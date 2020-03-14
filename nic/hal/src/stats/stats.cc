@@ -18,9 +18,14 @@ namespace hal {
 static thread_local void *t_stats_timer;
 
 #define HAL_STATS_COLLECTION_INTVL            ((1 * TIME_MSECS_PER_SEC) / 2)  // 500 msec
-#define HAL_STATS_START_INTVL                 (120 * TIME_MSECS_PER_SEC)    // 2 minutes
+#define HAL_STATS_START_INTVL                 (120 * TIME_MSECS_PER_SEC)      // 2 minutes
+//system stats collection interval is 20 secs;
+//the stats is collected in same timer_cb as period stats, hence
+//setting the delay trigger count for system stats collection in
+//proportion to periodic stats collection interval.
+//Adjust accordingly if the stats interval changes.
+#define HAL_SYSTEM_STATS_COLL_TRIG_DELAY      (40)  // 20 secs
 
-#if 0
 static void
 hal_update_drop_stats (SystemResponse *rsp) {
     delphi::objects::dropmetrics_t        dm;
@@ -110,7 +115,6 @@ hal_update_drop_stats (SystemResponse *rsp) {
     }
     delphi::objects::EgressDropMetrics::Publish(0, &edm);
 }
-#endif
 
 //------------------------------------------------------------------------------
 // callback invoked by the HAL periodic thread for stats collection
@@ -118,13 +122,12 @@ hal_update_drop_stats (SystemResponse *rsp) {
 static void
 stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
+    static uint8_t                      periodic_tmr_trig_cnt = 0;
     hal_ret_t ret;
-    SystemResponse                      rsp;
-#if 0
     pd::pd_system_args_t                pd_system_args;
     pd::pd_system_drop_stats_get_args_t drop_args;
     pd::pd_func_args_t                  pd_func_args;
-#endif
+    SystemResponse                      rsp;
 
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE, NULL);
     if (ret != HAL_RET_OK) {
@@ -136,9 +139,29 @@ stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
         HAL_TRACE_ERR("Error in updating port metrics, ret {}", ret);
     }
 
+    periodic_tmr_trig_cnt++;
+    if (periodic_tmr_trig_cnt == HAL_SYSTEM_STATS_COLL_TRIG_DELAY) {
+        periodic_tmr_trig_cnt = 0;
+
+        hal::hal_cfg_db_open(hal::CFG_OP_READ);
+
+        bzero(&pd_func_args, sizeof(pd::pd_func_args_t));
+        pd::pd_system_args_init(&pd_system_args);
+        pd_system_args.rsp = &rsp;
+
+        drop_args.pd_sys_args = &pd_system_args;
+        pd_func_args.pd_system_drop_stats_get = &drop_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_SYSTEM_DROP_STATS_GET, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
+        }
+
+        hal::hal_cfg_db_close();
+
+        hal_update_drop_stats(&rsp);
+    }
 }
 
-#if 0
 static void
 hal_global_stats_init (void)
 {
@@ -146,7 +169,6 @@ hal_global_stats_init (void)
     delphi::objects::DropMetrics::CreateTable();
     delphi::objects::EgressDropMetrics::CreateTable();
 }
-#endif
 
 static void
 stats_timer_start (void *timer, uint32_t timer_id, void *ctxt)
@@ -161,6 +183,8 @@ stats_timer_start (void *timer, uint32_t timer_id, void *ctxt)
     }
     HAL_TRACE_DEBUG("Started periodic stats timer with {} ms interval",
                     HAL_STATS_COLLECTION_INTVL);
+
+    hal_global_stats_init ();
 }
 
 //------------------------------------------------------------------------------
