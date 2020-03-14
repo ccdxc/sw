@@ -101,7 +101,7 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	forceDCMap := map[string]bool{}
 	forceDC, ok := config.Labels["force-dc-names"]
 	if ok {
-		logger.Infof("Foced DC %s: Only events for this DC will be processed", forceDC)
+		logger.Infof("Forced DC %s: Only events for this DC will be processed", forceDC)
 		forceDCs := strings.Split(forceDC, ",")
 		for _, dc := range forceDCs {
 			forceDCMap[dc] = true
