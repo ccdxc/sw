@@ -42,6 +42,7 @@ hal_ret_t micro_seg_status_update(MicroSegSpec &req,
 hal_ret_t system_handle_fwd_policy_updates(const SysSpec *spec,
                                            SysSpecResponse *rsp);
 hal_ret_t system_get_fwd_policy_mode(SysSpecGetResponse *rsp);
+hal_ret_t system_handle_a_to_b(void);
 
 }    // namespace hal
 

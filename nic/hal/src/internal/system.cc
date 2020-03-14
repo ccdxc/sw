@@ -956,4 +956,31 @@ system_get_fwd_policy_mode(SysSpecGetResponse *rsp) {
    return HAL_RET_OK;
 }
 
+//----------------------------------------------------------------------------
+// Upgrade A => B. If A is in hostpin, keep B in micro-seg enforce.
+//----------------------------------------------------------------------------
+hal_ret_t
+system_handle_a_to_b (void)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    SysSpec         sys_spec;
+    SysSpecResponse sys_rsp;
+
+    if (g_hal_state->forwarding_mode() == sdk::lib::FORWARDING_MODE_HOSTPIN) {
+        HAL_TRACE_DEBUG("Upgrade A(Hostpin) -> B. Moving to microseg-enforce");
+        sys_spec.set_fwd_mode(sys::FWD_MODE_MICROSEG);
+        sys_spec.set_policy_mode(sys::POLICY_MODE_ENFORCE);
+
+        ret = system_handle_fwd_policy_updates(&sys_spec, &sys_rsp);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Upgrade A(Hostpin) -> B. Failed to move "
+                          "to microseg-enforce");
+            goto end;
+        }
+    }
+
+end:
+    return ret;
+}
+
 }    // namespace hal

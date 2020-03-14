@@ -192,10 +192,40 @@ err:
 HdlrResp
 upgrade_handler::PostRestartHandler(UpgCtx& upgCtx)
 {
+    std::string preVer, postVer;
+    HdlrResp    hal_rsp, rsp;
+    const char *dev_conf_a = "1";
+    hal_ret_t ret = HAL_RET_OK;
+
+    HAL_TRACE_DEBUG("[upgrade] Handling host up msg ...");
+
+    ::upgrade::UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, 
+                                                      ::upgrade::DEVCONFVER, 
+                                                      preVer);
+    ::upgrade::UpgCtxApi::UpgCtxGetPostUpgTableVersion(upgCtx, 
+                                                       ::upgrade::DEVCONFVER, 
+                                                       postVer);
+    HAL_TRACE_DEBUG("[upgrade] Handling compat checks msg ... "
+                    "preVer {} postVer {}", 
+                    preVer, postVer);
+
+    // Check if A => B. Come up in microseg-enf if device.conf has hostpin
+    if (!strcmp(preVer.c_str(), dev_conf_a)) {
+        ret = hal::system_handle_a_to_b();
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to handle A -> B");
+        }
+    }
+
+    hal_rsp = upg_event_notify(MSG_ID_UPG_POST_RESTART, upgCtx);
+    rsp = HdlrResp(::upgrade::SUCCESS, empty_str);
+    return combine_responses(hal_rsp, rsp);
+#if 0
     HAL_TRACE_DEBUG("[upgrade] Handling post restart msg ...");
     // TODO: mostly regular asic init path should work here, no special handling
     // needed
     return upg_event_notify(MSG_ID_UPG_POST_RESTART, upgCtx);
+#endif
 }
 
 //------------------------------------------------------------------------------
