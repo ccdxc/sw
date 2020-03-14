@@ -75,6 +75,13 @@ var portUpdateCmd = &cobra.Command{
 	Run:   portUpdateCmdHandler,
 }
 
+var portShowXcvrCmd = &cobra.Command{
+	Use:   "transceiver",
+	Short: "show port transceiver",
+	Long:  "show port transceiver",
+	Run:   portXcvrShowCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatsShowCmd)
@@ -83,6 +90,9 @@ func init() {
 	portShowCmd.AddCommand(portStatusShowCmd)
 	portStatusShowCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
 	portStatusShowCmd.Flags().Bool("yaml", true, "Output in yaml")
+	portShowCmd.AddCommand(portShowXcvrCmd)
+	portShowXcvrCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
+	portShowXcvrCmd.Flags().Bool("yaml", true, "Output in yaml")
 
 	debugCmd.AddCommand(portUpdateCmd)
 	portUpdateCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
@@ -635,5 +645,132 @@ func printPortStats(resp *pds.Port) {
 		str = strings.Replace(str, "_", " ", -1)
 		fmt.Printf("%-25s%-5d\n", str, s.GetCount())
 		first = false
+	}
+}
+
+func portXcvrShowResp(resp *pds.Port) {
+	status := resp.GetStatus()
+	if status == nil {
+		fmt.Printf("Error! Port status cannot be nil\n")
+		return
+	}
+
+	xcvrStatus := status.GetXcvrStatus()
+	if xcvrStatus == nil {
+		// No xcvr connected to this phy port
+		return
+	}
+
+	xcvrPortNum := xcvrStatus.GetPort()
+	xcvrState := xcvrStatus.GetState()
+	xcvrPid := xcvrStatus.GetPid()
+
+	xcvrStateStr := "-"
+	xcvrPidStr := "-"
+
+	if xcvrPortNum <= 0 {
+		return
+	}
+
+	// Strip XCVR_STATE_ from the state
+	xcvrStateStr = strings.Replace(strings.Replace(xcvrState.String(), "XCVR_STATE_", "", -1), "_", "-", -1)
+
+	// Strip XCVR_PID_ from the pid
+	xcvrPidStr = strings.Replace(strings.Replace(xcvrPid.String(), "XCVR_PID_", "", -1), "_", "-", -1)
+
+	xcvrSprom := xcvrStatus.GetXcvrSprom()
+
+	lengthOm3 := 0
+	vendorRev := ""
+	lengthSmfKm := int(xcvrSprom[14])
+	lengthOm2 := int(xcvrSprom[16])
+	lengthOm1 := int(xcvrSprom[17])
+	lengthDac := int(xcvrSprom[18])
+	vendorName := string(xcvrSprom[20:35])
+	vendorPn := string(xcvrSprom[40:55])
+	vendorSn := string(xcvrSprom[68:83])
+
+	if strings.Contains(xcvrPid.String(), "QSFP") {
+		// convert from units of 2m to meters
+		lengthOm3 = int(xcvrSprom[15]) * 2
+
+		vendorRev = string(xcvrSprom[56:57])
+	} else {
+		lengthOm3 = int(xcvrSprom[19])
+		vendorRev = string(xcvrSprom[56:59])
+
+		// convert from units of 10m to meters
+		lengthOm1 *= 10
+		lengthOm2 *= 10
+		lengthOm3 *= 10
+	}
+
+	fmt.Printf("%-30s: %d\n", "Port", xcvrPortNum)
+	fmt.Printf("%-30s: %s\n", "Id", uuid.FromBytesOrNil(resp.GetSpec().GetId()).String())
+	fmt.Printf("%-30s: %s\n", "State", xcvrStateStr)
+	fmt.Printf("%-30s: %s\n", "PID", xcvrPidStr)
+	fmt.Printf("%-30s: %d KM\n", "Length Single Mode Fiber", lengthSmfKm)
+	fmt.Printf("%-30s: %d Meters\n", "Length 62.5um OM1 Fiber", lengthOm1)
+	fmt.Printf("%-30s: %d Meters\n", "Length 50um   OM2 Fiber", lengthOm2)
+	fmt.Printf("%-30s: %d Meters\n", "Length 50um   OM3 Fiber", lengthOm3)
+	fmt.Printf("%-30s: %d Meters\n", "Length Copper", lengthDac)
+	fmt.Printf("%-30s: %s\n", "vendor name", vendorName)
+	fmt.Printf("%-30s: %s\n", "vendor part number", vendorPn)
+	fmt.Printf("%-30s: %s\n", "vendor revision", vendorRev)
+	fmt.Printf("%-30s: %s\n\n", "vendor serial number", vendorSn)
+}
+
+func portXcvrShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewPortSvcClient(c)
+	yamlOutput := (cmd != nil) && cmd.Flags().Changed("yaml")
+
+	var req *pds.PortGetRequest
+	if cmd != nil && cmd.Flags().Changed("port") {
+		req = &pds.PortGetRequest{
+			Id: [][]byte{uuid.FromStringOrNil(portID).Bytes()},
+		}
+	} else {
+		// Get all Ports
+		req = &pds.PortGetRequest{
+			Id: [][]byte{},
+		}
+	}
+
+	// PDS call
+	respMsg, err := client.PortGet(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Getting Port failed. %v\n", err)
+		return
+	}
+
+	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+		return
+	}
+
+	if yamlOutput {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		for _, resp := range respMsg.Response {
+			portXcvrShowResp(resp)
+		}
 	}
 }

@@ -50,6 +50,8 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	portShowCmdHandler(nil, nil)
 	fmt.Printf("\n=== Port status ===\n")
 	portShowStatusCmdHandler(nil, nil)
+	fmt.Printf("\n=== Xcvr info  ===\n")
+	portXcvrShowCmdHandler(nil, nil)
 	fmt.Printf("\n=== Interface information ===\n")
 	ifShowCmdHandler(nil, nil)
 	fmt.Printf("\n=== LIF information ===\n")
