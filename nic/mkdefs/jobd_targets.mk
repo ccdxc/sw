@@ -195,19 +195,19 @@ jobd/apollo/pds_scale_test_mock_no_batch: ${JOBD_PREREQS}
 .PHONY: jobd/apollo/aarch64/container
 jobd/apollo/aarch64/container:${JOBD_PREREQS}
 	# With Agent
-	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 1 aarch64
+	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 1 aarch64 apollo
 	rm -rf ${TOPDIR}/apollo_sw
 	# Without Agent
-	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 0 aarch64
+	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 0 aarch64 apollo
 	rm -rf ${TOPDIR}/apollo_sw
 
 .PHONY: jobd/apollo/x86_64/container
 jobd/apollo/x86_64/container:${JOBD_PREREQS}
 	# With Agent
-	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 1 x86_64
+	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 1 x86_64 apollo
 	rm -rf ${TOPDIR}/apollo_sw
 	# Without Agent
-	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 0 x86_64
+	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 0 x86_64 apollo
 	rm -rf ${TOPDIR}/apollo_sw
 
 .PHONY: jobd/artemis/pds_scale_test_mock
