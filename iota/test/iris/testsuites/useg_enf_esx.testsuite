@@ -43,6 +43,7 @@ testbundles:
         - flowlog/flowlog_precheckin.testbundle
         - networking/cps_precheckin.testbundle
         - networking/telemetry_precheckin.testbundle
+        - networking/expanded_telemetry.testbundle
         - firewall/policy_precheckin.testbundle
         - firewall/normalization.testbundle
         - aging/aging_precheckin.testbundle
@@ -61,7 +62,6 @@ testbundles:
         - networking/cps.testbundle
         - networking/upgrade.testbundle
         - networking/telemetry.testbundle
-        #- networking/expanded_telemetry.testbundle
         - linktest/linktest.testbundle
         - firewall/policy.testbundle
         - aging/aging.testbundle

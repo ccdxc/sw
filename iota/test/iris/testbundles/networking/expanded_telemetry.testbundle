@@ -16,11 +16,11 @@ testcases:
             type      : nested
             pktsize   : [128]
             peer      : [remote]
-            collector : [local, remote, all]
+            collector : [local, remote]
             vlan      : [native, tag]
             iftype    : [uplink]
             direction : [ingress, egress, both]
-            ccount    : [1, 8]
+            ccount    : [1, 2]
         args          :
             type      : sanity
 

@@ -13,13 +13,13 @@ testcases:
         testcase      : testcases.expanded_telemetry.lif_erspan_collector
         iterators     :
             type      : nested
-            pktsize   : [128, 144, 160, 176, 192, 208, 224, 240]
+            pktsize   : [128]
             peer      : [remote]
-            collector : [remote]
+            collector : [local, remote]
             vlan      : [native, tag]
             iftype    : [uplink]
             direction : [ingress, egress, both]
-            ccount    : [1]
+            ccount    : [1, 2, 3, 4, 5, 6, 7, 8]
         args          :
             type      : sanity
 
