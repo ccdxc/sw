@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -1408,12 +1409,110 @@ func (a *ApuluAPI) ReplayConfigs() error {
 		}
 	}
 
-	return errors.Wrapf(types.ErrNotImplemented, "Not all config replays not implemented by pipeline")
+	return nil
 }
 
 // PurgeConfigs unimplemented
 func (a *ApuluAPI) PurgeConfigs() error {
-	return errors.Wrapf(types.ErrNotImplemented, "Config Purges not implemented by Apulu Pipeline")
+	// Apps, SGPolicies, Endpoints, Networks, RoutingConfig, Interface, Device
+	rt := netproto.RouteTable{TypeMeta: api.TypeMeta{Kind: "RouteTable"}}
+	rts, _ := a.HandleRouteTable(types.List, rt)
+	for _, r := range rts {
+		if _, err := a.HandleRouteTable(types.Delete, r); err != nil {
+			log.Errorf("Failed to purge the RouteTable. Err: %v", err)
+		}
+	}
+
+	rc := netproto.RoutingConfig{TypeMeta: api.TypeMeta{Kind: "RoutingConfig"}}
+	rcs, _ := a.HandleRoutingConfig(types.List, rc)
+	for _, r := range rcs {
+		if _, err := a.HandleRoutingConfig(types.Delete, r); err != nil {
+			log.Errorf("Failed to purge the RoutingConfig. Err: %v", err)
+		}
+	}
+
+	ip := netproto.IPAMPolicy{TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"}}
+	ips, _ := a.HandleIPAMPolicy(types.List, ip)
+	for _, i := range ips {
+		if _, err := a.HandleIPAMPolicy(types.Delete, i); err != nil {
+			log.Errorf("Failed to purge the IPAMPolicy. Err: %v", err)
+		}
+	}
+
+	s := netproto.NetworkSecurityPolicy{TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"}}
+	policies, _ := a.HandleNetworkSecurityPolicy(types.List, s)
+	for _, policy := range policies {
+		if _, err := a.HandleNetworkSecurityPolicy(types.Delete, policy); err != nil {
+			log.Errorf("Failed to purge the NetworkSecurityPolicy. Err: %v", err)
+		}
+	}
+
+	ap := netproto.App{TypeMeta: api.TypeMeta{Kind: "App"}}
+	apps, _ := a.HandleApp(types.List, ap)
+	for _, app := range apps {
+		if _, err := a.HandleApp(types.Delete, app); err != nil {
+			log.Errorf("Failed to purge the App. Err: %v", err)
+		}
+	}
+
+	e := netproto.Endpoint{TypeMeta: api.TypeMeta{Kind: "Endpoint"}}
+	endpoints, _ := a.HandleEndpoint(types.List, e)
+	for _, endpoint := range endpoints {
+		if strings.Contains(endpoint.Name, "_internal") {
+			continue
+		}
+		if _, err := a.HandleEndpoint(types.Delete, endpoint); err != nil {
+			log.Errorf("Failed to purge the Endpoint. Err: %v", err)
+		}
+	}
+
+	n := netproto.Network{TypeMeta: api.TypeMeta{Kind: "Network"}}
+	networks, _ := a.HandleNetwork(types.List, n)
+	for _, network := range networks {
+		if strings.Contains(network.Name, "_internal") {
+			continue
+		}
+		if _, err := a.HandleNetwork(types.Delete, network); err != nil {
+			log.Errorf("Failed to purge the Network. Err: %v", err)
+		}
+	}
+
+	ms := netproto.MirrorSession{TypeMeta: api.TypeMeta{Kind: "MirrorSession"}}
+	mirrors, _ := a.HandleMirrorSession(types.List, ms)
+	for _, m := range mirrors {
+		if _, err := a.HandleMirrorSession(types.Delete, m); err != nil {
+			log.Errorf("Failed to purge the MirrorSession. Err: %v", err)
+		}
+	}
+
+	ifs := netproto.Interface{TypeMeta: api.TypeMeta{Kind: "Interface"}}
+	intfs, _ := a.HandleInterface(types.List, ifs)
+	for _, i := range intfs {
+		if _, err := a.HandleInterface(types.Delete, i); err != nil {
+			log.Errorf("Failed to purge the Interface. Err: %v", err)
+		}
+	}
+
+	sp := netproto.SecurityProfile{TypeMeta: api.TypeMeta{Kind: "SecurityProfile"}}
+	profiles, _ := a.HandleSecurityProfile(types.List, sp)
+	for _, profile := range profiles {
+		if _, err := a.HandleSecurityProfile(types.Delete, profile); err != nil {
+			log.Errorf("Failed to purge the SecurityProfile. Err: %v", err)
+		}
+	}
+
+	v := netproto.Vrf{TypeMeta: api.TypeMeta{Kind: "Vrf"}}
+	vrfs, _ := a.HandleVrf(types.List, v)
+	for _, vrf := range vrfs {
+		if _, err := a.HandleVrf(types.Delete, vrf); err != nil {
+			log.Errorf("Failed to purge the Vrf. Err: %v", err)
+		}
+	}
+
+	if err := a.HandleDevice(types.Delete); err != nil {
+		log.Errorf("Failed to purge the Device. Err: %v", err)
+	}
+	return nil
 }
 
 // GetWatchOptions returns the options to be used while establishing a watch from this agent.

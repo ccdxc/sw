@@ -12,7 +12,7 @@ import (
 
 func TestHandleMirrorSession(t *testing.T) {
 	mirror := netproto.MirrorSession{
-		TypeMeta: api.TypeMeta{Kind: "Mirror"},
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
@@ -53,7 +53,7 @@ func TestHandleMirrorSession(t *testing.T) {
 func TestHandleMirrorSessionInfraFailures(t *testing.T) {
 	t.Parallel()
 	mirror := netproto.MirrorSession{
-		TypeMeta: api.TypeMeta{Kind: "Mirror"},
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
