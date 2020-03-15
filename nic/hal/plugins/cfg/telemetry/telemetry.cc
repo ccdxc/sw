@@ -1025,7 +1025,7 @@ populate_flow_monitor_rule (FlowMonitorRuleSpec &spec,
             /* Mirror action */
             int n = spec.action().ms_key_handle_size();
             HAL_TRACE_DEBUG("Num mirror dest: {}", n);
-            if (n >= MAX_MIRROR_SESSION_DEST) {
+            if (n > MAX_MIRROR_SESSION_DEST) {
                 HAL_TRACE_ERR("Num mirror destinations {} greater than max {}",
                                                     n, MAX_MIRROR_SESSION_DEST);
                 return HAL_RET_INVALID_ARG;
