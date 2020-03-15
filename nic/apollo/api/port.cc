@@ -234,13 +234,13 @@ create_port (pds_ifindex_t ifindex, port_args_t *port_args)
     if_db()->insert(intf);
     // register the stats region with metrics submodule
     if (port_args->port_type == port_type_t::PORT_TYPE_ETH) {
-        sdk::metrics::metrics_register((sdk::metrics::key_t *)&key,
-                                       &port_metrics_schema,
-                                       sdk::linkmgr::port_stats_addr(ifindex));
+        sdk::metrics::row_address(g_port_metrics_hndl,
+                                  *(sdk::metrics::key_t *)key.id,
+                                  (void *)sdk::linkmgr::port_stats_addr(ifindex));
     } else if (port_args->port_type == port_type_t::PORT_TYPE_MGMT) {
-        sdk::metrics::metrics_register((sdk::metrics::key_t *)&key,
-                                       &mgmt_port_metrics_schema,
-                                       sdk::linkmgr::port_stats_addr(ifindex));
+        sdk::metrics::row_address(g_mgmt_port_metrics_hndl,
+                                  *(sdk::metrics::key_t *)key.id,
+                                  (void *)sdk::linkmgr::port_stats_addr(ifindex));
     }
     return SDK_RET_OK;
 }

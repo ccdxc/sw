@@ -20,14 +20,26 @@ namespace metrics {
 
 static const int SDK_METRICS_DEFAULT_TBL_SIZE = 1000;
 
+typedef enum metrics_counter_type_ {
+    METRICS_COUNTER_VALUE64   = 1, // A 64bit value
+    METRICS_COUNTER_POINTER64 = 2, // A pointer to a 64bit value
+    METRICS_COUNTER_RSVD64    = 3, // A reserved counter (to be ignored)
+} metrics_counter_type_t;
+
+typedef struct metrics_counter_ {
+    const char *name; // Name of the metric. e.g. InboundPackets
+    metrics_counter_type_t type;
+} metrics_counter_t;
+
 struct counter_ {
     std::string name;
-    bool is_pointer;
+    metrics_counter_type_t type;
 };
 
 typedef struct metrics_table_ {
-    std::string                 name;
-    TableMgrUptr                tbl;
+    std::string name;
+    TableMgrUptr tbl;
+    metrics_type_t type;
     std::vector<struct counter_> counters;
 } metrics_table_t;
 
@@ -43,14 +55,15 @@ typedef struct buffer_ {
 
 typedef struct serialized_spec_ {
     unsigned int name_length;
+    metrics_type_t type;
     unsigned int counter_count;
-    char name[];
+    char         name[];
 } serialized_spec_t;
 
 typedef struct serialized_counter_spec_ {
-    unsigned int name_length;
+    unsigned int           name_length;
     metrics_counter_type_t type;
-    char name[];
+    char                   name[];
 } serialized_counter_spec_t;
 
 static ShmPtr
@@ -69,7 +82,7 @@ get_shm (void)
 
 static TableMgrUptr
 get_meta_table (void)
-{
+{ 
     TableMgrUptr tbl = nullptr;
 
     if (tbl == nullptr) {
@@ -85,9 +98,9 @@ get_meta_table (void)
 }
 
 static void
-save_schema_ (metrics_table_t *tbl, metrics_schema_t *schema)
+save_schema_ (metrics_table_t *tbl, schema_t *schema)
 {
-    metrics_counter_t *cntr_props;
+    const char *cntr_name;
     serialized_spec_t *srlzd;
     int16_t srlzd_len;
     int i;
@@ -95,17 +108,28 @@ save_schema_ (metrics_table_t *tbl, metrics_schema_t *schema)
     // todo
     // check if it already exists and crash if mismatch
     
-    for (i = 0; (cntr_props = &schema->counters[i]), cntr_props->name != NULL; i++) {
+    for (i = 0; (cntr_name = schema->counters[i]), cntr_name != NULL; i++) {
         std::string key = tbl->name + ":" + std::to_string(i);
         serialized_counter_spec_t *srlzd_counter;
         int16_t srlzd_counter_len =  sizeof(serialized_counter_spec_t *) +
-            strlen(cntr_props->name) + 1;
+            strlen(cntr_name) + 1;
+        metrics_counter_type_t type;
+
+        if (tbl->type == SW) {
+            type = METRICS_COUNTER_VALUE64; 
+        } else {
+            if (cntr_name[0] == '_') {
+                type = METRICS_COUNTER_RSVD64;
+            } else {
+                type = METRICS_COUNTER_POINTER64;
+            }
+        }
 
         srlzd_counter = (serialized_counter_spec_t *)malloc(srlzd_counter_len);
-        srlzd_counter->name_length = strlen(cntr_props->name);
-        memcpy(srlzd_counter->name, cntr_props->name,
+        srlzd_counter->name_length = strlen(cntr_name);
+        memcpy(srlzd_counter->name, cntr_name,
                srlzd_counter->name_length + 1); 
-        srlzd_counter->type = cntr_props->type;
+        srlzd_counter->type = type;
 
         error err = get_meta_table()->Publish(
             key.c_str(), key.size(), (char *)srlzd_counter, srlzd_counter_len);
@@ -114,14 +138,15 @@ save_schema_ (metrics_table_t *tbl, metrics_schema_t *schema)
         free(srlzd_counter);
 
         tbl->counters.push_back({
-            name: cntr_props->name,
-            is_pointer: cntr_props->type == METRICS_COUNTER_POINTER64,
+            name: cntr_name,
+            type: type,
             });
     }
 
     srlzd_len = sizeof(srlzd) + strlen(schema->name) + 1;
     srlzd = (serialized_spec_t *)malloc(srlzd_len);
     srlzd->name_length = strlen(schema->name);
+    srlzd->type = tbl->type;
     memcpy(srlzd->name, schema->name, srlzd->name_length + 1);
     srlzd->counter_count = i;
 
@@ -144,6 +169,7 @@ load_table_ (const char *name)
     srlzd = (serialized_spec_t *)get_meta_table()->Find(
         tbl->name.c_str(), tbl->name.size());
     assert(srlzd != NULL);
+    tbl->type = srlzd->type;
 
     for (unsigned int i = 0; i < srlzd->counter_count; i++) {
         serialized_counter_spec_t *srlzd_counter;
@@ -155,7 +181,7 @@ load_table_ (const char *name)
         
         tbl->counters.push_back({
             name: srlzd_counter->name,
-            is_pointer: srlzd_counter->type == METRICS_COUNTER_POINTER64,
+            type: srlzd_counter->type,
             });
     }
 
@@ -163,20 +189,43 @@ load_table_ (const char *name)
 }
 
 void *
-metrics_register (metrics_schema_t *schema)
+create (schema_t *schema)
 {
-    metrics_table_t *tbl = new metrics_table_t();
-   
-    tbl->tbl = get_shm()->Kvstore()->Table(schema->name);
-    if (tbl->tbl == nullptr) {
+    metrics_table_t *tbl;
+    TableMgrUptr tbmgr;
+
+  
+    tbmgr = get_shm()->Kvstore()->Table(schema->name);
+    if (tbmgr == nullptr) {
+        tbl = new metrics_table_t();
         tbl->tbl = get_shm()->Kvstore()->CreateTable(
             schema->name, SDK_METRICS_DEFAULT_TBL_SIZE);
         assert(tbl->tbl != nullptr);
         tbl->name = schema->name;
+        tbl->type = schema->type;
         save_schema_(tbl, schema);
+    } else {
+        tbl = load_table_(schema->name);
+        tbl->tbl = std::move(tbmgr);
     }
 
     return tbl;
+}
+
+void
+row_address(void *handler, key_t key, void *address) {
+    metrics_table_t *tbl = (metrics_table_t *)handler;
+    internal_key_t ikey = {
+        .key = key,
+        .counter = 0,
+    };
+
+    assert(tbl->type == HBM);
+
+    error err = tbl->tbl->Publish((char *)&ikey, sizeof(ikey), (char *)&address,
+                                  sizeof(address));
+
+    assert(err == error::OK());
 }
 
 void
@@ -206,27 +255,8 @@ metrics_open (const char *name)
     return tbl;
 }
 
-metrics_counters_t
-metrics_read (void  *handler, key_t key)
-{
-    metrics_table_t *tbl;
-    metrics_counters_t counters;
-
-    tbl = (metrics_table_t *)handler;
-
-    for (unsigned int i = 0; i < tbl->counters.size(); i++) {
-        metrics_counter_pair_t pair;
-
-        pair.first = tbl->counters[i].name;
-        pair.second = metrics_read(handler, key, i);
-        counters.push_back(pair);
-    }
-    
-    return counters;
-}
-
-uint64_t
-metrics_read (void *handler, key_t key, unsigned int counter)
+static uint64_t
+metrics_read_value (void *handler, key_t key, unsigned int counter)
 {
     metrics_table_t *tbl;
     uint64_t *value;
@@ -244,14 +274,83 @@ metrics_read (void *handler, key_t key, unsigned int counter)
         return 0;
     }
 
-    if (tbl->counters[counter].is_pointer) {
-        uint64_t data = 0;
-        sdk::lib::pal_ret_t rc;
-        rc = sdk::lib::pal_reg_read(*value, (uint32_t *)&data, 2);
-        assert(rc == sdk::lib::PAL_RET_OK);
-        return data;
+    return *value;
+}
+
+static metrics_counters_t
+metrics_read_values (void  *handler, key_t key)
+{
+    metrics_table_t *tbl;
+    metrics_counters_t counters;
+
+    tbl = (metrics_table_t *)handler;
+
+    for (unsigned int i = 0; i < tbl->counters.size(); i++) {
+        metrics_counter_pair_t pair;
+
+        pair.first = tbl->counters[i].name;
+        pair.second = metrics_read_value(handler, key, i);
+        counters.push_back(pair);
+    }
+    
+    return counters;
+}
+
+static uint64_t
+read_value (uint64_t base, unsigned int offset)
+{
+    uint64_t value;
+    int rc;
+    
+    rc = sdk::lib::pal_reg_read(base + (offset * sizeof(value)),
+                                (uint32_t *)&value, 2);
+    assert(rc == sdk::lib::PAL_RET_OK);
+
+    return value;
+}
+
+static metrics_counters_t
+metrics_read_pointers (void  *handler, key_t key)
+{
+    metrics_table_t *tbl;
+    metrics_counters_t counters;
+    uint64_t *base;
+    internal_key_t ikey = {
+        .key = key,
+        .counter = 0,
+    };
+
+    tbl = (metrics_table_t *)handler;
+
+    base = (uint64_t *)tbl->tbl->Find((char *)&ikey, sizeof(ikey));
+    if (base == NULL) {
+        return counters;
+    }
+    
+    for (unsigned int i = 0; i < tbl->counters.size(); i++) {
+        if (tbl->counters[i].type != METRICS_COUNTER_RSVD64) {
+            metrics_counter_pair_t pair;
+
+            pair.first = tbl->counters[i].name;
+            pair.second = read_value(*base, i);
+            counters.push_back(pair);
+        }
+    }
+    
+    return counters;
+}
+
+metrics_counters_t
+metrics_read (void  *handler, key_t key)
+{
+    metrics_table_t *tbl;
+
+    tbl = (metrics_table_t *)handler;
+
+    if (tbl->type == SW) {
+        return metrics_read_values(handler, key);
     } else {
-        return *value;
+        return metrics_read_pointers(handler, key);
     }
 }
 

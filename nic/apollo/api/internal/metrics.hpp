@@ -15,9 +15,11 @@
 
 namespace api {
 
-extern sdk::metrics::metrics_schema_t port_metrics_schema;
-extern sdk::metrics::metrics_schema_t mgmt_port_metrics_schema;
-extern sdk::metrics::metrics_schema_t host_if_metrics_schema;
+extern void *g_port_metrics_hndl;
+extern void *g_mgmt_port_metrics_hndl;
+extern void *g_host_if_metrics_hndl;
+
+extern sdk_ret_t register_metrics(void);
 
 }    // namespace api
 

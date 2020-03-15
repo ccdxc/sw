@@ -28,6 +28,7 @@
 #include "nic/apollo/api/debug.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/upgrade.hpp"
+#include "nic/apollo/api/internal/metrics.hpp"
 #include "platform/sysmon/sysmon.hpp"
 
 const pds_obj_key_t k_pds_obj_key_invalid = { 0 };
@@ -282,6 +283,9 @@ pds_init (pds_init_params_t *params)
         return SDK_RET_OK;
     }
 
+    // initialize metrics
+    api::register_metrics();
+    
     // spawn pciemgr thread.
     core::spawn_pciemgr_thread(&api::g_pds_state);
 
