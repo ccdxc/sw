@@ -91,14 +91,14 @@ nacl_dump_header (int fd)
                 "RP  - Rx packet                TP  - Tunnel Pkt\n"
                 "NhV - ARM to P4 Nexthop Valid  LMM - Local mapping miss\n"
                 "KT  - Key type\n");
-    dprintf(fd, "%s\n", std::string(160, '-').c_str());
+    dprintf(fd, "%s\n", std::string(190, '-').c_str());
     dprintf(fd, "%-4s%-5s%-6s%-3s%-3s%-3s%-3s%-3s%-4s%-4s"
-            "%-18s%-6s%-40s%-40s%-6s%-6s%-6s\n",
+            "%-18s%-6s%-40s%-40s%-6s%-6s%-7s%-4s%-10s%-5s%-7s\n",
             "Idx", "Type", "Lif", "LE",
             "FM", "RP", "TP", "KT", "NhV", "LMM",
             "DMAC", "Proto", "SIP", "DIP", "SPort", "DPort",
-            "VnicID");
-    dprintf(fd, "%s\n", std::string(160, '-').c_str());
+            "VnicID", "Act", "Nexthop", "Data", "CoPPIdx");
+    dprintf(fd, "%s\n", std::string(190, '-').c_str());
 }
 
 sdk_ret_t
@@ -116,6 +116,7 @@ apulu_impl_state::nacl_dump(int fd) {
                 if (!key.key_metadata_entry_valid) {
                     continue;
                 }
+                // print the key fields
                 dprintf(fd, "%-4u", i);
                 if (mask.control_metadata_lif_type_mask) {
                     dprintf(fd, "%-5u",
@@ -234,6 +235,25 @@ apulu_impl_state::nacl_dump(int fd) {
                     dprintf(fd, "%-6u", key.vnic_metadata_vnic_id);
                 } else {
                     dprintf(fd, "%-6s", "*");
+                }
+                // print the data fields
+                if (data.action_id == NACL_NACL_PERMIT_ID) {
+                    dprintf(fd, "%-3s", "P");
+                } else if (data.action_id == NACL_NACL_REDIRECT_ID) {
+                    dprintf(fd, "%-3s", "R");
+                    dprintf(fd, "%-2u/%-6u %-4s %-7u",
+                            data.action_u.nacl_nacl_redirect.nexthop_type,
+                            data.action_u.nacl_nacl_redirect.nexthop_id, "-",
+                            data.action_u.nacl_nacl_redirect.copp_policer_id);
+                } else if (data.action_id == NACL_NACL_REDIRECT_TO_ARM_ID) {
+                    dprintf(fd, "%-3s", "AR");
+                    dprintf(fd, "%-2u/%-6u %-4u %-7u",
+                            data.action_u.nacl_nacl_redirect_to_arm.nexthop_type,
+                            data.action_u.nacl_nacl_redirect_to_arm.nexthop_id,
+                            data.action_u.nacl_nacl_redirect_to_arm.data,
+                            data.action_u.nacl_nacl_redirect_to_arm.copp_policer_id);
+                } else {
+                    dprintf(fd, "%-3s", "D");
                 }
                 dprintf(fd, "\n");
             } else {
