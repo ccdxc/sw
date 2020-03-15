@@ -169,6 +169,7 @@ nic/build/$ARCH/$PIPELINE/bin/coremgr                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/capview                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/captrace                            /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/eth_dbgtool_apollo                  /nic/bin/eth_dbgtool
+nic/build/$ARCH/$PIPELINE/lib/libprotobuf.so.14                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/memtun                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/capmon                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/out/capviewdb_submake/capviewdb.bin     /nic/etc/

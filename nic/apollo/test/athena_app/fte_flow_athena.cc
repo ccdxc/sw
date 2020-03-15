@@ -62,6 +62,15 @@ uint32_t g_session_rewrite_index = 1;
 uint32_t g_h2s_vlan = 0x0002;
 uint16_t g_h2s_vnic_id = 0x0001;
 
+/*
+ * Static Normalized key for UDP flow
+ */
+static uint32_t    g_h2s_sip = 0x02000001;
+static uint32_t    g_h2s_dip = 0x02000002;
+static uint8_t     g_h2s_proto = 0x11;
+static uint16_t    g_h2s_sport = 0x2001;
+static uint16_t    g_h2s_dport = 0x2002;
+
 // H2S Session info rewrite
 mac_addr_t substrate_smac = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
 mac_addr_t substrate_dmac = {0x00, 0x06, 0x07, 0x08, 0x09, 0x0a};
@@ -347,6 +356,103 @@ fte_session_info_create (uint8_t dir, uint32_t session_index)
 }
 
 sdk_ret_t
+fte_flow_create(uint16_t vnic_id, ipv4_addr_t v4_addr_sip, ipv4_addr_t v4_addr_dip,
+        uint8_t proto, uint16_t sport, uint16_t dport,
+        pds_flow_spec_index_type_t index_type, uint32_t index)
+{
+    pds_flow_spec_t             spec;
+
+
+    spec.key.vnic_id = vnic_id;
+    spec.key.key_type = KEY_TYPE_IPV4;
+    memset(spec.key.ip_saddr, 0, sizeof(spec.key.ip_saddr));
+    memcpy(spec.key.ip_saddr, &v4_addr_sip, sizeof(ipv4_addr_t));
+    memset(spec.key.ip_daddr, 0, sizeof(spec.key.ip_daddr));
+    memcpy(spec.key.ip_daddr, &v4_addr_dip, sizeof(ipv4_addr_t));
+    spec.key.ip_proto = proto;
+    spec.key.l4.tcp_udp.sport = sport;
+    spec.key.l4.tcp_udp.dport = dport;
+
+    spec.data.index_type = index_type;
+    spec.data.index = index;
+
+    return pds_flow_cache_entry_create(&spec);
+}
+
+sdk_ret_t
+fte_session_info_create_all(uint32_t session_id, uint32_t conntrack_id,
+                uint8_t skip_flow_log, mac_addr_t *host_mac,
+                uint16_t h2s_epoch_vnic, uint32_t h2s_epoch_vnic_id,
+                uint16_t h2s_epoch_mapping, uint32_t h2s_epoch_mapping_id,
+                uint16_t h2s_policer_bw1_id, uint16_t h2s_policer_bw2_id,
+                uint16_t h2s_vnic_stats_id, uint8_t *h2s_vnic_stats_mask,
+                uint16_t h2s_vnic_histogram_latency_id, uint16_t h2s_vnic_histogram_packet_len_id,
+                uint8_t h2s_tcp_flags_bitmap,
+                uint32_t h2s_session_rewrite_id,
+                uint16_t h2s_allowed_flow_state_bitmask,
+                pds_egress_action_t h2s_egress_action,
+
+                uint16_t s2h_epoch_vnic, uint32_t s2h_epoch_vnic_id,
+                uint16_t s2h_epoch_mapping, uint32_t s2h_epoch_mapping_id,
+                uint16_t s2h_policer_bw1_id, uint16_t s2h_policer_bw2_id,
+                uint16_t s2h_vnic_stats_id, uint8_t *s2h_vnic_stats_mask,
+                uint16_t s2h_vnic_histogram_latency_id, uint16_t s2h_vnic_histogram_packet_len_id,
+                uint8_t s2h_tcp_flags_bitmap,
+                uint32_t s2h_session_rewrite_id,
+                uint16_t s2h_allowed_flow_state_bitmask,
+                pds_egress_action_t s2h_egress_action)
+{
+    sdk_ret_t                               ret = SDK_RET_OK;
+    pds_flow_session_spec_t                 spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_info_id = session_id;
+    spec.key.direction = (SWITCH_TO_HOST | HOST_TO_SWITCH);
+
+    spec.data.conntrack_id = conntrack_id;
+    spec.data.skip_flow_log = skip_flow_log;
+    sdk::lib::memrev(spec.data.host_mac, (uint8_t*)host_mac, sizeof(mac_addr_t));
+
+    /* Host-to-switch */
+    spec.data.host_to_switch_flow_info.epoch_vnic = h2s_epoch_vnic;
+    spec.data.host_to_switch_flow_info.epoch_vnic_id = h2s_epoch_vnic_id;
+    spec.data.host_to_switch_flow_info.epoch_mapping = h2s_epoch_mapping;
+    spec.data.host_to_switch_flow_info.policer_bw1_id = h2s_policer_bw1_id;
+    spec.data.host_to_switch_flow_info.policer_bw2_id = h2s_policer_bw2_id;
+    spec.data.host_to_switch_flow_info.vnic_stats_id = h2s_vnic_stats_id;
+    sdk::lib::memrev(spec.data.host_to_switch_flow_info.vnic_stats_mask,
+            h2s_vnic_stats_mask, PDS_FLOW_STATS_MASK_LEN);
+    spec.data.host_to_switch_flow_info.vnic_histogram_latency_id = h2s_vnic_histogram_latency_id;
+    spec.data.host_to_switch_flow_info.vnic_histogram_packet_len_id = h2s_vnic_histogram_packet_len_id;
+    spec.data.host_to_switch_flow_info.tcp_flags_bitmap = h2s_tcp_flags_bitmap;
+    spec.data.host_to_switch_flow_info.rewrite_id = h2s_session_rewrite_id;
+    spec.data.host_to_switch_flow_info.allowed_flow_state_bitmask = h2s_allowed_flow_state_bitmask;
+    spec.data.host_to_switch_flow_info.egress_action = h2s_egress_action;
+
+    /* Switch-to-host */
+    spec.data.switch_to_host_flow_info.epoch_vnic = s2h_epoch_vnic;
+    spec.data.switch_to_host_flow_info.epoch_vnic_id = s2h_epoch_vnic_id;
+    spec.data.switch_to_host_flow_info.epoch_mapping = s2h_epoch_mapping;
+    spec.data.switch_to_host_flow_info.policer_bw1_id = s2h_policer_bw1_id;
+    spec.data.switch_to_host_flow_info.policer_bw2_id = s2h_policer_bw2_id;
+    spec.data.switch_to_host_flow_info.vnic_stats_id = s2h_vnic_stats_id;
+    sdk::lib::memrev(spec.data.switch_to_host_flow_info.vnic_stats_mask,
+            s2h_vnic_stats_mask, PDS_FLOW_STATS_MASK_LEN);
+    spec.data.switch_to_host_flow_info.vnic_histogram_latency_id = s2h_vnic_histogram_latency_id;
+    spec.data.switch_to_host_flow_info.vnic_histogram_packet_len_id = s2h_vnic_histogram_packet_len_id;
+    spec.data.switch_to_host_flow_info.tcp_flags_bitmap = s2h_tcp_flags_bitmap;
+    spec.data.switch_to_host_flow_info.rewrite_id = s2h_session_rewrite_id;
+    spec.data.switch_to_host_flow_info.allowed_flow_state_bitmask = s2h_allowed_flow_state_bitmask;
+    spec.data.switch_to_host_flow_info.egress_action = s2h_egress_action;
+
+    ret = pds_flow_session_info_create(&spec);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program session s2h info : %u\n", ret);
+    }
+    return ret;
+}
+
+sdk_ret_t
 fte_flow_prog (struct rte_mbuf *m)
 {
     sdk_ret_t ret = SDK_RET_OK;
@@ -483,6 +589,8 @@ static sdk_ret_t
 fte_setup_flow (void)
 {
     sdk_ret_t       ret = SDK_RET_OK;
+    mac_addr_t      host_mac;
+    uint8_t         vnic_stats_mask[PDS_FLOW_STATS_MASK_LEN];
     uint32_t        s2h_session_rewrite_id;
     uint32_t        h2s_session_rewrite_id;
 
@@ -525,6 +633,45 @@ fte_setup_flow (void)
         PDS_TRACE_DEBUG("fte_s2h_v4_session_rewrite failed.\n");
         return ret;
     }
+
+    memset(&host_mac, 0, sizeof(host_mac));
+    ret = fte_session_info_create_all(g_session_index, /*conntrack_id*/0,
+                /*skip_flow_log*/ FALSE, /*host_mac*/ &host_mac,
+
+                /*h2s_epoch_vnic*/ 0, /*h2s_epoch_vnic_id*/ 0,
+                /*h2s_epoch_mapping*/0, /*h2s_epoch_mapping_id*/0,
+                /*h2s_policer_bw1_id*/0, /*h2s_policer_bw2_id*/0,
+                /*h2s_vnic_stats_id*/0, /*h2s_vnic_stats_mask*/ vnic_stats_mask,
+                /*h2s_vnic_histogram_latency_id*/0, /*h2s_vnic_histogram_packet_len_id*/0,
+                /*h2s_tcp_flags_bitmap*/0,
+                /*h2s_session_rewrite_id*/ h2s_session_rewrite_id,
+                /*h2s_allowed_flow_state_bitmask*/0,
+                /*h2s_egress_action*/EGRESS_ACTION_NONE,
+
+                /*s2h_epoch_vnic*/ 0, /*s2h_epoch_vnic_id*/ 0,
+                /*s2h_epoch_mapping*/0, /*s2h_epoch_mapping_id*/0,
+                /*s2h_policer_bw1_id*/0, /*s2h_policer_bw2_id*/0,
+                /*s2h_vnic_stats_id*/0, /*s2h_vnic_stats_mask*/ vnic_stats_mask,
+                /*s2h_vnic_histogram_latency_id*/0, /*s2h_vnic_histogram_packet_len_id*/0,
+                /*s2h_tcp_flags_bitmap*/0,
+                /*s2h_session_rewrite_id*/ s2h_session_rewrite_id,
+                /*s2h_allowed_flow_state_bitmask*/0,
+                /*s2h_egress_action*/EGRESS_ACTION_NONE
+                );
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // Setup Normalized Flow entry
+    ret = fte_flow_create(g_h2s_vnic_id, g_h2s_sip, g_h2s_dip,
+            g_h2s_proto, g_h2s_sport, g_h2s_dport,
+            PDS_FLOW_SPEC_INDEX_SESSION, g_session_index);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_flow_create failed.\n");
+        return ret;
+    }
+    g_session_index++;
+
 
     return ret;
 }

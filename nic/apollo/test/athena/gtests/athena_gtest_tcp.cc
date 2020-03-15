@@ -62,6 +62,9 @@ setup_flow_v4_tcp(void)
 
     ret = create_s2h_session_rewrite(s2h_session_rewrite_id,
                     (mac_addr_t*)ep_dmac, (mac_addr_t*)ep_smac, g_h2s_tcp_vlan);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
 
     h2s_session_rewrite_id = g_session_rewrite_index++;
 
@@ -70,6 +73,9 @@ setup_flow_v4_tcp(void)
         substrate_vlan,
         substrate_sip, substrate_dip,
         mpls1_label, mpls2_label);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
 
     memset(&host_mac, 0, sizeof(host_mac));
     ret = create_v4_session_info_all(g_session_index, /*conntrack_id*/0,
@@ -95,6 +101,9 @@ setup_flow_v4_tcp(void)
                 /*s2h_allowed_flow_state_bitmask*/0,
                 /*s2h_egress_action*/EGRESS_ACTION_NONE
                 );
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
 
     // Setup Normalized Flow entry
     ret = create_flow_v4_tcp_udp(g_tcp_vnic_id, g_h2s_sip, g_h2s_dip,

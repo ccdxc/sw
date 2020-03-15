@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = clicommon.swigcli
-MODULE_PIPELINE 	= iris apollo artemis apulu
+MODULE_PIPELINE 	= iris apollo artemis apulu athena
 MODULE_PREREQS      = p4cli.submake
 MODULE_SRC_DIR      = ${BLD_P4CLICMN_DIR}
 MODULE_FLAGS        = -c++ -python

@@ -53,6 +53,8 @@
 
 namespace fte_ath {
 
+uint8_t g_athena_app_mode = ATHENA_APP_MODE_CPP;
+
 char const * g_eal_args[] = {"fte",
                              "-l", "1,2,3",
                              "--vdev=net_ionic0",
@@ -170,11 +172,13 @@ _process (struct rte_mbuf *m, struct lcore_conf *qconf,
 {
     uint16_t dst_port;
 
-    if (fte_flow_prog(m) != SDK_RET_OK) {
-        PDS_TRACE_DEBUG("fte_flow_prog failed..\n");
-        // TODO: Unsupported traffic should be dropped?
-        rte_pktmbuf_free(m);
-        return;
+    if (g_athena_app_mode == ATHENA_APP_MODE_CPP) {
+        if (fte_flow_prog(m) != SDK_RET_OK) {
+            PDS_TRACE_DEBUG("fte_flow_prog failed..\n");
+            // TODO: Unsupported traffic should be dropped?
+            rte_pktmbuf_free(m);
+            return;
+        }
     }
 
     dst_port = (portid ? 0 : 1);
@@ -257,6 +261,9 @@ fte_rx_loop (int poller_qid)
                             lcore_id, nb_rx, portid, queueid);
             for (i = 0; i < nb_rx; i++) {
                 auto m = pkts_burst[i];
+                pkt_hex_dump_trace("PKT:",
+                        rte_pktmbuf_mtod(m, char*), 
+                        rte_pktmbuf_pkt_len(m));
                 if ((i+1) < nb_rx) {
                     auto m2 = pkts_burst[i+1];
                     uint8_t *d2 = rte_pktmbuf_mtod(m2, uint8_t*);

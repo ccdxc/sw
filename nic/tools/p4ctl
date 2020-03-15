@@ -54,7 +54,7 @@ else
     pipeline="iris"
 fi
 
-if [ $pipeline != "iris" ] && [ $pipeline != "apollo" ] && [ $pipeline != "apulu" ] && [ $pipeline != "artemis" ]; then
+if [ $pipeline != "iris" ] && [ $pipeline != "apollo" ] && [ $pipeline != "apulu" ] && [ $pipeline != "artemis" ] && [ $pipeline != "athena" ]; then
     echo -e "Error: Invalid pipeline specified in /nic/conf/pipeline.json"
     exit
 fi
@@ -62,6 +62,7 @@ fi
 if [ $pipeline == "iris" ]; then
 export HAL_CONFIG_PATH=/nic/conf
 else
+export HAL_CONFIG_PATH=/nic/conf
 export CONFIG_PATH=/nic/conf
 fi
 

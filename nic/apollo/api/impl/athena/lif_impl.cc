@@ -224,6 +224,10 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
                       "uplink 0x%x, err %u\n", id_, pinned_if_idx_, ret);
         return ret;
     }
+    else {
+        PDS_TRACE_DEBUG("NACL ARM->Uplink: LIF: 0x%x -> Uplink: %d\n",
+                id_, data.nacl_redirect_action.oport);
+    }
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -251,6 +255,10 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
         PDS_TRACE_ERR("Failed to program CPU-redirect NACL entry for uplink %u (key %u) -> "
                       "mnic lif %u, err %u\n", pinned_if_idx_, key.capri_intrinsic_lif,
                       id_, ret);
+    }
+    else {
+        PDS_TRACE_DEBUG("NACL Uplink->ARM: Uplink LIF: 0x%x -> LIF: 0x%x\n",
+                key.capri_intrinsic_lif, id_);
     }
 
     return ret;

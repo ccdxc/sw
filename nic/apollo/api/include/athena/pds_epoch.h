@@ -24,12 +24,12 @@ extern "C" {
 
 /// \brief Epoch key
 typedef struct pds_epoch_key_s {
-    uint16_t    epoch_id;    ///< Epoch id
+    uint32_t    epoch_id;    ///< Epoch id
 } __PACK__ pds_epoch_key_t;
 
 /// \brief Epoch data
 typedef struct pds_epoch_data_s {
-    uint32_t    epoch;    ///< Epoch value
+    uint16_t    epoch;    ///< Epoch value
 } __PACK__ pds_epoch_data_t;
 
 /// \brief Epoch specification

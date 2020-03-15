@@ -13,7 +13,7 @@ action config2_epoch_verify(epoch) {
     modify_field(scratch_metadata.config_epoch, epoch);
 }
 
-@pragma stage 4
+@pragma stage 2
 @pragma hbm_table
 @pragma index_table
 table config1 {
@@ -26,7 +26,7 @@ table config1 {
     size : SESSION_TABLE_SIZE;
 }
 
-@pragma stage 4
+@pragma stage 2
 @pragma hbm_table
 @pragma index_table
 table config2 {

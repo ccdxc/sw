@@ -5,6 +5,7 @@ extern uint8_t     g_h_port;
 extern uint8_t     g_s_port;
 extern uint32_t    g_session_index;
 extern uint32_t    g_session_rewrite_index;
+extern uint32_t    g_epoch_index;
 
 void
 dump_pkt(std::vector<uint8_t> &pkt);
@@ -73,6 +74,11 @@ athena_gtest_setup_flows_tcp(void);
 sdk_ret_t
 athena_gtest_test_flows_tcp(void);
 
+/* Slow Path Flows */
+sdk_ret_t
+athena_gtest_setup_flows_slowpath(void);
 
+sdk_ret_t
+athena_gtest_test_flows_slowpath(void);
 
 #endif /* __ATHENA_GTEST_HPP__ */

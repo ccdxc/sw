@@ -82,7 +82,7 @@ logger_init (void)
 
     // initialize the logger
     core::trace_init("agent", 0x1, true, err_logfile.c_str(), logfile.c_str(),
-                     TRACE_FILE_SIZE, TRACE_NUM_FILES, utils::trace_debug);
+                     TRACE_FILE_SIZE, TRACE_NUM_FILES, utils::trace_verbose);
 
     return SDK_RET_OK;
 }

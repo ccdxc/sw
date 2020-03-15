@@ -129,7 +129,7 @@ session_info_s2h_l2_vnic:
 
 session_info_slow_path:
     phvwr.e         p.control_metadata_flow_miss, TRUE
-    phvwr           p.control_metadata_redir_type, PACKET_ACTION_REDIR_RXDMA
+    nop
     
 
 

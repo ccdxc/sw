@@ -415,9 +415,9 @@ table session_rewrite_encap {
 control session_info_lookup {
     if (control_metadata.flow_miss == FALSE) {
         apply(session_info);
-    }
-    if (control_metadata.session_rewrite_id_valid == TRUE) {
-        apply(session_rewrite);
-        apply(session_rewrite_encap);
+        if (control_metadata.session_rewrite_id_valid == TRUE) {
+            apply(session_rewrite);
+            apply(session_rewrite_encap);
+        }
     }
 }

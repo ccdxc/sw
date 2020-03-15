@@ -215,8 +215,13 @@ sdk_ret_t send_packet(const char *out_pkt_descr, uint8_t *out_pkt, uint16_t out_
 
 uint8_t     g_h_port = TM_PORT_UPLINK_0;
 uint8_t     g_s_port = TM_PORT_UPLINK_1;
+
+/*
+ * Simple/Primitive resource allocation
+ */
 uint32_t    g_session_index = 1;
 uint32_t    g_session_rewrite_index = 1;
+uint32_t    g_epoch_index = 1;
 
 /*
  * Host to Switch: Flow-miss
@@ -440,6 +445,11 @@ setup_flows(void)
         return ret;
     }
 
+    ret = athena_gtest_setup_flows_slowpath();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
     return ret;
 }
 
@@ -490,6 +500,9 @@ TEST(athena_gtest, sim)
     ASSERT_TRUE(athena_gtest_test_flows_tcp() == SDK_RET_OK);
 
     iterate_dump_flows();
+
+    /* Slowpath Flow tests */
+    ASSERT_TRUE(athena_gtest_test_flows_slowpath() == SDK_RET_OK);
 
     pds_teardown();
 
