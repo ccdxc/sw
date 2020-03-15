@@ -24,6 +24,7 @@ function finish {
     ${NICDIR}/apollo/test/tools/savelogs.sh
     rm -f ${NICDIR}/conf/pipeline.json
     sudo pkill -9 vpp
+    sudo pkill -9 dhcpd
     sudo rm -f /tmp/*.db /tmp/pen_* /dev/shm/pds_* /dev/shm/ipc_*
 }
 trap finish EXIT
@@ -42,6 +43,13 @@ echo "Starting VPP"
 sudo $NICDIR/vpp/tools/start-vpp-mock.sh --pipeline apulu
 if [[ $? != 0 ]]; then
     echo "Failed to bring up VPP"
+    exit -1
+fi
+
+echo "Starting dhcpd"
+sudo $NICDIR/apollo/tools/apulu/start-dhcpd-sim.sh -p apulu
+if [[ $? != 0 ]]; then
+    echo "Failed to bring up dhcpd"
     exit -1
 fi
 
