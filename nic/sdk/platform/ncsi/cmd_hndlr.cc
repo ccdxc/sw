@@ -4,12 +4,15 @@
 
 #include <cstdio>
 #include <cstring>
+#include <exception>
 #include <arpa/inet.h>
 
 #include "cmd_hndlr.h"
 #include "lib/logger/logger.hpp"
 #include "platform/fru/fru.hpp"
 #include "lib/pal/pal.hpp"
+#include "platform/pciehdevices/include/pci_ids.h"
+#include "lib/catalog/catalog.hpp"
 
 //FIXME: Bharat needs to fix this smac hack
 #define NCSI_CMD_BEGIN_BANNER() \
@@ -72,26 +75,31 @@ void populate_fw_name_ver()
     }
     else
     {
-        boost::property_tree::read_json(fw_ver_file, prop_tree);
-        fw_git_sha = prop_tree.get<std::string>("sw.sha", "");
-        strncpy((char*)get_version_resp.fw_name, fw_git_sha.c_str(),
-                sizeof(get_version_resp.fw_name));
-        //    get_version_resp.fw_version
-        std::string version = prop_tree.get<std::string>("sw.version", "");
-        std::string s = version.substr(0, version.find("-"));
-        while ((pos = s.find(delimiter)) != std::string::npos) {
-            token = s.substr(0, pos);
-            std::cout << token << std::endl;
-            ver_id[idx] = std::stoi(token);
-            idx++;
-            s.erase(0, pos + delimiter.length());
+        try {
+            boost::property_tree::read_json(fw_ver_file, prop_tree);
+            fw_git_sha = prop_tree.get<std::string>("sw.sha", "");
+            strncpy((char*)get_version_resp.fw_name, fw_git_sha.c_str(),
+                    sizeof(get_version_resp.fw_name));
+            //    get_version_resp.fw_version
+            std::string version = prop_tree.get<std::string>("sw.version", "");
+            std::string s = version.substr(0, version.find("-"));
+            while ((pos = s.find(delimiter)) != std::string::npos) {
+                token = s.substr(0, pos);
+                std::cout << token << std::endl;
+                ver_id[idx] = std::stoi(token);
+                idx++;
+                s.erase(0, pos + delimiter.length());
+            }
+
+            std::cout << s << std::endl;
+            ver_id[idx] = std::stoi(s);
+        }
+        catch(std::exception &err) {
+            std::cout << "Conversion failure: "<< err.what() << std::endl;
         }
 
-        std::cout << s << std::endl;
-        ver_id[idx] = std::stoi(s);
-
-        get_version_resp.fw_version = (ver_id[0] | (ver_id[1] << 8) |
-                (ver_id[2] << 16) | (ver_id[3] << 24));
+        get_version_resp.fw_version = htonl((uint32_t)(ver_id[0] | (ver_id[1] << 8) |
+                (ver_id[2] << 16) | (ver_id[3] << 24)));
     }
 }
 
@@ -372,25 +380,24 @@ CmdHndler::CmdHndler(std::shared_ptr<IpcService> IpcObj, transport *XportObj) {
     get_cap_resp.vlan_mode = NCSI_CAP_VLAN_MODE_SUPPORT;
     get_cap_resp.channel_cnt = NCSI_CAP_CHANNEL_COUNT;
 
+    sdk::lib::catalog *catalog_db = sdk::lib::catalog::factory();
     //ncsi version 1.1.0 and alpha is 0
-    get_version_resp.ncsi_version = htonl(0xF1F1FF00);
-    get_version_resp.pci_ids[0] = htons(0x1dd8); //VID
-    get_version_resp.pci_ids[1] = htons(0x1002); //DID
-    get_version_resp.pci_ids[2] = htons(0xdead); //SUBVID
-    get_version_resp.pci_ids[3] = htons(0xbeef); //SUBDID
+    get_version_resp.ncsi_version = htonl(0xF1F1F000);
+    get_version_resp.pci_ids[0] = htons(catalog_db->pcie_vendorid());
+    get_version_resp.pci_ids[1] = htons(PCI_DEVICE_ID_PENSANDO_ENET);
+    get_version_resp.pci_ids[2] = htons(catalog_db->pcie_subvendorid());
+    get_version_resp.pci_ids[3] = htons(catalog_db->pcie_subdeviceid());
 
     /* Pensando IANA enterprise ID as per:
      * https://www.iana.org/assignments/enterprise-numbers/enterprise-numbers */
     get_version_resp.mf_id = htonl(51886);
 
-    //std::string hal_cfg_path = std::getenv("HAL_CONFIG_PATH");
     char* hal_cfg_path = std::getenv("HAL_CONFIG_PATH");
 
     //if (hal_cfg_path.empty())
     if (!hal_cfg_path)
         hal_cfg_path = "./";
 
-//    SDK_TRACE_INFO("HAL_CONFIG_PATH: %s", hal_cfg_path.c_str());
     SDK_TRACE_INFO("HAL_CONFIG_PATH: %s", hal_cfg_path);
 
     sdk::lib::device *device = sdk::lib::device::factory("/sysconfig/config0/device.conf");
@@ -398,7 +405,7 @@ CmdHndler::CmdHndler(std::shared_ptr<IpcService> IpcObj, transport *XportObj) {
 
     mempartition = sdk::platform::utils::mpartition::factory(mpart_json.c_str());
 
-    //populate_fw_name_ver();
+    populate_fw_name_ver();
 
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW) ==
            sdk::lib::PAL_RET_OK);
@@ -1182,8 +1189,8 @@ void CmdHndler::GetLinkStatus(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
     memset(&resp, 0, sizeof(resp));
     hndlr->ipc->GetLinkStatus(cmd->cmd.NcsiHdr.channel, link_status,
             link_speed);
-    status = ((link_status ? 1:0) | (link_speed << 1) | (0x3 << 5)/* autoneg */
-            | (1 << 20) /* serdes used */ );
+    status = ((link_status ? 1:0) | (link_speed << 1) | (link_speed << 24) | 
+            (0x3 << 5)/* autoneg */ | (1 << 20) /* serdes used */ );
 
     memcpy(&resp.rsp.NcsiHdr, &cmd->cmd.NcsiHdr, sizeof(resp.rsp.NcsiHdr));
 
