@@ -258,6 +258,7 @@ func TestVCSyncHost(t *testing.T) {
 
 	pNicMac := append(createPenPnicBase(), 0xaa, 0x00, 0x00)
 	// Make it Pensando host
+	hostSystem1.ClearNics()
 	err = hostSystem1.AddNic("vmnic0", conv.MacString(pNicMac))
 
 	hostSystem2, err := dc1.AddHost("host2")
@@ -266,8 +267,27 @@ func TestVCSyncHost(t *testing.T) {
 	AssertOk(t, err, "failed to add Host to DVS")
 	pNicMac2 := append(createPenPnicBase(), 0xbb, 0x00, 0x00)
 	// Make it Pensando host
+	hostSystem2.ClearNics()
 	err = hostSystem2.AddNic("vmnic0", conv.MacString(pNicMac2))
 
+	// Non-pensando host
+	hostSystem3, err := dc1.AddHost("host3")
+	AssertOk(t, err, "failed host3 create")
+	err = dvs.AddHost(hostSystem3)
+	AssertOk(t, err, "failed to add Host to DVS")
+
+	logger.Infof("host1 pnics-------")
+	for i, pnic := range hostSystem1.Obj.Config.Network.Pnic {
+		logger.Infof("pnic[%d] = %s", i, pnic.Mac)
+	}
+	logger.Infof("host2 pnics-------")
+	for i, pnic := range hostSystem2.Obj.Config.Network.Pnic {
+		logger.Infof("pnic[%d] = %s", i, pnic.Mac)
+	}
+	logger.Infof("host3 pnics-------")
+	for i, pnic := range hostSystem3.Obj.Config.Network.Pnic {
+		logger.Infof("pnic[%d] = %s", i, pnic.Mac)
+	}
 	// CREATING HOSTS
 	staleHost2 := createHostObj(
 		vchub.createHostName(dc1.Obj.Self.Value, "hostsystem-00001"),
@@ -364,7 +384,6 @@ func TestVCSyncHost(t *testing.T) {
 	}
 
 	verifyHosts(dcHostMap)
-
 }
 
 func TestVCSyncVM(t *testing.T) {

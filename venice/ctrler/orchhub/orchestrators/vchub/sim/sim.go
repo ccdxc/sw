@@ -9,6 +9,8 @@ import (
 	"os"
 	"path"
 
+	"github.com/pensando/sw/venice/utils/ref"
+
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/simulator"
 	"github.com/vmware/govmomi/simulator/vpx"
@@ -256,10 +258,13 @@ func (v *Datacenter) AddHost(name string) (*Host, error) {
 		HostName: name,
 	}
 	folder := simulator.Map.Get(v.Obj.HostFolder.Reference()).(*simulator.Folder)
-	host, _ := simulator.CreateStandaloneHost(folder, spec)
+	h, _ := simulator.CreateStandaloneHost(folder, spec)
+
+	// Make a deep-copy so that all Pnic and other objects are not shared across hosts
+	host := ref.DeepCopy(*h).(simulator.HostSystem)
 
 	entry := &Host{
-		Obj: host,
+		Obj: &host,
 	}
 
 	v.hostMap[name] = entry

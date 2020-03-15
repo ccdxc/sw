@@ -7,18 +7,32 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/venice/utils/log"
+	"time"
 )
 
 var _ = Describe("Vc hub workload tests", func() {
+	startTime := time.Now().UTC()
 	BeforeEach(func() {
-		 //verify cluster is in good health
+		// verify cluster is in good health
+		startTime = time.Now().UTC()
 		Eventually(func() error {
 			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
-	})
 
+		// delete the default allow policy
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).ShouldNot(HaveOccurred())
+	})
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
+		//Expect No Service is stopped
+		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
+
+		// delete test policy if its left over. we can ignore the error here
+		ts.model.NetworkSecurityPolicy("test-policy").Delete()
+		ts.model.DefaultNetworkSecurityPolicy().Delete()
+
+		// recreate default allow policy
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
 	})
 
 	Context("Bring up teardown workloads", func() {
@@ -29,7 +43,7 @@ var _ = Describe("Vc hub workload tests", func() {
 			err := ts.model.TeardownWorkloads(workloads)
 			Expect(err == nil)
 
-			workloads = ts.model.BringUpNewWorkloads(ts.model.Hosts(), ts.model.Networks().Any(1), 2)
+			workloads = ts.model.BringUpNewWorkloads(ts.model.Hosts(), ts.model.Networks().Any(1), 1)
 			Expect(workloads.Error()).ShouldNot(HaveOccurred())
 
 			// verify workload status is good, Put all check w.r.t to venice here.
@@ -37,9 +51,16 @@ var _ = Describe("Vc hub workload tests", func() {
 				return ts.model.VerifyWorkloadStatus(workloads)
 			}).Should(Succeed())
 
+			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(workloads.MeshPairs(), "tcp/8000", "PERMIT")
+			Expect(spc.Commit()).Should(Succeed())
+
+			// verify policy was propagated correctly
+			Eventually(func() error {
+				return ts.model.VerifyPolicyStatus(spc)
+			}).Should(Succeed())
 			// check ping between new workloads
 			Eventually(func() error {
-				return ts.model.TCPSession(workloads.LocalPairs().Any(4), 8000)
+				return ts.model.TCPSession(workloads.MeshPairs(), 8000)
 			}).ShouldNot(HaveOccurred())
 
 			/*
@@ -74,18 +95,35 @@ var _ = Describe("Vc hub workload tests", func() {
 
 		It("tags:sanity=true Vmotion basic test", func() {
 
-			//Skip("Skipping move tests..")
-			workloads := ts.model.BringUpNewWorkloads(ts.model.Hosts(), ts.model.Networks().Any(1), 1)
+			workloads := ts.model.Workloads()
+			err := ts.model.TeardownWorkloads(workloads)
+			Expect(err == nil)
+
+			// Skip("Skipping move tests..")
+			workloads = ts.model.BringUpNewWorkloads(ts.model.Hosts(), ts.model.Networks().Any(1), 1)
 			Expect(workloads.Error()).ShouldNot(HaveOccurred())
 
+			// verify workload status is good, Put all check w.r.t to venice here.
+			Eventually(func() error {
+				return ts.model.VerifyWorkloadStatus(workloads)
+			}).Should(Succeed())
+
+			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(workloads.MeshPairs(), "tcp/8000", "PERMIT")
+			Expect(spc.Commit()).Should(Succeed())
+
+			// Select one workload on each host in the same network
+			for _, wl := range workloads.Workloads {
+				log.Infof("Found Workload %v", wl)
+			}
 			//Get All possible Host & Corresponding workload combination
 			hostWorkloads := ts.model.HostWorkloads()
+			log.Infof("Found WL/host = %d", len(hostWorkloads))
 
 			if len(hostWorkloads) < 2 {
 				Skip("Skipping vmotion tests as there are not enough workloads")
 			}
 
-			log.Infof("Foudn sufficient worklaods")
+			log.Infof("Found sufficient worklaods")
 			srcHost := hostWorkloads[0].Host()
 			srcWorkloads := hostWorkloads[0].Workloads().Any(1)
 			dstHost := hostWorkloads[1].Host()
@@ -97,7 +135,7 @@ var _ = Describe("Vc hub workload tests", func() {
 
 			go runTraffic(wPairs, terr)
 
-			err := ts.model.MoveWorkloads(srcWorkloads, dstHost)
+			err = ts.model.MoveWorkloads(srcWorkloads, dstHost)
 			Expect(err == nil)
 			err = ts.model.MoveWorkloads(dstWorkloads, srcHost)
 			Expect(err == nil)
@@ -111,6 +149,102 @@ var _ = Describe("Vc hub workload tests", func() {
 			}).Should(Succeed())
 
 			Expect(terr == nil)
+		})
+
+		It("tags:sanity=true Bring up 8 local and remote workloads and test traffic", func() {
+
+			workloads := ts.model.Workloads()
+			err := ts.model.TeardownWorkloads(workloads)
+			Expect(err == nil)
+
+			// verify workload status is good, Put all check w.r.t to venice here.
+			Eventually(func() error {
+				return ts.model.VerifyWorkloadStatus(workloads)
+			}).Should(Succeed())
+
+			// Use 4 WLs on host 1 and 2 (two in each network)
+			networks := ts.model.Networks().Any(2)
+
+			// Run traffic between 8 remote pairs
+
+			workloads = ts.model.BringUpNewWorkloads(ts.model.Hosts(), networks, 4)
+			Expect(workloads.Error()).ShouldNot(HaveOccurred())
+
+			remotePairs := workloads.RemotePairsWithinNetwork()
+			log.Infof("Found %d remote pairs", len(remotePairs.Pairs))
+			localPairs := workloads.LocalPairsWithinNetwork()
+			log.Infof("Found %d local pairs", len(localPairs.Pairs))
+
+			wlp := objects.NewWorkloadPairCollection(workloads.Client, workloads.Testbed)
+			for _, p := range remotePairs.Pairs {
+				wlp.Pairs = append(wlp.Pairs, p)
+			}
+			for _, p := range localPairs.Pairs {
+				wlp.Pairs = append(wlp.Pairs, p)
+			}
+
+			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(wlp, "tcp/8000", "PERMIT")
+			Expect(spc.Commit()).Should(Succeed())
+
+			// verify policy was propagated correctly
+			Eventually(func() error {
+				return ts.model.VerifyPolicyStatus(spc)
+			}).Should(Succeed())
+
+			// Run traffic between one local pair and one remote pair (same workload)
+			// vmotion the work-load so local pair becomes remote and remote pair becomes
+			// local
+			wlp2 := objects.NewWorkloadPairCollection(workloads.Client, workloads.Testbed)
+			lp := localPairs.Pairs[0]
+			wlp2.Pairs = append(wlp2.Pairs, lp)
+
+			for _, p := range remotePairs.Pairs {
+				if lp.First == p.First || lp.First == p.Second ||
+					lp.Second == p.First || lp.Second == p.Second {
+					// found a remote pair using one of the workloads of local-pair
+					wlp2.Pairs = append(wlp2.Pairs, p)
+					break
+				}
+			}
+			Expect(len(wlp2.Pairs) == 2)
+
+			moveWl := lp.First
+			rp := wlp2.Pairs[1]
+			var dstHost *objects.Host
+			if rp.First.NodeName() != moveWl.NodeName() {
+				dstHost = rp.First.Host()
+			} else {
+				dstHost = rp.Second.Host()
+			}
+
+			log.Infof("Start Traffic between a local and remote pair")
+			mvWlc := objects.NewWorkloadCollection(workloads.Client, workloads.Testbed)
+			mvWlc.Workloads = append(mvWlc.Workloads, moveWl)
+			dstHosts := objects.NewHostCollection(workloads.Client, workloads.Testbed)
+			dstHosts.Hosts = append(dstHosts.Hosts, dstHost)
+
+			tErr := make(chan error)
+			go runTraffic(wlp2, tErr)
+			// wait for sessions to estabblish before starting migration
+			time.Sleep(10 * time.Second)
+
+			log.Infof("Migrate workload %s", moveWl.Name())
+			err = ts.model.MoveWorkloads(mvWlc, dstHosts)
+			Expect(err == nil)
+
+			Expect(tErr == nil)
+
+			log.Infof("Start Traffic between all local and remote pair")
+			// check traffic between all local and remote workloads
+			Eventually(func() error {
+				return ts.model.TCPSession(wlp, 8000)
+			}).ShouldNot(HaveOccurred())
+
+			// verify workload status is good, Put all check w.r.t to venice here.
+			Eventually(func() error {
+				return ts.model.VerifyWorkloadStatus(workloads)
+			}).Should(Succeed())
+
 		})
 
 	})

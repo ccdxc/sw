@@ -367,19 +367,23 @@ func (cfgen *Cfgen) genWorkloads() []*workload.Workload {
 
 	w := cfgen.WorkloadParams.WorkloadTemplate
 	wCtx := newIterContext()
+	maxNetworks := len(cfgen.ConfigItems.Networks)
 	for ii := 0; ii < len(cfgen.Smartnics); ii++ {
 		h := cfgen.ConfigItems.Hosts[ii]
 		w.Spec.HostName = h.ObjectMeta.Name
+		netIdx := 0
 		for jj := 0; jj < cfgen.WorkloadParams.WorkloadsPerHost; jj++ {
 			tWorkload := wCtx.transform(w).(*workload.Workload)
 			tWorkload.ObjectMeta.Name = fmt.Sprintf("workload-%s-w%d", w.Spec.HostName, jj)
 
 			// fix up the workload IP with that of a network it belongs to
-			netIdx := rand.Intn(len(cfgen.ConfigItems.Networks))
+			network := cfgen.ConfigItems.Networks[netIdx]
 			tWorkload.Spec.Interfaces[0].IpAddresses[0] = nIters[netIdx].ipSub(subnets[netIdx])
 			tWorkload.Spec.Interfaces[0].MicroSegVlan = (uint32)(jj + 1)
-			tWorkload.Spec.Interfaces[0].ExternalVlan = cfgen.ConfigItems.Networks[netIdx].Spec.VlanID
-			tWorkload.Spec.Interfaces[0].Network = cfgen.ConfigItems.Networks[netIdx].Name
+			tWorkload.Spec.Interfaces[0].ExternalVlan = network.Spec.VlanID
+			// Both network and ExternalVlan cannot be specified at the same time
+			// tWorkload.Spec.Interfaces[0].Network = network.Name
+			netIdx = (netIdx + 1) % maxNetworks
 
 			workloads = append(workloads, tWorkload)
 		}

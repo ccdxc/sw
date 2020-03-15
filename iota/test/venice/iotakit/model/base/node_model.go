@@ -113,18 +113,18 @@ func (sm *SysModel) BringUpNewWorkloads(hc *objects.HostCollection, snc *objects
 	wc := &objects.WorkloadCollection{}
 	newWloads := []*workload.Workload{}
 	hosts := []*objects.Host{}
-	for _, nw := range snc.Subnets() {
-		for _, host := range hc.Hosts {
-			hostWorkloads := 0
-			wloads, err := sm.ListWorkloadsOnHost(host.VeniceHost)
-			if err != nil {
-				err := fmt.Errorf("Error finding Workloads on host")
-				log.Errorf("%v", err.Error())
-				wc.SetError(err)
-				return wc
-			}
-			log.Infof("GOt workloads %v", len(wloads))
-		hostL:
+	for _, host := range hc.Hosts {
+		hostWorkloads := 0
+		wloads, err := sm.ListWorkloadsOnHost(host.VeniceHost)
+		if err != nil {
+			err := fmt.Errorf("Error finding Workloads on host")
+			log.Errorf("%v", err.Error())
+			wc.SetError(err)
+			return wc
+		}
+		log.Infof("GOt workloads %v", len(wloads))
+	hostL:
+		for _, nw := range snc.Subnets() {
 			for _, wload := range wloads {
 				vlan := wload.GetSpec().Interfaces[0].GetExternalVlan()
 				if wrk := sm.findWorkload(wload.Name); wrk != nil {
@@ -141,7 +141,6 @@ func (sm *SysModel) BringUpNewWorkloads(hc *objects.HostCollection, snc *objects
 						break hostL
 					}
 				}
-
 			}
 		}
 	}

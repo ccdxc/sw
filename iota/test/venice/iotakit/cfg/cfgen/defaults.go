@@ -15,7 +15,7 @@ var scaleCfgenParams = &Cfgen{
 	UserParams: UserParams{},
 	RoleParams: RoleParams{},
 	NetworkParams: NetworkParams{
-		NumNetworks: 10,
+		NumNetworks: 8,
 		NetworkTemplate: &network.Network{
 			TypeMeta: api.TypeMeta{Kind: "Network"},
 			ObjectMeta: api.ObjectMeta{

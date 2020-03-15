@@ -1317,7 +1317,7 @@ var topo3Venice2NaplesVcenter = Topology{
 		{
 			NodeName:    "naples2",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
-			Personality: iota.PersonalityType_PERSONALITY_THIRD_PARTY_NIC_DVS,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES_DVS,
 			HostOS:      "esx",
 		},
 		{

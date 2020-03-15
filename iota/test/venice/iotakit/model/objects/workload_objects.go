@@ -51,6 +51,10 @@ func (w *Workload) NaplesUUID() string {
 	return w.host.Naples.SmartNic.Name
 }
 
+func (w *Workload) Host() *Host {
+	return w.host
+}
+
 func (w *Workload) NaplesMAC() string {
 	return w.host.Naples.Node.Nodeuuid
 }
@@ -508,6 +512,48 @@ func (wc *WorkloadCollection) LocalPairs() *WorkloadPairCollection {
 	for i, wf := range wc.Workloads {
 		for j, ws := range wc.Workloads {
 			if i != j && wf.iotaWorkload.NodeName == ws.iotaWorkload.NodeName {
+				pair := WorkloadPair{
+					First:  wf,
+					Second: ws,
+				}
+				collection.Pairs = append(collection.Pairs, &pair)
+			}
+		}
+	}
+
+	return collection
+}
+
+// LocalPairsWithinNetwork returns pairs of Workloads in same host and same network
+func (wc *WorkloadCollection) LocalPairsWithinNetwork() *WorkloadPairCollection {
+
+	collection := NewWorkloadPairCollection(wc.Client, wc.Testbed)
+
+	for i, wf := range wc.Workloads {
+		for j, ws := range wc.Workloads {
+			if i != j && wf.iotaWorkload.NodeName == ws.iotaWorkload.NodeName &&
+				wf.iotaWorkload.UplinkVlan == ws.iotaWorkload.UplinkVlan {
+				pair := WorkloadPair{
+					First:  wf,
+					Second: ws,
+				}
+				collection.Pairs = append(collection.Pairs, &pair)
+			}
+		}
+	}
+
+	return collection
+}
+
+// RemotePairsWithinNetwork returns pairs of Workloads on different hosts and same network
+func (wc *WorkloadCollection) RemotePairsWithinNetwork() *WorkloadPairCollection {
+
+	collection := NewWorkloadPairCollection(wc.Client, wc.Testbed)
+
+	for i, wf := range wc.Workloads {
+		for j, ws := range wc.Workloads {
+			if i != j && wf.iotaWorkload.NodeName != ws.iotaWorkload.NodeName &&
+				wf.iotaWorkload.UplinkVlan == ws.iotaWorkload.UplinkVlan {
 				pair := WorkloadPair{
 					First:  wf,
 					Second: ws,
