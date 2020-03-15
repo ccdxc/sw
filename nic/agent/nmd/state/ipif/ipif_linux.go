@@ -5,6 +5,7 @@ package ipif
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -24,9 +25,10 @@ import (
 // NewIPClient returns a new IPClient instance
 func NewIPClient(nmd api.NmdAPI, intf string, pipeline string) (*IPClient, error) {
 	dhcpState := DHCPState{
-		nmd:       nmd,
-		VeniceIPs: make(map[string]bool),
-		pipeline:  pipeline,
+		nmd:                  nmd,
+		VeniceIPs:            make(map[string]bool),
+		pipeline:             pipeline,
+		SecondaryIntfClients: make(map[int]*dhcp.Client),
 	}
 	link, err := netlink.LinkByName(intf)
 	if err != nil {
@@ -152,8 +154,8 @@ func (c *IPClient) doDHCP() error {
 
 	c.dhcpState.PrimaryIntfClient = instantiateDHCPClient(c.primaryIntf)
 
-	for _, link := range c.secondaryInterfaces {
-		c.dhcpState.SecondaryIntfClients = append(c.dhcpState.SecondaryIntfClients, instantiateDHCPClient(link))
+	for idx, link := range c.secondaryInterfaces {
+		c.dhcpState.SecondaryIntfClients[idx] = instantiateDHCPClient(link)
 	}
 
 	if err := c.startDHCP(c.dhcpState.PrimaryIntfClient, c.primaryIntf); err != nil {
@@ -173,6 +175,9 @@ func (c *IPClient) doDHCP() error {
 }
 
 func (c *IPClient) startDHCP(client *dhcp.Client, intf netlink.Link) (err error) {
+	if client == nil {
+		return errors.New("Failed to find dhcp client")
+	}
 	disc := client.DiscoverPacket()
 	disc.AddOption(PensandoDHCPRequestOption.Code, PensandoDHCPRequestOption.Value)
 
@@ -297,7 +302,16 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 		d.nmd.SetVeniceIPs(veniceIPs)
 	}
 
-	d.nmd.SyncDHCPState()
+	if len(d.InterfaceIPs) > 0 {
+		interfaceIPs := make(map[uint32]*cluster.IPConfig)
+		for _, interfaceIP := range d.InterfaceIPs {
+			interfaceIPs[uint32(interfaceIP.IfID)] = &cluster.IPConfig{
+				IPAddress: interfaceIP.IPAddress.String() + "/" + strconv.Itoa(int(interfaceIP.PrefixLen)),
+				DefaultGW: interfaceIP.GwIP.String(),
+			}
+		}
+		d.nmd.SetInterfaceIPs(interfaceIPs)
+	}
 
 	// Assign IP Address here
 	addr := &netlink.Addr{
@@ -329,6 +343,7 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 	// Set the interface IPs
 	// Note: This is a temporary code. This config needs to handled by the netagent
 	d.setInterfaceIPs()
+	d.setStaticRoutes()
 	return
 }
 
@@ -616,6 +631,27 @@ func (d *DHCPState) isValidStaticRouteInfo(route StaticRoute) error {
 	}
 
 	return nil
+}
+
+func (d *DHCPState) setStaticRoutes() {
+	// Configure the static routes
+	log.Infof("Setting the classless static routes got from DHCP")
+	for _, r := range d.StaticRoutes {
+		destStr := r.DestAddr.String() + "/" + strconv.Itoa(int(r.DestPrefixLen))
+		_, dest, err := net.ParseCIDR(destStr)
+		if err != nil {
+			log.Errorf("Failed to Parse Destination address %v in static route %v. Err: %v", destStr, r, err)
+			continue
+		}
+
+		route := &netlink.Route{
+			Dst: dest,
+			Gw:  r.NextHopAddr,
+		}
+		if err := netlink.RouteAdd(route); err != nil {
+			log.Errorf("Failed to configure static route %v. Err: %v", route, err)
+		}
+	}
 }
 
 func getSecondaryMgmtLink(pipeline, primaryIntf string) (secondaryMgmtLinks []netlink.Link) {

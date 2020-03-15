@@ -788,7 +788,6 @@ func TestDHCPTimedout(t *testing.T) {
 }
 
 func TestDHCPRetries(t *testing.T) {
-	t.Skip("Temporarily skipped till we add support for creating secondary interfaces in the unit test")
 	var d dhcpSrv
 	mockNMD := mock.CreateMockNMD(t.Name())
 	err := d.setup(noDHCP)

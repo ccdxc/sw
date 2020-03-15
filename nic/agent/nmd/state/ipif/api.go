@@ -54,7 +54,7 @@ type DHCPState struct {
 	nmd                     api.NmdAPI
 	pipeline                string
 	PrimaryIntfClient       *dhcp.Client
-	SecondaryIntfClients    []*dhcp.Client
+	SecondaryIntfClients    map[int]*dhcp.Client
 	IPNet                   net.IPNet
 	GwIP                    net.IP
 	VeniceIPs               map[string]bool

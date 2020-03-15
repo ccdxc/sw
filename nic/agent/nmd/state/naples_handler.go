@@ -5,10 +5,8 @@ package state
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 
@@ -378,7 +376,6 @@ func (n *NMD) handleNetworkModeTransition() error {
 			n.config.Status.IPConfig = &cmd.IPConfig{}
 			return fmt.Errorf("dynamic mode transition event failed. Err: %v", err)
 		}
-		n.setStaticRoutes()
 	}
 
 	go n.runAdmissionControlLoop()
@@ -989,25 +986,4 @@ func isDataplaneClassic() bool {
 
 	log.Info("Dataplane is in HOSTPIN mode")
 	return false
-}
-
-func (n *NMD) setStaticRoutes() {
-	// Configure the static routes
-	log.Infof("Setting the classless static routes got from DHCP")
-	for _, r := range n.IPClient.GetStaticRoutes() {
-		destStr := r.DestAddr.String() + "/" + strconv.Itoa(int(r.DestPrefixLen))
-		_, dest, err := net.ParseCIDR(destStr)
-		if err != nil {
-			log.Errorf("Failed to Parse Destination address %v in static route %v. Err: %v", destStr, r, err)
-			continue
-		}
-
-		route := &netlink.Route{
-			Dst: dest,
-			Gw:  r.NextHopAddr,
-		}
-		if err := netlink.RouteAdd(route); err != nil {
-			log.Errorf("Failed to configure static route %v. Err: %v", route, err)
-		}
-	}
 }

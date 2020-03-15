@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/keymgr"
 )
@@ -293,7 +294,7 @@ func (ag *NMD) PersistState(updateDelphi bool) error {
 	return nil
 }
 
-// SyncDHCPState syncs the DHCP information received with NMD
-func (ag *NMD) SyncDHCPState() {
+// SetInterfaceIPs sets the DSC interface IPs
+func (ag *NMD) SetInterfaceIPs(interfaceIPs map[uint32]*cluster.IPConfig) {
 
 }

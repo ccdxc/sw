@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -1837,8 +1836,7 @@ func (a *ApuluAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
 			Spec: netproto.InterfaceSpec{
 				Type:        netproto.InterfaceSpec_L3.String(),
 				VrfName:     "underlay-vpc",
-				IPAddress:   fmt.Sprintf("%s/%d", obj.IPAddress, obj.DestPrefixLen),
-				Network:     strconv.Itoa(int(obj.DestPrefixLen)),
+				IPAddress:   obj.IPAddress,
 				AdminStatus: "UP",
 			},
 			Status: netproto.InterfaceStatus{

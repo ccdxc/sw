@@ -21,10 +21,9 @@ type DistributedServiceCardStatus struct {
 
 //DSCInterfaceIP captures the IP interface info of DSC interfaces
 type DSCInterfaceIP struct {
-	IfID          uint32
-	DestPrefixLen uint32
-	IPAddress     string
-	GatewayIP     string
+	IfID      uint32
+	IPAddress string
+	GatewayIP string
 }
 
 //DSCStaticRoute captures the static route info of Naples

@@ -58,8 +58,8 @@ type NmdAPI interface {
 	SetIPConfig(cfg *cluster.IPConfig)
 	SetVeniceIPs(veniceIPs []string)
 	GetVeniceIPs() []string
+	SetInterfaceIPs(interfaceIPs map[uint32]*cluster.IPConfig)
 	PersistState(updateDelphi bool) error
-	SyncDHCPState()
 	SetMgmtInterface(intf string)
 }
 

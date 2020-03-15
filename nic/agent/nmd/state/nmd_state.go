@@ -1595,10 +1595,10 @@ func (n *NMD) SetVeniceIPs(veniceIPs []string) {
 	n.config.Status.Controllers = veniceIPs
 }
 
-// SyncDHCPState syncs the DHCP information received with NMD
-func (n *NMD) SyncDHCPState() {
-	for _, intf := range n.IPClient.GetInterfaceIPs() {
-		n.DSCInterfaceIPs = append(n.DSCInterfaceIPs, agentTypes.DSCInterfaceIP{IfID: uint32(intf.IfID), DestPrefixLen: uint32(intf.PrefixLen), IPAddress: intf.IPAddress.String(), GatewayIP: intf.GwIP.String()})
+// SetInterfaceIPs sets the DSC interface IPs
+func (n *NMD) SetInterfaceIPs(interfaceIPs map[uint32]*cluster.IPConfig) {
+	for intfID, intf := range interfaceIPs {
+		n.DSCInterfaceIPs = append(n.DSCInterfaceIPs, agentTypes.DSCInterfaceIP{IfID: intfID, IPAddress: intf.IPAddress, GatewayIP: intf.DefaultGW})
 	}
 }
 

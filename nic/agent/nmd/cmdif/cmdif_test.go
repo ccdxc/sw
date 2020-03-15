@@ -18,6 +18,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
 	nmdutils "github.com/pensando/sw/nic/agent/nmd/utils"
@@ -151,7 +152,7 @@ func (ag *mockAgent) PersistState(update bool) error {
 	return nil
 }
 
-func (ag *mockAgent) SyncDHCPState() {
+func (ag *mockAgent) SetInterfaceIPs(interfaceIPs map[uint32]*cluster.IPConfig) {
 	return
 }
 
