@@ -48,6 +48,9 @@ func findMgmtIP(destIP string) (mgmtIP string, mgmtLink netlink.Link, mgmtIntf *
 	}
 	// Associate mgmt intf to the default route
 	mgmtLink, err = netlink.LinkByIndex(rts[0].LinkIndex)
+	if err != nil {
+		return
+	}
 	addrs, err := netlink.AddrList(mgmtLink, netlink.FAMILY_V4)
 	if err != nil {
 		return
