@@ -29,6 +29,7 @@ typedef struct zmq_ipc_msg_preamble {
     bool     is_pointer;
     size_t   real_length;
     uint32_t crc;
+    uint32_t tag;
 } zmq_ipc_msg_preamble_t;
 
 class zmq_ipc_msg : public ipc_msg {
@@ -56,6 +57,7 @@ public:
     void add_header(std::shared_ptr<zmq_ipc_msg> header);
     zmq_ipc_msg_preamble_t *preamble(void);
     const void *cookie(void);
+    uint32_t tag(void);
     response_oneshot_cb response_cb(void);
 private:
     std::vector<std::shared_ptr<zmq_ipc_msg> > headers_;
@@ -71,7 +73,7 @@ public:
     uint32_t get_next_serial(void);
     void send_msg(ipc_msg_type_t type, uint32_t recipient, uint32_t msg_code,
                   const void *data, size_t data_length, response_oneshot_cb cb,
-                  const void *cookie, bool send_pointer);
+                  const void *cookie, uint32_t tag, bool send_pointer);
     void recv_msg(zmq_ipc_user_msg_ptr msg);
 protected:
     uint32_t id_;

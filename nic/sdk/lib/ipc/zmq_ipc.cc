@@ -110,6 +110,11 @@ zmq_ipc_user_msg::cookie(void) {
 }
 
 uint32_t
+zmq_ipc_user_msg::tag(void) {
+    return this->preamble_.tag;
+}
+
+uint32_t
 zmq_ipc_user_msg::sender(void) {
     return this->preamble_.sender;
 }
@@ -159,7 +164,8 @@ void
 zmq_ipc_endpoint::send_msg(ipc_msg_type_t type, uint32_t recipient,
                            uint32_t msg_code, const void *data,
                            size_t data_length, response_oneshot_cb cb,
-                           const void *cookie, bool send_pointer) {
+                           const void *cookie, uint32_t tag,
+                           bool send_pointer) {
     int rc;
     zmq_ipc_msg_preamble_t preamble;
 
@@ -175,15 +181,24 @@ zmq_ipc_endpoint::send_msg(ipc_msg_type_t type, uint32_t recipient,
     preamble.is_pointer = send_pointer;
     preamble.real_length = data_length;
     preamble.crc = sdk::utils::crc32((const unsigned char *)data, data_length,
-                         sdk::utils::CRC32_POLYNOMIAL_TYPE_CRC32);
+                                     sdk::utils::CRC32_POLYNOMIAL_TYPE_CRC32);
+    if (tag != 0) {
+        preamble.tag = tag;
+    } else {
+        preamble.tag = sdk::utils::crc32((unsigned char *)&preamble,
+                                         sizeof(preamble),
+                                         sdk::utils::CRC32_POLYNOMIAL_TYPE_CRC32);
+    }
+        
     rc = zmq_send(this->zsocket_, &preamble, sizeof(preamble), ZMQ_SNDMORE);
     assert(rc != -1);
     SDK_TRACE_DEBUG("Sent message: type: %u, sender: %u, recipient: %u, "
                     "msg_code: %u, serial: %u, cookie: 0x%x, pointer: %d, "
-                    "real_length: %zu, crc32: %u",
+                    "real_length: %zu, crc32: %u, tag: %u",
                     preamble.type, preamble.sender, preamble.recipient,
                     preamble.msg_code, preamble.serial, preamble.cookie,
-                    preamble.is_pointer, preamble.real_length, preamble.crc);
+                    preamble.is_pointer, preamble.real_length, preamble.crc,
+                    preamble.tag);
 
      if (send_pointer) {
          rc = zmq_send(this->zsocket_, &data, sizeof(data), 0);
@@ -203,10 +218,11 @@ zmq_ipc_endpoint::recv_msg(zmq_ipc_user_msg_ptr msg) {
 
     SDK_TRACE_DEBUG("Received message: type: %u, sender: %u, recipient: %u, "
                     "msg_code: %u, serial: %u, cookie: 0x%x, pointer: %d, "
-                    "real_length: %zu, crc32: %u",
+                    "real_length: %zu, crc32: %u, tag: %u",
                     preamble->type, preamble->sender, preamble->recipient,
                     preamble->msg_code, preamble->serial, preamble->cookie,
-                    preamble->is_pointer, preamble->real_length, preamble->crc);
+                    preamble->is_pointer, preamble->real_length, preamble->crc,
+                    preamble->tag);
     assert(preamble->recipient == this->id_);
 
     rc = zmq_recvmsg(this->zsocket_, msg->zmsg(), 0);
@@ -317,7 +333,7 @@ zmq_ipc_server::reply(ipc_msg_ptr msg, const void *data,
     }
 
     this->send_msg(DIRECT, zmsg->sender(), zmsg->code(), data, data_length,
-                   zmsg->response_cb(), zmsg->cookie(), false);
+                   zmsg->response_cb(), zmsg->cookie(), zmsg->tag(), false);
 }
 
 zmq_ipc_client::~zmq_ipc_client() {
@@ -393,7 +409,7 @@ zmq_ipc_client_async::send(uint32_t msg_code, const void *data,
     assert(rc != -1);
 
     this->send_msg(DIRECT, this->recipient_, msg_code, data, data_length,
-                   cb, cookie, this->is_recipient_internal_);
+                   cb, cookie, 0, this->is_recipient_internal_);
 }
 
 void
@@ -407,7 +423,7 @@ zmq_ipc_client_async::broadcast(uint32_t msg_code, const void *data,
     assert(rc != -1);
 
     this->send_msg(BROADCAST, this->recipient_, msg_code, data, data_length,
-                   NULL, NULL, this->is_recipient_internal_);
+                   NULL, NULL, 0, this->is_recipient_internal_);
 }
 
 zmq_ipc_user_msg_ptr
@@ -454,7 +470,7 @@ zmq_ipc_client_sync::send_recv(uint32_t msg_code, const void *data,
     assert(rc != -1);
     
     this->send_msg(DIRECT, this->recipient_, msg_code, data, data_length, NULL,
-                   NULL, this->is_recipient_internal_);
+                   NULL, 0, this->is_recipient_internal_);
 
     // We use a Dealer socket talking to Router socket. See ZMQ documentation
     // why we need this
@@ -478,7 +494,7 @@ zmq_ipc_client_sync::broadcast(uint32_t msg_code, const void *data,
     assert(rc != -1);
     
     this->send_msg(BROADCAST, this->recipient_, msg_code, data, data_length,
-                   NULL, NULL, false);
+                   NULL, NULL, 0, false);
 }
 
 } // namespace ipc
