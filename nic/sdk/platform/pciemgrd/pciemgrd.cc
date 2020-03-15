@@ -714,6 +714,8 @@ portmap_init_from_catalog(pciemgrenv_t *pme)
         return -1;
     }
 
+    pme->params.vendorid = catalog->pcie_vendorid();
+    pme->params.subvendorid = catalog->pcie_subvendorid();
     pme->params.subdeviceid = catalog->pcie_subdeviceid();
     pme->params.long_lived = catalog->pcie_long_lived();
 
@@ -737,6 +739,8 @@ portmap_init_from_catalog(pciemgrenv_t *pme)
     }
     sdk::lib::catalog::destroy(catalog);
 #else
+    pme->params.vendorid = PCI_VENDOR_ID_PENSANDO;
+    pme->params.subvendorid = PCI_VENDOR_ID_PENSANDO;
     pme->params.subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100_4GB;
 
     pcieport_spec_t ps = { 0 };
@@ -780,10 +784,6 @@ pciemgrd_logconfig(pciemgrenv_t *pme)
 void
 pciemgrd_catalog_defaults(pciemgrenv_t *pme)
 {
-    pciemgr_params_t *params = &pme->params;
-    params->vendorid = PCI_VENDOR_ID_PENSANDO;
-    params->subvendorid = params->vendorid;
-
     portmap_init_from_catalog(pme);
 }
 

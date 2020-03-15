@@ -154,6 +154,8 @@ typedef struct catalog_s {
     uint32_t                   halfclock_hbmtemp;                 // temp limit when system goes to half clock
 
     // pcie parameters
+    uint16_t                   pcie_vendorid;                         // pcie vendor id
+    uint16_t                   pcie_subvendorid;                      // pcie subvendor id
     uint16_t                   pcie_subdeviceid;                      // pcie subdevice id
     uint8_t                    pcie_long_lived;                       // aux powered swm card
     uint32_t                   pcie_nportspecs;                       // pcie number of portspecs[]
@@ -278,8 +280,10 @@ public:
     uint32_t     ch_mode_mgmt(mac_mode_t mac_mode, uint32_t ch);
 
     // pcie configs
+    uint16_t     pcie_vendorid(void) { return catalog_db_.pcie_vendorid; }
+    uint16_t     pcie_subvendorid(void) { return catalog_db_.pcie_subvendorid;}
     uint16_t     pcie_subdeviceid(void) { return catalog_db_.pcie_subdeviceid;}
-    uint8_t      pcie_long_lived(void) { return catalog_db_.pcie_long_lived;}
+    uint8_t      pcie_long_lived(void) { return catalog_db_.pcie_long_lived; }
     uint32_t     pcie_nportspecs(void) { return catalog_db_.pcie_nportspecs; }
     uint8_t      pcie_host(uint32_t idx)
                         { return catalog_db_.pcie_portspecs[idx].host; }

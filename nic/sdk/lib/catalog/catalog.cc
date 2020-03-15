@@ -517,11 +517,20 @@ catalog::populate_pcie(ptree &pt)
     boost::optional<ptree&> pcieptopt = pt.get_child_optional("pcie");
     if (pcieptopt) {
         ptree &pciept = pt.get_child("pcie");
-        std::string s = pciept.get<std::string>("subdeviceid", "");
+        std::string s;
+
+        const std::string penid("0x1dd8"); // PCI_VENDOR_ID_PENSANDO
+        s = pciept.get<std::string>("vendorid", penid);
+        catalog_db_.pcie_vendorid = strtoul(s.c_str(), NULL, 16);
+
+        s = pciept.get<std::string>("subvendorid", penid);
+        catalog_db_.pcie_subvendorid = strtoul(s.c_str(), NULL, 16);
+
+        s = pciept.get<std::string>("subdeviceid", "");
         catalog_db_.pcie_subdeviceid = strtoul(s.c_str(), NULL, 16);
 
-        std::string s2 = pciept.get<std::string>("long_lived", "");
-        catalog_db_.pcie_long_lived = strtoul(s2.c_str(), NULL, 16);
+        s = pciept.get<std::string>("long_lived", "");
+        catalog_db_.pcie_long_lived = strtoul(s.c_str(), NULL, 16);
 
         for (ptree::value_type &v : pciept.get_child("portspecs")) {
             if (nportspecs < MAX_PCIE_PORTSPECS) {
