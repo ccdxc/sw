@@ -89,23 +89,23 @@ targets:
     build-dependencies:
     - build-apollo-x86
 
-  apollo/aarch64_container:
-    commands: ["make", "PIPELINE=apollo", "jobd/apollo/aarch64/container"]
-    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-apollo-x86
+  #apollo/aarch64_container:
+    #commands: ["make", "PIPELINE=apollo", "jobd/apollo/aarch64/container"]
+    #owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    #area:
+    #sub-area:
+    #feature:
+    #build-dependencies:
+    #- build-apollo-x86
 
-  apollo/x86_64_container:
-    commands: ["make", "PIPELINE=apollo", "jobd/apollo/x86_64/container"]
-    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-apollo-x86
+  #apollo/x86_64_container:
+    #commands: ["make", "PIPELINE=apollo", "jobd/apollo/x86_64/container"]
+    #owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    #area:
+    #sub-area:
+    #feature:
+    #build-dependencies:
+    #- build-apollo-x86
 
   #apollo/valgrind:
     #commands: ["make", "PIPELINE=apollo", "jobd/apollo/gtests-valgrind"]
