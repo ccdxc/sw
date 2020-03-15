@@ -10,6 +10,21 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
 // ------------------------------------- Profile Object ---------------------------
+message PropagationStatus {
+    // The Generation ID this status is for
+    string GenerationID = 1 [(gogoproto.jsontag) = "generation-id"];
+    // The number of Naples that this version has already been pushed to
+    int32 Updated = 2 [(gogoproto.jsontag) = "updated"];
+    // Number of Naples pending. If this is 0 it can be assumed that everything is up to date.
+    int32 Pending = 3 [(gogoproto.jsontag) = "pending"];
+    // The Version running on the slowest Naples
+    string MinVersion = 4 [(gogoproto.jsontag) = "min-version"];
+    // Textual description of propagation status
+    string Status = 5 [(gogoproto.jsontag) = "status"];
+    // list of DSCs where propagation did not complete
+    repeated string PendingNaples = 6 [(gogoproto.jsontag) = "pending-dscs"];
+}
+
 
 // ProfileSpec - Spec applicable to DSC
 message DSCProfileSpec {
@@ -35,6 +50,8 @@ message DSCProfileSpec {
 }
 
 message DSCProfileStatus {
+    // The status of the configuration propagation to naples
+    PropagationStatus       PropagationStatus         = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "propagation-status"];
 
 }
 // Profile

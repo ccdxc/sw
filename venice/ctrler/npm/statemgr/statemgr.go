@@ -52,6 +52,7 @@ type Topics struct {
 	AggregateTopic             *nimbus.AggregateTopic
 	IPAMPolicyTopic            *nimbus.IPAMPolicyTopic
 	RoutingConfigTopic         *nimbus.RoutingConfigTopic
+	ProfileTopic               *nimbus.ProfileTopic
 }
 
 // Statemgr is the object state manager
@@ -92,6 +93,12 @@ type Statemgr struct {
 	AggregateStatusReactor             nimbus.AggStatusReactor
 	RoutingConfigStatusReactor         nimbus.RoutingConfigStatusReactor
 	CollectorStatusReactor             nimbus.CollectorStatusReactor
+	ProfileStatusReactor               nimbus.ProfileStatusReactor
+}
+
+// SetProfileStatusReactor sets the ProfileStatusReactor
+func (sm *Statemgr) SetProfileStatusReactor(handler nimbus.ProfileStatusReactor) {
+	sm.ProfileStatusReactor = handler
 }
 
 // SetSecurityProfileStatusReactor sets the SecurityProfileStatusReactor
@@ -540,7 +547,6 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 		log.Errorf("Error starting Aggregate RPC server")
 		return err
 	}
-
 	return err
 }
 

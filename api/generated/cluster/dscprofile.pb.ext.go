@@ -161,6 +161,27 @@ func (m *DSCProfileStatus) Defaults(ver string) bool {
 	return false
 }
 
+// Clone clones the object into into or creates one of into is nil
+func (m *PropagationStatus) Clone(into interface{}) (interface{}, error) {
+	var out *PropagationStatus
+	var ok bool
+	if into == nil {
+		out = &PropagationStatus{}
+	} else {
+		out, ok = into.(*PropagationStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*PropagationStatus))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PropagationStatus) Defaults(ver string) bool {
+	return false
+}
+
 // Validators and Requirements
 
 func (m *DSCProfile) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
@@ -261,6 +282,19 @@ func (m *DSCProfileStatus) Validate(ver, path string, ignoreStatus bool, ignoreS
 }
 
 func (m *DSCProfileStatus) Normalize() {
+
+}
+
+func (m *PropagationStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *PropagationStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *PropagationStatus) Normalize() {
 
 }
 

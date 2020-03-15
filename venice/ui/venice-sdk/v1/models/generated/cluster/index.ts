@@ -79,6 +79,7 @@ export * from './cluster-node-list.model';
 export * from './cluster-node-spec.model';
 export * from './cluster-node-status.model';
 export * from './cluster-os-info.model';
+export * from './cluster-propagation-status.model';
 export * from './cluster-quorum-member-condition.model';
 export * from './cluster-quorum-member-status.model';
 export * from './cluster-quorum-status.model';

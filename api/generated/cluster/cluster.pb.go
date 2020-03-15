@@ -48,6 +48,7 @@
 		DSCProfile
 		DSCProfileSpec
 		DSCProfileStatus
+		PropagationStatus
 		Feature
 		FeatureStatus
 		License

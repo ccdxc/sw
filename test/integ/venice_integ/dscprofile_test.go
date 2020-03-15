@@ -98,10 +98,11 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 			FlowPolicyMode: "BASENET",
 		},
 	}
-	// create app
+	// create Profile
 	_, err = it.restClient.ClusterV1().DSCProfile().Create(ctx, &dscProfile)
 	AssertOk(c, err, "Error Creating NewProfileLNS profile")
 
+	//Verify DSCProfile create  in NPM
 	AssertEventually(c, func() (bool, interface{}) {
 		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "NewProfileLNS")
 		log.Infof("Profile found")
@@ -116,12 +117,34 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 
 	dscObj, err := it.getDistributedServiceCard(nic.macAddr)
 	AssertOk(c, err, "Error DSC object not found")
+
 	dscObj.Spec.DSCProfile = "NewProfileLNS"
 	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, dscObj)
 	AssertOk(c, err, "Error DistributedServicesCard update failed")
 
+	//Verify DSCProfile status in APIServer
 	AssertEventually(c, func() (bool, interface{}) {
+		obj, nerr := it.getDSCProfile("NewProfileLNS")
+		if nerr != nil {
+			return false, false
+		}
+		log.Infof("Profile found")
+		log.Infof("profile status:%v", obj.Status)
 
+		if obj.Status.PropagationStatus.GenerationID != obj.GenerationID {
+			return false, false
+		}
+		if (obj.Status.PropagationStatus.Updated != int32(it.config.NumHosts)) ||
+			(obj.Status.PropagationStatus.Pending != 0) ||
+			(obj.Status.PropagationStatus.MinVersion != "") {
+			return false, false
+		}
+
+		return true, true
+	}, "DSC Object does not have the right profile")
+
+	//Check in agent
+	AssertEventually(c, func() (bool, interface{}) {
 		ag := nic.agent
 		profile := netproto.Profile{
 			TypeMeta: api.TypeMeta{Kind: "Profile"},
@@ -134,6 +157,7 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 		return true, nil
 	}, "DSCProfile was not updated in agent", "100ms", it.pollTimeout())
 
+	//Check in NPM
 	AssertEventually(c, func() (bool, interface{}) {
 		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "NewProfileLNS")
 		if _, ok := obj.DscList[nic.macAddr]; ok {
@@ -142,6 +166,31 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 		return false, false
 	}, "DSCProfile not update")
 	log.Infof("Profile Updated Successfully")
+
+	//UPDATE THE PROFILE to TB =======> TFlowaware
+	dscProfile.Spec.FlowPolicyMode = "FLOWAWARE"
+	_, err = it.restClient.ClusterV1().DSCProfile().Update(ctx, &dscProfile)
+	//Verify DSCProfile status in APIServer
+	AssertEventually(c, func() (bool, interface{}) {
+		obj, nerr := it.getDSCProfile("NewProfileLNS")
+		if nerr != nil {
+			return false, false
+		}
+		log.Infof("Profile found")
+		log.Infof("profile statsu:%v", obj.Status)
+
+		if obj.Status.PropagationStatus.GenerationID != obj.GenerationID {
+			log.Infof("gen Id did not match")
+			return false, false
+		}
+		if (obj.Status.PropagationStatus.Updated != int32(it.config.NumHosts)) ||
+			(obj.Status.PropagationStatus.Pending != 0) ||
+			(obj.Status.PropagationStatus.MinVersion != "") {
+			log.Infof("status not correct")
+			return false, false
+		}
+		return true, true
+	}, "DSC Object does not have the right profile")
 
 	dscProfile1 := cluster.DSCProfile{
 		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
@@ -158,7 +207,6 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 
 	_, err = it.restClient.ClusterV1().DSCProfile().Create(ctx, &dscProfile1)
 	AssertOk(c, err, "Error Creating insertion.enforced profile")
-
 	AssertEventually(c, func() (bool, interface{}) {
 		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "insertion.enforced1")
 		log.Infof("Profile found")
@@ -177,7 +225,6 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 	dscObj.Spec.DSCProfile = "insertion.enforced1"
 	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, dscObj)
 	AssertOk(c, err, "Error DistributedServicesCard update failed")
-
 	AssertEventually(c, func() (bool, interface{}) {
 		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "insertion.enforced1")
 		if _, ok := obj.DscList[nic.macAddr]; ok {
@@ -186,16 +233,32 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 		return false, false
 	}, "DSCProfile not update")
 
-	dscObj, err = it.getDistributedServiceCard(nic.macAddr)
-	AssertOk(c, err, "Error DSC object not found")
+	//Verify DSCProfile status in APIServer
+	AssertEventually(c, func() (bool, interface{}) {
+		obj, nerr := it.getDSCProfile("insertion.enforced1")
+		if nerr != nil {
+			return false, false
+		}
+		log.Infof("Profile found for insertion.enforced1")
+		log.Infof("profile statsu:%v", obj.Status.PropagationStatus)
 
-	log.Infof("Profile is: %v", dscObj.Spec.DSCProfile)
+		if obj.Status.PropagationStatus.GenerationID != obj.GenerationID {
+			log.Info("Profile generation Id is not same")
+			return false, false
+		}
+		if (obj.Status.PropagationStatus.Updated != int32(it.config.NumHosts)) ||
+			(obj.Status.PropagationStatus.Pending != 0) ||
+			(obj.Status.PropagationStatus.MinVersion != "") {
+			log.Info("Propagation failed")
+			return false, false
+		}
+		return true, true
+	}, "DSC Object does not have the right profile")
 
 	_, err = it.restClient.ClusterV1().DSCProfile().Delete(ctx, &dscProfile.ObjectMeta)
 	AssertOk(c, err, "Error deleting dscprofile")
-
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindDSCProfile("", "TestDSCProfile")
+		_, nerr := it.ctrler.StateMgr.FindDSCProfile("", "NewProfileLNS")
 		if nerr != nil {
 			return true, true
 		}

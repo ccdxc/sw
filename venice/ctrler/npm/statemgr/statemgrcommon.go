@@ -22,6 +22,7 @@ func (sm *Statemgr) CompleteRegistration() {
 	sm.SetNetworkSecurityPolicyStatusReactor(sm)
 	sm.SetNetworkInterfaceStatusReactor(sm)
 	sm.SetAggregateStatusReactor(sm)
+	sm.SetProfileStatusReactor(sm)
 }
 
 func init() {

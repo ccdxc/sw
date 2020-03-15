@@ -20,6 +20,36 @@ type DistributedServiceCardState struct {
 	stateMgr               *Statemgr                     // pointer to state manager
 	recvHandle             objReceiver.Receiver
 	profileVersion         dscProfileVersion
+	// ToRevisit: Should DSC be updated with correct profile, then we need
+	//  below code
+	//NodeVersion            cluster.DSCProfileVersion
+}
+
+// GetKey returns the key of DSCProfile
+func (sns *DistributedServiceCardState) GetKey() string {
+	return sns.DistributedServiceCard.GetKey()
+}
+
+// Write write the obect to api server
+func (sns *DistributedServiceCardState) Write() error {
+	var err error
+	/* ToDo: Until we figure out  a way to write the status from NPM
+	   without conflicting with CMD
+	log.Infof("Push DSC card status")
+
+	sns.DistributedServiceCard.Lock()
+	defer sns.DistributedServiceCard.Unlock()
+	prop := sns.DistributedServiceCard.Status.ProfileVersion
+	newProp := &sns.NodeVersion
+	if prop != newProp {
+		sns.DistributedServiceCard.Status.ProfileVersion = newProp
+		sns.DistributedServiceCard.Write()
+		if err != nil {
+			sns.DistributedServiceCard.Status.ProfileVersion = prop
+		}
+	}*/
+	return err
+
 }
 
 //GetDistributedServiceCardWatchOptions gets options
@@ -81,9 +111,13 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 		if err == nil {
 			log.Infof("Found a profile send it to the DSC")
 			profileState.DSCProfile.Lock()
-			profileState.DscList[smartNic.ObjectMeta.Name] = dscProfileVersion{
+			profileVersion := dscProfileVersion{
 				profileState.DSCProfile.Name,
-				profileState.DSCProfile.GenerationID}
+				profileState.DSCProfile.GenerationID,
+			}
+			profileState.DscList[smartNic.ObjectMeta.Name] = profileVersion
+			sns.profileVersion = profileVersion
+			//sns.NodeVersion = cluster.DSCProfileVersion{}
 			if sm.isDscAdmitted(&smartNic.DistributedServiceCard) {
 				ret := profileState.PushObj.AddObjReceivers([]objReceiver.Receiver{sns.recvHandle})
 				if ret != nil {
@@ -155,6 +189,7 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 		}
 	}
 
+	sm.PeriodicUpdaterPush(sns)
 	return nil
 }
 
@@ -162,7 +197,7 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedServiceCard, nsnic *cluster.DistributedServiceCard) error {
 	// see if we already have the smartNic
 	log.Infof("Update of DistributedServiceCard")
-	hs, err := DistributedServiceCardStateFromObj(smartNic)
+	sns, err := DistributedServiceCardStateFromObj(smartNic)
 	if err != nil {
 		log.Errorf("Error finding smartnic. Err: %v", err)
 		return err
@@ -177,12 +212,16 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 		if newProfile != "" {
 			profileState, err := sm.FindDSCProfile("", newProfile)
 			if err == nil {
-				log.Infof("Found the profile: update the agent ")
 				profileState.DSCProfile.Lock()
-				profileState.DscList[nsnic.ObjectMeta.Name] = dscProfileVersion{
-					profileState.DSCProfile.Name, profileState.DSCProfile.GenerationID}
-				if sm.isDscAdmitted(nsnic) {
-					profileState.PushObj.AddObjReceivers([]objReceiver.Receiver{hs.recvHandle})
+				profileVersion := dscProfileVersion{
+					profileState.DSCProfile.Name,
+					profileState.DSCProfile.GenerationID,
+				}
+				profileState.DscList[smartNic.ObjectMeta.Name] = profileVersion
+				sns.profileVersion = profileVersion
+				//sns.NodeVersion = cluster.DSCProfileVersion{}
+				if sm.isDscAdmitted(&smartNic.DistributedServiceCard) {
+					profileState.PushObj.AddObjReceivers([]objReceiver.Receiver{sns.recvHandle})
 				}
 				profileState.DSCProfile.Unlock()
 			}
@@ -194,7 +233,7 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 			if _, ok := oldProfileState.DscList[nsnic.ObjectMeta.Name]; ok {
 				delete(oldProfileState.DscList, nsnic.ObjectMeta.Name)
 
-				oldProfileState.PushObj.RemoveObjReceivers([]objReceiver.Receiver{hs.recvHandle})
+				oldProfileState.PushObj.RemoveObjReceivers([]objReceiver.Receiver{sns.recvHandle})
 			}
 			oldProfileState.DSCProfile.Unlock()
 
@@ -203,7 +242,7 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 		log.Infof("No change in profile")
 	}
 
-	hs.DistributedServiceCard.DistributedServiceCard = *nsnic
+	sns.DistributedServiceCard.DistributedServiceCard = *nsnic
 
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()
@@ -242,6 +281,7 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 			fwprofile.FirewallProfile.Unlock()
 		}
 	}
+	sm.PeriodicUpdaterPush(sns)
 	return nil
 }
 
@@ -262,6 +302,19 @@ func (sm *Statemgr) OnDistributedServiceCardDelete(smartNic *ctkit.DistributedSe
 		}
 		log.Infof("Removed DSC %v as a receiver", hs.DistributedServiceCard.Status.PrimaryMAC)
 	}()
+
+	oldProfile := smartNic.Spec.DSCProfile
+	if oldProfile != "" {
+		oldProfileState, _ := sm.FindDSCProfile("", oldProfile)
+		oldProfileState.DSCProfile.Lock()
+		if _, ok := oldProfileState.DscList[smartNic.ObjectMeta.Name]; ok {
+			delete(oldProfileState.DscList, smartNic.ObjectMeta.Name)
+
+			oldProfileState.PushObj.RemoveObjReceivers([]objReceiver.Receiver{hs.recvHandle})
+		}
+		oldProfileState.DSCProfile.Unlock()
+
+	}
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()
 	for _, policy := range policies {

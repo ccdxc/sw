@@ -2289,6 +2289,53 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "propagation-status.generation-id",
+            "description": "The Generation ID this status is for.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "propagation-status.updated",
+            "description": "The number of Naples that this version has already been pushed to.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "propagation-status.pending",
+            "description": "Number of Naples pending. If this is 0 it can be assumed that everything is up to date.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "propagation-status.min-version",
+            "description": "The Version running on the slowest Naples.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "propagation-status.status",
+            "description": "Textual description of propagation status.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "propagation-status.pending-dscs",
+            "description": "list of DSCs where propagation did not complete.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -7096,7 +7143,13 @@
       "description": "ProfileSpec - Spec applicable to DSC."
     },
     "clusterDSCProfileStatus": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "propagation-status": {
+          "$ref": "#/definitions/clusterPropagationStatus",
+          "description": "The status of the configuration propagation to naples."
+        }
+      }
     },
     "clusterDistributedServiceCard": {
       "type": "object",
@@ -7692,6 +7745,41 @@
         }
       },
       "description": "OS information."
+    },
+    "clusterPropagationStatus": {
+      "type": "object",
+      "properties": {
+        "generation-id": {
+          "type": "string",
+          "description": "The Generation ID this status is for."
+        },
+        "updated": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The number of Naples that this version has already been pushed to."
+        },
+        "pending": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of Naples pending. If this is 0 it can be assumed that everything is up to date."
+        },
+        "min-version": {
+          "type": "string",
+          "description": "The Version running on the slowest Naples."
+        },
+        "status": {
+          "type": "string",
+          "description": "Textual description of propagation status."
+        },
+        "pending-dscs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "list of DSCs where propagation did not complete."
+        }
+      },
+      "description": "------------------------------------- Profile Object ---------------------------."
     },
     "clusterQuorumMemberCondition": {
       "type": "object",

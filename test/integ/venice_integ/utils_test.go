@@ -153,3 +153,17 @@ func (it *veniceIntegSuite) getDistributedServiceCard(dscName string) (*cluster.
 	// get DistributdServiceCard
 	return it.restClient.ClusterV1().DistributedServiceCard().Get(ctx, &meta)
 }
+
+// getDSCProfile get DSCProfile object. using REST api
+func (it *veniceIntegSuite) getDSCProfile(profileName string) (*cluster.DSCProfile, error) {
+	// build tenant meta
+	meta := api.ObjectMeta{
+		Name: profileName,
+	}
+	ctx, err := it.loggedInCtx()
+	if err != nil {
+		return nil, err
+	}
+	// get DSCProfile
+	return it.restClient.ClusterV1().DSCProfile().Get(ctx, &meta)
+}
