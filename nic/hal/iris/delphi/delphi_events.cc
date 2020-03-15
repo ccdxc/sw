@@ -6,7 +6,7 @@
 #include "nic/include/hal.hpp"
 #include "nic/utils/events/recorder/recorder.hpp"
 #include "gen/proto/eventtypes.pb.h"
-#include "nic/hal/src/internal/delphi_events.hpp"
+#include "nic/hal/iris/delphi/delphi_events.hpp"
 
 namespace hal {
 

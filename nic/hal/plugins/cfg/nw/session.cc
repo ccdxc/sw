@@ -27,7 +27,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "gen/proto/ftestats/ftestats.delphi.hpp"
 #include "gen/proto/flowstats/flowstats.delphi.hpp"
-#include "nic/hal/src/internal/delphi_events.hpp"
+#include "nic/hal/iris/delphi/delphi_events.hpp"
 
 using telemetry::MirrorSessionSpec;
 using session::FlowInfo;
@@ -2570,6 +2570,7 @@ inline void
 update_global_session_stats (session_t *session, bool decr=false)
 {
     flow_key_t key = session->iflow->config.key;
+    bool       is_tcp_session = false;
 
     if (session->iflow->pgm_attrs.drop) {
         HAL_SESSION_STATS_PTR(session->fte_id)->drop_sessions += 1;
@@ -2581,6 +2582,7 @@ update_global_session_stats (session_t *session, bool decr=false)
     } else if (key.flow_type == FLOW_TYPE_V4 ||
                key.flow_type == FLOW_TYPE_V6) {
         if (key.proto == types::IPPROTO_TCP) {
+            is_tcp_session = true;
             HAL_SESSION_STATS_PTR(session->fte_id)->tcp_sessions += (decr)?(-1):1;
             // update half open session count on delete
             if ((session->is_in_half_open_state) && (decr)) {
@@ -2598,6 +2600,15 @@ update_global_session_stats (session_t *session, bool decr=false)
     }
 
     HAL_SESSION_STATS_PTR(session->fte_id)->total_active_sessions += (decr)?(-1):1;
+
+    // Check & generate limit events for various flow types as follows:
+    // for flow types other than TCP, done on both session create & delete.
+    // for TCP flows, only on session delete; on connection setup and on
+    // various state changes, this is done at that appropriate triggers.
+    if (!is_tcp_session || decr) {
+        // Check and raise session limit approach/reached event
+        check_and_generate_session_limit_event(session);
+    }
 }
 
 hal_ret_t
@@ -2737,8 +2748,6 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
         HAL_SESSION_STATS_PTR(session->fte_id)->num_session_create_err += 1;
     } else {
         update_global_session_stats(session);
-        // Check and raise session limit approach/reached event
-        check_and_generate_session_limit_event(session);
     }
 
     return ret;
@@ -2873,8 +2882,6 @@ session_delete(const session_args_t *args, session_t *session)
     }
 
     update_global_session_stats(session, true);
-    // Check and raise session limit approach/reached event
-    check_and_generate_session_limit_event(session);
 
     session_cleanup(session);
 

@@ -25,7 +25,7 @@
 #include "nic/linkmgr/linkmgr.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
-#include "nic/hal/src/internal/delphi_events.hpp"
+#include "nic/hal/iris/delphi/delphi_events.hpp"
 #include "nic/utils/agent_api/agent_api.hpp"
 #include "nic/hal/core/heartbeat/heartbeat.hpp"
 #include "nic/hal/src/stats/stats.hpp"

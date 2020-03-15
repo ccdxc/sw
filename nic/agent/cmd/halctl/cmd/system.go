@@ -2426,6 +2426,12 @@ func sessionSummaryStatsShow(stats *halproto.Stats) {
 	fmt.Printf("%25s%25d\n", "TCP Resets on SFW Reject", sessstats.GetNumTcpResetSent())
 	fmt.Printf("%25s%25d\n", "ICMP Errors on SFW Reject", sessstats.GetNumIcmpErrorSent())
 	fmt.Printf("%25s%25d\n", "Session create failures", sessstats.GetNumSessionCreateErrors())
+	fmt.Printf("%25s%25d\n", "TCP Half-Open Sessions", sessstats.GetTcpHalfOpenSessions())
+	fmt.Printf("%25s%25d\n", "Other Active Sessions", sessstats.GetOtherActiveSessions())
+	fmt.Printf("%25s%25d\n", "TCP Session Drops", sessstats.GetTcpSessionDropCount())
+	fmt.Printf("%25s%25d\n", "UDP Session Drops", sessstats.GetUdpSessionDropCount())
+	fmt.Printf("%25s%25d\n", "ICMP Session Drops", sessstats.GetIcmpSessionDropCount())
+	fmt.Printf("%25s%25d\n", "Other Session Drops", sessstats.GetOtherSessionDropCount())
 }
 
 func apiStatsShowHeader() {

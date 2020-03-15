@@ -11,6 +11,6 @@ else
 MODULE_SRCS     := ${MODULE_SRCS} \
                    ${MODULE_SRC_DIR}/svc_iris.cc
 endif
-MODULE_SOLIBS   = ${NIC_HAL_ALL_SOLIBS} delphisdk events_recorder
+MODULE_SOLIBS   = ${NIC_HAL_ALL_SOLIBS} delphisdk
 MODULE_LDLIBS   = ${NIC_HAL_ALL_LDLIBS} ev ${SDK_THIRDPARTY_CAPRI_LDLIBS}
 include ${MKDEFS}/post.mk
