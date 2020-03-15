@@ -316,13 +316,15 @@ Status
                         {{if (eq $specMsgName "")}}
                           {{$specMsgName = (TrimPrefix .GetTypeName $pkg)}}
                         {{end}}
-                PDS_MS_GET_SHARED_START();
+                if (ret == types::API_STATUS_OK) {
+                    PDS_MS_GET_SHARED_START();
                         {{$statusMsgName := (TrimPrefix .GetTypeName $pkg)}}
-                pds_ms_pre_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
-                pds_ms_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
-                pds_ms_post_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
-                PDS_MS_GET_SHARED_END();
-                ret = pds_ms::mgmt_state_t::ms_response_wait();
+                    pds_ms_pre_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                    pds_ms_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                    pds_ms_post_getall_{{$statusMsgName | ToLower}}_{{$struct | ToLower}}(&proto_resp);
+                    PDS_MS_GET_SHARED_END();
+                    ret = pds_ms::mgmt_state_t::ms_response_wait();
+                }
                       {{end}}
                     {{end}}
                   {{end}}
@@ -354,12 +356,12 @@ Status
         PDS_TRACE_ERR ("Failed to process gRPC {{.RequestType.Name}}: %s", pds_ms_api_ret_str(ret));
     } else {
         PDS_TRACE_DEBUG ("Processed gRPC {{.RequestType.Name}} successfully");
-    }
 
   {{if (HasSuffix $rpc "Get") }}
-    pds_ms_dump_{{$respMsgName| ToLower}}(proto_resp);
-    pds_ms_convert_{{$respMsgName | ToLower}}_ext_response (proto_resp, resp);
+        //pds_ms_dump_{{$respMsgName| ToLower}}(proto_resp);
+        pds_ms_convert_{{$respMsgName | ToLower}}_ext_response (proto_resp, resp);
   {{end}}
+    }
     return Status::OK;
   {{end}}
 } //{{$svcname}}Impl::{{$rpc}} 

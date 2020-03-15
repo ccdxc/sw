@@ -371,10 +371,10 @@
     /*===== Get MS Table: {{$struct}} =====*/
       {{$rootMsg := getResponseRootMsg $file $pkgName $msg}}
       {{if or (HasSuffix $msg.GetName "Spec") (HasSuffix $msg.GetName "spec")}}
-    NBB_LONG pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_spec_response_count;
+    NBB_LONG pds_ms_check_get_{{$msgName | ToLower}}_spec_response_count;
       {{end}}
       {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
-    NBB_LONG pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count;
+    NBB_LONG pds_ms_check_get_{{$msgName | ToLower}}_status_response_count;
       {{end}}
     NBB_VOID pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}(NBB_CXT_T NBB_CXT)
     {
@@ -415,6 +415,52 @@
                                                        v_amb_get->data_offset);
             }
 
+      {{$reqfields := $rootMsg.Fields}}
+      {{range $reqfields}}
+        {{if (eq .GetName "Response")}}
+          {{if HasSuffix $msg.GetName "Status"}}
+            {{$specPresent := false}}
+            {{$fieldMsg := ($file.Reg.LookupMsg "" .GetTypeName)}}
+            {{$fields := $fieldMsg.Fields}}
+            {{range $fields}}
+              {{if or (HasSuffix .GetName "Spec") (HasSuffix .GetName "spec")}}
+                {{$specMsgName := .GetName}}
+                {{$specPresent = true}}
+              {{end}}
+            {{end}}
+            {{if $specPresent}}
+              {{if (isRepeatedField .)}}
+            if ((pds_ms_check_get_{{$msgName | ToLower}}_status_response_count + v_amb_get->bulk_returned) >
+                 pds_ms_check_get_{{$specMsgName | ToLower}}_spec_response_count) {
+                /*************************************************************************/
+                /* number of status entries retrieved are more than spec entries         */
+                /*************************************************************************/
+                NBB_TRC_FLOW((NBB_FORMAT "GET failure"));
+                PDS_TRACE_ERR ("Get failure, {{$msgName}} entries %d are more than {{$specMsgName}} %d",
+                    (pds_ms_check_get_{{$msgName | ToLower}}_status_response_count + v_amb_get->bulk_returned),
+                    pds_ms_check_get_{{$specMsgName | ToLower}}_spec_response_count);
+                v_amb_get->correlator.pds_ms_resp_ctx = NULL;
+                NBB_FREE_BUFFER(v_amb_get);
+                v_amb_get = NULL;
+
+                /*************************************************************************/
+                /* We are no longer responsible for incoming GETs.                       */
+                /*************************************************************************/
+                SHARED.wait_check_get = NULL;
+                pds_ms_check_get_{{$msgName | ToLower}}_status_response_count = 0;
+
+                /*************************************************************************/
+                /* Send response back to the caller.                                     */
+                /*************************************************************************/
+                pds_ms::mgmt_state_t::ms_response_ready(types::ApiStatus::API_STATUS_ERR);
+                return;
+            }
+              {{end}}
+            {{end}}
+          {{end}}
+        {{end}}
+      {{end}}
+
             for (bulk_row = 0; bulk_row < v_amb_get->bulk_returned; bulk_row++)
             {
                 if (pds_ms_pre_fill_get_{{$msgName | ToLower}}_{{$struct | ToLower}}(v_{{$struct | ToLower}})) {
@@ -434,7 +480,7 @@
             {{end}}
             {{if $specPresent}}
               {{if (isRepeatedField .)}}
-                    auto res = resp->mutable_response(pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count + bulk_row);
+                    auto res = resp->mutable_response(pds_ms_check_get_{{$msgName | ToLower}}_status_response_count + bulk_row);
               {{else}}
                     auto res = resp->response();
               {{end}}
@@ -539,9 +585,9 @@
             }
 
         {{if HasSuffix $msg.GetName "Status"}}
-            pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count += num_entries;
+            pds_ms_check_get_{{$msgName | ToLower}}_status_response_count += num_entries;
         {{else}}
-            pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_spec_response_count += num_entries;
+            pds_ms_check_get_{{$msgName | ToLower}}_spec_response_count += num_entries;
         {{end}}
 
             if (specific_get) {
@@ -559,7 +605,7 @@
                 /*************************************************************************/
                 SHARED.wait_check_get = NULL;
         {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
-                pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count = 0;
+                pds_ms_check_get_{{$msgName | ToLower}}_status_response_count = 0;
         {{end}}
                 /*************************************************************************/
                 /* Send response back to the caller.                                     */
@@ -615,7 +661,7 @@
             /*************************************************************************/
             SHARED.wait_check_get = NULL;
         {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
-            pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count = 0;
+            pds_ms_check_get_{{$msgName | ToLower}}_status_response_count = 0;
         {{end}}
 
             /*************************************************************************/
@@ -644,7 +690,7 @@
             /*************************************************************************/
             SHARED.wait_check_get = NULL;
         {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
-            pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count = 0;
+            pds_ms_check_get_{{$msgName | ToLower}}_status_response_count = 0;
         {{end}}
 
             /*************************************************************************/
@@ -675,7 +721,7 @@
             /*************************************************************************/
             SHARED.wait_check_get = NULL;
         {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
-            pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count = 0;
+            pds_ms_check_get_{{$msgName | ToLower}}_status_response_count = 0;
         {{end}}
             /*************************************************************************/
             /* Send response back to the caller.                                     */
@@ -771,10 +817,10 @@
         /* Define the routine to be used on receipt of a GET response.             */
         /***************************************************************************/
         {{if or (HasSuffix $msg.GetName "Spec") (HasSuffix $msg.GetName "spec")}}
-        pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_spec_response_count = 0;
+        pds_ms_check_get_{{$msgName | ToLower}}_spec_response_count = 0;
         {{end}}
         {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
-        pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count = 0;
+        pds_ms_check_get_{{$msgName | ToLower}}_status_response_count = 0;
         {{end}}
         SHARED.wait_check_get = pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}};
 
@@ -852,10 +898,10 @@
         /* Define the routine to be used on receipt of a GET response.             */
         /***************************************************************************/
         {{if or (HasSuffix $msg.GetName "Spec") (HasSuffix $msg.GetName "spec")}}
-        pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_spec_response_count = 0;
+        pds_ms_check_get_{{$msgName | ToLower}}_spec_response_count = 0;
         {{end}}
         {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
-        pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}}_status_response_count = 0;
+        pds_ms_check_get_{{$msgName | ToLower}}_status_response_count = 0;
         {{end}}
         SHARED.wait_check_get = pds_ms_check_get_{{$msgName | ToLower}}_{{$struct | ToLower}};
 
