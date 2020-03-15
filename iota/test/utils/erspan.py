@@ -1,8 +1,8 @@
 # Encapsulated Remote Switch Packet Analysis
 
-from scapy.packet import *
-from scapy.fields import *
-from scapy.all import *
+from scapy.packet import Packet, bind_layers
+from scapy.fields import XIntField, BitField
+from scapy.all import GRE, Ether
 
 class ERSPAN(Packet):
     name = "ERSPAN"

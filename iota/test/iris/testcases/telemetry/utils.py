@@ -10,6 +10,8 @@ from scapy.utils import rdpcap
 from scapy.utils import wrpcap
 from scapy import packet
 from scapy.all import Dot1Q
+from iota.test.utils.erspan import ERSPAN_III
+from iota.test.utils.erspan import PlatformSpecific
 import glob
 import json
 import copy
@@ -18,8 +20,6 @@ import ipaddress as ipaddr
 import iota.harness.api as api
 import iota.test.iris.testcases.penctl.common as common
 from datetime import datetime
-from iota.test.utils.erspan import ERSPAN_III
-from iota.test.utils.erspan import PlatformSpecific
 
 uplink_vlan = 0
 # for local work loads, the packet vlan may not be wire encap vlan.
