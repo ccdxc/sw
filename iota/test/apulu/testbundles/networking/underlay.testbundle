@@ -17,5 +17,5 @@ testcases:
             pktsize         : [ 64, 1024 ]
             connectivity    : [ underlay_lb, bgp_peer ]
             interface       : [ uplink0, uplink1, uplinks, switchport0, switchport1, switchports ]
-            port_status     : [ down, up ] 
+            port_status     : [ up ] 
 

@@ -308,15 +308,15 @@ class VpcObject(base.ConfigObjectBase):
                         "rd-auto": True,
                         "rt-export": [
                             {
-                                "type": "type2",
-                                "admin-value": 4294967295,
+                                "type": "type0",
+                                "admin-value": 100,
                                 "assigned-value": 2001
                             }
                         ],
                         "rt-import": [
                             {
-                                "type": "type2",
-                                "admin-value": 4294967295,
+                                "type": "type0",
+                                "admin-value": 100,
                                 "assigned-value": 2001
                             }
                         ]

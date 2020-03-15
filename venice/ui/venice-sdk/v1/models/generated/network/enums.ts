@@ -20,7 +20,7 @@ export enum ApiListWatchOptions_sort_order {
 
 export enum NetworkBGPNeighbor_enable_address_families {
     'ipv4-unicast' = "ipv4-unicast",
-    'evpn' = "evpn",
+    'l2vpn-evpn' = "l2vpn-evpn",
 }
 
 export enum NetworkIPAMPolicySpec_type {
@@ -72,7 +72,7 @@ export enum NetworkPauseSpec_type {
 
 export enum NetworkRDSpec_address_family {
     'ipv4-unicast' = "ipv4-unicast",
-    'evpn' = "evpn",
+    'l2vpn-evpn' = "l2vpn-evpn",
 }
 
 export enum NetworkRouteDistinguisher_type {

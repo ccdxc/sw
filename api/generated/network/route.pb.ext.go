@@ -54,18 +54,18 @@ func (x RouteDistinguisher_RDType) String() string {
 
 // BGPAddressFamily_normal is a map of normalized values for the enum
 var BGPAddressFamily_normal = map[string]string{
-	"evpn":         "evpn",
 	"ipv4-unicast": "ipv4-unicast",
+	"l2vpn-evpn":   "l2vpn-evpn",
 }
 
 var BGPAddressFamily_vname = map[int32]string{
 	0: "ipv4-unicast",
-	1: "evpn",
+	1: "l2vpn-evpn",
 }
 
 var BGPAddressFamily_vvalue = map[string]int32{
 	"ipv4-unicast": 0,
-	"evpn":         1,
+	"l2vpn-evpn":   1,
 }
 
 func (x BGPAddressFamily) String() string {

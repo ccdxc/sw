@@ -96,7 +96,7 @@ func (h *networkHooks) validateRoutingConfig(i interface{}, ver string, ignStatu
 				continue
 			}
 			switch n.EnableAddressFamilies[0] {
-			case network.BGPAddressFamily_EVPN.String():
+			case network.BGPAddressFamily_L2vpnEvpn.String():
 				if evpn {
 					ret = append(ret, fmt.Errorf("only one auto-config peer per address family [l2vpn-evpn] allowed"))
 				} else {

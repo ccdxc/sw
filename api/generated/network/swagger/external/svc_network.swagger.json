@@ -8160,7 +8160,7 @@
           },
           "enum": [
             "ipv4-unicast",
-            "evpn"
+            "l2vpn-evpn"
           ],
           "default": "ipv4-unicast",
           "description": "Address families to enable on the neighbor."
@@ -8885,7 +8885,7 @@
           "type": "string",
           "enum": [
             "ipv4-unicast",
-            "evpn"
+            "l2vpn-evpn"
           ],
           "default": "ipv4-unicast",
           "description": "Address family where this config applies."

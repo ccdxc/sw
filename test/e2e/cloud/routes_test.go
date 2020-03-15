@@ -156,7 +156,7 @@ var _ = Describe("Cloud E2E", func() {
 									IPAddress:             "192.168.30.9",
 									RemoteAS:              65500,
 									MultiHop:              10,
-									EnableAddressFamilies: []string{network.BGPAddressFamily_EVPN.String()},
+									EnableAddressFamilies: []string{network.BGPAddressFamily_L2vpnEvpn.String()},
 								},
 							},
 						},
@@ -171,7 +171,7 @@ var _ = Describe("Cloud E2E", func() {
 						IPAddress:             noip,
 						RemoteAS:              65500,
 						MultiHop:              10,
-						EnableAddressFamilies: []string{network.BGPAddressFamily_EVPN.String()},
+						EnableAddressFamilies: []string{network.BGPAddressFamily_L2vpnEvpn.String()},
 					}
 					nrtCfg.Spec.BGPConfig.Neighbors = append(nrtCfg.Spec.BGPConfig.Neighbors, peer)
 				}

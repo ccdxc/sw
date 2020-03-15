@@ -38,10 +38,11 @@ class DeviceObject(base.ConfigObjectBase):
         # If loopback ip exists in testbed json, use that,
         # else use from cfgyaml
         self.IPAddr = utils.GetNodeLoopbackIp(node)
-        if not self.IPAddr and getattr(spec, 'ipaddress', None) != None:
-            self.IPAddr = ipaddress.IPv4Address(spec.ipaddress)
-        else:
-            self.IPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
+        if not self.IPAddr:
+            if getattr(spec, 'ipaddress', None) != None:
+                self.IPAddr = ipaddress.IPv4Address(spec.ipaddress)
+            else:
+                self.IPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
         if getattr(spec, 'gateway', None) != None:
             self.GatewayAddr = ipaddress.IPv4Address(spec.gateway)
         else:

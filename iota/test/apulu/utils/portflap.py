@@ -53,15 +53,15 @@ def verifyDataPortStateHelper(naples_nodes, admin, oper):
             else :
                 ret = api.types.status.SUCCESS #explicitly mark SUCCESS
             if oper == operUp:
-                if "UP          UP" not in resp:
+                if "UP/UP" not in resp:
                     api.Logger.error("oper:%s uplink verify failed at node %s : %s" %(oper, node, resp))
                     return api.types.status.FAILURE
             elif admin == operDown:
-                if "DOWN        DOWN" not in resp:
+                if "DOWN/DOWN" not in resp:
                     api.Logger.error("admin:%s uplink verify failed at node %s : %s" %(admin, node, resp))
                     return api.types.status.FAILURE
             else:
-                if "UP          DOWN" not in resp:
+                if "UP/DOWN" not in resp:
                     api.Logger.error("admin:%s uplink verify failed at node %s : %s" %(admin, node, resp))
                     return api.types.status.FAILURE
     api.Logger.info("verifyDataPortState done for %s and result %d..." %(naples_nodes,ret))

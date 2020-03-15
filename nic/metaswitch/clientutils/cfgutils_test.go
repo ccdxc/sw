@@ -31,7 +31,7 @@ func TestCfgUtils(t *testing.T) {
 						IPAddress:             "10.1.1.1",
 						RemoteAS:              1000,
 						MultiHop:              10,
-						EnableAddressFamilies: []string{"evpn", "ipv4-unicast"},
+						EnableAddressFamilies: []string{"l2vpn-evpn", "ipv4-unicast"},
 					},
 					{
 						Shutdown:              true,
@@ -84,7 +84,7 @@ func TestCfgUtils(t *testing.T) {
 						IPAddress:             "11.1.1.1",
 						RemoteAS:              1000,
 						MultiHop:              10,
-						EnableAddressFamilies: []string{"evpn", "ipv4-unicast"},
+						EnableAddressFamilies: []string{"l2vpn-evpn", "ipv4-unicast"},
 					},
 					{
 						Shutdown:              true,
@@ -139,7 +139,7 @@ func TestCfgUtils(t *testing.T) {
 						IPAddress:             "11.1.1.1",
 						RemoteAS:              2000,
 						MultiHop:              10,
-						EnableAddressFamilies: []string{"evpn", "ipv4-unicast"},
+						EnableAddressFamilies: []string{"l2vpn-evpn", "ipv4-unicast"},
 					},
 					{
 						Shutdown:              true,
@@ -194,7 +194,7 @@ func TestCfgUtils(t *testing.T) {
 						IPAddress:             "11.1.1.1",
 						RemoteAS:              1000,
 						MultiHop:              10,
-						EnableAddressFamilies: []string{"evpn"},
+						EnableAddressFamilies: []string{"l2vpn-evpn"},
 					},
 					{
 						Shutdown:              true,

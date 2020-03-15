@@ -40,6 +40,9 @@ def Setup(tc):
     tc.workload_pairs = config_api.GetWorkloadPairs(__get_workload_type(tc), __get_workload_scope(tc))
     if len(tc.workload_pairs) == 0:
         api.Logger.error("Skipping Testcase due to no workload pairs.")
+        if tc.iterators.workload_type == 'local' and tc.iterators.workload_scope == 'intra-subnet':
+            # Currently we dont support local-to-local intra-subnet connectivity
+            return api.types.status.SUCCESS
         return api.types.status.FAILURE
 
     return api.types.status.SUCCESS

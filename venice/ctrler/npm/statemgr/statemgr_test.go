@@ -367,7 +367,7 @@ func createVirtualRouter(t *testing.T, stateMgr *Statemgr, tenant, virtualRouter
 			RouterMACAddress: "aaaa.bbbb.cccc",
 			VxLanVNI:         10000,
 			RouteImportExport: &network.RDSpec{
-				AddressFamily: network.BGPAddressFamily_EVPN.String(),
+				AddressFamily: network.BGPAddressFamily_L2vpnEvpn.String(),
 				RDAuto:        false,
 				ExportRTs: []*network.RouteDistinguisher{
 					{

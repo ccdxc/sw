@@ -166,7 +166,7 @@ var scaleCfgenParams = &Cfgen{
 			},
 		},
 		BgpNeihbourTemplate: &network.BGPNeighbor{
-			EnableAddressFamilies: []string{"evpn"},
+			EnableAddressFamilies: []string{"l2vpn-evpn"},
 			RemoteAS:              100,
 			MultiHop:              10,
 			IPAddress:             "{{ipv4:22.1.1.0}}",
@@ -198,7 +198,7 @@ var scaleCfgenParams = &Cfgen{
 			RemoteAS:              600, //Static testbed has this AS number
 			MultiHop:              10,
 			IPAddress:             "0.0.0.0",
-			EnableAddressFamilies: []string{"evpn"},
+			EnableAddressFamilies: []string{"l2vpn-evpn"},
 		},
 	},
 

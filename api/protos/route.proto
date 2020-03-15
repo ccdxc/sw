@@ -85,7 +85,7 @@ message EVPNConfig {
 
 enum BGPAddressFamily {
     IPv4Unicast = 0 [(venice.enumValueStr) = "ipv4-unicast"];
-    EVPN        = 1;
+    L2vpnEvpn   = 1 [(venice.enumValueStr) = "l2vpn-evpn"];
 }
 
 message BGPNeighbor {

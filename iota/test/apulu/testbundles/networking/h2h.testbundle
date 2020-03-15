@@ -12,8 +12,9 @@ testcases:
             type    : nested
             ipaf    : [ ipv4 ]
             proto   : [ icmp ]
-            pktsize : [ 64, 128, 256, 512, 1024 ]
-            workload_type : [ remote ]
-            # workload_type : [ local, remote ] # enable when L2L works
-            workload_scope : [ intra-subnet ]
-            # workload_scope : [ intra-subnet, inter-subnet ] # enable when inter subnet works
+            #pktsize : [ 64, 128, 256, 512, 1024 ]
+            pktsize : [ 64, 1024 ]
+            #workload_type : [ remote ]
+            workload_type : [ local, remote ]
+            #workload_scope : [ intra-subnet ]
+            workload_scope : [ intra-subnet, inter-subnet ]

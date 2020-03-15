@@ -45,8 +45,8 @@ common:
 testbundles:
     sanity:
         # Relative paths from iota/test/apulu/testbundles/
-        - networking/h2h.testbundle
         - networking/underlay.testbundle
+        - networking/h2h.testbundle
         - api_crud/netagent_api_crud.testbundle
         #- networking/h2n.testbundle
 
@@ -55,4 +55,4 @@ testbundles:
 
 teardown:
     #-   step    : verif.utils.collect_techsupport
-    -    step    : config.clean_netagent
+    #-    step    : config.clean_netagent

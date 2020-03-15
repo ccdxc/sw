@@ -388,7 +388,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 										DefaultOrig: false,
 									}
 									switch afn {
-									case network.BGPAddressFamily_EVPN.String():
+									case network.BGPAddressFamily_L2vpnEvpn.String():
 										afp.Afi = types.BGPAfi_BGP_AFI_L2VPN
 										afp.Safi = types.BGPSafi_BGP_SAFI_EVPN
 									case network.BGPAddressFamily_IPv4Unicast.String():
@@ -413,7 +413,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 										afpk := &types.BGPPeerAfKey{LocalAddr: ip2PDSType(o.localAddr), PeerAddr: ip2PDSType(o.ipaddress)}
 
 										switch afo {
-										case network.BGPAddressFamily_EVPN.String():
+									        case network.BGPAddressFamily_L2vpnEvpn.String():
 											afpk.Afi = types.BGPAfi_BGP_AFI_L2VPN
 											afpk.Safi = types.BGPSafi_BGP_SAFI_EVPN
 										case network.BGPAddressFamily_IPv4Unicast.String():
@@ -466,7 +466,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 						DefaultOrig: false,
 					}
 					switch afn {
-					case network.BGPAddressFamily_EVPN.String():
+				        case network.BGPAddressFamily_L2vpnEvpn.String():
 						afp.Afi = types.BGPAfi_BGP_AFI_L2VPN
 						afp.Safi = types.BGPSafi_BGP_SAFI_EVPN
 					case network.BGPAddressFamily_IPv4Unicast.String():

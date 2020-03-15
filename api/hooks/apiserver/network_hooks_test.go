@@ -199,7 +199,7 @@ func TestValidateHooks(t *testing.T) {
 				Neighbors: []*network.BGPNeighbor{
 					{
 						IPAddress:             "0.0.0.0",
-						EnableAddressFamilies: []string{"evpn"},
+						EnableAddressFamilies: []string{"l2vpn-evpn"},
 						RemoteAS:              1000,
 					},
 					{
@@ -226,7 +226,7 @@ func TestValidateHooks(t *testing.T) {
 	})
 	errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
 	Assert(t, len(errs) > 0, "Expecting errors %s", errs)
-	rtcfg.Spec.BGPConfig.Neighbors[2].EnableAddressFamilies = []string{"evpn"}
+	rtcfg.Spec.BGPConfig.Neighbors[2].EnableAddressFamilies = []string{"l2vpn-evpn"}
 	errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
 	Assert(t, len(errs) > 0, "Expecting errors %s", errs)
 }
