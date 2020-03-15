@@ -537,9 +537,9 @@ static void ionic_get_ringparam(struct net_device *netdev,
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
 
-	ring->tx_max_pending = IONIC_MAX_TXRX_DESC;
+	ring->tx_max_pending = IONIC_MAX_TX_DESC;
 	ring->tx_pending = lif->ntxq_descs;
-	ring->rx_max_pending = IONIC_MAX_TXRX_DESC;
+	ring->rx_max_pending = IONIC_MAX_RX_DESC;
 	ring->rx_pending = lif->nrxq_descs;
 }
 
@@ -561,12 +561,17 @@ static int ionic_set_ringparam(struct net_device *netdev,
 		return -EINVAL;
 	}
 
-	if (ring->tx_pending > IONIC_MAX_TXRX_DESC ||
-	    ring->tx_pending < IONIC_MIN_TXRX_DESC ||
-	    ring->rx_pending > IONIC_MAX_TXRX_DESC ||
+	if (ring->tx_pending > IONIC_MAX_TX_DESC ||
+	    ring->tx_pending < IONIC_MIN_TXRX_DESC) {
+		netdev_info(netdev, "Tx descriptor count must be in the range [%d-%d]\n",
+			    IONIC_MIN_TXRX_DESC, IONIC_MAX_TX_DESC);
+		return -EINVAL;
+	}
+
+	if (ring->rx_pending > IONIC_MAX_RX_DESC ||
 	    ring->rx_pending < IONIC_MIN_TXRX_DESC) {
-		netdev_info(netdev, "Descriptors count must be in the range [%d-%d]\n",
-			    IONIC_MIN_TXRX_DESC, IONIC_MAX_TXRX_DESC);
+		netdev_info(netdev, "Rx descriptor count must be in the range [%d-%d]\n",
+			    IONIC_MIN_TXRX_DESC, IONIC_MAX_RX_DESC);
 		return -EINVAL;
 	}
 
@@ -574,6 +579,14 @@ static int ionic_set_ringparam(struct net_device *netdev,
 	if (ring->tx_pending == lif->ntxq_descs &&
 	    ring->rx_pending == lif->nrxq_descs)
 		return 0;
+
+	if (ring->tx_pending != lif->ntxq_descs)
+		netdev_info(netdev, "Changing Tx ring size from %d to %d\n",
+			    lif->ntxq_descs, ring->tx_pending);
+
+	if (ring->rx_pending != lif->nrxq_descs)
+		netdev_info(netdev, "Changing Rx ring size from %d to %d\n",
+			    lif->nrxq_descs, ring->rx_pending);
 
 	err = ionic_wait_for_bit(lif, IONIC_LIF_F_QUEUE_RESET);
 	if (err)
@@ -622,6 +635,8 @@ static int ionic_set_channels(struct net_device *netdev,
 	if (ch->combined_count == lif->nxqs)
 		return 0;
 
+	netdev_info(netdev, "Changing queue count from %d to %d\n",
+		    lif->nxqs, ch->combined_count);
 	err = ionic_wait_for_bit(lif, IONIC_LIF_F_QUEUE_RESET);
 	if (err)
 		return err;

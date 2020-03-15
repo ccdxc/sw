@@ -1498,6 +1498,8 @@ static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 	if (err)
 		return err;
 
+	netdev_info(netdev, "Changing MTU from %d to %d\n",
+		    netdev->mtu, new_mtu);
 	netdev->mtu = new_mtu;
 	err = ionic_reset_queues(lif);
 
@@ -1938,6 +1940,7 @@ open_out:
 static int ionic_lif_stop(struct ionic_lif *lif)
 {
 	struct net_device *netdev;
+	bool carrier;
 	int err = 0;
 
 	if (!test_bit(IONIC_LIF_F_UP, lif->state)) {
@@ -1953,10 +1956,15 @@ static int ionic_lif_stop(struct ionic_lif *lif)
 	else
 		netdev = lif->netdev;
 
-	/* carrier off before disabling queues to avoid watchdog timeout */
-	netif_carrier_off(netdev);
-	netif_tx_stop_all_queues(netdev);
+	/* carrier off before disabling queues to avoid watchdog timeout,
+	 * but put it back on if Link wasn't actually down
+	 */
+	carrier = netif_carrier_ok(netdev);
+	if (carrier)
+		netif_carrier_off(netdev);
 	netif_tx_disable(netdev);
+	if (carrier)
+		netif_carrier_on(netdev);
 
 	ionic_txrx_disable(lif);
 	ionic_lif_quiesce(lif);
