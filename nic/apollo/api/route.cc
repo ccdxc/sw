@@ -114,7 +114,7 @@ route_table::init_config(api_ctxt_t *api_ctxt) {
 
     spec = &api_ctxt->api_params->route_table_spec;
     memcpy(&this->key_, &spec->key, sizeof(pds_obj_key_t));
-    this->af_ = spec->af;
+    this->af_ = spec->route_info->af;
     return SDK_RET_OK;
 }
 
@@ -130,7 +130,7 @@ route_table::compute_update(api_obj_ctxt_t *obj_ctxt) {
 
     // we can enable/disable priority based routing and/or change individual
     // routes in the route table but not the address family
-    if (af_ != spec->af) {
+    if (af_ != spec->route_info->af) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"address family\" "
                       "on route table %s", key2str().c_str());
         return SDK_RET_INVALID_ARG;
@@ -201,10 +201,11 @@ route_table::activate_config(pds_epoch_t epoch, api_op_t api_op,
 void
 route_table::fill_spec_(pds_route_table_spec_t *spec) {
     memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
-    spec->af = af_;
-    spec->num_routes = 0;
-    // routes are not stored anywhere
-    spec->routes = NULL;
+    if (spec->route_info) {
+        spec->route_info->af = af_;
+        spec->route_info->num_routes = 0;
+        // routes are not stored anywhere yet
+    }
 }
 
 sdk_ret_t

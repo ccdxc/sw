@@ -65,43 +65,59 @@ typedef struct pds_route_s {
     bool                        meter;
 } __PACK__ pds_route_t;
 
-/// \brief route table configuration
-typedef struct pds_route_table_spec_s    pds_route_table_spec_t;
-struct pds_route_table_spec_s {
-    pds_obj_key_t key;        ///< key
+typedef struct route_info_s {
     uint8_t       af;         ///< address family - v4 or v6
     bool          enable_pbr; ///< enable/disable priority based routing
     uint32_t      num_routes; ///< number of routes in the list
-    pds_route_t   *routes;    ///< list or route rules
+    pds_route_t   routes[0];  ///< list or route rules
+} route_info_t;
+#define ROUTE_SET_SIZE(count)        \
+            (sizeof(route_info_t) + (count) * sizeof(pds_route_t))
+
+/// \brief route table configuration
+typedef struct pds_route_table_spec_s    pds_route_table_spec_t;
+struct pds_route_table_spec_s {
+    pds_obj_key_t key;           ///< key
+    route_info_t *route_info;    ///< list of routes
 
     /// constructor
-    pds_route_table_spec_s() { routes = NULL; }
+    pds_route_table_spec_s() { route_info = NULL; }
 
     /// destructor
     ~pds_route_table_spec_s() {
-        if (routes) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, routes);
+        if (route_info && priv_mem_) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, route_info);
         }
+    }
+
+    /// copy constructor
+    pds_route_table_spec_s(const pds_route_table_spec_t& route_table) {
+        route_info = NULL;
+        deepcopy_(route_table);
     }
 
     /// assignment operator
     pds_route_table_spec_t& operator= (const pds_route_table_spec_t& route_table) {
-        // self-assignment guard
-        if (this == &route_table) {
-            return *this;
-        }
-        key = route_table.key;
-        af = route_table.af;
-        enable_pbr = route_table.enable_pbr;
-        num_routes = route_table.num_routes;
-        if (routes) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, routes);
-        }
-        routes = (pds_route_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                           num_routes * sizeof(pds_route_t));
-        memcpy(routes, route_table.routes, num_routes * sizeof(pds_route_t));
+        deepcopy_(route_table);
         return *this;
     }
+
+    /// move assignment operator
+    pds_route_table_spec_t& operator= (pds_route_table_spec_t&& route_table) noexcept {
+        move_(std::move(route_table));
+        return *this;
+    }
+
+    /// move constructor
+    pds_route_table_spec_s(pds_route_table_spec_t&& route_table) noexcept {
+        route_info = NULL;
+        move_(std::move(route_table));
+    }
+
+private:
+    bool priv_mem_ = false;
+    void deepcopy_(const pds_route_table_spec_t& route_table);
+    void move_(pds_route_table_spec_t&& route_table);
 } __PACK__;
 
 /// \brief route table status
@@ -150,6 +166,9 @@ sdk_ret_t pds_route_table_delete(pds_obj_key_t *key,
 
 /// \brief route configuration
 typedef struct pds_route_spec_s {
+    pds_obj_key_t key;            ///< route identifier
+    pds_obj_key_t route_table;    ///< route table this route is part of
+    pds_route_t route;            ///< route configuration
 } pds_route_spec_t;
 
 /// \brief route operational status

@@ -16,7 +16,7 @@ public:
         reset_mock_fail();
     }
     void expect_create() override {
-        ++num_vrf_objs_;
+        ++num_vrf_objs_; ++num_route_tbl_objs_;
         op_create_ = true; op_delete_ = false;
         clear_batches();
         auto vrf_input = dynamic_cast<vrf_input_params_t*>
@@ -55,6 +55,7 @@ public:
     }
 private:
     int           num_vrf_objs_ = 0;
+    int           num_route_tbl_objs_ = 0;
     void generate_addupd_specs(const vrf_input_params_t& input,
                                batch_spec_t& pds_batch);
     void generate_del_specs(const vrf_input_params_t& input,

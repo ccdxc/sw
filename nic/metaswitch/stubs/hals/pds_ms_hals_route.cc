@@ -54,12 +54,12 @@ void hals_route_t::make_pds_rttable_spec_(pds_route_table_spec_t &rttable,
                                           const pds_obj_key_t& rttable_key) {
     memset(&rttable, 0, sizeof(pds_route_table_spec_t));
     rttable.key = rttable_key;
-    rttable.af = IP_AF_IPV4;
-    
+
     // Populate the new route
     route_.prefix = ips_info_.pfx;
     route_.nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
     route_.nh_group = msidx2pdsobjkey(ips_info_.overlay_ecmp_id);
+
     { // Enter thread-safe context to access/modify global state
         auto state = pds_ms::state_t::thread_context().state();
         auto rttbl_store = state->route_table_store().get(rttable.key);
@@ -81,12 +81,10 @@ void hals_route_t::make_pds_rttable_spec_(pds_route_table_spec_t &rttable,
             // Delete the route from the store
             rttbl_store->del_route(route_.prefix);
         }
-        // Get the current number of routes
-        rttable.num_routes = rttbl_store->num_routes();
         // Get the routes pointer. PDS API will make a copy of the
         // route table and free it up once api processing is complete
         // after batch commit
-        rttable.routes = rttbl_store->routes();
+        rttable.route_info = rttbl_store->routes();
     }
     return;
 }
@@ -114,9 +112,7 @@ pds_batch_ctxt_guard_t hals_route_t::make_batch_pds_spec_(const pds_obj_key_t&
     if (!PDS_MOCK_MODE()) {
         ret = pds_route_table_update(&rttbl_spec, bctxt);
     }
-    // Reset the route ptr to avoid free since the destructor
-    // of pds_route_table_spec_t calls free
-    rttbl_spec.routes = NULL;
+
     if (op_delete_) { // Delete
         if (unlikely (ret != SDK_RET_OK)) {
             throw Error(std::string("PDS Route Delete failed for pfx ")

@@ -37,7 +37,8 @@ private:
         uint32_t   vrf_id;
     };
     struct store_info_t {
-        vpc_obj_t*    vpc_obj = nullptr;
+        vpc_obj_t*          vpc_obj = nullptr;
+        route_table_obj_t*  route_tbl_obj = nullptr;
     };
 
 private:

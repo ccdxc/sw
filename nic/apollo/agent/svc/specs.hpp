@@ -2078,8 +2078,8 @@ static inline sdk_ret_t
 pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
                               const pds::SecurityPolicySpec &proto_spec)
 {
-    uint32_t num_rules = 0;
     sdk_ret_t ret;
+    uint32_t num_rules = 0;
 
     pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     num_rules = proto_spec.rules_size();
@@ -2115,7 +2115,7 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
 
     return SDK_RET_OK;
 
-cleanup :
+cleanup:
 
     if (api_spec->rule_info) {
         SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec->rule_info);
@@ -2755,95 +2755,100 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
     uint32_t num_routes = 0;
 
     pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
+    num_routes = proto_spec.routes_size();
+    api_spec->route_info =
+        (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                   ROUTE_SET_SIZE(num_routes));
+    if (unlikely(api_spec->route_info == NULL)) {
+        PDS_TRACE_ERR("Failed to allocate memory for route table {}",
+                      api_spec->key.id);
+        return sdk::SDK_RET_OOM;
+    }
     switch (proto_spec.af()) {
     case types::IP_AF_INET:
-        api_spec->af = IP_AF_IPV4;
+        api_spec->route_info->af = IP_AF_IPV4;
         break;
 
     case types::IP_AF_INET6:
-        api_spec->af = IP_AF_IPV6;
+        api_spec->route_info->af = IP_AF_IPV6;
         break;
 
     default:
         SDK_ASSERT(FALSE);
         return SDK_RET_INVALID_ARG;
     }
-    api_spec->enable_pbr = proto_spec.enablepbr();
-    num_routes = proto_spec.routes_size();
-    api_spec->num_routes = num_routes;
-    api_spec->routes = (pds_route_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                                 sizeof(pds_route_t) *
-                                                 num_routes);
-    if (unlikely(api_spec->routes == NULL)) {
-        PDS_TRACE_ERR("Failed to allocate memory for route table {}",
-                      api_spec->key.id);
-        return sdk::SDK_RET_OOM;
-    }
+    api_spec->route_info->enable_pbr = proto_spec.enablepbr();
+    api_spec->route_info->num_routes = num_routes;
     for (uint32_t i = 0; i < num_routes; i++) {
         const pds::RouteInfo &proto_route = proto_spec.routes(i);
-        ippfx_proto_spec_to_api_spec(&api_spec->routes[i].prefix,
+        ippfx_proto_spec_to_api_spec(&api_spec->route_info->routes[i].prefix,
                                      proto_route.prefix());
-        if (api_spec->enable_pbr) {
-            api_spec->routes[i].prio = proto_route.priority();
+        if (api_spec->route_info->enable_pbr) {
+            api_spec->route_info->routes[i].prio = proto_route.priority();
         }
         switch (proto_route.nh_case()) {
         case pds::RouteInfo::kNextHop:
         case pds::RouteInfo::kTunnelId:
-            api_spec->routes[i].nh_type = PDS_NH_TYPE_OVERLAY;
-            pds_obj_key_proto_to_api_spec(&api_spec->routes[i].tep,
+            api_spec->route_info->routes[i].nh_type = PDS_NH_TYPE_OVERLAY;
+            pds_obj_key_proto_to_api_spec(&api_spec->route_info->routes[i].tep,
                                           proto_route.tunnelid());
             break;
         case pds::RouteInfo::kNexthopGroupId:
             // NOTE: UNDERLAY_ECMP is not done in the datapath
-            api_spec->routes[i].nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
-            pds_obj_key_proto_to_api_spec(&api_spec->routes[i].nh_group,
+            api_spec->route_info->routes[i].nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
+            pds_obj_key_proto_to_api_spec(&api_spec->route_info->routes[i].nh_group,
                                           proto_route.nexthopgroupid());
             break;
         case pds::RouteInfo::kVPCId:
-            pds_obj_key_proto_to_api_spec(&api_spec->routes[i].vpc,
+            pds_obj_key_proto_to_api_spec(&api_spec->route_info->routes[i].vpc,
                                           proto_route.vpcid());
-            api_spec->routes[i].nh_type = PDS_NH_TYPE_PEER_VPC;
+            api_spec->route_info->routes[i].nh_type = PDS_NH_TYPE_PEER_VPC;
             break;
         case pds::RouteInfo::kVnicId:
-            pds_obj_key_proto_to_api_spec(&api_spec->routes[i].vnic,
+            pds_obj_key_proto_to_api_spec(&api_spec->route_info->routes[i].vnic,
                                           proto_route.vnicid());
-            api_spec->routes[i].nh_type = PDS_NH_TYPE_VNIC;
+            api_spec->route_info->routes[i].nh_type = PDS_NH_TYPE_VNIC;
             break;
         case pds::RouteInfo::kNexthopId:
-            api_spec->routes[i].nh_type = PDS_NH_TYPE_IP;
-            pds_obj_key_proto_to_api_spec(&api_spec->routes[i].nh,
+            api_spec->route_info->routes[i].nh_type = PDS_NH_TYPE_IP;
+            pds_obj_key_proto_to_api_spec(&api_spec->route_info->routes[i].nh,
                                           proto_route.nexthopid());
             break;
         default:
-            api_spec->routes[i].nh_type = PDS_NH_TYPE_BLACKHOLE;
+            api_spec->route_info->routes[i].nh_type = PDS_NH_TYPE_BLACKHOLE;
             break;
         }
         if (proto_route.has_nataction()) {
             auto nat_action = proto_route.nataction();
             switch (nat_action.srcnataction()) {
             case types::NAT_ACTION_STATIC:
-                api_spec->routes[i].nat.src_nat_type = PDS_NAT_TYPE_STATIC;
+                api_spec->route_info->routes[i].nat.src_nat_type =
+                    PDS_NAT_TYPE_STATIC;
                 break;
             case types::NAT_ACTION_NAPT_PUBLIC:
-                api_spec->routes[i].nat.src_nat_type = PDS_NAT_TYPE_NAPT_PUBLIC;
+                api_spec->route_info->routes[i].nat.src_nat_type =
+                    PDS_NAT_TYPE_NAPT_PUBLIC;
                 break;
             case types::NAT_ACTION_NAPT_SVC:
-                api_spec->routes[i].nat.src_nat_type = PDS_NAT_TYPE_NAPT_SVC;
+                api_spec->route_info->routes[i].nat.src_nat_type =
+                    PDS_NAT_TYPE_NAPT_SVC;
                 break;
             case types::NAT_ACTION_NONE:
             default:
-                api_spec->routes[i].nat.src_nat_type = PDS_NAT_TYPE_NONE;
+                api_spec->route_info->routes[i].nat.src_nat_type =
+                    PDS_NAT_TYPE_NONE;
                 break;
             }
             if (nat_action.has_dstnatip()) {
                 ipaddr_proto_spec_to_api_spec(
-                    &api_spec->routes[i].nat.dst_nat_ip, nat_action.dstnatip());
+                    &api_spec->route_info->routes[i].nat.dst_nat_ip,
+                    nat_action.dstnatip());
             } else {
-                memset(&api_spec->routes[i].nat.dst_nat_ip, 0,
-                       sizeof(api_spec->routes[i].nat.dst_nat_ip));
+                memset(&api_spec->route_info->routes[i].nat.dst_nat_ip, 0,
+                       sizeof(api_spec->route_info->routes[i].nat.dst_nat_ip));
             }
         }
-        api_spec->routes[i].meter = proto_route.meteren();
+        api_spec->route_info->routes[i].meter = proto_route.meteren();
     }
     return SDK_RET_OK;
 }
@@ -2858,45 +2863,52 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
     }
 
     proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
-    if (api_spec->af == IP_AF_IPV4) {
+    if (api_spec->route_info == NULL) {
+        return;
+    }
+    if (api_spec->route_info->af == IP_AF_IPV4) {
         proto_spec->set_af(types::IP_AF_INET);
-    } else if (api_spec->af == IP_AF_IPV6) {
+    } else if (api_spec->route_info->af == IP_AF_IPV6) {
         proto_spec->set_af(types::IP_AF_INET6);
     } else {
         SDK_ASSERT(FALSE);
     }
-    proto_spec->set_enablepbr(api_spec->enable_pbr);
+    proto_spec->set_enablepbr(api_spec->route_info->enable_pbr);
 
-    for (uint32_t i = 0; i < api_spec->num_routes; i++) {
+    for (uint32_t i = 0; i < api_spec->route_info->num_routes; i++) {
         pds::RouteInfo *route = proto_spec->add_routes();
         ippfx_api_spec_to_proto_spec(route->mutable_prefix(),
-                                     &api_spec->routes[i].prefix);
-        if (api_spec->enable_pbr) {
-            route->set_priority(api_spec->routes[i].prio);
+                                     &api_spec->route_info->routes[i].prefix);
+        if (api_spec->route_info->enable_pbr) {
+            route->set_priority(api_spec->route_info->routes[i].prio);
         }
-        switch (api_spec->routes[i].nh_type) {
+        switch (api_spec->route_info->routes[i].nh_type) {
         case PDS_NH_TYPE_OVERLAY:
-            route->set_tunnelid(api_spec->routes[i].tep.id, PDS_MAX_KEY_LEN);
+            route->set_tunnelid(api_spec->route_info->routes[i].tep.id,
+                                PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_OVERLAY_ECMP:
-            route->set_nexthopgroupid(api_spec->routes[i].nh_group.id,
+            route->set_nexthopgroupid(api_spec->route_info->routes[i].nh_group.id,
                                       PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_PEER_VPC:
-            route->set_vpcid(api_spec->routes[i].vpc.id, PDS_MAX_KEY_LEN);
+            route->set_vpcid(api_spec->route_info->routes[i].vpc.id,
+                             PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_VNIC:
-            route->set_vnicid(api_spec->routes[i].vnic.id, PDS_MAX_KEY_LEN);
+            route->set_vnicid(api_spec->route_info->routes[i].vnic.id,
+                              PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_IP:
-            route->set_nexthopid(api_spec->routes[i].nh.id, PDS_MAX_KEY_LEN);
+            route->set_nexthopid(api_spec->route_info->routes[i].nh.id,
+                                 PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_BLACKHOLE:
         default:
             // blackhole nexthop
             break;
         }
-        switch (api_spec->routes[i].nat.src_nat_type) {
+        switch (api_spec->route_info->routes[i].nat.src_nat_type) {
         case PDS_NAT_TYPE_STATIC:
             route->mutable_nataction()->set_srcnataction(types::NAT_ACTION_STATIC);
             break;
@@ -2911,12 +2923,12 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
             route->mutable_nataction()->set_srcnataction(types::NAT_ACTION_NONE);
             break;
         }
-        if (!ip_addr_is_zero(&api_spec->routes[i].nat.dst_nat_ip)) {
+        if (!ip_addr_is_zero(&api_spec->route_info->routes[i].nat.dst_nat_ip)) {
             ipaddr_api_spec_to_proto_spec(
                 route->mutable_nataction()->mutable_dstnatip(),
-                &api_spec->routes[i].nat.dst_nat_ip);
+                &api_spec->route_info->routes[i].nat.dst_nat_ip);
         }
-        route->set_meteren(api_spec->routes[i].meter);
+        route->set_meteren(api_spec->route_info->routes[i].meter);
     }
     return;
 }

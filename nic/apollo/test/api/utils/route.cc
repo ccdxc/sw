@@ -53,8 +53,8 @@ route_table_feeder::init(std::string base_route_pfx_str,
                          uint32_t id) {
     memset(&spec, 0, sizeof(pds_route_table_spec_t));
     spec.key = int2pdsobjkey(id);
-    spec.af = af;
-    spec.num_routes = num_routes;
+    this->af = af;
+    this->num_routes = num_routes;
     this->base_route_pfx_str = base_route_pfx_str;
     this->num_obj = num_route_tables;
 }
@@ -79,21 +79,18 @@ route_table_feeder::spec_build(pds_route_table_spec_t *spec) const {
     uint32_t index = 0;
 
     test::extract_ip_pfx(base_route_pfx_str.c_str(), &route_pfx);
-
     this->key_build(&spec->key);
-    spec->af = this->spec.af;
-    spec->num_routes = this->spec.num_routes;
-    if (spec->num_routes) {
-        spec->routes = (pds_route_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                      (spec->num_routes * sizeof(pds_route_t)));
-    }
-
-    num_routes_per_type = spec->num_routes/k_num_nhtypes_supported;
+    spec->route_info =
+            (route_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                       ROUTE_SET_SIZE(num_routes));
+    spec->route_info->af = this->af;
+    spec->route_info->num_routes = this->num_routes;
+    num_routes_per_type = num_routes/k_num_nhtypes_supported;
     tmp_bmap = g_nhtypes_supported_bmap;
     while (tmp_bmap) {
         if (tmp_bmap & 0x1) {
             for (uint32_t j = 0; j < num_routes_per_type; j++) {
-                spec->routes[route_index].prefix = route_pfx;
+                spec->route_info->routes[route_index].prefix = route_pfx;
                 spec_fill((pds_nh_type_e)index, spec, route_index);
                 ip_prefix_ip_next(&route_pfx, &route_addr);
                 route_pfx.addr = route_addr;
@@ -104,8 +101,8 @@ route_table_feeder::spec_build(pds_route_table_spec_t *spec) const {
         tmp_bmap >>= 1;
     }
 
-    while (route_index < spec->num_routes) {
-        spec->routes[route_index].prefix = route_pfx;
+    while (route_index < num_routes) {
+        spec->route_info->routes[route_index].prefix = route_pfx;
         spec_fill(k_rt_def_nh_type, spec, route_index);
         ip_prefix_ip_next(&route_pfx, &route_addr);
         route_pfx.addr = route_addr;
@@ -121,27 +118,27 @@ route_table_feeder::spec_fill(pds_nh_type_t type,
     uint32_t base_id = 1;
     uint32_t base_tep_id = 2;
 
-    spec->routes[index].nh_type = type;
+    spec->route_info->routes[index].nh_type = type;
     switch (type) {
     case PDS_NH_TYPE_OVERLAY:
         num = (index % PDS_MAX_TEP);
-        spec->routes[index].tep = int2pdsobjkey(base_tep_id + num);
+        spec->route_info->routes[index].tep = int2pdsobjkey(base_tep_id + num);
         break;
     case PDS_NH_TYPE_OVERLAY_ECMP:
         num = (index % (PDS_MAX_NEXTHOP_GROUP-1));
-        spec->routes[index].nh_group = int2pdsobjkey(base_id + num);
+        spec->route_info->routes[index].nh_group = int2pdsobjkey(base_id + num);
         break;
     case PDS_NH_TYPE_PEER_VPC:
         num = (index % PDS_MAX_VPC);
-        spec->routes[index].vpc = int2pdsobjkey(base_id + num);
+        spec->route_info->routes[index].vpc = int2pdsobjkey(base_id + num);
         break;
     case PDS_NH_TYPE_VNIC:
         num = (index % PDS_MAX_VNIC);
-        spec->routes[index].vnic = int2pdsobjkey(base_id + num);
+        spec->route_info->routes[index].vnic = int2pdsobjkey(base_id + num);
         break;
     case PDS_NH_TYPE_IP:
         num = (index % PDS_MAX_NEXTHOP);
-        spec->routes[index].nh = int2pdsobjkey(base_id + num);
+        spec->route_info->routes[index].nh = int2pdsobjkey(base_id + num);
         break;
     case PDS_NH_TYPE_BLACKHOLE:
     default:
@@ -156,10 +153,12 @@ route_table_feeder::key_compare(const pds_obj_key_t *key) const {
 
 bool
 route_table_feeder::spec_compare(const pds_route_table_spec_t *spec) const {
-    if (spec->af != this->spec.af)
-        return false;
-    if (spec->num_routes != 0)
-        return false;
+    if (spec->route_info) {
+        if (spec->route_info->af != this->af)
+            return false;
+        if (spec->route_info->num_routes != 0)
+            return false;
+    }
     return true;
 }
 

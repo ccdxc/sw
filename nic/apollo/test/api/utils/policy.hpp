@@ -52,7 +52,7 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const pds_policy_spec_t *spec) {
     os << &spec->key
-       << " af: " << (spec->rule_info ? (uint32_t)spec->rule_info->af : 0)
+       << " af: " << +(spec->rule_info ? (uint32_t)spec->rule_info->af : 0)
        << " num rules: " << (spec->rule_info ? spec->rule_info->num_rules : 0);
     return os;
 }

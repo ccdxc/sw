@@ -15,11 +15,11 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
                                const pds::RouteTableRequest *proto_req,
                                pds::RouteTableResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
     pds_route_table_spec_t *api_spec;
-    pds_obj_key_t key = { 0 };
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -57,9 +57,9 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
         hooks::route_table_create(api_spec);
         ret = core::route_table_create(&key, api_spec, bctxt);
         // free the routes memory
-        if (api_spec->routes != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, api_spec->routes);
-            api_spec->routes = NULL;
+        if (api_spec->route_info != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, api_spec->route_info);
+            api_spec->route_info = NULL;
         }
         if (ret != SDK_RET_OK) {
             goto end;
@@ -88,10 +88,10 @@ RouteSvcImpl::RouteTableUpdate(ServerContext *context,
                                const pds::RouteTableRequest *proto_req,
                                pds::RouteTableResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
-    pds_obj_key_t key = { 0 };
     pds_route_table_spec_t *api_spec;
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
@@ -129,9 +129,9 @@ RouteSvcImpl::RouteTableUpdate(ServerContext *context,
         }
         ret = core::route_table_update(&key, api_spec, bctxt);
         // free the routes memory
-        if (api_spec->routes != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, api_spec->routes);
-            api_spec->routes = NULL;
+        if (api_spec->route_info != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, api_spec->route_info);
+            api_spec->route_info = NULL;
         }
         if (ret != SDK_RET_OK) {
             goto end;
@@ -160,10 +160,10 @@ RouteSvcImpl::RouteTableDelete(ServerContext *context,
                                const pds::RouteTableDeleteRequest *proto_req,
                                pds::RouteTableDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
-    pds_obj_key_t key = { 0 };
 
     if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);

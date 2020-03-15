@@ -135,7 +135,8 @@ TEST_F(route_store_test, create) {
     auto state = state_thr_ctxt.state();
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) == 0);
     state->route_table_store().add_upd(k_route_key,
-                        rttbl_obj_uptr_t (new route_table_obj_t(k_route_key)));
+                        rttbl_obj_uptr_t (new route_table_obj_t(k_route_key,
+                                                                IP_AF_IPV4)));
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) == 1);
 
     auto rttbl = state->route_table_store().get(k_route_key);
@@ -171,7 +172,7 @@ TEST_F(route_store_test, create) {
     route.prefix.addr.af = IP_AF_IPV4;
     route.prefix.addr.addr.v4_addr = 0x11121300;
     route.prefix.len = 30;
-    route.prio = 200;
+    route.prio = 600;
     rttbl->add_upd_route(route);
     ASSERT_TRUE (rttbl->num_routes() == 4);
 }
@@ -277,6 +278,79 @@ TEST_F(route_store_test, del) {
     // Delete complete rttbl
     state->route_table_store().erase(k_route_key);
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) == 0);
+}
+
+bool incr_ip (ipv4_addr_t& ip, int ip_byte)
+{
+    uint8_t *ip_ar = (uint8_t*) (&ip);
+    if (ip_ar[ip_byte] == 0xfe) {
+        ip_ar[ip_byte] = 1;
+        if (ip_byte == 3) return false;
+        ++ip_byte;
+        return incr_ip(ip, ip_byte);
+    } else {
+        ++ip_ar[ip_byte];
+    }
+    return true;
+}
+TEST_F(route_store_test, scale) {
+    auto state = state_thr_ctxt.state();
+    state->route_table_store().add_upd(k_route_key,
+                        rttbl_obj_uptr_t (new route_table_obj_t(k_route_key,
+                                                                IP_AF_IPV4)));
+
+    auto rttbl = state->route_table_store().get(k_route_key);
+    ASSERT_TRUE (rttbl != nullptr);
+    ASSERT_TRUE (rttbl->num_routes() == 0);
+
+    ipv4_addr_t ip = 0x09020300;
+	uint32_t i;
+    // Add first bucket
+	for (i=1; i<= 1023; ++i) {
+		pds_route_t route = {0};
+		route.prefix.addr.af = IP_AF_IPV4;
+		incr_ip(ip, 0);
+		route.prefix.addr.addr.v4_addr = ip;
+		route.prefix.len = 20;
+		route.prio = i;
+		rttbl->add_upd_route(route);
+	}
+    ASSERT_TRUE (rttbl->num_routes() == i-1);
+    // Get all
+    ip = 0x09020300;
+	for (i=1; i<= 1023; ++i) {
+		ip_prefix_t prefix = {0};
+		prefix.addr.af = IP_AF_IPV4;
+		incr_ip(ip, 0);
+		prefix.addr.addr.v4_addr = ip;
+		prefix.len = 20;
+		auto rt = rttbl->get_route(prefix);
+		ASSERT_TRUE (rt != nullptr);
+		ASSERT_TRUE (rt->prio == i);
+	}
+    // Add second bucket
+	for (; i<= 3000; ++i) {
+		pds_route_t route = {0};
+		route.prefix.addr.af = IP_AF_IPV4;
+		incr_ip(ip, 0);
+		route.prefix.addr.addr.v4_addr = ip;
+		route.prefix.len = 20;
+		route.prio = i;
+		rttbl->add_upd_route(route);
+	}
+    ASSERT_TRUE (rttbl->num_routes() == i-1);
+    // Get all
+    ip = 0x09020300;
+	for (i=1; i<= 3000; ++i) {
+		ip_prefix_t prefix = {0};
+		prefix.addr.af = IP_AF_IPV4;
+		incr_ip(ip, 0);
+		prefix.addr.addr.v4_addr = ip;
+		prefix.len = 20;
+		auto rt = rttbl->get_route(prefix);
+		ASSERT_TRUE (rt != nullptr);
+		ASSERT_TRUE (rt->prio == i);
+	}
 }
 
 } // namespace api_test

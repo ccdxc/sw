@@ -35,6 +35,11 @@ pds_policy_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
             api_ctxt->api_params->policy_key = *key;
         } else {
             api_ctxt->api_params->policy_spec = *spec;
+            if (spec->rule_info == NULL) {
+                PDS_TRACE_ERR("Rejected policy %s, api op %u with no rules",
+                              spec->key.str(), op);
+                return SDK_RET_INVALID_ARG;
+            }
         }
         return process_api(bctxt, api_ctxt);
     }
@@ -118,7 +123,7 @@ pds_policy_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 }
 
 //----------------------------------------------------------------------------
-// Policy Rule API entry point implementation
+// Policy Rule API implementation entry point
 //----------------------------------------------------------------------------
 
 static inline sdk_ret_t

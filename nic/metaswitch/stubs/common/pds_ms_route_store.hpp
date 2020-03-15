@@ -30,8 +30,9 @@ namespace pds_ms {
 class route_table_obj_t : public slab_obj_t<route_table_obj_t>,
                           public base_obj_t {
 public:
-    route_table_obj_t(pds_obj_key_t key) : key_(key) {
-        routes_.reserve(PDS_MS_MIN_NUM_ROUTES);
+    route_table_obj_t(pds_obj_key_t key, uint8_t af)
+        : key_(key), af_(af) {
+        realloc_();
     }
     pds_obj_key_t key(void) const {return key_;}
     void update_store(state_t* state, bool op_delete) override;
@@ -40,17 +41,27 @@ public:
     const pds_route_t* get_route(ip_prefix_t &pfx);
     void del_route(ip_prefix_t &pfx);
     int num_routes(void) { return (route_index_.size()); }
-    pds_route_t *routes(void) { return routes_.data(); }
+    route_info_t *routes(void) { return routes_; }
 
+    ~route_table_obj_t() {
+        if (routes_ != nullptr) {
+            free (routes_);
+            routes_ = nullptr;
+        }
+        routes_capacity_ = 0;
+    }
 
 private:
-    // Vector of pds routes. This needs to be a vector since the memory
-    // has to be contiguous in the route_table_spec when calling the PDS
-    // HAL APIs
-    std::vector<pds_route_t> routes_;
+    // Max routes that will fit in allocated buffer size
+    uint32_t routes_capacity_ = PDS_MS_MIN_NUM_ROUTES; 
+    route_info_t*  routes_ = nullptr;
+
     pds_obj_key_t key_;
+    uint8_t af_;
     // Store the index of the route in the vector
     std::unordered_map<ip_prefix_t, int, ip_prefix_hash> route_index_;
+
+    void realloc_();
 };
 
 class route_table_store_t : public obj_store_t <pds_obj_key_t, route_table_obj_t, pds_obj_key_hash> {

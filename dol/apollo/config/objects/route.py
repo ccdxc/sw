@@ -304,7 +304,7 @@ class RouteTableObject(base.ConfigObjectBase):
             return
         logger.info(" - Unlinking %s from %s " % (dObj, self))
         if dObj.ObjType == api.ObjectTypes.TUNNEL:
-            self.TunnelId = dObj.Duplicate.Id 
+            self.TunnelId = dObj.Duplicate.Id
         elif dObj.ObjType == api.ObjectTypes.NEXTHOP or\
              dObj.ObjType == api.ObjectTypes.NEXTHOPGROUP:
             logger.info(" - Nh or Nhg updated, ignoring for now")
@@ -360,6 +360,11 @@ class RouteObjectClient(base.ConfigClientBase):
 
     def PdsctlRead(self, node):
         # pdsctl show not supported for route table
+        return True
+
+    # TODO: need to disable reading of route objects temporarily
+    #       until persisting of these objects is mainlined into ToT
+    def ReadObjects(self, node):
         return True
 
     def GetRouteTableObject(self, node, routetableid):

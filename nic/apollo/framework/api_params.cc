@@ -23,10 +23,10 @@ api_params_free (api_params_t *api_params, obj_id_t obj_id, api_op_t api_op)
     switch (obj_id) {
     case OBJ_ID_ROUTE_TABLE:
         if ((api_op == API_OP_CREATE) || (api_op == API_OP_UPDATE)) {
-            if (api_params->route_table_spec.routes) {
+            if (api_params->route_table_spec.route_info) {
                 SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                         api_params->route_table_spec.routes);
-                api_params->route_table_spec.routes = NULL;
+                         api_params->route_table_spec.route_info);
+                api_params->route_table_spec.route_info = NULL;
             }
         }
         break;

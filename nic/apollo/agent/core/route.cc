@@ -12,13 +12,13 @@ static inline sdk_ret_t
 route_table_create_validate (pds_obj_key_t *key,
                              pds_route_table_spec_t *spec)
 {
-    for (uint32_t i = 0; i < spec->num_routes; i ++) {
-        if (spec->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
-            if (agent_state::state()->find_in_vpc_db(&spec->routes[i].vpc) ==
+    for (uint32_t i = 0; i < spec->route_info->num_routes; i ++) {
+        if (spec->route_info->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
+            if (agent_state::state()->find_in_vpc_db(&spec->route_info->routes[i].vpc) ==
                     NULL) {
                 PDS_TRACE_ERR("Failed to create route table {}, vpc {} "
                               "not found", spec->key.str(),
-                              spec->routes[i].vpc.str());
+                              spec->route_info->routes[i].vpc.str());
                 return SDK_RET_INVALID_ARG;
             }
         }
@@ -54,13 +54,13 @@ route_table_create (pds_obj_key_t *key, pds_route_table_spec_t *spec,
 static inline sdk_ret_t
 route_table_update_validate (pds_obj_key_t *key, pds_route_table_spec_t *spec)
 {
-    for (uint32_t i = 0; i < spec->num_routes; i ++) {
-        if (spec->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
-            if (agent_state::state()->find_in_vpc_db(&spec->routes[i].vpc) ==
+    for (uint32_t i = 0; i < spec->route_info->num_routes; i ++) {
+        if (spec->route_info->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
+            if (agent_state::state()->find_in_vpc_db(&spec->route_info->routes[i].vpc) ==
                     NULL) {
                 PDS_TRACE_ERR("Failed to update route table {}, vpc {} "
                               "not found", spec->key.str(),
-                              spec->routes[i].vpc.str());
+                              spec->route_info->routes[i].vpc.str());
                 return SDK_RET_INVALID_ARG;
             }
         }
@@ -110,9 +110,9 @@ route_table_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
             return ret;
         }
     }
-    if (spec->routes) {
-        SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, spec->routes);
-        spec->routes = NULL;
+    if (spec->route_info) {
+        SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, spec->route_info);
+        spec->route_info = NULL;
     }
     if (agent_state::state()->del_from_route_table_db(key) == false) {
         return SDK_RET_ERR;

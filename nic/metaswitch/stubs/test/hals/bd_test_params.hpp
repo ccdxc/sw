@@ -20,7 +20,6 @@ public:
     uint32_t           vrf_id, vrf_uuid;
     pds_subnet_spec_t  subnet_spec = {0};
     pds_vpc_spec_t  vpc_spec = {0};
-    pds_route_table_spec_t  route_table;
     bool test_if_bind = false;
     bool test_if_unbind = false;
 
@@ -39,8 +38,6 @@ public:
     vpc_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     vpc_spec.fabric_encap.val.vnid  = 100;
     vpc_spec.tos = 5;
-    route_table.key = vpc_spec.v4_route_table;
-    route_table.num_routes = 0;
 
 
     memset(&subnet_spec, 0, sizeof(subnet_spec));

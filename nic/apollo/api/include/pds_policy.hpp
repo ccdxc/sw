@@ -106,8 +106,8 @@ typedef struct rule_info_s {
     uint32_t    num_rules;    ///< number of rules in the list
     rule_t      rules[0];     ///< list or rules
 } rule_info_t;
-#define POLICY_RULE_SET_SIZE(rule_count)    \
-            (sizeof(rule_info_t) + (rule_count) * sizeof(rule_t))
+#define POLICY_RULE_SET_SIZE(count)        \
+            (sizeof(rule_info_t) + (count) * sizeof(rule_t))
 
 /// \brief    generic policy specification
 typedef struct pds_policy_spec_s    pds_policy_spec_t;

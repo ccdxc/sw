@@ -55,7 +55,7 @@ route_table_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt)
     spec = &obj_ctxt->api_params->route_table_spec;
     // allocate free lpm slab for this route table
     api_obj->set_rsvd_rsc();
-    if (spec->af == IP_AF_IPV4) {
+    if (spec->route_info->af == IP_AF_IPV4) {
         if (route_table_impl_db()->v4_idxr()->alloc(&lpm_block_id) !=
                 sdk::lib::indexer::SUCCESS) {
             return sdk::SDK_RET_NO_RESOURCE;
@@ -63,7 +63,7 @@ route_table_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt)
         lpm_root_addr_ =
             route_table_impl_db()->v4_region_addr() +
                 (route_table_impl_db()->v4_table_size() * lpm_block_id);
-    } else if (spec->af == IP_AF_IPV6) {
+    } else if (spec->route_info->af == IP_AF_IPV6) {
         if (route_table_impl_db()->v6_idxr()->alloc(&lpm_block_id) !=
                 sdk::lib::indexer::SUCCESS) {
             return sdk::SDK_RET_NO_RESOURCE;
@@ -117,22 +117,22 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         (route_table_t *)
             SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
                        sizeof(route_table_t) +
-                           (spec->num_routes * sizeof(route_t)));
+                           (spec->route_info->num_routes * sizeof(route_t)));
     if (rtable == NULL) {
         return sdk::SDK_RET_OOM;
     }
-    rtable->af = spec->af;
+    rtable->af = spec->route_info->af;
     rtable->default_nhid = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
     if (rtable->af == IP_AF_IPV4) {
         rtable->max_routes = route_table_impl_db()->v4_max_routes();
     } else {
         rtable->max_routes = route_table_impl_db()->v6_max_routes();
     }
-    rtable->num_routes = spec->num_routes;
+    rtable->num_routes = spec->route_info->num_routes;
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
-        rtable->routes[i].prefix = spec->routes[i].prefix;
-        rtable->routes[i].prio = 128 - spec->routes[i].prefix.len;
-        switch (spec->routes[i].nh_type) {
+        rtable->routes[i].prefix = spec->route_info->routes[i].prefix;
+        rtable->routes[i].prio = 128 - spec->route_info->routes[i].prefix.len;
+        switch (spec->route_info->routes[i].nh_type) {
         case PDS_NH_TYPE_BLACKHOLE:
             rtable->routes[i].nhid = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
             PDS_TRACE_DEBUG("Processing route table %s, route %s -> blackhole "
@@ -142,12 +142,12 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             break;
         case PDS_NH_TYPE_OVERLAY:
             // non vpc peering case
-            tep_key = &spec->routes[i].tep;
+            tep_key = &spec->route_info->routes[i].tep;
             tep = tep_db()->find(tep_key);
             if (tep == NULL) {
                 PDS_TRACE_ERR("TEP %s not found while processing route %s in "
                               "route table %s", tep_key->str(),
-                              ippfx2str(&spec->routes[i].prefix),
+                              ippfx2str(&spec->route_info->routes[i].prefix),
                               spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
@@ -159,11 +159,12 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                             rtable->routes[i].nhid, tep->key2str().c_str());
             break;
         case PDS_NH_TYPE_PEER_VPC:
-            vpc = vpc_db()->find(&spec->routes[i].vpc);
+            vpc = vpc_db()->find(&spec->route_info->routes[i].vpc);
             if (vpc == NULL) {
                 PDS_TRACE_ERR("vpc %s not found while processing route %s in "
-                              "route table %s", spec->routes[i].vpc.str(),
-                              ippfx2str(&spec->routes[i].prefix),
+                              "route table %s",
+                              spec->route_info->routes[i].vpc.str(),
+                              ippfx2str(&spec->route_info->routes[i].prefix),
                               spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
@@ -177,20 +178,21 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             break;
         default:
             PDS_TRACE_ERR("Unknown nh type %u while processing route %s in "
-                          "route table %s", spec->routes[i].nh_type,
-                          ippfx2str(&spec->routes[i].prefix), spec->key.str());
+                          "route table %s", spec->route_info->routes[i].nh_type,
+                          ippfx2str(&spec->route_info->routes[i].prefix),
+                          spec->key.str());
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
             break;
         }
     }
     ret = lpm_tree_create(rtable,
-                          (spec->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4 :
-                                                     ITREE_TYPE_IPV6,
+                          (spec->route_info->af == IP_AF_IPV4) ?
+                              ITREE_TYPE_IPV4 : ITREE_TYPE_IPV6,
                           lpm_root_addr_,
-                          (spec->af == IP_AF_IPV4) ?
-                          route_table_impl_db()->v4_table_size() :
-                          route_table_impl_db()->v6_table_size());
+                          (spec->route_info->af == IP_AF_IPV4) ?
+                              route_table_impl_db()->v4_table_size() :
+                              route_table_impl_db()->v6_table_size());
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build LPM route table, err : %u", ret);
     }

@@ -25,10 +25,9 @@ void route_pds_mock_t::generate_addupd_specs(const route_input_params_t& input,
     test::api::route_table_feeder route_table_feeder;
     route_table_feeder.init("10.1.1.1/24", IP_AF_IPV4, 1,
                             1, 1);
-    route_table_feeder.spec_build(&route_table_feeder.spec);
     pds_batch.emplace_back(OBJ_ID_ROUTE_TABLE, op);
     auto& route_table = pds_batch.back().route_table;
-    route_table = route_table_feeder.spec; 
+    route_table_feeder.spec_build(&route_table);
 }
 
 void route_pds_mock_t::generate_del_specs(const route_input_params_t& input,
@@ -41,7 +40,7 @@ void route_pds_mock_t::generate_del_specs(const route_input_params_t& input,
     route_table_feeder.spec_build(&route_table_feeder.spec);
     pds_batch.emplace_back(OBJ_ID_ROUTE_TABLE, op);
     auto& route_table = pds_batch.back().route_table;
-    route_table = route_table_feeder.spec; 
+    route_table_feeder.spec_build(&route_table);
 }
 
 void route_pds_mock_t::validate_()

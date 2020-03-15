@@ -41,7 +41,7 @@ public:
         state_ctxt.state()->vpc_store().add_upd (vrf_id,
                                                  new pds_ms::vpc_obj_t(vrf_id, vpc_spec));
         state_ctxt.state()->route_table_store().add_upd(route_table_key,
-                            new pds_ms::route_table_obj_t(route_table_key));
+                            new pds_ms::route_table_obj_t(route_table_key, IP_AF_IPV4));
    }
    virtual ~route_input_params_t(void) {};
 };

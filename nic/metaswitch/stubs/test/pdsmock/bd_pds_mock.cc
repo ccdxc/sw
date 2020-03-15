@@ -31,7 +31,8 @@ void bd_pds_mock_t::init(void)
         // Add route table also to expect
         expected_pds.emplace_back (OBJ_ID_ROUTE_TABLE, op);
         auto& route_table = expected_pds.back().route_table;
-        route_table = input->route_table;
+        route_table.key = vpc_spec.v4_route_table;
+        route_table.route_info = nullptr;
     }
 }
 

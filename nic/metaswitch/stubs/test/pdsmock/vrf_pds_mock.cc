@@ -29,7 +29,8 @@ void vrf_pds_mock_t::generate_addupd_specs(const vrf_input_params_t& input,
         // Add route table also to expect
         pds_batch.emplace_back (OBJ_ID_ROUTE_TABLE, op);
         auto& route_table = pds_batch.back().route_table;
-        route_table = input.route_table;
+        route_table.key = vpc_spec.v4_route_table;
+        route_table.route_info = nullptr;
     }
 }
 
@@ -40,7 +41,7 @@ void vrf_pds_mock_t::generate_del_specs(const vrf_input_params_t& input,
     pds_batch.back().vpc.key = input.vpc_spec.key;
     // Add route table also to expect
     pds_batch.emplace_back (OBJ_ID_ROUTE_TABLE, API_OP_DELETE);
-    pds_batch.back().route_table.key = input.route_table.key;
+    pds_batch.back().route_table.key = input.vpc_spec.v4_route_table;
 }
 
 void vrf_pds_mock_t::validate_()
@@ -51,7 +52,7 @@ void vrf_pds_mock_t::validate_()
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
         ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_VPC_SLAB_ID) , (uint32_t)(num_vrf_objs_));
-        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) , (uint32_t)0);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) , (uint32_t)num_route_tbl_objs_);
         ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) , (uint32_t)0);
         auto vrf_obj = state->vpc_store().get(((vrf_input_params_t*)test_params()->test_input)->vrf_id);
         ASSERT_FALSE (vrf_obj == nullptr);
@@ -67,10 +68,10 @@ void vrf_pds_mock_t::validate_()
         if (op_delete_) {
             // Object is removed from store synchronously for deletes
             ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_VPC_SLAB_ID) , uint32_t(num_vrf_objs_-1));
-            ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) , (uint32_t)0);
+            ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) , (uint32_t)num_route_tbl_objs_-1);
         } else if (op_create_) {
             ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_VPC_SLAB_ID) , (uint32_t)(num_vrf_objs_));
-            ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) , (uint32_t)0);
+            ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) , (uint32_t)num_route_tbl_objs_);
         }
     }
 
@@ -88,8 +89,10 @@ void vrf_pds_mock_t::validate_()
         // Verify no change to slab - all temporary objects released
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
+        // Route table object should have been release since the async call failed
+        --num_route_tbl_objs_;
         ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_VPC_SLAB_ID) , (uint32_t)num_vrf_objs_);
-        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) , (uint32_t)0);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) , (uint32_t)num_route_tbl_objs_);
         ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) , (uint32_t)0);
         auto vrf_obj = state->vpc_store().get(((vrf_input_params_t*)test_params()->test_input)->vrf_id);
         ASSERT_FALSE (vrf_obj == nullptr);
@@ -100,7 +103,7 @@ void vrf_pds_mock_t::validate_()
     auto state_ctxt = pds_ms::state_t::thread_context();
     auto state = state_ctxt.state();
     if (op_delete_) { 
-        --num_vrf_objs_;
+        --num_vrf_objs_; --num_route_tbl_objs_;
     } else {
         std::cout << "Fetching VRF for " <<  ((vrf_input_params_t*)test_params()->test_input)->vrf_id << std::endl;
         auto vrf_obj = state->vpc_store().get(((vrf_input_params_t*)test_params()->test_input)->vrf_id);
@@ -108,11 +111,7 @@ void vrf_pds_mock_t::validate_()
         ASSERT_TRUE (vrf_obj->properties().hal_created);
     }
     ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_VPC_SLAB_ID) , (uint32_t)num_vrf_objs_);
-    if (op_delete_) {
-        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) , (uint32_t)0);
-    } else {
-        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) , (uint32_t)1);
-    }
+    ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) , (uint32_t)num_route_tbl_objs_);
     ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) , (uint32_t)0);
 }
 

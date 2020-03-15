@@ -19,9 +19,6 @@ class route_ips_feeder_t final : public route_input_params_t {
 public:
     pds_ms::hals_l3_integ_subcomp_t hals_is; 
     ms_ifindex_t   prev_if_bind = 0;
-    void init(const char *rip, uint32_t pfxlen) override {
-        route_input_params_t::init(rip, pfxlen);
-    }
 
     ATG_ROPI_UPDATE_ROUTE generate_add_upd_ips(void) {
         ATG_ROPI_UPDATE_ROUTE add_upd = {0};

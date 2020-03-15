@@ -84,17 +84,13 @@ pds_vpc_spec_t li_vrf_t::make_pds_vpc_spec_(void) {
 
 pds_obj_key_t li_vrf_t::make_pds_rttable_key_(void) {
     // Get the route-table id from the VPC store
-    pds_vpc_spec_t vpc_spec = make_pds_vpc_spec_();
-    return (vpc_spec.v4_route_table);
+    return (store_info_.vpc_obj->properties().vpc_spec.v4_route_table);
 }
 
 pds_route_table_spec_t li_vrf_t::make_pds_rttable_spec_(void) {
     pds_route_table_spec_t rttable;
-    memset(&rttable, 0, sizeof(pds_route_table_spec_t));
     rttable.key = make_pds_rttable_key_();
-    rttable.af = IP_AF_IPV4;
-    rttable.num_routes = 0;
-    rttable.routes = NULL;
+    rttable.route_info = store_info_.route_tbl_obj->routes();
     return rttable;
 }
 
@@ -117,32 +113,38 @@ pds_batch_ctxt_guard_t li_vrf_t::make_batch_pds_spec_(bool async) {
     bctxt_guard_.set (bctxt);
 
     if (op_delete_) { // Delete
-        auto rttbl_key = make_pds_rttable_key_();
-        if (!is_pds_obj_key_invalid(rttbl_key) && !PDS_MOCK_MODE()) {
-            pds_route_table_delete(&rttbl_key, bctxt);
-        }
         auto vpc_key = make_pds_vpc_key_();
         if (!PDS_MOCK_MODE()) {
             pds_vpc_delete(&vpc_key, bctxt);
         }
+        auto rttbl_key = make_pds_rttable_key_();
+        if (!is_pds_obj_key_invalid(rttbl_key) && !PDS_MOCK_MODE()) {
+            pds_route_table_delete(&rttbl_key, bctxt);
+        }
     } else { // Add or update
         auto vpc_spec = make_pds_vpc_spec_();
-        auto rttbl_spec = make_pds_rttable_spec_();
-
         sdk_ret_t ret = SDK_RET_OK;
+
         if (op_create_) {
+            // Create a new route table in case of VPC create op
+            auto rttbl_spec = make_pds_rttable_spec_();
+
             if (!PDS_MOCK_MODE()) {
+                if (!is_pds_obj_key_invalid(rttbl_spec.key)) {
+                    ret = pds_route_table_create(&rttbl_spec, bctxt);
+                    if (unlikely(ret != SDK_RET_OK)) {
+                        throw Error(std::string("PDS Route Table Create failed for MS VRF ")
+                                    .append(std::to_string(ips_info_.vrf_id))
+                                    .append(" err=").append(std::to_string(ret)));
+                    }
+                }
                 ret = pds_vpc_create(&vpc_spec, bctxt);
-            }
-            if ((ret == SDK_RET_OK) && (!is_pds_obj_key_invalid(rttbl_spec.key)) 
-                && (!PDS_MOCK_MODE())) {
-                ret = pds_route_table_create(&rttbl_spec, bctxt);
             }
         } else {
             if (!PDS_MOCK_MODE()) {
                 ret = pds_vpc_update(&vpc_spec, bctxt);
+                // Route table cannot be updated for the VPC
             }
-            // Route table cannot be updated for the VPC
         }
         if (unlikely (ret != SDK_RET_OK)) {
             throw Error(std::string("PDS VPC Create or Update failed for MS VRF ")
@@ -200,6 +202,18 @@ NBB_BYTE li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) 
         auto l_rttbl_key =
                 store_info_.vpc_obj->properties().vpc_spec.v4_route_table;
         cookie_uptr_.reset(new cookie_t);
+        if (op_create_) {
+            // Create new RouteTbl Object
+            std::unique_ptr<route_table_obj_t> new_route_tbl_obj
+                (new route_table_obj_t(l_rttbl_key, IP_AF_IPV4));
+            // Update the local store info context so that the make_pds_spec 
+            // refers to the latest fields
+            store_info_.route_tbl_obj = new_route_tbl_obj.get(); 
+            // Stash the new object in the cookie for now. Save it
+            // in the final Global state only when PDS success 
+            // is received asynchronously
+            cookie_uptr_->objs.push_back(std::move(new_route_tbl_obj));
+        }
         auto pds_bctxt_guard = prepare_pds(state_ctxt, true /* async */);
 
         cookie_uptr_->send_ips_reply = 
@@ -218,12 +232,6 @@ NBB_BYTE li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) 
                 if (vpc_obj != nullptr) {
                     vpc_obj->properties().hal_created = false;
                 }
-            }
-            if (pds_status && l_op_create) {
-                // Create the route table store for this VRF
-                auto state_ctxt = pds_ms::state_t::thread_context();
-                state_ctxt.state()->route_table_store().add_upd(l_rttbl_key,
-                   new route_table_obj_t(l_rttbl_key));
             }
             if (unlikely(ips_mock)) return; // UT
 

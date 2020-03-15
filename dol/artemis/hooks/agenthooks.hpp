@@ -579,7 +579,7 @@ public:
     }
 
     void add_route_table(pds_route_table_spec_t *route_spec) {
-        uint32_t rt_dbid = route_spec->af == IP_AF_IPV4;
+        uint32_t rt_dbid = route_spec->route_info->af == IP_AF_IPV4;
         uint32_t route_table_id = test::objid_from_uuid(route_spec->key);
         uint32_t tblid = 0;
 
@@ -596,19 +596,21 @@ public:
         }
         DBG_PRINT("Route tblid %u:%u type %u\n", route_table_id, tblid, rt_dbid);
         assert(tblid < DOL_MAX_ROUTE_TABLE);
-        assert(route_spec->num_routes < DOL_MAX_ROUTE_PER_TABLE);
-        for (uint32_t i = 0; i < route_spec->num_routes; i++) {
+        assert(route_spec->route_info->num_routes < DOL_MAX_ROUTE_PER_TABLE);
+        for (uint32_t i = 0; i < route_spec->route_info->num_routes; i++) {
             memcpy(&routedb[rt_dbid][tblid].routes[i],
-                   &route_spec->routes[i], sizeof(pds_route_t));
+                   &route_spec->route_info->routes[i], sizeof(pds_route_t));
         }
-        routedb[rt_dbid][tblid].num_routes = route_spec->num_routes;
+        routedb[rt_dbid][tblid].num_routes = route_spec->route_info->num_routes;
     }
 
     void add_subnet(pds_subnet_spec_t *subnet_spec) {
         uint32_t subnet_id = test::objid_from_uuid(subnet_spec->key);
         uint32_t vpc_id = test::objid_from_uuid(subnet_spec->vpc);
-        uint32_t v4route_table_id = test::objid_from_uuid(subnet_spec->v4_route_table);
-        uint32_t v6route_table_id = test::objid_from_uuid(subnet_spec->v6_route_table);
+        uint32_t v4route_table_id =
+            test::objid_from_uuid(subnet_spec->v4_route_table);
+        uint32_t v6route_table_id =
+            test::objid_from_uuid(subnet_spec->v6_route_table);
 
         assert(subnet_id < DOL_MAX_SUBNET);
         assert(vpc_id < DOL_MAX_VPC);

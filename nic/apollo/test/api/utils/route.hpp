@@ -17,14 +17,17 @@ namespace api {
 // Route table test feeder class
 class route_table_feeder : public feeder {
 public:
+    uint8_t af;
+    bool enable_pbr;
+    uint32_t num_routes;
     pds_route_table_spec_t spec;
     std::string base_route_pfx_str;
 
     route_table_feeder() {};
     route_table_feeder(const route_table_feeder& feeder) {
         pds_obj_key_t key = feeder.spec.key;
-        init(feeder.base_route_pfx_str, feeder.spec.af,
-             feeder.spec.num_routes, feeder.num_obj,
+        init(feeder.base_route_pfx_str, feeder.af,
+             feeder.num_routes, feeder.num_obj,
              pdsobjkey2int(key));
     }
     ~route_table_feeder() {};
@@ -76,10 +79,13 @@ operator<<(std::ostream& os, const pds_route_t *route) {
 inline std::ostream&
 operator<<(std::ostream& os, const pds_route_table_spec_t *spec) {
     os << &spec->key
-       << " af: " << +spec->af
-       << " num routes: " << spec->num_routes;
-    for (uint32_t i = 0; i < spec->num_routes; i++) {
-        os << &spec->routes[i];
+       << " af: " << +(spec->route_info ? spec->route_info->af : 0)
+       << " num routes: " << (spec->route_info ?
+                                  spec->route_info->num_routes : 0);
+    if (spec->route_info) {
+        for (uint32_t i = 0; i < spec->route_info->num_routes; i++) {
+            os << &spec->route_info->routes[i];
+        }
     }
 
     return os;
@@ -111,8 +117,9 @@ inline std::ostream&
 operator<<(std::ostream& os, const route_table_feeder& obj) {
     os << "Route table feeder => "
        << " key: " << obj.spec.key.str()
-       << " af: " << +obj.spec.af
-       << " num routes: " << obj.spec.num_routes;
+       << " af: " << +(obj.spec.route_info ? obj.spec.route_info->af : 0)
+       << " num routes: " << (obj.spec.route_info ?
+                                  obj.spec.route_info->num_routes : 0);
     return os;
 }
 
