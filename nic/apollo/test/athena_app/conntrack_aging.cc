@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 #include "conntrack_aging.hpp"
+#include "session_aging.hpp"
 #include "nic/apollo/api/include/athena/pds_conntrack.h"
 #include "nic/apollo/api/include/athena/pds_flow_age.h"
 #include "nic/apollo/api/impl/athena/ftl_pollers_client.hpp"
@@ -233,20 +234,31 @@ conntrack_populate_full(test_vparam_ref_t vparam)
     return CONNTRACK_CREATE_RET_VALIDATE(ret) && tuple_eval.zero_failures();
 }
 
-static sdk_ret_t
+sdk_ret_t
 conntrack_aging_expiry_fn(uint32_t expiry_id,
                         pds_flow_age_expiry_type_t expiry_type,
                         void *user_ctx)
 {
-    aging_tolerance_t   *tolerance;
+    sdk_ret_t   ret;
 
-    if (expiry_type == EXPIRY_TYPE_CONNTRACK) {
-        tolerance = static_cast<aging_tolerance_t *>(user_ctx);
-        tolerance->expiry_count_inc();
-        tolerance->conntrack_tmo_tolerance_check(expiry_id);
-        tolerance->create_id_map_find_erase(expiry_id);
+    switch (expiry_type) {
+
+    case EXPIRY_TYPE_CONNTRACK:
+        glb_tolerance.expiry_count_inc();
+        glb_tolerance.conntrack_tmo_tolerance_check(expiry_id);
+        glb_tolerance.create_id_map_find_erase(expiry_id);
+        ret = (*aging_expiry_dflt_fn)(expiry_id, expiry_type, user_ctx);
+        break;
+
+    case EXPIRY_TYPE_SESSION:
+        ret = session_aging_expiry_fn(expiry_id, expiry_type, user_ctx);
+        break;
+
+    default:
+        ret = SDK_RET_INVALID_ARG;
+        break;
     }
-    return (*aging_expiry_dflt_fn)(expiry_id, expiry_type, nullptr);
+    return ret;
 }
                              
 bool
@@ -331,11 +343,28 @@ conntrack_aging_pollers_poll(void *user_ctx)
 static bool
 conntrack_aging_expiry_count_check(void *user_ctx)
 {
-    aging_tolerance_t   *tolerance;
-
     conntrack_aging_pollers_poll(user_ctx);
-    tolerance = static_cast<aging_tolerance_t *>(user_ctx);
-    return tolerance->expiry_count() >= tolerance->create_count();
+    return glb_tolerance.expiry_count() >= glb_tolerance.create_count();
+}
+
+bool
+conntrack_4combined_expiry_count_check(bool poll_needed)
+{
+    if (poll_needed) {
+        conntrack_aging_pollers_poll((void *)&glb_tolerance);
+    }
+    return glb_tolerance.expiry_count() >= glb_tolerance.create_count();
+}
+
+bool
+conntrack_4combined_result_check(void)
+{
+    TEST_LOG_INFO("Conntrack entries aged out: %u\n",
+                  glb_tolerance.expiry_count());
+    glb_tolerance.create_id_map_empty_check();
+    conntrack_metrics.expiry_count_check(glb_tolerance.expiry_count());
+    return conntrack_4combined_expiry_count_check() &&
+           glb_tolerance.zero_failures();
 }
 
 bool
@@ -344,14 +373,8 @@ conntrack_aging_test(test_vparam_ref_t vparam)
     test_timestamp_t    ts;
 
     ts.time_expiry_set(APP_TIME_LIMIT_EXEC_SECS(APP_TIME_LIMIT_EXEC_DFLT));
-    ts.time_limit_exec(conntrack_aging_expiry_count_check,
-                       (void *)&glb_tolerance, 0);
-    TEST_LOG_INFO("Conntrack entries aged out: %u\n",
-                  glb_tolerance.expiry_count());
-    glb_tolerance.create_id_map_empty_check();
-    conntrack_metrics.expiry_count_check(glb_tolerance.expiry_count());
-    return conntrack_aging_expiry_count_check((void *)&glb_tolerance) &&
-           glb_tolerance.zero_failures();
+    ts.time_limit_exec(conntrack_aging_expiry_count_check, nullptr, 0);
+    return conntrack_4combined_result_check();
 }
 
 bool

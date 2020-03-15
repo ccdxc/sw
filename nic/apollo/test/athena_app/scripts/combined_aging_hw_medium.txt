@@ -1,0 +1,44 @@
+session_aging_init
+conntrack_aging_init
+session_aging_sim_mode false
+
+session_aging_normal_tmo_set 9
+session_aging_accel_tmo_set 1
+
+conntrack_aging_normal_tmo_set {ICMP unestablished 8} {icmp established 8} {others unestablished 8} {others established 8}
+conntrack_aging_normal_tmo_set {udp unestablished 8} {UDP ESTABLISHED 8}
+conntrack_aging_normal_tmo_set {tcp unestablished 8} {TCP syn_sent 8} {TCP SYN_RECV 8} {tcp synack_sent 8} {tcp synack_recv 8} {tcp established 8} {tcp fin_sent 8} {tcp fin_recv 8} {tcp time_wait 8} {tcp rst_close 8}
+
+conntrack_aging_accel_tmo_set {ICMP unestablished 1} {icmp established 1} {others unestablished 1} {others established 1}
+conntrack_aging_accel_tmo_set {udp unestablished 1} {UDP ESTABLISHED 1}
+conntrack_aging_accel_tmo_set {tcp unestablished 1} {TCP syn_sent 1} {TCP SYN_RECV 1} {tcp synack_sent 1} {tcp synack_recv 1} {tcp established 1} {tcp fin_sent 1} {tcp fin_recv 1} {tcp time_wait 1} {tcp rst_close 1}
+
+session_aging_clear_full 262555
+conntrack_aging_clear_full 262555
+session_populate_full 262555
+conntrack_populate_full {TCP established 232121}
+combined_aging_test
+
+#random with specified {start_idx count} and random {flowtype flowstate}
+session_populate_random 21709 82901
+conntrack_populate_random {17 184262} {tcp rst_close}
+combined_aging_test
+
+#switch to accelerated aging
+session_aging_accel_control true
+conntrack_aging_accel_control true
+
+session_populate_random 938 892948
+conntrack_populate_random {9373 539901}
+combined_aging_test
+
+session_aging_metrics_show
+conntrack_aging_metrics_show
+
+session_aging_accel_control false
+conntrack_aging_accel_control false
+
+conntrack_aging_fini
+session_aging_fini
+session_aging_sim_mode false
+

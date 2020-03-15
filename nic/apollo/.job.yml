@@ -284,6 +284,16 @@ targets:
     - build-athena-x86
     - build-athena-arm
 
+  athena/gtests_sim:
+    commands: ["make", "PIPELINE=athena", "jobd/athena/gtests_sim"]
+    owners: ["email:skittur@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-athena-x86
+    - build-athena-arm
+
   athena_app/session_aging_sim_simple:
     commands: ["make", "PIPELINE=athena", "jobd/athena_app/session_aging_sim_simple"]
     owners: ["email:raghava@pensando.io"]

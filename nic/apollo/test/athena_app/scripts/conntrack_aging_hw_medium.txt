@@ -4,24 +4,39 @@
 
 conntrack_aging_init
 conntrack_aging_sim_mode false
+
+conntrack_aging_normal_tmo_set {ICMP unestablished  5} {others unestablished 5}
+conntrack_aging_normal_tmo_set {udp unestablished  5} {UDP ESTABLISHED 5}
+conntrack_aging_normal_tmo_set {tcp unestablished 5} {TCP syn_sent 5} {TCP SYN_RECV 5} {tcp synack_sent 5} {tcp synack_recv 5} {tcp established 5} {tcp fin_sent 5} {tcp fin_recv 5} {tcp time_wait 5} {tcp rst_close 5}
+
+conntrack_aging_accel_tmo_set {ICMP unestablished  3} {others unestablished 3}
+conntrack_aging_accel_tmo_set {udp unestablished  3} {UDP ESTABLISHED 3}
+conntrack_aging_accel_tmo_set {tcp unestablished 3} {TCP syn_sent 3} {TCP SYN_RECV 3} {tcp synack_sent 3} {tcp synack_recv 3} {tcp established 3} {tcp fin_sent 3} {tcp fin_recv 3} {tcp time_wait 3} {tcp rst_close 3}
+
 conntrack_aging_clear_full 368944
-conntrack_aging_normal_tmo_set {TCP FIN_SENT 5} {others unestablished 3}
 conntrack_populate_full {TCP FIN_SENT 161072}
 conntrack_aging_test
 conntrack_populate_full {others ESTABLISHED 269844}
 conntrack_aging_test
 
 #random with specified {start_idx count} and random {flowtype flowstate}
-conntrack_populate_random {371 8119}
+conntrack_populate_random {7382 181719}
 conntrack_aging_test
 #random with specified {start_idx count} and specified {flowtype flowstate}
-conntrack_populate_random {526 2744} {tcp established}
+conntrack_populate_random {526 254704} {tcp established}
 conntrack_aging_test
 #random everything
 conntrack_populate_random
 conntrack_aging_test
 
+#switch to accelerated aging
+conntrack_aging_accel_control true
+
+conntrack_populate_random {12625 188888} {udp established}
+conntrack_aging_test
+
 conntrack_aging_metrics_show
+conntrack_aging_accel_control false
 conntrack_aging_fini
 conntrack_aging_sim_mode false
 

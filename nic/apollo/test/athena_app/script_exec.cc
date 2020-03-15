@@ -12,6 +12,7 @@
 #include "script_parser.hpp"
 #include "session_aging.hpp"
 #include "conntrack_aging.hpp"
+#include "combined_aging.hpp"
 
 namespace test {
 namespace athena_app {
@@ -20,6 +21,7 @@ const static map<string,test_fn_t>  name2fn_map =
 {
     SESSION_AGING_NAME2FN_MAP
     CONNTRACK_AGING_NAME2FN_MAP
+    COMBINED_AGING_NAME2FN_MAP
     APP_TEST_NAME2FN_MAP_ENTRY(APP_TEST_EXIT_FN),
 };
 
@@ -38,7 +40,7 @@ public:
 
     string                      test_name;
     test_fn_t                   test_fn;
-    test_vparam_t                 vparam;
+    test_vparam_t               vparam;
     bool                        test_success;
 };
 

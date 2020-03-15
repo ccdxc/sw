@@ -4,24 +4,29 @@
 
 session_aging_init
 session_aging_sim_mode false
+
+session_aging_normal_tmo_set 7
+session_aging_accel_tmo_set 2
+
 session_aging_clear_full 8388608
-session_aging_normal_tmo_set {TCP synack_recv 2} {icmp unestablished 2} {tcp time_wait 2}
-session_populate_full {tcp time_wait 9194304}
+session_populate_full 9194304
 session_aging_test
-session_populate_full {TCP synack_recv 2697152}
+session_populate_full 2697152
 session_aging_test
 
-#random with specified {start_idx count} and random {flowtype flowstate}
-session_populate_random {371 8651}
+session_populate_random 371 3569736
 session_aging_test
-#random with specified {start_idx count} and specified {flowtype flowstate}
-session_populate_random {526 39607} {tcp established}
-session_aging_test
-#random everything
 session_populate_random
 session_aging_test
 
+#switch to accelerated aging
+session_aging_accel_control true
+
+session_populate_random 65279 2937947
+session_aging_test
+
 session_aging_metrics_show
+session_aging_accel_control FALSE
 session_aging_fini
 session_aging_sim_mode false
 

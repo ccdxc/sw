@@ -1,9 +1,9 @@
-#Note that the test infra knows the true size of the conntrack table
-#so it's fine to specify larger size parameters here. The infra will
-#automatically reduce it to the actual table size as needed.
-
+session_aging_init
 conntrack_aging_init
-conntrack_aging_sim_mode false
+session_aging_sim_mode false
+
+session_aging_normal_tmo_set 5
+session_aging_accel_tmo_set 2
 
 conntrack_aging_normal_tmo_set {ICMP unestablished 6} {icmp established 6} {others unestablished 6} {others established 6}
 conntrack_aging_normal_tmo_set {udp unestablished 6} {UDP ESTABLISHED 6}
@@ -13,30 +13,32 @@ conntrack_aging_accel_tmo_set {ICMP unestablished 2} {icmp established 2} {other
 conntrack_aging_accel_tmo_set {udp unestablished 2} {UDP ESTABLISHED 2}
 conntrack_aging_accel_tmo_set {tcp unestablished 2} {TCP syn_sent 2} {TCP SYN_RECV 2} {tcp synack_sent 2} {tcp synack_recv 2} {tcp established 2} {tcp fin_sent 2} {tcp fin_recv 2} {tcp time_wait 2} {tcp rst_close 2}
 
+session_aging_clear_full 8388608
 conntrack_aging_clear_full 8388608
-conntrack_populate_full {tcp time_wait 8894304}
-conntrack_aging_test
 
-conntrack_populate_full {icmp unestablished 2978152}
-conntrack_aging_test
+session_populate_full 6145304
+conntrack_populate_full {TCP fin_sent 7736083}
+combined_aging_test
 
 #random with specified {start_idx count} and random {flowtype flowstate}
-conntrack_populate_random {371 2993539}
-conntrack_aging_test
-#random with specified {start_idx count} and specified {flowtype flowstate}
-conntrack_populate_random {92573 1843847} {tcp established}
-conntrack_aging_test
-#random everything
-conntrack_populate_random
-conntrack_aging_test
+session_populate_random 391103 2074777
+conntrack_populate_random {6765 199607} {tcp syn_sent}
+combined_aging_test
 
 #switch to accelerated aging
+session_aging_accel_control true
 conntrack_aging_accel_control true
-conntrack_populate_random {13 973883} {others established}
-conntrack_aging_test
 
+session_populate_random 92868 3137088
+conntrack_populate_random {13 1846977}
+combined_aging_test
+
+session_aging_metrics_show
 conntrack_aging_metrics_show
+
+session_aging_accel_control FALSE
 conntrack_aging_accel_control false
 conntrack_aging_fini
-conntrack_aging_sim_mode false
+session_aging_fini
+session_aging_sim_mode false
 

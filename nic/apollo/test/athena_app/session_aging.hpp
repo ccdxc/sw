@@ -47,6 +47,13 @@ bool session_aging_metrics_show(test_vparam_ref_t vparam);
     APP_TEST_NAME2FN_MAP_ENTRY(session_aging_accel_control),        \
     APP_TEST_NAME2FN_MAP_ENTRY(session_aging_metrics_show),         \
 
+
+sdk_ret_t session_aging_expiry_fn(uint32_t expiry_id,
+                                  pds_flow_age_expiry_type_t expiry_type,
+                                  void *user_ctx);
+bool session_4combined_expiry_count_check(bool poll_needed = false);
+bool session_4combined_result_check(void);
+
 }    // namespace athena_app
 }    // namespace test
 
