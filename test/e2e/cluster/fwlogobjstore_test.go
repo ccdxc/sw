@@ -187,7 +187,7 @@ func verifyMetaObject(c objstore.Client, objName string) {
 	for i := 1; i < len(data); i++ {
 		// look for row 1, row 0 is header in CSV format
 		line := data[i]
-		fmt.Println("**** Shrey metaObject ****", line)
+		// fmt.Println("**** metaObject ****", line)
 		Expect(line[0] != "").Should(BeTrue())
 		Expect(line[1] != "").Should(BeTrue())
 		logcount++
@@ -331,7 +331,7 @@ func verifyLogsOnElastic(c elastic.ESClient, fwLogClient objstore.Client, indexN
 
 		Expect(err).NotTo(HaveOccurred())
 
-		fmt.Println("**** hits in elastic ****", len(result.Hits.Hits))
+		// fmt.Println("**** hits in elastic ****", len(result.Hits.Hits))
 
 		for _, res := range result.Hits.Hits {
 			var obj map[string]interface{}
@@ -346,7 +346,7 @@ func verifyLogsOnElastic(c elastic.ESClient, fwLogClient objstore.Client, indexN
 		Expect(len(result.Hits.Hits) != 0).Should(BeTrue())
 	}
 
-	fmt.Println("**** total records not found in elastic ****", notFound)
+	// fmt.Println("**** total records not found in elastic ****", notFound)
 }
 
 func verifyMinioObjectsOnElastic(c elastic.ESClient, fwLogClient objstore.Client, indexName string) {
@@ -394,8 +394,8 @@ func verifyIndexExistsOnElastic(c elastic.ESClient, indexName string) {
 
 func compareAndVerifyLogLineInCsvAndElastic(csvLine []string, elasticMap map[string]interface{}) {
 
-	fmt.Println("**** csv data ****", csvLine)
-	fmt.Println("**** elastic data ****", elasticMap)
+	// fmt.Println("**** csv data ****", csvLine)
+	// fmt.Println("**** elastic data ****", elasticMap)
 
 	// "sport", "dport",
 	// "proto", "act", "dir", "ruleid",
