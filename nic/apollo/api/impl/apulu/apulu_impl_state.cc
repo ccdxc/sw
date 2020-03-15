@@ -85,7 +85,7 @@ apulu_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
 }
 
 static void
-nacl_dump_header(int fd)
+nacl_dump_header (int fd)
 {
     dprintf(fd, "LE  - Learn enable             FM  - Flow Miss\n"
                 "RP  - Rx packet                TP  - Tunnel Pkt\n"
@@ -113,6 +113,9 @@ apulu_impl_state::nacl_dump(int fd) {
         if (nacl_idxr_->is_index_allocated(i)) {
             p4pd_ret = p4pd_entry_read(P4TBL_ID_NACL, i, &key, &mask, &data);
             if (p4pd_ret == P4PD_SUCCESS) {
+                if (!key.key_metadata_entry_valid) {
+                    continue;
+                }
                 dprintf(fd, "%-4u", i);
                 if (mask.control_metadata_lif_type_mask) {
                     dprintf(fd, "%-5u",
