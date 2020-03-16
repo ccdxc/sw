@@ -90,6 +90,7 @@ nic/build/x86_64/iris/lib/libsdklinkmgr.so                       /nic/lib/
 
 # nicmgr
 nic/build/x86_64/iris/lib/libnicmgr.so                           /nic/lib/
+nic/build/x86_64/iris/lib/libeth_p4plus.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libnicmgr_iris.so                      /nic/lib/
 
 # AAPL

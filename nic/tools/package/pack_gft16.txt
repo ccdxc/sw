@@ -96,6 +96,7 @@ nic/sdk/third-party/avago/fw/serdes.0x1094_244D.rom                  /nic/conf/f
 
 # nicmgr
 nic/build/$ARCH/$PIPELINE/lib/libnicmgr.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libeth_p4plus.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libnicmgr_mock.so                      /nic/lib/
 
 # AAPL

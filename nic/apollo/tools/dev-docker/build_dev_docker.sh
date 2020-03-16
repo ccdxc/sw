@@ -73,6 +73,7 @@ copy_files() {
     pack_apollo+='nic/conf/captrace platform/src/app/pciemgrd nic/hal/third-party/spdlog/include/ '
     pack_apollo+='platform/src/app/memtun nic/hal/third-party/judy '
     pack_apollo+='platform/src/lib/pciemgr_if platform/drivers  platform/src/lib/nicmgr '
+    pack_apollo+='platform/src/lib/eth_p4plus '
     pack_apollo+='platform/src/lib/rdmamgr_apollo '
 
     protobuf=" "
@@ -187,11 +188,12 @@ remove_files() {
 
 save_files() {
     # Mention the .so to be saved and restored'
-    files='libsdkcapri_csrint.so libnicmgr_'$pipeline'.so libpciemgr_if.so librdmamgr_apollo.so pdsctl.gobin '
+    files='libsdkcapri_csrint.so libnicmgr_'$pipeline'.so libpciemgr_if.so librdmamgr_apollo.so pdsctl.gobin libeth_p4plus.so '
+
     # Platform includes used by nicmgr
     platform_inc='pciemgr_if/include/pciemgr_if.hpp '
     platform_inc+='nicmgr/include/dev.hpp nicmgr/include/pd_client.hpp nicmgr/include/device.hpp nicmgr/include/pal_compat.hpp '
-    platform_inc+='nicmgr/include/eth_dev.hpp nicmgr/include/eth_lif.hpp nicmgr/include/logger.hpp nicmgr/include/nicmgr_utils.hpp nicmgr/include/ftl_dev.hpp nicmgr/include/ftl_lif.hpp '
+    platform_inc+='nicmgr/include/eth_dev.hpp nicmgr/include/eth_lif.hpp nicmgr/include/logger.hpp nicmgr/include/nicmgr_utils.hpp nicmgr/include/ftl_dev.hpp nicmgr/include/ftl_lif.hpp eth_p4plus/eth_p4pd.hpp '
 
     mkdir -p $LIBDIR
     cd $DST/nic/build

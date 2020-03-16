@@ -712,7 +712,7 @@ PdClient::get_iq(uint8_t pcp_or_dscp, uint8_t pinned_uplink_port_num)
     typedef struct pd_qos_dscp_cos_map_s {
         uint8_t     is_dscp : 1;
         uint8_t     rsvd1: 7;
-        uint8_t     no_drop[16]; // 128-bits. 2 bits per DSCP/PCP. 
+        uint8_t     no_drop[16]; // 128-bits. 2 bits per DSCP/PCP.
         uint8_t     txdma_iq[32];
         uint8_t     no_drop1_txdma_iq : 4;
         uint8_t     no_drop2_txdma_iq : 4;
@@ -779,10 +779,10 @@ PdClient::get_iq(uint8_t pcp_or_dscp, uint8_t pinned_uplink_port_num)
 
        default:
            break;
-   } 
+   }
 
-    NIC_LOG_DEBUG("Programming tx-iq {} for DCSP/PCP {} and uplink_port_num {}",        
-                   tx_iq, pcp_or_dscp, pinned_uplink_port_num);   
+    NIC_LOG_DEBUG("Programming tx-iq {} for DCSP/PCP {} and uplink_port_num {}",
+                   tx_iq, pcp_or_dscp, pinned_uplink_port_num);
     return tx_iq;
 #else
     return 0;
@@ -790,123 +790,11 @@ PdClient::get_iq(uint8_t pcp_or_dscp, uint8_t pinned_uplink_port_num)
 }
 
 int
-PdClient::p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
-        uint32_t hw_lif_id, uint8_t rss_type, uint8_t *rss_key)
+PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type,
+                          uint8_t *rss_key, uint8_t *rss_indir,
+                          uint16_t num_queues)
 {
-    p4pd_error_t        pd_err;
-    eth_rx_rss_params_actiondata_t data = { 0 };
-
-    assert(hw_lif_id < MAX_LIFS);
-    assert(rss_key != NULL);
-
-    data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_type = rss_type;
-    memcpy(&data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
-           rss_key,
-           sizeof(data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
-    memrev((uint8_t *)&data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
-           sizeof(data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
-
-    pd_err = p4pd_global_entry_write(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS,
-                                     hw_lif_id, NULL, NULL, &data);
-    if (pd_err != P4PD_SUCCESS) {
-        assert(0);
-    }
-    return 0;
-}
-
-int
-PdClient::p4pd_common_p4plus_rxdma_rss_params_table_entry_get(
-        uint32_t hw_lif_id, eth_rx_rss_params_actiondata_t *data)
-{
-    p4pd_error_t        pd_err;
-
-    assert(hw_lif_id < MAX_LIFS);
-    assert(data != NULL);
-
-    pd_err = p4pd_global_entry_read(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS,
-                                    hw_lif_id, NULL, NULL, data);
-    if (pd_err != P4PD_SUCCESS) {
-        assert(0);
-    }
-
-    memrev((uint8_t *)&data->action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
-           sizeof(data->action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key));
-
-    return 0;
-}
-
-int
-PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
-        uint32_t hw_lif_id, uint8_t index, uint8_t qid)
-{
-    uint64_t tbl_base;
-    uint64_t tbl_index;
-    uint64_t addr;
-    eth_rx_rss_indir_actiondata_t data = { 0 };
-
-    if (hw_lif_id >= MAX_LIFS ||
-        index >= ETH_RSS_LIF_INDIR_TBL_SZ ||
-        qid >= ETH_RSS_MAX_QUEUES) {
-        NIC_FUNC_ERR("{}, index : {}, qid : {}", hw_lif_id, index, qid);
-        return -1;
-    };
-
-    // NOTE: Enable value must always be set for ethernet devices, because,
-    // the rss indirection table action uses this field to decide if this
-    // is an ethernet PHV or not. RSS can be enabled/disabled on an ethernet
-    // LIF by just programming the type value in the rss params table.
-    // When RSS is disabled (rss_type == 0) in the param table the indirection
-    // action will not run.
-    data.action_u.eth_rx_rss_indir_eth_rx_rss_indir.enable = 0xff;
-    data.action_u.eth_rx_rss_indir_eth_rx_rss_indir.qid = qid;
-
-    tbl_index = (hw_lif_id * ETH_RSS_LIF_INDIR_TBL_SZ) +
-                (index * ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ);
-    tbl_base = mp_->start_addr(MEM_REGION_RSS_INDIR_TABLE_NAME);
-    tbl_base = (tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
-    addr = tbl_base + tbl_index;
-
-    sdk::asic::asic_mem_write(addr,
-                        (uint8_t *)&data.action_u,
-                        sizeof(data.action_u));
-    PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(data.action_u),
-                            P4PLUS_CACHE_INVALIDATE_RXDMA);
-
-    return 0;
-}
-
-int
-PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_get(
-        uint32_t hw_lif_id, uint8_t index, eth_rx_rss_indir_actiondata_t *data)
-{
-    uint64_t tbl_base;
-    uint64_t tbl_index;
-    uint64_t addr;
-
-    if (hw_lif_id >= MAX_LIFS ||
-        index >= ETH_RSS_LIF_INDIR_TBL_SZ) {
-        NIC_FUNC_ERR("hw_lif_id : {} index : {}", hw_lif_id, index);
-        return -1;
-    };
-
-    tbl_index = (hw_lif_id * ETH_RSS_LIF_INDIR_TBL_SZ) +
-                (index * ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ);
-    tbl_base = mp_->start_addr(MEM_REGION_RSS_INDIR_TABLE_NAME);
-    tbl_base = (tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
-    addr = tbl_base + tbl_index;
-
-    sdk::asic::asic_mem_read(addr,
-                       (uint8_t *)&data->action_u,
-                       sizeof(data->action_u));
-
-    return 0;
-}
-
-int
-PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type, uint8_t *rss_key, uint8_t *rss_indir,
-                uint16_t num_queues)
-{
+    sdk_ret_t ret = SDK_RET_OK;
     assert(hw_lif_id < MAX_LIFS);
     assert(num_queues < ETH_RSS_MAX_QUEUES);
 
@@ -915,12 +803,27 @@ PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type, uint8_t *rss_ke
     // the indirection table is completely programmed.
     if (num_queues > 0) {
         for (unsigned int index = 0; index < ETH_RSS_LIF_INDIR_TBL_LEN; index++) {
-            p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
-                    hw_lif_id, index, rss_indir[index]);
+            NIC_LOG_DEBUG("RSS Programming indirection table hw-lif-id : {},"
+                          "index : {}, rss_indir : {}",
+                          hw_lif_id, index, rss_indir[index]);
+            ret = p4plus_rxdma_rss_indir_update(
+                    hw_lif_id, index, 0xff, rss_indir[index]);
+            if(ret != SDK_RET_OK) {
+                NIC_LOG_ERR("RSS Programming indir failed error : {}"
+                              "hw-lif-id : {}, index : {}, rss_indir : {}",
+                              ret, hw_lif_id, index, rss_indir[index]);
+                return 1;
+            }
         }
     }
 
-    p4pd_common_p4plus_rxdma_rss_params_table_entry_add(hw_lif_id, rss_type, rss_key);
+    ret = p4plus_rxdma_rss_params_update(hw_lif_id, rss_type, rss_key, false);
+    if(ret != SDK_RET_OK) {
+        NIC_LOG_ERR("RSS Programming failed error : {} "
+                      "hw-lif-id : {}, rss_type : {}",
+                      ret, hw_lif_id, rss_type);
+        return 1;
+    }
 
     return 0;
 }

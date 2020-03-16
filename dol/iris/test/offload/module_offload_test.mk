@@ -29,7 +29,7 @@ MODULE_SOLIBS   = storage_hal_if storage_nicmgr_if storage_qstate_if \
                   storage_utils storage_r2n storage_ssd_core \
                   storage_nvme_dp storage_qstate_if \
                   pal p4pd_pack_storage_seq \
-                  sdkplatformutils shmmgr logger \
+                  sdkplatformutils shmmgr logger eth_p4plus \
                   nicmgr mnet \
                   pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp cfgspace \
                   intrutils pal misc evutils \

@@ -67,12 +67,12 @@ export NIC_HAL_CFG_PLUGIN_SOLIBS := ${NIC_HAL_CFG_PLUGIN_SOLIBS} \
                                     cfg_plugin_nat
 endif
 
-export NIC_HAL_NICMGR_SOLIBS := nicmgr nicmgr_iris
+export NIC_HAL_NICMGR_SOLIBS := nicmgr nicmgr_iris eth_p4plus
 
 ifeq ($(PIPELINE), gft)
 export NIC_HAL_CFG_PLUGIN_SOLIBS := ${NIC_HAL_CFG_PLUGIN_SOLIBS} \
                                     cfg_plugin_gft
-export NIC_HAL_NICMGR_SOLIBS := nicmgr_mock
+export NIC_HAL_NICMGR_SOLIBS := nicmgr_mock eth_p4plus
 endif
 
 export NIC_HAL_CFG_PLUGIN_SOLIBS_x86_64 := plugin_proxy
@@ -301,27 +301,27 @@ export NIC_FTL_LIBS         := sdkftl
 #                        Apollo Specific Defs
 # ==========================================================================
 export NIC_apollo_NICMGR_LIBS := nicmgr_apollo rdmamgr_apollo mnet evutils \
-                                 pciemgr_if pciemgr pciemgrutils \
+                                 pciemgr_if pciemgr pciemgrutils  eth_p4plus \
                                  pciehdevices pcietlp cfgspace intrutils misc
 
 # ==========================================================================
 #                        ARTEMIS specific defs
 # ==========================================================================
-export NIC_artemis_NICMGR_LIBS := nicmgr_artemis mnet evutils \
+export NIC_artemis_NICMGR_LIBS := nicmgr_artemis mnet evutils eth_p4plus \
                                   pciemgr_if pciemgr pciemgrutils \
                                   pciehdevices pcietlp cfgspace intrutils misc
 
 # ==========================================================================
 #                        APULU specific defs
 # ==========================================================================
-export NIC_apulu_NICMGR_LIBS := nicmgr_apulu mnet evutils \
+export NIC_apulu_NICMGR_LIBS := nicmgr_apulu mnet evutils eth_p4plus \
                                 pciemgr_if pciemgr pciemgrutils \
                                 pciehdevices pcietlp cfgspace intrutils misc
 
 # ==========================================================================
 #                        ATHENA specific defs
 # ==========================================================================
-export NIC_athena_NICMGR_LIBS := nicmgr_athena mnet evutils \
+export NIC_athena_NICMGR_LIBS := nicmgr_athena mnet evutils eth_p4plus \
                                 pciemgr_if pciemgr pciemgrutils \
                                 pciehdevices pcietlp cfgspace intrutils misc
 

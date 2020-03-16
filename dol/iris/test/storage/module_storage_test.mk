@@ -13,7 +13,7 @@ MODULE_SOLIBS   = storage_hal_if storage_nicmgr_if storage_qstate_if \
                   storage_encrypt_only storage_nvme_dp \
                   host_mem storage_qstate_if pal model_client \
                   p4pd_pack_storage_seq \
-                  sdkplatformutils shmmgr logger \
+                  sdkplatformutils shmmgr logger eth_p4plus \
                   nicmgr mnet \
                   pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp cfgspace \
                   intrutils pal misc evutils \
