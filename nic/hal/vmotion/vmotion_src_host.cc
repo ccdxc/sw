@@ -75,15 +75,19 @@ vmotion_src_host_fsm_def::vmotion_src_host_fsm_def(void)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_SRC_HOST_SYNCED, 0, NULL, NULL)
             FSM_TRANSITION(EVT_TERM_SYNC_REQ, SM_FUNC(proc_term_sync_req), STATE_SRC_HOST_TERM_SYNC)
+            FSM_TRANSITION(EVT_EP_DELETE_RCVD, SM_FUNC(proc_ep_delete), STATE_SRC_HOST_END)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_SRC_HOST_TERM_SYNC, 0, NULL, NULL)
             FSM_TRANSITION(EVT_TERM_SYNC_DONE, SM_FUNC(proc_term_sync_done), STATE_SRC_HOST_TERM_SYNCED)
+            FSM_TRANSITION(EVT_EP_DELETE_RCVD, SM_FUNC(proc_ep_delete), STATE_SRC_HOST_END)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_SRC_HOST_TERM_SYNCED, 0, NULL, NULL)
             FSM_TRANSITION(EVT_TERM_SYNCED_ACK, SM_FUNC(proc_term_synced_ack), STATE_SRC_HOST_EP_MOVED)
+            FSM_TRANSITION(EVT_EP_DELETE_RCVD, SM_FUNC(proc_ep_delete), STATE_SRC_HOST_END)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_SRC_HOST_EP_MOVED, 0, NULL, NULL)
             FSM_TRANSITION(EVT_SRC_EP_MOVED_ACK, SM_FUNC(proc_ep_moved_ack), STATE_SRC_HOST_END)
+            FSM_TRANSITION(EVT_EP_DELETE_RCVD, SM_FUNC(proc_ep_delete), STATE_SRC_HOST_END)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_SRC_HOST_END, 0, SM_FUNC_ARG_1(state_src_host_end_entry), NULL)
         FSM_STATE_END
@@ -417,30 +421,65 @@ src_host_thread_exit (void *ctxt)
     vmotion_thread_ctx_t *thread_ctx = (vmotion_thread_ctx_t *)ctxt;
     vmotion_ep           *vmn_ep = thread_ctx->vmn_ep;
 
-    HAL_TRACE_DEBUG("Source host thread exit");
+    HAL_TRACE_DEBUG("Source host thread exit vmn_ep:{:p}", (void *)vmn_ep);
 
     sdk::event_thread::event_thread::destroy(thread_ctx->th);
 
-    vmn_ep->get_vmotion()->release_thread_id(thread_ctx->tid);
+    if (vmn_ep) {
+        vmn_ep->get_vmotion()->release_thread_id(thread_ctx->tid);
+        vmn_ep->get_vmotion()->delete_vmotion_ep(vmn_ep);
+    }
 
     close(thread_ctx->fd);
 
-    vmn_ep->get_vmotion()->delete_vmotion_ep(vmn_ep);
+    if (thread_ctx->expiry_timer) {
+        sdk::lib::timer_delete(thread_ctx->expiry_timer);
+    }
 
     hal::delay_delete_to_slab(HAL_SLAB_VMOTION_THREAD_CTX, thread_ctx);
 }
 
 static void
+vmotion_src_host_timeout_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    vmotion_thread_ctx_t *thread_ctx = (vmotion_thread_ctx_t *) ctxt;
+    vmotion_thread_evt_t *evt =
+        (vmotion_thread_evt_t *)HAL_CALLOC(HAL_MEM_ALLOC_VMOTION, sizeof(vmotion_thread_evt_t));
+    *evt = VMOTION_EVT_TIMEOUT;
+
+    HAL_TRACE_INFO("vMotion src host timeout tid: {}", thread_ctx->tid);
+
+    thread_ctx->expiry_timer = NULL;
+
+    sdk::event_thread::message_send(thread_ctx->tid, (void *)evt);
+}
+
+static void
 src_host_thread_rcv_event (void *message, void *ctx)
 {
-    vmotion_ep            *vmn_ep = (vmotion_ep *)ctx;
     vmotion_thread_evt_t  *evt = (vmotion_thread_evt_t *) message;
-
-    HAL_TRACE_INFO("vMotion src host event thread. EP: {} Event:{} Flags: {}",
-                  vmn_ep->get_ep_handle(), *evt, *vmn_ep->get_flags());
+    vmotion_thread_ctx_t  *thread_ctx;
+    vmotion_ep            *vmn_ep;
 
     if (*evt == VMOTION_EVT_EP_MV_ABORT) {
+        vmn_ep = (vmotion_ep *)ctx;
+
+        HAL_TRACE_INFO("vMotion src host event thread. EP: {} Flags: {}",
+                       vmn_ep->get_ep_handle(), *vmn_ep->get_flags());
+
         vmn_ep->process_event(EVT_EP_DELETE_RCVD, NULL);
+    } else if (*evt == VMOTION_EVT_TIMEOUT) {
+        thread_ctx = (vmotion_thread_ctx_t *)ctx;
+        vmn_ep     = thread_ctx->vmn_ep;
+
+        HAL_TRACE_INFO("vMotion src host event thread timeout.  vmn_ep:{:p}", (void *)vmn_ep);
+
+        if (vmn_ep) {
+            vmn_ep->process_event(EVT_EP_DELETE_RCVD, NULL);
+        } else {
+            // Stop the watcher
+            thread_ctx->th->stop();
+        }
     }
 
     HAL_FREE(HAL_MEM_ALLOC_VMOTION, evt);
@@ -495,6 +534,13 @@ vmotion::spawn_src_host_thread(int sock_fd)
         HAL_TRACE_ERR("vmotion src host thread create failure");
         return HAL_RET_ERR;
     }
+
+    // Start the timer for vMotion clean if its timed out 
+    thread_ctx->expiry_timer =
+        sdk::lib::timer_schedule(HAL_TIMER_ID_VMOTION_TIMEOUT, VMOTION_TIMEOUT,
+                                 reinterpret_cast<void *>(thread_ctx),
+                                 vmotion_src_host_timeout_cb, false);
+
     // Start the thread
     thread_ctx->th->start(thread_ctx);
 

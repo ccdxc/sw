@@ -49,6 +49,7 @@ enum MigrationState {
     FAILED      = 3;  // Migration failed in the middle because of internal reasons
     ABORTED     = 4;  // Migration aborted in the middle by vCenter
     COLD        = 5;  // Cold Migration. Scenarios like migration from Non Pensando devices
+    TIMEOUT     = 6;  // vMotion operation timed out
 }
 
 // EndpointSpec is used to add or update an endpoint

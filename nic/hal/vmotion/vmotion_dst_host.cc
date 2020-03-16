@@ -30,7 +30,8 @@ dst_host_end (vmotion_ep *vmn_ep)
     if (ep) {
         // In Abort scenario, all these ep cleanup routines will be done in main thread itself
         if ((vmn_ep->get_migration_state() == MigrationState::SUCCESS) ||
-            (vmn_ep->get_migration_state() == MigrationState::FAILED)) {
+            (vmn_ep->get_migration_state() == MigrationState::FAILED) ||
+            (vmn_ep->get_migration_state() == MigrationState::TIMEOUT)) {
             // Remove EP Quiesce NACL entry
             if (VMOTION_FLAG_IS_EP_QUIESCE_ADDED(vmn_ep)) {
                 ep_quiesce(ep, FALSE);
@@ -51,6 +52,22 @@ dst_host_end (vmotion_ep *vmn_ep)
 
     // Stop the watcher
     vmn_ep->get_event_thread()->stop();
+}
+
+static void
+vmotion_dst_host_timeout_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    vmotion_ep *vmn_ep = (vmotion_ep *) ctxt;
+    vmotion_thread_evt_t *evt =
+        (vmotion_thread_evt_t *)HAL_CALLOC(HAL_MEM_ALLOC_VMOTION, sizeof(vmotion_thread_evt_t));
+
+    *evt = VMOTION_EVT_TIMEOUT;
+
+    HAL_TRACE_INFO("vMotion dst host timeout");
+
+    vmn_ep->set_expiry_timer(NULL);
+
+    sdk::event_thread::message_send(vmn_ep->get_thread_id(), (void *)evt);
 }
 
 vmotion_dst_host_fsm_def *
@@ -74,11 +91,13 @@ vmotion_dst_host_fsm_def::vmotion_dst_host_fsm_def(void)
         FSM_STATE_BEGIN(STATE_DST_HOST_INIT, 0, NULL, NULL)
             FSM_TRANSITION(EVT_START_SYNC, SM_FUNC(process_start_sync), STATE_DST_HOST_SYNCING)
             FSM_TRANSITION(EVT_EP_MV_ABORT_RCVD, SM_FUNC(process_ep_move_abort), STATE_DST_HOST_END)
+            FSM_TRANSITION(EVT_VMOTION_TIMEOUT, SM_FUNC(process_vmotion_timeout), STATE_DST_HOST_END)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_DST_HOST_SYNCING, 0, NULL, NULL)
             FSM_TRANSITION(EVT_RARP_RCVD, SM_FUNC(process_rarp_req), STATE_DST_HOST_TERM_SYNC_START)
             FSM_TRANSITION(EVT_EP_MV_DONE_RCVD, SM_FUNC(process_ep_move_done), STATE_DST_HOST_TERM_SYNC_START)
             FSM_TRANSITION(EVT_EP_MV_ABORT_RCVD, SM_FUNC(process_ep_move_abort), STATE_DST_HOST_END)
+            FSM_TRANSITION(EVT_VMOTION_TIMEOUT, SM_FUNC(process_vmotion_timeout), STATE_DST_HOST_END)
             FSM_TRANSITION(EVT_SYNC, SM_FUNC(process_sync), STATE_DST_HOST_SYNCING)
             FSM_TRANSITION(EVT_SYNC_END, SM_FUNC(process_sync_end), STATE_DST_HOST_SYNCED)
         FSM_STATE_END
@@ -86,18 +105,22 @@ vmotion_dst_host_fsm_def::vmotion_dst_host_fsm_def(void)
             FSM_TRANSITION(EVT_RARP_RCVD, SM_FUNC(process_rarp_req), STATE_DST_HOST_TERM_SYNC_START)
             FSM_TRANSITION(EVT_EP_MV_DONE_RCVD, SM_FUNC(process_ep_move_done), STATE_DST_HOST_TERM_SYNC_START)
             FSM_TRANSITION(EVT_EP_MV_ABORT_RCVD, SM_FUNC(process_ep_move_abort), STATE_DST_HOST_END)
+            FSM_TRANSITION(EVT_VMOTION_TIMEOUT, SM_FUNC(process_vmotion_timeout), STATE_DST_HOST_END)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_DST_HOST_TERM_SYNC_START, 0, NULL, NULL)
             FSM_TRANSITION(EVT_SYNC, SM_FUNC(process_sync), STATE_DST_HOST_TERM_SYNC_START)
             FSM_TRANSITION(EVT_TERM_SYNC, SM_FUNC(process_term_sync), STATE_DST_HOST_TERM_SYNCING)
             FSM_TRANSITION(EVT_TERM_SYNC_END, SM_FUNC(process_term_sync_end), STATE_DST_HOST_TERM_SYNCED)
+            FSM_TRANSITION(EVT_VMOTION_TIMEOUT, SM_FUNC(process_vmotion_timeout), STATE_DST_HOST_END)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_DST_HOST_TERM_SYNCING, 0, NULL, NULL)
             FSM_TRANSITION(EVT_TERM_SYNC, SM_FUNC(process_term_sync), STATE_DST_HOST_TERM_SYNCING)
             FSM_TRANSITION(EVT_TERM_SYNC_END, SM_FUNC(process_term_sync_end), STATE_DST_HOST_TERM_SYNCED)
+            FSM_TRANSITION(EVT_VMOTION_TIMEOUT, SM_FUNC(process_vmotion_timeout), STATE_DST_HOST_END)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_DST_HOST_TERM_SYNCED, 0, NULL, NULL)
             FSM_TRANSITION(EVT_DST_EP_MOVED, SM_FUNC(process_ep_moved), STATE_DST_HOST_END)
+            FSM_TRANSITION(EVT_VMOTION_TIMEOUT, SM_FUNC(process_vmotion_timeout), STATE_DST_HOST_END)
         FSM_STATE_END
         FSM_STATE_BEGIN(STATE_DST_HOST_END, 0, SM_FUNC_ARG_1(state_dst_host_end), NULL)
         FSM_STATE_END
@@ -178,6 +201,15 @@ vmotion_dst_host_fsm_def::process_ep_move_abort(fsm_state_ctx ctx, fsm_event_dat
     vmotion_ep      *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
     HAL_TRACE_INFO("Dest Host EP: {}", vmn_ep->get_ep_handle());
     vmn_ep->set_migration_state(MigrationState::ABORTED);
+    return true;
+}
+
+bool
+vmotion_dst_host_fsm_def::process_vmotion_timeout(fsm_state_ctx ctx, fsm_event_data data)
+{
+    vmotion_ep      *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
+    HAL_TRACE_INFO("Dest Host EP: {}", vmn_ep->get_ep_handle());
+    vmn_ep->set_migration_state(MigrationState::TIMEOUT);
     return true;
 }
 
@@ -445,6 +477,8 @@ dst_host_thread_rcv_event (void *message, void *ctx)
         vmn_ep->process_event(EVT_EP_MV_DONE_RCVD, NULL);
     } else if (*evt == VMOTION_EVT_EP_MV_ABORT) {
         vmn_ep->process_event(EVT_EP_MV_ABORT_RCVD, NULL);
+    } else if (*evt == VMOTION_EVT_TIMEOUT) {
+        vmn_ep->process_event(EVT_VMOTION_TIMEOUT, NULL);
     }
 
     HAL_FREE(HAL_MEM_ALLOC_VMOTION, evt);
@@ -465,6 +499,10 @@ dst_host_connect_to_old_host(int sock, struct sockaddr_in *addr)
 
     if (ret == 0) {
         // Connected successfully
+        // Reset the NONBLOCK flag. We use TCP recv() in blocking way (using MSG_WAITALL)
+        flags &= ~O_NONBLOCK;
+        fcntl(sock, F_SETFL, flags);
+
         HAL_TRACE_DEBUG("connect success");
         return HAL_RET_OK;
     }
@@ -477,6 +515,9 @@ dst_host_connect_to_old_host(int sock, struct sockaddr_in *addr)
 
         // Add to the select interval to check socket becomes writable
         if (select(sock + 1, NULL, &wset, NULL, &tv) > 0) {
+            flags &= ~O_NONBLOCK;
+            fcntl(sock, F_SETFL, flags);
+
             HAL_TRACE_DEBUG("connect success");
             return HAL_RET_OK;
         }
@@ -537,6 +578,10 @@ vmotion_ep::dst_host_exit(void)
 
     vmotion_ptr_->release_thread_id(thread_id_);
 
+    if (expiry_timer_) {
+        sdk::lib::timer_delete(expiry_timer_);
+    }
+
     close(sock_fd_);
 
     return HAL_RET_OK;
@@ -571,9 +616,15 @@ vmotion_ep::spawn_dst_host_thread(void)
         return HAL_RET_ERR;
     }
 
+    // Start the timer for vMotion clean if its timed out 
+    expiry_timer_ = sdk::lib::timer_schedule(HAL_TIMER_ID_VMOTION_TIMEOUT, VMOTION_TIMEOUT,
+                                             reinterpret_cast<void *>(this),
+                                             vmotion_dst_host_timeout_cb, false);
+
     evt_thread_->start(this);
 
     return ret;
 }
+
 
 } // namespace hal

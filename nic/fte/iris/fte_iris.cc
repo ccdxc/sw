@@ -387,7 +387,16 @@ hal_ret_t
 ctx_t::lookup_session()
 {
     session_ = hal::session_lookup(key_, &role_);
+
+    if ((sync_session_request()) && (!session_)) {
+        // In case of Session Sync for vMotions, direction bit will be reverse in the old
+        // host. Flip the direction bit and lookup the session 
+        key_.dir = !key_.dir;
+        session_ = hal::session_lookup(key_, &role_);
+    }
+
     if (!session_) {
+        HAL_TRACE_DEBUG("fte: session not found role:{}", role_);
         return HAL_RET_SESSION_NOT_FOUND;
     }
 

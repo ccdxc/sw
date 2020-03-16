@@ -20,9 +20,10 @@ namespace hal {
 #define VMOTION_PORT                 50055
 
 #define VMOTION_MAX_SESS_PER_MSG     1000
-#define VMOTION_AGE_DELAY            300000000000  // 5 Minutes 
-#define VMOTION_SESS_NORMALIZATION   300000  // 5 Minutes
-#define VMOTION_CONNECT_RETRY_TIME   30 // in Seconds
+#define VMOTION_AGE_DELAY            300000000000 // 5 Minutes 
+#define VMOTION_SESS_NORMALIZATION   300000       // (in Milliseconds) - 5 Minutes
+#define VMOTION_CONNECT_RETRY_TIME   30           // in Seconds
+#define VMOTION_TIMEOUT              9000000      // (in Milliseconds) - 15 Minutes
 
 #define VMOTION_WLOCK   vmotion_.rwlock.wlock();
 #define VMOTION_WUNLOCK vmotion_.rwlock.wunlock();
@@ -46,7 +47,8 @@ enum vmotion_thread_evt_t {
     VMOTION_EVT_EP_MV_START  = 2,
     VMOTION_EVT_EP_MV_DONE   = 3,
     VMOTION_EVT_EP_MV_ABORT  = 4,
-    VMOTION_EVT_EP_MV_COLD   = 5
+    VMOTION_EVT_EP_MV_COLD   = 5,
+    VMOTION_EVT_TIMEOUT      = 6
 };
 
 #define VMOTION_SET_BIT(flags, bit_pos)     ((flags) |=  (1 << (bit_pos)))
@@ -104,6 +106,7 @@ public:
     void                set_flags(uint32_t flags) { flags_ = flags;}
     void                set_thread_id(uint32_t thr_id) { thread_id_ = thr_id; }
     void                set_migration_state(MigrationState state) { migration_state_ = state; }
+    void                set_expiry_timer(void *tmr) { expiry_timer_ = tmr; }
 
     // Methods
     hal_ret_t           spawn_dst_host_thread(void);
@@ -127,6 +130,7 @@ private:
     fsm_state_machine_t             *sm_;
     hal_handle_t                     ep_hdl_;
     ep_vmotion_type_t                vmotion_type_;
+    void                            *expiry_timer_;
     MigrationState                   migration_state_;
 };
 
@@ -187,6 +191,7 @@ typedef struct vmotion_thread_ctx_s {
     sdk::event_thread::event_thread *th;
     uint32_t                         tid;
     sdk::event_thread::io_t          io;
+    void                            *expiry_timer;
 } vmotion_thread_ctx_t;
 
 
