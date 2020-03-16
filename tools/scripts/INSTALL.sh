@@ -7,7 +7,7 @@ if [ "$UID" != "0" ]; then
      exit
 fi
 
-#set -x
+set -ex
 
 # this script is run by customer after extracting the image.
 # this is supposed to install all the venice components in the system

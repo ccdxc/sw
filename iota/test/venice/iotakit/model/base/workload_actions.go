@@ -154,6 +154,7 @@ func (sm *SysModel) PingPairs(wpc *objects.WorkloadPairCollection) error {
 			NodeName:   pair.First.NodeName(),
 		}
 		cmds = append(cmds, &cmd)
+
 		pairNames = append(pairNames, fmt.Sprintf("%s -> %s; ", pair.First.Name(), pair.Second.Name()))
 		ipAddr = pair.First.GetIP()
 		otherCmd := iota.Command{
@@ -163,6 +164,7 @@ func (sm *SysModel) PingPairs(wpc *objects.WorkloadPairCollection) error {
 			NodeName:   pair.Second.NodeName(),
 		}
 		cmds = append(cmds, &otherCmd)
+
 	}
 
 	log.Infof("Testing ping between workloads %v ", pairNames)

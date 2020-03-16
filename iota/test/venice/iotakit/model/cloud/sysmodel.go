@@ -284,6 +284,9 @@ func (sm *SysModel) BringupWorkloads() error {
 		return err
 	}
 
+	//Add ping for now
+	sm.WorkloadsSayHelloToDataPath()
+
 	return nil
 }
 

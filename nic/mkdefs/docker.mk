@@ -112,4 +112,4 @@ docker/deps-test-build:
 	NO_PULL=1 make docker/build
 
 docker/pegasus:
-	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/nic pensando/nic bash -c 'make PIPELINE=apulu pegasus && cd .. && python ./nic/tools/package/package.py --target pegasus --pipeline apulu --no-strip'
+	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER) -c 'make PIPELINE=apulu pegasus && cd .. && python ./nic/tools/package/package.py --target pegasus --pipeline apulu --no-strip'

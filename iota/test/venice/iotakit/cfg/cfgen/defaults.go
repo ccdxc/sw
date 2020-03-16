@@ -169,7 +169,7 @@ var scaleCfgenParams = &Cfgen{
 			EnableAddressFamilies: []string{"l2vpn-evpn"},
 			RemoteAS:              100,
 			MultiHop:              10,
-			IPAddress:             "{{ipv4:22.1.1.0}}",
+			IPAddress:             "{{ipv4:22.x.1.1}}",
 		},
 	},
 
@@ -195,7 +195,7 @@ var scaleCfgenParams = &Cfgen{
 			EnableAddressFamilies: []string{"ipv4-unicast"},
 		},
 		OverlayBgpNeihbourTemplate: &network.BGPNeighbor{
-			RemoteAS:              600, //Static testbed has this AS number
+			RemoteAS:              100, //Static testbed has this AS number
 			MultiHop:              10,
 			IPAddress:             "0.0.0.0",
 			EnableAddressFamilies: []string{"l2vpn-evpn"},
@@ -225,7 +225,7 @@ var scaleCfgenParams = &Cfgen{
 				RouterMACAddress: "{{mac}}",
 				VxLanVNI:         998,
 				RouteImportExport: &network.RDSpec{
-					AddressFamily: "evpn",
+					AddressFamily: "l2vpn-evpn",
 					RDAuto:        true,
 					ImportRTs: []*network.RouteDistinguisher{
 						&network.RouteDistinguisher{
@@ -281,24 +281,24 @@ var scaleCfgenParams = &Cfgen{
 			},
 			Spec: network.NetworkSpec{
 				Type:        "routed",
-				IPv4Subnet:  "{{ipv4-subnet:10.x.0.0/8}}",
-				IPv4Gateway: "{{ipv4-gateway:10.x.1.1}}",
+				IPv4Subnet:  "{{ipv4-subnet:10.x.0.0/24}}",
+				IPv4Gateway: "{{ipv4-gateway:10.x.0.1}}",
 				VxlanVNI:    998,
 				RouteImportExport: &network.RDSpec{
-					AddressFamily: "evpn",
+					AddressFamily: "l2vpn-evpn",
 					RDAuto:        true,
 					ExportRTs: []*network.RouteDistinguisher{
 						&network.RouteDistinguisher{
-							AdminValue:    1000,
+							AdminValue:    998,
 							Type:          "type2",
-							AssignedValue: 1000,
+							AssignedValue: 998,
 						},
 					},
 					ImportRTs: []*network.RouteDistinguisher{
 						&network.RouteDistinguisher{
-							AdminValue:    1001,
+							AdminValue:    998,
 							Type:          "type2",
-							AssignedValue: 1000,
+							AssignedValue: 998,
 						},
 					},
 				},

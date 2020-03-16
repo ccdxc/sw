@@ -3,6 +3,7 @@ package agent
 import (
 	"os"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -13,6 +14,7 @@ import (
 
 const (
 	veniceStartScript = "INSTALL.sh"
+	veniceInstallLog  = "install.log"
 )
 
 type veniceNode struct {
@@ -54,15 +56,21 @@ func (venice *veniceNode) bringUpVenice(image string, hostname string,
 		return errors.Wrap(err, stdout)
 	}
 
-	setHostname := []string{"hostnamectl", "set-hostname", "--static", hostname}
-	if _, stdout, err := utils.Run(setHostname, 0, false, false, nil); err != nil {
-		venice.logger.Println("Setting hostname failed")
-		return errors.Wrap(err, stdout)
+	for i := 0; true; i++ {
+		setHostname := []string{"hostnamectl", "set-hostname", "--static", hostname}
+		if stderr, stdout, err := utils.Run(setHostname, 0, false, false, nil); err != nil {
+			venice.logger.Printf("Setting hostname failed %v %v %v", stderr, stdout, err.Error())
+			if i == 5 {
+				return errors.Wrap(err, stdout)
+			}
+			time.Sleep(1 * time.Second)
+		}
+		break
 	}
 
 	venice.logger.Println("Running Install Script : " + veniceStartScript)
-	install := []string{"./" + veniceStartScript, "--clean"}
-	if _, stdout, err := utils.Run(install, 0, false, false, nil); err != nil {
+	install := []string{"./" + veniceStartScript, "--clean", "|", "tee", veniceInstallLog}
+	if _, stdout, err := utils.Run(install, 0, false, true, nil); err != nil {
 		venice.logger.Println("Running Install Script failed : " + veniceStartScript)
 		return errors.Wrap(err, stdout)
 	}

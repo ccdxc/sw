@@ -593,7 +593,7 @@ func (sm *SysModel) SetupVeniceNodes() error {
 			trig.AddCommand(fmt.Sprintf("mkdir -p /pensando/iota/k8s/"), entity, node.NodeName)
 			trig.AddCommand(fmt.Sprintf("sudo cp -r /var/lib/pensando/pki/kubernetes/apiserver-client /pensando/iota/k8s/"), entity, node.NodeName)
 			trig.AddCommand(fmt.Sprintf("sudo chmod -R 777 /pensando/iota/k8s/"), entity, node.NodeName)
-			trig.AddCommand(fmt.Sprintf("mkdir -p /pensando/iota/bin; docker run -v /pensando/iota/bin:/import registry.test.pensando.io:5000/pens-debug:v0.1"), entity, node.NodeName)
+			trig.AddCommandWithRetriesOnFailures(fmt.Sprintf("mkdir -p /pensando/iota/bin; docker run -v /pensando/iota/bin:/import registry.test.pensando.io:5000/pens-debug:v0.1"), entity, node.NodeName, 3)
 			trig.AddCommand(fmt.Sprintf(`echo '/pensando/iota/bin/kubectl config set-cluster e2e --server=https://%s:6443 --certificate-authority=/pensando/iota/k8s/apiserver-client/ca-bundle.pem;
 				/pensando/iota/bin/kubectl config set-context e2e --cluster=e2e --user=admin;
 				/pensando/iota/bin/kubectl config use-context e2e;
@@ -617,10 +617,10 @@ func (sm *SysModel) SetupVeniceNodes() error {
 				-d docker.elastic.co/kibana/kibana:6.3.0
 				' > /pensando/iota/start_kibana.sh
 				`, node.NodeName), entity, node.NodeName)
-			trig.AddCommand(fmt.Sprintf("chmod +x /pensando/iota/start_kibana.sh"), entity, node.NodeName)
+			trig.AddCommandWithRetriesOnFailures(fmt.Sprintf("chmod +x /pensando/iota/start_kibana.sh"), entity, node.NodeName, 3)
 			trig.AddCommand(fmt.Sprintf("rm /etc/localtime"), entity, node.NodeName)
 			trig.AddCommand(fmt.Sprintf("ln -s /usr/share/zoneinfo/US/Pacific /etc/localtime"), entity, node.NodeName)
-			trig.AddCommand(fmt.Sprintf("docker run -d --name=grafana --net=host -e \"GF_SECURITY_ADMIN_PASSWORD=password\" registry.test.pensando.io:5000/pensando/grafana:0.1"), entity, node.NodeName)
+			trig.AddCommandWithRetriesOnFailures(fmt.Sprintf("docker run -d --name=grafana --net=host -e \"GF_SECURITY_ADMIN_PASSWORD=password\" registry.test.pensando.io:5000/pensando/grafana:0.1"), entity, node.NodeName, 3)
 
 			for _, ip := range naplesInbandIPs {
 				if sm.Tb.Params.Network.InbandDefaultRoute != "" {

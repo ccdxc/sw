@@ -513,6 +513,17 @@ func (dnode *dataNode) AddWorkloads(in *iota.WorkloadMsg) (*iota.WorkloadMsg, er
 			return resp
 		}
 
+		dnode.logger.Infof("Sending ARP probe with ip %v intf %v", strings.Split(in.GetIpPrefix(), "/")[0], resp.GetInterface())
+		if err := iotaWload.workload.SendArpProbe(strings.Split(in.GetIpPrefix(), "/")[0], resp.GetInterface(),
+			0); err != nil {
+			msg := fmt.Sprintf("Error in sending arp probe : %s", err.Error())
+			dnode.logger.Error(msg)
+			resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
+			dnode.entityMap.Delete(in.GetWorkloadName())
+			iotaWload.workload.TearDown()
+			return resp
+		}
+
 		iotaWload.workloadMsg = in
 		dnode.entityMap.Store(wloadKey, iotaWload)
 		dnode.logger.Printf("Added workload : %s (%s)", in.GetWorkloadName(), in.GetWorkloadType())
@@ -1150,48 +1161,6 @@ func (naples *naplesHwNode) AddWorkloads(in *iota.WorkloadMsg) (*iota.WorkloadMs
 	resp, err := naples.dataNode.AddWorkloads(in)
 	if err != nil || resp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		return resp, nil
-	}
-
-	hwNodeAddWorkload := func(in *iota.Workload) *iota.Workload {
-		wloadKey := in.GetWorkloadName()
-		item, _ := naples.entityMap.Load(wloadKey)
-		iotaWload := item.(iotaWorkload)
-		//Set vlan 0 as interface is already set before
-		if err := iotaWload.workload.SendArpProbe(strings.Split(in.GetIpPrefix(), "/")[0], in.GetInterface(),
-			0); err != nil {
-			msg := fmt.Sprintf("Error in sending arp probe : %s", err.Error())
-			naples.logger.Error(msg)
-			resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
-			naples.entityMap.Delete(in.GetWorkloadName())
-			iotaWload.workload.TearDown()
-			return resp
-		}
-		naples.logger.Println("Successfully sent arp probe")
-		in.WorkloadStatus = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
-		return in
-	}
-
-	maxParallelThreads := 64
-	currThreads := 0
-	scheduleBringups := []*iota.Workload{}
-	for index, wload := range in.Workloads {
-		currThreads++
-		scheduleBringups = append(scheduleBringups, wload)
-		if currThreads == maxParallelThreads-1 || index+1 == len(in.Workloads) {
-			pool, _ := errgroup.WithContext(context.Background())
-
-			wload := wload
-			index := index
-			pool.Go(func() error {
-				resp := hwNodeAddWorkload(wload)
-				in.Workloads[index] = resp
-				return nil
-			})
-			pool.Wait()
-			scheduleBringups = []*iota.Workload{}
-			currThreads = 0
-
-		}
 	}
 
 	for _, wload := range in.Workloads {

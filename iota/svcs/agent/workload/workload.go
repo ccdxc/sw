@@ -229,6 +229,7 @@ func (app *workloadBase) MoveInterface(name string) error {
 }
 
 func (app *workloadBase) SendArpProbe(ip string, intf string, vlan int) error {
+	app.logger.Infof("Skip Sending ARP probe with ip %v intf %v", ip, intf)
 	return nil
 }
 
@@ -347,14 +348,16 @@ var RunArpCmd = func(app Workload, ip string, intf string) error {
 	arpCmd := []string{"arping", "-c", "5", "-U", ip, "-I", intf}
 	cmdResp, _, _ := app.RunCommand(arpCmd, "", 0, 0, false, false)
 	if cmdResp.ExitCode != 0 {
-		errors.Errorf("Could not send arprobe for  %s (%s) : %s", ip, intf, cmdResp.Stdout)
+		log.Errorf("Could not send arprobe for  %s (%s) : %s", ip, intf, cmdResp.Stdout)
 		return nil
 	}
+	log.Infof("Successfully ran arp command with ip %v intf %v", ip, intf)
 	return nil
 }
 
 func (app *containerWorkload) SendArpProbe(ip string, intf string, vlan int) error {
 
+	app.logger.Infof("Sending ARP probe with ip %v intf %v", ip, intf)
 	if ip == "" {
 		return nil
 	}
@@ -449,6 +452,7 @@ func (app *containerWorkload) RunCommand(cmds []string, dir string, retries uint
 		return nil, "", errors.Wrap(err, "Set up command failed")
 	}
 
+	app.logger.Infof("Container Running command on %v", app.Name())
 	if !background {
 		var cmdResp utils.CommandResp
 		for i := (uint32)(0); i <= retries; i++ {

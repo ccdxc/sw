@@ -236,8 +236,10 @@ func (cfgen *Cfgen) genRoutingConfig() []*network.RoutingConfig {
 	for ii := 0; ii < cfgen.RoutingConfigParams.NumRoutingConfigs; ii++ {
 		tNetwork := netCtx.transform(n).(*network.RoutingConfig)
 		for jj := 0; jj < cfgen.RoutingConfigParams.NumNeighbors; jj++ {
+			copyN := network.BGPNeighbor{}
 			tNeigbor := neigCtx.transform(cfgen.RoutingConfigParams.BgpNeihbourTemplate).(*network.BGPNeighbor)
-			tNetwork.Spec.BGPConfig.Neighbors = append(tNetwork.Spec.BGPConfig.Neighbors, tNeigbor)
+			copyN = *tNeigbor
+			tNetwork.Spec.BGPConfig.Neighbors = append(tNetwork.Spec.BGPConfig.Neighbors, &copyN)
 
 		}
 		configs = append(configs, tNetwork)
@@ -318,7 +320,7 @@ func (cfgen *Cfgen) genSubnets() []*network.Network {
 				ipams = append(ipams, ipam)
 			}
 		}
-		numOfipams := len(ipams)
+		//numOfipams := len(ipams)
 		ll := 0
 		for jj := 0; jj < cfgen.TenantConfigParams.NumOfVRFsPerTenant; jj++ {
 			vpc := cfgen.ConfigItems.VRFs[jj]
@@ -329,9 +331,13 @@ func (cfgen *Cfgen) genSubnets() []*network.Network {
 				subnet := netCtx.transform(cfgen.SubnetConfigParams.SubnetTemplate).(*network.Network)
 				subnet.Spec.VirtualRouter = vpc.Name
 				subnet.ObjectMeta.Tenant = tenant.Name
-				subnet.Spec.IPAMPolicy = ipams[ll%numOfipams].Name
+				//subnet.Spec.IPAMPolicy = ipams[ll%numOfipams].Name
 				configs = append(configs, subnet)
 				subnet.Spec.VxlanVNI = 8000100 + subnet.Spec.VxlanVNI
+				subnet.Spec.RouteImportExport.ExportRTs[0].AdminValue = 1000 + subnet.Spec.RouteImportExport.ExportRTs[0].AdminValue
+				subnet.Spec.RouteImportExport.ExportRTs[0].AssignedValue = 1000 + subnet.Spec.RouteImportExport.ExportRTs[0].AssignedValue
+				subnet.Spec.RouteImportExport.ImportRTs[0].AdminValue = subnet.Spec.RouteImportExport.ExportRTs[0].AdminValue
+				subnet.Spec.RouteImportExport.ImportRTs[0].AssignedValue = subnet.Spec.RouteImportExport.ExportRTs[0].AssignedValue
 				ll++
 			}
 		}
@@ -405,6 +411,8 @@ func (cfgen *Cfgen) genTenantWorkloads() []*workload.Workload {
 	w := cfgen.WorkloadParams.WorkloadTemplate
 	wCtx := newIterContext()
 	for netIdx := range cfgen.ConfigItems.Subnets {
+		//Drop the first IP
+		nIters[netIdx].ipSub(subnets[netIdx])
 		for tenID := range cfgen.ConfigItems.Tenants {
 			for ii := 0; ii < len(cfgen.Smartnics); ii++ {
 				h := cfgen.ConfigItems.Hosts[ii]

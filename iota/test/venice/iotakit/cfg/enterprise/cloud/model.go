@@ -435,13 +435,14 @@ func (cl *CloudCfg) pushConfigViaRest() error {
 		}
 	}
 
-	for _, pol := range cl.Cfg.ConfigItems.IPAMPs {
-		err := rClient.CreateIPAMPolicy(pol)
-		if err != nil {
-			log.Errorf("Error creating ipam %+v. Err: %v", pol, err)
-			return err
-		}
-	}
+	/*
+		for _, pol := range cl.Cfg.ConfigItems.IPAMPs {
+			err := rClient.CreateIPAMPolicy(pol)
+				if err != nil {
+					log.Errorf("Error creating ipam %+v. Err: %v", pol, err)
+					return err
+				}
+		}*/
 
 	for _, sub := range cl.Cfg.ConfigItems.Subnets {
 		err := rClient.CreateNetwork(sub)
