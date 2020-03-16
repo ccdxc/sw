@@ -243,13 +243,13 @@ dependencies:
     - reference: venice/ui
     - reference: iota/test/venice
   dol/apollo:
-    - reference: nic/apollo/tools/apollo/sanity/base
+    - reference: nic/apollo/tools/apulu/sanity/base
+    - reference: iota/test/standalone/sanity/apulu-networking
+    - reference: iota/test/standalone/sanity/apulu-networking-scale
   dol/artemis:
     - reference: nic/apollo/tools/artemis/sanity/base
   dol/apulu:
     - reference: nic/apollo/tools/apulu/sanity/base
-    - reference: iota/test/standalone/sanity/apulu-networking
-    - reference: iota/test/standalone/sanity/apulu-networking-scale
   dol/test/networking:
     - reference: nic
   events:
