@@ -15,13 +15,16 @@ import (
 )
 
 var (
-	portNum        uint32
+	portNum        string
 	portPause      string
+	txPause        string
+	rxPause        string
 	portFecType    string
 	portAutoNeg    string
 	portMtu        uint32
 	portAdminState string
 	portSpeed      string
+	portNumLanes   uint32
 )
 
 var portShowCmd = &cobra.Command{
@@ -40,12 +43,13 @@ var portStatusShowCmd = &cobra.Command{
 	RunE:  portStatusShowCmdHandler,
 }
 
-var portCmd = &cobra.Command{
-	Use:   "port",
-	Short: "update port object",
-	Long:  "update port object",
-	Args:  cobra.NoArgs,
-	RunE:  portUpdateCmdHandler,
+var portUpdateCmd = &cobra.Command{
+	Use:    "port",
+	Short:  "update port object",
+	Long:   "update port object",
+	Args:   cobra.NoArgs,
+	Hidden: true,
+	RunE:   portUpdateCmdHandler,
 }
 
 var portStatsShowCmd = &cobra.Command{
@@ -57,20 +61,22 @@ var portStatsShowCmd = &cobra.Command{
 }
 
 func init() {
-	updateCmd.AddCommand(portCmd)
-	portCmd.Flags().Uint32Var(&portNum, "port", 0, "Specify port number")
-	portCmd.Flags().StringVar(&portPause, "pause", "none", "Specify pause - link, pfc, none")
-	portCmd.Flags().StringVar(&portFecType, "fec-type", "none", "Specify fec-type - rs, fc, none")
-	portCmd.Flags().StringVar(&portAutoNeg, "auto-neg", "enable", "Enable or disable auto-neg using enable | disable")
-	portCmd.Flags().StringVar(&portAdminState, "admin-state", "up", "Set port admin state - up, down")
-	portCmd.Flags().StringVar(&portSpeed, "speed", "", "Set port speed - none, 1g, 10g, 25g, 40g, 50g, 100g")
-	portCmd.Flags().Uint32Var(&portMtu, "mtu", 0, "Specify port MTU")
-	portCmd.MarkFlagRequired("port")
+	updateCmd.AddCommand(portUpdateCmd)
+
+	portUpdateCmd.Flags().StringVar(&portNum, "port", "eth1/1", "Specify port number")
+	portUpdateCmd.Flags().StringVar(&portPause, "pause", "none", "Specify pause - link, pfc, none")
+	portUpdateCmd.Flags().StringVar(&txPause, "tx-pause", "enable", "Enable or disable TX pause using enable | disable")
+	portUpdateCmd.Flags().StringVar(&rxPause, "rx-pause", "enable", "Enable or disable RX pause using enable | disable")
+	portUpdateCmd.Flags().StringVar(&portFecType, "fec-type", "none", "Specify fec-type - rs, fc, none")
+	portUpdateCmd.Flags().StringVar(&portAutoNeg, "auto-neg", "enable", "Enable or disable auto-neg using enable | disable")
+	portUpdateCmd.Flags().StringVar(&portAdminState, "admin-state", "up", "Set port admin state - up, down")
+	portUpdateCmd.Flags().StringVar(&portSpeed, "speed", "", "Set port speed - none, 1g, 10g, 25g, 40g, 50g, 100g")
+	portUpdateCmd.Flags().Uint32Var(&portMtu, "mtu", 0, "Specify port MTU")
+	portUpdateCmd.Flags().Uint32Var(&portNumLanes, "num-lanes", 4, "Specify number of lanes")
 
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatusShowCmd)
-	portShowCmd.PersistentFlags().Uint32Var(&portNum, "port", 1, "Specify port number")
-
+	portShowCmd.Flags().StringVar(&portNum, "port", "eth1/1", "Specify port number")
 	portShowCmd.AddCommand(portStatsShowCmd)
 }
 
@@ -125,9 +131,11 @@ func portStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func portUpdateCmdHandler(cmd *cobra.Command, args []string) error {
-	if cmd.Flags().Changed("pause") == false && cmd.Flags().Changed("fec-type") == false &&
+	if cmd.Flags().Changed("pause") == false && cmd.Flags().Changed("tx-pause") == false &&
+		cmd.Flags().Changed("rx-pause") == false && cmd.Flags().Changed("fec-type") == false &&
 		cmd.Flags().Changed("auto-neg") == false && cmd.Flags().Changed("mtu") == false &&
-		cmd.Flags().Changed("admin-state") == false && cmd.Flags().Changed("speed") == false {
+		cmd.Flags().Changed("admin-state") == false && cmd.Flags().Changed("speed") == false &&
+		cmd.Flags().Changed("num-lanes") == false {
 		return errors.New("Command arguments not provided correctly. Refer to help string for guidance")
 	}
 
@@ -141,6 +149,14 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 			return errors.New("Command arguments not provided correctly. Refer to help string for guidance")
 		}
 		halctlStr += ("--pause " + portPause + " ")
+	}
+
+	if cmd.Flags().Changed("tx-pause") == true {
+		halctlStr += ("--tx-pause " + txPause + " ")
+	}
+
+	if cmd.Flags().Changed("rx-pause") == true {
+		halctlStr += ("--rx-pause " + rxPause + " ")
 	}
 
 	if cmd.Flags().Changed("fec-type") == true {
@@ -176,6 +192,10 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 
 	if cmd.Flags().Changed("mtu") == true {
 		halctlStr += ("--mtu " + fmt.Sprint(portMtu) + " ")
+	}
+
+	if cmd.Flags().Changed("num-lanes") == true {
+		halctlStr += ("--num-lanes " + fmt.Sprint(portNumLanes) + " ")
 	}
 
 	execCmd := strings.Fields(halctlStr)
