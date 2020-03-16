@@ -6,20 +6,19 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
-	"sync"
 	"testing"
-	"time"
 
 	dctypes "github.com/docker/docker/api/types"
 	dc "github.com/docker/docker/client"
+	es "github.com/olivere/elastic"
 
 	"github.com/pensando/sw/api"
+	testelastic "github.com/pensando/sw/test/utils"
 	servicetypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/spyglass/indexer"
 	"github.com/pensando/sw/venice/utils/elastic"
-	esmock "github.com/pensando/sw/venice/utils/elastic/mock/server"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/resolver/mock"
@@ -27,129 +26,80 @@ import (
 	vospkg "github.com/pensando/sw/venice/vos/pkg"
 )
 
-const realEs = true
-
 var apiServerAddr = flag.String("api-server-addr", globals.APIServer, "ApiServer gRPC endpoint")
 
-func IndexerSetTest(i *indexer.Indexer) {
-	i.VosTest = true
-	i.VosTestGrpcURL = "127.0.0.1:9051"
-	i.WatchAPIServer = false
-}
-
 // TestAppendOnlyWriter tests the writer used for pushing fwlogs to elastic
+// Skipping this test until it also starts spinning up tmagent and fwlog generator
 func SkipTestAppendOnlyWriter(t *testing.T) {
-	wg := sync.WaitGroup{}
-	url := ""
-	logger := log.GetNewLogger(log.GetDefaultConfig("appendonlywriter_test"))
-	if realEs {
-		setupRealEs(t)
-		defer stopRealEs(t)
-		url = "127.0.0.1:9200"
-	} else {
-		es := esmock.NewElasticServer(logger)
-		es.Start()
-		url = es.URL
-	}
-
-	r := mock.New()
-	err := r.AddServiceInstance(&servicetypes.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: globals.ElasticSearch,
-		},
-		Service: globals.ElasticSearch,
-		URL:     url,
-	})
-	AssertOk(t, err, "failed to add elasticsearch sercvice")
-
-	err = r.AddServiceInstance(&servicetypes.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: globals.VosMinio,
-		},
-		Service: globals.VosMinio,
-		URL:     "127.0.0.1:19001",
-	})
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	esClient, err := elastic.NewClient(url, r, logger)
-	AssertOk(t, err, "failed to create elastic client")
+	logger := log.GetNewLogger(log.GetDefaultConfig("appendonlywriter_test"))
+	url, _, err := testelastic.StartElasticsearch("testfwlogselastic", "", nil, nil)
+	AssertOk(t, err, "failed to start elastic")
+	defer testelastic.StopElasticsearch("testfwlogselastic", "")
+	r := setupResolver(t, url)
 
-	setupVos(t, ctx, logger, "127.0.0.1", &wg)
-	setupIndexer(t, ctx, r, logger, &wg)
+	var esClient elastic.ESClient
+	AssertEventually(t, func() (bool, interface{}) {
+		esClient, err = testelastic.CreateElasticClient("", r, logger, nil, nil)
+		return esClient != nil, esClient
+	}, "failed to craete elastic client", "2s", "60s")
 
-	indexName := verifyAndReturnFirewallIndexName(t, esClient)
-	fmt.Println("found index", indexName)
+	// setupKibana(t, url)
+	// defer stopKibana(t)
 
-	wg.Wait()
+	setupVos(t, ctx, logger, "127.0.0.1")
+	setupSpyglass(ctx, t, r, esClient, logger)
+
+	// TestVerifyFirewallIndexName verifies that the firewall index is created
+	t.Run("TestVerifyFirewallIndexName", func(t *testing.T) {
+		verifyAndReturnFirewallIndexName(t, esClient)
+	})
+
+	t.Run("TestVerifyDiskMonitoring", func(t *testing.T) {
+		verifyDiskMonitoring(ctx, t, esClient, logger)
+	})
+
+	done := make(chan bool)
+	<-done
 }
 
-func setupIndexer(t *testing.T,
-	ctx context.Context, resolver resolver.Interface, logger log.Logger, wg *sync.WaitGroup) {
+func setupSpyglass(ctx context.Context, t *testing.T,
+	r resolver.Interface, es elastic.ESClient, logger log.Logger) {
 	// Create the indexer
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	go func(r resolver.Interface) {
+		cache := cache.NewCache(logger)
 		idxer, err := indexer.NewIndexer(ctx,
 			*apiServerAddr,
-			resolver,
-			cache.NewCache(logger),
+			r,
+			cache,
 			logger,
 			8,
 			1,
-			IndexerSetTest)
+			indexer.WithElasticClient(es),
+			indexer.WithDisableAPIServerWatcher(),
+			indexer.WithNumVosObjectsToDelete(1))
 
 		AssertOk(t, err, "failed to add indexer")
 		Assert(t, idxer != nil, "failed to create indexer")
 
 		err = idxer.Start()
 		AssertOk(t, err, "failed to start indexer")
-	}()
+	}(r)
 }
 
-func setupRealEs(t *testing.T) {
-	esCmdStr :=
-		"docker run -p 9200:9200 -p 9300:9300 -e \"discovery.type=single-node\" docker.elastic.co/elasticsearch/elasticsearch:6.3.2"
-	go exec.Command("/bin/sh", "-c", esCmdStr).Output()
-
-	cli, err := dc.NewEnvClient()
-	AssertOk(t, err, "failed to create docker client")
-
-	esConatinerID := ""
-loop:
-	for {
-		select {
-		case <-time.After(time.Second * 1):
-			containers, err := cli.ContainerList(context.Background(), dctypes.ContainerListOptions{})
-			AssertOk(t, err, "failed to list docker containers")
-
-			if len(containers) == 0 {
-				continue
-			}
-
-			for _, container := range containers {
-				fmt.Printf("%s %s\n", container.ID[:10], container.Image)
-				if strings.Contains(container.Image, "elastic") {
-					esConatinerID = container.ID[:10]
-					break loop
-				}
-			}
-		}
-	}
-
+func setupKibana(t *testing.T, elasticURL string) {
 	kibanaCmdStr :=
-		"docker run --link " + esConatinerID + ":elasticsearch -p 5601:5601 docker.elastic.co/kibana/kibana:6.3.0"
+		"docker run " +
+			"--net=host -e 'ELASTICSEARCH_URL=http://" + elasticURL + "'" +
+			" -p 5601:5601 docker.elastic.co/kibana/kibana:6.3.0"
+
+	fmt.Println("kibana command", kibanaCmdStr)
 	go exec.Command("/bin/sh", "-c", kibanaCmdStr).Output()
 }
 
-func stopRealEs(t *testing.T) {
+func stopKibana(t *testing.T) {
 	cli, err := dc.NewEnvClient()
 	AssertOk(t, err, "failed to create docker client")
 
@@ -170,16 +120,55 @@ func stopRealEs(t *testing.T) {
 	}
 }
 
-func setupVos(t *testing.T, ctx context.Context, logger log.Logger, url string, wg *sync.WaitGroup) {
-	wg.Add(1)
+func setupVos(t *testing.T, ctx context.Context, logger log.Logger, url string) {
 	go func() {
-		defer wg.Done()
 		args := []string{globals.Vos, "server", "--address", fmt.Sprintf("%s:%s", url, globals.VosMinioPort), "/disk1"}
-		err := vospkg.New(ctx, false, args, url)
+		_, err := vospkg.New(ctx, false, url,
+			vospkg.WithBootupArgs(args),
+			vospkg.WithBucketDiskThresholds(map[string]float64{"/disk1/fwlogs.fwlogs": 0.00001}))
 		AssertOk(t, err, "error in initiating Vos")
 	}()
 }
 
+func setupResolver(t *testing.T, elasticURL string) resolver.Interface {
+	r := mock.New()
+	err := r.AddServiceInstance(&servicetypes.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.ElasticSearch,
+		},
+		Service: globals.ElasticSearch,
+		URL:     elasticURL,
+	})
+	AssertOk(t, err, "failed to add elasticsearch service")
+
+	err = r.AddServiceInstance(&servicetypes.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.VosMinio,
+		},
+		Service: globals.VosMinio,
+		URL:     "127.0.0.1:19001",
+	})
+	AssertOk(t, err, "failed to add VosMinio service")
+
+	err = r.AddServiceInstance(&servicetypes.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.Vos,
+		},
+		Service: globals.Vos,
+		URL:     "127.0.0.1:9051",
+	})
+	AssertOk(t, err, "failed to add Vos service")
+	return r
+}
 func verifyAndReturnFirewallIndexName(t *testing.T, esClient elastic.ESClient) string {
 	firewallIndexName := ""
 	assert := func() (bool, interface{}) {
@@ -198,4 +187,38 @@ func verifyAndReturnFirewallIndexName(t *testing.T, esClient elastic.ESClient) s
 
 	AssertEventually(t, assert, "firewall index not found", string("100ms"), string("100s"))
 	return firewallIndexName
+}
+
+func verifyDiskMonitoring(ctx context.Context, t *testing.T, esClient elastic.ESClient, logger log.Logger) {
+	query := es.NewMatchQuery("bucket", "fwlogs")
+	oldCount := 0
+	assert := func() (bool, interface{}) {
+		result, err := esClient.Search(ctx,
+			elastic.GetIndex(globals.FwLogsObjects, ""), // index
+			"",           // skip the index type
+			query,        // query to be executed
+			nil,          // no aggregation
+			0,            // from
+			10000,        // to
+			"creationTs", // sorting is required
+			true)         // sort in desc order
+
+		if err != nil {
+			logger.Errorf("failed to query elasticsearch, err: %+v", err)
+			return false, nil
+		}
+
+		if len(result.Hits.Hits) == 0 {
+			return false, nil
+		}
+
+		if oldCount == 0 {
+			oldCount = len(result.Hits.Hits)
+			return false, nil
+		}
+
+		return oldCount > len(result.Hits.Hits), nil
+	}
+
+	AssertEventually(t, assert, "old objects are not getting deleted from elastic", string("1s"), string("200s"))
 }

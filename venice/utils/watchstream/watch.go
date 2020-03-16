@@ -324,7 +324,7 @@ func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.O
 		w.log.ErrorLog("oper", "WatchEventQEnqueue", "type", evType, "msg", "parse version failed", "err", err, "path", w.path)
 		return err
 	}
-	w.log.InfoLog("oper", "WatchEventQEnqueue", "type", evType, "path", w.path, "version", v)
+	w.log.DebugLog("oper", "WatchEventQEnqueue", "type", evType, "path", w.path, "version", v)
 	// XXXX-TODO(sanjayt): Use a pool here to reduce garbage collection work.
 	// XXX-TODO(sanjayt): TODO: The API server is done with the object enqueued here.
 	//  so although it is safe to enqueue this object to the eventQ, to keep race detector happy
@@ -372,7 +372,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 
 		histogram.Record("watch.DequeueLatency", time.Since(obj.enqts))
 		go func() {
-			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", obj.evType, "path", w.path, "ResVersion", obj.version, "peer", peer)
+			w.log.DebugLog("oper", "WatchEventQDequeue", "msg", "Send", "type", obj.evType, "path", w.path, "ResVersion", obj.version, "peer", peer)
 			cb(tracker.ctx, obj.evType, obj.item, obj.prev)
 			close(sendCh)
 		}()

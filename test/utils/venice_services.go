@@ -233,7 +233,7 @@ func StartSpyglassWithArchiveService(service, apiServerAddr string, mr resolver.
 		log.Info("starting indexer ...")
 		ctx := context.Background()
 		spyglassOpts := func(idr *indexer.Indexer) {
-			indexer.DisableVOSWatcher()(idr)
+			indexer.WithDisableVOSWatcher()(idr)
 			indexer.WithElasticClient(esClient)(idr)
 		}
 

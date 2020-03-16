@@ -43,7 +43,7 @@ func (idr *Indexer) startAppendOnlyWriter(id int,
 				continue
 			}
 
-			idr.logger.Infof("Writer: %d pending-requests len:%d data:%v",
+			idr.logger.Debugf("Writer: %d pending-requests len:%d data:%v",
 				id, len(idr.requests[id]), idr.requests[id])
 
 			// check if batchSize is reached and call the bulk API
@@ -67,7 +67,7 @@ func (idr *Indexer) helper(id, timeout int, reqs []*elastic.BulkRequest) {
 	// Batch any pending requests.
 	if len(reqs) > 0 {
 		// Send a bulk request
-		idr.logger.Infof("Writer: %d Calling Bulk Api len: %d requests",
+		idr.logger.Debugf("Writer: %d Calling Bulk Api len: %d requests",
 			id,
 			len(reqs))
 

@@ -635,6 +635,43 @@ func (e *Client) Bulk(ctx context.Context, objs []*BulkRequest) (*es.BulkRespons
 	}
 }
 
+// DeleteByQuery deletes objects that matches the given query from the given index
+func (e *Client) DeleteByQuery(ctx context.Context, index string, iType string, query es.Query,
+	size int, sortByField string, sortAsc bool) (*es.BulkIndexByScrollResponse, error) {
+	retryCount := 0
+	retryInterval := initialRetryInterval
+
+	var rResp interface{}
+	var rErr error
+	var retry bool
+
+	for {
+		retry, rResp, rErr = e.Perform(func() (interface{}, error) {
+			ctxWithDeadline, cancel := context.WithDeadline(ctx, time.Now().Add(contextDeadline))
+			defer cancel()
+			return e.esClient.DeleteByQuery().Index(index).Type(iType).Query(query).
+				Size(size).SortByField(sortByField, sortAsc).Refresh("false").Do(ctxWithDeadline)
+		}, retryCount, rResp, rErr)
+
+		if retry {
+			if 2*retryInterval > maxRetryInterval {
+				retryInterval = maxRetryInterval
+			} else {
+				retryInterval = retryInterval * 2
+			}
+
+			time.Sleep(retryInterval)
+
+			e.logger.Debug("retrying, delete index {%s}", index)
+			retryCount++
+			continue
+		}
+
+		searchResult := rResp.(*es.BulkIndexByScrollResponse)
+		return searchResult, rErr
+	}
+}
+
 // Delete deletes the given object in the index and docType provided
 func (e *Client) Delete(ctx context.Context, index, docType, ID string) error {
 	retryCount := 0

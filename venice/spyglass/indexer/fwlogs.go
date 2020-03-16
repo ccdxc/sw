@@ -83,22 +83,11 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 		return nil
 	}
 
-	// fwLogsIndex := globals.FwLogs
-	// fwLogObjectIndex := globals.FwLogsObjects
 	kind := req.object.(runtime.Object).GetObjectKind()
-	uuid := ometa.GetUUID()
-	if uuid == "" {
-		// VOS objects do not have a UUID
-		// Artificially create one using Objstore-Object-<tenant>-<namespace>-<meta.name>
-		uuid = fmt.Sprintf("Objstore-%s-%s-%s-%s", kind, ometa.GetTenant(), ometa.GetNamespace(), key)
-	}
-	idr.logger.Infof("Writer %d, processing object: <%s %s %v %v>", id, kind, key, uuid, req.evType)
-	if uuid == "" {
-		idr.logger.Errorf("Writer %d, object %s %s has no uuid", id, kind, key)
-		// Skip indexing as write is guaranteed to fail without uuid
-		return fmt.Errorf("Writer %d, object %s %s has no uuid", id, kind, key)
-	}
 
+	uuid := getUUIDForFwlogObject(kind, ometa.GetTenant(), ometa.GetNamespace(), key)
+
+	idr.logger.Infof("Writer %d, processing object: <%s %s %v %v>", id, kind, key, uuid, req.evType)
 	objStats, err := idr.vosFwLogsHTTPClient.StatObject(key)
 	if err != nil {
 		idr.logger.Errorf("Writer %d, Object %s, StatObject error %s",
@@ -109,7 +98,7 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 	}
 
 	meta := objStats.MetaData
-	if meta["Metaversion"] == "v1" || idr.VosTest {
+	if meta["Metaversion"] == "v1" {
 		request, err := idr.parseFwLogsMetaV1(id, meta, key, ometa, timeFormat, uuid)
 		if err != nil {
 			return err
@@ -153,7 +142,7 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 	data := output.([][]string)
 
 	// For testing, dont check versions
-	if meta["Csvversion"] == "v1" || idr.VosTest {
+	if meta["Csvversion"] == "v1" {
 		output, err := idr.parseFwLogsCsvV1(id, key, data, uuid)
 		if err != nil {
 			return err
@@ -166,7 +155,7 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 
 			for _, fwlogs := range output {
 				if len(fwlogs) != 0 {
-					idr.logger.Infof("Writer: %d Calling Bulk Api reached batchsize len: %d",
+					idr.logger.Debugf("Writer: %d Calling Bulk Api reached batchsize len: %d",
 						id,
 						len(fwlogs))
 
@@ -324,4 +313,9 @@ func (idr *Indexer) parseTime(id int, key string, timeFormat string, ts string, 
 			id, key, propertyName, ts, err.Error())
 	}
 	return parsedTime, nil
+}
+
+func getUUIDForFwlogObject(kind, tenant, namespace, key string) string {
+	// Artificially create one using Objstore-Object-<tenant>-<namespace>-<meta.name>
+	return fmt.Sprintf("Objstore-%s-%s-%s-%s", kind, tenant, namespace, key)
 }

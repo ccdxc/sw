@@ -49,7 +49,7 @@ func (idr *Indexer) createWatchers() error {
 	groupMap := runtime.GetDefaultScheme().Kinds()
 	apiClientVal := reflect.ValueOf(idr.apiClient)
 
-	if idr.WatchAPIServer {
+	if idr.watchAPIServer {
 		for group := range groupMap {
 			if idr.ctx.Err() != nil { // context canceled; indexer stopped
 				idr.stopWatchersHelper()
@@ -114,8 +114,14 @@ func (idr *Indexer) createWatchers() error {
 				return err
 			}
 		}
-	}
 
+		err := idr.createVosDiskMonitorWatcher()
+		if err != nil {
+			// Stop existing watchers
+			idr.stopWatchersHelper()
+		}
+		return err
+	}
 	return nil
 }
 
@@ -538,6 +544,9 @@ func (idr *Indexer) stopWatchersHelper() {
 				watcher.Stop()
 			}
 			idr.watchers[key] = nil
+		}
+		if idr.vosDiskUpdateWatcher != nil {
+			idr.vosDiskUpdateWatcher.CloseSend()
 		}
 		idr.watchers = nil
 		idr.channels = nil

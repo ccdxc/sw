@@ -181,6 +181,13 @@ func (e *mockClient) Delete(ctx context.Context, index, iType, ID string) error 
 	return nil
 }
 
+// DeleteByQuery deletes objects that matches the given query from the given index
+func (e *mockClient) DeleteByQuery(ctx context.Context,
+	index string, iType string, query es.Query,
+	size int, sortByField string, sortAsc bool) (*es.BulkIndexByScrollResponse, error) {
+	panic("not implemented")
+}
+
 // Search - mock implementation of search operation
 func (e *mockClient) Search(ctx context.Context, index, iType string, query es.Query, aggregation es.Aggregation,
 	from, size int32, sortByField string, sortAsc bool, options ...elastic.SearchOption) (*es.SearchResult, error) {
@@ -234,5 +241,5 @@ func (e *mockClient) IndexNames() ([]string, error) {
 
 // GetRawClient - used for testing purposes only
 func (e *mockClient) GetRawClient() *es.Client {
-	return nil
+	panic("not implemented")
 }

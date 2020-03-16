@@ -48,6 +48,11 @@ type ESClient interface {
 	// type `iType` with the given ID.
 	Delete(ctx context.Context, index, iType, ID string) error
 
+	// DeleteByQuery deletes objects that matches the given query from the given index
+	DeleteByQuery(ctx context.Context,
+		index string, iType string, query es.Query,
+		size int, sortByField string, sortAsc bool) (*es.BulkIndexByScrollResponse, error)
+
 	// Search performs the given query on `index` and type `iType` and limits
 	// the number of search results to desired 'size' with start offset specified
 	// by `from`.

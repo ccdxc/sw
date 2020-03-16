@@ -155,7 +155,7 @@ ESTAB:
 					continue ESTAB
 				}
 				for i := range ev.Records {
-					log.Infof("received event [%+v]", ev.Records[i])
+					log.Debugf("received event [%+v]", ev.Records[i])
 					evType, obj := w.makeEvent(ev.Records[i])
 					path := w.bucket + ":" + ev.Records[i].S3.Object.Key
 					qs := w.watchPrefixes.Get(path)

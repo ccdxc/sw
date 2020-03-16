@@ -61,22 +61,29 @@ func main() {
 	sort.Strings(nodes)
 	endpoints := []string{}
 	for _, h := range nodes {
-		endpoints = append(endpoints, fmt.Sprintf("https://%s:%s/disk1", h, globals.VosMinioPort))
-		endpoints = append(endpoints, fmt.Sprintf("https://%s:%s/disk2", h, globals.VosMinioPort))
+		endpoints = append(endpoints, fmt.Sprintf("https://%s:%s"+vospkg.DiskPaths[0], h, globals.VosMinioPort))
+		endpoints = append(endpoints, fmt.Sprintf("https://%s:%s"+vospkg.DiskPaths[1], h, globals.VosMinioPort))
 	}
 	localNode := k8s.GetPodIP()
 	args := []string{}
 	if len(nodes) > 1 {
-		args = []string{pkgName, "server", "--address", fmt.Sprintf("%s:%s", localNode, globals.VosMinioPort)}
+		args = []string{pkgName,
+			"server", "--address", fmt.Sprintf("%s:%s", localNode, globals.VosMinioPort)}
 		args = append(args, endpoints...)
 	} else {
-		args = []string{pkgName, "server", "--address", fmt.Sprintf("%s:%s", localNode, globals.VosMinioPort), "/disk1"}
+		args = []string{pkgName,
+			"server", "--address", fmt.Sprintf("%s:%s", localNode, globals.VosMinioPort), vospkg.DiskPaths[0]}
 	}
+
 	log.Infof("args for starting Minio %v", args)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
 	// init obj store
-	err := vospkg.New(ctx, *traceAPI, args, "")
+	_, err := vospkg.New(ctx, *traceAPI, "",
+		vospkg.WithBootupArgs(args),
+		vospkg.WithBucketDiskThresholds(vospkg.GetBucketDiskThresholds()))
+
 	if err != nil {
 		// let the scheduler restart obj store
 		log.Fatalf("failed to init object store, %s", err)

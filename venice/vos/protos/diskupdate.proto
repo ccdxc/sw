@@ -1,0 +1,40 @@
+// diskupdate
+
+syntax = "proto3";
+
+package protos;
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// DiskUpdateStatus represents operational parameters of the disk
+message DiskUpdateStatus {
+    // NodeID is the ID of the corresponding venice node
+    string NodeID      = 1 [(gogoproto.jsontag) = "node"];
+    // Path is the path of the subfolder on the disk (example: fwlogs.fwlogs)
+    string Path      = 2 [(gogoproto.jsontag) = "path"];
+    // Size is the total size of the disk partition
+    uint64 Size      = 3 [(gogoproto.jsontag) = "size"];
+    // UsedByNamespace is the size used by the namepace on the disk
+    uint64 UsedByNamespace      = 4 [(gogoproto.jsontag) = "usedbynamespace"];
+}
+
+// DiskUpdateSpec represents the config parameters of the disk
+message DiskUpdateSpec {
+}
+
+// DiskUpdate represents the disk update message going from Vos to its consumers like Spyglass
+message DiskUpdate {
+    api.TypeMeta T      = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O    = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
+    DiskUpdateSpec      Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec"];
+    DiskUpdateStatus    Status   = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status"];
+}
+
+service ObjstoreInternalService {
+    option (venice.apiPrefix)           = "";
+    option (venice.apiVersion) = "v1";
+    option (venice.apiGrpcCrudService)  = "DiskUpdate";
+    rpc WatchDiskThresholdUpdates(api.ListWatchOptions) returns (stream DiskUpdate) {}
+}

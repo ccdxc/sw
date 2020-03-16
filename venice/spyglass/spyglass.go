@@ -105,8 +105,8 @@ func main() {
 		}
 	}
 	// Create the indexers
-	go startIndexer(8, 0, indexer.DisableVOSWatcher())
-	go startIndexer(8, 1, indexer.DisableApiserverWatcher())
+	go startIndexer(8, 0, indexer.WithDisableVOSWatcher())
+	go startIndexer(8, 1, indexer.WithDisableAPIServerWatcher())
 
 	router := mux.NewRouter()
 

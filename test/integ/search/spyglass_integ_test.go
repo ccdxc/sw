@@ -544,7 +544,7 @@ func TestSpyglass(t *testing.T) {
 	AssertEventually(t,
 		func() (bool, interface{}) {
 			spyglassOpts := func(idr *indexer.Indexer) {
-				indexer.DisableVOSWatcher()(idr)
+				indexer.WithDisableVOSWatcher()(idr)
 				indexer.WithElasticClient(tInfo.esClient)(idr)
 			}
 			tInfo.idr, err = indexer.NewIndexer(ctx, tInfo.apiServerAddr, tInfo.mockResolver, tInfo.pcache, tInfo.l, 8, 0, spyglassOpts)

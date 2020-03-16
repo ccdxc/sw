@@ -162,3 +162,26 @@ func TestCreateBuckets(t *testing.T) {
 	Assert(t, err != nil, "create buckets should have failed")
 	inst.Close()
 }
+
+// TestOptions tests the Vos's option functions
+func TestOptions(t *testing.T) {
+	inst := &instance{}
+	f := WithBootupArgs([]string{"dummyarg"})
+	Assert(t, f != nil, "bootup option function is nil")
+	f(inst)
+	Assert(t, inst.bootupArgs[0] == "dummyarg", "bootup arg is missing")
+
+	f = WithBucketDiskThresholds(GetBucketDiskThresholds())
+	Assert(t, f != nil, "bucket diskthreshold option function is nil")
+	f(inst)
+	Assert(t, len(inst.bucketDiskThresholds) == 2, "fwlogs bucket diskthreshold is missing")
+
+	dth := GetBucketDiskThresholds()
+	Assert(t, len(dth) == 2, "incorrect disk threshold arguments, expected /disk1/fwlogs.fwlogs, /disk2/fwlogs.fwlogs")
+	th, ok := dth["/disk1/fwlogs.fwlogs"]
+	Assert(t, th == 50.00, "incorrect threshold")
+	Assert(t, ok, "fwlogs bucket threshold missing")
+	th, ok = dth["/disk2/fwlogs.fwlogs"]
+	Assert(t, th == 50.00, "incorrect threshold")
+	Assert(t, ok, "fwlogs bucket threshold missing")
+}

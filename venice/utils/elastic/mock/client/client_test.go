@@ -238,5 +238,36 @@ func TestESMockFunctions(t *testing.T) {
 	_, err = mc.GetNodesInfo(ctx, []string{"test"})
 	AssertOk(t, err, "failed get node info")
 
-	Assert(t, mc.GetRawClient() == nil, "raw client is not nil")
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("DeleteByQuery should have panicked!")
+			}
+		}()
+
+		// This function should cause a panic
+		mc.DeleteByQuery(context.Background(), "test", "", mockQuery{name: "dummy1 - updated"}, -1, "", false)
+	}()
+
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("IndexNames should have panicked!")
+			}
+		}()
+
+		// This function should cause a panic
+		mc.IndexNames()
+	}()
+
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("GetRawClient should have panicked!")
+			}
+		}()
+
+		// This function should cause a panic
+		mc.GetRawClient()
+	}()
 }

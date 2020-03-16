@@ -23,6 +23,7 @@ import (
 	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	vosinternalprotos "github.com/pensando/sw/venice/vos/protos"
 )
 
 /**
@@ -54,6 +55,10 @@ const (
 	fwLogsElasticBatchSize              = 100
 	fwLogsElasticWriteWorkerSize        = 10
 	fwLogsElasticWriterWorkerBufferSize = 1000
+
+	// Remove data for last 30 minutes. It will free up ~5.2Gb assuming the
+	// data is generated at the rate of 20CPS per DSC.
+	numFwLogObjectsToDelete = 30000
 )
 
 // Option fills the optional params for Indexer
@@ -72,8 +77,10 @@ type Indexer struct {
 	apiClient     apiservice.Services
 
 	// VOS client
-	vosClient           apiservice.Services
-	vosFwLogsHTTPClient objstore.Client
+	vosClient               apiservice.Services
+	vosInternalClient       *rpckit.RPCClient
+	vosFwLogsHTTPClient     objstore.Client
+	vosFwLogsMetaHTTPClient objstore.Client
 
 	// ElasticDB client object
 	elasticClient elastic.ESClient
@@ -143,16 +150,13 @@ type Indexer struct {
 	maxWriters           int // Max concurrent writers
 	indexMaxBuffer       int
 
+	// Vos disk update watcher
+	vosDiskUpdateWatcher    vosinternalprotos.ObjstoreInternalService_WatchDiskThresholdUpdatesClient
+	numFwLogObjectsToDelete int
+
 	// Whether or not to watch VOS objects
 	watchVos       bool
-	WatchAPIServer bool // exported because its set using Option closure.
-
-	// running tests, its exported so that it can be set
-	// using options from test package
-	// The test fields are set using the Option closure.
-	VosTest bool
-
-	VosTestGrpcURL string
+	watchAPIServer bool
 }
 
 // WithElasticClient passes a custom client for Elastic
@@ -162,17 +166,25 @@ func WithElasticClient(esClient elastic.ESClient) Option {
 	}
 }
 
-// DisableVOSWatcher disables indexing VOS objects
-func DisableVOSWatcher() Option {
+// WithDisableVOSWatcher disables indexing VOS objects
+func WithDisableVOSWatcher() Option {
 	return func(idr *Indexer) {
 		idr.watchVos = false
 	}
 }
 
-// DisableApiserverWatcher disables indexing APIServer objects
-func DisableApiserverWatcher() Option {
+// WithDisableAPIServerWatcher disables watching on API server
+func WithDisableAPIServerWatcher() Option {
 	return func(idr *Indexer) {
-		idr.WatchAPIServer = false
+		idr.watchAPIServer = false
+	}
+}
+
+// WithNumVosObjectsToDelete sets the number of vos objects to delete
+// when disk threshold is crossed
+func WithNumVosObjectsToDelete(num int) Option {
+	return func(idr *Indexer) {
+		idr.numFwLogObjectsToDelete = num
 	}
 }
 
@@ -198,24 +210,23 @@ func NewIndexer(ctx context.Context,
 	opts ...Option) (Interface, error) {
 	newCtx, cancelFunc := context.WithCancel(ctx)
 	indexer := Indexer{
-		ctx:                  newCtx,
-		cancelFunc:           cancelFunc,
-		apiServerAddr:        apiServerAddr,
-		logger:               logger,
-		batchSize:            indexBatchSize,
-		indexIntvl:           indexBatchIntvl,
-		indexRefreshIntvl:    indexRefreshIntvl,
-		doneCh:               make(chan error),
-		count:                0,
-		cache:                cache,
-		maxOrderedWriters:    maxOrderedWriters,
-		maxAppendOnlyWriters: maxAppendOnlyWriters,
-		maxWriters:           maxOrderedWriters + maxAppendOnlyWriters,
-		indexMaxBuffer:       (maxOrderedWriters + maxAppendOnlyWriters) * indexBatchSize,
-		watchVos:             true,
-		WatchAPIServer:       true,
-		VosTest:              false,
-		VosTestGrpcURL:       "", // 127.0.0.1:9051
+		ctx:                     newCtx,
+		cancelFunc:              cancelFunc,
+		apiServerAddr:           apiServerAddr,
+		logger:                  logger,
+		batchSize:               indexBatchSize,
+		indexIntvl:              indexBatchIntvl,
+		indexRefreshIntvl:       indexRefreshIntvl,
+		doneCh:                  make(chan error),
+		count:                   0,
+		cache:                   cache,
+		maxOrderedWriters:       maxOrderedWriters,
+		maxAppendOnlyWriters:    maxAppendOnlyWriters,
+		maxWriters:              maxOrderedWriters + maxAppendOnlyWriters,
+		indexMaxBuffer:          (maxOrderedWriters + maxAppendOnlyWriters) * indexBatchSize,
+		watchVos:                true,
+		watchAPIServer:          true,
+		numFwLogObjectsToDelete: numFwLogObjectsToDelete,
 	}
 
 	for _, opt := range opts {
@@ -225,14 +236,11 @@ func NewIndexer(ctx context.Context,
 	}
 
 	logger.Infof("Creating Indexer, apiserver-addr: %s, watchAPIServer %d, watchVos %d",
-		apiServerAddr, indexer.WatchAPIServer, indexer.watchVos)
+		apiServerAddr, indexer.watchAPIServer, indexer.watchVos)
 
 	if indexer.elasticClient == nil {
 		// Initialize elastic client
 		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-			if indexer.VosTest {
-				return elastic.NewClient("", rsr, logger.WithContext("submodule", "elastic"))
-			}
 			return elastic.NewAuthenticatedClient("", rsr, logger.WithContext("submodule", "elastic"))
 		}, elasticWaitIntvl, maxElasticRetries)
 		if err != nil {
@@ -243,7 +251,7 @@ func NewIndexer(ctx context.Context,
 		indexer.elasticClient = result.(elastic.ESClient)
 	}
 
-	if indexer.WatchAPIServer {
+	if indexer.watchAPIServer {
 		// Initialize api client
 		apiClientBalancer := balancer.New(rsr)
 		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
@@ -273,13 +281,9 @@ func NewIndexer(ctx context.Context,
 		indexer.vosFwLogsHTTPClient = result.(objstore.Client)
 
 		// create grpc client with vos
-		vosGrpcURL := globals.Vos
-		if indexer.VosTest {
-			vosGrpcURL = indexer.VosTestGrpcURL
-		}
 		vosClientBalancer := balancer.New(rsr)
 		result, err = utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-			return apiservice.NewGrpcAPIClient(globals.Spyglass, vosGrpcURL, logger, rpckit.WithBalancer(vosClientBalancer))
+			return apiservice.NewGrpcAPIClient(globals.Spyglass, globals.Vos, logger, rpckit.WithBalancer(vosClientBalancer))
 		}, apiSrvWaitIntvl, maxAPISrvRetries)
 		if err != nil {
 			logger.Errorf("Failed to create vos client, addr: %s err: %v",
@@ -292,6 +296,28 @@ func NewIndexer(ctx context.Context,
 
 		logger.Debugf("Created Vos API client")
 		indexer.vosClient = result.(apiservice.Services)
+
+		// create vos internal grpc client
+		vosInternalClientBalancer := balancer.New(rsr)
+		result, err = utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+			client, err := rpckit.NewRPCClient(globals.Spyglass, globals.Vos, rpckit.WithBalancer(vosInternalClientBalancer))
+			if err != nil {
+				logger.ErrorLog("msg", "Failed to connect to gRPC server", "URL", globals.Vos, "err", err)
+				return nil, err
+			}
+			return client, err
+		}, apiSrvWaitIntvl, maxAPISrvRetries)
+		if err != nil {
+			logger.Errorf("Failed to create vos internal client, addr: %s err: %v",
+				apiServerAddr, err)
+			indexer.elasticClient.Close()
+			indexer.apiClient.Close()
+			vosClientBalancer.Close()
+			vosInternalClientBalancer.Close()
+			return nil, err
+		}
+
+		indexer.vosInternalClient = result.(*rpckit.RPCClient)
 	}
 
 	logger.Infof("Created new indexer: {%+v}", &indexer)
@@ -379,6 +405,10 @@ func (idr *Indexer) initializeAndStartWatchers() {
 	// start the watchers
 	idr.SetRunningStatus(true)
 	idr.startWatchers()
+
+	if idr.watchVos {
+		idr.startVosDiskMonitorWatcher()
+	}
 }
 
 func (idr *Indexer) initialize() error {
@@ -436,10 +466,17 @@ func (idr *Indexer) Stop() {
 	for i := range idr.reqChan {
 		close(idr.reqChan[i])
 	}
-	idr.elasticClient.Close()
-	idr.apiClient.Close()
+	if idr.elasticClient != nil {
+		idr.elasticClient.Close()
+	}
+	if idr.apiClient != nil {
+		idr.apiClient.Close()
+	}
 	if idr.vosClient != nil {
 		idr.vosClient.Close()
+	}
+	if idr.vosInternalClient != nil {
+		idr.vosInternalClient.Close()
 	}
 	idr.logger.Info("Stopped indexer")
 }
@@ -559,7 +596,7 @@ func (idr *Indexer) GetRunningStatus() bool {
 // Initialize the searchDB with indices
 // required for Venice search
 func (idr *Indexer) initSearchDB() error {
-	if idr.WatchAPIServer {
+	if idr.watchAPIServer {
 		// Delete current index since we may have missed delete events while spyglass was down
 		if err := idr.deleteIndexHelper(globals.Configs, globals.DefaultTenant); err != nil {
 			return err

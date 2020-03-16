@@ -15,8 +15,9 @@ import (
 	minio "github.com/minio/minio/cmd"
 	"github.com/pkg/errors"
 
-	"github.com/pensando/sw/api/generated/objstore"
 	apiintf "github.com/pensando/sw/api/interfaces"
+
+	"github.com/pensando/sw/api/generated/objstore"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
@@ -33,27 +34,35 @@ const (
 )
 
 const (
-	metaPrefix       = "X-Amz-Meta-"
-	metaCreationTime = "Creation-Time"
-	metaFileName     = "file"
-	metaContentType  = "content-type"
-	fwlogsBucketName = "fwlogs.fwlogs"
+	metaPrefix          = "X-Amz-Meta-"
+	metaCreationTime    = "Creation-Time"
+	metaFileName        = "file"
+	metaContentType     = "content-type"
+	fwlogsBucketName    = "fwlogs.fwlogs"
+	diskUpdateWatchPath = "diskupdates"
 )
 
 var (
 	maxCreateBucketRetries = 1200
+	// DiskPaths are the data folder locations for Minio
+	DiskPaths = []string{"/disk1", "/disk2"}
 )
+
+// Option fills the optional params for Vos
+type Option func(vos.Interface)
 
 type instance struct {
 	sync.RWMutex
-	ctx        context.Context
-	cancel     context.CancelFunc
-	wg         sync.WaitGroup
-	pluginsMap map[string]*pluginSet
-	watcherMap map[string]*storeWatcher
-	store      apiintf.Store
-	pfxWatcher watchstream.WatchedPrefixes
-	client     vos.BackendClient
+	ctx                  context.Context
+	cancel               context.CancelFunc
+	wg                   sync.WaitGroup
+	pluginsMap           map[string]*pluginSet
+	watcherMap           map[string]*storeWatcher
+	store                apiintf.Store
+	pfxWatcher           watchstream.WatchedPrefixes
+	client               vos.BackendClient
+	bootupArgs           []string
+	bucketDiskThresholds map[string]float64
 }
 
 func (i *instance) Init(client vos.BackendClient) {
@@ -152,6 +161,14 @@ func (i *instance) createBucket(bucket string) error {
 	return nil
 }
 
+func (i *instance) createDiskUpdateWatcher(paths map[string]float64) error {
+	watcher := &storeWatcher{bucket: "", client: nil, watchPrefixes: i.pfxWatcher}
+	i.watcherMap[diskUpdateWatchPath] = watcher
+	i.wg.Add(1)
+	go watcher.monitorDisks(i.ctx, time.Second*60, &i.wg, paths)
+	return nil
+}
+
 func (i *instance) Watch(ctx context.Context, path, peer string, handleFn apiintf.EventHandlerFn) error {
 	wq := i.pfxWatcher.Add(path, peer)
 	cleanupFn := func() {
@@ -177,7 +194,16 @@ func (i *instance) Watch(ctx context.Context, path, peer string, handleFn apiint
 // testURL = url for minio server for testing
 // Vos is setup differently when testURL is provided. For example, tls is not used whil testing and
 // insecure minio connection is initialized.
-func New(ctx context.Context, trace bool, args []string, testURL string) error {
+func New(ctx context.Context, trace bool, testURL string, opts ...Option) (vos.Interface, error) {
+	inst := &instance{}
+
+	// Run options
+	for _, opt := range opts {
+		if opt != nil {
+			opt(inst)
+		}
+	}
+
 	os.Setenv("MINIO_ACCESS_KEY", minioKey)
 	os.Setenv("MINIO_SECRET_KEY", minioSecret)
 	log.Infof("minio env: %+v", os.Environ())
@@ -185,11 +211,11 @@ func New(ctx context.Context, trace bool, args []string, testURL string) error {
 		os.Setenv("MINIO_HTTP_TRACE", "/dev/stdout")
 		log.Infof("minio enabled API tracing")
 	}
-	log.Infof("minio args:  %+v", args)
-	go minio.Main(args)
+	log.Infof("minio args:  %+v", inst.bootupArgs)
 
+	go minio.Main(inst.bootupArgs)
 	time.Sleep(2 * time.Second)
-	inst := &instance{}
+
 	url := k8s.GetPodIP() + ":" + globals.VosMinioPort
 	if testURL != "" {
 		url = testURL + ":" + globals.VosMinioPort
@@ -204,7 +230,7 @@ func New(ctx context.Context, trace bool, args []string, testURL string) error {
 	mclient, err := minioclient.New(url, minioKey, minioSecret, secureMinio)
 	if err != nil {
 		log.Errorf("Failed to create client (%s)", err)
-		return errors.Wrap(err, "Failed to create Client")
+		return nil, errors.Wrap(err, "Failed to create Client")
 	}
 	defTr := http.DefaultTransport.(*http.Transport)
 
@@ -213,20 +239,20 @@ func New(ctx context.Context, trace bool, args []string, testURL string) error {
 		tlsp, err := rpckit.GetDefaultTLSProvider(globals.Vos)
 		if err != nil {
 			log.Errorf("failed to get tls provider (%s)", err)
-			return errors.Wrap(err, "failed GetDefaultTLSProvider()")
+			return nil, errors.Wrap(err, "failed GetDefaultTLSProvider()")
 		}
 
 		tlsClientConfig, err := tlsp.GetClientTLSConfig(globals.Vos)
 		if err != nil {
 			log.Errorf("failed to get client tls config (%s)", err)
-			return errors.Wrap(err, "client tls config")
+			return nil, errors.Wrap(err, "client tls config")
 		}
 		defTr.TLSClientConfig = tlsClientConfig
 
 		tlsc, err = tlsp.GetServerTLSConfig(globals.Vos)
 		if err != nil {
 			log.Errorf("failed to get tls config (%s)", err)
-			return errors.Wrap(err, "failed GetDefaultTLSProvider()")
+			return nil, errors.Wrap(err, "failed GetDefaultTLSProvider()")
 		}
 		tlsc.ServerName = globals.Vos
 	}
@@ -237,12 +263,12 @@ func New(ctx context.Context, trace bool, args []string, testURL string) error {
 
 	grpcBackend, err := newGrpcServer(inst, client)
 	if err != nil {
-		return errors.Wrap(err, "failed to start grpc listener")
+		return nil, errors.Wrap(err, "failed to start grpc listener")
 	}
 
 	httpBackend, err := newHTTPHandler(inst, client)
 	if err != nil {
-		return errors.Wrap(err, "failed to start http listener")
+		return nil, errors.Wrap(err, "failed to start http listener")
 	}
 
 	// For simplicity all nodes in the cluster check if the default buckets exist,
@@ -251,14 +277,45 @@ func New(ctx context.Context, trace bool, args []string, testURL string) error {
 	//  operation (only on a create of a new cluster)
 	err = inst.createDefaultBuckets(client)
 	if err != nil {
-		log.Errorf("Failed to create buckets (%+v)", err)
-		return errors.Wrap(err, "failed to create buckets")
+		log.Errorf("failed to create buckets (%+v)", err)
+		return nil, errors.Wrap(err, "failed to create buckets")
 	}
+
+	err = inst.createDiskUpdateWatcher(inst.bucketDiskThresholds)
+	if err != nil {
+		log.Errorf("failed to start disk watcher (%+v)", err)
+		return nil, errors.Wrap(err, "failed to start disk watcher")
+	}
+
 	// Register all plugins
 	plugins.RegisterPlugins(inst)
 	grpcBackend.start(ctx)
 	httpBackend.start(ctx, globals.VosHTTPPort, tlsc)
 	log.Infof("Initialization complete")
 	<-ctx.Done()
-	return nil
+	return inst, nil
+}
+
+// WithBootupArgs sets the args to bootup Minio
+func WithBootupArgs(args []string) func(vos.Interface) {
+	return func(i vos.Interface) {
+		if inst, ok := i.(*instance); ok {
+			inst.bootupArgs = args
+		}
+	}
+}
+
+// WithBucketDiskThresholds sets the disk threshold for Minio buckets
+func WithBucketDiskThresholds(th map[string]float64) func(vos.Interface) {
+	return func(i vos.Interface) {
+		if inst, ok := i.(*instance); ok {
+			inst.bucketDiskThresholds = th
+		}
+	}
+}
+
+// GetBucketDiskThresholds returns the bucket disk thresholds
+func GetBucketDiskThresholds() map[string]float64 {
+	return map[string]float64{DiskPaths[0] + "/" + fwlogsBucketName: 50.00,
+		DiskPaths[1] + "/" + fwlogsBucketName: 50.00}
 }

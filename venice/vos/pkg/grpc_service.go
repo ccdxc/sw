@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/vos"
+	vosinternalprotos "github.com/pensando/sw/venice/vos/protos"
 )
 
 func newGrpcServer(instance *instance, client vos.BackendClient) (*grpcBackend, error) {
@@ -31,6 +32,7 @@ func newGrpcServer(instance *instance, client vos.BackendClient) (*grpcBackend, 
 	}
 	ret := &grpcBackend{client: client, server: grpcSvc, instance: instance}
 	objstore.RegisterObjstoreV1Server(grpcSvc.GrpcServer, ret)
+	vosinternalprotos.RegisterObjstoreInternalServiceServer(grpcSvc.GrpcServer, ret)
 
 	return ret, nil
 }
@@ -567,4 +569,20 @@ func (g *grpcBackend) DownloadFileByPrefix(objS *objstore.Object, stream objstor
 	}
 
 	return nil
+}
+
+func (g *grpcBackend) WatchDiskThresholdUpdates(opts *api.ListWatchOptions,
+	stream vosinternalprotos.ObjstoreInternalService_WatchDiskThresholdUpdatesServer) error {
+	log.Infof("got call to WatchDiskThresholdUpdates")
+	peer := ctxutils.GetContextID(stream.Context())
+	if opts.ResourceVersion != "" || opts.LabelSelector != "" || opts.FieldSelector != "" || opts.FieldChangeSelector != nil {
+		return errors.New("filtering is not supported")
+	}
+
+	handleFn := func(inctx context.Context, evType kvstore.WatchEventType, item, prev runtime.Object) {
+		stream.Send(item.(*vosinternalprotos.DiskUpdate))
+	}
+
+	err := g.instance.Watch(stream.Context(), diskUpdateWatchPath, peer, handleFn)
+	return err
 }
