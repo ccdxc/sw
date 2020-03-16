@@ -26,6 +26,7 @@ class InterfaceType:
     NAPLES_INT_MGMT    = 4
     NAPLES_IB_100G     = 5
     NAPLES_OOB_1G      = 6
+    NAPLES_IB_BOND     = 7
 
 def GetHostMgmtInterfaces(node):
     intfs = []
@@ -81,6 +82,15 @@ def GetNaplesInbandInterfaces(node):
     api.Logger.debug("NaplesInbandInterfaces for node: ", node, intfs)
     return intfs
 
+def GetNaplesInbandBondInterfaces(node):
+    if not api.IsNaplesNode(node):
+        return []
+    intfs = []
+    for intf in naples_host.GetNaplesInbandBondInterfaces(node):
+        intfObj = BondInterface(node, intf, InterfaceType.NAPLES_IB_BOND, 'linux')
+        intfs.append(intfObj)
+    api.Logger.debug("NaplesInbandBondInterfaces for node: ", node, intfs)
+    return intfs
 
 class Interface:
     __CMD_WRAPPER = {
@@ -90,6 +100,7 @@ class Interface:
         InterfaceType.NAPLES_INT_MGMT  : api.Trigger_AddNaplesCommand,
         InterfaceType.NAPLES_IB_100G   : api.Trigger_AddNaplesCommand,
         InterfaceType.NAPLES_OOB_1G    : api.Trigger_AddNaplesCommand,
+        InterfaceType.NAPLES_IB_BOND   : api.Trigger_AddNaplesCommand,
     }
 
     __IP_CMD_WRAPPER = {
@@ -99,6 +110,7 @@ class Interface:
         InterfaceType.NAPLES_INT_MGMT  : naples_host.GetIPAddress,
         InterfaceType.NAPLES_IB_100G   : naples_host.GetIPAddress,
         InterfaceType.NAPLES_OOB_1G    : naples_host.GetIPAddress,
+        InterfaceType.NAPLES_IB_BOND   : naples_host.GetIPAddress,
     }
 
     def __init__(self, node, name, intfType, os_type):
@@ -161,6 +173,37 @@ class Interface:
     def GetConfiguredIP(self):
         return Interface.__IP_CMD_WRAPPER[self.__type](self.__node, self.__name)
 
+    def SetIntfState(self, state="up"):
+        req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+        cmd = "ifconfig %s %s"%(self.__name, state)
+        self.AddCommand(req, cmd)
+        trig_resp = api.Trigger(req)
+        for cmd in trig_resp.commands:
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code:
+                return api.types.status.FAILURE
+        return api.types.status.SUCCESS
+
+    def Flap(self):
+        ret = self.SetIntfState("down")
+        if ret != api.types.status.SUCCESS:
+            return ret
+        return self.SetIntfState("up")
+
+class BondInterface(Interface):
+    def __init__(self, node, name, intfType, os_type):
+        Interface.__init__(self, node, name, intfType, os_type)
+
+    def SetActiveInterface(self, intf):
+        req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+        cmd = "ifenslave -c %s %s"%(self.Name(), intf)
+        self.AddCommand(req, cmd)
+        trig_resp = api.Trigger(req)
+        for cmd in trig_resp.commands:
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code:
+                return api.types.status.FAILURE
+        return api.types.status.SUCCESS
 
 class NodeInterface:
     def __init__(self, node):
@@ -170,6 +213,7 @@ class NodeInterface:
         self._naples_int_mgmt_intfs  = GetNaplesInternalMgmtInterfaces(node)
         self._oob_1g_intfs           = GetNaplesOobInterfaces(node)
         self._ib_100g_intfs          = GetNaplesInbandInterfaces(node)
+        self._ib_bond_intfs          = GetNaplesInbandBondInterfaces(node)
 
     def HostMgmtIntfs(self):
         return self._host_mgmt_intfs
@@ -188,6 +232,9 @@ class NodeInterface:
 
     def Inb100GIntfs(self):
         return self._ib_100g_intfs
+
+    def InbBondIntfs(self):
+        return self._ib_bond_intfs
 
 def GetNodeInterface(node):
     return NodeInterface(node)

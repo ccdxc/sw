@@ -175,6 +175,9 @@ def GetNaplesInbandInterfaces(node):
     inband_intfs = ['inb_mnic0', 'inb_mnic1']
     return inband_intfs
 
+def GetNaplesInbandBondInterfaces(node):
+    return ['bond0']
+
 def getNaplesInterfaces(naples_node):
     int_mgmt_intf_list = GetNaplesInternalMgmtInterfaces(naples_node)
     oob_intf_list = GetNaplesOobInterfaces(naples_node)

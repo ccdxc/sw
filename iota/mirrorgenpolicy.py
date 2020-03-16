@@ -4,6 +4,7 @@ import json
 import os
 import collections
 import random
+import copy
 
 mirrorpolicy_template = {
     "type" : "netagent",
@@ -105,7 +106,7 @@ parser.add_argument('--topology', dest='topology_dir', required = dir,
 GlobalOptions = parser.parse_args()
 GlobalOptions.endpoint_file = GlobalOptions.topology_dir + "/endpoints.json"
 GlobalOptions.protocols = ["udp", "tcp", "icmp"]
-GlobalOptions.directories = ["udp", "tcp", "icmp", "mixed"]
+GlobalOptions.directories = ["udp", "tcp", "icmp", "mixed", "scale"]
 #GlobalOptions.ports = ["10", "22", "24", "30", "50-100", "101-200", "201-250, 251-290", "10000-20000", "65535"]
 GlobalOptions.ports = ["120"]
 GlobalOptions.actions = ["mirror"]
@@ -248,6 +249,40 @@ def Main():
     if len(verif) > 0:
         json.dump(verif, open(GlobalOptions.topology_dir +"/{}/mirror_mixed_verif.json".format('mixed'), "w"), indent=4)
         json.dump(mirrorpolicy, open(GlobalOptions.topology_dir + "/{}/mirror_mixed_policy.json".format('mixed'), "w"), indent=4)
+
+    # Scale Config
+    verif = []
+    for action in GlobalOptions.actions:
+        mirrorpolicies = copy.deepcopy(mirrorpolicy_template)
+        objects = mirrorpolicies['objects']
+        mirorpolicy = copy.deepcopy(objects[0])
+        collector = copy.deepcopy(mirorpolicy['spec']['collectors'][0])
+        collectors = []
+        del objects[:]
+        proto_index = 0
+        ep_index = 0
+        for i in range(0, min(len(EP), 8)):   # Collector loop
+            collector['export-config']['destination'] = EP[i-7]
+            collectors.append(copy.deepcopy(collector))
+            objects.append(copy.deepcopy(mirorpolicy))
+            objects[-1]['spec']['collectors'] = copy.deepcopy(collectors)
+            objects[-1]['meta']['name'] = "mirror-scale-%s"%i
+            match_rules = objects[-1]['spec']['match-rules']
+            del match_rules[:]
+            protocol =  GlobalOptions.protocols[proto_index]
+            for j in range(ep_index+1, len(EP)):
+                for k in GlobalOptions.ports:
+                    rule = get_rule(EP[ep_index], EP[j], protocol, k, action)
+                    match_rules.append(rule)
+                    #verif.append(get_verif(EP[i], EP[j], protocol, k, collector, action))
+                    rule = get_rule(EP[j], EP[ep_index], protocol, k, action)
+                    match_rules.append(rule)
+                    #verif.append(get_verif(EP[j], EP[i], protocol, k, collector, action))
+
+            proto_index = (proto_index + 1) % len(GlobalOptions.protocols)
+            if proto_index == 0:
+                ep_index += 1
+    json.dump(mirrorpolicies, open(GlobalOptions.topology_dir + "/{}/mirror_scale_policy.json".format('scale'), "w"), indent=4)
 
 if __name__ == '__main__':
     Main()

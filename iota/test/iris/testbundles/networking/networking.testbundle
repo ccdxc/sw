@@ -1,0 +1,14 @@
+meta:
+    name    : networking
+    os      : [ esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    #targetcount : 35
+
+testcases:
+    -   name    : Network_Workload_Add_Delete
+        testcase: testcases.networking.workload_add_delete
+        stress  : True
+        args    :
+            iters: 10
+            
+        

@@ -4,6 +4,7 @@ import json
 import os
 import collections
 import random
+import copy
 
 flowmonpolicy_template = {
     "type" : "netagent",
@@ -123,7 +124,7 @@ parser.add_argument('--topology', dest='topology_dir', required = dir,
 GlobalOptions = parser.parse_args()
 GlobalOptions.endpoint_file = GlobalOptions.topology_dir + "/endpoints.json"
 GlobalOptions.protocols = ["udp", "tcp", "icmp"]
-GlobalOptions.directories = ["udp", "tcp", "icmp", "mixed"]
+GlobalOptions.directories = ["udp", "tcp", "icmp", "mixed", "scale"]
 #GlobalOptions.ports = ["10", "22", "24", "30", "50-100", "101-200", "201-250, 251-290", "10000-20000", "65535"]
 GlobalOptions.ports = ["120"]
 GlobalOptions.actions = ["flowmon"]
@@ -266,6 +267,69 @@ def Main():
     if len(verif) > 0:
         json.dump(verif, open(GlobalOptions.topology_dir +"/{}/flowmon_mixed_verif.json".format('mixed'), "w"), indent=4)
         json.dump(mirrorpolicy, open(GlobalOptions.topology_dir + "/{}/flowmon_mixed_policy.json".format('mixed'), "w"), indent=4)
+
+    # Scale Config
+    verif = []
+    for action in GlobalOptions.actions:
+        mirrorpolicies = copy.deepcopy(flowmonpolicy_template)
+        objects = mirrorpolicies['objects']
+        mirorpolicy = copy.deepcopy(objects[0])
+        export = copy.deepcopy(mirorpolicy['spec']['exports'][0])
+        del objects[:]
+        proto_index = 0
+        ep_index = 0
+        cnt = 0
+        for collector_port in [2055, 3055]:
+            exports = []
+            for i in range(0, min(len(EP), 4)):   # Export loop
+                export['destination'] = EP[i-7]
+                export['proto-port']['port'] = collector_port
+                exports.append(copy.deepcopy(export))
+                objects.append(copy.deepcopy(mirorpolicy))
+                objects[-1]['spec']['exports'] = copy.deepcopy(exports)
+                objects[-1]['meta']['name'] = "flowmon-scale-%s"%cnt
+                match_rules = objects[-1]['spec']['match-rules']
+                del match_rules[:]
+                protocol =  GlobalOptions.protocols[proto_index]
+                for j in range(ep_index+1, len(EP)):
+                    for k in GlobalOptions.ports:
+                        rule = get_rule(EP[ep_index], EP[j], protocol, k, action)
+                        match_rules.append(rule)
+                        #verif.append(get_verif(EP[i], EP[j], protocol, k, export, action))
+                        rule = get_rule(EP[j], EP[ep_index], protocol, k, action)
+                        match_rules.append(rule)
+                        #verif.append(get_verif(EP[j], EP[i], protocol, k, export, action))
+
+                proto_index = (proto_index + 1) % len(GlobalOptions.protocols)
+                if proto_index == 0:
+                    ep_index += 1
+                cnt += 1
+
+            exports = []
+            for i in range(4, 8):   # Export loop
+                export['destination'] = EP[i-7]
+                export['proto-port']['port'] = collector_port
+                exports.append(copy.deepcopy(export))
+                objects.append(copy.deepcopy(mirorpolicy))
+                objects[-1]['spec']['exports'] = copy.deepcopy(exports)
+                objects[-1]['meta']['name'] = "flowmon-scale-%s"%cnt
+                match_rules = objects[-1]['spec']['match-rules']
+                del match_rules[:]
+                protocol =  GlobalOptions.protocols[proto_index]
+                for j in range(ep_index+1, len(EP)):
+                    for k in GlobalOptions.ports:
+                        rule = get_rule(EP[ep_index], EP[j], protocol, k, action)
+                        match_rules.append(rule)
+                        #verif.append(get_verif(EP[i], EP[j], protocol, k, export, action))
+                        rule = get_rule(EP[j], EP[ep_index], protocol, k, action)
+                        match_rules.append(rule)
+                        #verif.append(get_verif(EP[j], EP[i], protocol, k, export, action))
+
+                proto_index = (proto_index + 1) % len(GlobalOptions.protocols)
+                if proto_index == 0:
+                    ep_index += 1
+                cnt += 1
+    json.dump(mirrorpolicies, open(GlobalOptions.topology_dir + "/{}/flowmon_scale_policy.json".format('scale'), "w"), indent=4)
 
 if __name__ == '__main__':
     Main()

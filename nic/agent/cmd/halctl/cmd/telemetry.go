@@ -267,6 +267,7 @@ func mirrorShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 		spec := resp.GetSpec()
 		fmt.Println("\nMirror Session ID:                ", spec.GetKeyOrHandle().GetMirrorsessionId())
+		fmt.Println("Mirror Session HW ID:               ", resp.GetStatus().GetHandle())
 		fmt.Println("Mirror Session SnapLen:             ", spec.GetSnaplen())
 		fmt.Println("Mirror Session Tunnel Source        ", utils.IPAddrToStr(spec.GetErspanSpec().GetSrcIp()))
 		fmt.Println("Mirror Session Tunnel Destination   ", utils.IPAddrToStr(spec.GetErspanSpec().GetDestIp()))

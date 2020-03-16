@@ -37,7 +37,7 @@ def chooseNaples(tc, pair):
        naples = client
        if not client.IsNaples():
            api.Logger.error("Neither server not client is behind Naples")
-           return api.types.status.FAIL
+           return api.types.status.FAILURE
        else:
            client, server = pairs[0]
 
@@ -54,7 +54,7 @@ def Setup(tc):
 
     if len(pairs) == 0:
         api.Logger.error("Failed to get client server pair")
-        return api.types.status.FAIL
+        return api.types.status.FAILURE
 
     ret = chooseNaples(tc, pairs[0])
     if ret != api.types.status.SUCCESS:
@@ -62,7 +62,7 @@ def Setup(tc):
 
     if not addPktFltrRuleOnEp(tc):
         api.Logger.error("Failed to add packet filter on EP")
-        return api.types.status.FAIL
+        return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
 

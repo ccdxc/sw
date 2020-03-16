@@ -31,10 +31,7 @@ testcases:
         stress  : True
         ignore  : True
         args    :
-             stats_show_interval: 60
              latency_pps: 10
-             switch_port_flap_interval: 10
-             sec_policy_interval: 30
         iterators:
             type             : simple
             max_active_flow  : [64000]
@@ -49,7 +46,7 @@ testcases:
                 trigger         : repeat
                 sleep_interval  : 10
                 terminate       : verify
-            securityPolicyChangeEvent :
+            configurationChangeEvent :
                 trigger         : repeat
                 sleep_interval  : 30
                 terminate       : verify

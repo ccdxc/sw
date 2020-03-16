@@ -184,7 +184,7 @@ mirror_session_update_pd (mirror_session_t *session,
 
 #if 0
 hal_ret_t
-mirror_session_update_ifs (mirror_session_t *session, 
+mirror_session_update_ifs (mirror_session_t *session,
                            bool dst_if_change, if_t *dest_if,
                            bool tunnel_if_change, if_t *tunnel_if)
 {
@@ -221,6 +221,32 @@ mirror_session_update_ifs (mirror_session_t *session,
 }
 #endif
 
+static if_t *
+telemetry_mirror_pick_dest_if (if_t *dest_if)
+{
+    // No change to dest_if for sim mode
+    if (hal::is_platform_type_sim()) {
+        return dest_if;
+    }
+    if (dest_if->is_oob_management) {
+        // Nothing to be done for oob intf
+        return dest_if;
+    }
+
+    if (dest_if->if_type == intf::IF_TYPE_UPLINK) {
+        HAL_TRACE_DEBUG("Choosing active dest-if");
+        if_t *new_dest_if = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
+        if (new_dest_if) {
+            return new_dest_if;
+            HAL_TRACE_DEBUG("Active bond dest-if id {}", dest_if->if_id);
+        } else {
+            HAL_TRACE_DEBUG("Did not find an active uplink!");
+        }
+    }
+
+    return dest_if;
+}
+
 hal_ret_t
 telemetry_mirror_session_handle_repin ()
 {
@@ -241,14 +267,17 @@ end:
     auto walk_func = [](void *entry, void *ctxt) {
         mirror_session_t *session = (mirror_session_t *)entry;
         SDK_ASSERT(session != NULL);
-        if_t *sess_if = session->dest_if;
-        if_t *new_dif = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
+        if_t *old_if = session->dest_if;
+        if_t *new_dif = telemetry_mirror_pick_dest_if(old_if);
+        if (old_if == new_dif) {
+            return false;
+        }
         session->dest_if = new_dif;
         auto ret = mirror_session_update_ifs(session, true, new_dif,
                                              false, NULL);
         if (ret != HAL_RET_OK) {
             // we have failed to update the newuplink, restore the old dest if.
-            session->dest_if = sess_if;
+            session->dest_if = old_if;
         }
         return false;
     };
@@ -275,7 +304,7 @@ telemetry_mirror_pick_dest_if ()
     } else {
         dst_if = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
     }
-    HAL_TRACE_DEBUG("Active bond dest-if id {}", 
+    HAL_TRACE_DEBUG("Active bond dest-if id {}",
                     dst_if ? if_keyhandle_to_str(dst_if) : "NULL");
 
     return dst_if;
@@ -413,11 +442,11 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
         }
 #endif
         dest_if = telemetry_mirror_pick_dest_if();
-        auto ift = find_tnnlif_by_dst_ip(intf::IF_TUNNEL_ENCAP_TYPE_GRE, 
+        auto ift = find_tnnlif_by_dst_ip(intf::IF_TUNNEL_ENCAP_TYPE_GRE,
                                          dst_addr);
         session->type = hal::MIRROR_DEST_ERSPAN;
         session->dest_if = dest_if;
-        args.tunnel_if = ift; 
+        args.tunnel_if = ift;
         args.dst_if = dest_if;
         args.rtep_ep = ep;
         break;
@@ -456,6 +485,22 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
     return ret;
 }
 
+static hal_ret_t
+mirror_session_get_hw_id_helper (mirror_session_t *session,
+                                 mirror_session_id_t *hw_id)
+{
+    pd_mirror_session_get_hw_id_args_t args;
+    pd::pd_func_args_t pd_func_args = {0};
+
+    pd_mirror_session_get_hw_id_args_init(&args);
+    args.session = session;
+    pd_func_args.pd_mirror_session_get_hw_id = &args;
+    auto ret =   pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_GET_HW_ID,
+                                 &pd_func_args);
+    *hw_id = args.hw_id;
+    return ret;
+}
+
 static bool
 mirror_session_fill_rsp (void *entry, void *ctxt)
 {
@@ -464,13 +509,17 @@ mirror_session_fill_rsp (void *entry, void *ctxt)
         return false;
     }
 
-    const mirror_session_t *session = (mirror_session_t *)entry;
+    mirror_session_t *session = (mirror_session_t *)entry;
     MirrorSessionGetResponseMsg *rsp = (MirrorSessionGetResponseMsg *)ctxt;
+    mirror_session_id_t hw_id;
 
     auto response = rsp->add_response();
     response->set_api_status(types::API_STATUS_OK);
     response->mutable_spec()->mutable_key_or_handle()->\
         set_mirrorsession_id(session->sw_id);
+    auto ret = mirror_session_get_hw_id_helper(session, &hw_id);
+    SDK_ASSERT(ret == HAL_RET_OK);
+    response->mutable_status()->set_handle(hw_id);
     response->mutable_spec()->set_snaplen(session->truncate_len);
 
     switch (session->type) {
@@ -529,10 +578,7 @@ hal_ret_t
 mirror_session_get_hw_id (mirror_session_id_t sw_id,
                           mirror_session_id_t *hw_id)
 {
-    pd_mirror_session_get_hw_id_args_t args;
-    pd::pd_func_args_t pd_func_args = {0};
     mirror_session_t *session = NULL;
-    hal_ret_t ret;
     auto ms_ht = g_hal_state->mirror_session_ht();
 
     HAL_TRACE_DEBUG("Get hw id for Mirror session ID {} ", sw_id);
@@ -544,18 +590,13 @@ mirror_session_get_hw_id (mirror_session_id_t sw_id,
         return HAL_RET_ENTRY_NOT_FOUND;
     }
 
-    pd_mirror_session_get_hw_id_args_init(&args);
-    args.session = session;
-    pd_func_args.pd_mirror_session_get_hw_id = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_GET_HW_ID,
-                          &pd_func_args);
+    auto ret = mirror_session_get_hw_id_helper(session, hw_id);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get hw id for Mirror session ID {}",
                       sw_id);
         return ret;
     } else {
-        HAL_TRACE_DEBUG("Got hw id {} successfully", args.hw_id);
-        *hw_id = args.hw_id;
+        HAL_TRACE_DEBUG("Got hw id {} successfully", *hw_id);
     }
     return ret;
 }
@@ -629,7 +670,7 @@ mirror_session_change (ip_addr_t *ip,
         if_t *tnnl_if = NULL;
         ep_t *rtep_ep = NULL;
         HAL_TRACE_DEBUG("Processing mirror sesssion: {} with IP: {}, for tunnel tnnl_ip: {}",
-                        session->sw_id, 
+                        session->sw_id,
                         ipaddr2str(&session->mirror_destination_u.er_span_dest.ip_da),
                         ctx->ip ? ipaddr2str(ctx->ip) : "ALL");
 
@@ -638,7 +679,7 @@ mirror_session_change (ip_addr_t *ip,
             if (ctx->tnnl_if_valid) {
                 tnnl_if = ctx->tnnl_if;
             } else {
-                tnnl_if = find_tnnlif_by_dst_ip(intf::IF_TUNNEL_ENCAP_TYPE_GRE, 
+                tnnl_if = find_tnnlif_by_dst_ip(intf::IF_TUNNEL_ENCAP_TYPE_GRE,
                                                         &session->mirror_destination_u.er_span_dest.ip_da);
             }
 
@@ -662,7 +703,7 @@ mirror_session_change (ip_addr_t *ip,
 
 #if 0
 hal_ret_t
-mirror_session_if_change (ip_addr_t *ip, 
+mirror_session_if_change (ip_addr_t *ip,
                           bool tunnel_if_change,
                           if_t *tunnel_if,
                           bool dest_if_change,
@@ -691,7 +732,7 @@ mirror_session_if_change (ip_addr_t *ip,
         mirror_session_t *session = (mirror_session_t *)ht_entry;
         mirror_session_if_change_ctxt_t *ctx = (mirror_session_if_change_ctxt_t *)ctxt;
         HAL_TRACE_DEBUG("Processing mirror sesssion: {} with IP: {}, for tunnel tnnl_ip: {}",
-                        session->sw_id, 
+                        session->sw_id,
                         ipaddr2str(&session->mirror_destination_u.er_span_dest.ip_da),
                         ipaddr2str(ctx->ip));
 
@@ -938,7 +979,7 @@ collector_ep_update (ip_addr_t *ip, ep_t *ep)
     upd_args.ip = ip;
     upd_args.ep = ep;
     pd_func_args.pd_collector_ep_update = &upd_args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLL_EP_UPDATE, 
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLL_EP_UPDATE,
                           &pd_func_args);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_DEBUG("Unable to update IP for collector: {}",

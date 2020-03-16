@@ -1,5 +1,5 @@
 meta:
-    name    : cps
+    name    : cps_regression
     os      : [ esx ]
     nics    : [ pensando, mellanox, intel, broadcom ]
 
@@ -10,12 +10,22 @@ testcases:
         ignore  : True
         args    :
              timeout: 7200
-             stats_show_interval: 120
              latency_pps: 10
-             switch_port_flap_interval: 90
-             sec_policy_interval: 30
         iterators:
             type             : simple
             max_active_flow  : [64000]
             cps              : [900]
             duration         : [3600]
+        background_tasks:
+            showStats        : 
+                trigger         : repeat
+                sleep_interval  : 300
+                terminate       : verify
+            switchPortFlap   :
+                trigger         : repeat
+                sleep_interval  : 90
+                terminate       : verify
+            configurationChangeEvent :
+                trigger         : repeat
+                sleep_interval  : 120
+                terminate       : verify

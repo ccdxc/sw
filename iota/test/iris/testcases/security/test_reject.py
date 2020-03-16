@@ -63,7 +63,7 @@ def test_reject(srcIp, dstIp, srcPort, dstPort, proto):
     
     logging.info("Sending packet ..")
     #pkt.show2()
-    ans, uans = sr(pkt)
+    ans, uans = sr(pkt, iface="eth1", retry=-2, timeout=1)
     if len(uans):
         logging.info("unanswered packet summary")
         uans.summary()

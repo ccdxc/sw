@@ -27,6 +27,28 @@ testcases:
             pktsize : [128]
             proto   : [tcp, udp, icmp, mixed]
 
+    -   name    : Mirror_Policy_With_Flap
+        testcase: testcases.telemetry.mirror_flap
+        enable  : True
+        ignore  : True
+        args    :
+            port_shut_time: 60
+        iterators :
+            type    : nested
+            pktsize : [128]
+            proto   : [tcp]
+
+    -   name    : Flowmon_Policy_With_Flap
+        testcase: testcases.telemetry.flowmon_flap
+        enable  : True
+        ignore  : True
+        args    :
+            port_shut_time: 60
+        iterators :
+            type    : nested
+            pktsize : [128]
+            proto   : [tcp]
+    
     -   name    : Mirror_Crud_Policy
         testcase: testcases.telemetry.mirror_crud_policy
         enable  : True

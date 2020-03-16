@@ -401,6 +401,7 @@ message MirrorSessionGetResponse {
   types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];  // API status code
   MirrorSessionSpec  spec       = 2;     // MirrorSession configuration
   MirrorSessionStats stats      = 3;    // stats
+  MirrorSessionStatus status    = 4;    // status
 }
 
 // MirrorSessionGetResponseMsg is batched response to MirrorSessionGetRequestMsg

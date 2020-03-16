@@ -24,7 +24,7 @@ testcases:
                 trigger         : repeat
                 sleep_interval  : 10
                 terminate       : verify
-            securityPolicyChangeEvent :
+            configurationChangeEvent :
                 trigger         : repeat
                 sleep_interval  : 30
                 terminate       : verify

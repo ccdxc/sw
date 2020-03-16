@@ -5,6 +5,7 @@ import traceback
 import iota.harness.api as api
 import iota.test.iris.config.netagent.api as agent_api
 import iota.test.iris.testcases.security.utils as utils
+import iota.test.iris.testcases.telemetry.utils as tutils
 import iota.harness.infra.utils.periodic_timer as pt
 
 from trex.astf.api import *
@@ -81,6 +82,9 @@ def printPeerList(peerList):
     return out
 
 def showStats(tc):
+    if tc.cancel:
+        sys.exit(0)
+
     api.Logger.info("Running showStats...")
     dec = "="*20
     print("%s"%"X"*60)
@@ -95,6 +99,9 @@ def showStats(tc):
     return api.types.status.SUCCESS
 
 def switchPortFlap(tc):
+    if tc.cancel:
+        sys.exit(0)
+
     api.Logger.info("Running switchPortFlap...")
     flap_count = 1
     num_ports = 1
@@ -109,25 +116,49 @@ def switchPortFlap(tc):
         return ret
     return api.types.status.SUCCESS
 
-def securityPolicyChangeEvent(tc):
-    api.Logger.info("Running securityPolicyChangeEvent...")
-    agent_api.DeleteSgPolicies()
+def configurationChangeEvent(tc):
+    if tc.cancel:
+        sys.exit(0)
 
+    api.Logger.info("Running configurationChangeEvent...")
+    agent_api.DeleteSgPolicies()
     for proto in ["tcp", "udp"]:
         policies = utils.GetTargetJsons(proto)
         for policy_json in policies:
-            api.Logger.info("======================> pushing policy: %s "%(policy_json))
+            api.Logger.info("Pushing Security policy: %s "%(policy_json))
             newObjects = agent_api.AddOneConfig(policy_json)
             ret = agent_api.PushConfigObjects(newObjects)
             if ret != api.types.status.SUCCESS:
-                api.error("Failed to push policies for %s"%policy_json)
+                api.Logger.error("Failed to push policies for %s"%policy_json)
             if agent_api.DeleteConfigObjects(newObjects):
                 api.Logger.error("Failed to delete config object for %s"%policy_json)
             if agent_api.RemoveConfigObjects(newObjects):
                 api.Logger.error("Failed to remove config object for %s"%policy_json)
+            newObjects = agent_api.QueryConfigs(kind='NetworkSecurityPolicy')
+            agent_api.PushConfigObjects(newObjects)
 
-    newObjects = agent_api.QueryConfigs(kind='NetworkSecurityPolicy')
-    agent_api.PushConfigObjects(newObjects)
+            if tc.cancel:
+                return api.types.status.SUCCESS
+
+    for proto in ['tcp', 'udp', 'icmp', 'mixed', 'scale']:
+        mirrorPolicies = tutils.GetTargetJsons('mirror', proto)
+        flowmonPolicies = tutils.GetTargetJsons('flowmon', proto)
+        for mp_json, fp_json in zip(mirrorPolicies, flowmonPolicies):
+            mpObjs = agent_api.AddOneConfig(mp_json)
+            fpObjs = agent_api.AddOneConfig(fp_json)
+            ret = agent_api.PushConfigObjects(mpObjs+fpObjs)
+            if ret != api.types.status.SUCCESS:
+                api.Logger.error("Failed to push the telemetry objects")
+            ret = agent_api.DeleteConfigObjects(fpObjs+mpObjs)
+            if ret != api.types.status.SUCCESS:
+                api.Logger.error("Failed to delete the telemetry objects")
+            ret = agent_api.RemoveConfigObjects(mpObjs+fpObjs)
+            if ret != api.types.status.SUCCESS:
+                api.Logger.error("Failed to remove the telemetry objects")
+
+            if tc.cancel:
+                return api.types.status.SUCCESS
+
     return api.types.status.SUCCESS
 
 def connectTrex(tc):
@@ -166,12 +197,16 @@ def barrier(tc):
     for w in tc.workloadPeers.keys():
         try:
             w.trexHandle.wait_on_traffic()
+            tc.cancel = True
             api.Logger.info("Stopped traffic on %s"%(w.workload_name))
         except Exception as e:
             traceback.print_exc()
             api.Logger.error("Trex wait failed for %s : %s"%(w.workload_name, e))
+        finally:
+            tc.cancel = True
 
 def Setup(tc):
+    tc.cancel = False
     tc.workloadPeers = {}
     tc.events = []
 

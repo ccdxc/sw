@@ -222,6 +222,7 @@ TEST_F (mirror_session_test, erspan_basic) {
     auto create_rsp = create_erspan_session(session_id, vrf_id, mgmt_ip, collector_ip);
     EXPECT_EQ(create_rsp.api_status(), types::API_STATUS_OK);
     EXPECT_LT(create_rsp.status().handle(), MAX_MIRROR_SESSION_DEST);
+    auto hw_id = create_rsp.status().handle();
 
     // get  erspan session
     auto get_rsp = get_session(session_id);
@@ -229,6 +230,7 @@ TEST_F (mirror_session_test, erspan_basic) {
     EXPECT_EQ(get_rsp.response(0).api_status(), types::API_STATUS_OK);
     auto spec = get_rsp.response(0).spec();
     EXPECT_EQ(spec.key_or_handle().mirrorsession_id(), session_id);
+    EXPECT_EQ(get_rsp.response(0).status().handle(), hw_id);
     auto erspan = spec.erspan_spec();
     EXPECT_EQ(erspan.src_ip().ip_af(), types::IPAddressFamily::IP_AF_INET);
     EXPECT_EQ(erspan.src_ip().v4_addr(), mgmt_ip);
@@ -279,6 +281,8 @@ TEST_F (mirror_session_test, erspan_scale) {
         EXPECT_EQ(get_rsp.response(i).api_status(), types::API_STATUS_OK);
         spec = get_rsp.response(i).spec();
         ASSERT_TRUE(mirror_session_id_set.insert(spec.key_or_handle().mirrorsession_id()).second);
+        EXPECT_EQ(mirror_session_get_hw_id(spec.key_or_handle().mirrorsession_id(), &hw_id), HAL_RET_OK);
+        EXPECT_EQ(get_rsp.response(i).status().handle(), hw_id);
         erspan = spec.erspan_spec();
         EXPECT_EQ(erspan.src_ip().ip_af(), types::IPAddressFamily::IP_AF_INET);
         EXPECT_EQ(erspan.src_ip().v4_addr(), mgmt_ip);
@@ -302,7 +306,7 @@ TEST_F (mirror_session_test, repin) {
     MirrorSessionResponse create_rsp;
     MirrorSessionDeleteResponse del_rsp;
     hal_ret_t ret;
-    auto ms_ht = g_hal_state->mirror_session_ht();
+    //auto ms_ht = g_hal_state->mirror_session_ht();
 
     // create mirror sessions
     for(auto i=0; i<MAX_MIRROR_SESSION_DEST; i++) {

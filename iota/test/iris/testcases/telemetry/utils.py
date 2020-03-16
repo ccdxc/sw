@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 import json
-#import iota.test.iris.config.netagent.cfg_api as netagent_cfg_api
+import yaml
 import time
 import re
 import pdb
@@ -20,12 +20,125 @@ import ipaddress as ipaddr
 import iota.harness.api as api
 import iota.test.iris.testcases.penctl.common as common
 from datetime import datetime
+import traceback
+import iota.test.iris.utils.naples_workloads as naples_workload_utils
+import iota.harness.infra.utils.periodic_timer as timer
+import iota.test.iris.config.netagent.hw_sec_ip_config as sec_ip_api
+
 
 uplink_vlan = 0
 # for local work loads, the packet vlan may not be wire encap vlan.
 # its hard to predict which lif the local wl's are mapped to.
 # ignore vlan check for that case
 local_wls_ignore_vlan_check = False
+
+INB_MNIC0 = "inb_mnic0"
+INB_MNIC1 = "inb_mnic1"
+PORT_OPER_STATUS_UP = 1
+PORT_OPER_STATUS_DOWN = 2
+
+def IsBareMetal():
+    for node_name in api.GetNaplesHostnames():
+        if api.IsBareMetalWorkloadType(node_name):
+            return True
+    return False
+
+def PopulateSecondaryAddress(tc):
+    for wl in api.GetWorkloads():
+        tc.wl_sec_ip_info[wl.workload_name] = []
+        sec_ip_list = sec_ip_api.ConfigWorkloadSecondaryIp(wl, True, 2)
+        tc.wl_sec_ip_info[wl.workload_name] = sec_ip_list
+
+def RemoveSecondaryAddress(tc):
+    for wl in api.GetWorkloads():
+        sec_ip_api.ConfigWorkloadSecondaryIp(wl, False, 2)
+        tc.wl_sec_ip_info[wl.workload_name].clear()
+
+def GetSwitchPortFlapTask(node_names, num_ports_per_node = 1, down_time = 60,
+                          flap_count = 1, interval = 0):
+    args = (node_names, num_ports_per_node, down_time, flap_count, interval)
+    return timer.BackgroundTask(api.FlapDataPorts, interval=0, periodic=False, args=args)
+
+def BringUpInbandInterfaces():
+    intfs = []
+    for node_name in api.GetNaplesHostnames():
+        intfs += naples_workload_utils.GetNaplesInbandBondInterfaces(node_name)
+        intfs += naples_workload_utils.GetNaplesInbandInterfaces(node_name)
+
+    for intf in intfs:
+        ret = intf.SetIntfState("up")
+        if ret != api.types.status.SUCCESS:
+            api.Logger.error("Failed to bring up %s"%intf.Name())
+            return ret
+    return api.types.status.SUCCESS
+
+def SetActiveInterfaceOnBond(intf_name, node_name=None):
+    node_list = [node_name] if node_name else api.GetNaplesHostnames()
+    for node in node_list:
+        if not api.IsNaplesNode(node):
+            continue
+        intfs = naples_workload_utils.GetNaplesInbandBondInterfaces(node)
+        for intf in intfs:
+            ret = intf.SetActiveInterface(intf_name)
+            if ret != api.types.status.SUCCESS:
+                return ret
+    return api.types.status.SUCCESS
+
+def GetUplinkStatus(node_name):
+    IF_TYPE_UPLINK = 2
+    cmd = "/nic/bin/halctl show port --yaml"
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    api.Trigger_AddNaplesCommand(req, node_name, cmd)
+    resp = api.Trigger(req)
+    ptrn = "---"
+    uplinkStatus = []
+    cmd = resp.commands[0]
+    api.PrintCommandResults(cmd)
+
+    if not cmd.stdout:
+        return uplinkStatus
+
+    for port in cmd.stdout.split(ptrn):
+        try:
+            port = yaml.load(port)
+            if port['apistatus'] == 0:
+                uplinkStatus.append(port)
+        except:
+            pass
+
+    return uplinkStatus
+
+def SetupInbandInterface():
+    ret = BringUpInbandInterfaces()
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error("Failed to brinup all inband interfaces")
+        return ret
+
+    ret = SetActiveInterfaceOnBond(INB_MNIC0)
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error("Failed to set %s as active interface on bond0"%INB_MNIC0)
+        return ret
+
+    return api.types.status.SUCCESS
+
+def __detectUpLinkState(node, state, cb, tries=10):
+    PORT_TYPE_MGMT = 2
+    while tries:
+        uplink = GetUplinkStatus(node)
+        #print("uplink List : %s"%uplink)
+        arr = [ port['status']['linkstatus']["operstate"] == state for port in uplink if port['spec']['porttype'] != PORT_TYPE_MGMT]
+        if cb(arr):
+            return api.types.status.SUCCESS
+        time.sleep(1)
+        tries -= 1
+    return api.types.status.FAILURE
+
+def DetectUpLinkState(nodes, state, cb, tries=10):
+    for node in nodes:
+        ret = __detectUpLinkState(node, state, cb, tries)
+        if ret != api.types.status.SUCCESS:
+            return ret
+    return ret
 
 def GetProtocolDirectory(feature, proto):
     return api.GetTopologyDirectory() + "/gen/telemetry/{}/{}".format(feature, proto)
@@ -313,7 +426,7 @@ def VerifyTimeStamp(command, pcap_file_name):
             l_ts = pkt[ERSPAN_III].timestamp
             u_ts = pkt[PlatformSpecific].timestamp
             pkttime = u_ts << 32 | l_ts
-            api.Logger.info("Timestamp from the packet: %s" % (pkttime)) 
+            api.Logger.info("Timestamp from the packet: %s" % (pkttime))
             pkttime /= 1000000000
             pkttimestamp = datetime.fromtimestamp(pkttime)
             if g_time > pkttimestamp:

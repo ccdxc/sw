@@ -82,29 +82,29 @@ def Trigger(tc):
             agent_api.RemoveConfigObjects(newObjects)
             break
 
-        # # Update collector
-        # newObjects = agent_api.QueryConfigs(kind='MirrorSession')
+        # Update collector
+        newObjects = agent_api.QueryConfigs(kind='MirrorSession')
 
-        # # mirror config update to local collector is applicable only for ESX topology
-        # if is_wl_type_bm is False:
-        #     # Get new collector
-        #     for wl in tc.workloads:
-        #         if wl.ip_address == "192.168.100.102":
-        #             collector_dest[0] = "192.168.100.102"
-        #             collector_wl[0] = wl
-        #             break
+        # mirror config update to local collector is applicable only for ESX topology
+        if is_wl_type_bm is False:
+            # Get new collector
+            for wl in tc.workloads:
+                if wl.ip_address == "192.168.100.102":
+                    collector_dest[0] = "192.168.100.102"
+                    collector_wl[0] = wl
+                    break
 
-        #     for obj in newObjects:
-        #         obj.spec.collectors[0].export_config.destination = collector_dest[0]
-        #         break
+            for obj in newObjects:
+                obj.spec.collectors[0].export_config.destination = collector_dest[0]
+                break
 
-        #     # Now push the update as we modified
-        #     agent_api.UpdateConfigObjects(newObjects)
-        #     # Rerun the tests
-        #     ret = utils.RunAll(collector_wl, verif_json, tc, 'mirror', collector_dest, is_wl_type_bm)
-        #     result = ret['res']
-        #     ret_count = ret['count']
-        #     count = count + ret_count
+            # Now push the update as we modified
+            agent_api.UpdateConfigObjects(newObjects)
+            # Rerun the tests
+            ret = utils.RunAll(collector_wl, verif_json, tc, 'mirror', collector_dest, is_wl_type_bm)
+            result = ret['res']
+            ret_count = ret['count']
+            count = count + ret_count
 
         # Delete the objects
         agent_api.DeleteConfigObjects(newObjects)

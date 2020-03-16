@@ -1,0 +1,13 @@
+meta:
+    name    : telemetry_regression
+    os      : [ esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+
+testcases:
+    -   name    : telemetry_scale
+        testcase: testcases.telemetry.telemetry_scale
+        stress  : True
+        args    :
+             iters : 5
+             
+             
