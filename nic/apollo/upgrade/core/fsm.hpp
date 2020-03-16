@@ -57,26 +57,32 @@ class fsm {
     public:
         fsm(stage_id_t start = STAGE_ID_COMPAT_CHECK,
                     stage_id_t end = STAGE_ID_EXIT);
-        ~fsm(void) ;
-        stage_id_t current_stage(void);
-        void       set_current_stage(stage_id_t id);
-        stage_id_t start_stage(void);
-        stage_id_t end_stage(void);
-        uint32_t   pending_response(void);
-        void       set_pending_response(uint32_t count);
-        void       update_stage_progress(svc_rsp_code_t rsp);
-        void       set_timeout(ev_tstamp timeout);
-        bool       is_current_stage_over(void);
-        bool       is_serial_event_sequence(void);
-        void       start_timer(void);
-        void       stop_timer(void);
-        ev_tstamp  timeout(void);
+        ~fsm(void);
+        stage_id_t      current_stage(void);
+        void            set_current_stage(stage_id_t id);
+        stage_id_t      start_stage(void);
+        stage_id_t      end_stage(void);
+        uint32_t        pending_response(void);
+        void            set_pending_response(uint32_t count);
+        void            update_stage_progress(svc_rsp_code_t rsp);
+        void            set_timeout(ev_tstamp timeout);
+        bool            is_current_stage_over(void);
+        bool            is_serial_event_sequence(void);
+        bool            has_next_svc(void);
+        bool            is_valid_service(std::string svc);
+        svc_t           next_svc(void);
+        void            start_timer(void);
+        void            stop_timer(void);
+        ev_tstamp       timeout(void);
+        svc_sequence_t  svc_sequence(void);
     private:
-        stage_id_t   current_stage_;
-        stage_id_t   start_stage_;
-        stage_id_t   end_stage_;
-        uint32_t     pending_response_;
-        ev_tstamp    timeout_;
+        stage_id_t      current_stage_;
+        stage_id_t      start_stage_;
+        stage_id_t      end_stage_;
+        uint32_t        pending_response_;
+        uint32_t        size_;
+        svc_sequence_t  svc_sequence_;
+        ev_tstamp       timeout_;
         EV_P;
 };
 

@@ -28,16 +28,19 @@ void           token_parse(std::string& text,
 time_t         str_to_timeout(std::string& timeout);
 stage_id_t     name_to_stage_id(std::string stage);
 std::string    id_to_stage_name(stage_id_t stage);
-scripts_t      str_to_scripts (std::string scripts);
+std::string    svc_sequence_to_str(svc_sequence_t svcs);
+std::string    transition_to_str(transition_t& transitions);
+std::string    script_to_str(scripts_t& scripts);
+scripts_t      str_to_scripts(std::string scripts);
 upg_stage_t    upg_stage_id(stage_id_t id);
-svc_rsp_code_t svc_rsp_code( upg_status_t id);
-void           dump(transition_t transitions);
-void           dump(scripts_t scripts);
-void           dump(stage_t stage);
-void           dump(stages_t stages);
-void           dump(services_t svcs);
-void           dump(svc_sequence_t svcs);
-void           dump(stage_map_t tran);
+svc_rsp_code_t svc_rsp_code(upg_status_t id);
+void           dump(transition_t& transitions);
+void           dump(scripts_t& scripts);
+void           dump(stage_t& stage);
+void           dump(stages_t& stages);
+void           dump(services_t& svcs);
+void           dump(svc_sequence_t& svcs);
+void           dump(stage_map_t& tran);
 void           dump(fsm& fsm);
 
 }

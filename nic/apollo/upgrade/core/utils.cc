@@ -25,7 +25,41 @@
 namespace upg
 {
 
- // Overloaded dump functions can be used for debugging
+// Overloaded dump functions can be used for debugging
+std::string
+svc_sequence_to_str (svc_sequence_t svcs)
+{
+    std::string str = "svc_sequence_t : ";
+    for (auto x: svcs) {
+         str += x.name() + ":" ;
+         str += std::to_string(x.thread_id()) + ", " ;
+    }
+    return str;
+}
+
+std::string
+transition_to_str (transition_t& transitions)
+{
+    std::string str = "(from:rsp:to) :"  ;
+    for (auto x: transitions) {
+        str += "( " + id_to_stage_name(x.from());
+        str += " : "  + std::to_string(x.svc_rsp_code());
+        str += " : "  + id_to_stage_name(x.to()) + "),";
+    }
+
+    return str;
+}
+
+std::string
+script_to_str(scripts_t& scripts)
+{
+    std::string str;
+    for (auto x: scripts) {
+        str += x.path() + ", ";
+    }
+    return str;
+}
+
 void
 dump(fsm& fsm)
 {
@@ -42,18 +76,19 @@ dump(fsm& fsm)
     str += "\tend_stage     : " + id_to_stage_name(end);
     str += " -> " + std::string(upg_stage_name[upg_stage_id(end)]) + "\n";
     str += "\tPending resp  : " + std::to_string(fsm.pending_response()) + "\n";
-    str += "\ttimeout       : " + std::to_string(fsm.timeout());
+    str += "\ttimeout       : " + std::to_string(fsm.timeout()) + "\n";
+    str += "\tsvc sequence  : " + svc_sequence_to_str(fsm.svc_sequence());
 
     UPG_TRACE_PRINT(str);
 }
 
 void
-dump (transition_t transitions)
+dump (transition_t& transitions)
 {
     std::string str ;
     for (auto x: transitions) {
         str += "(from:" + id_to_stage_name(x.from());
-        str += " rsp:"  + x.svc_rsp_code();
+        str += " rsp:"  + std::to_string(x.svc_rsp_code());
         str += " to: "  + id_to_stage_name(x.to())+ "),";
     }
 
@@ -61,7 +96,7 @@ dump (transition_t transitions)
 }
 
 void
-dump (scripts_t scripts)
+dump (scripts_t& scripts)
 {
     std::string str;
     for (auto x: scripts) {
@@ -72,41 +107,32 @@ dump (scripts_t scripts)
 }
 
 void
-dump (stage_t stage)
+dump (stage_t& stage)
 {
     std::string str;
-    str = "\t stage_t : ";
-    str += " \t\t svc_rsp_timeout : ["+ std::to_string(stage.svc_rsp_timeout());
-    str += " ] \n";
-    str += " \t\t svc_sequence    : " ;
-    dump(stage.svc_sequence());
-    str += " \t\t event_sequence  : [" + std::to_string(stage.event_sequence());
-    str += " ]\n";
-    str += " \t\t transitions     : [" ;
-    dump(stage.transitions());
-    str += " ]\n";
-    str += " \t\t pre_hook        : [";
-    dump(stage.pre_hook_scripts());
-    str += " ]\n";
-    str += " \t\t post_hook       : [";
-    dump(stage.post_hook_scripts());
-    str += " ]\n";
+    str = "\t stage_t :";
+    str += "\n\t\t svc_rsp_timeout: " + std::to_string(stage.svc_rsp_timeout());
+    str += "\n\t\t svc_sequence  : "+ svc_sequence_to_str(stage.svc_sequence());
+    str += "\n\t\t event_sequence:" + std::to_string(stage.event_sequence());
+    str += "\n\t\t transitions   :" + transition_to_str (stage.transitions());
+    str += "\n\t\t pre_hook      :" + script_to_str(stage.pre_hook_scripts());
+    str += "\n\t\t post_hook     :" + script_to_str(stage.post_hook_scripts());
 
     UPG_TRACE_PRINT(str);
 }
 
 void
-dump (stages_t stages)
+dump (stages_t& stages)
 {
     std::string str = "stages_t : ";
-    for (auto x: stages){
+    UPG_TRACE_PRINT(str);
+    for (auto x: stages) {
         dump(x.second);
     }
-    UPG_TRACE_PRINT(str);
 }
 
 void
-dump (services_t svcs)
+dump (services_t& svcs)
 {
     std::string str = "services_t : ";
     svc_sequence_t svc_list = svcs.svc_sequence();
@@ -118,18 +144,17 @@ dump (services_t svcs)
 }
 
 void
-dump (svc_sequence_t svcs)
+dump (svc_sequence_t& svcs)
 {
     std::string str = "svc_sequence_t : ";
-    svc_sequence_t svc_list = svcs;
-    for (auto x: svc_list) {
+    for (auto x: svcs) {
          str += x.name() + ", ";
     }
     UPG_TRACE_PRINT(str);
 }
 
 void
-dump (stage_map_t tran)
+dump (stage_map_t& tran)
 {
     std::string str = "stage_map_t : ";
     for (std::pair<std::string, stage_id_t> element : tran) {

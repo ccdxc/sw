@@ -2,7 +2,8 @@
   "svc": {
     "event_sequence": "parallel",
     "names": [
-      "pdsagent"
+      "svc1",
+      "svc2"
     ]
   },
   "stages": {
@@ -99,6 +100,13 @@
       ]
     },
     "switchover": {
+      "svc": {
+        "event_sequence": "serial",
+        "names": [
+          "svc2",
+          "svc1"
+        ]
+      },
       "rsp_timeout": "100ms",
       "events": [
         {

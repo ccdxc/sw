@@ -81,7 +81,7 @@ trap  at_exit      EXIT
 
 create_svc_thread ${CMD1}
 create_svc_thread ${CMD2}
-create_svc_thread ${CMD3}
+#create_svc_thread ${CMD3}
 
 wait
 
