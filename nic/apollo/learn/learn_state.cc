@@ -79,9 +79,8 @@ learn_state::lif_init_(void) {
                            "--master-lcore 1 -c 3";
     params.log_name = "learn_dpdk";
     params.mbuf_pool_name = "learn_dpdk";
-    params.mbuf_size = 2048;
-    // 1024 mbufs for rx descriptors, 32 additional for local allocation
-    params.num_mbuf = 1024 + 32;
+    params.mbuf_size = LEARN_LIF_PKT_BUF_SZ;
+    params.num_mbuf = LEARN_LIF_MBUF_COUNT;
     params.vdev_list.push_back(string(lif_name));
     ret = dpdk_init(&params);
     if (unlikely(ret != SDK_RET_OK)) {
@@ -92,9 +91,9 @@ learn_state::lif_init_(void) {
     }
 
     args.dev_name = lif_name;
-    args.num_rx_desc = 1024;
+    args.num_rx_desc = LEARN_LIF_RX_DESC_COUNT;
     args.num_rx_queue = 1;
-    args.num_tx_desc = 1024;
+    args.num_tx_desc = LEARN_LIF_TX_DESC_COUNT;
     args.num_tx_queue = 1;
     learn_lif_ = dpdk_device::factory(&args);
 

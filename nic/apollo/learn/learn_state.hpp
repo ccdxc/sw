@@ -55,10 +55,25 @@ typedef struct learn_counters_s {
 #define LEARN_COUNTER_GET(name)         learn_db()->counters()->name
 
 /// \brief defualt timeout/age
-#define LEARN_EP_AGING_TICK_SEC         5
-#define LEARN_EP_DEFAULT_AGE_SEC        300
-#define LEARN_EP_ARP_PROBE_TIMEOUT_SEC  30
-#define LEARN_PKT_POLL_INTERVAL_MSEC    50
+#define LEARN_EP_DEFAULT_AGE_SEC                300
+#define LEARN_EP_ARP_PROBE_TIMEOUT_SEC          30
+#define LEARN_PKT_POLL_INTERVAL_MSEC            50
+
+/// \brief packet receive parameters
+#define LEARN_LIF_PKT_BUF_SZ                    2048
+#define LEARN_LIF_RECV_BURST_SZ                 32
+#define LEARN_LIF_RX_DESC_COUNT                 512
+#define LEARN_LIF_TX_DESC_COUNT                 256
+
+/// \brief packet buffer count for local use
+#define LEARN_LIF_APP_MBUF_COUNT                32
+
+/// \brief total packet buffer count
+#define LEARN_LIF_MBUF_COUNT                    (LEARN_LIF_RX_DESC_COUNT + \
+                                                 LEARN_LIF_TX_DESC_COUNT + \
+                                                 LEARN_LIF_RECV_BURST_SZ + \
+                                                 LEARN_LIF_APP_MBUF_COUNT)
+
 
 /// \brief start epoch for API calls
 // TODO: define a generic internal epoch id that can be used for batching only

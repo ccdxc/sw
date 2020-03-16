@@ -253,6 +253,25 @@ typedef enum pkt_type_e {
     PKT_TYPE_IPV6,
 } pkt_type_t;
 
+static inline
+std::string pkttype2str (pkt_type_t pkt_type) {
+    switch (pkt_type) {
+    case PKT_TYPE_NONE:
+        return "unknown";
+    case PKT_TYPE_ARP:
+        return "ARP";
+    case PKT_TYPE_DHCP:
+        return "DHCP";
+    case PKT_TYPE_NDP:
+        return "NDP";
+    case PKT_TYPE_IPV4:
+        return "IPV4";
+    case PKT_TYPE_IPV6:
+        return "IPV6";
+    }
+    return "invalid pkt type";
+}
+
 }    // namespace types
 }    // namespace sdk
 

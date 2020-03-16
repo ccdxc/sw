@@ -61,6 +61,9 @@ learn_lif_drop_pkt (void *mbuf, uint8_t reason)
     SDK_ASSERT((reason < PKT_DROP_REASON_MAX));
     LEARN_COUNTER_INCR(drop_reason[reason]);
     PDS_TRACE_VERBOSE("Dropped pkt with reason %u", reason);
+
+    // force driver cq cleanup
+    (void) learn_lif->transmit_packets(0, nullptr, 0);
 }
 
 /// \brief transmit pkt from learn lif

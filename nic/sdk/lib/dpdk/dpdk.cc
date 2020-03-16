@@ -332,13 +332,9 @@ dpdk_device::transmit_packets(uint16_t tx_queue_id, dpdk_mbuf **packets,
 
     do {
         n_sent = rte_eth_tx_burst(portid, tx_queue_id, tx_pkts, n_left);
-        if (n_sent < 0) {
-            // can't send anymore
-            break;
-        }
         n_left -= n_sent;
-        packets += n_sent;
-    } while(n_sent && n_left && (--n_retry > 0));
+        tx_pkts += n_sent;
+    } while(n_left && (--n_retry > 0));
 
     return n_left;
 }

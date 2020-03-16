@@ -510,7 +510,7 @@ process_learn_pkt (void *mbuf)
         goto error;
     }
 
-    PDS_TRACE_VERBOSE("Rcvd learn pkt with info  %s", ctxt.str());
+    PDS_TRACE_DEBUG("Rcvd learn pkt with info  %s", ctxt.str());
 
     // all required info is gathered, validate the learn
     ret = validate_learn(&ctxt);

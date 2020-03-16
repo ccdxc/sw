@@ -60,10 +60,14 @@ typedef struct local_learn_ctxt_s {
               std::string(ip_key.vpc.str()) + ", " +
               std::string(ipaddr2str(&ip_key.ip_addr)) + ", " +
               "mac learn type " + to_string(mac_learn_type) + ", " +
-              "ip learn type " + to_string(ip_learn_type) +
+              "ip learn type " + to_string(ip_learn_type) + ", " +
+              "pkt type " + sdk::types::pkttype2str(impl_info.pkt_type) + ", " +
+              "impl hints " + to_string(impl_info.hints) + ", " +
+              "lif " + to_string(impl_info.lif) +
               ")";
         return str.c_str();
     }
+
 } local_learn_ctxt_t;
 
 /// \brief process packets received on learn lif

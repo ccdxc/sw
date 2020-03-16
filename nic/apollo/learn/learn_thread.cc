@@ -71,7 +71,7 @@ learn_thread_pkt_poll_timer_cb (event::timer_t *timer)
     uint16_t rx_count = 0;
     dpdk_mbuf **rx_pkts;
 
-    rx_pkts = learn_lif->receive_packets(0, DPDK_MAX_BURST_SIZE, &rx_count);
+    rx_pkts = learn_lif->receive_packets(0, LEARN_LIF_RECV_BURST_SZ, &rx_count);
     if (unlikely(!rx_pkts || !rx_count)) {
         return;
     }
