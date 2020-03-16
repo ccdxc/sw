@@ -8,6 +8,7 @@
 #include "gen/hal/svc/session_svc_gen.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/hal_cfg.hpp"
@@ -57,11 +58,12 @@ svc_reg (ServerBuilder *server_builder, hal::hal_feature_set_t feature_set)
     return;
 }
 
+#if 0
 //------------------------------------------------------------------------------
 // create CPU interface, this will be used by FTEs to receive packets from
 // dataplane and to inject packets into the dataplane
 //------------------------------------------------------------------------------
-static inline hal_ret_t
+hal_ret_t
 hal_cpu_if_create (uint32_t lif_id)
 {
     InterfaceSpec      spec;
@@ -86,6 +88,7 @@ hal_cpu_if_create (uint32_t lif_id)
 
     return HAL_RET_OK;
 }
+#endif
 
 static hal_ret_t inline
 hal_uplink_if_create (uint64_t if_id, 
@@ -171,9 +174,12 @@ init (hal_cfg_t *hal_cfg)
     // default set to local switch prom. for DOLs to pass
     g_hal_state->set_allow_local_switch_for_promiscuous(true);
 
-    // create cpu interface
-    ret = hal_cpu_if_create(HAL_LIF_CPU);
-    HAL_ABORT(ret == HAL_RET_OK);
+    // Moved to vrf customer create
+    if (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_SIM) {
+        // create cpu interface
+        ret = hal_cpu_if_create(HAL_LIF_CPU);
+        HAL_ABORT(ret == HAL_RET_OK);
+    }
 
     if (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {
         // create uplink interfaces

@@ -560,16 +560,6 @@ hal_proxy_svc_init(void)
         return HAL_RET_NO_RESOURCE;
     }
 
-#if 0
-    // Reserve Service LIFs
-    if(lif_manager()->LIFRangeAlloc(SERVICE_LIF_START, (SERVICE_LIF_END - SERVICE_LIF_START))
-            <= 0)
-    {
-        HAL_TRACE_ERR("Failed to reserve service LIF");
-        return HAL_RET_NO_RESOURCE;
-    }
-#endif
-
     // Initialize meta
     ret = proxy_meta_init();
     if(ret != HAL_RET_OK) {

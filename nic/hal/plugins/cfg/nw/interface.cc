@@ -27,6 +27,7 @@
 #include "nic/linkmgr/linkmgr_utils.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "gen/proto/types.pb.h"
+#include "nic/hal/src/internal/cpulif.hpp"
 
 #define TNNL_ENC_TYPE intf::IfTunnelEncapType
 
@@ -5791,6 +5792,72 @@ hal_if_repin_l2segs (if_t *uplink)
 #endif
     }
 
+end:
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// create CPU interface, this will be used by FTEs to receive packets from
+// dataplane and to inject packets into the dataplane
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_cpu_if_create (uint32_t lif_id)
+{
+    InterfaceSpec      spec;
+    InterfaceResponse  response;
+    hal_ret_t          ret;
+
+    spec.mutable_key_or_handle()->set_interface_id(IF_ID_CPU);
+    spec.set_type(::intf::IfType::IF_TYPE_CPU);
+    spec.set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+    spec.mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = interface_create(spec, &response);
+    if ((ret == HAL_RET_OK) || (ret == HAL_RET_ENTRY_EXISTS)) {
+        HAL_TRACE_DEBUG("CPU interface {} create success, handle {}",
+                        IF_ID_CPU, response.status().if_handle());
+    } else {
+        HAL_TRACE_ERR("CPU interface {} create failed, err : {}",
+                      IF_ID_CPU, ret);
+    }
+    hal::hal_cfg_db_close();
+
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// Create CPU LIF and interface. Called from first vrf customer create
+//-----------------------------------------------------------------------------
+hal_ret_t
+if_cpu_lif_interface_create (void)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    static bool cpu_if_done = false;
+
+    if (cpu_if_done) {
+        goto end;
+    }
+
+    hal::hal_cfg_db_close();
+
+    // Create cpu lif
+    ret = program_cpu_lif();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to create cpu lif. err: {}", ret);
+        goto end;
+    }
+
+    // Create cpu if
+    ret = hal_cpu_if_create(HAL_LIF_CPU);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to create cpu if. err: {}", ret);
+        goto end;
+    }
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+
+    cpu_if_done = true;
 end:
     return ret;
 }

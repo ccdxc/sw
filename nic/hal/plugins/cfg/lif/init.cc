@@ -54,8 +54,11 @@ lif_init (hal_cfg_t *hal_cfg)
     if (hal_cfg->features == HAL_FEATURE_SET_IRIS) {
         hal_proxy_svc_init();
     }
-    if (hal_cfg->features == HAL_FEATURE_SET_IRIS) {
-        program_cpu_lif();
+    // Moved to customer vrf create
+    if (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_SIM) {
+        if (hal_cfg->features == HAL_FEATURE_SET_IRIS) {
+            program_cpu_lif();
+        }
     }
     return HAL_RET_OK;
 }

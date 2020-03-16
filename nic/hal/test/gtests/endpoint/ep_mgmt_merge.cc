@@ -140,6 +140,7 @@ TEST_F(ep_mgmt_merge_test, test1)
 
     // Create customer VRF
     ASSERT_EQ(create_vrf(vrf_id_hp1, types::VRF_TYPE_CUSTOMER, 0), HAL_RET_OK);
+    ASSERT_EQ(create_vrf(vrf_id_hp1 + 1, types::VRF_TYPE_CUSTOMER, 0), HAL_RET_OK);
     // Create customer L2seg with wire encap as 8192 
     up_ifid[0] = uplinkif_id1;
     up_ifid[1] = uplinkif_id2;
