@@ -185,7 +185,8 @@ nic/build/$ARCH/$PIPELINE/gen/p4gen/p4/dbg_out/model_debug.json         /nic/con
 nic/sysmgr/src/naples_sim.json                                      /nic/conf/sysmgr.json
 nic/sysmgr/src/naples_sim_no_datapath.json                          /nic/conf/sysmgr_no_datapath.json
 nic/conf/naples-tsa.json                                            /nic/conf/
-nic/conf/iris/operd.json                                            /nic/conf/
+nic/conf/iris/operd-sim.json                                        /nic/conf/
+nic/conf/iris/operd-regions.json                                    /nic/conf/
 
 nic/build/$ARCH/$PIPELINE/bin                                           /platform/bin/
 nic/build/$ARCH/$PIPELINE/lib                                           /platform/lib/

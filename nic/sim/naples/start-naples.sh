@@ -19,6 +19,7 @@ export CMD_RESOLVER_PORT=9009
 export CMD_GRPC_UNAUTH_PORT=9002
 export NPM_RPC_PORT=9005
 export DISABLE_NICMGR_HAL_THREAD=1  # using fake nicmgr configuration, so disabling
+export OPERD_REGIONS="/naples/nic/conf/operd-regions.json"
 
 # serial-number is hardcoded in go code.
 # nic/agent/nmd/state/rolloutif/smartnic_rollout.go
