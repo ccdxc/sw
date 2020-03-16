@@ -3429,6 +3429,125 @@ func TestReferences(t *testing.T) {
 	}
 }
 
+func TestCrudWithReferences(t *testing.T) {
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+
+	ctx := context.Background()
+	// gRPC client
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	if err != nil {
+		t.Fatalf("cannot create grpc client")
+	}
+	defer apicl.Close()
+
+	// Cleanup all objects
+	opts := api.ListWatchOptions{}
+	ol, err := apicl.BookstoreV1().Order().List(ctx, &opts)
+	AssertOk(t, err, "failed to list orders (%s)", err)
+	for _, o := range ol {
+		_, err = apicl.BookstoreV1().Order().Delete(ctx, &o.ObjectMeta)
+		AssertOk(t, err, "failed to delete orders (%s)", err)
+	}
+
+	bl, err := apicl.BookstoreV1().Book().List(ctx, &opts)
+	AssertOk(t, err, "failed to list books (%s)", err)
+	for _, b := range bl {
+		_, err = apicl.BookstoreV1().Book().Delete(ctx, &b.ObjectMeta)
+		AssertOk(t, err, "failed to delete books (%s)", err)
+	}
+
+	pl, err := apicl.BookstoreV1().Publisher().List(ctx, &opts)
+	AssertOk(t, err, "failed to list Publishers (%s)", err)
+	for _, p := range pl {
+		_, err = apicl.BookstoreV1().Publisher().Delete(ctx, &p.ObjectMeta)
+		AssertOk(t, err, "failed to delete Publisher (%s)", err)
+	}
+
+	cl, err := apicl.BookstoreV1().Customer().List(ctx, &opts)
+	AssertOk(t, err, "failed to list Customers (%s)", err)
+	for _, c := range cl {
+		_, err = apicl.BookstoreV1().Customer().Delete(ctx, &c.ObjectMeta)
+		AssertOk(t, err, "failed to delete Customer (%s)", err)
+	}
+
+	var pub1, pub2 bookstore.Publisher
+	{
+		pub1 = bookstore.Publisher{
+			ObjectMeta: api.ObjectMeta{
+				Name: "Sahara",
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "Publisher",
+			},
+			Spec: bookstore.PublisherSpec{
+				Id:      "111",
+				Address: "#1 hilane, timbuktoo",
+				WebAddr: "http://sahara-books.org",
+			},
+		}
+		pub2 = bookstore.Publisher{
+			ObjectMeta: api.ObjectMeta{
+				Name: "Kalahari",
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "Publisher",
+			},
+			Spec: bookstore.PublisherSpec{
+				Id:      "222",
+				Address: "#2 hilane, timbuktoo",
+				WebAddr: "http://sahara-books.org",
+			},
+		}
+	}
+	_, err = apicl.BookstoreV1().Publisher().Create(ctx, &pub1)
+	AssertOk(t, err, "Failed to create publisher (%s)", err)
+
+	_, err = apicl.BookstoreV1().Publisher().Create(ctx, &pub2)
+	AssertOk(t, err, "Failed to create publisher (%s)", err)
+
+	book1 := bookstore.Book{
+		ObjectMeta: api.ObjectMeta{
+			Name:         "book1",
+			GenerationID: "1",
+			Labels:       map[string]string{"category": "teen", "type": "fiction"},
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "book",
+		},
+		Spec: bookstore.BookSpec{
+			ISBNId:    "111-2-31-123456-0",
+			Author:    "foo",
+			Category:  bookstore.BookSpec_YoungAdult.String(),
+			Publisher: "Sahara",
+		},
+	}
+
+	_, err = apicl.BookstoreV1().Book().Create(ctx, &book1)
+	AssertOk(t, err, "failed to create book1 (%s)", err)
+
+	_, err = apicl.BookstoreV1().Publisher().Delete(ctx, &pub1.ObjectMeta)
+	Assert(t, err != nil, "should not be able to delete object with refences")
+
+	book1.Spec.Publisher = pub2.Name
+
+	_, err = apicl.BookstoreV1().Book().Update(ctx, &book1)
+	AssertOk(t, err, "update of book failed (%s)", err)
+
+	_, err = apicl.BookstoreV1().Publisher().Delete(ctx, &pub1.ObjectMeta)
+	AssertOk(t, err, "should be able to delete object with no refences(%s)", err)
+
+	_, err = apicl.BookstoreV1().Publisher().Delete(ctx, &pub2.ObjectMeta)
+	Assert(t, err != nil, "should not be able to delete object with refences")
+
+	book1.Spec.Publisher = ""
+
+	_, err = apicl.BookstoreV1().Book().Update(ctx, &book1)
+	AssertOk(t, err, "update of book failed (%s)", err)
+
+	_, err = apicl.BookstoreV1().Publisher().Delete(ctx, &pub2.ObjectMeta)
+	AssertOk(t, err, "should be able to delete object with no refences(%s)", err)
+}
+
 func TestSorting(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

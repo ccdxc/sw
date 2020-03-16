@@ -174,9 +174,14 @@ func GetRefRequirements(ctx context.Context, key string, oper apiintf.APIOperTyp
 			refs := make(map[string]apiintf.ReferenceObj)
 			args := []reflect.Value{reflect.ValueOf(objm.Tenant), reflect.ValueOf(""), reflect.ValueOf(refs)}
 			m.Call(args)
-			if len(refs) > 0 && server != nil {
+			if server != nil {
+				if len(refs) == 0 {
+					// return a empty requirements set
+					return NewReferenceReq(oper, key, nil, server.GetGraphDB(), cache)
+				}
 				return NewReferenceReq(oper, key, refs, server.GetGraphDB(), cache)
 			}
+
 		}
 	}
 	return nil

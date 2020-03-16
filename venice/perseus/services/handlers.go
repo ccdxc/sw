@@ -64,7 +64,7 @@ func (m *ServiceHandlers) configurePeers() {
 }
 
 func (m *ServiceHandlers) configurePeer(nic *snicT, deleteOp bool) {
-	log.Infof("configurePeer snic %+v CfgAsn %d", nic, CfgAsn)
+	log.Infof("configurePeer: delete [%v] - snic %+v CfgAsn %d", deleteOp, nic, CfgAsn)
 	if nic.phase != "admitted" || nic.ip == "" || nic.uuid == "" || CfgAsn == 0 {
 		// wait for all information to be right
 		// might have to handle case where nic was admitted previously
@@ -178,14 +178,28 @@ func (m *ServiceHandlers) handleCreateUpdateNetIntfObject(evtIntf *network.Netwo
 		snic = &snicT{}
 	}
 	snic.name = evtIntf.Status.DSC
-	snic.pushed = false
+	oldip := snic.ip
 	if evtIntf.Spec.IPConfig != nil {
 		ip, _, err := net.ParseCIDR(evtIntf.Spec.IPConfig.IPAddress)
 		if err != nil {
 			log.Errorf("could not parse IP CIDR (%s)", err)
 			return
 		}
-		snic.ip = ip.String()
+		if ip.IsUnspecified() {
+			log.Infof("IP is unspecified [%v]", ip.String())
+			snic.ip = ""
+		} else {
+			log.Infof("IP is [%v]", ip.String())
+			snic.ip = ip.String()
+		}
+	} else {
+		snic.ip = ""
+	}
+	if oldip != "" && oldip != snic.ip {
+		ip := snic.ip
+		snic.ip = oldip
+		m.configurePeer(snic, true)
+		snic.ip = ip
 	}
 	m.snicMap[evtIntf.Status.DSC] = snic
 	m.configurePeer(snic, false)

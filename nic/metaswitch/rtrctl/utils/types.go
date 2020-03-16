@@ -263,6 +263,13 @@ func Uint32ToIPv4Address(in uint32) string {
 	return ip.String()
 }
 
+// NetUint32ToIPv4Address returns an IP Address string given an integer in bigendian
+func NetUint32ToIPv4Address(in uint32) string {
+	ip := make(net.IP, 4)
+	binary.BigEndian.PutUint32(ip, in)
+	return ip.String()
+}
+
 // PdsIPToString convverts a PDS IPAddress type to a string. Only IPv4 is supported
 func PdsIPToString(in *pds.IPAddress) string {
 	if in == nil {
@@ -292,7 +299,7 @@ func NewBGPSpec(in *pds.BGPSpec) *ShadowBgpSpec {
 	return &ShadowBgpSpec{
 		BGPSpec:  in,
 		Id:       uidstr,
-		RouterId: Uint32ToIPv4Address(in.RouterId),
+		RouterId: NetUint32ToIPv4Address(in.RouterId),
 	}
 }
 
@@ -409,9 +416,9 @@ func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixSta
 
 // ShadowEvpnIpVrfSpec shadows the EvpnIpVrfSpec for CLI purposes
 type ShadowEvpnIpVrfSpec struct {
-	Id        string
-	VPCId     string
-	RD        string
+	Id    string
+	VPCId string
+	RD    string
 	*pds.EvpnIpVrfSpec
 }
 
@@ -459,10 +466,10 @@ func NewEvpnIpVrf(in *pds.EvpnIpVrf) *ShadowEvpnIpVrf {
 
 // ShadowEvpnIpVrfRtSpec shadows the EvpnIpVrfRtSpec for CLI purposes
 type ShadowEvpnIpVrfRtSpec struct {
-	Id        string
-	VPCId     string
-	RT        string
-    RTType    string
+	Id     string
+	VPCId  string
+	RT     string
+	RTType string
 	*pds.EvpnIpVrfRtSpec
 }
 
@@ -473,10 +480,10 @@ func NewEvpnIpVrfRtSpec(in *pds.EvpnIpVrfRtSpec) ShadowEvpnIpVrfRtSpec {
 		uidstr = uid.String()
 	}
 	return ShadowEvpnIpVrfRtSpec{
-		Id:            uidstr,
-		VPCId:         string(in.VPCId),
-		RT:            dumpBytes(in.RT),
-		RTType:        strings.TrimPrefix(in.RTType.String(), "EVPN_RT_"),
+		Id:              uidstr,
+		VPCId:           string(in.VPCId),
+		RT:              dumpBytes(in.RT),
+		RTType:          strings.TrimPrefix(in.RTType.String(), "EVPN_RT_"),
 		EvpnIpVrfRtSpec: in,
 	}
 }
@@ -511,10 +518,10 @@ func NewEvpnIpVrfRt(in *pds.EvpnIpVrfRt) *ShadowEvpnIpVrfRt {
 
 // ShadowEvpnEviSpec shadows the EvpnEviSpec for CLI purposes
 type ShadowEvpnEviSpec struct {
-	Id         string
-	SubnetId   string
-	RD         string
-    RTType     string
+	Id       string
+	SubnetId string
+	RD       string
+	RTType   string
 	*pds.EvpnEviSpec
 }
 
@@ -525,26 +532,26 @@ func NewEvpnEviSpec(in *pds.EvpnEviSpec) ShadowEvpnEviSpec {
 		uidstr = uid.String()
 	}
 	return ShadowEvpnEviSpec{
-		Id:             uidstr,
-		SubnetId:       string(in.SubnetId),
-		RD:             printRD(in.RD),
-		RTType:         strings.TrimPrefix(in.RTType.String(), "EVPN_RT_"),
-		EvpnEviSpec:    in,
+		Id:          uidstr,
+		SubnetId:    string(in.SubnetId),
+		RD:          printRD(in.RD),
+		RTType:      strings.TrimPrefix(in.RTType.String(), "EVPN_RT_"),
+		EvpnEviSpec: in,
 	}
 }
 
 // ShadowEvpnEviStatus shadows the EvpnEviStatus for CLI purposes
 type ShadowEvpnEviStatus struct {
-    RD         string
-    Status     string
+	RD     string
+	Status string
 	*pds.EvpnEviStatus
 }
 
 func NewEvpnEviStatus(in *pds.EvpnEviStatus) ShadowEvpnEviStatus {
 	return ShadowEvpnEviStatus{
-		RD:               printRD(in.RD),
-		Status:           strings.TrimPrefix(in.Status.String(), "EVPN_OPER_STATUS_"),
-		EvpnEviStatus:    in,
+		RD:            printRD(in.RD),
+		Status:        strings.TrimPrefix(in.Status.String(), "EVPN_OPER_STATUS_"),
+		EvpnEviStatus: in,
 	}
 }
 
@@ -567,10 +574,10 @@ func NewEvpnEvi(in *pds.EvpnEvi) *ShadowEvpnEvi {
 
 // ShadowEvpnEviRtSpec shadows the EvpnEviRtSpec for CLI purposes
 type ShadowEvpnEviRtSpec struct {
-	Id         string
-	SubnetId   string
-	RT         string
-    RTType     string
+	Id       string
+	SubnetId string
+	RT       string
+	RTType   string
 	*pds.EvpnEviRtSpec
 }
 
@@ -581,11 +588,11 @@ func NewEvpnEviRtSpec(in *pds.EvpnEviRtSpec) ShadowEvpnEviRtSpec {
 		uidstr = uid.String()
 	}
 	return ShadowEvpnEviRtSpec{
-		Id:               uidstr,
-		SubnetId:         string(in.SubnetId),
-		RT:               dumpBytes(in.RT),
-		RTType:           strings.TrimPrefix(in.RTType.String(), "EVPN_RT_"),
-		EvpnEviRtSpec:    in,
+		Id:            uidstr,
+		SubnetId:      string(in.SubnetId),
+		RT:            dumpBytes(in.RT),
+		RTType:        strings.TrimPrefix(in.RTType.String(), "EVPN_RT_"),
+		EvpnEviRtSpec: in,
 	}
 }
 
@@ -596,7 +603,7 @@ type ShadowEvpnEviRtStatus struct {
 
 func NewEvpnEviRtStatus(in *pds.EvpnEviRtStatus) ShadowEvpnEviRtStatus {
 	return ShadowEvpnEviRtStatus{
-		EvpnEviRtStatus:    in,
+		EvpnEviRtStatus: in,
 	}
 }
 

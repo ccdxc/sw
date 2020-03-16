@@ -75,6 +75,14 @@ func ip2uint32(ipstr string) uint32 {
 	return (((uint32(ip[3])*256)+uint32(ip[2]))*256+uint32(ip[1]))*256 + uint32(ip[0])
 }
 
+func ip2uint32Big(ipstr string) uint32 {
+	ip := net.ParseIP(ipstr).To4()
+	if len(ip) == 0 {
+		return 0
+	}
+	return binary.BigEndian.Uint32(ip)
+}
+
 func ip2PDSType(ipstr string) *types.IPAddress {
 	if ipstr == "0.0.0.0" || ipstr == "" {
 		return &types.IPAddress{
@@ -288,9 +296,9 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 		ret.GlobalOper = Create
 		var rid uint32
 		if newCfg.routerID == "0.0.0.0" || newCfg.routerID == "" {
-			rid = ip2uint32(newLb)
+			rid = ip2uint32Big(newLb)
 		} else {
-			rid = ip2uint32(newCfg.routerID)
+			rid = ip2uint32Big(newCfg.routerID)
 		}
 		ret.Global.Request = &types.BGPSpec{
 			Id:       newCfg.uid,
@@ -310,9 +318,9 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 			ret.GlobalOper = Update
 			var rid uint32
 			if newCfg.routerID == "0.0.0.0" || newCfg.routerID == "" {
-				rid = ip2uint32(newLb)
+				rid = ip2uint32Big(newLb)
 			} else {
-				rid = ip2uint32(newCfg.routerID)
+				rid = ip2uint32Big(newCfg.routerID)
 			}
 			ret.Global = types.BGPRequest{
 				Request: &types.BGPSpec{

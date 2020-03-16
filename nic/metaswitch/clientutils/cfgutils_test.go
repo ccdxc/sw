@@ -67,7 +67,7 @@ func TestCfgUtils(t *testing.T) {
 	AssertOk(t, err, "should have succeeded")
 	Assert(t, ret.GlobalOper == Update, "expecting Update got %v", ret.GlobalOper)
 	Assert(t, ret.Global.Request != nil, "expecting request to be not nil ")
-	Assert(t, ret.Global.Request.RouterId == 0x02010101, "expecting request to be 1.1.1.2 got %x", ret.Global.Request.RouterId)
+	Assert(t, ret.Global.Request.RouterId == 0x01010102, "expecting request to be 1.1.1.2 got %x", ret.Global.Request.RouterId)
 
 	// -  Update Add / del peers
 	newCfg.Spec.BGPConfig.RouterId = "1.1.1.1"
