@@ -7,14 +7,16 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/influxdata/influxdb/models"
 
 	"github.com/golang/mock/gomock"
 	"github.com/influxdata/influxdb/query"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/errors"
+	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/telemetry_query"
 	"github.com/pensando/sw/venice/citadel/broker/mock"
@@ -37,6 +39,61 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 	startTime.Parse("2018-11-09T23:16:17Z")
 	endTime := &api.Timestamp{}
 	endTime.Parse("2018-11-09T23:22:17Z")
+
+	// define different start time to test auto select continuous query table
+	cqTestStartTimeOneHour := &api.Timestamp{
+		Timestamp: types.Timestamp{
+			Seconds: time.Now().Unix() - 3600,
+		},
+	}
+	cqStartOneHour, err := cqTestStartTimeOneHour.Time()
+	AssertOk(t, err, "Error failed to parse cq test start time. Err: %v", err)
+	cqStartOneHourString := cqStartOneHour.Format(time.RFC3339)
+
+	cqTestStartTimeOneDay := &api.Timestamp{
+		Timestamp: types.Timestamp{
+			Seconds: time.Now().Unix() - 3600*24,
+		},
+	}
+	cqStartOneDay, err := cqTestStartTimeOneDay.Time()
+	AssertOk(t, err, "Error failed to parse cq test start time. Err: %v", err)
+	cqStartOneDayString := cqStartOneDay.Format(time.RFC3339)
+
+	cqTestStartTimeTenDay := &api.Timestamp{
+		Timestamp: types.Timestamp{
+			Seconds: time.Now().Unix() - 3600*24*10,
+		},
+	}
+	cqStartTenDay, err := cqTestStartTimeTenDay.Time()
+	AssertOk(t, err, "Error failed to parse cq test start time. Err: %v", err)
+	cqStartTenDayString := cqStartTenDay.Format(time.RFC3339)
+
+	cqTestStartTimeTwoMonth := &api.Timestamp{
+		Timestamp: types.Timestamp{
+			Seconds: time.Now().Unix() - 3600*24*60,
+		},
+	}
+	cqStartTwoMonth, err := cqTestStartTimeTwoMonth.Time()
+	AssertOk(t, err, "Error failed to parse cq test start time. Err: %v", err)
+	cqStartTwoMonthString := cqStartTwoMonth.Format(time.RFC3339)
+
+	cqTestStartTimeTwoYear := &api.Timestamp{
+		Timestamp: types.Timestamp{
+			Seconds: time.Now().Unix() - 3600*24*60,
+		},
+	}
+	cqStartTwoYear, err := cqTestStartTimeTwoYear.Time()
+	AssertOk(t, err, "Error failed to parse cq test start time. Err: %v", err)
+	cqStartTwoYearString := cqStartTwoYear.Format(time.RFC3339)
+
+	cqTestEndTime := &api.Timestamp{
+		Timestamp: types.Timestamp{
+			Seconds: time.Now().Unix(),
+		},
+	}
+	cqEnd, err := cqTestEndTime.Time()
+	AssertOk(t, err, "Error failed to parse cq test end time. Err: %v", err)
+	cqEndString := cqEnd.Format(time.RFC3339)
 	testQs := []struct {
 		qs   *telemetry_query.MetricsQuerySpec
 		resp string
@@ -258,7 +315,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				StartTime: startTime,
 				EndTime:   endTime,
 			},
-			resp: "SELECT cpu FROM test-db WHERE time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z' ORDER BY time ASC",
+			resp: "SELECT cpu FROM test-db_1day WHERE time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z' ORDER BY time ASC",
 			pass: true,
 		},
 		{
@@ -315,6 +372,101 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				},
 			},
 			resp: "SELECT mean(cpu) FROM test-db GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10",
+			pass: true,
+		},
+		{
+			desc: "queryOneDayTable",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Fields:      []string{"cpu"},
+				Function:    telemetry_query.TsdbFunctionType_MEAN.String(),
+				GroupbyTime: "30s",
+				Pagination: &telemetry_query.PaginationSpec{
+					Count:  10,
+					Offset: 10,
+				},
+				StartTime: cqTestStartTimeOneHour,
+				EndTime:   cqTestEndTime,
+			},
+			resp: "SELECT mean(cpu) FROM test-db WHERE time > '" + cqStartOneHourString + "' AND time < '" + cqEndString + "' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10",
+			pass: true,
+		},
+		{
+			desc: "queryFiveDaysTable",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Fields:      []string{"cpu"},
+				Function:    telemetry_query.TsdbFunctionType_MEAN.String(),
+				GroupbyTime: "30s",
+				Pagination: &telemetry_query.PaginationSpec{
+					Count:  10,
+					Offset: 10,
+				},
+				StartTime: cqTestStartTimeOneDay,
+				EndTime:   cqTestEndTime,
+			},
+			resp: "SELECT mean(cpu) FROM test-db_5minutes WHERE time > '" + cqStartOneDayString + "' AND time < '" + cqEndString + "' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10",
+			pass: true,
+		},
+		{
+			desc: "queryOneMonthTable",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Fields:      []string{"cpu"},
+				Function:    telemetry_query.TsdbFunctionType_MEAN.String(),
+				GroupbyTime: "30s",
+				Pagination: &telemetry_query.PaginationSpec{
+					Count:  10,
+					Offset: 10,
+				},
+				StartTime: cqTestStartTimeTenDay,
+				EndTime:   cqTestEndTime,
+			},
+			resp: "SELECT mean(cpu) FROM test-db_1hour WHERE time > '" + cqStartTenDayString + "' AND time < '" + cqEndString + "' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10",
+			pass: true,
+		},
+		{
+			desc: "queryOneYearTable",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Fields:      []string{"cpu"},
+				Function:    telemetry_query.TsdbFunctionType_MEAN.String(),
+				GroupbyTime: "30s",
+				Pagination: &telemetry_query.PaginationSpec{
+					Count:  10,
+					Offset: 10,
+				},
+				StartTime: cqTestStartTimeTwoMonth,
+				EndTime:   cqTestEndTime,
+			},
+			resp: "SELECT mean(cpu) FROM test-db_1day WHERE time > '" + cqStartTwoMonthString + "' AND time < '" + cqEndString + "' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10",
+			pass: true,
+		},
+		{
+			desc: "queryOneYearTable2",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Fields:      []string{"cpu"},
+				Function:    telemetry_query.TsdbFunctionType_MEAN.String(),
+				GroupbyTime: "30s",
+				Pagination: &telemetry_query.PaginationSpec{
+					Count:  10,
+					Offset: 10,
+				},
+				StartTime: cqTestStartTimeTwoYear,
+				EndTime:   cqTestEndTime,
+			},
+			resp: "SELECT mean(cpu) FROM test-db_1day WHERE time > '" + cqStartTwoYearString + "' AND time < '" + cqEndString + "' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10",
 			pass: true,
 		},
 	}

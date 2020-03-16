@@ -6,16 +6,24 @@ import (
 	"strings"
 	"time"
 
+	cq "github.com/pensando/sw/venice/citadel/broker/continuous_query"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/pensando/sw/api/fields"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/errors"
+	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/telemetry_query"
 	"github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/log"
+)
+
+const (
+	oneDay     = time.Hour * 24
+	fiveDays   = time.Hour * 24 * 5
+	thirtyDays = time.Hour * 24 * 30
 )
 
 // validateMetricsQueryList validates a query list request
@@ -203,6 +211,26 @@ func (q *Server) Metrics(c context.Context, ql *telemetry_query.MetricsQueryList
 	}, nil
 }
 
+func selectContinuousQueryTable(start time.Time) string {
+	var delta time.Duration
+	fmt.Printf("StartTime: %v", start)
+	fmt.Println(start.IsZero())
+	if start.IsZero() {
+		// if there is no start time, always pick up the biggest table
+		return ""
+	}
+	delta = time.Now().Sub(start)
+
+	if delta <= oneDay {
+		return ""
+	} else if delta <= fiveDays {
+		return "5minutes"
+	} else if delta <= thirtyDays {
+		return "1hour"
+	}
+	return "1day"
+}
+
 func buildCitadelMetricsQuery(qs *telemetry_query.MetricsQuerySpec) (string, error) {
 	measurement := qs.Kind
 	selectedFields := []string{"*"}
@@ -254,8 +282,6 @@ func buildCitadelMetricsQuery(qs *telemetry_query.MetricsQuerySpec) (string, err
 		}
 	}
 
-	q := fmt.Sprintf("SELECT %s FROM %s", strings.Join(selectedFields, ","), measurement)
-
 	if qs.Name != "" {
 		req := &fields.Requirement{
 			Key:      "Name",
@@ -277,21 +303,38 @@ func buildCitadelMetricsQuery(qs *telemetry_query.MetricsQuerySpec) (string, err
 		selectors = append(selectors, sel)
 	}
 
+	var startTimeObj time.Time
+	var endTimeObj time.Time
+	var err error
+
 	if qs.StartTime != nil {
-		t, err := qs.StartTime.Time()
+		startTimeObj, err = qs.StartTime.Time()
 		if err != nil {
 			return "", err
 		}
-		selectors = append(selectors, fmt.Sprintf("time > '%s'", t.Format(time.RFC3339)))
+		selectors = append(selectors, fmt.Sprintf("time > '%s'", startTimeObj.Format(time.RFC3339)))
 	}
 
 	if qs.EndTime != nil {
-		t, err := qs.EndTime.Time()
+		endTimeObj, err = qs.EndTime.Time()
 		if err != nil {
 			return "", err
 		}
-		selectors = append(selectors, fmt.Sprintf("time < '%s'", t.Format(time.RFC3339)))
+		selectors = append(selectors, fmt.Sprintf("time < '%s'", endTimeObj.Format(time.RFC3339)))
 	}
+
+	// if it is non-cq measurement, automatically select CQ table based on start and end time
+	suffix := ""
+	if !cq.IsContinuousQueryMeasurement(measurement) {
+		// get CQ table suffix based on time range
+		suffix = selectContinuousQueryTable(startTimeObj)
+		// update measurement name
+		if suffix != "" {
+			measurement = measurement + "_" + suffix
+		}
+	}
+
+	q := fmt.Sprintf("SELECT %s FROM %s", strings.Join(selectedFields, ","), measurement)
 
 	if len(selectors) > 0 {
 		q += fmt.Sprintf(" WHERE %s", strings.Join(selectors, " AND "))
