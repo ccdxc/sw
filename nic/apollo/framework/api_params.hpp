@@ -84,8 +84,6 @@ struct api_params_s {
         pds_policer_spec_t           policer_spec;
         pds_obj_key_t                nat_port_block_key;
         pds_nat_port_block_spec_t    nat_port_block_spec;
-        pds_obj_key_t                dhcp_relay_key;
-        pds_dhcp_relay_spec_t        dhcp_relay_spec;
         pds_obj_key_t                dhcp_policy_key;
         pds_dhcp_policy_spec_t       dhcp_policy_spec;
         pds_obj_key_t                security_profile_key;

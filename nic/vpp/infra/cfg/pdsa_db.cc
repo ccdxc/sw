@@ -16,7 +16,6 @@ std::list<object_cbs_t> vpp_config_batch::object_cbs;
         _(VPC, vpc)                                 \
         _(VNIC, vnic)                               \
         _(SUBNET, subnet)                           \
-        _(DHCP_RELAY, dhcp_relay)                   \
         _(DHCP_POLICY, dhcp_policy)                 \
         _(NAT_PORT_BLOCK, nat_port_block)           \
         _(SECURITY_PROFILE, security_profile)       \
@@ -171,9 +170,6 @@ vpp_config_batch::maxsize (obj_id_t obj_id) {
 
     case OBJ_ID_SUBNET:
         return PDS_MAX_SUBNET + 1;
-
-    case OBJ_ID_DHCP_RELAY:
-        return PDS_MAX_DHCP_RELAY;
 
     case OBJ_ID_DHCP_POLICY:
         return PDS_MAX_DHCP_POLICY;
@@ -540,7 +536,6 @@ pds_cfg_register_callbacks (obj_id_t id,
         (id != OBJ_ID_VPC) &&
         (id != OBJ_ID_VNIC) &&
         (id != OBJ_ID_SUBNET) &&
-        (id != OBJ_ID_DHCP_RELAY) &&
         (id != OBJ_ID_DHCP_POLICY) &&
         (id != OBJ_ID_NAT_PORT_BLOCK) &&
         (id != OBJ_ID_SECURITY_PROFILE)) {

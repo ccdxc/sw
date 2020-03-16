@@ -24,7 +24,7 @@ namespace impl {
 /// @{
 
 // forward declaration
-class dhcp_relay_impl;
+class dhcp_policy_impl;
 
 /// \brief  state maintained for DHCP objects
 class dhcp_impl_state : public state_base {
@@ -35,17 +35,17 @@ public:
     /// \brief  destructor
     ~dhcp_impl_state() {}
 
-    /// \brief  allocate memory required for a DHCP relay impl instance
+    /// \brief  allocate memory required for a DHCP policy impl instance
     /// \return pointer to the allocated instance, NULL if no memory
-    dhcp_relay_impl *alloc_relay(void);
+    dhcp_policy_impl *alloc(void);
 
-    /// \brief     free DHCP relay impl instance back
+    /// \brief     free DHCP policy impl instance back
     /// \param[in] impl pointer to the allocated impl instance
-    void free(dhcp_relay_impl *impl);
+    void free(dhcp_policy_impl *impl);
 
 private:
-    /// dhcp_relay_impl is friend of dhcp_impl_state
-    friend class dhcp_relay_impl;
+    /// dhcp_policy_impl is friend of dhcp_impl_state
+    friend class dhcp_policy_impl;
 };
 
 /// @}

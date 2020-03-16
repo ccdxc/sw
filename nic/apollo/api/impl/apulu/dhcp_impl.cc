@@ -25,62 +25,62 @@ namespace impl {
 /// \ingroup PDS_DHCP
 /// \@{
 
-dhcp_relay_impl *
-dhcp_relay_impl::factory(pds_dhcp_relay_spec_t *spec) {
-    dhcp_relay_impl *impl;
+dhcp_policy_impl *
+dhcp_policy_impl::factory(pds_dhcp_policy_spec_t *spec) {
+    dhcp_policy_impl *impl;
 
-    impl = dhcp_impl_db()->alloc_relay();
+    impl = dhcp_impl_db()->alloc();
     if (unlikely(impl == NULL)) {
         return NULL;
     }
-    new (impl) dhcp_relay_impl();
+    new (impl) dhcp_policy_impl();
     return impl;
 }
 
 void
-dhcp_relay_impl::soft_delete(dhcp_relay_impl *impl) {
-    impl->~dhcp_relay_impl();
+dhcp_policy_impl::soft_delete(dhcp_policy_impl *impl) {
+    impl->~dhcp_policy_impl();
     dhcp_impl_db()->free(impl);
 }
 
 void
-dhcp_relay_impl::destroy(dhcp_relay_impl *impl) {
-    dhcp_relay_impl::soft_delete(impl);
+dhcp_policy_impl::destroy(dhcp_policy_impl *impl) {
+    dhcp_policy_impl::soft_delete(impl);
 }
 
 impl_base *
-dhcp_relay_impl::clone(void) {
-    dhcp_relay_impl *cloned_impl;
+dhcp_policy_impl::clone(void) {
+    dhcp_policy_impl *cloned_impl;
 
-    cloned_impl = dhcp_impl_db()->alloc_relay();
-    new (cloned_impl) dhcp_relay_impl();
+    cloned_impl = dhcp_impl_db()->alloc();
+    new (cloned_impl) dhcp_policy_impl();
     // deep copy is not needed as we don't store pointers
     *cloned_impl = *this;
     return cloned_impl;
 }
 
 sdk_ret_t
-dhcp_relay_impl::free(dhcp_relay_impl *impl) {
+dhcp_policy_impl::free(dhcp_policy_impl *impl) {
     destroy(impl);
     return SDK_RET_OK;
 }
 
-dhcp_relay_impl *
-dhcp_relay_impl::build(pds_obj_key_t *key, dhcp_relay *relay) {
-    dhcp_relay_impl *impl;
+dhcp_policy_impl *
+dhcp_policy_impl::build(pds_obj_key_t *key, dhcp_policy *policy) {
+    dhcp_policy_impl *impl;
 
-    impl = dhcp_impl_db()->alloc_relay();
+    impl = dhcp_impl_db()->alloc();
     if (unlikely(impl == NULL)) {
         return NULL;
     }
-    new (impl) dhcp_relay_impl();
+    new (impl) dhcp_policy_impl();
     return impl;
 }
 
 #define nacl_redirect_action    action_u.nacl_nacl_redirect
 #define nacl_redirect_to_arm_action     action_u.nacl_nacl_redirect_to_arm
 sdk_ret_t
-dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
+dhcp_policy_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                              pds_epoch_t epoch, api_op_t api_op,
                              api_obj_ctxt_t *obj_ctxt) {
     lif_impl *lif;
@@ -94,7 +94,7 @@ dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
     case API_OP_CREATE:
     case API_OP_UPDATE:
         // install the NACL
-        spec = &obj_ctxt->api_params->dhcp_relay_spec;
+        spec = &obj_ctxt->api_params->dhcp_policy_spec.relay_spec;
         key.key_metadata_entry_valid = 1;
         key.control_metadata_rx_packet = 1;
         key.key_metadata_ktype = KEY_TYPE_IPV4;
@@ -145,7 +145,7 @@ dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                           "at %u", PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX1);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         } else {
-            PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+            PDS_TRACE_DEBUG("Programmed NACL entry idx %u, ktype %u, lif %u",
                             PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX1,
                             key.key_metadata_ktype, key.capri_intrinsic_lif);
         }
@@ -160,7 +160,7 @@ dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                           "at %u", PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX2);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         } else {
-            PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
+            PDS_TRACE_DEBUG("Programmed NACL entry idx %u, ktype %u, lif %u",
                             PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX2,
                             key.key_metadata_ktype, key.capri_intrinsic_lif);
         }
@@ -178,7 +178,7 @@ dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                           "idx %u", PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX1);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         } else {
-            PDS_TRACE_DEBUG("Cleared NACL entry idx %d, ktype %d, lif %d",
+            PDS_TRACE_DEBUG("Cleared NACL entry idx %u, ktype %u, lif %u",
                             PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX1,
                             key.key_metadata_ktype, key.capri_intrinsic_lif);
         }
@@ -190,7 +190,7 @@ dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                           "idx %u", PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX2);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         } else {
-            PDS_TRACE_DEBUG("Cleared NACL entry idx %d, ktype %d, lif %d",
+            PDS_TRACE_DEBUG("Cleared NACL entry idx %u, ktype %u, lif %u",
                             PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX2,
                             key.key_metadata_ktype, key.capri_intrinsic_lif);
         }
@@ -204,7 +204,7 @@ dhcp_relay_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
 }
 
 sdk_ret_t
-dhcp_relay_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
+dhcp_policy_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     return SDK_RET_INVALID_OP;
 }
 

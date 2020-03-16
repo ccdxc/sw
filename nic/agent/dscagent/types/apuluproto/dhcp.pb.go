@@ -23,28 +23,19 @@ var _ = math.Inf
 
 // DHCPRelaySpec captures DHCP relay configuration
 type DHCPRelaySpec struct {
-	// unique key/identifier of DHCP relay policy
-	Id []byte `protobuf:"bytes,1,opt,name=Id,proto3" json:"Id,omitempty" meta:mandatory`
 	// VPC where DHCP server is present in
-	VPCId []byte `protobuf:"bytes,2,opt,name=VPCId,proto3" json:"VPCId,omitempty" meta:mandatory`
+	VPCId []byte `protobuf:"bytes,1,opt,name=VPCId,proto3" json:"VPCId,omitempty" meta:mandatory`
 	// IP address of the DHCP server, agent is relaying requests to
-	ServerIP *IPAddress `protobuf:"bytes,3,opt,name=ServerIP" json:"ServerIP,omitempty" meta:mandatory`
+	ServerIP *IPAddress `protobuf:"bytes,2,opt,name=ServerIP" json:"ServerIP,omitempty" meta:mandatory`
 	// IP address of the relay agent, if no IP address is specified local TEP IP
 	// (MyTEP IP from device object configuration) will be used
-	AgentIP *IPAddress `protobuf:"bytes,4,opt,name=AgentIP" json:"AgentIP,omitempty"`
+	AgentIP *IPAddress `protobuf:"bytes,3,opt,name=AgentIP" json:"AgentIP,omitempty"`
 }
 
 func (m *DHCPRelaySpec) Reset()                    { *m = DHCPRelaySpec{} }
 func (m *DHCPRelaySpec) String() string            { return proto.CompactTextString(m) }
 func (*DHCPRelaySpec) ProtoMessage()               {}
 func (*DHCPRelaySpec) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{0} }
-
-func (m *DHCPRelaySpec) GetId() []byte {
-	if m != nil {
-		return m.Id
-	}
-	return nil
-}
 
 func (m *DHCPRelaySpec) GetVPCId() []byte {
 	if m != nil {
@@ -85,209 +76,137 @@ func (m *DHCPRelayStats) String() string            { return proto.CompactTextSt
 func (*DHCPRelayStats) ProtoMessage()               {}
 func (*DHCPRelayStats) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{2} }
 
-// DHCP relay object
-type DHCPRelay struct {
-	*meta.TypeMeta `protobuf:"bytes,1,opt,name=TypeMeta,embedded=TypeMeta" json:",inline"`
-	*meta.ObjMeta  `protobuf:"bytes,2,opt,name=ObjMeta,embedded=ObjMeta" json:"meta,omitempty"`
-	Spec           *DHCPRelaySpec   `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
-	Status         *DHCPRelayStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
-	Stats          *DHCPRelayStats  `protobuf:"bytes,5,opt,name=Stats" json:"stats,omitempty"`
-}
-
-func (m *DHCPRelay) Reset()                    { *m = DHCPRelay{} }
-func (m *DHCPRelay) String() string            { return proto.CompactTextString(m) }
-func (*DHCPRelay) ProtoMessage()               {}
-func (*DHCPRelay) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{3} }
-
-func (m *DHCPRelay) GetSpec() *DHCPRelaySpec {
-	if m != nil {
-		return m.Spec
-	}
-	return nil
-}
-
-func (m *DHCPRelay) GetStatus() *DHCPRelayStatus {
-	if m != nil {
-		return m.Status
-	}
-	return nil
-}
-
-func (m *DHCPRelay) GetStats() *DHCPRelayStats {
-	if m != nil {
-		return m.Stats
-	}
-	return nil
-}
-
-// DHCP relay create and update request
-type DHCPRelayRequest struct {
-	// optional batch context, if this request is part of batch of API calls
-	BatchCtxt *BatchCtxt `protobuf:"bytes,1,opt,name=BatchCtxt" json:"BatchCtxt,omitempty"`
-	// batched requests
-	Request []*DHCPRelaySpec `protobuf:"bytes,2,rep,name=Request" json:"Request,omitempty"`
-}
-
-func (m *DHCPRelayRequest) Reset()                    { *m = DHCPRelayRequest{} }
-func (m *DHCPRelayRequest) String() string            { return proto.CompactTextString(m) }
-func (*DHCPRelayRequest) ProtoMessage()               {}
-func (*DHCPRelayRequest) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{4} }
-
-func (m *DHCPRelayRequest) GetBatchCtxt() *BatchCtxt {
-	if m != nil {
-		return m.BatchCtxt
-	}
-	return nil
-}
-
-func (m *DHCPRelayRequest) GetRequest() []*DHCPRelaySpec {
-	if m != nil {
-		return m.Request
-	}
-	return nil
-}
-
-// DHCP relay create and update response
-type DHCPRelayResponse struct {
-	ApiStatus ApiStatus `protobuf:"varint,1,opt,name=ApiStatus,proto3,enum=types.ApiStatus" json:"ApiStatus,omitempty"`
-	// batched response
-	Response []*DHCPRelayStatus `protobuf:"bytes,2,rep,name=Response" json:"Response,omitempty"`
-}
-
-func (m *DHCPRelayResponse) Reset()                    { *m = DHCPRelayResponse{} }
-func (m *DHCPRelayResponse) String() string            { return proto.CompactTextString(m) }
-func (*DHCPRelayResponse) ProtoMessage()               {}
-func (*DHCPRelayResponse) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{5} }
-
-func (m *DHCPRelayResponse) GetApiStatus() ApiStatus {
-	if m != nil {
-		return m.ApiStatus
-	}
-	return ApiStatus_API_STATUS_OK
-}
-
-func (m *DHCPRelayResponse) GetResponse() []*DHCPRelayStatus {
-	if m != nil {
-		return m.Response
-	}
-	return nil
-}
-
-// DHCP relay get request
-type DHCPRelayGetRequest struct {
-	// id of the DHCP relay policy being queried
-	Id [][]byte `protobuf:"bytes,1,rep,name=Id" json:"Id,omitempty"`
-}
-
-func (m *DHCPRelayGetRequest) Reset()                    { *m = DHCPRelayGetRequest{} }
-func (m *DHCPRelayGetRequest) String() string            { return proto.CompactTextString(m) }
-func (*DHCPRelayGetRequest) ProtoMessage()               {}
-func (*DHCPRelayGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{6} }
-
-func (m *DHCPRelayGetRequest) GetId() [][]byte {
-	if m != nil {
-		return m.Id
-	}
-	return nil
-}
-
-// DHCP relay get response
-type DHCPRelayGetResponse struct {
-	// API status code
-	ApiStatus ApiStatus    `protobuf:"varint,1,opt,name=ApiStatus,proto3,enum=types.ApiStatus" json:"ApiStatus,omitempty"`
-	Response  []*DHCPRelay `protobuf:"bytes,2,rep,name=Response" json:"Response,omitempty"`
-}
-
-func (m *DHCPRelayGetResponse) Reset()                    { *m = DHCPRelayGetResponse{} }
-func (m *DHCPRelayGetResponse) String() string            { return proto.CompactTextString(m) }
-func (*DHCPRelayGetResponse) ProtoMessage()               {}
-func (*DHCPRelayGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{7} }
-
-func (m *DHCPRelayGetResponse) GetApiStatus() ApiStatus {
-	if m != nil {
-		return m.ApiStatus
-	}
-	return ApiStatus_API_STATUS_OK
-}
-
-func (m *DHCPRelayGetResponse) GetResponse() []*DHCPRelay {
-	if m != nil {
-		return m.Response
-	}
-	return nil
-}
-
-// DHCP relay delete request
-type DHCPRelayDeleteRequest struct {
-	// optional batch context, if this request is part of batch of API calls
-	BatchCtxt *BatchCtxt `protobuf:"bytes,1,opt,name=BatchCtxt" json:"BatchCtxt,omitempty"`
-	// id of the DHCP relay policy being deleted
-	Id [][]byte `protobuf:"bytes,2,rep,name=Id" json:"Id,omitempty"`
-}
-
-func (m *DHCPRelayDeleteRequest) Reset()                    { *m = DHCPRelayDeleteRequest{} }
-func (m *DHCPRelayDeleteRequest) String() string            { return proto.CompactTextString(m) }
-func (*DHCPRelayDeleteRequest) ProtoMessage()               {}
-func (*DHCPRelayDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{8} }
-
-func (m *DHCPRelayDeleteRequest) GetBatchCtxt() *BatchCtxt {
-	if m != nil {
-		return m.BatchCtxt
-	}
-	return nil
-}
-
-func (m *DHCPRelayDeleteRequest) GetId() [][]byte {
-	if m != nil {
-		return m.Id
-	}
-	return nil
-}
-
-// DHCP relay delete response
-type DHCPRelayDeleteResponse struct {
-	// API status code
-	ApiStatus []ApiStatus `protobuf:"varint,1,rep,packed,name=ApiStatus,enum=types.ApiStatus" json:"ApiStatus,omitempty"`
-}
-
-func (m *DHCPRelayDeleteResponse) Reset()                    { *m = DHCPRelayDeleteResponse{} }
-func (m *DHCPRelayDeleteResponse) String() string            { return proto.CompactTextString(m) }
-func (*DHCPRelayDeleteResponse) ProtoMessage()               {}
-func (*DHCPRelayDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{9} }
-
-func (m *DHCPRelayDeleteResponse) GetApiStatus() []ApiStatus {
-	if m != nil {
-		return m.ApiStatus
-	}
-	return nil
-}
-
-// DHCPPolicySpec captures the DHCP suppression configuration per subnet
-type DHCPPolicySpec struct {
-	// unique key/identifier of the DHCP policy
-	Id []byte `protobuf:"bytes,1,opt,name=Id,proto3" json:"Id,omitempty" meta:mandatory`
+// DHCPProxySpec captures the DHCP proxy/suppression configuration per subnet
+type DHCPProxySpec struct {
 	// IP address of the (local) DHCP server, this IP address will be
 	// used to respond to the DHCP requests from the workloads and is used as
 	// the DHCP server identifier
-	ServerIP *IPAddress `protobuf:"bytes,2,opt,name=ServerIP" json:"ServerIP,omitempty" meta:mandatory`
+	ServerIP *IPAddress `protobuf:"bytes,1,opt,name=ServerIP" json:"ServerIP,omitempty" meta:mandatory`
 	// MTU to be supplied by the DHCP server to its clients, if non-zero
-	MTU uint32 `protobuf:"varint,3,opt,name=MTU,proto3" json:"MTU,omitempty"`
+	MTU uint32 `protobuf:"varint,2,opt,name=MTU,proto3" json:"MTU,omitempty"`
 	// IP address of the subnet's gateway sent in DHCP offer
-	GatewayIP *IPAddress `protobuf:"bytes,4,opt,name=GatewayIP" json:"GatewayIP,omitempty"`
+	GatewayIP *IPAddress `protobuf:"bytes,3,opt,name=GatewayIP" json:"GatewayIP,omitempty"`
 	// IP address of the DNS server sent in DHCP offer
-	DNSServerIP *IPAddress `protobuf:"bytes,5,opt,name=DNSServerIP" json:"DNSServerIP,omitempty"`
+	DNSServerIP *IPAddress `protobuf:"bytes,4,opt,name=DNSServerIP" json:"DNSServerIP,omitempty"`
 	// IP address of the NTP server sent in DHCP offer
-	NTPServerIP *IPAddress `protobuf:"bytes,6,opt,name=NTPServerIP" json:"NTPServerIP,omitempty"`
+	NTPServerIP *IPAddress `protobuf:"bytes,5,opt,name=NTPServerIP" json:"NTPServerIP,omitempty"`
 	// client's Fully Qualified Domain Name (FQDN)
-	DomainName string `protobuf:"bytes,7,opt,name=DomainName,proto3" json:"DomainName,omitempty"`
+	DomainName string `protobuf:"bytes,6,opt,name=DomainName,proto3" json:"DomainName,omitempty"`
 	// DHCP lease timoeout in seconds
-	LeaseTimeout uint32 `protobuf:"varint,8,opt,name=LeaseTimeout,proto3" json:"LeaseTimeout,omitempty" default=3600`
+	LeaseTimeout uint32 `protobuf:"varint,7,opt,name=LeaseTimeout,proto3" json:"LeaseTimeout,omitempty" default=3600`
+}
+
+func (m *DHCPProxySpec) Reset()                    { *m = DHCPProxySpec{} }
+func (m *DHCPProxySpec) String() string            { return proto.CompactTextString(m) }
+func (*DHCPProxySpec) ProtoMessage()               {}
+func (*DHCPProxySpec) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{3} }
+
+func (m *DHCPProxySpec) GetServerIP() *IPAddress {
+	if m != nil {
+		return m.ServerIP
+	}
+	return nil
+}
+
+func (m *DHCPProxySpec) GetMTU() uint32 {
+	if m != nil {
+		return m.MTU
+	}
+	return 0
+}
+
+func (m *DHCPProxySpec) GetGatewayIP() *IPAddress {
+	if m != nil {
+		return m.GatewayIP
+	}
+	return nil
+}
+
+func (m *DHCPProxySpec) GetDNSServerIP() *IPAddress {
+	if m != nil {
+		return m.DNSServerIP
+	}
+	return nil
+}
+
+func (m *DHCPProxySpec) GetNTPServerIP() *IPAddress {
+	if m != nil {
+		return m.NTPServerIP
+	}
+	return nil
+}
+
+func (m *DHCPProxySpec) GetDomainName() string {
+	if m != nil {
+		return m.DomainName
+	}
+	return ""
+}
+
+func (m *DHCPProxySpec) GetLeaseTimeout() uint32 {
+	if m != nil {
+		return m.LeaseTimeout
+	}
+	return 0
+}
+
+// operational status of a DHCP proxy/suppression policy, if any
+type DHCPProxyStatus struct {
+}
+
+func (m *DHCPProxyStatus) Reset()                    { *m = DHCPProxyStatus{} }
+func (m *DHCPProxyStatus) String() string            { return proto.CompactTextString(m) }
+func (*DHCPProxyStatus) ProtoMessage()               {}
+func (*DHCPProxyStatus) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{4} }
+
+// stats for a DHCP proxy/suppression policy, if any
+type DHCPProxyStats struct {
+}
+
+func (m *DHCPProxyStats) Reset()                    { *m = DHCPProxyStats{} }
+func (m *DHCPProxyStats) String() string            { return proto.CompactTextString(m) }
+func (*DHCPProxyStats) ProtoMessage()               {}
+func (*DHCPProxyStats) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{5} }
+
+type DHCPPolicySpec struct {
+	// unique key/identifier of DHCP policy
+	Id []byte `protobuf:"bytes,1,opt,name=Id,proto3" json:"Id,omitempty" meta:mandatory`
+	// DHCP policy is one of DHCP relay or DHCP proxy
+	// NOTE: one of them is mandatory
+	//
+	// Types that are valid to be assigned to RelayOrProxy:
+	//	*DHCPPolicySpec_RelaySpec
+	//	*DHCPPolicySpec_ProxySpec
+	RelayOrProxy isDHCPPolicySpec_RelayOrProxy `protobuf_oneof:"relay_or_proxy"`
 }
 
 func (m *DHCPPolicySpec) Reset()                    { *m = DHCPPolicySpec{} }
 func (m *DHCPPolicySpec) String() string            { return proto.CompactTextString(m) }
 func (*DHCPPolicySpec) ProtoMessage()               {}
-func (*DHCPPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{10} }
+func (*DHCPPolicySpec) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{6} }
+
+type isDHCPPolicySpec_RelayOrProxy interface {
+	isDHCPPolicySpec_RelayOrProxy()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type DHCPPolicySpec_RelaySpec struct {
+	RelaySpec *DHCPRelaySpec `protobuf:"bytes,2,opt,name=RelaySpec,oneof"`
+}
+type DHCPPolicySpec_ProxySpec struct {
+	ProxySpec *DHCPProxySpec `protobuf:"bytes,3,opt,name=ProxySpec,oneof"`
+}
+
+func (*DHCPPolicySpec_RelaySpec) isDHCPPolicySpec_RelayOrProxy() {}
+func (*DHCPPolicySpec_ProxySpec) isDHCPPolicySpec_RelayOrProxy() {}
+
+func (m *DHCPPolicySpec) GetRelayOrProxy() isDHCPPolicySpec_RelayOrProxy {
+	if m != nil {
+		return m.RelayOrProxy
+	}
+	return nil
+}
 
 func (m *DHCPPolicySpec) GetId() []byte {
 	if m != nil {
@@ -296,72 +215,341 @@ func (m *DHCPPolicySpec) GetId() []byte {
 	return nil
 }
 
-func (m *DHCPPolicySpec) GetServerIP() *IPAddress {
-	if m != nil {
-		return m.ServerIP
+func (m *DHCPPolicySpec) GetRelaySpec() *DHCPRelaySpec {
+	if x, ok := m.GetRelayOrProxy().(*DHCPPolicySpec_RelaySpec); ok {
+		return x.RelaySpec
 	}
 	return nil
 }
 
-func (m *DHCPPolicySpec) GetMTU() uint32 {
-	if m != nil {
-		return m.MTU
-	}
-	return 0
-}
-
-func (m *DHCPPolicySpec) GetGatewayIP() *IPAddress {
-	if m != nil {
-		return m.GatewayIP
+func (m *DHCPPolicySpec) GetProxySpec() *DHCPProxySpec {
+	if x, ok := m.GetRelayOrProxy().(*DHCPPolicySpec_ProxySpec); ok {
+		return x.ProxySpec
 	}
 	return nil
 }
 
-func (m *DHCPPolicySpec) GetDNSServerIP() *IPAddress {
-	if m != nil {
-		return m.DNSServerIP
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*DHCPPolicySpec) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _DHCPPolicySpec_OneofMarshaler, _DHCPPolicySpec_OneofUnmarshaler, _DHCPPolicySpec_OneofSizer, []interface{}{
+		(*DHCPPolicySpec_RelaySpec)(nil),
+		(*DHCPPolicySpec_ProxySpec)(nil),
+	}
+}
+
+func _DHCPPolicySpec_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*DHCPPolicySpec)
+	// relay_or_proxy
+	switch x := m.RelayOrProxy.(type) {
+	case *DHCPPolicySpec_RelaySpec:
+		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.RelaySpec); err != nil {
+			return err
+		}
+	case *DHCPPolicySpec_ProxySpec:
+		_ = b.EncodeVarint(3<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.ProxySpec); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("DHCPPolicySpec.RelayOrProxy has unexpected type %T", x)
 	}
 	return nil
 }
 
-func (m *DHCPPolicySpec) GetNTPServerIP() *IPAddress {
-	if m != nil {
-		return m.NTPServerIP
+func _DHCPPolicySpec_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*DHCPPolicySpec)
+	switch tag {
+	case 2: // relay_or_proxy.RelaySpec
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(DHCPRelaySpec)
+		err := b.DecodeMessage(msg)
+		m.RelayOrProxy = &DHCPPolicySpec_RelaySpec{msg}
+		return true, err
+	case 3: // relay_or_proxy.ProxySpec
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(DHCPProxySpec)
+		err := b.DecodeMessage(msg)
+		m.RelayOrProxy = &DHCPPolicySpec_ProxySpec{msg}
+		return true, err
+	default:
+		return false, nil
 	}
-	return nil
 }
 
-func (m *DHCPPolicySpec) GetDomainName() string {
-	if m != nil {
-		return m.DomainName
+func _DHCPPolicySpec_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*DHCPPolicySpec)
+	// relay_or_proxy
+	switch x := m.RelayOrProxy.(type) {
+	case *DHCPPolicySpec_RelaySpec:
+		s := proto.Size(x.RelaySpec)
+		n += proto.SizeVarint(2<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *DHCPPolicySpec_ProxySpec:
+		s := proto.Size(x.ProxySpec)
+		n += proto.SizeVarint(3<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
 	}
-	return ""
+	return n
 }
 
-func (m *DHCPPolicySpec) GetLeaseTimeout() uint32 {
-	if m != nil {
-		return m.LeaseTimeout
-	}
-	return 0
-}
-
-// operational status of a DHCP policy, if any
+// operational status of DHCP policy, if any
 type DHCPPolicyStatus struct {
+	// Types that are valid to be assigned to RelayOrProxy:
+	//	*DHCPPolicyStatus_RelayStatus
+	//	*DHCPPolicyStatus_ProxyStatus
+	RelayOrProxy isDHCPPolicyStatus_RelayOrProxy `protobuf_oneof:"relay_or_proxy"`
 }
 
 func (m *DHCPPolicyStatus) Reset()                    { *m = DHCPPolicyStatus{} }
 func (m *DHCPPolicyStatus) String() string            { return proto.CompactTextString(m) }
 func (*DHCPPolicyStatus) ProtoMessage()               {}
-func (*DHCPPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{11} }
+func (*DHCPPolicyStatus) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{7} }
 
-// stats for a DHCP policy, if any
+type isDHCPPolicyStatus_RelayOrProxy interface {
+	isDHCPPolicyStatus_RelayOrProxy()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type DHCPPolicyStatus_RelayStatus struct {
+	RelayStatus *DHCPRelayStatus `protobuf:"bytes,1,opt,name=RelayStatus,oneof"`
+}
+type DHCPPolicyStatus_ProxyStatus struct {
+	ProxyStatus *DHCPProxyStatus `protobuf:"bytes,2,opt,name=ProxyStatus,oneof"`
+}
+
+func (*DHCPPolicyStatus_RelayStatus) isDHCPPolicyStatus_RelayOrProxy() {}
+func (*DHCPPolicyStatus_ProxyStatus) isDHCPPolicyStatus_RelayOrProxy() {}
+
+func (m *DHCPPolicyStatus) GetRelayOrProxy() isDHCPPolicyStatus_RelayOrProxy {
+	if m != nil {
+		return m.RelayOrProxy
+	}
+	return nil
+}
+
+func (m *DHCPPolicyStatus) GetRelayStatus() *DHCPRelayStatus {
+	if x, ok := m.GetRelayOrProxy().(*DHCPPolicyStatus_RelayStatus); ok {
+		return x.RelayStatus
+	}
+	return nil
+}
+
+func (m *DHCPPolicyStatus) GetProxyStatus() *DHCPProxyStatus {
+	if x, ok := m.GetRelayOrProxy().(*DHCPPolicyStatus_ProxyStatus); ok {
+		return x.ProxyStatus
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*DHCPPolicyStatus) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _DHCPPolicyStatus_OneofMarshaler, _DHCPPolicyStatus_OneofUnmarshaler, _DHCPPolicyStatus_OneofSizer, []interface{}{
+		(*DHCPPolicyStatus_RelayStatus)(nil),
+		(*DHCPPolicyStatus_ProxyStatus)(nil),
+	}
+}
+
+func _DHCPPolicyStatus_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*DHCPPolicyStatus)
+	// relay_or_proxy
+	switch x := m.RelayOrProxy.(type) {
+	case *DHCPPolicyStatus_RelayStatus:
+		_ = b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.RelayStatus); err != nil {
+			return err
+		}
+	case *DHCPPolicyStatus_ProxyStatus:
+		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.ProxyStatus); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("DHCPPolicyStatus.RelayOrProxy has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _DHCPPolicyStatus_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*DHCPPolicyStatus)
+	switch tag {
+	case 1: // relay_or_proxy.RelayStatus
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(DHCPRelayStatus)
+		err := b.DecodeMessage(msg)
+		m.RelayOrProxy = &DHCPPolicyStatus_RelayStatus{msg}
+		return true, err
+	case 2: // relay_or_proxy.ProxyStatus
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(DHCPProxyStatus)
+		err := b.DecodeMessage(msg)
+		m.RelayOrProxy = &DHCPPolicyStatus_ProxyStatus{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _DHCPPolicyStatus_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*DHCPPolicyStatus)
+	// relay_or_proxy
+	switch x := m.RelayOrProxy.(type) {
+	case *DHCPPolicyStatus_RelayStatus:
+		s := proto.Size(x.RelayStatus)
+		n += proto.SizeVarint(1<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *DHCPPolicyStatus_ProxyStatus:
+		s := proto.Size(x.ProxyStatus)
+		n += proto.SizeVarint(2<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// stats for DHCP policy, if any
 type DHCPPolicyStats struct {
+	// Types that are valid to be assigned to RelayOrProxy:
+	//	*DHCPPolicyStats_RelayStats
+	//	*DHCPPolicyStats_ProxyStats
+	RelayOrProxy isDHCPPolicyStats_RelayOrProxy `protobuf_oneof:"relay_or_proxy"`
 }
 
 func (m *DHCPPolicyStats) Reset()                    { *m = DHCPPolicyStats{} }
 func (m *DHCPPolicyStats) String() string            { return proto.CompactTextString(m) }
 func (*DHCPPolicyStats) ProtoMessage()               {}
-func (*DHCPPolicyStats) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{12} }
+func (*DHCPPolicyStats) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{8} }
+
+type isDHCPPolicyStats_RelayOrProxy interface {
+	isDHCPPolicyStats_RelayOrProxy()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type DHCPPolicyStats_RelayStats struct {
+	RelayStats *DHCPRelayStats `protobuf:"bytes,1,opt,name=RelayStats,oneof"`
+}
+type DHCPPolicyStats_ProxyStats struct {
+	ProxyStats *DHCPProxyStats `protobuf:"bytes,2,opt,name=ProxyStats,oneof"`
+}
+
+func (*DHCPPolicyStats_RelayStats) isDHCPPolicyStats_RelayOrProxy() {}
+func (*DHCPPolicyStats_ProxyStats) isDHCPPolicyStats_RelayOrProxy() {}
+
+func (m *DHCPPolicyStats) GetRelayOrProxy() isDHCPPolicyStats_RelayOrProxy {
+	if m != nil {
+		return m.RelayOrProxy
+	}
+	return nil
+}
+
+func (m *DHCPPolicyStats) GetRelayStats() *DHCPRelayStats {
+	if x, ok := m.GetRelayOrProxy().(*DHCPPolicyStats_RelayStats); ok {
+		return x.RelayStats
+	}
+	return nil
+}
+
+func (m *DHCPPolicyStats) GetProxyStats() *DHCPProxyStats {
+	if x, ok := m.GetRelayOrProxy().(*DHCPPolicyStats_ProxyStats); ok {
+		return x.ProxyStats
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*DHCPPolicyStats) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _DHCPPolicyStats_OneofMarshaler, _DHCPPolicyStats_OneofUnmarshaler, _DHCPPolicyStats_OneofSizer, []interface{}{
+		(*DHCPPolicyStats_RelayStats)(nil),
+		(*DHCPPolicyStats_ProxyStats)(nil),
+	}
+}
+
+func _DHCPPolicyStats_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*DHCPPolicyStats)
+	// relay_or_proxy
+	switch x := m.RelayOrProxy.(type) {
+	case *DHCPPolicyStats_RelayStats:
+		_ = b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.RelayStats); err != nil {
+			return err
+		}
+	case *DHCPPolicyStats_ProxyStats:
+		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.ProxyStats); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("DHCPPolicyStats.RelayOrProxy has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _DHCPPolicyStats_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*DHCPPolicyStats)
+	switch tag {
+	case 1: // relay_or_proxy.RelayStats
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(DHCPRelayStats)
+		err := b.DecodeMessage(msg)
+		m.RelayOrProxy = &DHCPPolicyStats_RelayStats{msg}
+		return true, err
+	case 2: // relay_or_proxy.ProxyStats
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(DHCPProxyStats)
+		err := b.DecodeMessage(msg)
+		m.RelayOrProxy = &DHCPPolicyStats_ProxyStats{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _DHCPPolicyStats_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*DHCPPolicyStats)
+	// relay_or_proxy
+	switch x := m.RelayOrProxy.(type) {
+	case *DHCPPolicyStats_RelayStats:
+		s := proto.Size(x.RelayStats)
+		n += proto.SizeVarint(1<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *DHCPPolicyStats_ProxyStats:
+		s := proto.Size(x.ProxyStats)
+		n += proto.SizeVarint(2<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
 
 // DHCP policy object
 type DHCPPolicy struct {
@@ -375,7 +563,7 @@ type DHCPPolicy struct {
 func (m *DHCPPolicy) Reset()                    { *m = DHCPPolicy{} }
 func (m *DHCPPolicy) String() string            { return proto.CompactTextString(m) }
 func (*DHCPPolicy) ProtoMessage()               {}
-func (*DHCPPolicy) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{13} }
+func (*DHCPPolicy) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{9} }
 
 func (m *DHCPPolicy) GetSpec() *DHCPPolicySpec {
 	if m != nil {
@@ -409,7 +597,7 @@ type DHCPPolicyRequest struct {
 func (m *DHCPPolicyRequest) Reset()                    { *m = DHCPPolicyRequest{} }
 func (m *DHCPPolicyRequest) String() string            { return proto.CompactTextString(m) }
 func (*DHCPPolicyRequest) ProtoMessage()               {}
-func (*DHCPPolicyRequest) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{14} }
+func (*DHCPPolicyRequest) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{10} }
 
 func (m *DHCPPolicyRequest) GetBatchCtxt() *BatchCtxt {
 	if m != nil {
@@ -435,7 +623,7 @@ type DHCPPolicyResponse struct {
 func (m *DHCPPolicyResponse) Reset()                    { *m = DHCPPolicyResponse{} }
 func (m *DHCPPolicyResponse) String() string            { return proto.CompactTextString(m) }
 func (*DHCPPolicyResponse) ProtoMessage()               {}
-func (*DHCPPolicyResponse) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{15} }
+func (*DHCPPolicyResponse) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{11} }
 
 func (m *DHCPPolicyResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -460,7 +648,7 @@ type DHCPPolicyGetRequest struct {
 func (m *DHCPPolicyGetRequest) Reset()                    { *m = DHCPPolicyGetRequest{} }
 func (m *DHCPPolicyGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*DHCPPolicyGetRequest) ProtoMessage()               {}
-func (*DHCPPolicyGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{16} }
+func (*DHCPPolicyGetRequest) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{12} }
 
 func (m *DHCPPolicyGetRequest) GetId() [][]byte {
 	if m != nil {
@@ -479,7 +667,7 @@ type DHCPPolicyGetResponse struct {
 func (m *DHCPPolicyGetResponse) Reset()                    { *m = DHCPPolicyGetResponse{} }
 func (m *DHCPPolicyGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*DHCPPolicyGetResponse) ProtoMessage()               {}
-func (*DHCPPolicyGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{17} }
+func (*DHCPPolicyGetResponse) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{13} }
 
 func (m *DHCPPolicyGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -506,7 +694,7 @@ type DHCPPolicyDeleteRequest struct {
 func (m *DHCPPolicyDeleteRequest) Reset()                    { *m = DHCPPolicyDeleteRequest{} }
 func (m *DHCPPolicyDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*DHCPPolicyDeleteRequest) ProtoMessage()               {}
-func (*DHCPPolicyDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{18} }
+func (*DHCPPolicyDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{14} }
 
 func (m *DHCPPolicyDeleteRequest) GetBatchCtxt() *BatchCtxt {
 	if m != nil {
@@ -531,7 +719,7 @@ type DHCPPolicyDeleteResponse struct {
 func (m *DHCPPolicyDeleteResponse) Reset()                    { *m = DHCPPolicyDeleteResponse{} }
 func (m *DHCPPolicyDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*DHCPPolicyDeleteResponse) ProtoMessage()               {}
-func (*DHCPPolicyDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{19} }
+func (*DHCPPolicyDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptorDhcp, []int{15} }
 
 func (m *DHCPPolicyDeleteResponse) GetApiStatus() []ApiStatus {
 	if m != nil {
@@ -544,13 +732,9 @@ func init() {
 	proto.RegisterType((*DHCPRelaySpec)(nil), "pds.DHCPRelaySpec")
 	proto.RegisterType((*DHCPRelayStatus)(nil), "pds.DHCPRelayStatus")
 	proto.RegisterType((*DHCPRelayStats)(nil), "pds.DHCPRelayStats")
-	proto.RegisterType((*DHCPRelay)(nil), "pds.DHCPRelay")
-	proto.RegisterType((*DHCPRelayRequest)(nil), "pds.DHCPRelayRequest")
-	proto.RegisterType((*DHCPRelayResponse)(nil), "pds.DHCPRelayResponse")
-	proto.RegisterType((*DHCPRelayGetRequest)(nil), "pds.DHCPRelayGetRequest")
-	proto.RegisterType((*DHCPRelayGetResponse)(nil), "pds.DHCPRelayGetResponse")
-	proto.RegisterType((*DHCPRelayDeleteRequest)(nil), "pds.DHCPRelayDeleteRequest")
-	proto.RegisterType((*DHCPRelayDeleteResponse)(nil), "pds.DHCPRelayDeleteResponse")
+	proto.RegisterType((*DHCPProxySpec)(nil), "pds.DHCPProxySpec")
+	proto.RegisterType((*DHCPProxyStatus)(nil), "pds.DHCPProxyStatus")
+	proto.RegisterType((*DHCPProxyStats)(nil), "pds.DHCPProxyStats")
 	proto.RegisterType((*DHCPPolicySpec)(nil), "pds.DHCPPolicySpec")
 	proto.RegisterType((*DHCPPolicyStatus)(nil), "pds.DHCPPolicyStatus")
 	proto.RegisterType((*DHCPPolicyStats)(nil), "pds.DHCPPolicyStats")
@@ -574,10 +758,6 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for DHCPSvc service
 
 type DHCPSvcClient interface {
-	DHCPRelayCreate(ctx context.Context, in *DHCPRelayRequest, opts ...grpc.CallOption) (*DHCPRelayResponse, error)
-	DHCPRelayUpdate(ctx context.Context, in *DHCPRelayRequest, opts ...grpc.CallOption) (*DHCPRelayResponse, error)
-	DHCPRelayGet(ctx context.Context, in *DHCPRelayGetRequest, opts ...grpc.CallOption) (*DHCPRelayGetResponse, error)
-	DHCPRelayDelete(ctx context.Context, in *DHCPRelayDeleteRequest, opts ...grpc.CallOption) (*DHCPRelayDeleteResponse, error)
 	DHCPPolicyCreate(ctx context.Context, in *DHCPPolicyRequest, opts ...grpc.CallOption) (*DHCPPolicyResponse, error)
 	DHCPPolicyUpdate(ctx context.Context, in *DHCPPolicyRequest, opts ...grpc.CallOption) (*DHCPPolicyResponse, error)
 	DHCPPolicyGet(ctx context.Context, in *DHCPPolicyGetRequest, opts ...grpc.CallOption) (*DHCPPolicyGetResponse, error)
@@ -590,42 +770,6 @@ type dHCPSvcClient struct {
 
 func NewDHCPSvcClient(cc *grpc.ClientConn) DHCPSvcClient {
 	return &dHCPSvcClient{cc}
-}
-
-func (c *dHCPSvcClient) DHCPRelayCreate(ctx context.Context, in *DHCPRelayRequest, opts ...grpc.CallOption) (*DHCPRelayResponse, error) {
-	out := new(DHCPRelayResponse)
-	err := grpc.Invoke(ctx, "/pds.DHCPSvc/DHCPRelayCreate", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dHCPSvcClient) DHCPRelayUpdate(ctx context.Context, in *DHCPRelayRequest, opts ...grpc.CallOption) (*DHCPRelayResponse, error) {
-	out := new(DHCPRelayResponse)
-	err := grpc.Invoke(ctx, "/pds.DHCPSvc/DHCPRelayUpdate", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dHCPSvcClient) DHCPRelayGet(ctx context.Context, in *DHCPRelayGetRequest, opts ...grpc.CallOption) (*DHCPRelayGetResponse, error) {
-	out := new(DHCPRelayGetResponse)
-	err := grpc.Invoke(ctx, "/pds.DHCPSvc/DHCPRelayGet", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dHCPSvcClient) DHCPRelayDelete(ctx context.Context, in *DHCPRelayDeleteRequest, opts ...grpc.CallOption) (*DHCPRelayDeleteResponse, error) {
-	out := new(DHCPRelayDeleteResponse)
-	err := grpc.Invoke(ctx, "/pds.DHCPSvc/DHCPRelayDelete", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *dHCPSvcClient) DHCPPolicyCreate(ctx context.Context, in *DHCPPolicyRequest, opts ...grpc.CallOption) (*DHCPPolicyResponse, error) {
@@ -667,10 +811,6 @@ func (c *dHCPSvcClient) DHCPPolicyDelete(ctx context.Context, in *DHCPPolicyDele
 // Server API for DHCPSvc service
 
 type DHCPSvcServer interface {
-	DHCPRelayCreate(context.Context, *DHCPRelayRequest) (*DHCPRelayResponse, error)
-	DHCPRelayUpdate(context.Context, *DHCPRelayRequest) (*DHCPRelayResponse, error)
-	DHCPRelayGet(context.Context, *DHCPRelayGetRequest) (*DHCPRelayGetResponse, error)
-	DHCPRelayDelete(context.Context, *DHCPRelayDeleteRequest) (*DHCPRelayDeleteResponse, error)
 	DHCPPolicyCreate(context.Context, *DHCPPolicyRequest) (*DHCPPolicyResponse, error)
 	DHCPPolicyUpdate(context.Context, *DHCPPolicyRequest) (*DHCPPolicyResponse, error)
 	DHCPPolicyGet(context.Context, *DHCPPolicyGetRequest) (*DHCPPolicyGetResponse, error)
@@ -679,78 +819,6 @@ type DHCPSvcServer interface {
 
 func RegisterDHCPSvcServer(s *grpc.Server, srv DHCPSvcServer) {
 	s.RegisterService(&_DHCPSvc_serviceDesc, srv)
-}
-
-func _DHCPSvc_DHCPRelayCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DHCPRelayRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DHCPSvcServer).DHCPRelayCreate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pds.DHCPSvc/DHCPRelayCreate",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DHCPSvcServer).DHCPRelayCreate(ctx, req.(*DHCPRelayRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DHCPSvc_DHCPRelayUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DHCPRelayRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DHCPSvcServer).DHCPRelayUpdate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pds.DHCPSvc/DHCPRelayUpdate",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DHCPSvcServer).DHCPRelayUpdate(ctx, req.(*DHCPRelayRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DHCPSvc_DHCPRelayGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DHCPRelayGetRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DHCPSvcServer).DHCPRelayGet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pds.DHCPSvc/DHCPRelayGet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DHCPSvcServer).DHCPRelayGet(ctx, req.(*DHCPRelayGetRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DHCPSvc_DHCPRelayDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DHCPRelayDeleteRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DHCPSvcServer).DHCPRelayDelete(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pds.DHCPSvc/DHCPRelayDelete",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DHCPSvcServer).DHCPRelayDelete(ctx, req.(*DHCPRelayDeleteRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _DHCPSvc_DHCPPolicyCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -830,22 +898,6 @@ var _DHCPSvc_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*DHCPSvcServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "DHCPRelayCreate",
-			Handler:    _DHCPSvc_DHCPRelayCreate_Handler,
-		},
-		{
-			MethodName: "DHCPRelayUpdate",
-			Handler:    _DHCPSvc_DHCPRelayUpdate_Handler,
-		},
-		{
-			MethodName: "DHCPRelayGet",
-			Handler:    _DHCPSvc_DHCPRelayGet_Handler,
-		},
-		{
-			MethodName: "DHCPRelayDelete",
-			Handler:    _DHCPSvc_DHCPRelayDelete_Handler,
-		},
-		{
 			MethodName: "DHCPPolicyCreate",
 			Handler:    _DHCPSvc_DHCPPolicyCreate_Handler,
 		},
@@ -881,20 +933,14 @@ func (m *DHCPRelaySpec) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Id) > 0 {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(len(m.Id)))
-		i += copy(dAtA[i:], m.Id)
-	}
 	if len(m.VPCId) > 0 {
-		dAtA[i] = 0x12
+		dAtA[i] = 0xa
 		i++
 		i = encodeVarintDhcp(dAtA, i, uint64(len(m.VPCId)))
 		i += copy(dAtA[i:], m.VPCId)
 	}
 	if m.ServerIP != nil {
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x12
 		i++
 		i = encodeVarintDhcp(dAtA, i, uint64(m.ServerIP.Size()))
 		n1, err := m.ServerIP.MarshalTo(dAtA[i:])
@@ -904,7 +950,7 @@ func (m *DHCPRelaySpec) MarshalTo(dAtA []byte) (int, error) {
 		i += n1
 	}
 	if m.AgentIP != nil {
-		dAtA[i] = 0x22
+		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintDhcp(dAtA, i, uint64(m.AgentIP.Size()))
 		n2, err := m.AgentIP.MarshalTo(dAtA[i:])
@@ -952,7 +998,7 @@ func (m *DHCPRelayStats) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *DHCPRelay) Marshal() (dAtA []byte, err error) {
+func (m *DHCPProxySpec) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -962,65 +1008,71 @@ func (m *DHCPRelay) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *DHCPRelay) MarshalTo(dAtA []byte) (int, error) {
+func (m *DHCPProxySpec) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if m.TypeMeta != nil {
+	if m.ServerIP != nil {
 		dAtA[i] = 0xa
 		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.TypeMeta.Size()))
-		n3, err := m.TypeMeta.MarshalTo(dAtA[i:])
+		i = encodeVarintDhcp(dAtA, i, uint64(m.ServerIP.Size()))
+		n3, err := m.ServerIP.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n3
 	}
-	if m.ObjMeta != nil {
-		dAtA[i] = 0x12
+	if m.MTU != 0 {
+		dAtA[i] = 0x10
 		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.ObjMeta.Size()))
-		n4, err := m.ObjMeta.MarshalTo(dAtA[i:])
+		i = encodeVarintDhcp(dAtA, i, uint64(m.MTU))
+	}
+	if m.GatewayIP != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintDhcp(dAtA, i, uint64(m.GatewayIP.Size()))
+		n4, err := m.GatewayIP.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n4
 	}
-	if m.Spec != nil {
-		dAtA[i] = 0x1a
+	if m.DNSServerIP != nil {
+		dAtA[i] = 0x22
 		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.Spec.Size()))
-		n5, err := m.Spec.MarshalTo(dAtA[i:])
+		i = encodeVarintDhcp(dAtA, i, uint64(m.DNSServerIP.Size()))
+		n5, err := m.DNSServerIP.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n5
 	}
-	if m.Status != nil {
-		dAtA[i] = 0x22
+	if m.NTPServerIP != nil {
+		dAtA[i] = 0x2a
 		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.Status.Size()))
-		n6, err := m.Status.MarshalTo(dAtA[i:])
+		i = encodeVarintDhcp(dAtA, i, uint64(m.NTPServerIP.Size()))
+		n6, err := m.NTPServerIP.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
 		i += n6
 	}
-	if m.Stats != nil {
-		dAtA[i] = 0x2a
+	if len(m.DomainName) > 0 {
+		dAtA[i] = 0x32
 		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.Stats.Size()))
-		n7, err := m.Stats.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n7
+		i = encodeVarintDhcp(dAtA, i, uint64(len(m.DomainName)))
+		i += copy(dAtA[i:], m.DomainName)
+	}
+	if m.LeaseTimeout != 0 {
+		dAtA[i] = 0x38
+		i++
+		i = encodeVarintDhcp(dAtA, i, uint64(m.LeaseTimeout))
 	}
 	return i, nil
 }
 
-func (m *DHCPRelayRequest) Marshal() (dAtA []byte, err error) {
+func (m *DHCPProxyStatus) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1030,37 +1082,15 @@ func (m *DHCPRelayRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *DHCPRelayRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *DHCPProxyStatus) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if m.BatchCtxt != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.BatchCtxt.Size()))
-		n8, err := m.BatchCtxt.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n8
-	}
-	if len(m.Request) > 0 {
-		for _, msg := range m.Request {
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintDhcp(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
 	return i, nil
 }
 
-func (m *DHCPRelayResponse) Marshal() (dAtA []byte, err error) {
+func (m *DHCPProxyStats) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1070,160 +1100,11 @@ func (m *DHCPRelayResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *DHCPRelayResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *DHCPProxyStats) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
-	if m.ApiStatus != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.ApiStatus))
-	}
-	if len(m.Response) > 0 {
-		for _, msg := range m.Response {
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintDhcp(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *DHCPRelayGetRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *DHCPRelayGetRequest) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Id) > 0 {
-		for _, b := range m.Id {
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintDhcp(dAtA, i, uint64(len(b)))
-			i += copy(dAtA[i:], b)
-		}
-	}
-	return i, nil
-}
-
-func (m *DHCPRelayGetResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *DHCPRelayGetResponse) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.ApiStatus != 0 {
-		dAtA[i] = 0x8
-		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.ApiStatus))
-	}
-	if len(m.Response) > 0 {
-		for _, msg := range m.Response {
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintDhcp(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
-	return i, nil
-}
-
-func (m *DHCPRelayDeleteRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *DHCPRelayDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if m.BatchCtxt != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.BatchCtxt.Size()))
-		n9, err := m.BatchCtxt.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n9
-	}
-	if len(m.Id) > 0 {
-		for _, b := range m.Id {
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintDhcp(dAtA, i, uint64(len(b)))
-			i += copy(dAtA[i:], b)
-		}
-	}
-	return i, nil
-}
-
-func (m *DHCPRelayDeleteResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *DHCPRelayDeleteResponse) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.ApiStatus) > 0 {
-		dAtA11 := make([]byte, len(m.ApiStatus)*10)
-		var j10 int
-		for _, num := range m.ApiStatus {
-			for num >= 1<<7 {
-				dAtA11[j10] = uint8(uint64(num)&0x7f | 0x80)
-				num >>= 7
-				j10++
-			}
-			dAtA11[j10] = uint8(num)
-			j10++
-		}
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(j10))
-		i += copy(dAtA[i:], dAtA11[:j10])
-	}
 	return i, nil
 }
 
@@ -1248,65 +1129,44 @@ func (m *DHCPPolicySpec) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintDhcp(dAtA, i, uint64(len(m.Id)))
 		i += copy(dAtA[i:], m.Id)
 	}
-	if m.ServerIP != nil {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.ServerIP.Size()))
-		n12, err := m.ServerIP.MarshalTo(dAtA[i:])
+	if m.RelayOrProxy != nil {
+		nn7, err := m.RelayOrProxy.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n12
-	}
-	if m.MTU != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.MTU))
-	}
-	if m.GatewayIP != nil {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.GatewayIP.Size()))
-		n13, err := m.GatewayIP.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n13
-	}
-	if m.DNSServerIP != nil {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.DNSServerIP.Size()))
-		n14, err := m.DNSServerIP.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n14
-	}
-	if m.NTPServerIP != nil {
-		dAtA[i] = 0x32
-		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.NTPServerIP.Size()))
-		n15, err := m.NTPServerIP.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n15
-	}
-	if len(m.DomainName) > 0 {
-		dAtA[i] = 0x3a
-		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(len(m.DomainName)))
-		i += copy(dAtA[i:], m.DomainName)
-	}
-	if m.LeaseTimeout != 0 {
-		dAtA[i] = 0x40
-		i++
-		i = encodeVarintDhcp(dAtA, i, uint64(m.LeaseTimeout))
+		i += nn7
 	}
 	return i, nil
 }
 
+func (m *DHCPPolicySpec_RelaySpec) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.RelaySpec != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintDhcp(dAtA, i, uint64(m.RelaySpec.Size()))
+		n8, err := m.RelaySpec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n8
+	}
+	return i, nil
+}
+func (m *DHCPPolicySpec_ProxySpec) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.ProxySpec != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintDhcp(dAtA, i, uint64(m.ProxySpec.Size()))
+		n9, err := m.ProxySpec.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
+	}
+	return i, nil
+}
 func (m *DHCPPolicyStatus) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1322,9 +1182,44 @@ func (m *DHCPPolicyStatus) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.RelayOrProxy != nil {
+		nn10, err := m.RelayOrProxy.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn10
+	}
 	return i, nil
 }
 
+func (m *DHCPPolicyStatus_RelayStatus) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.RelayStatus != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintDhcp(dAtA, i, uint64(m.RelayStatus.Size()))
+		n11, err := m.RelayStatus.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n11
+	}
+	return i, nil
+}
+func (m *DHCPPolicyStatus_ProxyStatus) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.ProxyStatus != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintDhcp(dAtA, i, uint64(m.ProxyStatus.Size()))
+		n12, err := m.ProxyStatus.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n12
+	}
+	return i, nil
+}
 func (m *DHCPPolicyStats) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1340,9 +1235,44 @@ func (m *DHCPPolicyStats) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.RelayOrProxy != nil {
+		nn13, err := m.RelayOrProxy.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn13
+	}
 	return i, nil
 }
 
+func (m *DHCPPolicyStats_RelayStats) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.RelayStats != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintDhcp(dAtA, i, uint64(m.RelayStats.Size()))
+		n14, err := m.RelayStats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n14
+	}
+	return i, nil
+}
+func (m *DHCPPolicyStats_ProxyStats) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.ProxyStats != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintDhcp(dAtA, i, uint64(m.ProxyStats.Size()))
+		n15, err := m.ProxyStats.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n15
+	}
+	return i, nil
+}
 func (m *DHCPPolicy) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1630,10 +1560,6 @@ func encodeVarintDhcp(dAtA []byte, offset int, v uint64) int {
 func (m *DHCPRelaySpec) Size() (n int) {
 	var l int
 	_ = l
-	l = len(m.Id)
-	if l > 0 {
-		n += 1 + l + sovDhcp(uint64(l))
-	}
 	l = len(m.VPCId)
 	if l > 0 {
 		n += 1 + l + sovDhcp(uint64(l))
@@ -1661,126 +1587,9 @@ func (m *DHCPRelayStats) Size() (n int) {
 	return n
 }
 
-func (m *DHCPRelay) Size() (n int) {
+func (m *DHCPProxySpec) Size() (n int) {
 	var l int
 	_ = l
-	if m.TypeMeta != nil {
-		l = m.TypeMeta.Size()
-		n += 1 + l + sovDhcp(uint64(l))
-	}
-	if m.ObjMeta != nil {
-		l = m.ObjMeta.Size()
-		n += 1 + l + sovDhcp(uint64(l))
-	}
-	if m.Spec != nil {
-		l = m.Spec.Size()
-		n += 1 + l + sovDhcp(uint64(l))
-	}
-	if m.Status != nil {
-		l = m.Status.Size()
-		n += 1 + l + sovDhcp(uint64(l))
-	}
-	if m.Stats != nil {
-		l = m.Stats.Size()
-		n += 1 + l + sovDhcp(uint64(l))
-	}
-	return n
-}
-
-func (m *DHCPRelayRequest) Size() (n int) {
-	var l int
-	_ = l
-	if m.BatchCtxt != nil {
-		l = m.BatchCtxt.Size()
-		n += 1 + l + sovDhcp(uint64(l))
-	}
-	if len(m.Request) > 0 {
-		for _, e := range m.Request {
-			l = e.Size()
-			n += 1 + l + sovDhcp(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *DHCPRelayResponse) Size() (n int) {
-	var l int
-	_ = l
-	if m.ApiStatus != 0 {
-		n += 1 + sovDhcp(uint64(m.ApiStatus))
-	}
-	if len(m.Response) > 0 {
-		for _, e := range m.Response {
-			l = e.Size()
-			n += 1 + l + sovDhcp(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *DHCPRelayGetRequest) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.Id) > 0 {
-		for _, b := range m.Id {
-			l = len(b)
-			n += 1 + l + sovDhcp(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *DHCPRelayGetResponse) Size() (n int) {
-	var l int
-	_ = l
-	if m.ApiStatus != 0 {
-		n += 1 + sovDhcp(uint64(m.ApiStatus))
-	}
-	if len(m.Response) > 0 {
-		for _, e := range m.Response {
-			l = e.Size()
-			n += 1 + l + sovDhcp(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *DHCPRelayDeleteRequest) Size() (n int) {
-	var l int
-	_ = l
-	if m.BatchCtxt != nil {
-		l = m.BatchCtxt.Size()
-		n += 1 + l + sovDhcp(uint64(l))
-	}
-	if len(m.Id) > 0 {
-		for _, b := range m.Id {
-			l = len(b)
-			n += 1 + l + sovDhcp(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *DHCPRelayDeleteResponse) Size() (n int) {
-	var l int
-	_ = l
-	if len(m.ApiStatus) > 0 {
-		l = 0
-		for _, e := range m.ApiStatus {
-			l += sovDhcp(uint64(e))
-		}
-		n += 1 + sovDhcp(uint64(l)) + l
-	}
-	return n
-}
-
-func (m *DHCPPolicySpec) Size() (n int) {
-	var l int
-	_ = l
-	l = len(m.Id)
-	if l > 0 {
-		n += 1 + l + sovDhcp(uint64(l))
-	}
 	if m.ServerIP != nil {
 		l = m.ServerIP.Size()
 		n += 1 + l + sovDhcp(uint64(l))
@@ -1810,18 +1619,103 @@ func (m *DHCPPolicySpec) Size() (n int) {
 	return n
 }
 
+func (m *DHCPProxyStatus) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *DHCPProxyStats) Size() (n int) {
+	var l int
+	_ = l
+	return n
+}
+
+func (m *DHCPPolicySpec) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Id)
+	if l > 0 {
+		n += 1 + l + sovDhcp(uint64(l))
+	}
+	if m.RelayOrProxy != nil {
+		n += m.RelayOrProxy.Size()
+	}
+	return n
+}
+
+func (m *DHCPPolicySpec_RelaySpec) Size() (n int) {
+	var l int
+	_ = l
+	if m.RelaySpec != nil {
+		l = m.RelaySpec.Size()
+		n += 1 + l + sovDhcp(uint64(l))
+	}
+	return n
+}
+func (m *DHCPPolicySpec_ProxySpec) Size() (n int) {
+	var l int
+	_ = l
+	if m.ProxySpec != nil {
+		l = m.ProxySpec.Size()
+		n += 1 + l + sovDhcp(uint64(l))
+	}
+	return n
+}
 func (m *DHCPPolicyStatus) Size() (n int) {
 	var l int
 	_ = l
+	if m.RelayOrProxy != nil {
+		n += m.RelayOrProxy.Size()
+	}
 	return n
 }
 
+func (m *DHCPPolicyStatus_RelayStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.RelayStatus != nil {
+		l = m.RelayStatus.Size()
+		n += 1 + l + sovDhcp(uint64(l))
+	}
+	return n
+}
+func (m *DHCPPolicyStatus_ProxyStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.ProxyStatus != nil {
+		l = m.ProxyStatus.Size()
+		n += 1 + l + sovDhcp(uint64(l))
+	}
+	return n
+}
 func (m *DHCPPolicyStats) Size() (n int) {
 	var l int
 	_ = l
+	if m.RelayOrProxy != nil {
+		n += m.RelayOrProxy.Size()
+	}
 	return n
 }
 
+func (m *DHCPPolicyStats_RelayStats) Size() (n int) {
+	var l int
+	_ = l
+	if m.RelayStats != nil {
+		l = m.RelayStats.Size()
+		n += 1 + l + sovDhcp(uint64(l))
+	}
+	return n
+}
+func (m *DHCPPolicyStats_ProxyStats) Size() (n int) {
+	var l int
+	_ = l
+	if m.ProxyStats != nil {
+		l = m.ProxyStats.Size()
+		n += 1 + l + sovDhcp(uint64(l))
+	}
+	return n
+}
 func (m *DHCPPolicy) Size() (n int) {
 	var l int
 	_ = l
@@ -1979,37 +1873,6 @@ func (m *DHCPRelaySpec) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDhcp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Id = append(m.Id[:0], dAtA[iNdEx:postIndex]...)
-			if m.Id == nil {
-				m.Id = []byte{}
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VPCId", wireType)
 			}
 			var byteLen int
@@ -2039,7 +1902,7 @@ func (m *DHCPRelaySpec) Unmarshal(dAtA []byte) error {
 				m.VPCId = []byte{}
 			}
 			iNdEx = postIndex
-		case 3:
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ServerIP", wireType)
 			}
@@ -2072,7 +1935,7 @@ func (m *DHCPRelaySpec) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AgentIP", wireType)
 			}
@@ -2226,7 +2089,7 @@ func (m *DHCPRelayStats) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *DHCPRelay) Unmarshal(dAtA []byte) error {
+func (m *DHCPProxySpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2249,15 +2112,15 @@ func (m *DHCPRelay) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: DHCPRelay: wiretype end group for non-group")
+			return fmt.Errorf("proto: DHCPProxySpec: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DHCPRelay: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DHCPProxySpec: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ServerIP", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2281,18 +2144,18 @@ func (m *DHCPRelay) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.TypeMeta == nil {
-				m.TypeMeta = &meta.TypeMeta{}
+			if m.ServerIP == nil {
+				m.ServerIP = &IPAddress{}
 			}
-			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ServerIP.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ObjMeta", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MTU", wireType)
 			}
-			var msglen int
+			m.MTU = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowDhcp
@@ -2302,28 +2165,14 @@ func (m *DHCPRelay) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				m.MTU |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.ObjMeta == nil {
-				m.ObjMeta = &meta.ObjMeta{}
-			}
-			if err := m.ObjMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GatewayIP", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2347,16 +2196,16 @@ func (m *DHCPRelay) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Spec == nil {
-				m.Spec = &DHCPRelaySpec{}
+			if m.GatewayIP == nil {
+				m.GatewayIP = &IPAddress{}
 			}
-			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.GatewayIP.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DNSServerIP", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2380,16 +2229,16 @@ func (m *DHCPRelay) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Status == nil {
-				m.Status = &DHCPRelayStatus{}
+			if m.DNSServerIP == nil {
+				m.DNSServerIP = &IPAddress{}
 			}
-			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.DNSServerIP.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Stats", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field NTPServerIP", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2413,68 +2262,18 @@ func (m *DHCPRelay) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Stats == nil {
-				m.Stats = &DHCPRelayStats{}
+			if m.NTPServerIP == nil {
+				m.NTPServerIP = &IPAddress{}
 			}
-			if err := m.Stats.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.NTPServerIP.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipDhcp(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *DHCPRelayRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowDhcp
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: DHCPRelayRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DHCPRelayRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
+		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BatchCtxt", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DomainName", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowDhcp
@@ -2484,111 +2283,26 @@ func (m *DHCPRelayRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
+				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthDhcp
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.BatchCtxt == nil {
-				m.BatchCtxt = &BatchCtxt{}
-			}
-			if err := m.BatchCtxt.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
+			m.DomainName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDhcp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Request = append(m.Request, &DHCPRelaySpec{})
-			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipDhcp(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *DHCPRelayResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowDhcp
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: DHCPRelayResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DHCPRelayResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
+		case 7:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field LeaseTimeout", wireType)
 			}
-			m.ApiStatus = 0
+			m.LeaseTimeout = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowDhcp
@@ -2598,42 +2312,11 @@ func (m *DHCPRelayResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				m.LeaseTimeout |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDhcp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Response = append(m.Response, &DHCPRelayStatus{})
-			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipDhcp(dAtA[iNdEx:])
@@ -2655,7 +2338,7 @@ func (m *DHCPRelayResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *DHCPRelayGetRequest) Unmarshal(dAtA []byte) error {
+func (m *DHCPProxyStatus) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2678,41 +2361,12 @@ func (m *DHCPRelayGetRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: DHCPRelayGetRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: DHCPProxyStatus: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DHCPRelayGetRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DHCPProxyStatus: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDhcp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Id = append(m.Id, make([]byte, postIndex-iNdEx))
-			copy(m.Id[len(m.Id)-1], dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipDhcp(dAtA[iNdEx:])
@@ -2734,7 +2388,7 @@ func (m *DHCPRelayGetRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *DHCPRelayGetResponse) Unmarshal(dAtA []byte) error {
+func (m *DHCPProxyStats) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2757,286 +2411,12 @@ func (m *DHCPRelayGetResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: DHCPRelayGetResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: DHCPProxyStats: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DHCPRelayGetResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DHCPProxyStats: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
-			}
-			m.ApiStatus = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDhcp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDhcp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Response = append(m.Response, &DHCPRelay{})
-			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipDhcp(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *DHCPRelayDeleteRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowDhcp
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: DHCPRelayDeleteRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DHCPRelayDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BatchCtxt", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDhcp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.BatchCtxt == nil {
-				m.BatchCtxt = &BatchCtxt{}
-			}
-			if err := m.BatchCtxt.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDhcp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Id = append(m.Id, make([]byte, postIndex-iNdEx))
-			copy(m.Id[len(m.Id)-1], dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipDhcp(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *DHCPRelayDeleteResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowDhcp
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: DHCPRelayDeleteResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DHCPRelayDeleteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType == 0 {
-				var v ApiStatus
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowDhcp
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= (ApiStatus(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				m.ApiStatus = append(m.ApiStatus, v)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowDhcp
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= (int(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthDhcp
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex > l {
-					return io.ErrUnexpectedEOF
-				}
-				for iNdEx < postIndex {
-					var v ApiStatus
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowDhcp
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						v |= (ApiStatus(b) & 0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					m.ApiStatus = append(m.ApiStatus, v)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipDhcp(dAtA[iNdEx:])
@@ -3120,7 +2500,7 @@ func (m *DHCPPolicySpec) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ServerIP", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field RelaySpec", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3144,35 +2524,15 @@ func (m *DHCPPolicySpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.ServerIP == nil {
-				m.ServerIP = &IPAddress{}
-			}
-			if err := m.ServerIP.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			v := &DHCPRelaySpec{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			m.RelayOrProxy = &DHCPPolicySpec_RelaySpec{v}
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MTU", wireType)
-			}
-			m.MTU = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDhcp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MTU |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GatewayIP", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ProxySpec", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3196,127 +2556,12 @@ func (m *DHCPPolicySpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.GatewayIP == nil {
-				m.GatewayIP = &IPAddress{}
-			}
-			if err := m.GatewayIP.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			v := &DHCPProxySpec{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			m.RelayOrProxy = &DHCPPolicySpec_ProxySpec{v}
 			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DNSServerIP", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDhcp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.DNSServerIP == nil {
-				m.DNSServerIP = &IPAddress{}
-			}
-			if err := m.DNSServerIP.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NTPServerIP", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDhcp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.NTPServerIP == nil {
-				m.NTPServerIP = &IPAddress{}
-			}
-			if err := m.NTPServerIP.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DomainName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDhcp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthDhcp
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.DomainName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 8:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LeaseTimeout", wireType)
-			}
-			m.LeaseTimeout = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDhcp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.LeaseTimeout |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipDhcp(dAtA[iNdEx:])
@@ -3367,6 +2612,70 @@ func (m *DHCPPolicyStatus) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: DHCPPolicyStatus: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RelayStatus", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDhcp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDhcp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &DHCPRelayStatus{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.RelayOrProxy = &DHCPPolicyStatus_RelayStatus{v}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProxyStatus", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDhcp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDhcp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &DHCPProxyStatus{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.RelayOrProxy = &DHCPPolicyStatus_ProxyStatus{v}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipDhcp(dAtA[iNdEx:])
@@ -3417,6 +2726,70 @@ func (m *DHCPPolicyStats) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: DHCPPolicyStats: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RelayStats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDhcp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDhcp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &DHCPRelayStats{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.RelayOrProxy = &DHCPPolicyStats_RelayStats{v}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProxyStats", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDhcp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDhcp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &DHCPProxyStats{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.RelayOrProxy = &DHCPPolicyStats_ProxyStats{v}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipDhcp(dAtA[iNdEx:])
@@ -4378,62 +3751,59 @@ var (
 func init() { proto.RegisterFile("dhcp.proto", fileDescriptorDhcp) }
 
 var fileDescriptorDhcp = []byte{
-	// 905 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0x41, 0x8f, 0xda, 0x46,
-	0x18, 0xad, 0xcd, 0xb2, 0xb0, 0x1f, 0x2c, 0x90, 0x59, 0x96, 0x38, 0x34, 0x05, 0x64, 0xa9, 0x15,
-	0x4a, 0xb7, 0x74, 0x4b, 0xaa, 0x1e, 0x12, 0xb5, 0xe9, 0x1a, 0xaa, 0x84, 0xaa, 0xa1, 0xd4, 0x90,
-	0xaa, 0x3d, 0x3a, 0x78, 0xba, 0xa1, 0x02, 0xec, 0xda, 0x43, 0x52, 0xfe, 0x61, 0xab, 0xaa, 0x52,
-	0xa4, 0xde, 0x51, 0xb5, 0xc7, 0x3d, 0xe6, 0xd0, 0x73, 0x65, 0xcf, 0x78, 0x3c, 0x36, 0x86, 0xae,
-	0xac, 0x4a, 0xb9, 0xac, 0xd8, 0x6f, 0xde, 0x7b, 0xf3, 0x7d, 0x6f, 0x3c, 0xcf, 0x06, 0x30, 0x5f,
-	0x4c, 0xed, 0x8e, 0xed, 0x58, 0xc4, 0x42, 0x19, 0xdb, 0x74, 0xeb, 0x70, 0x69, 0x5d, 0x5a, 0xb4,
-	0x50, 0x2f, 0x2f, 0x30, 0x31, 0x3e, 0xf6, 0xfe, 0xb0, 0x42, 0x81, 0xac, 0x6d, 0xec, 0xd2, 0x7f,
-	0xd4, 0x3f, 0x24, 0x38, 0xee, 0x3f, 0xe9, 0x8d, 0x74, 0x3c, 0x37, 0xd6, 0x63, 0x1b, 0x4f, 0x91,
-	0x0a, 0xf2, 0xc0, 0x54, 0xa4, 0x96, 0xd4, 0x2e, 0x6a, 0xe8, 0xcd, 0xa6, 0x59, 0xf2, 0xa8, 0x0f,
-	0x16, 0xc6, 0xd2, 0x34, 0x88, 0xe5, 0xac, 0x75, 0x79, 0x60, 0xa2, 0x36, 0x64, 0xbf, 0x1f, 0xf5,
-	0x06, 0xa6, 0x22, 0xef, 0x84, 0x51, 0x00, 0xfa, 0x12, 0xf2, 0x63, 0xec, 0xbc, 0xc4, 0xce, 0x60,
-	0xa4, 0x64, 0x5a, 0x52, 0xbb, 0xd0, 0xad, 0x74, 0xe8, 0xfe, 0x83, 0xd1, 0x85, 0x69, 0x3a, 0xd8,
-	0x75, 0x13, 0xe9, 0x9c, 0x85, 0xee, 0x41, 0xee, 0xe2, 0x12, 0x2f, 0xc9, 0x60, 0xa4, 0x1c, 0x24,
-	0x0b, 0xe8, 0x01, 0x40, 0xbd, 0x05, 0xe5, 0x70, 0x18, 0x62, 0x90, 0x95, 0xab, 0x56, 0xa0, 0x14,
-	0x29, 0xb9, 0xea, 0xef, 0x32, 0x1c, 0xf1, 0x12, 0x7a, 0x08, 0xf9, 0xc9, 0xda, 0xc6, 0x4f, 0x31,
-	0x31, 0xfc, 0xa1, 0x0b, 0xdd, 0x52, 0xc7, 0x37, 0x2b, 0xa8, 0x6a, 0xe5, 0xd7, 0x9b, 0xa6, 0x74,
-	0xbd, 0x69, 0xe6, 0xce, 0x66, 0xcb, 0xf9, 0x6c, 0x89, 0x75, 0x4e, 0x40, 0x8f, 0x20, 0xf7, 0xed,
-	0xf3, 0x9f, 0x7d, 0xae, 0xec, 0x73, 0x8f, 0x29, 0x97, 0x15, 0xb5, 0x1a, 0xa3, 0xfa, 0xd3, 0x9d,
-	0x59, 0x8b, 0x19, 0xc1, 0x0b, 0x9b, 0xac, 0xf5, 0x80, 0x85, 0x1e, 0xc0, 0x81, 0x67, 0x3a, 0xb3,
-	0x06, 0x75, 0x6c, 0xd3, 0xed, 0x44, 0x8e, 0x43, 0x43, 0x1e, 0xdd, 0xb5, 0xf1, 0x54, 0xa0, 0xfb,
-	0x1c, 0xa4, 0xc1, 0x21, 0x9d, 0x91, 0xf9, 0x52, 0x8d, 0xb1, 0xfd, 0x35, 0xad, 0x7a, 0xbd, 0x69,
-	0x56, 0x5c, 0xff, 0xb7, 0xa0, 0xc0, 0x98, 0xe8, 0x0b, 0xc8, 0xfa, 0xa6, 0x28, 0x59, 0x5f, 0xe2,
-	0x64, 0x5b, 0xc2, 0xd5, 0x4e, 0xae, 0x37, 0xcd, 0xb2, 0xa7, 0x20, 0x0a, 0x50, 0x9a, 0x6a, 0x43,
-	0x85, 0xa3, 0x75, 0xfc, 0xcb, 0x0a, 0xbb, 0x04, 0x75, 0xe0, 0x48, 0x33, 0xc8, 0xf4, 0x45, 0x8f,
-	0xfc, 0x4a, 0x98, 0xa5, 0xc1, 0x91, 0xf1, 0xba, 0x1e, 0x42, 0xd0, 0x19, 0xe4, 0x18, 0x55, 0x91,
-	0x5b, 0x99, 0x64, 0x1b, 0xf4, 0x00, 0xa2, 0xae, 0xe0, 0x96, 0xb0, 0xa3, 0x6b, 0x5b, 0x4b, 0x17,
-	0x7b, 0x5b, 0x5e, 0xd8, 0x33, 0xe6, 0x86, 0xb7, 0x65, 0x89, 0x6f, 0xc9, 0xeb, 0x7a, 0x08, 0x41,
-	0xe7, 0x90, 0x0f, 0xb8, 0x6c, 0xcf, 0x44, 0xf3, 0x74, 0x8e, 0x52, 0xdf, 0x87, 0x13, 0xbe, 0xf8,
-	0x18, 0x93, 0x60, 0xd6, 0x12, 0xbb, 0x2c, 0x99, 0x76, 0xd1, 0xbb, 0x18, 0xaa, 0x03, 0xd5, 0x28,
-	0x2c, 0x65, 0x83, 0xf7, 0xb6, 0x1a, 0x2c, 0x45, 0x1b, 0x14, 0x5a, 0xfb, 0x01, 0x6a, 0xbc, 0xdc,
-	0xc7, 0x73, 0x4c, 0x70, 0xda, 0x93, 0xa0, 0xd3, 0xc8, 0x7c, 0x9a, 0x01, 0xdc, 0xde, 0x52, 0x4e,
-	0x1e, 0x28, 0xf3, 0x1f, 0x03, 0xa9, 0xff, 0xc8, 0xf4, 0x1e, 0x8e, 0xac, 0xf9, 0x6c, 0x7a, 0xf3,
-	0xa0, 0x11, 0xe3, 0x43, 0x4e, 0x15, 0x1f, 0x15, 0xc8, 0x3c, 0x9d, 0x3c, 0xf3, 0x2f, 0xd8, 0xb1,
-	0xee, 0xfd, 0xf4, 0x5a, 0x7f, 0x6c, 0x10, 0xfc, 0xca, 0x58, 0xef, 0x89, 0x94, 0x10, 0x82, 0xba,
-	0x50, 0xe8, 0x0f, 0xc7, 0xbc, 0x8d, 0xec, 0x0e, 0x86, 0x08, 0xf2, 0x38, 0xc3, 0xc9, 0x88, 0x73,
-	0x0e, 0x77, 0x71, 0x04, 0x10, 0x6a, 0x00, 0xf4, 0xad, 0x85, 0x31, 0x5b, 0x0e, 0x8d, 0x05, 0x56,
-	0x72, 0x2d, 0xa9, 0x7d, 0xa4, 0x0b, 0x15, 0xf4, 0x29, 0x14, 0xbf, 0xc1, 0x86, 0x8b, 0x27, 0xb3,
-	0x05, 0xb6, 0x56, 0x44, 0xc9, 0x7b, 0x23, 0x69, 0x95, 0x37, 0x9b, 0x66, 0xd1, 0xc4, 0x3f, 0x19,
-	0xab, 0x39, 0xf9, 0xfc, 0xfe, 0x67, 0xe7, 0xe7, 0x7a, 0x04, 0xa5, 0x22, 0x7a, 0x43, 0x99, 0xef,
-	0xf4, 0x30, 0x58, 0x4c, 0x86, 0x35, 0x57, 0xfd, 0x53, 0x06, 0x08, 0x6b, 0x6f, 0x39, 0x15, 0x1f,
-	0x46, 0x52, 0x31, 0x0c, 0xa5, 0xf0, 0xe1, 0xd9, 0x13, 0x8b, 0xbd, 0x58, 0x2c, 0x9e, 0xc6, 0xe9,
-	0x37, 0xc9, 0xc5, 0x47, 0xd1, 0x5c, 0xac, 0x26, 0x68, 0xec, 0x0f, 0x46, 0x87, 0xc6, 0x14, 0x85,
-	0xa7, 0xbd, 0x8f, 0x1f, 0xc5, 0x93, 0x31, 0xc9, 0x8a, 0x30, 0x1a, 0x5f, 0x01, 0x12, 0xf7, 0x4c,
-	0x19, 0x3d, 0x9f, 0x6c, 0x45, 0x4f, 0xb2, 0x83, 0x42, 0x02, 0x7d, 0x40, 0x53, 0x8f, 0xae, 0xee,
-	0x49, 0x47, 0x02, 0xa7, 0x31, 0x5c, 0xca, 0x1e, 0x3f, 0xdc, 0xea, 0xb1, 0x1c, 0xeb, 0x51, 0xe8,
-	0xee, 0x47, 0x9a, 0x62, 0xb4, 0xfe, 0xff, 0x06, 0xe4, 0xd7, 0xa0, 0x6c, 0x4b, 0xa7, 0x4b, 0xc8,
-	0xee, 0x5f, 0x07, 0x90, 0xf3, 0xc4, 0xc6, 0x2f, 0xbd, 0x57, 0x7b, 0xf8, 0x1d, 0xd3, 0x73, 0xb0,
-	0x41, 0x30, 0x3a, 0x8d, 0xe5, 0x3f, 0x9d, 0xa0, 0x5e, 0x8b, 0x97, 0xd9, 0xd0, 0xef, 0x44, 0x34,
-	0x9e, 0xd9, 0x66, 0x2a, 0x8d, 0xaf, 0xa0, 0x28, 0xbe, 0xce, 0x90, 0x12, 0x45, 0x86, 0x47, 0x5d,
-	0xbf, 0x93, 0xb0, 0xc2, 0x65, 0x86, 0x42, 0x2b, 0xd4, 0x25, 0xf4, 0x6e, 0x14, 0x1f, 0x39, 0x96,
-	0xfa, 0xdd, 0xe4, 0x45, 0xa1, 0x2d, 0x21, 0xd3, 0x98, 0x3f, 0xb5, 0xf8, 0x03, 0xc0, 0xb4, 0x6e,
-	0x6f, 0xd5, 0x93, 0x65, 0x98, 0x45, 0x29, 0x64, 0x9e, 0xd0, 0x2f, 0x68, 0xfe, 0x54, 0xa3, 0x3b,
-	0x31, 0xac, 0x60, 0x53, 0x3d, 0x69, 0x89, 0x2b, 0x7d, 0x27, 0x36, 0xc4, 0x8c, 0xba, 0x1b, 0x63,
-	0x44, 0x9d, 0x7a, 0x6f, 0xc7, 0x6a, 0x20, 0xa9, 0x15, 0x7f, 0xbb, 0x6a, 0x48, 0xaf, 0xaf, 0x1a,
-	0xd2, 0xdf, 0x57, 0x0d, 0xe9, 0xf9, 0xa1, 0xff, 0xd1, 0x7f, 0xff, 0xdf, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0x54, 0x32, 0x6b, 0xed, 0x31, 0x0c, 0x00, 0x00,
+	// 852 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x56, 0xd1, 0x6e, 0x32, 0x45,
+	0x14, 0xee, 0x2e, 0x3f, 0xa5, 0x3d, 0x50, 0xa0, 0x53, 0xda, 0x22, 0x51, 0x20, 0x7b, 0x61, 0x88,
+	0x56, 0xac, 0x54, 0x8d, 0xb1, 0x31, 0xb5, 0x0b, 0xa6, 0x60, 0x6c, 0xc5, 0x85, 0x9a, 0x78, 0xd5,
+	0x6c, 0xd9, 0xb1, 0xc5, 0x00, 0xbb, 0xee, 0x0e, 0x6d, 0x79, 0x0c, 0xef, 0x7c, 0x03, 0xef, 0xbc,
+	0xf2, 0x21, 0xbc, 0x31, 0xa9, 0x2f, 0x40, 0x4c, 0x2f, 0x7b, 0xd9, 0x27, 0x30, 0xb3, 0x33, 0x3b,
+	0x3b, 0x2c, 0xd0, 0x3f, 0xe1, 0xa6, 0xd9, 0x39, 0xf3, 0x7d, 0x67, 0xbe, 0xef, 0x9c, 0xd3, 0xd3,
+	0x02, 0x58, 0xb7, 0x3d, 0xa7, 0xea, 0xb8, 0x36, 0xb1, 0x51, 0xcc, 0xb1, 0xbc, 0x02, 0xdc, 0xd8,
+	0x37, 0x36, 0x0b, 0x14, 0x32, 0x43, 0x4c, 0xcc, 0x8f, 0xe9, 0x0f, 0x1e, 0x48, 0x92, 0x89, 0x83,
+	0x3d, 0x76, 0xd0, 0xfe, 0x50, 0x60, 0xab, 0xd1, 0xac, 0xb7, 0x0d, 0x3c, 0x30, 0x27, 0x1d, 0x07,
+	0xf7, 0x50, 0x05, 0xe2, 0x3f, 0xb6, 0xeb, 0x2d, 0x2b, 0xaf, 0x94, 0x95, 0x4a, 0x4a, 0x47, 0x2f,
+	0xd3, 0x52, 0x9a, 0xb2, 0xbf, 0x1c, 0x9a, 0x23, 0xcb, 0x24, 0xb6, 0x3b, 0x31, 0x18, 0x00, 0x7d,
+	0x0d, 0x1b, 0x1d, 0xec, 0xde, 0x61, 0xb7, 0xd5, 0xce, 0xab, 0x65, 0xa5, 0x92, 0xac, 0x65, 0xab,
+	0x2c, 0x77, 0xab, 0x7d, 0x6a, 0x59, 0x2e, 0xf6, 0xbc, 0x85, 0x74, 0xc1, 0x42, 0x1f, 0x40, 0xe2,
+	0xf4, 0x06, 0x8f, 0x48, 0xab, 0x9d, 0x8f, 0x2d, 0x4e, 0x60, 0x04, 0x00, 0x6d, 0x1b, 0x32, 0xa1,
+	0x50, 0x62, 0x92, 0xb1, 0xa7, 0x65, 0x21, 0x3d, 0x13, 0xf2, 0xb4, 0x7f, 0x55, 0x66, 0xa7, 0xed,
+	0xda, 0x0f, 0xcc, 0x8e, 0x2c, 0x52, 0x59, 0x49, 0x64, 0x16, 0x62, 0xe7, 0xdd, 0x4b, 0xdf, 0xe1,
+	0x96, 0x41, 0x3f, 0x51, 0x15, 0x36, 0xcf, 0x4c, 0x82, 0xef, 0xcd, 0xc9, 0x2b, 0xc2, 0x43, 0x08,
+	0xaa, 0x41, 0xb2, 0x71, 0xd1, 0x11, 0x32, 0xde, 0x2c, 0x61, 0xc8, 0x20, 0xca, 0xb9, 0xe8, 0xb6,
+	0x05, 0x27, 0xbe, 0x8c, 0x23, 0x81, 0x50, 0x11, 0xa0, 0x61, 0x0f, 0xcd, 0xfe, 0xe8, 0xc2, 0x1c,
+	0xe2, 0xfc, 0x7a, 0x59, 0xa9, 0x6c, 0x1a, 0x52, 0x04, 0x7d, 0x0a, 0xa9, 0xef, 0xb0, 0xe9, 0xe1,
+	0x6e, 0x7f, 0x88, 0xed, 0x31, 0xc9, 0x27, 0xa8, 0x25, 0x3d, 0xfb, 0x32, 0x2d, 0xa5, 0x2c, 0xfc,
+	0xb3, 0x39, 0x1e, 0x90, 0xaf, 0x8e, 0x3e, 0x3f, 0x3c, 0x34, 0x66, 0x50, 0x41, 0xe1, 0x59, 0x49,
+	0x67, 0x0a, 0x2f, 0x42, 0x9e, 0xf6, 0xa7, 0xc2, 0x43, 0xf6, 0xa0, 0xdf, 0x63, 0x95, 0xd7, 0x40,
+	0x7d, 0x75, 0x8a, 0xd4, 0x96, 0x85, 0x6a, 0xb0, 0x29, 0x26, 0x8f, 0xcf, 0x10, 0xaa, 0x3a, 0x96,
+	0x57, 0x9d, 0x99, 0xc9, 0xe6, 0x9a, 0x11, 0xc2, 0x28, 0x47, 0xb4, 0x97, 0x57, 0x3f, 0xe4, 0x88,
+	0x1b, 0xca, 0x11, 0x07, 0x3d, 0x0b, 0x69, 0x97, 0x26, 0xb8, 0xb2, 0xdd, 0x2b, 0x87, 0x46, 0xb5,
+	0xdf, 0x15, 0xc8, 0x4a, 0x82, 0x7d, 0x5f, 0xe8, 0x0b, 0x48, 0x4a, 0xf3, 0xc5, 0xe7, 0x25, 0x17,
+	0x11, 0xe4, 0xdf, 0x35, 0xd7, 0x0c, 0x19, 0x4a, 0x99, 0x52, 0x81, 0xb8, 0x95, 0x5c, 0x44, 0x96,
+	0x60, 0x4a, 0xc7, 0x05, 0xd2, 0x7e, 0x53, 0x78, 0xc5, 0x85, 0x34, 0x0f, 0x7d, 0x06, 0x10, 0x8e,
+	0x39, 0x17, 0xb6, 0x33, 0x2f, 0x8c, 0x66, 0x97, 0x80, 0x94, 0x16, 0x36, 0x89, 0xab, 0xda, 0x99,
+	0x57, 0xe5, 0xd3, 0xc2, 0xd3, 0x02, 0x4d, 0xff, 0xa8, 0x00, 0xa1, 0x26, 0x74, 0x0c, 0x1b, 0xdd,
+	0x89, 0x83, 0xcf, 0x31, 0x31, 0xb9, 0x98, 0x74, 0xd5, 0x5f, 0x31, 0x41, 0x54, 0xcf, 0x3c, 0x4e,
+	0x4b, 0xca, 0xf3, 0xb4, 0x94, 0x38, 0xe8, 0x8f, 0x06, 0xfd, 0x11, 0x36, 0x04, 0x01, 0x9d, 0x40,
+	0xe2, 0xfb, 0xeb, 0x5f, 0x7c, 0x2e, 0x53, 0xb4, 0xc5, 0xb8, 0x3c, 0xa8, 0xef, 0x71, 0xaa, 0x3f,
+	0x30, 0x07, 0xf6, 0xb0, 0x4f, 0xf0, 0xd0, 0x21, 0x13, 0x23, 0x60, 0xa1, 0x63, 0x78, 0x23, 0x35,
+	0x5f, 0xf2, 0x23, 0x86, 0x4f, 0x47, 0x94, 0xef, 0x39, 0xb8, 0x27, 0xf1, 0x7d, 0x12, 0xaa, 0xc3,
+	0x3a, 0x6f, 0x12, 0xfb, 0x3d, 0xdc, 0x8d, 0xd2, 0x59, 0x5b, 0x72, 0xcf, 0xd3, 0x52, 0xd6, 0xf3,
+	0xbf, 0xa5, 0x14, 0x9c, 0x8a, 0x4e, 0x20, 0xce, 0x4a, 0x1a, 0x8f, 0x36, 0x3a, 0xec, 0x99, 0xbe,
+	0xf3, 0x3c, 0x2d, 0x65, 0x68, 0x0a, 0x39, 0x03, 0xe3, 0x69, 0x2e, 0x6c, 0x87, 0x70, 0x03, 0xff,
+	0x3a, 0xc6, 0x1e, 0xa1, 0x7b, 0x45, 0x37, 0x49, 0xef, 0xb6, 0x4e, 0x1e, 0x48, 0x64, 0x59, 0x89,
+	0xb8, 0x11, 0x42, 0xd0, 0x47, 0x90, 0xe0, 0xd4, 0xbc, 0x5a, 0x8e, 0x2d, 0x29, 0x85, 0x11, 0x60,
+	0xb4, 0x7b, 0x40, 0xf2, 0x9b, 0x9e, 0x63, 0x8f, 0x3c, 0x4c, 0x1f, 0x3d, 0x75, 0xfa, 0xd2, 0xc4,
+	0xa7, 0xc5, 0xa3, 0x22, 0x6e, 0x84, 0x10, 0xf4, 0x09, 0x6c, 0x04, 0x5c, 0xfe, 0xea, 0xe2, 0x0a,
+	0x1a, 0x02, 0xa6, 0xbd, 0x0f, 0xb9, 0xf0, 0xf6, 0x0c, 0x93, 0xc0, 0x6f, 0x9a, 0x6f, 0x88, 0x58,
+	0x25, 0x45, 0xb7, 0x81, 0x46, 0x60, 0x37, 0x82, 0x5b, 0x51, 0xe3, 0x87, 0x73, 0x1a, 0x33, 0x11,
+	0x8d, 0x92, 0xba, 0x9f, 0x60, 0x3f, 0x8c, 0x37, 0xf0, 0x00, 0x13, 0xbc, 0x6a, 0x43, 0x98, 0x21,
+	0x55, 0x18, 0xfa, 0x16, 0xf2, 0xf3, 0xa9, 0x17, 0x7b, 0x8a, 0xbd, 0xc5, 0x53, 0xed, 0x2f, 0x15,
+	0x12, 0x34, 0x59, 0xe7, 0xae, 0x87, 0xbe, 0x91, 0x77, 0x57, 0xdd, 0xc5, 0x26, 0xc1, 0x68, 0x2f,
+	0xea, 0x90, 0x79, 0x28, 0xec, 0xcf, 0xc5, 0xb9, 0xef, 0xb5, 0xd9, 0x34, 0x97, 0x8e, 0xb5, 0x62,
+	0x9a, 0x26, 0xff, 0x9b, 0x1b, 0xb4, 0x0d, 0xbd, 0x13, 0xc1, 0x86, 0x2d, 0x2f, 0x14, 0x16, 0x5d,
+	0x89, 0x4c, 0x3f, 0xc8, 0x82, 0x58, 0xbd, 0xd0, 0xbb, 0x11, 0xc6, 0x4c, 0x87, 0x0a, 0xef, 0x2d,
+	0xb9, 0x0d, 0x52, 0xea, 0xa9, 0xbf, 0x9f, 0x8a, 0xca, 0xe3, 0x53, 0x51, 0xf9, 0xef, 0xa9, 0xa8,
+	0x5c, 0xaf, 0xfb, 0xff, 0xf5, 0x1c, 0xfd, 0x1f, 0x00, 0x00, 0xff, 0xff, 0x81, 0x4b, 0x0a, 0x1f,
+	0x32, 0x09, 0x00, 0x00,
 }

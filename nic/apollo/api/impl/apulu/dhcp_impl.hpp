@@ -27,20 +27,20 @@ namespace impl {
 ///\ingroup PDS_DHCP
 /// @{
 
-///\brief DHCP relay implementation
-class dhcp_relay_impl : public impl_base {
+///\brief DHCP policy implementation
+class dhcp_policy_impl : public impl_base {
 public:
     /// \brief     factory method to allocate & initialize DHCP replay instance
-    /// \param[in] spec DHCP relay specification
-    /// \return    new instance of DHCP relay impl or NULL, in case of error
-    static dhcp_relay_impl *factory(pds_dhcp_relay_spec_t *spec);
+    /// \param[in] spec DHCP policy specification
+    /// \return    new instance of DHCP policy impl or NULL, in case of error
+    static dhcp_policy_impl *factory(pds_dhcp_policy_spec_t *spec);
 
     /// \brief     release all the s/w state associated with the given DHCP
-    ///            relay instance, if any, and free the memory
-    /// \param[in] impl DHCP relay instance to be freed
+    ///            policy instance, if any, and free the memory
+    /// \param[in] impl DHCP policy instance to be freed
     /// \NOTE      h/w entries should have been cleaned up (by calling
     ///            impl->cleanup_hw() before calling this
-    static void destroy(dhcp_relay_impl *impl);
+    static void destroy(dhcp_policy_impl *impl);
 
     /// \brief    clone this object by copying all the h/w resources
     ///           allocated for this object into new object and return the
@@ -52,22 +52,22 @@ public:
     ///           touching any of the databases or h/w etc.
     /// \param[in] impl impl instance to be freed
     /// \return   sdk_ret_ok or error code
-    static sdk_ret_t free(dhcp_relay_impl *impl);
+    static sdk_ret_t free(dhcp_policy_impl *impl);
 
-    /// \brief     instantiate a DHCP relay impl object based on current state
+    /// \brief     instantiate a DHCP policy impl object based on current state
     ///            (sw and/or hw) given its key
-    /// \param[in] key    DHCP relay entry's key
-    /// \param[in] relay  DHCP relay entry's API object
-    /// \return    new instance of DHCP relay implementation object or NULL
-    static dhcp_relay_impl *build(pds_obj_key_t *key, dhcp_relay *relay);
+    /// \param[in] key    DHCP policy entry's key
+    /// \param[in] policy  DHCP policy entry's API object
+    /// \return    new instance of DHCP policy implementation object or NULL
+    static dhcp_policy_impl *build(pds_obj_key_t *key, dhcp_policy *policy);
 
     /// \brief     free a stateless entry's temporary s/w only resources like
     ///            memory etc., for a stateless entry calling destroy() will
     ///            remove resources from h/w, which can't be done during
     ///            ADD/UPDATE etc. operations esp. when object is constructed
     ///            on the fly
-    /// \param[in] impl DHCP relay instance to be freed
-    static void soft_delete(dhcp_relay_impl *impl);
+    /// \param[in] impl DHCP policy instance to be freed
+    static void soft_delete(dhcp_policy_impl *impl);
 
     /// \brief     activate the epoch in the dataplane by programming stage 0
     ///            tables, if any
@@ -83,15 +83,15 @@ public:
 
     /// \brief      read h/w state corresponding to this object, if any
     /// \param[in]  api_obj  API object
-    /// \param[in]  key  pointer to DHCP relay object key
-    /// \param[out] info pointer to DHCP relay info
+    /// \param[in]  key  pointer to DHCP policy object key
+    /// \param[out] info pointer to DHCP policy info
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) override;
 
 private:
     /// \brief destructor
-    ~dhcp_relay_impl() {}
+    ~dhcp_policy_impl() {}
 };
 
 /// \@}

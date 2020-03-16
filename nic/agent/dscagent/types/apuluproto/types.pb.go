@@ -117,13 +117,9 @@
 		DHCPRelaySpec
 		DHCPRelayStatus
 		DHCPRelayStats
-		DHCPRelay
-		DHCPRelayRequest
-		DHCPRelayResponse
-		DHCPRelayGetRequest
-		DHCPRelayGetResponse
-		DHCPRelayDeleteRequest
-		DHCPRelayDeleteResponse
+		DHCPProxySpec
+		DHCPProxyStatus
+		DHCPProxyStats
 		DHCPPolicySpec
 		DHCPPolicyStatus
 		DHCPPolicyStats

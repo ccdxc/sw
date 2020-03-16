@@ -22,138 +22,6 @@ namespace api {
 // forward declaration
 class dhcp_state;
 
-/// \defgroup PDS_DHCP_RELAY - DHCP relay functionality
-/// \ingroup PDS_DHCP
-/// @{
-
-/// \brief    DHCP relay entry
-class dhcp_relay : public api_stooge {
-public:
-    /// \brief          factory method to allocate & initialize DHCP relay entry
-    /// \param[in]      spec  DHCP relay entry information
-    /// \return         new instance of DHCP relay entry or NULL
-    static dhcp_relay *factory(pds_dhcp_relay_spec_t *spec);
-
-    /// \brief          release all the s/w state associate with the given
-    ///                 DHCP relay entry, if any, and free the memory
-    /// \param[in]      relay DHCP relay entry to be freed
-    /// \NOTE: h/w entries should have been cleaned up (by calling
-    ///        impl->cleanup_hw() before calling this
-    static void destroy(dhcp_relay *relay);
-
-    /// \brief    clone this object and return cloned object
-    /// \param[in]    api_ctxt API context carrying object related configuration
-    /// \return       new object instance of current object
-    virtual api_base *clone(api_ctxt_t *api_ctxt) override;
-
-    /// \brief    free all the memory associated with this object without
-    ///           touching any of the databases or h/w etc.
-    /// \param[in] relay    DHCP relay entry to be freed
-    /// \return   sdk_ret_ok or error code
-    static sdk_ret_t free(dhcp_relay *relay);
-
-    /// \brief    build object given its key from the (sw and/or hw state we
-    ///           have) and return an instance of the object (this is useful for
-    ///           stateless objects to be operated on by framework during DELETE
-    ///           or UPDATE operations)
-    /// \param[in] key    key of object instance of interest
-    /// \return    DHCP relay object instance corresponding to the key
-    static dhcp_relay *build(pds_obj_key_t *key);
-
-    /// \brief    free a stateless entry's temporary s/w only resources like
-    ///           memory etc., for a stateless entry calling destroy() will
-    ///           remove resources from h/w, which can't be done during ADD/UPD
-    ///           etc. operations esp. when object is constructed on the fly
-    /// \param[in] relay    DHCP relay instance to be freed
-    static void soft_delete(dhcp_relay *relay);
-
-    /// \brief          initialize DHCP relay entry entry with the given config
-    /// \param[in]      api_ctxt API context carrying the configuration
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
-
-    /// \brief populate the IPC msg with object specific information
-    ///        so it can be sent to other components
-    /// \param[in] msg         IPC message to be filled in
-    /// \param[in] obj_ctxt    transient state associated with this API
-    /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t populate_msg(pds_msg_t *msg,
-                                   api_obj_ctxt_t *obj_ctxt) override;
-
-    /// \brief     activate the epoch in the dataplane by programming
-    ///            stage 0 tables, if any
-    /// \param[in] epoch    epoch being activated
-    /// \param[in] api_op   api operation
-    /// \param[in] orig_obj old/original version of the unmodified object
-    /// \param[in] obj_ctxt transient state associated with this API
-    /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
-                                      api_base *orig_obj,
-                                      api_obj_ctxt_t *obj_ctxt) override;
-
-    /// \brief          read config
-    /// \param[out]     info pointer to the info object
-    /// \return         SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_dhcp_relay_info_t *info);
-
-    /// \brief          add given DHCP relay entry to the database
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t add_to_db(void) override;
-
-    /// \brief          delete given DHCP relay entry from the database
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t del_from_db(void) override;
-
-    /// \brief          this method is called on new object that needs to
-    ///                 replace the old version of the object in the DBs
-    /// \param[in]      orig_obj    old version of the object being swapped out
-    /// \param[in]      obj_ctxt    transient state associated with this API
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t update_db(api_base *orig_obj,
-                                api_obj_ctxt_t *obj_ctxt) override;
-
-    /// \brief     initiate delay deletion of this object
-    /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t delay_delete(void) override;
-
-    /// \brief    return stringified key of the object (for debugging)
-    virtual string key2str(void) const override {
-        return "dhcp-relay-" + std::string(key_.str());
-    }
-
-    /// \brief        helper function to get key given DHCP relay entry
-    /// \param[in]    entry    pointer to DHCP relay entry instance
-    /// \return       pointer to the DHCP relay entry instance's key
-    static void *dhcp_relay_key_func_get(void *entry) {
-        dhcp_relay *relay = (dhcp_relay *)entry;
-        return (void *)&(relay->key_);
-    }
-
-private:
-    /// \brief constructor
-    dhcp_relay();
-
-    /// \brief destructor
-    ~dhcp_relay();
-
-    /// \brief    fill the DHCP relay entry sw spec
-    /// \param[out] spec specification
-    void fill_spec_(pds_dhcp_relay_spec_t *spec);
-
-private:
-    /// DHCP relay entry key
-    pds_obj_key_t key_;
-
-    /// hash table context
-    ht_ctxt_t ht_ctxt_;
-
-    ///< impl object instance
-    impl_base     *impl_;
-
-    /// dhcp_state is friend of dhcp_relay
-    friend class dhcp_state;
-} __PACK__;
-
 /// \defgroup PDS_DHCP_POLICY - DHCP policy functionality
 /// \ingroup PDS_DHCP
 /// @{
@@ -212,6 +80,17 @@ public:
     virtual sdk_ret_t populate_msg(pds_msg_t *msg,
                                    api_obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief     activate the epoch in the dataplane by programming
+    ///            stage 0 tables, if any
+    /// \param[in] epoch    epoch being activated
+    /// \param[in] api_op   api operation
+    /// \param[in] orig_obj old/original version of the unmodified object
+    /// \param[in] obj_ctxt transient state associated with this API
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
+                                      api_base *orig_obj,
+                                      api_obj_ctxt_t *obj_ctxt) override;
+
     /// \brief          read config
     /// \param[out]     info pointer to the info object
     /// \return         SDK_RET_OK on success, failure status code on error
@@ -239,7 +118,7 @@ public:
 
     /// \brief    return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "dhcp-relay-" + std::string(key_.str());
+        return "dhcp-policy-" + std::string(key_.str());
     }
 
     /// \brief        helper function to get key given DHCP policy entry
@@ -268,7 +147,10 @@ private:
     /// hash table context
     ht_ctxt_t ht_ctxt_;
 
-    /// dhcp_state is friend of dhcp_relay
+    ///< impl object instance
+    impl_base     *impl_;
+
+    /// dhcp_state is friend of dhcp_policy
     friend class dhcp_state;
 } __PACK__;
 
@@ -276,7 +158,6 @@ private:
 
 }    // namespace api
 
-using api::dhcp_relay;
 using api::dhcp_policy;
 
 #endif    // __API_DHCP_HPP__

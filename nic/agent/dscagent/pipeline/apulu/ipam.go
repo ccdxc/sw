@@ -41,7 +41,7 @@ func createDHCPRelayHandler(infraAPI types.InfraAPI, client halapi.DHCPSvcClient
 		return errors.Wrapf(types.ErrBadRequest, "DHCPRelay: %s | Err: %v", policy.GetKey(), err)
 	}
 
-	resp, err := client.DHCPRelayCreate(context.Background(), dhcpRelayReq)
+	resp, err := client.DHCPPolicyCreate(context.Background(), dhcpRelayReq)
 	if resp != nil {
 		if err := utils.HandleErr(types.Create, resp.ApiStatus, err, fmt.Sprintf("Create Failed for %s | %s", policy.GetKind(), policy.GetKey())); err != nil {
 			return err
@@ -64,7 +64,7 @@ func updateDHCPRelayHandler(infraAPI types.InfraAPI, client halapi.DHCPSvcClient
 		return errors.Wrapf(types.ErrBadRequest, "DHCPRelay: %s | Err: %v", policy.GetKey(), err)
 	}
 
-	resp, err := client.DHCPRelayUpdate(context.Background(), dhcpRelayReq)
+	resp, err := client.DHCPPolicyUpdate(context.Background(), dhcpRelayReq)
 	if resp != nil {
 		if err := utils.HandleErr(types.Update, resp.ApiStatus, err, fmt.Sprintf("Update Failed for %s | %s", policy.GetKind(), policy.GetKey())); err != nil {
 			return err
@@ -86,11 +86,11 @@ func deleteDHCPRelayHandler(infraAPI types.InfraAPI, client halapi.DHCPSvcClient
 		return errors.Wrapf(err, "parse UUID")
 	}
 
-	dhcpRelayDelReq := &halapi.DHCPRelayDeleteRequest{
+	dhcpRelayDelReq := &halapi.DHCPPolicyDeleteRequest{
 		Id: [][]byte{uid.Bytes()},
 	}
 
-	resp, err := client.DHCPRelayDelete(context.Background(), dhcpRelayDelReq)
+	resp, err := client.DHCPPolicyDelete(context.Background(), dhcpRelayDelReq)
 	if resp != nil {
 		if err := utils.HandleErr(types.Delete, resp.ApiStatus[0], err, fmt.Sprintf("DHCPRelay: %s", policy.GetKey())); err != nil {
 			return err
@@ -104,7 +104,7 @@ func deleteDHCPRelayHandler(infraAPI types.InfraAPI, client halapi.DHCPSvcClient
 	return nil
 }
 
-func convertIPAMPolicyToDHCPRelay(infraAPI types.InfraAPI, policy netproto.IPAMPolicy) (*halapi.DHCPRelayRequest, error) {
+func convertIPAMPolicyToDHCPRelay(infraAPI types.InfraAPI, policy netproto.IPAMPolicy) (*halapi.DHCPPolicyRequest, error) {
 	uid, err := uuid.FromString(policy.UUID)
 	if err != nil {
 		log.Errorf("DHCPRelay: %s | could not parse UUID | Err: %v", policy.GetKey(), err)
@@ -123,22 +123,26 @@ func convertIPAMPolicyToDHCPRelay(infraAPI types.InfraAPI, policy netproto.IPAMP
 		return nil, errors.Wrapf(err, "parse vrf UUID")
 	}
 
-	ret := &halapi.DHCPRelayRequest{
+	ret := &halapi.DHCPPolicyRequest{
 		BatchCtxt: nil,
-		Request:   []*halapi.DHCPRelaySpec{},
+		Request:   []*halapi.DHCPPolicySpec{},
 	}
 
 	for _, srv := range policy.Spec.DHCPRelay.Servers {
 		// TODO: cleanup this endianness mess !!
 		ip := net.ParseIP(srv.IPAddress).To4()
 		pdsIp := (((uint32(ip[0])*256)+uint32(ip[1]))*256+uint32(ip[2]))*256 + uint32(ip[3])
-		dhcpRelay := &halapi.DHCPRelaySpec{
+		dhcpRelay := &halapi.DHCPPolicySpec{
 			Id: uid.Bytes(),
-			ServerIP: &halapi.IPAddress{
-				Af:     halapi.IPAF_IP_AF_INET,
-				V4OrV6: &halapi.IPAddress_V4Addr{V4Addr: pdsIp},
+			RelayOrProxy: &halapi.DHCPPolicySpec_RelaySpec{
+				RelaySpec: &halapi.DHCPRelaySpec{
+					VPCId: vrfuid.Bytes(),
+					ServerIP: &halapi.IPAddress{
+						Af:     halapi.IPAF_IP_AF_INET,
+						V4OrV6: &halapi.IPAddress_V4Addr{V4Addr: pdsIp},
+					},
+				},
 			},
-			VPCId: vrfuid.Bytes(),
 		}
 		ret.Request = append(ret.Request, dhcpRelay)
 	}

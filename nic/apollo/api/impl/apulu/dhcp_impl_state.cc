@@ -20,14 +20,14 @@ namespace impl {
 /// \ingroup PDS_DHCP
 /// \@{
 
-dhcp_relay_impl *
-dhcp_impl_state::alloc_relay(void) {
-    return (dhcp_relay_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_DHCP_IMPL,
-                                         sizeof(dhcp_relay_impl));
+dhcp_policy_impl *
+dhcp_impl_state::alloc(void) {
+    return (dhcp_policy_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_DHCP_IMPL,
+                                         sizeof(dhcp_policy_impl));
 }
 
 void
-dhcp_impl_state::free(dhcp_relay_impl *impl) {
+dhcp_impl_state::free(dhcp_policy_impl *impl) {
     SDK_FREE(SDK_MEM_ALLOC_PDS_DHCP_IMPL, impl);
 }
 /// \@}

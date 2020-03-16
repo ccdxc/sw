@@ -12,12 +12,6 @@ using grpc::Status;
 using grpc::ServerContext;
 
 using pds::DHCPSvc;
-using pds::DHCPRelayRequest;
-using pds::DHCPRelayResponse;
-using pds::DHCPRelayDeleteRequest;
-using pds::DHCPRelayDeleteResponse;
-using pds::DHCPRelayGetRequest;
-using pds::DHCPRelayGetResponse;
 using pds::DHCPPolicyRequest;
 using pds::DHCPPolicyResponse;
 using pds::DHCPPolicyDeleteRequest;
@@ -27,18 +21,6 @@ using pds::DHCPPolicyGetResponse;
 
 class DHCPSvcImpl final : public DHCPSvc::Service {
 public:
-    Status DHCPRelayCreate(ServerContext *context,
-                           const pds::DHCPRelayRequest *req,
-                           pds::DHCPRelayResponse *rsp) override;
-    Status DHCPRelayUpdate(ServerContext *context,
-                           const pds::DHCPRelayRequest *req,
-                           pds::DHCPRelayResponse *rsp) override;
-    Status DHCPRelayGet(ServerContext *context,
-                        const pds::DHCPRelayGetRequest *req,
-                        pds::DHCPRelayGetResponse *rsp) override;
-    Status DHCPRelayDelete(ServerContext *context,
-                           const pds::DHCPRelayDeleteRequest *proto_req,
-                           pds::DHCPRelayDeleteResponse *proto_rsp) override;
     Status DHCPPolicyCreate(ServerContext *context,
                             const pds::DHCPPolicyRequest *req,
                             pds::DHCPPolicyResponse *rsp) override;

@@ -49,8 +49,6 @@ typedef enum pds_msg_id_s {
     PDS_CFG_MSG_ID_NAT_PORT_BLOCK_GET_ALL,
     /// DHCP (suppresion) policy configuration
     PDS_CFG_MSG_ID_DHCP_POLICY,
-    /// DHCP relay configuration
-    PDS_CFG_MSG_ID_DHCP_RELAY,
     /// security profile configuration
     PDS_CFG_MSG_ID_SECURITY_PROFILE,
 

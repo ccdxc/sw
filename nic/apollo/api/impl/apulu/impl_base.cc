@@ -114,8 +114,8 @@ impl_base::factory(impl_obj_id_t obj_id, void *spec) {
     case IMPL_OBJ_ID_POLICER:
         return policer_impl::factory((pds_policer_spec_t *)spec);
 
-    case IMPL_OBJ_ID_DHCP_RELAY:
-        return dhcp_relay_impl::factory((pds_dhcp_relay_spec_t *)spec);
+    case IMPL_OBJ_ID_DHCP_POLICY:
+        return dhcp_policy_impl::factory((pds_dhcp_policy_spec_t *)spec);
 
     default:
         break;
@@ -168,8 +168,8 @@ impl_base::free(impl_obj_id_t obj_id, impl_base *impl) {
     case IMPL_OBJ_ID_POLICER:
         return policer_impl::free((policer_impl *)impl);
 
-    case IMPL_OBJ_ID_DHCP_RELAY:
-        return dhcp_relay_impl::free((dhcp_relay_impl *)impl);
+    case IMPL_OBJ_ID_DHCP_POLICY:
+        return dhcp_policy_impl::free((dhcp_policy_impl *)impl);
 
     default:
         break;
@@ -188,9 +188,9 @@ impl_base::build(impl_obj_id_t obj_id, void *key, api_base *api_obj) {
         return svc_mapping_impl::build((pds_svc_mapping_key_t *)key,
                                        (svc_mapping *)api_obj);
 
-    case IMPL_OBJ_ID_DHCP_RELAY:
-        return dhcp_relay_impl::build((pds_obj_key_t *)key,
-                                      (dhcp_relay *)api_obj);
+    case IMPL_OBJ_ID_DHCP_POLICY:
+        return dhcp_policy_impl::build((pds_obj_key_t *)key,
+                                      (dhcp_policy *)api_obj);
     default:
         break;
     }
@@ -208,8 +208,8 @@ impl_base::soft_delete(impl_obj_id_t obj_id, impl_base *impl) {
         svc_mapping_impl::soft_delete((svc_mapping_impl *)impl);
         break;
 
-    case IMPL_OBJ_ID_DHCP_RELAY:
-        dhcp_relay_impl::soft_delete((dhcp_relay_impl *)impl);
+    case IMPL_OBJ_ID_DHCP_POLICY:
+        dhcp_policy_impl::soft_delete((dhcp_policy_impl *)impl);
         break;
 
     default:
@@ -263,8 +263,8 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
     case IMPL_OBJ_ID_POLICER:
         return policer_impl::destroy((policer_impl *)impl);
 
-    case IMPL_OBJ_ID_DHCP_RELAY:
-        return dhcp_relay_impl::destroy((dhcp_relay_impl *)impl);
+    case IMPL_OBJ_ID_DHCP_POLICY:
+        return dhcp_policy_impl::destroy((dhcp_policy_impl *)impl);
 
     default:
         break;

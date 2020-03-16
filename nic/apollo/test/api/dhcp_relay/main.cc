@@ -54,9 +54,9 @@ protected:
 TEST_F(dhcp_relay_test, dhcp_relay_workflow_b1) {
     if (!apulu()) return;
 
-    dhcp_relay_feeder feeder;
+    dhcp_policy_feeder feeder;
     feeder.init(int2pdsobjkey(1), agent_ip1, server_ip1, int2pdsobjkey(1));
-    workflow_b1<dhcp_relay_feeder>(feeder);
+    workflow_b1<dhcp_policy_feeder>(feeder);
 }
 
 /// \brief Device WF_B2
@@ -64,54 +64,54 @@ TEST_F(dhcp_relay_test, dhcp_relay_workflow_b1) {
 TEST_F(dhcp_relay_test, dhcp_relay_workflow_b2) {
     if (!apulu()) return;
 
-    dhcp_relay_feeder feeder1, feeder1A;
+    dhcp_policy_feeder feeder1, feeder1A;
     feeder1.init(int2pdsobjkey(1), agent_ip1, server_ip1, int2pdsobjkey(1));
     feeder1A.init(int2pdsobjkey(1), agent_ip2, server_ip2, int2pdsobjkey(1));
-    workflow_b2<dhcp_relay_feeder>(feeder1, feeder1A);
+    workflow_b2<dhcp_policy_feeder>(feeder1, feeder1A);
 }
 
 /// \brief Device WF_1
 /// \ref WF_1
 TEST_F(dhcp_relay_test, dhcp_relay_workflow_1) {
-    dhcp_relay_feeder feeder;
+    dhcp_policy_feeder feeder;
     feeder.init(int2pdsobjkey(1), agent_ip1, server_ip1, int2pdsobjkey(1));
-    workflow_1<dhcp_relay_feeder>(feeder);
+    workflow_1<dhcp_policy_feeder>(feeder);
 }
 
 /// \brief Device WF_2
 /// \ref WF_2
 TEST_F(dhcp_relay_test, dhcp_relay_workflow_2) {
-    dhcp_relay_feeder feeder;
+    dhcp_policy_feeder feeder;
     feeder.init(int2pdsobjkey(1), agent_ip1, server_ip1, int2pdsobjkey(1));
-    workflow_2<dhcp_relay_feeder>(feeder);
+    workflow_2<dhcp_policy_feeder>(feeder);
 }
 
 /// \brief Device WF_4
 /// \ref WF_4
 TEST_F(dhcp_relay_test, dhcp_relay_workflow_4) {
-    dhcp_relay_feeder feeder;
+    dhcp_policy_feeder feeder;
     feeder.init(int2pdsobjkey(1), agent_ip1, server_ip1, int2pdsobjkey(1));
-    workflow_4<dhcp_relay_feeder>(feeder);
+    workflow_4<dhcp_policy_feeder>(feeder);
 }
 
 /// \brief Device WF_6
 /// \ref WF_6
 TEST_F(dhcp_relay_test, dhcp_relay_workflow_6) {
-    dhcp_relay_feeder feeder1, feeder1A, feeder1B;
+    dhcp_policy_feeder feeder1, feeder1A, feeder1B;
     feeder1.init(int2pdsobjkey(1), agent_ip1, server_ip1, int2pdsobjkey(1));
     feeder1A.init(int2pdsobjkey(1), agent_ip1, server_ip2, int2pdsobjkey(1));
     feeder1B.init(int2pdsobjkey(1), agent_ip1, server_ip3, int2pdsobjkey(1));
-    workflow_6<dhcp_relay_feeder>(feeder1, feeder1A, feeder1B);
+    workflow_6<dhcp_policy_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief Device WF_7
 /// \ref WF_7
 TEST_F(dhcp_relay_test, dhcp_relay_workflow_7) {
-    dhcp_relay_feeder feeder1, feeder1A, feeder1B;
+    dhcp_policy_feeder feeder1, feeder1A, feeder1B;
     feeder1.init(int2pdsobjkey(1), agent_ip1, server_ip1, int2pdsobjkey(1));
     feeder1A.init(int2pdsobjkey(1), agent_ip1, server_ip2, int2pdsobjkey(1));
     feeder1B.init(int2pdsobjkey(1), agent_ip1, server_ip3, int2pdsobjkey(1));
-    workflow_7<dhcp_relay_feeder>(feeder1, feeder1A, feeder1B);
+    workflow_7<dhcp_policy_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief Device WF_8
@@ -119,11 +119,11 @@ TEST_F(dhcp_relay_test, dhcp_relay_workflow_7) {
 TEST_F(dhcp_relay_test, dhcp_relay_workflow_8) {
     if (!apulu()) return;
 
-    dhcp_relay_feeder feeder1, feeder1A, feeder1B;
+    dhcp_policy_feeder feeder1, feeder1A, feeder1B;
     feeder1.init(int2pdsobjkey(1), agent_ip1, server_ip1, int2pdsobjkey(1));
     feeder1A.init(int2pdsobjkey(1), agent_ip1, server_ip2, int2pdsobjkey(1));
     feeder1B.init(int2pdsobjkey(1), agent_ip1, server_ip3, int2pdsobjkey(1));
-    workflow_8<dhcp_relay_feeder>(feeder1, feeder1A, feeder1B);
+    workflow_8<dhcp_policy_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief Device WF_9
@@ -131,10 +131,10 @@ TEST_F(dhcp_relay_test, dhcp_relay_workflow_8) {
 TEST_F(dhcp_relay_test, dhcp_relay_workflow_9) {
     if (!apulu()) return;
 
-    dhcp_relay_feeder feeder1, feeder1A;
+    dhcp_policy_feeder feeder1, feeder1A;
     feeder1.init(int2pdsobjkey(1), agent_ip1, server_ip1, int2pdsobjkey(1));
     feeder1A.init(int2pdsobjkey(1), agent_ip1, server_ip2, int2pdsobjkey(1));
-    workflow_9<dhcp_relay_feeder>(feeder1, feeder1A);
+    workflow_9<dhcp_policy_feeder>(feeder1, feeder1A);
 }
 
 /// \brief Device WF_N_1
@@ -142,26 +142,26 @@ TEST_F(dhcp_relay_test, dhcp_relay_workflow_9) {
 TEST_F(dhcp_relay_test, dhcp_relay_workflow_neg_1) {
     if (!apulu()) return;
 
-    dhcp_relay_feeder feeder;
+    dhcp_policy_feeder feeder;
     feeder.init(int2pdsobjkey(1), agent_ip1, server_ip1, int2pdsobjkey(1));
-    workflow_neg_1<dhcp_relay_feeder>(feeder);
+    workflow_neg_1<dhcp_policy_feeder>(feeder);
 }
 
 /// \brief Device WF_N_3
 /// \ref WF_N_3
 TEST_F(dhcp_relay_test, dhcp_relay_workflow_neg_3) {
-    dhcp_relay_feeder feeder;
+    dhcp_policy_feeder feeder;
     feeder.init(int2pdsobjkey(1), agent_ip1, server_ip1, int2pdsobjkey(1));
-    workflow_neg_3<dhcp_relay_feeder>(feeder);
+    workflow_neg_3<dhcp_policy_feeder>(feeder);
 }
 
 /// \brief Device WF_N_5
 /// \ref WF_N_5
 TEST_F(dhcp_relay_test, dhcp_relay_workflow_neg_5) {
-    dhcp_relay_feeder feeder1, feeder1A;
+    dhcp_policy_feeder feeder1, feeder1A;
     feeder1.init(int2pdsobjkey(1), agent_ip1, server_ip1, int2pdsobjkey(1));
     feeder1A.init(int2pdsobjkey(1), agent_ip1, server_ip2, int2pdsobjkey(1));
-    workflow_neg_5<dhcp_relay_feeder>(feeder1, feeder1A);
+    workflow_neg_5<dhcp_policy_feeder>(feeder1, feeder1A);
 }
 
 /// @}

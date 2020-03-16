@@ -19,195 +19,12 @@
 
 namespace api {
 
-// DHCP relay API implementation
-dhcp_relay::dhcp_relay() {
+dhcp_policy::dhcp_policy() {
     impl_ = NULL;
     ht_ctxt_.reset();
 }
 
-dhcp_relay::~dhcp_relay() {
-}
-
-dhcp_relay *
-dhcp_relay::factory(pds_dhcp_relay_spec_t *spec) {
-    dhcp_relay *relay;
-
-    // create DHCP relay entry with defaults, if any
-    relay = dhcp_db()->alloc_relay();
-    if (relay) {
-        new (relay) dhcp_relay();
-        relay->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_DHCP_RELAY, spec);
-        if (relay->impl_ == NULL) {
-            dhcp_relay::destroy(relay);
-            return NULL;
-        }
-    }
-    return relay;
-}
-
-void
-dhcp_relay::destroy(dhcp_relay *relay) {
-    if (relay->impl_) {
-        impl_base::destroy(impl::IMPL_OBJ_ID_DHCP_RELAY, relay->impl_);
-    }
-    relay->~dhcp_relay();
-    dhcp_db()->free(relay);
-}
-
-api_base *
-dhcp_relay::clone(api_ctxt_t *api_ctxt) {
-    dhcp_relay *cloned_relay;
-
-    cloned_relay = dhcp_db()->alloc_relay();
-    if (cloned_relay) {
-         new (cloned_relay) dhcp_relay();
-         if (cloned_relay->init_config(api_ctxt) != SDK_RET_OK) {
-             goto error;
-         }
-         cloned_relay->impl_ = impl_->clone();
-         if (unlikely(cloned_relay->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone DHCP relay %s impl", key_.str());
-            goto error;
-         }
-    }
-    return cloned_relay;
-
-error:
-
-    cloned_relay->~dhcp_relay();
-    dhcp_db()->free(cloned_relay);
-    return NULL;
-}
-
-sdk_ret_t
-dhcp_relay::free(dhcp_relay *relay) {
-    if (relay->impl_) {
-        impl_base::free(impl::IMPL_OBJ_ID_DHCP_RELAY, relay->impl_);
-    }
-    relay->~dhcp_relay();
-    dhcp_db()->free(relay);
-    return SDK_RET_OK;
-}
-
-dhcp_relay *
-dhcp_relay::build(pds_obj_key_t *key) {
-    dhcp_relay *relay;
-
-    relay = dhcp_db()->alloc_relay();
-    if (relay) {
-        new (relay) dhcp_relay();
-        memcpy(&relay->key_, key, sizeof(*key));
-        relay->impl_ = impl_base::build(impl::IMPL_OBJ_ID_DHCP_RELAY,
-                                        key, relay);
-        if (relay->impl_ == NULL) {
-            dhcp_relay::destroy(relay);
-            return NULL;
-        }
-    }
-    return relay;
-}
-
-void
-dhcp_relay::soft_delete(dhcp_relay *relay) {
-    if (relay->impl_) {
-        impl_base::soft_delete(impl::IMPL_OBJ_ID_DHCP_RELAY, relay->impl_);
-    }
-    relay->del_from_db();
-    relay->~dhcp_relay();
-    dhcp_db()->free(relay);
-}
-
-sdk_ret_t
-dhcp_relay::init_config(api_ctxt_t *api_ctxt) {
-    ip_addr_t mytep_ip;
-    device_entry *device;
-    pds_dhcp_relay_spec_t *spec;
-
-    spec = &api_ctxt->api_params->dhcp_relay_spec;
-    PDS_TRACE_DEBUG("DHCP server IP %s", ipaddr2str(&spec->server_ip));
-    if (spec->server_ip.af != IP_AF_IPV4) {
-        PDS_TRACE_ERR("Invalid DHCP relay server IP, only IPv4 is supported");
-        return SDK_RET_INVALID_ARG;
-    }
-    if (spec->agent_ip.af == IP_AF_NIL) {
-        // not (local) DHCP relay agent IP provided, use mytep IP
-        device = device_db()->find();
-        if (likely(device)) {
-            mytep_ip = device->ip_addr();
-            if (mytep_ip.af == IP_AF_NIL) {
-                PDS_TRACE_ERR("Invalid DHCP relay config rejected, relay agent "
-                              "IP & device TEP IP are not configured");
-                return SDK_RET_INVALID_ARG;
-            }
-            memcpy(&spec->agent_ip, &mytep_ip, sizeof(ip_addr_t));
-        } else {
-            PDS_TRACE_ERR("Invalid DHCP relay config rejected, relay agent "
-                          "IP and device object are not configured");
-            return SDK_RET_INVALID_ARG;
-        }
-    }
-    key_ = api_ctxt->api_params->dhcp_relay_spec.key;
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-dhcp_relay::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
-    msg->id = PDS_CFG_MSG_ID_DHCP_RELAY;
-    msg->cfg_msg.op = obj_ctxt->api_op;
-    msg->cfg_msg.obj_id = OBJ_ID_DHCP_RELAY;
-    if (obj_ctxt->api_op == API_OP_DELETE) {
-        msg->cfg_msg.dhcp_relay.key = obj_ctxt->api_params->dhcp_relay_key;
-    } else {
-        msg->cfg_msg.dhcp_relay.spec = obj_ctxt->api_params->dhcp_relay_spec;
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-dhcp_relay::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                            api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
-}
-
-void
-dhcp_relay::fill_spec_(pds_dhcp_relay_spec_t *spec) {
-}
-
-sdk_ret_t
-dhcp_relay::read(pds_dhcp_relay_info_t *info) {
-    return SDK_RET_INVALID_OP;
-}
-
-sdk_ret_t
-dhcp_relay::add_to_db(void) {
-    return dhcp_db()->insert(this);
-}
-
-sdk_ret_t
-dhcp_relay::del_from_db(void) {
-    if (dhcp_db()->remove(this)) {
-        return SDK_RET_OK;
-    }
-    return SDK_RET_ENTRY_NOT_FOUND;
-}
-
-sdk_ret_t
-dhcp_relay::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    if (dhcp_db()->remove((dhcp_relay *)orig_obj)) {
-        return dhcp_db()->insert(this);
-    }
-    return SDK_RET_ENTRY_NOT_FOUND;
-}
-
-sdk_ret_t
-dhcp_relay::delay_delete(void) {
-    return delay_delete_to_slab(PDS_SLAB_ID_DHCP_RELAY, this);
-}
-
-// DHCP policy API implementation
-
-dhcp_policy::dhcp_policy() {
-    ht_ctxt_.reset();
+dhcp_policy::~dhcp_policy() {
 }
 
 dhcp_policy *
@@ -215,18 +32,27 @@ dhcp_policy::factory(pds_dhcp_policy_spec_t *spec) {
     dhcp_policy *policy;
 
     // create DHCP policy entry with defaults, if any
-    policy = dhcp_db()->alloc_policy();
+    policy = dhcp_db()->alloc();
     if (policy) {
         new (policy) dhcp_policy();
+        if (spec->type == PDS_DHCP_POLICY_TYPE_RELAY) {
+            policy->impl_ =
+                impl_base::factory(impl::IMPL_OBJ_ID_DHCP_POLICY, spec);
+            if (policy->impl_ == NULL) {
+                dhcp_policy::destroy(policy);
+                return NULL;
+            }
+        }
     }
     return policy;
 }
 
-dhcp_policy::~dhcp_policy() {
-}
-
 void
 dhcp_policy::destroy(dhcp_policy *policy) {
+    if (policy->impl_) {
+        impl_base::destroy(impl::IMPL_OBJ_ID_DHCP_POLICY,
+                           policy->impl_);
+    }
     policy->~dhcp_policy();
     dhcp_db()->free(policy);
 }
@@ -235,16 +61,35 @@ api_base *
 dhcp_policy::clone(api_ctxt_t *api_ctxt) {
     dhcp_policy *cloned_policy;
 
-    cloned_policy = dhcp_db()->alloc_policy();
+    cloned_policy = dhcp_db()->alloc();
     if (cloned_policy) {
         new (cloned_policy) dhcp_policy();
-        cloned_policy->init_config(api_ctxt);
+        if (cloned_policy->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
+        if (impl_) {
+            cloned_policy->impl_ = impl_->clone();
+            if (unlikely(cloned_policy->impl_ == NULL)) {
+                PDS_TRACE_ERR("Failed to clone DHCP relay %s impl", key_.str());
+                goto error;
+            }
+        }
     }
     return cloned_policy;
+
+error:
+
+    cloned_policy->~dhcp_policy();
+    dhcp_db()->free(cloned_policy);
+    return NULL;
 }
 
 sdk_ret_t
 dhcp_policy::free(dhcp_policy *policy) {
+    if (policy->impl_) {
+        impl_base::destroy(impl::IMPL_OBJ_ID_DHCP_POLICY,
+                           policy->impl_);
+    }
     policy->~dhcp_policy();
     dhcp_db()->free(policy);
     return SDK_RET_OK;
@@ -254,16 +99,25 @@ dhcp_policy *
 dhcp_policy::build(pds_obj_key_t *key) {
     dhcp_policy *policy;
 
-    policy = dhcp_db()->alloc_policy();
+    policy = dhcp_db()->alloc();
     if (policy) {
         new (policy) dhcp_policy();
         memcpy(&policy->key_, key, sizeof(*key));
+        policy->impl_ = impl_base::build(impl::IMPL_OBJ_ID_DHCP_POLICY,
+                                        key, policy);
+        if (policy->impl_ == NULL) {
+            dhcp_policy::destroy(policy);
+            return NULL;
+        }
     }
     return policy;
 }
 
 void
 dhcp_policy::soft_delete(dhcp_policy *policy) {
+    if (policy->impl_) {
+        impl_base::soft_delete(impl::IMPL_OBJ_ID_DHCP_POLICY, policy->impl_);
+    }
     policy->del_from_db();
     policy->~dhcp_policy();
     dhcp_db()->free(policy);
@@ -271,7 +125,38 @@ dhcp_policy::soft_delete(dhcp_policy *policy) {
 
 sdk_ret_t
 dhcp_policy::init_config(api_ctxt_t *api_ctxt) {
-    key_ = api_ctxt->api_params->dhcp_policy_spec.key;
+    ip_addr_t mytep_ip;
+    device_entry *device;
+    pds_dhcp_policy_spec_t *spec;
+
+    spec = &api_ctxt->api_params->dhcp_policy_spec;
+    key_ = spec->key;
+    if (spec->type == PDS_DHCP_POLICY_TYPE_RELAY) {
+        PDS_TRACE_DEBUG("DHCP server IP %s",
+                        ipaddr2str(&spec->relay_spec.server_ip));
+        if (spec->relay_spec.server_ip.af != IP_AF_IPV4) {
+            PDS_TRACE_ERR("Invalid DHCP relay server IP, only IPv4 supported");
+            return SDK_RET_INVALID_ARG;
+        }
+        if (spec->relay_spec.agent_ip.af == IP_AF_NIL) {
+            // not (local) DHCP relay agent IP provided, use mytep IP
+            device = device_db()->find();
+            if (likely(device)) {
+                mytep_ip = device->ip_addr();
+                if (mytep_ip.af == IP_AF_NIL) {
+                    PDS_TRACE_ERR("Invalid DHCP relay config rejected, relay "
+                                  "agent IP, device TEP IP are not configured");
+                    return SDK_RET_INVALID_ARG;
+                }
+                memcpy(&spec->relay_spec.agent_ip, &mytep_ip,
+                       sizeof(ip_addr_t));
+            } else {
+                PDS_TRACE_ERR("Invalid DHCP relay config rejected, relay agent "
+                              "IP, device object are not configured");
+                return SDK_RET_INVALID_ARG;
+            }
+        }
+    }
     return SDK_RET_OK;
 }
 
@@ -284,6 +169,15 @@ dhcp_policy::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
         msg->cfg_msg.dhcp_policy.key = obj_ctxt->api_params->dhcp_policy_key;
     } else {
         msg->cfg_msg.dhcp_policy.spec = obj_ctxt->api_params->dhcp_policy_spec;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+dhcp_policy::activate_config(pds_epoch_t epoch, api_op_t api_op,
+                            api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+    if (impl_) {
+        return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
     }
     return SDK_RET_OK;
 }

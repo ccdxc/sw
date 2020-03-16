@@ -12,10 +12,6 @@ import "meta/meta.proto";
 import "types.proto";
 
 service DHCPSvc {
-  rpc DHCPRelayCreate (DHCPRelayRequest) returns (DHCPRelayResponse) {}
-  rpc DHCPRelayUpdate (DHCPRelayRequest) returns (DHCPRelayResponse) {}
-  rpc DHCPRelayGet (DHCPRelayGetRequest) returns (DHCPRelayGetResponse) {}
-  rpc DHCPRelayDelete (DHCPRelayDeleteRequest) returns (DHCPRelayDeleteResponse) {}
   rpc DHCPPolicyCreate (DHCPPolicyRequest) returns (DHCPPolicyResponse) {}
   rpc DHCPPolicyUpdate (DHCPPolicyRequest) returns (DHCPPolicyResponse) {}
   rpc DHCPPolicyGet (DHCPPolicyGetRequest) returns (DHCPPolicyGetResponse) {}
@@ -24,15 +20,13 @@ service DHCPSvc {
 
 // DHCPRelaySpec captures DHCP relay configuration
 message DHCPRelaySpec {
-  // unique key/identifier of DHCP relay policy
-  bytes           Id       = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // VPC where DHCP server is present in
-  bytes           VPCId    = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes           VPCId    = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // IP address of the DHCP server, agent is relaying requests to
-  types.IPAddress ServerIP = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPAddress ServerIP = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // IP address of the relay agent, if no IP address is specified local TEP IP
   // (MyTEP IP from device object configuration) will be used
-  types.IPAddress AgentIP  = 4;
+  types.IPAddress AgentIP  = 3;
 }
 
 // operational status of a DHCP relay policy, if any
@@ -43,85 +37,59 @@ message DHCPRelayStatus {
 message DHCPRelayStats {
 }
 
-// DHCP relay object
-message DHCPRelay {
-  meta.TypeMeta   TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta    ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
-  DHCPRelaySpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
-  DHCPRelayStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
-  DHCPRelayStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
-}
-
-// DHCP relay create and update request
-message DHCPRelayRequest {
-  // optional batch context, if this request is part of batch of API calls
-  types.BatchCtxt        BatchCtxt = 1;
-  // batched requests
-  repeated DHCPRelaySpec Request   = 2;
-}
-
-// DHCP relay create and update response
-message DHCPRelayResponse {
-  types.ApiStatus          ApiStatus = 1;
-  // batched response
-  repeated DHCPRelayStatus Response  = 2;
-}
-
-// DHCP relay get request
-message DHCPRelayGetRequest {
-  // id of the DHCP relay policy being queried
-  repeated bytes Id = 1;
-}
-
-// DHCP relay get response
-message DHCPRelayGetResponse {
-  // API status code
-  types.ApiStatus    ApiStatus = 1;
-  repeated DHCPRelay Response  = 2;
-}
-
-// DHCP relay delete request
-message DHCPRelayDeleteRequest {
-  // optional batch context, if this request is part of batch of API calls
-  types.BatchCtxt BatchCtxt = 1;
-  // id of the DHCP relay policy being deleted
-  repeated bytes  Id        = 2;
-}
-
-// DHCP relay delete response
-message DHCPRelayDeleteResponse {
-  // API status code
-  repeated types.ApiStatus ApiStatus = 1;
-}
-
-// DHCPPolicySpec captures the DHCP suppression configuration per subnet
-message DHCPPolicySpec {
-  // unique key/identifier of the DHCP policy
-  bytes           Id           = 1 [(gogoproto.moretags) = "meta:mandatory"];
+// DHCPProxySpec captures the DHCP proxy/suppression configuration per subnet
+message DHCPProxySpec {
   // IP address of the (local) DHCP server, this IP address will be
   // used to respond to the DHCP requests from the workloads and is used as
   // the DHCP server identifier
-  types.IPAddress ServerIP     = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPAddress ServerIP     = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // MTU to be supplied by the DHCP server to its clients, if non-zero
-  uint32          MTU          = 3;
+  uint32          MTU          = 2;
   // IP address of the subnet's gateway sent in DHCP offer
-  types.IPAddress GatewayIP    = 4;
+  types.IPAddress GatewayIP    = 3;
   // IP address of the DNS server sent in DHCP offer
-  types.IPAddress DNSServerIP  = 5;
+  types.IPAddress DNSServerIP  = 4;
   // IP address of the NTP server sent in DHCP offer
-  types.IPAddress NTPServerIP  = 6;
+  types.IPAddress NTPServerIP  = 5;
   // client's Fully Qualified Domain Name (FQDN)
-  string          DomainName   = 7;
+  string          DomainName   = 6;
   // DHCP lease timoeout in seconds
-  uint32          LeaseTimeout = 8 [(gogoproto.moretags) = "default=3600"];
+  uint32          LeaseTimeout = 7 [(gogoproto.moretags) = "default=3600"];
 }
 
-// operational status of a DHCP policy, if any
+// operational status of a DHCP proxy/suppression policy, if any
+message DHCPProxyStatus {
+}
+
+// stats for a DHCP proxy/suppression policy, if any
+message DHCPProxyStats {
+}
+
+message DHCPPolicySpec {
+  // unique key/identifier of DHCP policy
+  bytes           Id        = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // DHCP policy is one of DHCP relay or DHCP proxy
+  // NOTE: one of them is mandatory
+  oneof relay_or_proxy {
+    DHCPRelaySpec RelaySpec = 2;
+    DHCPProxySpec ProxySpec = 3;
+  }
+}
+
+// operational status of DHCP policy, if any
 message DHCPPolicyStatus {
+  oneof relay_or_proxy {
+    DHCPRelayStatus RelayStatus = 1;
+    DHCPProxyStatus ProxyStatus = 2;
+  }
 }
 
-// stats for a DHCP policy, if any
+// stats for DHCP policy, if any
 message DHCPPolicyStats {
+  oneof relay_or_proxy {
+    DHCPRelayStats RelayStats = 1;
+    DHCPProxyStats ProxyStats = 2;
+  }
 }
 
 // DHCP policy object
@@ -132,6 +100,7 @@ message DHCPPolicy {
   DHCPPolicyStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
   DHCPPolicyStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
 }
+
 
 // DHCP policy create and update request
 message DHCPPolicyRequest {

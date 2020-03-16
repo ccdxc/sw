@@ -121,7 +121,6 @@ typedef struct pds_cfg_msg_s {
         pds_vpc_cfg_msg_t vpc;
         pds_vnic_cfg_msg_t vnic;
         pds_subnet_cfg_msg_t subnet;
-        pds_dhcp_relay_cfg_msg_t dhcp_relay;
         pds_dhcp_policy_cfg_msg_t dhcp_policy;
         pds_nat_port_block_cfg_msg_t nat_port_block;
         pds_security_profile_cfg_msg_t security_profile;

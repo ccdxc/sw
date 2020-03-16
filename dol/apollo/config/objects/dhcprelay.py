@@ -41,19 +41,21 @@ class DhcpRelayObject(base.ConfigObjectBase):
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
-        spec.VPCId = utils.PdsUuid.GetUUIDfromId(self.Vpc, api.ObjectTypes.VPC)
-        utils.GetRpcIPAddr(self.ServerIp, spec.ServerIP)
-        utils.GetRpcIPAddr(self.AgentIp, spec.AgentIP)
+        relaySpec = spec.RelaySpec
+        relaySpec.VPCId = utils.PdsUuid.GetUUIDfromId(self.Vpc, api.ObjectTypes.VPC)
+        utils.GetRpcIPAddr(self.ServerIp, relaySpec.ServerIP)
+        utils.GetRpcIPAddr(self.AgentIp, relaySpec.AgentIP)
         return
 
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
             return False
-        if spec.VPCId != utils.PdsUuid.GetUUIDfromId(self.Vpc, api.ObjectTypes.VPC):
+        relaySpec = spec.RelaySpec
+        if relaySpec.VPCId != utils.PdsUuid.GetUUIDfromId(self.Vpc, api.ObjectTypes.VPC):
             return False
-        if spec.ServerIP != self.ServerIp:
+        if relaySpec.ServerIP != self.ServerIp:
             return False
-        if spec.AgentIP != self.AgentIp:
+        if relaySpec.AgentIP != self.AgentIp:
             return False
         return True
 
