@@ -31,8 +31,6 @@ var metricsTables = []string{
 	metricsTableHostIf,
 }
 
-var tsdbObjs = map[string]tsdb.Obj{}
-
 func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_MetricsGetClient, tsdbObjs map[string]tsdb.Obj) (err error) {
 	var (
 		dat [][]byte

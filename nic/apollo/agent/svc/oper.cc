@@ -112,9 +112,6 @@ OperSvcImpl::MetricsGet(ServerContext* context,
     MetricsGetRequest metrics_req;
     std::shared_ptr<MetricsGetResponse> metrics_rsp = nullptr;
 
-    // TODO: will fix once metrics registration for lifs and ports is done
-    return Status::OK;
-
     do {
         while (stream->Read(&metrics_req)) {
             sdk::metrics::key_t key;
