@@ -283,7 +283,9 @@ fte_launch_one_lcore (__attribute__((unused)) void *dummy)
 {
     int poller_qid;
 
-    fte_ftl_set_core_id(rte_lcore_id());
+    if (g_athena_app_mode == ATHENA_APP_MODE_CPP) {
+        fte_ftl_set_core_id(rte_lcore_id());
+    }
 
     poller_qid = rte_lcore_index(rte_lcore_id());
     if (poller_qid >= (int)pollers_client_qcount) {
@@ -715,8 +717,10 @@ fte_main (void)
     _init_port();
 
     // init FTL
-    if ((sdk_ret = fte_ftl_init()) != SDK_RET_OK) {
-        rte_exit(EXIT_FAILURE, "fte_ftl_init:err=%d", sdk_ret);
+    if (g_athena_app_mode == ATHENA_APP_MODE_CPP) {
+        if ((sdk_ret = fte_ftl_init()) != SDK_RET_OK) {
+            rte_exit(EXIT_FAILURE, "fte_ftl_init:err=%d", sdk_ret);
+        }
     }
 
     _init_pollers_client();

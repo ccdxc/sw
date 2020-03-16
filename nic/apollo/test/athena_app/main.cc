@@ -126,7 +126,8 @@ sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
 void inline
 print_usage (char **argv)
 {
-    fprintf(stdout, "Usage : %s -c|--config <cfg.json>\n", argv[0]);
+    fprintf(stdout, "Usage : %s -c|--config <cfg.json> "
+            "[ -m | --mode { l2-fwd | no-dpdk } ] \n", argv[0]);
 }
 #ifdef __x86_64__
 void dump_pkt(std::vector<uint8_t> &pkt)
@@ -239,6 +240,7 @@ main (int argc, char **argv)
     int          oc;
     string       cfg_path, cfg_file, profile, pipeline, file;
     string       script_fname, script_dir;
+    string       mode;
     boost::property_tree::ptree pt;
 
     struct option longopts[] = {
@@ -247,12 +249,13 @@ main (int argc, char **argv)
        { "feature",     required_argument, NULL, 'f' },
        { "test_script", required_argument, NULL, 't' },
        { "script_dir",  required_argument, NULL, 'd' },
+       { "mode",        required_argument, NULL, 'm' },
        { "help",        no_argument,       NULL, 'h' },
        { 0,             0,                 0,     0 }
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hc:p:f:t:d:W;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hc:p:f:t:d:m:W;", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             if (optarg) {
@@ -289,6 +292,24 @@ main (int argc, char **argv)
                 script_dir = std::string(optarg);
             } else {
                 fprintf(stderr, "script directory is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'm':
+            if (optarg) {
+                mode = std::string(optarg);
+                printf("app mode: %s\n", mode.c_str());
+                if (mode.compare("l2-fwd") == 0) {
+                    fte_ath::g_athena_app_mode =
+                        ATHENA_APP_MODE_L2_FWD;
+                } else if (mode.compare("no-dpdk") == 0) {
+                    fte_ath::g_athena_app_mode =
+                        ATHENA_APP_MODE_NO_DPDK;
+                }
+            } else {
+                fprintf(stderr, "mode value is not specified\n");
                 print_usage(argv);
                 exit(1);
             }
@@ -386,6 +407,11 @@ main (int argc, char **argv)
          */
         printf("Waiting for 60 seconds...\n");
         sleep(60);
+    }
+
+    if (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_NO_DPDK) {
+        printf("mode: ATHENA_APP_MODE_NO_DPDK. Wait forever...\n");
+        while (1) usleep(10000);
     }
 
     fte_ath::fte_init();
