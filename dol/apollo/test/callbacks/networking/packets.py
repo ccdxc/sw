@@ -731,8 +731,6 @@ def __get_expected_nexthop(cfg):
     return nh
 
 def GetExpectedEgressUplinkPort(testcase, args=None):
-    if args is not None and args.Type == 'ecmp':
-        return [topo.Ports.UPLINK_0, topo.Ports.UPLINK_1]
     nh = __get_expected_nexthop(testcase.config)
     if nh is None:
         return None

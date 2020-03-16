@@ -22,7 +22,6 @@ class EvpnEviObject(base.ConfigObjectBase):
         self.GID("EvpnEvi%d"%self.Id)
         #self.UUID = utils.PdsUuid(self.Id)
         self.UUID = parent.UUID
-        parent.AddChild(self)
         ########## PUBLIC ATTRIBUTES OF EVPNEVI CONFIG OBJECT ##############
         self.SubnetId = parent.UUID
         self.AutoRD = getattr(evpnevispec, 'autord', None)
@@ -30,6 +29,7 @@ class EvpnEviObject(base.ConfigObjectBase):
         self.RTType = getattr(evpnevispec, 'rttype', None)
         self.AutoRT = getattr(evpnevispec, 'autort', None)
         self.RTType = getattr(evpnevispec, 'rttype', None)
+        self.EVIId = getattr(evpnevispec, 'eviid', None)
         ########## PRIVATE ATTRIBUTES OF EVPEVI CONFIG OBJECT #############
         self.Show()
         return
@@ -45,8 +45,7 @@ class EvpnEviObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        spec = grpcmsg.Request.add()
-        spec.Key.SubnetId = self.SubnetId.GetUuid()
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def PopulateSpec(self, grpcmsg):

@@ -21,18 +21,18 @@ class EvpnIpVrfRtObject(base.ConfigObjectBase):
         self.Id = next(ResmgrClient[node].EvpnIpVrfIdAllocator)
         self.GID("EvpnIPVrfRt%d"%self.Id)
         self.UUID = parent.UUID
-        parent.AddChild(self)
         ########## PUBLIC ATTRIBUTES OF EVPNEVI CONFIG OBJECT ##############
         self.VPCId = parent.UUID
         self.RT = getattr(evpnipvrfrtspec, 'rt', None)
         self.RTType = getattr(evpnipvrfrtspec, 'rttype', 0)
+        self.VRFName = getattr(evpnipvrfrtspec, 'vrfname', None)
         ########## PRIVATE ATTRIBUTES OF EVPEVI CONFIG OBJECT #############
         self.Show()
         return
 
     def __repr__(self):
         return f"EvpnIPVrfRt:{self.UUID} VPCId: {self.VPCId} RT:{self.RT} \
-                 RTType:{self.RTType}"
+                 RTType:{self.RTType} VRFName:{self.VRFName}"
 
     def Show(self):
         logger.info("EvpnIpVrfRt config Object: %s" % self)
@@ -40,17 +40,18 @@ class EvpnIpVrfRtObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        spec = grpcmsg.Request.add()
-        spec.Key.VPCId = self.VPCId.GetUuid()
-        spec.Key.RT = cp_utils.GetRT(self.RT)
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
         spec.VPCId = spec.Id
-        spec.RT = cp_utils.GetRT(self.RT)
+        if self.RT:
+            spec.RT = cp_utils.GetRT(self.RT)
         spec.RTType = cp_utils.GetRTType(self.RTType)
+        if self.VRFName:
+            spec.VRFName = self.VRFName
         return
 
     def ValidateSpec(self, spec):

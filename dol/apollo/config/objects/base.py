@@ -525,10 +525,6 @@ class ConfigClientBase(base.ConfigClientBase):
 
     def DeleteObjects(self, node):
         cfgObjects = self.Objs[node].copy().values()
-        if len(fixed) == 0 and len(implicitly_created) == 0:
-            logger.info(f"Skip Deleting {self.ObjType.name} Objects in {node}")
-            return
-
         logger.info(f"Deleting {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
         result = list(map(lambda x: x.Delete(), cfgObjects))
         if not all(result):

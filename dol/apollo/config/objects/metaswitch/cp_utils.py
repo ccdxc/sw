@@ -16,10 +16,10 @@ def GetRTType(RTType):
         return evpn_pb2.EVPN_RT_INVALID
 
 def GetRT(RT):
-    rt_array = bytearray()
+    rt_str=""
     for x in RT.split(':'):
-        rt_array.append(int(x,16))
-    return bytes(rt_array)
+        rt_str = rt_str+chr(int(x,16))
+    return bytes(rt_str, 'utf-8')
 
 def GetEVPNCfg(EVPNCfg):
     if EVPNCfg == 'auto':

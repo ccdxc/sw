@@ -9,7 +9,6 @@ import time
 import yaml
 from collections import OrderedDict
 import os
-import struct
 
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
@@ -129,19 +128,6 @@ class PdsUuid:
     def GetUuidString(uuid):
         # keep this inline with pds_obj_key_s.str()
         uuid_id = PdsUuid.GetIdfromUUID(uuid)
-        uuid_objtype = PdsUuid.GetObjTypefromUUID(uuid)
-        uuid_rsvd = PdsUuid.GetReservedValfromUUID(uuid)
-        uuid_magic = int.from_bytes(uuid[PDS_UUID_MAGIC_BYTE_OFFSET_START:PDS_UUID_MAGIC_BYTE_OFFSET_END], PDS_UUID_BYTE_ORDER)
-        uuid_mac = int.from_bytes(uuid[PDS_UUID_SYSTEM_MAC_OFFSET_START:], PDS_NODE_UUID_BYTE_ORDER)
-        uuidstr = f"{uuid_id:08x}-{uuid_objtype:04x}-{uuid_rsvd:04x}-{uuid_magic:04x}-{uuid_mac:012x}"
-        return uuidstr
-
-    @staticmethod
-    def GetGoUuidString(uuid):
-        # keep this inline with pds_obj_key_s.str()
-        uuid_id = PdsUuid.GetIdfromUUID(uuid)
-        u32 = uuid_id
-        uuid_id = struct.unpack("<I", struct.pack(">I", u32))[0]
         uuid_objtype = PdsUuid.GetObjTypefromUUID(uuid)
         uuid_rsvd = PdsUuid.GetReservedValfromUUID(uuid)
         uuid_magic = int.from_bytes(uuid[PDS_UUID_MAGIC_BYTE_OFFSET_START:PDS_UUID_MAGIC_BYTE_OFFSET_END], PDS_UUID_BYTE_ORDER)
@@ -377,19 +363,12 @@ def ValidateDelete(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
         # assume deletion was fine in case of dry run
         obj.SetHwHabitant(False)
         return True
-    def validateDelReturn(obj, status, expApiStatus):
-        if status != expApiStatus:
-            logger.error(f"Deletion failed for {obj} on {obj.Node}, received {resp} but expected {expApiStatus}")
-            obj.Show()
-            return False
     for resp in resps:
         respStatus = GetAttrFromResponse(obj, resp, 'ApiStatus')
-        if isinstance(respStatus, list):
-            for status in respStatus:
-                if not validateDelReturn(obj, status, expApiStatus):
-                    return False
-        else:        
-            if not validateDelReturn(obj, respStatus, expApiStatus):
+        for status in respStatus:
+            if status != expApiStatus:
+                logger.error(f"Deletion failed for {obj} on {obj.Node}, received {resp} but expected {expApiStatus}")
+                obj.Show()
                 return False
         SetObjectHwHabitantStatus(obj, 'Delete', expApiStatus)
     return True
@@ -448,9 +427,6 @@ def CreateObject(obj):
         return True
 
     def RestoreObj(robj, node):
-        if robj.IsOriginDiscovered():
-            logger.info(f"Skip Recreating discovered object {robj} on {node}")
-            return True
         logger.info(f"[Re]Creating object {robj} on {node}")
         if robj.Duplicate != None:
             #TODO: Ideally a new dependee object should be created first
@@ -544,9 +520,6 @@ def DeleteObject(obj):
         return True
 
     def DelObj(dobj, node):
-        if dobj.IsOriginDiscovered():
-            logger.info(f"Skip Deleting discovered object {dobj} on {node}")
-            return True
         logger.info(f"Deleting object {dobj} on {node}")
         #TODO: Ideally a new dependee object should be created first
         # and all dependents should be updated to point to the new object

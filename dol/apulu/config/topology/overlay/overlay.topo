@@ -8,8 +8,8 @@ node:
     device:
         mode            : host # bitw (default), host
         stack           : ipv4 # ipv4 (default), ipv6
-        bridging        : true # false (default), true
-        learning        : true # false (default), true
+        bridging        : false # false (default), true
+        learning        : false # false (default), true
         ipaddress       : '1.1.1.1'
         gateway         : None # Taken from resmgr
         encap           : vxlan # vxlan or mplsodup
@@ -60,6 +60,7 @@ node:
           nexthop-group: # Only for read op
             - count : 1
               type : underlay
+
           interface:
             - iid           : 1
               iftype        : l3
@@ -200,7 +201,7 @@ node:
           nexthop-group: # Only for read op
             - type : overlay
               count : 2
-              dual-ecmp : true
+              dual-ecmp : True
           routetbl: # Only for read op
             - type: base
               routetype: overlap

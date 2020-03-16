@@ -328,9 +328,7 @@ static void delete_evpn_evi_rt_proto_grpc () {
     Status                  ret_status;
 
     auto proto_spec = request.add_request ();
-    auto key   = proto_spec->mutable_key();
-    key->set_subnetid (pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi rt UUID is same as subnet UUID
-    key->set_rt((const char *)g_test_conf_.rt[0], 8);
+    proto_spec->set_id (pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi rt UUID is same as subnet UUID
 
     printf ("Pushing EVPN Evi RT Delete proto...\n");
     ret_status = g_evpn_stub_->EvpnEviRtDelete(&context, request, &response);

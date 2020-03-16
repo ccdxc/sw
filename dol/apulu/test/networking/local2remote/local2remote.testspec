@@ -89,7 +89,7 @@ session:
             packets:
                 - packet:
                     object  : callback://networking/packets/GetExpectedPacket/pkt=TO_SWITCH_PKT
-                    port    : callback://networking/packets/GetExpectedEgressUplinkPort/Type=ecmp
+                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2

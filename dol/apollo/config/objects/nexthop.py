@@ -63,7 +63,7 @@ class NexthopObject(base.ConfigObjectBase):
             self.__type = topo.NhType.OVERLAY
             if self.DualEcmp:
                 self.TunnelId = ResmgrClient[node].UnderlayECMPTunAllocator.rrnext().Id
-            elif (hasattr(spec, 'tunnelid')):
+            if (hasattr(spec, 'tunnelid')):
                 self.TunnelId = spec.tunnelid
             else:
                 self.TunnelId = ResmgrClient[node].UnderlayTunAllocator.rrnext().Id
