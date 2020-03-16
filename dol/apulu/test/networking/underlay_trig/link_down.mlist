@@ -1,0 +1,62 @@
+feature:
+    id          : networking
+    sub         : underlay_trig
+    package     : test.networking
+    module      : networking
+    runorder    : 9100
+    enable      : True
+    ignore      : True
+
+modules:
+# specify all the filters that are used in the packet testcases that will follow
+    - module:
+        name    : UNDERLAY_WORKFLOW_START
+        spec    : crud_workflow.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    # mlists to run before underlay trigger
+    - module:
+        name    : Local2Remote_Init
+        mlist   : local2remote.mlist
+        ignore  : True
+
+    - module:
+        name    : LINK_DOWN
+        spec    : crud_cfg_object.testspec
+        args    :
+            - object    : interface
+              operation : LinkDown
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    # mlists to run post link down
+    - module:
+        name    : Local2Remote_PostLinkDown
+        mlist   : local2remote.mlist
+        ignore  : True
+
+    - module:
+        name    : LINK_UP
+        spec    : crud_cfg_object.testspec
+        args    :
+            - object    : interface
+              operation : LinkUp
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    # mlists to run post link up
+    - module:
+        name    : Local2Remote_PostLinkUp
+        mlist   : local2remote.mlist
+        ignore  : True
+
+    - module:
+        name    : UNDERLAY_WORKFLOW_END
+        spec    : crud_workflow.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING

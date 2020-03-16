@@ -22,18 +22,18 @@ class EvpnEviRtObject(base.ConfigObjectBase):
         self.GID("EvpnEviRt%d"%self.Id)
         #self.UUID = utils.PdsUuid(self.Id)
         self.UUID = parent.UUID
+        parent.AddChild(self)
         ########## PUBLIC ATTRIBUTES OF EVPNEVI CONFIG OBJECT ##############
         self.SubnetId = parent.UUID
         self.RT = getattr(evpnevirtspec, 'rt', None)
         self.RTType = getattr(evpnevirtspec, 'rttype', None)
-        self.EVIId = getattr(evpnevirtspec, 'eviid', None)
         ########## PRIVATE ATTRIBUTES OF EVPEVI CONFIG OBJECT #############
         self.Show()
         return
 
     def __repr__(self):
         return f"EvpnEviRt:{self.UUID} SubnetId: {self.SubnetId} RT:\
-                {self.RT} RTType:{self.RTType} EVIId:{self.EVIId}"
+                {self.RT} RTType:{self.RTType}"
 
     def Show(self):
         logger.info("EvpnEviRt config Object: %s" % self)
@@ -41,18 +41,17 @@ class EvpnEviRtObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.GetKey())
+        spec = grpcmsg.Request.add()
+        spec.Key.SubnetId = self.SubnetId.GetUuid()
+        spec.Key.RT = cp_utils.GetRT(self.RT)
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
         spec.SubnetId = spec.Id
-        if self.RT:
-            spec.RT = cp_utils.GetRT(self.RT)
+        spec.RT = cp_utils.GetRT(self.RT)
         spec.RTType = cp_utils.GetRTType(self.RTType)
-        if self.EVIId:
-            spec.EVIId = self.EVIId
         return
 
     def ValidateSpec(self, spec):
