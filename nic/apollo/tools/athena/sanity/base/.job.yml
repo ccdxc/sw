@@ -23,7 +23,7 @@ targets:
 
   athena_app/session_aging_sim_simple:
     commands: ["make", "PIPELINE=athena", "jobd/athena_app/session_aging_sim_simple"]
-    owners: ["email:raghava@pensando.io"]
+    owners: ["email:tuyenq@pensando.io"]
     area:
     sub-area:
     feature:
@@ -33,7 +33,7 @@ targets:
 
   athena_app/session_aging_sim_medium:
     commands: ["make", "PIPELINE=athena", "jobd/athena_app/session_aging_sim_medium"]
-    owners: ["email:raghava@pensando.io"]
+    owners: ["email:tuyenq@pensando.io"]
     area:
     sub-area:
     feature:
@@ -43,7 +43,7 @@ targets:
 
   athena_app/conntrack_aging_sim_simple:
     commands: ["make", "PIPELINE=athena", "jobd/athena_app/conntrack_aging_sim_simple"]
-    owners: ["email:raghava@pensando.io"]
+    owners: ["email:tuyenq@pensando.io"]
     area:
     sub-area:
     feature:
@@ -53,7 +53,7 @@ targets:
 
   athena_app/conntrack_aging_sim_medium:
     commands: ["make", "PIPELINE=athena", "jobd/athena_app/conntrack_aging_sim_medium"]
-    owners: ["email:raghava@pensando.io"]
+    owners: ["email:tuyenq@pensando.io"]
     area:
     sub-area:
     feature:
