@@ -180,6 +180,14 @@ private:
     sdk::lib::thread *nbase_thread_;
 };
 
+class mgmt_uuid_guard_t {
+public:
+    ~mgmt_uuid_guard_t() {
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        mgmt_ctxt.state()->release_pending_uuid();
+    }
+};
+
 // Function prototypes
 bool  mgmt_state_init(void);
 void  mgmt_state_destroy(void);

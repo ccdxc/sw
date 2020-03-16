@@ -245,6 +245,9 @@ vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
     ms_vrf_id_t vrf_id = 0;
 
     try {
+        // Guard to release all pending UUIDs in case of any failures
+        mgmt_uuid_guard_t uuid_guard;
+
         mib_idx_t   rtm_index;
         std::tie(vrf_id,rtm_index) = vpc_uuid_2_idx_alloc(spec);
         // cache VPC spec to be used in hals stub
@@ -302,6 +305,9 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         return SDK_RET_INVALID_OP;
     }
     try {
+        // Guard to release all pending UUIDs in case of any failures
+        mgmt_uuid_guard_t uuid_guard;
+
         ms_vrf_id_t vrf_id;
         mib_idx_t   rtm_index;
         std::tie(vrf_id,rtm_index) = vpc_uuid_2_idx_fetch(spec->key, true);
@@ -336,6 +342,9 @@ vpc_update (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     // Enter thread-safe context to access/modify global state
     try {
+        // Guard to release all pending UUIDs in case of any failures
+        mgmt_uuid_guard_t uuid_guard;
+
         ms_vrf_id_t vrf_id;
         mib_idx_t   rtm_index;
         std::tie(vrf_id,rtm_index) = vpc_uuid_2_idx_fetch(spec->key, false);

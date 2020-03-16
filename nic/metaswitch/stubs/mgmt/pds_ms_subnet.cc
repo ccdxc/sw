@@ -237,6 +237,9 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
     }
 
     if (ms_upd_flags.irb) {
+        // Note: This code is not exercised - irb flag is never set when parsing
+        // incoming spec since L3 IRB interface is not created in MS for Subnet.
+        // Code retained here in case it is needed in future.
         PDS_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS IRB Update", subnet_spec->key.str(), bd_id);
         // Configure IRB IP Address
         ip_prefix_t ip_prefix;
@@ -369,6 +372,9 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     ms_bd_id_t bd_id = 0;
 
     try {
+        // Guard to release all pending UUIDs in case of any failures
+        mgmt_uuid_guard_t uuid_guard;
+
         bd_id = subnet_uuid_2_idx_alloc(spec->key);
         cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::CREATE);
 
@@ -403,6 +409,9 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     bool delete_completed = false;
 
     try {
+        // Guard to release all pending UUIDs in case of any failures
+        mgmt_uuid_guard_t uuid_guard;
+
         bd_id = subnet_uuid_2_idx_fetch(spec->key, true);
         // Mark as deleted so that L2F stub can release the Subnet UUID
         cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::MARK_DEL);
@@ -472,10 +481,7 @@ parse_subnet_update (pds_subnet_spec_t *spec, ms_bd_id_t bd_id,
                        spec->host_if.str());
         state_pds_spec.host_if = spec->host_if;
     }
-    if (state_pds_spec.v4_vr_ip != spec->v4_vr_ip) {
-        ms_upd_flags.irb = true;
-        // Diff in IP address needs to be driven through fast and slowpath
-    }
+
     // Diff in any other property needs to be driven through fastpath
     if (memcmp(&state_pds_spec, spec, sizeof(*spec)) != 0) {
         PDS_TRACE_INFO("Subnet %s BD %d fastpath parameter change",
@@ -508,6 +514,9 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     ms_bd_id_t bd_id;
 
     try {
+        // Guard to release all pending UUIDs in case of any failures
+        mgmt_uuid_guard_t uuid_guard;
+
         bd_id = subnet_uuid_2_idx_fetch(spec->key, false);
         parse_subnet_update(spec, bd_id, ms_upd_flags);
 
@@ -531,8 +540,13 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     return SDK_RET_OK;
 }
 
-#if 0 /* Enable MS L3 IRB Interface creation for each BD if needed
-         in future */
+#if 0 /* L3 IRB interface is suppressed to prevent Type-2 advertisement of the
+         local Gateway IP and MAC for each subnet from every Naples node.
+         Metaswitch need not be configured with a L3 interface for each Subnet
+         since MS APIs are not used to implement local subnet gateway
+         functionality and also there is no egress routing from remote to local.
+         Enable MS L3 IRB Interface creation for each BD if needed in future.
+       */
 static void
 populate_lim_irb_spec (pds_subnet_spec_t     *subnet_spec,
                        uint32_t          bd_id,

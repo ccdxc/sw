@@ -103,7 +103,7 @@ static void create_device_proto_grpc () {
     }
 }
 
-static void create_intf_proto_grpc (bool lo=false, bool second=false) {
+static void create_intf_proto_grpc (bool lo=false, bool second=false, bool update=false, ipv4_addr_t ipv4 = 0) {
     InterfaceRequest    request;
     InterfaceResponse   response;
     ClientContext       context;
@@ -117,7 +117,11 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false) {
         pds_if.type = PDS_IF_TYPE_LOOPBACK;
         if (g_node_id !=3) {
             pds_if.loopback_if_info.ip_prefix.addr.af = IP_AF_IPV4;
-            pds_if.loopback_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_lo_ip_addr;
+            if (update) {
+                pds_if.loopback_if_info.ip_prefix.addr.addr.v4_addr = ipv4;
+            } else {
+                pds_if.loopback_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_lo_ip_addr;
+            }
             pds_if.loopback_if_info.ip_prefix.len = 32;
         }
     } else {
@@ -143,7 +147,11 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false) {
     if (g_node_id == 3) {
         ret_status = g_rr_if_stub_->InterfaceCreate(&context, request, &response);
     } else {
-        ret_status = g_if_stub_->InterfaceCreate(&context, request, &response);
+        if (update) {
+            ret_status = g_if_stub_->InterfaceUpdate(&context, request, &response);
+        } else {
+            ret_status = g_if_stub_->InterfaceCreate(&context, request, &response);
+        }
     }
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
@@ -1014,6 +1022,14 @@ int main(int argc, char** argv)
             return 0;
         } else if (!strcmp(argv[1], "lo-create")) {
             create_intf_proto_grpc(true);
+            return 0;
+        } else if (!strcmp(argv[1], "lo-update1")) {
+            // Update
+            create_intf_proto_grpc(true, false, true, 0x05050505);
+            return 0;
+        } else if (!strcmp(argv[1], "lo-update2")) {
+            // Update
+            create_intf_proto_grpc(true, false, true, g_test_conf_.local_lo_ip_addr);
             return 0;
         }
     }

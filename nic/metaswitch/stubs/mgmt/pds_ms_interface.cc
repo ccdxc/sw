@@ -130,14 +130,16 @@ process_interface_update (pds_if_spec_t *if_spec,
         pds_ms_set_liminterfacespec_amb_lim_software_if (
                                         lim_swif_spec, row_status,
                                         PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
-        intf_ip_prfx = &if_spec->loopback_if_info.ip_prefix;
-        if (!ip_addr_is_zero(&if_spec->loopback_if_info.ip_prefix.addr)) {
-            has_ip_addr = true;
-            populate_lim_addr_spec (&if_spec->loopback_if_info.ip_prefix, 
-                                    lim_addr_spec, LIM_IF_TYPE_LOOPBACK,
-                                    LOOPBACK_IF_ID);
-            lim_l3_if_addr_pre_set(lim_addr_spec, row_status,
-                                        PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
+        if (row_status != AMB_ROW_DESTROY) {
+            intf_ip_prfx = &if_spec->loopback_if_info.ip_prefix;
+            if (!ip_addr_is_zero(&if_spec->loopback_if_info.ip_prefix.addr)) {
+                has_ip_addr = true;
+                populate_lim_addr_spec (&if_spec->loopback_if_info.ip_prefix, 
+                                        lim_addr_spec, LIM_IF_TYPE_LOOPBACK,
+                                        LOOPBACK_IF_ID);
+                lim_l3_if_addr_pre_set(lim_addr_spec, row_status,
+                                       PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
+            }
         }
     }
 
@@ -165,12 +167,12 @@ process_interface_update (pds_if_spec_t *if_spec,
                 lim_l3_if_addr_pre_set(lim_del_addr_spec, AMB_ROW_DESTROY,
                                             PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
             }
+            pds_ms_set_liminterfaceaddrspec_amb_lim_l3_if_addr (
+                                            lim_del_addr_spec, AMB_ROW_DESTROY,
+                                            PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
             if (!has_ip_addr) {
                 // no ip address for interface. reset the cached ip.
                 interface_uuid_ip_prefix (if_spec->key, ifinfo.ip_prfx, true);
-                pds_ms_set_liminterfaceaddrspec_amb_lim_l3_if_addr (
-                                            lim_del_addr_spec, AMB_ROW_DESTROY,
-                                            PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
             }
         }
     }
@@ -256,6 +258,9 @@ interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
     uint32_t ms_ifindex = 0;
 
     try {
+        // Guard to release all pending UUIDs in case of any failures
+        mgmt_uuid_guard_t uuid_guard;
+
         // Get PDS to MS IfIndex
         if (spec->type == PDS_IF_TYPE_L3) {
            auto eth_ifindex = api::objid_from_uuid(spec->l3_if_info.port);
@@ -303,41 +308,39 @@ interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-interface_delete (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
+interface_delete (pds_obj_key_t* key, pds_batch_ctxt_t bctxt)
 {
     types::ApiStatus ret_status;
     
-    SDK_ASSERT((spec->type == PDS_IF_TYPE_L3 ||
-                spec->type == PDS_IF_TYPE_LOOPBACK));
-
     try {
-        if (spec->type == PDS_IF_TYPE_L3) {
-            // Fill MS IfIndex from UUID cache
-            auto ifinfo = interface_uuid_fetch(spec->key);
-            if (ifinfo.eth_ifindex != 0) {
-                PDS_TRACE_ERR("Intf delete for Eth IfIndex 0x%x is not allowed",
-                              ifinfo.eth_ifindex);
-                return SDK_RET_INVALID_OP;
-            }
-        }
-        auto ifinfo = interface_uuid_fetch(spec->key, true);
-        auto ms_ifindex = ifinfo.ms_ifindex;
+        // Guard to release all pending UUIDs in case of any failures
+        mgmt_uuid_guard_t uuid_guard;
 
-        ret_status = process_interface_update(spec, ms_ifindex,
+        // Fill MS IfIndex from UUID cache
+        auto ifinfo = interface_uuid_fetch(*key, true /* mark for del */);
+        if (ifinfo.eth_ifindex != 0) {
+            PDS_TRACE_ERR("Intf delete for Eth IfIndex 0x%x is not allowed",
+                          ifinfo.eth_ifindex);
+            return SDK_RET_INVALID_OP;
+        }
+        auto ms_ifindex = ifinfo.ms_ifindex;
+        // For delete if_spec needs to be populated with type alone
+        pds_if_spec_t if_spec = {0};
+        if_spec.type = PDS_IF_TYPE_LOOPBACK;
+        ret_status = process_interface_update(&if_spec, ms_ifindex,
                                               AMB_ROW_DESTROY);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
             PDS_TRACE_ERR ("Failed to process interface UUID %s "
-                           "MS-Interface 0x%X "
-                           "delete err %d", 
-                            spec->key.str(), ms_ifindex, ret_status);
+                           "MS-Interface 0x%X delete err %d", 
+                            key->str(), ms_ifindex, ret_status);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
     
         PDS_TRACE_DEBUG ("Intf delete for UUID %s successfully processed",
-                         spec->key.str());
+                         key->str());
     } catch (const Error& e) {
         PDS_TRACE_ERR ("Interface %s deletion failed %s", 
-                        spec->key.str(), e.what());
+                        key->str(), e.what());
         return e.rc();
     }
     return SDK_RET_OK;
@@ -349,6 +352,9 @@ interface_update (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
     types::ApiStatus ret_status;
     
     try {
+        // Guard to release all pending UUIDs in case of any failures
+        mgmt_uuid_guard_t uuid_guard;
+
         // Fill MS IfIndex from UUID cache
         auto ifinfo = interface_uuid_fetch(spec->key);
         auto ms_ifindex = ifinfo.ms_ifindex;

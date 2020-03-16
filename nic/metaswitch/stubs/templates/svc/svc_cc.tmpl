@@ -75,6 +75,8 @@ Status
     PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}}");
     {{end}}
     try {
+    // Guard to release all pending UUIDs in case of any failures
+    pds_ms::mgmt_uuid_guard_t uuid_guard;
     {{if or (HasSuffix $rpc "Delete") (HasSuffix $rpc "Create") (HasSuffix $rpc "Update")}}
     uint correlator = PDS_MS_CTM_GRPC_CORRELATOR;
     PDS_MS_START_TXN(correlator);

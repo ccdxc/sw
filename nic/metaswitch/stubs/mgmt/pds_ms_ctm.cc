@@ -319,6 +319,13 @@ void ms_txn_guard_t::end_txn(void) {
 
 ms_txn_guard_t::~ms_txn_guard_t(void) {
     if (!end_txn_) {
+        {
+            // Release any pending UUID if transaction aborted
+            // This is to avoid accidentally committing the pending UUID
+            // in the ms_response_ready callback for the CTM abort below
+            auto mgmt_ctxt = pds_ms::mgmt_state_t::thread_context();
+            mgmt_ctxt.state()->release_pending_uuid();
+        }
         pds_ms_ctm_send_transaction_abort (correlator_);
     }
     correlator_ = 0;
