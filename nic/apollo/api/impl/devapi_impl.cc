@@ -22,10 +22,12 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/api/utils.hpp"
+#include "nic/apollo/api/internal/metrics.hpp"
 #include "nic/apollo/api/impl/devapi_impl.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
 #include "nic/apollo/api/internal/pds_if.hpp"
+#include "gen/platform/mem_regions.hpp"
 
 namespace api {
 namespace impl {
@@ -67,11 +69,14 @@ lif_spec_from_info (pds_lif_spec_t &spec, lif_info_t *info)
 
 sdk_ret_t
 devapi_impl::lif_create(lif_info_t *info) {
-    pds_lif_spec_t spec = { 0 };
     lif_impl *lif;
+    pds_lif_spec_t spec = { 0 };
+    static mem_addr_t lif_stats_base_addr =
+        g_pds_state.mempartition()->start_addr(MEM_REGION_LIF_STATS_NAME);
+    static uint64_t block_size =
+        g_pds_state.mempartition()->block_size(MEM_REGION_LIF_STATS_NAME);
 
     lif_spec_from_info(spec, info);
-
     lif = lif_impl::factory(&spec);
     if (unlikely(lif == NULL)) {
         return sdk::SDK_RET_OOM;
@@ -80,7 +85,11 @@ devapi_impl::lif_create(lif_info_t *info) {
     PDS_TRACE_DEBUG("Inserted lif %u %s %u %s",
                     info->lif_id, info->name, info->type,
                     macaddr2str(info->mac));
-
+    // register for lif metrics
+    sdk::metrics::row_address(g_pds_state.hostif_metrics_handle(),
+                      *(sdk::metrics::key_t *)spec.key.id,
+                      (void *)(lif_stats_base_addr +
+                                   (info->lif_id * block_size)));
     return SDK_RET_OK;
 }
 

@@ -283,10 +283,7 @@ pds_init (pds_init_params_t *params)
         return SDK_RET_OK;
     }
 
-    // initialize metrics
-    api::register_metrics();
-    
-    // spawn pciemgr thread.
+    // spawn pciemgr thread
     core::spawn_pciemgr_thread(&api::g_pds_state);
 
     PDS_TRACE_INFO("Waiting for pciemgr server to come up ...");

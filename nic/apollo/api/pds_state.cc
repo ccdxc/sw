@@ -6,6 +6,8 @@
  * @brief   This file contains implementation of pds state class
  */
 
+#include "nic/sdk/lib/metrics/metrics.hpp"
+#include "nic/apollo/api/internal/metrics.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
@@ -123,6 +125,11 @@ pds_state::init(string pipeline, string cfg_file) {
     state_[PDS_STATE_NAT] = new nat_state();
     state_[PDS_STATE_DHCP] = new dhcp_state();
     state_[PDS_STATE_LEARN] = new learn_state();
+
+    // initialize the metrics
+    port_metrics_hndl_ = sdk::metrics::create(&port_schema);
+    mgmt_port_metrics_hndl_ = sdk::metrics::create(&mgmt_port_schema);
+    hostif_metrics_hndl_ = sdk::metrics::create(&hostif_schema);
     return SDK_RET_OK;
 }
 

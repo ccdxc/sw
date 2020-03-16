@@ -14,10 +14,6 @@
 
 namespace api {
 
-void *g_port_metrics_hndl = NULL;
-void *g_mgmt_port_metrics_hndl = NULL;
-void *g_host_if_metrics_hndl = NULL;
-
 sdk::metrics::schema_t port_schema = {
     .name = "Port",
     .type = sdk::metrics::HBM,
@@ -156,7 +152,7 @@ sdk::metrics::schema_t mgmt_port_schema = {
     }
 };
 
-sdk::metrics::schema_t host_if_schema = {
+sdk::metrics::schema_t hostif_schema = {
     .name = "HostIf",
     .type = sdk::metrics::HBM,
     .counters = {
@@ -291,15 +287,5 @@ sdk::metrics::schema_t host_if_schema = {
         NULL,
     }
 };
-
-sdk_ret_t
-register_metrics (void)
-{
-    g_port_metrics_hndl = sdk::metrics::create(&port_schema);
-    g_mgmt_port_metrics_hndl = sdk::metrics::create(&mgmt_port_schema);
-    g_host_if_metrics_hndl = sdk::metrics::create(&host_if_schema);
-    
-    return SDK_RET_OK;
-}
 
 }    // namespace api

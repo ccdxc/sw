@@ -106,6 +106,7 @@
             "name": "lif_stats",
             "kind": "static",
             "size": "1024K",
+            "block_size": "1K",
             "reset": true,
             "cache": "p4plus-all"
         },

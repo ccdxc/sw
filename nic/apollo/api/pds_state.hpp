@@ -126,6 +126,9 @@ public:
         scale_profile_ = profile;
     }
     sdk::lib::kvstore *kvstore(void) const { return kvstore_; }
+    void *port_metrics_handle(void) const { return port_metrics_hndl_; }
+    void *mgmt_port_metrics_handle(void) const { return mgmt_port_metrics_hndl_; }
+    void *hostif_metrics_handle(void) const { return hostif_metrics_hndl_; }
     pds_scale_profile_t scale_profile(void) const { return scale_profile_; }
     bool vpp_ipc_mock(void) const { return vpp_ipc_mock_; }
     void set_control_cores_mask(uint64_t control_cores_mask) {
@@ -246,6 +249,10 @@ private:
     pds_event_cb_t          event_cb_;
     mac_addr_t              system_mac_;
     sdk::lib::kvstore       *kvstore_;
+    // handles for the metrics
+    void                    *port_metrics_hndl_;
+    void                    *mgmt_port_metrics_hndl_;
+    void                    *hostif_metrics_hndl_;
 };
 extern pds_state g_pds_state;
 
