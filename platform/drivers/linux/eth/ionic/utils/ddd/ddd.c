@@ -64,14 +64,14 @@ void dump_adminq(char *path)
 {
 	char *fpath;
 	FILE *file, *file_sg;
-	struct admin_cmd cmd;
+	struct ionic_admin_cmd cmd;
 	int i, j;
 
 	int head = get_val(path, "head");
 	int tail = get_val(path, "tail");
 	int num_descs = get_val(path, "num_descs");
 
-	char *ionic_opcode_to_str(enum cmd_opcode opcode)
+	char *ionic_opcode_to_str(enum ionic_cmd_opcode opcode)
 	{
 		switch (opcode) {
 		case IONIC_CMD_NOP:
@@ -162,7 +162,7 @@ void dump_adminq(char *path)
 void dump_admincq(char *path)
 {
 	FILE *file;
-	struct admin_comp comp;
+	struct ionic_admin_comp comp;
 	int tail = get_val(path, "tail");
 	int num_descs = get_val(path, "num_descs");
 	int i;
@@ -193,7 +193,7 @@ void dump_admincq(char *path)
 void dump_notifycq(char *path)
 {
 	FILE *file;
-	struct notifyq_event ev;
+	struct ionic_notifyq_event ev;
 	int tail = get_val(path, "tail");
 	int num_descs = get_val(path, "num_descs");
 	int i;
@@ -243,8 +243,8 @@ void dump_rxq(char *path)
 {
 	char *fpath;
 	FILE *file, *file_sg;
-	struct rxq_desc desc;
-	struct rxq_sg_desc sg_desc;
+	struct ionic_rxq_desc desc;
+	struct ionic_rxq_sg_desc sg_desc;
 	int i, j;
 
 	int head = get_val(path, "head");
@@ -289,7 +289,7 @@ void dump_rxq(char *path)
 void dump_rxcq(char *path)
 {
 	FILE *file;
-	struct rxq_comp comp;
+	struct ionic_rxq_comp comp;
 	int tail = get_val(path, "tail");
 	int num_descs = get_val(path, "num_descs");
 	int i;
@@ -340,7 +340,7 @@ void dump_rxcq(char *path)
 void dump_txcq(char *path)
 {
 	FILE *file;
-	struct txq_comp comp;
+	struct ionic_txq_comp comp;
 	int tail = get_val(path, "tail");
 	int num_descs = get_val(path, "num_descs");
 	int i;
@@ -369,8 +369,8 @@ void dump_txq(char *path)
 {
 	char *fpath;
 	FILE *file, *file_sg;
-	struct txq_desc desc;
-	struct txq_sg_desc sg_desc;
+	struct ionic_txq_desc desc;
+	struct ionic_txq_sg_desc sg_desc;
 	int i, j;
 
 	int head = get_val(path, "head");

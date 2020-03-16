@@ -189,6 +189,9 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 	xa_unlock_irq(xa);
 }
 
+#define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+#define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+
 /****************************************************************************
  *
  * Compatibility for OFED features that may be affected by OFA version

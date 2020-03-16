@@ -1333,8 +1333,6 @@ void ionic_rx_fill(struct net_device *netdev, int length)
 		rxq->lif->rx_iobuf[rxq->head->index] = iobuf;
 		rxq->head = rxq->head->next;
 
-		// only ring doorbell every stride.
-//		if (((rxq->head->index + 1) & RX_RING_DOORBELL_STRIDE) == 0) {
 		struct ionic_doorbell db = {
 			.qid_lo = rxq->hw_index,
 			.qid_hi = rxq->hw_index >> 8,
@@ -1342,7 +1340,6 @@ void ionic_rx_fill(struct net_device *netdev, int length)
 			.p_index = rxq->head->index,
 		};
 		writeq(*(u64 *)&db, rxq->db);
-//		}
 	}
 }
 

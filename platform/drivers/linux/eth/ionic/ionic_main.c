@@ -616,7 +616,6 @@ int ionic_port_reset(struct ionic *ionic)
 
 static int __init ionic_init_module(void)
 {
-	ionic_struct_size_checks();
 	pr_info("%s %s, ver %s\n",
 		IONIC_DRV_NAME, IONIC_DRV_DESCRIPTION, IONIC_DRV_VERSION);
 	ionic_debugfs_create();

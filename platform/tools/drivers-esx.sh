@@ -2,7 +2,8 @@
 #!/bin/bash
 
 #
-# Generate drivers-esx.tar.xz from the workspace.  The package can be used to do vib install on ESX
+# Generate drivers-esx.tar.xz from the workspace.
+# The package can be used to do vib install on ESX.
 #
 # Synopsis:
 #
@@ -69,8 +70,9 @@ rsync -r --delete --delete-excluded --copy-links \
   --exclude="freebsd/" \
   --exclude="linux/" \
   --exclude="pxe/" \
+  --exclude="rdma/" \
   "$ESXI_VIB_SRC/" "$GEN_DIR/drivers"
-  
+
 # Set version string
 if [ -n "$SW_VERSION" ] ; then
 	VER=$SW_VERSION

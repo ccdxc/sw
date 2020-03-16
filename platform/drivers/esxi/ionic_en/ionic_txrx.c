@@ -232,7 +232,7 @@ ionic_rx_pkt_free(struct queue *q,
         }
 }
 
-#define RX_RING_DOORBELL_STRIDE         ((1 << 2) - 1)
+#define IONIC_RX_RING_DOORBELL_STRIDE   ((1 << 2) - 1)
 
 void
 ionic_rx_fill(struct queue *q)
@@ -272,7 +272,7 @@ ionic_rx_fill(struct queue *q)
                 desc->opcode = IONIC_RXQ_DESC_OPCODE_SIMPLE;
 
                 ring_doorbell = ((q->head->index + 1) &
-                                RX_RING_DOORBELL_STRIDE) == 0;
+                                IONIC_RX_RING_DOORBELL_STRIDE) == 0;
 
                 ionic_q_post(q, ring_doorbell, ionic_rx_clean, pkt);
         }

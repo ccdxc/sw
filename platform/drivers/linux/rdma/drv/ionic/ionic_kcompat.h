@@ -65,6 +65,11 @@
 /* Use dma_alloc_coherent() */
 #endif
 
+#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 5,1, /* RHEL */ 99,99)
+#else
+#define HAVE_STATIC_ASSERT
+#endif
+
 #ifdef HAVE_XARRAY
 #ifdef HAVE_XARRAY_FOR_EACH_ARGS
 #include <linux/xarray.h>
@@ -133,6 +138,11 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 	xa_unlock_irq(xa);
 }
 #endif /* HAVE_XARRAY */
+#ifndef HAVE_STATIC_ASSERT
+
+#define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+#define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+#endif
 
 /****************************************************************************
  *

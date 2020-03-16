@@ -1226,7 +1226,6 @@ static int __init
 ionic_init_module(void)
 {
 
-	ionic_struct_size_checks();
 	ionic_validate_params();
 	pr_info("%s, ver: %s\n", DRV_DESCRIPTION, DRV_VERSION);
 

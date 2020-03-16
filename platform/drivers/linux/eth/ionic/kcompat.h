@@ -6406,7 +6406,8 @@ ptp_read_system_postts(struct ptp_system_timestamp __always_unused *sts)
 
 /*****************************************************************************/
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5,1,0))
-
+#define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+#define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
 #else /* >= 5.1.0 */
 #define HAVE_NDO_FDB_ADD_EXTACK
 #define NO_XDP_QUERY_XSK_UMEM

@@ -29,8 +29,8 @@
 #include <linux/io.h>
 #include <linux/slab.h>
 
-#include "ionic_dev.h"
 #include "ionic.h"
+#include "ionic_dev.h"
 
 static void
 ionic_init_devinfo(struct ionic_dev *idev)

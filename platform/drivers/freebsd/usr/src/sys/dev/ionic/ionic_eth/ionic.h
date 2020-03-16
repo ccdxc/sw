@@ -28,9 +28,10 @@
 
 struct ionic_lif;
 
+#include "ionic_kpicompat.h"
+
 #include "ionic_dev.h"
 #include "ionic_api.h"
-#include "ionic_kpicompat.h"
 #include "ionic_osdep.h"
 
 #define DRV_NAME		"ionic"

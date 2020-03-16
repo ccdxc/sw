@@ -47,101 +47,92 @@ struct ionic_dev_bar {
 	unsigned long len;
 };
 
-#ifndef BUILD_BUG_ON
-#define BUILD_BUG_ON(x) CTASSERT(!(x))
-#endif
+/* Registers */
+static_assert(sizeof(struct ionic_intr) == 32);
 
-static inline void ionic_struct_size_checks(void)
-{
-	/* Registers */
-	BUILD_BUG_ON(sizeof(struct ionic_intr) != 32);
+static_assert(sizeof(struct ionic_doorbell) == 8);
+static_assert(sizeof(struct ionic_intr_ctrl) == 32);
+static_assert(sizeof(struct ionic_intr_status) == 8);
+static_assert(sizeof(union ionic_dev_regs) == 4096);
+static_assert(sizeof(union ionic_dev_info_regs) == 2048);
+static_assert(sizeof(union ionic_dev_cmd_regs) == 2048);
+static_assert(sizeof(struct ionic_lif_stats) == 1024);
 
-	BUILD_BUG_ON(sizeof(struct ionic_doorbell) != 8);
-	BUILD_BUG_ON(sizeof(struct ionic_intr_ctrl) != 32);
-	BUILD_BUG_ON(sizeof(struct ionic_intr_status) != 8);
+static_assert(sizeof(struct ionic_admin_cmd) == 64);
+static_assert(sizeof(struct ionic_admin_comp) == 16);
+static_assert(sizeof(struct ionic_nop_cmd) == 64);
+static_assert(sizeof(struct ionic_nop_comp) == 16);
 
-	BUILD_BUG_ON(sizeof(union ionic_dev_regs) != 4096);
-	BUILD_BUG_ON(sizeof(union ionic_dev_info_regs) != 2048);
-	BUILD_BUG_ON(sizeof(union ionic_dev_cmd_regs) != 2048);
+/* Device commands */
+static_assert(sizeof(struct ionic_dev_identify_cmd) == 64);
+static_assert(sizeof(struct ionic_dev_identify_comp) == 16);
+static_assert(sizeof(struct ionic_dev_init_cmd) == 64);
+static_assert(sizeof(struct ionic_dev_init_comp) == 16);
+static_assert(sizeof(struct ionic_dev_reset_cmd) == 64);
+static_assert(sizeof(struct ionic_dev_reset_comp) == 16);
+static_assert(sizeof(struct ionic_dev_getattr_cmd) == 64);
+static_assert(sizeof(struct ionic_dev_getattr_comp) == 16);
+static_assert(sizeof(struct ionic_dev_setattr_cmd) == 64);
+static_assert(sizeof(struct ionic_dev_setattr_comp) == 16);
 
-	BUILD_BUG_ON(sizeof(struct ionic_lif_stats) != 1024);
+/* Port commands */
+static_assert(sizeof(struct ionic_port_identify_cmd) == 64);
+static_assert(sizeof(struct ionic_port_identify_comp) == 16);
+static_assert(sizeof(struct ionic_port_init_cmd) == 64);
+static_assert(sizeof(struct ionic_port_init_comp) == 16);
+static_assert(sizeof(struct ionic_port_reset_cmd) == 64);
+static_assert(sizeof(struct ionic_port_reset_comp) == 16);
+static_assert(sizeof(struct ionic_port_getattr_cmd) == 64);
+static_assert(sizeof(struct ionic_port_getattr_comp) == 16);
+static_assert(sizeof(struct ionic_port_setattr_cmd) == 64);
+static_assert(sizeof(struct ionic_port_setattr_comp) == 16);
 
-	BUILD_BUG_ON(sizeof(struct ionic_admin_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_admin_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_nop_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_nop_comp) != 16);
+/* LIF commands */
+static_assert(sizeof(struct ionic_lif_init_cmd) == 64);
+static_assert(sizeof(struct ionic_lif_init_comp) == 16);
+static_assert(sizeof(struct ionic_lif_reset_cmd) == 64);
+static_assert(sizeof(ionic_lif_reset_comp) == 16);
+static_assert(sizeof(struct ionic_lif_getattr_cmd) == 64);
+static_assert(sizeof(struct ionic_lif_getattr_comp) == 16);
+static_assert(sizeof(struct ionic_lif_setattr_cmd) == 64);
+static_assert(sizeof(struct ionic_lif_setattr_comp) == 16);
 
-	/* Device commands */
-	BUILD_BUG_ON(sizeof(struct ionic_dev_identify_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_dev_identify_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_dev_init_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_dev_init_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_dev_reset_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_dev_reset_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_dev_getattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_dev_getattr_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_dev_setattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_dev_setattr_comp) != 16);
+static_assert(sizeof(struct q_identify_cmd) == 64);
+static_assert(sizeof(struct q_identify_comp) == 16);
+static_assert(sizeof(struct ionic_q_init_cmd) == 64);
+static_assert(sizeof(struct ionic_q_init_comp) == 16);
+static_assert(sizeof(struct ionic_q_control_cmd) == 64);
+static_assert(sizeof(ionic_q_control_comp) == 16);
 
-	/* Port commands */
-	BUILD_BUG_ON(sizeof(struct ionic_port_identify_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_port_identify_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_port_init_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_port_init_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_port_reset_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_port_reset_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_port_getattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_port_getattr_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_port_setattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_port_setattr_comp) != 16);
+static_assert(sizeof(struct ionic_rx_mode_set_cmd) == 64);
+static_assert(sizeof(ionic_rx_mode_set_comp) == 16);
+static_assert(sizeof(struct ionic_rx_filter_add_cmd) == 64);
+static_assert(sizeof(struct ionic_rx_filter_add_comp) == 16);
+static_assert(sizeof(struct ionic_rx_filter_del_cmd) == 64);
+static_assert(sizeof(ionic_rx_filter_del_comp) == 16);
 
-	/* LIF commands */
-	BUILD_BUG_ON(sizeof(struct ionic_lif_init_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_lif_init_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_lif_reset_cmd) != 64);
-	BUILD_BUG_ON(sizeof(ionic_lif_reset_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_lif_getattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_lif_getattr_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_lif_setattr_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_lif_setattr_comp) != 16);
+/* RDMA commands */
+static_assert(sizeof(struct ionic_rdma_reset_cmd) == 64);
+static_assert(sizeof(struct ionic_rdma_queue_cmd) == 64);
 
-	BUILD_BUG_ON(sizeof(struct q_identify_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct q_identify_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_q_init_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_q_init_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_q_control_cmd) != 64);
-	BUILD_BUG_ON(sizeof(ionic_q_control_comp) != 16);
+/* Events */
+static_assert(sizeof(struct ionic_notifyq_cmd) == 4);
+static_assert(sizeof(union ionic_notifyq_comp) == 64);
+static_assert(sizeof(struct ionic_notifyq_event) == 64);
+static_assert(sizeof(struct ionic_link_change_event) == 64);
+static_assert(sizeof(struct ionic_reset_event) == 64);
+static_assert(sizeof(struct ionic_heartbeat_event) == 64);
+static_assert(sizeof(struct ionic_log_event) == 64);
 
-	BUILD_BUG_ON(sizeof(struct ionic_rx_mode_set_cmd) != 64);
-	BUILD_BUG_ON(sizeof(ionic_rx_mode_set_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_rx_filter_add_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_rx_filter_add_comp) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_rx_filter_del_cmd) != 64);
-	BUILD_BUG_ON(sizeof(ionic_rx_filter_del_comp) != 16);
+/* I/O */
+static_assert(sizeof(struct ionic_txq_desc) == 16);
+static_assert(sizeof(struct ionic_txq_sg_desc) == 128);
+static_assert(sizeof(struct ionic_txq_sg_desc_v1) == 256);
+static_assert(sizeof(struct ionic_txq_comp) == 16);
 
-	/* RDMA commands */
-	BUILD_BUG_ON(sizeof(struct ionic_rdma_reset_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_rdma_queue_cmd) != 64);
-
-	/* Events */
-	BUILD_BUG_ON(sizeof(struct ionic_notifyq_cmd) != 4);
-	BUILD_BUG_ON(sizeof(union ionic_notifyq_comp) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_notifyq_event) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_link_change_event) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_reset_event) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_heartbeat_event) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_log_event) != 64);
-
-	/* I/O */
-	BUILD_BUG_ON(sizeof(struct ionic_txq_desc) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_txq_sg_desc) != 128);
-	BUILD_BUG_ON(sizeof(struct ionic_txq_sg_desc_v1) != 256);
-	BUILD_BUG_ON(sizeof(struct ionic_txq_comp) != 16);
-
-	BUILD_BUG_ON(sizeof(struct ionic_rxq_desc) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_rxq_sg_desc) != 128);
-	BUILD_BUG_ON(sizeof(struct ionic_rxq_comp) != 16);
-}
+static_assert(sizeof(struct ionic_rxq_desc) == 16);
+static_assert(sizeof(struct ionic_rxq_sg_desc) == 128);
+static_assert(sizeof(struct ionic_rxq_comp) == 16);
 
 enum ionic_fw_hb_state {
 	IONIC_FW_HB_DISABLED,

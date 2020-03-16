@@ -105,7 +105,6 @@ typedef enum
 #define NTXQ_DESC 16
 #define NRXQ_DESC 16
 #define NOTIFYQ_LENGTH	16
-//#define RX_RING_DOORBELL_STRIDE ((1 << 3) - 1)
 
 typedef unsigned char u8;
 typedef unsigned short u16;

@@ -29,10 +29,10 @@ typedef u8 bool;
 
 #include "ionic_if.h"
 
-#define DEV_CMD_DONE                    0x00000001
+#define IONIC_DEV_CMD_DONE              0x00000001
 
-union dev_cmd_regs *cmd_regs;
-union dev_info_regs *info_regs;
+union ionic_dev_cmd_regs *cmd_regs;
+union ionic_dev_info_regs *info_regs;
 
 char *progname;
 
@@ -43,11 +43,12 @@ static void usage(char **argv)
 	printf("%s <pci> identify\n", progname);
 	printf("%s <pci> link <down|up>\n", progname);
 	printf("%s <pci> lif_init <index>\n", progname);
-	printf("%s <pci> vf <id> set|get spoof|trust|state|mac|vlan|rate [val]\n", progname);
+	printf("%s <pci> vf <id> set|get spoof|trust|state|mac|vlan|rate [val]\n",
+	       progname);
 	exit(1);
 }
 
-static int go(union dev_cmd *cmd, union dev_cmd_comp *comp)
+static int go(union ionic_dev_cmd *cmd, union ionic_dev_cmd_comp *comp)
 {
 	unsigned int i;
 
@@ -59,7 +60,7 @@ static int go(union dev_cmd *cmd, union dev_cmd_comp *comp)
 
 	sleep(1);
 
-	if (!(cmd_regs->done & DEV_CMD_DONE)) {
+	if (!(cmd_regs->done & IONIC_DEV_CMD_DONE)) {
 		fprintf(stderr, "Done bit not set after 1 second.\n");
 		return 0;
 	}
@@ -83,10 +84,10 @@ static void dump_regs()
 
 static void nop(int argc, char **argv)
 {
-	union dev_cmd cmd = {
+	union ionic_dev_cmd cmd = {
 		.nop.opcode = IONIC_CMD_NOP,
 	};
-	union dev_cmd_comp comp;
+	union ionic_dev_cmd_comp comp;
 
 	if (argc != 2)
 		usage(argv);
@@ -97,10 +98,10 @@ static void nop(int argc, char **argv)
 
 static void reset(int argc, char **argv)
 {
-	union dev_cmd cmd = {
+	union ionic_dev_cmd cmd = {
 		.reset.opcode = IONIC_CMD_RESET,
 	};
-	union dev_cmd_comp comp;
+	union ionic_dev_cmd_comp comp;
 
 	if (argc != 2)
 		usage(argv);
@@ -111,12 +112,12 @@ static void reset(int argc, char **argv)
 
 static void identify(int argc, char **argv)
 {
-	union dev_cmd cmd = {
+	union ionic_dev_cmd cmd = {
 		.identify.opcode = IONIC_CMD_IDENTIFY,
 		.identify.ver = IONIC_IDENTITY_VERSION_1,
 	};
-	union dev_cmd_comp comp;
-	union dev_identity *dev_ident;
+	union ionic_dev_cmd_comp comp;
+	union ionic_dev_identity *dev_ident;
 
 	if (argc != 2)
 		usage(argv);
@@ -137,7 +138,7 @@ static void identify(int argc, char **argv)
 	printf("fw_heartbeat:     0x%x\n", info_regs->fw_heartbeat);
 	printf("\n");
 
-	dev_ident = (union dev_identity *)cmd_regs->data;
+	dev_ident = (union ionic_dev_identity *)cmd_regs->data;
 	printf("version:          %d\n", dev_ident->version);
 	printf("type:             %d\n", dev_ident->type);
 	printf("nports:           %d\n", dev_ident->nports);
@@ -151,11 +152,11 @@ static void identify(int argc, char **argv)
 
 static void port_state(int argc, char **argv)
 {
-	union dev_cmd cmd = {
+	union ionic_dev_cmd cmd = {
 		.port_setattr.opcode = IONIC_CMD_PORT_SETATTR,
 		.port_setattr.attr = IONIC_PORT_ATTR_STATE,
 	};
-	union dev_cmd_comp comp;
+	union ionic_dev_cmd_comp comp;
 	u8 state;
 
 	if (argc != 3)
@@ -175,10 +176,10 @@ static void port_state(int argc, char **argv)
 
 static void lif_init(int argc, char **argv)
 {
-	union dev_cmd cmd = {
+	union ionic_dev_cmd cmd = {
 		.lif_init.opcode = IONIC_CMD_LIF_INIT,
 	};
-	union dev_cmd_comp comp;
+	union ionic_dev_cmd_comp comp;
 
 	if (argc != 3)
 		usage(argv);
@@ -191,8 +192,8 @@ static void lif_init(int argc, char **argv)
 
 static void vf_attr(int argc, char **argv)
 {
-	union dev_cmd cmd = { 0 };
-	union dev_cmd_comp comp;
+	union ionic_dev_cmd cmd = { 0 };
+	union ionic_dev_cmd_comp comp;
 	unsigned int attr;
 	unsigned int vf;
 	unsigned int set = 0;
@@ -301,7 +302,8 @@ int main(int argc, char **argv)
 
 	/* get the 64-bit bar offset from setpci in two 32-bit chunks */
 	pciaddr = argv[1];
-	snprintf(cmdbuf, sizeof(cmdbuf), "setpci -s %s base_address_0 base_address_1", pciaddr);
+	snprintf(cmdbuf, sizeof(cmdbuf),
+		 "setpci -s %s base_address_0 base_address_1", pciaddr);
 	fp = popen(cmdbuf, "r");
 	if (!fp) {
 		perror("popen for setpci");
@@ -343,20 +345,22 @@ int main(int argc, char **argv)
 	if (fd == -1) {
 		perror(path);
 		exit(1);
-	} 
+	}
 
-	mapped = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, bar_addr);
+	mapped = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_SHARED,
+		      fd, bar_addr);
 	if (mapped == MAP_FAILED) {
 		perror("mmap");
 		exit(1);
 	}
 
-	info_regs = mapped + BAR0_DEV_INFO_REGS_OFFSET;
+	info_regs = mapped + IONIC_BAR0_DEV_INFO_REGS_OFFSET;
 	if (info_regs->signature != IONIC_DEV_INFO_SIGNATURE) {
-		fprintf(stderr, "Signature didn't match.  Expected 0x%08x, got 0x%08x\n",
+		fprintf(stderr,
+			"Signature mismatch. Expected 0x%08x, got 0x%08x\n",
 			IONIC_DEV_INFO_SIGNATURE, info_regs->signature);
 	}
-	cmd_regs = mapped + BAR0_DEV_CMD_REGS_OFFSET;
+	cmd_regs = mapped + IONIC_BAR0_DEV_CMD_REGS_OFFSET;
 
 	cmd = argv[1];
 

@@ -130,4 +130,7 @@ static inline int __addrconf_ifid_eui48(u8 *eui, struct net_device *dev)
 #define notifier_from_errno(v) NOTIFY_DONE
 #endif
 
+#define __static_assert(expr, msg, ...) _Static_assert(expr, msg)
+#define static_assert(expr, ...) __static_assert(expr, ##__VA_ARGS__, #expr)
+
 #endif

@@ -907,6 +907,17 @@ static void __exit ionic_exit_work(struct work_struct *ws)
 	}
 }
 
+static_assert(sizeof(struct ionic_v1_cqe) == 32);
+static_assert(sizeof(struct ionic_v1_base_hdr) == 16);
+static_assert(sizeof(struct ionic_v1_recv_bdy) == 48);
+static_assert(sizeof(struct ionic_v1_common_bdy) == 48);
+static_assert(sizeof(struct ionic_v1_atomic_bdy) == 48);
+static_assert(sizeof(struct ionic_v1_reg_mr_bdy) == 48);
+static_assert(sizeof(struct ionic_v1_bind_mw_bdy) == 48);
+static_assert(sizeof(struct ionic_v1_wqe) == 64);
+static_assert(sizeof(struct ionic_v1_admin_wqe) == 64);
+static_assert(sizeof(struct ionic_v1_eqe) == 4);
+
 static void __exit ionic_mod_exit(void)
 {
 	struct work_struct ws;
@@ -922,17 +933,6 @@ static void __exit ionic_mod_exit(void)
 	destroy_workqueue(ionic_dev_workq);
 
 	ionic_dbg_exit();
-
-	BUILD_BUG_ON(sizeof(struct ionic_v1_cqe) != 32);
-	BUILD_BUG_ON(sizeof(struct ionic_v1_base_hdr) != 16);
-	BUILD_BUG_ON(sizeof(struct ionic_v1_recv_bdy) != 48);
-	BUILD_BUG_ON(sizeof(struct ionic_v1_common_bdy) != 48);
-	BUILD_BUG_ON(sizeof(struct ionic_v1_atomic_bdy) != 48);
-	BUILD_BUG_ON(sizeof(struct ionic_v1_reg_mr_bdy) != 48);
-	BUILD_BUG_ON(sizeof(struct ionic_v1_bind_mw_bdy) != 48);
-	BUILD_BUG_ON(sizeof(struct ionic_v1_wqe) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_v1_admin_wqe) != 64);
-	BUILD_BUG_ON(sizeof(struct ionic_v1_eqe) != 4);
 }
 
 module_init(ionic_mod_init);
