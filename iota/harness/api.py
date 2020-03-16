@@ -457,6 +457,9 @@ def IsDryrun():
 def IsRegression():
     return GlobalOptions.regression
 
+def SetNicMode(mode):
+    return store.GetTestbed().GetCurrentTestsuite().SetNicMode(mode)
+
 def GetNicMode():
     return store.GetTestbed().GetCurrentTestsuite().GetNicMode()
 

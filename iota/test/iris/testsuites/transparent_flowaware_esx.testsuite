@@ -1,0 +1,62 @@
+meta:
+    name        : transparent_flowaware_esx
+    description : Transparent Flowaware ESX Test Suite
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : unified
+    fwdmode     : transparent
+    policymode  : flowaware
+    os          : [ esx ]
+
+packages:
+    - iota.test.iris
+
+images:
+    naples: nic/naples_fw.tar
+
+setup:
+    topology: test/iris/topologies/2Naples_VM/vm.topology
+    config  :
+
+        - step : utils.cleanup
+        - step : testcases.penctl.install
+        - step : testcases.penctl.enable_ssh
+        - step : config.netagent.mode_switch
+          args :
+               fwd_mode    : "TRANSPARENT"
+               policy_Mode : "FLOWAWARE"
+        - step : config.netagent.hw_push_config
+        - step : config.netagent.naples_inband_ip_config
+        - step : testcases.drivers.install_iperf
+
+common:
+    verifs:
+        #-   step    : verif.utils.verify_interrupts
+        #-   step    : verif.utils.verify_ionic_stats
+    debugs:
+        # Commenting out techsupport collection. If tech support fails,
+        #   run gets stuck for a long time
+        #-   step : verif.utils.collect_logs_and_cores
+
+    setup:
+        #-   step    : verif.utils.link_flap
+        #-   step    : verif.utils.del_add_config
+
+testbundles:
+    precheckin:
+        # Relative paths from iota/test/iris/testbundles/
+        - networking/connectivity.testbundle
+        - networking/telemetry.testbundle
+        - transition/trans_flow_to_insert_enf.testbundle
+        - networking/connectivity.testbundle
+        - networking/telemetry.testbundle
+
+    sanity_ext:
+        # Relative paths from iota/test/iris/testbundles/
+
+    regression:
+        # Relative paths from iota/test/iris/testbundles/
+
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores
+    #- step      : testcases.frequency.clock_settings_td

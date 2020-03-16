@@ -8,8 +8,7 @@ queue_name: baremetal
 
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
 e2e-targets:
-  # baremetal + baremetal Esx test cases
-  e2e-esx-bm:
+  e2e-esx-useg_enf:
    commands: ["sh", "-c", "make esx-precheckin && ./run_iota.sh --testsuite useg_enf_esx --precheckin --skip-sanity"]
    # commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:akshay@pensando.io"]
@@ -35,6 +34,34 @@ e2e-targets:
           VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
+
+  e2e-esx-trans_flow:
+   commands: ["sh", "-c", "make esx-precheckin && ./run_iota.sh --testsuite transparent_flowaware_esx --precheckin --skip-sanity"]
+   # commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:akshay@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-10
+       count: 2
+       resources:
+         servers:
+           - type: hpe
+           - type: server-a
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz
   - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node1
@@ -43,3 +70,9 @@ logfiles:
   - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node2
   - /sw/iota/all_corefiles.tgz
   - /testcase_result_export/testsuite_useg_enf_esx_results.json
+  - /sw/iota/logs/transparent_flowaware_esx/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node1
+  - /sw/iota/logs/transparent_flowaware_esx/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node2
+  - /sw/iota/logs/transparent_flowaware_esx/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node1
+  - /sw/iota/logs/transparent_flowaware_esx/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node2
+  - /sw/iota/all_corefiles.tgz
+  - /testcase_result_export/testsuite_transparent_flowaware_esx_results.json

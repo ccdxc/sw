@@ -72,7 +72,7 @@ parser.add_argument('--host-password', dest='host_password',
 parser.add_argument('--image-manifest', dest='image_manifest',
                     default='/sw/images/latest.json', help='Image manifest file')
 parser.add_argument('--mode', dest='mode', default='hostpin',
-                    choices=["classic", "hostpin", "bitw", "hostpin_dvs"],
+                    choices=["classic", "hostpin", "bitw", "hostpin_dvs", "unified"],
                     help='Naples mode - hostpin / classic.')
 parser.add_argument('--cimc-username', dest='cimc_username',
                     default="admin", help='CIMC Username')

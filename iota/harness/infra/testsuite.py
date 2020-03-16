@@ -123,6 +123,9 @@ class TestSuite:
     def GetNicMode(self):
         return self.__spec.meta.nicmode
 
+    def SetNicMode(self, mode):
+        self.__spec.meta.nicmode = mode
+
     def GetVerifs(self):
         return self.__verifs
 

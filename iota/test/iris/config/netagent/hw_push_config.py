@@ -83,7 +83,7 @@ def __prepare_ipv6_address_str_for_endpoint(ep):
     objects = netagent_api.QueryConfigs(kind='Network', filter=nw_filter)
     assert(len(objects) == 1)
     nw_obj = objects[0]
-    ep_spec_ip = ep.spec.ipv6_address
+    ep_spec_ip = ep.spec.ipv6_addresses[0]
     nw_spec_subnet = nw_obj.spec.ipv6_subnet
     ip_str = ep_spec_ip.split('/')[0] + '/' + nw_spec_subnet.split('/')[1]
     return ip_str
@@ -150,8 +150,16 @@ def __add_config_worklads(req, target_node = None):
                 #Set encap vlan if its non native.
                 wl_msg.encap_vlan = wire_vlan
                 wl_msg.uplink_vlan = wire_vlan
+
+        elif api.GetNicMode() == 'unified':
+            host_if = api.AllocateHostInterfaceForNode(wl_msg.node_name)
+            wl_msg.ipv6_prefix = __prepare_ipv6_address_str_for_endpoint(ep)
+            wl_msg.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
+            wl_msg.encap_vlan = wl_msg.uplink_vlan
+
         else:
             assert(0)
+
         wl_msg.interface = host_if
         wl_msg.parent_interface = host_if
 
@@ -450,7 +458,7 @@ def __add_config_classic_workloads(req, target_node = None):
 
 def __add_workloads(target_node = None):
     req = topo_svc.WorkloadMsg()
-    if api.GetNicMode() in ['hostpin', 'hostpin_dvs']:
+    if api.GetNicMode() in ['hostpin', 'hostpin_dvs', 'unified']:
         __add_config_worklads(req, target_node)
     elif api.GetNicMode() == 'classic':
         __add_config_classic_workloads(req, target_node)
@@ -475,6 +483,12 @@ def AddWorkloads():
 
 def RestoreWorkloads():
     __recover_workloads()
+
+def DeleteWorkloads():
+    if api.GetNicMode() == 'classic':
+        __delete_classic_workloads()
+    else:
+        __delete_workloads()
 
 def AddNaplesWorkloads(target_node=None):
     req = topo_svc.WorkloadMsg()
@@ -571,21 +585,45 @@ def ReAddWorkloads(node):
         __add_workloads(node)
     AddNaplesWorkloads(node)
 
+def UpdateNetworkAndEnpointObject():
+    nwObj = netagent_api.QueryConfigs(kind='Network')
+    if not nwObj:
+        api.Logger.error("Failed to get network object")
+        return api.types.status.FAILURE
 
+    api.Testbed_ResetVlanAlloc()
+    vlan = api.Testbed_AllocateVlan()
+    api.Logger.info("Ignoring first vlan as it is native ", vlan)
+    netagent_api.UpdateTestBedVlans(nwObj)
+
+    epObj = netagent_api.QueryConfigs(kind='Endpoint')
+    if not epObj:
+        api.Logger.error("Failed to get endpoint object")
+        return api.types.status.FAILURE
+
+    netagent_api.UpdateNodeUuidEndpoints(epObj)
+    return api.types.status.SUCCESS
 
 def Main(args):
     #time.sleep(120)
+    api.Logger.info("NIC Mode is %s"%(api.GetNicMode()))
     agent_nodes = api.GetNaplesHostnames()
     netagent_api.Init(agent_nodes, hw = True)
 
     netagent_api.ReadConfigs(api.GetTopologyDirectory(), reset=False)
+
+    if api.GetNicMode() in ['unified']:
+        ret = UpdateNetworkAndEnpointObject()
+        if ret != api.types.status.SUCCESS:
+            return ret
+    
     #Delete path is not stable yet
     #netagent_api.DeleteBaseConfig()
 
     if GlobalOptions.skip_setup:
         RestoreWorkloads()
     else:
-        if api.GetNicMode() != 'classic':
+        if api.GetNicMode() not in ['classic','unified']:
             netagent_api.PushBaseConfig()
         __add_workloads()
     return api.types.status.SUCCESS
