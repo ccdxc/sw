@@ -197,7 +197,6 @@ flow_table_pd::insert(void *entry,
 
     bzero((void *)&params, sizeof(sdk_table_api_params_t));
     params.entry = (base_table_entry_t *)entry;
-    params.entry_size = flow_hash_info_entry_t::entry_size();
     if (hash_valid) {
         params.hash_32b = *hash_value;
         params.hash_valid = true;
@@ -241,7 +240,6 @@ flow_table_pd::update(void *entry,
     
     bzero((void *)&params, sizeof(sdk_table_api_params_t));
     params.entry = (base_table_entry_t *)entry;
-    params.entry_size = flow_hash_info_entry_t::entry_size();
     if (hash_valid) {
         params.hash_32b = *hash_value;
         params.hash_valid = 1;
@@ -270,7 +268,6 @@ flow_table_pd::remove(void *entry) {
 
     bzero((void *)&params, sizeof(sdk_table_api_params_t));
     params.entry = (base_table_entry_t *)entry;
-    params.entry_size = flow_hash_info_entry_t::entry_size();
     sret = table_->remove(&params);
 
     ret = hal_sdk_ret_to_hal_ret(sret);
@@ -332,7 +329,6 @@ flow_table_pd::get(void *entry, FlowHashGetResponse *rsp) {
 
     params.entry = (base_table_entry_t *)entry;
     params.appdata = &swappdata;
-    params.entry_size = flow_hash_info_entry_t::entry_size();
     sret = table_->get(&params);
     if (sret == SDK_RET_OK) {
         str = key2str(params.entry);

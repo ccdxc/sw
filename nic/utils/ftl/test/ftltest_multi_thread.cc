@@ -145,7 +145,8 @@ TEST_F(multi_thread, insert_iterate_remove)
 {
     insert_bulk_async(16*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     remove_bulk_async(16*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
-    thread iterate_th(&multi_thread::iterate, this);
+    thread iterate_th(&multi_thread::iterate, this, 16*1024,
+                      sdk::SDK_RET_OK, WITHOUT_HASH, 0, false);
     iterate_th.join();
 }
 

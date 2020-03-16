@@ -39,20 +39,22 @@ table_size_get(uint32_t table_id)
 void
 ftl_mock_init ()
 {
+    flow_hash_entry_t entry;
+    ipv4_flow_hash_entry_t ipv4_entry;
     mocktables[P4TBL_ID_FLOW].entries =
-        (base_table_entry_t *)calloc(table_size_get(P4TBL_ID_FLOW), flow_hash_entry_t::entry_size());
+        (base_table_entry_t *)calloc(table_size_get(P4TBL_ID_FLOW), entry.entry_size());
     assert(mocktables[P4TBL_ID_FLOW].entries);
 
     mocktables[P4TBL_ID_FLOW_OHASH].entries =
-        (base_table_entry_t *)calloc(table_size_get(P4TBL_ID_FLOW_OHASH), flow_hash_entry_t::entry_size());
+        (base_table_entry_t *)calloc(table_size_get(P4TBL_ID_FLOW_OHASH), entry.entry_size());
     assert(mocktables[P4TBL_ID_FLOW_OHASH].entries);
 
     mocktables[P4TBL_ID_IPV4_FLOW].entries =
-        (base_table_entry_t *)calloc(table_size_get(P4TBL_ID_IPV4_FLOW), ipv4_flow_hash_entry_t::entry_size());
+        (base_table_entry_t *)calloc(table_size_get(P4TBL_ID_IPV4_FLOW), ipv4_entry.entry_size());
     assert(mocktables[P4TBL_ID_IPV4_FLOW].entries);
 
     mocktables[P4TBL_ID_IPV4_FLOW_OHASH].entries =
-        (base_table_entry_t *)calloc(table_size_get(P4TBL_ID_IPV4_FLOW_OHASH), ipv4_flow_hash_entry_t::entry_size());
+        (base_table_entry_t *)calloc(table_size_get(P4TBL_ID_IPV4_FLOW_OHASH), ipv4_entry.entry_size());
     assert(mocktables[P4TBL_ID_IPV4_FLOW_OHASH].entries);
 }
 

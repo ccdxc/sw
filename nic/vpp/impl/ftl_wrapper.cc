@@ -252,9 +252,9 @@ ftl_create (void *key2str, void *appdata2str)
 }
 
 int
-ftl_insert (ftl *obj, flow_hash_entry_t *entry, uint32_t hash, 
+ftl_insert (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
             uint8_t log, uint8_t update)
-{ 
+{
     sdk_table_api_params_t params = {0};
 
     if (get_skip_ftl_program()) {
@@ -266,7 +266,6 @@ ftl_insert (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
         params.hash_valid = 1;
     }
     params.entry = entry;
-    params.entry_size = flow_hash_entry_t::entry_size();
 
     if (unlikely(update)) {
         if (SDK_RET_OK != obj->update(&params)) {
@@ -315,7 +314,6 @@ ftl_remove (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
         params.hash_valid = 1;
     }
     params.entry = entry;
-    params.entry_size = flow_hash_entry_t::entry_size();
     if (SDK_RET_OK != obj->remove(&params)) {
         return -1;
     }
@@ -345,7 +343,6 @@ ftl_clear (ftl *obj, bool clear_global_state,
            bool clear_thread_local_state)
 {
     sdk_table_api_params_t params = {0};
-    params.entry_size = flow_hash_entry_t::entry_size();
 
     if (SDK_RET_OK != obj->clear(clear_global_state,
                                  clear_thread_local_state,
@@ -432,7 +429,6 @@ ftl_dump_hw_entries (ftl *obj, char *logfile, uint8_t detail, bool v6)
                     ftl_dump_hw_entry_iter_cb;
     params.cbdata = logfp;
     params.force_hwread = false;
-    params.entry_size = flow_hash_entry_t::entry_size();
     if (v6) {
         params.key_type = KEY_TYPE_IPV6;
         ftlv6_entry_count = 0;
@@ -484,7 +480,6 @@ ftl_get_flow_count (ftl *obj, bool v6)
     params.itercb = ftl_hw_entry_count_cb;
     params.cbdata = &count;
     params.force_hwread = false;
-    params.entry_size = flow_hash_entry_t::entry_size();
     if (v6) {
         params.key_type = KEY_TYPE_IPV6;
     } else {

@@ -387,7 +387,6 @@ private:
             params.hash_valid = true;
             params.hash_32b = hash++;
         }
-        params.entry_size = flow_hash_entry_t::entry_size();
         rv = v6table->insert(&params);
         dump_hash_value(params.hash_32b);
         return rv;
@@ -402,7 +401,6 @@ private:
             params.hash_valid = true;
             params.hash_32b = hash++;
         }
-        params.entry_size = ipv4_flow_hash_entry_t::entry_size();
         rv = v4table->insert(&params);
         dump_hash_value(params.hash_32b);
         return rv;

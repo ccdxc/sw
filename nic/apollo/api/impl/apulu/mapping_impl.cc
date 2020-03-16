@@ -160,7 +160,7 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
 
     // if public mapping exists, NAT table provides the public IP
     if (public_ip_valid) {
-        memset(&nat_data, 0, nat_rewrite_entry_t::entry_size());
+        memset(&nat_data, 0, nat_data.entry_size());
         ret = nat_data.read(local_mapping_data.xlate_id);
         if (ret != SDK_RET_OK) {
             return NULL;
@@ -1059,7 +1059,7 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, subnet_entry *subnet,
     status->vnic_hw_id = local_mapping_data.vnic_id;
 
     if (local_mapping_data.xlate_id != PDS_IMPL_RSVD_NAT_HW_ID) {
-        memset(&nat_data, 0, nat_rewrite_entry_t::entry_size());
+        memset(&nat_data, 0, nat_data.entry_size());
         ret = nat_data.read(local_mapping_data.xlate_id);
         if (ret != SDK_RET_OK) {
             return sdk::SDK_RET_HW_READ_ERR;

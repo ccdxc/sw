@@ -53,8 +53,6 @@ public:
     };
 
 public:
-    // Flow Table Entry size
-    uint32_t entry_size;
     // Flow Table Entry
     base_table_entry_t *entry;
 
@@ -155,14 +153,13 @@ public:
     sdk_ret_t init(sdk_table_api_op_t op, sdk_table_api_params_t *params,
                    sdk::table::properties_t *props, tablestats *tstats,
                    uint32_t thread_id, void* ftlbase,
-                   base_table_entry_t *entry, uint32_t entry_size) {
+                   base_table_entry_t *entry) {
         memset(this, 0, sizeof(Apictx));
 
         this->entry = entry;
         this->entry->clear();
 
         this->ftlbase_ = ftlbase;
-        this->entry_size = entry_size;
         this->op = op;
         this->props = props;
         this->params = params;
@@ -181,7 +178,6 @@ public:
         this->entry->clear();
 
         this->ftlbase_ = p->ftlbase();
-        this->entry_size = p->entry_size;
         this->op = p->op;
         this->hash_msbits = p->hash_msbits;
         this->level = p->level + 1;

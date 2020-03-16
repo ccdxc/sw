@@ -625,7 +625,7 @@ ${table_name}::genhash_(sdk_table_api_params_t *params) {
     }
 
     hashkey->build_key(params->entry);
-    sdk::lib::swizzle(get_sw_entry_pointer(hashkey), params->entry_size);
+    sdk::lib::swizzle(get_sw_entry_pointer(hashkey), params->entry->entry_size());
 
     if (!params->hash_valid) {
 #ifdef SIM

@@ -27,6 +27,7 @@ struct __attribute__((__packed__)) base_table_entry_t {
     virtual int tostr(char *buff, uint32_t len) { SDK_ASSERT(0); return 0; }
     virtual void clear(void) { SDK_ASSERT(0); }
     virtual void set_epoch(uint8_t val) {}
+    virtual uint32_t entry_size(void) { SDK_ASSERT(0); return 0; }
 };
 
 #endif    // __BASE_TABLE_ENTRY_HPP__

@@ -685,11 +685,11 @@ public:
 //::                # if the table is index based entry_size calculation is different
 //::                # and alloc method is not required
 //::                if is_table_index_based(table, pddict):
-    static uint32_t entry_size(void) {
+    uint32_t entry_size(void) {
         return sizeof(${struct_full_name});
     }
 
-    static uint32_t entry_size_bits(void) {
+    uint32_t entry_size_bits(void) {
         return entry_size() * 8;
     }
 
@@ -724,7 +724,7 @@ public:
         return SDK_RET_OK;
     }
 //::                else:
-    static uint32_t entry_size(void) {
+    uint32_t entry_size(void) {
         return sizeof(${struct_full_name}) - sizeof(base_table_entry_t);
     }
 

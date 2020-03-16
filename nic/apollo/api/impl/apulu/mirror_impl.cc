@@ -124,7 +124,7 @@ mirror_impl::activate_create_(pds_epoch_t epoch, mirror_session *ms,
             mirror_data.rspan_action.ctag = spec->rspan_spec.encap.val.vlan_tag;
             mirror_data.rspan_action.truncate_len = spec->snap_len;
             // program the nexthop entry 1st
-            memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+            memset(&nh_data, 0, nh_data.entry_size());
             nh_data.set_port(oport);
             nh_data.set_vlan(spec->rspan_spec.encap.val.vlan_tag);
             ret = nh_data.write(oport);

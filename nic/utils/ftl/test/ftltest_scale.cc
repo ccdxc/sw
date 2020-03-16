@@ -49,7 +49,8 @@ TEST_F(scale, num1K) {
     rs = insert(1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
-    iterate();
+    rs = iterate(1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
     rs = update(1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);

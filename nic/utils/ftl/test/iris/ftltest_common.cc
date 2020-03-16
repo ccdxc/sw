@@ -27,7 +27,7 @@ fill_entry (uint32_t index, flow_hash_info_entry_t *entry)
     flow_lkp_metadata_lkp_dst[14] = index >> 8 & 0xFF;
     flow_lkp_metadata_lkp_dst[15] = index & 0xFF;
     entry->set_flow_lkp_metadata_lkp_dst(flow_lkp_metadata_lkp_dst);
-
+    entry->set_entry_valid(1);
     entry->set_flow_index(index+1);
     return;
 }
@@ -40,7 +40,6 @@ gen_entry (uint32_t index, bool with_hash, uint32_t hash_32b) {
 
     fill_entry(index+1, &entry[pidx]);
     params[pidx].entry = &entry[pidx];
-    params[pidx].entry_size = flow_hash_info_entry_t::entry_size();
     params[pidx].hash_valid = with_hash;
     if (with_hash) {
         params[pidx].hash_32b = hash_32b ? hash_32b : index;

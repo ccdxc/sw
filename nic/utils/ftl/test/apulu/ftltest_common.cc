@@ -41,7 +41,6 @@ gen_entry (uint32_t index, bool with_hash, uint32_t hash_32b) {
     fill_entry(index+1, &entry[pidx]);
     params[pidx].entry = &entry[pidx];
     params[pidx].hash_valid = with_hash;
-    params[pidx].entry_size = flow_hash_entry_t::entry_size();
     if (with_hash) {
         params[pidx].hash_32b = hash_32b ? hash_32b : index;
     } else {

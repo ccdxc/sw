@@ -675,7 +675,7 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
     // program the nexthop table
     device = device_find();
-    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+    memset(&nh_data, 0, nh_data.entry_size());
     if (device->oper_mode() == PDS_DEV_OPER_MODE_BITW) {
         nh_data.set_port(0);
     } else {
@@ -720,7 +720,7 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     nexthop_info_entry_t nh_data;
     vnic_entry *vnic = (vnic_entry *)curr_obj;
 
-    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+    memset(&nh_data, 0, nh_data.entry_size());
     spec = &obj_ctxt->api_params->vnic_spec;
     // we don't need to reset the VNIC_TX_STATS and VNIC_RX_STATS
     // table entries because of udpate
@@ -1142,7 +1142,7 @@ vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
     sdk_ret_t ret;
     nexthop_info_entry_t nh_data;
 
-    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+    memset(&nh_data, 0, nh_data.entry_size());
     // read the nexthop table
     ret = nh_data.read(nh_idx_);
     if (ret != SDK_RET_OK) {

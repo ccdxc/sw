@@ -37,12 +37,13 @@ table_size_get(uint32_t table_id)
 void
 ftl_mock_init ()
 {
+    flow_hash_info_entry_t entry;
     mocktables[P4TBL_ID_FLOW_HASH].entries =
-        (base_table_entry_t *)calloc(table_size_get(P4TBL_ID_FLOW_HASH), flow_hash_info_entry_t::entry_size());
+        (base_table_entry_t *)calloc(table_size_get(P4TBL_ID_FLOW_HASH), entry.entry_size());
     assert(mocktables[P4TBL_ID_FLOW_HASH].entries);
 
     mocktables[P4TBL_ID_FLOW_HASH_OVERFLOW].entries =
-        (base_table_entry_t *)calloc(table_size_get(P4TBL_ID_FLOW_HASH_OVERFLOW), flow_hash_info_entry_t::entry_size());
+        (base_table_entry_t *)calloc(table_size_get(P4TBL_ID_FLOW_HASH_OVERFLOW), entry.entry_size());
     assert(mocktables[P4TBL_ID_FLOW_HASH_OVERFLOW].entries);
 }
 

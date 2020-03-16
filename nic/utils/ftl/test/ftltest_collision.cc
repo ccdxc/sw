@@ -93,7 +93,7 @@ TEST_F(collision, insert_remove_full_mesh_iterate) {
     rs = insert(MAX_COUNT, sdk::SDK_RET_OK, WITH_HASH, HASH_VALUE);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
-    rs = iterate();
+    rs = iterate(MAX_COUNT, sdk::SDK_RET_OK, WITH_HASH, HASH_VALUE);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
     rs = remove(MAX_COUNT, sdk::SDK_RET_OK, WITH_HASH, HASH_VALUE);

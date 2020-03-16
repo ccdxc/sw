@@ -116,7 +116,7 @@ nexthop_impl::activate_create_update_(pds_epoch_t epoch, nexthop *nh,
     pds_encap_t encap;
     nexthop_info_entry_t nh_data;
 
-    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+    memset(&nh_data, 0, nh_data.entry_size());
     switch (spec->type) {
     case PDS_NH_TYPE_BLACKHOLE:
         // nothing to program for system-wide blackhole nexthop
@@ -154,7 +154,7 @@ nexthop_impl::activate_delete_(pds_epoch_t epoch, nexthop *nh) {
     if ((unlikely(hw_id_ == PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID))) {
         return SDK_RET_OK;
     }
-    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+    memset(&nh_data, 0, nh_data.entry_size());
     ret = nh_data.write(hw_id_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program nexthop %s at idx %u",
@@ -226,7 +226,7 @@ nexthop_impl::fill_info_(pds_nexthop_info_t *info) {
     sdk_ret_t ret;
     nexthop_info_entry_t nh_data;
 
-    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+    memset(&nh_data, 0, nh_data.entry_size());
     ret = nh_data.read(hw_id_);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to read nexthop table at index %u", hw_id_);

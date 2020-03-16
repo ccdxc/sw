@@ -75,7 +75,6 @@ ftll2_dump_hw_entry (ftll2 *obj, uint8_t *src, uint8_t *dst,
     entry.clear();
     ftll2_set_key(&entry, src, dst, ether_type, lookup_id);
     params.entry = &entry;
-    params.entry_size = flow_hash_entry_t::entry_size();
 
     ret = obj->get(&params);
     if (ret != SDK_RET_OK) {

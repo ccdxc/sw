@@ -483,8 +483,7 @@ pd_table_get_entries(uint32_t table_id, TableResponse *rsp, bool get_all)
             ret = pd_table_hash_get_entries(table_id, rsp, get_all);
             break;
         case table::TABLE_FLOW:
-            // TODO multi-thread support for FTL iterate
-            // ret = g_hal_state_pd->flow_table_pd_get()->dump(rsp);
+            ret = g_hal_state_pd->flow_table_pd_get()->dump(rsp);
             break;
         case table::TABLE_MET:
             ret = pd_table_met_get_entries(table_id, rsp, get_all);

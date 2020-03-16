@@ -252,7 +252,7 @@ svc_mapping_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
 
     spec = &obj_ctxt->api_params->svc_mapping_spec;
-    memset(&nat_data, 0, nat_rewrite_entry_t::entry_size());
+    memset(&nat_data, 0, nat_data.entry_size());
     ret = nat_data.write(to_vip_nat_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to cleanup NAT table entry %u for "

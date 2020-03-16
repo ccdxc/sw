@@ -660,13 +660,11 @@ public:
 
         params.itercb = table_entry_iterate;
 
-        params.entry_size = ftlv6_entry_t::entry_size();
         v6table->iterate(&params);
         return SDK_RET_OK;
     }
 
     sdk_ret_t clear_flows() {
-       params.entry_size = flow_hash_entry_t::entry_size();
        v6table->clear(true, true, &params);
        return SDK_RET_OK;
     }

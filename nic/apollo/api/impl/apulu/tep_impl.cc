@@ -300,7 +300,7 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
-    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+    memset(&nh_data, 0, nh_data.entry_size());
     // now we need to update/fix the nexthop(s)
     if (spec->nh_type == PDS_NH_TYPE_UNDERLAY_ECMP) {
         nhgroup = nexthop_group_db()->find(&spec->nh_group);
@@ -412,7 +412,7 @@ tep_impl::activate_delete_tunnel2_(pds_epoch_t epoch, tep_entry *tep) {
     nexthop_group_impl *nhgroup_impl;
     pds_obj_key_t nh_group_key;
 
-    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+    memset(&nh_data, 0, nh_data.entry_size());
     // update/fix the nexthop(s) to not point to this outer tunnel anymore
     if (tep->nh_type() == PDS_NH_TYPE_UNDERLAY_ECMP) {
         nh_group_key = tep->nh_group();

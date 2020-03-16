@@ -15,14 +15,14 @@ static inline uint64_t
 get_va (Apictx *ctx) {
     uint64_t baseva = ctx->level ? ctx->props->stable_base_mem_va
                              : ctx->props->ptable_base_mem_va;
-    return baseva + (ctx->entry_size * ctx->table_index);
+    return baseva + (ctx->entry->entry_size() * ctx->table_index);
 }
 
 static inline uint64_t
 get_pa (Apictx *ctx) {
     uint64_t basepa = ctx->level ? ctx->props->stable_base_mem_pa
                              : ctx->props->ptable_base_mem_pa;
-    return basepa + (ctx->entry_size * ctx->table_index);
+    return basepa + (ctx->entry->entry_size() * ctx->table_index);
 }
 
 sdk_ret_t
@@ -30,29 +30,29 @@ memrd(Apictx *ctx) {
     if (ctx->props->stable_base_mem_va && ctx->props->ptable_base_mem_va) {
         ftl_memcpy(get_sw_entry_pointer(ctx->entry),
                    (uint8_t *)get_va(ctx),
-                   ctx->entry_size);
+                   ctx->entry->entry_size());
         // FTL_TRACE_ERR("Read from :0x%llx", get_va(ctx));
     } else if (ctx->props->stable_base_mem_pa && ctx->props->ptable_base_mem_pa) {
         pal_mem_read(get_pa(ctx),
                      (uint8_t*)get_sw_entry_pointer(ctx->entry),
-                     ctx->entry_size);
+                     ctx->entry->entry_size());
     }
-    sdk::lib::swizzle(get_sw_entry_pointer(ctx->entry), ctx->entry_size);
+    sdk::lib::swizzle(get_sw_entry_pointer(ctx->entry), ctx->entry->entry_size());
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 memwr(Apictx *ctx) {
-    sdk::lib::swizzle(get_sw_entry_pointer(ctx->entry), ctx->entry_size);
+    sdk::lib::swizzle(get_sw_entry_pointer(ctx->entry), ctx->entry->entry_size());
     if (ctx->props->stable_base_mem_va && ctx->props->ptable_base_mem_va) {
         ftl_memcpy((uint8_t *)get_va(ctx),
                    get_sw_entry_pointer(ctx->entry),
-                   ctx->entry_size);
+                   ctx->entry->entry_size());
         // FTL_TRACE_ERR("Wrote to :0x%llx", get_va(ctx));
     } else if (ctx->props->stable_base_mem_pa && ctx->props->ptable_base_mem_pa) {
         pal_mem_write(get_pa(ctx),
                       (uint8_t*)get_sw_entry_pointer(ctx->entry),
-                      ctx->entry_size);
+                      ctx->entry->entry_size());
         // FTL_TRACE_ERR("Wrote to :0x%llx", get_pa(ctx));
     }
 
@@ -63,7 +63,7 @@ memwr(Apictx *ctx) {
     // factory call ?
     auto basepa = ctx->level ? ctx->props->stable_base_mem_pa :
                                ctx->props->ptable_base_mem_pa;
-    auto size = ctx->table_index * ctx->entry_size;
+    auto size = ctx->table_index * ctx->entry->entry_size();
     capri_hbm_table_entry_cache_invalidate(P4_TBL_CACHE_INGRESS, size, 1, basepa);
 #endif
 

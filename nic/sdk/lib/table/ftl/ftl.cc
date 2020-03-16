@@ -127,7 +127,7 @@ ftl_base::ctxinit_(sdk_table_api_op_t op,
 
     index = 0;
     get_apictx(index)->init(op, params, props_, &tstats_[thread_id()], thread_id(),
-                            this, get_entry(index), params->entry_size);
+                            this, get_entry(index));
     return SDK_RET_OK;
 }
 

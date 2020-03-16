@@ -210,7 +210,7 @@ populate_underlay_nh_info_ (pds_nexthop_spec_t *spec,
     pds_encap_t encap;
 
     PDS_TRACE_ERR("l3_if %s", spec->l3_if.str());
-    memset(nh_data, 0, nexthop_info_entry_t::entry_size());
+    memset(nh_data, 0, nh_data->entry_size());
     intf = if_db()->find(&spec->l3_if);
     if (!intf) {
         PDS_TRACE_ERR("L3 intf %s not found for nexthop %s",
@@ -253,7 +253,7 @@ fill_nh_spec_ (pds_nexthop_spec_t *spec, uint16_t hw_id) {
         spec->type = PDS_NH_TYPE_BLACKHOLE;
         return SDK_RET_OK;
     }
-    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+    memset(&nh_data, 0, nh_data.entry_size());
     spec->type = PDS_NH_TYPE_UNDERLAY;
     ret = nh_data.read(hw_id);
     if (unlikely(ret != SDK_RET_OK)) {
@@ -273,7 +273,7 @@ fill_nh_status_ (pds_nexthop_status_t *status, uint16_t hw_id) {
     if ((unlikely(hw_id == PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID))) {
         return SDK_RET_OK;
     }
-    memset(&nh_data, 0, nexthop_info_entry_t::entry_size());
+    memset(&nh_data, 0, nh_data.entry_size());
     ret = nh_data.read(hw_id);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to read nexthop table at index %u", hw_id);

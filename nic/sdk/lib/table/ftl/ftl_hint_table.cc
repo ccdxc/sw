@@ -374,7 +374,7 @@ hint_table::clear_(Apictx *ctx) {
         memclr(ctx->props->stable_base_mem_va,
                            ctx->props->stable_base_mem_pa,
                            ctx->props->stable_size,
-                           ctx->entry_size);
+                           ctx->entry->entry_size());
         indexer_.clear(); 
 
         for (auto i = 0; i < PDS_FLOW_HINT_POOLS_MAX; i++) {

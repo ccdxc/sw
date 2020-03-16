@@ -156,7 +156,6 @@ pds_flow_cache_entry_create (pds_flow_spec_t *spec)
     ftlv6_set_index(&entry, index);
     ftlv6_set_index_type(&entry, index_type);
     params.entry = &entry;
-    params.entry_size = flow_hash_entry_t::entry_size();
     return ftl_table->insert(&params);
 }
 
@@ -215,7 +214,6 @@ pds_flow_cache_entry_read (pds_flow_key_t *key,
              != SDK_RET_OK)
          return ret;
     params.entry = &entry;
-    params.entry_size = flow_hash_entry_t::entry_size();
     params.itercb = flow_cache_entry_find_cb;
     cbdata.key = key;
     cbdata.info = info;
@@ -244,7 +242,6 @@ pds_flow_cache_entry_update (pds_flow_spec_t *spec)
              != SDK_RET_OK)
          return ret;
     params.entry = &entry;
-    params.entry_size = flow_hash_entry_t::entry_size();
     return ftl_table->update(&params);
 }
 
@@ -265,7 +262,6 @@ pds_flow_cache_entry_delete (pds_flow_key_t *key)
              != SDK_RET_OK)
          return ret;
     params.entry = &entry;
-    params.entry_size = flow_hash_entry_t::entry_size();
     return ftl_table->remove(&params);
 }
 
@@ -313,7 +309,6 @@ pds_flow_cache_entry_iterate (pds_flow_iter_cb_t iter_cb,
     params.itercb = flow_cache_entry_iterate_cb;
     params.cbdata = &cbdata;
     params.force_hwread = false;
-    params.entry_size = flow_hash_entry_t::entry_size();
     ftl_entry_count = 0;
     return ftl_table->iterate(&params);
 }

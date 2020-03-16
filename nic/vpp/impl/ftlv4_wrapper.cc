@@ -59,7 +59,6 @@ ftlv4_insert (ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
         params.hash_valid = 1;
     }
     params.entry = entry;
-    params.entry_size = ipv4_flow_hash_entry_t::entry_size();
     if (unlikely(update)) {
         if (SDK_RET_OK != obj->update(&params)) {
             return -1;
@@ -96,8 +95,6 @@ ftlv4_remove (ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
         params.hash_valid = 1;
     }
     params.entry = entry;
-    params.entry_size = ipv4_flow_hash_entry_t::entry_size();
-    
     if (SDK_RET_OK != obj->remove(&params)) {
         return -1;
     }
@@ -117,7 +114,6 @@ ftlv4_clear (ftlv4 *obj, bool clear_global_state,
              bool clear_thread_local_state)
 {
     sdk_table_api_params_t params = {0};
-    params.entry_size = ipv4_flow_hash_entry_t::entry_size();
 
     if (SDK_RET_OK != obj->clear(clear_global_state,
                                  clear_thread_local_state,
@@ -210,7 +206,6 @@ ftlv4_dump_hw_entries (ftlv4 *obj, char *logfile, uint8_t detail)
                     ftlv4_dump_hw_entry_iter_cb;
     params.cbdata = logfp;
     params.force_hwread = false;
-    params.entry_size = ipv4_flow_hash_entry_t::entry_size();
     ftlv4_entry_count = 0;
 
     if (!detail) {
@@ -248,7 +243,6 @@ ftlv4_dump_hw_entry (ftlv4 *obj, uint32_t src, uint32_t dst,
     entry.clear();
     ftlv4_set_key(&entry, src, dst, ip_proto, sport, dport, lookup_id);
     params.entry = &entry;
-    params.entry_size = ipv4_flow_hash_entry_t::entry_size();
 
     ret = obj->get(&params);
     if (ret != SDK_RET_OK) {
@@ -306,7 +300,6 @@ ftlv4_get_flow_count (ftlv4 *obj)
     params.itercb = ftlv4_hw_entry_count_cb;
     params.cbdata = &count;
     params.force_hwread = false;
-    params.entry_size = ipv4_flow_hash_entry_t::entry_size();
 
     ret = obj->iterate(&params);
     if (ret != SDK_RET_OK) {

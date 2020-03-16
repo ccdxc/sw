@@ -307,7 +307,6 @@ private:
             params.hash_valid = true;
             params.hash_32b = hash++;
         }
-        params.entry_size = flow_hash_entry_t::entry_size();
         return v6table->insert(&params);
     }
 
@@ -318,7 +317,6 @@ private:
             params.hash_valid = true;
             params.hash_32b = hash++;
         }
-        params.entry_size = flow_hash_entry_t::entry_size();
         return v6table->remove(&params);
     }
 
@@ -329,7 +327,6 @@ private:
             params.hash_valid = true;
             params.hash_32b = hash++;
         }
-        params.entry_size = ipv4_flow_hash_entry_t::entry_size();
         return v4table->insert(&params);
     }
 
@@ -340,7 +337,6 @@ private:
             params.hash_valid = true;
             params.hash_32b = hash++;
         }
-        params.entry_size = ipv4_flow_hash_entry_t::entry_size();
         return v4table->remove(&params);
     }
 
@@ -1012,20 +1008,16 @@ public:
 
         params.itercb = table_entry_iterate;
 
-        params.entry_size = ipv4_flow_hash_entry_t::entry_size();
         v4table->iterate(&params);
 
-        params.entry_size = flow_hash_entry_t::entry_size();
         v6table->iterate(&params);
         return SDK_RET_OK;
     }
 
     sdk_ret_t clear_flows(void) {
        sdk_table_api_params_t params = {0};
-       params.entry_size = ipv4_flow_hash_entry_t::entry_size();
        v4table->clear(true, true, &params);
 
-       params.entry_size = flow_hash_entry_t::entry_size();
        v6table->clear(true, true, &params);
        return SDK_RET_OK;
     }

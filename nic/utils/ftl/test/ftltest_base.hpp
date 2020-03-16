@@ -239,17 +239,62 @@ public:
 
     static void
     iterate_callback(sdk_table_api_params_t *params) {
+#ifdef IRIS
+        vector<flow_hash_info_entry_t> *entry_vec;
+        entry_vec = (vector<flow_hash_info_entry_t> *) params->cbdata;
+        flow_hash_info_entry_t *entry = (flow_hash_info_entry_t *)params->entry;
+#else
+        vector<flow_hash_entry_t> *entry_vec;
+        entry_vec = (vector<flow_hash_entry_t> *) params->cbdata;
+        flow_hash_entry_t *entry = (flow_hash_entry_t *)params->entry;
+#endif
+
+        if (entry_vec != NULL) {
+            entry_vec->push_back(*entry);
+        }
         static char buff[512];
-        (params->entry)->tostr(buff, 512);
+        entry->tostr(buff, 512);
         SDK_TRACE_INFO("Handle[%s] Entry[%s]",
-                          params->handle.tostr(), buff);
+                       params->handle.tostr(), buff);
+
         return;
     }
 
-    sdk_ret_t iterate() {
+    sdk_ret_t iterate(uint32_t count, sdk_ret_t expret,
+                      bool with_hash = false, uint32_t hash_32b = 0,
+                      bool validate=true) {
         sdk_table_api_params_t params = { 0 };
+#ifdef IRIS
+        vector<flow_hash_info_entry_t> entry_vec;
+        vector<flow_hash_info_entry_t>::iterator it;
+#else
+        vector<flow_hash_entry_t> entry_vec;
+        vector<flow_hash_entry_t>::iterator it;
+#endif
+        params.cbdata = (void*)&entry_vec;
         params.itercb = iterate_callback;
-        return table->iterate(&params);
+        auto ret = table->iterate(&params);
+        if (validate) {
+            for (auto i=0; i<count; i++) {
+                auto _params = gen_entry(i, with_hash, hash_32b);
+                for (it=entry_vec.begin(); it!=entry_vec.end(); ++it) {
+#ifdef IRIS
+                    flow_hash_info_entry_t *entry = (flow_hash_info_entry_t *) _params->entry;
+                    flow_hash_info_entry_t e = *it;
+#else
+                    flow_hash_entry_t *entry = (flow_hash_entry_t *) _params->entry;
+                    flow_hash_entry_t e = *it;
+#endif
+                    if (e.compare_key(_params->entry)) {
+                        entry_vec.erase(it);
+                        break;
+                    }
+                }
+            }
+            EXPECT_EQ(entry_vec.size(), 0);
+            EXPECT_EQ(expret, ret);
+        }
+        return ret;
     }
 };
 #endif

@@ -87,13 +87,11 @@ vpp_uds_flow_dump(int fd)
     params.itercb = ftlv4_entry_iter_cb;
     params.cbdata = &fd;
     params.force_hwread = false;
-    params.entry_size = ipv4_flow_hash_entry_t::entry_size();
     table4->iterate(&params);
 
     params.itercb = ftlv6_entry_iter_cb;
     params.cbdata = &fd;
     params.force_hwread = false;
-    params.entry_size = flow_hash_entry_t::entry_size();
     table6->iterate(&params);
 
     // Send 0 entries to indicate end of dump

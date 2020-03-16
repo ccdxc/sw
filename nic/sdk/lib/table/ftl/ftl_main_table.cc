@@ -290,7 +290,7 @@ main_table::clear_(Apictx *ctx) {
         memclr(ctx->props->ptable_base_mem_va,
                ctx->props->ptable_base_mem_pa,
                ctx->props->ptable_size,
-               ctx->entry_size);
+               ctx->entry->entry_size());
     }
 
     ret = hint_table_->clear_(ctx);

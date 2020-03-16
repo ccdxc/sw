@@ -141,7 +141,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     }
 
     // program the nexthop for ARM to uplink traffic
-    memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
+    memset(&nexthop_info_entry, 0, nexthop_info_entry.entry_size());
     nexthop_info_entry.port =
             g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
     ret = nexthop_info_entry.write(nh_idx_);
@@ -224,7 +224,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     }
 
     // program the nexthop for uplink to ARM traffic
-    memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
+    memset(&nexthop_info_entry, 0, nexthop_info_entry.entry_size());
     nexthop_info_entry.lif = id_;
     nexthop_info_entry.port = TM_PORT_DMA;
     ret = nexthop_info_entry.write(nh_idx_);
@@ -316,7 +316,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     }
 
     // program the nexthop for ARM to uplink traffic
-    memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
+    memset(&nexthop_info_entry, 0, nexthop_info_entry.entry_size());
     tm_port = nexthop_info_entry.port =
         g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);
     ret = nexthop_info_entry.write(nh_idx_);
@@ -402,7 +402,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     }
 
     // program the nexthop for uplink to ARM traffic
-    memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
+    memset(&nexthop_info_entry, 0, nexthop_info_entry.entry_size());
     nexthop_info_entry.lif = id_;
     nexthop_info_entry.port = TM_PORT_DMA;
     ret = nexthop_info_entry.write(nh_idx_);
@@ -514,7 +514,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     }
 
     // program the nexthop
-    memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
+    memset(&nexthop_info_entry, 0, nexthop_info_entry.entry_size());
     nexthop_info_entry.lif = id_;
     nexthop_info_entry.port = TM_PORT_DMA;
     ret = nexthop_info_entry.write(nh_idx_);
@@ -870,7 +870,7 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
     }
 
     // program the nexthop for host mgmt. lif to internal mgmt. lif traffic
-    memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
+    memset(&nexthop_info_entry, 0, nexthop_info_entry.entry_size());
     nexthop_info_entry.lif = int_mgmt_lif->id();
     nexthop_info_entry.port = TM_PORT_DMA;
     ret = nexthop_info_entry.write(nh_idx_);
@@ -1043,7 +1043,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     }
 
     // program the nexthop
-    memset(&nexthop_info_entry, 0, nexthop_info_entry_t::entry_size());
+    memset(&nexthop_info_entry, 0, nexthop_info_entry.entry_size());
     nexthop_info_entry.lif = id_;
     nexthop_info_entry.port = TM_PORT_DMA;
     ret = nexthop_info_entry.write(nh_idx_);

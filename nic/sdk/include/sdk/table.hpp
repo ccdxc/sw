@@ -193,8 +193,6 @@ typedef struct sdk_table_api_params_ {
     // [Input]
     // Set this to true to allocate from top of range for indices
     bool highest;
-    // size of the entry
-    uint32_t entry_size;
     // Key type of the entry
     uint8_t key_type;
 } sdk_table_api_params_t;

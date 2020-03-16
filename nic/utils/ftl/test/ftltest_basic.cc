@@ -95,6 +95,6 @@ TEST_F(basic, iterate)
     sdk_ret_t rs;
     rs = insert(128, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
-    rs = iterate();
+    rs = iterate(128, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
