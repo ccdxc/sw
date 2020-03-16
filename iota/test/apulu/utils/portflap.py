@@ -16,6 +16,9 @@ uplinkDict = {UPLINK_PREFIX1: "Uplink0", UPLINK_PREFIX2: "Uplink1"}
 
 def getFirstOperDownPort(node):
     sleep (3)
+    if GlobalOptions.dryrun:
+        return api.types.status.SUCCESS
+
     node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
     for uplink in [UPLINK_PREFIX1, UPLINK_PREFIX2]:
         intf_uuid = uplink % node_uuid
@@ -112,7 +115,10 @@ def setDataPortStatePerUplink(naples_nodes, oper, id):
     else:
         uplink_list.append(UPLINK_PREFIX1)
         uplink_list.append(UPLINK_PREFIX2)
-        
+     
+    if GlobalOptions.dryrun:
+        return api.types.status.SUCCESS
+       
     for node in naples_nodes:
         node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
         #node_uuid = 750763714960
@@ -128,6 +134,8 @@ def setDataPortStatePerUplink(naples_nodes, oper, id):
     return api.types.status.SUCCESS
 
 def setDataPortState(naples_nodes, oper):
+    if GlobalOptions.dryrun:
+        return api.types.status.SUCCESS
     for node in naples_nodes:
         node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
         #node_uuid = 750763714960
