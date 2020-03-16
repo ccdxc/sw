@@ -267,6 +267,13 @@ func NewNMD(pipeline Pipeline,
 		log.Info("Config object not found in NMD DB. Persisting it in the DB.")
 		config.CreationTime = ts
 		config.ModTime = ts
+		// Override the default mgmt mode as network in case of older version.
+		if pipeline != nil && pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
+			config.Spec.NetworkMode = nmd.NetworkMode_OOB.String()
+		} else {
+			config.Spec.NetworkMode = nmd.NetworkMode_INBAND.String()
+		}
+
 		err = emdb.Write(&config)
 		if err != nil {
 			log.Errorf("Error persisting the default naples config in EmDB, err: %+v", err)
