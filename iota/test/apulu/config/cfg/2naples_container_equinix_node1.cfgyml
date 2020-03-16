@@ -136,7 +136,7 @@ vpc:
           count            : 1
           v4prefixlen      : 24
           v4prefix         : '2.1.0.0\24'
-          hostifidx        : 0x80000048
+          hostifidx        : 0x80000046
           fabricencap      : vxlan
           fabricencapvalue : 202
           v4routerip       : '2.1.0.0'
@@ -159,7 +159,7 @@ vpc:
             - id        : 1
               count     : 1             # 1 untagged VNIC
               vmac      : macaddr/00ae.cd00.0811
-              hostifidx : 0x80000048
+              hostifidx : 0x80000046
               srcguard  : false         # true or false (default false)
               public    : false
               tagged    : false         # true or false (default true)
@@ -188,7 +188,7 @@ vpc:
           count            : 1
           v4prefixlen      : 24
           v4prefix         : '2.1.1.0\24'
-          hostifidx        : 0x80000049
+          hostifidx        : 0x80000047
           fabricencap      : vxlan
           fabricencapvalue : 203
           v4routerip       : '2.1.1.0'
@@ -211,7 +211,7 @@ vpc:
             - id        : 2
               count     : 1             # 1 untagged VNIC
               vmac      : macaddr/00ae.cd00.0911
-              hostifidx : 0x80000049
+              hostifidx : 0x80000047
               srcguard  : false         # true or false (default false)
               public    : false
               tagged    : false         # true or false (default true)
