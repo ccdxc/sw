@@ -14,7 +14,7 @@
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
-#include "nic/linkmgr/linkmgr.hpp"
+#include "nic/sdk/platform/marvell/marvell.hpp"
 
 using intf::Interface;
 using intf::LifSpec;
@@ -190,15 +190,15 @@ populate_port_info (uint8_t port_num, uint16_t status,
     bool is_up, full_duplex, txpause, fctrl;
     uint8_t speed;
 
-    sdk::linkmgr::marvell_get_status_updown(status, &is_up);
-    sdk::linkmgr::marvell_get_status_duplex(status, &full_duplex);
-    sdk::linkmgr::marvell_get_status_speed(status, &speed);
-    sdk::linkmgr::marvell_get_status_txpause(status, &txpause);
-    sdk::linkmgr::marvell_get_status_flowctrl(status, &fctrl);
+    sdk::marvell::marvell_get_status_updown(status, &is_up);
+    sdk::marvell::marvell_get_status_duplex(status, &full_duplex);
+    sdk::marvell::marvell_get_status_speed(status, &speed);
+    sdk::marvell::marvell_get_status_txpause(status, &txpause);
+    sdk::marvell::marvell_get_status_flowctrl(status, &fctrl);
 
     internal::InternalPortResponse *response = rsp->add_response();
     response->set_port_number(port_num + 1);
-    response->set_port_descr(sdk::linkmgr::marvell_get_descr(port_num));
+    response->set_port_descr(sdk::marvell::marvell_get_descr(port_num));
     if (is_up) {
         response->set_port_status(intf::IF_STATUS_UP);
     } else {
@@ -228,8 +228,8 @@ internal_port_get (internal::InternalPortRequest& req,
     
     if (has_port_num) {
         if (port_num < MARVELL_NPORTS) {
-            sdk::lib::marvell_link_status(MARVELL_PORT_STATUS_REG, &data,
-                                          MARVELL_PORT0 + port_num);
+            sdk::marvell::marvell_get_port_status(MARVELL_PORT0 + port_num,
+                                                  &data);
             populate_port_info(port_num, data, rsp);
         } else {
             HAL_TRACE_ERR("Port No must be between 0-7");
@@ -237,8 +237,7 @@ internal_port_get (internal::InternalPortRequest& req,
         }
     } else {
         for (port_num = 0; port_num < MARVELL_NPORTS; port_num++) {
-            sdk::lib::marvell_link_status(MARVELL_PORT_STATUS_REG, &data,
-                                          MARVELL_PORT0 + port_num);
+            sdk::marvell::marvell_get_port_status(MARVELL_PORT0 + port_num, &data);
             populate_port_info(port_num, data, rsp);
         }
     }

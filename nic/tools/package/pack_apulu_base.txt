@@ -42,6 +42,7 @@ nic/build/$ARCH/$PIPELINE/lib/libzmq.so                           /nic/lib/libzm
 nic/build/$ARCH/$PIPELINE/lib/libslab.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libshmmgr.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmmgr.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmarvell.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkpal.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpal.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkfru.so                        /nic/lib/

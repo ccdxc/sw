@@ -6,6 +6,6 @@ MODULE_PIPELINE = apollo artemis apulu athena
 MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/core/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/internal/*.cc)
-MODULE_SOLIBS   = asicerror
+MODULE_SOLIBS   = asicerror marvell
 
 include ${MKDEFS}/post.mk

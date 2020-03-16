@@ -8,6 +8,7 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
+#include "nic/sdk/platform/marvell/marvell.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "nic/sdk/lib/device/device.hpp"
@@ -71,10 +72,8 @@ linkmgr_init (catalog *catalog, const char *cfg_path)
 {
     linkmgr_cfg_t    cfg;
 
-    // program the marvell port
-    sdk::lib::pal_program_marvell(MARVELL_PORT_CTRL_REG,
-                                  sdk::linkmgr::marvell_port_cfg_1g(),
-                                  MARVELL_PORT0);
+    // Initialize the marvell switch
+    sdk::marvell::marvell_switch_init();
 
     memset(&cfg, 0, sizeof(cfg));
     cfg.platform_type = g_pds_state.platform_type();

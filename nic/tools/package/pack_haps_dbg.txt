@@ -47,6 +47,7 @@ nic/build/aarch64/iris/lib/libJudy.so.1                              /nic/lib/
 nic/build/aarch64/iris/lib/liblist.so                                /nic/lib/
 nic/build/aarch64/iris/lib/liblogger.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libmmgr.so                                /nic/lib/
+nic/build/aarch64/iris/lib/libmarvell.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libmpuobj.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libmtrack.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libnat.so                                 /nic/lib/

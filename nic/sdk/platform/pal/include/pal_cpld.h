@@ -34,6 +34,8 @@
 #define CPLD_DATA_CACHE_END_ADDR              0x5f
 #define CPLD_REGISTER_ID                      0x80
 
+#define CPLD_ALOM_PRESENT_BIT                 0x20
+
 //CPLD ID and REV
 #define CPLD_NAPLES_100_ID    0x12
 #define CPLD_NAPLES_25_ID     0x13
@@ -115,8 +117,6 @@ int cpld_reg_rd(uint8_t addr);
 int cpld_reg_wr(uint8_t addr, uint8_t data);
 int cpld_mdio_rd(uint8_t addr, uint16_t* data, uint8_t phy);
 int cpld_mdio_wr(uint8_t addr, uint16_t data, uint8_t phy);
-int cpld_mdio_smi_rd(uint8_t addr, uint16_t* data, uint8_t phy);
-int cpld_mdio_smi_wr(uint8_t addr, uint16_t data, uint8_t phy);
 int pal_write_gpios(int gpio, uint32_t data);
 void cpld_reload_reset(void);
 bool cpld_verify_idcode(void);
@@ -131,8 +131,6 @@ int pal_qsfp_set_low_power_mode(int port);
 int pal_qsfp_reset_low_power_mode(int port);
 int pal_qsfp_set_led(int port, pal_led_color_t led, pal_led_frequency_t frequency);
 int pal_system_set_led(pal_led_color_t led, pal_led_frequency_t frequency);
-int pal_program_marvell(uint8_t marvell_addr, uint32_t data, uint8_t phy);
-int pal_marvell_link_status(uint8_t marvell_addr, uint16_t *data, uint8_t phy);
 int pal_get_cpld_rev(void);
 int pal_get_cpld_id(void);
 void pal_write_core_temp(int data);

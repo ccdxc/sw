@@ -396,7 +396,7 @@ CmdHndler::CmdHndler(std::shared_ptr<IpcService> IpcObj, transport *XportObj) {
 
     //if (hal_cfg_path.empty())
     if (!hal_cfg_path)
-        hal_cfg_path = "./";
+        hal_cfg_path = (char *)"./";
 
     SDK_TRACE_INFO("HAL_CONFIG_PATH: %s", hal_cfg_path);
 

@@ -1771,9 +1771,6 @@ sdk_ret_t
 port::port_init(linkmgr_cfg_t *cfg)
 {
     sdk_ret_t   rc           = SDK_RET_OK;
-    int         exp_build_id = serdes_build_id();
-    int         exp_rev_id   = serdes_rev_id();
-    std::string cfg_file     = "fw/" + serdes_fw_file();
 
     SDK_ASSERT(cfg->cfg_path);
 
@@ -1781,8 +1778,6 @@ port::port_init(linkmgr_cfg_t *cfg)
     if (rc != SDK_RET_OK) {
         SDK_TRACE_ERR("port mac init failed");
     }
-
-    cfg_file = std::string(cfg->cfg_path) + "/" + cfg_file;
 
     rc = port_serdes_fn_init(cfg->platform_type,
                              jtag_id(),

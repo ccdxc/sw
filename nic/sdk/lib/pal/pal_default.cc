@@ -157,20 +157,6 @@ pal_default_qsfp_set_led(int port, pal_led_color_t led, pal_led_frequency_t freq
     return PAL_RET_OK;
 }
 
-static pal_ret_t
-pal_default_program_marvell(uint8_t addr, uint32_t data, uint8_t phy)
-{
-    SDK_TRACE_DEBUG("PAL default program marvell called.");
-    return PAL_RET_OK;
-}
-
-static pal_ret_t
-pal_default_marvell_link_status(uint8_t addr, uint16_t *data, uint8_t phy)
-{
-    SDK_TRACE_DEBUG("PAL default marvell link status called.");
-    return PAL_RET_OK;
-}
-
 static int
 pal_default_get_cpld_rev(void)
 {
@@ -227,8 +213,6 @@ pal_default_init_rwvectors (void)
     gl_pal_info.rwvecs.mem_map = pal_default_mem_map;
     gl_pal_info.rwvecs.mem_unmap = pal_default_mem_unmap;
     gl_pal_info.rwvecs.qsfp_set_led = pal_default_qsfp_set_led;
-    gl_pal_info.rwvecs.program_marvell = pal_default_program_marvell;
-    gl_pal_info.rwvecs.marvell_link_status = pal_default_marvell_link_status;
     gl_pal_info.rwvecs.get_cpld_id = pal_default_get_cpld_id;
     gl_pal_info.rwvecs.get_cpld_rev = pal_default_get_cpld_rev;
     gl_pal_info.rwvecs.cpld_write_qsfp_temp = pal_default_cpld_write_qsfp_temp;

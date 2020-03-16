@@ -35,8 +35,6 @@ typedef int (*qsfp_write_fn_t)(const uint8_t *buffer, uint32_t size, uint32_t ad
 typedef void*(*mem_map_fn_t)(const uint64_t pa, const uint32_t sz, uint32_t flags);
 typedef void(*mem_unmap_fn_t)(void *va);
 typedef int (*qsfp_set_led_fn_t)(int port, pal_led_color_t led, pal_led_frequency_t frequency);
-typedef int (*program_marvell_fn_t)(uint8_t addr, uint32_t data, uint8_t phy);
-typedef int (*marvell_link_status_fn_t)(uint8_t addr, uint16_t *data, uint8_t phy);
 typedef int (*get_cpld_id_fn_t)(void);
 typedef int (*get_cpld_rev_fn_t)(void);
 typedef int (*cpld_write_qsfp_temp_fn_t)(uint32_t temperature, uint32_t port);
@@ -65,8 +63,6 @@ typedef struct pal_hw_vectors_s {
     mem_map_fn_t                mem_map;
     mem_unmap_fn_t              mem_unmap;
     qsfp_set_led_fn_t           qsfp_set_led;
-    program_marvell_fn_t        program_marvell;
-    marvell_link_status_fn_t    marvell_link_status;
     get_cpld_id_fn_t            get_cpld_id;
     get_cpld_rev_fn_t           get_cpld_rev;
     cpld_write_qsfp_temp_fn_t   cpld_write_qsfp_temp;
@@ -150,14 +146,6 @@ pal_init_hw_vectors (void)
     gl_hw_vecs.qsfp_set_led = (qsfp_set_led_fn_t)dlsym(gl_lib_handle,
                                                        "pal_qsfp_set_led");
     SDK_ASSERT(gl_hw_vecs.qsfp_set_led);
-
-    gl_hw_vecs.program_marvell = (program_marvell_fn_t)dlsym(gl_lib_handle,
-                                                             "pal_program_marvell");
-    SDK_ASSERT(gl_hw_vecs.program_marvell);
-
-    gl_hw_vecs.marvell_link_status = (marvell_link_status_fn_t)dlsym(gl_lib_handle,
-                                                             "pal_marvell_link_status");
-    SDK_ASSERT(gl_hw_vecs.marvell_link_status);
 
     gl_hw_vecs.get_cpld_id = (get_cpld_id_fn_t)dlsym(gl_lib_handle,
                                                      "pal_get_cpld_id");
@@ -394,26 +382,6 @@ pal_hw_qsfp_set_led(int port_no, pal_led_color_t led, pal_led_frequency_t freque
 }
 
 
-static pal_ret_t
-pal_hw_program_marvell(uint8_t addr, uint32_t data, uint8_t phy)
-{
-    if((*gl_hw_vecs.program_marvell)(addr, data, phy) == 0) {
-        return PAL_RET_OK;
-    }
-
-    return PAL_RET_NOK;
-}
-
-static pal_ret_t
-pal_hw_marvell_link_status(uint8_t addr, uint16_t *data, uint8_t phy)
-{
-    if((*gl_hw_vecs.marvell_link_status)(addr, data, phy) == 0) {
-        return PAL_RET_OK;
-    }
-
-    return PAL_RET_NOK;
-}
-
 static int
 pal_hw_get_cpld_id(void) {
     return (*gl_hw_vecs.get_cpld_id)();
@@ -472,8 +440,6 @@ pal_hw_init_rwvectors (void)
     gl_pal_info.rwvecs.mem_map = pal_hw_mem_map;
     gl_pal_info.rwvecs.mem_unmap = pal_hw_mem_unmap;
     gl_pal_info.rwvecs.qsfp_set_led = pal_hw_qsfp_set_led;
-    gl_pal_info.rwvecs.program_marvell = pal_hw_program_marvell;
-    gl_pal_info.rwvecs.marvell_link_status = pal_hw_marvell_link_status;
     gl_pal_info.rwvecs.get_cpld_rev = pal_hw_get_cpld_rev;
     gl_pal_info.rwvecs.get_cpld_id = pal_hw_get_cpld_id;
     gl_pal_info.rwvecs.cpld_write_qsfp_temp = pal_hw_cpld_write_qsfp_temp;

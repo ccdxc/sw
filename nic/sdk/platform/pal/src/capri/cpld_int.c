@@ -55,6 +55,16 @@ int cpld_reg_wr(uint8_t addr, uint8_t data)
     return -1;
 }
 
+int cpld_mdio_rd(uint8_t addr, uint16_t* data, uint8_t phy)
+{
+    return -1;
+}
+
+int cpld_mdio_wr(uint8_t addr, uint16_t data, uint8_t phy)
+{
+    return -1;
+}
+
 int
 pal_write_gpios(int gpio, uint32_t data)
 {

@@ -72,6 +72,7 @@ MODULE_ARLIBS	= \
 	linkmgrproto \
 	list \
 	logger \
+	marvell \
 	misc \
 	mmgr \
 	mnet \

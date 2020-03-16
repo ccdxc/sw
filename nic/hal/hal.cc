@@ -20,6 +20,7 @@
 #include "nic/hal/core/plugins.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/platform/marvell/marvell.hpp"
 #include "lib/logger/logger.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
@@ -234,10 +235,8 @@ hal_init (hal_cfg_t *hal_cfg)
                             "HAL PD layer initialization failure");
     HAL_TRACE_DEBUG("Platform initialization done");
 
-    // pal_init done in hal_pd_init
-    sdk::lib::pal_program_marvell(MARVELL_PORT_CTRL_REG,
-                                  sdk::linkmgr::marvell_port_cfg_1g(),
-                                  MARVELL_PORT0);
+    // Initialize the marvell switch
+    sdk::marvell::marvell_switch_init();
 
     // nicmgr init
     if (!getenv("DISABLE_NICMGR_HAL_THREAD")) {

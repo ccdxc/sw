@@ -53,19 +53,7 @@ pal_qsfp_set_led(int port, pal_led_color_t led,
 }
 
 int
-pal_program_marvell(uint8_t marvell_addr, uint32_t data, uint8_t phy)
-{
-    return -1;
-}
-
-int
 pal_get_cpld_rev(void)
-{
-    return -1;
-}
-
-int
-pal_marvell_link_status(uint8_t marvell_addr, uint16_t *data, uint8_t phy)
 {
     return -1;
 }
@@ -181,6 +169,17 @@ cpld_reg_wr(uint8_t reg, uint8_t data)
 {
     return -1;
 }
+
+int cpld_mdio_rd(uint8_t addr, uint16_t* data, uint8_t phy)
+{
+    return -1;
+}
+
+int cpld_mdio_wr(uint8_t addr, uint16_t data, uint8_t phy)
+{
+    return -1;
+}
+
 #else
 #include <string.h>
 /* Public APIs */
@@ -224,18 +223,6 @@ pal_qsfp_set_led(int port, pal_led_color_t led,
 }
 
 int
-pal_program_marvell(uint8_t marvell_addr, uint32_t data, uint8_t phy)
-{
-    return -1;
-}
-
-int
-pal_marvell_link_status(uint8_t marvell_addr, uint16_t *data, uint8_t phy)
-{
-    return -1;
-}
-
-int
 pal_get_cpld_rev(void)
 {
     return -1;
@@ -357,6 +344,16 @@ cpld_reg_rd(uint8_t reg)
 
 int
 cpld_reg_wr(uint8_t reg, uint8_t data)
+{
+    return -1;
+}
+
+int cpld_mdio_rd(uint8_t addr, uint16_t* data, uint8_t phy)
+{
+    return -1;
+}
+
+int cpld_mdio_wr(uint8_t addr, uint16_t data, uint8_t phy)
 {
     return -1;
 }

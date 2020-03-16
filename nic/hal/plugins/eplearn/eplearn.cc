@@ -172,12 +172,14 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
 
     return ret;
 
+#if 0
 end:
     // Come here only if EP update failed
     // Open the cfg db as it could be closed
     // in update if 
     hal::hal_cfg_db_open(hal::CFG_OP_READ);
     return ret;
+#endif
 }
 
 fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {

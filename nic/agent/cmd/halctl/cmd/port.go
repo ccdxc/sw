@@ -132,7 +132,7 @@ func init() {
 	portInternalShowCmd.AddCommand(portInternalStatsCmd)
 
 	portShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	portShowCmd.PersistentFlags().StringVar(&portNum, "port", "eth1/1", "Specify port number (1-7 for internal ports)")
+	portShowCmd.PersistentFlags().StringVar(&portNum, "port", "", "Specify port number. eg eth1/1 or 1 to 7 for internal ports")
 
 	clearCmd.AddCommand(portClearStatsCmd)
 	portClearStatsCmd.Flags().StringVar(&portNum, "port", "eth1/1", "Specify port number")
@@ -322,10 +322,6 @@ func portInternalCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Invalid argument\n")
 		return
 	}
-	if cmd.Flags().Changed("yaml") {
-		fmt.Printf("yaml option not supported for internal ports")
-		return
-	}
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -368,7 +364,7 @@ func portInternalCmdHandler(cmd *cobra.Command, args []string) {
 
 	hdrLine := strings.Repeat("-", 90)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-25s%-15s%-10s%-12s%-10s%-10s\n", "PortNo", "Descr", "Status", "Speed", "Mode", "Pause", "FlowCtrl")
+	fmt.Printf("%-10s%-25s%-15s%-10s%-12s%-10s%-10s\n", "Port", "Descr", "Status", "Speed", "Duplex", "Pause", "FlowCtrl")
 	fmt.Println(hdrLine)
 
 	// Print Result
