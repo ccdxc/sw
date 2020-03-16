@@ -41,7 +41,7 @@ end
 
 workdir "/sw"
 
-copy "nic/apollo/tools/apulu/customer-docker/entrypoint.sh", "/entrypoint.sh"
+copy "nic/apollo/tools/apulu/sanity/customer-docker/entrypoint.sh", "/entrypoint.sh"
 run "chmod +x /entrypoint.sh"
 
 entrypoint "/entrypoint.sh"

@@ -200,11 +200,17 @@ jobs:
     labels: ["precommit", "hourly", "2xhourly"]
   nic/agent:
     labels: ["precommit", "hourly"]
-  nic/apollo:
+  nic/apollo/tools/apollo/sanity/base:
+    labels: ["daily"]
+  nic/apollo/tools/artemis/sanity/base:
+    labels: ["daily"]
+  nic/apollo/tools/apulu/sanity/base:
     labels: ["precommit", "hourly"]
-  nic/apollo/tools/apulu/customer-docker: 
+  nic/apollo/tools/apulu/sanity/customer-docker:
+    labels: ["daily"]
+  nic/apollo/tools/athena/sanity/base:
     labels: ["precommit", "hourly"]
-  nic/apollo/tools/athena/customer-docker: 
+  nic/apollo/tools/athena/sanity/customer-docker:
     labels: ["precommit", "hourly"]
   nic/sdk:
     labels: ["precommit", "hourly", "2xhourly"]
@@ -237,13 +243,13 @@ dependencies:
     - reference: venice/ui
     - reference: iota/test/venice
   dol/apollo:
-    - reference: nic/apollo
+    - reference: nic/apollo/tools/apollo/sanity/base
+  dol/artemis:
+    - reference: nic/apollo/tools/artemis/sanity/base
+  dol/apulu:
+    - reference: nic/apollo/tools/apulu/sanity/base
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
-  dol/apulu:
-    - reference: nic/apollo
-  dol/artemis:
-    - reference: nic/apollo
   dol/test/networking:
     - reference: nic
   events:
@@ -310,15 +316,13 @@ dependencies:
     - reference: test/verify-build
     - reference: iota/test/standalone/precheckin/linux
   nic/apollo:
-  #  - reference: iota/test/venice
-  #  - reference: iota/test/standalone/sanity/esx
-  #  - reference: iota/test/standalone/sanity/freebsd
-  #  - reference: iota/test/standalone/precheckin/linux
-     - reference: iota/test/standalone/sanity/apulu-networking
-     - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: nic/apollo/tools/apulu/sanity/base
+    - reference: nic/apollo/tools/athena/sanity/base
+    - reference: iota/test/standalone/sanity/apulu-networking
+    - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/apollo/tools/dev-docker:
-    - reference: nic/apollo/tools/apulu/customer-docker
-    - reference: nic/apollo/tools/athena/customer-docker
+    - reference: nic/apollo/tools/apulu/sanity/customer-docker
+    - reference: nic/apollo/tools/athena/sanity/customer-docker
   nic/agent:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
@@ -340,6 +344,7 @@ dependencies:
   nic/conf:
     - reference: iota/test/standalone/precheckin/linux
   nic/conf/apulu:
+    - reference: nic/apollo/tools/apulu/sanity/base
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/debug_cli:
@@ -367,7 +372,7 @@ dependencies:
    # - reference: iota/test/standalone/precheckin/freebsd
     - reference: iota/test/standalone/precheckin/linux
   nic/metaswitch:
-    - reference: nic/apollo
+    - reference: nic/apollo/tools/apulu/sanity/base
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/p4-hlir:
@@ -387,8 +392,9 @@ dependencies:
   nic/sdk:
     - reference: iota/test/standalone/precheckin/esx
     - reference: iota/test/standalone/precheckin/linux
-    - reference: nic/apollo
-      #    - reference: iota/test/standalone/sanity/swm
+    - reference: nic/apollo/tools/apulu/sanity/base
+    - reference: iota/test/standalone/sanity/apulu-networking
+    - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/sysmgr:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/linux
@@ -407,10 +413,11 @@ dependencies:
     - reference: iota/test/venice
       exclude_dirs: ["arm_compiler","asic_sw_combined_sanity","client","gcov","hal","jenkins","ncc","package","server", "valgrind"]
   nic/tools/ncc:
-    - reference: nic/apollo
+    - reference: nic/apollo/tools/apulu/sanity/base
+    - reference: nic/apollo/tools/athena/sanity/base
   nic/tools/package:
-    - reference: nic/apollo/tools/apulu/customer-docker
-    - reference: nic/apollo/tools/athena/customer-docker
+    - reference: nic/apollo/tools/apulu/sanity/customer-docker
+    - reference: nic/apollo/tools/athena/sanity/customer-docker
   nic/upgrade_manager:
     - reference: iota/test/standalone/precheckin/esx
   nic/utils:
@@ -418,15 +425,15 @@ dependencies:
   nic/utils/ftl:
     - reference: iota/test/standalone/precheckin/esx
   nic/vpp:
-    - reference: nic/apollo
+    - reference: nic/apollo/tools/apulu/sanity/base
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/conf/apollo:
-    - reference: nic/apollo
+    - reference: nic/apollo/tools/apollo/sanity/base
   nic/conf/artemis:
-    - reference: nic/apollo
+    - reference: nic/apollo/tools/artemis/sanity/base
   nic/debug_cli/apollo:
-    - reference: nic/apollo
+    - reference: nic/apollo/tools/apulu/sanity/base
   nic/sdk/platform/cfgspace:
     - reference: platform/src/app/pciemgrd
   nic/sdk/platform/pciehdevices:
@@ -438,7 +445,7 @@ dependencies:
   nic/sdk/platform/ncsi:
     - reference: iota/test/standalone/sanity/swm
   nic/agent/dscagent/pipeline:
-    - reference: nic/apollo
+    - reference: nic/apollo/tools/apulu/sanity/base
       exclude_dirs: ["iris"]
   platform/drivers:
     - reference: iota/test/standalone/precheckin/esx
@@ -464,27 +471,23 @@ dependencies:
   platform/src/app/ncsid:
     - reference: iota/test/standalone/sanity/swm
   platform/src/app/nicmgrd:
-    - reference: nic/apollo
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: nic/apollo/tools/apulu/sanity/base
     - reference: iota/test/standalone/precheckin/linux
-      #- reference: iota/test/standalone/sanity/swm
   platform/src/lib/nicmgr:
-    - reference: nic/apollo
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: nic/apollo/tools/apulu/sanity/base
     - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
-      #- reference: iota/test/standalone/sanity/swm
   platform/src/lib/devapi_iris:
     - reference: iota/test/standalone/precheckin/linux
       #- reference: iota/test/standalone/sanity/swm
   platform/src/app/pciemgrd:
     - reference: iota/test/standalone/precheckin/linux
-    - reference: nic/apollo
+    - reference: nic/apollo/tools/apulu/sanity/base
   platform/src/app/pcieutil/src:
     - reference: iota/test/standalone/precheckin/linux
   platform/src/app/sysmond:

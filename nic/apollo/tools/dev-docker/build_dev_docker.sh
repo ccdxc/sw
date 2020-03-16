@@ -260,7 +260,7 @@ build_docker() {
     cd $SWMNTDIR
     tar cf  sw.tar /sw
     tar cf inc.tar /usr/local/include
-    sh -c "cp /sw/nic/apollo/tools/athena/customer-docker/Dockerfile . && docker build -t customimage:v2 . && docker save customimage:v2 | gzip > customimage.tar.gz"
+    sh -c "cp /sw/nic/apollo/tools/athena/sanity/customer-docker/Dockerfile . && docker build -t customimage:v2 . && docker save customimage:v2 | gzip > customimage.tar.gz"
     echo "done with Docker Save"
     docker images
     docker image rm customimage:v2
