@@ -341,7 +341,7 @@ class TestSuite:
     def CollectCores(self):
         try:
             destCoreDir = "corefiles/{0}".format(re.sub('[\W]+','_',self.Name()))
-            core_collector.CollectCores(GlobalOptions.testbed_json, destCoreDir, "vm", "vm")
+            core_collector.CollectCores(GlobalOptions.testbed_json, destCoreDir, "vm", "vm", Logger)
         except:
             Logger.debug("failed to collect cores. error was {0}".format(traceback.format_exc()))
 

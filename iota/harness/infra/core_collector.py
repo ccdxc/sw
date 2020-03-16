@@ -12,7 +12,10 @@ log = logging.getLogger()
 
 class CoreCollector(object):
 
-    def __init__(self,testbed, destDir, username, password):
+    def __init__(self,testbed, destDir, username, password, log=None):
+        if not log:
+            log = logging.getLogger()
+        self.log = log
         self.excluded = ["minfree"]
         self.testbed = testbed
         self.username = username
@@ -43,10 +46,14 @@ class CoreCollector(object):
             print(msg)
         return nodes
 
-    def sshCmd(self,ip,cmd):
+    def sshCmd(self,ip,cmd,verbose=False):
         sshHost = "%s@%s" % (self.username, ip)
         fullCmd = "%s %s \"%s\"" % (self.sshPfx, sshHost, cmd)
+        if verbose:
+            self.log.debug("sending ssh command: {0}".format(fullCmd))
         output = subprocess.check_output(fullCmd, stderr=subprocess.PIPE, shell=True)
+        if verbose:
+            self.log.debug("output of command was: {0}".format(output))
         return re.split('\n',output.decode("utf-8"))
 
     def scpGetFile(self,ip,srcFile,dstFile):
@@ -56,27 +63,50 @@ class CoreCollector(object):
         return re.split('\n',output.decode("utf-8"))
 
     def gatherCores(self):
+        maxCores = 5
         filelist = ""
         nodes = self.buildNodesFromTestbedFile()
-        for node in nodes:
-            log.debug("looking for cores on host {0}".format(node))
-            corefiles = self.sshCmd(node,"sudo ls /var/crash")
-            for core in corefiles:
-                if len(core) < 4:
+        self.log.debug("gathering cores for nodes {0}".format(nodes))
+        for _dir in ["/var/crash", "/var/core"]:
+            for node in nodes:
+                coreCount = 0
+                self.log.debug("looking for cores in dir {0} on host {1}".format(_dir, node))
+                try:
+                    corefiles = self.sshCmd(node,"sudo ls -t {0}".format(_dir),verbose=True)
+                except subprocess.CalledProcessError as e:
+                    if e.returncode == 1:
+                        self.log.debug("directory {0} does not exist on host {1}".format(_dir, node))
+                        continue
+                    else:
+                        self.log.debug("failed to search directory {0} on node {1}. return code was: {2}".format(_dir, node, e.returncode))
+                        continue
+                except:
+                    self.log.debug("failed to search directory {0} on node {1}. error was: {2}".format(_dir, node, traceback.format_exc()))
                     continue
-                if core in self.excluded:
-                    log.debug("skipping file {0}. in excluded list".format(core))
-                    continue
-                destFile = self.destDir + core
-                self.sshCmd(node,"sudo mv /var/crash/{0} /var/".format(core))
-                self.scpGetFile(node,"/var/{0}".format(core),destFile)
-                self.sshCmd(node,"sudo rm /var/{0}".format(core))
-                filelist += destFile + ' '
+                for core in corefiles:
+                    if len(core) < 4:
+                        continue
+                    if core in self.excluded:
+                        self.log.debug("skipping file {0}. in excluded list".format(core))
+                        continue
+                    if coreCount >= maxCores:
+                        self.log.debug("skipping file {0}. max core count of {1} reached for node {2} in directory {3}".format(core,maxCores,node,_dir)) 
+                        continue
+                    coreCount += 1
+                    destFile = self.destDir + core
+                    try:
+                        print("processing core file {0}".format(core))
+                        self.sshCmd(node,"sudo cp {0}/{1} /var/".format(_dir,core))
+                        self.scpGetFile(node,"/var/{0}".format(core),destFile)
+                        self.sshCmd(node,"sudo rm /var/{0}".format(core))
+                        filelist += destFile + ' '
+                    except:
+                        self.log.debug("failed to scp core file. error was: {0}".format(traceback.format_exc()))
         return filelist
 
 
-def CollectCores(testbed,destdir,username="vm",password="vm"):
-    cc = CoreCollector(testbed, destdir, username, password)
+def CollectCores(testbed,destdir,username="vm",password="vm",log=None):
+    cc = CoreCollector(testbed, destdir, username, password, log)
     filelist = cc.gatherCores()
     if filelist:
         tgzFile = destdir+".tgz"
