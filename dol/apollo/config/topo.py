@@ -1,6 +1,11 @@
 #! /usr/bin/python3
 import enum
 from infra.common.logging  import logger as logger
+
+MTU = 1500
+KEEPALIVE_INTERVAL = 60
+HOLD_TIME = 3 * KEEPALIVE_INTERVAL
+
 class InterfaceTypes(enum.IntEnum):
     NONE = 0
     ETH = 1

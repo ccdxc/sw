@@ -47,6 +47,12 @@ class InterfaceInfoObject(base.ConfigObjectBase):
         self.VrfName = ''
         self.Network = ''
         self.PfxStr = ''
+        self.Speed = ''
+        self.MTU = topo.MTU
+        self.PauseSpec = InterfaceSpec_()
+        self.PauseSpec.Type = 'DISABLE'
+        self.PauseSpec.TxPauseEnabled = False
+        self.PauseSpec.RxPauseEnabled = False
         if (iftype == topo.InterfaceTypes.UPLINK):
             self.port_num = getattr(spec, 'port', None)
             self.VrfName = 'underlay-vpc'
@@ -217,10 +223,14 @@ class InterfaceObject(base.ConfigObjectBase):
 
     def UpdateAttributes(self):
         self.IfInfo.macaddr = ResmgrClient[self.Node].DeviceMacAllocator.get()
+        self.IfInfo.MTU = self.IfInfo.MTU + 10
+        self.IfInfo.Speed = '' #TODO
+        self.IfInfo.PauseSpec.Type = 'LINK'
         return
 
     def RollbackAttributes(self):
-        self.IfInfo.macaddr = self.GetPrecedent().IfInfo.macaddr
+        self.IfInfo = self.GetPrecedent().IfInfo
+        self.Show()
         return
 
     def PopulateKey(self, grpcmsg):
@@ -273,6 +283,13 @@ class InterfaceObject(base.ConfigObjectBase):
                 "vrf-name": self.IfInfo.VrfName,
                 "network": self.IfInfo.Network,
                 "ip-address": self.IfInfo.PfxStr,
+                "speed": self.IfInfo.Speed,
+                "mtu": self.IfInfo.MTU,
+                "pause": {
+                    "type": self.IfInfo.PauseSpec.Type,
+                    "tx-pause-enabled": self.IfInfo.PauseSpec.TxPauseEnabled,
+                    "rx-pause-enabled": self.IfInfo.PauseSpec.RxPauseEnabled,
+                }
             }
         }
         return json.dumps(spec)
@@ -480,7 +497,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
 
     def UpdateHostInterfaces(self, node, subnets):
         if GlobalOptions.dryrun:
-            return 
+            return
         resp = api.client[node].GetHttp(api.ObjectTypes.INTERFACE)
         if not resp:
             return None
@@ -574,4 +591,3 @@ class InterfaceObjectClient(base.ConfigClientBase):
 client = InterfaceObjectClient()
 def GetMatchingObjects(selectors):
     return client.Objects()
-

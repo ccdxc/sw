@@ -40,7 +40,7 @@ testcases:
             ipaf    : [ ipv4 ]
             # objects tested with update config.
             # TODO: nh-group
-            objtype : [ vpc, subnet ]
+            objtype : [ vpc, subnet, bgp, interface ]
             oper    : [ [update] ]
         background_tasks:
             switchPortFlap  :

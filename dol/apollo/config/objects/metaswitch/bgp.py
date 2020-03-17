@@ -9,6 +9,7 @@ from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
 
 import apollo.config.agent.api as api
+import apollo.config.topo as topo
 import apollo.config.utils as utils
 import apollo.config.objects.base as base
 from apollo.config.objects.metaswitch.bgp_peer import client as BGPPeerClient
@@ -20,6 +21,7 @@ class BgpObject(base.ConfigObjectBase):
         self.Id = next(ResmgrClient[node].BgpIdAllocator)
         self.GID("BGP%d"%self.Id)
         self.UUID = utils.PdsUuid(self.Id, api.ObjectTypes.BGP)
+        self.Mutable = utils.IsUpdateSupported()
         self.LocalASN = getattr(spec, "localasn", 0)
         # If loopback ip exists in testbed json, use that,
         # else use from cfgyaml
@@ -28,12 +30,15 @@ class BgpObject(base.ConfigObjectBase):
             self.RouterId = ipaddress.ip_address(getattr(spec, "routerid", 0))
         self.RouterId = int(self.RouterId)
         self.ClusterId = getattr(spec, "clusterid", 0)
+        self.KeepAliveInterval = topo.KEEPALIVE_INTERVAL
+        self.HoldTime = topo.HOLD_TIME
         self.Show()
         return
 
     def __repr__(self):
-        return "BGP: %s |Id:%d|LocalASN:%d|RouterId:%s|ClusterId:%d" %\
-               (self.UUID, self.Id, self.LocalASN, self.RouterId, self.ClusterId)
+        return "BGP: %s |Id:%d|LocalASN:%d|RouterId:%s|ClusterId:%d|KeepAliveInterval:%d|HoldTime:%d" %\
+               (self.UUID, self.Id, self.LocalASN, self.RouterId, \
+                self.ClusterId, self.KeepAliveInterval, self.HoldTime)
 
     def Show(self):
         logger.info("Bgp config Object: %s" % self)
@@ -94,8 +99,8 @@ class BgpObject(base.ConfigObjectBase):
                       "router-id": ipaddress.ip_address(0).exploded,
                       "as-number": self.LocalASN,
                       "neighbors" :  peers,
-                      "keepalive-interval" : 60,
-                      "holdtime" : 180,
+                      "keepalive-interval" : self.KeepAliveInterval,
+                      "holdtime" : self.HoldTime,
                   }
               }
             }
@@ -124,6 +129,16 @@ class BgpObject(base.ConfigObjectBase):
             if not self.CheckPeerMatch(peer1, operpeers):
                 return False
         return True
+
+    def UpdateAttributes(self):
+        self.Show()
+        self.KeepAliveInterval = self.KeepAliveInterval + 10
+        self.HoldTime = self.HoldTime + 10
+        self.Show()
+
+    def RollbackAttributes(self):
+        attrlist = ["KeepAliveInterval", "HoldTime"]
+        self.RollbackMany(attrlist)
 
 class BgpObjectClient(base.ConfigClientBase):
     def __init__(self):
