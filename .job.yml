@@ -230,6 +230,8 @@ jobs:
     labels: ["precommit", "hourly"]
   test/ci_targets/e2e:
     labels: ["precommit", "2xhourly"]
+  test/ci_targets/e2erollout:
+    labels: ["precommit", "2xhourly"]
   test/verify-build:
     labels: ["precommit"]
   venice:
@@ -512,6 +514,7 @@ dependencies:
   venice:
     - reference: api
     - reference: test/ci_targets/e2e
+    - reference: test/ci_targets/e2erollout
     - reference: iota/test/venice
       exclude_dirs: ["ui"]
   venice/orch:
@@ -519,11 +522,13 @@ dependencies:
   test:
     - reference: api
     - reference: test/ci_targets/e2e
+    - reference: test/ci_targets/e2erollout
     - reference: platform
   vendor:
     - reference: api
     - reference: venice
     - reference: test/ci_targets/e2e
+    - reference: test/ci_targets/e2erollout
   penctl:
     - reference: iota/test/standalone/precheckin/esx
     - reference: iota/test/standalone/precheckin/linux

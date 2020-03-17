@@ -5,15 +5,19 @@ package rollout
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"mime/multipart"
+	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
-	objstore "github.com/pensando/sw/venice/utils/objstore/client"
+	loginctx "github.com/pensando/sw/api/login/context"
 
 	"github.com/pensando/sw/venice/utils/log"
 
@@ -25,6 +29,8 @@ import (
 	"github.com/pensando/sw/api"
 
 	"github.com/pensando/sw/api/generated/rollout"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -34,87 +40,321 @@ const (
 
 var version string
 
-type ImageConfig struct {
-	ImageMap                map[string]string   `json:"imageMap,omitempty"`
-	UpgradeOrder            []string            `json:"upgradeOrder,omitempty"`
-	SupportedNaplesVersions map[string][]string `json:"supportedNaplesVersions,omitempty"`
-	GitVersion              map[string]string   `json:"cmdVersionMap,omitempty"`
+type BuildMeta struct {
+	Repo            string
+	Branch          string
+	Prefix          string
+	Label           string
+	NextBuildNumber int
 }
 
-func readImageConfigFile(imageConfig *ImageConfig) error {
-	confFile := "/import/src/github.com/pensando/sw/bin/venice.json"
-	if _, err := os.Stat(confFile); err != nil {
-		// Stat error is treated as not part of cluster.
-		log.Errorf("unable to find confFile %s error: %v", confFile, err)
-		return err
+func uploadBundle(ctx context.Context, filename string, metadata map[string]string, content []byte) (int, error) {
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", filename)
+	if err != nil {
+		return 0, errors.Wrap(err, "CreateFormFile failed")
 	}
-	var in []byte
-	var err error
-	if in, err = ioutil.ReadFile(confFile); err != nil {
-		log.Errorf("unable to read confFile %s error: %v", confFile, err)
-		return err
+	written, err := part.Write(content)
+	if err != nil {
+		return 0, errors.Wrap(err, "writing form")
 	}
-	if err := json.Unmarshal(in, imageConfig); err != nil {
-		log.Errorf("unable to understand confFile %s error: %v", confFile, err)
-		return err
+
+	for key, val := range metadata {
+		_ = writer.WriteField(key, val)
+	}
+	err = writer.Close()
+	if err != nil {
+		return 0, errors.Wrap(err, "closing writer")
+	}
+	uri := fmt.Sprintf("https://%s/objstore/v1/uploads/images/", ts.tu.APIGwAddr)
+	By(fmt.Sprintf("upload URI [%v]", uri))
+	req, err := http.NewRequest("POST", uri, body)
+	if err != nil {
+		return 0, errors.Wrap(err, "http.newRequest failed")
+	}
+	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if !ok {
+		return 0, fmt.Errorf("no authorization header in context")
+	}
+	req.Header.Set("Authorization", authzHeader)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	client := &http.Client{Transport: transport}
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, errors.Wrap(err, "Sending req")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		By(fmt.Sprintf("Did not get a success on upload [%v]", string(body)))
+		return 0, fmt.Errorf("failed to get upload [%v][%v]", resp.Status, string(body))
+	}
+	return written, nil
+}
+
+func checkNodeRolloutStatus() error {
+	obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
+	r1, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
+	if err != nil {
+		By(fmt.Sprintf("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, r1))
+		return errors.New("Unable to GET rollout status")
+	}
+
+	By(fmt.Sprintf("Able to GET rollout status, proceeding with checking node rollout status"))
+	statuses := r1.Status.GetControllerNodesStatus()
+	var (
+		preCheckNodeCount,
+		dependenciesCheckNodeCount,
+		completeNodeCount,
+		progressingNodeCount,
+		failedNodeCount,
+		waitingForTurnNodeCount int
+	)
+	if len(statuses) == 0 {
+		By(fmt.Sprintf("ts:%s Rollout controller node status: not found", time.Now().String()))
+		return errors.New("No Rollout status found")
+	}
+
+	for _, status := range statuses {
+		switch strings.Trim(strings.ToLower(status.Phase), " \t") {
+		case "pre-check":
+			preCheckNodeCount++
+		case "dependencies-check":
+			dependenciesCheckNodeCount++
+		case "waiting-for-turn":
+			waitingForTurnNodeCount++
+		case "progressing":
+			progressingNodeCount++
+		case "complete":
+			completeNodeCount++
+		case "fail":
+			failedNodeCount++
+		default:
+			By(fmt.Sprintf("Found unexpected node rollout phase:(%s)", status.Phase))
+			return fmt.Errorf("Invalid node rollout status:(%s)", status.Phase)
+		}
+	}
+
+	nodeStatusCounts := map[string]int{
+		"PRE_CHECK":          preCheckNodeCount,
+		"DEPENDENCIES_CHECK": dependenciesCheckNodeCount,
+		"WAITING_FOR_TURN":   waitingForTurnNodeCount,
+		"PROGRESSING":        progressingNodeCount,
+		"COMPLETE":           completeNodeCount,
+		"FAIL":               failedNodeCount,
+	}
+
+	for k, v := range nodeStatusCounts {
+		By(fmt.Sprintf("Node status: %s, count: %d", k, v))
+	}
+
+	if failedNodeCount > 0 {
+		return fmt.Errorf("Found %d nodes with rollout failures", failedNodeCount)
+	}
+
+	if completeNodeCount < len(statuses) {
+		waitingorProgressingNodes := preCheckNodeCount + dependenciesCheckNodeCount + waitingForTurnNodeCount + progressingNodeCount
+		return fmt.Errorf("Waiting for %d nodes to finish rollout", waitingorProgressingNodes)
+	}
+
+	By(fmt.Sprintf("ts:%s Rollout completed on all nodes", time.Now().String()))
+	return nil
+}
+
+func downloadVeniceBundle(bundleLocalFilePath string) (string, error) {
+	var version string
+	err := deleteBundleIfExists(bundleLocalFilePath)
+	if err != nil {
+		By(fmt.Sprintf("ts:%s Error trying to deleting bundle file, error: ", err.Error()))
+		return "", err
+	}
+	node := ts.tu.QuorumNodes[rand.Intn(len(ts.tu.QuorumNodes))]
+	nodeIP := ts.tu.NameToIPMap[node]
+	versionPrefix, buildNumber, err := getLatestBuildVersionInfo(nodeIP)
+	if err != nil {
+		By(fmt.Sprintf("ts:%s Unable to fetch latest build version information: %s", time.Now().String(), err.Error()))
+		return "", errors.Wrap(err, "Unable to fetch latest build version information")
+	}
+	for b := buildNumber; b > 0; b-- {
+		version = versionPrefix + "-" + strconv.Itoa(b)
+		By(fmt.Sprintf("ts:%s Trying to download bundle.tar, version: %s", time.Now().String(), version))
+		url := fmt.Sprintf("http://pxe.pensando.io/builds/hourly/%s/bundle/bundle.tar --output %s -f", version, bundleLocalFilePath)
+		res := ts.tu.CommandOutputIgnoreError(nodeIP, fmt.Sprintf(`curl %s`, url))
+
+		if strings.Contains(res, "404 Not Found") || strings.Contains(res, " error: ") {
+			By(fmt.Sprintf("ts:%s Error when trying to download Bundle with version: %s, response: %s", time.Now().String(), version, res))
+		} else {
+			By(fmt.Sprintf("ts:%s Successfully downloaded bundle.tar for version: %s", time.Now().String(), version))
+			By(res)
+			return version, nil
+		}
+	}
+	return "", errors.Errorf("Unable to download image with version prefix: %s", versionPrefix)
+}
+
+func deleteBundleIfExists(filename string) error {
+	_, err := os.Stat(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return errors.Wrap(err, fmt.Sprintf("Unexpected error when trying to get stats for file: %s", filename))
+	}
+	By(fmt.Sprintf("Found file %s, deleting it.", filename))
+	err = os.Remove(filename)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("Unable to delete the file: %s", filename))
 	}
 	return nil
 }
 
-// GetGitVersion reads config file and returns a map of ContainerInfo indexed by name
-func GetGitVersion() map[string]string {
-	var imageConfig ImageConfig
-	readImageConfigFile(&imageConfig)
-	return imageConfig.GitVersion
-}
-
-func uploadBundleImg(ctx context.Context, client objstore.Client, rootDir string, version string, imageName string, objStoreFile string) error {
-
-	imageFile := rootDir + "/" + imageName
-	objectStoreFileName := "Bundle/" + version + "_img/" + objStoreFile
-	return UploadImage(ctx, client, version, imageFile, objectStoreFileName)
-
-}
-
-func uploadVeniceImg(ctx context.Context, client objstore.Client, rootDir string, version string, imageName string, objStoreFile string) error {
-
-	imageFile := rootDir + "/" + imageName
-	objectStoreFileName := "Venice/" + version + "_img/" + objStoreFile
-	return UploadImage(ctx, client, version, imageFile, objectStoreFileName)
-
-}
-
-//UploadImage uploads a given image to objectStore /rootDir/version/imageName should give the path to the file
-func UploadImage(ctx context.Context, client objstore.Client, version string, imageName string, objStoreFileName string) error {
-
-	meta := make(map[string]string)
-	imageFile := imageName
-
-	_, err := client.StatObject(objStoreFileName)
-	if err == nil {
-		By(fmt.Sprintf("Image (%s) exists in objectStore", objStoreFileName))
-		log.Errorf("Image (%s) exists in the object store", objStoreFileName)
-		return nil
-	}
-
-	meta["Version"] = version
-	meta["Environment"] = "production"
-	meta["Description"] = objStoreFileName
-	meta["ReleaseDate"] = "May2018"
-
-	buf, err := ioutil.ReadFile(imageFile)
+func getLatestBuildVersionInfo(nodeIP string) (string, int, error) {
+	targetBranch := "master"
+	jsonResponse := ts.tu.LocalCommandOutput(`curl -s http://jobd.pensando.io:3456/tags`)
+	By(fmt.Sprintf("ts:%s BuildMeta response from jobd: %s", time.Now().String(), jsonResponse))
+	jsonResponseBytes := []byte(jsonResponse)
+	var buildMetas = []*BuildMeta{}
+	err := json.Unmarshal(jsonResponseBytes, &buildMetas)
 	if err != nil {
-		By(fmt.Sprintf("Error (%+v) reading file %s", err, imageFile))
-		return err
+		return "", 0, errors.Wrap(err, "Unable to unmarshal response from jobd")
 	}
-	_, err = client.PutObject(context.Background(), objStoreFileName, bytes.NewBuffer(buf), meta)
-	if err != nil {
-		By(fmt.Sprintf("UploadImage: Could not put object (%s) to datastore", err))
-		return err
+	for _, bm := range buildMetas {
+		if bm.Branch == targetBranch {
+			return bm.Prefix, bm.NextBuildNumber, nil
+		}
 	}
-	By(fmt.Sprintf("Uploaded file %s to objectStore", imageFile))
+	return "", 0, errors.Errorf("No build metadata found for targetBranch: %s", targetBranch)
+}
 
+func deleteRolloutObject() error {
+	obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
+	r1, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
+	if err != nil {
+		By(fmt.Sprintf("ts:%s Rollout GET failed during delete, err: %+v rollouts: %+v", time.Now().String(), err, r1))
+		return errors.Wrap(err, "Unable to GET rollout object")
+	}
+
+	r1, err = ts.restSvc.RolloutV1().Rollout().RemoveRollout(ts.loggedInCtx, r1)
+	if err != nil || r1.Name != rolloutName {
+		By(fmt.Sprintf("ts:%s Rollout DELETE failed, err: %+v rollouts: %+v", time.Now().String(), err, r1))
+		return errors.Wrap(err, "Unable to delete rollout object")
+	}
+	By(fmt.Sprintf("ts:%s Rollout DELETE validated for [%s]", time.Now().String(), rolloutName))
 	return nil
+}
+
+func isServiceRolloutComplete() bool {
+	obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
+	r1, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
+	if err != nil {
+		By(fmt.Sprintf("ts:%s Rollout LIST failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, r1))
+		return false
+	}
+	status := r1.Status.GetControllerServicesStatus()
+	if len(status) == 0 {
+		By(fmt.Sprintf("ts:%s Rollout controller services status: Not Found", time.Now().String()))
+		return false
+	}
+	if strings.Trim(strings.ToLower(status[0].Phase), " \t") != "complete" {
+		By(fmt.Sprintf("ts:%s Rollout controller services status: : %+v", time.Now().String(), status[0].Phase))
+		return false
+	}
+
+	By(fmt.Sprintf("ts:%s Rollout Controller Services Status: Complete", time.Now().String()))
+
+	return true
+}
+
+func isRolloutStartTimeCorrect() bool {
+	obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
+	r1, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
+	if err != nil || r1.Name != rolloutName {
+		By(fmt.Sprintf("ts:%s Rollout GET failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutName, err, r1))
+		return false
+	}
+	if r1.Status.StartTime == nil || r1.Spec.ScheduledStartTime.Seconds > r1.Status.StartTime.Seconds {
+		By(fmt.Sprintf("ts:%s Waiting for pre-install to complete and to schedule rollout : %s", time.Now().String(), rolloutName))
+		return false
+	}
+	By(fmt.Sprintf("ts:%s Rollout successfully started at [%+v] for [%s]", time.Now().String(), time.Unix(r1.Status.StartTime.Seconds, 0), rolloutName))
+	return true
+}
+
+func isPreinstallDone() bool {
+	obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
+	r1, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
+	if err != nil {
+		By(fmt.Sprintf("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, r1))
+		return false
+	}
+	if len(r1.Status.GetControllerNodesStatus()) == 0 || r1.Status.OperationalState == "precheck-in-progress" {
+		By(fmt.Sprintf("ts:%s Pre-install in progress", time.Now().String()))
+		return false
+	}
+	By(fmt.Sprintf("ts:%s Pre-install completed, current rollout state: %s", time.Now().String(), r1.Status.OperationalState))
+	return true
+}
+
+func isRolloutObjectPresent(rName string) bool {
+	obj := api.ObjectMeta{Name: rName, Tenant: "default"}
+	r1, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
+	if err != nil || r1.Name != rName {
+		By(fmt.Sprintf("ts:%s Rollout GET failed for [%s] err: %+v r1: %+v", time.Now().String(), rName, err, r1))
+		return false
+	}
+	By(fmt.Sprintf("ts:%s Rollout GET validated for [%s]", time.Now().String(), rName))
+	return true
+}
+
+func createRolloutObject(rolloutObj *rollout.Rollout) error {
+	r1, err := ts.restSvc.RolloutV1().Rollout().CreateRollout(ts.loggedInCtx, rolloutObj)
+	if err != nil || r1.Name != rolloutName {
+		By(fmt.Sprintf("ts:%s Rollout CREATE failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutName, err, r1))
+		return errors.Wrap(err, "Unable to CREATE rollout")
+	}
+	By(fmt.Sprintf("ts:%s Rollout created at [%s] and scheduled at [%+v] for [%s]", time.Now().String(), time.Unix(r1.CreationTime.Seconds, 0), time.Unix(r1.Spec.ScheduledStartTime.Seconds, 0), rolloutName))
+	return nil
+}
+
+func cleanupRolloutObjects(objMeta api.ObjectMeta) error {
+	rollouts, err := ts.restSvc.RolloutV1().Rollout().List(ts.loggedInCtx, &api.ListWatchOptions{ObjectMeta: objMeta})
+	if err != nil {
+		By(fmt.Sprintf("ts:%s Unable to LIST rollout objects for cleanup, err: %+v meta: %+v", time.Now().String(), err, objMeta))
+		return errors.Wrap(err, "Unable to LIST rollout objects for cleanup")
+	}
+	By(fmt.Sprintf("Found %d rollout objects for cleanup, rolloutObjs: %+v", len(rollouts), rollouts))
+	for _, r := range rollouts {
+		_, deleteErr := ts.restSvc.RolloutV1().Rollout().RemoveRollout(ts.loggedInCtx, r)
+		if deleteErr != nil {
+			By(fmt.Sprintf("ts:%s Rollout DELETE failed, err: %+v rollouts: %+v", time.Now().String(), deleteErr, r))
+			return errors.Wrap(deleteErr, "Unable to DELETE rollout")
+		}
+	}
+	return nil
+}
+
+func suspendRollout(rolloutObj rollout.Rollout) bool {
+	rolloutObj.Spec.Suspend = true
+	r1, err := ts.restSvc.RolloutV1().Rollout().StopRollout(ts.loggedInCtx, &rolloutObj)
+	if err != nil || r1.Name != rolloutSuspendName {
+		By(fmt.Sprintf("ts:%s Rollout Update failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutSuspendName, err, r1))
+		return false
+	}
+	obj := api.ObjectMeta{Name: rolloutSuspendName, Tenant: "default"}
+	r1, err = ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
+	if err != nil || r1.Name != rolloutSuspendName {
+		By(fmt.Sprintf("ts:%s Rollout GET failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutSuspendName, err, r1))
+		return false
+	}
+
+	if r1.Spec.GetSuspend() {
+		By(fmt.Sprintf("ts:%s Rollout suspended for [%s]", time.Now().String(), rolloutSuspendName))
+		return true
+	}
+	return false
 }
 
 // run the tests
@@ -123,73 +363,36 @@ var _ = Describe("Rollout object tests", func() {
 	Context("Rollout tests", func() {
 
 		// setup
-		It("Rollout setup: upload image should succeed", func() {
-			//Skip(fmt.Sprintf("Skipping upload venice image test"))
-			node := ts.tu.QuorumNodes[rand.Intn(len(ts.tu.QuorumNodes))]
-			nodeIP := ts.tu.NameToIPMap[node]
-			url := fmt.Sprintf("http://pxe.pensando.io/kickstart/veniceImageForRollout/venice.tgz --output /import/src/github.com/pensando/sw/bin/venice.upg.tgz")
-			res := ts.tu.CommandOutput(nodeIP, fmt.Sprintf(`curl %s`, url))
-			By(fmt.Sprintf("ts:%s CURL image download [%s]", time.Now().String(), res))
+		It("Rollout setup: upload bundle should succeed", func() {
 
-			url = fmt.Sprintf("http://pxe.pensando.io/kickstart/veniceImageForRollout/venice.json --output /import/src/github.com/pensando/sw/bin/venice.json")
-			res = ts.tu.CommandOutput(nodeIP, fmt.Sprintf(`curl %s`, url))
-			By(fmt.Sprintf("ts:%s CURL venice.json download [%s]", time.Now().String(), res))
+			fileName := "bundle.tar"
+			bundleLocalFilePath := "/import/src/github.com/pensando/sw/bin/" + fileName
+			var err error
+			version, err = downloadVeniceBundle(bundleLocalFilePath)
+			Expect(err).Should(BeNil(), fmt.Sprintf("Failed to find and download a venice bundle"))
 
-			cmdVersion := GetGitVersion()
-			for version = range cmdVersion {
-				break
-			}
-			if version == "" {
-				By(fmt.Sprintf("ts:%s Build Failure. Couldnt get version.json", time.Now().String()))
-				err := errors.New("Build Failure. Couldnt get version information")
-				Expect(err).Should(BeNil(), "Build Failure. Couldnt get version from version.json")
-
-			}
-			// location of the objstore.
-			err := ts.tu.SetupObjstoreClient()
-			filename := "venice.upg.tgz"
-
-			By(fmt.Sprintf("\nts:%s uploading image to object store..", time.Now().String()))
 			ctx := ts.tu.MustGetLoggedInContext(context.Background())
-			err = uploadVeniceImg(ctx, ts.tu.VOSClient, "/import/src/github.com/pensando/sw/bin/", version, filename, "venice.tgz")
-			Expect(err).Should(BeNil(), "Failed to upload file")
-			meta := map[string]map[string]string{
-				"Bundle": {"Version": "0.10.0-110",
-					"Description": "Meta File",
-					"ReleaseDate": "May2019",
-					"Name":        "metadata.json"},
-
-				"Venice": {"Version": version,
-					"Description": "Venice Image",
-					"ReleaseDate": "May2019",
-					"Name":        "venice.tgz"},
-
-				"Naples": {"Version": "5.1",
-					"Description": "Naples Image",
-					"ReleaseDate": "May2019",
-					"Name":        "naples_fw.tar"}}
-
-			b, err := json.Marshal(meta)
+			metadata := map[string]string{
+				"Version":     version,
+				"Environment": "production",
+				"Description": "E2E rollout test Image upload",
+				"Releasedate": "Feb2020",
+			}
+			fileContent, err := ioutil.ReadFile(bundleLocalFilePath)
 			if err != nil {
-				By(fmt.Sprintf("ts:%s Failed to marshal meta info", time.Now().String()))
-				err := errors.New("Failed to marshal meta info")
-				Expect(err).Should(BeNil(), "Failed to marshal meta info")
+				log.Infof("Error (%+v) reading file %s", err, bundleLocalFilePath)
+				Fail(fmt.Sprintf("Failed to read %s", bundleLocalFilePath))
 			}
 
-			err = ioutil.WriteFile("/tmp/metadata.json", b, 0644)
-			if err != nil {
-				By(fmt.Sprintf("ts:%s Failed to marshal meta info", time.Now().String()))
-				err := errors.New("Failed to marshal meta info")
-				Expect(err).Should(BeNil(), "Failed to marshal meta info")
-			}
-			err = uploadBundleImg(ctx, ts.tu.VOSClient, "/tmp/", "0.10.0-110", "metadata.json", "metadata.json")
-			Expect(err).Should(BeNil(), "Failed to upload file")
-
+			Eventually(func() error {
+				_, err = uploadBundle(ctx, fileName, metadata, fileContent)
+				return err
+			}, 300, 5).Should(BeNil(), fmt.Sprintf("Failed to upload file %s due to (%s)", bundleLocalFilePath, err))
+			By(fmt.Sprintf("ts:%s Successfully uploaded bundle to VOS", time.Now().String()))
 		})
 
 		// run tests
 		It("Rollout operations should succeed", func() {
-			//Skip(fmt.Sprintf("Skipping rollout tests"))
 			seconds := time.Now().Unix()
 			scheduledStartTime := &api.Timestamp{
 				Timestamp: types.Timestamp{
@@ -197,7 +400,7 @@ var _ = Describe("Rollout object tests", func() {
 				},
 			}
 
-			rollout := rollout.Rollout{
+			rolloutObj := rollout.Rollout{
 				TypeMeta: api.TypeMeta{
 					Kind: "Rollout",
 				},
@@ -217,177 +420,28 @@ var _ = Describe("Rollout object tests", func() {
 					UpgradeType:               "Disruptive",
 				},
 			}
-			// Verify creation for rollout object
-			Eventually(func() bool {
-				oMeta := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-				_, _ = ts.tu.APIClient.RolloutV1().RolloutAction().Delete(ts.loggedInCtx, &oMeta)
-				return true
-			}).Should(BeTrue(), fmt.Sprintf("Failed to create %s object", rolloutName))
 
-			// Verify creation for rollout object
-			Eventually(func() bool {
-				r1, err := ts.restSvc.RolloutV1().Rollout().CreateRollout(ts.loggedInCtx, &rollout)
-				if err != nil || r1.Name != rolloutName {
-					By(fmt.Sprintf("ts:%s Rollout CREATE failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutName, err, r1))
-					return false
-				}
-				By(fmt.Sprintf("ts:%s Rollout created at [%s] and scheduled at [%+v] for [%s]", time.Now().String(), time.Unix(r1.CreationTime.Seconds, 0), time.Unix(r1.Spec.ScheduledStartTime.Seconds, 0), rolloutName))
-				return true
-			}).Should(BeTrue(), fmt.Sprintf("Failed to create %s object", rolloutName))
-
-			// Verify GET for rollout object
-			Eventually(func() bool {
-				obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-				r1, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
-				if err != nil || r1.Name != rolloutName {
-					By(fmt.Sprintf("ts:%s Rollout GET failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutName, err, r1))
-					return false
-				}
-				By(fmt.Sprintf("ts:%s Rollout GET validated for [%s]", time.Now().String(), rolloutName))
-				return true
-			}, 30, 1).Should(BeTrue(), fmt.Sprintf("Failed to get %s object", rolloutName))
-
-			// Verify pre-install rollout Node status
-			Eventually(func() bool {
-				obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-				rollout, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
-				if err != nil {
-					By(fmt.Sprintf("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout))
-					return false
-				}
-				status := rollout.Status.GetControllerNodesStatus()
-				if len(status) == 0 {
-					By(fmt.Sprintf("ts:%s Pre-install in progress", time.Now().String()))
-					return false
-				}
-				By(fmt.Sprintf("ts:%s Pre-install completed for : %d nodes", time.Now().String(), len(status)))
-				return true
-			}, 300, 5).Should(BeTrue(), "Failed to finish pre-install for controller node")
-
-			// Verify rollout Node status
 			Eventually(func() error {
-				obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-				rollout, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
-				if err != nil {
-					By(fmt.Sprintf("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout))
-					return errors.New("No rollout object found")
-				}
-				var numNodes int
-				status := rollout.Status.GetControllerNodesStatus()
-				if len(status) == 0 {
-					By(fmt.Sprintf("ts:%s Pre-install in progress", time.Now().String()))
-					return errors.New("No controller node status found")
-				}
+				oMeta := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
+				return cleanupRolloutObjects(oMeta)
+			}, 30, 1).Should(BeNil(), fmt.Sprintf("Failed to cleanup %s object", rolloutName))
 
-				for i := 0; i < len(status); i++ {
-					if status[i].Phase != "WAITING_FOR_TURN" {
-						By(fmt.Sprintf("ts:%s Controller node Pre-install Failed", time.Now().String()))
-						return errors.New("Controller Pre-install Failed")
-					}
-					numNodes++
-				}
+			Eventually(func() error {
+				return createRolloutObject(&rolloutObj)
+			}, 30, 1).Should(BeNil(), fmt.Sprintf("Failed to create %s object", rolloutName))
 
-				if numNodes != ts.tu.NumQuorumNodes {
-					By(fmt.Sprintf("ts:%s Pre-install completed for : %d nodes", time.Now().String(), numNodes))
-					return errors.New("Controller Pre-install continues")
-				}
-				By(fmt.Sprintf("ts:%s Pre-install Status: Complete", time.Now().String()))
-				return nil
-			}, 300, 5).Should(BeNil(), "Failed to complete Pre-install")
-
-			// Verify Start Time of rollout object
 			Eventually(func() bool {
-				obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-				r1, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
-				if err != nil || r1.Name != rolloutName {
-					By(fmt.Sprintf("ts:%s Rollout GET failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutName, err, r1))
-					return false
-				}
-				if r1.Status.StartTime == nil || r1.Spec.ScheduledStartTime.Seconds > r1.Status.StartTime.Seconds {
-					By(fmt.Sprintf("ts:%s Waiting for pre-install to complete and to schedule rollout : %s", time.Now().String(), rolloutName))
-					return false
-				}
-				By(fmt.Sprintf("ts:%s Rollout successfully started at [%+v] for [%s]", time.Now().String(), time.Unix(r1.Status.StartTime.Seconds, 0), rolloutName))
-				return true
-			}, 100, 5).Should(BeTrue(), fmt.Sprintf("Failed to validate scheduled rollout for object %s", rolloutName))
+				return isRolloutObjectPresent(rolloutName)
+			}, 30, 1).Should(BeTrue(), fmt.Sprintf("Failed to verify presence of %s object", rolloutName))
 
-			// Verify rollout Node status
+			Eventually(isPreinstallDone, 600, 5).Should(BeTrue(), "Failed to verify pre-install step status for controller node")
+			Eventually(checkNodeRolloutStatus, 1500, 5).Should(BeNil(), "Failed to verify rollout status on all nodes")
+			Eventually(isRolloutStartTimeCorrect, 100, 5).Should(BeTrue(), fmt.Sprintf("Failed to validate scheduled rollout for object %s", rolloutName))
+			Eventually(isServiceRolloutComplete, 600, 10).Should(BeTrue(), "Failed to verify rollout status for controller services")
+			Eventually(deleteRolloutObject, 60, 5).Should(BeNil(), fmt.Sprintf("Failed to delete %s object", rolloutName))
 			Eventually(func() bool {
-				obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-				rollout, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
-				if err != nil {
-					By(fmt.Sprintf("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout))
-					return false
-				}
-
-				status := rollout.Status.GetControllerNodesStatus()
-				var numNodes int
-				if len(status) == 0 {
-					By(fmt.Sprintf("ts:%s Rollout controller node status: not found", time.Now().String()))
-					return false
-				}
-
-				for i := 0; i < len(status); i++ {
-					if status[i].Phase == "COMPLETE" {
-						numNodes++
-					}
-				}
-				if numNodes != len(status) {
-					By(fmt.Sprintf("ts:%s Rollout completed for : %d nodes", time.Now().String(), numNodes))
-					return false
-				}
-
-				By(fmt.Sprintf("ts:%s Rollout Node Status: Complete", time.Now().String()))
-
-				return true
-			}, 500, 5).Should(BeTrue(), "Failed to finish rollout controller node")
-
-			// Verify rollout service status
-			Eventually(func() bool {
-				obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-				rollout, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
-				if err != nil {
-					By(fmt.Sprintf("ts:%s Rollout LIST failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout))
-					return false
-				}
-				status := rollout.Status.GetControllerServicesStatus()
-				if len(status) == 0 {
-					By(fmt.Sprintf("ts:%s Rollout controller services status: Not Found", time.Now().String()))
-					return false
-				}
-				if status[0].Phase != "COMPLETE" {
-					By(fmt.Sprintf("ts:%s Rollout controller services status: : %+v", time.Now().String(), status[0].Phase))
-					return false
-				}
-
-				By(fmt.Sprintf("ts:%s Rollout Controller Services Status: Complete", time.Now().String()))
-
-				return true
-			}, 300, 5).Should(BeTrue(), "Failed to finish rollout for controller services")
-
-			// Verify delete on rollout object
-			Eventually(func() bool {
-				obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-				r1, err := ts.restSvc.RolloutV1().Rollout().Delete(ts.loggedInCtx, &obj)
-				if err != nil || r1.Name != rolloutName {
-					return false
-				}
-				By(fmt.Sprintf("ts:%s Rollout DELETE validated for [%s]", time.Now().String(), rolloutName))
-				return true
-			}, 30, 1).Should(BeTrue(), fmt.Sprintf("Failed to delete %s object", rolloutName))
-
-			// Verify GET for all rollout objects (LIST) returns empty
-			Eventually(func() bool {
-
-				ometa := api.ObjectMeta{Tenant: "default"}
-				rollouts, err := ts.restSvc.RolloutV1().Rollout().List(ts.loggedInCtx, &api.ListWatchOptions{ObjectMeta: ometa})
-				if err != nil || len(rollouts) != 0 {
-					By(fmt.Sprintf("ts:%s Rollout LIST has unexpected objects, err: %+v rollouts: %+v", time.Now().String(), err, rollouts))
-					return false
-				}
-				return true
-			}, 30, 1).Should(BeTrue(), "Unexpected rollout objects found")
-
+				return isRolloutObjectPresent(rolloutName)
+			}, 30, 1).Should(BeFalse(), fmt.Sprintf("Failed to verify the absence of %s object", rolloutName))
 		})
 
 		It("Rollout suspend operations should succeed", func() {
@@ -396,7 +450,7 @@ var _ = Describe("Rollout object tests", func() {
 				Skip(fmt.Sprintf("Skipping suspend rollout tests :%d quorum nodes found, need >= 2", ts.tu.NumQuorumNodes))
 			}
 
-			rollout := rollout.Rollout{
+			rolloutObj := rollout.Rollout{
 				TypeMeta: api.TypeMeta{
 					Kind: "Rollout",
 				},
@@ -417,27 +471,12 @@ var _ = Describe("Rollout object tests", func() {
 				},
 			}
 
-			// Verify creation for rollout object
-			Eventually(func() bool {
-				r1, err := ts.restSvc.RolloutV1().Rollout().CreateRollout(ts.loggedInCtx, &rollout)
-				if err != nil || r1.Name != rolloutSuspendName {
-					By(fmt.Sprintf("ts:%s Rollout CREATE failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutSuspendName, err, r1))
-					return false
-				}
-				By(fmt.Sprintf("ts:%s Rollout created for [%s]", time.Now().String(), rolloutSuspendName))
-				return true
-			}).Should(BeTrue(), fmt.Sprintf("Failed to create %s object", rolloutSuspendName))
+			Eventually(func() error {
+				return createRolloutObject(&rolloutObj)
+			}).Should(BeNil(), fmt.Sprintf("Failed to create %s object", rolloutSuspendName))
 
-			// Verify GET for rollout object
 			Eventually(func() bool {
-				obj := api.ObjectMeta{Name: rolloutSuspendName, Tenant: "default"}
-				r1, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
-				if err != nil || r1.Name != rolloutSuspendName {
-					By(fmt.Sprintf("ts:%s Rollout GET failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutSuspendName, err, r1))
-					return false
-				}
-				By(fmt.Sprintf("ts:%s Rollout GET validated for [%s]", time.Now().String(), rolloutSuspendName))
-				return true
+				return isRolloutObjectPresent(rolloutSuspendName)
 			}, 30, 1).Should(BeTrue(), fmt.Sprintf("Failed to get %s object", rolloutSuspendName))
 
 			// Verify suspend for rollout object
@@ -445,24 +484,7 @@ var _ = Describe("Rollout object tests", func() {
 				//Sleep 20 seconds
 				time.Sleep(20 * time.Second)
 				//Now Suspend rollout
-				rollout.Spec.Suspend = true
-				r1, err := ts.restSvc.RolloutV1().Rollout().StopRollout(ts.loggedInCtx, &rollout)
-				if err != nil || r1.Name != rolloutSuspendName {
-					By(fmt.Sprintf("ts:%s Rollout Update failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutSuspendName, err, r1))
-					return false
-				}
-				obj := api.ObjectMeta{Name: rolloutSuspendName, Tenant: "default"}
-				r1, err = ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
-				if err != nil || r1.Name != rolloutSuspendName {
-					By(fmt.Sprintf("ts:%s Rollout GET failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutSuspendName, err, r1))
-					return false
-				}
-
-				if r1.Spec.GetSuspend() {
-					By(fmt.Sprintf("ts:%s Rollout suspended for [%s]", time.Now().String(), rolloutSuspendName))
-					return true
-				}
-				return false
+				return suspendRollout(rolloutObj)
 			}).Should(BeTrue(), fmt.Sprintf("Failed to suspend rollout %s object", rolloutSuspendName))
 
 			// Verify Status of rollout
@@ -506,8 +528,12 @@ var _ = Describe("Rollout object tests", func() {
 		AfterEach(func() {
 			// Cleanup rollout objects regardless of test outcome
 			By(fmt.Sprintf("ts:%s Test completed cleaning up rollout objects if any", time.Now().String()))
-			obj1 := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
-			ts.restSvc.RolloutV1().Rollout().Delete(ts.loggedInCtx, &obj1)
+
+			Eventually(func() error {
+				oMeta := api.ObjectMeta{Tenant: "default"}
+				return cleanupRolloutObjects(oMeta)
+			}, 60, 5).Should(BeNil(), "Encountered errors while trying to cleanup rollout objects")
+
 		})
 	})
 })

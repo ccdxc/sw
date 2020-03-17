@@ -696,8 +696,8 @@ e2e-rollout-ci:
 	$(MAKE) e2e-rollout
 e2e-rollout:
 	@stty sane
-	@echo "Running tests..."
-	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/rollout -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG} -ginkgo.v -timeout 25m ${E2E_SEED}'
+	@echo "Running rollout tests..."
+	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/rollout -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG} -ginkgo.v -timeout 60m ${E2E_SEED}'
 	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
 	#./test/e2e/dind/do.py -delete
 
