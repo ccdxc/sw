@@ -58,7 +58,7 @@ header_type control_metadata_t {
         local_mapping_ohash_lkp : 1;
         flow_ohash_lkp          : 1;
         mapping_ohash_lkp       : 1;
-        epoch                   : 8;
+        flow_epoch              : 8;
         span_copy               : 1;
         update_checksum         : 1;
         egress_bypass           : 1;

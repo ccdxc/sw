@@ -3,27 +3,25 @@
 /*****************************************************************************/
 @pragma capi appdatafields epoch session_index flow_role nexthop_valid nexthop_type nexthop_id
 @pragma capi hwfields_access_api
-action flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
+action flow_hash(epoch, session_index,
                  hash1, hint1, hash2, hint2, hash3, hint3, hash4, hint4,
                  more_hashes, more_hints, force_flow_miss, flow_role,
-                 nexthop_id, entry_valid) {
+                 nexthop_valid, nexthop_type, nexthop_id, entry_valid) {
     modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
-        modify_field(scratch_metadata.epoch, epoch);
+        modify_field(control_metadata.flow_epoch, epoch);
         modify_field(scratch_metadata.flag, force_flow_miss);
         modify_field(scratch_metadata.session_id, session_index);
         // entry is old or force_flow_miss is true
-        if ((scratch_metadata.epoch < control_metadata.epoch) or
+        if ((ingress_recirc.defunct_flow == TRUE) or
             (force_flow_miss == TRUE)) {
             modify_field(control_metadata.flow_miss, TRUE);
             modify_field(control_metadata.flow_done, TRUE);
-            if (force_flow_miss == TRUE) {
-                modify_field(p4i_to_arm.flow_hit, TRUE);
-                modify_field(p4i_to_arm.flow_role, flow_role);
-                modify_field(p4i_to_arm.session_id,
-                             scratch_metadata.session_id);
-            }
+            modify_field(p4i_to_arm.flow_hit, TRUE);
+            modify_field(p4i_to_arm.flow_role, flow_role);
+            modify_field(p4i_to_arm.session_id, scratch_metadata.session_id);
+            modify_field(p4i_to_arm.defunct_flow, ingress_recirc.defunct_flow);
         } else {
             modify_field(control_metadata.flow_done, TRUE);
             modify_field(scratch_metadata.flag, nexthop_valid);
@@ -146,26 +144,25 @@ table flow_ohash {
 /*****************************************************************************/
 @pragma capi appdatafields epoch session_index flow_role nexthop_valid nexthop_type nexthop_id
 @pragma capi hwfields_access_api
-action ipv4_flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
+action ipv4_flow_hash(epoch, session_index, nexthop_type,
                       hash1, hint1, hash2, hint2, more_hashes, more_hints,
-                      force_flow_miss, flow_role, nexthop_id, entry_valid) {
+                      force_flow_miss, flow_role, nexthop_valid, nexthop_id,
+                      entry_valid) {
     modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
-        modify_field(scratch_metadata.epoch, epoch);
+        modify_field(control_metadata.flow_epoch, epoch);
         modify_field(scratch_metadata.flag, force_flow_miss);
         modify_field(scratch_metadata.session_id, session_index);
         // entry is old or force_flow_miss is true
-        if ((scratch_metadata.epoch < control_metadata.epoch) or
+        if ((ingress_recirc.defunct_flow == TRUE) or
             (force_flow_miss == TRUE)) {
             modify_field(control_metadata.flow_miss, TRUE);
             modify_field(control_metadata.flow_done, TRUE);
-            if (force_flow_miss == TRUE) {
-                modify_field(p4i_to_arm.flow_hit, TRUE);
-                modify_field(p4i_to_arm.flow_role, flow_role);
-                modify_field(p4i_to_arm.session_id,
-                             scratch_metadata.session_id);
-            }
+            modify_field(p4i_to_arm.flow_hit, TRUE);
+            modify_field(p4i_to_arm.flow_role, flow_role);
+            modify_field(p4i_to_arm.session_id, scratch_metadata.session_id);
+            modify_field(p4i_to_arm.defunct_flow, ingress_recirc.defunct_flow);
         } else {
             modify_field(control_metadata.flow_done, TRUE);
             modify_field(scratch_metadata.flag, nexthop_valid);

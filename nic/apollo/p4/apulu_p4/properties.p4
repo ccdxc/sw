@@ -187,7 +187,15 @@ table vni_otcam {
     size : VNI_OTCAM_TABLE_SIZE;
 }
 
-action vnic_info(meter_enabled, rx_mirror_session, tx_mirror_session) {
+action vnic_info(epoch, meter_enabled, rx_mirror_session, tx_mirror_session) {
+    modify_field(scratch_metadata.epoch, epoch);
+    if ((control_metadata.flow_done == TRUE) and
+        (control_metadata.flow_miss == FALSE) and
+        (control_metadata.flow_epoch != scratch_metadata.epoch)) {
+        modify_field(control_metadata.flow_done, FALSE);
+        modify_field(ingress_recirc.defunct_flow, TRUE);
+        // return;
+    }
     modify_field(p4i_i2e.meter_enabled, meter_enabled);
     if (control_metadata.rx_packet == TRUE) {
         modify_field(p4i_i2e.mirror_session, rx_mirror_session);

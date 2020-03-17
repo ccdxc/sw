@@ -48,7 +48,10 @@ class P4ToARM(Packet):
             BitField("sacl_root", 0, 3),
             BitEnumField("nexthop_type", 0, 2,
                 {0: 'VPC', 1: 'ECMP', 2: 'Tunnel', 3: 'Nexthop'}),
-            BitField("drop", 0, 1) ]
+            BitField("drop", 0, 1),
+            BitField("defunct_flow", 0, 1),
+            BitField("local_mapping_ip_type", 0, 2),
+            BitField("pad", 0, 5)]
 
 def dump_pkt(pkt, sname):
     print('uint8_t %s[] = {' % sname)
@@ -94,7 +97,7 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         IP(dst='10.10.10.10', src='11.11.11.11') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 opkt = P4ToARM(packet_len=ntohs(0x6e), flags='VLAN+IPv4', \
-        ingress_bd_id=ntohs(0x02ed), flow_hash=ntohl(0x41f250eb), \
+        ingress_bd_id=ntohs(0x02ed), flow_hash=ntohl(0x8736b9e0), \
         l2_1_offset=0x11, l3_1_offset=0x23, l4_2_offset=0x37, \
         payload_offset=0x4b, lif=ntohs(0x1), nexthop_id=ntohs(0x1ef), \
         nexthop_type='Tunnel', vpc_id=ntohs(0x2ec), vnic_id=ntohs(0x2fe), \
@@ -146,7 +149,7 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678, flags='F') / payload
 opkt = P4ToARM(packet_len=ntohs(0x6e), flags='VLAN+IPv4', flow_hit=1, \
-        ingress_bd_id=ntohs(0x02ed), flow_hash=ntohl(0x9e185097), \
+        ingress_bd_id=ntohs(0x02ed), flow_hash=ntohl(0X6032bd96), \
         l2_1_offset=0x11, l3_1_offset=0x23, l4_2_offset=0x37, \
         payload_offset=0x4b, lif=ntohs(0x1), session_id=ntohl(0x55e51), \
         tcp_flags=0x1, nexthop_id=ntohs(0x1ef), nexthop_type='Tunnel', \
@@ -242,3 +245,18 @@ dump_pkt(ipkt, 'g_snd_pkt11')
 dump_pkt(opkt, 'g_rcv_pkt11')
 dump_pkt(mpkt1, 'g_rcv_mpkt11_1')
 dump_pkt(mpkt2, 'g_rcv_mpkt11_2')
+
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='10.10.1.1', src='11.11.1.12') / \
+        TCP(sport=0x1234, dport=0x5678) / payload
+opkt = P4ToARM(packet_len=ntohs(0x6e), flags='VLAN+IPv4', \
+        ingress_bd_id=ntohs(0x02ed), flow_hash=ntohl(0xcb82801f), \
+        l2_1_offset=0x1f, l3_1_offset=0x31, l4_2_offset=0x45, flow_hit=1, \
+        payload_offset=0x59, lif=ntohs(0x1), session_id=ntohl(0x55e51), \
+        nexthop_id=ntohs(0x1ef), nexthop_type='Tunnel', vpc_id=ntohs(0x2ec), \
+        vnic_id=ntohs(0x20c), tcp_flags=0x2, mapping_hit=1, defunct_flow=1) / \
+        ipkt
+dump_pkt(ipkt, 'g_snd_pkt12')
+dump_pkt(opkt, 'g_rcv_pkt12')

@@ -46,7 +46,9 @@ nexthop_tx_rewrite:
     phvwr.c1        p.ethernet_1_dstAddr, d.nexthop_info_d.dmaci
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_DMAC_BITS], \
                         TX_REWRITE_DMAC_FROM_TUNNEL
-    phvwr.c1        p.ethernet_1_dstAddr, k.rewrite_metadata_tunnel_dmaci
+    or              r6, k.rewrite_metadata_tunnel_dmaci_s32_e47, \
+                        k.rewrite_metadata_tunnel_dmaci_s0_e31, 16
+    phvwr.c1        p.ethernet_1_dstAddr, r6
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_SMAC_BITS], \
                         TX_REWRITE_SMAC_FROM_VRMAC
     phvwr.c1        p.ethernet_1_srcAddr, k.rewrite_metadata_vrmac
@@ -66,9 +68,7 @@ vxlan_encap:
                         d.{nexthop_info_d.dmaco,nexthop_info_d.smaco}
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_VNI_BITS], \
                         TX_REWRITE_VNI_FROM_TUNNEL
-    or              r6, k.rewrite_metadata_tunnel_vni_s16_e23, \
-                        k.rewrite_metadata_tunnel_vni_s0_e15, 8
-    cmov            r7, c1, r6, k.rewrite_metadata_vni
+    cmov            r7, c1, k.rewrite_metadata_tunnel_vni, k.rewrite_metadata_vni
     or              r7, r7, 0x8, 48
     or              r7, r0, r7, 8
     phvwr           p.{vxlan_0_flags,vxlan_0_reserved,vxlan_0_vni, \

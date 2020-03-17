@@ -38,45 +38,49 @@ header_type apulu_txdma_to_p4e_header_t {
 
 header_type apulu_p4_to_arm_header_t {
     fields {
-        packet_len          : 16;
-        nacl_data           : 8;
-        flags               : 8;
-        ingress_bd_id       : 16;
-        flow_hash           : 32;
+        packet_len              : 16;
+        nacl_data               : 8;
+        flags                   : 8;
+        ingress_bd_id           : 16;
+        flow_hash               : 32;
 
-        l2_1_offset         : 8;
-        l3_1_offset         : 8;
-        l4_1_offset         : 8;
-        l2_2_offset         : 8;
-        l3_2_offset         : 8;
-        l4_2_offset         : 8;
-        payload_offset      : 8;
-        tcp_flags           : 8;
+        l2_1_offset             : 8;
+        l3_1_offset             : 8;
+        l4_1_offset             : 8;
+        l2_2_offset             : 8;
+        l3_2_offset             : 8;
+        l4_2_offset             : 8;
+        payload_offset          : 8;
+        tcp_flags               : 8;
 
-        session_id          : 32;
-        lif                 : 16;
-        egress_bd_id        : 16;
-        service_xlate_id    : 16;
-        mapping_xlate_id    : 16;
-        tx_meter_id         : 16;
-        nexthop_id          : 16;
-        vpc_id              : 16;
-        vnic_id             : 16;
-        dnat_id             : 16;
+        session_id              : 32;
+        lif                     : 16;
+        egress_bd_id            : 16;
+        service_xlate_id        : 16;
+        mapping_xlate_id        : 16;
+        tx_meter_id             : 16;
+        nexthop_id              : 16;
+        vpc_id                  : 16;
+        vnic_id                 : 16;
+        dnat_id                 : 16;
 
-        rx_packet           : 1;
-        flow_hit            : 1;
-        flow_role           : 1;
-        is_local            : 1;
-        is_l3_vnid          : 1;
-        snat_type           : 2;
-        dnat_en             : 1;
+        rx_packet               : 1;
+        flow_hit                : 1;
+        flow_role               : 1;
+        is_local                : 1;
+        is_l3_vnid              : 1;
+        snat_type               : 2;
+        dnat_en                 : 1;
 
-        mapping_hit         : 1;
-        sacl_action         : 1;
-        sacl_root           : 3;
-        nexthop_type        : 2;
-        drop                : 1;
+        mapping_hit             : 1;
+        sacl_action             : 1;
+        sacl_root               : 3;
+        nexthop_type            : 2;
+        drop                    : 1;
+
+        defunct_flow            : 1;
+        local_mapping_ip_type   : 2;
+        pad                     : 5;
     }
 }
 
@@ -95,6 +99,8 @@ header_type apulu_arm_to_p4_header_t {
 
 header_type apulu_ingress_recirc_header_t {
     fields {
+        pad                 : 7;
+        defunct_flow        : 1;
         flow_ohash          : 32;
         local_mapping_ohash : 32;
     }

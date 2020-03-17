@@ -36,13 +36,15 @@ label_flow_miss:
                         p.p4i_to_arm_flow_role, d.ipv4_flow_hash_d.flow_role
     phvwr.c7        p.p4i_to_arm_session_id, \
                         d.{ipv4_flow_hash_d.session_index}.wx
+    phvwr.c7        p.p4i_to_arm_defunct_flow, k.ingress_recirc_defunct_flow
     phvwr.e         p.control_metadata_flow_miss, TRUE
     phvwr.f         p.control_metadata_flow_done, TRUE
 
 label_flow_hit:
-    slt             c1, d.ipv4_flow_hash_d.epoch, k.control_metadata_epoch
-    seq             c7, d.ipv4_flow_hash_d.force_flow_miss, TRUE
-    bcf             [c1 | c7], label_flow_miss
+    phvwr           p.control_metadata_flow_epoch, d.ipv4_flow_hash_d.epoch
+    seq             c7, k.ingress_recirc_defunct_flow, TRUE
+    seq.!c7         c7, d.ipv4_flow_hash_d.force_flow_miss, TRUE
+    bcf             [c7], label_flow_miss
     phvwr           p.control_metadata_flow_done, TRUE
     smneb           c1, k.tcp_flags, (TCP_FLAG_FIN|TCP_FLAG_RST), 0
     bcf             [c1], label_force_flow_miss

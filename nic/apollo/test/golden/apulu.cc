@@ -160,6 +160,9 @@ uint32_t g_erspan_dip1 = 0xC8010102;
 uint32_t g_erspan_sip1 = 0xC8010101;
 uint32_t g_tunnel2_id11 = 0x7B;
 
+uint32_t g_sip12 = 0x0B0B010C;
+uint16_t g_vnic_id12 = 0x20C;
+
 mpartition *g_mempartition;
 
 class sort_mpu_programs_compare {
@@ -640,6 +643,17 @@ local_mappings_init (void)
     local_info->binding_id1 = g_binding_id1;
     local_info->allow_tagged_pkts = 1;
     entry_write(tbl_id, 0, &key, NULL, &data, true, LOCAL_MAPPING_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_local_mapping_lkp_type = KEY_TYPE_IPV4;
+    key.key_metadata_local_mapping_lkp_id = g_vpc_id1;
+    memcpy(key.key_metadata_local_mapping_lkp_addr, &g_sip12, 4);
+    local_info->entry_valid = 1;
+    local_info->vnic_id = g_vnic_id12;
+    local_info->binding_check_enabled = 0;
+    local_info->allow_tagged_pkts = 1;
+    entry_write(tbl_id, 0, &key, NULL, &data, true, LOCAL_MAPPING_TABLE_SIZE);
 }
 
 static void
@@ -996,6 +1010,20 @@ flows_init (void)
     flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
     flow_hash_info->epoch = EPOCH;
     entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_flow_lkp_id = g_bd_id1;
+    key.key_metadata_ipv4_src = g_sip12;
+    key.key_metadata_ipv4_dst = g_dip1;
+    key.key_metadata_proto = g_proto1;
+    key.key_metadata_sport = g_sport1;
+    key.key_metadata_dport = g_dport1;
+    flow_hash_info->entry_valid = 1;
+    flow_hash_info->session_index = g_session_id1;
+    flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
+    flow_hash_info->epoch = EPOCH;
+    entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
 }
 
 static void
@@ -1255,6 +1283,10 @@ vnic_init (void)
     memset(&data, 0, sizeof(data));
     vnic_info->tx_mirror_session = (1 << g_mirror_id1) | (1 << g_mirror_id2);
     entry_write(tbl_id, g_vnic_id11, 0, 0, &data, false, 0);
+
+    memset(&data, 0, sizeof(data));
+    vnic_info->epoch = EPOCH + 1;
+    entry_write(tbl_id, g_vnic_id12, 0, 0, &data, false, 0);
 }
 
 static void
@@ -1680,6 +1712,25 @@ TEST_F(apulu_test, test1)
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
                 get_next_pkt(opkt, port, cos);
                 EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
+            }
+            testcase_end(tcid, i + 1);
+        }
+    }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt12));
+        memcpy(ipkt.data(), g_snd_pkt12, sizeof(g_snd_pkt12));
+        epkt.resize(sizeof(g_rcv_pkt12));
+        memcpy(epkt.data(), g_rcv_pkt12, sizeof(g_rcv_pkt12));
+        std::cout << "[TCID=" << tcid << "] EPOCH:P4I-P4I-RxDMA-TxDMA-P4E" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i + 1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_0);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(opkt == epkt);
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
             }
             testcase_end(tcid, i + 1);

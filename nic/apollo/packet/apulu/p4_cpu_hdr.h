@@ -66,6 +66,14 @@ typedef struct p4_rx_cpu_hdr_s {
 #endif
         };
     };
+    union {
+        uint8_t flags2;
+        struct {
+            uint8_t  pad                    : 5;
+            uint8_t  local_mapping_ip_type  : 2;
+            uint8_t  defunct_flow           : 1;
+        };
+    };
 } __attribute__ ((packed)) p4_rx_cpu_hdr_t;
 
 // Meta sent to P4 for tx packet

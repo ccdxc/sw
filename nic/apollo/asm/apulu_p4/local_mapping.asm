@@ -74,6 +74,8 @@ local_mapping_miss:
     phvwr.!c1.f p.control_metadata_local_mapping_miss, TRUE
 
 local_mapping_hit:
+    phvwr       p.p4i_to_arm_local_mapping_ip_type, \
+                    d.local_mapping_info_d.ip_type
     sne         c1, d.local_mapping_info_d.vnic_id, r0
     phvwr.c1    p.vnic_metadata_vnic_id, d.local_mapping_info_d.vnic_id
     phvwr       p.control_metadata_binding_check_enabled, \
