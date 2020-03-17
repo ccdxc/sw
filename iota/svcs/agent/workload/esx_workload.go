@@ -532,8 +532,15 @@ func (vm *vmVcenterWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 		}
 	}
 
-	if err := vm.vhost.ReconfigureVMNetwork(vm.vm, constants.EsxDefaultNetwork, vsname, pgName, 1, relaxSecurity); err != nil {
-		return "", errors.Wrapf(err, "Error in Reconfiguring Def network to %v", pgName)
+   	for i := 0; true; i++ {
+	   if err := vm.vhost.ReconfigureVMNetwork(vm.vm, constants.EsxDefaultNetwork, vsname, pgName, 1, relaxSecurity); err != nil {
+		   if i == 3 {
+				   return "", errors.Wrapf(err, "Error in Reconfiguring Def network to %v", pgName)
+		   }
+		   time.Sleep(1 * time.Second)
+		   continue
+	   }
+	   break
 	}
 
 	if err != nil {

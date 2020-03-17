@@ -167,7 +167,6 @@ func (v *VCHub) Destroy(delete bool) {
 
 	v.cancel()
 	v.Wg.Wait()
-
 	v.probe.ClearState()
 
 	if delete {
@@ -206,12 +205,10 @@ func (v *VCHub) Destroy(delete bool) {
 		}
 		v.cancel()
 		v.Wg.Wait()
+		v.probe.ClearState()
 
 		v.DeleteHosts()
 	}
-
-	v.probe.ClearState()
-
 	v.Log.Infof("VCHub Destroyed")
 }
 

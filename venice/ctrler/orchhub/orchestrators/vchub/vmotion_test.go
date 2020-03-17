@@ -141,11 +141,13 @@ func TestVmotion(t *testing.T) {
 
 	pNicMac := append(createPenPnicBase(), 0xbb, 0x00, 0x00)
 	// Make it Pensando host
+	penHost1.ClearNics()
 	err = penHost1.AddNic("vmnic0", conv.MacString(pNicMac))
 	AssertOk(t, err, "failed to add pNic")
 
 	pNicMac2 := append(createPenPnicBase(), 0xcc, 0x00, 0x00)
 	// Make it Pensando host
+	penHost2.ClearNics()
 	err = penHost2.AddNic("vmnic0", conv.MacString(pNicMac2))
 	AssertOk(t, err, "failed to add pNic")
 
@@ -346,10 +348,7 @@ func TestVmotion(t *testing.T) {
 	pNicMac3 = append(pNicMac3, 0x00)
 	pNicMac3 = append(pNicMac3, 0x00)
 
-	penHost1.ClearNics()
-	penHost2.ClearNics()
 	host3.ClearNics()
-
 	err = host3.AddNic("vmnic0", conv.MacString(pNicMac3))
 	AssertOk(t, err, "failed to add pNic")
 
@@ -364,12 +363,28 @@ func TestVmotion(t *testing.T) {
 		Msg:  startMsg1,
 	}
 	vchub.handleVCNotification(m)
-
 	err = dc.UpdateVMHost(vm1, "host3")
 	AssertOk(t, err, "VM host update failed")
 	vchub.sync()
 	delete(testWorkloads, vmName)
 	verifyVMWorkloads(testWorkloads, "VM not removed")
+
+	logger.Infof("===== Move VM from non-pensando host3 to pensando host =====")
+	startMsg1.VMKey = vm1.Self.Value
+	startMsg1.DstHostKey = penHost1.Obj.Self.Value
+	startMsg1.DcID = dc.Obj.Self.Value
+	startMsg1.HotMigration = true
+	m = defs.VCNotificationMsg{
+		Type: defs.VMotionStart,
+		Msg:  startMsg1,
+	}
+	vchub.handleVCNotification(m)
+	err = dc.UpdateVMHost(vm1, "host1")
+	AssertOk(t, err, "VM host update failed")
+	vchub.sync()
+	testWorkloads[vmName] = host1Name
+	verifyVMWorkloads(testWorkloads, "VM not found")
+
 }
 
 // Tests vmotion by triggering watch events

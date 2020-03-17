@@ -71,6 +71,11 @@ func CreateNetwork(stateMgr *Statemgr, tenant, net, subnet, gw string, vlanid ui
 	return &np, err
 }
 
+// DeleteNetwork utility function to delete a venice network
+func DeleteNetwork(stateMgr *Statemgr, net *network.Network) error {
+	return stateMgr.ctrler.Network().Delete(net)
+}
+
 // GetOrchestratorConfig get orchestrator config
 func GetOrchestratorConfig(name, user, pass string) *orchestration.Orchestrator {
 	return &orchestration.Orchestrator{

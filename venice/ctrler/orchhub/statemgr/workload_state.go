@@ -28,6 +28,13 @@ func (sm *Statemgr) GetWorkloadWatchOptions() *api.ListWatchOptions {
 func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 	_, err := NewWorkloadState(w, sm)
 
+	// workloads related to vcenter VMs are created by orchhub,
+	// no need to send event when orchhub is creating it.. but on orchhub restart, we might
+	// receive these workloads from api server and need to process migration status
+	if w.Status.MigrationStatus == nil {
+		// new workload or, nothing to process
+		return nil
+	}
 	err = sm.SendProbeEvent(&w.Workload, kvstore.Created, "")
 	return err
 }
@@ -51,9 +58,8 @@ func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nw *workload.Workload) e
 
 // OnWorkloadDelete deletes a workload
 func (sm *Statemgr) OnWorkloadDelete(w *ctkit.Workload) error {
-	// TODO : act on the state object
+	// Orchhub is the one deleting the workloads, no need to send event
 	_, err := WorkloadStateFromObj(w)
-	err = sm.SendProbeEvent(&w.Workload, kvstore.Deleted, "")
 	return err
 }
 
