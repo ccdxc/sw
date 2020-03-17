@@ -61,6 +61,7 @@ func (c *IPClient) DoStaticConfig() (string, error) {
 	}
 
 	// Assign IP Address statically
+
 	if err := netlink.AddrReplace(c.primaryIntf, addr); err != nil {
 		log.Errorf("Failed to assign ip address %v to interface %v. Err: %v", ipConfig.IPAddress, c.primaryIntf, err)
 		return "", err

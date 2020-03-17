@@ -255,6 +255,7 @@ func NewNMD(pipeline Pipeline,
 		}
 
 		// Override the default mgmt mode as network in case of older version.
+		config.Spec.Mode = nmd.MgmtMode_NETWORK.String()
 		if pipeline != nil && pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
 			config.Spec.NetworkMode = nmd.NetworkMode_OOB.String()
 		} else {

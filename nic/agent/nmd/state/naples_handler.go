@@ -184,11 +184,6 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.DistributedServiceCard) error {
 	log.Infof("NAPLES Update: Old: %s", string(oldCfg))
 	log.Infof("NAPLES Update: New: %s", string(newCfg))
 
-	// Ensure all links are brought down before performing any mode change operation
-	if err := bringAllLinksDown(); err != nil {
-		log.Errorf("Failed to bring all links down. Err:%v", err)
-	}
-
 	// Perform Mode Validations
 	switch cfg.Spec.Mode {
 	case nmd.MgmtMode_HOST.String():
@@ -217,6 +212,11 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.DistributedServiceCard) error {
 
 		if err := n.PersistState(isEmulation); err != nil {
 			return errInternalServer(err)
+		}
+		// Ensure all links are brought down before performing any mode change operation
+		// Only in HOST Managed mode we bring the interfaces down
+		if err := bringAllLinksDown(); err != nil {
+			log.Errorf("Failed to bring all links down. Err:%v", err)
 		}
 
 	case nmd.MgmtMode_NETWORK.String():
@@ -495,24 +495,30 @@ func (n *NMD) triggerAdmissionEvents() error {
 
 func (n *NMD) reconcileIPClient() error {
 	var mgmtIntf string
+
+	// Bring interfaces up. This is needed because auto discovery is expected start sending DHCP Discover on all
+	// available interfaces. This reconcilation ensures that the interfaces are up.
+	err := bringInbandUp()
+	if err != nil {
+		log.Error("Failed to bring INBAND interface up.")
+		return err
+	}
+	log.Info("Inband interface is up.")
+
+	err = linkUp(ipif.NaplesOOBInterface)
+	if err != nil {
+		log.Error("Failed to bring OOB interface up.")
+		return err
+	}
+
+	log.Info("OOB interface is up.")
+
 	if n.config.Spec.NetworkMode == nmd.NetworkMode_INBAND.String() {
 		mgmtIntf = ipif.NaplesInbandInterface
-
-		err := bringInbandUp()
-		if err != nil {
-			log.Error("Failed to bring INBAND interface up.")
-			return err
-		}
-
 	} else {
 		mgmtIntf = ipif.NaplesOOBInterface
-
-		err := linkUp(ipif.NaplesOOBInterface)
-		if err != nil {
-			log.Error("Failed to bring OOB interface up.")
-			return err
-		}
 	}
+	log.Infof("Setting the primary interface to: %v", mgmtIntf)
 
 	// Check if we need to reconcile
 	if n.IPClient == nil || n.IPClient.GetIPClientIntf() != mgmtIntf {
