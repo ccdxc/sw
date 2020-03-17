@@ -91,7 +91,10 @@ func (sm *SysModel) QueryMetricsSelector(kind, timestr string, sel fields.Select
 		return nil, err
 	}
 	stime := &api.Timestamp{}
-	stime.Parse(timestr)
+	if err := stime.Parse(timestr); err != nil {
+		log.Errorf("failed to parse time %v", timestr)
+		return nil, err
+	}
 
 	// build the query
 	query := &telemetry_query.MetricsQueryList{
@@ -140,7 +143,10 @@ func (sm *SysModel) QueryMetrics(kind, name, timestr string, count int32) (*tele
 	}
 
 	stime := &api.Timestamp{}
-	stime.Parse(timestr)
+	if err := stime.Parse(timestr); err != nil {
+		log.Errorf("failed to parse time %v", timestr)
+		return nil, err
+	}
 
 	// build the query
 	query := &telemetry_query.MetricsQueryList{
@@ -194,7 +200,10 @@ func (sm *SysModel) QueryMetricsFields(kind, timestr string) (*telemetryclient.M
 		return nil, err
 	}
 	stime := &api.Timestamp{}
-	stime.Parse(timestr)
+	if err := stime.Parse(timestr); err != nil {
+		log.Errorf("failed to parse time %v", timestr)
+		return nil, err
+	}
 
 	// build the query
 	query := &telemetry_query.MetricsQueryList{

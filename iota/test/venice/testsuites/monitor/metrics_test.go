@@ -5,6 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -29,7 +30,7 @@ var _ = Describe("metrics test", func() {
 
 			//Verif policy was propagted correctly
 
-			startTime := time.Now().UTC()
+			startTime := time.Now().UTC().Format(time.RFC3339)
 			// establish TCP session between workload pairs in same subnet
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
 			log.Infof("wait to get to the console")
@@ -47,7 +48,7 @@ var _ = Describe("metrics test", func() {
 			*/
 
 			Eventually(func() error {
-				return ts.model.QueryDropMetricsForWorkloadPairs(workloadPairs, startTime.String())
+				return ts.model.QueryDropMetricsForWorkloadPairs(workloadPairs, startTime)
 			}).Should(Succeed())
 
 		})

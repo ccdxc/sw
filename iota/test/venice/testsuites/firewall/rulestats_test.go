@@ -45,7 +45,7 @@ var _ = Describe("rulestats tests", func() {
 			}).Should(Succeed())
 
 			//Naples time is set in UTC
-			startTime := time.Now().UTC()
+			startTime := time.Now().UTC().Format(time.RFC3339)
 			// establish TCP session between workload pairs in same subnet
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
 			Eventually(func() error {
@@ -63,7 +63,7 @@ var _ = Describe("rulestats tests", func() {
 			// verify TCP hits and total hits got incremented
 			expCount := []map[string]float64{{"TotalHits": 1, "TcpHits": 1}}
 			Eventually(func() error {
-				return ts.model.VerifyRuleStats(startTime.String(), spc, expCount)
+				return ts.model.VerifyRuleStats(startTime, spc, expCount)
 			}).Should(Succeed())
 
 		})
@@ -80,7 +80,7 @@ var _ = Describe("rulestats tests", func() {
 			}).Should(Succeed())
 
 			//Naples time is set in UTC
-			startTime := time.Now().UTC()
+			startTime := time.Now().UTC().Format(time.RFC3339)
 			// establish UDP session between workload pairs
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
 			Eventually(func() error {
@@ -98,7 +98,7 @@ var _ = Describe("rulestats tests", func() {
 			// verify UDP hits and total hits got incremented
 			expCount := []map[string]float64{{"TotalHits": 1, "UdpHits": 1}}
 			Eventually(func() error {
-				return ts.model.VerifyRuleStats(startTime.String(), spc, expCount)
+				return ts.model.VerifyRuleStats(startTime, spc, expCount)
 			}).Should(Succeed())
 
 		})
@@ -115,7 +115,7 @@ var _ = Describe("rulestats tests", func() {
 			}).Should(Succeed())
 
 			//Naples time is set in UTC
-			startTime := time.Now().UTC()
+			startTime := time.Now().UTC().Format(time.RFC3339)
 
 			// establish ICMP session between workload pairs
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
@@ -134,7 +134,7 @@ var _ = Describe("rulestats tests", func() {
 			// verify ICMP hits and total hits got incremented
 			expCount := []map[string]float64{{"TotalHits": 1, "IcmpHits": 1}}
 			Eventually(func() error {
-				return ts.model.VerifyRuleStats(startTime.String(), spc, expCount)
+				return ts.model.VerifyRuleStats(startTime, spc, expCount)
 			}).Should(Succeed())
 		})
 	})
