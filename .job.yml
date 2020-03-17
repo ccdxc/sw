@@ -309,6 +309,8 @@ dependencies:
       exclude_dirs: ["test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/linux
       exclude_dirs: ["test/iris/testcases/server"]
+  iota/test/iris/testcases/swm:
+    - reference: iota/test/standalone/sanity/swm
   metrics:
     - reference: api
     - reference: test/ci_targets/e2e

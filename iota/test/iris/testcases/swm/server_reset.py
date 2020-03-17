@@ -36,6 +36,7 @@ def Trigger(tc):
             reboot_type = tc.iterators.reboot_types
             api.Logger.info("Iter: %d" % _iter)
             uptime1 = GetNaplesUptime(tc.node_name)
+            api.Logger.info("Naples uptime1 %s" % str(uptime1))
             start_time = time.time()
             if reboot_type == "offon":
                 api.Logger.info("Powering off the server")
@@ -61,9 +62,10 @@ def Trigger(tc):
                 
             tc.test_node.WaitForHost()
             elapsed_time = time.time() - start_time
+            time.sleep(15)
             uptime2 =  GetNaplesUptime(tc.node_name)
-            time.sleep(5)
-            if uptime2 < uptime1 + elapsed_time:
+            api.Logger.info("Naples uptime2 %s elapsed time %s" % (str(uptime2), str(elapsed_time)))
+            if uptime2 < (uptime1 + elapsed_time):
                 api.Logger.error("Naples rebooted upon server reset, exiting")
                 return api.types.status.FAILURE
             ret = check_ncsi_conn(tc.cimc_info)
