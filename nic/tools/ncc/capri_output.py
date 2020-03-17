@@ -3064,7 +3064,7 @@ def capri_parser_output_decoders(parser):
 
     # program catch all entry register
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['pe_enable']['value'] = str(0x3ff)
-    ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['parse_loop_cnt']['value'] = str(64)
+    ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['parse_loop_cnt']['value'] = str(128)
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']['num_phv_flit']['value'] = str(6)
     ppa_json['cap_ppa']['registers']['cap_ppa_csr_cfg_ctrl']\
         ['state_lkp_catchall_entry']['value'] = str(idx)
