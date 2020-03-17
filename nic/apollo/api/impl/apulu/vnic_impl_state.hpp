@@ -68,9 +68,30 @@ public:
     /// \return   SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
 
+    /// \brief      API to find vnic impl obj using hw id
+    /// \return     vnic impl object
+    vnic_impl *find(uint16_t hw_id);
+
+    /// \brief      API to insert vnic impl into hash table
+    /// \param[in]  key     vnic key
+    /// \param[in]  impl    vnic impl object
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t insert(uint16_t hw_id, vnic_impl *impl);
+
+    /// \brief      API to update vnic impl in the hash table
+    /// \param[in]  key     vnic key
+    /// \param[in]  impl    vnic impl object to be updated with
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t update(uint16_t hw_id, vnic_impl *impl);
+
+    /// \brief      API to remove hw id and vnic key from the hash table
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t remove(uint16_t hw_id);
+
 private:
     rte_indexer *vnic_idxr(void) { return vnic_idxr_; }
     slab *vnic_impl_slab(void) { return vnic_impl_slab_; }
+    ht *impl_ht(void) const { return impl_ht_; }
     ///< vnic_impl class is friend of vnic_impl_state
     friend class vnic_impl;
     ///< mapping_impl class is friend of vnic_impl_state
@@ -84,6 +105,8 @@ private:
     slab         *vnic_impl_slab_;
     ///< indexer to allocate hw vnic id
     rte_indexer  *vnic_idxr_;
+    ///< hash table for hw_id to vpc key
+    ht *impl_ht_;
 };
 
 /// \@}

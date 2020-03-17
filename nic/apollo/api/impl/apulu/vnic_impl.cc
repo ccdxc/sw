@@ -49,7 +49,7 @@ vnic_impl::factory(pds_vnic_spec_t *spec) {
     vnic_impl *impl;
 
     impl = vnic_impl_db()->alloc();
-    new (impl) vnic_impl();
+    new (impl) vnic_impl(spec);
     return impl;
 }
 
@@ -922,6 +922,8 @@ vnic_impl::activate_create_(pds_epoch_t epoch, vnic_entry *vnic,
     if (unlikely(ret != SDK_RET_OK)) {
         goto error;
     }
+
+    vnic_impl_db()->insert(hw_id_, this);
     return SDK_RET_OK;
 
 error:
@@ -992,6 +994,7 @@ vnic_impl::activate_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
                       "(subnet %s, mac %s), ret %u", vnic->key().str(),
                       subnet_key.str(), macaddr2str(vnic->mac()), ret);
     }
+    vnic_impl_db()->remove(hw_id_);
     return ret;
 }
 
@@ -1042,6 +1045,9 @@ vnic_impl::activate_update_(pds_epoch_t epoch, vnic_entry *vnic,
         }
     }
 
+    // delete old impl and insert cloned impl into ht
+    vnic_impl_db()->remove(hw_id_);
+    vnic_impl_db()->insert(hw_id_, this);
 end:
 
     return ret;

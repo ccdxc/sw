@@ -178,6 +178,19 @@ public:
     /// \return    h/w id assigned to the vnic in IP_MAC_BINDING table
     uint32_t binding_hw_id(void) const { return binding_hw_id_; }
 
+    /// \brief      get the key from entry in hash table context
+    /// \param[in]  entry in the hash table context
+    /// \return     hw id from the entry
+    static void *key_get(void *entry) {
+        vnic_impl *vnic = (vnic_impl *) entry;
+        return (void *)&(vnic->hw_id_);
+    }
+
+    /// \brief      accessor API for key
+    pds_obj_key_t *key(void) { return &key_; }
+
+    /// \brief      accessor API for hash table context
+    ht_ctxt_t *ht_ctxt(void) { return &ht_ctxt_; }
 private:
     /// \brief constructor
     vnic_impl() {
@@ -186,6 +199,13 @@ private:
         local_mapping_hdl_ = handle_t::null();
         mapping_hdl_ = handle_t::null();
         binding_hw_id_ = PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID;
+        ht_ctxt_.reset();
+    }
+
+    /// \brief  constructor with spec
+    vnic_impl(pds_vnic_spec_t *spec) {
+        vnic_impl();
+        key_ = spec->key;
     }
 
     /// \brief destructor
@@ -292,6 +312,11 @@ private:
     handle_t mapping_hdl_;
     // h/w id for IP_MAC_BINDING table
     uint32_t binding_hw_id_;
+    /// PI specific info
+    struct {
+        pds_obj_key_t key_;
+    };
+    ht_ctxt_t ht_ctxt_;
 };
 
 /// \@}

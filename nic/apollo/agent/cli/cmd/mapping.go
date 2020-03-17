@@ -27,6 +27,13 @@ var mappingShowCmd = &cobra.Command{
 	Long:  "show Mapping object information",
 }
 
+var mappingInternalShowCmd = &cobra.Command{
+	Use:    "internal",
+	Short:  "show internal mapping information",
+	Long:   "show internal mapping information",
+	Hidden: true,
+}
+
 var localMappingShowCmd = &cobra.Command{
 	Use:   "local",
 	Short: "show local mapping information",
@@ -43,8 +50,9 @@ var remoteMappingShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(mappingShowCmd)
-	mappingShowCmd.AddCommand(localMappingShowCmd)
-	mappingShowCmd.AddCommand(remoteMappingShowCmd)
+	mappingShowCmd.AddCommand(mappingInternalShowCmd)
+	mappingInternalShowCmd.AddCommand(localMappingShowCmd)
+	mappingInternalShowCmd.AddCommand(remoteMappingShowCmd)
 	localMappingShowCmd.Flags().Uint32Var(&vpcID, "vpc", 0, "Specify VPC ID")
 	localMappingShowCmd.Flags().StringVar(&mappingIP, "ip", "0", "Specify mapping IP address")
 	remoteMappingShowCmd.Flags().StringVar(&mappingType, "type", "l3", "Specify remote mapping type - l2, l3")

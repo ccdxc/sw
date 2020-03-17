@@ -11,6 +11,7 @@
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
+#include "nic/apollo/api/impl/apulu/vnic_impl_state.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 
 namespace api {
@@ -34,11 +35,18 @@ vnic_impl_state::vnic_impl_state(pds_state *state) {
         slab::factory("vnic-impl", PDS_SLAB_ID_VNIC_IMPL,
                       sizeof(vnic_impl), 16, true, true, true, NULL);
     SDK_ASSERT(vnic_impl_slab_ != NULL);
+
+    // create ht for vnic id to key mapping
+    impl_ht_ = ht::factory(PDS_MAX_VNIC >> 2,
+                           vnic_impl::key_get,
+                           sizeof(uint16_t));
+    SDK_ASSERT(impl_ht_ != NULL);
 }
 
 vnic_impl_state::~vnic_impl_state() {
     rte_indexer::destroy(vnic_idxr_);
     slab::destroy(vnic_impl_slab_);
+    ht::destroy(impl_ht_);
 }
 
 vnic_impl *
@@ -65,6 +73,36 @@ vnic_impl_state::table_transaction_end(void) {
 sdk_ret_t
 vnic_impl_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
     walk_cb(vnic_impl_slab_, ctxt);
+    return SDK_RET_OK;
+}
+
+vnic_impl *
+vnic_impl_state::find(uint16_t hw_id) {
+    return (vnic_impl *)impl_ht_->lookup(&hw_id);
+}
+
+sdk_ret_t
+vnic_impl_state::insert(uint16_t hw_id, vnic_impl *impl) {
+    impl_ht_->insert_with_key(&hw_id, impl, impl->ht_ctxt());
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vnic_impl_state::update(uint16_t hw_id, vnic_impl *impl) {
+    impl_ht_->remove(&hw_id);
+    impl_ht_->insert_with_key(&hw_id, impl, impl->ht_ctxt());
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vnic_impl_state::remove(uint16_t hw_id) {
+    vnic_impl *vnic;
+
+    vnic = (vnic_impl *)impl_ht_->remove(&hw_id);
+    if (!vnic) {
+        PDS_TRACE_ERR("Failed to find vnic impl for hw id %u", hw_id);
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
     return SDK_RET_OK;
 }
 

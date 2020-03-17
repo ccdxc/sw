@@ -18,6 +18,7 @@
 #include "nic/apollo/api/impl/apulu/mapping_impl.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
+#include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
 #include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/api/include/pds.hpp"
@@ -130,11 +131,11 @@ mapping_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
 static void
 local_mapping_print_header (int fd)
 {
-    dprintf(fd, "%s\n", std::string(148, '-').c_str());
-    dprintf(fd, "%-7s%-40s%-18s%-40s%-7s%-10s%-10s%-16s\n",
+    dprintf(fd, "%s\n", std::string(214, '-').c_str());
+    dprintf(fd, "%-40s%-40s%-18s%-40s%-40s%-10s%-10s%-16s\n",
             "VpcID", "OverlayIP", "OverlayMAC", "PublicIP",
             "VnicID", "NhType", "Tunnel", "FabricEncap");
-    dprintf(fd, "%s\n", std::string(148, '-').c_str());
+    dprintf(fd, "%s\n", std::string(214, '-').c_str());
 }
 
 /// \brief     callback function to dump local mapping entries
@@ -156,6 +157,8 @@ local_mapping_dump_cb (sdk_table_api_params_t *params)
     mac_addr_t              overlay_mac;
     pds_encap_t             encap;
     string                  nexthop_type;
+    char                    *vpc_uuid = NULL;
+    char                    *vnic_uuid = NULL;
 
     key = (local_mapping_swkey_t *)(params->key);
     data = (local_mapping_appdata_t *)(params->appdata);
@@ -207,12 +210,21 @@ local_mapping_dump_cb (sdk_table_api_params_t *params)
     }
     nexthop_type_to_string(nexthop_type, mapping_data.nexthop_type);
 
-    dprintf(fd, "%-7u%-40s%-18s%-40s%-7u%-10s%-10u%-16s\n",
-            vpc_id, ipaddr2str(&private_ip), macaddr2str(overlay_mac),
-            ipaddr2str(&public_ip),
-            data->vnic_id, nexthop_type.c_str(),
-            mapping_data.nexthop_id,
-            pds_encap2str(&encap));
+    // convert vnic hw id to uuid
+    vnic_impl *vnic = vnic_impl_db()->find(data->vnic_id);
+    if (vnic) {
+        vnic_uuid = vnic->key()->str();
+    }
+    // convert vpc hw id to uuid
+    vpc_impl *vpc = vpc_impl_db()->find(vpc_id);
+    if (vpc) {
+        vpc_uuid = vpc->key()->str();
+    }
+    dprintf(fd, "%-40s%-40s%-18s%-40s%-40s%-10s%-10u%-16s\n",
+            vpc_uuid ? vpc_uuid : "-", ipaddr2str(&private_ip),
+            macaddr2str(overlay_mac), ipaddr2str(&public_ip),
+            vnic_uuid ? vnic_uuid : "-", nexthop_type.c_str(),
+            mapping_data.nexthop_id, pds_encap2str(&encap));
 }
 
 /// \brief     function to print l3 mapping header
@@ -220,11 +232,11 @@ local_mapping_dump_cb (sdk_table_api_params_t *params)
 static void
 remote_mapping_print_l3_header (int fd)
 {
-    dprintf(fd, "%s\n", std::string(82, '-').c_str());
-    dprintf(fd, "%-7s%-40s%-18s%-10s%-7s\n",
+    dprintf(fd, "%s\n", std::string(115, '-').c_str());
+    dprintf(fd, "%-40s%-40s%-18s%-10s%-7s\n",
             "VpcID", "OverlayIP", "OverlayMAC",
             "NhType", "Tunnel");
-    dprintf(fd, "%s\n", std::string(82, '-').c_str());
+    dprintf(fd, "%s\n", std::string(115, '-').c_str());
 }
 
 /// \brief     callback function to dump remote l3 mapping entries
@@ -243,6 +255,7 @@ remote_l3_mapping_dump_cb (sdk_table_api_params_t *params)
     mac_addr_t              overlay_mac;
     pds_encap_t             encap;
     string                  nexthop_type;
+    char                    *vpc_uuid;
 
     mapping_key = (mapping_swkey_t *)(params->key);
     mapping_data = (mapping_appdata_t *)(params->appdata);
@@ -282,8 +295,14 @@ remote_l3_mapping_dump_cb (sdk_table_api_params_t *params)
     }
     nexthop_type_to_string(nexthop_type, mapping_data->nexthop_type);
 
-    dprintf(fd, "%-7u%-40s%-18s%-10s%-7u\n",
-            vpc_id,  ipaddr2str(&private_ip),
+    // convert vpc hw id to uuid
+    vpc_impl *vpc = vpc_impl_db()->find(vpc_id);
+    if (vpc) {
+        vpc_uuid = vpc->key()->str();
+    }
+
+    dprintf(fd, "%-40s%-40s%-18s%-10s%-7u\n",
+            vpc_uuid ? vpc_uuid : "-",  ipaddr2str(&private_ip),
             macaddr2str(overlay_mac),
             nexthop_type.c_str(),
             mapping_data->nexthop_id);
@@ -294,10 +313,10 @@ remote_l3_mapping_dump_cb (sdk_table_api_params_t *params)
 static void
 remote_mapping_print_l2_header (int fd)
 {
-    dprintf(fd, "%s\n", std::string(44, '-').c_str());
-    dprintf(fd, "%-9s%-18s%-10s%-7s\n",
+    dprintf(fd, "%s\n", std::string(75, '-').c_str());
+    dprintf(fd, "%-40s%-18s%-10s%-7s\n",
             "SubnetID", "OverlayMAC", "NhType", "Tunnel");
-    dprintf(fd, "%s\n", std::string(44, '-').c_str());
+    dprintf(fd, "%s\n", std::string(75, '-').c_str());
 }
 
 /// \brief     callback function to dump remote l2 mapping entries
@@ -314,6 +333,7 @@ remote_l2_mapping_dump_cb (sdk_table_api_params_t *params)
     bd_actiondata_t         bd_data;
     mac_addr_t              mac;
     string                  nexthop_type;
+    char                    *subnet_uuid;
 
     mapping_key = (mapping_swkey_t *)(params->key);
     mapping_data = (mapping_appdata_t *)(params->appdata);
@@ -332,8 +352,14 @@ remote_l2_mapping_dump_cb (sdk_table_api_params_t *params)
 
     nexthop_type_to_string(nexthop_type, mapping_data->nexthop_type);
 
-    dprintf(fd, "%-9u%-18s%-10s%-7u\n",
-            subnet_id, macaddr2str(mac),
+    // convert subnet hw id to uuid
+    subnet_impl *subnet = subnet_impl_db()->find(subnet_id);
+    if (subnet) {
+        subnet_uuid = subnet->key()->str();
+    }
+    dprintf(fd, "%-40s%-18s%-10s%-7u\n",
+            subnet_uuid ? subnet_uuid : "-",
+            macaddr2str(mac),
             nexthop_type.c_str(),
             mapping_data->nexthop_id);
 }
