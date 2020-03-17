@@ -21,9 +21,11 @@ const (
 
 // NLRIPrefix is a representation of the BGP Route
 type NLRIPrefix struct {
+        Afi    int
+	Safi   int
 	Type   int
 	Length int
-	Prefix EVPNPrefix
+	Prefix UserPrefix
 }
 
 func dumpBytes(in []byte) string {
@@ -57,27 +59,38 @@ func label2int(in []byte) uint32 {
 
 // String returns a user friendly string
 func (n *NLRIPrefix) String() string {
-	return fmt.Sprintf("Type : %d  %v", n.Type, n.Prefix)
+	if (n.Afi == 25) {
+	  return fmt.Sprintf("Type : %d  %v", n.Type, n.Prefix)
+	} else {
+	  return fmt.Sprintf("%v", n.Prefix)
+	}
 }
 
-func NewNLRIPrefix(in []byte) *NLRIPrefix {
+func NewNLRIPrefix(afi int, safi int, in []byte) *NLRIPrefix {
 	if len(in) < 3 {
 		return nil
 	}
 	ret := &NLRIPrefix{
+	        Afi:    afi,
+		Safi:   safi,
 		Type:   int(in[0]),
 		Length: int(in[1]),
 	}
-	switch ret.Type {
-	case 2:
-		p := &EVPNType2Route{}
+
+	if afi == 1 {
+	   ret.Prefix = newIPv4Route(in[0:])
+	} else {
+	  switch ret.Type {
+	  case 2:
+	  	p := &EVPNType2Route{}
 		p.parseBytes(in[2:])
 		ret.Prefix = newEVPNType2Route(p)
 
-	case 5:
+	  case 5:
 		p := &EVPNType5Route{}
 		p.parseBytes(in[2:])
 		ret.Prefix = newEVPNType5Route(p)
+	 }
 	}
 	return ret
 }
@@ -252,7 +265,33 @@ func newEVPNType5Route(in *EVPNType5Route) *ShadowEVPNType5Route {
 	}
 }
 
-type EVPNPrefix interface {
+type ShadowIPv4Route struct {
+	IPPrefix    string
+}
+
+const ipv4Fmt = `%v`
+		   
+func (a *ShadowIPv4Route) parseBytes(in []byte) {
+}
+
+// String returns a user friendly string
+func (s *ShadowIPv4Route) String() string {     
+     return fmt.Sprintf(ipv4Fmt, s.IPPrefix)
+}
+
+func newIPv4Route(in []byte) *ShadowIPv4Route {
+        if in == nil || len(net.IP(in)) == 0 {
+	   return &ShadowIPv4Route{
+		IPPrefix:       "0.0.0.0",
+           }	
+	} else {
+	   return &ShadowIPv4Route{
+		IPPrefix:       net.IP(in).String(),
+           }
+        }
+}
+
+type UserPrefix interface {
 	parseBytes(in []byte)
 }
 
@@ -405,7 +444,7 @@ func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixSta
 		ASPathStr:           fmt.Sprintf("%v", in.ASPathStr),
 		PathOrigId:          net.IP(in.PathOrigId).String(),
 		NextHopAddr:         net.IP(in.NextHopAddr).String(),
-		Prefix:              NewNLRIPrefix(in.Prefix),
+		Prefix:              NewNLRIPrefix(int(in.Afi), int(in.Safi), in.Prefix),
 		BGPNLRIPrefixStatus: in,
 	}
 }
