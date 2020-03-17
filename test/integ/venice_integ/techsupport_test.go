@@ -412,22 +412,22 @@ func (it *veniceIntegSuite) TestTechSupportRequestCreateDelete(c *C) {
 
 	ctx, err := authntestutils.NewLoggedInContext(context.Background(), it.apiGwAddr, it.userCred)
 	AssertOk(c, err, "Error creating logged in context")
-	n1 := newSmartNICNode("00ae.cd88.0011", map[string]string{"group": "red", "type": "prod"})
+	n1 := newSmartNICNode("00ae.cd88.0011", map[string]string{"group": "orange", "type": "hr"})
 	err = it.createSmartNICNode(ctx, n1)
 	AssertOk(c, err, fmt.Sprintf("Error creating SmartNIC node %+v", n1))
 	defer it.deleteSmartNICNode(ctx, &n1.ObjectMeta)
 
-	n2 := newSmartNICNode("00ae.cd88.0012", map[string]string{"group": "red", "type": "prod"})
+	n2 := newSmartNICNode("00ae.cd88.0012", map[string]string{"group": "orange", "type": "hr"})
 	err = it.createSmartNICNode(ctx, n2)
 	AssertOk(c, err, fmt.Sprintf("Error creating Controller node %+v", n2))
 	defer it.deleteSmartNICNode(ctx, &n2.ObjectMeta)
 
-	n3 := newSmartNICNode("00ae.cd88.0013", map[string]string{"group": "red", "type": "prod"})
+	n3 := newSmartNICNode("00ae.cd88.0013", map[string]string{"group": "orange", "type": "hr"})
 	err = it.createSmartNICNode(ctx, n3)
 	AssertOk(c, err, fmt.Sprintf("Error creating SmartNIC node %+v", n3))
 	defer it.deleteSmartNICNode(ctx, &n3.ObjectMeta)
 
-	n4 := newSmartNICNode("00ae.cd88.0014", map[string]string{"group": "red", "type": "prod"})
+	n4 := newSmartNICNode("00ae.cd88.0014", map[string]string{"group": "orange", "type": "hr"})
 	err = it.createSmartNICNode(ctx, n4)
 	AssertOk(c, err, fmt.Sprintf("Error creating Controller node %+v", n4))
 	defer it.deleteSmartNICNode(ctx, &n4.ObjectMeta)
