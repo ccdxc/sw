@@ -82,6 +82,7 @@ type Statemgr struct {
 	RoutingConfigReactor          ctkit.RoutingConfigHandler
 	DSCProfileReactor             ctkit.DSCProfileHandler
 	MirrorSessionReactor          ctkit.MirrorSessionHandler
+	FlowExportPolicyReactor       ctkit.FlowExportPolicyHandler
 
 	SecurityProfileStatusReactor       nimbus.SecurityProfileStatusReactor
 	AppStatusReactor                   nimbus.AppStatusReactor
@@ -231,6 +232,11 @@ func (sm *Statemgr) SetMirrorSessionReactor(handler ctkit.MirrorSessionHandler) 
 	sm.MirrorSessionReactor = handler
 }
 
+// SetFlowExportPolicyReactor sets the  MirrorSession reactor
+func (sm *Statemgr) SetFlowExportPolicyReactor(handler ctkit.FlowExportPolicyHandler) {
+	sm.FlowExportPolicyReactor = handler
+}
+
 // SetRoutingConfigReactor sets the RoutingConfig reactor
 func (sm *Statemgr) SetRoutingConfigReactor(handler ctkit.RoutingConfigHandler) {
 	sm.RoutingConfigReactor = handler
@@ -358,6 +364,8 @@ func (sm *Statemgr) setDefaultReactors(reactor ctkit.CtrlDefReactor) {
 
 	sm.SetNetworkInterfaceReactor(reactor)
 
+	sm.SetFlowExportPolicyReactor(reactor)
+
 	sm.SetMirrorSessionReactor(reactor)
 
 	sm.SetIPAMPolicyReactor(reactor)
@@ -483,6 +491,11 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 		logger.Fatalf("Error watching mirror")
 	}
 
+	err = ctrler.FlowExportPolicy().Watch(sm.FlowExportPolicyReactor)
+	if err != nil {
+		logger.Fatalf("Error watching flow export")
+	}
+
 	err = ctrler.IPAMPolicy().Watch(sm.IPAMPolicyReactor)
 	if err != nil {
 		logger.Fatalf("Error watching ipam-policy")
@@ -563,6 +576,8 @@ func (sm *Statemgr) registerKindsWithMbus() {
 	sm.mbus.RegisterKind("NetworkInterface")
 	sm.mbus.RegisterKind("Collector")
 	sm.mbus.RegisterKind("Profile")
+	sm.mbus.RegisterKind("MirrorSession")
+	sm.mbus.RegisterKind("FlowExportPolicy")
 }
 
 //EnableSelectivePushForKind enable selective push for a kind

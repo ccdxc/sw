@@ -728,6 +728,10 @@ func (sma *SmNetworkInterface) OnNetworkInterfaceCreate(ctkitNetif *ctkit.Networ
 	sma.updateLabelMap(ifcfg)
 
 	receiver, err := sma.sm.mbus.FindReceiver(ifcfg.NetworkInterfaceState.Status.DSC)
+	if err != nil {
+		log.Errorf("error finding receiver for %v %v", ifcfg.NetworkInterfaceState.Status.DSC, err)
+		return err
+	}
 
 	pushObj, err := sma.sm.mbus.AddPushObject(ctkitNetif.MakeKey(string(apiclient.GroupNetwork)), convertNetworkInterfaceObject(ifcfg), references(ctkitNetif),
 		[]objReceiver.Receiver{receiver})

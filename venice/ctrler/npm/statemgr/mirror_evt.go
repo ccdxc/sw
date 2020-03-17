@@ -5,7 +5,11 @@ package statemgr
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
+	"time"
+
+	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 
@@ -19,6 +23,225 @@ import (
 	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
+
+type mirrorTimerType int
+
+const (
+	mirrorSchTimer mirrorTimerType = iota
+	mirrorExpTimer
+)
+
+const (
+	watcherQueueLen = 16
+	// MaxMirrorSessions is the maximum number of mirror sessions allowed
+	MaxMirrorSessions = 8
+)
+
+// MirrorTimerEvent - schedule or expiry
+type MirrorTimerEvent struct {
+	Type  mirrorTimerType
+	genID string
+	*MirrorSessionState
+}
+
+type mirrorHandler struct {
+	genID string
+	*MirrorSessionState
+}
+
+func (mh *mirrorHandler) handleSchTimer() {
+	log.Infof("Sch Timer Done... %v", mh.MirrorSession.Name)
+	mh.MirrorSessionState.stateMgr.mirrorTimerWatcher <- MirrorTimerEvent{
+		Type:               mirrorSchTimer,
+		genID:              mh.genID,
+		MirrorSessionState: mh.MirrorSessionState}
+	log.Infof("Sch Timer Firing Done... %v", mh.MirrorSession.Name)
+}
+
+/* XXX Uncomment after NAPLES adds support for mirror expiry
+func (mss *MirrorSessionState) getExpDuration() time.Duration {
+	// format conversion and max duration (2h) is checked by common Venice parameter checker hook
+	expDuration, _ := time.ParseDuration(mss.MirrorSession.Spec.StopConditions.ExpiryDuration)
+	return expDuration
+} */
+
+func (mss *MirrorSessionState) runMsExpTimer() bool {
+	return true
+	/* XXX Uncomment after NAPLES adds support for mirror expiry
+	expDuration := mss.getExpDuration()
+	expTime := mss.schTime.Add(expDuration)
+	if expTime.After(time.Now()) {
+		log.Infof("Expiry Time set to %v for %v\n", expTime, mss.Name)
+		mss.expTimer = time.AfterFunc(time.Until(expTime), mss.handleExpTimer)
+		return true
+	}
+	log.Infof("Expiry Time expired in the past %v for %v\n", expTime, mss.Name)
+	return false */
+}
+
+func (mss *MirrorSessionState) handleExpTimer() {
+	log.Infof("Exp Timer Done...%v", mss.MirrorSession.Name)
+	mss.stateMgr.mirrorTimerWatcher <- MirrorTimerEvent{
+		Type:               mirrorExpTimer,
+		MirrorSessionState: mss}
+}
+
+func buildDSCMirrorSession(mss *MirrorSessionState) *netproto.MirrorSession {
+	ms := mss.MirrorSession
+	tms := netproto.MirrorSession{
+		TypeMeta:   ms.TypeMeta,
+		ObjectMeta: ms.ObjectMeta,
+	}
+	tSpec := &tms.Spec
+	//tSpec.CaptureAt = netproto.MirrorSrcDst_SRC_DST
+	tSpec.MirrorDirection = netproto.MirrorDir_BOTH
+	//tSpec.Enable = (mss.State == monitoring.MirrorSessionState_ACTIVE)
+	tSpec.PacketSize = ms.Spec.PacketSize
+	//tSpec.PacketFilters = ms.Spec.PacketFilters
+
+	for _, c := range ms.Spec.Collectors {
+		var export monitoring.MirrorExportConfig
+		if c.ExportCfg != nil {
+			export = *c.ExportCfg
+		}
+		tc := netproto.MirrorCollector{
+			//Type:      c.Type,
+			ExportCfg: netproto.MirrorExportConfig{Destination: export.Destination},
+		}
+		tSpec.Collectors = append(tSpec.Collectors, tc)
+	}
+	for _, mr := range ms.Spec.MatchRules {
+		tmr := netproto.MatchRule{}
+		if mr.Src == nil && mr.Dst == nil {
+			log.Debugf("Ignore MatchRule with Src = * and Dst = *")
+			continue
+		}
+		if mr.Src != nil {
+			tmr.Src = &netproto.MatchSelector{}
+			tmr.Src.Addresses = mr.Src.IPAddresses
+			//tmr.Src.MACAddresses = mr.Src.MACAddresses
+		}
+		if mr.Dst != nil {
+			tmr.Dst = &netproto.MatchSelector{}
+			tmr.Dst.Addresses = mr.Dst.IPAddresses
+			if mr.AppProtoSel != nil {
+				for _, pp := range mr.AppProtoSel.ProtoPorts {
+					var protoPort netproto.ProtoPort
+					components := strings.Split(pp, "/")
+					switch len(components) {
+					case 1:
+						protoPort.Protocol = components[0]
+					case 2:
+						protoPort.Protocol = components[0]
+						protoPort.Port = components[1]
+					case 3:
+						protoPort.Protocol = components[0]
+						protoPort.Port = fmt.Sprintf("%s/%s", components[1], components[2])
+					default:
+						continue
+					}
+					tmr.Dst.ProtoPorts = append(tmr.Dst.ProtoPorts, &protoPort)
+				}
+			}
+			//tmr.Dst.MACAddresses = mr.Dst.MACAddresses
+		}
+		//if mr.AppProtoSel != nil {
+		//	tmr.AppProtoSel = &netproto.AppProtoSelector{}
+		//	for _, port := range mr.AppProtoSel.ProtoPorts {
+		//		tmr.AppProtoSel.Ports = append(tmr.AppProtoSel.Ports, port)
+		//	}
+		//	for _, app := range mr.AppProtoSel.Apps {
+		//		tmr.AppProtoSel.Apps = append(tmr.AppProtoSel.Apps, app)
+		//	}
+		//}
+		tSpec.MatchRules = append(tSpec.MatchRules, tmr)
+	}
+	return &tms
+}
+
+// MirrorSessionCountAllocate : Increment the active session counter if max is not reached
+func (smm *SmMirrorSessionInterface) MirrorSessionCountAllocate() bool {
+	smm.Mutex.Lock()
+	defer smm.Mutex.Unlock()
+
+	if smm.numMirrorSessions < MaxMirrorSessions {
+		smm.numMirrorSessions++
+		log.Infof("Allocated mirror session: count %v", smm.numMirrorSessions)
+		return true
+	}
+	log.Infof("Max mirror session count reached")
+	return false
+}
+
+// MirrorSessionCountFree : decrement the active session counter
+func (smm *SmMirrorSessionInterface) MirrorSessionCountFree() {
+	smm.Mutex.Lock()
+	defer smm.Mutex.Unlock()
+	if smm.numMirrorSessions > 0 {
+		smm.numMirrorSessions--
+		log.Infof("Active mirror session: count %v", smm.numMirrorSessions)
+	} else {
+		panic("Bug - mirror session free below 0")
+	}
+}
+
+func isFlowBasedMirroring(ms *monitoring.MirrorSession) bool {
+	return len(ms.Spec.GetMatchRules()) != 0
+}
+
+func (mss *MirrorSessionState) isFlowBasedMirroring() bool {
+
+	return isFlowBasedMirroring(&mss.MirrorSession.MirrorSession)
+}
+
+func (mss *MirrorSessionState) setMirrorSessionRunning(ms *monitoring.MirrorSession) {
+	if isFlowBasedMirroring(ms) && !mss.stateMgr.MirrorSessionCountAllocate() {
+		mss.State = monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION
+		mss.MirrorSession.Status.ScheduleState = monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION.String()
+		log.Infof("Mirror session  %v not scheduled", mss.MirrorSession.Name)
+	} else {
+		mss.State = monitoring.MirrorSessionState_ACTIVE
+		mss.MirrorSession.Status.ScheduleState = monitoring.MirrorSessionState_ACTIVE.String()
+		ts, _ := types.TimestampProto(time.Now())
+		mss.MirrorSession.Status.StartedAt.Timestamp = *ts
+		// create PCAP file URL for sessions with venice collector
+		_t, _ := mss.MirrorSession.Status.StartedAt.Time()
+		log.Infof("Mirror session StartedAt %v", _t)
+	}
+}
+
+func (mss *MirrorSessionState) programMirrorSession(ms *monitoring.MirrorSession) {
+	// common function called for both create and update operations
+	// New or previously SCHEDULED session
+	if ms.Spec.StartConditions.ScheduleTime != nil {
+		schTime, _ := ms.Spec.StartConditions.ScheduleTime.Time()
+		if schTime.After(mss.schTime) {
+			mss.schTime = schTime
+			// start the timer routine only if time is in future
+			log.Infof("Schedule time is %v", mss.schTime)
+			mh := mirrorHandler{MirrorSessionState: mss, genID: mss.MirrorSession.ObjectMeta.GenerationID}
+			mss.schTimer = time.AfterFunc(time.Until(mss.schTime), mh.handleSchTimer)
+			mss.State = monitoring.MirrorSessionState_SCHEDULED
+			mss.MirrorSession.Status.ScheduleState = monitoring.MirrorSessionState_SCHEDULED.String()
+		} else {
+			// schedule time in the past, run it right-away
+			log.Warnf("Schedule time %v already passed, starting the mirror-session now - %v\n", schTime, mss.MirrorSession.Name)
+			mss.setMirrorSessionRunning(ms)
+		}
+	} else {
+		mss.schTime = time.Now()
+		mss.setMirrorSessionRunning(ms)
+		log.Infof("Mirror Session  %v, State %v", mss.MirrorSession.Name, mss.MirrorSession.Status.ScheduleState)
+	}
+	if !mss.runMsExpTimer() {
+		if mss.State == monitoring.MirrorSessionState_ACTIVE {
+			mss.stateMgr.MirrorSessionCountFree()
+		}
+		mss.State = monitoring.MirrorSessionState_STOPPED
+		mss.MirrorSession.Status.ScheduleState = monitoring.MirrorSessionState_STOPPED.String()
+		mss.expTimer = nil
+	}
+}
 
 // MirrorSessionStateFromObj conerts from memdb object to network state
 func MirrorSessionStateFromObj(obj runtime.Object) (*MirrorSessionState, error) {
@@ -42,6 +265,47 @@ func MirrorSessionStateFromObj(obj runtime.Object) (*MirrorSessionState, error) 
 type MirrorSessionState struct {
 	MirrorSession *ctkit.MirrorSession `json:"-"`
 	stateMgr      *SmMirrorSessionInterface
+	schTime       time.Time
+	schTimer      *time.Timer
+	expTimer      *time.Timer
+	// Local information
+	State   monitoring.MirrorSessionState
+	deleted bool
+}
+
+// runMirrorSessionWatcher watches on a channel for changes from api server and internal events
+func (smm *SmMirrorSessionInterface) runMirrorSessionWatcher() {
+	log.Infof("Mirror Session Watcher running")
+
+	// loop till channel is closed
+	for {
+		select {
+		case evt, ok := <-smm.mirrorTimerWatcher:
+			if !ok {
+				// Since the channel is within the same controller process... no need to restart it
+				log.Infof("Mirror Session Watcher exited")
+				return
+			}
+			log.Infof("Watcher: Got Mirror session Timer event(%v) on %v, ver %v", evt.Type, evt.MirrorSessionState.MirrorSession.Name,
+				evt.MirrorSessionState.MirrorSession.ResourceVersion)
+			smm.handleMirrorSessionTimerEvent(evt.Type, evt.genID, evt.MirrorSessionState)
+		}
+	}
+}
+
+func (smm *SmMirrorSessionInterface) handleMirrorSessionTimerEvent(et mirrorTimerType, genID string, mss *MirrorSessionState) {
+	mss.MirrorSession.Lock()
+	defer mss.MirrorSession.Unlock()
+	if mss.deleted || genID != mss.MirrorSession.ObjectMeta.GenerationID {
+		return
+	}
+	switch et {
+	case mirrorSchTimer:
+		smm.addMirror(mss)
+	case mirrorExpTimer:
+		//smm.stopMirrorSession(mss)
+	default:
+	}
 }
 
 // FindMirrorSession finds mirror session state
@@ -64,9 +328,11 @@ type mirrorCollector struct {
 //SmMirrorSessionInterface is statemanagers struct for mirror session handling
 type SmMirrorSessionInterface struct {
 	sync.Mutex
-	sm             *Statemgr
-	collectors     map[string]*mirrorCollector
-	mirrorSessions map[string]*MirrorSessionState
+	sm                 *Statemgr
+	collectors         map[string]*mirrorCollector
+	mirrorSessions     map[string]*MirrorSessionState
+	mirrorTimerWatcher chan MirrorTimerEvent // mirror session Timer watcher
+	numMirrorSessions  int                   // total mirror sessions created
 }
 
 var smgrMirrorInterface *SmMirrorSessionInterface
@@ -81,14 +347,16 @@ func (smm *SmMirrorSessionInterface) CompleteRegistration() {
 	smm.sm.SetMirrorSessionReactor(smgrMirrorInterface)
 	//Send collectors selectively
 	smm.sm.EnableSelectivePushForKind("Collector")
+	go smgrMirrorInterface.runMirrorSessionWatcher()
 }
 
 func initSmMirrorInterface() {
 	mgr := MustGetStatemgr()
 	smgrMirrorInterface = &SmMirrorSessionInterface{
-		sm:             mgr,
-		collectors:     make(map[string]*mirrorCollector),
-		mirrorSessions: make(map[string]*MirrorSessionState),
+		sm:                 mgr,
+		collectors:         make(map[string]*mirrorCollector),
+		mirrorSessions:     make(map[string]*MirrorSessionState),
+		mirrorTimerWatcher: make(chan MirrorTimerEvent, watcherQueueLen),
 	}
 	mgr.Register("statemgrmirrorSession", smgrMirrorInterface)
 }
@@ -195,6 +463,21 @@ type mirrorSelectorCollectors struct {
 	mirrorSession string
 }
 
+func (smm *SmMirrorSessionInterface) pushAddMirrorSession(mss *MirrorSessionState) error {
+	return smm.sm.mbus.AddObjectWithReferences(mss.MirrorSession.MakeKey("monitoring"),
+		buildDSCMirrorSession(mss), references(mss.MirrorSession))
+}
+
+func (smm *SmMirrorSessionInterface) pushUpdateMirrorSession(mss *MirrorSessionState) error {
+	return smm.sm.mbus.UpdateObjectWithReferences(mss.MirrorSession.MakeKey("monitoring"),
+		buildDSCMirrorSession(mss), references(mss.MirrorSession))
+}
+
+func (smm *SmMirrorSessionInterface) pushDeleteMirrorSession(mss *MirrorSessionState) error {
+	return smm.sm.mbus.DeleteObjectWithReferences(mss.MirrorSession.MakeKey("monitoring"),
+		buildDSCMirrorSession(mss), references(mss.MirrorSession))
+}
+
 //OnMirrorSessionCreate mirror session create handle
 func (smm *SmMirrorSessionInterface) OnMirrorSessionCreate(obj *ctkit.MirrorSession) error {
 	log.Infof("Got mirror session create")
@@ -207,64 +490,43 @@ func (smm *SmMirrorSessionInterface) OnMirrorSessionCreate(obj *ctkit.MirrorSess
 
 	log.Infof("Creating mirror: %+v", obj)
 
-	// create new app object
 	ms, err = NewMirroSessionState(obj, smm)
 	if err != nil {
 		log.Errorf("Error creating mirror %+v. Err: %v", obj, err)
 		return err
 	}
 
+	if ms.MirrorSession.Status.ScheduleState != "" && (ms.MirrorSession.Status.ScheduleState != monitoring.MirrorSessionState_NONE.String()) {
+		ms.State = monitoring.MirrorSessionState(monitoring.MirrorSessionState_value[ms.MirrorSession.Status.ScheduleState])
+		ms.schTime, _ = ms.MirrorSession.Status.StartedAt.Time()
+	} else {
+		ms.State = monitoring.MirrorSessionState_NONE
+		ms.schTime = time.Now()
+	}
+
+	ms.programMirrorSession(&ms.MirrorSession.MirrorSession)
+
+	if ms.State == monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION ||
+		ms.State == monitoring.MirrorSessionState_SCHEDULED {
+		ms.MirrorSession.Write()
+		return nil
+	}
+
+	return smm.addMirror(ms)
+
+}
+
+//OnMirrorSessionCreate mirror session create handle
+func (smm *SmMirrorSessionInterface) addMirror(ms *MirrorSessionState) error {
+
+	defer ms.MirrorSession.Write()
+
 	//Process only if no match rules
-	if len(ms.MirrorSession.Spec.GetMatchRules()) != 0 {
-		log.Infof("Skipping processing of mirror session %v  as flow match rules present", ms.MirrorSession.Name)
-		return nil
+	if ms.isFlowBasedMirroring() {
+		return smm.addFlowMirror(ms)
 	}
 
-	//Process only if no match rules
-	if ms.MirrorSession.Spec.InterfaceSelector == nil {
-		log.Infof("Skipping processing of mirror session %v  as interface selector not assigned yet", ms.MirrorSession.Name)
-		return nil
-	}
-
-	collectors := ms.MirrorSession.Spec.GetCollectors()
-	if len(collectors) == 0 {
-		return nil
-	}
-
-	mCollectors := []*mirrorCollector{}
-	for _, collector := range collectors {
-		mcol, err := smgrMirrorInterface.findCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace, collector.ExportCfg.Destination)
-		if err != nil {
-			mcol, err = smgrMirrorInterface.addCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace,
-				collector.ExportCfg.Destination)
-			if err != nil {
-				log.Errorf("Error Adding collector %+v. Err: %v", collector.ExportCfg.Destination, err)
-				return err
-			}
-		} else {
-			mcol.refCount++
-		}
-		mCollectors = append(mCollectors, mcol)
-	}
-
-	smgrMirrorInterface.addMirrorSession(ms)
-
-	if ms.MirrorSession.Spec.InterfaceSelector != nil {
-		//Now evaluate the interfaces
-		selCollector := &mirrorSelectorCollectors{
-			rxCollectors:  mCollectors,
-			txCollectors:  mCollectors,
-			selector:      ms.MirrorSession.Spec.InterfaceSelector,
-			mirrorSession: ms.MirrorSession.Name,
-		}
-
-		err = smgrNetworkInterface.UpdateCollectorsMatchingSelector(nil, selCollector)
-		if err != nil {
-			log.Infof("Error updating collector state %v", err)
-		}
-	}
-
-	return nil
+	return smm.addInterfaceMirror(ms)
 }
 
 //AddMirrorSession add mirror session
@@ -329,26 +591,60 @@ func (smm *SmMirrorSessionInterface) getAllMirrorSessionCollectors() []*mirrorSe
 	return mcols
 }
 
+func (smm *SmMirrorSessionInterface) addInterfaceMirror(ms *MirrorSessionState) error {
+
+	//Process only if no match rules
+	if ms.MirrorSession.Spec.InterfaceSelector == nil {
+		log.Infof("Skipping processing of mirror session %v  as interface selector not assigned yet", ms.MirrorSession.Name)
+		return nil
+	}
+
+	collectors := ms.MirrorSession.Spec.GetCollectors()
+	if len(collectors) == 0 {
+		return nil
+	}
+
+	mCollectors := []*mirrorCollector{}
+	for _, collector := range collectors {
+		mcol, err := smgrMirrorInterface.findCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace, collector.ExportCfg.Destination)
+		if err != nil {
+			mcol, err = smgrMirrorInterface.addCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace,
+				collector.ExportCfg.Destination)
+			if err != nil {
+				log.Errorf("Error Adding collector %+v. Err: %v", collector.ExportCfg.Destination, err)
+				return err
+			}
+		} else {
+			mcol.refCount++
+		}
+		mCollectors = append(mCollectors, mcol)
+	}
+
+	smgrMirrorInterface.addMirrorSession(ms)
+
+	if ms.MirrorSession.Spec.InterfaceSelector != nil {
+		//Now evaluate the interfaces
+		selCollector := &mirrorSelectorCollectors{
+			rxCollectors:  mCollectors,
+			txCollectors:  mCollectors,
+			selector:      ms.MirrorSession.Spec.InterfaceSelector,
+			mirrorSession: ms.MirrorSession.Name,
+		}
+
+		err := smgrNetworkInterface.UpdateCollectorsMatchingSelector(nil, selCollector)
+		if err != nil {
+			log.Infof("Error updating collector state %v", err)
+		}
+	}
+
+	return nil
+}
+
 //OnMirrorSessionUpdate mirror session update handle
-func (smm *SmMirrorSessionInterface) OnMirrorSessionUpdate(mirror *ctkit.MirrorSession, nmirror *monitoring.MirrorSession) error {
+func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionState, nmirror *monitoring.MirrorSession) error {
 	log.Infof("Got mirror update for %#v", nmirror.ObjectMeta)
 
 	// see if anything changed
-	_, ok := ref.ObjDiff(mirror.Spec, nmirror.Spec)
-	if (mirror.GenerationID == nmirror.GenerationID) && !ok {
-		//mirror.ObjectMeta = nmirror.ObjectMeta
-	}
-
-	ms, err := MirrorSessionStateFromObj(mirror)
-	if err != nil {
-		log.Errorf("Error finding mirror object for delete %v", err)
-		return err
-	}
-
-	if len(nmirror.Spec.GetMatchRules()) != 0 && ms.MirrorSession.Spec.InterfaceSelector == nil {
-		log.Infof("Skipping update processing of mirror session %v  as flow match rules present", ms.MirrorSession.Name)
-		return nil
-	}
 
 	currentCollectors := ms.MirrorSession.Spec.GetCollectors()
 	newCollectors := nmirror.Spec.GetCollectors()
@@ -363,9 +659,9 @@ func (smm *SmMirrorSessionInterface) OnMirrorSessionUpdate(mirror *ctkit.MirrorS
 	delCollectors := []*mirrorCollector{}
 	curCollectors := []*mirrorCollector{}
 	for _, curCol := range currentCollectors {
-		key := collectorKey(mirror.Tenant, mirror.Namespace, curCol.ExportCfg.Destination)
+		key := collectorKey(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace, curCol.ExportCfg.Destination)
 		//1 indiates object is present in update tpp
-		collector, err := smgrMirrorInterface.findCollector(mirror.Tenant, mirror.Namespace,
+		collector, err := smgrMirrorInterface.findCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace,
 			curCol.ExportCfg.Destination)
 		if err == nil {
 			curCollectors = append(curCollectors, collector)
@@ -388,7 +684,7 @@ func (smm *SmMirrorSessionInterface) OnMirrorSessionUpdate(mirror *ctkit.MirrorS
 	for _, cref := range newColMap {
 		if cref.cnt == 1 {
 			log.Infof("Deleting  collector %v", cref.col.ExportCfg.Destination)
-			mcol, err := smgrMirrorInterface.deleteCollector(mirror.Tenant, mirror.Namespace, cref.col.ExportCfg.Destination)
+			mcol, err := smgrMirrorInterface.deleteCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace, cref.col.ExportCfg.Destination)
 			if err != nil {
 				//Collector may not be added before as part of create.
 				log.Infof("Error deleting collector %v", err)
@@ -410,9 +706,9 @@ func (smm *SmMirrorSessionInterface) OnMirrorSessionUpdate(mirror *ctkit.MirrorS
 	var newSelCollector *mirrorSelectorCollectors
 
 	selectorChanged := true
-	if (mirror.Spec.InterfaceSelector == nil && nmirror.Spec.InterfaceSelector == nil) ||
-		(mirror.Spec.InterfaceSelector != nil && nmirror.Spec.InterfaceSelector != nil &&
-			mirror.Spec.InterfaceSelector.Print() == nmirror.Spec.InterfaceSelector.Print()) {
+	if (ms.MirrorSession.Spec.InterfaceSelector == nil && nmirror.Spec.InterfaceSelector == nil) ||
+		(ms.MirrorSession.Spec.InterfaceSelector != nil && nmirror.Spec.InterfaceSelector != nil &&
+			ms.MirrorSession.Spec.InterfaceSelector.Print() == nmirror.Spec.InterfaceSelector.Print()) {
 		selectorChanged = false
 	}
 
@@ -423,12 +719,12 @@ func (smm *SmMirrorSessionInterface) OnMirrorSessionUpdate(mirror *ctkit.MirrorS
 		//Interface selector
 		//Collectors are same but label selectors have changed
 		// Remove current collectors and change label
-		if mirror.Spec.InterfaceSelector != nil {
+		if ms.MirrorSession.Spec.InterfaceSelector != nil {
 			oldSelCollector = &mirrorSelectorCollectors{
 				rxCollectors:  curCollectors,
 				txCollectors:  curCollectors,
-				selector:      mirror.Spec.InterfaceSelector,
-				mirrorSession: mirror.Name,
+				selector:      ms.MirrorSession.Spec.InterfaceSelector,
+				mirrorSession: ms.MirrorSession.Name,
 			}
 		}
 
@@ -438,19 +734,19 @@ func (smm *SmMirrorSessionInterface) OnMirrorSessionUpdate(mirror *ctkit.MirrorS
 				rxCollectors:  curCollectors,
 				txCollectors:  curCollectors,
 				selector:      nmirror.Spec.InterfaceSelector,
-				mirrorSession: mirror.Name,
+				mirrorSession: ms.MirrorSession.Name,
 			}
 		}
 
 	} else if len(addCollectors) != 0 || len(delCollectors) != 0 && !selectorChanged {
 		//case 2: Collectors are different but label is the same
 		// Delete old collectors and new collectors to existing label
-		if mirror.Spec.InterfaceSelector != nil {
+		if ms.MirrorSession.Spec.InterfaceSelector != nil {
 			oldSelCollector = &mirrorSelectorCollectors{
 				rxCollectors:  delCollectors,
 				txCollectors:  delCollectors,
-				selector:      mirror.Spec.InterfaceSelector,
-				mirrorSession: mirror.Name,
+				selector:      ms.MirrorSession.Spec.InterfaceSelector,
+				mirrorSession: ms.MirrorSession.Name,
 			}
 		}
 
@@ -460,7 +756,7 @@ func (smm *SmMirrorSessionInterface) OnMirrorSessionUpdate(mirror *ctkit.MirrorS
 				rxCollectors:  addCollectors,
 				txCollectors:  addCollectors,
 				selector:      nmirror.Spec.InterfaceSelector,
-				mirrorSession: mirror.Name,
+				mirrorSession: ms.MirrorSession.Name,
 			}
 		}
 	} else {
@@ -468,12 +764,12 @@ func (smm *SmMirrorSessionInterface) OnMirrorSessionUpdate(mirror *ctkit.MirrorS
 		//case 3: Both Collectors and label has changed.
 		// For new label, send both new and old col collecotrs
 		// for old lablel, send the old collectors only.
-		if mirror.Spec.InterfaceSelector != nil {
+		if ms.MirrorSession.Spec.InterfaceSelector != nil {
 			oldSelCollector = &mirrorSelectorCollectors{
 				rxCollectors:  curCollectors,
 				txCollectors:  curCollectors,
-				selector:      mirror.Spec.InterfaceSelector,
-				mirrorSession: mirror.Name,
+				selector:      ms.MirrorSession.Spec.InterfaceSelector,
+				mirrorSession: ms.MirrorSession.Name,
 			}
 		}
 
@@ -483,12 +779,12 @@ func (smm *SmMirrorSessionInterface) OnMirrorSessionUpdate(mirror *ctkit.MirrorS
 				rxCollectors:  addCollectors,
 				txCollectors:  addCollectors,
 				selector:      nmirror.Spec.InterfaceSelector,
-				mirrorSession: mirror.Name,
+				mirrorSession: ms.MirrorSession.Name,
 			}
 		}
 	}
 
-	err = smgrNetworkInterface.UpdateCollectorsMatchingSelector(oldSelCollector, newSelCollector)
+	err := smgrNetworkInterface.UpdateCollectorsMatchingSelector(oldSelCollector, newSelCollector)
 	if err != nil {
 		log.Infof("Error updating collector state %v", err)
 	}
@@ -518,15 +814,157 @@ func (smm *SmMirrorSessionInterface) OnMirrorSessionUpdate(mirror *ctkit.MirrorS
 
 }
 
-//OnMirrorSessionDelete mirror session delete handle
-func (smm *SmMirrorSessionInterface) OnMirrorSessionDelete(obj *ctkit.MirrorSession) error {
+//OnMirrorSessionUpdate mirror session update handle
+func (smm *SmMirrorSessionInterface) OnMirrorSessionUpdate(mirror *ctkit.MirrorSession, nmirror *monitoring.MirrorSession) error {
+	log.Infof("Got mirror update for %#v", nmirror.ObjectMeta)
 
-	log.Infof("Got mirror delete for %#v", obj.ObjectMeta)
-	ms, err := MirrorSessionStateFromObj(obj)
+	// see if anything changed
+	_, ok := ref.ObjDiff(mirror.Spec, nmirror.Spec)
+	if (mirror.GenerationID == nmirror.GenerationID) && !ok {
+		//mss.MirrorSession.ObjectMeta = nmirror.ObjectMeta
+		return nil
+	}
+
+	ms, err := MirrorSessionStateFromObj(mirror)
 	if err != nil {
 		log.Errorf("Error finding mirror object for delete %v", err)
 		return err
 	}
+
+	curState := ms.State
+	if ms.isFlowBasedMirroring() && ms.State == monitoring.MirrorSessionState_ACTIVE {
+		smm.MirrorSessionCountFree()
+		ms.State = monitoring.MirrorSessionState_NONE
+	}
+
+	// stop any running timers
+	// If timer already fired GENID will prevent it from running stale routine
+	ms.MirrorSession.ObjectMeta = nmirror.ObjectMeta
+	if ms.schTimer != nil {
+		ms.schTimer.Stop()
+		ms.schTimer = nil
+	}
+	if ms.expTimer != nil {
+		ms.expTimer.Stop()
+		ms.expTimer = nil
+	}
+
+	ms.programMirrorSession(nmirror)
+
+	defer ms.MirrorSession.Write()
+	if curState == monitoring.MirrorSessionState_SCHEDULED && ms.State == monitoring.MirrorSessionState_SCHEDULED {
+		//nothing has changed w.r.t to scheduling, return
+		return nil
+	}
+
+	if curState == monitoring.MirrorSessionState_ACTIVE && ms.State == monitoring.MirrorSessionState_SCHEDULED {
+		//have to delete the old state
+		if ms.isFlowBasedMirroring() {
+			err = smm.deleteFlowMirror(ms)
+		} else {
+			err = smm.deleteInterfaceMirror(ms)
+		}
+		return err
+	}
+
+	if (curState == monitoring.MirrorSessionState_ACTIVE && ms.State == monitoring.MirrorSessionState_ACTIVE) ||
+		(curState == monitoring.MirrorSessionState_SCHEDULED && ms.State == monitoring.MirrorSessionState_ACTIVE) {
+		//have to delete the old state
+
+		add := curState == monitoring.MirrorSessionState_SCHEDULED
+
+		if isFlowBasedMirroring(nmirror) && !ms.isFlowBasedMirroring() {
+			//If new one is flow based mirroring,  delete interface based mirroing
+			err = smm.deleteInterfaceMirror(ms)
+			if err != nil {
+				log.Errorf("Error deleting interface mirror %v", err)
+			}
+			ms.MirrorSession.Spec = nmirror.Spec
+			return smm.addFlowMirror(ms)
+		} else if !isFlowBasedMirroring(nmirror) && ms.isFlowBasedMirroring() {
+			//If new one is interface based,  delete the flow one
+			err = smm.deleteFlowMirror(ms)
+			ms.MirrorSession.Spec = nmirror.Spec
+			//Add Interface mirror
+			return smm.addInterfaceMirror(ms)
+		} else if !isFlowBasedMirroring(nmirror) && !ms.isFlowBasedMirroring() {
+			//If both new and old are interface based mirroring
+			if add {
+				ms.MirrorSession.Spec = nmirror.Spec
+				err = smgrMirrorInterface.addInterfaceMirror(ms)
+			} else {
+				err = smgrMirrorInterface.updateInterfaceMirror(ms, nmirror)
+			}
+			if err != nil {
+				log.Errorf("Error updating interface mirroing %v", err)
+				return err
+			}
+		} else {
+			//If both new and old are flow  based mirroring
+			ms.MirrorSession.Spec = nmirror.Spec
+			if add {
+				err = smgrMirrorInterface.addFlowMirror(ms)
+			} else {
+				err = smgrMirrorInterface.updateFlowMirror(ms)
+			}
+			if err != nil {
+				log.Errorf("Error updating interface mirroing %v", err)
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// ListMirrorSesssions lists all mirror sessions
+func (sm *Statemgr) ListMirrorSesssions() ([]*MirrorSessionState, error) {
+	objs := sm.ListObjects("MirrorSession")
+
+	var mss []*MirrorSessionState
+	for _, obj := range objs {
+		ms, err := MirrorSessionStateFromObj(obj)
+		if err != nil {
+			return mss, err
+		}
+
+		mss = append(mss, ms)
+	}
+
+	return mss, nil
+}
+
+//OnMirrorSessionDelete mirror session delete handle
+func (smm *SmMirrorSessionInterface) deleteFlowMirror(ms *MirrorSessionState) error {
+
+	smgrMirrorInterface.pushDeleteMirrorSession(ms)
+	smm.deleteMirrorSession(ms)
+	return nil
+}
+
+func (smm *SmMirrorSessionInterface) addFlowMirror(ms *MirrorSessionState) error {
+
+	if ms.State == monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION {
+		log.Infof("Skipping add of mirror session %+v as limit has reached", ms.MirrorSession.ObjectMeta)
+		return nil
+	}
+
+	smgrMirrorInterface.pushAddMirrorSession(ms)
+	return smm.addMirrorSession(ms)
+}
+
+func (smm *SmMirrorSessionInterface) updateFlowMirror(ms *MirrorSessionState) error {
+
+	if ms.State == monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION {
+		log.Infof("Skipping update of mirror session %+v as limit has reached", ms.MirrorSession.ObjectMeta)
+		return nil
+	}
+	smgrMirrorInterface.pushUpdateMirrorSession(ms)
+	return smm.addMirrorSession(ms)
+}
+
+//OnMirrorSessionDelete mirror session delete handle
+func (smm *SmMirrorSessionInterface) deleteInterfaceMirror(ms *MirrorSessionState) error {
 
 	collectors := ms.MirrorSession.Spec.GetCollectors()
 	delCollectors := []*mirrorCollector{}
@@ -550,7 +988,7 @@ func (smm *SmMirrorSessionInterface) OnMirrorSessionDelete(obj *ctkit.MirrorSess
 			mirrorSession: ms.MirrorSession.Name,
 		}
 
-		err = smgrNetworkInterface.UpdateCollectorsMatchingSelector(oldSelCollector, nil)
+		err := smgrNetworkInterface.UpdateCollectorsMatchingSelector(oldSelCollector, nil)
 		if err != nil {
 			log.Infof("Error updating collector state %v", err)
 		}
@@ -568,6 +1006,62 @@ func (smm *SmMirrorSessionInterface) OnMirrorSessionDelete(obj *ctkit.MirrorSess
 
 	return nil
 
+}
+
+//OnMirrorSessionDelete mirror session delete handle
+func (smm *SmMirrorSessionInterface) OnMirrorSessionDelete(obj *ctkit.MirrorSession) error {
+
+	log.Infof("Got mirror delete for %#v", obj.ObjectMeta)
+	ms, err := MirrorSessionStateFromObj(obj)
+	if err != nil {
+		log.Errorf("Error finding mirror object for delete %v", err)
+		return err
+	}
+
+	// Stop the timers,
+	// If Timers cannot be stopped, its ok. Set the state to STOPPED. Timers
+	// check the state and will no-op if it is STOPPED
+	//mark as deleted to that fired timer will not schedule
+	ms.deleted = true
+	if ms.schTimer != nil {
+		log.Infof("STOP SchTimer for %v", ms.MirrorSession.Name)
+		ms.schTimer.Stop()
+	}
+	if ms.expTimer != nil {
+		log.Infof("STOP ExpTimer for %v", ms.MirrorSession.Name)
+		ms.expTimer.Stop()
+	}
+
+	if ms.State == monitoring.MirrorSessionState_ACTIVE && ms.isFlowBasedMirroring() {
+		smm.MirrorSessionCountFree()
+	}
+	ms.State = monitoring.MirrorSessionState_STOPPED
+
+	if ms.isFlowBasedMirroring() {
+		smgrMirrorInterface.pushDeleteMirrorSession(ms)
+		smm.deleteMirrorSession(ms)
+
+		// bring-up any of the mirror session in failed state
+		ml, err := smm.sm.ListMirrorSesssions()
+		if err == nil {
+			for _, m := range ml {
+				if m.MirrorSession.Status.ScheduleState == monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION.String() {
+					log.Infof("retry session %v in state:%v ", m.MirrorSession.Name, m.MirrorSession.Status.ScheduleState)
+					m.MirrorSession.Lock()
+					m.setMirrorSessionRunning(&m.MirrorSession.MirrorSession)
+					if ms.State == monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION {
+						m.MirrorSession.Unlock()
+						continue
+					}
+					m.State = monitoring.MirrorSessionState_SCHEDULED
+					m.MirrorSession.Unlock()
+					return smm.addMirror(m)
+				}
+			}
+		}
+	}
+
+	return smm.deleteInterfaceMirror(ms)
 }
 
 //GetMirrorSessionWatchOptions Get watch options
