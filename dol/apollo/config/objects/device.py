@@ -209,6 +209,12 @@ class DeviceObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.DEVICE, Resmgr.MAX_DEVICE)
         return
 
+    def IsReadSupported(self):
+        if utils.IsNetAgentMode():
+            # TODO: Add UpdateImplicit support & remove this check
+            return False
+        return True
+
     def GenerateObjects(self, node, topospec):
         obj = DeviceObject(node, topospec.device)
         self.Objs[node].update({0: obj})

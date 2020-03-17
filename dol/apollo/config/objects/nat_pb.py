@@ -58,16 +58,24 @@ class NatPbObject(base.ConfigObjectBase):
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
             return False
+        if spec.Protocol != self.ProtoNum:
+            return False
+        ports = spec.Ports
+        if ports.PortLow != self.PortLo:
+            return False
+        if ports.PortHigh != self.PortHi:
+            return False
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.PdsUuid(spec['id']).GetUuid() != self.GetKey():
+        if utils.GetYamlSpecAttr(spec) != self.GetKey():
             return False
         if spec['protocol'] != self.ProtoNum:
             return False
-        if spec['ports']['portlow'] != self.PortLo:
+        ports = spec['ports']
+        if ports['portlow'] != self.PortLo:
             return False
-        if spec['ports']['porthigh'] != self.PortHi:
+        if ports['porthigh'] != self.PortHi:
             return False
         return True
 

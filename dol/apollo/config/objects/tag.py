@@ -87,7 +87,7 @@ class TagObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
+        if utils.GetYamlSpecAttr(spec) != self.GetKey():
             return False
         if spec['af'] != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False
@@ -102,7 +102,7 @@ class TagObjectClient(base.ConfigClientBase):
         self.__v6iter = defaultdict(dict)
         return
 
-    def IsValidConfig(self):
+    def IsValidConfig(self, node):
         count = sum(list(map(lambda x: len(x.values()), self.__v4objs[node].values())))
         if  count > self.Maxlimit:
             return False, "V4 Tag Table count %d exceeds allowed limit of %d" %\
@@ -111,8 +111,6 @@ class TagObjectClient(base.ConfigClientBase):
         if  count > self.Maxlimit:
             return False, "V6 Tag Table count %d exceeds allowed limit of %d" %\
                           (count, self.Maxlimit)
-        #TODO: check route table count equals subnet count in that VPC
-        #TODO: check scale of routes per route table
         return True, ""
 
     def GetTagV4Table(self, node, vpcid, tagtblid):

@@ -69,6 +69,9 @@ class EvpnIpVrfObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.BGP_EVPN_IP_VRF, Resmgr.MAX_BGP_EVPN_IP_VRF)
         return
 
+    def IsReadSupported(self):
+        return False
+
     def GenerateObjects(self, node, vpc, vpcspec):
         def __add_evpn_ip_vrf_config(evpnipvrfspec):
             parentid = getattr(evpnipvrfspec, "parent-id", 1)

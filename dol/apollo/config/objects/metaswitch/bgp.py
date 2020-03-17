@@ -133,6 +133,11 @@ class BgpObjectClient(base.ConfigClientBase):
     def GetBgpObject(self, node):
         return self.GetObjectByKey(node, 1)
 
+    def PdsctlRead(self, node):
+        # TODO: Add json support
+        logger.error("pdsctl read not supported for BGP object")
+        return True
+
     def GenerateObjects(self, node, vpc, vpcspec):
         def __add_bgp_config(bgpspec):
             obj = BgpObject(node, bgpspec)

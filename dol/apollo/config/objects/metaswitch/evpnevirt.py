@@ -70,6 +70,9 @@ class EvpnEviRtObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.BGP_EVPN_EVI_RT, Resmgr.MAX_BGP_EVPN_EVI_RT)
         return
 
+    def IsReadSupported(self):
+        return False
+
     def GenerateObjects(self, node, subnet, subnetspec):
         def __add_evpn_evi_rt_config(evpnevirtspec):
             parentid = getattr(evpnevirtspec, "parent-id", 1)

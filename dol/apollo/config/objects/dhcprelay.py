@@ -60,7 +60,7 @@ class DhcpRelayObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if spec['id'] != self.GetKey():
+        if utils.GetYamlSpecAttr(spec) != self.GetKey():
             return False
         return True
 
@@ -71,6 +71,9 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
 
     def GetDhcpRelayObject(self, node):
         return self.GetObjectByKey(node, 1)
+
+    def IsReadSupported(self):
+        return False
 
     def GenerateObjects(self, node, dhcpspec):
         def __add_dhcp_relay_config(dhcpspec):

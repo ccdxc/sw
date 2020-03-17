@@ -34,8 +34,8 @@ class PolicerObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "Policer: %d|Type:%s|Dir:%s|Rate:%d|Burst:%d" %\
-               (self.PolicerId, self.type, self.direction, self.rate, self.burst)
+        return "Policer: %s |Type:%s|Dir:%s|Rate:%d|Burst:%d" %\
+               (self.UUID, self.type, self.direction, self.rate, self.burst)
 
     def Show(self):
         logger.info("Policer object:", self)
@@ -50,11 +50,11 @@ class PolicerObject(base.ConfigObjectBase):
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
-        if (self.direction == 'ingress'):
+        if self.direction == 'ingress':
             spec.Direction = policer_pb2.POLICER_DIR_INGRESS
         else:
             spec.Direction = policer_pb2.POLICER_DIR_EGRESS
-        if (self.type == 'bps'):
+        if self.type == 'bps':
             spec.BPSPolicer.BytesPerSecond = self.rate
             spec.BPSPolicer.Burst = self.burst
         else:
@@ -62,40 +62,58 @@ class PolicerObject(base.ConfigObjectBase):
             spec.PPSPolicer.Burst = self.burst
         return
 
+    def __validate_direction(self, direction):
+        if self.direction == 'ingress':
+            if direction != policer_pb2.POLICER_DIR_INGRESS:
+                return False
+        else:
+            if direction != policer_pb2.POLICER_DIR_EGRESS:
+                return False
+        return True
+
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
             return False
-        if (self.direction == 'ingress'):
-            if spec.Direction != policer_pb2.POLICER_DIR_INGRESS:
+        if not self.__validate_direction(spec.Direction):
+            return False
+        if self.type == 'bps':
+            bpspolicer = getattr(spec, 'BPSPolicer', None)
+            if not bpspolicer:
+                return False
+            if ((bpspolicer.BytesPerSecond != self.rate) or\
+                (bpspolicer.Burst != self.burst)):
                 return False
         else:
-            if spec.Direction != policer_pb2.POLICER_DIR_EGRESS:
+            ppspolicer = getattr(spec, 'PPSPolicer', None)
+            if not ppspolicer:
                 return False
-        if (self.type == 'bps'):
-            if not hasattr(spec, 'BPSPolicer'):
-                return False
-            if ((spec.BPSPolicer.BytesPerSecond != self.rate) or\
-                (spec.BPSPolicer.Burst != self.burst)):
-                return False
-        else:
-            if not hasattr(spec, 'PPSPolicer'):
-                return False
-            if ((spec.PPSPolicer.PacketsPerSecond != self.rate) or\
-                (spec.PPSPolicer.Burst != self.burst)):
+            if ((ppspolicer.PacketsPerSecond != self.rate) or\
+                (ppspolicer.Burst != self.burst)):
                 return False
         return True
 
     def ValidateYamlSpec(self, spec):
-        if (utils.GetYamlSpecAttr(spec, 'id') != self.GetKey()):
+        if utils.GetYamlSpecAttr(spec) != self.GetKey():
             return False
-        if spec['direction'] != self.direction:
+        if not self.__validate_direction(spec['direction']):
             return False
-        if spec['type'] != self.type:
+        policer = spec.get('policer', None)
+        if not policer:
             return False
-        if spec['rate'] != spec.rate:
-            return False
-        if spec['burst'] != spec.burst:
-            return False
+        if self.type == 'bps':
+            bpspolicer = policer.get('bpspolicer', None)
+            if not bpspolicer:
+                return False
+            if (bpspolicer['bytespersecond'] != self.rate) or\
+               (bpspolicer['burst'] != self.burst):
+                return False
+        else:
+            ppspolicer = policer.get('ppspolicer', None)
+            if not ppspolicer:
+                return False
+            if (ppspolicer['packetspersecond'] != self.rate) or\
+               (ppspolicer['burst'] != self.burst):
+                return False
         return True
 
 class PolicerObjectClient(base.ConfigClientBase):

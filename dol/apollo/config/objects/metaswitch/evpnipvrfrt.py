@@ -73,6 +73,9 @@ class EvpnIpVrfRtObjectClient(base.ConfigClientBase):
     def GetEvpnIpVrfRtObject(self, node, id):
         return self.GetObjectByKey(node, id)
 
+    def IsReadSupported(self):
+        return False
+
     def GenerateObjects(self, node, vpc, vpcspec):
         def __add_evpn_ip_vrf_rt_config(evpnipvrfrtspec):
             parentid = getattr(evpnipvrfrtspec, "parent-id", 1)

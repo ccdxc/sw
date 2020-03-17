@@ -127,7 +127,7 @@ class PdsUuid:
     @staticmethod
     def GetUuidString(uuid):
         # keep this inline with pds_obj_key_s.str()
-        uuid_id = PdsUuid.GetIdfromUUID(uuid)
+        uuid_id = int.from_bytes(uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END], "big")
         uuid_objtype = PdsUuid.GetObjTypefromUUID(uuid)
         uuid_rsvd = PdsUuid.GetReservedValfromUUID(uuid)
         uuid_magic = int.from_bytes(uuid[PDS_UUID_MAGIC_BYTE_OFFSET_START:PDS_UUID_MAGIC_BYTE_OFFSET_END], PDS_UUID_BYTE_ORDER)
@@ -184,6 +184,9 @@ def IsSkipSetup():
     skip_setup = getattr(GlobalOptions, 'skip_setup', None)
     return skip_setup
 
+def IsNetAgentMode():
+    return GlobalOptions.netagent
+
 def IsDryRun():
     return GlobalOptions.dryrun
 
@@ -193,7 +196,9 @@ def Sleep(timeout=1):
     time.sleep(timeout)
     return
 
-def GetYamlSpecAttr(spec, attr):
+def GetYamlSpecAttr(spec, attr='id', convert2uuid=True):
+    if not convert2uuid:
+        return spec[attr]
     return PdsUuid(spec[attr]).GetUuid()
 
 def ValidateRpcIPAddr(srcaddr, dstaddr):

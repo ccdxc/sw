@@ -170,6 +170,12 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.RMAPPING, Resmgr.MAX_RMAPPING)
         return
 
+    def IsReadSupported(self):
+        if utils.IsPipelineApulu():
+            return True
+        # TODO: reads are failing for apollo & artemis
+        return False
+
     def PdsctlRead(self, node):
         # pdsctl show not supported for remote mapping
         return True

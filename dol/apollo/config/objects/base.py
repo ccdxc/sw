@@ -315,6 +315,9 @@ class ConfigClientBase(base.ConfigClientBase):
         self.Maxlimit = maxlimit
         return
 
+    def IsReadSupported(self):
+        return True
+
     def IsValidConfig(self, node):
         count = self.GetNumObjects(node)
         if count > self.Maxlimit:
@@ -410,8 +413,6 @@ class ConfigClientBase(base.ConfigClientBase):
         if utils.IsDryRun(): return True
         if not ret:
             logger.error("pdsctl show cmd failed for ", self.ObjType)
-            return False
-        if self.ObjType == api.ObjectTypes.BGP:
             return False
         # split output per object
         cmdop = stdout.split("---")

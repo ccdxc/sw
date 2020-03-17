@@ -312,7 +312,7 @@ class MeterObjectClient(base.ConfigClientBase):
         # TODO: Add validation
         msg = self.GetGrpcReadAllMessage(node)
         api.client[node].Get(self.ObjType, [msg])
-        return
+        return True
 
 client = MeterObjectClient()
 

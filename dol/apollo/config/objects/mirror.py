@@ -109,7 +109,7 @@ class MirrorSessionObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
+        if utils.GetYamlSpecAttr(spec) != self.GetKey():
             return False
         return True
 

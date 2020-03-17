@@ -73,6 +73,9 @@ class OperObjectsClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.OPER, Resmgr.MAX_OPER)
         self.TechSupportObjs = dict()
 
+    def IsReadSupported(self):
+        return False
+
     def GenerateTechSupportObjects(self, node):
         obj = TechSupportObject(node)
         self.TechSupportObjs[node] = obj

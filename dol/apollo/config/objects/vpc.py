@@ -354,7 +354,7 @@ class VpcObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
+        if utils.GetYamlSpecAttr(spec) != self.GetKey():
             return False
         if spec['type'] != self.Type:
             return False
@@ -427,6 +427,12 @@ class VpcObjectClient(base.ConfigClientBase):
     # TODO: move to GetObjectByKey
     def GetVpcObject(self, node, vpcid):
         return self.GetObjectByKey(node, vpcid)
+
+    def IsReadSupported(self):
+        if utils.IsNetAgentMode():
+            # TODO: Fix validation & remove this
+            return False
+        return True
 
     def __write_cfg(self, vpc_count):
         nh = NhClient.GetNumNextHopPerVPC()

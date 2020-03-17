@@ -129,6 +129,13 @@ class BgpPeerAfObjectClient(base.ConfigClientBase):
 
     def GetBgpPeerAfObject(self, node, peerafid):
         return self.GetObjectByKey(node, peerafid)
+
+    def IsReadSupported(self):
+        return False
+
+    def PdsctlRead(self, node):
+        return True
+
     """
     def GenerateObjects(self, node, parent, vpcspec):
         def __add_bgp_peer(peerspec):

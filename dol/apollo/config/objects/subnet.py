@@ -315,7 +315,7 @@ class SubnetObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
+        if utils.GetYamlSpecAttr(spec) != self.GetKey():
             return False
         return True
 
@@ -431,6 +431,12 @@ class SubnetObjectClient(base.ConfigClientBase):
 
     def GetSubnetObject(self, node, subnetid):
         return self.GetObjectByKey(node, subnetid)
+
+    def IsReadSupported(self):
+        if utils.IsNetAgentMode():
+            # TODO: Fix validation & remove this
+            return False
+        return True
 
     def GenerateObjects(self, node, parent, vpc_spec_obj):
         poolid = 0

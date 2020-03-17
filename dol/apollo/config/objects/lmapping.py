@@ -148,6 +148,12 @@ class LocalMappingObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.LMAPPING, Resmgr.MAX_LMAPPING)
         return
 
+    def IsReadSupported(self):
+        if utils.IsPipelineApulu():
+            return True
+        # TODO: reads are failing for apollo & artemis
+        return False
+
     def PdsctlRead(self, node):
         # pdsctl show not supported for local mapping
         return True

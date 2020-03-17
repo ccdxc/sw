@@ -57,6 +57,8 @@ def __initialize_object_info():
     ObjectInfo[APIObjTypes.ROUTE.name.lower()] = RouteTableClient
     ObjectInfo[APIObjTypes.POLICY.name.lower()] = PolicyClient
     ObjectInfo[APIObjTypes.MIRROR.name.lower()] = MirrorClient
+    ObjectInfo[APIObjTypes.METER.name.lower()] = MeterClient
+    ObjectInfo[APIObjTypes.TAG.name.lower()] = TagClient
     ObjectInfo[APIObjTypes.DHCP_RELAY.name.lower()] = DHCPRelayClient
     ObjectInfo[APIObjTypes.NAT.name.lower()] = NATPbClient
     ObjectInfo[APIObjTypes.POLICER.name.lower()] = PolicerClient
@@ -172,28 +174,25 @@ def __create(node):
 def __read(node):
     # Read all objects
     logger.info("Reading objects from pds-agent for node ", node)
-    # TODO - assert if read fails
-    InterfaceClient.ReadObjects(node)
-    DeviceClient.ReadObjects(node)
-    VpcClient.ReadObjects(node)
-    SubnetClient.ReadObjects(node)
-    VnicClient.ReadObjects(node)
-    TunnelClient.ReadObjects(node)
-    NexthopClient.ReadObjects(node)
-    MirrorClient.ReadObjects(node)
-    MeterClient.ReadObjects(node)
-    PolicyClient.ReadObjects(node)
-    TagClient.ReadObjects(node)
-    RouteTableClient.ReadObjects(node)
-    # DHCPRelayClient.ReadObjects(node)
-    NATPbClient.ReadObjects(node)
-    # BGPPbClient.ReadObjects(node)
-    LmappingClient.ReadObjects(node)
-    RmappingClient.ReadObjects(node)
-    PolicerClient.ReadObjects(node)
-    BGPClient.ReadObjects(node)
-    BGPPeerClient.ReadObjects(node)
-    BGPPeerAfClient.ReadObjects(node)
+
+    failingObjects = []
+    # read & validate the objects
+    for objtype in APIObjTypes:
+        objname = objtype.name
+        client = ObjectInfo.get(objname.lower(), None)
+        if not client:
+            logger.error(f"Skipping read validation for {objname}")
+            continue
+        if not client.IsReadSupported():
+            logger.error(f"Read unsupported for {objname}")
+            continue
+        if not client.ReadObjects(node):
+            logger.error(f"Read validation failed for {objname}")
+            failingObjects.append(objname)
+    if len(failingObjects):
+        logger.error(f"Read validation failed for {failingObjects}")
+        # assert here as there is no point in proceeding further
+        assert(0)
     return
 
 def Main(node, topospec, ip=None):
