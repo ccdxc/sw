@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"math"
 	"net/http"
 	"os"
 	"strings"
@@ -175,14 +174,14 @@ func (i *instance) Watch(ctx context.Context, path, peer string, handleFn apiint
 		i.pfxWatcher.Del(path, peer)
 	}
 
-	// Temporary fix for handling fwlogs notifications.
-	// If version is set to MaxUint64 then watchEventQ will
-	// not perform list operation. It will send the events
-	// starting from the ones that are present in the queue.
-	if path == fwlogsBucketName {
-		wq.Dequeue(ctx, math.MaxUint64, handleFn, cleanupFn)
-		return nil
-	}
+	// // Temporary fix for handling fwlogs notifications.
+	// // If version is set to MaxUint64 then watchEventQ will
+	// // not perform list operation. It will send the events
+	// // starting from the ones that are present in the queue.
+	// if path == fwlogsBucketName {
+	// 	wq.Dequeue(ctx, math.MaxUint64, handleFn, cleanupFn)
+	// 	return nil
+	// }
 	wq.Dequeue(ctx, 0, handleFn, cleanupFn)
 	return nil
 }
