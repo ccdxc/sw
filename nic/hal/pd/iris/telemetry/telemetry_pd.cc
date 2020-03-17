@@ -231,16 +231,18 @@ pd_mirror_session_create (pd_func_args_t *pd_func_args)
     // Add to a PD datastructure instead of stack.
     memset(&action_data, 0, sizeof(mirror_actiondata_t));
 
-    switch (args->session->dest_if->if_type) {
-        case intf::IF_TYPE_TUNNEL:
-        case intf::IF_TYPE_ENIC:
-        case intf::IF_TYPE_UPLINK_PC:
-        case intf::IF_TYPE_UPLINK:
-        case intf::IF_TYPE_APP_REDIR:
-            dst_lport = if_get_lport_id(args->session->dest_if);
-            break;
-        default:
-            return HAL_RET_INVALID_OP;
+    if (args->session->dest_if) {
+        switch (args->session->dest_if->if_type) {
+            case intf::IF_TYPE_TUNNEL:
+            case intf::IF_TYPE_ENIC:
+            case intf::IF_TYPE_UPLINK_PC:
+            case intf::IF_TYPE_UPLINK:
+            case intf::IF_TYPE_APP_REDIR:
+                dst_lport = if_get_lport_id(args->session->dest_if);
+                break;
+            default:
+                return HAL_RET_INVALID_OP;
+        }
     }
 
     switch (args->session->type) {

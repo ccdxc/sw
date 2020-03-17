@@ -221,7 +221,7 @@ typedef struct mirror_session_s {
     mirror_session_id_t sw_id;
     mirror_desttype_en type;
     uint32_t truncate_len;
-    if_t *dest_if;
+    if_t *dest_if; // not used for erspan
     union {
         struct er_span_dest_ {
             uint32_t tnnl_rw_idx;

@@ -8,6 +8,7 @@
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
+#include "nic/hal/plugins/cfg/nw/interface.hpp"
 #include "nic/hal/test/hal_calls/hal_calls.hpp"
 #include "nic/hal/test/utils/hal_base_test.hpp"
 
@@ -62,11 +63,14 @@ TEST_F (arp_track_test, mirror_order1) {
     uint32_t       ips[2] = {0x0a000002, 0x0a000003};
     uint32_t       sid1 = 1, sid2 = 2, cid1 = 1, cid2 = 2;
     uint32_t       up_ifid[2], ifid_count = 0;
+    if_t           *up_if = NULL;
 
     // Create uplinks
     ASSERT_EQ(create_uplink(uplinkif_id1, up_port1), HAL_RET_OK);
     ASSERT_EQ(create_uplink(uplinkif_id2, up_port2), HAL_RET_OK);
     ASSERT_EQ(create_uplink(uplinkif_id3, up_port3, 0, true), HAL_RET_OK);
+
+    up_if = find_if_by_id(uplinkif_id1);
 
     // Create Inband VRF
     ASSERT_EQ(create_vrf(vrf_id_hp1, types::VRF_TYPE_CUSTOMER, 0), HAL_RET_OK);
@@ -88,9 +92,14 @@ TEST_F (arp_track_test, mirror_order1) {
     ASSERT_EQ(create_tunnel(tnnl_if_id1, vrf_id_hp1, src_ip, ips[0]), HAL_RET_OK);
     ASSERT_EQ(create_tunnel(tnnl_if_id2, vrf_id_hp1, src_ip, ips[1]), HAL_RET_OK);
 
+    g_hal_state->set_inb_bond_active_uplink(HAL_HANDLE_INVALID);
+
     // Create Mirror session
     ASSERT_EQ(create_mirror(sid1, vrf_id_hp1, src_ip, ips[0]), HAL_RET_OK);
     ASSERT_EQ(create_mirror(sid2, vrf_id_hp1, src_ip, ips[1]), HAL_RET_OK);
+
+    g_hal_state->set_inb_bond_active_uplink(up_if->hal_handle); 
+    hal::hal_if_inb_bond_active_changed();
 
     // Create collector
     ASSERT_EQ(create_collector(cid1, vrf_id_hp1, l2seg_id_hp1, src_ip, ips[0]), HAL_RET_OK);
