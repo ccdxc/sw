@@ -97,6 +97,8 @@ func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 		PvlanConfigSpec: pvlanConfigSpecArray,
 	}
 	spec.ConfigSpec.GetDVSConfigSpec().Name = dvsName
+	spec.ProductInfo = new(types.DistributedVirtualSwitchProductSpec)
+	spec.ProductInfo.Version = "6.5.0"
 	err := dc.AddPenDVS(&spec)
 	if err != nil {
 		evtMsg := fmt.Sprintf("Failed to create DVS in Datacenter %s. Network configuration cannot be pushed.", dcName)
