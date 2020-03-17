@@ -1,5 +1,14 @@
 [
     {
+        "name": "network",
+        "command": "/bin/sh /nic/tools/bringup_mgmt_ifs.sh",
+        "kind": "oneshot",
+        "dependencies": [],
+        "flags": [],
+        "timeout": 0.0,
+        "cpu-affinity": "0xD"
+    },
+    {
         "name": "hal",
         "command": "/bin/sh /nic/tools/start-hal-haps.sh",
         "dependencies": [],
@@ -198,20 +207,6 @@
         "cpu-max-percentage": 25,
         "timeout": 0.0,
         "cpu-affinity": "0xC"
-    },
-    {
-        "name": "network",
-        "command": "/bin/sh /nic/tools/bringup_mgmt_ifs.sh",
-        "kind": "oneshot",
-        "dependencies": [
-            {
-                "kind": "service",
-                "service-name": "hal"
-            }
-        ],
-        "flags": [],
-        "timeout": 0.0,
-        "cpu-affinity": "0xD"
     },
     {
         "name": "firewall",

@@ -277,6 +277,62 @@ end:
 }
 
 // ----------------------------------------------------------------------------
+// Inband Bond A-A changed pinning. Reprogram all inp prop entries
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_enicif_repgm_inp_props (pd_if_update_args_t *args)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    pd_enicif_t     *pd_enicif = (pd_enicif_t *)args->intf->pd_if;
+    if_t            *hal_if = (if_t *)pd_enicif->pi_if;
+    l2seg_t         *native_l2seg_clsc = NULL;
+
+    HAL_TRACE_DEBUG("Reprogramming inp props for: {}", hal_if->if_id);
+
+    // L2segs
+    ret = pd_enicif_pd_pgm_inp_prop(pd_enicif, &hal_if->l2seg_list_clsc_head,
+                                    args, NULL, TABLE_OPER_UPDATE);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR(" failed to repgm input prop."
+                "for l2segs. ret:{}", ret);
+        goto end;
+    }
+    // Native l2seg
+    if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
+        native_l2seg_clsc =
+            l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
+        ret = pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif,
+                                              ENICIF_UPD_FLAGS_NONE,
+                                              0,
+                                              native_l2seg_clsc,
+                                              NULL, args, NULL, NULL,
+                                              TABLE_OPER_UPDATE);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR(" failed to repgm input prop."
+                          "for native l2seg. ret:{}", ret);
+            goto end;
+        }
+    }
+
+end:
+    return ret;
+}
+
+hal_ret_t
+pd_if_inp_prop_pgm (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd_if_inp_prop_pgm_args_t *args = pd_func_args->pd_if_inp_prop_pgm;
+    pd_if_update_args_t if_upd_args = {0};
+
+    if_upd_args.intf = args->intf;
+
+    ret = pd_enicif_repgm_inp_props(&if_upd_args);
+
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Enicif Update: Handling native l2seg change
 // ----------------------------------------------------------------------------
 hal_ret_t
@@ -1164,10 +1220,6 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
 
     l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(l2seg);
 
-    // Enic's Uplink:
-    uplink = pd_enicif_get_pinned_uplink_for_inp_props(hal_if,
-                                                       args, lif_args);
-
     if (attached_l2seg) {
         hp_l2seg = attached_l2seg;
     } else {
@@ -1181,6 +1233,17 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
 
     lif = if_get_lif(hal_if);
     SDK_ASSERT_RETURN((lif != NULL), HAL_RET_ERR);
+
+    // Enic's Uplink:
+    if (lif && lif->type == types::LIF_TYPE_MNIC_INBAND_MANAGEMENT &&
+        g_hal_state->inband_bond_mode() == hal::BOND_MODE_RR) {
+        uplink = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
+        HAL_TRACE_DEBUG("Inband bond is in RR ... picking uplink: {}", 
+                        uplink ? if_keyhandle_to_str(uplink) : "NULL");
+    } else {
+        uplink = pd_enicif_get_pinned_uplink_for_inp_props(hal_if,
+                                                           args, lif_args);
+    }
 
     if (lif->type == types::LIF_TYPE_HOST) {
         nwsec_prof_id = L4_PROFILE_HOST_DEFAULT;
@@ -1636,7 +1699,6 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
 
     pd_enicif = (pd_enicif_t *)args->intf->pd_if;
     hal_if = (if_t *)pd_enicif->pi_if;
-
 
     // Check if classic
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {

@@ -193,6 +193,14 @@ init (hal_cfg_t *hal_cfg)
         HAL_ABORT(ret == HAL_RET_OK);
     }
 
+    if (inband_mgmt_get_bond_mode() == (uint8_t)hal::BOND_MODE_RR) {
+        g_hal_state->set_inband_bond_mode(hal::BOND_MODE_RR);
+    } else {
+        g_hal_state->set_inband_bond_mode(hal::BOND_MODE_ACTIVE_BACKUP);
+    }
+
+    HAL_TRACE_DEBUG("Done with if init");
+
     return HAL_RET_OK;
 }
 

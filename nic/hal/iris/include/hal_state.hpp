@@ -79,6 +79,17 @@ enum {
     HAL_TIMER_ID_MAX,
 };
 
+typedef enum bond_mode_s {
+    BOND_MODE_RR,
+    BOND_MODE_ACTIVE_BACKUP,
+    BOND_MODE_BALANCE_XOR,
+    BOND_MODE_BROADCAST,
+    BOND_MODE_LACP,
+    BOND_MODE_BALANCE_TLB,
+    BOND_MODE_BALANCE_ALB
+} bond_mode_t;
+    
+
 #define HAL_HANDLE_HT_SZ                             (16 << 10)
 
 // TODO: this should be coming from catalogue or platform API
@@ -417,6 +428,9 @@ public:
     uint32_t swm_qos_port_num(void) const { return swm_qos_port_num_; }
     void set_swm_qos_port_num(uint32_t port) { swm_qos_port_num_ = port; }
 
+    bond_mode_t inband_bond_mode(void) const { return inband_bond_mode_; }
+    void set_inband_bond_mode(bond_mode_t mode) { inband_bond_mode_ = mode; }
+
 private:
     // following can come from shared memory or non-linux HBM memory
     // NOTE: strictly shmnot required as we can rebuild this from slab elements,
@@ -529,6 +543,7 @@ private:
     hal_handle_t  inb_bond_active_uplink_hdl_;
     bool          swm_qos_en_;
     uint32_t      swm_qos_port_num_;
+    bond_mode_t   inband_bond_mode_;
 
 private:
     bool init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr);
@@ -921,7 +936,8 @@ public:
     void set_swm_qos_port_num(uint32_t port) { oper_db_->set_swm_qos_port_num(port); }
     uint32_t swm_qos_port_num(void) { return oper_db_->swm_qos_port_num(); }
 
-
+    void set_inband_bond_mode(bond_mode_t mode) { oper_db_->set_inband_bond_mode(mode); }
+    bond_mode_t inband_bond_mode(void) const { return oper_db_->inband_bond_mode(); }
 private:
     // following come from shared memory or non-linux HBM memory
     hal_cfg_db           *cfg_db_;

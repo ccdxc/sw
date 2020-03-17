@@ -618,6 +618,66 @@ enicif_update_host_prom (bool add)
 }
 
 hal_ret_t
+enicif_update_inb_enics (void)
+{
+    auto walk_cb = [](void *ht_entry, void *ctxt) {
+        hal_ret_t                          ret = HAL_RET_OK;
+        pd::pd_func_args_t                 pd_func_args = {0};
+        pd::pd_if_inp_prop_pgm_args_t      args = {0};
+        hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+        if_t *hal_if = NULL;
+        lif_t *lif = NULL;
+
+        hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
+        if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+            lif = find_lif_by_handle(hal_if->lif_handle);
+            if (lif->type == types::LIF_TYPE_MNIC_INBAND_MANAGEMENT) {
+                args.intf = hal_if;
+                pd_func_args.pd_if_inp_prop_pgm = &args;
+                ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_INP_PROP_PGM,
+                                      &pd_func_args);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Failed to pgm inp prop: if: {} err: {}", 
+                                  hal_if->if_id, ret);
+                }
+            }
+        }
+        return false;
+    };
+
+    g_hal_state->if_id_ht()->walk(walk_cb, NULL);
+}
+
+if_t *
+if_pick_uplink_oper_up (void)
+{
+    struct uplink_oper_up_t {
+        if_t *hal_if;
+    } ctxt = {};
+
+    auto walk_cb = [](void *ht_entry, void *ctxt) {
+        hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+        uplink_oper_up_t *ctx = (uplink_oper_up_t *)ctxt;
+        if_t *hal_if = NULL;
+
+        hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
+        if (hal_if->if_type == intf::IF_TYPE_UPLINK && 
+            !hal_if->is_oob_management) {
+            if (hal_if->if_op_status == intf::IF_STATUS_UP) {
+                ctx->hal_if = hal_if;
+                return true;
+            }
+        }
+        return false;
+    };
+
+    ctxt.hal_if = NULL;
+    g_hal_state->if_id_ht()->walk(walk_cb, &ctxt);
+
+    return ctxt.hal_if;
+}
+
+hal_ret_t
 enicif_classic_update_oif_lists(if_t *hal_if, l2seg_t *l2seg,
                                 lif_t *lif, bool add)
 {
@@ -5619,6 +5679,8 @@ if_port_oper_state_process_event (uint32_t fp_port_num, port_event_t event)
     hal_ret_t               ret = HAL_RET_OK;
     if_port_event_cb_ctxt_t ctxt = {0};
     IfStatus                new_status = intf::IF_STATUS_NONE;
+    if_t                    *inb_act_if = NULL;
+    bool                    inb_bond_active_changed = false;
 
 
     // Take CFG DB write lock
@@ -5643,13 +5705,13 @@ if_port_oper_state_process_event (uint32_t fp_port_num, port_event_t event)
     // Update uplink's oper status
     ctxt.hal_if->if_op_status = new_status;
 
-#if 0
-    bool inb_bond_active_changed = false;
-    ret = hal_if_pick_inb_bond_active(&inb_bond_active_changed);
-    if (inb_bond_active_changed) {
-        ret = hal_if_inb_bond_active_changed();
+    if (g_hal_state->inband_bond_mode() == hal::BOND_MODE_RR) {
+        ret = hal_if_pick_inb_bond_active(ctxt.hal_if, new_status, 
+                                          &inb_bond_active_changed);
+        if (inb_bond_active_changed) {
+            ret = hal_if_inb_bond_active_changed(true);
+        }
     }
-#endif
     
 end:
     // Release write lock
@@ -5674,34 +5736,59 @@ hal_if_repin_mirror_sessions (void)
 }
 
 hal_ret_t
-hal_if_pick_inb_bond_active (bool *changed)
+hal_if_pick_inb_bond_active (if_t *hal_if, IfStatus new_status, bool *changed)
 {
     hal_ret_t ret = HAL_RET_OK;
-    if_t *hal_if = inband_mgmt_get_active_if();
-    if_t *old_if = NULL;
-    hal_handle_t new_if_handle = hal_if ? hal_if->hal_handle : HAL_HANDLE_INVALID;
+    if_t *old_if = NULL, *new_if = NULL;
+    hal_handle_t new_if_handle = HAL_HANDLE_INVALID;
 
     *changed = false;
-    if (new_if_handle != g_hal_state->inb_bond_active_uplink()) {
-        *changed = true;
+
+    if (g_hal_state->inband_bond_mode() == hal::BOND_MODE_RR) {
         old_if = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
+        if (new_status == intf::IF_STATUS_UP) {
+            if (!old_if) {
+                // NULL -> IF
+                *changed = true;
+                new_if = hal_if;
+            }
+        } else {
+            if (old_if->if_id == hal_if->if_id) {
+                // Old -> New
+                *changed = true;
+                new_if = if_pick_uplink_oper_up();
+            }
+        }
+    } else {
+        new_if = inband_mgmt_get_active_if();
+        new_if_handle = new_if ? new_if->hal_handle : HAL_HANDLE_INVALID;
+        if (new_if_handle != g_hal_state->inb_bond_active_uplink()) {
+            *changed = true;
+            old_if = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
+        }
+    }
+
+    if (*changed) {
         HAL_TRACE_DEBUG("Inband bond's active uplink change: {} => {}",
                         old_if ? if_keyhandle_to_str(old_if) : "NULL",
-                        hal_if ? if_keyhandle_to_str(hal_if) : "NULL");
-        g_hal_state->set_inb_bond_active_uplink(new_if_handle);
+                        new_if ? if_keyhandle_to_str(new_if) : "NULL");
+        g_hal_state->set_inb_bond_active_uplink(new_if ? 
+                                                new_if->hal_handle : HAL_HANDLE_INVALID);
     }
 
     return ret;
 }
 
 hal_ret_t
-hal_if_inb_bond_active_changed (void)
+hal_if_inb_bond_active_changed (bool took_lock)
 {
     hal_ret_t ret = HAL_RET_OK;
     if_t *hal_if = find_if_by_handle(g_hal_state->inb_bond_active_uplink());
 
-    // Take CFG DB write lock
-    g_hal_state->cfg_db()->wlock();
+    if (!took_lock) {
+        // Take CFG DB write lock
+        g_hal_state->cfg_db()->wlock();
+    }
 
     HAL_TRACE_DEBUG("Reprogramming telemetry l2seg for IPFIX flows");
     ret = hal_if_reprogram_telemetry_l2seg();
@@ -5721,8 +5808,18 @@ hal_if_inb_bond_active_changed (void)
         HAL_TRACE_ERR("Unable to repin mirror sessions. ret: {}", ret);
     }
 
-    // Release write lock
-    g_hal_state->cfg_db()->wunlock();
+    if (g_hal_state->inband_bond_mode() == hal::BOND_MODE_RR) {
+        HAL_TRACE_DEBUG("Reprogramming input props for inband TX.");
+        ret = enicif_update_inb_enics();
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to update inband enics. ret: {}", ret);
+        }
+    }
+
+    if (!took_lock) {
+        // Release write lock
+        g_hal_state->cfg_db()->wunlock();
+    }
 
     return ret;
 }

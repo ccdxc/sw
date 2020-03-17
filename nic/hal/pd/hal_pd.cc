@@ -136,6 +136,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_IF_GET, pd_if_get);
     PD_FUNC_LOAD(PD_FUNC_ID_IF_RESTORE, pd_if_restore);
     PD_FUNC_LOAD(PD_FUNC_ID_IF_INP_MAC_VLAN_PGM, pd_if_inp_mac_vlan_pgm);
+    PD_FUNC_LOAD(PD_FUNC_ID_IF_INP_PROP_PGM, pd_if_inp_prop_pgm);
 
     // ep pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_EP_CREATE, pd_ep_create);

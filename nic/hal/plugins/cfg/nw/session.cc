@@ -3618,10 +3618,13 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     g_lif_manager->read_qstate_map(33, &qstate);
 
     // Re-pick inband bond0's active link
-   ret = hal_if_pick_inb_bond_active(&inb_bond_active_changed);
-   if (inb_bond_active_changed) {
-       ret = hal_if_inb_bond_active_changed();
-   }
+    if (g_hal_state->inband_bond_mode() == hal::BOND_MODE_ACTIVE_BACKUP) {
+        ret = hal_if_pick_inb_bond_active(NULL, intf::IF_STATUS_DOWN, 
+                                          &inb_bond_active_changed);
+        if (inb_bond_active_changed) {
+            ret = hal_if_inb_bond_active_changed(false);
+        }
+    }
 
    if (!g_mpu_prog_gen_done) {
         sret = sdk::p4::p4_dump_program_info(hal::g_hal_cfg.cfg_path.c_str()); 

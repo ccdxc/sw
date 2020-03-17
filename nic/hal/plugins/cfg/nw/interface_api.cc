@@ -11,6 +11,7 @@
 namespace hal {
 
 #define HAL_BOND0_ACTIVE_IF_FILENAME "/sys/class/net/bond0/bonding/active_slave"
+#define HAL_BOND0_MODE_FILENAME "/sys/class/net/bond0/bonding/mode"
 
 uint32_t
 lif_get_lif_id (lif_t *pi_lif)
@@ -637,6 +638,29 @@ end:
         fclose(fptr);
     }
     return act_if;
+}
+
+uint8_t
+inband_mgmt_get_bond_mode (void)
+{
+    FILE *fptr = fopen(HAL_BOND0_MODE_FILENAME, "r");
+    char mode_str[LIF_NAME_LEN];
+    unsigned int mode = 1;
+
+    if (!fptr) {
+        HAL_TRACE_ERR("Failed to open bond0 mode file");
+        goto end;
+    }
+    memset(mode_str, 0, LIF_NAME_LEN);
+    fscanf(fptr, "%31s %u", mode_str, &mode);
+    HAL_TRACE_DEBUG("Inband bond mode: {}, {}", mode_str, mode);
+
+end:
+    if (fptr) {
+        fclose(fptr);
+    }
+
+    return (uint8_t)mode;
 }
 
 } // namespace hal

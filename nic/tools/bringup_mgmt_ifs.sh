@@ -15,7 +15,8 @@ inb_mnic1_admin_up=0
 inb_mnic1_enslaved=0
 
 #setup the bonding device for inband management
-ip link s dev bond0 type bond mode active-backup miimon 100
+#ip link s dev bond0 type bond mode active-backup miimon 100
+ip link s dev bond0 type bond mode balance-rr
 mkfifo /tmp/bond0_fifo
 
 log() {

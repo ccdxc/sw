@@ -68,6 +68,7 @@ hal_ret_t tunnel_if_update_rtep_ep(if_t *hal_if, ep_t *ep);
 hal_ret_t tunnel_if_rtep_ep_change(ip_addr_t *ip, ep_t *ep);
 hal_ret_t hal_cpu_if_create(uint32_t lif_id);
 hal_ret_t if_cpu_lif_interface_create(void);
+uint8_t inband_mgmt_get_bond_mode(void);
 
 } // namespace hal
 #endif // __INTERFACE_API_HPP__

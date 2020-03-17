@@ -442,9 +442,10 @@ uint32_t uplink_if_get_idx (if_t *hal_if);
 bool enicif_is_swm(if_t *hal_if);
 hal_ret_t enicif_update_host_prom(bool add);
 hal_ret_t hal_if_reprogram_telemetry_l2seg(void);
-hal_ret_t hal_if_pick_inb_bond_active(bool *changed);
-hal_ret_t hal_if_inb_bond_active_changed(void);
+hal_ret_t hal_if_pick_inb_bond_active(if_t *hal_if, IfStatus new_status, bool *changed);
+hal_ret_t hal_if_inb_bond_active_changed(bool took_lock);
 if_t *find_tnnlif_by_dst_ip(IfTunnelEncapType encap_type, ip_addr_t *ip);
+if_t * if_pick_uplink_oper_up(void);
 
 }    // namespace hal
 

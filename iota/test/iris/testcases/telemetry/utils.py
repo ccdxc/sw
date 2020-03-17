@@ -114,10 +114,10 @@ def SetupInbandInterface():
         api.Logger.error("Failed to brinup all inband interfaces")
         return ret
 
-    ret = SetActiveInterfaceOnBond(INB_MNIC0)
-    if ret != api.types.status.SUCCESS:
-        api.Logger.error("Failed to set %s as active interface on bond0"%INB_MNIC0)
-        return ret
+    #ret = SetActiveInterfaceOnBond(INB_MNIC0)
+    #if ret != api.types.status.SUCCESS:
+    #    api.Logger.error("Failed to set %s as active interface on bond0"%INB_MNIC0)
+    #    return ret
 
     return api.types.status.SUCCESS
 
@@ -352,7 +352,7 @@ def GetHping3Cmd(protocol, src_wl, destination_ip, destination_port):
         cmd = "hping3 --{} -p {} -c 1 {} -I {}".format(protocol.lower(), int(destination_port), destination_ip, src_wl.interface)
     else:
         cmd = "hping3 --{} -c 1 {} -I {}".format(protocol.lower(), destination_ip, src_wl.interface)
-        
+
     return cmd
 
 def GetNpingCmd(protocol, destination_ip, destination_port, source_ip = "", count = 1):
@@ -468,12 +468,12 @@ def GetDestPort(port):
         return "120"
     elif 'any' in port:
         return '3000'
-    return port 
+    return port
 
 def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collector_count, collector_w, collector_ip, action, feature, is_wl_type_bm=False):
     backgroun_req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     result = api.types.status.SUCCESS
-    
+
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     # Add the ping commands from collector to source and dest workload
     # to avoid flooding on the vswitch
@@ -652,7 +652,7 @@ def RunAll(collector_w, verif_json, tc, feature, collector_ip, is_wl_type_bm=Fal
     if feature == 'flowmon':
         time.sleep(4)
     for i in range(0, len(verif)):
-        protocol = verif[i]['protocol'] 
+        protocol = verif[i]['protocol']
         src_w = GetSourceWorkload(verif[i], tc)
         if src_w == None:
             continue
