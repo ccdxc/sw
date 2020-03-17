@@ -13,7 +13,6 @@
 
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
-#include "nic/apollo/framework/api_stooge.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_dhcp.hpp"
 
@@ -27,7 +26,7 @@ class dhcp_state;
 /// @{
 
 /// \brief    DHCP policy entry
-class dhcp_policy : public api_stooge {
+class dhcp_policy : public api_base {
 public:
     /// \brief          factory method to allocate & initialize DHCP policy
     /// \param[in]      policy    DHCP policy entry information
@@ -52,20 +51,16 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(dhcp_policy *policy);
 
-    /// \brief    build object given its key from the (sw and/or hw state we
-    ///           have) and return an instance of the object (this is useful for
-    ///           stateless objects to be operated on by framework during DELETE
-    ///           or UPDATE operations)
-    /// \param[in] key    key of object instance of interest
-    /// \return    DHCP policy object instance corresponding to the key
-    static dhcp_policy *build(pds_obj_key_t *key);
+    /// \brief     allocate h/w resources for this object
+    /// \param[in] orig_obj    old version of the unmodified object
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t reserve_resources(api_base *orig_obj,
+                                        api_obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief    free a stateless entry's temporary s/w only resources like
-    ///           memory etc., for a stateless entry calling destroy() will
-    ///           remove resources from h/w, which can't be done during ADD/UPD
-    ///           etc. operations esp. when object is constructed on the fly
-    /// \param[in] policy    DHCP policy instance to be freed
-    static void soft_delete(dhcp_policy *policy);
+    /// \brief     free h/w resources used by this object, if any
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t release_resources(void) override;
 
     /// \brief          initialize DHCP policy entry entry with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
@@ -79,6 +74,53 @@ public:
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t populate_msg(pds_msg_t *msg,
                                    api_obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief    program all h/w tables relevant to this object except stage 0
+    ///           table(s), if any
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t program_create(api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
+
+    /// \brief    cleanup all h/w tables relevant to this object except stage 0
+    ///           table(s), if any, by updating packed entries with latest
+    ///           epoch#
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t cleanup_config(api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
+
+    /// \brief    compute the object diff during update operation compare the
+    ///           attributes of the object on which this API is invoked and the
+    ///           attrs provided in the update API call passed in the object
+    ///           context (as cloned object + api_params) and compute the upd
+    ///           bitmap (and stash in the object context for later use)
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t compute_update(api_obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief        add all objects that may be affected if this object is
+    ///               updated to framework's object dependency list
+    /// \param[in]    obj_ctxt    transient state associated with this API
+    ///                           processing
+    /// \return       SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) override {
+        // no other objects are effected if DHCP config is modified
+        return SDK_RET_OK;
+    }
+
+    /// \brief    update all h/w tables relevant to this object except stage 0
+    ///           table(s), if any, by updating packed entries with latest
+    ///           epoch#
+    /// \param[in] orig_obj    old version of the unmodified object
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t program_update(api_base *orig_obj,
+                                     api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief     activate the epoch in the dataplane by programming
     ///            stage 0 tables, if any
@@ -118,7 +160,7 @@ public:
 
     /// \brief    return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "dhcp-policy-" + std::string(key_.str());
+        return "dhcp-" + std::string(key_.str());
     }
 
     /// \brief        helper function to get key given DHCP policy entry
@@ -128,6 +170,18 @@ public:
         dhcp_policy *policy = (dhcp_policy *)entry;
         return (void *)&(policy->key_);
     }
+
+    /// \brief     return the key/id of this DHCP policy
+    /// \return    key/id of the DHCP policy object
+    pds_obj_key_t key(void) const { return key_; }
+
+    /// \brief     return the type of this DHCP policy
+    /// \return    type of the DHCP policy object
+    pds_dhcp_policy_type_t type(void) const { return type_; }
+
+    /// \brief     return impl instance of this DHCP policy object
+    /// \return    impl instance of the DHCP policy object
+    impl_base *impl(void) { return impl_; }
 
 private:
     /// \brief constructor
@@ -140,9 +194,17 @@ private:
     /// \param[out] spec specification
     void fill_spec_(pds_dhcp_policy_spec_t *spec);
 
+    /// \brief    free h/w resources used by this object, if any
+    ///           (this API is invoked during object deletes)
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t nuke_resources_(void);
+
 private:
     /// DHCP policy entry key
     pds_obj_key_t key_;
+
+    /// DHCP policy type
+    pds_dhcp_policy_type_t type_;
 
     /// hash table context
     ht_ctxt_t ht_ctxt_;

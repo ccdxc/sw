@@ -49,6 +49,7 @@ dhcp_policy::factory(pds_dhcp_policy_spec_t *spec) {
 
 void
 dhcp_policy::destroy(dhcp_policy *policy) {
+    policy->nuke_resources_();
     if (policy->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_DHCP_POLICY,
                            policy->impl_);
@@ -95,32 +96,29 @@ dhcp_policy::free(dhcp_policy *policy) {
     return SDK_RET_OK;
 }
 
-dhcp_policy *
-dhcp_policy::build(pds_obj_key_t *key) {
-    dhcp_policy *policy;
-
-    policy = dhcp_db()->alloc();
-    if (policy) {
-        new (policy) dhcp_policy();
-        memcpy(&policy->key_, key, sizeof(*key));
-        policy->impl_ = impl_base::build(impl::IMPL_OBJ_ID_DHCP_POLICY,
-                                        key, policy);
-        if (policy->impl_ == NULL) {
-            dhcp_policy::destroy(policy);
-            return NULL;
-        }
+sdk_ret_t
+dhcp_policy::reserve_resources(api_base *orig_obj,
+                               api_obj_ctxt_t *obj_ctxt) {
+    if (impl_) {
+        return impl_->reserve_resources(this, obj_ctxt);
     }
-    return policy;
+    return SDK_RET_OK;
 }
 
-void
-dhcp_policy::soft_delete(dhcp_policy *policy) {
-    if (policy->impl_) {
-        impl_base::soft_delete(impl::IMPL_OBJ_ID_DHCP_POLICY, policy->impl_);
+sdk_ret_t
+dhcp_policy::release_resources(void) {
+    if (impl_) {
+        return impl_->release_resources(this);
     }
-    policy->del_from_db();
-    policy->~dhcp_policy();
-    dhcp_db()->free(policy);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+dhcp_policy::nuke_resources_(void) {
+    if (impl_) {
+        return impl_->nuke_resources(this);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -131,6 +129,7 @@ dhcp_policy::init_config(api_ctxt_t *api_ctxt) {
 
     spec = &api_ctxt->api_params->dhcp_policy_spec;
     key_ = spec->key;
+    type_ = spec->type;
     if (spec->type == PDS_DHCP_POLICY_TYPE_RELAY) {
         PDS_TRACE_DEBUG("DHCP server IP %s",
                         ipaddr2str(&spec->relay_spec.server_ip));
@@ -169,6 +168,18 @@ dhcp_policy::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
         msg->cfg_msg.dhcp_policy.key = obj_ctxt->api_params->dhcp_policy_key;
     } else {
         msg->cfg_msg.dhcp_policy.spec = obj_ctxt->api_params->dhcp_policy_spec;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+dhcp_policy::compute_update(api_obj_ctxt_t *obj_ctxt) {
+    pds_dhcp_policy_spec_t *spec = &obj_ctxt->api_params->dhcp_policy_spec;
+    if (type_ != spec->type) {
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" from "
+                      "%u to %u on dhcp policy %s", type_, spec->type,
+                      key_.str());
+        return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;
 }

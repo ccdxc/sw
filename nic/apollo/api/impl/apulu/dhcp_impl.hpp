@@ -54,20 +54,23 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(dhcp_policy_impl *impl);
 
-    /// \brief     instantiate a DHCP policy impl object based on current state
-    ///            (sw and/or hw) given its key
-    /// \param[in] key    DHCP policy entry's key
-    /// \param[in] policy  DHCP policy entry's API object
-    /// \return    new instance of DHCP policy implementation object or NULL
-    static dhcp_policy_impl *build(pds_obj_key_t *key, dhcp_policy *policy);
+    /// \brief     allocate/reserve h/w resources for this object
+    /// \param[in] api_obj API object for which resources are being reserved
+    /// \param[in] obj_ctxt transient state associated with this API
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t reserve_resources(api_base *api_obj,
+                                        api_obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief     free a stateless entry's temporary s/w only resources like
-    ///            memory etc., for a stateless entry calling destroy() will
-    ///            remove resources from h/w, which can't be done during
-    ///            ADD/UPDATE etc. operations esp. when object is constructed
-    ///            on the fly
-    /// \param[in] impl DHCP policy instance to be freed
-    static void soft_delete(dhcp_policy_impl *impl);
+    /// \brief     free h/w resources used by this object, if any
+    /// \param[in] api_obj API object holding this resource
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t release_resources(api_base *api_obj) override;
+
+    /// \brief     free h/w resources used by this object, if any
+    ///            (this API is invoked during object deletes)
+    /// \param[in] api_obj API object holding the resources
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t nuke_resources(api_base *api_obj) override;
 
     /// \brief     activate the epoch in the dataplane by programming stage 0
     ///            tables, if any
@@ -89,9 +92,21 @@ public:
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) override;
 
+    /// \brief     return nacl table (base) index allocated for this policy
+    /// \return    nacl table (base) idx assigned to the vnic
+    uint16_t nacl_idx(void) const { return nacl_idx_; }
+
 private:
+    /// \brief constructor
+    dhcp_policy_impl() {
+        nacl_idx_ = 0xFFFF;
+    }
+
     /// \brief destructor
     ~dhcp_policy_impl() {}
+
+private:
+    uint16_t nacl_idx_;    ///< base index of this policy in NACL table
 };
 
 /// \@}

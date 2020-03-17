@@ -38,14 +38,9 @@ dhcp_policy_impl::factory(pds_dhcp_policy_spec_t *spec) {
 }
 
 void
-dhcp_policy_impl::soft_delete(dhcp_policy_impl *impl) {
+dhcp_policy_impl::destroy(dhcp_policy_impl *impl) {
     impl->~dhcp_policy_impl();
     dhcp_impl_db()->free(impl);
-}
-
-void
-dhcp_policy_impl::destroy(dhcp_policy_impl *impl) {
-    dhcp_policy_impl::soft_delete(impl);
 }
 
 impl_base *
@@ -65,16 +60,50 @@ dhcp_policy_impl::free(dhcp_policy_impl *impl) {
     return SDK_RET_OK;
 }
 
-dhcp_policy_impl *
-dhcp_policy_impl::build(pds_obj_key_t *key, dhcp_policy *policy) {
-    dhcp_policy_impl *impl;
+sdk_ret_t
+dhcp_policy_impl::reserve_resources(api_base *api_obj,
+                                    api_obj_ctxt_t *obj_ctxt) {
+    uint32_t idx;
+    sdk_ret_t ret;
+    pds_dhcp_policy_spec_t *spec = &obj_ctxt->api_params->dhcp_policy_spec;
 
-    impl = dhcp_impl_db()->alloc();
-    if (unlikely(impl == NULL)) {
-        return NULL;
+    switch (obj_ctxt->api_op) {
+    case API_OP_CREATE:
+        // record the fact that resource reservation was attempted
+        // NOTE: even if we partially acquire resources and fail eventually,
+        //       this will ensure that proper release of resources will happen
+        api_obj->set_rsvd_rsc();
+        ret = apulu_impl_db()->dhcp_nacl_idxr()->alloc_block(&idx, 2);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to allocate NACL entries for %s, "
+                          "err %u", spec->key.str(), ret);
+            return ret;
+        }
+        nacl_idx_ = idx;
+        break;
+
+    case API_OP_UPDATE:
+        // we will use the same h/w resources as the original object
+    default:
+        break;
     }
-    new (impl) dhcp_policy_impl();
-    return impl;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+dhcp_policy_impl::release_resources(api_base *api_obj) {
+    if (nacl_idx_ != 0xFFFF) {
+        apulu_impl_db()->dhcp_nacl_idxr()->free(nacl_idx_, 2);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+dhcp_policy_impl::nuke_resources(api_base *api_obj) {
+    if (nacl_idx_ != 0xFFFF) {
+        apulu_impl_db()->dhcp_nacl_idxr()->free(nacl_idx_, 2);
+    }
+    return SDK_RET_OK;
 }
 
 #define nacl_redirect_action    action_u.nacl_nacl_redirect
@@ -137,32 +166,30 @@ dhcp_policy_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         }
         //data.nacl_redirect_to_arm_action.copp_policer_id = idx;
         data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_FLOW_MISS_DHCP;
-        p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL,
-                                      PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX1, &key,
-                                      &mask, &data);
+        p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx_,
+                                      &key, &mask, &data);
         if (p4pd_ret != P4PD_SUCCESS) {
             PDS_TRACE_ERR("Failed to program DHCP relay NACL redirect entry "
-                          "at %u", PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX1);
+                          "at %u", nacl_idx_);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         } else {
             PDS_TRACE_DEBUG("Programmed NACL entry idx %u, ktype %u, lif %u",
-                            PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX1,
-                            key.key_metadata_ktype, key.capri_intrinsic_lif);
+                            nacl_idx_, key.key_metadata_ktype,
+                            key.capri_intrinsic_lif);
         }
 
         // cover the regular case where dst port is 68
         key.key_metadata_dport = 68;
-        p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL,
-                                      PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX2, &key,
-                                      &mask, &data);
+        p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx_ + 1,
+                                      &key, &mask, &data);
         if (p4pd_ret != P4PD_SUCCESS) {
             PDS_TRACE_ERR("Failed to program DHCP relay NACL redirect entry "
-                          "at %u", PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX2);
+                          "at %u", nacl_idx_ + 1);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         } else {
             PDS_TRACE_DEBUG("Programmed NACL entry idx %u, ktype %u, lif %u",
-                            PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX2,
-                            key.key_metadata_ktype, key.capri_intrinsic_lif);
+                            nacl_idx_ + 1, key.key_metadata_ktype,
+                            key.capri_intrinsic_lif);
         }
         break;
 
@@ -170,29 +197,27 @@ dhcp_policy_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         // clear the DHCP relay related NACLs
         key.key_metadata_entry_valid = 0;
         mask.key_metadata_entry_valid_mask = ~0;
-        p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL,
-                                      PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX1, &key,
-                                      &mask, &data);
+        p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx_,
+                                      &key, &mask, &data);
         if (p4pd_ret != P4PD_SUCCESS) {
             PDS_TRACE_ERR("Failed to clear DHCP relay NACL redirect entry, "
-                          "idx %u", PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX1);
+                          "idx %u", nacl_idx_);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         } else {
             PDS_TRACE_DEBUG("Cleared NACL entry idx %u, ktype %u, lif %u",
-                            PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX1,
-                            key.key_metadata_ktype, key.capri_intrinsic_lif);
+                            nacl_idx_, key.key_metadata_ktype,
+                            key.capri_intrinsic_lif);
         }
-        p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL,
-                                      PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX2, &key,
-                                      &mask, &data);
+        p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx_ + 1,
+                                      &key, &mask, &data);
         if (p4pd_ret != P4PD_SUCCESS) {
             PDS_TRACE_ERR("Failed to clear DHCP relay NACL redirect entry, "
-                          "idx %u", PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX2);
+                          "idx %u", nacl_idx_ + 1);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         } else {
             PDS_TRACE_DEBUG("Cleared NACL entry idx %u, ktype %u, lif %u",
-                            PDS_IMPL_RSVD_DHCP_RELAY_NACL_IDX2,
-                            key.key_metadata_ktype, key.capri_intrinsic_lif);
+                            nacl_idx_ + 1, key.key_metadata_ktype,
+                            key.capri_intrinsic_lif);
         }
         break;
 

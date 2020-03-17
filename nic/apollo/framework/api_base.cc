@@ -103,16 +103,6 @@ api_base::build(api_ctxt_t *api_ctxt) {
         }
         return mapping_entry::build(&api_ctxt->api_params->mapping_spec.key);
 
-#if 0
-    case OBJ_ID_MIRROR_SESSION:
-        // mirror is a stateless object, so we need to construct the object
-        // from the datapath tables
-        if (api_ctxt->api_op == API_OP_DELETE) {
-            return mirror_session::build(&api_ctxt->api_params->mirror_session_key);
-        }
-        return mirror_session::build(&api_ctxt->api_params->mirror_session_spec.key);
-#endif
-
     case OBJ_ID_SVC_MAPPING:
         // service mapping is a stateless object, so we need to construct the
         // object from the datapath tables
@@ -137,13 +127,6 @@ api_base::build(api_ctxt_t *api_ctxt) {
         }
         return nat_port_block::build(&api_ctxt->api_params->nat_port_block_spec.key);
 
-    case OBJ_ID_DHCP_POLICY:
-        // DHCP policy is a stateless object, so we need to build it on the fly
-        if (api_ctxt->api_op == API_OP_DELETE) {
-            return dhcp_policy::build(&api_ctxt->api_params->dhcp_policy_key);
-        }
-        return dhcp_policy::build(&api_ctxt->api_params->dhcp_policy_spec.key);
-
     case OBJ_ID_SECURITY_PROFILE:
         // security profile is a stateless object, so we need to build it on
         // the fly
@@ -167,12 +150,6 @@ api_base::soft_delete(obj_id_t obj_id, api_base *api_obj) {
         mapping_entry::soft_delete((mapping_entry *)api_obj);
         break;
 
-#if 0
-    case OBJ_ID_MIRROR_SESSION:
-        mirror_session::soft_delete((mirror_session *)api_obj);
-        break;
-#endif
-
     case OBJ_ID_SVC_MAPPING:
         svc_mapping::soft_delete((svc_mapping *)api_obj);
         break;
@@ -183,10 +160,6 @@ api_base::soft_delete(obj_id_t obj_id, api_base *api_obj) {
 
     case OBJ_ID_NAT_PORT_BLOCK:
         nat_port_block::soft_delete((nat_port_block *)api_obj);
-        break;
-
-    case OBJ_ID_DHCP_POLICY:
-        dhcp_policy::soft_delete((dhcp_policy *)api_obj);
         break;
 
     case OBJ_ID_SECURITY_PROFILE:
@@ -497,7 +470,6 @@ api_base::stateless(obj_id_t obj_id) {
     case OBJ_ID_SVC_MAPPING:
     case OBJ_ID_VPC_PEER:
     case OBJ_ID_NAT_PORT_BLOCK:
-    case OBJ_ID_DHCP_POLICY:
     case OBJ_ID_SECURITY_PROFILE:
         return true;
 
