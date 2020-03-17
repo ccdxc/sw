@@ -44,6 +44,7 @@
 #include "nic/apollo/api/include/athena/pds_flow_session_rewrite.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
 #include "gen/p4gen/p4/include/ftl.h"
+#include "athena_test.hpp"
 
 namespace fte_ath {
 
@@ -497,7 +498,7 @@ fte_ftl_set_core_id (unsigned int core_id)
     PDS_TRACE_DEBUG("pds_flow_cache_set_core_id core#:%u\n", core_id);
 }
 
-static sdk_ret_t
+sdk_ret_t
 fte_vlan_to_vnic_map (uint16_t vlan_id, uint16_t vnic_id)
 {
     pds_vlan_to_vnic_map_spec_t spec;
@@ -509,7 +510,7 @@ fte_vlan_to_vnic_map (uint16_t vlan_id, uint16_t vnic_id)
     return pds_vlan_to_vnic_map_create(&spec);
 }
 
-static sdk_ret_t
+sdk_ret_t
 fte_mpls_label_to_vnic_map (uint32_t mpls_label, uint16_t vnic_id)
 {
     pds_mpls_label_to_vnic_map_spec_t spec;
@@ -521,7 +522,7 @@ fte_mpls_label_to_vnic_map (uint32_t mpls_label, uint16_t vnic_id)
     return pds_mpls_label_to_vnic_map_create(&spec);
 }
 
-static sdk_ret_t
+sdk_ret_t
 fte_h2s_v4_session_rewrite_mplsoudp (uint32_t session_rewrite_id,
                                      mac_addr_t *substrate_dmac,
                                      mac_addr_t *substrate_smac,
@@ -558,7 +559,7 @@ fte_h2s_v4_session_rewrite_mplsoudp (uint32_t session_rewrite_id,
     return pds_flow_session_rewrite_create(&spec);
 }
 
-static sdk_ret_t
+sdk_ret_t
 fte_s2h_v4_session_rewrite (uint32_t session_rewrite_id,
                             mac_addr_t *ep_dmac, mac_addr_t *ep_smac,
                             uint16_t vnic_vlan)
@@ -628,50 +629,17 @@ fte_setup_flow (void)
     ret = fte_s2h_v4_session_rewrite(s2h_session_rewrite_id,
                                      (mac_addr_t *)ep_dmac,
                                      (mac_addr_t *)ep_smac,
-                                     vnic_vlan);
+                                     g_h2s_vlan);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_DEBUG("fte_s2h_v4_session_rewrite failed.\n");
         return ret;
     }
 
-    memset(&host_mac, 0, sizeof(host_mac));
-    ret = fte_session_info_create_all(g_session_index, /*conntrack_id*/0,
-                /*skip_flow_log*/ FALSE, /*host_mac*/ &host_mac,
-
-                /*h2s_epoch_vnic*/ 0, /*h2s_epoch_vnic_id*/ 0,
-                /*h2s_epoch_mapping*/0, /*h2s_epoch_mapping_id*/0,
-                /*h2s_policer_bw1_id*/0, /*h2s_policer_bw2_id*/0,
-                /*h2s_vnic_stats_id*/0, /*h2s_vnic_stats_mask*/ vnic_stats_mask,
-                /*h2s_vnic_histogram_latency_id*/0, /*h2s_vnic_histogram_packet_len_id*/0,
-                /*h2s_tcp_flags_bitmap*/0,
-                /*h2s_session_rewrite_id*/ h2s_session_rewrite_id,
-                /*h2s_allowed_flow_state_bitmask*/0,
-                /*h2s_egress_action*/EGRESS_ACTION_NONE,
-
-                /*s2h_epoch_vnic*/ 0, /*s2h_epoch_vnic_id*/ 0,
-                /*s2h_epoch_mapping*/0, /*s2h_epoch_mapping_id*/0,
-                /*s2h_policer_bw1_id*/0, /*s2h_policer_bw2_id*/0,
-                /*s2h_vnic_stats_id*/0, /*s2h_vnic_stats_mask*/ vnic_stats_mask,
-                /*s2h_vnic_histogram_latency_id*/0, /*s2h_vnic_histogram_packet_len_id*/0,
-                /*s2h_tcp_flags_bitmap*/0,
-                /*s2h_session_rewrite_id*/ s2h_session_rewrite_id,
-                /*s2h_allowed_flow_state_bitmask*/0,
-                /*s2h_egress_action*/EGRESS_ACTION_NONE
-                );
+    ret = fte_setup_static_flows();
     if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_setup_static_flows failed.\n");
         return ret;
     }
-
-    // Setup Normalized Flow entry
-    ret = fte_flow_create(g_h2s_vnic_id, g_h2s_sip, g_h2s_dip,
-            g_h2s_proto, g_h2s_sport, g_h2s_dport,
-            PDS_FLOW_SPEC_INDEX_SESSION, g_session_index);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_DEBUG("fte_flow_create failed.\n");
-        return ret;
-    }
-    g_session_index++;
-
 
     return ret;
 }
