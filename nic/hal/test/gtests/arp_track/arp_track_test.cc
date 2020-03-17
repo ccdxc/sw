@@ -99,7 +99,7 @@ TEST_F (arp_track_test, mirror_order1) {
     ASSERT_EQ(create_mirror(sid2, vrf_id_hp1, src_ip, ips[1]), HAL_RET_OK);
 
     g_hal_state->set_inb_bond_active_uplink(up_if->hal_handle); 
-    hal::hal_if_inb_bond_active_changed();
+    hal::hal_if_inb_bond_active_changed(false);
 
     // Create collector
     ASSERT_EQ(create_collector(cid1, vrf_id_hp1, l2seg_id_hp1, src_ip, ips[0]), HAL_RET_OK);
