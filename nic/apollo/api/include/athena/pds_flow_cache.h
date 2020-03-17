@@ -21,6 +21,8 @@ extern "C" {
 /// \defgroup PDS_FLOW_CACHE 
 /// @{
 
+#define PDS_FLOW_TABLE_MAX_RECIRC    (8)
+
 /// \brief Key type
 typedef enum pds_key_type_e {
     KEY_TYPE_INVALID = 0,
@@ -93,6 +95,36 @@ typedef struct pds_flow_iter_cb_arg_s {
     pds_flow_data_t    flow_appdata;
 } __PACK__ pds_flow_iter_cb_arg_t;
 
+/// \brief Flow statistics
+typedef struct pds_flow_stats_t {
+    // Flow cache API stats
+    uint64_t    api_insert;
+    uint64_t    api_insert_duplicate;
+    uint64_t    api_insert_fail;
+    uint64_t    api_insert_recirc_fail;
+    uint64_t    api_remove;
+    uint64_t    api_remove_not_found;
+    uint64_t    api_remove_fail;
+    uint64_t    api_update;
+    uint64_t    api_update_fail;
+    uint64_t    api_get;
+    uint64_t    api_get_fail;
+    uint64_t    api_reserve;
+    uint64_t    api_reserve_fail;
+    uint64_t    api_release;
+    uint64_t    api_release_fail;
+
+    // Flow cache table stats
+    uint64_t    table_entries;
+    uint64_t    table_collisions;
+    uint64_t    table_insert;
+    uint64_t    table_remove;
+    uint64_t    table_read;
+    uint64_t    table_write;
+    uint64_t    table_insert_lvl[PDS_FLOW_TABLE_MAX_RECIRC];
+    uint64_t    table_remove_lvl[PDS_FLOW_TABLE_MAX_RECIRC];
+} __PACK__ pds_flow_stats_t;
+
 /// \brief     Flow iterate callback function type
 /// \remark    This function needs to be defined by the application.
 typedef void (*pds_flow_iter_cb_t) (pds_flow_iter_cb_arg_t *);
@@ -137,10 +169,20 @@ sdk_ret_t pds_flow_cache_entry_delete(pds_flow_key_t *key);
 
 /// \brief     iterate through flow cache table
 /// \param[in] iterate callback function
-//  \param[in] iterate callback argument
+///  \param[in] iterate callback argument
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_flow_cache_entry_iterate(pds_flow_iter_cb_t iter_cb,
                                        pds_flow_iter_cb_arg_t *iter_cb_arg);
+
+/// \brief     get flow cache statistics
+/// \param[in] core_id of the thread
+/// \param[out] stats flow statistics
+/// \return    #SDK_RET_OK on success, failure status code on error
+/// \remark    If core id is passed as -1, local thread id is used
+///            From control thread, a valid data core id should be passed
+///            This needs to be called from control/master core
+///            for every data core of the application
+sdk_ret_t pds_flow_cache_stats_get(int32_t core_id, pds_flow_stats_t *stats);
 
 /// @}
 

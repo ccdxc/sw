@@ -49,6 +49,7 @@
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/athena/ftl_pollers_client.hpp"
+#include "nic/apollo/api/include/athena/pds_flow_cache.h"
 #include "fte_athena.hpp"
 
 namespace fte_ath {
@@ -124,6 +125,9 @@ static uint16_t nb_lcore_params = sizeof(lcore_params_arr_default) /
                                 sizeof(lcore_params_arr_default[0]);
 
 static struct rte_mempool * pktmbuf_pool[NB_SOCKETS];
+
+pds_flow_stats_t flow_stats[FTE_MAX_CORES];
+pds_flow_stats_t g_flow_stats;
 
 // Send burst of packets on an output interface 
 static inline void
@@ -311,6 +315,126 @@ _init_pollers_client (void)
     }
 }
 
+void
+dump_single_flow(pds_flow_iter_cb_arg_t *iter_cb_arg)
+{
+    pds_flow_key_t *key = &iter_cb_arg->flow_key;
+    pds_flow_data_t *data = &iter_cb_arg->flow_appdata;
+
+    if (key->key_type == KEY_TYPE_IPV6) {
+        PDS_TRACE_DEBUG("SrcIP:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x "
+                        "DstIP:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x "
+                        "Dport:%u Sport:%u Proto:%u "
+                        "Ktype:%u VNICID:%u "
+                        "index:%u index_type:%u\n\n",
+                        key->ip_saddr[0], key->ip_saddr[1], key->ip_saddr[2], key->ip_saddr[3],
+                        key->ip_saddr[4], key->ip_saddr[5], key->ip_saddr[6], key->ip_saddr[7],
+                        key->ip_saddr[8], key->ip_saddr[9], key->ip_saddr[10], key->ip_saddr[11],
+                        key->ip_saddr[12], key->ip_saddr[13], key->ip_saddr[14], key->ip_saddr[15],
+                        key->ip_daddr[0], key->ip_daddr[1], key->ip_daddr[2], key->ip_daddr[3],
+                        key->ip_daddr[4], key->ip_daddr[5], key->ip_daddr[6], key->ip_daddr[7],
+                        key->ip_daddr[8], key->ip_daddr[9], key->ip_daddr[10], key->ip_daddr[11],
+                        key->ip_daddr[12], key->ip_daddr[13], key->ip_daddr[14], key->ip_daddr[15],
+                        key->l4.tcp_udp.dport, key->l4.tcp_udp.sport,
+                        key->ip_proto, (uint8_t)key->key_type, key->vnic_id,
+                        data->index, (uint8_t)data->index_type);
+    } else {
+        PDS_TRACE_DEBUG("SrcIP:%02x:%02x:%02x:%02x "
+                        "DstIP:%02x:%02x:%02x:%02x "
+                        "Dport:%u Sport:%u Proto:%u "
+                        "Ktype:%u VNICID:%u "
+                        "index:%u index_type:%u\n\n",
+                        key->ip_saddr[0], key->ip_saddr[1], key->ip_saddr[2], key->ip_saddr[3],
+                        key->ip_daddr[0], key->ip_daddr[1], key->ip_daddr[2], key->ip_daddr[3],
+                        key->l4.tcp_udp.dport, key->l4.tcp_udp.sport,
+                        key->ip_proto, (uint8_t)key->key_type, key->vnic_id,
+                        data->index, (uint8_t)data->index_type);
+    }
+    return;
+}
+
+void
+dump_flows(void)
+{
+    pds_flow_iter_cb_arg_t iter_cb_arg = { 0 };
+
+    pds_flow_cache_entry_iterate(dump_single_flow, &iter_cb_arg);
+}
+
+static void
+dump_stats (pds_flow_stats_t *stats)
+{
+    PDS_TRACE_DEBUG("\nPrinting Flow cache statistics\n");
+    PDS_TRACE_DEBUG("Insert %lu, Insert_fail_dupl %lu, Insert_fail %lu, "
+                    "Insert_fail_recirc %lu\n"
+                    "Remove %lu, Remove_not_found %lu, Remove_fail %lu\n"
+                    "Update %lu, Update_fail %lu\n"
+                    "Get %lu, Get_fail %lu\n"
+                    "Reserve %lu, reserve_fail %lu\n"
+                    "Release %lu, Release_fail %lu\n"
+                    "Tbl_entries %lu, Tbl_collision %lu\n"
+                    "Tbl_insert %lu, Tbl_remove %lu, Tbl_read %lu, Tbl_write %lu\n",
+                    stats->api_insert,
+                    stats->api_insert_duplicate,
+                    stats->api_insert_fail,
+                    stats->api_insert_recirc_fail,
+                    stats->api_remove,
+                    stats->api_remove_not_found,
+                    stats->api_remove_fail,
+                    stats->api_update,
+                    stats->api_update_fail,
+                    stats->api_get,
+                    stats->api_get_fail,
+                    stats->api_reserve,
+                    stats->api_reserve_fail,
+                    stats->api_release,
+                    stats->api_release_fail,
+                    stats->table_entries,
+                    stats->table_collisions,
+                    stats->table_insert,
+                    stats->table_remove,
+                    stats->table_read,
+                    stats->table_write);
+    for (int i= 0; i < PDS_FLOW_TABLE_MAX_RECIRC; i++) {
+         PDS_TRACE_DEBUG("Tbl_lvl %u, Tbl_insert %lu, Tbl_remove %lu\n",
+                         i, stats->table_insert_lvl[i],
+                         stats->table_remove_lvl[i]);
+    }
+    return;
+}
+
+void
+accumulate_stats (pds_flow_stats_t *stats)
+{
+    g_flow_stats.api_insert += stats->api_insert;
+    g_flow_stats.api_insert_duplicate += stats->api_insert_duplicate;
+    g_flow_stats.api_insert_fail += stats->api_insert_fail;
+    g_flow_stats.api_insert_recirc_fail += stats->api_insert_recirc_fail;
+    g_flow_stats.api_remove += stats->api_remove;
+    g_flow_stats.api_remove_not_found += stats->api_remove_not_found;
+    g_flow_stats.api_remove_fail += stats->api_remove_fail;
+    g_flow_stats.api_update += stats->api_update;
+    g_flow_stats.api_update_fail += stats->api_update_fail;
+    g_flow_stats.api_get += stats->api_get;
+    g_flow_stats.api_get_fail += stats->api_get_fail;
+    g_flow_stats.api_reserve += stats->api_reserve;
+    g_flow_stats.api_reserve_fail += stats->api_reserve_fail;
+    g_flow_stats.api_release += stats->api_release;
+    g_flow_stats.api_release_fail += stats->api_release_fail;
+
+    g_flow_stats.table_entries += stats->table_entries;
+    g_flow_stats.table_collisions += stats->table_collisions;
+    g_flow_stats.table_insert += stats->table_insert;
+    g_flow_stats.table_remove += stats->table_remove;
+    g_flow_stats.table_read += stats->table_read;
+    g_flow_stats.table_write += stats->table_write;
+    for (int i = 0; i < PDS_FLOW_TABLE_MAX_RECIRC; i++) {
+         g_flow_stats.table_insert_lvl[i] += stats->table_insert_lvl[i];
+         g_flow_stats.table_remove_lvl[i] += stats->table_remove_lvl[i];
+    }
+    return;
+}
+
 static void
 signal_handler (int signum)
 {
@@ -318,6 +442,22 @@ signal_handler (int signum)
         PDS_TRACE_DEBUG("\nSIGNAL %d received..core#:%u\n",
                         signum, rte_lcore_id());
         rte_exit(0, "received signal: %d, exiting\n", signum);
+    }
+    if (signum == SIGUSR1) {
+        PDS_TRACE_DEBUG("\nSIGNAL %d received..\n",
+                        signum);
+        memset(&g_flow_stats, 0, sizeof(pds_flow_stats_t));
+        for (int i = 0; i < FTE_MAX_CORES; i++) {
+             memset(&flow_stats[i], 0, sizeof(pds_flow_stats_t));
+             if (pds_flow_cache_stats_get(i, &flow_stats[i])
+                 == SDK_RET_OK) {
+                 accumulate_stats(&flow_stats[i]);
+             } else {
+                 PDS_TRACE_ERR("Stats get failed for core#%u\n", i);
+             }
+        }
+        dump_stats(&g_flow_stats);
+        dump_flows();
     }
 }
 
@@ -699,6 +839,7 @@ fte_main (void)
 
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
+    signal(SIGUSR1, signal_handler);
 
     if (check_lcore_params() < 0) {
         rte_exit(EXIT_FAILURE, "check_lcore_params failed\n");

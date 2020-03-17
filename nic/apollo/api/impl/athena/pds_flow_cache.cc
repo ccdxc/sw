@@ -313,4 +313,56 @@ pds_flow_cache_entry_iterate (pds_flow_iter_cb_t iter_cb,
     return ftl_table->iterate(&params);
 }
 
+sdk_ret_t
+pds_flow_cache_stats_get (int32_t core_id, pds_flow_stats_t *stats)
+{
+    sdk_ret_t ret;
+    sdk_table_api_stats_t api_stats = { 0 };
+    sdk_table_stats_t table_stats = { 0 };
+    int i;
+
+    if (!stats) {
+        PDS_TRACE_ERR("Stats is null");
+        return SDK_RET_INVALID_ARG;
+    }
+
+    if (core_id != -1)
+        ret = ftl_table->stats_get(&api_stats, &table_stats, false, core_id);
+    else
+        ret = ftl_table->stats_get(&api_stats, &table_stats);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Stats get failed");
+        return ret;
+    }
+    // Populate api statistics
+    stats->api_insert = api_stats.insert;
+    stats->api_insert_duplicate = api_stats.insert_duplicate;
+    stats->api_insert_fail = api_stats.insert_fail;
+    stats->api_insert_recirc_fail = api_stats.insert_recirc_fail;
+    stats->api_remove = api_stats.remove;
+    stats->api_remove_not_found = api_stats.remove_not_found;
+    stats->api_remove_fail = api_stats.remove_fail;
+    stats->api_update = api_stats.update;
+    stats->api_update_fail = api_stats.update_fail;
+    stats->api_get = api_stats.get;
+    stats->api_get_fail = api_stats.get_fail;
+    stats->api_reserve = api_stats.reserve;
+    stats->api_reserve_fail = api_stats.reserve_fail;
+    stats->api_release = api_stats.release;
+    stats->api_release_fail = api_stats.release_fail;
+
+    // Populate table statistics
+    stats->table_entries = table_stats.entries;
+    stats->table_collisions = table_stats.collisions;
+    stats->table_insert = table_stats.insert;
+    stats->table_remove = table_stats.remove;
+    stats->table_read = table_stats.read;
+    stats->table_write = table_stats.write;
+    for(i = 0; i < PDS_FLOW_TABLE_MAX_RECIRC; i++) {
+        stats->table_insert_lvl[i] = table_stats.insert_lvl[i];
+        stats->table_remove_lvl[i] = table_stats.remove_lvl[i];
+    }
+    return SDK_RET_OK;
+}
+
 }

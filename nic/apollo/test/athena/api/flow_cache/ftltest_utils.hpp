@@ -18,4 +18,6 @@ void fill_data(uint32_t index, pds_flow_spec_index_type_t index_type,
 
 void dump_flow(pds_flow_iter_cb_arg_t *iter_cb_arg);
 
+void dump_stats(pds_flow_stats_t *stats);
+
 #endif // __UTILS_HPP__

@@ -59,6 +59,7 @@ TEST_F(flow_cache_test, flow_cache_crud) {
     pds_flow_key_t key = { 0 };
     pds_flow_info_t info = { 0 };
     pds_flow_iter_cb_arg_t iter_cb_arg = { 0 };
+    pds_flow_stats_t stats = { 0 };
 
     fill_key(1, &spec.key);
     fill_data(1, PDS_FLOW_SPEC_INDEX_SESSION, &spec.data);
@@ -112,6 +113,9 @@ TEST_F(flow_cache_test, flow_cache_crud) {
 
     SDK_ASSERT(pds_flow_cache_entry_iterate(dump_flow, &iter_cb_arg) ==
                SDK_RET_OK);
+
+    SDK_ASSERT(pds_flow_cache_stats_get(2, &stats) == SDK_RET_OK);
+    dump_stats(&stats);
 }
 
 /// @}

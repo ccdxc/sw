@@ -134,7 +134,13 @@ sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
 sdk_ret_t
 flow_table_init(void)
 {
-    return pds_flow_cache_create();
+    sdk_ret_t ret;
+    ret = pds_flow_cache_create();
+    if (ret != SDK_RET_OK)
+        return ret;
+    // Set core id to 1 for this testing
+    pds_flow_cache_set_core_id(1);
+    return ret;
 }
 
 void dump_pkt(std::vector<uint8_t> &pkt)
@@ -483,7 +489,55 @@ iterate_dump_flows(void)
 {
     pds_flow_iter_cb_arg_t iter_cb_arg = { 0 };
 
-    pds_flow_cache_entry_iterate(dump_single_flow, &iter_cb_arg);
+    ASSERT_TRUE(pds_flow_cache_entry_iterate(dump_single_flow, &iter_cb_arg)
+        == SDK_RET_OK);
+}
+
+void
+dump_stats(pds_flow_stats_t *stats)
+{
+    printf("\nPrinting Flow cache statistics\n");
+    printf("Insert %lu, Insert_fail_dupl %lu, Insert_fail %lu, "
+           "Insert_fail_recirc %lu\n"
+           "Remove %lu, Remove_not_found %lu, Remove_fail %lu\n"
+           "Update %lu, Update_fail %lu\n"
+           "Get %lu, Get_fail %lu\n"
+           "Reserve %lu, reserve_fail %lu\n"
+           "Release %lu, Release_fail %lu\n"
+           "Tbl_entries %lu, Tbl_collision %lu\n"
+           "Tbl_insert %lu, Tbl_remove %lu, Tbl_read %lu, Tbl_write %lu\n",
+           stats->api_insert,
+           stats->api_insert_duplicate,
+           stats->api_insert_fail,
+           stats->api_insert_recirc_fail,
+           stats->api_remove,
+           stats->api_remove_not_found,
+           stats->api_remove_fail,
+           stats->api_update,
+           stats->api_update_fail,
+           stats->api_get,
+           stats->api_get_fail,
+           stats->api_reserve,
+           stats->api_reserve_fail,
+           stats->api_release,
+           stats->api_release_fail,
+           stats->table_entries, stats->table_collisions,
+           stats->table_insert, stats->table_remove,
+           stats->table_read, stats->table_write);
+    for (int i= 0; i < PDS_FLOW_TABLE_MAX_RECIRC; i++) {
+         printf("Tbl_lvl %u, Tbl_insert %lu, Tbl_remove %lu\n",
+                 i, stats->table_insert_lvl[i], stats->table_remove_lvl[i]);
+    }
+    return;
+}
+
+void
+print_stats(void)
+{
+    pds_flow_stats_t stats = { 0 };
+
+    ASSERT_TRUE(pds_flow_cache_stats_get(1, &stats) == SDK_RET_OK);
+    dump_stats(&stats);
 }
 
 TEST(athena_gtest, sim)
@@ -500,6 +554,8 @@ TEST(athena_gtest, sim)
     ASSERT_TRUE(athena_gtest_test_flows_tcp() == SDK_RET_OK);
 
     iterate_dump_flows();
+
+    print_stats();
 
     /* Slowpath Flow tests */
     ASSERT_TRUE(athena_gtest_test_flows_slowpath() == SDK_RET_OK);
