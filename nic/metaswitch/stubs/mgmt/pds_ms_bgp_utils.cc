@@ -808,6 +808,10 @@ pds_ms_fill_amb_bgp_rm (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
         data->as_size = AMB_BGP_FOUR_OCTET;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_AS_SIZE);
 
+        // Enable Fast external fallover
+        data->fast_ext_fallover = AMB_TRUE;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_FAST_EXT_FALL);
+
         // Enable ORF support
         data->orf_supported  = AMB_TRUE;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_ORF_SUPPORTED);
