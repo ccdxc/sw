@@ -343,14 +343,10 @@ class _Testbed:
                 if GlobalOptions.pipeline in [ "apulu" ]:
                     cmd.extend(["--no-mgmt"])
 
+                cmd.extend(["--testbed", GlobalOptions.testbed_json])
+                cmd.extend(["--instance-name", instance.Name])
                 cmd.extend(["--naples", GlobalOptions.naples_type])
-                cmd.extend(["--console-ip", instance.NicConsoleIP])
                 cmd.extend(["--mnic-ip", instance.NicIntMgmtIP])
-                cmd.extend(["--console-port", instance.NicConsolePort])
-                cmd.extend(["--host-ip", instance.NodeMgmtIP])
-                cmd.extend(["--cimc-ip", instance.NodeCimcIP])
-                if hasattr(instance, "NodeCimcUsername"):
-                    cmd.extend(["--cimc-username", instance.NodeCimcUsername])
                 nics = getattr(instance, "Nics", None)
                 if nics != None and len(nics) != 0:
                     for nic in nics:
@@ -359,7 +355,8 @@ class _Testbed:
                             break
                 cmd.extend(["--mode", "%s" % api.GetNicMode()])
                 if instance.NodeOs == "esx":
-                    cmd.extend(["--esx-script", ESX_CTRL_VM_BRINGUP_SCRIPT])
+                    pass
+                    # cmd.extend(["--esx-script", ESX_CTRL_VM_BRINGUP_SCRIPT])
                 if GlobalOptions.skip_driver_install:
                     cmd.extend(["--skip-driver-install"]) 
                 if GlobalOptions.use_gold_firmware: 
@@ -367,12 +364,7 @@ class _Testbed:
                 if GlobalOptions.fast_upgrade: 
                     cmd.extend(["--fast-upgrade"]) 
                 cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
-                cmd.extend(["--os", "%s" % instance.NodeOs])
                 cmd.extend(["--image-manifest", manifest_file])
-                if getattr(instance.Resource, "ServerType", "server-a") == "hpe":
-                    cmd.extend(["--server", "hpe"])
-                else:
-                    cmd.extend(["--server", "%s" % getattr(instance, "NodeServer", "ucs")])
 
                 if self.__fw_upgrade_done or GlobalOptions.only_reboot:
                     logfile = "%s/%s-%s-reboot.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
@@ -396,12 +388,6 @@ class _Testbed:
                 if hasattr(instance, "NodeCimcUsername"):
                     cmd.extend(["--cimc-username", instance.NodeCimcUsername])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
-            if instance.NodeOs == "esx":
-                cmd.extend(["--host-username", self.__tbspec.Provision.Vars.EsxUsername])
-                cmd.extend(["--host-password", self.__tbspec.Provision.Vars.EsxPassword])
-            else:
-                cmd.extend(["--host-username", self.__tbspec.Provision.Username])
-                cmd.extend(["--host-password", self.__tbspec.Provision.Password])
 
                 logfile = "%s/%s-%s-reboot.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
                 Logger.info("Rebooting Node %s (logfile = %s)" % (instance.Name, logfile))

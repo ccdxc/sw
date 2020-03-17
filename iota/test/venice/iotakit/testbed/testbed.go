@@ -244,6 +244,7 @@ type TestBed struct {
 	DataSwitches         []*iota.DataSwitch         // data switches associated to this testbed
 	naplesDataMap        map[string]naplesData      //naples name data map
 	dcName               string
+	warmdJsonFile        string // warmd json file
 
 	// cached message responses from iota server
 	iotaClient      *common.GRPCClient   // iota grpc client
@@ -344,6 +345,7 @@ func newTestBed(topoName string, paramsFile string, skipSetup bool) (*TestBed, e
 		taskResult:    make(map[string]error),
 		caseResult:    make(map[string]*TestCaseResult),
 		useNaplesMgmt: usemgmt,
+		warmdJsonFile: paramsFile,
 	}
 
 	// initialize node state
@@ -986,6 +988,7 @@ func (tb *TestBed) DeleteNodes(nodes []*TestNode) error {
 			CimcPassword:        common.DefaultCimcPassword,
 			NicUuid:             node.instParams.Resource.NICUuid,
 			NodeName:            node.NodeName,
+			InstanceName:        node.instParams.Name,
 		}
 		tbn.NicIpAddress, err = node.instParams.getNicMgmtIP()
 		if err != nil {
@@ -1407,15 +1410,16 @@ func (tb *TestBed) setupTestBed() error {
 
 	// Allocate VLANs
 	testBedMsg := &iota.TestBedMsg{
-		NaplesImage:    tb.Topo.NaplesImage,
-		VeniceImage:    tb.Topo.VeniceImage,
-		NaplesSimImage: tb.Topo.NaplesSimImage,
-		Username:       tb.Params.Provision.Username,
-		Password:       tb.Params.Provision.Password,
-		ApiResponse:    &iota.IotaAPIResponse{},
-		Nodes:          []*iota.TestBedNode{},
-		DataSwitches:   []*iota.DataSwitch{},
-		NativeVlan:     uint32(tb.Params.Network.VlanID),
+		NaplesImage:     tb.Topo.NaplesImage,
+		VeniceImage:     tb.Topo.VeniceImage,
+		NaplesSimImage:  tb.Topo.NaplesSimImage,
+		Username:        tb.Params.Provision.Username, // FIXME: might be obsolete
+		Password:        tb.Params.Provision.Password, // FIXME: might be obsolete
+		ApiResponse:     &iota.IotaAPIResponse{},
+		Nodes:           []*iota.TestBedNode{},
+		DataSwitches:    []*iota.DataSwitch{},
+		NativeVlan:      uint32(tb.Params.Network.VlanID),
+		TestbedJsonFile: tb.warmdJsonFile,
 	}
 
 	tb.tbMsg = testBedMsg
@@ -1446,6 +1450,7 @@ func (tb *TestBed) setupTestBed() error {
 			CimcPassword:        common.DefaultCimcPassword,
 			NicUuid:             node.instParams.Resource.NICUuid,
 			NodeName:            node.NodeName,
+			InstanceName:        node.instParams.Name,
 		}
 		tbn.NicIpAddress, err = node.instParams.getNicMgmtIP()
 		if err != nil {

@@ -41,18 +41,18 @@ type testBedInfo struct {
 }
 
 type FirmwareInfo struct {
-        FwImage                         string  `json:"image"`
-        GoldFirmwareImage               string  `json:"gold_fw_img"`
-        GoldFirmwareLatestVersion       string  `json:"gold_fw_latest_ver"`
-        GoldFirmwareOldVersion          string  `json:"gold_fw_old_ver"`
+	FwImage                   string `json:"image"`
+	GoldFirmwareImage         string `json:"gold_fw_img"`
+	GoldFirmwareLatestVersion string `json:"gold_fw_latest_ver"`
+	GoldFirmwareOldVersion    string `json:"gold_fw_old_ver"`
 }
 
 type DriverInfo struct {
-        OS                      string          `json:"OS"`
-        DriversPackage          string          `json:"drivers_pkg"`
-        GoldDriverLatestPackage string          `json:"gold_drv_latest_pkg"`
-        GoldDriverOldPackage    string          `json:"gold_drv_old_pkg"`
-        FileType                string          `json:"pkg_file_type"`
+	OS                      string `json:"OS"`
+	DriversPackage          string `json:"drivers_pkg"`
+	GoldDriverLatestPackage string `json:"gold_drv_latest_pkg"`
+	GoldDriverOldPackage    string `json:"gold_drv_old_pkg"`
+	FileType                string `json:"pkg_file_type"`
 }
 
 // NewTopologyServiceHandler Topo service handle
@@ -126,48 +126,24 @@ func (ts *TopologyService) InstallImage(ctx context.Context, req *iota.TestBedMs
 		// walk each node
 		for _, node := range poolNodes {
 			if node.Type == iota.TestBedNodeType_TESTBED_NODE_TYPE_HW {
-				nodeOs := "esx"
-				switch node.Os {
-				case iota.TestBedNodeOs_TESTBED_NODE_OS_ESX:
-					nodeOs = "esx"
-				case iota.TestBedNodeOs_TESTBED_NODE_OS_LINUX:
-					nodeOs = "linux"
-				case iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD:
-					nodeOs = "freebsd"
-				}
 				cmd := fmt.Sprintf("%s/iota/scripts/boot_naples_v2.py", wsdir)
-				cmd += fmt.Sprintf(" --console-ip %s", node.NicConsoleIpAddress)
-				cmd += fmt.Sprintf(" --console-port %s", node.NicConsolePort)
 				cmd += fmt.Sprintf(" --mnic-ip 169.254.0.1")
-				cmd += fmt.Sprintf(" --host-ip %s", node.IpAddress)
-				cmd += fmt.Sprintf(" --cimc-ip %s", node.CimcIpAddress)
-                                // naples_type should come from topology or testbed
-                                if filepath.Base(req.NaplesImage) == "naples_fw.tar" {
-                                    cmd += fmt.Sprintf(" --naples capri")
-                                } else {
-                                    cmd += fmt.Sprintf(" --naples equinix")
-                                }
+				cmd += fmt.Sprintf(" --instance-name %v", node.InstanceName)
+				cmd += fmt.Sprintf(" --testbed %v", req.TestbedJsonFile)
+				// naples_type should come from topology or testbed
+				if filepath.Base(req.NaplesImage) == "naples_fw.tar" {
+					cmd += fmt.Sprintf(" --naples capri")
+				} else {
+					cmd += fmt.Sprintf(" --naples equinix")
+				}
 				cmd += fmt.Sprintf(" --mode hostpin")
 				if node.MgmtIntf != "" {
 					cmd += fmt.Sprintf(" --mgmt-intf %v", node.MgmtIntf)
 				}
-				if node.ServerType != "" {
-					cmd += fmt.Sprintf("  --server %v", node.ServerType)
-				}
 				cmd += fmt.Sprintf(" --uuid %s", node.NicUuid)
-				cmd += fmt.Sprintf(" --os %s", nodeOs)
 
 				cmd += fmt.Sprintf(" --wsdir %s", wsdir)
 				cmd += fmt.Sprintf(" --image-manifest %s/images/latest.json", wsdir)
-
-				if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
-					cmd += fmt.Sprintf(" --esx-script %s/iota/bin/iota_esx_setup", wsdir)
-					cmd += fmt.Sprintf(" --host-username %s", node.EsxUsername)
-					cmd += fmt.Sprintf(" --host-password %s", node.EsxPassword)
-				} else {
-					cmd += fmt.Sprintf(" --host-username %s", common.DefaultHostUsername)
-					cmd += fmt.Sprintf(" --host-password %s", common.DefaultHostPassword)
-				}
 
 				if node.NoMgmt {
 					cmd += fmt.Sprintf(" --no-mgmt")
@@ -309,7 +285,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	ts.ProvisionedNodes = make(map[string]testbed.TestNodeInterface)
 	ts.Nodes = make(map[string]testbed.TestNodeInterface)
 	// split init nodes into pools of upto 'n' each
-        restoreAgentFiles := false
+	restoreAgentFiles := false
 	for nodeIdx := 0; nodeIdx < len(req.Nodes); {
 		poolNodes := []*iota.TestBedNode{}
 		for nodeIdx < len(req.Nodes) {
@@ -400,7 +376,7 @@ func (ts *TopologyService) GetTestBed(ctx context.Context, req *iota.TestBedMsg)
 func (ts *TopologyService) initTestNodes(ctx context.Context, req *iota.TestNodesMsg) error {
 	pool, ctx := errgroup.WithContext(ctx)
 
-        restoreAgentFiles := false
+	restoreAgentFiles := false
 	for _, node := range req.GetNodes() {
 
 		nodeInfo := testbed.NodeInfo{
@@ -1294,154 +1270,154 @@ func (ts *TopologyService) MoveWorkloads(ctx context.Context, req *iota.Workload
 
 // SaveNodes to save and download context to local fs
 func (ts *TopologyService) SaveNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
-    log.Infof("TOPO SVC | DEBUG | SaveNodes. Received Request Msg: %v", req)
-    defer log.Infof("TOPO SVC | DEBUG | SaveNodes Returned: %v", req)
+	log.Infof("TOPO SVC | DEBUG | SaveNodes. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | SaveNodes Returned: %v", req)
 
-    // - Call SaveNodes Agent API
-    rNodes := []testbed.TestNodeInterface{}
-    for _, node := range req.Nodes {
-        n, ok := ts.ProvisionedNodes[node.Name]
-        if !ok {
-            req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
-            req.ApiResponse.ErrorMsg = fmt.Sprintf("SaveNodes on unprovisioned node: %v", node.GetName())
-            return req, nil
-        } 
-        rNodes = append(rNodes, n)
-    }
+	// - Call SaveNodes Agent API
+	rNodes := []testbed.TestNodeInterface{}
+	for _, node := range req.Nodes {
+		n, ok := ts.ProvisionedNodes[node.Name]
+		if !ok {
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("SaveNodes on unprovisioned node: %v", node.GetName())
+			return req, nil
+		}
+		rNodes = append(rNodes, n)
+	}
 
-    saveNodes := func(ctx context.Context) error {
-        pool, ctx := errgroup.WithContext(ctx)
+	saveNodes := func(ctx context.Context) error {
+		pool, ctx := errgroup.WithContext(ctx)
 
-        for _, node := range rNodes {
-            node := node
-            pool.Go(func() error {
-                return node.SaveNode(ts.SSHConfig)
-            })
-        }
-        return pool.Wait()
-    }
-    err := saveNodes(context.Background())
-    if err != nil {
-        log.Errorf("TOPO SVC | SaveNodes | SaveNodes Call failed. %v", err)
-        req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-        req.ApiResponse.ErrorMsg = err.Error()
-    }
-    req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
-    return req, nil
+		for _, node := range rNodes {
+			node := node
+			pool.Go(func() error {
+				return node.SaveNode(ts.SSHConfig)
+			})
+		}
+		return pool.Wait()
+	}
+	err := saveNodes(context.Background())
+	if err != nil {
+		log.Errorf("TOPO SVC | SaveNodes | SaveNodes Call failed. %v", err)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = err.Error()
+	}
+	req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
+	return req, nil
 }
 
-// RestoreNodes is to initNode after external/unknown reboot event 
+// RestoreNodes is to initNode after external/unknown reboot event
 func (ts *TopologyService) RestoreNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
-    log.Infof("TOPO SVC | DEBUG | RestoreNodes. Received Request Msg: %v", req)
-    defer log.Infof("TOPO SVC | DEBUG | RestoreNodes Returned: %v", req)
+	log.Infof("TOPO SVC | DEBUG | RestoreNodes. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | RestoreNodes Returned: %v", req)
 
-    pool, ctx := errgroup.WithContext(ctx)
+	pool, ctx := errgroup.WithContext(ctx)
 
-    rNodes := []testbed.TestNodeInterface{}
-    for _, node := range req.Nodes {
-        n, ok := ts.ProvisionedNodes[node.Name]
-        if !ok {
-            req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
-            req.ApiResponse.ErrorMsg = fmt.Sprintf("SaveNodes on unprovisioned node: %v", node.GetName())
-            return req, nil
-        }
-        rNodes = append(rNodes, n)
-    }
-    reboot := false
-    restoreAgentFiles := true
-    // - Prepare to upload the required files from local fs to remote node
-    for _, node := range rNodes {
-            // Assumption that node is alive and reachable
-            commonCopyArtifacts := []string{
-                    ts.tbInfo.resp.VeniceImage,
-                    ts.tbInfo.resp.NaplesImage,
-                    ts.tbInfo.resp.NaplesSimImage,
-            }
-            pool.Go(func() error {
-                    node := node
-                    node.InitNode(reboot, restoreAgentFiles, ts.SSHConfig, commonCopyArtifacts)
-                    svcName := node.GetNodeInfo().Name
+	rNodes := []testbed.TestNodeInterface{}
+	for _, node := range req.Nodes {
+		n, ok := ts.ProvisionedNodes[node.Name]
+		if !ok {
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("SaveNodes on unprovisioned node: %v", node.GetName())
+			return req, nil
+		}
+		rNodes = append(rNodes, n)
+	}
+	reboot := false
+	restoreAgentFiles := true
+	// - Prepare to upload the required files from local fs to remote node
+	for _, node := range rNodes {
+		// Assumption that node is alive and reachable
+		commonCopyArtifacts := []string{
+			ts.tbInfo.resp.VeniceImage,
+			ts.tbInfo.resp.NaplesImage,
+			ts.tbInfo.resp.NaplesSimImage,
+		}
+		pool.Go(func() error {
+			node := node
+			node.InitNode(reboot, restoreAgentFiles, ts.SSHConfig, commonCopyArtifacts)
+			svcName := node.GetNodeInfo().Name
 
-                    agentURL, err := node.GetAgentURL()
-                    if err != nil {
-                            log.Errorf("TOPO SVC | RestoreNodes | Failed obtain AgentURL for Node: %v. Err: %v", svcName, err)
-                            return err
-                    }
+			agentURL, err := node.GetAgentURL()
+			if err != nil {
+				log.Errorf("TOPO SVC | RestoreNodes | Failed obtain AgentURL for Node: %v. Err: %v", svcName, err)
+				return err
+			}
 
-                    c, err := common.CreateNewGRPCClient(svcName, agentURL, common.GrpcMaxMsgSize)
-                    if err != nil {
-                            log.Errorf("TOPO SVC | RestoreNodes | CreateNewGRPCClient call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", svcName, err)
-                            return err
-                    }
-                    node.SetNodeAgent(iota.NewIotaAgentApiClient(c.Client))
-                    resp, err := node.GetNodeAgent().ReloadNode(ctx, node.GetNodeMsg(node.GetNodeInfo().Name))
-                    log.Infof("TOPO SVC | RestoreNodes | ReloadNode Agent . Received Response Msg: %v", resp)
-                    if err != nil {
-                            log.Errorf("Reload node %v failed. Err: %v", node.GetNodeInfo().Name, err)
-                            return err
-                    }
-                    return nil
-            })
-    }
-    if err := pool.Wait(); err != nil {
-            req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-            return req, nil
-    }
-    req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
-    return req, nil
+			c, err := common.CreateNewGRPCClient(svcName, agentURL, common.GrpcMaxMsgSize)
+			if err != nil {
+				log.Errorf("TOPO SVC | RestoreNodes | CreateNewGRPCClient call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", svcName, err)
+				return err
+			}
+			node.SetNodeAgent(iota.NewIotaAgentApiClient(c.Client))
+			resp, err := node.GetNodeAgent().ReloadNode(ctx, node.GetNodeMsg(node.GetNodeInfo().Name))
+			log.Infof("TOPO SVC | RestoreNodes | ReloadNode Agent . Received Response Msg: %v", resp)
+			if err != nil {
+				log.Errorf("Reload node %v failed. Err: %v", node.GetNodeInfo().Name, err)
+				return err
+			}
+			return nil
+		})
+	}
+	if err := pool.Wait(); err != nil {
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		return req, nil
+	}
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
 }
 
 // DownlaodAssets pulls assets
 func (ts *TopologyService) DownloadAssets(ctx context.Context, req *iota.DownloadAssetsMsg) (*iota.DownloadAssetsMsg, error) {
-    log.Infof("TOPO SVC | DEBUG | DownloadAssets. Received Request Msg: %v", req)
-    defer log.Infof("TOPO SVC | DEBUG | DownloadAssets Returned: %v", req)
+	log.Infof("TOPO SVC | DEBUG | DownloadAssets. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | DownloadAssets Returned: %v", req)
 
-    if ts.downloadedAssets {
-            req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
-            return req, nil
-    }
+	if ts.downloadedAssets {
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+		return req, nil
+	}
 
-    // TODO: Explore integrating with asset-build. For now invoke the cmd to asset-pull
-    mkdir := []string{"mkdir", "-p", req.ParentDir}
-    if stdout, err := exec.Command(mkdir[0], mkdir[1:]...).CombinedOutput(); err != nil {
-            log.Errorf("TOPO SVC | DownloadAssets | Failed to create repo-folder: %v (%v, %v)",
-                    req.ParentDir, err.Error(), string(stdout))
-            req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-            req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to create repo folder")
-            return req, nil
-    }
+	// TODO: Explore integrating with asset-build. For now invoke the cmd to asset-pull
+	mkdir := []string{"mkdir", "-p", req.ParentDir}
+	if stdout, err := exec.Command(mkdir[0], mkdir[1:]...).CombinedOutput(); err != nil {
+		log.Errorf("TOPO SVC | DownloadAssets | Failed to create repo-folder: %v (%v, %v)",
+			req.ParentDir, err.Error(), string(stdout))
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to create repo folder")
+		return req, nil
+	}
 
-    cwd, _ := os.Getwd()
-    os.Chdir(req.ParentDir)
-    defer os.Chdir(cwd)
+	cwd, _ := os.Getwd()
+	os.Chdir(req.ParentDir)
+	defer os.Chdir(cwd)
 
-    destFile := req.ReleaseVersion + ".tgz"
+	destFile := req.ReleaseVersion + ".tgz"
 
-    gopath := os.Getenv("GOPATH")
-    asset_pull_bin := gopath + "/src/github.com/pensando/sw/iota/bin/asset-pull"
+	gopath := os.Getenv("GOPATH")
+	asset_pull_bin := gopath + "/src/github.com/pensando/sw/iota/bin/asset-pull"
 
-    pullAsset := []string{asset_pull_bin, req.AssetName, req.ReleaseVersion, destFile}
-    if stdout, err := exec.Command(pullAsset[0], pullAsset[1:]...).CombinedOutput(); err != nil {
-            log.Errorf("TOPO SVC | DownloadAssets | Failed to download asset: %v %v (%v %v)",
-                    req.AssetName, req.ReleaseVersion, err.Error(), string(stdout))
-            req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-            req.ApiResponse.ErrorMsg = fmt.Sprintf("asset-pull failed")
-            return req, nil
-    }
+	pullAsset := []string{asset_pull_bin, req.AssetName, req.ReleaseVersion, destFile}
+	if stdout, err := exec.Command(pullAsset[0], pullAsset[1:]...).CombinedOutput(); err != nil {
+		log.Errorf("TOPO SVC | DownloadAssets | Failed to download asset: %v %v (%v %v)",
+			req.AssetName, req.ReleaseVersion, err.Error(), string(stdout))
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("asset-pull failed")
+		return req, nil
+	}
 
-    tarCmd := []string{"tar", "-zxvf", destFile}
-    if stdout, err := exec.Command(tarCmd[0], tarCmd[1:]...).CombinedOutput(); err != nil {
-            log.Errorf("TOPO SVC | DownloadAssets | Failed to extract asset: %v %v (%v %v)",
-                    req.AssetName, req.ReleaseVersion, err.Error(), string(stdout))
-            req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-            req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to untar downloaded asset")
-            return req, nil
-    }
+	tarCmd := []string{"tar", "-zxvf", destFile}
+	if stdout, err := exec.Command(tarCmd[0], tarCmd[1:]...).CombinedOutput(); err != nil {
+		log.Errorf("TOPO SVC | DownloadAssets | Failed to extract asset: %v %v (%v %v)",
+			req.AssetName, req.ReleaseVersion, err.Error(), string(stdout))
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to untar downloaded asset")
+		return req, nil
+	}
 
-    ts.downloadedAssets = true
+	ts.downloadedAssets = true
 
-    req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
-    return req, nil
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
 }
 
 // RemoveNetworks remove networks

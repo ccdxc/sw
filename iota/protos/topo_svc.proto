@@ -835,6 +835,8 @@ message TestBedMsg {
     // global licenses
     repeated License licenses           = 14;
    
+    // Testbed Jobc/testbed json file
+    string testbed_json_file            = 15;
 }
 
 message TestNodesMsg {
@@ -1038,6 +1040,10 @@ message TestBedNode {
 
     //auto discover on install
     bool auto_discover_on_install   = 30;
+
+    // warmd instance name
+    string instance_name            = 31;
+
 }
 
 // CopyDirection defines direction whether to copy in or copy out

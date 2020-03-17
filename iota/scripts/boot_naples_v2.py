@@ -24,60 +24,31 @@ HOST_ESX_NAPLES_IMAGES_DIR      = "/home/vm"
 UPGRADE_TIMEOUT                 = 600
 NAPLES_CONFIG_SPEC_LOCAL        = "/tmp/system-config.json"
 
-def GetPrimaryIntNicMgmtIpNext():
-    nxt = str((int(re.search('\.([\d]+)$',GlobalOptions.mnic_ip).group(1))+1)%255)
-    return re.sub('\.([\d]+)$','.'+nxt,GlobalOptions.mnic_ip)
-
-def GetPrimaryIntNicMgmtIp():
-    return GlobalOptions.mnic_ip
-
 parser = argparse.ArgumentParser(description='Naples Boot Script')
 # Mandatory parameters
-parser.add_argument('--console-ip', dest='console_ip', required = True,
-                    default=None, help='Console Server IP Address.')
-parser.add_argument('--console-port', dest='console_port', required = True,
-                    default=None, help='Console Server Port.')
-parser.add_argument('--host-ip', dest='host_ip', required = True,
-                    default=None, help='Host IP Address.')
-parser.add_argument('--cimc-ip', dest='cimc_ip', required = True,
-                    default=None, help='CIMC IP Address.')
-parser.add_argument('--os', dest='os', required = True,
-                    default="", help='Node OS (Freebsd or Linux).')
-parser.add_argument('--server', dest='server', default='ucs',
-                    choices=["ucs", "hpe"],
-                    help='Node Server type')
+parser.add_argument('--testbed', dest='testbed', required = True,
+                    default=None, help='testbed json file - warmd.json.')
+parser.add_argument('--instance-name', dest='instance_name', required = True,
+                    default=None, help='instance id.')
 parser.add_argument('--naples', dest='naples_type', required = True,
                     default="", help='Naples type : capri/equinix')
 
+# Optional parameters
 parser.add_argument('--wsdir', dest='wsdir', default='/sw',
                     help='Workspace folder')
-
-# Optional parameters
 parser.add_argument('--mac-hint', dest='mac_hint',
                     default="", help='Mac hint')
-parser.add_argument('--console-username', dest='console_username',
-                    default="admin", help='Console Server Username.')
-parser.add_argument('--console-password', dest='console_password',
-                    default="N0isystem$", help='Console Server Password.')
-parser.add_argument('--username', dest='username',
+parser.add_argument('--username', dest='naples_username',
                     default="root", help='Naples Username.')
-parser.add_argument('--password', dest='password',
+parser.add_argument('--password', dest='naples_password',
                     default="pen123", help='Naples Password.')
 parser.add_argument('--timeout', dest='timeout',
                     default=180, help='Naples Password.')
-parser.add_argument('--host-username', dest='host_username',
-                    default="root", help='Host Username')
-parser.add_argument('--host-password', dest='host_password',
-                    default="docker", help='Host Password.')
 parser.add_argument('--image-manifest', dest='image_manifest',
                     default='/sw/images/latest.json', help='Image manifest file')
 parser.add_argument('--mode', dest='mode', default='hostpin',
                     choices=["classic", "hostpin", "bitw", "hostpin_dvs", "unified"],
                     help='Naples mode - hostpin / classic.')
-parser.add_argument('--cimc-username', dest='cimc_username',
-                    default="admin", help='CIMC Username')
-parser.add_argument('--cimc-password', dest='cimc_password',
-                    default="N0isystem$", help='CIMC Password.')
 parser.add_argument('--debug', dest='debug',
                     action='store_true', help='Enable Debug Mode')
 parser.add_argument('--uuid', dest='uuid',
@@ -89,7 +60,7 @@ parser.add_argument('--only-init', dest='only_init',
 parser.add_argument('--no-mgmt', dest='no_mgmt',
                     action='store_true', help='Do not ping test mgmt interface on host')
 parser.add_argument('--mnic-ip', dest='mnic_ip',
-                    default="", help='Mnic IP.')
+                    default="169.254.0.1", help='Mnic IP.')
 parser.add_argument('--mgmt-intf', dest='mgmt_intf',
                     default="oob_mnic0", help='Management Interface (oob_mnic0 or bond0).')
 parser.add_argument('--naples-mem-size', dest='mem_size',
@@ -99,7 +70,7 @@ parser.add_argument('--skip-driver-install', dest='skip_driver_install',
 parser.add_argument('--naples-only-setup', dest="naples_only_setup",
                     action='store_true', help='Setup only naples')
 parser.add_argument('--esx-script', dest='esx_script',
-                    default="", help='ESX start up script')
+                    default=None, help='ESX start up script')
 parser.add_argument('--use-gold-firmware', dest='use_gold_firmware',
                     action='store_true', help='Only use gold firmware')
 parser.add_argument('--fast-upgrade', dest='fast_upgrade',
@@ -109,36 +80,13 @@ parser.add_argument('--auto-discover-on-install', dest='auto_discover',
 
 
 GlobalOptions = parser.parse_args()
-GlobalOptions.console_port = int(GlobalOptions.console_port)
 GlobalOptions.timeout = int(GlobalOptions.timeout)
 ws_top = os.path.dirname(sys.argv[0]) + '/../../'
 ws_top = os.path.abspath(ws_top)
 sys.path.insert(0, ws_top)
 import iota.harness.infra.utils.parser as jparser
 
-# if GlobalOptions.image is None:
-#     GlobalOptions.image = "%s/nic/naples_fw.tar" % ws_top
-# if GlobalOptions.drivers_pkg is None:
-#     GlobalOptions.drivers_pkg = "%s/platform/gen/drivers-%s.tar.xz" % (ws_top, GlobalOptions.os)
-
-ROOT_EXP_PROMPT="~#"
-if GlobalOptions.os == 'freebsd':
-    ROOT_EXP_PROMPT="~]"
-
-if GlobalOptions.os == 'esx':
-    ROOT_EXP_PROMPT="~]"
-
-gold_fw_latest = False
-
-def IsNaplesGoldFWLatest():
-    return gold_fw_latest
-
-def IpmiReset():
-    print('calling ipmitool power cycle')
-    cmd="ipmitool -I lanplus -H %s -U %s -P %s power cycle" %\
-              (GlobalOptions.cimc_ip, GlobalOptions.cimc_username, GlobalOptions.cimc_password)
-    subprocess.check_call(cmd, shell=True)
-
+ESX_CTRL_VM_BRINGUP_SCRIPT = "%s/iota/bin/iota_esx_setup" % (GlobalOptions.wsdir)
 
 # Create system config file to enable console with out triggering
 # authentication.
@@ -266,7 +214,7 @@ class FlushFile(object):
 sys.stdout = FlushFile(sys.stdout)
 
 class EntityManagement:
-    def __init__(self, ipaddr = None, username = None, password = None, fw_images = None, driver_images = None):
+    def __init__(self, ipaddr = None, username = None, password = None, fw_images = None):
         self.ipaddr = ipaddr
         self.mac_addr = None
         self.host = None
@@ -274,12 +222,15 @@ class EntityManagement:
         self.username = username
         self.password = password
         self.fw_images = fw_images
-        self.driver_images = driver_images
+        self.console_logfile = None
         self.SSHPassInit()
         return
 
     def SetHost(self, host):
         self.host = host
+
+    def SetIpmiHandler(self, handler):
+        self.ipmi_handler = handler
 
     def SSHPassInit(self):
         self.ssh_host = "%s@%s" % (self.username, self.ipaddr)
@@ -292,14 +243,19 @@ class EntityManagement:
                                hdl = self.hdl, timeout = 180)
         if midx == 0: return
         # Got capri login prompt, send username/password.
-        self.SendlineExpect(GlobalOptions.username, "Password:")
-        ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
+        self.SendlineExpect(self.username, "Password:")
+        ret = self.SendlineExpect(self.password, ["#", pexpect.TIMEOUT], timeout = 3)
         if ret == 1: self.SendlineExpect("", "#")
 
     def IpmiResetAndWait(self):
         print('calling IpmiResetAndWait')
         os.system("date")
-        IpmiReset()
+
+        self.ipmi_handler()
+        self.WaitAfterReset()
+        return
+
+    def WaitAfterReset(self):
         print("sleeping 120 seconds after IpmiReset")
         time.sleep(120)
         print("finished 120 second sleep. Looking for prompt now...")
@@ -352,10 +308,15 @@ class EntityManagement:
             else:
                 raise
 
-    def Spawn(self, command):
+    def Spawn(self, command, dev_name=None):
         hdl = pexpect.spawn(command)
         hdl.timeout = GlobalOptions.timeout
-        hdl.logfile = sys.stdout.buffer
+        if dev_name:
+            if not self.console_logfile:
+                self.console_logfile = open(dev_name + ".log", 'w', buffering=1)
+            hdl.logfile = self.console_logfile.buffer
+        else:
+            hdl.logfile = sys.stdout.buffer
         return hdl
 
     @_exceptionWrapper(_errCodes.ENTITY_NOT_UP, "Host not up")
@@ -461,32 +422,43 @@ class EntityManagement:
 
     @_exceptionWrapper(_errCodes.NAPLES_CMD_FAILED, "Naples command failed")
     def RunNaplesCmd(self, command, ignore_failure = False):
+        ret = {}
         assert(ignore_failure == True or ignore_failure == False)
-        full_command = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@%s %s" %\
-                       (GlobalOptions.password, self.host.naples.ipaddr, command)
-        return self.RunSshCmd(full_command, ignore_failure)
+        for naples_inst in self.host.naples:
+            full_command = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@%s %s" %\
+                           (naples_inst.password, naples_inst.ipaddr, command)
+            ret[naples_inst.GetName()] = self.RunSshCmd(full_command, ignore_failure)
+        return ret
 
 class NaplesManagement(EntityManagement):
-    def __init__(self, username = None, password = None, fw_images = None, driver_images = None):
-        super().__init__(ipaddr = None, username = username, password = password, fw_images = fw_images, driver_images = driver_images)
+    def __init__(self, nic_spec, fw_images = None):
+        super().__init__(ipaddr = None, username = nic_spec.NaplesUsername, password = nic_spec.NaplesPassword, fw_images = fw_images)
+        self.nic_spec = nic_spec
+        self.gold_fw_latest = False
         return
+
+    def GetName(self):
+        return getattr(self.nic_spec, "NaplesName", "NA")
 
     def SetHost(self, host):
         self.host = host
+
+    def IsNaplesGoldFWLatest(self):
+        return self.gold_fw_latest
 
     @_exceptionWrapper(_errCodes.NAPLES_TELNET_CLEARLINE_FAILED, "Failed to clear line")
     def __clearline(self):
         try:
             print("Clearing Console Server Line")
-            hdl = self.Spawn("telnet %s" % GlobalOptions.console_ip)
+            hdl = self.Spawn("telnet %s" % self.nic_spec.ConsoleIP, self.nic_spec.NaplesName)
             idx = hdl.expect(["Username:", "Password:"])
             if idx == 0:
-                self.SendlineExpect(GlobalOptions.console_username, "Password:", hdl = hdl)
-            self.SendlineExpect(GlobalOptions.console_password, "#", hdl = hdl)
+                self.SendlineExpect(self.nic_spec.ConsoleUsername, "Password:", hdl = hdl)
+            self.SendlineExpect(self.nic_spec.ConsolePassword, "#", hdl = hdl)
 
             for i in range(6):
                 time.sleep(5)
-                self.SendlineExpect("clear line %d" % (GlobalOptions.console_port - 2000), "[confirm]", hdl = hdl)
+                self.SendlineExpect("clear line %d" % (self.nic_spec.ConsolePort - 2000), "[confirm]", hdl = hdl)
                 self.SendlineExpect("", " [OK]", hdl = hdl)
             hdl.close()
         except:
@@ -507,8 +479,8 @@ class NaplesManagement(EntityManagement):
                                     hdl = self.hdl, timeout = 30)
                 if midx == 0: return
                 # Got capri login prompt, send username/password.
-                self.SendlineExpect(GlobalOptions.username, "Password:")
-                ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
+                self.SendlineExpect(self.username, "Password:")
+                ret = self.SendlineExpect(self.password, ["#", pexpect.TIMEOUT], timeout = 3)
                 if ret == 1: self.SendlineExpect("", "#")
                 #login successful
                 self.SyncLine()
@@ -552,6 +524,14 @@ class NaplesManagement(EntityManagement):
             time.sleep(5)
         self.__login()
 
+    def RebootAndLogin(self):
+        if not self.host.PciSensitive():
+            self.hdl.sendline('reboot')
+            self.hdl.expect_exact('Starting kernel',120)
+            self.hdl.expect_exact(["#", "capri login:", "capri-gold login:"],120)
+
+        self.__login()
+
     def InstallPrep(self):
         self.SendlineExpect("mount -t ext4 /dev/mmcblk0p6 /sysconfig/config0", "#")
         self.SendlineExpect("mount -t ext4 /dev/mmcblk0p7 /sysconfig/config1", "#")
@@ -585,20 +565,20 @@ class NaplesManagement(EntityManagement):
     def __connect_to_console(self):
         for _ in range(3):
             try:
-                self.hdl = self.Spawn("telnet %s %s" % ((GlobalOptions.console_ip, GlobalOptions.console_port)))
+                self.hdl = self.Spawn("telnet %s %s" % ((self.nic_spec.ConsoleIP, self.nic_spec.ConsolePort)), self.nic_spec.NaplesName)
                 midx = self.hdl.expect_exact([ "Escape character is '^]'.", pexpect.EOF])
                 if midx == 1:
-                    raise Exception("Failed to connect to Console %s %d" % (GlobalOptions.console_ip, GlobalOptions.console_port))
+                    raise Exception("Failed to connect to Console %s %d" % (self.nic_spec.ConsoleIP, self.nic_spec.ConsolePort))
             except:
                 try:
                     self.__clearline()
                 except:
-                    print("Expect Failed to clear line %s %d" % (GlobalOptions.console_ip, GlobalOptions.console_port))
+                    print("Expect Failed to clear line %s %d" % (self.nic_spec.ConsoleIP, self.nic_spec.ConsolePort))
                 continue
             break
         else:
             #Did not break, so connection failed.
-            msg = "Failed to connect to Console %s %d" % (GlobalOptions.console_ip, GlobalOptions.console_port)
+            msg = "Failed to connect to Console %s %d" % (self.nic_spec.ConsoleIP, self.nic_spec.ConsolePort)
             print(msg)
             raise Exception(msg)
 
@@ -619,7 +599,7 @@ class NaplesManagement(EntityManagement):
     @_exceptionWrapper(_errCodes.NAPLES_MEMORY_SIZE_INCOMPATIBLE, "Memroy size check failed")
     def CheckMemorySize(self, size):
         if self._getMemorySize().lower() != size.lower():
-            msg = "Memory size check failed %s %d" % (GlobalOptions.console_ip, GlobalOptions.console_port)
+            msg = "Memory size check failed %s %d" % (self.nic_spec.ConsoleIP, self.nic_spec.ConsolePort)
             raise Exception(msg)
 
 
@@ -682,7 +662,7 @@ class NaplesManagement(EntityManagement):
                 print("Read MAC {0}".format(self.mac_addr))
                 return
             else:
-                print("Did not Read MAC  {0}".format(self.mac_addr))
+                print("Did not Read MAC  : o/p {0}, pattern {1}".format(output, x))
             time.sleep(2)
         raise Exception("Not able to read oob mac")
 
@@ -695,23 +675,22 @@ class NaplesManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_UNKNOWN, "Gold FW unknown")
     def ReadGoldFwVersion(self):
-        global gold_fw_latest
         gold_fw_cmd = '''fwupdate -l | jq '.goldfw' | jq '.kernel_fit' | jq '.software_version' | tr -d '"\''''
         try:
             self.SendlineExpect(gold_fw_cmd, self.fw_images.gold_fw_latest_ver + '\r\n' + '#')
-            gold_fw_latest = True
+            self.gold_fw_latest = True
             print ("Matched gold fw latest")
         except:
             try:
                 self.SendlineExpect(gold_fw_cmd, self.fw_images.gold_fw_old_ver)
-                gold_fw_latest = False
+                self.gold_fw_latest = False
                 print ("Matched gold fw older")
             except:
                 msg = "Did not match any available gold fw"
                 print(msg)
                 if self.IsSSHUP():
                     print("SSH working, skipping gold fw version check")
-                    gold_fw_latest = False
+                    self.gold_fw_latest = False
                     return
                 raise Exception(msg)
 
@@ -778,14 +757,18 @@ class NaplesManagement(EntityManagement):
     def Close(self):
         if self.hdl:
             self.hdl.close()
+
+        if self.console_logfile:
+            self.console_logfile.close()
+
         return
 
     def __get_capri_prompt(self):
-        IpmiReset()
+        self.ipmi_handler()
         match_idx = self.hdl.expect(["Autoboot in 0 seconds", pexpect.TIMEOUT], timeout = 180)
         if match_idx == 1:
             print("WARN: sysreset.sh script did not reset the system. Trying CIMC")
-            IpmiReset()
+            self.ipmi_handler()
             self.hdl.expect_exact("Autoboot in 0 seconds", timeout = 180)
         self.hdl.sendcontrol('C')
         self.hdl.expect_exact("Capri#")
@@ -812,10 +795,11 @@ class NaplesManagement(EntityManagement):
         return
 
 class HostManagement(EntityManagement):
-    def __init__(self, ipaddr, server, fw_images, driver_images):
-        super().__init__(ipaddr, GlobalOptions.host_username, GlobalOptions.host_password, fw_images, driver_images)
+    def __init__(self, ipaddr, server_type, host_username, host_password, fw_images):
+        super().__init__(ipaddr, host_username, host_password, fw_images)
         self.naples = None
-        self.server = server
+        self.server = server_type
+        self.__host_os = None
 
     def SetNaples(self, naples):
         self.naples = naples
@@ -825,20 +809,32 @@ class HostManagement(EntityManagement):
         #return self.server == "hpe"
         return True
 
+    def SetNodeOs(self, os):
+        self.__host_os = os
+
+    def GetPrimaryIntNicMgmtIpNext(self):
+        nxt = str((int(re.search('\.([\d]+)$',GlobalOptions.mnic_ip).group(1))+1)%255)
+        return re.sub('\.([\d]+)$','.'+nxt,GlobalOptions.mnic_ip)
+
+    def GetPrimaryIntNicMgmtIp(self):
+        return GlobalOptions.mnic_ip
+
     @_exceptionWrapper(_errCodes.HOST_INIT_FAILED, "Host Init Failed")
     def Init(self, driver_pkg = None, cleanup = True, gold_fw = False):
         self.WaitForSsh()
         os.system("date")
-        nodeinit_args = " --own_ip " + GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + GetPrimaryIntNicMgmtIp()
+        nodeinit_args = " --own_ip " + self.GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + self.GetPrimaryIntNicMgmtIp()
 
         if GlobalOptions.skip_driver_install:
             nodeinit_args += " --skip-install"
 
+        node_init_script = os.path.join(GlobalOptions.wsdir, 'iota', 'scripts', self.__host_os, 'nodeinit.sh')
+        pen_nics_script = os.path.join(GlobalOptions.wsdir, 'iota', 'scripts', 'pen_nics.py')
         if cleanup:
             nodeinit_args += " --cleanup"
             self.RunSshCmd("sudo rm -rf /naples &&  sudo mkdir -p /naples && sudo chown vm:vm /naples")
             self.RunSshCmd("sudo mkdir -p /pensando && sudo chown vm:vm /pensando")
-            self.CopyIN("scripts/%s/nodeinit.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
+            self.CopyIN(node_init_script, HOST_NAPLES_DIR)
             print('running nodeinit.sh cleanup with args: {0}'.format(nodeinit_args))
             self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
 
@@ -850,20 +846,21 @@ class HostManagement(EntityManagement):
             print('running nodeinit.sh cleanup with args: {0}'.format(nodeinit_args))
             self.RunSshCmd("sudo rm -rf /naples &&  sudo mkdir -p /naples && sudo chown vm:vm /naples")
             self.RunSshCmd("sudo mkdir -p /pensando && sudo chown vm:vm /pensando")
-            self.CopyIN("scripts/pen_nics.py",  HOST_NAPLES_DIR)
-            self.CopyIN("scripts/%s/nodeinit.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
+            self.CopyIN(pen_nics_script,  HOST_NAPLES_DIR)
+            self.CopyIN(node_init_script, HOST_NAPLES_DIR)
             self.CopyIN(os.path.join(GlobalOptions.wsdir, driver_pkg), HOST_NAPLES_DIR)
 
             nodeinit_args = ""
             #Run with not mgmt first
             if gold_fw or not GlobalOptions.no_mgmt:
                 self.RunSshCmd("sudo %s/nodeinit.sh --no-mgmt" % (HOST_NAPLES_DIR))
-                mgmtIPCmd = "sudo python3  %s/pen_nics.py --mac-hint %s --intf-type int-mnic --op mnic-ip --os %s" % (HOST_NAPLES_DIR, self.naples.mac_addr, GlobalOptions.os)
-                output, errout = self.RunSshCmdWithOutput(mgmtIPCmd)
-                print("Command output ", output)
-                mnic_ip = ipaddress.ip_address(output.split("\n")[0])
-                own_ip = str(mnic_ip + 1)
-                nodeinit_args = " --own_ip " + own_ip + " --trg_ip " + str(mnic_ip)
+                #mgmtIPCmd = "sudo python5  %s/pen_nics.py --mac-hint %s --intf-type int-mnic --op mnic-ip --os %s" % (HOST_NAPLES_DIR, self.naples.mac_addr, self.__host_os)
+                #output, errout = self.RunSshCmdWithOutput(mgmtIPCmd)
+                #print("Command output ", output)
+                #mnic_ip = ipaddress.ip_address(output.split("\n")[0])
+                #own_ip = str(mnic_ip + 1)
+                #nodeinit_args = " --own_ip " + own_ip + " --trg_ip " + str(mnic_ip)
+                nodeinit_args = " --own_ip " + self.GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + self.GetPrimaryIntNicMgmtIp()
             else:
                 nodeinit_args += " --no-mgmt"
             self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
@@ -875,10 +872,11 @@ class HostManagement(EntityManagement):
         super(HostManagement, self).CopyIN(src_filename, entity_dir)
         if naples_dir:
             naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
-            ret = self.RunSshCmd("sshpass -p %s scp -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no %s %s@%s:%s" %\
-                           (GlobalOptions.password, dest_filename, GlobalOptions.username, self.naples.ipaddr, naples_dest_filename))
-            if ret:
-                raise Exception("Copy to Naples failed")
+            for naples_inst in self.naples:
+                ret = self.RunSshCmd("sshpass -p %s scp -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no %s %s@%s:%s" %\
+                               (naples_inst.password, dest_filename, naples_inst.username, naples_inst.ipaddr, naples_dest_filename))
+                if ret:
+                    raise Exception("Copy to Naples failed")
         return 0
 
     @_exceptionWrapper(_errCodes.HOST_RESTART_FAILED, "Host restart Failed")
@@ -887,7 +885,7 @@ class HostManagement(EntityManagement):
         self.RunSshCmd("sync")
         self.RunSshCmd("ls -l /tmp/")
         self.RunSshCmd("uptime")
-        print("Rebooting Host : %s" % GlobalOptions.host_ip)
+        print("Rebooting Host : %s" % self.ipaddr)
         if dryrun == False:
             self.RunSshCmd("sudo shutdown -r now", ignore_failure = True)
             print("sleeping 60 after shutdown -r in Reboot")
@@ -960,8 +958,11 @@ class HostManagement(EntityManagement):
 
 
 class EsxHostManagement(HostManagement):
-    def __init__(self, ipaddr, server, fw_images, driver_images):
-        HostManagement.__init__(self, ipaddr, server, fw_images, driver_images)
+    def __init__(self, ipaddr, server_type, host_username, host_password, fw_images, driver_images):
+        HostManagement.__init__(self, ipaddr, server_type, host_username, host_password, fw_images)
+        self.driver_images = driver_images
+        if GlobalOptions.esx_script is None:
+            GlobalOptions.esx_script = ESX_CTRL_VM_BRINGUP_SCRIPT
 
     @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_COPY_FAILED, "ESX ctrl vm copy failed")
     def ctrl_vm_copyin(self, src_filename, entity_dir, naples_dir = None):
@@ -978,19 +979,23 @@ class EsxHostManagement(HostManagement):
 
         if naples_dir:
             naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
-            ret = self.ctrl_vm_run("sshpass -p %s scp -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no %s %s@%s:%s" %\
-                           (GlobalOptions.password, dest_filename, GlobalOptions.username, self.naples.ipaddr, naples_dest_filename))
-            if ret:
-                raise Exception("Cmd failed : " + cmd)
+            for naples_inst in self.naples:
+                ret = self.ctrl_vm_run("sshpass -p %s scp -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no %s %s@%s:%s" %\
+                               (naples_inst.password, dest_filename, naples_inst.username, naples_inst.ipaddr, naples_dest_filename))
+                if ret:
+                    raise Exception("Cmd failed : " + cmd)
 
         return 0
 
     @_exceptionWrapper(_errCodes.NAPLES_CMD_FAILED, "Naples command failed")
     def RunNaplesCmd(self, command, ignore_failure = False):
+        ret = []
         assert(ignore_failure == True or ignore_failure == False)
-        full_command = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no %s@%s %s" %\
-                       (GlobalOptions.password, GlobalOptions.username, self.naples.ipaddr, command)
-        return self.ctrl_vm_run(full_command, ignore_failure)
+        for naples_inst in self.naples:
+            full_command = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no %s@%s %s" %\
+                           (naples_inst.password, naples_inst.username, naples_inst.ipaddr, command)
+            ret.append(self.ctrl_vm_run(full_command, ignore_failure))
+        return ret
 
     @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_RUN_CMD_FAILED, "ESX ctrl vm run failed")
     def ctrl_vm_run(self, command, background = False, ignore_result = False):
@@ -1021,17 +1026,19 @@ class EsxHostManagement(HostManagement):
     def __esx_host_init(self):
         self.WaitForSsh(port=443)
         time.sleep(30)
-        if self.naples.IsSSHUP():
-            print ("Naples OOB is up, skipping ctrl vm initialization.")
+        if all(n.IsSSHUP() for n in self.naples):
+            print ("All Naples OOB is up, skipping ctrl vm initialization.")
             return
-        outFile = "/tmp/esx_" +  GlobalOptions.host_ip + ".json"
+        # Use first instance of naples
+        naples_inst = self.naples[0]
+        outFile = "/tmp/esx_" +  self.ipaddr + ".json"
         esx_startup_cmd = ["timeout", "2400"]
         esx_startup_cmd.extend([GlobalOptions.esx_script])
-        esx_startup_cmd.extend(["--esx-host", GlobalOptions.host_ip])
-        esx_startup_cmd.extend(["--esx-username", GlobalOptions.host_username])
-        esx_startup_cmd.extend(["--esx-password", GlobalOptions.host_password])
+        esx_startup_cmd.extend(["--esx-host", self.ipaddr])
+        esx_startup_cmd.extend(["--esx-username", self.username])
+        esx_startup_cmd.extend(["--esx-password", self.password])
         esx_startup_cmd.extend(["--esx-outfile", outFile])
-        esx_startup_cmd.extend(["--mac-hint", self.naples.mac_addr])
+        esx_startup_cmd.extend(["--mac-hint", naples_inst.mac_addr])
         proc_hdl = subprocess.Popen(esx_startup_cmd, stdout=sys.stdout.f, stderr=sys.stderr)
         while proc_hdl.poll() is None:
             time.sleep(5)
@@ -1119,7 +1126,10 @@ class EsxHostManagement(HostManagement):
 
     @_exceptionWrapper(_errCodes.HOST_INIT_FOR_UPGRADE_FAILED, "Init for upgrade failed")
     def InitForUpgrade(self):
-        gold_pkg = self.driver_images.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else self.driver_images.gold_drv_old_pkg
+        if all(n.IsNaplesGoldFWLatest() for n in self.naples):
+            gold_pkg = self.driver_images.gold_drv_latest_pkg
+        else:
+            gold_pkg = self.driver_images.gold_drv_old_pkg
         self.__install_drivers(gold_pkg)
 
     @_exceptionWrapper(_errCodes.HOST_INIT_FOR_REBOOT_FAILED, "Init for reboot failed")
@@ -1141,10 +1151,10 @@ class EsxHostManagement(HostManagement):
             raise Exception("Unload failed")
 
     def __host_connect(self):
-        ip=GlobalOptions.host_ip
+        ip=self.ipaddr
         port='22'
-        username=GlobalOptions.host_username
-        password=GlobalOptions.host_password
+        username=self.username
+        password=self.password
         ssh=paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(ip,port,username,password)
@@ -1159,81 +1169,159 @@ class EsxHostManagement(HostManagement):
             self.RunSshCmd("reboot", ignore_failure = True)
         print("sleeping 120 seconds after run ssh reboot")
         time.sleep(120)
-        print("Rebooting Host : %s" % GlobalOptions.host_ip)
+        print("Rebooting Host : %s" % self.ipaddr)
         return
 
 
 class PenOrchestrator:
 
     def __init__(self):
-        self.naples = None
-        self.host = None
-        self.image_manifest = None
-        self.driver_images = None
-        self.fw_images = None
+        self.__naples = list()
+        self.__host = None
+        self.__img_manifest = None
+        self.__driver_images = None
+        self.__fw_images = None
+        self.__server_type = None
+        self.__testbed = None
+        self.__node_os = "linux"
+        self.__host_username = None
+        self.__host_password = None
 
+        # This variable introduced to control successive ipmi-reset in case of multiple Naples
+        self.__ipmi_reboot_allowed = False  
+
+        self.__load_testbed_json()
         self.__load_image_manifest()
 
     def __load_image_manifest(self):
-        """
-            Following parameters/args will be derived from input image manifest json
-            parser.add_argument('--image', dest='image',
-                                default=None, help='Naples Image.')
-            parser.add_argument('--drivers-pkg', dest='drivers_pkg',
-                                default=None, help='Driver Package.')
-            parser.add_argument('--gold-firmware-image', dest='gold_fw_img',
-                                default=None, help='Gold Firmware Image.')
-            parser.add_argument('--gold-firmware-latest-version', dest='gold_fw_latest_ver',
-                                default=None, help='Gold Firmware latest version.')
-            parser.add_argument('--gold-firmware-old-version', dest='gold_fw_old_ver',
-                                default=None, help='Gold Firmware old version.')
-            parser.add_argument('--gold-drivers-latest-pkg', dest='gold_drv_latest_pkg',
-                                default=None, help='Gold Drivers latest package.')
-            parser.add_argument('--gold-drivers-old-pkg', dest='gold_drv_old_pkg',
-                                default=None, help='Gold Drivers old package.')
-        """
-        self.image_manifest = jparser.JsonParse(GlobalOptions.image_manifest)
-        self.driver_images = list(filter(lambda x: x.OS == GlobalOptions.os, self.image_manifest.Drivers))[0]
-        self.fw_images = list(filter(lambda x: x.naples_type == GlobalOptions.naples_type, self.image_manifest.Firmwares))[0]
-        if self.driver_images is None or self.fw_images is None:
+        self.__img_manifest = jparser.JsonParse(GlobalOptions.image_manifest)
+        self.__driver_images = list(filter(lambda x: x.OS == self.__node_os, self.__img_manifest.Drivers))[0]
+        self.__fw_images = list(filter(lambda x: x.naples_type == GlobalOptions.naples_type, self.__img_manifest.Firmwares))[0]
+        if self.__driver_images is None or self.__fw_images is None:
             sys.stderr.write("Unable to load image manifest")
             sys.exit(1)
 
+    def __load_testbed_json(self):
+        warmd = jparser.JsonParse(GlobalOptions.testbed)
+        self.__testbed = list(filter(lambda x: x.Name == GlobalOptions.instance_name, warmd.Instances))[0]
+        if self.__testbed is None:
+            sys.stderr.write("Unable to load warmd.json")
+            sys.exit(1)
+
+        # Precheck Nics for naples type
+        if getattr(self.__testbed, 'Nics', None):
+            # warmd.json has Nics
+            if any(nic.Type == "naples" for nic in self.__testbed.Nics):
+                print("Found naples-type NICs to initialize testbed")
+            else:
+                print("No Naples-type NICs found in testbed - No-Op")
+                sys.exit(0)
+
+            if getattr(self.__testbed.Resource, '__server_type', 'server-a') == 'hpe':
+                self.__server_type = 'hpe'
+            else:
+                self.__server_type = getattr(self.__testbed, 'NodeServer', 'ucs')
+
+            # Update standard values
+            for nic in self.__testbed.Nics:
+                setattr(nic, 'NaplesUsername', GlobalOptions.naples_username)
+                setattr(nic, 'NaplesPassword', GlobalOptions.naples_password)
+                if getattr(nic, 'ConsoleUsername', None) == None:
+                    setattr(nic, 'ConsoleUsername', 'admin')
+                if getattr(nic, 'ConsolePassword', None) == None:
+                    setattr(nic, 'ConsolePassword', 'N0isystem$')
+                setattr(nic, 'ConsolePort', int(getattr(nic, 'ConsolePort')))
+
+            # Derive NodeOs from the warmd.json Provision.Vars section
+            if hasattr(warmd.Provision, "Vars") and hasattr(warmd.Provision.Vars, 'BmOs') and self.__testbed.Type == "bm":
+                self.__node_os = warmd.Provision.Vars.BmOs
+            if hasattr(warmd.Provision, "Vars") and hasattr(warmd.Provision.Vars, 'VmOs') and self.__testbed.Type == "vm":
+                self.__node_os = warmd.Provision.Vars.VmOs
+
+            # Derive Host Username and Password based on NodeOs
+            if self.__node_os == "esx":
+                self.__host_username = warmd.Provision.Vars.EsxUsername
+                self.__host_password = warmd.Provision.Vars.EsxPassword
+            else:
+                self.__host_username = warmd.Provision.Username
+                self.__host_password = warmd.Provision.Password
+
+        else:
+            # tbXY.json has None
+            setattr(self.__testbed, 'NodeCimcUsername', 'admin') 
+            setattr(self.__testbed, 'NodeCimcPassword', 'N0isystem$')
+
+            nic = jparser.Dict2Object({})
+            setattr(nic, 'NaplesUsername', GlobalOptions.naples_username)
+            setattr(nic, 'NaplesPassword', GlobalOptions.naples_password)
+            setattr(nic, 'ConsoleUsername', 'admin') 
+            setattr(nic, 'ConsolePassword', 'N0isystem$')
+            setattr(nic, 'ConsoleIP', self.__testbed.NicConsoleIP) 
+            setattr(nic, 'ConsolePort', int(self.__testbed.NicConsolePort))
+            setattr(nic, 'ConsolePassword', 'N0isystem$')
+            self.__node_os = self.__testbed.NodeOs
+            if self.__node_os == "esx": # some of the testbed json has no EsxUsername and EsxPassword
+                self.__host_username = getattr(warmd.Provision, 'EsxUsername', 'root')
+                self.__host_password = getattr(warmd.Provision, 'EsxPassword', 'pen123!')
+            else:
+                self.__host_username = warmd.Provision.Username
+                self.__host_password = warmd.Provision.Password
+            self.__testbed.Nics = [nic]
+
+        print("Found %d Naples with host %s in testbed" % (len(self.__testbed.Nics), GlobalOptions.instance_name))
+        for nic in self.__testbed.Nics: 
+            name = "naples_%s_%s" % (nic.ConsoleIP, nic.ConsolePort)
+            setattr(nic, 'NaplesName', name)
+
     def AtExitCleanup(self):
-        if not self.naples:
+        if not self.__naples:
             return
-        try: 
-            self.naples.Connect(bringup_oob=(not GlobalOptions.auto_discover)) # Make sure it is connected
-            self.naples.SendlineExpect("/nic/tools/fwupdate -l", "#", trySync=True)
-            self.naples.Close()
-        except: 
-            print("failed to read firmware. error was: {0}".format(traceback.format_exc()))
+        for naples_inst in self.__naples:
+            try: 
+                naples_inst.Connect(bringup_oob=(not GlobalOptions.auto_discover)) # Make sure it is connected
+                naples_inst.SendlineExpect("/nic/tools/fwupdate -l", "#", trySync=True)
+                naples_inst.Close()
+            except: 
+                print("failed to read firmware. error was: {0}".format(traceback.format_exc()))
 
     def __doNaplesReboot(self):
-        self.naples.Connect()
 
-        self.naples.Reboot()
+        if self.__host.PciSensitive():
+            self.__host.Reboot()
+            self.__host.WaitForSsh()
+            time.sleep(5)
 
-        # Naples would have rebooted to, login again.
-        self.naples.Connect()
+        for naples_inst in self.__naples:
+            # Naples would have rebooted to, login again.
+            naples_inst.Connect()
+            naples_inst.RebootAndLogin()
 
-        if GlobalOptions.mem_size:
-            self.naples.CheckMemorySize(GlobalOptions.mem_size)
+            if GlobalOptions.mem_size:
+                naples_inst.CheckMemorySize(GlobalOptions.mem_size)
 
     def NaplesOnlySetup(self):
 
-        self.naples = NaplesManagement(username='root', password='pen123', fw_images = self.fw_images, driver_images = self.driver_images)
-
-        if GlobalOptions.os == 'esx':
-            self.host = EsxHostManagement(GlobalOptions.host_ip, GlobalOptions.server, self.fw_images, self.driver_images)
-        else:
-            self.host = HostManagement(GlobalOptions.host_ip, GlobalOptions.server, self.fw_images, self.driver_images)
-
-        self.naples.SetHost(self.host)
-        self.host.SetNaples(self.naples)
-
         if GlobalOptions.only_init == True:
             return
+
+        if self.__node_os == 'esx':
+            self.__host = EsxHostManagement(self.__testbed.NodeMgmtIP, self.__server_type,
+                                            self.__host_username, self.__host_password,
+                                            self.__fw_images, self.__driver_images)
+        else:
+            self.__host = HostManagement(self.__testbed.NodeMgmtIP, self.__server_type, 
+                                         self.__host_username, self.__host_password, 
+                                         self.__fw_images)
+        self.__host.SetIpmiHandler(self.IpmiReset)
+        self.__host.SetNodeOs(self.__node_os)
+
+        for nic in self.__testbed.Nics:
+            naples_inst = NaplesManagement(nic, fw_images = self.__fw_images) 
+            naples_inst.SetHost(self.__host)
+            naples_inst.SetIpmiHandler(self.IpmiReset)
+            self.__naples.append(naples_inst)
+
+        self.__host.SetNaples(self.__naples)
 
         if GlobalOptions.only_mode_change == True:
             # Case 3: Only INIT option.
@@ -1241,35 +1329,47 @@ class PenOrchestrator:
             return
 
         #First do a reset as naples may be in screwed up state.
-        try:
-            self.naples.Connect()
-            if not self.host.IsSSHUP():
-                raise Exception("Host not up.")
-        except:
-            #Do Reset only if we can't connect to naples.
-            IpmiReset()
-            time.sleep(10)
-            self.naples.Connect()
-            self.naples.InitForUpgrade(goldfw = True)
+        run_init_for_ugrade = False
+        self.__ipmi_reboot_allowed = True
+        for naples_inst in self.__naples:
+            try:
+                naples_inst.Connect()
+                if not self.__host.IsSSHUP():
+                    raise Exception("Host not up.")
+            except:
+                #Do Reset only if we can't connect to naples.
+                self.IpmiReset()
+                self.__ipmi_reboot_allowed = False
+                time.sleep(10)
+                run_init_for_ugrade = True
+                break
+        self.__ipmi_reboot_allowed = True
+
+        if run_init_for_ugrade:
+            # TODO: Since we are going to do IpmiReset second time. call InitForUpgrade for all naples
+            for naples_inst in self.__naples:
+                naples_inst.Connect()
+                naples_inst.InitForUpgrade(goldfw = True)
             #Do a reset again as old fw might lock up host boot
-            IpmiReset()
-            self.host.WaitForSsh()
+            self.__ipmi_reboot_allowed = True
+            self.IpmiReset()
+            if not self.__host.WaitForSsh():
+                raise Exception("Host not up after 2nd IpmiReset")
 
-        self.host.SetNaples(self.naples)
+        for naples_inst in self.__naples:
+            if GlobalOptions.mem_size:
+                naples_inst.CheckMemorySize(GlobalOptions.mem_size)
 
-        if GlobalOptions.mem_size:
-            self.naples.CheckMemorySize(GlobalOptions.mem_size)
+            #Read Naples Gold FW version.
+            naples_inst.ReadGoldFwVersion()
 
-        #Read Naples Gold FW version.
-        self.naples.ReadGoldFwVersion()
-
-        # Case 1: Main firmware upgrade.
-        self.naples.InitForUpgrade(goldfw = True)
-        #OOb is present and up install right away,
-        self.naples.RebootGoldFw()
-        self.naples.InstallMainFirmware()
-        if not IsNaplesGoldFWLatest():
-            self.naples.InstallGoldFirmware()
+            # Case 1: Main firmware upgrade.
+            naples_inst.InitForUpgrade(goldfw = True)
+            #OOb is present and up install right away,
+            naples_inst.RebootGoldFw()
+            naples_inst.InstallMainFirmware()
+            if not naples_inst.IsNaplesGoldFWLatest():
+                naples_inst.InstallGoldFirmware()
 
         self.__doNaplesReboot()
 
@@ -1280,113 +1380,146 @@ class PenOrchestrator:
     # 3) Only initialize the node and start tests.
 
     def Main(self):
-        self.naples = NaplesManagement(username='root', password='pen123', fw_images = self.fw_images, driver_images = self.driver_images)
-
-        if GlobalOptions.os == 'esx':
-            self.host = EsxHostManagement(GlobalOptions.host_ip, GlobalOptions.server, self.fw_images, self.driver_images)
+        if self.__node_os == 'esx':
+            self.__host = EsxHostManagement(self.__testbed.NodeMgmtIP, self.__server_type, 
+                                            self.__host_username, self.__host_password, 
+                                            self.__fw_images, self.__driver_images)
         else:
-            self.host = HostManagement(GlobalOptions.host_ip, GlobalOptions.server, self.fw_images, self.driver_images)
+            self.__host = HostManagement(self.__testbed.NodeMgmtIP, self.__server_type, 
+                                         self.__host_username, self.__host_password, 
+                                         self.__fw_images)
 
-        self.host.SetNaples(self.naples)
-        self.naples.SetHost(self.host)
+        self.__host.SetIpmiHandler(self.IpmiReset)
+        self.__host.SetNodeOs(self.__node_os)
+
+        for nic in self.__testbed.Nics:
+            naples_inst = NaplesManagement(nic, fw_images = self.__fw_images)
+            naples_inst.SetHost(self.__host)
+            naples_inst.SetIpmiHandler(self.IpmiReset)
+            self.__naples.append(naples_inst)
+        self.__host.SetNaples(self.__naples)
 
         if GlobalOptions.only_mode_change:
             # Case 2: Only change mode, reboot and install drivers
             #naples.InitForUpgrade(goldfw = False)
-            self.host.Reboot()
-            self.host.WaitForSsh()
+            self.__host.Reboot()
+            self.__host.WaitForSsh()
+            return
+
+        if GlobalOptions.only_init == True:
+            # Case 3: Only INIT option.
+            self.__host.Init(driver_pkg = self.__driver_images.drivers_pkg, cleanup = True)
             return
 
         # Reset the setup:
         # If the previous run left it in bad state, we may not get ssh or console.
+        #First do a reset as naples may be in screwed up state.
+
         if GlobalOptions.only_mode_change == False and GlobalOptions.only_init == False:
-            #First do a reset as naples may be in screwed up state.
             try:
-                self.naples.Connect(force_connect=False)
-                #Read Naples Gold FW version if system in good state.
-                #If not able to read then we will reset
-                self.naples.ReadGoldFwVersion()
-                self.host.WaitForSsh()
+                for naples_inst in self.__naples:
+                    naples_inst.Connect(force_connect=False)
+                    #Read Naples Gold FW version if system in good state.
+                    #If not able to read then we will reset
+                    naples_inst.ReadGoldFwVersion()
+
+                self.__host.WaitForSsh()
                 #need to unload driver as host might crash in ESX case.
                 #unloading of driver should not fail, else reset to goldfw
-                self.host.UnloadDriver()
-
-                #If Interal IP read fails, force switch
-                self.naples.ReadInternalIP()
-                #Read External IP to try oob path first
-                self.naples.ReadExternalIP()
+                self.__host.UnloadDriver()
             except:
-                #Do force reset to switch to gold fw
-                self.naples.ForceSwitchToGoldFW()
+                # Because ForceSwitchToGoldFW is time-sensetive operation (sending Ctrl-c), allowing both IpmiReset
+                self.__ipmi_reboot_allowed = True
+                for naples_inst in self.__naples:
+                    naples_inst.ForceSwitchToGoldFW()
+
                 try:
-                    #Try to do a clean up db files and conf files
-                    self.naples.InitForUpgrade()
+                    for naples_inst in self.__naples:
+                        naples_inst.InitForUpgrade()
                 except:
                     pass
-                self.host.WaitForSsh()
-                self.host.UnloadDriver()
+
+                self.__host.WaitForSsh()
+                self.UnloadDriver()
         else:
-            self.naples.Connect(bringup_oob=(not GlobalOptions.auto_discover))
-            self.host.WaitForSsh()
+            for naples_inst in self.__naples:
+                naples_inst.Connect(bringup_oob=(not GlobalOptions.auto_discover))
+                self.__host.WaitForSsh()
 
-        if GlobalOptions.only_init == True:
-            # Case 3: Only INIT option.
-            self.host.Init(driver_pkg = self.driver_images.drivers_pkg, cleanup = True)
-            return
-
-        self.naples.StartSSH()
-        self.naples.ReadGoldFwVersion()
-        fwType = self.naples.ReadRunningFirmwareType()
-
-        # Case 1: Main firmware upgrade.
-        #naples.InitForUpgrade(goldfw = True)
-        if self.naples.IsSSHUP():
-            #OOb is present and up install right away,
-            print("installing and running tests with firmware {0} without checking goldfw".format(self.fw_images.image))
-            try:
-                self.naples.InstallMainFirmware()
-                if not IsNaplesGoldFWLatest():
-                    self.naples.InstallGoldFirmware()
-            except:
-                print("failed to upgrade main firmware only. error was:")
-                print(traceback.format_exc())
-                print("attempting gold + main firmware update")
-                self.__fullUpdate()
-        else:
-            self.naples.ReadInternalIP()
-            if fwType != FIRMWARE_TYPE_GOLD:
-                self.naples.InitForUpgrade(goldfw = True)
-                self.host.InitForUpgrade()
-                if GlobalOptions.no_mgmt:
-                    #If non mgmt, do ipmi reset to make sure we reboot
-                    self.naples.IpmiResetAndWait()
-                else:
-                    self.host.Reboot()
-            gold_pkg = self.driver_images.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else self.driver_images.gold_drv_old_pkg
-            self.host.Init(driver_pkg =  gold_pkg, cleanup = False, gold_fw = True)
-            if GlobalOptions.use_gold_firmware:
-                if fwType != FIRMWARE_TYPE_GOLD:
-                    self.naples.InstallGoldFirmware()
-                else:
-                    print('firmware already gold, skipping gold firmware installation')
+        self.__ipmi_reboot_allowed = True
+        install_mainfw_via_host = False
+        for naples_inst in self.__naples:
+            naples_inst.StartSSH()
+            naples_inst.ReadGoldFwVersion()
+            fwType = naples_inst.ReadRunningFirmwareType()
+            
+            # Case 1: Main firmware upgrade.
+            #naples.InitForUpgrade(goldfw = True)
+            if naples_inst.IsSSHUP():
+                #OOb is present and up install right away,
+                print("installing and running tests with firmware {0} without checking goldfw".format(self.__fw_images.image))
+                try:
+                    naples_inst.InstallMainFirmware()
+                    if not naples_inst.IsNaplesGoldFWLatest():
+                        naples_inst.InstallGoldFirmware()
+                except:
+                    print("failed to upgrade main firmware only. error was:")
+                    print(traceback.format_exc())
+                    print("attempting gold + main firmware update")
+                    self.__fullUpdate(naples_inst)
             else:
-                self.host.InstallMainFirmware()
-                #Install gold fw if required.
-                if not IsNaplesGoldFWLatest():
-                    self.host.InstallGoldFirmware()
+                naples_inst.ReadInternalIP()
+                if fwType != FIRMWARE_TYPE_GOLD:
+                    naples_inst.InitForUpgrade(goldfw = True)
+                    self.__host.InitForUpgrade()
+                    if GlobalOptions.no_mgmt:
+                        #If non mgmt, do ipmi reset to make sure we reboot
+                        # Since GlobalOptions.no_mgmt would apply to both Naples (?), reset only once
+                        naples_inst.IpmiResetAndWait()
+                        self.__ipmi_reboot_allowed = False
+                    else:
+                        self.__host.Reboot()
+
+                if naples_inst.IsNaplesGoldFWLatest():
+                    gold_pkg = self.__driver_images.gold_drv_latest_pkg 
+                else:
+                    gold_pkg = self.__driver_images.gold_drv_old_pkg
+                self.__host.Init(driver_pkg =  gold_pkg, cleanup = False, gold_fw = True)
+                if GlobalOptions.use_gold_firmware:
+                    if fwType != FIRMWARE_TYPE_GOLD:
+                        naples_inst.InstallGoldFirmware()
+                    else:
+                        print('firmware already gold, skipping gold firmware installation')
+                else:
+                    install_mainfw_via_host = True
+
+        if install_mainfw_via_host:
+            # Since we are updating from host-side, this is a one-time operation
+            self.__ipmi_reboot_allowed = True
+            self.__host.InstallMainFirmware()
+            #Install gold fw if required.
+            for naples_inst in self.__naples:
+                if not naples_inst.IsNaplesGoldFWLatest():
+                    self.__host.InstallGoldFirmware()
 
         #Script that might have to run just before reboot
         # ESX would require drivers to be installed here to avoid
         # onr more reboot
-        self.host.InitForReboot()
+        self.__host.InitForReboot()
         #Do and IP reset to make sure naples and Host are in sync
-        self.naples.IpmiResetAndWait()
 
-        self.naples.Connect(bringup_oob=(not GlobalOptions.auto_discover))
+        self.__ipmi_reboot_allowed=True
+        self.IpmiReset() # Do IpmiReset once
+        for naples_inst in self.__naples:
+            naples_inst.WaitAfterReset()
+
+        #Naples would have rebooted to, login again.
+        for naples_inst in self.__naples:
+            naples_inst.Connect(bringup_oob=(not GlobalOptions.auto_discover))
 
         # Common to Case 2 and Case 1.
         # Initialize the Node, this is needed in all cases.
-        self.host.Init(driver_pkg = self.driver_images.drivers_pkg, cleanup = False)
+        self.__host.Init(driver_pkg = self.__driver_images.drivers_pkg, cleanup = False)
 
         #if naples.IsSSHUP():
             # Connect to serial console too
@@ -1396,16 +1529,31 @@ class PenOrchestrator:
             # Update MainFwB also to same image - TEMP CHANGE
             # host.InstallMainFirmware(mount_data = False, copy_fw = False)
 
-    def __fullUpdate(self):
-        self.naples.ForceSwitchToGoldFW()
+    def __fullUpdate(self, naples_inst):
+        fwType = naples_inst.ReadRunningFirmwareType()
+        if fwType != FIRMWARE_TYPE_GOLD:
+            naples_inst.ForceSwitchToGoldFW()
+            naples_inst.RebootGoldFw()
+
         if GlobalOptions.use_gold_firmware:
-            print("installing and running tests with gold firmware {0}".format(self.fw_images.gold_fw_img))
-            self.naples.InstallGoldFirmware()
+            print("installing and running tests with gold firmware {0}".format(self.__fw_images.gold_fw_img))
+            naples_inst.InstallGoldFirmware()
         else:
-            print("installing and running tests with firmware {0}".format(self.fw_images.image))
-            self.naples.InstallMainFirmware()
-            if not IsNaplesGoldFWLatest():
-                self.naples.InstallGoldFirmware()
+            print("installing and running tests with firmware {0}".format(self.__fw_images.image))
+            naples_inst.InstallMainFirmware()
+            if not naples_inst.IsNaplesGoldFWLatest():
+                naples_inst.InstallGoldFirmware()
+        naples_inst.Reboot()
+
+    def IpmiReset(self):
+        if self.__ipmi_reboot_allowed:
+            print('calling ipmitool power cycle')
+            cmd="ipmitool -I lanplus -H %s -U %s -P %s power cycle" % (
+                    self.__testbed.NodeCimcIP, self.__testbed.NodeCimcUsername, 
+                    self.__testbed.NodeCimcPassword)
+            subprocess.check_call(cmd, shell=True)
+        else:
+            print("Skipping IPMI Reset")
 
 
 if __name__ == '__main__':
