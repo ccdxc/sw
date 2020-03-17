@@ -176,12 +176,8 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 		}
 
 		// Clean up older go-routines. This makes calls to Start idempotent
-		if c.cancelWatcher != nil {
-			log.Infof("Controller API: %s", types.InfoNPMWatcherReaped)
-			if err := c.Stop(); err != nil {
-				log.Error(errors.Wrapf(types.ErrControllerWatcherStop, "Controller API: %s", err))
-			}
-			c.Wait()
+		if err := c.Stop(); err != nil {
+			log.Error(errors.Wrapf(types.ErrControllerWatcherStop, "Controller API: %s", err))
 		}
 
 		c.factory = rpckit.NewClientFactory(c.InfraAPI.GetDscName())
@@ -213,6 +209,7 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 }
 
 // Start starts the control loop for connecting to Venice
+// Caller must be holding the lock
 func (c *API) Start(ctx context.Context) error {
 	defer c.Done()
 	for {
@@ -353,10 +350,14 @@ func (c *API) WatchObjects(kinds []string) {
 	}
 
 	log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStarted, kinds)
+	// Add to the WG so that when Stop() is invoked we wait for all wather to exit
+	// before cleaning up the RPC clients
+	c.Add(1)
 	if err := c.nimbusClient.WatchAggregate(c.WatchCtx, kinds, c.PipelineAPI); err != nil {
 		log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
 	}
 	log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStopped, kinds)
+	c.Done()
 }
 
 // WatchTechSupport watches for TechSupportRequests. This is called only in Cloud Pipeline.
@@ -460,10 +461,18 @@ func (c *API) WatchTechSupport() {
 }
 
 // Stop cancels all watchers and closes all clients to venice controllers
+// Caller must be holding the lock
 func (c *API) Stop() error {
-	if c.cancelWatcher != nil {
-		c.cancelWatcher()
+	if c.cancelWatcher == nil {
+		log.Infof("Controller API: watchers not running, returning")
+		return nil
 	}
+
+	c.cancelWatcher()
+	log.Infof("Controller API: %s", types.InfoNPMWatcherReaped)
+
+	c.Wait()
+	c.cancelWatcher = nil
 
 	if c.npmClient != nil {
 		if err := c.npmClient.Close(); err != nil {

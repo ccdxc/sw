@@ -7,6 +7,7 @@ if [ "$UID" != "0" ]; then
      exit
 fi
 
+set -x # temporarily enable debugging to figure out iota install issue
 
 # this script is run by customer after extracting the image.
 # this is supposed to install all the venice components in the system
@@ -99,8 +100,6 @@ then
     cleanupNode
     exit 0
 fi
-
-set -ex
 
 # on some systems systemctl is in /bin/systemctl
 if  [ ! -f /usr/bin/systemctl  -a -f /bin/systemctl ]
