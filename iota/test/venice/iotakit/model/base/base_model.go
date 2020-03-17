@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	iota "github.com/pensando/sw/iota/protos/gogen"
+	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise/base"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
@@ -67,6 +68,41 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType) error 
 
 func (sm *SysModel) ConfigClient() objClient.ObjClient {
 	return sm.CfgModel.ObjClient()
+}
+
+func (sm *SysModel) enableSSHDOnNaples(nodes []*testbed.TestNode) error {
+
+	trig := sm.Tb.NewTrigger()
+	for _, node := range nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			for _, naples := range node.NaplesConfigs.Configs {
+				//enable sshd
+				penctlNaplesURL := "http://" + naples.NaplesIpAddress
+				cmd := fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s -a %s system enable-sshd",
+					penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, constants.PenctlAuthTokenFileName)
+				trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+				cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s  -a %s  update ssh-pub-key -f ~/.ssh/id_rsa.pub",
+					penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, constants.PenctlAuthTokenFileName)
+				trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+			}
+		}
+	}
+
+	resp, err := trig.Run()
+	if err != nil {
+		return fmt.Errorf("Error update public key on naples. Err: %v", err)
+	}
+
+	for _, cmdResp := range resp {
+		if cmdResp.ExitCode != 0 {
+			log.Errorf("Changing naples mode failed. %+v", cmdResp)
+			return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v",
+				cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
+
+		}
+	}
+
+	return nil
 }
 
 // SetupConfig sets up the venice cluster and basic config (like auth etc)
@@ -131,6 +167,7 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 				done <- err
 				return
 			}
+
 		}
 
 		done <- nil

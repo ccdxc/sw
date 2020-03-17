@@ -7,14 +7,16 @@ import (
 	"fmt"
 	"os"
 
+	nmdcerts "github.com/pensando/sw/nic/agent/nmd/certs"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
-// GetNaplesTrustRoots returns the trust roots that have been persistified on NAPLES
+// GetVeniceTrustRoots returns the trust roots that have been persistified on NAPLES
 // during the last succesful admission
-func GetNaplesTrustRoots() ([]*x509.Certificate, error) {
-	_, err := os.Stat(globals.NaplesTrustRootsFile)
+func GetVeniceTrustRoots() ([]*x509.Certificate, error) {
+	_, err := os.Stat(globals.VeniceTrustRootsFile)
 	if os.IsNotExist(err) {
 		// If a clusterTrustRoots.pem is not found in /sysconfig/config0 try to restrore it from /sysconfig/config1
 		err = CheckAndRestoreTrustCerts()
@@ -23,7 +25,7 @@ func GetNaplesTrustRoots() ([]*x509.Certificate, error) {
 	switch {
 	case err == nil:
 		// trust roots file is present and opened successfully, validate signature
-		trustRoots, err := certs.ReadCertificates(globals.NaplesTrustRootsFile)
+		trustRoots, err := certs.ReadCertificates(globals.VeniceTrustRootsFile)
 		if err != nil {
 			return nil, fmt.Errorf("Error reading trust roots file: %v", err)
 		}
@@ -37,22 +39,46 @@ func GetNaplesTrustRoots() ([]*x509.Certificate, error) {
 	}
 }
 
-// ClearNaplesTrustRoots removes persistified trust roots from NAPLES
-func ClearNaplesTrustRoots() error {
-	err := os.RemoveAll(globals.NaplesTrustRootsFile)
+// ClearVeniceTrustRoots removes persistified trust roots from NAPLES
+func ClearVeniceTrustRoots() error {
+	err := os.RemoveAll(globals.VeniceTrustRootsFile)
 	if err != nil {
 		return err
 	}
 
-	return os.RemoveAll(globals.NaplesTrustRootsBackupFile)
+	return os.RemoveAll(globals.VeniceTrustRootsBackupFile)
 }
 
-// StoreTrustRoots updates persistified trust roots on NAPLES
-func StoreTrustRoots(trustRoots []*x509.Certificate) error {
-	err := certs.SaveCertificates(globals.NaplesTrustRootsFile, trustRoots)
+// StoreVeniceTrustRoots updates persistified trust roots on NAPLES
+func StoreVeniceTrustRoots(trustRoots []*x509.Certificate) error {
+	err := certs.SaveCertificates(globals.VeniceTrustRootsFile, trustRoots)
 	if err != nil {
 		return err
 	}
 
 	return BackupTrustCerts()
+}
+
+// GetSupportCATrustRoots returns the trust roots used to validate client certificates when accessing protected resources on NAPLES REST API
+func GetSupportCATrustRoots() ([]*x509.Certificate, error) {
+	return certs.DecodePEMCertificates([]byte(nmdcerts.SupportCATrustRoots))
+}
+
+// GetNaplesTrustRoots looks for Venice trust roots that have been persistified on NAPLES
+// during the last succesful admission. If it doesn't find any, it defaults to SupportCATrustRoots.
+// The second parameter returns whether these are cluster trust roots or Pensando trust roots.
+func GetNaplesTrustRoots() ([]*x509.Certificate, bool, error) {
+	tr, err := GetVeniceTrustRoots()
+	if tr != nil {
+		return tr, true, nil
+	}
+	log.Infof("Unable to open load Venice trust roots, err: %v", err)
+
+	tr, err = GetSupportCATrustRoots()
+	if tr != nil {
+		return tr, false, nil
+	}
+	log.Infof("Unable to open load SupportCA trust roots, err: %v", err)
+
+	return nil, false, err
 }

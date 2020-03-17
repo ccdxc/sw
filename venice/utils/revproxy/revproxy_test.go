@@ -64,7 +64,7 @@ func TestRevProxy(t *testing.T) {
 
 	srv, err := NewReverseProxyRouter("127.0.0.1:", proxyRte)
 	AssertOk(t, err, "failed to create proxy server")
-	err = srv.Start(nil)
+	err = srv.Start(nil, nil)
 	AssertOk(t, err, "failed to start proxy server")
 	defer srv.Stop()
 
@@ -125,7 +125,7 @@ func TestRevProxy(t *testing.T) {
 	clientCert, err := certs.SignCSRwithCA(clientCSR, caCert, caKey, certs.WithValidityDays(1))
 	AssertOk(t, err, "Error signing client CSR")
 
-	err = srv.Start(&serverTLSConfig)
+	err = srv.Start(&serverTLSConfig, nil)
 	AssertOk(t, err, "Error starting proxy with TLS")
 	url = srv.GetListenURL()
 	// Verify that without client cert request is rejected

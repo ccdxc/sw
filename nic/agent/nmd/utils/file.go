@@ -38,10 +38,10 @@ func BackupDeviceConfig() error {
 
 // BackupTrustCerts backs up clusterTrustRoots.pem into config1
 func BackupTrustCerts() error {
-	return copyFiles(globals.NaplesTrustRootsFile, globals.NaplesTrustRootsBackupFile)
+	return copyFiles(globals.VeniceTrustRootsFile, globals.VeniceTrustRootsBackupFile)
 }
 
 // CheckAndRestoreTrustCerts checks if a backup exists in /sysconfig/config1 and restores it to config0
 func CheckAndRestoreTrustCerts() error {
-	return copyFiles(globals.NaplesTrustRootsBackupFile, globals.NaplesTrustRootsFile)
+	return copyFiles(globals.VeniceTrustRootsBackupFile, globals.VeniceTrustRootsFile)
 }

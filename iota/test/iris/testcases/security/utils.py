@@ -43,7 +43,7 @@ def GetSecurityPolicy(workload=None, node_name=None):
     if not node_name:
         node_name = workload.node_name
     mgmtIp = api.GetNicIntMgmtIP(node_name)
-    cmd = 'curl -X GET -H "Content-Type:application/json" http://' + mgmtIp + ':8888/api/security/policies/'
+    cmd = 'curl -X GET -k -H "Content-Type:application/json" https://' + mgmtIp + ':8888/api/security/policies/'
     req = api.Trigger_CreateExecuteCommandsRequest()
     result = api.types.status.SUCCESS
 

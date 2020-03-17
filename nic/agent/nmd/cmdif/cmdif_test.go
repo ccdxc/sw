@@ -527,8 +527,8 @@ func TestCmdClientErrorHandling(t *testing.T) {
 }
 
 func TestMain(m *testing.M) {
-	globals.NaplesTrustRootsFile = "/tmp/clusterTrustRoots.pem"
-	nmdutils.ClearNaplesTrustRoots()
-	defer nmdutils.ClearNaplesTrustRoots()
+	globals.VeniceTrustRootsFile = "/tmp/clusterTrustRoots.pem"
+	nmdutils.ClearVeniceTrustRoots()
+	defer nmdutils.ClearVeniceTrustRoots()
 	m.Run()
 }

@@ -40,11 +40,17 @@ subnet 10.5.5.0 netmask 255.255.255.0 {
 PENCTL_EXEC =  {
 }
 
+PENCTL_TOKEN =  {
+}
+
+
 PENCTL_ROOT_DIR   = 'penctl_bin'
 PENCTL_RUN_DIR   = '.'
 PENCTL_DEST_DIR   = 'nic/bin/'
 
 PENCTL_PKG = "nic/host.tar"
+PENCTL_TOKEN_FILE_NAME = "penctl.token"
+PENCTL_TOKEN_FILE = "iota/scripts/" + PENCTL_TOKEN_FILE_NAME
 PENCTL_NAPLES_PKG = "nic/naples_fw.tar"
 
 DEF_TECH_SUPPORT_FILE = "naples-tech-support.tar.gz"

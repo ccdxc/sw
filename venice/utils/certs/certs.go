@@ -279,13 +279,10 @@ func SaveCertificate(certFile string, cert *x509.Certificate) error {
 	return SaveCertificates(certFile, []*x509.Certificate{cert})
 }
 
-// ReadCertificates from a file
-func ReadCertificates(certFile string) ([]*x509.Certificate, error) {
+// DecodePEMCertificates decodes an array of PEM-encoded x509 certificates
+func DecodePEMCertificates(bytes []byte) ([]*x509.Certificate, error) {
 	var result []*x509.Certificate
-	bytes, err := ioutil.ReadFile(certFile)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to read Certificate.")
-	}
+	var err error
 	for {
 		if len(bytes) == 0 {
 			break
@@ -305,6 +302,15 @@ func ReadCertificates(certFile string) ([]*x509.Certificate, error) {
 		bytes = rest
 	}
 	return result, err
+}
+
+// ReadCertificates from a file
+func ReadCertificates(certFile string) ([]*x509.Certificate, error) {
+	bytes, err := ioutil.ReadFile(certFile)
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to read Certificate.")
+	}
+	return DecodePEMCertificates(bytes)
 }
 
 // ReadCertificate reads exactly 1 certificate from a file.

@@ -136,7 +136,7 @@ def Setup(tc):
 def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
-        cmd = 'curl -d \'{"kind": "SmartNICRollout","meta": {"name": "test disruptive upgrade","tenant": "tenant-foo"},"spec": {"ops": [{"op": 4,"version": "0.1"}]}}\' -X POST -H "Content-Type:application/json" ' + api.GetNicIntMgmtIP(n) + ':8888/api/v1/naples/rollout/'
+        cmd = 'curl -k -d \'{"kind": "SmartNICRollout","meta": {"name": "test disruptive upgrade","tenant": "tenant-foo"},"spec": {"ops": [{"op": 4,"version": "0.1"}]}}\' -X POST -H "Content-Type:application/json" ' + 'https://' + api.GetNicIntMgmtIP(n) + ':8888/api/v1/naples/rollout/'
         api.Trigger_AddHostCommand(req, n, cmd)
     tc.resp = api.Trigger(req)
 
@@ -155,7 +155,7 @@ def Verify(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
-        cmd = 'curl ' + api.GetNicIntMgmtIP(n) + ':8888/api/v1/naples/rollout/'
+        cmd = 'curl -k https://' + api.GetNicIntMgmtIP(n) + ':8888/api/v1/naples/rollout/'
         api.Trigger_AddHostCommand(req, n, cmd)
     tc.resp = api.Trigger(req)
 
@@ -225,7 +225,7 @@ def Teardown(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
-        cmd = 'curl -X DELETE ' + api.GetNicIntMgmtIP(n) + ':8888/api/v1/naples/rollout/'
+        cmd = 'curl -k -X DELETE https://' + api.GetNicIntMgmtIP(n) + ':8888/api/v1/naples/rollout/'
         api.Trigger_AddHostCommand(req, n, cmd)
     tc.resp = api.Trigger(req)
     for cmd in tc.resp.commands:

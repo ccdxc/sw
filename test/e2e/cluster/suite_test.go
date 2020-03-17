@@ -3,6 +3,7 @@ package cluster
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -113,10 +114,12 @@ var _ = BeforeSuite(func() {
 			ts.netagentClients = append(ts.netagentClients, rclient)
 
 			var naples nmd.DistributedServiceCard
-			nmdURL := "http://" + agIP.String() + ":" + globals.AgentProxyPort + "/api/v1/naples/"
+			nmdURL := "https://" + agIP.String() + ":" + globals.AgentProxyPort + "/api/v1/naples/"
 			By(fmt.Sprintf("Getting Naples object from %v", nmdURL))
 
-			resp, err := http.Get(nmdURL)
+			transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+			client := &http.Client{Transport: transport}
+			resp, err := client.Get(nmdURL)
 			Expect(err).ShouldNot(HaveOccurred())
 			data, err := ioutil.ReadAll(resp.Body)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -154,7 +157,7 @@ var _ = BeforeSuite(func() {
 			By(fmt.Sprintf("Switching Naples %+v to managed mode", naples))
 			out, err := json.Marshal(&naples)
 			Expect(err).ShouldNot(HaveOccurred())
-			_, err = http.Post(nmdURL, "application/json", bytes.NewReader(out))
+			_, err = client.Post(nmdURL, "application/json", bytes.NewReader(out))
 			Expect(err).ShouldNot(HaveOccurred())
 
 			// Point the DSC to firewall profile

@@ -779,7 +779,7 @@ func (n *NMD) setClusterCredentials(cert *x509.Certificate, caTrustChain, trustR
 
 	// Persist trust roots so that we remember what is the last Venice cluster we connected to
 	// and we can authenticate offline credentials signed by Venice CA.
-	err = utils.StoreTrustRoots(trustRoots)
+	err = utils.StoreVeniceTrustRoots(trustRoots)
 	if err != nil {
 		return fmt.Errorf("Error storing cluster trust roots: %v", err)
 	}
@@ -830,7 +830,7 @@ func (n *NMD) parseAdmissionResponse(resp *grpc.NICAdmissionResponse) (*x509.Cer
 	// If we have trust roots obtained during previous admission, we use them to check the
 	// issued certificate signature and make sure that we are connecting to the same cluster.
 	// However, we always return the new trust roots, not old ones, as they may differ.
-	ntr, err := utils.GetNaplesTrustRoots()
+	ntr, err := utils.GetVeniceTrustRoots()
 	if err != nil {
 		return nil, nil, nil, nil, fmt.Errorf("Error getting trust roots: %v", err)
 	}

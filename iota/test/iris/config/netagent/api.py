@@ -15,7 +15,13 @@ from iota.test.iris.testcases.penctl.common import GetNaplesUUID
 _cfg_dir = api.GetTopDir() + "/iota/test/iris/config/netagent/cfg/"
 
 ip=api.GetPrimaryIntNicMgmtIp()
-base_url = "http://"+ip+":8888/"
+base_url = "https://"+ip+":8888/"
+
+def formatMac(mac: str) -> str:
+    mac = re.sub('[.:-]', '', mac).lower()  # remove delimiters and convert to lower case
+    mac = ''.join(mac.split())  # remove whitespaces
+    mac = ".".join(["%s" % (mac[i:i+4]) for i in range(0, 12, 4)])
+    return mac
 
 def formatMac(mac: str) -> str:
     mac = re.sub('[.:-]', '', mac).lower()  # remove delimiters and convert to lower case
@@ -39,7 +45,7 @@ def Init(agent_nodes, hw=False):
         agent_ip = api.GetNaplesMgmtIpAddress(node)
         if agent_ip == None:
             assert(0)
-        AGENT_URLS.append('http://%s:8888/' % agent_ip)
+        AGENT_URLS.append('https://%s:8888/' % agent_ip)
 
     global AGENT_NODES
     AGENT_NODES = agent_nodes
@@ -51,7 +57,7 @@ def Init(agent_nodes, hw=False):
     return
 
 def __get_base_url(nic_ip):
-    return "http://" + nic_ip + ":8888/"
+    return "https://" + nic_ip + ":8888/"
 
 
 def __get_agent_cfg_nodes(node_names = None):

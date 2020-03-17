@@ -18,6 +18,7 @@ setup:
     config  :
         - step : utils.cleanup
         - step : testcases.penctl.install
+        - step : testcases.penctl.enable_ssh
         - step : testcases.penctl.eth_dev_scale_mode
         - step : utils.reboot_all
         - step : utils.enable_l2_fwd_offload

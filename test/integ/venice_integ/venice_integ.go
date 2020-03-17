@@ -924,8 +924,8 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 		c.Fatalf("Failed to setup fwupdate script : %v", err)
 	}
 
-	globals.NaplesTrustRootsFile = "/tmp/clusterTrustRoots.pem"
-	err = nmdutils.ClearNaplesTrustRoots()
+	globals.VeniceTrustRootsFile = "/tmp/clusterTrustRoots.pem"
+	err = nmdutils.ClearVeniceTrustRoots()
 	if err != nil {
 		c.Fatalf("Could not remove stale trust roots file: %v", err)
 	}
@@ -1165,8 +1165,9 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 		cmdenv.CertMgr = nil
 	}
 
-	nmdutils.ClearNaplesTrustRoots()
 	it.fakehal.Stop()
+	nmdutils.ClearVeniceTrustRoots()
+
 	time.Sleep(time.Millisecond * 100) // allow goroutines to cleanup and terminate gracefully
 	log.Infof("============================= TearDownSuite completed ==========================")
 }

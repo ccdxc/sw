@@ -31,6 +31,9 @@ const (
 	//NicFinderConfFileName
 	PenNicFinderScriptName = "pen_nics.py"
 
+	//PenctlAuthTokenFileName auth token filename
+	PenctlAuthTokenFileName = "penctl.token"
+
 	// VlansPerTestBed vlans that a testbed can manage
 	VlansPerTestBed = 36
 
@@ -196,6 +199,8 @@ var (
 	NicFinderConf = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/scripts/%s", os.Getenv("GOPATH"), NicFinderConfFileName)
 
 	NicFinderScript = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/scripts/%s", os.Getenv("GOPATH"), PenNicFinderScriptName)
+
+	PenctlAuthTokenFile = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/scripts/%s", os.Getenv("GOPATH"), PenctlAuthTokenFileName)
 
 	// DstIotaAgentBinary captures the location of agent on the remote nodes
 	DstIotaAgentBinary = fmt.Sprintf("%s/%s", DstIotaAgentDir, IotaAgentBinaryName)

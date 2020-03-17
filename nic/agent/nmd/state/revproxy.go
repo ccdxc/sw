@@ -3,18 +3,25 @@
 package state
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/tls"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/pensando/sw/nic/agent/nmd/utils"
+	"github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/revproxy"
 )
 
 const (
@@ -75,57 +82,128 @@ var revProxyConfig = map[string]string{
 	"/api/diagnostics/": "http://127.0.0.1:" + globals.NaplesDiagnosticsRestPort,
 }
 
-func getRevProxyTLSConfig() (*tls.Config, error) {
-	trustRoots, err := utils.GetNaplesTrustRoots()
-	if trustRoots != nil {
-		// use a self-signed certificate for the server so we don't have dependencies on Venice
-		privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-		if err != nil {
-			return nil, fmt.Errorf("Error generating private key. Err: %v", err)
-		}
-		cert, err := certs.SelfSign("", privateKey, certs.WithNotBefore(certs.BeginningOfTime), certs.WithNotAfter(certs.EndOfTime))
-		if err != nil {
-			return nil, fmt.Errorf("Error generating self-signed certificate. Err: %v", err)
-		}
-		log.Infof("Loaded %d trust roots", len(trustRoots))
-		for _, c := range trustRoots {
-			pemBlock := &pem.Block{
-				Type:  certs.CertificatePemBlockType,
-				Bytes: c.Raw,
-			}
-			cb := pem.EncodeToMemory(pemBlock)
-			log.Infof("\n%s\n", string(cb))
-		}
-		return &tls.Config{
-			MinVersion:             minTLSVersion,
-			SessionTicketsDisabled: true,
-			ClientAuth:             tls.RequireAndVerifyClientCert,
-			ClientCAs:              certs.NewCertPool(trustRoots),
-			Certificates: []tls.Certificate{
-				{
-					Certificate: [][]byte{cert.Raw},
-					PrivateKey:  privateKey,
-				},
-			},
-		}, nil
+var protectedCommands = []string{
+	"setsshauthkey",
+	"penrmauthkeys",
+	"penrmsshdfiles",
+	"penrmpubkey",
+	"mksshdir",
+	"touchsshauthkeys",
+	"touchsshdlock",
+	"enablesshd",
+	"startsshd",
+}
+
+func authorizeProtectedCommands(req *http.Request) error {
+	// We want to make sure that we authorize only protected commands but
+	// also that we don't get fooled by malformed requests.
+
+	// Per Go http docs, Empty Method is ok and it means "GET"
+
+	if req.URL == nil {
+		log.Errorf("Error authorizing request, empty URL")
+		return fmt.Errorf("Error authorizing request, empty URL")
 	}
+
+	// if it is not a command, nothing to authorize
+	if !strings.HasPrefix(req.URL.Path, "/cmd") {
+		return nil
+	}
+
+	if req.Body == nil {
+		log.Errorf("Error authorizing request, empty body")
+		return fmt.Errorf("Error authorizing cmd request, empty body")
+	}
+
+	var bodyBytes []byte
+	// if we weren't able to read the entire req, better to bail out and let client retry
+	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Error getting NAPLES trust roots: %v", err)
+		log.Errorf("Error authorizing request %s %s: %v", req.Method, req.URL, err)
+		return fmt.Errorf("Error authorizing request: %v", err)
 	}
-	return nil, nil
+
+	// Restore the io.ReadCloser to its original state, otherwise the handler won't be able to read it
+	req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	cmdReq := nmd.DistributedServiceCardCmdExecute{}
+	err = json.Unmarshal(bodyBytes, &cmdReq)
+	if err != nil {
+		log.Errorf("Error authorizing request %s %s: %v", req.Method, req.URL, err)
+		return fmt.Errorf("Error authorizing request: %v", err)
+	}
+
+	for _, pc := range protectedCommands {
+		if cmdReq.Executable == pc && (req.TLS == nil || len(req.TLS.VerifiedChains) == 0) {
+			log.Errorf("Authorization failed: command %s requires authorization token", pc)
+			return fmt.Errorf("Authorization failed: command %s requires authorization token", pc)
+		}
+	}
+	return nil
+}
+
+func getRevProxyTLSConfig() (*tls.Config, revproxy.Authorizer, error) {
+	var clientAuth tls.ClientAuthType
+	var authz revproxy.Authorizer
+
+	trustRoots, isClusterRoots, err := utils.GetNaplesTrustRoots()
+	if isClusterRoots {
+		// trust roots are Venice cluster trust roots, client cert is mandatory, no need to further authorize
+		clientAuth = tls.RequireAndVerifyClientCert
+	} else {
+		// trust roots are Pensando support CA trust roots, client cert is optional, authorize protected commands
+		clientAuth = tls.VerifyClientCertIfGiven
+		authz = authorizeProtectedCommands
+	}
+
+	if err != nil {
+		return nil, nil, fmt.Errorf("Error opening trust roots, err: %v", err)
+	}
+
+	// use a self-signed certificate for the server so we don't have dependencies on Venice
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Error generating private key. Err: %v", err)
+	}
+	cert, err := certs.SelfSign("", privateKey, certs.WithNotBefore(certs.BeginningOfTime), certs.WithNotAfter(certs.EndOfTime))
+	if err != nil {
+		return nil, nil, fmt.Errorf("Error generating self-signed certificate. Err: %v", err)
+	}
+	log.Infof("Loaded %d trust roots", len(trustRoots))
+	for _, c := range trustRoots {
+		pemBlock := &pem.Block{
+			Type:  certs.CertificatePemBlockType,
+			Bytes: c.Raw,
+		}
+		cb := pem.EncodeToMemory(pemBlock)
+		log.Infof("\n%s\n", string(cb))
+	}
+
+	return &tls.Config{
+		MinVersion:             minTLSVersion,
+		SessionTicketsDisabled: true,
+		ClientAuth:             clientAuth,
+		ClientCAs:              certs.NewCertPool(trustRoots),
+		Certificates: []tls.Certificate{
+			{
+				Certificate: [][]byte{cert.Raw},
+				PrivateKey:  privateKey,
+			},
+		},
+	}, authz, nil
 }
 
 // StartReverseProxy starts the reverse proxy for all NAPLES REST APIs
 func (n *NMD) StartReverseProxy() error {
 	// if we have persisted root of trust, require client auth
-	tlsConfig, err := getRevProxyTLSConfig()
+	tlsConfig, authz, err := getRevProxyTLSConfig()
 	if err != nil {
 		log.Errorf("Error getting TLS config for reverse proxy: %v", err)
 	}
 	if tlsConfig == nil {
 		log.Infof("NAPLES trust roots not found")
 	}
-	return n.revProxy.Start(tlsConfig)
+	return n.revProxy.Start(tlsConfig, authz)
 }
 
 // StopReverseProxy stops the NMD reverse proxy

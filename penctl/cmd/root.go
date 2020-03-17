@@ -72,6 +72,7 @@ var yamlFormat bool
 var jsonFormat bool
 var mockMode bool
 var authTokenFile string
+var compat11 bool
 
 func init() {
 	// Fill logger config params
@@ -91,6 +92,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", true, "display in json format")
 	rootCmd.PersistentFlags().BoolVarP(&mockMode, "localhost", "l", false, "run penctl in mock managedBy to localhost")
 	rootCmd.PersistentFlags().StringVarP(&authTokenFile, "authtoken", "a", "", "path to file containing authorization token")
+	rootCmd.PersistentFlags().BoolVarP(&compat11, "compat-1.1", "", false, "run in 1.1 firmware compatibility mode")
 
 	rootCmd.PersistentFlags().MarkHidden("localhost")
 
@@ -179,6 +181,7 @@ func cliPreRunInit(cmd *cobra.Command, args []string) error {
 	//	return err
 	//}
 
+	var clientCerts []tls.Certificate
 	if authTokenFile != "" {
 		pemBlocks, err := ioutil.ReadFile(authTokenFile)
 		if err != nil {
@@ -188,13 +191,19 @@ func cliPreRunInit(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("Error parsing X509 key pair: %v", err)
 		}
-		penHTTPClient.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true, // do not check agent's certificate
-				Certificates:       []tls.Certificate{cert},
-			},
-			MaxIdleConnsPerHost: 5,
-		}
+		clientCerts = []tls.Certificate{cert}
+	}
+	// always use HTTPS, even if we don't have a client cert
+	penHTTPClient.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true, // do not check agent's certificate
+			Certificates:       clientCerts,
+		},
+		MaxIdleConnsPerHost: 5,
+	}
+	// compat11 is only for legacy firmware (1.1)
+	// if URL starts with http://, the TLS config is ignored
+	if !compat11 {
 		naplesURL = "https://" + strings.TrimPrefix(naplesURL, "http://")
 	}
 

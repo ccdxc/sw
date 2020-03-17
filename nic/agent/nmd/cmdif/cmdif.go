@@ -360,12 +360,12 @@ func (client *CmdClient) RegisterSmartNICReq(nic *cluster.DistributedServiceCard
 		return *msg, fmt.Errorf("Protocol error: no trust chain AuthenticationRequest in message %+v", msg)
 	}
 
-	naplesTrustRoots, err := utils.GetNaplesTrustRoots()
+	naplesTrustRoots, isClusterRoots, err := utils.GetNaplesTrustRoots()
 	if err != nil {
 		return makeErrorResp(err, "Error loading trust roots", nic)
 	}
 
-	if naplesTrustRoots != nil {
+	if naplesTrustRoots != nil && isClusterRoots {
 		// Check that we are connecting back to the same Venice we were admitted to.
 		// Right now we just check the trust chain presented by the cluster.
 		// After the admission sequence is complete, we also verify the signature on our CSR
@@ -396,7 +396,7 @@ func (client *CmdClient) RegisterSmartNICReq(nic *cluster.DistributedServiceCard
 		}
 		log.Infof("Successfully validated cluster trust chain")
 	} else {
-		log.Infof("No trust roots found, skipping cluster trust chain validation")
+		log.Infof("No cluster trust roots found, skipping cluster trust chain validation")
 	}
 
 	claimantRandom, challengeResp, err := client.nmd.GenChallengeResponse(nic, msg.AuthenticationRequest.Challenge)

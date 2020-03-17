@@ -952,6 +952,11 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 	}
 	log.Infof("Setting up Naples in network managed mode")
 
+	err := sm.enableSSHDOnNaples(nodes)
+	if err != nil {
+		return err
+	}
+
 	// set date, untar penctl and trigger mode switch
 	trig := sm.Tb.NewTrigger()
 	for _, node := range nodes {
@@ -965,7 +970,7 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 				veniceIPs := strings.Join(naplesConfig.VeniceIps, ",")
 
 				// clean up roots of trust, if any
-				trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), naplesConfig.Name, node.NodeName)
+				trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.VeniceTrustRootsFile), naplesConfig.Name, node.NodeName)
 
 				// disable watchdog for naples
 				trig.AddCommand(fmt.Sprintf("touch /data/no_watchdog"), naplesConfig.Name, node.NodeName)

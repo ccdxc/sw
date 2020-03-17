@@ -15,6 +15,9 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+// Authorizer is a pluggable function that returns true when the supplied request is authorized, false otherwise
+type Authorizer func(r *http.Request) error
+
 // ReverseProxyRouter is a HTTP/HTTPs reverse proxy based on gorilla mux
 type ReverseProxyRouter struct {
 	sync.Mutex
@@ -22,6 +25,7 @@ type ReverseProxyRouter struct {
 	muxRouter  *mux.Router
 	tlsConfig  *tls.Config
 	httpServer *http.Server // HTTP server
+	authorizer Authorizer
 }
 
 const (
@@ -63,6 +67,21 @@ func logTLSInfo(next http.Handler) http.Handler {
 	})
 }
 
+func (rpr *ReverseProxyRouter) authorize(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if rpr.authorizer != nil {
+			err := rpr.authorizer(r)
+			if err != nil {
+				log.Infof("Authorization failed for request: %+v", r)
+				http.Error(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
+			log.Infof("Authorization succeeded for request: %+v", r) // FIXME REMOVE
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (rpr *ReverseProxyRouter) handleStopRequest(res http.ResponseWriter, req *http.Request) {
 	go rpr.Stop()
 }
@@ -97,8 +116,10 @@ func (rpr *ReverseProxyRouter) UpdateConfig(config map[string]string) error {
 		log.Infof("proxy %v: %v", prefix, proxyURL.String())
 	}
 
+	log.Infof("REVPROXY AUTHORIZER IS %p", rpr.authorize) // FIXME remove
 	muxRouter.Use(logTLSInfo)
 	muxRouter.Use(dumpHTTPRequest)
+	muxRouter.Use(rpr.authorize)
 
 	// register /stop
 	muxRouter.HandleFunc("/stop", rpr.handleStopRequest)
@@ -119,7 +140,7 @@ func NewReverseProxyRouter(listenURL string, config map[string]string) (*Reverse
 }
 
 // Start starts the proxy router instance
-func (rpr *ReverseProxyRouter) Start(tlsConfig *tls.Config) error {
+func (rpr *ReverseProxyRouter) Start(tlsConfig *tls.Config, authz Authorizer) error {
 	rpr.Lock()
 	defer rpr.Unlock()
 
@@ -128,6 +149,7 @@ func (rpr *ReverseProxyRouter) Start(tlsConfig *tls.Config) error {
 		return fmt.Errorf("Error starting listener. Err: %v", err)
 	}
 	rpr.tlsConfig = tlsConfig
+	rpr.authorizer = authz
 	rpr.httpServer = &http.Server{
 		Addr:      listener.Addr().String(),
 		Handler:   rpr.muxRouter,

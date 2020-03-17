@@ -88,9 +88,12 @@ func requestTechSupport() (string, error) {
 		},
 	}
 	ntsaResp, err := restPost(tsReq, "api/techsupport/")
+	if err != nil {
+		return "", err
+	}
 	ntsaRespBytes := []byte(ntsaResp)
 	ntsaRespJSON := tsproto.TechSupportRequest{}
-	json.Unmarshal(ntsaRespBytes[:len(ntsaRespBytes)-1], &ntsaRespJSON)
+	err = json.Unmarshal(ntsaRespBytes[:len(ntsaRespBytes)-1], &ntsaRespJSON)
 	if err != nil {
 		if ntsaRespJSON.Status.Status != tsproto.TechSupportRequestStatus_Completed {
 			return "", errors.New(ntsaRespJSON.Status.Reason)

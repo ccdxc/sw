@@ -2,7 +2,7 @@ package copier
 
 import (
 	"errors"
-    "io"
+	"io"
 	"os"
 	"path/filepath"
 	"time"

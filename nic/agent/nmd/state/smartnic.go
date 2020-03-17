@@ -112,7 +112,7 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.DistributedServiceCard) error {
 			// the watcher and the watcher has to terminate for the cleanup to be complete
 			go func() {
 				// wipe out existing roots of trust
-				err = utils.ClearNaplesTrustRoots()
+				err = utils.ClearVeniceTrustRoots()
 				if err != nil {
 					log.Errorf("Error removing trust roots: %v", err)
 				}

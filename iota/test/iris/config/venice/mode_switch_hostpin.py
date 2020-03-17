@@ -4,6 +4,7 @@ import time
 import datetime
 import iota.harness.api as api
 import iota.test.iris.testcases.penctl.common as common
+import iota.test.iris.testcases.penctl.enable_ssh as enable_ssh
 import iota.test.iris.utils.hal_show as hal_show_utils
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
@@ -97,14 +98,14 @@ def Main(step):
         return api.types.status.FAILURE
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    enable_sshd = "system enable-sshd"
-    copy_key = "update ssh-pub-key -f ~/.ssh/id_rsa.pub"
+    #enable_sshd = "system enable-sshd"
+    #copy_key = "update ssh-pub-key -f ~/.ssh/id_rsa.pub"
     for n in api.GetNaplesHostnames():
         #hack for now, need to set date
         cmd = "date -s '{}'".format(datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         api.Trigger_AddNaplesCommand(req, n, cmd)
-        common.AddPenctlCommand(req, n, enable_sshd)
-        common.AddPenctlCommand(req, n, copy_key)
+        #common.AddPenctlCommand(req, n, enable_sshd)
+        #common.AddPenctlCommand(req, n, copy_key)
 
     resp = api.Trigger(req)
 
@@ -155,5 +156,6 @@ def Main(step):
             api.Logger.error("Agent not in correct mode: {} {} ".format(cmd.node_name, out["naples-mode"]))
             return api.types.status.FAILURE
 
-
-    return api.types.status.SUCCESS
+    api.Logger.info("Trying to re-enable ssh on naples nodes")
+    
+    return enable_ssh.Main(None)

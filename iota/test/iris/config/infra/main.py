@@ -285,10 +285,10 @@ class CfgNode:
             resp = api.CopyToHost(self.host_name, [filename], "")
             if not api.IsApiResponseOk(resp):
                 assert(0)
-            cmd = ["curl", "-X", oper,  "-d", "@temp_config.json", "-H", "\"Content-Type:application/json\"",
+            cmd = ["curl", "-X", oper,  "-d", "@temp_config.json", "-k", "-H", "\"Content-Type:application/json\"",
                     url]
         else:
-            cmd = ["curl", "-X", oper, "-d", "\'" + json.dumps(json_data) + "\'" if json_data else " ", "-H", "\"Content-Type:application/json\"",
+            cmd = ["curl", "-X", oper,  "-k", "-d", "\'" + json.dumps(json_data) + "\'" if json_data else " ", "-H", "\"Content-Type:application/json\"",
                     url]
         cmd = " ".join(cmd)
         req = api.Trigger_CreateAllParallelCommandsRequest()
@@ -316,6 +316,6 @@ class CfgNode:
         return data
 
     def BaseUrl(self):
-        return "http://" + self.nic_ip + ":8888/"
+        return "https://" + self.nic_ip + ":8888/"
 
 ObjectConfigStore = ConfigStore()

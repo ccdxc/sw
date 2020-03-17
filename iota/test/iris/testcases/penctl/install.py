@@ -18,8 +18,18 @@ def __installPenCtl(node):
     if resp is None:
         return api.types.status.FAILURE
     if resp.api_response.api_status != types_pb2.API_STATUS_OK:
-        api.Logger.error("Failed to copy Drivers to Node: %s" % node)
+        api.Logger.error("Failed to copy penctl to Node: %s" % node)
         return api.types.status.FAILURE
+
+    fullpath = api.GetTopDir() + '/' + common.PENCTL_TOKEN_FILE
+
+    resp = api.CopyToHost(node, [fullpath], "")
+    if resp is None:
+        return api.types.status.FAILURE
+    if resp.api_response.api_status != types_pb2.API_STATUS_OK:
+        api.Logger.error("Failed to copy penctl token to Node: %s" % node)
+        return api.types.status.FAILURE
+
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     api.Trigger_AddHostCommand(req, node, "tar -xvf %s" % os.path.basename(common.PENCTL_PKG) + " && sync",
@@ -38,6 +48,23 @@ def __installPenCtl(node):
             return api.types.status.FAILURE
 
     common.PENCTL_EXEC[node] = resp.commands[1].stdout.split("\n")[0]
+
+
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    #Create a symlink at top level
+    realPath = "realpath %s " % (common.PENCTL_TOKEN_FILE_NAME)
+    api.Trigger_AddHostCommand(req, node, realPath, background = False)
+
+    resp = api.Trigger(req)
+
+    for cmd in resp.commands:
+        api.PrintCommandResults(cmd)
+        if cmd.exit_code != 0:
+            return api.types.status.FAILURE
+
+    common.PENCTL_TOKEN[node] = resp.commands[0].stdout.split("\n")[0]
+
+
 
     return api.types.status.SUCCESS
 

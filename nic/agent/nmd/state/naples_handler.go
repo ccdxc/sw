@@ -236,7 +236,7 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.DistributedServiceCard) error {
 		//
 		//	// When moving from HOST->NETWORK, there are no Trust bundles saved
 		//	// When moving from NETWORK->NETWORK, the action can only be issued by a trusted entity
-		//	err := utils.ClearNaplesTrustRoots()
+		//	err := utils.ClearVeniceTrustRoots()
 		//	if err != nil {
 		//		log.Errorf("Failed to clear trust certs. Err : %v", err)
 		//	}
@@ -392,9 +392,9 @@ func (n *NMD) handleHostModeTransition() error {
 	}
 
 	log.Info("Clearing  nw mode naples status")
-	err = utils.ClearNaplesTrustRoots()
+	err = utils.ClearVeniceTrustRoots()
 	if err != nil {
-		log.Errorf("Error removing trust roots: %v", err)
+		log.Errorf("Error removing venice trust roots: %v", err)
 	}
 	// restart rev proxy so that it can go back to HTTP and no client auth
 

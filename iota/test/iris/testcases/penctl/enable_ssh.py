@@ -13,11 +13,11 @@ def Main(step):
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     for n in api.GetNaplesHostnames():
-        #enable_sshd = " -a " + common.PENCTL_TOKEN[n] +  " system enable-sshd"
-        enable_sshd =  "system enable-sshd"
+        enable_sshd = " -a " + common.PENCTL_TOKEN[n] +  " system enable-sshd"
+        #enable_sshd =  "system enable-sshd"
         common.AddPenctlCommand(req, n, enable_sshd)
-        #copy_key =  " -a " + common.PENCTL_TOKEN[n] +  " update ssh-pub-key -f ~/.ssh/id_rsa.pub"
-        copy_key = "update ssh-pub-key -f ~/.ssh/id_rsa.pub"
+        copy_key =  " -a " + common.PENCTL_TOKEN[n] +  " update ssh-pub-key -f ~/.ssh/id_rsa.pub"
+        #copy_key = "update ssh-pub-key -f ~/.ssh/id_rsa.pub"
         common.AddPenctlCommand(req, n, copy_key)
 
     resp = api.Trigger(req)

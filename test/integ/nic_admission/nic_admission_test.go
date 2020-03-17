@@ -259,7 +259,7 @@ func createNMD(t *testing.T, dbPath, priMac, restURL, revProxyURL, mgmtMode stri
 	venicetestutils.CreateFruJSON(priMac)
 
 	// override location of trust roots for reverse proxy
-	globals.NaplesTrustRootsFile = "/tmp/clusterTrustRoots.pem"
+	globals.VeniceTrustRootsFile = "/tmp/clusterTrustRoots.pem"
 
 	// // create a platform agent
 	// pa, err := platform.NewNaplesPlatformAgent()
@@ -320,7 +320,7 @@ func createNMD(t *testing.T, dbPath, priMac, restURL, revProxyURL, mgmtMode stri
 	err = createNaplesOOBInterface()
 
 	// set the NMD reverse proxy config to point to corresponding REST port
-	err = nmdutils.ClearNaplesTrustRoots()
+	err = nmdutils.ClearVeniceTrustRoots()
 	Assert(t, err == nil || os.IsNotExist(err), "Error removing stale trust roots: %v", err)
 	proxyConfig := map[string]string{
 		"/api/v1/naples": "http://127.0.0.1" + restURL,
@@ -342,7 +342,7 @@ func stopNMD(t *testing.T, i *nmdInfo) {
 		log.Fatalf("Error deleting emDB file: %s, err: %v", i.dbPath, err)
 	}
 	_ = deleteNaplesOOBInterfaces()
-	nmdutils.ClearNaplesTrustRoots()
+	nmdutils.ClearVeniceTrustRoots()
 }
 
 func createNaplesOOBInterface() error {
@@ -600,6 +600,11 @@ func getAgentRESTClient(t *testing.T, auth bool) (*netutils.HTTPClient, error) {
 				InsecureSkipVerify: true, // do not check agent's certificate
 				Certificates:       []tls.Certificate{tlsCert},
 			})
+	} else {
+		client.WithTLSConfig(
+			&tls.Config{
+				InsecureSkipVerify: true, // do not check agent's certificate
+			})
 	}
 	return client, nil
 }
@@ -721,16 +726,12 @@ func checkReverseProxy(t *testing.T, nmd *nmdstate.NMD, admPhase string) error {
 	}
 	client.DisableKeepAlives()
 	defer client.CloseIdleConnections()
-	url := revProxyURL + "/api/v1/naples/"
-	if auth {
-		url = "https://" + url
-	} else {
-		url = "http://" + url
-	}
+	url := "https://" + revProxyURL + "/api/v1/naples/"
+
 	var naplesCfg proto.DistributedServiceCard
 	resp, err := client.Req("GET", url, nil, &naplesCfg)
 	if err != nil || resp != http.StatusOK {
-		return fmt.Errorf("Failed to get naples config via reverse proxy. AdmPhase: %v, Resp: %+v, err: %v", admPhase, resp, err)
+		return fmt.Errorf("Failed to get naples config via reverse proxy. URL: %s, AdmPhase: %v, Resp: %+v, err: %v", url, admPhase, resp, err)
 	}
 	if !reflect.DeepEqual(naplesCfg, nmd.GetNaplesConfig()) {
 		return fmt.Errorf("Unexpected NAPLES config response. Have: %+v, want: %+v", naplesCfg, nmd.GetNaplesConfig())
@@ -1006,7 +1007,7 @@ func TestNICReadmit(t *testing.T) {
 	setNICAdmitState(t, &meta, false)
 	checkE2EState(t, nmd, pencluster.DistributedServiceCardStatus_PENDING.String())
 
-	err = nmdutils.StoreTrustRoots(cmdenv.CertMgr.Ca().TrustRoots())
+	err = nmdutils.StoreVeniceTrustRoots(cmdenv.CertMgr.Ca().TrustRoots())
 	AssertOk(t, err, "Error updating trust roots file")
 
 	origCertMgr := cmdenv.CertMgr
@@ -1309,7 +1310,7 @@ func Teardown(m *testing.M) {
 		cmdenv.CertMgr = nil
 	}
 
-	nmdutils.ClearNaplesTrustRoots()
+	nmdutils.ClearVeniceTrustRoots()
 
 	log.Infof("#### ApiServer and CMD smartnic server is STOPPED")
 }

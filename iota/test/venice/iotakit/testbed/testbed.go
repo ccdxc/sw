@@ -1786,7 +1786,7 @@ func (tb *TestBed) cleanUpNaplesConfig(nodes []*TestNode) error {
 		if IsNaplesHW(node.Personality) {
 			for _, naples := range node.NaplesConfigs.Configs {
 				trig.AddCommand(fmt.Sprintf("rm -rf /sysconfig/config0/*.db"), naples.Name, node.NodeName)
-				trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), naples.Name, node.NodeName)
+				trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.VeniceTrustRootsFile), naples.Name, node.NodeName)
 				cmds++
 
 			}
@@ -1860,7 +1860,7 @@ func (sm *SysModel) reassociateNaplestoVenice(nodes []*TestNode) error {
 			cmd := fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
 			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 			for _, naples := range node.NaplesConfigs.Configs {
-				trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), naples.Name, node.NodeName)
+				trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.VeniceTrustRootsFile), naples.Name, node.NodeName)
 			}
 			cmds++
 		}

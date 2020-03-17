@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -26,7 +27,12 @@ import (
 var penHTTPClient = &http.Client{}
 
 func init() {
+	// always use HTTPS by default, even without a client certificate
+	// if compat11 flag is set, the URL will start with http:// and TLS config is ignored
 	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true, // do not check agent's certificate
+		},
 		MaxIdleConnsPerHost: 5,
 	}
 	penHTTPClient = &http.Client{Transport: tr}
