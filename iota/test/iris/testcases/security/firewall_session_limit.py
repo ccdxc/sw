@@ -4,6 +4,7 @@ import time
 import iota.harness.api as api
 import iota.test.iris.testcases.security.utils as utils
 import iota.test.iris.testcases.aging.aging_utils as timeout_utils
+import iota.test.iris.testcases.penctl.common as common
 
 
 def SetTestSettings(tc):
@@ -12,14 +13,17 @@ def SetTestSettings(tc):
         tc.timeout_field = 'tcp-connection-setup'
         tc.metric_field = 'num_tcp_half_open_sessions'
         test_timeout = '200s'
+        tc.grep_str = 'TCP_HALF_OPEN_SESSION_LIMIT'
     elif tc.proto == 'icmp':
         tc.timeout_field = 'icmp-timeout'
         test_timeout = '200s'
         tc.metric_field = 'num_icmp_sessions'
+        tc.grep_str = 'ICMP_ACTIVE_SESSION_LIMIT'
     elif tc.proto == 'udp':
         tc.timeout_field = 'udp-timeout'
         test_timeout = '200s'
         tc.metric_field = 'num_udp_sessions'
+        tc.grep_str = 'UDP_ACTIVE_SESSION_LIMIT'
     else:
         return api.types.status.FAILURE
     tc.timeout = timeout_utils.get_timeout_val(tc.timeout_field)
@@ -48,6 +52,34 @@ def SetTrafficGeneratorCommand(tc, req):
             tc.wc_server.workload_name, cmd, background = True)
     tc.cmd_cookies.append(cmd_cookie)
 
+def VerifySessionEvents(tc):
+    cmd_cookie = "show events"
+    fields = ["APPROACH", "REACHED"]
+
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    # show events gives out one blank line we are interested in latest two
+    # events hence the -(2+1) tail command
+    cmd = "show events --json | tail -3 | grep %s" % (tc.grep_str)
+    common.AddPenctlCommand(req, tc.wc_server.node_name, cmd)
+    resp = api.Trigger(req)
+    cmd_resp = resp.commands[0]
+    api.PrintCommandResults(cmd_resp)
+    if cmd_resp.exit_code != 0:
+        return api.types.status.FAILURE
+
+    empty_lines = cmd_resp.stdout.split("\n")
+    lines = [line for line in empty_lines if line.strip() != ""]
+    if len(lines) != len(fields):
+        api.Logger.error("Incorrect events len encountered : %d expected %d" %
+                (len(lines), len(fields)))
+        return api.types.status.FAILURE
+    for i in range(len(lines)):
+        if fields[i] not in lines[i]:
+            api.Logger.error("Incorrect event encountered :%s expected substring : %s" %
+                    (lines[i], fields[i]))
+            return api.types.status.FAILURE
+    api.Logger.info("Event verification session limit for %s Success" % tc.proto)
+    return api.types.status.SUCCESS
 
 def Setup(tc):
     if SetTestSettings(tc) is not api.types.status.SUCCESS:
@@ -135,8 +167,8 @@ def Verify(tc):
         api.Logger.error("%s : %d Expected : %d" % \
                 (tc.metric_field, metrics[tc.metric_field], limit))
         return api.types.status.FAILURE
-    api.Logger.info("%s session Limit Success"%tc.proto)
-    return api.types.status.SUCCESS
+    api.Logger.info("%s session limit metric verification Success"%tc.proto)
+    return VerifySessionEvents(tc)
 
 def Teardown(tc):
     api.Logger.info("Teardown.")
