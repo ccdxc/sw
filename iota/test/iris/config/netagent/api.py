@@ -369,11 +369,6 @@ def switch_profile(fwd_mode="TRANSPARENT", policy_mode="BASENET", push=True,
 
     if push or push_base_profile:
         ret = PushConfigObjects(objects)
-        if ret == api.types.status.SUCCESS:
-            api.Logger.info("Waiting for %d sec for HAL to switch "
-                            "profile, This is temporary"%
-                            (sleep_time))
-            time.sleep(sleep_time)
 
     return ret
 
