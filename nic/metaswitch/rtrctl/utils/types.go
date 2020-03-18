@@ -59,6 +59,9 @@ func label2int(in []byte) uint32 {
 
 // String returns a user friendly string
 func (n *NLRIPrefix) String() string {
+	if (n == nil) {
+		return fmt.Sprintf("0.0.0.0")
+	}
 	if (n.Afi == 25) {
 	  return fmt.Sprintf("Type : %d  %v", n.Type, n.Prefix)
 	} else {
