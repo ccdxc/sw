@@ -164,6 +164,10 @@ vmotion::run_vmotion(ep_t *ep, vmotion_thread_evt_t event)
 {
     vmotion_ep *vmn_ep = get_vmotion_ep(ep);
 
+    if ((!vmn_ep) && (event == VMOTION_EVT_EP_MV_ABORT)) {
+        return;
+    }
+
     HAL_TRACE_INFO("vMotion: vmn_ep:{:p} event:{}", (void *)vmn_ep, event);
 
     if (event == VMOTION_EVT_EP_MV_COLD) {
@@ -241,12 +245,17 @@ vmotion::delete_vmotion_ep(vmotion_ep *vmn_ep)
 hal_ret_t
 vmotion::vmotion_handle_ep_del(ep_t *ep)
 {
-    if (ep->vmotion_state == MigrationState::IN_PROGRESS) {
-        run_vmotion(ep, VMOTION_EVT_EP_MV_ABORT);
+    if (!VMOTION_IS_ENABLED()) {
+        return HAL_RET_OK;
+    }
 
+    if (ep->vmotion_state == MigrationState::IN_PROGRESS) {
         // Loop the sessions, and start aging timer
         endpoint_migration_session_age_reset(ep);
     }
+
+    run_vmotion(ep, VMOTION_EVT_EP_MV_ABORT);
+
     return HAL_RET_OK;
 }
 

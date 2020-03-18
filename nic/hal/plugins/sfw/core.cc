@@ -232,7 +232,7 @@ net_sfw_pol_check_sg_policy(ctx_t                  &ctx,
     hal_ret_t    ret;
 
 
-    if (ctx.protobuf_request()) {
+    if (ctx.protobuf_request() && !ctx.sync_session_request()) {
         match_rslt->valid  = 1;
         match_rslt->action = ctx.sess_spec()->initiator_flow().flow_data().flow_info().flow_action();
         return HAL_RET_OK;

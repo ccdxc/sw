@@ -457,21 +457,16 @@ vmotion_src_host_timeout_cb (void *timer, uint32_t timer_id, void *ctxt)
 static void
 src_host_thread_rcv_event (void *message, void *ctx)
 {
-    vmotion_thread_evt_t  *evt = (vmotion_thread_evt_t *) message;
-    vmotion_thread_ctx_t  *thread_ctx;
-    vmotion_ep            *vmn_ep;
+    vmotion_thread_evt_t *evt = (vmotion_thread_evt_t *) message;
+    vmotion_thread_ctx_t *thread_ctx = (vmotion_thread_ctx_t *)ctx;
+    vmotion_ep           *vmn_ep = thread_ctx->vmn_ep;
 
     if (*evt == VMOTION_EVT_EP_MV_ABORT) {
-        vmn_ep = (vmotion_ep *)ctx;
-
         HAL_TRACE_INFO("vMotion src host event thread. EP: {} Flags: {}",
                        vmn_ep->get_ep_handle(), *vmn_ep->get_flags());
 
         vmn_ep->process_event(EVT_EP_DELETE_RCVD, NULL);
     } else if (*evt == VMOTION_EVT_TIMEOUT) {
-        thread_ctx = (vmotion_thread_ctx_t *)ctx;
-        vmn_ep     = thread_ctx->vmn_ep;
-
         HAL_TRACE_INFO("vMotion src host event thread timeout.  vmn_ep:{:p}", (void *)vmn_ep);
 
         if (vmn_ep) {
@@ -481,7 +476,6 @@ src_host_thread_rcv_event (void *message, void *ctx)
             thread_ctx->th->stop();
         }
     }
-
     HAL_FREE(HAL_MEM_ALLOC_VMOTION, evt);
 }
 
