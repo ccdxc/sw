@@ -144,6 +144,45 @@ func expandRoutingConfig(infraAPI types.InfraAPI, lbIp string, rtCfg *netproto.R
 	return ret
 }
 
+func getRouterID(infraAPI types.InfraAPI) string {
+	rid := ""
+	dsccfg := infraAPI.GetConfig()
+	if dsccfg.LoopbackIP != "" {
+		rid = dsccfg.LoopbackIP
+	} else {
+		if len(dsccfg.DSCInterfaceIPs) > 0 {
+			rip := dsccfg.DSCInterfaceIPs[0].IPAddress
+			ip, _, err := net.ParseCIDR(rip)
+			if err == nil {
+				rid = ip.String()
+			} else {
+				log.Errorf("could not parse ip [%v](%s)", rip, err)
+			}
+		} else {
+			intf, err := net.InterfaceByName(oobIntfName)
+			if err != nil {
+				return ""
+			}
+			addrs, err := intf.Addrs()
+			if err != nil {
+				return ""
+			}
+		GotIP:
+			for _, a := range addrs {
+				switch aip := a.(type) {
+				case *net.IPNet:
+					rid = aip.IP.String()
+					break GotIP
+				case *net.IPAddr:
+					rid = aip.IP.String()
+					break GotIP
+				}
+			}
+		}
+	}
+	return rid
+}
+
 func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcClient, rtCfg netproto.RoutingConfig) error {
 	// we can have only one routing config on the NAPLES card.
 	if currentRoutingConfig != nil {
@@ -162,44 +201,17 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 
 	dsccfg := infraAPI.GetConfig()
 	ctx := context.TODO()
+	log.Infof("RID calculation [%s][%s] Interfaces [%v]", rid, dsccfg.LoopbackIP, dsccfg.DSCInterfaceIPs)
 
-	if dsccfg.LoopbackIP != "" {
-		rid = dsccfg.LoopbackIP
-	} else {
-		if len(dsccfg.DSCInterfaceIPs) > 0 {
-			rid = dsccfg.DSCInterfaceIPs[0].IPAddress
-		} else {
-			intf, err := net.InterfaceByName(oobIntfName)
-			if err != nil {
-				log.Errorf("BGP Create could not get IP Address for router ID (%s)", err)
-				return errors.Wrap(types.ErrInvalidIP, "could not determine Router ID")
-			}
-			addrs, err := intf.Addrs()
-			if err != nil {
-				log.Errorf("BGP Create could not get IP Address for router ID (%s)", err)
-				return errors.Wrap(types.ErrInvalidIP, "could not determine Router ID")
-			}
-		GotIP:
-			for _, a := range addrs {
-				switch aip := a.(type) {
-				case *net.IPNet:
-					rid = aip.IP.String()
-					break GotIP
-				case *net.IPAddr:
-					rid = aip.IP.String()
-					break GotIP
-				}
-			}
-		}
-	}
+	rid = getRouterID(infraAPI)
 	if rid == "" {
 		log.Errorf("BGP Create could not get IP Address for router ID ")
 		return errors.Wrap(types.ErrInvalidIP, "could not determine Router ID")
 	}
-
-	newCfg := expandRoutingConfig(infraAPI, dsccfg.LoopbackIP, &rtCfg)
+	log.Infof("Choosing RID [%v]", rid)
+	newCfg := expandRoutingConfig(infraAPI, rid, &rtCfg)
 	newCfg.Spec.BGPConfig.RouterId = rid
-	cfg, err := clientutils.GetBGPConfiguration(nil, newCfg, "0.0.0.0", dsccfg.LoopbackIP)
+	cfg, err := clientutils.GetBGPConfiguration(nil, newCfg, "0.0.0.0", rid)
 	if err != nil {
 		log.Errorf("BGPConfig: GetConfig failed | Err: %s", err)
 		return errors.Wrapf(types.ErrBadRequest, "BGPConfig: [%s] GetConfig failed | Err: %s", rtCfg.GetKey(), err)
@@ -211,6 +223,7 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		return errors.Wrapf(types.ErrBadRequest, "BGPConfig: [%s] Create BGP failed | Err: %s", rtCfg.GetKey(), err)
 	}
 	currentRoutingConfig = &rtCfg
+	curLbIP = rid
 
 	dat, _ := rtCfg.Marshal()
 
@@ -239,10 +252,15 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		return nil
 	}
 
-	oldCfg := expandRoutingConfig(infraAPI, curLbIP, currentRoutingConfig)
-	newCfg := expandRoutingConfig(infraAPI, curLbIP, &rtCfg)
+	rid := getRouterID(infraAPI)
+	if rid == "" {
+		log.Errorf("BGP Create could not get IP Address for router ID ")
+		return errors.Wrap(types.ErrInvalidIP, "could not determine Router ID")
+	}
+	oldCfg := expandRoutingConfig(infraAPI, rid, currentRoutingConfig)
+	newCfg := expandRoutingConfig(infraAPI, rid, &rtCfg)
 
-	cfg, err := clientutils.GetBGPConfiguration(oldCfg, newCfg, curLbIP, curLbIP)
+	cfg, err := clientutils.GetBGPConfiguration(oldCfg, newCfg, rid, rid)
 	if err != nil {
 		log.Errorf("BGPConfig: GetConfig failed | Err: %s", err)
 		return errors.Wrapf(types.ErrBadRequest, "BGPConfig: [%s] GetConfig failed | Err: %s", rtCfg.GetKey(), err)
@@ -253,8 +271,9 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		return errors.Wrapf(types.ErrBadRequest, "BGPConfig: [%s] Update BGP failed | Err: %s", rtCfg.GetKey(), err)
 	}
 	currentRoutingConfig = &rtCfg
-	dat, _ := rtCfg.Marshal()
+	curLbIP = rid
 
+	dat, _ := rtCfg.Marshal()
 	if err := infraAPI.Store(rtCfg.Kind, rtCfg.GetKey(), dat); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreUpdate, "RoutingConfig: %s | Err: %v", rtCfg.GetKey(), err))
 		return errors.Wrapf(types.ErrBoltDBStoreUpdate, "RoutingConfig: %s | Err: %v", rtCfg.GetKey(), err)
@@ -324,13 +343,12 @@ func HandleRouteTable(infraAPI types.InfraAPI, rtSvc pdstypes.RouteSvcClient, op
 func UpdateBGPLoopbackConfig(infraAPI types.InfraAPI, client msTypes.BGPSvcClient, oldLb, newLb string) {
 	// Loopback IP changed. Delete and create the loopback config
 	if currentRoutingConfig == nil {
-		log.Infof("Setting Loobback IP to %v", newLb)
+		log.Infof("New Loobback IP is %v", newLb)
 		curLbIP = newLb
 		return
 	}
 	rtcfg := currentRoutingConfig
 	deleteRoutingConfigHandler(infraAPI, client, *currentRoutingConfig)
-	log.Infof("Setting Loobback IP to %v", newLb)
-	curLbIP = newLb
+	log.Infof("New Loobback IP is %v", newLb)
 	createRoutingConfigHandler(infraAPI, client, *rtcfg)
 }

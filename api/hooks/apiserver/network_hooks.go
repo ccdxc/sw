@@ -17,10 +17,12 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/workload"
 	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -136,14 +138,21 @@ func (h *networkHooks) routingConfigPreCommit(ctx context.Context, kv kvstore.In
 		return i, true, errors.New("invalid input type")
 	}
 
-	existingObj := &network.RoutingConfig{}
-	err := kv.Get(ctx, key, existingObj)
-	if err != nil {
-		return i, true, fmt.Errorf("Failed to get existing object: %s", err)
-	}
-	if existingObj.Spec.BGPConfig != nil && in.Spec.BGPConfig != nil {
-		if existingObj.Spec.BGPConfig.ASNumber != in.Spec.BGPConfig.ASNumber {
-			return i, true, fmt.Errorf("Change in local ASN not allowed, delete and recreate")
+	switch oper {
+	case apiintf.CreateOper:
+		if !featureflags.IsOVerlayRoutingEnabled() {
+			return i, true, fmt.Errorf("not licensed to enable overlay routing")
+		}
+	case apiintf.UpdateOper:
+		existingObj := &network.RoutingConfig{}
+		err := kv.Get(ctx, key, existingObj)
+		if err != nil {
+			return i, true, fmt.Errorf("Failed to get existing object: %s", err)
+		}
+		if existingObj.Spec.BGPConfig != nil && in.Spec.BGPConfig != nil {
+			if existingObj.Spec.BGPConfig.ASNumber != in.Spec.BGPConfig.ASNumber {
+				return i, true, fmt.Errorf("Change in local ASN not allowed, delete and recreate")
+			}
 		}
 	}
 	return i, true, nil
@@ -333,6 +342,28 @@ func (h *networkHooks) deleteDefaultVRFRouteTable(ctx context.Context, kv kvstor
 	return r, true, nil
 }
 
+// checkNetworkInterfaceMutable is a pre-commit hook check for immutable fields
+func (h *networkHooks) checkNetworkInterfaceMutable(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(network.NetworkInterface)
+	if !ok {
+		h.logger.ErrorLog("method", "checkNetworkInterfaceMutable", "msg", fmt.Sprintf("API server hook checkNetworkInterfaceMutable with invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+	if oper != apiintf.UpdateOper {
+		return i, true, nil
+	}
+	pctx := apiutils.SetVar(ctx, apiutils.CtxKeyGetPersistedKV, true)
+	existingObj := &network.NetworkInterface{}
+	err := kv.Get(pctx, key, existingObj)
+	if err != nil {
+		return i, true, fmt.Errorf("Failed to get existing object: %s", err)
+	}
+	if existingObj.Spec.Type != r.Spec.Type {
+		return i, true, fmt.Errorf("Interface Type cannot be changed")
+	}
+	return i, true, nil
+}
+
 func registerNetworkHooks(svc apiserver.Service, logger log.Logger) {
 	hooks := networkHooks{}
 	hooks.svc = svc
@@ -343,9 +374,11 @@ func registerNetworkHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("Network", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateNetworkConfig)
 	svc.GetCrudService("VirtualRouter", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateVirtualrouterConfig)
 	svc.GetCrudService("NetworkInterface", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateNetworkIntfConfig)
+	svc.GetCrudService("NetworkInterface", apiintf.UpdateOper).WithPreCommitHook(hooks.checkNetworkInterfaceMutable)
 	svc.GetCrudService("VirtualRouter", apiintf.CreateOper).WithPreCommitHook(hooks.createDefaultVRFRouteTable)
 	svc.GetCrudService("VirtualRouter", apiintf.DeleteOper).WithPreCommitHook(hooks.deleteDefaultVRFRouteTable)
 	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.networkOrchConfigPrecommit)
+	svc.GetCrudService("RoutingConfig", apiintf.CreateOper).WithPreCommitHook(hooks.routingConfigPreCommit)
 	svc.GetCrudService("RoutingConfig", apiintf.UpdateOper).WithPreCommitHook(hooks.routingConfigPreCommit)
 	svc.GetCrudService("RoutingConfig", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateRoutingConfig)
 }

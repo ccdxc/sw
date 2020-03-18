@@ -64,7 +64,6 @@ func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_Metric
 			// statistics on other types of interfaces are not supported
 			continue
 		}
-		log.Infof("Querying metrics for interface %s, %s", intf.UUID, intf.Name)
 		err = stream.Send(metricsGetRequest)
 		if err != nil {
 			log.Error(errors.Wrapf(types.ErrMetricsSend,
@@ -87,7 +86,6 @@ func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_Metric
 				"Metrics response failure, | Err %v", resp.GetApiStatus().String()))
 			continue
 		}
-		log.Infof("Rcvd metrics for intf %s, %s", intf.UUID, intf.Name)
 
 		// build the row to be added to tsdb
 		points := []*tsdb.Point{}

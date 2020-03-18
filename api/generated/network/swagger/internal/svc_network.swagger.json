@@ -8075,8 +8075,10 @@
         "multi-hop": {
           "type": "integer",
           "format": "int64",
-          "maximum": 256,
-          "description": "BGP Multihop configuration, 0 disables multihop. Value should be between 0 and 256."
+          "default": "1",
+          "minimum": 1,
+          "maximum": 255,
+          "description": "BGP Multihop configuration, 0 disables multihop. Value should be between 1 and 255."
         },
         "enable-address-families": {
           "type": "array",

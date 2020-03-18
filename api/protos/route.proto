@@ -101,7 +101,7 @@ message BGPNeighbor {
 
     // BGP Multihop configuration, 0 disables multihop.
     uint32 MultiHop                         = 4 [(gogoproto.jsontag) = "multi-hop,omitempty",
-                                                (venice.check) = "IntRange(0, 256)"];
+                                                (venice.check) = "IntRange(1, 255)", (venice.default) = "1"];
 
     // Address families to enable on the neighbor.
     repeated string EnableAddressFamilies   = 5 [(gogoproto.jsontag) = "enable-address-families,omitempty",

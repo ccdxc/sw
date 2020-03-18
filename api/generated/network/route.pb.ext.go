@@ -157,6 +157,7 @@ func (m *BGPNeighbor) Defaults(ver string) bool {
 		for k := range m.EnableAddressFamilies {
 			m.EnableAddressFamilies[k] = "ipv4-unicast"
 		}
+		m.MultiHop = 1
 	}
 	return ret
 }
@@ -1056,8 +1057,8 @@ func init() {
 	validatorMapRoute["BGPNeighbor"]["all"] = append(validatorMapRoute["BGPNeighbor"]["all"], func(path string, i interface{}) error {
 		m := i.(*BGPNeighbor)
 		args := make([]string, 0)
-		args = append(args, "0")
-		args = append(args, "256")
+		args = append(args, "1")
+		args = append(args, "255")
 
 		if err := validators.IntRange(m.MultiHop, args); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"MultiHop", err.Error())

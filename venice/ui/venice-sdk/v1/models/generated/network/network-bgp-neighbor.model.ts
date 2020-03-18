@@ -30,7 +30,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
     'ip-address': string = null;
     /** ASN the neighbor belongs to. */
     'remote-as': number = null;
-    /** BGP Multihop configuration, 0 disables multihop. Value should be between 0 and 256. */
+    /** BGP Multihop configuration, 0 disables multihop. Value should be between 1 and 255. */
     'multi-hop': number = null;
     /** Address families to enable on the neighbor. */
     'enable-address-families': Array<NetworkBGPNeighbor_enable_address_families> = null;
@@ -56,7 +56,8 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
             type: 'number'
         },
         'multi-hop': {
-            description:  `BGP Multihop configuration, 0 disables multihop. Value should be between 0 and 256.`,
+            default: parseInt('1'),
+            description:  `BGP Multihop configuration, 0 disables multihop. Value should be between 1 and 255.`,
             required: true,
             type: 'number'
         },
@@ -173,7 +174,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
                 'shutdown': CustomFormControl(new FormControl(this['shutdown']), NetworkBGPNeighbor.propInfo['shutdown']),
                 'ip-address': CustomFormControl(new FormControl(this['ip-address'], [required, ]), NetworkBGPNeighbor.propInfo['ip-address']),
                 'remote-as': CustomFormControl(new FormControl(this['remote-as']), NetworkBGPNeighbor.propInfo['remote-as']),
-                'multi-hop': CustomFormControl(new FormControl(this['multi-hop'], [required, maxValueValidator(256), ]), NetworkBGPNeighbor.propInfo['multi-hop']),
+                'multi-hop': CustomFormControl(new FormControl(this['multi-hop'], [required, minValueValidator(1), maxValueValidator(255), ]), NetworkBGPNeighbor.propInfo['multi-hop']),
                 'enable-address-families': CustomFormControl(new FormControl(this['enable-address-families']), NetworkBGPNeighbor.propInfo['enable-address-families']),
                 'password': CustomFormControl(new FormControl(this['password'], [minLengthValidator(1), maxLengthValidator(128), ]), NetworkBGPNeighbor.propInfo['password']),
                 'source-from-loopback': CustomFormControl(new FormControl(this['source-from-loopback']), NetworkBGPNeighbor.propInfo['source-from-loopback']),

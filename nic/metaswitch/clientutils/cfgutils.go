@@ -78,6 +78,7 @@ func ip2uint32(ipstr string) uint32 {
 func ip2uint32Big(ipstr string) uint32 {
 	ip := net.ParseIP(ipstr).To4()
 	if len(ip) == 0 {
+		log.Errorf("failed to parse the IP address [%v]", ipstr)
 		return 0
 	}
 	return binary.BigEndian.Uint32(ip)
@@ -149,13 +150,14 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 				keepalive: b.KeepaliveInterval,
 				holdtime:  b.Holdtime,
 			}
+			peers := "new config peers - "
 			for _, n := range b.Neighbors {
 				laddr := newLb
 				if n.RemoteAS != newCfg.asn {
 					// Force to use local IP for the eBGP sessions
 					laddr = ""
 				}
-				log.Infof("new [%v] peer:%s local: %s", newLb, n.IPAddress, laddr)
+				peers = fmt.Sprintf("%s [peer:%s local: %s]", peers, n.IPAddress, laddr)
 				newCfg.neighbors = append(newCfg.neighbors, &bgpNeighbor{
 					shutdown:     n.Shutdown,
 					ipaddress:    n.IPAddress,
@@ -168,6 +170,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 					localAddr:    laddr,
 				})
 			}
+			log.Info(peers)
 		case *network.RoutingConfig:
 			c := new.(*network.RoutingConfig)
 			if c.Spec.BGPConfig == nil {
@@ -185,13 +188,14 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 				keepalive: b.KeepaliveInterval,
 				holdtime:  b.Holdtime,
 			}
+			peers := "new config peers - "
 			for _, n := range b.Neighbors {
 				laddr := newLb
 				if n.RemoteAS != newCfg.asn {
 					// Force to use local IP for the eBGP sessions
 					laddr = ""
 				}
-				log.Infof("new [%v] peer:%s local: %s", newLb, n.IPAddress, laddr)
+				peers = fmt.Sprintf("%s [peer:%s local: %s]", peers, n.IPAddress, laddr)
 				newCfg.neighbors = append(newCfg.neighbors, &bgpNeighbor{
 					shutdown:     n.Shutdown,
 					ipaddress:    n.IPAddress,
@@ -204,6 +208,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 					localAddr:    laddr,
 				})
 			}
+			log.Info(peers)
 		default:
 			return nil, fmt.Errorf("unknown config type")
 		}
@@ -229,13 +234,14 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 				routerID: b.RouterId,
 				asn:      b.ASNumber,
 			}
+			peers := "old config peers - "
 			for _, n := range b.Neighbors {
 				laddr := oldLb
 				if n.RemoteAS != oldCfg.asn {
 					// Force to use local IP for the eBGP sessions
 					laddr = ""
 				}
-				log.Infof("old [%v] peer:%s local: %s", oldLb, n.IPAddress, laddr)
+				peers = fmt.Sprintf("%s [peer:%s local: %s]", peers, n.IPAddress, laddr)
 				oldCfg.neighbors = append(oldCfg.neighbors, &bgpNeighbor{
 					shutdown:     n.Shutdown,
 					ipaddress:    n.IPAddress,
@@ -248,6 +254,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 					localAddr:    laddr,
 				})
 			}
+			log.Info(peers)
 		case *network.RoutingConfig:
 			c := old.(*network.RoutingConfig)
 			if c == nil {
@@ -266,13 +273,14 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 				routerID: b.RouterId,
 				asn:      b.ASNumber,
 			}
+			peers := "old config peers - "
 			for _, n := range b.Neighbors {
 				laddr := oldLb
 				if n.RemoteAS != oldCfg.asn {
 					// Force to use local IP for the eBGP sessions
 					laddr = ""
 				}
-				log.Infof("old [%v] peer:%s local: %s", oldLb, n.IPAddress, laddr)
+				peers = fmt.Sprintf("%s [peer:%s local:%s]", peers, n.IPAddress, laddr)
 				oldCfg.neighbors = append(oldCfg.neighbors, &bgpNeighbor{
 					shutdown:     n.Shutdown,
 					ipaddress:    n.IPAddress,
@@ -285,6 +293,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 					localAddr:    laddr,
 				})
 			}
+			log.Info(peers)
 		default:
 			return nil, fmt.Errorf("unknown config type")
 		}
@@ -421,7 +430,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 										afpk := &types.BGPPeerAfKey{LocalAddr: ip2PDSType(o.localAddr), PeerAddr: ip2PDSType(o.ipaddress)}
 
 										switch afo {
-									        case network.BGPAddressFamily_L2vpnEvpn.String():
+										case network.BGPAddressFamily_L2vpnEvpn.String():
 											afpk.Afi = types.BGPAfi_BGP_AFI_L2VPN
 											afpk.Safi = types.BGPSafi_BGP_SAFI_EVPN
 										case network.BGPAddressFamily_IPv4Unicast.String():
@@ -474,7 +483,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 						DefaultOrig: false,
 					}
 					switch afn {
-				        case network.BGPAddressFamily_L2vpnEvpn.String():
+					case network.BGPAddressFamily_L2vpnEvpn.String():
 						afp.Afi = types.BGPAfi_BGP_AFI_L2VPN
 						afp.Safi = types.BGPSafi_BGP_SAFI_EVPN
 					case network.BGPAddressFamily_IPv4Unicast.String():
@@ -523,6 +532,7 @@ func UpdateBGPConfiguration(ctx context.Context, client types.BGPSvcClient, cfg 
 		}
 		if resp.ApiStatus != types.ApiStatus_API_STATUS_OK {
 			log.Errorf("BGPConfig: Delete Peer AF failed | Status: %s", resp.ApiStatus)
+			return err
 		}
 		log.Infof("Peer AF [%d] delete succeeded [%s]", len(cfg.DelPeerAF.Request), resp.ApiStatus)
 	}
@@ -536,6 +546,7 @@ func UpdateBGPConfiguration(ctx context.Context, client types.BGPSvcClient, cfg 
 		}
 		if resp.ApiStatus != types.ApiStatus_API_STATUS_OK {
 			log.Errorf("BGPConfig: Delete Peer failed | Status: %s", resp.ApiStatus)
+			return err
 		}
 		log.Infof("BGPConfig: Peers [%d] delete succeeded [%s]", len(cfg.DelPeers.Request), resp.ApiStatus)
 	}
@@ -550,6 +561,7 @@ func UpdateBGPConfiguration(ctx context.Context, client types.BGPSvcClient, cfg 
 		}
 		if resp.ApiStatus != types.ApiStatus_API_STATUS_OK {
 			log.Errorf("BGPConfig: Create Global failed | Status: %s", resp.ApiStatus)
+			return err
 		}
 		log.Infof("BGPConfig: Create Global succeeded [%s]", resp.ApiStatus)
 
@@ -561,6 +573,7 @@ func UpdateBGPConfiguration(ctx context.Context, client types.BGPSvcClient, cfg 
 		}
 		if resp.ApiStatus != types.ApiStatus_API_STATUS_OK {
 			log.Errorf("BGPConfig: Create Global failed | Status: %s", resp.ApiStatus)
+			return err
 		}
 		log.Infof("BGPConfig: Update Global succeeded [%s]", resp.ApiStatus)
 	}
@@ -574,6 +587,7 @@ func UpdateBGPConfiguration(ctx context.Context, client types.BGPSvcClient, cfg 
 		}
 		if resp.ApiStatus != types.ApiStatus_API_STATUS_OK {
 			log.Errorf("BGPConfig: Create Peer failed | Status: %s", resp.ApiStatus)
+			return err
 		}
 		log.Infof("BGPConfig: Create Peers [%d] succeeded [%s]", len(cfg.AddPeers.Request), resp.ApiStatus)
 	}
@@ -587,6 +601,7 @@ func UpdateBGPConfiguration(ctx context.Context, client types.BGPSvcClient, cfg 
 		}
 		if resp.ApiStatus != types.ApiStatus_API_STATUS_OK {
 			log.Errorf("BGPConfig: Update Peer failed | Status: %s", resp.ApiStatus)
+			return err
 		}
 		log.Infof("BGPConfig: Update Peers [%d] succeeded [%s]", len(cfg.UpdPeers.Request), resp.ApiStatus)
 	}
@@ -600,6 +615,7 @@ func UpdateBGPConfiguration(ctx context.Context, client types.BGPSvcClient, cfg 
 		}
 		if resp.ApiStatus != types.ApiStatus_API_STATUS_OK {
 			log.Errorf("BGPConfig: Update Peer failed | Status: %s", resp.ApiStatus)
+			return err
 		}
 		log.Infof("BGPConfig: Update Peers [%d] succeeded [%s]", len(cfg.UpdPeers.Request), resp.ApiStatus)
 	}
@@ -613,6 +629,7 @@ func UpdateBGPConfiguration(ctx context.Context, client types.BGPSvcClient, cfg 
 		}
 		if resp.ApiStatus != types.ApiStatus_API_STATUS_OK {
 			log.Errorf("BGPConfig:Delete global failed | Status: %s", resp.ApiStatus)
+			return err
 		}
 		log.Infof("BGPConfig: Delete global [%d] succeeded [%s]", len(cfg.UpdPeers.Request), resp.ApiStatus)
 	}

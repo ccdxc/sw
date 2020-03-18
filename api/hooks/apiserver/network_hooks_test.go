@@ -287,12 +287,44 @@ func TestPrecommitHooks(t *testing.T) {
 			},
 		},
 	}
-	_, _, err = nh.routingConfigPreCommit(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, rtCfg)
+	_, _, err = nh.routingConfigPreCommit(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, rtCfg)
 	AssertOk(t, err, "expecting to succeed (%v)", err)
 	rtCfg.Spec.BGPConfig.ASNumber = 2000
-	_, _, err = nh.routingConfigPreCommit(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, rtCfg)
+	_, _, err = nh.routingConfigPreCommit(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, rtCfg)
 	Assert(t, err != nil, "expecting to fail (%v)", err)
 
+	intf := network.NetworkInterface{
+		Spec: network.NetworkInterfaceSpec{
+			Type: network.IFType_LOOPBACK_TEP.String(),
+		},
+	}
+
+	curIntf := network.NetworkInterface{
+		Spec: network.NetworkInterfaceSpec{
+			Type: network.IFType_LOOPBACK_TEP.String(),
+		},
+	}
+	kvs.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		return fmt.Errorf("not found")
+	}
+	_, kvw, err = nh.checkNetworkInterfaceMutable(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, intf)
+	AssertOk(t, err, "expecting to succeed")
+
+	_, kvw, err = nh.checkNetworkInterfaceMutable(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, intf)
+	Assert(t, err != nil, "expecting to fail")
+
+	kvs.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		r := into.(*network.NetworkInterface)
+		*r = curIntf
+		return nil
+	}
+
+	_, kvw, err = nh.checkNetworkInterfaceMutable(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, intf)
+	AssertOk(t, err, "expecting to succeed")
+
+	curIntf.Spec.Type = network.IFType_HOST_PF.String()
+	_, kvw, err = nh.checkNetworkInterfaceMutable(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, intf)
+	Assert(t, err != nil, "expecting to fail")
 }
 
 func TestNetworkOrchestratorRemoval(t *testing.T) {
