@@ -36,7 +36,7 @@ common:
     debugs:
         # Commenting out techsupport collection. If tech support fails,
         #   run gets stuck for a long time
-        #-   step : verif.utils.collect_logs_and_cores
+        -   step : verif.utils.collect_logs_and_cores
 
     setup:
         #-   step    : verif.utils.link_flap
