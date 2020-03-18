@@ -18,8 +18,11 @@ e2e-targets:
    feature:
    build-dependencies:
      - build-iris-arm
+     #- build-apollo-arm
+     - build-athena-arm
      - build-iota
      - build-iris-arm-elba
+     - build-custom-athena-image
    clusters:
      - image: build-17
        count: 2
