@@ -37,6 +37,30 @@ mirrorpolicy_template = {
     ]
 }
 
+collector_template = {
+    "type": "netagent",
+    "rest-endpoint": "api/collectors/",
+    "object-key": "meta.tenant/meta.namespace/meta.name",
+    "objects": [
+        {
+            "kind": "Collector",
+            "meta": {
+                "creation-time": "1970-01-01T00:00:00Z",
+                "mod-time": "1970-01-01T00:00:00Z",
+                "namespace": "default",
+                "name": "lif-collector",
+                "tenant": "default"
+            },
+            "spec": {
+                "packet-size": 128,
+                "destination": "192.168.100.101"
+            },
+            "status": {},
+        }
+    ],
+}
+
+
 def get_verif(dst_ip, src_ip, protocol, port, result):
     verif = {}
     verif['dst_ip'] = dst_ip
@@ -106,7 +130,7 @@ parser.add_argument('--topology', dest='topology_dir', required = dir,
 GlobalOptions = parser.parse_args()
 GlobalOptions.endpoint_file = GlobalOptions.topology_dir + "/endpoints.json"
 GlobalOptions.protocols = ["udp", "tcp", "icmp"]
-GlobalOptions.directories = ["udp", "tcp", "icmp", "mixed", "scale"]
+GlobalOptions.directories = ["udp", "tcp", "icmp", "mixed", "scale", "collector"]
 #GlobalOptions.ports = ["10", "22", "24", "30", "50-100", "101-200", "201-250, 251-290", "10000-20000", "65535"]
 GlobalOptions.ports = ["120"]
 GlobalOptions.actions = ["mirror"]
@@ -284,5 +308,15 @@ def Main():
                 ep_index += 1
     json.dump(mirrorpolicies, open(GlobalOptions.topology_dir + "/{}/mirror_scale_policy.json".format('scale'), "w"), indent=4)
 
+    # collector Config
+    collectors = collector_template
+    objects = collectors['objects']
+    collector = objects[0]
+    del objects[:]
+    for i in range(0, min(len(EP), 8)):   # Collector loop
+        objects.append(copy.deepcopy(collector))
+        objects[-1]['meta']['name'] = "lif-collector-%s"%(i)
+        objects[-1]['spec']['destination'] = EP[i]
+    json.dump(collectors, open(GlobalOptions.topology_dir + "/{}/collector_scale.json".format('collector'), "w"), indent=4)
 if __name__ == '__main__':
     Main()

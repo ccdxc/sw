@@ -5,6 +5,7 @@ import iota.test.iris.config.api as cfg_api
 import iota.test.iris.config.netagent.api as agent_api
 import iota.test.iris.config.netagent.hw_sec_ip_config as sec_ip_api
 import iota.test.iris.testcases.telemetry.utils as utils
+import iota.test.iris.config.infra.main as cfg_main
 from iota.test.iris.testcases.aging.aging_utils import *
 import pdb
 import json
@@ -64,6 +65,7 @@ def establishWorkloads(tc):
 #
 # Identify Naples Workload which would be WUT (workload under test)
 #
+
 def establishNaplesWorkload(tc):
     tc.naples = None
     for wl in tc.workloads:
@@ -336,6 +338,31 @@ def generateLifCollectorConfig(tc, colObjects):
         colObjects[c].spec.destination = tc.collector_ip_address[c]
 
     return api.types.status.SUCCESS
+
+def generateUplinkIntfCfgObj(node_name):
+    cfgObjs = []
+    uplinks = getUplinkInterfaceObj(node_name)
+    for uplink in uplinks:
+        del uplink['status']
+        uplink["spec"]['TxCollectors'] = []
+        uplink["spec"]['RxCollectors'] = []
+        cfgObj = cfg_main.ConfigObject(uplink, "meta.tenant/meta.namespace/meta.name", "api/interfaces/")
+        cfgObjs.append(cfgObj)
+    return cfgObjs
+
+def getUplinkInterfaceObj(node_name):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "/usr/bin/curl localhost:9007/api/interfaces/"
+    api.Trigger_AddNaplesCommand(req, node_name, cmd)
+    uplink = []
+    trig_resp = api.Trigger(req)
+    for cmd in trig_resp.commands:
+        api.PrintCommandResults(cmd)
+        intfs = json.loads(cmd.stdout)
+        for intf in intfs:
+            if intf['spec']['type'] == 'UPLINK_ETH':
+                uplink.append(intf)
+    return uplink
 
 #
 # Retrieve applicable IfNames from Netagent IF objects
