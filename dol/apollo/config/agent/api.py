@@ -5,6 +5,7 @@ import grpc
 import enum
 import requests
 import time
+import urllib3
 
 import oper_pb2_grpc as oper_pb2_grpc
 import batch_pb2_grpc as batch_pb2_grpc
@@ -131,7 +132,7 @@ class ClientModule:
 
 class ClientRESTModule:
     def __init__(self, ip, uri):
-        self.url = "http://" + ip + ":8888" + uri
+        self.url = "https://" + ip + ":8888" + uri
         return
 
     def Create(self, objs):
@@ -144,7 +145,7 @@ class ClientRESTModule:
                 continue
             logger.info("PostData: %s"%pdata)
             if not GlobalOptions.dryrun:
-                rdata = requests.post(self.url, pdata)
+                rdata = requests.post(self.url, pdata, verify=False)
                 if rdata.status_code != 200:
                     logger.error("Obj:%s POST FAILED [%d] to URL %s"%(obj.GID(), rdata.status_code, self.url))
                 else:
@@ -164,7 +165,7 @@ class ClientRESTModule:
                 continue
             logger.info("PutData: %s"%pdata)
             if not GlobalOptions.dryrun:
-                rdata = requests.put(url, pdata)
+                rdata = requests.put(url, pdata, verify=False)
                 if rdata.status_code != 200:
                     logger.error("Obj:%s PUT FAILED [%d] to URL %s"%(obj.GID(), rdata.status_code, url))
                 else:
@@ -174,7 +175,7 @@ class ClientRESTModule:
         return resps
 
     def Get(self):
-        rdata = requests.get(self.url)
+        rdata = requests.get(self.url, verify=False)
         if rdata.status_code != 200:
             logger.error("GET FAILED [%d] to URL %s"%(rdata.status_code, self.url))
             return
@@ -186,7 +187,7 @@ class ClientRESTModule:
             url = "%s%s"%(self.url, obj.GetRESTPath())
             logger.info("Obj:%s Delete URL %s"%(obj.GID(), url))
             if not GlobalOptions.dryrun:
-                rdata = requests.delete(url)
+                rdata = requests.delete(url, verify=False)
                 if rdata.status_code != 200:
                     logger.error("Obj:%s DELETE FAILED [%d] URL %s"%(obj.GID(), rdata.status_code, url))
                 else:
@@ -297,6 +298,7 @@ class ApolloAgentClient:
             assert(0)
         self.__create_stubs()
         self.__create_restreq_table()
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         return
 
     def __get_agent_port(self):
