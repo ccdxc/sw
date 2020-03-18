@@ -60,8 +60,20 @@ func (c *IPClient) DoStaticConfig() (string, error) {
 		return "", fmt.Errorf("could not parse IP Address from %v", ipConfig.IPAddress)
 	}
 
+	// Get list of IPv4 Addresses
+	addrs, err := netlink.AddrList(c.primaryIntf, netlink.FAMILY_V4)
+	if err != nil {
+		log.Errorf("Failed list ip address on interface %v. Err: %v", c.primaryIntf, err)
+		return "", err
+	}
+	// Delete all IPv4 Addresses
+	for _, addr := range addrs {
+		if err := netlink.AddrDel(c.primaryIntf, &addr); err != nil {
+			log.Errorf("Failed to delete ip address %v on interface %v. Err: %v", addr, c.primaryIntf, err)
+			return "", err
+		}
+	}
 	// Assign IP Address statically
-
 	if err := netlink.AddrReplace(c.primaryIntf, addr); err != nil {
 		log.Errorf("Failed to assign ip address %v to interface %v. Err: %v", ipConfig.IPAddress, c.primaryIntf, err)
 		return "", err
