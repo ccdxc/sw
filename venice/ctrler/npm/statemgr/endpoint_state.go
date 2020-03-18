@@ -346,9 +346,9 @@ func (sm *Statemgr) OnEndpointUpdate(epinfo *ctkit.Endpoint, nep *workload.Endpo
 		return err
 	}
 
-	// Successful migration
-	if nep.Status.Migration.Status == workload.EndpointMigrationStatus_START.String() && nep.Status.NodeUUID == nep.Spec.NodeUUID {
-		log.Infof("EP [%v] moved to [%v].", nep.Name, nep.Spec.NodeUUID)
+	// Start Last Sync of migration
+	if nep.Status.Migration.Status == workload.EndpointMigrationStatus_FINAL_SYNC.String() {
+		log.Infof("Starting last sync for EP [%v] to move to [%v].", nep.Name, nep.Spec.NodeUUID)
 		eps.Endpoint.Status = nep.Status
 
 		// Send DONE to the new host, so that DSC can start its terminal synch
@@ -357,6 +357,11 @@ func (sm *Statemgr) OnEndpointUpdate(epinfo *ctkit.Endpoint, nep *workload.Endpo
 		sm.mbus.AddObjectWithReferences(epinfo.MakeKey("cluster"), newEP, references(epinfo))
 		eps.Endpoint.Write()
 
+		return nil
+	}
+
+	if nep.Status.Migration.Status == workload.EndpointMigrationStatus_DONE.String() {
+		log.Infof("EP [%v] successfully moved to [%v]", nep.Name, nep.Spec.NodeUUID)
 		return nil
 	}
 
@@ -497,6 +502,11 @@ func (sm *Statemgr) moveEndpoint(epinfo *ctkit.Endpoint, nep *workload.Endpoint)
 				return
 			}
 
+			if ws.Workload.Status.MigrationStatus == nil {
+				log.Errorf("Workload [%v] has not migration status.", ws.Workload.Name)
+				return
+			}
+
 			// We perform a negative check here, to avoid any race condition in setting of the Status in workload
 			if ws.Workload.Status.MigrationStatus.Stage != workload.WorkloadMigrationStatus_MIGRATION_ABORT.String() {
 				log.Infof("Move timed out. Sending delete EP to old DSC. Traffic flows might be affected. [%v]", oldEP.Spec.NodeUUID)
@@ -557,9 +567,8 @@ func (sm *Statemgr) moveEndpoint(epinfo *ctkit.Endpoint, nep *workload.Endpoint)
 			eps, _ := EndpointStateFromObj(epinfo)
 			if eps != nil {
 				eps.Lock()
-				// TODO : Once we have the lastSync phase being sent from OrchHub, that will be the check we have over here
-				if eps.Endpoint.Status.Migration.Status == workload.EndpointMigrationStatus_START.String() && eps.Endpoint.Status.NodeUUID == eps.Endpoint.Spec.NodeUUID {
-					log.Infof("Waiting for final sync to finish for EP [%v].", eps.Endpoint.Name)
+				if eps.Endpoint.Status.Migration.Status == workload.EndpointMigrationStatus_FINAL_SYNC.String() && eps.Endpoint.Status.NodeUUID == eps.Endpoint.Spec.NodeUUID {
+					log.Infof("Waiting for last sync to finish for EP [%v].", eps.Endpoint.Name)
 					lastSyncRetryCount = lastSyncRetryCount + 1
 
 					// We will be here if the migration was declared successful by the orchestrator.
@@ -568,7 +577,7 @@ func (sm *Statemgr) moveEndpoint(epinfo *ctkit.Endpoint, nep *workload.Endpoint)
 					generationID = generationID + 1
 					newEP.ObjectMeta.GenerationID = fmt.Sprintf("%d", generationID)
 
-					// Fix the newEP's object to say LastSyncPhase
+					// TODO : Fix the newEP's object to say LastSyncPhase
 					newEP.Spec.Migration = netproto.MigrationState_NONE.String()
 					sm.mbus.UpdateObjectWithReferences(epinfo.MakeKey("cluster"), &newEP, references(epinfo))
 					if eps.migrationState == DONE || lastSyncRetryCount > defaultLastSyncRetries {

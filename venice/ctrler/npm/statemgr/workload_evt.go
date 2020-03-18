@@ -143,7 +143,8 @@ func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 		}
 
 		err = sm.reconcileWorkload(w, hsts, snic)
-		if err == nil {
+		// For Workloads moving from non_pensando to pensando host, ensure the appropriate state is slected
+		if err == nil && ws.Workload.Status.MigrationStatus.Status == workload.WorkloadMigrationStatus_STARTED.String() {
 			log.Infof("Handling migration for reconciled workload [%v]", ws.Workload.Name)
 			err = ws.handleMigration()
 		}
@@ -601,7 +602,7 @@ func (sm *Statemgr) RemoveStaleEndpoints() error {
 }
 
 func (ws *WorkloadState) handleMigration() error {
-	log.Infof("Handling migration stage [%v] for workload %v", ws.Workload.Status.MigrationStatus.Stage, ws.Workload.Name)
+	log.Infof("Handling migration stage [%v] status [%v] for workload [%v] ", ws.Workload.Status.MigrationStatus.Stage, ws.Workload.Status.MigrationStatus.Status, ws.Workload.Name)
 
 	switch ws.Workload.Status.MigrationStatus.Stage {
 	case workload.WorkloadMigrationStatus_MIGRATION_START.String():
@@ -654,6 +655,8 @@ func (ws *WorkloadState) handleMigration() error {
 
 		ws.Workload.Status.MigrationStatus.Status = workload.WorkloadMigrationStatus_STARTED.String()
 		ws.Workload.Write()
+	case workload.WorkloadMigrationStatus_MIGRATION_FINAL_SYNC.String():
+		log.Infof("Orchestrator declared workload %v migration in last sync phase.", ws.Workload.Name)
 	case workload.WorkloadMigrationStatus_MIGRATION_DONE.String():
 		log.Infof("Orchestrator declared workload %v migration is done.", ws.Workload.Name)
 	case workload.WorkloadMigrationStatus_MIGRATION_ABORT.String():
@@ -817,13 +820,13 @@ func (ws *WorkloadState) updateEndpoints() error {
 			switch ws.Workload.Status.MigrationStatus.Stage {
 			case workload.WorkloadMigrationStatus_MIGRATION_START.String():
 				epInfo.Status.Migration.Status = workload.EndpointMigrationStatus_START.String()
+			case workload.WorkloadMigrationStatus_MIGRATION_FINAL_SYNC.String():
+				epInfo.Status.Migration.Status = workload.EndpointMigrationStatus_FINAL_SYNC.String()
 			case workload.WorkloadMigrationStatus_MIGRATION_DONE.String():
 				// To communicate completion of migration from workload to EP we set the NodeUUID
 				// of Status equal to Spec
-				// The migration status continues to be in START stage
-				// migration status is moved to DONE once the dataplane responds affirmatively
 				epInfo.Status.NodeUUID = epInfo.Spec.NodeUUID
-				epInfo.Status.Migration.Status = workload.EndpointMigrationStatus_START.String()
+				epInfo.Status.Migration.Status = workload.EndpointMigrationStatus_FINAL_SYNC.String()
 			case workload.WorkloadMigrationStatus_MIGRATION_ABORT.String():
 				epInfo.Spec.NodeUUID = epInfo.Status.NodeUUID
 				epInfo.Status.Migration.Status = workload.EndpointMigrationStatus_ABORTED.String()

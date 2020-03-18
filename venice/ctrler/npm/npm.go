@@ -133,10 +133,13 @@ func NewNetctrler(serverURL, restURL, apisrvURL string, resolver resolver.Interf
 
 // Stop server and release resources
 func (c *Netctrler) Stop() error {
+	log.Infof("========= NPM Stop called")
 	if c.rpcServer != nil {
+		log.Infof("========== RPC Server Stop called")
 		c.rpcServer.Stop()
 	}
 
+	log.Infof("StateManager stop called")
 	c.StateMgr.Stop()
 	return nil
 }

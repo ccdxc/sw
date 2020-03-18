@@ -81,14 +81,16 @@ message EndpointMigrationStatus {
         NONE    = 0; // No Migration is in progress
         // ui-hint: Start
         START = 1; // Start migration
+        // ui-hint: FinalSync
+        FINAL_SYNC = 2; // Start last sync
         // ui-hint: Done
-        DONE = 2; // Migration is Done
+        DONE = 3; // Migration is Done
         // ui-hint: Failed
-        FAILED = 3; // Abort Migration
+        FAILED = 4; // Abort Migration
         // ui-hint : Aborted
-        ABORTED = 4; // Migration aborted
+        ABORTED = 5; // Migration aborted
         // ui-hint : Move from non pensando host
-        FROM_NON_PEN_HOST = 5; // Migration from non-pensando host
+        FROM_NON_PEN_HOST = 6; // Migration from non-pensando host
     }
 
     // Status of migration

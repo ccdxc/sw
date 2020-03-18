@@ -33,6 +33,7 @@ var EndpointMigrationStatus_MigrationState_normal = map[string]string{
 	"aborted":           "aborted",
 	"done":              "done",
 	"failed":            "failed",
+	"final_sync":        "final_sync",
 	"from_non_pen_host": "from_non_pen_host",
 	"none":              "none",
 	"start":             "start",
@@ -41,19 +42,21 @@ var EndpointMigrationStatus_MigrationState_normal = map[string]string{
 var EndpointMigrationStatus_MigrationState_vname = map[int32]string{
 	0: "none",
 	1: "start",
-	2: "done",
-	3: "failed",
-	4: "aborted",
-	5: "from_non_pen_host",
+	2: "final_sync",
+	3: "done",
+	4: "failed",
+	5: "aborted",
+	6: "from_non_pen_host",
 }
 
 var EndpointMigrationStatus_MigrationState_vvalue = map[string]int32{
 	"none":              0,
 	"start":             1,
-	"done":              2,
-	"failed":            3,
-	"aborted":           4,
-	"from_non_pen_host": 5,
+	"final_sync":        2,
+	"done":              3,
+	"failed":            4,
+	"aborted":           5,
+	"from_non_pen_host": 6,
 }
 
 func (x EndpointMigrationStatus_MigrationState) String() string {

@@ -6878,6 +6878,19 @@ func TestWorkloadMigration(t *testing.T) {
 		return false, nil
 	}, "Endpoint not found", "1ms", "1s")
 
+	// Send final sync
+	nwr.Status.MigrationStatus.Stage = "migration-final-sync"
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		ep, err := stateMgr.FindEndpoint("default", "testWorkload-1001.0203.0405")
+		if err == nil && ep.Endpoint.Status.Migration.Status == workload.EndpointMigrationStatus_FINAL_SYNC.String() {
+			return true, nil
+		}
+		return false, nil
+	}, "Endpoint not found", "1ms", "1s")
+
 	// Finish Migration
 	// update workload external vlan
 	nwr = ref.DeepCopy(wr).(workload.Workload)

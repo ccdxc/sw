@@ -4030,6 +4030,7 @@
           "enum": [
             "none",
             "start",
+            "final_sync",
             "done",
             "failed",
             "aborted",
@@ -4039,6 +4040,7 @@
           "x-ui-hints": {
             "done": "Done",
             "failed": "Failed",
+            "final_sync": "FinalSync",
             "none": "None",
             "start": "Start"
           },

@@ -21,6 +21,7 @@ export enum ApiListWatchOptions_sort_order {
 export enum WorkloadEndpointMigrationStatus_status {
     'none' = "none",
     'start' = "start",
+    'final_sync' = "final_sync",
     'done' = "done",
     'failed' = "failed",
     'aborted' = "aborted",
@@ -60,6 +61,7 @@ export enum ApiListWatchOptions_sort_order_uihint {
 export enum WorkloadEndpointMigrationStatus_status_uihint {
     'done' = "Done",
     'failed' = "Failed",
+    'final_sync' = "FinalSync",
     'none' = "None",
     'start' = "Start",
 }

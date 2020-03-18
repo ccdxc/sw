@@ -297,6 +297,7 @@ func (sm *Statemgr) ListObjects(kind string) []runtime.Object {
 
 // Stop stops the watchers
 func (sm *Statemgr) Stop() error {
+	log.Infof("Statemanager stop called")
 	return sm.ctrler.Stop()
 }
 
