@@ -144,28 +144,10 @@ class SubnetObject(base.ConfigObjectBase):
                 continue
             policyobj = PolicyClient.GetPolicyObject(node, policyid)
             if policyobj.PolicyType == 'default':
-                #TODO: move this to policy.py
-                self.__fill_default_rules(policyobj)
+                PolicyClient.Fill_Default_Rules(policyobj, self.IPPrefix)
             else:
                 PolicyClient.ModifyPolicyRules(node, policyid, self)
         return
-
-    def __fill_default_rules(self, policyobj):
-        rules = []
-        pfx = None
-        if policyobj.AddrFamily == 'IPV4':
-            if policyobj.PolicyType == 'default':
-                pfx = utils.IPV4_DEFAULT_ROUTE
-            elif policyobj.PolicyType is 'subnet':
-                pfx = ipaddress.ip_network(self.IPPrefix[1])
-        else:
-            if not self.IpV6Valid:
-                return
-            if policyobj.PolicyType == 'default':
-                pfx = utils.IPV6_DEFAULT_ROUTE
-            elif policyobj.PolicyType is 'subnet':
-                pfx = ipaddress.ip_network(self.IPPrefix[0])
-        policyobj.rules = PolicyClient.Generate_Allow_All_Rules(pfx, pfx)
 
     def __set_vrouter_attributes(self):
         # 1st IP address of the subnet becomes the vrouter.
@@ -252,6 +234,10 @@ class SubnetObject(base.ConfigObjectBase):
                             }
                         ],
                     "vxlan-vni": self.Vnid,
+                    "ing-v4-sec-pol-id": [],
+                    "ing-v6-sec-pol-id": [],
+                    "eg-v4-sec-pol-id": [],
+                    "eg-v6-sec-pol-id": [],
                     "route-import-export": {
                         "address-family": "evpn",
                         "rd-auto": True,
@@ -272,6 +258,18 @@ class SubnetObject(base.ConfigObjectBase):
                         }
                     }
                 }
+        for policyid in self.IngV4SecurityPolicyIds:
+            if policyid == 0: continue
+            spec['spec']['ing-v4-sec-pol-id'].append(f"Policy{policyid}")
+        for policyid in self.IngV6SecurityPolicyIds:
+            if policyid == 0: continue
+            spec['spec']['ing-v6-sec-pol-id'].append(f"Policy{policyid}")
+        for policyid in self.EgV4SecurityPolicyIds:
+            if policyid == 0: continue
+            spec['spec']['eg-v4-sec-pol-id'].append(f"Policy{policyid}")
+        for policyid in self.EgV6SecurityPolicyIds:
+            if policyid == 0: continue
+            spec['spec']['eg-v6-sec-pol-id'].append(f"Policy{policyid}")
         return json.dumps(spec)
 
     def ValidateJSONSpec(self, spec):

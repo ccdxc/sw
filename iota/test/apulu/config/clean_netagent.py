@@ -33,14 +33,17 @@ def __cleanup_netagent():
         addr = api.GetNicMgmtIP(node.Name())
         j = __get(addr, "/api/networks/");
         for obj in j: __del(addr, "/api/networks/", obj)
+        j = __get(addr, "/api/security/policies/");
+        for obj in j: __del(addr, "/api/security/policies/", obj)
+        j = __get(addr, "/api/apps/");
+        for obj in j: __del(addr, "/api/apps/", obj)
         j = __get(addr, "/api/vrfs/");
         for obj in j:
             if obj['spec']['vrf-type'] != 'CUSTOMER':
                 continue
             __del(addr, "/api/vrfs/", obj)
         j = __get(addr, "/api/route-tables/");
-        for obj in j:
-            __del(addr, "/api/route-tables/", obj)
+        for obj in j: __del(addr, "/api/route-tables/", obj)
     return api.types.status.SUCCESS
 
 def Main(step):

@@ -4,12 +4,15 @@ import copy
 import enum
 import ipaddress
 import random
+import json
+import requests
 from collections import defaultdict
 
 from infra.common.logging import logger
 
 from apollo.config.store import EzAccessStore
 from apollo.config.store import client as EzAccessStoreClient
+from infra.common.glopts  import GlobalOptions
 
 import apollo.config.agent.api as api
 from apollo.config.resmgr import client as ResmgrClient
@@ -35,8 +38,7 @@ class SupportedIPProtos(enum.IntEnum):
 
 class L4MatchObject:
     def __init__(self, valid=False,\
-                 sportlow=utils.L4PORT_MIN, sporthigh=utils.L4PORT_MAX,\
-                 dportlow=utils.L4PORT_MIN, dporthigh=utils.L4PORT_MAX,\
+                 sportlow=None,sporthigh=None,dportlow=None,dporthigh=None,\
                  icmptype=utils.ICMPTYPE_MIN, icmpcode=utils.ICMPCODE_MIN):
         self.valid = valid
         self.SportLow = sportlow
@@ -48,10 +50,12 @@ class L4MatchObject:
 
     def Show(self):
         if self.valid:
-            logger.info("    SrcPortRange:%d - %d"\
-                        %(self.SportLow, self.SportHigh))
-            logger.info("    DstPortRange:%d - %d"\
-                        %(self.DportLow, self.DportHigh))
+            if self.SportLow != None and self.SportHigh != None:
+                logger.info("    SrcPortRange:%d - %d"\
+                            %(self.SportLow, self.SportHigh))
+            if self.DportLow != None and self.DportHigh != None:
+                logger.info("    DstPortRange:%d - %d"\
+                            %(self.DportLow, self.DportHigh))
             logger.info("    Icmp Type:%d Code:%d"\
                         %(self.IcmpType, self.IcmpCode))
         else:
@@ -69,10 +73,20 @@ class L3MatchObject:
         self.DstType = dsttype
         self.SrcPrefix = srcpfx
         self.DstPrefix = dstpfx
-        self.SrcIPLow = srciplow
-        self.SrcIPHigh = srciphigh
-        self.DstIPLow = dstiplow
-        self.DstIPHigh = dstiphigh
+        if srciplow is None and srcpfx:
+            n=ipaddress.ip_network(srcpfx, False).hosts()
+            self.SrcIPLow = next(n)
+            self.SrcIPHigh = max(n)
+        else:
+            self.SrcIPLow = srciplow
+            self.SrcIPHigh = srciphigh
+        if dstiplow is None and dstpfx:
+            n=ipaddress.ip_network(dstpfx, False).hosts()
+            self.DstIPLow = next(n)
+            self.DstIPHigh = max(n)
+        else:
+            self.DstIPLow = dstiplow
+            self.DstIPHigh = dstiphigh
         self.SrcTag = srctag
         self.DstTag = dsttag
 
@@ -96,6 +110,8 @@ class L3MatchObject:
         else:
             logger.info("    No L3Match")
 
+AppIdx=1
+
 class RuleObject:
     def __init__(self, l3match, l4match, priority=0, action=types_pb2.SECURITY_RULE_ACTION_ALLOW, stateful=False):
         self.Stateful = stateful
@@ -103,6 +119,7 @@ class RuleObject:
         self.L4Match = copy.deepcopy(l4match)
         self.Priority = priority
         self.Action = action
+        self.AppName = ''
 
     def Show(self):
         def __get_action_str(action):
@@ -114,6 +131,72 @@ class RuleObject:
                     %(self.Stateful, self.Priority, __get_action_str(self.Action)))
         self.L3Match.Show()
         self.L4Match.Show()
+
+    def CreateAppObject(self, node):
+        global AppIdx
+        appname = f"App{AppIdx}"
+        appspec = {
+            "kind": "App",
+            "meta": {
+                "name": appname,
+                "namespace": "default",
+                "tenant": "default",
+                "uuid" : "00000001-00FF-%04X-4242-022222111111"%AppIdx,
+            },
+            "spec": {
+                "alg": {
+                    "icmp": {
+                        "type": self.L4Match.IcmpType,
+                        "code": self.L4Match.IcmpCode
+                    }
+                }
+            }
+        }
+        AppIdx += 1
+        logger.info("PostData: %s"%json.dumps(appspec))
+        url=f"https://{api.client[node].agentip}:8888/api/apps/"
+        logger.info(f"Obj:{appname} Posting to {url}")
+        if not utils.IsDryRun():
+            requests.post(url, json.dumps(appspec), verify=False)
+        return appname
+
+    def GetJson(self, node):
+        ret = {}
+        if self.Action == types_pb2.SECURITY_RULE_ACTION_ALLOW:
+            ret['action'] = 'PERMIT'
+        else:
+            ret['action'] = 'DENY'
+        ret['source'] = {}
+        ret['destination'] = {}
+        if self.L4Match.SportLow != None and self.L4Match.SportHigh != None:
+            ret['source']['proto-ports']: [{
+                "protocol": utils.GetIPProtoName(self.L3Match.Proto),
+                "port": f"{self.L4Match.SportLow}-{self.L4Match.SportHigh}"
+                }]
+        else:
+            if len(self.AppName) == 0:
+                self.AppName = self.CreateAppObject(node)
+            ret['app-name'] = self.AppName
+
+        if self.L3Match.SrcIPLow and self.L3Match.SrcIPHigh:
+            ret['source']['addresses'] = [
+                    f"{self.L3Match.SrcIPLow}-{self.L3Match.SrcIPHigh}"
+                    ]
+        elif self.L3Match.SrcIPLow:
+            ret['source']['addresses'] = [ f"{self.L3Match.SrcIPLow}" ]
+        if self.L4Match.DportLow != None and self.L4Match.DportHigh != None:
+            ret['destination']["proto-ports"] = [{
+                "protocol": utils.GetIPProtoName(self.L3Match.Proto),
+                "port": f"{self.L4Match.DportLow}-{self.L4Match.DportHigh}"
+                }]
+        if self.L3Match.DstIPLow and self.L3Match.DstIPHigh:
+            ret['destination']['addresses'] = [
+                    "%s-%s"%(self.L3Match.DstIPLow, self.L3Match.DstIPHigh)
+                    ]
+        elif self.L3Match.DstIPLow:
+            ret['destination']['addresses'] = [ f"{self.L3Match.DstIPLow}" ]
+
+        return ret
 
 class PolicyObject(base.ConfigObjectBase):
     def __init__(self, node, vpcid, af, direction, rules, policytype, overlaptype, level='subnet'):
@@ -220,6 +303,29 @@ class PolicyObject(base.ConfigObjectBase):
         for rule in self.rules:
             self.FillRuleSpec(spec, rule)
         return
+
+    def FillJsonRuleSpec(self):
+        spec = []
+        for rule in self.rules:
+            spec.append(rule.GetJson(self.Node))
+        return spec
+
+    def PopulateAgentJson(self):
+        spec = {
+            "kind": "NetworkSecurityPolicy",
+            "meta": {
+                "name": self.GID(),
+                "namespace": self.Namespace,
+                "tenant": self.Tenant,
+                "uuid" : self.UUID.UuidStr,
+            },
+            "spec": {
+                "vrf-name": f"Vpc{self.VPCId}",
+                "attach-tenant": True,
+                "policy-rules": self.FillJsonRuleSpec()
+            }
+        }
+        return json.dumps(spec)
 
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
@@ -433,8 +539,12 @@ class PolicyObjectClient(base.ConfigClientBase):
 
     def Generate_Allow_All_Rules(self, spfx, dpfx, priority=RulePriority.MAX):
         rules = []
+        #pdb.set_trace()
         # allow all ports
-        l4AllPorts = L4MatchObject(True)
+        l4AllPorts = L4MatchObject(True,\
+                 sportlow=utils.L4PORT_MIN, sporthigh=utils.L4PORT_MAX,\
+                 dportlow=utils.L4PORT_MIN, dporthigh=utils.L4PORT_MAX,\
+                )
         # allow icmp reply
         l4IcmpReply = L4MatchObject(True, icmptype=0, icmpcode=0)
         # allow icmp request
@@ -450,6 +560,25 @@ class PolicyObjectClient(base.ConfigClientBase):
                 rule = RuleObject(l3match, l4AllPorts, priority)
                 rules.append(rule)
         return rules
+
+    def Fill_Default_Rules(self, policyobj, subnetpfx):
+        rules = []
+        pfx = None
+        # Netagent expects a valid IP address, so if we're in netagent mode,
+        # use the subnet prefix, otherwise, default values
+        if policyobj.AddrFamily == 'IPV4':
+            if not GlobalOptions.netagent:
+                pfx = utils.IPV4_DEFAULT_ROUTE
+            else:
+                pfx = ipaddress.ip_network(subnetpfx[1])
+        else:
+            if not self.IpV6Valid:
+                return
+            if not GlobalOptions.netagent:
+                pfx = utils.IPV6_DEFAULT_ROUTE
+            else:
+                pfx = ipaddress.ip_network(subnetpfx[0])
+        policyobj.rules = self.Generate_Allow_All_Rules(pfx, pfx)
 
     def Generate_random_rules_from_nacl(self, naclobj, subnetpfx, af):
         # TODO: randomize - Add allow all with default pfx & low prio for now
@@ -809,7 +938,7 @@ class PolicyObjectClient(base.ConfigClientBase):
             policy_spec_type = policy_spec_obj.type
             policytype = policy_spec_obj.policytype
             if policy_spec_type == "specific":
-                if policytype == 'default':
+                if policytype == 'default' or policytype == 'subnet':
                     __add_default_policies(vpc_spec_obj, policy_spec_obj)
                 else:
                     overlaptype = getattr(policy_spec_obj, 'overlaptype', None)
