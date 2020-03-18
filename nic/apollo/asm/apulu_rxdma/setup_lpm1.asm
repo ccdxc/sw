@@ -42,7 +42,7 @@ setup_lpm_dport_sport:
 
     // Setup root for DPORT lookup on LPM2
     addi             r2, r1, SACL_PROTO_DPORT_TABLE_OFFSET
-    phvwr            p.lpm_metadata_lpm1_base_addr, r2
+    phvwr            p.lpm_metadata_lpm2_base_addr, r2
 
     // Setup key for DPORT lookup on LPM2
     phvwr            p.lpm_metadata_lpm2_key[15:0], k.p4_to_rxdma_flow_dport
