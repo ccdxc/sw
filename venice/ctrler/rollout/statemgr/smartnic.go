@@ -58,6 +58,7 @@ func (sm *Statemgr) CreateDSCRolloutState(ro *protos.DSCRollout, ros *RolloutSta
 		}
 		if snicStatus.Phase == roproto.RolloutPhase_FAIL.String() {
 			opStatus = "failure"
+			atomic.AddInt32(&ros.numPreUpgradeFailures, 1)
 		}
 		st := protos.DSCOpStatus{
 			Op:       op,
