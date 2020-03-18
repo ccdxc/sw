@@ -445,9 +445,17 @@ type ShadowBGPNLRIPrefixStatus struct {
 }
 
 func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixStatus {
+      var pathOrigId string
+
+      if (net.IP(in.PathOrigId).String() == "0.0.0.0") {
+         pathOrigId = ""
+      } else {
+         pathOrigId = net.IP(in.PathOrigId).String()
+      }
+
 	return &ShadowBGPNLRIPrefixStatus{
 		ASPathStr:           fmt.Sprintf("%v", in.ASPathStr),
-		PathOrigId:          net.IP(in.PathOrigId).String(),
+		PathOrigId:          pathOrigId,
 		NextHopAddr:         net.IP(in.NextHopAddr).String(),
 		Prefix:              NewNLRIPrefix(int(in.Afi), int(in.Safi), in.Prefix),
 		BGPNLRIPrefixStatus: in,
