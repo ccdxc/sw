@@ -132,6 +132,12 @@ parser start {
 
 @pragma xgress ingress
 parser parse_txdma_to_ingress {
+    set_metadata(control_metadata.from_arm, TRUE);
+    return parse_txdma_to_ingress_split;
+}
+
+@pragma xgress ingress
+parser parse_txdma_to_ingress_split {
     extract(capri_txdma_intrinsic);
     extract(p4plus_to_p4);
     extract(p4plus_to_p4_vlan);

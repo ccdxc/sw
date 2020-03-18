@@ -24,6 +24,13 @@
 #define RX_FROM_SWITCH                  1
 
 /*****************************************************************************/
+/* Packet direction :egress                                                  */
+/*****************************************************************************/
+#define PORT_HOST                       0
+#define PORT_SWITCH                     1
+
+
+/*****************************************************************************/
 /* User L3 rewrite types                                                     */
 /*****************************************************************************/
 #define L3REWRITE_NONE                          0
@@ -107,6 +114,15 @@
 #define CONNTRACK_FLOW_STATE_RSVD2              13
 #define CONNTRACK_FLOW_STATE_RSVD3              14
 #define CONNTRACK_FLOW_STATE_RSVD4              15
+
+
+/*****************************************************************************/
+/* Stats flags for P4E                                                       */
+/*****************************************************************************/
+#define P4E_STATS_FLAG_TX_TO_HOST               0x01
+#define P4E_STATS_FLAG_TX_TO_SWITCH             0x02
+#define P4E_STATS_FLAG_TX_TO_ARM                0x04
+
 
 
 #endif /* _ATHENA_DEFINES_H_ */

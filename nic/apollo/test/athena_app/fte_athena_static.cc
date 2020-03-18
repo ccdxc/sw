@@ -21,11 +21,11 @@ static uint32_t g_vnic1_slot_id = 0x12345;
 
 /* Towards Host */
 static mac_addr_t g_vnic1_ep_smac = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55};
-static mac_addr_t g_vnic1_ep_dmac = {0x00, 0x66, 0x77, 0x88, 0x99, 0xaa};
+static mac_addr_t g_vnic1_ep_dmac = {0x00, 0xae, 0xcd, 0x01, 0x2c, 0x60};
 
 /* Towards Switch */
 static mac_addr_t substrate_smac = {0x00, 0x55, 0x44, 0x33, 0x22, 0x11};
-static mac_addr_t substrate_dmac = {0x00, 0xaa, 0x99, 0x88, 0x77, 0x66};
+static mac_addr_t substrate_dmac = {0x00, 0xae, 0xcd, 0x01, 0x2c, 0x61};
 static uint16_t substrate_vlan = 0x0058;
 static uint32_t substrate_sip = 0x01010101;
 static uint32_t substrate_dip = 0x01010102;
@@ -33,7 +33,7 @@ static uint32_t substrate_dip = 0x01010102;
 /*
  * VNIC 2
  */
-static uint16_t g_vnic2_vlan = 0x003B;
+static uint16_t g_vnic2_vlan = 0x0058;
 static uint16_t g_vnic2_id = 0x02;
 static uint32_t g_vnic2_slot_id = 0x54321;
 

@@ -16,7 +16,7 @@
 #include "flow.p4"
 #include "nacl.p4"
 #include "session.p4"
-//#include "statistics.p4"
+#include "statistics.p4"
 #include "config_verify.p4"
 #include "inter_pipe.p4"
 #include "policers.p4"
@@ -40,6 +40,7 @@ control ingress {
     offloads();
     flow_lookup();
     ingress_inter_pipe();
+    p4i_statistics();
 }
 
 /*****************************************************************************/
@@ -55,4 +56,5 @@ control egress {
     update_checksums();
     egress_inter_pipe();
     conntrack_state_update();
+    p4e_statistics();
 }

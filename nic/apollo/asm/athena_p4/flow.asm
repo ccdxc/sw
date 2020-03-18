@@ -18,6 +18,7 @@ struct phv_     p;
 %%
 
 flow_hash:
+    phvwr       p.p4i_to_p4e_header_flow_hash, r1
     bbne        d.flow_hash_d.entry_valid, TRUE, label_flow_miss
     nop
     bcf         [c1], label_flow_hit

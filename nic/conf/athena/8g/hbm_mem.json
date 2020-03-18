@@ -324,6 +324,18 @@
             "name": "port_stats",
             "size": "3K",
             "reset": true
+        },
+        {
+            "name": "p4i_stats",
+            "size": "64B",
+            "reset": true,
+            "cache": "p4ig"
+        },
+        {
+            "name": "p4e_stats",
+            "size": "64B",
+            "reset": true,
+            "cache": "p4eg"
         }
     ]
 }

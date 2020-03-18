@@ -36,6 +36,7 @@ header_type control_metadata_t {
         flow_ohash_lkp                      : 1;
         dnat_ohash_lkp                      : 1;
         direction                           : 1;
+        from_arm                            : 1;
         parse_tcp_option_error              : 1;
         flow_miss                           : 1;
         session_index_valid                 : 1;
@@ -98,12 +99,16 @@ header_type control_metadata_t {
         p4e_drop_reason                     : 32;
 
         // NACL Results
-        redir_type          : 1;
-        redir_oport         : 4;
-        redir_lif           : 11;
-        redir_qtype         : 3;
-        redir_qid           : 24;
-        redir_app_id        : 4;
+        redir_type                          : 1;
+        redir_oport                         : 4;
+        redir_lif                           : 11;
+        redir_qtype                         : 3;
+        redir_qid                           : 24;
+        redir_app_id                        : 4;
+
+        /*  Stats - TMP */
+        stats_id                            : 1;
+        p4e_stats_flag                      : 4;
     }
 }
 

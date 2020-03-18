@@ -356,7 +356,7 @@ action session_rewrite_encap_mplsoudp(
 
     modify_field(udp_0.srcPort, udp_sport);
     modify_field(udp_0.dstPort, udp_dport);
-    modify_field(udp_0.srcPort, p4i_to_p4e_header.hash);
+    modify_field(udp_0.srcPort, p4i_to_p4e_header.flow_hash);
     add_header(udp_0);
     
     modify_field(scratch_metadata.mpls_label, mpls_label1);

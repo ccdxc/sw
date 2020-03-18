@@ -95,7 +95,7 @@ session_rewrite_encap_mplsoudp_no_more_mpls_labels:
         /* Setup IP length in r2 */
         add             r2, r1, 20
 
-        SESSION_REWRITE_ENCAP_UDP(k.p4i_to_p4e_header_hash, 6635, r1);
+        SESSION_REWRITE_ENCAP_UDP(k.p4i_to_p4e_header_flow_hash[15:0], 6635, r1);
         SESSION_REWRITE_ENCAP_IP(IP_PROTO_UDP, r2);
 
         /*
