@@ -164,14 +164,16 @@ local_mapping_dump_cb (sdk_table_api_params_t *params)
     data = (local_mapping_appdata_t *)(params->appdata);
     vpc_id = key->key_metadata_local_mapping_lkp_id;
 
-    // skip l2 mappings
-    if (key->key_metadata_local_mapping_lkp_type == KEY_TYPE_MAC) {
+    // skip L2 mappings as they are provided as vnic entries
+    if ((key->key_metadata_local_mapping_lkp_type == KEY_TYPE_MAC) ||
+        (data->ip_type != MAPPING_TYPE_OVERLAY)) {
         return;
     }
 
-    // read remote mapping
+    // read MAPPING table
     mapping_key.p4e_i2e_mapping_lkp_id = key->key_metadata_local_mapping_lkp_id;
-    mapping_key.p4e_i2e_mapping_lkp_type = key->key_metadata_local_mapping_lkp_type;
+    mapping_key.p4e_i2e_mapping_lkp_type =
+        key->key_metadata_local_mapping_lkp_type;
     memcpy(mapping_key.p4e_i2e_mapping_lkp_addr,
            key->key_metadata_local_mapping_lkp_addr,
            IP6_ADDR8_LEN);
@@ -184,11 +186,13 @@ local_mapping_dump_cb (sdk_table_api_params_t *params)
     }
 
     // TODO: read NAT table for public ip address
-    private_ip.af = (key->key_metadata_local_mapping_lkp_type == KEY_TYPE_IPV6) ?
-                        IP_AF_IPV6 : IP_AF_IPV4;
+    private_ip.af =
+        (key->key_metadata_local_mapping_lkp_type == KEY_TYPE_IPV6) ?
+            IP_AF_IPV6 : IP_AF_IPV4;
     public_ip.af = private_ip.af;
     if (private_ip.af == IP_AF_IPV4) {
-        private_ip.addr.v4_addr = *(uint32_t *)key->key_metadata_local_mapping_lkp_addr;
+        private_ip.addr.v4_addr =
+            *(uint32_t *)key->key_metadata_local_mapping_lkp_addr;
     } else {
         sdk::lib::memrev(private_ip.addr.v6_addr.addr8,
                          key->key_metadata_local_mapping_lkp_addr,
@@ -196,7 +200,7 @@ local_mapping_dump_cb (sdk_table_api_params_t *params)
     }
     sdk::lib::memrev(overlay_mac, mapping_data.dmaci, ETH_ADDR_LEN);
 
-    // read bd id table
+    // read BD table
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_BD, mapping_data.egress_bd_id,
                                       NULL, NULL, &bd_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -377,7 +381,6 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
             api_params.cbdata = &fd;
             local_mapping_tbl_->iterate(&api_params);
         }
-        // TODO: skip local entries from remote table
         if (type == MAPPING_DUMP_TYPE_REMOTE_L3) {
             remote_mapping_print_l3_header(fd);
             api_params.itercb = remote_l3_mapping_dump_cb;

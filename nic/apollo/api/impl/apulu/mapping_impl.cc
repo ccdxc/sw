@@ -147,13 +147,10 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
         if (ret != SDK_RET_OK) {
             return NULL;
         }
-        // TODO: uncomment once p4 has support for this !!
-#if 0
-        if (local_mapping_data.ip_type != IP_TYPE_OVERLAY) {
-            // this is either public IP or some other type of IP
+        if (local_mapping_data.ip_type != MAPPING_TYPE_OVERLAY) {
+            // this is either public IP or IP entry for some other purpose
             return NULL;
         }
-#endif
         public_ip_valid = (local_mapping_data.xlate_id !=
                                PDS_IMPL_RSVD_NAT_HW_ID) ? true : false;
     }
