@@ -3548,7 +3548,9 @@ pds_subnet_api_spec_to_proto (pds::SubnetSpec *proto_spec,
     pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
                              &api_spec->fabric_encap);
     proto_spec->set_hostif(api_spec->host_if.id, PDS_MAX_KEY_LEN);
-    proto_spec->set_dhcppolicyid(api_spec->dhcp_policy.id, PDS_MAX_KEY_LEN);
+    for (uint8_t i = 0; i < api_spec->num_dhcp_policy; i++) {
+        proto_spec->add_dhcppolicyid(api_spec->dhcp_policy[i].id, PDS_MAX_KEY_LEN);
+    }
     proto_spec->set_tos(api_spec->tos);
 }
 
@@ -3607,6 +3609,11 @@ pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
                       "exceed {}", PDS_MAX_SUBNET_POLICY);
         return SDK_RET_INVALID_ARG;
     }
+    if (proto_spec.dhcppolicyid_size() > PDS_MAX_SUBNET_POLICY) {
+        PDS_TRACE_ERR("No. of DHCP policies on subnet can't "
+                      "exceed {}", PDS_MAX_SUBNET_DHCP_POLICY);
+        return SDK_RET_INVALID_ARG;
+    }
     api_spec->num_ing_v4_policy = proto_spec.ingv4securitypolicyid_size();
     for (uint8_t i = 0; i < api_spec->num_ing_v4_policy; i++) {
         pds_obj_key_proto_to_api_spec(&api_spec->ing_v4_policy[i],
@@ -3644,8 +3651,11 @@ pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
     }
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
     pds_obj_key_proto_to_api_spec(&api_spec->host_if, proto_spec.hostif());
-    pds_obj_key_proto_to_api_spec(&api_spec->dhcp_policy,
-                                  proto_spec.dhcppolicyid());
+    api_spec->num_dhcp_policy = proto_spec.dhcppolicyid_size();
+    for (uint8_t i = 0; i < api_spec->num_dhcp_policy; i++) {
+        pds_obj_key_proto_to_api_spec(&api_spec->dhcp_policy[i],
+                                      proto_spec.dhcppolicyid(i));
+    }
     api_spec->tos = proto_spec.tos();
     return SDK_RET_OK;
 }

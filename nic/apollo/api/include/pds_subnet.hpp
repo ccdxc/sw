@@ -21,40 +21,49 @@
 /// \defgroup PDS_SUBNET Subnet API
 /// @{
 
-#define PDS_MAX_SUBNET           64    ///< max subnets
-#define PDS_MAX_SUBNET_POLICY    5     ///< max #of security policies per subnet
+#define PDS_MAX_SUBNET                64    ///< max subnets
+#define PDS_MAX_SUBNET_POLICY         5     ///< max #of security policies per subnet
+#define PDS_MAX_SUBNET_DHCP_POLICY    5     ///< max #of DHCP policies per subnet
 
 /// \brief Subnet specification
 typedef struct pds_subnet_spec_s {
-    pds_obj_key_t key;                       ///< key
-    pds_obj_key_t vpc;                       ///< VPC key
-    ipv4_prefix_t v4_prefix;                 ///< IPv4 CIDR block
-    ip_prefix_t v6_prefix;                   ///< IPv6 CIDR block
-    ipv4_addr_t v4_vr_ip;                    ///< IPv4 virtual router IP
-    ip_addr_t v6_vr_ip;                      ///< IPv6 virtual router IP
-    mac_addr_t vr_mac;                       ///< virtual router mac
-    pds_obj_key_t v4_route_table;    ///< IPv4 Route table id
-    pds_obj_key_t v6_route_table;    ///< IPv6 Route table id
-    ///< ingress IPv4 policy table(s)
+    pds_obj_key_t key;                      ///< key
+    pds_obj_key_t vpc;                      ///< VPC key
+    ipv4_prefix_t v4_prefix;                ///< IPv4 CIDR block
+    ip_prefix_t v6_prefix;                  ///< IPv6 CIDR block
+    ipv4_addr_t v4_vr_ip;                   ///< IPv4 virtual router IP
+    ip_addr_t v6_vr_ip;                     ///< IPv6 virtual router IP
+    mac_addr_t vr_mac;                      ///< virtual router mac
+    pds_obj_key_t v4_route_table;           ///< IPv4 Route table id
+    pds_obj_key_t v6_route_table;           ///< IPv6 Route table id
+    /// ingress IPv4 policy table(s)
     uint8_t num_ing_v4_policy;
     pds_obj_key_t ing_v4_policy[PDS_MAX_SUBNET_POLICY];
-    ///< ingress IPv6 policy table(s)
+    /// ingress IPv6 policy table(s)
     uint8_t num_ing_v6_policy;
     pds_obj_key_t ing_v6_policy[PDS_MAX_SUBNET_POLICY];
-    ///< egress IPv4 policy table(s)
+    /// egress IPv4 policy table(s)
     uint8_t num_egr_v4_policy;
     pds_obj_key_t egr_v4_policy[PDS_MAX_SUBNET_POLICY];
-    ///< egress IPv6 policy table(s)
+    /// egress IPv6 policy table(s)
     uint8_t num_egr_v6_policy;
     pds_obj_key_t egr_v6_policy[PDS_MAX_SUBNET_POLICY];
-    pds_encap_t fabric_encap;                ///< fabric encap for this subnet
+    pds_encap_t fabric_encap;               ///< fabric encap for this subnet
     /// when operating in PDS_DEV_OPER_MODE_HOST mode with multiple host
     /// PFs/VFs present, subnet can be attached to PF/VF
     pds_obj_key_t host_if;
-    pds_obj_key_t dhcp_policy;       ///< DHCP policy, if any
-    uint8_t tos;                             ///< type of service to be used
-                                             ///< in the outer header in
-                                             ///< encapped pkts
+    /// DHCP policies, if any
+    /// NOTE:
+    /// 1. at any given time, a subnet can either have DHCP relay policy or
+    ///    DHCP proxy policy only and for simplicty on any given subnet we
+    ///    can't switch from one type of policy to another
+    /// 2. Multiple DHCP proxy policies per subnet is not supported
+    /// 3. More than two DHCP relay policies is not supported
+    uint8_t num_dhcp_policy;
+    pds_obj_key_t dhcp_policy[PDS_MAX_SUBNET_DHCP_POLICY];
+    uint8_t tos;                            ///< type of service to be used
+                                            ///< in the outer header in
+                                            ///< encapped pkts
 } __PACK__ pds_subnet_spec_t;
 
 /// \brief Subnet status

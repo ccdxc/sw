@@ -23,15 +23,15 @@ public:
     bool test_if_bind = false;
     bool test_if_unbind = false;
 
-   // These inputs are used to generate feeder inputs 
-   // as well as output verifications 
+   // These inputs are used to generate feeder inputs
+   // as well as output verifications
    virtual void init() {
-    bd_id = 1; vrf_id = 2;  
+    bd_id = 1; vrf_id = 2;
     bd_uuid = 300; vrf_uuid = 100;
 
     vpc_spec.key = pds_ms::msidx2pdsobjkey(vrf_uuid);
     vpc_spec.type = PDS_VPC_TYPE_TENANT;
-    vpc_spec.v4_prefix.len = 24; 
+    vpc_spec.v4_prefix.len = 24;
     str2ipv4addr("23.1.10.1", &vpc_spec.v4_prefix.v4_addr);
     mac_str_to_addr((char*) "04:06:03:09:00:03", vpc_spec.vr_mac);
     vpc_spec.v4_route_table = pds_ms::msidx2pdsobjkey(vrf_id);
@@ -56,7 +56,8 @@ public:
     subnet_spec.egr_v4_policy[2] = pds_ms::msidx2pdsobjkey(7);
     subnet_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     subnet_spec.fabric_encap.val.vnid  = 100;
-    subnet_spec.dhcp_policy = pds_ms::msidx2pdsobjkey(10);
+    subnet_spec.num_dhcp_policy = 1;
+    subnet_spec.dhcp_policy[0] = pds_ms::msidx2pdsobjkey(10);
     subnet_spec.tos = 5;
    }
 
@@ -80,22 +81,22 @@ public:
        memset (&subnet_spec.host_if, 0, sizeof(subnet_spec.host_if));
        test_if_unbind = true;
    }
-   void next(void) override { 
+   void next(void) override {
        subnet_spec.key = pds_ms::msidx2pdsobjkey(++bd_uuid); ++bd_id;
        str2ipv4addr("24.4.10.1", &subnet_spec.v4_prefix.v4_addr);
        subnet_spec.fabric_encap.val.vnid  += 100;
-       auto state_ctxt = pds_ms::state_t::thread_context(); 
+       auto state_ctxt = pds_ms::state_t::thread_context();
    }
-   void trigger_delete(void) override { 
-       auto state_ctxt = pds_ms::state_t::thread_context(); 
+   void trigger_delete(void) override {
+       auto state_ctxt = pds_ms::state_t::thread_context();
    }
    virtual ~bd_input_params_t(void) {};
    virtual void init_direct_update() {
-       // Set an initial subnet spec in the BD store 
+       // Set an initial subnet spec in the BD store
        subnet_spec.key = pds_ms::msidx2pdsobjkey(++bd_uuid); ++bd_id;
        subnet_spec.fabric_encap.val.vnid  += 100;
        str2ipv4addr("33.3.10.1", &subnet_spec.v4_prefix.v4_addr);
-       auto state_ctxt = pds_ms::state_t::thread_context(); 
+       auto state_ctxt = pds_ms::state_t::thread_context();
        state_ctxt.state()->subnet_store().add_upd (bd_id,
                                                new pds_ms::subnet_obj_t(subnet_spec));
 
@@ -123,7 +124,7 @@ void load_bd_test_input(void);
 void load_bd_test_output(void);
 
 static inline void
-load_bd_test (void) 
+load_bd_test (void)
 {
     load_bd_test_input();
     load_bd_test_output();

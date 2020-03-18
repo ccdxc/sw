@@ -62,7 +62,13 @@ message SubnetSpec {
   // HostIfIndex is the interface index of such VF/PF
   bytes            HostIf                = 15;
   // DHCP policy to be applied in this subnet
-  bytes            DHCPPolicyId          = 16;
+  // NOTE:
+  // 1. at any given time, a subnet can either have DHCP relay policy or
+  //    DHCP proxy policy only and for simplicty on any given subnet we
+  //    can't switch from one type of policy to another
+  // 2. Multiple DHCP proxy policies per subnet is not supported
+  // 3. More than two DHCP relay policies is not supported
+  repeated bytes   DHCPPolicyId          = 16;
   // ToS field is 1 byte value that is populated in the DSCP field of IPv4 outer
   // header or in the Traffic Class field of IPv6 outer header, this value will
   // be written as-is (i.e., not interpreted) during encap time by the dataplane
