@@ -2,7 +2,6 @@
 
 // Functions related to Capri LIF 2 Qstate programming.
 
-#include "platform/capri/capri_lif_manager.hpp"
 #include "platform/capri/capri_state.hpp"
 #include "platform/capri/capri_qstate.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"

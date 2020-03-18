@@ -20,7 +20,6 @@ namespace hal {
 const static uint32_t kAllocUnit = 4096;
 
 //RDMAManager *g_rdma_manager = nullptr;
-// extern sdk::platform::capri::LIFManager *lif_manager();
 extern lif_mgr *lif_manager();
 
 RDMAManager::RDMAManager() {

@@ -62,7 +62,6 @@ static nvme_ns_info_t *g_nvme_ns_info = NULL;
 
 
 //NVMEManager *g_nvme_manager = nullptr;
-// extern sdk::platform::capri::LIFManager *lif_manager();
 extern lif_mgr *lif_manager();
 
 NVMEManager::NVMEManager() {

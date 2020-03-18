@@ -21,7 +21,6 @@ namespace hal {
 
 const uint32_t kNumMaxLIFs = 2048;
 
-// LIFManager *g_lif_manager = nullptr;
 class lif_mgr *g_lif_manager = nullptr;
 program_info *g_pinfo = nullptr;
 

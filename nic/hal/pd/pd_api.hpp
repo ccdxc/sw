@@ -48,7 +48,7 @@
 #include "nic/hal/pd/tcp_msg_api.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
-#include "platform/capri/capri_lif_manager.hpp"
+#include "platform/utils/lif_manager_base.hpp"
 
 using sdk::platform::capri::tm_port_t;
 

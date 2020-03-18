@@ -558,7 +558,6 @@ pd_collector_populate_export_info (collector_config_t *cfg,
     }
     telemetry_export_dest_commit(dst);
 
-end:
     return ret;
 }
 

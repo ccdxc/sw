@@ -11,7 +11,6 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/platform/utils/lif_manager_base.hpp"
 #include "nic/sdk/platform/utils/qstate_mgr.hpp"
-#include "nic/sdk/platform/capri/capri_lif_manager.hpp"
 #include "nic/sdk/platform/capri/capri_qstate.hpp"
 #include "nic/sdk/p4/loader/loader.hpp"
 #include "nic/sdk/platform/capri/capri_qstate.hpp"
@@ -23,7 +22,6 @@
 #include "nic/apollo/api/impl/devapi_impl.hpp"
 #include "nic/apollo/api/upgrade_state.hpp"
 
-using sdk::platform::capri::LIFManager;
 using sdk::platform::utils::program_info;
 
 #define JLIF2QSTATE_MAP_NAME        "lif2qstate_map"
@@ -70,17 +68,6 @@ init_service_lif (uint32_t lif_id, const char *cfg_path)
     program_info *pginfo = program_info::factory(prog_info_file.c_str());
     SDK_ASSERT(pginfo != NULL);
     api::g_pds_state.set_prog_info(pginfo);
-/*
-    LIFManager *lm = LIFManager::factory(api::g_pds_state.mempartition(),
-                                         api::g_pds_state.prog_info(),
-                                         JLIF2QSTATE_MAP_NAME);
-    SDK_ASSERT(lm != NULL);
-    api::g_pds_state.set_lif_mgr(lm);
-    qstate_mgr *qstate_mgr::factory(const char *qstate_info_file, shmmgr *mmgr)
-
-
-    lm->LIFRangeMarkAlloced(APOLLO_SERVICE_LIF, 1);
-*/
 
     sdk::platform::utils::LIFQState qstate = { 0 };
     qstate.lif_id = lif_id;
