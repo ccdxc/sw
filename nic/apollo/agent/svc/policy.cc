@@ -118,8 +118,8 @@ SecurityPolicySvcImpl::SecurityPolicyUpdate(ServerContext *context,
         auto request = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = core::policy_update(&key, &api_spec, bctxt);
-        if (api_spec.rule_info->rules != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec.rule_info->rules);
+        if (api_spec.rule_info != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec.rule_info);
             api_spec.rule_info = NULL;
         }
         if (ret != SDK_RET_OK) {
