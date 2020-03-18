@@ -267,7 +267,7 @@ export class GenServiceUtility {
   public createDataCache<T>(constructor: any, key: string, listFn: () => Observable<VeniceResponse>, watchFn: (query: any) => Observable<VeniceResponse>): Observable<ServerEvent<any>> {
     // preserve input parameter
 
-     // service (eg cluser-service) class may have multiple keys
+    // service (eg cluser-service) class may have multiple keys
     if (!this._createCacheConfigMap) {
       // case-1, this._createCacheConfigMap is not initialized
       this._createCacheConfigMap = {
@@ -280,7 +280,7 @@ export class GenServiceUtility {
       };
     } else {
       // case-2, set the key entry
-      this._createCacheConfigMap[key] =  {
+      this._createCacheConfigMap[key] = {
         constructor: constructor,
         key: key,
         listFn: listFn,
@@ -373,7 +373,7 @@ export class GenServiceUtility {
       return this.cacheMap[key];
     } else {
       console.error('GenUtility.ts handleListFromCache() re-run createDataCache()');  // VS-1306.
-      return this.createDataCache(this._createCacheConfigMap.AUTH_KEY.constructor, this._createCacheConfigMap.key.key, this._createCacheConfigMap.key.listFn, this._createCacheConfigMap.key.watchFn);
+      return this.createDataCache(this._createCacheConfigMap[key].constructor, this._createCacheConfigMap[key].key, this._createCacheConfigMap[key].listFn, this._createCacheConfigMap[key].watchFn);
     }
   }
 

@@ -4,7 +4,12 @@
       <div fxFlex="nogrow" fxLayout="column">
         <ng-container *ngTemplateOutlet="metaName"></ng-container>
         <div fxFlex="10px"></div>
-        <ng-container *ngTemplateOutlet="FWPolicyMode"></ng-container>
+        <ng-container *ngIf="!isReleaseB">
+          <ng-container *ngTemplateOutlet="FWPolicyMode"></ng-container>
+        </ng-container>
+        <ng-container *ngIf="isReleaseB">
+          <ng-container *ngTemplateOutlet="ReleaseB_FWPolicyMode"></ng-container>
+        </ng-container>
       </div>
     </div>
   </div>
@@ -22,6 +27,17 @@
                type="text" pInputText appFloatLabel="Unique DSP Profile Name...">
       </span>
     </div>
+  </div>
+</ng-template>
+
+<ng-template #ReleaseB_FWPolicyMode>
+  <div fxFlex="100" fxLayout="row">
+    <p-listbox #nodesListbox [options]="releaseBDSCProfileOptions"
+               styleClass="new-dsc-profile-row-plist-B"
+               *ngIf="releaseBDSCProfileOptions && releaseBDSCProfileOptions.length>0"
+               [(ngModel)]="selectedReleaseBDSCProfile"
+               optionLabel="label" [listStyle]="{'height':'100px'}">
+    </p-listbox>
   </div>
 </ng-template>
 
