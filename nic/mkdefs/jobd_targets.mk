@@ -513,3 +513,7 @@ jobd/dol/apulu/learn: ${JOBD_PREREQS}
 .PHONY: jobd/athena/gtests
 jobd/athena/gtests: ${JOBD_PREREQS}
 	${NICDIR}/apollo/test/tools/athena/run_gtests_athena.sh ${COVERAGE_OPTS}
+
+.PHONY: jobd/athena_app/make
+jobd/athena_app/make: ${JOBD_PREREQS}
+	${NICDIR}/apollo/test/athena_app/build_athena_app.sh

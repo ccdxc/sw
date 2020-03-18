@@ -63,15 +63,6 @@ uint32_t g_session_rewrite_index = 1;
 uint32_t g_h2s_vlan = 0x0002;
 uint16_t g_h2s_vnic_id = 0x0001;
 
-/*
- * Static Normalized key for UDP flow
- */
-static uint32_t    g_h2s_sip = 0x02000001;
-static uint32_t    g_h2s_dip = 0x02000002;
-static uint8_t     g_h2s_proto = 0x11;
-static uint16_t    g_h2s_sport = 0x2001;
-static uint16_t    g_h2s_dport = 0x2002;
-
 // H2S Session info rewrite
 mac_addr_t substrate_smac = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
 mac_addr_t substrate_dmac = {0x00, 0x06, 0x07, 0x08, 0x09, 0x0a};
@@ -590,8 +581,6 @@ static sdk_ret_t
 fte_setup_flow (void)
 {
     sdk_ret_t       ret = SDK_RET_OK;
-    mac_addr_t      host_mac;
-    uint8_t         vnic_stats_mask[PDS_FLOW_STATS_MASK_LEN];
     uint32_t        s2h_session_rewrite_id;
     uint32_t        h2s_session_rewrite_id;
 

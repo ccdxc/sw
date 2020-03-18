@@ -11,6 +11,15 @@ targets:
   build-dependencies:
     - build-custom-athena-image
 
+ athena_app/make:
+  commands: ["sh", "-c", "cd /sw/nic && JOB_ID=1 make PIPELINE=athena jobd/athena_app/make"]
+  owners: ["email:skittur@pensando.io"]
+  area:
+  sub-area:
+  feature:
+  build-dependencies:
+    - build-custom-athena-image
+
 cache:
   name: "sw"
   mount_dir: "/root/.cache"
