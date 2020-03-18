@@ -692,7 +692,8 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
         vnic_impl_obj->hw_id(), to_public_ip_nat_idx_,
         (vnic->binding_checks_en() && (spec->skey.ip_addr.af == IP_AF_IPV4)) ?
              true : false, vnic_impl_obj->binding_hw_id(),
-        PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID, vnic->tagged());
+        PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID, vnic->tagged(),
+        MAPPING_TYPE_OVERLAY);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
                                    &local_mapping_data,
                                    LOCAL_MAPPING_LOCAL_MAPPING_INFO_ID,
@@ -731,7 +732,8 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
             (vnic->binding_checks_en() &&
              (spec->public_ip.af == IP_AF_IPV4)) ? true : false,
             vnic_impl_obj->binding_hw_id(),
-            PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID, vnic->tagged());
+            PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID, vnic->tagged(),
+            MAPPING_TYPE_PUBLIC);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams,
                                        &local_mapping_key,
                                        NULL, &local_mapping_data,

@@ -265,6 +265,12 @@
 #define ROUTE_RESULT_NEXTHOP_SHIFT           ROUTE_RESULT_NEXTHOP_START_BIT
 
 /*****************************************************************************/
+/* IP mapping types                                                          */
+/*****************************************************************************/
+#define MAPPING_TYPE_OVERLAY                 0
+#define MAPPING_TYPE_PUBLIC                  1
+
+/*****************************************************************************/
 /* number of hints in various HBM hash tables                                */
 /*****************************************************************************/
 #define P4_LOCAL_MAPPING_NUM_HINTS_PER_ENTRY              9
