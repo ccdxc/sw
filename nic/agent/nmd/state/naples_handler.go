@@ -293,14 +293,21 @@ func (n *NMD) PersistState(updateDelphi bool) (err error) {
 		controllers = append(controllers, fmt.Sprintf("%s:%s", c, globals.CMDGRPCAuthPort))
 	}
 
-	statusObj := agentTypes.DistributedServiceCardStatus{
-		DSCMode:     n.config.Status.Mode,
-		DSCName:     n.config.Status.DSCName,
-		MgmtIntf:    n.config.Status.ManagementInterface,
-		Controllers: controllers,
+	var secondaryMgmtIntfs []string
+	if n.Pipeline != nil {
+		if n.Pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
+			secondaryMgmtIntfs = []string{ipif.ApuluINB0Interface, ipif.ApuluINB1Interface}
+		} else if n.Pipeline.GetPipelineType() == globals.NaplesPipelineIris {
+			secondaryMgmtIntfs = []string{ipif.NaplesInbandInterface}
+		}
 	}
-	if n.config.Status.IPConfig != nil {
-		statusObj.MgmtIP = n.config.Status.IPConfig.IPAddress
+
+	statusObj := agentTypes.DistributedServiceCardStatus{
+		DSCMode:            n.config.Status.Mode,
+		DSCName:            n.config.Status.DSCName,
+		MgmtIntf:           n.config.Status.ManagementInterface,
+		SecondaryMgmtIntfs: secondaryMgmtIntfs,
+		Controllers:        controllers,
 	}
 
 	if n.config.Status.IPConfig != nil {

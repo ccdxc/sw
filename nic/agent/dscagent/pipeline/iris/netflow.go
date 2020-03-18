@@ -55,7 +55,6 @@ func HandleFlowExportPolicy(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 
 func createFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, netflow netproto.FlowExportPolicy, vrfID uint64) error {
 	var collectorKeys []*halapi.CollectorKeyHandle
-	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
 	for _, c := range netflow.Spec.Exports {
 		var destPort int
 		var collectorID uint64
@@ -76,7 +75,7 @@ func createFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 			continue
 		}
 		compositeKey := fmt.Sprintf("%s/%s", netflow.GetKind(), collectorKey)
-		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, false); err != nil {
+		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, MgmtIP, dstIP, false); err != nil {
 			log.Error(errors.Wrapf(types.ErrNetflowCreateLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
 			return errors.Wrapf(types.ErrMirrorCreateLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
 		}
@@ -168,7 +167,6 @@ func deleteFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 	// TODO Remove this hack once HAL side's telemetry code is cleaned up and DSCAgent must not maintain any internal state
 	delete(netflowSessionToFlowMonitorRuleMapping, netflow.GetKey())
 
-	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
 	for _, c := range netflow.Spec.Exports {
 		dstIP := c.Destination
 		cKey := commonUtils.BuildCollectorKey(netflow.Spec.VrfName, c)
@@ -211,7 +209,7 @@ func deleteFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 			}
 			delete(CollectorToNetflow, cKey)
 			compositeKey := fmt.Sprintf("%s/%s", netflow.GetKind(), cKey)
-			if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, false); err != nil {
+			if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, dstIP, false); err != nil {
 				log.Error(errors.Wrapf(types.ErrNetflowDeleteLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
 				return errors.Wrapf(types.ErrNetflowDeleteLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
 			}
@@ -230,8 +228,7 @@ func deleteFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 func convertCollector(infraAPI types.InfraAPI, collector netproto.ExportConfig, netflow netproto.FlowExportPolicy, vrfID, l2SegID, collectorID uint64) *halapi.CollectorRequestMsg {
 	var port uint64
 	var protocol halapi.IPProtocol
-	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
-	srcIP := utils.ConvertIPAddresses(mgmtIP.String())[0]
+	srcIP := utils.ConvertIPAddresses(MgmtIP)[0]
 	dstIP := utils.ConvertIPAddresses(collector.Destination)[0]
 	if collector.Transport != nil {
 		port, _ = strconv.ParseUint(collector.Transport.GetPort(), 10, 64)
@@ -291,9 +288,7 @@ func sendTemplate(ctx context.Context, infraAPI types.InfraAPI, destIP net.IP, d
 		},
 	}
 
-	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
-
-	conn, err := nc.ListenPacket(ctx, "udp", fmt.Sprintf("%v:%v", mgmtIP, types.IPFIXSrcPort))
+	conn, err := nc.ListenPacket(ctx, "udp", fmt.Sprintf("%v:%v", MgmtIP, types.IPFIXSrcPort))
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrIPFIXPacketListen, "FlowExportPolicy: %s  | Err: %v", netflow.GetKey(), err))
 		return

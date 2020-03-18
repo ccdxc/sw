@@ -5,7 +5,6 @@ package iris
 import (
 	"context"
 	"fmt"
-	"net"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -58,13 +57,8 @@ func createCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 	col.Status.Collector = mirrorSessionID
 
 	if !foundCollector {
-		mgmtIP, _, err := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
-		if err != nil {
-			log.Errorf("Failed to parse management IP passed. Err : %v", err)
-			return err
-		}
 		compositeKey := fmt.Sprintf("%s/%s", col.GetKind(), destKey)
-		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, true); err != nil {
+		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, MgmtIP, dstIP, true); err != nil {
 			log.Error(errors.Wrapf(types.ErrMirrorCreateLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err))
 			return errors.Wrapf(types.ErrMirrorCreateLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err)
 		}
@@ -155,9 +149,8 @@ func deleteCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 			}
 		}
 		delete(MirrorDestToIDMapping, destKey)
-		mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
 		compositeKey := fmt.Sprintf("%s/%s", col.GetKind(), destKey)
-		if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP.String(), dstIP, true); err != nil {
+		if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, dstIP, true); err != nil {
 			log.Error(errors.Wrapf(types.ErrMirrorDeleteLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err))
 			return errors.Wrapf(types.ErrMirrorDeleteLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err)
 		}

@@ -12,6 +12,7 @@ type DistributedServiceCardStatus struct {
 	DSCName             string           `json:"dsc-name,omitempty"`
 	MgmtIP              string           `json:"mgmt-ip,omitempty"`
 	MgmtIntf            string           `json:"mgmt-intf,omitempty"`
+	SecondaryMgmtIntfs  []string         `json:"secondary-mgmt-intfs,omitempty"`
 	Controllers         []string         `json:"controllers,omitempty"`
 	IsConnectedToVenice bool             `json:"is-connected-to-venice"`
 	DSCInterfaceIPs     []DSCInterfaceIP `json:"dsc-interfaces,omitempty"`

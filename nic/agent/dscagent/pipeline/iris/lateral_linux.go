@@ -33,6 +33,9 @@ var destIPToMAC sync.Map
 var arpCache sync.Map
 var mux sync.Mutex
 
+// MgmtIP is the global mgmt ip
+var MgmtIP string
+
 // ArpClient is the global arp client for netagent
 var ArpClient *arp.Client
 
@@ -178,8 +181,8 @@ func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 }
 
 // DeleteLateralNetAgentObjects deletes lateral objects for telmetry objects and does refcounting. This is temporary code till HAL subsumes ARP'ing for dest IPs
-func DeleteLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, vrfID uint64, owner string, mgmtIP, destIP string, tunnelOp bool) error {
-	log.Infof("Deleting Lateral NetAgent objects. Owner: %v MgmtIP: %v DestIP: %v TunnelOp: %v", owner, mgmtIP, destIP, tunnelOp)
+func DeleteLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, vrfID uint64, owner string, destIP string, tunnelOp bool) error {
+	log.Infof("Deleting Lateral NetAgent objects. Owner: %v DestIP: %v TunnelOp: %v", owner, destIP, tunnelOp)
 
 	tunnelName := fmt.Sprintf("_internal-%s", destIP)
 	tunnelCompositeKey := fmt.Sprintf("tunnel|%s", tunnelName)
@@ -392,8 +395,6 @@ func resolveIPAddress(ctx context.Context, destIP string) string {
 		}
 	}
 
-	// Delete for arp Expiry to take effect
-	arpCache.Delete(destIP)
 	return mac
 }
 
@@ -422,6 +423,9 @@ func resolveWithDeadline(ctx context.Context, IP net.IP) (string, error) {
 	arpChan := make(chan string, 1)
 
 	go func(arpChan chan string, IP net.IP) {
+		// Delete for arp Expiry to take effect
+		log.Infof("Delete arpCache for %s", IP.String())
+		arpCache.Delete(IP.String())
 		err := ArpClient.Request(IP)
 		if err != nil {
 			log.Errorf("Failed to resolve MAC for %v, %v", IP.String(), err)

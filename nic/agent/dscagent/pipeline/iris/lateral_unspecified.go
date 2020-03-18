@@ -18,6 +18,6 @@ func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 }
 
 // DeleteLateralNetAgentObjects is a stubbed out method for non linux systems.
-func DeleteLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, vrfID uint64, owner string, mgmtIP, destIP string, tunnelOp bool) error {
+func DeleteLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, vrfID uint64, owner string, destIP string, tunnelOp bool) error {
 	return nil
 }

@@ -215,17 +215,11 @@ func (i *IrisAPI) PipelineInit() error {
 // HandleVeniceCoordinates initializes the pipeline when VeniceCoordinates are discovered
 func (i *IrisAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatus) {
 	log.Infof("Iris API: received venice co-ordinates [%v]", dsc)
-	ip, _, _ := net.ParseCIDR(i.InfraAPI.GetConfig().MgmtIP)
-	mgmtIP := ip.String()
-	mgmtLink := utils.GetMgmtLink(mgmtIP)
-	if mgmtLink == nil {
-		log.Errorf("Failed to get the mgmt interface. MgmtIP: %s", mgmtIP)
+	mgmtIP, mgmtIntf, mgmtLink, err := utils.GetMgmtInfo(i.InfraAPI.GetConfig())
+	if err != nil {
+		log.Errorf("Failed to get the mgmt information. config: %v: %v", i.InfraAPI.GetConfig(), err)
 		return
 	}
-	log.Infof("Management Link: %v", mgmtLink.Attrs().Name)
-	mgmtIntf, _ := net.InterfaceByName(mgmtLink.Attrs().Name)
-	log.Infof("Management Inft: %v", mgmtIntf.Name)
-
 	// Init Agent's ARP Client
 	i.Lock()
 	defer i.Unlock()
@@ -240,6 +234,7 @@ func (i *IrisAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatus
 	}
 	iris.ArpClient = client
 	iris.MgmtLink = mgmtLink
+	iris.MgmtIP = mgmtIP
 	log.Infof("Starting the ARP watch loop")
 	go iris.ResolveWatch()
 }

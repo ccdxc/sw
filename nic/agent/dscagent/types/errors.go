@@ -138,6 +138,8 @@ const (
 	ErrTechSupportArtifactsMissing           = Error("ErrTechSupportArtifactsMissing")
 	ErrTechSupportVeniceExport               = Error("ErrTechSupportVeniceExport")
 	ErrTechSupportArtifactCleanup            = Error("ErrTechSupportArtifactCleanup")
+	ErrNoIpForMgmtIntf                       = Error("ErrNoIpForMgmtIntf")
+	ErrFailedToGetMgmtLink                   = Error("ErrFailedToGetMgmtLink")
 )
 
 // Const Info

@@ -113,6 +113,7 @@ func TestMain(m *testing.M) {
 	}
 	ArpClient = client
 	MgmtLink = mgmtLink
+	MgmtIP = fakeCfg.MgmtIP
 	go ResolveWatch()
 
 	epClient = halapi.NewEndpointClient(conn)
