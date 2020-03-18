@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 
 	roproto "github.com/pensando/sw/api/generated/rollout"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -154,6 +155,17 @@ func (snicState *DSCRolloutState) UpdateDSCRolloutStatus(newStatus *protos.DSCRo
 	if snicState.ros == nil {
 		log.Infof("ROS State is null")
 		for _, s := range newStatus.OpStatus {
+			smartnicState, err := snicState.GetSmartNICState(snicState.Tenant, snicState.Name)
+			if err != nil {
+				log.Errorf("Error GetSmartNICState for {%+v}. Err: %v", snicState.Name, err)
+				continue
+			}
+			if s.OpStatus == opStatusSuccess && s.Op == protos.DSCOp_DSCDisruptiveUpgrade {
+				snicState.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUCCESS, fmt.Sprintf("Force Rollout to version(%s) successful", s.Version), smartnicState.DistributedServiceCard)
+			}
+			if s.OpStatus != opStatusSuccess {
+				snicState.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_FAILED, fmt.Sprintf("Force Rollout to version(%s) failed", s.Version), smartnicState.DistributedServiceCard)
+			}
 			if s.Op == protos.DSCOp_DSCDisruptiveUpgrade {
 				log.Infof("Received status disruptive upgrade. Delete DSCRollout Object")
 				snicState.Statemgr.DeleteDSCRolloutState(snicState.DSCRollout)

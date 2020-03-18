@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 
 	"github.com/pensando/sw/api/generated/cluster"
@@ -60,6 +61,7 @@ func (sm *Statemgr) performForceRollout(smartNIC *cluster.DistributedServiceCard
 	}
 	sm.memDB.AddObject(&sros)
 	log.Infof("ForceRollout: Created smartNICRollout %#v", snicRollout.Name)
+	sm.evtsRecorder.Event(eventtypes.ROLLOUT_STARTED, fmt.Sprintf("Force Rollout to version(%s) started", buildVersion), smartNIC)
 }
 
 func (sm *Statemgr) handleSmartNICEvent(et kvstore.WatchEventType, smartNIC *cluster.DistributedServiceCard) {
