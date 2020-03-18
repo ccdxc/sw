@@ -92,24 +92,25 @@ func bgpShowCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 const (
-	bgpPeerFmt = `%-40s %-10s %-16v %-16v %-5v %-10v %-16v`
-	bgpPeerHdr = "UUID,AdminState,Local Address,Remote Address,ASN,Auth,Status"
+	bgpPeerFmt = `%-40s %-10s %-16v %-5v %-10v %-16v`
+	bgpPeerHdr = "UUID,AdminState,Remote Address,ASN,Auth,Status"
 
 	bgpPeerDetStr = `BGP Peer details
 ------------------------------------
-UUID            : %s
-Admin State     : %v
-Local Address   : %v
-Remote Address  : %v
-Remote ASN      : %d
-Authentication  : %v
-Flags           : [ RR Client: %v / Send Community: %v / Ext Community: %v ]
-Timers          : [ Holdtime: %v seconds / Keepalive: %v seconds ]
+UUID                   : %s
+Admin State            : %v
+Config Local Address   : %v
+Selected Local Address : %v
+Remote Address         : %v
+Remote ASN             : %d
+Authentication         : %v
+Flags                  : [ RR Client: %v / Send Community: %v / Ext Community: %v ]
+Timers                 : [ Holdtime: %v seconds / Keepalive: %v seconds ]
 
-Status          : %v
-Previous State  : %v
-Last Err Recvd  : %v
-Last Err Sent   : %v
+Status                 : %v
+Previous State         : %v
+Last Err Recvd         : %v
+Last Err Sent          : %v
 ------------------------------------
 `
 )
@@ -146,12 +147,12 @@ func bgpPeersShowCmdHandler(cmd *cobra.Command, args []string) error {
 		} else {
 			if doDetail {
 				fmt.Printf(bgpPeerDetStr, peer.Spec.Id, peer.Spec.State, peer.Spec.LocalAddr,
-					peer.Spec.PeerAddr, peer.Spec.RemoteASN, peer.Spec.Password, peer.Spec.RRClient,
-					peer.Spec.SendComm, peer.Spec.SendExtComm, peer.Spec.HoldTime, peer.Spec.KeepAlive,
-					peer.Status.Status, peer.Status.PrevStatus, peer.Status.LastErrorRcvd,
-					peer.Status.LastErrorSent)
+					peer.Status.LocalAddr, peer.Spec.PeerAddr, peer.Spec.RemoteASN, peer.Spec.Password,
+					peer.Spec.RRClient, peer.Spec.SendComm, peer.Spec.SendExtComm, peer.Spec.HoldTime,
+					peer.Spec.KeepAlive, peer.Status.Status, peer.Status.PrevStatus,
+					peer.Status.LastErrorRcvd, peer.Status.LastErrorSent)
 			} else {
-				fmt.Printf(bgpPeerFmt, peer.Spec.Id, peer.Spec.State, peer.Spec.LocalAddr, peer.Spec.PeerAddr, peer.Spec.RemoteASN, peer.Spec.Password, peer.Status.Status)
+				fmt.Printf(bgpPeerFmt, peer.Spec.Id, peer.Spec.State, peer.Spec.PeerAddr, peer.Spec.RemoteASN, peer.Spec.Password, peer.Status.Status)
 				fmt.Printf("\n")
 			}
 		}
@@ -164,13 +165,12 @@ func bgpPeersShowCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 const (
-	bgpPeerAfHdr    = "UUID,Local Address,Peer Address,AFI,SAFI"
-	bgpPeerAFFmt    = "%-40s %-16v %-16v %-16v %-16v"
+	bgpPeerAfHdr    = "UUID,Peer Address,AFI,SAFI"
+	bgpPeerAFFmt    = "%-40s %-16v %-16v %-16v"
 	bgpPeerAFDetStr = `BGP Peer Address Family
 ------------------------------------
 UUID            : %s
 AFI/SAFI        : [ %v/%v ]
-LocalAddress    : %v
 Remote Address  : %v
 Flags           : [ Next-Hop-Self: %v / Default-originate: %v ]
 ------------------------------------
@@ -210,9 +210,9 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 				afs = append(afs, afp)
 			} else {
 				if doDetail {
-					fmt.Printf(bgpPeerAFDetStr, afp.Id, afp.Afi, afp.Safi, afp.LocalAddr, afp.PeerAddr, afp.NexthopSelf, afp.DefaultOrig)
+					fmt.Printf(bgpPeerAFDetStr, afp.Id, afp.Afi, afp.Safi, afp.PeerAddr, afp.NexthopSelf, afp.DefaultOrig)
 				} else {
-					fmt.Printf(bgpPeerAFFmt, afp.Id, afp.LocalAddr, afp.PeerAddr, afp.Afi, afp.Safi)
+					fmt.Printf(bgpPeerAFFmt, afp.Id, afp.PeerAddr, afp.Afi, afp.Safi)
 					fmt.Println("")
 				}
 			}

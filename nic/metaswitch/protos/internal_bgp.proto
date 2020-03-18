@@ -210,13 +210,15 @@ message BGPPeerStatus {
     SpecMsg: "BGPPeerSpec"
   };
   // BGP session status
-  BGPPeerState Status        = 1 [(venice.pdsaFields) = {Field: "state"}];
+  BGPPeerState    Status        = 1 [(venice.pdsaFields) = {Field: "state"}];
   // BGP session previous status
-  BGPPeerState PrevStatus    = 2 [(venice.pdsaFields) = {Field: "last_state"}];
+  BGPPeerState    PrevStatus    = 2 [(venice.pdsaFields) = {Field: "last_state"}];
   // last error received
-  bytes        LastErrorRcvd = 3 [(venice.pdsaFields) = {Field: "last_error_rcvd"}];
+  bytes           LastErrorRcvd = 3 [(venice.pdsaFields) = {Field: "last_error_rcvd"}];
   // Last error sent
-  bytes        LastErrorSent = 4 [(venice.pdsaFields) = {Field: "last_error_sent"}];
+  bytes           LastErrorSent = 4 [(venice.pdsaFields) = {Field: "last_error_sent"}];
+  // selected local address of the peer
+  types.IPAddress LocalAddr     = 5 [(venice.pdsaFields) = {Field: "selected_local_addr"}];
 }
 
 // BGP peer object

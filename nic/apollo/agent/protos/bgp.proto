@@ -169,13 +169,15 @@ message BGPPeerSpec {
 // BGP peer status
 message BGPPeerStatus {
   // BGP session status
-  BGPPeerState Status        = 1;
+  BGPPeerState    Status        = 1;
   // BGP session previous status
-  BGPPeerState PrevStatus    = 2;
+  BGPPeerState    PrevStatus    = 2;
   // last error received
-  bytes        LastErrorRcvd = 3;
+  bytes           LastErrorRcvd = 3;
   // Last error sent
-  bytes        LastErrorSent = 4;
+  bytes           LastErrorSent = 4;
+  // selected local address of the peer
+  types.IPAddress LocalAddr     = 5;
 }
 
 // BGP peer object

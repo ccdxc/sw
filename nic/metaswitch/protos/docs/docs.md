@@ -2772,6 +2772,7 @@ BGP peer status
 | PrevStatus | [BGPPeerState](#pds_ms.BGPPeerState) |  | BGP session previous status |
 | LastErrorRcvd | [bytes](#bytes) |  | last error received |
 | LastErrorSent | [bytes](#bytes) |  | Last error sent |
+| LocalAddr | [.types.IPAddress](#pds_ms..types.IPAddress) |  | selected local address of the peer |
 
 
 

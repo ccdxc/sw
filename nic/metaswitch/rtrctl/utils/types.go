@@ -378,6 +378,7 @@ type ShadowBGPPeerStatus struct {
 	LastErrorSent string
 	Status        string
 	PrevStatus    string
+	LocalAddr     string
 	*pds.BGPPeerStatus
 }
 
@@ -388,6 +389,7 @@ func newBGPPeerStatus(in *pds.BGPPeerStatus) ShadowBGPPeerStatus {
 		LastErrorSent: string(in.LastErrorSent),
 		Status:        strings.TrimPrefix(in.Status.String(), "BGP_PEER_STATE_"),
 		PrevStatus:    in.PrevStatus.String(),
+		LocalAddr:     PdsIPToString(in.LocalAddr),
 		BGPPeerStatus: in,
 	}
 }
