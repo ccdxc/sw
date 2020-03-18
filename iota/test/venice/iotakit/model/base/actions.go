@@ -131,7 +131,8 @@ func (sm *SysModel) VerifyNaplesStatus() error {
 
 		for _, naplesConfig := range np.GetTestNode().NaplesConfigs.Configs {
 			// check smartnic status in Venice
-			snic, err := sm.GetSmartNICByName(naplesConfig.NodeUuid)
+			vmac := convertToVeniceFormatMac(naplesConfig.NodeUuid)
+			snic, err := sm.GetSmartNICByName(vmac)
 			if err != nil {
 				snic, err = sm.GetSmartNICByName(naplesConfig.Name)
 			}
