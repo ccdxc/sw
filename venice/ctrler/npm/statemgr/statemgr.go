@@ -800,6 +800,14 @@ func (sm *Statemgr) GetWatchFilter(kind string, opts *api.ListWatchOptions) []me
 	}
 
 	if opts.Name != "" {
+		// FIX for VS-1305, with Naples running release A code and Venice running newer code, Naples will send the
+		// node ID as the name for endpoints to filter.
+		if kind == "netproto.Endpoint" {
+			newOpts := &api.ListWatchOptions{}
+			str := fmt.Sprintf("spec.node-uuid=%s", opts.Name)
+			newOpts.FieldSelector = str
+			return sm.GetWatchFilter(kind, newOpts)
+		}
 		filters = append(filters, nameFilterFn(opts.Name))
 	}
 
