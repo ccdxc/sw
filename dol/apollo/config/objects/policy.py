@@ -74,16 +74,16 @@ class L3MatchObject:
         self.SrcPrefix = srcpfx
         self.DstPrefix = dstpfx
         if srciplow is None and srcpfx:
-            n=ipaddress.ip_network(srcpfx, False).hosts()
-            self.SrcIPLow = next(n)
-            self.SrcIPHigh = max(n)
+            pfx = ipaddress.ip_network(srcpfx, False)
+            self.SrcIPLow = pfx.network_address
+            self.SrcIPHigh = pfx.network_address + (pfx.num_addresses - 1)
         else:
             self.SrcIPLow = srciplow
             self.SrcIPHigh = srciphigh
         if dstiplow is None and dstpfx:
-            n=ipaddress.ip_network(dstpfx, False).hosts()
-            self.DstIPLow = next(n)
-            self.DstIPHigh = max(n)
+            pfx = ipaddress.ip_network(dstpfx, False)
+            self.DstIPLow = pfx.network_address
+            self.DstIPHigh = pfx.network_address + (pfx.num_addresses - 1)
         else:
             self.DstIPLow = dstiplow
             self.DstIPHigh = dstiphigh
@@ -572,8 +572,6 @@ class PolicyObjectClient(base.ConfigClientBase):
             else:
                 pfx = ipaddress.ip_network(subnetpfx[1])
         else:
-            if not self.IpV6Valid:
-                return
             if not GlobalOptions.netagent:
                 pfx = utils.IPV6_DEFAULT_ROUTE
             else:
