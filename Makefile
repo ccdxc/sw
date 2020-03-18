@@ -643,10 +643,10 @@ e2e:
 
 cloud-e2e:
 	if [ -z ${BYPASS_CLOUD_SIM} ]; then \
-		PIPELINE=apulu FLAVOR=-venice IGNORE_BUILD_PIPELINE=1 ${MAKE} -C nic docker/naples-sim; \
-		tar xvf nic/obj/images/naples-release-v1.tgz -C nic/obj/images/; \
-		docker load -i nic/obj/images/naples-docker-v1.tgz; \
+		JOB_ID=1 IGNORE_BUILD_PIPELINE=1 FLAVOR=-venice PIPELINE=apulu ${MAKE} -C nic jobd/e2e/naples-sim-image; \
 	fi
+	tar xvf nic/obj/images/naples-release-v1.tgz -C nic/obj/images/; \
+	docker load -i nic/obj/images/naples-docker-v1.tgz; \
 	if [ -z ${BYPASS_PEGASUS} ]; then \
 		$(MAKE) -C nic docker/pegasus; \
 	fi
@@ -861,11 +861,13 @@ venice-image:
 	$(MAKE) install
 	printf "\n+++++++++++++++++ start tar $$(date) +++++++++++++++++\n"
 	#todo compress later in the release cycle with better compression level. As of now compression takes too much time for development
-	if [ -a nic/pegasus.tgz ]; then \
-		cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.apulu.tgz; \
-        else \
-		cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz; \
-        fi
+	if [ -z ${BYPASS_VENICE_IMAGE} ]; then \
+		if [ -a nic/pegasus.tgz ]; then \
+			cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.apulu.tgz; \
+			else \
+			cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz; \
+			fi \
+	fi
 	printf "\n+++++++++++++++++ complete venice-image $$(date) +++++++++++++++++\n"
 
 venice-upgrade-image:

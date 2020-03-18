@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -19,7 +19,7 @@ import (
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
-	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/featureflags"
@@ -158,6 +158,28 @@ func (h *networkHooks) routingConfigPreCommit(ctx context.Context, kv kvstore.In
 	return i, true, nil
 }
 
+func (h *networkHooks) checkNetworkMutableFields(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	in, ok := i.(network.Network)
+	if !ok {
+		h.logger.ErrorLog("method", "checkNetworkMutableFields", "msg", fmt.Sprintf("API server network hook called for invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+
+	existingNw := &network.Network{}
+	err := kv.Get(ctx, key, existingNw)
+	if err != nil {
+		log.Errorf("did not find obj [%v] on update (%s)", key, err)
+		return i, true, err
+	}
+	if in.Spec.Type != existingNw.Spec.Type {
+		return i, true, fmt.Errorf("cannot modify type of network [%v->%v]", existingNw.Spec.Type, in.Spec.Type)
+	}
+	if in.Spec.VirtualRouter != existingNw.Spec.VirtualRouter {
+		return i, true, fmt.Errorf("cannot modify Virtual Router [%v->%v]", existingNw.Spec.Type, in.Spec.Type)
+	}
+	return i, true, nil
+}
+
 // Checks that for any orch info deletion, no workloads from the orch info are using this network
 func (h *networkHooks) networkOrchConfigPrecommit(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	in, ok := i.(network.Network)
@@ -290,6 +312,25 @@ func (h *networkHooks) validateNetworkIntfConfig(i interface{}, ver string, ignS
 }
 
 // createDefaultRoutingTable is a pre-commit hook to creates default RouteTable when a tenant is created
+func (h *networkHooks) checkVirtualRouterMutableUpdate(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	existingObj := &network.VirtualRouter{}
+	err := kv.Get(ctx, key, existingObj)
+	if err != nil {
+		log.Errorf("did not find obj [%v] on update (%s)", key, err)
+		return i, true, err
+	}
+	curObj, ok := i.(network.VirtualRouter)
+	if !ok {
+		h.logger.ErrorLog("method", "checkVirtualRouterMutableUpdate", "msg", fmt.Sprintf("API server hook to create RouteTable called for invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+	if curObj.Spec.Type != existingObj.Spec.Type {
+		return i, true, fmt.Errorf("VirtualRouter Type cannot be modified [%v->%v]", existingObj.Spec.Type, curObj.Spec.Type)
+	}
+	return i, true, nil
+}
+
+// createDefaultRoutingTable is a pre-commit hook to creates default RouteTable when a tenant is created
 func (h *networkHooks) createDefaultVRFRouteTable(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(network.VirtualRouter)
 	if !ok {
@@ -376,9 +417,11 @@ func registerNetworkHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("NetworkInterface", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateNetworkIntfConfig)
 	svc.GetCrudService("NetworkInterface", apiintf.UpdateOper).WithPreCommitHook(hooks.checkNetworkInterfaceMutable)
 	svc.GetCrudService("VirtualRouter", apiintf.CreateOper).WithPreCommitHook(hooks.createDefaultVRFRouteTable)
+	svc.GetCrudService("VirtualRouter", apiintf.UpdateOper).WithPreCommitHook(hooks.checkVirtualRouterMutableUpdate)
 	svc.GetCrudService("VirtualRouter", apiintf.DeleteOper).WithPreCommitHook(hooks.deleteDefaultVRFRouteTable)
 	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.networkOrchConfigPrecommit)
 	svc.GetCrudService("RoutingConfig", apiintf.CreateOper).WithPreCommitHook(hooks.routingConfigPreCommit)
+	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.networkOrchConfigPrecommit)
 	svc.GetCrudService("RoutingConfig", apiintf.UpdateOper).WithPreCommitHook(hooks.routingConfigPreCommit)
 	svc.GetCrudService("RoutingConfig", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateRoutingConfig)
 }

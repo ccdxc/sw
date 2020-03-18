@@ -204,6 +204,9 @@ def enable_overlay_routing():
         "features": [
             {
                 "feature-key": "OverlayRouting"
+            },
+            {
+                "feature-key": "SubnetSecurityPolicies"
             }
         ]
     }

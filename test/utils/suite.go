@@ -18,10 +18,7 @@ import (
 	"github.com/onsi/gomega"
 	"golang.org/x/crypto/ssh"
 
-	objstore "github.com/pensando/sw/venice/utils/objstore/client"
-
 	"github.com/pensando/sw/api"
-
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -33,9 +30,11 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/certs"
+	"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
+	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
@@ -338,7 +337,8 @@ func (tu *TestUtils) SetupAuth() {
 
 	// Setup the Overlay routing Licence if CP is enabled
 	if tu.TestBedConfig.EnableCP {
-		features := []cluster.Feature{{FeatureKey: "OverlayRouting"}}
+		features := []cluster.Feature{{FeatureKey: featureflags.OverlayRouting}, {FeatureKey: featureflags.SubnetSecurityPolicies}}
+		ginkgo.By(fmt.Sprintf("Applying licenses [%v]", features))
 		_, err := testutils.CreateLicense(apicl, features)
 		if err != nil {
 			if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") {

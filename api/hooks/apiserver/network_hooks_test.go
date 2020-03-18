@@ -325,6 +325,72 @@ func TestPrecommitHooks(t *testing.T) {
 	curIntf.Spec.Type = network.IFType_HOST_PF.String()
 	_, kvw, err = nh.checkNetworkInterfaceMutable(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, intf)
 	Assert(t, err != nil, "expecting to fail")
+	vrf = network.VirtualRouter{
+		Spec: network.VirtualRouterSpec{
+			Type: network.VirtualRouterSpec_Tenant.String(),
+		},
+	}
+
+	curvrf := network.VirtualRouter{
+		Spec: network.VirtualRouterSpec{
+			Type: network.VirtualRouterSpec_Tenant.String(),
+		},
+	}
+	kvs.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		return fmt.Errorf("not found")
+	}
+	_, kvw, err = nh.checkVirtualRouterMutableUpdate(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, vrf)
+	Assert(t, err != nil, "precomit check shoud fail")
+
+	kvs.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		r := into.(*network.VirtualRouter)
+		*r = curvrf
+		return nil
+	}
+	_, kvw, err = nh.checkVirtualRouterMutableUpdate(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, vrf)
+	AssertOk(t, err, "precomit check failed (%s)", err)
+	Assert(t, kvw, "kvwrite should be set")
+
+	curvrf.Spec.Type = network.VirtualRouterSpec_Infra.String()
+	_, kvw, err = nh.checkVirtualRouterMutableUpdate(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, vrf)
+	Assert(t, err != nil, "precomit check shoud fail")
+
+	nw := network.Network{
+		Spec: network.NetworkSpec{
+			Type:          network.NetworkType_Routed.String(),
+			VirtualRouter: "test",
+		},
+	}
+	curnw := network.Network{
+		Spec: network.NetworkSpec{
+			Type:          network.NetworkType_Routed.String(),
+			VirtualRouter: "test",
+		},
+	}
+	kvs.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		return fmt.Errorf("not found")
+	}
+	_, kvw, err = nh.checkNetworkMutableFields(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, nw)
+	Assert(t, err != nil, "precomit check shoud fail")
+
+	kvs.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		r := into.(*network.Network)
+		*r = curnw
+		return nil
+	}
+	_, kvw, err = nh.checkNetworkMutableFields(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, nw)
+	AssertOk(t, err, "precomit check failed (%s)", err)
+	Assert(t, kvw, "kvwrite should be set")
+
+	nw.Spec.Type = network.NetworkType_Bridged.String()
+	_, kvw, err = nh.checkNetworkMutableFields(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, nw)
+	Assert(t, err != nil, "precomit check shoud fail")
+
+	nw.Spec.Type = network.NetworkType_Routed.String()
+	nw.Spec.VirtualRouter = "test1"
+	nw.Spec.Type = network.NetworkType_Bridged.String()
+	_, kvw, err = nh.checkNetworkMutableFields(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, nw)
+	Assert(t, err != nil, "precomit check shoud fail")
 }
 
 func TestNetworkOrchestratorRemoval(t *testing.T) {

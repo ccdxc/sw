@@ -79,6 +79,8 @@ func expandRoutingConfig(infraAPI types.InfraAPI, lbIp string, rtCfg *netproto.R
 
 	dsccfg := infraAPI.GetConfig()
 
+	log.Infof("DSCConfig Controllers[%v] Interfaces[%v]", dsccfg.Controllers, dsccfg.DSCInterfaceIPs)
+
 	ret.Spec.BGPConfig.RouterId = lbIp
 	ret.Spec.BGPConfig.Holdtime, ret.Spec.BGPConfig.KeepaliveInterval = rtCfg.Spec.BGPConfig.Holdtime, rtCfg.Spec.BGPConfig.KeepaliveInterval
 	ret.Spec.BGPConfig.ASNumber = rtCfg.Spec.BGPConfig.ASNumber
