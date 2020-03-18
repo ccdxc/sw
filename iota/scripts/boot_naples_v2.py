@@ -240,7 +240,7 @@ class EntityManagement:
 
     def NaplesWait(self):
         midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
-                               hdl = self.hdl, timeout = 180)
+                               hdl = self.hdl, timeout = 30)
         if midx == 0: return
         # Got capri login prompt, send username/password.
         self.SendlineExpect(self.username, "Password:")
@@ -1222,13 +1222,21 @@ class PenOrchestrator:
             else:
                 self.__server_type = getattr(self.__testbed, 'NodeServer', 'ucs')
 
+            username = getattr(self.__testbed, 'NodeCimcUsername', "")
+            if username == "":
+                setattr(self.__testbed, 'NodeCimcUsername', 'admin')
+            passwd = getattr(self.__testbed, 'NodeCimcPassword', "")
+            if passwd == "":
+                setattr(self.__testbed, 'NodeCimcPassword', 'N0isystem$')
             # Update standard values
             for nic in self.__testbed.Nics:
                 setattr(nic, 'NaplesUsername', GlobalOptions.naples_username)
                 setattr(nic, 'NaplesPassword', GlobalOptions.naples_password)
-                if getattr(nic, 'ConsoleUsername', None) == None:
+                username = getattr(nic, 'ConsoleUsername', "")
+                if username == "":
                     setattr(nic, 'ConsoleUsername', 'admin')
-                if getattr(nic, 'ConsolePassword', None) == None:
+                passwd = getattr(nic, 'ConsolePassword', "")
+                if passwd == "": 
                     setattr(nic, 'ConsolePassword', 'N0isystem$')
                 setattr(nic, 'ConsolePort', int(getattr(nic, 'ConsolePort')))
 
@@ -1422,11 +1430,16 @@ class PenOrchestrator:
                     #Read Naples Gold FW version if system in good state.
                     #If not able to read then we will reset
                     naples_inst.ReadGoldFwVersion()
+               
+                    naples_inst.ReadInternalIP()
+                    #Read External IP to try oob path first
+                    naples_inst.ReadExternalIP()
 
                 self.__host.WaitForSsh()
                 #need to unload driver as host might crash in ESX case.
                 #unloading of driver should not fail, else reset to goldfw
                 self.__host.UnloadDriver()
+
             except:
                 # Because ForceSwitchToGoldFW is time-sensetive operation (sending Ctrl-c), allowing both IpmiReset
                 self.__ipmi_reboot_allowed = True
