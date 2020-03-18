@@ -1453,7 +1453,7 @@ class PenOrchestrator:
                     pass
 
                 self.__host.WaitForSsh()
-                self.UnloadDriver()
+                self.__host.UnloadDriver()
         else:
             for naples_inst in self.__naples:
                 naples_inst.Connect(bringup_oob=(not GlobalOptions.auto_discover))
