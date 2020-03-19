@@ -1815,6 +1815,7 @@ Types of lif
 | LIF_TYPE_INTERNAL_MGMT | 5 |  |
 | LIF_TYPE_DATAPATH | 6 |  |
 | LIF_TYPE_LEARN | 7 |  |
+| LIF_TYPE_VENDOR_INBAND | 8 |  |
 
 
 

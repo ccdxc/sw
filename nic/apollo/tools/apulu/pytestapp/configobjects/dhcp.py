@@ -26,23 +26,23 @@ class DhcpPolicyObject():
         spec = grpcmsg.Request.add()
         spec.Id = self.uuid.GetUuid()
         if self.server_ip:
-            spec.ServerIP.Af = types_pb2.IP_AF_INET
-            spec.ServerIP.V4Addr = int(self.server_ip)
+            spec.ProxySpec.ServerIP.Af = types_pb2.IP_AF_INET
+            spec.ProxySpec.ServerIP.V4Addr = int(self.server_ip)
         if self.mtu:
-            spec.MTU = self.mtu
+            spec.ProxySpec.MTU = self.mtu
         if self.gateway_ip:
-            spec.GatewayIP.Af = types_pb2.IP_AF_INET
-            spec.GatewayIP.V4Addr = int(self.gateway_ip)
+            spec.ProxySpec.GatewayIP.Af = types_pb2.IP_AF_INET
+            spec.ProxySpec.GatewayIP.V4Addr = int(self.gateway_ip)
         if self.dns_server:
-            spec.DNSServerIP.Af = types_pb2.IP_AF_INET
-            spec.DNSServerIP.V4Addr = int(self.dns_server)
+            spec.ProxySpec.DNSServerIP.Af = types_pb2.IP_AF_INET
+            spec.ProxySpec.DNSServerIP.V4Addr = int(self.dns_server)
         if self.ntp_server:
-            spec.NTPServerIP.Af = types_pb2.IP_AF_INET
-            spec.NTPServerIP.V4Addr = int(self.ntp_server)
+            spec.ProxySpec.NTPServerIP.Af = types_pb2.IP_AF_INET
+            spec.ProxySpec.NTPServerIP.V4Addr = int(self.ntp_server)
         if self.domain_name:
-            spec.DomainName = self.domain_name
+            spec.ProxySpec.DomainName = self.domain_name
         if self.lease_timeout:
-            spec.LeaseTimeout = self.lease_timeout
+            spec.ProxySpec.LeaseTimeout = self.lease_timeout
 
         return grpcmsg
 

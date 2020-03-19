@@ -203,7 +203,7 @@ class Resmgr(base.ConfigObjectBase):
         self.HostIfs = dict()
         # Host interface index allocator for IOTA.
         # Ifindices 72 and 73 (0x48, 0x49) are reserved, so we have a non-contiuous list
-        HostIfIdxList = [0x80000046, 0x80000047, 0x8000004A, 0x8000004B, 0x8000004C, 0x8000004D, 0x8000004E, 0x8000004F]
+        HostIfIdxList = [0x80000047, 0x8000004A, 0x8000004B, 0x8000004C, 0x8000004D, 0x8000004E, 0x8000004F, 0x80000050]
         self.HostIfIdxAllocator = iter(HostIfIdxList)
         self.LoopbackIfIdAllocator = iter(irange(1, 16))
 

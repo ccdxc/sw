@@ -50,6 +50,7 @@ typedef enum EthDevType_s {
     ETH_MNIC_INBAND_MGMT,
     ETH_MNIC_CPU,
     ETH_MNIC_LEARN,
+    ETH_MNIC_INBAND_VENDOR,
 } EthDevType;
 
 struct eth_dev_res {

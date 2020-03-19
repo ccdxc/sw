@@ -66,6 +66,9 @@
 #define PDS_IMPL_NACL_BLOCK_LEARN_MAX                31
 #define PDS_IMPL_NACL_BLOCK_GENERIC_MIN              32
 
+// Inband control interface name
+#define PDS_IMPL_VENDOR_L3_IF_NAME                   "dscv0"
+
 extern mac_addr_t g_zero_mac;
 extern ip_addr_t g_zero_ip;
 

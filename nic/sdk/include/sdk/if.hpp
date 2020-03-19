@@ -24,6 +24,7 @@ enum {
     IF_TYPE_L3         = 7,
     IF_TYPE_LIF        = 8,
     IF_TYPE_LOOPBACK   = 9,
+    IF_TYPE_VENDOR_L3  = 10,
 };
 
 #define IFINDEX_INVALID                          0x0
@@ -60,6 +61,7 @@ enum {
 #define L3_IFINDEX(if_id_)         ((IF_TYPE_L3 << IF_TYPE_SHIFT) | (if_id_))
 #define LIF_IFINDEX(if_id_)        ((IF_TYPE_LIF << IF_TYPE_SHIFT) | (if_id_))
 #define LOOPBACK_IFINDEX(if_id_)   ((IF_TYPE_LOOPBACK << IF_TYPE_SHIFT) | (if_id_))
+#define VENDOR_L3_IFINDEX(if_id_)  ((IF_TYPE_VENDOR_L3 << IF_TYPE_SHIFT) | (if_id_))
 
 #define IFINDEX_TO_IFTYPE(ifindex_)         \
             ((ifindex_ >> IF_TYPE_SHIFT) & IF_TYPE_MASK)
@@ -109,6 +111,8 @@ ifindex_to_type_str (uint32_t ifindex) {
 		return "Lif";
     case IF_TYPE_LOOPBACK:
         return "Loopback";
+	case IF_TYPE_VENDOR_L3:
+		return "VendorL3";
     case IF_TYPE_NONE:
     default:
         return "None";

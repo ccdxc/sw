@@ -4,6 +4,7 @@ counter=300
 oob0_up=0
 dsc0_up=0
 dsc1_up=0
+dscv0_up=0
 
 while [ $counter -gt 0 ]
 do
@@ -41,7 +42,18 @@ do
         echo "dsc1 interface is up"
     fi
 
-    if [ $oob0_up -eq 1 ] && [ $dsc0_up -eq 1 ] && [ $dsc1_up -eq 1 ]; then
+    if [ -d "/sys/class/net/dscv0" ] && [ $dscv0_up -eq 0 ] ; then
+        ethtool -K dscv0 rx off tx off
+        ifconfig dscv0 up && dscv0_up=1
+        irq_number=`find /proc/irq  -name *dscv0* | awk -F/ '{ print $4 }'`
+        if [[ ! -z $irq_number ]]; then
+            echo 3 > /proc/irq/$irq_number/smp_affinity
+            dscv0_up=1
+        fi
+        echo "dscv0 interface is up"
+    fi
+
+    if [ $oob0_up -eq 1 ] && [ $dsc0_up -eq 1 ] && [ $dsc1_up -eq 1 ] && [ $dscv0_up -eq 1 ] ; then
         break
     else
         echo "Waiting for mgmt interfaces to be created ..."
@@ -51,7 +63,7 @@ do
 done
 
 echo ""
-if [ $oob0_up -eq 1 ] && [ $dsc0_up -eq 1 ] && [ $dsc1_up -eq 1 ]; then
+if [ $oob0_up -eq 1 ] && [ $dsc0_up -eq 1 ] && [ $dsc1_up -eq 1 ] && [ $dscv0_up -eq 1 ]; then
     echo "All internal interfaces are brought up"
 else
     echo "All internal interfaces didn't show up for 5 minutes !!"

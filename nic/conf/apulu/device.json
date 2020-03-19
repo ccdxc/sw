@@ -66,6 +66,16 @@
             "txq_count" : 4,
             "adminq_count" : 1,
             "intr_count" : 16
+        },
+        {
+            "name" : "dscv0",
+            "dev_uuid" : 16,
+            "type": "inband_vendor",
+            "lif_count" : 1,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4
         }
     ],
     "eth_dev" : [

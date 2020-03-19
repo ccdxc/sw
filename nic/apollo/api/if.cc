@@ -165,6 +165,13 @@ if_entry::init_config(api_ctxt_t *api_ctxt) {
                 ETH_ADDR_LEN);
          break;
 
+    case PDS_IF_TYPE_VENDOR_L3:
+         ifindex_ = VENDOR_L3_IFINDEX(0);
+         PDS_TRACE_DEBUG("Initializing inband control interface %s, ifindex 0x%x",
+                         spec->key.str(), ifindex_);
+         if_info_.vendor_l3_.ip_pfx_ = spec->vendor_l3_if_info.ip_prefix;
+         break;
+
     case PDS_IF_TYPE_NONE:
         break;
 
@@ -248,6 +255,9 @@ if_entry::fill_spec_(pds_if_spec_t *spec) {
         spec->l3_if_info.encap = if_info_.l3_.encap_;
         memcpy(spec->l3_if_info.mac_addr, if_info_.l3_.mac_,
                ETH_ADDR_LEN);
+        break;
+    case PDS_IF_TYPE_VENDOR_L3:
+        spec->vendor_l3_if_info.ip_prefix = if_info_.vendor_l3_.ip_pfx_;
         break;
     case PDS_IF_TYPE_ETH:
         break;

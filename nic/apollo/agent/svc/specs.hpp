@@ -496,6 +496,8 @@ pds_if_type_to_proto_if_type (pds_if_type_t type)
         return pds::IF_TYPE_L3;
     case PDS_IF_TYPE_LOOPBACK:
         return pds::IF_TYPE_LOOPBACK;
+    case PDS_IF_TYPE_VENDOR_L3:
+        return pds::IF_TYPE_VENDOR_L3;
     default:
         return pds::IF_TYPE_NONE;
     }
@@ -566,6 +568,16 @@ pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
             if (af == IP_AF_IPV4 || af == IP_AF_IPV6) {
                 ippfx_api_spec_to_proto_spec(proto_loopback->mutable_prefix(),
                                              &api_spec->loopback_if_info.ip_prefix);
+            }
+        }
+        break;
+    case PDS_IF_TYPE_VENDOR_L3:
+        {
+            auto proto_vendor_l3_if = proto_spec->mutable_vendorl3ifspec();
+            auto af = api_spec->vendor_l3_if_info.ip_prefix.addr.af;
+            if (af == IP_AF_IPV4 || af == IP_AF_IPV6) {
+                ippfx_api_spec_to_proto_spec(proto_vendor_l3_if->mutable_prefix(),
+                                             &api_spec->vendor_l3_if_info.ip_prefix);
             }
         }
         break;
@@ -662,6 +674,22 @@ pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
     case pds::IF_TYPE_UPLINK:
         pds_obj_key_proto_to_api_spec(&api_spec->uplink_info.port,
                                       proto_spec.uplinkspec().portid());
+        break;
+
+    case pds::IF_TYPE_VENDOR_L3:
+        if (proto_spec.txmirrorsessionid_size()) {
+            PDS_TRACE_ERR("Tx Mirroring not supported on inband interface {}",
+                          api_spec->key.str());
+            return SDK_RET_INVALID_ARG;
+        }
+        if (proto_spec.rxmirrorsessionid_size()) {
+            PDS_TRACE_ERR("Rx Mirroring not supported on inband interface {}",
+                          api_spec->key.str());
+            return SDK_RET_INVALID_ARG;
+        }
+        api_spec->type = PDS_IF_TYPE_VENDOR_L3;
+        ippfx_proto_spec_to_api_spec(&api_spec->vendor_l3_if_info.ip_prefix,
+                                     proto_spec.vendorl3ifspec().prefix());
         break;
 
     default:
@@ -807,6 +835,8 @@ pds_lif_type_to_proto_lif_type (lif_type_t lif_type)
         return types::LIF_TYPE_DATAPATH;
     case lif_type_t::LIF_TYPE_LEARN:
         return types::LIF_TYPE_LEARN;
+    case lif_type_t::LIF_TYPE_VENDOR_INBAND:
+        return types::LIF_TYPE_VENDOR_INBAND;
     default:
         break;
     }

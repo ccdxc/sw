@@ -1233,6 +1233,11 @@ lif_impl::create(pds_lif_spec_t *spec) {
     case sdk::platform::LIF_TYPE_LEARN:
         ret = create_learn_lif_(spec);
         break;
+    case sdk::platform::LIF_TYPE_VENDOR_INBAND:
+        // TODO
+        strncpy(name_, spec->name, sizeof(name_));
+        ret = SDK_RET_OK;
+        break;
     default:
         return SDK_RET_INVALID_ARG;
     }

@@ -173,6 +173,18 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t program_l3_if_(if_entry *intf, pds_if_spec_t *spec);
 
+    /// \brief     configure ip address on mgmt interface (ctrl0)
+    /// \param[in] intf  interface obj being programmed
+    /// \param[in] spec  interface configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_vendor_l3_if_(if_entry *intf, pds_if_spec_t *spec);
+
+    /// \brief     remove ip address on mgmt interface (ctrl0)
+    /// \param[in] intf  interface obj being programmed
+    /// \param[in] spec  interface configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t deactivate_vendor_l3_if_(if_entry *intf);
+
     /// \brief     program interface related tables during interface create by
     ///            enabling stage0 tables corresponding to the new epoch
     /// \param[in] epoch epoch being activated

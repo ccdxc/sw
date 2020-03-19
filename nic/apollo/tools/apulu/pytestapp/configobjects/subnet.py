@@ -40,7 +40,7 @@ class SubnetObject():
         spec.Id = self.uuid.GetUuid()
         spec.VPCId = utils.PdsUuid.GetUUIDfromId(self.vpcid)
         if self.dhcp_policy_id:
-            spec.DHCPPolicyId = utils.PdsUuid.GetUUIDfromId(self.dhcp_policy_id)
+            spec.DHCPPolicyId.append(utils.PdsUuid.GetUUIDfromId(self.dhcp_policy_id))
         spec.V4Prefix.Len = self.v4prefix.prefixlen
         #print(spec.V4Prefix.Addr)
         spec.V4Prefix.Addr = int( self.v4prefix.network_address)

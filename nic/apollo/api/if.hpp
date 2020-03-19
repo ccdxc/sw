@@ -281,13 +281,18 @@ private:
             pds_obj_key_t port_;
         } uplink_;
         ///< L3 interface specific information
-        struct {
-            pds_obj_key_t vpc_;    ///< vpc of this L3 interface
-            ip_prefix_t ip_pfx_;   ///< IP subnet of this L3 interface
-            pds_obj_key_t port_;   ///< physical port of this L3 interface
-            pds_encap_t encap_;    ///< wire encap, if any
-            mac_addr_t mac_;       ///< MAC address of this L3 interface
-        } l3_;
+        union {
+            struct {
+                pds_obj_key_t vpc_;    ///< vpc of this L3 interface
+                ip_prefix_t ip_pfx_;   ///< IP subnet of this L3 interface
+                pds_obj_key_t port_;   ///< physical port of this L3 interface
+                pds_encap_t encap_;    ///< wire encap, if any
+                mac_addr_t mac_;       ///< MAC address of this L3 interface
+            } l3_;
+            struct {
+                ip_prefix_t ip_pfx_;   ///< IP subnet of this interface
+            } vendor_l3_;
+        };
     } if_info_;
 
     ht_ctxt_t ht_ctxt_;            ///< hash table context

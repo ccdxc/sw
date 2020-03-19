@@ -34,7 +34,7 @@ import ipaddress
 # Parse argument
 parser = argparse.ArgumentParser()
 parser.add_argument("naples_ip", help="naples ip address")
-parser.add_argument("--grpc_port", help="naples grpc port (default=9999)", default=9999, type=str)
+parser.add_argument("--grpc_port", help="naples grpc port (default=50054)", default=50054, type=str)
 args = parser.parse_args()
 naplesip = args.naples_ip
 naplesport = args.grpc_port
@@ -65,6 +65,9 @@ intf2_mac='00:ae:cd:00:14:cd'
 intf1_underlay_mac='00:ae:cd:00:4f:de'
 intf2_underlay_mac='00:ae:cd:00:4f:dd'
 
+# VCN objects
+vcn_prefix='100.1.2.1/24'
+
 # Tunnel object inputs (Underlay)
 tunnel_local_ip='1.0.0.3'
 tunnel_remote_ip='1.0.0.2'
@@ -76,7 +79,7 @@ tunnel_nhid=2
 ipv4_subnet1='2.1.0.0/24'
 ipv6_subnet1='2001::2:1:0:0/112'
 # The host_if_idx is an encoding for PF1
-host_if_idx='0x80000048'
+host_if_idx='0x80000047'
 fabric_encap=202
 v4_router_ip='2.1.0.0'
 v6_router_ip='2001::2:1:0:2'
@@ -120,6 +123,9 @@ intf2=interface.InterfaceObject( 2, interface_pb2.IF_TYPE_L3, interface_pb2.IF_S
 nh1 = nh.NexthopObject( 1, 'underlay', 1, intf1_underlay_mac, vpc2_id )
 nh2 = nh.NexthopObject( 2, 'underlay', 2, intf2_underlay_mac, vpc2_id )
 
+# Create VCN interface
+vcn0=interface.InterfaceObject( 3, interface_pb2.IF_TYPE_VENDOR_L3, interface_pb2.IF_STATUS_UP, prefix=vcn_prefix )
+
 
 # Create Tunnel Objects ..
 # id, vpcid, localip, remoteip, macaddr, encaptype, vnid, nhid
@@ -156,6 +162,8 @@ api.client.Create(api.ObjectTypes.VPC, [vpc100.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.INTERFACE, [intf1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.INTERFACE, [intf2.GetGrpcCreateMessage()])
+
+api.client.Create(api.ObjectTypes.INTERFACE, [vcn0.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.NH, [nh1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.NH, [nh2.GetGrpcCreateMessage()])
