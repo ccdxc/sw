@@ -66,6 +66,10 @@ fte_setup_static_flows (void)
     uint32_t        vnic2_h2s_session_rewrite_id;
     uint32_t        vnic1_session_index;
     uint32_t        vnic2_session_index;
+    uint8_t         flow_count;
+    uint32_t        start_slot;
+    uint16_t        start_vlan, start_vnic;
+    uint16_t        start_sport, start_dport;
 
     PDS_TRACE_DEBUG("fte_setup_static_flows:\n");
 
@@ -229,6 +233,88 @@ fte_setup_static_flows (void)
     if (ret != SDK_RET_OK) {
         PDS_TRACE_DEBUG("fte_flow_create failed.\n");
         return ret;
+    }
+
+    /* 
+     * Program more VLANs/VNICs
+     */
+    for (flow_count = 0; flow_count < 10; flow_count++) {
+        g_vnic1_vlan++;
+        g_vnic1_slot_id++;
+        g_vnic1_id++;
+        g_h2s_sport++;
+        g_h2s_dport++;
+
+        if (flow_count == 0) {
+            start_vlan = g_vnic1_vlan;
+            start_slot = g_vnic1_slot_id;
+            start_vnic = g_vnic1_id;
+            start_sport = g_h2s_sport;
+            start_dport = g_h2s_dport;
+        }
+
+        // Setup VLAN->VNIC mapping
+        ret = fte_vlan_to_vnic_map(g_vnic1_vlan, g_vnic1_id);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_DEBUG("fte_vlan_to_vnic_map failed.\n");
+            return ret;
+        }
+
+        // Setup MPLS label->VNIC mapping
+        ret = fte_mpls_label_to_vnic_map(g_vnic1_slot_id,
+                                         g_vnic1_id);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_DEBUG("fte_mpls_label_to_vnic_map failed.\n");
+            return ret;
+        }
+
+        vnic1_session_index = g_session_index++;
+        memset(&host_mac, 0, sizeof(host_mac));
+        ret = fte_session_info_create_all(vnic1_session_index, /*conntrack_id*/0,
+                /*skip_flow_log*/ FALSE, /*host_mac*/ &host_mac,
+
+                /*h2s_epoch_vnic*/ 0, /*h2s_epoch_vnic_id*/ 0,
+                /*h2s_epoch_mapping*/0, /*h2s_epoch_mapping_id*/0,
+                /*h2s_policer_bw1_id*/0, /*h2s_policer_bw2_id*/0,
+                /*h2s_vnic_stats_id*/0, /*h2s_vnic_stats_mask*/ vnic_stats_mask,
+                /*h2s_vnic_histogram_latency_id*/0, /*h2s_vnic_histogram_packet_len_id*/0,
+                /*h2s_tcp_flags_bitmap*/0,
+                /*h2s_session_rewrite_id*/ vnic1_h2s_session_rewrite_id,
+                /*h2s_allowed_flow_state_bitmask*/0,
+                /*h2s_egress_action*/EGRESS_ACTION_NONE,
+
+                /*s2h_epoch_vnic*/ 0, /*s2h_epoch_vnic_id*/ 0,
+                /*s2h_epoch_mapping*/0, /*s2h_epoch_mapping_id*/0,
+                /*s2h_policer_bw1_id*/0, /*s2h_policer_bw2_id*/0,
+                /*s2h_vnic_stats_id*/0, /*s2h_vnic_stats_mask*/ vnic_stats_mask,
+                /*s2h_vnic_histogram_latency_id*/0, /*s2h_vnic_histogram_packet_len_id*/0,
+                /*s2h_tcp_flags_bitmap*/0,
+                /*s2h_session_rewrite_id*/ vnic1_s2h_session_rewrite_id,
+                /*s2h_allowed_flow_state_bitmask*/0,
+                /*s2h_egress_action*/EGRESS_ACTION_NONE
+                );
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+
+        // Setup Normalized Flow entry
+        ret = fte_flow_create(g_vnic1_id, g_h2s_sip, g_h2s_dip,
+                g_h2s_proto, g_h2s_sport, g_h2s_dport,
+                PDS_FLOW_SPEC_INDEX_SESSION, vnic1_session_index);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_DEBUG("fte_flow_create failed.\n");
+            return ret;
+        }
+
+        // Dump the entries configured
+        if (flow_count == 9) {
+            while (start_vlan <= g_vnic1_vlan) {
+                PDS_TRACE_DEBUG("SFD: VNIC Mapping: Vlan:%u MPLS label:%u VNIC:%u\n",
+                             start_vlan++, start_slot++, start_vnic);
+                PDS_TRACE_DEBUG("SFD: FLOW: VNIC:%u SIP:0x%x DIP:0x%x PROTO:0x%x SPORT:0x%x DPORT:0x%x\n",
+                             start_vnic++, g_h2s_sip, g_h2s_dip, g_h2s_proto, start_sport++, start_dport++);
+            }
+        }
     }
 
     return ret;
