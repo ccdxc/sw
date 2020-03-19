@@ -105,6 +105,15 @@ var _ = BeforeSuite(func() {
 			time.Sleep(time.Second)
 			st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s route add default gw %v oob_mnic0", ts.tu.NaplesNodes[idx], gw.String()))
 			Expect(st).Should(Equal(""))
+			// netagent expects bond0 to be available and with an assigned IP
+			st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s ip link add link oob_mnic0 name bond0 type dummy", ts.tu.NaplesNodes[idx]))
+			Expect(st).Should(Equal(""))
+			time.Sleep(time.Second)
+			st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s ifconfig bond0 %s netmask 255.255.255.0", ts.tu.NaplesNodes[idx], agIP.String()))
+			Expect(st).Should(Equal(""))
+			// remove route to avoid interference with oob_mnic0 // FIXME remove hardcoded network
+			st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s route del -net 192.168.30.0 netmask 255.255.255.0 dev bond0", ts.tu.NaplesNodes[idx]))
+			Expect(st).Should(Equal(""))
 
 			agURL := agIP.String() + ":" + globals.AgentProxyPort
 			By(fmt.Sprintf("ts:%s connecting to netagent [%s]", time.Now().String(), agURL))

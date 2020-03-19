@@ -245,7 +245,7 @@ func (c *API) Start(ctx context.Context) error {
 			rpckit.WithBalancer(balancer.New(c.ResolverClient)),
 			rpckit.WithRemoteServerName(types.Npm))
 
-		if c.npmClient != nil && c.tpmClient != nil && c.tsmClient != nil {
+		if c.npmClient != nil && c.tpmClient != nil && c.tsmClient != nil && c.ifClient != nil {
 			log.Infof("Controller API: %s", types.InfoConnectedToNPM)
 			log.Infof("Controller API: %s", types.InfoConnectedToTSM)
 			log.Infof("Controller API: %s", types.InfoConnectedToTPM)
