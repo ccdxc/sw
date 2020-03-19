@@ -35,10 +35,13 @@ uint32_t tep_id = 0;
 #define PDS_SUBNET_ID(vpc_num, num_subnets_per_vpc, subnet_num)    \
             (((vpc_num) * (num_subnets_per_vpc)) + subnet_num)
 
-#define TEP_ID_START 1
-#define TEP_ID_MYTEP TEP_ID_START
+#define TEP_ID_START           1
+#define TEP_ID_MYTEP           TEP_ID_START
 #define HOST_LIF_ID_MIN        72
 #define HOST_LIF_ID_MAX        79
+
+#define POLICY_ID_BASE         1
+#define ROUTE_TABLE_ID_BASE    4096
 
 //----------------------------------------------------------------------------
 // create route tables
@@ -68,7 +71,8 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
     v6route_table.route_info->num_routes = num_routes;
     for (uint32_t i = 1; i <= ntables; i++) {
         v6rtnum = 0;
-        v6route_table.key = test::int2pdsobjkey(ntables + i);
+        v6route_table.key =
+            test::int2pdsobjkey(ntables + ROUTE_TABLE_ID_BASE + i);
         for (uint32_t j = 0; j < num_routes; j++) {
             if (apollo() || apulu()) {
                 // In apollo, use TEPs as nexthop
@@ -127,7 +131,8 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     route_table.route_info->num_routes = num_routes;
     for (uint32_t i = 1; i <= ntables; i++) {
         rtnum = 0;
-        route_table.key = test::int2pdsobjkey(i);
+        route_table.key =
+            test::int2pdsobjkey(ROUTE_TABLE_ID_BASE + i);
         for (uint32_t j = 0; j < num_routes; j++) {
             route_table.route_info->routes[j].prefix.addr.af = IP_AF_IPV4;
             if (apollo() || apulu()) {
@@ -748,7 +753,7 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
 {
     sdk_ret_t rv;
     pds_subnet_spec_t pds_subnet;
-    static uint32_t route_table_id = 1;
+    static uint32_t route_table_id = ROUTE_TABLE_ID_BASE + 1;
     static uint32_t policy_id = 1;
     static uint32_t lif_id = HOST_LIF_ID_MIN;
 
@@ -1429,7 +1434,7 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
 {
     sdk_ret_t            rv;
     pds_policy_spec_t    policy;
-    static uint32_t      policy_id = 1, num_pfx;
+    static uint32_t      policy_id = POLICY_ID_BASE, num_pfx;
     rule_t               *rule;
     uint32_t             num_sub_rules = 10;
     uint16_t             step = 4;

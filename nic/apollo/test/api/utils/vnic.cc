@@ -154,16 +154,16 @@ vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
     if (this->configure_policy) {
         increment_num(&num_policy);
         spec->num_ing_v4_policy = num_policy;
-        fill_policy_ids(spec->ing_v4_policy, 1, num_policy);
+        fill_policy_ids(spec->ing_v4_policy, TEST_POLICY_ID_BASE + 1, num_policy);
         increment_num(&num_policy);
         spec->num_ing_v6_policy = num_policy;
-        fill_policy_ids(spec->ing_v6_policy, 6, num_policy);
+        fill_policy_ids(spec->ing_v6_policy, TEST_POLICY_ID_BASE + 5, num_policy);
         increment_num(&num_policy);
         spec->num_egr_v4_policy = num_policy;
-        fill_policy_ids(spec->egr_v4_policy, 11, num_policy);
+        fill_policy_ids(spec->egr_v4_policy, TEST_POLICY_ID_BASE + 10, num_policy);
         increment_num(&num_policy);
         spec->num_egr_v6_policy = num_policy;
-        fill_policy_ids(spec->egr_v6_policy, 16, num_policy);
+        fill_policy_ids(spec->egr_v6_policy, TEST_POLICY_ID_BASE + 15, num_policy);
     }
 }
 

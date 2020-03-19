@@ -33,13 +33,13 @@ subnet_feeder::init(pds_obj_key_t key, pds_obj_key_t vpc_key,
                                             // for IPv4 rt table
     // TODO: fix for multiple policies
     spec.num_ing_v4_policy = 1;
-    spec.ing_v4_policy[0] = int2pdsobjkey(1);
+    spec.ing_v4_policy[0] = int2pdsobjkey(TEST_POLICY_ID_BASE + 1);
     spec.num_ing_v6_policy = 1;
-    spec.ing_v6_policy[0] = int2pdsobjkey(6);
+    spec.ing_v6_policy[0] = int2pdsobjkey(TEST_POLICY_ID_BASE + 5);
     spec.num_egr_v4_policy = 1;
-    spec.egr_v4_policy[0] = int2pdsobjkey(11);
+    spec.egr_v4_policy[0] = int2pdsobjkey(TEST_POLICY_ID_BASE + 10);
     spec.num_egr_v6_policy = 1;
-    spec.egr_v6_policy[0] = int2pdsobjkey(16);
+    spec.egr_v6_policy[0] = int2pdsobjkey(TEST_POLICY_ID_BASE + 15);
     spec.fabric_encap.val.vnid = pdsobjkey2int(key) + 512;
     spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
 

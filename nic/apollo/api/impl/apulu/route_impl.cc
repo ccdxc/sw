@@ -403,19 +403,29 @@ route_table_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                               pds_epoch_t epoch, api_op_t api_op,
                               api_obj_ctxt_t *obj_ctxt)
 {
+    sdk_ret_t ret;
+    pds_route_table_spec_t *spec;
+
     switch (api_op) {
     case API_OP_CREATE:
-    case API_OP_DELETE:
-        // for route table create, there is no stage 0 programming
-        // for route table delete, since all objects (e.g., subnets)
-        // referring to this route table are already modified to point
-        // to other routing table(s) or deleted (agent is expected to
-        // ensure this), there is no need to program any tables during
-        // activation stage
+        spec = &obj_ctxt->api_params->route_table_spec;
+        ret = route_table_db()->persist((route_table *)api_obj, spec);
+        break;
+
     case API_OP_UPDATE:
-        // affected objects like affected vpc, subnet and vnic objects
-        // are in the dependent object list by now and will be reprogrammed
+        spec = &obj_ctxt->api_params->route_table_spec;
+        if ((ret = route_table_db()->perish(spec->key)) ==
+                SDK_RET_OK) {
+            ret = route_table_db()->persist((route_table *)api_obj, spec);
+        }
+        break;
+
+    case API_OP_DELETE:
+        ret = route_table_db()->perish(obj_ctxt->api_params->route_table_key);
+        break;
+
     default:
+        ret = SDK_RET_INVALID_OP;
         break;
     }
     return SDK_RET_OK;

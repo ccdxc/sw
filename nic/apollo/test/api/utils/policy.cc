@@ -161,7 +161,7 @@ policy_feeder::status_compare(const pds_policy_status_t *status1,
 static policy_feeder k_pol_feeder;
 
 void sample_policy_setup(pds_batch_ctxt_t bctxt) {
-    pds_obj_key_t pol_key = int2pdsobjkey(1);
+    pds_obj_key_t pol_key = int2pdsobjkey(TEST_POLICY_ID_BASE + 1);
 
     // setup and teardown parameters should be in sync
     k_pol_feeder.init(pol_key, 512, IP_AF_IPV4, "10.0.0.1/16", 5);
@@ -181,7 +181,7 @@ void sample_policy_setup(pds_batch_ctxt_t bctxt) {
 }
 
 void sample_policy_teardown(pds_batch_ctxt_t bctxt) {
-    pds_obj_key_t pol_key = int2pdsobjkey(1);
+    pds_obj_key_t pol_key = int2pdsobjkey(TEST_POLICY_ID_BASE + 1);
 
     // this feeder base values doesn't matter in case of deletes
     k_pol_feeder.init(pol_key, 512, IP_AF_IPV4, "10.0.0.1/16", 5);

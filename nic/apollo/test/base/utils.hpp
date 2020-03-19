@@ -15,6 +15,8 @@
 #include "nic/sdk/platform/fru/fru.hpp"
 #endif
 
+#define TEST_POLICY_ID_BASE    4096
+
 namespace test {
 
 // todo: @kalyanbade delete this once all references are gone
