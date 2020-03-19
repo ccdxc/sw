@@ -1618,6 +1618,9 @@ func (i *IrisAPI) ReplayConfigs() error {
 			}
 			creator, ok := network.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
+				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", network.Kind, network.GetKey())
+				i.InfraAPI.Delete(network.Kind, network.GetKey())
+
 				log.Info("Replaying persisted Network objects")
 				if _, err := i.HandleNetwork(types.Create, network); err != nil {
 					log.Errorf("Failed to recreate Network: %v. Err: %v", network.GetKey(), err)
@@ -1638,6 +1641,9 @@ func (i *IrisAPI) ReplayConfigs() error {
 			}
 			creator, ok := endpoint.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
+				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", endpoint.Kind, endpoint.GetKey())
+				i.InfraAPI.Delete(endpoint.Kind, endpoint.GetKey())
+
 				log.Info("Replaying persisted Endpoint objects")
 				if _, err := i.HandleEndpoint(types.Create, endpoint); err != nil {
 					log.Errorf("Failed to recreate Endpoint: %v. Err: %v", endpoint.GetKey(), err)
@@ -1658,6 +1664,9 @@ func (i *IrisAPI) ReplayConfigs() error {
 			}
 			creator, ok := tunnel.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
+				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", tunnel.Kind, tunnel.GetKey())
+				i.InfraAPI.Delete(tunnel.Kind, tunnel.GetKey())
+
 				log.Info("Replaying persisted Tunnel objects")
 				if _, err := i.HandleTunnel(types.Create, tunnel); err != nil {
 					log.Errorf("Failed to recreate Tunnel: %v. Err: %v", tunnel.GetKey(), err)
@@ -1678,6 +1687,9 @@ func (i *IrisAPI) ReplayConfigs() error {
 			}
 			creator, ok := sgp.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
+				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", sgp.Kind, sgp.GetKey())
+				i.InfraAPI.Delete(sgp.Kind, sgp.GetKey())
+
 				log.Info("Replaying persisted NetworkSecurityPolicy objects")
 				if _, err := i.HandleNetworkSecurityPolicy(types.Create, sgp); err != nil {
 					log.Errorf("Failed to recreate NetworkSecurityPolicy: %v. Err: %v", sgp.GetKey(), err)
@@ -1698,6 +1710,9 @@ func (i *IrisAPI) ReplayConfigs() error {
 			}
 			creator, ok := collector.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
+				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", collector.Kind, collector.GetKey())
+				i.InfraAPI.Delete(collector.Kind, collector.GetKey())
+
 				log.Info("Replaying persisted Collector object")
 				if _, err := i.HandleCollector(types.Create, collector); err != nil {
 					log.Errorf("Failed to recreate Collector: %v. Err: %v", collector.GetKey(), err)

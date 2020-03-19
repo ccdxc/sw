@@ -1323,6 +1323,9 @@ func (a *ApuluAPI) ReplayConfigs() error {
 			}
 			creator, ok := rtcfg.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
+				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", rtcfg.Kind, rtcfg.GetKey())
+				a.InfraAPI.Delete(rtcfg.Kind, rtcfg.GetKey())
+
 				log.Info("Replaying persisted RoutingConfig object")
 				if _, err := a.HandleRoutingConfig(types.Create, rtcfg); err != nil {
 					log.Errorf("Failed to recreate RoutingConfig: %v. Err: %v", rtcfg.GetKey(), err)
@@ -1342,6 +1345,9 @@ func (a *ApuluAPI) ReplayConfigs() error {
 			}
 			creator, ok := rtbl.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
+				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", rtbl.Kind, rtbl.GetKey())
+				a.InfraAPI.Delete(rtbl.Kind, rtbl.GetKey())
+
 				log.Info("Replaying persisted RouteTable object")
 				if _, err := a.HandleRouteTable(types.Create, rtbl); err != nil {
 					log.Errorf("Failed to recreate RouteTable: %v. Err: %v", rtbl.GetKey(), err)
@@ -1361,6 +1367,9 @@ func (a *ApuluAPI) ReplayConfigs() error {
 			}
 			creator, ok := ipam.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
+				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", ipam.Kind, ipam.GetKey())
+				a.InfraAPI.Delete(ipam.Kind, ipam.GetKey())
+
 				log.Info("Replaying persisted IPAM Policy object")
 				if _, err := a.HandleIPAMPolicy(types.Create, ipam); err != nil {
 					log.Errorf("Failed to recreate IPAM Policy: %v. Err: %v", ipam.GetKey(), err)
@@ -1381,6 +1390,9 @@ func (a *ApuluAPI) ReplayConfigs() error {
 			}
 			creator, ok := vrf.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
+				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", vrf.Kind, vrf.GetKey())
+				a.InfraAPI.Delete(vrf.Kind, vrf.GetKey())
+
 				log.Info("Replaying persisted Vrf object")
 				if _, err := a.HandleVrf(types.Create, vrf); err != nil {
 					log.Errorf("Failed to recreate Vrf: %v. Err: %v", vrf.GetKey(), err)
@@ -1400,6 +1412,9 @@ func (a *ApuluAPI) ReplayConfigs() error {
 			}
 			creator, ok := netw.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
+				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", netw.Kind, netw.GetKey())
+				a.InfraAPI.Delete(netw.Kind, netw.GetKey())
+
 				log.Info("Replaying persisted Network object")
 				if _, err := a.HandleNetwork(types.Create, netw); err != nil {
 					log.Errorf("Failed to recreate Network: %v. Err: %v", netw.GetKey(), err)
