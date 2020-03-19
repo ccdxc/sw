@@ -21,6 +21,7 @@ from capri_utils import *
 from capri_model import capri_model as capri_model
 from capri_output import capri_parser_logical_output as capri_parser_logical_output
 from capri_output import capri_parser_output_decoders as capri_parser_output_decoders
+from capri_output import elba_parser_output_decoders as elba_parser_output_decoders
 from capri_pa import capri_field as capri_field
 
 def _get_p4_headers(s):
@@ -944,6 +945,7 @@ class capri_parser:
         self.hv_bit_header = [ None for _ in range(self.be.hw_model['parser']['max_hv_bits']) ]
 
         self.var_len_headers = OrderedDict() # {hdr_name : var_len_exp|str}
+        self.asic            = capri_be.asic
 
         self.flit_hv_idx_start = [0 for _ in range(parser_flits)]
         hv_start_bit = 0
@@ -3342,8 +3344,11 @@ class capri_parser:
 
     def generate_output(self):
         # capri_parser_logical_output(self)
-        capri_parser_output_decoders(self)
-
+        if (self.asic == 'capri'):
+            capri_parser_output_decoders(self)
+        elif (self.asic == 'elba'):
+            elba_parser_output_decoders(self)
+ 
     def create_extraction_chunks(self, cs, add_off, extracted_fields):
         # extracted_field entry is a tuple (src, dst). For pkt header both src and dst are
         # pkt header fields. For meta extraction, src can be pkt_field, dst is

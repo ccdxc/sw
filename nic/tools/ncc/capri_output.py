@@ -1835,11 +1835,11 @@ def capri_deparser_cfg_output(deparser):
 
     if not deparser.be.args.p4_plus:
         cap_inst = 1 if (deparser.d == xgress.INGRESS) else 0
-        capri_dump_registers(deparser.be.args.cfg_dir, deparser.be.prog_name,
+        capri_dump_registers(deparser.asic, deparser.be.args.cfg_dir, deparser.be.prog_name,
                              'cap_dpp', cap_inst,
                              dpp_json['cap_dpp']['registers'], None)
 
-        capri_dump_registers(deparser.be.args.cfg_dir, deparser.be.prog_name,
+        capri_dump_registers(deparser.asic, deparser.be.args.cfg_dir, deparser.be.prog_name,
                              'cap_dpr', cap_inst,
                              dpr_json['cap_dpr']['registers'], None)
 
@@ -1881,10 +1881,14 @@ def capri_output_i2e_meta_header(be, i2e_fields, hsize):
     hfile.close()
 
 # new output json format with decoders
-def _expand_decoder(decoder_json, dname):
+def _expand_decoder(decoder_json, dname, asic):
     tmplt = OrderedDict()
+    if asic == 'capri':
+        decoderFields = decoder_json['cap_ppa_decoders']['decoders'][dname]['fields']
+    elif asic == 'elba':
+        decoderFields = decoder_json['elb_ppa_decoders']['decoders'][dname]['fields']
     #tmplt['fields'] = []
-    for field in decoder_json['cap_ppa_decoders']['decoders'][dname]['fields']:
+    for field in decoderFields:
         tfield = OrderedDict()
         for fname,fattr in field.items():
             #tfield[fname] = []
@@ -1902,24 +1906,24 @@ def _expand_decoder(decoder_json, dname):
                 tfield[fname] = []
                 for n in range(n_elem):
                     if f_decoder:
-                        tfield[fname].append(_expand_decoder(decoder_json, f_decoder))
+                        tfield[fname].append(_expand_decoder(decoder_json, f_decoder, asic))
                     else:
                         tfield[fname].append({'value':'0', 'size':str(elem_sz)})
             else:
                 if f_decoder:
-                    tfield[fname] = _expand_decoder(decoder_json, f_decoder)
+                    tfield[fname] = _expand_decoder(decoder_json, f_decoder, asic)
                 else:
                     tfield[fname] = {'value':'0', 'size':str(elem_sz)}
         #tmplt['fields'].append(tfield)
         tmplt[fname] = tfield[fname]
     return tmplt
 
-def _create_template(reg_json, decoder_json, ename):
+def _create_template(reg_json, decoder_json, ename, asic):
     ncc_assert(ename in reg_json)
     elem = reg_json[ename]
     if 'decoder' in elem.keys():
         decoder_name = elem['decoder']
-        return _expand_decoder(decoder_json, decoder_name), decoder_name
+        return _expand_decoder(decoder_json, decoder_name, asic), decoder_name
     else:
         return copy.deepcopy(elem), None
 
@@ -2903,17 +2907,17 @@ def capri_parser_output_decoders(parser):
     max_tcam_entries = parser.be.hw_model['parser']['num_states']
 
     tcam_t, tcam_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
-                            'cap_ppa_csr_dhs_bndl0_state_lkp_tcam_entry[0]')
+                            'cap_ppa_csr_dhs_bndl0_state_lkp_tcam_entry[0]', parser.asic)
     sram_t, sram_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
-                            'cap_ppa_csr_dhs_bndl0_state_lkp_sram_entry[0]')
+                            'cap_ppa_csr_dhs_bndl0_state_lkp_sram_entry[0]', parser.asic)
     csum_t, csum_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
-                            'cap_ppa_csr_cfg_csum_profile[1]')
+                            'cap_ppa_csr_cfg_csum_profile[1]', parser.asic)
     csum_phdr_t, phdr_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
-                            'cap_ppa_csr_cfg_csum_phdr_profile[1]')
+                            'cap_ppa_csr_cfg_csum_phdr_profile[1]', parser.asic)
     icrc_t, icrc_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
-                            'cap_ppa_csr_cfg_crc_profile[1]')
+                            'cap_ppa_csr_cfg_crc_profile[1]', parser.asic)
     icrc_mask_t, icrc_mask_dname = _create_template(ppa_json['cap_ppa']['registers'], ppa_decoder_json,
-                            'cap_ppa_csr_cfg_crc_mask_profile[1]')
+                            'cap_ppa_csr_cfg_crc_mask_profile[1]', parser.asic)
     tcam0 = []
     sram0 = []
 
@@ -3153,7 +3157,7 @@ def capri_parser_output_decoders(parser):
     ppa_cfg_file_reg.close()
     if not parser.be.args.p4_plus:
         cap_inst = 1 if (parser.d == xgress.INGRESS) else 0
-        capri_dump_registers(parser.be.args.cfg_dir, parser.be.prog_name,
+        capri_dump_registers(parser.asic, parser.be.args.cfg_dir, parser.be.prog_name,
                              'cap_ppa', cap_inst,
                              ppa_json['cap_ppa']['registers'],
                              ppa_json['cap_ppa']['memories'],)
@@ -3815,7 +3819,7 @@ def _decode_reg(entry, result):
             for field, attrib in entry.iteritems():
                 _decode_reg(attrib, result)
 
-def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
+def capri_dump_registers(asic_name, cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
     if cfg_out_dir is None or cap_mod is None or prog_name is None:
         return
     if not os.path.exists(cfg_out_dir):
@@ -3830,7 +3834,10 @@ def capri_dump_registers(cfg_out_dir, prog_name, cap_mod, cap_inst, regs, mems):
     # fetch base address
     cur_path = os.path.abspath(__file__)
     cur_path = os.path.split(cur_path)[0]
-    base_addr_file = os.path.join(cur_path, 'csr_json/cap_addr.json')
+    if asic_name == "capri":
+        base_addr_file = os.path.join(cur_path, 'csr_json/cap_addr.json')
+    elif asic_name == "elba":
+        base_addr_file = os.path.join(cur_path, 'csr_json/elb_addr.json')
     base_addr_fp = open(base_addr_file)
     base_addr_json = json.load(base_addr_fp)
     addr_map_size = eval(base_addr_json[cap_mod]['amap_size'])
@@ -3967,8 +3974,12 @@ def capri_pic_csr_load(tmgr):
            'hbm' :{'ingress':[], 'egress':[]}}
     cur_path = os.path.abspath(__file__)
     cur_path = os.path.split(cur_path)[0]
-    pics_file_path = os.path.join(cur_path, 'csr_json/cap_pics_csr.json')
-    pict_file_path = os.path.join(cur_path, 'csr_json/cap_pict_csr.json')
+    if (tmgr.asic == 'capri'):
+        pics_file_path = os.path.join(cur_path, 'csr_json/cap_pics_csr.json')
+        pict_file_path = os.path.join(cur_path, 'csr_json/cap_pict_csr.json')
+    elif (tmgr.asic == 'elba'):
+        pics_file_path = os.path.join(cur_path, 'csr_json/elb_pics_csr.json')
+        pict_file_path = os.path.join(cur_path, 'csr_json/elb_pict_csr.json')
     pics_file = open(pics_file_path)
     pict_file = open(pict_file_path)
     pic['sram']['ingress'] = json.load(pics_file)
@@ -3983,7 +3994,10 @@ def capri_pic_csr_load(tmgr):
     cur_path = tmgr.be.args.gen_dir + '/%s/cfg_out/' % (tmgr.be.prog_name)
     for direction in tmgr.gress_tm:
         for stage in sorted(direction.stages):
-            te_file_path = cur_path + 'cap_te_' + xgress_to_string(direction.d).upper() + '_' + repr(stage) + '_cfg_reg.json'
+            if (tmgr.asic == 'capri'):
+                te_file_path = cur_path + 'cap_te_' + xgress_to_string(direction.d).upper() + '_' + repr(stage) + '_cfg_reg.json'
+            elif (tmgr.asic == 'elba'):
+                te_file_path = cur_path + 'elb_te_' + xgress_to_string(direction.d).upper() + '_' + repr(stage) + '_cfg_reg.json'
             te_file = open(te_file_path)
             pic['hbm'][xgress_to_string(direction.d)].append(json.load(te_file))
             te_file.close()
@@ -3993,6 +4007,11 @@ def capri_pic_csr_load(tmgr):
 def capri_pic_csr_output(be, out_pic):
 
     out_dir = be.args.gen_dir + '/%s/cfg_out/' % (be.prog_name)
+    if be.asic == 'capri':
+        asicStr = 'cap_'
+    elif be.asic == 'elba':
+        asicStr = 'elb_'
+
 
     if not os.path.exists(out_dir):
         try:
@@ -4007,7 +4026,7 @@ def capri_pic_csr_output(be, out_pic):
                 continue
             if mem_type == 'hbm':
                 for stage in range(len(out_pic[mem_type][direction])):
-                    out_file = out_dir + 'cap_te_' + direction.upper() + '_' + repr(stage) + '_cfg_reg.json'
+                    out_file = out_dir + asicStr + 'te_' + direction.upper() + '_' + repr(stage) + '_cfg_reg.json'
                     with open(out_file, "w") as of:
                         json.dump(out_pic[mem_type][direction][stage], of, indent=2, sort_keys=True)
                         of.close()
@@ -4016,21 +4035,27 @@ def capri_pic_csr_output(be, out_pic):
                     if not be.args.p4_plus:
                         prog_name = be.prog_name
                         if (direction == xgress_to_string(xgress.INGRESS)):
-                            cap_mod = 'cap_sgi_te'
+                            cap_mod = asicStr + 'sgi_te'
                         else:
-                            cap_mod = 'cap_sge_te'
+                            cap_mod = asicStr + 'sge_te'
                     else:
                         prog_name = be.args.p4_plus_module
                         if be.args.p4_plus_module == 'rxdma':
-                            cap_mod = 'cap_pcr_te'
+                            cap_mod = asicStr + 'pcr_te'
                         elif be.args.p4_plus_module == 'txdma':
-                            cap_mod = 'cap_pct_te'
+                            cap_mod = asicStr + 'pct_te'
+                        elif be.args.p4_plus_module == 'sxdma':
+                            if be.asic == 'elba':
+                                cap_mod = asicStr + 'xg_te'
+                            elif be.asic == 'capri':
+                                be.logger.info ("Unsupported NCC options, capri asic and sxdma")
+                                cap_mod = None
                         else:
                             cap_mod = None
-                    capri_dump_registers(be.args.cfg_dir, prog_name, cap_mod, stage,
+                    capri_dump_registers(be.asic, be.args.cfg_dir, prog_name, cap_mod, stage,
                                          out_pic[mem_type][direction][stage], None)
             else:
-                name = 'cap_pics_' if mem_type == 'sram' else 'cap_pict_'
+                name = asicStr + 'pics_' if mem_type == 'sram' else asicStr + 'pict_'
                 out_file = out_dir + name + direction.upper() + '.json'
                 with open(out_file, "w") as of:
                     json.dump(out_pic[mem_type][direction], of, indent=2, sort_keys=True)
@@ -4040,37 +4065,49 @@ def capri_pic_csr_output(be, out_pic):
                     if not be.args.p4_plus:
                         prog_name = be.prog_name
                         if (direction == xgress_to_string(xgress.INGRESS)):
-                            cap_mod = 'cap_ssi_pics'
+                            cap_mod = asicStr + 'ssi_pics'
                         else:
-                            cap_mod = 'cap_sse_pics'
+                            cap_mod = asicStr + 'sse_pics'
                     else:
                         prog_name = be.args.p4_plus_module
                         if be.args.p4_plus_module == 'rxdma':
-                            cap_mod = 'cap_rpc_pics'
+                            if be.asic == 'elba':
+                                cap_mod = asicStr + 'rd_pics'
+                            elif be.asic == 'capri':
+                                cap_mod = asicStr + 'rpc_pics'
                         elif be.args.p4_plus_module == 'txdma':
-                            cap_mod = 'cap_tpc_pics'
+                            if be.asic == 'elba':
+                                cap_mod = asicStr + 'td_pics'
+                            elif be.asic == 'capri':
+                                cap_mod = asicStr + 'tpc_pics'
                         else:
                             cap_mod = None
-                    capri_dump_registers(be.args.cfg_dir, prog_name, cap_mod, 0,
-                        out_pic[mem_type][direction]['cap_pics']['registers'], None)
+                    capri_dump_registers(be.asic, be.args.cfg_dir, prog_name, cap_mod, 0,
+                        out_pic[mem_type][direction][asicStr + 'pics']['registers'], None)
                 else:
                     prog_name = None
                     if not be.args.p4_plus:
                         prog_name = be.prog_name
                         if (direction == xgress_to_string(xgress.INGRESS)):
-                            cap_mod = 'cap_tsi_pict'
+                            cap_mod = asicStr + 'tsi_pict'
                         else:
-                            cap_mod = 'cap_tse_pict'
+                            cap_mod = asicStr + 'tse_pict'
                     else:
                         prog_name = be.args.p4_plus_module
                         if be.args.p4_plus_module == 'rxdma':
-                            cap_mod = 'cap_rpc_pict'
+                            if be.asic == 'elba':
+                                continue
+                            elif be.asic == 'capri':
+                                cap_mod = asicStr + 'rpc_pict'
                         elif be.args.p4_plus_module == 'txdma':
-                            cap_mod = 'cap_tpc_pict'
+                            if be.asic == 'elba':
+                                continue
+                            elif be.asic == 'capri':
+                                cap_mod = asicStr + 'tpc_pict'
                         else:
                             cap_mod = None
-                    capri_dump_registers(be.args.cfg_dir, prog_name, cap_mod, 0,
-                        out_pic[mem_type][direction]['cap_pict']['registers'], None)
+                    capri_dump_registers(be.asic, be.args.cfg_dir, prog_name, cap_mod, 0,
+                        out_pic[mem_type][direction][asicStr + 'pict']['registers'], None)
 
 def capri_p4_table_spec_output(be, out_dict):
 
@@ -4179,5 +4216,1234 @@ def capri_get_top_level_path(cur_dir):
         dirs = subpath.split("/")
         for dir in dirs:
             top_dir += '/..'
-
     return top_dir
+
+def elba_parser_output_decoders(parser):
+    # read the register spec json
+    cur_path = os.path.abspath(__file__)
+    cur_path = os.path.split(cur_path)[0]
+    gen_dir = parser.be.args.gen_dir
+    ppa_file_path = os.path.join(cur_path, 'csr_json/elb_ppa_csr.json')
+    ppa_file = open(ppa_file_path)
+    ppa_json = json.load(ppa_file)
+    ppa_decoder_file_path = os.path.join(cur_path, 'csr_json/elb_ppa_decoders.json')
+    ppa_decoder_file = open(ppa_decoder_file_path)
+    ppa_decoder_json = json.load(ppa_decoder_file, object_pairs_hook=OrderedDict)
+    cfg_out_dir = os.path.join(gen_dir + '/%s/cfg_out' % parser.be.prog_name)
+    if not os.path.exists(cfg_out_dir):
+        try:
+            os.makedirs(cfg_out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+    ppa_cfg_output_mem = os.path.join(cfg_out_dir, 'elb_ppa_%s_cfg_decoder_mem.json' % \
+        parser.d.name)
+    ppa_cfg_output_reg = os.path.join(cfg_out_dir, 'elb_ppa_%s_cfg_decoder_reg.json' % \
+        parser.d.name)
+    ppa_cfg_file_mem = open(ppa_cfg_output_mem, 'w+')
+    ppa_cfg_file_reg = open(ppa_cfg_output_reg, 'w+')
+
+    parser.logger.info('%s:Parser Output Generation:' % parser.d.name)
+
+    # create initial config register for start state
+    idx = 0
+    max_tcam_entries = parser.be.hw_model['parser']['num_states']
+
+    tcam_t, tcam_dname = _create_template(ppa_json['elb_ppa']['registers'], ppa_decoder_json,
+                            'elb_ppa_csr_dhs_bndl0_state_lkp_tcam_entry[0]', parser.asic)
+    sram_t, sram_dname = _create_template(ppa_json['elb_ppa']['registers'], ppa_decoder_json,
+                            'elb_ppa_csr_dhs_bndl0_state_lkp_sram_entry[0]', parser.asic)
+    csum_t, csum_dname = _create_template(ppa_json['elb_ppa']['registers'], ppa_decoder_json,
+                            'elb_ppa_csr_cfg_csum_profile[1]', parser.asic)
+    csum_phdr_t, phdr_dname = _create_template(ppa_json['elb_ppa']['registers'], ppa_decoder_json,
+                            'elb_ppa_csr_cfg_csum_phdr_profile[1]', parser.asic)
+    icrc_t, icrc_dname = _create_template(ppa_json['elb_ppa']['registers'], ppa_decoder_json,
+                            'elb_ppa_csr_cfg_crc_profile[1]', parser.asic)
+    icrc_mask_t, icrc_mask_dname = _create_template(ppa_json['elb_ppa']['registers'], ppa_decoder_json,
+                            'elb_ppa_csr_cfg_crc_mask_profile[1]', parser.asic)
+    tcam0 = []
+    sram0 = []
+
+    parse_state_stack = []
+    bi_processed_list = [] #(parse-state, [all-parse-states-along-the path])
+    parse_state_stack.append((parser.states[0], [parser.states[0]]))
+    while len(parse_state_stack):
+        cs, parse_states_in_path = parse_state_stack.pop(0)
+        ncc_assert(cs != None)
+        for bi in cs.branches:
+            if bi not in bi_processed_list:
+                bi_processed_list.append(bi)
+
+                # create a match entry for {state_id, lkp_flds, lkp_fld_mask}
+                if not parser.be.args.post_extract and cs.is_end:
+                    # Terminal state
+                    parser.logger.debug('Skip transition from %s -> __END__,\
+                                        Terminate' % (cs.name))
+                    continue
+
+                parse_state_stack.append((bi.nxt_state, parse_states_in_path + \
+                                         [bi.nxt_state]))
+
+                parser.logger.debug('%s:%s[%d]->%s[%d]' % \
+                        (parser.d.name, cs.name, cs.id, bi.nxt_state.name, \
+                         bi.nxt_state.id))
+                te = _fill_parser_tcam_entry(tcam_t, parser, cs, bi)
+                if cs.is_hw_start:
+                    add_cs = cs
+                else:
+                    add_cs = None
+                se = _fill_parser_sram_entry(parse_states_in_path + \
+                                             [bi.nxt_state],\
+                                             sram_t, parser, bi, add_cs)
+
+                # Allow smaller json definition file and add entries
+                te['entry_idx'] = str(idx)  # debug aid
+                te['_modified'] = True
+                se['entry_idx'] = str(idx)  # debug aid
+                se['_modified'] = True
+                if idx < len(tcam0):
+                    tcam0[idx] = te
+                    sram0[idx] = se
+                else:
+                    tcam0.append(te)
+                    sram0.append(se)
+                parser.logger.debug('TCAM-decoder[%d] - \n%s' % (idx,
+                                                _parser_tcam_print(tcam0[idx])))
+                parser.logger.debug('SRAM-decoder[%d] - \n%s' % \
+                    (idx, _parser_sram_print(parser,sram0[idx])))
+
+                for r,lf in enumerate(bi.nxt_state.active_lkp_lfs):
+                    if lf != None:
+                        parser.logger.debug('%s:lkp_reg[%d] = %s' % (parser.d.name, r, lf.hfname))
+                idx += 1
+
+                #Generate csum related profile config for parser block
+                csum_prof_list = parser.be.checksum.\
+                                ParserCsumProfileGenerate(parser, \
+                                                          parse_states_in_path+\
+                                                          [bi.nxt_state], bi.nxt_state,\
+                                                          csum_t)
+                csum_phdr_prof_list = parser.be.checksum.\
+                           ParserCsumPhdrProfileGenerate(parser, \
+                                                         parse_states_in_path +\
+                                                         [bi.nxt_state], bi.nxt_state,\
+                                                         csum_phdr_t)
+                if len(csum_prof_list):
+                    for csum_p in csum_prof_list:
+                        csum_prof, cprof_inst = csum_p
+                        #For handling wide register store word_size  *  profile#
+                        csum_prof['word_size'] = str(hex(int(csum_t['word_size'], 16) * cprof_inst))
+                        ppa_json['elb_ppa']['registers']\
+                            ['elb_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
+                                = csum_prof
+                        ppa_json['elb_ppa']['registers']\
+                            ['elb_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]['_modified']\
+                                = True
+                if len(csum_phdr_prof_list):
+                    for csum_p in csum_phdr_prof_list:
+                        csum_phdr_prof, phdr_inst = csum_p
+                        #For handling wide register store word_size  *  profile#
+                        csum_phdr_prof['word_size'] = str(hex(int(csum_phdr_t['word_size'], 16) * phdr_inst))
+                        ppa_json['elb_ppa']['registers']\
+                            ['elb_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]\
+                                                              = csum_phdr_prof
+                        ppa_json['elb_ppa']['registers']\
+                            ['elb_ppa_csr_cfg_csum_phdr_profile[%d]' % phdr_inst]['_modified']\
+                                = True
+
+                #Generate Gso csum related profile config for parser block
+                csum_prof, cprof_inst = parser.be.checksum.\
+                                GsoCsumParserProfileGenerate(parser, \
+                                                          parse_states_in_path+\
+                                                          [bi.nxt_state], bi.nxt_state,\
+                                                          csum_t)
+                if csum_prof != None:
+                    csum_prof['word_size'] = str(hex(int(csum_t['word_size'], 16) * cprof_inst))
+                    ppa_json['elb_ppa']['registers']\
+                        ['elb_ppa_csr_cfg_csum_profile[%d]' % cprof_inst]\
+                            = csum_prof
+
+                #Generate icrc related profile config for parser block
+                icrc_prof, prof_inst = parser.be.icrc.\
+                                ParserIcrcProfileGenerate(parser, \
+                                                          parse_states_in_path+\
+                                                          [bi.nxt_state], bi.nxt_state,\
+                                                          icrc_t)
+                if icrc_prof != None:
+                    #For handling wide register store word_size  *  profile#
+                    icrc_prof['word_size'] = str(hex(int(icrc_t['word_size'], 16) * prof_inst))
+                    ppa_json['elb_ppa']['registers']\
+                      ['elb_ppa_csr_cfg_crc_profile[%d]' % prof_inst] = icrc_prof
+                    ppa_json['elb_ppa']['registers']\
+                      ['elb_ppa_csr_cfg_crc_profile[%d]' % prof_inst]['_modified'] = True
+
+                icrc_mask_prof, prof_inst = parser.be.icrc.\
+                                ParserIcrcMaskProfileGenerate(parser, \
+                                                          parse_states_in_path+\
+                                                          [bi.nxt_state], bi.nxt_state,\
+                                                          icrc_mask_t)
+                if icrc_mask_prof != None:
+                    #For handling wide register store word_size  *  profile#
+                    icrc_mask_prof['word_size'] = str(hex(int(icrc_mask_t['word_size'], 16) * prof_inst))
+                    ppa_json['elb_ppa']['registers']\
+                      ['elb_ppa_csr_cfg_crc_mask_profile[%d]' % prof_inst] = icrc_mask_prof
+                    ppa_json['elb_ppa']['registers']\
+                      ['elb_ppa_csr_cfg_crc_mask_profile[%d]' % prof_inst]['_modified'] = True
+
+
+    # XXX add a catch-all end state
+    te = _fill_parser_tcam_catch_all(tcam_t)
+    se = _fill_parser_sram_catch_all(sram_t)
+    if idx < len(tcam0):
+        tcam0[idx] = te
+        sram0[idx] = se
+    else:
+        tcam0.append(te)
+        sram0.append(se)
+    te['entry_idx'] = str(idx)  # debug aid
+    se['entry_idx'] = str(idx)  # debug aid
+    te['_modified'] = True
+    se['_modified'] = True
+
+    idx += 1
+    parser.logger.info('%s:Tcam states used (including catch-all) %d' % (parser.d.name, idx))
+    ncc_assert(idx <= parser.be.hw_model['parser']['num_states'], "Parser TCAM overflow")
+
+    # program catch all entry register
+    ppa_json['elb_ppa']['registers']['elb_ppa_csr_cfg_ctrl']['pe_enable']['value'] = str(0x3ff)
+    ppa_json['elb_ppa']['registers']['elb_ppa_csr_cfg_ctrl']['parse_loop_cnt']['value'] = str(64)
+    ppa_json['elb_ppa']['registers']['elb_ppa_csr_cfg_ctrl']['num_phv_flit']['value'] = str(6)
+    ppa_json['elb_ppa']['registers']['elb_ppa_csr_cfg_ctrl']\
+        ['state_lkp_catchall_entry']['value'] = str(idx)
+
+    # gso csum will be written by a separate checksum instruction, enabling it here is ok
+    # even if checksum inst is not executed
+    ppa_json['elb_ppa']['registers']['elb_ppa_csr_cfg_ctrl']['gso_csum_en']['value'] = str(1)
+    if parser.be.pa.gress_pa[parser.d].parser_end_off_cf:
+        phv_flit_sz = parser.be.hw_model['phv']['flit_size']
+        end_offset_flit = parser.be.pa.gress_pa[parser.d].parser_end_off_cf.phv_bit / phv_flit_sz
+        ppa_json['elb_ppa']['registers']['elb_ppa_csr_cfg_ctrl']['end_offset_en']['value'] = str(1)
+        ppa_json['elb_ppa']['registers']['elb_ppa_csr_cfg_ctrl']['end_offset_flit_num']['value'] = \
+            str(end_offset_flit)
+
+    ppa_json['elb_ppa']['registers']['elb_ppa_csr_cfg_ctrl']['_modified'] = True
+
+    # program len_chk profiles
+    for e,len_chk_profile in enumerate(parser.len_chk_profiles):
+        if len_chk_profile == None:
+            continue
+        cap_ppa_csr_cfg_len_chk_profile = \
+            ppa_json['elb_ppa']['registers']['elb_ppa_csr_cfg_len_chk_profile[%d]'%e]
+        cap_ppa_csr_cfg_len_chk_profile['len_mask']['value'] = "0x%x" % int(0x3FFF)
+        cap_ppa_csr_cfg_len_chk_profile['len_shift_left']['value'] = str(0)
+        cap_ppa_csr_cfg_len_chk_profile['len_shift_val']['value'] = str(0)
+        if len_chk_profile.offset_op == '+':
+            cap_ppa_csr_cfg_len_chk_profile['addsub_start']['value'] = str(1)
+        else:
+            cap_ppa_csr_cfg_len_chk_profile['addsub_start']['value'] = str(0)
+
+        cap_ppa_csr_cfg_len_chk_profile['start_adj']['value'] = "0x%x" % \
+            int(len_chk_profile.start_offset)
+        cap_ppa_csr_cfg_len_chk_profile['_modified'] = True
+
+    ppa_json['elb_ppa']['memories']['elb_ppa_csr_dhs_bndl0_state_lkp_tcam']['entries'] = tcam0
+    ppa_json['elb_ppa']['memories']['elb_ppa_csr_dhs_bndl1_state_lkp_tcam']['entries'] = tcam0
+    if tcam_dname:
+        ppa_json['elb_ppa']['memories']['elb_ppa_csr_dhs_bndl0_state_lkp_tcam']['decoder'] = \
+            tcam_dname
+        ppa_json['elb_ppa']['memories']['elb_ppa_csr_dhs_bndl1_state_lkp_tcam']['decoder'] = \
+            tcam_dname
+    ppa_json['elb_ppa']['memories']['elb_ppa_csr_dhs_bndl0_state_lkp_sram']['entries'] = sram0
+    ppa_json['elb_ppa']['memories']['elb_ppa_csr_dhs_bndl1_state_lkp_sram']['entries'] = sram0
+    if sram_dname:
+        ppa_json['elb_ppa']['memories']['elb_ppa_csr_dhs_bndl0_state_lkp_sram']['decoder'] = \
+            sram_dname
+        ppa_json['elb_ppa']['memories']['elb_ppa_csr_dhs_bndl1_state_lkp_sram']['decoder'] = \
+            sram_dname
+
+    json.dump(ppa_json['elb_ppa']['memories'],
+                ppa_cfg_file_mem, indent=4, sort_keys=False, separators=(',', ': '))
+
+    # XXX program all init profiles to use the same info
+    # change this when we optimize for separate start state
+    num_profiles = parser.be.hw_model['parser']['num_init_profiles']
+    for i in range(num_profiles):
+        init_profile = ppa_json['elb_ppa']['registers']['elb_ppa_csr_cfg_init_profile[%d]'%i]
+        init_profile['curr_offset']['value'] = str(0)
+        init_profile['state']['value'] = str(parser.start_state.id)
+        init_profile['_modified'] = True
+        for r, reg in enumerate(parser.start_state.lkp_regs):
+            if reg.pkt_off >= 0:
+                #init_profile['mux_sel%d' % r]['value'] =  str(r)
+                #init_profile['mux_idx%d' % r]['value'] =  str(reg.pkt_off / 8)
+                init_profile['lkp_val_pkt_idx%d' % r]['value'] =  str(reg.pkt_off / 8)
+            else:
+                #init_profile['mux_sel%d' % r]['value'] =  str(r)
+                #init_profile['mux_sel%d' % r]['value'] =  str(0)
+                init_profile['lkp_val_pkt_idx%d' % r]['value'] =  str(0)
+    parser.logger.debug("%s" % _parser_init_profile_print(parser, init_profile))
+
+    #Enable pre parser on all uplinks and p4-ingress.
+    pre_parser = ppa_json['elb_ppa']['registers']['elb_ppa_csr_cfg_preparse']
+    pre_parser['tm_iport_enc_en']['value'] = str(0xff) # First 8 bits map to 8 uplink ports.
+    pre_parser['bypass']['value'] = str(0)
+    pre_parser['udp_dstport_roce_val0']['value'] = str(4791)
+    pre_parser['udp_dstport_vxlan_val0']['value'] = str(4789)
+    pre_parser['udp_dstport_vxlan_val1']['value'] = str(4790)
+    pre_parser['vxlan_flag_mask']['value'] = str(0xfb) # vxlan-flags = |R|R|Ver|I|P|B|O|
+    pre_parser['vxlan_flag_val']['value'] = str(0x8)
+    pre_parser['_modified'] = True
+
+    json.dump(ppa_json['elb_ppa']['registers'],
+                ppa_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
+    ppa_cfg_file_mem.close()
+    ppa_cfg_file_reg.close()
+    if not parser.be.args.p4_plus:
+        cap_inst = 1 if (parser.d == xgress.INGRESS) else 0
+        capri_dump_registers(parser.asic, parser.be.args.cfg_dir, parser.be.prog_name,
+                             'elb_ppa', cap_inst,
+                             ppa_json['elb_ppa']['registers'],
+                             ppa_json['elb_ppa']['memories'],)
+
+def elba_deparser_cfg_output(deparser):
+    csum_hv_fld_slots = OrderedDict() # Key = HVbit, Value = (fld_start, fld_end)
+    icrc_hv_fld_slots = OrderedDict() # Key = HVbit, Value = (fld_start, fld_end)
+    # read the register spec json
+    cur_path = os.path.abspath(__file__)
+    cur_path = os.path.split(cur_path)[0]
+    dpr_file_path = os.path.join(cur_path, 'csr_json/elb_dpr_csr.json')
+    dpr_file = open(dpr_file_path)
+    dpr_json = json.load(dpr_file)
+
+    dpp_file_path = os.path.join(cur_path, 'csr_json/elb_dpp_csr.json')
+    dpp_file = open(dpp_file_path)
+    dpp_json = json.load(dpp_file)
+
+    gen_dir = deparser.be.args.gen_dir
+    cfg_out_dir = os.path.join(gen_dir + '/%s/cfg_out' % deparser.be.prog_name)
+    if not os.path.exists(cfg_out_dir):
+        try:
+            os.makedirs(cfg_out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+    dpp_cfg_output_reg = os.path.join(cfg_out_dir, 'elb_dpp_%s_cfg_reg.json' \
+                         % deparser.d.name)
+    dpp_cfg_file_reg = open(dpp_cfg_output_reg, 'w+')
+
+    dpr_cfg_output_reg = os.path.join(cfg_out_dir, 'elb_dpr_%s_cfg_reg.json' \
+                         % deparser.d.name)
+    dpr_cfg_file_reg = open(dpr_cfg_output_reg, 'w+')
+
+    deparser.logger.info('%s:DeParser Dpp & Dpr Block Output Generation:' \
+                         % deparser.d.name)
+
+    used_hdr_fld_info_slots = deparser.be.hw_model['deparser']['hdrfld_info_start']
+    max_hdr_flds = deparser.be.hw_model['deparser']['max_hdr_flds']
+    phv_sel = deparser.be.hw_model['deparser']['dpa_src_phv']
+    ohi_sel = deparser.be.hw_model['deparser']['dpa_src_ohi']
+    fixed_sel = deparser.be.hw_model['deparser']['dpa_src_fixed']
+    cfg_sel = deparser.be.hw_model['deparser']['dpa_src_cfg']
+    pkt_sel = deparser.be.hw_model['deparser']['dpa_src_pkt']
+    max_hv_bit_idx = deparser.be.hw_model['parser']['max_hv_bits'] - 1
+    payload_hv_bit_idx = deparser.be.hw_model['parser']['hv_pkt_len_location']
+    trunc_hv_bit_idx = deparser.be.hw_model['parser']['hv_pkt_trunc_location']
+    pad_hv_bit_idx = deparser.be.hw_model['parser']['hv_pad_hdr_location']
+
+    # Last header field slot is reserved for payload len.
+    # Hence max available hdr-field slot is one less.
+
+    # Fill in payload len related information.
+    cf = deparser.be.pa.get_field("capri_p4_intrinsic.frame_size", deparser.d)
+    if cf:
+        payload_offset_len_ohi_id = deparser.be.hw_model['parser']['ohi_threshold']
+        payload_offset_ohi_bit = 1<<payload_offset_len_ohi_id
+        dpp_json['elb_dpp']['registers']['elb_dpp_csr_cfg_ohi_payload']\
+            ['ohi_slot_payload_ptr_bm']['value'] = str('0x%x' % payload_offset_ohi_bit)
+        dpp_json['elb_dpp']['registers']['elb_dpp_csr_cfg_ohi_payload']['_modified'] = True
+
+        # Because header bit 126 is used for payload, use hdrfld_info slot 254 (last slot)
+        # for specifying packet payload ohi information. OHI slot contains payload offset,
+        # len comes from fram_len phv
+        rstr = 'elb_dpphdr_csr_cfg_hdr_info[%d]' % (payload_hv_bit_idx)
+        dpp_json['elb_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-2)
+        dpp_json['elb_dpp']['registers'][rstr]['fld_end']['value'] = str(1)
+        dpp_json['elb_dpp']['registers'][rstr]['_modified'] = True
+        dpp_rstr_name = 'elb_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-2)
+        dpr_rstr_name = 'elb_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-2)
+        dpp_rstr = dpp_json['elb_dpp']['registers'][dpp_rstr_name]
+        dpr_rstr = dpr_json['elb_dpr']['registers'][dpr_rstr_name]
+        # hw gets total frame len from frame_size phv, needs the ohi_slot carrying payload_offset
+        # to subtract it from total len
+        dpp_rstr['size_sel']['value'] = str(ohi_sel)
+        dpp_rstr['size_val']['value'] = str(payload_offset_len_ohi_id)
+        dpp_rstr['_modified'] = True
+        # get pkt_offset from last(sw) ohi slot
+        dpr_rstr['source_sel']['value'] = str(ohi_sel)
+        dpr_rstr['source_oft']['value'] = str(payload_offset_len_ohi_id)
+        dpr_rstr['_modified'] = True
+
+    for name, hdr in deparser.be.h.p4_header_instances.items():
+        if hdr.metadata:
+            if 'deparser_variable_length_header' in hdr._parsed_pragmas:
+                hf_name = hdr.name + '.trunc'
+                cf = deparser.be.pa.get_field(hf_name, deparser.d)
+                ncc_assert(cf)
+                rstr = 'elb_dpphdr_csr_cfg_hdr_info[%d]' % (trunc_hv_bit_idx)
+                dpp_json['elb_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-3)
+                dpp_json['elb_dpp']['registers'][rstr]['fld_end']['value'] = str(2)
+                dpp_json['elb_dpp']['registers'][rstr]['_modified'] = True
+                dpp_rstr_name = 'elb_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-3)
+                dpr_rstr_name = 'elb_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-3)
+                dpp_rstr = dpp_json['elb_dpp']['registers'][dpp_rstr_name]
+                dpr_rstr = dpr_json['elb_dpr']['registers'][dpr_rstr_name]
+                dpp_rstr['size_sel']['value'] = str(phv_sel)
+                hf_name = hdr.name + '.trunc_pkt_len'
+                cf = deparser.be.pa.get_field(hf_name, deparser.d)
+                ncc_assert(cf)
+                dpr_slot = cf.phv_bit - deparser.be.hw_model['phv']['flit_size']
+                dpr_slot = dpr_slot / 16
+                dpp_rstr['size_val']['value'] = str(dpr_slot)
+                payload_offset_len_ohi_id = deparser.be.hw_model['parser']['ohi_threshold']
+                dpr_rstr['source_sel']['value'] = str(ohi_sel)
+                dpr_rstr['source_oft']['value'] = str(payload_offset_len_ohi_id)
+                dpr_rstr['_modified'] = True
+                dpp_rstr['_modified'] = True
+
+            if 'deparser_pad_header' in hdr._parsed_pragmas:
+                hf_name = hdr.name + '.pad'
+                cf = deparser.be.pa.get_field(hf_name, deparser.d)
+                ncc_assert(cf)
+                rstr = 'elb_dpphdr_csr_cfg_hdr_info[%d]' % (pad_hv_bit_idx)
+                dpp_json['elb_dpp']['registers'][rstr]['fld_start']['value'] = str(max_hdr_flds-1)
+                dpp_json['elb_dpp']['registers'][rstr]['fld_end']['value'] = str(0)
+                dpp_json['elb_dpp']['registers'][rstr]['_modified'] = True
+                dpp_rstr_name = 'elb_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-1)
+                dpr_rstr_name = 'elb_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (max_hdr_flds-1)
+                dpp_rstr = dpp_json['elb_dpp']['registers'][dpp_rstr_name]
+                dpr_rstr = dpr_json['elb_dpr']['registers'][dpr_rstr_name]
+                dpp_rstr['size_sel']['value'] = str(phv_sel)
+                hf_name = hdr.name + '.pad_len'
+                cf = deparser.be.pa.get_field(hf_name, deparser.d)
+                ncc_assert(cf)
+                dpr_slot = cf.phv_bit - deparser.be.hw_model['phv']['flit_size']
+                dpr_slot = dpr_slot / 16
+                dpp_rstr['size_val']['value'] = str(dpr_slot)
+                dpr_rstr['source_sel']['value'] = str(cfg_sel)
+                dpr_rstr['source_oft']['value'] = str(0) #elb_dprcfg_csr_cfg_static_field
+                                                         #register has to be set to zero
+                dpr_rstr['_modified'] = True
+                dpp_rstr['_modified'] = True
+
+                #Configure config register from which pad bytes are sourced.
+                #Setting this register to zero will make pad bytes as zero value.
+                for idx in range(0, 64):
+                    dpr_rstr_name = 'elb_dprcfg_csr_cfg_static_field[%d]' % (idx)
+                    dpr_rstr = dpr_json['elb_dpr']['registers'][dpr_rstr_name]
+                    dpr_rstr['data']['value'] = str(0)
+                    dpr_rstr['_modified'] = True
+
+    # Fill in all header fields information.
+    for hvb in range(max_hv_bit_idx, -1, -1):
+        h = deparser.be.parsers[deparser.d].hv_bit_header[hvb]
+        if (h == None):
+            continue
+
+        ncc_assert(h in deparser.topo_ordered_phv_ohi_chunks)
+
+        dp_hdr_fields = deparser.topo_ordered_phv_ohi_chunks[h]
+
+        phvchunks = 0
+        ohis = 0
+
+        first_ohi = False
+        start_fld = used_hdr_fld_info_slots
+
+        #Generate DPP block configurations
+        rstr = 'elb_dpphdr_csr_cfg_hdr_info[%d]' % (max_hv_bit_idx - hvb)
+        # Logic = all_1_mask >> fld_end  & (all_1_mask << fld_start)
+
+        csum_hvb = False
+        if h in deparser.be.parsers[deparser.d].csum_hdr_hv_bit.keys():
+            #HV bit used for csum purposes. Do not use them to
+            #include hdrs into packet.
+            for csum_h in \
+                deparser.be.parsers[deparser.d].csum_hdr_hv_bit[h]:
+                csum_allocated_hv, _, _ = csum_h
+                if csum_allocated_hv == hvb:
+                    csum_hvb = True
+                    break
+        icrc_hvb = False
+        if h in deparser.be.parsers[deparser.d].icrc_hdr_hv_bit.keys():
+            #HV bit used for icrc purposes. Do not use them to
+            #include hdrs into packet.
+            for icrc_h in \
+                deparser.be.parsers[deparser.d].icrc_hdr_hv_bit[h]:
+                icrc_allocated_hv, _, _ = icrc_h
+                if icrc_allocated_hv == hvb:
+                    icrc_hvb = True
+                    break
+        end_fld_info_adjust = False
+        if not csum_hvb and not icrc_hvb:
+            for i, chunks in enumerate(dp_hdr_fields):
+                ncc_assert(used_hdr_fld_info_slots < (max_hdr_flds-1), "No hdr fld slots avaialble")
+                dpp_rstr_name = 'elb_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
+                dpr_rstr_name = 'elb_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
+                dpp_rstr = dpp_json['elb_dpp']['registers'][dpp_rstr_name]
+                dpr_rstr = dpr_json['elb_dpr']['registers'][dpr_rstr_name]
+                (phv_ohi, chunk_type, _) = chunks
+                if (chunk_type == deparser.field_type_phv):
+                    dpp_rstr['size_sel']['value'] = str(fixed_sel)
+                    dpp_rstr['size_val']['value'] = str(phv_ohi[1]/8) if not csum_hvb else str(0) # in bytes
+
+                    dpr_rstr['source_sel']['value'] = str(phv_sel)
+                    dpr_rstr['source_oft']['value'] = str(phv_ohi[0]/8) # in bytes
+                else:
+                    if not first_ohi:
+                        first_ohi = True
+                        fohi = phv_ohi
+
+                    dpr_rstr['source_sel']['value'] = str(ohi_sel)
+                    dpr_rstr['source_oft']['value'] = \
+                        str((phv_ohi.start - fohi.start) << 6 | fohi.id)
+                    if (isinstance(phv_ohi.length, int)):
+                        dpp_rstr['size_sel']['value'] = str(fixed_sel)
+                        dpp_rstr['size_val']['value'] = str(phv_ohi.length) if not csum_hvb else str(0)
+                    else:
+                        dpp_rstr['size_sel']['value'] = str(ohi_sel)
+                        dpp_rstr['size_val']['value'] = str(phv_ohi.var_id) if not csum_hvb else str(0)
+                dpr_rstr['_modified'] = True
+                dpp_rstr['_modified'] = True
+                used_hdr_fld_info_slots += 1
+
+            #Check if the header has csum hv bits; if so, allocate dummy  end fld slots
+            #and adjust end_fld slot associated with csum hv bits.
+            if h in deparser.be.parsers[deparser.d].csum_hdr_hv_bit.keys():
+                end_fld_info_adjust = True
+        elif csum_hvb or icrc_hvb:
+            ncc_assert(used_hdr_fld_info_slots < (max_hdr_flds-1), "No hdr fld slots avaialble")
+            dpp_rstr_name = 'elb_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
+            dpr_rstr_name = 'elb_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
+            dpp_rstr = dpp_json['elb_dpp']['registers'][dpp_rstr_name]
+            dpr_rstr = dpr_json['elb_dpr']['registers'][dpr_rstr_name]
+            dpp_rstr['size_val']['value'] = str(0)
+            dpr_rstr['_modified'] = True
+            dpp_rstr['_modified'] = True
+            used_hdr_fld_info_slots += 1
+
+        dpp_json['elb_dpp']['registers'][rstr]['fld_start']['value'] = str(start_fld)
+        dpp_json['elb_dpp']['registers'][rstr]['_modified'] = True
+        if not end_fld_info_adjust:
+            dpp_json['elb_dpp']['registers'][rstr]['fld_end']['value'] = \
+                str(max_hdr_flds - used_hdr_fld_info_slots)
+            if csum_hvb:
+                #Collect startfld, endfld, hv to program deparser csum
+                #endfld will get adjusted once associated hdr.valid is allocated
+                #for now start_fld and end_fld will be single slot.
+                #Also csum hdrfld configuration to specify fld_start and fld_end
+                #is different from hdrfld configuration to build pkt. (In case
+                #csum, provide fld_start and fld_end zero based. In case of pkt
+                #build, provide fld_start and 255-fld_end.
+                csum_hv_fld_slots[hvb] = \
+                    (start_fld, used_hdr_fld_info_slots, h.name)
+            elif icrc_hvb:
+                icrc_hv_fld_slots[hvb] = \
+                    (start_fld, used_hdr_fld_info_slots, h.name)
+        else:
+            if icrc_hvb:
+                #This should not happen. Assert
+                ncc_assert(0)
+            csum_bits_assigned_for_hdr = len(deparser.be.parsers[deparser.d].csum_hdr_hv_bit[h])
+            ncc_assert(csum_bits_assigned_for_hdr > 0)
+            #Adjust end slot for hdr.valid
+            dpp_json['elb_dpp']['registers'][rstr]['fld_end']['value'] = \
+                str(max_hdr_flds - (used_hdr_fld_info_slots + csum_bits_assigned_for_hdr))
+            #Adjust end slot for all csum related HV
+            for csum_h in \
+                deparser.be.parsers[deparser.d].csum_hdr_hv_bit[h]:
+                csum_allocated_hv, _, _ = csum_h
+                start_fld = csum_hv_fld_slots[csum_allocated_hv][0]
+                end_fld = used_hdr_fld_info_slots
+                dpp_rstr_name = 'elb_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
+                dpr_rstr_name = 'elb_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (used_hdr_fld_info_slots)
+                dpp_rstr = dpp_json['elb_dpp']['registers'][dpp_rstr_name]
+                dpr_rstr = dpr_json['elb_dpr']['registers'][dpr_rstr_name]
+                dpp_rstr['size_val']['value'] = str(0)
+                dpr_rstr['_modified'] = True
+                dpp_rstr['_modified'] = True
+                rstr = 'elb_dpphdr_csr_cfg_hdr_info[%d]' % (max_hv_bit_idx - csum_allocated_hv)
+                dpp_json['elb_dpp']['registers'][rstr]['fld_end']['value'] = \
+                    str(max_hdr_flds - end_fld)
+                dpp_json['elb_dpp']['registers'][rstr]['_modified'] = True
+                used_hdr_fld_info_slots += 1 #Dummy slot after actual hdr slot
+                csum_hv_fld_slots[csum_allocated_hv] = \
+                    (start_fld, end_fld - 1, h.name)
+
+    deparser.be.checksum.GsoCsumDeParserConfigGenerate(deparser, \
+                                                       dpp_json, \
+                                                       dpr_json)
+    deparser.be.checksum.CsumDeParserConfigGenerate(deparser, \
+                                            csum_hv_fld_slots, dpp_json)
+    deparser.be.icrc.IcrcDeParserConfigGenerate(deparser, \
+                                            icrc_hv_fld_slots, dpp_json)
+
+    # Configure minimum packet size on all network ports 0 to 7.
+    # Pad profile #1 is set to size 88 Bytes  (60B + 22Bytes). 4B CRC is not
+    # included in min size calculation. MAC adds 4Bytes.
+    # Pad profile #0 is configured to pad upto 0 bytes..which means no padding.
+    # For ports 0 to 7, profile 1 is set. For all other ports profile 0
+    # is configured.
+    dpr_rstr_name = 'elb_dpr_csr_cfg_global_1'
+    dpr_rstr = dpr_json['elb_dpr']['registers'][dpr_rstr_name]
+    dpr_rstr['padding_en']['value'] = str(1)
+    dpr_rstr['_modified'] = True
+    dpr_rstr_name = 'elb_dpr_csr_cfg_pkt_padding'
+    dpr_rstr = dpr_json['elb_dpr']['registers'][dpr_rstr_name]
+    dpr_rstr['padding_profile_sel']['value'] = str(0x5555)
+    p4_intrinsic_size = get_header_size(deparser.be.h.p4_header_instances['capri_p4_intrinsic']) if 'capri_p4_intrinsic' in deparser.be.h.p4_header_instances.keys()  else 0
+    intrinsic_size =  get_header_size(deparser.be.h.p4_header_instances['capri_intrinsic']) if 'capri_intrinsic' in deparser.be.h.p4_header_instances.keys() else 0
+    min_size = (p4_intrinsic_size + intrinsic_size + 60) << 8 # 64B - 4B CRC
+    dpr_rstr['min_size']['value'] = str(min_size) #Profile #1 starts from bit 8
+    dpr_rstr['_modified'] = True
+
+    json.dump(dpp_json['elb_dpp']['registers'],
+                dpp_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
+    dpp_cfg_file_reg.close()
+    json.dump(dpr_json['elb_dpr']['registers'],
+                dpr_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
+    dpr_cfg_file_reg.close()
+
+    if not deparser.be.args.p4_plus:
+        elb_inst = 1 if (deparser.d == xgress.INGRESS) else 0
+        capri_dump_registers(deparser.asic, deparser.be.args.cfg_dir, deparser.be.prog_name,
+                             'elb_dpp', elb_inst,
+                             dpp_json['elb_dpp']['registers'], None)
+
+        capri_dump_registers(deparser.asic, deparser.be.args.cfg_dir, deparser.be.prog_name,
+                             'elb_dpr', elb_inst,
+                             dpr_json['elb_dpr']['registers'], None)
+
+
+
+def elba_te_cfg_output(stage):
+    # read the register spec json
+    cur_path = os.path.abspath(__file__)
+    cur_path = os.path.split(cur_path)[0]
+    gen_dir = stage.gtm.tm.be.args.gen_dir
+    te_file_path = os.path.join(cur_path, 'csr_json/elb_te_csr.json')
+    te_file = open(te_file_path)
+    te_json = json.load(te_file)
+    '''
+    # no decoder for TE
+    te_decoder_file_path = os.path.join(cur_path, 'csr_json/elb_te_decoders.json')
+    te_decoder_file = open(te_decoder_file_path)
+    te_decoder_json = json.load(te_decoder_file)
+    '''
+    cfg_out_dir = os.path.join(gen_dir + '/%s/cfg_out' % stage.gtm.tm.be.prog_name)
+    if not os.path.exists(cfg_out_dir):
+        try:
+            os.makedirs(cfg_out_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+    te_cfg_output_mem = os.path.join(cfg_out_dir, 'elb_te_%s_%d_cfg_mem.json' % \
+        (stage.gtm.d.name, stage.id))
+    te_cfg_output_reg = os.path.join(cfg_out_dir, 'elb_te_%s_%d_cfg_reg.json' % \
+        (stage.gtm.d.name, stage.id))
+    te_cfg_file_mem = open(te_cfg_output_mem, 'w+')
+    te_cfg_file_reg = open(te_cfg_output_reg, 'w+')
+
+    stage.gtm.tm.logger.info('%s:====== Table Engine Output Generation: stage %d ======' % \
+        (stage.gtm.d.name, stage.id))
+    # program km_profiles
+    max_km_width = stage.gtm.tm.be.hw_model['match_action']['key_maker_width']
+    max_km_wB = max_km_width/8
+    max_km_profiles = stage.gtm.tm.be.hw_model['match_action']['num_km_profiles']
+    max_km_bits = stage.gtm.tm.be.hw_model['match_action']['num_bit_extractors']
+
+    num_flits = stage.gtm.tm.be.hw_model['phv']['num_flits']
+    max_cycles = stage.gtm.tm.be.hw_model['match_action']['max_te_cycles']
+    te_consts = stage.gtm.tm.be.hw_model['match_action']['te_consts']
+    no_load_byte = te_consts['no_load_byte']
+    no_load_bit = te_consts['no_load_bit']
+
+    json_regs = te_json['elb_te']['registers']
+    json_mems = te_json['elb_te']['memories']
+
+    json_regs['elb_te_csr_cfg_global']['max_table_num']["value"] = str(len(stage.ct_list))
+    json_regs['elb_te_csr_cfg_global']['max_table_num']['_modified'] = True
+
+    for prof in stage.hw_km_profiles:
+        if prof == None:
+            continue
+        hw_id = prof.hw_id
+        ncc_assert(hw_id < max_km_profiles)
+        sel_id = (hw_id * max_km_wB)
+        bit_sel_id = (hw_id * max_km_bits)
+        bit_loc_id = (hw_id * (max_km_bits/8))
+
+        byte_sel_val = []
+        stage.gtm.tm.logger.debug("%s:%d:Program km_profile[%d]:" % \
+            (stage.gtm.d.name, stage.id, hw_id))
+
+        for b in prof.byte_sel:
+            json_km_profile = json_regs['elb_te_csr_dhs_km_profile_byte_sel_entry[%d]' % sel_id]
+            if b < 0:
+                json_km_profile['byte_sel']['value'] = no_load_byte
+            else:
+                json_km_profile['byte_sel']['value'] = str(b)
+            json_km_profile['_modified'] = True
+            sel_id += 1
+        # load rest of the bytes to not load the km
+        for b in range(sel_id, ((hw_id+1) * max_km_wB)):
+            if sel_id >= 256: pdb.set_trace()
+            json_km_profile = json_regs['elb_te_csr_dhs_km_profile_byte_sel_entry[%d]' % sel_id]
+            json_km_profile['byte_sel']['value'] = no_load_byte
+            json_km_profile['_modified'] = True
+            sel_id += 1
+
+        byte_sel_val = []
+        sel_id = (hw_id * max_km_wB)
+        for b in range(sel_id, sel_id+max_km_wB):
+            byte_sel_val.append( \
+                json_regs['elb_te_csr_dhs_km_profile_byte_sel_entry[%d]' % b]['byte_sel']['value'])
+
+        # Change the bit order and phv_bit numbering as hw wants it
+        # For ASIC ms_bit must be programmed in bit_sel[15] and lsb in bit_sel[0]
+        bit_sel_id += (max_km_bits - 1)
+        bits_left = max_km_bits
+        for b in prof.bit_sel:
+            json_km_profile = json_regs['elb_te_csr_dhs_km_profile_bit_sel_entry[%d]' % bit_sel_id]
+            if b < 0:
+                json_km_profile['bit_sel']['value'] = no_load_bit
+            else:
+                json_km_profile['bit_sel']['value'] = "0x%x" % int(_phv_bit_flit_le_bit(b))
+            json_km_profile['_modified'] = True
+            bit_sel_id -= 1
+            bits_left -= 1
+
+        for b in range(bits_left):
+            json_km_profile = json_regs['elb_te_csr_dhs_km_profile_bit_sel_entry[%d]' % bit_sel_id]
+            json_km_profile['bit_sel']['value'] = no_load_bit
+            json_km_profile['_modified'] = True
+            bit_sel_id -= 1
+
+        # bit_loc1 is bit0-7, bit_loc0 is bit8-15
+        # since bit_sels are written from 15 down to 0, no need to switch bit_loc here
+        # XXX check for <= 8 can be removed or turned into ncc_assert(, just look at bit_locX >= 0)
+        if len(prof.bit_sel) <= 8:
+            json_km_profile = json_regs['elb_te_csr_cfg_km_profile_bit_loc[%d]' % (bit_loc_id)]
+            if prof.bit_loc >= 0:
+                json_km_profile['valid']['value'] = str(1)
+                json_km_profile['bit_loc']['value'] = str(prof.bit_loc)
+                json_km_profile['_modified'] = True
+            else:
+                # do we need to set _modified flag here?
+                json_km_profile['valid']['value'] = str(0)
+            json_km_profile = json_regs['elb_te_csr_cfg_km_profile_bit_loc[%d]' % (bit_loc_id+1)]
+            json_km_profile['valid']['value'] = str(0)
+        else:
+            json_km_profile = json_regs['elb_te_csr_cfg_km_profile_bit_loc[%d]' % (bit_loc_id)]
+            if prof.bit_loc >= 0:
+                json_km_profile['valid']['value'] = str(1)
+                json_km_profile['bit_loc']['value'] = str(prof.bit_loc)
+                json_km_profile['_modified'] = True
+            else:
+                json_km_profile['valid']['value'] = str(0)
+            json_km_profile = json_regs['elb_te_csr_cfg_km_profile_bit_loc[%d]' % (bit_loc_id+1)]
+            if prof.bit_loc1 >= 0:
+                json_km_profile['valid']['value'] = str(1)
+                json_km_profile['bit_loc']['value'] = str(prof.bit_loc1)
+                json_km_profile['_modified'] = True
+            else:
+                json_km_profile['valid']['value'] = str(0)
+
+        # debug printing
+        bit_sel_val = []
+        bit_sel_id = (hw_id * max_km_bits)
+        for b in range(bit_sel_id, bit_sel_id+max_km_bits):
+            bit_sel_val.append( \
+                json_regs['elb_te_csr_dhs_km_profile_bit_sel_entry[%d]' % b]['bit_sel']['value'])
+        stage.gtm.tm.logger.debug( \
+            "byte_sel[%d] %s\nbit_sel[%d] %s\nbit_locs [%d]%s, [%d]%s" % \
+            (sel_id, byte_sel_val, bit_sel_id, bit_sel_val, bit_loc_id,
+            json_regs['elb_te_csr_cfg_km_profile_bit_loc[%d]' % bit_loc_id]['bit_loc']['value'] \
+                if prof.bit_loc >= 0 else "-",
+            (bit_loc_id+1),
+            json_regs['elb_te_csr_cfg_km_profile_bit_loc[%d]'%(bit_loc_id+1)]['bit_loc']['value'] \
+                if prof.bit_loc1 >= 0 else "-",
+            ))
+
+    # got thru' predicate combinations and program km
+    # program predication tcam/srams for each combination
+    max_key_sel = stage.gtm.tm.be.hw_model['match_action']['num_predicate_bits']
+    max_tbl_profiles = stage.gtm.tm.be.hw_model['match_action']['num_table_profiles']
+    max_hw_flits = stage.gtm.tm.be.hw_model['phv']['max_hw_flits']
+    num_km = stage.gtm.tm.be.hw_model['match_action']['num_key_makers']
+    json_tbl_prof_key = json_regs['elb_te_csr_cfg_table_profile_key']
+
+    # XXX TCAM programming can be handled in a loop for all predicate values
+    # need to set unused entries to map to DO-NOTHING
+    run_all_tables = False
+    if len(stage.active_predicates) == 0:
+        # No predicates - execute all tables
+        for k in range(max_key_sel):
+            json_tbl_prof_key['sel%d' % k]['value'] = str(0)
+        # setup tcam entry#0 as catch-all and prgram all tables in sram..
+        idx = 0
+        tcam_t = json_regs['elb_te_csr_cfg_table_profile_cam[%d]' % idx]
+        _fill_te_tcam_catch_all(tcam_t)
+        # profile_id 0 is used to populate all the tables by the compiler
+        run_all_tables = True
+    else:
+        w, cf_key_sel = stage.stg_get_tbl_profile_key()
+        k = 0
+        # program the key selector
+        key_sel_bits = []
+        for cf in cf_key_sel:
+            phv_bit = cf.phv_bit
+            stage.gtm.tm.logger.debug("%s:Stage %d:Table profile key field %s phv %d, w %d" % \
+                (stage.gtm.d.name, stage.id, cf.hfname, cf.phv_bit, cf.width))
+            for b in range(cf.width):
+                key_sel_bits.insert(0, phv_bit)
+                phv_bit += 1
+                k += 1
+
+        # ASIC uses flittle endian when using bit locations.
+        # Keep the active profile bits to lsb since val and mask is computed that way
+        k = -1
+        for k in range(len(key_sel_bits)):
+            json_tbl_prof_key['sel%d' % k]['value'] = "0x%x" % \
+                int(_phv_bit_flit_le_bit(key_sel_bits[k]))
+            json_tbl_prof_key['_modified'] = True
+
+        for k in range(k+1, max_key_sel):
+            json_tbl_prof_key['sel%d' % k]['value'] = str(0)
+            #json_tbl_prof_key['_modified'] = True
+
+    prof_idx = 0
+    # don't sort the prof_vals, already done while creating profiles
+    # sorting must be done based on masks
+    tcam_entries = OrderedDict()
+    sidx = 0
+    for prof_val,ctg in stage.table_profiles.items():
+        if not run_all_tables:
+            # program tcam entries for predicate values
+            tcam_vms = stage.stg_create_tbl_profile_tcam_val_mask(prof_val)
+            # XXX for now max one tcam entry per prof_val is supported
+            if len(tcam_vms) == 0:
+                stage.gtm.tm.logger.warning( \
+                        "%s:Stage %d: Table profile TCAM: profile_val %d Skip Invalid condition" % \
+                        (stage.gtm.d.name, stage.id, prof_val))
+                continue
+            ncc_assert(len(tcam_vms) == 1)
+            (val, mask) = tcam_vms[0]
+            if (val, mask) in tcam_entries:
+                stage.gtm.tm.logger.warning( \
+                        "%s:Stage %d:Table profile TCAM: Skip entry (0x%x, 0x%x) : %d, %s" % \
+                        (stage.gtm.d.name, stage.id, val, mask, prof_val, ctg))
+                continue
+
+            tcam_entries[(val, mask)] = ctg
+            te = json_regs['elb_te_csr_cfg_table_profile_cam[%d]' % prof_idx]
+            te['valid']['value'] = str(1)
+            te['value']['value'] = "0x%x" % val
+            te['mask']['value'] = "0x%x" % mask
+            te['_modified'] = True
+
+        te = json_regs['elb_te_csr_cfg_table_profile_cam[%d]' % prof_idx] # for printing
+        # do use overflow tcam when programming
+        active_ctg = [act for act in stage.table_profiles[prof_val] if not act.is_otcam]
+
+        json_tbl_prof = json_regs['elb_te_csr_cfg_table_profile[%d]' % prof_idx]
+        # compute mpu res based on threads
+        mpu_res = sum(x.num_threads for x in active_ctg if not x.is_memory_only)
+        json_tbl_prof['mpu_results']['value'] = str(mpu_res)
+        json_tbl_prof['_modified'] = True
+
+        stage.gtm.tm.logger.debug( \
+            "%s:Stage %d:Table profile TCAM[%d]:(val %s, mask %s): prof_val %d, %s, mpu_res %d" % \
+                (stage.gtm.d.name, stage.id, prof_idx, te['value']['value'],
+                te['mask']['value'], prof_val, active_ctg, mpu_res))
+
+        # h/w allows a flexible partitioning of the total (192) ctrl_sram entries per profile
+        json_tbl_prof['seq_base']['value'] = str(sidx)
+        ncc_assert(sidx < max_cycles)
+
+        stage.gtm.tm.logger.debug( \
+            "%s:Stage %d:Profile %d SRAM start_idx %d" % \
+            (stage.gtm.d.name, stage.id, prof_idx, sidx))
+
+        flit_kms = [[] for _ in range(num_flits)]
+        for ct in active_ctg:
+            ncc_assert(not ct.is_otcam)
+            for _km in ct.key_makers:
+                if _km.shared_km:
+                    km = _km.shared_km
+                else:
+                    km = _km
+                for fid in km.flits_used:
+                    if km not in flit_kms[fid]:
+                        flit_kms[fid].append(km)
+
+        fid = 0
+        prev_fid = -1
+        cyc_done = False
+        prev_km_prof = [(-1,-1) for _ in range(num_km)] # preserve the profile_id on unused flits
+        for cyc in range(len(stage.table_sequencer[prof_val])):
+            cyc_km_used = {}
+            # fill control_sram entry
+            se = json_regs['elb_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
+
+            # For good measures, hw model checks that key-makers are cleared on very first
+            # cycle of the sequencer
+            if cyc == 0:
+                for kmid in range(num_km):
+                    se['km_new_key%d' % kmid]['value'] = str(1)
+
+            # init km_prof with vales from previous cyc, these will be over-written
+            # if kms are used/changed, if not just retain the old values
+            # table's flits_used are set contiguously from first flits used until the last flit
+            # but key makers' flits_used is specific to flits (done for P4+ and sharing)
+            for kmid, (prof_id,prof_mode) in enumerate(prev_km_prof):
+                if prof_id < 0:
+                    continue
+                se['km_profile%d' % kmid]['value'] = str(prof_id)
+                se['km_mode%d' % kmid]['value'] = str(prof_mode)
+
+            if not stage.table_sequencer[prof_val][cyc].is_used:
+                # no need to do much, key-maker values can be modified only if they are not
+                # used anymore
+                pass
+            else:
+                ncc_assert(fid <= num_flits    )# error in advancing flits
+                for km in flit_kms[fid]:
+                    km_prof = km.combined_profile
+                    kmid = km.hw_id
+
+                    if kmid in cyc_km_used:
+                        ncc_assert(cyc_km_used[kmid] == km_prof.hw_id)
+                    else:
+                        cyc_km_used[kmid] = km_prof.hw_id
+
+                    if not km_prof:
+                        continue # key-less tables
+                    se['km_mode%d' % kmid]['value'] = str(km_prof.mode)
+                    se['km_profile%d' % kmid]['value'] = str(km_prof.hw_id)
+                    # save the values for init of next cycle
+                    prev_km_prof[kmid] = (km_prof.hw_id, km_prof.mode)
+                    if fid == km.flits_used[0] and fid != prev_fid:
+                        # on first flit used by this km, set new_key = 1
+                        # asic loads km only on accepting new flit, if flit is not
+                        # advanced, km can get reset if new_key is set
+                        se['km_new_key%d' % kmid]['value'] = str(1)
+                    else:
+                        se['km_new_key%d' % kmid]['value'] = str(0)
+
+            ct = stage.table_sequencer[prof_val][cyc].tbl
+            if ct:
+                ncc_assert(se['tableid']['value'] == '-1')
+                if stage.table_sequencer[prof_val][cyc].thread == 0:
+                    se['tableid']['value'] = str(ct.tbl_id)
+                else:
+                    se['tableid']['value'] = str(\
+                        ct.thread_tbl_ids[stage.table_sequencer[prof_val][cyc].thread])
+                se['hash_sel']['value'] = str(ct.hash_type)
+                if ct.match_type == match_type.EXACT_IDX:
+                    se['lkup']['value'] = te_consts['direct']
+                elif ct.match_type == match_type.TERNARY:
+                    se['lkup']['value'] = te_consts['tcam_sram']    # XXX new type for tcam_only
+                elif ct.match_type == match_type.EXACT_HASH:
+                    se['lkup']['value'] = te_consts['hash_only']
+                elif ct.match_type == match_type.EXACT_HASH_OTCAM:
+                    se['lkup']['value'] = te_consts['hash_otcam_sram']
+                elif ct.match_type == match_type.MPU_ONLY:
+                    se['lkup']['value'] = te_consts['mpu_only']
+                else:
+                    ncc_assert(0)
+                if ct.is_wide_key:
+                    if fid == ct.flits_used[0]:
+                        se['hash_chain']['value'] = str(0)
+                        se['hash_store']['value'] = str(1)
+                    elif fid == ct.flits_used[-1]:
+                        se['hash_chain']['value'] = str(1)
+                        se['hash_store']['value'] = str(0)
+                    else:
+                        se['hash_chain']['value'] = str(1)
+                        se['hash_store']['value'] = str(1)
+
+                if ct.num_entries == 0 and ct.is_hash_table():
+                    stage.gtm.tm.logger.warning(\
+                        '%s: Stage %d:sram[%d]:Table %s change lkp_type %s to HASH-ONLY (no mem access)' % \
+                            (stage.gtm.d.name, stage.id, sidx, ct.p4_table.name, se['lkup']['value']))
+                    #se['lkup']['value'] = te_consts['mpu_only']
+                    se['lkup']['value'] = te_consts['hash_only']
+            else:
+                se['lkup']['value'] = te_consts['no_op']
+                se['hash_chain']['value'] = str(0)
+                se['hash_store']['value'] = str(0)
+
+            # fill sram_extention
+            json_sram_ext = json_regs['elb_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
+            if stage.table_sequencer[prof_val][cyc].adv_flit:
+                json_sram_ext['adv_phv_flit']['value'] = str(1)
+                prev_fid = fid
+                fid += 1
+            else:
+                json_sram_ext['adv_phv_flit']['value'] = str(0)
+                prev_fid = fid
+
+            if stage.table_sequencer[prof_val][cyc].is_last:
+                json_sram_ext['done']['value'] = str(1)
+            else:
+                json_sram_ext['done']['value'] = str(0)
+
+            if not cyc_done:
+                stage.gtm.tm.logger.debug(\
+                    "%s:Stage[%d]:elb_te_csr_dhs_table_profile_ctrl_sram_entry[%d]:\n%s" % \
+                    (stage.gtm.d.name, stage.id, sidx,
+                    te_ctrl_sram_print(se, json_sram_ext)))
+            if stage.table_sequencer[prof_val][cyc].is_last:
+                cyc_done = True
+
+            json_sram_ext['_modified'] = True
+            se['_modified'] = True
+            sidx += 1
+
+        prof_idx += 1
+
+    if len(stage.active_predicates) > 0 or prof_idx == 0:
+        # prof_idx == 0 indicates that no tables to be run in this stage, use catch-all
+        if prof_idx == 0:
+            stage.gtm.tm.logger.debug(\
+                "%s:Stage[%d]:Empty Stage. Use catch-all to skip it" % \
+                (stage.gtm.d.name, stage.id))
+        if prof_idx < stage.gtm.tm.be.hw_model['match_action']['num_table_profiles']:
+            # create a catch-all entry to execute NO tables
+            # ASIC seems to use tcam entry 0 on miss (Initally plan was to skip table lookups on miss)
+            # If all entries are already programmed.. we can skip this... but need to make sure if there
+            # can be a tcam miss - XXX
+            te = json_regs['elb_te_csr_cfg_table_profile_cam[%d]' % prof_idx]
+            _fill_te_tcam_catch_all(te)
+
+            json_tbl_prof = json_regs['elb_te_csr_cfg_table_profile[%d]' % prof_idx]
+            json_tbl_prof['mpu_results']['value'] = str(0)
+            json_tbl_prof['seq_base']['value'] = str(sidx)
+            json_tbl_prof['_modified'] = True
+
+            json_sram_ext = json_regs['elb_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
+            json_sram_ext['adv_phv_flit']['value'] = str(1)
+            json_sram_ext['done']['value'] = str(1)
+            json_sram_ext['_modified'] = True
+
+            # setup sram entry to launch no lookup
+            se = json_regs['elb_te_csr_dhs_table_profile_ctrl_sram_entry[%d]' % sidx]
+            se['lkup']['value'] = te_consts['no_op']
+            # init a few other values to keep RTL sim happy
+            se['tableid']['value'] = str(0)
+            se['hash_sel']['value'] = str(0)
+            se['hash_chain']['value'] = str(0)
+            se['hash_store']['value'] = str(0)
+            # For good measures, hw model checks that key-makers are cleared on very first
+            # cycle of the sequencer
+            for kmid in range(num_km):
+                se['km_new_key%d' % kmid]['value'] = str(1)
+            se['_modified'] = True
+
+            stage.gtm.tm.logger.debug( \
+                "%s:Stage %d:Table profile (catch-all)TCAM[%d]:(val %s, mask %s): prof_val %d, %s, mpu_res %d" % \
+                    (stage.gtm.d.name, stage.id, prof_idx, te['value']['value'],
+                    te['mask']['value'], 0, [], 0))
+            stage.gtm.tm.logger.debug(\
+                        "%s:Stage[%d]:elb_te_csr_dhs_table_profile_ctrl_sram_entry[%d]:\n%s" % \
+                        (stage.gtm.d.name, stage.id, sidx,
+                        te_ctrl_sram_print(se, json_sram_ext)))
+        else:
+            stage.gtm.tm.logger.warning( \
+                "%s:Stage[%d]:No space to create catch-all table profile" % \
+                (stage.gtm.d.name, stage.id))
+
+    for ct in stage.ct_list:
+        if ct.is_otcam:
+            continue
+        for thd in range(ct.num_threads):
+            if thd == 0:
+                tbl_id = ct.tbl_id
+                json_tbl_ = json_regs['elb_te_csr_cfg_table_property[%d]' % tbl_id]
+            else:
+                tbl_id = ct.thread_tbl_ids[thd]
+                json_tbl_ = json_regs['elb_te_csr_cfg_table_property[%d]' % tbl_id]
+
+            # update to asic doc - axi=1 => SRAM
+            if ct.is_hbm:
+                json_tbl_['axi']['value'] = str(0)
+                #json_tbl_['hbm']['value'] = str(1)
+            else:
+                # XXX there can be tables in host mem (not hbm) for which axi should set to 0
+                # currently there are no host tables supported (need a pragma)
+                json_tbl_['axi']['value'] = str(1)
+                #json_tbl_['hbm']['value'] = str(0)
+
+            if ct.is_hash_table() and ct.d_size < ct.start_key_off:
+                # Program APC location. APC location is always first byte
+                # in the hash table entry. However when axi-shift is programmed,
+                # APC byte location moves right by axi-shift number of bytes.
+                json_tbl_['mpu_pc_loc']['value'] = (((ct.start_key_off - ct.d_size) >> 4) << 1)
+
+            # key mask programming -
+            # hw bit numbering is 511:0 - little endian like
+            # which is opposite on ncc ordering
+            # ncc creates end_key_off such that it points to a bit after the key
+            # if only one km is used, it is at msb (??) so still adjust it using 512 bit
+            # hardware expects hi, lo mask as -
+            # (hi, lo] => hi=512 means we need bit 511, lo=496 means we need bit 496
+            # XXX hw does not have enough bits to store 512 - will be fixed soon
+            if ct.is_wide_key:
+                key_mask_hi = 512 - ct.last_flit_start_key_off
+                key_mask_lo = 512 - ct.last_flit_end_key_off
+            elif not ct.is_mpu_only():
+                ncc_assert(ct.start_key_off >= 0)
+                key_mask_hi = 512 - ct.start_key_off
+                key_mask_lo = 512 - ct.end_key_off
+            else:
+                key_mask_hi = 0
+                key_mask_lo = 0
+
+            # for index table the key_mask_lo must be specified in terms of 16bit chunks
+            if ct.is_index_table():
+                # do it for raw table also.. should not matter
+                key_mask_lo = key_mask_lo / 16  # model param for 16??
+
+            json_tbl_['key_mask_hi']['value'] = str(key_mask_hi)
+            json_tbl_['key_mask_lo']['value'] = str(key_mask_lo)
+
+            # XXX set mpu_pc_loc to 0
+            json_tbl_['mpu_pc_loc']['value'] = str(0)
+
+            # key size (applicable to hash and index tables), num bits to use as index
+            if ct.is_index_table():
+                #lg2_size = log2size(ct.num_entries)
+                # does not work correctly for raw tables
+                json_tbl_['addr_sz']['value'] = str(ct.final_key_size)
+            elif ct.is_hash_table():
+                if ct.is_overflow:
+                    lg2_size = log2size(ct.num_entries)
+                    json_tbl_['addr_sz']['value'] = str(lg2_size)
+                else:
+                    lg2_size = log2size(ct.num_entries)
+                    json_tbl_['addr_sz']['value'] = str(lg2_size)
+
+            # For asic  km0=>lo, km1=>hi (from te.cc)
+            # ncc uses km0 as high key and km1 as lo key bytes, so flip it
+            k = 1
+            for _km in ct.key_makers:
+                if k < 0:
+                    break;  # handles wide-key tables
+                if _km.shared_km:
+                    km = _km.shared_km
+                else:
+                    km = _km
+
+                json_tbl_['fullkey_km_sel%d' % k]['value'] = str(km.hw_id)
+                k -= 1
+
+            if ct.is_writeback:
+                if ct.is_raw:
+                    json_tbl_['lock_en_raw']['value'] = str(1)
+                else:
+                    if ct.match_type == match_type.TERNARY:
+                        json_tbl_['lock_en']['value'] = str(0)
+                    else:
+                        json_tbl_['lock_en']['value'] = str(1)
+            else:
+                json_tbl_['lock_en']['value'] = str(0)
+
+            if ct.num_actions() > 1 and not ct.is_raw:
+                json_tbl_['mpu_pc_dyn']['value'] = str(1)
+            else:
+                json_tbl_['mpu_pc_dyn']['value'] = str(0)
+            # set a fixed value for model testing XXX
+            json_tbl_['mpu_pc']['value'] = '0x2FEED00'
+
+            if ct.is_raw:
+                json_tbl_['mpu_pc_raw']['value'] = str(1)
+            else:
+                json_tbl_['mpu_pc_raw']['value'] = str(0)
+
+            if ct.is_raw or ct.is_raw_index:
+                json_tbl_['max_bypass_cnt']['value'] = str(16)
+
+#            json_tbl_['mpu_pc_ofst_err']['value'] = str(0)
+            json_tbl_['mpu_vec']['value'] = '0xF'    # all mpus for scheduling
+            json_tbl_['addr_base']['value'] = str(0)
+            json_tbl_['addr_vf_id_en']['value'] = str(0)
+            json_tbl_['addr_vf_id_loc']['value'] = str(0)
+
+            if ct.num_entries and ct.otcam_ct:
+                #This value is used by Otcam table to jump to sram area
+                #associated with TCAM but present at end of hash-table's
+                #sram-area.
+                json_tbl_['oflow_base_idx']['value'] = str(ct.num_entries)
+
+            entry_size = ct.d_size
+            if ct.is_hash_table():
+                if ct.is_overflow:
+                    entry_size += ct.hash_ct.key_phv_size
+                else:
+                    entry_size += ct.key_phv_size
+
+            entry_sizeB = (entry_size + 7) / 8   # convert to bytes
+            lg2entry_size = log2size(entry_sizeB)
+            json_tbl_['tbl_entry_sz_raw']['value'] = str(0)
+            json_tbl_['addr_shift']['value'] = str(0)
+            json_tbl_['lg2_entry_size']['value'] = str(0)
+
+            if ct.is_hbm and not ct.is_raw and not ct.is_raw_index:
+                json_tbl_['addr_shift']['value'] = str(lg2entry_size)
+                json_tbl_['lg2_entry_size']['value'] = str(lg2entry_size)
+            elif ct.is_raw_index:
+                # special handling, don't shift addr, but read entry_size bytes
+                if not ct.is_qstate_addr:
+                    json_tbl_['addr_shift']['value'] = str(0)
+                else:
+                    json_tbl_['addr_shift']['value'] = str(5)
+                json_tbl_['lg2_entry_size']['value'] = str(lg2entry_size)
+            elif ct.is_raw:
+                # XXX need parameter to pragma if entry size is fixed - leave it to run-time for now
+                json_tbl_['tbl_entry_sz_raw']['value'] = str(1)
+                json_tbl_['addr_shift']['value'] = str(0)
+                json_tbl_['lg2_entry_size']['value'] = str(0)
+            else:
+                json_tbl_['addr_shift']['value'] = str(0)
+                json_tbl_['lg2_entry_size']['value'] = str(0)
+
+            # need to program chain shift for wide-key table - for toeplitz leave it as 0??
+            if ct.is_wide_key and not ct.is_toeplitz_hash():
+                json_tbl_['chain_shift']['value'] = str(6)
+                json_tbl_['lg2_entry_size']['value'] = str(6)
+            else:
+                json_tbl_['chain_shift']['value'] = str(0)
+
+            # special case - for hash table w/ no mem access, overwrite log2entry and axi values
+            if ct.num_entries == 0 and ct.is_hash_table():
+                # this also covers toeplitz hash
+                # special values (7) is used by h/w to not launch mem read operation
+                json_tbl_['lg2_entry_size']['value'] = str(7)
+                json_tbl_['axi']['value'] = str(0) # make it hbm for lg2_Entry_sz to take effect
+
+            if ct.is_memory_only:
+                json_tbl_['memory_only']['value'] = '0x1'
+            # else leave default value
+
+            json_tbl_['_modified'] = True
+            stage.gtm.tm.logger.debug("%s:Stage[%d]:Table %s:elb_te_csr_cfg_table_property[%d]:\n%s" % \
+                (stage.gtm.d.name, stage.id, ct.p4_table.name, tbl_id,
+                te_tbl_property_print(json_tbl_)))
+
+    #pdb.set_trace()
+    json.dump(te_json['elb_te']['registers'],
+                te_cfg_file_reg, indent=4, sort_keys=True, separators=(',', ': '))
+    te_cfg_file_reg.close()
+    te_cfg_file_mem.close()
+

@@ -25,6 +25,7 @@ from capri_model import capri_model as capri_model
 from capri_pa import capri_field as capri_field
 from capri_output import capri_asm_output_table as capri_asm_output_table
 from capri_output import capri_te_cfg_output as capri_te_cfg_output
+from capri_output import elba_te_cfg_output as elba_te_cfg_output
 from capri_output import capri_p4_table_spec_output as capri_p4_table_spec_output
 from capri_output import capri_pic_csr_load as capri_pic_csr_load
 from capri_output import capri_pic_csr_output as capri_pic_csr_output
@@ -3725,8 +3726,9 @@ class capri_km_profile:
 
 class capri_stage:
     def __init__(self, gtm, stg_id):
-        self.gtm = gtm
-        self.id = stg_id
+        self.gtm  = gtm
+        self.id   = stg_id
+        self.asic = gtm.tm.asic
 
         num_km_profiles = gtm.tm.be.hw_model['match_action']['num_km_profiles']
         num_flits = self.gtm.tm.be.hw_model['phv']['num_flits']
@@ -4860,7 +4862,10 @@ class capri_stage:
                 [ct.p4_table.name for ct in self.table_profiles[i]]))
 
     def stg_generate_output(self):
-        capri_te_cfg_output(self)
+        if (self.asic == 'capri'):
+            capri_te_cfg_output(self)
+        elif (self.asic == 'elba'):
+            elba_te_cfg_output(self)
 
     def stg_te_dbg_output(self):
         max_km_width = self.gtm.tm.be.hw_model['match_action']['key_maker_width']
@@ -4983,8 +4988,9 @@ class capri_te_cycle:
         return pstr
 
 class capri_gress_tm:
-    def __init__(self, tm, d):
-        self.d = d
+    def __init__(self, tm, d, be):
+        self.d  = d
+        self.be = be
         self.tm = tm
         self.tables = OrderedDict() # {table_name : capri_table}
         self.table_predicates = OrderedDict() # {condition_name : capri_predicate}
@@ -5082,6 +5088,27 @@ class capri_gress_tm:
     def init_tables(self, stage_tables):
         self.tm.logger.debug("Initing tables: ...")
         action_id_size = self.tm.be.hw_model['match_action']['action_id_size']
+        max_stages     = int(self.tm.be.hw_model['match_action']['num_stages'])
+        stages_to_add = 0
+        if len(stage_tables) < max_stages:
+           stages_to_add = max_stages - len(stage_tables)
+        for i in range(0, stages_to_add):
+            stage_tables.append(list())
+        '''
+        for sxdma, map tables mapped to stages > 3, to stages 0..3
+        stage 4 -> stage 0,
+        stage 5 -> stage 1 and so on
+        '''
+        # import pdb; pdb.set_trace()
+        if self.be.args.p4_plus_module == 'sxdma':
+            stage_id = 0
+            for i in range(max_stages, len(stage_tables)):
+                stage_tables[stage_id].extend(stage_tables[i])
+                stage_id += 1
+
+            # delete stage_tables mapped to stages > 3 
+            del(stage_tables[max_stages:len(stage_tables)])
+        ncc_assert(len(stage_tables) <= max_stages)
         self.stage_tables = stage_tables
         stg = -1
         for stg_id, table_list in enumerate(stage_tables):
@@ -5123,6 +5150,9 @@ class capri_gress_tm:
                     if t._parsed_pragmas and 'raw_index_table' in t._parsed_pragmas:
                         ctable.is_hbm = True    # must be in hbm ??
                         ctable.is_raw_index = True
+
+                    if t._parsed_pragmas and 'qstate_addr_shift' in t._parsed_pragmas:
+                        ctable.is_qstate_addr = True
 
                     # Check if a hash type has been specified for the table.
                     if t._parsed_pragmas and 'hash_type' in t._parsed_pragmas:
@@ -6229,11 +6259,12 @@ class capri_table_mapper:
 
 class capri_table_manager:
     def __init__(self, capri_be):
-        self.be = capri_be
-        self.logger = logging.getLogger('TM')
-        self.gress_tm = [capri_gress_tm(self, d) for d in xgress]
+        self.be                = capri_be
+        self.asic              = capri_be.asic
+        self.logger            = logging.getLogger('TM')
+        self.gress_tm          = [capri_gress_tm(self, d, capri_be) for d in xgress]
         self.table_memory_spec = capri_table_memory_spec_load(self.be)
-        self.mapper = capri_table_mapper(self)
+        self.mapper            = capri_table_mapper(self)
 
     def print_tables(self):
         for gtm in self.gress_tm:
@@ -6373,7 +6404,10 @@ class capri_table_manager:
                     ctable = self.gress_tm[direction].tables[table['name']]
                     profile_id = (ctable.stage << 4) | ctable.tbl_id
                     if mem_type == 'sram':
-                        cap_name = 'cap_pics'
+                        if self.asic == 'capri': 
+                            cap_name = 'cap_pics'
+                        elif self.asic == 'elba':
+                            cap_name = 'elb_pics'
                         profile_name = "%s_csr_cfg_table_profile[%d]" % (cap_name, profile_id)
                         profile = pic[mem_type][xgress_to_string(direction)][cap_name]['registers'][profile_name]
                         profile['width']['value'] = "0x%x" % table['width']
@@ -6436,14 +6470,17 @@ class capri_table_manager:
                             bg_upd_profile['scale']['value'] = "0x%x" % (ctable.token_refresh_timers['scale'])
                             bg_upd_profile['_modified'] = True
 
-                            bg_upd_profile_en_name = 'cap_pics_csr_cfg_bg_update_profile_enable'
+                            bg_upd_profile_en_name = "%s_csr_cfg_bg_update_profile_enable" %(cap_name)
                             bg_upd_profile_en = pic[mem_type][xgress_to_string(direction)][cap_name]['registers'][bg_upd_profile_en_name]
                             vector = (int(bg_upd_profile_en['vector']['value'], 0) | (1 << ctable.token_refresh_profile))
                             bg_upd_profile_en['vector']['value'] = "0x%x" % (vector)
                             bg_upd_profile_en['_modified'] = True
 
                     elif mem_type == 'tcam':
-                        cap_name = 'cap_pict'
+                        if self.asic == 'capri':
+                            cap_name = 'cap_pict'
+                        elif self.asic == 'elba':
+                            cap_name = 'elb_pict'
                         num_bkts = 0 if table['depth'] == 0 else (capri_get_depth_from_layout(layout) / table['depth'])
                         profile_name = "%s_csr_cfg_tcam_table_profile[%d]" % (cap_name, profile_id)
                         profile = pic[mem_type][xgress_to_string(direction)][cap_name]['registers'][profile_name]
@@ -6453,7 +6490,10 @@ class capri_table_manager:
                         profile['end_addr']['value'] = "0x%x" % capri_get_tcam_end_address_from_layout(layout)
                         profile['keyshift']['value'] = "0x%x" % (ctable.start_key_off / 16)
                     elif mem_type == 'hbm':
-                        profile_name = "cap_te_csr_cfg_table_property[%d]" % (ctable.tbl_id)
+                        if self.asic == 'capri':
+                            profile_name = "cap_te_csr_cfg_table_property[%d]" % (ctable.tbl_id)
+                        elif self.asic == 'elba':
+                            profile_name = "elb_te_csr_cfg_table_property[%d]" % (ctable.tbl_id)
                         profile = pic[mem_type][xgress_to_string(direction)][ctable.stage][profile_name]
                         profile['addr_base']['value'] = "0x%x" % (memory_base_addr.HBM +
                                                                   capri_get_hbm_start_address_from_layout(table['layout']))

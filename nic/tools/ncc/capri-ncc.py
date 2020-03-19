@@ -56,7 +56,7 @@ def get_parser():
                         default=False, required=False)
     parser.add_argument('--p4-plus-module', dest='p4_plus_module', action='store',
                         help='Generate configuration for P4+ program',
-                        choices=['rxdma', 'txdma'],
+                        choices=['rxdma', 'txdma', 'sxdma'],
                         default=None, required=False)
     parser.add_argument('--i2e-user', dest='i2e_user', action='store_true',
                         help='Use i2e metadata specified by the user',
@@ -104,6 +104,9 @@ def get_parser():
     parser.add_argument('--pdb-on-assert', dest='pdb_on_assert', action='store_true',
                         help='Enter pdb on assert',
                         default=False, required=False)
+    parser.add_argument('--asic', dest='asic', action='store',
+                        help='Target Asic', choices=['capri', 'elba'],
+                        default='capri', required=False)
     return parser
 
 # Main back-end class that holds everything needed by the backend
@@ -111,7 +114,8 @@ def get_parser():
 # keeps a back reference to hlir
 class capri_backend:
     def __init__(self, hlir=None, hw_model=None, args=None):
-        self.h= hlir
+        self.h      = hlir
+        self.asic   = args.asic
         self.logger = logging.getLogger('BE')
         self.hw_model = hw_model
         self.args = args
@@ -163,6 +167,11 @@ def setup_p4_plus_hw_parameters(capri_model):
     capri_model['match_action']['num_stages'] = 8
     setup_num_phv_flits(capri_model, 12)
 
+def setup_sxdma_hw_parameters(capri_model):
+    capri_model['match_action']['num_stages'] = 4
+    setup_num_phv_flits(capri_model, 12)
+
+
 def setup_num_phv_flits(capri_model, num_flits):
     ncc_assert( (num_flits % 2) == 0, "Only even number of phv flits is allowed")
     max_hw_flits = capri_model['phv']['max_hw_flits']
@@ -196,7 +205,10 @@ def main():
         sys.exit(1)
 
     if args.p4_plus:
-        setup_p4_plus_hw_parameters(capri_model)
+        if args.p4_plus_module == 'sxdma':
+            setup_sxdma_hw_parameters(capri_model)
+        else:
+            setup_p4_plus_hw_parameters(capri_model)
 
     if args.phv_flits:
         setup_num_phv_flits(capri_model, int(args.phv_flits))

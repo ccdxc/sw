@@ -1880,8 +1880,14 @@ class Icrc:
         else:
             self.eg_dpr_hw_icrc_obj =  dpr_hw_icrc_obj
         #Generate ASIC Config
-        icrc_hdr_index = 0
+        if deparser.asic == "capri":
+            self.IcrcDeParserConfigGenerateCapri(dpr_hw_icrc_obj, deparser, dpp_json)
+        elif deparser.asic == "elba":
+            self.IcrcDeParserConfigGenerateElba(dpr_hw_icrc_obj, deparser, dpp_json)
+        #Json is dumped in the caller to cfg-file.
 
+    def IcrcDeParserConfigGenerateCapri(self, dpr_hw_icrc_obj, deparser, dpp_json):
+        icrc_hdr_index = 0
         for _calfldobj in dpr_hw_icrc_obj:
             _icrc_profile_obj = _calfldobj.IcrcDeParserProfileObjGet()
             if _calfldobj not in self.l4_calfldobjs and \
@@ -1933,6 +1939,59 @@ class Icrc:
                 last_start_fld += 1
 
         #Json is dumped in the caller to cfg-file.
+
+    def IcrcDeParserConfigGenerateElba(self, dpr_hw_icrc_obj, deparser, dpp_json):
+        icrc_hdr_index = 0
+        for _calfldobj in dpr_hw_icrc_obj:
+            _icrc_profile_obj = _calfldobj.IcrcDeParserProfileObjGet()
+            if _calfldobj not in self.l4_calfldobjs and \
+               _calfldobj not in self.l5_calfldobjs:
+                icrc_hdr_cfg_name = 'elb_dppcsum_csr_cfg_crc_hdrs[%d]' %\
+                                    (icrc_hdr_index)
+                _calfldobj.ConfigGenerate(dpp_json['elb_dpp']\
+                                    ['registers'][icrc_hdr_cfg_name], 'l3hdr')
+                icrc_profile_cfg_name = 'elb_dppcsum_csr_cfg_crc_profile[%d]' %\
+                                       _icrc_profile_obj.IcrcProfileNumGet()
+                _icrc_profile_obj.ConfigGenerate(dpp_json['elb_dpp']\
+                                       ['registers'][icrc_profile_cfg_name])
+                icrc_profile_cfg_name = 'elb_dppcsum_csr_cfg_crc_mask_profile[%d]' %\
+                                       _icrc_profile_obj.IcrcMaskProfileNumGet()
+                _icrc_profile_obj.MaskProfileConfigGenerate(dpp_json['elb_dpp']\
+                                       ['registers'][icrc_profile_cfg_name])
+            elif _calfldobj in self.l4_calfldobjs:
+                icrc_hdr_cfg_name = 'elb_dppcsum_csr_cfg_crc_hdrs[%d]' %\
+                                    (icrc_hdr_index)
+                _calfldobj.ConfigGenerate(dpp_json['elb_dpp']\
+                                    ['registers'][icrc_hdr_cfg_name], 'l4hdr')
+                icrc_profile_cfg_name = 'elb_dppcsum_csr_cfg_crc_mask_profile[%d]' %\
+                                       _icrc_profile_obj.IcrcL4MaskProfileNumGet()
+                _icrc_profile_obj.L4MaskProfileConfigGenerate(dpp_json['elb_dpp']\
+                                       ['registers'][icrc_profile_cfg_name])
+            elif _calfldobj in self.l5_calfldobjs:
+                icrc_hdr_cfg_name = 'elb_dppcsum_csr_cfg_crc_hdrs[%d]' %\
+                                    (icrc_hdr_index)
+                _calfldobj.ConfigGenerate(dpp_json['elb_dpp']\
+                                    ['registers'][icrc_hdr_cfg_name], 'l5hdr')
+                icrc_profile_cfg_name = 'elb_dppcsum_csr_cfg_crc_mask_profile[%d]' %\
+                                       _icrc_profile_obj.IcrcL5MaskProfileNumGet()
+                _icrc_profile_obj.L5MaskProfileConfigGenerate(dpp_json['elb_dpp']\
+                                       ['registers'][icrc_profile_cfg_name])
+
+            icrc_hdr_index += 1
+
+        #Deparser expects unused icrc Hdr Slots to be programmed with start fld
+        #in increasing order.
+        if len(dpr_hw_icrc_obj):
+            last_start_fld = _calfldobj.HdrFldStartGet()
+            for unfilled_index in  range(icrc_hdr_index, deparser.be.hw_model['deparser']['max_crc_hdrs']):
+                icrc_hdr_cfg_name = 'elb_dppcsum_csr_cfg_crc_hdrs[%d]' % unfilled_index
+                dpp_json['elb_dpp']['registers'][icrc_hdr_cfg_name]['hdrfld_start']['value'] = \
+                                                                                  str(last_start_fld + 1)
+                dpp_json['elb_dpp']['registers'][icrc_hdr_cfg_name]['hdrfld_end']['value'] = \
+                                                                                  str(last_start_fld + 2)
+                dpp_json['elb_dpp']['registers'][icrc_hdr_cfg_name]['_modified'] = True
+                last_start_fld += 1
+
 
     def IcrcLogicalOutputCreate(self):
         out_dir = self.be.args.gen_dir + '/%s/logs' % (self.be.prog_name)

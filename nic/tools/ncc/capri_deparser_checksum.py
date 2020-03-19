@@ -715,7 +715,7 @@ class DeParserGsoCalField:
                         (self.gso_csum_result_fld_name, self.gso_csum_result_phv)
         return log_str
 
-    def GsoConfigGenerate(self, dpp_json, dpr_json):
+    def GsoConfigGenerateCapri(self, dpp_json, dpr_json):
         self.DeParserGsoCsumObjAddLog(self.GsoCfgLogGenerate())
         rstr = 'cap_dpphdr_csr_cfg_hdr_info[%d]' % (self.hdrfld_slot)
         dpp_json['cap_dpp']['registers'][rstr]['fld_start']['value'] = str(self.hdrfld_slot)
@@ -741,3 +741,28 @@ class DeParserGsoCalField:
         dpp_rstr['_modified'] = True
         dpr_rstr['_modified'] = True
 
+    def GsoConfigGenerateElba(self, dpp_json, dpr_json):
+        self.DeParserGsoCsumObjAddLog(self.GsoCfgLogGenerate())
+        rstr = 'elb_dpphdr_csr_cfg_hdr_info[%d]' % (self.hdrfld_slot)
+        dpp_json['elb_dpp']['registers'][rstr]['fld_start']['value'] = str(self.hdrfld_slot)
+        dpp_json['elb_dpp']['registers'][rstr]['fld_end']['value'] = str(255 - self.hdrfld_slot)
+        dpp_json['elb_dpp']['registers'][rstr]['_modified'] = True
+        dpp_rstr_name = 'elb_dpphdrfld_csr_cfg_hdrfld_info[%d]' % (self.hdrfld_slot)
+        dpr_rstr_name = 'elb_dprhdrfld_csr_cfg_hdrfld_info[%d]' % (self.hdrfld_slot)
+        dpp_rstr = dpp_json['elb_dpp']['registers'][dpp_rstr_name]
+        dpr_rstr = dpr_json['elb_dpr']['registers'][dpr_rstr_name]
+        dpp_rstr['size_sel']['value'] = str(self.be.hw_model['deparser']['dpa_src_cfg'])
+        dpp_rstr['size_val']['value'] = str(0)
+        dpp_rstr['allow_size0']['value'] = str(1)
+        dpr_rstr['source_sel']['value'] = str(self.be.hw_model['deparser']['dpa_src_ohi'])
+        dpr_rstr['source_oft']['value'] = str(self.csum_field_ohi_slot)
+        dpp_rstr['_modified'] = True
+        dpr_rstr['_modified'] = True
+
+        dpr_rstr_name = 'elb_dprhdrfld_csr_cfg_ingress_rw_phv_info[%d]' % (self.hdr_valid)
+        dpr_rstr = dpr_json['elb_dpr']['registers'][dpr_rstr_name]
+        dpr_rstr['enable']['value'] = str(1)
+        dpr_rstr['start_loc']['value'] = str(self.gso_csum_result_phv >> 3) #specify in phv location in byte
+        dpr_rstr['fld_size']['value'] = str(self.field_size)
+        dpp_rstr['_modified'] = True
+        dpr_rstr['_modified'] = True

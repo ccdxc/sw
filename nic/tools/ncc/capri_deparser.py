@@ -23,11 +23,13 @@ from capri_model import capri_model as capri_model
 from capri_pa import capri_field as capri_field
 from capri_output import capri_deparser_logical_output as capri_deparser_logical_output
 from capri_output import capri_deparser_cfg_output as capri_deparser_cfg_output
+from capri_output import elba_deparser_cfg_output as elba_deparser_cfg_output
 
 class capri_deparser:
     def __init__(self, capri_be, d):
-        self.d = d
-        self.be = capri_be
+        self.d    = d
+        self.asic = capri_be.asic
+        self.be   = capri_be
         self.field_type_none = 0
         self.field_type_phv = 1
         self.field_type_ohi = 2
@@ -42,7 +44,10 @@ class capri_deparser:
 
     def generate_output(self):
         capri_deparser_logical_output(self)
-        capri_deparser_cfg_output(self)#, self.hv_fld_slots)
+        if (self.asic == 'capri'):
+            capri_deparser_cfg_output(self)#, self.hv_fld_slots)
+        elif (self.asic == 'elba'):
+            elba_deparser_cfg_output(self)#, self.hv_fld_slots)
 
     def build_field_dictionary(self):
         headers = self.be.parsers[self.d].headers

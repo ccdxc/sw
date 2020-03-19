@@ -1964,6 +1964,13 @@ class Checksum:
             self.eg_dpr_hw_csum_obj = dpr_hw_csum_obj
 
         #Generate ASIC Config
+        if deparser.asic == "capri":
+            self.CsumDeParserConfigGenerateCapri(dpr_hw_csum_obj, deparser, dpp_json)
+        elif deparser.asic == "elba":
+            self.CsumDeParserConfigGenerateElba(dpr_hw_csum_obj, deparser, dpp_json)
+        #Json is dumped in the caller to cfg-file.
+
+    def CsumDeParserConfigGenerateCapri(self, dpr_hw_csum_obj, deparser, dpp_json):
         csum_hdr_index = 0
         _calfldobj = None
         for _, is_phdr, _calfldobj in dpr_hw_csum_obj:
@@ -2003,8 +2010,45 @@ class Checksum:
                 dpp_json['cap_dpp']['registers'][csum_hdr_cfg_name]['_modified'] = True
                 last_end_fld += 1
 
-        #Json is dumped in the caller to cfg-file.
+    def CsumDeParserConfigGenerateElba(self, dpr_hw_csum_obj, deparser, dpp_json):
+        csum_hdr_index = 0
+        _calfldobj = None
+        for _, is_phdr, _calfldobj in dpr_hw_csum_obj:
+            if not is_phdr:
+                _csum_obj = _calfldobj.DeParserCsumObjGet()
+                _csum_profile_obj = _calfldobj.DeParserCsumProfileObjGet()
+                csum_hdr_cfg_name = 'elb_dppcsum_csr_cfg_csum_hdrs[%d]' %\
+                                        (csum_hdr_index)
+                csum_hdr_index += 1
+                _csum_obj.ConfigGenerate(dpp_json['elb_dpp']\
+                                        ['registers'][csum_hdr_cfg_name])
+                csum_profile_cfg_name = 'elb_dppcsum_csr_cfg_csum_profile[%d]' %\
+                                           _csum_profile_obj.CsumProfileNumGet()
+                _csum_profile_obj.ConfigGenerate(dpp_json['elb_dpp']\
+                                           ['registers'][csum_profile_cfg_name])
+            if is_phdr:
+                _phdr_csum_obj = _calfldobj.DeParserPhdrCsumObjGet()
+                _phdr_profile_obj = _calfldobj.DeParserPhdrProfileObjGet()
+                csum_hdr_cfg_name = 'elb_dppcsum_csr_cfg_csum_hdrs[%d]' %\
+                                    (csum_hdr_index)
+                csum_hdr_index += 1
+                _phdr_csum_obj.ConfigGenerate(dpp_json['elb_dpp']\
+                                    ['registers'][csum_hdr_cfg_name])
+                phdr_cfg_name = 'elb_dppcsum_csr_cfg_csum_phdr_profile[%d]' %\
+                                     _phdr_csum_obj.PhdrProfileNumGet()
+                _phdr_profile_obj.ConfigGenerate(dpp_json['elb_dpp']\
+                                             ['registers'][phdr_cfg_name], _calfldobj.phdr_fields)
 
+        #Deparser expects unused Csum Hdr Slots to be programmed with start fld
+        #in increasing order.
+        if _calfldobj:
+            last_end_fld = _calfldobj.DeParserCsumObjGet().HdrFldEndGet()
+            for unfilled_index in  range(csum_hdr_index, deparser.be.hw_model['deparser']['max_csum_hdrs']):
+                csum_hdr_cfg_name = 'elb_dppcsum_csr_cfg_csum_hdrs[%d]' % unfilled_index
+                dpp_json['elb_dpp']['registers'][csum_hdr_cfg_name]['hdrfld_start']['value'] = str(last_end_fld + 1)
+                dpp_json['elb_dpp']['registers'][csum_hdr_cfg_name]['hdrfld_end']['value'] = str(last_end_fld + 2)
+                dpp_json['elb_dpp']['registers'][csum_hdr_cfg_name]['_modified'] = True
+                last_end_fld += 1
 
     def AllocateDeParserGsoCsumResources(self, parser):
         #Doesn't need csum unit.
@@ -2039,7 +2083,10 @@ class Checksum:
             gso_cal_fieldlist_update = self.eg_gso_cal_fieldlist_update
 
         for calfldobj in gso_cal_fieldlist_update:
-            calfldobj.GsoConfigGenerate(dpp_json, dpr_json)
+            if deparser.asic == "capri":
+                calfldobj.GsoConfigGenerateCapri(dpp_json, dpr_json)
+            elif deparser.asic == "elba":
+                calfldobj.GsoConfigGenerateElba(dpp_json, dpr_json)
 
     def AllocateL2CompleteCsumDeParserResources(self, parser):
         '''
