@@ -357,6 +357,11 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 	// Note: This is a temporary code. This config needs to handled by the netagent
 	d.setInterfaceIPs()
 	d.setStaticRoutes()
+
+	if d.CurState == missingVendorAttributes.String() {
+		log.Errorf("Failed to find Venice IPs in option 241 when trying DHCP on %v", mgmtLink.Attrs().Name)
+		return fmt.Errorf("failed to find Venice IPs in option 241 when trying DHCP on %v", mgmtLink.Attrs().Name)
+	}
 	return
 }
 
@@ -367,6 +372,9 @@ func (d *DHCPState) startRenewLoop(ackPacket dhcp4.Packet, mgmtLink netlink.Link
 		select {
 		case <-ticker.C:
 			d := d
+			if d.PrimaryIntfClient == nil {
+				continue
+			}
 			_, newAck, err := d.PrimaryIntfClient.Renew(ackPacket)
 			if err != nil {
 				log.Infof("Failed to get the new Ack Packet.  Err: %v | Retrying...", err)
@@ -717,7 +725,7 @@ func instantiateDHCPClient(link netlink.Link) *dhcp.Client {
 		return nil
 	}
 
-	client, err := dhcp.New(dhcp.HardwareAddr(link.Attrs().HardwareAddr), dhcp.Connection(pktSock))
+	client, err := dhcp.New(dhcp.HardwareAddr(link.Attrs().HardwareAddr), dhcp.Connection(pktSock), dhcp.Timeout(time.Second*30))
 	if err != nil {
 		log.Errorf("Failed to  instantiate primary DHCP Client. Err: %v", err)
 	}
