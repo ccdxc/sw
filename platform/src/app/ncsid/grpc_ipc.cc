@@ -663,6 +663,7 @@ int grpc_ipc::GetLinkStatus(uint32_t port, bool& link_status, uint8_t& link_spee
     PortGetResponseMsg  rsp_msg;
     grpc::ClientContext context;
     Status              status;
+    link_status = false;
     link_speed = 0;
 
     if (port == 0)
@@ -680,7 +681,6 @@ int grpc_ipc::GetLinkStatus(uint32_t port, bool& link_status, uint8_t& link_spee
     // port get
     status = port_stub_->PortGet(&context, req_msg, &rsp_msg);
     if (status.ok()) {
-
         if (port_handle_api_status(
                     rsp_msg.response(0).api_status(), port) == true) {
             SDK_TRACE_DEBUG("Port oper status: %x",
@@ -722,10 +722,6 @@ int grpc_ipc::GetLinkStatus(uint32_t port, bool& link_status, uint8_t& link_spee
 
         return 0;
     }
-
-    SDK_TRACE_ERR("Port Get failed for port %d error: %x", 
-                    port, rsp_msg.response(0).api_status());
-
+    SDK_TRACE_ERR("Port Get failed for port %d", port);
     return -1;
 }
-
