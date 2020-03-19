@@ -367,11 +367,13 @@ devapi_lif::add_mac(mac_t mac, bool re_add)
             }
             // In micro-seg mode, host lifs will be prom. So no need to install
             // mac filters. For own mac we install as l2seg have to be creaetd.
-            if (!is_multicast(mac) && hal->get_micro_seg_en() &&
-                mac != MAC_TO_UINT64(info_.mac)) {
-                NIC_LOG_DEBUG("Skipping ucast mac registration for "
-                                "non-native mac in micro-seg");
-                skip_registration = true;
+            if (is_host()) {
+                if (!is_multicast(mac) && hal->get_micro_seg_en() &&
+                    mac != MAC_TO_UINT64(info_.mac)) {
+                    NIC_LOG_DEBUG("Skipping ucast mac registration for "
+                                  "non-native mac in micro-seg");
+                    skip_registration = true;
+                }
             }
 
             if (!skip_registration) {

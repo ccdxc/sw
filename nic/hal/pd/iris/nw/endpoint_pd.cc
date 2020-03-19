@@ -908,7 +908,7 @@ pd_ep_reg_mac_info (l2seg_t *ep_l2seg, l2seg_t *cl_l2seg, l2seg_t *hp_l2seg,
     cl_l2seg_pd = cl_l2seg ? (pd_l2seg_t *)cl_l2seg->pd : NULL;
     hp_l2seg_pd = hp_l2seg ? (pd_l2seg_t *)hp_l2seg->pd : NULL;
     if (cl_l2seg && hp_l2seg) {
-        if (orig) {
+        if (orig && (ep_l2seg == hp_l2seg)) {
             key.flow_lkp_metadata_lkp_reg_mac_vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
         } else {
             key.flow_lkp_metadata_lkp_reg_mac_vrf = cl_l2seg_pd->l2seg_fl_lkup_id;

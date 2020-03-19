@@ -631,7 +631,7 @@ enicif_update_inb_enics (void)
         hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
         if (hal_if->if_type == intf::IF_TYPE_ENIC) {
             lif = find_lif_by_handle(hal_if->lif_handle);
-            if (lif->type == types::LIF_TYPE_MNIC_INBAND_MANAGEMENT) {
+            if (lif && lif->type == types::LIF_TYPE_MNIC_INBAND_MANAGEMENT) {
                 args.intf = hal_if;
                 pd_func_args.pd_if_inp_prop_pgm = &args;
                 ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_INP_PROP_PGM,
@@ -5705,11 +5705,13 @@ if_port_oper_state_process_event (uint32_t fp_port_num, port_event_t event)
     // Update uplink's oper status
     ctxt.hal_if->if_op_status = new_status;
 
-    if (g_hal_state->inband_bond_mode() == hal::BOND_MODE_RR) {
-        ret = hal_if_pick_inb_bond_active(ctxt.hal_if, new_status, 
-                                          &inb_bond_active_changed);
-        if (inb_bond_active_changed) {
-            ret = hal_if_inb_bond_active_changed(true);
+    if (!ctxt.hal_if->is_oob_management) {
+        if (g_hal_state->inband_bond_mode() == hal::BOND_MODE_RR) {
+            ret = hal_if_pick_inb_bond_active(ctxt.hal_if, new_status, 
+                                              &inb_bond_active_changed);
+            if (inb_bond_active_changed) {
+                ret = hal_if_inb_bond_active_changed(true);
+            }
         }
     }
     
@@ -5838,11 +5840,13 @@ hal_if_reprogram_telemetry_l2seg (void)
     l2seg = find_l2seg_by_wire_encap(encap, types::VRF_TYPE_CUSTOMER,
                                      HAL_HANDLE_INVALID);
 
-    args.l2seg = l2seg;
-    pd_func_args.pd_tel_l2seg_update = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_TEL_L2SEG_UPDATE, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to update l2seg pd, err : {}", ret);
+    if (l2seg) {
+        args.l2seg = l2seg;
+        pd_func_args.pd_tel_l2seg_update = &args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_TEL_L2SEG_UPDATE, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to update l2seg pd, err : {}", ret);
+        }
     }
 
     return ret;
