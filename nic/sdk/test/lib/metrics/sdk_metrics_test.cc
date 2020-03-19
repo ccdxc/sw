@@ -45,14 +45,21 @@ sdk::metrics::schema_t schema_hbm = {
 
 TEST_F (sdk_metrics_test, basic_test) {
     void *handler;
+    uint64_t counters[] = {
+        12,
+        13
+    };
 
     // Write
     handler = sdk::metrics::create(&schema);
     ASSERT_TRUE(handler != NULL);
 
-    sdk::metrics::metrics_update(handler, 1, 0, 12);
-    sdk::metrics::metrics_update(handler, 1, 1, 13);
+    sdk::metrics::metrics_update(handler, 1, counters);
 
+    // make sure we do a memcopy
+    counters[0] = 0;
+    counters[1] = 0;
+    
     // Read
     handler = sdk::metrics::metrics_open("utTable");
     sdk::metrics::metrics_counters_t values;

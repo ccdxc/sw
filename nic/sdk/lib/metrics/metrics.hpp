@@ -35,8 +35,7 @@ extern void *create(schema_t *schema);
 
 extern void row_address(void *handler, key_t key, void *address);
 
-extern void metrics_update(void *handler, key_t key, unsigned int counter,
-                           uint64_t value);
+extern void metrics_update(void *handler, key_t key, uint64_t values[]);
 
 // For reader
 extern void *metrics_open(const char *name);

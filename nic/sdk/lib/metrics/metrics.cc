@@ -40,13 +40,9 @@ typedef struct metrics_table_ {
     std::string name;
     TableMgrUptr tbl;
     metrics_type_t type;
+    size_t row_size;
     std::vector<struct counter_> counters;
 } metrics_table_t;
-
-typedef struct internal_key_ {
-    key_t key;
-    unsigned int counter;
-} __attribute__((packed)) internal_key_t;
 
 typedef struct buffer_ {
     int length;
@@ -142,6 +138,7 @@ save_schema_ (metrics_table_t *tbl, schema_t *schema)
             type: type,
             });
     }
+    tbl->row_size = tbl->counters.size() * sizeof(uint64_t);
 
     srlzd_len = sizeof(srlzd) + strlen(schema->name) + 1;
     srlzd = (serialized_spec_t *)malloc(srlzd_len);
@@ -184,6 +181,7 @@ load_table_ (const char *name)
             type: srlzd_counter->type,
             });
     }
+    tbl->row_size = tbl->counters.size() * sizeof(uint64_t);
 
     return tbl;
 }
@@ -215,29 +213,21 @@ create (schema_t *schema)
 void
 row_address(void *handler, key_t key, void *address) {
     metrics_table_t *tbl = (metrics_table_t *)handler;
-    internal_key_t ikey = {
-        .key = key,
-        .counter = 0,
-    };
-
     assert(tbl->type == HBM);
 
-    error err = tbl->tbl->Publish((char *)&ikey, sizeof(ikey), (char *)&address,
+    error err = tbl->tbl->Publish((char *)&key, sizeof(key), (char *)&address,
                                   sizeof(address));
 
     assert(err == error::OK());
 }
 
 void
-metrics_update (void *handler, key_t key, unsigned int counter, uint64_t value)
+metrics_update (void *handler, key_t key, uint64_t *values)
 {
     metrics_table_t *tbl = (metrics_table_t *)handler;
-    internal_key_t ikey = {
-        .key = key,
-        .counter = counter,
-    };
-    error err = tbl->tbl->Publish((char *)&ikey, sizeof(ikey), (char *)&value,
-                                  sizeof(value));
+
+    error err = tbl->tbl->Publish((char *)&key, sizeof(key), (char *)values,
+                                  tbl->row_size);
     assert(err == error::OK());
 }
 
@@ -255,41 +245,26 @@ metrics_open (const char *name)
     return tbl;
 }
 
-static uint64_t
-metrics_read_value (void *handler, key_t key, unsigned int counter)
-{
-    metrics_table_t *tbl;
-    uint64_t *value;
-    internal_key_t ikey = {
-        .key = key,
-        .counter = counter,
-    };
-
-    tbl = (metrics_table_t *)handler;
-
-    assert(tbl != NULL && counter >= 0 && counter < tbl->counters.size());
-
-    value = (uint64_t *)tbl->tbl->Find((char *)&ikey, sizeof(ikey));
-    if (value == NULL) {
-        return 0;
-    }
-
-    return *value;
-}
-
 static metrics_counters_t
 metrics_read_values (void  *handler, key_t key)
 {
     metrics_table_t *tbl;
     metrics_counters_t counters;
+    uint64_t *values;
 
     tbl = (metrics_table_t *)handler;
+
+    values = (uint64_t *)tbl->tbl->Find((char *)&key, sizeof(key));
 
     for (unsigned int i = 0; i < tbl->counters.size(); i++) {
         metrics_counter_pair_t pair;
 
         pair.first = tbl->counters[i].name;
-        pair.second = metrics_read_value(handler, key, i);
+        if (values) {
+            pair.second = values[i];
+        } else {
+            pair.second = 0;
+        }
         counters.push_back(pair);
     }
     
@@ -315,14 +290,10 @@ metrics_read_pointers (void  *handler, key_t key)
     metrics_table_t *tbl;
     metrics_counters_t counters;
     uint64_t *base;
-    internal_key_t ikey = {
-        .key = key,
-        .counter = 0,
-    };
 
     tbl = (metrics_table_t *)handler;
 
-    base = (uint64_t *)tbl->tbl->Find((char *)&ikey, sizeof(ikey));
+    base = (uint64_t *)tbl->tbl->Find((char *)&key, sizeof(key));
     if (base == NULL) {
         return counters;
     }
