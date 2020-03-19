@@ -456,6 +456,11 @@ setup_flows(void)
         return ret;
     }
 
+    ret = athena_gtest_setup_flows_icmp();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
     return ret;
 }
 
@@ -553,12 +558,15 @@ TEST(athena_gtest, sim)
     /* TCP Flow tests */
     ASSERT_TRUE(athena_gtest_test_flows_tcp() == SDK_RET_OK);
 
+    /* Slowpath Flow tests */
+    ASSERT_TRUE(athena_gtest_test_flows_slowpath() == SDK_RET_OK);
+
+    /* ICMP Flow tests */
+    ASSERT_TRUE(athena_gtest_test_flows_icmp() == SDK_RET_OK);
+
     iterate_dump_flows();
 
     print_stats();
-
-    /* Slowpath Flow tests */
-    ASSERT_TRUE(athena_gtest_test_flows_slowpath() == SDK_RET_OK);
 
     pds_teardown();
 

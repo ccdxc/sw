@@ -1,18 +1,18 @@
 /*****************************************************************************/
 /* Policy (unified for IPv4, IPv6 and L2)                                    */
 /*****************************************************************************/
-@pragma capi appdatafields index index_type
+@pragma capi appdatafields idx idx_type
 @pragma capi hwfields_access_api
-action flow_hash(index, index_type, pad,
+action flow_hash(idx, idx_type, pad,
                 hash1, hint1, hash2, hint2, hash3, hint3,
                 hash4, hint4, hash5, hint5,
                 more_hashes, more_hints, entry_valid) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(ingress_recirc_header.flow_done, TRUE);
-        modify_field(p4i_to_p4e_header.index, index);
-        modify_field(control_metadata.index, index);
-        modify_field(p4i_to_p4e_header.index_type, index_type);
+        modify_field(p4i_to_p4e_header.index, idx);
+        modify_field(control_metadata.index, idx);
+        modify_field(p4i_to_p4e_header.index_type, idx_type);
         modify_field(p4i_to_p4e_header.direction, control_metadata.direction);
 
         // if hardware register indicates miss, compare hashes with r1

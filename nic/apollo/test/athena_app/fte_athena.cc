@@ -265,9 +265,11 @@ fte_rx_loop (int poller_qid)
                             lcore_id, nb_rx, portid, queueid);
             for (i = 0; i < nb_rx; i++) {
                 auto m = pkts_burst[i];
+#ifdef DEBUG
                 pkt_hex_dump_trace("PKT:",
                         rte_pktmbuf_mtod(m, char*), 
                         rte_pktmbuf_pkt_len(m));
+#endif
                 if ((i+1) < nb_rx) {
                     auto m2 = pkts_burst[i+1];
                     uint8_t *d2 = rte_pktmbuf_mtod(m2, uint8_t*);

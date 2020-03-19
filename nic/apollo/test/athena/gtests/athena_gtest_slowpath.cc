@@ -10,8 +10,8 @@
 #include "athena_gtest.hpp"
 
 
-static uint16_t    g_udp_vnic_id = 0x0003;
-static uint32_t    g_h2s_udp_vlan = 0x0003;
+static uint16_t    g_udp_vnic_id = VNIC_ID_SLOW_PATH;
+static uint32_t    g_h2s_udp_vlan = VLAN_ID_SLOW_PATH;
 
 /*
  * Normalized key for UDP flow
@@ -37,7 +37,7 @@ static uint16_t    substrate_vlan = 0x02;
 static uint32_t    substrate_sip = 0x04030201;
 static uint32_t    substrate_dip = 0x01020304;
 static uint32_t    mpls1_label = 0x12345;
-static uint32_t    mpls2_label = 0x6789c;
+static uint32_t    mpls2_label = MPLS_LABEL_SLOW_PATH;
 
 
 /*

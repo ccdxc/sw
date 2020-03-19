@@ -56,6 +56,7 @@ header udp_t udp_2;
 @pragma no_ohi ingress
 header tcp_t tcp;
 header icmp_t icmp;
+header icmp_echo_t icmp_echo;
 
 // TCP options
 @pragma hdr_len parser_metadata.parse_tcp_counter
@@ -249,7 +250,7 @@ parser parse_ipv6_1 {
     set_metadata(offset_metadata.l3_1, current + 0);
     set_metadata(ohi.l4_1_len, ipv6_1.payloadLen + 0);
     return select(latest.nextHdr) {
-        IP_PROTO_ICMPV6 : parse_icmp;
+        IP_PROTO_ICMPV6 : parse_icmp6;
         IP_PROTO_TCP : parse_tcp;
         IP_PROTO_UDP : parse_udp_1;
         IP_PROTO_IPV4 : parse_ipv4_in_ip_1;
@@ -262,14 +263,36 @@ parser parse_ipv6_1 {
 parser parse_icmp {
     extract(icmp);
     set_metadata(offset_metadata.l4_2, current + 0);
+    set_metadata(key_metadata.parsed_dport, latest.typeCode);
+    return select(latest.typeCode) {
+        ICMP_ECHO_REQ_TYPE_CODE : parse_icmp_echo;
+        ICMP_ECHO_REPLY_TYPE_CODE : parse_icmp_echo;
+        default : ingress;
+    }
+}
+
+parser parse_icmp6 {
+    extract(icmp);
+    set_metadata(offset_metadata.l4_2, current + 0);
+    set_metadata(key_metadata.parsed_dport, latest.typeCode);
+    return select(latest.typeCode) {
+        ICMP6_ECHO_REQ_TYPE_CODE : parse_icmp_echo;
+        ICMP6_ECHO_REPLY_TYPE_CODE : parse_icmp_echo;
+        default : ingress;
+    }
+}
+
+parser parse_icmp_echo {
+    extract(icmp_echo);
+    set_metadata(key_metadata.parsed_sport, latest.identifier);
     return ingress;
 }
 
 parser parse_tcp {
     extract(tcp);
     set_metadata(offset_metadata.l4_2, current + 0);
-    set_metadata(key_metadata.sport, latest.srcPort);
-    set_metadata(key_metadata.dport, latest.dstPort);
+    set_metadata(key_metadata.parsed_sport, latest.srcPort);
+    set_metadata(key_metadata.parsed_dport, latest.dstPort);
     set_metadata(parser_metadata.parse_tcp_counter, (tcp.dataOffset << 2) - 20);
     return select(parser_metadata.parse_tcp_counter) {
         0 : ingress;

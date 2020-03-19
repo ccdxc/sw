@@ -57,9 +57,15 @@ header_type ipv6_t {
 
 header_type icmp_t {
     fields {
-        icmp_type : 8;
-        icmp_code : 8;
+        typeCode : 16;
         hdrChecksum : 16;
+    }
+}
+
+header_type icmp_echo_t {
+    fields {
+        identifier : 16;
+        seqNum : 16;
     }
 }
 

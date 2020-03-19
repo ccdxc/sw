@@ -8,8 +8,8 @@
 
 #include "athena_gtest.hpp"
 
-static uint16_t    g_tcp_vnic_id = 0x0002;
-static uint32_t    g_h2s_tcp_vlan = 0x0002;
+static uint16_t    g_tcp_vnic_id = VNIC_ID_TCP;
+static uint32_t    g_h2s_tcp_vlan = VLAN_ID_TCP;
 
 /*
  * Normalized key for UDP flow
@@ -35,7 +35,7 @@ static uint16_t    substrate_vlan = 0x02;
 static uint32_t    substrate_sip = 0x04030201;
 static uint32_t    substrate_dip = 0x01020304;
 static uint32_t    mpls1_label = 0x12345;
-static uint32_t    mpls2_label = 0x6789b;
+static uint32_t    mpls2_label = MPLS_LABEL_TCP;
 
 static sdk_ret_t
 setup_flow_v4_tcp(void)

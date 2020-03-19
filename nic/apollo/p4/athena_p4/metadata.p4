@@ -14,15 +14,11 @@ header_type key_metadata_t {
         vnic_id             : 9;
         src                 : 128;
         dst                 : 128;
-        smac                : 48;
-        dmac                : 48;
         proto               : 8;
         sport               : 16;
         dport               : 16;
-        ipv4_src            : 32;
-        ipv4_dst            : 32;
-        tcp_flags           : 6;
-        ingress_port        : 1;
+        parsed_sport    : 16;
+        parsed_dport    : 16;
     }
 }
 

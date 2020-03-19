@@ -1,6 +1,21 @@
 #ifndef __ATHENA_GTEST_HPP__
 #define __ATHENA_GTEST_HPP__
 
+#define VNIC_ID_UDP         0x0001
+#define VNIC_ID_TCP         0x0002
+#define VNIC_ID_SLOW_PATH   0x0003
+#define VNIC_ID_ICMP        0x0004
+
+#define VLAN_ID_UDP         0x0001
+#define VLAN_ID_TCP         0x0002
+#define VLAN_ID_SLOW_PATH   0x0003
+#define VLAN_ID_ICMP        0x0004
+
+#define MPLS_LABEL_UDP      0x6789a
+#define MPLS_LABEL_TCP      0x6789b
+#define MPLS_LABEL_SLOW_PATH    0x6789c
+#define MPLS_LABEL_ICMP     0x6789d
+
 extern uint8_t     g_h_port;
 extern uint8_t     g_s_port;
 extern uint32_t    g_session_index;
@@ -80,5 +95,12 @@ athena_gtest_setup_flows_slowpath(void);
 
 sdk_ret_t
 athena_gtest_test_flows_slowpath(void);
+
+/* ICMP Flows */
+sdk_ret_t
+athena_gtest_setup_flows_icmp(void);
+
+sdk_ret_t
+athena_gtest_test_flows_icmp(void);
 
 #endif /* __ATHENA_GTEST_HPP__ */

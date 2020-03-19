@@ -42,7 +42,7 @@ typedef struct pds_flow_key_tcp_udp_s {
 typedef struct pds_flow_key_icmp_s {
     uint8_t    type;          ///< Type
     uint8_t    code;          ///< Code
-    uint8_t    identifier;    ///< Identifier
+    uint16_t   identifier;    ///< Identifier
 } pds_flow_key_icmp_t;
 
 /// \brief L4 specific key fields

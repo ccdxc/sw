@@ -46,8 +46,8 @@ label_flow_miss:
 
 label_flow_hit:
     phvwr       p.p4i_to_p4e_header_direction, k.control_metadata_direction
-    phvwr       p.p4i_to_p4e_header_index, d.flow_hash_d.index
-    phvwr.e     p.p4i_to_p4e_header_index_type, d.flow_hash_d.index_type
+    phvwr       p.p4i_to_p4e_header_index, d.flow_hash_d.idx
+    phvwr.e     p.p4i_to_p4e_header_index_type, d.flow_hash_d.idx_type
     phvwr       p.ingress_recirc_header_flow_done, TRUE
 
 label_flow_hash_hit:

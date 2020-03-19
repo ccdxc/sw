@@ -11,9 +11,9 @@ action native_ipv4_packet() {
             modify_field(key_metadata.sport, udp_1.srcPort);
             modify_field(key_metadata.dport, udp_1.dstPort);
         }
-        if (tcp.valid == TRUE) {
-            modify_field(key_metadata.sport, tcp.srcPort);
-            modify_field(key_metadata.dport, tcp.dstPort);
+        else {
+            modify_field(key_metadata.sport, key_metadata.parsed_sport);
+            modify_field(key_metadata.dport, key_metadata.parsed_dport);
         }
     }
     if (control_metadata.direction == RX_FROM_SWITCH) {
@@ -23,9 +23,15 @@ action native_ipv4_packet() {
             modify_field(key_metadata.dport, udp_1.srcPort);
             modify_field(key_metadata.sport, udp_1.dstPort);
         }
-        if (tcp.valid == TRUE) {
-            modify_field(key_metadata.dport, tcp.srcPort);
-            modify_field(key_metadata.sport, tcp.dstPort);
+        else {
+            if (tcp.valid == TRUE) {
+                modify_field(key_metadata.dport, key_metadata.parsed_sport);
+                modify_field(key_metadata.sport, key_metadata.parsed_dport);
+            }
+            else {
+                modify_field(key_metadata.sport, key_metadata.parsed_sport);
+                modify_field(key_metadata.dport, key_metadata.parsed_dport);
+            }
         }
     }
     modify_field(key_metadata.proto, ipv4_1.protocol);
@@ -42,9 +48,9 @@ action native_ipv6_packet() {
             modify_field(key_metadata.sport, udp_1.srcPort);
             modify_field(key_metadata.dport, udp_1.dstPort);
         }
-        if (tcp.valid == TRUE) {
-            modify_field(key_metadata.sport, tcp.srcPort);
-            modify_field(key_metadata.dport, tcp.dstPort);
+        else {
+            modify_field(key_metadata.sport, key_metadata.parsed_sport);
+            modify_field(key_metadata.dport, key_metadata.parsed_dport);
         }
     }
     if (control_metadata.direction == RX_FROM_SWITCH) {
@@ -54,9 +60,15 @@ action native_ipv6_packet() {
             modify_field(key_metadata.dport, udp_1.srcPort);
             modify_field(key_metadata.sport, udp_1.dstPort);
         }
-        if (tcp.valid == TRUE) {
-            modify_field(key_metadata.dport, tcp.srcPort);
-            modify_field(key_metadata.sport, tcp.dstPort);
+        else {
+            if (tcp.valid == TRUE) {
+                modify_field(key_metadata.dport, key_metadata.parsed_sport);
+                modify_field(key_metadata.sport, key_metadata.parsed_dport);
+            }
+            else {
+                modify_field(key_metadata.sport, key_metadata.parsed_sport);
+                modify_field(key_metadata.dport, key_metadata.parsed_dport);
+            }
         }
     }
     modify_field(key_metadata.proto, ipv6_1.nextHdr);
@@ -75,9 +87,9 @@ action tunneled_ipv4_packet() {
             modify_field(key_metadata.sport, udp_2.srcPort);
             modify_field(key_metadata.dport, udp_2.dstPort);
         }
-        if (tcp.valid == TRUE) {
-            modify_field(key_metadata.sport, tcp.srcPort);
-            modify_field(key_metadata.dport, tcp.dstPort);
+        else {
+            modify_field(key_metadata.sport, key_metadata.parsed_sport);
+            modify_field(key_metadata.dport, key_metadata.parsed_dport);
         }
     }
     if (control_metadata.direction == RX_FROM_SWITCH) {
@@ -87,9 +99,15 @@ action tunneled_ipv4_packet() {
             modify_field(key_metadata.dport, udp_2.srcPort);
             modify_field(key_metadata.sport, udp_2.dstPort);
         }
-        if (tcp.valid == TRUE) {
-            modify_field(key_metadata.dport, tcp.srcPort);
-            modify_field(key_metadata.sport, tcp.dstPort);
+        else {
+            if (tcp.valid == TRUE) {
+                modify_field(key_metadata.dport, key_metadata.parsed_sport);
+                modify_field(key_metadata.sport, key_metadata.parsed_dport);
+            }
+            else {
+                modify_field(key_metadata.sport, key_metadata.parsed_sport);
+                modify_field(key_metadata.dport, key_metadata.parsed_dport);
+            }
         }
     }
     modify_field(key_metadata.proto, ipv4_2.protocol);
@@ -104,9 +122,9 @@ action tunneled_ipv6_packet() {
             modify_field(key_metadata.sport, udp_2.srcPort);
             modify_field(key_metadata.dport, udp_2.dstPort);
         }
-        if (tcp.valid == TRUE) {
-            modify_field(key_metadata.sport, tcp.srcPort);
-            modify_field(key_metadata.dport, tcp.dstPort);
+        else {
+            modify_field(key_metadata.sport, key_metadata.parsed_sport);
+            modify_field(key_metadata.dport, key_metadata.parsed_dport);
         }
     }
     if (control_metadata.direction == RX_FROM_SWITCH) {
@@ -116,9 +134,15 @@ action tunneled_ipv6_packet() {
             modify_field(key_metadata.dport, udp_2.srcPort);
             modify_field(key_metadata.sport, udp_2.dstPort);
         }
-        if (tcp.valid == TRUE) {
-            modify_field(key_metadata.dport, tcp.srcPort);
-            modify_field(key_metadata.sport, tcp.dstPort);
+        else {
+            if (tcp.valid == TRUE) {
+                modify_field(key_metadata.dport, key_metadata.parsed_sport);
+                modify_field(key_metadata.sport, key_metadata.parsed_dport);
+            }
+            else {
+                modify_field(key_metadata.sport, key_metadata.parsed_sport);
+                modify_field(key_metadata.dport, key_metadata.parsed_dport);
+            }
         }
     }
     modify_field(key_metadata.proto, ipv6_2.nextHdr);

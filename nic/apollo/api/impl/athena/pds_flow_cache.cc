@@ -73,7 +73,7 @@ pds_flow6_appdata2str (void *appdata)
 {
     static char str[512] = { 0 };
     flow_appdata_t *d = (flow_appdata_t *)appdata;
-    sprintf(str, "id_type:%u id:%u", d->index_type, d->index);
+    sprintf(str, "id_type:%u id:%u", d->idx_type, d->idx);
     return str;
 }
 
@@ -91,8 +91,20 @@ flow_cache_entry_setup_key (flow_hash_entry_t *entry,
     ftlv6_set_key_dst_ip(entry, key->ip_daddr);
     ftlv6_set_key_src_ip(entry, key->ip_saddr);
     ftlv6_set_key_proto(entry, key->ip_proto);
-    ftlv6_set_key_sport(entry, key->l4.tcp_udp.sport);
-    ftlv6_set_key_dport(entry, key->l4.tcp_udp.dport);
+    switch (key->ip_proto) {
+        case IP_PROTO_TCP:
+        case IP_PROTO_UDP:    
+            ftlv6_set_key_sport(entry, key->l4.tcp_udp.sport);
+            ftlv6_set_key_dport(entry, key->l4.tcp_udp.dport);
+            break;
+        case IP_PROTO_ICMP:
+            ftlv6_set_key_sport(entry, key->l4.icmp.identifier);
+            ftlv6_set_key_dport(entry,
+                    ((uint16_t)key->l4.icmp.type << 8) | key->l4.icmp.code);
+            break;
+        default:
+            break;
+    }
 
     return SDK_RET_OK;
 }
@@ -175,14 +187,37 @@ flow_cache_entry_find_cb (sdk_table_api_params_t *params)
         if ((vnic_id == cbdata->key->vnic_id) &&
             (!memcmp(hwentry->key_metadata_dst, cbdata->key->ip_daddr, IP6_ADDR8_LEN)) &&
             (!memcmp(hwentry->key_metadata_src, cbdata->key->ip_saddr, IP6_ADDR8_LEN)) &&
-            (hwentry->key_metadata_proto == cbdata->key->ip_proto) &&
-            (hwentry->key_metadata_sport == cbdata->key->l4.tcp_udp.sport) &&
-            (hwentry->key_metadata_dport == cbdata->key->l4.tcp_udp.dport)) {
-            // Key matching with index, so fill data
-            cbdata->info->spec.data.index = hwentry->index;
-            cbdata->info->spec.data.index_type =
-                (pds_flow_spec_index_type_t)hwentry->index_type;
-            ftl_entry_valid = true;
+            (hwentry->key_metadata_proto == cbdata->key->ip_proto)) { 
+            switch (hwentry->key_metadata_proto) {
+                case IP_PROTO_TCP:
+                case IP_PROTO_UDP:    
+                    if ((hwentry->key_metadata_sport ==
+                            cbdata->key->l4.tcp_udp.sport) &&
+                        (hwentry->key_metadata_dport ==
+                             cbdata->key->l4.tcp_udp.dport)) {
+                        // Key matching with index, so fill data
+                        cbdata->info->spec.data.index = hwentry->idx;
+                        cbdata->info->spec.data.index_type =
+                            (pds_flow_spec_index_type_t)hwentry->idx_type;
+                        ftl_entry_valid = true;
+                    }
+                    break;
+                case IP_PROTO_ICMP:
+                    if ((hwentry->key_metadata_sport ==
+                            cbdata->key->l4.icmp.identifier) &&
+                        (hwentry->key_metadata_dport ==
+                             (((uint16_t)cbdata->key->l4.icmp.type << 8) |
+                                 cbdata->key->l4.icmp.code))) {
+                        // Key matching with index, so fill data
+                        cbdata->info->spec.data.index = hwentry->idx;
+                        cbdata->info->spec.data.index_type =
+                            (pds_flow_spec_index_type_t)hwentry->idx_type;
+                        ftl_entry_valid = true;
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
         return;
     }
@@ -282,8 +317,21 @@ flow_cache_entry_iterate_cb (sdk_table_api_params_t *params)
         ftlv6_get_key_dst_ip(hwentry, key->ip_daddr);
         ftlv6_get_key_src_ip(hwentry, key->ip_saddr);
         key->ip_proto = ftlv6_get_key_proto(hwentry);
-        key->l4.tcp_udp.sport = ftlv6_get_key_sport(hwentry);
-        key->l4.tcp_udp.dport = ftlv6_get_key_dport(hwentry);
+
+        switch (key->ip_proto) {
+            case IP_PROTO_TCP:
+            case IP_PROTO_UDP:    
+                key->l4.tcp_udp.sport = ftlv6_get_key_sport(hwentry);
+                key->l4.tcp_udp.dport = ftlv6_get_key_dport(hwentry);
+                break;
+            case IP_PROTO_ICMP:
+                key->l4.icmp.identifier = ftlv6_get_key_sport(hwentry);
+                key->l4.icmp.type = ftlv6_get_key_dport(hwentry) >> 8;
+                key->l4.icmp.code = ftlv6_get_key_dport(hwentry) & 0x00ff;
+                break;
+            default:
+                break;
+        }
         data->index = ftlv6_get_index(hwentry);
         data->index_type =
             (pds_flow_spec_index_type_t)ftlv6_get_index_type(hwentry);
