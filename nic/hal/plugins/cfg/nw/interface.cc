@@ -5536,6 +5536,11 @@ port_event_cb (port_event_info_t *port_event_info)
     ctxt->event      = port_event_info->event;
     ctxt->port_speed = port_event_info->speed;
     ctxt->port_type  = port_event_info->type;
+
+    // wait for the periodic thread to be ready before sending msg to it
+    while (!sdk::lib::periodic_thread_is_ready()) {
+        pthread_yield();
+    }
     HAL_TRACE_DEBUG("Starting port timer. Port: {}, Event: {}, Speed: {}",
                     port_event_info->logical_port,
                     (uint32_t)port_event_info->event,
