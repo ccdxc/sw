@@ -93,7 +93,7 @@ func TestVlanManager(t *testing.T) {
 	tu.AssertEquals(t, 0, vMgr.GetFreeVlanCount(), "Remaining vlan count did not match")
 
 	_, err := vMgr.AssignVlan("overflow")
-	tu.AssertEquals(t, "no vlans available", err.Error(), "Allocating more than 4096 vlans should have failed.")
+	tu.AssertEquals(t, VlanExhaustedErr, err.Error(), "Allocating more than 4096 vlans should have failed.")
 
 	err = vMgr.ReleaseVlan(3095)
 	tu.AssertOk(t, err, "releasing vlan should have passed")

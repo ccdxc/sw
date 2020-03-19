@@ -12,9 +12,12 @@ import (
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/workload"
 	apiserverutils "github.com/pensando/sw/api/hooks/apiserver/utils"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils/usegvlanmgr"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/ref"
 	conv "github.com/pensando/sw/venice/utils/strconv"
@@ -79,12 +82,11 @@ func (v *VCHub) handleWorkloadEvent(evtType kvstore.WatchEventType, obj *workloa
 	if obj.Status.MigrationStatus != nil {
 		// Read current state of object in case we already processed it (during sync)
 		wl := v.pCache.GetWorkloadByName(obj.Name)
-		if !v.isWorkloadMigrating(wl) {
+		if wl == nil || !v.isWorkloadMigrating(wl) {
 			return
 		}
 		switch wl.Status.MigrationStatus.Status {
 		case statusTimedOut:
-			v.releaseOldUsegs(wl)
 			v.finishMigration(wl)
 			v.resyncWorkload(wl)
 		case statusDone, statusFailed:
@@ -437,9 +439,21 @@ func (v *VCHub) resyncWorkloadByID(vmKey string, dcID string) {
 	destDC := v.GetDCFromID(dcID)
 	vm, err := v.probe.GetVM(vmKey)
 	if err != nil {
-		v.Log.Errorf("Failed to find vm %s by ID, err %s", vmKey, err)
+		v.Log.Errorf("Failed to find vm %s by ID, sending delete event, err %s", vmKey, err)
+		// Workload we are resyncing may have been deleted, send delete event
+		m := defs.VCEventMsg{
+			VcObject:   defs.VirtualMachine,
+			Key:        vm.Self.Value,
+			DcID:       dcID,
+			DcName:     destDC.Name,
+			Originator: v.VcID,
+			Changes:    []types.PropertyChange{},
+			UpdateType: types.ObjectUpdateKindLeave,
+		}
+		v.handleVM(m)
 		return
 	}
+
 	m := defs.VCEventMsg{
 		VcObject:   defs.VirtualMachine,
 		Key:        vm.Self.Value,
@@ -498,13 +512,7 @@ func (v *VCHub) finalSyncMigration(wlObj *workload.Workload) {
 		v.Log.Errorf("Cannot Complete vMotion for %s - not set vlan overrides", wlName)
 		// This should never happen, go ahead and continue doing other things
 	}
-	// TODO: There should be no interfaces added/removed during migration,
-	// if they are, handle them here?
-	// release the old useg vlans (from the status)
-	if err := v.releaseUsegVlans(wlObj, true /*old*/); err != nil {
-		v.Log.Errorf("Cannot Complete vMotion for %s - %s", wlName, err)
-		// This should never happen, go ahead and continue doing other things
-	}
+
 	_, err := v.StateMgr.Controller().Workload().SyncFinalSyncMigration(wlObj)
 	if err != nil {
 		// This call can fail if workload has been set to timeout. If so, we do nothing.
@@ -514,6 +522,11 @@ func (v *VCHub) finalSyncMigration(wlObj *workload.Workload) {
 }
 
 func (v *VCHub) finishMigration(wlObj *workload.Workload) {
+	// release the old useg vlans (from the status)
+	if err := v.releaseUsegVlans(wlObj, true /*old*/); err != nil {
+		v.Log.Errorf("Failed to relase old useg values during vMotion for %s - %s", wlObj.Name, err)
+		// This should never happen, go ahead and finish migration
+	}
 	_, err := v.StateMgr.Controller().Workload().SyncFinishMigration(wlObj)
 	if err != nil {
 		v.Log.Errorf("Could not complete migration on workload %s - %s", wlObj.Name, err)
@@ -619,6 +632,10 @@ func (v *VCHub) reassignUsegs(dcName string, wlObj *workload.Workload) error {
 		if err != nil {
 			errMsg := fmt.Errorf("Failed to assign vlan %v", err)
 			v.Log.Errorf("%s", errMsg)
+			if err.Error() == usegvlanmgr.VlanExhaustedErr {
+				evtMsg := fmt.Sprintf("Workload interfaces per host limit reached. Unable to allocate a micro seg vlan for workload %s, interface %s", wlObj.Name, inf.MACAddress)
+				recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, v.State.OrchConfig)
+			}
 			return errMsg
 		}
 		wlObj.Spec.Interfaces[i].MicroSegVlan = uint32(vlan)
@@ -781,8 +798,12 @@ func (v *VCHub) assignUsegs(workload *workload.Workload) {
 		vlan, err = dvs.UsegMgr.AssignVlanForVnic(inf.MACAddress, host)
 
 		if err != nil {
-			// TODO: if vlans are full, raise event
 			v.Log.Errorf("Failed to assign vlan %v", err)
+			// if vlans are full, raise event
+			if err.Error() == usegvlanmgr.VlanExhaustedErr {
+				evtMsg := fmt.Sprintf("Workload interfaces per host limit reached. Unable to allocate a micro seg vlan for workload %s, interface %s", workload.Name, inf.MACAddress)
+				recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, v.State.OrchConfig)
+			}
 		} else {
 			// Set useg
 			workload.Spec.Interfaces[i].MicroSegVlan = uint32(vlan)
@@ -892,11 +913,11 @@ func (v *VCHub) extractInterfaces(workloadName string, dcID string, dcName strin
 				if err == nil {
 					v.Log.Debugf("Setting network %v for vnic %s", nw.Name, macStr)
 				} else {
-					v.Log.Errorf("Received EP with no corresponding venice network: PG: %s DC: %s Network meta %+v, err %s", pgID, dcName, pgObj.NetworkMeta, err)
+					v.Log.Errorf("Received EP with no corresponding venice network: PG ID: %s DC: %s Network meta %+v, err %s", pgID, dcName, pgObj.NetworkMeta, err)
 					continue
 				}
 			} else {
-				v.Log.Errorf("Received EP with PG we don't have state for: PG: %s DC: %s", pgID, dcName)
+				v.Log.Errorf("Received EP with PG we don't have state for: PG ID: %s DC: %s", pgID, dcName)
 				continue
 			}
 		} else {

@@ -129,7 +129,7 @@ func (d *PenDVS) AddPenPGWithVlan(pgName string, networkMeta api.ObjectMeta, pri
 		externalVlan := int(nw.Spec.VlanID)
 		err = d.probe.TagObjWithVlan(penPG.PgRef, externalVlan)
 		if err != nil {
-			d.Log.Errorf("Failed to tag PG %s as managed, %s", pgName, err)
+			d.Log.Errorf("Failed to tag PG %s with vlan tag, %s", pgName, err)
 			// Error isn't worth failing the operation for
 		}
 	} else {

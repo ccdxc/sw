@@ -9,7 +9,10 @@ import (
 
 // VlanMax is the highest allowed VLAN + 1
 // Vlans of 0 and 4095 are reserved
-const VlanMax int = 4095
+var VlanMax = 4095
+
+// VlanExhaustedErr error message returned when no vlans are available
+const VlanExhaustedErr string = "No VLANs available"
 
 // Inf defines the vlan manager interface
 type Inf interface {
@@ -176,7 +179,7 @@ func (v *VlanMgr) AssignVlan(owner string) (int, error) {
 	}
 
 	if v.itemList.Len() == 0 {
-		return -1, fmt.Errorf("no vlans available")
+		return -1, fmt.Errorf(VlanExhaustedErr)
 	}
 
 	// Pick one at random

@@ -40,7 +40,8 @@ type datastore struct {
 
 // Host contains info of a simulator host instance
 type Host struct {
-	Obj *simulator.HostSystem
+	client *vim25.Client
+	Obj    *simulator.HostSystem
 }
 
 // DVS contains info of a simulator distributed virtual switch instance
@@ -155,6 +156,17 @@ func (v *VcSim) AddDC(name string) (*Datacenter, error) {
 	return entry, nil
 }
 
+// Destroy removes the DC from the inventory
+func (v *Datacenter) Destroy() error {
+	dcObj := object.NewDatacenter(v.client, v.Obj.Reference())
+	task, err := dcObj.Destroy(context.Background())
+	if err != nil {
+		return err
+	}
+	err = task.Wait(context.Background())
+	return err
+}
+
 // GetDVS returns the distributed virtual switch by name
 func (v *Datacenter) GetDVS(name string) (*DVS, bool) {
 	entry, ok := v.dvsMap[name]
@@ -264,7 +276,8 @@ func (v *Datacenter) AddHost(name string) (*Host, error) {
 	host := ref.DeepCopy(*h).(simulator.HostSystem)
 
 	entry := &Host{
-		Obj: &host,
+		client: v.client,
+		Obj:    &host,
 	}
 
 	v.hostMap[name] = entry
@@ -287,6 +300,17 @@ func (v *Datacenter) AddHost(name string) (*Host, error) {
 func (v *Datacenter) GetHost(name string) (*Host, bool) {
 	entry, ok := v.hostMap[name]
 	return entry, ok
+}
+
+// Destroy removes the host from the inventory
+func (v *Host) Destroy() error {
+	hostObj := object.NewHostSystem(v.client, v.Obj.Reference())
+	task, err := hostObj.Destroy(context.Background())
+	if err != nil {
+		return err
+	}
+	err = task.Wait(context.Background())
+	return err
 }
 
 // AddNic adds a nic the host
@@ -468,6 +492,17 @@ func (v *Datacenter) AddVMWithSpec(name string, hostName string, spec types.Virt
 	}
 
 	return nil, fmt.Errorf("VM create was successful but couldn't be found in inventory")
+}
+
+// DeleteVM removes the VM from the inventory
+func (v *Datacenter) DeleteVM(vm *simulator.VirtualMachine) error {
+	vmObj := object.NewVirtualMachine(v.client, vm.Reference())
+	task, err := vmObj.Destroy(context.Background())
+	if err != nil {
+		return err
+	}
+	err = task.Wait(context.Background())
+	return err
 }
 
 // AddVnic adds vnic info to the given vm

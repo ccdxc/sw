@@ -3,25 +3,30 @@ package vchub
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/url"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/vmware/govmomi"
+	"github.com/vmware/govmomi/simulator"
 	"github.com/vmware/govmomi/vapi/rest"
 	"github.com/vmware/govmomi/vapi/tags"
-
-	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
+	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/testutils"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock"
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils/usegvlanmgr"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
@@ -727,4 +732,559 @@ func TestDCWatchers(t *testing.T) {
 	}
 	wg.Wait()
 	AssertEquals(t, 0, len(vchub.DcMap), "DC map length did not match")
+}
+
+func TestUsegVlanLimit(t *testing.T) {
+	// Lower the limit for testing
+	usegvlanmgr.VlanMax = useg.FirstUsegVlan + 100
+
+	u := &url.URL{
+		Scheme: "https",
+		Host:   defaultTestParams.TestHostName,
+		Path:   "/sdk",
+	}
+	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
+	dc1, err := s.AddDC(defaultTestParams.TestDCName)
+	AssertOk(t, err, "failed dc create")
+
+	config := log.GetDefaultConfig("vcprobe_testVlanLimit")
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger := log.SetConfig(config)
+
+	probe := createProbe(context.Background(), defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if !probe.IsSessionReady() {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready", "1s", "10s")
+
+	// Create DVS
+	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
+	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
+
+	err = probe.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, retryCount)
+	dvsName := CreateDVSName(defaultTestParams.TestDCName)
+	dvs, ok := dc1.GetDVS(dvsName)
+	Assert(t, ok, "failed dvs create")
+
+	hostSystem1, err := dc1.AddHost("host1")
+	AssertOk(t, err, "failed host1 create")
+	err = dvs.AddHost(hostSystem1)
+	AssertOk(t, err, "failed to add Host to DVS")
+
+	pNicMac := append(createPenPnicBase(), 0xaa, 0x00, 0x00)
+	// Make it Pensando host
+	err = hostSystem1.AddNic("vmnic0", conv.MacString(pNicMac))
+
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
+
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+
+	orchInfo1 := []*network.OrchestratorInfo{
+		{
+			Name:      orchConfig.Name,
+			Namespace: defaultTestParams.TestDCName,
+		},
+	}
+	smmock.CreateNetwork(sm, "default", "pg1", "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
+
+	vchub := LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+
+	// Give time for VCHub to come up
+	time.Sleep(2 * time.Second)
+
+	defer func() {
+		vchub.Destroy(false)
+		defer s.Destroy()
+	}()
+
+	pgName := CreatePGName("pg1")
+
+	pgID := ""
+	// Verify PG is created
+	AssertEventually(t, func() (bool, interface{}) {
+		dc := vchub.GetDC(defaultTestParams.TestDCName)
+		dvs := dc.GetPenDVS(CreateDVSName(defaultTestParams.TestDCName))
+		if dvs == nil {
+			err := fmt.Errorf("Failed to find dvs in DC")
+			logger.Errorf("%s", err)
+			return false, err
+		}
+		pgObj := dvs.GetPenPG(pgName)
+		if pgObj == nil {
+			err := fmt.Errorf("Failed to find %s in DC", pgName)
+			logger.Errorf("%s", err)
+			return false, err
+		}
+		pgID = pgObj.PgRef.Value
+		return true, nil
+	}, "failled to find PG")
+
+	toChar := func(i int) string {
+		return string(rune('a' + i))
+	}
+
+	// Send events on the channel to simulate the VMs
+	vmCount := 25
+	for i := 0; i < vmCount; i++ {
+		// 4 vnics per vm
+		evt := defs.Probe2StoreMsg{
+			MsgType: defs.VCEvent,
+			Val: defs.VCEventMsg{
+				VcObject:   defs.VirtualMachine,
+				DcID:       dc1.Obj.Self.Value,
+				DcName:     dc1.Obj.Name,
+				Key:        fmt.Sprintf("vm-%d", i),
+				Originator: vchub.OrchID,
+				Changes: []types.PropertyChange{
+					types.PropertyChange{
+						Op:   types.PropertyChangeOpAdd,
+						Name: "config",
+						Val: types.VirtualMachineConfigInfo{
+							Hardware: types.VirtualHardware{
+								Device: []types.BaseVirtualDevice{
+									generateVNIC(fmt.Sprintf("a%s:f%s:ff:ff:ff:ff", toChar(i/5), toChar(i%5)), "10", pgID, "E1000e"),
+									generateVNIC(fmt.Sprintf("a%s:ff:f%s:ff:ff:ff", toChar(i/5), toChar(i%5)), "10", pgID, "E1000e"),
+									generateVNIC(fmt.Sprintf("a%s:ff:ff:f%s:ff:ff", toChar(i/5), toChar(i%5)), "10", pgID, "E1000e"),
+									generateVNIC(fmt.Sprintf("a%s:ff:ff:ff:f%s:ff", toChar(i/5), toChar(i%5)), "10", pgID, "E1000e"),
+								},
+							},
+						},
+					},
+					types.PropertyChange{
+						Op:   types.PropertyChangeOpAdd,
+						Name: "runtime",
+						Val: types.VirtualMachineRuntimeInfo{
+							Host: &types.ManagedObjectReference{
+								Type:  "HostSystem",
+								Value: hostSystem1.Obj.Self.Value,
+							},
+						},
+					},
+				},
+			},
+		}
+		vchub.vcReadCh <- evt
+	}
+
+	dc := vchub.GetDC(dc1.Obj.Name)
+	penDVS := dc.GetPenDVS(CreateDVSName(dc1.Obj.Name))
+	AssertEventually(t, func() (bool, interface{}) {
+		count, err := penDVS.UsegMgr.GetRemainingVnicCount("orch0--host-18")
+		if err != nil {
+			return false, err
+		}
+		if count != 0 {
+			return false, fmt.Errorf("Remaining vlan count %d", count)
+		}
+		return count == 0, err
+	}, "vlan remaining count never reached 0", "1s", "20s")
+
+	// Should be at capacity now. Next vnic should fail
+	eventRecorder.ClearEvents()
+	evt := defs.Probe2StoreMsg{
+		MsgType: defs.VCEvent,
+		Val: defs.VCEventMsg{
+			VcObject:   defs.VirtualMachine,
+			DcID:       dc1.Obj.Self.Value,
+			DcName:     dc1.Obj.Name,
+			Key:        fmt.Sprintf("vm-%d", vmCount+1),
+			Originator: vchub.OrchID,
+			Changes: []types.PropertyChange{
+				types.PropertyChange{
+					Op:   types.PropertyChangeOpAdd,
+					Name: "config",
+					Val: types.VirtualMachineConfigInfo{
+						Hardware: types.VirtualHardware{
+							Device: []types.BaseVirtualDevice{
+								generateVNIC("ff:ff:ff:ff:ff:ff", "10", pgID, "E1000e"),
+							},
+						},
+					},
+				},
+				types.PropertyChange{
+					Op:   types.PropertyChangeOpAdd,
+					Name: "runtime",
+					Val: types.VirtualMachineRuntimeInfo{
+						Host: &types.ManagedObjectReference{
+							Type:  "HostSystem",
+							Value: hostSystem1.Obj.Self.Value,
+						},
+					},
+				},
+			},
+		},
+	}
+	vchub.vcReadCh <- evt
+
+	// Should have gotten vlan limit failure
+	AssertEventually(t, func() (bool, interface{}) {
+		foundEvent := false
+		for _, evt := range eventRecorder.GetEvents() {
+			if evt.EventType == eventtypes.ORCH_CONFIG_PUSH_FAILURE.String() {
+				foundEvent = true
+			}
+		}
+		return foundEvent, nil
+	}, "Failed to find vlan failure event", "1s", "10s")
+}
+
+func TestRapidEvents(t *testing.T) {
+	numDCs := 4
+	numHosts := 4 // Hosts per DC
+	numVMs := 4   // VMs per Host
+	numVNICs := 4 // VNICs per VM
+
+	// STARTING SIM
+	u := &url.URL{
+		Scheme: "https",
+		Host:   defaultTestParams.TestHostName,
+		Path:   "/sdk",
+	}
+	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
+
+	config := log.GetDefaultConfig("vcprobe_testRapidEvents")
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger := log.SetConfig(config)
+
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
+
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+
+	vchub := LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+
+	defer func() {
+		vchub.Destroy(false)
+		defer s.Destroy()
+	}()
+
+	// Give time for VCHub to come up
+	time.Sleep(2 * time.Second)
+	vcsimLock := sync.Mutex{}
+
+	addDC := func(dcName string) *sim.Datacenter {
+		vcsimLock.Lock()
+		defer vcsimLock.Unlock()
+		dc, err := s.AddDC(dcName)
+		dc.Obj.Name = dcName
+		AssertOk(t, err, "failed to create DC %s", dcName)
+		vchub.vcReadCh <- createDCEvent(dcName, dc.Obj.Self.Value)
+		return dc
+	}
+
+	removeDC := func(dc *sim.Datacenter) {
+		vcsimLock.Lock()
+		defer vcsimLock.Unlock()
+		dc.Destroy()
+		vchub.vcReadCh <- deleteDCEvent(dc.Obj.Self.Value)
+	}
+
+	addHost := func(dc *sim.Datacenter, hostName string, pnic net.HardwareAddr) *sim.Host {
+		vcsimLock.Lock()
+		defer vcsimLock.Unlock()
+		hostSystem, err := dc.AddHost("host1")
+		AssertOk(t, err, "failed host create")
+		dvs, ok := dc.GetDVS(CreateDVSName(dc.Obj.Name))
+		Assert(t, ok, "failed to get dvs for DC %s", dc.Obj.Name)
+
+		err = dvs.AddHost(hostSystem)
+		AssertOk(t, err, "failed to add Host to DVS")
+
+		macStr := conv.MacString(pnic)
+		err = hostSystem.AddNic("vmnic0", macStr)
+		// Generate host create event
+		vchub.vcReadCh <- createHostEvent(dc.Obj.Name, dc.Obj.Self.Value, hostName, hostSystem.Obj.Self.Value, dvs.Obj.Name, macStr)
+		return hostSystem
+	}
+
+	removeHost := func(dc *sim.Datacenter, host *sim.Host) {
+		vcsimLock.Lock()
+		defer vcsimLock.Unlock()
+		err := host.Destroy()
+		AssertOk(t, err, "Failed to delete host")
+		vchub.vcReadCh <- deleteHostEvent(dc.Obj.Name, dc.Obj.Self.Value, host.Obj.Self.Value)
+	}
+
+	addVM := func(dc *sim.Datacenter, vmName string, host *sim.Host, vnics []sim.VNIC) *simulator.VirtualMachine {
+		vcsimLock.Lock()
+		defer vcsimLock.Unlock()
+		vm, err := dc.AddVM(vmName, host.Obj.Name, vnics)
+		AssertOk(t, err, "failed to create VM")
+		vchub.vcReadCh <- createVMEvent(dc.Obj.Name, dc.Obj.Self.Value, vmName, vm.Self.Value, host.Obj.Self.Value, vnics)
+		return vm
+	}
+
+	removeVM := func(dc *sim.Datacenter, vm *simulator.VirtualMachine) {
+		vcsimLock.Lock()
+		defer vcsimLock.Unlock()
+		err := dc.DeleteVM(vm)
+		AssertOk(t, err, "failed to delete VM")
+		vchub.vcReadCh <- deleteVMEvent(dc.Obj.Name, dc.Obj.Self.Value, vm.Self.Value)
+	}
+
+	vcp := createProbe(context.Background(), defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	AssertEventually(t, func() (bool, interface{}) {
+		if !vcp.IsSessionReady() {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready")
+
+	wg := sync.WaitGroup{}
+	for i := 0; i < numDCs; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			dcName := fmt.Sprintf("DC%d", i)
+
+			orchInfo1 := []*network.OrchestratorInfo{
+				{
+					Name:      orchConfig.Name,
+					Namespace: dcName,
+				},
+			}
+			nwName := fmt.Sprintf("PG-%d", i)
+			nw, err := smmock.CreateNetwork(sm, "default", nwName, "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
+			AssertOk(t, err, "Faield to create network")
+
+			dc := addDC(dcName)
+
+			pgName := CreatePGName(nw.Name)
+			pgID := ""
+			// Verify PG is created
+			AssertEventually(t, func() (bool, interface{}) {
+				dc := vchub.GetDC(dcName)
+				if dc == nil {
+					return false, fmt.Errorf("DC does not exist")
+				}
+				dvs := dc.GetPenDVS(CreateDVSName(dcName))
+				if dvs == nil {
+					err := fmt.Errorf("Failed to find dvs in DC %s", dcName)
+					logger.Errorf("%s", err)
+					return false, err
+				}
+				pgObj := dvs.GetPenPG(pgName)
+				if pgObj == nil {
+					err := fmt.Errorf("Failed to find %s in DC", pgName)
+					logger.Errorf("%s", err)
+					return false, err
+				}
+				pgID = pgObj.PgRef.Value
+				return true, nil
+			}, "failled to find PG")
+
+			for j := 0; j < numHosts; j++ {
+				pNicMac := append(createPenPnicBase(), 0xaa, byte(i/256), byte(j%256))
+				hostName := fmt.Sprintf("host-%d-%d", i, j)
+				host := addHost(dc, hostName, pNicMac)
+				for k := 0; k < numVMs; k++ {
+					vnics := []sim.VNIC{}
+					for l := 0; l < numVNICs; l++ {
+						mac := append(net.HardwareAddr{}, 0xaa, byte(i/256), byte(j%256), 0xaa, byte(k/256), byte(l%256))
+						vnic := sim.VNIC{
+							PortKey:      "10",
+							PortgroupKey: pgID,
+							MacAddress:   conv.MacString(mac),
+						}
+						vnics = append(vnics, vnic)
+					}
+					vm := addVM(dc, fmt.Sprintf("vm-%d-%d-%d", i, j, k), host, vnics)
+					// Immediately delete VM
+					removeVM(dc, vm)
+				}
+				// Delete host
+				removeHost(dc, host)
+			}
+			removeDC(dc)
+		}(i)
+	}
+
+	wg.Wait()
+
+	// Verify vchub state
+	AssertEventually(t, func() (bool, interface{}) {
+		vchub.DcMapLock.Lock()
+		defer vchub.DcMapLock.Unlock()
+		if len(vchub.DcMap) != 0 {
+			return false, fmt.Errorf("found %d DCs", len(vchub.DcMap))
+		}
+
+		workloads, err := sm.Controller().Workload().List(context.Background(), &api.ListWatchOptions{})
+		if err != nil {
+			return false, err
+		}
+		if len(workloads) != 0 {
+			return false, fmt.Errorf("Found %d workloads", len(workloads))
+		}
+
+		hosts, err := sm.Controller().Host().List(context.Background(), &api.ListWatchOptions{})
+		if err != nil {
+			return false, err
+		}
+		if len(hosts) != 0 {
+			return false, fmt.Errorf("Found %d hosts", len(hosts))
+		}
+		return true, nil
+	}, "state wasn't cleaned up")
+
+}
+
+func createVMEvent(dcName, dcID, vmName, vmID, hostID string, vnics []sim.VNIC) defs.Probe2StoreMsg {
+	devices := []types.BaseVirtualDevice{}
+	for _, vnic := range vnics {
+		devices = append(devices, generateVNIC(vnic.MacAddress, vnic.PortKey, vnic.PortgroupKey, "E1000e"))
+	}
+	// Generate host create event
+	return defs.Probe2StoreMsg{
+		MsgType: defs.VCEvent,
+		Val: defs.VCEventMsg{
+			VcObject:   defs.VirtualMachine,
+			DcID:       dcID,
+			DcName:     dcName,
+			Key:        vmID,
+			Originator: "127.0.0.1:8990",
+			Changes: []types.PropertyChange{
+				types.PropertyChange{
+					Op:   types.PropertyChangeOpAdd,
+					Name: "config",
+					Val: types.VirtualMachineConfigInfo{
+						Hardware: types.VirtualHardware{
+							Device: devices,
+						},
+					},
+				},
+				types.PropertyChange{
+					Op:   types.PropertyChangeOpAdd,
+					Name: "runtime",
+					Val: types.VirtualMachineRuntimeInfo{
+						Host: &types.ManagedObjectReference{
+							Type:  "HostSystem",
+							Value: hostID,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func deleteVMEvent(dcName, dcID, vmID string) defs.Probe2StoreMsg {
+	return defs.Probe2StoreMsg{
+		MsgType: defs.VCEvent,
+		Val: defs.VCEventMsg{
+			VcObject:   defs.VirtualMachine,
+			DcID:       dcID,
+			DcName:     dcName,
+			Key:        vmID,
+			Originator: "127.0.0.1:8990",
+			Changes:    []types.PropertyChange{},
+			UpdateType: types.ObjectUpdateKindLeave,
+		},
+	}
+}
+
+func createHostEvent(dcName, dcID, hostName, hostID, dvsName, macStr string) defs.Probe2StoreMsg {
+	// Generate host create event
+	return defs.Probe2StoreMsg{
+		MsgType: defs.VCEvent,
+		Val: defs.VCEventMsg{
+			VcObject:   defs.HostSystem,
+			DcID:       dcID,
+			DcName:     dcName,
+			Key:        hostID,
+			Originator: "127.0.0.1:8990",
+			Changes: []types.PropertyChange{
+				types.PropertyChange{
+					Op:   types.PropertyChangeOpAdd,
+					Name: "name",
+					Val:  hostName,
+				},
+				types.PropertyChange{
+					Op:   types.PropertyChangeOpAdd,
+					Name: "config",
+					Val: types.HostConfigInfo{
+						Network: &types.HostNetworkInfo{
+							Pnic: []types.PhysicalNic{
+								types.PhysicalNic{
+									Mac: macStr,
+								},
+							},
+							ProxySwitch: []types.HostProxySwitch{
+								types.HostProxySwitch{
+									DvsName: dvsName,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func deleteHostEvent(dcName, dcID, hostID string) defs.Probe2StoreMsg {
+	return defs.Probe2StoreMsg{
+		MsgType: defs.VCEvent,
+		Val: defs.VCEventMsg{
+			VcObject:   defs.VirtualMachine,
+			DcID:       dcID,
+			DcName:     dcName,
+			Key:        hostID,
+			Originator: "127.0.0.1:8990",
+			Changes:    []types.PropertyChange{},
+			UpdateType: types.ObjectUpdateKindLeave,
+		},
+	}
+}
+
+func createDCEvent(dcName, dcID string) defs.Probe2StoreMsg {
+	return defs.Probe2StoreMsg{
+		MsgType: defs.VCEvent,
+		Val: defs.VCEventMsg{
+			VcObject:   defs.Datacenter,
+			Key:        dcID,
+			Originator: "127.0.0.1:8990",
+			Changes: []types.PropertyChange{
+				types.PropertyChange{
+					Op:  types.PropertyChangeOpAdd,
+					Val: dcName,
+				},
+			},
+		},
+	}
+}
+
+func deleteDCEvent(dcID string) defs.Probe2StoreMsg {
+	return defs.Probe2StoreMsg{
+		MsgType: defs.VCEvent,
+		Val: defs.VCEventMsg{
+			VcObject:   defs.Datacenter,
+			Key:        dcID,
+			Originator: "127.0.0.1:8990",
+			Changes:    []types.PropertyChange{},
+			UpdateType: types.ObjectUpdateKindLeave,
+		},
+	}
 }

@@ -133,6 +133,15 @@ func TestNetworks(t *testing.T) {
 	//   - DVS + PG should appear
 	// Exhaust venice network limit (500). Generate event
 	// Delete old networks, new networks should be added now that we are below limit.
+	// Current hard limit is 500.
+	// Testing with lower limit since it takes too long to run with 500
+	networkCount := 128
+
+	networkExhaust := false
+	if networkCount == (useg.FirstUsegVlan-useg.FirstPGVlan)/2 {
+		networkExhaust = true
+	}
+
 	vcInfo := tinfo.vcConfig
 
 	// bring up sim
@@ -201,19 +210,17 @@ func TestNetworks(t *testing.T) {
 		return true, nil
 	}, "Failed to find DVS and PG", "1s", "10s")
 
-	// Exhaust network limit
-	count := (useg.FirstUsegVlan - useg.FirstPGVlan) / 2
-	for i := 1; i < count; i++ {
+	for i := 1; i < networkCount; i++ {
 		_, err := createNetwork(fmt.Sprintf("network%d", i), 1000+i, orchInfo)
 		AssertOk(t, err, "Error creating network")
 	}
 
 	// Verify all PGs show up
-	foundArr := make([]bool, count)
+	foundArr := make([]bool, networkCount)
 	foundArr[0] = true
 	AssertEventually(t, func() (bool, interface{}) {
 		foundAll := true
-		for i := 1; i < count; i++ {
+		for i := 1; i < networkCount; i++ {
 			if foundArr[i] {
 				continue
 			}
@@ -245,27 +252,29 @@ func TestNetworks(t *testing.T) {
 
 	eventRecorder.ClearEvents()
 
-	// Next creation should exceed limit
-	nw, err = createNetwork(fmt.Sprintf("network-fail"), 2000, orchInfo)
-	AssertOk(t, err, "Error creating network")
+	if networkExhaust {
+		// Next creation should exceed limit
+		nw, err = createNetwork(fmt.Sprintf("network-fail"), 2000, orchInfo)
+		AssertOk(t, err, "Error creating network")
 
-	// Check config failure event was generated
-	AssertEventually(t, func() (bool, interface{}) {
-		foundEvent := false
-		for _, evt := range eventRecorder.GetEvents() {
-			if evt.EventType == eventtypes.ORCH_CONFIG_PUSH_FAILURE.String() {
-				if strings.Contains(evt.Message, nw.Name) {
-					foundEvent = true
+		// Check config failure event was generated
+		AssertEventually(t, func() (bool, interface{}) {
+			foundEvent := false
+			for _, evt := range eventRecorder.GetEvents() {
+				if evt.EventType == eventtypes.ORCH_CONFIG_PUSH_FAILURE.String() {
+					if strings.Contains(evt.Message, nw.Name) {
+						foundEvent = true
+					}
 				}
 			}
-		}
-		return foundEvent, nil
-	}, "Failed to find config push error event", "1s", "30s")
+			return foundEvent, nil
+		}, "Failed to find config push error event", "1s", "30s")
 
-	err = deleteNetwork(nw.Name)
-	AssertOk(t, err, "failed to delete network")
+		err = deleteNetwork(nw.Name)
+		AssertOk(t, err, "failed to delete network")
+	}
 
-	err = deleteNetwork(fmt.Sprintf("network%d", count-1))
+	err = deleteNetwork(fmt.Sprintf("network%d", networkCount-1))
 	AssertOk(t, err, "failed to delete network")
 
 	nw, err = createNetwork(fmt.Sprintf("network-new"), 3000, orchInfo)

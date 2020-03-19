@@ -166,10 +166,12 @@ func (v *VCProbe) connectionListen() {
 				// we don't want to block processing vcenter events
 				// If after blocking for 500ms the tags are not set up, we start a routine
 				// in the backround to retry the tag creation, and move on
+				v.Log.Infof("Connection successful, setting up tags...")
 				ctx, tCancel := context.WithTimeout(v.ClientCtx, 500*time.Millisecond)
 				tagsCreated := v.tp.SetupVCTags(ctx)
 				tCancel()
 				if !tagsCreated {
+					v.Log.Infof("Tags setup failed in timelimit, retrying in the background....")
 					v.WatcherWg.Add(1)
 					go func() {
 						defer v.WatcherWg.Done()

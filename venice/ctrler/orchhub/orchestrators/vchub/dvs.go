@@ -104,6 +104,10 @@ func (d *PenDVS) GetPortSettings() ([]types.DistributedVirtualPort, error) {
 
 // SetVlanOverride overrides the port settings with the given vlan
 func (d *PenDVS) SetVlanOverride(port string, vlan int) error {
+	// Get lock to prevent two different threads
+	// configuring the dvs at the same time.
+	d.Lock()
+	defer d.Unlock()
 	d.Log.Debugf("SetVlanOverride called with port: %v vlan:%v", port, vlan)
 	ports := vcprobe.PenDVSPortSettings{
 		port: &types.VmwareDistributedVirtualSwitchVlanIdSpec{

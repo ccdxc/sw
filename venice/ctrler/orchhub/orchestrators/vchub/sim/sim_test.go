@@ -203,6 +203,15 @@ func TestList(t *testing.T) {
 	AssertEquals(t, int32(10), pgs[3].Config.NumPorts, "Portgroup had incorrect number of ports")
 	AssertEquals(t, "pg4", pgs[4].Name, "Portgroup had incorrect name")
 	AssertEquals(t, int32(10), pgs[4].Config.NumPorts, "Portgroup had incorrect number of ports")
+
+	err = dc.DeleteVM(vm1)
+	AssertOk(t, err, "failed to destroy vm")
+	vms = []mo.VirtualMachine{}
+	getKind(t, c, "VirtualMachine", []string{"name", "config"}, &vms)
+	AssertEquals(t, 0, len(vms), "Recieved incorrect amount of vms")
+
+	err = host2.Destroy()
+	AssertOk(t, err, "failed to destroy host")
 }
 
 func getKind(t *testing.T, client *govmomi.Client, kind string, props []string, dst interface{}) {
