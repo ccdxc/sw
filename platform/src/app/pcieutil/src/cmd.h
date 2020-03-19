@@ -22,4 +22,7 @@ static cmd_t cmd_t_##F \
     .func = F, \
 }
 
+int cmd_run(int argc, char *argv[]);
+int cmd_runstr(char *cmdstr);
+
 #endif /* __CMD_H__ */

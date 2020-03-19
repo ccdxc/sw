@@ -11,7 +11,7 @@ MODULE_SOLIBS   = delphisdk trace halproto utils sdkasicpd \
                   pdcapri pdcommon p4pd_${PIPELINE} sdkp4 \
                   p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma \
                   asicpd ${NIC_SDK_SOLIBS} penipc penipc_ev halproto \
-                  bm_allocator sdkxcvrdriver hal_mock sysmon evutils events_recorder \
+                  bm_allocator sdkxcvrdriver hal_mock events_recorder \
                   eventproto eventtypes asicerror event_thread
 MODULE_LDLIBS   = :libprotobuf.so.14 grpc++ \
                   ${NIC_COMMON_LDLIBS} \

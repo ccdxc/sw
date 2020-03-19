@@ -87,7 +87,7 @@ cfgspace_linkextcap(cfgspace_t *cs, const u_int16_t capaddr)
 static int
 cfgspace_setextcap_acs(cfgspace_t *cs,
                        const cfgspace_capparams_t *cp,
-                       const u_int16_t capaddr)                       
+                       const u_int16_t capaddr)
 {
     const u_int16_t caplen = 0xc;
     u_int32_t v, m;

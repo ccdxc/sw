@@ -148,11 +148,33 @@ pcieport_clear_early_sat_ind_reason(pcieport_t *p)
     pal_reg_wr32w(sat_tgt_ind_reason, v.w, 4);
 }
 
+/*
+ * We get some pipe_decode_disparity_err counts during link
+ * establishment.  We clear these when the link comes up so any
+ * counts that show up later are from after the link has settled.
+ */
+static void
+pcieport_clear_pipe_decode_err(pcieport_t *p)
+{
+    const u_int64_t base = PP_(SAT_PP_PIPE_DECODE_DISPARITY_ERR_0);
+    const int stride = 0x14;
+    int i;
+
+    for (i = 0; i < 16; i++) {
+        const int lanebit = 1 << i;
+
+        if (p->lanemask & lanebit) {
+            pal_reg_wr32(base + (i * stride), 0);
+        }
+    }
+}
+
 static void
 pcieport_clear_early_link_counts(pcieport_t *p)
 {
     pcieport_set_ltssm_st_cnt(p, 0);
     pcieport_clear_early_sat_ind_reason(p);
+    pcieport_clear_pipe_decode_err(p);
 }
 
 static void
@@ -438,11 +460,7 @@ pcieport_fsm(pcieport_t *p, pcieportev_t ev)
     fsm_table[st][ev](p);
 
     if (fsm_verbose) {
-        struct timeval tv;
-
-        gettimeofday(&tv, NULL);
-        pciesys_loginfo("[%ld.%.3ld] fsm port%d: %s + %s => %s\n",
-                        tv.tv_sec, tv.tv_usec / 1000,
+        pciesys_loginfo("fsm port%d: %s + %s => %s\n",
                         p->port,
                         pcieport_stname(st),
                         pcieport_evname(ev),
@@ -453,8 +471,12 @@ pcieport_fsm(pcieport_t *p, pcieportev_t ev)
 void
 pcieport_fsm_init(pcieport_t *p, pcieportst_t st)
 {
-    p->state = st;
+    if (fsm_verbose) {
+        pciesys_loginfo("fsm port%d: init %s\n",
+                        p->port, pcieport_stname(st));
+    }
 
+    p->state = st;
     switch (p->state) {
     case PCIEPORTST_MACUP:
         pcieport_macup(p);
@@ -471,15 +493,6 @@ pcieport_fsm_init(pcieport_t *p, pcieportst_t st)
         break;
     default:
         break;
-    }
-
-    if (fsm_verbose) {
-        struct timeval tv;
-
-        gettimeofday(&tv, NULL);
-        pciesys_loginfo("[%ld.%.3ld] fsm port%d: init %s\n",
-                        tv.tv_sec, tv.tv_usec / 1000,
-                        p->port, pcieport_stname(p->state));
     }
 }
 

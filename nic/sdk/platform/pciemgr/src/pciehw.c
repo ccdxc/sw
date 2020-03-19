@@ -107,7 +107,21 @@ pciehw_hostbdf(const int port, const u_int16_t lbdf)
 u_int16_t
 pciehwdev_get_hostbdf(const pciehwdev_t *phwdev)
 {
-    return pciehw_hostbdf(phwdev->port, phwdev->bdf);
+    /*
+     * If we have a parent then map our local bdf based on root secbus,
+     * else
+     *     No parent this is the root, so no local bdf,
+     *     construct bdf based on primary bus, also known as (secbus - 1).
+     *     If no secbus set yet because no bios scan, then use 0.
+     */
+    if (phwdev->parenth) {
+        return pciehw_hostbdf(phwdev->port, phwdev->bdf);
+    } else {
+        pciehw_shmem_t *pshmem = pciehw_get_shmem();
+        const pciehw_port_t *p = &pshmem->port[phwdev->port];
+        const u_int8_t bus = p->secbus ? p->secbus - 1 : 0;
+        return bdf_make(bus, 0, 0);
+    }
 }
 
 typedef int (*pciehw_cb_t)(pciehwdev_t *phwdev, void *cbarg);
@@ -264,6 +278,7 @@ pciehw_hwinit(void)
 struct hostup_args {
     int gen;
     int width;
+    u_int16_t lnksta2;
 };
 
 static int
@@ -273,14 +288,15 @@ pciehw_hostup(pciehwdev_t *phwdev, void *arg)
     cfgspace_t cs;
 
     pciehwdev_get_cfgspace(phwdev, &cs);
-    cfgspace_update(&cs, a->gen, a->width);
+    cfgspace_update(&cs, a->gen, a->width, a->lnksta2);
     return 0;
 }
 
 void
-pciehw_event_hostup(const int port, const int gen, const int width)
+pciehw_event_hostup(const int port,
+                    const int gen, const int width, const u_int16_t lnksta2)
 {
-    struct hostup_args a = { .gen = gen, .width = width };
+    struct hostup_args a = { .gen = gen, .width = width, .lnksta2 = lnksta2 };
 
     pciehw_foreach(port, pciehw_hostup, &a);
 }
@@ -1078,7 +1094,7 @@ pciehw_stats_show(const int port, const unsigned int flags)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
     pciehw_port_t *p;
-    const int w = 20;
+    const int w = 30;
 
     if (port < 0 || port >= PCIEHW_NPORTS) {
         pciesys_logerror("port %d out of range\n", port);

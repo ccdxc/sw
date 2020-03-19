@@ -17,6 +17,7 @@
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
 #include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
+#include "pciemgrd_impl.hpp"
 
 int
 gold_loop(pciemgrenv_t *pme)

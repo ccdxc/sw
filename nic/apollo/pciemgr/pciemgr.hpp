@@ -11,9 +11,6 @@
 #ifndef __PCIEMGR_HPP__
 #define __PCIEMGR_HPP__
 
-#include "nic/sdk/platform/evutils/include/evutils.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
-
 /// \defgroup PDS_PCIEMGR
 /// @{
 
@@ -45,21 +42,6 @@ private:
 };
 
 }    // namespace pciemgr
-
-#if 0
-typedef struct pciemgrenv_s {
-    u_int8_t interactive:1;
-    u_int8_t gold:1;
-    u_int8_t reboot_on_hostdn:1;
-    u_int8_t poll_port:1;
-    u_int8_t poll_dev:1;
-    u_int8_t enabled_ports;
-    pciemgr_params_t params;
-} pciemgrenv_t;
-
-int intr_init(void);
-#endif
-
 
 /// \@}
 

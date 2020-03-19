@@ -53,14 +53,14 @@ do_finalize(pmmsg_t *m)
         pciesys_logerror("pciehdev_finalize(%d) failed %d\n", port, r);
     }
 
+    // log some info about the final config
+    pciehw_dev_show(0, NULL);
+    pciehw_bar_show(0, NULL);
+
     r = pcieport_crs_off(port);
     if (r < 0) {
         pciesys_logerror("pcieport_crs_off(%d) failed %d\n", port, r);
     }
-
-    // log some info about the final config
-    pciehw_dev_show(0, NULL);
-    pciehw_bar_show(0, NULL);
     pciesys_loginfo("finalize: port %d ready\n", port);
 }
 
@@ -209,7 +209,6 @@ server_loop(pciemgrenv_t *pme)
 {
     int r = 0;
 
-    // logger_init();
     pciesys_loginfo("pciemgrd started\n");
 
 #ifdef IRIS

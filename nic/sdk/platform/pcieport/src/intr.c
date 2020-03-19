@@ -189,6 +189,19 @@ pcieport_mac_intr_ack(const int port)
 }
 
 /*
+ * Update int_mac stats to count each instance of these interrupts.
+ */
+static void
+pcieport_int_mac_stats(u_int32_t int_mac, u_int64_t *stats)
+{
+    while (int_mac) {
+        u_int32_t bit = ffs(int_mac) - 1;
+        int_mac &= ~(1 << bit);
+        stats[bit]++;
+    }
+}
+
+/*
  * 3 conditions for link up
  *     1) PCIE clock (PERSTxN_DN2UP)
  *     2) CFG_PP_SW_RESET unreset
@@ -214,6 +227,8 @@ pcieport_handle_mac_intr(pcieport_t *p)
     }
 #endif
     if (int_mac == 0) return -1;
+
+    pcieport_int_mac_stats(int_mac, &p->stats.int_mac_stats);
 
     /*
      * Snapshot current status here *before* ack'ing int_mac intrs.
@@ -274,7 +289,7 @@ pcieport_handle_mac_intr(pcieport_t *p)
 void
 pcieport_intr_inherit(pcieport_t *p)
 {
-    u_int32_t int_mac, sta_rst;
+    u_int32_t int_mac, sta_rst, ltssm_cnt;
     pcieportst_t initst = PCIEPORTST_OFF;
     u_int8_t secbus;
 
@@ -285,14 +300,17 @@ pcieport_intr_inherit(pcieport_t *p)
 #endif
 
     if (pcieport_is_accessible(p->port)) {
+        u_int64_t pa = PXP_(SAT_P_PORT_CNT_LTSSM_STATE_CHANGED, p->port);
+        ltssm_cnt = pal_reg_rd32(pa);
         portcfg_read_bus(p->port, NULL, &secbus, NULL);
     } else {
         secbus = 0;
+        ltssm_cnt = 0;
     }
 
     pciesys_loginfo("pcieport_intr_inherit: "
-                    "int_mac 0x%x sta_rst 0x%x secbus 0x%02x\n",
-                    int_mac, sta_rst, secbus);
+                    "int_mac 0x%x sta_rst 0x%x secbus 0x%02x ltssm_cnt %d\n",
+                    int_mac, sta_rst, secbus, ltssm_cnt);
 
     if (sta_rst & STA_RSTF_(PERSTN)) {
         if (sta_rst & STA_RSTF_(MAC_DL_UP)) {

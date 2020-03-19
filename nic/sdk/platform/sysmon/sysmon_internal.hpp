@@ -64,6 +64,7 @@ void checkdisk(void);
 void checkmemory(void);
 void checkpower(void);
 void checkpostdiag(void);
+void checkpciehealth(void);
 
 extern sysmon_cfg_t g_sysmon_cfg;
 

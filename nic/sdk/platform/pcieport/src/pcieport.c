@@ -322,14 +322,14 @@ pcieport_is_accessible(const int port)
 
     /*
      * port is accessible if out of reset so pcie refclk is good and
-     * ltssm_st == 0x10 (UP).
+     * ltssm_st >= 0x9 (config.complete).
      *
      * Note: this is a bit conservative, we don't need to be all the
-     * way to 0x10 (UP) to have a stable refclk.  But the link might
+     * way through config to have a stable refclk.  But the link might
      * still be settling and refclk could go away during the settling
      * time so we check ltssm_st to be sure we've settled.
      */
-    return (sta_rst & STA_RSTF_(PERSTN)) != 0 && ltssm_st == 0x10;
+    return (sta_rst & STA_RSTF_(PERSTN)) != 0 && ltssm_st >= 0x9;
 }
 
 /******************************************************************
@@ -413,7 +413,7 @@ void
 pcieport_showportstats(const int port, const unsigned int flags)
 {
     pcieport_t *p = pcieport_get(port);
-    const int w = 20;
+    const int w = 30;
 
     if (p == NULL) {
         pciesys_logerror("port %d out of range\n", port);

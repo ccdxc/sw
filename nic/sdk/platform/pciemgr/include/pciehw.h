@@ -204,7 +204,8 @@ void pciehw_stats_show(const int port, const unsigned int flags);
 void pciehw_stats_clear(const int port, const unsigned int flags);
 pciemgr_stats_t *pciehw_stats_get(const int port);
 
-void pciehw_event_hostup(const int port, const int gen, const int width);
+void pciehw_event_hostup(const int port, const int gen, const int width,
+                         const u_int16_t lnksta2);
 void pciehw_event_hostdn(const int port);
 void pciehw_event_buschg(const int port, const u_int8_t secbus);
 

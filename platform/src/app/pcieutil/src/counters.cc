@@ -14,6 +14,7 @@
 #include "nic/sdk/platform/pal/include/pal.h"
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
+#include "nic/sdk/platform/pcieport/include/portmap.h"
 
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"
@@ -21,6 +22,7 @@
 #include "cap_wa_c_hdr.h"
 
 #include "cmd.h"
+#include "utils.hpp"
 #include "counter_defs.h"
 
 // field width for name
@@ -403,6 +405,18 @@ show_db_wa_sat_wa(void)
 }
 
 static void
+show_per_port_stats(const int port, void *arg)
+{
+    show_pp_port_c_cnt_c(port);
+    show_pp_port_c_sat_c_port_cnt(port);
+    if (pcieport_is_accessible(port)) {
+        show_pp_port_p_sat_p_port_cnt(port);
+    } else {
+        printf("port%d:pp_port_p_sat_p_port_cnt not accessible\n", port);
+    }
+}
+
+static void
 counters(int argc, char *argv[])
 {
     int opt;
@@ -431,13 +445,8 @@ counters(int argc, char *argv[])
 
     show_pp_sat_pp_pipe();
 
-    for (int port = 0; port < PCIEPORT_NPORTS; port++) {
-        if (pcieport_is_accessible(port)) {
-            show_pp_port_c_cnt_c(port);
-            show_pp_port_c_sat_c_port_cnt(port);
-            show_pp_port_p_sat_p_port_cnt(port);
-        }
-    }
+    portmap_init_from_catalog();
+    portmap_foreach_port(show_per_port_stats, NULL);
 
     show_db_wa_sat_wa();
 }

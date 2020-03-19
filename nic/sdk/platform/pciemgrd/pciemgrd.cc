@@ -41,20 +41,39 @@ pciemgrenv_get(void)
 }
 
 static void
-reboot_the_system(void)
+pcie_hostdn(void)
 {
-    int r = system("/nic/tools/pcie_hostdn.sh");
-    if (r) pciesys_logerror("failed to reboot %d\n", r);
+    int r = evutil_system(EV_DEFAULT_ "/nic/tools/pcie_hostdn.sh", NULL, NULL);
+    if (r < 0) pciesys_logerror("pcie_hostdn failed %d\n", r);
 }
 
+/*
+ * With long-lived SWM cards, a hostdn is a sign the host is going away.
+ * This might be an opportunity for us to reset if there is a
+ * pending config change.  The pcie_hostdn_swm.sh script will check
+ * for pending changes and reset if necessary.
+ */
 static void
-reboot_the_system_swm(void)
+pcie_hostdn_swm(void)
 {
-    int r = system("/nic/tools/pcie_hostdn_swm.sh");
-    if (r < 0)
-        pciesys_loginfo("pcie_hostdn_swm.sh error (%d)\n", r);
-    else
+    int r = evutil_system(EV_DEFAULT_ "/nic/tools/pcie_hostdn_swm.sh",
+                          NULL, NULL);
+    if (r < 0) {
+        pciesys_logerror("pcie_hostdn_swm.sh failed %d\n", r);
+    } else {
         pciesys_loginfo("pcie_hostdn_swm.sh called\n");
+    }
+}
+
+/*
+ * With long-lived SWM cards, a macup is a sign the host is booting.
+ * This might be another opportunity for us to reset if there is a
+ * pending config change, same as pcie_hostdn_swm().
+ */
+static void
+pcie_macup_swm(void)
+{
+    pcie_hostdn_swm();
 }
 
 /*
@@ -107,24 +126,26 @@ port_evhandler(pcieport_event_t *ev, void *arg)
         break;
     }
     case PCIEPORT_EVENT_HOSTUP: {
+        pcieport_event_hostup_t *hup = &ev->hostup;
         pciesys_loginfo("port%d: hostup gen%dx%d%s\n",
-                        ev->port, ev->hostup.gen, ev->hostup.width,
-                        ev->linkup.reversed ? "r" : "");
-        pciehw_event_hostup(ev->port, ev->hostup.gen, ev->hostup.width);
+                        ev->port, hup->gen, hup->width,
+                        hup->reversed ? "r" : "");
+        pciehw_event_hostup(ev->port, hup->gen, hup->width, hup->lnksta2);
 #ifdef IRIS
         update_pcie_port_status(ev->port, PCIEMGR_UP,
-                                ev->hostup.gen, ev->hostup.width,
-                                ev->hostup.reversed);
+                                hup->gen, hup->width, hup->reversed);
 #endif
         break;
     }
     case PCIEPORT_EVENT_HOSTDN: {
         if (pme->reboot_on_hostdn) {
-            if (pme->params.long_lived)
-                reboot_the_system_swm();
-            else
-                reboot_the_system();
+            if (pme->params.long_lived) {
+                pcie_hostdn_swm();
+            } else {
+                pcie_hostdn();
+            }
         }
+        // if no reset on hostdn, continue...
         pciesys_loginfo("port%d: hostdn\n", ev->port);
         pciehw_event_hostdn(ev->port);
 #ifdef IRIS
@@ -134,8 +155,9 @@ port_evhandler(pcieport_event_t *ev, void *arg)
     }
     case PCIEPORT_EVENT_MACUP: {
         pciesys_loginfo("port%d: macup event\n", ev->port);
-        if (pme->params.long_lived)
-            reboot_the_system_swm();
+        if (pme->params.long_lived) {
+            pcie_macup_swm();
+        }
         break;
     }
     case PCIEPORT_EVENT_BUSCHG: {
@@ -168,11 +190,24 @@ open_hostports(void)
     int r, port;
 
     /*
+     * Register for events here so we get events as we open/config ports.
+     */
+    r = pcieport_register_event_handler(port_evhandler, NULL);
+    if (r < 0) {
+        pciesys_logerror("pcieport_register_event_handler failed %d\n", r);
+        return r;
+    }
+
+    /*
      * Open and configure all the ports we are going to manage.
      */
     r = 0;
     for (port = 0; port < PCIEPORT_NPORTS; port++) {
         if (pme->enabled_ports & (1 << port)) {
+#ifdef IRIS
+            /* initialize delphi port status object */
+            update_pcie_port_status(port, PCIEMGR_DOWN);
+#endif
             if ((r = pcieport_open(port, params->initmode)) < 0) {
                 pciesys_logerror("pcieport_open %d failed: %d\n", port, r);
                 goto error_out;
@@ -181,16 +216,9 @@ open_hostports(void)
                 pciesys_logerror("pcieport_hostconfig %d failed\n", port);
                 goto close_error_out;
             }
-#ifdef IRIS
-            /* initialize delphi port status object */
-            update_pcie_port_status(port, PCIEMGR_DOWN);
-#endif
         }
     }
 
-    if ((r = pcieport_register_event_handler(port_evhandler, NULL)) < 0) {
-        goto error_out;
-    }
     return r;
 
  close_error_out:
@@ -841,7 +869,7 @@ pciemgrd_sched_init(pciemgrenv_t *pme)
 
     if (pme->fifopri) {
         struct sched_param param;
-        const int policy = SCHED_FIFO;
+        const int policy = SCHED_FIFO | SCHED_RESET_ON_FORK;
 
         memset(&param, 0, sizeof(param));
         param.sched_priority = pme->fifopri;

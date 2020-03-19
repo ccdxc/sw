@@ -29,9 +29,17 @@ typedef struct pcieport_event_linkinfo_s {
     int genid;                  /* port event generation id */
 } pcieport_event_linkinfo_t;
 
+typedef struct pcieport_event_hostup_s {
+    int gen;                    /* pcie speed genX */
+    int width;                  /* pcie width xX lanes */
+    int reversed;               /* pcie lanes reversed */
+    int genid;                  /* port event generation id */
+    u_int16_t lnksta2;          /* pcie cap lnksta2 register */
+    u_int32_t physlsta;         /* phys layer cap status register */
+} pcieport_event_hostup_t;
+
 typedef pcieport_event_linkinfo_t pcieport_event_linkup_t;
 typedef pcieport_event_linkinfo_t pcieport_event_linkdn_t;
-typedef pcieport_event_linkinfo_t pcieport_event_hostup_t;
 typedef pcieport_event_linkinfo_t pcieport_event_hostdn_t;
 typedef pcieport_event_linkinfo_t pcieport_event_macup_t;
 

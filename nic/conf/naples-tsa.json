@@ -107,64 +107,9 @@
                                         "Command" : "/nic/bin/delphictl db get NaplesStatus"
                                 },
                                 {
-                                        "Name" : "Pcie Port",
+                                        "Name" : "Pcie Techsupport",
                                         "Method" : 0,
-                                        "Command" : "/platform/bin/pcieutil port"
-                                },
-                                {
-                                        "Name" : "Pcie Portstats",
-                                        "Method" : 0,
-                                        "Command" : "/platform/bin/pcieutil portstats"
-                                },
-                                {
-                                        "Name" : "Pcie Stats",
-                                        "Method" : 0,
-                                        "Command" : "/platform/bin/pcieutil stats"
-                                },
-                                {
-                                        "Name" : "Pcie Counters",
-                                        "Method" : 0,
-                                        "Command" : "/platform/bin/pcieutil counters"
-                                },
-                                {
-                                        "Name" : "Pcie Dev",
-                                        "Method" : 0,
-                                        "Command" : "/platform/bin/pcieutil dev"
-                                },
-                                {
-                                        "Name" : "Pcie Devintr",
-                                        "Method" : 0,
-                                        "Command" : "/platform/bin/pcieutil devintr"
-                                },
-                                {
-                                        "Name" : "Pcie Bar",
-                                        "Method" : 0,
-                                        "Command" : "/platform/bin/pcieutil bar"
-                                },
-                                {
-                                        "Name" : "Pcie PMT",
-                                        "Method" : 0,
-                                        "Command" : "/platform/bin/pcieutil pmt"
-                                },
-                                {
-                                        "Name" : "Pcie PRT",
-                                        "Method" : 0,
-                                        "Command" : "/platform/bin/pcieutil prt"
-                                },
-                                {
-                                        "Name" : "Pcie HDRT",
-                                        "Method" : 0,
-                                        "Command" : "/platform/bin/pcieutil hdrt"
-                                },
-                                {
-                                        "Name" : "Pcie aximst",
-                                        "Method" : 0,
-                                        "Command" : "/platform/bin/pcieutil aximst"
-                                },
-                                {
-                                        "Name" : "Pcie dberr",
-                                        "Method" : 0,
-                                        "Command" : "/platform/bin/pcieutil dberr"
+                                        "Command" : "/platform/bin/pcieutil techsupport"
                                 },
                                 {
                                         "Name" : "Fwupdate",

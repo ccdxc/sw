@@ -23,7 +23,7 @@ logfmt(const char *fmt, va_list ap)
     static char buf[1024];
     vsnprintf(buf, sizeof(buf), fmt, ap);
     const int len = strlen(buf);
-    if (buf[len - 1] == '\n') buf[len - 1] = '\0';
+    if (len && buf[len - 1] == '\n') buf[len - 1] = '\0';
     return buf;
 }
 
@@ -52,7 +52,7 @@ logerror(const char *fmt, va_list ap)
 }
 
 static void
-logflush(void *arg)
+logflush(void)
 {
     spdlogger->flush();
 }
@@ -62,7 +62,14 @@ static pciesys_logger_t pciemgrd_logger = {
     .loginfo  = loginfo,
     .logwarn  = logwarn,
     .logerror = logerror,
+    .logflush = logflush,
 };
+
+static void
+logflush_cb(void *arg)
+{
+    logflush();
+}
 
 static spdlog::level::level_enum
 default_loglevel(void)
@@ -102,7 +109,7 @@ logger_init(void)
     spdlogger->set_level(default_loglevel());
 
     static evutil_prepare logprep;
-    evutil_add_prepare(EV_DEFAULT_ &logprep, logflush, NULL);
+    evutil_add_prepare(EV_DEFAULT_ &logprep, logflush_cb, NULL);
 
     pciesys_set_logger(&pciemgrd_logger);
 }

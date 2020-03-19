@@ -26,12 +26,14 @@ void pciesys_logwarn(const char *fmt, ...)
     __attribute__((format (printf, 1, 2)));
 void pciesys_logerror(const char *fmt, ...)
     __attribute__((format (printf, 1, 2)));
+void pciesys_logflush(void);
 
 typedef struct pciesys_logger_s {
     void (*logdebug)(const char *fmt, va_list ap);
     void (*loginfo)(const char *fmt, va_list ap);
     void (*logwarn)(const char *fmt, va_list ap);
     void (*logerror)(const char *fmt, va_list ap);
+    void (*logflush)(void);
 } pciesys_logger_t;
 
 void pciesys_set_logger(pciesys_logger_t *logger);

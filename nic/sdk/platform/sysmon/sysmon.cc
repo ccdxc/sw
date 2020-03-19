@@ -18,7 +18,8 @@ monfunc_t monfunclist[] = {
     { checkmemory      },
     { checkpostdiag    },
     { checkliveness    },
-    { checkpower       }
+    { checkpower       },
+    { checkpciehealth  },
 };
 
 static void monitorsystem() {

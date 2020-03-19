@@ -39,7 +39,7 @@ portmap_init_from_catalog()
         if (portmap_addhost(&ps) < 0) {
             pciesys_logerror("portmap_add i %d h%d p%d gen%dx%d failed\n",
                              i, ps.host, ps.port, ps.gen, ps.width);
-            return-1;
+            return -1;
         }
     }
     sdk::lib::catalog::destroy(catalog);
@@ -53,7 +53,7 @@ portmap_init_from_catalog()
     if (portmap_addhost(&ps) < 0) {
         pciesys_logerror("portmap_add h%d p%d gen%dx%d failed\n",
                          ps.host, ps.port, ps.gen, ps.width);
-            return -1;
+        return -1;
     }
 #endif
     inited = 1;

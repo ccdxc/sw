@@ -302,6 +302,7 @@ nic/build/$ARCH/$PIPELINE/out/capviewdb_submake/capviewdb.bin                   
 platform/src/app/cpld/bin/*.bin                                                 /nic/etc/cpld/
 nic/tools/pcie_hostdn.sh                                                        /nic/tools/
 nic/tools/pcie_hostdn_swm.sh                                                    /nic/tools/
+nic/tools/pcie_healthlog.sh                                                     /nic/tools/
 platform/src/app/cpld/cpldapp.sh                                                /nic/tools/
 platform/src/app/cpld/reboot.sh                                                 /nic/tools/
 platform/src/app/sysmond/sysmondebug.sh                                         /nic/tools/

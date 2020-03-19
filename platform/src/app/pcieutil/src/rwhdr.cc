@@ -126,27 +126,14 @@ wrhdr_show(const uint32_t entry, wrhdr_t *h)
  * are used less frequently.
  */
 static void
-itr_rdhdr(int argc, char *argv[])
+show_rdhdr(const int raw)
 {
-    int opt, raw, i;
     rdhdr_t rdhdr[RDHDR_NENTRIES];
-
-    raw = 0;
-    optind = 0;
-    while ((opt = getopt(argc, argv, "r")) != -1) {
-        switch (opt) {
-        case 'r':
-            raw = 1;
-            break;
-        default:
-            return;
-        }
-    }
+    int i;
 
     for (i = 0; i < RDHDR_NENTRIES; i++) {
         rdhdr_read(i, &rdhdr[i]);
     }
-
     for (i = 0; i < RDHDR_NENTRIES; i++) {
         if (raw) {
             rdhdr_raw(i, &rdhdr[i]);
@@ -155,10 +142,6 @@ itr_rdhdr(int argc, char *argv[])
         }
     }
 }
-CMDFUNC(itr_rdhdr,
-"show itr_rdhdr_entry[]",
-"itr_rdhdr [-r]\n"
-"    -r         raw format\n");
 
 /*
  * Display the itr_wrhdr_entry table of writes to the host.
@@ -171,27 +154,14 @@ CMDFUNC(itr_rdhdr,
  * id will likely get reallocated soon and the table overwritten.
  */
 static void
-itr_wrhdr(int argc, char *argv[])
+show_wrhdr(const int raw)
 {
-    int opt, raw, i;
     wrhdr_t wrhdr[WRHDR_NENTRIES];
-
-    raw = 0;
-    optind = 0;
-    while ((opt = getopt(argc, argv, "r")) != -1) {
-        switch (opt) {
-        case 'r':
-            raw = 1;
-            break;
-        default:
-            return;
-        }
-    }
+    int i;
 
     for (i = 0; i < WRHDR_NENTRIES; i++) {
         wrhdr_read(i, &wrhdr[i]);
     }
-
     for (i = 0; i < WRHDR_NENTRIES; i++) {
         if (raw) {
             wrhdr_raw(i, &wrhdr[i]);
@@ -200,7 +170,48 @@ itr_wrhdr(int argc, char *argv[])
         }
     }
 }
-CMDFUNC(itr_wrhdr,
-"show itr_wrhdr_entry[]",
-"itr_wrhdr [-r]\n"
-"    -r         raw format\n");
+
+static void
+itr_rwhdr(int argc, char *argv[])
+{
+    int opt, showrd, showwr, raw;
+
+    showrd = 0;
+    showwr = 0;
+    raw = 0;
+    optind = 0;
+    while ((opt = getopt(argc, argv, "rwR")) != -1) {
+        switch (opt) {
+        case 'r':
+            showrd = 1;
+            break;
+        case 'w':
+            showwr = 1;
+            break;
+        case 'R':
+            raw = 1;
+            break;
+        default:
+            return;
+        }
+    }
+    if (!showrd && !showwr) {
+        showrd = 1;
+        showwr = 1;
+    }
+
+    if (showrd) {
+        printf("==== itr_rdhdr ====\n");
+        show_rdhdr(raw);
+    }
+    if (showwr) {
+        printf("==== itr_wrhdr ====\n");
+        show_wrhdr(raw);
+    }
+}
+CMDFUNC(itr_rwhdr,
+"show itr_rd/wrhdr_entry[]",
+"itr_rwhdr [-rwR]\n"
+"    -r         idr_rdhdr only (default both)\n"
+"    -w         idr_wrhdr only (default both)\n"
+"    -R         raw format\n");

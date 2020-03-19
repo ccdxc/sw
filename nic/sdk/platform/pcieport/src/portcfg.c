@@ -68,6 +68,44 @@ portcfg_readd(const int port, const u_int16_t addr)
     return portcfg_readdw(port, addr);
 }
 
+size_t
+portcfg_read(const int port, const u_int16_t addr, void *buf, size_t count)
+{
+    const size_t requested_count = count;
+    u_int16_t off = addr;
+    char *cp;
+    u_int32_t *wp;
+
+    /* read unaligned head */
+    cp = buf;
+    while ((off & 0x3) && (count > 0)) {
+        *cp = portcfg_readb(port, off);
+        cp++;
+        off++;
+        count--;
+    }
+
+    /* read aligned dwords */
+    wp = (u_int32_t *)cp;
+    while (count >= 4) {
+        *wp = portcfg_readd(port, off);
+        wp++;
+        off += 4;
+        count -= 4;
+    }
+
+    /* read unaligned tail */
+    cp = (char *)wp;
+    while (count > 0) {
+        *cp = portcfg_readb(port, off);
+        cp++;
+        off++;
+        count--;
+    }
+
+    return requested_count;
+}
+
 void
 portcfg_writeb(const int port, const u_int16_t addr, const u_int8_t val)
 {
@@ -117,7 +155,7 @@ void
 portcfg_read_genwidth(const int port, int *gen, int *width)
 {
     /* pcie cap at 0x80, link status at +0x12 */
-    const u_int16_t lnksta = portcfg_readw(port, 0x80 + 0x12);
+    const u_int16_t lnksta = portcfg_readw(port, PORTCFG_CAP_PCIE + 0x12);
 
     if (gen) *gen = lnksta & 0xf;
     if (width) *width = (lnksta >> 4) & 0x1f;

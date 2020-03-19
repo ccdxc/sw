@@ -15,6 +15,7 @@
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "platform/pciemgr/include/pciemgr.h"
 #include "pcieport.h"
+#include "portcfg.h"
 #include "pcieport_impl.h"
 
 typedef struct pcieport_handler_info_s {
@@ -89,6 +90,7 @@ pcieport_event_hostup(pcieport_t *p, const int genid)
     hostup->width = p->cur_width;
     hostup->reversed = p->cur_reversed;
     hostup->genid = genid;
+    hostup->lnksta2 = portcfg_readw(p->port, PORTCFG_CAP_PCIE + 0x32);
     send_event(&ev);
 }
 

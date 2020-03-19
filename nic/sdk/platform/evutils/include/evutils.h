@@ -135,6 +135,11 @@ evutil_stat_start(EV_P_ evutil_stat* evu_stat,
                   evutil_cb_t *delete_cb,
                   void *delete_cbarg);
 
+typedef void (evutil_system_cb_t)(pid_t pid, int status, void *cbarg);
+
+pid_t evutil_system(EV_P_ const char *cmd,
+                    evutil_system_cb_t *cb, void *cbarg);
+
 #ifdef __cplusplus
 }
 #endif

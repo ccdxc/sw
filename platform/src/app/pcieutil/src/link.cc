@@ -96,16 +96,18 @@ linkpoll(int argc, char *argv[])
         unsigned int fifo_wr:8;
         int gen;
         int width;
-    } ost, nst;
-    u_int64_t otm, ntm;
+    } ostbuf, *ost = &ostbuf, nstbuf, *nst = &nstbuf, *tst;
+    u_int64_t otm, ntm, starttm, totaltm;
     int port, polltm_us, opt, showall;
+    char genGxW_str[16];
 
     port = default_pcieport();
     polltm_us = 0;
+    totaltm = 0;
     showall = 0;
 
     optind = 0;
-    while ((opt = getopt(argc, argv, "ap:t:")) != -1) {
+    while ((opt = getopt(argc, argv, "ap:t:T:")) != -1) {
         switch (opt) {
         case 'a':
             showall = 1;
@@ -116,6 +118,11 @@ linkpoll(int argc, char *argv[])
         case 't':
             polltm_us = strtoul(optarg, NULL, 0);
             break;
+        case 'T': {
+            u_int32_t totaltm_sec = strtoul(optarg, NULL, 0);
+            totaltm = totaltm_sec * 1000000;
+            break;
+        }
         default:
             return;
         }
@@ -130,76 +137,92 @@ linkpoll(int argc, char *argv[])
     printf("              |||||  fifo           |\n");
     printf(" +time (sec)  Pplgr  rd/wr  genGxW  r ltssm\n");
 
-    memset(&ost, 0, sizeof(ost));
-    memset(&nst, 0, sizeof(nst));
+    memset(ost, 0, sizeof(*ost));
+    memset(nst, 0, sizeof(*nst));
     otm = 0;
     ntm = 0;
+    starttm = gettimestamp();
     while (1) {
         const u_int32_t sta_rst = pal_reg_rd32(PXC_(STA_C_PORT_RST, port));
         const u_int32_t sta_mac = pal_reg_rd32(PXC_(STA_C_PORT_MAC, port));
         const u_int32_t cfg_mac = pal_reg_rd32(PXC_(CFG_C_PORT_MAC, port));
         u_int16_t portfifo[8], depths;
 
-        nst.perstn = (sta_rst & STA_RSTF_(PERSTN)) != 0;
-        nst.phystatus = (sta_rst & STA_RSTF_(PHYSTATUS_OR)) != 0;
-        nst.portgate = (sta_mac & STA_C_PORT_MACF_(PORTGATE_OPEN)) != 0;
-        nst.ltssm_en = (cfg_mac & CFG_MACF_(0_2_LTSSM_EN)) != 0;
-        nst.crs = (cfg_mac & CFG_MACF_(0_2_CFG_RETRY_EN)) != 0;
-        nst.ltssm_st = (sta_mac & 0x1f);
-        nst.reversed = pcieport_get_mac_lanes_reversed(port);
+        nst->perstn = (sta_rst & STA_RSTF_(PERSTN)) != 0;
+        nst->phystatus = (sta_rst & STA_RSTF_(PHYSTATUS_OR)) != 0;
+        nst->portgate = (sta_mac & STA_C_PORT_MACF_(PORTGATE_OPEN)) != 0;
+        nst->ltssm_en = (cfg_mac & CFG_MACF_(0_2_LTSSM_EN)) != 0;
+        nst->crs = (cfg_mac & CFG_MACF_(0_2_CFG_RETRY_EN)) != 0;
+        nst->ltssm_st = (sta_mac & 0x1f);
 
         // protect against mac reset events
         // gen/width registers are inaccessible when mac is reset.
         // (this is not perfect, still racy)
         if (pcieport_is_accessible(port)) {
-            portcfg_read_genwidth(port, &nst.gen, &nst.width);
+            portcfg_read_genwidth(port, &nst->gen, &nst->width);
+            snprintf(genGxW_str, sizeof(genGxW_str),
+                     "gen%dx%-2d", nst->gen, nst->width);
+            nst->reversed = pcieport_get_mac_lanes_reversed(port);
         } else {
-            nst.gen = 0;
-            nst.width = 0;
+            nst->gen = 0;
+            nst->width = 0;
+            genGxW_str[0] = '\0';
+            nst->reversed = 0;
         }
 
         pal_reg_rd32w(PXB_(STA_ITR_PORTFIFO_DEPTH), (u_int32_t *)portfifo, 4);
         depths = portfifo[port];
 
-        nst.fifo_wr = depths;
-        nst.fifo_rd = depths >> 8;
+        nst->fifo_wr = depths;
+        nst->fifo_rd = depths >> 8;
 
         /* fold small depths to 0's */
-        if (!showall && nst.fifo_wr <= 2) nst.fifo_wr = 0;
-        if (!showall && nst.fifo_rd <= 2) nst.fifo_rd = 0;
+        if (!showall && nst->fifo_wr <= 2) nst->fifo_wr = 0;
+        if (!showall && nst->fifo_rd <= 2) nst->fifo_rd = 0;
 
         /* fold early detect states quiet/active, too many at start */
-        if (!showall && nst.ltssm_st == 1) nst.ltssm_st = 0;
+        if (!showall && nst->ltssm_st == 1) nst->ltssm_st = 0;
 
-        if (memcmp(&nst, &ost, sizeof(nst)) != 0) {
+        if (memcmp(nst, ost, sizeof(*nst)) != 0) {
             ntm = gettimestamp();
             if (otm == 0) otm = ntm;
 
-            printf("[+%010.6lf] %c%c%c%c%c %3u/%-3u gen%dx%-2d %c 0x%02x %s\n",
+            printf("[+%010.6lf] %c%c%c%c%c %3u/%-3u %-7s %c 0x%02x %s\n",
                    (ntm - otm) / 1000000.0,
-                   nst.perstn           ? 'P' : '-',
-                   nst.phystatus == 0   ? 'p' :'-',
-                   nst.ltssm_en         ? 'l' : '-',
-                   nst.portgate         ? 'g' : '-',
-                   nst.crs == 0         ? 'r' : '-',
-                   nst.fifo_rd,
-                   nst.fifo_wr,
-                   nst.gen,
-                   nst.width,
-                   nst.reversed ? 'r' : ' ',
-                   nst.ltssm_st,
-                   ltssm_str(nst.ltssm_st));
+                   nst->perstn          ? 'P' : '-',
+                   nst->phystatus == 0  ? 'p' :'-',
+                   nst->ltssm_en        ? 'l' : '-',
+                   nst->portgate        ? 'g' : '-',
+                   nst->crs == 0        ? 'r' : '-',
+                   nst->fifo_rd,
+                   nst->fifo_wr,
+                   genGxW_str,
+                   nst->reversed ? 'r' : ' ',
+                   nst->ltssm_st,
+                   ltssm_str(nst->ltssm_st));
 
+            tst = ost;
             ost = nst;
+            nst = tst;
             otm = ntm;
         }
 
+        if (totaltm) {
+            u_int64_t nowtm = gettimestamp();
+            if (nowtm - starttm >= totaltm) {
+                printf("[+%010.6lf] stop after %" PRId64 " seconds\n",
+                       (nowtm - otm) / 1000000.0, totaltm / 1000000);
+                break;
+            }
+        }
         if (polltm_us) usleep(polltm_us);
     }
 }
 CMDFUNC(linkpoll,
 "poll pcie link state",
-"linkpoll [-a][-p <port>][-t <polltm>]\n"
-"    -a         show all state changes (default ignores small changes)\n"
-"    -p <port>  poll port <port> (default port 0)\n"
-"    -t <polltm> <polltm> microseconds between poll events (default 0)\n");
+"linkpoll [-a][-p <port>][-t <polltm>][-T <runtime>\n"
+"    -a             show all state changes (default ignores small changes)\n"
+"    -p <port>      poll port <port> (default port 0)\n"
+"    -t <polltm>    <polltm> microseconds between poll events (default 0)\n"
+"    -T <runtime>   run for <runtime> seconds, then exit\n"
+);

@@ -18,6 +18,7 @@
 #include "nic/sdk/platform/pciemgr/include/pciehw.h"
 #include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 #include "cmd.h"
+#include "utils.hpp"
 
 typedef union laneinfo_u {
     uint16_t lane[16];
@@ -112,14 +113,22 @@ pciesd_lanes_ready(const uint16_t lanemask)
     return lanes_ready;
 }
 
+static uint16_t
+default_lanemask(void)
+{
+    int port = default_pcieport();
+    pcieport_t *p = pcieport_get(port);
+    return p ? p->lanemask : 0xffff;
+}
+
 static void
 serdesfw(int argc, char *argv[])
 {
     int opt;
     uint16_t lanemask, lanes_ready;
-    laneinfo_t build, revid;
+    laneinfo_t build, revid, engbd;
 
-    lanemask = 0xffff;
+    lanemask = default_lanemask();
     optind = 0;
     while ((opt = getopt(argc, argv, "l:")) != -1) {
         switch (opt) {
@@ -134,8 +143,9 @@ serdesfw(int argc, char *argv[])
 
     pal_wr_lock(SBUSLOCK);
     lanes_ready = pciesd_lanes_ready(lanemask);
-    pciesd_core_interrupt(lanes_ready, 0, 0, &build);
+    pciesd_core_interrupt(lanes_ready, 0,    0, &build);
     pciesd_core_interrupt(lanes_ready, 0x3f, 0, &revid);
+    pciesd_core_interrupt(lanes_ready, 0,    1, &engbd);
     pal_wr_unlock(SBUSLOCK);
 
     for (int i = 0; i < 16; i++) {
@@ -146,7 +156,8 @@ serdesfw(int argc, char *argv[])
         if (lanemask & lanebit) {
             if (ready) {
                 snprintf(buildrev, sizeof(buildrev),
-                         "%04x %04x", build.lane[i], revid.lane[i]);
+                         "%04x %04x %04x",
+                         build.lane[i], revid.lane[i], engbd.lane[i]);
             } else {
                 strncpy(buildrev, "not ready", sizeof(buildrev));
             }
@@ -157,7 +168,7 @@ serdesfw(int argc, char *argv[])
 CMDFUNC(serdesfw,
 "pcie serdes fw version info",
 "serdesfw [-l <lanemask>]\n"
-"    -l <lanemask>      use lanemask (default 0xffff)\n");
+"    -l <lanemask>      use lanemask (default port lanemask)\n");
 
 static void
 serdesint(int argc, char *argv[])
@@ -214,4 +225,4 @@ CMDFUNC(serdesint,
 "serdesint [-l <lanemask>] -c <code> -d <data>\n"
 "    -c <code>          int code\n"
 "    -d <data>          int data\n"
-"    -l <lanemask>      use lanemask (default 0xffff)\n");
+"    -l <lanemask>      use lanemask (default port lanemask)\n");

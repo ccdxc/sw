@@ -49,11 +49,18 @@ logerror(const char *fmt, va_list ap)
     spdlogger->error(logfmt(fmt, ap));
 }
 
+static void
+logflush(void)
+{
+    spdlogger->flush();
+}
+
 static pciesys_logger_t pciemgrd_logger = {
     .logdebug = logdebug,
     .loginfo  = loginfo,
     .logwarn  = logwarn,
     .logerror = logerror,
+    .logflush = logflush,
 };
 
 static spdlog::level::level_enum

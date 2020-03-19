@@ -42,11 +42,18 @@ logvprintf(const char *fmt, va_list ap)
     vprintf(fmt, ap);
 }
 
+static void
+logflush(void)
+{
+    fflush(stdout);
+}
+
 static pciesys_logger_t default_logger = {
     .logdebug = logvprintf,
     .loginfo  = logvprintf,
     .logwarn  = logvprintf,
     .logerror = logvprintf,
+    .logflush = logflush,
 };
 
 static pciesys_logger_t *current_logger = &default_logger;
@@ -95,6 +102,12 @@ pciesys_logerror(const char *fmt, ...)
     va_start(ap, fmt);
     current_logger->logerror(fmt, ap);
     va_end(ap);
+}
+
+void
+pciesys_logflush(void)
+{
+    current_logger->logflush();
 }
 
 static void

@@ -28,7 +28,6 @@ int server_loop(pciemgrenv_t *pme);
 int open_hostports(void);
 void close_hostports(void);
 int intr_init(pciemgrenv_t *pme);
-void logger_init(void);
 
 int upgrade_state_save(void);
 int upgrade_state_restore(void);

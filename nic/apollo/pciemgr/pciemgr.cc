@@ -11,17 +11,16 @@
 #include <pthread.h>
 #include "include/sdk/base.hpp"
 #include "nic/sdk/lib/utils/port_utils.hpp"
-#include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/pciemgrd/pciemgrd.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/pciemgr/pciemgr.hpp"
-#include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
-#include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/core/core.hpp"
 
 /// \defgroup PDS_pciemgr
 /// @{
+
+void logger_init(void);
 
 namespace pdspciemgr {
 

@@ -48,4 +48,6 @@ PCIEMGR_STATS_DEF(ind_iord)
 PCIEMGR_STATS_DEF(ind_iowr)
 PCIEMGR_STATS_DEF(ind_unknown)
 
+PCIEMGR_STATS_DEF(healthlog)
+
 #undef PCIEMGR_STATS_DEF

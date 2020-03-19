@@ -61,6 +61,44 @@ type PciePortMetrics struct {
 
 	Powerdown metrics.Counter
 
+	LinkDn2UpInt metrics.Counter
+
+	LinkUp2DnInt metrics.Counter
+
+	SecBusRstInt metrics.Counter
+
+	RstUp2DnInt metrics.Counter
+
+	RstDn2UpInt metrics.Counter
+
+	PortgateOpen2CloseInt metrics.Counter
+
+	LtssmStChangedInt metrics.Counter
+
+	SecBusnumChangedInt metrics.Counter
+
+	RcPmeInt metrics.Counter
+
+	RcAerrInt metrics.Counter
+
+	RcSerrInt metrics.Counter
+
+	RcHpeInt metrics.Counter
+
+	RcEqReqInt metrics.Counter
+
+	RcDpcInt metrics.Counter
+
+	PmTurnoffInt metrics.Counter
+
+	TxbfrOverflowInt metrics.Counter
+
+	RxtlpErrInt metrics.Counter
+
+	TlFlrReqInt metrics.Counter
+
+	RcLegacyIntpinChangedInt metrics.Counter
+
 	// private state
 	metrics gometrics.Metrics
 }
@@ -120,6 +158,44 @@ func (mtr *PciePortMetrics) Size() int {
 	sz += mtr.Faults.Size()
 
 	sz += mtr.Powerdown.Size()
+
+	sz += mtr.LinkDn2UpInt.Size()
+
+	sz += mtr.LinkUp2DnInt.Size()
+
+	sz += mtr.SecBusRstInt.Size()
+
+	sz += mtr.RstUp2DnInt.Size()
+
+	sz += mtr.RstDn2UpInt.Size()
+
+	sz += mtr.PortgateOpen2CloseInt.Size()
+
+	sz += mtr.LtssmStChangedInt.Size()
+
+	sz += mtr.SecBusnumChangedInt.Size()
+
+	sz += mtr.RcPmeInt.Size()
+
+	sz += mtr.RcAerrInt.Size()
+
+	sz += mtr.RcSerrInt.Size()
+
+	sz += mtr.RcHpeInt.Size()
+
+	sz += mtr.RcEqReqInt.Size()
+
+	sz += mtr.RcDpcInt.Size()
+
+	sz += mtr.PmTurnoffInt.Size()
+
+	sz += mtr.TxbfrOverflowInt.Size()
+
+	sz += mtr.RxtlpErrInt.Size()
+
+	sz += mtr.TlFlrReqInt.Size()
+
+	sz += mtr.RcLegacyIntpinChangedInt.Size()
 
 	return sz
 }
@@ -201,6 +277,63 @@ func (mtr *PciePortMetrics) Unmarshal() error {
 
 	mtr.Powerdown = mtr.metrics.GetCounter(offset)
 	offset += mtr.Powerdown.Size()
+
+	mtr.LinkDn2UpInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.LinkDn2UpInt.Size()
+
+	mtr.LinkUp2DnInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.LinkUp2DnInt.Size()
+
+	mtr.SecBusRstInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.SecBusRstInt.Size()
+
+	mtr.RstUp2DnInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.RstUp2DnInt.Size()
+
+	mtr.RstDn2UpInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.RstDn2UpInt.Size()
+
+	mtr.PortgateOpen2CloseInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.PortgateOpen2CloseInt.Size()
+
+	mtr.LtssmStChangedInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.LtssmStChangedInt.Size()
+
+	mtr.SecBusnumChangedInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.SecBusnumChangedInt.Size()
+
+	mtr.RcPmeInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.RcPmeInt.Size()
+
+	mtr.RcAerrInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.RcAerrInt.Size()
+
+	mtr.RcSerrInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.RcSerrInt.Size()
+
+	mtr.RcHpeInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.RcHpeInt.Size()
+
+	mtr.RcEqReqInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.RcEqReqInt.Size()
+
+	mtr.RcDpcInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.RcDpcInt.Size()
+
+	mtr.PmTurnoffInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.PmTurnoffInt.Size()
+
+	mtr.TxbfrOverflowInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxbfrOverflowInt.Size()
+
+	mtr.RxtlpErrInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxtlpErrInt.Size()
+
+	mtr.TlFlrReqInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.TlFlrReqInt.Size()
+
+	mtr.RcLegacyIntpinChangedInt = mtr.metrics.GetCounter(offset)
+	offset += mtr.RcLegacyIntpinChangedInt.Size()
 
 	return nil
 }
@@ -328,6 +461,101 @@ func (mtr *PciePortMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.Powerdown.Size()
+
+	if fldName == "LinkDn2UpInt" {
+		return offset
+	}
+	offset += mtr.LinkDn2UpInt.Size()
+
+	if fldName == "LinkUp2DnInt" {
+		return offset
+	}
+	offset += mtr.LinkUp2DnInt.Size()
+
+	if fldName == "SecBusRstInt" {
+		return offset
+	}
+	offset += mtr.SecBusRstInt.Size()
+
+	if fldName == "RstUp2DnInt" {
+		return offset
+	}
+	offset += mtr.RstUp2DnInt.Size()
+
+	if fldName == "RstDn2UpInt" {
+		return offset
+	}
+	offset += mtr.RstDn2UpInt.Size()
+
+	if fldName == "PortgateOpen2CloseInt" {
+		return offset
+	}
+	offset += mtr.PortgateOpen2CloseInt.Size()
+
+	if fldName == "LtssmStChangedInt" {
+		return offset
+	}
+	offset += mtr.LtssmStChangedInt.Size()
+
+	if fldName == "SecBusnumChangedInt" {
+		return offset
+	}
+	offset += mtr.SecBusnumChangedInt.Size()
+
+	if fldName == "RcPmeInt" {
+		return offset
+	}
+	offset += mtr.RcPmeInt.Size()
+
+	if fldName == "RcAerrInt" {
+		return offset
+	}
+	offset += mtr.RcAerrInt.Size()
+
+	if fldName == "RcSerrInt" {
+		return offset
+	}
+	offset += mtr.RcSerrInt.Size()
+
+	if fldName == "RcHpeInt" {
+		return offset
+	}
+	offset += mtr.RcHpeInt.Size()
+
+	if fldName == "RcEqReqInt" {
+		return offset
+	}
+	offset += mtr.RcEqReqInt.Size()
+
+	if fldName == "RcDpcInt" {
+		return offset
+	}
+	offset += mtr.RcDpcInt.Size()
+
+	if fldName == "PmTurnoffInt" {
+		return offset
+	}
+	offset += mtr.PmTurnoffInt.Size()
+
+	if fldName == "TxbfrOverflowInt" {
+		return offset
+	}
+	offset += mtr.TxbfrOverflowInt.Size()
+
+	if fldName == "RxtlpErrInt" {
+		return offset
+	}
+	offset += mtr.RxtlpErrInt.Size()
+
+	if fldName == "TlFlrReqInt" {
+		return offset
+	}
+	offset += mtr.TlFlrReqInt.Size()
+
+	if fldName == "RcLegacyIntpinChangedInt" {
+		return offset
+	}
+	offset += mtr.RcLegacyIntpinChangedInt.Size()
 
 	return offset
 }
@@ -473,6 +701,120 @@ func (mtr *PciePortMetrics) SetFaults(val metrics.Counter) error {
 // SetPowerdown sets cunter in shared memory
 func (mtr *PciePortMetrics) SetPowerdown(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Powerdown"))
+	return nil
+}
+
+// SetLinkDn2UpInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetLinkDn2UpInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("LinkDn2UpInt"))
+	return nil
+}
+
+// SetLinkUp2DnInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetLinkUp2DnInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("LinkUp2DnInt"))
+	return nil
+}
+
+// SetSecBusRstInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetSecBusRstInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SecBusRstInt"))
+	return nil
+}
+
+// SetRstUp2DnInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetRstUp2DnInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RstUp2DnInt"))
+	return nil
+}
+
+// SetRstDn2UpInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetRstDn2UpInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RstDn2UpInt"))
+	return nil
+}
+
+// SetPortgateOpen2CloseInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetPortgateOpen2CloseInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("PortgateOpen2CloseInt"))
+	return nil
+}
+
+// SetLtssmStChangedInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetLtssmStChangedInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("LtssmStChangedInt"))
+	return nil
+}
+
+// SetSecBusnumChangedInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetSecBusnumChangedInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SecBusnumChangedInt"))
+	return nil
+}
+
+// SetRcPmeInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetRcPmeInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RcPmeInt"))
+	return nil
+}
+
+// SetRcAerrInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetRcAerrInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RcAerrInt"))
+	return nil
+}
+
+// SetRcSerrInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetRcSerrInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RcSerrInt"))
+	return nil
+}
+
+// SetRcHpeInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetRcHpeInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RcHpeInt"))
+	return nil
+}
+
+// SetRcEqReqInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetRcEqReqInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RcEqReqInt"))
+	return nil
+}
+
+// SetRcDpcInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetRcDpcInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RcDpcInt"))
+	return nil
+}
+
+// SetPmTurnoffInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetPmTurnoffInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("PmTurnoffInt"))
+	return nil
+}
+
+// SetTxbfrOverflowInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetTxbfrOverflowInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxbfrOverflowInt"))
+	return nil
+}
+
+// SetRxtlpErrInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetRxtlpErrInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxtlpErrInt"))
+	return nil
+}
+
+// SetTlFlrReqInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetTlFlrReqInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TlFlrReqInt"))
+	return nil
+}
+
+// SetRcLegacyIntpinChangedInt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetRcLegacyIntpinChangedInt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RcLegacyIntpinChangedInt"))
 	return nil
 }
 
@@ -632,6 +974,8 @@ type PcieMgrMetrics struct {
 
 	IndUnknown metrics.Counter
 
+	Healthlog metrics.Counter
+
 	// private state
 	metrics gometrics.Metrics
 }
@@ -719,6 +1063,8 @@ func (mtr *PcieMgrMetrics) Size() int {
 	sz += mtr.IndIowr.Size()
 
 	sz += mtr.IndUnknown.Size()
+
+	sz += mtr.Healthlog.Size()
 
 	return sz
 }
@@ -842,6 +1188,9 @@ func (mtr *PcieMgrMetrics) Unmarshal() error {
 
 	mtr.IndUnknown = mtr.metrics.GetCounter(offset)
 	offset += mtr.IndUnknown.Size()
+
+	mtr.Healthlog = mtr.metrics.GetCounter(offset)
+	offset += mtr.Healthlog.Size()
 
 	return nil
 }
@@ -1039,6 +1388,11 @@ func (mtr *PcieMgrMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.IndUnknown.Size()
+
+	if fldName == "Healthlog" {
+		return offset
+	}
+	offset += mtr.Healthlog.Size()
 
 	return offset
 }
@@ -1268,6 +1622,12 @@ func (mtr *PcieMgrMetrics) SetIndIowr(val metrics.Counter) error {
 // SetIndUnknown sets cunter in shared memory
 func (mtr *PcieMgrMetrics) SetIndUnknown(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("IndUnknown"))
+	return nil
+}
+
+// SetHealthlog sets cunter in shared memory
+func (mtr *PcieMgrMetrics) SetHealthlog(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Healthlog"))
 	return nil
 }
 

@@ -92,7 +92,9 @@ void cfgspace_set_prefbase_upper(cfgspace_t *cs, const u_int32_t prefbaseup);
 void cfgspace_set_preflimit_upper(cfgspace_t *cs, const u_int32_t preflimup);
 void cfgspace_set_bridgectrl(cfgspace_t *cs, const u_int16_t bridgectrl);
 
-void cfgspace_update(cfgspace_t *cs, const u_int8_t gen, const u_int8_t width);
+void cfgspace_update(cfgspace_t *cs,
+                     const u_int8_t gen, const u_int8_t width,
+                     const u_int16_t lnksta2);
 
 /*
  * Common header registers.

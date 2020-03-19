@@ -17,6 +17,7 @@
 #include "cap_pxb_c_hdr.h"
 #include "cap_pp_c_hdr.h"
 
+#include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/pal/include/pal.h"
 #include "cmd.h"
 
@@ -122,24 +123,40 @@ CMDFUNC(help,
 "    <cmd>      usage for <cmd>\n");
 
 int
-main(int argc, char *argv[])
+cmd_run(int argc, char *argv[])
 {
     cmd_t *c;
 
     if (argc <= 1) {
         c = cmd_lookup("help");
         c->func(argc, argv);
-        exit(0);
+        return 0;
     }
 
     c = cmd_lookup(argv[1]);
     if (c == NULL) {
         printf("%s: not found\n", argv[1]);
-        exit(1);
+        return 1;
     }
 
     argc--;
     argv++;
     c->func(argc, argv);
-    exit(0);
+    return 0;
+}
+
+int
+cmd_runstr(char *cmdstr)
+{
+    char *argv[16];
+    int argc;
+
+    argc = strtoargv(cmdstr, argv, sizeof(argv) / sizeof(argv[0]));
+    return cmd_run(argc, argv);
+}
+
+int
+main(int argc, char *argv[])
+{
+    return cmd_run(argc, argv);
 }
