@@ -82,6 +82,8 @@ typedef struct hbm_bw_samples_s {
 } __PACK__ hbm_bw_samples_t;
 
 sdk_ret_t asicpd_read_table_constant(uint32_t tableid, uint64_t *value);
+sdk_ret_t asicpd_program_table_thread_constant(uint32_t tableid, uint8_t table_thread_id,
+                                               uint64_t const_value);
 typedef struct lif_qtype_info_s {
     uint8_t entries;
     uint8_t size;
@@ -231,6 +233,13 @@ sdk_ret_t asicpd_rss_tbl_eng_cfg_get(const char *handle, uint32_t tableid,
                                      p4_tbl_eng_cfg_t *rss);
 void asicpd_rss_tbl_eng_cfg_modify(p4_tbl_eng_cfg_t *rss);
 
+mpartition_region_t *get_mem_region(char *name);
+uint64_t get_mem_base(void);
+uint64_t get_mem_offset(const char *reg_name);
+uint64_t get_mem_addr(const char *reg_name);
+uint32_t get_mem_size_kb(const char *reg_name);
+mpartition_region_t * get_hbm_region_by_address(uint64_t addr);
+
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk
@@ -244,5 +253,9 @@ using sdk::asic::pd::lif_qtype_info_t;
 using sdk::asic::pd::kNumQTypes;
 using sdk::asic::pd::kAllocUnit;
 using sdk::asic::pd::p4_tbl_eng_cfg_t;
+
+using sdk::asic::pd::get_mem_addr;
+using sdk::asic::pd::get_mem_size_kb;
+using sdk::asic::pd::get_hbm_region_by_address;
 
 #endif    // __SDK_ASIC_PD_HPP__

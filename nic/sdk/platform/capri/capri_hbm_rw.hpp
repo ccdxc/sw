@@ -29,11 +29,11 @@ using sdk::platform::utils::mpartition_region_t;
 #define MEM_REGION_MCAST_REPL_NAME "mcast_repl"
 
 void reset_hbm_regions(capri_cfg_t *cfg);
-mpartition_region_t *get_mem_region(char *name);
-uint64_t get_mem_base(void);
-uint64_t get_mem_offset(const char *reg_name);
-uint64_t get_mem_addr(const char *reg_name);
-uint32_t get_mem_size_kb(const char *reg_name);
+mpartition_region_t *capri_get_mem_region(char *name);
+uint64_t capri_get_mem_base(void);
+uint64_t capri_get_mem_offset(const char *reg_name);
+uint64_t capri_get_mem_addr(const char *reg_name);
+uint32_t capri_get_mem_size_kb(const char *reg_name);
 
 typedef struct capri_descr_s {
         uint64_t        scratch[8];
@@ -66,14 +66,18 @@ sdk_ret_t capri_nx_get_llc_counters(uint32_t *mask, uint32_t *rd_data);
 sdk_ret_t capri_nx_setup_llc_counters(uint32_t mask);
 sdk_ret_t capri_hbm_cache_init(capri_cfg_t *cfg);
 sdk_ret_t capri_hbm_cache_regions_init(void);
-mpartition_region_t* get_hbm_region_by_address(uint64_t addr);
+mpartition_region_t* capri_get_hbm_region_by_address(uint64_t addr);
 uint32_t capri_freq_get(void);
 
 }    // namespace capri
 }    // namespace platform
 }    // namespace sdk
 
-using sdk::platform::capri::get_mem_addr;
-using sdk::platform::capri::get_mem_size_kb;
+using sdk::platform::capri::capri_get_mem_base;
+using sdk::platform::capri::capri_get_mem_offset;
+using sdk::platform::capri::capri_get_mem_addr;
+using sdk::platform::capri::capri_get_mem_size_kb;
+using sdk::platform::capri::capri_get_mem_region;
+using sdk::platform::capri::capri_get_hbm_region_by_address;
 
 #endif    // __CAPRI_HBM_RW_HPP__

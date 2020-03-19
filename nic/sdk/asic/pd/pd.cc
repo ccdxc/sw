@@ -952,6 +952,43 @@ asicpd_rss_tbl_eng_cfg_modify (p4_tbl_eng_cfg_t *rss)
                                                  rss->mem_offset, rss->asm_base);
 }
 
+
+mem_addr_t
+get_mem_base (void)
+{
+    return sdk::platform::capri::capri_get_mem_base();
+}
+
+mem_addr_t
+get_mem_offset (const char *reg_name)
+{
+    return sdk::platform::capri::capri_get_mem_offset(reg_name);
+}
+
+mem_addr_t
+get_mem_addr (const char *reg_name)
+{
+    return sdk::platform::capri::capri_get_mem_addr(reg_name);
+}
+
+uint32_t
+get_mem_size_kb (const char *reg_name)
+{
+    return sdk::platform::capri::capri_get_mem_size_kb(reg_name);
+}
+
+mpartition_region_t *
+get_mem_region (char *reg_name)
+{
+    return sdk::platform::capri::capri_get_mem_region(reg_name);
+}
+
+mpartition_region_t *
+get_hbm_region_by_address (uint64_t addr)
+{
+    return sdk::platform::capri::capri_get_hbm_region_by_address(addr);
+}
+
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk

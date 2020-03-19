@@ -14,8 +14,10 @@
 #include "third-party/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "platform/capri/capri_quiesce.hpp"
 #include "platform/capri/capri_qstate.hpp"
+#include "asic/pd/pd.hpp"
 
 using namespace sdk::platform::capri;
+using namespace sdk::asic::pd;
 
 namespace hal {
 namespace pd {
@@ -72,7 +74,7 @@ pd_capri_hbm_write_mem (pd_func_args_t *pd_func_args)
     pd_capri_hbm_write_mem_args_t *args = pd_func_args->pd_capri_hbm_write_mem;
     sdk::asic::asic_mem_write(args->addr, (uint8_t *)args->buf, args->size);
 
-    reg = get_hbm_region_by_address(args->addr);
+    reg = sdk::asic::pd::get_hbm_region_by_address(args->addr);
     SDK_ASSERT(reg != NULL);
 
     if(is_region_cache_pipe_p4plus_all(reg)) {

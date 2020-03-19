@@ -6,7 +6,6 @@
 #include "nic/include/base.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "platform/capri/capri_hbm_rw.hpp"
 
 typedef struct asicpd_stats_region_info_t_ {
     int tblid;

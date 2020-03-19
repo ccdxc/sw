@@ -15,14 +15,13 @@
 #include "nic/hal/pd/iris/nw/rw_pd.hpp"
 #include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"
 #include "nic/hal/pd/iris/p4pd_defaults.hpp"
-#include "platform/capri/capri_tbl_rw.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "gen/proto/types.pb.h"
 #include "nic/hal/pd/iris/aclqos/acl_pd.hpp"
 #include "nic/hal/pd/hal_pd.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 
 #define PAGE_SZ 4096
 
@@ -1381,9 +1380,8 @@ p4pd_compute_checksum_init(void)
 //    - Same as above but this is not inherently driven by P4 code and have
 //      a different qid than above two.
 //-----------------------------------------------------------------------------
-// TODO: Ajeer -- why is this called capri_xxx ??
 static hal_ret_t
-capri_repl_pgm_def_entries (void)
+p4pd_repl_pgm_def_entries (void)
 {
     p4_replication_data_t data;
 
@@ -1457,34 +1455,6 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
     //uint64_t val, nic_mode = NIC_MODE_SMART;
     p4pd_table_properties_t       tbl_ctx;
     p4pd_table_properties_get(P4TBL_ID_INPUT_PROPERTIES, &tbl_ctx);
-#if 0
-    sdk::platform::capri::capri_table_constant_read(&val, tbl_ctx.stage, tbl_ctx.stage_tableid,
-                              (tbl_ctx.gress == P4_GRESS_INGRESS));
-
-    val = be64toh(val);
-
-    if (p4pd_def_cfg->hal_cfg->device_cfg.forwarding_mode == sdk::lib::FORWARDING_MODE_CLASSIC) {
-        nic_mode = NIC_MODE_CLASSIC;
-    } else {
-        // host-pinned & default
-        nic_mode = NIC_MODE_SMART;
-    }
-
-    if (nic_mode == NIC_MODE_CLASSIC) {
-        //val &= (uint64_t)0x1;
-        val |= (uint64_t)~0;
-        HAL_TRACE_DEBUG("Nic forwarding mode CLASSIC");
-    } else {
-        //val |= (uint64_t)~0x1;
-        val = 0;
-        HAL_TRACE_DEBUG("Nic forwarding mode SMART");
-    }
-    HAL_TRACE_DEBUG("Nic specific forwarding mode: {}",
-                    p4pd_def_cfg->hal_cfg->device_cfg.forwarding_mode);
-    val = htobe64(val);
-    sdk::platform::capri::capri_table_constant_write(val, tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
-#endif
 
     // Flow_info table is split into multiple threads in Capri so that
     // we can limit the # of phvwr to less than 8. Internally
@@ -1494,18 +1464,12 @@ p4pd_forwarding_mode_init (p4pd_def_cfg_t *p4pd_def_cfg)
     // code to execute and this branching is done in ASM Code.
     // Here we need to program a different table constant for each
     // thread.
-    uint8_t tid = 0;
     p4pd_table_properties_get(P4TBL_ID_FLOW_INFO, &tbl_ctx);
     for (int i = 0; i < tbl_ctx.table_thread_count; i++) {
-        if (i != 0) {
-            tid = tbl_ctx.thread_table_id[i];
-        } else {
-            tid = tbl_ctx.stage_tableid;
-        }
-        sdk::platform::capri::capri_table_constant_write(i, tbl_ctx.stage, tid,
-                                   (tbl_ctx.gress == P4_GRESS_INGRESS));
-        HAL_TRACE_DEBUG("setting flow_info table constant, tid = {}, constant = {}",
-                        tid, i);
+        sdk::asic::pd::asicpd_program_table_thread_constant (P4TBL_ID_FLOW_INFO, i, i);
+
+        HAL_TRACE_DEBUG("setting flow_info table constant, thread id = {}, constant = {}",
+                        i, i);
     }
 
     return HAL_RET_OK;
@@ -1570,7 +1534,7 @@ p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
     // Even though this is not really a P4 Table it is very
     // tightly coupled with our P4 Program and after discussing
     // we put this call here conciously.
-    SDK_ASSERT(capri_repl_pgm_def_entries() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_repl_pgm_def_entries() == HAL_RET_OK);
 
     // Setting NIC's forwarding mode
     SDK_ASSERT(p4pd_forwarding_mode_init(p4pd_def_cfg) == HAL_RET_OK);

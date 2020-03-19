@@ -127,7 +127,7 @@ capri_asm_init (capri_cfg_t *cfg)
             num_symbols = cfg->asm_cfg[i].symbols_func((void **)&symbols, cfg->platform);
         }
 
-        base_addr = get_mem_addr(cfg->asm_cfg[i].base_addr.c_str());
+        base_addr = capri_get_mem_addr(cfg->asm_cfg[i].base_addr.c_str());
         SDK_TRACE_DEBUG("base addr 0x%llx", base_addr);
         iret = sdk::p4::p4_load_mpu_programs(cfg->asm_cfg[i].name.c_str(),
            (char *)full_path.c_str(),
@@ -277,7 +277,7 @@ capri_prd_init()
 static sdk_ret_t
 capri_repl_init (capri_cfg_t *cfg)
 {
-    uint64_t hbm_repl_table_offset = get_mem_offset(MEM_REGION_MCAST_REPL_NAME);
+    uint64_t hbm_repl_table_offset = capri_get_mem_offset(MEM_REGION_MCAST_REPL_NAME);
     if (hbm_repl_table_offset != INVALID_MEM_ADDRESS) {
         capri_tm_repl_table_base_addr_set(hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH);
         capri_tm_repl_table_token_size_set(cfg->repl_entry_width * 8);

@@ -20,6 +20,7 @@
 #include "nic/hal/pd/capri/capri_toeplitz.hpp"
 
 using namespace sdk::platform::capri;
+using namespace sdk::asic::pd;
 
 namespace hal {
 namespace pd {
@@ -119,9 +120,7 @@ asicpd_stats_region_init (asicpd_stats_region_info_t *region_arr, int arrlen)
 
     for (int i = 0; i < arrlen; i++) {
         p4pd_table_properties_get(region_arr[i].tblid, &tbl_ctx);
-        capri_table_constant_write(stats_base_addr,
-                                   tbl_ctx.stage, tbl_ctx.stage_tableid,
-                                   (tbl_ctx.gress == P4_GRESS_INGRESS));
+        asicpd_program_table_constant (region_arr[i].tblid, stats_base_addr);
         stats_base_addr += (tbl_ctx.tabledepth << region_arr[i].tbldepthshift);
     }
     assert(stats_base_addr <  (stats_region_start +  stats_region_size));

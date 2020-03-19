@@ -17,7 +17,6 @@
 #include "nic/include/base.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/capri/capri_sw_phv.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
 
 #include "third-party/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"

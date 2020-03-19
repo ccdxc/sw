@@ -18,8 +18,6 @@
 #include "nic/hal/plugins/cfg/aclqos/qos_api.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/iris/internal/system_pd.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "platform/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"

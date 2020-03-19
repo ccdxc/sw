@@ -60,41 +60,40 @@ cap_nx_read_pb_axi_cnt(int rd) { // 1=>rd , 0=> wr
 }
 
 mem_addr_t
-get_mem_base (void)
+capri_get_mem_base (void)
 {
     return g_capri_state_pd->mempartition()->base();
 }
 
 mem_addr_t
-get_mem_offset (const char *reg_name)
+capri_get_mem_offset (const char *reg_name)
 {
     return g_capri_state_pd->mempartition()->start_offset(reg_name);
 }
 
 mem_addr_t
-get_mem_addr (const char *reg_name)
+capri_get_mem_addr (const char *reg_name)
 {
     return g_capri_state_pd->mempartition()->start_addr(reg_name);
 }
 
 uint32_t
-get_mem_size_kb (const char *reg_name)
+capri_get_mem_size_kb (const char *reg_name)
 {
     return (g_capri_state_pd->mempartition()->size(reg_name) >> 10 );
 }
 
 mpartition_region_t *
-get_mem_region (char *reg_name)
+capri_get_mem_region (char *reg_name)
 {
     return g_capri_state_pd->mempartition()->region(reg_name);
 }
 
 mpartition_region_t *
-get_hbm_region_by_address (uint64_t addr)
+capri_get_hbm_region_by_address (uint64_t addr)
 {
     return g_capri_state_pd->mempartition()->region_by_address(addr);
 }
-
 // for HW platform this is now done during uboot
 void
 reset_hbm_regions (capri_cfg_t *capri_cfg)

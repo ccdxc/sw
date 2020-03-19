@@ -46,8 +46,8 @@ sdk_ret_t capri_barco_sym_key_init(void)
     sdk_ret_t           ret = SDK_RET_OK;
     uint32_t            region_sz = 0;
 
-    key_mem_base = get_mem_addr(key_mem);
-    region_sz = get_mem_size_kb(key_mem) * 1024;
+    key_mem_base = capri_get_mem_addr(key_mem);
+    region_sz = capri_get_mem_size_kb(key_mem) * 1024;
     key_mem_size = region_sz / CRYPTO_SYM_KEY_SIZE_MAX;
     assert(key_mem_size >= CRYPTO_KEY_COUNT_MAX);
 
@@ -71,7 +71,7 @@ sdk_ret_t capri_barco_crypto_init(platform_type_t platform)
     hens.cfg_he_ctl.sw_rst(0);
     hens.cfg_he_ctl.write();
 
-    key_desc_array_base = get_mem_addr(key_desc_array);
+    key_desc_array_base = capri_get_mem_addr(key_desc_array);
     if (key_desc_array_base == INVALID_MEM_ADDRESS) {
         /* For non IRIS scenarios, the region may not be defined
          * in that case bail out silently
@@ -341,7 +341,7 @@ sdk_ret_t capri_barco_sym_free_key(int32_t key_idx)
 sdk_ret_t
 capri_barco_crypto_init_tls_pad_table(void)
 {
-    uint8_t  tls_pad_bytes[get_mem_size_kb(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) * 1024], i, j;
+    uint8_t  tls_pad_bytes[capri_get_mem_size_kb(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) * 1024], i, j;
     uint64_t tls_pad_base_addr = 0;
 
     SDK_TRACE_DEBUG("Initializing TLS-proxy Pad Bytes table of size 0x%llx", sizeof(tls_pad_bytes));
@@ -358,7 +358,7 @@ capri_barco_crypto_init_tls_pad_table(void)
         }
     }
 
-    tls_pad_base_addr = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE);
+    tls_pad_base_addr = capri_get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE);
     if (tls_pad_base_addr != INVALID_MEM_ADDRESS) {
         sdk::asic::asic_mem_write(tls_pad_base_addr, tls_pad_bytes, sizeof(tls_pad_bytes));
     }

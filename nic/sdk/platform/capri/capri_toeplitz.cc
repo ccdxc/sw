@@ -78,7 +78,7 @@ capri_rss_table_base_pc_get (const char *handle, uint64_t *tbl_base, uint64_t *p
 
 
 #ifdef MEM_REGION_RSS_INDIR_TABLE_NAME
-    *tbl_base = get_mem_addr(MEM_REGION_RSS_INDIR_TABLE_NAME);
+    *tbl_base = capri_get_mem_addr(MEM_REGION_RSS_INDIR_TABLE_NAME);
     SDK_ASSERT(*tbl_base != INVALID_MEM_ADDRESS);
 #else
     SDK_ASSERT(0);

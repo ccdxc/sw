@@ -3,7 +3,7 @@
 #include "nic/sdk/platform/capri/capri_barco_rings.hpp"
 #include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
 #include "nic/hal/pd/capri/accel/accel_rgroup.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 
 /*
