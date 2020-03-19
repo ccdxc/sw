@@ -616,11 +616,42 @@ func (v *DVS) AddHost(host *Host) error {
 		ConfigNumPorts: 512,
 		DvsName:        v.Obj.Name,
 	}
+	// XXX should we not be doing Update on host object too ???
 	host.Obj.Config.Network.ProxySwitch = append(host.Obj.Config.Network.ProxySwitch, dvsProxy)
 	v.Obj.Config.GetDVSConfigInfo().Host = append(v.Obj.Config.GetDVSConfigInfo().Host, newMember)
 	d := simulator.Map.Get(v.Obj.Reference())
 	simulator.Map.Update(d, []types.PropertyChange{
 		{Name: "config", Val: v.Obj.Config},
+	})
+	return nil
+}
+
+// RemoveHost remove a host from the DVS
+func (v *DVS) RemoveHost(host *Host) error {
+	ref := host.Obj.Reference()
+	newDVSHostInfo := []types.DistributedVirtualSwitchHostMember{}
+	for _, member := range v.Obj.Config.GetDVSConfigInfo().Host {
+		if member.Config.Host.Value == ref.Value {
+			continue
+		}
+		newDVSHostInfo = append(newDVSHostInfo, member)
+	}
+	newDVSProxy := []types.HostProxySwitch{}
+	for _, proxySwitch := range host.Obj.Config.Network.ProxySwitch {
+		if v.Obj.Name == proxySwitch.DvsName {
+			continue
+		}
+		newDVSProxy = append(newDVSProxy, proxySwitch)
+	}
+	host.Obj.Config.Network.ProxySwitch = newDVSProxy
+	v.Obj.Config.GetDVSConfigInfo().Host = newDVSHostInfo
+	d := simulator.Map.Get(v.Obj.Reference())
+	simulator.Map.Update(d, []types.PropertyChange{
+		{Name: "config", Val: v.Obj.Config},
+	})
+	h := simulator.Map.Get(host.Obj.Reference())
+	simulator.Map.Update(h, []types.PropertyChange{
+		{Name: "config", Val: host.Obj.Config},
 	})
 	return nil
 }

@@ -699,7 +699,8 @@ func TestVCSyncVmkNics(t *testing.T) {
 	logger.Infof("Creating PenDC for %s\n", dc.Obj.Reference().Value)
 	_, err = vchub.NewPenDC(defaultTestParams.TestDCName, dc.Obj.Self.Value)
 	// Add DVS
-	dvsName := CreateDVSName(defaultTestParams.TestDCName)
+	dcName := defaultTestParams.TestDCName
+	dvsName := CreateDVSName(dcName)
 	dvs, ok := dc.GetDVS(dvsName)
 	if !ok {
 		logger.Info("GetDVS Failed")
@@ -868,6 +869,265 @@ func TestVCSyncVmkNics(t *testing.T) {
 	go vchub.startEventsListener()
 	vchub.probe.StartWatchers()
 	verifyVmkworkloads(testWorkloadMap, "VmkWorkload create with EP failed via watch")
+}
+
+func TestHostDeleteFromDVS(t *testing.T) {
+	// Create a host and a few vms on it
+	// Remove host from Pen-DVS, verify that workloads (including vmkworkload) and host are
+	// deleted from venice
+	err := testutils.ValidateParams(defaultTestParams)
+	if err != nil {
+		t.Fatalf("Failed at validating test parameters")
+	}
+
+	// SETTING UP LOGGER
+	config := log.GetDefaultConfig("scale_test-Host")
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger := log.SetConfig(config)
+
+	// SETTING UP STATE MANAGER
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
+
+	// CREATING ORCH CONFIG
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+
+	// SETTING UP VCSIM
+	vcURL := &url.URL{
+		Scheme: "https",
+		Host:   defaultTestParams.TestHostName,
+		Path:   "/sdk",
+	}
+	vcURL.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: vcURL.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
+
+	// SETTING UP MOCK
+	// Real probe that will be used by mock probe when possible
+	vchub := setupTestVCHub(vcURL, sm, orchConfig, logger)
+	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
+	mockProbe := mock.NewProbeMock(vcp)
+	vchub.probe = mockProbe
+	mockProbe.Start(false)
+	AssertEventually(t, func() (bool, interface{}) {
+		if !mockProbe.IsSessionReady() {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready", "1s", "10s")
+
+	defer vchub.Destroy(false)
+
+	dcName := defaultTestParams.TestDCName
+	dc1, err := s.AddDC(dcName)
+	AssertOk(t, err, "failed dc create")
+	logger.Infof("Creating PenDC for %s\n", dc1.Obj.Reference().Value)
+	_, err = vchub.NewPenDC(defaultTestParams.TestDCName, dc1.Obj.Self.Value)
+	// Add DVS
+	dvsName := CreateDVSName(defaultTestParams.TestDCName)
+	dvs, ok := dc1.GetDVS(dvsName)
+	Assert(t, ok, "failed dvs create")
+
+	orchInfo1 := []*network.OrchestratorInfo{
+		{
+			Name:      orchConfig.Name,
+			Namespace: defaultTestParams.TestDCName,
+		},
+	}
+	// Create one PG for vmkNic
+	pgConfigSpec := []types.DVPortgroupConfigSpec{
+		types.DVPortgroupConfigSpec{
+			Name:     CreatePGName("vMotion_PG"),
+			NumPorts: 8,
+			DefaultPortConfig: &types.VMwareDVSPortSetting{
+				Vlan: &types.VmwareDistributedVirtualSwitchPvlanSpec{
+					PvlanId: int32(100),
+				},
+			},
+		},
+	}
+
+	smmock.CreateNetwork(sm, "default", "vMotion_PG", "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
+	// Add PG to mockProbe (this is weird, this should be part of sim)
+	// vcHub should provide this function ??
+	mockProbe.AddPenPG(defaultTestParams.TestDCName, dvsName, &pgConfigSpec[0], retryCount)
+	pg, err := mockProbe.GetPenPG(defaultTestParams.TestDCName, CreatePGName("vMotion_PG"), retryCount)
+	AssertOk(t, err, "failed to add portgroup")
+
+	// Create host1
+	hName := "Host1"
+	hostSystem, err := dc1.AddHost(hName)
+	AssertOk(t, err, "failed host1 create")
+	err = dvs.AddHost(hostSystem)
+	AssertOk(t, err, "failed to add Host to DVS")
+
+	pNicMac := append(createPenPnicBase(), 0xaa, 0x00, 0x01)
+	// Make it Pensando host
+	hostSystem.ClearNics()
+	err = hostSystem.AddNic("vmnic0", conv.MacString(pNicMac))
+
+	hName2 := "Host2"
+	hostSystem2, err := dc1.AddHost(hName2)
+	AssertOk(t, err, "failed host21 create")
+	err = dvs.AddHost(hostSystem2)
+	AssertOk(t, err, "failed to add Host2 to DVS")
+
+	pNicMac2 := append(createPenPnicBase(), 0xaa, 0x00, 0x02)
+	// Make it Pensando host
+	hostSystem2.ClearNics()
+	err = hostSystem2.AddNic("vmnic0", conv.MacString(pNicMac2))
+
+	// Create vmkNIC
+	var spec types.HostVirtualNicSpec
+	vmkMac := net.HardwareAddr{0x00, 0x11, 0x22, 0xcc, 0x00, 0x01}
+	spec.Mac = conv.MacString(vmkMac)
+	var dvPort types.DistributedVirtualSwitchPortConnection
+	dvPort.PortgroupKey = pg.Reference().Value
+	dvPort.PortKey = "10" // use some port number
+	spec.DistributedVirtualPort = &dvPort
+	err = hostSystem.AddVmkNic(&spec, "vmk1")
+
+	// create VMs
+	_, err = dc1.AddVM("vm1", hName, []sim.VNIC{
+		sim.VNIC{
+			MacAddress:   "aaaa.bbbb.ddde",
+			PortgroupKey: pg.Reference().Value,
+			PortKey:      "11",
+		},
+	})
+	AssertOk(t, err, "Failed to create vm1")
+	vm2, err := dc1.AddVM("vm2", hName2, []sim.VNIC{
+		sim.VNIC{
+			MacAddress:   "aaaa.bbbb.dd02",
+			PortgroupKey: pg.Reference().Value,
+			PortKey:      "12",
+		},
+	})
+	AssertOk(t, err, "Failed to create vm2")
+
+	RegisterMigrationActions(sm, logger)
+	vchub.Sync()
+
+	verifyHosts := func(dcHostMap map[string][]string) {
+		AssertEventually(t, func() (bool, interface{}) {
+			for name, hostnames := range dcHostMap {
+				dc := vchub.GetDC(name)
+				if dc == nil {
+					return false, fmt.Errorf("Failed to find DC %s", name)
+				}
+				opts := api.ListWatchOptions{}
+				hosts, err := sm.Controller().Host().List(context.Background(), &opts)
+				if err != nil {
+					return false, err
+				}
+				if len(hostnames) != len(hosts) {
+					return false, fmt.Errorf("expected %d hosts but got %d", len(hostnames), len(hosts))
+				}
+				for _, hostname := range hostnames {
+					meta := &api.ObjectMeta{
+						Name: hostname,
+					}
+					host, err := sm.Controller().Host().Find(meta)
+					if err != nil {
+						return false, fmt.Errorf("Failed to find host %s", hostname)
+					}
+					if host == nil {
+						return false, fmt.Errorf("Returned host was nil for host %s", hostname)
+					}
+				}
+			}
+			return true, nil
+		}, "Failed to find hosts", "1s", "10s")
+	}
+
+	verifyWorkloadCount := func(expCount int) {
+		AssertEventually(t, func() (bool, interface{}) {
+			opts := api.ListWatchOptions{}
+			workloads, err := sm.Controller().Workload().List(context.Background(), &opts)
+			if err != nil {
+				return false, err
+			}
+			if len(workloads) != expCount {
+				return false, fmt.Errorf("expected %d workloads but got %d", expCount, len(workloads))
+			}
+			return true, nil
+		}, "Failed to find Workloads", "1s", "10s")
+	}
+
+	// check that host and workloads are created
+	dcHostMap := map[string][]string{
+		defaultTestParams.TestDCName: []string{
+			vchub.createHostName(dc1.Obj.Self.Value, hostSystem.Obj.Self.Value),
+			vchub.createHostName(dc1.Obj.Self.Value, hostSystem2.Obj.Self.Value),
+		},
+	}
+
+	verifyHosts(dcHostMap)
+	verifyWorkloadCount(3)
+	// send start vmotion on vm1, need another pensando host
+	logger.Infof("===== Move VM to pensando host1 =====")
+	// move vm to host that is being removed
+	startMsg1 := defs.VMotionStartMsg{
+		VMKey:        vm2.Self.Value,
+		DstHostKey:   hostSystem.Obj.Self.Value,
+		DcID:         dc1.Obj.Self.Value,
+		HotMigration: true,
+	}
+	m := defs.VCNotificationMsg{
+		Type: defs.VMotionStart,
+		Msg:  startMsg1,
+	}
+	vchub.handleVCNotification(m)
+
+	// change DVS from the host and send update
+	event := defs.Probe2StoreMsg{
+		MsgType: defs.VCEvent,
+		Val: defs.VCEventMsg{
+			VcObject:   defs.HostSystem,
+			DcID:       dcName,
+			DcName:     dcName,
+			Key:        hostSystem.Obj.Reference().Value,
+			Originator: orchConfig.Name,
+			Changes: []types.PropertyChange{
+				types.PropertyChange{
+					Op:   types.PropertyChangeOpAdd,
+					Name: "config",
+					Val: types.HostConfigInfo{
+						Network: &types.HostNetworkInfo{
+							ProxySwitch: []types.HostProxySwitch{
+								types.HostProxySwitch{
+									DvsName: "Non-Pen-DVS",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	vchub.handleVCEvent(event.Val.(defs.VCEventMsg))
+	dcHostMap = map[string][]string{
+		defaultTestParams.TestDCName: []string{
+			vchub.createHostName(dc1.Obj.Self.Value, hostSystem2.Obj.Self.Value),
+		},
+	}
+
+	verifyHosts(dcHostMap)
+	verifyWorkloadCount(0)
+	// after sync the vm2 should still be on host2
+	// remove host1 from DVS
+	dvs.RemoveHost(hostSystem)
+	vchub.Sync()
+	verifyHosts(dcHostMap)
+	verifyWorkloadCount(1)
 }
 
 func setupTestVCHub(vcURL *url.URL, stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator, logger log.Logger, opts ...Option) *VCHub {

@@ -1,7 +1,6 @@
 package vchub
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"sort"
@@ -16,6 +15,25 @@ import (
 	"github.com/pensando/sw/venice/utils/ref"
 	conv "github.com/pensando/sw/venice/utils/strconv"
 )
+
+func (v *VCHub) penDVSForVcHost(dcName string, hConfig *types.HostConfigInfo) *PenDVS {
+	if hConfig == nil || hConfig.Network == nil {
+		return nil
+	}
+	penDC := v.GetDC(dcName)
+	if penDC == nil {
+		return nil
+	}
+	var penDVS *PenDVS
+	for _, dvsProxy := range hConfig.Network.ProxySwitch {
+		v.Log.Debugf("Proxy switch %s", dvsProxy.DvsName)
+		penDVS = penDC.GetDVS(dvsProxy.DvsName)
+		if penDVS != nil {
+			break
+		}
+	}
+	return penDVS
+}
 
 func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	v.Log.Infof("Got handle host event for host %s in DC %s", m.Key, m.DcID)
@@ -103,17 +121,15 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		return
 	}
 
-	var penDVS *PenDVS
-	for _, dvsProxy := range nwInfo.ProxySwitch {
-		v.Log.Debugf("Proxy switch %s", dvsProxy.DvsName)
-		penDVS = penDC.GetDVS(dvsProxy.DvsName)
-		if penDVS != nil {
-			break
-		}
-	}
+	penDVS := v.penDVSForVcHost(m.DcName, hConfig)
 	if penDVS == nil {
 		// This host in not on pen-dvs, ignore it
-		v.Log.Infof("Host %s is not added to pensando DVS - ignored", m.Key)
+		v.Log.Infof("Host %s is not added to pensando DVS", m.Key)
+		if existingHost != nil {
+			// host was removed from Pen-DVS, cleanup any workloads on it and
+			// delete the host
+			v.hostRemovedFromDVS(existingHost)
+		}
 		return
 	}
 
@@ -214,7 +230,7 @@ func (v *VCHub) fixStaleHost(host *cluster.Host) error {
 	// some VC association and do the same?? (linked VC case)
 	// List hosts
 	opts := api.ListWatchOptions{}
-	hosts, err := v.StateMgr.Controller().Host().List(context.Background(), &opts)
+	hosts, err := v.StateMgr.Controller().Host().List(v.Ctx, &opts)
 	if err != nil {
 		v.Log.Errorf("fixStaleHost Failed to get host list. Err : %v", err)
 		return err
@@ -248,6 +264,21 @@ searchHosts:
 	v.deleteHost(hostFound)
 	err = v.StateMgr.Controller().Host().SyncCreate(host)
 	return err
+}
+
+func (v *VCHub) hostRemovedFromDVS(host *cluster.Host) {
+	v.Log.Infof("Host %s Removed from Pen-DVS", host.Name)
+	opts := api.ListWatchOptions{}
+	wlList, err := v.StateMgr.Controller().Workload().List(v.Ctx, &opts)
+	if err == nil {
+		for _, wl := range wlList {
+			if wl.Spec.HostName != host.Name {
+				continue
+			}
+			v.deleteWorkload(&wl.Workload)
+		}
+	}
+	v.deleteHost(host)
 }
 
 func (v *VCHub) deleteHost(obj *cluster.Host) {
@@ -288,7 +319,7 @@ func (v *VCHub) deleteHostFromDc(obj *cluster.Host, penDC *PenDC) {
 func (v *VCHub) DeleteHosts() {
 	// List hosts
 	opts := api.ListWatchOptions{}
-	hosts, err := v.StateMgr.Controller().Host().List(context.Background(), &opts)
+	hosts, err := v.StateMgr.Controller().Host().List(v.Ctx, &opts)
 	if err != nil {
 		v.Log.Errorf("Failed to get host list. Err : %v", err)
 	}

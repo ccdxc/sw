@@ -1,7 +1,6 @@
 package vchub
 
 import (
-	"context"
 	"time"
 
 	"github.com/vmware/govmomi/vim25/mo"
@@ -21,7 +20,7 @@ func (v *VCHub) sync() bool {
 	v.syncLock.Lock()
 	defer v.syncLock.Unlock()
 
-	v.Log.Infof("VCHub %v synching........", v)
+	v.Log.Infof("VCHub %v syncing........", v)
 
 	// Check that probe session is connected
 	count := 3
@@ -45,17 +44,17 @@ func (v *VCHub) sync() bool {
 	opts := api.ListWatchOptions{}
 	// By the time this is called, the statemanager would have setup watchers to the API server
 	// and synched the local cache with the API server
-	nw, err := v.StateMgr.Controller().Network().List(context.Background(), &opts)
+	nw, err := v.StateMgr.Controller().Network().List(v.Ctx, &opts)
 	if err != nil {
 		v.Log.Errorf("Failed to get network list. Err : %v", err)
 	}
 
-	hosts, err := v.StateMgr.Controller().Host().List(context.Background(), &opts)
+	hosts, err := v.StateMgr.Controller().Host().List(v.Ctx, &opts)
 	if err != nil {
 		v.Log.Errorf("Failed to get host list. Err : %v", err)
 	}
 
-	workloads, err := v.StateMgr.Controller().Workload().List(context.Background(), &opts)
+	workloads, err := v.StateMgr.Controller().Workload().List(v.Ctx, &opts)
 	if err != nil {
 		v.Log.Errorf("Failed to get workload list. Err : %v", err)
 	}
@@ -99,17 +98,17 @@ func (v *VCHub) sync() bool {
 		vcHosts := v.ListPensandoHosts(&dcRef)
 
 		v.syncNetwork(nw, dc, dvsObjs, pgs)
-		v.syncNewHosts(dc, vcHosts, hosts, vmkMap)
+		v.syncNewHosts(dc, vcHosts, vmkMap)
 		v.syncVMs(workloads, dc, dvsObjs, vms, pgs, vmkMap)
 		// Removing hosts after removing workloads to fix WL -> Host dependency
-		v.syncStaleHosts(dc, vcHosts, hosts, vmkMap)
+		v.syncStaleHosts(dc, vcHosts, hosts)
 	}
 
 	v.Log.Infof("Sync done for VCHub. %v", v)
 	return true
 }
 
-func (v *VCHub) syncNewHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ctkit.Host, vmkMap map[string]bool) {
+func (v *VCHub) syncNewHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, vmkMap map[string]bool) {
 	v.Log.Infof("Syncing new hosts on DC %s============", dc.Name)
 
 	// Process all hosts
@@ -134,12 +133,14 @@ func (v *VCHub) syncNewHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []
 			},
 		}
 		v.Log.Debugf("Process config change for host %s", host.Reference().Value)
+		// check if host is added to PenDVS is not needed here, handleHost() will check it and
+		// delete the host and associated workloads (including vmk workload)
 		vmkMap[v.createVmkWorkloadName(dc.Reference().Value, host.Reference().Value)] = true
 		v.handleHost(m)
 	}
 }
 
-func (v *VCHub) syncStaleHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ctkit.Host, vmkMap map[string]bool) {
+func (v *VCHub) syncStaleHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ctkit.Host) {
 	v.Log.Infof("Syncing stale hosts on DC %s============", dc.Name)
 	vcHostMap := map[string]bool{}
 	for _, vcHost := range vcHosts {

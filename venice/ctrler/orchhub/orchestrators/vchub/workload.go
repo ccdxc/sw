@@ -668,6 +668,10 @@ func (v *VCHub) deleteWorkload(workloadObj *workload.Workload) {
 	if dcName == "" {
 		v.Log.Errorf("DC not found for workload (delete) %s", workloadObj.Name)
 	} else {
+		// check if workload was migrating, free old usegs as well
+		if v.isWorkloadMigrating(workloadObj) {
+			v.releaseOldUsegs(workloadObj)
+		}
 		// free vlans
 		for _, inf := range workloadObj.Spec.Interfaces {
 			v.releaseInterface(dcName, &inf, workloadObj, true)
