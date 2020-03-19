@@ -998,7 +998,6 @@ void inst_t::process_arq_new ()
                 HAL_TRACE_ERR("FTE in Quiesce mode -- dropping packet");
                 drop_pkt = true;
                 ctx_->set_drop();
-                continue;
             }
 
             if ((drop_pkt == false) && hal::g_session_stats && 

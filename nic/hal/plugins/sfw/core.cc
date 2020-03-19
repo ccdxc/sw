@@ -314,6 +314,8 @@ sfw_exec(ctx_t& ctx)
     match_rslt.idle_timeout = HAL_MAX_INACTIVTY_TIMEOUT;
 
     if (hal::g_hal_state->is_flow_aware()) {
+        flowupd.action = session::FLOW_ACTION_ALLOW;
+        ret = ctx.update_flow(flowupd);  
         return PIPELINE_CONTINUE;
     }
 

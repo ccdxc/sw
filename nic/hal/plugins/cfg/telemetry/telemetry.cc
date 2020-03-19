@@ -955,8 +955,9 @@ collector_process_get (CollectorGetRequest &req, CollectorGetResponse *response,
         response->mutable_spec()->set_dest_port(args->cfg->dport);
         response->mutable_spec()->set_template_id(args->cfg->template_id);
         response->mutable_spec()->set_export_interval(args->cfg->export_intvl);
-        response->mutable_spec()->mutable_encap()->set_encap_type(types::encapType::ENCAP_TYPE_IPSEC);
+        response->mutable_spec()->mutable_encap()->set_encap_type(types::encapType::ENCAP_TYPE_GRE);
         response->mutable_spec()->mutable_encap()->set_encap_value(args->cfg->vlan);
+        response->mutable_spec()->set_protocol(types::IPProtocol::IPPROTO_UDP);
         response->mutable_stats()->set_num_exported_bytes(args->stats->num_export_bytes);
         response->mutable_stats()->set_num_exported_packets(args->stats->num_export_packets);
         response->mutable_stats()->set_num_exported_records_nonip(args->stats->num_export_records_nonip);

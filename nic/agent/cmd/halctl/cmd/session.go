@@ -74,7 +74,7 @@ func init() {
 
 func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	supportedAlgs := []string{"none", "tftp", "ftp", "sun_rpc", "msft_rpc", "rtsp", "dns", "sip"}
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		sessionDetailShowCmdHandler(cmd, args)
 		return
 	}
@@ -97,113 +97,120 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	var sessionGetReqMsg *halproto.SessionGetRequestMsg
 
 	found := false
-	if cmd.Flags().Changed("alg") {
-		for _, v := range supportedAlgs {
-			if v == sessionAlg {
-				found = true
-				break
+	if cmd != nil {
+		if cmd.Flags().Changed("alg") {
+			for _, v := range supportedAlgs {
+				if v == sessionAlg {
+					found = true
+					break
+				}
+			}
+			if found != true {
+				fmt.Printf("Unsupported ALG please try - tftp/ftp/rtsp/msft_rpc/sun_rpc/dns/sip\n")
+				return
 			}
 		}
-		if found != true {
-			fmt.Printf("Unsupported ALG please try - tftp/ftp/rtsp/msft_rpc/sun_rpc/dns/sip\n")
-			return
-		}
-	}
 
-	if cmd.Flags().Changed("handle") {
-		var req *halproto.SessionGetRequest
-		req = &halproto.SessionGetRequest{
-			GetBy: &halproto.SessionGetRequest_SessionHandle{
-				SessionHandle: sessionHandle,
-			},
-		}
-		sessionGetReqMsg = &halproto.SessionGetRequestMsg{
-			Request: []*halproto.SessionGetRequest{req},
-		}
-	} else if cmd.Flags().Changed("vrfid") || cmd.Flags().Changed("srcip") ||
-		cmd.Flags().Changed("dstip") || cmd.Flags().Changed("srcport") ||
-		cmd.Flags().Changed("dstport") || cmd.Flags().Changed("ipproto") ||
-		cmd.Flags().Changed("l2segid") || cmd.Flags().Changed("alg") {
-		var req *halproto.SessionGetRequest
-		if cmd.Flags().Changed("srcip") && cmd.Flags().Changed("dstip") {
+		if cmd.Flags().Changed("handle") {
+			var req *halproto.SessionGetRequest
 			req = &halproto.SessionGetRequest{
-				GetBy: &halproto.SessionGetRequest_SessionFilter{
-					SessionFilter: &halproto.SessionFilter{
-						SrcIp: &halproto.IPAddress{
-							IpAf: halproto.IPAddressFamily_IP_AF_INET,
-							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: utils.IPAddrStrtoUint32(sessionSrcIP),
-							},
-						},
-						DstIp: &halproto.IPAddress{
-							IpAf: halproto.IPAddressFamily_IP_AF_INET,
-							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: utils.IPAddrStrtoUint32(sessionDstIP),
-							},
-						},
-						SrcPort:     sessionSrcPort,
-						DstPort:     sessionDstPort,
-						IpProto:     halproto.IPProtocol(sessionIPProto),
-						VrfId:       sessionVrfID,
-						L2SegmentId: sessionL2SegID,
-						Alg:         algNameToEnum(sessionAlg),
-					},
+				GetBy: &halproto.SessionGetRequest_SessionHandle{
+					SessionHandle: sessionHandle,
 				},
 			}
-		} else if cmd.Flags().Changed("srcip") {
-			req = &halproto.SessionGetRequest{
-				GetBy: &halproto.SessionGetRequest_SessionFilter{
-					SessionFilter: &halproto.SessionFilter{
-						SrcIp: &halproto.IPAddress{
-							IpAf: halproto.IPAddressFamily_IP_AF_INET,
-							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: utils.IPAddrStrtoUint32(sessionSrcIP),
-							},
-						},
-						SrcPort:     sessionSrcPort,
-						DstPort:     sessionDstPort,
-						IpProto:     halproto.IPProtocol(sessionIPProto),
-						VrfId:       sessionVrfID,
-						L2SegmentId: sessionL2SegID,
-						Alg:         algNameToEnum(sessionAlg),
-					},
-				},
+			sessionGetReqMsg = &halproto.SessionGetRequestMsg{
+				Request: []*halproto.SessionGetRequest{req},
 			}
-		} else if cmd.Flags().Changed("dstip") {
-			req = &halproto.SessionGetRequest{
-				GetBy: &halproto.SessionGetRequest_SessionFilter{
-					SessionFilter: &halproto.SessionFilter{
-						DstIp: &halproto.IPAddress{
-							IpAf: halproto.IPAddressFamily_IP_AF_INET,
-							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: utils.IPAddrStrtoUint32(sessionDstIP),
+		} else if cmd.Flags().Changed("vrfid") || cmd.Flags().Changed("srcip") ||
+			cmd.Flags().Changed("dstip") || cmd.Flags().Changed("srcport") ||
+			cmd.Flags().Changed("dstport") || cmd.Flags().Changed("ipproto") ||
+			cmd.Flags().Changed("l2segid") || cmd.Flags().Changed("alg") {
+			var req *halproto.SessionGetRequest
+			if cmd.Flags().Changed("srcip") && cmd.Flags().Changed("dstip") {
+				req = &halproto.SessionGetRequest{
+					GetBy: &halproto.SessionGetRequest_SessionFilter{
+						SessionFilter: &halproto.SessionFilter{
+							SrcIp: &halproto.IPAddress{
+								IpAf: halproto.IPAddressFamily_IP_AF_INET,
+								V4OrV6: &halproto.IPAddress_V4Addr{
+									V4Addr: utils.IPAddrStrtoUint32(sessionSrcIP),
+								},
 							},
+							DstIp: &halproto.IPAddress{
+								IpAf: halproto.IPAddressFamily_IP_AF_INET,
+								V4OrV6: &halproto.IPAddress_V4Addr{
+									V4Addr: utils.IPAddrStrtoUint32(sessionDstIP),
+								},
+							},
+							SrcPort:     sessionSrcPort,
+							DstPort:     sessionDstPort,
+							IpProto:     halproto.IPProtocol(sessionIPProto),
+							VrfId:       sessionVrfID,
+							L2SegmentId: sessionL2SegID,
+							Alg:         algNameToEnum(sessionAlg),
 						},
-						SrcPort:     sessionSrcPort,
-						DstPort:     sessionDstPort,
-						IpProto:     halproto.IPProtocol(sessionIPProto),
-						VrfId:       sessionVrfID,
-						L2SegmentId: sessionL2SegID,
-						Alg:         algNameToEnum(sessionAlg),
 					},
-				},
+				}
+			} else if cmd.Flags().Changed("srcip") {
+				req = &halproto.SessionGetRequest{
+					GetBy: &halproto.SessionGetRequest_SessionFilter{
+						SessionFilter: &halproto.SessionFilter{
+							SrcIp: &halproto.IPAddress{
+								IpAf: halproto.IPAddressFamily_IP_AF_INET,
+								V4OrV6: &halproto.IPAddress_V4Addr{
+									V4Addr: utils.IPAddrStrtoUint32(sessionSrcIP),
+								},
+							},
+							SrcPort:     sessionSrcPort,
+							DstPort:     sessionDstPort,
+							IpProto:     halproto.IPProtocol(sessionIPProto),
+							VrfId:       sessionVrfID,
+							L2SegmentId: sessionL2SegID,
+							Alg:         algNameToEnum(sessionAlg),
+						},
+					},
+				}
+			} else if cmd.Flags().Changed("dstip") {
+				req = &halproto.SessionGetRequest{
+					GetBy: &halproto.SessionGetRequest_SessionFilter{
+						SessionFilter: &halproto.SessionFilter{
+							DstIp: &halproto.IPAddress{
+								IpAf: halproto.IPAddressFamily_IP_AF_INET,
+								V4OrV6: &halproto.IPAddress_V4Addr{
+									V4Addr: utils.IPAddrStrtoUint32(sessionDstIP),
+								},
+							},
+							SrcPort:     sessionSrcPort,
+							DstPort:     sessionDstPort,
+							IpProto:     halproto.IPProtocol(sessionIPProto),
+							VrfId:       sessionVrfID,
+							L2SegmentId: sessionL2SegID,
+							Alg:         algNameToEnum(sessionAlg),
+						},
+					},
+				}
+			} else {
+				req = &halproto.SessionGetRequest{
+					GetBy: &halproto.SessionGetRequest_SessionFilter{
+						SessionFilter: &halproto.SessionFilter{
+							SrcPort:     sessionSrcPort,
+							DstPort:     sessionDstPort,
+							IpProto:     halproto.IPProtocol(sessionIPProto),
+							VrfId:       sessionVrfID,
+							L2SegmentId: sessionL2SegID,
+							Alg:         algNameToEnum(sessionAlg),
+						},
+					},
+				}
+			}
+			sessionGetReqMsg = &halproto.SessionGetRequestMsg{
+				Request: []*halproto.SessionGetRequest{req},
 			}
 		} else {
-			req = &halproto.SessionGetRequest{
-				GetBy: &halproto.SessionGetRequest_SessionFilter{
-					SessionFilter: &halproto.SessionFilter{
-						SrcPort:     sessionSrcPort,
-						DstPort:     sessionDstPort,
-						IpProto:     halproto.IPProtocol(sessionIPProto),
-						VrfId:       sessionVrfID,
-						L2SegmentId: sessionL2SegID,
-						Alg:         algNameToEnum(sessionAlg),
-					},
-				},
+			// Get all Sessions
+			sessionGetReqMsg = &halproto.SessionGetRequestMsg{
+				Request: []*halproto.SessionGetRequest{},
 			}
-		}
-		sessionGetReqMsg = &halproto.SessionGetRequestMsg{
-			Request: []*halproto.SessionGetRequest{req},
 		}
 	} else {
 		// Get all Sessions
