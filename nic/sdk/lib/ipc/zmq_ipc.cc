@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include <zmq.h>
 
@@ -185,6 +186,7 @@ zmq_ipc_endpoint::send_msg(ipc_msg_type_t type, uint32_t recipient,
     if (tag != 0) {
         preamble.tag = tag;
     } else {
+        preamble.tag = rand();
         preamble.tag = sdk::utils::crc32((unsigned char *)&preamble,
                                          sizeof(preamble),
                                          sdk::utils::CRC32_POLYNOMIAL_TYPE_CRC32);
@@ -286,6 +288,7 @@ zmq_ipc_server::recv(void) {
     int rc;
 
     if (!this->is_event_pending()) {
+        SDK_TRACE_DEBUG("No event pending");
         return nullptr;
     }
 
@@ -299,6 +302,7 @@ zmq_ipc_server::recv(void) {
         rc = zmq_recvmsg(this->zsocket_, header->zmsg(), 0);
         assert(rc != -1);
         msg->add_header(header);
+        SDK_TRACE_DEBUG("Got header with length: %d", header->length());
         if (header->length() == 0) {
             break;
         }

@@ -44,7 +44,7 @@ ev_watch_cb (int fd, handler_cb cb, const void *set_ctx, const void *ctx)
     ev_watcher_t *watcher = (ev_watcher_t *)malloc(sizeof(*watcher));
 
     watcher->cb = cb;
-    watcher->ctx = ctx;
+    watcher->ctx = set_ctx;
     
     ev_io_init((ev_io *)watcher, ev_watch_cb_wrap, fd, EV_READ);
     ev_io_start(EV_DEFAULT, (ev_io *)watcher);

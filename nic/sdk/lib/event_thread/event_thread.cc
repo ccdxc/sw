@@ -4,6 +4,7 @@
 #include <memory>
 #include <mutex>
 #include <set>
+#include <time.h>
 
 #include "event_thread.hpp"
 
@@ -14,6 +15,8 @@
 
 namespace sdk {
 namespace event_thread {
+
+const double MAX_CALLBACK_DURATION = 0.25;
 
 typedef enum updown_status_ {
     THREAD_DOWN = 0,
@@ -281,6 +284,9 @@ event_thread::handle_thread_up(uint32_t thread_id) {
 void
 event_thread::process_lfq_(void) {
     lfq_msg *msg;
+    clock_t start;
+    double cpu_time_used;
+    
     while (true) {
         msg = (lfq_msg *)this->dequeue();
         if (msg == NULL) {
@@ -288,12 +294,30 @@ event_thread::process_lfq_(void) {
         }
         if (msg->type == lfq_msg::USER_MSG) {
             assert(this->message_cb_ != NULL);
+            start = clock();
+
             this->message_cb_(msg->payload, this->user_ctx_);
+
+            cpu_time_used = ((double) (clock() - start)) / CLOCKS_PER_SEC;
+            if (cpu_time_used > MAX_CALLBACK_DURATION) {
+                SDK_TRACE_DEBUG("message_callback %p took %f seconds",
+                                this->message_cb_, cpu_time_used);
+            }
+            
         } else if (msg->type == lfq_msg::UPDOWN_MSG) {
             assert(this->updown_up_cbs_.count(msg->meta.updown.thread_id) > 0);
+            start = clock();
+            
             this->updown_up_cbs_[msg->meta.updown.thread_id](
                 msg->meta.updown.thread_id,
                 this->updown_up_ctxs_[msg->meta.updown.thread_id]);
+
+            cpu_time_used = ((double) (clock() - start)) / CLOCKS_PER_SEC;
+            if (cpu_time_used > MAX_CALLBACK_DURATION) {
+                SDK_TRACE_DEBUG("updown_callback %p took %f seconds",
+                                this->updown_up_cbs_[msg->meta.updown.thread_id],
+                                cpu_time_used);
+            }
         } else {
             assert(false);
         }
@@ -305,8 +329,16 @@ static void
 ipc_io_callback (struct ev_loop *loop, ev_io *watcher, int revents)
 {
     ipc_watcher_t *ipc_watcher = (ipc_watcher_t *)watcher->data;
+    clock_t start;
+    double cpu_time_used;
 
+    start = clock();
     ipc_watcher->callback(watcher->fd, ipc_watcher->ctx);
+    cpu_time_used = ((double) (clock() - start)) / CLOCKS_PER_SEC;
+    
+    if (cpu_time_used > MAX_CALLBACK_DURATION) {
+        SDK_TRACE_DEBUG("ipc_io took %f seconds", cpu_time_used);
+    }
 }
 
 void
@@ -405,7 +437,17 @@ static void
 ev_prepare_callback_ (struct ev_loop *loop, ev_prepare *watcher, int revents)
 {
     prepare_t *prepare = (prepare_t *)watcher;
+    clock_t start;
+    double cpu_time_used;
+
+    start = clock();
     prepare->callback(prepare, prepare->ctx);
+    cpu_time_used = ((double) (clock() - start)) / CLOCKS_PER_SEC;
+    
+    if (cpu_time_used > MAX_CALLBACK_DURATION) {
+        SDK_TRACE_DEBUG("prepare_callback %p took %f seconds",
+                        prepare->callback, cpu_time_used);
+    }
 }
 
 void
@@ -429,7 +471,17 @@ static void
 ev_io_callback_ (struct ev_loop *loop, ev_io *watcher, int revents)
 {
     io_t *io = (io_t *)watcher;
+    clock_t start;
+    double cpu_time_used;
+
+    start = clock();
     io->callback(io, watcher->fd, ev_to_event(revents));
+    cpu_time_used = ((double) (clock() - start)) / CLOCKS_PER_SEC;
+    
+    if (cpu_time_used > MAX_CALLBACK_DURATION) {
+        SDK_TRACE_DEBUG("io_callback %p took %f seconds",
+                        io->callback, cpu_time_used);
+    }
 }
 
 void
@@ -451,7 +503,17 @@ static void
 ev_timer_callback_ (struct ev_loop *loop, ev_timer *watcher, int revents)
 {
     timer_t *timer = (timer_t *)watcher;
+    clock_t start;
+    double cpu_time_used;
+
+    start = clock();
     timer->callback(timer);
+    cpu_time_used = ((double) (clock() - start)) / CLOCKS_PER_SEC;
+    
+    if (cpu_time_used > MAX_CALLBACK_DURATION) {
+        SDK_TRACE_DEBUG("timer_callback %p took %f seconds",
+                        timer->callback, cpu_time_used);
+    }
 }
 
 void
