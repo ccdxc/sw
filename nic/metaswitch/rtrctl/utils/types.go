@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"strconv"
 
 	"github.com/satori/go.uuid"
 
@@ -328,6 +329,7 @@ type ShadowBgpSpec struct {
 	*pds.BGPSpec
 	Id       string
 	RouterId string
+	ClusterId string
 }
 
 // NewBGPSpec creates a new shadow of the BGPSpec
@@ -341,7 +343,8 @@ func NewBGPSpec(in *pds.BGPSpec) *ShadowBgpSpec {
 	return &ShadowBgpSpec{
 		BGPSpec:  in,
 		Id:       uidstr,
-		RouterId: NetUint32ToIPv4Address(in.RouterId),
+		RouterId:  NetUint32ToIPv4Address(in.RouterId),
+		ClusterId: NetUint32ToIPv4Address(in.ClusterId),
 	}
 }
 
@@ -382,11 +385,52 @@ type ShadowBGPPeerStatus struct {
 	*pds.BGPPeerStatus
 }
 
+func BgpErrStr(bs []byte) string {
+    if bs[0] == 0 {
+        return "NONE"
+    }
+    if bs[0] > 7 {
+        return "Unknown Error " + strconv.Itoa(int(bs[0]))
+    }
+    type BGPErrCodeInfo struct {
+        Str       string
+        SubCodeSz int
+    }
+    ErrCodeStr := [...]BGPErrCodeInfo{
+                    {"NONE", 0},
+                    {"Message Header Error", 3},
+                    {"OPEN Message Error", 8},
+                    {"UPDATE Message Error", 11},
+                    {"Hold Timer Expired", 0},
+                    {"Finite State Machine Error", 3},
+                    {"Cease", 7},
+                    {"ROUTE-REFRESH Message Error", 1}}
+
+    SubErrCodeStr := [...][12] string {
+        {},
+        {"Unspecific", "Connection Not Synchronized","Bad Message Length","Bad Message Type"},
+        {"Unspecific", "Unsupported Version Number","Bad Peer AS","Bad BGP Identifier","Unsupported Optional Parameter","", "Unacceptable Hold Time","Unsupported Capability","Role Mismatch"},
+        {"Unspecific", "Malformed Attribute List","Unrecognized Well-known Attribute","Missing Well-known Attribute","Attribute Flags Error","Attribute Length Error","Invalid ORIGIN Attribute","","Invalid NEXT_HOP Attribute","Optional Attribute Error", "Invalid Network Field","Malformed AS_PATH"},
+        {},
+        {"Unspecific", "Receive Unexpected Message in OpenSent State","Receive Unexpected Message in OpenConfirm State","Receive Unexpected Message in Established State"},
+        {"Unspecific", "Maximum Number of Prefixes Reached","Administrative Shutdown","Connection Rejected","Other Configuration Change","Connection Collision Resolution","Out of Resources","Hard Reset"},
+        {"Reserved", "Invalid Message Length"}}
+
+    ErrStr := ErrCodeStr[bs[0]].Str
+  
+    if int(bs[1]) > ErrCodeStr[bs[0]].SubCodeSz {
+       ErrStr += " : Unknown sub error " + strconv.Itoa(int(bs[1]))
+    } else if ErrCodeStr[bs[0]].SubCodeSz > 0 {
+       ErrStr += " : " + SubErrCodeStr[bs[0]][bs[1]]
+    }
+    return ErrStr
+}
+
 func newBGPPeerStatus(in *pds.BGPPeerStatus) ShadowBGPPeerStatus {
 	return ShadowBGPPeerStatus{
 		Id:            "",
-		LastErrorRcvd: string(in.LastErrorRcvd),
-		LastErrorSent: string(in.LastErrorSent),
+		LastErrorRcvd: BgpErrStr(in.LastErrorRcvd),
+		LastErrorSent: BgpErrStr(in.LastErrorSent),
 		Status:        strings.TrimPrefix(in.Status.String(), "BGP_PEER_STATE_"),
 		PrevStatus:    in.PrevStatus.String(),
 		LocalAddr:     PdsIPToString(in.LocalAddr),
