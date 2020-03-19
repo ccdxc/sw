@@ -303,11 +303,13 @@ func (cl *Cluster) AddHost(ip, username, password, sslKey string) error {
 	task, err := cl.ref.AddHost(cl.dc.vc.Ctx(), spec, true, &cl.dc.vc.Entity.License, nil)
 
 	if err != nil {
+		log.Errorf("TOPO SVC | AddHost  | Failed to add host %v. Error for AddHost %v", ip, err.Error())
 		return err
 	}
 
 	_, err = task.WaitForResult(cl.dc.vc.Ctx(), nil)
 	if err != nil {
+		log.Errorf("TOPO SVC | AddHost  | Failed to add host %v. Error for WaitForResult %v", ip, err.Error())
 		return err
 	}
 

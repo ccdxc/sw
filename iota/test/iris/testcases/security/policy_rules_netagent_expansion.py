@@ -7,10 +7,17 @@ import iota.test.iris.config.netagent.api as agent_api
 import iota.test.iris.testcases.security.utils as utils
 import pdb
 import time
+from iota.test.iris.utils import vmotion_utils
 
 def Setup(tc):
     tc.workload_pairs = api.GetRemoteWorkloadPairs()
     agent_api.DeleteSgPolicies()
+
+    if getattr(tc.args, 'vmotion_enable', False):
+        wloads = []
+        for pair in tc.workload_pairs:
+            wloads.append(pair[1])
+        vmotion_utils.PrepareWorkloadVMotion(tc, wloads)
 
     return api.types.status.SUCCESS
 
@@ -39,6 +46,9 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
+    if getattr(tc.args, 'vmotion_enable', False):
+        vmotion_utils.PrepareWorkloadRestore(tc)
+
     return tc.ret
 
 def Teardown(tc):

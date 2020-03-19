@@ -19,6 +19,7 @@ testcases:
             duration         : [10]
         background_tasks:
             showStats        : 
-                trigger         : repeat
+                trigger         : auto
+                run             : repeat
                 sleep_interval  : 10
                 terminate       : verify

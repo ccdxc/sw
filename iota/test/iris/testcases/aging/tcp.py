@@ -121,12 +121,12 @@ def Trigger(tc):
     cmd = trig_resp1.commands[-1]
     for command in trig_resp1.commands:
         api.PrintCommandResults(command)
-    iseq_num, iack_num, iwindosz, iwinscale, rseq_num, rack_num, rwindo_sz, rwinscale = get_conntrackinfo(cmd)
+    tc.ctrckinf = get_conntrackinfo(cmd)
 
     #Send ACK
     req2 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     api.Trigger_AddCommand(req2, client.node_name, client.workload_name,
-               "hping3 -c 1 -s {} -p {} -M {}  -L {} --ack {}".format(client_port, server_port, rack_num, rseq_num, server.ip_address))
+               "hping3 -c 1 -s {} -p {} -M {}  -L {} --ack {}".format(client_port, server_port, tc.ctrckinf.r_tcpacknum, tc.ctrckinf.r_tcpseqnum, server.ip_address))
     tc.cmd_cookies.append("Send ACK") 
 
     cmd_cookie = "Before aging show session"

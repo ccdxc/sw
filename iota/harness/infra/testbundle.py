@@ -143,6 +143,14 @@ class TestBundle:
                 tc_spec.debugs += self.__parent.GetDebugs()
             else:
                 tc_spec.debugs = self.__parent.GetDebugs()
+
+            tc_spec.triggers = self.__parent.GetTriggers()
+            tc_spec.teardowns = self.__parent.GetTeardowns()
+            if getattr(tc_spec, 'args', None):
+                tc_spec.args.ImportProperties(self.__parent.GetCommonArgs())
+            else:
+                tc_spec.args = self.__parent.GetCommonArgs()
+
             tc = testcase.Testcase(tc_spec, self)
             self.__testcases.append(tc)
         return types.status.SUCCESS

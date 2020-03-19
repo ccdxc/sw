@@ -70,7 +70,7 @@ def Trigger(tc):
     cmd = sesssetup.commands[-1]
     for command in sesssetup.commands:
         api.PrintCommandResults(command)
-    iseq_num, iack_num, iwindosz, iwinscale, rseq_num, rack_num, rwindo_sz, rwinscale = get_conntrackinfo(cmd)
+    tc.ctrckinf = get_conntrackinfo(cmd)
 
     GetTcpdumpData(client)
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
@@ -82,8 +82,8 @@ def Trigger(tc):
     pkts=rdpcap(msrpcpcap)
     clientidx = 0 
     serveridx = 0
-    client_ack = iack_num
-    server_ack = rack_num
+    client_ack = tc.ctrckinf.i_tcpacknum
+    server_ack = tc.ctrckinf.r_tcpacknum
     filename = None
     for pkt in pkts:
         node = client.node_name
@@ -100,7 +100,7 @@ def Trigger(tc):
            if clientidx == 0:
               client_start_seq = pkt[TCP].seq
               client_start_ack = pkt[TCP].ack
-           pkt[TCP].seq = iseq_num + (pkt[TCP].seq - client_start_seq)
+           pkt[TCP].seq = tc.ctrckinf.i_tcpseqnum + (pkt[TCP].seq - client_start_seq)
            pkt[TCP].ack = client_ack
            server_ack =  pkt[TCP].seq + 1
            clientidx += 1
@@ -118,7 +118,7 @@ def Trigger(tc):
            if serveridx == 0:
               server_start_seq = pkt[TCP].seq
               server_start_ack = pkt[TCP].ack 
-           pkt[TCP].seq = rseq_num + (pkt[TCP].seq - server_start_seq)
+           pkt[TCP].seq = tc.ctrckinf.r_tcpseqnum + (pkt[TCP].seq - server_start_seq)
            pkt[TCP].ack = server_ack
            client_ack = pkt[TCP].seq + 1
            serveridx += 1

@@ -4,6 +4,7 @@ import time
 import iota.harness.api as api
 import iota.test.iris.testcases.security.utils as utils
 import iota.test.iris.testcases.aging.aging_utils as timeout_utils
+from iota.test.iris.utils import vmotion_utils
 import iota.test.iris.testcases.penctl.common as common
 
 
@@ -92,6 +93,10 @@ def Setup(tc):
         return api.types.status.FAILURE
     tc.wc_server = server
     tc.wc_client = client
+    if getattr(tc.args, 'vmotion_enable', False):
+        wloads = [server]
+        vmotion_utils.PrepareWorkloadVMotion(tc, wloads)
+
     return api.types.status.SUCCESS
 
 
@@ -144,6 +149,9 @@ def Trigger(tc):
 
 def Verify(tc):
     api.Logger.info("Verify.")
+
+    if getattr(tc.args, 'vmotion_enable', False):
+        vmotion_utils.PrepareWorkloadRestore(tc)
 
     if tc.resp is None:
         api.Logger.info("Null response from aggregartecommands")

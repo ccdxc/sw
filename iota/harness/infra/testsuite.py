@@ -48,7 +48,7 @@ class TestSuiteResults(object):
           if targetId:
               self.TargetID = int(targetId)
           else:
-              self.TargetID = int(os.getenv("TARGET_ID"))
+              self.TargetID = int(os.getenv("TARGET_ID", "0"))
         except ValueError:
             print("targetID is not an integer")
         self.Testcases = []
@@ -67,6 +67,9 @@ class TestSuite:
         self.__verifs = []
         self.__debugs = []
         self.__setups = []
+        self.__triggers = []
+        self.__teardowns = []
+        self.__common_args = parser.Dict2Object({})
         self.__setup_complete = False
 
         self.__aborted = False
@@ -135,6 +138,12 @@ class TestSuite:
     def GetSetups(self):
         return self.__setups
 
+    def GetTriggers(self):
+        return self.__triggers
+
+    def GetTeardowns(self):
+        return self.__teardowns
+
     def GetPacakges(self):
         return self.__spec.packages
 
@@ -153,6 +162,9 @@ class TestSuite:
     def DoConfig(self):
         return self.__setup_config()
 
+    def GetCommonArgs(self):
+        return self.__common_args
+
     def __resolve_calls(self):
         if getattr(self.__spec, 'common', None) and getattr(self.__spec.common, 'verifs', None):
             self.__verifs = self.__spec.common.verifs
@@ -160,6 +172,12 @@ class TestSuite:
             self.__debugs = self.__spec.common.debugs
         if getattr(self.__spec, 'common', None) and getattr(self.__spec.common, 'setups', None):
             self.__setups = self.__spec.common.setups
+        if getattr(self.__spec, 'common', None) and getattr(self.__spec.common, 'triggers', None):
+            self.__triggers = self.__spec.common.triggers
+        if getattr(self.__spec, 'common', None) and getattr(self.__spec.common, 'teardowns', None):
+            self.__teardowns = self.__spec.common.triggers
+        if getattr(self.__spec, 'common', None) and getattr(self.__spec.common, 'args', None):
+            self.__common_args = self.__spec.common.args
 
     def __import_testbundles(self):
         if not GlobalOptions.skip_sanity:
@@ -359,16 +377,21 @@ class TestSuite:
         except:
             Logger.debug("failed to save test results to file {0}. error was: {1}".format(filename,traceback.format_exc()))
 
+    def ExitHandler(self):
+        logcollector.CollectLogs()
+        logcollector.CollectTechSupport(self.Name())
+        self.CollectCores()
+        self.writeTestResults()
+        if store.GetTestbed().IsUsingProdVCenter():
+            store.GetTestbed().CleanupTestbed()
+        return
+
     def Main(self):
         if self.__skip:
             Logger.debug("Skipping Testsuite: %s due to filters." % self.Name())
             return types.status.SUCCESS
 
-        atexit.register(logcollector.CollectLogs)
-        atexit.register(logcollector.CollectTechSupport,(self.Name()))
-        atexit.register(self.CollectCores)
-        atexit.register(self.writeTestResults)
-
+        atexit.register(self.ExitHandler)
         # Start the testsuite timer
         self.__timer.Start()
 

@@ -2,6 +2,7 @@
 import pdb
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
+from iota.test.iris.utils import vmotion_utils
 
 def __get_workload_pairs():
     pairs = []
@@ -14,6 +15,12 @@ def __get_workload_pairs():
 
 def Setup(tc):
     tc.workload_pairs = __get_workload_pairs()
+    if getattr(tc.args, 'vmotion_enable', False):
+        wloads = []
+        for pair in tc.workload_pairs:
+            wloads.append(pair[1])
+        vmotion_utils.PrepareWorkloadVMotion(tc, wloads)
+
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -34,6 +41,9 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
+    if getattr(tc.args, 'vmotion_enable', False):
+        vmotion_utils.PrepareWorkloadRestore(tc)
+
     api.Logger.info("Validating ...")
     if tc.resp is None:
         return api.types.status.FAILURE

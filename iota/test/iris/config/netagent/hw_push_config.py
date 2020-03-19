@@ -130,7 +130,7 @@ def __add_config_worklads(req, target_node = None):
         elif api.GetNicMode() == 'hostpin_dvs':
             host_if = api.AllocateHostInterfaceForNode(wl_msg.node_name)
             wl_msg.interface_type = topo_svc.INTERFACE_TYPE_DVS_PVLAN
-            wl_msg.switch_name = GlobalOptions.distributed_switch
+            wl_msg.switch_name = api.GetVCenterDVSName()
             wl_msg.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)
             if api.GetNicType(wl_msg.node_name) in ['pensando', 'naples']:
                 wl_msg.encap_vlan = ep.spec.primary_vlan

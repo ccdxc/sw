@@ -3,6 +3,7 @@ import time
 import iota.harness.api as api
 import iota.test.iris.config.netagent.api as netagent_api
 import iota.test.iris.utils.iperf as iperf
+from iota.test.iris.utils import vmotion_utils
 
 
 def Setup(tc):
@@ -22,10 +23,13 @@ def Setup(tc):
         api.Logger.info("Skipping Testcase due to no workload pairs.")
         tc.skip = True
 
-    wloads = []
-    for wl_pair in tc.workload_pairs:
-        wloads.append(wl_pair[0])
-        wloads.append(wl_pair[1])
+    if getattr(tc.args, 'vmotion_enable', False):
+        wloads = []
+        # collecting all server
+        for wl_pair in tc.workload_pairs:
+            wloads.append(wl_pair[1])
+
+        vmotion_utils.PrepareWorkloadVMotion(tc, wloads)
 
     #Have to fix it later.
     return api.types.status.SUCCESS

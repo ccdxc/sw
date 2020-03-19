@@ -3,13 +3,10 @@
 import iota.harness.api as api
 from iota.test.iris.testcases.security.conntrack.session_info import *
 from iota.test.iris.testcases.security.conntrack.conntrack_utils import *
+from iota.test.iris.utils import vmotion_utils
 
 def Setup(tc):
     api.Logger.info("Setup.")
-    return api.types.status.SUCCESS
-
-def Trigger(tc):
-    api.Logger.info("Trigger.")
     if tc.iterators.kind == "remote":
         pairs = api.GetRemoteWorkloadPairs()
         if not pairs:
@@ -18,58 +15,67 @@ def Trigger(tc):
     else:
         pairs = api.GetLocalWorkloadPairs()
 
-    resp_flow = getattr(tc.args, "resp_flow", 0)
-    tc.resp_flow = resp_flow
+    tc.resp_flow = getattr(tc.args, "resp_flow", 0)
     tc.cmd_cookies = {}
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     if pairs[0][0].IsNaples():
-        client,server = pairs[0]
+        tc.client,tc.server = pairs[0]
     else:
-        server,client = pairs[0]
-    cmd_cookie = start_nc_server(server, "1237")
-    add_command(req, tc, 'server', server, cmd_cookie, True) 
+        tc.server,tc.client = pairs[0]
+    cmd_cookie = start_nc_server(tc.server, "1237")
+    add_command(req, tc, 'server', tc.server, cmd_cookie, True) 
 
 
-    cmd_cookie = start_nc_client(server, "52255", "1237")
-    add_command(req, tc, 'client', client, cmd_cookie, True)
+    cmd_cookie = start_nc_client(tc.server, "52255", "1237")
+    add_command(req, tc, 'client', tc.client, cmd_cookie, True)
        
-    cmd_cookie = "/nic/bin/halctl show session --dstport 1237 --dstip {} --yaml".format(server.ip_address)
-    add_command(req, tc, 'show before', client, cmd_cookie, naples=True)
+    cmd_cookie = "/nic/bin/halctl show session --dstport 1237 --dstip {} --yaml".format(tc.server.ip_address)
+    add_command(req, tc, 'show before', tc.client, cmd_cookie, naples=True)
 
     
-    trig_resp1 = api.Trigger(req)
-    cmd = trig_resp1.commands[-1] 
+    tc.setup_cmd_resp = api.Trigger(req)
+    cmd = tc.setup_cmd_resp.commands[-1] 
     api.PrintCommandResults(cmd)
-    iseq_num, iack_num, iwindo_sz, iwinscale, rseq_num, rack_num, rwindo_sz, rwinscale = get_conntrackinfo(cmd)
+    tc.pre_ctrckinf = get_conntrackinfo(cmd)
+    if getattr(tc.args, 'vmotion_enable', False):
+        vmotion_utils.PrepareWorkloadVMotion(tc, [tc.server])
+
+    return api.types.status.SUCCESS
+
+def Trigger(tc):
+    api.Logger.info("Trigger.")
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    if resp_flow:
-        new_seq_num = rseq_num + iwindo_sz * (2 ** iwinscale)
+    if tc.resp_flow:
+        new_seq_num = tc.pre_ctrckinf.r_tcpseqnum + tc.pre_ctrckinf.i_tcpwinsz * (2 ** tc.pre_ctrckinf.i_tcpwinscale)
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
         #left out of window - retransmit
-        cmd_cookie = "hping3 -c 1 -s 1237 -p 52255 -M {}  -L {} --ack --tcp-timestamp {} --syn  -d 10".format(wrap_around(rseq_num, 0), rack_num, client.ip_address)    
-        add_command(req, tc, 'fail ping', server, cmd_cookie)
+        cmd_cookie = "hping3 -c 1 -s 1237 -p 52255 -M {}  -L {} --ack --tcp-timestamp {} --syn  -d 10".format(wrap_around(tc.pre_ctrckinf.r_tcpseqnum, 0), tc.pre_ctrckinf.r_tcpacknum, tc.client.ip_address)    
+        add_command(req, tc, 'fail ping', tc.server, cmd_cookie)
     else:
-        new_seq_num = iseq_num + rwindo_sz * (2 ** rwinscale)
+        new_seq_num = tc.pre_ctrckinf.i_tcpseqnum + tc.pre_ctrckinf.r_tcpwinsz * (2 ** tc.pre_ctrckinf.r_tcpwinscale)
         #left out of window - retransmit
-        cmd_cookie = "hping3 -c 1 -s 52255 -p 1237 -M {}  -L {} --ack --tcp-timestamp --syn {} -d 10".format(wrap_around(iseq_num, 0), iack_num, server.ip_address)   
-        add_command(req, tc,"fail ping", client, cmd_cookie)
+        cmd_cookie = "hping3 -c 1 -s 52255 -p 1237 -M {}  -L {} --ack --tcp-timestamp --syn {} -d 10".format(wrap_around(tc.pre_ctrckinf.i_tcpseqnum, 0), tc.pre_ctrckinf.i_tcpacknum, tc.server.ip_address)   
+        add_command(req, tc,"fail ping", tc.client, cmd_cookie)
 
-    cmd_cookie = "sleep 3 && /nic/bin/halctl show session --dstport 1237 --dstip {} --yaml".format(server.ip_address)
-    add_command(req, tc, 'show after', client, cmd_cookie, naples=True)
+    cmd_cookie = "sleep 3 && /nic/bin/halctl show session --dstport 1237 --dstip {} --yaml".format(tc.server.ip_address)
+    add_command(req, tc, 'show after', tc.client, cmd_cookie, naples=True)
 
     cmd_cookie = "/nic/bin/halctl clear session"
-    add_command(req, tc, 'clear', client, cmd_cookie, naples=True)
+    add_command(req, tc, 'clear', tc.client, cmd_cookie, naples=True)
 
-    if server.IsNaples():
+    if tc.server.IsNaples():
         cmd_cookie = "/nic/bin/halctl clear session"
-        add_command(req, tc, 'clear', server, cmd_cookie, naples=True)
+        add_command(req, tc, 'clear', tc.server, cmd_cookie, naples=True)
 
 
     trig_resp = api.Trigger(req)
-    term_resp1 = api.Trigger_TerminateAllCommands(trig_resp1)
+    term_resp1 = api.Trigger_TerminateAllCommands(tc.setup_cmd_resp)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp1)
+    if getattr(tc.args, 'vmotion_enable', False):
+        vmotion_utils.PrepareWorkloadRestore(tc)
+
     return api.types.status.SUCCESS    
         
 def Verify(tc):

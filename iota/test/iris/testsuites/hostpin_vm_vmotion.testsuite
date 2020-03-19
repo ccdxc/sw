@@ -1,5 +1,5 @@
 meta:
-    name        : hostpin_vm_dvs
+    name        : hostpin_vm_vmotion
     description : Hardware Test Suite
     mode        : hybrid
     cfgmode     : netagent
@@ -13,6 +13,7 @@ packages:
 images:
     naples: nic/naples_fw.tar
 
+
 setup:
     topology: test/iris/topologies/2Naples_VM_Vcenter/vm.topology
     config  :
@@ -21,8 +22,8 @@ setup:
         - step : testcases.penctl.enable_ssh
         - step : config.netagent.mode_switch
           args :
-               fwd_mode    : "INSERTION"
-               policy_Mode : "ENFORCED"
+             fwd_mode    : "INSERTION"
+             policy_Mode : "ENFORCED"
         - step : config.netagent.hw_push_config
           args :
              spec : scale_cfg_1vrf_1nw_2ep_2rep.cfgyml
@@ -30,6 +31,17 @@ setup:
         - step : testcases.naples_upgrade.install
 
 common:
+    args: 
+        vmotion_enable  : True
+
+    triggers:
+        -   step : triggers.vmotion.trigger_vmotion
+            args:
+                trigger         : auto
+                run             : once
+                sleep_interval  : 10
+                terminate       : verify
+                background      : False
     verifs:
         -   step    : verif.vmotion.verify_vmotion
         -   step    : verif.utils.verify_interrupts
@@ -38,16 +50,17 @@ common:
     debugs:
         -   step : verif.utils.collect_logs_and_cores
 
-testbundles:
-    precheckin:
-        - vmotion/basic_ping.testbundle
+    teardowns:
+        -   step : triggers.vmotion.trigger_vmotion
 
+testbundles:
     sanity:
         # Relative paths from iota/test/iris/testbundles/
-        - vmotion/basic_ping.testbundle
-        - vmotion/clean.testbundle
-        - vmotion/aging.testbundle
-        
+        # - networking/connectivity.testbundle
+        # - networking/cps.testbundle
+        - firewall/conntrack.testbundle
+        - firewall/normalization.testbundle
+        - firewall/policy.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores

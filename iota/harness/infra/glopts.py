@@ -122,10 +122,6 @@ if GlobalOptions.uid == None:
             GlobalOptions.uid = "SUPER_USER"
 
 
-GlobalOptions.dc_name = GlobalOptions.uid + "-iota-dc"
-GlobalOptions.cluster_name = GlobalOptions.uid + "-iota-cluster"
-GlobalOptions.distributed_switch = "Pen-DVS-" + GlobalOptions.dc_name
-
 def __validate():
     if GlobalOptions.debug:
         print("========================================================")

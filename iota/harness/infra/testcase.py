@@ -154,6 +154,113 @@ class DebugStep:
         print(types.FORMAT_TESTCASE_SUMMARY % (modname, self.__get_owner(), types.status.str(self.__status).title(), self.__timer.TotalTime()))
         return types.status.SUCCESS
 
+class TriggerStep:
+    def __init__(self, spec):
+        self.__spec = spec
+        self.__timer = timeprofiler.TimeProfiler()
+        self.__trigger = 'auto'
+        self.__run = 'once'
+        self.__sleep_interval = 0
+        self.__terminate = 'teardown'
+        self.__background = True
+        self.__resolve()
+        self.__status = api.types.status.FAILURE
+        return
+
+    def __resolve(self):
+        Logger.debug("Resolving testcase trigger  module: %s" % self.__spec.step)
+        self.__mod = loader.Import(self.__spec.step, self.__spec.packages)
+        if hasattr(self.__spec, 'args') and hasattr(self.__spec.args, 'trigger'):
+            self.__trigger = self.__spec.args.trigger
+
+        if hasattr(self.__spec, 'args') and hasattr(self.__spec.args, 'run'):
+            self.__run = self.__spec.args.run
+
+        if hasattr(self.__spec, 'args') and hasattr(self.__spec.args, 'sleep_interval'):
+            self.__sleep_interval = self.__spec.args.sleep_interval
+
+        if hasattr(self.__spec, 'args') and hasattr(self.__spec.args, 'terminate'):
+            self.__terminate = self.__spec.args.terminate
+
+        if hasattr(self.__spec, 'args') and hasattr(self.__spec.args, 'background'):
+            self.__background = self.__spec.args.background
+        return
+
+    def __execute(self, iter_data):
+        if self.__background:
+            Logger.debug("Running common trigger module in background: %s" % self.__spec.step)
+            bt_inst = TestcaseBackgroundTrigger('Main', self.__trigger, self.__run, 
+                                                 self.__sleep_interval, self.__terminate)
+            return bt_inst.StartTask(self.__mod, iter_data)
+        else:
+            Logger.debug("Running common trigger module in foreground: %s" % self.__spec.step)
+            return loader.RunCallback(self.__mod, 'Main', True, iter_data)
+
+    def Main(self, iter_data):
+        self.__timer.Start()
+        self.__status = self.__execute(iter_data)
+        self.__timer.Stop()
+        if self.__status != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+        return self.__status
+
+    def __get_owner(self):
+        return get_owner(self.__mod.__file__)
+
+    def PrintResultSummary(self):
+        modname = "- %s" % self.__mod.__name__.split('.')[-1]
+        print(types.FORMAT_TESTCASE_SUMMARY % (modname, self.__get_owner(), types.status.str(self.__status).title(), self.__timer.TotalTime()))
+        return types.status.SUCCESS
+
+class TeardownStep:
+    def __init__(self, spec):
+        self.__spec = spec
+        self.__timer = timeprofiler.TimeProfiler()
+        self.__trigger = 'auto'
+        self.__run = 'once'
+        self.__sleep_interval = 0
+        self.__terminate = 'teardown'
+        self.__background = True
+        self.__resolve()
+        self.__status = api.types.status.FAILURE
+        return
+
+    def __resolve(self):
+        Logger.debug("Resolving testcase teardown module: %s" % self.__spec.step)
+        self.__mod = loader.Import(self.__spec.step, self.__spec.packages)
+        if hasattr(self.__spec, 'args') and hasattr(self.__spec.args, 'trigger'):
+            self.__trigger = self.__spec.args.trigger
+
+        if hasattr(self.__spec, 'args') and hasattr(self.__spec.args, 'background'):
+            self.__background = self.__spec.args.background
+        return
+
+    def __execute(self, iter_data):
+        if self.__background:
+            Logger.debug("Running common teardown module in background: %s" % self.__spec.step)
+            bt_inst = TestcaseBackgroundTrigger('Main', self.__trigger, self.__run, 
+                                                 self.__sleep_interval, self.__terminate)
+            return bt_inst.StartTask(self.__mod, iter_data)
+        else:
+            Logger.debug("Running common teardown module in foreground: %s" % self.__spec.step)
+            return loader.RunCallback(self.__mod, 'Main', True, iter_data)
+
+    def Main(self, iter_data):
+        self.__timer.Start()
+        self.__status = self.__execute(iter_data)
+        self.__timer.Stop()
+        if self.__status != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+        return self.__status
+
+    def __get_owner(self):
+        return get_owner(self.__mod.__file__)
+
+    def PrintResultSummary(self):
+        modname = "- %s" % self.__mod.__name__.split('.')[-1]
+        print(types.FORMAT_TESTCASE_SUMMARY % (modname, self.__get_owner(), types.status.str(self.__status).title(), self.__timer.TotalTime()))
+        return types.status.SUCCESS
+
 class TestcaseDataIters:
     def __init__(self):
         self.__summary = None
@@ -247,14 +354,28 @@ class TestcaseData:
         self.__package = package
 
 class TestcaseBackgroundTrigger:
+    """
+    Encapsulation of BackgroundTrigger :
+    """
 
-    def __init__(self, task, trigger, sleep_interval, terminate):
+    def __init__(self, task, trigger, run, sleep_interval, terminate):
+        """
+        :param task: Name of task/function to invoke
+        :param trigger: Trigger mode - auto/manual
+        :param run: once or repeat
+        :param sleep_interval: Sleep interval in sec between repeat-run. Ignored for run-once
+        :param terminate: Termination at verify|teardown
+        """
         self.__status = types.status.FAILURE
         self.__task = task
         self.__sleep_interval = sleep_interval
         self.__trigger = trigger
+        self.__run = run
         self.__terminate = terminate
         self.__task_inst = None
+
+    def IsAutoTriggerEnabled(self):
+        return self.__trigger == 'auto'
 
     def StartTask(self, module, args):
         callback_fn = getattr(module, self.__task, None)
@@ -266,16 +387,21 @@ class TestcaseBackgroundTrigger:
         self.__task_inst.start()
         return types.status.SUCCESS
 
-    def StopTask(self):
-        if self.IsTaskRunning():
-            self.__task_inst.cancel()
-            self.__task_inst.join(self.__sleep_interval + 10)
+    def StopTask(self, exec_stage):
+        if self.__task_inst:
+            if self.__terminate == exec_stage:
+                if self.IsTaskRunning():
+                    self.__task_inst.cancel()
         return types.status.SUCCESS
 
     def IsTaskRunning(self):
-        if self.__task_inst.is_alive():
-            return True
-        return False
+        return self.__task_inst and self.__task_inst.is_alive()
+
+    def CollectTask(self): 
+        if self.__task_inst:
+            self.StopTask(self.__terminate)  # Provide another attempt to 
+            self.__task_inst.join(0) # Terminate task/thread
+        return
 
 class Testcase:
     def __init__(self, spec, parent):
@@ -286,7 +412,9 @@ class Testcase:
         self.__setups = []
         self.__verifs = []
         self.__debugs = []
-        self.__background_tasks = []
+        self.__triggers = []
+        self.__teardowns = []
+        self.__background_tasks = {}
         self.__iterid = 0
         self.__resolve()
         self.__enable = getattr(self.__spec, 'enable', True)
@@ -420,13 +548,14 @@ class Testcase:
 
         for task_name, task_attr in tasks.__dict__.items():
             # Build BackgroundTask instance and prepare for trigger
-            trigger = getattr(task_attr, 'trigger', 'once')
+            trigger = getattr(task_attr, 'trigger', 'auto') # or manual
+            run = getattr(task_attr, 'run', 'once') # or repeat
             sleep_interval = getattr(task_attr, 'sleep_interval', 60)
             terminate = getattr(task_attr, 'terminate', 'Teardown')
             Logger.info("Task %s attributes : trigger %s, sleep %d and terminate %s" % 
                     (task_name, trigger, sleep_interval, terminate))
-            bt = TestcaseBackgroundTrigger(task_name, trigger, sleep_interval, terminate)
-            self.__background_tasks.append(bt)
+            bt = TestcaseBackgroundTrigger(task_name, trigger, run, sleep_interval, terminate)
+            self.__background_tasks[task_name] = bt
         return
 
     def __resolve_testcase(self):
@@ -437,6 +566,7 @@ class Testcase:
             self.__sel_module_args = self.__spec.selector.args
         else:
             self.__sel_module = None
+        setattr(self.__tc, 'parent',  self)
         setups_spec = getattr(self.__spec, 'setups', [])
         if setups_spec is None:
             return types.status.SUCCESS
@@ -458,6 +588,20 @@ class Testcase:
             d.packages = self.__spec.packages
             debug = DebugStep(d)
             self.__debugs.append(debug)
+        common_triggers_spec = getattr(self.__spec, 'triggers', {})
+        if common_triggers_spec is None:
+            return types.status.SUCCESS
+        for t in common_triggers_spec:
+            t.packages = self.__spec.packages
+            trigger = TriggerStep(t)
+            self.__triggers.append(trigger)
+        common_teardowns_spec = getattr(self.__spec, 'teardowns', {})
+        if common_teardowns_spec is None:
+            return types.status.SUCCESS
+        for t in common_teardowns_spec:
+            t.packages = self.__spec.packages
+            teardown = TeardownStep(t)
+            self.__teardowns.append(teardown)
         return types.status.SUCCESS
 
     def __resolve(self):
@@ -492,10 +636,26 @@ class Testcase:
             self.__stats_error += count
         return
 
+    def __run_common_triggers(self, iter_data):
+        result = types.status.SUCCESS
+        for t in self.__triggers:
+            status = t.Main(iter_data)
+            if status != types.status.SUCCESS:
+                result = status
+        return result
+
     def __run_common_verifs(self):
         result = types.status.SUCCESS
         for s in self.__verifs:
             status = s.Main()
+            if status != types.status.SUCCESS:
+                result = status
+        return result
+
+    def __run_common_teardowns(self, iter_data):
+        result = types.status.SUCCESS
+        for t in self.__teardowns:
+            status = t.Main(iter_data)
             if status != types.status.SUCCESS:
                 result = status
         return result
@@ -511,6 +671,30 @@ class Testcase:
     def MakeTestcaseDirectory(self):
         instance_id = self.__get_instance_id(self.__iterid)
         self.__mk_testcase_directory(instance_id)
+
+    def TriggerBackgroundTasks(self, tasks, iter_data):
+        result = types.status.SUCCESS
+        for task in tasks:
+            bt = self.__background_tasks[task_name]
+            assert(bt)
+
+            Logger.debug("Triggering BackgroundTask %s - manual trigger" % task_name)
+            bt_trigger_result = bt.StartTask(self.__tc, iter_data)
+            if bt_trigger_result != types.status.SUCCESS:
+                result = bt_trigger_result
+        return result
+
+    def StopBackgroundTasks(self, tasks):
+        result = types.status.SUCCESS
+        for task in tasks:
+            bt = self.__background_tasks[task_name]
+            assert(bt)
+
+            Logger.debug("Triggering BackgroundTask %s - manual trigger" % task_name)
+            bt_trigger_result = bt.CollectTask()
+            if bt_trigger_result != types.status.SUCCESS:
+                result = bt_trigger_result
+        return result
 
     @tcTimeout()
     def __execute(self):
@@ -541,10 +725,16 @@ class Testcase:
                 loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
                 result = setup_result
             else:
-                for bt in self.__background_tasks:
-                    bt_trigger_result = bt.StartTask(self.__tc, iter_data)
-                    if bt_trigger_result != types.status.SUCCESS:
-                        result = bt_trigger_result
+                for task_name, bt in self.__background_tasks.items():
+                    if bt.IsAutoTriggerEnabled():
+                        Logger.debug("Triggering BackgroundTask %s - auto trigger" % task_name)
+                        bt_trigger_result = bt.StartTask(self.__tc, iter_data)
+                        if bt_trigger_result != types.status.SUCCESS:
+                            result = bt_trigger_result
+                    else:
+                        Logger.debug("Skipping BackgroundTask %s - manual trigger" % task_name)
+
+                trigger_result = self.__run_common_triggers(iter_data)
 
                 trigger_result = loader.RunCallback(self.__tc, 'Trigger', True, iter_data)
                 if trigger_result != types.status.SUCCESS:
@@ -554,8 +744,8 @@ class Testcase:
                 if verify_result != types.status.SUCCESS:
                     result = verify_result
 
-                for bt in self.__background_tasks:
-                    bt_stop_result = bt.StopTask()
+                for task_name, bt in self.__background_tasks.items():
+                    bt_stop_result = bt.StopTask('verify')
 
                 verify_result = self.__run_common_verifs();
                 if verify_result != types.status.SUCCESS:
@@ -570,6 +760,11 @@ class Testcase:
                         Logger.error("Common debugs failed.")
                         result = debug_result
 
+                for task_name, bt in self.__background_tasks.items():
+                    bt_stop_result = bt.StopTask('teardown')
+                    bt.CollectTask()
+
+                teardown_result = self.__run_common_teardowns(iter_data)
                 teardown_result = loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
                 if teardown_result != types.status.SUCCESS:
                     Logger.error("Teardown callback failed.")

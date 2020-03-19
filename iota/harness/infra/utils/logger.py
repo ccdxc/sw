@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import os
 import datetime
 import pdb
 import sys
@@ -82,7 +83,7 @@ class _Logger:
         self.sinks          = []
         self.indent_enable  = False
         self.level          = level
-        self.logfile        = "%s/%s" % (GlobalOptions.logdir, logfile)
+        self.logfile        = os.path.join("." if GlobalOptions.logdir is None else GlobalOptions.logdir, logfile)
         self.tsname         = None
         self.tcname         = None
         self.tbname         = None

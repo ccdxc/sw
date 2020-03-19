@@ -66,7 +66,7 @@ def Trigger(tc):
     sesssetup = api.Trigger(req)
     cmd = sesssetup.commands[-1]
     api.PrintCommandResults(cmd)
-    iseq_num, iack_num, iwindosz, iwinscale, rseq_num, rack_num, rwindo_sz, rwinscale = get_conntrackinfo(cmd)
+    tc.pre_ctrckinf = get_conntrackinfo(cmd)
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
@@ -74,8 +74,8 @@ def Trigger(tc):
     pkts=rdpcap(msrpcpcap)
     clientidx = 0 
     serveridx = 0
-    client_ack = iack_num
-    server_ack = rack_num
+    client_ack = tc.pre_ctrckinf.i_tcpacknum
+    server_ack = tc.pre_ctrckinf.r_tcpacknum
     filename = None
     for pkt in pkts:
         node = client.node_name
@@ -92,7 +92,7 @@ def Trigger(tc):
            if clientidx == 0:
               client_start_seq = pkt[TCP].seq
               client_start_ack = pkt[TCP].ack
-           pkt[TCP].seq = iseq_num + (pkt[TCP].seq - client_start_seq)
+           pkt[TCP].seq = tc.pre_ctrckinf.i_tcpseqnum + (pkt[TCP].seq - client_start_seq)
            pkt[TCP].ack = client_ack
            server_ack =  pkt[TCP].seq + len(pkt[TCP].payload) + 1
            clientidx += 1
@@ -110,7 +110,7 @@ def Trigger(tc):
            if serveridx == 0:
               server_start_seq = pkt[TCP].seq
               server_start_ack = pkt[TCP].ack 
-           pkt[TCP].seq = rseq_num + (pkt[TCP].seq - server_start_seq)
+           pkt[TCP].seq = tc.pre_ctrckinf.r_tcpseqnum + (pkt[TCP].seq - server_start_seq)
            pkt[TCP].ack = server_ack
            client_ack = pkt[TCP].seq + len(pkt[TCP].payload) + 1
            serveridx += 1
@@ -133,14 +133,14 @@ def Trigger(tc):
     firstbind = api.Trigger(req)
     cmd = firstbind.commands[-1]
     api.PrintCommandResults(cmd)
-    iseq_num, iack_num, iwindosz, iwinscale, rseq_num, rack_num, rwindo_sz, rwinscale = get_conntrackinfo(cmd)
+    tc.post_ctrckinf = get_conntrackinfo(cmd)
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     msrpcpcap = dir_path + '/' + "msrpc_second_bind.pcap"
     pkts=rdpcap(msrpcpcap)
-    client_ack = iack_num
-    server_ack = rack_num
+    client_ack = tc.post_ctrckinf.i_tcpacknum
+    server_ack = tc.post_ctrckinf.r_tcpacknum
     clientidx = 0
     serveridx = 0
     filename = None
@@ -159,7 +159,7 @@ def Trigger(tc):
            if clientidx == 0:
               client_start_seq = pkt[TCP].seq
               client_start_ack = pkt[TCP].ack
-           pkt[TCP].seq = iseq_num + (pkt[TCP].seq - client_start_seq)
+           pkt[TCP].seq = tc.post_ctrckinf.i_tcpseqnum + (pkt[TCP].seq - client_start_seq)
            pkt[TCP].ack = client_ack
            server_ack =  pkt[TCP].seq + len(pkt[TCP].payload) + 1
            clientidx += 1
@@ -177,7 +177,7 @@ def Trigger(tc):
            if serveridx == 0:
                server_start_seq = pkt[TCP].seq
                server_start_ack = pkt[TCP].ack
-           pkt[TCP].seq = rseq_num + (pkt[TCP].seq - server_start_seq)
+           pkt[TCP].seq = tc.post_ctrckinf.r_tcpseqnum + (pkt[TCP].seq - server_start_seq)
            pkt[TCP].ack = server_ack
            client_ack = pkt[TCP].seq + len(pkt[TCP].payload) + 1 
            serveridx += 1

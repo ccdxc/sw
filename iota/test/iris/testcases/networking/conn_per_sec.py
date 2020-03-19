@@ -9,6 +9,7 @@ import os
 import traceback
 
 from iota.test.iris.utils.trex_wrapper import *
+from iota.test.iris.utils import vmotion_utils
 
 def chooseWorkload(tc):
     tc.skip = False
@@ -110,6 +111,10 @@ def Setup(tc):
         cleanup(tc)
         return api.types.status.FAILURE
 
+    if getattr(tc.args, 'vmotion_enable', False):
+        wloads = []
+        vmotion_utils.PrepareWorkloadVMotion(tc,[server])
+
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -146,6 +151,9 @@ def Trigger(tc):
         return api.types.status.FAILURE
 
 def Verify(tc):
+    if getattr(tc.args, 'vmotion_enable', False):
+        vmotion_utils.PrepareWorkloadRestore(tc)
+
     try:
         if tc.skip: return api.types.status.SUCCESS
 

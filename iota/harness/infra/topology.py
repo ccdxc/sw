@@ -598,9 +598,9 @@ class Node(object):
                 esx_config.password = getattr(self.__tb_params, "EsxPassword", "")
                 esx_config.ip_address = self.__topo.GetMgmtIPAddress(node)
                 esx_config.name = node
-            msg.vcenter_config.dc_name = GlobalOptions.dc_name
-            msg.vcenter_config.cluster_name = GlobalOptions.cluster_name
-            msg.vcenter_config.distributed_switch = GlobalOptions.distributed_switch
+            msg.vcenter_config.dc_name = store.GetTestbed().GetVCenterDataCenterName()
+            msg.vcenter_config.cluster_name = store.GetTestbed().GetVCenterClusterName()
+            msg.vcenter_config.distributed_switch = store.GetTestbed().GetVCenterDVSName()
 
         elif self.Role() == topo_pb2.PERSONALITY_VENICE:
             msg.venice_config.control_intf = self.__control_intf

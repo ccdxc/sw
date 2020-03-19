@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import yaml
+import collections
 
 from enum import IntEnum
 class TcpState(IntEnum):
@@ -12,6 +13,8 @@ class TcpState(IntEnum):
     BIDIR_FIN_RCVD = 6,
     RESET = 7
 
+ConnTrackInfo = collections.namedtuple('ConnTrackInfo', 
+                'i_tcpseqnum i_tcpacknum i_tcpwinsz i_tcpwinscale r_tcpseqnum r_tcpacknum r_tcpwinsz r_tcpwinscale')
 def get_conntrackinfo(cmd):
     yaml_out = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
     print(type(yaml_out))
@@ -31,16 +34,18 @@ def get_conntrackinfo(cmd):
             rwindosz = resp_flow['flowdata']['conntrackinfo']['tcpwinsz']
             rwinscale = resp_flow['flowdata']['conntrackinfo']['tcpwinscale']
             print('resp flow: seq_num {} ack_num {} iwindosz {} iwinscale {}'.format(rseq_num, rack_num, rwindosz, rwinscale))
-            return iseq_num, iack_num, iwindosz, iwinscale, rseq_num, rack_num, rwindosz, rwinscale
+            return ConnTrackInfo(i_tcpseqnum=iseq_num, i_tcpacknum=iack_num, i_tcpwinsz=iwindosz, i_tcpwinscale=iwinscale, 
+                                 r_tcpseqnum=rseq_num, r_tcpacknum=rack_num, r_tcpwinsz=rwindosz, r_tcpwinscale=rwinscale)
         else:
-            return 0,0,0,0,0,0,0,0
-    return 0,0,0,0,0,0,0,0
+            return ConnTrackInfo(0,0,0,0,0,0,0,0)
+    return ConnTrackInfo(0,0,0,0,0,0,0,0)
 
 def get_yaml(cmd):
     yaml_out = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
     for data in yaml_out:
         if data is not None:
             return data
+    return None
 
 def get_flowkey(flow):
     return flow['flowkey']

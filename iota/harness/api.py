@@ -359,6 +359,15 @@ def GetWorkloadMemoryForNode(node_name):
 def GetNodes():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodes()
 
+def GetVCenterDataCenterName():
+    return store.GetTestbed().GetVCenterDataCenterName()
+
+def GetVCenterDVSName():
+    return store.GetTestbed().GetVCenterDVSName()
+
+def GetVCenterClusterName():
+    return store.GetTestbed().GetVCenterClusterName()
+
 def GetNaplesNodes():
     naples_nodes = []
     for _node in GetNodes():

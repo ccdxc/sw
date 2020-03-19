@@ -63,7 +63,7 @@ def Trigger(tc):
     cmd = trig_resp1.commands[-1]
     for command in trig_resp1.commands:
         api.PrintCommandResults(command)
-    iseq_num, iack_num, iwindosz, iwinscale, rseq_num, rack_num, rwindo_sz, rwinscale = get_conntrackinfo(cmd)
+    tc.ctrckinf = get_conntrackinfo(cmd)
     tc.cmd_cookies1.append("show session detail")
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
@@ -77,16 +77,19 @@ def Trigger(tc):
 
     #Step 5: Cook up a FIN and send
     api.Trigger_AddCommand(req, client.node_name, client.workload_name, 
-               "hping3 -c 1 -s {} -p {} -M {}  -L {} --ack --tcp-timestamp {} -d 0 -F".format(client_port, server_port, iseq_num+1, iack_num, server.ip_address))
+               "hping3 -c 1 -s {} -p {} -M {}  -L {} --ack --tcp-timestamp {} -d 0 -F".format(client_port, server_port, tc.ctrckinf.i_tcpseqnum+1, 
+                                                                                              tc.ctrckinf.i_tcpacknum, server.ip_address))
     tc.cmd_cookies2.append("Send FIN")
 
     #Step 6: Send FIN ACK now from other side after timeout
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
-               "hping3 -c 1 -s {} -p {} -M {}  -L {} --ack --tcp-timestamp {} -d 0 -F".format(server_port, client_port, rseq_num+1, rack_num, client.ip_address))
+               "hping3 -c 1 -s {} -p {} -M {}  -L {} --ack --tcp-timestamp {} -d 0 -F".format(server_port, client_port, tc.ctrckinf.r_tcpseqnum+1, 
+                                                                                              tc.ctrckinf.r_tcpacknum, client.ip_address))
     tc.cmd_cookies2.append("Send FIN ACK")
 
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-               "hping3 -c 1 -s {} -p {} -M {}  -L {} --ack --tcp-timestamp {} -d 0".format(server_port, client_port, iseq_num, iack_num+1, server.ip_address))
+               "hping3 -c 1 -s {} -p {} -M {}  -L {} --ack --tcp-timestamp {} -d 0".format(server_port, client_port, tc.ctrckinf.i_tcpseqnum, 
+                                                                                           tc.ctrckinf.i_tcpacknum+1, server.ip_address))
     tc.cmd_cookies2.append("Send ACK")
 
     #Step 6: Check if session is up in FIN_RCVD state

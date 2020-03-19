@@ -39,15 +39,18 @@ testcases:
             duration         : [300]
         background_tasks:
             showStats        : 
-                trigger         : repeat
+                trigger         : auto
+                run             : repeat
                 sleep_interval  : 60
                 terminate       : verify
             switchPortFlap   :
-                trigger         : repeat
+                trigger         : auto
+                run             : repeat
                 sleep_interval  : 10
                 terminate       : verify
             configurationChangeEvent :
-                trigger         : repeat
+                trigger         : auto
+                run             : repeat
                 sleep_interval  : 30
                 terminate       : verify
 

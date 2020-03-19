@@ -77,7 +77,7 @@ def Trigger(tc):
     cmd = trig_resp1.commands[-1]
     for command in trig_resp1.commands:
         api.PrintCommandResults(command)
-    iseq_num, iack_num, iwindosz, iwinscale, rseq_num, rack_num, rwindo_sz, rwinscale = get_conntrackinfo(cmd)
+    tc.ctrckinf = get_conntrackinfo(cmd)
     sess_hdl = get_sess_handle(cmd)
 
 
@@ -89,7 +89,8 @@ def Trigger(tc):
 
     #Step 5: Send data on one side
     api.Trigger_AddCommand(req2, client.node_name, client.workload_name, 
-               "hping3 -c 1 -s {} -p {} -M {}  -L {} --ack --tcp-timestamp {} -d 10 ".format(client_port, server_port, iseq_num, iack_num, server.ip_address))
+               "hping3 -c 1 -s {} -p {} -M {}  -L {} --ack --tcp-timestamp {} -d 10 ".format(client_port, server_port, tc.ctrckinf.i_tcpseqnum, 
+                                                                                             tc.ctrckinf.i_tcpacknum, server.ip_address))
     tc.cmd_cookies2.append("Send data on initiator flow")
 
     #Step 6: Validate if session is exist

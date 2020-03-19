@@ -110,6 +110,27 @@ class _Testbed:
     def GetProvisionEsxPassword(self):
         return self.__tbspec.Provision.Vars.EsxPassword
 
+    def IsUsingProdVCenter(self):
+        return getattr(self.__tbspec.Provision.Vars, 'ProdVCenter', False)
+
+    def GetVCenterDataCenterName(self):
+        if self.IsUsingProdVCenter() and hasattr(self.__tbspec.Provision.Vars, 'Datastore'):
+            return "iota-dc-" + self.__tbspec.Provision.Vars.Datastore
+        else:
+            return GlobalOptions.uid + "-iota-dc"
+
+    def GetVCenterDVSName(self): 
+        if self.IsUsingProdVCenter() and hasattr(self.__tbspec.Provision.Vars, 'Datastore'):
+            return "iota-Pen-DVS-" + self.__tbspec.Provision.Vars.Datastore
+        else:
+            return "Pen-DVS-" + self.GetVCenterDataCenterName()
+
+    def GetVCenterClusterName(self):
+        if self.IsUsingProdVCenter() and hasattr(self.__tbspec.Provision.Vars, 'Datastore'):
+            return "iota-cluster-" + self.__tbspec.Provision.Vars.Datastore
+        else:
+            return GlobalOptions.uid + "-iota-cluster"
+
     def GetOs(self):
         return self.__os
 
@@ -205,8 +226,8 @@ class _Testbed:
 
             if getattr(instance, "Tag", None) ==  "vcenter":
                 node_msg.os = topo_pb2.TESTBED_NODE_OS_VCENTER
-                node_msg.dc_name = GlobalOptions.dc_name
-                node_msg.switch = GlobalOptions.distributed_switch
+                node_msg.dc_name = self.GetVCenterDataCenterName()
+                node_msg.switch = self.GetVCenterDVSName()
                 node_msg.esx_username = self.__tbspec.Provision.Vars.VcenterUsername
                 node_msg.esx_password = self.__tbspec.Provision.Vars.VcenterPassword
                 node_msg.license = self.__tbspec.Provision.Vars.VcenterLicense
@@ -270,7 +291,7 @@ class _Testbed:
                     Logger.info ("Skipped switch setup")
         return msg
 
-    def __cleanup_testbed(self):
+    def CleanupTestbed(self):
         msg = self.__prepare_TestBedMsg(self.prev_ts)
         resp = api.CleanupTestbed(msg)
         if resp is None:
@@ -449,6 +470,9 @@ class _Testbed:
         resp = None
         msg = self.__prepare_TestBedMsg(self.curr_ts)
         if not GlobalOptions.skip_setup:
+            status = self.CleanupTestbed()
+            if status != types.status.SUCCESS:
+                return status
             try:
                 self.__recover_testbed(self.image_manifest_file)
             except:
@@ -457,13 +481,6 @@ class _Testbed:
                 return types.status.CRITICAL
             if GlobalOptions.dryrun:
                 status = types.status.SUCCESS
-            else:
-                status = self.__cleanup_testbed()
-                if status != types.status.SUCCESS:
-                    return status
-                #status = self.__cleanup_testbed_script()
-                #if status != types.status.SUCCESS:
-                #    return status
 
             resp = api.InitTestbed(msg)
         else:

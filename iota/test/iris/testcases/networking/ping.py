@@ -4,6 +4,7 @@ import pdb
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 from iota.harness.infra.exceptions import *
+from iota.test.iris.utils import vmotion_utils
 
 def Setup(tc):
     tc.skip = False
@@ -20,6 +21,15 @@ def Setup(tc):
     if api.GetNicMode() == 'hostpin' and tc.iterators.ipaf == 'ipv6':
         api.Logger.info("Skipping Testcase: IPv6 not supported in hostpin mode.")
         tc.skip = True
+
+    if getattr(tc.args, 'vmotion_enable', False):
+        wloads = []
+        for idx, pair in enumerate(tc.workload_pairs):
+            if idx % 2:
+                continue
+            w2 = pair[1]
+            wloads.append(w2)
+        vmotion_utils.PrepareWorkloadVMotion(tc, wloads)
 
     return api.types.status.SUCCESS
 
@@ -53,10 +63,12 @@ def Trigger(tc):
 
     tc.resp = api.Trigger(req)
 
-
     return api.types.status.SUCCESS
 
 def Verify(tc):
+    if getattr(tc.args, 'vmotion_enable', False):
+        vmotion_utils.PrepareWorkloadRestore(tc)
+
     if tc.skip: return api.types.status.SUCCESS
     if tc.resp is None:
         return api.types.status.FAILURE

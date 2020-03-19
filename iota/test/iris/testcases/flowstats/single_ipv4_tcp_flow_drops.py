@@ -190,7 +190,7 @@ def Trigger(tc):
     cmd = tc.resp1.commands[-1]
     for command in tc.resp1.commands:
         api.PrintCommandResults(command)
-    iseq_num, iack_num, iwindosz, iwinscale, rseq_num, rack_num, rwindosz, rwinscale = get_conntrackinfo(cmd)
+    tc.pre_ctrckinf = get_conntrackinfo(cmd)
 
     #
     # Send Bad Data with TTL=0 from both Client and Server
@@ -199,13 +199,13 @@ def Trigger(tc):
     cmd_cookie = "send bad data from Client TTL=0: Create case"
     cmd = "hping3 --count 1 --baseport {} --destport {} --setseq {} --setack {}\
            --ttl 0 --data 10 {}".format(tc.client_port, tc.server_port, 
-                                       rack_num, rseq_num, tc.server.ip_address)
+                                        tc.pre_ctrckinf.r_tcpacknum, tc.pre_ctrckinf.r_tcpseqnum, tc.server.ip_address)
     add_command(tc, req2, cmd_cookie, cmd, tc.client, False)
 
     cmd_cookie = "send bad data from Server TTL=0: Create case"
     cmd = "hping3 --count 1 --baseport {} --destport {} --setseq {} --setack {}\
            --ttl 0 --data 10 {}".format(tc.server_port, tc.client_port, 
-                                       iack_num, iseq_num, tc.client.ip_address)
+                                        tc.pre_ctrckinf.i_tcpacknum, tc.pre_ctrckinf.i_tcpseqnum, tc.client.ip_address)
     add_command(tc, req2, cmd_cookie, cmd, tc.server, False)
 
     #
@@ -214,13 +214,13 @@ def Trigger(tc):
     cmd_cookie = "send bad data from Client TCP-RSVD-FLAGS-BIT-0: Create case"
     cmd = "hping3 --count 1 --baseport {} --destport {} --setseq {} --setack {}\
            --xmas --data 10 {}".format(tc.client_port, tc.server_port,
-                                    rack_num+10, rseq_num, tc.server.ip_address)
+                                     tc.pre_ctrckinf.r_tcpacknum+10, tc.pre_ctrckinf.r_tcpseqnum, tc.server.ip_address)
     add_command(tc, req2, cmd_cookie, cmd, tc.client, False)
 
     cmd_cookie = "send bad data from Server TCP-RSVD-FLAGS-BIT-0: Create case"
     cmd = "hping3 --count 1 --baseport {} --destport {} --setseq {} --setack {}\
            --xmas --data 10 {}".format(tc.server_port, tc.client_port,
-                                    iack_num+10, iseq_num, tc.client.ip_address)
+                                     tc.pre_ctrckinf.i_tcpacknum+10, tc.pre_ctrckinf.i_tcpseqnum, tc.client.ip_address)
     add_command(tc, req2, cmd_cookie, cmd, tc.server, False)
 
     #
@@ -229,13 +229,13 @@ def Trigger(tc):
     cmd_cookie = "send bad data from Client TCP-RSVD-FLAGS-BIT-1: Create case"
     cmd = "hping3 --count 1 --baseport {} --destport {} --setseq {} --setack {}\
            --ymas --data 10 {}".format(tc.client_port, tc.server_port,
-                                    rack_num+20, rseq_num, tc.server.ip_address)
+                                     tc.pre_ctrckinf.r_tcpacknum+20, tc.pre_ctrckinf.r_tcpseqnum, tc.server.ip_address)
     add_command(tc, req2, cmd_cookie, cmd, tc.client, False)
 
     cmd_cookie = "send bad data from Server TCP-RSVD-FLAGS-BIT-1: Create case"
     cmd = "hping3 --count 1 --baseport {} --destport {} --setseq {} --setack {}\
            --ymas --data 10 {}".format(tc.server_port, tc.client_port,
-                                    iack_num+20, iseq_num, tc.client.ip_address)
+                                     tc.pre_ctrckinf.i_tcpacknum+20, tc.pre_ctrckinf.i_tcpseqnum, tc.client.ip_address)
     add_command(tc, req2, cmd_cookie, cmd, tc.server, False)
 
     tc.resp2 = api.Trigger(req2)
@@ -320,7 +320,7 @@ def Trigger(tc):
     cmd = tc.resp4.commands[-1]
     for command in tc.resp4.commands:
         api.PrintCommandResults(command)
-    iseq_num, iack_num, iwindosz, iwinscale, rseq_num, rack_num, rwindosz, rwinscale = get_conntrackinfo(cmd)
+    tc.post_ctrckinf = get_conntrackinfo(cmd)
 
     #
     # Re-send Bad Data with TTL=0 from both Client and Server
@@ -329,13 +329,13 @@ def Trigger(tc):
     cmd_cookie = "send bad data from Client TTL=0: Re-use case"
     cmd = "hping3 --count 1 --baseport {} --destport {} --setseq {} --setack {}\
            --ttl 0 --data 10 {}".format(tc.client_port, tc.server_port, 
-                                       rack_num, rseq_num, tc.server.ip_address)
+                                        tc.post_ctrckinf.r_tcpacknum, tc.post_ctrckinf.r_tcpseqnum, tc.server.ip_address)
     add_command(tc, req5, cmd_cookie, cmd, tc.client, False)
 
     cmd_cookie = "send bad data from Server TTL=0: Re-use case"
     cmd = "hping3 --count 1 --baseport {} --destport {} --setseq {} --setack {}\
            --ttl 0 --data 10 {}".format(tc.server_port, tc.client_port, 
-                                       iack_num, iseq_num, tc.client.ip_address)
+                                        tc.post_ctrckinf.i_tcpacknum, tc.post_ctrckinf.i_tcpseqnum, tc.client.ip_address)
     add_command(tc, req5, cmd_cookie, cmd, tc.server, False)
 
     #
@@ -344,13 +344,13 @@ def Trigger(tc):
     cmd_cookie = "send bad data from Client TCP-RSVD-FLAGS-BIT-0: Re-use case"
     cmd = "hping3 --count 1 --baseport {} --destport {} --setseq {} --setack {}\
            --xmas --data 10 {}".format(tc.client_port, tc.server_port,
-                                    rack_num+10, rseq_num, tc.server.ip_address)
+                                     tc.post_ctrckinf.r_tcpacknum+10, tc.post_ctrckinf.r_tcpseqnum, tc.server.ip_address)
     add_command(tc, req5, cmd_cookie, cmd, tc.client, False)
 
     cmd_cookie = "send bad data from Server TCP-RSVD-FLAGS-BIT-0: Re-use case"
     cmd = "hping3 --count 1 --baseport {} --destport {} --setseq {} --setack {}\
            --xmas --data 10 {}".format(tc.server_port, tc.client_port,
-                                    iack_num+10, iseq_num, tc.client.ip_address)
+                                     tc.post_ctrckinf.i_tcpacknum+10, tc.post_ctrckinf.i_tcpseqnum, tc.client.ip_address)
     add_command(tc, req5, cmd_cookie, cmd, tc.server, False)
 
     #
@@ -359,13 +359,13 @@ def Trigger(tc):
     cmd_cookie = "send bad data from Client TCP-RSVD-FLAGS-BIT-1: Re-use case"
     cmd = "hping3 --count 1 --baseport {} --destport {} --setseq {} --setack {}\
            --ymas --data 10 {}".format(tc.client_port, tc.server_port,
-                                    rack_num+20, rseq_num, tc.server.ip_address)
+                                     tc.post_ctrckinf.r_tcpacknum+20, tc.post_ctrckinf.r_tcpseqnum, tc.server.ip_address)
     add_command(tc, req5, cmd_cookie, cmd, tc.client, False)
 
     cmd_cookie = "send bad data from Server TCP-RSVD-FLAGS-BIT-1: Re-use case"
     cmd = "hping3 --count 1 --baseport {} --destport {} --setseq {} --setack {}\
            --ymas --data 10 {}".format(tc.server_port, tc.client_port,
-                                    iack_num+20, iseq_num, tc.client.ip_address)
+                                     tc.post_ctrckinf.i_tcpacknum+20, tc.post_ctrckinf.i_tcpseqnum, tc.client.ip_address)
     add_command(tc, req5, cmd_cookie, cmd, tc.server, False)
 
     tc.resp5 = api.Trigger(req5)

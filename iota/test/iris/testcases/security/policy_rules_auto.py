@@ -13,6 +13,7 @@ import iota.test.iris.utils.ip_rule_db.rule_db.rule_db as db
 import iota.test.iris.utils.ip_rule_db.test as test
 import iota.test.iris.utils.ip_rule_db.util.proto as proto_util
 from iota.test.iris.testcases.aging.aging_utils import *
+from iota.test.iris.utils import vmotion_utils
 
 def FilterAndAlter(pkt, src_w, dst_w, **kwargs):
     '''
@@ -102,6 +103,13 @@ def setupWorkloadDict(tc):
 
 def Setup(tc):
     setupWorkloadDict(tc)
+
+    if getattr(tc.args, 'vmotion_enable', False):
+        wllist = []
+        for w1 in tc.workload_dict.keys():
+            wllist.append(w1)
+        vmotion_utils.PrepareWorkloadVMotion(tc, wllist)
+
     agent_api.DeleteSgPolicies()
     tc.scale = tc.iterators.scale
     result = test.execute()
@@ -194,6 +202,10 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
+
+    if getattr(tc.args, 'vmotion_enable', False):
+        vmotion_utils.PrepareWorkloadRestore(tc)
+
     return tc.ret
 
 def Teardown(tc):

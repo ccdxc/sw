@@ -7,6 +7,7 @@ import iota.test.iris.config.netagent.api as agent_api
 import iota.test.iris.testcases.security.utils as utils
 import iota.test.iris.testcases.telemetry.utils as tutils
 import iota.harness.infra.utils.periodic_timer as pt
+from iota.test.iris.utils import vmotion_utils
 
 from trex.astf.api import *
 from iota.test.iris.utils.trex_wrapper import *
@@ -228,6 +229,14 @@ def Setup(tc):
         cleanup(tc)
         return api.types.status.FAILURE
 
+    if getattr(tc.args, 'vmotion_enable', False):
+        wloads = []
+        for idx, wl in enumerate(tc.workloadPeers.keys()):
+            if idx % 2 == 0:
+                w2 = pair[1]
+                wloads.append(w2)
+        vmotion_utils.PrepareWorkloadVMotion(tc, wloads)
+
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -259,6 +268,10 @@ def verifySessions(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
+
+    if getattr(tc.args, 'vmotion_enable', False):
+        vmotion_utils.PrepareWorkloadRestore(tc)
+
     try:
         # Disconnect and stop Trex, so that we dont get any more packets from Trex.
         # Without this session verification will fail.

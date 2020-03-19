@@ -10,6 +10,11 @@ class Dict2Object(object):
             else:
                 setattr(self, a, Dict2Object(b) if isinstance(b, dict) else b)
 
+    def ImportProperties(self, fromDict2Obj):
+        for attr in fromDict2Obj.__dict__:
+            if not callable(fromDict2Obj.__dict__[attr]) and not hasattr(self, attr):
+                setattr(self, attr, getattr(fromDict2Obj, attr))
+
 def YmlParse(filename):
     with open(filename, 'r') as f:
         obj = Dict2Object(yaml.load(f, Loader=yaml.FullLoader))
