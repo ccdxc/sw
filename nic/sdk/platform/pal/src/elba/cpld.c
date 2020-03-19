@@ -180,6 +180,25 @@ int cpld_mdio_wr(uint8_t addr, uint16_t data, uint8_t phy)
     return -1;
 }
 
+void
+pal_cpld_increment_liveness(void)
+{
+}
+
+void
+pal_cpld_set_port0_link_status(uint8_t status)
+{
+}
+
+void
+pal_cpld_set_port1_link_status(uint8_t status)
+{
+}
+
+void
+pal_cpld_set_card_status(uint8_t status)
+{
+}
 #else
 #include <string.h>
 /* Public APIs */
