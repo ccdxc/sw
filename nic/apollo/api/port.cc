@@ -268,7 +268,7 @@ populate_port_info (pds_ifindex_t ifindex, uint32_t phy_port,
         port_args->port_speed = port_speed_t::PORT_SPEED_1G;
         port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
     }
-    port_args->admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
+    port_args->admin_state = g_pds_state.catalogue()->admin_state_fp(phy_port);
     port_args->num_lanes = g_pds_state.catalogue()->num_lanes_fp(phy_port);
     port_args->mac_id = g_pds_state.catalogue()->mac_id(logical_port, 0);
     port_args->mac_ch = g_pds_state.catalogue()->mac_ch(logical_port, 0);

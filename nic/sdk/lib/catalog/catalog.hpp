@@ -90,6 +90,7 @@ typedef struct catalog_fp_port_s {
     uint32_t    breakout_modes;   // bitmap of breakout modes
     port_type_t type;             // port type
     uint32_t    num_lanes;
+    port_admin_state_t admin_state;
 } catalog_fp_port_t;
 
 typedef struct catalog_asic_port_s {
@@ -196,6 +197,8 @@ public:
     static port_speed_t catalog_speed_to_port_speed(std::string speed);
     static port_type_t catalog_type_to_port_type(std::string type);
     static port_fec_type_t catalog_fec_type_to_port_fec_type(std::string type);
+    static port_admin_state_t catalog_admin_st_to_port_admin_st(std::string admin_state);
+
     static platform_type_t catalog_platform_type_to_platform_type(
                                             std::string platform_type);
     static bool catalog_str_to_bool(std::string val);
@@ -270,6 +273,7 @@ public:
     // return number of physical ports (fp_ports == phy_ports)
     uint32_t num_fp_ports(void) const { return catalog_db_.num_fp_ports; }
     port_type_t  port_type_fp(uint32_t fp_port);
+    port_admin_state_t  admin_state_fp(uint32_t fp_port);
     uint32_t     num_lanes_fp(uint32_t fp_port);
     uint32_t     breakout_modes(uint32_t fp_port);
 

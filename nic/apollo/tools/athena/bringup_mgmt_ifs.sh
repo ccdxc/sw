@@ -7,17 +7,24 @@ inb_mnic1_up=0
 
 while [ $counter -gt 0 ]
 do
-    if [ -d "/sys/class/net/oob_mnic0" ] && [ $oob0_up -eq 0 ] ; then
-        ethtool -K oob_mnic0 rx off tx off
-        ifconfig oob_mnic0 up
-        irq_number=`find /proc/irq  -name *oob_mnic0* | awk -F/ '{ print $4 }'`
-        if [[ ! -z $irq_number ]]; then
-            echo d > /proc/irq/$irq_number/smp_affinity
-            oob0_up=1
-        fi
-        echo "oob interface is up"
-        dhclient oob_mnic0 > /dev/null 2>&1 &
-    fi
+    #Vomero does not have OOB interface, so this script is leading 300
+    #dhclient processed started, so disable OOB for all Athena pipeline
+    #So for Naples, oob can be manually be brought up
+    #In future, disable this conditionally only for vomero cards
+
+    #if [ -d "/sys/class/net/oob_mnic0" ] && [ $oob0_up -eq 0 ] ; then
+    #    ethtool -K oob_mnic0 rx off tx off
+    #    ifconfig oob_mnic0 up
+    #    irq_number=`find /proc/irq  -name *oob_mnic0* | awk -F/ '{ print $4 }'`
+    #    if [[ ! -z $irq_number ]]; then
+    #        echo d > /proc/irq/$irq_number/smp_affinity
+    #        oob0_up=1
+    #    fi
+    #    echo "oob interface is up"
+    #    dhclient oob_mnic0 > /dev/null 2>&1 &
+    #fi
+    oob0_up=1
+    echo "Skipping oob_mnic0 bringup, on Naples cards bring up oob_mnic0 manually"
 
     if [ -d "/sys/class/net/inb_mnic0" ] && [ $inb_mnic0_up -eq 0 ] ; then
         ethtool -K inb_mnic0 rx off tx off

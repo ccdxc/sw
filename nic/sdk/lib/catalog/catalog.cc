@@ -133,6 +133,16 @@ catalog::catalog_type_to_port_type(std::string type)
     return port_type_t::PORT_TYPE_NONE;
 }
 
+port_admin_state_t
+catalog::catalog_admin_st_to_port_admin_st(std::string admin_state)
+{
+    if (admin_state == "disable") {
+        return port_admin_state_t::PORT_ADMIN_STATE_DOWN;
+    }
+    // default is UP
+    return port_admin_state_t::PORT_ADMIN_STATE_UP;
+}
+
 port_fec_type_t
 catalog::catalog_fec_type_to_port_fec_type (std::string type)
 {
@@ -167,6 +177,9 @@ catalog::populate_fp_port(ptree::value_type &fp_port,
     fp_port_p->type = catalog_type_to_port_type(type);
 
     fp_port_p->num_lanes = fp_port.second.get<uint32_t>("num_lanes", 0);
+
+    std::string admin_state = fp_port.second.get<std::string>("admin-state", "");
+    fp_port_p->admin_state = catalog_admin_st_to_port_admin_st(admin_state);
 
     for (ptree::value_type &breakout_mode :
                             fp_port.second.get_child("breakout_modes")) {
@@ -859,6 +872,12 @@ port_type_t
 catalog::port_type_fp (uint32_t fp_port)
 {
     return catalog_db_.fp_ports[fp_port-1].type;
+}
+
+port_admin_state_t
+catalog::admin_state_fp (uint32_t fp_port)
+{
+    return catalog_db_.fp_ports[fp_port-1].admin_state;
 }
 
 uint32_t
