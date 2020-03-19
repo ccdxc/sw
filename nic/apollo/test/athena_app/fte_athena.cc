@@ -224,11 +224,14 @@ fte_rx_loop (int poller_qid)
     }
 
     while (1) {
+#if 0
+        // Polling from multiple cores lead to an eventual
+        // crash so disable for now until a real fix is found.
         if ((poller_qid != -1) &&
             !ftl_pollers_client::user_will_poll()) {
             pds_flow_age_sw_pollers_poll(poller_qid, nullptr);
         }
-
+#endif
         cur_tsc = rte_rdtsc();
 
         /*
