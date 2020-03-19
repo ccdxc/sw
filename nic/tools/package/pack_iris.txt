@@ -331,7 +331,7 @@ nic/build/$ARCH/$PIPELINE/out/boot0_submake/boot0.bin                           
 nic/build/$ARCH/$PIPELINE/out/boot0_submake/boards.json                            /boot0/
 
 # Oprom
-nic/build/$ARCH/$PIPELINE/bin/ionic.efirom                                         /platform/oprom/
+nic/build/$ARCH/$PIPELINE/bin/ionic.efirom                                         /nic/oprom/
 
 # Drivers
 platform/drivers/linux/eth/ionic/ionic_mnic.ko                                  /platform/drivers/

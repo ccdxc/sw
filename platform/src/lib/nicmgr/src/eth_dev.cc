@@ -705,7 +705,7 @@ Eth::LoadOprom()
 
     // FIXME: Get the filepaths from catalog
 #ifdef __aarch64__
-    rom_file_path = "/platform/oprom/";
+    rom_file_path = "/nic/oprom/";
 #else
     rom_file_path = "/sw/platform/gen/";
 #endif

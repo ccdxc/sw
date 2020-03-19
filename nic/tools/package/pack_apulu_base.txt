@@ -196,7 +196,7 @@ nic/build/$ARCH/$PIPELINE/lib/libintrutils.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmisc.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsysmon.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libasicerror.so                     /nic/lib/
-#nic/build/$ARCH/$PIPELINE/bin/ionic.efirom                       /nic/oprom/
+nic/build/$ARCH/$PIPELINE/bin/ionic.efirom                        /nic/oprom/
 
 # captrace config json files
 nic/conf/captrace/txdma-all.json                                  /nic/conf/captrace/
