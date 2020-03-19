@@ -685,6 +685,8 @@ DeviceManager::HalEventHandler(bool status)
 
         // Instantiate HAL client
         dev_api = devapi_init();
+        micro_seg_en = dev_api->get_micro_seg_cfg_en();
+        NIC_LOG_DEBUG("micro_seg_en: {}", micro_seg_en);
         dev_api->set_micro_seg_en(micro_seg_en);
         pd->update();
 

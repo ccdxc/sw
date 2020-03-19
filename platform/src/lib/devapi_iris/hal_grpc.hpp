@@ -138,6 +138,8 @@ using sys::MicroSegRequestMsg;
 using sys::MicroSegResponseMsg;
 using sys::MicroSegSpec;
 using sys::MicroSegResponse;
+using sys::SysSpecGetRequest;
+using sys::SysSpecGetResponse;
 using std::chrono::seconds;
 
 namespace iris {
@@ -199,6 +201,8 @@ public:
     // System APIs
     Status micro_seg_update(MicroSegRequestMsg& req_msg,
                             MicroSegResponseMsg& rsp_msg);
+    Status sys_spec_get(SysSpecGetRequest& req,
+                        SysSpecGetResponse& rsp);
 
     // Vrf APIs
     Status vrf_create(VrfRequestMsg& req_msg,

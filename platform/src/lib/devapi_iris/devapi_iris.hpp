@@ -63,6 +63,7 @@ public:
 
     // Generic APIs
     sdk_ret_t set_micro_seg_en(bool en);
+    bool get_micro_seg_cfg_en(void);
     static bool is_hal_up(void);
 
     // Single Wire Management(SWM) APIs

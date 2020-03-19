@@ -181,6 +181,19 @@ hal_grpc::micro_seg_update(MicroSegRequestMsg& req_msg,
     return status;
 }
 
+Status
+hal_grpc::sys_spec_get (SysSpecGetRequest& req,
+                        SysSpecGetResponse& rsp)
+{
+    grpc::ClientContext         context;
+    grpc::Status                status;
+
+    SET_TIMEOUT();
+    status = sys_stub_->SysSpecGet(&context, req, &rsp);
+
+    return status;
+}
+
 //-----------------------------------------------------------------------------
 // Vrf Create to HAL
 //-----------------------------------------------------------------------------

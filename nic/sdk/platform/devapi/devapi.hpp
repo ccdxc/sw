@@ -78,6 +78,9 @@ public:
     virtual sdk_ret_t set_micro_seg_en(bool en) {
         return SDK_RET_INVALID_OP;
     }
+    virtual bool get_micro_seg_cfg_en(void) {
+        return SDK_RET_INVALID_OP;
+    }
     static bool is_hal_up(void);
 
     // single wire management APIs

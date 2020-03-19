@@ -534,6 +534,31 @@ end:
     return SDK_RET_OK;
 }
 
+bool
+devapi_iris::get_micro_seg_cfg_en(void)
+{
+    grpc::Status        status;
+    SysSpecGetRequest   req;
+    SysSpecGetResponse  rsp;
+    bool                micro_seg_cfg_en = false;
+
+    if (hal_grpc::get_hal_grpc()) {
+        status = hal_grpc::get_hal_grpc()->sys_spec_get(req, rsp);
+        if (status.ok()) {
+            if (rsp.api_status() == types::API_STATUS_OK) {
+                NIC_LOG_DEBUG("Got micro_seg_cfg_en: {}",
+                              sys::ForwardMode_Name(rsp.spec().fwd_mode()));
+                micro_seg_cfg_en = (rsp.spec().fwd_mode() == sys::FWD_MODE_MICROSEG);
+            } else {
+                NIC_LOG_DEBUG("Failed to get micro seg cfg en. err: {}:{}", 
+                              status.error_code(), status.error_message());
+            }
+        }
+    }
+
+    return micro_seg_cfg_en;
+}
+
 sdk_ret_t
 devapi_iris::uplink_create(uint32_t id, uint32_t port, bool is_oob)
 {
