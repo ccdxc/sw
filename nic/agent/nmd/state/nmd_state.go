@@ -258,7 +258,8 @@ func NewNMD(pipeline Pipeline,
 		config.Spec.Mode = nmd.MgmtMode_NETWORK.String()
 		if pipeline != nil && pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
 			config.Spec.NetworkMode = nmd.NetworkMode_OOB.String()
-		} else {
+		} else if len(config.Spec.NetworkMode) == 0 {
+			// Override to inband only if its not set
 			config.Spec.NetworkMode = nmd.NetworkMode_INBAND.String()
 		}
 		// Always re-read the contents of fru.json upon startup
