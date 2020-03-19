@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"flag"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -11,6 +12,7 @@ import (
 
 var ts *teleSuite
 var _ = BeforeSuite(func() {
+	flag.Parse()
 	var err error
 	ts, err = newTS()
 	Expect(err).Should(BeNil())

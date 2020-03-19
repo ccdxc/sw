@@ -27,13 +27,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 )
 
-var configFile string
-
-func init() {
-	cfgFile := flag.String("configFile", "./tb_config.json", "Path to JSON Config file describing testbed")
-	flag.Parse()
-	configFile = *cfgFile
-}
+var configFile = flag.String("configFile", "./tb_config.json", "Path to JSON Config file describing testbed")
 
 func TestE2ETest(t *testing.T) {
 	if os.Getenv("E2E_TEST") == "" {
@@ -56,8 +50,9 @@ var ts *TestSuite
 var _ = BeforeSuite(func() {
 	var err error
 
+	flag.Parse()
 	ts = &TestSuite{
-		tu: testutils.New(nil, configFile),
+		tu: testutils.New(nil, *configFile),
 	}
 	ts.tu.Init()
 

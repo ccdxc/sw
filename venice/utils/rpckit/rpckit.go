@@ -1,4 +1,4 @@
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+// {C} Copyright 2017  Pensando Systems Inc. All rights reserved.
 
 // gRPC wrapper library that provides additional functionality for Pensando
 // cluster clients and server (TLS, service-discovery, load-balancing, etc.)

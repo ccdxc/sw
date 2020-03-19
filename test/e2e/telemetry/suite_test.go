@@ -31,7 +31,7 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 )
 
-var configFile string
+var configFile = flag.String("configFile", "./tb_config.json", "Path to JSON Config file")
 
 type teleSuite struct {
 	//simClients []halproto.InternalClient
@@ -50,11 +50,6 @@ type tbConfig struct {
 	Scheme         string
 }
 
-func init() {
-	cfgFile := flag.String("configFile", "./tb_config.json", "Path to JSON Config file")
-	flag.Parse()
-	configFile = *cfgFile
-}
 func TestTM(t *testing.T) {
 	if os.Getenv("E2E_TEST") == "" {
 		return
@@ -67,7 +62,7 @@ func TestTM(t *testing.T) {
 func newTS() (*teleSuite, error) {
 	var cfg tbConfig
 
-	file, err := ioutil.ReadFile(configFile)
+	file, err := ioutil.ReadFile(*configFile)
 	if err != nil {
 		return nil, err
 	}
