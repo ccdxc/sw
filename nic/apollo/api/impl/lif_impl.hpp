@@ -191,6 +191,7 @@ private:
     uint32_t         nh_idx_;         ///< nexthop idx of this lif
     uint16_t         vnic_hw_id_;     ///< vnic hw id
     lif_state_t      state_;          ///< operational state
+    bool             init_done_;      ///< TRUE if lif init is done
     ht_ctxt_t        ht_ctxt_;        ///< hash table context
     ht_ctxt_t        id_ht_ctxt_;     ///< id based hash table context
     ///< lif_impl_state is friend of lif_impl

@@ -68,6 +68,7 @@ lif_impl::lif_impl(pds_lif_spec_t *spec) {
     nh_idx_ = 0xFFFFFFFF;
     vnic_hw_id_ = 0xFFFF;
     state_ = sdk::types::LIF_STATE_NONE;
+    init_done_ = false;
     ht_ctxt_.reset();
     id_ht_ctxt_.reset();
 }
@@ -852,8 +853,9 @@ lif_impl::create_internal_mgmt_mnic_(pds_lif_spec_t *spec) {
         int_mgmt_lif = this;
         host_mgmt_lif = lif_impl_db()->find(sdk::platform::LIF_TYPE_HOST_MGMT);
     }
-    if (!host_mgmt_lif || !int_mgmt_lif) {
-        // we will program when both lifs are available
+    if (!(host_mgmt_lif && int_mgmt_lif &&
+          host_mgmt_lif->init_done_ && int_mgmt_lif->init_done_)) {
+        // we will program when both lifs are available and initialized properly
         return SDK_RET_OK;
     }
 
@@ -1233,6 +1235,9 @@ lif_impl::create(pds_lif_spec_t *spec) {
         break;
     default:
         return SDK_RET_INVALID_ARG;
+    }
+    if (ret == SDK_RET_OK) {
+        init_done_ = true;
     }
     return ret;
 }
