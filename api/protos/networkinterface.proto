@@ -235,4 +235,7 @@ message NetworkInterfaceUplinkStatus {
     TransceiverStatus TransceiverStatus = 2 [(gogoproto.jsontag) = "transceiver-status,omitempty"];
 
     // Future: BFD, CDP, LLDP, LACP, Breakout status appears here
+
+    // Interface IP Configuration if any.
+    cluster.IPConfig IPConfig           = 3 [(gogoproto.jsontag) = "ip-config,omitempty"];
 }

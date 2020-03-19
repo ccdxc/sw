@@ -58,11 +58,13 @@ var typesMapInterface = map[string]*api.Struct{
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"cable-type":       api.CLIInfo{Path: "Status.IFUplinkStatus.TransceiverStatus.TranceiverCableType", Skip: false, Insert: "", Help: ""},
 			"dsc":              api.CLIInfo{Path: "Status.Name", Skip: false, Insert: "", Help: ""},
+			"gateway-ip":       api.CLIInfo{Path: "Status.IFUplinkStatus.GatewayIP", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"host-ifname":      api.CLIInfo{Path: "Status.IFHostStatus.HostIfName", Skip: false, Insert: "", Help: ""},
 			"id":               api.CLIInfo{Path: "Status.InterfaceID", Skip: false, Insert: "", Help: ""},
 			"if-uuid":          api.CLIInfo{Path: "Status.InterfaceUUID", Skip: false, Insert: "", Help: ""},
 			"ip-address":       api.CLIInfo{Path: "Spec.IPAddress", Skip: false, Insert: "", Help: ""},
+			"ip-alloc-type":    api.CLIInfo{Path: "Status.IPAllocType", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"link-speed":       api.CLIInfo{Path: "Status.IFUplinkStatus.LinkSpeed", Skip: false, Insert: "", Help: ""},
@@ -159,6 +161,8 @@ var typesMapInterface = map[string]*api.Struct{
 			"MirrorEnabled": api.Field{Name: "MirrorEnabled", CLITag: api.CLIInfo{ID: "mirror-enabled", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mirror-enabled", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 
 			"InterfaceUUID": api.Field{Name: "InterfaceUUID", CLITag: api.CLIInfo{ID: "if-uuid", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "if-uuid", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"IPAllocType": api.Field{Name: "IPAllocType", CLITag: api.CLIInfo{ID: "ip-alloc-type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-alloc-type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"netproto.InterfaceUplinkStatus": &api.Struct{
@@ -169,6 +173,10 @@ var typesMapInterface = map[string]*api.Struct{
 			"TransceiverStatus": api.Field{Name: "TransceiverStatus", CLITag: api.CLIInfo{ID: "transceiver-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "transceiver-status", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.TransceiverStatus"},
 
 			"PortID": api.Field{Name: "PortID", CLITag: api.CLIInfo{ID: "uplink-port-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "uplink-port-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"IPAddress": api.Field{Name: "IPAddress", CLITag: api.CLIInfo{ID: "ip-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-address", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"GatewayIP": api.Field{Name: "GatewayIP", CLITag: api.CLIInfo{ID: "gateway-ip", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "gateway-ip", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"netproto.PauseSpec": &api.Struct{

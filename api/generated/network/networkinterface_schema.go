@@ -145,6 +145,8 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 			"LinkSpeed": api.Field{Name: "LinkSpeed", CLITag: api.CLIInfo{ID: "link-speed", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "link-speed", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"TransceiverStatus": api.Field{Name: "TransceiverStatus", CLITag: api.CLIInfo{ID: "transceiver-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "transceiver-status", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.TransceiverStatus"},
+
+			"IPConfig": api.Field{Name: "IPConfig", CLITag: api.CLIInfo{ID: "ip-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-config", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.IPConfig"},
 		},
 	},
 	"network.PauseSpec": &api.Struct{

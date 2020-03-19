@@ -120,6 +120,12 @@ message InterfaceUplinkStatus {
 
     uint32 PortID                       = 3 [(gogoproto.jsontag) = "uplink-port-id,omitempty"];
     // Future: BFD, CDP, LLDP, LACP, Breakout status appears here
+    
+    // IPConfig has the IP address for the interface.
+    string IPAddress                    = 4   [(gogoproto.jsontag) = "ip-address,omitempty"];
+
+    // GatewayIP associated to the interface.
+    string GatewayIP                    = 5  [(gogoproto.jsontag) = "gateway-ip,omitemtpy"];
 }
 
 message TransceiverStatus {
@@ -205,6 +211,7 @@ message InterfaceStatus {
     bool MirrorEnabled                          = 8 [(gogoproto.jsontag) = "mirror-enabled,omitempty"];
 
     string InterfaceUUID                        = 9 [(gogoproto.jsontag) = "if-uuid,omitempty"];
+    string IPAllocType                          = 10 [(gogoproto.jsontag) = "ip-alloc-type,omitempty"]; 
 }
 
 

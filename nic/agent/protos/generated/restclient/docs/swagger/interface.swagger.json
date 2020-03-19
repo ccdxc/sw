@@ -626,6 +626,9 @@
         },
         "if-uuid": {
           "type": "string"
+        },
+        "ip-alloc-type": {
+          "type": "string"
         }
       },
       "description": "InterfaceStatus."
@@ -643,6 +646,14 @@
         "uplink-port-id": {
           "type": "integer",
           "format": "int64"
+        },
+        "ip-address": {
+          "type": "string",
+          "description": "IPConfig has the IP address for the interface."
+        },
+        "gateway-ip": {
+          "type": "string",
+          "description": "GatewayIP associated to the interface."
         }
       }
     },

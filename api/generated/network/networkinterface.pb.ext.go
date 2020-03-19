@@ -753,6 +753,19 @@ func (m *NetworkInterfaceUplinkStatus) References(tenant string, path string, re
 func (m *NetworkInterfaceUplinkStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
+	if m.IPConfig != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "IPConfig"
+			if errs := m.IPConfig.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+
 	if m.TransceiverStatus != nil {
 		{
 			dlmtr := "."
@@ -769,6 +782,10 @@ func (m *NetworkInterfaceUplinkStatus) Validate(ver, path string, ignoreStatus b
 }
 
 func (m *NetworkInterfaceUplinkStatus) Normalize() {
+
+	if m.IPConfig != nil {
+		m.IPConfig.Normalize()
+	}
 
 	if m.TransceiverStatus != nil {
 		m.TransceiverStatus.Normalize()

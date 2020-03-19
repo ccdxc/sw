@@ -1659,11 +1659,25 @@ func (a *ApuluAPI) handleUplinkInterface(spec *halapi.PortSpec, status *halapi.P
 			DSC:         a.InfraAPI.GetDscName(),
 			InterfaceID: uint64(status.GetIfIndex()),
 			OperStatus:  status.GetLinkStatus().GetOperState().String(),
+			IPAllocType: "DHCP",
 			IFUplinkStatus: netproto.InterfaceUplinkStatus{
 				PortID: spec.GetPortNumber(),
 			},
 		},
 	}
+
+	curIntf := netproto.Interface{}
+	o, err := a.InfraAPI.Read(i.Kind, i.GetKey())
+	if err == nil {
+		err = curIntf.Unmarshal(o)
+		if err != nil {
+			log.Errorf("Could not parse existing Interface object")
+		} else {
+			i.Status.IFUplinkStatus.IPAddress = curIntf.Status.IFUplinkStatus.IPAddress
+			i.Status.IFUplinkStatus.GatewayIP = curIntf.Status.IFUplinkStatus.GatewayIP
+		}
+	}
+
 	log.Infof("Processing uplink interface [%+v]", i)
 	a.LocalInterfaces[i.Name] = i.UUID
 	ifEvnt := types.UpdateIfEvent{
@@ -1868,6 +1882,22 @@ func (a *ApuluAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
 		// Configure the default route
 		err := a.HandleCPRoutingConfig(types.DSCStaticRoute{DestAddr: "0.0.0.0", DestPrefixLen: 0, NextHop: obj.GatewayIP})
 		if err != nil {
+			return err
+		}
+
+		// Update the uplink interface status
+		uplinkInterface.Status.IFUplinkStatus.IPAddress = obj.IPAddress
+		uplinkInterface.Status.IFUplinkStatus.GatewayIP = obj.GatewayIP
+		//TODO: this has to use to be converted to an update call
+		ifEvnt := types.UpdateIfEvent{
+			Oper: types.Create,
+			Intf: *uplinkInterface,
+		}
+
+		a.InfraAPI.UpdateIfChannel() <- ifEvnt
+		dat, _ := uplinkInterface.Marshal()
+		if err := a.InfraAPI.Store(uplinkInterface.Kind, uplinkInterface.GetKey(), dat); err != nil {
+			log.Error(errors.Wrapf(types.ErrBoltDBStoreUpdate, "Port: %s | Port: %v", uplinkInterface.GetKey(), err))
 			return err
 		}
 	}

@@ -1045,6 +1045,30 @@
             "type": "string"
           },
           {
+            "name": "ip-config.ip-address",
+            "description": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format. Should be a valid v4 or v6 CIDR block.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ip-config.default-gw",
+            "description": "DefaultGW contains the default gateway's IP address. Should be a valid v4 or v6 IP address.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ip-config.dns-servers",
+            "description": "DNSServers contains a list of DNS Servers that can be used on DistributedServiceCard.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
             "name": "status.mirror-sessions",
             "in": "query",
             "required": false,
@@ -8680,6 +8704,10 @@
         },
         "transceiver-status": {
           "$ref": "#/definitions/networkTransceiverStatus"
+        },
+        "ip-config": {
+          "$ref": "#/definitions/clusterIPConfig",
+          "description": "Interface IP Configuration if any."
         }
       }
     },

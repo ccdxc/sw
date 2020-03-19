@@ -15,6 +15,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/labels"
@@ -81,6 +82,10 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 		netif.Spec.IPAllocType = network.IPAllocTypes_Static.String()
 		netif.Status.Type = network.NetworkInterfaceStatus_UPLINK_ETH.String()
 	}
+
+	if agentNetif.Status.IPAllocType != "" {
+		netif.Spec.IPAllocType = agentNetif.Status.IPAllocType
+	}
 	netif.Tenant = ""
 	netif.Namespace = ""
 	netif.Status.IFHostStatus = &network.NetworkInterfaceHostStatus{
@@ -88,6 +93,10 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 	}
 	netif.Status.IFUplinkStatus = &network.NetworkInterfaceUplinkStatus{
 		// TBD: LinkSpeed: "tbf",
+		IPConfig: &cluster.IPConfig{
+			IPAddress: agentNetif.Status.IFUplinkStatus.IPAddress,
+			DefaultGW: agentNetif.Status.IFUplinkStatus.GatewayIP,
+		},
 	}
 
 	return netif
