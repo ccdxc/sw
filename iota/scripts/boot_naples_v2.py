@@ -1021,6 +1021,8 @@ class EsxHostManagement(HostManagement):
         except:
             print('lspci failed to find nic. calling ipmi power cycle')
             self.IpmiResetAndWait()
+        for naples_inst in self.naples:
+            naples_inst.Connect(bringup_oob=(not GlobalOptions.auto_discover))
 
     @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_INIT_FAILED, "Ctrl VM init failed")
     def __esx_host_init(self):

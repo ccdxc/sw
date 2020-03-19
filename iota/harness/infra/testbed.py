@@ -381,13 +381,19 @@ class _Testbed:
                     cmd.extend(["--auto-discover-on-install"]) 
             else:
                 if GlobalOptions.skip_firmware_upgrade or instance.Type == "vm" or naples_host_only:
-                    continue
+                    continue 
                 cmd.extend([ "%s/iota/scripts/reboot_node.py" % GlobalOptions.topdir ])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
                 cmd.extend(["--cimc-ip", instance.NodeCimcIP])
                 if hasattr(instance, "NodeCimcUsername"):
                     cmd.extend(["--cimc-username", instance.NodeCimcUsername])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
+                if instance.NodeOs == "esx": 
+                    cmd.extend(["--host-username", self.__tbspec.Provision.Vars.EsxUsername]) 
+                    cmd.extend(["--host-password", self.__tbspec.Provision.Vars.EsxPassword]) 
+                else: 
+                    cmd.extend(["--host-username", self.__tbspec.Provision.Username]) 
+                    cmd.extend(["--host-password", self.__tbspec.Provision.Password])
 
                 logfile = "%s/%s-%s-reboot.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
                 Logger.info("Rebooting Node %s (logfile = %s)" % (instance.Name, logfile))
