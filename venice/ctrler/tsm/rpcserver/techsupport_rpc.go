@@ -305,6 +305,7 @@ func (r *TechSupportRPCServer) WatchTechSupportRequests(params *tsproto.WatchTec
 
 			tsrs := evt.Obj.(*statemgr.TechSupportRequestState)
 			tsrs.Lock()
+			tsr := tsrs.TechSupportRequest
 			if !r.nodeSelectorMatch(nodeName, nodeKind, tsrs.TechSupportRequest.Spec.NodeSelector) {
 				tsrs.Unlock()
 				continue
@@ -312,6 +313,11 @@ func (r *TechSupportRPCServer) WatchTechSupportRequests(params *tsproto.WatchTec
 
 			nodeTSR := buildNodeTechSupportRequest(tsrs.TechSupportRequest, nodeName)
 			if eventType == api.EventType_CreateEvent {
+				if !isActiveTechSupportRequest(tsr) {
+					tsrs.Unlock()
+					continue
+				}
+
 				r.updateTechSupportNodeResult(tsrs.TechSupportRequest, nodeName, nodeKind, nodeTSR.Spec.InstanceID, &tsproto.TechSupportRequestStatus{Status: tsproto.TechSupportRequestStatus_Scheduled})
 			}
 			tsrs.Unlock()
