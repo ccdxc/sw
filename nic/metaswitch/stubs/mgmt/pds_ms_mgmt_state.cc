@@ -51,6 +51,7 @@ void mgmt_state_t::ms_response_ready(types::ApiStatus resp) {
     g_ms_response_ = resp;
     vector<pend_rt_t> rt_add_list;
     vector<pend_rt_t> rt_del_list;
+    vector<bgp_peer_pend_obj_t> bgp_peer_list;
     if (g_ms_response_ != types::API_STATUS_OK) {
         {
             // Delete any UUIDs stashed in temporary pending store
@@ -59,7 +60,9 @@ void mgmt_state_t::ms_response_ready(types::ApiStatus resp) {
             mgmt_ctxt.state()->release_pending_uuid();
             rt_add_list = mgmt_ctxt.state()->get_rt_pending_add();
             rt_del_list = mgmt_ctxt.state()->get_rt_pending_delete();
+            bgp_peer_list = mgmt_ctxt.state()->get_bgp_peer_pend();
             mgmt_ctxt.state()->clear_rt_pending();
+            mgmt_ctxt.state()->clear_bgp_peer_pend();
         }
         if (!rt_add_list.empty()) {
             // delete pending rt from the store it is added
@@ -69,11 +72,16 @@ void mgmt_state_t::ms_response_ready(types::ApiStatus resp) {
             // add pending rt back to the store from where it is deleted
             redo_rt_pending (rt_del_list, true);
         }
+        if (!bgp_peer_list.empty()) {
+            // redo bgp peer store update on failure
+            redo_bgp_peer_pend(bgp_peer_list);
+        }
     } else {
         // Commit pending UUID operations to permanent store
         auto mgmt_ctxt = mgmt_state_t::thread_context();
         mgmt_ctxt.state()->commit_pending_uuid();
         mgmt_ctxt.state()->clear_rt_pending();
+        mgmt_ctxt.state()->clear_bgp_peer_pend();
     }
     g_cv_resp_.notify_all();
 }
@@ -140,6 +148,21 @@ void mgmt_state_t::redo_rt_pending (vector<pend_rt_t>& rt_list, bool add) {
                     vpc_obj->rt_store.del(obj.rt_str);
                 }
             }
+        }
+    }
+}
+
+// bgp peer config failure: walk through the pending bgp peer list and redo
+void mgmt_state_t::redo_bgp_peer_pend (vector<bgp_peer_pend_obj_t>& list) {
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    auto bgp_peer_store = mgmt_ctxt.state()->bgp_peer_store();
+    for (auto& obj: list) {
+        if (obj.add_oper) {
+            //bgp peer is added to list, delete it now
+            bgp_peer_store.del(obj.local_addr, obj.peer_addr);
+        } else {
+            //bgp peer is deleted from list, add it now
+            bgp_peer_store.add(obj.local_addr, obj.peer_addr);
         }
     }
 }

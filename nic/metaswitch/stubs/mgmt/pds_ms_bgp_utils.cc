@@ -417,6 +417,26 @@ bgp_peer_pre_set(BGPPeerSpec &req, NBB_LONG row_status,
                                                        correlator, FALSE);
     }
 
+    if (!op_update)
+    {
+        // no need to make changes to store in case of update
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto& bgp_peer_store = mgmt_ctxt.state()->bgp_peer_store();
+        ip_addr_t laddr = {0};
+        ip_addr_t paddr = {0};
+        ip_addr_spec_to_ip_addr (req.localaddr(), &laddr);
+        ip_addr_spec_to_ip_addr (req.peeraddr(), &paddr);
+
+        if (row_status == AMB_ROW_ACTIVE) {
+            // add entry to store
+            bgp_peer_store.add(laddr, paddr);
+            mgmt_ctxt.state()->set_bgp_peer_pend (laddr, paddr, true);
+        } else {
+           // delete entry from store
+           bgp_peer_store.del(laddr, paddr);
+           mgmt_ctxt.state()->set_bgp_peer_pend (laddr, paddr, false);
+        }
+    }
 }
 
 // API to verify whether given peer AF can be displayed to user or not
@@ -479,6 +499,7 @@ bgp_peer_afi_safi_pre_set(BGPPeerAfSpec &req, NBB_LONG row_status,
                           NBB_ULONG correlator, NBB_VOID* kh, bool op_update)
 {
     pds_obj_key_t uuid = {0};
+    ip_addr_t local_ipaddr, peer_ipaddr;
 
     if (row_status == AMB_ROW_DESTROY) {
         BGPPeerAfKeyHandle *key_handle = (BGPPeerAfKeyHandle *)kh;
@@ -545,19 +566,30 @@ bgp_peer_afi_safi_pre_set(BGPPeerAfSpec &req, NBB_LONG row_status,
                      append(uuid.str()));
     }
 
+    ip_addr_spec_to_ip_addr (req.localaddr(), &local_ipaddr);
+    ip_addr_spec_to_ip_addr (req.peeraddr(), &peer_ipaddr);
+    // check if the peer is valid or not.
+    {
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto& bgp_peer_store = mgmt_ctxt.state()->bgp_peer_store();
+        if (bgp_peer_store.find(local_ipaddr, peer_ipaddr) == false) {
+            throw Error (std::string("BGP PeerAf req with invalid Peer ").
+                         append("local addr: ").append(ipaddr2str(&local_ipaddr)).
+                         append(" peer addr: ").append(ipaddr2str(&peer_ipaddr)));
+        }
+    }
+
     // Address Family enable/disable should be set internally as per
     // create-update/delete operation. these rows cannot be destroyed
     // in metaswitch, so when user deletes an AF for a peer, we internally
     // disable the AF and enable when he creates it
     req.set_disable (row_status == AMB_ROW_DESTROY);
-    ip_addr_t local_ipaddr, peer_ipaddr;
-    ip_addr_spec_to_ip_addr (req.localaddr(), &local_ipaddr);
-    ip_addr_spec_to_ip_addr (req.peeraddr(), &peer_ipaddr);
     PDS_TRACE_VERBOSE("BGP PeerAF for Local IP %s "
                       "Peer IP %s AFI %d SAFI %d is %s",
                       ipaddr2str(&local_ipaddr), ipaddr2str(&peer_ipaddr),
                       req.afi(), req.safi(),
                       (row_status == AMB_ROW_DESTROY)?"disabled":"enabled");
+
 }
 
 NBB_VOID

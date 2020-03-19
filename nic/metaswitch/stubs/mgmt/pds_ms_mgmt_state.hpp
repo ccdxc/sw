@@ -11,6 +11,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_object_store.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_bgp_store.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/include/pds.hpp"
@@ -152,6 +153,18 @@ public:
     vector<pend_rt_t>& get_rt_pending_delete() { return rt_pending_delete_;}
     static void redo_rt_pending(vector<pend_rt_t>&, bool);
 
+    // bgp peer store
+    bgp_peer_store_t& bgp_peer_store(void) {return bgp_peer_store_;}
+    void set_bgp_peer_pend(const ip_addr_t& l, const ip_addr_t& p, bool add) {
+        bgp_peer_pend_.emplace_back(l,p,add);
+    }
+    void clear_bgp_peer_pend(void) {
+        bgp_peer_pend_.clear();
+    }
+    vector<bgp_peer_pend_obj_t>& get_bgp_peer_pend(void) {return bgp_peer_pend_;}
+    static void redo_bgp_peer_pend(vector<bgp_peer_pend_obj_t>&);
+
+
 private:
     static mgmt_state_t* g_state_;
     // Predicate to avoid spurious wake-up calls
@@ -169,6 +182,8 @@ private:
     std::vector<pend_rt_t> rt_pending_delete_;
     mib_idx_gen_indexer_t mib_indexer_;
     slab_uptr_t slabs_ [PDS_MS_MGMT_MAX_SLAB_ID];
+    bgp_peer_store_t  bgp_peer_store_;
+    std::vector<bgp_peer_pend_obj_t> bgp_peer_pend_;
 
 private:
     mgmt_state_t(void);
