@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2019 Pensando Systems, Inc.
- *
- * @file    policy.hpp
- *
- * @brief   policy handling
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// policy handling
+///
+//----------------------------------------------------------------------------
 
 #ifndef __POLICY_HPP__
 #define __POLICY_HPP__
@@ -183,7 +185,7 @@ public:
 
     /// \brief     return the policy key/id
     /// \return    key/id of the policy
-    pds_obj_key_t key(void) const { return key_; }
+    const pds_obj_key_t key(void) const { return key_; }
 
     /**
      * @brief     return IP address family for this policy
@@ -222,12 +224,15 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_obj_key_t    key_;        /**< security policy key */
-    uint8_t             af_;         /**< IP address family of this policy */
-    rule_dir_t          dir_;        /**< traffic direction in which this policy is applied on */
+    pds_obj_key_t    key_;        ///< security policy key
+    uint8_t          af_;         ///< IP address family of this policy
+    rule_dir_t       dir_;        ///< traffic direction in which this policy
+                                  ///< is applied on
+    uint32_t         num_rules_;  ///< number of rules in this policy
 
-    ht_ctxt_t           ht_ctxt_;    /**< hash table context */
-    impl_base           *impl_;      /**< impl object instance */
+    /// operational state
+    ht_ctxt_t        ht_ctxt_;    ///< hash table context
+    impl_base        *impl_;      ///< impl object instance
 
     friend class policy_state;       // policy_state is friend of policy
 } __PACK__;

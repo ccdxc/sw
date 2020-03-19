@@ -124,7 +124,7 @@ mapping_state::skey(pds_obj_key_t *key, pds_mapping_key_t *skey) const {
 }
 
 sdk_ret_t
-mapping_state::persist(mapping_entry *mapping) {
+mapping_state::persist(mapping_entry *mapping, pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
 
     if (mapping->key_.valid()) {
@@ -140,14 +140,14 @@ mapping_state::persist(mapping_entry *mapping) {
 }
 
 sdk_ret_t
-mapping_state::perish(mapping_entry *mapping) {
+mapping_state::perish(const pds_obj_key_t& key) {
     sdk_ret_t ret;
 
-    if (mapping->key_.valid()) {
-        ret = kvstore_->remove(&mapping->key_, sizeof(mapping->key_));
+    if (key.valid()) {
+        ret = kvstore_->remove(&key, sizeof(key));
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed to remove pkey -> skey binding in kvstore for"
-                          "mapping %s, err %u", mapping->key2str().c_str(), ret);
+                          "mapping %s, err %u", key.str(), ret);
         }
         return ret;
     }

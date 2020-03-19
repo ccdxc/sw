@@ -112,8 +112,8 @@ pds_state::init(string pipeline, string cfg_file) {
     state_[PDS_STATE_SUBNET] = new subnet_state();
     state_[PDS_STATE_VNIC] = new vnic_state();
     state_[PDS_STATE_MAPPING] = new mapping_state(kvstore_);
-    state_[PDS_STATE_ROUTE_TABLE] = new route_table_state();
-    state_[PDS_STATE_POLICY] = new policy_state();
+    state_[PDS_STATE_ROUTE_TABLE] = new route_table_state(kvstore_);
+    state_[PDS_STATE_POLICY] = new policy_state(kvstore_);
     state_[PDS_STATE_MIRROR] = new mirror_session_state();
     state_[PDS_STATE_METER] = new meter_state();
     state_[PDS_STATE_TAG] = new tag_state();
@@ -179,13 +179,16 @@ pds_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
 sdk_ret_t
 pds_state::transaction_begin(void) {
     //return mapping_db()->transaction_begin();
-    return SDK_RET_OK;
+    return kvstore_->txn_start(sdk::lib::kvstore::TXN_TYPE_READ_WRITE);
 }
 
 sdk_ret_t
 pds_state::transaction_end(bool abort) {
     //return mapping_db()->transaction_end(abort);
-    return SDK_RET_OK;
+    if (abort) {
+        return kvstore_->txn_abort();
+    }
+    return kvstore_->txn_commit();
 }
 
 /** * @} */    // end of PDS_STATE

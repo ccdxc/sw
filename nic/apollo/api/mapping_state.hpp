@@ -69,14 +69,15 @@ public:
                    _Out_ pds_mapping_key_t *skey) const;
 
     /// \brief      persist given mapping entry (portions of it that need to be)
-    /// \param[in] mapping instance of the mapping entry
+    /// \param[in]  mapping instance of the mapping entry
+    /// \param[in]  spec mapping configuration
     /// \return     SDK_RET_OK on success, failure status code on error
-    sdk_ret_t persist(mapping_entry *mapping);
+    sdk_ret_t persist(mapping_entry *mapping, pds_mapping_spec_t *spec);
 
     /// \brief      destroy any persisted state of the given mapping entry
-    /// \param[in] mapping instance of the mapping entry
+    /// \param[in] key    key of mapping to be removed from persistent db
     /// \return     SDK_RET_OK on success, failure status code on error
-    sdk_ret_t perish(mapping_entry *mapping);
+    sdk_ret_t perish(const pds_obj_key_t& key);
 
     /// \brief API to walk all the db elements
     /// \param[in] walk_cb    callback to be invoked for every node
@@ -93,17 +94,19 @@ public:
     /// \brief API to begin database/remote transactions, if any
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t transaction_begin(void) {
-        return kvstore_->txn_start(sdk::lib::kvstore::TXN_TYPE_READ_WRITE);
+        //return kvstore_->txn_start(sdk::lib::kvstore::TXN_TYPE_READ_WRITE);
+        return SDK_RET_OK;
     }
 
     /// \brief API to end database/remote transactions, if any
     /// \param[in] abort    true if transaction needs to be aborted, else false
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t transaction_end(bool abort) {
-        if (abort) {
-            return kvstore_->txn_abort();
-        }
-        return kvstore_->txn_commit();
+        //if (abort) {
+            //return kvstore_->txn_abort();
+        //}
+        //return kvstore_->txn_commit();
+        return SDK_RET_OK;
     }
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);

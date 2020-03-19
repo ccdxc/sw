@@ -221,6 +221,7 @@
             "_comment": "((8 * 2 * 2) + 1) * 6697K",
             "block_count": "33",
             "block_size": "6697K",
+            "max_elements": "1K",
             "size": "221001K",
             "cache": "p4plus-all"
         },
@@ -237,6 +238,7 @@
             "_comment": "((8 * 2 * 2) + 1) * 6833K",
             "block_count": "33",
             "block_size": "1B",
+            "max_elements": "1K",
             "size": "64B",
             "cache": "p4plus-all"
         },

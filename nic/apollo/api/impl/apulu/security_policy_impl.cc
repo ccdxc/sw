@@ -28,6 +28,14 @@ security_policy_impl *
 security_policy_impl::factory(pds_policy_spec_t *spec) {
     security_policy_impl    *impl;
 
+    if (spec->rule_info->num_rules >
+            security_policy_impl_db()->max_rules(spec->rule_info->af)) {
+        PDS_TRACE_ERR("No. of rules %u in the policy %s exceeded the max "
+                      "supported scale %u", spec->rule_info->num_rules,
+                      spec->key.str(),
+                      security_policy_impl_db()->max_rules(spec->rule_info->af));
+        return NULL;
+    }
     impl = security_policy_impl_db()->alloc();
     new (impl) security_policy_impl();
     return impl;
@@ -135,16 +143,32 @@ security_policy_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                                   pds_epoch_t epoch, api_op_t api_op,
                                   api_obj_ctxt_t *obj_ctxt)
 {
+    sdk_ret_t ret;
+    pds_policy_spec_t *spec;
+
     switch (api_op) {
     case API_OP_CREATE:
+        spec = &obj_ctxt->api_params->policy_spec;
+        ret = policy_db()->persist((policy *)api_obj, spec);
+        break;
+
     case API_OP_UPDATE:
-        // no programming needed in stage0 for these
+        spec = &obj_ctxt->api_params->policy_spec;
+        if ((ret = policy_db()->perish(spec->key)) ==
+                SDK_RET_OK) {
+            ret = policy_db()->persist((policy *)api_obj, spec);
+        }
+        break;
+
     case API_OP_DELETE:
-        // delete operation will free the hbm region in use altogether
+        ret = policy_db()->perish(obj_ctxt->api_params->policy_key);
+        break;
+
     default:
+        ret = SDK_RET_INVALID_OP;
         break;
     }
-    return SDK_RET_OK;
+    return ret;
 }
 
 void

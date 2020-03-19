@@ -11,6 +11,7 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/sdk/lib/ht/ht.hpp"
+#include "nic/sdk/lib/kvstore/kvstore.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/policy.hpp"
 #include "nic/apollo/api/security_profile.hpp"
@@ -29,7 +30,8 @@ namespace api {
 class policy_state : public state_base {
 public:
     /// \brief    constructor
-    policy_state();
+    /// \param[in] kvs pointer to key-value store instance
+    policy_state(sdk::lib::kvstore *kvs);
 
     /// \brief    destructor
     ~policy_state();
@@ -61,14 +63,15 @@ public:
     policy *find_policy(pds_obj_key_t *policy_key) const;
 
     /// \brief      persist the given security policy
-    /// \param[in]  spec    policy to be persisted
+    /// \param[in]  policy policy object instance
+    /// \param[in]  spec    policy configuration to be persisted
     /// \return     SDK_RET_OK on success, failure status code on error
-    sdk_ret_t persist(pds_policy_spec_t *spec);
+    sdk_ret_t persist(policy *policy, pds_policy_spec_t *spec);
 
     /// \brief      destroy any persisted state of the given security policy
-    /// \param[in]  key    key of the policy to be removed from persistent database
+    /// \param[in]  key    key of the policy to be removed from persistent db
     /// \return     SDK_RET_OK on success, failure status code on error
-    sdk_ret_t perish(pds_obj_key_t *key);
+    sdk_ret_t perish(const pds_obj_key_t& key);
 
     /// \brief    allocate memory required for a security profile instance
     /// \return    pointer to the allocated security profile instance,
@@ -125,6 +128,7 @@ private:
     slab    *policy_slab_;              ///< slab to allocate security policy instance
     ht      *security_profile_ht_;      ///< security profile database
     slab    *security_profile_slab_;    ///< slab to allocate security profile
+    sdk::lib::kvstore *kvstore_;        ///< key-value store instance
 };
 
 static inline policy *

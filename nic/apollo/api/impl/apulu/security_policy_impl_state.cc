@@ -25,19 +25,18 @@ security_policy_impl_state::security_policy_impl_state(pds_state *state) {
         rte_indexer::factory(state->mempartition()->block_count("sacl_v4"),
                              false, false);
     SDK_ASSERT(v4_idxr_ != NULL);
-
-    v4_region_addr_ = state->mempartition()->start_addr("sacl_v4");
-    SDK_ASSERT(v4_region_addr_ != INVALID_MEM_ADDRESS);
-    v4_table_size_ = state->mempartition()->block_size("sacl_v4");
-
     v6_idxr_ =
         rte_indexer::factory(state->mempartition()->block_count("sacl_v6"),
                              false, false);
     SDK_ASSERT(v6_idxr_ != NULL);
-
+    v4_region_addr_ = state->mempartition()->start_addr("sacl_v4");
+    SDK_ASSERT(v4_region_addr_ != INVALID_MEM_ADDRESS);
+    v4_table_size_ = state->mempartition()->block_size("sacl_v4");
+    v4_max_rules_ = state->mempartition()->max_elements("sacl_v4") - 1;
     v6_region_addr_ = state->mempartition()->start_addr("sacl_v6");
     SDK_ASSERT(v6_region_addr_ != INVALID_MEM_ADDRESS);
     v6_table_size_ = state->mempartition()->block_size("sacl_v6");
+    v6_max_rules_ = state->mempartition()->max_elements("sacl_v6") - 1;
 }
 
 security_policy_impl_state::~security_policy_impl_state() {

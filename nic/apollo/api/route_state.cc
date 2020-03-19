@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/core/mem.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/route_state.hpp"
 
 namespace api {
@@ -17,7 +18,8 @@ namespace api {
 /// \ingroup PDS_ROUTE
 /// \@{
 
-route_table_state::route_table_state() {
+route_table_state::route_table_state(sdk::lib::kvstore *kvs) {
+    kvstore_ = kvs;
     route_table_ht_ = ht::factory(PDS_MAX_ROUTE_TABLE >> 2,
                                   route_table::route_table_key_func_get,
                                   sizeof(pds_obj_key_t));
@@ -67,6 +69,38 @@ route_table_state::free(route_table *rtable) {
 route_table *
 route_table_state::find(pds_obj_key_t *route_table_key) const {
     return (route_table *)(route_table_ht_->lookup(route_table_key));
+}
+
+sdk_ret_t
+route_table_state::persist(route_table *table, pds_route_table_spec_t *spec) {
+    sdk_ret_t ret;
+
+    if (table->key_.valid()) {
+        ret = kvstore_->insert(&table->key_, sizeof(table->key_),
+                               spec->route_info,
+                               ROUTE_SET_SIZE(spec->route_info->num_routes));
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to persist route table %s in kvstore, err %u",
+                          spec->key.str(), ret);
+        }
+        return ret;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+route_table_state::perish(const pds_obj_key_t& key) {
+    sdk_ret_t ret;
+
+    if (key.valid()) {
+        ret = kvstore_->remove(&key, sizeof(key));
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to remove route table %s from kvstore, "
+                          "err %u", key.str(), ret);
+        }
+        return ret;
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

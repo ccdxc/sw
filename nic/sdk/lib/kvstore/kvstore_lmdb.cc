@@ -148,7 +148,7 @@ kvstore_lmdb::txn_abort(void) {
 }
 
 sdk_ret_t
-kvstore_lmdb::find(void *key, size_t key_sz, void *data, size_t *data_sz) {
+kvstore_lmdb::find(const void *key, size_t key_sz, void *data, size_t *data_sz) {
     int rv;
     sdk_ret_t ret;
     MDB_val db_key;
@@ -164,7 +164,7 @@ kvstore_lmdb::find(void *key, size_t key_sz, void *data, size_t *data_sz) {
         new_txn = true;
     }
     // lookup the key
-    db_key.mv_data = key;
+    db_key.mv_data = (void *)key;
     db_key.mv_size = key_sz;
     rv = mdb_get(t_txn_hdl_, db_dbi_, &db_key, &db_val);
     if (rv) {
@@ -193,7 +193,8 @@ end:
 }
 
 sdk_ret_t
-kvstore_lmdb::insert(void *key, size_t key_sz, void *data, size_t data_sz) {
+kvstore_lmdb::insert(const void *key, size_t key_sz,
+                     const void *data, size_t data_sz) {
     int rv;
     MDB_val db_key;
     MDB_val db_val;
@@ -209,9 +210,9 @@ kvstore_lmdb::insert(void *key, size_t key_sz, void *data, size_t data_sz) {
         new_txn = true;
     }
     // update the database
-    db_key.mv_data = key;
+    db_key.mv_data = (void *)key;
     db_key.mv_size = key_sz;
-    db_val.mv_data = data;
+    db_val.mv_data = (void *)data;
     db_val.mv_size = data_sz;
     rv = mdb_put(t_txn_hdl_, db_dbi_, &db_key, &db_val, 0);
     if (rv) {
@@ -234,7 +235,7 @@ end:
 }
 
 sdk_ret_t
-kvstore_lmdb::remove(void *key, size_t key_sz) {
+kvstore_lmdb::remove(const void *key, size_t key_sz) {
     int rv;
     MDB_val db_key;
     bool new_txn = false;
@@ -249,7 +250,7 @@ kvstore_lmdb::remove(void *key, size_t key_sz) {
         new_txn = true;
     }
     // update the database
-    db_key.mv_data = key;
+    db_key.mv_data = (void *)key;
     db_key.mv_size = key_sz;
     rv = mdb_del(t_txn_hdl_, db_dbi_, &db_key, NULL);
     if (rv) {

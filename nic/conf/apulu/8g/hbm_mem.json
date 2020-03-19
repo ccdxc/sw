@@ -213,9 +213,10 @@
             "_comment": "1K vnics, 1K subnets, 5 policies per vnic per direction, 1 policy per subnet per direction",
             "_comment": "((1K * 5) * 2) + ((1K * 1) * 2) + 1 = 12K +1 blocks = 12289 blocks",
             "kind": "cfgtbl",
-            "size": "528M",
+            "block_count": "12289",
             "block_size": "264K",
-            "block_count": "2049",
+            "max_elements": "1K",
+            "size": "528M",
             "cache": "p4plus-rxdma"
         },
         {
@@ -223,9 +224,10 @@
             "_comment": "1K vnics, 1K subnets, 5 policies per vnic per direction, 1 policy per subnet per direction",
             "_comment": "((1K * 5) * 2) + ((1K * 1) * 2) + 1 = 12K +1 blocks = 12289 blocks",
             "kind": "cfgtbl",
-            "size": "1K",
+            "block_count": "12289",
             "block_size": "1K",
-            "block_count": "2049",
+            "max_elements": "1K",
+            "size": "1K",
             "cache": "p4plus-rxdma"
         },
         {

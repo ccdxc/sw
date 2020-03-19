@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/core/mem.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/policy_state.hpp"
 
 namespace api {
@@ -17,7 +18,8 @@ namespace api {
 /// \ingroup PDS_POLICY
 /// \@{
 
-policy_state::policy_state() {
+policy_state::policy_state(sdk::lib::kvstore *kvs) {
+    kvstore_ = kvs;
     policy_ht_ = ht::factory(PDS_MAX_SECURITY_POLICY >> 2,
                              policy::policy_key_func_get,
                              sizeof(pds_obj_key_t));
@@ -70,6 +72,38 @@ policy_state::free(policy *policy) {
 policy *
 policy_state::find_policy(pds_obj_key_t *policy_key) const {
     return (policy *)(policy_ht_->lookup(policy_key));
+}
+
+sdk_ret_t
+policy_state::persist(policy *policy, pds_policy_spec_t *spec) {
+    sdk_ret_t ret;
+
+    if (policy->key_.valid()) {
+        ret = kvstore_->insert(&policy->key_, sizeof(policy->key_),
+                               spec->rule_info,
+                               POLICY_RULE_SET_SIZE(spec->rule_info->num_rules));
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to persist policy %s in kvstore, err %u",
+                          spec->key.str(), ret);
+        }
+        return ret;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+policy_state::perish(const pds_obj_key_t& key) {
+    sdk_ret_t ret;
+
+    if (key.valid()) {
+        ret = kvstore_->remove(&key, sizeof(key));
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to remove policy %s from kvstore, err %u",
+                          key.str(), ret);
+        }
+        return ret;
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

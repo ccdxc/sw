@@ -185,7 +185,7 @@ public:
 
     /// \brief          return the route table key/id
     /// \return         key/id of the route table
-    pds_obj_key_t key(void) const { return key_; }
+    const pds_obj_key_t key(void) const { return key_; }
 
     /**
      * @brief return address family of this routing table
@@ -220,6 +220,7 @@ private:
 private:
     pds_obj_key_t    key_;        ///< route table key
     uint8_t          af_;         ///< IP_AF_IPV4 or IP_AF_IPV6
+    uint32_t         num_routes_; ///< number of routes in this table
     ht_ctxt_t        ht_ctxt_;    ///< hash table context
     impl_base        *impl_;      ///< impl object instance
 

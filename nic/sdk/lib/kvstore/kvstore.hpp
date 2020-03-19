@@ -29,11 +29,11 @@ public:
     virtual sdk_ret_t txn_start(txn_type_t txn_type) = 0;
     virtual sdk_ret_t txn_commit(void) = 0;
     virtual sdk_ret_t txn_abort(void) = 0;
-    virtual sdk_ret_t find(_Out_ void *key, _In_ size_t key_sz,
+    virtual sdk_ret_t find(_In_ const void *key, _In_ size_t key_sz,
                            _Out_ void *data, _Inout_ size_t *data_sz) = 0;
-    virtual sdk_ret_t insert(void *key, size_t key_sz,
-                             void *data, size_t data_sz) = 0;
-    virtual sdk_ret_t remove(void *key, size_t key_sz) = 0;
+    virtual sdk_ret_t insert(const void *key, size_t key_sz,
+                             const void *data, size_t data_sz) = 0;
+    virtual sdk_ret_t remove(const void *key, size_t key_sz) = 0;
 
 protected:
     kvstore() {}

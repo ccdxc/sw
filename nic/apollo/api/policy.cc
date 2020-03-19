@@ -33,7 +33,10 @@ typedef struct policy_upd_ctxt_s {
 } __PACK__ policy_upd_ctxt_t;
 
 policy::policy() {
+    af_ = IP_AF_NIL;
+    num_rules_ = 0;
     ht_ctxt_.reset();
+    impl_ = NULL;
 }
 
 policy *
@@ -75,12 +78,14 @@ policy::clone(api_ctxt_t *api_ctxt) {
     cloned_policy = policy_db()->alloc();
     if (cloned_policy) {
         new (cloned_policy) policy();
+        if (cloned_policy->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
         cloned_policy->impl_ = impl_->clone();
         if (unlikely(cloned_policy->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone policy %s impl", key2str().c_str());
             goto error;
         }
-        cloned_policy->init_config(api_ctxt);
     }
     return cloned_policy;
 
@@ -122,6 +127,7 @@ policy::init_config(api_ctxt_t *api_ctxt) {
 
     spec = &api_ctxt->api_params->policy_spec;
     this->af_ = spec->rule_info->af;
+    this->num_rules_ = spec->rule_info->num_rules;
     memcpy(&this->key_, &spec->key, sizeof(pds_obj_key_t));
     return SDK_RET_OK;
 }

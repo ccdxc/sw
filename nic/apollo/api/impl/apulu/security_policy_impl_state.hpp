@@ -65,6 +65,12 @@ public:
         return (af == IP_AF_IPV4) ? v4_table_size_ : v6_table_size_;
     }
 
+    /// \brief return max rules per security policy
+    /// \param[in] af    address family of the policy
+    uint32_t max_rules(uint8_t af) const {
+        return (af == IP_AF_IPV4) ? v4_max_rules_ : v6_max_rules_;
+    }
+
 private:
     rte_indexer *security_policy_idxr(uint8_t af) {
         return (af == IP_AF_IPV4) ? v4_idxr_ : v6_idxr_;
@@ -74,12 +80,13 @@ private:
 private:
     // datapath tables for security policy
     rte_indexer *v4_idxr_;          ///< indexer to allocate mem block for v4 policy tables
+    rte_indexer *v6_idxr_;          ///< indexer to allocate mem block for v6 policy tables
     mem_addr_t  v4_region_addr_;    ///< base address for v4 policy region
     uint64_t    v4_table_size_;     ///< size of each v4 policy table
-
-    rte_indexer *v6_idxr_;          ///< indexer to allocate mem block for v6 policy tables
+    uint32_t    v4_max_rules_;      ///< max IPv4 rules per policy
     mem_addr_t  v6_region_addr_;    ///< base address for v6 policy region
     uint64_t    v6_table_size_;     ///< size of each v6 policy table
+    uint32_t    v6_max_rules_;      ///< max IPv6 rules per policy
 };
 
 /// \@}

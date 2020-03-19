@@ -13,6 +13,7 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/sdk/lib/ht/ht.hpp"
+#include "nic/sdk/lib/kvstore/kvstore.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/route.hpp"
 
@@ -26,7 +27,8 @@ namespace api {
 class route_table_state : public state_base {
 public:
     /// \brief constructor
-    route_table_state();
+    /// \param[in] kvs pointer to key-value store instance
+    route_table_state(sdk::lib::kvstore *kvs);
 
     /// \brief destructor
     ~route_table_state();
@@ -62,6 +64,17 @@ public:
     /// \param[in] key route table key
     route_table *find(pds_obj_key_t *key) const;
 
+    /// \brief      persist the given route table
+    /// \param[in]  table route table instance
+    /// \param[in]  spec    route table configuration to be persisted
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t persist(route_table *table, pds_route_table_spec_t *spec);
+
+    /// \brief      destroy any persisted state of the given route table
+    /// \param[in]  key    key of route table to be removed from persistent db
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t perish(const pds_obj_key_t& key);
+
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab
     /// \param[in] ctxt       opaque context passed back to the callback
@@ -76,8 +89,9 @@ private:
     friend class route_table;   // route_table is friend of route_table_state
 
 private:
-    ht      *route_table_ht_;      // route table database
-    slab    *route_table_slab_;    // slab to allocate route table instance
+    ht      *route_table_ht_;      ///< route table database
+    slab    *route_table_slab_;    ///< slab to allocate route table instance
+    sdk::lib::kvstore *kvstore_;   ///< key-value store instance
 };
 
 static inline route_table *

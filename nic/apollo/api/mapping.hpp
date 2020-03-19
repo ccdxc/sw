@@ -279,7 +279,7 @@ public:
      * @brief    return the mapping object's key
      * @return    key of the mapping object
      */
-    pds_obj_key_t& key(void) { return key_; }
+    const pds_obj_key_t& key(void) const { return key_; }
 
     /**
      * @brief    return the mapping object's identifier fields

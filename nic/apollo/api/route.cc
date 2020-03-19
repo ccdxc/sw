@@ -26,7 +26,10 @@ typedef struct route_table_upd_ctxt_s {
 } __PACK__ route_table_upd_ctxt_t;
 
 route_table::route_table() {
+    af_ = IP_AF_NIL;
+    num_routes_ = 0;
     ht_ctxt_.reset();
+    impl_ = NULL;
 }
 
 route_table *
@@ -66,13 +69,15 @@ route_table::clone(api_ctxt_t *api_ctxt) {
     rtable = route_table_db()->alloc();
     if (rtable) {
         new (rtable) route_table();
+        if (rtable->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
         rtable->impl_ = impl_->clone();
         if (unlikely(rtable->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone route table %s impl",
                           key2str().c_str());
             goto error;
         }
-        rtable->init_config(api_ctxt);
     }
     return rtable;
 
@@ -115,6 +120,7 @@ route_table::init_config(api_ctxt_t *api_ctxt) {
     spec = &api_ctxt->api_params->route_table_spec;
     memcpy(&this->key_, &spec->key, sizeof(pds_obj_key_t));
     this->af_ = spec->route_info->af;
+    this->num_routes_ = spec->route_info->num_routes;
     return SDK_RET_OK;
 }
 

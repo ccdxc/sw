@@ -801,7 +801,7 @@ mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
             goto error;
         }
     }
-    ret = mapping_db()->persist(mapping);
+    ret = mapping_db()->persist(mapping, spec);
     if (unlikely(ret != SDK_RET_OK)) {
         goto error;
     }
@@ -925,7 +925,7 @@ mapping_impl::activate_delete_(pds_epoch_t epoch, mapping_entry *mapping) {
             // continue cleanup !!
         }
     }
-    ret = mapping_db()->perish(mapping);
+    ret = mapping_db()->perish(mapping->key());
     return ret;
 }
 

@@ -57,6 +57,25 @@ route_table_impl *
 route_table_impl::factory(pds_route_table_spec_t *spec) {
     route_table_impl    *impl;
 
+    if (spec->route_info->af == IP_AF_IPV4) {
+        if (spec->route_info->num_routes >
+            route_table_impl_db()->v4_table_size()) {
+            PDS_TRACE_ERR("No. of IPv4 routes %u in the route table %s "
+                          "exceeded max supported scale %u",
+                          spec->route_info->num_routes, spec->key.str(),
+                          route_table_impl_db()->v4_table_size());
+            return NULL;
+        }
+    } else {
+        if (spec->route_info->num_routes >
+            route_table_impl_db()->v6_table_size()) {
+            PDS_TRACE_ERR("No. of IPv6 routes %u in the route table %s "
+                          "exceeded max supported scale %u",
+                          spec->route_info->num_routes, spec->key.str(),
+                          route_table_impl_db()->v6_table_size());
+            return NULL;
+        }
+    }
     impl = route_table_impl_db()->alloc();
     new (impl) route_table_impl();
     return impl;
