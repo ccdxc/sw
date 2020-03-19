@@ -3603,7 +3603,6 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     uint32_t              num_sessions = 0, bucket_no = 0;
     flow_telemetry_state_t *flow_telemetry_state_p;
     bool                  inb_bond_active_changed = false;
-    lif_qstate_t          qstate;
 
     session_age_cb_args_t args;
 #if SESSION_AGE_DEBUG
@@ -3612,10 +3611,6 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     // Keep track of age_timer_ticks for pps / bw calculations
     g_age_timer_ticks++;
-
-    // Dump cpu lif's qstate
-
-    g_lif_manager->read_qstate_map(33, &qstate);
 
     // Re-pick inband bond0's active link
     if (g_hal_state->inband_bond_mode() == hal::BOND_MODE_ACTIVE_BACKUP) {

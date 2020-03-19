@@ -771,7 +771,6 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
                         src_addr = RULE_MATCH_GET_ADDR(sa_entry);
                         /* IP-DA loop */
                         dllist_for_each(da_entry, &match->dst_addr_list) {
-                            HAL_TRACE_DEBUG("Rule match rule add proto: {}", match->proto);
                             dst_addr = RULE_MATCH_GET_ADDR(da_entry);
                             if ((match->proto == types::IPPROTO_TCP) || (match->proto == types::IPPROTO_UDP)) {
                                 /* L4 Src-Port loop */
