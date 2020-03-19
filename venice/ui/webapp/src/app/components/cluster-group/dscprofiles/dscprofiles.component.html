@@ -12,6 +12,7 @@
                      [expandTemplate]="expandTemplate" [createTemplate]="createTemplate"
                      [enableCheckbox]="true"
                      [tableLoading]="tableLoading"
+                     (rowClick)="selectDSCProfile($event)"
                      (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
   </app-tableviewedit>
 </ng-template>
@@ -29,6 +30,10 @@
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
   <div fxFlex fxLayout="column">
+    <div *ngIf="selectedDSCProfile" fxFlex="auto" fxLayout="row"
+         class="dscprofiles-detail-container">
+      <ng-container *ngTemplateOutlet="selectedDSCProfileDetail;"></ng-container>
+    </div>
     <div fxLayout="row">
       <app-tableheader fxFlex="auto" fxLayout="row" [tableMenuItems]="tableMenuItems"
                        title="DSC Profiles"
@@ -58,14 +63,26 @@
       {{rowData.meta['creation-time'] | PrettyDate }}
     </ng-container>
     <ng-container *ngSwitchCase="'spec.dscs'">
-      <div *ngFor="let w of rowData._ui['associatedDSCS'] let i=index"
+      <div *ngFor="let w of rowData._ui.associatedDSCS let i=index"
            class="dscprofile-dsc-div">
         <ng-container *roleGuard="'clusterDistributedservicecard_read'">
           <a *ngIf="i < maxDSCsPerRow" routerLink="/cluster/dscs/{{w.meta.name}}"
              [matTooltip]="'Jump to DSC page'">{{w?.spec.id}}</a>
           <a *ngIf="i === maxDSCsPerRow" routerLink="/cluster/dscs"
              [matTooltip]="buildMoreDSCsTooltip(rowData)">
-            ... {{rowData._ui['associatedDSCS'].length - maxDSCsPerRow}} more</a>
+            ... {{rowData._ui.associatedDSCS.length - maxDSCsPerRow}} more</a>
+        </ng-container>
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'status.propagation-status.pending-dscs'">
+      <div *ngFor="let w of rowData._ui.pendingDSCNames let i=index"
+           class="dscprofile-dsc-div">
+        <ng-container *roleGuard="'clusterDistributedservicecard_read'">
+          <a *ngIf="i < maxDSCsPerRow" routerLink="/cluster/dscs/{{w.mac}}"
+             [matTooltip]="'Jump to DSC page'">{{w.name}}</a>
+          <a *ngIf="i === maxDSCsPerRow" routerLink="/cluster/dscs"
+             [matTooltip]="buildMorePendingDSCsTooltip(rowData)">
+            ... {{rowData._ui.pendingDSCNames.length - maxDSCsPerRow}} more</a>
         </ng-container>
       </div>
     </ng-container>
@@ -97,4 +114,142 @@
   <app-newdscprofile [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
                      (formClose)="closeRowExpand()"
                      fxFlex="none"></app-newdscprofile>
+</ng-template>
+
+<ng-template #selectedDSCProfileDetail>
+  <div fxFlex>
+    <div fxFlex fxLayout="column">
+      <div class="dscprofiles-detail-header" fxFlex fxLayout="row">
+        <a fxFlex fxLayoutAlign="start center">DSC Profile Details:</a>
+        <mat-icon class="dscprofiles-detail-close" (click)="closeDetails()">close
+        </mat-icon>
+      </div>
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center"
+               class="dscprofiles-detail-key">Name:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="dscprofiles-detail-value">{{this.selectedDSCProfile.meta.name}}</a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center"
+               class="dscprofiles-detail-key">Associated DSC Count:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="dscprofiles-detail-value">{{this.selectedDSCProfile._ui.associatedDSCS.length}}</a>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center"
+               class="dscprofiles-detail-key">Modification Time:</a>
+            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-value">
+              {{ $any(this.selectedDSCProfile.meta['mod-time']) | PrettyDate }}
+            </a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center"
+               class="dscprofiles-detail-key">Creation Time:</a>
+            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-value">
+              {{ $any(this.selectedDSCProfile.meta['mod-time']) | PrettyDate }}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-key">FWD Mode:</a>
+            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-value">
+              {{this.selectedDSCProfile.spec['fwd-mode']}}
+            </a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center"
+               class="dscprofiles-detail-key">Policy Mode:</a>
+            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-value">
+              {{this.selectedDSCProfile.spec['policy-mode']}}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!--  <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center"
+               class="dscprofiles-detail-key">Updated DSC Count:</a>
+            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-value">
+              {{this.selectedDSCProfile.status['propagation-status'].updated}}
+            </a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-key">Pending DSC Count:</a>
+            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-value">
+              {{this.selectedDSCProfile.status['propagation-status'].pending}}
+            </a>
+          </div>
+        </div>
+      </div> -->
+
+      <div class="dscprofiles-detail-header" fxFlex fxLayout="row">
+        <br /> <a fxFlex fxLayoutAlign="start center">Status:</a>
+      </div>
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center"
+               class="dscprofiles-detail-key">Propagation:</a>
+            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-value">
+              <div
+                   class="dscprofiles-summary-panel-content-value dscprofiles-summary-panel-content-value-warning"
+                   *ngIf="selectedDSCProfile?.status['propagation-status']['generation-id'] != selectedDSCProfile?.meta['generation-id']">
+                DSC profile not propagated</div>
+              <div
+                   class="dscprofiles-summary-panel-content-value  dscprofiles-summary-panel-content-value-warning dscprofiles-summary-panel-content-value-link"
+                   *ngIf="selectedDSCProfile?.status['propagation-status']['generation-id'] == selectedDSCProfile?.meta['generation-id'] && selectedDSCProfile?.status['propagation-status'].pending>0"
+                   (click)="viewPendingNaplesList()"
+                   [matTooltip]="viewPendingNaples ? 'Click to hide Pending Distributed Services Card List' : 'Click to view Pending Distributed Services Cards List'">
+                {{selectedDSCProfile.status['propagation-status'].pending}} Out Of
+                {{selectedDSCProfile.status['propagation-status'].pending + selectedDSCProfile.status['propagation-status'].updated }}
+                Pending
+              </div>
+              <div class="dscprofiles-summary-panel-content-value"
+                   *ngIf="selectedDSCProfile?.status['propagation-status']['generation-id'] == selectedDSCProfile?.meta['generation-id'] && selectedDSCProfile?.status['propagation-status'].pending==0">
+                Complete
+              </div>
+
+            </a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <div [@slideInOut] class="dscprofiles-summary-panel-content-pendingNaples"
+                 *ngIf="selectedDSCProfile?.status['propagation-status']['pending-dscs'].length>0 && viewPendingNaples">
+              <div class="dscprofiles-summary-panel-content-pendingNaples-grid">
+                <div
+                     *ngFor="let nicMac of selectedDSCProfile?.status['propagation-status']['pending-dscs']">
+                  <a routerLink="/cluster/dscs/{{nicMac}}"
+                     class="dscprofiles-summary-panel-content-nic-div-link">{{getNaplesName(nicMac)}}</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </ng-template>

@@ -114,7 +114,7 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
     this._route.queryParams.subscribe(params => {
       if (params.hasOwnProperty('interface')) {
         // alerttab selected
-        this.getSearchedSecurityApp(params['interface']);
+        this.getSearchedNetworkInterface(params['interface']);
       }
     });
     this.watchNetworkInterfaces();
@@ -129,7 +129,7 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
     });
   }
 
-  getSearchedSecurityApp(interfacename) {
+  getSearchedNetworkInterface(interfacename) {
     const subscription = this.networkService.GetNetworkInterface(interfacename).subscribe(
       response => {
         const networkinterface = response.body as NetworkNetworkInterface;

@@ -1270,6 +1270,8 @@ export class Utility {
         return cat + '/dscs' + (name ? '/' + name : '');
       case 'Host':
         return cat + '/hosts';
+      case 'DSCProfile':
+          return cat + '/dscprofiles?dscprofile=' + name;
       case 'Workload':
       case 'Endpoint':
         return 'workload';  // VS-363, when search is:Workload or is:Endpoint, we should /workload page
