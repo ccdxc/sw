@@ -432,7 +432,7 @@ func newBGPPeerStatus(in *pds.BGPPeerStatus) ShadowBGPPeerStatus {
 		LastErrorRcvd: BgpErrStr(in.LastErrorRcvd),
 		LastErrorSent: BgpErrStr(in.LastErrorSent),
 		Status:        strings.TrimPrefix(in.Status.String(), "BGP_PEER_STATE_"),
-		PrevStatus:    in.PrevStatus.String(),
+		PrevStatus:    strings.TrimPrefix(in.PrevStatus.String(), "BGP_PEER_STATE_"),
 		LocalAddr:     PdsIPToString(in.LocalAddr),
 		BGPPeerStatus: in,
 	}

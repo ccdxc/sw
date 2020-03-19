@@ -527,7 +527,7 @@ var _ = Describe("Cloud E2E", func() {
 					}
 				}
 				return nil
-			}, 60, 10).Should(BeNil(), "BGP Peer sessions did not match on naples")
+			}, 180, 10).Should(BeNil(), "BGP Peer sessions did not match on naples")
 		})
 	})
 

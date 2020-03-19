@@ -31,6 +31,11 @@ builds:
     owners: ["email:jainvipin@pensando.io"]
     artifacts:
       - /sw/iota.tgz
+  build-apulu-x86-sim:
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && IGNORE_BUILD_PIPELINE=1 FLAVOR=-venice make PIPELINE=apulu jobd/e2e/naples-sim-image &&  cp /sw/nic/obj/images/naples-release-v1.tgz /sw/ && ls -al /sw/; ls -al /sw/nic/obj/images"]
+    owners: ["email:jainvipin@pensando.io"]
+    artifacts:
+    - /sw/naples-release-v1.tgz
   build-apollo-x86:
     commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=apollo package && find ./build -name '*.o'  | xargs rm && tar -zvcf /sw/build_apollo_x86.tar.gz /usr/src/github.com/pensando/sw/nic/build /usr/src/github.com/pensando/sw/nic/third-party/metaswitch/output/x86_64/lib*"]
     owners: ["email:jainvipin@pensando.io"]
@@ -237,6 +242,8 @@ jobs:
     labels: ["precommit", "2xhourly"]
   test/ci_targets/e2erollout:
     labels: ["precommit", "2xhourly"]
+  test/ci_targets/cloud-e2e:
+    labels: ["precommit", "2xhourly"]
   test/verify-build:
     labels: ["precommit"]
   venice:
@@ -247,6 +254,7 @@ jobs:
 dependencies:
   api:
     - reference: test/ci_targets/e2e
+    - reference: test/ci_targets/cloud-e2e
     - reference: venice/ui
     - reference: iota/test/venice
   dol/apollo:
@@ -262,6 +270,7 @@ dependencies:
   events:
     - reference: api
     - reference: test/ci_targets/e2e
+    - reference: test/ci_targets/cloud-e2e
     - reference: iota/test/venice
     - reference: venice/ui
   iota/harness:
@@ -319,6 +328,7 @@ dependencies:
   metrics:
     - reference: api
     - reference: test/ci_targets/e2e
+    - reference: test/ci_targets/cloud-e2e
     - reference: iota/test/venice
     - reference: venice/ui
   minio:
@@ -329,6 +339,7 @@ dependencies:
     - reference: nic/apollo/tools/athena/sanity/base
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: test/ci_targets/cloud-e2e
   nic/apollo/tools/dev-docker:
     - reference: nic/apollo/tools/apulu/sanity/customer-docker
     - reference: nic/apollo/tools/athena/sanity/customer-docker
@@ -338,6 +349,7 @@ dependencies:
     - reference: iota/test/standalone/precheckin/linux
     - reference: api
     - reference: test/ci_targets/e2e
+    - reference: test/ci_targets/cloud-e2e
   nic/asm:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
@@ -384,6 +396,7 @@ dependencies:
     - reference: nic/apollo/tools/apulu/sanity/base
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: test/ci_targets/cloud-e2e
   nic/p4-hlir:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
@@ -522,6 +535,7 @@ dependencies:
     - reference: api
     - reference: test/ci_targets/e2e
     - reference: test/ci_targets/e2erollout
+    - reference: test/ci_targets/cloud-e2e
     - reference: iota/test/venice
       exclude_dirs: ["ui"]
   venice/orch:
@@ -530,12 +544,14 @@ dependencies:
     - reference: api
     - reference: test/ci_targets/e2e
     - reference: test/ci_targets/e2erollout
+    - reference: test/ci_targets/cloud-e2e
     - reference: platform
   vendor:
     - reference: api
     - reference: venice
     - reference: test/ci_targets/e2e
     - reference: test/ci_targets/e2erollout
+    - reference: test/ci_targets/cloud-e2e
   penctl:
     - reference: iota/test/standalone/precheckin/esx
     - reference: iota/test/standalone/precheckin/linux
