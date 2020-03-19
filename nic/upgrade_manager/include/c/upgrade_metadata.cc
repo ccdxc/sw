@@ -49,6 +49,43 @@ inline bool exists(const std::string& name) {
   return (stat (name.c_str(), &buffer) == 0); 
 }
 
+static
+bool read_meta_for_image(ImageInfo& meta, ptree& root, string img)
+{
+    try {
+        UPG_LOG_DEBUG("image {}", img);
+        for (ptree::value_type sysimg : root.get_child(img)) {
+            if (!strcmp(sysimg.first.c_str(), "nicmgr_compat_version")) {
+                meta.nicmgrVersion = sysimg.second.get_value<string>();
+                UPG_LOG_DEBUG("running nicmgr version: {}", meta.nicmgrVersion);
+            } else if (!strcmp(sysimg.first.c_str(), "kernel_compat_version")) {
+                meta.kernelVersion = sysimg.second.get_value<string>();
+                UPG_LOG_DEBUG("running kernel version: {}", meta.kernelVersion);
+            } else if (!strcmp(sysimg.first.c_str(), "pcie_compat_version")) {
+                meta.pcieVersion = sysimg.second.get_value<string>();
+                UPG_LOG_DEBUG("running pcie version: {}", meta.pcieVersion);
+            } else if (!strcmp(sysimg.first.c_str(), "dev_conf_compat_version")) {
+                meta.devConfVersion = sysimg.second.get_value<string>();
+                UPG_LOG_DEBUG("running devconf version: {}", meta.devConfVersion);
+            } else if (!strcmp(sysimg.first.c_str(), "build_date")) {
+                meta.buildDate = sysimg.second.get_value<string>();
+                UPG_LOG_DEBUG("running build date: {}", meta.buildDate);
+            } else if (!strcmp(sysimg.first.c_str(), "base_version")) {
+                meta.baseVersion = sysimg.second.get_value<string>();
+                UPG_LOG_DEBUG("running base version: {}", meta.baseVersion);
+            } else if (!strcmp(sysimg.first.c_str(), "software_version")) {
+                meta.softwareVersion = sysimg.second.get_value<string>();
+                UPG_LOG_DEBUG("running software version: {}", meta.softwareVersion);
+            }
+        }
+    } catch (exception const& e) {
+        UPG_LOG_DEBUG("PreMeta Unable to parse {} {}", img, e.what());
+        return false;
+    }
+
+    return true;
+}
+
 bool GetUpgCtxTablesFromMeta(string metafile,
                              ImageInfo& meta,
                              bool isVerFromCache) {
@@ -59,37 +96,17 @@ bool GetUpgCtxTablesFromMeta(string metafile,
     if (isVerFromCache) {
         try {
             string img = "mainfwa.system_image";
+            string not_img = "mainfwb.system_image";
             read_json(json_cfg, root);
             if (exists("/nic/tools/fwupdate")) {
                 UPG_LOG_DEBUG("this is the image {}", exec("/nic/tools/fwupdate -r"));
                 if (exec("/nic/tools/fwupdate -r") == "mainfwb\n") {
                    img = "mainfwb.system_image";
+                   not_img = "mainfwa.system_image";
                 }
             }
-            UPG_LOG_DEBUG("image {}", img);
-            for (ptree::value_type sysimg : root.get_child(img)) {
-                if (!strcmp(sysimg.first.c_str(), "nicmgr_compat_version")) {
-                    meta.nicmgrVersion = sysimg.second.get_value<string>();
-                    UPG_LOG_DEBUG("running nicmgr version: {}", meta.nicmgrVersion);
-                } else if (!strcmp(sysimg.first.c_str(), "kernel_compat_version")) {
-                    meta.kernelVersion = sysimg.second.get_value<string>();
-                    UPG_LOG_DEBUG("running kernel version: {}", meta.kernelVersion);
-                } else if (!strcmp(sysimg.first.c_str(), "pcie_compat_version")) {
-                    meta.pcieVersion = sysimg.second.get_value<string>();
-                    UPG_LOG_DEBUG("running pcie version: {}", meta.pcieVersion);
-                } else if (!strcmp(sysimg.first.c_str(), "dev_conf_compat_version")) {
-                    meta.devConfVersion = sysimg.second.get_value<string>();
-                    UPG_LOG_DEBUG("running devconf version: {}", meta.devConfVersion);
-                } else if (!strcmp(sysimg.first.c_str(), "build_date")) {
-                    meta.buildDate = sysimg.second.get_value<string>();
-                    UPG_LOG_DEBUG("running build date: {}", meta.buildDate);
-                } else if (!strcmp(sysimg.first.c_str(), "base_version")) {
-                    meta.baseVersion = sysimg.second.get_value<string>();
-                    UPG_LOG_DEBUG("running base version: {}", meta.baseVersion);
-                } else if (!strcmp(sysimg.first.c_str(), "software_version")) {
-                    meta.softwareVersion = sysimg.second.get_value<string>();
-                    UPG_LOG_DEBUG("running software version: {}", meta.softwareVersion);
-                }
+            if (!read_meta_for_image(meta, root, img)) {
+                read_meta_for_image(meta, root, not_img);
             }
         } catch (exception const& e) {
             UPG_LOG_DEBUG("PreMeta Unable to parse {} {}", metafile, e.what());
