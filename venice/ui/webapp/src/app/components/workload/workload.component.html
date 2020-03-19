@@ -119,7 +119,8 @@
 </ng-template>
 
 <ng-template #actionTemplate let-rowData>
-  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px"
+       *ngIf="!isWorkloadSystemGenerated(rowData)">
     <mat-icon *roleGuard="'workloadworkload_update'" matTooltip="Edit workload"
               class="global-table-action-icon workload-table-action-icon-edit"
               (click)="expandRowRequest($event, rowData)">
@@ -152,8 +153,11 @@
                      (cancelEmitter)="handleEditCancel($event)"
                      [objects]="getSelectedDataObjects()" [nameKey]="'meta.name'">
     </app-labeleditor>
-    <mat-icon class="global-multi-records-delete-icon" *ngIf="hasSelectedRows()"
-              [matTooltip]="'Delete selected workloads'" (click)="onDeleteSelectedRows($event)">
+    <mat-icon [ngClass]="{
+              'global-multi-records-delete-icon': true,
+              'multi-delete-icon-disabled': disableMultiDelIcons() }"
+              *ngIf="hasSelectedRows()" (click)="onDeleteSelectedWorkloads($event)"
+              [matTooltip]="disableMultiDelIcons() ? 'At least one workload can not be deleted' : 'Delete selected workloads'">
       delete</mat-icon>
   </div>
 

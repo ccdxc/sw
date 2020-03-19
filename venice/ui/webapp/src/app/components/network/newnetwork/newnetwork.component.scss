@@ -17,9 +17,59 @@ $dary-grey: #a9a9a9;
       width: 300px;
     }
 
-    .new-network-input {
+    .new-network-autocomplete,
+    .new-network-input,
+    .new-network-select {
       width: 100%;
       height: 30px;
+    }
+
+    .new-network-select {
+      input {
+        height: 28px;
+      }
+    }
+
+    .new-network-autocomplete {
+      span {
+        width: 100% !important;
+
+        input {
+          border-radius: 0px;
+          width: 239px;
+          height: 30px;
+          border-right: 0px !important;
+        }
+
+        input.ui-inputtext:hover+button,
+        input.ui-inputtext:focus+button {
+          background: #fff;
+          border: solid 1px #6ba0e5;
+        }
+
+        button {
+          width: 26px;
+          height: 30px;
+          position: relative;
+          top: -1px;
+          border-radius: 0px;
+          background: #f7f7f7;
+          border: 1px solid #d6d6d6;
+          border-left: 0px !important;
+
+          .ui-button-icon-left {
+            margin-left: -1em;
+            color: #555;
+            font-size: 16px;
+          }
+        }
+
+        button:enabled:hover,
+        button:enabled:focus {
+          background: #f7f7f7;
+          border: 1px solid #d6d6d6;
+        }
+      }
     }
 
     fieldset {
@@ -41,8 +91,12 @@ $dary-grey: #a9a9a9;
       width: 265px;
     }
 
-    .new-network-orchestrator-selectbox.requiredField :first-child {
+    .new-network-orchestrator-selectbox.requiredField p-autocomplete:first-of-type {
       width: calc(100% - 2px) !important;
+
+      input {
+        width: 229px !important;
+      }
     }
 
     .new-network-add-orchestrator {
@@ -79,4 +133,10 @@ $dary-grey: #a9a9a9;
       }
     }
   }
+}
+
+.new-network-save-tooltip {
+  position: relative;
+  top: 30px;
+  font-size: 10px;
 }

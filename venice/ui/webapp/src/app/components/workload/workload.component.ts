@@ -662,6 +662,39 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     return outputs;
   }
 
+  isWorkloadSystemGenerated(rowData: WorkloadWorkload): boolean {
+    if (rowData && rowData.meta.labels) {
+      if (rowData.meta.labels['io.pensando.namespace']) {
+        return true;
+      }
+      if (rowData.meta.labels['io.pensando.orch-name']) {
+        return true;
+      }
+      if (rowData.meta.labels['io.pensando.vcenter.display-name']) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  disableMultiDelIcons() {
+    if (this.getSelectedDataObjects() && this.getSelectedDataObjects().length > 0) {
+      const generatedWorkload: WorkloadWorkload = this.getSelectedDataObjects().find(
+        item => this.isWorkloadSystemGenerated(item)
+      );
+      if (generatedWorkload) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  onDeleteSelectedWorkloads(event) {
+    if (!this.disableMultiDelIcons()) {
+      this.onDeleteSelectedRows(event);
+    }
+  }
+
   ngOnDestroyHook() {
     // we save workloads to host only we have full set of workloads.
     if (this.dataObjects && this.dataObjects.length >= this.searchWorkloadCount) {

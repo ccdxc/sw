@@ -39,6 +39,21 @@ $dary-grey: #a9a9a9;
   }
 }
 
+.newVcenter-save-tooltip {
+  position: relative;
+  top: 0px;
+  font-size: 10px;
+}
+
+// when screen is big enough
+@media only screen and (min-width: 950px) {
+  .newVcenter-save-tooltip {
+    position: relative;
+    top: 30px;
+  }
+}
+
+
 .newVcenter-buttoncontainer,
 .newVcenter-container {
   background: white;
@@ -64,6 +79,22 @@ $dary-grey: #a9a9a9;
   @include primary-font();
   width: 400px;
   margin-bottom: 10px;
+
+  .newVcenter-radio-format {
+    margin-left: 5px;
+    margin-top: 9px;
+    @include global-mat-radio(12px);
+  }
+
+  .newVcenter-dcnames-boxes {
+    ul {
+      width: 400px;
+      white-space: nowrap;
+      overflow: hidden !important;
+      font-size: 16px !important;
+      height: 30px !important;
+    }
+  }
 
   fieldset {
     width: 100%;

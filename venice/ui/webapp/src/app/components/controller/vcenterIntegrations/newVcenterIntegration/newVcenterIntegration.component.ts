@@ -11,6 +11,7 @@ import { IApiStatus, OrchestrationOrchestrator, IOrchestrationOrchestrator,
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Observable } from 'rxjs';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { SelectItem } from 'primeng/api';
 
 @Component({
   selector: 'app-newvcenter-integration',
@@ -25,10 +26,18 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
   @Input() isInline: boolean = false;
   @Input() existingObjects: IOrchestrationOrchestrator[] = [];
 
+  DCNAMES_TOOLTIP: string = 'Type in datacenter name and hit enter or space key to add more.';
   createButtonTooltip: string = 'Ready to submit.';
 
   credentialTypes = Utility.convertEnumToSelectItem(MonitoringExternalCred_auth_type);
   currentObjCredType: string = 'none';
+
+
+  chooseOptions: SelectItem[] = [
+    {label: 'Manage All Datacenters', value: 'ALL'},
+    {label: 'Manage Individual Datacenters', value: 'each'}
+  ];
+  pickedOption: String = 'ALL';
 
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
@@ -64,6 +73,14 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
   }
 
   processVcenterIntegration() {
+    const dataCenters = this.newObject.$formGroup.get(['spec', 'manage-namespaces']).value;
+    if (dataCenters) {
+      if (dataCenters.length === 1 && dataCenters[0] === 'ALL') {
+        this.newObject.$formGroup.get(['spec', 'manage-namespaces']).setValue(null);
+      } else {
+        this.pickedOption = 'each';
+      }
+    }
     this.currentObjCredType =
       this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value;
     // clear crdentials
@@ -94,6 +111,10 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
   isFormValid(): boolean {
     if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'uri']))) {
       this.createButtonTooltip = 'Error: URI is empty.';
+      return false;
+    }
+    if (this.pickedOption !== 'ALL' && this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'manage-namespaces']))) {
+      this.createButtonTooltip = 'Error: Datacenter names are empty.';
       return false;
     }
     if (!this.isInline) {
@@ -296,6 +317,9 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
         'force-dc-names': Utility.getGUID()
       };
     }
+    if (this.pickedOption === 'ALL') {
+      currValue.spec['manage-namespaces'] = ['ALL'];
+    }
     Utility.removeObjectProperties(currValue, 'status');
     const formGrp: any = currValue.spec.credentials;
     Utility.removeObjectProperties(formGrp, 'confirmPassword');
@@ -342,7 +366,8 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
     if (this.currentObjCredType !== MonitoringExternalCred_auth_type['username-password']) {
       return true;
     }
-    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username']));
+    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password'])) ||
+        !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']));
   }
 
   isPasswordRequired() {
@@ -356,14 +381,23 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
     if (this.currentObjCredType !== MonitoringExternalCred_auth_type['username-password']) {
       return true;
     }
-    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']));
+    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username'])) ||
+        !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']));
   }
 
   isConfirmPwdRequired() {
-    return this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
-        === MonitoringExternalCred_auth_type['username-password'] &&
-      !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password'])) &&
-      this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']));
+    if (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']))) {
+      return false;
+    }
+    if (!this.isInline) {
+      return this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value
+        === MonitoringExternalCred_auth_type['username-password'];
+    }
+    if (this.currentObjCredType !== MonitoringExternalCred_auth_type['username-password']) {
+      return true;
+    }
+    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username'])) ||
+          !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']));
   }
 
   isTokenRequired() {
@@ -420,5 +454,10 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
     }
     return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'cert-data'])) ||
         !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'key-data']));
+  }
+
+  isValidDCName(name: string): boolean {
+    // put a place holder here for the futre validation
+    return true;
   }
 }

@@ -38,19 +38,24 @@
               'requiredField': isFieldEmpty(orchestrator.get(['orchestrator-name'])),
               'selectboxWithValue': !isFieldEmpty(orchestrator.get(['orchestrator-name']))
             }">
-              <p-dropdown appFloatLabel="vCenter Name" appendTo="body" class="new-network-input"
+              <p-dropdown appFloatLabel="vCenter Name" appendTo="body" class="new-network-select"
+                          (onChange)="onVcenterChange($event, orchestrator)"
                           [options]="vcenterOptions" formControlName="orchestrator-name">
               </p-dropdown>
             </span>
             <div fxFlex="15px"></div>
             <span fxFlex="none" fxLayout="row" [ngClass]="{
-              'new-network-orchestrator-inputbox': true,
-              'requiredField': isFieldEmpty(orchestrator.get(['namespace']))
+              'new-network-orchestrator-selectbox': true,
+              'requiredField': isFieldEmpty(orchestrator.get(['namespace'])),
+              'selectboxWithValue': !isFieldEmpty(orchestrator.get(['namespace']))
             }">
-              <input fxFlex="nogrow" appFloatLabel="Datacenter Name" appErrorTooltip
-                     class="new-network-input"
-                     [appErrorTooltip]="'Datacenter in the orchestrator in which this network should be created in.'"
-                     formControlName="namespace" spellcheck="false" type="text" pInputText>
+              <p-autoComplete formControlName="namespace" [suggestions]="datacenterNames"
+                              [dropdown]="true"
+                              (completeMethod)="filterDatacenterNames($event, orchestrator.get(['orchestrator-name']).value)"
+                              [size]="30"
+                              [appErrorTooltip]="'Datacenter in the orchestrator in which this network should be created in. Type \'ALL\' for all datacenters.'"
+                              appFloatLabel="Datacenter Name" class="new-network-autocomplete">
+              </p-autoComplete>
             </span>
             <mat-icon fxFlex="nogrow"
                       class="global-trash-button new-network-orchestrator-delete-icon"
@@ -69,8 +74,9 @@
 <ng-template #inlineButtons>
   <div *ngIf="isInline" fxLayout="row" fxLayoutAlign="end center"
        class="new-network-button-container">
-    <div fxFlex="nogrow" class="button-container">
-      <span (click)="saveObject()" [title]="getTooltip()"
+    <div fxFlex="nogrow" class="button-container" [matTooltip]="getTooltip()"
+         matTooltipClass="new-network-save-tooltip">
+      <span (click)="saveObject()"
             class="global-button-primary global-button-padding new-network-save"
             [ngClass]="computeInlineButtonClass()">SAVE</span>
     </div>

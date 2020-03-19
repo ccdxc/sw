@@ -1,12 +1,12 @@
-import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Animations } from '@app/animations';
-import { NetworkNetwork, INetworkNetwork, NetworkOrchestratorInfo } from '@sdk/v1/models/generated/network';
+import { NetworkNetwork, INetworkNetwork, NetworkOrchestratorInfo, INetworkOrchestratorInfo } from '@sdk/v1/models/generated/network';
 import { NetworkService } from '@app/services/generated/network.service';
 import { OrchestrationService } from '@app/services/generated/orchestration.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { FormArray, ValidatorFn, AbstractControl, Validators, ValidationErrors, FormGroup } from '@angular/forms';
+import { FormArray, ValidatorFn, AbstractControl, FormGroup } from '@angular/forms';
 import { Utility } from '@app/common/Utility';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { OrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
@@ -29,6 +29,7 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
   vcenterEventUtility: HttpEventUtility<OrchestrationOrchestrator>;
   vcenters: ReadonlyArray<OrchestrationOrchestrator> = [];
   vcenterOptions: SelectItem[] = [];
+  datacenterNames: string[] = [];
 
   createButtonTooltip: string = 'Ready to submit';
 
@@ -36,6 +37,7 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
     protected uiconfigsService: UIConfigsService,
     protected orchestrationService: OrchestrationService,
     protected networkService: NetworkService,
+    private cdr: ChangeDetectorRef
   ) {
     super(_controllerService, uiconfigsService, NetworkNetwork);
   }
@@ -57,6 +59,7 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
           };
         });
         this.vcenterOptions.push({label: '', value: null});
+        this.cdr.detectChanges();
       },
       this.controllerService.webSocketErrorHandler('Failed to get vCenter Integrations')
     );
@@ -67,9 +70,13 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
   postNgInit() {
     this.getVcenterIntegrations();
 
-    this.newObject.$formGroup.get(['meta', 'name']).setValidators([
-      this.newObject.$formGroup.get(['meta', 'name']).validator,
-      this.isNewPolicyNameValid(this.existingObjects)]);
+    if (!this.isInline) {
+      this.newObject.$formGroup.get(['meta', 'name']).setValidators([
+        this.newObject.$formGroup.get(['meta', 'name']).validator,
+        this.isNewPolicyNameValid(this.existingObjects)]);
+    } else {
+      this.newObject.$formGroup.get(['meta', 'name']).setValidators(null);
+    }
 
     this.newObject.$formGroup.get(['spec', 'vlan-id']).setValidators(
       [minValueValidator(0), maxValueValidator(65536)]);
@@ -97,6 +104,34 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
     if (orchestrators.length > 1) {
       orchestrators.removeAt(index);
     }
+  }
+
+  filterDatacenterNames(event, vcenterName: string) {
+    this.datacenterNames = [];
+    const options: string[] = this.generateDCNamesOptions(vcenterName);
+
+    for (let i = 0; i < options.length; i++) {
+      const brand = options[i];
+      if (!event.query || brand.toLowerCase().indexOf(event.query.toLowerCase()) > -1) {
+          this.datacenterNames.push(brand);
+      }
+    }
+  }
+
+  generateDCNamesOptions(vCenter: string): string[] {
+    if (vCenter && this.vcenters && this.vcenters.length > 0) {
+      const vcenterObj: OrchestrationOrchestrator = this.vcenters.find(
+        item => item.meta.name === vCenter
+      );
+      if (vcenterObj && vcenterObj.spec && vcenterObj.spec['manage-namespaces'] &&
+          vcenterObj.spec['manage-namespaces'].length > 0) {
+        if (vcenterObj.spec['manage-namespaces'].length > 1 ||
+            vcenterObj.spec['manage-namespaces'][0] !== 'ALL') {
+          return vcenterObj.spec['manage-namespaces'].map(item => item);
+        }
+      }
+    }
+    return [];
   }
 
   // Empty Hook
@@ -133,7 +168,7 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
     if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
       return 'Error: Name field is empty.';
     }
-    if (!this.newObject.$formGroup.get(['meta', 'name']).valid)  {
+    if (this.newObject.$formGroup.get(['meta', 'name']).invalid)  {
       return 'Error: Name field is invalid.';
     }
     return this.createButtonTooltip;
@@ -159,6 +194,11 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
 
       this._controllerService.setToolbarData(currToolbar);
     }
+  }
+
+  onVcenterChange(event, orchestrator: FormGroup) {
+    orchestrator.get(['namespace']).setValue(null);
+    this.cdr.detectChanges();
   }
 
   createObject(object: INetworkNetwork) {

@@ -370,7 +370,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
           }
         },
         (err) => {
-          this.controllerService.invokeErrorToaster('Error', 'Failed to load Top 10 DSC matics.');
+          this.controllerService.invokeErrorToaster('Error', 'Failed to load Top 10 DSC metrics.');
         }
       );
   }

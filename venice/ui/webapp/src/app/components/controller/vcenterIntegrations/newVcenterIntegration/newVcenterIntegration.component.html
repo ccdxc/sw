@@ -24,6 +24,25 @@
                spellcheck="false" type="text"
                pInputText appFloatLabel="URI">
       </span>
+      <div fxFlex="5px"></div>
+      <div fxLayout="row" fxLayoutAlign="start center">
+        <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center"
+                         fxLayoutGap="20px" class="newVcenter-radio-format"
+                         [(ngModel)]="pickedOption" [ngModelOptions]="{standalone: true}">
+          <mat-radio-button fxFlex="nogrow" color="primary" [disableRipple]="true"
+                            *ngFor="let option of chooseOptions" [value]="option.value">
+            {{option.label}}
+          </mat-radio-button>
+        </mat-radio-group>
+      </div>
+      <span *ngIf="pickedOption !== 'ALL'"
+            [ngClass]="{'app-formchips-requiredField': isFieldEmpty(newObject.$formGroup.get(['spec', 'manage-namespaces']))}">
+        <app-formchips fxFlex="none" [chipsLabel]="'Datacenter Names'"
+                       [itemValidator]="isValidDCName"
+                       [formControl]="newObject.$formGroup.get(['spec', 'manage-namespaces'])"
+                       boxStyleClass="newVcenter-dcnames-boxes" [toolTip]="DCNAMES_TOOLTIP">
+        </app-formchips>
+      </span>
       <div fxFlex="10px"></div>
       <fieldset>
         <legend>Credential</legend>
@@ -104,9 +123,9 @@
 <ng-template #editButtonContainer>
   <div fxFlex="auto" fxLayout="row" fxLayoutAlign="end center">
     <div class="newVcenter-buttoncontainer">
-      <div fxFlex="nogrow" class="button-container">
+      <div fxFlex="nogrow" class="button-container" [matTooltip]="getTooltip()"
+           matTooltipClass="newVcenter-save-tooltip">
         <button [disabled]="!isFormValid()" (click)="saveObject()"
-                [title]="getTooltip()"
                 class="global-button-primary newVcenter-save">SAVE</button>
       </div>
       <div fxFlex="nogrow" class="button-container">
