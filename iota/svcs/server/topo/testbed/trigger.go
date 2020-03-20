@@ -47,13 +47,13 @@ type triggerWrap struct {
 
 // Trigger invokes the workload's trigger. It could be ping, start client/server etc..
 func (n *TestNode) triggerValidate(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
-	logger.Info("Trigger message received.")
 
 	validate := func() error {
 		for _, cmd := range in.Commands {
 			wloadKey := cmd.GetEntityName()
 			if _, ok := n.workloadMap.Load(wloadKey); !ok {
 				msg := fmt.Sprintf("Workload %s does not exist on node %s", cmd.GetEntityName(), n.info.Name)
+				log.Errorf(msg)
 				return errors.New(msg)
 			}
 		}
@@ -71,7 +71,9 @@ func (n *TestNode) triggerValidate(in *iota.TriggerMsg) (*iota.TriggerMsg, error
 func (n *TestNode) TriggerWithContextLocally(ctx context.Context, in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 
 	if _, err := n.triggerValidate(in); err != nil {
-		return &iota.TriggerMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: err.Error()}}, nil
+		return &iota.TriggerMsg{
+			Commands:    in.Commands,
+			ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: err.Error()}}, nil
 	}
 
 	runTrigger := func(client iota.IotaAgentApiClient, tw *triggerWrap) (*triggerWrap, error) {
@@ -160,10 +162,14 @@ func (n *VcenterNode) runSerialTrigger(ctx context.Context, req *iota.TriggerMsg
 		node, _ := n.managedNodes[cmd.NodeName]
 		triggerInfo := &iota.TriggerMsg{Commands: []*iota.Command{cmd},
 			TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
-		if triggerResp, err := node.TriggerWithContext(ctx, triggerInfo); err != nil {
+		if triggerResp, err := node.TriggerWithContext(ctx, triggerInfo); err != nil ||
+			triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-			req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | Trigger | RunSerialTrigger Call Failed. %v", err)
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | Trigger | RunSerialTrigger Call Failed. %v %v", err, triggerResp.ApiResponse.ErrorMsg)
+			req.Commands[cidx] = triggerResp.GetCommands()[0]
+			req.Commands[cidx].Stderr = triggerResp.ApiResponse.ErrorMsg
+			req.Commands[cidx].ExitCode = 127
 			return req, nil
 		} else {
 			req.Commands[cidx] = triggerResp.GetCommands()[0]
@@ -241,16 +247,25 @@ func (n *VcenterNode) runParallelTrigger(ctx context.Context, req *iota.TriggerM
 
 	}
 
+	triggerResp.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
 	for _, node := range triggerNodes {
 		item, _ := triggerRespMap.Load(node.GetNodeInfo().Name)
 		triggerMsg := item.(*iota.TriggerMsg)
+		failed := false
+		if triggerMsg.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+			triggerResp.ApiResponse = triggerMsg.ApiResponse
+			failed = true
+		}
 		for index, cmd := range triggerMsg.Commands {
 			realIndex := triggerCmdIndexMap[node.GetNodeInfo().Name][index]
 			triggerResp.Commands[realIndex] = cmd
+			if failed {
+				//Make sure we indicate to called all commands failed
+				triggerResp.Commands[realIndex].ExitCode = 127
+				triggerResp.Commands[realIndex].Stderr = triggerMsg.ApiResponse.ErrorMsg
+			}
 		}
 	}
-
-	triggerResp.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
 
 	return triggerResp, nil
 }

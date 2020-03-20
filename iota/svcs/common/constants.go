@@ -111,7 +111,7 @@ const (
 	ControlVMImageDirectory = "/tmp"
 
 	// DataVmImageDirectory
-	DataVMImageDirectory = "/pensando/iota"
+	DataVMImageDirectory = "/tmp"
 
 	CtrlVMNaplesInterfaceIP = "169.254.0.2/24"
 
@@ -217,8 +217,8 @@ var (
 	// BuildItBinary
 	BuildItBinary = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/images/buildit", os.Getenv("GOPATH"))
 
-        // Runner/LocalFS location to store iota-agent DB
-        LocalAgentDBFolder = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/agentdb/", os.Getenv("GOPATH"))
+	// Runner/LocalFS location to store iota-agent DB
+	LocalAgentDBFolder = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/agentdb/", os.Getenv("GOPATH"))
 
 	// CleanupCommands lists the clean up commands required to clean up an IOTA node.
 	CleanupCommands = []string{
