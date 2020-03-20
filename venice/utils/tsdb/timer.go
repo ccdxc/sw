@@ -71,6 +71,7 @@ func periodicTransmit() {
 				atomic.CompareAndSwapUint64(&maxFwlogPoints, uint64(defaultNumFwlogPoints), uint64(defaultNumPoints))
 				log.Infof("lost connection, set fwlog limit to %v", atomic.LoadUint64(&maxFwlogPoints))
 			}
+			log.Infof("+++ send to %v", global.opts.Collector)
 		case <-global.context.Done():
 			// flush any metrics that are not yet pushed out
 			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second))

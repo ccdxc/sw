@@ -15,7 +15,7 @@
 namespace api {
 
 sdk::metrics::schema_t port_schema = {
-    .name = "Port",
+    .name = "MacMetrics",
     .type = sdk::metrics::HBM,
     .counters = {
         "Frames Rx ok",
@@ -113,7 +113,7 @@ sdk::metrics::schema_t port_schema = {
 
 
 sdk::metrics::schema_t mgmt_port_schema = {
-    .name = "MgmtPort",
+    .name = "MgmtMacMetrics",
     .type = sdk::metrics::HBM,
     .counters = {
         "Frames Rx ok",
@@ -153,7 +153,7 @@ sdk::metrics::schema_t mgmt_port_schema = {
 };
 
 sdk::metrics::schema_t hostif_schema = {
-    .name = "HostIf",
+    .name = "LifMetrics",
     .type = sdk::metrics::HBM,
     .counters = {
         "Octets Rx unicast",

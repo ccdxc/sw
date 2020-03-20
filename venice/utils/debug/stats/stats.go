@@ -126,7 +126,7 @@ func (sf *StatFactory) Build() *Stats {
 		s.tsdbKeys = map[string]string{"Kind": sf.kind, "Name": sf.name}
 		s.tableObj, err = tsdb.NewObj("objStats", s.tsdbKeys, nil, &tsdb.ObjOpts{})
 		if err != nil {
-			log.Fatalf("tsdb.NewTableObj with %+v gave error %#v", s.tsdbKeys, err)
+			log.Errorf("tsdb.NewTableObj with %+v gave error %#v", s.tsdbKeys, err)
 		}
 		if sf.tsdbPushDuration != 0 {
 			go s.startTsdbTimer(sf.tsdbPushDuration)
@@ -187,7 +187,7 @@ func (st *Stats) sendPoints() {
 			fields[kv.Key] = v.Value()
 		}
 	})
-	if len(fields) > 0 {
+	if len(fields) > 0 && st.tableObj != nil {
 		tsdbPoint := tsdb.Point{Tags: st.tsdbKeys, Fields: fields}
 		st.tableObj.Points([]*tsdb.Point{&tsdbPoint}, time.Now())
 	}

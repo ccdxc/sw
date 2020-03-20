@@ -9,7 +9,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
@@ -20,9 +20,9 @@ import (
 )
 
 const (
-	metricsTablePort     = "Port"
-	metricsTableMgmtPort = "MgmtPort"
-	metricsTableHostIf   = "HostIf"
+	metricsTablePort     = "MacMetrics"
+	metricsTableMgmtPort = "MgmtMacMetrics"
+	metricsTableHostIf   = "LifMetrics"
 )
 
 var metricsTables = []string{
@@ -31,7 +31,9 @@ var metricsTables = []string{
 	metricsTableHostIf,
 }
 
-func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_MetricsGetClient, tsdbObjs map[string]tsdb.Obj) (err error) {
+var tsdbObjs map[string]tsdb.Obj
+
+func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_MetricsGetClient) (err error) {
 	var (
 		dat [][]byte
 	)
@@ -64,6 +66,7 @@ func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_Metric
 			// statistics on other types of interfaces are not supported
 			continue
 		}
+		//log.Infof("Querying metrics for interface %s, %s", intf.UUID, intf.Name)
 		err = stream.Send(metricsGetRequest)
 		if err != nil {
 			log.Error(errors.Wrapf(types.ErrMetricsSend,
@@ -86,6 +89,11 @@ func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_Metric
 				"Metrics response failure, | Err %v", resp.GetApiStatus().String()))
 			continue
 		}
+		//log.Infof("Rcvd metrics %v for intf %s, %s", metricsGetRequest.Name, intf.UUID, intf.Name)
+		if _, ok := tsdbObjs[metricsGetRequest.Name]; !ok {
+			log.Errorf("Ignoring unknown metrics %v", metricsGetRequest.Name)
+			continue
+		}
 
 		// build the row to be added to tsdb
 		points := []*tsdb.Point{}
@@ -96,11 +104,11 @@ func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_Metric
 				fields[counter.Name] = counter.Value
 			}
 		}
-		// TODO:
-		//fields["test"] = 1000
-		//log.Infof("tags %v, field %v", tags, fields)
+
 		points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
-		tsdbObjs[metricsGetRequest.Name].Points(points, time.Now())
+		if err := tsdbObjs[metricsGetRequest.Name].Points(points, time.Now()); err != nil {
+			log.Errorf("failed to send metricd %v", err)
+		}
 	}
 	return nil
 }
@@ -114,25 +122,35 @@ func HandleMetrics(infraAPI types.InfraAPI, client halapi.OperSvcClient) error {
 		return errors.Wrapf(types.ErrMetricsGet, "MetricsGet failure | Err %v", err)
 	}
 
-	// create tsdb objects for all tables
-	tsdbObjs := map[string]tsdb.Obj{}
-	for _, table := range metricsTables {
-		obj, err := tsdb.NewObj(table, nil, nil, nil)
-		if err != nil {
-			log.Errorf("Failed to create tsdb object for table %s", table)
-			continue
-		}
-
-		if obj == nil {
-			log.Errorf("Found invalid tsdb object for table %s", table)
-			continue
-		}
-		tsdbObjs[table] = obj
-	}
-
 	// periodically query for metrics from PDS agent
-	go func(stream halapi.OperSvc_MetricsGetClient, tsdbObjs map[string]tsdb.Obj) {
+	go func(stream halapi.OperSvc_MetricsGetClient) {
+		for {
+			if ok := tsdb.IsInitialized(); ok {
+				break
+			}
+			log.Infof("waiting to init tsdb")
+			time.Sleep(time.Second * 2)
+		}
+
+		// create tsdb objects for all tables
+		tsdbObjs = map[string]tsdb.Obj{}
+
+		for _, table := range metricsTables {
+			obj, err := tsdb.NewObj(table, nil, nil, nil)
+			if err != nil {
+				log.Errorf("Failed to create tsdb object for table %s", table)
+				continue
+			}
+
+			if obj == nil {
+				log.Errorf("Found invalid tsdb object for table %s", table)
+				continue
+			}
+			tsdbObjs[table] = obj
+		}
+
 		ticker := time.NewTicker(time.Minute * 1)
+
 		for {
 			select {
 			case <-ticker.C:
@@ -141,9 +159,9 @@ func HandleMetrics(infraAPI types.InfraAPI, client halapi.OperSvcClient) error {
 					// HAL is not up, skip querying
 					continue
 				}
-				queryInterfaceMetrics(infraAPI, stream, tsdbObjs)
+				queryInterfaceMetrics(infraAPI, stream)
 			}
 		}
-	}(metricsStream, tsdbObjs)
+	}(metricsStream)
 	return nil
 }

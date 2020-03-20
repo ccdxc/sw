@@ -170,6 +170,14 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 
 		if c.ResolverClient == nil {
 			c.ResolverClient = resolver.New(&resolver.Config{Name: types.Netagent, Servers: obj.Controllers})
+			tsdb.Init(context.Background(), &tsdb.Opts{
+				ClientName:              types.Netagent + c.InfraAPI.GetDscName(),
+				ResolverClient:          c.ResolverClient,
+				Collector:               types.Collector,
+				DBName:                  "default",
+				SendInterval:            time.Minute,
+				ConnectionRetryInterval: types.StatsRetryInterval,
+			})
 		} else {
 			log.Infof("Controller API: %s | Obj: %v", types.InfoUpdateVeniceCoordinates, obj.Controllers)
 			c.ResolverClient.UpdateServers(obj.Controllers)
@@ -191,9 +199,6 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 			}
 		}()
 
-		tsdb.Init(c.WatchCtx, &tsdb.Opts{
-			ClientName:     types.Netagent,
-			ResolverClient: c.ResolverClient})
 	} else if strings.Contains(strings.ToLower(obj.DSCMode), "host") {
 		c.InfraAPI.StoreConfig(obj)
 		if err := c.Stop(); err != nil {
@@ -203,6 +208,7 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 		if err := c.PipelineAPI.PurgeConfigs(); err != nil {
 			log.Error(err)
 		}
+		tsdb.Cleanup()
 	}
 
 	return nil
@@ -275,16 +281,6 @@ func (c *API) Start(ctx context.Context) error {
 			continue
 		}
 
-		opts := &tsdb.Opts{
-			ClientName:              types.Netagent + c.InfraAPI.GetDscName(),
-			ResolverClient:          c.ResolverClient,
-			Collector:               types.Collector,
-			DBName:                  "default",
-			SendInterval:            types.StatsSendInterval,
-			ConnectionRetryInterval: types.StatsRetryInterval,
-		}
-
-		tsdb.Init(c.WatchCtx, opts)
 		log.Infof("Controller API: %s", types.InfoTSDBInitDone)
 
 		nimbusClient, err := nimbus.NewNimbusClient(c.InfraAPI.GetDscName(), c.npmURL, c.npmClient)
