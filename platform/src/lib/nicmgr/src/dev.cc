@@ -324,6 +324,7 @@ DeviceManager::LoadProfile(string device_json_file, bool init_pci)
 {
     struct eth_devspec *eth_spec;
     uint32_t eth_ifindex, uplink_ifindex;
+    clock_t tStart = clock();
 
     NIC_HEADER_TRACE("Loading Config");
     if (!device_json_file.empty()) {
@@ -493,6 +494,8 @@ DeviceManager::LoadProfile(string device_json_file, bool init_pci)
     clock_gettime(CLOCK_MONOTONIC, &hb_last);
 
     upg_state = DEVICES_ACTIVE_STATE;
+    NIC_LOG_DEBUG("Loading Config Done in {:.3f}s",
+            (double)(clock() - tStart)/CLOCKS_PER_SEC);
 
     return 0;
 }

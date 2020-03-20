@@ -187,9 +187,11 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
 
     memcpy(hal_lif_info_.queue_info, qinfo, sizeof(hal_lif_info_.queue_info));
 
-    if (!skip_hwinit) {
-        pd->program_qstate((struct queue_info *)hal_lif_info_.queue_info, &hal_lif_info_, 0x0);
-    }
+#ifdef __x86_64__
+        if (!skip_hwinit) {
+            pd->program_qstate((struct queue_info *)hal_lif_info_.queue_info, &hal_lif_info_, 0x0);
+        }
+#endif
 
     NIC_LOG_INFO("{}: created lif_id {} mac {} uplink {}", spec->name, hal_lif_info_.lif_id,
                  mac2str(spec->mac_addr), spec->uplink_port_num);
@@ -352,6 +354,11 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
     // first time, program txdma scheduler
     if (pre_state == LIF_STATE_CREATED) {
+#ifndef __x86_64__
+        if (!skip_hwinit) {
+            pd->program_qstate((struct queue_info *)hal_lif_info_.queue_info, &hal_lif_info_, 0x0);
+        }
+#endif
         hal_lif_info_.lif_state = ConvertEthLifStateToLifState(state);
         rs = dev_api->lif_init(&hal_lif_info_);
         if (rs != SDK_RET_OK) {
