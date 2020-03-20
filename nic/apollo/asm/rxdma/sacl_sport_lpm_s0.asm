@@ -22,7 +22,7 @@ sacl_sport_lpm_s0:
                         k.p4_to_rxdma_header_flow_dst_s16_e127
     phvwr.!c1       p.sacl_metadata_ip, k.p4_to_rxdma_header_flow_src
     add             r1, k.p4_to_rxdma_header_flow_dport, \
-                        k.p4_to_rxdma_header_flow_proto, 16
+                        k.p4_to_rxdma_header_flow_proto, 24
     phvwr           p.sacl_metadata_proto_dport, r1
     add             r1, r0, sacl_sport_base_addr
     add             r2, r1, SACL_IP_TABLE_OFFSET

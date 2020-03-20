@@ -45,8 +45,8 @@ setup_lpm_dport_sport:
     phvwr            p.lpm_metadata_lpm2_base_addr, r2
 
     // Setup key for DPORT lookup on LPM2
-    phvwr            p.lpm_metadata_lpm2_key[15:0], k.p4_to_rxdma_flow_dport
-    phvwr            p.lpm_metadata_lpm2_key[31:16], k.p4_to_rxdma_flow_proto
+    phvwr            p.lpm_metadata_lpm2_key[127:24], k.p4_to_rxdma_flow_proto
+    phvwr            p.lpm_metadata_lpm2_key[23:0], k.p4_to_rxdma_flow_dport
 
     // Enable both LPMs and recirc again
     phvwr            p.p4_to_rxdma_lpm1_enable, TRUE

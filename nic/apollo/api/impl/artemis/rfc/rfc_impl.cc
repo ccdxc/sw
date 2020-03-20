@@ -146,9 +146,8 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
         }
 
         // handle source port match condition
-        itable_add_port_inodes(rule_num, port_inode,
+        port_inode = itable_add_port_inodes(rule_num, port_inode,
                                &rule->match.l4_match.sport_range);
-        port_inode += 2;
 
         // handle protocol and destination port match condition
         itable_add_proto_port_inodes(rule_num, proto_port_inode,
@@ -160,7 +159,8 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
     stag_itable->num_nodes = stag_inode - &stag_itable->nodes[0];
     dip_itable->num_nodes = dip_inode - &dip_itable->nodes[0];
     dtag_itable->num_nodes = dtag_inode - &dtag_itable->nodes[0];
-    port_itable->num_nodes = proto_port_itable->num_nodes = rule_num << 1;
+    port_itable->num_nodes = port_inode - &port_itable->nodes[0];
+    proto_port_itable->num_nodes = proto_port_inode - &proto_port_itable->nodes[0];
     return SDK_RET_OK;
 }
 

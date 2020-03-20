@@ -115,7 +115,7 @@ void itable_update_icmp_type_code (port_range_t *sport_range,
                                    port_range_t *dport_range,
                                    uint8_t icmp_type,
                                    uint8_t icmp_code);
-void itable_add_port_inodes(uint32_t rule, inode_t *port_inode,
+inode_t *itable_add_port_inodes(uint32_t rule, inode_t *port_inode,
                             port_range_t *port_range);
 void itable_add_proto_port_inodes(uint32_t rule, inode_t *proto_port_inode,
                                   uint8_t ip_proto, port_range_t *port_range);

@@ -45,13 +45,13 @@ process_salc_roots:
     // Setup and Enable LPM1 for SPORT lookup
     addi         r2, r1, SACL_SPORT_TABLE_OFFSET
     phvwr        p.lpm_metadata_lpm1_base_addr, r2
-    phvwr        p.lpm_metadata_lpm1_key[15:0], k.p4_to_rxdma_flow_sport
+    phvwr        p.lpm_metadata_lpm1_key, k.p4_to_rxdma_flow_sport
 
     // Setup and Enable LPM2 for DPORT lookup
     addi         r2, r1, SACL_PROTO_DPORT_TABLE_OFFSET
     phvwr        p.lpm_metadata_lpm2_base_addr, r2
-    phvwr        p.lpm_metadata_lpm2_key[15:0], k.p4_to_rxdma_flow_dport
-    phvwr        p.lpm_metadata_lpm2_key[23:16], k.p4_to_rxdma_flow_proto
+    phvwr        p.lpm_metadata_lpm2_key[127:24], k.p4_to_rxdma_flow_proto
+    phvwr        p.lpm_metadata_lpm2_key[23:0], k.p4_to_rxdma_flow_dport
 
     // Enable both LPMs
     phvwr.e      p.p4_to_rxdma_lpm1_enable, TRUE

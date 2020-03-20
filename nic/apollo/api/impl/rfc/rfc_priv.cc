@@ -68,8 +68,8 @@ rfc_itree_dump (rfc_tree_t *rfc_tree, itree_type_t tree_type)
         } else if (tree_type == ITREE_TYPE_PROTO_PORT) {
             PDS_TRACE_DEBUG("inode %u, proto %u, port %u, classid %u, "
                             "rule# %u, start %s", i,
-                            (inode->key32 >> 16) & 0xFF,
-                            inode->key32 & 0xFFFF, inode->rfc.class_id,
+                            (inode->key32 >> 24) & 0xFF,
+                            inode->key32 & 0xFFFFFF, inode->rfc.class_id,
                             inode->rfc.rule_no,
                             inode->rfc.start ? "true" : "false");
         }

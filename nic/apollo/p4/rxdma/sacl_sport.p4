@@ -28,7 +28,7 @@ action sacl_sport_lpm_s0(key0, key1, key2, key3, key4, key5, key6, key7, key8,
     modify_field(sacl_metadata.proto_dport_table_addr,
         p4_to_rxdma_header.sacl_base_addr + SACL_PROTO_DPORT_TABLE_OFFSET);
     modify_field(sacl_metadata.proto_dport,
-        (p4_to_rxdma_header.flow_dport | (p4_to_rxdma_header.flow_proto << 16)));
+        (p4_to_rxdma_header.flow_dport | (p4_to_rxdma_header.flow_proto << 24)));
     if (p4_to_rxdma_header.direction == TX_FROM_HOST) {
         modify_field(sacl_metadata.ip, p4_to_rxdma_header.flow_dst);
     } else {

@@ -106,17 +106,17 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
             itable_add_address_inodes(rule_num, addr_inode,
                                       &rule->match.l3_match.dst_ip_pfx);
         }
-        itable_add_port_inodes(rule_num, port_inode,
+        port_inode = itable_add_port_inodes(rule_num, port_inode,
                                &rule->match.l4_match.sport_range);
         itable_add_proto_port_inodes(rule_num, proto_port_inode,
                                      rule->match.l3_match.ip_proto,
                                      &rule->match.l4_match.dport_range);
         addr_inode += 2;
-        port_inode += 2;
         proto_port_inode += 2;
     }
-    addr_itable->num_nodes = port_itable->num_nodes =
-        proto_port_itable->num_nodes = rule_num << 1;
+    addr_itable->num_nodes = addr_inode - &addr_itable->nodes[0];
+    port_itable->num_nodes = port_inode - &port_itable->nodes[0];
+    proto_port_itable->num_nodes = proto_port_inode - &proto_port_itable->nodes[0];
     return SDK_RET_OK;
 }
 

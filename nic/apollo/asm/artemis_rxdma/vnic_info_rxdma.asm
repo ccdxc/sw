@@ -35,8 +35,8 @@ vnic_info_rxdma:
     phvwr        p.rx_to_tx_hdr_iptype, k.p4_to_rxdma_iptype
 
     // Setup key for DPORT lookup
-    phvwr        p.lpm_metadata_lpm2_key[23:16], k.p4_to_rxdma_flow_proto
-    phvwr        p.lpm_metadata_lpm2_key[15:0], k.p4_to_rxdma_flow_dport
+    phvwr        p.lpm_metadata_lpm2_key[127:24], k.p4_to_rxdma_flow_proto
+    phvwr        p.lpm_metadata_lpm2_key[23:0], k.p4_to_rxdma_flow_dport
     // Enable LPM2
     phvwr        p.p4_to_rxdma_lpm2_enable, TRUE
 

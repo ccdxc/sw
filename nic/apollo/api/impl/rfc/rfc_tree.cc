@@ -83,7 +83,7 @@ itable_update_icmp_type_code (port_range_t *sport_range,
     sport_range->port_hi = 65535;
 }
 
-void
+inode_t *
 itable_add_port_inodes (uint32_t rule, inode_t *port_inode,
                         port_range_t *port_range)
 {
@@ -92,39 +92,36 @@ itable_add_port_inodes (uint32_t rule, inode_t *port_inode,
     port_inode->rfc.rule_no = rule;
     port_inode->rfc.start = TRUE;
     port_inode->rfc.pad = 0;
-
     port_inode++;
+
     if (port_range->port_hi != 65535) {
         port_inode->port = port_range->port_hi + 1;
-    } else {
-        port_inode->port = 65535;
+        port_inode->rfc.class_id = 0;
+        port_inode->rfc.rule_no = rule;
+        port_inode->rfc.start = FALSE;
+        port_inode->rfc.pad = 0;
+        port_inode++;
     }
-    port_inode->rfc.class_id = 0;
-    port_inode->rfc.rule_no = rule;
-    port_inode->rfc.start = FALSE;
-    port_inode->rfc.pad = 0;
+
+    return port_inode;
 }
 
 void
 itable_add_proto_port_inodes (uint32_t rule, inode_t *proto_port_inode,
                               uint8_t ip_proto, port_range_t *port_range)
 {
-    uint16_t   port_hi;
+    uint32_t   port_hi;
 
-    proto_port_inode->key32 = (ip_proto << 16) | port_range->port_lo;
+    proto_port_inode->key32 = (ip_proto << 24) | port_range->port_lo;
     proto_port_inode->rfc.class_id = 0;
     proto_port_inode->rfc.rule_no = rule;
     proto_port_inode->rfc.start = TRUE;
     proto_port_inode->rfc.pad = 0;
 
     proto_port_inode++;
-    if (port_range->port_hi != 65535) {
-        port_hi = port_range->port_hi + 1;
-    } else {
-        port_hi = port_range->port_hi;
-    }
+    port_hi = port_range->port_hi + 1;
     if (ip_proto) {
-        proto_port_inode->key32 = (ip_proto << 16) | port_hi;
+        proto_port_inode->key32 = (ip_proto << 24) | port_hi;
     } else {
         proto_port_inode->key32 = 0x00FFFFFF;
     }

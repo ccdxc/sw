@@ -77,7 +77,7 @@ action vnic_info_rxdma(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
 
     // Setup key for DPORT lookup
     modify_field(lpm_metadata.lpm2_key,
-        (p4_to_rxdma.flow_dport | (p4_to_rxdma.flow_proto << 16)));
+        (p4_to_rxdma.flow_dport | (p4_to_rxdma.flow_proto << 24)));
     // Enable LPM2
     modify_field(p4_to_rxdma.lpm2_enable, TRUE);
 }

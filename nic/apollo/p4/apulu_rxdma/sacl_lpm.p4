@@ -167,7 +167,7 @@ action setup_lpm_dport_sport()
         modify_field(lpm_metadata.lpm2_base_addr, lpm_metadata.sacl_base_addr +
                      SACL_PROTO_DPORT_TABLE_OFFSET);
         modify_field(lpm_metadata.lpm2_key, (p4_to_rxdma.flow_dport |
-                                            (p4_to_rxdma.flow_proto << 16)));
+                                            (p4_to_rxdma.flow_proto << 24)));
 
         // Enable LPMs
         modify_field(p4_to_rxdma.lpm1_enable, TRUE);
