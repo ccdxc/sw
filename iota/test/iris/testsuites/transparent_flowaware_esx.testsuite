@@ -51,8 +51,13 @@ testbundles:
         - networking/connectivity.testbundle
         - networking/telemetry.testbundle
 
-    sanity_ext:
+    sanity:
         # Relative paths from iota/test/iris/testbundles/
+        - networking/connectivity.testbundle
+        - networking/telemetry.testbundle
+        - transition/trans_flow_to_insert_enf.testbundle
+        - networking/connectivity.testbundle
+        - networking/telemetry.testbundle
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
