@@ -89,7 +89,19 @@ func (h *networkHooks) validateRoutingConfig(i interface{}, ver string, ignStatu
 	if rip.IsUnspecified() {
 		autoCfg = true
 	}
-
+	// validate Holdtime and Keepalive timers
+	if in.Spec.BGPConfig.Holdtime != 0 && in.Spec.BGPConfig.KeepaliveInterval == 0 || in.Spec.BGPConfig.Holdtime == 0 && in.Spec.BGPConfig.KeepaliveInterval != 0 {
+		ret = append(ret, fmt.Errorf("inconsistent holdtime and keepalive-interval values, either both should be zero or both should be non-zero"))
+	}
+	if in.Spec.BGPConfig.Holdtime != 0 {
+		if in.Spec.BGPConfig.Holdtime < 3 {
+			ret = append(ret, fmt.Errorf("holdtime cannot be smaller than 3secs"))
+		} else {
+			if in.Spec.BGPConfig.KeepaliveInterval*3 > in.Spec.BGPConfig.Holdtime {
+				ret = append(ret, fmt.Errorf("holdtime shuold be 3 times keepalive-interval or more"))
+			}
+		}
+	}
 	peerMap := make(map[string]bool)
 	for _, n := range in.Spec.BGPConfig.Neighbors {
 		if n.IPAddress == "0.0.0.0" {

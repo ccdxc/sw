@@ -229,6 +229,31 @@ func TestValidateHooks(t *testing.T) {
 	rtcfg.Spec.BGPConfig.Neighbors[2].EnableAddressFamilies = []string{"l2vpn-evpn"}
 	errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
 	Assert(t, len(errs) > 0, "Expecting errors %s", errs)
+
+	// holdtimer and keepalive timer tests
+	cases := []struct {
+		holdtime  uint32
+		keepalive uint32
+		ok        bool
+	}{
+		{holdtime: 30, keepalive: 10, ok: true},
+		{holdtime: 60, keepalive: 10, ok: true},
+		{holdtime: 0, keepalive: 0, ok: true},
+		{holdtime: 3, keepalive: 1, ok: true},
+		{holdtime: 3600, keepalive: 1200, ok: true},
+		{holdtime: 180, keepalive: 60, ok: true},
+		{holdtime: 2, keepalive: 1, ok: false},
+		{holdtime: 30, keepalive: 0, ok: false},
+		{holdtime: 0, keepalive: 30, ok: false},
+		{holdtime: 30, keepalive: 15, ok: false},
+	}
+	rtcfg.Spec.BGPConfig.Neighbors = nil
+	for _, c := range cases {
+		rtcfg.Spec.BGPConfig.Holdtime, rtcfg.Spec.BGPConfig.KeepaliveInterval = c.holdtime, c.keepalive
+		errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
+		Assert(t, c.ok && len(errs) == 0 || !c.ok && len(errs) != 0, "case [holdtime: %v / Keepalive: %v] result [%v] got errors[%v]", c.holdtime, c.keepalive, c.ok, errs)
+	}
+
 }
 
 func TestPrecommitHooks(t *testing.T) {
