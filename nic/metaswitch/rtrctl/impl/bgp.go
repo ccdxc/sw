@@ -228,18 +228,8 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 const (
-	bgpNLRI = `
-------------------------------------
-AFI/SAFI        : [ %v/%v ]
-Route Source    : %d
-Path ID         : %d
-AS Path         : %v
-Originator      : %v
-Next Hop Addr   : %v
-BestPath        : %v
-Prefix Length   : %v
-Prefix          : %v
-------------------------------------
+	bgpNLRI = `   %s NextHop %v AS Path %v 
+      Originator %v Route Source %d
 `
 )
 
@@ -263,12 +253,35 @@ func bgpNlriPrefixShowCmdHandler(cmd *cobra.Command, args []string) error {
 	doJSON := cmd.Flag("json").Value.String() == "true"
 
 	var nlris []*utils.ShadowBGPNLRIPrefixStatus
+	var afi string
+	var safi string
+	var network string
 	for _, p := range respMsg.Response {
 		nlri := utils.NewBGPNLRIPrefixStatus(p.Status)
 		nlris = append(nlris, nlri)
 		if !doJSON {
-			fmt.Printf(bgpNLRI, strings.TrimPrefix(nlri.Afi.String(), "BGP_AFI_"), strings.TrimPrefix(nlri.Safi.String(), "BGP_SAFI_"),
-				nlri.RouteSource, nlri.PathID, nlri.ASPathStr, nlri.PathOrigId, nlri.NextHopAddr, nlri.BestRoute, nlri.PrefixLen, nlri.Prefix)
+
+			//Print AFI/SAFI info
+			if afi != strings.TrimPrefix(nlri.Afi.String(), "BGP_AFI_") ||
+				safi != strings.TrimPrefix(nlri.Safi.String(), "BGP_SAFI_") {
+				afi = strings.TrimPrefix(nlri.Afi.String(), "BGP_AFI_")
+				safi = strings.TrimPrefix(nlri.Safi.String(), "BGP_SAFI_")
+				fmt.Printf("\n%s/%s\n", afi, safi)
+			}
+			var plen string
+			plen = fmt.Sprint(nlri.PrefixLen)
+			if network != nlri.Prefix.String()+"/"+plen {
+				network = nlri.Prefix.String() + "/" + plen
+				fmt.Printf(" Network: %s\n", network)
+			}
+			var best string
+			if nlri.BestRoute {
+				best = ">"
+			} else {
+				best = " "
+			}
+			fmt.Printf(bgpNLRI, best, nlri.NextHopAddr, nlri.ASPathStr,
+				nlri.PathOrigId, nlri.RouteSource)
 		}
 	}
 

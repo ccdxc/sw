@@ -63,11 +63,7 @@ func (n *NLRIPrefix) String() string {
 	if (n == nil) {
 		return fmt.Sprintf("0.0.0.0")
 	}
-	if (n.Afi == 25) {
-	  return fmt.Sprintf("Type : %d  %v", n.Type, n.Prefix)
-	} else {
-	  return fmt.Sprintf("%v", n.Prefix)
-	}
+	return fmt.Sprintf("%v", n.Prefix)
 }
 
 func NewNLRIPrefix(afi int, safi int, in []byte) *NLRIPrefix {
@@ -122,19 +118,17 @@ type ShadowEVPNType2Route struct {
 	*EVPNType2Route
 }
 
-const type2Fmt = `
-                   ----------------
-                   RD             : %v
-                   ESI            : %v
-                   Ethernet Tag   : %v
-                   MAC Address    : %v
-                   IPAddress      : %v
-                   Label1         : %v
-                   Label2         : %v`
+const type2Fmt = `[%d][%v][%v][%d][%v][%d][%v]`
 
 // String returns a user friendly string
 func (s *ShadowEVPNType2Route) String() string {
-	return fmt.Sprintf(type2Fmt, s.RD, s.ESI, s.EthTagID, s.MACAddress, s.IPAddress, s.MPLSLabel1, s.MPLSLabel2)
+        var type2 int = 2
+	var ipsize int = 32
+	var macsize int = 48
+	if s.IPAddress == "<nil>" {
+	   ipsize = 0
+	}
+	return fmt.Sprintf(type2Fmt, type2, s.RD, s.EthTagID, macsize, s.MACAddress, ipsize, "0.0.0.0")
 }
 
 func (a *EVPNType2Route) parseBytes(in []byte) {
@@ -208,19 +202,12 @@ type ShadowEVPNType5Route struct {
 	*EVPNType5Route
 }
 
-const type5Fmt = `
-                   ----------------
-                   RD             : %v
-                   ESI            : %v
-                   Ethernet Tag   : %v
-                   IPPrefix       : %v
-                   Prefix Length  : %v
-                   Gateway IP     : %v
-                   Label1         : %v`
+const type5Fmt = `[%d][%v][%v][%v][%v]`
 
 // String returns a user friendly string
 func (s *ShadowEVPNType5Route) String() string {
-	return fmt.Sprintf(type5Fmt, s.RD, s.ESI, s.EthTagID, s.IPPrefix, s.IPPrefixLen, s.GWIPAddress, dumpBytes(s.MPLSLabel1))
+        var type5 int = 5
+	return fmt.Sprintf(type5Fmt, type5, s.RD, s.EthTagID, s.IPPrefixLen, s.IPPrefix)
 }
 
 func (a *EVPNType5Route) parseBytes(in []byte) {
@@ -492,7 +479,7 @@ func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixSta
       var pathOrigId string
 
       if (net.IP(in.PathOrigId).String() == "0.0.0.0") {
-         pathOrigId = ""
+         pathOrigId = "<not set>"
       } else {
          pathOrigId = net.IP(in.PathOrigId).String()
       }
