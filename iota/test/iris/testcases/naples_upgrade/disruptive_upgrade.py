@@ -101,7 +101,8 @@ def Setup(tc):
     tc.Nodes = api.GetNaplesHostnames()
     if arping.ArPing(tc) != api.types.status.SUCCESS:
         api.Logger.info("arping failed on setup")
-    if ping.TestPing(tc, 'local_only', 'ipv4', 64) != api.types.status.SUCCESS or ping.TestPing(tc, 'remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
+    if ping.TestPing(tc, 'local_only', 'ipv4', 64) != api.types.status.SUCCESS or \
+            ping.TestPing(tc, 'remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
         api.Logger.info("ping test failed on setup")
         return api.types.status.FAILURE
     req = api.Trigger_CreateExecuteCommandsRequest()
@@ -114,6 +115,10 @@ def Setup(tc):
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/nicmgr_upgstate")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/NaplesTechSupport-*")
         api.Trigger_AddNaplesCommand(req, node, "touch /data/upgrade_to_same_firmware_allowed")
+        #Removing Netagent DB config, till Netagent replay issue is fixed
+        if tc.iterators.option != 'compatcheckfail':
+            api.Trigger_AddNaplesCommand(req, node, "rm -rf /sysconfig/config0/pen-netagent.db")
+            api.Trigger_AddNaplesCommand(req, node, "rm -rf /sysconfig/config1/pen-netagent.db")
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:
         api.PrintCommandResults(cmd_resp)
@@ -162,15 +167,17 @@ def Verify(tc):
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
 
-    if netagent_cfg_api.switch_profile(push_base_profile=True) != \
-       api.types.status.SUCCESS:
-        api.Logger.info("Failed to push the base profile")
-        return api.types.status.FAILURE
 
-    if netagent_cfg_api.PushBaseConfig(ignore_error = False) != \
-       api.types.status.SUCCESS:
-        api.Logger.info("policy push failed")
-        return api.types.status.FAILURE
+    if tc.iterators.option != 'compatcheckfail':
+        if netagent_cfg_api.switch_profile(push_base_profile=True) != \
+           api.types.status.SUCCESS:
+            api.Logger.info("Failed to push the base profile")
+            return api.types.status.FAILURE
+
+        if netagent_cfg_api.PushBaseConfig(ignore_error = False) != \
+           api.types.status.SUCCESS:
+            api.Logger.info("policy push failed")
+            return api.types.status.FAILURE
 
     for cmd in tc.resp.commands:
         if cmd.exit_code != 0:
@@ -181,22 +188,26 @@ def Verify(tc):
         if ping.TestPing(tc, 'local_only', 'ipv4', 64) != api.types.status.SUCCESS or ping.TestPing(tc, 'remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
             api.Logger.info("ping test failed")
             return api.types.status.FAILURE
+
         resp = json.loads(cmd.stdout)
-        for item in resp['Status']['status']:
-            if not item['Op'] == 4:
-                api.Logger.info("opcode is bad")
-                return api.types.status.FAILURE
-            if "fail" in tc.iterators.option:
-                if not item['opstatus'] == 'failure':
-                    api.Logger.info("opstatus is bad")
+        try:
+            for item in resp['Status']['status']:
+                if not item['Op'] == 4:
+                    api.Logger.info("opcode is bad")
                     return api.types.status.FAILURE
-                if tc.iterators.option not in item['Message']:
-                    api.Logger.info("message is bad")
-                    return api.types.status.FAILURE
-            else:
-                if not item['opstatus'] == 'success':
-                    api.Logger.info("opstatus is bad")
-                    return api.types.status.FAILURE
+                if "fail" in tc.iterators.option:
+                    if not item['opstatus'] == 'failure':
+                        api.Logger.info("opstatus is bad")
+                        return api.types.status.FAILURE
+                    if tc.iterators.option not in item['Message']:
+                        api.Logger.info("message is bad")
+                        return api.types.status.FAILURE
+                else:
+                    if not item['opstatus'] == 'success':
+                        api.Logger.info("opstatus is bad")
+                        return api.types.status.FAILURE
+        except:
+            api.Logger.info("resp: ", json.dumps(resp, indent=1))
 
         if wait_and_verify_fuz(tc) != api.types.status.SUCCESS:
             return api.types.status.FAILURE

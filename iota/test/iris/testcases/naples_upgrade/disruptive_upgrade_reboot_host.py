@@ -43,7 +43,7 @@ def Trigger(tc):
 
     api.Logger.info("restarting nodes")
     ret = api.RestartNodes(tc.Nodes)
-    
+
     return api.types.status.SUCCESS
 
 def Verify(tc):
@@ -85,15 +85,20 @@ def Verify(tc):
         if ping.TestPing(tc, 'local_only', 'ipv4', 64) != api.types.status.SUCCESS or ping.TestPing(tc, 'remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
             api.Logger.info("ping test failed")
             return api.types.status.FAILURE
+
         resp = json.loads(cmd.stdout)
-        for item in resp['Status']['status']:
-            if not item['Op'] == 4:
-                api.Logger.info("opcode is bad")
-                return api.types.status.FAILURE
-            else:
-                if not item['opstatus'] == 'success':
-                    api.Logger.info("opstatus is bad")
+        try:
+            for item in resp['Status']['status']:
+                if not item['Op'] == 4:
+                    api.Logger.info("opcode is bad")
                     return api.types.status.FAILURE
+                else:
+                    if not item['opstatus'] == 'success':
+                        api.Logger.info("opstatus is bad")
+                        return api.types.status.FAILURE
+        except:
+            api.logger.info("resp : ", json.dumps(resp, indent=4))
+
     return api.types.status.SUCCESS
 
 def Teardown(tc):

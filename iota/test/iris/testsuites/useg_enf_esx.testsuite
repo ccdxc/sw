@@ -49,12 +49,12 @@ testbundles:
         - aging/aging_precheckin.testbundle
         - penctl/penctl_hostpin.testbundle
         - p4ctl/p4ctl_hostpin.testbundle
-        #- naples_upgrade/naples_upgrade_hostpin.testbundle
+        - naples_upgrade/naples_upgrade_hostpin.testbundle
         - system/obfl_check.testbundle
         - sysmon/interrupts.testbundle
         - cpld/cpldupgrade.testbundle
         - hpe_ilo/hpe_ilo.testbundle
-        
+
     sanity:
         # Relative paths from iota/test/iris/testbundles/
         - networking/networking.testbundle
@@ -74,12 +74,12 @@ testbundles:
         - mnic/mnic_hostpin_naples_only.testbundle
         - penctl/penctl_hostpin.testbundle
         - p4ctl/p4ctl_hostpin.testbundle
-        #- naples_upgrade/naples_upgrade_hostpin.testbundle
+        - naples_upgrade/naples_upgrade_hostpin.testbundle
         - system/obfl_check.testbundle
         - sysmon/interrupts.testbundle
         - cpld/cpldupgrade.testbundle
         - hpe_ilo/hpe_ilo.testbundle
-        
+
     regression:
         - networking/connectivity.testbundle
         - firewall/policy_scale.testbundle

@@ -59,16 +59,6 @@ def Verify(tc):
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
 
-    if netagent_cfg_api.switch_profile(push_base_profile=True) != \
-       api.types.status.SUCCESS:
-        api.Logger.info("Failed to push the base profile")
-        return api.types.status.FAILURE
-
-    if netagent_cfg_api.PushBaseConfig(ignore_error = False) != \
-       api.types.status.SUCCESS:
-        api.Logger.info("policy push failed")
-        return api.types.status.FAILURE
-
     for cmd in tc.resp.commands:
         if cmd.exit_code != 0:
             return api.types.status.FAILURE
