@@ -297,10 +297,15 @@ class Checksum:
         self.eg_dpr_hw_csum_obj     = [] #Sorted list of (csum_obj, is_phdr, calfldobj)
                                          #sorted based on fldstart value. (Egress pipe)
 
-    def csum_direction_get(self, field_list_cal):
+    def csum_direction_get(self, op, field_list_cal):
         p4_calfld_obj = self.be.h.p4_field_list_calculations[field_list_cal]
         if 'gress' in p4_calfld_obj._parsed_pragmas['checksum']:
             gress = p4_calfld_obj._parsed_pragmas['checksum']['gress'].keys()[0]
+            if gress == 'xgress':
+                return 'XGRESS'
+            return xgress.EGRESS if gress == 'egress' else xgress.INGRESS
+        if op in p4_calfld_obj._parsed_pragmas['checksum']:
+            gress = p4_calfld_obj._parsed_pragmas['checksum'][op].keys()[0]
             if gress == 'xgress':
                 return 'XGRESS'
             return xgress.EGRESS if gress == 'egress' else xgress.INGRESS
@@ -316,7 +321,7 @@ class Checksum:
             for ops in fld_ops:
                 if self.be.h.p4_field_list_calculations[ops[1]].algorithm == 'csum16' \
                   or self.be.h.p4_field_list_calculations[ops[1]].algorithm == 'csum8':
-                    d = self.csum_direction_get(ops[1])
+                    d = self.csum_direction_get(ops[0], ops[1])
                     if ops[0] == 'verify':
                         if d == xgress.INGRESS or d == None or d == 'XGRESS':
                             self.verify_cal_fieldlist.append(ParserCalField(\
@@ -336,7 +341,7 @@ class Checksum:
                                                          self.be, \
                                                          field_dst, ops[1]))
                 elif self.be.h.p4_field_list_calculations[ops[1]].algorithm == 'gso':
-                    d = self.csum_direction_get(ops[1])
+                    d = self.csum_direction_get(ops[0], ops[1])
                     if d == xgress.INGRESS or d == 'XGRESS':
                         gso_cal_fieldlist_compute = self.gso_cal_fieldlist_compute
                         gso_cal_fieldlist_update = self.gso_cal_fieldlist_update
@@ -354,7 +359,7 @@ class Checksum:
                                                         self.be, \
                                                         field_dst, ops[1]))
                 elif self.be.h.p4_field_list_calculations[ops[1]].algorithm == 'l2_complete_csum':
-                    d = self.csum_direction_get(ops[1])
+                    d = self.csum_direction_get(ops[0], ops[1])
                     if ops[0] == 'update':
                         if d == xgress.INGRESS or d == 'XGRESS':
                             self.l2_csum_cal_fieldlist_update.append(DeParserCalField(\

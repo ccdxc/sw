@@ -109,6 +109,10 @@ Pragmas
     * checksum udp_option
         Specifies checksum field list is udp option checksum even though "payload" field
         is specified in field list.
+    * checksum verify {ingress|egress|xgress}
+        Specifies the pipeline(s) in which this checksum has to be verified
+    * checksum update {ingress|egress|xgress}
+        Specifies the pipeline(s) in whcih this checksum has to be computed
 
 * PD API
     * include_k_in_d
