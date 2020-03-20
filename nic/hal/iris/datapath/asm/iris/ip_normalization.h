@@ -164,6 +164,8 @@ lb_ipv4_norm_invalid_length:
   // Reason being we don't what all headers are parsed and marking them all
   // invalid might not be striaght forward.
   sub         r2, k.control_metadata_parser_payload_offset, k.control_metadata_parser_outer_eth_offset
+  seq         c2, k.p4plus_to_p4_insert_vlan_tag, 1
+  add.c2      r2, r2, 4
   // This case should be ideally catched by parser "packet_len_check" pragma.
   sle         c2, k.capri_p4_intrinsic_packet_len, r1
   b.c2        lb_ipv4_norm_ttl

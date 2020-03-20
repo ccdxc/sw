@@ -1276,6 +1276,9 @@ action ip_normalization_checks() {
         modify_field(scratch_metadata.size8, control_metadata.parser_outer_eth_offset);
         modify_field(scratch_metadata.size8, control_metadata.parser_inner_eth_offset);
         modify_field(scratch_metadata.size16, control_metadata.parser_payload_offset);
+        // if VLAN header was inserted, then adjust payload length accordingly
+        modify_field(scratch_metadata.flag, p4plus_to_p4.insert_vlan_tag);
+
         if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_DROP) and
             (tunnel_metadata.tunnel_terminate == FALSE) and
             (((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 18))) or

@@ -25,34 +25,34 @@ const (
 	//-------------------------- Default Action Edit --------------------------
 
 	// IPInvalidLenAction is set to edit by default
-	IPInvalidLenAction = halproto.NormalizationAction_NORM_ACTION_EDIT
+	IPInvalidLenAction = halproto.NormalizationAction_NORM_ACTION_ALLOW
 
 	// TCPUnexpectedMSSAction is set to edit by default
-	TCPUnexpectedMSSAction = halproto.NormalizationAction_NORM_ACTION_EDIT
+    TCPUnexpectedMSSAction = halproto.NormalizationAction_NORM_ACTION_ALLOW
 
 	// TCPUnexpectedWinScaleAction is set to edit by default
-	TCPUnexpectedWinScaleAction = halproto.NormalizationAction_NORM_ACTION_EDIT
+	TCPUnexpectedWinScaleAction = halproto.NormalizationAction_NORM_ACTION_ALLOW
 
 	// TCPUnexpectedSACKPermAction is set to edit by default
-	TCPUnexpectedSACKPermAction = halproto.NormalizationAction_NORM_ACTION_EDIT
+	TCPUnexpectedSACKPermAction = halproto.NormalizationAction_NORM_ACTION_ALLOW
 
 	// TCPUrgentPtrNotSetAction is set to edit by default
-	TCPUrgentPtrNotSetAction = halproto.NormalizationAction_NORM_ACTION_EDIT
+	TCPUrgentPtrNotSetAction = halproto.NormalizationAction_NORM_ACTION_ALLOW
 
 	// TCPUrgentFlagNotSetAction is set to edit by default
-	TCPUrgentFlagNotSetAction = halproto.NormalizationAction_NORM_ACTION_EDIT
+	TCPUrgentFlagNotSetAction = halproto.NormalizationAction_NORM_ACTION_ALLOW
 
 	// TCPUrgentPayloadMissingAction is set to edit by default
-	TCPUrgentPayloadMissingAction = halproto.NormalizationAction_NORM_ACTION_EDIT
+	TCPUrgentPayloadMissingAction = halproto.NormalizationAction_NORM_ACTION_ALLOW
 
 	// TCPDataLenGreaterThanMSSAction is set to edit by default
-	TCPDataLenGreaterThanMSSAction = halproto.NormalizationAction_NORM_ACTION_EDIT
+	TCPDataLenGreaterThanMSSAction = halproto.NormalizationAction_NORM_ACTION_ALLOW
 
 	// TCPDataLenGreaterThanWinSizeAction is set to edit by default
-	TCPDataLenGreaterThanWinSizeAction = halproto.NormalizationAction_NORM_ACTION_EDIT
+	TCPDataLenGreaterThanWinSizeAction = halproto.NormalizationAction_NORM_ACTION_ALLOW
 
 	// TCPUnexpectedTSOptionAction is set to edit by default
-	TCPUnexpectedTSOptionAction = halproto.NormalizationAction_NORM_ACTION_EDIT
+	TCPUnexpectedTSOptionAction = halproto.NormalizationAction_NORM_ACTION_ALLOW
 
 	//-------------------------- Default Action Drop --------------------------
 

@@ -52,7 +52,13 @@ sfw_populate_default_enforce_security_profile(SecurityProfileSpec &prof)
     prof.set_tcp_rsvd_flags_action(NormalizationAction::NORM_ACTION_DROP);
     prof.set_ip_df_action(NormalizationAction::NORM_ACTION_ALLOW);
     prof.set_ip_options_action(NormalizationAction::NORM_ACTION_ALLOW);
-    prof.set_ip_invalid_len_action(NormalizationAction::NORM_ACTION_EDIT);
+    /*
+     * Naples is receiving an ERSPAN packet on uplink with len in ip header 
+     * less than the parsed headers. For P4 len in ip header is source of truth.
+     * P4 will not be able to trim it less than the parsed headers. For now
+     * disabling trimming
+     */
+    prof.set_ip_invalid_len_action(NormalizationAction::NORM_ACTION_ALLOW);
     prof.set_ip_spoof_pkt_drop(false);
     prof.set_ip_loose_src_routing_pkt_drop(false);
     prof.set_ip_malformed_option_pkt_drop(false);
@@ -88,16 +94,16 @@ sfw_populate_default_enforce_security_profile(SecurityProfileSpec &prof)
     prof.set_icmpv6_large_msg_mtu_small_drop(false);
     prof.set_tcp_split_handshake_drop(false);
     prof.set_tcp_rsvd_flags_action(NormalizationAction::NORM_ACTION_DROP);
-    prof.set_tcp_unexpected_mss_action(NormalizationAction::NORM_ACTION_EDIT);
-    prof.set_tcp_unexpected_win_scale_action(NormalizationAction::NORM_ACTION_EDIT);
-    prof.set_tcp_unexpected_sack_perm_action(NormalizationAction::NORM_ACTION_EDIT);
-    prof.set_tcp_urg_ptr_not_set_action(NormalizationAction::NORM_ACTION_EDIT);
-    prof.set_tcp_urg_flag_not_set_action(NormalizationAction::NORM_ACTION_EDIT);
-    prof.set_tcp_urg_payload_missing_action(NormalizationAction::NORM_ACTION_EDIT);
+    prof.set_tcp_unexpected_mss_action(NormalizationAction::NORM_ACTION_ALLOW);
+    prof.set_tcp_unexpected_win_scale_action(NormalizationAction::NORM_ACTION_ALLOW);
+    prof.set_tcp_unexpected_sack_perm_action(NormalizationAction::NORM_ACTION_ALLOW);
+    prof.set_tcp_urg_ptr_not_set_action(NormalizationAction::NORM_ACTION_ALLOW);
+    prof.set_tcp_urg_flag_not_set_action(NormalizationAction::NORM_ACTION_ALLOW);
+    prof.set_tcp_urg_payload_missing_action(NormalizationAction::NORM_ACTION_ALLOW);
     prof.set_tcp_rst_with_data_action(NormalizationAction::NORM_ACTION_NONE);
-    prof.set_tcp_data_len_gt_mss_action(NormalizationAction::NORM_ACTION_EDIT);
-    prof.set_tcp_data_len_gt_win_size_action(NormalizationAction::NORM_ACTION_EDIT);
-    prof.set_tcp_unexpected_ts_option_action(NormalizationAction::NORM_ACTION_EDIT);
+    prof.set_tcp_data_len_gt_mss_action(NormalizationAction::NORM_ACTION_ALLOW);
+    prof.set_tcp_data_len_gt_win_size_action(NormalizationAction::NORM_ACTION_ALLOW);
+    prof.set_tcp_unexpected_ts_option_action(NormalizationAction::NORM_ACTION_ALLOW);
     prof.set_tcp_unexpected_echo_ts_action(NormalizationAction::NORM_ACTION_DROP);
     prof.set_tcp_unexpected_sack_option_action(NormalizationAction::NORM_ACTION_DROP);
     prof.set_tcp_ts_not_present_drop(true);

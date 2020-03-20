@@ -201,17 +201,21 @@ func flowMonitorShowCmdHandler(cmd *cobra.Command, args []string) {
 		default:
 			break
 		}
-		fmt.Printf("Monitor Action:	")
-		for _, action := range resp.GetSpec().GetAction().Action {
-			fmt.Printf("%s, ", action.String())
-		}
-		fmt.Printf("\nMirror Session Ids:	")
-		for _, mirrorkey := range resp.GetSpec().GetAction().MsKeyHandle {
-			fmt.Printf("%d, ", mirrorkey.GetMirrorsessionId())
-		}
-		fmt.Printf("\nCollector Ids:	")
-		for _, collector := range resp.GetSpec().CollectorKeyHandle {
-			fmt.Printf("%d, ", collector.GetCollectorId())
+		if resp.GetSpec().GetAction() != nil {
+			fmt.Printf("Monitor Action:	")
+			for _, action := range resp.GetSpec().GetAction().Action {
+				fmt.Printf("%s, ", action.String())
+			}
+			fmt.Printf("\nMirror Session Ids:	")
+			for _, mirrorkey := range resp.GetSpec().GetAction().MsKeyHandle {
+				fmt.Printf("%d, ", mirrorkey.GetMirrorsessionId())
+			}
+			fmt.Printf("\nCollector Ids:	")
+			for _, collector := range resp.GetSpec().CollectorKeyHandle {
+				fmt.Printf("%d, ", collector.GetCollectorId())
+			}
+		} else {
+			fmt.Printf("No Action")
 		}
 		fmt.Println()
 	}
