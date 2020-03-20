@@ -33,7 +33,6 @@ shift $((OPTIND -1))
 localedef -i en_US -f UTF-8 en_US.UTF-8
 export LC_ALL="en_US.UTF-8"
 export LANG="en_US.UTF-8"
-export LD_LIBRARY_PATH=/nic/lib:/nic/cli
 export ASIC_SOFT_INIT=1
 
 if [ -e /nic/conf/pipeline.json ]; then
@@ -60,8 +59,10 @@ if [ $pipeline != "iris" ] && [ $pipeline != "apollo" ] && [ $pipeline != "apulu
 fi
 
 if [ $pipeline == "iris" ]; then
+export LD_LIBRARY_PATH=/nic/lib:/nic/cli:/platform/lib
 export HAL_CONFIG_PATH=/nic/conf
 else
+export LD_LIBRARY_PATH=/nic/lib:/nic/cli
 export HAL_CONFIG_PATH=/nic/conf
 export CONFIG_PATH=/nic/conf
 fi
