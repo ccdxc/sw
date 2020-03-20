@@ -302,19 +302,19 @@ jobd/offload: ${JOBD_PREREQS}
 
 .PHONY: jobd/athena_app/session_aging_sim_simple
 jobd/athena_app/session_aging_sim_simple: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test session_aging_sim_simple.txt
+	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test session_aging_sim_simple.txt --athena_app_runargs '\-\-no-fte-flow-prog'
 
 .PHONY: jobd/athena_app/session_aging_sim_medium
 jobd/athena_app/session_aging_sim_medium: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test session_aging_sim_medium.txt
+	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test session_aging_sim_medium.txt --athena_app_runargs '\-\-no-fte-flow-prog'
 
 .PHONY: jobd/athena_app/conntrack_aging_sim_simple
 jobd/athena_app/conntrack_aging_sim_simple: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test conntrack_aging_sim_simple.txt
+	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test conntrack_aging_sim_simple.txt --athena_app_runargs '\-\-no-fte-flow-prog'
 
 .PHONY: jobd/athena_app/conntrack_aging_sim_medium
 jobd/athena_app/conntrack_aging_sim_medium: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test conntrack_aging_sim_medium.txt
+	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test conntrack_aging_sim_medium.txt --athena_app_runargs '\-\-no-fte-flow-prog'
 
 .PHONY: jobd/athena/gtests_sim
 jobd/athena/gtests_sim: ${JOBD_PREREQS}

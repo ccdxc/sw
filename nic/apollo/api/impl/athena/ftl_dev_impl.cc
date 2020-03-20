@@ -467,11 +467,7 @@ static sdk_ret_t
 force_expired_ts_set(enum lif_attr attr,
                      bool force_expired_ts)
 {
-    /*
-     * force_expiry is only for debugging and can be dynamically set
-     * (no need for any lock)
-     */
-    devcmd_t        devcmd(ftl_lif);
+    devcmd_t        devcmd(ftl_lif, age_tmo_cfg_lock, age_tmo_cfg_unlock);
 
     devcmd.req().lif_setattr.opcode = FTL_DEVCMD_OPCODE_LIF_SETATTR;
     devcmd.req().lif_setattr.attr = attr;
@@ -1023,7 +1019,7 @@ devcmd_t::submit_with_retry(void *req_data,
     ftl_timestamp_t     ts;
     sdk_ret_t           ret;
 
-    time_expiry_set(ts, FTL_DEVCMD_RETRY_TMO_US);
+    ts.time_expiry_set(FTL_DEVCMD_RETRY_TMO_US);
 
     /*
      * Take lock only if not already pre-locked by owener.
@@ -1034,7 +1030,7 @@ devcmd_t::submit_with_retry(void *req_data,
 
     for ( ;; ) {
         ret = cmd_handler(req_data, rsp_data);
-        if ((ret != SDK_RET_RETRY) || time_expiry_check(ts)) {
+        if ((ret != SDK_RET_RETRY) || ts.time_expiry_check()) {
             break;
         }
         usleep(10000);

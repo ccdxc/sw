@@ -45,6 +45,7 @@
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
 #include "gen/p4gen/p4/include/ftl.h"
 #include "athena_test.hpp"
+#include "app_test_utils.hpp"
 
 namespace fte_ath {
 
@@ -644,11 +645,13 @@ fte_ftl_init ()
         PDS_TRACE_DEBUG("pds_flow_cache_create success.\n");
     }
 
-    if ((sdk_ret = fte_setup_flow()) != SDK_RET_OK) {
-        PDS_TRACE_DEBUG("fte_setup_flow failed.\n");
-        return sdk_ret;
-    } else {
-        PDS_TRACE_DEBUG("fte_setup_flow success.\n");
+    if (!skip_fte_flow_prog()) {
+        if ((sdk_ret = fte_setup_flow()) != SDK_RET_OK) {
+            PDS_TRACE_DEBUG("fte_setup_flow failed.\n");
+            return sdk_ret;
+        } else {
+            PDS_TRACE_DEBUG("fte_setup_flow success.\n");
+        }
     }
 
     return sdk_ret;

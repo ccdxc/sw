@@ -26,7 +26,6 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/test/api/utils/base.hpp"
 #include "script_parser.hpp"
-#include "nic/apollo/p4/include/athena_defines.h"
 #include "nic/include/ftl_dev_if.hpp"
 #include "nic/apollo/api/include/athena/pds_conntrack.h"
 #include "nic/apollo/api/include/athena/pds_flow_session_info.h"
@@ -542,5 +541,7 @@ uint32_t mpu_timestamp2secs(uint32_t mpu_timestamp);
 #define APP_TEST_EXIT_FN        app_test_exit
 #define APP_TEST_EXIT_FN_STR    APP_TEST_NAME2STR(app_test_exit)
 bool app_test_exit(test::athena_app::test_vparam_ref_t vparam);
+
+bool skip_fte_flow_prog(void);
 
 #endif   // __ATHENA_APP_TEST_UTILS_HPP__

@@ -2,6 +2,7 @@
 conntrack_aging_init
 #conntrack_aging_expiry_log_set TRUE
 conntrack_aging_sim_mode TRUE
+conntrack_aging_clear_full 4096
 conntrack_populate_simple {27 tcp syn_sent} {1 icmp unestablished} {1023 udp established} {901 tcp TIME_WAIT} {438 others UNESTABLISHED} {1019 TCP fin_recv}
 conntrack_aging_test
 

@@ -25,8 +25,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include "trace.hpp"
-#include "fte_athena.hpp"
 #include "app_test_utils.hpp"
+#include "fte_athena.hpp"
 
 using namespace test::athena_app;
 
@@ -122,6 +122,14 @@ sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
     return 0;
 }
 } // namespace core
+
+static int skip_fte_flow_prog_;
+
+bool
+skip_fte_flow_prog(void)
+{
+    return (bool)skip_fte_flow_prog_;
+}
 
 void inline
 print_usage (char **argv)
@@ -250,6 +258,7 @@ main (int argc, char **argv)
        { "test_script", required_argument, NULL, 't' },
        { "script_dir",  required_argument, NULL, 'd' },
        { "mode",        required_argument, NULL, 'm' },
+       { "no-fte-flow-prog", no_argument,  &skip_fte_flow_prog_, 1 },
        { "help",        no_argument,       NULL, 'h' },
        { 0,             0,                 0,     0 }
     };
@@ -257,6 +266,9 @@ main (int argc, char **argv)
     // parse CLI options
     while ((oc = getopt_long(argc, argv, ":hc:p:f:t:d:m:W;", longopts, NULL)) != -1) {
         switch (oc) {
+        case 0:
+            break;
+
         case 'c':
             if (optarg) {
                 cfg_file = std::string(optarg);

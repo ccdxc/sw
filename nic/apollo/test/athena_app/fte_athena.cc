@@ -50,6 +50,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/athena/ftl_pollers_client.hpp"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
+#include "app_test_utils.hpp"
 #include "fte_athena.hpp"
 
 namespace fte_ath {
@@ -80,6 +81,7 @@ char const * g_eal_args[] = {"fte",
 static uint16_t nb_rxd = FTE_MAX_RXDSCR;
 static uint16_t nb_txd = FTE_MAX_TXDSCR;
 
+static rte_atomic32_t pollers_qid = RTE_ATOMIC32_INIT(-1);
 static uint32_t pollers_client_qcount;
 
 // Ports set in promiscuous mode off by default.
@@ -176,7 +178,8 @@ _process (struct rte_mbuf *m, struct lcore_conf *qconf,
 {
     uint16_t dst_port;
 
-    if (g_athena_app_mode == ATHENA_APP_MODE_CPP) {
+    if (!skip_fte_flow_prog() &&
+        (g_athena_app_mode == ATHENA_APP_MODE_CPP)) {
         if (fte_flow_prog(m) != SDK_RET_OK) {
             PDS_TRACE_DEBUG("fte_flow_prog failed..\n");
             // TODO: Unsupported traffic should be dropped?
@@ -224,14 +227,10 @@ fte_rx_loop (int poller_qid)
     }
 
     while (1) {
-#if 0
-        // Polling from multiple cores lead to an eventual
-        // crash so disable for now until a real fix is found.
         if ((poller_qid != -1) &&
             !ftl_pollers_client::user_will_poll()) {
             pds_flow_age_sw_pollers_poll(poller_qid, nullptr);
         }
-#endif
         cur_tsc = rte_rdtsc();
 
         /*
@@ -290,18 +289,23 @@ fte_rx_loop (int poller_qid)
 static int
 fte_launch_one_lcore (__attribute__((unused)) void *dummy)
 {
-    int poller_qid;
+    int qid;
 
     if (g_athena_app_mode == ATHENA_APP_MODE_CPP) {
         fte_ftl_set_core_id(rte_lcore_id());
     }
 
-    poller_qid = rte_lcore_index(rte_lcore_id());
-    if (poller_qid >= (int)pollers_client_qcount) {
-        poller_qid = -1;
+    /*
+     * rte_lcore_index(rte_lcore_id()) does not return zero-based index
+     * as expected so derive poller qid from an atomic.
+     */
+    qid = rte_atomic32_add_return(&pollers_qid, 1);
+    if (qid >= (int)pollers_client_qcount) {
+        qid = -1;
     }
+    PDS_TRACE_DEBUG("Launching fte_rx_loop with poller qid %d", qid);
 
-    fte_rx_loop(poller_qid);
+    fte_rx_loop(qid);
     return 0;
 }
 

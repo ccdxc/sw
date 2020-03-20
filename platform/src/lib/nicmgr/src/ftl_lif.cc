@@ -14,6 +14,8 @@
 #include "nic/include/base.hpp"
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/capri/capri_txs_scheduler.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 
 #include "logger.hpp"
 #include "ftl_dev.hpp"
@@ -497,44 +499,13 @@ static ftl_lif_ordered_event_t lif_ordered_ev_table[FTL_LIF_ST_MAX][FTL_LIF_EV_M
 static bool ftl_lif_fsm_verbose;
 
 static void ftl_lif_state_machine_build(void);
-static void poller_cb_activate(int64_t qstate_addr);
-static void poller_cb_deactivate(int64_t qstate_addr);
-static void scanner_session_cb_activate(int64_t qstate_addr);
-static void scanner_session_cb_deactivate(int64_t qstate_addr);
+static void poller_cb_activate(const mem_access_t *access);
+static void poller_cb_deactivate(const mem_access_t *access);
+static void scanner_session_cb_activate(const mem_access_t *access);
+static void scanner_session_cb_deactivate(const mem_access_t *access);
 static const char *lif_state_str(ftl_lif_state_t state);
 static const char *lif_event_str(ftl_lif_event_t event);
 
-static inline void
-read_mem_small(uint64_t read_addr,
-               uint8_t *buf,
-               uint32_t total_sz)
-{
-    READ_MEM(read_addr, buf, total_sz, 0);
-}
-
-static inline void
-write_mem_small(uint64_t write_addr,
-                uint8_t *buf,
-                uint32_t total_sz,
-                bool cache_invalidate = true)
-{
-    WRITE_MEM(write_addr, buf, total_sz, 0);
-    if (cache_invalidate) {
-        PAL_barrier();
-        p4plus_invalidate_cache(write_addr, total_sz,
-                                P4PLUS_CACHE_INVALIDATE_TXDMA);
-    }
-}
-
-static void read_mem_large(uint64_t read_addr,
-                           uint8_t *buf,
-                           uint32_t total_sz);
-static void write_mem_large(uint64_t write_addr,
-                            uint8_t *buf,
-                            uint32_t total_sz,
-                            bool cache_invalidate = true);
-static void mem_cache_invalidate(uint64_t addr,
-                                 uint32_t total_sz);
 /*
  * devcmd opcodes to state machine events
  */
@@ -563,14 +534,14 @@ static const opcode2event_map_t opcode2event_map = {
 #define FTL_LIF_DEVAPI_CHECK(devcmd_status, ret_val)                            \
     if (!dev_api) {                                                             \
         NIC_LOG_ERR("{}: Uninitialized devapi", LifNameGet());                  \
-        if (devcmd_status) fsm_ctx.devcmd.status = devcmd_status;               \
+        if (devcmd_status) devcmd_ctx.status = devcmd_status;                   \
         return ret_val;                                                         \
     }
 
 #define FTL_LIF_DEVAPI_CHECK_VOID(devcmd_status)                                \
     if (!dev_api) {                                                             \
         NIC_LOG_ERR("{}: Uninitialized devapi", LifNameGet());                  \
-        if (devcmd_status) fsm_ctx.devcmd.status = devcmd_status;               \
+        if (devcmd_status) devcmd_ctx.status = devcmd_status;                   \
         return;                                                                 \
     }
 
@@ -600,8 +571,14 @@ FtlLif::FtlLif(FtlDev& ftl_dev,
     pollers_ctl(*this, FTL_QTYPE_POLLER, spec->sw_pollers),
     pd(ftl_dev.PdClientGet()),
     dev_api(ftl_dev.DevApiGet()),
+    normal_age_access_(*this),
+    accel_age_access_(*this),
     EV_A(EV_A)
 {
+    uint64_t    cmb_age_tmo_addr;
+    uint32_t    cmb_age_tmo_size;
+    ftl_lif_devcmd_ctx_t    devcmd_ctx;
+
     ftl_lif_state_machine_build();
 
     memset(&hal_lif_info_, 0, sizeof(hal_lif_info_));
@@ -629,20 +606,22 @@ FtlLif::FtlLif(FtlDev& ftl_dev,
         throw;
     }
 
-    age_tmo_cb_init(&normal_age_tmo_cb, normal_age_cb_addr(), true);
-    age_tmo_cb_init(&accel_age_tmo_cb, accel_age_cb_addr(), false);
+    normal_age_access_.reset(cmb_age_tmo_addr, sizeof(age_tmo_cb_t));
+    accel_age_access_.reset(cmb_age_tmo_addr + sizeof(age_tmo_cb_t),
+                            sizeof(age_tmo_cb_t));
+    age_tmo_cb_init(&normal_age_tmo_cb, normal_age_access(), true);
+    age_tmo_cb_init(&accel_age_tmo_cb, accel_age_access(), false);
 
-    memset(&devcmd_reset, 0, sizeof(devcmd_reset));
-    memset(&fsm_ctx, 0, sizeof(fsm_ctx));
-    fsm_ctx.state = FTL_LIF_ST_INITIAL;
-    ftl_lif_state_machine(FTL_LIF_EV_CREATE);
+    ftl_lif_state_machine(FTL_LIF_EV_CREATE, devcmd_ctx);
 }
 
 FtlLif::~FtlLif()
 {
-    fsm_ctx.devcmd.status = FTL_RC_EAGAIN;
-    while (fsm_ctx.devcmd.status == FTL_RC_EAGAIN) {
-        ftl_lif_state_machine(FTL_LIF_EV_DESTROY);
+    ftl_lif_devcmd_ctx_t    devcmd_ctx;
+
+    devcmd_ctx.status = FTL_RC_EAGAIN;
+    while (devcmd_ctx.status == FTL_RC_EAGAIN) {
+        ftl_lif_state_machine(FTL_LIF_EV_DESTROY, devcmd_ctx);
     }
 }
 
@@ -655,8 +634,10 @@ FtlLif::SetHalClient(devapi *dapi)
 void
 FtlLif::HalEventHandler(bool status)
 {
+    ftl_lif_devcmd_ctx_t    devcmd_ctx;
+
     if (status) {
-        ftl_lif_state_machine(FTL_LIF_EV_HAL_UP);
+        ftl_lif_state_machine(FTL_LIF_EV_HAL_UP, devcmd_ctx);
     }
 }
 
@@ -666,14 +647,15 @@ FtlLif::CmdHandler(ftl_devcmd_t *req,
                    ftl_devcmd_cpl_t *rsp,
                    void *rsp_data)
 {
-    ftl_lif_event_t event;
-    bool            log_cpl = false;
+    ftl_lif_event_t         event;
+    ftl_lif_devcmd_ctx_t    devcmd_ctx;
+    bool                    log_cpl = false;
 
-    fsm_ctx.devcmd.req = req;
-    fsm_ctx.devcmd.req_data = req_data;
-    fsm_ctx.devcmd.rsp = rsp;
-    fsm_ctx.devcmd.rsp_data = rsp_data;
-    fsm_ctx.devcmd.status = FTL_RC_SUCCESS;
+    devcmd_ctx.req = req;
+    devcmd_ctx.req_data = req_data;
+    devcmd_ctx.rsp = rsp;
+    devcmd_ctx.rsp_data = rsp_data;
+    devcmd_ctx.status = FTL_RC_SUCCESS;
 
     /*
      * Short cut for the most frequent "datapath" operations
@@ -681,15 +663,15 @@ FtlLif::CmdHandler(ftl_devcmd_t *req,
     switch (req->cmd.opcode) {
 
     case FTL_DEVCMD_OPCODE_POLLERS_DEQ_BURST:
-        ftl_lif_state_machine(FTL_LIF_EV_POLLERS_DEQ_BURST);
+        ftl_lif_state_machine(FTL_LIF_EV_POLLERS_DEQ_BURST, devcmd_ctx);
         break;
 
     case FTL_DEVCMD_OPCODE_SCANNERS_START_SINGLE:
-        ftl_lif_state_machine(FTL_LIF_EV_SCANNERS_START_SINGLE);
+        ftl_lif_state_machine(FTL_LIF_EV_SCANNERS_START_SINGLE, devcmd_ctx);
         break;
 
     case FTL_DEVCMD_OPCODE_ACCEL_AGING_CONTROL:
-        ftl_lif_state_machine(FTL_LIF_EV_ACCEL_AGING_CONTROL);
+        ftl_lif_state_machine(FTL_LIF_EV_ACCEL_AGING_CONTROL, devcmd_ctx);
         break;
 
     default:
@@ -701,74 +683,77 @@ FtlLif::CmdHandler(ftl_devcmd_t *req,
         if (iter != opcode2event_map.end()) {
             event = iter->second;
             if (event != FTL_LIF_EV_NULL) {
-                ftl_lif_state_machine(event);
+                ftl_lif_state_machine(event, devcmd_ctx);
             }
         } else {
             NIC_LOG_ERR("{}: Unknown Opcode {}", LifNameGet(), req->cmd.opcode);
-            fsm_ctx.devcmd.status = FTL_RC_EOPCODE;
+            devcmd_ctx.status = FTL_RC_EOPCODE;
         }
         break;
     }
 
-    rsp->status = fsm_ctx.devcmd.status;
+    rsp->status = devcmd_ctx.status;
     if (log_cpl) {
         NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}", LifNameGet(),
-                      ftl_dev_opcode_str(req->cmd.opcode), fsm_ctx.devcmd.status);
+                      ftl_dev_opcode_str(req->cmd.opcode), devcmd_ctx.status);
     }
-    return fsm_ctx.devcmd.status;
+    return devcmd_ctx.status;
 }
 
 ftl_status_code_t
 FtlLif::reset(bool destroy)
 {
-    fsm_ctx.devcmd.req = (ftl_devcmd_t *)&devcmd_reset;
-    fsm_ctx.devcmd.req_data = nullptr;
-    fsm_ctx.devcmd.rsp = nullptr;
-    fsm_ctx.devcmd.rsp_data = nullptr;
-    fsm_ctx.devcmd.status = FTL_RC_SUCCESS;
+    ftl_lif_devcmd_ctx_t    devcmd_ctx;
+    lif_reset_cmd_t         devcmd_reset = {0};
 
+    devcmd_ctx.req = (ftl_devcmd_t *)&devcmd_reset;
     devcmd_reset.quiesce_check = true;
     ftl_lif_state_machine(destroy ? FTL_LIF_EV_RESET_DESTROY :
-                                    FTL_LIF_EV_RESET);
-    return fsm_ctx.devcmd.status;
+                                    FTL_LIF_EV_RESET, devcmd_ctx);
+    return devcmd_ctx.status;
 }
 
 /*
  * LIF State Machine Actions
  */
 ftl_lif_event_t
-FtlLif::ftl_lif_null_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_null_action(ftl_lif_event_t event,
+                            ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
     FTL_LIF_FSM_LOG();
-    fsm_ctx.devcmd.status = FTL_RC_SUCCESS;
+    devcmd_ctx.status = FTL_RC_SUCCESS;
     return FTL_LIF_EV_NULL;
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_null_no_log_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_null_no_log_action(ftl_lif_event_t event,
+                                   ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
-    fsm_ctx.devcmd.status = FTL_RC_SUCCESS;
+    devcmd_ctx.status = FTL_RC_SUCCESS;
     return FTL_LIF_EV_NULL;
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_eagain_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_eagain_action(ftl_lif_event_t event,
+                              ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
     FTL_LIF_FSM_LOG();
-    fsm_ctx.devcmd.status = FTL_RC_EAGAIN;
+    devcmd_ctx.status = FTL_RC_EAGAIN;
     return FTL_LIF_EV_NULL;
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_reject_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_reject_action(ftl_lif_event_t event,
+                              ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
     FTL_LIF_FSM_ERR_LOG();
-    fsm_ctx.devcmd.status = FTL_RC_EPERM;
+    devcmd_ctx.status = FTL_RC_EPERM;
     return FTL_LIF_EV_NULL;
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_create_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_create_action(ftl_lif_event_t event,
+                              ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
     FTL_LIF_FSM_LOG();
     memset(pd_qinfo, 0, sizeof(pd_qinfo));
@@ -799,15 +784,17 @@ FtlLif::ftl_lif_create_action(ftl_lif_event_t event)
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_destroy_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_destroy_action(ftl_lif_event_t event,
+                               ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
     FTL_LIF_FSM_LOG();
-    fsm_ctx.devcmd.status = FTL_RC_SUCCESS;
+    devcmd_ctx.status = FTL_RC_SUCCESS;
     return FTL_LIF_EV_RESET_DESTROY;
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_hal_up_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_hal_up_action(ftl_lif_event_t event,
+                              ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
     FTL_LIF_FSM_LOG();
     cosA = 1;
@@ -825,14 +812,14 @@ FtlLif::ftl_lif_hal_up_action(ftl_lif_event_t event)
         NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
                     LifNameGet(), "INTERNAL_TX_PROXY_DROP", 1);
         cosB = 0;
-        fsm_ctx.devcmd.status = FTL_RC_ERROR;
+        devcmd_ctx.status = FTL_RC_ERROR;
     }
     dev_api->qos_get_txtc_cos("CONTROL", 1, &ctl_cosB);
     if ((int)ctl_cosB < 0) {
         NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
                     LifNameGet(), "CONTROL", 1);
         ctl_cosB = 0;
-        fsm_ctx.devcmd.status = FTL_RC_ERROR;
+        devcmd_ctx.status = FTL_RC_ERROR;
     }
 
     NIC_LOG_DEBUG("{}: cosA: {} cosB: {} ctl_cosA: {} ctl_cosB: {}",
@@ -842,9 +829,10 @@ FtlLif::ftl_lif_hal_up_action(ftl_lif_event_t event)
 
 
 ftl_lif_event_t
-FtlLif::ftl_lif_setattr_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_setattr_action(ftl_lif_event_t event,
+                               ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
-    lif_setattr_cmd_t  *cmd = &fsm_ctx.devcmd.req->lif_setattr;
+    lif_setattr_cmd_t  *cmd = &devcmd_ctx.req->lif_setattr;
 
     FTL_LIF_FSM_LOG();
     switch (cmd->attr) {
@@ -864,12 +852,12 @@ FtlLif::ftl_lif_setattr_action(ftl_lif_event_t event)
 
     case FTL_LIF_ATTR_NORMAL_AGE_TMO:
         age_tmo_cb_set("normal", &normal_age_tmo_cb,
-                       normal_age_cb_addr(), &cmd->age_tmo);
+                       normal_age_access(), &cmd->age_tmo);
         break;
 
     case FTL_LIF_ATTR_ACCEL_AGE_TMO:
         age_tmo_cb_set("accelerated", &accel_age_tmo_cb,
-                       accel_age_cb_addr(), &cmd->age_tmo);
+                       accel_age_access(), &cmd->age_tmo);
         break;
 
     case FTL_LIF_ATTR_METRICS:
@@ -877,26 +865,26 @@ FtlLif::ftl_lif_setattr_action(ftl_lif_event_t event)
         /*
          * Setting of metrics not supported; only Get allowed
          */
-        fsm_ctx.devcmd.status = FTL_RC_EPERM;
+        devcmd_ctx.status = FTL_RC_EPERM;
         break;
 
     case FTL_LIF_ATTR_FORCE_SESSION_EXPIRED_TS:
         force_session_expired_ts_set(&normal_age_tmo_cb,
-                              normal_age_cb_addr(), cmd->force_expired_ts);
+                              normal_age_access(), cmd->force_expired_ts);
         force_session_expired_ts_set(&accel_age_tmo_cb,
-                              accel_age_cb_addr(), cmd->force_expired_ts);
+                              accel_age_access(), cmd->force_expired_ts);
         break;
 
     case FTL_LIF_ATTR_FORCE_CONNTRACK_EXPIRED_TS:
         force_conntrack_expired_ts_set(&normal_age_tmo_cb,
-                              normal_age_cb_addr(), cmd->force_expired_ts);
+                              normal_age_access(), cmd->force_expired_ts);
         force_conntrack_expired_ts_set(&accel_age_tmo_cb,
-                              accel_age_cb_addr(), cmd->force_expired_ts);
+                              accel_age_access(), cmd->force_expired_ts);
         break;
 
     default:
         NIC_LOG_ERR("{}: unknown ATTR {}", LifNameGet(), cmd->attr);
-        fsm_ctx.devcmd.status = FTL_RC_EINVAL;
+        devcmd_ctx.status = FTL_RC_EINVAL;
         break;
     }
 
@@ -904,10 +892,11 @@ FtlLif::ftl_lif_setattr_action(ftl_lif_event_t event)
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_getattr_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_getattr_action(ftl_lif_event_t event,
+                               ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
-    lif_getattr_cmd_t  *cmd = &fsm_ctx.devcmd.req->lif_getattr;
-    lif_getattr_cpl_t  *cpl = &fsm_ctx.devcmd.rsp->lif_getattr;
+    lif_getattr_cmd_t  *cmd = &devcmd_ctx.req->lif_getattr;
+    lif_getattr_cpl_t  *cpl = &devcmd_ctx.rsp->lif_getattr;
 
     FTL_LIF_FSM_LOG();
 
@@ -918,47 +907,47 @@ FtlLif::ftl_lif_getattr_action(ftl_lif_event_t event)
         /*
          * Name is too big to return in cpl so use rsp_data if available
          */
-        if (fsm_ctx.devcmd.rsp_data) {
-            strncpy0((char *)fsm_ctx.devcmd.rsp_data, hal_lif_info_.name,
+        if (devcmd_ctx.rsp_data) {
+            strncpy0((char *)devcmd_ctx.rsp_data, hal_lif_info_.name,
                      FTL_DEV_IFNAMSIZ);
         }
         break;
 
     case FTL_LIF_ATTR_NORMAL_AGE_TMO:
-        if (fsm_ctx.devcmd.rsp_data) {
-            age_tmo_cb_get((lif_attr_age_tmo_t *)fsm_ctx.devcmd.rsp_data,
+        if (devcmd_ctx.rsp_data) {
+            age_tmo_cb_get((lif_attr_age_tmo_t *)devcmd_ctx.rsp_data,
                            &normal_age_tmo_cb);
         }
         break;
 
     case FTL_LIF_ATTR_ACCEL_AGE_TMO:
-        if (fsm_ctx.devcmd.rsp_data) {
-            age_tmo_cb_get((lif_attr_age_tmo_t *)fsm_ctx.devcmd.rsp_data,
+        if (devcmd_ctx.rsp_data) {
+            age_tmo_cb_get((lif_attr_age_tmo_t *)devcmd_ctx.rsp_data,
                            &accel_age_tmo_cb);
         }
         break;
 
     case FTL_LIF_ATTR_METRICS:
 
-        if (fsm_ctx.devcmd.rsp_data) {
+        if (devcmd_ctx.rsp_data) {
             lif_attr_metrics_t  *metrics =
-                     (lif_attr_metrics_t *)fsm_ctx.devcmd.rsp_data;
+                     (lif_attr_metrics_t *)devcmd_ctx.rsp_data;
             switch (cmd->qtype) {
             case FTL_QTYPE_SCANNER_SESSION:
-                fsm_ctx.devcmd.status = session_scanners_ctl.metrics_get(metrics);
+                devcmd_ctx.status = session_scanners_ctl.metrics_get(metrics);
                 break;
 
             case FTL_QTYPE_SCANNER_CONNTRACK:
-                fsm_ctx.devcmd.status = conntrack_scanners_ctl.metrics_get(metrics);
+                devcmd_ctx.status = conntrack_scanners_ctl.metrics_get(metrics);
                 break;
 
             case FTL_QTYPE_POLLER:
-                fsm_ctx.devcmd.status = pollers_ctl.metrics_get(metrics);
+                devcmd_ctx.status = pollers_ctl.metrics_get(metrics);
                 break;
 
             default:
                 NIC_LOG_ERR("{}: Unsupported qtype {}", LifNameGet(), cmd->qtype);
-                fsm_ctx.devcmd.status = FTL_RC_EQTYPE;
+                devcmd_ctx.status = FTL_RC_EQTYPE;
                 break;
             }
         }
@@ -974,7 +963,7 @@ FtlLif::ftl_lif_getattr_action(ftl_lif_event_t event)
 
     default:
         NIC_LOG_ERR("{}: unknown ATTR {}", LifNameGet(), cmd->attr);
-        fsm_ctx.devcmd.status = FTL_RC_EINVAL;
+        devcmd_ctx.status = FTL_RC_EINVAL;
         break;
     }
 
@@ -982,22 +971,23 @@ FtlLif::ftl_lif_getattr_action(ftl_lif_event_t event)
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_identify_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_identify_action(ftl_lif_event_t event,
+                                ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
-    lif_identify_cmd_t  *cmd = &fsm_ctx.devcmd.req->lif_identify;
-    lif_identity_t      *rsp = (lif_identity_t *)fsm_ctx.devcmd.rsp_data;
-    lif_identify_cpl_t  *cpl = &fsm_ctx.devcmd.rsp->lif_identify;
+    lif_identify_cmd_t  *cmd = &devcmd_ctx.req->lif_identify;
+    lif_identity_t      *rsp = (lif_identity_t *)devcmd_ctx.rsp_data;
+    lif_identify_cpl_t  *cpl = &devcmd_ctx.rsp->lif_identify;
 
     FTL_LIF_FSM_LOG();
 
     if (cmd->type >= FTL_LIF_TYPE_MAX) {
         NIC_LOG_ERR("{}: bad lif type {}", LifNameGet(), cmd->type);
-        fsm_ctx.devcmd.status = FTL_RC_EINVAL;
+        devcmd_ctx.status = FTL_RC_EINVAL;
         return FTL_LIF_EV_NULL;
     }
     if (cmd->ver != IDENTITY_VERSION_1) {
         NIC_LOG_ERR("{}: unsupported version {}", LifNameGet(), cmd->ver);
-        fsm_ctx.devcmd.status = FTL_RC_EVERSION;
+        devcmd_ctx.status = FTL_RC_EVERSION;
         return FTL_LIF_EV_NULL;
     }
 
@@ -1024,7 +1014,8 @@ FtlLif::ftl_lif_identify_action(ftl_lif_event_t event)
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_init_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_init_action(ftl_lif_event_t event,
+                            ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
     FTL_LIF_FSM_LOG();
 
@@ -1033,7 +1024,7 @@ FtlLif::ftl_lif_init_action(ftl_lif_event_t event)
     FTL_LIF_DEVAPI_CHECK(FTL_RC_ERROR, FTL_LIF_EV_NULL);
     if (dev_api->lif_create(&hal_lif_info_) != SDK_RET_OK) {
         NIC_LOG_ERR("{}: Failed to create LIF", LifNameGet());
-        fsm_ctx.devcmd.status = FTL_RC_ERROR;
+        devcmd_ctx.status = FTL_RC_ERROR;
     }
 
     pd->program_qstate((struct queue_info*)hal_lif_info_.queue_info,
@@ -1043,20 +1034,29 @@ FtlLif::ftl_lif_init_action(ftl_lif_event_t event)
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_reset_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_reset_action(ftl_lif_event_t event,
+                             ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
-    lif_reset_cmd_t     *cmd = &fsm_ctx.devcmd.req->lif_reset;
+    lif_reset_cmd_t     *cmd = &devcmd_ctx.req->lif_reset;
 
     FTL_LIF_FSM_LOG();
     fsm_ctx.reset = true;
     fsm_ctx.reset_destroy = (event == FTL_LIF_EV_RESET_DESTROY) ||
                             (event == FTL_LIF_EV_DESTROY);
+    /*
+     * Special handling for the case where lif_reset is
+     * called before scanners are initialized.
+     */
+    if (session_scanners_ctl.empty_qstate_access() ||
+        conntrack_scanners_ctl.empty_qstate_access()) {
+        return FTL_LIF_EV_QUEUES_STOP_COMPLETE;
+    }
     session_scanners_ctl.stop();
     conntrack_scanners_ctl.stop();
 
     if (cmd->quiesce_check) {
-        time_expiry_set(fsm_ctx.ts, FTL_LIF_SCANNERS_QUIESCE_TIME_US);
-        fsm_ctx.devcmd.status = FTL_RC_EAGAIN;
+        fsm_ctx.ts.time_expiry_set(FTL_LIF_SCANNERS_QUIESCE_TIME_US);
+        devcmd_ctx.status = FTL_RC_EAGAIN;
         return FTL_LIF_EV_SCANNERS_QUIESCE;
     }
 
@@ -1064,23 +1064,25 @@ FtlLif::ftl_lif_reset_action(ftl_lif_event_t event)
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_pollers_init_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_pollers_init_action(ftl_lif_event_t event,
+                                    ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
-    pollers_init_cmd_t          *cmd = &fsm_ctx.devcmd.req->pollers_init;
-    pollers_init_cpl_t          *cpl = &fsm_ctx.devcmd.rsp->pollers_init;
+    pollers_init_cmd_t          *cmd = &devcmd_ctx.req->pollers_init;
+    pollers_init_cpl_t          *cpl = &devcmd_ctx.rsp->pollers_init;
 
     FTL_LIF_FSM_LOG();
-    fsm_ctx.devcmd.status = pollers_ctl.init(cmd);
+    devcmd_ctx.status = pollers_ctl.init(cmd);
 
     cpl->qtype = cmd->qtype;
     return FTL_LIF_EV_NULL;
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_pollers_flush_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_pollers_flush_action(ftl_lif_event_t event,
+                                     ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
-    pollers_flush_cmd_t     *cmd = &fsm_ctx.devcmd.req->pollers_flush;
-    pollers_flush_cpl_t     *cpl = &fsm_ctx.devcmd.rsp->pollers_flush;
+    pollers_flush_cmd_t     *cmd = &devcmd_ctx.req->pollers_flush;
+    pollers_flush_cpl_t     *cpl = &devcmd_ctx.rsp->pollers_flush;
 
     FTL_LIF_FSM_LOG();
 
@@ -1088,50 +1090,52 @@ FtlLif::ftl_lif_pollers_flush_action(ftl_lif_event_t event)
      * SW pollers flush is implemented with the stop() method which
      * has immediate completion.
      */
-    fsm_ctx.devcmd.status = pollers_ctl.stop();
+    devcmd_ctx.status = pollers_ctl.stop();
 
     cpl->qtype = cmd->qtype;
     return FTL_LIF_EV_NULL;
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_pollers_deq_burst_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_pollers_deq_burst_action(ftl_lif_event_t event,
+                                         ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
-    pollers_deq_burst_cmd_t *cmd = &fsm_ctx.devcmd.req->pollers_deq_burst;
-    pollers_deq_burst_cpl_t *cpl = &fsm_ctx.devcmd.rsp->pollers_deq_burst;
+    pollers_deq_burst_cmd_t *cmd = &devcmd_ctx.req->pollers_deq_burst;
+    pollers_deq_burst_cpl_t *cpl = &devcmd_ctx.rsp->pollers_deq_burst;
     uint32_t                burst_count = cmd->burst_count;
 
     // Don't log as this function is called very frequently
     //FTL_LIF_FSM_LOG();
 
-    fsm_ctx.devcmd.status =
+    devcmd_ctx.status =
         pollers_ctl.dequeue_burst(cmd->index, &burst_count,
-                                  (uint8_t *)fsm_ctx.devcmd.rsp_data, cmd->buf_sz);
+                                  (uint8_t *)devcmd_ctx.rsp_data, cmd->buf_sz);
     cpl->qtype = cmd->qtype;
     cpl->read_count = burst_count;
     return FTL_LIF_EV_NULL;
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_scanners_init_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_scanners_init_action(ftl_lif_event_t event,
+                                     ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
-    scanners_init_cmd_t         *cmd = &fsm_ctx.devcmd.req->scanners_init;
-    scanners_init_cpl_t         *cpl = &fsm_ctx.devcmd.rsp->scanners_init;
+    scanners_init_cmd_t         *cmd = &devcmd_ctx.req->scanners_init;
+    scanners_init_cpl_t         *cpl = &devcmd_ctx.rsp->scanners_init;
 
     FTL_LIF_FSM_LOG();
     switch (cmd->qtype) {
 
     case FTL_QTYPE_SCANNER_SESSION:
-        fsm_ctx.devcmd.status = session_scanners_ctl.init(cmd);
+        devcmd_ctx.status = session_scanners_ctl.init(cmd);
         break;
 
     case FTL_QTYPE_SCANNER_CONNTRACK:
-        fsm_ctx.devcmd.status = conntrack_scanners_ctl.init(cmd);
+        devcmd_ctx.status = conntrack_scanners_ctl.init(cmd);
         break;
 
     default:
         NIC_LOG_ERR("{}: Unsupported qtype {}", LifNameGet(), cmd->qtype);
-        fsm_ctx.devcmd.status = FTL_RC_EQTYPE;
+        devcmd_ctx.status = FTL_RC_EQTYPE;
         break;
     }
 
@@ -1140,7 +1144,8 @@ FtlLif::ftl_lif_scanners_init_action(ftl_lif_event_t event)
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_scanners_start_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_scanners_start_action(ftl_lif_event_t event,
+                                      ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
     ftl_status_code_t           session_status;
     ftl_status_code_t           conntrack_status;
@@ -1149,17 +1154,18 @@ FtlLif::ftl_lif_scanners_start_action(ftl_lif_event_t event)
     session_status = session_scanners_ctl.start();
     conntrack_status = conntrack_scanners_ctl.start();
 
-    fsm_ctx.devcmd.status = session_status;
-    if (fsm_ctx.devcmd.status == FTL_RC_SUCCESS) {
-        fsm_ctx.devcmd.status = conntrack_status;
+    devcmd_ctx.status = session_status;
+    if (devcmd_ctx.status == FTL_RC_SUCCESS) {
+        devcmd_ctx.status = conntrack_status;
     }
     return FTL_LIF_EV_NULL;
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_scanners_stop_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_scanners_stop_action(ftl_lif_event_t event,
+                                     ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
-    scanners_stop_cmd_t         *cmd = &fsm_ctx.devcmd.req->scanners_stop;
+    scanners_stop_cmd_t         *cmd = &devcmd_ctx.req->scanners_stop;
     ftl_status_code_t           session_status;
     ftl_status_code_t           conntrack_status;
 
@@ -1167,14 +1173,14 @@ FtlLif::ftl_lif_scanners_stop_action(ftl_lif_event_t event)
     session_status = session_scanners_ctl.stop();
     conntrack_status = conntrack_scanners_ctl.stop();
 
-    fsm_ctx.devcmd.status = session_status;
-    if (fsm_ctx.devcmd.status == FTL_RC_SUCCESS) {
-        fsm_ctx.devcmd.status = conntrack_status;
+    devcmd_ctx.status = session_status;
+    if (devcmd_ctx.status == FTL_RC_SUCCESS) {
+        devcmd_ctx.status = conntrack_status;
     }
 
     if (cmd->quiesce_check) {
-        time_expiry_set(fsm_ctx.ts, FTL_LIF_SCANNERS_QUIESCE_TIME_US);
-        fsm_ctx.devcmd.status = FTL_RC_EAGAIN;
+        fsm_ctx.ts.time_expiry_set(FTL_LIF_SCANNERS_QUIESCE_TIME_US);
+        devcmd_ctx.status = FTL_RC_EAGAIN;
         return FTL_LIF_EV_SCANNERS_QUIESCE;
     }
 
@@ -1182,18 +1188,19 @@ FtlLif::ftl_lif_scanners_stop_action(ftl_lif_event_t event)
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_scanners_quiesce_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_scanners_quiesce_action(ftl_lif_event_t event,
+                                        ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
     bool    quiesce_complete = false;
 
     FTL_LIF_FSM_VERBOSE_LOG();
 
-    fsm_ctx.devcmd.status = FTL_RC_EAGAIN;
+    devcmd_ctx.status = FTL_RC_EAGAIN;
     if (session_scanners_ctl.quiesce() && conntrack_scanners_ctl.quiesce()) {
         quiesce_complete = true;
     }
 
-    if (!quiesce_complete && time_expiry_check(fsm_ctx.ts)) {
+    if (!quiesce_complete && fsm_ctx.ts.time_expiry_check()) {
         NIC_LOG_DEBUG("{}: scanners quiesce timed out", LifNameGet());
         NIC_LOG_DEBUG("    last session qid quiesced: {} qid_high: {}",
                       session_scanners_ctl.quiesce_qid(),
@@ -1214,30 +1221,31 @@ FtlLif::ftl_lif_scanners_quiesce_action(ftl_lif_event_t event)
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_scanners_start_single_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_scanners_start_single_action(ftl_lif_event_t event,
+                                             ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
-    scanners_start_single_cmd_t *cmd = &fsm_ctx.devcmd.req->scanners_start_single;
-    scanners_start_single_cpl_t *cpl = &fsm_ctx.devcmd.rsp->scanners_start_single;
+    scanners_start_single_cmd_t *cmd = &devcmd_ctx.req->scanners_start_single;
+    scanners_start_single_cpl_t *cpl = &devcmd_ctx.rsp->scanners_start_single;
 
     // Don't log as this function may be called very frequently
     //FTL_LIF_FSM_LOG();
     switch (cmd->qtype) {
 
     case FTL_QTYPE_SCANNER_SESSION:
-        fsm_ctx.devcmd.status = session_scanners_ctl.sched_start_single(cmd->index);
+        devcmd_ctx.status = session_scanners_ctl.sched_start_single(cmd->index);
         break;
 
     case FTL_QTYPE_SCANNER_CONNTRACK:
-        fsm_ctx.devcmd.status = conntrack_scanners_ctl.sched_start_single(cmd->index);
+        devcmd_ctx.status = conntrack_scanners_ctl.sched_start_single(cmd->index);
         break;
 
     case FTL_QTYPE_POLLER:
-        fsm_ctx.devcmd.status = pollers_ctl.sched_start_single(cmd->index);
+        devcmd_ctx.status = pollers_ctl.sched_start_single(cmd->index);
         break;
 
     default:
         NIC_LOG_ERR("{}: Unsupported qtype {}", LifNameGet(), cmd->qtype);
-        fsm_ctx.devcmd.status = FTL_RC_EQTYPE;
+        devcmd_ctx.status = FTL_RC_EQTYPE;
         break;
     }
 
@@ -1246,14 +1254,15 @@ FtlLif::ftl_lif_scanners_start_single_action(ftl_lif_event_t event)
 }
 
 ftl_lif_event_t
-FtlLif::ftl_lif_accel_aging_ctl_action(ftl_lif_event_t event)
+FtlLif::ftl_lif_accel_aging_ctl_action(ftl_lif_event_t event,
+                                       ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
-    accel_aging_ctl_cmd_t   *cmd = &fsm_ctx.devcmd.req->accel_aging_ctl;
+    accel_aging_ctl_cmd_t   *cmd = &devcmd_ctx.req->accel_aging_ctl;
 
     // Don't log as this function might be called frequently
     //FTL_LIF_FSM_LOG();
 
-    fsm_ctx.devcmd.status = cmd->enable_sense ?
+    devcmd_ctx.status = cmd->enable_sense ?
                             accel_age_tmo_cb_select() : normal_age_tmo_cb_select();
     return FTL_LIF_EV_NULL;
 }
@@ -1262,7 +1271,8 @@ FtlLif::ftl_lif_accel_aging_ctl_action(ftl_lif_event_t event)
  * Event-Action state machine execute
  */
 void
-FtlLif::ftl_lif_state_machine(ftl_lif_event_t event)
+FtlLif::ftl_lif_state_machine(ftl_lif_event_t event,
+                              ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
     ftl_lif_ordered_event_t     *ordered_event;
     ftl_lif_action_t            action;
@@ -1284,7 +1294,7 @@ FtlLif::ftl_lif_state_machine(ftl_lif_event_t event)
                             lif_event_str(event));
                 throw;
             }
-            event = (this->*action)(event);
+            event = (this->*action)(event, devcmd_ctx);
 
         } else {
             NIC_LOG_ERR("Unknown state {} or event {}",
@@ -1296,7 +1306,7 @@ FtlLif::ftl_lif_state_machine(ftl_lif_event_t event)
 
 void
 FtlLif::age_tmo_cb_init(age_tmo_cb_t *age_tmo_cb,
-                        uint64_t cb_addr,
+                        const mem_access_t& access,
                         bool cb_select)
 {
     memset(age_tmo_cb, 0, sizeof(*age_tmo_cb));
@@ -1318,13 +1328,13 @@ FtlLif::age_tmo_cb_init(age_tmo_cb_t *age_tmo_cb,
 
     age_tmo_cb->cb_activate = SCANNER_AGE_TMO_CB_ACTIVATE;
     age_tmo_cb->cb_select = cb_select;
-    write_mem_small(cb_addr, (uint8_t *)age_tmo_cb, sizeof(*age_tmo_cb));
+    access.small_write(0, (uint8_t *)age_tmo_cb, sizeof(*age_tmo_cb));
 }
 
 void
 FtlLif::age_tmo_cb_set(const char *which,
                        age_tmo_cb_t *age_tmo_cb,
-                       uint64_t cb_addr,
+                       const mem_access_t& access,
                        const lif_attr_age_tmo_t *attr_age_tmo)
 {
     lif_attr_age_tmo_t  scratch_tmo;
@@ -1335,10 +1345,9 @@ FtlLif::age_tmo_cb_set(const char *which,
      * in order to ensure MPU does not pick up any partially filled values.
      */
     age_tmo_cb->cb_activate = (age_tmo_cb_activate_t)~SCANNER_AGE_TMO_CB_ACTIVATE;
-    write_mem_small(cb_addr + offsetof(age_tmo_cb_t, cb_activate),
-                    (uint8_t *)&age_tmo_cb->cb_activate,
-                    sizeof(age_tmo_cb->cb_activate));
-
+    access.small_write(offsetof(age_tmo_cb_t, cb_activate),
+                       (uint8_t *)&age_tmo_cb->cb_activate,
+                       sizeof(age_tmo_cb->cb_activate));
     /*
      * Timeout values are stored in big endian to make it
      * convenient for MPU code to load them with bit truncation.
@@ -1367,12 +1376,12 @@ FtlLif::age_tmo_cb_set(const char *which,
                   LifNameGet(), which);
     age_tmo_cb_get(&scratch_tmo, age_tmo_cb);
 
-    write_mem_small(cb_addr, (uint8_t *)age_tmo_cb, sizeof(*age_tmo_cb));
+    access.small_write(0, (uint8_t *)age_tmo_cb, sizeof(*age_tmo_cb));
 
     age_tmo_cb->cb_activate = SCANNER_AGE_TMO_CB_ACTIVATE;
-    write_mem_small(cb_addr + offsetof(age_tmo_cb_t, cb_activate),
-                    (uint8_t *)&age_tmo_cb->cb_activate,
-                    sizeof(age_tmo_cb->cb_activate));
+    access.small_write(offsetof(age_tmo_cb_t, cb_activate),
+                       (uint8_t *)&age_tmo_cb->cb_activate,
+                       sizeof(age_tmo_cb->cb_activate));
 }
 
 void
@@ -1403,7 +1412,7 @@ FtlLif::age_tmo_cb_get(lif_attr_age_tmo_t *attr_age_tmo,
 
 void
 FtlLif::force_session_expired_ts_set(age_tmo_cb_t *age_tmo_cb,
-                                     uint64_t cb_addr,
+                                     const mem_access_t& access,
                                      uint8_t force_expired_ts)
 {
     /*
@@ -1411,14 +1420,14 @@ FtlLif::force_session_expired_ts_set(age_tmo_cb_t *age_tmo_cb,
      * it's fine to dynamically update it.
      */
     age_tmo_cb->force_session_expired_ts = force_expired_ts;
-    write_mem_small(cb_addr + offsetof(age_tmo_cb_t, force_session_expired_ts),
-                    (uint8_t *)&age_tmo_cb->force_session_expired_ts,
-                    sizeof(age_tmo_cb->force_session_expired_ts));
+    access.small_write(offsetof(age_tmo_cb_t, force_session_expired_ts),
+                       (uint8_t *)&age_tmo_cb->force_session_expired_ts,
+                       sizeof(age_tmo_cb->force_session_expired_ts));
 }
 
 void
 FtlLif::force_conntrack_expired_ts_set(age_tmo_cb_t *age_tmo_cb,
-                                       uint64_t cb_addr,
+                                       const mem_access_t& access,
                                        uint8_t force_expired_ts)
 {
     /*
@@ -1426,9 +1435,9 @@ FtlLif::force_conntrack_expired_ts_set(age_tmo_cb_t *age_tmo_cb,
      * it's fine to dynamically update it.
      */
     age_tmo_cb->force_conntrack_expired_ts = force_expired_ts;
-    write_mem_small(cb_addr + offsetof(age_tmo_cb_t, force_conntrack_expired_ts),
-                    (uint8_t *)&age_tmo_cb->force_conntrack_expired_ts,
-                    sizeof(age_tmo_cb->force_conntrack_expired_ts));
+    access.small_write(offsetof(age_tmo_cb_t, force_conntrack_expired_ts),
+                       (uint8_t *)&age_tmo_cb->force_conntrack_expired_ts,
+                       sizeof(age_tmo_cb->force_conntrack_expired_ts));
 }
 
 ftl_status_code_t
@@ -1440,14 +1449,14 @@ FtlLif::normal_age_tmo_cb_select(void)
          * Must always enable the newly selected CB before disabling the other.
          */
         normal_age_tmo_cb.cb_select = true;
-        write_mem_small(normal_age_cb_addr() + offsetof(age_tmo_cb_t, cb_select),
-                        (uint8_t *)&normal_age_tmo_cb.cb_select,
-                        sizeof(normal_age_tmo_cb.cb_select));
+        normal_age_access().small_write(offsetof(age_tmo_cb_t, cb_select),
+                                  (uint8_t *)&normal_age_tmo_cb.cb_select,
+                                  sizeof(normal_age_tmo_cb.cb_select));
 
         accel_age_tmo_cb.cb_select = false;
-        write_mem_small(accel_age_cb_addr() + offsetof(age_tmo_cb_t, cb_select),
-                        (uint8_t *)&accel_age_tmo_cb.cb_select,
-                        sizeof(accel_age_tmo_cb.cb_select));
+        accel_age_access().small_write(offsetof(age_tmo_cb_t, cb_select),
+                                 (uint8_t *)&accel_age_tmo_cb.cb_select,
+                                 sizeof(accel_age_tmo_cb.cb_select));
     }
 
     return FTL_RC_SUCCESS;
@@ -1462,14 +1471,14 @@ FtlLif::accel_age_tmo_cb_select(void)
          * Must always enable the newly selected CB before disabling the other.
          */
         accel_age_tmo_cb.cb_select = true;
-        write_mem_small(accel_age_cb_addr() + offsetof(age_tmo_cb_t, cb_select),
-                        (uint8_t *)&accel_age_tmo_cb.cb_select,
-                        sizeof(accel_age_tmo_cb.cb_select));
+        accel_age_access().small_write(offsetof(age_tmo_cb_t, cb_select),
+                                 (uint8_t *)&accel_age_tmo_cb.cb_select,
+                                 sizeof(accel_age_tmo_cb.cb_select));
 
         normal_age_tmo_cb.cb_select = false;
-        write_mem_small(normal_age_cb_addr() + offsetof(age_tmo_cb_t, cb_select),
-                        (uint8_t *)&normal_age_tmo_cb.cb_select,
-                        sizeof(normal_age_tmo_cb.cb_select));
+        normal_age_access().small_write(offsetof(age_tmo_cb_t, cb_select),
+                                  (uint8_t *)&normal_age_tmo_cb.cb_select,
+                                  sizeof(normal_age_tmo_cb.cb_select));
     }
 
     return FTL_RC_SUCCESS;
@@ -1547,6 +1556,8 @@ ftl_lif_queues_ctl_t::ftl_lif_queues_ctl_t(FtlLif& lif,
                                            uint32_t qcount) :
     lif(lif),
     qtype_(qtype),
+    db_pndx_inc(lif),
+    db_shed_clr(lif),
     wrings_base_addr(0),
     wring_single_sz(0),
     slot_data_sz(0),
@@ -1580,6 +1591,8 @@ ftl_lif_queues_ctl_t::init(const scanners_init_cmd_t *cmd)
                   "poller_qtype {}", cmd->poller_lif,
                   cmd->poller_qcount, cmd->poller_qdepth,
                   cmd->poller_qtype);
+    qstate_access.clear();
+    wring_access.clear();
     qid_high_ = 0;
 
     single_cmd.cos = cmd->cos;
@@ -1645,6 +1658,8 @@ ftl_lif_queues_ctl_t::init(const pollers_init_cmd_t *cmd)
                   "wrings_total_sz {}", lif.LifNameGet(), cmd->qtype,
                   cmd->qcount, cmd->qdepth, cmd->wrings_base_addr,
                   cmd->wrings_total_sz);
+    qstate_access.clear();
+    wring_access.clear();
     qid_high_ = 0;
     wrings_base_addr = cmd->wrings_base_addr;
     slot_data_sz = POLLER_SLOT_DATA_BYTES;
@@ -1673,6 +1688,7 @@ ftl_lif_queues_ctl_t::init(const pollers_init_cmd_t *cmd)
     }
 
     single_cmd.wring_base_addr = cmd->wrings_base_addr;
+    single_cmd.wring_sz = wring_single_sz;
     single_cmd.index = 0;
     while (single_cmd.index < cmd->qcount) {
         status = poller_init_single(&single_cmd);
@@ -1692,8 +1708,8 @@ ftl_lif_queues_ctl_t::init(const pollers_init_cmd_t *cmd)
 ftl_status_code_t
 ftl_lif_queues_ctl_t::start(void)
 {
-    void            (*cb_activate)(int64_t qstate_addr);
-    int64_t         qstate_addr;
+    void                (*cb_activate)(const mem_access_t *access);
+    const mem_access_t  *qstate_access;
 
     switch (qtype()) {
 
@@ -1714,12 +1730,12 @@ ftl_lif_queues_ctl_t::start(void)
     if (cb_activate && qcount_) {
 
         for (uint32_t qid = 0; qid <= qid_high_; qid++) {
-            qstate_addr = qid_qstate_addr(qid);
-            if (qstate_addr < 0) {
+            qstate_access = qid_qstate_access(qid);
+            if (!qstate_access) {
                 return FTL_RC_EFAULT;
             }
 
-            (*cb_activate)(qstate_addr);
+            (*cb_activate)(qstate_access);
             sched_start_single(qid);
         }
     }
@@ -1730,7 +1746,6 @@ ftl_lif_queues_ctl_t::start(void)
 ftl_status_code_t
 ftl_lif_queues_ctl_t::sched_start_single(uint32_t qid)
 {
-    asic_db_addr_t  db_addr = { 0 };
     uint64_t        db_data;
 
     if (qid >= qcount()) {
@@ -1747,16 +1762,8 @@ ftl_lif_queues_ctl_t::sched_start_single(uint32_t qid)
         /*
          * Doorbell update with a pndx increment
          */
-        db_addr.lif_id = lif.LifIdGet();
-        db_addr.q_type = qtype();
-        db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
-                                            ASIC_DB_UPD_INDEX_INCR_PINDEX,
-                                            false);
-
         db_data = FTL_LIF_DBDATA_SET(qid, 0);
-
-        PAL_barrier();
-        sdk::asic::pd::asic_ring_db(&db_addr, db_data);
+        db_pndx_inc.write64(db_data);
         break;
 
     default:
@@ -1773,8 +1780,8 @@ ftl_lif_queues_ctl_t::sched_start_single(uint32_t qid)
 ftl_status_code_t
 ftl_lif_queues_ctl_t::stop(void)
 {
-    void                (*cb_deactivate)(int64_t qstate_addr);
-    int64_t             qstate_addr;
+    void                (*cb_deactivate)(const mem_access_t *access);
+    const mem_access_t  *qstate_access;
     ftl_status_code_t   status = FTL_RC_SUCCESS;
 
     switch (qtype()) {
@@ -1796,8 +1803,8 @@ ftl_lif_queues_ctl_t::stop(void)
     if (cb_deactivate && qcount_) {
 
         for (uint32_t qid = 0; qid <= qid_high_; qid++) {
-            qstate_addr = qid_qstate_addr(qid);
-            if (qstate_addr < 0) {
+            qstate_access = qid_qstate_access(qid);
+            if (!qstate_access) {
 
                 /*
                  * continue to try and stop as many queues as possible
@@ -1806,7 +1813,7 @@ ftl_lif_queues_ctl_t::stop(void)
                 continue;
             }
 
-            (*cb_deactivate)(qstate_addr);
+            (*cb_deactivate)(qstate_access);
             sched_stop_single(qid);
         }
     }
@@ -1817,7 +1824,6 @@ ftl_lif_queues_ctl_t::stop(void)
 ftl_status_code_t
 ftl_lif_queues_ctl_t::sched_stop_single(uint32_t qid)
 {
-    asic_db_addr_t  db_addr = { 0 };
     uint64_t        db_data;
 
     if (qid >= qcount()) {
@@ -1834,16 +1840,8 @@ ftl_lif_queues_ctl_t::sched_stop_single(uint32_t qid)
         /*
          * Doorbell update clear
          */
-        db_addr.lif_id = lif.LifIdGet();
-        db_addr.q_type = qtype();
-        db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSA,
-                                            ASIC_DB_UPD_INDEX_UPDATE_NONE,
-                                            false);
-
         db_data = FTL_LIF_DBDATA_SET(qid, 0);
-
-        PAL_barrier();
-        sdk::asic::pd::asic_ring_db(&db_addr, db_data);
+        db_shed_clr.write64(db_data);
         break;
 
     default:
@@ -1863,9 +1861,9 @@ ftl_lif_queues_ctl_t::dequeue_burst(uint32_t qid,
                                     uint8_t *buf,
                                     uint32_t buf_sz)
 {
-    int64_t             qstate_addr;
-    uint64_t            queue_wring_base;
-    uint64_t            slot_addr;
+    const mem_access_t  *qstate_access;
+    const mem_access_t  *wring_access;
+    uint32_t            slot_offset;
     qstate_1ring_cb_t   qstate_1ring_cb;
     uint32_t            avail_count;
     uint32_t            read_count;
@@ -1875,21 +1873,17 @@ ftl_lif_queues_ctl_t::dequeue_burst(uint32_t qid,
     uint32_t            cndx;
     uint32_t            pndx;
 
-    qstate_addr = qid_qstate_addr(qid);
-    if (qstate_addr < 0) {
+    qstate_access = qid_qstate_access(qid);
+    wring_access = qid_wring_access(qid);
+    if (!qstate_access || !wring_access) {
         return FTL_RC_EQID;
     }
 
     if (qdepth && slot_data_sz) {
-
-        /*
-         * TODO: use memory map for more efficiency
-         */
-        read_mem_small(qstate_addr + offsetof(qstate_1ring_cb_t, p_ndx0),
-                       (uint8_t *)&qstate_1ring_cb.p_ndx0,
-                       (offsetof(qstate_1ring_cb_t, c_ndx0) -
-                        offsetof(qstate_1ring_cb_t, p_ndx0) +
-                        sizeof(qstate_1ring_cb.c_ndx0)));
+        qstate_access->small_read(offsetof(qstate_1ring_cb_t, p_ndx0),
+                                  (uint8_t *)&qstate_1ring_cb.p_ndx0,
+                                  sizeof(qstate_1ring_cb.p_ndx0) +
+                                  sizeof(qstate_1ring_cb.c_ndx0));
         cndx = qstate_1ring_cb.c_ndx0 & qdepth_mask;
         pndx = qstate_1ring_cb.p_ndx0 & qdepth_mask;
         if (cndx == pndx) {
@@ -1910,12 +1904,11 @@ ftl_lif_queues_ctl_t::dequeue_burst(uint32_t qid,
         /*
          * Handle ring wrap during read
          */
-        queue_wring_base = wrings_base_addr + (qid * wring_single_sz);
-        slot_addr = queue_wring_base + (cndx * slot_data_sz);
+        slot_offset = cndx * slot_data_sz;
         max_read_sz = (qdepth - cndx) * slot_data_sz;
         read_sz = std::min(total_read_sz, max_read_sz);
+        wring_access->large_read(slot_offset, buf, read_sz);
 
-        read_mem_large(slot_addr, buf, read_sz);
         total_read_sz -= read_sz;
         buf += read_sz;
         if (total_read_sz) {
@@ -1923,13 +1916,13 @@ ftl_lif_queues_ctl_t::dequeue_burst(uint32_t qid,
             /*
              * Wrap once to start of ring
              */
-            read_mem_large(queue_wring_base, buf, total_read_sz);
+            wring_access->large_read(0, buf, total_read_sz);
         }
 
         qstate_1ring_cb.c_ndx0 = (cndx + read_count) & qdepth_mask;
-        write_mem_small(qstate_addr + offsetof(qstate_1ring_cb_t, c_ndx0),
-                        (uint8_t *)&qstate_1ring_cb.c_ndx0,
-                        sizeof(qstate_1ring_cb.c_ndx0));
+        qstate_access->small_write(offsetof(qstate_1ring_cb_t, c_ndx0),
+                                   (uint8_t *)&qstate_1ring_cb.c_ndx0,
+                                   sizeof(qstate_1ring_cb.c_ndx0));
         *burst_count = read_count;
         return FTL_RC_SUCCESS;
     }
@@ -1940,7 +1933,7 @@ ftl_lif_queues_ctl_t::dequeue_burst(uint32_t qid,
 bool
 ftl_lif_queues_ctl_t::quiesce(void)
 {
-    int64_t             qstate_addr;
+    const mem_access_t  *qstate_access;
     qstate_1ring_cb_t   qstate_1ring_cb;
 
     if (!quiescing) {
@@ -1953,25 +1946,21 @@ ftl_lif_queues_ctl_t::quiesce(void)
     case FTL_QTYPE_SCANNER_SESSION:
     case FTL_QTYPE_SCANNER_CONNTRACK:
 
-        while (qid_high_ && (quiesce_qid_ <= qid_high_)) {
-
-            qstate_addr = qid_qstate_addr(quiesce_qid_);
-            if (qstate_addr < 0) {
+        for (; qid_high_ && (quiesce_qid_ <= qid_high_); quiesce_qid_++) {
+            qstate_access = qid_qstate_access(quiesce_qid_);
+            if (!qstate_access) {
                 continue;
             }
-            read_mem_small(qstate_addr + offsetof(qstate_1ring_cb_t, p_ndx0),
-                           (uint8_t *)&qstate_1ring_cb.p_ndx0,
-                           (offsetof(qstate_1ring_cb_t, c_ndx0) -
-                            offsetof(qstate_1ring_cb_t, p_ndx0) +
-                            sizeof(qstate_1ring_cb.c_ndx0)));
+            qstate_access->small_read(offsetof(qstate_1ring_cb_t, p_ndx0),
+                                      (uint8_t *)&qstate_1ring_cb.p_ndx0,
+                                      sizeof(qstate_1ring_cb.p_ndx0) +
+                                      sizeof(qstate_1ring_cb.c_ndx0));
             /*
              * As part of deactivate, MPU would set c_ndx = p_ndx
              */
             if (qstate_1ring_cb.c_ndx0 != qstate_1ring_cb.p_ndx0) {
                 return false;
             }
-
-            quiesce_qid_++;
         }
         break;
 
@@ -1991,7 +1980,7 @@ ftl_lif_queues_ctl_t::quiesce_idle(void)
 ftl_status_code_t
 ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
 {
-    int64_t             qstate_addr;
+    const mem_access_t  *qstate_access;
     uint64_t            min_elapsed_ticks;
     uint64_t            max_elapsed_ticks;
     uint64_t            total_min_elapsed_ticks;
@@ -2010,8 +1999,8 @@ ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
         avg_count = 0;
 
         for (uint32_t qid = 0; qid <= qid_high_; qid++) {
-            qstate_addr = qid_qstate_addr(qid);
-            if (qstate_addr < 0) {
+            qstate_access = qid_qstate_access(qid);
+            if (!qstate_access) {
 
                 /*
                  * continue to try with as many queues as possible
@@ -2026,8 +2015,8 @@ ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
             case FTL_QTYPE_SCANNER_CONNTRACK: {
                 scanner_session_qstate_t scanner_qstate;
 
-                read_mem_small(qstate_addr, (uint8_t *)&scanner_qstate,
-                               sizeof(scanner_qstate));
+                qstate_access->small_read(0, (uint8_t *)&scanner_qstate,
+                                          sizeof(scanner_qstate));
                 metrics->scanners.total_expired_entries  +=
                          scanner_qstate.metrics0.expired_entries;
                 metrics->scanners.total_scan_invocations +=
@@ -2065,8 +2054,8 @@ ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
             case FTL_QTYPE_POLLER: {
                 poller_qstate_t poller_qstate;
 
-                read_mem_small(qstate_addr, (uint8_t *)&poller_qstate,
-                               sizeof(poller_qstate));
+                qstate_access->small_read(0, (uint8_t *)&poller_qstate,
+                                          sizeof(poller_qstate));
                 metrics->pollers.total_num_qposts += poller_qstate.num_qposts;
                 metrics->pollers.total_num_qfulls += poller_qstate.num_qfulls;
                 break;
@@ -2102,6 +2091,7 @@ ftl_lif_queues_ctl_t::scanner_init_single(const scanner_init_single_cmd_t *cmd)
     int64_t                 poller_qstate_addr;
     uint32_t                qid = cmd->index;
     scanner_session_qstate_t qstate = {0};
+    mem_access_t            qs_access(lif);
     ftl_status_code_t       status;
     uint8_t                 pc_offset;
 
@@ -2116,21 +2106,38 @@ ftl_lif_queues_ctl_t::scanner_init_single(const scanner_init_single_cmd_t *cmd)
         return FTL_RC_ERROR;
     }
 
-    qid_high_ = std::max(qid_high_, qid);
+    /*
+     * Init doorbell accesses
+     */
+    db_pndx_inc.reset(qtype(),
+                      ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
+                                            ASIC_DB_UPD_INDEX_INCR_PINDEX,
+                                            false));
+    db_shed_clr.reset(qtype(),
+                      ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSA,
+                                            ASIC_DB_UPD_INDEX_UPDATE_NONE,
+                                            false));
+    /*
+     * Scanner queues init/start/stop are carried out from only one
+     * single thread at a time. However, because PAL lib is not
+     * thread safe, mmap is req is still required for qstate access.
+     */
+    qs_access.reset(qstate_addr, sizeof(scanner_session_qstate_t));
 
+    qid_high_ = std::max(qid_high_, qid);
     status = pgm_pc_offset_get("scanner_session_stage0", &pc_offset);
     if (status != FTL_RC_SUCCESS) {
         return status;
     }
     qstate.cb.qstate_1ring.pc_offset = pc_offset;
-    qstate.cb.qstate_1ring.eval_last = 1;
+    qstate.cb.qstate_1ring.eval_last = 1 << 0;
     qstate.cb.qstate_1ring.cosB = cmd->cos_override ? cmd->cos : lif.cosB;
     qstate.cb.qstate_1ring.host_wrings = 0;
     qstate.cb.qstate_1ring.total_wrings = 1;
     qstate.cb.qstate_1ring.pid = cmd->pid;
 
-    qstate.cb.normal_tmo_cb_addr = lif.normal_age_cb_addr();
-    qstate.cb.accel_tmo_cb_addr = lif.accel_age_cb_addr();
+    qstate.cb.normal_tmo_cb_addr = lif.normal_age_access().pa();
+    qstate.cb.accel_tmo_cb_addr = lif.accel_age_access().pa();
     qstate.cb.scan_resched_ticks =
            time_us_to_txs_sched_ticks(cmd->scan_resched_time,
                                       &qstate.cb.resched_uses_slow_timer);
@@ -2163,8 +2170,9 @@ ftl_lif_queues_ctl_t::scanner_init_single(const scanner_init_single_cmd_t *cmd)
     }
     qstate.summarize.poller_qstate_addr = poller_qstate_addr;
     qstate.metrics0.min_range_elapsed_ticks = ~qstate.metrics0.min_range_elapsed_ticks;
-    write_mem_small(qstate_addr, (uint8_t *)&qstate, sizeof(qstate));
+    qs_access.small_write(0, (uint8_t *)&qstate, sizeof(qstate));
 
+    qstate_access.push_back(std::move(qs_access));
     return FTL_RC_SUCCESS;
 }
 
@@ -2173,6 +2181,8 @@ ftl_lif_queues_ctl_t::poller_init_single(const poller_init_single_cmd_t *cmd)
 {
     int64_t                 qstate_addr;
     uint32_t                qid = cmd->index;
+    mem_access_t            qs_access(lif);
+    mem_access_t            wr_access(lif);
     poller_qstate_t         qstate = {0};
 
     if (qid >= qcount()) {
@@ -2186,14 +2196,27 @@ ftl_lif_queues_ctl_t::poller_init_single(const poller_init_single_cmd_t *cmd)
         return FTL_RC_ERROR;
     }
 
+    /*
+     * Poller queues will be polled from multiple threads so mmap
+     * is required for qstate access (since PAL lib is not thread safe)
+     */
+    qs_access.reset(qstate_addr, sizeof(poller_qstate_t));
+
     qid_high_ = std::max(qid_high_, qid);
     qstate.qstate_1ring.host_wrings = 0;
     qstate.qstate_1ring.total_wrings = 1;
     qstate.qstate_1ring.pid = cmd->pid;
     qstate.qdepth_shft = cmd->qdepth_shft;
     qstate.wring_base_addr = cmd->wring_base_addr;
-    write_mem_small(qstate_addr, (uint8_t *)&qstate, sizeof(qstate));
+    qs_access.small_write(0, (uint8_t *)&qstate, sizeof(qstate));
 
+    qstate_access.push_back(std::move(qs_access));
+
+    /*
+     * Similarly, mmap the wring as required
+     */
+    wr_access.reset(qstate.wring_base_addr, cmd->wring_sz);
+    wring_access.push_back(std::move(wr_access));
     return FTL_RC_SUCCESS;
 }
 
@@ -2213,6 +2236,36 @@ ftl_lif_queues_ctl_t::qid_qstate_addr(uint32_t qid)
     return qstate_addr;
 }
 
+const mem_access_t *
+ftl_lif_queues_ctl_t::qid_qstate_access(uint32_t qid)
+{
+    const mem_access_t  *access;
+
+    access = qid < (uint32_t)qstate_access.size() ?
+             &qstate_access.at(qid) : nullptr;
+    if (!access) {
+        NIC_LOG_ERR("{}: Failed to get qstate access for qtype {} qid {}",
+                    lif.LifNameGet(), qtype(), qid);
+    }
+
+    return access;
+}
+
+const mem_access_t *
+ftl_lif_queues_ctl_t::qid_wring_access(uint32_t qid)
+{
+    const mem_access_t  *access;
+
+    access = qid < (uint32_t)wring_access.size() ?
+             &wring_access.at(qid) : nullptr;
+    if (!access) {
+        NIC_LOG_ERR("{}: Failed to get wring access for qtype {} qid {}",
+                    lif.LifNameGet(), qtype(), qid);
+    }
+
+    return access;
+}
+
 ftl_status_code_t
 ftl_lif_queues_ctl_t::pgm_pc_offset_get(const char *pc_jump_label,
                                         uint8_t *pc_offset)
@@ -2230,7 +2283,7 @@ ftl_lif_queues_ctl_t::pgm_pc_offset_get(const char *pc_jump_label,
  * Miscelaneous utility functions
  */
 static void
-poller_cb_activate(int64_t qstate_addr)
+poller_cb_activate(const mem_access_t *access)
 {
     /*
      * SW queues don't use cb_activate
@@ -2238,7 +2291,7 @@ poller_cb_activate(int64_t qstate_addr)
 }
 
 static void
-poller_cb_deactivate(int64_t qstate_addr)
+poller_cb_deactivate(const mem_access_t *access)
 {
     qstate_1ring_cb_t   qstate_1ring_cb;
 
@@ -2246,39 +2299,38 @@ poller_cb_deactivate(int64_t qstate_addr)
      * SW queues don't have the benefit of MPU setting CI=PI on
      * deactivate so must be done inline here.
      */
-    read_mem_small(qstate_addr + offsetof(qstate_1ring_cb_t, p_ndx0),
-                   (uint8_t *)&qstate_1ring_cb.p_ndx0,
-                   (offsetof(qstate_1ring_cb_t, c_ndx0) -
-                    offsetof(qstate_1ring_cb_t, p_ndx0) +
-                    sizeof(qstate_1ring_cb.c_ndx0)));
+    access->small_read(offsetof(qstate_1ring_cb_t, p_ndx0),
+                       (uint8_t *)&qstate_1ring_cb.p_ndx0,
+                       sizeof(qstate_1ring_cb.p_ndx0) +
+                       sizeof(qstate_1ring_cb.c_ndx0));
     qstate_1ring_cb.c_ndx0 = qstate_1ring_cb.p_ndx0;
-    write_mem_small(qstate_addr + offsetof(qstate_1ring_cb_t, c_ndx0),
-                    (uint8_t *)&qstate_1ring_cb.c_ndx0,
-                    sizeof(qstate_1ring_cb.c_ndx0));
+    access->small_write(offsetof(qstate_1ring_cb_t, c_ndx0),
+                        (uint8_t *)&qstate_1ring_cb.c_ndx0,
+                        sizeof(qstate_1ring_cb.c_ndx0));
 }
 
 static void
-scanner_session_cb_activate(int64_t qstate_addr)
+scanner_session_cb_activate(const mem_access_t *access)
 {
     scanner_session_cb_activate_t   activate = SCANNER_SESSION_CB_ACTIVATE;
 
     /*
      * Activate the CB sections in this order: summarize, fsm, cb
      */
-    write_mem_small(qstate_addr + offsetof(scanner_session_qstate_t, summarize) +
-                                  offsetof(scanner_session_summarize_t, cb_activate),
-                    (uint8_t *)&activate, sizeof(activate), false);
-    write_mem_small(qstate_addr + offsetof(scanner_session_qstate_t, fsm) +
-                                  offsetof(scanner_session_fsm_t, cb_activate),
-                    (uint8_t *)&activate, sizeof(activate), false);
-    write_mem_small(qstate_addr + offsetof(scanner_session_qstate_t, cb) +
-                                  offsetof(scanner_session_cb_t, cb_activate),
-                    (uint8_t *)&activate, sizeof(activate), false);
-    mem_cache_invalidate(qstate_addr, sizeof(scanner_session_qstate_t));
+    access->small_write(offsetof(scanner_session_qstate_t, summarize) +
+                        offsetof(scanner_session_summarize_t, cb_activate),
+                        (uint8_t *)&activate, sizeof(activate));
+    access->small_write(offsetof(scanner_session_qstate_t, fsm) +
+                        offsetof(scanner_session_fsm_t, cb_activate),
+                        (uint8_t *)&activate, sizeof(activate));
+    access->small_write(offsetof(scanner_session_qstate_t, cb) +
+                        offsetof(scanner_session_cb_t, cb_activate),
+                        (uint8_t *)&activate, sizeof(activate));
+    //access->cache_invalidate();
 }
 
 static void
-scanner_session_cb_deactivate(int64_t qstate_addr)
+scanner_session_cb_deactivate(const mem_access_t *access)
 {
     scanner_session_cb_activate_t   deactivate =
             (scanner_session_cb_activate_t)~SCANNER_SESSION_CB_ACTIVATE;
@@ -2286,69 +2338,188 @@ scanner_session_cb_deactivate(int64_t qstate_addr)
     /*
      * Deactivate the CB sections in this order: cb, fsm, summarize
      */
-    write_mem_small(qstate_addr + offsetof(scanner_session_qstate_t, cb) +
-                                  offsetof(scanner_session_cb_t, cb_activate),
-                    (uint8_t *)&deactivate, sizeof(deactivate), false);
-    write_mem_small(qstate_addr + offsetof(scanner_session_qstate_t, fsm) +
-                                  offsetof(scanner_session_fsm_t, cb_activate),
-                    (uint8_t *)&deactivate, sizeof(deactivate), false);
-    write_mem_small(qstate_addr + offsetof(scanner_session_qstate_t, summarize) +
-                                  offsetof(scanner_session_summarize_t, cb_activate),
-                    (uint8_t *)&deactivate, sizeof(deactivate), false);
-    mem_cache_invalidate(qstate_addr, sizeof(scanner_session_qstate_t));
+    access->small_write(offsetof(scanner_session_qstate_t, cb) +
+                        offsetof(scanner_session_cb_t, cb_activate),
+                        (uint8_t *)&deactivate, sizeof(deactivate));
+    access->small_write(offsetof(scanner_session_qstate_t, fsm) +
+                        offsetof(scanner_session_fsm_t, cb_activate),
+                        (uint8_t *)&deactivate, sizeof(deactivate));
+    access->small_write(offsetof(scanner_session_qstate_t, summarize) +
+                        offsetof(scanner_session_summarize_t, cb_activate),
+                    (uint8_t *)&deactivate, sizeof(deactivate));
+    //access->cache_invalidate();
 }
 
 /*
- * HBM read/write large, breaking into multiple reads or writes as necessary.
+ * Memory access wrapper
  */
-static void
-read_mem_large(uint64_t read_addr,
-               uint8_t *buf,
-               uint32_t total_sz)
+mem_access_t::~mem_access_t()
 {
-    uint32_t    read_sz;
-
-    while (total_sz) {
-        read_sz = std::min(total_sz, (uint32_t)FTL_DEV_HBM_RW_LARGE_BYTES_MAX);
-        READ_MEM(read_addr, buf, read_sz, 0);
-        read_addr += read_sz;
-        buf += read_sz;
-        total_sz -= read_sz;
+    if (vaddr) {
+        sdk::lib::pal_mem_unmap((void *)vaddr);
+        vaddr = nullptr;
     }
 }
 
-static void __attribute__((unused))
-write_mem_large(uint64_t write_addr,
-                uint8_t *buf,
-                uint32_t total_sz,
-                bool cache_invalidate)
+void
+mem_access_t::reset(int64_t new_paddr,
+                    uint32_t new_sz,
+                    bool mmap_requested)
 {
-    uint32_t    write_sz;
+    if (vaddr) {
+        sdk::lib::pal_mem_unmap((void *)vaddr);
+        vaddr = nullptr;
+    }
+    paddr = new_paddr;
+    total_sz = new_sz;
 
-    while (total_sz) {
-        write_sz = std::min(total_sz, (uint32_t)FTL_DEV_HBM_RW_LARGE_BYTES_MAX);
-        WRITE_MEM(write_addr, buf, write_sz, 0);
-        if (cache_invalidate) {
-            PAL_barrier();
-            p4plus_invalidate_cache(write_addr, write_sz,
-                                    P4PLUS_CACHE_INVALIDATE_TXDMA);
+    if (platform_is_hw(lif.pd->platform_) && mmap_requested) {
+        vaddr = (volatile uint8_t *)sdk::lib::pal_mem_map(paddr, total_sz);
+        if (!vaddr) {
+            NIC_LOG_ERR("{}: memory map error addr {:#x} total_sz {}",
+                        lif.LifNameGet(), paddr, total_sz);
+            throw;
         }
-        write_addr += write_sz;
-        buf += write_sz;
-        total_sz -= write_sz;
+    }
+}
+
+void
+mem_access_t::small_read(uint32_t offset,
+                         uint8_t *buf,
+                         uint32_t read_sz) const
+{
+    if ((offset + read_sz) > total_sz) {
+        NIC_LOG_ERR("{}: offset {} + read_sz {} > total_sz {}",
+                    lif.LifNameGet(), offset, read_sz, total_sz);
+        throw;
+    }
+
+    if (vaddr) {
+        memcpy(buf, (void *)(vaddr + offset), read_sz);
+    } else {
+        sdk::asic::asic_mem_read(paddr + offset, buf, read_sz);
+    }
+}
+
+void
+mem_access_t::small_write(uint32_t offset,
+                          const uint8_t *buf,
+                          uint32_t write_sz) const
+{
+    if ((offset + write_sz) > total_sz) {
+        NIC_LOG_ERR("{}: offset {} + write_sz {} > total_sz {}",
+                    lif.LifNameGet(), offset, write_sz, total_sz);
+        throw;
+    }
+
+    if (vaddr) {
+        memcpy((void *)(vaddr + offset), buf, write_sz);
+    } else {
+        sdk::asic::asic_mem_write(paddr + offset, (uint8_t *)buf, write_sz);
     }
 }
 
 /*
- * Separate control for memory cache invalidate, suitable for use
- * when write_mem_large() was invoked without invalidating cache.
+ * Large read/write, breaking into multiple reads or writes as necessary.
  */
-static void
-mem_cache_invalidate(uint64_t addr,
-                     uint32_t total_sz)
+void
+mem_access_t::large_read(uint32_t offset,
+                         uint8_t *buf,
+                         uint32_t read_sz) const
 {
+    uint32_t    curr_sz;
+
+    /*
+     * With vaddr, no need to do any breakup
+     */
+    if (vaddr) {
+        small_read(offset, buf, read_sz);
+    } else {
+        while (read_sz) {
+            curr_sz = std::min(read_sz, (uint32_t)FTL_DEV_HBM_RW_LARGE_BYTES_MAX);
+            small_read(offset, buf, curr_sz);
+            offset += curr_sz;
+            buf += curr_sz;
+            read_sz -= curr_sz;
+        }
+    }
+}
+
+void
+mem_access_t::large_write(uint32_t offset,
+                          const uint8_t *buf,
+                          uint32_t write_sz) const
+{
+    uint32_t    curr_sz;
+
+    /*
+     * With vaddr, no need to do any breakup
+     */
+    if (vaddr) {
+        small_write(offset, buf, write_sz);
+    } else {
+        while (write_sz) {
+            curr_sz = std::min(write_sz, (uint32_t)FTL_DEV_HBM_RW_LARGE_BYTES_MAX);
+            small_write(offset, buf, curr_sz);
+            offset += curr_sz;
+            buf += curr_sz;
+            write_sz -= curr_sz;
+        }
+    }
+}
+
+void
+mem_access_t::cache_invalidate(uint32_t offset,
+                               uint32_t sz) const
+{
+    if (!sz) {
+        sz = offset < total_sz ?
+             total_sz - offset : 0;
+    }
+    if ((offset + sz) > total_sz) {
+        NIC_LOG_ERR("{}: offset {} + sz {} > total_sz {}",
+                    lif.LifNameGet(), offset, sz, total_sz);
+        throw;
+    }
+
+    /*
+     * Note that p4plus_invalidate_cache() also uses vaddr to
+     * access the required invalidate register.
+     */
     PAL_barrier();
-    p4plus_invalidate_cache(addr, total_sz, P4PLUS_CACHE_INVALIDATE_TXDMA);
+    p4plus_invalidate_cache(paddr + offset, sz, P4PLUS_CACHE_INVALIDATE_TXDMA);
+}
+
+/*
+ * Doorbell access wrapper
+ */
+void
+db_access_t::reset(enum ftl_qtype qtype,
+                   uint32_t upd)
+{
+    uint64_t    paddr;
+
+    db_addr = {0};
+    db_addr.lif_id = lif.LifIdGet();
+    db_addr.q_type = (uint8_t)qtype;
+    db_addr.upd = upd;
+    paddr = sdk::asic::pd::asic_localdb_addr(db_addr.lif_id,
+                                             db_addr.q_type,
+                                             db_addr.upd);
+    db_access.reset(paddr, sizeof(uint64_t));
+}
+
+void
+db_access_t::write64(uint64_t data)
+{
+    volatile uint64_t *db = (volatile uint64_t *)db_access.va();
+
+    PAL_barrier();
+    if (db) {
+        *db = data;
+    } else {
+        sdk::asic::pd::asic_ring_db(&db_addr, data);
+    }
 }
 
 /*

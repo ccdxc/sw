@@ -2,7 +2,9 @@
 #define __FTL_LIF_HPP__
 
 #include <map>
+#include <utility>
 #include "nic/p4/ftl_dev/include/ftl_dev_shared.h"
+#include "nic/sdk/asic/pd/db.hpp"
 
 #ifndef USEC_PER_SEC
 #define USEC_PER_SEC    1000000L
@@ -36,34 +38,60 @@ is_power_of_2(uint64_t n)
 /**
  * Generic timestamp and expiry interval
  */
-typedef struct {
-    uint64_t                timestamp;
-    uint64_t                expiry;
-} ftl_timestamp_t;
-
 static inline uint64_t
 timestamp(void)
 {
     struct timeval tv;
 
     gettimeofday(&tv, NULL);
-    return (tv.tv_sec * USEC_PER_SEC + tv.tv_usec);
+    return (((uint64_t)tv.tv_sec * USEC_PER_SEC) +
+            (uint64_t)tv.tv_usec);
 }
 
-static inline void
-time_expiry_set(ftl_timestamp_t& ts,
-                uint64_t expiry)
+class ftl_timestamp_t
 {
-    ts.timestamp = timestamp();
-    ts.expiry = expiry;
-}
+public:
+    ftl_timestamp_t() :
+        ts(0),
+        expiry(0) {}
 
-static inline bool
-time_expiry_check(const ftl_timestamp_t& ts)
-{
-    return (ts.expiry == 0) ||
-           ((timestamp() - ts.timestamp) > ts.expiry);
-}
+    void time_expiry_set(uint64_t val)
+    {
+        ts = timestamp();
+        expiry = val;
+    }
+
+    bool time_expiry_check(void)
+    {
+        return (expiry == 0) ||
+               ((timestamp() - ts) > expiry);
+    }
+
+private:
+    uint64_t                ts;
+    uint64_t                expiry;
+};
+
+/**
+ * Devcmd context
+ */
+class ftl_lif_devcmd_ctx_t {
+public:
+    ftl_lif_devcmd_ctx_t() :
+        req(nullptr),
+        req_data(nullptr),
+        rsp(nullptr),
+        rsp_data(nullptr),
+        status(FTL_RC_SUCCESS)
+    {
+    }
+
+    ftl_devcmd_t            *req;
+    void                    *req_data;
+    ftl_devcmd_cpl_t        *rsp;
+    void                    *rsp_data;
+    ftl_status_code_t       status;
+};
 
 /**
  * LIF State Machine
@@ -145,7 +173,8 @@ typedef enum {
     FTL_DEV_INDEX_STRINGIFY(FTL_LIF_EV_POLLERS_DEQ_BURST),          \
     FTL_DEV_INDEX_STRINGIFY(FTL_LIF_EV_ACCEL_AGING_CONTROL),        \
  
-typedef ftl_lif_event_t (FtlLif::*ftl_lif_action_t)(ftl_lif_event_t event);
+typedef ftl_lif_event_t (FtlLif::*ftl_lif_action_t)(ftl_lif_event_t event,
+                                                    ftl_lif_devcmd_ctx_t& devcmd_ctx);
 
 typedef struct {
     ftl_lif_event_t         event;
@@ -191,8 +220,97 @@ typedef struct {
     uint16_t                pid;
     uint32_t                index;
     uint64_t                wring_base_addr;
+    uint32_t                wring_sz;
     uint8_t                 qdepth_shft;
 } poller_init_single_cmd_t;
+
+/*
+ * std::exchange() is available only in C++14 so
+ * we use the cppreference implementation here.
+ */
+template<class T, class U = T>
+T obj_xchg(T& obj, U&& new_value)
+{
+    T old_value = std::move(obj);
+    obj = std::forward<U>(new_value);
+    return old_value;
+}
+
+/*
+ * Memory access wrapper
+ */
+class mem_access_t {
+public:
+    mem_access_t(FtlLif& lif) :
+        lif(lif),
+        paddr(0),
+        vaddr(nullptr),
+        total_sz(0)
+    {
+    }
+
+    /*
+     * Move constructor
+     */
+    mem_access_t(mem_access_t &&m) noexcept :
+        lif(m.lif),
+        paddr(m.paddr),
+        vaddr(obj_xchg(m.vaddr, nullptr)),
+        total_sz(m.total_sz)
+    {
+    }
+
+    ~mem_access_t();
+
+    void reset(int64_t paddr,
+               uint32_t total_sz,
+               bool mmap_requested = true);
+    void small_read(uint32_t offset,
+                    uint8_t *buf,
+                    uint32_t read_sz) const;
+    void small_write(uint32_t offset,
+                     const uint8_t *buf,
+                     uint32_t write_sz) const;
+    void large_read(uint32_t offset,
+                    uint8_t *buf,
+                    uint32_t read_sz) const;
+    void large_write(uint32_t offset,
+                     const uint8_t *buf,
+                     uint32_t write_sz) const;
+    void cache_invalidate(uint32_t offset = 0,
+                          uint32_t sz = 0) const;
+    uint64_t pa(void) const { return paddr; }
+    volatile uint8_t *va(void) const { return vaddr; }
+
+
+private:
+    FtlLif&                 lif;
+    int64_t                 paddr;
+    volatile uint8_t        *vaddr;
+    uint32_t                total_sz;
+};
+
+/*
+ * Doorbell access wrapper
+ */
+class db_access_t {
+public:
+    db_access_t(FtlLif& lif) :
+        lif(lif),
+        db_access(lif)
+    {
+        db_addr = {0};
+    }
+
+    void reset(enum ftl_qtype qtype,
+               uint32_t upd);
+    void write64(uint64_t data);
+
+private:
+    FtlLif&                 lif;
+    asic_db_addr_t          db_addr;
+    mem_access_t            db_access;
+};
 
 /**
  * Queues control class
@@ -225,6 +343,11 @@ public:
     uint32_t qid_high(void) { return qid_high_; }
     uint32_t quiesce_qid(void) { return quiesce_qid_; }
     int64_t qid_qstate_addr(uint32_t qid);
+    const mem_access_t *qid_qstate_access(uint32_t qid);
+    const mem_access_t *qid_wring_access(uint32_t qid);
+
+    bool empty_qstate_access(void) { return qstate_access.empty(); }
+    bool empty_wring_access(void) { return wring_access.empty(); }
 
 private:
     ftl_status_code_t scanner_init_single(const scanner_init_single_cmd_t *cmd);
@@ -234,6 +357,10 @@ private:
 
     FtlLif&                 lif;
     enum ftl_qtype          qtype_;
+    std::vector<mem_access_t> qstate_access;
+    std::vector<mem_access_t> wring_access;
+    db_access_t             db_pndx_inc;
+    db_access_t             db_shed_clr;
     uint64_t                wrings_base_addr;
     uint32_t                wring_single_sz;
     uint32_t                slot_data_sz;
@@ -249,22 +376,22 @@ private:
 /**
  * LIF State Machine Context
  */
-typedef struct {
-    ftl_devcmd_t            *req;
-    void                    *req_data;
-    ftl_devcmd_cpl_t        *rsp;
-    void                    *rsp_data;
-    ftl_status_code_t       status;
-} ftl_lif_devcmd_ctx_t;
+class ftl_lif_fsm_ctx_t {
+public:
+    ftl_lif_fsm_ctx_t() :
+        state(FTL_LIF_ST_INITIAL),
+        enter_state(FTL_LIF_ST_INITIAL),
+        reset(0),
+        reset_destroy(0)
+    {
+    }
 
-typedef struct {
     ftl_lif_state_t         state;
     ftl_lif_state_t         enter_state;
-    ftl_lif_devcmd_ctx_t    devcmd;
     ftl_timestamp_t         ts;
     uint32_t                reset               : 1,
                             reset_destroy       : 1;
-} ftl_lif_fsm_ctx_t;
+};
 
 /**
  * LIF Resource structure
@@ -299,6 +426,7 @@ public:
     lif_info_t                  hal_lif_info_;
 
     friend class ftl_lif_queues_ctl_t;
+    friend class mem_access_t;
 
     static ftl_lif_state_event_t lif_initial_ev_table[];
     static ftl_lif_state_event_t lif_wait_hal_ev_table[];
@@ -326,63 +454,80 @@ private:
     uint32_t                    index;
     uint8_t                     cosA, cosB, ctl_cosA, ctl_cosB;
 
-    // Controller memory
-    uint64_t                    cmb_age_tmo_addr;
-    uint32_t                    cmb_age_tmo_size;
-
-    // Other state
+    // Other states
     ftl_lif_fsm_ctx_t           fsm_ctx;
     age_tmo_cb_t                normal_age_tmo_cb;
     age_tmo_cb_t                accel_age_tmo_cb;
+    mem_access_t                normal_age_access_;
+    mem_access_t                accel_age_access_;
 
     EV_P;
 
-    // Reset command anchor for use by FTL_LIF_EV_RESET_DESTROY
-    lif_reset_cmd_t             devcmd_reset;
-
-    void ftl_lif_state_machine(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_null_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_null_no_log_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_eagain_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_reject_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_create_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_destroy_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_hal_up_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_init_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_setattr_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_getattr_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_identify_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_reset_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_pollers_init_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_pollers_flush_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_pollers_deq_burst_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_scanners_init_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_scanners_start_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_scanners_start_single_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_scanners_stop_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_scanners_quiesce_action(ftl_lif_event_t event);
-    ftl_lif_event_t ftl_lif_accel_aging_ctl_action(ftl_lif_event_t event);
+    void ftl_lif_state_machine(ftl_lif_event_t event,
+                               ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_null_action(ftl_lif_event_t event,
+                                        ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_null_no_log_action(ftl_lif_event_t event,
+                                               ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_eagain_action(ftl_lif_event_t event,
+                                          ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_reject_action(ftl_lif_event_t event,
+                                          ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_create_action(ftl_lif_event_t event,
+                                          ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_destroy_action(ftl_lif_event_t event,
+                                           ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_hal_up_action(ftl_lif_event_t event,
+                                          ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_init_action(ftl_lif_event_t event,
+                                        ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_setattr_action(ftl_lif_event_t event,
+                                           ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_getattr_action(ftl_lif_event_t event,
+                                           ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_identify_action(ftl_lif_event_t event,
+                                            ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_reset_action(ftl_lif_event_t event,
+                                         ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_pollers_init_action(ftl_lif_event_t event,
+                                                ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_pollers_flush_action(ftl_lif_event_t event,
+                                                 ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_pollers_deq_burst_action(ftl_lif_event_t event,
+                                                     ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_scanners_init_action(ftl_lif_event_t event,
+                                                 ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_scanners_start_action(ftl_lif_event_t event,
+                                                  ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_scanners_start_single_action(ftl_lif_event_t event,
+                                                         ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_scanners_stop_action(ftl_lif_event_t event,
+                                                 ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_scanners_quiesce_action(ftl_lif_event_t event,
+                                                    ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_accel_aging_ctl_action(ftl_lif_event_t event,
+                                                   ftl_lif_devcmd_ctx_t& devcmd_ctx);
 
     void age_tmo_cb_init(age_tmo_cb_t *age_tmo_cb,
-                         uint64_t cb_addr,
+                         const mem_access_t& access,
                          bool cb_select);
     void age_tmo_cb_set(const char *which,
                         age_tmo_cb_t *age_tmo_cb,
-                        uint64_t cb_addr,
+                        const mem_access_t& access,
                         const lif_attr_age_tmo_t *attr_age_tmo);
     void age_tmo_cb_get(lif_attr_age_tmo_t *attr_age_tmo,
                         const age_tmo_cb_t *age_tmo_cb);
     void force_session_expired_ts_set(age_tmo_cb_t *age_tmo_cb,
-                                      uint64_t cb_addr,
+                                      const mem_access_t& access,
                                       uint8_t force_expired_ts);
     void force_conntrack_expired_ts_set(age_tmo_cb_t *age_tmo_cb,
-                                        uint64_t cb_addr,
+                                        const mem_access_t& access,
                                         uint8_t force_expired_ts);
     ftl_status_code_t normal_age_tmo_cb_select(void);
     ftl_status_code_t accel_age_tmo_cb_select(void);
 
-    uint64_t normal_age_cb_addr(void) { return cmb_age_tmo_addr; }
-    uint64_t accel_age_cb_addr(void) { return cmb_age_tmo_addr + sizeof(age_tmo_cb_t); }
+    const mem_access_t& normal_age_access(void) { return normal_age_access_; }
+    const mem_access_t& accel_age_access(void) { return accel_age_access_; }
 };
 
 #endif

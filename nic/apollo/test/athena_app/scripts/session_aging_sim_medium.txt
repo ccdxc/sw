@@ -4,7 +4,7 @@
 session_aging_init
 #session_aging_expiry_log_set TRUE
 session_aging_sim_mode TRUE
-session_aging_clear_full 1024
+session_aging_clear_full 4096
 session_populate_full 1011
 session_aging_test
 session_populate_random 333 209
