@@ -74,6 +74,12 @@ enum BGPPeerState {
   BGP_PEER_STATE_ESTABLISHED = 6;
 }
 
+enum BGPASSize {
+  BGP_AS_SIZE_NONE        = 0;
+  BGP_AS_SIZE_TWO_OCTET   = 1;
+  BGP_AS_SIZE_FOUR_OCTET  = 2;
+}
+
 // BGP configuration
 message BGPSpec {
   // unique key/identifier of BGP config
@@ -371,6 +377,10 @@ message BGPNLRIPrefixStatus {
   bytes   PathOrigId       = 10;
   // next-hop address
   bytes   NextHopAddr      = 11;
+  // Size of each ASN in the AS path string
+  BGPASSize ASSize         = 12;
+  // Is this route part of an ECMP set
+  bool    EcmpRoute        = 13;
 }
 
 // BGP NLRI prefix key object

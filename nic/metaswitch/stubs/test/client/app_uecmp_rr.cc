@@ -328,7 +328,9 @@ static void delete_evpn_evi_rt_proto_grpc () {
     Status                  ret_status;
 
     auto proto_spec = request.add_request ();
-    proto_spec->set_id (pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi rt UUID is same as subnet UUID
+    auto key   = proto_spec->mutable_key();
+    key->set_subnetid (pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi rt UUID is same as subnet UUID
+    key->set_rt((const char *)g_test_conf_.rt[0], 8);
 
     printf ("Pushing EVPN Evi RT Delete proto...\n");
     ret_status = g_evpn_stub_->EvpnEviRtDelete(&context, request, &response);
@@ -401,7 +403,7 @@ static void delete_l2f_test_mac_ip_proto_grpc (bool second=false) {
     }
 }
 
-static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
+static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false, bool passwd=false) {
     BGPPeerRequest  request;
     BGPPeerResponse response;
     ClientContext   context;
@@ -437,7 +439,9 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     proto_spec->set_connectretry(5);
     proto_spec->set_sendcomm(true);
     proto_spec->set_sendextcomm(true);
-    proto_spec->set_password("test");
+    if (passwd) {
+        proto_spec->set_password("test");
+    }
     if (lo) {
     proto_spec->set_keepalive(10);
     proto_spec->set_holdtime(30);
@@ -1030,6 +1034,14 @@ int main(int argc, char** argv)
         } else if (!strcmp(argv[1], "lo-update2")) {
             // Update
             create_intf_proto_grpc(true, false, true, g_test_conf_.local_lo_ip_addr);
+            return 0;
+        } else if (!strcmp(argv[1], "bgp-upeer-passwd")) {
+            // First underlay peer
+            create_bgp_peer_proto_grpc(false,false,true);
+            return 0;
+        } else if (!strcmp(argv[1], "bgp-upeer-passwd-reset")) {
+            // First underlay peer
+            create_bgp_peer_proto_grpc();
             return 0;
         }
     }

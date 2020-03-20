@@ -109,8 +109,8 @@ Timers                 : [ Holdtime: %v seconds / Keepalive: %v seconds ]
 
 Status                 : %v
 Previous State         : %v
-Last Err Recvd         : %v
-Last Err Sent          : %v
+Last Err Recvd         : [ %v ]
+Last Err Sent          : [ %v ]
 ------------------------------------
 `
 )
@@ -228,7 +228,7 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 const (
-	bgpNLRI = `   %s NextHop %v AS Path %v 
+	bgpNLRI = `   %s NextHop %v AS Path [ %v ]
       Originator %v Route Source %d
 `
 )

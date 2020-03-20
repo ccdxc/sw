@@ -75,6 +75,12 @@ enum BGPPeerState {
   BGP_PEER_STATE_ESTABLISHED = 6;
 }
 
+enum BGPASSize {
+  BGP_AS_SIZE_NONE        = 0;
+  BGP_AS_SIZE_TWO_OCTET   = 1;
+  BGP_AS_SIZE_FOUR_OCTET  = 2;
+}
+
 // BGP configuration
 message BGPSpec {
   option (venice.pdsaSetGlobOpts) = {
@@ -196,7 +202,7 @@ message BGPPeerSpec {
   // BGP session keepalive timer in seconds
   uint32           KeepAlive    = 11 [(venice.pdsaFields) = {Field: "keep_alive_configd"}];
   // MD5 authentication
-  bytes            Password     = 12 [(venice.pdsaFields) = {Field: "password", IgnoreIfEmpty: true}];
+  bytes            Password     = 12 [(venice.pdsaFields) = {Field: "password"}];
   // TTL
   uint32           TTL          = 13 [(venice.pdsaFields) = {Field: "ttl"}];
 }
@@ -453,6 +459,10 @@ message BGPNLRIPrefixStatus {
   bytes   PathOrigId       = 10 [(venice.pdsaFields) = {Field: "path_attr_orig_id"}];
   // next-hop address
   bytes   NextHopAddr      = 11 [(venice.pdsaFields) = {Field: "path_attr_next_hop"}];
+  // Size of each ASN in the AS path string
+  BGPASSize ASSize         = 12 [(venice.pdsaFields) = {Field: "as_size"}];
+  // Is this route part of an ECMP set
+  bool    EcmpRoute        = 13 [(venice.pdsaFields) = {Field: "ecmp"}];
 }
 
 // BGP NLRI prefix key object

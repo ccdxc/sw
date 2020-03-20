@@ -498,6 +498,42 @@ type ShadowBGPNLRIPrefixStatus struct {
 	*pds.BGPNLRIPrefixStatus
 }
 
+func BGPASPath(ASSize int, ASPath []byte) string {
+    // Flag Type Total-Len {ASSegmentType NumAS {AS}*}*
+    TotalLen := int(ASPath[2])
+    if TotalLen == 0 {
+        return "NONE"
+    }
+    FirstASSeg := true
+    var ASStr string
+    for ASSegStart:= 3 ; TotalLen > 0;  {
+        if !FirstASSeg {
+            ASStr += " { "
+        }
+        NumAS := int(ASPath[ASSegStart+1])
+        ASSegLen := 2 + NumAS * ASSize
+        asseq := ASPath[ASSegStart + 2 : ASSegStart + ASSegLen]
+        FirstAS := true
+        for i:=0; i<NumAS; i++ {
+            asint := binary.BigEndian.Uint32(asseq [i*ASSize : (i+1)*ASSize])
+            if !FirstAS {
+                ASStr += " "
+            } else {
+                FirstAS = false
+            }
+            ASStr += strconv.FormatUint(uint64(asint),10)
+        }
+        if !FirstASSeg {
+            ASStr += " } "
+        } else {
+            FirstASSeg = false
+        }
+        ASSegStart += ASSegLen
+        TotalLen -= ASSegLen
+    }
+    return ASStr
+}
+
 func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixStatus {
       var pathOrigId string
 
@@ -507,8 +543,18 @@ func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixSta
          pathOrigId = net.IP(in.PathOrigId).String()
       }
 
+      var ASSize int
+
+      switch (in.ASSize) {
+      case pds.BGPASSize_BGP_AS_SIZE_TWO_OCTET:
+	      ASSize = 2
+      case pds.BGPASSize_BGP_AS_SIZE_FOUR_OCTET:
+	      ASSize = 4
+      default:
+	      log.Errorf("Invalid AS Size")
+      }
 	return &ShadowBGPNLRIPrefixStatus{
-		ASPathStr:           fmt.Sprintf("%v", in.ASPathStr),
+		ASPathStr:           BGPASPath(ASSize, in.ASPathStr),
 		PathOrigId:          pathOrigId,
 		NextHopAddr:         net.IP(in.NextHopAddr).String(),
 		Prefix:              NewNLRIPrefix(int(in.Afi), int(in.Safi), in.Prefix),
