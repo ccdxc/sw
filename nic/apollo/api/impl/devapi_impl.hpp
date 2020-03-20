@@ -92,7 +92,7 @@ public:
     // single wire management APIs
     virtual sdk_ret_t swm_enable() override;
     virtual sdk_ret_t swm_disable() override;
-    virtual sdk_ret_t swm_create_channel(uint32_t channel, uint32_t port_num) override;
+    virtual sdk_ret_t swm_create_channel(uint32_t channel, uint32_t port_num, uint32_t lif_id) override;
     virtual sdk_ret_t swm_get_channels_info(std::set<channel_info_t *>* channels_info) override; // caller has to free elems
     virtual sdk_ret_t swm_add_mac(mac_t mac, uint32_t channel) override;
     virtual sdk_ret_t swm_del_mac(mac_t mac, uint32_t channel) override;

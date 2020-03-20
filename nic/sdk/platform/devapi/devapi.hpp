@@ -86,7 +86,7 @@ public:
     // single wire management APIs
     virtual sdk_ret_t swm_enable(void) = 0;
     virtual sdk_ret_t swm_disable(void) = 0;
-    virtual sdk_ret_t swm_create_channel(uint32_t channel, uint32_t port_num) = 0;
+    virtual sdk_ret_t swm_create_channel(uint32_t channel, uint32_t port_num, uint32_t lif_id) = 0;
     virtual sdk_ret_t swm_get_channels_info(std::set<channel_info_t *>* channels_info) = 0;
     virtual sdk_ret_t swm_add_mac(mac_t mac, uint32_t channel) = 0;
     virtual sdk_ret_t swm_del_mac(mac_t mac, uint32_t channel) = 0;

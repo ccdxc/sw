@@ -219,7 +219,6 @@ mirror_session_update_ifs (mirror_session_t *session,
     }
     return ret;
 }
-#endif
 
 static if_t *
 telemetry_mirror_pick_dest_if (if_t *dest_if)
@@ -246,6 +245,7 @@ telemetry_mirror_pick_dest_if (if_t *dest_if)
 
     return dest_if;
 }
+#endif
 
 hal_ret_t
 telemetry_mirror_session_handle_repin ()

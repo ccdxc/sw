@@ -464,7 +464,7 @@ devapi_impl::swm_disable(void)
 }
 
 sdk_ret_t
-devapi_impl::swm_create_channel (uint32_t channel, uint32_t port_num)
+devapi_impl::swm_create_channel (uint32_t channel, uint32_t port_num, uint32_t lif_id)
 {
     PDS_TRACE_VERBOSE("Not provided");
     return SDK_RET_OK;

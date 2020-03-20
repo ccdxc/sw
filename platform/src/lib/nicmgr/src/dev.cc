@@ -146,12 +146,6 @@ DeviceManager::DeviceManager(devicemgr_cfg_t *cfg)
     if (ret < 0) {
         throw runtime_error("Failed to reserve HAL LIFs");
     }
-    NIC_LOG_DEBUG("Reserving NCSI lifs {}-{}", NICMGR_NCSI_LIF_MIN, NICMGR_NCSI_LIF_MAX);
-    ret = pd->lm_->reserve_id(NICMGR_NCSI_LIF_MIN, 
-                              (NICMGR_NCSI_LIF_MAX - NICMGR_NCSI_LIF_MIN + 1));
-    if (ret < 0) {
-        throw runtime_error("Failed to reserve NCSI LIFs");
-    }
     if (!skip_hwinit) {
         ret = sdk::platform::utils::lif_mgr::lifs_reset(NICMGR_SVC_LIF, NICMGR_LIF_MAX);
         if (ret != sdk::SDK_RET_OK) {
@@ -673,6 +667,9 @@ DeviceManager::SetHalClient(devapi *dev_api)
 void
 DeviceManager::HalEventHandler(bool status)
 {
+    uint32_t lif_id = 0;
+    sdk_ret_t ret;
+
     NIC_HEADER_TRACE("HAL Event");
 
     if (init_done) {
@@ -731,7 +728,11 @@ DeviceManager::HalEventHandler(bool status)
             for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
                 uplink_t *up = it->second;
                 if (!up->is_oob) {
-                    dev_api->swm_create_channel(cid++, up->port);
+                    ret = pd->lm_->alloc_id(&lif_id, 1);
+                    if (ret != SDK_RET_OK) {
+                        NIC_LOG_ERR("Unable to allocate swm lif. ret: {}", ret);
+                    }
+                    dev_api->swm_create_channel(cid++, up->port, lif_id);
                 }
             }
         }

@@ -646,6 +646,8 @@ enicif_update_inb_enics (void)
     };
 
     g_hal_state->if_id_ht()->walk(walk_cb, NULL);
+
+    return HAL_RET_OK;
 }
 
 if_t *
@@ -5684,7 +5686,6 @@ if_port_oper_state_process_event (uint32_t fp_port_num, port_event_t event)
     hal_ret_t               ret = HAL_RET_OK;
     if_port_event_cb_ctxt_t ctxt = {0};
     IfStatus                new_status = intf::IF_STATUS_NONE;
-    if_t                    *inb_act_if = NULL;
     bool                    inb_bond_active_changed = false;
 
 

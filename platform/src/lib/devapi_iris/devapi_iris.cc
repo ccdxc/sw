@@ -958,9 +958,9 @@ end:
 }
 
 sdk_ret_t
-devapi_iris::swm_create_channel(uint32_t channel, uint32_t port_num)
+devapi_iris::swm_create_channel(uint32_t channel, uint32_t port_num, uint32_t lif_id)
 {
-    return devapi_swm::swm()->create_channel(channel, port_num);
+    return devapi_swm::swm()->create_channel(channel, port_num, lif_id);
 }
 
 sdk_ret_t

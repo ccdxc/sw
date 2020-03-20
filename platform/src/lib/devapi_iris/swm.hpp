@@ -23,7 +23,6 @@ private:
     // state
     devapi_uplink *oob_up_;
     std::map<uint32_t, channel_info_t*> channel_state_; // channel -> info
-    uint32_t lif_base_;
     int tx_channel_;
 
     // Single ton class
@@ -55,7 +54,7 @@ public:
     void free_channel_info_();
 
 
-    sdk_ret_t create_channel(uint32_t channel, uint32_t port_num);
+    sdk_ret_t create_channel(uint32_t channel, uint32_t port_num, uint32_t lif_id);
     sdk_ret_t get_channels_info(std::set<channel_info_t *>* channels_info);
     sdk_ret_t add_mac(mac_t mac, uint32_t channel);
     sdk_ret_t del_mac(mac_t mac, uint32_t channel);

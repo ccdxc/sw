@@ -52,7 +52,6 @@ end:
 sdk_ret_t
 devapi_swm::init_()
 {
-    lif_base_ = NICMGR_NCSI_LIF_MIN;
     tx_channel_ = -1;
     return SDK_RET_OK;
 }
@@ -82,7 +81,7 @@ devapi_swm::~devapi_swm()
 }
 
 sdk_ret_t
-devapi_swm::create_channel(uint32_t channel, uint32_t port_num)
+devapi_swm::create_channel(uint32_t channel, uint32_t port_num, uint32_t lif_id)
 {
     sdk_ret_t ret = SDK_RET_OK;
     channel_info_t *cinfo = NULL;
@@ -100,7 +99,7 @@ devapi_swm::create_channel(uint32_t channel, uint32_t port_num)
     cinfo = new (mem) channel_info_t();
     cinfo->channel = channel;
     cinfo->port_num = port_num;
-    cinfo->swm_lif_id = lif_base_++;
+    cinfo->swm_lif_id = lif_id;
     cinfo->vlan_enable = 0;
     cinfo->vlan_mode = 0;
 
