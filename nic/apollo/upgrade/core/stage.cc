@@ -10,6 +10,7 @@
 
 
 #include <iostream>
+#include <ev.h>
 #include <boost/unordered_map.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/algorithm/string.hpp>
@@ -18,6 +19,7 @@
 #include "nic/apollo/upgrade/core/stage.hpp"
 #include "nic/apollo/upgrade/core/service.hpp"
 #include "nic/apollo/upgrade/core/idl.hpp"
+#include "nic/apollo/upgrade/core/fsm.hpp"
 
 namespace upg {
     stage_transition_t::stage_transition_t(void):
@@ -70,11 +72,11 @@ namespace upg {
     };
 
     stage_t::stage_t(void) {
-        svc_rsp_timeout_       = DEFAULT_RSP_TIMEOUT ;
+        svc_rsp_timeout_       = DEFAULT_SVC_RSP_TIMEOUT ;
         event_sequence_    = PARALLEL;
     };
 
-    stage_t::stage_t(time_t svc_rsp_timeout, svc_sequence_t svc_seq,
+    stage_t::stage_t(ev_tstamp svc_rsp_timeout, svc_sequence_t svc_seq,
                      event_sequence_t evt_seq,
                      transition_t transitions, scripts_t pre_sc,
                      scripts_t post_sc) {
@@ -88,7 +90,7 @@ namespace upg {
 
     stage_t::~stage_t(void) {};
 
-    time_t& stage_t::svc_rsp_timeout(void) {
+    ev_tstamp& stage_t::svc_rsp_timeout(void) {
         return svc_rsp_timeout_;
     };
 

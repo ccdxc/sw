@@ -8,7 +8,7 @@
   },
   "stages": {
     "compatcheck": {
-      "rsp_timeout": "100ms",
+      "rsp_timeout": "1000ms",
       "events": [
         {
           "name": "svc_rsp_ok",
@@ -29,7 +29,7 @@
       ]
     },
     "start": {
-      "rsp_timeout": "100ms",
+      "rsp_timeout": "1000ms",
       "events": [
         {
           "name": "svc_rsp_ok",
@@ -58,7 +58,7 @@
       ]
     },
     "prepare": {
-      "rsp_timeout": "100ms",
+      "rsp_timeout": "1000ms",
       "events": [
         {
           "name": "svc_rsp_ok",
@@ -79,7 +79,7 @@
       ]
     },
     "backup": {
-      "rsp_timeout": "100ms",
+      "rsp_timeout": "1000ms",
       "events": [
         {
           "name": "svc_rsp_ok",
@@ -107,7 +107,7 @@
           "svc1"
         ]
       },
-      "rsp_timeout": "100ms",
+      "rsp_timeout": "2000ms",
       "events": [
         {
           "name": "svc_rsp_ok",
@@ -128,7 +128,7 @@
       ]
     },
     "verify": {
-      "rsp_timeout": "100ms",
+      "rsp_timeout": "1000ms",
       "events": [
         {
           "name": "svc_rsp_ok",
@@ -149,7 +149,7 @@
       ]
     },
     "finish": {
-      "rsp_timeout": "100ms",
+      "rsp_timeout": "1000ms",
       "events": [
         {
           "name": "svc_rsp_ok",
@@ -170,7 +170,7 @@
       ]
     },
     "abort": {
-      "rsp_timeout": "100ms",
+      "rsp_timeout": "1000ms",
       "events": [
         {
           "name": "svc_rsp_ok",
@@ -191,7 +191,7 @@
       ]
     },
     "rollback": {
-      "rsp_timeout": "100ms",
+      "rsp_timeout": "1000ms",
       "events": [
         {
           "name": "svc_rsp_ok",
@@ -212,7 +212,7 @@
       ]
     },
     "critical": {
-      "rsp_timeout": "100ms",
+      "rsp_timeout": "1000ms",
       "events": [
         {
           "name": "svc_rsp_ok",
@@ -233,7 +233,7 @@
       ]
     },
     "exit": {
-      "rsp_timeout": "100ms",
+      "rsp_timeout": "3000ms",
       "events": [
         {
           "name": "svc_rsp_ok",

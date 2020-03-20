@@ -9,6 +9,7 @@
 
 
 #include <iostream>
+#include <ev.h>
 #include <boost/unordered_map.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/algorithm/string.hpp>
@@ -170,16 +171,16 @@ token_parse (std::string& text, std::vector<std::string>& results)
     boost::split(results, text, [](char c){return c == ':';});
 };
 
-time_t
+ev_tstamp
 str_to_timeout (std::string& timeout)
 {
     if (timeout.empty()) {
-        return (time_t) DEFAULT_RSP_TIMEOUT;
+        return (ev_tstamp) DEFAULT_SVC_RSP_TIMEOUT;
     }
     // TODO:
     //  if timeout regex doesnt match return Default too
 
-    time_t svc_rsp_timeout = std::stoi(timeout);
+    ev_tstamp svc_rsp_timeout = std::stoi(timeout);
     return svc_rsp_timeout;
 }
 

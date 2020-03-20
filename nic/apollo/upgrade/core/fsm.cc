@@ -9,11 +9,13 @@
 
 
 #include <iostream>
+#include <ev.h>
 #include <boost/unordered_map.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/upgrade/core/stage.hpp"
 #include "nic/apollo/upgrade/core/service.hpp"
 #include "nic/apollo/upgrade/core/idl.hpp"
@@ -23,8 +25,6 @@
 #include "nic/apollo/upgrade/core/ipc/notify_endpoint.hpp"
 
 namespace upg {
-
-evutil_timer api_rsp_timer;
 
 static void
 dispatch_event (stage_id_t id)
@@ -87,7 +87,6 @@ upg_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *req_cookie,
            event->rsp_thread_id);
     dump(fsm_states);
 
-
     if (event->stage == upg_stage_id(id) &&
         fsm_states.is_valid_service(thread_name)) {
 
@@ -98,14 +97,18 @@ upg_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *req_cookie,
         fsm_states.update_stage_progress(svc_rsp_code(event->rsp_status));
 
         if ( fsm_states.is_current_stage_over()) {
+            stage_id_t id = fsm_states.current_stage();
+            fsm_states.set_current_stage(id);
             if (fsm_states.current_stage() == fsm_states.end_stage()) {
                 // TODO:
                 UPG_TRACE_PRINT("Upgrade is over Exiting..");
                 exit(0);
 
             } else {
+                std::string stage =id_to_stage_name(fsm_states.current_stage());
                 if (fsm_states.is_serial_event_sequence()) {
-                    UPG_TRACE_PRINT("Moving to Next stage in serial order..");
+                    UPG_TRACE_PRINT("Moving to Next stage (" + stage +
+                                    ") in serial order..");
                     if (fsm_states.has_next_svc()) {
                         stage_id_t id = fsm_states.current_stage();
                         svc_t svc = fsm_states.next_svc();
@@ -116,9 +119,9 @@ upg_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *req_cookie,
                         SDK_ASSERT(0);
                     }
                 } else {
-                    UPG_TRACE_PRINT("Moving to Next stage in parallel order..");
+                    UPG_TRACE_PRINT("Moving to Next stage (" + stage +
+                                    ") in parallel order..");
                     stage_id_t id = fsm_states.current_stage();
-                    fsm_states.set_current_stage(id);
                     dispatch_event(id);
                 }
             }
@@ -143,24 +146,31 @@ upg_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *req_cookie,
         UPG_TRACE_PRINT("Dropping response from a previous stage..");
     }
 
-    UPG_TRACE_PRINT("RSP Event handler Done..");
     dump(fsm_states);
+    UPG_TRACE_PRINT("RSP Event handler Done..");
 }
 
-    void
-timer_callback (void*)
+static void
+timeout_cb (EV_P_ ev_timer *w, int revents)
 {
-    std::cout<<"Timer called ... \n";
-    fsm_states.stop_timer();
-    // Check if pending is still non zero
-    // need to fail and move to next stape
-    // else start timer
-    fsm_states.start_timer();
-    return;
+
+    UPG_TRACE_PRINT("**** Timer expired ****");
+    fsm_states.timer_stop();
+    fsm_states.update_stage_progress(SVC_RSP_NONE);
+    stage_id_t id = fsm_states.current_stage();
+    std::string name = id_to_stage_name(id);
+    fsm_states.set_current_stage(id);
+    UPG_TRACE_PRINT("Timer expired: Moving to next stage (" + name + ")");
+    fsm_states.timer_start();
+    dispatch_event(id);
+    if (fsm_states.current_stage() == fsm_states.end_stage()) {
+        // TODO:
+        UPG_TRACE_PRINT("Upgrade Failed !!");
+        exit(1);
+    }
 }
 
-
-    static stage_id_t
+static stage_id_t
 lookup_stage_transition (stage_id_t cur, svc_rsp_code_t rsp)
 {
     stage_id_t next_stage = STAGE_ID_EXIT ;
@@ -174,7 +184,7 @@ fsm::fsm(stage_id_t start, stage_id_t end) {
     end_stage_        = end;
     pending_response_ = 0;
     size_             = 0;
-    this->loop = EV_DEFAULT;
+    timeout_          = DEFAULT_SVC_RSP_TIMEOUT;
 }
 
 fsm::~fsm(void) { }
@@ -189,22 +199,58 @@ void fsm::set_current_stage(stage_id_t stage_id) {
 
     SDK_ASSERT(fsm_stages.find(start_stage_) != fsm_stages.end());
 
-    stage_t stage     = fsm_stages[start_stage_];
+    stage_t stage     = fsm_stages[current_stage_];
     svc_sequence_     = stage.svc_sequence();
     size_             = 0;
     for (auto x: svc_sequence_) {
-        UPG_TRACE_PRINT("name : " + x.name());
+       // UPG_TRACE_PRINT("name : " + x.name());
         size_++;
     }
     pending_response_ = size_;
     timeout_          = stage.svc_rsp_timeout();
 
+    // dump(stage);
+
+    timeout_ = double(timeout_* 1.0) / 1000;
+
+
     std::string str   = __PRETTY_FUNCTION__   ;
-    str += " pending_response :" + std::to_string(pending_response_);
+    str += " pending response :" + std::to_string(pending_response_);
     str += " : " + svc_sequence_to_str(svc_sequence_);
+    str += " timeout : " + std::to_string(timeout_);
     UPG_TRACE_PRINT(str);
 }
 
+
+void fsm::timer_stop(void)
+{
+    UPG_TRACE_PRINT("Stopping the timer..");
+    ev_timer_stop(loop, &timeout_watcher);
+}
+
+void fsm::timer_init(void* ctxt)
+{
+    UPG_TRACE_PRINT("Initializing the timer with timeout:" +
+                    std::to_string(timeout_));
+
+    sdk::event_thread::event_thread *curr_thread;
+    curr_thread = (sdk::event_thread::event_thread *)ctxt;
+    loop = curr_thread->ev_loop();
+
+    ev_timer_init(&timeout_watcher, timeout_cb, timeout_, 0.0);
+}
+
+void fsm::timer_set(void)
+{
+    UPG_TRACE_PRINT("Setting the timer :" + std::to_string(timeout_));
+    ev_timer_set(&timeout_watcher, timeout_, 0.0);
+}
+
+void fsm::timer_start (void)
+{
+    UPG_TRACE_PRINT("Starting the timer..");
+    ev_timer_start(loop, &timeout_watcher);
+}
 
 stage_id_t fsm::start_stage(void) {
     return start_stage_;
@@ -232,15 +278,23 @@ ev_tstamp fsm::timeout(void) {
 
 void fsm::update_stage_progress(svc_rsp_code_t rsp) {
     if (rsp != SVC_RSP_OK) {
-
-        UPG_TRACE_PRINT("Got failure svc response");
-        SDK_ASSERT(pending_response_ >= 0);
-
+        switch (rsp) {
+        case UPG_STATUS_FAIL:
+            UPG_TRACE_PRINT("Got failure svc response");
+            break;
+        case UPG_STATUS_CRITICAL:
+            // TODO: if ( critical ??)
+            UPG_TRACE_PRINT("Got critical svc response");
+            break;
+        case SVC_RSP_NONE:
+            UPG_TRACE_PRINT("Timer expired, no svc response so far");
+            break;
+        default:
+            break;
+        }
+        // TODO: if current stage is ( exit/rollback ??)
         current_stage_ = lookup_stage_transition(current_stage_, rsp);
-        // TODO: if ( critical ??)
-
-        // TODO: if ( exit ??)
-
+        SDK_ASSERT(pending_response_ >= 0);
         pending_response_ = 0;
         size_             = 0;
     } else {
@@ -254,7 +308,7 @@ void fsm::update_stage_progress(svc_rsp_code_t rsp) {
 
         if (pending_response_ == 0) {
             str += " . Finish current stage.";
-            // TODO: if current state is exit ??
+            // TOO: if current state is exit ??
             SDK_ASSERT(pending_response_ >= 0);
             current_stage_ = lookup_stage_transition(current_stage_, rsp);
             size_          = 0;
@@ -329,16 +383,6 @@ bool fsm::is_serial_event_sequence(void) {
     return stage.event_sequence() == SERIAL;
 }
 
-void fsm::start_timer(void) {
-    std::cout<<"Timer Start .......... \n";
-    evutil_timer_start(EV_A_ &api_rsp_timer, timer_callback, NULL, timeout_/1000,
-                       0.1);
-}
-
-void fsm::stop_timer(void) {
-    std::cout<<"Timer Stop .......... \n";
-    evutil_timer_stop(EV_A_ &api_rsp_timer);
-}
 
 static svc_sequence_t
 str_to_svc_sequence (std::string& svc_seq)
@@ -412,7 +456,7 @@ static void
 init_fsm_stages (void)
 {
     stage_id_t          stage_id;
-    time_t              svc_rsp_timeout;
+    ev_tstamp           svc_rsp_timeout;
     svc_sequence_t      svcs_seq;
     event_sequence_t    event_seq;
     transition_t        transitions;
@@ -436,29 +480,32 @@ init_fsm_stages (void)
 }
 
 static void
-init_fsm (void)
+init_fsm (void* ctxt)
 {
-    upg_event_msg_t            event;
-    stage_id_t start_stage     = fsm_states.start_stage();
-    event.stage                = upg_stage_id(start_stage);
+    upg_event_msg_t                 event;
+    stage_id_t start_stage          = fsm_states.start_stage();
+    event.stage                     = upg_stage_id(start_stage);
 
     SDK_ASSERT(fsm_stages.find(start_stage) != fsm_stages.end());
+    fsm_states.timer_init(ctxt);
     fsm_states.set_current_stage(start_stage);
 
     sdk::ipc::reg_response_handler(PDS_IPC_MSG_ID_UPGRADE,
                                    upg_event_handler, NULL);
-    fsm_states.start_timer();
+    dump(fsm_states);
+    // TODO: main thread blocking due to this
+    fsm_states.timer_start();
     sdk::ipc::broadcast(PDS_IPC_MSG_ID_UPGRADE, &event, sizeof(event));
     return;
 }
 
 void
-init (void)
+init (void* ctxt)
 {
     init_svc();
     init_lookup_table();
     init_fsm_stages();
-    init_fsm();
+    init_fsm(ctxt);
 
 #if 0
     dump(fsm_stages);

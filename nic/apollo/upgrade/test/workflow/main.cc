@@ -19,7 +19,6 @@ static std::string                      svc_name;
 static uint32_t                         svc_thread_id;
 
 
-
 static inline upg_status_t
 stage_to_upg_status (upg_stage_t evt)
 {
@@ -38,6 +37,13 @@ stage_to_upg_status (upg_stage_t evt)
     upg_status    = (upg_status_t) pt.get<int>(test_id + "." + upg_stage);
     return upg_status;
 #endif
+
+   // TODO: need to do this timeout injection from test json
+   if (UPG_STAGE_PREPARE == evt) {
+       printf("\nSleeping ...\n");
+       sleep (5);
+       printf("\nSleep done ...\n");
+   }
     return UPG_STATUS_OK;
 }
 

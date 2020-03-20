@@ -32,7 +32,7 @@ print_usage (char **argv)
 void
 upg_event_thread_init (void *ctxt)
 {
-    upg::init();
+    upg::init(ctxt);
 }
 
 void

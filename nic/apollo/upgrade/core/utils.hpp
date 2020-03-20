@@ -9,6 +9,7 @@
 
 
 #include <iostream>
+#include <ev.h>
 #include <boost/unordered_map.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/algorithm/string.hpp>
@@ -25,7 +26,7 @@ namespace upg
 
 void           token_parse(std::string& text,
                            std::vector<std::string>& results);
-time_t         str_to_timeout(std::string& timeout);
+ev_tstamp      str_to_timeout(std::string& timeout);
 stage_id_t     name_to_stage_id(std::string stage);
 std::string    id_to_stage_name(stage_id_t stage);
 std::string    svc_sequence_to_str(svc_sequence_t svcs);

@@ -11,18 +11,21 @@
 #define __UPG_FSM_HPP__
 
 #include <iostream>
+#include <ev.h>
 #include <boost/unordered_map.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
+#include "nic/sdk/platform/pal/include/pal.h"
+#include "nic/sdk/platform/evutils/include/evutils.h"
+#include "platform/pal/include/pal.h"
 #include "nic/apollo/upgrade/core/stage.hpp"
 #include "nic/apollo/upgrade/core/service.hpp"
 #include "nic/apollo/upgrade/core/idl.hpp"
-#include "platform/evutils/include/evutils.h"
-#include "platform/pal/include/pal.h"
-#include "nic/sdk/platform/pal/include/pal.h"
+
+#define DEFAULT_SVC_RSP_TIMEOUT 5
 
 namespace upg {
 #if 0
@@ -65,15 +68,17 @@ class fsm {
         uint32_t        pending_response(void);
         void            set_pending_response(uint32_t count);
         void            update_stage_progress(svc_rsp_code_t rsp);
+        ev_tstamp       timeout(void);
         void            set_timeout(ev_tstamp timeout);
         bool            is_current_stage_over(void);
         bool            is_serial_event_sequence(void);
         bool            has_next_svc(void);
         bool            is_valid_service(std::string svc);
         svc_t           next_svc(void);
-        void            start_timer(void);
-        void            stop_timer(void);
-        ev_tstamp       timeout(void);
+        void            timer_init(void* ctxt);
+        void            timer_start(void);
+        void            timer_stop(void);
+        void            timer_set(void);
         svc_sequence_t  svc_sequence(void);
     private:
         stage_id_t      current_stage_;
@@ -83,12 +88,13 @@ class fsm {
         uint32_t        size_;
         svc_sequence_t  svc_sequence_;
         ev_tstamp       timeout_;
-        EV_P;
 };
 
-void init(void);
-static fsm fsm_states;
+static fsm            fsm_states;
+static ev_timer       timeout_watcher;
+static struct ev_loop *loop;
 
+void init(void *ctxt);
 sdk_ret_t do_switchover(void);
 sdk_ret_t register_callback(stage_callback_t cb_type, stage_id_t cb_stage,
                             void *(*callback)(void *), void *arg);

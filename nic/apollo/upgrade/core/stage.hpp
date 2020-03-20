@@ -11,6 +11,7 @@
 #define __UPGRADE_FSM_STAGE_HPP__
 
 #include <string>
+#include <ev.h>
 #include <boost/unordered_map.hpp>
 #include <boost/container/small_vector.hpp>
 #include <boost/assign/list_of.hpp>
@@ -18,7 +19,6 @@
 #include "nic/apollo/upgrade/core/service.hpp"
 #include "nic/apollo/upgrade/core/idl.hpp"
 
-#define DEFAULT_RSP_TIMEOUT 200
 #define STAGE_COUNT         11
 
 namespace upg {
@@ -121,20 +121,20 @@ typedef boost::container::vector<script_t> scripts_t;
 class stage_t {
 public:
     stage_t(void);
-    stage_t(time_t svc_rsp_timeout, svc_sequence_t svc_seq,
+    stage_t(ev_tstamp svc_rsp_timeout, svc_sequence_t svc_seq,
             event_sequence_t evt_seq,
             transition_t transitions, scripts_t pre_sc,
             scripts_t post_sc);
     ~stage_t(void);
 
-    time_t&           svc_rsp_timeout(void);
+    ev_tstamp&        svc_rsp_timeout(void);
     svc_sequence_t&   svc_sequence(void);
     event_sequence_t& event_sequence(void);
     transition_t&     transitions(void);
     scripts_t&        pre_hook_scripts(void);
     scripts_t&        post_hook_scripts(void);
 private:
-    time_t           svc_rsp_timeout_;
+    ev_tstamp        svc_rsp_timeout_;
     svc_sequence_t   svc_sequence_;
     event_sequence_t event_sequence_;
     transition_t     transitions_;
