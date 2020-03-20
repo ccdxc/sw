@@ -399,7 +399,7 @@ int grpc_ipc::PostMsg(struct ResetChanMsg& reset_ch)
     ChannelGetRequestMsg get_req_msg;
     ChannelGetResponseMsg get_rsp_msg;
 
-    SDK_TRACE_INFO("channel enable on ncsi channel: 0x%x", 
+    SDK_TRACE_INFO("reset channel on ncsi channel: 0x%x", 
             reset_ch.port);
     auto get_req = get_req_msg.add_request();
 
@@ -460,7 +460,7 @@ int grpc_ipc::PostMsg(struct EnableChanTxMsg& enable_ch_tx)
     ChannelGetRequestMsg get_req_msg;
     ChannelGetResponseMsg get_rsp_msg;
 
-    SDK_TRACE_INFO("channel enable on ncsi channel: 0x%x", 
+    SDK_TRACE_INFO("enable channel tx on ncsi channel: 0x%x", 
             enable_ch_tx.port);
     auto get_req = get_req_msg.add_request();
 

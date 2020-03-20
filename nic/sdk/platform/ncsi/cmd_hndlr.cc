@@ -565,6 +565,7 @@ void CmdHndler::ClearInitState(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
     ssize_t ret;
     NcsiStateErr sm_ret;
     struct NcsiRspPkt resp;
+    struct ResetChanMsg reset_ch_msg;
     CmdHndler *hndlr = (CmdHndler *)obj;
     const struct NcsiFixedCmdPkt *cmd = (NcsiFixedCmdPkt *)cmd_pkt;
 
@@ -573,6 +574,23 @@ void CmdHndler::ClearInitState(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
 
     NCSI_CMD_BEGIN_BANNER();
     SDK_TRACE_INFO("ncsi_channel: 0x%x", cmd->cmd.NcsiHdr.channel);
+
+    // reset the channel
+    reset_ch_msg.reset = true;
+    reset_ch_msg.port = cmd->cmd.NcsiHdr.channel;
+    reset_ch_msg.filter_id = cmd->cmd.NcsiHdr.channel;
+
+    NcsiDb[reset_ch_msg.port]->UpdateNcsiParam(reset_ch_msg);
+
+    ret = hndlr->ipc->PostMsg(reset_ch_msg);
+    if (ret) {
+        SDK_TRACE_ERR("Failed to reset channel");
+    }
+
+    // zero out the local database of filters
+    memset(mac_addr_list, 0, sizeof(mac_addr_list));
+    memset(vlan_filter_list, 0, sizeof(vlan_filter_list));
+    memset(vlan_mode_list, 0, sizeof(vlan_mode_list));
 
     sm_ret = StateM[cmd->cmd.NcsiHdr.channel]->UpdateState(CMD_CLEAR_INIT_STATE);
 
@@ -595,8 +613,6 @@ void CmdHndler::ClearInitState(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
             goto error_out;
         }
     }
-
-    //TODO: Implement clear initial state command here
 
 error_out:
     resp.rsp.NcsiHdr.type = ncsi_cmd_resp_opcode(CMD_CLEAR_INIT_STATE);
