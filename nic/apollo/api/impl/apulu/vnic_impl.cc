@@ -1133,7 +1133,7 @@ vnic_impl::fill_stats_(pds_vnic_stats_t *stats) {
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_TX_STATS, hw_id_, NULL,
                                       NULL, &tx_stats);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to read VNIC_TX_STATS table; hw_id:%u", hw_id_);
+        PDS_TRACE_ERR("Failed to read VNIC_TX_STATS table at index %u", hw_id_);
         return sdk::SDK_RET_HW_READ_ERR;
     }
     stats->tx_pkts  = *(uint64_t *)tx_stats.vnic_tx_stats_action.out_packets;
@@ -1143,7 +1143,7 @@ vnic_impl::fill_stats_(pds_vnic_stats_t *stats) {
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_RX_STATS, hw_id_, NULL,
                                       NULL, &rx_stats);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to read VNIC_RX_STATS table hw_id:%u", hw_id_);
+        PDS_TRACE_ERR("Failed to read VNIC_RX_STATS table at index %u", hw_id_);
         return sdk::SDK_RET_HW_READ_ERR;
     }
     stats->rx_pkts  = *(uint64_t *)rx_stats.vnic_rx_stats_action.in_packets;

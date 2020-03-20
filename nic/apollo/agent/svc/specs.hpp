@@ -1394,6 +1394,10 @@ static inline void
 pds_vnic_api_stats_to_proto (pds::VnicStats *proto_stats,
                              const pds_vnic_stats_t *api_stats)
 {
+    proto_stats->set_txbytes(api_stats->tx_bytes);
+    proto_stats->set_txpackets(api_stats->tx_pkts);
+    proto_stats->set_rxbytes(api_stats->rx_bytes);
+    proto_stats->set_rxpackets(api_stats->rx_pkts);
 }
 
 // populate proto buf from vnic API info
