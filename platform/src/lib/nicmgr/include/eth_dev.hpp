@@ -37,6 +37,8 @@ namespace pt = boost::property_tree;
     ((0x8400000) | (0xb << UPD_BITS_POSITION) | (lif_num << LIF_BITS_POSITION))
 
 #define DEVCMD_TIMEOUT 5
+#define PORT_MAC_STATS_REPORT_SIZE (1024)
+#define PORT_PB_STATS_REPORT_SIZE  (1024)
 
 /**
  * ETH Device type
@@ -189,10 +191,14 @@ class Eth : public Device
     struct ionic_port_status *port_status;
     uint64_t port_status_addr;
     uint64_t host_port_status_addr;
-    // Port Stats
-    uint64_t port_stats_addr;
-    uint64_t host_port_stats_addr;
-    uint32_t port_stats_size;
+    // Port MAC Stats
+    uint64_t port_mac_stats_addr;
+    uint64_t host_port_mac_stats_addr;
+    uint32_t port_mac_stats_size;
+    // Port PacketBuffer (PB) Stats
+    uint64_t port_pb_stats_addr;
+    uint64_t host_port_pb_stats_addr;
+    uint32_t port_pb_stats_size;
     // Tasks
     EV_P;
     evutil_prepare devcmd_prepare = {0};
@@ -231,8 +237,6 @@ class Eth : public Device
     status_code_t _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdLifReset(void *req, void *req_data, void *resp, void *resp_data);
 
-    void port_stats_init_(uint32_t ifindex, sdk::types::mem_addr_t stats_hbm_base_addr);
-
     // Tasks
     static void StatsUpdate(void *obj);
     static void StatsUpdateComplete(void *obj);
@@ -245,6 +249,12 @@ class Eth : public Device
 
     const char *opcode_to_str(cmd_opcode_t opcode);
     const char *qos_class_to_str(uint8_t qos_class);
+
+    // stats
+    uint64_t PortStatsGetOffset(uint32_t ifindex, sdk::types::mem_addr_t stats_hbm_base_addr);
+    void PortMacStatsUpdateSize(uint32_t ifindex);
+    void PortMacStatsMappingInit(const struct eth_devspec *spec, PdClient *pd);
+    void PortPbStatsMappingInit(const struct eth_devspec *spec, PdClient *pd);
 };
 
 #endif

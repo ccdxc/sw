@@ -10,8 +10,11 @@
 #include "gen/proto/system.pb.h"
 #include "gen/proto/dropstats/dropstats.delphi.hpp"
 #include "gen/proto/dropstats/dropstats.pb.h"
+#include "asic/rw/asicrw.hpp"
+#include "nic/sdk/lib/catalog/catalog.hpp"
 
 using sys::SystemResponse;
+using sdk::lib::slab;
 
 namespace hal {
 
@@ -116,6 +119,83 @@ hal_update_drop_stats (SystemResponse *rsp) {
     delphi::objects::EgressDropMetrics::Publish(0, &edm);
 }
 
+// update hbm with uplink stats
+static void
+hal_update_pb_stats (SystemResponse *rsp)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    int index = 0, drop_entries = 0;
+    uint32_t tm_port, offset_multiplier, len;
+    ionic_pb_stats_t pb_stats;
+    sdk::types::mem_addr_t uplink_stats_base = INVALID_MEM_ADDRESS;
+    sdk::types::mem_addr_t uplink_port_base = INVALID_MEM_ADDRESS;
+    sys::PacketBufferPortStats *port_stats = NULL;
+    sys::PacketBufferStats *pakbuf_stats = rsp->mutable_stats()->mutable_packet_buffer_stats();
+
+    // get uplink stats ptr in hbm
+    uplink_stats_base = g_hal_cfg.mempartition->start_addr("uplink_stats");
+    if ((uplink_stats_base == 0) || (uplink_stats_base == INVALID_MEM_ADDRESS)) {
+        // nothing to do
+        return;
+    }
+
+    // TODO: need to generalize with catalog object
+    for (tm_port = 0; tm_port < TM_NUM_PORTS; tm_port++) {
+        switch (tm_port) {
+        case 0:
+            offset_multiplier = 0; // logical (inb)  port 1
+            break;
+        case 1:
+            offset_multiplier = 1; // logical (inb) port 5
+            break;
+        case 8:
+            offset_multiplier = 2; // logical (oob) port 9
+            break;
+        default:
+            continue;
+        }
+
+        memset(&pb_stats, 0, sizeof(pb_stats));
+        port_stats = pakbuf_stats->mutable_port_stats(tm_port);
+        pb_stats.sop_count_in = port_stats->mutable_buffer_stats()->sop_count_in();
+        pb_stats.eop_count_in = port_stats->mutable_buffer_stats()->eop_count_in();
+        pb_stats.sop_count_out = port_stats->mutable_buffer_stats()->sop_count_out();
+        pb_stats.eop_count_out = port_stats->mutable_buffer_stats()->eop_count_out();
+
+        auto buff_drop_stats = port_stats->mutable_buffer_stats()->mutable_drop_counts();
+        drop_entries = buff_drop_stats->stats_entries_size();
+        if (drop_entries > IONIC_BUFFER_DROP_MAX) {
+            drop_entries = IONIC_BUFFER_DROP_MAX;
+        }
+
+        for (index = 0; index < drop_entries; index++) {
+            auto entry = buff_drop_stats->mutable_stats_entries(index);
+            pb_stats.drop_counts[index] = entry->drop_count();
+        }
+
+        auto qstats = port_stats->qos_queue_stats();
+        for (index = 0; index < IONIC_PORT_QOS_MAX_QUEUES; index++) {
+            auto iqstats = qstats.input_queue_stats(index);
+            auto oqstats = qstats.output_queue_stats(index);
+            // iqstats fill
+            pb_stats.input_queue_buffer_occupancy[index] = iqstats.buffer_occupancy();
+            pb_stats.input_queue_port_monitor[index] = iqstats.port_monitor();
+            // oqstats fill
+            pb_stats.output_queue_port_monitor[index] = oqstats.port_monitor();
+        }
+
+        // ptr offset (not byte len)
+        uplink_port_base = uplink_stats_base + (IONIC_PORT_PB_STATS_REPORT_SIZE * offset_multiplier);
+        len = sizeof(pb_stats);
+
+        // write to hbm mem
+        ret = sdk::asic::asic_mem_write(uplink_port_base, (uint8_t*) &pb_stats, len);
+        if (ret != SDK_RET_OK) {
+            HAL_TRACE_ERR("update_pb_stats persist mem write fail for tm_port {} ret {}", tm_port, ret);
+        }
+    }
+}
+
 //------------------------------------------------------------------------------
 // callback invoked by the HAL periodic thread for stats collection
 //------------------------------------------------------------------------------
@@ -124,8 +204,9 @@ stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
     static uint8_t                      periodic_tmr_trig_cnt = 0;
     hal_ret_t ret;
-    pd::pd_system_args_t                pd_system_args;
+    pd::pd_pb_stats_get_args_t          pb_args;
     pd::pd_system_drop_stats_get_args_t drop_args;
+    pd::pd_system_args_t                pd_system_args;
     pd::pd_func_args_t                  pd_func_args;
     SystemResponse                      rsp;
 
@@ -134,6 +215,7 @@ stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
         HAL_TRACE_ERR("Error in updating qos periodic stats, ret {}", ret);
     }
 
+    // linkmgr mac stats
     ret = linkmgr::port_metrics_update();
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error in updating port metrics, ret {}", ret);
@@ -159,6 +241,22 @@ stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
         hal::hal_cfg_db_close();
 
         hal_update_drop_stats(&rsp);
+    }
+
+    // system PB stats
+    if (hal::g_hal_cfg.device_cfg.forwarding_mode == sdk::lib::FORWARDING_MODE_CLASSIC) {
+        bzero(&pd_func_args, sizeof(pd::pd_func_args_t));
+        bzero(&pd_system_args, sizeof(pd::pd_system_args_t));
+        bzero(&pb_args, sizeof(pd::pd_pb_stats_get_args_t));
+        pd_system_args.rsp = &rsp;
+        pb_args.pd_sys_args = &pd_system_args;
+        pd_func_args.pd_pb_stats_get = &pb_args;
+
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_PB_STATS_GET, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error in updating PB stats, ret {}", ret);
+        }
+        hal_update_pb_stats(&rsp);
     }
 }
 

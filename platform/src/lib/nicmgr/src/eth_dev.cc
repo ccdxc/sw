@@ -92,34 +92,112 @@ Eth::str_to_eth_type(std::string const &s)
     }
 }
 
+uint64_t
+Eth::PortStatsGetOffset(uint32_t ifindex, sdk::types::mem_addr_t stats_hbm_base_addr)
+{
+
+    // ifindex=0 for internal mnic
+    if (ifindex == 0) {
+        return 0;
+    }
+    return (stats_hbm_base_addr + port_stats_addr_offset(ifindex));
+}
+
 void
-Eth::port_stats_init_(uint32_t ifindex, sdk::types::mem_addr_t stats_hbm_base_addr) {
+Eth::PortMacStatsUpdateSize(uint32_t ifindex)
+{
     uint32_t parent_port;
 
     // ifindex=0 for internal mnic
     if (ifindex == 0) {
-        port_stats_addr = 0;
+        port_mac_stats_size  = 0;
         return;
     }
 
     parent_port = ETH_IFINDEX_TO_PARENT_PORT(ifindex);
-    port_stats_addr = stats_hbm_base_addr + port_stats_addr_offset(ifindex);
-
     // TODO store the type from catalog and set port_stats_size accordingly
     switch (parent_port) {
     case 1:
     case 2:
         // mx0, mx1
-        port_stats_size = sizeof(struct ionic_port_stats);
+        port_mac_stats_size = sizeof(struct ionic_port_stats);
         break;
     case 3:
         // bx
-        port_stats_size = sizeof(struct ionic_mgmt_port_stats);
+        port_mac_stats_size = sizeof(struct ionic_mgmt_port_stats);
         break;
     default:
-        SDK_ASSERT(0);
+        port_mac_stats_size = 0;
         break;
     }
+}
+
+void
+Eth::PortMacStatsMappingInit(const struct eth_devspec *spec, PdClient *pd)
+{
+    bool use_hbm = true;
+    sdk::types::mem_addr_t mac_stats_hbm_base = INVALID_MEM_ADDRESS;
+
+    if (pd == NULL) {
+        use_hbm = false;
+        NIC_LOG_ERR("{}: No PD allocation!", spec->name);
+    } else if (pd->mp_ == NULL) {
+        use_hbm = false;
+        NIC_LOG_ERR("{}: No HBM region!", spec->name);
+    }
+
+    if (use_hbm == true) {
+        mac_stats_hbm_base = pd->mp_->start_addr("port_stats");
+        if ((mac_stats_hbm_base == 0) || (mac_stats_hbm_base == INVALID_MEM_ADDRESS)) {
+            use_hbm = false;
+            NIC_LOG_ERR("{}: Failed to get HBM mac stats hbm base addr!", spec->name);
+        }
+    }
+    if (use_hbm == false) {
+        port_mac_stats_addr = 0;
+        port_mac_stats_size = 0;
+        return;
+    }
+
+    port_mac_stats_addr = PortStatsGetOffset(spec->uplink_port_num, mac_stats_hbm_base);
+    PortMacStatsUpdateSize(spec->uplink_port_num);
+
+    NIC_LOG_INFO("{}: {:#d} port_mac_stats_addr {:#x} size {:#d}", spec->name, spec->uplink_port_num,
+                 port_mac_stats_addr, port_mac_stats_size);
+}
+
+void
+Eth::PortPbStatsMappingInit(const struct eth_devspec *spec, PdClient *pd)
+{
+    bool use_hbm = true;
+    sdk::types::mem_addr_t pb_stats_hbm_base = INVALID_MEM_ADDRESS;
+
+    if (pd == NULL) {
+        use_hbm = false;
+        NIC_LOG_ERR("{}: No PD allocation!", spec->name);
+    } else if (pd->mp_ == NULL) {
+        use_hbm = false;
+        NIC_LOG_ERR("{}: No HBM region!", spec->name);
+    }
+
+    if (use_hbm == true) {
+        pb_stats_hbm_base = pd->mp_->start_addr("uplink_stats");
+        if ((pb_stats_hbm_base == 0) || (pb_stats_hbm_base == INVALID_MEM_ADDRESS)) {
+            use_hbm = false;
+            NIC_LOG_ERR("{}: Failed to get HBM pb stats base addr!", spec->name);
+        }
+    }
+    if (use_hbm == false) {
+        port_pb_stats_addr = 0;
+        port_pb_stats_size = 0;
+        return;
+    }
+
+    port_pb_stats_addr = PortStatsGetOffset(spec->uplink_port_num, pb_stats_hbm_base);
+    port_pb_stats_size = sizeof(struct ionic_port_pb_stats);
+
+    NIC_LOG_INFO("{}: {:#d} port_pb_stats_addr {:#x} size {:#d}", spec->name, spec->uplink_port_num,
+                 port_pb_stats_addr, port_pb_stats_size);
 }
 
 Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P)
@@ -130,7 +208,6 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
     Eth::spec = dev_info->eth_spec;
     Eth::pd = pd_client;
     dev_resources = *(dev_info->eth_res);
-    sdk::types::mem_addr_t stats_hbm_base_addr = INVALID_MEM_ADDRESS;
 
     this->loop = loop;
     this->skip_hwinit = pd->is_dev_hwinit_done(spec->name.c_str());
@@ -270,7 +347,8 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
     }
 
     host_port_info_addr = 0;
-    host_port_stats_addr = 0;
+    host_port_mac_stats_addr = 0;
+    host_port_pb_stats_addr = 0;
 
     // Port Config
     port_config_addr = pd->nicmgr_mem_alloc(sizeof(union ionic_port_config));
@@ -296,19 +374,9 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
 
     NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name, port_status_addr);
 
-    stats_hbm_base_addr = pd->mp_->start_addr("port_stats");
-    if ((stats_hbm_base_addr == 0) || (stats_hbm_base_addr == INVALID_MEM_ADDRESS)) {
-        NIC_LOG_ERR("{}: Failed to get HBM port stats base addr!", spec->name);
-        SDK_ASSERT(0);
-    }
-
-    NIC_LOG_INFO("{}: {:#d} stats_hbm_base_addr {:#x}", spec->name, spec->uplink_port_num,
-                 stats_hbm_base_addr);
-
-    port_stats_init_(spec->uplink_port_num, stats_hbm_base_addr);
-
-    NIC_LOG_INFO("{}: {:#d} port_stats_addr {:#x} size {:#d}", spec->name, spec->uplink_port_num,
-                 port_stats_addr, port_stats_size);
+    // init stats interface to host
+    PortMacStatsMappingInit(spec, pd);
+    PortPbStatsMappingInit(spec, pd);
 
     // Enable Devcmd Handling
     evutil_add_prepare(EV_A_ & devcmd_prepare, Eth::DevcmdPoll, this);
@@ -324,7 +392,6 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
     Eth::dev_api = dev_api;
     Eth::spec = (struct eth_devspec *)dev_spec;
     Eth::pd = pd_client;
-    sdk::types::mem_addr_t stats_hbm_base_addr = INVALID_MEM_ADDRESS;
 
     this->loop = loop;
     this->skip_hwinit = pd->is_dev_hwinit_done(spec->name.c_str());
@@ -439,7 +506,8 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
     }
 
     host_port_info_addr = 0;
-    host_port_stats_addr = 0;
+    host_port_mac_stats_addr = 0;
+    host_port_pb_stats_addr = 0;
 
     // Port Config
     port_config_addr = pd->nicmgr_mem_alloc(sizeof(union ionic_port_config));
@@ -465,20 +533,9 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
 
     NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name, port_status_addr);
 
-    stats_hbm_base_addr = pd->mp_->start_addr("port_stats");
-    if ((stats_hbm_base_addr == 0) || (stats_hbm_base_addr == INVALID_MEM_ADDRESS)) {
-        NIC_LOG_ERR("{}: Failed to get HBM port stats base addr!", spec->name);
-        SDK_ASSERT(0);
-    }
-
-    NIC_LOG_INFO("{}: {:#d} stats_hbm_base_addr {:#x}", spec->name, spec->uplink_port_num,
-                 stats_hbm_base_addr);
-
-    port_stats_init_(spec->uplink_port_num, stats_hbm_base_addr);
-
-
-    NIC_LOG_INFO("{}: {:#d} port_stats_addr {:#x} size {:#d}", spec->name, spec->uplink_port_num,
-                 port_stats_addr, port_stats_size);
+    // init stats interface to host
+    PortMacStatsMappingInit(spec, pd);
+    PortPbStatsMappingInit(spec, pd);
 
     // Enable Devcmd Handling
     evutil_add_prepare(EV_A_ & devcmd_prepare, Eth::DevcmdPoll, this);
@@ -1257,13 +1314,17 @@ Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
         host_port_status_addr = cmd->info_pa + offsetof(struct ionic_port_info, status);
         NIC_LOG_INFO("{}: host_port_status_addr {:#x}", spec->name, host_port_status_addr);
 
-        host_port_stats_addr = cmd->info_pa + offsetof(struct ionic_port_info, stats);
-        NIC_LOG_INFO("{}: host_port_stats_addr {:#x}", spec->name, host_port_stats_addr);
+        host_port_mac_stats_addr = cmd->info_pa + offsetof(struct ionic_port_info, stats);
+        NIC_LOG_INFO("{}: host_port_mac_stats_addr {:#x}", spec->name, host_port_mac_stats_addr);
+
+        host_port_pb_stats_addr = cmd->info_pa + offsetof(struct ionic_port_info, pb_stats);
+        NIC_LOG_INFO("{}: host_port_pb_stats_addr {:#x}", spec->name, host_port_pb_stats_addr);
     } else {
         host_port_info_addr = 0;
         host_port_config_addr = 0;
         host_port_status_addr = 0;
-        host_port_stats_addr = 0;
+        host_port_mac_stats_addr = 0;
+        host_port_pb_stats_addr = 0;
     }
 
     memcpy(port_config, cfg, sizeof(*port_config));
@@ -1286,7 +1347,8 @@ Eth::_CmdPortReset(void *req, void *req_data, void *resp, void *resp_data)
     host_port_info_addr = 0;
     host_port_config_addr = 0;
     host_port_status_addr = 0;
-    host_port_stats_addr = 0;
+    host_port_mac_stats_addr = 0;
+    host_port_pb_stats_addr = 0;
 
     return (IONIC_RC_SUCCESS);
 }
@@ -1827,11 +1889,13 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
         }
     };
 
-    if (spec->eth_type == ETH_HOST && cmd->index == 0 && host_port_stats_addr != 0) {
+    if (spec->eth_type == ETH_HOST && cmd->index == 0 && host_port_mac_stats_addr != 0) {
         NIC_LOG_INFO("{}: port{}: Starting stats update to "
-                     "host_port_stats_addr {:#x}",
-                     spec->name, spec->uplink_port_num, host_port_stats_addr);
+                     "host_port_mac_stats_addr {:#x} host_port_pb_stats_addr {:#x}",
+                     spec->name, spec->uplink_port_num,
+                     host_port_mac_stats_addr, host_port_pb_stats_addr);
         evutil_timer_start(EV_A_ & stats_timer, &Eth::StatsUpdate, this, 0.0, 0.5);
+
     }
 
     // TODO: Workaround for linkmgr not setting port id
@@ -1876,7 +1940,7 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
     }
     eth_lif = it->second;
 
-    if (spec->eth_type == ETH_HOST && cmd->index == 0 && host_port_stats_addr != 0) {
+    if (spec->eth_type == ETH_HOST && cmd->index == 0 && host_port_mac_stats_addr != 0) {
         NIC_LOG_INFO("{}: port{}: Stopping stats update", spec->name, spec->uplink_port_num);
         evutil_timer_stop(EV_A_ & stats_timer);
     }
@@ -1935,10 +1999,17 @@ Eth::StatsUpdate(void *obj)
 
     struct edmaq_ctx ctx = { .cb = &Eth::StatsUpdateComplete, .obj = obj };
 
-    if (eth->port_stats_addr != 0 && eth->host_port_stats_addr != 0) {
+    if (eth->port_mac_stats_addr != 0 && eth->host_port_mac_stats_addr != 0) {
         auto posted = eth_lif->EdmaAsyncProxy(
             eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            eth->port_stats_addr, eth->host_port_stats_addr, sizeof(struct ionic_port_stats), &ctx);
+            eth->port_mac_stats_addr, eth->host_port_mac_stats_addr, sizeof(struct ionic_port_stats), &ctx);
+
+        if (eth->port_pb_stats_addr != 0 && eth->host_port_pb_stats_addr != 0) {
+            eth_lif->EdmaAsyncProxy(
+                eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
+                eth->port_pb_stats_addr, eth->host_port_pb_stats_addr, sizeof(struct ionic_port_pb_stats), &ctx);
+        }
+
         if (posted)
             evutil_timer_stop(eth->loop, &eth->stats_timer);
     }

@@ -878,7 +878,6 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
     bool                   reset = false;
     capri_queue_stats_t    qos_queue_stats = {0};
 
-    HAL_TRACE_DEBUG("Querying PB stats");
     pb_stats = rsp->mutable_stats()->mutable_packet_buffer_stats();
 
     for (port = 0; port < TM_NUM_PORTS; port++) {

@@ -66,7 +66,7 @@ sfp_sprom_parse (int port, uint8_t *data)
 
     switch (data[SFP_OFFSET_EXT_SPEC_COMPLIANCE_CODES]) {
     case 0x0:
-        SDK_TRACE_DEBUG("Xcvr port %d SFP ext spec found unspecified compliance code", port);
+        SDK_TRACE_DEBUG("Xcvr port %d SFP ext spec unspecified compliance code 0x0", port);
         break;
     case 0x1:
         // 25GAUI C2M AOC - BER 5x10^(-5)
@@ -149,7 +149,7 @@ sfp_sprom_parse (int port, uint8_t *data)
         break;
 
     default:
-        SDK_TRACE_DEBUG("Xcvr port %u SFP ext spec unsupported code 0x%u",
+        SDK_TRACE_DEBUG("Xcvr port %u SFP ext spec code %u not supported yet",
                          port, data[SFP_OFFSET_EXT_SPEC_COMPLIANCE_CODES]);
         break;
     }

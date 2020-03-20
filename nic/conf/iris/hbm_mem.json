@@ -578,11 +578,6 @@
             "reset": true
         },
         {
-            "name": "port_stats",
-            "size": "3K",
-            "reset": true
-        },
-        {
             "name": "qos-dscp-cos-map",
             "size": "64B",
             "reset": true
@@ -591,6 +586,16 @@
             "name": "clock",
             "size": "64B",
             "cache": "p4eg"
+        },
+        {
+            "name": "port_stats",
+            "size": "3K",
+            "reset": true
+        },
+        {
+            "name": "uplink_stats",
+            "size": "3K",
+            "reset": true
         }
     ]
 }

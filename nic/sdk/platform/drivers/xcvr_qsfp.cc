@@ -95,7 +95,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
 
     switch (data[QSFP_OFFSET_ETH_COMPLIANCE_CODES]) {
     case 0x0:
-        SDK_TRACE_DEBUG("Xcvr port %d QSFP eth spec found unspecified compliance code", port);
+        SDK_TRACE_DEBUG("Xcvr port %d QSFP eth spec unspecified compliance code 0x0", port);
         break;
     case 0x1:
         // 40G Active cable
@@ -129,14 +129,14 @@ qsfp_sprom_parse (int port, uint8_t *data)
         break;
 
     default:
-        SDK_TRACE_DEBUG("Xcvr port %u QSFP eth spec unsupported code 0x%u",
+        SDK_TRACE_DEBUG("Xcvr port %u QSFP eth spec code %u checking ext compliance",
                          port, data[QSFP_OFFSET_ETH_COMPLIANCE_CODES]);
         break;
     }
 
     switch (data[QSFP_OFFSET_EXT_SPEC_COMPLIANCE_CODES]) {
     case 0x0:
-        SDK_TRACE_DEBUG("Xcvr port %d QSFP ext spec found unspecified compliance code", port);
+        SDK_TRACE_DEBUG("Xcvr port %d QSFP ext spec unspecified compliance code 0x0", port);
         break;
     case 0x1:
         // 100G AOC
@@ -227,7 +227,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
         break;
 
     default:
-        SDK_TRACE_DEBUG("Xcvr port %u QSFP ext spec unsupported code 0x%u",
+        SDK_TRACE_DEBUG("Xcvr port %u QSFP ext spec code %u not supported yet",
                          port, data[QSFP_OFFSET_ETH_COMPLIANCE_CODES]);
         break;
     }

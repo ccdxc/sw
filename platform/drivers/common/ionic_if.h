@@ -2357,6 +2357,39 @@ struct ionic_mgmt_port_stats {
 	__le64 frames_tx_pause;
 };
 
+enum ionic_pb_buffer_drop_stats {
+	IONIC_BUFFER_INTRINSIC_DROP = 0,
+	IONIC_BUFFER_DISCARDED,
+	IONIC_BUFFER_ADMITTED,
+	IONIC_BUFFER_OUT_OF_CELLS_DROP,
+	IONIC_BUFFER_OUT_OF_CELLS_DROP_2,
+	IONIC_BUFFER_OUT_OF_CREDIT_DROP,
+	IONIC_BUFFER_TRUNCATION_DROP,
+	IONIC_BUFFER_PORT_DISABLED_DROP,
+	IONIC_BUFFER_COPY_TO_CPU_TAIL_DROP,
+	IONIC_BUFFER_SPAN_TAIL_DROP,
+	IONIC_BUFFER_MIN_SIZE_VIOLATION_DROP,
+	IONIC_BUFFER_ENQUEUE_ERROR_DROP,
+	IONIC_BUFFER_INVALID_PORT_DROP,
+	IONIC_BUFFER_INVALID_OUTPUT_QUEUE_DROP,
+	IONIC_BUFFER_DROP_MAX,
+};
+
+/**
+ * struct port_pb_stats - packet buffers system stats
+ * uses ionic_pb_buffer_drop_stats for drop_counts[]
+ */
+struct ionic_port_pb_stats {
+	__le64 sop_count_in;
+	__le64 eop_count_in;
+	__le64 sop_count_out;
+	__le64 eop_count_out;
+	__le64 drop_counts[IONIC_BUFFER_DROP_MAX];
+	__le64 input_queue_buffer_occupancy[IONIC_QOS_TC_MAX];
+	__le64 input_queue_port_monitor[IONIC_QOS_TC_MAX];
+	__le64 output_queue_port_monitor[IONIC_QOS_TC_MAX];
+};
+
 /**
  * struct ionic_port_identity - port identity structure
  * @version:        identity structure version
@@ -2395,6 +2428,7 @@ union ionic_port_identity {
  * @status:          Port status data
  * @stats:           Port statistics data
  * @mgmt_stats:      Port management statistics data
+ * @port_pb_drop_stats:   uplink pb drop stats
  */
 struct ionic_port_info {
 	union ionic_port_config config;
@@ -2403,6 +2437,9 @@ struct ionic_port_info {
 		struct ionic_port_stats      stats;
 		struct ionic_mgmt_port_stats mgmt_stats;
 	};
+	/* room for pb_stats to start at 2k offset */
+	u8                          rsvd[760];
+	struct ionic_port_pb_stats  pb_stats;
 };
 
 /**
