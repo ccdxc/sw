@@ -2,6 +2,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/fte_ctx.hpp"
+#include <tins/tins.h>
 
 namespace fte {
 
@@ -121,5 +122,8 @@ void set_fte_max_sessions(uint8_t fte_id, uint64_t max_session);
 
 // Set Quisce on FTE
 void fte_set_quiesce(uint8_t fte_id, bool quiesce);
+
+hal_ret_t fte_inject_eth_pkt(const lifqid_t &lifq, hal_handle_t src_ifh, hal_handle_t src_l2segh,
+                              std::vector<Tins::EthernetII> &pkts, bool add_padding=false);
 
 } // namespace fte

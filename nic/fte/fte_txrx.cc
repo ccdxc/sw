@@ -918,7 +918,7 @@ void inst_t::process_arq_new ()
      * mode is used for PMD PPS measurements/testing. So we'll just enqueue the packet
      * to tx-q and send it out.
      */
-    if (bypass_fte_) {
+    if (unlikely(bypass_fte_)) {
 
         update_rx_stats_batch(cpupkt_batch.pktcount);
 
@@ -958,7 +958,7 @@ void inst_t::process_arq_new ()
 
     if (!cpupkt_batch.pktcount) return;
 
-    HAL_TRACE_VERBOSE("Received {} packets", cpupkt_batch.pktcount);
+    //HAL_TRACE_VERBOSE("Received {} packets", cpupkt_batch.pktcount);
 
     for (npkt = 0; npkt < cpupkt_batch.pktcount; npkt++) {
 
@@ -971,7 +971,7 @@ void inst_t::process_arq_new ()
         copied_pkt = cpupkt_batch.pkts[npkt].copied_pkt;
         drop_pkt = false;
 
-        HAL_TRACE_VERBOSE("npkt {} pkt_len {}, pkt {:p}", npkt, pkt_len, pkt);
+        //HAL_TRACE_VERBOSE("npkt {} pkt_len {}, pkt {:p}", npkt, pkt_len, pkt);
 
         do {
 
@@ -1001,7 +1001,7 @@ void inst_t::process_arq_new ()
             }
 
             if ((drop_pkt == false) && hal::g_session_stats && 
-                hal::g_session_stats[id_].total_active_sessions >= max_sessions_) {
+                unlikely(hal::g_session_stats[id_].total_active_sessions >= max_sessions_)) {
                 drop_pkt = true;
                 stats_.fte_hbm_stats->qstats.max_session_drop_pkts++;
                 ctx_->set_drop();
@@ -1035,7 +1035,7 @@ void inst_t::process_arq_new ()
 
         fte::impl::cfg_db_close();
     }
-    HAL_TRACE_VERBOSE("Done processing {} packets", cpupkt_batch.pktcount);
+    //HAL_TRACE_VERBOSE("Done processing {} packets", cpupkt_batch.pktcount);
 
 }
 

@@ -60,6 +60,7 @@ ctx_t::extract_flow_key()
 
     key_.dir = cpu_rxhdr_->lkp_dir;
     key_.lkpvrf = cpu_rxhdr_->lkp_vrf;
+    HAL_TRACE_DEBUG("Lkp vrf: {}", key_.lkpvrf);
     args.flow_lkupid = cpu_rxhdr_->lkp_vrf;
     args.obj_id = &obj_id;
     args.pi_obj = &obj;
@@ -164,140 +165,59 @@ ctx_t::lookup_flow_objs (void)
     ether_header_t *ethhdr = NULL;
     hal::pd::pd_l2seg_get_flow_lkupid_args_t l2seg_args;
     hal::pd::pd_func_args_t pd_func_args = {0};
+    hal::ep_t *sep = NULL, *dep = NULL;
 
-    // Derive the objects for flow-miss
-    if (sl2seg_ != NULL) {
-        svrf_ = dvrf_ = hal::vrf_lookup_by_handle(sl2seg_->vrf_handle);
-        key_.svrf_id = key_.dvrf_id = svrf_->vrf_id;
-    } else {
-        HAL_TRACE_VERBOSE("Looking up vrf for id: {}", key_.svrf_id);
-        svrf_ = hal::vrf_lookup_by_id(key_.svrf_id);
-        if (svrf_ == NULL) {
-            HAL_TRACE_ERR("fte: vrf not found for id:{}", key_.svrf_id);
-            return HAL_RET_VRF_NOT_FOUND;
-        }
-
-        if (key_.svrf_id == key_.dvrf_id) {
-            dvrf_ = svrf_;
-        } else {
-            dvrf_ = hal::vrf_lookup_by_id(key_.dvrf_id);
-            SDK_ASSERT_RETURN(dvrf_, HAL_RET_VRF_NOT_FOUND);
-        }
-    }
-
-    //If we already found sl2seg_ during key lookup for flow miss
-    //then we use that to derive the source ep
+    rkey_.lkpvrf = key_.lkpvrf;
+    dl2seg_ = sl2seg_;
     if (sl2seg_ != NULL && cpu_rxhdr_ != NULL) {
         // Try to find sep by looking at L2.
         ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
         sep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->smac);
-        if (sep_) {
-            HAL_TRACE_VERBOSE("src ep {} found by L2 lookup seg_id:{} smac:{}",
-                           sep_->hal_handle, sl2seg_->seg_id, macaddr2str(ethhdr->smac));
-        }
-
         ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
         dep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->dmac);
-        if (dep_) {
-            HAL_TRACE_VERBOSE("dst ep {} found by L2 lookup, seg_id:{} dmac:{}",
-                              dep_->hal_handle, sl2seg_->seg_id, macaddr2str(ethhdr->dmac));
-        }
     } else if (existing_session()) {
-        sep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
+            sep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
                                       session_->iflow->config.l2_info.smac);
-        dep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
+            dep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
                                       session_->iflow->config.l2_info.dmac);
+    }
 
-        HAL_TRACE_VERBOSE("L2 lookup sep: {} dep: {} seg_id:{} smac: {} dmac:{}",
-                          (sep_ != NULL) ? "found" : "not found",
-                          (dep_ != NULL) ? "found" : "not found",
-                          session_->iflow->config.l2_info.l2seg_id,
-                          macaddr2str(session_->iflow->config.l2_info.smac),
-                          macaddr2str(session_->iflow->config.l2_info.dmac));
-    } 
-
-    if (hal::is_platform_type_sim() && (sep_ == NULL || dep_ == NULL)) {
-        hal::ep_t *sep = NULL, *dep = NULL;
-
-        //Lookup src and dest EPs
+    if (unlikely(protobuf_request() && sep_ == NULL)) {
         hal::ep_get_from_flow_key(&key_, &sep, &dep);
-        if (sep_ == NULL) sep_ = sep;
-        if (dep_ == NULL) dep_ = dep;
-
-        HAL_TRACE_VERBOSE("L3 lookup sep: {} dep: {}", (sep_ != NULL)?"found":"not found",
-                        (dep_ != NULL)?"found":"not found");
-    }
-
-    if (sep_) {
-        sep_handle_ = sep_->hal_handle;
-        if (protobuf_request()) {
-            key_.dir = (sep_->ep_flags & EP_FLAGS_LOCAL) ? hal::FLOW_DIR_FROM_DMA
-                                                         : hal::FLOW_DIR_FROM_UPLINK;
+        if (sep) {
+            sep_ = sep;
         }
 
-        if ((sl2seg_ == NULL) ||
-            (sl2seg_ != NULL && sl2seg_->hal_handle != sep_->l2seg_handle)) {
-            sl2seg_ = hal::l2seg_lookup_by_handle(sep_->l2seg_handle);
-            SDK_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
-        }
-        sif_ = hal::find_if_by_handle(sep_->if_handle);
-        SDK_ASSERT_RETURN(sif_, HAL_RET_IF_NOT_FOUND);
-    }
-
-    if (dep_) {
-        dep_handle_ = dep_->hal_handle;
-        if (sep_ && dep_->l2seg_handle == sep_->l2seg_handle) {
-            dl2seg_ = sl2seg_;
-        } else {
+        if (dep) {
+            dep_ = dep;
             dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
             SDK_ASSERT_RETURN(dl2seg_, HAL_RET_L2SEG_NOT_FOUND);
         }
 
-        dif_ = hal::find_if_by_handle(dep_->if_handle);
-        SDK_ASSERT_RETURN(dif_, HAL_RET_IF_NOT_FOUND);
-         /* Check if LIF is known for the dep */
-        if (dif_->if_type == intf::IF_TYPE_ENIC) {
-             hal::lif_t *dlif = if_get_lif(dif_);
-             if (dlif == NULL) {
-                 /* Ignore the lookup as we don't know the lif yet */
-                 HAL_TRACE_DEBUG("fte: dest lif not found or discovered yet.");
-             }
-        }
-    } else {
-        if (protobuf_request()) {
-            if (sl2seg_) {
-                dl2seg_ = sl2seg_;
-                dif_ = hal::find_if_by_handle(sl2seg_->pinned_uplink);
-            }
-            HAL_TRACE_VERBOSE("DIF Lookup.. sl2seg:{:p} dif:{:p}", (void *)sl2seg_, (void*)dif_);
-        }
-    }
+        HAL_TRACE_DEBUG("VRF:{} l2seg_id:{}, sl2seg:{:p} sep:{:p} dep:{:p}", key_.lkpvrf,
+                      (sl2seg_)?sl2seg_->seg_id:0, (void *)sl2seg_, (void *)sep_, (void *)dep_);
 
-    if (protobuf_request() || hal::is_platform_type_sim()) {
-        HAL_TRACE_VERBOSE("Looking up flow lookup vrf sl2seg_: {:p}", (void *)sl2seg_);
-        if (sl2seg_) {
+        if (sep_) {
+            sep_handle_ = sep_->hal_handle;
+            sl2seg_ = hal::l2seg_lookup_by_handle(sep_->l2seg_handle);
+            SDK_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
+
             l2seg_args.l2seg = sl2seg_;
             pd_func_args.pd_l2seg_get_flow_lkupid = &l2seg_args;
             hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
-            key_.lkpvrf = l2seg_args.hwid;
-        } else {
-            hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
-            vrf_args.vrf = svrf_;
-            pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
-            hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
-            key_.lkpvrf = vrf_args.lkup_id;
+            rkey_.lkpvrf = key_.lkpvrf = l2seg_args.hwid; 
         }
-        HAL_TRACE_VERBOSE("Lookup vrf {}", key_.lkpvrf);
+
+        dep_handle_ = (dep_)?dep_->hal_handle:0;
     }
 
-    rkey_.lkpvrf = key_.lkpvrf;
-    if ((sl2seg_ != dl2seg_) && (dl2seg_ != NULL)) {
-        l2seg_args.l2seg = dl2seg_;
-        pd_func_args.pd_l2seg_get_flow_lkupid = &l2seg_args;
-        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, (hal::pd::pd_func_args_t*)&pd_func_args);
-        rkey_.lkpvrf = l2seg_args.hwid;
+    sep_handle_ = (sep_)?sep_->hal_handle:0;
+    dep_handle_ = (dep_)?dep_->hal_handle:0;
+
+    if (unlikely(sl2seg_ != NULL)) {
+        svrf_ = dvrf_ = hal::vrf_lookup_by_handle(sl2seg_->vrf_handle);
+        key_.svrf_id = key_.dvrf_id = svrf_->vrf_id;
     }
-    HAL_TRACE_DEBUG("Key lkpvrf: {} rkey lkpvrf: {}", key_.lkpvrf, rkey_.lkpvrf);
 
     return HAL_RET_OK;
 }
@@ -430,8 +350,7 @@ ctx_t::create_session()
         memcpy(l2_info.dmac, ethhdr->dmac, sizeof(l2_info.dmac));
     }
 
-    HAL_TRACE_VERBOSE("fte: create session");
-
+    HAL_TRACE_DEBUG("Key: {}", key_);
     for (int i = 0; i < MAX_STAGES; i++) {
         iflow_[i]->set_key(key_);
         iflow_[i]->set_l2_info(l2_info);
@@ -488,7 +407,6 @@ static inline void fw_log(ipc_logger *logger, fwlog::FWEvent ev)
 {
     uint8_t *buf = logger->get_buffer(LOG_SIZE(ev));
     if (buf == NULL) {
-        HAL_TRACE_ERR("Null buffer return");
         return;
     }
 
@@ -516,15 +434,12 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
     t_fwlg.set_dest_vrf(key.dvrf_id);
     t_fwlg.set_sipv4(key.sip.v4_addr);
     t_fwlg.set_dipv4(key.dip.v4_addr);
-    HAL_TRACE_VERBOSE("sip={}/dip={}", key.sip.v4_addr, key.dip.v4_addr);
 
     t_fwlg.set_ipprot(key.proto);
     if (key.proto == IP_PROTO_TCP || key.proto == IP_PROTO_UDP) {
-        HAL_TRACE_VERBOSE("proto={}/sport={}/dport={}", key.proto, key.sport,key.dport);
         t_fwlg.set_sport(key.sport);
         t_fwlg.set_dport(key.dport);
     } else if (key.proto == IP_PROTO_ICMP) {
-        HAL_TRACE_VERBOSE("proto=ICMP/type={}/code={}", key.icmp_type,key.icmp_code);
         t_fwlg.set_icmptype(key.icmp_type);
         t_fwlg.set_icmpcode(key.icmp_code);
         t_fwlg.set_icmpid(key.icmp_id);
@@ -601,7 +516,7 @@ ctx_t::update_flow_table()
 
     session_args.session = &session_cfg;
     session_cfg.idle_timeout = HAL_MAX_INACTIVTY_TIMEOUT;
-    if (protobuf_request()) {
+    if (unlikely(protobuf_request())) {
         session_cfg.session_id = sess_spec_->session_id();
         session_state.tcp_ts_option = sess_spec_->tcp_ts_option();
         session_state.tcp_sack_perm_option = sess_spec_->tcp_sack_perm_option();
@@ -612,6 +527,7 @@ ctx_t::update_flow_table()
     }
 
     if (ignore_session_create()) {
+        HAL_TRACE_DEBUG("Sesssion create ignored");
         goto end;
     }
 
@@ -622,7 +538,7 @@ ctx_t::update_flow_table()
 
     for (uint8_t stage = 0; valid_iflow_ && !hal_cleanup() && stage <= istage_; stage++) {
         flow_t *iflow = iflow_[stage];
-        hal::flow_cfg_t &iflow_cfg = iflow_cfg_list[stage];
+        hal::flow_cfg_t& iflow_cfg = iflow_cfg_list[stage];
         hal::flow_pgm_attrs_t& iflow_attrs = iflow_attrs_list[stage];
 
         // For existing sessions initialize with the configs the session
@@ -635,8 +551,6 @@ ctx_t::update_flow_table()
         iflow->to_config(iflow_cfg, iflow_attrs);
         iflow_cfg.role = iflow_attrs.role = hal::FLOW_ROLE_INITIATOR;
 
-        update_flow_qos_class_id(iflow, &iflow_attrs);
-
         iflow_attrs.use_vrf = (use_vrf_)?1:0;
 
         // Set the lkp_inst for all stages except the first stage
@@ -644,17 +558,19 @@ ctx_t::update_flow_table()
             iflow_attrs.lkp_inst = 1;
         }
 
-        // TODO(goli) fix tnnl_rw_idx lookup
-        if (iflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_NOP_ID) {
-            iflow_attrs.tnnl_rw_idx = 0;
-        } else if (iflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_ENCAP_VLAN_ID) {
-            iflow_attrs.tnnl_rw_idx = 1;
-        } else if (dif_ && dif_->if_type == intf::IF_TYPE_TUNNEL) {
-            t_args.hal_if = dif_;
-            pd_func_args.pd_tunnelif_get_rw_idx = &t_args;
-            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TNNL_IF_GET_RW_IDX,
+        if (unlikely((hal::is_platform_type_sim()))) {
+            // TODO(goli) fix tnnl_rw_idx lookup
+            if (iflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_NOP_ID) {
+                iflow_attrs.tnnl_rw_idx = 0;
+            } else if (iflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_ENCAP_VLAN_ID) {
+                iflow_attrs.tnnl_rw_idx = 1;
+            } else if (dif_ && dif_->if_type == intf::IF_TYPE_TUNNEL) {
+                t_args.hal_if = dif_;
+                pd_func_args.pd_tunnelif_get_rw_idx = &t_args;
+                ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TNNL_IF_GET_RW_IDX,
                                        &pd_func_args);
-            iflow_attrs.tnnl_rw_idx = t_args.tnnl_rw_idx;
+                iflow_attrs.tnnl_rw_idx = t_args.tnnl_rw_idx;
+            }
         }
 
         session_args.iflow[stage] = &iflow_cfg;
@@ -684,7 +600,8 @@ ctx_t::update_flow_table()
             session_args.update_iflow = false;
         }
 
-        HAL_TRACE_DEBUG("fte::update_flow_table: iflow.{} key={} lkp_inst={} "
+        if (unlikely(hal::utils::hal_trace_level() >= ::utils::trace_debug)) { 
+            HAL_TRACE_DEBUG("fte::update_flow_table: iflow.{} key={} lkp_inst={} "
                         "lkp_vrf={} action={} smac_rw={} dmac-rw={} "
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
@@ -713,11 +630,12 @@ ctx_t::update_flow_table()
                         ether_ntoa((struct ether_addr*)&iflow_cfg.l2_info.dmac),
                         iflow_cfg.l2_info.l2seg_id, session_cfg.skip_sfw_reval, session_cfg.sfw_rule_id,
                         session_cfg.sfw_action, session_cfg.syncing_session);
+        }
     }
 
     for (uint8_t stage = 0; valid_rflow_ && !hal_cleanup() && stage <= rstage_; stage++) {
         flow_t *rflow = rflow_[stage];
-        hal::flow_cfg_t &rflow_cfg = rflow_cfg_list[stage];
+        hal::flow_cfg_t& rflow_cfg = rflow_cfg_list[stage];
         hal::flow_pgm_attrs_t& rflow_attrs = rflow_attrs_list[stage];
 
         // For existing sessions initialize with the configs the session
@@ -730,8 +648,6 @@ ctx_t::update_flow_table()
         rflow->to_config(rflow_cfg, rflow_attrs);
         rflow_cfg.role = rflow_attrs.role = hal::FLOW_ROLE_RESPONDER;
 
-        update_flow_qos_class_id(rflow, &rflow_attrs);
-
         rflow_attrs.use_vrf = (use_vrf_)?1:0;
 
         // Set the lkp_inst for all stages except the first stage
@@ -739,17 +655,19 @@ ctx_t::update_flow_table()
             rflow_attrs.lkp_inst = 1;
         }
 
-        // TODO(goli) fix tnnl w_idx lookup
-        if (rflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_NOP_ID) {
-            rflow_attrs.tnnl_rw_idx = 0;
-        } else if (rflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_ENCAP_VLAN_ID) {
-            rflow_attrs.tnnl_rw_idx = 1;
-        } else if (sif_ && sif_->if_type == intf::IF_TYPE_TUNNEL) {
-            t_args.hal_if = sif_;
-            pd_func_args.pd_tunnelif_get_rw_idx = &t_args;
-            ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TNNL_IF_GET_RW_IDX,
+        if (unlikely(hal::is_platform_type_sim())) {
+            // TODO(goli) fix tnnl w_idx lookup
+            if (rflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_NOP_ID) {
+                rflow_attrs.tnnl_rw_idx = 0;
+            } else if (rflow_attrs.tnnl_rw_act == hal::TUNNEL_REWRITE_ENCAP_VLAN_ID) {
+                rflow_attrs.tnnl_rw_idx = 1;
+            } else if (sif_ && sif_->if_type == intf::IF_TYPE_TUNNEL) {
+                t_args.hal_if = sif_;
+                pd_func_args.pd_tunnelif_get_rw_idx = &t_args;
+                ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_TNNL_IF_GET_RW_IDX,
                                        &pd_func_args);
-            rflow_attrs.tnnl_rw_idx = t_args.tnnl_rw_idx;
+                rflow_attrs.tnnl_rw_idx = t_args.tnnl_rw_idx;
+            }
         }
 
         session_args.rflow[stage] = &rflow_cfg;
@@ -765,7 +683,7 @@ ctx_t::update_flow_table()
             session_args.update_rflow = false;
         }
 
-        if (dl2seg_ != sl2seg_ && dl2seg_ != NULL) {
+        if (unlikely(dl2seg_ != sl2seg_ && dl2seg_ != NULL)) {
             hal::pd::pd_func_args_t  pd_func_args = {0};
             hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
 
@@ -775,7 +693,8 @@ ctx_t::update_flow_table()
             rflow_cfg.key.lkpvrf = rkey_.lkpvrf = args.hwid;    
         }
 
-        HAL_TRACE_DEBUG("fte::update_flow_table: rflow.{} key={} lkp_inst={} "
+        if (unlikely(hal::utils::hal_trace_level() >= ::utils::trace_debug)) {
+            HAL_TRACE_DEBUG("fte::update_flow_table: rflow.{} key={} lkp_inst={} "
                         "lkp_vrf={} action={} smac_rw={} dmac-rw={} "
                         "ttl_dec={} mcast={} lport={} qid_en={} qtype={} qid={} rw_act={} "
                         "rw_idx={} tnnl_rw_act={} tnnl_rw_idx={} tnnl_vnid={} nat_sip={} "
@@ -799,6 +718,7 @@ ctx_t::update_flow_table()
                         ether_ntoa((struct ether_addr*)&rflow_cfg.l2_info.smac),
                         ether_ntoa((struct ether_addr*)&rflow_cfg.l2_info.dmac),
                         rflow_cfg.l2_info.l2seg_id);
+        }
     }
 
     if (cpu_rxhdr_) {
@@ -807,8 +727,8 @@ ctx_t::update_flow_table()
         session_args.flow_hash   = 0;
     }
     session_args.vrf_handle  = (svrf_)?svrf_->hal_handle:HAL_HANDLE_INVALID;
-    session_args.sep_handle  = sep_handle_;
-    session_args.dep_handle  = dep_handle_;
+    session_args.sep  = sep_;
+    session_args.dep = dep_;
     session_args.sl2seg_handle = sl2seg_?sl2seg_->hal_handle:HAL_HANDLE_INVALID;
     session_args.dl2seg_handle = dl2seg_?dl2seg_->hal_handle:HAL_HANDLE_INVALID;
     session_args.spec        = sess_spec_;
@@ -850,8 +770,6 @@ ctx_t::update_flow_table()
 
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Session {} failed, ret = {}", update_type, ret);
-    } else {
-        HAL_TRACE_VERBOSE("Session {} of session {} successful", update_type, session_handle);
     }
 
     if (sess_resp()) {
@@ -859,9 +777,8 @@ ctx_t::update_flow_table()
     }
 
 end:
-
     // Dont log when we hit an error
-    if ((key_.flow_type == hal::FLOW_TYPE_V4) && !is_ipfix_flow() && 
+    if ((key_.flow_type == hal::FLOW_TYPE_V4) && 
         (ret == HAL_RET_OK) && ((session_exists == false) || (update_type == "delete"))) {
       
         // Compute CPS
@@ -895,18 +812,18 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
         return HAL_RET_OK;
     }
 
+    dvrf_ =  hal::vrf_lookup_by_id(key->dvrf_id);
+
+    if (dvrf_ == NULL) {
+        HAL_TRACE_ERR("DNAT vrf not found vrf={}", key->dvrf_id);
+        return HAL_RET_VRF_NOT_FOUND;
+    }
+
     if (header.valid_flds.dvrf_id) {
         if ((header.valid_hdrs&FTE_L3_HEADERS) == FTE_HEADER_ipv4) {
             key->dvrf_id = header.ipv4.dvrf_id;
         } else {
             key->dvrf_id = header.ipv6.dvrf_id;
-        }
-
-        dvrf_ =  hal::vrf_lookup_by_id(key->dvrf_id);
-
-        if (dvrf_ == NULL) {
-            HAL_TRACE_ERR("DNAT vrf not found vrf={}", key->dvrf_id);
-            return HAL_RET_VRF_NOT_FOUND;
         }
     }
 
@@ -1040,7 +957,9 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     txpkt_info_t *pkt_info;
     hal::pd::pd_func_args_t pd_func_args = {0};
 
-    HAL_TRACE_VERBOSE("fte: txpkt len={} pkt={}", pkt_len, hex_str(pkt, (pkt_len >=128)?128:pkt_len));
+    if (unlikely(hal::utils::hal_trace_level() >= ::utils::trace_verbose)) {
+        HAL_TRACE_VERBOSE("fte: txpkt len={} pkt={}", pkt_len, hex_str(pkt, (pkt_len >=128)?128:pkt_len));
+    }
 
     if (txpkt_cnt_ >= MAX_QUEUED_PKTS) {
         HAL_TRACE_ERR("fte: queued tx pkts exceeded {}", txpkt_cnt_);
@@ -1048,8 +967,6 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     }
 
     pkt_info = &txpkts_[txpkt_cnt_++];
-    HAL_TRACE_VERBOSE("fte: txpkt for dir={}, tunnel_terminated: {}", 
-                    key_.dir, tunnel_terminated());
     if (cpu_header) {
         pkt_info->cpu_header = *cpu_header;
     } else {
@@ -1063,7 +980,6 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
         if ((cpu_rxhdr_->lkp_dir == hal::FLOW_DIR_FROM_UPLINK) && 
             (use_vrf_ || is_proxy_enabled() || tunnel_terminated() ||
              pkt_info->cpu_header.src_lif == HAL_LIF_CPU)) {
-     	    HAL_TRACE_VERBOSE("fte: setting defaults for uplink -> host direction");
             pkt_info->cpu_header.src_lif = HAL_LIF_CPU;
             if (use_vrf_) {
                 hal::pd::pd_vrf_get_fromcpu_vlanid_args_t args;
@@ -1104,7 +1020,8 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     pkt_info->wring_type = wring_type;
     pkt_info->cb = cb;
 
-    HAL_TRACE_VERBOSE("fte: feature={} queued txpkt lkp_inst={} src_lif={} vlan={} "
+    if (unlikely(hal::utils::hal_trace_level() >= ::utils::trace_verbose)) {
+        HAL_TRACE_VERBOSE("fte: feature={} queued txpkt lkp_inst={} src_lif={} vlan={} "
                       "dest_lifq={} ring={} wring={} pkt={:p} len={}",
                       feature_name_,
                       pkt_info->p4plus_header.lkp_inst,
@@ -1112,6 +1029,8 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
                       pkt_info->cpu_header.hw_vlan_id,
                       pkt_info->lifq, pkt_info->ring_number, pkt_info->wring_type,
                       pkt_info->pkt, pkt_info->pkt_len);
+    }
+
     return HAL_RET_OK;
 }
 
@@ -1161,9 +1080,6 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 
     for (int i = 0; i < txpkt_cnt_; i++) {
         txpkt_info_t *pkt_info = &txpkts_[i];
-        HAL_TRACE_VERBOSE("fte:: txpkt slif={} pkt={:p} len={}",
-                        pkt_info->cpu_header.src_lif,
-                        pkt_info->pkt, pkt_info->pkt_len);
         if ( istage_ > 0 ){
             pkt_info->p4plus_header.lkp_inst = 1;
         }
@@ -1191,7 +1107,6 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         incr_inst_fte_tx_stats(pkt_info->pkt_len);
         // Issue a callback to free the packet
         if (pkt_info->cb) {
-	    HAL_TRACE_VERBOSE(" packet buffer/cpu_rx header {:#x} {:#x}", (long)cpu_rxhdr_, (long)pkt_);
             pkt_info->cb(pkt_info->pkt);
         }
     }
@@ -1270,25 +1185,18 @@ ctx_t::apply_session_limit(void)
     hal_ret_t                    ret = HAL_RET_OK;
     uint8_t                      id = fte_id();
     int8_t                       tcp_flags;
-    hal::vrf_t                  *vrf = NULL;
-    hal::nwsec_profile_t        *nwsec_prof = NULL;
     const fte::cpu_rxhdr_t      *cpurxhdr = cpu_rxhdr();
-
-    vrf = svrf();
-    SDK_ASSERT_RETURN((vrf != NULL), HAL_RET_INVALID_ARG);
 
     // check for flood protection limits
     // fetch the security profile, if any
-    if (vrf->nwsec_profile_handle == HAL_HANDLE_INVALID) {
-        goto end;
-    }
-    nwsec_prof =
-        hal::find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
-
-    if (nwsec_prof == NULL) {
+    nwsec_prof_ =
+        hal::find_nwsec_profile_by_handle(
+                       hal::g_hal_state->customer_default_security_profile_hdl());
+    if (nwsec_prof_ == NULL) {
         goto end;
     }
 
+    HAL_TRACE_DEBUG("Security profile handle: {}", hal::g_hal_state->customer_default_security_profile_hdl());
     // check for flood protection limits
     switch (key_.flow_type) {
     case hal::FLOW_TYPE_V4: //intentional fall-through
@@ -1300,23 +1208,23 @@ ctx_t::apply_session_limit(void)
                 // if not a SYN packet then skip half-open session limit validation
                 goto end;
             }
-            if ((nwsec_prof->tcp_half_open_session_limit) &&
+            if ((nwsec_prof_->tcp_half_open_session_limit) &&
                     (hal::g_session_stats[id].tcp_half_open_sessions >=
-                     nwsec_prof->tcp_half_open_session_limit)) {
+                     nwsec_prof_->tcp_half_open_session_limit)) {
                 ret = HAL_RET_FLOW_LIMT_REACHED;
                 hal::g_session_stats[id].tcp_session_drop_count++;
             }
         } else if (key_.proto == types::IPPROTO_UDP) {
-            if ((nwsec_prof->udp_active_session_limit) &&
+            if ((nwsec_prof_->udp_active_session_limit) &&
                     (hal::g_session_stats[id].udp_sessions >=
-                     nwsec_prof->udp_active_session_limit)) {
+                     nwsec_prof_->udp_active_session_limit)) {
                 ret = HAL_RET_FLOW_LIMT_REACHED;
                 hal::g_session_stats[id].udp_session_drop_count++;
             }
         } else if (key_.proto == types::IPPROTO_ICMP) {
-            if ((nwsec_prof->icmp_active_session_limit) &&
+            if ((nwsec_prof_->icmp_active_session_limit) &&
                     (hal::g_session_stats[id].icmp_sessions >=
-                     nwsec_prof->icmp_active_session_limit)) {
+                     nwsec_prof_->icmp_active_session_limit)) {
                 ret = HAL_RET_FLOW_LIMT_REACHED;
                 hal::g_session_stats[id].icmp_session_drop_count++;
             }
@@ -1324,9 +1232,9 @@ ctx_t::apply_session_limit(void)
         break;
     case hal::FLOW_TYPE_L2: //intentional fall-through
     default:
-        if ((nwsec_prof->other_active_session_limit) &&
+        if ((nwsec_prof_->other_active_session_limit) &&
                 (hal::g_session_stats[id].other_active_sessions >=
-                 nwsec_prof->other_active_session_limit)) {
+                 nwsec_prof_->other_active_session_limit)) {
             ret = HAL_RET_FLOW_LIMT_REACHED;
             hal::g_session_stats[id].other_session_drop_count++;
         }

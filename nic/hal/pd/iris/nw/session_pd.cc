@@ -323,15 +323,6 @@ p4pd_add_upd_session_state_table_entry (pd_session_t *session_pd,
         d.action_u.session_state_tcp_session_state_info.iflow_exceptions_seen =
             session_state->iflow_state.exception_bmap;
 
-        HAL_TRACE_VERBOSE("iflow:S:{} Seq:{} Ack:{} Sz:{} Sc:{} Mss:{} Ws:{}, ts:{}, Sa:{}, Ex:{}",
-                session_state->iflow_state.state,session_state->iflow_state.tcp_seq_num,
-                session_state->iflow_state.tcp_ack_num, session_state->iflow_state.tcp_win_sz,
-                session_state->iflow_state.tcp_win_scale, session_state->iflow_state.tcp_mss,
-                session_state->iflow_state.tcp_ws_option_sent,
-                session_state->iflow_state.tcp_ts_option_sent,
-                session_state->iflow_state.tcp_sack_perm_option_sent,
-                session_state->iflow_state.exception_bmap);
-
         // responder flow specific information
         d.action_u.session_state_tcp_session_state_info.rflow_tcp_state =
             session_state->rflow_state.state;
@@ -347,12 +338,6 @@ p4pd_add_upd_session_state_table_entry (pd_session_t *session_pd,
             session_state->rflow_state.tcp_mss;
         d.action_u.session_state_tcp_session_state_info.rflow_exceptions_seen =
             session_state->rflow_state.exception_bmap;
-
-        HAL_TRACE_VERBOSE("rflow: S:{} Seq:{} Ack:{}, Sz:{} Sc:{}, Mss:{}, Ex:{}",
-                session_state->rflow_state.state,session_state->rflow_state.tcp_seq_num,
-                session_state->rflow_state.tcp_ack_num, session_state->rflow_state.tcp_win_sz,
-                session_state->rflow_state.tcp_win_scale, session_state->rflow_state.tcp_mss,
-                session_state->rflow_state.exception_bmap);
 
         d.action_u.session_state_tcp_session_state_info.syn_cookie_delta =
             session_state->iflow_state.syn_ack_delta;
@@ -454,7 +439,6 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
     if (flow_attrs->drop) {
         d.action_id = FLOW_INFO_FLOW_HIT_DROP_ID;
         d.action_u.flow_info_flow_hit_drop.start_timestamp = (clock>>16);
-        HAL_TRACE_DEBUG("Action being set to drop");
 
     } else {
         d.action_id = FLOW_INFO_FLOW_INFO_ID;
@@ -649,7 +633,6 @@ p4pd_add_flow_info_table_entries (pd_session_create_args_t *args)
     hal_ret_t       ret;
     pd_session_t    *session_pd = (pd_session_t *)args->session->pd;
 
-    HAL_TRACE_VERBOSE("Adding flow info table entries");
     // program flow_info table entry for rflow
     if (session_pd->rflow.valid) {
         ret = p4pd_add_upd_flow_info_table_entry(args->session, &session_pd->rflow,
@@ -756,7 +739,6 @@ p4pd_add_upd_flow_hash_table_entry (flow_key_t *flow_key,
     flow_hash_info_entry_t key;
 
     key.clear();
-    HAL_TRACE_VERBOSE("update {} flow_pd->installed {}", update, flow_pd->installed);
     if (!update && flow_pd->installed) {
         return HAL_RET_OK;
     }
@@ -965,13 +947,6 @@ p4pd_add_upd_flow_hash_table_entries (pd_session_t *session_pd,
     session_t               *session = (session_t *)session_pd->session;
     uint32_t                flow_hash = 0;
 
-    HAL_TRACE_VERBOSE("Add flow hash table entries update {} rflow.valid {} "
-                    "rflow.installed {} iflow.installed {} "
-                    "update_iflow {} rflow_aug.valid {} "
-                    "rflow_aug.installed {}", update, session_pd->rflow.valid,
-                    session_pd->rflow.installed, session_pd->iflow.installed,
-                    args->update_iflow, session_pd->rflow_aug.valid,
-                    session_pd->rflow_aug.installed);
     if (session_pd->rflow.valid &&
             (args->update_rflow || !session_pd->rflow.installed)) {
         ret = p4pd_add_upd_flow_hash_table_entry(&session->rflow->config.key,
@@ -1066,8 +1041,6 @@ pd_session_create (pd_func_args_t *pd_func_args)
     uint64_t                                sw_ns = 0, clock=0;
     timespec_t                              ts;
     pd_func_args_t                          pd_clock_fn_args = {0};
-
-    HAL_TRACE_VERBOSE("Creating pd state for session");
 
     session_pd = session_pd_alloc_init();
     if (session_pd == NULL) {
@@ -1173,8 +1146,6 @@ pd_session_update (pd_func_args_t *pd_func_args)
     session_t                           *session = args->session;
     uint64_t                             sw_ns = 0, clock=0;
 
-    HAL_TRACE_VERBOSE("Updating pd state for session");
-
     session_pd = session->pd;
 
     SDK_ASSERT(session_pd != NULL);
@@ -1275,8 +1246,6 @@ pd_session_delete (pd_func_args_t *pd_func_args)
     pd_session_t         *session_pd = NULL;
     pd_func_args_t        get_func_args = {0};
     pd_session_get_args_t session_get_args = {0};
-
-    HAL_TRACE_VERBOSE("Deleting pd state for session");
 
     session_get_args.session = args->session;
     session_get_args.session_state = args->session_state;
@@ -1960,8 +1929,6 @@ pd_flow_hash_get (pd_func_args_t *pd_func_args) {
     key.clear();
     p4pd_fill_flow_hash_key(&args->key,
             args->lkp_inst, key);
-
-    HAL_TRACE_VERBOSE("Hash entry {}", hex_str((uint8_t*)&key, sizeof(flow_hash_info_entry_t)));
 
     ret = g_hal_state_pd->flow_table_pd_get()->get(&key, args->rsp);
     if (ret != HAL_RET_OK) {

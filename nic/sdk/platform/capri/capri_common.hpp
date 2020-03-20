@@ -301,7 +301,7 @@ namespace capri {
 #define CAPRI_SEM_RNMDPR_BIG_ALLOC_INF_ADDR     \
                             (CAPRI_SEM_RNMDPR_BIG_ALLOC_ADDR + CAPRI_SEM_INF_OFFSET)
 
-#define CAPRI_CPU_RX_DPR_RING_SHIFT         10
+#define CAPRI_CPU_RX_DPR_RING_SHIFT         11
 #define CAPRI_CPU_RX_DPR_RING_SIZE          (1 << CAPRI_CPU_RX_DPR_RING_SHIFT)
 #define CAPRI_CPU_RX_DPR_RING_MASK          ((1 << CAPRI_CPU_RX_DPR_RING_SHIFT) - 1)
 #define CAPRI_CPU_RX_DPR_OBJ_OVERHEADS      (128) /* Descriptor size for now, page metadata overheads TBD */

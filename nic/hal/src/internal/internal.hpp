@@ -173,6 +173,9 @@ hal_ret_t testclocksync_req(internal::TestClockSyncRequest& req,
 hal_ret_t internal_port_get(internal::InternalPortRequest& req,
                             internal::InternalPortResponseMsg *rsp);
 
+hal_ret_t testfteinject_packets(internal::TestInjectFtePacketRequest& req,
+                                internal::TestInjectFtePacketResponse *rsp);
+
 }    // namespace hal
 
 #endif    // __INTERNAL_HPP__

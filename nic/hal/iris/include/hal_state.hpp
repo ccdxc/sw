@@ -415,6 +415,9 @@ public:
     void set_inb_bond_active_uplink(hal_handle_t hdl) { inb_bond_active_uplink_hdl_ = hdl; } 
     hal_handle_t inb_bond_active_uplink(void) { return inb_bond_active_uplink_hdl_; }
 
+    void set_customer_default_security_profile (hal_handle_t hdl) { customer_default_securityprof_hdl_ = hdl; }
+    hal_handle_t customer_default_security_profile_hdl (void) const { return customer_default_securityprof_hdl_; }
+
     bool is_microseg_enabled(void) { return (fwd_mode_ == sys::FWD_MODE_MICROSEG); }
     bool is_policy_enforced(void) { return (policy_mode_ == sys::POLICY_MODE_ENFORCE); }
     bool is_flow_aware(void)      { return (policy_mode_ == sys::POLICY_MODE_FLOW_AWARE); }
@@ -544,6 +547,7 @@ private:
     bool          swm_qos_en_;
     uint32_t      swm_qos_port_num_;
     bond_mode_t   inband_bond_mode_;
+    hal_handle_t  customer_default_securityprof_hdl_;
 
 private:
     bool init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr);
@@ -929,6 +933,8 @@ public:
     vrf_id_t customer_default_vrf(void) { return oper_db_->customer_default_vrf(); }
 
     uint64_t mgmt_if_mac(void) { return oper_db_->mgmt_if_mac(platform_); }
+    void set_customer_default_security_profile (hal_handle_t hdl) { oper_db_->set_customer_default_security_profile(hdl); }
+    hal_handle_t customer_default_security_profile_hdl (void) const { return oper_db_->customer_default_security_profile_hdl(); }
 
     void set_swm_qos_en(bool en) { oper_db_->set_swm_qos_en(en); }
     bool swm_qos_en(void) { return oper_db_->swm_qos_en(); }

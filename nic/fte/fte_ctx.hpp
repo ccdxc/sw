@@ -674,9 +674,6 @@ public:
     bool valid_rflow() const { return valid_rflow_; }
     void set_valid_rflow(bool val) { valid_rflow_ = val; }
 
-    bool is_ipfix_flow() const { return is_ipfix_flow_; }
-    void set_is_ipfix_flow(bool val) { is_ipfix_flow_ = val; }
-
     flow_t *flow(hal::flow_role_t role, uint8_t stage=0) {
          if (role == hal::FLOW_ROLE_INITIATOR) {
              return (iflow_[stage]);
@@ -704,6 +701,8 @@ public:
     hal::ep_t *dep() const { return dep_; }
     hal_handle_t sep_handle() { return sep_handle_; }
     hal_handle_t dep_handle() { return dep_handle_; }
+    hal::nwsec_profile_t *nwsec_profile() { return nwsec_prof_; }
+    void set_nwsec_profile(hal::nwsec_profile_t *prof) { nwsec_prof_ = prof; }
     bool vlan_valid();
     bool tunnel_terminated();
 
@@ -854,6 +853,7 @@ private:
     bool                  is_flow_swapped_;
     uint16_t              payload_len_;
     uint64_t              featureid_bitmap_;
+    hal::nwsec_profile_t *nwsec_prof_;
 
     void init_ctxt_from_session(hal::session_t *session);
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);

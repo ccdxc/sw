@@ -185,23 +185,6 @@ update_fwding_info(fte::ctx_t&ctx)
         }
     }
 
-    /* Get dest-if based on the l2seg information for IPFIX pkts */
-    if ((ctx.session() && ctx.session()->is_ipfix_flow) ||
-            (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
-            (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_TELEMETRY))) {
-        if (dif == NULL) {
-            if (ctx.sl2seg() == NULL) {
-                HAL_TRACE_INFO("net_fwding: sl2seg is NULL!");
-            } else {
-                dif = find_if_by_handle(ctx.sl2seg()->pinned_uplink);
-                if (dif == NULL) {
-                    HAL_TRACE_INFO("net_fwding: HALIF lookup by l2seg and "
-                                   "dest-ep pinned uplink failed!");
-                }
-            }
-        }
-    }
-
     if (dif == NULL) {
         ret = route_lookup(&ctx.get_key(), &flowupd.fwding.dep,
                            &flowupd.fwding.dif, &flowupd.fwding.dl2seg);
@@ -212,13 +195,6 @@ update_fwding_info(fte::ctx_t&ctx)
         }
     }
 
-    // update fwding info
-    pd::pd_if_get_lport_id_args_t args;
-    pd::pd_func_args_t pd_func_args = {0};
-    args.pi_if = dif;
-    pd_func_args.pd_if_get_lport_id = &args;
-    pd::hal_pd_call(pd::PD_FUNC_ID_IF_GET_LPORT_ID, &pd_func_args);
-    flowupd.fwding.lport = args.lport_id;
     // flowupd.fwding.lport = hal::pd::if_get_lport_id(dif);
     return ctx.update_flow(flowupd);
 }

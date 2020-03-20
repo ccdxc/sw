@@ -24,7 +24,7 @@ testcases:
         iterators:
             type      : nested
             proto     : [ tcp, udp ]
-            cps       : [ 900 ]
+            cps       : [ 1000 ]
             duration  : [ 300 ]
     -   name    : session_scale
         testcase: testcases.networking.session_scale

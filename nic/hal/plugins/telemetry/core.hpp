@@ -29,7 +29,6 @@ const std::string FTE_FEATURE_TELEMETRY("pensando.io/telemetry:telemetry");
 
 // exec.cc
 fte::pipeline_action_t telemetry_exec(fte::ctx_t &ctx);
-fte::pipeline_action_t telemetry_exec_delete(fte::ctx_t &ctx);
 
 }  // namespace telemetry
 }  // namespace plugins

@@ -87,7 +87,7 @@ static inline bool is_cpu_zero_copy_enabled (void)
         is_hw = (is_platform_type_haps() || is_platform_type_hw());
 	platform_check_done = true;
     }
-    return(is_hw && cpu_do_zero_copy);
+    return (is_hw && cpu_do_zero_copy);
 }
 
 /*
@@ -912,7 +912,7 @@ cpupkt_descr_to_headers (pd_descr_aol_t *descr,
     //uint8_t* buffer = (uint8_t* ) malloc(9216);
     uint8_t *buffer;
 
-    if (is_cpu_zero_copy_enabled() && no_copy) {
+    if (likely(is_cpu_zero_copy_enabled() && no_copy)) {
 
         /*
 	 * Packet page is at a fixed offset from the descriptor, as we use a
@@ -1204,6 +1204,7 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
     cpupkt_qinst_info_t *qinst_info = NULL;
     bool more_pkt;
     pktcount = compq_rx_pkt_count = compq_tx_pkt_count = rxq_pkt_count = 0;
+    bool comp_queue = false;
 
     if (!ctxt->rx.num_queues) return(HAL_RET_RETRY);
 
@@ -1211,7 +1212,9 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
         value = 0;
         qinst_info = ctxt->rx.queue[i].qinst_info[0];
 	qpkt_count = 0;
-	if (is_cpu_send_comp_queue(ctxt->rx.queue[i].type)) {
+        comp_queue = is_cpu_send_comp_queue(ctxt->rx.queue[i].type);
+
+	if (comp_queue) {
 	    compq = &ctxt->rx.queue[i];
 	} else {
 	    rxq = &ctxt->rx.queue[i];
@@ -1224,7 +1227,7 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
 	     * If zero-copy enabled, we'll read the slot directly without the
 	     * asic_mem_read() API overhead.
 	     */
-	    if (is_cpu_zero_copy_enabled() && qinst_info->virt_pc_index_addr) {
+	    if (likely(is_cpu_zero_copy_enabled() && qinst_info->virt_pc_index_addr)) {
                 value = *(uint64_t*)qinst_info->virt_pc_index_addr;
 	    } else {
 	        if (sdk::asic::asic_mem_read(qinst_info->pc_index_addr,
@@ -1241,11 +1244,11 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
 	        continue;
 	    }
 
-	    HAL_TRACE_DEBUG2("Rcvd valid data (count {}): queue: {}, qid: {} pc_index: {}, "
-			    "addr: {:#x}, value: {:#x}, descr_addr: {:#x}", pktcount,
-			    ctxt->rx.queue[i].type, qinst_info->queue_id,
-			    qinst_info->pc_index, qinst_info->pc_index_addr,
-			    value, descr_addrs[pktcount]);
+	    //HAL_TRACE_DEBUG2("Rcvd valid data (count {}): queue: {}, qid: {} pc_index: {}, "
+		//	    "addr: {:#x}, value: {:#x}, descr_addr: {:#x}", pktcount,
+		//	    ctxt->rx.queue[i].type, qinst_info->queue_id,
+		//	    qinst_info->pc_index, qinst_info->pc_index_addr,
+		//	    value, descr_addrs[pktcount]);
 
 	    /*
 	     * Increment the queue's slot index/addr to poll on next.
@@ -1288,11 +1291,7 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
 		descr_p = &rxq_descr_copy[pktcount];
 	    }
 
-	    HAL_TRACE_DEBUG2("Received packet descriptor {:#x} from {} memory pool, virtual-addr {:#x}",
-			    descr_addrs[pktcount], cpu_rx_descr ? "CPU-Rx" : (cpu_tx_descr ? "CPU-Tx" : "RNMDPR"),
-			    descr_p ? (uint64_t) descr_p : (uint64_t)-1);
-
-	    if (is_cpu_send_comp_queue(ctxt->rx.queue[i].type)) {
+	    if (comp_queue) {
 		if (cpu_rx_descr) {
 		    compq_rx_descr_addrs[compq_rx_pkt_count] = descr_addrs[pktcount];
 		    compq_rx_descr_virt_ptrs[compq_rx_pkt_count] = descr_p;
@@ -1332,11 +1331,7 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
     if (!pktcount) {
 	return(HAL_RET_RETRY);
     }
-
-    HAL_TRACE_VERBOSE("Process batch: total-pkts {} rxq-pkts {} "
-                      "compq-rx-descrs {} compq-tx-descrs {}",
-                      pktcount, rxq_pkt_count,
-                      compq_rx_pkt_count, compq_tx_pkt_count);
+    bzero(pkt_batch->pkts, (sizeof(cpupkt_pktinfo_t)*rxq_pkt_count));
 
     /*
      * If we received the descriptor on the completion-queue (one of the ASCQ's), we
@@ -1359,8 +1354,6 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
     }
 
     for (npkt = 0; npkt < rxq_pkt_count; npkt++) {
-        bzero(&(pkt_batch->pkts[*app_pkt_count]), sizeof (cpupkt_pktinfo_t));
-
         /*
          * Lets get the packet header/data from the descriptor we've received.
          */
@@ -1390,7 +1383,7 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
                  * to the pool, and not go through the Garbage-collector (GC)
                  * P4+ program.
                  */
-                if (!is_cpu_zero_copy_enabled()) {
+                if (unlikely(!is_cpu_zero_copy_enabled())) {
                     ret = pd_cpupkt_free_rx_descr(rxq_descr_addrs[npkt]);
                     if (ret != HAL_RET_OK) {
                         rxq->qinst_info[0]->ctr.tx_descr_free_err++;

@@ -148,5 +148,5 @@ MODULE_SOLIBS   = \
         plugin_sfw_pkt_utils \
 	sdkcapri_asicrw_if
 
-MODULE_LDLIBS        = zmq ${NIC_HAL_ALL_LDLIBS} ev
+MODULE_LDLIBS        = zmq ${NIC_HAL_ALL_LDLIBS} ev tins
 include ${MKDEFS}/post.mk

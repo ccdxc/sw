@@ -15,6 +15,10 @@
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/platform/marvell/marvell.hpp"
+#include "nic/linkmgr/linkmgr.hpp"
+#include "nic/fte/test/fte_base_test.hpp"
+#include "nic/sdk/lib/utils/time_profile.hpp"
+#include <tins/tins.h>
 
 using intf::Interface;
 using intf::LifSpec;
@@ -241,6 +245,56 @@ internal_port_get (internal::InternalPortRequest& req,
             populate_port_info(port_num, data, rsp);
         }
     }
+}
+
+static inline 
+void timeit(const std::string &msg, int count, std::function<void()> fn)
+{
+    HAL_TRACE_DEBUG("{} {}", msg, count);
+
+    std::clock_t start = clock();
+    fn();
+    int ticks = clock()-start;
+
+    HAL_TRACE_DEBUG("Time ran: {} ", (1000.0*ticks/CLOCKS_PER_SEC));
+    if (count) {
+        HAL_TRACE_DEBUG("CPS: {}/sec", count*CLOCKS_PER_SEC/ticks);
+    }
+}
+
+hal_ret_t testfteinject_packets (internal::TestInjectFtePacketRequest& req,
+                                 internal::TestInjectFtePacketResponse *rsp)
+{
+    hal::ep_t *srcep = NULL, *dstep = NULL;
+    vector<Tins::EthernetII> pkts;
+    const int num_flows = 1000; // thousnads
+
+    srcep = hal::find_ep_by_handle(req.source_endpoint().endpoint_handle());
+    dstep = hal::find_ep_by_handle(req.destination_endpoint().endpoint_handle());
+    if (srcep == NULL || dstep == NULL) {
+        HAL_TRACE_ERR("Null eps -- bailing");
+        return HAL_RET_OK;    
+    }
+    for (uint32_t sport = 1; sport <= num_flows; sport++) {
+        for (uint32_t dport = 1; dport <= 1000; dport++) {
+            Tins::TCP tcp = Tins::TCP(dport, sport);
+            tcp.flags(Tins::TCP::SYN);
+            Tins::EthernetII eth = Tins::EthernetII(Tins::HWAddress<6>(macaddr2str(dstep->l2_key.mac_addr)), \
+                                 Tins::HWAddress<6>(macaddr2str(srcep->l2_key.mac_addr))) /  \
+                                 Tins::Dot1Q(100) / \
+                Tins::IP(Tins::IPv4Address(htonl(req.destination_ip())), Tins::IPv4Address(htonl(req.source_ip()))) / \
+                tcp;
+            pkts.push_back(eth);
+        }
+    }
+
+    timeit("inject_pkts", pkts.size(), [&]() {
+            fte::fte_inject_eth_pkt(fte::FLOW_MISS_LIFQ, srcep->if_handle, srcep->l2seg_handle, pkts);
+        });
+
+    double total_secs = (double)time_profile_total(sdk::utils::time_profile::FTE_CTXT_INIT) / (double)1000000000ULL;
+    HAL_TRACE_DEBUG("Total secs: {}", total_secs);
+    HAL_TRACE_DEBUG("Rate: {} flows/sec\n", (double)(num_flows * 1000 / total_secs));
     return HAL_RET_OK;
 }
 

@@ -475,8 +475,8 @@ typedef struct session_args_s {
     bool               update_iflow;                      // Update Iflow ?
     bool               update_rflow;                      // Update Rflow ?
     hal_handle_t       vrf_handle;                        // src vrf
-    hal_handle_t       sep_handle;                        // source ep
-    hal_handle_t       dep_handle;                        // dest ep
+    ep_t               *sep;                              // source endpoint
+    ep_t               *dep;                              // destination endpoint
     hal_handle_t       sl2seg_handle;                     // source l2seg
     hal_handle_t       dl2seg_handle;                     // dest l2seg
     SessionSpec        *spec;                             // session spec
@@ -498,7 +498,6 @@ struct session_s {
     uint16_t            fte_id:4;                 // FTE that created this session
     uint16_t            conn_track_en:1;          // enable connection tracking
     uint16_t            skip_sfw_reval:1;         // do not reeval session
-    uint16_t            is_ipfix_flow:1;          // to track ipfix flows
     uint16_t            sfw_action:3;             // sfw action to log
     uint16_t            deleting:1;               // is session queued up for deletion 
     uint16_t            aging_enqueued:1;         // is session aging action taken already
@@ -612,9 +611,9 @@ hal_ret_t session_get (session::SessionGetRequest& spec,
                       session::SessionGetResponseMsg *rsp);
 hal_ret_t session_get_stream (session::SessionGetRequest& spec,
                               grpc::ServerWriter<session::SessionGetResponseMsg> *writer);
-hal_ret_t schedule_tcp_close_timer (session_t *session);
-hal_ret_t schedule_tcp_half_closed_timer (session_t *session);
-hal_ret_t schedule_tcp_cxnsetup_timer (session_t *session);
+hal_ret_t schedule_tcp_close_timer (session_t *session, nwsec_profile_t *nwsec_prof);
+hal_ret_t schedule_tcp_half_closed_timer (session_t *session, nwsec_profile_t *nwsec_prof);
+hal_ret_t schedule_tcp_cxnsetup_timer (session_t *session, nwsec_profile_t *nwsec_prof);
 void session_set_tcp_state (session_t *session, hal::flow_role_t role,
                            FlowTCPState tcp_state);
 hal_ret_t session_get_all_stream(grpc::ServerWriter<session::SessionGetResponseMsg> *writer);

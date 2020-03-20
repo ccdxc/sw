@@ -599,6 +599,7 @@ end:
         // accessibility
         if (vrf->vrf_type == types::VRF_TYPE_CUSTOMER) {
             g_hal_state->set_customer_default_vrf(vrf->vrf_id);
+            g_hal_state->set_customer_default_security_profile(vrf->nwsec_profile_handle);
         }
         HAL_API_STATS_INC(HAL_API_VRF_CREATE_SUCCESS);
     }
@@ -631,6 +632,10 @@ vrf_handle_nwsec_update (vrf_t *vrf, nwsec_profile_t *nwsec_prof)
             continue;
         }
         l2seg_handle_nwsec_update(l2seg, nwsec_prof);
+    }
+
+    if (vrf->vrf_type == types::VRF_TYPE_CUSTOMER) {
+        g_hal_state->set_customer_default_security_profile(nwsec_prof->hal_handle);
     }
 
     return ret;

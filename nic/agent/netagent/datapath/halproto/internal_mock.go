@@ -1797,6 +1797,24 @@ func (mr *MockInternalClientMockRecorder) InternalPortGet(ctx, in interface{}, o
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InternalPortGet", reflect.TypeOf((*MockInternalClient)(nil).InternalPortGet), varargs...)
 }
 
+// TestFteInjectPackets mocks base method
+func (m *MockInternalClient) TestFteInjectPackets(ctx context.Context, in *TestInjectFtePacketRequestMsg, opts ...grpc.CallOption) (*TestInjectFtePacketResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "TestFteInjectPackets", varargs...)
+	ret0, _ := ret[0].(*TestInjectFtePacketResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TestFteInjectPackets indicates an expected call of TestFteInjectPackets
+func (mr *MockInternalClientMockRecorder) TestFteInjectPackets(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TestFteInjectPackets", reflect.TypeOf((*MockInternalClient)(nil).TestFteInjectPackets), varargs...)
+}
+
 // MockInternalServer is a mock of InternalServer interface
 type MockInternalServer struct {
 	ctrl     *gomock.Controller
@@ -2546,6 +2564,19 @@ func (m *MockInternalServer) InternalPortGet(arg0 context.Context, arg1 *Interna
 // InternalPortGet indicates an expected call of InternalPortGet
 func (mr *MockInternalServerMockRecorder) InternalPortGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InternalPortGet", reflect.TypeOf((*MockInternalServer)(nil).InternalPortGet), arg0, arg1)
+}
+
+// TestFteInjectPackets mocks base method
+func (m *MockInternalServer) TestFteInjectPackets(arg0 context.Context, arg1 *TestInjectFtePacketRequestMsg) (*TestInjectFtePacketResponseMsg, error) {
+	ret := m.ctrl.Call(m, "TestFteInjectPackets", arg0, arg1)
+	ret0, _ := ret[0].(*TestInjectFtePacketResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TestFteInjectPackets indicates an expected call of TestFteInjectPackets
+func (mr *MockInternalServerMockRecorder) TestFteInjectPackets(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TestFteInjectPackets", reflect.TypeOf((*MockInternalServer)(nil).TestFteInjectPackets), arg0, arg1)
 }
 
 // MockSoftwarePhvClient is a mock of SoftwarePhvClient interface

@@ -128,8 +128,11 @@ public:
     static void gen_rules(uint32_t num_rules, uint32_t num_tenants,
                          vector<v4_rule_t *> &rules);
 
+    static void send_packets (hal_handle_t srceph, hal_handle_t dsteph, 
+                         uint32_t srcip, uint32_t dstip);
+
 protected:
-    fte_base_test() {}
+    fte_base_test() {};
 
     virtual ~fte_base_test() {}
 
@@ -415,3 +418,5 @@ private:
         EXPECT_TRUE(ctx_.session()->iflow->pgm_attrs.drop) << msg;             \
         EXPECT_TRUE(ctx_.session()->rflow->pgm_attrs.drop) << msg;             \
     }
+
+

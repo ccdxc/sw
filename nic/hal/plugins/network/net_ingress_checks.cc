@@ -53,6 +53,8 @@ perform_ingress_checks(fte::ctx_t&ctx)
 {
     bool broadcast_pkt = is_broadcast(ctx);
     bool mcast_dmac = is_multicast_dmac(ctx);
+    bool l2pkt = ((ctx.key().flow_type == hal::FLOW_TYPE_L2) && \
+            likely(!hal::is_platform_type_sim()));
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
 
     if (broadcast_pkt) {
@@ -68,6 +70,12 @@ perform_ingress_checks(fte::ctx_t&ctx)
         ctx.set_ignore_session_create(true);
         HAL_TRACE_ERR("Dropping packet for multicast dmac");
         ctx.update_flow(flowupd);
+    }
+
+    if (l2pkt) {
+        ctx.set_ignore_session_create(true);
+        HAL_TRACE_VERBOSE("L2Pkt -- dont create any session");
+        ctx.update_flow(flowupd);    
     }
 
     return HAL_RET_OK;

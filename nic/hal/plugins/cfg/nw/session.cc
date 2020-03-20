@@ -406,11 +406,8 @@ ep_get_from_flow_key (const flow_key_t* key, ep_t **sep, ep_t **dep)
 // insert this session in all meta data structures
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-add_session_to_db (hal_handle_t sep_handle, hal_handle_t dep_handle,
-                   session_t *session)
+add_session_to_db (ep_t *sep, ep_t *dep, session_t *session)
 {
-    ep_t *sep = NULL, *dep = NULL;
-
     //session->session_id_ht_ctxt.reset();
     //g_hal_state->session_id_ht()->insert(session,
                                          //&session->session_id_ht_ctxt);
@@ -426,9 +423,6 @@ add_session_to_db (hal_handle_t sep_handle, hal_handle_t dep_handle,
                          (void *)std::addressof(session->rflow->config.key),
                          session, &session->hal_rflow_ht_ctxt);
     }
-
-    sep = find_ep_by_handle(sep_handle);
-    dep = find_ep_by_handle(dep_handle);
 
     if (sep) {
         session->sep_handle = sep->hal_handle;
@@ -446,14 +440,10 @@ add_session_to_db (hal_handle_t sep_handle, hal_handle_t dep_handle,
 // insert this session in all meta data structures
 //------------------------------------------------------------------------------
 static inline hal_ret_t
-updt_session_to_db (hal_handle_t sep_handle, hal_handle_t dep_handle, session_t *session)
+updt_session_to_db (ep_t *sep, ep_t *dep, session_t *session)
 {
-    ep_t *sep = find_ep_by_handle(sep_handle);
-    ep_t *dep = find_ep_by_handle(dep_handle);
-
-    HAL_TRACE_VERBOSE("sep_hdl:{} dep_hdl:{} sep:{:p} dep:{:p} sess_sep_hdl:{} sess_dep_hdl:{}",
-                      sep_handle, dep_handle, (void *)sep, (void *)dep,
-                      session->sep_handle, session->dep_handle);
+    HAL_TRACE_VERBOSE("sep:{:p} dep:{:p} sess_sep_hdl:{} sess_dep_hdl:{}",
+                      (void *)sep, (void *)dep, session->sep_handle, session->dep_handle);
     if ((sep) && (session->sep_handle == HAL_HANDLE_INVALID)) {
         session->sep_handle = sep->hal_handle;
         ep_add_session(sep, session);
@@ -462,6 +452,7 @@ updt_session_to_db (hal_handle_t sep_handle, hal_handle_t dep_handle, session_t 
         session->dep_handle = dep->hal_handle;
         ep_add_session(dep, session);
     }
+
     return HAL_RET_OK;
 }
 
@@ -490,14 +481,9 @@ updt_ep_to_session_db (ep_t *sep, ep_t *dep, session_t *session)
 // remove this session from all meta data structures
 //------------------------------------------------------------------------------
 static inline void
-del_session_from_db (hal_handle_t sep_handle, hal_handle_t dep_handle, session_t *session)
+del_session_from_db (ep_t *sep, ep_t *dep, session_t *session)
 {
-    ep_t *sep = NULL, *dep = NULL;
-
     HAL_TRACE_VERBOSE("Entering DEL session from DB:{}", session->hal_handle);
-
-    sep = find_ep_by_handle(session->sep_handle);
-    dep = find_ep_by_handle(session->dep_handle);
 
     if (sep)
         ep_del_session(sep, session);
@@ -2450,7 +2436,8 @@ check_and_generate_session_limit_event (session_t *session)
     bool                         low_threshold_reset = 0;
     bool                         high_threshold_reset = 0;
     uint32_t                     num_active_session = 0;
-    eventtypes::EventTypes       session_limit_event;
+    eventtypes::EventTypes       session_limit_event_reach, 
+                    session_limit_event_approach, session_limit_event;
     types::IPProtocol            ip_proto = types::IPPROTO_NONE;
     hal::vrf_t                  *vrf = NULL;
     hal::nwsec_profile_t        *nwsec_prof = NULL;
@@ -2460,14 +2447,12 @@ check_and_generate_session_limit_event (session_t *session)
     // TBD if session limits needs to be applied for
     // transparent policy-enforced, then we need to
     // check and generate events when it reaches the limits.
-    if (!(hal::g_hal_state->is_policy_enforced())) {
+    if (likely(!(hal::g_hal_state->is_policy_enforced()))) {
         return;
     }
 
-    vrf = vrf_lookup_by_handle(session->vrf_handle);
-    if ((vrf != NULL) && (vrf->nwsec_profile_handle != HAL_HANDLE_INVALID)) {
-        nwsec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
-    }
+    nwsec_prof = find_nwsec_profile_by_handle(\
+            hal::g_hal_state->customer_default_security_profile_hdl());
     if (nwsec_prof == NULL) {
         // No valid nwsec profile, hence no session limits.
         return;
@@ -2482,24 +2467,32 @@ check_and_generate_session_limit_event (session_t *session)
         num_active_session = HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions;
         low_threshold_reset = g_session_limit_stats_trckr->tcp_half_open_sess_limit_low_thresh_reset;
         high_threshold_reset = g_session_limit_stats_trckr->tcp_half_open_sess_limit_high_thresh_reset;
+        session_limit_event_reach = eventtypes::TCP_HALF_OPEN_SESSION_LIMIT_REACHED;
+        session_limit_event_approach = eventtypes::TCP_HALF_OPEN_SESSION_LIMIT_APPROACH;
         break;
     case types::IPPROTO_UDP:
         session_limit = ((nwsec_prof != NULL) ? nwsec_prof->udp_active_session_limit: 0);
         num_active_session = HAL_SESSION_STATS_PTR(session->fte_id)->udp_sessions;
         low_threshold_reset = g_session_limit_stats_trckr->udp_sess_limit_low_thresh_reset;
         high_threshold_reset = g_session_limit_stats_trckr->udp_sess_limit_high_thresh_reset;
+        session_limit_event_reach = eventtypes::UDP_ACTIVE_SESSION_LIMIT_REACHED;
+        session_limit_event_approach = eventtypes::UDP_ACTIVE_SESSION_LIMIT_APPROACH;
         break;
     case types::IPPROTO_ICMP:
         session_limit = ((nwsec_prof != NULL) ? nwsec_prof->icmp_active_session_limit: 0);
         num_active_session = HAL_SESSION_STATS_PTR(session->fte_id)->icmp_sessions;
         low_threshold_reset = g_session_limit_stats_trckr->icmp_sess_limit_low_thresh_reset;
         high_threshold_reset = g_session_limit_stats_trckr->icmp_sess_limit_high_thresh_reset;
+        session_limit_event_reach = eventtypes::ICMP_ACTIVE_SESSION_LIMIT_REACHED;
+        session_limit_event_approach = eventtypes::ICMP_ACTIVE_SESSION_LIMIT_APPROACH;
         break;
     default: //L2 or other sessions
         session_limit = ((nwsec_prof != NULL) ? nwsec_prof->other_active_session_limit: 0);
         num_active_session = HAL_SESSION_STATS_PTR(session->fte_id)->other_active_sessions;
         low_threshold_reset = g_session_limit_stats_trckr->other_sess_limit_low_thresh_reset;
         high_threshold_reset = g_session_limit_stats_trckr->other_sess_limit_high_thresh_reset;
+        session_limit_event_reach = eventtypes::OTHER_ACTIVE_SESSION_LIMIT_REACHED;
+        session_limit_event_approach = eventtypes::OTHER_ACTIVE_SESSION_LIMIT_APPROACH;
         break;
     }
 
@@ -2521,40 +2514,14 @@ check_and_generate_session_limit_event (session_t *session)
 
     if (high_threshold_reset && (num_active_session >= session_limit)) {
         high_threshold_reset = 0;
+        session_limit_event = session_limit_event_reach;
         // limit reached, raise limit reached event
-        switch(ip_proto) {
-        case IPPROTO_TCP:
-            session_limit_event = eventtypes::TCP_HALF_OPEN_SESSION_LIMIT_REACHED;
-            break;
-        case IPPROTO_UDP:
-            session_limit_event = eventtypes::UDP_ACTIVE_SESSION_LIMIT_REACHED;
-            break;
-        case IPPROTO_ICMP:
-            session_limit_event = eventtypes::ICMP_ACTIVE_SESSION_LIMIT_REACHED;
-            break;
-        default:
-            session_limit_event = eventtypes::OTHER_ACTIVE_SESSION_LIMIT_REACHED;
-            break;
-        }
         send_flag = true;
     } else if (low_threshold_reset &&
             (num_active_session >= ((session_limit/100)*SESS_LIMIT_UPPER_THRESHOLD))) {
         low_threshold_reset = 0;
+        session_limit_event = session_limit_event_approach;
         // limit reached, raise limit approach event
-        switch(ip_proto) {
-        case IPPROTO_TCP:
-            session_limit_event = eventtypes::TCP_HALF_OPEN_SESSION_LIMIT_APPROACH;
-            break;
-        case IPPROTO_UDP:
-            session_limit_event = eventtypes::UDP_ACTIVE_SESSION_LIMIT_APPROACH;
-            break;
-        case IPPROTO_ICMP:
-            session_limit_event = eventtypes::ICMP_ACTIVE_SESSION_LIMIT_APPROACH;
-            break;
-        default:
-            session_limit_event = eventtypes::OTHER_ACTIVE_SESSION_LIMIT_APPROACH;
-            break;
-        }
         send_flag = true;
     }
     update_session_thresh_reset_status(session, ip_proto,
@@ -2616,11 +2583,10 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
                 session_t **session_p)
 {
     hal_ret_t ret;
-    nwsec_profile_t              *nwsec_prof;
+    nwsec_profile_t              *nwsec_prof = NULL;
     pd::pd_session_create_args_t  pd_session_args;
     session_t                    *session;
     pd::pd_func_args_t          pd_func_args = {0};
-    vrf_t                       *vrf = NULL;
 
     SDK_ASSERT(args->iflow && args->iflow_attrs);
 
@@ -2633,22 +2599,10 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     *session = {};
 
     session->fte_id = fte::fte_id();
-    HAL_TRACE_VERBOSE("Creating session {:p} with a rflow :{}", (void *)session, (args->valid_rflow) ? "valid" : "not valid");
 
     dllist_reset(&session->feature_list_head);
     session->vrf_handle = args->vrf_handle;
     session->tcp_cxntrack_timer = NULL;
-
-    vrf = vrf_lookup_by_handle(args->vrf_handle);
-    //SDK_ASSERT_RETURN((vrf != NULL), HAL_RET_INVALID_ARG);
-
-    // fetch the security profile, if any
-    if (vrf != NULL && vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
-        nwsec_prof =
-            find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
-    } else {
-        nwsec_prof = NULL;
-    }
 
     // Handle the spec info not handled in the FTE
     // TODO(goli) all these should go to appropriate fte features
@@ -2730,7 +2684,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     }
 
     // add this session to our db
-    ret = add_session_to_db(args->sep_handle, args->dep_handle, session);
+    ret = add_session_to_db(args->sep, args->dep, session);
     SDK_ASSERT(ret == HAL_RET_OK);
 
     if (session_handle) {
@@ -2851,7 +2805,7 @@ session_update(const session_args_t *args, session_t *session)
         session->syncing_session = args->session->syncing_session;
 
     // Update this session to our db
-    updt_session_to_db(args->sep_handle, args->dep_handle, session);
+    updt_session_to_db(args->sep, args->dep, session);
     
     return ret;
 }
@@ -2866,7 +2820,7 @@ session_delete(const session_args_t *args, session_t *session)
 
     SDK_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
 
-    del_session_from_db(args->sep_handle, args->dep_handle, session);
+    del_session_from_db(args->sep, args->dep, session);
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_delete_args_init(&pd_session_args);
@@ -3874,17 +3828,9 @@ typedef enum timeout_type_ {
 //------------------------------------------------------------------------------
 // Get TCP timeout from nwsec profile
 //------------------------------------------------------------------------------
-static uint64_t
-get_tcp_timeout (session_t *session, timeout_type_t timeout)
+static inline uint64_t
+get_tcp_timeout (nwsec_profile_t *nwsec_prof, timeout_type_t timeout)
 {
-    vrf_t              *vrf = NULL;
-    nwsec_profile_t    *nwsec_prof = NULL;
-
-    vrf = vrf_lookup_by_handle(session->vrf_handle);
-    if (vrf != NULL) {
-        nwsec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
-    }
-
     switch (timeout) {
         case TCP_CXNSETUP_TIMEOUT:
         {
@@ -3927,7 +3873,7 @@ get_tcp_timeout (session_t *session, timeout_type_t timeout)
 // FIN is received
 //------------------------------------------------------------------------------
 hal_ret_t
-schedule_tcp_close_timer (session_t *session)
+schedule_tcp_close_timer (session_t *session, nwsec_profile_t *nwsec_prof)
 {
     flow_key_t  key = {};
     uint32_t    timeout = 0;
@@ -3936,18 +3882,12 @@ schedule_tcp_close_timer (session_t *session)
         return HAL_RET_OK;
     }
 
-    timeout = get_tcp_timeout(session, TCP_HALF_CLOSED_TIMEOUT);
+    timeout = get_tcp_timeout(nwsec_prof, TCP_HALF_CLOSED_TIMEOUT);
     if (timeout == HAL_MAX_INACTIVTY_TIMEOUT) {
         // No timeout configured so we bail out
         return HAL_RET_OK;
     }
 
-    // Delete the previous timers if any and start a new one
-    if (session->tcp_cxntrack_timer != NULL) {
-        // Let the library delete it
-        //sdk::lib::timer_delete(session->tcp_cxntrack_timer);
-        session->tcp_cxntrack_timer = NULL;
-    }
     // update half open session count for sessions that are in TCP close state
     if (session->is_in_half_open_state) {
         session->is_in_half_open_state = 0;
@@ -3955,11 +3895,18 @@ schedule_tcp_close_timer (session_t *session)
                 &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
         // Check and raise session limit approach/reached event
         check_and_generate_session_limit_event(session);
+    } 
+
+    // Delete the previous timers if any and start a new one
+    if (session->tcp_cxntrack_timer != NULL) {
+        // Let the library delete it
+        //sdk::lib::timer_delete(session->tcp_cxntrack_timer);
+        session->tcp_cxntrack_timer = NULL;
     }
 
     session->tcp_cxntrack_timer = sdk::lib::timer_schedule(
                                      HAL_TIMER_ID_TCP_CLOSE_WAIT,
-                                     get_tcp_timeout(session, TCP_CLOSE_TIMEOUT),
+                                     get_tcp_timeout(nwsec_prof, TCP_CLOSE_TIMEOUT),
                                      (void *)(session->hal_handle), tcp_close_cb, false);
     if (!session->tcp_cxntrack_timer) {
         return HAL_RET_ERR;
@@ -4026,7 +3973,7 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
 // idle timeout
 //------------------------------------------------------------------------------
 hal_ret_t
-schedule_tcp_half_closed_timer (session_t *session)
+schedule_tcp_half_closed_timer (session_t *session, nwsec_profile_t *nwsec_prof)
 {
     uint32_t  timeout = 0;
 
@@ -4034,18 +3981,12 @@ schedule_tcp_half_closed_timer (session_t *session)
         return HAL_RET_OK;
     }
 
-    timeout = get_tcp_timeout(session, TCP_HALF_CLOSED_TIMEOUT);
+    timeout = get_tcp_timeout(nwsec_prof, TCP_HALF_CLOSED_TIMEOUT);
     if (timeout == HAL_MAX_INACTIVTY_TIMEOUT) {
         // No timeout configured so we bail out
         return HAL_RET_OK;
     }
 
-    // Delete the previous timers if any and start a new one
-    if (session->tcp_cxntrack_timer != NULL) {
-        // Let the library delete it
-        //sdk::lib::timer_delete(session->tcp_cxntrack_timer);
-        session->tcp_cxntrack_timer = NULL;
-    }
     // update half open session count for sessions that are in TCP close state
     if (session->is_in_half_open_state) {
         session->is_in_half_open_state = 0;
@@ -4053,11 +3994,18 @@ schedule_tcp_half_closed_timer (session_t *session)
                 &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
         // Check and raise session limit approach/reached event
         check_and_generate_session_limit_event(session);
+    }  
+
+    // Delete the previous timers if any and start a new one
+    if (session->tcp_cxntrack_timer != NULL) {
+        // Let the library delete it
+        //sdk::lib::timer_delete(session->tcp_cxntrack_timer);
+        session->tcp_cxntrack_timer = NULL;
     }
 
     session->tcp_cxntrack_timer = sdk::lib::timer_schedule(
                                      HAL_TIMER_ID_TCP_HALF_CLOSED_WAIT,
-                                     get_tcp_timeout(session, TCP_HALF_CLOSED_TIMEOUT),
+                                     get_tcp_timeout(nwsec_prof, TCP_HALF_CLOSED_TIMEOUT),
                                      (void *)(session->hal_handle),
                                      tcp_half_close_cb, false);
 
@@ -4139,15 +4087,15 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
 // goes to established state within the given timeout
 //------------------------------------------------------------------------------
 hal_ret_t
-schedule_tcp_cxnsetup_timer (session_t *session)
+schedule_tcp_cxnsetup_timer (session_t *session, nwsec_profile_t *nwsec_prof)
 {
-    if (getenv("DISABLE_AGING") || session->conn_track_en == 0) {
+    if (unlikely(getenv("DISABLE_AGING") || session->conn_track_en == 0)) {
         return HAL_RET_OK;
     }
 
     session->tcp_cxntrack_timer = sdk::lib::timer_schedule(
                                         HAL_TIMER_ID_TCP_CXNSETUP_WAIT,
-                                        get_tcp_timeout(session, TCP_CXNSETUP_TIMEOUT),
+                                        get_tcp_timeout(nwsec_prof, TCP_CXNSETUP_TIMEOUT),
                                         (void *)(session->hal_handle),
                                         tcp_cxnsetup_cb, false);
 
@@ -4187,7 +4135,7 @@ session_set_tcp_state (session_t *session, hal::flow_role_t role,
                     &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
             // Check and raise session limit approach/reached event
             check_and_generate_session_limit_event(session);
-        }
+        } 
     } else {
         flow = session->rflow;
     }

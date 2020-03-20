@@ -11,7 +11,7 @@ namespace pd {
 #define MAX_CPU_PKT_QUEUES              (types::WRingType_ARRAYSIZE)
 #define MAX_CPU_PKT_QUEUE_INST_INFO     MAX_PD_CPU_PKT_QUEUE_INST
 
-#define CPUPKT_MAX_BATCH_SIZE           512
+#define CPUPKT_MAX_BATCH_SIZE           2048
 
 #define HAL_MAX_CPU_PKT_DESCR_ENTRIES   1024
 #define CPU_PKT_DESCR_SIZE              128

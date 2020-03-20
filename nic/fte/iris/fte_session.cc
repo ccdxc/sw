@@ -4,6 +4,7 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/fte/fte_impl.hpp"
+#include <tins/tins.h>
 
 namespace fte {
 
@@ -424,6 +425,127 @@ session_is_feature_enabled(hal::session_t *session, const char *feature)
     }
 end:
     return false;
+}
+
+hal_ret_t 
+fte_inject_pkt (cpu_rxhdr_t *cpu_rxhdr,
+                std::vector<uint8_t *> &pkts, size_t pkt_len, bool copied_pkt_arg)
+{
+    ctx_t ctx;
+
+    struct fn_ctx_t {
+        ctx_t *ctx;
+        cpu_rxhdr_t *cpu_rxhdr;
+        std::vector<uint8_t *> &pkts;
+        size_t pkt_len;
+        bool   copied_pkt;
+        hal_ret_t ret;
+    } fn_ctx = { &ctx, cpu_rxhdr, pkts, pkt_len, copied_pkt_arg, HAL_RET_OK };
+
+    fte::fte_execute(0, [](void *data) {
+        fn_ctx_t *fn_ctx = (fn_ctx_t *)data;
+        auto pkt = fn_ctx->pkts[0];
+        fte::ctx_t *ctx = fn_ctx->ctx;
+
+        fte::flow_t iflow[fte::ctx_t::MAX_STAGES], rflow[fte::ctx_t::MAX_STAGES];
+        uint16_t num_features;
+        size_t fstate_size = fte::feature_state_size(&num_features);
+        fte::feature_state_t *feature_state = (fte::feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, fstate_size);
+
+        for (int i=0; i<fte::ctx_t::MAX_STAGES; i++) {
+            iflow[i]  =  {};
+            rflow[i]  =  {};
+        }
+
+        for (uint32_t i=0; i<fn_ctx->pkts.size(); i++) {
+            hal::hal_cfg_db_open(hal::CFG_OP_READ);
+            fn_ctx->ret = ctx->init(fn_ctx->cpu_rxhdr, pkt, fn_ctx->pkt_len, fn_ctx->copied_pkt,
+                                    iflow, rflow, feature_state, num_features);
+            if (fn_ctx->ret == HAL_RET_OK) {
+                fn_ctx->ret = ctx->process();
+            }
+            SDK_ASSERT(fn_ctx->ret == HAL_RET_OK);
+            hal::hal_cfg_db_close();
+        }
+        HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature_state);
+    }, &fn_ctx );
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+fte_inject_eth_pkt (const lifqid_t &lifq,
+                    hal_handle_t src_ifh, hal_handle_t src_l2segh,
+                    std::vector<Tins::EthernetII> &pkts, bool add_padding)
+{
+    hal::pd::pd_if_get_hw_lif_id_args_t lif_args;
+    hal::if_t *sif = hal::find_if_by_handle(src_ifh);
+    hal::l2seg_t *l2seg = hal::l2seg_lookup_by_handle(src_l2segh);
+
+    // use first pkt to build cpu header
+    Tins::EthernetII eth = pkts[0];
+
+    uint8_t vlan_valid;
+    uint16_t vlan_id;
+    hal::if_l2seg_get_encap(sif, l2seg, &vlan_valid, &vlan_id);
+
+    hal::pd::pd_l2seg_get_flow_lkupid_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
+    args.l2seg = l2seg;
+    pd_func_args.pd_l2seg_get_flow_lkupid = &args;
+    hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FLOW_LKPID, &pd_func_args);
+    hal::pd::l2seg_hw_id_t hwid = args.hwid;
+
+    if (sif->if_type == intf::IF_TYPE_ENIC) {
+        hal::pd::pd_func_args_t pd_func_args = {0};
+        lif_args.pi_if = sif;
+        pd_func_args.pd_if_get_hw_lif_id = &lif_args;
+        hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_HW_LIF_ID, &pd_func_args);
+    }
+
+    fte::cpu_rxhdr_t cpu_rxhdr = {};
+    cpu_rxhdr.src_lif = (sif->if_type == intf::IF_TYPE_ENIC)?lif_args.hw_lif_id:sif->if_id;
+    cpu_rxhdr.lif = lifq.lif;
+    cpu_rxhdr.qtype = lifq.qtype;
+    cpu_rxhdr.qid = lifq.qid;
+    cpu_rxhdr.lkp_vrf = hwid;
+    cpu_rxhdr.lkp_dir = sif->if_type == intf::IF_TYPE_ENIC ? FLOW_DIR_FROM_DMA :
+        FLOW_DIR_FROM_UPLINK;
+    cpu_rxhdr.lkp_inst = 0;
+    cpu_rxhdr.lkp_type = FLOW_KEY_LOOKUP_TYPE_IPV4;
+    cpu_rxhdr.l2_offset = 0;
+  
+    cpu_rxhdr.l3_offset = eth.header_size() + eth.find_pdu<Tins::Dot1Q>()->header_size();
+    cpu_rxhdr.l4_offset = cpu_rxhdr.l3_offset + eth.find_pdu<Tins::IP>()->header_size();
+    cpu_rxhdr.payload_offset = cpu_rxhdr.l4_offset;
+
+    auto l4pdu = eth.find_pdu<Tins::IP>()->inner_pdu();
+    if (l4pdu) {
+        cpu_rxhdr.payload_offset +=  l4pdu->header_size();
+    }
+
+    cpu_rxhdr.flags = 0;
+    Tins::TCP *tcp = eth.find_pdu<Tins::TCP>();
+    if (tcp) {
+        cpu_rxhdr.tcp_seq_num = ntohl(tcp->seq());
+        cpu_rxhdr.tcp_flags = ((tcp->get_flag(Tins::TCP::SYN) << 1) |
+                               (tcp->get_flag(Tins::TCP::ACK) << 4));
+    }
+
+    std::vector<uint8_t *>buffs;
+    size_t buff_size;
+    bool copied_pkt = true;
+
+    for (auto pkt: pkts) {
+        vector<uint8_t> buffer = pkt.serialize();
+        if (add_padding) {
+            buff_size += 4;
+            buffer.resize(buff_size, 0);
+        }
+        buffs.push_back(&buffer[0]);
+    }
+
+    return fte_inject_pkt(&cpu_rxhdr, buffs, buff_size, copied_pkt);
 }
 
 } // namespace fte

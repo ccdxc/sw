@@ -61,6 +61,7 @@ hal_handle_t fte_base_test::add_vrf()
 
     spec.mutable_key_or_handle()->set_vrf_id(++fte_base_test::vrf_id_);
     spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
+    spec.set_vrf_type(types::VRF_TYPE_CUSTOMER);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::vrf_create(spec, &resp);
     hal::hal_cfg_db_close();

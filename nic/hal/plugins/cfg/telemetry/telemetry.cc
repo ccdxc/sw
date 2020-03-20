@@ -87,17 +87,15 @@ telemetry_eval_sessions (void)
         hal::session_t  *session = (session_t *)entry;
         dllist_ctxt_t   *list_head = (dllist_ctxt_t *) ctxt;
 
-        if (!session->is_ipfix_flow) {
-            hal_handle_id_list_entry_t *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->
-                    hal_handle_id_list_entry_slab()->alloc();
-            if (list_entry == NULL) {
-                HAL_TRACE_ERR("Out of memory - skipping delete session {}", session->hal_handle);
-                return false;
-            }
-
-            list_entry->handle_id = session->hal_handle;
-            dllist_add(list_head, &list_entry->dllist_ctxt);
+        hal_handle_id_list_entry_t *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->
+                  hal_handle_id_list_entry_slab()->alloc();
+        if (list_entry == NULL) {
+            HAL_TRACE_ERR("Out of memory - skipping delete session {}", session->hal_handle);
+            return false;
         }
+
+        list_entry->handle_id = session->hal_handle;
+        dllist_add(list_head, &list_entry->dllist_ctxt);
         return false;
     };
 

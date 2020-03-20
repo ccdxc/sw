@@ -99,7 +99,7 @@ static inline bool
 net_conntrack_configured(fte::ctx_t &ctx)
 {
 
-    if (ctx.protobuf_request()) {
+    if (unlikely(ctx.protobuf_request())) {
         return ctx.sess_spec()->conn_track_en();
     }
 
@@ -109,12 +109,10 @@ net_conntrack_configured(fte::ctx_t &ctx)
     }
 
     // lookup Security profile
-    if (ctx.svrf() && ctx.svrf()->nwsec_profile_handle  != HAL_HANDLE_INVALID) {
-        hal::nwsec_profile_t  *nwsec_prof =
-            find_nwsec_profile_by_handle(ctx.svrf()->nwsec_profile_handle);
-        if (nwsec_prof != NULL) {
-            return nwsec_prof->cnxn_tracking_en;
-        }
+    hal::nwsec_profile_t  *nwsec_prof =
+        find_nwsec_profile_by_handle(hal::g_hal_state->customer_default_security_profile_hdl());
+    if (nwsec_prof != NULL) {
+        return nwsec_prof->cnxn_tracking_en;
     }
     return false;
 }
@@ -153,7 +151,7 @@ process_tcp_close(fte::ctx_t& ctx)
           ctx.session()->rflow->state <= session::FLOW_TCP_STATE_ESTABLISHED))) {
         if (tcp_flags & TCP_FLAG_FIN) {
             state = session::FLOW_TCP_STATE_FIN_RCVD;
-            hal::schedule_tcp_half_closed_timer(ctx.session());
+            hal::schedule_tcp_half_closed_timer(ctx.session(), ctx.nwsec_profile());
             goto done;
         }
     } else if ((state == session::FLOW_TCP_STATE_FIN_RCVD) && 
@@ -170,7 +168,7 @@ process_tcp_close(fte::ctx_t& ctx)
         return;
     }
 
-    hal::schedule_tcp_close_timer(ctx.session());
+    hal::schedule_tcp_close_timer(ctx.session(), ctx.nwsec_profile());
 
 done:
     /*
@@ -190,7 +188,7 @@ done:
 static void
 start_tcp_cxnsetup_timer (fte::ctx_t& ctx, bool status) {
     if (status && ctx.session() && !ctx.drop()) {
-        hal::schedule_tcp_cxnsetup_timer(ctx.session());
+        hal::schedule_tcp_cxnsetup_timer(ctx.session(), ctx.nwsec_profile());
     }
 }
 

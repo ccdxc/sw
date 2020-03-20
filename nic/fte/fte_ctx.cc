@@ -112,7 +112,6 @@ void ctx_t::swap_flow_key(const hal::flow_key_t &key, hal::flow_key_t *rkey)
     }
 }
 
-
 //------------------------------------------------------------------------------
 // Initialize the flow entries in the context
 //------------------------------------------------------------------------------
@@ -135,9 +134,11 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
         return ret;
     }
 
-    HAL_TRACE_DEBUG("fte: extracted flow key {}", key_);
+    if (unlikely(hal::utils::hal_trace_level() >= ::utils::trace_debug)) {
+        HAL_TRACE_DEBUG("fte: extracted flow key {}", key_);
+    }
 
-    if (hal::g_hal_state->is_microseg_enabled()) { 
+    if (likely(hal::g_hal_state->is_microseg_enabled())) {
         // Lookup ep, intf, l2seg, vrf
         ret = lookup_flow_objs();
         if (ret != HAL_RET_OK) {
@@ -201,6 +202,9 @@ ctx_t::init(const lifqid_t &lifq, feature_state_t feature_state[], uint16_t num_
         feature_state_init(feature_state_, num_features_);
     }
 
+    HAL_TRACE_DEBUG("VRF:{} sl2seg:{:p} sep:{:p} dep:{:p}", key_.lkpvrf,
+                      (void *)sl2seg_, (void *)sep_, (void *)dep_); 
+
     return HAL_RET_OK;
 }
 
@@ -229,12 +233,13 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pk
 {
     hal_ret_t ret;
 
-    HAL_TRACE_DEBUG("fte: rxpkt{} cpu_rxhdr={}",
+    if (unlikely(hal::utils::hal_trace_level() >= ::utils::trace_debug)) {
+        HAL_TRACE_DEBUG("fte: rxpkt{} cpu_rxhdr={}",
                     copied_pkt ? "(copy)" : "", hex_str((uint8_t*)cpu_rxhdr, sizeof(*cpu_rxhdr)));
 
-    HAL_TRACE_DEBUG("fte: rxpkt len={} pkt={}", pkt_len, hex_str(pkt, (pkt_len >=128)?128:pkt_len));
+        HAL_TRACE_DEBUG("fte: rxpkt len={} pkt={}", pkt_len, hex_str(pkt, (pkt_len >=128)?128:pkt_len));
 
-    HAL_TRACE_DEBUG("fte: rxpkt slif={} lif={} qtype={} qid={} vrf={} "
+        HAL_TRACE_DEBUG("fte: rxpkt slif={} lif={} qtype={} qid={} vrf={} "
                     "src_app_id={} lkp_dir={} lkp_inst={} lkp_type={} flags={} "
                     "l2={} l3={} l4={} payload={} src_lport={}",
                     cpu_rxhdr->src_lif, cpu_rxhdr->lif, cpu_rxhdr->qtype,
@@ -242,6 +247,7 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pk
                     cpu_rxhdr->lkp_dir, cpu_rxhdr->lkp_inst, cpu_rxhdr->lkp_type,
                     cpu_rxhdr->flags, cpu_rxhdr->l2_offset, cpu_rxhdr->l3_offset,
                     cpu_rxhdr->l4_offset, cpu_rxhdr->payload_offset, cpu_rxhdr->src_lport);
+    }
 
     lifqid_t lifq =  {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
 
@@ -298,7 +304,6 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pk
     return HAL_RET_OK;
 }
 
-
 //------------------------------------------------------------------------------
 // Initialize the context from GRPC protobuf
 //------------------------------------------------------------------------------
@@ -354,9 +359,6 @@ ctx_t::init(SessionSpec* spec, SessionStatus* status, SessionStats* stats, hal::
     sep_ = hal::find_ep_by_l2_key(l2seg->seg_id, smac);
     MAC_UINT64_TO_ADDR(dmac, sess_status_->dmac());
     dep_ = hal::find_ep_by_l2_key(l2seg->seg_id, dmac);
-
-    HAL_TRACE_VERBOSE("VRF:{} l2seg_id:{}, sl2seg:{:p} sep:{:p} dep:{:p}", key_.lkpvrf,
-                      l2seg->seg_id, (void *)sl2seg_, (void *)sep_, (void *)dep_);
 
     ret = init_flows(iflow, rflow);
 
@@ -578,8 +580,6 @@ ctx_t::update_flow(const flow_update_t& flowupd,
 hal_ret_t
 ctx_t::advance_to_next_stage() {
 
-    if (is_ipfix_flow()) return HAL_RET_OK; 
-    
     if (existing_session()) {
         if (role_ == hal::FLOW_ROLE_INITIATOR &&
             session()->iflow && session()->iflow->assoc_flow) {
@@ -614,11 +614,8 @@ ctx_t::advance_to_next_stage() {
 void
 ctx_t::invoke_completion_handlers(bool fail)
 {
-    HAL_TRACE_VERBOSE("fte: invoking completion handlers.");
     for (int i = 0; i < num_features_; i++) {
         if (feature_state_[i].completion_handler != nullptr) {
-            HAL_TRACE_VERBOSE("fte: invoking completion handler {}",
-                              feature_state_[i].name);
             set_feature_name(feature_state_[i].name);
             (*feature_state_[i].completion_handler)(*this, fail);
         }
@@ -637,7 +634,7 @@ ctx_t::process()
     // and we do not want to log the get
     if (!ipc_logging_disable() &&
         pipeline_event() != FTE_SESSION_GET) {
-        HAL_TRACE_VERBOSE("get ipc logger");
+        //HAL_TRACE_VERBOSE("get ipc logger");
         logger_  = get_current_ipc_logger_inst();
     }
 
@@ -697,8 +694,6 @@ ctx_t::swap_flow_objs()
 bool
 ctx_t::is_proxy_enabled()
 {
-    if (is_ipfix_flow()) return false;
-
     flow_t **flow = (role_ == hal::FLOW_ROLE_INITIATOR) ? iflow_ : rflow_;
 
     // For existing sessions, fwding will be set to TRUE even if it is

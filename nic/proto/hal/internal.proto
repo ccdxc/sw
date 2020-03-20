@@ -8,6 +8,7 @@ import "types.proto";
 import "fwlog.proto";
 import "session.proto";
 import "interface.proto";
+import "kh.proto";
 
 package internal;
 option go_package="halproto";
@@ -104,6 +105,9 @@ service Internal {
 
   // Internal (Marvell) port status
   rpc InternalPortGet (InternalPortRequestMsg) returns (InternalPortResponseMsg) {}
+ 
+  // Inject Packets to FTE
+  rpc TestFteInjectPackets (TestInjectFtePacketRequestMsg) returns (TestInjectFtePacketResponseMsg) {}
 }
 
 message ProgramAddressReq {
@@ -1771,6 +1775,26 @@ message TestClockSyncResponseMsg {
 }
 
 message TestClockSyncResponse {
+  types.ApiStatus api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+}
+
+// Debug test to fte cps
+message TestInjectFtePacketRequestMsg {
+  repeated TestInjectFtePacketRequest  request = 1;
+}
+
+message TestInjectFtePacketRequest {
+  kh.EndpointKeyHandle  source_endpoint      = 1;
+  kh.EndpointKeyHandle  destination_endpoint = 2;
+  uint32                source_ip            = 3;
+  uint32                destination_ip       = 4; 
+}
+
+message TestInjectFtePacketResponseMsg {
+  repeated TestInjectFtePacketResponse response = 1;
+}
+
+message TestInjectFtePacketResponse {
   types.ApiStatus api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
 }
 

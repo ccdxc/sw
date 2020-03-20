@@ -47,6 +47,10 @@ var (
 	isMicroSegEn            bool
 	fwdModeStr              string
 	policyModeStr           string
+	srcEpHdl                uint64
+	dstEpHdl                uint64
+	sourceIP                uint32
+	destIP                  uint32
 )
 
 var debugCmd = &cobra.Command{
@@ -213,6 +217,14 @@ var sysDebugCmd = &cobra.Command{
 	Run:   sysDebugCmdHandler,
 }
 
+var testFteInjectPacketCmd = &cobra.Command{
+	Use:    "fte-inject-packets",
+	Short:  "test fte inject packets",
+	Long:   "test fte inject packets",
+	Hidden: true,
+	Run:    testFteInjectPacketCmdHandler,
+}
+
 func init() {
 	rootCmd.AddCommand(debugCmd)
 	debugCmd.AddCommand(traceDebugCmd)
@@ -234,6 +246,7 @@ func init() {
 	showCmd.AddCommand(regShowCmd)
 	testDebugCmd.AddCommand(testSendFinDebugCmd)
 	testDebugCmd.AddCommand(testClockSyncDebugCmd)
+	testDebugCmd.AddCommand(testFteInjectPacketCmd)
 
 	// debug platform llc-cache-setup
 	platDebugCmd.AddCommand(platLlcDebugCmd)
@@ -293,6 +306,11 @@ func init() {
 	// debug modes
 	sysDebugCmd.Flags().StringVar(&fwdModeStr, "fwd", "tp", "Set fwd mode - tp(transparent), ms(micro-seg)")
 	sysDebugCmd.Flags().StringVar(&policyModeStr, "pol", "bn", "Set policy mode - bn(base-net), fa(flow-aware), enf(enforce)")
+
+	testFteInjectPacketCmd.Flags().Uint64Var(&srcEpHdl, "srcephdl", 0, "Source Endpoint to generate traffic from")
+	testFteInjectPacketCmd.Flags().Uint64Var(&dstEpHdl, "dstephdl", 0, "Destination Endpoint to generate traffic to")
+	testFteInjectPacketCmd.Flags().Uint32Var(&sourceIP, "srcip", 0, "Source IP address (uint32) to generate traffic from")
+	testFteInjectPacketCmd.Flags().Uint32Var(&destIP, "dstip", 0, "Destination IP address (uint32) to generate traffic to")
 }
 
 func microSegCmdHandler(cmd *cobra.Command, args []string) {
@@ -1364,4 +1382,55 @@ func sessionCtrlDebugCmdHandler(cmd *cobra.Command, args []string) {
 		}
 	}
 	fmt.Println("Success: SessionCtrl Update successfull.")
+}
+
+func testFteInjectPacketCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewInternalClient(c)
+
+	req := &halproto.TestInjectFtePacketRequest{}
+	if cmd.Flags().Changed("srcephdl") {
+		req.SourceEndpoint = &halproto.EndpointKeyHandle{
+			KeyOrHandle: &halproto.EndpointKeyHandle_EndpointHandle{
+				EndpointHandle: srcEpHdl,
+			},
+		}
+	}
+	if cmd.Flags().Changed("dstephdl") {
+		req.DestinationEndpoint = &halproto.EndpointKeyHandle{
+			KeyOrHandle: &halproto.EndpointKeyHandle_EndpointHandle{
+				EndpointHandle: dstEpHdl,
+			},
+		}
+	}
+	if cmd.Flags().Changed("srcip") {
+		req.SourceIp = sourceIP
+	}
+	if cmd.Flags().Changed("dstip") {
+		req.DestinationIp = destIP
+	}
+
+	reqMsg := &halproto.TestInjectFtePacketRequestMsg{
+		Request: []*halproto.TestInjectFtePacketRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.TestFteInjectPackets(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("Test Inject Fte Packets request failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+		}
+	}
 }

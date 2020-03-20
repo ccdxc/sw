@@ -1519,7 +1519,7 @@ end:
     if (ret == HAL_RET_OK) {
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_CREATE_SUCCESS);
         session_match_t match = {};
-        match.match_fields |= SESSION_MATCH_SVRF;
+        //match.match_fields |= SESSION_MATCH_SVRF;
         match.match_fields |= SESSION_MATCH_V4_FLOW;
         match.key.svrf_id = nwsec_policy->key.vrf_id;
         session_eval_matching_session(&match);
@@ -1666,7 +1666,7 @@ end:
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_UPDATE_SUCCESS);
         // On successful update evaluate the sessions
         session_match_t match = {};
-        match.match_fields |= SESSION_MATCH_SVRF;
+        //match.match_fields |= SESSION_MATCH_SVRF;
         match.match_fields |= SESSION_MATCH_V4_FLOW;
         match.key.svrf_id = policy_clone->key.vrf_id;
         session_eval_matching_session(&match);
@@ -1792,7 +1792,7 @@ end:
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_DELETE_SUCCESS);
         // On success, delete the flows
         session_match_t match = {};
-        match.match_fields |= SESSION_MATCH_SVRF;
+        //match.match_fields |= SESSION_MATCH_SVRF;
         match.match_fields |= SESSION_MATCH_V4_FLOW;
         match.key.svrf_id = policy->key.vrf_id;
         session_eval_matching_session(&match);

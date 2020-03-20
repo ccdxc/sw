@@ -104,9 +104,10 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
     const hal::ipv4_rule_t *rule = NULL;
     const acl::acl_ctx_t *acl_ctx = NULL;
 
-    HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy acl rule lookup for key={}", ctx.key());
+    HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy acl rule lookup for key={} vrf={}",
+                   ctx.key(), hal::g_hal_state->customer_default_vrf());
 
-    const char *ctx_name = nwsec_acl_ctx_name(ctx.key().svrf_id);
+    const char *ctx_name = nwsec_acl_ctx_name(hal::g_hal_state->customer_default_vrf());
     acl_ctx = acl::acl_get(ctx_name);
     if (acl_ctx == NULL) {
         HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy failed to lookup acl_ctx {}", ctx_name);
@@ -328,7 +329,6 @@ sfw_exec(ctx_t& ctx)
     // only ipv4 is handled in data path.
     if (!ctx.protobuf_request()  &&
          (ctx.key().flow_type == hal::FLOW_TYPE_V6 || ctx.key().flow_type == hal::FLOW_TYPE_L2)) {
-        HAL_TRACE_VERBOSE("flow type is non-ipv4:{}", ctx.key().flow_type);
         sfw_info->sfw_done = true;
         goto install_flow;
 
@@ -337,7 +337,6 @@ sfw_exec(ctx_t& ctx)
     if ((!ctx.protobuf_request() && ctx.existing_session()) ||
         (ctx.role() == hal::FLOW_ROLE_INITIATOR &&
          (sfw_info->skip_sfw || sfw_info->sfw_done))) {
-        HAL_TRACE_VERBOSE("Existing session.. skipping lookups");
         return PIPELINE_CONTINUE;
     }
 
@@ -345,7 +344,6 @@ sfw_exec(ctx_t& ctx)
     if (ctx.role() == hal::FLOW_ROLE_INITIATOR && !ctx.existing_session()) {
         expected_flow_t *expected_flow = lookup_expected_flow(ctx.key());
         if (expected_flow) {
-            HAL_TRACE_VERBOSE("Found expected alg flow - invoking handler...");
             ret = expected_flow->handler(ctx, expected_flow);
             flow_update_t flowupd = {type: FLOWUPD_AGING_INFO};
             flowupd.aging_info.idle_timeout = sfw_info->idle_timeout;
@@ -366,7 +364,6 @@ sfw_exec(ctx_t& ctx)
                 flowupd.action  = match_rslt.action;
                 sfw_info->idle_timeout = match_rslt.idle_timeout;
                 sfw_info->sfw_done = true;
-                HAL_TRACE_VERBOSE("Match result: {}", match_rslt);
                 if (match_rslt.sfw_action == nwsec::SECURITY_RULE_ACTION_REJECT &&
                     ctx.valid_rflow()) {
                     // Register completion handler to send a reject packet out
