@@ -157,7 +157,7 @@ func (m *BGPNeighbor) Defaults(ver string) bool {
 		for k := range m.EnableAddressFamilies {
 			m.EnableAddressFamilies[k] = "ipv4-unicast"
 		}
-		m.MultiHop = 1
+		m.MultiHop = 64
 	}
 	return ret
 }

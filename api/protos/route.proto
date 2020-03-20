@@ -99,9 +99,9 @@ message BGPNeighbor {
     // ASN the neighbor belongs to.
     uint32 RemoteAS                         = 3 [(gogoproto.jsontag) = "remote-as,omitempty"];
 
-    // BGP Multihop configuration, 0 disables multihop.
+    // BGP Multihop configuration.
     uint32 MultiHop                         = 4 [(gogoproto.jsontag) = "multi-hop,omitempty",
-                                                (venice.check) = "IntRange(1, 255)", (venice.default) = "1"];
+                                                (venice.check) = "IntRange(1, 255)", (venice.default) = "64"];
 
     // Address families to enable on the neighbor.
     repeated string EnableAddressFamilies   = 5 [(gogoproto.jsontag) = "enable-address-families,omitempty",

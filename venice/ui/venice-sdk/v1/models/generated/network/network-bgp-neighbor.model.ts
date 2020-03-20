@@ -30,7 +30,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
     'ip-address': string = null;
     /** ASN the neighbor belongs to. */
     'remote-as': number = null;
-    /** BGP Multihop configuration, 0 disables multihop. Value should be between 1 and 255. */
+    /** BGP Multihop configuration. Value should be between 1 and 255. */
     'multi-hop': number = null;
     /** Address families to enable on the neighbor. */
     'enable-address-families': Array<NetworkBGPNeighbor_enable_address_families> = null;
@@ -56,8 +56,8 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
             type: 'number'
         },
         'multi-hop': {
-            default: parseInt('1'),
-            description:  `BGP Multihop configuration, 0 disables multihop. Value should be between 1 and 255.`,
+            default: parseInt('64'),
+            description:  `BGP Multihop configuration. Value should be between 1 and 255.`,
             required: true,
             type: 'number'
         },
