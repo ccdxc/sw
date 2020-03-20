@@ -66,6 +66,14 @@ func (n *NLRIPrefix) String() string {
 	return fmt.Sprintf("%v", n.Prefix)
 }
 
+// String returns a user friendly string
+func (n *NLRIPrefix) AttrString() string {
+	if (n == nil) {
+		return fmt.Sprintf("")
+	}
+	return fmt.Sprintf("%v", n.Prefix.attrString())
+}
+
 func NewNLRIPrefix(afi int, safi int, in []byte) *NLRIPrefix {
 	if len(in) < 3 {
 		return nil
@@ -131,6 +139,10 @@ func (s *ShadowEVPNType2Route) String() string {
 	return fmt.Sprintf(type2Fmt, type2, s.RD, s.EthTagID, macsize, s.MACAddress, ipsize, "0.0.0.0")
 }
 
+// String returns a user friendly string
+func (s *ShadowEVPNType2Route) attrString() string {
+	return fmt.Sprintf("      ESI %v L2VNI %v L3VNI %v", s.ESI, s.MPLSLabel1, s.MPLSLabel2)
+}
 func (a *EVPNType2Route) parseBytes(in []byte) {
 	if len(in) < type2MinLen {
 		log.Errorf("invalid length [%d] for evpn type2", len(in))
@@ -199,6 +211,7 @@ type ShadowEVPNType5Route struct {
 	EthTagID    uint32
 	IPPrefix    string
 	GWIPAddress string
+	MPLSLabel1  uint32
 	*EVPNType5Route
 }
 
@@ -210,6 +223,10 @@ func (s *ShadowEVPNType5Route) String() string {
 	return fmt.Sprintf(type5Fmt, type5, s.RD, s.EthTagID, s.IPPrefixLen, s.IPPrefix)
 }
 
+// String returns a user friendly string
+func (s *ShadowEVPNType5Route) attrString() string {
+	return fmt.Sprintf("      ESI %v GW-IP %v L3VNI %v", s.ESI, s.GWIPAddress, s.MPLSLabel1)
+}
 func (a *EVPNType5Route) parseBytes(in []byte) {
 	if len(in) < type5MinLen {
 		log.Errorf("invalid length [%d] for evpn type2", len(in))
@@ -260,6 +277,11 @@ type ShadowIPv4Route struct {
 	IPPrefix    string
 }
 
+// String returns a user friendly string
+func (s *ShadowIPv4Route) attrString() string {
+	return fmt.Sprintf("")
+}
+
 const ipv4Fmt = `%v`
 		   
 func (a *ShadowIPv4Route) parseBytes(in []byte) {
@@ -284,6 +306,7 @@ func newIPv4Route(in []byte) *ShadowIPv4Route {
 
 type UserPrefix interface {
 	parseBytes(in []byte)
+	attrString() string
 }
 
 // Uint32ToIPv4Address returns an IP Address string given an integer

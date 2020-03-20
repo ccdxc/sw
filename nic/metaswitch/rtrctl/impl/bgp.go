@@ -282,6 +282,10 @@ func bgpNlriPrefixShowCmdHandler(cmd *cobra.Command, args []string) error {
 			}
 			fmt.Printf(bgpNLRI, best, nlri.NextHopAddr, nlri.ASPathStr,
 				nlri.PathOrigId, nlri.RouteSource)
+			attrString := nlri.Prefix.AttrString()
+			if attrString != "" {
+				fmt.Println(nlri.Prefix.AttrString())
+			}
 		}
 	}
 
