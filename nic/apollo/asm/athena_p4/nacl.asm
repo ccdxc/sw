@@ -28,9 +28,9 @@ nacl_redirect:
     phvwr.c1        p.control_metadata_p4e_stats_flag, P4E_STATS_FLAG_TX_TO_ARM
 
     /* Uplink */
-    seq.!c1         c2, d.u.nacl_redirect_d.oport, PORT_HOST
+    seq.!c1         c2, d.u.nacl_redirect_d.oport, UPLINK_HOST
     phvwr.c2        p.control_metadata_p4e_stats_flag, P4E_STATS_FLAG_TX_TO_HOST
-    seq.!c1         c2, d.u.nacl_redirect_d.oport, PORT_SWITCH
+    seq.!c1         c2, d.u.nacl_redirect_d.oport, UPLINK_SWITCH
     phvwr.c2        p.control_metadata_p4e_stats_flag, P4E_STATS_FLAG_TX_TO_SWITCH
 #endif
     phvwr.e         p.capri_intrinsic_drop, 0

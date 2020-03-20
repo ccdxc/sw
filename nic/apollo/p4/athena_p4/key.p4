@@ -2,7 +2,7 @@
 /* Key derivation tables                                                      */
 /******************************************************************************/
 action native_ipv4_packet() {
-    modify_field(key_metadata.ktype, KEY_TYPE_IPV4);
+    modify_field(key_metadata.ktype, P4_KEY_TYPE_IPV4);
 
     if (control_metadata.direction == TX_FROM_HOST) {
         modify_field(key_metadata.src, ipv4_1.srcAddr);
@@ -40,7 +40,7 @@ action native_ipv4_packet() {
 }
 
 action native_ipv6_packet() {
-    modify_field(key_metadata.ktype, KEY_TYPE_IPV6);
+    modify_field(key_metadata.ktype, P4_KEY_TYPE_IPV6);
     if (control_metadata.direction == TX_FROM_HOST) {
         modify_field(key_metadata.src, ipv6_1.srcAddr);
         modify_field(key_metadata.dst, ipv6_1.dstAddr);
@@ -79,7 +79,7 @@ action native_nonip_packet() {
 }
 
 action tunneled_ipv4_packet() {
-    modify_field(key_metadata.ktype, KEY_TYPE_IPV4);
+    modify_field(key_metadata.ktype, P4_KEY_TYPE_IPV4);
     if (control_metadata.direction == TX_FROM_HOST) {
         modify_field(key_metadata.src, ipv4_2.srcAddr);
         modify_field(key_metadata.dst, ipv4_2.dstAddr);
@@ -114,7 +114,7 @@ action tunneled_ipv4_packet() {
 }
 
 action tunneled_ipv6_packet() {
-    modify_field(key_metadata.ktype, KEY_TYPE_IPV6);
+    modify_field(key_metadata.ktype, P4_KEY_TYPE_IPV6);
     if (control_metadata.direction == TX_FROM_HOST) {
         modify_field(key_metadata.src, ipv6_2.srcAddr);
         modify_field(key_metadata.dst, ipv6_2.dstAddr);

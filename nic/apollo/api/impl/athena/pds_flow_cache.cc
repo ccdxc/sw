@@ -183,7 +183,7 @@ flow_cache_entry_find_cb (sdk_table_api_params_t *params)
         if (hwentry->key_metadata_ktype != cbdata->key->key_type) {
             return;
         }
-        vnic_id = (hwentry->key_metadata_vnic_id_sbit0_ebit7 << 1) | hwentry->key_metadata_vnic_id_sbit8_ebit8;
+        vnic_id = hwentry->get_key_metadata_vnic_id();
         if ((vnic_id == cbdata->key->vnic_id) &&
             (!memcmp(hwentry->key_metadata_dst, cbdata->key->ip_daddr, IP6_ADDR8_LEN)) &&
             (!memcmp(hwentry->key_metadata_src, cbdata->key->ip_saddr, IP6_ADDR8_LEN)) &&

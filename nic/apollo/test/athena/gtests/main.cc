@@ -27,7 +27,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
-//#include "nic/apollo/p4/include/athena_defines.h"
+#include "nic/apollo/p4/include/athena_defines.h"
 #include "nic/apollo/p4/include/athena_table_sizes.h"
 #include "trace.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
@@ -219,8 +219,8 @@ sdk_ret_t send_packet(const char *out_pkt_descr, uint8_t *out_pkt, uint16_t out_
 }
 
 
-uint8_t     g_h_port = TM_PORT_UPLINK_0;
-uint8_t     g_s_port = TM_PORT_UPLINK_1;
+uint8_t     g_h_port = UPLINK_HOST;
+uint8_t     g_s_port = UPLINK_SWITCH;
 
 /*
  * Simple/Primitive resource allocation

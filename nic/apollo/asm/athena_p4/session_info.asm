@@ -78,7 +78,7 @@ session_info_h2s_l2_vnic:
 
     phvwr           p.control_metadata_p4e_stats_flag, P4E_STATS_FLAG_TX_TO_SWITCH
     phvwr.e         p.control_metadata_redir_type, PACKET_ACTION_REDIR_UPLINK
-    phvwr           p.control_metadata_redir_oport, TM_PORT_UPLINK_1
+    phvwr           p.control_metadata_redir_oport, UPLINK_SWITCH
 
 session_info_s2h:
     seq             c1, k.control_metadata_l2_vnic, TRUE
@@ -127,7 +127,7 @@ session_info_s2h_l2_vnic:
 
     phvwr           p.control_metadata_p4e_stats_flag, P4E_STATS_FLAG_TX_TO_HOST
     phvwr.e         p.control_metadata_redir_type, PACKET_ACTION_REDIR_UPLINK
-    phvwr           p.control_metadata_redir_oport, TM_PORT_UPLINK_0
+    phvwr           p.control_metadata_redir_oport, UPLINK_HOST
 
 session_info_slow_path:
     phvwr.e         p.control_metadata_flow_miss, TRUE

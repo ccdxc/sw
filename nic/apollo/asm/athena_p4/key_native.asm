@@ -19,7 +19,7 @@ native_ipv4_packet:
 
     seq             c2, k.control_metadata_direction, RX_FROM_SWITCH
     b.c2            native_ipv4_packet_from_switch
-    phvwr           p.key_metadata_ktype, KEY_TYPE_IPV4
+    phvwr           p.key_metadata_ktype, P4_KEY_TYPE_IPV4
 
     seq             c1, k.udp_1_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.udp_1_srcPort
@@ -51,7 +51,7 @@ native_ipv6_packet:
 
     seq             c2, k.control_metadata_direction, RX_FROM_SWITCH
     b.c2            native_ipv6_packet_from_switch
-    phvwr           p.key_metadata_ktype, KEY_TYPE_IPV6
+    phvwr           p.key_metadata_ktype, P4_KEY_TYPE_IPV6
 
     seq             c1, k.udp_1_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.udp_1_srcPort

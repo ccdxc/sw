@@ -167,9 +167,9 @@ parser parse_cpu_packet {
 @pragma xgress ingress
 parser parse_uplink {
     return select(capri_intrinsic.tm_iport) {
-        TM_PORT_UPLINK_0 : parse_packet_from_host;
-        TM_PORT_UPLINK_1 : parse_packet_from_switch;
-        default : parse_packet;
+        UPLINK_HOST     : parse_packet_from_host;
+        UPLINK_SWITCH   : parse_packet_from_switch;
+        default         : parse_packet;
     }
 }
 
