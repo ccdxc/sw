@@ -8,6 +8,7 @@ import (
 	"os"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/vmware/govmomi/vim25/types"
 
@@ -409,6 +410,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 
 	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
 
@@ -533,151 +535,9 @@ func TestVmotionWithWatchers(t *testing.T) {
 		}, "workload not found")
 	}
 
-	// Wait for vm to be present in vchub
-	AssertEventually(t, func() (bool, interface{}) {
-		meta := &api.ObjectMeta{
-			Name: vchub.createVMWorkloadName("", vm1.Self.Value),
-			// TODO: Don't use default tenant
-			Tenant:    globals.DefaultTenant,
-			Namespace: globals.DefaultNamespace,
-		}
+	// Build helper functions for the test cases
 
-		_, err := sm.Controller().Workload().Find(meta)
-		if err != nil {
-			return false, err
-		}
-		return true, nil
-	}, "workload not found")
-
-	{
-		/** ---------- VMotion Happy case ----------
-		1. VM moves from h1 -> h2
-		2. VM update host config
-		3. Datapath says completed
-		4. VM migration completed
-		*/
-
-		logger.Infof("===== VMotion Happy case =====")
-		logger.Infof("===== Move VM to host2 =====")
-
-		// Start migration
-		startMsg1 := defs.VMotionStartMsg{
-			VMKey:        vm1.Self.Value,
-			DstHostKey:   penHost2.Obj.Self.Value,
-			DcID:         dc1.Obj.Self.Value,
-			HotMigration: true,
-		}
-
-		m := defs.Probe2StoreMsg{
-			MsgType: defs.VCNotification,
-			Val: defs.VCNotificationMsg{
-				Type: defs.VMotionStart,
-				Msg:  startMsg1,
-			},
-		}
-		vchub.vcEventCh <- m
-
-		// Check Migration Start
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
-
-		// Add vnic, should be ignored since we are migrating
-		dc1.AddVnic(vm1, sim.VNIC{
-			MacAddress:   "aaaa.bbbb.eeee",
-			PortgroupKey: pg.Reference().Value,
-			PortKey:      "12",
-		})
-		// Send event since watch does not work
-		vchub.vcReadCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value,
-			generateVNIC("aa:aa:bb:bb:dd:dd", "11", pg.Reference().Value, "E1000"),
-			generateVNIC("aa:aa:bb:bb:ee:ee", "12", pg.Reference().Value, "E1000"))
-
-		// Trigger config update
-		err = dc1.UpdateVMHost(vm1, "host2")
-		AssertOk(t, err, "VM host update failed")
-		// Send event since watch does not work
-		vchub.vcReadCh <- createVMHostUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value, penHost2.Obj.Self.Value)
-
-		// Check Migration final sync
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
-
-		// Update data path
-		meta := &api.ObjectMeta{
-			Name: vchub.createVMWorkloadName("", vm1.Self.Value),
-			// TODO: Don't use default tenant
-			Tenant:    globals.DefaultTenant,
-			Namespace: globals.DefaultNamespace,
-		}
-		wl, err := sm.Controller().Workload().Find(meta)
-		AssertOk(t, err, "failed to get workload")
-		wlObj := wl.Workload
-		newWl := ref.DeepCopy(wlObj).(workload.Workload)
-		newWl.Status.MigrationStatus.Status = statusDone
-		sm.Controller().Workload().SyncUpdate(&newWl)
-
-		// Check finish migration
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
-
-		// Now that we are done migrating, verify new vnic was added
-		AssertEventually(t, func() (bool, interface{}) {
-			meta := &api.ObjectMeta{
-				Name: vchub.createVMWorkloadName("", vm1.Self.Value),
-				// TODO: Don't use default tenant
-				Tenant:    globals.DefaultTenant,
-				Namespace: globals.DefaultNamespace,
-			}
-
-			wl, err := sm.Controller().Workload().Find(meta)
-			if err != nil {
-				return false, err
-			}
-			if len(wl.Spec.Interfaces) != 2 {
-				return false, fmt.Errorf("expected 2 interfaces, found %d", len(wl.Spec.Interfaces))
-			}
-			return true, nil
-		}, "workload not found")
-
-		// CLEANUP
-		// remove vnic, move back vm
-		dc1.RemoveVnic(vm1, sim.VNIC{
-			MacAddress:   "aaaa.bbbb.eeee",
-			PortgroupKey: pg.Reference().Value,
-			PortKey:      "12",
-		})
-		// Send event since watch does not work
-		vchub.vcReadCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value,
-			generateVNIC("aa:aa:bb:bb:dd:dd", "11", pg.Reference().Value, "E1000"))
-
-		AssertEventually(t, func() (bool, interface{}) {
-			meta := &api.ObjectMeta{
-				Name: vchub.createVMWorkloadName("", vm1.Self.Value),
-				// TODO: Don't use default tenant
-				Tenant:    globals.DefaultTenant,
-				Namespace: globals.DefaultNamespace,
-			}
-
-			wl, err := sm.Controller().Workload().Find(meta)
-			if err != nil {
-				return false, err
-			}
-			if len(wl.Spec.Interfaces) != 1 {
-				return false, fmt.Errorf("expected 1 interfaces, found %d", len(wl.Spec.Interfaces))
-			}
-			return true, nil
-		}, "workload not found")
-
-		moveVMBack()
-	}
-
-	{
-		/** ---------- VMotion Happy abort ----------
-		1. VM moves from h1 -> h2
-		2. VM abort
-		3. Datapath says failed
-		4. VM migration completed
-		*/
-		logger.Infof("===== VMotion Happy abort =====")
-		logger.Infof("===== Move VM to host1 =====")
-
+	waitVMReady := func() {
 		// Wait for vm to be present in vchub
 		AssertEventually(t, func() (bool, interface{}) {
 			meta := &api.ObjectMeta{
@@ -693,58 +553,45 @@ func TestVmotionWithWatchers(t *testing.T) {
 			}
 			return true, nil
 		}, "workload not found")
+	}
 
-		// Start migration
-		startMsg1 := defs.VMotionStartMsg{
-			VMKey:        vm1.Self.Value,
-			DstHostKey:   penHost2.Obj.Self.Value,
-			DcID:         dc1.Obj.Self.Value,
-			HotMigration: true,
-		}
+	vMotionStart := func() {
+		vchub.vcEventCh <- createVmotionStartEvent(vm1.Self.Value, penHost2.Obj.Self.Value, dc1.Obj.Self.Value)
+	}
 
-		m := defs.Probe2StoreMsg{
-			MsgType: defs.VCNotification,
-			Val: defs.VCNotificationMsg{
-				Type: defs.VMotionStart,
-				Msg:  startMsg1,
-			},
-		}
-		vchub.vcEventCh <- m
-
-		// Add vnic, should be ignored since we are migrating
+	addVnic := func() {
 		dc1.AddVnic(vm1, sim.VNIC{
 			MacAddress:   "aaaa.bbbb.eeee",
 			PortgroupKey: pg.Reference().Value,
 			PortKey:      "12",
 		})
 		// Send event since watch does not work
-		vchub.vcReadCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value,
+		vchub.vcEventCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value,
 			generateVNIC("aa:aa:bb:bb:dd:dd", "11", pg.Reference().Value, "E1000"),
 			generateVNIC("aa:aa:bb:bb:ee:ee", "12", pg.Reference().Value, "E1000"))
+	}
 
-		// Check Migration Start
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+	removeVnic := func() {
+		dc1.RemoveVnic(vm1, sim.VNIC{
+			MacAddress:   "aaaa.bbbb.eeee",
+			PortgroupKey: pg.Reference().Value,
+			PortKey:      "12",
+		})
+		vchub.vcEventCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value,
+			generateVNIC("aa:aa:bb:bb:dd:dd", "11", pg.Reference().Value, "E1000"))
+	}
 
-		// Trigger abort
-		failedMsg1 := defs.VMotionFailedMsg{
-			VMKey:      vm1.Self.Value,
-			DstHostKey: penHost2.Obj.Self.Value,
-			DcID:       dc1.Obj.Self.Value,
-			Reason:     "Testing",
-		}
-		m = defs.Probe2StoreMsg{
-			MsgType: defs.VCNotification,
-			Val: defs.VCNotificationMsg{
-				Type: defs.VMotionFailed,
-				Msg:  failedMsg1,
-			},
-		}
-		vchub.vcEventCh <- m
+	vmConfigUpdate := func() {
+		err = dc1.UpdateVMHost(vm1, "host2")
+		AssertOk(t, err, "VM host update failed")
+		vchub.vcEventCh <- createVMHostUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value, penHost2.Obj.Self.Value)
+	}
 
-		// Check Migration abort
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationAbort)
+	vmAbort := func() {
+		vchub.vcEventCh <- createVmotionAbortEvent(vm1.Self.Value, penHost2.Obj.Self.Value, dc1.Obj.Self.Value)
+	}
 
-		// Update data path
+	updateMigrationStatus := func(status string) {
 		meta := &api.ObjectMeta{
 			Name: vchub.createVMWorkloadName("", vm1.Self.Value),
 			// TODO: Don't use default tenant
@@ -755,10 +602,11 @@ func TestVmotionWithWatchers(t *testing.T) {
 		AssertOk(t, err, "failed to get workload")
 		wlObj := wl.Workload
 		newWl := ref.DeepCopy(wlObj).(workload.Workload)
-		newWl.Status.MigrationStatus.Status = statusFailed
+		newWl.Status.MigrationStatus.Status = status
 		sm.Controller().Workload().SyncUpdate(&newWl)
+	}
 
-		// Now that we are done migrating, verify new vnic was added
+	verifyWorkload := func(specHost *sim.Host, statusHost *sim.Host, numVnics int) {
 		AssertEventually(t, func() (bool, interface{}) {
 			meta := &api.ObjectMeta{
 				Name: vchub.createVMWorkloadName("", vm1.Self.Value),
@@ -767,27 +615,33 @@ func TestVmotionWithWatchers(t *testing.T) {
 				Namespace: globals.DefaultNamespace,
 			}
 
+			specHostName := ""
+			statusHostName := ""
+			if specHost != nil {
+				specHostName = vchub.createHostName("", specHost.Obj.Self.Value)
+			}
+			if statusHost != nil {
+				statusHostName = vchub.createHostName("", statusHost.Obj.Self.Value)
+			}
+
 			wl, err := sm.Controller().Workload().Find(meta)
 			if err != nil {
 				return false, err
 			}
-			if len(wl.Spec.Interfaces) != 2 {
-				return false, fmt.Errorf("expected 2 interfaces, found %d", len(wl.Spec.Interfaces))
+			if len(wl.Spec.Interfaces) != numVnics {
+				return false, fmt.Errorf("expected %d interfaces, found %d", numVnics, len(wl.Spec.Interfaces))
+			}
+			if wl.Spec.HostName != specHostName {
+				return false, fmt.Errorf("wl spec not on correct host, expected %s but found %s", specHostName, wl.Spec.HostName)
+			}
+			if wl.Status.HostName != statusHostName {
+				return false, fmt.Errorf("wl status not on correct host, expected %s but found %s", statusHostName, wl.Status.HostName)
 			}
 			return true, nil
-		}, "workload not found")
+		}, "workload verify failed")
+	}
 
-		// CLEANUP
-		// remove vnic, move back vm
-		dc1.RemoveVnic(vm1, sim.VNIC{
-			MacAddress:   "aaaa.bbbb.eeee",
-			PortgroupKey: pg.Reference().Value,
-			PortKey:      "12",
-		})
-		// Send event since watch does not work
-		vchub.vcReadCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value,
-			generateVNIC("aa:aa:bb:bb:dd:dd", "11", pg.Reference().Value, "E1000"))
-
+	verifyVnicReset := func() {
 		AssertEventually(t, func() (bool, interface{}) {
 			meta := &api.ObjectMeta{
 				Name: vchub.createVMWorkloadName("", vm1.Self.Value),
@@ -805,6 +659,99 @@ func TestVmotionWithWatchers(t *testing.T) {
 			}
 			return true, nil
 		}, "workload not found")
+	}
+
+	recreateVM := func() {
+		vnics := []sim.VNIC{
+			sim.VNIC{
+				MacAddress:   "aaaa.bbbb.dddd",
+				PortgroupKey: pg.Reference().Value,
+				PortKey:      "11",
+			},
+		}
+		vm1, err = dc1.AddVM("vm1", "host1", vnics)
+		AssertOk(t, err, "Failed to create vm1")
+		vchub.vcReadCh <- createVMEvent(dc1.Obj.Name, dc1.Obj.Self.Value, "vm1", vm1.Self.Value, penHost1.Obj.Self.Value, vnics)
+		wlName = vchub.createVMWorkloadName("", vm1.Self.Value)
+		waitVMReady()
+	}
+
+	waitVMReady()
+	{
+		/** ---------- VMotion Happy case ----------
+		1. VM moves from h1 -> h2
+		2. VM update host config
+		3. Datapath says completed
+		4. VM migration completed
+		*/
+
+		logger.Infof("===== VMotion Happy case =====")
+
+		// Start migration
+		vMotionStart()
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+
+		// Add vnic, should be ignored since we are migrating
+		addVnic()
+
+		// Trigger config update
+		vmConfigUpdate()
+
+		// Check Migration final sync
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
+		verifyWorkload(penHost2, penHost1, 1)
+
+		// Update data path
+		updateMigrationStatus(statusDone)
+
+		// Check finish migration
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
+
+		// Now that we are done migrating, verify new vnic was added
+		verifyWorkload(penHost2, nil, 2)
+
+		// CLEANUP
+		removeVnic()
+		verifyVnicReset()
+		moveVMBack()
+	}
+
+	{
+		/** ---------- VMotion Happy abort ----------
+		1. VM moves from h1 -> h2
+		2. VM abort
+		3. Datapath says failed
+		4. VM migration completed
+		*/
+		logger.Infof("===== VMotion Happy abort =====")
+
+		// Start migration
+		vMotionStart()
+
+		// Add vnic, should be ignored since we are migrating
+		addVnic()
+
+		// Check Migration Start
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+		verifyWorkload(penHost2, penHost1, 1)
+
+		// Trigger abort
+		vmAbort()
+
+		// Check Migration abort
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationAbort)
+
+		// Update data path to failed
+		updateMigrationStatus(statusFailed)
+
+		// Now that we are done migrating, verify new vnic was added
+		verifyWorkload(penHost1, nil, 2)
+
+		// CLEANUP
+		// remove vnic, move back vm
+		removeVnic()
+
+		verifyVnicReset()
 	}
 
 	{
@@ -816,113 +763,35 @@ func TestVmotionWithWatchers(t *testing.T) {
 		*/
 
 		logger.Infof("===== VMotion datapath fail =====")
-		logger.Infof("===== Move VM to host2 =====")
 
 		// Start migration
-		startMsg1 := defs.VMotionStartMsg{
-			VMKey:        vm1.Self.Value,
-			DstHostKey:   penHost2.Obj.Self.Value,
-			DcID:         dc1.Obj.Self.Value,
-			HotMigration: true,
-		}
-
-		m := defs.Probe2StoreMsg{
-			MsgType: defs.VCNotification,
-			Val: defs.VCNotificationMsg{
-				Type: defs.VMotionStart,
-				Msg:  startMsg1,
-			},
-		}
-		vchub.vcEventCh <- m
+		vMotionStart()
 
 		// Check Migration Start
 		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
 
 		// Add vnic, should be ignored since we are migrating
-		dc1.AddVnic(vm1, sim.VNIC{
-			MacAddress:   "aaaa.bbbb.eeee",
-			PortgroupKey: pg.Reference().Value,
-			PortKey:      "12",
-		})
-		// Send event since watch does not work
-		vchub.vcReadCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value,
-			generateVNIC("aa:aa:bb:bb:dd:dd", "11", pg.Reference().Value, "E1000"),
-			generateVNIC("aa:aa:bb:bb:ee:ee", "12", pg.Reference().Value, "E1000"))
+		addVnic()
 
 		// Trigger config update
-		err = dc1.UpdateVMHost(vm1, "host2")
-		AssertOk(t, err, "VM host update failed")
-		// Send event since watch does not work
-		vchub.vcReadCh <- createVMHostUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value, penHost2.Obj.Self.Value)
+		vmConfigUpdate()
 
 		// Check Migration final sync
 		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
+		verifyWorkload(penHost2, penHost1, 1)
 
 		// Update data path
-		meta := &api.ObjectMeta{
-			Name: vchub.createVMWorkloadName("", vm1.Self.Value),
-			// TODO: Don't use default tenant
-			Tenant:    globals.DefaultTenant,
-			Namespace: globals.DefaultNamespace,
-		}
-		wl, err := sm.Controller().Workload().Find(meta)
-		AssertOk(t, err, "failed to get workload")
-		wlObj := wl.Workload
-		newWl := ref.DeepCopy(wlObj).(workload.Workload)
-		newWl.Status.MigrationStatus.Status = statusFailed
-		sm.Controller().Workload().SyncUpdate(&newWl)
+		updateMigrationStatus(statusFailed)
 
 		// Check finish migration
 		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
 
 		// Now that we are done migrating, verify new vnic was added
-		AssertEventually(t, func() (bool, interface{}) {
-			meta := &api.ObjectMeta{
-				Name: vchub.createVMWorkloadName("", vm1.Self.Value),
-				// TODO: Don't use default tenant
-				Tenant:    globals.DefaultTenant,
-				Namespace: globals.DefaultNamespace,
-			}
-
-			wl, err := sm.Controller().Workload().Find(meta)
-			if err != nil {
-				return false, err
-			}
-			if len(wl.Spec.Interfaces) != 2 {
-				return false, fmt.Errorf("expected 2 interfaces, found %d", len(wl.Spec.Interfaces))
-			}
-			return true, nil
-		}, "workload not found")
+		verifyWorkload(penHost2, nil, 2)
 
 		// CLEANUP
-		// remove vnic, move back vm
-		dc1.RemoveVnic(vm1, sim.VNIC{
-			MacAddress:   "aaaa.bbbb.eeee",
-			PortgroupKey: pg.Reference().Value,
-			PortKey:      "12",
-		})
-		// Send event since watch does not work
-		vchub.vcReadCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value,
-			generateVNIC("aa:aa:bb:bb:dd:dd", "11", pg.Reference().Value, "E1000"))
-
-		AssertEventually(t, func() (bool, interface{}) {
-			meta := &api.ObjectMeta{
-				Name: vchub.createVMWorkloadName("", vm1.Self.Value),
-				// TODO: Don't use default tenant
-				Tenant:    globals.DefaultTenant,
-				Namespace: globals.DefaultNamespace,
-			}
-
-			wl, err := sm.Controller().Workload().Find(meta)
-			if err != nil {
-				return false, err
-			}
-			if len(wl.Spec.Interfaces) != 1 {
-				return false, fmt.Errorf("expected 1 interfaces, found %d", len(wl.Spec.Interfaces))
-			}
-			return true, nil
-		}, "workload not found")
-
+		removeVnic()
+		verifyVnicReset()
 		moveVMBack()
 	}
 
@@ -934,89 +803,53 @@ func TestVmotionWithWatchers(t *testing.T) {
 		*/
 
 		logger.Infof("===== VMotion datapath timeout =====")
-		logger.Infof("===== Move VM to host2 =====")
 
 		// Start migration
-		startMsg1 := defs.VMotionStartMsg{
-			VMKey:        vm1.Self.Value,
-			DstHostKey:   penHost2.Obj.Self.Value,
-			DcID:         dc1.Obj.Self.Value,
-			HotMigration: true,
-		}
-
-		m := defs.Probe2StoreMsg{
-			MsgType: defs.VCNotification,
-			Val: defs.VCNotificationMsg{
-				Type: defs.VMotionStart,
-				Msg:  startMsg1,
-			},
-		}
-		vchub.vcEventCh <- m
+		vMotionStart()
 
 		// Check Migration Start
 		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
 
 		// Add vnic, should be ignored since we are migrating
-		dc1.AddVnic(vm1, sim.VNIC{
-			MacAddress:   "aaaa.bbbb.eeee",
-			PortgroupKey: pg.Reference().Value,
-			PortKey:      "12",
-		})
-		// Send event since watch does not work
-		vchub.vcReadCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value,
-			generateVNIC("aa:aa:bb:bb:dd:dd", "11", pg.Reference().Value, "E1000"),
-			generateVNIC("aa:aa:bb:bb:ee:ee", "12", pg.Reference().Value, "E1000"))
+		addVnic()
+		verifyWorkload(penHost2, penHost1, 1)
 
 		// Update data path
-		meta := &api.ObjectMeta{
-			Name: vchub.createVMWorkloadName("", vm1.Self.Value),
-			// TODO: Don't use default tenant
-			Tenant:    globals.DefaultTenant,
-			Namespace: globals.DefaultNamespace,
-		}
-		wl, err := sm.Controller().Workload().Find(meta)
-		AssertOk(t, err, "failed to get workload")
-		wlObj := wl.Workload
-		newWl := ref.DeepCopy(wlObj).(workload.Workload)
-		newWl.Status.MigrationStatus.Status = statusTimedOut
-		sm.Controller().Workload().SyncUpdate(&newWl)
+		updateMigrationStatus(statusTimedOut)
 
 		// Check finish migration
 		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
 
 		// Now that we are done migrating, verify new vnic was added
 		// verify we are on the old host
-		AssertEventually(t, func() (bool, interface{}) {
-			meta := &api.ObjectMeta{
-				Name: vchub.createVMWorkloadName("", vm1.Self.Value),
-				// TODO: Don't use default tenant
-				Tenant:    globals.DefaultTenant,
-				Namespace: globals.DefaultNamespace,
-			}
-
-			wl, err := sm.Controller().Workload().Find(meta)
-			if err != nil {
-				return false, err
-			}
-			if len(wl.Spec.Interfaces) != 2 {
-				return false, fmt.Errorf("expected 2 interfaces, found %d", len(wl.Spec.Interfaces))
-			}
-			if wl.Spec.HostName != vchub.createHostName("", penHost1.Obj.Self.Value) {
-				return false, fmt.Errorf("wl not on correct host")
-			}
-			return true, nil
-		}, "workload not found")
+		verifyWorkload(penHost1, nil, 2)
 
 		// CLEANUP
 		// remove vnic, move back vm
-		dc1.RemoveVnic(vm1, sim.VNIC{
-			MacAddress:   "aaaa.bbbb.eeee",
-			PortgroupKey: pg.Reference().Value,
-			PortKey:      "12",
-		})
-		// Send event since watch does not work
-		vchub.vcReadCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value,
-			generateVNIC("aa:aa:bb:bb:dd:dd", "11", pg.Reference().Value, "E1000"))
+		removeVnic()
+		verifyVnicReset()
+	}
+
+	{
+		/** ---------- VMotion delete before datapath finishes ----------
+		1. VM moves from h1 -> h2
+		2. VM update host config
+		3. VM deleted
+		*/
+
+		logger.Infof("===== VMotion delete before datapath finishes =====")
+		vMotionStart()
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+
+		addVnic()
+
+		vmConfigUpdate()
+
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
+		verifyWorkload(penHost2, penHost1, 1)
+
+		err := dc1.DeleteVM(vm1)
+		AssertOk(t, err, "failed to delete VM")
 
 		AssertEventually(t, func() (bool, interface{}) {
 			meta := &api.ObjectMeta{
@@ -1026,16 +859,142 @@ func TestVmotionWithWatchers(t *testing.T) {
 				Namespace: globals.DefaultNamespace,
 			}
 
-			wl, err := sm.Controller().Workload().Find(meta)
-			if err != nil {
-				return false, err
-			}
-			if len(wl.Spec.Interfaces) != 1 {
-				return false, fmt.Errorf("expected 1 interfaces, found %d", len(wl.Spec.Interfaces))
+			_, err := sm.Controller().Workload().Find(meta)
+			if err == nil {
+				return false, fmt.Errorf("Expected workload to be deleted")
 			}
 			return true, nil
-		}, "workload not found")
+		}, "workload should have been deleted")
+
+		// CLEANUP - recreate workload on host1
+		recreateVM()
 	}
+
+	/** ------------- RESTART CASES --------------- */
+
+	{
+		/** ---------- Restart during host config update ----------
+		1. VM moves from h1 -> h2
+		2. Kill VCHub
+		3. VM update host config
+		4. VCHub comes back, final sync should start
+		5. Kill VCHub
+		6. Datapath says completed
+		7. VCHub comes back, finish migration called
+		8. VM migration completed
+		*/
+		logger.Infof("===== Restart during host config update =====")
+		vMotionStart()
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+
+		addVnic()
+		vchub.Destroy(false)
+
+		vmConfigUpdate()
+
+		vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+		time.Sleep(1 * time.Second)           // Time for sync to run
+		verifyWorkload(penHost2, penHost1, 1) // Verify sync isn't writing any state
+
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
+
+		vchub.Destroy(false)
+
+		updateMigrationStatus(statusDone)
+
+		vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
+
+		verifyWorkload(penHost2, nil, 2)
+
+		// CLEANUP
+		removeVnic()
+		verifyVnicReset()
+		moveVMBack()
+	}
+
+	{
+		/** ---------- Restart during data path failure ----------
+		1. VM moves from h1 -> h2
+		2. VM update host config
+		3. Kill VCHub
+		4. Datapath says failure
+		5. Start VCHub
+		6. VCHub comes back, finish migration called
+		8. VM migration completed
+		*/
+		logger.Infof("===== Restart during data path failure =====")
+		vMotionStart()
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+
+		addVnic()
+
+		vmConfigUpdate()
+
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
+		verifyWorkload(penHost2, penHost1, 1) // Verify sync isn't writing any state
+
+		vchub.Destroy(false)
+
+		updateMigrationStatus(statusFailed)
+
+		vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
+
+		verifyWorkload(penHost2, nil, 2)
+		// CLEANUP
+		removeVnic()
+		verifyVnicReset()
+		moveVMBack()
+	}
+
+	{
+		/** ---------- VM deleted after VMotion with restart ----------
+		1. VM moves from h1 -> h2
+		2. VM update host config
+		3. Kill VCHub
+		4. Datapath says completed
+		5. Delete VM in vcenter
+		6. VCHub comes back, finish migration called, vm deleted after
+		*/
+		logger.Infof("===== VM deleted after VMotion with restart =====")
+		vMotionStart()
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+
+		addVnic()
+
+		vmConfigUpdate()
+
+		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
+		verifyWorkload(penHost2, penHost1, 1)
+
+		vchub.Destroy(false)
+
+		updateMigrationStatus(statusDone)
+
+		err := dc1.DeleteVM(vm1)
+		AssertOk(t, err, "failed to delete VM")
+
+		vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+		AssertEventually(t, func() (bool, interface{}) {
+			meta := &api.ObjectMeta{
+				Name: vchub.createVMWorkloadName("", vm1.Self.Value),
+				// TODO: Don't use default tenant
+				Tenant:    globals.DefaultTenant,
+				Namespace: globals.DefaultNamespace,
+			}
+
+			_, err := sm.Controller().Workload().Find(meta)
+			if err == nil {
+				return false, fmt.Errorf("Expected workload to be deleted")
+			}
+			return true, nil
+		}, "workload should have been deleted")
+		// CLEANUP - recreate workload on host1
+		recreateVM()
+	}
+
+	vchub.Destroy(false)
 }
 
 func checkMigrationState(t *testing.T, sm *smmock.Statemgr, vcID, wlName, stage string) {
@@ -1088,6 +1047,7 @@ func createVMHostUpdateEvent(vcID, dcName, dcID, vmID, hostID string) defs.Probe
 		},
 	}
 }
+
 func createVnicUpdateEvent(vcID, dcName, dcID, vmID string, devices ...types.BaseVirtualDevice) defs.Probe2StoreMsg {
 	return defs.Probe2StoreMsg{
 		MsgType: defs.VCEvent,
@@ -1107,6 +1067,36 @@ func createVnicUpdateEvent(vcID, dcName, dcID, vmID string, devices ...types.Bas
 						},
 					},
 				},
+			},
+		},
+	}
+}
+
+func createVmotionStartEvent(vmKey, dstHostKey, dcID string) defs.Probe2StoreMsg {
+	return defs.Probe2StoreMsg{
+		MsgType: defs.VCNotification,
+		Val: defs.VCNotificationMsg{
+			Type: defs.VMotionStart,
+			Msg: defs.VMotionStartMsg{
+				VMKey:        vmKey,
+				DstHostKey:   dstHostKey,
+				DcID:         dcID,
+				HotMigration: true,
+			},
+		},
+	}
+}
+
+func createVmotionAbortEvent(vmKey, dstHostKey, dcID string) defs.Probe2StoreMsg {
+	return defs.Probe2StoreMsg{
+		MsgType: defs.VCNotification,
+		Val: defs.VCNotificationMsg{
+			Type: defs.VMotionFailed,
+			Msg: defs.VMotionFailedMsg{
+				VMKey:      vmKey,
+				DstHostKey: dstHostKey,
+				DcID:       dcID,
+				Reason:     "Testing",
 			},
 		},
 	}

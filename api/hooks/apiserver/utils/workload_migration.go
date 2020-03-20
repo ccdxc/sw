@@ -122,6 +122,9 @@ func ProcessAbortMigration(l log.Logger, oldObj, inObj *workload.Workload) (*wor
 			})
 		}
 	}
+	// Reset status fields
+	oldObj.Status.HostName = ""
+	oldObj.Status.Interfaces = []workload.WorkloadIntfStatus{}
 	// sort it to keep the same order between spec and status (for common intfs)
 	sort.Slice(oldObj.Spec.Interfaces, func(i, j int) bool {
 		return oldObj.Spec.Interfaces[i].MACAddress < oldObj.Spec.Interfaces[j].MACAddress
@@ -157,10 +160,9 @@ func ProcessFinishMigration(l log.Logger, oldObj, inObj *workload.Workload) (*wo
 		return oldObj, errors.New("Migration is not in the correct stage, cannot perform finish migration")
 	}
 	oldObj.Status.MigrationStatus.Stage = stageMigrationDone
-	oldObj.Status.HostName = oldObj.Spec.HostName
-	oldObj.Status.HostName = oldObj.Spec.HostName
-	// Move spec interfaces to status
-	moveSpecInterfacesToStatus(oldObj)
+	// Remove host and interfaces
+	oldObj.Status.HostName = ""
+	oldObj.Status.Interfaces = []workload.WorkloadIntfStatus{}
 
 	// TODO: Clean up statius
 	return oldObj, nil

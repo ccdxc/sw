@@ -70,8 +70,10 @@ func TestList(t *testing.T) {
 	AssertOk(t, err, "failed to create DVS")
 	dvs, _ := dc.GetDVS("dvs1")
 	Assert(t, dvs != nil, "GetDVS failed")
-	_ = dvs.AddHost(host)
-	_ = dvs.AddHost(host2)
+	err = dvs.AddHost(host)
+	AssertOk(t, err, "Failed to add host from dvs")
+	err = dvs.AddHost(host2)
+	AssertOk(t, err, "Failed to add host from dvs")
 
 	pgConfigSpec0 := []types.DVPortgroupConfigSpec{
 		types.DVPortgroupConfigSpec{
@@ -209,6 +211,11 @@ func TestList(t *testing.T) {
 	vms = []mo.VirtualMachine{}
 	getKind(t, c, "VirtualMachine", []string{"name", "config"}, &vms)
 	AssertEquals(t, 0, len(vms), "Recieved incorrect amount of vms")
+
+	err = dvs.RemoveHost(host)
+	AssertOk(t, err, "Failed to remove host from dvs")
+	err = dvs.RemoveHost(host2)
+	AssertOk(t, err, "Failed to remove host from dvs")
 
 	err = host2.Destroy()
 	AssertOk(t, err, "failed to destroy host")

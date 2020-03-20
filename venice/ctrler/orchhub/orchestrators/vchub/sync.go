@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
 // returns whether sync executed
@@ -102,6 +103,13 @@ func (v *VCHub) sync() bool {
 		v.syncVMs(workloads, dc, dvsObjs, vms, pgs, vmkMap)
 		// Removing hosts after removing workloads to fix WL -> Host dependency
 		v.syncStaleHosts(dc, vcHosts, hosts)
+	}
+
+	// Process any API events we have missed (migration.status.done/timeout)
+	for _, workload := range workloads {
+		if workload.Status.MigrationStatus != nil {
+			v.handleWorkloadEvent(kvstore.Updated, &workload.Workload)
+		}
 	}
 
 	v.Log.Infof("Sync done for VCHub. %v", v)

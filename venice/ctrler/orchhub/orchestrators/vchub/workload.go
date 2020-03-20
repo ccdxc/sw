@@ -130,7 +130,7 @@ func (v *VCHub) validateWorkload(in interface{}) (bool, bool) {
 }
 
 func (v *VCHub) handleVM(m defs.VCEventMsg) {
-	v.Log.Infof("Got handle workload event for %s in DC %s", m.Key, m.DcName)
+	v.Log.Infof("Got handle vm event for %s in DC %s", m.Key, m.DcName)
 	meta := &api.ObjectMeta{
 		Name: v.createVMWorkloadName(m.DcID, m.Key),
 		// TODO: Don't use default tenant
@@ -214,6 +214,7 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 	}
 
 	if existingWorkload != nil && v.isWorkloadMigrating(existingWorkload) {
+		v.Log.Infof("update for migrating workload ")
 		// vCenter seems to send an update with stale vnic config - need to investigate
 		// HACK - don't accept vnic changes during vMotion
 		// If config prop was sent with wrong info.. it will result in change in Spec.Interfaces, if
@@ -226,7 +227,7 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 		}
 
 		if existingWorkload.Spec.HostName != workloadObj.Spec.HostName {
-			v.Log.Infof("Ingore VM host change during migration for vm %s", existingWorkload.Name)
+			v.Log.Infof("Ignore VM host change during migration for vm %s", existingWorkload.Name)
 		}
 
 		if workloadObj.Spec.HostName == "" && existingWorkload != nil &&

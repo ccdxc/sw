@@ -508,27 +508,13 @@ func (v *Datacenter) DeleteVM(vm *simulator.VirtualMachine) error {
 // AddVnic adds vnic info to the given vm
 func (v *Datacenter) AddVnic(vmSim *simulator.VirtualMachine, vnic VNIC) error {
 	vm := object.NewVirtualMachine(v.client, vmSim.Reference())
-	var devices object.VirtualDeviceList
-	// VirtualMachineConfigSpec
-	config := types.VirtualMachineConfigSpec{}
 	vnicDevice, err := createVnicDevice(vnic)
 	if err != nil {
 		return err
 	}
-	devices = append(devices, vnicDevice)
+	err = vm.AddDevice(context.Background(), vnicDevice)
 
-	config.DeviceChange, _ = devices.ConfigSpec(types.VirtualDeviceConfigSpecOperationAdd)
-	task, err := vm.Reconfigure(context.Background(), config)
-	if err != nil {
-		return err
-	}
-
-	err = task.Wait(context.Background())
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // RemoveVnic removes vnic info from the given vm
@@ -616,12 +602,15 @@ func (v *DVS) AddHost(host *Host) error {
 		ConfigNumPorts: 512,
 		DvsName:        v.Obj.Name,
 	}
-	// XXX should we not be doing Update on host object too ???
 	host.Obj.Config.Network.ProxySwitch = append(host.Obj.Config.Network.ProxySwitch, dvsProxy)
 	v.Obj.Config.GetDVSConfigInfo().Host = append(v.Obj.Config.GetDVSConfigInfo().Host, newMember)
 	d := simulator.Map.Get(v.Obj.Reference())
 	simulator.Map.Update(d, []types.PropertyChange{
 		{Name: "config", Val: v.Obj.Config},
+	})
+	h := simulator.Map.Get(host.Obj.Reference())
+	simulator.Map.Update(h, []types.PropertyChange{
+		{Name: "config", Val: host.Obj.Config},
 	})
 	return nil
 }
