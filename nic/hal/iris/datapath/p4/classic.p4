@@ -3,7 +3,8 @@
 /*****************************************************************************/
 action registered_macs(dst_lport, multicast_en, 
                        tunnel_rewrite_en, tunnel_rewrite_index, 
-                       dst_if_label, flow_learn, l4_profile_en, l4_profile_idx) {
+                       dst_if_label, flow_learn, l4_profile_en, l4_profile_idx,
+                       skip_ip_drop) {
     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
     modify_field(qos_metadata.qos_class_id, capri_intrinsic.tm_oq);
 
@@ -44,6 +45,7 @@ action registered_macs(dst_lport, multicast_en,
     if (l4_profile_en == TRUE) {
         modify_field(l4_metadata.profile_idx, l4_profile_idx);
     }
+    modify_field(control_metadata.skip_ip_drop, skip_ip_drop);
 
     // Miss Action
     if (p4plus_to_p4.dst_lport_valid == TRUE) {

@@ -139,6 +139,7 @@ header_type control_metadata_t {
         ep_learn_en                    : 1;
         nacl_egress_drop               : 1;
         has_prom_host_lifs             : 1;
+        skip_ip_drop                   : 1;
     }
 }
 

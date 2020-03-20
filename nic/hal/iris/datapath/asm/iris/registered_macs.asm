@@ -29,6 +29,7 @@ registered_macs:
   nop
 
 registered_macs_hit:
+  phvwr       p.control_metadata_skip_ip_drop, d.registered_macs_d.skip_ip_drop
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   bcf         [c1], registered_macs_unicast
 registered_macs_hit_common:

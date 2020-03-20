@@ -233,7 +233,8 @@ flow_miss:
 flow_miss_common:
   seq           c1, k.flow_lkp_metadata_lkp_vrf, r0
   bcf           [c1], flow_miss_input_properites_miss_drop
-  seq           c1, k.flow_lkp_metadata_lkp_proto, IP_PROTO_TCP
+  seq           c1, k.control_metadata_skip_ip_drop, FALSE
+  seq.c1        c1, k.flow_lkp_metadata_lkp_proto, IP_PROTO_TCP
   smneb         c2, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   seq           c3, k.l4_metadata_tcp_non_syn_first_pkt_drop, ACT_DROP
   setcf         c1, [c1 & c2 & c3]

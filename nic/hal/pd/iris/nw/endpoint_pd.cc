@@ -913,10 +913,14 @@ pd_ep_reg_mac_info (l2seg_t *ep_l2seg, l2seg_t *cl_l2seg, l2seg_t *hp_l2seg,
         } else {
             key.flow_lkp_metadata_lkp_reg_mac_vrf = cl_l2seg_pd->l2seg_fl_lkup_id;
         }
+        if (ep_l2seg == cl_l2seg) {
+            reg_mac.skip_ip_drop = true;
+        }
         reg_mac.multicast_en = 0;
         reg_mac.dst_if_label = pd_uplinkif_if_label(uplink_if);
         reg_mac.flow_learn = (ep_l2seg == hp_l2seg) ? 1 : 0;
         if (ep_l2seg == cl_l2seg) {
+            // TODO: Deprecate this. as l3 prof and reg_mac are in the same stage.
             // Pkts from Uplink destined to mgmt EPs, will have profile as 0, which will have all knobs off.
             reg_mac.l4_profile_en = 1;
             reg_mac.l4_profile_idx = L4_PROF_DEFAULT_ENTRY;

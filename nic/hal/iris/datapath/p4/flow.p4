@@ -56,7 +56,8 @@ action flow_miss() {
         drop_packet();
     }
 
-    if ((flow_lkp_metadata.lkp_proto == IP_PROTO_TCP) and
+    if ((control_metadata.skip_ip_drop == FALSE) and
+        (flow_lkp_metadata.lkp_proto == IP_PROTO_TCP) and
         ((tcp.flags & TCP_FLAG_SYN) != TCP_FLAG_SYN) and
         (l4_metadata.tcp_non_syn_first_pkt_drop == ACT_DROP)) {
         modify_field(control_metadata.drop_reason, DROP_TCP_NON_SYN_FIRST_PKT);
