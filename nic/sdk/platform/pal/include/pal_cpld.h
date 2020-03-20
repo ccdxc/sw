@@ -46,17 +46,17 @@
 #define CPLD_REV_0            0x0
 #define CPLD_REV_8            0x8
 
-//CPLD qsfp port number specifiers.
+// CPLD qsfp port number specifiers.
 #define QSFP_PORT1   1
 #define QSFP_PORT2   2
 
-//CPLD bits for QSFP LED.
+// CPLD bits for QSFP LED
 #define QSFP_LED_PORT1_GREEN_ON   0
 #define QSFP_LED_PORT1_YELLOW_ON  1
 #define QSFP_LED_PORT2_GREEN_ON   2
 #define QSFP_LED_PORT2_YELLOW_ON  3
 
-//Defines used for QSFP Frequency.
+// Defines used for QSFP Frequency
 #define QSFP_PORT1_GREEN_BLINK_SHIFT             0
 #define QSFP_PORT1_YELLOW_BLINK_SHIFT            2
 #define QSFP_PORT2_GREEN_BLINK_SHIFT             4
@@ -67,7 +67,7 @@
 #define QSFP_PORT2_GREEN_BLINK_MASK         ~(0x3 << QSFP_PORT2_GREEN_BLINK_SHIFT)
 #define QSFP_PORT2_YELLOW_BLINK_MASK        ~(0x3 << QSFP_PORT2_YELLOW_BLINK_SHIFT)
 
-//Defines used for MDIO IO operations
+// Defines used for MDIO IO operations
 #define MDIO_CRTL_LO_REG        0x6
 #define MDIO_CRTL_HI_REG        0x7
 #define MDIO_DATA_LO_REG        0x8
@@ -77,11 +77,12 @@
 #define MDIO_RD_ENA             0x2
 #define MDIO_WR_ENA             0x4
 
-//Others.
+// Others
 #define CPLD_MAX_RETRY              600
 #define CPLD_HWLOCK_MASK            0x07
 #define CPLD_READ_STATUS_MASK       0x31
 #define CPLD_COMPLETION_STATUS_BIT1 0x80
+#define CPLD_AUX_FAN_ON             0x10
 
 #define CPLD_CFG_FLASH_SIZE         (16 * 2175)
 #define CPLD_FLASH_TRANS_SIZE       16
@@ -153,4 +154,6 @@ int pal_write_qsfp_warning_temp(int data, int port);
 void pal_write_hbmwarning_temp(int data);
 void pal_write_hbmcritical_temp(int data);
 void pal_write_hbmfatal_temp(int data);
+int pal_enable_auxiliary_fan(void);
+int pal_disable_auxiliary_fan(void);
 #endif

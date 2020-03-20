@@ -48,13 +48,11 @@
 #define MAIN_POWER_OFF         0x02
 #define TEMP_SENSOR_ALERT      0x04
 #define TEMP_SENSOR_TRIP       0x08
+#define OCP_PWRBRK             0x10
 
 // CPLD control register bits
 #define ALOM_PRESENT           0x20
 #define HOST_POWER_ON          0x80
-
-// CPLD control2 register bits
-#define ALOM_FAN_ON            0x10
 
 namespace cpldmon {
 
@@ -182,7 +180,7 @@ get_cpld_int_enable()
 {
     int ret = cpld_reg_rd(CPLD_REGISTER_INTERRUPT_ENABLE);
     if (ret == -1)
-        CLOG_INFO("Error reading cpld interrupt enable register");
+        cpldmon_exit("Error reading cpld interrupt enable register", ret);
     if (debug)
         dump_cpld_int_enable(ret);
     return ret;
@@ -193,7 +191,7 @@ get_cpld_int_status()
 {
     int ret = cpld_reg_rd(CPLD_REGISTER_INTERRUPT_STATUS);
     if (ret == -1)
-        CLOG_INFO("Error reading cpld interrupt status register");
+        cpldmon_exit("Error reading cpld interrupt status register", ret);
     if (debug)
         dump_cpld_int_status(ret);
     return ret;
@@ -204,7 +202,7 @@ get_cpld_extended_int_enable()
 {
     int ret = cpld_reg_rd(CPLD_REGISTER_EXT_INTERRUPT_ENABLE);
     if (ret == -1)
-        CLOG_INFO("Error reading cpld extended interrupt enable register");
+        cpldmon_exit("Error reading cpld extended interrupt enable register", ret);
     if (debug)
         dump_cpld_extended_int_enable(ret);
     return ret;
@@ -215,7 +213,7 @@ get_cpld_extended_int_status()
 {
     int ret = cpld_reg_rd(CPLD_REGISTER_EXT_INTERRUPT_STATUS);
     if (ret == -1)
-        CLOG_INFO("Error reading cpld extended interrupt status register");
+        cpldmon_exit("Error reading cpld extended interrupt status register", ret);
     if (debug)
         dump_cpld_extended_int_status(ret);
     return ret;
@@ -231,23 +229,18 @@ cpld_clear_enable_interrupt(uint8_t interrupt)
     // Clear
     cpld_reg = cpld_reg_rd(CPLD_REGISTER_INTERRUPT_ENABLE);
     if (cpld_reg == -1) {
-        CLOG_ERROR("Error reading cpld interrupt enable register");
-        return cpld_reg;
+        cpldmon_exit("Error reading cpld interrupt enable register", ret);
     } else {
         regval = cpld_reg & ~interrupt;
         ret = cpld_reg_wr(CPLD_REGISTER_INTERRUPT_ENABLE, regval);
-        if (ret == -1) {
-            CLOG_ERROR("Error writing cpld interrupt enable register");
-            return ret;
-        }
+        if (ret == -1)
+            cpldmon_exit("Error writing cpld interrupt enable register", ret);
     }
     // Enable
     regval = cpld_reg | interrupt;
     ret = cpld_reg_wr(CPLD_REGISTER_INTERRUPT_ENABLE, regval);
-    if (ret == -1) {
-        CLOG_ERROR("Error writing cpld interrupt enable register");
-        return ret;
-    }
+    if (ret == -1)
+        cpldmon_exit("Error writing cpld interrupt enable register", ret);
     return 0;
 }
 
@@ -261,23 +254,18 @@ cpld_clear_enable_extended_interrupt(uint8_t interrupt)
     // Clear
     cpld_reg = cpld_reg_rd(CPLD_REGISTER_EXT_INTERRUPT_ENABLE);
     if (cpld_reg == -1) {
-        CLOG_ERROR("Error reading cpld extended interrupt enable register");
-        return cpld_reg;
+        cpldmon_exit("Error reading cpld extended interrupt enable register", ret);
     } else {
         regval = cpld_reg & ~interrupt;
         ret = cpld_reg_wr(CPLD_REGISTER_EXT_INTERRUPT_ENABLE, regval);
-        if (ret == -1) {
-            CLOG_ERROR("Error writing cpld extended interrupt enable register");
-            return ret;
-        }
+        if (ret == -1)
+            cpldmon_exit("Error writing cpld extended interrupt enable register", ret);
     }
     // Enable
     regval = cpld_reg | interrupt;
     ret = cpld_reg_wr(CPLD_REGISTER_EXT_INTERRUPT_ENABLE, regval);
-    if (ret == -1) {
-        CLOG_ERROR("Error writing cpld extended interrupt enable register");
-        return ret;
-    }
+    if (ret == -1)
+        cpldmon_exit("Error writing cpld extended interrupt enable register", ret);
     return 0;
 }
 
@@ -289,15 +277,14 @@ cpld_enable_interrupt(uint8_t interrupt)
 
     ret = cpld_reg_rd(CPLD_REGISTER_INTERRUPT_ENABLE);
     if (ret == -1) {
-        CLOG_INFO("Error reading cpld interrupt enable register");
+        cpldmon_exit("Error reading cpld interrupt enable register", ret);
     } else {
         regval = ret | interrupt;
         ret = cpld_reg_wr(CPLD_REGISTER_INTERRUPT_ENABLE, regval);
         if (ret == -1)
-            CLOG_INFO("Error writing cpld interrupt enable register");
+            cpldmon_exit("Error writing cpld interrupt enable register", ret);
         if (debug)
-            CLOG_INFO("{}: Interrupt enable register 0x{}",
-                           __func__, regval);
+            CLOG_INFO("{}: Interrupt enable register 0x{}", __func__, regval);
     }
     return ret;
 }
@@ -310,12 +297,12 @@ cpld_disable_interrupt(uint8_t interrupt)
 
     ret = cpld_reg_rd(CPLD_REGISTER_INTERRUPT_ENABLE);
     if (ret == -1) {
-        CLOG_INFO("Error reading cpld interrupt enable register");
+        cpldmon_exit("Error reading cpld interrupt enable register", ret);
     } else {
         regval = ret & ~interrupt;
         ret = cpld_reg_wr(CPLD_REGISTER_INTERRUPT_ENABLE, regval);
         if (ret == -1)
-            CLOG_INFO("Error writing cpld interrupt enable register");
+            cpldmon_exit("Error writing cpld interrupt enable register", ret);
         if (debug)
             CLOG_INFO("{}: Interrupt enable register 0x{}", __func__, regval);
     }
@@ -362,44 +349,6 @@ cpld_disable_extended_interrupt(uint8_t interrupt)
     return ret;
 }
 
-static int
-alom_fan_on()
-{
-    int ret;
-    uint8_t regval;
-   
-    ret = cpld_reg_rd(CPLD_REGISTER_CTRL2);
-    if (ret == -1) {
-        cpldmon_exit("Error reading cpld control 2 register", ret);
-    } else {
-        regval = ret | ALOM_FAN_ON;
-        ret = cpld_reg_wr(CPLD_REGISTER_CTRL2, regval);
-        if (ret == -1)
-            cpldmon_exit("Error writing cpld control 2 register", ret);
-        CLOG_INFO("ALOM fan turned on");
-    }
-    return 0;
-}
-
-static int
-alom_fan_off()
-{
-    int ret;
-    uint8_t regval;
-   
-    ret = cpld_reg_rd(CPLD_REGISTER_CTRL2);
-    if (ret == -1) {
-        cpldmon_exit("Error reading cpld control 2 register", ret);
-    } else {
-        regval = ret & ~ALOM_FAN_ON;
-        ret = cpld_reg_wr(CPLD_REGISTER_CTRL2, regval);
-        if (ret == -1)
-            cpldmon_exit("Error writing cpld control 2 register", ret);
-        CLOG_INFO("ALOM fan turned off");
-    }
-    return 0;
-}
-
 static int 
 get_card_power(float *power)
 {
@@ -417,6 +366,30 @@ get_card_power(float *power)
     }
     *power = (float)power_milliwatts/1000000.0;
     return 0;
+}
+
+bool
+naples25_swm(void) {
+    int ret;
+
+    ret = cpld_reg_rd(CPLD_REGISTER_ID);
+    if (ret == -1)
+        cpldmon_exit("Error reading cpld id register", ret);
+    if (ret == CPLD_ID_NAPLES25_SWM)
+        return true;
+    return false;
+}
+
+bool
+naples25_ocp(void) {
+    int ret;
+
+    ret = cpld_reg_rd(CPLD_REGISTER_ID);
+    if (ret == -1)
+        cpldmon_exit("Error reading cpld id register", ret);
+    if (ret == CPLD_ID_NAPLES25_OCP)
+        return true;
+    return false;
 }
 
 static void 
@@ -438,13 +411,8 @@ main(int argc, char *argv[])
     struct gpiohandle_data data;
     struct gpiochip_info cinfo;
     struct gpioline_info linfo;
-    uint8_t alom_present = 0;
-    uint8_t int_enable;
     uint8_t int_status;
-    uint8_t ext_int_enable;
     uint8_t ext_int_status;
-    uint8_t main_power_on;
-    uint8_t main_power_off;
     uint16_t cpld_interrupt_cnt = 0;
     uint16_t sfp_p1_present_cnt = 0;
     uint16_t sfp_p2_present_cnt = 0;
@@ -458,6 +426,8 @@ main(int argc, char *argv[])
     uint16_t main_power_off_cnt = 0;
     uint16_t temp_sensor_alert_cnt = 0;
     uint16_t temp_sensor_trip_cnt = 0;
+    uint16_t ocp_pwrbrk_cnt = 0;
+    bool power_break = false;
     float card_power;
     int cpld_cntl_reg;
     int opt;
@@ -513,7 +483,7 @@ main(int argc, char *argv[])
 
     sdk::platform::capri::csr_init();
 
-    // uboot should have set the core clock to 208MHz for SWM/OCP
+    // u-boot should have set the core clock to 208MHz for SWM/OCP
     if (get_card_power(&card_power) == 0)
         CLOG_INFO("Card power {} Watts", card_power);
 
@@ -531,16 +501,28 @@ main(int argc, char *argv[])
         }
     }
 
-    // Check PCIe standup mode.  If CPLD indicates ALOM is not present
-    // The core clock will be set to 416 MHz.
+    // Reboot after panic for single wire management cards otherwise
+    // management over shared LOM will not recover without chassis power cycle.
+    system("echo 1 > /sys/kernel/reboot/panic_reboot");
+
+    // Check PCIe standup mode.  If CPLD indicates ALOM is present
+    // check live status otherwise set the core clock to 416 MHz.
+    // Single wire management cards are set to 208 MHz in u-boot.
     cpld_cntl_reg = cpld_reg_rd(CPLD_REGISTER_CTRL);
     if (cpld_cntl_reg == -1) {
         cpldmon_exit("Error reading cpld control register for ALOM presence", cpld_cntl_reg);
     } else {
         CLOG_INFO("cpld control register: 0x{}", cpld_cntl_reg);
         if (cpld_cntl_reg & ALOM_PRESENT) {
-            alom_present = 1;
             CLOG_INFO("ALOM present");
+
+            // Live status check
+            if (cpld_cntl_reg & HOST_POWER_ON) {
+                cap_top_set_half_clock(0, 0);
+                sleep(2);
+                if (get_card_power(&card_power) == 0)
+                    CLOG_INFO("Main power is on, card power is now {} Watts", card_power);
+            }
         } else {
             CLOG_INFO("ALOM not present, core clock set to 416 MHz");
             cap_top_set_half_clock(0, 0);
@@ -548,23 +530,6 @@ main(int argc, char *argv[])
             if (get_card_power(&card_power) == 0)
                 CLOG_INFO("Card power {} Watts", card_power);
         }
-    }
-
-    // Set power state based upon live status
-    if (cpld_cntl_reg & HOST_POWER_ON) {
-        cap_top_set_half_clock(0, 0);
-        alom_fan_off();
-        sleep(2);
-        if (get_card_power(&card_power) == 0)
-            CLOG_INFO("Main power is on, card power is now {} Watts",
-                      card_power);
-    } else {
-        cap_top_set_quarter_core_clock_mode(0, 0);
-        alom_fan_on();
-        sleep(2);
-        if (get_card_power(&card_power) == 0)
-            CLOG_INFO("Main power is off, card power is now {} Watts",
-                      card_power);
     }
 
     // Configure CPLD to Capri GPIO interrupt
@@ -600,22 +565,29 @@ main(int argc, char *argv[])
     CLOG_INFO("Monitoring capri gpio line {} on {}",
               CPLD_CAPRI_INT_GPIO, device_name);
 
-    // Clear and enable interrupts for host power events. 
+    // Clear and enable interrupts
     cpld_clear_enable_extended_interrupt(MAIN_POWER_ON);
     cpld_clear_enable_extended_interrupt(MAIN_POWER_OFF);
     CLOG_INFO("Host power on/off interrupts enabled");
 
+    cpld_clear_enable_extended_interrupt(TEMP_SENSOR_ALERT);
+    cpld_clear_enable_extended_interrupt(TEMP_SENSOR_TRIP);
+    CLOG_INFO("Temperature alert and trip interrupts enabled");
+
+    if (naples25_ocp()) {
+        cpld_clear_enable_extended_interrupt(OCP_PWRBRK);
+        CLOG_INFO("OCP power break interrupt enabled");
+    }
+
     // Interrupt sources currently not used operationally
-    //cpld_enable_interrupt(SFP_P1_PRESENT);
-    //cpld_enable_interrupt(SFP_P2_PRESENT);
-    //cpld_enable_interrupt(SFP_P1_REMOVE);
-    //cpld_enable_interrupt(SFP_P2_REMOVE);
-    //cpld_enable_interrupt(MARVELL);
-    //cpld_enable_interrupt(SFP_P1_ERROR);
-    //cpld_enable_interrupt(SFP_P2_ERROR);
-    //cpld_enable_interrupt(TEST_INTERRUPT);
-    //cpld_enable_extended_interrupt(TEMP_SENSOR_ALERT);
-    //cpld_enable_extended_interrupt(TEMP_SENSOR_TRIP);
+    //cpld_clear_enable_interrupt(SFP_P1_PRESENT);
+    //cpld_clear_enable_interrupt(SFP_P2_PRESENT);
+    //cpld_clear_enable_interrupt(SFP_P1_REMOVE);
+    //cpld_clear_enable_interrupt(SFP_P2_REMOVE);
+    //cpld_clear_enable_interrupt(MARVELL);
+    //cpld_clear_enable_interrupt(SFP_P1_ERROR);
+    //cpld_clear_enable_interrupt(SFP_P2_ERROR);
+    //cpld_clear_enable_interrupt(TEST_INTERRUPT);
 
     // Main loop responds to CPLD to Capri interrupt
     while (1) {
@@ -653,30 +625,37 @@ main(int argc, char *argv[])
                 cpld_clear_enable_interrupt(SFP_P1_PRESENT);
                 CLOG_INFO("SFP P1 present interrupt ({})", ++sfp_p1_present_cnt);
             }
+
             if (int_status & SFP_P2_PRESENT) {
                 cpld_clear_enable_interrupt(SFP_P2_PRESENT);
                 CLOG_INFO("SFP P2 present interrupt ({})", ++sfp_p2_present_cnt);
             }
+
             if (int_status & SFP_P1_REMOVE) {
                 cpld_clear_enable_interrupt(SFP_P1_REMOVE);
                 CLOG_INFO("SFP P1 removed interrupt ({})", ++sfp_p1_remove_cnt);
             }
+
             if (int_status & SFP_P2_REMOVE) {
                 cpld_clear_enable_interrupt(SFP_P2_REMOVE);
                 CLOG_INFO("SFP P2 removed interrupt ({})", ++sfp_p2_remove_cnt);
             }
+
             if (int_status & MARVELL) {
                 cpld_clear_enable_interrupt(MARVELL);
                 CLOG_INFO("Marvell switch interrupt ({})", ++marvell_cnt);
             }
+
             if (int_status & SFP_P1_ERROR) {
                 cpld_clear_enable_interrupt(SFP_P1_ERROR);
                 CLOG_INFO("SFP P1 error ({})", ++sfp_p1_error_cnt);
             }
+
             if (int_status & SFP_P2_ERROR) {
                 cpld_clear_enable_interrupt(SFP_P2_ERROR);
                 CLOG_INFO("SFP P2 error ({})", ++sfp_p2_error_cnt);
             }
+
             if (int_status & TEST_INTERRUPT) {
                 // Toggle core clock between 208 and 416 MHz
                 CLOG_INFO("Test interrupt ({})", ++test_interrupt_cnt);
@@ -696,6 +675,12 @@ main(int argc, char *argv[])
 
             // CPLD extended interrupt status bit check
             ext_int_status = get_cpld_extended_int_status();
+
+            if (power_break && !(ext_int_status & OCP_PWRBRK)) {
+                CLOG_INFO("OCP clear power break");
+                power_break = false;
+            }
+
             if (ext_int_status & MAIN_POWER_ON) {
                 CLOG_INFO("Main power on interrupt ({})", ++main_power_on_cnt);
 
@@ -704,12 +689,12 @@ main(int argc, char *argv[])
 
                 cap_top_set_half_clock(0, 0);
                 cpld_clear_enable_extended_interrupt(MAIN_POWER_ON);
-                alom_fan_off();
 
                 sleep(2);
                 if (get_card_power(&card_power) == 0)
                     CLOG_INFO("AFTER: Card power {} Watts", card_power);
             }
+
             if (ext_int_status & MAIN_POWER_OFF) {
                 CLOG_INFO("Main power off interrupt ({})", ++main_power_off_cnt);
 
@@ -718,19 +703,35 @@ main(int argc, char *argv[])
 
                 cap_top_set_quarter_core_clock_mode(0, 0);
                 cpld_clear_enable_extended_interrupt(MAIN_POWER_OFF);
-                alom_fan_on();
 
                 sleep(2);
                 if (get_card_power(&card_power) == 0)
                     CLOG_INFO("AFTER: Card power {} Watts", card_power);
             }
+
             if (ext_int_status & TEMP_SENSOR_ALERT) {
                 cpld_clear_enable_extended_interrupt(TEMP_SENSOR_ALERT);
                 CLOG_INFO("Temp sensor alert interrupt ({})", ++temp_sensor_alert_cnt);
             }
+
             if (ext_int_status & TEMP_SENSOR_TRIP) {
                 cpld_clear_enable_extended_interrupt(TEMP_SENSOR_TRIP);
                 CLOG_INFO("Temp sensor trip interrupt ({})", ++temp_sensor_trip_cnt);
+            }
+
+            if (ext_int_status & OCP_PWRBRK) {
+                CLOG_INFO("OCP power break interrupt ({})", ++ocp_pwrbrk_cnt);
+
+                if (get_card_power(&card_power) == 0)
+                    CLOG_INFO("BEFORE: Card power {} Watts", card_power);
+
+                power_break = true;
+                cap_top_set_quarter_core_clock_mode(0, 0);
+                cpld_clear_enable_extended_interrupt(OCP_PWRBRK);
+
+                sleep(2);
+                if (get_card_power(&card_power) == 0)
+                    CLOG_INFO("AFTER: Card power {} Watts", card_power);
             }
             break;
         default:

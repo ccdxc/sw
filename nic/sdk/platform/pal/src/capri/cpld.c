@@ -169,6 +169,18 @@ pal_write_hbmfatal_temp(int data)
 {
 }
 
+int
+pal_enable_auxiliary_fan(void)
+{
+    return -1;
+}
+
+int
+pal_disable_auxiliary_fan(void)
+{
+    return -1;
+}
+
 #else
 #include <string.h>
 
@@ -596,5 +608,17 @@ void
 pal_power_cycle(void)
 {
     pal_write_gpios(GPIO_3_POWER_CYCLE, GPIO_EN);
+}
+
+int
+pal_enable_auxiliary_fan(void)
+{
+    return cpld_reg_bit_set(CPLD_REGISTER_CTRL2, CPLD_AUX_FAN_ON);
+}
+
+int
+pal_disable_auxiliary_fan(void)
+{
+    return cpld_reg_bit_reset(CPLD_REGISTER_CTRL2, CPLD_AUX_FAN_ON);
 }
 #endif
