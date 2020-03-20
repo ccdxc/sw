@@ -127,14 +127,15 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                               spec->host_if.str());
                 return SDK_RET_INVALID_ARG;
             }
-            if (unlikely(lif->type() != sdk::platform::LIF_TYPE_HOST)) {
+            if (unlikely(lif->type() != sdk::platform::LIF_TYPE_HOST &&
+                         lif->type() != sdk::platform::LIF_TYPE_VENDOR_INBAND)) {
                 PDS_TRACE_ERR("Incorrect type %u lif %s in vnic %s spec",
                               lif->type(), spec->host_if.str(),
                               spec->key.str());
                 return SDK_RET_INVALID_ARG;
             }
             if (lif->state() != sdk::types::LIF_STATE_UP) {
-                PDS_TRACE_ERR("Failed to reserve resources for vnic %s, hosot "
+                PDS_TRACE_ERR("Failed to reserve resources for vnic %s, host "
                               "lif %s is not up, current state %u", spec->key.str(),
                               spec->host_if.str(), lif->state());
                 return SDK_RET_RETRY;

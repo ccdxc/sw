@@ -180,17 +180,36 @@ get_set_interface_address_cmd (std::string if_name, ip_prefix_t ip_prefix)
     return std::string(cmd);
 }
 
+static inline std::string
+get_set_interface_hw_address_cmd (std::string if_name, mac_addr_t mac_addr)
+{
+    char cmd[PATH_MAX];
+
+    snprintf(cmd, PATH_MAX, "ip link set %s address %s",
+             if_name.c_str(), macaddr2str(mac_addr));
+    return std::string(cmd);
+}
+
 sdk_ret_t
 if_impl::activate_vendor_l3_if_(if_entry *intf, pds_if_spec_t *spec) {
     int rc;
     auto ifcmd = get_set_interface_address_cmd(
                     std::string(PDS_IMPL_VENDOR_L3_IF_NAME),
                     spec->vendor_l3_if_info.ip_prefix);
+    auto ifhwcmd = get_set_interface_hw_address_cmd(
+                    std::string(PDS_IMPL_VENDOR_L3_IF_NAME),
+                    spec->vendor_l3_if_info.mac_addr);
 
     PDS_TRACE_DEBUG("%s", ifcmd.c_str());
     rc = system(ifcmd.c_str());
     if (rc == -1) {
         PDS_TRACE_ERR("set mgmt if address failed with ret %d", rc);
+        return SDK_RET_ERR;
+    }
+
+    rc = system(ifhwcmd.c_str());
+    if (rc == -1) {
+        PDS_TRACE_ERR("set mgmt if mac address failed with ret %d", rc);
         return SDK_RET_ERR;
     }
 

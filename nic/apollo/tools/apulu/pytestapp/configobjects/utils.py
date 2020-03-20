@@ -1,5 +1,8 @@
 import enum
 
+def getnum2mac(mac):
+    return ':'.join(format(s, '02x') for s in bytes.fromhex(hex(mac)[2:].zfill(12)))
+
 def getmac2num(mac,reorder=False):
     by8 = mac.split(":")
     if len(by8) != 6:

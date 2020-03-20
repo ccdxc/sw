@@ -173,6 +173,11 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t create_learn_lif_(pds_lif_spec_t *spec);
 
+    ///< \brief    program necessary entries for vendor lif(s)
+    ///< \param[in] spec    lif configuration parameters
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t create_vendor_inband_lif_(pds_lif_spec_t *spec);
+
 private:
     ///< name of the lif
     pds_obj_key_t    key_;            //< lif key

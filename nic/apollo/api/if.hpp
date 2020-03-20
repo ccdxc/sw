@@ -291,6 +291,7 @@ private:
             } l3_;
             struct {
                 ip_prefix_t ip_pfx_;   ///< IP subnet of this interface
+                mac_addr_t mac_;       ///< MAC address of this interface
             } vendor_l3_;
         };
     } if_info_;

@@ -23,8 +23,9 @@ class L3IfObject():
         return
 
 class MgmtIfObject():
-    def __init__(self, prefix):
+    def __init__(self, prefix, macaddr):
         self.prefix      = ipaddress.IPv4Interface(prefix)
+        self.macaddr     = macaddr
         return
 
 
@@ -37,7 +38,7 @@ class InterfaceObject():
         if iftype == interface_pb2.IF_TYPE_L3:
             self.ifobj = L3IfObject( vpcid, prefix, portid, encap, macaddr, node_uuid )
         elif iftype == interface_pb2.IF_TYPE_VENDOR_L3:
-            self.ifobj = MgmtIfObject( prefix )
+            self.ifobj = MgmtIfObject( prefix, macaddr )
         return
 
     def GetGrpcCreateMessage(self):
@@ -58,4 +59,5 @@ class InterfaceObject():
             spec.VendorL3IfSpec.Prefix.Addr.Af = 1
             spec.VendorL3IfSpec.Prefix.Len = int(self.ifobj.prefix._prefixlen)
             spec.VendorL3IfSpec.Prefix.Addr.V4Addr = int(self.ifobj.prefix.ip)
+            spec.VendorL3IfSpec.MACAddress = utils.getmac2num(self.ifobj.macaddr,reorder=False)
         return grpcmsg

@@ -85,7 +85,8 @@ message LoopbackIfSpec {
 // Inband management/control interface configuration
 message VendorL3IfSpec {
   // IP address hosted on the inband control interface
-  types.IPPrefix Prefix = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPPrefix Prefix     = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint64         MACAddress = 2;
 }
 
 // InterfaceSpec is used to add or update of an interface

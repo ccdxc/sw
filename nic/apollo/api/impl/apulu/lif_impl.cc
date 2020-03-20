@@ -1208,6 +1208,52 @@ error:
 }
 
 sdk_ret_t
+lif_impl::create_vendor_inband_lif_(pds_lif_spec_t *spec) {
+    uint32_t idx;
+    sdk_ret_t ret;
+    nexthop_info_entry_t nexthop_info_entry;
+
+    strncpy(name_, spec->name, sizeof(name_));
+    PDS_TRACE_DEBUG("Creating vendor inband lif %s", name_);
+
+    // allocate vnic h/w id for this lif
+    if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate vnic h/w id for lif %u, err %u",
+                      id_, ret);
+        return ret;
+    }
+    vnic_hw_id_ = idx;
+
+    // allocate required nexthop to point to lif
+    ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate nexthop entry for learn lif %s, "
+                      "id %u, err %u", name_, id_, ret);
+        return ret;
+    }
+
+    // program the nexthop
+    memset(&nexthop_info_entry, 0, nexthop_info_entry.entry_size());
+    nexthop_info_entry.lif = id_;
+    nexthop_info_entry.port = TM_PORT_DMA;
+    ret = nexthop_info_entry.write(nh_idx_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for vendor lif %u "
+                      "at idx %u", id_, nh_idx_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    }
+
+    return SDK_RET_OK;
+
+error:
+
+    nexthop_impl_db()->nh_idxr()->free(nh_idx_);
+    nh_idx_ = 0xFFFFFFFF;
+    return ret;
+}
+
+sdk_ret_t
 lif_impl::create(pds_lif_spec_t *spec) {
     sdk_ret_t ret;
 
@@ -1234,9 +1280,7 @@ lif_impl::create(pds_lif_spec_t *spec) {
         ret = create_learn_lif_(spec);
         break;
     case sdk::platform::LIF_TYPE_VENDOR_INBAND:
-        // TODO
-        strncpy(name_, spec->name, sizeof(name_));
-        ret = SDK_RET_OK;
+        ret = create_vendor_inband_lif_(spec);
         break;
     default:
         return SDK_RET_INVALID_ARG;

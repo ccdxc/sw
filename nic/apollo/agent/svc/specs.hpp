@@ -579,6 +579,8 @@ pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
                 ippfx_api_spec_to_proto_spec(proto_vendor_l3_if->mutable_prefix(),
                                              &api_spec->vendor_l3_if_info.ip_prefix);
             }
+            proto_vendor_l3_if->set_macaddress(
+                MAC_TO_UINT64(api_spec->vendor_l3_if_info.mac_addr));
         }
         break;
     default:
@@ -690,6 +692,8 @@ pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
         api_spec->type = PDS_IF_TYPE_VENDOR_L3;
         ippfx_proto_spec_to_api_spec(&api_spec->vendor_l3_if_info.ip_prefix,
                                      proto_spec.vendorl3ifspec().prefix());
+        MAC_UINT64_TO_ADDR(api_spec->vendor_l3_if_info.mac_addr,
+                           proto_spec.vendorl3ifspec().macaddress());
         break;
 
     default:

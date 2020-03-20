@@ -92,6 +92,7 @@ typedef struct pds_loopback_info_s {
 /// \brief inband control interface specific configuration
 typedef struct pds_vendor_l3_if_s {
     ip_prefix_t    ip_prefix;     ///< IP address and subnet host on this intf
+    mac_addr_t     mac_addr;      ///< MAC address of this interface
 } __PACK__ pds_vendor_l3_if_t;
 
 /// \brief interface specification
