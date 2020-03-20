@@ -73,8 +73,8 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
     this.dataObjects = this.networkEventUtility.array;
     const sub = this.networkService.WatchNetwork().subscribe(
       response => {
-        this.networkEventUtility.processEvents(response);
-        this.dataObjects = this.dataObjects.filter((network: NetworkNetwork) => {
+        const data = this.networkEventUtility.processEvents(response);
+        this.dataObjects = data.filter((network: NetworkNetwork) => {
           return network && network.spec && network.spec.orchestrators &&
               network.spec.orchestrators.length > 0;
         });
