@@ -19,11 +19,13 @@ struct ionic_tx_stats {
 	u64 bytes;
 	u64 clean;
 	u64 linearize;
-	u64 no_csum;
+	u64 csum_none;
 	u64 csum;
 	u64 crc32_csum;
 	u64 tso;
+	u64 tso_bytes;
 	u64 frags;
+	u64 vlan_inserted;
 	u64 sg_cntr[IONIC_MAX_NUM_SG_CNTR];
 };
 
@@ -37,6 +39,7 @@ struct ionic_rx_stats {
 	u64 csum_error;
 	u64 buffers_posted;
 	u64 dropped;
+	u64 vlan_stripped;
 };
 
 #define IONIC_QCQ_F_INITED		BIT(0)
@@ -115,7 +118,8 @@ struct ionic_lif_sw_stats {
 	u64 rx_packets;
 	u64 rx_bytes;
 	u64 tx_tso;
-	u64 tx_no_csum;
+	u64 tx_tso_bytes;
+	u64 tx_csum_none;
 	u64 tx_csum;
 	u64 rx_csum_none;
 	u64 rx_csum_complete;

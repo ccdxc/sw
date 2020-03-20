@@ -213,18 +213,17 @@ static void ionic_rx_clean(struct ionic_queue *q,
 		}
 	}
 
-	if (likely(netdev->features & NETIF_F_RXCSUM)) {
-		if (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_CALC) {
-			skb->ip_summed = CHECKSUM_COMPLETE;
-			skb->csum = (__wsum)le16_to_cpu(comp->csum);
-			stats->csum_complete++;
+	if (likely(netdev->features & NETIF_F_RXCSUM) &&
+	    (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_CALC)) {
+		skb->ip_summed = CHECKSUM_COMPLETE;
+		skb->csum = (__wsum)le16_to_cpu(comp->csum);
+		stats->csum_complete++;
 #ifdef CSUM_DEBUG
-			if (skb->csum != (u16)~csum)
-				netdev_warn(netdev, "Rx CSUM incorrect. Want 0x%04x got 0x%04x, protocol 0x%04x\n",
-					    (u16)~csum, skb->csum,
-					    htons(skb->protocol));
+		if (skb->csum != (u16)~csum)
+			netdev_warn(netdev, "Rx CSUM incorrect. Want 0x%04x got 0x%04x, protocol 0x%04x\n",
+				    (u16)~csum, skb->csum,
+				    htons(skb->protocol));
 #endif
-		}
 	} else {
 		stats->csum_none++;
 	}
@@ -234,10 +233,11 @@ static void ionic_rx_clean(struct ionic_queue *q,
 		     (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_IP_BAD)))
 		stats->csum_error++;
 
-	if (likely(netdev->features & NETIF_F_HW_VLAN_CTAG_RX)) {
-		if (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_VLAN)
-			__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q),
-					       le16_to_cpu(comp->vlan_tci));
+	if (likely(netdev->features & NETIF_F_HW_VLAN_CTAG_RX) &&
+	    (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_VLAN)) {
+		__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q),
+				       le16_to_cpu(comp->vlan_tci));
+		stats->vlan_stripped++;
 	}
 
 	if (le16_to_cpu(comp->len) <= q->lif->rx_copybreak)
@@ -908,6 +908,7 @@ static int ionic_tx_tso(struct ionic_queue *q, struct sk_buff *skb)
 	stats->pkts += total_pkts;
 	stats->bytes += total_bytes;
 	stats->tso++;
+	stats->tso_bytes += total_bytes;
 
 	return 0;
 
@@ -985,9 +986,12 @@ static int ionic_tx_calc_no_csum(struct ionic_queue *q, struct sk_buff *skb)
 				  flags, skb_shinfo(skb)->nr_frags, dma_addr);
 	desc->cmd = cpu_to_le64(cmd);
 	desc->len = cpu_to_le16(skb_headlen(skb));
-	desc->vlan_tci = cpu_to_le16(skb_vlan_tag_get(skb));
+	if (has_vlan) {
+		desc->vlan_tci = cpu_to_le16(skb_vlan_tag_get(skb));
+		stats->vlan_inserted++;
+	}
 
-	stats->no_csum++;
+	stats->csum_none++;
 
 	return 0;
 }

@@ -286,8 +286,8 @@ void ionic_debugfs_add_qcq(struct ionic_lif *lif, struct ionic_qcq *qcq)
 				   &qcq->stats->tx.clean);
 		debugfs_create_u64("linearize", 0400, stats_dentry,
 				   &qcq->stats->tx.linearize);
-		debugfs_create_u64("no_csum", 0400, stats_dentry,
-				   &qcq->stats->tx.no_csum);
+		debugfs_create_u64("csum_none", 0400, stats_dentry,
+				   &qcq->stats->tx.csum_none);
 		debugfs_create_u64("csum", 0400, stats_dentry,
 				   &qcq->stats->tx.csum);
 		debugfs_create_u64("crc32_csum", 0400, stats_dentry,
