@@ -41,7 +41,7 @@ slhctx::calchash() {
                                                       params->key, NULL,
                                                       hwkey, NULL);
         SDK_ASSERT(p4pdret == P4PD_SUCCESS);
-        SLHASH_TRACE_PRINT("HW Key:[%s]", rawstr(hwkey, props->hwkey_len));
+        SLHASH_TRACE_DEBUG("HW Key:[%s]", rawstr(hwkey, props->hwkey_len));
         hash_32b = sdk::utils::crc32(hwkey, props->hwkey_len, props->hash_poly);
         hash_valid = true;
     } else {
@@ -53,7 +53,7 @@ slhctx::calchash() {
     index = hash_32b % props->table_size;
     index_valid = true;
 
-    SLHASH_TRACE_PRINT("Hash:%#x Index:%#x", hash_32b, index);
+    SLHASH_TRACE_DEBUG("Hash:%#x Index:%#x", hash_32b, index);
     return sdk::SDK_RET_OK;
 }
 
