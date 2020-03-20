@@ -174,6 +174,10 @@ jobs:
     labels: ["precommit"]
   iota/test/standalone/precheckin/freebsd:
     labels: ["daily"]
+  iota/test/standalone/precheckin/linux-rdma:
+    labels: ["daily"]
+  iota/test/standalone/precheckin/freebsd-rdma:
+    labels: ["daily"]
   iota/test/standalone/sanity/freebsd:
     labels: ["daily", "2xhourly"]
   iota/test/standalone/sanity/esx:
@@ -352,9 +356,16 @@ dependencies:
     - reference: test/ci_targets/cloud-e2e
   nic/asm:
     - reference: iota/test/venice
+      exclude_dirs: ["rdma"]
     - reference: iota/test/standalone/precheckin/esx
+      exclude_dirs: ["rdma"]
    # - reference: iota/test/standalone/precheckin/freebsd
+   #   exclude_dirs: ["rdma"]
     - reference: iota/test/standalone/precheckin/linux
+      exclude_dirs: ["rdma"]
+  nic/asm/rdma:
+    - reference: iota/test/standalone/precheckin/linux-rdma
+    - reference: iota/test/standalone/precheckin/freebsd-rdma
   nic/buildroot:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
@@ -404,9 +415,16 @@ dependencies:
     - reference: iota/test/standalone/precheckin/linux
   nic/p4:
     - reference: iota/test/venice
+      exclude_dirs: ["rdma"]
     - reference: iota/test/standalone/precheckin/esx
+      exclude_dirs: ["rdma"]
    # - reference: iota/test/standalone/precheckin/freebsd
+   #   exclude_dirs: ["rdma"]
     - reference: iota/test/standalone/precheckin/linux
+      exclude_dirs: ["rdma"]
+  nic/asm/rdma:
+    - reference: iota/test/standalone/precheckin/linux-rdma
+    - reference: iota/test/standalone/precheckin/freebsd-rdma
   nic/proto:
     - reference: api
     - reference: venice/ui
@@ -469,17 +487,27 @@ dependencies:
   nic/agent/dscagent/pipeline:
     - reference: nic/apollo/tools/apulu/sanity/base
       exclude_dirs: ["iris"]
-  platform/drivers:
+  platform/drivers/esxi:
     - reference: iota/test/standalone/precheckin/esx
-      exclude_dirs: ["freebsd"]
-    - reference: iota/test/standalone/precheckin/freebsd
-      exclude_dirs: ["linux","esxi"]
-    - reference: iota/test/standalone/precheckin/linux
-      exclude_dirs: ["freebsd","esxi"]
+  platform/drivers/freebsd:
+    - reference: iota/test/standalone/precheckin/freebsd-rdma
+  platform/drivers/linux:
+    - reference: iota/test/standalone/precheckin/linux-rdma
+    - reference: iota/test/standalone/precheckin/esx
+      exclude_dirs: ["rdma"]
     - reference: iota/test/standalone/sanity/apulu-networking
-      exclude_dirs: ["freebsd","esxi"]
+      exclude_dirs: ["rdma"]
     - reference: iota/test/standalone/sanity/apulu-networking-scale
-      exclude_dirs: ["freebsd","esxi"]
+      exclude_dirs: ["rdma"]
+  platform/drivers/common:
+    - reference: iota/test/standalone/precheckin/linux-rdma
+    - reference: iota/test/standalone/precheckin/freebsd-rdma
+    - reference: iota/test/standalone/precheckin/esx
+      exclude_dirs: ["rdma"]
+    - reference: iota/test/standalone/sanity/apulu-networking
+      exclude_dirs: ["rdma"]
+    - reference: iota/test/standalone/sanity/apulu-networking-scale
+      exclude_dirs: ["rdma"]
   platform/src/app/asicerrord:
     - reference: iota/test/standalone/precheckin/linux
   platform/src/app/captrace:

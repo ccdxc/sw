@@ -1,0 +1,49 @@
+---
+version: 2.0
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/iota/test/standalone"
+
+queue_name: baremetal
+
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
+e2e-targets:
+ # baremetal RDMA
+ e2e-linux-bm-rdma:
+   commands: ["sh", "-c", "make linux && ./run_iota.sh --testsuite transparent_basenet --precheckin --testbundle rdma,lif_telemetry,filters,subifs,rx_mode,ionicdrv,obfl_check,interrupts_check,cpldupgrade,hpe-ilo"]
+   owners: ["email:aboyer@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+     - build-iris-arm-elba
+   clusters:
+     - image: build-17
+       count: 2
+       resources:
+         servers:
+           - type: server-a
+           - type: hpe
+         # nic-type can be naples, mellanox, or raw
+         nic-type: naples
+         # Required when RDMA is enabled
+         constraints:
+           same-switch: true
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+logfiles:
+  - /sw/iota/iota_sanity_logs.tar.gz
+  - /sw/iota/logs/transparent_basenet/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node1
+  - /sw/iota/logs/transparent_basenet/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node2
+  - /sw/iota/logs/transparent_basenet/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node1
+  - /sw/iota/logs/transparent_basenet/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node2
+  - /sw/iota/all_corefiles.tgz
