@@ -133,11 +133,6 @@ export class NewdestinationComponent extends BaseComponent implements OnInit, Af
     }
   }
 
-  isFieldEmpty(field: AbstractControl): boolean {
-    return Utility.isEmpty(field.value);
-  }
-
-
   saveDestination() {
     let handler: Observable<{ body: IMonitoringAlertDestination | IApiStatus | Error, statusCode: number }>;
     const destination: IMonitoringAlertDestination = this.newDestination.getFormGroupValues();

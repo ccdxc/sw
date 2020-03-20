@@ -245,9 +245,6 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
 
   }
 
-  isFieldEmpty(field: AbstractControl): boolean {
-    return Utility.isEmpty(field.value);
-  }
 
   formControls(): AbstractControl[] {
     return (this.newObject.$formGroup.get(['spec', 'interfaces']) as FormArray).controls;

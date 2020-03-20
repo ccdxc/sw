@@ -88,7 +88,7 @@
     </ng-container>
     <ng-container *ngSwitchCase="'utilization'">
       <div class="dscprofile-dsc-div-utilization"
-           [matTooltip]="'Assigned to ' + rowData._ui['associatedDSCS'].length + ' DSCs'">
+           [matTooltip]="'Assigned to ' + ((rowData._ui.associatedDSCS && rowData._ui.associatedDSCS.length) ? rowData._ui.associatedDSCS.length : 0 ) + ' DSCs'">
         {{rowData._ui['associatedDSCSPercentile'] | percent}} </div>
     </ng-container>
 

@@ -221,9 +221,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   }
   */
 
-  isFieldEmpty(field: AbstractControl): boolean {
-    return Utility.isEmpty(field.value);
-  }
+
 
   isFormValid(): boolean {
     // vs-1021 packet-filters can be empty

@@ -1,0 +1,34 @@
+<div *ngIf="inEditMode" class="ui-widget-overlay ui-dialog-mask" style="z-index:10"></div>
+<div *ngIf="dialogMode" fxFlex="nogrow">
+  <p-dialog #dialog [header]="header"
+            [(visible)]="inEditMode" fxFlex fxLayout="row wrap" (onHide)="cancel()"
+            [draggable]="true" [focusOnShow]="false">
+    <ng-container *ngTemplateOutlet="body"></ng-container>
+  </p-dialog>
+</div>
+<div *ngIf="!dialogMode">
+  <div>
+    <ng-container *ngTemplateOutlet="body"></ng-container>
+  </div>
+</div>
+
+<ng-template #body>
+  <div fxLayout="column" fxFlex="100" class="dscprofilesetter-plist" fxLayoutAlign="start center">
+    <p-listbox [options]="selections" checkbox="checkbox" filter="filter" fxFlex="100"
+               *ngIf="selections && selections.length>0" [showToggleAll]="true"
+               [(ngModel)]="selectedOption" checkbox="true" [optionLabel]="optionLabel">
+    </p-listbox>
+    <div fxLayout="row" fxLayoutAlign="end center">
+      <div fxFlexFill></div>
+      <button fxFlex="100px" [disabled]="selectedOption==null"
+              class="global-button-primary  dscprofilesetter-plist-label-editor-button dscprofilesetter-plist-label-editor-save"
+              [ngClass]="selectedOption != null? '' : 'global-button-disabled'"
+              (click)="onSave($event)">SAVE
+      </button>
+      <button fxFlex="100px"
+              class="global-button-neutral  dscprofilesetter-plist-label-editor-button dscprofilesetter-plist-label-editor-cancel"
+              (click)="onCancel($event)">Cancel
+      </button>
+    </div>
+  </div>
+</ng-template>

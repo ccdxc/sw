@@ -336,9 +336,7 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
     return 'Updated policy ' + object.meta.name;
   }
 
-  isFieldEmpty(field: AbstractControl): boolean {
-    return Utility.isEmpty(field.value);
-  }
+
 
   isTimeoutValid(fieldName: string): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {

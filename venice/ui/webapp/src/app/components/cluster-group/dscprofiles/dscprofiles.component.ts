@@ -148,12 +148,13 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
    * Fetch DSC Profiles records
    */
   watchDSCProfiles() {
-    this.dscprofilesEventUtility = new HttpEventUtility<ClusterDSCProfile>(ClusterDSCProfile, false, null, true); // https://pensando.atlassian.net/browse/VS-93 we want to trim the object
-    this.dataObjects = this.dscprofilesEventUtility.array;
-    const subscription = this.clusterService.WatchDSCProfile().subscribe(
+    const subscription = this.clusterService.ListDSCProfileCache().subscribe(
       response => {
-        this.dscprofilesEventUtility.processEvents(response);
-        this.handleDataReady();
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.dataObjects  = response.data;
+        this.handleDataReady(); // process DSCProfile. Note: At this this moment, this.selectedObj may not be available
       },
       this._controllerService.webSocketErrorHandler('Failed to get DSC Profile')
     );
@@ -200,7 +201,7 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
       }
     }
     const pendingDSCNames: DSCMacName[] = [];
-    for (let k = 0; k < dscProfile.status['propagation-status']['pending-dscs'].length; k++) {
+    for (let k = 0; dscProfile.status['propagation-status']['pending-dscs'] && k < dscProfile.status['propagation-status']['pending-dscs'].length; k++) {
       const mac = dscProfile.status['propagation-status']['pending-dscs'][k];
       const name = this.macToNameMap[mac];
       pendingDSCNames.push({ mac: mac, name: name });

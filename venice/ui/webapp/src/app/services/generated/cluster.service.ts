@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { ControllerService } from '@app/services/controller.service';
-import { ClusterDistributedServiceCard, ClusterHost } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterHost, ClusterDSCProfile } from '@sdk/v1/models/generated/cluster';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 import { Clusterv1Service } from '@sdk/v1/services/generated/clusterv1.service';
@@ -19,6 +19,7 @@ export class ClusterService extends Clusterv1Service {
   public  DATA_CACHE_TYPE_DSC = 'DistributedServiceCards';
   public  DATA_CACHE_TYPE_HOST = 'Hosts';
   public  DATA_CACHE_TYPE_NODE = 'Nodes';
+  public  DATA_CACHE_TYPE_DSCPRPOFILE = 'DSCProfile';
 
   // Attributes used by generated services
   protected O_Tenant: string = this.getTenant();
@@ -38,6 +39,8 @@ export class ClusterService extends Clusterv1Service {
       this.serviceUtility.setId(this.getClassName());
       this.serviceUtility.createDataCache<ClusterDistributedServiceCard>(ClusterDistributedServiceCard, this.DATA_CACHE_TYPE_DSC, () => this.ListDistributedServiceCard(), (body: any) => this.WatchDistributedServiceCard(body));
       this.serviceUtility.createDataCache<ClusterHost>(ClusterHost, this.DATA_CACHE_TYPE_HOST, () => this.ListHost(), (body: any) => this.WatchHost(body));
+      this.serviceUtility.createDataCache<ClusterDSCProfile>(ClusterDSCProfile, this.DATA_CACHE_TYPE_DSCPRPOFILE, () => this.ListDSCProfile(), (body: any) => this.WatchDSCProfile(body));
+
   }
 
   /**
@@ -53,6 +56,10 @@ export class ClusterService extends Clusterv1Service {
 
   public ListHostCache() {
     return this.serviceUtility.handleListFromCache(this.DATA_CACHE_TYPE_HOST);
+  }
+
+  public ListDSCProfileCache() {
+    return this.serviceUtility.handleListFromCache(this.DATA_CACHE_TYPE_DSCPRPOFILE);
   }
 
 

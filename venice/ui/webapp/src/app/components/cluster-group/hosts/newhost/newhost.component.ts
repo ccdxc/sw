@@ -389,9 +389,7 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
       this.saveBatchMode();
     }
   }
-  isFieldEmpty(field: AbstractControl): boolean {
-    return Utility.isEmpty(field.value);
-  }
+
   getTooltip() {
     return this.createButtonTooltip;
   }

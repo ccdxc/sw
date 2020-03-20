@@ -291,4 +291,8 @@ export class BaseComponent implements OnInit {
     });
   }
 
+  isFieldEmpty(field: AbstractControl): boolean {
+    return Utility.isEmpty(field.value);
+  }
+
 }

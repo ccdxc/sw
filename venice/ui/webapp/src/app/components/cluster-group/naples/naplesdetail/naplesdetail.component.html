@@ -3,28 +3,21 @@
     <ng-container *ngTemplateOutlet="detailsTable"></ng-container>
     <div fxFlex="none" fxLayout="row wrap" class="naplesdetail-card-container">
       <ng-container *ngFor="let cardData of heroCards">
-        <app-herocard fxFlex="nogrow"
-                      [title]="cardData.title"
-                      [firstStat]="cardData.firstStat"
-                      [secondStat]="cardData.secondStat"
-                      [thirdStat]="cardData.thirdStat"
+        <app-herocard fxFlex="nogrow" [title]="cardData.title" [firstStat]="cardData.firstStat"
+                      [secondStat]="cardData.secondStat" [thirdStat]="cardData.thirdStat"
                       [backgroundIcon]="cardData.backgroundIcon"
-                      [themeColor]="cardData.themeColor"
-                      [icon]="cardData.icon"
+                      [themeColor]="cardData.themeColor" [icon]="cardData.icon"
                       [lineData]="cardData.lineData"
-                      [arrowDirection]="cardData.arrowDirection"
-                      [lastUpdateTime]="lastUpdateTime"
+                      [arrowDirection]="cardData.arrowDirection" [lastUpdateTime]="lastUpdateTime"
                       [cardState]="cardData.cardState">
         </app-herocard>
       </ng-container>
     </div>
     <div fxFlex="none" fxLayout="row wrap" class="naplesdetail-card-container">
       <ng-container *ngFor="let item of graphConfigs">
-        <app-telemetrychartview class="naplesdetail-chart-item"
-                                fxFlex="nogrow"
+        <app-telemetrychartview class="naplesdetail-chart-item" fxFlex="nogrow"
                                 [hideEditButtons]="true"
-                                [selectedTimeRange]="selectedTimeRange"
-                                [chartConfig]="item">
+                                [selectedTimeRange]="selectedTimeRange" [chartConfig]="item">
         </app-telemetrychartview>
       </ng-container>
     </div>
@@ -38,7 +31,8 @@
   <!-- Deletion screen overlay displays when the policy we are viewing is deleted -->
   <!-- Missing screen overlay displays when the policy does not exist-->
   <div #overlay *ngIf="showDeletionScreen || showMissingScreen" fxLayout="row"
-       fxLayoutAlign="center stretch" class="naplesdetail-overlay">
+       fxLayoutAlign="center stretch"
+       class="naplesdetail-overlay">
     <div fxFlex="50%" fxLayout="column" class="naplesdetail-overlay-content">
       <div fxFlex='20%'></div>
       <div *ngIf="showDeletionScreen" fxFlex='15%' class="naplesdetail-deleted-node"></div>
@@ -128,13 +122,11 @@
                      [matTooltip]="selectedObj.status['admission-phase'] === 'rejected' || selectedObj.status['admission-phase'] === 'pending' ? selectedObj.status['adm-phase-reason'] : ''">
                   {{ selectedObj ? admissionPhaseEnum[selectedObj.status['admission-phase']] : '' }}
                   <mat-icon *ngIf="selectedObj.status['admission-phase'] === 'rejected'"
-                            fxFlex="nogrow"
-                            [inline]="true"
+                            fxFlex="nogrow" [inline]="true"
                             class="global-alert-warning-icon naplesdetail-phase-icon">error
                   </mat-icon>
                   <mat-icon *ngIf="selectedObj.status['admission-phase'] === 'pending'"
-                            fxFlex="nogrow"
-                            [inline]="true"
+                            fxFlex="nogrow" [inline]="true"
                             class="global-alert-info-icon naplesdetail-phase-icon">notifications
                   </mat-icon>
                 </div>
@@ -195,6 +187,15 @@
               <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
                    fxLayoutAlign="start center">
                 <div>DSC Profile:</div>
+                <mat-icon matTooltip="Edit DSC Profile" class="global-table-action-icon"
+                          (click)="assignDSCProfile()"
+                          *roleGuard="'clusterdscprofile_update'">edit
+                </mat-icon>
+                <app-dscprofilesetter [inEditMode]="inProfileAssigningMode"
+                                      [selections]="dscprofileOptions"
+                                      (saveEmitter)="handleSetDSCProfileSave($event)"
+                                      (cancelEmitter)="handleSetDSCProfileCancel($event)">
+                </app-dscprofilesetter>
               </div>
             </div>
             <div fxFlex="40px"></div>
@@ -233,7 +234,8 @@
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
                    class="naplesdetail-node-value">
                 <div class="naplesdetail-panel-auto-admit-nics">
-                  <a routerLink="/cluster/dscprofiles"> {{ selectedObj?.spec.dscprofile }}</a>
+                  <a [routerLink]="['/cluster/dscprofiles']"
+                     [queryParams]="{ dscprofile: selectedObj?.spec.dscprofile  }">{{ selectedObj?.spec.dscprofile }}</a>
                 </div>
               </div>
             </div>
@@ -310,7 +312,8 @@
           <!-- Values -->
           <div class="naplesdetail-node-value" fxFlex="200px">
             <p-table [value]="genKeys()" *ngIf="ifLabelExists()" [autoLayout]="true"
-                     [scrollable]="true" scrollHeight="150px" [resizableColumns]="true">
+                     [scrollable]="true"
+                     scrollHeight="150px" [resizableColumns]="true">
               <ng-template pTemplate="header">
                 <tr>
                   <th>Key</th>

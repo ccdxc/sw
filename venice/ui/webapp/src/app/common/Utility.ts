@@ -1741,7 +1741,7 @@ export class Utility {
     const helperFunc = (obj): boolean => {
       let retValue = true;
       for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
+        if (key !== '_ui' && obj.hasOwnProperty(key)) {  // keep "_ui" field
           if (_.isObjectLike(obj[key])) {
             if (helperFunc(obj[key])) {
               delete obj[key];

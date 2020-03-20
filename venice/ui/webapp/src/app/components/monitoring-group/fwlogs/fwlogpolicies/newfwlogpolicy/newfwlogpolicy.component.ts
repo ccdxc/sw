@@ -120,9 +120,7 @@ export class NewfwlogpolicyComponent extends CreationForm<IMonitoringFwlogPolicy
       }
     }
   }
-  isFieldEmpty(field: AbstractControl): boolean {
-    return Utility.isEmpty(field.value);
-  }
+
   getTooltip() {
     if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
       return 'Error: Name field is empty.';

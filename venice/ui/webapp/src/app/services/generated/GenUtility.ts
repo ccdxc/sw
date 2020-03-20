@@ -372,8 +372,17 @@ export class GenServiceUtility {
     if (this.cacheMap[key]) {
       return this.cacheMap[key];
     } else {
-      console.error('GenUtility.ts handleListFromCache() re-run createDataCache()');  // VS-1306.
-      return this.createDataCache(this._createCacheConfigMap[key].constructor, this._createCacheConfigMap[key].key, this._createCacheConfigMap[key].listFn, this._createCacheConfigMap[key].watchFn);
+      // VS-1306. If browser is idle for a while. User is logged out. But Venice-UI is on browser and ClusterService object exists. We try to re-build the cache.
+      console.error('GenUtility.ts handleListFromCache() re-run createDataCache()', JSON.stringify(this._createCacheConfigMap), key);  // VS-1306.
+      if (this._createCacheConfigMap[key]) {
+        return this.createDataCache(this._createCacheConfigMap[key].constructor, this._createCacheConfigMap[key].key, this._createCacheConfigMap[key].listFn, this._createCacheConfigMap[key].watchFn);
+      } else {
+        if (Utility.getInstance().getControllerService()) {
+          Utility.getInstance().getControllerService().invokeErrorToaster('Session Expired', 'Please refresh your browser');
+        } else {
+          alert('Session Expired. Please refresh your browser');
+        }
+      }
     }
   }
 

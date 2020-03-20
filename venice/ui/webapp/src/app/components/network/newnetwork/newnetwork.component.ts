@@ -217,8 +217,4 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
     return 'Updated network ' + object.meta.name;
   }
 
-  isFieldEmpty(field: AbstractControl): boolean {
-    return Utility.isEmpty(field.value);
-  }
-
 }

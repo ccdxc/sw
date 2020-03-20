@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
 import { Animations } from '@app/animations';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
-import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase_uihint, IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase_uihint, IClusterDistributedServiceCard, ClusterDSCProfile } from '@sdk/v1/models/generated/cluster';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { MetricsUtility } from '@app/common/MetricsUtility';
@@ -32,6 +32,7 @@ import { SearchService } from '@app/services/generated/search.service';
 import { SearchSearchRequest } from '@sdk/v1/models/generated/search';
 import { BrowserService } from '@app/services/generated/browser.service';
 import { IBrowserBrowseRequestList, BrowserBrowseRequestList, BrowserBrowseResponseList } from '@sdk/v1/models/generated/browser';
+import { SelectItem } from 'primeng/api';
 
 /**
  * This component displays DSC detail information.
@@ -126,6 +127,12 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   networkInterfaces: NetworkNetworkInterface[] = [];
   allNetworkInterfaces: NetworkNetworkInterface[] = [];
 
+  inProfileAssigningMode: boolean = false;
+
+
+  dscprofiles: ReadonlyArray<ClusterDSCProfile> = [];
+  dscprofileOptions: SelectItem[] = [];
+
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute,
     private _router: Router,
@@ -173,6 +180,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.getNetworkInterfaces();
     this.getNaplesDetails();
     this.setNapleDetailToolbar(this.selectedId); // Build the toolbar with naple.id first. Toolbar will be over-written when naple object is available.
+
   }
 
   searchDsc() {
@@ -211,7 +219,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   /**
    * This function find all NetworkInterfaces (NIs) belong to this.selectedObj (currrent DSC)
    */
-  getDSCNetworkInterfaces() {
+  getThisDSCNetworkInterfaces() {
     const list: NetworkNetworkInterface[] = [];
     if (this.allNetworkInterfaces) {
       this.allNetworkInterfaces.forEach((networkNetworkInterface: NetworkNetworkInterface) => {
@@ -223,23 +231,62 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.networkInterfaces = list;
   }
 
+
   /**
    * Retrieve network interfaces objects ( whole list of NIs)
    */
   getNetworkInterfaces() {
     if (this.uiconfigsService.isAuthorized(UIRolePermissions.networknetworkinterface_read)) {
-      // https://10.30.2.173/configs/network/v1/networkinterfaces
-      // {"kind":"NetworkInterfaceList","api-version":"v1","list-meta":{},"items":[{"kind":"NetworkInterface","api-version":"v1","meta":{"name":"aaaa.bbbb.0014-lif2","self-link":"/configs/network/v1/networkinterfaces/aaaa.bbbb.0014-lif2"}},{"kind":"NetworkInterface","api-version":"v1","meta":{"name":"aaaa.bbbb.0014-uplink128","self-link":"/configs/network/v1/networkinterfaces/aaaa.bbbb.0014-uplink128"}}]}
-      // use aaaa.bbbb.0014-lif2 and  aaaa.bbbb.0014-uplink128 to find mapping between DSC and interface (LIF or uplink)
-      this.networkService.ListNetworkInterface().subscribe(
+      const dscSubscription = this.networkService.ListNetworkInterfacesCache().subscribe(
+        (response) => {
+          if (response.connIsErrorState) {
+            return;
+          }
+          this.allNetworkInterfaces = response.data as NetworkNetworkInterface[];
+          if (this.allNetworkInterfaces && this.allNetworkInterfaces.length > 0) {
+            this.getThisDSCNetworkInterfaces();  // find all NIs belong to current DSC
+          }
+        }
+      );
+      this.subscriptions.push(dscSubscription);
+      /* this.networkService.ListNetworkInterface().subscribe(
         (response) => {
           const body: INetworkNetworkInterfaceList = response.body as INetworkNetworkInterfaceList;
           this.allNetworkInterfaces = body.items as NetworkNetworkInterface[];
           if (this.allNetworkInterfaces && this.allNetworkInterfaces.length > 0) {
-            this.getDSCNetworkInterfaces();  // find all NIs belong to current DSC
+            this.getThisDSCNetworkInterfaces();  // find all NIs belong to current DSC
           }
         }
-      );
+      ); */
+    }
+  }
+
+  getDSCProfiles() {
+    const subscription = this.clusterService.ListDSCProfileCache().subscribe(
+      response => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.dscprofiles = response.data;
+        this.processDSCProfiles(); // process DSCProfile. Note: At this this moment, this.selectedObj may not be available
+      },
+      this._controllerService.webSocketErrorHandler('Failed to get DSC Profile')
+    );
+    this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
+  }
+
+  private processDSCProfiles() {
+    if (this.dscprofiles && this.dscprofiles.length > 0) {
+      this.dscprofileOptions = [];
+      this.dscprofiles.forEach((dscprofile: ClusterDSCProfile) => {
+        if (!(this.selectedObj && this.selectedObj.spec.dscprofile === dscprofile.meta.name)) {
+          const obj: SelectItem = {
+            value: dscprofile.meta.name,
+            label: dscprofile.meta.name
+          };
+          this.dscprofileOptions.push(obj);
+        }
+      });
     }
   }
 
@@ -269,7 +316,6 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.avgData = null;
     this.avgDayData = null;
     this.clusterAvgData = null;
-    this.objList = [];
     this.selectedObj = null;
     this.alertseventsSelector = null;
     this.showExpandedDetailsCard = true;
@@ -397,7 +443,10 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           if (!this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS] || this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS].length === 0) {
             this.browseDSCWorkload();
           }
-          this.getDSCNetworkInterfaces();
+          // Wait until we got DSC object, then fetch DSC-profile and networkinterfaces or this DSC.
+          // Since we use ListNetworkInterface()
+          this.getDSCProfiles();
+          this.getThisDSCNetworkInterfaces();
         }
       },
       this._controllerService.webSocketErrorHandler('Failed to get NAPLES')
@@ -722,4 +771,42 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   isNICNotAdmitted(data: Readonly<ClusterDistributedServiceCard>): boolean {
     return Utility.isNICConditionNotAdmitted(data);
   }
+
+  // update dsc profile
+
+  assignDSCProfile() {
+    this.inProfileAssigningMode = !this.inProfileAssigningMode;
+  }
+
+  /**
+   * Update DSC with new DSC-profile name
+   * Only if DSC's existing profile is different from the newly chosen one.
+   */
+  handleSetDSCProfileSave(option: SelectItem) {
+    const naplesObject = new ClusterDistributedServiceCard(this.selectedObj);
+    const name = naplesObject.meta.name;
+    if (naplesObject.spec.dscprofile !== option.value) {
+      naplesObject.spec.dscprofile = option.value;
+      // udpdate DSC without trimming
+      const sub = this.clusterService.UpdateDistributedServiceCard(name, naplesObject, '', this.selectedObj, false).subscribe(
+        response => {
+          this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, `Successfully updated ${name}'s profile`);
+          this.inProfileAssigningMode = false;
+        },
+        error => {
+          this._controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
+          this.inProfileAssigningMode = false;
+        }
+      );
+      this.subscriptions.push(sub);
+    } else {
+      this._controllerService.invokeInfoToaster('Info', naplesObject.spec.id + ' is already set to profile ' + option.value);
+      this.inProfileAssigningMode = false;
+    }
+  }
+
+  handleSetDSCProfileCancel($event) {
+    this.inProfileAssigningMode = false;
+  }
+
 }

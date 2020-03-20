@@ -220,9 +220,6 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
     this.subscriptions.push(subscription);
   }
 
-  isFieldEmpty(field: AbstractControl): boolean {
-    return Utility.isEmpty(field.value);
-  }
 
   // Empty Hook
   isFormValid() {

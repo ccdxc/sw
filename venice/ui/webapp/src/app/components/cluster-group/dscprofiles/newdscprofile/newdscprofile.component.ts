@@ -156,7 +156,4 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
     return true;
   }
 
-  isFieldEmpty(field: AbstractControl): boolean {
-    return Utility.isEmpty(field.value);
-  }
 }

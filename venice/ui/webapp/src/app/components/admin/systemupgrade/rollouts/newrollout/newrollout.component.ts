@@ -132,11 +132,6 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     super(controllerService);
   }
 
-
-  isFieldEmpty(field: AbstractControl): boolean {
-    return Utility.isEmpty(field.value);
-  }
-
   getClassName(): string {
     return this.constructor.name;
   }

@@ -105,12 +105,12 @@
                     *ngIf="this.tableContainer.selectedDataObjects.length>0"
                     [matTooltip]="'Assign DSC profile to selected DSC'"
                     (click)="assignDSCProfile()">book</mat-icon>
-          <p-dialog #dialog [header]="'Assign one profile to DSCs'"
-                    [(visible)]="inProfileAssigningMode" fxFlex fxLayout="row wrap"
-                    (onHide)="cancelDSCProfileDialog()"
-                    [draggable]="false" [focusOnShow]="false">
-            <ng-container *ngTemplateOutlet="profileSelect"></ng-container>
-          </p-dialog>
+          <app-dscprofilesetter [inEditMode]="inProfileAssigningMode"
+                                [selections]="dscprofileOptions"
+                                (saveEmitter)="handleSetDSCProfileSave($event)"
+                                (cancelEmitter)="handleSetDSCProfileCancel($event)">
+          </app-dscprofilesetter>
+
         </div>
       </app-tableheader>
     </div>
@@ -164,7 +164,8 @@
         {{formatLabels(rowData.meta.labels)}}
       </ng-container>
       <ng-container *ngSwitchCase="'spec.dscprofile'">
-        <a routerLink="/cluster/dscprofiles">{{rowData.spec.dscprofile}}</a>
+        <a [routerLink]="['/cluster/dscprofiles']"
+           [queryParams]="{ dscprofile: rowData.spec.dscprofile  }">{{ rowData.spec.dscprofile }}</a>
       </ng-container>
       <ng-container *ngSwitchCase="'status.conditions'">
         <div>
@@ -225,26 +226,5 @@
       </mat-icon>
 
     </button>
-  </div>
-</ng-template>
-
-<ng-template #profileSelect>
-  <div fxLayout="column" fxFlex="100" class="naples-plist" fxLayoutAlign="start center">
-    <p-listbox [options]="dscprofileOptions" checkbox="checkbox" filter="filter" fxFlex="100"
-               *ngIf="dscprofileOptions && dscprofileOptions.length>0" [showToggleAll]="true"
-               [(ngModel)]="selectedDSCProfiles" checkbox="true" optionLabel="label">
-    </p-listbox>
-    <div fxLayout="row" fxLayoutAlign="end center">
-      <div fxFlexFill></div>
-      <button fxFlex="100px" [disabled]="selectedDSCProfiles==null"
-              class="global-button-primary  naples-plist-label-editor-button naples-plist-label-editor-save"
-              [ngClass]="selectedDSCProfiles != null? '' : 'global-button-disabled'"
-              (click)="onSaveProfileToDSCs()">SAVE
-      </button>
-      <button fxFlex="100px"
-              class="global-button-neutral  naples-plist-label-editor-button naples-plist-label-editor-cancel"
-              (click)="cancelDSCProfileDialog()">Cancel
-      </button>
-    </div>
   </div>
 </ng-template>

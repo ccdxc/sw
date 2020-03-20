@@ -20,12 +20,24 @@
          class="networknetworkinterface-detail-container">
       <ng-container *ngTemplateOutlet="selectedNetworkInterfaceDetail;"></ng-container>
     </div>
-    <app-tableheader title="Network Interfaces" [total]="count" fxFlex="auto" fxLayout="row"
-                     [tableMenuItems]="tableMenuItems" [enableColumnSelect]="true" [cols]="cols"
-                     (columnSelectChange)="onColumnSelectChange($event)" [icon]="headerIcon">
+    <div fxLayout="row" style="border-bottom: 1px solid #d9d9d9;">
+      <app-tableheader title="Network Interfaces" [total]="count" fxFlex="auto" fxLayout="row"
+                       [tableMenuItems]="tableMenuItems" [enableColumnSelect]="true" [cols]="cols"
+                       (columnSelectChange)="onColumnSelectChange($event)" [icon]="headerIcon">
 
-      <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
-    </app-tableheader>
+        <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
+      </app-tableheader>
+    </div>
+
+    <div fxLayout="row">
+      <app-advanced-search #advancedSearchComponent [formArray]="fieldFormArray"
+                           [cols]="advSearchCols"
+                           (cancelEmitter)="onCancelSearch($event)"
+                           (searchEmitter)="onSearchWorkloads()" kind="NetworkInterface"
+                           fxFlex="grow">
+      </app-advanced-search>
+    </div>
+
   </div>
 
 </ng-template>
@@ -97,8 +109,7 @@
           <div fxLayout="row">
             <a fxFlex fxLayoutAlign="start center"
                class="networknetworkinterface-detail-key">DSC:</a>
-            <a fxFlex fxLayoutAlign="start center"
-               class="networknetworkinterface-detail-value"><a
+            <a fxFlex fxLayoutAlign="start center" class="networknetworkinterface-detail-value"><a
                  routerLink="/cluster/dscs/{{this.selectedNetworkInterface.status.dsc}}">
                 {{this.selectedNetworkInterface._ui && this.selectedNetworkInterface._ui['associatedDSC'] ? this.selectedNetworkInterface._ui['associatedDSC'] : this.selectedNetworkInterface.status.dsc}}</a></a>
           </div>

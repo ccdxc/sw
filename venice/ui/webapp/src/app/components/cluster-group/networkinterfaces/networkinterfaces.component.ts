@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ViewEncapsulation, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewEncapsulation, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { Animations } from '@app/animations';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
@@ -20,6 +20,11 @@ import { BrowserService } from '@app/services/generated/browser.service';
 import { LabelEditorMetadataModel } from '@app/components/shared/labeleditor';
 import { ObjectsRelationsUtility, DSCsNameMacMap } from '@app/common/ObjectsRelationsUtility';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
+import { FormArray } from '@angular/forms';
+import { AdvancedSearchComponent } from '@app/components/shared/advanced-search/advanced-search.component';
+import { SearchUtil } from '@app/components/search/SearchUtil';
+import { FieldsRequirement } from '@sdk/v1/models/generated/search';
+import * as _ from 'lodash';
 
 /**
  * NetworkinterfacesComponent is linked to DSC object.
@@ -47,7 +52,13 @@ import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNetworkInterface, NetworkNetworkInterface> implements OnInit, OnDestroy {
 
   public static NETWORKINTERFACE_FIELD_DSC: string = 'associatedDSC';
+
+  @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
+
+  maxSearchRecords: number = 8000;
+
   dataObjects: ReadonlyArray<NetworkNetworkInterface>;
+  dataObjectsBackUp: ReadonlyArray<NetworkNetworkInterface> = null;
   naplesList: ClusterDistributedServiceCard[] = [];
 
   techsupportrequestsEventUtility: HttpEventUtility<NetworkNetworkInterface>;
@@ -91,6 +102,11 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
 
   _myDSCnameToMacMap: DSCsNameMacMap;
 
+  // advance search variables
+  advSearchCols: TableCol[] = [];
+  fieldFormArray = new FormArray([]);
+
+
   constructor(protected controllerService: ControllerService,
     protected clusterService: ClusterService,
     protected uiConfigsService: UIConfigsService,
@@ -119,6 +135,7 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
     });
     this.watchNetworkInterfaces();
     this.watchNaples();
+    this.buildAdvSearchCols();
   }
 
   setDefaultToolbar() {
@@ -162,6 +179,7 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
         }
         this.dataObjects = response.data;
         this.handleDataReady();
+        this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects); // make a copy of server provided data
       }
     );
     this.subscriptions.push(dscSubscription);
@@ -274,6 +292,56 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
 
   closeDetails() {
     this.selectedNetworkInterface = null;
+  }
+
+  // advance search
+  buildAdvSearchCols() {
+    this.advSearchCols = this.cols.filter((col: TableCol) => {
+      return (col.field !== 'meta.creation-time' && col.field !== 'status.dsc');
+    });
+    this.advSearchCols.push(
+      {
+        field: 'DSC', header: 'DSC Name', localSearch: true, kind: 'DistributedServiceCard',
+        filterfunction: this.searchDSC,
+        advancedSearchOperator: SearchUtil.stringOperators
+      }
+    );
+  }
+
+  // advance search APIs
+  onCancelSearch($event) {
+    this.controllerService.invokeInfoToaster('Information', 'Cleared search criteria, Table refreshed.');
+    this.dataObjects = this.dataObjectsBackUp;
+  }
+
+   /**
+   * Execute table search
+   * @param field
+   * @param order
+   */
+  onSearchWorkloads(field = this.tableContainer.sortField, order = this.tableContainer.sortOrder) {
+    const searchResults = this.onSearchDataObjects(field, order, 'NetworkInterface', this.maxSearchRecords, this.advSearchCols, this.dataObjectsBackUp, this.advancedSearchComponent);
+    if (searchResults && searchResults.length > 0) {
+      this.dataObjects = [];
+      this.dataObjects = searchResults;
+    }
+  }
+
+  searchDSC(requirement: FieldsRequirement, data = this.dataObjects): any[] {
+    const outputs: any[] = [];
+    for (let i = 0; data && i < data.length; i++) {
+      const recordValue  = data[i]._ui.associatedDSC; //  data[i]._ui.associatedDSC is the dsc name
+        const searchValues = requirement.values;
+        let operator = String(requirement.operator);
+        operator = TableUtility.convertOperator(operator);
+        for (let j = 0; j < searchValues.length; j++) {
+          const activateFunc = TableUtility.filterConstraints[operator];
+          if (activateFunc && activateFunc(recordValue, searchValues[j])) {
+            outputs.push(data[i]);
+          }
+        }
+    }
+    return outputs;
   }
 
 }

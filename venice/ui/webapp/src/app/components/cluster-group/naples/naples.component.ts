@@ -40,7 +40,7 @@ interface ChartData {
   datasets: { [key: string]: any }[];
 }
 
- interface DSCUiModel {
+interface DSCUiModel {
   associatedConditionStatus?: {
     dscCondStr: string;
     dscNeedReboot: boolean
@@ -201,7 +201,6 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   chosenCard: ClusterDistributedServiceCard;
 
 
-  dscprofilesEventUtility: HttpEventUtility<ClusterDSCProfile>;
   dscprofileOptions: SelectItem[] = [];
   selectedDSCProfiles: SelectItem;
   dscprofiles: ReadonlyArray<ClusterDSCProfile> = [];
@@ -297,7 +296,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
               this.chosenCardMac !== chartData.labels[index]) {
               this.chosenCardMac = chartData.labels[index];
               const card: ClusterDistributedServiceCard =
-                this.dataObjects.find( (item: ClusterDistributedServiceCard ) => (item.spec.id === this.chosenCardMac) || (item.meta.name === this.chosenCardMac) );
+                this.dataObjects.find((item: ClusterDistributedServiceCard) => (item.spec.id === this.chosenCardMac) || (item.meta.name === this.chosenCardMac));
               if (card) {
                 this.chosenCard = card;
                 if (this.top10CardTelemetryData) {
@@ -535,11 +534,12 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   watchDSCProfiles() {
-    this.dscprofilesEventUtility = new HttpEventUtility<ClusterDSCProfile>(ClusterDSCProfile, false, null, true); // https://pensando.atlassian.net/browse/VS-93 we want to trim the object
-    this.dscprofiles = this.dscprofilesEventUtility.array;
-    const subscription = this.clusterService.WatchDSCProfile().subscribe(
+    const subscription = this.clusterService.ListDSCProfileCache().subscribe(
       response => {
-        this.dscprofilesEventUtility.processEvents(response);
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.dscprofiles = response.data;
         if (this.dscprofiles && this.dscprofiles.length > 0) {
           this.dscprofiles.forEach((dscprofile: ClusterDSCProfile) => {
             const obj: SelectItem = {
@@ -1000,7 +1000,11 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
         this.selectedDSCProfiles = null;
       }
     },
-      this._controllerService.restErrorHandler(summary + ' Failed'));
+    error => {
+        this._controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
+        this.inProfileAssigningMode = false;
+      }
+    );
   }
 
   onForkJoinSuccess() {
@@ -1164,7 +1168,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       for (let k = 0; k < conditions.length; k++) {
         // datat[i].associatedConditionStatus is  {dscCondStr: "healthy", dscNeedReboot: true}
         const uiData: DSCUiModel = data[i]._ui;
-        const recordValueStr = uiData.associatedConditionStatus.dscCondStr ;
+        const recordValueStr = uiData.associatedConditionStatus.dscCondStr;
         const recordValueReboot = uiData.associatedConditionStatus.dscNeedReboot;
         const searchValues = requirement.values;
         let operator = String(requirement.operator);
@@ -1223,6 +1227,15 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     return outputs;
   }
 
+  handleSetDSCProfileSave(option: SelectItem) {
+    this.selectedDSCProfiles = option;
+    this.onSaveProfileToDSCs();
+  }
+
+  handleSetDSCProfileCancel($event) {
+    this.inProfileAssigningMode = false;
+  }
+
   cancelDSCProfileDialog() {
     this.inProfileAssigningMode = false;
     this.selectedDSCProfiles = null;
@@ -1241,12 +1254,13 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       const name = naplesObject.meta.name;
       if (naplesObject.spec.dscprofile !== this.selectedDSCProfiles.value) {
         naplesObject.spec.dscprofile = this.selectedDSCProfiles.value;
-        const sub = this.clusterService.UpdateDistributedServiceCard(name, naplesObject, '', this.naplesMap[name].$inputValue);
+        const sub = this.clusterService.UpdateDistributedServiceCard(name, naplesObject, '', this.naplesMap[name].$inputValue, false);
         observables.push(sub);
       }
     }
     if (observables.length === 0) {
       this._controllerService.invokeInfoToaster('No update neccessary', 'All selected DSCs are assigned ' + this.selectedDSCProfiles.value + ' DSC profile already.');
+      this.inProfileAssigningMode = false;
       return;
     }
     const summary = 'Distributed Services Card update profile';
@@ -1254,3 +1268,4 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     this.handleForkJoin(observables, summary, objectType);
   }
 }
+

@@ -343,10 +343,6 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
     return currValue;
   }
 
-  isFieldEmpty(field: AbstractControl): boolean {
-    return Utility.isEmpty(field.value);
-  }
-
   isNameRequired() {
     return this.isFieldEmpty(this.newObject.$formGroup.get(['meta', 'name']));
   }

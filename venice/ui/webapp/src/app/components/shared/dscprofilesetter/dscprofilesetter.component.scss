@@ -1,0 +1,40 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.dscprofilesetter-plist .ui-listbox {
+  min-width: 20em;
+}
+
+.dscprofilesetter-plist input.ui-inputtext:not(.ui-dropdown-filter) {
+  padding: 2px;
+  text-indent: 18px;
+}
+
+.dscprofilesetter-plist .ui-listbox .ui-listbox-item>span {
+  display: flex;
+  margin-left: 5px;
+
+}
+
+.dscprofilesetter-plist .ui-listbox-header.ui-listbox-header-w-checkbox .ui-listbox-filter-container {
+  width: calc(100% - 0.1em);
+}
+
+.dscprofilesetter-plist-label-editor-button {
+  margin: 5px;
+}
+
+.dscprofilesetter-plist-label-editor-save {
+  color: #6ba0e5;
+  margin: 10px 0px 10px 5px;
+  display: inline-block;
+}
+
+.dscprofilesetter-plist-label-editor-delete {
+  margin-left: 5px;
+  margin-top: 6px;
+  cursor: pointer;
+  display: inline-block;
+}

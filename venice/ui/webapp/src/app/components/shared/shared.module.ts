@@ -46,6 +46,7 @@ import { TelemetrychartComponent } from './telemetry/telemetrychart/telemetrycha
 import { TelemetrycharteditComponent } from './telemetry/telemetrychart-edit/telemetrychartedit.component';
 import { TelemetrychartviewComponent } from './telemetry/telemetrychart-view/telemetrychartview.component';
 import {AlertIndicationBarComponent} from './alert-indication-bar/alert-indication-bar.component';
+import { DscprofilesetterComponent } from './dscprofilesetter/dscprofilesetter.component';
 @NgModule({
   imports: [
     CommonModule,
@@ -95,7 +96,8 @@ import {AlertIndicationBarComponent} from './alert-indication-bar/alert-indicati
     TelemetrychartComponent,
     TelemetrycharteditComponent,
     TelemetrychartviewComponent,
-    AlertIndicationBarComponent
+    AlertIndicationBarComponent,
+    DscprofilesetterComponent
   ],
   exports: [
     PagebodyComponent,
@@ -135,7 +137,8 @@ import {AlertIndicationBarComponent} from './alert-indication-bar/alert-indicati
     TelemetrychartComponent,
     TelemetrycharteditComponent,
     TelemetrychartviewComponent,
-    AlertIndicationBarComponent
+    AlertIndicationBarComponent,
+    DscprofilesetterComponent
   ],
   providers: [
     DomHandler
