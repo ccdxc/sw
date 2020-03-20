@@ -36,7 +36,7 @@ e2e-targets:
           EsxUsername: root
           EsxPassword: Pen0trl!
 
-  e2e-esx-trans_flow:
+ e2e-esx-trans_flow:
    commands: ["sh", "-c", "make esx && ./run_iota.sh --testsuite transparent_flowaware_esx"]
    # commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:akshay@pensando.io"]
