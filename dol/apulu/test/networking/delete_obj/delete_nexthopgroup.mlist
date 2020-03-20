@@ -1,11 +1,11 @@
 feature:
     id          : networking
-    sub         : delete_nexthopgroup
+    sub         : delete_nhgroup
     package     : test.networking
     module      : networking
     runorder    : 9050
     enable      : False
-    ignore      : True
+    ignore      : False #TODO: Add flows which uses nhgroup
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow

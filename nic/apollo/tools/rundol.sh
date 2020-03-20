@@ -79,6 +79,12 @@ function start_process () {
     start_vpp
 }
 
+function remove_db () {
+    echo "===== Cleaning stale db ====="
+    rm -f $PDSPKG_TOPDIR/pdsagent.db
+    rm -f $PDSPKG_TOPDIR/pdsagent.db-lock
+}
+
 function remove_stale_files () {
     echo "===== Cleaning stale files ====="
     rm -f $PDSPKG_TOPDIR/out.sh
@@ -86,6 +92,7 @@ function remove_stale_files () {
     rm -f $PDSPKG_TOPDIR/conf/gen/dol_agentcfg.json
     rm -f $PDSPKG_TOPDIR/conf/gen/device_info.txt
     rm -rf /sysconfig/config0
+    remove_db
 }
 
 function remove_logs () {

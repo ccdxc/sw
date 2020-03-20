@@ -4,7 +4,7 @@ feature:
     sub      : dhcp_relay
     package  : test.networking
     module   : networking
-    runorder : 15000
+    runorder : 1210
     enable   : False 
     ignore   : True
 

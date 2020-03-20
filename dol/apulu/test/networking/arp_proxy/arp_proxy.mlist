@@ -5,7 +5,7 @@ feature:
     sub         : arp_proxy
     package     : test.networking
     module      : networking
-    runorder    : 15000
+    runorder    : 1200
     enable      : True
     ignore      : True
 

@@ -6,7 +6,7 @@ feature:
     runorder    : 8040
 # TODO fix nh PopulateKey for GET before enabling
     enable      : True
-    ignore      : True
+    ignore      : False
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
