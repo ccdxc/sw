@@ -70,6 +70,7 @@ var Topologies = map[string]*Topology{
 	"3VMVenice_5SimScale1000CloudNaples":  &topo3VMVenice5NaplesSim1000CloudScale,
 	"3Venice_2Naples_Vcenter":             &topo3Venice2NaplesVcenter,
 	"3Venice_1Naples_Vcenter":             &topo3Venice1Naples1ThirdPartyVcenter,
+	"3Venice_1Naples_ThirdParty":          &topo3Venice1Naples1ThirdParty,
 	"3Venice_1Naples_Cloud":               &topo3Venice1NaplesCloud,
 	"3Venice_2Naples_Cloud":               &topo3Venice2NaplesCloud,
 	"3Venice_2Naples_Basenet":             &topo3Venice2NaplesBasenet,
@@ -1166,6 +1167,46 @@ var topo3Venice1Naples1ThirdPartyVcenter = Topology{
 			Personality: iota.PersonalityType_PERSONALITY_VCENTER_NODE,
 			HostOS:      "vcenter",
 			MangedNodes: []string{"naples1", "intel"},
+		},
+		{
+			NodeName:    "venice2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice3",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+	},
+}
+
+var topo3Venice1Naples1ThirdParty = Topology{
+	NaplesImage:   "../nic/naples_fw.tar",
+	VeniceImage:   "../bin/venice.tgz",
+	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_VM,
+	WorkloadImage: "build-1007",
+	NumVlans:      10, // FIXME: what should this be??
+	Model:         DefaultModel,
+	Nodes: []TopoNode{
+		{
+			NodeName:    "naples1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "intel",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_THIRD_PARTY,
+			Personality: iota.PersonalityType_PERSONALITY_THIRD_PARTY_NIC,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "venice1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
 		},
 		{
 			NodeName:    "venice2",

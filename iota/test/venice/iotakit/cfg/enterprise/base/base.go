@@ -690,6 +690,7 @@ func (gs *EntBaseCfg) PushConfig() error {
 			if complete && err == nil {
 				cfgPushTime.Config = TimeTrack(startTime, "Config Push").String()
 				done <- nil
+				return
 			}
 		}
 		done <- fmt.Errorf("Config push incomplete")

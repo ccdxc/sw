@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
 	"strings"
 	"time"
 
@@ -1032,6 +1033,11 @@ func (r *Client) DeleteMirrorSession(msp *monitoring.MirrorSession) error {
 
 // CreateeDscProfile Creates DSC Profile
 func (r *Client) CreateDscProfile(obj *cluster.DSCProfile) error {
+	//Need a clean way
+	if os.Getenv("RELEASE_A") != "" {
+		return nil
+	}
+
 	var err error
 	for _, restcl := range r.restcls {
 		_, err = restcl.ClusterV1().DSCProfile().Create(r.ctx, obj)
@@ -1044,6 +1050,10 @@ func (r *Client) CreateDscProfile(obj *cluster.DSCProfile) error {
 
 // GetDscProfile Get DSC Profile
 func (r *Client) GetDscProfile(meta *api.ObjectMeta) (dscProfile *cluster.DSCProfile, err error) {
+	//Need a clean way
+	if os.Getenv("RELEASE_A") != "" {
+		return nil, fmt.Errorf("Not implemented")
+	}
 	for _, restcl := range r.restcls {
 		dscProfile, err = restcl.ClusterV1().DSCProfile().Get(r.ctx, meta)
 		if err == nil {
@@ -1056,6 +1066,10 @@ func (r *Client) GetDscProfile(meta *api.ObjectMeta) (dscProfile *cluster.DSCPro
 
 // ListDscProfile List Profiles
 func (r *Client) ListDscProfile() (objs []*cluster.DSCProfile, err error) {
+	//Need a clean way
+	if os.Getenv("RELEASE_A") != "" {
+		return nil, fmt.Errorf("Not implemented")
+	}
 	opts := api.ListWatchOptions{}
 	for _, restcl := range r.restcls {
 		objs, err = restcl.ClusterV1().DSCProfile().List(r.ctx, &opts)
@@ -1068,6 +1082,10 @@ func (r *Client) ListDscProfile() (objs []*cluster.DSCProfile, err error) {
 
 // DeleteDscProfile deletes profiles
 func (r *Client) DeleteDscProfile(dscProfile *cluster.DSCProfile) error {
+	//Need a clean way
+	if os.Getenv("RELEASE_A") != "" {
+		return nil
+	}
 
 	var err error
 	for _, restcl := range r.restcls {

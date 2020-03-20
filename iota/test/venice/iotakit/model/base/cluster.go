@@ -913,9 +913,12 @@ func (sm *SysModel) SetupPenctl(nodes []*testbed.TestNode) error {
 			if err != nil {
 				return fmt.Errorf("Error copying penctl package to host. Err: %v", err)
 			}
-			// untar the package
-			//cmd := fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
-			//trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+
+			// Copy the private token as well
+			err = sm.Tb.CopyToHost(node.NodeName, []string{constants.PenctlAuthTokenFile}, "")
+			if err != nil {
+				return fmt.Errorf("Error copying penctl auth token to host. Err: %v", err)
+			}
 		}
 	}
 
@@ -954,6 +957,12 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 
 	err := sm.enableSSHDOnNaples(nodes)
 	if err != nil {
+		return err
+	}
+
+	err = sm.readNodeUUIDs(nodes)
+	if err != nil {
+		log.Infof("Reading nod uuids failed.")
 		return err
 	}
 
@@ -1015,37 +1024,35 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 		}
 	}
 
-	if noReboot {
-		return nil
-	}
-	//No longeer reload  of naples is needed : Auto Discovery / DSCProfile change should help
-	// Retaining this, in case , we have to revert
-	/*var hostNames string
-	nodeMsg := &iota.NodeMsg{
-		ApiResponse: &iota.IotaAPIResponse{},
-		Nodes:       []*iota.Node{},
-	}
-	for _, node := range nodes {
-		if testbed.IsNaplesHW(node.Personality) {
-			nodeMsg.Nodes = append(nodeMsg.Nodes, &iota.Node{Name: node.NodeName})
-			hostNames += node.NodeName + ", "
+	if !sm.AutoDiscovery {
 
+		//No longeer reload  of naples is needed : Auto Discovery / DSCProfile change should help
+		// Retaining this, in case , we have to revert
+		var hostNames string
+		nodeMsg := &iota.NodeMsg{
+			ApiResponse: &iota.IotaAPIResponse{},
+			Nodes:       []*iota.Node{},
+		}
+		for _, node := range nodes {
+			if testbed.IsNaplesHW(node.Personality) {
+				nodeMsg.Nodes = append(nodeMsg.Nodes, &iota.Node{Name: node.NodeName})
+				hostNames += node.NodeName + ", "
+
+			}
+		}
+		log.Info("Reload Naples")
+
+		reloadMsg := &iota.ReloadMsg{
+			NodeMsg: nodeMsg,
+		}
+		topoClient := iota.NewTopologyApiClient(sm.Tb.Client().Client)
+		reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
+		if err != nil {
+			return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
+		} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+			return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
 		}
 	}
-	log.Info("Skipping Naples Reloads")
-
-	//reloadMsg := &iota.ReloadMsg{
-	//	NodeMsg: nodeMsg,
-	//}
-	// Trigger App
-	//topoClient := iota.NewTopologyApiClient(sm.Tb.Client().Client)
-	//reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
-	//if err != nil {
-	//	return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
-	//} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-	//	return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
-	//}
-	}*/
 
 	return nil
 }

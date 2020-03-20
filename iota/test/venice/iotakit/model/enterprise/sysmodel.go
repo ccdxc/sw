@@ -473,31 +473,9 @@ func (sm *SysModel) DefaultNetworkSecurityPolicy() *objects.NetworkSecurityPolic
 }
 
 // SetupDefaultConfig sets up a default config for the system
-func (sm *SysModel) SetupDefaultCommon(ctx context.Context, scale, scaleData bool) error {
-	log.Infof("Setting up default config...")
-
-	//TODO, we have to move this out of sysmodel
-	dscNodes := sm.NaplesNodes
-	log.Infof("Number of dscs %v", len(dscNodes))
+func (sm *SysModel) setupInsertionMode() error {
 
 	cfgClient := sm.ConfigClient()
-
-	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
-	defer cancelFunc()
-L:
-	for {
-		select {
-		case <-bkCtx.Done():
-			return fmt.Errorf("Less than %v dscs checked into venice", len(sm.NaplesNodes))
-		default:
-			dscObject, err := cfgClient.ListSmartNIC()
-			if err == nil && len(dscObject) == len(sm.NaplesNodes) {
-				break L
-			}
-			time.Sleep(2 * time.Second)
-		}
-	}
-
 	dscProfile := cluster.DSCProfile{
 		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
 		ObjectMeta: api.ObjectMeta{
@@ -513,10 +491,25 @@ L:
 	cfgClient.CreateDscProfile(&dscProfile)
 	dscObject, err := cfgClient.ListSmartNIC()
 
+	if err != nil {
+		return err
+	}
+
 	for _, dsc := range dscObject {
 		dsc.Spec.DSCProfile = "insertion.enforced"
 		cfgClient.UpdateSmartNIC(dsc)
 	}
+
+	return nil
+}
+
+// SetupDefaultConfig sets up a default config for the system
+func (sm *SysModel) SetupDefaultCommon(ctx context.Context, scale, scaleData bool) error {
+	log.Infof("Setting up default config...")
+
+	//TODO, we have to move this out of sysmodel
+	dscNodes := sm.NaplesNodes
+	log.Infof("Number of dscs %v", len(dscNodes))
 
 	defaultSgPolicies, err1 := sm.ListNetworkSecurityPolicy()
 	if err1 != nil {
@@ -528,7 +521,7 @@ L:
 		sm.defaultSgPolicies = append(sm.defaultSgPolicies, objects.NewNetworkSecurityPolicyCollection(nPolicy, sm.ObjClient(), sm.Tb))
 	}
 
-	err = sm.AssociateHosts()
+	err := sm.AssociateHosts()
 	if err != nil {
 		return fmt.Errorf("Error associating hosts: %s", err)
 	}
@@ -568,7 +561,13 @@ L:
 // SetupDefaultConfig sets up a default config for the system
 func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData bool) error {
 
-	err := sm.InitConfig(scale, scaleData)
+	err := sm.setupInsertionMode()
+
+	if err != nil {
+		return err
+	}
+
+	err = sm.InitConfig(scale, scaleData)
 	if err != nil {
 		return err
 	}
