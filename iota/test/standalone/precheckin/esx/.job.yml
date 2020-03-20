@@ -35,32 +35,6 @@ e2e-targets:
           EsxUsername: root
           EsxPassword: Pen0trl!
 
-  e2e-esx-trans_flow:
-   commands: ["sh", "-c", "make esx-precheckin && ./run_iota.sh --testsuite transparent_flowaware_esx --precheckin --skip-sanity"]
-   # commands: [ "cat /warmd.json && sleep 30000000"]
-   owners: ["email:akshay@pensando.io"]
-   area:
-   sub-area:
-   feature:
-   build-dependencies:
-     - build-iris-arm
-     - build-iota
-   clusters:
-     - image: build-10
-       count: 2
-       resources:
-         servers:
-           - type: hpe
-           - type: server-a
-         nic-type: naples
-   provision:
-       username: vm
-       password: vm
-       vars:
-          BmOs: esx
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
 
   e2e-esx-vmotion:
    commands: ["sh", "-c", "make esx-precheckin && ./run_iota_vcenter.sh --testsuite hostpin_vm_dvs --precheckin --skip-sanity"]

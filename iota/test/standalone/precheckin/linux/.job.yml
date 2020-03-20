@@ -40,36 +40,6 @@ e2e-targets:
           VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
- e2e-linux-bm-unified:
-   commands: ["sh", "-c", "make linux && ./run_iota.sh --testsuite transparent_flowaware  --precheckin --skip-sanity"]
-   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
-   owners: ["email:tony@pensando.io"]
-   area:
-   sub-area:
-   feature:
-   build-dependencies:
-     - build-iris-arm
-     - build-iota
-   clusters:
-     - image: build-17
-       count: 2
-       resources:
-         servers:
-           - type: server-a
-           - type: hpe
-         # nic-type can be naples, mellanox, or raw
-         nic-type: naples
-         # Required when RDMA is enabled
-         constraints:
-           same-switch: true
-   provision:
-       username: vm
-       password: vm
-       vars:
-          BmOs: linux
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
 
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz
