@@ -25,6 +25,8 @@ class subnet_state;
 #define PDS_SUBNET_UPD_ROUTE_TABLE         0x1
 #define PDS_SUBNET_UPD_POLICY              0x2
 #define PDS_SUBNET_UPD_HOST_IFINDEX        0x4
+#define PDS_SUBNET_UPD_V4_VR_IP            0x8
+#define PDS_SUBNET_UPD_V6_VR_IP            0x10
 
 /// \defgroup PDS_SUBNET_ENTRY - subnet entry functionality
 /// \ingroup PDS_SUBNET
@@ -182,6 +184,14 @@ public:
         return (void *)&(subnet->key_);
     }
 
+    /// \brief          return IPv4 VR IP of this subnet
+    /// \return         IPv4 virtual router (VR) IP of this subnet
+    const ipv4_addr_t v4_vr_ip(void) const { return v4_vr_ip_; }
+
+    /// \brief          return IPv6 VR IP of this subnet
+    /// \return         IPv6 virtual router (VR) IP of this subnet
+    const ip_addr_t v6_vr_ip(void) const { return v6_vr_ip_; }
+
     /// \brief          return router mac of this subnet
     /// \return         virtual router (VR) mac of this subnet
     mac_addr_t &vr_mac(void) { return vr_mac_; }
@@ -308,6 +318,8 @@ private:
     uint8_t num_egr_v6_policy_;
     /// egress IPv6 policies
     pds_obj_key_t egr_v6_policy_[PDS_MAX_SUBNET_POLICY];
+    ipv4_addr_t v4_vr_ip_;            ///< IPv4 virtual router IP
+    ip_addr_t v6_vr_ip_;              ///< IPv6 virtual router IP
     mac_addr_t vr_mac_;               ///< virtual router MAC
     pds_obj_key_t host_if_;           ///< PF/VF attached to this subnet
 

@@ -195,6 +195,8 @@ private:
     subnet_impl() {
         hw_id_ = 0xFFFF;
         vni_hdl_ = handle_t::null();
+        v4_vr_ip_mapping_hdl_ = handle_t::null();
+        v6_vr_ip_mapping_hdl_ = handle_t::null();
         ht_ctxt_.reset();
     }
 
@@ -202,6 +204,8 @@ private:
     subnet_impl(pds_subnet_spec_t *spec) {
         hw_id_ = 0xFFFF;
         vni_hdl_ = handle_t::null();
+        v4_vr_ip_mapping_hdl_ = handle_t::null();
+        v6_vr_ip_mapping_hdl_ = handle_t::null();
         key_ = spec->key;
         ht_ctxt_.reset();
     }
@@ -239,6 +243,9 @@ private:
 private:
     uint16_t hw_id_;
     handle_t vni_hdl_;
+    ///< handles in MAPPING table for IPv4 and IPv6 VR IPs
+    handle_t v4_vr_ip_mapping_hdl_;
+    handle_t v6_vr_ip_mapping_hdl_;
     /// PI specific info
     struct {
         pds_obj_key_t key_;

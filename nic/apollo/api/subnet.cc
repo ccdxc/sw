@@ -192,6 +192,8 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     for (uint8_t i = 0; i < num_egr_v6_policy_; i++) {
         egr_v6_policy_[i] = spec->egr_v6_policy[i];
     }
+    v4_vr_ip_ = spec->v4_vr_ip;
+    v6_vr_ip_ = spec->v6_vr_ip;
     memcpy(&vr_mac_, &spec->vr_mac, sizeof(mac_addr_t));
     host_if_ = spec->host_if;
     if (host_if_ != k_pds_obj_key_invalid) {
@@ -275,6 +277,12 @@ subnet_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     }
     if (host_if_ != spec->host_if) {
         obj_ctxt->upd_bmap |= PDS_SUBNET_UPD_HOST_IFINDEX;
+    }
+    if (v4_vr_ip_ != spec->v4_vr_ip) {
+        obj_ctxt->upd_bmap |= PDS_SUBNET_UPD_V4_VR_IP;
+    }
+    if (memcmp(&v6_vr_ip_, &spec->v6_vr_ip, sizeof(v6_vr_ip_))) {
+        obj_ctxt->upd_bmap |= PDS_SUBNET_UPD_V6_VR_IP;
     }
     PDS_TRACE_DEBUG("subnet %s upd bmap 0x%lx",
                     key2str().c_str(), obj_ctxt->upd_bmap);
