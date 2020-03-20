@@ -30,6 +30,7 @@ public:
     virtual sdk_ret_t insert(const void *key, size_t key_sz,
                              const void *data, size_t data_sz) override;
     virtual sdk_ret_t remove(const void *key, size_t key_sz) override;
+    virtual sdk_ret_t iterate(kvstore_iterate_cb_t cb, void *ctxt) override;
 
 private:
     kvstore_lmdb() {

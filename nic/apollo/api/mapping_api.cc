@@ -14,7 +14,9 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/obj_api.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/mapping.hpp"
+#include "nic/apollo/api/mapping_state.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/internal/pds_mapping.hpp"
@@ -92,25 +94,86 @@ pds_remote_mapping_create (_In_ pds_remote_mapping_spec_t *remote_spec,
 // mapping read routines
 //----------------------------------------------------------------------------
 
+typedef struct mapping_read_all_args_s {
+    mapping_read_cb_t cb;
+    void *ctxt;
+    bool is_local;
+} mapping_read_all_args_t;
+
+void
+pds_mapping_info_from_entry (mapping_entry *entry, void *ctxt)
+{
+    sdk_ret_t rv;
+    pds_mapping_info_t info;
+    mapping_read_all_args_t *args = (mapping_read_all_args_t *)ctxt;
+
+    if (entry->is_local() != args->is_local) {
+        return;
+    }
+
+    info.spec.key = entry->key();
+    info.spec.skey = entry->skey();
+    rv = entry->read(&entry->skey(), &info);
+    if (rv == SDK_RET_OK) {
+        if (entry->is_local()) {
+            pds_local_mapping_info_t local_info;
+            memset(&local_info, 0, sizeof(pds_local_mapping_info_t));
+            pds_mapping_spec_to_local_spec(&local_info.spec, &info.spec);
+            args->cb(&local_info, args->ctxt);
+        } else {
+            pds_remote_mapping_info_t remote_info;
+            memset(&remote_info, 0, sizeof(pds_remote_mapping_info_t));
+            pds_mapping_spec_to_remote_spec(&remote_info.spec, &info.spec);
+            args->cb(&remote_info, args->ctxt);
+        }
+    }
+}
+
+sdk_ret_t
+pds_local_mapping_read_all (mapping_read_cb_t cb, void *ctxt)
+{
+    mapping_read_all_args_t args;
+    args.cb = cb;
+    args.ctxt = ctxt;
+    args.is_local = 1;
+
+    mapping_db()->kvstore_iterate(pds_mapping_info_from_entry, &args);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+pds_remote_mapping_read_all (mapping_read_cb_t cb, void *ctxt)
+{
+    mapping_read_all_args_t args;
+    args.cb = cb;
+    args.ctxt = ctxt;
+    args.is_local = 0;
+
+    mapping_db()->kvstore_iterate(pds_mapping_info_from_entry, &args);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 pds_local_mapping_read (pds_obj_key_t *key,
                         pds_local_mapping_info_t *local_info)
 {
     pds_mapping_info_t info;
     sdk_ret_t rv = SDK_RET_OK;
+    pds_mapping_key_t skey;
     mapping_entry *entry = NULL;
 
     if ((key == NULL) || (local_info == NULL)) {
         return SDK_RET_INVALID_ARG;
     }
 
-    if ((entry = pds_mapping_entry_find(key)) == NULL) {
+    rv = mapping_db()->skey(key, &skey);
+    if (rv != SDK_RET_OK) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
+    entry = mapping_entry::build(&skey);
 
     memset(&info, 0, sizeof(pds_mapping_info_t));
     info.spec.key = *key;
-    entry->set_local(true);
     rv = entry->read(key, &info);
     if (rv == SDK_RET_OK) {
         pds_mapping_spec_to_local_spec(&local_info->spec, &info.spec);
@@ -124,19 +187,21 @@ pds_remote_mapping_read (pds_obj_key_t *key,
 {
     pds_mapping_info_t info;
     mapping_entry *entry = NULL;
+    pds_mapping_key_t skey;
     sdk_ret_t rv = SDK_RET_OK;
 
     if ((key == NULL) || (remote_info == NULL)) {
         return SDK_RET_INVALID_ARG;
     }
 
-    if ((entry = pds_mapping_entry_find(key)) == NULL) {
+    rv = mapping_db()->skey(key, &skey);
+    if (rv != SDK_RET_OK) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
+    entry = mapping_entry::build(&skey);
 
     memset(&info, 0, sizeof(pds_mapping_info_t));
     info.spec.key = *key;
-    entry->set_local(false);
     rv = entry->read(key, &info);
     if (rv == SDK_RET_OK) {
         pds_mapping_spec_to_remote_spec(&remote_info->spec, &info.spec);

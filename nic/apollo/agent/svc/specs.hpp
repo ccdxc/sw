@@ -3944,9 +3944,9 @@ pds_mapping_api_stats_to_proto (pds::MappingStats *proto_stats,
 
 // populate proto buf from local mapping API info
 static inline void
-pds_local_mapping_api_info_to_proto (const pds_local_mapping_info_t *api_info,
-                                     void *ctxt)
+pds_local_mapping_api_info_to_proto (void *info, void *ctxt)
 {
+    pds_local_mapping_info_t *api_info = (pds_local_mapping_info_t *)info;
     pds::MappingGetResponse *proto_rsp = (pds::MappingGetResponse *)ctxt;
     auto mapping = proto_rsp->add_response();
     pds::MappingSpec *proto_spec = mapping->mutable_spec();
@@ -3960,9 +3960,9 @@ pds_local_mapping_api_info_to_proto (const pds_local_mapping_info_t *api_info,
 
 // populate proto buf from remote mapping API info
 static inline void
-pds_remote_mapping_api_info_to_proto (const pds_remote_mapping_info_t *api_info,
-                                      void *ctxt)
+pds_remote_mapping_api_info_to_proto (void *info, void *ctxt)
 {
+    pds_remote_mapping_info_t *api_info = (pds_remote_mapping_info_t *)info;
     pds::MappingGetResponse *proto_rsp = (pds::MappingGetResponse *)ctxt;
     auto mapping = proto_rsp->add_response();
     pds::MappingSpec *proto_spec = mapping->mutable_spec();

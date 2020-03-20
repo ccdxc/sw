@@ -19,6 +19,8 @@
 
 namespace api {
 
+typedef void (*mapping_state_cb_t) (mapping_entry *entry, void *ctxt);
+
 /// \defgroup PDS_MAPPING_STATE - mapping state handling
 /// \ingroup PDS_MAPPING
 /// @{
@@ -60,6 +62,11 @@ public:
     /// \param[in] skey    2nd-ary key of the mapping object
     /// \return    pointer to the mapping instance found or NULL
     mapping_entry *find(pds_mapping_key_t *skey) const;
+
+    /// \brief     Iterate through mapping entries through lmdb
+    /// \param[in] cb      callback called on each entry
+    /// \param[in] ctxt    opaque context passed to callback
+    void kvstore_iterate(mapping_state_cb_t cb, void *ctxt);
 
     /// \brief      given the primary key, return the 2nd-ary key of mapping
     /// \param[in]  key primary key of the mapping object

@@ -12,6 +12,8 @@
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/hooks.hpp"
 #include "nic/apollo/api/debug.hpp"
+#include "nic/apollo/api/utils.hpp"
+#include <malloc.h>
 
 Status
 MappingSvcImpl::MappingCreate(ServerContext *context,
@@ -223,10 +225,16 @@ MappingSvcImpl::MappingGet(ServerContext *context,
     pds_remote_mapping_info_t remote_info;
 
     if (proto_req == NULL || proto_req->id_size() == 0) {
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
+        ret = pds_local_mapping_read_all(pds_local_mapping_api_info_to_proto,
+                                         proto_rsp);
+        if (ret == SDK_RET_OK) {
+            ret = pds_remote_mapping_read_all(pds_remote_mapping_api_info_to_proto,
+                                              proto_rsp);
+        }
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        PDS_MEMORY_TRIM();
     }
-    proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = pds_local_mapping_read(&key, &local_info);
@@ -240,6 +248,7 @@ MappingSvcImpl::MappingGet(ServerContext *context,
             break;
         }
         pds_remote_mapping_api_info_to_proto(&remote_info, proto_rsp);
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
     }
     return Status::OK;
 }

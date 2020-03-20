@@ -407,6 +407,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     uint32_t ip_offset = 0, remote_slot = 1025;
     uint32_t tep_offset = 0, v6_tep_offset = 0;
     static uint32_t svc_tag = 1;
+    uint32_t mapping_key = 1;
 
     // ensure a max. of 32 IPs per VNIC
     SDK_ASSERT(num_vpcs * num_subnets * num_vnics * num_ip_per_vnic <=
@@ -417,6 +418,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
                     memset(&pds_local_mapping, 0, sizeof(pds_local_mapping));
+                    pds_local_mapping.key = test::uuid_from_objid(mapping_key++);
                     pds_local_mapping.skey.type = PDS_MAPPING_TYPE_L3;
                     pds_local_mapping.skey.vpc = test::int2pdsobjkey(i);
                     pds_local_mapping.skey.ip_addr.af = IP_AF_IPV4;
@@ -460,7 +462,6 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         pds_local_mapping.tags[0] = svc_tag++;
                     }
                     ip_offset++;
-
                     rv = create_local_mapping(&pds_local_mapping);
                     SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                                             "create v4 local mapping failed, vpc %u, ret %u",
@@ -468,6 +469,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     if (g_test_params.dual_stack) {
                         // V6 mapping
                         pds_local_v6_mapping = pds_local_mapping;
+                        pds_local_v6_mapping.key = test::uuid_from_objid(mapping_key++);
                         pds_local_v6_mapping.skey.type = PDS_MAPPING_TYPE_L3;
                         pds_local_v6_mapping.skey.ip_addr.af = IP_AF_IPV6;
                         pds_local_v6_mapping.skey.ip_addr.addr.v6_addr =
@@ -520,6 +522,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             ip_base = num_vnics * num_ip_per_vnic + 1;
             for (uint32_t k = 1; k <= num_remote_mappings; k++) {
                 memset(&pds_remote_mapping, 0, sizeof(pds_remote_mapping));
+                pds_remote_mapping.key = test::uuid_from_objid(mapping_key++);
                 pds_remote_mapping.skey.type = PDS_MAPPING_TYPE_L3;
                 pds_remote_mapping.skey.vpc = test::int2pdsobjkey(i);
                 pds_remote_mapping.skey.ip_addr.af = IP_AF_IPV4;
@@ -564,6 +567,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 if (apulu()) {
                     // l2 mapping
                     pds_remote_l2_mapping = pds_remote_mapping;
+                    pds_remote_l2_mapping.key = test::uuid_from_objid(mapping_key++);
                     pds_remote_l2_mapping.skey.type = PDS_MAPPING_TYPE_L2;
                     pds_remote_l2_mapping.skey.subnet =
                         test::int2pdsobjkey(PDS_SUBNET_ID((i - 1), num_subnets, j));
@@ -581,6 +585,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 if (g_test_params.dual_stack) {
                     // V6 mapping
                     pds_remote_v6_mapping = pds_remote_mapping;
+                    pds_remote_v6_mapping.key = test::uuid_from_objid(mapping_key++);
                     pds_remote_v6_mapping.skey.type = PDS_MAPPING_TYPE_L3;
                     pds_remote_v6_mapping.skey.ip_addr.af = IP_AF_IPV6;
                     pds_remote_v6_mapping.skey.ip_addr.addr.v6_addr =

@@ -15,6 +15,10 @@
 
 namespace api {
 
+#define PDS_MEMORY_TRIM() {            \
+    malloc_trim(0);                    \
+}
+
 /**
  * @brief    given two epochs, pick invalid one or the lowest numbered epoch so
  *           we can overwrite its contents, and return its index

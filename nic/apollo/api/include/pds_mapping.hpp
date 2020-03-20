@@ -95,6 +95,20 @@ typedef struct pds_remote_mapping_info_t {
 sdk_ret_t pds_local_mapping_create(pds_local_mapping_spec_t *spec,
                                    pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
+typedef void (*mapping_read_cb_t) (void *info, void *ctxt);
+
+/// \brief    read local mappings
+/// \param[in] cb     callback for reading local mappings
+/// \param[in] ctxt   opaque context to be passed to callbacks
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_local_mapping_read_all(mapping_read_cb_t cb, void *ctxt);
+
+/// \brief    read remote mappings
+/// \param[in] cb     callback for reading remote mappings
+/// \param[in] ctxt   opaque context to be passed to callbacks
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_remote_mapping_read_all(mapping_read_cb_t cb, void *ctxt);
+
 /// \brief    read local mapping
 /// \param[in] key      key to local mapping
 /// \param[out] info    local mapping information

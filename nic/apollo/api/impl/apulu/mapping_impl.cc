@@ -1015,7 +1015,10 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, subnet_entry *subnet,
     // TODO: tag support
     spec->num_tags = 0;
     status->subnet_hw_id = mapping_data.egress_bd_id;
-
+    subnet_impl *impl = subnet_impl_db()->find(status->subnet_hw_id);
+    if (impl) {
+        spec->subnet = *impl->key();
+    }
     return SDK_RET_OK;
 }
 
@@ -1056,6 +1059,11 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, subnet_entry *subnet,
         return ret;
     }
     status->vnic_hw_id = local_mapping_data.vnic_id;
+    // Set vnic uuid in spec
+    vnic_impl *vnic = vnic_impl_db()->find(status->vnic_hw_id);
+    if (vnic) {
+        spec->vnic = *vnic->key();
+    }
 
     if (local_mapping_data.xlate_id != PDS_IMPL_RSVD_NAT_HW_ID) {
         memset(&nat_data, 0, nat_data.entry_size());

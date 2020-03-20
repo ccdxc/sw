@@ -18,6 +18,8 @@
 namespace sdk {
 namespace lib {
 
+typedef void (*kvstore_iterate_cb_t)(void *key, void *val, void *ctxt);
+
 class kvstore {
 public:
     typedef enum txn_type_e {
@@ -34,6 +36,7 @@ public:
     virtual sdk_ret_t insert(const void *key, size_t key_sz,
                              const void *data, size_t data_sz) = 0;
     virtual sdk_ret_t remove(const void *key, size_t key_sz) = 0;
+    virtual sdk_ret_t iterate(kvstore_iterate_cb_t cb, void *ctxt) = 0;
 
 protected:
     kvstore() {}

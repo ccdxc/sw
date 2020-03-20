@@ -88,6 +88,31 @@ mapping_state::free(mapping_entry *mapping) {
     mapping_slab_->free(mapping);
 }
 
+typedef struct pds_mapping_state_iterate_args_s {
+    mapping_state_cb_t cb;
+    void *ctxt;
+} pds_mapping_state_iterate_args_t;
+
+static void
+mapping_state_entry_cb (void *key, void *val, void *ctxt) {
+    mapping_entry *entry;
+    pds_obj_key_t *pkey = (pds_obj_key_t *)key;
+    pds_mapping_state_iterate_args_t *it_ctxt = (pds_mapping_state_iterate_args_t *)ctxt;
+
+    entry = mapping_entry::build(pkey);
+    if (entry) {
+        it_ctxt->cb(entry, it_ctxt->ctxt);
+    }
+}
+
+void
+mapping_state::kvstore_iterate(mapping_state_cb_t cb, void *ctxt) {
+    pds_mapping_state_iterate_args_t it_ctxt;
+    it_ctxt.cb = cb;
+    it_ctxt.ctxt = ctxt;
+    kvstore_->iterate(mapping_state_entry_cb, &it_ctxt);
+}
+
 mapping_entry *
 mapping_state::find(pds_obj_key_t *key) const {
     PDS_TRACE_VERBOSE("Looking for %s", key->str());

@@ -148,6 +148,63 @@ kvstore_lmdb::txn_abort(void) {
 }
 
 sdk_ret_t
+kvstore_lmdb::iterate(kvstore_iterate_cb_t cb, void *ctxt) {
+    int rv;
+    sdk_ret_t ret;
+    MDB_cursor *db_cur;
+    MDB_val db_key;
+    MDB_val db_val;
+    bool new_txn = false;
+    bool cursor_open = false;
+
+    // if this is not inside a transaction, open new transaction
+    if (!t_txn_hdl_) {
+        ret = txn_start(TXN_TYPE_READ_ONLY);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        new_txn = true;
+    }
+
+    rv = mdb_cursor_open(t_txn_hdl_, db_dbi_, &db_cur);
+    if (rv) {
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    cursor_open = true;
+
+    rv = mdb_cursor_get(db_cur, &db_key, &db_val, MDB_FIRST);
+    if (rv && rv != MDB_NOTFOUND) {
+        SDK_TRACE_ERR("kvstore iterate failed, err %d", rv);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    while (rv != MDB_NOTFOUND) {
+        cb(db_key.mv_data, db_val.mv_data, ctxt);
+        rv = mdb_cursor_get(db_cur, &db_key, &db_val, MDB_NEXT);
+        if (rv && rv != MDB_NOTFOUND) {
+            SDK_TRACE_ERR("kvstore iterate failed, err %d", rv);
+            ret = SDK_RET_ERR;
+            goto end;
+        }
+    }
+    ret = SDK_RET_OK;
+end:
+    if (cursor_open) {
+        mdb_cursor_close(db_cur);
+    }
+    // if a new transaction is opened, close it
+    if (new_txn == true) {
+        if (rv) {
+            txn_abort();
+        } else {
+            txn_commit();
+        }
+    }
+    return ret;
+}
+
+sdk_ret_t
 kvstore_lmdb::find(const void *key, size_t key_sz, void *data, size_t *data_sz) {
     int rv;
     sdk_ret_t ret;
