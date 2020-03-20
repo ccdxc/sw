@@ -158,6 +158,27 @@ devapi_swm::add_mac_filters_(uint32_t channel)
 }
 
 sdk_ret_t
+devapi_swm::remove_mac_filters(channel_info_t *cinfo)
+{
+    mac_t mac;
+    std::set<mac_t>::iterator tmp;
+
+    NIC_LOG_DEBUG("channel-{}: Removing {} Mac Filters", 
+                  cinfo->channel, cinfo->mac_table.size());
+    for (auto it = cinfo->mac_table.begin(); it != cinfo->mac_table.end();) {
+        mac = *it;
+        tmp = it;
+        ++tmp;
+        del_mac(mac, cinfo->channel);
+        it = tmp;
+    }
+    NIC_LOG_DEBUG("# of Mac Filters after delete: {}", 
+                  cinfo->mac_table.size());
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 devapi_swm::add_vlan_filters_(uint32_t channel)
 {
     channel_info_t *cinfo;
@@ -166,6 +187,26 @@ devapi_swm::add_vlan_filters_(uint32_t channel)
     for (auto it = cinfo->vlan_table.cbegin(); it != cinfo->vlan_table.cend(); it++) {
         devapi_swm::add_vlan(*it, channel);
     }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+devapi_swm::remove_vlan_filters(channel_info_t *cinfo)
+{
+    vlan_t vlan;
+    std::set<vlan_t>::iterator tmp;
+
+    NIC_LOG_DEBUG("channel-{}: Removing {} Vlan Filters", 
+                  cinfo->channel, cinfo->vlan_table.size());
+    for (auto it = cinfo->vlan_table.begin(); it != cinfo->vlan_table.end();) {
+        vlan = *it;
+        tmp = it;
+        ++tmp;
+        del_vlan(vlan, cinfo->channel);
+        it = tmp;
+    }
+    NIC_LOG_DEBUG("# of Vlan Filters after delete: {}", 
+                  cinfo->vlan_table.size());
     return SDK_RET_OK;
 }
 
@@ -967,6 +1008,54 @@ devapi_swm::disable_rx (uint32_t channel)
                     cinfo->swm_lif_id, channel);
     }
     cinfo->rx_en = false;
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_swm::reset_channel (uint32_t channel)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    channel_info_t *cinfo;
+
+    NIC_LOG_DEBUG("Reset for channel: {}", channel);
+    cinfo = lookup_channel_info_(channel);
+
+    // Remove mac filters
+    ret = remove_mac_filters(cinfo);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("Failed to remove mac filters for channel: {}. err: {}", 
+                    channel, ret);
+    }
+
+    // Remove vlan filters
+    ret = remove_vlan_filters(cinfo);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("Failed to remove vlan filters for channel: {}. err: {}", 
+                    channel, ret);
+    }
+
+    // Disable RX
+    ret = disable_rx(channel);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("Failed to disable rx for channel: {}. err: {}", 
+                    channel, ret);
+    }
+
+    // Disable TX
+    ret = disable_tx(channel);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("Failed to disable tx for channel: {}. err: {}", 
+                    channel, ret);
+    }
+
+    // Disable vlan mode
+    ret = upd_vlan_mode(false, 0, channel);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("Failed to disable vlan mode for channel: {}. err: {}", 
+                    channel, ret);
+    }
 
 end:
     return ret;

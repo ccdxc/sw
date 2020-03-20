@@ -255,12 +255,16 @@ ncsi_ipc_channel (ncsi_ipc_msg_t *msg)
     ChannelRequest *req = dynamic_cast<ChannelRequest *>(msg->msg);
     ChannelResponse *rsp = dynamic_cast<ChannelResponse *>(msg->rsp);
 
-    NIC_LOG_DEBUG("NCSI Channel config: channel: {}, oper: {}, tx_enable: {}, "
-                  "rx_enable: {}", req->channel(), msg->oper,
+    NIC_LOG_DEBUG("NCSI Channel config: channel: {}, oper: {}, reset: {}, tx_enable: {}, "
+                  "rx_enable: {}", req->channel(), msg->oper, req->reset(),
                   req->tx_enable(), req->rx_enable());
 
     if (msg->oper == hal::NCSI_MSG_OPER_CREATE ||
         msg->oper == hal::NCSI_MSG_OPER_UPDATE) {
+        if (req->reset()) {
+             devmgr->DevApi()->swm_reset_channel(req->channel());
+             goto end;
+        }
         if (req->tx_enable()) {
             devmgr->DevApi()->swm_enable_tx(req->channel());
         } else {
@@ -274,6 +278,8 @@ ncsi_ipc_channel (ncsi_ipc_msg_t *msg)
     } else if (msg->oper == hal::NCSI_MSG_OPER_DELETE) {
         NIC_LOG_ERR("Channel should never be deleted.");
     }
+
+end:
     rsp->set_api_status(types::API_STATUS_OK);
     return ret;
 }

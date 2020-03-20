@@ -84,6 +84,7 @@ public:
     sdk_ret_t swm_disable_tx(uint32_t channel);
     sdk_ret_t swm_enable_rx(uint32_t channel);
     sdk_ret_t swm_disable_rx(uint32_t channel);
+    sdk_ret_t swm_reset_channel(uint32_t channel);
     sdk_ret_t swm_upd_vlan_mode(bool enable, uint32_t mode, uint32_t channel);
 
     // Port APIs

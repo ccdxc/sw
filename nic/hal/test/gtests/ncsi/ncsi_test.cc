@@ -278,6 +278,16 @@ TEST_F(ncsi_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
     ASSERT_TRUE(ch_rsp.api_status() == types::API_STATUS_OK);
 
+    // reset cannel
+    ch_req.Clear();
+    ch_req.set_channel(0);
+    ch_req.set_reset(true);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::channel_update(ch_req, &ch_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    ASSERT_TRUE(ch_rsp.api_status() == types::API_STATUS_OK);
+
     // To test halctl in sim
     // sleep(10000);
 }

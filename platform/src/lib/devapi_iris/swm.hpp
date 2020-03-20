@@ -70,7 +70,10 @@ public:
     sdk_ret_t disable_tx(uint32_t channel);
     sdk_ret_t enable_rx(uint32_t channel);
     sdk_ret_t disable_rx(uint32_t channel);
+    sdk_ret_t reset_channel(uint32_t channel);
     sdk_ret_t upd_vlan_mode(bool enable, uint32_t vlan_mode, uint32_t channel);
+    sdk_ret_t remove_mac_filters(channel_info_t *cinfo);
+    sdk_ret_t remove_vlan_filters(channel_info_t *cinfo);
 
     static devapi_swm *swm() { return swm_; }
 
