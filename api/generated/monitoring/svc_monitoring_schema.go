@@ -231,6 +231,20 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{ID: "object", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.MirrorSession"},
 		},
 	},
+	"monitoring.AutoMsgStatsAlertPolicyWatchHelper": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgStatsAlertPolicyWatchHelper{}) },
+		Fields: map[string]api.Field{
+			"Events": api.Field{Name: "Events", CLITag: api.CLIInfo{ID: "events", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "events", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.AutoMsgStatsAlertPolicyWatchHelper.WatchEvent"},
+		},
+	},
+	"monitoring.AutoMsgStatsAlertPolicyWatchHelper.WatchEvent": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgStatsAlertPolicyWatchHelper_WatchEvent{}) },
+		Fields: map[string]api.Field{
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Object": api.Field{Name: "Object", CLITag: api.CLIInfo{ID: "object", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.StatsAlertPolicy"},
+		},
+	},
 	"monitoring.AutoMsgTechSupportRequestWatchHelper": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AutoMsgTechSupportRequestWatchHelper{}) },
 		Fields: map[string]api.Field{
@@ -331,6 +345,24 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 			"TotalCount": api.Field{Name: "TotalCount", CLITag: api.CLIInfo{ID: "total-count", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "total-count", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_INT32"},
 		},
 	},
+	"monitoring.StatsAlertPolicyList": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatsAlertPolicyList{}) },
+		Fields: map[string]api.Field{
+			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{ID: "T", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
+
+			"ListMeta": api.Field{Name: "ListMeta", CLITag: api.CLIInfo{ID: "list-meta", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "list-meta", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.ListMeta"},
+
+			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{ID: "items", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "items", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.StatsAlertPolicy"},
+
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{ID: "kind", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{ID: "api-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"ResourceVersion": api.Field{Name: "ResourceVersion", CLITag: api.CLIInfo{ID: "resource-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"TotalCount": api.Field{Name: "TotalCount", CLITag: api.CLIInfo{ID: "total-count", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "total-count", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_INT32"},
+		},
+	},
 	"monitoring.TechSupportRequestList": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(TechSupportRequestList{}) },
 		Fields: map[string]api.Field{
@@ -389,6 +421,8 @@ var keyMapSvc_monitoring = map[string][]api.PathsMap{
 		{URI: "/configs/monitoring/v1/tenant/{Tenant}/fwlogPolicy/{Name}", Key: "/venice/config/monitoring/fwlogPolicy/{Tenant}/{Name}"}},
 	"monitoring.MirrorSession": []api.PathsMap{
 		{URI: "/configs/monitoring/v1/tenant/{Tenant}/MirrorSession/{Name}", Key: "/venice/config/monitoring/MirrorSession/{Tenant}/{Name}"}},
+	"monitoring.StatsAlertPolicy": []api.PathsMap{
+		{URI: "/configs/monitoring/v1/tenant/{Tenant}/statsAlertPolicies/{Name}", Key: "/venice/config/monitoring/statsAlertPolicies/{Tenant}/{Name}"}},
 	"monitoring.TechSupportRequest": []api.PathsMap{
 		{URI: "/configs/monitoring/v1/techsupport/{Name}", Key: "/venice/config/monitoring/techsupport/{Name}"}},
 	"monitoring.TroubleshootingSession": []api.PathsMap{

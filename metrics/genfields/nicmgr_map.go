@@ -3,5 +3,6 @@
 package genfields
 
 func init() {
+	globalMetricsMap["nicmgr"] = make(map[string][]string)
 
 }

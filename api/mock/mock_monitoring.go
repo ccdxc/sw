@@ -711,6 +711,145 @@ func (mr *MockMonitoringV1AlertPolicyInterfaceMockRecorder) Allowed(oper interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockMonitoringV1AlertPolicyInterface)(nil).Allowed), oper)
 }
 
+// MockMonitoringV1StatsAlertPolicyInterface is a mock of MonitoringV1StatsAlertPolicyInterface interface
+type MockMonitoringV1StatsAlertPolicyInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockMonitoringV1StatsAlertPolicyInterfaceMockRecorder
+}
+
+// MockMonitoringV1StatsAlertPolicyInterfaceMockRecorder is the mock recorder for MockMonitoringV1StatsAlertPolicyInterface
+type MockMonitoringV1StatsAlertPolicyInterfaceMockRecorder struct {
+	mock *MockMonitoringV1StatsAlertPolicyInterface
+}
+
+// NewMockMonitoringV1StatsAlertPolicyInterface creates a new mock instance
+func NewMockMonitoringV1StatsAlertPolicyInterface(ctrl *gomock.Controller) *MockMonitoringV1StatsAlertPolicyInterface {
+	mock := &MockMonitoringV1StatsAlertPolicyInterface{ctrl: ctrl}
+	mock.recorder = &MockMonitoringV1StatsAlertPolicyInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockMonitoringV1StatsAlertPolicyInterface) EXPECT() *MockMonitoringV1StatsAlertPolicyInterfaceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method
+func (m *MockMonitoringV1StatsAlertPolicyInterface) Create(ctx context.Context, in *monitoring.StatsAlertPolicy) (*monitoring.StatsAlertPolicy, error) {
+	ret := m.ctrl.Call(m, "Create", ctx, in)
+	ret0, _ := ret[0].(*monitoring.StatsAlertPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (mr *MockMonitoringV1StatsAlertPolicyInterfaceMockRecorder) Create(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockMonitoringV1StatsAlertPolicyInterface)(nil).Create), ctx, in)
+}
+
+// Update mocks base method
+func (m *MockMonitoringV1StatsAlertPolicyInterface) Update(ctx context.Context, in *monitoring.StatsAlertPolicy) (*monitoring.StatsAlertPolicy, error) {
+	ret := m.ctrl.Call(m, "Update", ctx, in)
+	ret0, _ := ret[0].(*monitoring.StatsAlertPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (mr *MockMonitoringV1StatsAlertPolicyInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1StatsAlertPolicyInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockMonitoringV1StatsAlertPolicyInterface) UpdateStatus(ctx context.Context, in *monitoring.StatsAlertPolicy) (*monitoring.StatsAlertPolicy, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*monitoring.StatsAlertPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockMonitoringV1StatsAlertPolicyInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1StatsAlertPolicyInterface)(nil).UpdateStatus), ctx, in)
+}
+
+// Label mocks base method
+func (m *MockMonitoringV1StatsAlertPolicyInterface) Label(ctx context.Context, in *api.Label) (*monitoring.StatsAlertPolicy, error) {
+	ret := m.ctrl.Call(m, "Label", ctx, in)
+	ret0, _ := ret[0].(*monitoring.StatsAlertPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Label indicates an expected call of Label
+func (mr *MockMonitoringV1StatsAlertPolicyInterfaceMockRecorder) Label(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Label", reflect.TypeOf((*MockMonitoringV1StatsAlertPolicyInterface)(nil).Label), ctx, in)
+}
+
+// Get mocks base method
+func (m *MockMonitoringV1StatsAlertPolicyInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.StatsAlertPolicy, error) {
+	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*monitoring.StatsAlertPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (mr *MockMonitoringV1StatsAlertPolicyInterfaceMockRecorder) Get(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockMonitoringV1StatsAlertPolicyInterface)(nil).Get), ctx, objMeta)
+}
+
+// Delete mocks base method
+func (m *MockMonitoringV1StatsAlertPolicyInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.StatsAlertPolicy, error) {
+	ret := m.ctrl.Call(m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*monitoring.StatsAlertPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockMonitoringV1StatsAlertPolicyInterfaceMockRecorder) Delete(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockMonitoringV1StatsAlertPolicyInterface)(nil).Delete), ctx, objMeta)
+}
+
+// List mocks base method
+func (m *MockMonitoringV1StatsAlertPolicyInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.StatsAlertPolicy, error) {
+	ret := m.ctrl.Call(m, "List", ctx, options)
+	ret0, _ := ret[0].([]*monitoring.StatsAlertPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (mr *MockMonitoringV1StatsAlertPolicyInterfaceMockRecorder) List(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockMonitoringV1StatsAlertPolicyInterface)(nil).List), ctx, options)
+}
+
+// Watch mocks base method
+func (m *MockMonitoringV1StatsAlertPolicyInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := m.ctrl.Call(m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (mr *MockMonitoringV1StatsAlertPolicyInterfaceMockRecorder) Watch(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockMonitoringV1StatsAlertPolicyInterface)(nil).Watch), ctx, options)
+}
+
+// Allowed mocks base method
+func (m *MockMonitoringV1StatsAlertPolicyInterface) Allowed(oper interfaces.APIOperType) bool {
+	ret := m.ctrl.Call(m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (mr *MockMonitoringV1StatsAlertPolicyInterfaceMockRecorder) Allowed(oper interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockMonitoringV1StatsAlertPolicyInterface)(nil).Allowed), oper)
+}
+
 // MockMonitoringV1AlertDestinationInterface is a mock of (monitoring.MonitoringV1AlertDestinationInterface)interface
 type MockMonitoringV1AlertDestinationInterface struct {
 	ctrl     *gomock.Controller
@@ -1639,6 +1778,18 @@ func (m *MockMonitoringV1Interface) AlertPolicy() monitoring.MonitoringV1AlertPo
 // AlertPolicy indicates an expected call of AlertPolicy
 func (mr *MockMonitoringV1InterfaceMockRecorder) AlertPolicy() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AlertPolicy", reflect.TypeOf((*MockMonitoringV1Interface)(nil).AlertPolicy))
+}
+
+// StatsAlertPolicy mocks base method
+func (m *MockMonitoringV1Interface) StatsAlertPolicy() monitoring.MonitoringV1StatsAlertPolicyInterface {
+	ret := m.ctrl.Call(m, "StatsAlertPolicy")
+	ret0, _ := ret[0].(monitoring.MonitoringV1StatsAlertPolicyInterface)
+	return ret0
+}
+
+// StatsAlertPolicy indicates an expected call of StatsAlertPolicy
+func (mr *MockMonitoringV1InterfaceMockRecorder) StatsAlertPolicy() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StatsAlertPolicy", reflect.TypeOf((*MockMonitoringV1Interface)(nil).StatsAlertPolicy))
 }
 
 // AlertDestination mocks base method

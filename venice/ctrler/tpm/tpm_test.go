@@ -130,6 +130,9 @@ func (m *mockMonitoringV1) Alert() telemetry.MonitoringV1AlertInterface {
 func (m *mockMonitoringV1) AlertPolicy() telemetry.MonitoringV1AlertPolicyInterface {
 	return nil
 }
+func (m *mockMonitoringV1) StatsAlertPolicy() telemetry.MonitoringV1StatsAlertPolicyInterface {
+	return nil
+}
 func (m *mockMonitoringV1) AlertDestination() telemetry.MonitoringV1AlertDestinationInterface {
 	return nil
 }

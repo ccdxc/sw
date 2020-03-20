@@ -28,6 +28,9 @@ var ObjRelations = map[string][]apiintf.ObjRelation{
 	"monitoring.AlertPolicySpec": []apiintf.ObjRelation{
 		{Type: "NamedRef", To: "monitoring/AlertDestination", Field: "Destinations"},
 	},
+	"monitoring.StatsAlertPolicySpec": []apiintf.ObjRelation{
+		{Type: "NamedRef", To: "monitoring/AlertDestination", Field: "Destinations"},
+	},
 	"network.DHCPServer": []apiintf.ObjRelation{
 		{Type: "NamedRef", To: "network/VirtualRouter", Field: "VirtualRouter"},
 	},

@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Monitoring API reference",
-    "description": "Configure and manage Event,  Logging, Alerts, Mirror Sessions\nand other monitoring policies.\n\n API Objects are: Alert AlertDestination AlertPolicy ArchiveRequest AuditPolicy EventPolicy FlowExportPolicy FwlogPolicy MirrorSession TechSupportRequest TroubleshootingSession ",
+    "description": "Configure and manage Event,  Logging, Alerts, Mirror Sessions\nand other monitoring policies.\n\n API Objects are: Alert AlertDestination AlertPolicy ArchiveRequest AuditPolicy EventPolicy FlowExportPolicy FwlogPolicy MirrorSession StatsAlertPolicy TechSupportRequest TroubleshootingSession ",
     "version": "v1"
   },
   "schemes": [
@@ -5672,6 +5672,577 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/apiLabel"
+            }
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
+    "/configs/monitoring/v1/statsAlertPolicies": {
+      "get": {
+        "summary": "List StatsAlertPolicy objects",
+        "operationId": "ListStatsAlertPolicy_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsAlertPolicyList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.tenant",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.namespace",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "label-selector",
+            "description": "LabelSelector to select on labels in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-selector",
+            "description": "FieldSelector to select on field values in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-change-selector",
+            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort-order",
+            "description": "order to sort List results in.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "post": {
+        "summary": "Create StatsAlertPolicy object",
+        "operationId": "AddStatsAlertPolicy_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsAlertPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsAlertPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
+    "/configs/monitoring/v1/statsAlertPolicies/{O.Name}": {
+      "get": {
+        "summary": "Get StatsAlertPolicy object",
+        "operationId": "GetStatsAlertPolicy_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsAlertPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.api-version",
+            "description": "APIVersion defines the version of the API object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.tenant",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.namespace",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "metric.group",
+            "description": "Metric group - e.g. ftestats, flowstats, etc.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "metric.kind",
+            "description": "Sub-category within the group e.g. MaxSessionThresholdDrops, FlowMissPackets.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "metric.field-name",
+            "description": "Field belonging to the kind e.g. ConnectionsPerSecond. This is the attribute that will be monitored and alerts will be created/resolved based on the thresholds.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "measurement-criteria.window",
+            "description": "The length of time the metric will be monitored/observed before running the values against thresholds for alert creation/resolution. ui-hint: Allowed values - 5m, 10m, 30m, 1h.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "measurement-criteria.function",
+            "description": "Aggregate function to be applied on the metric values that were monitored over a window/interval.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "thresholds.operator",
+            "description": "Operator to be applied when comparing metric values against the threshold values.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.enable",
+            "description": "User can disable the policy by setting this field. Disabled policies will not generate any more alerts but the outstanding ones will remain as is.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "spec.destinations",
+            "description": "name of the alert destinations to be used to send out notification when an alert gets generated.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.total-hits",
+            "description": "Total hits on this policy.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "status.open-alerts",
+            "description": "Open alerts based on this policy.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "status.acknowledged-alerts",
+            "description": "Acknowledged alerts based on this policy.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "delete": {
+        "summary": "Delete StatsAlertPolicy object",
+        "operationId": "DeleteStatsAlertPolicy_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsAlertPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "put": {
+        "summary": "Update StatsAlertPolicy object",
+        "operationId": "UpdateStatsAlertPolicy_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsAlertPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsAlertPolicy"
             }
           }
         ],
@@ -11998,6 +12569,593 @@
         ]
       }
     },
+    "/configs/monitoring/v1/tenant/{O.Tenant}/statsAlertPolicies": {
+      "get": {
+        "summary": "List StatsAlertPolicy objects",
+        "operationId": "ListStatsAlertPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsAlertPolicyList"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.namespace",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "label-selector",
+            "description": "LabelSelector to select on labels in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-selector",
+            "description": "FieldSelector to select on field values in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-change-selector",
+            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort-order",
+            "description": "order to sort List results in.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "post": {
+        "summary": "Create StatsAlertPolicy object",
+        "operationId": "AddStatsAlertPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsAlertPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsAlertPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
+    "/configs/monitoring/v1/tenant/{O.Tenant}/statsAlertPolicies/{O.Name}": {
+      "get": {
+        "summary": "Get StatsAlertPolicy object",
+        "operationId": "GetStatsAlertPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsAlertPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "T.kind",
+            "description": "Kind represents the type of the API object.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "T.api-version",
+            "description": "APIVersion defines the version of the API object. This can only be set by the server.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.namespace",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meta.creation-time",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.mod-time",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "meta.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "metric.group",
+            "description": "Metric group - e.g. ftestats, flowstats, etc.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "metric.kind",
+            "description": "Sub-category within the group e.g. MaxSessionThresholdDrops, FlowMissPackets.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "metric.field-name",
+            "description": "Field belonging to the kind e.g. ConnectionsPerSecond. This is the attribute that will be monitored and alerts will be created/resolved based on the thresholds.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "measurement-criteria.window",
+            "description": "The length of time the metric will be monitored/observed before running the values against thresholds for alert creation/resolution. ui-hint: Allowed values - 5m, 10m, 30m, 1h.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "measurement-criteria.function",
+            "description": "Aggregate function to be applied on the metric values that were monitored over a window/interval.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "thresholds.operator",
+            "description": "Operator to be applied when comparing metric values against the threshold values.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.enable",
+            "description": "User can disable the policy by setting this field. Disabled policies will not generate any more alerts but the outstanding ones will remain as is.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "spec.destinations",
+            "description": "name of the alert destinations to be used to send out notification when an alert gets generated.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.total-hits",
+            "description": "Total hits on this policy.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "status.open-alerts",
+            "description": "Open alerts based on this policy.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "status.acknowledged-alerts",
+            "description": "Acknowledged alerts based on this policy.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "delete": {
+        "summary": "Delete StatsAlertPolicy object",
+        "operationId": "DeleteStatsAlertPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsAlertPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      },
+      "put": {
+        "summary": "Update StatsAlertPolicy object",
+        "operationId": "UpdateStatsAlertPolicy",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsAlertPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/monitoringStatsAlertPolicy"
+            }
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
     "/configs/monitoring/v1/watch/MirrorSession": {
       "get": {
         "summary": "Watch MirrorSession objects. Supports WebSockets or HTTP long poll",
@@ -13343,6 +14501,173 @@
             "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/monitoringAutoMsgFwlogPolicyWatchHelper"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.tenant",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.namespace",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "label-selector",
+            "description": "LabelSelector to select on labels in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-selector",
+            "description": "FieldSelector to select on field values in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-change-selector",
+            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort-order",
+            "description": "order to sort List results in.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
+    },
+    "/configs/monitoring/v1/watch/statsAlertPolicies": {
+      "get": {
+        "summary": "Watch StatsAlertPolicy objects. Supports WebSockets or HTTP long poll",
+        "operationId": "WatchStatsAlertPolicy_1",
+        "responses": {
+          "200": {
+            "description": "(streaming responses)",
+            "schema": {
+              "$ref": "#/definitions/monitoringAutoMsgStatsAlertPolicyWatchHelper"
             }
           },
           "400": {
@@ -15161,6 +16486,172 @@
           "monitoring/v1"
         ]
       }
+    },
+    "/configs/monitoring/v1/watch/tenant/{O.Tenant}/statsAlertPolicies": {
+      "get": {
+        "summary": "Watch StatsAlertPolicy objects. Supports WebSockets or HTTP long poll",
+        "operationId": "WatchStatsAlertPolicy",
+        "responses": {
+          "200": {
+            "description": "(streaming responses)",
+            "schema": {
+              "$ref": "#/definitions/monitoringAutoMsgStatsAlertPolicyWatchHelper"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.name",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.namespace",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.generation-id",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.resource-version",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.uuid",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "O.creation-time",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.mod-time",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "O.self-link",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "label-selector",
+            "description": "LabelSelector to select on labels in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-selector",
+            "description": "FieldSelector to select on field values in list or watch results.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "field-change-selector",
+            "description": "FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "max-results",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort-order",
+            "description": "order to sort List results in.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "monitoring/v1"
+        ]
+      }
     }
   },
   "definitions": {
@@ -16459,6 +17950,29 @@
         }
       }
     },
+    "monitoringAutoMsgStatsAlertPolicyWatchHelper": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringAutoMsgStatsAlertPolicyWatchHelperWatchEvent"
+          }
+        }
+      },
+      "description": "AutoMsgStatsAlertPolicyWatchHelper is a wrapper object for watch events for StatsAlertPolicy objects."
+    },
+    "monitoringAutoMsgStatsAlertPolicyWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "object": {
+          "$ref": "#/definitions/monitoringStatsAlertPolicy"
+        }
+      }
+    },
     "monitoringAutoMsgTechSupportRequestWatchHelper": {
       "type": "object",
       "properties": {
@@ -16977,6 +18491,48 @@
       },
       "description": "One of the requirement from the expression that was met."
     },
+    "monitoringMeasurementCriteria": {
+      "type": "object",
+      "required": [
+        "function"
+      ],
+      "properties": {
+        "window": {
+          "type": "string",
+          "description": "The length of time the metric will be monitored/observed before running the values against thresholds for alert creation/resolution. ui-hint: Allowed values - 5m, 10m, 30m, 1h."
+        },
+        "function": {
+          "type": "string",
+          "enum": [
+            "min",
+            "max",
+            "mean",
+            "difference"
+          ],
+          "default": "min",
+          "description": "Aggregate function to be applied on the metric values that were monitored over a window/interval."
+        }
+      },
+      "description": "Measurement window and function to be used for monitoring the metric. nil `measurement` indicates that the policy will act on the instantaneous value of the metric that gets reported every 30s."
+    },
+    "monitoringMetricIdentifier": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string",
+          "description": "Metric group - e.g. ftestats, flowstats, etc."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Sub-category within the group e.g. MaxSessionThresholdDrops, FlowMissPackets."
+        },
+        "field-name": {
+          "type": "string",
+          "description": "Field belonging to the kind e.g. ConnectionsPerSecond. This is the attribute that will be monitored and alerts will be created/resolved based on the thresholds."
+        }
+      },
+      "description": "MetricIdentifier - uniquely identifies an metric that needs to be monitored as part of the policy."
+    },
     "monitoringMirrorCollector": {
       "type": "object",
       "required": [
@@ -17223,6 +18779,99 @@
         }
       },
       "description": "SNMPTrapServer contains the configuration for sending SNMP traps to a receiver."
+    },
+    "monitoringStatsAlertPolicy": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/monitoringStatsAlertPolicySpec"
+        },
+        "status": {
+          "$ref": "#/definitions/monitoringStatsAlertPolicyStatus"
+        }
+      },
+      "description": "StatsAlertPolicy - tenant scoped."
+    },
+    "monitoringStatsAlertPolicyList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringStatsAlertPolicy"
+          },
+          "description": "List of StatsAlertPolicy objects."
+        }
+      },
+      "description": "StatsAlertPolicyList is a container object for list of StatsAlertPolicy objects."
+    },
+    "monitoringStatsAlertPolicySpec": {
+      "type": "object",
+      "properties": {
+        "metric": {
+          "$ref": "#/definitions/monitoringMetricIdentifier",
+          "description": "Details about the metric that needs to be monitored."
+        },
+        "measurement-criteria": {
+          "$ref": "#/definitions/monitoringMeasurementCriteria",
+          "description": "Measurement window and function to be applied while monitoring the metric."
+        },
+        "thresholds": {
+          "$ref": "#/definitions/monitoringThresholds",
+          "description": "Threshold values with varying severity."
+        },
+        "enable": {
+          "type": "boolean",
+          "format": "boolean",
+          "default": "true",
+          "description": "User can disable the policy by setting this field. Disabled policies will not generate any more alerts but the outstanding ones will remain as is."
+        },
+        "destinations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "name of the alert destinations to be used to send out notification when an alert gets generated."
+        }
+      }
+    },
+    "monitoringStatsAlertPolicyStatus": {
+      "type": "object",
+      "properties": {
+        "total-hits": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Total hits on this policy."
+        },
+        "open-alerts": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Open alerts based on this policy."
+        },
+        "acknowledged-alerts": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Acknowledged alerts based on this policy."
+        }
+      }
     },
     "monitoringSyslogAuditor": {
       "type": "object",
@@ -17485,6 +19134,54 @@
           "type": "string"
         }
       }
+    },
+    "monitoringThreshold": {
+      "type": "object",
+      "required": [
+        "severity"
+      ],
+      "properties": {
+        "severity": {
+          "type": "string",
+          "enum": [
+            "info",
+            "warn",
+            "critical"
+          ],
+          "default": "info",
+          "description": "Severity of the alert to be created."
+        },
+        "raise-value": {
+          "type": "string",
+          "description": "Raise/Create an alert when the threshold reaches this value."
+        }
+      },
+      "description": "Threshold represents the threshold value of a metric against different severities."
+    },
+    "monitoringThresholds": {
+      "type": "object",
+      "required": [
+        "operator"
+      ],
+      "properties": {
+        "operator": {
+          "type": "string",
+          "enum": [
+            "less_or_equal_than",
+            "greater_or_equal_than"
+          ],
+          "default": "less_or_equal_than",
+          "description": "Operator to be applied when comparing metric values against the threshold values."
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/monitoringThreshold"
+          },
+          "description": "List of threshold values to be acted against. Key should be one of the alert severity."
+        }
+      },
+      "description": "List of threshold values."
     },
     "monitoringTimeWindow": {
       "type": "object",

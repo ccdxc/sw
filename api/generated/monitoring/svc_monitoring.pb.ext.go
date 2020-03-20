@@ -115,6 +115,16 @@ func (m *MirrorSessionList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *StatsAlertPolicyList) MakeKey(prefix string) string {
+	obj := StatsAlertPolicy{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *StatsAlertPolicyList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *TechSupportRequestList) MakeKey(prefix string) string {
 	obj := TechSupportRequest{}
 	return obj.MakeKey(prefix)
@@ -185,6 +195,12 @@ func (m *AutoMsgFwlogPolicyWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgMirrorSessionWatchHelper) MakeKey(prefix string) string {
 	obj := MirrorSession{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgStatsAlertPolicyWatchHelper) MakeKey(prefix string) string {
+	obj := StatsAlertPolicy{}
 	return obj.MakeKey(prefix)
 }
 
@@ -684,6 +700,48 @@ func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgStatsAlertPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgStatsAlertPolicyWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgStatsAlertPolicyWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgStatsAlertPolicyWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgStatsAlertPolicyWatchHelper))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgStatsAlertPolicyWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgStatsAlertPolicyWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgStatsAlertPolicyWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgStatsAlertPolicyWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgStatsAlertPolicyWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgStatsAlertPolicyWatchHelper_WatchEvent))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgStatsAlertPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgTechSupportRequestWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgTechSupportRequestWatchHelper
 	var ok bool
@@ -848,6 +906,27 @@ func (m *MirrorSessionList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *MirrorSessionList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *StatsAlertPolicyList) Clone(into interface{}) (interface{}, error) {
+	var out *StatsAlertPolicyList
+	var ok bool
+	if into == nil {
+		out = &StatsAlertPolicyList{}
+	} else {
+		out, ok = into.(*StatsAlertPolicyList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*StatsAlertPolicyList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *StatsAlertPolicyList) Defaults(ver string) bool {
 	return false
 }
 
@@ -1626,6 +1705,93 @@ func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Normalize() {
 
 }
 
+func (m *AutoMsgStatsAlertPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
+}
+
+func (m *AutoMsgStatsAlertPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgStatsAlertPolicyWatchHelper) Normalize() {
+
+	for k, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+			m.Events[k] = v
+		}
+	}
+
+}
+
+func (m *AutoMsgStatsAlertPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
+}
+
+func (m *AutoMsgStatsAlertPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgStatsAlertPolicyWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *AutoMsgTechSupportRequestWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1856,6 +2022,50 @@ func (m *MirrorSessionList) Validate(ver, path string, ignoreStatus bool, ignore
 }
 
 func (m *MirrorSessionList) Normalize() {
+
+	for k, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+			m.Items[k] = v
+		}
+	}
+
+}
+
+func (m *StatsAlertPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
+}
+
+func (m *StatsAlertPolicyList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *StatsAlertPolicyList) Normalize() {
 
 	for k, v := range m.Items {
 		if v != nil {

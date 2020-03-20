@@ -19,6 +19,7 @@ import { MonitoringFwlogPolicy } from './monitoring';
 import { MonitoringFlowExportPolicy } from './monitoring';
 import { MonitoringAlert } from './monitoring';
 import { MonitoringAlertPolicy } from './monitoring';
+import { MonitoringStatsAlertPolicy } from './monitoring';
 import { MonitoringAlertDestination } from './monitoring';
 import { MonitoringMirrorSession } from './monitoring';
 import { MonitoringTechSupportRequest } from './monitoring';
@@ -169,6 +170,11 @@ export const CategoryMapping: CatMap  = {
     },
     "AlertPolicy" : {
       instance: new MonitoringAlertPolicy(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "StatsAlertPolicy" : {
+      instance: new MonitoringStatsAlertPolicy(),
       scopes: [ 'tenant', ] ,
       actions:  [] ,
     },

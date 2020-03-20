@@ -80,6 +80,19 @@ type MonitoringV1AlertPolicyInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 }
 
+// MonitoringV1StatsAlertPolicyInterface exposes the CRUD methods for StatsAlertPolicy
+type MonitoringV1StatsAlertPolicyInterface interface {
+	Create(ctx context.Context, in *StatsAlertPolicy) (*StatsAlertPolicy, error)
+	Update(ctx context.Context, in *StatsAlertPolicy) (*StatsAlertPolicy, error)
+	UpdateStatus(ctx context.Context, in *StatsAlertPolicy) (*StatsAlertPolicy, error)
+	Label(ctx context.Context, in *api.Label) (*StatsAlertPolicy, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*StatsAlertPolicy, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*StatsAlertPolicy, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*StatsAlertPolicy, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
+}
+
 // MonitoringV1AlertDestinationInterface exposes the CRUD methods for AlertDestination
 type MonitoringV1AlertDestinationInterface interface {
 	Create(ctx context.Context, in *AlertDestination) (*AlertDestination, error)
@@ -166,6 +179,7 @@ type MonitoringV1Interface interface {
 	FlowExportPolicy() MonitoringV1FlowExportPolicyInterface
 	Alert() MonitoringV1AlertInterface
 	AlertPolicy() MonitoringV1AlertPolicyInterface
+	StatsAlertPolicy() MonitoringV1StatsAlertPolicyInterface
 	AlertDestination() MonitoringV1AlertDestinationInterface
 	MirrorSession() MonitoringV1MirrorSessionInterface
 	TroubleshootingSession() MonitoringV1TroubleshootingSessionInterface

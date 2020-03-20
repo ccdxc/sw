@@ -3,9 +3,11 @@
 package genfields
 
 func init() {
+	globalMetricsMap["nmdmetrics"] = make(map[string][]string)
 
-	msgFieldMaps["NMDMetrics"] = []string{
+	kindToFieldNameMap["NMDMetrics"] = []string{
 		"GetCalls",
 	}
+	globalMetricsMap["nmdmetrics"]["NMDMetrics"] = kindToFieldNameMap["NMDMetrics"]
 
 }

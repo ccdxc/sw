@@ -3,15 +3,17 @@
 package genfields
 
 func init() {
+	globalMetricsMap["ftestats"] = make(map[string][]string)
 
-	msgFieldMaps["FteCPSMetrics"] = []string{
+	kindToFieldNameMap["FteCPSMetrics"] = []string{
 		"ConnectionsPerSecond",
 		"MaxConnectionsPerSecond",
 		"PacketsPerSecond",
 		"MaxPacketsPerSecond",
 	}
+	globalMetricsMap["ftestats"]["FteCPSMetrics"] = kindToFieldNameMap["FteCPSMetrics"]
 
-	msgFieldMaps["FteLifQMetrics"] = []string{
+	kindToFieldNameMap["FteLifQMetrics"] = []string{
 		"FlowMissPackets",
 		"FlowRetransmitPackets",
 		"L4RedirectPackets",
@@ -24,8 +26,9 @@ func init() {
 		"FreedTxPackets",
 		"MaxSessionThresholdDrops",
 	}
+	globalMetricsMap["ftestats"]["FteLifQMetrics"] = kindToFieldNameMap["FteLifQMetrics"]
 
-	msgFieldMaps["SessionSummaryMetrics"] = []string{
+	kindToFieldNameMap["SessionSummaryMetrics"] = []string{
 		"TotalActiveSessions",
 		"NumL2Sessions",
 		"NumTcpSessions",
@@ -44,5 +47,6 @@ func init() {
 		"NumIcmpSessionLimitDrops",
 		"NumOtherSessionLimitDrops",
 	}
+	globalMetricsMap["ftestats"]["SessionSummaryMetrics"] = kindToFieldNameMap["SessionSummaryMetrics"]
 
 }

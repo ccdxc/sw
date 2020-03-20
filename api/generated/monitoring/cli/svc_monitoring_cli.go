@@ -430,6 +430,95 @@ func restPutAlertPolicy(hostname, token string, obj interface{}) error {
 
 }
 
+func restGetStatsAlertPolicy(hostname, tenant, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*monitoring.StatsAlertPolicy); ok {
+		nv, err := restcl.MonitoringV1().StatsAlertPolicy().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*monitoring.StatsAlertPolicyList); ok {
+		opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
+		nv, err := restcl.MonitoringV1().StatsAlertPolicy().List(loginCtx, &opts)
+		if err != nil {
+			return err
+		}
+		v.Items = nv
+	}
+	return nil
+
+}
+
+func restDeleteStatsAlertPolicy(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*monitoring.StatsAlertPolicy); ok {
+		nv, err := restcl.MonitoringV1().StatsAlertPolicy().Delete(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPostStatsAlertPolicy(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*monitoring.StatsAlertPolicy); ok {
+		nv, err := restcl.MonitoringV1().StatsAlertPolicy().Create(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
+func restPutStatsAlertPolicy(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*monitoring.StatsAlertPolicy); ok {
+		nv, err := restcl.MonitoringV1().StatsAlertPolicy().Update(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
+}
+
 func restGetAlertDestination(hostname, tenant, token string, obj interface{}) error {
 
 	restcl, err := apiclient.NewRestAPIClient(hostname)
@@ -960,6 +1049,11 @@ func init() {
 	cl.AddRestDeleteFunc("monitoring.AlertPolicy", "v1", restDeleteAlertPolicy)
 	cl.AddRestPutFunc("monitoring.AlertPolicy", "v1", restPutAlertPolicy)
 	cl.AddRestGetFunc("monitoring.AlertPolicy", "v1", restGetAlertPolicy)
+
+	cl.AddRestPostFunc("monitoring.StatsAlertPolicy", "v1", restPostStatsAlertPolicy)
+	cl.AddRestDeleteFunc("monitoring.StatsAlertPolicy", "v1", restDeleteStatsAlertPolicy)
+	cl.AddRestPutFunc("monitoring.StatsAlertPolicy", "v1", restPutStatsAlertPolicy)
+	cl.AddRestGetFunc("monitoring.StatsAlertPolicy", "v1", restGetStatsAlertPolicy)
 
 	cl.AddRestPostFunc("monitoring.AlertDestination", "v1", restPostAlertDestination)
 	cl.AddRestDeleteFunc("monitoring.AlertDestination", "v1", restDeleteAlertDestination)

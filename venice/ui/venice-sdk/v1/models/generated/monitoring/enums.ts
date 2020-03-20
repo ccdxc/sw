@@ -114,6 +114,13 @@ export enum MonitoringMatchedRequirement_operator {
     'lte' = "lte",
 }
 
+export enum MonitoringMeasurementCriteria_function {
+    'min' = "min",
+    'max' = "max",
+    'mean' = "mean",
+    'difference' = "difference",
+}
+
 export enum MonitoringMirrorCollector_type {
     'erspan' = "erspan",
 }
@@ -190,6 +197,17 @@ export enum MonitoringTechSupportRequestStatus_status {
     'completed' = "completed",
     'failed' = "failed",
     'timeout' = "timeout",
+}
+
+export enum MonitoringThreshold_severity {
+    'info' = "info",
+    'warn' = "warn",
+    'critical' = "critical",
+}
+
+export enum MonitoringThresholds_operator {
+    'less_or_equal_than' = "less_or_equal_than",
+    'greater_or_equal_than' = "greater_or_equal_than",
 }
 
 export enum MonitoringTroubleshootingSessionStatus_state {
@@ -375,6 +393,7 @@ export class AllEnums {
     MonitoringFwlogPolicySpec_format = MonitoringFwlogPolicySpec_format;
     MonitoringFwlogPolicySpec_filter = MonitoringFwlogPolicySpec_filter;
     MonitoringMatchedRequirement_operator = MonitoringMatchedRequirement_operator;
+    MonitoringMeasurementCriteria_function = MonitoringMeasurementCriteria_function;
     MonitoringMirrorCollector_type = MonitoringMirrorCollector_type;
     MonitoringMirrorSessionSpec_packet_filters = MonitoringMirrorSessionSpec_packet_filters;
     MonitoringMirrorSessionStatus_schedule_state = MonitoringMirrorSessionStatus_schedule_state;
@@ -385,6 +404,8 @@ export class AllEnums {
     MonitoringSyslogExportConfig_facility_override = MonitoringSyslogExportConfig_facility_override;
     MonitoringTechSupportNodeResult_status = MonitoringTechSupportNodeResult_status;
     MonitoringTechSupportRequestStatus_status = MonitoringTechSupportRequestStatus_status;
+    MonitoringThreshold_severity = MonitoringThreshold_severity;
+    MonitoringThresholds_operator = MonitoringThresholds_operator;
     MonitoringTroubleshootingSessionStatus_state = MonitoringTroubleshootingSessionStatus_state;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;

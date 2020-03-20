@@ -3,16 +3,18 @@
 package genfields
 
 func init() {
+	globalMetricsMap["accel_metrics"] = make(map[string][]string)
 
-	msgFieldMaps["AccelHwRingMetrics"] = []string{
+	kindToFieldNameMap["AccelHwRingMetrics"] = []string{
 		"PIndex",
 		"CIndex",
 		"InputBytes",
 		"OutputBytes",
 		"SoftResets",
 	}
+	globalMetricsMap["accel_metrics"]["AccelHwRingMetrics"] = kindToFieldNameMap["AccelHwRingMetrics"]
 
-	msgFieldMaps["AccelPfInfo"] = []string{
+	kindToFieldNameMap["AccelPfInfo"] = []string{
 		"HwLifId",
 		"NumSeqQueues",
 		"CryptoKeyIdxBase",
@@ -20,14 +22,16 @@ func init() {
 		"IntrBase",
 		"IntrCount",
 	}
+	globalMetricsMap["accel_metrics"]["AccelPfInfo"] = kindToFieldNameMap["AccelPfInfo"]
 
-	msgFieldMaps["AccelSeqQueueInfoMetrics"] = []string{
+	kindToFieldNameMap["AccelSeqQueueInfoMetrics"] = []string{
 		"QStateAddr",
 		"QGroup",
 		"CoreId",
 	}
+	globalMetricsMap["accel_metrics"]["AccelSeqQueueInfoMetrics"] = kindToFieldNameMap["AccelSeqQueueInfoMetrics"]
 
-	msgFieldMaps["AccelSeqQueueMetrics"] = []string{
+	kindToFieldNameMap["AccelSeqQueueMetrics"] = []string{
 		"InterruptsRaised",
 		"NextDBsRung",
 		"SeqDescsProcessed",
@@ -48,5 +52,6 @@ func init() {
 		"CpHeaderUpdates",
 		"SeqHwBytes",
 	}
+	globalMetricsMap["accel_metrics"]["AccelSeqQueueMetrics"] = kindToFieldNameMap["AccelSeqQueueMetrics"]
 
 }

@@ -32,6 +32,7 @@ service MonitoringV1 {
     option (venice.apiGrpcCrudService) = "FlowExportPolicy";
     option (venice.apiGrpcCrudService) = "Alert";
     option (venice.apiGrpcCrudService) = "AlertPolicy";
+    option (venice.apiGrpcCrudService) = "StatsAlertPolicy";
     option (venice.apiGrpcCrudService) = "AlertDestination";
     option (venice.apiGrpcCrudService) = "MirrorSession";
     option (venice.apiGrpcCrudService) = "TroubleshootingSession";
@@ -61,6 +62,10 @@ service MonitoringV1 {
     option (venice.apiRestService) = {
         Object: "AlertPolicy"
         Method: ["get", "put", "delete", "post", "list" , "watch", "label"]
+    };
+    option (venice.apiRestService) = {
+        Object: "StatsAlertPolicy"
+        Method: ["get", "put", "delete", "post", "list" , "watch"]
     };
     option (venice.apiRestService) = {
         Object: "AlertDestination"

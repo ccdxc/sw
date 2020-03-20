@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
-import { IMonitoringMirrorSessionList,MonitoringMirrorSessionList,IApiStatus,ApiStatus,IMonitoringMirrorSession,MonitoringMirrorSession,ApiLabel,IApiLabel,IMonitoringTroubleshootingSessionList,MonitoringTroubleshootingSessionList,IMonitoringTroubleshootingSession,MonitoringTroubleshootingSession,IMonitoringAlertDestinationList,MonitoringAlertDestinationList,IMonitoringAlertDestination,MonitoringAlertDestination,IMonitoringAlertPolicyList,MonitoringAlertPolicyList,IMonitoringAlertPolicy,MonitoringAlertPolicy,IMonitoringAlertList,MonitoringAlertList,IMonitoringAlert,MonitoringAlert,IMonitoringArchiveRequestList,MonitoringArchiveRequestList,IMonitoringArchiveRequest,MonitoringArchiveRequest,MonitoringCancelArchiveRequest,IMonitoringCancelArchiveRequest,IMonitoringAuditPolicy,MonitoringAuditPolicy,IMonitoringEventPolicyList,MonitoringEventPolicyList,IMonitoringEventPolicy,MonitoringEventPolicy,IMonitoringFlowExportPolicyList,MonitoringFlowExportPolicyList,IMonitoringFlowExportPolicy,MonitoringFlowExportPolicy,IMonitoringFwlogPolicyList,MonitoringFwlogPolicyList,IMonitoringFwlogPolicy,MonitoringFwlogPolicy,IMonitoringTechSupportRequestList,MonitoringTechSupportRequestList,IMonitoringTechSupportRequest,MonitoringTechSupportRequest,IMonitoringAutoMsgMirrorSessionWatchHelper,MonitoringAutoMsgMirrorSessionWatchHelper,IMonitoringAutoMsgAlertDestinationWatchHelper,MonitoringAutoMsgAlertDestinationWatchHelper,IMonitoringAutoMsgAlertPolicyWatchHelper,MonitoringAutoMsgAlertPolicyWatchHelper,IMonitoringAutoMsgAlertWatchHelper,MonitoringAutoMsgAlertWatchHelper,IMonitoringAutoMsgArchiveRequestWatchHelper,MonitoringAutoMsgArchiveRequestWatchHelper,IMonitoringAutoMsgAuditPolicyWatchHelper,MonitoringAutoMsgAuditPolicyWatchHelper,IMonitoringAutoMsgEventPolicyWatchHelper,MonitoringAutoMsgEventPolicyWatchHelper,IMonitoringAutoMsgFlowExportPolicyWatchHelper,MonitoringAutoMsgFlowExportPolicyWatchHelper,IMonitoringAutoMsgFwlogPolicyWatchHelper,MonitoringAutoMsgFwlogPolicyWatchHelper,IMonitoringAutoMsgTechSupportRequestWatchHelper,MonitoringAutoMsgTechSupportRequestWatchHelper } from '../../models/generated/monitoring';
+import { IMonitoringMirrorSessionList,MonitoringMirrorSessionList,IApiStatus,ApiStatus,IMonitoringMirrorSession,MonitoringMirrorSession,ApiLabel,IApiLabel,IMonitoringTroubleshootingSessionList,MonitoringTroubleshootingSessionList,IMonitoringTroubleshootingSession,MonitoringTroubleshootingSession,IMonitoringAlertDestinationList,MonitoringAlertDestinationList,IMonitoringAlertDestination,MonitoringAlertDestination,IMonitoringAlertPolicyList,MonitoringAlertPolicyList,IMonitoringAlertPolicy,MonitoringAlertPolicy,IMonitoringAlertList,MonitoringAlertList,IMonitoringAlert,MonitoringAlert,IMonitoringArchiveRequestList,MonitoringArchiveRequestList,IMonitoringArchiveRequest,MonitoringArchiveRequest,MonitoringCancelArchiveRequest,IMonitoringCancelArchiveRequest,IMonitoringAuditPolicy,MonitoringAuditPolicy,IMonitoringEventPolicyList,MonitoringEventPolicyList,IMonitoringEventPolicy,MonitoringEventPolicy,IMonitoringFlowExportPolicyList,MonitoringFlowExportPolicyList,IMonitoringFlowExportPolicy,MonitoringFlowExportPolicy,IMonitoringFwlogPolicyList,MonitoringFwlogPolicyList,IMonitoringFwlogPolicy,MonitoringFwlogPolicy,IMonitoringStatsAlertPolicyList,MonitoringStatsAlertPolicyList,IMonitoringStatsAlertPolicy,MonitoringStatsAlertPolicy,IMonitoringTechSupportRequestList,MonitoringTechSupportRequestList,IMonitoringTechSupportRequest,MonitoringTechSupportRequest,IMonitoringAutoMsgMirrorSessionWatchHelper,MonitoringAutoMsgMirrorSessionWatchHelper,IMonitoringAutoMsgAlertDestinationWatchHelper,MonitoringAutoMsgAlertDestinationWatchHelper,IMonitoringAutoMsgAlertPolicyWatchHelper,MonitoringAutoMsgAlertPolicyWatchHelper,IMonitoringAutoMsgAlertWatchHelper,MonitoringAutoMsgAlertWatchHelper,IMonitoringAutoMsgArchiveRequestWatchHelper,MonitoringAutoMsgArchiveRequestWatchHelper,IMonitoringAutoMsgAuditPolicyWatchHelper,MonitoringAutoMsgAuditPolicyWatchHelper,IMonitoringAutoMsgEventPolicyWatchHelper,MonitoringAutoMsgEventPolicyWatchHelper,IMonitoringAutoMsgFlowExportPolicyWatchHelper,MonitoringAutoMsgFlowExportPolicyWatchHelper,IMonitoringAutoMsgFwlogPolicyWatchHelper,MonitoringAutoMsgFwlogPolicyWatchHelper,IMonitoringAutoMsgStatsAlertPolicyWatchHelper,MonitoringAutoMsgStatsAlertPolicyWatchHelper,IMonitoringAutoMsgTechSupportRequestWatchHelper,MonitoringAutoMsgTechSupportRequestWatchHelper } from '../../models/generated/monitoring';
 
 @Injectable()
 export class Monitoringv1Service extends AbstractService {
@@ -984,6 +984,92 @@ export class Monitoringv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** List StatsAlertPolicy objects */
+  public ListStatsAlertPolicy_1(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringStatsAlertPolicyList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/statsAlertPolicies';
+    const opts = {
+      eventID: 'ListStatsAlertPolicy_1',
+      objType: 'MonitoringStatsAlertPolicyList',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringStatsAlertPolicyList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create StatsAlertPolicy object */
+  public AddStatsAlertPolicy_1(body: IMonitoringStatsAlertPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/statsAlertPolicies';
+    const opts = {
+      eventID: 'AddStatsAlertPolicy_1',
+      objType: 'MonitoringStatsAlertPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringStatsAlertPolicy(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get StatsAlertPolicy object */
+  public GetStatsAlertPolicy_1(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/statsAlertPolicies/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'GetStatsAlertPolicy_1',
+      objType: 'MonitoringStatsAlertPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete StatsAlertPolicy object */
+  public DeleteStatsAlertPolicy_1(O_Name, stagingID: string = ""):Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/statsAlertPolicies/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'DeleteStatsAlertPolicy_1',
+      objType: 'MonitoringStatsAlertPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update StatsAlertPolicy object */
+  public UpdateStatsAlertPolicy_1(O_Name, body: IMonitoringStatsAlertPolicy, stagingID: string = "", previousVal: IMonitoringStatsAlertPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/statsAlertPolicies/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'UpdateStatsAlertPolicy_1',
+      objType: 'MonitoringStatsAlertPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringStatsAlertPolicy(body), previousVal, trimDefaults)
+    }
+    return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List TechSupportRequest objects */
@@ -2073,6 +2159,97 @@ export class Monitoringv1Service extends AbstractService {
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringFwlogPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** List StatsAlertPolicy objects */
+  public ListStatsAlertPolicy(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringStatsAlertPolicyList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/statsAlertPolicies';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    const opts = {
+      eventID: 'ListStatsAlertPolicy',
+      objType: 'MonitoringStatsAlertPolicyList',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringStatsAlertPolicyList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create StatsAlertPolicy object */
+  public AddStatsAlertPolicy(body: IMonitoringStatsAlertPolicy, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/statsAlertPolicies';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    const opts = {
+      eventID: 'AddStatsAlertPolicy',
+      objType: 'MonitoringStatsAlertPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringStatsAlertPolicy(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get StatsAlertPolicy object */
+  public GetStatsAlertPolicy(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/statsAlertPolicies/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'GetStatsAlertPolicy',
+      objType: 'MonitoringStatsAlertPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete StatsAlertPolicy object */
+  public DeleteStatsAlertPolicy(O_Name, stagingID: string = ""):Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/statsAlertPolicies/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'DeleteStatsAlertPolicy',
+      objType: 'MonitoringStatsAlertPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Update StatsAlertPolicy object */
+  public UpdateStatsAlertPolicy(O_Name, body: IMonitoringStatsAlertPolicy, stagingID: string = "", previousVal: IMonitoringStatsAlertPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/statsAlertPolicies/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'UpdateStatsAlertPolicy',
+      objType: 'MonitoringStatsAlertPolicy',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new MonitoringStatsAlertPolicy(body), previousVal, trimDefaults)
+    }
+    return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** Watch MirrorSession objects. Supports WebSockets or HTTP long poll */
   public WatchMirrorSession_1(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringAutoMsgMirrorSessionWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/MirrorSession';
@@ -2206,6 +2383,21 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringAutoMsgFwlogPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch StatsAlertPolicy objects. Supports WebSockets or HTTP long poll */
+  public WatchStatsAlertPolicy_1(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringAutoMsgStatsAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/statsAlertPolicies';
+    const opts = {
+      eventID: 'WatchStatsAlertPolicy_1',
+      objType: 'MonitoringAutoMsgStatsAlertPolicyWatchHelper',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringAutoMsgStatsAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch TechSupportRequest objects. Supports WebSockets or HTTP long poll */
@@ -2365,6 +2557,22 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringAutoMsgFwlogPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch StatsAlertPolicy objects. Supports WebSockets or HTTP long poll */
+  public WatchStatsAlertPolicy(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringAutoMsgStatsAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/watch/tenant/{O.Tenant}/statsAlertPolicies';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    const opts = {
+      eventID: 'WatchStatsAlertPolicy',
+      objType: 'MonitoringAutoMsgStatsAlertPolicyWatchHelper',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringAutoMsgStatsAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
 }

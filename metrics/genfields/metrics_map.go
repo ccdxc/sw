@@ -3,8 +3,9 @@
 package genfields
 
 func init() {
+	globalMetricsMap["metrics"] = make(map[string][]string)
 
-	msgFieldMaps["LifMetrics"] = []string{
+	kindToFieldNameMap["LifMetrics"] = []string{
 		"RxUnicastBytes",
 		"RxUnicastPackets",
 		"RxMulticastBytes",
@@ -30,5 +31,6 @@ func init() {
 		"TxDropBroadcastBytes",
 		"TxDropBroadcastPackets",
 	}
+	globalMetricsMap["metrics"]["LifMetrics"] = kindToFieldNameMap["LifMetrics"]
 
 }

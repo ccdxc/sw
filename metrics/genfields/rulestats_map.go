@@ -3,8 +3,9 @@
 package genfields
 
 func init() {
+	globalMetricsMap["rulestats"] = make(map[string][]string)
 
-	msgFieldMaps["RuleMetrics"] = []string{
+	kindToFieldNameMap["RuleMetrics"] = []string{
 		"TcpHits",
 		"UdpHits",
 		"IcmpHits",
@@ -12,5 +13,6 @@ func init() {
 		"OtherHits",
 		"TotalHits",
 	}
+	globalMetricsMap["rulestats"]["RuleMetrics"] = kindToFieldNameMap["RuleMetrics"]
 
 }

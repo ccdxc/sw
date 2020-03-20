@@ -9,26 +9,26 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-func TestGetFields(t *testing.T) {
+func TestGetFieldNamesFromKind(t *testing.T) {
 	// Simulated test case
-	msgFieldMaps["metric_zero"] = []string{}
-	v, ok := GetFields("metric_zero")
+	kindToFieldNameMap["metric_zero"] = []string{}
+	v, ok := GetFieldNamesFromKind("metric_zero")
 	Assert(t, ok, fmt.Sprintf("failed to get field list"))
-	Assert(t, reflect.DeepEqual(v, msgFieldMaps["metric_zero"]), fmt.Sprintf("failed to get correct field list from msgFieldMaps"))
+	Assert(t, reflect.DeepEqual(v, kindToFieldNameMap["metric_zero"]), fmt.Sprintf("failed to get correct field list from kindToFieldNameMap"))
 
-	msgFieldMaps["metric_one"] = []string{"field_one"}
-	v, ok = GetFields("metric_one")
+	kindToFieldNameMap["metric_one"] = []string{"field_one"}
+	v, ok = GetFieldNamesFromKind("metric_one")
 	Assert(t, ok, fmt.Sprintf("failed to get field list"))
-	Assert(t, reflect.DeepEqual(v, msgFieldMaps["metric_one"]), fmt.Sprintf("failed to get correct field list from msgFieldMaps"))
+	Assert(t, reflect.DeepEqual(v, kindToFieldNameMap["metric_one"]), fmt.Sprintf("failed to get correct field list from kindToFieldNameMap"))
 
-	msgFieldMaps["metric_two"] = []string{"field_one", "field_two"}
-	v, ok = GetFields("metric_two")
+	kindToFieldNameMap["metric_two"] = []string{"field_one", "field_two"}
+	v, ok = GetFieldNamesFromKind("metric_two")
 	Assert(t, ok, fmt.Sprintf("failed to get field list"))
-	Assert(t, reflect.DeepEqual(v, msgFieldMaps["metric_two"]), fmt.Sprintf("failed to get correct field list from msgFieldMaps"))
+	Assert(t, reflect.DeepEqual(v, kindToFieldNameMap["metric_two"]), fmt.Sprintf("failed to get correct field list from kindToFieldNameMap"))
 
 	// Real test case for three proto files
 	// If the original field config changed, the answer here must also be changed
-	v, ok = GetFields("IPv4FlowBehavioralMetrics")
+	v, ok = GetFieldNamesFromKind("IPv4FlowBehavioralMetrics")
 	Assert(t, ok, fmt.Sprintf("failed to get field list for flowstats IPv4FlowBehavioralMetrics"))
 	flowstatsAnswer := []string{
 		"Instances",
@@ -43,9 +43,9 @@ func TestGetFields(t *testing.T) {
 	}
 	sort.Strings(v)
 	sort.Strings(flowstatsAnswer)
-	Assert(t, reflect.DeepEqual(v, flowstatsAnswer), fmt.Sprintf("failed to get correct field list from msgFieldMaps for flowstats IPv4FlowBehavioralMetrics"))
+	Assert(t, reflect.DeepEqual(v, flowstatsAnswer), fmt.Sprintf("failed to get correct field list from kindToFieldNameMap for flowstats IPv4FlowBehavioralMetrics"))
 
-	v, ok = GetFields("RuleMetrics")
+	v, ok = GetFieldNamesFromKind("RuleMetrics")
 	Assert(t, ok, fmt.Sprintf("failed to get field list for rulestats RuleMetrics"))
 	rulestatsAnswer := []string{
 		"TcpHits",
@@ -57,9 +57,9 @@ func TestGetFields(t *testing.T) {
 	}
 	sort.Strings(v)
 	sort.Strings(rulestatsAnswer)
-	Assert(t, reflect.DeepEqual(v, rulestatsAnswer), fmt.Sprintf("failed to get correct field list from msgFieldMaps for rulestats RuleMetrics"))
+	Assert(t, reflect.DeepEqual(v, rulestatsAnswer), fmt.Sprintf("failed to get correct field list from kindToFieldNameMap for rulestats RuleMetrics"))
 
-	v, ok = GetFields("FteLifQMetrics")
+	v, ok = GetFieldNamesFromKind("FteLifQMetrics")
 	Assert(t, ok, fmt.Sprintf("failed to get field list for ftestats FteLifQMetrics"))
 	ftestatsAnswer := []string{
 		"FlowMissPackets",
@@ -76,20 +76,32 @@ func TestGetFields(t *testing.T) {
 	}
 	sort.Strings(v)
 	sort.Strings(ftestatsAnswer)
-	Assert(t, reflect.DeepEqual(v, ftestatsAnswer), fmt.Sprintf("failed to get correct field list from msgFieldMaps for ftestats FteLifQMetrics"))
+	Assert(t, reflect.DeepEqual(v, ftestatsAnswer), fmt.Sprintf("failed to get correct field list from kindToFieldNameMap for ftestats FteLifQMetrics"))
 }
 
-func TestGetAllKeys(t *testing.T) {
+func TestGetAllFieldNames(t *testing.T) {
 	// This test is conduct adter adding three simulated key value pairs
-	msgFieldMaps["metric_zero"] = []string{}
-	msgFieldMaps["metric_one"] = []string{"field_one"}
-	msgFieldMaps["metric_two"] = []string{"field_one", "field_two"}
+	kindToFieldNameMap["metric_zero"] = []string{}
+	kindToFieldNameMap["metric_one"] = []string{"field_one"}
+	kindToFieldNameMap["metric_two"] = []string{"field_one", "field_two"}
 	keys := []string{}
-	for k := range msgFieldMaps {
+	for k := range kindToFieldNameMap {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	allKeysResult := GetAllKeys()
+	allKeysResult := GetAllFieldNames()
 	sort.Strings(allKeysResult)
-	Assert(t, reflect.DeepEqual(keys, allKeysResult), fmt.Sprintf("failed to get correct all keys from msgFieldMaps %v %v", keys, sort.StringSlice(GetAllKeys())))
+	Assert(t, reflect.DeepEqual(keys, allKeysResult),
+		fmt.Sprintf("failed to get correct all keys from kindToFieldNameMap %v %v", keys, sort.StringSlice(GetAllFieldNames())))
+}
+
+func TestGlobalMetricsMap(t *testing.T) {
+	Assert(t, IsGroupValid("ftestats"), "expected: true, got: false")
+	Assert(t, !IsGroupValid("invalid"), "expected: false, got: true")
+
+	Assert(t, IsKindValid("flowstats", "IPv4FlowDropMetrics"), "expected: true, got: false")
+	Assert(t, !IsKindValid("flowstats", "IPv4FlowDropMetricsInvalid"), "expected: false, got: true")
+
+	Assert(t, IsFieldNameValid("ftestats", "FteCPSMetrics", "ConnectionsPerSecond"), "expected: true, got: false")
+	Assert(t, !IsFieldNameValid("ftestats", "FteCPSMetrics", "CConnectionsPerSecond"), "expected: false, got: true")
 }

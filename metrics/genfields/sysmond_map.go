@@ -3,24 +3,28 @@
 package genfields
 
 func init() {
+	globalMetricsMap["sysmond"] = make(map[string][]string)
 
-	msgFieldMaps["AsicFrequencyMetrics"] = []string{
+	kindToFieldNameMap["AsicFrequencyMetrics"] = []string{
 		"Frequency",
 	}
+	globalMetricsMap["sysmond"]["AsicFrequencyMetrics"] = kindToFieldNameMap["AsicFrequencyMetrics"]
 
-	msgFieldMaps["AsicMemoryMetrics"] = []string{
+	kindToFieldNameMap["AsicMemoryMetrics"] = []string{
 		"Totalmemory",
 		"Availablememory",
 		"Freememory",
 	}
+	globalMetricsMap["sysmond"]["AsicMemoryMetrics"] = kindToFieldNameMap["AsicMemoryMetrics"]
 
-	msgFieldMaps["AsicPowerMetrics"] = []string{
+	kindToFieldNameMap["AsicPowerMetrics"] = []string{
 		"Pin",
 		"Pout1",
 		"Pout2",
 	}
+	globalMetricsMap["sysmond"]["AsicPowerMetrics"] = kindToFieldNameMap["AsicPowerMetrics"]
 
-	msgFieldMaps["AsicTemperatureMetrics"] = []string{
+	kindToFieldNameMap["AsicTemperatureMetrics"] = []string{
 		"LocalTemperature",
 		"DieTemperature",
 		"HbmTemperature",
@@ -31,5 +35,6 @@ func init() {
 		"QsfpPort1AlarmTemperature",
 		"QsfpPort2AlarmTemperature",
 	}
+	globalMetricsMap["sysmond"]["AsicTemperatureMetrics"] = kindToFieldNameMap["AsicTemperatureMetrics"]
 
 }

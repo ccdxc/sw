@@ -74,6 +74,52 @@ func (x AlertSeverity) String() string {
 	return AlertSeverity_vname[int32(x)]
 }
 
+// MeasurementFunction_normal is a map of normalized values for the enum
+var MeasurementFunction_normal = map[string]string{
+	"difference": "difference",
+	"max":        "max",
+	"mean":       "mean",
+	"min":        "min",
+}
+
+var MeasurementFunction_vname = map[int32]string{
+	0: "min",
+	1: "max",
+	2: "mean",
+	3: "difference",
+}
+
+var MeasurementFunction_vvalue = map[string]int32{
+	"min":        0,
+	"max":        1,
+	"mean":       2,
+	"difference": 3,
+}
+
+func (x MeasurementFunction) String() string {
+	return MeasurementFunction_vname[int32(x)]
+}
+
+// Operator_normal is a map of normalized values for the enum
+var Operator_normal = map[string]string{
+	"greater_or_equal_than": "greater_or_equal_than",
+	"less_or_equal_than":    "less_or_equal_than",
+}
+
+var Operator_vname = map[int32]string{
+	0: "less_or_equal_than",
+	1: "greater_or_equal_than",
+}
+
+var Operator_vvalue = map[string]int32{
+	"less_or_equal_than":    0,
+	"greater_or_equal_than": 1,
+}
+
+func (x Operator) String() string {
+	return Operator_vname[int32(x)]
+}
+
 var _ validators.DummyVar
 var validatorMapAlerts = make(map[string]map[string][]func(string, interface{}) error)
 
@@ -105,6 +151,16 @@ func (m *AlertPolicy) MakeKey(prefix string) string {
 func (m *AlertPolicy) MakeURI(cat, ver, prefix string) string {
 	in := m
 	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/alertPolicies/", in.Name)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *StatsAlertPolicy) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "statsAlertPolicies/", m.Tenant, "/", m.Name)
+}
+
+func (m *StatsAlertPolicy) MakeURI(cat, ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/statsAlertPolicies/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -447,6 +503,54 @@ func (m *MatchedRequirement) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *MeasurementCriteria) Clone(into interface{}) (interface{}, error) {
+	var out *MeasurementCriteria
+	var ok bool
+	if into == nil {
+		out = &MeasurementCriteria{}
+	} else {
+		out, ok = into.(*MeasurementCriteria)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*MeasurementCriteria))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *MeasurementCriteria) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Function = "min"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *MetricIdentifier) Clone(into interface{}) (interface{}, error) {
+	var out *MetricIdentifier
+	var ok bool
+	if into == nil {
+		out = &MetricIdentifier{}
+	} else {
+		out, ok = into.(*MetricIdentifier)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*MetricIdentifier))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *MetricIdentifier) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *SNMPExport) Clone(into interface{}) (interface{}, error) {
 	var out *SNMPExport
 	var ok bool
@@ -464,6 +568,86 @@ func (m *SNMPExport) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *SNMPExport) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *StatsAlertPolicy) Clone(into interface{}) (interface{}, error) {
+	var out *StatsAlertPolicy
+	var ok bool
+	if into == nil {
+		out = &StatsAlertPolicy{}
+	} else {
+		out, ok = into.(*StatsAlertPolicy)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*StatsAlertPolicy))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *StatsAlertPolicy) Defaults(ver string) bool {
+	var ret bool
+	m.Kind = "StatsAlertPolicy"
+	ret = m.Tenant != "default" || m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
+	ret = m.Spec.Defaults(ver) || ret
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *StatsAlertPolicySpec) Clone(into interface{}) (interface{}, error) {
+	var out *StatsAlertPolicySpec
+	var ok bool
+	if into == nil {
+		out = &StatsAlertPolicySpec{}
+	} else {
+		out, ok = into.(*StatsAlertPolicySpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*StatsAlertPolicySpec))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *StatsAlertPolicySpec) Defaults(ver string) bool {
+	var ret bool
+	if m.MeasurementCriteria != nil {
+		ret = m.MeasurementCriteria.Defaults(ver) || ret
+	}
+	ret = m.Thresholds.Defaults(ver) || ret
+	ret = true
+	switch ver {
+	default:
+		m.Enable = true
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *StatsAlertPolicyStatus) Clone(into interface{}) (interface{}, error) {
+	var out *StatsAlertPolicyStatus
+	var ok bool
+	if into == nil {
+		out = &StatsAlertPolicyStatus{}
+	} else {
+		out, ok = into.(*StatsAlertPolicyStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*StatsAlertPolicyStatus))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *StatsAlertPolicyStatus) Defaults(ver string) bool {
 	return false
 }
 
@@ -490,6 +674,64 @@ func (m *SyslogExport) Defaults(ver string) bool {
 	switch ver {
 	default:
 		m.Format = "syslog-bsd"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *Threshold) Clone(into interface{}) (interface{}, error) {
+	var out *Threshold
+	var ok bool
+	if into == nil {
+		out = &Threshold{}
+	} else {
+		out, ok = into.(*Threshold)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*Threshold))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Threshold) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Severity = "info"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *Thresholds) Clone(into interface{}) (interface{}, error) {
+	var out *Thresholds
+	var ok bool
+	if into == nil {
+		out = &Thresholds{}
+	} else {
+		out, ok = into.(*Thresholds)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*Thresholds))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Thresholds) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Values {
+		i := m.Values[k]
+		ret = i.Defaults(ver) || ret
+	}
+	ret = true
+	switch ver {
+	default:
+		m.Operator = "less_or_equal_than"
 	}
 	return ret
 }
@@ -1088,6 +1330,47 @@ func (m *MatchedRequirement) Normalize() {
 
 }
 
+func (m *MeasurementCriteria) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *MeasurementCriteria) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapAlerts["MeasurementCriteria"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapAlerts["MeasurementCriteria"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *MeasurementCriteria) Normalize() {
+
+	m.Function = MeasurementFunction_normal[strings.ToLower(m.Function)]
+
+}
+
+func (m *MetricIdentifier) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *MetricIdentifier) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *MetricIdentifier) Normalize() {
+
+}
+
 func (m *SNMPExport) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1115,6 +1398,177 @@ func (m *SNMPExport) Normalize() {
 			m.SNMPTrapServers[k] = v
 		}
 	}
+
+}
+
+func (m *StatsAlertPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "spec"
+
+		m.Spec.References(tenant, tag, resp)
+
+	}
+	{
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
+
+func (m *StatsAlertPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for StatsAlertPolicy"))
+	}
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *StatsAlertPolicy) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+}
+
+func (m *StatsAlertPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "destinations"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "AlertDestination",
+			}
+		}
+
+		for _, v := range m.Destinations {
+
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/monitoring/"+"alertDestinations/"+tenant+"/"+v)
+
+		}
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
+
+func (m *StatsAlertPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.MeasurementCriteria != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "MeasurementCriteria"
+			if errs := m.MeasurementCriteria.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Thresholds"
+		if errs := m.Thresholds.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *StatsAlertPolicySpec) Normalize() {
+
+	if m.MeasurementCriteria != nil {
+		m.MeasurementCriteria.Normalize()
+	}
+
+	m.Thresholds.Normalize()
+
+}
+
+func (m *StatsAlertPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *StatsAlertPolicyStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *StatsAlertPolicyStatus) Normalize() {
 
 }
 
@@ -1180,6 +1634,78 @@ func (m *SyslogExport) Normalize() {
 
 }
 
+func (m *Threshold) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *Threshold) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapAlerts["Threshold"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapAlerts["Threshold"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *Threshold) Normalize() {
+
+	m.Severity = AlertSeverity_normal[strings.ToLower(m.Severity)]
+
+}
+
+func (m *Thresholds) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *Thresholds) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Values {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sValues[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	if vs, ok := validatorMapAlerts["Thresholds"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapAlerts["Thresholds"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *Thresholds) Normalize() {
+
+	m.Operator = Operator_normal[strings.ToLower(m.Operator)]
+
+	for k, v := range m.Values {
+		v.Normalize()
+		m.Values[k] = v
+
+	}
+
+}
+
 // Transformers
 
 func init() {
@@ -1188,6 +1714,7 @@ func init() {
 		&Alert{},
 		&AlertDestination{},
 		&AlertPolicy{},
+		&StatsAlertPolicy{},
 	)
 
 	validatorMapAlerts = make(map[string]map[string][]func(string, interface{}) error)
@@ -1234,6 +1761,20 @@ func init() {
 		return nil
 	})
 
+	validatorMapAlerts["MeasurementCriteria"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAlerts["MeasurementCriteria"]["all"] = append(validatorMapAlerts["MeasurementCriteria"]["all"], func(path string, i interface{}) error {
+		m := i.(*MeasurementCriteria)
+
+		if _, ok := MeasurementFunction_vvalue[m.Function]; !ok {
+			vals := []string{}
+			for k1, _ := range MeasurementFunction_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Function", vals)
+		}
+		return nil
+	})
+
 	validatorMapAlerts["SyslogExport"] = make(map[string][]func(string, interface{}) error)
 	validatorMapAlerts["SyslogExport"]["all"] = append(validatorMapAlerts["SyslogExport"]["all"], func(path string, i interface{}) error {
 		m := i.(*SyslogExport)
@@ -1244,6 +1785,34 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Format", vals)
+		}
+		return nil
+	})
+
+	validatorMapAlerts["Threshold"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAlerts["Threshold"]["all"] = append(validatorMapAlerts["Threshold"]["all"], func(path string, i interface{}) error {
+		m := i.(*Threshold)
+
+		if _, ok := AlertSeverity_vvalue[m.Severity]; !ok {
+			vals := []string{}
+			for k1, _ := range AlertSeverity_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Severity", vals)
+		}
+		return nil
+	})
+
+	validatorMapAlerts["Thresholds"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAlerts["Thresholds"]["all"] = append(validatorMapAlerts["Thresholds"]["all"], func(path string, i interface{}) error {
+		m := i.(*Thresholds)
+
+		if _, ok := Operator_vvalue[m.Operator]; !ok {
+			vals := []string{}
+			for k1, _ := range Operator_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Operator", vals)
 		}
 		return nil
 	})

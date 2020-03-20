@@ -134,6 +134,91 @@ func removeAlertPolicyOper(obj interface{}) error {
 	return nil
 }
 
+// CreateStatsAlertPolicyFlags specifies flags for StatsAlertPolicy create operation
+var CreateStatsAlertPolicyFlags = []gen.CliFlag{
+	{
+		ID:     "destinations",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "enable",
+		Type:   "Bool",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "field-name",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "function",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "group",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "kind",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "operator",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "raise-value",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "severity",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "window",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+}
+
+func removeStatsAlertPolicyOper(obj interface{}) error {
+	if v, ok := obj.(*monitoring.StatsAlertPolicy); ok {
+		v.UUID = ""
+		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
+		v.Status = monitoring.StatsAlertPolicyStatus{}
+	}
+	return nil
+}
+
 func init() {
 	cl := gen.GetInfo()
 
@@ -145,5 +230,8 @@ func init() {
 
 	cl.AddCliInfo("monitoring.AlertPolicy", "create", CreateAlertPolicyFlags)
 	cl.AddRemoveObjOperFunc("monitoring.AlertPolicy", removeAlertPolicyOper)
+
+	cl.AddCliInfo("monitoring.StatsAlertPolicy", "create", CreateStatsAlertPolicyFlags)
+	cl.AddRemoveObjOperFunc("monitoring.StatsAlertPolicy", removeStatsAlertPolicyOper)
 
 }

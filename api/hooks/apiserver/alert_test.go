@@ -29,6 +29,354 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
+func TestValidateStatsAlertPolicy(t *testing.T) {
+	userCtx, kvs, ap1Key, a1Key := setup(t)
+	defer kvs.Delete(userCtx, ap1Key, nil)
+	defer kvs.Delete(userCtx, a1Key, nil)
+
+	ah := &alertHooks{logger: log.GetNewLogger(log.GetDefaultConfig("TestAPIServerAlertHooks"))}
+
+	tests := []struct {
+		name   string
+		policy monitoring.StatsAlertPolicy
+		err    error
+	}{
+		{
+			name: "valid stats alert policy",
+			policy: monitoring.StatsAlertPolicy{
+				TypeMeta: api.TypeMeta{Kind: "StatsAlertPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name:   "sap1",
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: monitoring.StatsAlertPolicySpec{
+					Metric: monitoring.MetricIdentifier{
+						Group:     "ftestats",
+						Kind:      "FteCPSMetrics",
+						FieldName: "ConnectionsPerSecond",
+					},
+					MeasurementCriteria: &monitoring.MeasurementCriteria{
+						Window:   "10m",
+						Function: "max",
+					},
+					Thresholds: monitoring.Thresholds{
+						Operator: "greater_or_equal_than",
+						Values: []monitoring.Threshold{
+							{
+								Severity:   monitoring.AlertSeverity_WARN.String(),
+								RaiseValue: "100",
+							},
+							{
+								Severity:   monitoring.AlertSeverity_CRITICAL.String(),
+								RaiseValue: "110",
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "invalid metric group",
+			policy: monitoring.StatsAlertPolicy{
+				TypeMeta: api.TypeMeta{Kind: "StatsAlertPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name:   "sap1",
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: monitoring.StatsAlertPolicySpec{
+					Metric: monitoring.MetricIdentifier{
+						Group:     "ftestats-invalid",
+						Kind:      "FteCPSMetrics",
+						FieldName: "ConnectionsPerSecond",
+					},
+					Thresholds: monitoring.Thresholds{
+						Operator: "greater_or_equal_than",
+						Values: []monitoring.Threshold{
+							{
+								Severity:   monitoring.AlertSeverity_CRITICAL.String(),
+								RaiseValue: "110",
+							},
+							{
+								Severity:   monitoring.AlertSeverity_WARN.String(),
+								RaiseValue: "100",
+							},
+						},
+					},
+				},
+			},
+			err: errInvalidMetricGroup,
+		},
+		{
+			name: "invalid metric class",
+			policy: monitoring.StatsAlertPolicy{
+				TypeMeta: api.TypeMeta{Kind: "StatsAlertPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name:   "sap1",
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: monitoring.StatsAlertPolicySpec{
+					Metric: monitoring.MetricIdentifier{
+						Group:     "ftestats",
+						Kind:      "FteCPSMetrics-invalid",
+						FieldName: "ConnectionsPerSecond",
+					},
+					Thresholds: monitoring.Thresholds{
+						Operator: "greater_or_equal_than",
+						Values: []monitoring.Threshold{
+							{
+								Severity:   monitoring.AlertSeverity_WARN.String(),
+								RaiseValue: "100",
+							},
+							{
+								Severity:   monitoring.AlertSeverity_CRITICAL.String(),
+								RaiseValue: "110",
+							},
+						},
+					},
+				},
+			},
+			err: errInvalidMetricKind,
+		},
+		{
+			name: "invalid metric property",
+			policy: monitoring.StatsAlertPolicy{
+				TypeMeta: api.TypeMeta{Kind: "StatsAlertPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name:   "sap1",
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: monitoring.StatsAlertPolicySpec{
+					Metric: monitoring.MetricIdentifier{
+						Group:     "ftestats",
+						Kind:      "FteCPSMetrics",
+						FieldName: "ConnectionsPerSecond-invalid",
+					},
+					Thresholds: monitoring.Thresholds{
+						Operator: "greater_or_equal_than",
+						Values: []monitoring.Threshold{
+							{
+								Severity:   monitoring.AlertSeverity_CRITICAL.String(),
+								RaiseValue: "110",
+							},
+							{
+								Severity:   monitoring.AlertSeverity_WARN.String(),
+								RaiseValue: "100",
+							},
+						},
+					},
+				},
+			},
+			err: errInvalidMetricFieldName,
+		},
+		{
+			name: "empty threshold values list",
+			policy: monitoring.StatsAlertPolicy{
+				TypeMeta: api.TypeMeta{Kind: "StatsAlertPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name:   "sap1",
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: monitoring.StatsAlertPolicySpec{
+					Metric: monitoring.MetricIdentifier{
+						Group:     "ftestats",
+						Kind:      "FteCPSMetrics",
+						FieldName: "ConnectionsPerSecond",
+					},
+					Thresholds: monitoring.Thresholds{
+						Operator: "greater_or_equal_than",
+					},
+				},
+			},
+			err: errEmptyThresholdValues,
+		},
+		{
+			name: "invalid measurement window - 1",
+			policy: monitoring.StatsAlertPolicy{
+				TypeMeta: api.TypeMeta{Kind: "StatsAlertPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name:   "sap1",
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: monitoring.StatsAlertPolicySpec{
+					Metric: monitoring.MetricIdentifier{
+						Group:     "ftestats",
+						Kind:      "FteCPSMetrics",
+						FieldName: "ConnectionsPerSecond",
+					},
+					MeasurementCriteria: &monitoring.MeasurementCriteria{
+						Window:   "invalid",
+						Function: "max",
+					},
+					Thresholds: monitoring.Thresholds{
+						Operator: "greater_or_equal_than",
+						Values: []monitoring.Threshold{
+							{
+								Severity:   monitoring.AlertSeverity_WARN.String(),
+								RaiseValue: "100",
+							},
+							{
+								Severity:   monitoring.AlertSeverity_CRITICAL.String(),
+								RaiseValue: "110",
+							},
+						},
+					},
+				},
+			},
+			err: errInvalidMeasurementWindow,
+		},
+		{
+			name: "invalid measurement window - 2",
+			policy: monitoring.StatsAlertPolicy{
+				TypeMeta: api.TypeMeta{Kind: "StatsAlertPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name:   "sap1",
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: monitoring.StatsAlertPolicySpec{
+					Metric: monitoring.MetricIdentifier{
+						Group:     "ftestats",
+						Kind:      "FteCPSMetrics",
+						FieldName: "ConnectionsPerSecond",
+					},
+					MeasurementCriteria: &monitoring.MeasurementCriteria{
+						Window:   "60m",
+						Function: "max",
+					},
+					Thresholds: monitoring.Thresholds{
+						Operator: "greater_or_equal_than",
+						Values: []monitoring.Threshold{
+							{
+								Severity:   monitoring.AlertSeverity_WARN.String(),
+								RaiseValue: "100",
+							},
+							{
+								Severity:   monitoring.AlertSeverity_CRITICAL.String(),
+								RaiseValue: "110",
+							},
+						},
+					},
+				},
+			},
+			err: errInvalidMeasurementWindow,
+		},
+		{
+			name: "duplicate severity in threshold value",
+			policy: monitoring.StatsAlertPolicy{
+				TypeMeta: api.TypeMeta{Kind: "StatsAlertPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name:   "sap1",
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: monitoring.StatsAlertPolicySpec{
+					Metric: monitoring.MetricIdentifier{
+						Group:     "ftestats",
+						Kind:      "FteCPSMetrics",
+						FieldName: "ConnectionsPerSecond",
+					},
+					MeasurementCriteria: &monitoring.MeasurementCriteria{
+						Window:   "1h",
+						Function: "mean",
+					},
+					Thresholds: monitoring.Thresholds{
+						Operator: "greater_or_equal_than",
+						Values: []monitoring.Threshold{
+							{
+								Severity:   monitoring.AlertSeverity_WARN.String(),
+								RaiseValue: "100",
+							},
+							{
+								Severity:   monitoring.AlertSeverity_WARN.String(),
+								RaiseValue: "100",
+							},
+							{
+								Severity:   monitoring.AlertSeverity_CRITICAL.String(),
+								RaiseValue: "110",
+							},
+						},
+					},
+				},
+			},
+			err: errDuplicateSeveritiesInThreshold,
+		},
+		{
+			name: "invalid threshold-raise values - 1",
+			policy: monitoring.StatsAlertPolicy{
+				TypeMeta: api.TypeMeta{Kind: "StatsAlertPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name:   "sap1",
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: monitoring.StatsAlertPolicySpec{
+					Metric: monitoring.MetricIdentifier{
+						Group:     "ftestats",
+						Kind:      "FteCPSMetrics",
+						FieldName: "ConnectionsPerSecond",
+					},
+					MeasurementCriteria: &monitoring.MeasurementCriteria{
+						Window:   "1h",
+						Function: "mean",
+					},
+					Thresholds: monitoring.Thresholds{
+						Operator: "greater_or_equal_than",
+						Values: []monitoring.Threshold{
+							{
+								Severity:   monitoring.AlertSeverity_WARN.String(),
+								RaiseValue: "110",
+							},
+							{
+								Severity:   monitoring.AlertSeverity_CRITICAL.String(),
+								RaiseValue: "100",
+							},
+						},
+					},
+				},
+			},
+			err: errInvalidThresholdValues,
+		},
+		{
+			name: "invalid threshold-raise values - 2",
+			policy: monitoring.StatsAlertPolicy{
+				TypeMeta: api.TypeMeta{Kind: "StatsAlertPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name:   "sap1",
+					Tenant: globals.DefaultTenant,
+				},
+				Spec: monitoring.StatsAlertPolicySpec{
+					Metric: monitoring.MetricIdentifier{
+						Group:     "ftestats",
+						Kind:      "FteCPSMetrics",
+						FieldName: "ConnectionsPerSecond",
+					},
+					MeasurementCriteria: &monitoring.MeasurementCriteria{
+						Window:   "1h",
+						Function: "mean",
+					},
+					Thresholds: monitoring.Thresholds{
+						Operator: "less_or_equal_than",
+						Values: []monitoring.Threshold{
+							{
+								Severity:   monitoring.AlertSeverity_WARN.String(),
+								RaiseValue: "100",
+							},
+							{
+								Severity:   monitoring.AlertSeverity_CRITICAL.String(),
+								RaiseValue: "110",
+							},
+						},
+					},
+				},
+			},
+			err: errInvalidThresholdValues,
+		},
+	}
+
+	for _, test := range tests {
+		_, _, err := ah.validateStatsAlertPolicy(userCtx, kvs, kvs.NewTxn(), test.policy.MakeKey("monitoring"), apiintf.CreateOper, false, test.policy)
+		Assert(t, test.err == err, "{tc: %s} expected: %v, got: %v", test.name, test.err, err)
+	}
+}
+
 func TestValidateAlertDestination(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()

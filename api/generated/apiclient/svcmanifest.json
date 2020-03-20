@@ -399,6 +399,7 @@
           "FlowExportPolicy",
           "Alert",
           "AlertPolicy",
+          "StatsAlertPolicy",
           "AlertDestination",
           "MirrorSession",
           "TroubleshootingSession",
@@ -538,6 +539,20 @@
               "label"
             ],
             "URI": "/configs/monitoring/v1/MirrorSession"
+          },
+          "StatsAlertPolicy": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ],
+            "URI": "/configs/monitoring/v1/statsAlertPolicies"
           },
           "TechSupportRequest": {
             "Scopes": [

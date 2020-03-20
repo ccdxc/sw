@@ -3,8 +3,9 @@
 package genfields
 
 func init() {
+	globalMetricsMap["dropstats"] = make(map[string][]string)
 
-	msgFieldMaps["DropMetrics"] = []string{
+	kindToFieldNameMap["DropMetrics"] = []string{
 		"DropMalformedPkt",
 		"DropParserIcrcError",
 		"DropParseLenError",
@@ -34,8 +35,9 @@ func init() {
 		"DropVfBadRrDstIp",
 		"DropIcmpFragPkt",
 	}
+	globalMetricsMap["dropstats"]["DropMetrics"] = kindToFieldNameMap["DropMetrics"]
 
-	msgFieldMaps["EgressDropMetrics"] = []string{
+	kindToFieldNameMap["EgressDropMetrics"] = []string{
 		"DropOutputMapping",
 		"DropPruneSrcPort",
 		"DropMirror",
@@ -43,5 +45,6 @@ func init() {
 		"DropCopp",
 		"DropChecksumErr",
 	}
+	globalMetricsMap["dropstats"]["EgressDropMetrics"] = kindToFieldNameMap["EgressDropMetrics"]
 
 }

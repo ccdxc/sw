@@ -219,6 +219,9 @@ func (m *mockMonitoringV1) Alert() monitoring.MonitoringV1AlertInterface {
 func (m *mockMonitoringV1) AlertPolicy() monitoring.MonitoringV1AlertPolicyInterface {
 	return nil
 }
+func (m *mockMonitoringV1) StatsAlertPolicy() monitoring.MonitoringV1StatsAlertPolicyInterface {
+	return nil
+}
 func (m *mockMonitoringV1) AlertDestination() monitoring.MonitoringV1AlertDestinationInterface {
 	return m.mAlertDestination
 }

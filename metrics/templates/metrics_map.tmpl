@@ -4,10 +4,12 @@
 package genfields
 
 func init() {
+    globalMetricsMap["{{$msgMapObj.Package}}"] = make(map[string][]string)
     {{range $key, $value := $msgMapObj.Maps}}
-    msgFieldMaps["{{$key}}"] = []string{
-        {{range $v := $value}} "{{$v}}", 
-        {{end}}
-    }
+        kindToFieldNameMap["{{$key}}"] = []string{
+            {{range $v := $value}} "{{$v}}",
+            {{end}}
+        }
+        globalMetricsMap["{{$msgMapObj.Package}}"]["{{$key}}"] = kindToFieldNameMap["{{$key}}"]
 	{{end}}
 }

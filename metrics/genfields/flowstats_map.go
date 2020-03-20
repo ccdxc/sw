@@ -3,8 +3,9 @@
 package genfields
 
 func init() {
+	globalMetricsMap["flowstats"] = make(map[string][]string)
 
-	msgFieldMaps["IPv4FlowBehavioralMetrics"] = []string{
+	kindToFieldNameMap["IPv4FlowBehavioralMetrics"] = []string{
 		"Instances",
 		"PpsThreshold",
 		"PpsThresholdExceedEvents",
@@ -15,8 +16,9 @@ func init() {
 		"BwThresholdExceedEventFirstTimestamp",
 		"BwThresholdExceedEventLastTimestamp",
 	}
+	globalMetricsMap["flowstats"]["IPv4FlowBehavioralMetrics"] = kindToFieldNameMap["IPv4FlowBehavioralMetrics"]
 
-	msgFieldMaps["IPv4FlowDropMetrics"] = []string{
+	kindToFieldNameMap["IPv4FlowDropMetrics"] = []string{
 		"Instances",
 		"DropPackets",
 		"DropBytes",
@@ -24,8 +26,9 @@ func init() {
 		"DropLastTimestamp",
 		"DropReason",
 	}
+	globalMetricsMap["flowstats"]["IPv4FlowDropMetrics"] = kindToFieldNameMap["IPv4FlowDropMetrics"]
 
-	msgFieldMaps["IPv4FlowLatencyMetrics"] = []string{
+	kindToFieldNameMap["IPv4FlowLatencyMetrics"] = []string{
 		"Instances",
 		"MinSetupLatency",
 		"MinSetupLatencyTimestamp",
@@ -36,22 +39,25 @@ func init() {
 		"MaxRttLatency",
 		"MaxRttLatencyTimestamp",
 	}
+	globalMetricsMap["flowstats"]["IPv4FlowLatencyMetrics"] = kindToFieldNameMap["IPv4FlowLatencyMetrics"]
 
-	msgFieldMaps["IPv4FlowPerformanceMetrics"] = []string{
+	kindToFieldNameMap["IPv4FlowPerformanceMetrics"] = []string{
 		"Instances",
 		"PeakPps",
 		"PeakPpsTimestamp",
 		"PeakBw",
 		"PeakBwTimestamp",
 	}
+	globalMetricsMap["flowstats"]["IPv4FlowPerformanceMetrics"] = kindToFieldNameMap["IPv4FlowPerformanceMetrics"]
 
-	msgFieldMaps["IPv4FlowRawMetrics"] = []string{
+	kindToFieldNameMap["IPv4FlowRawMetrics"] = []string{
 		"Instances",
 		"Packets",
 		"Bytes",
 	}
+	globalMetricsMap["flowstats"]["IPv4FlowRawMetrics"] = kindToFieldNameMap["IPv4FlowRawMetrics"]
 
-	msgFieldMaps["IPv6FlowBehavioralMetrics"] = []string{
+	kindToFieldNameMap["IPv6FlowBehavioralMetrics"] = []string{
 		"Instances",
 		"PpsThreshold",
 		"PpsThresholdExceedEvents",
@@ -62,8 +68,9 @@ func init() {
 		"BwThresholdExceedEventFirstTimestamp",
 		"BwThresholdExceedEventLastTimestamp",
 	}
+	globalMetricsMap["flowstats"]["IPv6FlowBehavioralMetrics"] = kindToFieldNameMap["IPv6FlowBehavioralMetrics"]
 
-	msgFieldMaps["IPv6FlowDropMetrics"] = []string{
+	kindToFieldNameMap["IPv6FlowDropMetrics"] = []string{
 		"Instances",
 		"DropPackets",
 		"DropBytes",
@@ -71,8 +78,9 @@ func init() {
 		"DropLastTimestamp",
 		"DropReason",
 	}
+	globalMetricsMap["flowstats"]["IPv6FlowDropMetrics"] = kindToFieldNameMap["IPv6FlowDropMetrics"]
 
-	msgFieldMaps["IPv6FlowLatencyMetrics"] = []string{
+	kindToFieldNameMap["IPv6FlowLatencyMetrics"] = []string{
 		"Instances",
 		"MinSetupLatency",
 		"MinSetupLatencyTimestamp",
@@ -83,22 +91,25 @@ func init() {
 		"MaxRttLatency",
 		"MaxRttLatencyTimestamp",
 	}
+	globalMetricsMap["flowstats"]["IPv6FlowLatencyMetrics"] = kindToFieldNameMap["IPv6FlowLatencyMetrics"]
 
-	msgFieldMaps["IPv6FlowPerformanceMetrics"] = []string{
+	kindToFieldNameMap["IPv6FlowPerformanceMetrics"] = []string{
 		"Instances",
 		"PeakPps",
 		"PeakPpsTimestamp",
 		"PeakBw",
 		"PeakBwTimestamp",
 	}
+	globalMetricsMap["flowstats"]["IPv6FlowPerformanceMetrics"] = kindToFieldNameMap["IPv6FlowPerformanceMetrics"]
 
-	msgFieldMaps["IPv6FlowRawMetrics"] = []string{
+	kindToFieldNameMap["IPv6FlowRawMetrics"] = []string{
 		"Instances",
 		"Packets",
 		"Bytes",
 	}
+	globalMetricsMap["flowstats"]["IPv6FlowRawMetrics"] = kindToFieldNameMap["IPv6FlowRawMetrics"]
 
-	msgFieldMaps["L2FlowBehavioralMetrics"] = []string{
+	kindToFieldNameMap["L2FlowBehavioralMetrics"] = []string{
 		"Instances",
 		"PpsThreshold",
 		"PpsThresholdExceedEvents",
@@ -109,8 +120,9 @@ func init() {
 		"BwThresholdExceedEventFirstTimestamp",
 		"BwThresholdExceedEventLastTimestamp",
 	}
+	globalMetricsMap["flowstats"]["L2FlowBehavioralMetrics"] = kindToFieldNameMap["L2FlowBehavioralMetrics"]
 
-	msgFieldMaps["L2FlowDropMetrics"] = []string{
+	kindToFieldNameMap["L2FlowDropMetrics"] = []string{
 		"Instances",
 		"DropPackets",
 		"DropBytes",
@@ -118,19 +130,22 @@ func init() {
 		"DropLastTimestamp",
 		"DropReason",
 	}
+	globalMetricsMap["flowstats"]["L2FlowDropMetrics"] = kindToFieldNameMap["L2FlowDropMetrics"]
 
-	msgFieldMaps["L2FlowPerformanceMetrics"] = []string{
+	kindToFieldNameMap["L2FlowPerformanceMetrics"] = []string{
 		"Instances",
 		"PeakPps",
 		"PeakPpsTimestamp",
 		"PeakBw",
 		"PeakBwTimestamp",
 	}
+	globalMetricsMap["flowstats"]["L2FlowPerformanceMetrics"] = kindToFieldNameMap["L2FlowPerformanceMetrics"]
 
-	msgFieldMaps["L2FlowRawMetrics"] = []string{
+	kindToFieldNameMap["L2FlowRawMetrics"] = []string{
 		"Instances",
 		"Packets",
 		"Bytes",
 	}
+	globalMetricsMap["flowstats"]["L2FlowRawMetrics"] = kindToFieldNameMap["L2FlowRawMetrics"]
 
 }

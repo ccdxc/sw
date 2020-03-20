@@ -311,10 +311,113 @@ var typesMapAlerts = map[string]*api.Struct{
 			"Values": api.Field{Name: "Values", CLITag: api.CLIInfo{ID: "values", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "values", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
+	"monitoring.MeasurementCriteria": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MeasurementCriteria{}) },
+		Fields: map[string]api.Field{
+			"Window": api.Field{Name: "Window", CLITag: api.CLIInfo{ID: "window", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "window", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Function": api.Field{Name: "Function", CLITag: api.CLIInfo{ID: "function", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "function", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"monitoring.MetricIdentifier": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MetricIdentifier{}) },
+		Fields: map[string]api.Field{
+			"Group": api.Field{Name: "Group", CLITag: api.CLIInfo{ID: "group", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "group", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{ID: "kind", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"FieldName": api.Field{Name: "FieldName", CLITag: api.CLIInfo{ID: "field-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "field-name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
 	"monitoring.SNMPExport": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SNMPExport{}) },
 		Fields: map[string]api.Field{
 			"SNMPTrapServers": api.Field{Name: "SNMPTrapServers", CLITag: api.CLIInfo{ID: "snmp-trap-servers", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "snmp-trap-servers", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.SNMPTrapServer"},
+		},
+	},
+	"monitoring.StatsAlertPolicy": &api.Struct{
+		Kind: "StatsAlertPolicy", APIGroup: "monitoring", Scopes: []string{"Tenant"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatsAlertPolicy{}) },
+		Fields: map[string]api.Field{
+			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{ID: "T", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
+
+			"ObjectMeta": api.Field{Name: "ObjectMeta", CLITag: api.CLIInfo{ID: "meta", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "meta", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectMeta"},
+
+			"Spec": api.Field{Name: "Spec", CLITag: api.CLIInfo{ID: "spec", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "spec", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.StatsAlertPolicySpec"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.StatsAlertPolicyStatus"},
+
+			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{ID: "kind", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"APIVersion": api.Field{Name: "APIVersion", CLITag: api.CLIInfo{ID: "api-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Name": api.Field{Name: "Name", CLITag: api.CLIInfo{ID: "name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Tenant": api.Field{Name: "Tenant", CLITag: api.CLIInfo{ID: "tenant", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Namespace": api.Field{Name: "Namespace", CLITag: api.CLIInfo{ID: "namespace", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "namespace", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"GenerationID": api.Field{Name: "GenerationID", CLITag: api.CLIInfo{ID: "generation-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "generation-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"ResourceVersion": api.Field{Name: "ResourceVersion", CLITag: api.CLIInfo{ID: "resource-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"UUID": api.Field{Name: "UUID", CLITag: api.CLIInfo{ID: "uuid", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "uuid", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
+			"Labels": api.Field{Name: "Labels", CLITag: api.CLIInfo{ID: "labels", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "labels", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: true, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
+
+			"CreationTime": api.Field{Name: "CreationTime", CLITag: api.CLIInfo{ID: "creation-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "creation-time", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.Timestamp"},
+
+			"ModTime": api.Field{Name: "ModTime", CLITag: api.CLIInfo{ID: "mod-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mod-time", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.Timestamp"},
+
+			"SelfLink": api.Field{Name: "SelfLink", CLITag: api.CLIInfo{ID: "self-link", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "self-link", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+		},
+
+		CLITags: map[string]api.CLIInfo{
+			"acknowledged-alerts": api.CLIInfo{Path: "Status.AcknowledgedAlerts", Skip: false, Insert: "", Help: ""},
+			"api-version":         api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"destinations":        api.CLIInfo{Path: "Spec.Destinations", Skip: false, Insert: "", Help: ""},
+			"enable":              api.CLIInfo{Path: "Spec.Enable", Skip: false, Insert: "", Help: ""},
+			"field-name":          api.CLIInfo{Path: "Spec.Metric.FieldName", Skip: false, Insert: "", Help: ""},
+			"function":            api.CLIInfo{Path: "Spec.MeasurementCriteria.Function", Skip: false, Insert: "", Help: ""},
+			"generation-id":       api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"group":               api.CLIInfo{Path: "Spec.Metric.Group", Skip: false, Insert: "", Help: ""},
+			"kind":                api.CLIInfo{Path: "Spec.Metric.Kind", Skip: false, Insert: "", Help: ""},
+			"labels":              api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
+			"name":                api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
+			"namespace":           api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"open-alerts":         api.CLIInfo{Path: "Status.OpenAlerts", Skip: false, Insert: "", Help: ""},
+			"operator":            api.CLIInfo{Path: "Spec.Thresholds.Operator", Skip: false, Insert: "", Help: ""},
+			"raise-value":         api.CLIInfo{Path: "Spec.Thresholds.Values[].RaiseValue", Skip: false, Insert: "", Help: ""},
+			"resource-version":    api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"self-link":           api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"severity":            api.CLIInfo{Path: "Spec.Thresholds.Values[].Severity", Skip: false, Insert: "", Help: ""},
+			"tenant":              api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"total-hits":          api.CLIInfo{Path: "Status.TotalHits", Skip: false, Insert: "", Help: ""},
+			"uuid":                api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
+			"window":              api.CLIInfo{Path: "Spec.MeasurementCriteria.Window", Skip: false, Insert: "", Help: ""},
+		},
+	},
+	"monitoring.StatsAlertPolicySpec": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatsAlertPolicySpec{}) },
+		Fields: map[string]api.Field{
+			"Metric": api.Field{Name: "Metric", CLITag: api.CLIInfo{ID: "metric", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "metric", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.MetricIdentifier"},
+
+			"MeasurementCriteria": api.Field{Name: "MeasurementCriteria", CLITag: api.CLIInfo{ID: "measurement-criteria", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "measurement-criteria", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.MeasurementCriteria"},
+
+			"Thresholds": api.Field{Name: "Thresholds", CLITag: api.CLIInfo{ID: "thresholds", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "thresholds", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.Thresholds"},
+
+			"Enable": api.Field{Name: "Enable", CLITag: api.CLIInfo{ID: "enable", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enable", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
+
+			"Destinations": api.Field{Name: "Destinations", CLITag: api.CLIInfo{ID: "destinations", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destinations", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"monitoring.StatsAlertPolicyStatus": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(StatsAlertPolicyStatus{}) },
+		Fields: map[string]api.Field{
+			"TotalHits": api.Field{Name: "TotalHits", CLITag: api.CLIInfo{ID: "total-hits", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "total-hits", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"OpenAlerts": api.Field{Name: "OpenAlerts", CLITag: api.CLIInfo{ID: "open-alerts", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "open-alerts", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"AcknowledgedAlerts": api.Field{Name: "AcknowledgedAlerts", CLITag: api.CLIInfo{ID: "acknowledged-alerts", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "acknowledged-alerts", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 		},
 	},
 	"monitoring.SyslogExport": &api.Struct{
@@ -325,6 +428,22 @@ var typesMapAlerts = map[string]*api.Struct{
 			"Targets": api.Field{Name: "Targets", CLITag: api.CLIInfo{ID: "targets", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "targets", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.ExportConfig"},
 
 			"Config": api.Field{Name: "Config", CLITag: api.CLIInfo{ID: "config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "config", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.SyslogExportConfig"},
+		},
+	},
+	"monitoring.Threshold": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Threshold{}) },
+		Fields: map[string]api.Field{
+			"Severity": api.Field{Name: "Severity", CLITag: api.CLIInfo{ID: "severity", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "severity", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"RaiseValue": api.Field{Name: "RaiseValue", CLITag: api.CLIInfo{ID: "raise-value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "raise-value", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"monitoring.Thresholds": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Thresholds{}) },
+		Fields: map[string]api.Field{
+			"Operator": api.Field{Name: "Operator", CLITag: api.CLIInfo{ID: "operator", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "operator", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Values": api.Field{Name: "Values", CLITag: api.CLIInfo{ID: "values", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "values", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.Threshold"},
 		},
 	},
 }

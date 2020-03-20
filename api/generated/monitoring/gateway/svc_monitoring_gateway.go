@@ -296,6 +296,33 @@ func (a adapterMonitoringV1) AutoAddMirrorSession(oldctx oldcontext.Context, t *
 	return ret.(*monitoring.MirrorSession), err
 }
 
+func (a adapterMonitoringV1) AutoAddStatsAlertPolicy(oldctx oldcontext.Context, t *monitoring.StatsAlertPolicy, options ...grpc.CallOption) (*monitoring.StatsAlertPolicy, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoAddStatsAlertPolicy", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddStatsAlertPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "StatsAlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.CreateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.StatsAlertPolicy)
+		return a.service.AutoAddStatsAlertPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.StatsAlertPolicy), err
+}
+
 func (a adapterMonitoringV1) AutoAddTechSupportRequest(oldctx oldcontext.Context, t *monitoring.TechSupportRequest, options ...grpc.CallOption) (*monitoring.TechSupportRequest, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -591,6 +618,33 @@ func (a adapterMonitoringV1) AutoDeleteMirrorSession(oldctx oldcontext.Context, 
 		return nil, err
 	}
 	return ret.(*monitoring.MirrorSession), err
+}
+
+func (a adapterMonitoringV1) AutoDeleteStatsAlertPolicy(oldctx oldcontext.Context, t *monitoring.StatsAlertPolicy, options ...grpc.CallOption) (*monitoring.StatsAlertPolicy, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoDeleteStatsAlertPolicy", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteStatsAlertPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.DeleteOper, "StatsAlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.DeleteOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.StatsAlertPolicy)
+		return a.service.AutoDeleteStatsAlertPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.StatsAlertPolicy), err
 }
 
 func (a adapterMonitoringV1) AutoDeleteTechSupportRequest(oldctx oldcontext.Context, t *monitoring.TechSupportRequest, options ...grpc.CallOption) (*monitoring.TechSupportRequest, error) {
@@ -890,6 +944,33 @@ func (a adapterMonitoringV1) AutoGetMirrorSession(oldctx oldcontext.Context, t *
 	return ret.(*monitoring.MirrorSession), err
 }
 
+func (a adapterMonitoringV1) AutoGetStatsAlertPolicy(oldctx oldcontext.Context, t *monitoring.StatsAlertPolicy, options ...grpc.CallOption) (*monitoring.StatsAlertPolicy, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoGetStatsAlertPolicy", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetStatsAlertPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.GetOper, "StatsAlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.GetOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.StatsAlertPolicy)
+		return a.service.AutoGetStatsAlertPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.StatsAlertPolicy), err
+}
+
 func (a adapterMonitoringV1) AutoGetTechSupportRequest(oldctx oldcontext.Context, t *monitoring.TechSupportRequest, options ...grpc.CallOption) (*monitoring.TechSupportRequest, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -1185,6 +1266,33 @@ func (a adapterMonitoringV1) AutoLabelMirrorSession(oldctx oldcontext.Context, t
 		return nil, err
 	}
 	return ret.(*monitoring.MirrorSession), err
+}
+
+func (a adapterMonitoringV1) AutoLabelStatsAlertPolicy(oldctx oldcontext.Context, t *api.Label, options ...grpc.CallOption) (*monitoring.StatsAlertPolicy, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoLabelStatsAlertPolicy", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoLabelStatsAlertPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "StatsAlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.LabelOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.Label)
+		return a.service.AutoLabelStatsAlertPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.StatsAlertPolicy), err
 }
 
 func (a adapterMonitoringV1) AutoLabelTechSupportRequest(oldctx oldcontext.Context, t *api.Label, options ...grpc.CallOption) (*monitoring.TechSupportRequest, error) {
@@ -1529,6 +1637,38 @@ func (a adapterMonitoringV1) AutoListMirrorSession(oldctx oldcontext.Context, t 
 	return ret.(*monitoring.MirrorSessionList), err
 }
 
+func (a adapterMonitoringV1) AutoListStatsAlertPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.StatsAlertPolicyList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoListStatsAlertPolicy", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListStatsAlertPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
+	}
+	t.Namespace = ""
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.ListOper, "StatsAlertPolicy", t.Tenant, t.Namespace, "monitoring", "", strings.Title(string(apiintf.ListOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListStatsAlertPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.StatsAlertPolicyList), err
+}
+
 func (a adapterMonitoringV1) AutoListTechSupportRequest(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*monitoring.TechSupportRequestList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -1832,6 +1972,33 @@ func (a adapterMonitoringV1) AutoUpdateMirrorSession(oldctx oldcontext.Context, 
 		return nil, err
 	}
 	return ret.(*monitoring.MirrorSession), err
+}
+
+func (a adapterMonitoringV1) AutoUpdateStatsAlertPolicy(oldctx oldcontext.Context, t *monitoring.StatsAlertPolicy, options ...grpc.CallOption) (*monitoring.StatsAlertPolicy, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.MonitoringV1AutoUpdateStatsAlertPolicy", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateStatsAlertPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.UpdateOper, "StatsAlertPolicy", t.Tenant, t.Namespace, "monitoring", t.Name, strings.Title(string(apiintf.UpdateOper))
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*monitoring.StatsAlertPolicy)
+		return a.service.AutoUpdateStatsAlertPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*monitoring.StatsAlertPolicy), err
 }
 
 func (a adapterMonitoringV1) AutoUpdateTechSupportRequest(oldctx oldcontext.Context, t *monitoring.TechSupportRequest, options ...grpc.CallOption) (*monitoring.TechSupportRequest, error) {
@@ -2264,6 +2431,65 @@ func (a adapterMonitoringV1) AutoWatchAlertPolicy(oldctx oldcontext.Context, in 
 	return ret.(monitoring.MonitoringV1_AutoWatchAlertPolicyClient), err
 }
 
+func (a adapterMonitoringV1) AutoWatchStatsAlertPolicy(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (monitoring.MonitoringV1_AutoWatchStatsAlertPolicyClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchStatsAlertPolicy")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	if in.Tenant == "" {
+		in.Tenant = globals.DefaultTenant
+	}
+	in.Namespace = ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "StatsAlertPolicy", in.Tenant, in.Namespace, "monitoring"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper, strings.Title(string(oper)))
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchStatsAlertPolicy] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchStatsAlertPolicy(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(monitoring.MonitoringV1_AutoWatchStatsAlertPolicyClient), err
+}
+
 func (a adapterMonitoringV1) AutoWatchAlertDestination(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (monitoring.MonitoringV1_AutoWatchAlertDestinationClient, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchAlertDestination")
@@ -2637,6 +2863,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoAddMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiintf.CreateOper)
 
+	e.svcProf["AutoAddStatsAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "StatsAlertPolicy", "monitoring", apiintf.CreateOper)
+
 	e.svcProf["AutoAddTechSupportRequest"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TechSupportRequest", "monitoring", apiintf.CreateOper)
 
 	e.svcProf["AutoAddTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSession", "monitoring", apiintf.CreateOper)
@@ -2656,6 +2884,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoDeleteFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FwlogPolicy", "monitoring", apiintf.DeleteOper)
 
 	e.svcProf["AutoDeleteMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiintf.DeleteOper)
+
+	e.svcProf["AutoDeleteStatsAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "StatsAlertPolicy", "monitoring", apiintf.DeleteOper)
 
 	e.svcProf["AutoDeleteTechSupportRequest"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TechSupportRequest", "monitoring", apiintf.DeleteOper)
 
@@ -2678,6 +2908,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoGetFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FwlogPolicy", "monitoring", apiintf.GetOper)
 
 	e.svcProf["AutoGetMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiintf.GetOper)
+
+	e.svcProf["AutoGetStatsAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "StatsAlertPolicy", "monitoring", apiintf.GetOper)
 
 	e.svcProf["AutoGetTechSupportRequest"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TechSupportRequest", "monitoring", apiintf.GetOper)
 
@@ -2715,6 +2947,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoListMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSessionList", "monitoring", apiintf.ListOper)
 
+	e.svcProf["AutoListStatsAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "StatsAlertPolicyList", "monitoring", apiintf.ListOper)
+
 	e.svcProf["AutoListTechSupportRequest"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TechSupportRequestList", "monitoring", apiintf.ListOper)
 
 	e.svcProf["AutoListTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSessionList", "monitoring", apiintf.ListOper)
@@ -2735,6 +2969,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoUpdateMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiintf.UpdateOper)
 
+	e.svcProf["AutoUpdateStatsAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "StatsAlertPolicy", "monitoring", apiintf.UpdateOper)
+
 	e.svcProf["AutoUpdateTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSession", "monitoring", apiintf.UpdateOper)
 
 	e.svcProf["AutoWatchAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgAlertWatchHelper", "monitoring", apiintf.WatchOper)
@@ -2754,6 +2990,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoWatchFwlogPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgFwlogPolicyWatchHelper", "monitoring", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgMirrorSessionWatchHelper", "monitoring", apiintf.WatchOper)
+
+	e.svcProf["AutoWatchStatsAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgStatsAlertPolicyWatchHelper", "monitoring", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchTechSupportRequest"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgTechSupportRequestWatchHelper", "monitoring", apiintf.WatchOper)
 

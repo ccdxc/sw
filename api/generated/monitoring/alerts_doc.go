@@ -21,8 +21,15 @@ The following Messages are defined.
   AuditInfo
   EmailExport
   MatchedRequirement
+  MeasurementCriteria
+  MetricIdentifier
   SNMPExport
+  StatsAlertPolicy
+  StatsAlertPolicySpec
+  StatsAlertPolicyStatus
   SyslogExport
+  Threshold
+  Thresholds
 
 The following Services and Methods are defined.
 

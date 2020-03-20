@@ -196,8 +196,36 @@ message Alert {
 // |               |                   | ...                                                                             |
 // |               |                   | }                                                                               |
 // -----------------------------------------------------------------------------------------------------------------------
-// |   Metric      |  alerts on the    | // TODO                                                                         |
-// |               |  metrics          |                                                                                 |
+// | Metric /      |  alerts on the    | Trigger a WARN alert when CPS exceeds 100 and CRITICAL alert when               |
+// | Threshold     |  metrics          | CPS exceeds 120.                                                                |
+// |               |                   | { ...                                                                           |
+// |               |                   |  "spec": {                                                                      |
+// |               |                   |    "metric": {                                                                  |
+// |               |                   |      "group": "ftestats",                                                       |
+// |               |                   |      "kind": "FteCPSMetrics",             // CPS Statistics, table              |
+// |               |                   |      "field-name": "ConnectionsPerSecond" // CPS; table field                   |
+// |               |                   |    },                                                                           |
+// |               |                   |    "measurement-criteria": {                                                    |
+// |               |                   |      "window": "10m",    // enum of fixed intervals (5m,10m,30m,1h)             |
+// |               |                   |      "function": "max"   // enum of aggregate functions                         |
+// |               |                   |    },                                                                           |
+// |               |                   |    "thresholds": {                                                              |
+// |               |                   |      "operator": "greater_or_equal_than",                                       |
+// |               |                   |      "values": [{                                                               |
+// |               |                   |        "severity": "critical",                                                  |
+// |               |                   |        "raise-value": 110                                                       |
+// |               |                   |      },                                                                         |
+// |               |                   |      {                                                                          |
+// |               |                   |        "severity": "warn",                                                      |
+// |               |                   |        "raise-value": 100                                                       |
+// |               |                   |      }]                                                                         |
+// |               |                   |      },                                                                         |
+// |               |                   |    },                                                                           |
+// |               |                   |    "enable": true // enable or disable the policy                               |
+// |               |                   |    "destinations": ["syslog-export-1"]  #name of the alert destinations         |
+// |               |                   |  }                                                                              |
+// |               |                   | ...                                                                             |
+// |               |                   | }                                                                               |
 // -----------------------------------------------------------------------------------------------------------------------
 //
 
@@ -274,6 +302,125 @@ message AlertPolicy {
                                     (gogoproto.jsontag) = "status, omitempty"];
 }
 
+// ------------------------------------- Stats/Threshold Alert Policy Object ---------------------------------------
+// Possible measurement.function values
+enum MeasurementFunction {
+  MIN         = 0;
+  MAX         = 1;
+  MEAN        = 2;
+  DIFFERENCE  = 3;
+}
+
+// Possible threshold.operator values
+enum Operator {
+  LESS_OR_EQUAL_THAN    = 0;
+  GREATER_OR_EQUAL_THAN = 1;
+}
+
+// MetricIdentifier - uniquely identifies an metric that needs to be monitored as part of the policy
+message MetricIdentifier {
+  // Metric group - e.g. ftestats, flowstats, etc.
+  string Group        = 1 [(gogoproto.jsontag) = "group, omitempty"];
+
+  // Sub-category within the group e.g. MaxSessionThresholdDrops, FlowMissPackets
+  string Kind         = 2 [(gogoproto.jsontag) = "kind, omitempty"];
+
+  // Field belonging to the kind e.g. ConnectionsPerSecond. This is the attribute that will be monitored
+  // and alerts will be created/resolved based on the thresholds.
+  string FieldName    = 3 [(gogoproto.jsontag) = "field-name, omitempty"];
+}
+
+// Measurement window and function to be used for monitoring the metric.
+// nil `measurement` indicates that the policy will act on the instantaneous value of the metric that gets reported
+// every 30s.
+message MeasurementCriteria {
+  // The length of time the metric will be monitored/observed before running the values against thresholds
+  // for alert creation/resolution.
+  //ui-hint: Allowed values - 5m, 10m, 30m, 1h
+  string Window     = 1 [(gogoproto.jsontag) = "window, omitempty"];
+
+  // Aggregate function to be applied on the metric values that were monitored over a window/interval.
+  string Function   = 2 [(gogoproto.jsontag) = "function, omitempty",
+                         (venice.check)      = "StrEnum(MeasurementFunction)"];
+}
+
+// Threshold represents the threshold value of a metric against different severities.
+message Threshold {
+    // Severity of the alert to be created
+    string Severity      = 1 [(gogoproto.jsontag) = "severity, omitempty",
+                              (venice.check)      = "StrEnum(AlertSeverity)"];
+
+    // Raise/Create an alert when the threshold reaches this value
+    string RaiseValue    = 2 [(gogoproto.jsontag) = "raise-value, omitempty"];
+}
+
+// List of threshold values
+message Thresholds {
+  // Operator to be applied when comparing metric values against the threshold values.
+  string Operator               = 1 [(gogoproto.jsontag) = "operator, omitempty",
+                                     (venice.check)      = "StrEnum(Operator)"];
+
+  // List of threshold values to be acted against. Key should be one of the alert severity.
+  repeated Threshold Values     = 4 [(gogoproto.nullable) = false,
+                                     (gogoproto.jsontag) = "values, omitempty"];
+}
+
+
+message StatsAlertPolicySpec {
+  // Details about the metric that needs to be monitored.
+  MetricIdentifier Metric                 = 1 [(gogoproto.nullable) = false,
+                                               (gogoproto.jsontag)  = "metric, omitempty"];
+
+  // Measurement window and function to be applied while monitoring the metric.
+  MeasurementCriteria MeasurementCriteria = 2 [(gogoproto.nullable) = true,
+                                               (gogoproto.jsontag)  = "measurement-criteria, omitempty"];
+
+  // Threshold values with varying severity.
+  Thresholds Thresholds                   = 3 [(gogoproto.nullable) = false,
+                                               (gogoproto.jsontag)  = "thresholds, omitempty"];
+
+  // User can disable the policy by setting this field.
+  // Disabled policies will not generate any more alerts but the outstanding ones will remain as is.
+  bool Enable                             = 4 [(venice.default)    = "true",
+                                               (gogoproto.jsontag) = "enable, omitempty"];
+
+  // name of the alert destinations to be used to send out notification when an alert
+  // gets generated.
+  repeated string Destinations            = 5 [(gogoproto.jsontag) = "destinations, omitempty",
+                                               (venice.objRelation) = {Type: "NamedRef", To: "monitoring/AlertDestination"}];
+}
+
+message StatsAlertPolicyStatus {
+  // Total hits on this policy
+  int32 TotalHits            = 1 [(gogoproto.jsontag) = "total-hits, omitempty"];
+
+  // Open alerts based on this policy
+  int32 OpenAlerts           = 2 [(gogoproto.jsontag) = "open-alerts, omitempty"];
+
+  // Acknowledged alerts based on this policy
+  int32 AcknowledgedAlerts   = 3 [(gogoproto.jsontag) = "acknowledged-alerts, omitempty"];
+
+}
+
+// StatsAlertPolicy - tenant scoped
+message StatsAlertPolicy {
+  // KV store prefix
+  option (venice.objectPrefix) = {Collection: "statsAlertPolicies", Path: "/{O.Tenant}"};
+
+  api.TypeMeta      T            = 1 [(gogoproto.embed)    = true,
+                                      (gogoproto.nullable) = false,
+                                      (gogoproto.jsontag)  = ",inline"];
+
+  api.ObjectMeta    O            = 2 [(gogoproto.embed)    = true,
+                                      (gogoproto.nullable) = false,
+                                      (gogoproto.jsontag)  = "meta, omitempty"];
+
+  StatsAlertPolicySpec Spec      = 3 [(gogoproto.nullable) = false,
+                                      (gogoproto.jsontag)  = "spec, omitempty"];
+
+  StatsAlertPolicyStatus Status  = 4 [(gogoproto.nullable) = false,
+                                      (gogoproto.jsontag)  = "status, omitempty"];
+}
 
 // -------------------------- Alert Destination Object ------------------------
 // Alert Destination is a user-defined object which captures the details of all

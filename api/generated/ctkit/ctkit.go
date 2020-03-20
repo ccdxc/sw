@@ -176,6 +176,7 @@ type Controller interface {
 	FlowExportPolicy() FlowExportPolicyAPI               // return FlowExportPolicy API interface
 	Alert() AlertAPI                                     // return Alert API interface
 	AlertPolicy() AlertPolicyAPI                         // return AlertPolicy API interface
+	StatsAlertPolicy() StatsAlertPolicyAPI               // return StatsAlertPolicy API interface
 	AlertDestination() AlertDestinationAPI               // return AlertDestination API interface
 	MirrorSession() MirrorSessionAPI                     // return MirrorSession API interface
 	TroubleshootingSession() TroubleshootingSessionAPI   // return TroubleshootingSession API interface
@@ -492,6 +493,9 @@ func (ct *ctrlerCtx) FindObject(kind string, ometa *api.ObjectMeta) (runtime.Obj
 	case "AlertPolicy":
 		obj := alertpolicyAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "StatsAlertPolicy":
+		obj := statsalertpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "AlertDestination":
 		obj := alertdestinationAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
@@ -669,6 +673,9 @@ func (ct *ctrlerCtx) IsPending(kind string, ometa *api.ObjectMeta) (bool, error)
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "AlertPolicy":
 		obj := alertpolicyAPI{}
+		key = obj.getFullKey(ometa.Tenant, ometa.Name)
+	case "StatsAlertPolicy":
+		obj := statsalertpolicyAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "AlertDestination":
 		obj := alertdestinationAPI{}

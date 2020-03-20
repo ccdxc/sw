@@ -40,6 +40,7 @@
 | SecurityGroup | /configs/security/v1/security-groups |
 | Service | /configs/network/v1/services |
 | SnapshotRestore | /configs/cluster/v1/config-restore |
+| StatsAlertPolicy | /configs/monitoring/v1/statsAlertPolicies |
 | TechSupportRequest | /configs/monitoring/v1/techsupport |
 | Tenant | /configs/cluster/v1/tenants |
 | TrafficEncryptionPolicy | /configs/security/v1/trafficEncryptionPolicy |

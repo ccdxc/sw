@@ -46,6 +46,13 @@
       "Field": "Destinations"
     }
   ],
+  "monitoring.StatsAlertPolicySpec": [
+    {
+      "Type": "NamedRef",
+      "To": "monitoring/AlertDestination",
+      "Field": "Destinations"
+    }
+  ],
   "network.DHCPServer": [
     {
       "Type": "NamedRef",
