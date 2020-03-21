@@ -30,6 +30,7 @@
 		Node
 		ApcInfo
 		NaplesMultiSimConfig
+		NaplesControlSimConfig
 		NaplesConfig
 		NaplesConfigs
 		ThirdPartyNicConfig

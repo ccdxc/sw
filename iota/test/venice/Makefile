@@ -63,4 +63,11 @@ venice-e2e-cloud:
 	./start_iota.sh
 	VENICE_DEV=1 USE_MGMT=1 go test github.com/pensando/sw/iota/test/venice/testsuites/equinix -timeout 3h -v -ginkgo.v  -topo 3Venice_1Naples_Cloud
 
+venice-sim-cloud:
+	cd ../../../ && make ws-tools && make pull-assets && tar -zxf /sw/build_apulu_sim.tar.gz -C .
+	ln -s /sw/bin/venice.apulu.tgz /go/src/github.com/pensando/sw/bin/venice.apulu.tgz
+	cd ../../ && make
+	./start_iota.sh
+	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/equinix -timeout 120m -v -ginkgo.v  -topo 1Venice_2Naples_Sim_Cloud
+
 all: venice-e2e upgrade

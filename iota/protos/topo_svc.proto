@@ -136,26 +136,30 @@ enum PersonalityType {
     PERSONALITY_NAPLES_SIM              = 1;
     //No datapath, just spin up multiple naples-sim for scale.
     PERSONALITY_NAPLES_MULTI_SIM        = 2;
-    PERSONALITY_VENICE                  = 3;
-    PERSONALITY_NAPLES_SIM_WITH_QEMU    = 4;
+
+    //naples sim just running control path
+    PERSONALITY_NAPLES_CONTROL_SIM      = 3;
+
+    PERSONALITY_VENICE                  = 4;
+    PERSONALITY_NAPLES_SIM_WITH_QEMU    = 5;
     // Naples Hardware
-    PERSONALITY_NAPLES                  = 5;
-    PERSONALITY_NAPLES_BITW             = 6;
+    PERSONALITY_NAPLES                  = 6;
+    PERSONALITY_NAPLES_BITW             = 7;
     //Naples BITW model to run on one host for performance
-    PERSONALITY_NAPLES_BITW_PERF        = 7;
-    PERSONALITY_THIRD_PARTY_NIC         = 8;
-    PERSONALITY_MELLANOX                = 9;
-    PERSONALITY_BROADCOM                = 10;
-    PERSONALITY_INTEL                   = 11;
+    PERSONALITY_NAPLES_BITW_PERF        = 8;
+    PERSONALITY_THIRD_PARTY_NIC         = 9;
+    PERSONALITY_MELLANOX                = 10;
+    PERSONALITY_BROADCOM                = 11;
+    PERSONALITY_INTEL                   = 12;
     // Node just run commands
-    PERSONALITY_COMMAND_NODE            = 12;
-    PERSONALITY_VENICE_BM               = 13;
-    PERSONALITY_VCENTER_NODE            = 14;
+    PERSONALITY_COMMAND_NODE            = 13;
+    PERSONALITY_VENICE_BM               = 14;
+    PERSONALITY_VCENTER_NODE            = 15;
 
     // Naples with DVS mode
-    PERSONALITY_NAPLES_DVS              = 15;
+    PERSONALITY_NAPLES_DVS              = 16;
 
-    PERSONALITY_THIRD_PARTY_NIC_DVS     = 16;
+    PERSONALITY_THIRD_PARTY_NIC_DVS     = 17;
 }
 
 enum EntityType {
@@ -241,7 +245,10 @@ message Node {
         // naples multiple sim on same node
         NaplesMultiSimConfig    naples_multi_sim_config    = 9;
 
-        VcenterConfig           vcenter_config = 10;
+        // naples multiple sim on same node
+        NaplesControlSimConfig    naples_control_sim_config    = 10;
+        
+        VcenterConfig           vcenter_config = 11;
     }
 
     // NodeStatus captures the details of the node action
@@ -297,6 +304,18 @@ message NaplesMultiSimConfig {
 
     // Sim infos
     repeated NaplesSimInfo sims_info = 8;
+}
+
+message NaplesControlSimConfig {
+
+    // parent network to be used.
+    string control_intf           = 1;
+
+    // Venice IPs to use, if specified agent will come up im managed mode.
+    repeated string venice_ips    = 2;
+
+    // control IP of the sim
+    string control_ip             = 3;
 }
 
 message NaplesConfig {

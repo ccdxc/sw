@@ -319,6 +319,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 			}
 			n := testbed.NewTestNode(nodeInfo)
 			ts.Nodes[node.IpAddress] = n
+
 			commonCopyArtifacts := []string{
 				ts.tbInfo.resp.VeniceImage,
 				ts.tbInfo.resp.NaplesImage,

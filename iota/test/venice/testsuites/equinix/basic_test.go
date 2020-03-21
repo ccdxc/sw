@@ -24,6 +24,9 @@ var _ = Describe("Equinx Bring up", func() {
 	Context("Basic tests", func() {
 
 		It("Make sure Ping works", func() {
+			if !ts.tb.HasNaplesHW() {
+				Skip("Skipping datapath tests on sim nodes")
+			}
 			workloads := ts.model.WorkloadPairs().WithinNetwork()
 			Expect(len(workloads.Pairs) != 0).Should(BeTrue())
 			Eventually(func() error {
@@ -32,13 +35,15 @@ var _ = Describe("Equinx Bring up", func() {
 		})
 
 		It("Make sure TCP works", func() {
+			if !ts.tb.HasNaplesHW() {
+				Skip("Skipping datapath tests on sim nodes")
+			}
 			workloads := ts.model.WorkloadPairs().WithinNetwork()
 			Expect(len(workloads.Pairs) != 0).Should(BeTrue())
 			Expect(ts.model.TCPSession(workloads, 8000)).Should(Succeed())
 		})
 
 		It("Delete & Add Config", func() {
-			Skip("Skipping until delete/add config is fixed!")
 			Expect(ts.model.CleanupAllConfig()).Should(Succeed())
 			err := ts.model.SetupDefaultConfig(context.Background(), ts.scaleData, ts.scaleData)
 			Expect(err).ShouldNot(HaveOccurred())

@@ -172,13 +172,14 @@ type TestNode struct {
 	Personality         iota.PersonalityType // node topology
 	NodeMgmtIP          string
 	SecondaryIP         string
-	VeniceConfig        iota.VeniceConfig         // venice specific configuration
-	NaplesConfigs       iota.NaplesConfigs        // naples specific config
-	NaplesMultSimConfig iota.NaplesMultiSimConfig // naples multiple sim specific config
-	VcenterConfig       iota.VcenterConfig        // vcenter config
-	iotaNode            *iota.Node                // node info we got from iota
-	instParams          *InstanceParams           // instance params we got from warmd.json
-	topoNode            *TopoNode                 // node info from topology
+	VeniceConfig        iota.VeniceConfig           // venice specific configuration
+	NaplesConfigs       iota.NaplesConfigs          // naples specific config
+	NaplesSimConfig     iota.NaplesControlSimConfig // naples specific config
+	NaplesMultSimConfig iota.NaplesMultiSimConfig   // naples multiple sim specific config
+	VcenterConfig       iota.VcenterConfig          // vcenter config
+	iotaNode            *iota.Node                  // node info we got from iota
+	instParams          *InstanceParams             // instance params we got from warmd.json
+	topoNode            *TopoNode                   // node info from topology
 }
 
 //InstanceParams return inst params
@@ -600,6 +601,16 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 					},
 				},
 			}
+		case iota.PersonalityType_PERSONALITY_NAPLES_CONTROL_SIM:
+			if node.instParams.Type != "vm" {
+				log.Errorf("Incompatible testbed node %v for personality %v/%v", nodeType, personality, personality)
+				return fmt.Errorf("Incompatible testbed node")
+			}
+
+			tb.hasNaplesSim = true
+			node.NaplesSimConfig = iota.NaplesControlSimConfig{
+				ControlIntf: "eth3",
+			}
 		case iota.PersonalityType_PERSONALITY_VENICE:
 			if node.instParams.Type != "vm" {
 				log.Errorf("Incompatible testbed node %v for personality %v/%v", node.instParams.Type, nodeType, personality)
@@ -802,6 +813,8 @@ func (tb *TestBed) setupVeniceIPs(node *TestNode) error {
 		fallthrough
 	case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
 		fallthrough
+	case iota.PersonalityType_PERSONALITY_NAPLES_CONTROL_SIM:
+		fallthrough
 	case iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM:
 		var veniceIps []string
 		for _, vn := range tb.Nodes {
@@ -816,6 +829,8 @@ func (tb *TestBed) setupVeniceIPs(node *TestNode) error {
 		}
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM {
 			node.NaplesMultSimConfig.VeniceIps = veniceIps
+		} else if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES_CONTROL_SIM {
+			node.NaplesSimConfig.VeniceIps = veniceIps
 		} else {
 			for _, naplesConfig := range node.NaplesConfigs.Configs {
 				naplesConfig.VeniceIps = veniceIps
@@ -1665,6 +1680,17 @@ func (tb *TestBed) setupTestBed() error {
 			tbn.Image = filepath.Base(tb.Topo.NaplesSimImage)
 			tbn.NodeInfo = &iota.Node_NaplesMultiSimConfig{
 				NaplesMultiSimConfig: &node.NaplesMultSimConfig,
+			}
+			tbn.Entities = []*iota.Entity{
+				{
+					Type: iota.EntityType_ENTITY_TYPE_HOST,
+					Name: node.NodeName + "_host",
+				},
+			}
+		case iota.PersonalityType_PERSONALITY_NAPLES_CONTROL_SIM:
+			tbn.Image = filepath.Base(tb.Topo.NaplesSimImage)
+			tbn.NodeInfo = &iota.Node_NaplesControlSimConfig{
+				NaplesControlSimConfig: &node.NaplesSimConfig,
 			}
 			tbn.Entities = []*iota.Entity{
 				{

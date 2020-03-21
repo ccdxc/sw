@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-    "os/exec"
-    "time"
+	"os/exec"
+	"time"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -147,8 +147,8 @@ func (agent *Service) SaveNode(ctx context.Context, req *iota.Node) (*iota.Node,
 
 	}
 
-    exec.Command("sync")
-    time.Sleep(5 * time.Second)
+	exec.Command("sync")
+	time.Sleep(5 * time.Second)
 	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}, nil
 }
 
@@ -334,6 +334,7 @@ var iotaNodes = map[iota.PersonalityType]func() IotaNode{
 	iota.PersonalityType_PERSONALITY_NAPLES_BITW_PERF:     newNaplesBitwPerf,
 	iota.PersonalityType_PERSONALITY_NAPLES_SIM:           newNaplesSim,
 	iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM:     newNaplesMultiSim,
+	iota.PersonalityType_PERSONALITY_NAPLES_CONTROL_SIM:   newNaplesControlSim,
 	iota.PersonalityType_PERSONALITY_VENICE:               newVenice,
 	iota.PersonalityType_PERSONALITY_VENICE_BM:            newVeniceBM,
 	iota.PersonalityType_PERSONALITY_NAPLES_SIM_WITH_QEMU: newNaplesQemu,
@@ -380,6 +381,10 @@ func newCommandNode() IotaNode {
 
 func newNaplesMultiSim() IotaNode {
 	return &naplesMultiSimNode{dataNode: dataNode{iotaNode: iotaNode{name: "naples-multi-sim"}}}
+}
+
+func newNaplesControlSim() IotaNode {
+	return &naplesControlSimNode{dataNode: dataNode{iotaNode: iotaNode{name: "naples-control-sim"}}}
 }
 
 func newNaplesSim() IotaNode {

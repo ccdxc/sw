@@ -735,6 +735,11 @@ func (sm *SysModel) CheckVeniceServiceStatus(leaderNode string) (string, error) 
 								break checkLoop
 							}
 						}
+						//HACK for now
+						if strings.Contains(line, "pen-pegasus") && !strings.Contains(line, "Running") &&
+							len(sm.VeniceNodeMap) == 1 {
+							break checkLoop
+						}
 						fmt.Printf("Some kuberneted services were not running: %v", cmdResp.Stdout)
 						return ret, fmt.Errorf("Some pods not running: %v", line)
 					}

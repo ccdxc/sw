@@ -73,6 +73,7 @@ var Topologies = map[string]*Topology{
 	"3Venice_1Naples_ThirdParty":          &topo3Venice1Naples1ThirdParty,
 	"3Venice_1Naples_Cloud":               &topo3Venice1NaplesCloud,
 	"3Venice_2Naples_Cloud":               &topo3Venice2NaplesCloud,
+	"1Venice_2Naples_Sim_Cloud":           &topo1Venice2NaplesSimCloud,
 	"3Venice_2Naples_Basenet":             &topo3Venice2NaplesBasenet,
 }
 
@@ -1254,6 +1255,29 @@ var topo3Venice1NaplesCloud = Topology{
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
 			Personality: iota.PersonalityType_PERSONALITY_VENICE,
 			HostOS:      "linux",
+		},
+	},
+}
+
+var topo1Venice2NaplesSimCloud = Topology{
+	VeniceImage:    "../bin/venice.apulu.tgz",
+	NaplesSimImage: "../nic/obj/images/naples-release-v1.tgz",
+	WorkloadType:   iota.WorkloadType_WORKLOAD_TYPE_CONTAINER,
+	WorkloadImage:  "registry.test.pensando.io:5000/pensando/iota/centos:1.1",
+	NumVlans:       10, // FIXME: what should this be??
+	Model:          CloudModel,
+
+	Nodes: []TopoNode{
+		{
+			NodeName:    "naples1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES_CONTROL_SIM,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
 		},
 	},
 }

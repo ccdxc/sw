@@ -190,14 +190,31 @@ def __move_data_intfs_to_naples_sim(container_obj, node_ip, data_intfs):
             sys.exit(1)
         print ("Configure IP for intf : %s with  :%s" % (intf, node_ip))
 
-def __move_control_intf_to_naples_sim(container_obj,control_intf, control_ip):
+
+def __move_control_intf_to_naples_sim(container_obj,control_intf, control_ip, control_intf_alias=None):
     pid = str(_DOCKER_API_CLIENT.inspect_container(container_obj.id)["State"]["Pid"])
     moveInterfaceToNs(control_intf, pid)
-    cmd = ["ip", "netns", "exec", pid, "ifconfig", control_intf, control_ip, "up"]
+    cmd = ["ip", "netns", "exec", pid, "ifconfig", control_intf, "up"]
+    if control_ip:
+        cmd = ["ip", "netns", "exec", pid, "ifconfig", control_intf, control_ip, "up"]
     if not RunShellCmd(cmd):
         print ("Failed to configure IP for intf : %s with  :%s" % (control_intf, control_ip))
         sys.exit(1)
 
+    if control_intf_alias:
+        cmd = ["ip", "netns", "exec", pid, "ifconfig", control_intf, "down"]
+        if not RunShellCmd(cmd):
+            print ("Failed to bring down intf : %s " % (control_intf))
+            sys.exit(1)
+        cmd = ["ip", "netns", "exec", pid, "ip", "link", "set", control_intf, "name", control_intf_alias]
+        if not RunShellCmd(cmd):
+            print ("Failed to rename interface : %s " % (intf))
+            sys.exit(1)
+        if not control_ip:
+            cmd = ["ip", "netns", "exec", pid, "dhclient", control_intf_alias]
+            if not RunShellCmd(cmd):
+                print ("Failed to run dhclient : %s " % (control_intf_alias))
+                sys.exit(1)
 
 
 def __setup_hntap(container_obj, args):
@@ -286,7 +303,7 @@ def __setup_data_network(container_obj, args):
 
 def __setup_control_network(container_obj, args):
     if args.control_intf:
-        __move_control_intf_to_naples_sim(container_obj, args.control_intf, args.control_ip)
+        __move_control_intf_to_naples_sim(container_obj, args.control_intf, args.control_ip, args.control_intf_alias)
 
 
 def __wait_for_line_log(log_file, line_match):
@@ -428,6 +445,8 @@ def main():
                         choices=["macvlan"], help='Network Driver for docker network')
     parser.add_argument('--control-intf', dest='control_intf', default=None,
                         help='Control interface to be used.')
+    parser.add_argument('--control-intf-alias', dest='control_intf_alias', default=None,
+                        help='Control interface alias to be used.')
     parser.add_argument('--control-ip', dest='control_ip', default=None,
                         help='Control Network IP to be used.')
     parser.add_argument('--venice-ips', dest='venice_ips', default=None,

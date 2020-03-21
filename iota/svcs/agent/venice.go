@@ -75,6 +75,9 @@ func (venice *veniceNode) bringUpVenice(image string, hostname string,
 		return errors.Wrap(err, stdout)
 	}
 
+	cmd := []string{"touch", "/etc/hosts"}
+	utils.Run(cmd, 0, false, true, nil)
+
 	for _, peer := range peers {
 		if peer.hostname != "" && peer.ip != "" {
 			cmd := []string{"echo", strings.Split(peer.ip, "/")[0], peer.hostname, " | sudo tee -a /etc/hosts"}

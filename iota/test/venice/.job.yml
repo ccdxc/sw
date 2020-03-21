@@ -90,6 +90,36 @@ e2e-targets:
           VcenterUsername: administrator@vsphere.local
           VcenterPassword: N0isytem$
           VcenterLicense: YN69K-6YK5J-78X8T-0M3RH-0T12H
+ e2e-venice-sim-cloud:
+   commands: ["make", "-C", "iota/test/venice", "venice-sim-cloud"]
+   # commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:venice-dev@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   build-dependencies:
+     - build-apulu-x86-sim
+     - build-venice-apulu-image
+   clusters:
+     - image: build-160
+       count: 2
+       resources:
+         cpus: 6
+         memory: 12
+         pvt-networks:
+         - control-1
+         - control-2
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+          VcenterUsername: administrator@vsphere.local
+          VcenterPassword: N0isytem$
+          VcenterLicense: YN69K-6YK5J-78X8T-0M3RH-0T12H
 #e2e-venice-1naples-cloud:
 #  commands: ["make", "-C", "iota/test/venice", "venice-e2e-cloud"]
 #  # commands: [ "cat /warmd.json && sleep 30000000"]

@@ -61,6 +61,11 @@ builds:
     owners: ["email:jainvipin@pensando.io"]
     artifacts:
       - /sw/build_apulu_x86.tar.gz
+  build-apulu-x86-sim:
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && IGNORE_BUILD_PIPELINE=1 make PIPELINE=apulu FLAVOR=-venice jobd/e2e/naples-sim-image && cd .. && tar -zvcf /sw/build_apulu_sim.tar.gz nic/obj/images"]
+    owners: ["email:jainvipin@pensando.io"]
+    artifacts:
+      - /sw/build_apulu_sim.tar.gz
   build-apulu-arm:
     commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw && ls -al && make ws-tools && go install ./asset-build/... && make pull-assets && make PIPELINE=apulu naples-firmware && make PIPELINE=apulu naples-firmware-tarball-apulu && make PIPELINE=apulu naples-protos-apulu"]
     owners: ["email:jainvipin@pensando.io"]

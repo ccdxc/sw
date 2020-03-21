@@ -196,6 +196,9 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM {
 			nc = nc + int(node.NaplesMultSimConfig.NumInstances)
 		}
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES_CONTROL_SIM {
+			nc = nc + 1
+		}
 	}
 L:
 	for {
@@ -391,6 +394,48 @@ func (sm *SysModel) createMultiSimNaples(node *testbed.TestNode) error {
 	return nil
 }
 
+// createControlSimNaples creates a naples instance
+func (sm *SysModel) createControlSimNaples(node *testbed.TestNode) error {
+
+	log.Infof("Adding control sim naples : %v(%v)", (node.NodeName), node.GetIotaNode().GetNaplesControlSimConfig().ControlIp)
+
+	success := false
+	var err error
+	for i := 0; i < 3; i++ {
+		var snicList []*cluster.DistributedServiceCard
+		snicList, err = sm.ListSmartNIC()
+		if err != nil {
+			continue
+		}
+		//TODO: (iota agent is also following the same format.)
+		simName := node.NodeName
+		success = false
+		for _, snic := range snicList {
+			if snic.Spec.ID == simName {
+				sm.FakeNaples[simName] = objects.NewNaplesNode(simName, node, snic)
+				sm.FakeNaples[simName].SetIP(node.GetIotaNode().GetNaplesControlSimConfig().ControlIp)
+				success = true
+			}
+		}
+
+		if !success {
+			err = fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", node.NodeName, err)
+			log.Errorf("%v", err)
+			break
+		}
+		//All got added, success!
+		if success {
+			break
+		}
+	}
+
+	if !success {
+		return fmt.Errorf("Errorr adding fake naples  %v", err.Error())
+	}
+
+	return nil
+}
+
 //SetupVeniceNaples setups venice and naples
 func (sm *SysModel) SetupVeniceNaples() error {
 	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Minute)
@@ -431,6 +476,11 @@ func (sm *SysModel) SetupNodes() error {
 			}
 		} else if nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM {
 			err := sm.createMultiSimNaples(nr)
+			if err != nil {
+				return err
+			}
+		} else if nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES_CONTROL_SIM {
+			err := sm.createControlSimNaples(nr)
 			if err != nil {
 				return err
 			}
