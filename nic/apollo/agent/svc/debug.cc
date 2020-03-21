@@ -404,22 +404,21 @@ DebugSvcImpl::InternalPortGet(ServerContext *context,
         bool     has_port_num = (port_num != 0);
         uint16_t data;
 
-#if 0
         port_num = port_num - 1;
         if (has_port_num) {
             if (port_num < MARVELL_NPORTS) {
-                sdk::marvell::marvell_get_port_status(MARVELL_PORT0 + port_num, &data);
+                sdk::marvell::marvell_get_port_status(port_num, &data);
                 populate_port_info(port_num, data, rsp);
             } else {
-                return Status(grpc::StatusCode::INVALID_ARGUMENT, "Port number must be between 0-7");
+                return Status(grpc::StatusCode::INVALID_ARGUMENT,
+                              "Internal port number must be between 1-7");
             }
         } else {
             for (port_num = 0; port_num < MARVELL_NPORTS; port_num++) {
-                sdk::marvell::marvell_get_port_status(MARVELL_PORT0 + port_num, &data);
+                sdk::marvell::marvell_get_port_status(port_num, &data);
                 populate_port_info(port_num, data, rsp);
             }
         }
-#endif
     }
     return Status::OK;
 }

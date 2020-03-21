@@ -567,6 +567,7 @@ api_engine::resource_reservation_stage_(void)
             batch_ctxt_.num_msgs++;
         }
     }
+
     // if some of these APIs need to be shipped to other components, allocate
     // memory for the necessary messages
     if (batch_ctxt_.num_msgs) {
