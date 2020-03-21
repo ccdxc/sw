@@ -20,6 +20,7 @@ class EzAccessStore:
 
         # Custom Database for easy access.
         self.trunks = ObjectDatabase()
+        self.dhcprelayObjs = ObjectDatabase()
         self.tunnels = ObjectDatabase()
         self.nexthops = ObjectDatabase()
         self.nexthopgroups = ObjectDatabase()
@@ -191,6 +192,12 @@ class EzAccessStore:
         for nhg in self.nexthopgroups.GetAllInList():
             if nhg.IsOverlay() and nhg.DualEcmp: nhgs.append(nhg)
         return nhgs
+
+    def GetDhcpRelayObjects(self):
+        return self.dhcprelayObjs.GetAllInList()
+
+    def SetDhcpRelayObjects(self, objs):
+        return self.dhcprelayObjs.SetAll(objs)
 
     def GetTrunkingUplinks(self):
         return self.trunks.GetAllInList()

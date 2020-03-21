@@ -191,6 +191,7 @@ class Resmgr(base.ConfigObjectBase):
         self.DualEcmpNhAllocator = None
         self.UnderlayNhGroupAllocator = None
         self.DualEcmpNhGroupAllocator = None
+        self.DhcpRelayAllocator = None
         self.DeviceMacAllocator = objects.TemplateFieldObject("macstep/0002.0100.0000/0000.0000.0001")
         self.NumVnicPolicyAllocator = utils.rrobiniter(range(Resmgr.MAX_POLICY_PER_VNIC+1))
         self.UnderlayNumNexthopsAllocator = utils.rrobiniter(range(1, Resmgr.MAX_UNDERLAY_NHS+1))
@@ -349,6 +350,11 @@ class Resmgr(base.ConfigObjectBase):
         objs = EzAccessStoreClient[self.Node].GetDualEcmpNhGroups()
         if len(objs) != 0:
             self.DualEcmpNhGroupAllocator = utils.rrobiniter(objs)
+
+    def CreateDHCPRelayAllocator(self):
+        objs = EzAccessStoreClient[self.Node].GetDhcpRelayObjects()
+        if len(objs) != 0:
+            self.DhcpRelayAllocator = utils.rrobiniter(objs)
 
     # Create subnets from base prefix
     # - base is a prefix in the form of '10.0.0.0/16'

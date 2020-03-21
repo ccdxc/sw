@@ -18,6 +18,8 @@ typedef sdk::sdk_ret_t (*pds_cfg_set_cb)(const pds_cfg_msg_t *msg);
 typedef sdk::sdk_ret_t (*pds_cfg_del_cb)(const pds_cfg_msg_t *msg);
 typedef sdk::sdk_ret_t (*pds_cfg_act_cb)(const pds_cfg_msg_t *msg);
 typedef sdk::sdk_ret_t (*pds_cfg_get_cb)(pds_cfg_msg_t *msg);
+typedef void (*pds_cfg_walk_cb)(pds_cfg_msg_t *msg, void *cb_msg);
+typedef void (*pds_cfg_notify_cb)(const pds_cfg_msg_t *msg, bool del);
 
 // function prototypes
 int pds_cfg_register_callbacks(obj_id_t id,
@@ -25,6 +27,10 @@ int pds_cfg_register_callbacks(obj_id_t id,
                                pds_cfg_del_cb del_cb_fn,
                                pds_cfg_act_cb act_cb_fn,
                                pds_cfg_get_cb get_cb_fn = NULL);
+
+int
+pds_cfg_register_notify_callbacks(obj_id_t id,
+                                  pds_cfg_notify_cb notify_cb_fn);
 
 typedef struct {
     obj_id_t      obj_id;
@@ -40,6 +46,11 @@ typedef struct {
     pds_cfg_act_cb act_cb;
     pds_cfg_get_cb get_cb;
 } object_cbs_t;
+
+typedef struct {
+    obj_id_t       obj_id;
+    std::vector<pds_cfg_notify_cb> notify_cbs;
+} object_notify_cbs_t;
 
 // represents all the configuration data that is required by all VPP plugins.
 // this is the authoritative copy, and plugins are notified (through
@@ -63,6 +74,7 @@ public:
     int size(obj_id_t obj_id) const;
     bool exists(pds_cfg_msg_t const& cfg_msg) const;
     bool get(pds_cfg_msg_t &value) const;
+    void walk(pds_cfg_msg_t &cfg_msg, pds_cfg_walk_cb cb, void *cb_msg) const;
 
     // modifiers
     void set(pds_cfg_msg_t const& cfg_msg);
@@ -78,6 +90,7 @@ class vpp_config_batch {
     std::vector<size_t> pool_sz;
 
     static std::list<object_cbs_t> object_cbs;
+    static std::list<object_notify_cbs_t> object_notify_cbs;
     static vpp_config_batch singleton;
 
 private:
@@ -100,6 +113,9 @@ public:
                              pds_cfg_del_cb del_cb_fn,
                              pds_cfg_act_cb act_cb_fn,
                              pds_cfg_get_cb get_cb_fn);
+
+    static void register_notify_cbs(obj_id_t id,
+                                    pds_cfg_notify_cb notify_cb_fn);
 
     static vpp_config_batch &get(void) { return singleton; }
 public:

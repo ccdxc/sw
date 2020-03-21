@@ -11,17 +11,27 @@ extern "C" {
 #endif
 
 void pds_dhcp_relay_cfg_init(void);
-int pds_dhcp4_relay_config_update(uint32_t server_ip,
-                                  uint32_t agent_ip,
-                                  bool del);
+
+int
+pds_dhcp4_cfg_add_del_all(uint16_t subnet);
+
+int pds_dhcp4_relay_config_update(uint16_t subnet_id,
+                                  uint8_t *id,
+                                  uint32_t del);
+
+int pds_dhcp4_proxy_config_update(uint16_t subnet_id,
+                                  uint8_t *id,
+                                  uint32_t del);
+
+int
+pds_dhcp4_server_add(uint8_t *id,
+                     uint32_t server_ip,
+                     uint32_t agent_ip,
+                     uint16_t server_vpc);
+
+int pds_dhcp4_server_del(uint8_t *id);
 
 int pds_dhcp_relay_init_cb(bool external_server);
-
-typedef struct dhcp_relay_cfg_main_s {
-    uint32_t *svr_ip_list;
-} dhcp_relay_cfg_main_t;
-
-extern dhcp_relay_cfg_main_t dhcp_relay_cfg_main;
 
 #ifdef __cplusplus
 }

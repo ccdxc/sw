@@ -108,11 +108,12 @@ def __generate(node, topospec):
     # Generate Policer config
     PolicerClient.GenerateObjects(node, topospec)
 
+    # Generate DHCP configuration
+    # TODO: move it under underlay_vpc
+    DHCPRelayClient.GenerateObjects(node, topospec)
+
     # Generate VPC configuration
     VpcClient.GenerateObjects(node, topospec)
-
-    # Generate DHCP configuration
-    DHCPRelayClient.GenerateObjects(node, topospec)
 
     # Generate Oper objects
     OperClient.GenerateObjects(node)
@@ -160,9 +161,6 @@ def __create(node):
 
     # Create Mirror session objects
     MirrorClient.CreateObjects(node)
-
-    # Create DHCP Relay Objects
-    DHCPRelayClient.CreateObjects(node)
 
     # Commit the Batch
     BatchClient.Commit(node)

@@ -4,6 +4,7 @@ import ipaddress
 
 from infra.common.logging import logger
 
+from apollo.config.store import client as EzAccessStoreClient
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
 
@@ -69,8 +70,9 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.DHCP_RELAY, Resmgr.MAX_DHCP_RELAY)
         return
 
-    def GetDhcpRelayObject(self, node):
-        return self.GetObjectByKey(node, 1)
+    def GetDhcpRelayObject(self, node, dhcprelayid=1):
+        #TODO: Fix flow.py for sending dhcprelayid
+        return self.GetObjectByKey(node, dhcprelayid)
 
     def IsReadSupported(self):
         return False
@@ -89,6 +91,8 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
 
         for dhcp_relay_spec_obj in dhcprelaySpec:
             __add_dhcp_relay_config(dhcp_relay_spec_obj)
+        EzAccessStoreClient[node].SetDhcpRelayObjects(self.Objects(node))
+        ResmgrClient[node].CreateDHCPRelayAllocator()
         return
 
 client = DhcpRelayObjectClient()

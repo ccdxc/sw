@@ -11,6 +11,7 @@ from apollo.config.store import client as EzAccessStoreClient
 
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
+from apollo.config.objects.dhcprelay import client as DHCPRelayClient
 from apollo.config.objects.nexthop import client as NhClient
 from apollo.config.objects.nexthop_group import client as NhGroupClient
 from apollo.config.objects.interface import client as InterfaceClient
@@ -474,6 +475,9 @@ class VpcObjectClient(base.ConfigClientBase):
 
         # netagent requires route table before vpc
         super().CreateObjects(node)
+
+        # Create DHCP Relay Objects
+        DHCPRelayClient.CreateObjects(node)
 
         # Create Nexthop object
         NhClient.CreateObjects(node)

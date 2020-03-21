@@ -10,6 +10,8 @@
 vpp_config_data vpp_config_data::singleton;
 vpp_config_batch vpp_config_batch::singleton;
 std::list<object_cbs_t> vpp_config_batch::object_cbs;
+std::list<object_notify_cbs_t> vpp_config_batch::object_notify_cbs;
+
 
 #define foreach_config_data_element                 \
         _(DEVICE, device)                           \
@@ -92,6 +94,39 @@ vpp_config_data::get (pds_cfg_msg_t &cfg_msg) const {
     }
 
     return true;
+}
+
+// walk on all config objects for the given config obj id. returns
+void
+vpp_config_data::walk (pds_cfg_msg_t &cfg_msg,
+                       pds_cfg_walk_cb cb,
+                       void *cb_msg) const {
+    // initialize iterators to all obj types
+#define _(obj, data)                                    \
+    auto data##_it = data.begin();                      \
+
+    foreach_config_data_element
+#undef _
+
+    switch(cfg_msg.obj_id) {
+#define _(obj, data)                                    \
+    case OBJ_ID_##obj:                                  \
+        for (data##_it = data.begin();                  \
+             data##_it != data.end(); data##_it++) {    \
+            cfg_msg.data = data##_it->second;           \
+            (cb) (&cfg_msg, cb_msg);                    \
+        }                                               \
+        break;
+
+        foreach_config_data_element
+#undef _
+
+    default:
+        assert(false);
+        break;
+    }
+
+    return;
 }
 
 // inserts/updates the spec associated with the specificed key
@@ -321,6 +356,25 @@ vpp_config_batch::register_cbs (obj_id_t id,
 }
 
 void
+vpp_config_batch::register_notify_cbs (obj_id_t id,
+                     pds_cfg_notify_cb notify_cb_fn) {
+    object_notify_cbs_t cbs;
+
+    for (auto cit = vpp_config_batch::object_notify_cbs.begin();
+         cit != vpp_config_batch::object_notify_cbs.end(); cit++) {
+        if (cit->obj_id != id) {
+            continue;
+        }
+        cit->notify_cbs.push_back(notify_cb_fn);
+        return;
+    }
+    cbs.obj_id = id;
+    cbs.notify_cbs.push_back(notify_cb_fn);
+    vpp_config_batch::object_notify_cbs.push_back(cbs);
+    return;
+}
+
+void
 vpp_config_batch::publish (void) {
     vpp_config_data &vpp_config = vpp_config_data::get();
     // commit modifications to config data
@@ -470,6 +524,23 @@ vpp_config_batch::commit (void) {
                     ((*cit).act_cb)(&((*it).modified));
                 }
             }
+            for (auto cit = object_notify_cbs.begin();
+                 cit != object_notify_cbs.end(); cit++) {
+                if ((*cit).obj_id != (*it).obj_id) {
+                    continue;
+                }
+                std::vector<pds_cfg_notify_cb>::iterator nit;
+                for (nit = (*cit).notify_cbs.begin();
+                     nit != (*cit).notify_cbs.end(); ++nit) {
+                    if ((*it).deleted) {
+                        if ((*it).original.obj_id != OBJ_ID_NONE) {
+                            (*nit) (&((*it).original), true);
+                        }
+                    } else {
+                        (*nit)(&((*it).modified), false);
+                    }
+                }
+            }
         }
         return ret;
     }
@@ -493,6 +564,21 @@ vpp_config_batch::commit (void) {
                 ((*cit).set_cb)(&((*it).original));
                 if ((*cit).act_cb) {
                     ((*cit).act_cb)(&((*it).original));
+                }
+            }
+        }
+        for (auto cit = object_notify_cbs.begin();
+                cit != object_notify_cbs.end(); cit++) {
+            if ((*cit).obj_id != (*it).obj_id) {
+                continue;
+            }
+            std::vector<pds_cfg_notify_cb>::iterator nit;
+            for (nit = (*cit).notify_cbs.begin();
+                    nit != (*cit).notify_cbs.end(); ++nit) {
+                if ((*it).original.obj_id == OBJ_ID_NONE) {
+                    (*nit)(&((*it).modified), true);
+                } else {
+                    (*nit)(&((*it).original), false);
                 }
             }
         }
@@ -527,7 +613,7 @@ pds_cfg_register_callbacks (obj_id_t id,
                             pds_cfg_set_cb set_cb_fn,
                             pds_cfg_del_cb del_cb_fn,
                             pds_cfg_act_cb act_cb_fn,
-                            pds_cfg_get_cb get_cb_fn ) {
+                            pds_cfg_get_cb get_cb_fn) {
     if ((set_cb_fn == NULL) || (del_cb_fn == NULL)) {
         return -1;
     }
@@ -547,4 +633,22 @@ pds_cfg_register_callbacks (obj_id_t id,
     return 0;
 }
 
+// register configuration notification callbacks from plugins for messages
+// return 0 indicates  registered successfully
+// return non-zero indicates registration fail (invalid param)
+int
+pds_cfg_register_notify_callbacks (obj_id_t id,
+                                   pds_cfg_notify_cb notify_cb_fn) {
+    if ((id != OBJ_ID_DEVICE) &&
+        (id != OBJ_ID_VPC) &&
+        (id != OBJ_ID_VNIC) &&
+        (id != OBJ_ID_SUBNET) &&
+        (id != OBJ_ID_DHCP_POLICY) &&
+        (id != OBJ_ID_NAT_PORT_BLOCK) &&
+        (id != OBJ_ID_SECURITY_PROFILE)) {
+        return -1;
+    }
 
+    vpp_config_batch::register_notify_cbs(id, notify_cb_fn);
+    return 0;
+}

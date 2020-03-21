@@ -165,7 +165,7 @@ dhcp_policy_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
             data.nacl_redirect_to_arm_action.nexthop_id = lif->nh_idx();
         }
         //data.nacl_redirect_to_arm_action.copp_policer_id = idx;
-        data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_FLOW_MISS_DHCP;
+        data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_FLOW_MISS_DHCP_UPLINK;
         p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx_,
                                       &key, &mask, &data);
         if (p4pd_ret != P4PD_SUCCESS) {
