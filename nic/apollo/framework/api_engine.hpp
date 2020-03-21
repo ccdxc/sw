@@ -348,7 +348,7 @@ public:
     /// \return pointer to the API object context containing cumulative update
     ///         bitmap if there is any new update or else NULL
     api_obj_ctxt_t *add_to_deps_list(obj_id_t obj_id, api_op_t api_op,
-                                 api_base *api_obj, uint64_t upd_bmap) {
+                                     api_base *api_obj, uint64_t upd_bmap) {
         api_obj_ctxt_t *octxt;
 
         if (api_obj->in_dirty_list()) {
@@ -359,12 +359,13 @@ public:
                         upd_bmap) {
                     batch_ctxt_.dom[api_obj]->upd_bmap |= upd_bmap;
                     PDS_TRACE_DEBUG("%s already in DoL, updated upd bmap to "
-                                    "0x%lx", api_obj->key2str(),
+                                    "0x%lx", api_obj->key2str().c_str(),
                                     batch_ctxt_.dom[api_obj]->upd_bmap);
                     return batch_ctxt_.dom[api_obj];
                 }
                 // entry exists and the update was already noted
-                PDS_TRACE_DEBUG("%s already in DoL", api_obj->key2str());
+                PDS_TRACE_DEBUG("%s already in DoL",
+                                api_obj->key2str().c_str());
                 return NULL;
             }
 #if 0
@@ -381,7 +382,7 @@ public:
             if ((batch_ctxt_.aom[api_obj]->upd_bmap & upd_bmap) != upd_bmap) {
                 batch_ctxt_.aom[api_obj]->upd_bmap |= upd_bmap;
                 PDS_TRACE_DEBUG("%s already in AoL, update upd bmap to 0x%lx",
-                                api_obj->key2str(),
+                                api_obj->key2str().c_str(),
                                 batch_ctxt_.aom[api_obj]->upd_bmap);
                 return batch_ctxt_.aom[api_obj];
             }
@@ -392,7 +393,7 @@ public:
             batch_ctxt_.aol.remove(api_obj);
             batch_ctxt_.aol.push_back(api_obj);
             // entry exists and the update was already noted
-            PDS_TRACE_DEBUG("%s already in AoL", api_obj->key2str());
+            PDS_TRACE_DEBUG("%s already in AoL", api_obj->key2str().c_str());
             return NULL;
         }
 
@@ -406,7 +407,7 @@ public:
         batch_ctxt_.aom[api_obj] = octxt;
         batch_ctxt_.aol.push_back(api_obj);
         PDS_TRACE_DEBUG("Added %s to AoL, update bitmap 0x%lx",
-                        api_obj->key2str(), upd_bmap);
+                        api_obj->key2str().c_str(), upd_bmap);
         return octxt;
     }
 

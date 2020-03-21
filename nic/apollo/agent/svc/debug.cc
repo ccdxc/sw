@@ -392,7 +392,7 @@ Status
 DebugSvcImpl::InternalPortGet(ServerContext *context,
                               const pds::InternalPortRequestMsg *req,
                               pds::InternalPortResponseMsg *rsp) {
-    uint32_t    i, nreqs = req->request_size();
+    uint32_t i, nreqs = req->request_size();
 
     if (nreqs == 0) {
         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
@@ -404,8 +404,8 @@ DebugSvcImpl::InternalPortGet(ServerContext *context,
         bool     has_port_num = (port_num != 0);
         uint16_t data;
 
+#if 0
         port_num = port_num - 1;
-
         if (has_port_num) {
             if (port_num < MARVELL_NPORTS) {
                 sdk::marvell::marvell_get_port_status(MARVELL_PORT0 + port_num, &data);
@@ -419,6 +419,7 @@ DebugSvcImpl::InternalPortGet(ServerContext *context,
                 populate_port_info(port_num, data, rsp);
             }
         }
+#endif
     }
     return Status::OK;
 }
