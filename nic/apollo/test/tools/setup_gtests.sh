@@ -16,6 +16,7 @@ function finish () {
     ${PDSPKG_TOPDIR}/apollo/test/tools/savelogs.sh
     rm -f ${PDSPKG_TOPDIR}/conf/pipeline.json
     sudo rm -f /tmp/*.db /tmp/pen_* /dev/shm/pds_* /dev/shm/ipc_*
+    sudo rm -f /dev/shm/metrics_*
     if [ $PIPELINE == 'apulu' ]; then
         sudo pkill -9 vpp
         sudo pkill -9 dhcpd
