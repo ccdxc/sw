@@ -162,12 +162,6 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 		// let the pipeline do its thing
 		c.PipelineAPI.HandleVeniceCoordinates(obj)
 
-		// Replay stored configs. This is a best-effort replay. Not marking errors as fatal since controllers will
-		// eventually get the configs to a cluster-wide consistent state
-		if err := c.PipelineAPI.ReplayConfigs(); err != nil {
-			log.Error(err)
-		}
-
 		if c.ResolverClient == nil {
 			c.ResolverClient = resolver.New(&resolver.Config{Name: types.Netagent, Servers: obj.Controllers})
 			tsdb.Init(context.Background(), &tsdb.Opts{

@@ -177,6 +177,12 @@ func (a *ApuluAPI) PipelineInit() error {
 		}
 	}()
 
+	// Replay stored configs. This is a best-effort replay. Not marking errors as fatal since controllers will
+	// eventually get the configs to a cluster-wide consistent state
+	if err := a.ReplayConfigs(); err != nil {
+		log.Error(err)
+	}
+
 	return nil
 }
 

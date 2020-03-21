@@ -209,6 +209,12 @@ func (i *IrisAPI) PipelineInit() error {
 		}
 	}
 
+	// Replay stored configs. This is a best-effort replay. Not marking errors as fatal since controllers will
+	// eventually get the configs to a cluster-wide consistent state
+	if err := i.ReplayConfigs(); err != nil {
+		log.Error(err)
+	}
+
 	return nil
 }
 
@@ -1720,6 +1726,30 @@ func (i *IrisAPI) ReplayConfigs() error {
 			}
 		}
 	}
+
+	// Replay SecurityProfile Object
+	secProfiles, err := i.InfraAPI.List("SecurityProfile")
+	if err == nil {
+		for _, o := range secProfiles {
+			var secProfile netproto.SecurityProfile
+			err := secProfile.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to SecurityProfile. Err: %v", err)
+				continue
+			}
+			creator, ok := secProfile.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", secProfile.Kind, secProfile.GetKey())
+				i.InfraAPI.Delete(secProfile.Kind, secProfile.GetKey())
+
+				log.Info("Replaying persisted SecurityProfile object")
+				if _, err := i.HandleSecurityProfile(types.Create, secProfile); err != nil {
+					log.Errorf("Failed to recreate SecurityProfile: %v. Err: %v", secProfile.GetKey(), err)
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -1941,7 +1971,6 @@ func (i *IrisAPI) initLifStream(uid string) {
 	for _, lif := range lifs.Response {
 		i.createHostInterface(uid, lif.Spec, lif.Status)
 	}
-
 }
 
 // HandleCPRoutingConfig unimplemented
