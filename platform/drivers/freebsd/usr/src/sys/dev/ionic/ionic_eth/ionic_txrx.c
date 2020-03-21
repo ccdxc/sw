@@ -2493,6 +2493,72 @@ ionic_setup_fw_stats(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 			&stat->rx_rdma_ecn_packets, "");
 }
 
+static void
+ionic_setup_qos_stats(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
+	struct sysctl_oid_list *child)
+{
+	struct ionic_dev *idev = &lif->ionic->idev;
+	struct ionic_port_pb_stats *pb_stats = &idev->port_info->pb_stats;
+	struct sysctl_oid *queue_node, *queue_node1;
+	struct sysctl_oid_list *queue_list, *queue_list1;
+	char namebuf[QUEUE_NAME_LEN];
+	int i;
+
+	snprintf(namebuf, QUEUE_NAME_LEN, "qos_stats");
+	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
+				CTLFLAG_RD, NULL, "QoS counters");
+	queue_list = SYSCTL_CHILDREN(queue_node);
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "sop_count_in", CTLFLAG_RD,
+		&pb_stats->sop_count_in, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "eop_count_in", CTLFLAG_RD,
+		&pb_stats->eop_count_in, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "sop_count_out", CTLFLAG_RD,
+		&pb_stats->sop_count_out, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "eop_count_out", CTLFLAG_RD,
+		&pb_stats->eop_count_out, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_intrinsic_drop", CTLFLAG_RD,
+		&pb_stats->drop_counts[IONIC_BUFFER_INTRINSIC_DROP], "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_discarded", CTLFLAG_RD,
+		&pb_stats->drop_counts[IONIC_BUFFER_DISCARDED], "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_admitted", CTLFLAG_RD,
+		&pb_stats->drop_counts[IONIC_BUFFER_ADMITTED], "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_of_cells_drop", CTLFLAG_RD,
+		&pb_stats->drop_counts[IONIC_BUFFER_OUT_OF_CELLS_DROP], "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_of_cells_drop2", CTLFLAG_RD,
+		&pb_stats->drop_counts[IONIC_BUFFER_OUT_OF_CELLS_DROP_2], "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_out_of_credit_drop", CTLFLAG_RD,
+		&pb_stats->drop_counts[IONIC_BUFFER_OUT_OF_CREDIT_DROP], "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_truncation_drop", CTLFLAG_RD,
+		&pb_stats->drop_counts[IONIC_BUFFER_TRUNCATION_DROP], "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_port_disable_drop", CTLFLAG_RD,
+		&pb_stats->drop_counts[IONIC_BUFFER_PORT_DISABLED_DROP], "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_copy_to_cpu_tail_drop", CTLFLAG_RD,
+		&pb_stats->drop_counts[IONIC_BUFFER_COPY_TO_CPU_TAIL_DROP], "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_span_tail_drop", CTLFLAG_RD,
+		&pb_stats->drop_counts[IONIC_BUFFER_SPAN_TAIL_DROP], "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_min_size_violation_drop", CTLFLAG_RD,
+		&pb_stats->drop_counts[IONIC_BUFFER_MIN_SIZE_VIOLATION_DROP], "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_enqueue_error_drop", CTLFLAG_RD,
+		&pb_stats->drop_counts[IONIC_BUFFER_ENQUEUE_ERROR_DROP], "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_invalid_port_drop", CTLFLAG_RD,
+		&pb_stats->drop_counts[IONIC_BUFFER_INVALID_PORT_DROP], "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_invalid_output_queue_drop", CTLFLAG_RD,
+		&pb_stats->drop_counts[IONIC_BUFFER_INVALID_OUTPUT_QUEUE_DROP], "");
+
+	for (i = 0; i < IONIC_QOS_TC_MAX; i++) {
+		snprintf(namebuf, QUEUE_NAME_LEN, "tc%d", i);
+		queue_node1 = SYSCTL_ADD_NODE(ctx, queue_list, OID_AUTO, namebuf,
+					CTLFLAG_RD, NULL, "QoS per class stats");
+		queue_list1 = SYSCTL_CHILDREN(queue_node1);
+		SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "input_queue_buffer_occupancy", CTLFLAG_RD,
+			&pb_stats->input_queue_buffer_occupancy[i], "");
+		SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "input_queue_port_monitor", CTLFLAG_RD,
+			&pb_stats->input_queue_port_monitor[i], "");
+		SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "output_queue_port_monitor", CTLFLAG_RD,
+			&pb_stats->output_queue_port_monitor[i], "");
+	}
+}
+
 /*
  * MAC statistics.
  */
@@ -2887,7 +2953,6 @@ ionic_qos_tc_enable_sysctl(SYSCTL_HANDLER_ARGS)
 	}
 
 	ionic_qos_init(ionic);
-//	memcpy(ionic->qos.enable_flag, enable, sizeof(ionic->qos.enable_flag));
 err_out:
 	IONIC_LIF_UNLOCK(lif);
 	return (error);
@@ -2928,7 +2993,6 @@ ionic_qos_no_drop_sysctl(SYSCTL_HANDLER_ARGS)
 	}
 
 	ionic_qos_init(ionic);
-	//memcpy(ionic->qos.no_drop, no_drop, sizeof(ionic->qos.no_drop));
 err_out:
 	IONIC_LIF_UNLOCK(lif);
 	return (error);
@@ -2970,7 +3034,6 @@ ionic_qos_tc_sched_type_sysctl(SYSCTL_HANDLER_ARGS)
 	}
 
 	ionic_qos_init(ionic);
-	//memcpy(ionic->qos.sched_type, sched, sizeof(ionic->qos.sched_type));
 err_out:
 	IONIC_LIF_UNLOCK(lif);
 	return (error);
@@ -3019,7 +3082,6 @@ ionic_qos_tc_bw_perc_sysctl(SYSCTL_HANDLER_ARGS)
 	}
 
 	ionic_qos_init(ionic);
-	//memcpy(ionic->qos.dwrr_bw_perc, bw_perc, sizeof(ionic->qos.dwrr_bw_perc));
 err_out:
 	IONIC_LIF_UNLOCK(lif);
 	return (error);
@@ -3058,7 +3120,6 @@ ionic_qos_pcp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 	}
 
 	ionic_qos_init(ionic);
-	//memcpy(ionic->qos.pcp_to_tc, pcp_to_tc, sizeof(ionic->qos.pcp_to_tc));
 err_out:
 	IONIC_LIF_UNLOCK(lif);
 	return (error);
@@ -3096,7 +3157,6 @@ ionic_qos_pfc_cos_sysctl(SYSCTL_HANDLER_ARGS)
 	}
 
 	ionic_qos_init(ionic);
-	//memcpy(ionic->qos.pfc_cos, pfc_cos, sizeof(ionic->qos.pfc_cos));
 err_out:
 	IONIC_LIF_UNLOCK(lif);
 	return (error);
@@ -3135,8 +3195,6 @@ ionic_qos_dscp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 	}
 
 	ionic_qos_init(ionic);
-	//memcpy(ionic->qos.dscp_to_tc + start, dscp_to_tc,
-	 //   sizeof(ionic->qos.dscp_to_tc[0]) * IONIC_DSCP_BLOCK_SIZE);
 err_out:
 	IONIC_LIF_UNLOCK(lif);
 	return (error);
@@ -3423,6 +3481,7 @@ ionic_setup_device_stats(struct ionic_lif *lif)
 			ionic_firmware_update_sysctl, "I", "Firmware update");
 
 	ionic_setup_fw_stats(lif, ctx, child);
+	ionic_setup_qos_stats(lif, ctx, child);
 	if (lif->ionic->is_mgmt_nic)
 		ionic_setup_mgmt_mac_stats(lif, ctx, child);
 	else

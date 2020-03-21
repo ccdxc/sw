@@ -1876,8 +1876,9 @@ struct ionic_qos_identify_comp {
 /* Capri max supported, should be renamed. */
 #define IONIC_QOS_CLASS_MAX		7
 #define IONIC_QOS_PCP_MAX		8
-#define IONIC_QOS_CLASS_NAME_SZ		32
+#define IONIC_QOS_CLASS_NAME_SZ	32
 #define IONIC_QOS_DSCP_MAX		64
+#define IONIC_QOS_ALL_PCP		0xFF
 
 /**
  * enum ionic_qos_class

@@ -613,7 +613,7 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
         dot1q_pcp = qos_class_group_get_dot1q_pcp(qos_class);
     }
     dscp_map.dot1q_pcp = dot1q_pcp;
-    for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+    for (port = TM_UPLINK_PORT_BEGIN; port < TM_UPLINK_PORT_END; port++) {
         sdk_ret = capri_tm_uplink_input_map_update(
                                                port,
                                                dot1q_pcp,
@@ -663,7 +663,7 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
     memcpy(dscp_map.ip_dscp, ip_dscp_vals, sizeof(dscp_map.ip_dscp));
     dscp_map.dot1q_pcp = default_qos_class_dot1q_pcp;
 
-    for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+    for (port = TM_UPLINK_PORT_BEGIN; port < TM_UPLINK_PORT_END; port++) {
         if (dot1q_remove) {
             sdk_ret = capri_tm_uplink_input_map_update(port,
                                                    dot1q_pcp,
@@ -1322,7 +1322,7 @@ qos_class_pd_deprogram_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     // program the default COS for dscp map
     dscp_map.dot1q_pcp = QOS_COS_DEFAULT;
 
-    for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+    for (port = TM_UPLINK_PORT_BEGIN; port < TM_UPLINK_PORT_END; port++) {
         sdk_ret = capri_tm_uplink_input_map_update(
                                                port,
                                                dot1q_pcp,

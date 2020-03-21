@@ -1543,6 +1543,14 @@ Eth::_CmdQosIdentify(void *req, void *req_data, void *resp, void *resp_data)
                 cfg->ip_dscp[i] = info->class_ip_dscp[i];
         }
 
+        if ( (info->group == IONIC_QOS_CLASS_DEFAULT) && 
+             ((info->class_dot1q_pcp == 0) || 
+              (info->class_type == sdk::platform::QOS_CLASS_TYPE_NONE)) ) {
+            NIC_LOG_DEBUG("Returning do1q_pcp as match-all value (0xFF) for class-default");
+            /*cfg->dot1q_pcp = info->class_dot1q_pcp;*/
+            cfg->dot1q_pcp = 0xFF;
+        }
+
         if(info->no_drop)
             cfg->flags |= IONIC_QOS_CONFIG_F_NO_DROP;
 
@@ -1564,8 +1572,8 @@ Eth::_CmdQosIdentify(void *req, void *req_data, void *resp, void *resp_data)
             cfg->flags |= IONIC_QOS_CONFIG_F_RW_IP_DSCP;
             cfg->rw_ip_dscp = info->rewrite_ip_dscp;
         }
-        NIC_LOG_DEBUG("pause_type: {} no_drop {} flags: {}", 
-                      info->pause_type, info->no_drop, cfg->flags);
+        NIC_LOG_DEBUG("pause_type: {} no_drop {} flags: {} dot1q_pcp {} class_type {}", 
+                      info->pause_type, info->no_drop, cfg->flags, cfg->dot1q_pcp, info->class_type);
     };
 
     for (unsigned int i = 0; i < IONIC_QOS_CLASS_MAX; i++) {
