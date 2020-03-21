@@ -102,9 +102,8 @@ erspan_common:
     phvwr           p.rewrite_metadata_nexthop_type, d.u.erspan_d.nexthop_type
     phvwr           p.p4e_i2e_nexthop_id, d.u.erspan_d.nexthop_id
     phvwr           p.control_metadata_apply_tunnel2, d.u.erspan_d.apply_tunnel2
-    phvwr           p.{rewrite_metadata_tunnel2_id, \
-                        rewrite_metadata_tunnel2_vni}, \
-                        d.{u.erspan_d.tunnel2_id,u.erspan_d.tunnel2_vni}
+    phvwr           p.rewrite_metadata_tunnel2_id, d.u.erspan_d.tunnel2_id
+    phvwr           p.rewrite_metadata_tunnel2_vni, d.u.erspan_d.tunnel2_vni
     phvwr           p.ctag_1_valid, FALSE
     phvwr.e         p.mirror_blob_valid, FALSE
     phvwr.f         p.capri_intrinsic_tm_span_session, 0

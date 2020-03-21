@@ -4,6 +4,7 @@ header_type capri_deparser_len_t {
         ipv4_00_hdr_len : 16;
         ipv4_0_hdr_len  : 16;
         ipv4_1_hdr_len  : 16;
+        ipv4_2_hdr_len  : 16;
         l4_payload_len  : 16;
         l2_checksum_len : 16;
     }

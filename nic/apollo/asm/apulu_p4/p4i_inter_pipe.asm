@@ -122,8 +122,13 @@ ingress_recirc:
     phvwr.f         p.capri_intrinsic_tm_oport, TM_PORT_INGRESS
 
 tunnel_decap:
-    phvwr           p.{vxlan_1_valid,udp_1_valid,ipv4_1_valid,ipv6_1_valid, \
-                        arp_valid,ctag_1_valid,ethernet_1_valid}, 0
+    phvwr           p.{vxlan_1_valid, \
+                        udp_1_valid, \
+                        ipv4_1_valid, \
+                        ipv6_1_valid, \
+                        arp_valid, \
+                        ctag_1_valid, \
+                        ethernet_1_valid}, 0
     sub             r6, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l2_2
     jr              r7
     phvwr           p.capri_p4_intrinsic_packet_len, r6

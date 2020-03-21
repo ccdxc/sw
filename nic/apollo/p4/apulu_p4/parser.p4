@@ -88,6 +88,7 @@ header ipv4_t ipv4_1;
 header ipv6_t ipv6_1;
 header udp_t udp_1;
 header vxlan_t vxlan_1;
+header geneve_t geneve;
 
 // layer 2
 header ethernet_t ethernet_2;
@@ -303,6 +304,7 @@ parser parse_udp_1 {
     set_metadata(offset_metadata.l4_1, current + 0);
     set_metadata(ohi.l4_1_len, udp_1.len + 0);
     return select(latest.dstPort) {
+        UDP_PORT_GENV : parse_geneve;
         UDP_PORT_VXLAN : parse_vxlan_1;
         default : ingress;
     }
@@ -310,6 +312,11 @@ parser parse_udp_1 {
 
 parser parse_vxlan_1 {
     extract(vxlan_1);
+    return parse_ethernet_2;
+}
+
+parser parse_geneve {
+    extract(geneve);
     return parse_ethernet_2;
 }
 
@@ -525,6 +532,8 @@ parser parse_egress_ctag_1 {
 @pragma xgress egress
 parser parse_egress_ipv4_1 {
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1_len, ipv4_1.ihl << 2);
+    set_metadata(ohi.l4_1_len, ipv4_1.totalLen - (ipv4_1.ihl << 2));
     return select(latest.fragOffset, latest.protocol) {
         IP_PROTO_ICMP : parse_egress_icmp;
         IP_PROTO_TCP : parse_egress_tcp;
@@ -538,6 +547,7 @@ parser parse_egress_ipv4_1 {
 @pragma allow_set_meta key_metadata.dst
 parser parse_egress_ipv6_1 {
     extract(ipv6_1);
+    set_metadata(ohi.l4_1_len, ipv6_1.payloadLen + 0);
     set_metadata(key_metadata.src, latest.srcAddr);
     set_metadata(key_metadata.dst, latest.dstAddr);
     return select(latest.nextHdr) {
@@ -551,16 +561,6 @@ parser parse_egress_ipv6_1 {
 @pragma xgress egress
 parser parse_egress_icmp {
     extract(icmp);
-    return ingress;
-}
-
-@pragma xgress egress
-@pragma allow_set_meta key_metadata.sport
-@pragma allow_set_meta key_metadata.dport
-parser parse_egress_udp {
-    extract(udp_1);
-    set_metadata(key_metadata.sport, latest.srcPort);
-    set_metadata(key_metadata.dport, latest.dstPort);
     return ingress;
 }
 
@@ -653,6 +653,79 @@ parser parse_egress_tcp_option_generic {
     return parse_egress_tcp_options;
 }
 
+@pragma xgress egress
+@pragma allow_set_meta key_metadata.sport
+@pragma allow_set_meta key_metadata.dport
+parser parse_egress_udp {
+    extract(udp_1);
+    set_metadata(ohi.l4_1_len, udp_1.len + 0);
+    set_metadata(key_metadata.sport, latest.srcPort);
+    set_metadata(key_metadata.dport, latest.dstPort);
+    return select(latest.dstPort) {
+        UDP_PORT_GENV : parse_egress_geneve;
+        default : ingress;
+    }
+}
+
+@pragma xgress egress
+parser parse_egress_geneve {
+    extract(geneve);
+    return parse_egress_ethernet_2;
+}
+
+@pragma xgress egress
+parser parse_egress_ethernet_2 {
+    extract(ethernet_2);
+    return select(latest.etherType) {
+        ETHERTYPE_CTAG : parse_egress_ctag_2;
+        ETHERTYPE_IPV4 : parse_egress_ipv4_2;
+        ETHERTYPE_IPV6 : parse_egress_ipv6_2;
+        default : ingress;
+    }
+}
+
+@pragma xgress egress
+parser parse_egress_ctag_2 {
+    extract(ctag_2);
+    return select(latest.etherType) {
+        ETHERTYPE_IPV4 : parse_egress_ipv4_2;
+        ETHERTYPE_IPV6 : parse_egress_ipv6_2;
+        default : ingress;
+    }
+}
+
+@pragma xgress egress
+parser parse_egress_ipv4_2 {
+    extract(ipv4_2);
+    set_metadata(ohi.ipv4_2_len, ipv4_2.ihl << 2);
+    set_metadata(ohi.l4_2_len, ipv4_2.totalLen - (ipv4_2.ihl << 2));
+    return select(latest.fragOffset, latest.protocol) {
+        IP_PROTO_ICMP : parse_egress_icmp;
+        IP_PROTO_TCP : parse_egress_tcp;
+        IP_PROTO_UDP : parse_egress_udp_2;
+        default : ingress;
+    }
+}
+
+@pragma xgress egress
+parser parse_egress_ipv6_2 {
+    extract(ipv6_2);
+    set_metadata(ohi.l4_2_len, ipv6_2.payloadLen + 0);
+    return select(latest.nextHdr) {
+        IP_PROTO_ICMPV6 : parse_egress_icmp;
+        IP_PROTO_TCP : parse_egress_tcp;
+        IP_PROTO_UDP : parse_egress_udp_2;
+        default : ingress;
+    }
+}
+
+@pragma xgress egress
+parser parse_egress_udp_2 {
+    extract(udp_2);
+    set_metadata(ohi.l4_2_len, udp_2.len + 0);
+    return ingress;
+}
+
 /******************************************************************************
  * Egress deparser                                                            *
  *****************************************************************************/
@@ -714,7 +787,7 @@ field_list ipv4_00_checksum_list {
     ipv4_00.dstAddr;
 }
 
-@pragma checksum gress egress
+@pragma checksum update egress
 @pragma checksum update_len capri_deparser_len.ipv4_00_hdr_len
 field_list_calculation ipv4_00_checksum {
     input {
@@ -745,7 +818,7 @@ field_list ipv4_0_checksum_list {
     ipv4_0.dstAddr;
 }
 
-@pragma checksum gress egress
+@pragma checksum update egress
 @pragma checksum update_len capri_deparser_len.ipv4_0_hdr_len
 field_list_calculation ipv4_0_checksum {
     input {
@@ -776,6 +849,8 @@ field_list ipv4_1_checksum_list {
     ipv4_1.dstAddr;
 }
 
+@pragma checksum verify xgress
+@pragma checksum update egress
 @pragma checksum verify_len ohi.l4_1_len
 @pragma checksum hdr_len_expr ohi.ipv4_1_len + 0
 @pragma checksum update_len capri_deparser_len.ipv4_1_hdr_len
@@ -810,8 +885,11 @@ field_list ipv4_1_tcp_checksum_list {
     payload;
 }
 
+@pragma checksum verify xgress
+@pragma checksum update egress
 @pragma checksum verify_len ohi.l4_1_len
 @pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum update_share tcp.checksum udp_1.checksum icmp.hdrChecksum
 field_list_calculation ipv4_1_tcp_checksum {
     input {
         ipv4_1_tcp_checksum_list;
@@ -838,8 +916,11 @@ field_list ipv6_1_tcp_checksum_list {
     payload;
 }
 
+@pragma checksum verify xgress
+@pragma checksum update egress
 @pragma checksum verify_len ohi.l4_1_len
 @pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum update_share tcp.checksum udp_1.checksum icmp.hdrChecksum
 field_list_calculation ipv6_1_tcp_checksum {
     input {
         ipv6_1_tcp_checksum_list;
@@ -866,8 +947,11 @@ field_list ipv4_1_udp_checksum_list {
     payload;
 }
 
+@pragma checksum verify xgress
+@pragma checksum update egress
 @pragma checksum verify_len ohi.l4_1_len
 @pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum update_share udp_1.checksum tcp.checksum icmp.hdrChecksum
 field_list_calculation ipv4_1_udp_checksum {
     input {
         ipv4_1_udp_checksum_list;
@@ -886,8 +970,11 @@ field_list ipv6_1_udp_checksum_list {
     payload;
 }
 
+@pragma checksum verify xgress
+@pragma checksum update egress
 @pragma checksum verify_len ohi.l4_1_len
 @pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum update_share udp_1.checksum tcp.checksum icmp.hdrChecksum
 field_list_calculation ipv6_1_udp_checksum {
     input {
         ipv6_1_udp_checksum_list;
@@ -907,8 +994,10 @@ field_list ipv4_1_icmp_checksum_list {
     payload;
 }
 
+@pragma checksum verify xgress
+@pragma checksum update egress
 @pragma checksum update_len capri_deparser_len.l4_payload_len
-@pragma checksum update_share icmp.hdrChecksum tcp.checksum
+@pragma checksum update_share icmp.hdrChecksum tcp.checksum udp_1.checksum
 field_list_calculation ipv4_1_icmp_checksum {
     input {
         ipv4_1_icmp_checksum_list;
@@ -925,8 +1014,10 @@ field_list ipv6_1_icmp_checksum_list {
     payload;
 }
 
+@pragma checksum verify xgress
+@pragma checksum update egress
 @pragma checksum update_len capri_deparser_len.l4_payload_len
-@pragma checksum update_share icmp.hdrChecksum tcp.checksum
+@pragma checksum update_share icmp.hdrChecksum tcp.checksum udp_1.checksum
 field_list_calculation ipv6_1_icmp_checksum {
     input {
         ipv6_1_icmp_checksum_list;
@@ -942,7 +1033,7 @@ calculated_field icmp.hdrChecksum {
 }
 
 /******************************************************************************
- * Checksums : Layer 2 (verify only)                                          *
+ * Checksums : Layer 2 (verify in ingress and egress, update in ingress)      *
  *****************************************************************************/
 field_list ipv4_2_checksum_list {
     ipv4_2.version;
@@ -958,9 +1049,11 @@ field_list ipv4_2_checksum_list {
     ipv4_2.dstAddr;
 }
 
-@pragma checksum gress ingress
+@pragma checksum verify xgress
+@pragma checksum update ingress
 @pragma checksum verify_len ohi.l4_2_len
 @pragma checksum hdr_len_expr ohi.ipv4_2_len + 0
+@pragma checksum update_len capri_deparser_len.ipv4_2_hdr_len
 field_list_calculation ipv4_2_checksum {
     input {
         ipv4_2_checksum_list;
@@ -971,6 +1064,7 @@ field_list_calculation ipv4_2_checksum {
 
 calculated_field ipv4_2.hdrChecksum  {
     verify ipv4_2_checksum;
+    update ipv4_2_checksum;
 }
 
 field_list ipv4_2_tcp_checksum_list {
@@ -991,8 +1085,11 @@ field_list ipv4_2_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum gress ingress
+@pragma checksum verify xgress
+@pragma checksum update ingress
 @pragma checksum verify_len ohi.l4_2_len
+@pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum update_share tcp.checksum udp_2.checksum icmp.hdrChecksum
 field_list_calculation ipv4_2_tcp_checksum {
     input {
         ipv4_2_tcp_checksum_list;
@@ -1019,8 +1116,11 @@ field_list ipv6_2_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum gress ingress
+@pragma checksum verify xgress
+@pragma checksum update ingress
 @pragma checksum verify_len ohi.l4_2_len
+@pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum update_share tcp.checksum udp_2.checksum icmp.hdrChecksum
 field_list_calculation ipv6_2_tcp_checksum {
     input {
         ipv6_2_tcp_checksum_list;
@@ -1032,6 +1132,8 @@ field_list_calculation ipv6_2_tcp_checksum {
 calculated_field tcp.checksum {
     verify ipv4_2_tcp_checksum;
     verify ipv6_2_tcp_checksum;
+    update ipv4_2_tcp_checksum;
+    update ipv6_2_tcp_checksum;
 }
 
 field_list ipv4_2_udp_checksum_list {
@@ -1045,8 +1147,11 @@ field_list ipv4_2_udp_checksum_list {
     payload;
 }
 
-@pragma checksum gress ingress
+@pragma checksum verify xgress
+@pragma checksum update ingress
 @pragma checksum verify_len ohi.l4_2_len
+@pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum update_share udp_2.checksum tcp.checksum icmp.hdrChecksum
 field_list_calculation ipv4_2_udp_checksum {
     input {
         ipv4_2_udp_checksum_list;
@@ -1065,8 +1170,11 @@ field_list ipv6_2_udp_checksum_list {
     payload;
 }
 
-@pragma checksum gress ingress
+@pragma checksum verify xgress
+@pragma checksum update ingress
 @pragma checksum verify_len ohi.l4_2_len
+@pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum update_share udp_2.checksum tcp.checksum icmp.hdrChecksum
 field_list_calculation ipv6_2_udp_checksum {
     input {
         ipv6_2_udp_checksum_list;
@@ -1078,6 +1186,49 @@ field_list_calculation ipv6_2_udp_checksum {
 calculated_field udp_2.checksum {
     verify ipv4_2_udp_checksum;
     verify ipv6_2_udp_checksum;
+    update ipv4_2_udp_checksum;
+    update ipv6_2_udp_checksum;
+}
+
+field_list ipv4_2_icmp_checksum_list {
+    payload;
+}
+
+@pragma checksum verify xgress
+@pragma checksum update igress
+@pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum update_share icmp.hdrchecksum tcp.checksum udp_2.checksum
+field_list_calculation ipv4_2_icmp_checksum {
+    input {
+        ipv4_2_icmp_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+field_list ipv6_2_icmp_checksum_list {
+    ipv6_2.srcAddr;
+    ipv6_2.dstAddr;
+    ipv6_2.nextHdr;
+    ipv6_2.payloadLen;
+    payload;
+}
+
+@pragma checksum verify xgress
+@pragma checksum update igress
+@pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum update_share icmp.hdrchecksum tcp.checksum udp_2.checksum
+field_list_calculation ipv6_2_icmp_checksum {
+    input {
+        ipv6_2_icmp_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field icmp.hdrChecksum {
+    update ipv4_2_icmp_checksum;
+    update ipv6_2_icmp_checksum;
 }
 
 /******************************************************************************

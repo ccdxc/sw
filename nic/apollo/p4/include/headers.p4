@@ -246,6 +246,22 @@ header_type vxlan_t {
     }
 }
 
+header_type geneve_t {
+    fields {
+        ver : 2;
+        optLen : 6;
+        oam : 1;
+        critical : 1;
+        reserved : 6;
+        protoType : 16;
+        vni : 24;
+        reserved2 : 8;
+        options : *;
+    }
+    length : (optLen << 2) + 8;
+    max_length : 256;
+}
+
 header_type mpls_t {
     fields {
         label : 20;

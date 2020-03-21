@@ -163,6 +163,9 @@ uint32_t g_tunnel2_id11 = 0x7B;
 uint32_t g_sip12 = 0x0B0B010C;
 uint16_t g_vnic_id12 = 0x20C;
 
+uint8_t  g_proto13 = 0x11;
+uint16_t g_sport13 = 0x1234;
+uint16_t g_dport13 = 6081;
 mpartition *g_mempartition;
 
 class sort_mpu_programs_compare {
@@ -1024,6 +1027,34 @@ flows_init (void)
     flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
     flow_hash_info->epoch = EPOCH;
     entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_flow_lkp_id = g_bd_id1;
+    key.key_metadata_ipv4_src = g_sip1;
+    key.key_metadata_ipv4_dst = g_dip1;
+    key.key_metadata_proto = g_proto13;
+    key.key_metadata_sport = g_sport13;
+    key.key_metadata_dport = g_dport13;
+    flow_hash_info->entry_valid = 1;
+    flow_hash_info->session_index = g_session_id1;
+    flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
+    flow_hash_info->epoch = EPOCH;
+    entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_flow_lkp_id = g_bd_id1;
+    key.key_metadata_ipv4_src = g_dip1;
+    key.key_metadata_ipv4_dst = g_sip1;
+    key.key_metadata_proto = g_proto13;
+    key.key_metadata_sport = g_sport13;
+    key.key_metadata_dport = g_dport13;
+    flow_hash_info->entry_valid = 1;
+    flow_hash_info->session_index = g_session_id1;
+    flow_hash_info->flow_role = TCP_FLOW_RESPONDER;
+    flow_hash_info->epoch = EPOCH;
+    entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
 }
 
 static void
@@ -1732,6 +1763,44 @@ TEST_F(apulu_test, test1)
                 get_next_pkt(opkt, port, cos);
                 EXPECT_TRUE(opkt == epkt);
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
+            }
+            testcase_end(tcid, i + 1);
+        }
+    }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt13));
+        memcpy(ipkt.data(), g_snd_pkt13, sizeof(g_snd_pkt13));
+        epkt.resize(sizeof(g_rcv_pkt13));
+        memcpy(epkt.data(), g_rcv_pkt13, sizeof(g_rcv_pkt13));
+        std::cout << "[TCID=" << tcid << "] Tx:GENEVE:P4I-P4E" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i + 1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_0);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
+            }
+            testcase_end(tcid, i + 1);
+        }
+    }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt14));
+        memcpy(ipkt.data(), g_snd_pkt14, sizeof(g_snd_pkt14));
+        epkt.resize(sizeof(g_rcv_pkt14));
+        memcpy(epkt.data(), g_rcv_pkt14, sizeof(g_rcv_pkt14));
+        std::cout << "[TCID=" << tcid << "] Rx:GENEVE:P4I-P4E" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i + 1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_1);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(port == TM_PORT_UPLINK_0);
             }
             testcase_end(tcid, i + 1);
         }

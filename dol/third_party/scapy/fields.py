@@ -392,6 +392,15 @@ class StrField(Field):
     def randval(self):
         return RandBin(RandNum(0,1200))
 
+class XStrField(StrField):
+    """
+    StrField which value is printed as hexadecimal.
+    """
+    def i2repr(self, pkt, x):
+        if x is None:
+            return repr(x)
+        return bytes_hex(x).decode()
+
 class PacketField(StrField):
     holds_packets=1
     def __init__(self, name, default, cls, remain=0): #is remain used somewhere?
