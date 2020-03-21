@@ -14,6 +14,7 @@ import (
 	minio "github.com/minio/minio/cmd"
 	"github.com/pkg/errors"
 
+	"github.com/pensando/sw/api"
 	apiintf "github.com/pensando/sw/api/interfaces"
 
 	"github.com/pensando/sw/api/generated/objstore"
@@ -168,7 +169,11 @@ func (i *instance) createDiskUpdateWatcher(paths map[string]float64) error {
 	return nil
 }
 
-func (i *instance) Watch(ctx context.Context, path, peer string, handleFn apiintf.EventHandlerFn) error {
+func (i *instance) Watch(ctx context.Context,
+	path, peer string, handleFn apiintf.EventHandlerFn,
+	opts *api.ListWatchOptions) error {
+	// fieldChangeSelector is respected only for fwlogsbucket
+
 	wq := i.pfxWatcher.Add(path, peer)
 	cleanupFn := func() {
 		i.pfxWatcher.Del(path, peer)
@@ -179,10 +184,10 @@ func (i *instance) Watch(ctx context.Context, path, peer string, handleFn apiint
 	// // not perform list operation. It will send the events
 	// // starting from the ones that are present in the queue.
 	// if path == fwlogsBucketName {
-	// 	wq.Dequeue(ctx, math.MaxUint64, handleFn, cleanupFn)
+	// 	wq.Dequeue(ctx, math.MaxUint64, handleFn, cleanupFn, opts)
 	// 	return nil
 	// }
-	wq.Dequeue(ctx, 0, handleFn, cleanupFn)
+	wq.Dequeue(ctx, 0, handleFn, cleanupFn, opts)
 	return nil
 }
 

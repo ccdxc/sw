@@ -348,7 +348,10 @@ func (g *grpcBackend) AutoWatchObject(opts *api.ListWatchOptions, stream objstor
 	log.Infof("got call to AutoWatchObject")
 	peer := ctxutils.GetContextID(stream.Context())
 	bucket := opts.Tenant + "." + opts.Namespace
-	if opts.ResourceVersion != "" || opts.LabelSelector != "" || opts.FieldSelector != "" || opts.FieldChangeSelector != nil {
+	if opts.ResourceVersion != "" ||
+		opts.LabelSelector != "" ||
+		opts.FieldSelector != "" ||
+		(bucket != fwlogsBucketName && opts.FieldChangeSelector != nil) {
 		return errors.New("filtering is not supported")
 	}
 	errs := g.instance.RunPlugins(stream.Context(), opts.Namespace, vos.PreOp, vos.Watch, nil, g.client)
@@ -369,7 +372,7 @@ func (g *grpcBackend) AutoWatchObject(opts *api.ListWatchOptions, stream objstor
 		}
 		stream.Send(&evs)
 	}
-	err := g.instance.Watch(stream.Context(), bucket, peer, handleFn)
+	err := g.instance.Watch(stream.Context(), bucket, peer, handleFn, opts)
 	return err
 }
 
@@ -583,6 +586,6 @@ func (g *grpcBackend) WatchDiskThresholdUpdates(opts *api.ListWatchOptions,
 		stream.Send(item.(*vosinternalprotos.DiskUpdate))
 	}
 
-	err := g.instance.Watch(stream.Context(), diskUpdateWatchPath, peer, handleFn)
+	err := g.instance.Watch(stream.Context(), diskUpdateWatchPath, peer, handleFn, nil)
 	return err
 }

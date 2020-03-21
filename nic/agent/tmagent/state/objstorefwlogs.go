@@ -257,6 +257,7 @@ func transmitLogs(ctx context.Context,
 		meta["nodeid"] = nodeUUID
 		meta["csvversion"] = fwLogCSVVersion
 		meta["metaversion"] = fwLogMetaVersion
+		meta["creation-Time"] = time.Now().Format(time.RFC3339Nano)
 
 		// Send the file on to the channel for testing
 		if testChannel != nil {
@@ -303,7 +304,7 @@ func putObjectHelper(ctx context.Context,
 	}
 
 	if dolog {
-		log.Infof("success, bucket %s, time %s, logcount %s, data len %d, tries %d",
+		log.Debugf("success, bucket %s, time %s, logcount %s, data len %d, tries %d",
 			bucketName, time.Now().String(), logcount, size, tries)
 	}
 }

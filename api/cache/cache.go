@@ -1387,7 +1387,7 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 	c.logger.DebugLog("oper", "watchfiltered", "msg", "starting watcher with version", fromVer)
 	watchers.Add(1)
 	go func() {
-		wq.Dequeue(nctx, fromVer, watchHandler, cleanupFn)
+		wq.Dequeue(nctx, fromVer, watchHandler, cleanupFn, &api.ListWatchOptions{})
 		watchers.Add(-1)
 		ret.Stop()
 		close(ret.ch)

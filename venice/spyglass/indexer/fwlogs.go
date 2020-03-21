@@ -17,7 +17,10 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-const fwlogsBucketName = "fwlogs"
+const (
+	fwlogsBucketName           = "fwlogs"
+	fwlogsSystemMetaBucketName = "fwlogssystemmeta"
+)
 
 // FwLogV1 represents the fwlog V1 struct
 type FwLogV1 struct {
@@ -87,7 +90,7 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 
 	uuid := getUUIDForFwlogObject(kind, ometa.GetTenant(), ometa.GetNamespace(), key)
 
-	idr.logger.Infof("Writer %d, processing object: <%s %s %v %v>", id, kind, key, uuid, req.evType)
+	idr.logger.Debugf("Writer %d, processing object: <%s %s %v %v>", id, kind, key, uuid, req.evType)
 	objStats, err := idr.vosFwLogsHTTPClient.StatObject(key)
 	if err != nil {
 		idr.logger.Errorf("Writer %d, Object %s, StatObject error %s",
@@ -141,7 +144,6 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 
 	data := output.([][]string)
 
-	// For testing, dont check versions
 	if meta["Csvversion"] == "v1" {
 		output, err := idr.parseFwLogsCsvV1(id, key, data, uuid)
 		if err != nil {
@@ -155,10 +157,11 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 
 			for _, fwlogs := range output {
 				if len(fwlogs) != 0 {
-					idr.logger.Debugf("Writer: %d Calling Bulk Api reached batchsize len: %d",
+					idr.logger.Infof("Writer: %d Calling Bulk Api reached batchsize len: %d",
 						id,
 						len(fwlogs))
 
+					idr.updateLastProcessedkeys(key)
 					idr.helper(id, bulkTimeout, fwlogs)
 				}
 			}

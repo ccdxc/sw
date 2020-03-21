@@ -12,7 +12,7 @@ import (
 )
 
 func updateObjectMeta(info *minio.ObjectInfo, ometa *api.ObjectMeta) {
-	log.Infof("Updating from UserMeta[%+v]", info)
+	log.Debugf("Updating from UserMeta[%+v]", info)
 	key := metaPrefix + metaCreationTime
 	updCrTime, updModTime := true, true
 	ct, err := time.Parse(time.RFC3339Nano, info.Metadata.Get(key))

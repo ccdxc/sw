@@ -89,7 +89,7 @@ func (idr *Indexer) helper(id, timeout int, reqs []*elastic.BulkRequest) {
 					continue
 				}
 
-				idr.logger.Infof("Writer: %d Bulk request succeeded after (%d) failures", id, failedBulkCount)
+				idr.logger.Debugf("Writer: %d Bulk request succeeded after (%d) failures", id, failedBulkCount)
 				failedBulkCount = 0
 				break
 			}

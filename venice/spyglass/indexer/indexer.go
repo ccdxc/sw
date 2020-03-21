@@ -3,9 +3,12 @@
 package indexer
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -157,6 +160,15 @@ type Indexer struct {
 	// Whether or not to watch VOS objects
 	watchVos       bool
 	watchAPIServer bool
+
+	// Last processed fwlog object
+	// This key is persisted in Etcd as well
+	// key = DSC ID
+	// value = Key
+	lastProcessedFwLogObjectKey map[string]string
+
+	// resolver
+	rsr resolver.Interface
 }
 
 // WithElasticClient passes a custom client for Elastic
@@ -210,23 +222,25 @@ func NewIndexer(ctx context.Context,
 	opts ...Option) (Interface, error) {
 	newCtx, cancelFunc := context.WithCancel(ctx)
 	indexer := Indexer{
-		ctx:                     newCtx,
-		cancelFunc:              cancelFunc,
-		apiServerAddr:           apiServerAddr,
-		logger:                  logger,
-		batchSize:               indexBatchSize,
-		indexIntvl:              indexBatchIntvl,
-		indexRefreshIntvl:       indexRefreshIntvl,
-		doneCh:                  make(chan error),
-		count:                   0,
-		cache:                   cache,
-		maxOrderedWriters:       maxOrderedWriters,
-		maxAppendOnlyWriters:    maxAppendOnlyWriters,
-		maxWriters:              maxOrderedWriters + maxAppendOnlyWriters,
-		indexMaxBuffer:          (maxOrderedWriters + maxAppendOnlyWriters) * indexBatchSize,
-		watchVos:                true,
-		watchAPIServer:          true,
-		numFwLogObjectsToDelete: numFwLogObjectsToDelete,
+		ctx:                         newCtx,
+		rsr:                         rsr,
+		cancelFunc:                  cancelFunc,
+		apiServerAddr:               apiServerAddr,
+		logger:                      logger,
+		batchSize:                   indexBatchSize,
+		indexIntvl:                  indexBatchIntvl,
+		indexRefreshIntvl:           indexRefreshIntvl,
+		doneCh:                      make(chan error),
+		count:                       0,
+		cache:                       cache,
+		maxOrderedWriters:           maxOrderedWriters,
+		maxAppendOnlyWriters:        maxAppendOnlyWriters,
+		maxWriters:                  maxOrderedWriters + maxAppendOnlyWriters,
+		indexMaxBuffer:              (maxOrderedWriters + maxAppendOnlyWriters) * indexBatchSize,
+		watchVos:                    true,
+		watchAPIServer:              true,
+		numFwLogObjectsToDelete:     numFwLogObjectsToDelete,
+		lastProcessedFwLogObjectKey: map[string]string{},
 	}
 
 	for _, opt := range opts {
@@ -382,6 +396,13 @@ func (idr *Indexer) Start() error {
 				idr.fwlogsRequestCreator)
 		}(k)
 		k++
+	}
+
+	// Start the lastProcessedObjectKeys persistence routine
+	if idr.watchVos {
+		if err := idr.persistLastProcessedkeys(); err != nil {
+			return err
+		}
 	}
 
 	// Block on the done channel
@@ -720,4 +741,116 @@ func createBucketClient(ctx context.Context, resolver resolver.Interface, tenant
 	tlsc.ServerName = globals.Vos
 
 	return objstore.NewClient(tenantName, bucketName, resolver, objstore.WithTLSConfig(tlsc))
+}
+
+func (idr *Indexer) updateLastProcessedkeys(lastProcessedKey string) {
+	idr.logger.Debugf("updating last processed object key to %s", lastProcessedKey)
+	// Using the Indexer's Lock for now, it seems ok to use the same lock
+	// but fix if it turns out to be an issue
+	idr.Lock()
+	defer idr.Unlock()
+	tokens := strings.SplitAfterN(lastProcessedKey, "/", 2)
+	idr.lastProcessedFwLogObjectKey[tokens[0]] = lastProcessedKey
+}
+
+func (idr *Indexer) getLastProcessedKeys() (map[string]string, error) {
+	// Create objstrore http client for fwlogs
+	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+		return createBucketClient(idr.ctx, idr.rsr, globals.ReservedFwLogsTenantName, fwlogsSystemMetaBucketName)
+	}, apiSrvWaitIntvl, maxAPISrvRetries)
+
+	if err != nil {
+		idr.logger.Errorf("Failed to create objstore client for fwlogs")
+		return nil, err
+	}
+
+	client := result.(objstore.Client)
+	data, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+		// PutObjectOfSize uploads object of "size' to object store
+		rc, err := client.GetObject(idr.ctx, "lastProcessedKeys")
+		if err != nil {
+			if strings.Contains(err.Error(), "bucket does not exist") {
+				return nil, nil
+			}
+			idr.logger.Errorf("failed to get object lastProcessedKeys, err %s", err)
+			return nil, err
+		}
+
+		// Read into a buffer
+		buf := bytes.Buffer{}
+		_, err = buf.ReadFrom(rc)
+		if err != nil {
+			idr.logger.Errorf("failed to read object lastProcessedKeys, err %s", err)
+			return nil, err
+		}
+
+		// Unmarshall
+		var data map[string]string
+		err = json.Unmarshal(buf.Bytes(), &data)
+		if err != nil {
+			idr.logger.Errorf("failed to unmarshall object lastProcessedKeys, err %s", err)
+			return nil, err
+		}
+		return data, nil
+	}, apiSrvWaitIntvl, maxAPISrvRetries)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if data == nil {
+		return map[string]string{}, nil
+	}
+
+	return data.(map[string]string), nil
+}
+
+func (idr *Indexer) persistLastProcessedkeys() error {
+	idr.logger.Infof("start persising fwlogs lastProcessedObjectKey")
+	// Create objstrore http client for fwlogs
+	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+		return createBucketClient(ctx, idr.rsr, globals.ReservedFwLogsTenantName, fwlogsSystemMetaBucketName)
+	}, apiSrvWaitIntvl, maxAPISrvRetries)
+
+	if err != nil {
+		idr.logger.Errorf("Failed to create objstore client for %s", fwlogsSystemMetaBucketName)
+		return err
+	}
+
+	client := result.(objstore.Client)
+	idr.Add(1)
+	go func() {
+		defer idr.Done()
+		for {
+			select {
+			case <-idr.ctx.Done():
+				return
+			case <-idr.watcherDone:
+				return
+			case <-time.After(time.Minute * 1):
+				// Using the Indexer's Lock for now, it seems ok to use the same lock
+				// but fix if it turns out to be an issue
+				idr.Lock()
+				data, err := json.Marshal(idr.lastProcessedFwLogObjectKey)
+				if err != nil {
+					idr.logger.Errorf("error in marshlling lastProcessedFwLogObjectKey")
+					idr.Unlock()
+					continue
+				}
+
+				r := bytes.NewReader(data)
+				_, err = utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+					// PutObjectOfSize uploads object of "size' to object store
+					_, err := client.PutObjectOfSize(idr.ctx, "lastProcessedKeys", r, int64(len(data)), map[string]string{})
+					return nil, err
+				}, apiSrvWaitIntvl, maxAPISrvRetries)
+
+				if err != nil {
+					idr.logger.Errorf("dropping lastProcessedObjectKeys, err %s", err)
+				}
+				idr.Unlock()
+			}
+		}
+	}()
+	return nil
 }

@@ -4,7 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/watchstream"
@@ -86,7 +87,8 @@ func (f *FakeWatchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runti
 }
 
 // Dequeue implements a mock interface
-func (f *FakeWatchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.EventHandlerFn, cleanupfn func()) {
+func (f *FakeWatchEventQ) Dequeue(ctx context.Context,
+	fromver uint64, cb apiintf.EventHandlerFn, cleanupfn func(), opts *api.ListWatchOptions) {
 	defer f.Unlock()
 	f.Lock()
 	close(f.DqCh)

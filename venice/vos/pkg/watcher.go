@@ -1,9 +1,12 @@
 package vospkg
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/minio/minio-go"
@@ -40,6 +43,10 @@ func (s *storeImpl) Delete(key string, rev uint64, cb apiintf.SuccessCbFunc) (ru
 
 // List satisfies the apiintf.Store interface
 func (s *storeImpl) List(bucket, kind string, opts api.ListWatchOptions) ([]runtime.Object, error) {
+	if bucket == fwlogsBucketName {
+		return s.handleListFwLogsDuringGrpcInit(opts)
+	}
+
 	var ret []runtime.Object
 	doneCh := make(chan struct{})
 	objCh := s.BaseBackendClient.ListObjectsV2(bucket, "", true, doneCh)
@@ -160,7 +167,7 @@ ESTAB:
 					path := w.bucket + ":" + ev.Records[i].S3.Object.Key
 					qs := w.watchPrefixes.Get(path)
 					for j := range qs {
-						log.Infof("sending watch event [%v][%v][%+v]", path, evType, obj)
+						log.Debugf("sending watch event [%v][%v][%+v]", path, evType, obj)
 						err := qs[j].Enqueue(evType, obj, nil)
 						if err != nil {
 							log.Errorf("unable to enqueue the event (%s)", err)
@@ -198,9 +205,101 @@ func (w *storeWatcher) makeEvent(event minio.NotificationEvent) (kvstore.WatchEv
 	//  to keep the runtime.Object satisfactory for watch infra.
 	if err == nil {
 		obj.ResourceVersion = fmt.Sprintf("%d", t.UnixNano())
-		log.Infof("setting resource version to [%v]", obj.ResourceVersion)
+		log.Debugf("setting resource version to [%v]", obj.ResourceVersion)
 	} else {
 		log.Errorf("got error parsing event time (%s)", err)
 	}
 	return retType, obj
+}
+
+func (s *storeImpl) handleListFwLogsDuringGrpcInit(opts api.ListWatchOptions) ([]runtime.Object, error) {
+	results := []runtime.Object{}
+	wg := sync.WaitGroup{}
+
+	lastProcessedKeys := map[string]string{}
+	for _, temp := range opts.FieldChangeSelector {
+		tokens := strings.SplitAfterN(temp, "/", 2)
+		lastProcessedKeys[tokens[0]] = temp
+	}
+	log.Infof("started list over fwlogs bucket, time %s, received last processed keys %+v",
+		time.Now().String(), lastProcessedKeys)
+
+	output := make(chan []runtime.Object, 1000)
+
+	for k, v := range lastProcessedKeys {
+		wg.Add(1)
+		go func(output chan<- []runtime.Object, wg *sync.WaitGroup, dscID, lastProcessedKey string) {
+			defer wg.Done()
+			result := []runtime.Object{}
+			tokens := strings.Split(lastProcessedKey, "/")
+			y, _ := strconv.Atoi(tokens[1])
+			m, _ := strconv.Atoi(tokens[2])
+			d, _ := strconv.Atoi(tokens[3])
+			h, _ := strconv.Atoi(tokens[4])
+			tThat := time.Date(y, time.Month(m), d, h, 0, 0, 0, time.UTC)
+			tNow := time.Now().UTC()
+			for {
+				if tThat.Equal(tNow) || tThat.After(tNow) {
+					break
+				}
+				y, m, d := tThat.Date()
+				h, _, _ := tThat.Clock()
+				doneCh := make(chan struct{})
+				var b bytes.Buffer
+				b.WriteString(dscID)
+				b.WriteString("/")
+				b.WriteString(strconv.Itoa(y))
+				b.WriteString("/")
+				b.WriteString(strconv.Itoa(int(m)))
+				b.WriteString("/")
+				b.WriteString(strconv.Itoa(d))
+				b.WriteString("/")
+				b.WriteString(strconv.Itoa(h))
+				objCh := s.BaseBackendClient.ListObjectsV2(fwlogsBucketName, b.String(), true, doneCh)
+				for mobj := range objCh {
+					// Ignore the objects that are less then the given last processed key
+					if strings.Compare(lastProcessedKey, mobj.Key) == 1 {
+						continue
+					}
+
+					// List does not seem to be returing with UserMeta populated. Workaround by doing a stat.
+					stat, err := s.BaseBackendClient.StatObject(fwlogsBucketName, mobj.Key, minio.StatObjectOptions{})
+					if err != nil {
+						log.Errorf("failed to get stat for object [%v.%v](%s)", fwlogsBucketName, mobj.Key, err)
+						continue
+					}
+					lobj := &objstore.Object{
+						TypeMeta:   api.TypeMeta{Kind: "Object"},
+						ObjectMeta: api.ObjectMeta{Name: mobj.Key},
+						Spec:       objstore.ObjectSpec{ContentType: stat.ContentType},
+						Status: objstore.ObjectStatus{
+							Size_:  stat.Size,
+							Digest: stat.ETag,
+						},
+					}
+					parts := strings.Split(fwlogsBucketName, ".")
+					if len(parts) == 2 {
+						lobj.Tenant = parts[0]
+						lobj.Namespace = parts[1]
+					}
+					updateObjectMeta(&stat, &lobj.ObjectMeta)
+					result = append(result, lobj)
+				}
+				close(doneCh)
+
+				// Add 1 hour
+				tThat = tThat.Add(time.Duration(1) * time.Hour)
+			}
+			output <- result
+		}(output, &wg, k, v)
+	}
+	wg.Wait()
+	close(output)
+	for result := range output {
+		results = append(results, result...)
+	}
+
+	log.Infof("finished list over fwlogs bucket, time %s, len(results) %d",
+		time.Now().String(), len(results))
+	return results, nil
 }

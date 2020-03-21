@@ -92,6 +92,14 @@ func (idr *Indexer) createWatchers() error {
 	// There is a possibility of missing a delete if this watch connection goes down briefly.
 	// TODO: Add resource version
 	if idr.watchVos {
+		// Get the lastProcessedObjectKeys from Minio.
+		// For now we are persisting them in Minio.
+		keys, err := idr.getLastProcessedKeys()
+		if err != nil {
+			return err
+		}
+		idr.lastProcessedFwLogObjectKey = keys
+		idr.logger.Infof("fetched lastProcessedFwLogObjectKey %+v", keys)
 		for _, bucket := range objstore.Buckets_name {
 			key := fmt.Sprintf("objstore-%s", bucket)
 			opts := api.ListWatchOptions{}
@@ -100,6 +108,12 @@ func (idr *Indexer) createWatchers() error {
 
 			if bucket == fwlogsBucketName {
 				opts.Tenant = globals.ReservedFwLogsTenantName
+				objectVersions := []string{}
+				for _, v := range idr.lastProcessedFwLogObjectKey {
+					objectVersions = append(objectVersions, v)
+				}
+				// Piggyback on FieldChangeSelector for fwlog object versioning.
+				opts.FieldChangeSelector = objectVersions
 			}
 
 			// To watch on a bucket, bucket name must be provided as the namespace
@@ -115,7 +129,7 @@ func (idr *Indexer) createWatchers() error {
 			}
 		}
 
-		err := idr.createVosDiskMonitorWatcher()
+		err = idr.createVosDiskMonitorWatcher()
 		if err != nil {
 			// Stop existing watchers
 			idr.stopWatchersHelper()

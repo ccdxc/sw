@@ -1,25 +1,32 @@
 package indexer_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
 	dctypes "github.com/docker/docker/api/types"
 	dc "github.com/docker/docker/client"
 	es "github.com/olivere/elastic"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/dscagent/types"
+	tmagentstate "github.com/pensando/sw/nic/agent/tmagent/state"
 	testelastic "github.com/pensando/sw/test/utils"
 	servicetypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/spyglass/indexer"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
+	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/resolver/mock"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -46,23 +53,32 @@ func SkipTestAppendOnlyWriter(t *testing.T) {
 		return esClient != nil, esClient
 	}, "failed to craete elastic client", "2s", "60s")
 
-	// setupKibana(t, url)
-	// defer stopKibana(t)
+	setupKibana(t, url)
+	defer stopKibana(t)
 
 	setupVos(t, ctx, logger, "127.0.0.1")
 	setupSpyglass(ctx, t, r, esClient, logger)
+	setupTmAgent(ctx, t, r)
+	startFwLogGen()
 
 	// TestVerifyFirewallIndexName verifies that the firewall index is created
 	t.Run("TestVerifyFirewallIndexName", func(t *testing.T) {
 		verifyAndReturnFirewallIndexName(t, esClient)
 	})
 
+	// TestVerifyDiskMonitoring verifies disk monitoring
 	t.Run("TestVerifyDiskMonitoring", func(t *testing.T) {
 		verifyDiskMonitoring(ctx, t, esClient, logger)
 	})
 
-	done := make(chan bool)
-	<-done
+	// TestVerifyLastProcessedObjectKeys verifies that lastProcessedObjectKeys
+	// are getting persisted in minio
+	t.Run("TestVerifyLastProcessedObjectKeys", func(t *testing.T) {
+		verifyLastProcessedObjectKeys(ctx, t, r, logger)
+	})
+
+	// done := make(chan bool)
+	// <-done
 }
 
 func setupSpyglass(ctx context.Context, t *testing.T,
@@ -125,7 +141,7 @@ func setupVos(t *testing.T, ctx context.Context, logger log.Logger, url string) 
 		args := []string{globals.Vos, "server", "--address", fmt.Sprintf("%s:%s", url, globals.VosMinioPort), "/disk1"}
 		_, err := vospkg.New(ctx, false, url,
 			vospkg.WithBootupArgs(args),
-			vospkg.WithBucketDiskThresholds(map[string]float64{"/disk1/fwlogs.fwlogs": 0.00001}))
+			vospkg.WithBucketDiskThresholds(map[string]float64{"/disk1/fwlogs.fwlogs": 0.000001}))
 		AssertOk(t, err, "error in initiating Vos")
 	}()
 }
@@ -200,7 +216,7 @@ func verifyDiskMonitoring(ctx context.Context, t *testing.T, esClient elastic.ES
 			nil,          // no aggregation
 			0,            // from
 			10000,        // to
-			"creationTs", // sorting is required
+			"creationts", // sorting is required
 			true)         // sort in desc order
 
 		if err != nil {
@@ -221,4 +237,62 @@ func verifyDiskMonitoring(ctx context.Context, t *testing.T, esClient elastic.ES
 	}
 
 	AssertEventually(t, assert, "old objects are not getting deleted from elastic", string("1s"), string("200s"))
+}
+
+func verifyLastProcessedObjectKeys(ctx context.Context, t *testing.T, r resolver.Interface, logger log.Logger) {
+	// Get the minio client for download the object
+	var client objstore.Client
+	var err error
+	assert := func() (bool, interface{}) {
+		client, err = objstore.NewClient(globals.ReservedFwLogsTenantName, "fwlogssystemmeta", r)
+		return err == nil, client
+	}
+	AssertEventually(t, assert, "error in creating objstore client", string("1s"), string("200s"))
+
+	data, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+		// PutObjectOfSize uploads object of "size' to object store
+		rc, err := client.GetObject(ctx, "lastProcessedKeys")
+		if err != nil {
+			return nil, err
+		}
+
+		// Read into a buffer
+		buf := bytes.Buffer{}
+		_, err = buf.ReadFrom(rc)
+		if err != nil {
+			return nil, err
+		}
+
+		// Unmarshall
+		var data map[string]string
+		err = json.Unmarshal(buf.Bytes(), &data)
+		if err != nil {
+			return nil, err
+		}
+		return data, nil
+	}, time.Second, 200)
+
+	AssertOk(t, err, "error in fetching lastProcessedObjectKeys from minio")
+	lpk, ok := data.(map[string]string)
+	Assert(t, ok, "error in casting lastProcessedObjectKeys")
+	Assert(t, len(lpk) > 0, "corrupted data in lastProcessedObjectKeys object")
+}
+
+func setupTmAgent(ctx context.Context, t *testing.T, r resolver.Interface) {
+	ps, err := tmagentstate.NewTpAgent(ctx, strings.Split(types.DefaultAgentRestURL, ":")[1])
+	AssertOk(t, err, "failed to create tp agent")
+	Assert(t, ps != nil, "invalid policy state received")
+
+	err = ps.FwlogInit(tmagentstate.FwlogIpcShm)
+	AssertOk(t, err, "failed to init FwLog")
+
+	err = ps.ObjStoreInit("1", r, time.Duration(1)*time.Second, nil)
+	AssertOk(t, err, "objstore init failed")
+}
+
+func startFwLogGen() {
+	gen := "../../../nic/agent/tests/fwloggen/fwloggen -rate 100 -num 6000"
+
+	fmt.Println("fwloggen command", gen)
+	go exec.Command("/bin/sh", "-c", gen).Output()
 }

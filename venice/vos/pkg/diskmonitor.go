@@ -19,7 +19,7 @@ func isThresholdReached(currPath string, size uint64, thresholdPercent float64) 
 
 	dir, err := os.Open(currPath)
 	if err != nil {
-		fmt.Println(err)
+		// fmt.Println(err)
 		return false, used
 	}
 	defer dir.Close()

@@ -56,7 +56,7 @@ type WatchEventQConfig struct {
 // WatchEventQ is a interface for a Watch Q which is used to mux events to watchers.
 type WatchEventQ interface {
 	Enqueue(evType kvstore.WatchEventType, obj, prev runtime.Object) error
-	Dequeue(ctx context.Context, fromver uint64, cb apiintf.EventHandlerFn, cleanupfn func())
+	Dequeue(ctx context.Context, fromver uint64, cb apiintf.EventHandlerFn, cleanupfn func(), opts *api.ListWatchOptions)
 	// Stop signals a watcher exiting. Returns true when the last
 	//  watcher has returned
 	Stop() bool
@@ -346,7 +346,9 @@ func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.O
 // Dequeue dequeues elements from the event queue and calls the callback fn
 // for each element. Dequeue() runs as a go routine and does callbacks in a tight loop
 // till the end of the list is encountered.
-func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.EventHandlerFn, cleanupFn func()) {
+func (w *watchEventQ) Dequeue(ctx context.Context,
+	fromver uint64, cb apiintf.EventHandlerFn, cleanupFn func(),
+	opts *api.ListWatchOptions) {
 	peer := ctxutils.GetContextID(ctx)
 	tracker := watcher{peerID: peer}
 	tracker.ctx, tracker.cancel = context.WithCancel(ctx)
@@ -394,8 +396,11 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 	tracker.lastUpd = time.Now()
 	tracker.Unlock()
 	w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Start", "path", w.path, "fromVer", fromver, "peer", peer)
-	var opts api.ListWatchOptions
-	opts.ResourceVersion = fmt.Sprintf("%d", fromver)
+	var lopts api.ListWatchOptions
+	if opts != nil {
+		lopts = *opts
+	}
+	lopts.ResourceVersion = fmt.Sprintf("%d", fromver)
 	maxver := uint64(0)
 
 	// List from store if fromver is not specified
@@ -415,7 +420,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 			kind = k.(string)
 		}
 		// List all objects
-		objs, err := w.store.List(w.path, kind, opts)
+		objs, err := w.store.List(w.path, kind, lopts)
 		if err == nil {
 			sort.Slice(objs, func(i int, j int) bool {
 				v1, err := w.versioner.GetVersion(objs[i])
