@@ -189,6 +189,7 @@ hal_ret_t testclocksync_req(internal::TestClockSyncRequest& req,
 
 static void
 populate_port_info (uint8_t port_num, uint16_t status,
+                    sdk::marvell::marvell_port_stats_t *statsp,
                     internal::InternalPortResponseMsg *rsp)
 {
     bool is_up, full_duplex, txpause, fctrl;
@@ -202,29 +203,60 @@ populate_port_info (uint8_t port_num, uint16_t status,
 
     internal::InternalPortResponse *response = rsp->add_response();
     response->set_port_number(port_num + 1);
-    response->set_port_descr(sdk::marvell::marvell_get_descr(port_num));
+
+    internal::InternalPortStatus *pstatus = response->mutable_status();
+    pstatus->set_port_descr(sdk::marvell::marvell_get_descr(port_num));
     if (is_up) {
-        response->set_port_status(intf::IF_STATUS_UP);
+        pstatus->set_port_status(intf::IF_STATUS_UP);
     } else {
-        response->set_port_status(intf::IF_STATUS_DOWN);
+        pstatus->set_port_status(intf::IF_STATUS_DOWN);
     }
-    response->set_port_speed(::internal::IntPortSpeed(speed));
+    pstatus->set_port_speed(::internal::IntPortSpeed(speed));
     if (full_duplex) {
-        response->set_port_mode(::internal::FULL_DUPLEX);
+        pstatus->set_port_mode(::internal::FULL_DUPLEX);
     } else{
-        response->set_port_mode(::internal::HALF_DUPLEX);
+        pstatus->set_port_mode(::internal::HALF_DUPLEX);
     }
-    response->set_port_tx_paused(txpause);
-    response->set_port_flow_ctrl(fctrl);
+    pstatus->set_port_tx_paused(txpause);
+    pstatus->set_port_flow_ctrl(fctrl);
+
+    // Now the optional stats part
+    internal::InternalPortStats *stats = response->mutable_stats();
+    stats->set_in_good_octets(statsp->in_good_octets);
+    stats->set_in_bad_octets(statsp->in_bad_octets);
+    stats->set_in_unicast(statsp->in_unicast);
+    stats->set_in_broadcast(statsp->in_broadcast);
+    stats->set_in_multicast(statsp->in_multicast);
+    stats->set_in_pause(statsp->in_pause);
+    stats->set_in_undersize(statsp->in_undersize);
+    stats->set_in_fragments(statsp->in_fragments);
+    stats->set_in_oversize(statsp->in_oversize);
+    stats->set_in_jabber(statsp->in_jabber);
+    stats->set_in_rx_err(statsp->in_rx_err);
+    stats->set_in_fcs_err(statsp->in_fcs_err);
+
+    stats->set_out_octets(statsp->out_octets);
+    stats->set_out_unicast(statsp->out_unicast);
+    stats->set_out_broadcast(statsp->out_broadcast);
+    stats->set_out_multicast(statsp->out_multicast);
+    stats->set_out_fcs_err(statsp->out_fcs_err);
+    stats->set_out_pause(statsp->out_pause);
+    stats->set_out_collisions(statsp->out_collisions);
+    stats->set_out_deferred(statsp->out_deferred);
+    stats->set_out_single(statsp->out_single);
+    stats->set_out_multiple(statsp->out_multiple);
+    stats->set_out_excessive(statsp->out_excessive);
+    stats->set_out_late(statsp->out_late);
 }
 
 hal_ret_t
 internal_port_get (internal::InternalPortRequest& req,
                    internal::InternalPortResponseMsg *rsp)
 {
-    bool    has_port_num;
-    uint8_t port_num;
-    uint16_t data;
+    bool                                has_port_num;
+    uint8_t                             port_num;
+    uint16_t                            data;
+    sdk::marvell::marvell_port_stats_t  stats;
 
     port_num = (uint8_t)req.port_number();
     has_port_num = (port_num != 0);
@@ -232,19 +264,23 @@ internal_port_get (internal::InternalPortRequest& req,
     
     if (has_port_num) {
         if (port_num < MARVELL_NPORTS) {
-            sdk::marvell::marvell_get_port_status(MARVELL_PORT0 + port_num,
-                                                  &data);
-            populate_port_info(port_num, data, rsp);
+            sdk::marvell::marvell_get_port_status(port_num, &data);
+            bzero(&stats, sizeof(stats));
+            sdk::marvell::marvell_get_port_stats(port_num, &stats);
+            populate_port_info(port_num, data, &stats, rsp);
         } else {
             HAL_TRACE_ERR("Port No must be between 0-7");
             return HAL_RET_INVALID_ARG;
         }
     } else {
         for (port_num = 0; port_num < MARVELL_NPORTS; port_num++) {
-            sdk::marvell::marvell_get_port_status(MARVELL_PORT0 + port_num, &data);
-            populate_port_info(port_num, data, rsp);
+            sdk::marvell::marvell_get_port_status(port_num, &data);
+            bzero(&stats, sizeof(stats));
+            sdk::marvell::marvell_get_port_stats(port_num, &stats);
+            populate_port_info(port_num, data, &stats, rsp);
         }
     }
+    return HAL_RET_OK;
 }
 
 static inline 

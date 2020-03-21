@@ -338,7 +338,7 @@ func portInternalCmdHandler(cmd *cobra.Command, args []string) {
 
 	if cmd != nil && cmd.Flags().Changed("port") {
 		intPortNum, err = strconv.ParseUint(portNum, 10, 8)
-		if (err != nil) || (intPortNum > 7) {
+		if (err != nil) || (intPortNum < 1) || (intPortNum > 7) {
 			fmt.Printf("Invalid argument. port number must be between 1 - 7 for internal ports\n")
 			return
 		}
@@ -369,12 +369,13 @@ func portInternalCmdHandler(cmd *cobra.Command, args []string) {
 
 	// Print Result
 	for _, resp := range respMsg.Response {
+		status := resp.GetStatus()
 		fmt.Printf("%-10d%-25s%-15s%-10s%-12s%-10v%-10v\n",
-			resp.GetPortNumber(), resp.GetPortDescr(),
-			strings.TrimPrefix(resp.GetPortStatus().String(), "IF_STATUS_"),
-			strings.TrimPrefix(resp.GetPortSpeed().String(), "SPEED_"),
-			strings.TrimSuffix(resp.GetPortMode().String(), "_DUPLEX"),
-			resp.GetPortTxPaused(), resp.GetPortFlowCtrl())
+			resp.GetPortNumber(), status.GetPortDescr(),
+			strings.TrimPrefix(status.GetPortStatus().String(), "IF_STATUS_"),
+			strings.TrimPrefix(status.GetPortSpeed().String(), "SPEED_"),
+			strings.TrimSuffix(status.GetPortMode().String(), "_DUPLEX"),
+			status.GetPortTxPaused(), status.GetPortFlowCtrl())
 	}
 }
 
@@ -382,6 +383,59 @@ func portInternalStatsCmdHandler(cmd *cobra.Command, args []string) {
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
 		return
+	}
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	// HAL call
+	client := halproto.NewInternalClient(c)
+
+	var req *halproto.InternalPortRequest
+	var intPortNum uint64
+
+	if cmd != nil && cmd.Flags().Changed("port") {
+		intPortNum, err = strconv.ParseUint(portNum, 10, 8)
+		if (err != nil) || (intPortNum < 1) || (intPortNum > 7) {
+			fmt.Printf("Invalid argument. port number must be between 1 - 7 for internal ports\n")
+			return
+		}
+		// Get port info for specified port
+		req = &halproto.InternalPortRequest{
+			PortNumber: uint32(intPortNum),
+		}
+	} else {
+		// Get all Ports
+		req = &halproto.InternalPortRequest{}
+	}
+
+	reqMsg := &halproto.InternalPortRequestMsg{
+		Request: []*halproto.InternalPortRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.InternalPortGet(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("Getting Internal port status failed. %v\n", err)
+		return
+	}
+
+	hdrLine := strings.Repeat("-", 30)
+	portShowStatsHeader()
+	// Print Result
+	for _, resp := range respMsg.Response {
+		fmt.Printf("\nstats for port : %v\n\n", resp.GetPortNumber())
+		stats := resp.GetStats()
+		respVal := reflect.ValueOf(stats).Elem()
+		respType := respVal.Type()
+		for i := 0; i < respType.NumField(); i++ {
+			fmt.Printf("%-15s: %-20v\n", respType.Field(i).Name, respVal.Field(i).Interface())
+		}
+		fmt.Println(hdrLine)
 	}
 }
 

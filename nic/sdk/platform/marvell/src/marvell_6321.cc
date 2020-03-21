@@ -4,18 +4,10 @@
 
 #include <unistd.h>
 #include <marvell.hpp>
+#include "marvell_6321.hpp"
 extern "C" {
 #include "platform/pal/include/pal_cpld.h"
 }
-
-#define MARVELL_SMI_CMD_REG             0x18
-#define MARVELL_SMI_DATA_REG            0x19
-#define MARVELL_SMI_PHY_ADDR            0x1C
-#define MARVELL_SMI_BUSY                (1 << 15)
-#define MARVELL_SMI_MODE                (1 << 12)
-#define MARVELL_SMI_READ                (1 << 11)
-#define MARVELL_SMI_WRITE               (1 << 10)
-#define MARVELL_DEV_BITS                5
 
 namespace sdk {
 namespace marvell {
@@ -84,14 +76,11 @@ marvell_serdes_enable (uint8_t serdes_port, bool powerup)
     return 0;
 }
 
-// This function is not currently being used, but is here
-// so that we can enable it if required in future
-#if 0
 // \@brief     set the power mode for copper phy
 // \@param[in] phy Marvell PHY port
 // \@param[in] powerup power up the PHY
 // \@return    0 on success, -1 on failure
-static int
+int
 marvell_phy_enable (uint8_t phy, bool powerup)
 {
     uint16_t data;
@@ -112,7 +101,6 @@ marvell_phy_enable (uint8_t phy, bool powerup)
     marvell_smi_wr(addr, data, phy);
     return 0;
 }
-#endif
 
 // \@brief     set the forwarding state of Marvell ports
 // \@param[in] src_port 0x10-0x16
@@ -210,12 +198,85 @@ marvell_switch_init (void)
     marvell_set_pvlan(MARVELL_PORT5, 3, false);
 }
 
+// \@brief      Given a port number return the status of that port
+// \@param[in]  port 0 - 6
+// \@param[out] data Status of the port.
+// \@return    0 on success, -1 on failure
 int
-marvell_get_port_status (uint8_t port_num, uint16_t *data)
+marvell_get_port_status (uint8_t port, uint16_t *data)
 {
     int rc = -1;
-    rc = cpld_mdio_rd(MARVELL_PORT_STATUS_REG, data, port_num);
+    rc = cpld_mdio_rd(MARVELL_PORT_STATUS_REG, data,
+                      MARVELL_PORT0 + port);
     return rc;
+}
+
+static uint32_t
+marvell_get_port_cntr (uint8_t port, uint8_t counter)
+{
+    uint16_t data_lo, data_hi;
+    uint32_t value;
+
+    data_lo = data_hi = 0;
+    port = port + 1;
+    cpld_mdio_wr(
+        MARVELL_STAT_OPT_REG,
+        (MARVELL_STATS_OP_BUSY_READ | port << MARVELL_STATS_OP_PORT_SHIFT) +
+        counter, MARVELL_GLOBAL1_PHY_ADDR);
+    usleep(1000);
+    cpld_mdio_rd(MARVELL_STAT_CNT_LO_REG, &data_lo, MARVELL_GLOBAL1_PHY_ADDR);
+    cpld_mdio_rd(MARVELL_STAT_CNT_HI_REG, &data_hi, MARVELL_GLOBAL1_PHY_ADDR);
+    value = ((uint32_t)data_hi) << 16 | data_lo;
+    return value;
+}
+
+// \@brief      Given a port number return the statistics for that port
+// \@param[in]  port 0 - 6
+// \@param[out] data statistics for that port
+// \@return    0 on success, -1 on failure
+int
+marvell_get_port_stats (uint8_t port, marvell_port_stats_t *stats)
+{
+    uint32_t low, hi;
+
+    if (port >= MARVELL_NPORTS) {
+        return -1;
+    }
+    // Rx Counters
+    low = hi = 0;
+    low = marvell_get_port_cntr(port, MARVELL_STATS_IN_GOOD_OCT_LO);
+    hi = marvell_get_port_cntr(port, MARVELL_STATS_IN_GOOD_OCT_HI);
+    stats->in_good_octets = ((uint64_t)hi) << 32 | low;
+    stats->in_bad_octets = marvell_get_port_cntr(port, MARVELL_STATS_IN_BAD_OCT);
+    stats->in_unicast = marvell_get_port_cntr(port, MARVELL_STATS_IN_UNICAST);
+    stats->in_broadcast = marvell_get_port_cntr(port, MARVELL_STATS_IN_BROADCAST);
+    stats->in_multicast = marvell_get_port_cntr(port, MARVELL_STATS_IN_MULTICAST);
+    stats->in_pause = marvell_get_port_cntr(port, MARVELL_STATS_IN_PAUSE);
+    stats->in_undersize = marvell_get_port_cntr(port, MARVELL_STATS_IN_UNDERSIZE);
+    stats->in_fragments = marvell_get_port_cntr(port, MARVELL_STATS_IN_FRAGMENTS);
+    stats->in_oversize = marvell_get_port_cntr(port, MARVELL_STATS_IN_OVERSIZE);
+    stats->in_jabber = marvell_get_port_cntr(port, MARVELL_STATS_IN_JABBER);
+    stats->in_rx_err = marvell_get_port_cntr(port, MARVELL_STATS_IN_RX_ERR);
+    stats->in_fcs_err = marvell_get_port_cntr(port, MARVELL_STATS_IN_FCS_ERR);
+
+    // Tx Counters
+    low = hi = 0;
+    low = marvell_get_port_cntr(port, MARVELL_STATS_OUT_OCTETS_LO);
+    hi = marvell_get_port_cntr(port, MARVELL_STATS_OUT_OCTETS_HI);
+    stats->out_octets = ((uint64_t)hi) << 32 | low;
+    stats->out_unicast = marvell_get_port_cntr(port, MARVELL_STATS_OUT_UNICAST);
+    stats->out_broadcast = marvell_get_port_cntr(port, MARVELL_STATS_OUT_BROADCAST);
+    stats->out_multicast = marvell_get_port_cntr(port, MARVELL_STATS_OUT_MULTICAST);
+    stats->out_fcs_err = marvell_get_port_cntr(port, MARVELL_STATS_OUT_FCS_ERR);
+    stats->out_pause = marvell_get_port_cntr(port, MARVELL_STATS_OUT_PAUSE);
+    stats->out_collisions = marvell_get_port_cntr(port, MARVELL_STATS_OUT_COLLISION);
+    stats->out_deferred = marvell_get_port_cntr(port, MARVELL_STATS_OUT_DEFERRED);
+    stats->out_single = marvell_get_port_cntr(port, MARVELL_STATS_OUT_SINGLE);
+    stats->out_multiple = marvell_get_port_cntr(port, MARVELL_STATS_OUT_MULTIPLE);
+    stats->out_excessive = marvell_get_port_cntr(port, MARVELL_STATS_OUT_EXCESSIVE);
+    stats->out_late = marvell_get_port_cntr(port, MARVELL_STATS_OUT_LATE);
+
+    return 0;
 }
 
 }   // namespace marvell

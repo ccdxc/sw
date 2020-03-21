@@ -665,6 +665,8 @@ It has these top-level messages:
 	FlowHashGetResponse
 	FlowHashGetRequest
 	FlowHashGetRequestMsg
+	InternalPortStatus
+	InternalPortStats
 	InternalPortResponse
 	InternalPortResponseMsg
 	InternalPortRequest

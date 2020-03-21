@@ -648,7 +648,6 @@ enicif_update_inb_enics (void)
     };
 
     g_hal_state->if_id_ht()->walk(walk_cb, NULL);
-
     return HAL_RET_OK;
 }
 

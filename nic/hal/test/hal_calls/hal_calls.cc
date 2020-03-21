@@ -337,7 +337,7 @@ update_ep(uint32_t vrf_id, uint32_t l2seg_id, uint32_t if_id, uint64_t mac,
     ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg_id);
     ep_spec.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(if_id);
     ep_spec.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac);
-    for (int i = 0; i < ip_count; i++) {
+    for (uint32_t i = 0; i < ip_count; i++) {
         ep_spec.mutable_endpoint_attrs()->add_ip_address();
         ep_spec.mutable_endpoint_attrs()->mutable_ip_address(i)->set_ip_af(types::IP_AF_INET);
         ep_spec.mutable_endpoint_attrs()->mutable_ip_address(i)->set_v4_addr(ip[i]);

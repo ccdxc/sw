@@ -22,51 +22,6 @@
 
 #define MARVELL_NPORTS      7       // number of ports in the marvell switch
 
-#define MARVELL_PORT0       0x10    // ASIC (capri) connection
-#define MARVELL_PORT1       0x11      
-#define MARVELL_PORT2       0x12
-#define MARVELL_PORT3       0x13    // oob_mnic0
-#define MARVELL_PORT4       0x14
-#define MARVELL_PORT5       0x15    // BMC
-#define MARVELL_PORT6       0x16
-
-#define MARVELL_PORT_STATE_DISABLED   0x0
-#define MARVELL_PORT_STATE_BLOCKING   0x1
-#define MARVELL_PORT_STATE_LEARNING   0x2
-#define MARVELL_PORT_STATE_FORWARDING 0x3
-#define MARVELL_PORT_STATE_MASK       0x3       // bits 1:0
-#define MARVELL_PORT_STATE_BITSHIFT   0x0
-
-#define MARVELL_SWITCH_PORT_CTRL_REG  0x4
-#define MARVELL_PORT_VLAN_MAP_REG     0x6
-
-// For accessing SERDES registers
-#define MARVELL_SERDES_PORT0          0xC   // port 0
-#define MARVELL_SERDES_PORT1          0XD   // port 1
-
-// For accessing PHY registers
-#define MARVELL_PHY_PORT0             0x3   // port 3
-#define MARVELL_PHY_PORT1             0X4   // port 4
-
-#define MARVELL_PHY_CU_CTRL_REG       0x0
-#define MARVELL_PHY_POWERDN_BIT       11
-
-#define MARVELL_FIBER_CTRL_REG        0x0
-#define MARVELL_FIBER_POWERDN_BIT     11
-
-#define MARVELL_PORT_STATUS_REG       0x0
-#define MARVELL_PORT_CTRL_REG         0x1
-#define MARVELL_STAT_OPT_REG          0x1D
-#define MARVELL_STAT_CNT_HI_REG       0x1E
-#define MARVELL_STAT_CNT_LO_REG       0x1F
-
-// Offsets for information in the port status register
-#define MARVELL_PORT_CTRL_SPEED_OFFSET     0x0   // force speed
-#define MARVELL_PORT_CTRL_FORCEDDPX_OFFSET 0x2   // force duplex
-#define MARVELL_PORT_CTRL_DPX_OFFSET       0x3   // duplex value
-#define MARVELL_PORT_CTRL_FORCEDFC_OFFSET  0x6   // force flow contrl
-#define MARVELL_PORT_CTRL_FC_OFFSET        0x7   // flow control value
-
 #define MARVELL_PORT_UPDOWN_SHIFT   11          // Single bit
 #define MARVELL_PORT_UPDOWN_MASK    0x1
 
@@ -84,6 +39,33 @@
 
 namespace sdk {
 namespace marvell {
+
+typedef struct marvell_port_stats_ {
+    uint64_t in_good_octets;
+    uint64_t out_octets;
+    uint32_t in_bad_octets;
+    uint32_t in_unicast;
+    uint32_t in_broadcast;
+    uint32_t in_multicast;
+    uint32_t in_pause;
+    uint32_t in_undersize;
+    uint32_t in_fragments;
+    uint32_t in_oversize;
+    uint32_t in_jabber;
+    uint32_t in_rx_err;
+    uint32_t in_fcs_err;
+    uint32_t out_unicast;
+    uint32_t out_broadcast;
+    uint32_t out_multicast;
+    uint32_t out_fcs_err;
+    uint32_t out_pause;
+    uint32_t out_collisions;
+    uint32_t out_deferred;
+    uint32_t out_single;
+    uint32_t out_multiple;
+    uint32_t out_excessive;
+    uint32_t out_late;
+} marvell_port_stats_t;
 
 static inline const char *
 marvell_get_descr (uint8_t port)
@@ -140,7 +122,8 @@ marvell_get_status_flowctrl (uint16_t status, bool *fctrl)
 
 // extern functions
 void marvell_switch_init(void);
-int marvell_get_port_status(uint8_t port_num, uint16_t *data);
+int marvell_get_port_status(uint8_t port, uint16_t *data);
+int marvell_get_port_stats(uint8_t port, marvell_port_stats_t *stats);
 
 }   // namespace marvell
 }   // namespace sdk
