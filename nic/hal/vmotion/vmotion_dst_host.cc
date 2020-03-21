@@ -38,7 +38,10 @@ dst_host_end (vmotion_ep *vmn_ep)
                 VMOTION_FLAG_RESET_EP_QUIESCE_ADDED(vmn_ep);
             }
 
-            endpoint_migration_inp_mac_vlan_pgm(ep, true);
+            if (VMOTION_FLAG_IS_INP_MAC_REMOVED(vmn_ep)) {
+                endpoint_migration_inp_mac_vlan_pgm(ep, true);
+                VMOTION_FLAG_RESET_INP_MAC_REMOVED(vmn_ep);
+            }
 
             // Loop the sessions, and start aging timer
             endpoint_migration_session_age_reset(ep);

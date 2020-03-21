@@ -1,0 +1,50 @@
+meta:
+    name    : vmotion_triggers
+    os      : [ esx ]
+    nics    : [ pensando ]
+    #targetcount : 35
+
+testcases:
+   -   name    : PORT_FLAP_VM
+       testcase: testcases.vmotion.trigger
+       stress  : True
+       args    :
+           vm_type      : dsc_to_dsc
+           type         : both
+           num_sessions : 2 
+           num_moves    : 2
+           trigger_type : port_flap
+           #timeout : 60
+   -   name    : MGMT_PORT_FLAP_VM 
+       testcase: testcases.vmotion.trigger
+       stress  : True
+       args    :
+           vm_type      : dsc_to_dsc
+           type         : both
+           num_sessions : 2 
+           num_moves    : 2
+           trigger_type : mgmt_down
+           trigger_on   : old
+           #timeout : 60
+   -   name    : DEL_EP_OLD_NODE_VM 
+       testcase: testcases.vmotion.trigger
+       stress  : True
+       args    :
+           vm_type      : dsc_to_dsc
+           type         : both
+           num_sessions : 2 
+           num_moves    : 2
+           trigger_type : delete_ep
+           trigger_on   : old
+           #timeout : 60
+   -   name    : DEL_EP_NEW_NODE_VM 
+       testcase: testcases.vmotion.trigger
+       stress  : True
+       args    :
+           vm_type      : dsc_to_dsc
+           type         : both
+           num_sessions : 2 
+           num_moves    : 2
+           trigger_type : delete_ep
+           #timeout : 60
+

@@ -38,7 +38,7 @@ def copy_fuz(tc):
             return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
-def start_fuz(tc):
+def start_fuz(tc, fuz_run_time = __fuz_run_time):
     ret = copy_fuz(tc)
     if ret != api.types.status.SUCCESS:
         return api.types.status.FAILURE
@@ -100,6 +100,12 @@ def start_fuz(tc):
     return api.types.status.SUCCESS
 
 
+def stop_fuz(tc):
+    tc.fuz_client_resp = api.Trigger_WaitForAllCommands(tc.fuz_client_resp)
+    api.Trigger_TerminateAllCommands(tc.server_resp)
+    api.Logger.info("Fuz test completed, ignoring results")
+    return api.types.status.SUCCESS
+
 def wait_and_verify_fuz(tc):
     tc.fuz_client_resp = api.Trigger_WaitForAllCommands(tc.fuz_client_resp)
     api.Trigger_TerminateAllCommands(tc.server_resp)
@@ -110,6 +116,73 @@ def wait_and_verify_fuz(tc):
 
     api.Logger.info("Fuz test successfull")
     return api.types.status.SUCCESS
+
+def switchPortFlap(tc):
+    api.Logger.info("Running switchPortFlap...")
+    flap_count = 1
+    num_ports = 1
+    interval = 2
+    down_time  = 2
+    naples_nodes = api.GetNaplesHostnames()
+
+    api.Logger.info("Flapping switch port on %s ..."%naples_nodes)
+    ret = api.FlapDataPorts(naples_nodes, num_ports, down_time, flap_count, interval)
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error("Failed to flap the switch port")
+        return ret
+    return api.types.status.SUCCESS
+
+def switchPortFlap2(tc, node):
+    api.Logger.info("Running switchPortFlap2...")
+    cmd_cookies = []
+    sessions       = []
+    api.Logger.info("flpping uplink port on node %s" % (node))
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd_cookie = "port uplink down"
+    api.Trigger_AddNaplesCommand(req, node, "halctl debug port --port Eth1/3 --admin-state down")
+    cmd_cookies.append(cmd_cookie)
+    cmd_cookie = "sleep"
+    api.Trigger_AddNaplesCommand(req, node, "sleep 5",timeout=30)
+    tc.cmd_cookies.append(cmd_cookie)
+    cmd_cookie = "port uplink up"
+    api.Trigger_AddNaplesCommand(req, node, "halctl debug port --port Eth1/3 --admin-state up")
+    cmd_cookies.append(cmd_cookie)
+    trig_resp = api.Trigger(req)
+    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
+    tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+
+
+
+def flapMgmtConnectivity(tc, node):
+    api.Logger.info("Running flapMgmtConnectivity...")
+    cmd_cookies = []
+    sessions       = []
+    api.Logger.info("flapping mgmt connectivity on  node %s" % (node))
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd_cookie = "ifconfig oob_mnic0 down"
+    api.Trigger_AddNaplesCommand(req, node, "ifconfig oob_mnic0 down")
+    cmd_cookies.append(cmd_cookie)
+    cmd_cookie = "sleep"
+    api.Trigger_AddNaplesCommand(req, node, "sleep 5",timeout=30)
+    tc.cmd_cookies.append(cmd_cookie)
+    cmd_cookie = "ifconfig oob_mnic0 up"
+    api.Trigger_AddNaplesCommand(req, node, "ifconfig oob_mnic0 up")
+    cmd_cookies.append(cmd_cookie)
+    trig_resp = api.Trigger(req)
+    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
+    tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+
+
+def deleteEpTrigger(tc, node, wl):
+    api.Logger.info("Running delete ep %s on node %s" %(wl.workload_name, node))
+    ep_filter = "meta.name=" + wl.workload_name + ";"
+    objects = agent_api.QueryConfigs("Endpoint", filter=ep_filter)
+    assert(len(objects) == 1)
+    object = copy.deepcopy(objects[0])
+    delete_ep_info(tc, wl, node)
+    time.sleep(5)
+    agent_api.PushConfigObjects([object], [node], True)
+
 
 def triggerVmotion(tc, wl, node):
     api.Logger.info("triggering vmotion for workload %s to node %s" %(wl.workload_name, node))
@@ -177,25 +250,42 @@ def do_vmotion(tc, dsc_to_dsc):
     api.Logger.info("moving workloads from {} to {}".format(old_node, new_node))
     update_move_info(tc, workloads, factor_l2seg, new_node)
     vm_threads = []
-    #TEMP
-    if 0:
-        #import pdb; pdb.set_trace()
-        temp_node = tc.Nodes[0]
-        wl_temp   = api.GetWorkloads(temp_node)
-        wl_temp[0].sess_info_before = vm_utils.get_session_info(tc, wl_temp[0])
-        wl_temp[0].sess_info_after  = vm_utils.get_session_info(tc, wl_temp[0])
-        ret = vm_utils.verify_session_info(tc, wl_temp[0])
-        return ret
-
+    trigger_node = None
+    tc.trigger_wl = None
     for wl_info in tc.move_info:
         if (api.IsNaplesNode(wl_info.wl.node_name)):
             wl_info.sess_info_before = vm_utils.get_session_info(tc, wl_info.wl)
             vm_utils.get_sessions_info(tc, wl_info.old_node)
         api.Logger.info("moving wl {} from node {} to node {}".format(wl_info.wl.workload_name, wl_info.old_node, wl_info.new_node))
+        if not trigger_node:
+            if tc.trigger == 'port_flap':
+                trigger_node = wl_info.new_node
+            elif tc.trigger == 'mgmt_down' or tc.trigger == 'ep_delete':
+                if tc.trigger_on == 'old':  
+                    trigger_node = wl_info.old_node
+                else:
+                    trigger_node = wl_info.new_node
+                tc.trigger_wl = wl_info.wl
         vm_thread = threading.Thread(target=triggerVmotion,args=(tc, wl_info.wl, wl_info.new_node, ))
         vm_threads.append(vm_thread)
         vm_thread.start()
         create_ep_info(tc, wl_info.wl, wl_info.new_node, "START", wl_info.old_node)
+
+    if tc.trigger and trigger_node:
+        if tc.trigger == 'port_flap':
+            switchPortFlap2(tc, trigger_node)
+        elif tc.trigger == 'mgmt_down':
+            flapMgmtConnectivity(tc, trigger_node)
+        elif tc.trigger == 'delete_ep':
+            deleteEpTrigger(tc, trigger_node, wl)
+
+    dump_nodes = [] 
+    for wl_info in tc.move_info:
+        if (api.IsNaplesNode(wl_info.new_node)):
+            if wl_info.new_node not in dump_nodes:
+                vm_utils.get_sessions_info(tc, wl_info.new_node)
+                dump_nodes.append(wl_info.new_node)
+            
     # wait for vmotion thread to complete, meaning vmotion is done on vcenter
     for vm_thread in vm_threads:
         vm_thread.join()
@@ -221,6 +311,18 @@ def Setup(tc):
     else:
         tc.vm_dsc_to_dsc     = True 
     tc.num_moves = int(getattr(tc.args, "num_moves", 1))
+
+    tc.trigger = None
+    tc.trigger    = getattr(tc.args, "trigger_type", None)
+    tc.trigger_on = getattr(tc.args, "trigger_on", 'new')
+    '''
+    if tc.args.trigger_type  == 'port_flap':
+        tc.trigger = 'port_flap'
+    elif tc.args.trigger_type == 'mgmt_down':
+        tc.trigger = 'mgmt_down'
+    elif tc.args.trigger_type == 'delete_ep':
+        tc.trigger = 'delete_ep'
+    '''
         
     getNonNaplesNodes(tc)
     if arping.ArPing(tc) != api.types.status.SUCCESS:
@@ -230,7 +332,7 @@ def Setup(tc):
         return api.types.status.FAILURE
 
     #Start Fuz
-    ret = start_fuz(tc)
+    ret = start_fuz(tc, "20s")
     if ret != api.types.status.SUCCESS:
         api.Logger.error("Fuz start failed")
         return api.types.status.FAILURE
@@ -273,20 +375,16 @@ def Trigger(tc):
 def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
-
-    for wl_info in tc.move_info:
-        wl_info.sess_info_after = vm_utils.get_session_info(tc, wl_info.wl)
-
-    ret1 =  wait_and_verify_fuz(tc)
-    ret2 = api.types.status.SUCCESS
+    stop_fuz(tc)
+    '''
+    start fuz test to verify traffic recovered
+    '''
+    start_fuz(tc)
+    ret1 = wait_and_verify_fuz(tc)
     for wl_info in tc.move_info:
         vm_utils.get_sessions_info(tc, wl_info.new_node)
-        if (wl_info.sess_info_before): 
-            ret2 = vm_utils.verify_session_info(tc, wl_info)
-    
-    if ret1 != api.types.status.SUCCESS or ret2 != api.types.status.SUCCESS:
-        return api.types.status.FAILURE
-    return api.types.status.SUCCESS
+        vm_utils.get_sessions_info(tc, wl_info.old_node)
+    return ret1 
 
 def Teardown(tc):
     # adding sleep to make sure last occurance of vmotion is updated in old(src) node

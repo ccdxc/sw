@@ -45,7 +45,9 @@ testbundles:
     sanity:
         # Relative paths from iota/test/iris/testbundles/
         - vmotion/basic_ping.testbundle
-        - vmotion/clean.testbundle
+        #- vmotion/basic_ping_nondsc.testbundle
+        - vmotion/triggers.testbundle
+        #- vmotion/clean.testbundle
         - vmotion/aging.testbundle
         
 

@@ -197,6 +197,9 @@ vmotion::run_vmotion(ep_t *ep, vmotion_thread_evt_t event)
         //  So, in the start of the vMotion, temporarily delete that entry and when vMotion is over
         //  add this entry back. 
         endpoint_migration_inp_mac_vlan_pgm(ep, false);
+        if (vmn_ep) {
+            VMOTION_FLAG_SET_INP_MAC_REMOVED(vmn_ep);
+        }
     }
 
     if (vmn_ep) {

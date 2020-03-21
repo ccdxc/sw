@@ -8,6 +8,24 @@ import iota.test.iris.config.netagent.api as agent_api
 import iota.harness.api as api
 import yaml
 
+def get_sessions_info(tc, node):
+    tc.cmd_cookies = []
+    sessions       = []
+    api.Logger.info("showing session info on node %s" % (node))
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd_cookie = "hal show session"
+    api.Trigger_AddNaplesCommand(req, node, "/nic/bin/halctl show session ")
+    tc.cmd_cookies.append(cmd_cookie)
+    trig_resp = api.Trigger(req)
+    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
+    tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    cookie_idx = 0
+    for cmd in tc.resp.commands:
+        api.Logger.info("Results for %s" % (tc.cmd_cookies[cookie_idx]))
+        api.PrintCommandResults(cmd)
+    return
+
+
 
 def get_session_info(tc, wl):
     tc.cmd_cookies = []
@@ -100,6 +118,12 @@ def compare_session_info(sess_before_dict, sess_after_dict):
 def verify_session_info(tc, wl_info):
     sess_before_dict = {} 
     sess_after_dict  = {} 
+    if not (hasattr(wl_info, 'sess_before_dict')):
+        api.Logger.info("no sessions before move")
+        return api.types.status.SUCCESS
+    if not (hasattr(wl_info, 'sess_after_dict')):
+        api.Logger.info("no sessions after move")
+        return api.types.status.SUCCESS
     for session in wl_info.sess_info_before:
         if session != None:
             build_dict(session, sess_before_dict)

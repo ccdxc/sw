@@ -40,6 +40,7 @@ enum vmotion_flag_t {
     VMOTION_FLAG_POS_EP_MOV_DONE_RCVD = 1,
     VMOTION_FLAG_EP_QUIESCE_ADDED = 2,
     VMOTION_FLAG_THREAD_EXITED = 3,
+    VMOTION_FLAG_INP_MAC_REMOVED = 4,
 };
 
 enum vmotion_thread_evt_t {
@@ -63,9 +64,13 @@ enum vmotion_thread_evt_t {
     (vmn_ep->set_flags(VMOTION_SET_BIT(*(vmn_ep->get_flags()), VMOTION_FLAG_EP_QUIESCE_ADDED)))
 #define VMOTION_FLAG_SET_THREAD_EXITED(vmn_ep) \
     (vmn_ep->set_flags(VMOTION_SET_BIT(*(vmn_ep->get_flags()), VMOTION_FLAG_THREAD_EXITED)))
+#define VMOTION_FLAG_SET_INP_MAC_REMOVED(vmn_ep) \
+    (vmn_ep->set_flags(VMOTION_SET_BIT(*(vmn_ep->get_flags()), VMOTION_FLAG_INP_MAC_REMOVED)))
 
 #define VMOTION_FLAG_RESET_EP_QUIESCE_ADDED(vmn_ep) \
     (vmn_ep->set_flags(VMOTION_RESET_BIT(*(vmn_ep->get_flags()), VMOTION_FLAG_EP_QUIESCE_ADDED)))
+#define VMOTION_FLAG_RESET_INP_MAC_REMOVED(vmn_ep) \
+    (vmn_ep->set_flags(VMOTION_RESET_BIT(*(vmn_ep->get_flags()), VMOTION_FLAG_INP_MAC_REMOVED)))
 
 #define VMOTION_FLAG_IS_RARP_SET(vmn_ep) \
     (VMOTION_IS_BIT_SET(*(vmn_ep->get_flags()), VMOTION_FLAG_POS_RARP_RCVD))
@@ -75,6 +80,8 @@ enum vmotion_thread_evt_t {
     (VMOTION_IS_BIT_SET(*(vmn_ep->get_flags()), VMOTION_FLAG_EP_QUIESCE_ADDED))
 #define VMOTION_FLAG_IS_THREAD_EXITED(vmn_ep) \
     (VMOTION_IS_BIT_SET(*(vmn_ep->get_flags()), VMOTION_FLAG_THREAD_EXITED))
+#define VMOTION_FLAG_IS_INP_MAC_REMOVED(vmn_ep) \
+    (VMOTION_IS_BIT_SET(*(vmn_ep->get_flags()), VMOTION_FLAG_INP_MAC_REMOVED))
 
 class vmotion_ep {
 public:
