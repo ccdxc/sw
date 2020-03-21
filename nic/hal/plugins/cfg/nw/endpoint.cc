@@ -504,19 +504,17 @@ hal_ret_t
 endpoint_install_swm_qos (ep_t *ep, if_t *uplink_if)
 {
     hal_ret_t ret = HAL_RET_OK;
-    uint32_t log_port = 0;
 
-    log_port = g_hal_state->catalog()->ifindex_to_logical_port(uplink_if->fp_port_num);
-    ret = qos_swm_queue_init(log_port, MAC_TO_UINT64(ep->l2_key.mac_addr));
+    ret = qos_swm_queue_init(uplink_if->uplink_port_num, MAC_TO_UINT64(ep->l2_key.mac_addr));
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to swm qos init. ret: {}", ret);
         goto end;
     }
     HAL_TRACE_DEBUG("SWM Qos programmed for port: {}, mac: {}",
-                    log_port, macaddr2str(ep->l2_key.mac_addr));
+                    uplink_if->uplink_port_num, macaddr2str(ep->l2_key.mac_addr));
 
     g_hal_state->set_swm_qos_en(true);
-    g_hal_state->set_swm_qos_port_num(log_port);
+    g_hal_state->set_swm_qos_port_num(uplink_if->uplink_port_num);
 
 end:
     return ret;

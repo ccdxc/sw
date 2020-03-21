@@ -592,15 +592,17 @@ enicif_process_host_cb (void *ht_entry, void *ctxt)
     hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
 
     if (hal_if->if_type == intf::IF_TYPE_ENIC) {
-        lif = find_lif_by_handle(hal_if->lif_handle);
-        if (lif->type == types::LIF_TYPE_HOST) {
-            if (lif->packet_filters.receive_promiscuous) {
-                l2seg = l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
-                ret = l2seg_update_oiflist_oif(l2seg, hal_if, *add,
-                                               false, false, false, true);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("Unable to update prom for host enicif: {}",
-                                  hal_if->if_id);
+        if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
+            lif = find_lif_by_handle(hal_if->lif_handle);
+            if (lif && lif->type == types::LIF_TYPE_HOST) {
+                if (lif->packet_filters.receive_promiscuous) {
+                    l2seg = l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
+                    ret = l2seg_update_oiflist_oif(l2seg, hal_if, *add,
+                                                   false, false, false, true);
+                    if (ret != HAL_RET_OK) {
+                        HAL_TRACE_ERR("Unable to update prom for host enicif: {}",
+                                      hal_if->if_id);
+                    }
                 }
             }
         }
