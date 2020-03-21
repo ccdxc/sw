@@ -59,64 +59,9 @@ func TestHostObjectValidation(t *testing.T) {
 		{makeHostObj(".naples1-host.local", "00:01:02:03:04:05", ""), []error{hooks.errInvalidHostConfig(".naples1-host.local")}}, // invalid host name
 		{makeHostObj("naples3-host.local", "0102.0304.0506", ""), []error{}},                                                      // valid host object #1
 		{makeHostObj("20.5.5.5", "01-02-03-04-05-06", ""), []error{}},                                                             // valid host object #2
-		{makeHostObj("20.5.5.5", "01-02-03-04-05-06", "hello-world"), []error{hooks.errInvalidSmartNIC()}},                        // both SmartNIC name and MAC Address
-		{makeHostObj("20.5.5.5", "", ""), []error{hooks.errInvalidSmartNIC()}},                                                    // no MAC or Name
-		{ // invalid tenant name
-			&cluster.Host{
-				ObjectMeta: api.ObjectMeta{
-					Name:   "naples3-host.local",
-					Tenant: "audi",
-				},
-				TypeMeta: api.TypeMeta{
-					Kind:       "Host",
-					APIVersion: "v1",
-				},
-			},
-			[]error{
-				hooks.errInvalidTenantConfig(),
-				hooks.errUnsupportedNumberOfSmartNICs(0, numExpectedSmartNICsInHostSpec),
-			},
-		},
-		{ // invalid namespace
-			&cluster.Host{
-				ObjectMeta: api.ObjectMeta{
-					Name:      "naples3-host.local",
-					Namespace: "some",
-				},
-				TypeMeta: api.TypeMeta{
-					Kind:       "Host",
-					APIVersion: "v1",
-				},
-			},
-			[]error{
-				hooks.errInvalidNamespaceConfig(),
-				hooks.errUnsupportedNumberOfSmartNICs(0, numExpectedSmartNICsInHostSpec),
-			},
-		},
-		{ // empty SmartNIC ID following valid one
-			&cluster.Host{
-				ObjectMeta: api.ObjectMeta{
-					Name: "20.5.5.5",
-				},
-				TypeMeta: api.TypeMeta{
-					Kind:       "Host",
-					APIVersion: "v1",
-				},
-				Spec: cluster.HostSpec{
-					DSCs: []cluster.DistributedServiceCardID{
-						{
-							MACAddress: "01-02-03-04-05-06",
-						},
-						{},
-					},
-				},
-			},
-			[]error{
-				hooks.errUnsupportedNumberOfSmartNICs(2, numExpectedSmartNICsInHostSpec),
-				hooks.errInvalidSmartNIC(),
-			},
-		},
-		{ //too many SmartNIC IDs
+		{makeHostObj("20.5.5.5", "01-02-03-04-05-06", "hello-world"), []error{hooks.errInvalidDSCID()}},                           // both DSC ID and MAC Address
+		{makeHostObj("20.5.5.5", "", ""), []error{hooks.errInvalidDSCID()}},                                                       // no MAC or Name
+		{ // two valid DSC IDs
 			&cluster.Host{
 				ObjectMeta: api.ObjectMeta{
 					Name: "20.5.5.5",
@@ -136,8 +81,109 @@ func TestHostObjectValidation(t *testing.T) {
 					},
 				},
 			},
+			[]error{},
+		},
+		{ // two valid DSC IDs
+			&cluster.Host{
+				ObjectMeta: api.ObjectMeta{
+					Name: "20.5.5.5",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Host",
+					APIVersion: "v1",
+				},
+				Spec: cluster.HostSpec{
+					DSCs: []cluster.DistributedServiceCardID{
+						{
+							MACAddress: "01-02-03-04-05-06",
+						},
+						{
+							MACAddress: "01-02-03-04-05-07",
+						},
+					},
+				},
+			},
+			[]error{},
+		},
+		{ // invalid tenant name
+			&cluster.Host{
+				ObjectMeta: api.ObjectMeta{
+					Name:   "naples3-host.local",
+					Tenant: "audi",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Host",
+					APIVersion: "v1",
+				},
+			},
 			[]error{
-				hooks.errUnsupportedNumberOfSmartNICs(2, numExpectedSmartNICsInHostSpec),
+				hooks.errInvalidTenantConfig(),
+				hooks.errUnsupportedNumberOfDSCIDs(0, minDSCIDsInHostSpec, maxDSCIDsInHostSpec),
+			},
+		},
+		{ // invalid namespace
+			&cluster.Host{
+				ObjectMeta: api.ObjectMeta{
+					Name:      "naples3-host.local",
+					Namespace: "some",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Host",
+					APIVersion: "v1",
+				},
+			},
+			[]error{
+				hooks.errInvalidNamespaceConfig(),
+				hooks.errUnsupportedNumberOfDSCIDs(0, minDSCIDsInHostSpec, maxDSCIDsInHostSpec),
+			},
+		},
+		{ // empty DSC ID following valid one
+			&cluster.Host{
+				ObjectMeta: api.ObjectMeta{
+					Name: "20.5.5.5",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Host",
+					APIVersion: "v1",
+				},
+				Spec: cluster.HostSpec{
+					DSCs: []cluster.DistributedServiceCardID{
+						{
+							MACAddress: "01-02-03-04-05-06",
+						},
+						{},
+					},
+				},
+			},
+			[]error{
+				hooks.errInvalidDSCID(),
+			},
+		},
+		{ //too many DSC IDs
+			&cluster.Host{
+				ObjectMeta: api.ObjectMeta{
+					Name: "20.5.5.5",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Host",
+					APIVersion: "v1",
+				},
+				Spec: cluster.HostSpec{
+					DSCs: []cluster.DistributedServiceCardID{
+						{
+							MACAddress: "01-02-03-04-05-06",
+						},
+						{
+							ID: "hello-world",
+						},
+						{
+							ID: "how-are-you",
+						},
+					},
+				},
+			},
+			[]error{
+				hooks.errUnsupportedNumberOfDSCIDs(3, minDSCIDsInHostSpec, maxDSCIDsInHostSpec),
 			},
 		},
 	}
@@ -146,7 +192,7 @@ func TestHostObjectValidation(t *testing.T) {
 	for c, tc := range hostTestcases {
 		t.Run(tc.obj.Name, func(t *testing.T) {
 			err := hooks.validateHostConfig(*tc.obj, "", true, false)
-			Assert(t, len(err) == len(tc.err), fmt.Sprintf("Testcase %d: expected and actual errors mismatch. Have: %d, want: %d", c, len(err), len(tc.err)))
+			Assert(t, len(err) == len(tc.err), fmt.Sprintf("Testcase %d: expected and actual errors mismatch. Have: %v, want: %v", c, err, tc.err))
 			for i := 0; i < len(tc.err); i++ {
 				Assert(t, tc.err[i].Error() == err[i].Error(),
 					fmt.Sprintf("Testcase %d, err %d: expected and actual errors mismatch. Have: %v, want: %v", c, i, tc.err[i], err[i]))
@@ -181,16 +227,16 @@ func TestHostObjectPreCommitHooks(t *testing.T) {
 	otherName := "goodbye"
 
 	testCases := []testCase{
-		{apiintf.CreateOper, makeHostObj("testHostMAC", baseMAC, ""), nil},                                                                              // First object with MAC, no conflicts
-		{apiintf.CreateOper, makeHostObj("testHostName", "", baseName), nil},                                                                            // First object with Name, no conflicts
-		{apiintf.CreateOper, makeHostObj("testHostMAC2", baseMAC, ""), hooks.errHostSmartNICConflicts("testHostMAC2", []string{"testHostMAC"})},         // MAC conflict on create
-		{apiintf.CreateOper, makeHostObj("testHostName2", "", baseName), hooks.errHostSmartNICConflicts("testHostName2", []string{"testHostName"})},     // Name conflict on create
-		{apiintf.CreateOper, makeHostObj("testHostUpdates", "", otherName), nil},                                                                        // Base object for updates
-		{apiintf.UpdateOper, makeHostObj("testHostUpdates", baseMAC, ""), hooks.errHostSmartNICConflicts("testHostUpdates", []string{"testHostMAC"})},   // MAC conflict on update
-		{apiintf.UpdateOper, makeHostObj("testHostUpdates", "", baseName), hooks.errHostSmartNICConflicts("testHostUpdates", []string{"testHostName"})}, // Name conflict on update
-		{apiintf.UpdateOper, makeHostObj("testHostUpdates", otherMAC, ""), hooks.errHostFieldImmutable("testHostUpdates", "Spec.DSCs")},                 // Attempt to modify Spec.DSCs after creation
-		{apiintf.UpdateOper, makeHostObj("testHostUpdates", "", ""), hooks.errHostFieldImmutable("testHostUpdates", "Spec.DSCs")},                       // Attempt to modify Spec.DSCs after creation
-		{apiintf.UpdateOper, makeHostObj("testHostUpdates", "", "newname"), hooks.errHostFieldImmutable("testHostUpdates", "Spec.DSCs")},                // Attempt to modify Spec.DSCs after creation
+		{apiintf.CreateOper, makeHostObj("testHostMAC", baseMAC, ""), nil},                                                                           // First object with MAC, no conflicts
+		{apiintf.CreateOper, makeHostObj("testHostName", "", baseName), nil},                                                                         // First object with Name, no conflicts
+		{apiintf.CreateOper, makeHostObj("testHostMAC2", baseMAC, ""), hooks.errHostDSCIDConflicts("testHostMAC2", []string{"testHostMAC"})},         // MAC conflict on create
+		{apiintf.CreateOper, makeHostObj("testHostName2", "", baseName), hooks.errHostDSCIDConflicts("testHostName2", []string{"testHostName"})},     // Name conflict on create
+		{apiintf.CreateOper, makeHostObj("testHostUpdates", "", otherName), nil},                                                                     // Base object for updates
+		{apiintf.UpdateOper, makeHostObj("testHostUpdates", baseMAC, ""), hooks.errHostDSCIDConflicts("testHostUpdates", []string{"testHostMAC"})},   // MAC conflict on update
+		{apiintf.UpdateOper, makeHostObj("testHostUpdates", "", baseName), hooks.errHostDSCIDConflicts("testHostUpdates", []string{"testHostName"})}, // Name conflict on update
+		{apiintf.UpdateOper, makeHostObj("testHostUpdates", otherMAC, ""), hooks.errHostFieldImmutable("testHostUpdates", "Spec.DSCs")},              // Attempt to modify Spec.DSCs after creation
+		{apiintf.UpdateOper, makeHostObj("testHostUpdates", "", ""), hooks.errHostFieldImmutable("testHostUpdates", "Spec.DSCs")},                    // Attempt to modify Spec.DSCs after creation
+		{apiintf.UpdateOper, makeHostObj("testHostUpdates", "", "newname"), hooks.errHostFieldImmutable("testHostUpdates", "Spec.DSCs")},             // Attempt to modify Spec.DSCs after creation
 	}
 
 	ctx := context.TODO()

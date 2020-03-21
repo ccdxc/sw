@@ -18,7 +18,8 @@ import (
 )
 
 const (
-	numExpectedSmartNICsInHostSpec = 1
+	minDSCIDsInHostSpec = 1
+	maxDSCIDsInHostSpec = 2
 )
 
 // errInvalidHostConfig returns error associated with invalid hostname
@@ -31,19 +32,19 @@ func (cl *clusterHooks) errInvalidMacConfig(mac string) error {
 	return fmt.Errorf("Invalid mac address: %s", mac)
 }
 
-// errUnsupportedNumberOfSmartNICs returns error associated with an
-// unsupported number of SmartNICs specified in a host object
-func (cl *clusterHooks) errUnsupportedNumberOfSmartNICs(numFoundNICs, numExpNICs int) error {
-	return fmt.Errorf("Found %d DSC specifications in Host object, exactly %d expected", numFoundNICs, numExpNICs)
+// errUnsupportedNumberOfDSCIDs returns error associated with an
+// unsupported number of DSCIDs specified in a host object
+func (cl *clusterHooks) errUnsupportedNumberOfDSCIDs(numFoundDSCIDs, minExpDSCIDs, maxExpDSCIDs int) error {
+	return fmt.Errorf("Found %d DSC specifications in Host object, expected min %d, max %d", numFoundDSCIDs, minExpDSCIDs, maxExpDSCIDs)
 }
 
-// errInvalidSmartNICSpec returns error associated with invalid SmartNIC ID
-func (cl *clusterHooks) errInvalidSmartNIC() error {
+// errInvalidDSCIDSpec returns error associated with invalid SmartNIC ID
+func (cl *clusterHooks) errInvalidDSCID() error {
 	return fmt.Errorf("Invalid DSC specification in Host object: exactly one of {Id, MAC Address} must be provided")
 }
 
-// errHostSmartNICConflicts returns error associated with invalid mac-address
-func (cl *clusterHooks) errHostSmartNICConflicts(hostName string, conflicts []string) error {
+// errHostDSCIDConflicts returns error associated with invalid mac-address
+func (cl *clusterHooks) errHostDSCIDConflicts(hostName string, conflicts []string) error {
 	return fmt.Errorf("DSC specification for Host object %s conflicts with specifications for Host objects %s."+
 		" The same MAC Address or Name cannot appear in multiple host objects", hostName, strings.Join(conflicts, ","))
 }
@@ -114,7 +115,7 @@ func (cl *clusterHooks) hostPreCommitHook(ctx context.Context, kvs kvstore.Inter
 	}
 
 	if len(conflicts) > 0 {
-		return i, true, cl.errHostSmartNICConflicts(host.Name, conflicts)
+		return i, true, cl.errHostDSCIDConflicts(host.Name, conflicts)
 	}
 
 	// Note that there is still a chance that by the time this transaction commits,
@@ -144,15 +145,15 @@ func (cl *clusterHooks) hostPreCommitHook(ctx context.Context, kvs kvstore.Inter
 func (cl *clusterHooks) validateHostSmartNICs(host *cluster.Host) []error {
 	var err []error
 
-	// As of now, only one SmartNIC per host is supported
-	if len(host.Spec.DSCs) != numExpectedSmartNICsInHostSpec {
-		err = append(err, cl.errUnsupportedNumberOfSmartNICs(len(host.Spec.DSCs), numExpectedSmartNICsInHostSpec))
+	// As of now, up to two SmartNIC per host is supported
+	if len(host.Spec.DSCs) < minDSCIDsInHostSpec || len(host.Spec.DSCs) > maxDSCIDsInHostSpec {
+		err = append(err, cl.errUnsupportedNumberOfDSCIDs(len(host.Spec.DSCs), minDSCIDsInHostSpec, maxDSCIDsInHostSpec))
 	}
 
 	// validate each SmartNIC spec
 	for _, sn := range host.Spec.DSCs {
 		if (sn.MACAddress == "") == (sn.ID == "") { // both empty or both non-empty
-			err = append(err, cl.errInvalidSmartNIC())
+			err = append(err, cl.errInvalidDSCID())
 		}
 	}
 	return err
