@@ -580,6 +580,12 @@ func (d *DHCPState) setInterfaceIPs() {
 			continue
 		}
 
+		// Fix for PS-2494
+		// Special Case: Need to set the broadcast for /31 network
+		if interfaceIP.PrefixLen == 31 {
+			ipAddr.Broadcast = interfaceIP.IPAddress
+		}
+
 		// Assign IP Address statically
 		if err := netlink.AddrReplace(link, ipAddr); err != nil {
 			log.Errorf("Failed to assign ip address %v to interface %v. Err: %v", ipAddrString, linkName, err)
