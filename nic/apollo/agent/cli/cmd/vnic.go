@@ -24,15 +24,26 @@ var (
 
 var vnicShowCmd = &cobra.Command{
 	Use:   "vnic",
-	Short: "show Vnic information",
-	Long:  "show Vnic object information",
+	Short: "show vnic information",
+	Long:  "show vnic object information",
 	Run:   vnicShowCmdHandler,
+}
+
+var vnicShowStatisticsCmd = &cobra.Command{
+	Use:   "statistics",
+	Short: "show vnic statistics",
+	Long:  "show vnic statistics",
+	Run:   vnicShowStatisticsCmdHandler,
 }
 
 func init() {
 	showCmd.AddCommand(vnicShowCmd)
 	vnicShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	vnicShowCmd.Flags().StringVarP(&vnicID, "id", "i", "", "Specify Vnic ID")
+	vnicShowCmd.Flags().StringVarP(&vnicID, "id", "i", "", "Specify vnic ID")
+
+	vnicShowCmd.AddCommand(vnicShowStatisticsCmd)
+	vnicShowStatisticsCmd.Flags().Bool("yaml", false, "Output in yaml")
+	vnicShowStatisticsCmd.Flags().StringVarP(&vnicID, "id", "i", "", "Specify vnic ID")
 }
 
 func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -126,4 +137,70 @@ func printVnic(vnic *pds.Vnic) {
 		utils.MactoStr(spec.GetMACAddress()), spec.GetSourceGuardEnable(),
 		fabricEncapStr, rxMirrorSessionStr, txMirrorSessionStr,
 		spec.GetSwitchVnic(), lifName)
+}
+
+func vnicShowStatisticsCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewVnicSvcClient(c)
+
+	var req *pds.VnicGetRequest
+	if cmd != nil && cmd.Flags().Changed("id") {
+		// Get specific Vnic
+		req = &pds.VnicGetRequest{
+			Id: [][]byte{uuid.FromStringOrNil(vnicID).Bytes()},
+		}
+	} else {
+		// Get all Vnics
+		req = &pds.VnicGetRequest{
+			Id: [][]byte{},
+		}
+	}
+
+	// PDS call
+	respMsg, err := client.VnicGet(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Getting Vnic failed. %v\n", err)
+		return
+	}
+
+	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+		return
+	}
+
+	// Print Vnics
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		hdrLine := strings.Repeat("-", 95)
+		fmt.Println(hdrLine)
+		fmt.Printf("%-40s%-11s%-11s%-11s%-11s\n",
+			"VnicID", "TxBytes", "TxPackets", "RxBytes", "RxPackets")
+		fmt.Println(hdrLine)
+		for _, resp := range respMsg.Response {
+			spec := resp.GetSpec()
+			stats := resp.GetStats()
+			fmt.Printf("%-40s%-11d%-11d%-11d%-11d\n",
+				uuid.FromBytesOrNil(spec.GetId()).String(),
+				stats.GetTxBytes(), stats.GetTxPackets(),
+				stats.GetRxBytes(), stats.GetRxPackets())
+		}
+	}
 }
