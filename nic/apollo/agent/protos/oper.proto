@@ -121,8 +121,9 @@ enum SecurityPolicyType {
 }
 
 // protobuf format for flow logs (this is the format consumers will see flow
-// logs in). VPP itself will just a binary dump and a decoder (invoked by VPP)
-// will xform the contents into this format.
+// logs in). The producer (e.g., VPP) will do just a binary dump to shared
+// memory and a decoder (invoked by operd) will transform the contents into
+// this format
 message FlowLog {
   // timestamp indicating when the flow is created/closed
   uint64                   Timestamp    = 1;
@@ -144,4 +145,12 @@ message FlowLog {
   uint32                   DstNATPort   = 9;
   // policy type that resulted in the flow action
   SecurityPolicyType       PolicyType   = 10;
+  // initiator flow octet count
+  uint64                   IflowBytes   = 11;
+  // initator flow packet count
+  uint64                   IflowPackets = 12;
+  // responder flow octet count
+  uint64                   RflowBytes   = 13;
+  // responder flow packet count
+  uint64                   RflowPackets = 14;
 }
