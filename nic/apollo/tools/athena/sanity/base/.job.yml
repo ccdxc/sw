@@ -61,6 +61,15 @@ targets:
     - build-athena-x86
     - build-athena-arm
 
+  athena_app/standalone_compile:
+    commands: ["sh", "-c", "cd /sw/ && tar -zxvf athena.tar.gz  && cd pensando_v1.0/athena_app && make ARCH=aarch64"]
+    owners: ["email:murali@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-athena-customer-arm
+
 cache:
   name: "sw"
   mount_dir: "/root/.cache"

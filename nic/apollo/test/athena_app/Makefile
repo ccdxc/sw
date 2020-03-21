@@ -1,31 +1,42 @@
 
 TOPDIR = ../../../..
+
 OBJ_DIR = ./obj
 
 export ARCH ?= x86_64
-
-CXX = g++
+CXX = /tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-g++ 
 CPPFLAGS += -I/usr/local/include -std=c++11 -pthread -g -c -Wall -Werror -O0
-CPPFLAGS += -MT $@ -MMD -MP -MF $(OBJ_DIR)/$*.d -D__FNAME__=__FUNCTION__
+CPPFLAGS += -MT $@ -MMD -MP -MF $(OBJ_DIR)/$*.d -D__FNAME__=__FUNCTION__ -DRTE_FORCE_INTRINSICS
 ifeq ($(ARCH), x86_64)
+CXX = g++
 CPPFLAGS  += -march=native
 endif
 
 INC_DIRS = -I. -I$(TOPDIR) -I$(TOPDIR)/nic/sdk -I$(TOPDIR)/nic/sdk/dpdk/build/include/ \
-		-I$(TOPDIR)/nic/build/x86_64/athena/ -I$(TOPDIR)/nic/hal/third-party/spdlog/include \
-		-I$(TOPDIR)/nic/sdk/third-party/googletest-release-1.8.0/googletest/include
-GMK_TARGETOS = x86_64
+		-I$(TOPDIR)/nic/build/$(ARCH)/athena/ -I$(TOPDIR)/nic/hal/third-party/spdlog/include \
+		-I$(TOPDIR)/nic/sdk/third-party/googletest-release-1.8.0/googletest/include \
+                -I$(TOPDIR)/nic/sdk/third-party/boost/include
+
 MODE = debug
-LDFLAGS = -L$(TOPDIR)/nic/build/x86_64/athena/lib/ -Wl,-rpath=/sw/nic/build/x86_64/athena/lib/ -L/usr/local/lib64 -L/lib64 \
-		-L$(TOPDIR)/nic/third-party/metaswitch/output/$(GMK_TARGETOS)/$(MODE)
+LDFLAGS = -L$(TOPDIR)/nic/build/$(ARCH)/athena/lib/ -Wl,-rpath=$(TOPDIR)/nic/build/$(ARCH)/athena/lib/ \
+		-L$(TOPDIR)/nic/third-party/metaswitch/output/$(ARCH)/$(MODE)
+
+ifeq ($(ARCH), x86_64)
+LDFLAGS += -L/usr/local/lib64 -L/lib64 
+else
+LDFLAGS += -L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/lib \
+           -L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/lib \
+           -L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/lib/aarch64-linux-gnu 
+endif
+
 LDLIBS += -lpal -lpdsframework -lpdscore -lpdslearn -lpdsapi -lpdsapi_impl -lsdkftl \
-		-ldpdksim -ldpdk -lthread -ltrace -llogger -lmemhash -lsltcam -leth_p4plus \
+		-ldpdk -lthread -ltrace -llogger -lmemhash -lsltcam -leth_p4plus \
 		-levent_thread -lslhash -lpenmetrics -lp4pd_athena -lp4pd_athena_rxdma \
 		-lp4pd_athena_txdma -lutils -llist -lslab -lshmmgr -lmmgr \
 		-lsdkpal -lsdkfru -lht -lindexer -lperiodic -ltwheel -ldirectmap \
 		-lsldirectmap -lhash -lhbmhash -ltcam -ltimerfd -lcatalog \
 		-ldevice -lsdkplatformutils -lsdkcapri -lsdkp4loader -lsdkasicrw \
-		-llif_mgr -lsdkring -lsysmon -lsensor -lmodel_client -lsdkp4 \
+		-llif_mgr -lsdkring -lsysmon -lsensor -lsdkp4 \
 		-lsdkp4utils -lsdkcapri_asicrw_if -lpdsapi_capri_impl \
 		-lsdkxcvrdriver -lsdkasicpd -lkvstore_lmdb -llmdb -lbm_allocator -lsdklinkmgr \
 		-lsdklinkmgrcsr -lnicmgr_athena -lmnet -levutils \
@@ -33,9 +44,12 @@ LDLIBS += -lpal -lpdsframework -lpdscore -lpdslearn -lpdsapi -lpdsapi_impl -lsdk
 		-lpcietlp -lcfgspace -lintrutils -lmisc \
 		-lev \
 		-lmpuobj -lcapisa -lisa -lsknobs -lsdkcapri_csrint -lAAPL \
-		-lpthread -lz -lrt -lJudy -ldl -lzmq -ledit -lncurses -ltinfo \
+		-lpthread -lz -lrt -lJudy -ldl -lzmq -ledit -lncurses \
 		-lstdc++ -lm -lgcc -lc
 
+ifeq ($(ARCH), x86_64)
+LDLIBS += -lmodel_client -ldpdksim
+endif
 SRC_FILES := app_test_utils.cc \
 		fte_athena.cc \
 		fte_flow_athena.cc \

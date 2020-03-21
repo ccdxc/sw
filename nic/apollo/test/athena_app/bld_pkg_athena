@@ -1,0 +1,174 @@
+#!/usr/bin/python
+
+from os import system, mkdir, chdir
+from  shutil import copytree, ignore_patterns, make_archive
+import argparse
+
+
+
+def parse_input ():
+    parser = argparse.ArgumentParser(description="Build and validate Standalone App")
+    parser.add_argument('--arch', default='aarch64', 
+           help='Architecture to compile either X86 or aarch64', dest='arch')
+    parser.add_argument('--dest', default='pensando', 
+           help='Dest folder relative to /sw/nic where all the binaries and Athena App should be copied', dest='dest')
+    parser.add_argument('--output', default='athena', 
+           help='gztar archive name without any suffix', dest='output')
+    parser.add_argument('--version', default='v1.0', 
+           help='Major.Minor version', dest='version')
+    args = parser.parse_args()
+    return args
+
+
+def build (arch="aarch64", clean=False):
+    """
+       Build Athena APP. 
+       TODO: Need to get the return value and bailout if make failed.
+    """
+    cmds = {
+       "x86_64" : "make PIPELINE=athena",
+       "aarch64" : "make PIPELINE=athena ARCH=aarch64 PLATFORM=hw"
+    }
+    target = " athena_app.bin" if clean == False else " clean"
+    if args.arch == "all" :
+        tmp = [v+target for v in cmds.itervalues()]
+        cmd = " && ".join(tmp)
+    else:
+       #cmd will return exception if arch is not aarch64 or x86_64
+       cmd = cmds[arch]+target
+
+    system(cmd)
+
+def modifyMakeFile (dest):
+    """
+        Modify any static definitions in Makefile to reflect 
+        new location.
+    """
+    system("pwd")
+    fileLoc = "{0}/athena_app/Makefile".format(dest)
+    with open(fileLoc , "rt") as fp:
+        data = fp.read()
+        #Modify TOPDIR to point to correct location
+        wdata = data.replace("TOPDIR = ../../../..", "TOPDIR = ../")
+    
+    with open(fileLoc, "wt") as fp:
+        fp.write(wdata)
+
+def copy_gen (dest, arch="aarch64"):
+    """
+        Copy all auto generated files and libaries to dest.
+        TODO: Handle Exceptions
+    """
+    if arch == "all" :
+        copytree("build/x86_64/athena/lib".format(arch),
+             "{0}/nic/build/x86_64/athena/lib".format(dest))
+
+        copytree("build/x86_64/athena/gen/p4gen/p4/include".format(arch),
+              "{0}/nic/build/x86_64/athena/gen/p4gen/p4/include".format(dest))
+
+        copytree("build/aarch64/athena/lib".format(arch),
+             "{0}/nic/build/aarch64/athena/lib".format(dest))
+
+        copytree("build/aarch64/athena/gen/p4gen/p4/include".format(arch),
+              "{0}/nic/build/aarch64/athena/gen/p4gen/p4/include".format(dest))
+    else :
+        copytree("build/{0}/athena/lib".format(arch),
+             "{0}/nic/build/{1}/athena/lib".format(dest, arch))
+
+        copytree("build/{0}/athena/gen/p4gen/p4/include".format(arch),
+              "{0}/nic/build/{1}/athena/gen/p4gen/p4/include".format(dest, arch))
+
+
+def copy_test_app (dest="nic"):
+    """
+        Copy athena_app code except for module.mk 
+        and blg_pkg_athena files.
+    """
+    copytree("apollo/test/athena_app", 
+             "{0}/athena_app".format(dest),
+             ignore=ignore_patterns("*.mk", "bld_pkg_athena", "*.sh"))
+
+def copy_includes (dest):
+    copytree("hal/third-party/spdlog/include", 
+             "{0}/nic/hal/third-party/spdlog/include".format(dest))
+    copytree("sdk/dpdk/build/include", 
+             "{0}/nic/sdk/dpdk/build/include".format(dest))
+    #nic/include and nic/sdk/include have some dead symlinks
+    try:
+        copytree("include", 
+             "{0}/nic/include".format(dest))
+    except :
+         pass
+    try:
+        copytree("sdk/include", 
+             "{0}/nic/sdk/include".format(dest))
+    except :
+         pass
+    copytree("apollo/api/impl/athena", 
+             "{0}/nic/apollo/api/impl/athena".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("apollo/api/include", "{0}/nic/apollo/api/include".format(dest))
+    copytree("p4/ftl_dev/include","{0}/nic/p4/ftl_dev/include".format(dest))
+    copytree("p4/common","{0}/nic/p4/common".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("hal/pd", "{0}/nic/hal/pd".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile")) #try to copy only nic/hal/pd/pd.hpp
+    copytree("apollo/core", "{0}/nic/apollo/core".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("apollo/upgrade","{0}/nic/apollo/upgrade".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("apollo/framework","{0}/nic/apollo/framework".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("apollo/include","{0}/nic/apollo/include".format(dest))
+    copytree("apollo/p4/include","{0}/nic/apollo/p4/include".format(dest))
+    copytree("apollo/test/api/utils","{0}/nic/apollo/test/api/utils".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("apollo/test/base", "{0}/nic/apollo/test/base".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("sdk/asic","{0}/nic/sdk/asic".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("sdk/p4/loader","{0}/nic/sdk/p4/loader".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("sdk/linkmgr","{0}/nic/sdk/linkmgr".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("sdk/lib", "{0}/nic/sdk/lib".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("sdk/platform/utils","{0}/nic/sdk/platform/utils".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("sdk/platform/ring","{0}/nic/sdk/platform/ring".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("sdk/platform/fru","{0}/nic/sdk/platform/fru".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("sdk/platform/devapi","{0}/nic/sdk/platform/devapi".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("sdk/platform/capri","{0}/nic/sdk/platform/capri".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("sdk/platform/pal/include",
+             "{0}/nic/sdk/platform/pal/include".format(dest))
+    copytree("sdk/model_sim/include","{0}/nic/sdk/model_sim/include".format(dest))
+
+    copytree("sdk/third-party/googletest-release-1.8.0/googletest/include", 
+        "{0}/nic/sdk/third-party/googletest-release-1.8.0/googletest/include/".format(dest))
+    copytree("sdk/third-party/boost/include/", 
+        "{0}/nic/sdk/third-party/boost/include/".format(dest))
+
+if __name__ == '__main__':
+
+    args = parse_input()
+    chdir("/usr/src/github.com/pensando/sw/nic")
+    dst_folder = "_".join([args.dest,args.version])
+    mkdir(dst_folder)
+    build(args.arch)
+    copy_gen(dst_folder, args.arch)
+    copy_includes(dst_folder)
+    copy_test_app(dst_folder)
+    modifyMakeFile(dst_folder)
+
+    src = "/usr/src/github.com/pensando/sw/nic/{0}".format(dst_folder)
+    dest = "/sw/{0}.tar.gz".format(args.output)
+    print "Starting to archive {0} folder to {1}.tar.gz". format(src, dest)
+    #make_archive(dest, "gztar", "{0}".format(dst_folder))
+    system("tar -zvcf  /sw/{0}.tar.gz pensando_v1.0".format(args.output))
+    print "Clean up the {0} folder".format(dst_folder)
+    system("rm -rf {0}".format(dst_folder))
+    build(args.arch, True)
