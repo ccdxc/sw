@@ -24,6 +24,8 @@ static bool ionic_next_cqe(struct ionic_cq *cq, struct ionic_v1_cqe **cqe)
 	if (unlikely(cq->color != ionic_v1_cqe_color(qcqe)))
 		return false;
 
+	ionic_lat_enable(dev->lats, true);
+
 	/* Prevent out-of-order reads of the CQE */
 	rmb();
 
@@ -157,6 +159,8 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 		cq->flush = true;
 		list_move_tail(&qp->cq_flush_rq, &cq->flush_rq);
 
+		ionic_stat_incr(dev->stats, poll_cq_wc_err);
+
 		/* posted recvs (if any) flushed by ionic_flush_recv */
 		return 0;
 	}
@@ -201,6 +205,7 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 		cq->flush = true;
 		list_move_tail(&qp->cq_flush_rq, &cq->flush_rq);
 
+		ionic_stat_incr(dev->stats, poll_cq_wc_err);
 		ibdev_warn(&dev->ibdev,
 			   "qp %d recv cqe with error\n", qp->qpid);
 		print_hex_dump(KERN_WARNING, "cqe ", DUMP_PREFIX_OFFSET, 16, 1,
@@ -290,6 +295,7 @@ static bool ionic_peek_send(struct ionic_qp *qp)
 static int ionic_poll_send(struct ionic_cq *cq, struct ionic_qp *qp,
 			   struct ib_wc *wc)
 {
+	struct ionic_ibdev *dev = to_ionic_ibdev(cq->ibcq.device);
 	struct ionic_sq_meta *meta;
 
 	if (qp->sq_flush)
@@ -330,6 +336,8 @@ static int ionic_poll_send(struct ionic_cq *cq, struct ionic_qp *qp,
 		qp->sq_flush = true;
 		cq->flush = true;
 		list_move_tail(&qp->cq_flush_sq, &cq->flush_sq);
+
+		ionic_stat_incr(dev->stats, poll_cq_wc_err);
 	}
 
 	return 1;
@@ -460,6 +468,8 @@ static void ionic_reserve_sync_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 
 		ionic_dbell_ring(dev->dbpage, dev->cq_qtype,
 				 ionic_queue_dbell_val(&cq->q));
+
+		ionic_stat_incr(dev->stats, ring_cq_dbell);
 	}
 }
 
@@ -483,11 +493,17 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 	bool peek;
 	int rc = 0, npolled = 0;
 	unsigned long irqflags;
+	u16 old_prod;
+
+	ionic_lat_trace(dev->lats, application);
+	ionic_stat_incr(dev->stats, poll_cq);
 
 	if (nwc < 1)
 		return 0;
 
 	spin_lock_irqsave(&cq->lock, irqflags);
+
+	old_prod = cq->q.prod;
 
 	/* poll already indicated work completions for send queue */
 
@@ -600,6 +616,7 @@ cq_next:
 
 		spin_lock(&qp->sq_lock);
 		rc = ionic_flush_send_many(qp, wc + npolled, nwc - npolled);
+		ionic_stat_add(dev->stats, poll_cq_wc_flush, rc);
 		spin_unlock(&qp->sq_lock);
 
 		if (rc > 0)
@@ -617,6 +634,7 @@ cq_next:
 
 		spin_lock(&qp->rq_lock);
 		rc = ionic_flush_recv_many(qp, wc + npolled, nwc - npolled);
+		ionic_stat_add(dev->stats, poll_cq_wc_flush, rc);
 		spin_unlock(&qp->rq_lock);
 
 		if (rc > 0)
@@ -633,7 +651,22 @@ out:
 	if (cq->reserve <= 0)
 		ionic_reserve_sync_cq(dev, cq);
 
+	old_prod = (cq->q.prod - old_prod) & cq->q.mask;
+
+	ionic_stat_add(dev->stats, poll_cq_cqe, old_prod);
+	ionic_stat_incr_idx_fls(dev->stats, poll_cq_ncqe, old_prod);
+	ionic_stat_add(dev->stats, poll_cq_wc, npolled);
+	ionic_stat_incr_idx_fls(dev->stats, poll_cq_nwc, npolled);
+	ionic_stat_add(dev->stats, poll_cq_err, (npolled ?: rc) < 0);
+
 	spin_unlock_irqrestore(&cq->lock, irqflags);
+
+	if (npolled) {
+		ionic_lat_trace(dev->lats, poll_cq_compl);
+	} else {
+		ionic_lat_trace(dev->lats, poll_cq_empty);
+		ionic_lat_enable(dev->lats, false);
+	}
 
 	return npolled ?: rc;
 }
@@ -648,9 +681,13 @@ static int ionic_req_notify_cq(struct ib_cq *ibcq,
 	if (flags & IB_CQ_SOLICITED) {
 		cq->arm_sol_prod = ionic_queue_next(&cq->q, cq->arm_sol_prod);
 		dbell_val |= cq->arm_sol_prod | IONIC_CQ_RING_SOL;
+
+		ionic_stat_incr(dev->stats, arm_cq_sol);
 	} else {
 		cq->arm_any_prod = ionic_queue_next(&cq->q, cq->arm_any_prod);
 		dbell_val |= cq->arm_any_prod | IONIC_CQ_RING_ARM;
+
+		ionic_stat_incr(dev->stats, arm_cq_any);
 	}
 
 	ionic_reserve_sync_cq(dev, cq);
@@ -792,6 +829,11 @@ static void ionic_prep_base(struct ionic_qp *qp,
 		qp->sq_msn_prod = ionic_queue_next(&qp->sq, qp->sq_msn_prod);
 	}
 
+	ionic_stat_incr_idx(dev->stats, post_send_op, wqe->base.op);
+	ionic_stat_add(dev->stats, post_send_sig,
+		       !!(wqe->base.flags & cpu_to_be16(IONIC_V1_FLAG_SIG)));
+	ionic_stat_add(dev->stats, post_send_inl,
+		       !!(wqe->base.flags & cpu_to_be16(IONIC_V1_FLAG_INL)));
 	ibdev_dbg(&dev->ibdev,
 		  "post send %u prod %u\n", qp->qpid, qp->sq.prod);
 	print_hex_dump_debug("wqe ", DUMP_PREFIX_OFFSET, 16, 1,
@@ -806,6 +848,34 @@ static int ionic_prep_common(struct ionic_qp *qp,
 {
 	s64 signed_len;
 	u32 mval;
+	u32 sg_i, len;
+
+	if (ionic_stats_enable) {
+		qp->sq_frag_cnt[wr->num_sge]++;
+		for (sg_i = 0; sg_i < wr->num_sge; sg_i++) {
+			len = wr->sg_list[sg_i].length;
+			if (len == 0 || len >= 4096)
+				qp->sq_frag_4096_plus++;
+			else if (len >= 2048)
+				qp->sq_frag_2048_4095++;
+			else if (len >= 1024)
+				qp->sq_frag_1024_2047++;
+			else if (len >= 512)
+				qp->sq_frag_512_1023++;
+			else if (len >= 256)
+				qp->sq_frag_256_511++;
+			else if (len >= 192)
+				qp->sq_frag_192_255++;
+			else if (len >= 128)
+				qp->sq_frag_128_191++;
+			else if (len >= 64)
+				qp->sq_frag_64_127++;
+			else if (len >= 32)
+				qp->sq_frag_32_63++;
+			else
+				qp->sq_frag_0_31++;
+		}
+	}
 
 	if (wr->send_flags & IB_SEND_INLINE) {
 		wqe->base.num_sge_key = 0;
@@ -1153,6 +1223,9 @@ static void ionic_post_send_cmb(struct ionic_ibdev *dev, struct ionic_qp *qp)
 					 qp->sq.dbell | pos);
 	}
 
+	ionic_stat_add(dev->stats, post_send_cmb,
+		       (end - qp->sq_cmb_prod) & qp->sq.mask);
+
 	qp->sq_cmb_prod = end;
 }
 
@@ -1194,6 +1267,9 @@ static void ionic_post_recv_cmb(struct ionic_ibdev *dev, struct ionic_qp *qp)
 		ionic_dbell_ring(dev->dbpage, dev->rq_qtype,
 				 qp->rq.dbell | pos);
 	}
+
+	ionic_stat_add(dev->stats, post_recv_cmb,
+		       (end - qp->rq_cmb_prod) & qp->rq.mask);
 
 	qp->rq_cmb_prod = end;
 }
@@ -1264,6 +1340,10 @@ static int ionic_post_send_common(struct ionic_ibdev *dev,
 	unsigned long irqflags;
 	bool notify = false;
 	int spend, rc = 0;
+	u16 old_prod;
+
+	ionic_lat_trace(dev->lats, application);
+	ionic_stat_incr(dev->stats, post_send);
 
 	if (!bad)
 		return -EINVAL;
@@ -1279,6 +1359,10 @@ static int ionic_post_send_common(struct ionic_ibdev *dev,
 	}
 
 	spin_lock_irqsave(&qp->sq_lock, irqflags);
+
+	old_prod = qp->sq.prod;
+	ionic_stat_incr_idx_fls(dev->stats, post_send_qlen,
+				ionic_queue_length(&qp->sq));
 
 	while (wr) {
 		if (ionic_queue_full(&qp->sq)) {
@@ -1299,6 +1383,10 @@ static int ionic_post_send_common(struct ionic_ibdev *dev,
 	}
 
 out:
+	old_prod = (qp->sq.prod - old_prod) & qp->sq.mask;
+	ionic_stat_incr_idx_fls(dev->stats, post_send_nwr, old_prod);
+	ionic_stat_add(dev->stats, post_send_wr, old_prod);
+
 	/* irq remains saved here, not restored/saved again */
 	if (!spin_trylock(&cq->lock)) {
 		spin_unlock(&qp->sq_lock);
@@ -1332,6 +1420,9 @@ out:
 	if (notify && cq->ibcq.comp_handler)
 		cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
 
+	ionic_stat_add(dev->stats, post_send_err, !!rc);
+	ionic_lat_trace(dev->lats, post_send);
+
 	*bad = wr;
 	return rc;
 }
@@ -1353,6 +1444,10 @@ static int ionic_post_recv_common(struct ionic_ibdev *dev,
 	unsigned long irqflags;
 	bool notify = false;
 	int spend, rc = 0;
+	u16 old_prod;
+
+	ionic_lat_trace(dev->lats, application);
+	ionic_stat_incr(dev->stats, post_recv);
 
 	if (!bad)
 		return -EINVAL;
@@ -1369,6 +1464,10 @@ static int ionic_post_recv_common(struct ionic_ibdev *dev,
 
 	spin_lock_irqsave(&qp->rq_lock, irqflags);
 
+	old_prod = qp->rq.prod;
+	ionic_stat_incr_idx_fls(dev->stats, post_recv_qlen,
+				ionic_queue_length(&qp->rq));
+
 	while (wr) {
 		if (ionic_queue_full(&qp->rq)) {
 			ibdev_dbg(&dev->ibdev, "queue full");
@@ -1384,6 +1483,10 @@ static int ionic_post_recv_common(struct ionic_ibdev *dev,
 	}
 
 out:
+	old_prod = (qp->rq.prod - old_prod) & qp->rq.mask;
+	ionic_stat_incr_idx_fls(dev->stats, post_recv_nwr, old_prod);
+	ionic_stat_add(dev->stats, post_recv_wr, old_prod);
+
 	if (!cq) {
 		spin_unlock_irqrestore(&qp->rq_lock, irqflags);
 		goto out_unlocked;
@@ -1423,6 +1526,9 @@ out:
 		cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
 
 out_unlocked:
+	ionic_lat_trace(dev->lats, post_recv);
+	ionic_stat_add(dev->stats, post_recv_err, !!rc);
+
 	*bad = wr;
 	return rc;
 }

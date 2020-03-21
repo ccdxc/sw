@@ -371,14 +371,22 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	ionic_api_clear_private(dev->handle);
 
-#ifdef __FreeBSD__
-	contig_kfree(dev->stats, PAGE_SIZE);
-	contig_kfree(dev->stats_buf, PAGE_SIZE);
-#else
+#ifdef NOT_UPSTREAM
+	ionic_stats_print(&dev->ibdev.dev, dev->stats);
 	kfree(dev->stats);
-	kfree(dev->stats_buf);
+
+	ionic_lats_print(&dev->ibdev.dev, dev->lats);
+	kfree(dev->lats);
+
 #endif
-	kfree(dev->stats_hdrs);
+#ifdef __FreeBSD__
+	contig_kfree(dev->hw_stats, PAGE_SIZE);
+	contig_kfree(dev->hw_stats_buf, PAGE_SIZE);
+#else
+	kfree(dev->hw_stats);
+	kfree(dev->hw_stats_buf);
+#endif
+	kfree(dev->hw_stats_hdrs);
 
 	ionic_dbg_rm_dev(dev);
 
@@ -707,7 +715,7 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 	ib_set_device_ops(&dev->ibdev, &ionic_dev_ops);
 	ionic_datapath_setops(dev);
 	ionic_controlpath_setops(dev);
-	ionic_stats_setops(dev);
+	ionic_hw_stats_setops(dev);
 #ifdef IONIC_SRQ_XRC
 	ionic_srq_setops(dev);
 #endif /* IONIC_SRQ_XRC */
@@ -738,6 +746,18 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 
 	list_add(&dev->driver_ent, &ionic_ibdev_list);
 
+#ifdef NOT_UPSTREAM
+	dev->stats = kzalloc(sizeof(*dev->stats), GFP_KERNEL);
+	if (dev->stats)
+		dev->stats->histogram = 1;
+
+	dev->lats = kzalloc(sizeof(*dev->lats), GFP_KERNEL);
+	if (dev->lats) {
+		dev->lats->histogram = 1;
+		ionic_lat_init(dev->lats);
+	}
+
+#endif
 	return dev;
 
 err_api:
@@ -746,13 +766,13 @@ err_register:
 	ionic_kill_rdma_admin(dev, false);
 	ionic_destroy_rdma_admin(dev);
 #ifdef __FreeBSD__
-	contig_kfree(dev->stats, PAGE_SIZE);
-	contig_kfree(dev->stats_buf, PAGE_SIZE);
+	contig_kfree(dev->hw_stats, PAGE_SIZE);
+	contig_kfree(dev->hw_stats_buf, PAGE_SIZE);
 #else
-	kfree(dev->stats);
-	kfree(dev->stats_buf);
+	kfree(dev->hw_stats);
+	kfree(dev->hw_stats_buf);
 #endif
-	kfree(dev->stats_hdrs);
+	kfree(dev->hw_stats_hdrs);
 err_reset:
 	ionic_dbg_rm_dev(dev);
 	ionic_resid_destroy(&dev->inuse_qpid);

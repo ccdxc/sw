@@ -3,7 +3,7 @@ obj-$(CONFIG_IONIC) += eth/ionic/
 obj-$(CONFIG_IONIC_MNIC) += eth/ionic/
 obj-$(CONFIG_MNET) += mnet/
 obj-$(CONFIG_MNET_UIO_PDRV_GENIRQ) += mnet_uio_pdrv_genirq/
-obj-$(CONFIG_INFINIBAND_IONIC_RDMA) += rdma/drv/ionic/
+obj-$(CONFIG_INFINIBAND_IONIC) += rdma/drv/ionic/
 else
 
 IONIC_ETH_SRC = $(CURDIR)/eth/ionic
@@ -15,8 +15,8 @@ IONIC_RDMA_SRC = $(CURDIR)/rdma/drv/ionic
 #KOPT += CHECK=sparse	# static analysis tool
 #KOPT += CHECK=scripts/coccicheck
 
-ETH_KOPT += CONFIG_INFINIBAND_IONIC_RDMA=_
-RDMA_KOPT += CONFIG_INFINIBAND_IONIC_RDMA=m
+ETH_KOPT += CONFIG_INFINIBAND_IONIC=_
+RDMA_KOPT += CONFIG_INFINIBAND_IONIC=m
 
 default: all
 ALL = eth

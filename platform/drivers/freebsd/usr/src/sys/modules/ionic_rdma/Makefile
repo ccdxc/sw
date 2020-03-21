@@ -11,7 +11,7 @@ ionic_admin.c \
 ionic_controlpath.c \
 ionic_datapath.c  \
 ionic_pgtbl.c \
-ionic_stats.c \
+ionic_hw_stats.c \
 device_if.h bus_if.h vnode_if.h pci_if.h \
 	opt_inet.h opt_inet6.h
 

@@ -36,7 +36,7 @@ RDRV_FILES=(
     "ionic_queue.h"
     "ionic_res.c"
     "ionic_res.h"
-    "ionic_stats.c"
+    "ionic_hw_stats.c"
 )
 LINUX_RDRV_FILES=(
     "ionic_sysfs.c"

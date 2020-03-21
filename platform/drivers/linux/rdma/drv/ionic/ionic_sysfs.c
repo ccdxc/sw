@@ -22,6 +22,8 @@ u16 ionic_eq_depth = 511;
 u16 ionic_eq_isr_budget = 10;
 u16 ionic_eq_work_budget = 1000;
 int ionic_max_pd = 1024;
+bool ionic_stats_enable;
+bool ionic_lats_enable;
 static bool ionic_nosupport;
 int ionic_spec = IONIC_SPEC_HIGH;
 
@@ -63,6 +65,8 @@ IRCFG_U16(eq_depth);
 IRCFG_U16(eq_isr_budget);
 IRCFG_U16(eq_work_budget);
 IRCFG_INT(max_pd);
+IRCFG_BOOL(stats_enable);
+IRCFG_BOOL(lats_enable);
 IRCFG_BOOL(nosupport);
 
 /* Special handling for spec */
@@ -107,6 +111,8 @@ static ssize_t ionic_rdma_description_show(struct config_item *item, char *pg)
 "eq_isr_budget   Max events to poll per round in isr context\n"
 "eq_work_budget  Max events to poll per round in work context\n"
 "max_pd          Max number of PDs\n"
+"stats_enable    Keep counters on WR and SGLs, etc.\n"
+"lats_enable     Track post_send, poll_cq, etc latency (SINGLE THREAD ONLY)\n"
 "nosupport       Enable unsupported config values\n"
 "spec            Max SGEs per WR for speculation\n");
 }
@@ -121,6 +127,8 @@ CONFIGFS_ATTR(ionic_rdma_, eq_depth);
 CONFIGFS_ATTR(ionic_rdma_, eq_isr_budget);
 CONFIGFS_ATTR(ionic_rdma_, eq_work_budget);
 CONFIGFS_ATTR(ionic_rdma_, max_pd);
+CONFIGFS_ATTR(ionic_rdma_, stats_enable);
+CONFIGFS_ATTR(ionic_rdma_, lats_enable);
 CONFIGFS_ATTR(ionic_rdma_, nosupport);
 CONFIGFS_ATTR(ionic_rdma_, spec);
 CONFIGFS_ATTR_RO(ionic_rdma_, description);
@@ -136,6 +144,8 @@ static struct configfs_attribute *ionic_rdma_attrs[] = {
 	&ionic_rdma_attr_eq_isr_budget,
 	&ionic_rdma_attr_eq_work_budget,
 	&ionic_rdma_attr_max_pd,
+	&ionic_rdma_attr_stats_enable,
+	&ionic_rdma_attr_lats_enable,
 	&ionic_rdma_attr_nosupport,
 	&ionic_rdma_attr_spec,
 	&ionic_rdma_attr_description,
@@ -189,6 +199,13 @@ MODULE_PARM_DESC(work_budget, "Max events to poll per round in work context.");
 
 module_param_named(max_pd, ionic_max_pd, int, 0444);
 MODULE_PARM_DESC(max_pd, "Max number of PDs.");
+
+module_param_named(stats_enable, ionic_stats_enable, bool, 0644);
+MODULE_PARM_DESC(stats_enable, "Keep counters on WR and SGLs, etc.");
+
+module_param_named(lats_enable, ionic_lats_enable, bool, 0644);
+MODULE_PARM_DESC(lats_enable,
+		 "Track post_send, poll_cq, etc latency (SINGLE THREAD ONLY)");
 
 module_param_named(nosupport, ionic_nosupport, bool, 0644);
 MODULE_PARM_DESC(nosupport, "Enable unsupported config values.");
@@ -416,6 +433,33 @@ static const struct file_operations ionic_dev_reset_fops = {
 	.write = ionic_dev_reset_write,
 };
 
+static ssize_t ionic_dev_stats_write(struct file *fp, const char __user *ubuf,
+				     size_t count, loff_t *ppos)
+{
+	struct ionic_ibdev *dev = fp->private_data;
+	char buf[16] = {};
+	int rc = 0;
+
+	if (count > sizeof(buf))
+		return -EINVAL;
+
+	rc = copy_from_user(buf, ubuf, count);
+	if (rc)
+		return rc;
+
+	if (strcmp(buf, "1") && strcmp(buf, "1\n"))
+		return -EINVAL;
+
+	ionic_stats_print(&dev->ibdev.dev, dev->stats);
+	ionic_lats_print(&dev->ibdev.dev, dev->lats);
+	return count;
+}
+
+static const struct file_operations ionic_dev_stats_fops = {
+	.open = simple_open,
+	.write = ionic_dev_stats_write,
+};
+
 void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 {
 	dev->debug = NULL;
@@ -438,6 +482,8 @@ void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 			    &ionic_dev_info_fops);
 	debugfs_create_file("reset", 0220, dev->debug, dev,
 			    &ionic_dev_reset_fops);
+	debugfs_create_file("stats", 0220, dev->debug, dev,
+			    &ionic_dev_stats_fops);
 
 	dev->debug_aq = debugfs_create_dir("aq", dev->debug);
 	if (IS_ERR(dev->debug_aq))
@@ -1111,6 +1157,8 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "state:\t%d\n", qp->state);
 
 	if (qp->has_sq) {
+		u32 sge_i;
+
 		if (qp->sq.ptr) {
 			ionic_q_show(s, "sq.", &qp->sq);
 			seq_printf(s, "sq_msn_prod:\t%#06x\n",
@@ -1136,6 +1184,23 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 		seq_printf(s, "sq_flush_rcvd:\t%d\n", qp->sq_flush_rcvd);
 		seq_printf(s, "sq_spec:\t%d\n", qp->sq_spec);
 		seq_printf(s, "sq_cqid:\t%u\n", qp->sq_cqid);
+
+		for (sge_i = 1; sge_i <= IONIC_SPEC_HIGH; sge_i++)
+			seq_printf(s, "sq_frag_cnt_%d:\t%u\n",
+				   sge_i, qp->sq_frag_cnt[sge_i]);
+		seq_printf(s, "sq_frag_0_31:\t%u\n", qp->sq_frag_0_31);
+		seq_printf(s, "sq_frag_32_63:\t%u\n", qp->sq_frag_32_63);
+		seq_printf(s, "sq_frag_64_127:\t%u\n", qp->sq_frag_64_127);
+		seq_printf(s, "sq_frag_128_191:\t%u\n", qp->sq_frag_128_191);
+		seq_printf(s, "sq_frag_192_255:\t%u\n", qp->sq_frag_192_255);
+		seq_printf(s, "sq_frag_256_511:\t%u\n", qp->sq_frag_256_511);
+		seq_printf(s, "sq_frag_512_1023:\t%u\n", qp->sq_frag_512_1023);
+		seq_printf(s, "sq_frag_1024_2037:\t%u\n",
+			   qp->sq_frag_1024_2047);
+		seq_printf(s, "sq_frag_2048_4095:\t%u\n",
+			   qp->sq_frag_2048_4095);
+		seq_printf(s, "sq_frag_4096_plus:\t%u\n",
+			   qp->sq_frag_4096_plus);
 	}
 
 	if (qp->has_rq) {

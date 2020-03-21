@@ -82,6 +82,15 @@ SYSCTL_INT(_hw_ionic_rdma, OID_AUTO, max_pd, CTLFLAG_RDTUN,
     &ionic_max_pd, 0, "Max number of PDs");
 
 #ifdef NOT_UPSTREAM
+bool ionic_stats_enable = false;
+SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, stats_enable, CTLFLAG_RWTUN,
+    &ionic_stats_enable, 0, "Keep counters on WR and SGLs, etc");
+
+bool ionic_lats_enable = false;
+SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, lats_enable, CTLFLAG_RWTUN,
+    &ionic_lats_enable, 0,
+    "Track post_send, poll_cq, etc latency (SINGLE THREADED ONLY)");
+
 static bool ionic_nosupport = false;
 SYSCTL_BOOL(_hw_ionic_rdma, OID_AUTO, nosupport,
     CTLFLAG_RWTUN | CTLFLAG_SKIP,
@@ -409,6 +418,20 @@ static int ionic_dev_reset_write(void *context, const char *buf, size_t count)
 	return 0;
 }
 
+#ifdef NOT_UPSTREAM
+static int ionic_dev_stats_write(void *context, const char *buf, size_t count)
+{
+	struct ionic_ibdev *dev = context;
+
+	if (strcmp(buf, "1") && strcmp(buf, "1\n"))
+		return -EINVAL;
+
+	ionic_stats_print(&dev->ibdev.dev, dev->stats);
+	ionic_lats_print(&dev->ibdev.dev, dev->lats);
+	return 0;
+}
+
+#endif /* NOT_UPSTREAM */
 static void ionic_dbg_add_dev_info(struct ionic_ibdev *dev)
 {
 	struct sysctl_ctx_list *ctx;
@@ -427,6 +450,10 @@ static void ionic_dbg_add_dev_info(struct ionic_ibdev *dev)
 
 	ionic_ctrl(ctx, parent, dev, ionic_dev_reset_write,
 		   "reset", "Device Reset (write)");
+#ifdef NOT_UPSTREAM
+	ionic_ctrl(ctx, parent, dev, ionic_dev_stats_write,
+		   "stats", "Device Stats (write)");
+#endif
 
 	oidp = ionic_node(ctx, parent, "info", "Rdma Device Info");
 	if (!oidp) {
@@ -958,6 +985,11 @@ void ionic_dbg_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 	ionic_int(ctx, parent, (int *)&qp->state, "state", "QP State");
 
 	if (qp->has_sq) {
+#ifdef NOT_UPSTREAM
+		u32 sge_i;
+		char sge_name[32];
+
+#endif
 		ionic_q_add(ctx, parent, &qp->sq, &qp->sq_res, qp->sq_umem,
 			    "sq", "Send Queue");
 
@@ -985,6 +1017,34 @@ void ionic_dbg_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 			  "sq_spec", "SQ Spec Configuration");
 		ionic_u32(ctx, parent, &qp->sq_cqid,
 			  "sq_cqid", "SQ CQ ID");
+#ifdef NOT_UPSTREAM
+
+		for (sge_i = 1; sge_i <= IONIC_SPEC_HIGH; sge_i++) {
+			snprintf(sge_name, 32, "sq_frag_cnt_%d", sge_i);
+			ionic_u32(ctx, parent, &qp->sq_frag_cnt[sge_i],
+				  sge_name, "SQ fragment count");
+		}
+		ionic_u32(ctx, parent, &qp->sq_frag_0_31,
+			  "sq_frag_0_31", "SQ fragments 0-31B");
+		ionic_u32(ctx, parent, &qp->sq_frag_32_63,
+			  "sq_frag_32_63", "SQ fragments 32-63B");
+		ionic_u32(ctx, parent, &qp->sq_frag_64_127,
+			  "sq_frag_64_127", "SQ fragments 64-127B");
+		ionic_u32(ctx, parent, &qp->sq_frag_128_191,
+			  "sq_frag_128_191", "SQ fragments 128-191B");
+		ionic_u32(ctx, parent, &qp->sq_frag_192_255,
+			  "sq_frag_192_255", "SQ fragments 192-255B");
+		ionic_u32(ctx, parent, &qp->sq_frag_256_511,
+			  "sq_frag_256_511", "SQ fragments 256B-511B");
+		ionic_u32(ctx, parent, &qp->sq_frag_512_1023,
+			  "sq_frag_512_1023", "SQ fragments 512B-1KB");
+		ionic_u32(ctx, parent, &qp->sq_frag_1024_2047,
+			  "sq_frag_1024_2047", "SQ fragments 1KB-2KB");
+		ionic_u32(ctx, parent, &qp->sq_frag_2048_4095,
+			  "sq_frag_2048_4095", "SQ fragments 2KB-4KB");
+		ionic_u32(ctx, parent, &qp->sq_frag_4096_plus,
+			  "sq_frag_4096_plus", "SQ fragments 4KB+");
+#endif
 	}
 
 	if (qp->has_rq) {

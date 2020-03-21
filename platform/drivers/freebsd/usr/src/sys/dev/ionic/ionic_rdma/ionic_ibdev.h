@@ -50,6 +50,7 @@
 #include "ionic_sysctl.h"
 #include "ionic_queue.h"
 #include "ionic_res.h"
+#include "ionic_stats.h"
 
 #define DRIVER_NAME		"ionic_rdma"
 #define DRIVER_SHORTNAME	"ionr"
@@ -184,10 +185,13 @@ struct ionic_ibdev {
 	struct ionic_eq		**eq_vec;
 	int			eq_count;
 
-	int			stats_count;
-	struct ionic_v1_stat	*stats;
-	void			*stats_buf;
-	const char		**stats_hdrs;
+	int			hw_stats_count;
+	struct ionic_v1_stat	*hw_stats;
+	void			*hw_stats_buf;
+	const char		**hw_stats_hdrs;
+
+	struct ionic_stats	*stats;
+	struct ionic_latencies	*lats;
 
 	struct dcqcn_root	*dcqcn;
 
@@ -363,6 +367,18 @@ struct ionic_qp {
 	u16			sq_msn_prod;
 	u16			sq_msn_cons;
 	u16			sq_cmb_prod;
+
+	u32			sq_frag_cnt[IONIC_SPEC_HIGH + 1];
+	u32			sq_frag_0_31;
+	u32			sq_frag_32_63;
+	u32			sq_frag_64_127;
+	u32			sq_frag_128_191;
+	u32			sq_frag_192_255;
+	u32			sq_frag_256_511;
+	u32			sq_frag_512_1023;
+	u32			sq_frag_1024_2047;
+	u32			sq_frag_2048_4095;
+	u32			sq_frag_4096_plus;
 
 	spinlock_t		rq_lock; /* for posting and polling */
 	bool			rq_flush;
@@ -580,8 +596,8 @@ void ionic_notify_flush_cq(struct ionic_cq *cq);
 /* ionic_datapath.c */
 void ionic_datapath_setops(struct ionic_ibdev *dev);
 
-/* ionic_stats.c */
-void ionic_stats_setops(struct ionic_ibdev *dev);
+/* ionic_hw_stats.c */
+void ionic_hw_stats_setops(struct ionic_ibdev *dev);
 
 /* ionic_pgtbl.c */
 __le64 ionic_pgtbl_dma(struct ionic_tbl_buf *buf, u64 va);
