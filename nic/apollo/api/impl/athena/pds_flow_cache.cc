@@ -300,6 +300,13 @@ pds_flow_cache_entry_delete (pds_flow_key_t *key)
     return ftl_table->remove(&params);
 }
 
+void
+pds_flow_cache_delete ()
+{
+    ftl_table->destroy(ftl_table);
+    return;
+}
+
 static void
 flow_cache_entry_iterate_cb (sdk_table_api_params_t *params)
 {

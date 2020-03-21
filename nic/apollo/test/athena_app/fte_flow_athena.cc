@@ -39,6 +39,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/sdk/lib/table/ftl/ftl_base.hpp"
 #include "fte_athena.hpp"
+#include "nic/apollo/api/include/athena/pds_init.h"
 #include "nic/apollo/api/include/athena/pds_vnic.h"
 #include "nic/apollo/api/include/athena/pds_flow_session_info.h"
 #include "nic/apollo/api/include/athena/pds_flow_session_rewrite.h"
@@ -484,10 +485,10 @@ fte_flow_prog (struct rte_mbuf *m)
 }
 
 void
-fte_ftl_set_core_id (unsigned int core_id)
+fte_thread_init (unsigned int core_id)
 {
-    pds_flow_cache_set_core_id(core_id);
-    PDS_TRACE_DEBUG("pds_flow_cache_set_core_id core#:%u\n", core_id);
+    PDS_TRACE_DEBUG("Thread init on core#:%u\n", core_id);
+    pds_thread_init(core_id);
 }
 
 sdk_ret_t
@@ -635,15 +636,9 @@ fte_setup_flow (void)
 }
 
 sdk_ret_t
-fte_ftl_init ()
+fte_flows_init ()
 {
-    sdk_ret_t sdk_ret;
-    if ((sdk_ret = pds_flow_cache_create()) != SDK_RET_OK) {
-        PDS_TRACE_DEBUG("pds_flow_cache_create failed.\n");
-        return sdk_ret;
-    } else {
-        PDS_TRACE_DEBUG("pds_flow_cache_create success.\n");
-    }
+    sdk_ret_t sdk_ret = SDK_RET_OK;
 
     if (!skip_fte_flow_prog()) {
         if ((sdk_ret = fte_setup_flow()) != SDK_RET_OK) {

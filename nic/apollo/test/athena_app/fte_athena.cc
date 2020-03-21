@@ -292,7 +292,7 @@ fte_launch_one_lcore (__attribute__((unused)) void *dummy)
     int qid;
 
     if (g_athena_app_mode == ATHENA_APP_MODE_CPP) {
-        fte_ftl_set_core_id(rte_lcore_id());
+        fte_thread_init(rte_lcore_id());
     }
 
     /*
@@ -868,8 +868,8 @@ fte_main (void)
 
     // init FTL
     if (g_athena_app_mode == ATHENA_APP_MODE_CPP) {
-        if ((sdk_ret = fte_ftl_init()) != SDK_RET_OK) {
-            rte_exit(EXIT_FAILURE, "fte_ftl_init:err=%d", sdk_ret);
+        if ((sdk_ret = fte_flows_init()) != SDK_RET_OK) {
+            rte_exit(EXIT_FAILURE, "FTE flows init:err=%d", sdk_ret);
         }
     }
 

@@ -16,8 +16,8 @@ namespace fte_ath {
 void fte_init(void);
 
 sdk_ret_t fte_flow_prog(struct rte_mbuf *m);
-void fte_ftl_set_core_id(unsigned int core_id);
-sdk_ret_t fte_ftl_init(void);
+void fte_thread_init(unsigned int core_id);
+sdk_ret_t fte_flows_init(void);
 
 #define MAX_LINE_SZ 128
 static inline void pkt_hex_dump_trace(const char *label, char *buf, uint16_t len)

@@ -140,7 +140,6 @@ sdk_ret_t pds_flow_cache_create(void);
 //             This needs to be called on every data core of the application
 void pds_flow_cache_set_core_id(uint32_t core_id);
 
-
 /// \brief     create flow cache entry
 /// \param[in] spec flow specification
 /// \return    #SDK_RET_OK on success, failure status code on error
@@ -166,6 +165,10 @@ sdk_ret_t pds_flow_cache_entry_update(pds_flow_spec_t *spec);
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid flow key should be passed
 sdk_ret_t pds_flow_cache_entry_delete(pds_flow_key_t *key);
+
+/// \brief     delete flow cache table
+/// \remark    This needs to be called precise once by application.
+void pds_flow_cache_delete(void);
 
 /// \brief     iterate through flow cache table
 /// \param[in] iterate callback function

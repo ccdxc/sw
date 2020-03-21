@@ -32,6 +32,7 @@
 #include "trace.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "gen/p4gen/p4/include/ftl_table.hpp"
+#include "nic/apollo/api/include/athena/pds_init.h"
 #include "nic/apollo/api/include/athena/pds_vnic.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
 #include "nic/apollo/api/include/athena/pds_flow_session_info.h"
@@ -134,13 +135,7 @@ sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
 sdk_ret_t
 flow_table_init(void)
 {
-    sdk_ret_t ret;
-    ret = pds_flow_cache_create();
-    if (ret != SDK_RET_OK)
-        return ret;
-    // Set core id to 1 for this testing
-    pds_flow_cache_set_core_id(1);
-    return ret;
+    return pds_thread_init(1);
 }
 
 void dump_pkt(std::vector<uint8_t> &pkt)
@@ -568,7 +563,7 @@ TEST(athena_gtest, sim)
 
     print_stats();
 
-    pds_teardown();
+    pds_global_teardown();
 
 }
 
@@ -586,6 +581,7 @@ main (int argc, char **argv)
     int          oc;
     string       cfg_path, cfg_file, profile, pipeline, file;
     boost::property_tree::ptree pt;
+    sdk_ret_t ret;
 
     struct option longopts[] = {
        { "config",    required_argument, NULL, 'c' },
@@ -697,7 +693,11 @@ main (int argc, char **argv)
     // initialize the logger instance
     core::logger_init();
 
-    pds_init(&init_params);
+    ret = pds_global_init(&init_params);
+    if (ret != SDK_RET_OK) {
+        fprintf(stderr, "PDS global init failed with ret %u\n", ret);
+        exit(1);
+    }
 
     flow_table_init();
 

@@ -10,6 +10,7 @@
 //----------------------------------------------------------------------------
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/test/api/utils/base.hpp"
+#include "nic/apollo/api/include/athena/pds_init.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
 #include "ftl_p4pd_mock.hpp"
 #include "ftltest_utils.hpp"
@@ -36,7 +37,7 @@ protected:
         pds_flow_cache_set_core_id(2);
     }
     virtual void TearDown() {
-        //flow_hash::destroy(table);
+        pds_flow_cache_delete();
         ftl_mock_cleanup();
         SDK_TRACE_INFO("============== TEARDOWN : %s.%s ===============",
                        ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name(),

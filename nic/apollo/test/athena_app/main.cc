@@ -20,6 +20,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
+#include "nic/apollo/api/include/athena/pds_init.h"
 #include "nic/sdk/platform/capri/capri_p4.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 #include <boost/property_tree/ptree.hpp>
@@ -245,6 +246,7 @@ uint8_t g_snd_pkt_s2h[] = {
 int
 main (int argc, char **argv)
 {
+    sdk_ret_t    ret;
     int          oc;
     string       cfg_path, cfg_file, profile, pipeline, file;
     string       script_fname, script_dir;
@@ -408,7 +410,11 @@ main (int argc, char **argv)
     // initialize the logger instance
     core::logger_init();
 
-    pds_init(&init_params);
+    ret = pds_global_init(&init_params);
+    if (ret != SDK_RET_OK) {
+        printf("PDS global init failed with ret %u\n", ret);
+        exit(1);
+    }
 
     if (hw()) {
 
@@ -469,7 +475,7 @@ main (int argc, char **argv)
 bool
 app_test_exit(test_vparam_ref_t vparam)
 {
-    pds_teardown();
+    pds_global_teardown();
     exit(vparam.expected_bool() ? 0 : 1);
     return 0;
 }
