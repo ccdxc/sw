@@ -13,6 +13,7 @@ eventpolicy.proto monitoring true
 events.proto events true
 example.proto bookstore true
 export.proto monitoring true
+fwlog.proto fwlog true
 fwprofile.proto security true
 ipam.proto network true
 lb.proto network true

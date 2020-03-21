@@ -1,0 +1,82 @@
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package fwlog;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/fields/selector.proto";
+
+// Enums for the response
+enum FwLogActions {
+    // ui-hint: Allow
+    allow = 0;
+    // ui-hint: Deny
+    deny = 1;
+    // ui-hint: Reject
+    reject = 2;
+    // ui-hint: Implicit-deny
+    implicit_deny = 3;
+}
+
+enum FwLogDirections {
+    // ui-hint: From Host
+    from_host = 0 [(venice.enumValueStr) = "from-host"];
+    // ui-hint: From Uplink
+    from_uplink = 1  [(venice.enumValueStr) = "from-uplink"];
+}
+
+message FwLog {
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Source VRF,
+    uint64 SrcVRF       = 3 [(gogoproto.jsontag) = "source-vrf,omitempty"];
+    // Destination VRF,
+    uint64 DestVRF      = 4 [(gogoproto.jsontag) = "destination-vrf,omitempty"];
+    // Source IP,
+    string SrcIP        = 5 [(gogoproto.jsontag) = "source-ip,omitempty"];
+    // Destination IP
+    string DestIP       = 6 [(gogoproto.jsontag) = "destination-ip,omitempty"];
+    // Source Port
+    uint32 SrcPort      = 7 [(gogoproto.jsontag) = "source-port,omitempty"];
+    // Destination Port
+    uint32 DestPort     = 8 [(gogoproto.jsontag) = "destination-port,omitempty"];
+    // Protocol,
+    string Protocol     = 9 [(gogoproto.jsontag) = "protocol,omitempty"];
+    // Action
+    string Action       = 10 [(gogoproto.jsontag) = "action,omitempty", (venice.check)="StrEnum(FwLogActions)"];
+    // Flow Direction
+    string Direction    = 11 [(gogoproto.jsontag) = "direction,omitempty", (venice.check)="StrEnum(FwLogDirections)"];
+    // Rule ID
+    uint64 RuleID       = 12 [(gogoproto.jsontag) = "rule-id,omitempty"];
+    // Session ID
+    uint64 SessionID    = 13 [(gogoproto.jsontag) = "session-id,omitempty"];
+    // Session state
+    string SessionState = 14 [(gogoproto.jsontag) = "session-state,omitempty"];
+    // Application ID
+    string AppID        = 15 [(gogoproto.jsontag) = "app-id,omitempty"];
+    //policy name
+    string PolicyName   = 16 [(gogoproto.jsontag) = "policy-name,omitempty"];
+    // Reporter ID
+    string ReporterID   = 17 [(gogoproto.jsontag) = "reporter-id,omitempty"];
+    // Flow action
+    string FlowAction   = 18 [(gogoproto.jsontag) = "flow-action,omitempty"];
+    // icmp type
+    uint32 IcmpType     = 19 [(gogoproto.jsontag) = "icmp-type,omitempty"];
+    // icmp code
+    uint32 IcmpCode     = 20 [(gogoproto.jsontag) = "icmp-code,omitempty"];
+    // icmp ID
+    uint32 IcmpID       = 21 [(gogoproto.jsontag) = "icmp-id,omitempty"];
+}
+
+// list of fw logs
+message FwLogList {
+    api.TypeMeta T        = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
+    api.ListMeta ListMeta = 2 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
+    repeated FwLog Items  = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "items,omitempty"];
+}

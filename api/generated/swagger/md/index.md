@@ -9,6 +9,7 @@
 | [cluster](/swagger/cluster) | Configure and Manage the Venice cluster, manage nodes in the cluster, DSCs, Tenants etc. |
 | [diagnostics](/swagger/diagnostics) | Diagnostics APIs for the cluster |
 | [events](/swagger/events) | Monitor events on the cluster |
+| [fwlog](/swagger/fwlog) | Fwlog API reference |
 | [monitoring](/swagger/monitoring) | Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions and other policies |
 | [network](/swagger/network) | Configure and Manage Networks and Services |
 | [objstore](/swagger/objstore) | Objstore API reference |

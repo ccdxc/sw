@@ -20,6 +20,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/diagnostics/cli"
 	// blank import to pull in events service into cli utils
 	_ "github.com/pensando/sw/api/generated/events/cli"
+	// blank import to pull in fwlog service into cli utils
+	_ "github.com/pensando/sw/api/generated/fwlog/cli"
 	// blank import to pull in monitoring service into cli utils
 	_ "github.com/pensando/sw/api/generated/monitoring/cli"
 	// blank import to pull in network service into cli utils

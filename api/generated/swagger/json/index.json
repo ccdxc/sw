@@ -23,6 +23,10 @@
       "description": "Monitor events on the cluster",
       "path": "/swagger/events"
     },
+    "fwlog": {
+      "description": "Fwlog API reference",
+      "path": "/swagger/fwlog"
+    },
     "monitoring": {
       "description": "Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions and other policies",
       "path": "/swagger/monitoring"

@@ -7,6 +7,7 @@
 | [Cluster](generated/apiref/cluster/index.html) | Configure and Manage the Venice cluster, manage nodes in the cluster, DSCs, Tenants etc. |
 | [Diagnostics](generated/apiref/diagnostics/index.html) | Diagnostics APIs for the cluster |
 | [Events](generated/apiref/events/index.html) | Monitor events on the cluster |
+| [Fwlog](generated/apiref/fwlog/index.html) | Fwlog API reference |
 | [Monitoring](generated/apiref/monitoring/index.html) | Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions and other policies |
 | [Network](generated/apiref/network/index.html) | Configure and Manage Networks and Services |
 | [Objstore](generated/apiref/objstore/index.html) | Objstore API reference |
