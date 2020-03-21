@@ -5,7 +5,7 @@ nic/third-party/libconfig 86c4ff2ad4b0d31eac84cbc65ebfffbafc2d1535
 nic/third-party/metaswitch 95d0c3e18dacf86cc6de25cdeb25f4c68e6c7b06
 nic/third-party/odp 18fbde70ea1c1360cb3292655377771c9c1c32f9
 nic/third-party/ofp 3df0b142806ad96f30dfe30622dc5143c35c8333
-platform/src/third-party/rdma/krping dbbdf451393c391953ef6bd39397a8f96822ade0
+platform/src/third-party/rdma/krping 169c720048fedccb9f80a4f2c4cb2bb87a27801e
 platform/src/third-party/rdma/perftest 13388add4d665496814a029114958962e94e8eb6
 platform/src/third-party/rdma/qperf e660421110763446317f06de37efda208508543d
 platform/src/third-party/rdma/rdma-core 57b5b32fad8d9b43be52a4dbdcf9825aff3babcd

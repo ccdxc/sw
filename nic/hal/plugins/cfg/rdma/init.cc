@@ -98,6 +98,7 @@ static const struct {
     RDMA_STAT(LE64, LIF_STATS_REQ_TX_LOCAL_OPER_ERR_OFFSET, "req_tx_loc_oper_err"),
     RDMA_STAT(LE64, LIF_STATS_REQ_TX_MEMORY_MGMT_ERR_OFFSET, "req_tx_mem_mgmt_err"),
     RDMA_STAT(LE64, LIF_STATS_REQ_TX_RETRY_EXCEED_ERR_OFFSET, "req_tx_retry_excd_err"),
+    RDMA_STAT(LE64, LIF_STATS_REQ_TX_LOCAL_SGL_INV_ERR_OFFSET, "req_tx_loc_sgl_inv_err"),
     //RDMA Responder error/debug counters
     RDMA_STAT(LE64, LIF_STATS_RESP_RX_DUP_REQUEST_OFFSET, "resp_rx_dup_request"),
     RDMA_STAT(LE64, LIF_STATS_RESP_RX_OUT_OF_BUFFER_OFFSET, "resp_rx_outof_buf"),
@@ -113,6 +114,7 @@ static const struct {
     RDMA_STAT(LE64, LIF_STATS_RESP_TX_REMOTE_ACC_ERR_OFFSET, "resp_tx_rmt_acc_err"),
     RDMA_STAT(LE64, LIF_STATS_RESP_TX_REMOTE_OPER_ERR_OFFSET, "resp_tx_rmt_oper_err"),
     RDMA_STAT(LE64, LIF_STATS_RESP_TX_RNR_RETRY_ERR_OFFSET, "resp_tx_rnr_retry_err"),
+    RDMA_STAT(LE64, LIF_STATS_RESP_TX_LOCAL_SGL_INV_ERR_OFFSET, "resp_tx_loc_sgl_inv_err"),
     RDMA_STAT(NONE, 0, "")
 #undef RDMA_STAT
 };

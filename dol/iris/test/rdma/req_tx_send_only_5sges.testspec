@@ -151,7 +151,7 @@ descriptors:
         fields:
             wrid   : 6
             qid    : ref://testcase/config/rdmasession/lqp/id
-            status : 2  # CQ_STATUS_LOCAL_QP_OPER_ERR
+            status : 14  # CQ_STATUS_LOCAL_SGL_INV_ERR
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
             error  : 1
             type   : 3 #CQE_TYPE_SEND_NPG

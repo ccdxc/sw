@@ -210,6 +210,7 @@ enum ionic_status {
 	IONIC_STS_RETRY_EXCEEDED,
 	IONIC_STS_RNR_RETRY_EXCEEDED,
 	IONIC_STS_XRC_VIO_ERR,
+	IONIC_STS_LOCAL_SGL_INV_ERR,
 };
 
 static inline int ionic_to_ib_status(int sts)
@@ -220,6 +221,7 @@ static inline int ionic_to_ib_status(int sts)
 	case IONIC_STS_LOCAL_LEN_ERR:
 		return IB_WC_LOC_LEN_ERR;
 	case IONIC_STS_LOCAL_QP_OPER_ERR:
+	case IONIC_STS_LOCAL_SGL_INV_ERR:
 		return IB_WC_LOC_QP_OP_ERR;
 	case IONIC_STS_LOCAL_PROT_ERR:
 		return IB_WC_LOC_PROT_ERR;

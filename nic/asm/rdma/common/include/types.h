@@ -912,6 +912,7 @@ struct rqwqe_base_t {
 #define     CQ_STATUS_RETRY_EXCEEDED        11
 #define     CQ_STATUS_RNR_RETRY_EXCEEDED    12
 #define     CQ_STATUS_XRC_VIO_ERR           13
+#define     CQ_STATUS_LOCAL_SGL_INV_ERR     14
 
 #define     AQ_CQ_STATUS_SUCCESS            0
 #define     AQ_CQ_STATUS_BAD_CMD            1

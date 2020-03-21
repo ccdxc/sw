@@ -200,7 +200,7 @@ err_no_dma_cmds:
     phvwrpair      CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
                    CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rrqsge_insuff_dma_cmds), 1
     phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
-    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1
+    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_SGL_INV_ERR, p.cqe.error, 1
     // Error disable QP
     phvwr         CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
     b              set_arg

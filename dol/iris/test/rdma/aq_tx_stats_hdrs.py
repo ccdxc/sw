@@ -38,15 +38,17 @@ def TestCaseVerify(tc):
         end = start + 32
         return bytes(stat_hdrs.data[start:end])
 
+    hw_stats_count = 41
+
     if not VerifyEqual(tc, 'first stat', stat_hdr(0),
             b'\x40\x00\x01\x80tx_rdma_ucast_bytes\0\0\0\0\0\0\0\0\0'):
         return False
 
-    if not VerifyEqual(tc, 'last stat', stat_hdr(38),
-            b'\x40\x00\x03\xe8resp_tx_rnr_retry_err\0\0\0\0\0\0\0'):
+    if not VerifyEqual(tc, 'last stat', stat_hdr(hw_stats_count - 1),
+            b'\x40\x00\x03\xf0resp_tx_loc_sgl_inv_err\0\0\0\0\0'):
         return False
 
-    if not VerifyEqual(tc, 'sentry', stat_hdr(39), b'\0' * 32):
+    if not VerifyEqual(tc, 'sentry', stat_hdr(hw_stats_count), b'\0' * 32):
         return False
 
     return True

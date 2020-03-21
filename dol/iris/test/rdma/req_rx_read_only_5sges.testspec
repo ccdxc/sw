@@ -198,7 +198,7 @@ descriptors:
             msn:  callback://rdma/rdma/GetCQMsn/sq_wqe_num=0
             qid: ref://testcase/config/rdmasession/lqp/id
             #op_type: 3 #OP_TYPE_READ
-            status : 2  # CQ_STATUS_LOCAL_QP_OPER_ERR
+            status : 14  # CQ_STATUS_LOCAL_SGL_INV_ERR
             color  : callback://rdma/rdma/GetReqRxCQExpColor/cq_wqe_num=0
             error  : 1
             type   : 2 #CQE_TYPE_SEND_MSN
