@@ -616,11 +616,11 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
                                           pds_mapping_spec_t *spec) {
     tep_entry *tep;
     tep_impl *tep_impl_obj;
-    mapping_swkey_t mapping_key;
     nexthop_group *nh_group;
-    nexthop_group_impl *nhgroup_impl;
+    mapping_swkey_t mapping_key;
     mapping_appdata_t mapping_data;
     sdk_table_api_params_t tparams;
+    nexthop_group_impl *nhgroup_impl;
 
     // add entry to MAPPING table for overlay IP or MAC
     if (spec->skey.type == PDS_MAPPING_TYPE_L3) {

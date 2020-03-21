@@ -207,7 +207,11 @@ subnet_impl::nuke_resources(api_base *api_obj) {
         vni_key.vxlan_1_vni = subnet->fabric_encap().val.vnid;
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, NULL,
                                        VNI_VNI_INFO_ID, vni_hdl_);
-        return vpc_impl_db()->vni_tbl()->remove(&tparams);
+        ret = vpc_impl_db()->vni_tbl()->remove(&tparams);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to remove VNI table entry for subnet %s, vni %u",
+                          subnet->key().str(), vni_key.vxlan_1_vni);
+        }
     }
 
     // find the VPC of this subnet
@@ -231,7 +235,7 @@ subnet_impl::nuke_resources(api_base *api_obj) {
                                        0, sdk::table::handle_t::null());
         ret = mapping_impl_db()->mapping_tbl()->remove(&tparams);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to remote entry in MAPPING table for "
+            PDS_TRACE_ERR("Failed to remove entry in MAPPING table for "
                           "subnet %s IPv4 VR IP %s", subnet->key().str(),
                           ipv4addr2str(subnet->v4_vr_ip()));
             return ret;
@@ -248,7 +252,7 @@ subnet_impl::nuke_resources(api_base *api_obj) {
                                        0, sdk::table::handle_t::null());
         ret = mapping_impl_db()->mapping_tbl()->remove(&tparams);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for "
+            PDS_TRACE_ERR("Failed to remove entry in MAPPING table for "
                           "subnet %s IPv6 VR IP %s", subnet->key().str(),
                           ipaddr2str(&vr_ip));
             return ret;
@@ -266,17 +270,79 @@ subnet_impl::populate_msg(pds_msg_t *msg, api_base *api_obj,
 
 sdk_ret_t
 subnet_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+    sdk_ret_t ret;
+    lif_impl *lif;
+    vpc_entry *vpc;
+    ip_addr_t vr_ip;
     p4pd_error_t p4pd_ret;
+    mapping_swkey_t mapping_key;
     bd_actiondata_t bd_data { 0 };
+    mapping_appdata_t mapping_data;
+    sdk_table_api_params_t tparams;
     pds_subnet_spec_t *spec = &obj_ctxt->api_params->subnet_spec;
+
+    // install MAPPING table entries for VR IPs pointing to datapath lif
+    if (v4_vr_ip_mapping_hdl_.valid() || v6_vr_ip_mapping_hdl_.valid()) {
+        vpc = vpc_find(&spec->vpc);
+        lif = lif_impl_db()->find(sdk::platform::LIF_TYPE_MNIC_CPU);
+
+        // fill the MAPPING table entry data
+        memset(&mapping_data, 0, sizeof(mapping_data));
+        mapping_data.is_local = TRUE;
+        mapping_data.nexthop_valid = TRUE;
+        mapping_data.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+        mapping_data.nexthop_id = lif->nh_idx();
+        mapping_data.egress_bd_id = hw_id_;
+
+        // program the IPv4 VR IP in the MAPPING table
+        if (v4_vr_ip_mapping_hdl_.valid()) {
+            // fill the IPv4 key
+            memset(&vr_ip, 0, sizeof(vr_ip));
+            vr_ip.af = IP_AF_IPV4;
+            vr_ip.addr.v4_addr = spec->v4_vr_ip;
+            PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                           ((vpc_impl *)vpc->impl())->hw_id(),
+                                           &vr_ip);
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL,
+                                           &mapping_data,
+                                           MAPPING_MAPPING_INFO_ID,
+                                           v4_vr_ip_mapping_hdl_);
+            ret = mapping_impl_db()->mapping_tbl()->insert(&tparams);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to program MAPPING table entry for "
+                              "VR IP %s of subnet %s",
+                              ipv4addr2str(spec->v4_vr_ip), spec->key.str());
+                return SDK_RET_OK;
+            }
+        }
+
+        // program the IPv6 VR IP in the MAPPING table
+        if (v6_vr_ip_mapping_hdl_.valid()) {
+            // fill the IPv6 key
+            PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                           ((vpc_impl *)vpc->impl())->hw_id(),
+                                           &spec->v6_vr_ip);
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL,
+                                           &mapping_data,
+                                           MAPPING_MAPPING_INFO_ID,
+                                           v6_vr_ip_mapping_hdl_);
+            ret = mapping_impl_db()->mapping_tbl()->insert(&tparams);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to program MAPPING table entry for "
+                              "VR IP %s of subnet %s",
+                              ipaddr2str(&spec->v6_vr_ip), spec->key.str());
+                return SDK_RET_OK;
+            }
+        }
+    }
 
     // program BD table in the egress pipe
     bd_data.action_id = BD_BD_INFO_ID;
     bd_data.bd_info.vni = spec->fabric_encap.val.vnid;
     bd_data.bd_info.tos = spec->tos;
     sdk::lib::memrev(bd_data.bd_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);
-    PDS_TRACE_DEBUG("Programming BD table at %u with vni %u",
-                    hw_id_, bd_data.bd_info.vni);
+    PDS_TRACE_VERBOSE("Programming BD table at %u with vni %u for subnet %s",
+                      hw_id_, bd_data.bd_info.vni, spec->key.str());
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_BD, hw_id_,
                                        NULL, NULL, &bd_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -288,8 +354,65 @@ subnet_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 subnet_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+    sdk_ret_t ret;
+    vpc_entry *vpc;
+    ip_addr_t vr_ip;
+    pds_obj_key_t vpc_key;
     p4pd_error_t p4pd_ret;
+    mapping_swkey_t mapping_key;
+    sdk_table_api_params_t tparams;
     bd_actiondata_t bd_data = { 0 };
+    mapping_appdata_t mapping_data;
+    subnet_entry *subnet = (subnet_entry *)api_obj;
+
+    // install MAPPING table entries for VR IPs pointing to datapath lif
+    if (v4_vr_ip_mapping_hdl_.valid() || v6_vr_ip_mapping_hdl_.valid()) {
+        vpc_key = subnet->vpc();
+        vpc = vpc_find(&vpc_key);
+        // fill the MAPPING table entry data
+        memset(&mapping_data, 0, sizeof(mapping_data));
+        mapping_data.nexthop_valid = FALSE;
+        mapping_data.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+        mapping_data.nexthop_id = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
+        mapping_data.egress_bd_id = 0;
+        if (v4_vr_ip_mapping_hdl_.valid()) {
+            // fill the IPv4 key
+            memset(&vr_ip, 0, sizeof(vr_ip));
+            vr_ip.af = IP_AF_IPV4;
+            vr_ip.addr.v4_addr = subnet->v4_vr_ip();
+            PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                           ((vpc_impl *)vpc->impl())->hw_id(),
+                                           &vr_ip);
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL,
+                                           &mapping_data,
+                                           MAPPING_MAPPING_INFO_ID,
+                                           sdk::table::handle_t::null());
+            ret = mapping_impl_db()->mapping_tbl()->update(&tparams);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to cleanup entry in MAPPING table for "
+                              "subnet %s IPv4 VR IP %s", subnet->key().str(),
+                              ipaddr2str(&vr_ip));
+                return ret;
+            }
+        }
+        if (v6_vr_ip_mapping_hdl_.valid()) {
+            vr_ip = subnet->v6_vr_ip();
+            PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                           ((vpc_impl *)vpc->impl())->hw_id(),
+                                           &vr_ip);
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL,
+                                           &mapping_data,
+                                           MAPPING_MAPPING_INFO_ID,
+                                           sdk::table::handle_t::null());
+            ret = mapping_impl_db()->mapping_tbl()->update(&tparams);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to cleanup entry in MAPPING table for "
+                              "subnet %s IPv6 VR IP %s", subnet->key().str(),
+                              ipaddr2str(&vr_ip));
+                return ret;
+            }
+        }
+    }
 
     // program BD table in the egress pipe
     bd_data.action_id = BD_BD_INFO_ID;

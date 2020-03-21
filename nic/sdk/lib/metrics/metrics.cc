@@ -78,7 +78,7 @@ get_shm (void)
 
 static TableMgrUptr
 get_meta_table (void)
-{ 
+{
     TableMgrUptr tbl = nullptr;
 
     if (tbl == nullptr) {
@@ -103,7 +103,7 @@ save_schema_ (metrics_table_t *tbl, schema_t *schema)
 
     // todo
     // check if it already exists and crash if mismatch
-    
+
     for (i = 0; (cntr_name = schema->counters[i]), cntr_name != NULL; i++) {
         std::string key = tbl->name + ":" + std::to_string(i);
         serialized_counter_spec_t *srlzd_counter;
@@ -112,7 +112,7 @@ save_schema_ (metrics_table_t *tbl, schema_t *schema)
         metrics_counter_type_t type;
 
         if (tbl->type == SW) {
-            type = METRICS_COUNTER_VALUE64; 
+            type = METRICS_COUNTER_VALUE64;
         } else {
             if (cntr_name[0] == '_') {
                 type = METRICS_COUNTER_RSVD64;
@@ -124,7 +124,7 @@ save_schema_ (metrics_table_t *tbl, schema_t *schema)
         srlzd_counter = (serialized_counter_spec_t *)malloc(srlzd_counter_len);
         srlzd_counter->name_length = strlen(cntr_name);
         memcpy(srlzd_counter->name, cntr_name,
-               srlzd_counter->name_length + 1); 
+               srlzd_counter->name_length + 1);
         srlzd_counter->type = type;
 
         error err = get_meta_table()->Publish(
@@ -162,7 +162,7 @@ load_table_ (const char *name)
 
     tbl = new metrics_table_t();
     tbl->name = name;
-    
+
     srlzd = (serialized_spec_t *)get_meta_table()->Find(
         tbl->name.c_str(), tbl->name.size());
     assert(srlzd != NULL);
@@ -175,7 +175,7 @@ load_table_ (const char *name)
         srlzd_counter = (serialized_counter_spec_t *)get_meta_table()->Find(
             key.c_str(), key.size());
         assert(srlzd_counter != NULL);
-        
+
         tbl->counters.push_back({
             name: srlzd_counter->name,
             type: srlzd_counter->type,
@@ -192,7 +192,7 @@ create (schema_t *schema)
     metrics_table_t *tbl;
     TableMgrUptr tbmgr;
 
-  
+
     tbmgr = get_shm()->Kvstore()->Table(schema->name);
     if (tbmgr == nullptr) {
         tbl = new metrics_table_t();
@@ -235,7 +235,7 @@ void *
 metrics_open (const char *name)
 {
     metrics_table_t *tbl = load_table_(name);
-    
+
     tbl->tbl = get_shm()->Kvstore()->Table(name);
     if (tbl->tbl == nullptr) {
         delete tbl;
@@ -267,7 +267,7 @@ metrics_read_values (void  *handler, key_t key)
         }
         counters.push_back(pair);
     }
-    
+
     return counters;
 }
 
@@ -276,7 +276,7 @@ read_value (uint64_t base, unsigned int offset)
 {
     uint64_t value;
     int rc;
-    
+
     rc = sdk::lib::pal_reg_read(base + (offset * sizeof(value)),
                                 (uint32_t *)&value, 2);
     assert(rc == sdk::lib::PAL_RET_OK);
@@ -297,7 +297,7 @@ metrics_read_pointers (void  *handler, key_t key)
     if (base == NULL) {
         return counters;
     }
-    
+
     for (unsigned int i = 0; i < tbl->counters.size(); i++) {
         if (tbl->counters[i].type != METRICS_COUNTER_RSVD64) {
             metrics_counter_pair_t pair;
@@ -307,7 +307,7 @@ metrics_read_pointers (void  *handler, key_t key)
             counters.push_back(pair);
         }
     }
-    
+
     return counters;
 }
 
