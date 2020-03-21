@@ -41,7 +41,7 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
     }
     if (rule->match.l3_match.ip_proto == IP_PROTO_ICMP) {
         rule_str += "ICMP type/code " +
-            std::to_string(rule->match.l4_match.icmp_type) +
+            std::to_string(rule->match.l4_match.icmp_type) + "/" +
             std::to_string(rule->match.l4_match.icmp_code) + ", ";
     } else if ((rule->match.l3_match.ip_proto == IP_PROTO_UDP) ||
                (rule->match.l3_match.ip_proto == IP_PROTO_TCP)) {

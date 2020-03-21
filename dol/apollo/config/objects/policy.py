@@ -613,6 +613,33 @@ class PolicyObjectClient(base.ConfigClientBase):
             vnic_policies.append(policyid)
         return vnic_policies
 
+    def GenerateSubnetPolicies(self, subnet, naclid, numPolicy, direction, is_v6=False):
+        if not self.__supported:
+            return []
+
+        vpcid = subnet.VPC.VPCId
+        if is_v6:
+            if not self.__v6supported:
+                return [naclid]
+            af = utils.IP_VERSION_6
+            add_policy = self.Add_V6Policy
+        else:
+            af = utils.IP_VERSION_4
+            add_policy = self.Add_V4Policy
+
+        node = subnet.Node
+        naclobj = self.GetPolicyObject(node, naclid)
+        subnetpfx = subnet.IPPrefix[1] if af == utils.IP_VERSION_4 else subnet.IPPrefix[0]
+
+        subnet_policies = [naclid]
+        for i in range(numPolicy -1):
+            overlaptype = naclobj.OverlapType
+            policytype = naclobj.PolicyType
+            rules = self.Generate_random_rules_from_nacl(naclobj, subnetpfx, af)
+            policyid = add_policy(node, vpcid, direction, rules, policytype, overlaptype)
+            subnet_policies.append(policyid)
+        return subnet_policies
+
     def GenerateObjects(self, node, parent, vpc_spec_obj):
         if not self.__supported:
             return

@@ -61,14 +61,18 @@ node:
           type  : tenant
           subnet:
             # apulu supports max 8 lifs - so 8 subnets & 8 policies for now
-            - count     :  8              # should be same as total routetbl / policy
-              v4prefixlen : 24
-              v6prefixlen : 64
+            - count            :  8       # should be same as total routetbl / policy
+              v4prefixlen      : 24
+              v6prefixlen      : 64
+              v4ingrpolicycount: 2        # default 0
+              v4egrpolicycount : 2        # default 0
+              v6ingrpolicycount: 2        # default 0
+              v6egrpolicycount : 2        # default 0
               vnic:
                 - count   : 1             # VNICs per subnet
                   ipcount : 2             # Local IP mapping per vnic
                   public  : true
-                  policy  : true          # security policy at vnic level (0 - 2)
+                  policy  : false         # security policy at vnic level (0 - 2)
                   tagged  : false         # true or false (default true)
               rmap:                       # Remote IP mappings per subnet
                 - count : 1

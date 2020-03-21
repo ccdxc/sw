@@ -58,10 +58,21 @@ class SubnetObject(base.ConfigObjectBase):
         self.VirtualRouterMacAddr = None
         self.V4RouteTableId = route.client.GetRouteV4TableId(node, parent.VPCId)
         self.V6RouteTableId = route.client.GetRouteV6TableId(node, parent.VPCId)
-        self.IngV4SecurityPolicyIds = [PolicyClient.GetIngV4SecurityPolicyId(node, parent.VPCId)]
-        self.IngV6SecurityPolicyIds = [PolicyClient.GetIngV6SecurityPolicyId(node, parent.VPCId)]
-        self.EgV4SecurityPolicyIds = [PolicyClient.GetEgV4SecurityPolicyId(node, parent.VPCId)]
-        self.EgV6SecurityPolicyIds = [PolicyClient.GetEgV6SecurityPolicyId(node, parent.VPCId)]
+
+        v4ingrpolicycount = getattr(spec, 'v4ingrpolicycount', 0)
+        v6ingrpolicycount = getattr(spec, 'v6ingrpolicycount', 0)
+        v4egrpolicycount = getattr(spec, 'v4egrpolicycount', 0)
+        v6egrpolicycount = getattr(spec, 'v6egrpolicycount', 0)
+
+        policy_id = PolicyClient.GetIngV4SecurityPolicyId(node, parent.VPCId)
+        self.IngV4SecurityPolicyIds = PolicyClient.GenerateSubnetPolicies(self, policy_id, v4ingrpolicycount, 'ingress')
+        policy_id = PolicyClient.GetIngV6SecurityPolicyId(node, parent.VPCId)
+        self.IngV6SecurityPolicyIds = PolicyClient.GenerateSubnetPolicies(self, policy_id, v6ingrpolicycount, 'ingress', True)
+        policy_id = PolicyClient.GetEgV4SecurityPolicyId(node, parent.VPCId)
+        self.EgV4SecurityPolicyIds = PolicyClient.GenerateSubnetPolicies(self, policy_id, v4egrpolicycount, 'egress')
+        policy_id = PolicyClient.GetEgV6SecurityPolicyId(node, parent.VPCId)
+        self.EgV6SecurityPolicyIds = PolicyClient.GenerateSubnetPolicies(self, policy_id, v6egrpolicycount, 'egress', True)
+
         self.V4RouteTable = route.client.GetRouteV4Table(node, parent.VPCId, self.V4RouteTableId)
         self.V6RouteTable = route.client.GetRouteV6Table(node, parent.VPCId, self.V6RouteTableId)
         if getattr(spec, 'fabricencap', None) != None:
