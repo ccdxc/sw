@@ -140,11 +140,11 @@ save_schema_ (metrics_table_t *tbl, schema_t *schema)
     }
     tbl->row_size = tbl->counters.size() * sizeof(uint64_t);
 
-    srlzd_len = sizeof(srlzd) + strlen(schema->name) + 1;
+    srlzd_len = sizeof(*srlzd) + strlen(schema->name) + 1;
     srlzd = (serialized_spec_t *)malloc(srlzd_len);
     srlzd->name_length = strlen(schema->name);
     srlzd->type = tbl->type;
-    memcpy(srlzd->name, schema->name, srlzd->name_length + 1);
+    memcpy(&srlzd->name, schema->name, srlzd->name_length + 1);
     srlzd->counter_count = i;
 
     error err = get_meta_table()->Publish(
