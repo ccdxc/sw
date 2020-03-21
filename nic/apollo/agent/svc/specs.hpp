@@ -1730,46 +1730,46 @@ pds_port_sdk_fec_type_to_proto_fec_type (port_fec_type_t sdk_fec_type)
 }
 
 static inline port_speed_t
-pds_port_proto_speed_to_sdk_speed (pds::PortSpeed proto_port_speed)
+pds_port_proto_speed_to_sdk_speed (types::PortSpeed proto_port_speed)
 {
     switch (proto_port_speed) {
-    case pds::PORT_SPEED_NONE:
+    case types::PORT_SPEED_NONE:
         return port_speed_t::PORT_SPEED_NONE;
-    case pds::PORT_SPEED_1G:
+    case types::PORT_SPEED_1G:
         return port_speed_t::PORT_SPEED_1G;
-    case pds::PORT_SPEED_10G:
+    case types::PORT_SPEED_10G:
         return port_speed_t::PORT_SPEED_10G;
-    case pds::PORT_SPEED_25G:
+    case types::PORT_SPEED_25G:
         return port_speed_t::PORT_SPEED_25G;
-    case pds::PORT_SPEED_40G:
+    case types::PORT_SPEED_40G:
         return port_speed_t::PORT_SPEED_40G;
-    case pds::PORT_SPEED_50G:
+    case types::PORT_SPEED_50G:
         return port_speed_t::PORT_SPEED_50G;
-    case pds::PORT_SPEED_100G:
+    case types::PORT_SPEED_100G:
         return port_speed_t::PORT_SPEED_100G;
     default:
         return port_speed_t::PORT_SPEED_NONE;
     }
 }
 
-static inline pds::PortSpeed
+static inline types::PortSpeed
 pds_port_sdk_speed_to_proto_speed (port_speed_t sdk_port_speed)
 {
     switch (sdk_port_speed) {
     case port_speed_t::PORT_SPEED_1G:
-        return pds::PORT_SPEED_1G;
+        return types::PORT_SPEED_1G;
     case port_speed_t::PORT_SPEED_10G:
-        return pds::PORT_SPEED_10G;
+        return types::PORT_SPEED_10G;
     case port_speed_t::PORT_SPEED_25G:
-        return pds::PORT_SPEED_25G;
+        return types::PORT_SPEED_25G;
     case port_speed_t::PORT_SPEED_40G:
-        return pds::PORT_SPEED_40G;
+        return types::PORT_SPEED_40G;
     case port_speed_t::PORT_SPEED_50G:
-        return pds::PORT_SPEED_50G;
+        return types::PORT_SPEED_50G;
     case port_speed_t::PORT_SPEED_100G:
-        return pds::PORT_SPEED_100G;
+        return types::PORT_SPEED_100G;
     default:
-        return pds::PORT_SPEED_NONE;
+        return types::PORT_SPEED_NONE;
     }
 }
 
@@ -4141,25 +4141,25 @@ pds_port_status_to_proto (pds::PortStatus *status,
 
     switch (port_info->port_speed) {
     case port_speed_t::PORT_SPEED_1G:
-        link_status->set_portspeed(pds::PORT_SPEED_1G);
+        link_status->set_portspeed(types::PORT_SPEED_1G);
         break;
     case port_speed_t::PORT_SPEED_10G:
-        link_status->set_portspeed(pds::PORT_SPEED_10G);
+        link_status->set_portspeed(types::PORT_SPEED_10G);
         break;
     case port_speed_t::PORT_SPEED_25G:
-        link_status->set_portspeed(pds::PORT_SPEED_25G);
+        link_status->set_portspeed(types::PORT_SPEED_25G);
         break;
     case port_speed_t::PORT_SPEED_40G:
-        link_status->set_portspeed(pds::PORT_SPEED_40G);
+        link_status->set_portspeed(types::PORT_SPEED_40G);
         break;
     case port_speed_t::PORT_SPEED_50G:
-        link_status->set_portspeed(pds::PORT_SPEED_50G);
+        link_status->set_portspeed(types::PORT_SPEED_50G);
         break;
     case port_speed_t::PORT_SPEED_100G:
-        link_status->set_portspeed(pds::PORT_SPEED_100G);
+        link_status->set_portspeed(types::PORT_SPEED_100G);
         break;
     default:
-        link_status->set_portspeed(pds::PORT_SPEED_NONE);
+        link_status->set_portspeed(types::PORT_SPEED_NONE);
         break;
     }
     link_status->set_autonegen(port_info->auto_neg_enable);

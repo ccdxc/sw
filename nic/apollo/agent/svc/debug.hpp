@@ -75,6 +75,8 @@ public:
                            Empty *rsp) override;
     Status SlabGet(ServerContext *context, const Empty *req,
                    pds::SlabGetResponse *rsp) override;
+    Status InternalPortGet(ServerContext *context, const pds::InternalPortRequestMsg *req,
+                           pds::InternalPortResponseMsg *rsp) override;
 };
 
 #endif    // __AGENT_SVC_DEBUG_HPP__

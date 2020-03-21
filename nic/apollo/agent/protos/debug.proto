@@ -10,6 +10,7 @@ package pds;
 import "gogo.proto";
 import "meta/meta.proto";
 import "types.proto";
+import "interface.proto";
 
 service DebugSvc {
   rpc ClockFrequencyUpdate (ClockFrequencyRequest) returns (ClockFrequencyResponse) {}
@@ -32,6 +33,7 @@ service DebugSvc {
   rpc QueueCreditsGet (types.Empty) returns (QueueCreditsGetResponse) {}
   rpc StartAacsServer (AacsRequest) returns (types.Empty) {}
   rpc StopAacsServer (types.Empty) returns (types.Empty) {}
+  rpc InternalPortGet (InternalPortRequestMsg) returns (InternalPortResponseMsg) {}
 }
 
 enum TraceLevel {
@@ -481,3 +483,35 @@ message SlabGetResponse {
   types.ApiStatus ApiStatus = 1;
   repeated Slab   Slab      = 2;
 }
+
+enum IntPortDplxMode {
+  HALF_DUPLEX     = 0;
+  FULL_DUPLEX     = 1;
+}
+
+message InternalPortStatus {
+  pds.IfStatus        PortStatus     = 1;
+  types.PortSpeed     PortSpeed      = 2;
+  IntPortDplxMode     PortMode       = 3;
+  bool                PortTxPaused   = 4;
+  bool                PortFlowCtrl   = 5;
+}
+
+message InternalPortResponse {
+  uint32              PortNumber     = 1;        // Port number
+  string              PortDescr      = 2;        // Port Description
+  InternalPortStatus  InternalStatus = 3;        // Internal port status
+}
+
+message InternalPortResponseMsg {
+  repeated InternalPortResponse Response = 1;
+}
+
+message InternalPortRequest {
+  uint32  PortNumber     = 1;
+}
+
+message InternalPortRequestMsg {
+  repeated InternalPortRequest  Request = 1;
+}
+

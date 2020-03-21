@@ -227,17 +227,6 @@ enum PortOperState {
   PORT_OPER_STATUS_DOWN = 2; // port link status is down
 }
 
-// PortSpeed specifies the speed of the port
-enum PortSpeed {
-  PORT_SPEED_NONE = 0; // port speed not configured
-  PORT_SPEED_1G   = 1; // port speed is 1Gbps
-  PORT_SPEED_10G  = 2; // port speed is 10Gbps
-  PORT_SPEED_25G  = 3; // port speed is 25Gbps
-  PORT_SPEED_40G  = 4; // port speed is 40Gbps
-  PORT_SPEED_50G  = 5; // port speed is 50Gbps
-  PORT_SPEED_100G = 6; // port speed is 100Gbps
-}
-
 enum PortPauseType {
   PORT_PAUSE_TYPE_NONE = 0; // Disable Pause
   PORT_PAUSE_TYPE_LINK = 1; // Link level pause
@@ -298,7 +287,7 @@ message PortSpec {
   // type of the port
   PortType         Type            = 4 [(gogoproto.moretags) = "meta:mandatory"];
   // port speed
-  PortSpeed        Speed           = 5;
+  types.PortSpeed  Speed           = 5;
   // FEC type
   PortFecType      FECType         = 6;
   // enable/disable auto negotiation feature
@@ -318,10 +307,10 @@ message PortSpec {
 }
 
 message PortLinkStatus {
-  PortOperState OperState = 1; // operational state of port
-  PortSpeed     PortSpeed = 2; // operational speed of the port
-  bool          AutoNegEn = 3; // operational state of AN
-  uint32        NumLanes  = 4; // operational value of NumLanes
+  PortOperState    OperState = 1; // operational state of port
+  types.PortSpeed  PortSpeed = 2; // operational speed of the port
+  bool             AutoNegEn = 3; // operational state of AN
+  uint32           NumLanes  = 4; // operational value of NumLanes
 }
 
 message PortXcvrStatus {

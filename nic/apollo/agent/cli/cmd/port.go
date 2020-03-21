@@ -82,6 +82,20 @@ var portShowXcvrCmd = &cobra.Command{
 	Run:   portXcvrShowCmdHandler,
 }
 
+var portInternalShowCmd = &cobra.Command{
+	Use:   "internal",
+	Short: "show internal port information",
+	Long:  "show information about the ports on the internal switch",
+	Run:   portInternalCmdHandler,
+}
+
+var portInternalStatsCmd = &cobra.Command{
+	Use:   "statistics",
+	Short: "show internal port statistics",
+	Long:  "show statistics about the ports on the internal switch",
+	Run:   portInternalStatsCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatsShowCmd)
@@ -93,6 +107,9 @@ func init() {
 	portShowCmd.AddCommand(portShowXcvrCmd)
 	portShowXcvrCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
 	portShowXcvrCmd.Flags().Bool("yaml", true, "Output in yaml")
+	portShowCmd.AddCommand(portInternalShowCmd)
+	portInternalShowCmd.PersistentFlags().StringVarP(&portID, "port", "p", "", "Specify port number. eg eth1/1 or 1 to 7 for internal ports")
+	portInternalShowCmd.AddCommand(portInternalStatsCmd)
 
 	debugCmd.AddCommand(portUpdateCmd)
 	portUpdateCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
@@ -772,5 +789,77 @@ func portXcvrShowCmdHandler(cmd *cobra.Command, args []string) {
 		for _, resp := range respMsg.Response {
 			portXcvrShowResp(resp)
 		}
+	}
+}
+
+func portInternalCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewDebugSvcClient(c)
+	if (cmd != nil) && cmd.Flags().Changed("yaml") {
+		fmt.Printf("yaml option not supported for internal ports")
+		return
+	}
+
+	var req *pds.InternalPortRequest
+	var intPortNum uint64
+
+	if cmd != nil && cmd.Flags().Changed("port") {
+		intPortNum, err = strconv.ParseUint(portID, 10, 8)
+		if (err != nil) || (intPortNum > 7) {
+			fmt.Printf("Invalid argument. port number must be between 1 - 7 for internal ports\n")
+			return
+		}
+		// Get port info for specified port
+		req = &pds.InternalPortRequest{
+			PortNumber: uint32(intPortNum),
+		}
+	} else {
+		// Get all Ports
+		req = &pds.InternalPortRequest{}
+	}
+
+	reqMsg := &pds.InternalPortRequestMsg{
+		Request: []*pds.InternalPortRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.InternalPortGet(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("Getting Internal port status failed. %v\n", err)
+		return
+	}
+
+	hdrLine := strings.Repeat("-", 90)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-25s%-15s%-10s%-12s%-10s%-10s\n", "PortNo", "Descr", "Status", "Speed", "Mode", "Pause", "FlowCtrl")
+	fmt.Println(hdrLine)
+
+	// Print Result
+	for _, resp := range respMsg.Response {
+		fmt.Printf("%-10d%-25s%-15s%-10s%-12s%-10v%-10v\n",
+			resp.GetPortNumber(), resp.GetPortDescr(),
+			strings.TrimPrefix(resp.GetInternalStatus().GetPortStatus().String(), "IF_STATUS_"),
+			strings.TrimPrefix(resp.GetInternalStatus().GetPortSpeed().String(), "PORT_SPEED_"),
+			strings.TrimSuffix(resp.GetInternalStatus().GetPortMode().String(), "_DUPLEX"),
+			resp.GetInternalStatus().GetPortTxPaused(), resp.GetInternalStatus().GetPortFlowCtrl())
+	}
+}
+
+func portInternalStatsCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
 	}
 }

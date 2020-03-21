@@ -6,6 +6,8 @@
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/platform/capri/capri_tm_utils.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/platform/marvell/marvell.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/api/debug.hpp"
 #include "nic/apollo/agent/core/state.hpp"
@@ -354,3 +356,70 @@ DebugSvcImpl::SlabGet(ServerContext *context,
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }
+
+static void
+populate_port_info (uint8_t port_num, uint16_t status,
+                    pds::InternalPortResponseMsg *rsp) {
+    bool is_up, full_duplex, txpause, fctrl;
+    uint8_t speed;
+
+    sdk::marvell::marvell_get_status_updown(status, &is_up);
+    sdk::marvell::marvell_get_status_duplex(status, &full_duplex);
+    sdk::marvell::marvell_get_status_speed(status, &speed);
+    sdk::marvell::marvell_get_status_txpause(status, &txpause);
+    sdk::marvell::marvell_get_status_flowctrl(status, &fctrl);
+
+    pds::InternalPortResponse *response = rsp->add_response();
+    pds::InternalPortStatus *internal_status = response->mutable_internalstatus();
+    response->set_portnumber(port_num + 1);
+    response->set_portdescr(sdk::marvell::marvell_get_descr(port_num));
+    if (is_up) {
+        internal_status->set_portstatus(pds::IF_STATUS_UP);
+    } else {
+        internal_status->set_portstatus(pds::IF_STATUS_DOWN);
+    }
+    internal_status->set_portspeed(::types::PortSpeed(speed));
+    if (full_duplex) {
+        internal_status->set_portmode(::pds::FULL_DUPLEX);
+    } else{
+        internal_status->set_portmode(::pds::HALF_DUPLEX);
+    }
+    internal_status->set_porttxpaused(txpause);
+    internal_status->set_portflowctrl(fctrl);
+}
+
+Status
+DebugSvcImpl::InternalPortGet(ServerContext *context,
+                              const pds::InternalPortRequestMsg *req,
+                              pds::InternalPortResponseMsg *rsp) {
+    uint32_t    i, nreqs = req->request_size();
+
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        auto     request      = req->request(i);
+        uint8_t  port_num     = (uint8_t)request.portnumber();
+        bool     has_port_num = (port_num != 0);
+        uint16_t data;
+
+        port_num = port_num - 1;
+
+        if (has_port_num) {
+            if (port_num < MARVELL_NPORTS) {
+                sdk::marvell::marvell_get_port_status(MARVELL_PORT0 + port_num, &data);
+                populate_port_info(port_num, data, rsp);
+            } else {
+                return Status(grpc::StatusCode::INVALID_ARGUMENT, "Port number must be between 0-7");
+            }
+        } else {
+            for (port_num = 0; port_num < MARVELL_NPORTS; port_num++) {
+                sdk::marvell::marvell_get_port_status(MARVELL_PORT0 + port_num, &data);
+                populate_port_info(port_num, data, rsp);
+            }
+        }
+    }
+    return Status::OK;
+}
+

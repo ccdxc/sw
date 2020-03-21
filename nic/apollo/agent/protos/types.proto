@@ -319,3 +319,18 @@ enum AdminState {
   ADMIN_STATE_ENABLE  = 1;
   ADMIN_STATE_DISABLE = 2;
 }
+
+// PortSpeed specifies the speed of the port
+enum PortSpeed {
+  PORT_SPEED_NONE  = 0; // port speed not configured
+  PORT_SPEED_10M   = 1; // port speed is 10Mbps 
+  PORT_SPEED_100M  = 2; // port speed is 100Mbps
+  PORT_SPEED_1G    = 3; // port speed is 1Gbps
+  PORT_SPEED_10G   = 4; // port speed is 10Gbps
+  PORT_SPEED_25G   = 5; // port speed is 25Gbps
+  PORT_SPEED_40G   = 6; // port speed is 40Gbps
+  PORT_SPEED_50G   = 7; // port speed is 50Gbps
+  PORT_SPEED_100G  = 8; // port speed is 100Gbps
+  PORT_SPEED_RESVD = 9;
+}
+
