@@ -11,7 +11,7 @@ header_type sacl_metadata_t {
         pad4                        : 6;
         p2_table_addr               : 34;
         proto_dport_class_id        : 8;
-        proto_dport                 : 24;
+        proto_dport                 : 32;
         sport_class_id              : 7;
         ip_sport_class_id           : 17;
         p1_class_id                 : 10;
@@ -44,7 +44,7 @@ header_type scratch_metadata_t {
         field64         : 64;
         field128        : 128;
         ipv4_addr       : 32;
-        proto_dport     : 24;
+        proto_dport     : 32;
     }
 }
 
