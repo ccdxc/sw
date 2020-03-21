@@ -6,10 +6,117 @@ image:
 
 queue_name: baremetal
 
-# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
+# e2e-targets represent typically what is required by developers 
 e2e-targets:
-  # baremetal + baremetal Esx test cases
- esx-6.7:
+
+ # single esx 6.7 instance with 1 Venice instance
+ esx67WithVenice:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-160
+       count: 1
+       resources:
+         cpus: 4
+         memory: 8
+         pvt-networks:
+         - control-1
+         - control-2
+     - image: build-10
+       count: 1
+       resources:
+         server-type: any
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+ # single esx 6.7 instance with 3 Venice instance
+ esx67With3Venice:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-160
+       count: 3
+       resources:
+         cpus: 4
+         memory: 8
+         pvt-networks:
+         - control-1
+         - control-2
+     - image: build-10
+       count: 1
+       resources:
+         server-type: any
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+ # single instance of RHEL 8.0 with 1 Venice instance
+ rhel80WithVenice:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-160
+       count: 1
+       resources:
+         cpus: 4
+         memory: 8
+         pvt-networks:
+         - control-1
+         - control-2
+     - image: build-13
+       count: 1
+       resources:
+         server-type: any
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+
+ # single esx 6.7 instance
+ esx67:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-10
+       count: 1
+       resources:
+         server-type: any
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+ # two esx6.7 instances
+ 2esx67:
    commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:ci-status@pensando.io"]
    area:
@@ -28,7 +135,28 @@ e2e-targets:
           BmOs: esx
           EsxUsername: root
           EsxPassword: Pen0trl!
- rhel-8.0:
+
+ # single instance of RHEL 8.0
+ rhel80:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-13
+       count: 1
+       resources:
+         server-type: any
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+
+ # two bare-metal instances of RHEL 8.0
+ 2rhel80:
    commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:ci-status@pensando.io"]
    area:
@@ -45,7 +173,28 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
- rhel-7.6:
+
+ # single bare-metal instance of RHEL 7.6
+ rhel76:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-17
+       count: 1
+       resources:
+         server-type: any
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+
+ # two bare-metal instance of RHEL 7.6
+ 2rhel76:
    commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:ci-status@pensando.io"]
    area:
@@ -63,7 +212,27 @@ e2e-targets:
        vars:
           BmOs: linux
  
- ubuntu-18.04:
+ # single bare-metal instance of Ubuntu 18.04
+ ubuntu1804:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-17
+       count: 1
+       resources:
+         server-type: any
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+ 
+ # two bare-metal instance of Ubuntu 18.04
+ 2ubuntu1804:
    commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:ci-status@pensando.io"]
    area:
@@ -80,7 +249,28 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
- freebsd-11.2:
+ 
+ # single bare-metal instance of freebsd-11.2
+ freebsd11.2:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-12
+       count: 1
+       resources:
+         server-type: any
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: freebsd
+
+ # two bare-metal instance of freebsd-11.2
+ 2freebsd11.2:
    commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:ci-status@pensando.io"]
    area:
