@@ -327,12 +327,11 @@ always_inline void pds_session_id_dealloc(u32 ses_id)
 always_inline void pds_session_id_flush(void)
 {
     pds_flow_main_t *fm = &pds_flow_main;
-    pds_flow_hw_ctx_t *ctx;
 
     pds_flow_prog_lock();
-    pool_flush(ctx, fm->session_index_pool,
-          ({
-          }));
+    pool_free(fm->session_index_pool);
+    fm->session_index_pool = NULL;
+    pool_init_fixed(fm->session_index_pool, fm->max_sessions);
     for (u32 i = 0; i < vec_len(fm->session_id_thr_local_pool); i++) {
         fm->session_id_thr_local_pool[i].pool_count = -1;
     }
