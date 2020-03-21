@@ -23,6 +23,7 @@ setup:
           args :
                fwd_mode    : "INSERTION"
                policy_Mode : "ENFORCED"
+               mgmt_intf   : "IN_BAND"
         - step : config.netagent.hw_push_config
           args :
              spec : scale_cfg_1vrf_1nw_2ep_2rep.cfgyml

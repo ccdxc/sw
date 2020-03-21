@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import json
+import yaml
 import time
 import datetime
 import iota.harness.api as api
@@ -7,106 +8,36 @@ import iota.test.iris.testcases.penctl.common as common
 import iota.test.iris.utils.hal_show as hal_show_utils
 import iota.test.iris.config.netagent.api as netagent_api
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+from ipaddress import IPv4Network
 
-NAPLES_CONFIG_SPEC_LOCAL        = "/tmp/system-config.json"
+def LoadNetworkObjectFromJSON():
+    try:
+        nw_config = api.GetTopologyDirectory() + "/networks.json"
+        with open(nw_config) as f:
+            nw_obj = json.load(f)
+            for obj in nw_obj['objects']:
+                if obj['meta']['name'] == "nw0":
+                    return IPv4Network(obj['spec']['ipv4-subnet'])
+        return None
+    except:
+        return None
 
-# Create system config file to enable console with out triggering
-# authentication. 
-def CreateConfigConsoleNoAuth():
-    console_enable = {'console': 'enable'}
-    with open(NAPLES_CONFIG_SPEC_LOCAL, 'w') as outfile:
-        json.dump(console_enable, outfile, indent=4)
+def LoadNetworkObjectFromYAML():
+    try:
+        nw_config = api.GetTopologyDirectory() + "/config.yml"
+        with open(nw_config) as f:
+            nw_obj = yaml.load(f)
+            ipam_base = nw_obj['spec']['networks'][0]['network']['ipv4']['ipam_base'].split('/')[0]
+            prefix_length = nw_obj['spec']['networks'][0]['network']['ipv4']['prefix_length']
+            return IPv4Network(ipam_base + "/" + str(prefix_length))
+    except:
+        return None
 
-def Main(step):
-    policy_mode = getattr(step, "policy_Mode", None)
-    agent_nodes = api.GetNaplesHostnames()
-    fwd_mode = getattr(step, "fwd_mode", None)
-    policy_mode = getattr(step, "policy_Mode", None)
+def GetNativeNetworkIpSubnet():
+    nw = LoadNetworkObjectFromJSON()
+    return  nw if nw else LoadNetworkObjectFromYAML()
 
-    netagent_api.Init(agent_nodes, hw = True)
-
-    if GlobalOptions.skip_setup:
-        # Restore the current profile in cfg DB
-        return netagent_api.switch_profile(fwd_mode, policy_mode, push=False)
-
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    uuidMap = api.GetNaplesNodeUuidMap()
-    nodes = api.GetNaplesHostnames()
-    for n in nodes:
-        # Touch a file to indicate to NMD that the current mode is emulation
-        cmd = "touch /data/iota-emulation"
-        api.Trigger_AddNaplesCommand(req, n, cmd)
-        # Make sure console is enabled
-        CreateConfigConsoleNoAuth()
-        api.CopyToNaples(n, [NAPLES_CONFIG_SPEC_LOCAL], "")
-
-        if GlobalOptions.skip_firmware_upgrade is not True:
-            cmd = "mv /system-config.json /sysconfig/config0/system-config.json"
-            api.Trigger_AddNaplesCommand(req, n, cmd)
-
-        if common.PenctlGetModeStatus(n) != "NETWORK" or \
-           common.PenctlGetTransitionPhaseStatus(n) != "VENICE_REGISTRATION_DONE":
-            api.Logger.info("Host [{}] is in HOST mode. Initiating mode change.".format(n))
-            ret = common.SetNaplesModeOOB_Static(n, "1.1.1.1", "1.1.1.2/24")
-            if ret == None:
-                api.Logger.info("Failed to change mode for node: {}".format(n))
-                return api.types.status.FAILURE
-
-        #hack for now, need to set date
-        cmd = "date -s '{}'".format(datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-        api.Trigger_AddNaplesCommand(req, n, cmd)
-
-    resp = api.Trigger(req)
-
-    for cmd in resp.commands:
-        api.PrintCommandResults(cmd)
-        if cmd.exit_code != 0:
-            api.Logger.info("Failed to execute command")
-            return api.types.status.FAILURE
-
-    num_retries = 60
-    while nodes:
-        req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-        for n in nodes:
-            #hack for now, need to set date
-            api.Logger.info("Checking Tranisition phase for node : %s" % n)
-            check_state_cmd = "show naples --json"
-            time.sleep(30)
-            common.AddPenctlCommand(req, n, check_state_cmd)
-            #api.Trigger_AddNaplesCommand(req, n, "touch /data/no_watchdog")
-            resp = api.Trigger(req)
-            cmd = resp.commands[0]
-            api.PrintCommandResults(cmd)
-            if cmd.exit_code != 0:
-                return api.types.status.FAILURE
-            try:
-                out = json.loads(cmd.stdout)
-            except:
-                api.Logger.error("Penctl output not in Json format {}".format(cmd.stdout))
-                return api.types.status.FAILURE
-            if not hal_show_utils.IsNaplesForwardingModeClassic(n):
-                api.Logger.info("Dataplane already in HOSTPIN mode. Skipping node [{}] for reboot.".format(n))
-                nodes.remove(n)
-            elif out["status"]["transition-phase"] == "VENICE_UNREACHABLE":
-                api.Logger.info("Reboot pending on node : %s" % n)
-                nodes.remove(n)
-            elif out["status"]["transition-phase"] == "VENICE_REGISTRATION_DONE":
-                api.Logger.info("Node already transitioned : %s" % n)
-                nodes.remove(n)
-            else:
-                api.Logger.info("Reboot not pending on node : %s" % n)
-
-        time.sleep(1)
-        num_retries = num_retries - 1
-        if num_retries == 0:
-            api.Logger.error("Reboot pending state not transitioned complete on naples")
-            return api.types.status.FAILURE
-
-    api.Logger.info("Switching to profile fwd_mode: %s," \
-                    "policy_mode : %s"%(fwd_mode, policy_mode))
-
-    netagent_api.switch_profile(fwd_mode, policy_mode)
-
+def StartSSH():
     api.Logger.info("Starting SSH server on Nodes")
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     enable_sshd = "system enable-sshd"
@@ -122,42 +53,73 @@ def Main(step):
     for cmd in resp.commands:
         api.PrintCommandResults(cmd)
 
-    # api.Logger.info("Verifying system information")
-    # req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-    # for n in api.GetNaplesHostnames():
-    #     cmd = "curl localhost:8888/api/system/info/"
-    #     api.Trigger_AddNaplesCommand(req, n, cmd)
+def DeleteTmpFiles():
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    iota_cmd = "rm -f /data/iota-emulation"
+    dev_cmd = "rm -f /sysconfig/config0/device.conf"
 
-    # resp = api.Trigger(req)
-    # for cmd in resp.commands:
-    #     api.PrintCommandResults(cmd)
-    #     if cmd.exit_code != 0:
-    #         api.Logger.error("Agent system get failed : {}".format(cmd.node_name))
-    #         result = api.types.status.FAILURE
-    #     out = None
-    #     try:
-    #         out = json.loads(cmd.stdout)
-    #     except:
-    #         api.Logger.error("Agent System get out failed {}".format(cmd.stdout))
-    #         return api.types.status.FAILURE
-    #     if out["naples-mode"] != "NETWORK_MANAGED_OOB":
-    #         api.Logger.error("Agent not in correct mode: {} {} ".format(cmd.node_name, out["naples-mode"]))
-    #         return api.types.status.FAILURE
-
-    api.Logger.info("Removing temp files")
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
     for n in api.GetNaplesHostnames():
-        # Delete the iota-emulation file created earlied for NMD. Mode change would have passed by now if it had to.
-        cmd = "rm -f /data/iota-emulation"
-        api.Trigger_AddNaplesCommand(req, n, cmd)
-
-        # Delete device.conf so that during -skip-firmware-upgrade step
-        # we dont parse device.conf with hostpin forwarding mode.
-        cmd = "rm -f /sysconfig/config0/device.conf"
-        api.Trigger_AddNaplesCommand(req, n, cmd)
+        api.Trigger_AddNaplesCommand(req, n, iota_cmd)
+        api.Trigger_AddNaplesCommand(req, n, dev_cmd)
 
     resp = api.Trigger(req)
     for cmd in resp.commands:
         api.PrintCommandResults(cmd)
+
+def restoreBondIp(ip):
+    for n in api.GetNaplesHostnames():
+        api.SetBondIp(n, str(ip))
+        api.Logger.info("%s: Bond IP %s"%(n, str(ip)))
+        ip -= 1
+
+def Main(step):
+    policy_mode = getattr(step, "policy_Mode", None)
+    fwd_mode    = getattr(step, "fwd_mode", None)
+    mgmt_intf   = getattr(step, "mgmt_intf", "OOB")
+    nw = GetNativeNetworkIpSubnet()
+    controller_ip = nw[-2] #Last address in the subnet is broadcast
+    mgmt_ip = controller_ip-1
+    index = 1
+
+    # Init Netagent
+    nodes = api.GetNaplesHostnames()
+    netagent_api.Init(nodes, hw = True)
+
+    # Restore the current profile in cfg DB
+    if GlobalOptions.skip_setup:
+        if mgmt_intf == "IN_BAND":
+            restoreBondIp(mgmt_ip)
+        return netagent_api.switch_profile(fwd_mode, policy_mode, push=False)
+
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    for n in nodes:
+        if mgmt_intf == "OOB":
+            ret = common.SetNaplesModeOOB_Static(n, "1.1.1.1", "1.1.1.2/24")
+            if ret == None:
+                api.Logger.info("Failed to change mode for node: {}".format(n))
+                return api.types.status.FAILURE
+        elif mgmt_intf == "IN_BAND":
+            mgmt_ip_str = "%s/%s"%(mgmt_ip, nw.prefixlen)
+            ret = common.SetNaplesModeInband_Static(n, str(controller_ip), mgmt_ip_str)
+            if ret == None:
+                api.Logger.info("Failed to change mode for node: {}".format(n))
+                return api.types.status.FAILURE
+            api.SetBondIp(n, str(mgmt_ip))
+            mgmt_ip -= 1
+        else:
+            api.Logger.error("Invalid mgmt interface type : %s"%(mgmt_intf))
+            return api.types.status.FAILURE
+
+    api.Logger.info("Switching to profile fwd_mode: %s, policy_mode : %s"%(fwd_mode, policy_mode))
+    ret = netagent_api.switch_profile(fwd_mode, policy_mode)
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error("Failed to switch profile to fwd_mode: %s, policy_mode : %s"%(fwd_mode, policy_mode))
+        return ret
+
+    # Start SSH server on Naples
+    StartSSH()
+
+    # Clean Up temporary files
+    DeleteTmpFiles()
 
     return api.types.status.SUCCESS

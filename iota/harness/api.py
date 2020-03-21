@@ -522,7 +522,11 @@ def IsApiResponseOk(resp):
     if resp.api_response.api_status != types_pb2.API_STATUS_OK: return False
     return True
 
+def GetBondIp(node_name):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetBondIp(node_name)
 
+def SetBondIp(node_name, ip):
+    store.GetTestbed().GetCurrentTestsuite().GetTopology().SetBondIp(node_name, ip)
 
 def AddWorkloadTeardown(req, workload):
     assert(req.workload_op == topo_svc.DELETE)

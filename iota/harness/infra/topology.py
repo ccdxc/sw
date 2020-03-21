@@ -287,6 +287,7 @@ class Node(object):
         self.ssh_host = "%s@%s" % (self.__vmUser, self.__ip_address) 
         self.ssh_pfx = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % self.__vmPassword
         self.__control_ip = resmgr.ControlIpAllocator.Alloc()
+        self.__bond_ip = None
         self.__control_intf = "eth1"
         self.__cimc_ip = getattr(self.__inst, "NodeCimcIP", None)
         self.__cimc_ncsi_ip = getattr(self.__inst, "NodeCimcNcsiIP", None)
@@ -757,6 +758,11 @@ class Node(object):
             time.sleep(5)
         raise Exception("host {0} not up".format(self.__ip_address))
 
+    def SetBondIp(self, ip):
+        self.__bond_ip = ip
+
+    def GetBondIp(self):
+        return self.__bond_ip
 
 class Topology(object):
 
@@ -1278,3 +1284,9 @@ class Topology(object):
         device = self.GetDefaultDeivce(node_name)
         assert(device)
         return device.Name()
+
+    def SetBondIp(self, node_name, ip):
+        self.__nodes[node_name].SetBondIp(ip)
+
+    def GetBondIp(self, node_name):
+        return self.__nodes[node_name].GetBondIp()

@@ -25,10 +25,10 @@ setup:
           args :
                fwd_mode    : "TRANSPARENT"
                policy_Mode : "FLOWAWARE"
+               mgmt_intf   : "IN_BAND"
         - step : utils.naples_workloads
         - step : config.config_link_flap
         - step : config.netagent.hw_push_config
-        - step : config.netagent.naples_inband_ip_config
         - step : testcases.drivers.install_iperf
 
 common:

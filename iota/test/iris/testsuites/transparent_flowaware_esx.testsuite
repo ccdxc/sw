@@ -25,8 +25,8 @@ setup:
           args :
                fwd_mode    : "TRANSPARENT"
                policy_Mode : "FLOWAWARE"
+               mgmt_intf   : "IN_BAND"
         - step : config.netagent.hw_push_config
-        - step : config.netagent.naples_inband_ip_config
         - step : testcases.drivers.install_iperf
 
 common:
@@ -49,7 +49,7 @@ testbundles:
         - networking/telemetry.testbundle
         - transition/trans_flow_to_insert_enf.testbundle
         - networking/connectivity.testbundle
-        - networking/telemetry.testbundle
+        #- networking/telemetry.testbundle
 
     sanity:
         # Relative paths from iota/test/iris/testbundles/
