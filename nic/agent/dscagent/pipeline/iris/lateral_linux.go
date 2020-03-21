@@ -354,7 +354,7 @@ func startRefreshLoop(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient
 
 func resolveIPAddress(ctx context.Context, destIP string) string {
 	addrs, err := netlink.AddrList(MgmtLink, netlink.FAMILY_V4)
-	if err != nil {
+	if err != nil || len(addrs) == 0 {
 		log.Errorf("Failed to list management interface addresses. Err: %v", err)
 		// Temporary hack in Release A. generateLateralEP is expected to return errors only on ARP resolution failures.
 		// Hence masking just logging the err
