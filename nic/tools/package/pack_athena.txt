@@ -233,9 +233,11 @@ platform/drivers/linux/eth/ionic/ionic_mnic.ko                    /nic/bin/
 platform/drivers/linux/mnet/mnet.ko                               /nic/bin/
 platform/drivers/linux/mnet_uio_pdrv_genirq/mnet_uio_pdrv_genirq.ko /nic/bin/
 
-# VPP
+# DPDK
 nic/build/$ARCH/$PIPELINE/lib/libnuma.so.1                        /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libdpdk.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/out/pen_dpdk_submake/lib/libdpdk.so     /nic/lib/
+nic/build/$ARCH/$PIPELINE/out/pen_dpdk_submake/kmod/rte_kni.ko    /nic/bin/
+nic/build/$ARCH/$PIPELINE/out/pen_dpdk_submake/app/testpmd        /nic/bin/
 
 # cronjobs
 nic/conf/$PIPELINE/crontabs/root                                  /nic/conf/$PIPELINE/crontabs/
