@@ -80,6 +80,7 @@ func createSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 			delresp, err := client.SubnetDelete(ctx, delReq)
 			if err != nil {
 				log.Errorf("Subnet: %s Cleanup failed | Err: %v", nw.GetKey(), err)
+				return
 			}
 			if delresp.ApiStatus[0] != halapi.ApiStatus_API_STATUS_OK {
 				log.Errorf("Subnet: %s Cleanup failed | Status: %v", nw.GetKey(), delresp.ApiStatus)
@@ -412,6 +413,7 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	evrtresp, err := msc.EvpnEviRtCreate(ctx, &rtAddReq)
 	if err != nil {
 		log.Errorf("failed to create EVI RTs for subnet [%v/%v](%s)", nw.Tenant, nw.Name, err)
+		return err
 	}
 	if evrtresp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 		log.Errorf("failed to create EVI RTs for subnet [%v/%v] (%v)", nw.Tenant, nw.Name, evrtresp.ApiStatus)
@@ -422,6 +424,7 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	evrtdelresp, err := msc.EvpnEviRtDelete(ctx, &rtDelReq)
 	if err != nil {
 		log.Errorf("failed to delete EVI RTs for subnet [%v/%v](%s)", nw.Tenant, nw.Name, err)
+		return err
 	}
 	if evrtdelresp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 		log.Errorf("failed to delete EVI RTs for subnet [%v/%v] (%v)", nw.Tenant, nw.Name, evrtdelresp.ApiStatus)

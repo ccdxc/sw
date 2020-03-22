@@ -63,6 +63,7 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 			delresp, err := client.VPCDelete(context.TODO(), &delreq)
 			if err != nil {
 				log.Errorf("Vrf: %s could not cleanup vpc from datapath: Err: %s", vrf.GetKey(), err)
+				return
 			}
 			if delresp.ApiStatus[0] != halapi.ApiStatus_API_STATUS_OK {
 				log.Errorf("Vrf: %s could not cleanup vpc from datapath: Status: %s", vrf.GetKey(), delresp.ApiStatus)
@@ -205,6 +206,7 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 				delresp, err := msc.EvpnIpVrfRtDelete(ctx, &rtDelReq)
 				if err != nil {
 					log.Infof("EVPN VRF RT cleanup received resp (%v)[%+v]", err, delresp)
+					return
 				}
 				if delresp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 					log.Infof("EVPN VRF RT cleanup received resp (%v)[%v]", err, delresp.ApiStatus)

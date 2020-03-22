@@ -153,6 +153,11 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 		//	log.Infof("Controller API: %s", types.InfoIgnoreVeniceCoordinatesUpdate)
 		//	return nil
 		//}
+		// restore the Loopback IP if it is set.
+		cfg := c.InfraAPI.GetConfig()
+		if cfg.LoopbackIP != "" {
+			obj.LoopbackIP = cfg.LoopbackIP
+		}
 		c.InfraAPI.StoreConfig(obj)
 
 		// Ensure that the controller API is registered with the pipeline
