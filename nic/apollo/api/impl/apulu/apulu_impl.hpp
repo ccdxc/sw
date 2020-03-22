@@ -59,12 +59,12 @@
 
 // NACL table partitioning
 #define PDS_IMPL_NACL_BLOCK_HIGH_PRIO_DYNAMIC_MIN    0
-#define PDS_IMPL_NACL_BLOCK_HIGH_PRIO_DYNAMIC_MAX    15
-#define PDS_IMPL_NACL_BLOCK_GLOBAL_MIN               16
-#define PDS_IMPL_NACL_BLOCK_GLOBAL_MAX               23
-#define PDS_IMPL_NACL_BLOCK_LEARN_MIN                24
-#define PDS_IMPL_NACL_BLOCK_LEARN_MAX                31
-#define PDS_IMPL_NACL_BLOCK_GENERIC_MIN              32
+#define PDS_IMPL_NACL_BLOCK_HIGH_PRIO_DYNAMIC_MAX    31
+#define PDS_IMPL_NACL_BLOCK_GLOBAL_MIN               32
+#define PDS_IMPL_NACL_BLOCK_GLOBAL_MAX               39
+#define PDS_IMPL_NACL_BLOCK_LEARN_MIN                40
+#define PDS_IMPL_NACL_BLOCK_LEARN_MAX                47
+#define PDS_IMPL_NACL_BLOCK_GENERIC_MIN              48
 
 // Inband control interface name
 #define PDS_IMPL_VENDOR_L3_IF_NAME                   "dscv0"
