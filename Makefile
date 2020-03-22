@@ -645,7 +645,6 @@ cloud-e2e:
 	if [ -z ${BYPASS_CLOUD_SIM} ]; then \
 		JOB_ID=1 IGNORE_BUILD_PIPELINE=1 FLAVOR=-venice PIPELINE=apulu ${MAKE} -C nic jobd/e2e/naples-sim-image; \
 	fi
-	tar xvf nic/obj/images/naples-release-v1.tgz -C nic/obj/images/; \
 	docker load -i nic/obj/images/naples-docker-v1.tgz; \
 	if [ -z ${BYPASS_PEGASUS} ]; then \
 		$(MAKE) -C nic docker/pegasus; \
@@ -661,8 +660,10 @@ cloud-e2e-retest:
 
 cloud-e2e-ci:
 	mkdir -p nic/obj/images/
-	tar -ztvf naples-release-v1.tgz
-	tar -zxvf naples-release-v1.tgz -C nic/obj/images/
+	tar -zxvf build_apulu_sim.tar.gz -C .
+	ls -al 
+	tar -zxvf nic/obj/images/naples-release-v1.tgz  -C nic/obj/images/
+	ls -al nic/obj/images/
 	docker load -i nic/obj/images/naples-docker-v1.tgz
 	./test/e2e/dind/do.py -configFile ${E2E_CP_CONFIG} -custom_config_file ${E2E_CUSTOM_CONFIG}
 	$(MAKE) cloud-e2e-test

@@ -250,7 +250,7 @@ func (m *ServiceHandlers) configureBGP(ctx context.Context, in *network.RoutingC
 
 // HandleNodeConfigEvent handles Node updates
 func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNodeConfig *cmd.Node) {
-	log.Infof("HandleNodeConfigEvent called: event type: %v : %+v ", et, *evtNodeConfig)
+	log.Infof("HandleNodeConfigEvent called: event type: %v: %+v ", et, *evtNodeConfig)
 
 	ctx := context.TODO()
 	if evtNodeConfig.Spec.RoutingConfig != "" {

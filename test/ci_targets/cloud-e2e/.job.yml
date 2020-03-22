@@ -9,7 +9,7 @@ image:
 warmd:
   #  TODO This needs to be ported to IOTA
   target:
-    commands: [ "sh", "-c", "ls -al /sw/ && ls -al /sw/bin/ && go run ../upload/main.go /sw/bin/venice.apulu.tgz /import/src/github.com/pensando/sw/bin/venice.tgz && go run ../upload/main.go /sw/naples-release-v1.tgz /import/src/github.com/pensando/sw/naples-release-v1.tgz && go run cloud-e2e.go" ]
+    commands: [ "sh", "-c", "ls -al /sw/ && ls -al /sw/bin/ && go run ../upload/main.go /sw/bin/venice.apulu.tgz /import/src/github.com/pensando/sw/bin/venice.tgz && go run ../upload/main.go /sw/build_apulu_sim.tar.gz /import/src/github.com/pensando/sw/build_apulu_sim.tar.gz && go run cloud-e2e.go" ]
     owners: ["email:sanjayt@pensando.io"]
     area:
     sub-area:
