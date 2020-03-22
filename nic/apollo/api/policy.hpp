@@ -13,18 +13,17 @@
 
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
+#include "nic/apollo/framework/api_stooge.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
 
 namespace api {
 
-/**
- * @defgroup PDS_POLICY - security policy functionality
- */
+/// \defgroup PDS_POLIOCY - security policy functionality
+/// \ingroup PDS_POLICY
+/// @{
 
-/**
- * @brief   security policy
- */
+/// \brief   security policy
 class policy : public api_base {
 public:
     /**
@@ -206,21 +205,19 @@ public:
     impl_base *impl(void) { return impl_; }
 
 private:
-    /**< @brief    constructor */
+    /// \brief    constructor
     policy();
 
-    /**< @brief    destructor */
+    /// \brief    destructor
     ~policy();
 
     /// \brief      fill the policy sw spec
     /// \param[out] spec specification
     void fill_spec_(pds_policy_spec_t *spec);
 
-    /**
-     * @brief     free h/w resources used by this object, if any
-     *            (this API is invoked during object deletes)
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
+    /// \brief     free h/w resources used by this object, if any
+    ///           (this API is invoked during object deletes)
+    /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t nuke_resources_(void);
 
 private:
@@ -234,10 +231,96 @@ private:
     ht_ctxt_t        ht_ctxt_;    ///< hash table context
     impl_base        *impl_;      ///< impl object instance
 
-    friend class policy_state;       // policy_state is friend of policy
+    // policy_state class is friend of policy class
+    friend class policy_state;
 } __PACK__;
 
-/** @} */    // end of PDS_POLICY
+/// \brief   security policy rule
+class policy_rule : public api_stooge {
+public:
+    /// \brief    factory method to allocate & initialize a security policy
+    ///           rule instance
+    /// \param[in] spec    security policy rule spec
+    /// \return    new instance of security policy rule or NULL,
+    ///            in case of error
+    static policy_rule *factory(pds_policy_rule_spec_t *spec);
+
+    /// \brief    release all the s/w state associate with the given security
+    ///           policy rule, if any, and free the memory
+    /// \param[in] rule security policy rule to be freed
+    static void destroy(policy_rule *rule);
+
+    /// \brief    clone this object and return cloned object
+    /// \param[in]    api_ctxt API context carrying object related configuration
+    /// \return       new object instance of current object
+    virtual api_base *clone(api_ctxt_t *api_ctxt) override;
+
+    /// \brief    free all the memory associated with this object without
+    ///           touching any of the databases or h/w etc.
+    /// \param[in] rule    policy rule to be freed
+    /// \return   sdk_ret_ok or error code
+    static sdk_ret_t free(policy_rule *rule);
+
+    /// \brief     initialize security policy rule instance with given config
+    /// \param[in] api_ctxt API context carrying the configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
+
+    /// \brief compute all the objects depending on this object and add to
+    ///        framework's dependency list
+    /// \param[in] obj_ctxt transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief     add given security policy rule to the database
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_to_db(void) override;
+
+     /// \brief     delete security policy rule from the database
+     /// \@return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t del_from_db(void) override;
+
+    /// \brief    this method is called on new object that needs to replace the
+    ///           old version of the object in the DBs
+    /// \param[in] orig_obj    old version of the unmodified object
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t update_db(api_base *orig_obj,
+                                api_obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief    initiate delay deletion of this object
+    virtual sdk_ret_t delay_delete(void) override;
+
+    /// \brief    return stringified key of the object (for debugging)
+    virtual string key2str(void) const override {
+            return "rule-"  + std::string(key_.str());
+    }
+
+    /// \brief     helper function to get key given security policy rule
+    /// \param[in] entry    pointer to security policy rule instance
+    /// \return    pointer to the security policy rule instance's key
+    static void *policy_rule_key_func_get(void *entry) {
+        policy_rule *rule = (policy_rule *)entry;
+        return (void *)&(rule->key_);
+    }
+
+    /// \brief     return the security policy rule key/id
+    /// \return    key/id of the security policy rule
+    const pds_obj_key_t key(void) const { return key_; }
+
+private:
+    /// \brief    constructor
+    policy_rule() {}
+
+    /// \brief    destructor
+    ~policy_rule() {}
+
+private:
+    pds_obj_key_t key_;    ///< security policy rule key
+};
+
+/// \@}
+
 
 }    // namespace api
 
