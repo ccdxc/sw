@@ -76,6 +76,7 @@ class SubnetObject(base.ConfigObjectBase):
 
         self.V4RouteTable = route.client.GetRouteV4Table(node, parent.VPCId, self.V4RouteTableId)
         self.V6RouteTable = route.client.GetRouteV6Table(node, parent.VPCId, self.V6RouteTableId)
+        self.IPAMname = 'Dhcp1'
         if getattr(spec, 'fabricencap', None) != None:
             self.FabricEncap = utils.GetEncapType(spec.fabricencap)
         if getattr(spec, 'fabricencapvalue', None) != None:
@@ -138,6 +139,7 @@ class SubnetObject(base.ConfigObjectBase):
         logger.info("- VirtualRouter IP:%s" % (self.VirtualRouterIPAddr))
         logger.info("- VRMac:%s" % (self.VirtualRouterMACAddr))
         logger.info(f"- DHCPPolicy: {self.DHCPPolicyIds}")
+        logger.info("- DHCP Policy:%s" %(self.IPAMname))
         logger.info("- TableIds V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
         logger.info("- NaclIDs IngV4:%s|IngV6:%s|EgV4:%s|EgV6:%s" %\
                     (self.IngV4SecurityPolicyIds, self.IngV6SecurityPolicyIds, self.EgV4SecurityPolicyIds, self.EgV6SecurityPolicyIds))
@@ -186,10 +188,19 @@ class SubnetObject(base.ConfigObjectBase):
                 self.HostIf = hostIf
                 self.HostIfIdx = utils.LifId2LifIfIndex(self.HostIf.lif.id)
                 self.HostIfUuid = utils.PdsUuid(self.HostIfIdx) if self.HostIfIdx else None
+        self.V4RouteTableId = 0
+        self.IngV4SecurityPolicyIds = [PolicyClient.GetIngV4SecurityPolicyId(self.Node, self.VPC.VPCId)]
+        self.EgV4SecurityPolicyIds = [PolicyClient.GetEgV4SecurityPolicyId(self.Node, self.VPC.VPCId)]
+        if self.IpV6Valid:
+            self.VirtualRouterIPAddr[0] = next(Resmgr.CreateIpv6AddrPool(self.IPPrefix[0]))
+        self.VirtualRouterIPAddr[1] = next(Resmgr.CreateIpv4AddrPool(self.IPPrefix[1]))
+        self.IPAMname = None
         return
 
     def RollbackAttributes(self):
-        attrlist = ["VirtualRouterMACAddr", "HostIf", "HostIfIdx", "HostIfUuid"]
+        attrlist = ["VirtualRouterMACAddr", "HostIf", "HostIfIdx", "HostIfUuid",
+            "V4RouteTableId", "IngV4SecurityPolicyIds", "EgV4SecurityPolicyIds",
+            "VirtualRouterIPAddr", "IPAMname"]
         self.RollbackMany(attrlist)
         return
 
@@ -251,6 +262,7 @@ class SubnetObject(base.ConfigObjectBase):
                             }
                         ],
                     "vxlan-vni": self.Vnid,
+                    "ipam-policy": self.IPAMname,
                     "ing-v4-sec-pol-id": [],
                     "ing-v6-sec-pol-id": [],
                     "eg-v4-sec-pol-id": [],
@@ -294,6 +306,7 @@ class SubnetObject(base.ConfigObjectBase):
         if spec['meta']['name'] != self.GID(): return False
         if spec['spec']['vrf-name'] != self.VPC.GID(): return False
         if spec['spec']['vxlan-vni'] != self.Vnid: return False
+        if spec['spec']['ipam-policy'] != self.IPAMname: return False
         addr = spec['spec']['v4-address'][0]
         if addr['prefix-len'] != self.IPPrefix[1]._prefixlen:
                 return False
@@ -446,12 +459,6 @@ class SubnetObjectClient(base.ConfigClientBase):
 
     def GetSubnetObject(self, node, subnetid):
         return self.GetObjectByKey(node, subnetid)
-
-    def IsReadSupported(self):
-        if utils.IsNetAgentMode():
-            # TODO: Fix validation & remove this
-            return False
-        return True
 
     def GenerateObjects(self, node, parent, vpc_spec_obj):
         poolid = 0

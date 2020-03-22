@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 import ipaddress
+import json
 
 from infra.common.logging import logger
 
@@ -39,6 +40,14 @@ class DhcpRelayObject(base.ConfigObjectBase):
         grpcmsg.Id.append(self.GetKey())
         return
 
+    def UpdateAttributes(self):
+        self.ServerIp = self.ServerIp + 1
+
+    def RollbackAttributes(self):
+        attrlist = ["ServerIp"]
+        self.RollbackMany(attrlist)
+        return
+
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
@@ -47,6 +56,61 @@ class DhcpRelayObject(base.ConfigObjectBase):
         utils.GetRpcIPAddr(self.ServerIp, relaySpec.ServerIP)
         utils.GetRpcIPAddr(self.AgentIp, relaySpec.AgentIP)
         return
+
+    def PopulateAgentJson(self):
+        #TODO revisit in case of multiple dhcp servers
+        servers = []
+        serverjson = {
+            "ip-address": str(self.ServerIp),
+            "virtual-router": self.Vpc,
+        }
+        servers.append(serverjson)
+        spec = {
+                "kind": "IPAMPolicy",
+                "meta": {
+                    "name": self.GID(),
+                    "namespace": self.Namespace,
+                    "tenant": self.Tenant,
+                    "uuid" : self.UUID.UuidStr,
+                    "labels": {
+                        "CreatedBy": "Venice"
+                    },
+                },
+                "spec": {
+                    "type": 0,
+                    "dhcp-relay": {
+                        "relay-servers": servers,
+                    }
+                }
+            }
+        return json.dumps(spec)
+
+    def CheckServerMatch(self, cfg, operservers):
+        for obj in operservers:
+            if cfg['ip-address'] == obj['ip-address'] and \
+               cfg['virtual-router'] == obj['virtual-router']:
+                return True
+        return False
+
+    def ValidateJSONSpec(self, spec):
+        if spec['kind'] != 'IPAMPolicy': return False
+        if spec['meta']['name'] != self.GID(): return False
+        if spec['spec']['spec']['type'] !=  0: return False
+        operservers =  spec['spec']['spec']['relay-servers']
+        cfgservers = []
+        serverjson = {
+            "ip-address": str(self.ServerIp),
+            "virtual-router": self.Vpc,
+        }
+        cfgservers.append(serverjson)
+        if (len(cfgservers) != len(operservers)):
+            logger.error(f"Mismatch in number of servers. cfg {len(cfgservers)}\
+                 oper {len(operservers)}")
+            return False
+        for server in cfgservers:
+            if not self.CheckServerMatch(server, operservers):
+                return False
+        return True
 
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
@@ -74,7 +138,13 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
         #TODO: Fix flow.py for sending dhcprelayid
         return self.GetObjectByKey(node, dhcprelayid)
 
+    def PdsctlRead(self, node):
+        # pdsctl show not supported for dhcp policy yet
+        return True
+
     def IsReadSupported(self):
+        if utils.IsNetAgentMode():
+            return True
         return False
 
     def GenerateObjects(self, node, dhcpspec):

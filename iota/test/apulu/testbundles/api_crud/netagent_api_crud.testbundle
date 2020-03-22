@@ -17,7 +17,7 @@ testcases:
             # objects tested with delete config.
             # TODO: nh-group
             # route object excluded from local2remote tests, because no hit
-            objtype : [ vpc, subnet, policy]
+            objtype : [ vpc, subnet, policy, dhcp_relay]
             oper    : [ [delete] ]
         background_tasks:
             switchPortFlap  :
@@ -40,7 +40,7 @@ testcases:
             ipaf    : [ ipv4 ]
             # objects tested with update config.
             # TODO: nh-group
-            objtype : [ vpc, subnet, bgp, interface, policy ]
+            objtype : [ vpc, subnet, bgp, interface, policy, dhcp_relay ]
             oper    : [ [update] ]
         background_tasks:
             switchPortFlap  :
@@ -64,7 +64,7 @@ testcases:
             #ipaf   : [ ipv4, ipv6 ]
             ipaf    : [ ipv4 ]
             # TODO: nh-group
-            objtype : [ vpc, subnet, policy ]
+            objtype : [ vpc, subnet, policy, dhcp_relay ]
             oper    : [ [create, create], [delete, read, update, read] ]
         background_tasks:
             switchPortFlap  :
@@ -85,7 +85,7 @@ testcases:
             type    : nested
             #ipaf   : [ ipv4, ipv6 ]
             ipaf    : [ ipv4 ]
-            objtype : [ vpc, subnet, policy ]
+            objtype : [ vpc, subnet, policy, dhcp_relay ]
             oper    : [ [delete, delete] ]
         background_tasks:
             switchPortFlap  :
@@ -106,7 +106,7 @@ testcases:
             type    : nested
             #ipaf   : [ ipv4, ipv6 ]
             ipaf    : [ ipv4 ]
-            objtype : [ vpc, subnet, policy ]
+            objtype : [ vpc, subnet, policy, dhcp_relay ]
             oper    : [ [update, create] ]
         background_tasks:
             switchPortFlap  :
