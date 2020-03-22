@@ -115,7 +115,7 @@ route_table::nuke_resources_(void) {
 
 sdk_ret_t
 route_table::init_config(api_ctxt_t *api_ctxt) {
-    pds_route_table_spec_t    *spec;
+    pds_route_table_spec_t *spec;
 
     spec = &api_ctxt->api_params->route_table_spec;
     memcpy(&this->key_, &spec->key, sizeof(pds_obj_key_t));
@@ -246,6 +246,71 @@ route_table::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 route_table::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_ROUTE_TABLE, this);
+}
+
+route *
+route::factory(pds_route_spec_t *spec) {
+    return NULL;
+}
+
+void
+route::destroy(route *rt) {
+    SDK_ASSERT(FALSE);
+    return;
+}
+
+api_base *
+route::clone(api_ctxt_t *api_ctxt) {
+    return NULL;
+}
+
+sdk_ret_t
+route::free(route *rt) {
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
+route::init_config(api_ctxt_t *api_ctxt) {
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
+route::add_deps(api_obj_ctxt_t *obj_ctxt) {
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
+route::add_to_db(void) {
+    PDS_TRACE_VERBOSE("Adding table %s to db", key2str().c_str());
+    //return route_db()->insert(this);
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
+route::del_from_db(void) {
+#if 0
+    if (route_db()->remove(this)) {
+        return SDK_RET_OK;
+    }
+#endif
+    return SDK_RET_ENTRY_NOT_FOUND;
+}
+
+sdk_ret_t
+route::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+#if 0
+    if (route_db()->remove((route *)orig_obj)) {
+        return route_db()->insert(this);
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
+#endif
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
+route::delay_delete(void) {
+    //return delay_delete_to_slab(PDS_SLAB_ID_ROUTE, this);
+    return SDK_RET_ERR;
 }
 
 }    // namespace api
