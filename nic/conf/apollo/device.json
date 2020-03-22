@@ -65,7 +65,24 @@
             "rxq_count" : 4,
             "txq_count" : 4,
             "adminq_count" : 1,
-            "intr_count" : 16
+            "intr_count" : 16,
+            "network" : {
+                "uplink" : 285343745
+            }
+        },
+        {
+            "name" : "cpu_mnic1",
+            "dev_uuid" : 16,
+            "type": "cpu",
+            "lif_count" : 1,
+            "rxq_count" : 4,
+            "txq_count" : 4,
+            "eq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 16,
+            "network" : {
+                "uplink" : 285278209
+            }
         }
     ],
     "eth_dev" : [
