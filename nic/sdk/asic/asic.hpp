@@ -130,6 +130,31 @@ void set_init_type(asic_init_type_t type);
 void set_state(asic_state_t state);
 bool is_quiesced(void);
 
+typedef enum p4plus_cache_action_e {
+    P4PLUS_CACHE_ACTION_NONE        = 0x0,
+    P4PLUS_CACHE_INVALIDATE_RXDMA   = 0x1,
+    P4PLUS_CACHE_INVALIDATE_TXDMA   = 0x2,
+    P4PLUS_CACHE_INVALIDATE_BOTH    = P4PLUS_CACHE_INVALIDATE_RXDMA |
+                                      P4PLUS_CACHE_INVALIDATE_TXDMA
+} p4plus_cache_action_t;
+
+// sw phv pipeline type
+typedef enum asic_swphv_type_t {
+    ASIC_SWPHV_TYPE_RXDMA   = 0,    // P4+ RxDMA
+    ASIC_SWPHV_TYPE_TXDMA   = 1,    // P4+ TxDMA
+    ASIC_SWPHV_TYPE_INGRESS = 2,    // P4 Ingress
+    ASIC_SWPHV_TYPE_EGRESS  = 3,    // P4 Egress
+} asic_swphv_type_t;
+
+// sw phv injection state
+typedef struct asic_sw_phv_state_s {
+    bool        enabled;
+    bool        done;
+    uint32_t    current_cntr;
+    uint32_t    no_data_cntr;
+    uint32_t    drop_no_data_cntr;
+} asic_sw_phv_state_t;
+
 }    // namespace asic
 }    // namespace sdk
 

@@ -6,6 +6,7 @@
 #include "include/sdk/base.hpp"
 #include "lib/p4/p4_api.hpp"
 #include "asic/asic.hpp"
+#include "include/sdk/qos.hpp"
 
 namespace sdk {
 namespace asic {
@@ -140,9 +141,24 @@ typedef struct p4_tbl_eng_cfg_s {
     bool     pc_dyn;
 } p4_tbl_eng_cfg_t;
 
+typedef struct hw_fifo_prof_s {
+    uint64_t        opaque;
+    uint32_t        lg2size;
+    uint32_t        lg2occ1;
+    uint32_t        lg2occ2;
+    uint32_t        lg2occ3;
+    uint32_t        lg2occ4;
+} hw_fifo_prof_t;
+
+typedef struct hw_fifo_stats_s {
+    uint32_t        head;
+    uint32_t        tail;
+    bool            empty;
+    bool            full;
+} hw_fifo_stats_t;
+
 sdk_ret_t asicpd_program_table_constant(uint32_t tableid, uint64_t const_value);
 sdk_ret_t asicpd_p4plus_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
-sdk_ret_t asicpd_program_table_mpu_pc(void);
 sdk_ret_t asicpd_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
 sdk_ret_t asicpd_program_table_mpu_pc(void);
 sdk_ret_t asicpd_deparser_init(void);
@@ -169,15 +185,14 @@ int asicpd_table_hw_entry_read(uint32_t tableid, uint32_t index,
 int asicpd_tcam_table_hw_entry_read(uint32_t tableid, uint32_t index,
                                     uint8_t  *trit_x, uint8_t  *trit_y,
                                     uint16_t *hwentry_bit_len);
-void asicpd_copy_capri_table_info(p4_table_mem_layout_t *out,
-                                  p4pd_table_mem_layout_t *in,
-                                  p4pd_table_properties_t *tbl_ctx);
+void asicpd_copy_table_info(p4_table_mem_layout_t *out,
+                            p4pd_table_mem_layout_t *in,
+                            p4pd_table_properties_t *tbl_ctx);
 int asicpd_hbm_table_entry_read(uint32_t tableid, uint32_t index,
                                 uint8_t *hwentry, uint16_t *entry_size);
 int asicpd_hbm_table_entry_write(uint32_t tableid, uint32_t index,
                                  uint8_t *hwentry, uint16_t entry_size);
-sdk_ret_t asic_pd_scheduler_stats_get(
-    scheduler_stats_t *sch_stats);
+sdk_ret_t asic_pd_scheduler_stats_get(scheduler_stats_t *sch_stats);
 sdk_ret_t asic_pd_hbm_bw_get(hbm_bw_samples_t *hbm_bw_samples);
 sdk_ret_t asic_pd_llc_setup(llc_counters_t *llc);
 sdk_ret_t asic_pd_llc_get(llc_counters_t *llc);
@@ -185,24 +200,42 @@ sdk_ret_t asicpd_p4plus_recirc_init(void);
 sdk_ret_t asic_pd_qstate_map_clear(uint32_t lif_id);
 sdk_ret_t asic_pd_qstate_map_write(lif_qstate_t *qstate, uint8_t enable);
 sdk_ret_t asic_pd_qstate_map_read (lif_qstate_t *qstate);
-sdk_ret_t asic_pd_qstate_write (uint64_t addr, const uint8_t *buf, uint32_t size);
-sdk_ret_t asic_pd_qstate_read (uint64_t addr, uint8_t *buf, uint32_t size);
-sdk_ret_t asic_pd_qstate_clear (lif_qstate_t *qstate);
-sdk_ret_t asic_pd_p4plus_invalidate_cache (mpartition_region_t *reg,
-                                           uint64_t q_addr, uint32_t size);
+sdk_ret_t asic_pd_qstate_write(uint64_t addr, const uint8_t *buf,
+                               uint32_t size);
+sdk_ret_t asic_pd_qstate_read(uint64_t addr, uint8_t *buf, uint32_t size);
+sdk_ret_t asic_pd_qstate_clear(lif_qstate_t *qstate);
+sdk_ret_t asic_pd_p4plus_invalidate_cache(mpartition_region_t *reg,
+                                          uint64_t q_addr, uint32_t size);
 uint32_t asic_pd_clock_freq_get(void);
 pd_adjust_perf_status_t asic_pd_adjust_perf(int chip_id, int inst_id,
                                             pd_adjust_perf_index_t &idx,
                                             pd_adjust_perf_type_t perf_type);
 void asic_pd_set_half_clock(int chip_id, int inst_id);
-sdk_ret_t asic_pd_unravel_hbm_intrs(bool *iscattrip, bool *iseccerr, bool logging=false);
+sdk_ret_t asic_pd_unravel_hbm_intrs(bool *iscattrip, bool *iseccerr,
+                                    bool logging=false);
 sdk_ret_t asicpd_toeplitz_init(const char *handle, uint32_t table_id);
 
+bool asicpd_p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
+                                    p4plus_cache_action_t action);
+int asicpd_p4plus_table_init(p4plus_table_params_t *table_params);
+sdk_ret_t asicpd_tm_get_clock_tick(uint64_t *tick);
+sdk_ret_t asicpd_tm_debug_stats_get(tm_port_t port,
+                                    tm_debug_stats_t *debug_stats, bool reset);
+sdk_ret_t asicpd_sw_phv_init(void);
+sdk_ret_t asicpd_sw_phv_get(asicpd_swphv_type_t type, uint8_t prof_num,
+                            asicpd_sw_phv_state_t *state);
 sdk_ret_t asicpd_sw_phv_inject(asicpd_swphv_type_t type, uint8_t prof_num,
                                uint8_t start_idx, uint8_t num_flits,
                                void *data);
-sdk_ret_t asicpd_sw_phv_get(asicpd_swphv_type_t type, uint8_t prof_num,
-                            asicpd_sw_phv_state_t *state);
+
+uint32_t asicpd_get_coreclk_freq(platform_type_t platform_type);
+void asicpd_txs_timer_init_hsh_depth(uint32_t key_lines);
+
+sdk_ret_t asicpd_init_hw_fifo(int fifo_num, uint64_t addr, int n,
+                              hw_fifo_prof_t *prof);
+sdk_ret_t asicpd_get_hw_fifo_info(int fifo_num, hw_fifo_stats_t *stats);
+sdk_ret_t asicpd_set_hw_fifo_info(int fifo_num, hw_fifo_stats_t *stats);
+inline bool asicpd_tm_q_valid(int32_t tm_q);
 
 typedef struct queue_credit_s {
     uint32_t oq;
@@ -218,8 +251,8 @@ typedef void (*queue_credits_get_cb_t)(uint32_t port_num,
                                        port_queue_credit_t *credit,
                                        void *ctxt);
 
-sdk_ret_t
-queue_credits_get (queue_credits_get_cb_t cb, void *ctxt);
+sdk_ret_t queue_credits_get(queue_credits_get_cb_t cb, void *ctxt);
+
 uint64_t asicpd_table_asm_base_addr_get(uint32_t tableid);
 uint64_t asicpd_table_asm_err_offset_get(uint32_t tableid);
 
@@ -233,12 +266,29 @@ sdk_ret_t asicpd_rss_tbl_eng_cfg_get(const char *handle, uint32_t tableid,
                                      p4_tbl_eng_cfg_t *rss);
 void asicpd_rss_tbl_eng_cfg_modify(p4_tbl_eng_cfg_t *rss);
 
-mpartition_region_t *get_mem_region(char *name);
+// TODO: Fixup asicpd prefix for these newly added routines
 uint64_t get_mem_base(void);
 uint64_t get_mem_offset(const char *reg_name);
 uint64_t get_mem_addr(const char *reg_name);
 uint32_t get_mem_size_kb(const char *reg_name);
-mpartition_region_t * get_hbm_region_by_address(uint64_t addr);
+mpartition_region_t *get_mem_region(char *name);
+mpartition_region_t *get_hbm_region_by_address(uint64_t addr);
+
+uint64_t asicpd_get_p4plus_table_mpu_pc(int tableid);
+void asicpd_program_p4plus_table_mpu_pc(int tableid, int stage_tbl_id,
+                                        int stage);
+void asicpd_program_tbl_mpu_pc(int tableid, bool gress, int stage,
+                               int stage_tableid, uint64_t table_asm_err_offset,
+                               uint64_t table_asm_base);
+
+void asicpd_set_action_asm_base(int tableid, int actionid, uint64_t asm_base);
+
+void asicpd_set_action_rxdma_asm_base(int tableid, int actionid,
+                                      uint64_t asm_base);
+void asicpd_set_action_txdma_asm_base(int tableid, int actionid,
+                                      uint64_t asm_base);
+void asicpd_set_table_rxdma_asm_base(int tableid, uint64_t asm_base);
+void asicpd_set_table_txdma_asm_base(int tableid, uint64_t asm_base);
 
 }    // namespace pd
 }    // namespace asic
