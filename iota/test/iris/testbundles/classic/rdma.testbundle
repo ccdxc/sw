@@ -211,16 +211,16 @@ testcases:
     #=======================================
     # Vlan
     #=======================================
-    -   name    : Rc_Bw_Only_Bidir_Vlan
-        testcase: testcases.rdma.rc_bw_bidir_vlan
-        stress  : True
-        iterators :
-            type     : nested
-            num_qp   : [1]
-            rdma_cm  : ['yes', 'no']
-            test     : ['send','write','read']
-        args    :
-            type: remote_only
+    #-   name    : Rc_Bw_Only_Bidir_Vlan
+    #    testcase: testcases.rdma.rc_bw_bidir_vlan
+    #    stress  : True
+    #    iterators :
+    #        type     : nested
+    #        num_qp   : [1]
+    #        rdma_cm  : ['yes', 'no']
+    #        test     : ['send','write','read']
+    #    args    :
+    #        type: remote_only
 
     #=======================================
     # Atomic
