@@ -471,8 +471,34 @@ api_base::stateless(obj_id_t obj_id) {
     case OBJ_ID_VPC_PEER:
     case OBJ_ID_NAT_PORT_BLOCK:
     case OBJ_ID_SECURITY_PROFILE:
+    case OBJ_ID_POLICY_RULE:
+    case OBJ_ID_ROUTE:
         return true;
 
+    default:
+        break;
+    }
+    return false;
+}
+
+bool
+api_base::container(obj_id_t obj_id) {
+    switch (obj_id) {
+    case OBJ_ID_POLICY:
+    case OBJ_ID_ROUTE_TABLE:
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
+bool
+api_base::contained(obj_id_t obj_id) {
+    switch (obj_id) {
+    case OBJ_ID_POLICY_RULE:
+    case OBJ_ID_ROUTE:
+        return true;
     default:
         break;
     }

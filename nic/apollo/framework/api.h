@@ -48,7 +48,9 @@ typedef enum obj_id_e {
     OBJ_ID_POLICER            = 19,    ///< policer
     OBJ_ID_NAT_PORT_BLOCK     = 20,    ///< NAT port block
     OBJ_ID_DHCP_POLICY        = 21,    ///< DHCP relay/proxy policy
-    OBJ_ID_SECURITY_PROFILE   = 22,    ///< Security profile
+    OBJ_ID_SECURITY_PROFILE   = 22,    ///< security profile
+    OBJ_ID_ROUTE              = 23,    ///< route inside route table
+    OBJ_ID_POLICY_RULE        = 24,    ///< rule inside a policy
     OBJ_ID_MAX
 } obj_id_t;
 

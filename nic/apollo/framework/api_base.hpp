@@ -232,6 +232,14 @@ public:
     /// \param[in] obj_id    object id
     static bool stateless(obj_id_t obj_id);
 
+    /// \brief return true if object is contains list of other objects
+    /// \param[in] obj_id    object id
+    static bool container(obj_id_t obj_id);
+
+    /// \brief return true if object is contained inside another object
+    /// \param[in] obj_id    object id
+    static bool contained(obj_id_t obj_id);
+
     /// \brief return true if object needs to be circulated to other components
     /// (potentially multiple) in the system
     /// \param[in] obj_id    object id
