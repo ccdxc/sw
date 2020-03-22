@@ -147,6 +147,16 @@
 //::
 //::        key_fields_list = []
 //::        key_fields_dict = {}
+//::
+//::        if 'ftl_asm_ki_fields' in pddict['tables'][table]:
+//::          for field in pddict['tables'][table]['ftl_asm_ki_fields']['Full']:
+//::            ftl_store_field_full(key_fields_dict,key_fields_list,field['name'],field['width'])
+//::          #endfor
+//::          for field in pddict['tables'][table]['ftl_asm_ki_fields']['Splitted']:
+//::            ftl_store_field_splitted(key_fields_dict,key_fields_list,field['name'],field['split_field_name'],field['width'],field['sbit'],field['ebit'])
+//::          #endfor
+//::        #endif
+//::
 //::        if len(pddict['tables'][table]['asm_ki_fields']):
 //::            pad_to_512 = 0
 //::

@@ -519,6 +519,37 @@ def ftl_store_field(fields_dict, fields_list, field_name, field_width, little_st
     if field_obj.is_field_hash():
         hash_field_cnt += 1
 
+def ftl_store_field_splitted(fields_dict, fields_list, field_name, split_field_name, field_width, sbit, ebit):
+    global hash_field_cnt
+
+    field_obj = SplitField(field_name, field_width, '', split_field_name, sbit, ebit)
+    insert_split_fields_db(field_obj)
+
+    if field_obj.is_hash_hint_field():
+        insert_hash_hint_fields_db(field_obj)
+
+    fields_dict[field_name] = field_obj
+    fields_list.append(field_obj)
+
+    # count number of hash fields
+    if field_obj.is_field_hash():
+        hash_field_cnt += 1
+
+def ftl_store_field_full(fields_dict, fields_list, field_name, field_width):
+    global hash_field_cnt
+
+    field_obj = Field(field_name, field_width, '')
+
+    fields_dict[field_name] = field_obj
+    fields_list.append(field_obj)
+
+    if field_obj.is_hash_hint_field():
+        insert_hash_hint_fields_db(field_obj)
+
+    # count number of hash fields
+    if field_obj.is_field_hash():
+        hash_field_cnt += 1
+
 ################
 # process field
 ################

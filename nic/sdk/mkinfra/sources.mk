@@ -31,14 +31,6 @@ $${${1}_BLD_OUT_DIR}/${2}/%.p4o: ${2}/%${3} $${${1}_DEPS}
 	${AT}mkdir -p $$(dir $$@)
 	${NAT}${AT}echo ${${1}_NAME_P4C} $$(call CANPATH,$$<) "=>" $$(call CANPATH,$$@_build.log)
 	${AT}$(strip ${${1}_CMD_P4C} ${${1}_P4C_OPTS} $$<) > $$(call CANPATH,$$@_build.log)
-	${AT}mkdir -p ${BLD_P4GEN_DIR}/p4/dbg_out
-	${AT}mv ${BLD_P4GEN_DIR}/p4/model_debug.json ${BLD_P4GEN_DIR}/p4/dbg_out
-	${AT}mkdir -p ${BLD_P4GEN_DIR}/p4/p4pd
-	${AT}mv ${BLD_P4GEN_DIR}/p4/memory_spec.json ${BLD_P4GEN_DIR}/p4/p4pd
-	${AT}mv ${BLD_P4GEN_DIR}/p4/*.bin ${BLD_PGMBIN_DIR}
-	${AT}mkdir -p ${BLD_P4GEN_DIR}/p4/asm
-	${AT}mv ${BLD_P4GEN_DIR}/p4/*.asm ${BLD_P4GEN_DIR}/p4/asm
-	#${AT}${CMD_P4C_ASM} ${CMD_CAPAS} ${BLD_P4GEN_DIR}/p4/asm ${BLD_OUT_DIR}/$$(patsubst %.p4bin,%_asmbin,$${${1}_TARGET})
 	${AT}mkdir -p $${${1}_BIN_DIR}
 	${AT}${CMD_P4C_ASM} ${CMD_CAPAS} ${BLD_P4GEN_DIR}/p4/asm $${${1}_BIN_DIR}
 	${AT}touch $$@

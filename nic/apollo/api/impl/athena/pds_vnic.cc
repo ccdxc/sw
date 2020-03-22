@@ -124,9 +124,12 @@ static inline pds_mpls_label_to_hw_id(uint32_t mpls_label)
 {
     mpls_label_to_vnic_swkey_t  swkey;
     uint64_t    hw_idx;
-
+#ifndef P4_16
     swkey.control_metadata_mpls_label_b20_b4 = (mpls_label >> 4);
     swkey.control_metadata_mpls_label_b3_b0 = (mpls_label & 0x000f);
+#else
+    swkey.hdr_mpls_dst_label = (mpls_label);
+#endif
     hw_idx = p4pd_index_to_hwindex_map(P4TBL_ID_MPLS_LABEL_TO_VNIC, (void*) &swkey);
     PDS_TRACE_ERR("mpls_label: %x: hwidx: %x\n", mpls_label, (uint32_t)hw_idx);
     return hw_idx;

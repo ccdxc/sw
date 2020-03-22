@@ -774,5 +774,6 @@ if __name__ == '__main__':
     be = _dummy_backend(args);
     p4pd_gen = capri_p4pd_generator(be)
     p4pd_gen.load_pd_dict()
+    p4pd_gen.pddict['cli-name'] = be.prog_name
     capri_p4pd_code_generate(p4pd_gen)
 
