@@ -187,14 +187,7 @@ nic/build/$ARCH/$PIPELINE/lib/liblif_mgr.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmnet.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/librdmamgr_$PIPELINE.so             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpciemgr_if.so                    /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpciemgr.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpciemgrd.so                      /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpciemgrutils.so                  /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpciehdevices.so                  /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpcietlp.so                       /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libcfgspace.so                      /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libintrutils.so                     /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libmisc.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsysmon.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libasicerror.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/ionic.efirom                        /nic/oprom/

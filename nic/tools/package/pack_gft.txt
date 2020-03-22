@@ -191,13 +191,6 @@ nic/build/$ARCH/$PIPELINE/lib/liblif_mgr.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmnet.so                             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/librdmamgr_apollo.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpciemgr_if.so                       /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpciemgr.so                          /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpciemgrutils.so                     /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpciehdevices.so                     /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpcietlp.so                          /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libcfgspace.so                         /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libintrutils.so                        /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libmisc.so                             /nic/lib/
 nic/hal/third-party/judy/$ARCH/lib/libJudy.so.1                      /nic/lib/
 
 nic/build/$ARCH/$PIPELINE/lib/libhaltestutils.so                     /nic/lib/
