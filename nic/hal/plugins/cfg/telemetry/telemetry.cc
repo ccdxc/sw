@@ -690,6 +690,9 @@ mirror_session_change (ip_addr_t *ip,
             ret = mirror_session_update_pd(session,
                                            ctx->dest_if,
                                            tnnl_if, rtep_ep);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to update mirror session. err: {}", ret);
+            }
 
         }
         return false;

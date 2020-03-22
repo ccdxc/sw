@@ -740,8 +740,6 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t          *dhl_entry   = NULL;
     ep_t                 *ep          = NULL;
     vrf_t                *vrf         = NULL;
-    if_t                 *hal_if      = NULL;
-    // hal_handle_t         hal_handle   = 0;
     ep_create_app_ctxt_t *app_ctxt    = NULL;
 
     SDK_ASSERT(cfg_ctxt != NULL);
@@ -751,7 +749,6 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     app_ctxt = (ep_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     ep = (ep_t *)dhl_entry->obj;
-    // hal_handle = dhl_entry->handle;
     vrf = app_ctxt->vrf;
 
     HAL_TRACE_DEBUG("EP create commit cb {}", ep_l2_key_to_str(ep));

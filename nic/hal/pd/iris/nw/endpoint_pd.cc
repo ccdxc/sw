@@ -1041,17 +1041,13 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep,
                          table_oper_t oper)
 {
     hal_ret_t                           ret = HAL_RET_OK;
-    sdk_ret_t                           sdk_ret;
     registered_macs_swkey_t             key;
-    registered_macs_otcam_swkey_mask_t  key_mask, *key_mask_p = NULL; 
+    registered_macs_otcam_swkey_mask_t  key_mask; 
     registered_macs_actiondata_t        data;
     sdk_hash                            *reg_mac_tbl = NULL;
     ep_t                                *pi_ep = (ep_t *)pd_ep->pi_ep;
     l2seg_t                             *l2seg = NULL;
-    mac_addr_t                          *mac = NULL;
     if_t                                *pi_if = NULL, *uplink_if = NULL;
-    uint32_t                            hash_idx = INVALID_INDEXER_INDEX;
-    bool                                direct_to_otcam = false;
     lif_t                               *lif = NULL;
     l2seg_t                             *cl_l2seg = NULL, *hp_l2seg = NULL;
 

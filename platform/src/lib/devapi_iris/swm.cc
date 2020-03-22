@@ -1056,7 +1056,6 @@ devapi_swm::reset_channel (uint32_t channel)
                     channel, ret);
     }
 
-end:
     return ret;
 }
 

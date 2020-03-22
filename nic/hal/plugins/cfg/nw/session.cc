@@ -2439,7 +2439,6 @@ check_and_generate_session_limit_event (session_t *session)
     eventtypes::EventTypes       session_limit_event_reach, 
                     session_limit_event_approach, session_limit_event;
     types::IPProtocol            ip_proto = types::IPPROTO_NONE;
-    hal::vrf_t                  *vrf = NULL;
     hal::nwsec_profile_t        *nwsec_prof = NULL;
     uint64_t                     session_limit = 0;
     flow_key_t                   key = session->iflow->config.key;

@@ -1256,8 +1256,8 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
 
     if (!(upd_flags & ENICIF_UPD_FLAGS_NUM_PROM_LIFS)) {
         // no change in prom lifs
-        HAL_TRACE_DEBUG("Number of prom lifs: {}", l2seg_pd->num_prom_lifs);
         num_prom_lifs = l2seg_pd->num_prom_lifs;
+        HAL_TRACE_DEBUG("Number of prom lifs: {}", num_prom_lifs);
     }
 
     // Key
