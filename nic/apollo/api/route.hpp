@@ -1,33 +1,32 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    route.hpp
- *
- * @brief   route table handling
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// route table handling
+///
+//----------------------------------------------------------------------------
 
 #ifndef __ROUTE_HPP__
 #define __ROUTE_HPP__
 
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
+#include "nic/apollo/framework/api_stooge.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
 
 namespace api {
 
-/**
- * @defgroup PDS_ROUTE_TABLE - route table functionality
- * @ingroup PDS_ROUTE
- * @{
- */
+/// \defgroup PDS_ROUTE_TABLE - route table functionality
+/// \ingroup PDS_ROUTE
+/// @{
 
 // forward declaration
 class route_table_state;
 
-/**
- * @brief    route table
- */
+/// \brief route table
 class route_table : public api_base {
 public:
     /// \brief    factory method to allocate & initialize a route table instance
@@ -228,7 +227,89 @@ private:
                                        // of route_table
 } __PACK__;
 
-/** @} */    // end of PDS_ROUTE_TABLE
+/// \brief route class
+class route : public api_stooge {
+public:
+    /// \brief    factory method to allocate & initialize a route instance
+    /// \param[in] spec route configuration
+    /// \return    new instance of route or NULL, in case of error
+    static route *factory(pds_route_spec_t *spec);
+
+    /// \brief    release all the s/w state associate with the given route,
+    ///           if any, and free the memory
+    ///@param[in] rt route to be freed
+    static void destroy(route *rt);
+
+    /// \brief    clone this object and return cloned object
+    /// \param[in]    api_ctxt API context carrying object related configuration
+    /// \return       new object instance of current object
+    virtual api_base *clone(api_ctxt_t *api_ctxt) override;
+
+    /// \brief    free all the memory associated with this object without
+    ///           touching any of the databases or h/w etc.
+    /// \param[in] rt route to be freed
+    /// \return   sdk_ret_ok or error code
+    static sdk_ret_t free(route *route);
+
+    /// \brief     initialize route instance with the given config
+    /// \param[in] api_ctxt API context carrying the configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
+
+    /// \brief compute all the objects depending on this object and add to
+    ///        framework's dependency list
+    /// \param[in] obj_ctxt transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief     add given route to the database
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_to_db(void) override;
+
+     /// \brief     delete route from the database
+     /// \@return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t del_from_db(void) override;
+
+    /// \brief    this method is called on new object that needs to replace the
+    ///           old version of the object in the DBs
+    /// \param[in] orig_obj    old version of the unmodified object
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t update_db(api_base *orig_obj,
+                                api_obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief    initiate delay deletion of this object
+    virtual sdk_ret_t delay_delete(void) override;
+
+    /// \brief    return stringified key of the object (for debugging)
+    virtual string key2str(void) const override {
+            return "route-"  + std::string(key_.str());
+    }
+
+    /// \brief     helper function to get key given route
+    /// \param[in] entry    pointer to route instance
+    /// \return    pointer to the route instance's key
+    static void *route_key_func_get(void *entry) {
+        route *rt = (route *)entry;
+        return (void *)&(rt->key_);
+    }
+
+    /// \brief     return the route key/id
+    /// \return    key/id of the route
+    const pds_obj_key_t key(void) const { return key_; }
+
+private:
+    /// \brief    constructor
+    route() {}
+
+    /// \brief    destructor
+    ~route() {}
+
+private:
+    pds_obj_key_t key_;    ///< route key
+};
+
+/// \@}
 
 }    // namespace api
 
