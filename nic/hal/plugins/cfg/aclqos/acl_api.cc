@@ -155,7 +155,13 @@ acl_install_bcast_all (if_t *hal_if)
     action->set_egress_drop(true);
 
     // Selector
-    match->mutable_src_if_key_handle()->set_interface_id(hal_if->if_id);
+    /*
+     * Mcast/Bcast packets coming from host pinned to this interface
+     * are getting replicated to swm lif. We have to prevent that traffic.
+     * So all traffic coming from anywhere will hit this entry but only 
+     * traffic trying to go to swm enics will get dropped.
+     */
+    // match->mutable_src_if_key_handle()->set_interface_id(hal_if->if_id);
     match->mutable_internal_key()->set_outer_dst_mac(0xFFFFFFFFFFFF);
     match->mutable_internal_mask()->set_outer_dst_mac(0xFFFFFFFFFFFF);
 #if 0
@@ -1236,7 +1242,13 @@ acl_install_mcast_all (if_t *hal_if)
     action->set_egress_drop(true);
 
     // Selector
-    match->mutable_src_if_key_handle()->set_interface_id(hal_if->if_id);
+    /*
+     * Mcast/Bcast packets coming from host pinned to this interface
+     * are getting replicated to swm lif. We have to prevent that traffic.
+     * So all traffic coming from anywhere will hit this entry but only 
+     * traffic trying to go to swm enics will get dropped.
+     */
+    // match->mutable_src_if_key_handle()->set_interface_id(hal_if->if_id);
     match->mutable_internal_key()->set_outer_dst_mac(0x010000000000);
     match->mutable_internal_mask()->set_outer_dst_mac(0x010000000000);
 #if 0
