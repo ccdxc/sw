@@ -545,40 +545,30 @@ api_engine::reserve_resources_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 api_engine::resource_reservation_stage_(void)
 {
+    uint32_t i = 0;
     sdk_ret_t ret;
+    api_base *api_obj;
     api_obj_ctxt_t *obj_ctxt;
 
-    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
+    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_OBJ_DEPENDENCY),
                       sdk::SDK_RET_INVALID_ARG);
     batch_ctxt_.num_msgs = 0;
     // walk over all the dirty objects and reserve resources, if needed
     batch_ctxt_.stage = API_BATCH_STAGE_RESERVE_RESOURCES;
     for (auto it = batch_ctxt_.dol.begin();
          it != batch_ctxt_.dol.end(); ++it) {
+        api_obj = *it;
         obj_ctxt = batch_ctxt_.dom[*it];
         ret = reserve_resources_(*it, obj_ctxt);
         if (ret != SDK_RET_OK) {
             goto error;
         }
-        // if this API msg needs to relayed to other components as well,
-        // count it so we can allocate resources for all them in one shot
+        // if this object needs to be circulated, add it to the msg list
         if ((obj_ctxt->api_op != API_OP_NONE) &&
             api_base::circulate(obj_ctxt->obj_id)) {
-            batch_ctxt_.num_msgs++;
-        }
-    }
-
-    // if some of these APIs need to be shipped to other components, allocate
-    // memory for the necessary messages
-    if (batch_ctxt_.num_msgs) {
-        batch_ctxt_.pds_msgs =
-            (pds_msg_list_t *)core::pds_msg_list_alloc(PDS_MSG_TYPE_CFG,
-                                                       batch_ctxt_.epoch,
-                                                       batch_ctxt_.num_msgs);
-        if (batch_ctxt_.pds_msgs == NULL) {
-            PDS_TRACE_ERR("Failed to allocate memory for %u IPC msgs",
-                          batch_ctxt_.num_msgs);
-            ret = SDK_RET_OOM;
+            api_obj->populate_msg(core::pds_msg(batch_ctxt_.pds_msgs, i),
+                                  obj_ctxt);
+            i++;
         }
     }
     return SDK_RET_OK;
@@ -604,12 +594,11 @@ api_engine::add_deps_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 api_engine::obj_dependency_computation_stage_(void)
 {
-    uint32_t i = 0;
     sdk_ret_t ret;
     api_base *api_obj;
     api_obj_ctxt_t *obj_ctxt;
 
-    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_RESERVE_RESOURCES),
+    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
                       sdk::SDK_RET_INVALID_ARG);
     // walk over all the dirty objects and make a list of objects that are
     // affected because of each dirty object
@@ -623,12 +612,25 @@ api_engine::obj_dependency_computation_stage_(void)
             PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(err, 1);
             goto error;
         }
-        // if this object needs to be circulated, add it to the msg list
+        // if this API msg needs to relayed to other components as well,
+        // count it so we can allocate resources for all them in one shot
         if ((obj_ctxt->api_op != API_OP_NONE) &&
             api_base::circulate(obj_ctxt->obj_id)) {
-            api_obj->populate_msg(core::pds_msg(batch_ctxt_.pds_msgs, i),
-                                  obj_ctxt);
-            i++;
+            batch_ctxt_.num_msgs++;
+        }
+    }
+
+    // if some of these APIs need to be shipped to other components, allocate
+    // memory for the necessary messages
+    if (batch_ctxt_.num_msgs) {
+        batch_ctxt_.pds_msgs =
+            (pds_msg_list_t *)core::pds_msg_list_alloc(PDS_MSG_TYPE_CFG,
+                                                       batch_ctxt_.epoch,
+                                                       batch_ctxt_.num_msgs);
+        if (batch_ctxt_.pds_msgs == NULL) {
+            PDS_TRACE_ERR("Failed to allocate memory for %u IPC msgs",
+                          batch_ctxt_.num_msgs);
+            ret = SDK_RET_OOM;
         }
     }
     PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(ok, 1);
@@ -730,7 +732,7 @@ sdk_ret_t
 api_engine::program_config_stage_(void) {
     sdk_ret_t    ret;
 
-    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_OBJ_DEPENDENCY),
+    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_RESERVE_RESOURCES),
                       sdk::SDK_RET_INVALID_ARG);
 
     // walk over all the dirty objects and program hw, if any
@@ -1068,6 +1070,19 @@ api_engine::batch_commit_phase1_(void) {
     PDS_TRACE_INFO("Dirty object list size %u, Dirty object map size %u",
                    batch_ctxt_.dol.size(), batch_ctxt_.dom.size());
 
+    // walk over the dirty object list and compute the objects that could be
+    // effected because of dirty list objects
+    PDS_TRACE_INFO("Starting object dependency computation stage for epoch %u",
+                   batch_ctxt_.epoch);
+    ret = obj_dependency_computation_stage_();
+    PDS_TRACE_INFO("Finished object dependency computation stage for epoch %u",
+                   batch_ctxt_.epoch);
+    if (ret != SDK_RET_OK) {
+        goto error;
+    }
+    PDS_TRACE_INFO("Dependency object list size %u, map size %u",
+                   batch_ctxt_.aol.size(), batch_ctxt_.aom.size());
+
     // start table mgmt. lib transaction
     PDS_TRACE_INFO("Initiating transaction begin for epoch %u",
                    batch_ctxt_.epoch);
@@ -1083,19 +1098,6 @@ api_engine::batch_commit_phase1_(void) {
     if (ret != SDK_RET_OK) {
         goto error;
     }
-
-    // walk over the dirty object list and compute the objects that could be
-    // effected because of dirty list objects
-    PDS_TRACE_INFO("Starting object dependency computation stage for epoch %u",
-                   batch_ctxt_.epoch);
-    ret = obj_dependency_computation_stage_();
-    PDS_TRACE_INFO("Finished object dependency computation stage for epoch %u",
-                   batch_ctxt_.epoch);
-    if (ret != SDK_RET_OK) {
-        goto error;
-    }
-    PDS_TRACE_INFO("Dependency object list size %u, map size %u",
-                   batch_ctxt_.aol.size(), batch_ctxt_.aom.size());
     PDS_TRACE_INFO("Object circulation list size %u", batch_ctxt_.num_msgs);
     return SDK_RET_OK;
 
