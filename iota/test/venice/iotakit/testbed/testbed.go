@@ -1317,19 +1317,22 @@ func (tb *TestBed) getIotaNode(node *TestNode) *iota.Node {
 	}
 
 	// set esx user name when required
-	if node.topoNode.HostOS == "vcenter" {
+	switch node.topoNode.HostOS {
+	case "vcenter":
 		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_VCENTER
-	} else if node.topoNode.HostOS == "esx" {
+	case "esx":
 		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_ESX
 		tbn.EsxConfig = &iota.VmwareESXConfig{
 			Username:  tb.Params.Provision.Vars["EsxUsername"],
 			Password:  tb.Params.Provision.Vars["EsxPassword"],
 			IpAddress: node.NodeMgmtIP,
 		}
-	} else if node.topoNode.HostOS == "freebsd" {
+	case "freebsd":
 		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD
-	} else {
+	case "linux":
 		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_LINUX
+	case "windows":
+		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_WINDOWS
 	}
 
 	switch node.Personality {

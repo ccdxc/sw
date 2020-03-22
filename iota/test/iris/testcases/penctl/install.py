@@ -8,7 +8,7 @@ from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 
 def __penctl_exec(node):
-    return "penctl.linux" if api.GetNodeOs(node) in ["linux", "esx"] else "penctl.freebsd"
+    return "penctl.linux" if api.GetNodeOs(node) in ["linux", "esx", "windows"] else "penctl.freebsd"
 
 def __installPenCtl(node):
 

@@ -4,6 +4,7 @@ import yaml
 OS_TYPE_LINUX = "linux"
 OS_TYPE_BSD   = "freebsd"
 OS_TYPE_ESX   = "esx"
+OS_TYPE_WINDOWS = "windows"
 
 LinuxDriverPath   = api.HOST_NAPLES_DIR + "/drivers-linux-eth/drivers/eth/ionic/ionic.ko"
 FreeBSDDriverPath = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth/sys/modules/ionic/ionic.ko"
@@ -54,7 +55,7 @@ def ShowLeakInMemorySlabInNaples(memslab_before, memslab_after, node_name):
 
     return ret_memslab_diff
 
-# Toggele txvlan options based on <enable>
+# Toggle txvlan options based on <enable>
 # <enable> = on/off
 def Toggle_TxVlanOffload(node, interface, enable):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
@@ -66,6 +67,10 @@ def Toggle_TxVlanOffload(node, interface, enable):
             cmd = "ifconfig " + interface + " vlanhwtag "
         else:
             cmd = "ifconfig " + interface + " -vlanhwtag "
+    else:
+        api.Logger.info("Unknown os_type - %s" % api.GetNodeOs(node))
+        return api.types.status.FAILURE
+
     api.Trigger_AddHostCommand(req, node, cmd)
     api.Logger.info("Toggle_TxVlanOffload: cmd = %s" % cmd)
     resp = api.Trigger(req)
@@ -83,6 +88,9 @@ def Toggle_RxVlanOffload(node, interface, enable):
             cmd = "ifconfig " + interface + " vlanhwtag "
         else:
             cmd = "ifconfig " + interface + " -vlanhwtag "
+    else:
+        api.Logger.info("Unknown os_type - %s" % api.GetNodeOs(node))
+        return api.types.status.FAILURE
 
     api.Trigger_AddHostCommand(req, node, cmd)
     api.Logger.info("Toggle_RxVlanOffload: cmd = %s" % cmd)
@@ -92,11 +100,13 @@ def Toggle_RxVlanOffload(node, interface, enable):
 def Get_RxVlanOffload_Status(node, interface):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    resp = None
     if api.GetNodeOs(node) == OS_TYPE_LINUX:
         cmd = "ethtool -k " + interface + " | grep rx-vlan-offload"
     elif api.GetNodeOs(node) == OS_TYPE_BSD:
         cmd = "ifconfig " + interface + " | grep options"
+    else:
+        api.Logger.info("Unknown os_type - %s" % api.GetNodeOs(node))
+        return api.types.status.FAILURE
 
     api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
@@ -105,11 +115,13 @@ def Get_RxVlanOffload_Status(node, interface):
 def Get_TxVlanOffload_Status(node, interface):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    resp = None
     if api.GetNodeOs(node) == OS_TYPE_LINUX:
         cmd = "ethtool -k " + interface + " | grep tx-vlan-offload"
     elif api.GetNodeOs(node) == OS_TYPE_BSD:
         cmd = "ifconfig " + interface + " | grep options"
+    else:
+        api.Logger.info("Unknown os_type - %s" % api.GetNodeOs(node))
+        return api.types.status.FAILURE
 
     api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
@@ -149,9 +161,12 @@ def GetHostInternalMgmtInterfaces(node):
                     #iface_name = None
                     iface_name = command.stdout
                     interface_names.append(iface_name.strip("\n"))
-    elif api.GetNodeOs(node) == "esx":
+    elif api.GetNodeOs(node) == OS_TYPE_ESX:
         #For now hardcoding.
         return ["eth1"]
+    elif api.GetNodeOs(node) == OS_TYPE_WINDOWS:
+        # TODO
+        return ["eth2"]
     else:
         cmd = "pciconf -l | grep chip=0x10041dd8 | cut -d'@' -f1 | sed \"s/ion/ionic/g\""
         api.Trigger_AddHostCommand(req, node, cmd)
@@ -186,6 +201,7 @@ def getNaplesInterfaces(naples_node):
     naples_intf_list = int_mgmt_intf_list + oob_intf_list + inb_mnic_intf_list
     return naples_intf_list
 
+
 def GetIPAddress(node, interface):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     cmd = "ifconfig " + interface + "   | grep 'inet' | cut -d: -f2 |  awk '{print $1}' "
@@ -193,6 +209,9 @@ def GetIPAddress(node, interface):
     resp = api.Trigger(req)
     return resp.commands[0].stdout.strip("\n")
 
+
+# Load/Unload Driver are used by driver test
+# TODO not ready for windows driver test
 def LoadDriver (os_type, node):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
@@ -229,6 +248,7 @@ def LoadDriver (os_type, node):
     return api.types.status.SUCCESS
 
 
+# TODO not ready for windows driver test
 def UnloadDriver (os_type, node, whichdriver = "all" ):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 

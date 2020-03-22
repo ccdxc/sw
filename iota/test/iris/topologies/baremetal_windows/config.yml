@@ -1,0 +1,72 @@
+# Configuration YML file for Classic NIC Baremetal topology
+meta:
+    name: baremetal_windows
+
+spec:
+    networks:
+        - network:
+            name: default_ipv4_ipv6
+            # count: Number of networks to be configured,
+            #   - 'auto' : based on the number of vlans available for the testbed.
+            #   - 100 (some number) : Fixed number of networks
+            #   - None : No networks configured
+            ipv4:
+                # Enables ipv4 on all networks
+                enable  : True
+
+                # ipam_base: Base prefix for all ip-address management
+                # All networks will get subnets from this base prefix.
+                # E.g. 10.255.1.0/24, 10.255.2.0/24 and so on.
+                ipam_base: 10.255.0.0/16
+
+                # Desired prefix length of each network
+                # This should be bigger than the prefix length of 'ipam_base'
+                prefix_length: 24
+
+            ipv6:
+                # Enables ipv6 on all networks
+                enable  : True
+
+                # ipam_base: Base prefix for all ip-address management
+                # All networks will get subnets from this base prefix.
+                # E.g. 10.255.1.0/24, 10.255.2.0/24 and so on.
+                ipam_base: 2000::/48
+
+                # Desired prefix length of each network
+                # This should be bigger than the prefix length of 'ipam_base'
+                prefix_length: 80
+            default: True
+
+    workloads:
+        - workload:
+            name        : native # Untagged workloads
+            network_spec: default_ipv4_ipv6
+            tagged      : False
+
+
+instances:
+    networks:
+        count       : auto
+        distribution: all
+
+    workloads:
+        - workload:
+            node        : node1
+            count       : 2
+            spec        : native
+            # Interfaces controls the distribution of workloads on
+            # all the available host interfaces.
+            # Distribution is equal, 1 on each interface
+            interfaces  :
+                - host_if1 # Tag or Label for Interface1
+                - host_if2 # Tag or Label for Interface2
+
+        - workload:
+            node        : node2
+            count       : 2
+            spec        : native
+            # Some kind of a tag for host if
+            interfaces  :
+                - host_if1 # Tag or Label for Interface1
+                - host_if2 # Tag or Label for Interface2
+

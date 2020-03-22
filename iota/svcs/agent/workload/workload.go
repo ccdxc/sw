@@ -1,6 +1,7 @@
 package workload
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -50,8 +51,10 @@ const (
 
 var (
 	//ContainerPrivileged run container in privileged mode
-	ContainerPrivileged  = true
-	macVlanIntfPrefixCnt uint64
+	ContainerPrivileged    = true
+	macVlanIntfPrefixCnt   uint64
+	windowsPortNameMapping map[string]map[string]string
+	once                   sync.Once
 )
 
 //InterfaceSpec def
@@ -100,9 +103,6 @@ func isFreeBsd() bool {
 	return runtime.GOOS == "freebsd"
 }
 
-type workload interface {
-}
-
 type workloadBase struct {
 	name   string
 	parent string
@@ -126,7 +126,8 @@ type remoteWorkload struct {
 
 type bareMetalWorkload struct {
 	workloadBase
-	subIF string
+	subIF  string
+	osType string
 }
 
 type bareMetalMacVlanWorkload struct {
@@ -560,59 +561,132 @@ func (app *bareMetalWorkload) SendArpProbe(ip string, intf string, vlan int) err
 }
 
 func (app *bareMetalWorkload) AddInterface(spec InterfaceSpec) (string, error) {
+	switch app.osType {
+	case "linux":
+		fallthrough
+	case "freebsd":
+		ifconfigCmd := []string{"ifconfig", spec.Parent, "up"}
+		if retCode, stdout, _ := utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
+			return "", errors.Errorf("Could not bring up parent interface %s : %s", spec.Parent, stdout)
+		}
+	case "windows":
+		cmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Enable-NetAdapter \"" + windowsPortNameMapping[spec.Parent]["Name"] + "\" -Confirm:$false"}
+		if retCode, stdout, _ := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+			return "", errors.Errorf("Could not bring up parent interface %s with command %v: %s", spec.Parent, cmd, stdout)
+		}
 
-	ifconfigCmd := []string{"ifconfig", spec.Parent, "up"}
-	if retCode, stdout, _ := utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
-		return "", errors.Errorf("Could not bring up parent interface %s : %s", spec.Parent, stdout)
 	}
 	intfToAttach := spec.Parent
 
 	if spec.PrimaryVlan != 0 {
+		app.logger.Println("Add VLAN interface ", spec.Parent, spec.PrimaryVlan)
 		vlanintf := ""
 		var addVlanCmd []string
 		var delVlanCmd []string
-		if isFreeBsd() {
-			vlanintf = freebsdVlanIntf(spec.Parent, spec.PrimaryVlan)
-			delVlanCmd = []string{"ifconfig", vlanintf, "destroy"}
-			addVlanCmd = []string{"ifconfig", vlanintf, "create", "inet"}
-		} else {
+		switch app.osType {
+		case "linux":
 			vlanintf = vlanIntf(spec.Parent, spec.PrimaryVlan)
 			delVlanCmd = []string{"ip", "link", "del", vlanintf}
 			addVlanCmd = []string{"ip", "link", "add", "link", spec.Parent, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(spec.PrimaryVlan)}
-		}
-		utils.Run(delVlanCmd, 0, false, false, nil)
-		if retCode, stdout, _ := utils.Run(addVlanCmd, 0, false, false, nil); retCode != 0 {
-			return "", errors.Errorf("IP link create to add vlan failed %s:%d, err :%s", spec.Parent, spec.PrimaryVlan, stdout)
-		}
+			utils.Run(delVlanCmd, 0, false, false, nil)
+			if retCode, stdout, _ := utils.Run(addVlanCmd, 0, false, false, nil); retCode != 0 {
+				return "", errors.Errorf("add vlan failed %s:%d, err :%s", spec.Parent, spec.PrimaryVlan, stdout)
+			}
 
+		case "freebsd":
+			vlanintf = freebsdVlanIntf(spec.Parent, spec.PrimaryVlan)
+			delVlanCmd = []string{"ifconfig", vlanintf, "destroy"}
+			addVlanCmd = []string{"ifconfig", vlanintf, "create", "inet"}
+			utils.Run(delVlanCmd, 0, false, false, nil)
+			if retCode, stdout, _ := utils.Run(addVlanCmd, 0, false, false, nil); retCode != 0 {
+				return "", errors.Errorf("add vlan failed %s:%d, err :%s", spec.Parent, spec.PrimaryVlan, stdout)
+			}
+		case "windows":
+			/*
+				vlanintf := spec.Parent + strconv.Itoa(spec.PrimaryVlan)
+				intfToAttach = vlanintf
+				app.logger.Println("Add VLAN interface ", intfToAttach)
+				app.subIF = intfToAttach
+				return intfToAttach, nil
+			*/
+			return "", errors.Errorf("VLAN interface is not supported on windows")
+		}
 		intfToAttach = vlanintf
 	}
 
 	if spec.Mac != "" {
-		var setMacAddrCmd []string
-		if !isFreeBsd() {
+		app.logger.Println("Changing MAC Address ", spec.Mac)
+		switch app.osType {
+		case "linux":
 			//Mac address change only works on linux
-			setMacAddrCmd = []string{"ifconfig", intfToAttach, "hw", "ether", spec.Mac}
+			setMacAddrCmd := []string{"ifconfig", intfToAttach, "hw", "ether", spec.Mac}
 			if retCode, stdout, err := utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
 				return "", errors.Wrap(err, stdout)
+			}
+		case "windows":
+			/*
+				comment out for now, not supported by powershell/driver
+				setMacAddrCmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Set-NetAdapter -Name '" + spec.Parent + " -MacAddress '" + spec.Mac +"' -Confirm:$false"}
+				if retCode, stdout, err := utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
+					return "", errors.Wrap(err, stdout)
+				}
+			*/
+		case "freebsd":
+			// not supported
+		}
+
+	}
+
+	if spec.IPV4Address != "" {
+		app.logger.Println("Adding IPv4 address ", spec.IPV4Address, " for ", intfToAttach)
+		switch app.osType {
+		case "linux":
+			fallthrough
+		case "freebsd":
+			cmd := []string{"ifconfig", intfToAttach, spec.IPV4Address}
+			if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+				return "", errors.Wrap(err, stdout)
+			}
+		case "windows":
+			output := strings.Split(spec.IPV4Address, "/")
+			intfInfo, ok := windowsPortNameMapping[spec.Parent]
+			if !ok {
+				return "", errors.Errorf("Failed to find port")
+			}
+			cmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "New-NetIPAddress -InterfaceAlias \"" + intfInfo["Name"] + "\" -IPAddress " + output[0] + " -PrefixLength " + output[1]}
+			if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+				if !strings.Contains(stdout, "already exists") {
+					return "", errors.Wrap(err, stdout)
+				}
 			}
 		}
 	}
 
-	if spec.IPV4Address != "" {
-		cmd := []string{"ifconfig", intfToAttach, spec.IPV4Address}
-		if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
-			return "", errors.Wrap(err, stdout)
-		}
-	}
-
 	if spec.IPV6Address != "" {
-		//unset ipv6 address first
-		cmd := []string{"ifconfig", intfToAttach, "inet6", "del", spec.IPV6Address}
-		utils.Run(cmd, 0, false, false, nil)
-		cmd = []string{"ifconfig", intfToAttach, "inet6", "add", spec.IPV6Address}
-		if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
-			return "", errors.Wrap(err, stdout)
+		app.logger.Println("Adding IPv6 address ", spec.IPV6Address, " for ", intfToAttach)
+		switch app.osType {
+		case "linux":
+			fallthrough
+		case "freebsd":
+			//unset ipv6 address first
+			cmd := []string{"ifconfig", intfToAttach, "inet6", "del", spec.IPV6Address}
+			utils.Run(cmd, 0, false, false, nil)
+			cmd = []string{"ifconfig", intfToAttach, "inet6", "add", spec.IPV6Address}
+			if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+				return "", errors.Wrap(err, stdout)
+			}
+		case "windows":
+			output := strings.Split(spec.IPV6Address, "/")
+			intfInfo, ok := windowsPortNameMapping[spec.Parent]
+			if !ok {
+				return "", errors.Errorf("Failed to find port")
+			}
+			cmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "New-NetIPAddress -InterfaceAlias \"" + intfInfo["Name"] + "\" -AddressFamily IPv6 -IPAddress " + output[0] + " -PrefixLength " + output[1]}
+			if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+				if !strings.Contains(stdout, "already exists") {
+					return "", errors.Wrap(err, stdout)
+				}
+			}
 		}
 	}
 
@@ -803,6 +877,28 @@ func (app *bareMetalWorkload) TearDown() {
 func (app *bareMetalWorkload) BringUp(args ...string) error {
 	//app.name = name
 	app.bgCmds = new(sync.Map)
+	if runtime.GOOS == "freebsd" {
+		app.osType = "freebsd"
+		return nil
+	}
+
+	f, err := os.Open("/pensando/iota/name-mapping.json")
+	if err != nil {
+		app.osType = "linux"
+	} else {
+		app.osType = "windows"
+		var err error
+		getPortNameMapping := func() {
+			err = json.NewDecoder(f).Decode(&windowsPortNameMapping)
+			f.Close()
+		}
+		once.Do(getPortNameMapping)
+		if err != nil {
+			return errors.Errorf("Failed to decode json file: %v", err)
+		}
+	}
+	app.logger.Println("workload is running on ", app.osType)
+
 	return nil
 }
 

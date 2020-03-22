@@ -1,6 +1,6 @@
 meta:
     name    : connectivity
-    os      : [ linux, freebsd, esx ]
+    os      : [ linux, freebsd, esx, windows ]
     nics    : [ pensando, mellanox, intel, broadcom ]
     #targetcount : 35
 

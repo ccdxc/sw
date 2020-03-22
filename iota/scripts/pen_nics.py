@@ -8,7 +8,7 @@ import json
 parser = argparse.ArgumentParser(description='ESX pen nic finder')
 parser.add_argument('--intf-type', dest='intf_type', default='data-nic', choices=['int-mnic','data-nic'])
 parser.add_argument('--op', dest='op', default='intfs', choices=['intfs','mnic-ip'])
-parser.add_argument('--os', dest='os', default='linux', choices=['linux','esx','freebsd'])
+parser.add_argument('--os', dest='os', default='linux', choices=['linux','esx','freebsd','windows'])
 parser.add_argument('--mac-hint', dest='mac_hint')
 args = parser.parse_args()
 
@@ -156,18 +156,144 @@ def __print_mnic_ip_freebsd(mac_hint, intf_type):
     devs=__get_devices_freebsd(mac_hint)
     print("169.254.{}.1".format(devs[-1][1]))
 
+
+def __get_devices_windows(mac_hint):
+
+    devs = []
+    proc = subprocess.Popen(['/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', 'Get-NetAdapter -InterfaceDescription "Pensando*" | select Name, ifIndex, MacAddress'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    try:
+        ifInfo, errs = proc.communicate(timeout=30)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        # no Naples detected, return error
+        print("execute powershell.exe timeout", file=sys.stderr)
+        return devs
+
+    lines = ifInfo.decode('utf-8').splitlines()
+
+    intfs = {}
+    intf = {}
+    for line in lines:
+        line = line.strip()
+        if len(line) == 0:
+            continue
+        if line.find("Name") >= 0:
+            ifIndexIndex = line.find("ifIndex")
+            macIndex = line.find("MacAddress")
+            continue
+        if line.find("----") >= 0:
+            continue
+        name = line[:ifIndexIndex].strip()
+        ifIndex = line[ifIndexIndex:macIndex].strip()
+        macAddress = line[macIndex:].strip()
+        macAddress = macAddress.replace('-', ':')
+        intf["Name"] = name
+        intf["ifIndex"] = ifIndex
+        intf["macAddress"] = macAddress
+        intfs[name] = intf
+        intf = {}
+
+    if len(intfs) == 0:
+        # no Naples detected, return error
+        print("not able to detect Naples", file=sys.stderr)
+        return devs
+
+    # powershell path: /mnt/c/Windows/System32/WindowsPowerShell/v1.0/
+    proc = subprocess.Popen(['/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', 'Get-NetAdapterHardwareInfo -InterfaceDescription "Pensando*" | select Name, Bus'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    try:
+        busInfo, errs = proc.communicate(timeout=30)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        # no Naples detected, return error
+        print("execute powershell.exe timeout", file=sys.stderr)
+        return devs
+
+    lines = busInfo.decode('utf-8').splitlines()
+    if len(lines) == 0:
+        # no Naples detected, return error
+        print("not able to detect Naples", file=sys.stderr)
+        return devs
+
+    for line in lines:
+        line = line.strip()
+        if len(line) == 0:
+            continue
+        if line.find("Name") >= 0:
+            index = line.find("Bus")
+            continue
+        if line.find("----") >= 0:
+            continue
+        name = line[:index].strip()
+        if intfs.get(name) is None:
+            print("cannot find this adaptor %s", name)
+            continue
+        intfs[name]["Bus"] = line[index:]
+
+    def populateChildren(children):
+        for child in children:
+            if child.get("class") == "network":
+                mac = child.get("serial")
+                if mac is None:
+                    continue
+                for intf in intfs.values():
+                    if intf["macAddress"].lower() == mac:
+                        intf["LinuxName"] = child.get("logicalname")
+                        break
+            if child.get("children") is not None:
+                populateChildren(child.get("children"))
+
+    output = __get_nics_output_linux().decode('utf-8')
+    entries=json.loads(output)
+    children = entries["children"]
+    populateChildren(children)
+
+    devs = []
+    output = {}
+    for intf in intfs.values():
+        if MacInRange(intf["macAddress"], mac_hint):
+            devs.append((intf["LinuxName"], int(intf["Bus"])))
+        output[intf["LinuxName"]] = intf
+
+    ojson = json.JSONEncoder().encode(output)
+    f = open("/pensando/iota/name-mapping.json", "w")
+    f.write(ojson)
+    f.close()
+
+    devs.sort(key = lambda x: x[1])
+    return devs
+
+
+def __print_intfs_windows(mac_hint, intf_type):
+    devs = __get_devices_windows(mac_hint)
+    if intf_type == "data-nic":
+        devs.pop()
+        for dev in devs:
+            print(dev[0])
+    else:
+        print(devs[-1][0])
+
+
+def __print_mnic_ip_windows(mac_hint, intf_type):
+    devs = __get_devices_windows(mac_hint)
+    print("169.254.{}.1".format(devs[-1][1]))
+
+
 os_operation = {
-"esx" : {
-    	"intfs" :  __print_intfs_esx,
-    	"mnic-ip" : __print_mnic_ip_esx
+    "esx": {
+        "intfs":  __print_intfs_esx,
+        "mnic-ip": __print_mnic_ip_esx
     },
-"linux" : {
-    	"intfs" :  __print_intfs_linux,
-    	"mnic-ip" : __print_mnic_ip_linux
+    "linux": {
+        "intfs":  __print_intfs_linux,
+        "mnic-ip": __print_mnic_ip_linux
     },
-"freebsd" : {
-    	"intfs" :  __print_intfs_freebsd,
-    	"mnic-ip" : __print_mnic_ip_freebsd
+    "freebsd": {
+        "intfs":  __print_intfs_freebsd,
+        "mnic-ip": __print_mnic_ip_freebsd
+    },
+    "windows": {
+        "intfs":  __print_intfs_windows,
+        "mnic-ip": __print_mnic_ip_windows
     }
 }
 

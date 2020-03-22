@@ -204,6 +204,8 @@ func NewTestNode(info NodeInfo) TestNodeInterface {
 	switch info.Os {
 	case iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD:
 		fallthrough
+	case iota.TestBedNodeOs_TESTBED_NODE_OS_WINDOWS:
+		fallthrough
 	case iota.TestBedNodeOs_TESTBED_NODE_OS_LINUX:
 		return &TestNode{info: info, logger: logger, workloadMap: new(sync.Map)}
 	case iota.TestBedNodeOs_TESTBED_NODE_OS_ESX:

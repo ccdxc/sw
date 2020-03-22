@@ -1,0 +1,21 @@
+meta:
+    name: BM-windows
+    description: Classic NIC Baremetal Topology for windows
+
+nodes:
+    - node: node1
+      name: node1
+      role: auto
+      workloads:
+        windows:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "N/A"
+
+    - node: node2
+      name: node2
+      role: auto
+      workloads:
+        windows:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "N/A"
+

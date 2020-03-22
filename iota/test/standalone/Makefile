@@ -27,6 +27,8 @@ apulu-networking: apulu-linux extract-protos-apulu
 linux: extract-artifacts
 
 freebsd: extract-artifacts
+
+windows: extract-artifacts
 	
 regression-rdma: extract-artifacts
 

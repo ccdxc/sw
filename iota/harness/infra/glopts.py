@@ -103,6 +103,9 @@ GlobalOptions.end_testcase = None
 GlobalOptions.testcases = None
 GlobalOptions.markers_present = False
 GlobalOptions.inb_markers = False
+#GlobalOptions.skip_firmware_upgrade = True
+#GlobalOptions.skip_driver_install = True
+
 if GlobalOptions.testcase != None:
     if "..." in GlobalOptions.testcase:
         markers = GlobalOptions.testcase.split("...")

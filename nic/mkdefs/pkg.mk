@@ -79,12 +79,17 @@ package-ipxe:
 	make PLATFORM=efi ARCH=x86_64 -C ${TOPDIR}/platform/drivers/pxe ionic-ipxepatch
 
 .PHONY: package-drivers
-package-drivers: package-ionic package-storage-offload package-freebsd package-esx package-ipxe
+package-drivers: package-ionic package-storage-offload package-freebsd package-esx package-ipxe package-windows
 
 .PHONY: package-freebsd
 package-freebsd:
 	@echo "Building FreeBSD IONIC driver package."
 	${TOPDIR}/platform/tools/package-freebsd.sh
+
+.PHONY: package-windows
+package-windows:
+	@echo "Building Windows IONIC driver package."
+	${TOPDIR}/platform/tools/drivers-windows.sh
 
 .PHONY: release
 release: ${PKG_PREREQS}

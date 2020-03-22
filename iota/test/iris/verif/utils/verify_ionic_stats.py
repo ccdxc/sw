@@ -11,7 +11,8 @@ def Main(tc):
         for i in api.GetNaplesHostInterfaces(node):
             req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
 
-            if api.GetNodeOs(node) == host.OS_TYPE_BSD:
+            os = api.GetNodeOs(node)
+            if os == host.OS_TYPE_BSD:
                 api.Trigger_AddHostCommand(
                     req, node, "bash " + IONIC_DRV_PATH +
                     "/ionic_stats.sh -i %s -c" %
@@ -19,6 +20,11 @@ def Main(tc):
                 # Clear the stats.
                 api.Trigger_AddHostCommand(
                     req, node, 'sysctl dev.%s.reset_stats=1 1>/dev/null' % host.GetNaplesSysctl(i))
+            elif os == host.OS_TYPE_WINDOWS:
+              #  api.Trigger_AddHostCommand(
+              #      req, node, '/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe ' + 'Get-NetAdapterStatistics -Name "%s' % i)
+                api.Logger.error("Not supported on windows")
+                return api.types.status.FAILURE
             else:
                 api.Trigger_AddHostCommand(
                     req, node, 'ethtool -S %s | grep packets' % i)

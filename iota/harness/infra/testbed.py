@@ -2,8 +2,6 @@
 import copy
 import os
 import json
-import pdb
-import socket
 import subprocess
 import sys
 import time
@@ -17,7 +15,6 @@ import iota.harness.infra.resmgr as resmgr
 import iota.harness.infra.getNicHostInfo as gnhi
 
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
-import iota.protos.pygen.iota_types_pb2 as types_pb2
 
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 from iota.harness.infra.utils.logger import Logger as Logger
@@ -221,6 +218,8 @@ class _Testbed:
                 node_msg.os = topo_pb2.TESTBED_NODE_OS_ESX
                 node_msg.esx_username = self.__tbspec.Provision.Vars.EsxUsername
                 node_msg.esx_password = self.__tbspec.Provision.Vars.EsxPassword
+            elif node_os == "windows":
+                node_msg.os = topo_pb2.TESTBED_NODE_OS_WINDOWS
             else:
                 node_msg.os = topo_pb2.TESTBED_NODE_OS_LINUX
 

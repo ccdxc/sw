@@ -908,10 +908,11 @@ class HostManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
-        try: self.RunSshCmd("sudo lspci -d 1dd8:")
-        except:
-            print('lspci failed to find nic. calling ipmi power cycle')
-            self.IpmiResetAndWait()
+#        comment out, return value not checked
+#        try: self.RunSshCmd("sudo lspci -d 1dd8:")
+#        except:
+#            print('lspci failed to find nic. calling ipmi power cycle')
+#            self.IpmiResetAndWait()
         self.InstallPrep()
 
         if copy_fw:

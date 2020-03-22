@@ -986,6 +986,7 @@ enum TestBedNodeOs {
     TESTBED_NODE_OS_FREEBSD = 1;
     TESTBED_NODE_OS_ESX     = 2;
     TESTBED_NODE_OS_VCENTER = 3;
+    TESTBED_NODE_OS_WINDOWS = 4;
 }
 
 message TestBedNode {

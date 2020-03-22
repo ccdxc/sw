@@ -280,8 +280,8 @@ class Node(object):
                     device.SetNicUnderlayIPs(getattr(self.__inst, "NicUnderlayIPs", []))
                     device.read_from_console()
 
-        self.__nic_pci_info = {}
-        self.__nic_info = {}
+        self.__nic_pci_info = {}  # not used
+        self.__nic_info = {}  # not used
         self.__vmUser = getattr(self.__inst, "Username", "vm")
         self.__vmPassword = getattr(self.__inst, "Password", "vm")
         self.ssh_host = "%s@%s" % (self.__vmUser, self.__ip_address) 
@@ -394,6 +394,7 @@ class Node(object):
                                 password=apcInfo.GetPassword())
         apcctrl.portOn(apcInfo.GetPort())
 
+    # not used function
     def GetNicPciInfo(self,nic):
         if nic not in self.__nic_pci_info:
             raise Exception('nic {0} not found on node {1}'.format(nic, self.__name))
@@ -409,6 +410,9 @@ class Node(object):
             cmd = "ethtool -i " + nic + " | awk -F ' ' '/bus-info/ { print $2}'"
             reText = '([\d]+):([\d]+):([\d]+\.([\d]+))'
         elif self.__os == 'freebsd':
+            cmd = ''
+            reText = ''
+        elif self.__os == 'windows':
             cmd = ''
             reText = ''
         if not cmd == '':
@@ -577,7 +581,7 @@ class Node(object):
         msg.ip_address = self.__ip_address
         msg.name = self.__name
 
-        if self.__os== 'esx':
+        if self.__os == 'esx':
             msg.os = topo_pb2.TESTBED_NODE_OS_ESX
             msg.esx_config.username = self.__esx_username
             msg.esx_config.password = self.__esx_password
@@ -586,6 +590,8 @@ class Node(object):
             msg.os = topo_pb2.TESTBED_NODE_OS_LINUX
         elif self.__os == 'freebsd':
             msg.os = topo_pb2.TESTBED_NODE_OS_FREEBSD
+        elif self.__os == 'windows':
+            msg.os = topo_pb2.TESTBED_NODE_OS_WINDOWS
 
         if self.Role() == topo_pb2.PERSONALITY_VCENTER_NODE:
             msg.vcenter_config.pvlan_start = int(self.__spec.vlan_start)

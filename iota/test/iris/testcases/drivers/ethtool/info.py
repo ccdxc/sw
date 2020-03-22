@@ -2,6 +2,7 @@
 import iota.harness.api as api
 import iota.test.iris.utils.debug as debug_utils
 import iota.test.iris.utils.host as host_utils
+import iota.test.utils.naples_host as host
 # tc.desc = 'Extract Driver info, Firmware Info, and Card info'
 
 def Setup(tc):
@@ -19,9 +20,9 @@ def Trigger(tc):
         intfs = api.GetNaplesHostInterfaces(n)
         for i in intfs:
             api.Logger.info("Get Info of the Interface: %s" % i)
-            if tc.os == 'linux':
+            if tc.os == host.OS_TYPE_LINUX:
                 api.Trigger_AddHostCommand(req, n, "ethtool -i %s" % i)
-            elif tc.os == 'freebsd':
+            elif tc.os == host.OS_TYPE_BSD:
                 # FreeBSD doesn't have a command
                 # TODO: In verification we will need to do dmesg to extract same info
                 api.types.status.SUCCESS

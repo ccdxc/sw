@@ -1,0 +1,40 @@
+---
+version: 2.0
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/iota/test/standalone"
+rebase: true
+queue_name: baremetal
+
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
+e2e-targets:
+  # baremetal + baremetal Esx test cases
+ e2e-windows-bm:
+   commands: ["sh", "-c", "make windows && ./run_iota.sh --testsuite transparent_basenet_windows --precheckin --skip-sanity"]
+   owners: ["email:tony@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   build-dependencies:
+     - build-iota
+     - build-iris-arm
+   clusters:
+     - image: build-40
+       count: 2
+       resources:
+         servers:
+           --type: server-a
+         nic-type: naples
+         # Required when RDMA is enabled
+         constraints:
+           same-switch: true
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: windows
+
+
+logfiles:
+  - /sw/iota/iota_sanity_logs.tar.gz
+  - /sw/iota/all_corefiles.tgz
