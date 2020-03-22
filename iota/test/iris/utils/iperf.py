@@ -3,9 +3,16 @@ import json
 import pdb
 import iota.harness.api as api
 
-def ServerCmd(port = None, time=None, run_core=None, jsonOut=False):
+iper3_env = ["PATH=$PATH:/usr/bin/:/platform/bin/;",
+             "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/platform/lib/:/nic/lib/;",
+             "export PATH; export LD_LIBRARY_PATH;"]
+def ServerCmd(port = None, time=None, run_core=None, jsonOut=False, naples=False):
     assert(port)
     cmd = ["iperf3", "-s","-p", str(port)]
+
+    if naples:
+        cmd = iper3_env + cmd
+
     if run_core:
         cmd.extend(["-A", str(run_core)])
 
@@ -18,10 +25,13 @@ def ServerCmd(port = None, time=None, run_core=None, jsonOut=False):
     return " ".join(cmd)
 
 def ClientCmd(server_ip, port = None, time=10, pktsize=None, proto='tcp', run_core=None,
-            ipproto='v4', bandwidth="100G", num_of_streams = None, jsonOut=False,
-            connect_timeout=None, client_ip=None, client_port=None, packet_count=None):
+              ipproto='v4', bandwidth="100G", num_of_streams = None, jsonOut=False,
+              connect_timeout=None, client_ip=None, client_port=None, packet_count=None, naples=False):
     assert(port)
     cmd = ["iperf3", "-c", str(server_ip), "-p", str(port), "-b", str(bandwidth)]
+
+    if naples:
+        cmd = iper3_env + cmd
 
     if client_ip:
         cmd.extend(["-B", str(client_ip)])

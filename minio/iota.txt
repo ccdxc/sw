@@ -1,3 +1,4 @@
 iota/images/raw.tar.gz
 iota/images/arm-iperf
 iota/images/buildit
+iota/images/iperf3_aarch64

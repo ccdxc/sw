@@ -43,3 +43,11 @@ testcases:
             bandwidth : [ 10Gbps, 25Gbps, 50Gbps, 100Gbps ]
         args    :
             type: remote_only
+
+    -   name    : Iperf_Bond
+        testcase: testcases.networking.iperf_bond
+        stress  : True
+        ignore  : True 
+        iterators:
+            type      : nested
+            proto     : [ tcp ]

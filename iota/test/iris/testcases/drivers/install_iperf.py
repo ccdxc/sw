@@ -2,7 +2,7 @@ import os
 import iota.harness.api as api
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
-source_file = api.GetTopDir() + '/iota/images/arm-iperf'
+source_file = api.GetTopDir() + '/iota/images/iperf3_aarch64'
 
 def Main(step):
     if GlobalOptions.skip_setup:
@@ -13,7 +13,7 @@ def Main(step):
 
     for naples_host in api.GetNaplesHostnames():
         api.CopyToNaples(naples_host, [source_file], "")
-        api.Trigger_AddNaplesCommand(req, naples_host, "mv /arm-iperf /usr/bin/iperf")
+        api.Trigger_AddNaplesCommand(req, naples_host, "mv /iperf3_aarch64 /usr/bin/iperf3")
 
     resp = api.Trigger(req)
 
