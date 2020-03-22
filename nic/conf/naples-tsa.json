@@ -112,9 +112,24 @@
                                         "Command" : "/platform/bin/pcieutil techsupport"
                                 },
                                 {
-                                        "Name" : "Fwupdate",
+                                        "Name" : "Fwupdate -l",
                                         "Method" : 0,
                                         "Command" : "/nic/tools/fwupdate -l"
+                                },
+                                {
+                                        "Name" : "Fwupdate -r",
+                                        "Method" : 0,
+                                        "Command" : "/nic/tools/fwupdate -r"
+                                },
+                                {
+                                        "Name" : "Fwupdate -S",
+                                        "Method" : 0,
+                                        "Command" : "/nic/tools/fwupdate -S"
+                                },
+                                {
+                                        "Name" : "Fructl read",
+                                        "Method" : 0,
+                                        "Command" : "/platform/bin/fructl read"
                                 },
                                 {
                                         "Name" : "IfConfig",

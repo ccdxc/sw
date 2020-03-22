@@ -6,8 +6,9 @@
       "cat /proc/cpuinfo",
       "cat /proc/iomem",
       "ifconfig -a",
-      "/nic/tools/fwupdate -r",
       "/nic/tools/fwupdate -l",
+      "/nic/tools/fwupdate -r",
+      "/nic/tools/fwupdate -S",
       "/nic/bin/pcieutil techsupport",
       "/nic/bin/pdsctl show techsupport",
       "/nic/bin/vppctl show version",
@@ -38,9 +39,8 @@
       "/data/core/"
     ],
   "logs": [
-      "/var/log/messages/",
-      "/var/log/pensando/",
+      "/var/log/",
       "/obfl/",
-      "/sysconfig/config0/"
+      "/sysconfig/"
     ]
 }
