@@ -19,7 +19,7 @@
 
 namespace api {
 
-/// \defgroup PDS_ROUTE_TABLE_STATE - route table state/db functionality
+/// \defgroup PDS_ROUTE_STATE - route table state/db functionality
 /// \ingroup PDS_ROUTE
 /// \@{
 
@@ -94,13 +94,77 @@ private:
     sdk::lib::kvstore *kvstore_;   ///< key-value store instance
 };
 
+/// \brief    state maintained for routes
+class route_state : public state_base {
+public:
+    /// \brief constructor
+    route_state();
+
+    /// \brief destructor
+    ~route_state();
+
+    /// \brief  allocate memory required for a route instance
+    /// \return pointer to the allocated route instance, NULL if no
+    ///         memory
+    route *alloc(void);
+
+    /// \brief    insert given route instance into the route db
+    /// \param[in] route    route to be added to the db
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t insert(route *route);
+
+    /// \brief     remove the given instance of route object from db
+    /// \param[in] route    route entry to be deleted from the db
+    /// \return    pointer to the removed route instance or NULL,
+    ///            if not found
+    route_table *remove(route *route);
+
+    /// \brief    remove current object from the databse(s) and swap it with the
+    ///           new instance of the obj (with same key)
+    /// \param[in] curr_route    current instance of the route
+    /// \param[in] new_route     new instance of the route
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t update(route *curr_route, route *new_route);
+
+    /// \brief     free route instance back to slab
+    /// \param[in] route pointer to the allocated route instance
+    void free(route *route);
+
+    /// \brief     lookup a route in database given the key
+    /// \param[in] key route key
+    route_table *find(pds_obj_key_t *key) const;
+
+    /// \brief API to walk all the slabs
+    /// \param[in] walk_cb    callback to be invoked for every slab
+    /// \param[in] ctxt       opaque context passed back to the callback
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
+
+    friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
+
+private:
+    ht *route_ht(void) const { return route_ht_; }
+    slab *route_slab(void) const { return route_slab_; }
+    friend class route;   // route class is friend of route_table_state
+
+private:
+    ht *route_ht_;        ///< route database
+    slab *route_slab_;    ///< slab to allocate route instance
+};
+
+static inline route *
+route_find (pds_obj_key_t *key)
+{
+    return (route *)api_base::find_obj(OBJ_ID_ROUTE, key);
+}
+
 static inline route_table *
 route_table_find (pds_obj_key_t *key)
 {
     return (route_table *)api_base::find_obj(OBJ_ID_ROUTE_TABLE, key);
 }
 
-/// \@}    // end of PDS_ROUTE_TABLE_STATE
+/// \@}    // end of PDS_ROUTE_STATE
 
 }    // namespace api
 
