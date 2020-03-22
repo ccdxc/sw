@@ -7,6 +7,8 @@ def TriggerConnectivityTest(workload_pairs, proto, af, pktsize):
     resp = None
     if proto == 'icmp':
         cmd_cookies, resp = traffic_utils.pingWorkloads(workload_pairs, af, pktsize)
+    elif proto in ['tcp','udp']:
+        cmd_cookies, resp = traffic_utils.iperfWorkloads(workload_pairs, af, proto, pktsize, "100G", 2, 4)
     else:
         api.Logger.error("Proto %s unsupported" % proto)
     return cmd_cookies, resp
@@ -14,6 +16,9 @@ def TriggerConnectivityTest(workload_pairs, proto, af, pktsize):
 def VerifyConnectivityTest(proto, cmd_cookies, resp):
     if proto == 'icmp':
         if traffic_utils.verifyPing(cmd_cookies, resp) != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
+    if proto in ['tcp','udp']:
+        if traffic_utils.verifyIPerf(cmd_cookies, resp) != api.types.status.SUCCESS:
             return api.types.status.FAILURE
     return api.types.status.SUCCESS
 

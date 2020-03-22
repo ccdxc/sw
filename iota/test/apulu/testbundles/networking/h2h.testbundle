@@ -18,3 +18,14 @@ testcases:
             workload_type : [ local, remote ]
             #workload_scope : [ intra-subnet ]
             workload_scope : [ intra-subnet, inter-subnet ]
+
+    -   name    : Workload_Iperf
+        testcase: testcases.networking.connectivity
+        stress  : True
+        iterators :
+            type    : nested
+            ipaf    : [ ipv4 ]
+            proto   : [ udp ]
+            pktsize : [ 1024 ]
+            workload_type : [ remote ]
+            workload_scope : [ intra-subnet, inter-subnet ]

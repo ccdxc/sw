@@ -96,11 +96,11 @@ def verifyPing(cmd_cookies, response, exit_code=0):
         cookie_idx += 1
     return result
 
-def iperfWorkloads(workload_pairs, af="ipv4", proto="tcp", packet_size=64):
+def iperfWorkloads(workload_pairs, af="ipv4", proto="tcp", packet_size=64,
+        bandwidth="100G", time=1, num_of_streams=None):
     serverCmds = []
     clientCmds = []
     cmdDesc = []
-    num_sessions = 1
     ipproto = __get_ipproto(af)
     
     if not api.IsSimulation():
@@ -117,12 +117,12 @@ def iperfWorkloads(workload_pairs, af="ipv4", proto="tcp", packet_size=64):
         client_addr = __get_workload_address(client, af)
         port = api.AllocateUdpPort() if proto == 'udp' else api.AllocateTcpPort()
         serverCmd = iperf.ServerCmd(port)
-        clientCmd = iperf.ClientCmd(server_addr, port, 1, packet_size, proto, None, ipproto, num_sessions, jsonOut=True)
+        clientCmd = iperf.ClientCmd(server_addr, port, time, packet_size, proto, None, ipproto, bandwidth, num_of_streams, jsonOut=True)
 
         cmd_cookie = "Server: %s(%s:%s:%d) <--> Client: %s(%s)" %\
                      (server.workload_name, server_addr, proto, port,\
                       client.workload_name, client_addr)
-        api.Logger.verbose("Starting Iperf test %s num-sessions %d" % (cmd_cookie, num_sessions))
+        api.Logger.info("Starting Iperf test %s num-sessions %d" % (cmd_cookie, num_of_streams))
         serverCmds.append(serverCmd)
         clientCmds.append(clientCmd)
         cmdDesc.append(cmd_cookie)
@@ -146,9 +146,9 @@ def verifyIPerf(cmd_cookies, response, exit_code=0):
     serverCmds = cmd_cookies[1]
     clientCmds = cmd_cookies[2]
     for idx, cmd in enumerate(response.commands):
-        api.Logger.verbose("Iperf Result for %s" % (cmdDesc[idx]))
-        api.Logger.verbose("Iperf Server cmd %s" % (serverCmds[idx]))
-        api.Logger.verbose("Iperf Client cmd %s" % (clientCmds[idx]))
+        api.Logger.info("Iperf Result for %s" % (cmdDesc[idx]))
+        api.Logger.info("Iperf Server cmd %s" % (serverCmds[idx]))
+        api.Logger.info("Iperf Client cmd %s" % (clientCmds[idx]))
         if cmd.exit_code != exit_code:
             api.Logger.error("Iperf client exited with error")
             api.PrintCommandResults(cmd)
@@ -167,10 +167,10 @@ def verifyIPerf(cmd_cookies, response, exit_code=0):
                 api.Logger.error("Iperf failed", iperf.Error(cmd.stdout))
                 result = api.types.status.FAILURE
         elif not api.GlobalOptions.dryrun:
-            api.Logger.verbose("Iperf Send Rate in Gbps ", iperf.GetSentGbps(cmd.stdout))
-            api.Logger.verbose("Iperf Receive Rate in Gbps ", iperf.GetReceivedGbps(cmd.stdout))
+            api.Logger.info("Iperf Send Rate in Gbps ", iperf.GetSentGbps(cmd.stdout))
+            api.Logger.info("Iperf Receive Rate in Gbps ", iperf.GetReceivedGbps(cmd.stdout))
 
-    api.Logger.verbose("Iperf test successfull")
-    api.Logger.verbose("Number of connection timeouts : {}".format(conn_timedout))
-    api.Logger.verbose("Number of control socket errors : {}".format(control_socker_err))
+    api.Logger.info("Iperf test successfull")
+    api.Logger.info("Number of connection timeouts : {}".format(conn_timedout))
+    api.Logger.info("Number of control socket errors : {}".format(control_socker_err))
     return result
