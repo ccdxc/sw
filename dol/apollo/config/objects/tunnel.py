@@ -373,6 +373,9 @@ class TunnelObjectClient(base.ConfigClientBase):
         ResmgrClient[node].CreateUnderlayTunnels()
         return
 
+    def IsReadSupported(self):
+        return False
+
 client = TunnelObjectClient()
 
 def GetMatchingObjects(selectors):

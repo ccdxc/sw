@@ -487,6 +487,9 @@ class SubnetObjectClient(base.ConfigClientBase):
     def UpdateHostInterfaces(self, node):
         InterfaceClient.UpdateHostInterfaces(node, self.Objects(node))
 
+    def IsReadSupported(self):
+        return False
+
 client = SubnetObjectClient()
 
 def GetMatchingObjects(selectors):
