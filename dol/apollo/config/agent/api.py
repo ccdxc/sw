@@ -430,7 +430,6 @@ class ApolloAgentClient:
         self.__restreqs[ObjectTypes.BGP] = ClientRESTModule(self.agentip, "/api/routingconfigs/")
         self.__restreqs[ObjectTypes.INTERFACE] = ClientRESTModule(self.agentip, "/api/interfaces/")
         self.__restreqs[ObjectTypes.POLICY] = ClientRESTModule(self.agentip, "/api/security/policies/")
-        self.__restreqs[ObjectTypes.DHCP_RELAY] = ClientRESTModule(self.agentip, "/api/ipampolicys/")
         return
 
     def GetGRPCMsgReq(self, objtype, op):
