@@ -370,7 +370,7 @@ try_again:
 		done = ionic_dev_cmd_done(idev);
 		if (done)
 			break;
-		msleep(5);
+		msleep(20);
 		hb = ionic_heartbeat_check(ionic);
 	} while (!done && !hb && time_before(jiffies, max_wait));
 	duration = jiffies - start_time;
