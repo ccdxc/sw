@@ -147,7 +147,8 @@ DeviceManager::DeviceManager(devicemgr_cfg_t *cfg)
         throw runtime_error("Failed to reserve HAL LIFs");
     }
     if (!skip_hwinit) {
-        ret = sdk::platform::utils::lif_mgr::lifs_reset(NICMGR_SVC_LIF, NICMGR_LIF_MAX);
+        ret = sdk::platform::utils::lif_mgr::lifs_reset(NICMGR_LIF_ID_MIN,
+                                                        NICMGR_LIF_ID_MAX);
         if (ret != sdk::SDK_RET_OK) {
             throw runtime_error("Failed to reset LIFs");
         }
@@ -629,7 +630,7 @@ DeviceManager::SetHalClient(devapi *dev_api)
 {
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
-        enum DeviceType type = dev->GetType(); 
+        enum DeviceType type = dev->GetType();
         switch (type) {
         case ETH: {
             Eth *eth_dev = (Eth *)dev;
@@ -702,7 +703,7 @@ DeviceManager::HalEventHandler(bool status)
         // Setting hal clients in all devices
         SetHalClient(dev_api);
     }
-       
+
     // OOB bring UP first for NCSI
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
@@ -779,7 +780,7 @@ DeviceManager::HalEventHandler(bool status)
 #endif // ATHENA
         default:
             NIC_LOG_ERR("Invalid device type {} in HalEventHandler",
-                       type); 
+                       type);
         }
     }
 }
