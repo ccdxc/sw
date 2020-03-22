@@ -69,9 +69,6 @@ func createRoutingConfig(stateMgr *Statemgr, tenant, name, IP string) (*network.
 				RouterId: "1.1.1.1",
 				ASNumber: 100,
 			},
-			EVPNConfig: &network.EVPNConfig{
-				Shutdown: false,
-			},
 		},
 		Status: network.RoutingConfigStatus{},
 	}
@@ -130,6 +127,15 @@ func createNetwork(t *testing.T, stateMgr *Statemgr, tenant, net, subnet, gw str
 			Type:        network.NetworkType_Bridged.String(),
 			IPv4Subnet:  subnet,
 			IPv4Gateway: gw,
+			RouteImportExport: &network.RDSpec{
+				AddressFamily: network.BGPAddressFamily_L2vpnEvpn.String(),
+				ExportRTs: []*network.RouteDistinguisher{
+					{Type: network.RouteDistinguisher_Type0.String(), AdminValue: 100, AssignedValue: 100},
+				},
+				ImportRTs: []*network.RouteDistinguisher{
+					{Type: network.RouteDistinguisher_Type0.String(), AdminValue: 100, AssignedValue: 100},
+				},
+			},
 		},
 		Status: network.NetworkStatus{},
 	}

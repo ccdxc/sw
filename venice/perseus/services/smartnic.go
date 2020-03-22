@@ -184,12 +184,15 @@ func (m *ServiceHandlers) setupLBIf() {
 // HandleRoutingConfigEvent handles SmartNIC updates
 func (m *ServiceHandlers) HandleRoutingConfigEvent(et kvstore.WatchEventType, evtRtConfig *network.RoutingConfig) {
 	log.Infof("HandleRoutingConfigEvent called: Intf: %+v event type: %v", *evtRtConfig, et)
-
-	if !cache.needUpdate(evtRtConfig) {
-		return
+	rtCfg := evtRtConfig
+	if et == kvstore.Deleted {
+		rtCfg = nil
+	} else {
+		if !cache.needUpdate(evtRtConfig) {
+			return
+		}
 	}
-
-	err := m.configureBGP(context.TODO(), evtRtConfig)
+	err := m.configureBGP(context.TODO(), rtCfg)
 	if err != nil {
 		log.Errorf("HandleRoutingConfigEvent: failed to apply config (%s)", err)
 	}
@@ -200,6 +203,9 @@ var once sync.Once
 var pReq pdstypes.BGPPeerRequest
 
 func (m *ServiceHandlers) handleAutoConfig(in *network.RoutingConfig) *network.RoutingConfig {
+	if in == nil {
+		return nil
+	}
 	ret := ref.DeepCopy(in).(*network.RoutingConfig)
 	if ret.Spec.BGPConfig == nil {
 		return ret
@@ -211,6 +217,7 @@ func (m *ServiceHandlers) handleAutoConfig(in *network.RoutingConfig) *network.R
 			m.naplesTemplate = &network.BGPNeighbor{
 				MultiHop: n.MultiHop,
 				Password: n.Password,
+				Shutdown: n.Shutdown,
 			}
 			continue
 		}
@@ -221,8 +228,13 @@ func (m *ServiceHandlers) handleAutoConfig(in *network.RoutingConfig) *network.R
 }
 
 func (m *ServiceHandlers) configureBGP(ctx context.Context, in *network.RoutingConfig) error {
+	oldCfg := m.handleAutoConfig(cache.config)
 	rtCfg := m.handleAutoConfig(in)
-	updCfg, err := clientutils.GetBGPConfiguration(cache.config, rtCfg, "0.0.0.0", "0.0.0.0")
+	if oldCfg != nil && rtCfg.ResourceVersion == oldCfg.ResourceVersion {
+		log.Infof("Resouce version is same ignoring request [%v]", oldCfg.ResourceVersion)
+		return nil
+	}
+	updCfg, err := clientutils.GetBGPConfiguration(oldCfg, rtCfg, "0.0.0.0", "0.0.0.0")
 	if err != nil {
 		return errors.Wrap(err, "failed to construct pegasus config")
 	}

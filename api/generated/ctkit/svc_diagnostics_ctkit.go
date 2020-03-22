@@ -699,6 +699,7 @@ func (api *moduleAPI) Create(obj *diagnostics.Module) error {
 		_, err = apicl.DiagnosticsV1().Module().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.DiagnosticsV1().Module().Update(context.Background(), obj)
+
 		}
 		return err
 	}

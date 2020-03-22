@@ -705,8 +705,10 @@ func (api *{{ToLower .}}API) Create(obj *{{$pkgname}}.{{.}}) error {
 		}
 
 		_, err = apicl.{{$srvname}}().{{.}}().Create(context.Background(), obj)
-		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.{{$srvname}}().{{.}}().Update(context.Background(), obj)
+		if err != nil && strings.Contains(err.Error(), "AlreadyExists") { {{if ctrlerPromoteCreateToUpdate .}}
+			_, err = apicl.{{$srvname}}().{{.}}().Update(context.Background(), obj) {{else}}
+        	_, err = apicl.{{$srvname}}().{{.}}().UpdateStatus(context.Background(), obj) {{end}}
+
 		}
 		return err
 	}
@@ -728,8 +730,9 @@ func (api *{{ToLower .}}API) SyncCreate(obj *{{$pkgname}}.{{.}}) error {
 		}
 
 		newObj, writeErr = apicl.{{$srvname}}().{{.}}().Create(context.Background(), obj)
-		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
-			newObj, writeErr = apicl.{{$srvname}}().{{.}}().Update(context.Background(), obj)
+		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") { {{if ctrlerPromoteCreateToUpdate .}}
+			newObj, writeErr = apicl.{{$srvname}}().{{.}}().Update(context.Background(), obj) {{else}}
+			newObj, writeErr = apicl.{{$srvname}}().{{.}}().UpdateStatus(context.Background(), obj) {{end}}
 			evtType = kvstore.Updated
 		}
 	}

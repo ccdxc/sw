@@ -717,6 +717,7 @@ func (api *rolloutAPI) Create(obj *rollout.Rollout) error {
 		_, err = apicl.RolloutV1().Rollout().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.RolloutV1().Rollout().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -1745,6 +1746,7 @@ func (api *rolloutactionAPI) Create(obj *rollout.RolloutAction) error {
 		_, err = apicl.RolloutV1().RolloutAction().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.RolloutV1().RolloutAction().Update(context.Background(), obj)
+
 		}
 		return err
 	}

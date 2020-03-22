@@ -38,7 +38,6 @@ export * from './network-bgp-config.model';
 export * from './network-bgp-neighbor.model';
 export * from './network-dhcp-relay-policy.model';
 export * from './network-dhcp-server.model';
-export * from './network-evpn-config.model';
 export * from './network-health-check-spec.model';
 export * from './network-ipam-policy.model';
 export * from './network-ipam-policy-list.model';

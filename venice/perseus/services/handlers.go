@@ -94,6 +94,11 @@ func (m *ServiceHandlers) configurePeer(nic *snicT, deleteOp bool) {
 		if m.naplesTemplate != nil {
 			peer.Password = []byte(m.naplesTemplate.Password)
 			peer.TTL = m.naplesTemplate.MultiHop
+			if m.naplesTemplate.Shutdown {
+				peer.State = pdstypes.AdminState_ADMIN_STATE_DISABLE
+			} else {
+				peer.State = pdstypes.AdminState_ADMIN_STATE_ENABLE
+			}
 		}
 		log.Infof("Add create peer [%+v]", peer)
 		peerReq.Request = append(peerReq.Request, &peer)

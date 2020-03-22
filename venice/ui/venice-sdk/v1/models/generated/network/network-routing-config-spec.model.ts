@@ -8,11 +8,9 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { NetworkBGPConfig, INetworkBGPConfig } from './network-bgp-config.model';
-import { NetworkEVPNConfig, INetworkEVPNConfig } from './network-evpn-config.model';
 
 export interface INetworkRoutingConfigSpec {
     'bgp-config'?: INetworkBGPConfig;
-    'evpn-config'?: INetworkEVPNConfig;
     '_ui'?: any;
 }
 
@@ -22,16 +20,9 @@ export class NetworkRoutingConfigSpec extends BaseModel implements INetworkRouti
     '_ui': any = {};
     /** Configuration for the BGP instance. */
     'bgp-config': NetworkBGPConfig = null;
-    /** EVPN related configuration. */
-    'evpn-config': NetworkEVPNConfig = null;
     public static propInfo: { [prop in keyof INetworkRoutingConfigSpec]: PropInfoItem } = {
         'bgp-config': {
             description:  `Configuration for the BGP instance.`,
-            required: false,
-            type: 'object'
-        },
-        'evpn-config': {
-            description:  `EVPN related configuration.`,
             required: false,
             type: 'object'
         },
@@ -60,7 +51,6 @@ export class NetworkRoutingConfigSpec extends BaseModel implements INetworkRouti
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['bgp-config'] = new NetworkBGPConfig();
-        this['evpn-config'] = new NetworkEVPNConfig();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -78,11 +68,6 @@ export class NetworkRoutingConfigSpec extends BaseModel implements INetworkRouti
         } else {
             this['bgp-config'].setValues(null, fillDefaults);
         }
-        if (values) {
-            this['evpn-config'].setValues(values['evpn-config'], fillDefaults);
-        } else {
-            this['evpn-config'].setValues(null, fillDefaults);
-        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -91,16 +76,10 @@ export class NetworkRoutingConfigSpec extends BaseModel implements INetworkRouti
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'bgp-config': CustomFormGroup(this['bgp-config'].$formGroup, NetworkRoutingConfigSpec.propInfo['bgp-config'].required),
-                'evpn-config': CustomFormGroup(this['evpn-config'].$formGroup, NetworkRoutingConfigSpec.propInfo['evpn-config'].required),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('bgp-config') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('bgp-config').get(field);
-                control.updateValueAndValidity();
-            });
-            // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('evpn-config') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('evpn-config').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -114,7 +93,6 @@ export class NetworkRoutingConfigSpec extends BaseModel implements INetworkRouti
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this['bgp-config'].setFormGroupValuesToBeModelValues();
-            this['evpn-config'].setFormGroupValuesToBeModelValues();
         }
     }
 }

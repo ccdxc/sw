@@ -136,9 +136,6 @@ message BGPConfig {
 message RoutingConfigSpec {
     // Configuration for the BGP instance.
     BGPConfig BGPConfig = 1 [(gogoproto.jsontag) = "bgp-config,omitempty"];
-
-    // EVPN related configuration.
-    EVPNConfig EVPNConfig = 2 [(gogoproto.jsontag) = "evpn-config,omitempty"];
 }
 
 message RoutingConfigStatus {

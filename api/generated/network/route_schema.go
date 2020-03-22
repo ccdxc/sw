@@ -213,8 +213,6 @@ var typesMapRoute = map[string]*api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoutingConfigSpec{}) },
 		Fields: map[string]api.Field{
 			"BGPConfig": api.Field{Name: "BGPConfig", CLITag: api.CLIInfo{ID: "bgp-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "bgp-config", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.BGPConfig"},
-
-			"EVPNConfig": api.Field{Name: "EVPNConfig", CLITag: api.CLIInfo{ID: "evpn-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "evpn-config", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.EVPNConfig"},
 		},
 	},
 	"network.RoutingConfigStatus": &api.Struct{

@@ -692,6 +692,7 @@ func (api *bucketAPI) Create(obj *objstore.Bucket) error {
 		_, err = apicl.ObjstoreV1().Bucket().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.ObjstoreV1().Bucket().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -1516,6 +1517,7 @@ func (api *objectAPI) Create(obj *objstore.Object) error {
 		_, err = apicl.ObjstoreV1().Object().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.ObjstoreV1().Object().Update(context.Background(), obj)
+
 		}
 		return err
 	}

@@ -692,6 +692,7 @@ func (api *securitygroupAPI) Create(obj *security.SecurityGroup) error {
 		_, err = apicl.SecurityV1().SecurityGroup().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -1516,6 +1517,7 @@ func (api *networksecuritypolicyAPI) Create(obj *security.NetworkSecurityPolicy)
 		_, err = apicl.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.SecurityV1().NetworkSecurityPolicy().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -2340,6 +2342,7 @@ func (api *appAPI) Create(obj *security.App) error {
 		_, err = apicl.SecurityV1().App().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.SecurityV1().App().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -3164,6 +3167,7 @@ func (api *firewallprofileAPI) Create(obj *security.FirewallProfile) error {
 		_, err = apicl.SecurityV1().FirewallProfile().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.SecurityV1().FirewallProfile().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -3988,6 +3992,7 @@ func (api *certificateAPI) Create(obj *security.Certificate) error {
 		_, err = apicl.SecurityV1().Certificate().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.SecurityV1().Certificate().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -4812,6 +4817,7 @@ func (api *trafficencryptionpolicyAPI) Create(obj *security.TrafficEncryptionPol
 		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), obj)
+
 		}
 		return err
 	}

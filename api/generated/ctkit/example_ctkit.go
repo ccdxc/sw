@@ -705,6 +705,7 @@ func (api *orderAPI) Create(obj *bookstore.Order) error {
 		_, err = apicl.BookstoreV1().Order().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.BookstoreV1().Order().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -1638,6 +1639,7 @@ func (api *bookAPI) Create(obj *bookstore.Book) error {
 		_, err = apicl.BookstoreV1().Book().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.BookstoreV1().Book().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -2513,6 +2515,7 @@ func (api *publisherAPI) Create(obj *bookstore.Publisher) error {
 		_, err = apicl.BookstoreV1().Publisher().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.BookstoreV1().Publisher().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -3344,6 +3347,7 @@ func (api *storeAPI) Create(obj *bookstore.Store) error {
 		_, err = apicl.BookstoreV1().Store().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.BookstoreV1().Store().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -4219,6 +4223,7 @@ func (api *couponAPI) Create(obj *bookstore.Coupon) error {
 		_, err = apicl.BookstoreV1().Coupon().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.BookstoreV1().Coupon().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -5043,6 +5048,7 @@ func (api *customerAPI) Create(obj *bookstore.Customer) error {
 		_, err = apicl.BookstoreV1().Customer().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.BookstoreV1().Customer().Update(context.Background(), obj)
+
 		}
 		return err
 	}

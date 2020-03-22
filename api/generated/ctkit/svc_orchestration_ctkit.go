@@ -692,6 +692,7 @@ func (api *orchestratorAPI) Create(obj *orchestration.Orchestrator) error {
 		_, err = apicl.OrchestratorV1().Orchestrator().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.OrchestratorV1().Orchestrator().Update(context.Background(), obj)
+
 		}
 		return err
 	}

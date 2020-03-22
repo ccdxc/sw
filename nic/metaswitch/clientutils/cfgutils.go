@@ -122,13 +122,44 @@ func operStr(i int) string {
 	}
 }
 
+func (b *BGPCfg) print() {
+	uid, err := uuid.FromBytes(b.Uuid)
+	if err == nil {
+		log.Infof("UUID: %s Global Oper [%v]", uid.String(), operStr(b.GlobalOper))
+	}
+	if b.Global.Request != nil {
+		log.Infof("GlobalCFG: RID: %x. [%+v]", b.Global.Request.RouterId, b.Global.Request)
+	}
+
+	if b.DelGlobal.Request != nil {
+		log.Infof("GLobal Delete: %+v", b.DelGlobal.Request)
+	}
+
+	for _, p := range b.AddPeers.Request {
+		log.Infof("AddPeer [%v-%v][%+v]", pdsIPtoStr(p.PeerAddr), pdsIPtoStr(p.LocalAddr), p)
+	}
+	for _, p := range b.UpdPeers.Request {
+		log.Infof("UpdPeer [%v-%v][%+v]", pdsIPtoStr(p.PeerAddr), pdsIPtoStr(p.LocalAddr), p)
+	}
+	for _, d := range b.DelPeers.Request {
+		p := d.GetKey()
+		log.Infof("DelPeer [%v-%v][%+v]", pdsIPtoStr(p.PeerAddr), pdsIPtoStr(p.LocalAddr), p)
+	}
+	for _, p := range b.AddPeerAF.Request {
+		log.Infof("AddPeeAF [%v-%v][%+v]", pdsIPtoStr(p.PeerAddr), pdsIPtoStr(p.LocalAddr), p)
+	}
+	for _, d := range b.DelPeerAF.Request {
+		p := d.GetKey()
+		log.Infof("DelPeerAF [%v-%v][%+v]", pdsIPtoStr(p.PeerAddr), pdsIPtoStr(p.LocalAddr), p)
+	}
+}
+
 // GetBGPConfiguration updates BGP Configuration
 func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb string) (*BGPCfg, error) {
 	if new == nil && old == nil {
 		return nil, fmt.Errorf("both old and new are nil")
 	}
 	// Assume both in and out are of the same type
-	summary := ""
 	var oldCfg, newCfg *bgpConfig
 	ret := &BGPCfg{}
 	if new != nil {
@@ -230,9 +261,11 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 			}
 			b := c.Spec.BGPConfig
 			oldCfg = &bgpConfig{
-				uid:      uid.Bytes(),
-				routerID: b.RouterId,
-				asn:      b.ASNumber,
+				uid:       uid.Bytes(),
+				routerID:  b.RouterId,
+				asn:       b.ASNumber,
+				keepalive: b.KeepaliveInterval,
+				holdtime:  b.Holdtime,
 			}
 			peers := "old config peers - "
 			for _, n := range b.Neighbors {
@@ -269,9 +302,11 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 			}
 			b := c.Spec.BGPConfig
 			oldCfg = &bgpConfig{
-				uid:      uid.Bytes(),
-				routerID: b.RouterId,
-				asn:      b.ASNumber,
+				uid:       uid.Bytes(),
+				routerID:  b.RouterId,
+				asn:       b.ASNumber,
+				keepalive: b.KeepaliveInterval,
+				holdtime:  b.Holdtime,
 			}
 			peers := "old config peers - "
 			for _, n := range b.Neighbors {
@@ -302,6 +337,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 
 	switch {
 	case oldCfg == nil:
+		ret.Uuid = newCfg.uid
 		ret.GlobalOper = Create
 		var rid uint32
 		if newCfg.routerID == "0.0.0.0" || newCfg.routerID == "" {
@@ -315,12 +351,15 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 			RouterId: rid,
 		}
 	case newCfg == nil:
+		ret.Uuid = oldCfg.uid
 		ret.GlobalOper = Delete
 		ret.DelGlobal.Request = &types.BGPKeyHandle{Id: oldCfg.uid}
 	default:
+		ret.Uuid = newCfg.uid
 		if oldCfg.routerID == newCfg.routerID && oldCfg.asn == newCfg.asn && oldCfg.keepalive == newCfg.keepalive && oldCfg.holdtime == newCfg.holdtime {
 			ret.GlobalOper = None
 		} else {
+			log.Infof("[%v/%v][%v/%v][%v/%v][%v/%v]", oldCfg.routerID, newCfg.routerID, oldCfg.asn, newCfg.asn, oldCfg.keepalive, newCfg.keepalive, oldCfg.holdtime, newCfg.holdtime)
 			if oldCfg.asn != newCfg.asn {
 				return nil, fmt.Errorf("change in ASN not supported")
 			}
@@ -341,11 +380,6 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 		}
 	}
 
-	summary = fmt.Sprintf("Global: [oper %v", operStr(ret.GlobalOper))
-	if ret.Global.Request != nil {
-		summary = fmt.Sprintf("%s ASN:%d RID:%x", summary, ret.Global.Request.LocalASN, ret.Global.Request.RouterId)
-	}
-	summary = fmt.Sprintf("%s] Peers: [", summary)
 	if newCfg != nil {
 		forceUpdate := false
 	outer:
@@ -364,7 +398,15 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 						found = true
 						oper := Update
 						if forceUpdate || !reflect.DeepEqual(n, o) {
-							if n.localAddr != o.localAddr {
+							oldLocal, newLocal := o.localAddr, n.localAddr
+							if o.localAddr != "" && net.ParseIP(o.localAddr).IsUnspecified() {
+								oldLocal = ""
+							}
+							if n.localAddr != "" && net.ParseIP(n.localAddr).IsUnspecified() {
+								newLocal = ""
+							}
+
+							if oldLocal != newLocal {
 								// need to delete add rather than update
 								ret.DelPeers.Request = append(ret.DelPeers.Request, &types.BGPPeerKeyHandle{
 									IdOrKey: &types.BGPPeerKeyHandle_Key{Key: &types.BGPPeerKey{PeerAddr: ip2PDSType(o.ipaddress), LocalAddr: ip2PDSType(o.localAddr)}},
@@ -386,7 +428,6 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 								ConnectRetry: 5,
 								Password:     []byte(n.password),
 							}
-							summary = fmt.Sprintf("%s %s-%s-%s", summary, operStr(oper), pdsIPtoStr(peer.PeerAddr), n.localAddr)
 							// Add Afs
 							for _, afn := range n.addrFamilies {
 								found := false
@@ -396,7 +437,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 										break
 									}
 								}
-								if !found {
+								if !found || oper == Create {
 									afp := &types.BGPPeerAfSpec{
 										Id:          newCfg.uid,
 										LocalAddr:   ip2PDSType(n.localAddr),
@@ -472,7 +513,6 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 					// TODO add Holdtime and Keepalive
 					Password: []byte(n.password),
 				})
-				summary = fmt.Sprintf("%s %s-%s-%s", summary, operStr(Create), n.ipaddress, n.localAddr)
 				// Add Afs
 				for _, afn := range n.addrFamilies {
 					afp := &types.BGPPeerAfSpec{
@@ -514,11 +554,10 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 				ret.DelPeers.Request = append(ret.DelPeers.Request, &types.BGPPeerKeyHandle{
 					IdOrKey: &types.BGPPeerKeyHandle_Key{Key: &types.BGPPeerKey{PeerAddr: ip2PDSType(o.ipaddress), LocalAddr: ip2PDSType(o.localAddr)}},
 				})
-				summary = fmt.Sprintf("%s %s-%s-%s", summary, operStr(Delete), o.ipaddress, o.localAddr)
 			}
 		}
 	}
-	log.Infof("%s] AddPeers: %d UpdPeers: %d DelPeers: %d AddAfs: %d DelAfs: %d", summary, len(ret.AddPeers.Request), len(ret.UpdPeers.Request), len(ret.DelPeers.Request), len(ret.AddPeerAF.Request), len(ret.DelPeerAF.Request))
+	ret.print()
 	return ret, nil
 }
 

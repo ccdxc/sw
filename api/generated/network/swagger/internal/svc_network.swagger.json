@@ -2616,13 +2616,6 @@
             "required": false,
             "type": "integer",
             "format": "int64"
-          },
-          {
-            "name": "evpn-config.shutdown",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
           }
         ],
         "tags": [
@@ -8158,15 +8151,6 @@
       },
       "description": "DHCPServer specifies details about each server."
     },
-    "networkEVPNConfig": {
-      "type": "object",
-      "properties": {
-        "shutdown": {
-          "type": "boolean",
-          "format": "boolean"
-        }
-      }
-    },
     "networkHealthCheckSpec": {
       "type": "object",
       "properties": {
@@ -8937,10 +8921,6 @@
         "bgp-config": {
           "$ref": "#/definitions/networkBGPConfig",
           "description": "Configuration for the BGP instance."
-        },
-        "evpn-config": {
-          "$ref": "#/definitions/networkEVPNConfig",
-          "description": "EVPN related configuration."
         }
       }
     },

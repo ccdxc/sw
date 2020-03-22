@@ -692,6 +692,7 @@ func (api *eventpolicyAPI) Create(obj *monitoring.EventPolicy) error {
 		_, err = apicl.MonitoringV1().EventPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.MonitoringV1().EventPolicy().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -1516,6 +1517,7 @@ func (api *fwlogpolicyAPI) Create(obj *monitoring.FwlogPolicy) error {
 		_, err = apicl.MonitoringV1().FwlogPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.MonitoringV1().FwlogPolicy().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -2340,6 +2342,7 @@ func (api *flowexportpolicyAPI) Create(obj *monitoring.FlowExportPolicy) error {
 		_, err = apicl.MonitoringV1().FlowExportPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.MonitoringV1().FlowExportPolicy().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -3164,6 +3167,7 @@ func (api *alertAPI) Create(obj *monitoring.Alert) error {
 		_, err = apicl.MonitoringV1().Alert().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.MonitoringV1().Alert().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -3988,6 +3992,7 @@ func (api *alertpolicyAPI) Create(obj *monitoring.AlertPolicy) error {
 		_, err = apicl.MonitoringV1().AlertPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.MonitoringV1().AlertPolicy().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -4812,6 +4817,7 @@ func (api *statsalertpolicyAPI) Create(obj *monitoring.StatsAlertPolicy) error {
 		_, err = apicl.MonitoringV1().StatsAlertPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.MonitoringV1().StatsAlertPolicy().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -5636,6 +5642,7 @@ func (api *alertdestinationAPI) Create(obj *monitoring.AlertDestination) error {
 		_, err = apicl.MonitoringV1().AlertDestination().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.MonitoringV1().AlertDestination().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -6460,6 +6467,7 @@ func (api *mirrorsessionAPI) Create(obj *monitoring.MirrorSession) error {
 		_, err = apicl.MonitoringV1().MirrorSession().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -7284,6 +7292,7 @@ func (api *troubleshootingsessionAPI) Create(obj *monitoring.TroubleshootingSess
 		_, err = apicl.MonitoringV1().TroubleshootingSession().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.MonitoringV1().TroubleshootingSession().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -8108,6 +8117,7 @@ func (api *techsupportrequestAPI) Create(obj *monitoring.TechSupportRequest) err
 		_, err = apicl.MonitoringV1().TechSupportRequest().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -8939,6 +8949,7 @@ func (api *archiverequestAPI) Create(obj *monitoring.ArchiveRequest) error {
 		_, err = apicl.MonitoringV1().ArchiveRequest().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.MonitoringV1().ArchiveRequest().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -9814,6 +9825,7 @@ func (api *auditpolicyAPI) Create(obj *monitoring.AuditPolicy) error {
 		_, err = apicl.MonitoringV1().AuditPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.MonitoringV1().AuditPolicy().Update(context.Background(), obj)
+
 		}
 		return err
 	}

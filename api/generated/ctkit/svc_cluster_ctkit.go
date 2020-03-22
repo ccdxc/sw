@@ -705,6 +705,7 @@ func (api *clusterAPI) Create(obj *cluster.Cluster) error {
 		_, err = apicl.ClusterV1().Cluster().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.ClusterV1().Cluster().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -1631,6 +1632,7 @@ func (api *nodeAPI) Create(obj *cluster.Node) error {
 		_, err = apicl.ClusterV1().Node().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.ClusterV1().Node().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -2455,6 +2457,7 @@ func (api *hostAPI) Create(obj *cluster.Host) error {
 		_, err = apicl.ClusterV1().Host().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.ClusterV1().Host().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -3279,6 +3282,7 @@ func (api *distributedservicecardAPI) Create(obj *cluster.DistributedServiceCard
 		_, err = apicl.ClusterV1().DistributedServiceCard().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.ClusterV1().DistributedServiceCard().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -4103,6 +4107,7 @@ func (api *tenantAPI) Create(obj *cluster.Tenant) error {
 		_, err = apicl.ClusterV1().Tenant().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.ClusterV1().Tenant().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -4927,6 +4932,7 @@ func (api *versionAPI) Create(obj *cluster.Version) error {
 		_, err = apicl.ClusterV1().Version().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.ClusterV1().Version().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -5758,6 +5764,7 @@ func (api *configurationsnapshotAPI) Create(obj *cluster.ConfigurationSnapshot) 
 		_, err = apicl.ClusterV1().ConfigurationSnapshot().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.ClusterV1().ConfigurationSnapshot().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -6640,6 +6647,7 @@ func (api *snapshotrestoreAPI) Create(obj *cluster.SnapshotRestore) error {
 		_, err = apicl.ClusterV1().SnapshotRestore().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.ClusterV1().SnapshotRestore().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -7515,6 +7523,7 @@ func (api *licenseAPI) Create(obj *cluster.License) error {
 		_, err = apicl.ClusterV1().License().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.ClusterV1().License().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -8339,6 +8348,7 @@ func (api *dscprofileAPI) Create(obj *cluster.DSCProfile) error {
 		_, err = apicl.ClusterV1().DSCProfile().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.ClusterV1().DSCProfile().Update(context.Background(), obj)
+
 		}
 		return err
 	}

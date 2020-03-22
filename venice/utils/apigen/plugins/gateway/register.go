@@ -3910,6 +3910,13 @@ func getNormalizedEnum(e *descriptor.Enum) (values string, err error) {
 	return
 }
 
+func ctrlerPromoteCreateToUpdate(kind string) (bool, error) {
+	if kind == "NetworkInterface" {
+		return false, nil
+	}
+	return true, nil
+}
+
 func init() {
 	cliTagRegex = regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`)
 
@@ -4048,6 +4055,7 @@ func init() {
 	reg.RegisterFunc("getResponseRootMsg", getResponseRootMsg)
 	reg.RegisterFunc("getRequestRootMsg", getRequestRootMsg)
 	reg.RegisterFunc("getMsg", getMsg)
+	reg.RegisterFunc("ctrlerPromoteCreateToUpdate", ctrlerPromoteCreateToUpdate)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

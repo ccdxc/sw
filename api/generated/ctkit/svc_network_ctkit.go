@@ -692,6 +692,7 @@ func (api *networkAPI) Create(obj *network.Network) error {
 		_, err = apicl.NetworkV1().Network().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.NetworkV1().Network().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -1516,6 +1517,7 @@ func (api *serviceAPI) Create(obj *network.Service) error {
 		_, err = apicl.NetworkV1().Service().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.NetworkV1().Service().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -2340,6 +2342,7 @@ func (api *lbpolicyAPI) Create(obj *network.LbPolicy) error {
 		_, err = apicl.NetworkV1().LbPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.NetworkV1().LbPolicy().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -3164,6 +3167,7 @@ func (api *virtualrouterAPI) Create(obj *network.VirtualRouter) error {
 		_, err = apicl.NetworkV1().VirtualRouter().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.NetworkV1().VirtualRouter().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -3987,7 +3991,8 @@ func (api *networkinterfaceAPI) Create(obj *network.NetworkInterface) error {
 
 		_, err = apicl.NetworkV1().NetworkInterface().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
-			_, err = apicl.NetworkV1().NetworkInterface().Update(context.Background(), obj)
+			_, err = apicl.NetworkV1().NetworkInterface().UpdateStatus(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -4010,7 +4015,7 @@ func (api *networkinterfaceAPI) SyncCreate(obj *network.NetworkInterface) error 
 
 		newObj, writeErr = apicl.NetworkV1().NetworkInterface().Create(context.Background(), obj)
 		if writeErr != nil && strings.Contains(writeErr.Error(), "AlreadyExists") {
-			newObj, writeErr = apicl.NetworkV1().NetworkInterface().Update(context.Background(), obj)
+			newObj, writeErr = apicl.NetworkV1().NetworkInterface().UpdateStatus(context.Background(), obj)
 			evtType = kvstore.Updated
 		}
 	}
@@ -4812,6 +4817,7 @@ func (api *ipampolicyAPI) Create(obj *network.IPAMPolicy) error {
 		_, err = apicl.NetworkV1().IPAMPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.NetworkV1().IPAMPolicy().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -5636,6 +5642,7 @@ func (api *routingconfigAPI) Create(obj *network.RoutingConfig) error {
 		_, err = apicl.NetworkV1().RoutingConfig().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.NetworkV1().RoutingConfig().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -6460,6 +6467,7 @@ func (api *routetableAPI) Create(obj *network.RouteTable) error {
 		_, err = apicl.NetworkV1().RouteTable().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.NetworkV1().RouteTable().Update(context.Background(), obj)
+
 		}
 		return err
 	}

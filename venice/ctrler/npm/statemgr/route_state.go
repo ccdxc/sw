@@ -83,12 +83,6 @@ func convertRoutingConfig(rtcfg *RoutingConfigState) *netproto.RoutingConfig {
 
 	obj.Spec = netproto.RoutingConfigSpec{}
 
-	if rtcfg.RoutingConfig.Spec.EVPNConfig != nil {
-		obj.Spec.EVPNConfig = &netproto.EVPNConfig{
-			Shutdown: rtcfg.RoutingConfig.Spec.EVPNConfig.Shutdown,
-		}
-	}
-
 	if rtcfg.RoutingConfig.Spec.BGPConfig != nil {
 		obj.Spec.BGPConfig = &netproto.BGPConfig{
 			RouterId:          rtcfg.RoutingConfig.Spec.BGPConfig.RouterId,

@@ -692,6 +692,7 @@ func (api *endpointAPI) Create(obj *workload.Endpoint) error {
 		_, err = apicl.WorkloadV1().Endpoint().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.WorkloadV1().Endpoint().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -1541,6 +1542,7 @@ func (api *workloadAPI) Create(obj *workload.Workload) error {
 		_, err = apicl.WorkloadV1().Workload().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.WorkloadV1().Workload().Update(context.Background(), obj)
+
 		}
 		return err
 	}

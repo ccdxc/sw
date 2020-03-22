@@ -711,6 +711,7 @@ func (api *userAPI) Create(obj *auth.User) error {
 		_, err = apicl.AuthV1().User().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.AuthV1().User().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -1707,6 +1708,7 @@ func (api *authenticationpolicyAPI) Create(obj *auth.AuthenticationPolicy) error
 		_, err = apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -2684,6 +2686,7 @@ func (api *roleAPI) Create(obj *auth.Role) error {
 		_, err = apicl.AuthV1().Role().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.AuthV1().Role().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -3508,6 +3511,7 @@ func (api *rolebindingAPI) Create(obj *auth.RoleBinding) error {
 		_, err = apicl.AuthV1().RoleBinding().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.AuthV1().RoleBinding().Update(context.Background(), obj)
+
 		}
 		return err
 	}
@@ -4332,6 +4336,7 @@ func (api *userpreferenceAPI) Create(obj *auth.UserPreference) error {
 		_, err = apicl.AuthV1().UserPreference().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.AuthV1().UserPreference().Update(context.Background(), obj)
+
 		}
 		return err
 	}

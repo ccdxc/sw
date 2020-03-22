@@ -4564,3 +4564,21 @@ func TestApis(t *testing.T) {
 		t.Errorf("Got wrong value")
 	}
 }
+
+func TestCtrlerPromoteCreateToUpdate(t *testing.T) {
+	ok, err := ctrlerPromoteCreateToUpdate("NetworkInterface")
+	if err != nil {
+		t.Errorf("not expecting errors")
+	}
+	if ok {
+		t.Errorf("expecting false")
+	}
+	ok, err = ctrlerPromoteCreateToUpdate("Network")
+	if err != nil {
+		t.Errorf("not expecting errors")
+	}
+	if !ok {
+		t.Errorf("expecting true")
+	}
+
+}

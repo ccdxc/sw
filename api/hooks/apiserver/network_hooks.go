@@ -104,11 +104,10 @@ func (h *networkHooks) validateRoutingConfig(i interface{}, ver string, ignStatu
 	}
 	peerMap := make(map[string]bool)
 	for _, n := range in.Spec.BGPConfig.Neighbors {
+		if len(n.EnableAddressFamilies) != 1 {
+			ret = append(ret, fmt.Errorf("there should be one address family %v", n.EnableAddressFamilies))
+		}
 		if n.IPAddress == "0.0.0.0" {
-			if len(n.EnableAddressFamilies) != 1 {
-				ret = append(ret, fmt.Errorf("exactly one address family allowed with auto config peering %v", n.EnableAddressFamilies))
-				continue
-			}
 			switch n.EnableAddressFamilies[0] {
 			case network.BGPAddressFamily_L2vpnEvpn.String():
 				if evpn {

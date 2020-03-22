@@ -705,6 +705,7 @@ func (api *bufferAPI) Create(obj *staging.Buffer) error {
 		_, err = apicl.StagingV1().Buffer().Create(context.Background(), obj)
 		if err != nil && strings.Contains(err.Error(), "AlreadyExists") {
 			_, err = apicl.StagingV1().Buffer().Update(context.Background(), obj)
+
 		}
 		return err
 	}
