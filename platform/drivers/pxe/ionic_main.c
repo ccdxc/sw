@@ -1139,7 +1139,7 @@ int ionic_lif_init(struct net_device *netdev)
 		DBG2("%s ::lif station mac addr failed\n", __FUNCTION__);
 		goto err_reset_lif;
 	}
-	netdev->max_pkt_len = IONIC_MAX_MTU;
+//	netdev->max_pkt_len = IONIC_MAX_MTU;
 	return 0;
 
 err_reset_lif:
