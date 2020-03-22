@@ -31,9 +31,10 @@ var (
 )
 
 var ncsiDebugCmd = &cobra.Command{
-	Use:   "ncsi",
-	Short: "debug ncsi information",
-	Long:  "debug ncsi object information",
+	Use:    "ncsi",
+	Short:  "debug ncsi information",
+	Long:   "debug ncsi object information",
+	Hidden: true,
 }
 
 var ncsiVlanDebugCmd = &cobra.Command{
