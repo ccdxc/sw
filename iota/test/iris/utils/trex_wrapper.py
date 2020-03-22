@@ -172,6 +172,8 @@ class TRexIotaWrapper(ASTFClient):
             self._stopTrex()
         except:
             pass
+        finally:
+            self._killTrex()
 
     def connect(self, tries = 20):
         for i in range(tries):

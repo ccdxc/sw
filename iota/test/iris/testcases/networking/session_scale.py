@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import sys
 import os
+import time
 import traceback
 import iota.harness.api as api
 import iota.test.iris.config.netagent.api as agent_api
@@ -84,6 +85,7 @@ def printPeerList(peerList):
 
 def showStats(tc):
     if tc.cancel:
+        api.Logger.info("Canceling showStats...")
         sys.exit(0)
 
     api.Logger.info("Running showStats...")
@@ -101,6 +103,7 @@ def showStats(tc):
 
 def switchPortFlap(tc):
     if tc.cancel:
+        api.Logger.info("Canceling switchPortFlap...")
         sys.exit(0)
 
     api.Logger.info("Running switchPortFlap...")
@@ -119,6 +122,7 @@ def switchPortFlap(tc):
 
 def configurationChangeEvent(tc):
     if tc.cancel:
+        api.Logger.info("Canceling configurationChangeEvent...")
         sys.exit(0)
 
     api.Logger.info("Running configurationChangeEvent...")
@@ -185,7 +189,7 @@ def startTrex(tc):
                     %(tc.iterators.duration, tc.iterators.cps))
     try:
         for w in tc.workloadPeers.keys():
-            w.trexHandle.start(duration = int(tc.iterators.duration), latency_pps=latency_pps)
+            w.trexHandle.start(duration = int(tc.iterators.duration), latency_pps=latency_pps, nc=True)
     except Exception as e:
         traceback.print_exc()
         api.Logger.error("Failed to start traffic on %s : %s"%(w.workload_name, e))
@@ -193,18 +197,6 @@ def startTrex(tc):
         return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
-
-def barrier(tc):
-    for w in tc.workloadPeers.keys():
-        try:
-            w.trexHandle.wait_on_traffic()
-            tc.cancel = True
-            api.Logger.info("Stopped traffic on %s"%(w.workload_name))
-        except Exception as e:
-            traceback.print_exc()
-            api.Logger.error("Trex wait failed for %s : %s"%(w.workload_name, e))
-        finally:
-            tc.cancel = True
 
 def Setup(tc):
     tc.cancel = False
@@ -240,15 +232,9 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    try:
-        # Start the events and let the party begin.
-        barrier(tc)
-        return api.types.status.SUCCESS
-    except Exception as e:
-        traceback.print_exc()
-        api.Logger.error("Failed to trigger the session scale : %s"%(e))
-        cleanup(tc)
-        return api.types.status.FAILURE
+    time.sleep(int(tc.iterators.duration))
+    tc.cancel = True
+    return api.types.status.SUCCESS
 
 def verifySessions(tc):
     try:
@@ -296,23 +282,21 @@ def Verify(tc):
     return api.types.status.SUCCESS
 
 def cleanup(tc):
+    for w in tc.workloadPeers.keys():
+        try:
+            w.trexHandle.stop(block=False)
+            w.trexHandle.disconnect()
+            w.trexHandle.cleanup()
+            w.trexHandle = None
+        except:
+            pass
     try:
         utils.clearNaplesSessions()
         RestoreHalLogLevel(tc)
     except:
         pass
 
-    for w in tc.workloadPeers.keys():
-        try:
-            w.trexHandle.stop()
-            w.trexHandle.disconnect()
-            w.trexHandle.cleanup()
-            w.trexHandle = None
-        except:
-            pass
 
 def Teardown(tc):
     cleanup(tc)
-    newObjects = agent_api.QueryConfigs(kind='NetworkSecurityPolicy')
-    agent_api.PushConfigObjects(newObjects)
     return api.types.status.SUCCESS

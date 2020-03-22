@@ -90,18 +90,15 @@ def GetHalPid(node_name):
             return int(cmd.stdout.strip())
 
 def clearNaplesSessions(node_name=None):
-    if not node_name:
-        for node_name in  api.GetNaplesHostnames():
-            req = api.Trigger_CreateExecuteCommandsRequest()
-            api.Trigger_AddNaplesCommand(req, node_name,
-                                         "/nic/bin/halctl clear session")
+    clear_cmd = "/nic/bin/halctl clear session"
+    req = api.Trigger_CreateExecuteCommandsRequest(serial=False)
+    if node_name:
+        api.Trigger_AddNaplesCommand(req, node_name, clear_cmd)
     else:
-        req = api.Trigger_CreateExecuteCommandsRequest()
-        api.Trigger_AddNaplesCommand(req, node_name, "/nic/bin/halctl clear session")
+         for node_name in  api.GetNaplesHostnames():
+            api.Trigger_AddNaplesCommand(req, node_name, clear_cmd)
 
     api.Trigger(req)
-
-    time.sleep(5)
 
 def GetProtocolDirectory(proto):
     return api.GetTopologyDirectory() + "/gen/{}".format(proto)

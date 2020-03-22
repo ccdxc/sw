@@ -47,6 +47,7 @@ testbundles:
         # Relative paths from iota/test/iris/testbundles/
         - networking/connectivity.testbundle
         - networking/telemetry.testbundle
+        - networking/cps_transparent_flowaware.testbundle
         - transition/trans_flow_to_insert_enf.testbundle
         - networking/connectivity.testbundle
         #- networking/telemetry.testbundle
