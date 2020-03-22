@@ -52,6 +52,22 @@ static uint32_t    g_h2s_dip = 0x02000002;
 static uint8_t     g_h2s_proto = 0x11;
 static uint16_t    g_h2s_sport = 0x2001;
 static uint16_t    g_h2s_dport = 0x2002;
+
+
+static ipv6_addr_t  g_h2s_sipv6 = 
+                                {
+                                    0x02, 0x00, 0x00, 0x00,
+                                    0x00, 0x00, 0x00, 0x00,
+                                    0x00, 0x00, 0x00, 0x00,
+                                    0x00, 0x00, 0x00, 0x01,
+                                };
+static ipv6_addr_t  g_h2s_dipv6 = 
+                                {
+                                    0x02, 0x00, 0x00, 0x00,
+                                    0x00, 0x00, 0x00, 0x00,
+                                    0x00, 0x00, 0x00, 0x00,
+                                    0x00, 0x00, 0x00, 0x02,
+                                };
     
 
 sdk_ret_t
@@ -70,8 +86,6 @@ fte_setup_static_flows (void)
     uint32_t        start_slot;
     uint16_t        start_vlan, start_vnic;
     uint16_t        start_sport, start_dport;
-
-    PDS_TRACE_DEBUG("fte_setup_static_flows:\n");
 
     /* 
      * VNIC1
@@ -153,6 +167,14 @@ fte_setup_static_flows (void)
         PDS_TRACE_DEBUG("fte_flow_create failed.\n");
         return ret;
     }
+    // Setup v6 Normalized Flow entry
+    ret = fte_flow_create_v6(g_vnic1_id, &g_h2s_sipv6, &g_h2s_dipv6,
+            g_h2s_proto, g_h2s_sport, g_h2s_dport,
+            PDS_FLOW_SPEC_INDEX_SESSION, vnic1_session_index);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_flow_create failed.\n");
+        return ret;
+    }
 
     /* 
      * VNIC2
@@ -228,6 +250,14 @@ fte_setup_static_flows (void)
 
     // Setup Normalized Flow entry
     ret = fte_flow_create(g_vnic2_id, g_h2s_dip, g_h2s_sip,
+            g_h2s_proto, g_h2s_dport, g_h2s_sport,
+            PDS_FLOW_SPEC_INDEX_SESSION, vnic2_session_index);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_flow_create failed.\n");
+        return ret;
+    }
+    // Setup v6 Normalized Flow entry
+    ret = fte_flow_create_v6(g_vnic2_id, &g_h2s_dipv6, &g_h2s_sipv6,
             g_h2s_proto, g_h2s_dport, g_h2s_sport,
             PDS_FLOW_SPEC_INDEX_SESSION, vnic2_session_index);
     if (ret != SDK_RET_OK) {

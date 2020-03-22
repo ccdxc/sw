@@ -55,6 +55,12 @@ fte_flow_create(uint16_t vnic_id, ipv4_addr_t v4_addr_sip, ipv4_addr_t v4_addr_d
         pds_flow_spec_index_type_t index_type, uint32_t index);
 
 sdk_ret_t
+fte_flow_create_v6(uint16_t vnic_id, ipv6_addr_t *v6_addr_sip,
+        ipv6_addr_t *v6_addr_dip,
+        uint8_t proto, uint16_t sport, uint16_t dport,
+        pds_flow_spec_index_type_t index_type, uint32_t index);
+
+sdk_ret_t
 fte_setup_static_flows (void);
 
 }

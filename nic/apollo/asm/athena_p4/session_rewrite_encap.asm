@@ -16,17 +16,17 @@ struct phv_                         p;
         sne             c1, D(valid_flag), TRUE;                        \
         b.c1            session_rewrite_encap_invalid;
 
-#define SESSION_REWRITE_ENCAP_L2()                                      \
+#define SESSION_REWRITE_ENCAP_L2(_ethertype)                            \
         phvwr           p.{ethernet_0_dstAddr...ethernet_0_srcAddr},    \
-                       D_R(dmac, smac);                                 \
+                        D_R(dmac, smac);                                \
         phvwr           p.ethernet_0_valid, TRUE;                       \
                                                                         \
         seq             c1, D(add_vlan_tag_flag), TRUE;                 \
         phvwr.c1        p.ctag_0_vid, D(vlan);                          \
-        phvwr.c1        p.ctag_0_etherType, ETHERTYPE_IPV4;             \
+        phvwr.c1        p.ctag_0_etherType, _ethertype;                 \
         phvwr.c1        p.ctag_0_valid, TRUE;                           \
         phvwr.c1        p.ethernet_0_etherType, ETHERTYPE_VLAN;         \
-        phvwr.!c1       p.ethernet_0_etherType, ETHERTYPE_IPV4;
+        phvwr.!c1       p.ethernet_0_etherType, _ethertype;
     
 #define SESSION_REWRITE_ENCAP_IP(_ip_proto_, _tot_len_)                 \
         phvwrpair       p.{ipv4_0_version...ipv4_0_ihl}, 0x45,          \
@@ -49,7 +49,16 @@ session_rewrite_encap_l2:
 #undef _ACTION_
 #define _ACTION_    session_rewrite_encap_l2_d
         SESSION_REWRITE_ENCAP_COMMON();
-        SESSION_REWRITE_ENCAP_L2();
+        /*
+         * For now asssume L2 encap to be always towards Host
+         * and for the packet that was received encapped
+         * i.e. the user packet is at Layer 2
+         */
+        seq             c1, k.ipv4_2_valid, TRUE
+        add.c1          r1, r0, ETHERTYPE_IPV4
+        seq             c1, k.ipv6_2_valid, TRUE
+        add.c1          r1, r0, ETHERTYPE_IPV6
+        SESSION_REWRITE_ENCAP_L2(r1);
         nop.e
         nop
 
@@ -59,7 +68,7 @@ session_rewrite_encap_mplsoudp:
 #undef _ACTION_
 #define _ACTION_    session_rewrite_encap_mplsoudp_d
         SESSION_REWRITE_ENCAP_COMMON();
-        SESSION_REWRITE_ENCAP_L2();
+        SESSION_REWRITE_ENCAP_L2(ETHERTYPE_IPV4);
 
         phvwrpair       p.{mpls_label1_0_label_b20_b4...mpls_label1_0_label_b3_b0}, \
                         D(mpls_label1),                                             \
@@ -88,9 +97,15 @@ session_rewrite_encap_mplsoudp:
 
 session_rewrite_encap_mplsoudp_no_more_mpls_labels:
 
+        /* Adjust for incoming L2 header that will be stipped */
+        /* FIXME: Include all rewrites from a single table */
+        seq             c1, k.ctag_1_valid, TRUE
+        sub.c1          r3, k.p4i_to_p4e_header_packet_len, 18
+        sub.!c1         r3, k.p4i_to_p4e_header_packet_len, 14
+
         /* Setup UDP length in r1 */
         add             r2, r2, 8
-        add             r1, k.p4i_to_p4e_header_packet_len, r2
+        add             r1, r3, r2
 
         /* Setup IP length in r2 */
         add             r2, r1, 20

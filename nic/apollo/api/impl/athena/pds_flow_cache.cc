@@ -98,6 +98,7 @@ flow_cache_entry_setup_key (flow_hash_entry_t *entry,
             ftlv6_set_key_dport(entry, key->l4.tcp_udp.dport);
             break;
         case IP_PROTO_ICMP:
+        case IP_PROTO_ICMPV6:
             ftlv6_set_key_sport(entry, key->l4.icmp.identifier);
             ftlv6_set_key_dport(entry,
                     ((uint16_t)key->l4.icmp.type << 8) | key->l4.icmp.code);
@@ -203,6 +204,7 @@ flow_cache_entry_find_cb (sdk_table_api_params_t *params)
                     }
                     break;
                 case IP_PROTO_ICMP:
+                case IP_PROTO_ICMPV6:
                     if ((hwentry->key_metadata_sport ==
                             cbdata->key->l4.icmp.identifier) &&
                         (hwentry->key_metadata_dport ==
@@ -332,6 +334,7 @@ flow_cache_entry_iterate_cb (sdk_table_api_params_t *params)
                 key->l4.tcp_udp.dport = ftlv6_get_key_dport(hwentry);
                 break;
             case IP_PROTO_ICMP:
+            case IP_PROTO_ICMPV6:
                 key->l4.icmp.identifier = ftlv6_get_key_sport(hwentry);
                 key->l4.icmp.type = ftlv6_get_key_dport(hwentry) >> 8;
                 key->l4.icmp.code = ftlv6_get_key_dport(hwentry) & 0x00ff;

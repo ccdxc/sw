@@ -34,6 +34,12 @@ create_flow_v4_tcp_udp (uint16_t vnic_id, ipv4_addr_t v4_addr_sip, ipv4_addr_t v
         uint8_t proto, uint16_t sport, uint16_t dport,
         pds_flow_spec_index_type_t index_type, uint32_t index);
 
+sdk_ret_t
+create_flow_v6_tcp_udp (uint16_t vnic_id, ipv6_addr_t *v6_addr_sip,
+        ipv6_addr_t *v6_addr_dip,
+        uint8_t proto, uint16_t sport, uint16_t dport,
+        pds_flow_spec_index_type_t index_type, uint32_t index);
+
 
 sdk_ret_t
 create_s2h_session_rewrite(uint32_t session_rewrite_id,
@@ -53,7 +59,7 @@ sdk_ret_t
 mpls_label_to_vnic_map(uint32_t mpls_label, uint16_t vnic_id);
 
 sdk_ret_t
-create_v4_session_info_all(uint32_t session_id, uint32_t conntrack_id,
+create_session_info_all(uint32_t session_id, uint32_t conntrack_id,
                 uint8_t skip_flow_log, mac_addr_t *host_mac,
                 uint16_t h2s_epoch_vnic, uint32_t h2s_epoch_vnic_id,
                 uint16_t h2s_epoch_mapping, uint32_t h2s_epoch_mapping_id,

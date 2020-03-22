@@ -317,7 +317,7 @@ create_h2s_session_rewrite_mplsoudp(uint32_t session_rewrite_id,
 }
 
 sdk_ret_t
-create_v4_session_info_all(uint32_t session_id, uint32_t conntrack_id,
+create_session_info_all(uint32_t session_id, uint32_t conntrack_id,
                 uint8_t skip_flow_log, mac_addr_t *host_mac,
                 uint16_t h2s_epoch_vnic, uint32_t h2s_epoch_vnic_id,
                 uint16_t h2s_epoch_mapping, uint32_t h2s_epoch_mapping_id,

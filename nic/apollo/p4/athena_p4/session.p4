@@ -331,6 +331,14 @@ action session_rewrite_encap_common(SESSION_REWRITE_ENCAP_COMMON_FIELDS) {
 
         modify_field(scratch_metadata.packet_len, p4i_to_p4e_header.packet_len);
 
+        if (ctag_1.valid == TRUE) {
+            subtract(scratch_metadata.packet_len, scratch_metadata.packet_len, 18);
+        }
+        else {
+            subtract(scratch_metadata.packet_len, scratch_metadata.packet_len, 14);
+        }
+
+
     }
     else {
         modify_field(control_metadata.flow_miss, TRUE);
@@ -340,6 +348,12 @@ action session_rewrite_encap_common(SESSION_REWRITE_ENCAP_COMMON_FIELDS) {
 }
 
 action session_rewrite_encap_l2(SESSION_REWRITE_ENCAP_COMMON_FIELDS) {
+    if (ipv4_2.valid == TRUE) {
+        modify_field(ethernet_0.etherType, ETHERTYPE_IPV4);
+    }
+    if (ipv6_2.valid == TRUE) {
+        modify_field(ethernet_0.etherType, ETHERTYPE_IPV6);
+    }
     session_rewrite_encap_common(SESSION_REWRITE_ENCAP_COMMON_FIELDS);
 }
 

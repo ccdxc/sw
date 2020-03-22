@@ -595,7 +595,7 @@ parser parse_ipv6_2 {
     //set_metadata(key_metadata.src, latest.srcAddr);
     set_metadata(ohi.l4_2_len, ipv6_2.payloadLen + 0);
     return select(latest.nextHdr) {
-        IP_PROTO_ICMPV6 : parse_icmp;
+        IP_PROTO_ICMPV6 : parse_icmp6;
         IP_PROTO_TCP : parse_tcp;
         IP_PROTO_UDP : parse_udp_2;
         default : ingress;
