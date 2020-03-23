@@ -56,7 +56,9 @@ bdid_to_subnet (uint16_t bd_hw_id)
     pds_obj_key_t *subnet;
 
     impl = subnet_impl_db()->find(bd_hw_id);
-    SDK_ASSERT(impl);
+    if (!impl) {
+        return k_pds_obj_key_invalid;
+    }
     subnet = impl->key();
     return *subnet;
 }
@@ -92,6 +94,9 @@ extract_info_from_p4_hdr (char *pkt, learn_info_t *info)
     info->hints = 0;
     info->lif = p4_rx_hdr->lif;
     info->subnet = bdid_to_subnet(p4_rx_hdr->ingress_bd_id);
+    if (info->subnet == k_pds_obj_key_invalid) {
+        return SDK_RET_ERR;
+    }
     info->l2_offset = APULU_P4_TO_ARM_HDR_SZ;
     if (p4_rx_hdr->flags & APULU_CPU_FLAGS_VLAN_VALID) {
         // assuming only single dot1q header

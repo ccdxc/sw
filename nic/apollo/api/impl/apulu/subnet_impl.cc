@@ -491,6 +491,8 @@ subnet_impl::activate_delete_(pds_epoch_t epoch, subnet_entry *subnet) {
     vni_swkey_t vni_key = { 0 };
     vni_actiondata_t vni_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
+    lif_impl *lif;
+    pds_obj_key_t host_if;
 
     PDS_TRACE_DEBUG("Activating subnet %s delete, fabric encap (%u, %u)",
                     subnet->key().str(), subnet->fabric_encap().type,
@@ -508,6 +510,27 @@ subnet_impl::activate_delete_(pds_epoch_t epoch, subnet_entry *subnet) {
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Programming of VNI table failed for subnet %s, err %u",
                       subnet->key().str(), ret);
+    }
+    // reset the lif entry
+    host_if = subnet->host_if();
+    if (host_if != k_pds_obj_key_invalid) {
+        lif = lif_impl_db()->find(&host_if);
+        if (lif) {
+            ret = program_lif_table(lif->id(), P4_LIF_TYPE_HOST,
+                                    PDS_IMPL_RSVD_VPC_HW_ID,
+                                    PDS_IMPL_RSVD_BD_HW_ID,
+                                    lif->vnic_hw_id(),
+                                    g_zero_mac,
+                                    false);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to update lif %s on subnet %s"
+                              " delete, err %u", host_if.str(),
+                              subnet->key().str(), ret);
+            } else {
+                PDS_TRACE_VERBOSE("Updated lif %s on subnet %s delete",
+                                  host_if.str(), subnet->key().str());
+            }
+        }
     }
     subnet_impl_db()->remove(hw_id_);
     return ret;

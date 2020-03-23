@@ -521,6 +521,8 @@ process_learn_pkt (void *mbuf)
     // now process the learn start API batch
     ctxt.bctxt = pds_batch_start(&batch_params);
     if (unlikely(ctxt.bctxt == PDS_BATCH_CTXT_INVALID)) {
+        PDS_TRACE_ERR("Failed to start a batch for %s", ctxt.str());
+        ctxt.pkt_drop_reason = PKT_DROP_REASON_RES_ALLOC_FAIL;
         goto error;
     }
 
