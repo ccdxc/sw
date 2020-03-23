@@ -16,6 +16,8 @@ import (
 const (
 	type2MinLen = 8 + 10 + 4 + 1 + 6 + 1 + 3
 	type2MaxLen = 8 + 10 + 4 + 1 + 6 + 1 + 16 + 3 + 3
+	type3MinLen = 8 + 4 + 1 + 4
+	type3MaxLen = 8 + 4 + 1 + 16
 	type5MinLen = 8 + 10 + 4 + 1 + 4 + 4 + 3
 	type5MaxLen = 8 + 10 + 4 + 1 + 16 + 16 + 3
 )
@@ -79,7 +81,7 @@ func NewNLRIPrefix(afi int, safi int, in []byte) *NLRIPrefix {
 		return nil
 	}
 	ret := &NLRIPrefix{
-	        Afi:    afi,
+		Afi:    afi,
 		Safi:   safi,
 		Type:   int(in[0]),
 		Length: int(in[1]),
@@ -93,6 +95,11 @@ func NewNLRIPrefix(afi int, safi int, in []byte) *NLRIPrefix {
 	  	p := &EVPNType2Route{}
 		p.parseBytes(in[2:])
 		ret.Prefix = newEVPNType2Route(p)
+
+	  case 3:
+	  	p := &EVPNType3Route{}
+		p.parseBytes(in[2:])
+		ret.Prefix = newEVPNType3Route(p)
 
 	  case 5:
 		p := &EVPNType5Route{}
@@ -130,13 +137,12 @@ const type2Fmt = `[%d][%v][%v][%d][%v][%d][%v]`
 
 // String returns a user friendly string
 func (s *ShadowEVPNType2Route) String() string {
-        var type2 int = 2
-	var ipsize int = 32
+	var type2 int = 2
 	var macsize int = 48
 	if s.IPAddress == "<nil>" {
-	   ipsize = 0
+       s.IPAddress = "0.0.0.0"
 	}
-	return fmt.Sprintf(type2Fmt, type2, s.RD, s.EthTagID, macsize, s.MACAddress, ipsize, "0.0.0.0")
+	return fmt.Sprintf(type2Fmt, type2, s.RD, s.EthTagID, macsize, s.MACAddress, s.IPAddressLen, s.IPAddress)
 }
 
 // String returns a user friendly string
@@ -165,11 +171,11 @@ func (a *EVPNType2Route) parseBytes(in []byte) {
 	a.IPAddressLen = int(in[cur])
 	cur += 1
 	switch a.IPAddressLen {
-	case 4:
+	case 32:
 		a.IPAddress = make([]byte, 4)
 		copy(a.IPAddress, in[cur:cur+4])
 		cur += 4
-	case 16:
+	case 128:
 		a.IPAddress = make([]byte, 16)
 		copy(a.IPAddress, in[cur:cur+16])
 		cur += 16
@@ -192,6 +198,66 @@ func newEVPNType2Route(in *EVPNType2Route) *ShadowEVPNType2Route {
 		IPAddress:      net.IP(in.IPAddress).String(),
 		MPLSLabel1:     label2int(in.MPLSLabel1),
 		MPLSLabel2:     label2int(in.MPLSLabel2),
+	}
+}
+
+type EVPNType3Route struct {
+	RD           []byte
+	EthTagID     []byte
+	IPAddressLen int
+	IPAddress    []byte
+}
+
+type ShadowEVPNType3Route struct {
+	RD         string
+	EthTagID   uint32
+	IPAddress  string
+	*EVPNType3Route
+}
+
+const type3Fmt = `[%d][%v][%v][%d][%v]`
+
+// String returns a user friendly string
+func (s *ShadowEVPNType3Route) String() string {
+    var type3 int = 3
+	return fmt.Sprintf(type3Fmt, type3, s.RD, s.EthTagID, s.IPAddressLen, s.IPAddress)
+}
+
+// String returns a user friendly string
+func (s *ShadowEVPNType3Route) attrString() string {
+	return fmt.Sprintf("")
+}
+func (a *EVPNType3Route) parseBytes(in []byte) {
+	if len(in) < type3MinLen {
+		log.Errorf("invalid length [%d] for evpn type3", len(in))
+	}
+	cur := 0
+	a.RD = make([]byte, 8)
+	copy(a.RD, in[cur:cur+8])
+	cur += 8
+	a.EthTagID = make([]byte, 4)
+	copy(a.EthTagID, in[cur:cur+4])
+	cur += 4
+	a.IPAddressLen = int(in[cur])
+	cur += 1
+	switch a.IPAddressLen {
+	case 32:
+		a.IPAddress = make([]byte, 4)
+		copy(a.IPAddress, in[cur:cur+4])
+		cur += 4
+	case 128:
+		a.IPAddress = make([]byte, 16)
+		copy(a.IPAddress, in[cur:cur+16])
+		cur += 16
+	}
+}
+
+func newEVPNType3Route(in *EVPNType3Route) *ShadowEVPNType3Route {
+	return &ShadowEVPNType3Route{
+		EVPNType3Route: in,
+		RD:             printRD(in.RD),
+		EthTagID:       binary.BigEndian.Uint32(in.EthTagID),
+		IPAddress:      net.IP(in.IPAddress).String(),
 	}
 }
 
@@ -219,7 +285,7 @@ const type5Fmt = `[%d][%v][%v][%v][%v]`
 
 // String returns a user friendly string
 func (s *ShadowEVPNType5Route) String() string {
-        var type5 int = 5
+    var type5 int = 5
 	return fmt.Sprintf(type5Fmt, type5, s.RD, s.EthTagID, s.IPPrefixLen, s.IPPrefix)
 }
 

@@ -21,7 +21,14 @@ func RegisterNodes(params *CLIParams, base *cobra.Command) {
 	bgpShowCmd.PersistentFlags().Bool("detail", false, "detailed output")
 	bgpShowCmd.AddCommand(peerShowCmd)
 	bgpShowCmd.AddCommand(peerAfShowCmd)
-	bgpShowCmd.AddCommand(nlriPrefixShowCmd)
+
+	bgpShowCmd.AddCommand(bgpIPShowCmd)
+	bgpIPShowCmd.AddCommand(bgpIPUnicastShowCmd)
+	bgpIPUnicastShowCmd.AddCommand(bgpIPUnicastNlriShowCmd)
+
+	bgpShowCmd.AddCommand(bgpL2vpnShowCmd)
+	bgpL2vpnShowCmd.AddCommand(bgpL2vpnEvpnShowCmd)
+	bgpL2vpnEvpnShowCmd.AddCommand(bgpL2vpnEvpnNlriShowCmd)
 
 	//evpn commands
 	base.AddCommand(evpnShowCmd)

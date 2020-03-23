@@ -41,12 +41,48 @@ var peerAfShowCmd = &cobra.Command{
 	RunE:  bgpPeersAfShowCmdHandler,
 }
 
-var nlriPrefixShowCmd = &cobra.Command{
-	Use:   "nlri",
-	Short: "show nlri prefix information",
-	Long:  "show nlri prefix object information",
+var bgpIPShowCmd = &cobra.Command{
+	Use:   "ip",
+	Short: "show ip afi information",
+	Long:  "show ip afi information",
 	Args:  cobra.NoArgs,
-	RunE:  bgpNlriPrefixShowCmdHandler,
+}
+
+var bgpIPUnicastShowCmd = &cobra.Command{
+	Use:   "unicast",
+	Short: "show unicast safi information",
+	Long:  "show unicast safi information",
+	Args:  cobra.NoArgs,
+}
+
+var bgpIPUnicastNlriShowCmd = &cobra.Command{
+	Use:   "nlri",
+	Short: "show ip unicast nlri information",
+	Long:  "show ip unicast nlri information",
+	Args:  cobra.NoArgs,
+	RunE:  bgpIPUnicastNlriShowCmdHandler,
+}
+
+var bgpL2vpnShowCmd = &cobra.Command{
+	Use:   "l2vpn",
+	Short: "show l2vpn afi information",
+	Long:  "show l2vpn afi information",
+	Args:  cobra.NoArgs,
+}
+
+var bgpL2vpnEvpnShowCmd = &cobra.Command{
+	Use:   "evpn",
+	Short: "show evpn safi information",
+	Long:  "show evpn safi information",
+	Args:  cobra.NoArgs,
+}
+
+var bgpL2vpnEvpnNlriShowCmd = &cobra.Command{
+	Use:   "nlri",
+	Short: "show bgp l2vpn evpn nlri information",
+	Long:  "show bgp l2vpn evpn nlri information",
+	Args:  cobra.NoArgs,
+	RunE:  bgpL2vpnEvpnNlriShowCmdHandler,
 }
 
 func init() {
@@ -233,7 +269,15 @@ const (
 `
 )
 
-func bgpNlriPrefixShowCmdHandler(cmd *cobra.Command, args []string) error {
+func bgpIPUnicastNlriShowCmdHandler(cmd *cobra.Command, args []string) error {
+	return (bgpNlriShowCmdHandler(cmd, "ipv4-unicast", args))
+}
+
+func bgpL2vpnEvpnNlriShowCmdHandler(cmd *cobra.Command, args []string) error {
+	return (bgpNlriShowCmdHandler(cmd, "l2vpn-evpn", args))
+}
+
+func bgpNlriShowCmdHandler(cmd *cobra.Command, _afisafi string, args []string) error {
 	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
 	if err != nil {
 		return errors.New("Could not connect to the PDS. Is PDS Running?")
@@ -262,17 +306,20 @@ func bgpNlriPrefixShowCmdHandler(cmd *cobra.Command, args []string) error {
 		if !doJSON {
 
 			//Print AFI/SAFI info
-			if afi != strings.TrimPrefix(nlri.Afi.String(), "BGP_AFI_") ||
-				safi != strings.TrimPrefix(nlri.Safi.String(), "BGP_SAFI_") {
-				afi = strings.TrimPrefix(nlri.Afi.String(), "BGP_AFI_")
-				safi = strings.TrimPrefix(nlri.Safi.String(), "BGP_SAFI_")
-				fmt.Printf("\n%s/%s\n", afi, safi)
+			afi = strings.TrimPrefix(nlri.Afi.String(), "BGP_AFI_")
+			safi = strings.TrimPrefix(nlri.Safi.String(), "BGP_SAFI_")
+
+			//Lets check if its right afi/safi
+			afisafi := strings.ToLower(afi) + "-" + strings.ToLower(safi)
+			if strings.Compare(_afisafi, afisafi) != 0 {
+				continue
 			}
+
 			var plen string
 			plen = fmt.Sprint(nlri.PrefixLen)
 			if network != nlri.Prefix.String()+"/"+plen {
 				network = nlri.Prefix.String() + "/" + plen
-				fmt.Printf(" Network: %s\n", network)
+				fmt.Printf("%s\n", network)
 			}
 			var best string
 			if nlri.BestRoute {
