@@ -23,12 +23,9 @@ setup:
         - step : config.set_max_mtu
         - step : config.topology
           args :
-             spec : 2naples_bm_static_node1.cfgyml
-             node : node1
-        - step : config.topology
-          args :
-             spec : 2naples_bm_static_node2.cfgyml
-             node : node2
+             spec :
+                node1 : 2naples_bm_static_node1.cfgyml
+                node2 : 2naples_bm_static_node2.cfgyml
         - step : config.bringup_workloads
           args :
              trex : True

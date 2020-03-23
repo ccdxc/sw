@@ -6,7 +6,7 @@ import re
 
 import infra.common.objects as objects
 import infra.config.base as base
-
+from infra.common.glopts  import GlobalOptions
 import apollo.config.utils as utils
 import apollo.config.topo as topo
 from apollo.config.store import client as EzAccessStoreClient
@@ -101,6 +101,12 @@ class Resmgr(base.ConfigObjectBase):
     TransportDstPort   = 200 # For VNET packets
     TransportSvcPort   = 400 # For VIP, Underlay tcp/udp port
     TransportSrcLBPort = 101 # Local backend service port, 101 mapped to 400
+
+    # Subnet address pools for multi node topology where same subnet exists on many nodes
+    SubnetIPv4AddrPool = dict()
+    SubnetIPv6AddrPool = dict()
+    SubnetVRIPv4 = dict()
+    SubnetVRIPv6 = dict()
 
     def __init__(self, node):
         super().__init__()
@@ -204,7 +210,9 @@ class Resmgr(base.ConfigObjectBase):
         self.HostIfs = dict()
         # Host interface index allocator for IOTA.
         # Ifindices 72 and 73 (0x48, 0x49) are reserved, so we have a non-contiuous list
+        #TODO: Fix it properly later
         HostIfIdxList = [0x80000047, 0x8000004A, 0x8000004B, 0x8000004C, 0x8000004D, 0x8000004E, 0x8000004F, 0x80000050]
+
         self.HostIfIdxAllocator = iter(HostIfIdxList)
         self.LoopbackIfIdAllocator = iter(irange(1, 16))
 
@@ -389,6 +397,54 @@ class Resmgr(base.ConfigObjectBase):
     def CreateIpv6AddrPool(subnet):
         assert(isinstance(subnet, ipaddress.IPv6Network))
         return iter(subnet.hosts())
+
+    @staticmethod
+    def CreateIPv4AddrPoolForSubnet(subnet_id, prefix):
+        if subnet_id in Resmgr.SubnetIPv4AddrPool:
+            return
+        assert(isinstance(prefix, ipaddress.IPv4Network))
+        Resmgr.SubnetIPv4AddrPool[subnet_id] = iter(prefix.hosts())
+        # store first IP as VRIP
+        Resmgr.SubnetVRIPv4[subnet_id] = next(Resmgr.SubnetIPv4AddrPool[subnet_id])
+        return
+
+    @staticmethod
+    def CreateIPv6AddrPoolForSubnet(subnet_id, prefix):
+        if subnet_id in Resmgr.SubnetIPv6AddrPool:
+            return
+        assert(isinstance(prefix, ipaddress.IPv6Network))
+        Resmgr.SubnetIPv6AddrPool[subnet_id] = iter(prefix.hosts())
+        # store first IP as VRIP
+        Resmgr.SubnetVRIPv6[subnet_id] = next(Resmgr.SubnetIPv6AddrPool[subnet_id])
+        return
+
+    @staticmethod
+    def GetIPv4AddrFromSubnetPool(subnet_id):
+        if subnet_id in Resmgr.SubnetIPv4AddrPool:
+            return next(Resmgr.SubnetIPv4AddrPool[subnet_id])
+        else:
+            return None
+
+    @staticmethod
+    def GetIPv6AddrFromSubnetPool(subnet_id):
+        if subnet_id in Resmgr.SubnetIPv6AddrPool:
+            return next(Resmgr.SubnetIPv6AddrPool[subnet_id])
+        else:
+            return None
+
+    @staticmethod
+    def GetSubnetVRIPv4(subnet_id):
+        if subnet_id in Resmgr.SubnetVRIPv4:
+            return Resmgr.SubnetVRIPv4[subnet_id]
+        else:
+            return None
+
+    @staticmethod
+    def GetSubnetVRIPv6(subnet_id):
+        if subnet_id in Resmgr.SubnetVRIPv6:
+            return Resmgr.SubnetVRIPv6[subnet_id]
+        else:
+            return None
 
     # The below function will be called for every Remote TEP
     @staticmethod

@@ -18,13 +18,13 @@ class RemoteMappingObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, tunobj, ipversion, count, l2=False):
         super().__init__(api.ObjectTypes.RMAPPING, node)
         parent.AddChild(self)
-        if hasattr(spec, 'origin'):
-            self.SetOrigin(spec.origin)
+        if 'origin' in spec:
+            self.SetOrigin(spec['origin'])
         elif (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
             self.SetOrigin('discovered')
         ################# PUBLIC ATTRIBUTES OF REMOTE MAPPING OBJECT ##########
-        if (hasattr(spec, 'id')):
-            self.MappingId = spec.id
+        if 'id' in spec:
+            self.MappingId = spec['id']
         else:
             self.MappingId = next(ResmgrClient[node].RemoteMappingIdAllocator)
         self.GID('RemoteMapping%d'%self.MappingId)
@@ -34,8 +34,8 @@ class RemoteMappingObject(base.ConfigObjectBase):
             self.TypeL2 = True
         else:
             self.TypeL2 = False
-        if (hasattr(spec, 'rmacaddr')):
-            self.MACAddr = spec.rmacaddr
+        if 'rmacaddr' in spec:
+            self.MACAddr = spec['rmacaddr']
         else:
             self.MACAddr = ResmgrClient[node].RemoteMappingMacAllocator.get()
         self.TunID = tunobj.Id
@@ -53,8 +53,8 @@ class RemoteMappingObject(base.ConfigObjectBase):
             if self.SUBNET.V6RouteTable:
                 self.HasDefaultRoute = self.SUBNET.V6RouteTable.HasDefaultRoute
         else:
-            if getattr(spec, 'ripaddr', None) != None:
-                self.IPAddr = ipaddress.IPv4Address(spec.ripaddr)
+            if 'ripaddr' in spec:
+                self.IPAddr = ipaddress.IPv4Address(spec['ripaddr'])
             else:
                 self.IPAddr = parent.AllocIPv4Address();
             self.AddrFamily = 'IPV4'
@@ -180,37 +180,39 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
         # pdsctl show not supported for remote mapping
         return True
 
+    def GenerateObj(self, node, parent, rmap_dict, ipversion, count=0, l2=False):
+        if utils.IsPipelineApulu():
+            tunnelAllocator = ResmgrClient[node].UnderlayTunAllocator
+        else:
+            tunnelAllocator = ResmgrClient[node].RemoteMplsVnicTunAllocator
+
+        tunobj = tunnelAllocator.rrnext()
+        obj = RemoteMappingObject(node, parent, rmap_dict, tunobj, ipversion, count, l2)
+        self.Objs[node].update({obj.MappingId: obj})
+        return
+
     def GenerateObjects(self, node, parent, subnet_spec_obj):
         if getattr(subnet_spec_obj, 'rmap', None) == None:
             return
 
         isV4Stack = utils.IsV4Stack(parent.VPC.Stack)
         isV6Stack = utils.IsV6Stack(parent.VPC.Stack)
-        if utils.IsPipelineApulu():
-            tunnelAllocator = ResmgrClient[node].UnderlayTunAllocator
-        else:
-            tunnelAllocator = ResmgrClient[node].RemoteMplsVnicTunAllocator
-
         for rmap_spec_obj in subnet_spec_obj.rmap:
             l2 = getattr(rmap_spec_obj, "l2", False)
             c = 0
             v6c = 0
             v4c = 0
             while c < rmap_spec_obj.count:
-                tunobj = tunnelAllocator.rrnext()
                 if isV6Stack:
-                    obj = RemoteMappingObject(node, parent, rmap_spec_obj, tunobj, utils.IP_VERSION_6, v6c)
-                    self.Objs[node].update({obj.MappingId: obj})
+                    self.GenerateObj(node, parent, rmap_spec_obj.__dict__, utils.IP_VERSION_6, v6c)
                     c = c + 1
                     v6c = v6c + 1
                 if c < rmap_spec_obj.count and isV4Stack:
-                    obj = RemoteMappingObject(node, parent, rmap_spec_obj, tunobj, utils.IP_VERSION_4, v4c)
-                    self.Objs[node].update({obj.MappingId: obj})
+                    self.GenerateObj(node, parent, rmap_spec_obj.__dict__, utils.IP_VERSION_4, v4c)
                     c = c + 1
                     v4c = v4c + 1
                     if l2:
-                        obj = RemoteMappingObject(node, parent, rmap_spec_obj, tunobj, utils.IP_VERSION_4, v4c, l2=True)
-                        self.Objs[node].update({obj.MappingId: obj})
+                        self.GenerateObj(node, parent, rmap_spec_obj.__dict__, utils.IP_VERSION_4, v4c, l2=True)
         return
 
     def ReadObjects(self, node):

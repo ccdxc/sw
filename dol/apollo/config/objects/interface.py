@@ -392,6 +392,8 @@ class InterfaceObjectClient(base.ConfigClientBase):
                 key = self.GetKeyfromSpec(lif.Spec)
                 intf_name = lif.Status.Name
                 self.__hostifs[node].update({key: intf_name})
+        if self.__hostifs[node]:
+            self.__hostifs_iter[node] = utils.rrobiniter(self.__hostifs[node].keys())
         return
 
     def __generate_l3_uplink_interfaces(self, node, parent, iflist):

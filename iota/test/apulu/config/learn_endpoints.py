@@ -11,6 +11,9 @@ def __learn_endpoints(args):
     if not conf_utils.SetDeviceLearnTimeout(86400):
         return api.types.status.FAILURE
 
+    if not conf_utils.ClearLearnData():
+        return api.types.status.FAILURE
+
     if not api.IsSimulation():
         req = api.Trigger_CreateAllParallelCommandsRequest()
     else:
@@ -20,6 +23,11 @@ def __learn_endpoints(args):
         api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
                                "arping -c  5 -U %s -I %s" % (wl.ip_address, wl.interface))
         api.Logger.debug("ArPing from %s %s %s %s" % (wl.node_name, wl.workload_name, wl.interface, wl.ip_address))
+        # send arping with secondary IPs too
+        for sec_ip_addr in wl.sec_ip_addresses:
+            api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
+                                   "arping -c  5 -U %s -I %s" % (sec_ip_addr, wl.interface))
+            api.Logger.debug("ArPing from %s %s %s %s" % (wl.node_name, wl.workload_name, wl.interface, sec_ip_addr))
 
     resp = api.Trigger(req)
     if resp is None:

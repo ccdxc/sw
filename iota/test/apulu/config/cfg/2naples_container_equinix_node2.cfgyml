@@ -2,6 +2,12 @@
 meta:
     id: EQUINIX_HOST_MODE
 
+# 1 Device
+# 2 VPCs (1 underlay + 1 Tenant)
+# 6 Subnets (as we can have only 6 Host interfaces)
+# 6 VNICs
+# 6 Local mappings (1 per VNIC)
+# 6 Remote mappings
 device:
     id          : 1
     mode        : host
@@ -120,6 +126,7 @@ vpc:
       stack      : ipv4
       count      : 1
       type       : tenant
+      v4prefix   : '2.0.0.0\24'
 
       tunnel:
         - id         : 1
@@ -132,211 +139,29 @@ vpc:
           nhid       : 1
 
       subnet:
-        - id               : 1
-          count            : 1
+        - count            : 6
           v4prefixlen      : 24
-          v6prefixlen      : 64
-          v4prefix         : '2.1.0.0\24'
-          hostifidx        : 0x80000046
           fabricencap      : vxlan
-          fabricencapvalue : 202
-          v4routerip       : '2.1.0.0'
-          vroutermac       : macaddr/0055.0100.0001
           evpnevi:
-            - id     : 1
-              rttype : import_export
+            - rttype : import_export
               autort : manual
               autord : auto
               encap  : vxlan
           evpnevirt:
-            - id     : 1
-              rttype : import_export
+            - rttype : import_export
               rt     : 00:02:00:01:10:00:00:64
-            - id     : 2
-              rttype : import_export
+            - rttype : import_export
               rt     : 00:02:00:01:10:00:00:65
 
           vnic:
-            - id        : 1
-              count     : 1             # 1 untagged VNIC
-              vmac      : macaddr/00ae.cd00.000a
-              hostifidx : 0x80000046
+            - count     : 1             # 1 untagged VNIC
+              vmac      : macstep/00ae.cd00.000a/0000.0000.0100
               srcguard  : false         # true or false (default false)
               public    : false
               tagged    : false         # true or false (default true)
               origin    : discovered
-              remoteroutes : '2.1.0.0\16'
-              ipcount   : 1             # Local IP mapping per vnic
-
-              lmap:
-                - id       : 1
-                  keytype  : l3
-                  lmacaddr : macaddr/00ae.cd00.000a
-                  lipaddr  : '2.1.0.3'
-                  origin   : discovered
-
-          rmap:                         # Remote IP mappings per subnet
-            - id       : 1
-              count    : 1
-              keytype  : l3
-              rmacaddr : macaddr/00ae.cd00.0811
-              ripaddr  : '2.1.0.2'
-              tunnelid : 1
-              origin   : discovered
-
-        - id               : 2
-          count            : 1
-          v4prefixlen      : 24
-          v6prefixlen      : 64
-          v4prefix         : '2.1.1.0\24'
-          hostifidx        : 0x80000047
-          fabricencap      : vxlan
-          fabricencapvalue : 203
-          v4routerip       : '2.1.1.0'
-          vroutermac       : macaddr/0055.0100.0101
-          evpnevi:
-            - id     : 2
-              rttype : import_export
-              autort : manual
-              autord : auto
-              encap  : vxlan
-          evpnevirt:
-            - id     : 3
-              rttype : import_export
-              rt     : 00:02:00:01:10:00:00:64
-            - id     : 4
-              rttype : import_export
-              rt     : 00:02:00:01:10:00:00:65
-
-          vnic:
-            - id        : 2
-              count     : 1             # 1 untagged VNIC
-              vmac      : macaddr/00ae.cd00.010a
-              hostifidx : 0x80000047
-              srcguard  : false         # true or false (default false)
-              public    : false
-              tagged    : false         # true or false (default true)
-              origin    : discovered
-              remoteroutes : '2.1.0.0\16'
-              ipcount   : 1             # Local IP mapping per vnic
-
-              lmap:
-                - id       : 2
-                  keytype  : l3
-                  lmacaddr : macaddr/00ae.cd00.010a
-                  lipaddr  : '2.1.1.3'
-                  origin   : discovered
-
-          rmap:                         # Remote IP mappings per subnet
-            - id       : 2
-              count    : 1
-              keytype  : l3
-              rmacaddr : macaddr/00ae.cd00.0911
-              ripaddr  : '2.1.1.2'
-              tunnelid : 1
-              origin   : discovered
-
-        - id               : 3
-          count            : 1
-          v4prefixlen      : 24
-          v4prefix         : '2.1.2.0\24'
-          hostifidx        : 0x8000004a
-          fabricencap      : vxlan
-          fabricencapvalue : 204
-          v4routerip       : '2.1.2.0'
-          vroutermac       : macaddr/0055.0100.0201
-          evpnevi:
-            - id     : 3
-              rttype : import_export
-              autort : manual
-              autord : auto
-              encap  : vxlan
-          evpnevirt:
-            - id     : 5
-              rttype : import_export
-              rt     : 00:02:00:01:10:00:00:64
-            - id     : 6
-              rttype : import_export
-              rt     : 00:02:00:01:10:00:00:65
-
-          vnic:
-            - id        : 3
-              count     : 1             # 1 untagged VNIC
-              vmac      : macaddr/00ae.cd00.020a
-              hostifidx : 0x8000004a
-              srcguard  : false         # true or false (default false)
-              public    : false
-              tagged    : false         # true or false (default true)
-              origin    : discovered
-              remoteroutes : '2.1.0.0\16'
-              ipcount   : 1             # Local IP mapping per vnic
-
-              lmap:
-                - id       : 3
-                  keytype  : l3
-                  lmacaddr : macaddr/00ae.cd00.020a
-                  lipaddr  : '2.1.2.3'
-                  origin   : discovered
-
-          rmap:                         # Remote IP mappings per subnet
-            - id       : 3
-              count    : 1
-              keytype  : l3
-              rmacaddr : macaddr/00ae.cd00.0a11
-              ripaddr  : '2.1.2.2'
-              tunnelid : 1
-              origin   : discovered
-
-        - id               : 4
-          count            : 1
-          v4prefixlen      : 24
-          v4prefix         : '2.1.3.0\24'
-          hostifidx        : 0x8000004b
-          fabricencap      : vxlan
-          fabricencapvalue : 205
-          v4routerip       : '2.1.3.0'
-          vroutermac       : macaddr/0055.0100.0301
-          evpnevi:
-            - id     : 4
-              rttype : import_export
-              autort : manual
-              autord : auto
-              encap  : vxlan
-          evpnevirt:
-            - id     : 7
-              rttype : import_export
-              rt     : 00:02:00:01:10:00:00:64
-            - id     : 8
-              rttype : import_export
-              rt     : 00:02:00:01:10:00:00:65
-
-          vnic:
-            - id        : 4
-              count     : 1             # 1 untagged VNIC
-              vmac      : macaddr/00ae.cd00.030a
-              hostifidx : 0x8000004b
-              srcguard  : false         # true or false (default false)
-              public    : false
-              tagged    : false         # true or false (default true)
-              origin    : discovered
-              remoteroutes : '2.1.0.0\16'
-              ipcount   : 1             # Local IP mapping per vnic
-
-              lmap:
-                - id       : 4
-                  keytype  : l3
-                  lmacaddr : macaddr/00ae.cd00.030a
-                  lipaddr  : '2.1.3.3'
-                  origin   : discovered
-
-          rmap:                         # Remote IP mappings per subnet
-            - id       : 4
-              count    : 1
-              keytype  : l3
-              rmacaddr : macaddr/00ae.cd00.0b11
-              ripaddr  : '2.1.3.2'
-              tunnelid : 1
-              origin   : discovered
+              remoteroutes : '2.0.0.0\16'
+              ipcount      : 1
 
       nexthop:
         - id         : 3

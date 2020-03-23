@@ -39,26 +39,18 @@ def verifyFlowLogging(af, workload_pairs):
 def clearFlowTable(workload_pairs):
     if api.GlobalOptions.dryrun:
         return api.types.status.SUCCESS
-    for pair in workload_pairs:
-        w1 = pair[0]
-        w2 = pair[1]
 
-        ret, resp = pdsctl.ExecutePdsctlCommand(w1.node_name, "clear flow", yaml=False)
+    nodes = api.GetNaplesHostnames()
+    for node in nodes:
+        ret, resp = pdsctl.ExecutePdsctlCommand(node, "clear flow", yaml=False)
         if ret != True:
-            api.Logger.error("Failed to execute clear flows at node %s : %s" %(w1.node_name, resp))
+            api.Logger.error("Failed to execute clear flows at node %s : %s" %(node, resp))
             return api.types.status.FAILURE
 
         if "Clearing flows succeeded" not in resp:
-            api.Logger.error("Failed to clear flows at node %s : %s" %(w1.node_name, resp))
+            api.Logger.error("Failed to clear flows at node %s : %s" %(node, resp))
             return api.types.status.FAILURE
 
-        ret, resp = pdsctl.ExecutePdsctlCommand(w2.node_name, "clear flow", yaml=False)
-        if ret != True:
-            api.Logger.error("Failed to execute clear flows at node %s : %s" %(w2.node_name, resp))
-            return api.types.status.FAILURE
-        if "Clearing flows succeeded" not in resp:
-            api.Logger.error("Failed to clear flows at node %s : %s" %(w2.node_name, resp))
-            return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 def parseFlowEntries(entries, w1, w2):

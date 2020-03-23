@@ -1,8 +1,7 @@
 #! /usr/bin/python3
 import pdb
-
 from infra.common.logging import logger
-
+import infra.common.objects as objects
 from apollo.config.store import client as EzAccessStoreClient
 
 from apollo.config.resmgr import client as ResmgrClient
@@ -42,7 +41,10 @@ class VnicObject(base.ConfigObjectBase):
         self.UUID = utils.PdsUuid(self.VnicId, self.ObjType)
         self.SUBNET = parent
         if hasattr(spec, 'vmac'):
-            self.MACAddr =  spec.vmac
+            if isinstance(spec.vmac, objects.MacAddressStep):
+                self.MACAddr = spec.vmac.get()
+            else:
+                self.MACAddr = spec.vmac
         else:
             self.MACAddr =  ResmgrClient[node].VnicMacAllocator.get()
         if utils.IsDol():

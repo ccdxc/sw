@@ -2,6 +2,7 @@
 import pdb
 import json
 import requests
+import ipaddress
 
 from infra.common.logging import logger
 from infra.common.glopts  import GlobalOptions
@@ -73,7 +74,10 @@ class VpcObject(base.ConfigObjectBase):
         else:
             self.Type = vpc_pb2.VPC_TYPE_TENANT
             self.IPPrefix[0] = ResmgrClient[node].GetVpcIPv6Prefix(self.VPCId)
-            self.IPPrefix[1] = ResmgrClient[node].GetVpcIPv4Prefix(self.VPCId)
+            if hasattr(spec, "v4prefix"):
+                self.IPPrefix[1] = ipaddress.ip_network(spec.v4prefix.replace('\\', '/'))
+            else:
+                self.IPPrefix[1] = ResmgrClient[node].GetVpcIPv4Prefix(self.VPCId)
         if (hasattr(spec, 'nat46')) and spec.nat46 is True:
             self.Nat46_pfx = ResmgrClient[node].Nat46Address
         self.Stack = spec.stack

@@ -18,6 +18,24 @@ __max_tcp_ports = 1
 portUdpAllocator = resmgr.TestbedPortAllocator(205)
 portTcpAllocator = resmgr.TestbedPortAllocator(4500)
 
+def __add_secondary_ip_to_workloads():
+    if not api.IsSimulation():
+        req = api.Trigger_CreateAllParallelCommandsRequest()
+    else:
+        req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+
+    for wl in api.GetWorkloads():
+        for sec_ip_addr in wl.sec_ip_addresses:
+            api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
+                                   "ifconfig %s add %s" % (wl.interface, sec_ip_addr))
+            api.Logger.debug("ifconfig add from %s %s %s %s" % (wl.node_name, wl.workload_name, wl.interface, sec_ip_addr))
+
+    resp = api.Trigger(req)
+    if resp is None:
+        return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS
+
 def _add_exposed_ports(wl_msg):
     if  wl_msg.workload_type != topo_svc.WORKLOAD_TYPE_CONTAINER:
         return
@@ -43,6 +61,7 @@ def __add_workloads(redirect_port):
         wl_msg.workload_name = ep.name + ep.node_name
         wl_msg.node_name = ep.node_name
         wl_msg.ip_prefix = ep.ip_addresses[0]
+        wl_msg.sec_ip_prefix.extend(ep.ip_addresses[1:])
         # wl_msg.ipv6_prefix = ep.ip_addresses[1]
         wl_msg.mac_address = ep.macaddr
         wl_msg.interface_type = topo_svc.INTERFACE_TYPE_NONE
@@ -124,6 +143,7 @@ def Main(args):
     else:
         redirect_port = False
     __add_workloads(redirect_port)
+    __add_secondary_ip_to_workloads()
     return api.types.status.SUCCESS
 
 if __name__ == '__main__':

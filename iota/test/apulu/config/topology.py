@@ -13,21 +13,56 @@ import apollo.config.generator as generator
 from apollo.config.store import EzAccessStore
 from apollo.config.store import client as EzAccessStoreClient
 from apollo.config.store import Init as EzAccessStoreInit
+import infra.common.objects as objects
+import apollo.config.utils as utils
+import iota.test.apulu.config.api as config_api
+
+def __generate_rmappings_from_lmappings():
+    nodes = api.GetNaplesHostnames()
+    lmapClient = config_api.GetObjClient('lmapping')
+    rmapClient = config_api.GetObjClient('rmapping')
+    rmapSpec = dict()
+    rmapSpec['origin'] = 'discovered'
+    for targetNode in nodes:
+        if rmapClient.GetNumObjects(targetNode) != 0:
+            # Skip since Remote mapping configs are already generated from cfgspec
+            api.Logger.debug("Skipping Remote mapping generation since they already exist")
+            return
+        for srcNode in nodes:
+            num = 0
+            if targetNode == srcNode:
+                continue
+            lmappings = lmapClient.Objects(srcNode)
+            for lmap in lmappings:
+                if lmap.VNIC.IgwVnic:
+                    api.Logger.debug("Skipping Remote mapping generation since lmapping %s is part of a IgwVnic" %lmap.GID())
+                    continue
+                mac = "macaddr/%s" %lmap.VNIC.MACAddr.get()
+                rmapSpec['rmacaddr'] = objects.TemplateFieldObject(mac)
+                rmapSpec['ripaddr'] = lmap.IP
+                if lmap.AddrFamily == 'IPV6':
+                    ipversion = utils.IP_VERSION_6
+                else:
+                    ipversion = utils.IP_VERSION_4
+                parent = config_api.GetObjClient('subnet').GetSubnetObject(targetNode, lmap.VNIC.SUBNET.SubnetId)
+                rmapClient.GenerateObj(targetNode, parent, rmapSpec, ipversion)
+                num += 1
+            api.Logger.info(f"Generated {num} RMAPPING Objects in {targetNode}")
+    return
 
 def Main(args):
-    node = args.node
     defs.DOL_PATH = "/iota/"
     defs.TEST_TYPE = "IOTA"
-    api.Logger.info(f"Generating Configuration for Spec {args.spec}")
-    if args.spec == 'dummy':
-        return api.types.status.SUCCESS
-    cfgspec = parser.ParseFile('test/apulu/config/cfg/', '%s'%args.spec)
+    for node, cfgyml in vars(args.spec).items():
+        api.Logger.info(f"Generating Configuration for Spec {cfgyml}")
+        cfgspec = parser.ParseFile('test/apulu/config/cfg/', '%s'%cfgyml)
 
-    naples_uuid_map = api.GetNaplesNodeUuidMap()
-    EzAccessStoreInit(node)
-    EzAccessStore.SetUuidMap(naples_uuid_map)
-    EzAccessStoreClient[node].SetUnderlayIPs(api.GetNicUnderlayIPs(node))
+        naples_uuid_map = api.GetNaplesNodeUuidMap()
+        EzAccessStoreInit(node)
+        EzAccessStore.SetUuidMap(naples_uuid_map)
+        EzAccessStoreClient[node].SetUnderlayIPs(api.GetNicUnderlayIPs(node))
 
-    generator.Main(node, cfgspec, api.GetNicMgmtIP(node))
+        generator.Main(node, cfgspec, api.GetNicMgmtIP(node))
 
+    __generate_rmappings_from_lmappings()
     return api.types.status.SUCCESS

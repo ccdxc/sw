@@ -96,17 +96,16 @@ class SubnetObject(base.ConfigObjectBase):
             if hostifidx:
                 self.HostIfIdx = int(hostifidx)
             else:
-                self.HostIfIdx = next(ResmgrClient[node].HostIfIdxAllocator)
+                self.HostIfIdx = InterfaceClient.GetHostInterface(node)
             node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
         self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, node_uuid=node_uuid) if self.HostIfIdx else None
         # TODO: randomize maybe?
         self.DHCPPolicyIds = list(map(lambda x: x.Id, DHCPRelayClient.Objects(node)))
         self.Status = SubnetStatus()
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
-        self.__ip_address_pool = {}
         if self.IpV6Valid:
-            self.__ip_address_pool[0] = Resmgr.CreateIpv6AddrPool(self.IPPrefix[0])
-        self.__ip_address_pool[1] = Resmgr.CreateIpv4AddrPool(self.IPPrefix[1])
+            Resmgr.CreateIPv6AddrPoolForSubnet(self.SubnetId, self.IPPrefix[0])
+        Resmgr.CreateIPv4AddrPoolForSubnet(self.SubnetId, self.IPPrefix[1])
 
         self.__set_vrouter_attributes()
         self.__fill_default_rules_in_policy(node)
@@ -164,19 +163,19 @@ class SubnetObject(base.ConfigObjectBase):
                 PolicyClient.ModifyPolicyRules(node, policyid, self)
         return
 
+    def AllocIPv6Address(self):
+        return Resmgr.GetIPv6AddrFromSubnetPool(self.SubnetId)
+
+    def AllocIPv4Address(self):
+        return Resmgr.GetIPv4AddrFromSubnetPool(self.SubnetId)
+
     def __set_vrouter_attributes(self):
         # 1st IP address of the subnet becomes the vrouter.
         if self.IpV6Valid:
-            self.VirtualRouterIPAddr[0] = next(self.__ip_address_pool[0])
-        self.VirtualRouterIPAddr[1] = next(self.__ip_address_pool[1])
+            self.VirtualRouterIPAddr[0] = Resmgr.GetSubnetVRIPv6(self.SubnetId)
+        self.VirtualRouterIPAddr[1] = Resmgr.GetSubnetVRIPv4(self.SubnetId)
         self.VirtualRouterMACAddr = ResmgrClient[self.Node].VirtualRouterMacAllocator.get()
         return
-
-    def AllocIPv6Address(self):
-        return next(self.__ip_address_pool[0])
-
-    def AllocIPv4Address(self):
-        return next(self.__ip_address_pool[1])
 
     def UpdateAttributes(self):
         self.VirtualRouterMACAddr = ResmgrClient[self.Node].VirtualRouterMacAllocator.get()
