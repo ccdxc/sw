@@ -801,11 +801,10 @@ PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type,
     // program the indirection table before the params table as it is downstream
     // from the params table. rss params like should be set after
     // the indirection table is completely programmed.
+    NIC_LOG_DEBUG("RSS Programming indirection table hw-lif-id {} start",
+                  hw_lif_id);
     if (num_queues > 0) {
         for (unsigned int index = 0; index < ETH_RSS_LIF_INDIR_TBL_LEN; index++) {
-            NIC_LOG_DEBUG("RSS Programming indirection table hw-lif-id : {},"
-                          "index : {}, rss_indir : {}",
-                          hw_lif_id, index, rss_indir[index]);
             ret = p4plus_rxdma_rss_indir_update(
                     hw_lif_id, index, 0xff, rss_indir[index]);
             if(ret != SDK_RET_OK) {
@@ -824,6 +823,9 @@ PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type,
                       ret, hw_lif_id, rss_type);
         return 1;
     }
+
+    NIC_LOG_DEBUG("RSS Programming indirection table hw-lif-id {} end",
+                  hw_lif_id);
 
     return 0;
 }
