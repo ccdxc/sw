@@ -15,7 +15,35 @@ import (
 func (cl *AgentClient) IPAMPolicyList() ([]netproto.IPAMPolicy, error) {
 	var ipampolicyList []netproto.IPAMPolicy
 
-	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/ipampolicys/", &ipampolicyList)
+	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/ipam-policies/", &ipampolicyList)
 
 	return ipampolicyList, err
+}
+
+// IPAMPolicyPost creates IPAMPolicy object
+func (cl *AgentClient) IPAMPolicyCreate(postData netproto.IPAMPolicy) error {
+	var resp Response
+
+	err := netutils.HTTPPost("http://"+cl.agentURL+"/api/ipam-policies/", &postData, &resp)
+
+	return err
+
+}
+
+// IPAMPolicyDelete deletes IPAMPolicy object
+func (cl *AgentClient) IPAMPolicyDelete(deleteData netproto.IPAMPolicy) error {
+	var resp Response
+
+	err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/ipam-policies/default/default/testDeleteIPAMPolicy", &deleteData, &resp)
+
+	return err
+}
+
+// IPAMPolicyPut updates IPAMPolicy object
+func (cl *AgentClient) IPAMPolicyUpdate(putData netproto.IPAMPolicy) error {
+	var resp Response
+
+	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/ipam-policies/default/default/preCreatedIPAMPolicy", &putData, &resp)
+
+	return err
 }

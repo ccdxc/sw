@@ -15,7 +15,7 @@ service IPAMPolicyApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "IPAMPolicy",
-        Method: ["list"],
+        Method: ["list", "get", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
         Prefix: "api/ipam-policies"
         Version: "V1"

@@ -7,8 +7,12 @@ Input file: ipam.proto
 package restapi
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"time"
 
+	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/api"
@@ -22,6 +26,14 @@ func (s *RestServer) AddIPAMPolicyAPIRoutes(r *mux.Router) {
 
 	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listIPAMPolicyHandler))
 
+	r.Methods("GET").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(s.getIPAMPolicyHandler))
+
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.postIPAMPolicyHandler))
+
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(s.deleteIPAMPolicyHandler))
+
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(s.putIPAMPolicyHandler))
+
 }
 
 func (s *RestServer) listIPAMPolicyHandler(r *http.Request) (interface{}, error) {
@@ -30,4 +42,104 @@ func (s *RestServer) listIPAMPolicyHandler(r *http.Request) (interface{}, error)
 	}
 
 	return s.pipelineAPI.HandleIPAMPolicy(types.List, o)
+}
+
+func (s *RestServer) getIPAMPolicyHandler(r *http.Request) (interface{}, error) {
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	o := netproto.IPAMPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
+
+	data, err := s.pipelineAPI.HandleIPAMPolicy(types.Get, o)
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return data, nil
+
+}
+
+func (s *RestServer) postIPAMPolicyHandler(r *http.Request) (interface{}, error) {
+	var o netproto.IPAMPolicy
+	b, _ := ioutil.ReadAll(r.Body)
+	err := json.Unmarshal(b, &o)
+	if err != nil {
+		return nil, err
+	}
+	c, _ := protoTypes.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
+
+	_, err = s.pipelineAPI.HandleIPAMPolicy(types.Create, o)
+
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
+}
+
+func (s *RestServer) deleteIPAMPolicyHandler(r *http.Request) (interface{}, error) {
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	o := netproto.IPAMPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
+
+	_, err := s.pipelineAPI.HandleIPAMPolicy(types.Delete, o)
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
+}
+
+func (s *RestServer) putIPAMPolicyHandler(r *http.Request) (interface{}, error) {
+	var o netproto.IPAMPolicy
+	b, _ := ioutil.ReadAll(r.Body)
+	err := json.Unmarshal(b, &o)
+	if err != nil {
+		return nil, err
+	}
+	c, _ := protoTypes.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
+
+	_, err = s.pipelineAPI.HandleIPAMPolicy(types.Update, o)
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
 }
