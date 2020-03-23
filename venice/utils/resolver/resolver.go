@@ -129,15 +129,16 @@ func (r *resolverClient) runUntilCancel() {
 			r.Unlock()
 			return
 		}
+		servers := r.config.Servers
 		r.Unlock()
 
-		if len(r.config.Servers) == 0 {
+		if len(servers) == 0 {
 			time.Sleep(2 * time.Second)
 			continue
 		}
 
 		// Pick one of the servers at random.
-		i := rand.New(s).Intn(len(r.config.Servers))
+		i := rand.New(s).Intn(len(servers))
 
 		if rpcClient != nil {
 			rpcClient.Close()
@@ -149,7 +150,7 @@ func (r *resolverClient) runUntilCancel() {
 		// If client passes different options, they override
 		rpcOptions := []rpckit.Option{rpckit.WithRemoteServerName(globals.Cmd)}
 		rpcOptions = append(rpcOptions, r.config.Options...)
-		rpcClient, err = rpckit.NewRPCClient(r.config.Name, r.config.Servers[i], rpcOptions...)
+		rpcClient, err = rpckit.NewRPCClient(r.config.Name, servers[i], rpcOptions...)
 		if err != nil {
 			time.Sleep(rpcRetryInterval)
 			continue
@@ -162,7 +163,7 @@ func (r *resolverClient) runUntilCancel() {
 			time.Sleep(rpcRetryInterval)
 			continue
 		}
-		log.Infof("Resolver connected to server %s", r.config.Servers[i])
+		log.Infof("Resolver connected to server %v", servers[i])
 		first := true
 		for {
 			el, err := watcher.Recv()
