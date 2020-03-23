@@ -22,6 +22,8 @@ import iota.harness.infra.utils.timeprofiler as timeprofiler
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+import iota.test.iris.testcases.server.verify_pci as verify_pci
+from iota.harness.infra.exceptions import *
 
 
 class TestSuiteResults(object):
@@ -369,6 +371,20 @@ class TestSuite:
         except:
             Logger.debug("failed to collect cores. error was {0}".format(traceback.format_exc()))
 
+    def checkPci(self):
+        result = types.status.SUCCESS
+        for node in self.GetTopology().GetNodes():
+            msg = "calling verify_pci.verify_error_lspci() for node {0}".format(node.Name())
+            Logger.debug(msg)
+            result = verify_pci.verify_errors_lspci(node.Name(), node.GetOs())
+            if result != types.status.SUCCESS:
+                msg = "PCIe Failure detected on node {0} with OS {1}".format(node.Name(), node.GetOs())
+                print(msg)
+                Logger.error(msg)
+                return result
+                # raise OfflineTestbedException
+        return result
+
     def writeTestResults(self):
         filename = "testsuite_{0}_results.json".format(self.Name())
         try:
@@ -425,6 +441,11 @@ class TestSuite:
         self.__resolve_calls()
 
         status = self.__setup()
+        if status != types.status.SUCCESS:
+            self.__timer.Stop()
+            return status
+
+        status = self.checkPci()
         if status != types.status.SUCCESS:
             self.__timer.Stop()
             return status
