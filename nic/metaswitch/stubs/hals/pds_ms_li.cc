@@ -186,6 +186,94 @@ ms_to_lnx_ipaddr (const ATG_INET_ADDRESS& in_ip, in_ipx_addr_t* out_ip)
     memcpy (&(out_ip->addr), &(in_ip.address), in_ip.length);
 }
 
+NBB_BYTE li_integ_subcomp_t::if_addr_set(NBB_ULONG ms_ifindex,
+                                         ATG_LIPI_L3_IP_ADDR *ip_addr) {
+#if 0 /* TODO: configure L3 interface IP in Linux
+         Enable after solving PDS HAL batch semantics for hijacked objects */
+    try {
+        in_ipx_addr_t ip;
+        ms_to_lnx_ipaddr(ip_addr->inet_addr, &ip);
+
+        uint32_t lnx_ifindex;
+        {
+            auto state_ctxt = pds_ms::state_t::thread_context();
+            auto if_obj = state_ctxt.state()->if_store().get(ms_ifindex);
+            if (if_obj == nullptr) {
+                PDS_TRACE_ERR("Unknown MSIfIndex 0x%x IP address set",
+                               ms_ifindex);
+                return ATG_OK;
+            }
+
+
+            auto& port_prop = if_obj->phy_port_properties();
+            if (ip.af == AF_INET6) {
+                PDS_TRACE_DEBUG("Ignore MSIfIndex 0x%x Interface %s"
+                                " IPv6 address set request",
+                                ms_ifindex, port_prop.l3_if_spec.key.str());
+                return ATG_OK;
+            }
+            lnx_ifindex = port_prop.lnx_ifindex;
+
+            char buf[INET6_ADDRSTRLEN];
+            PDS_TRACE_INFO("MSIfIndex 0x%x Interface %s Linux IfIndex %d"
+                           " IP address set request %s",
+                           ms_ifindex, port_prop.l3_if_spec.key.str(), lnx_ifindex,
+                           inet_ntop(ip.af, &ip.addr, buf, INET6_ADDRSTRLEN));
+        }
+
+        pds_ms::config_linux_intf_ip(lnx_ifindex, ip, ip_addr->prefix_len);
+    } catch (Error& e) {
+        PDS_TRACE_ERR ("Interface 0x%x IP address add failed %s", ms_ifindex, e.what());
+        return ATG_UNSUCCESSFUL;
+    }
+#endif
+    return ATG_OK;
+}
+
+NBB_BYTE li_integ_subcomp_t::if_addr_del(NBB_ULONG ms_ifindex,
+                                         ATG_LIPI_L3_IP_ADDR *ip_addr) {
+#if 0 /* TODO: configure L3 interface IP in Linux
+         Enable after solving PDS HAL batch semantics for hijacked objects */
+    try {
+        in_ipx_addr_t ip;
+        ms_to_lnx_ipaddr(ip_addr->inet_addr, &ip);
+
+        uint32_t lnx_ifindex;
+        {
+            auto state_ctxt = pds_ms::state_t::thread_context();
+            auto if_obj = state_ctxt.state()->if_store().get(ms_ifindex);
+            if (if_obj == nullptr) {
+                PDS_TRACE_ERR("Unknown MSIfIndex 0x%x IP address delete",
+                               ms_ifindex);
+                return ATG_OK;
+            }
+
+            auto& port_prop = if_obj->phy_port_properties();
+            if (ip.af == AF_INET6) {
+                PDS_TRACE_DEBUG("Ignore MSIfIndex 0x%x Interface %s"
+                                " IPv6 address delete request",
+                                ms_ifindex, port_prop.l3_if_spec.key.str());
+                return ATG_OK;
+            }
+            lnx_ifindex = port_prop.lnx_ifindex;
+
+            char buf[INET6_ADDRSTRLEN];
+            PDS_TRACE_INFO("MSIfIndex 0x%x Interface %s Linux IfIndex %d"
+                           " IP address %s delete request",
+                           ms_ifindex, port_prop.l3_if_spec.key.str(), lnx_ifindex,
+                           inet_ntop(ip.af, &ip.addr, buf, INET6_ADDRSTRLEN));
+        }
+
+        pds_ms::config_linux_intf_ip(lnx_ifindex, ip, ip_addr->prefix_len,
+                                     true /* del */);
+    } catch (Error& e) {
+        PDS_TRACE_ERR ("Interface 0x%x IP address del failed %s", ms_ifindex, e.what());
+        return ATG_UNSUCCESSFUL;
+    }
+#endif
+    return ATG_OK;
+}
+
 NBB_BYTE li_integ_subcomp_t::softwif_addr_set(const NBB_CHAR *if_name,
                                               ATG_LIPI_L3_IP_ADDR *ip_addr,
                                               NBB_BYTE *vrf_name) {

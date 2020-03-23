@@ -138,7 +138,7 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false, bool updat
         pds_if.admin_state = PDS_IF_STATE_UP;
         pds_if.l3_if_info.vpc = pds_ms::msidx2pdsobjkey(k_underlay_vpc_id);
         pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
-        pds_if.l3_if_info.ip_prefix.len = 16;
+        pds_if.l3_if_info.ip_prefix.len = 24;
     }
 
     pds_if_api_spec_to_proto (request.add_request(), &pds_if);
@@ -968,15 +968,19 @@ int main(int argc, char** argv)
             create_evpn_ip_vrf_rt_proto_grpc();
             return 0;
         } else if (!strcmp(argv[1], "subnet-del")) {
-            delete_evpn_evi_rt_proto_grpc();
-            delete_evpn_evi_proto_grpc();
+            if (argc < 3 || (!strcmp(argv[2], "no-evi-del"))) {
+                delete_evpn_evi_rt_proto_grpc();
+                delete_evpn_evi_proto_grpc();
+            }
             delete_subnet_proto_grpc();
             return 0;
         } else if (!strcmp(argv[1], "subnet-create")) {
             create_subnet_proto_grpc();
-            create_evpn_evi_proto_grpc();
-            if (g_test_conf_.manual_rt) {
-                create_evpn_evi_rt_proto_grpc();
+            if (argc < 3 || (!strcmp(argv[2], "no-evi-create"))) {
+                create_evpn_evi_proto_grpc();
+                if (g_test_conf_.manual_rt) {
+                    create_evpn_evi_rt_proto_grpc();
+                }
             }
             return 0;
         } else if (!strcmp(argv[1], "bgp-upeer-del")) {

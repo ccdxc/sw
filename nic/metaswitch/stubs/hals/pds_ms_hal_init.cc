@@ -25,6 +25,7 @@ namespace pds_ms {
 void
 hal_callback (sdk_ret_t status, const void *cookie)
 {
+    if (cookie == nullptr) return;
     std::unique_ptr<cookie_t> cookie_ptr ((cookie_t*) cookie);
 
     PDS_TRACE_DEBUG("Async PDS HAL callback, status %d, cookie 0x%lx",

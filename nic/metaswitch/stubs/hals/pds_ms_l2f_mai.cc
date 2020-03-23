@@ -663,4 +663,31 @@ l2f_del_remote_macs_for_bd (state_t::context_t& state_ctxt, ms_bd_id_t bd_id,
                        });
 }
 
+pds_batch_ctxt_guard_t
+l2f_del_remote_macs_for_bd (state_t::context_t& state_ctxt, ms_bd_id_t bd_id)
+{
+    pds_batch_ctxt_guard_t  pds_bctxt_guard;
+    if (!state_ctxt.state()->bd_store().get(bd_id)->has_macs()) {
+        PDS_TRACE_DEBUG("MS BD %d has no Remote MAC mappings", bd_id);
+        return pds_bctxt_guard;
+    }
+    // Do Not combine Delete MACs with any other batch
+    // Creating a new batch for the MACs
+    pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH,
+                           PDS_BATCH_PARAMS_ASYNC,
+                           hal_callback,
+                           nullptr};
+    auto bctxt = pds_batch_start(&bp);
+
+    if (unlikely (!bctxt)) {
+        throw Error(std::string("PDS Batch Start failed when trying to delete"
+                                " Remote MACs for MS BD ")
+                    .append(std::to_string(bd_id)));
+    }
+    pds_bctxt_guard.set(bctxt);
+
+    l2f_del_remote_macs_for_bd(state_ctxt, bd_id, bctxt);
+    return pds_bctxt_guard;
+}
+
 } // End namespace

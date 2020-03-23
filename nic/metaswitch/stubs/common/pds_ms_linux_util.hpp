@@ -25,6 +25,8 @@ bool get_linux_intf_params(const char* ifname,      // In
                            uint32_t*   lnx_ifindex, // Out
                            mac_addr_t& mac);        // Out
 
+void config_linux_intf_ip (uint32_t lnx_ifindex, const in_ipx_addr_t& ip,
+                                uint32_t prefix_len, bool del = false);
 void config_linux_loopback_ip (const in_ipx_addr_t& ip, uint32_t prefix_len, 
                                bool del = false);
 

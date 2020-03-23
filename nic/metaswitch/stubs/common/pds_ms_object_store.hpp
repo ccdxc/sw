@@ -31,8 +31,11 @@ public:
     void erase(const KEY& key) {
         store_.erase(key);
     }
-    void clear() {
+    void clear(void) {
         store_.clear();
+    }
+    bool empty(void) {
+        return store_.empty();
     }
 
     OBJECT* get(const KEY& k) {

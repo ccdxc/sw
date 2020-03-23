@@ -27,7 +27,7 @@
 namespace pds_ms {
 
 // Utility function to get MAC address for interface from Linux
-static bool 
+static bool
 get_linux_intf_mac_addr (const std::string& if_name, mac_addr_t& if_mac)
 {
     struct ifaddrs *ifaddr = NULL;
@@ -73,7 +73,8 @@ get_linux_intf_params (const char* ifname,
 
 struct ipaddr_req_nlmsg_t {
 #define NETLINK_SEND_BUF_LEN \
-     (NLMSG_ALIGN(NLMSG_LENGTH(sizeof(struct ifaddrmsg))) + RTA_LENGTH(sizeof(in6_addr)) + 16)
+     (NLMSG_ALIGN(NLMSG_LENGTH(sizeof(struct ifaddrmsg))) + \
+      (RTA_LENGTH(sizeof(in6_addr)))*2 + 16)
     char buf_[NETLINK_SEND_BUF_LEN];
 };
 
@@ -81,9 +82,21 @@ static ipaddr_req_nlmsg_t
 make_ipaddr_req_nlmsg (uint32_t pid, uint32_t lnx_ifindex, const in_ipx_addr_t& ip,
                        uint32_t prefix_len, uint64_t seq, bool del)
 {
+    /* Netlink IOV structure reference
+       msg_iov=[{iov_base={{len=48, type=RTM_NEWADDR,
+                            flags=NLM_F_REQUEST|NLM_F_ACK|NLM_F_EXCL|NLM_F_CREATE,
+                            seq=<>, pid=0},
+                           {ifa_family=AF_INET, ifa_prefixlen=24, ifa_flags=0,
+                            ifa_scope=RT_SCOPE_UNIVERSE,
+                            ifa_index=if_nametoindex("<>")},
+                           [{{nla_len=8, nla_type=IFA_LOCAL}, 35.1.1.1},
+                            {{nla_len=8, nla_type=IFA_BROADCAST}, 35.1.1.255},
+                            {{nla_len=8, nla_type=IFA_ADDRESS}, 35.1.1.1}]},
+                            iov_len=48}]
+    */
     ipaddr_req_nlmsg_t req = {0};
     auto nlhdr = (nlmsghdr*) req.buf_;
-    
+
     nlhdr->nlmsg_len = NLMSG_ALIGN(NLMSG_LENGTH(sizeof(struct ifaddrmsg)));
     nlhdr->nlmsg_pid = pid;
     nlhdr->nlmsg_flags = NLM_F_REQUEST | NLM_F_CREATE | NLM_F_EXCL | NLM_F_ACK;
@@ -107,15 +120,36 @@ make_ipaddr_req_nlmsg (uint32_t pid, uint32_t lnx_ifindex, const in_ipx_addr_t& 
     if (ip.af == IP_AF_IPV4) {
         nlhdr->nlmsg_len += RTA_LENGTH(sizeof(in_addr));
         attr->rta_len = RTA_LENGTH(sizeof(in_addr));
-        ip_len = sizeof(in_addr); 
+        ip_len = sizeof(in_addr);
     } else {
         nlhdr->nlmsg_len += RTA_LENGTH(sizeof(in6_addr));
         attr->rta_len = RTA_LENGTH(sizeof(in6_addr));
-        ip_len = sizeof(in6_addr); 
+        ip_len = sizeof(in6_addr);
     }
     memcpy(RTA_DATA(attr), &ip.addr, ip_len);
+
+    if (prefix_len == 31) {
+        PDS_TRACE_DEBUG("Override interface Broadcast address in Linux");
+        // Special Case - Override the subnet Broadcast IP, set it same as our IP
+        // Reason - /31 subnet has just 2 IP addresses and is P2P.
+        // By default, Linux allocates the highest IP in the subnet as the
+        // broadcast IP which causes the default route pointing to the
+        // peer IP to fail in Linux.
+        attr = (rtattr*) (((char*)req.buf_) + nlhdr->nlmsg_len + attr->rta_len);
+        attr->rta_type = IFA_BROADCAST;
+        if (ip.af == IP_AF_IPV4) {
+            nlhdr->nlmsg_len += RTA_LENGTH(sizeof(in_addr));
+            attr->rta_len = RTA_LENGTH(sizeof(in_addr));
+            ip_len = sizeof(in_addr);
+        } else {
+            nlhdr->nlmsg_len += RTA_LENGTH(sizeof(in6_addr));
+            attr->rta_len = RTA_LENGTH(sizeof(in6_addr));
+            ip_len = sizeof(in6_addr);
+        }
+        memcpy(RTA_DATA(attr), &ip.addr, ip_len);
+    }
     return req;
-}    
+}
 
 static void
 send_nlmsg (int fd, nlmsghdr* nlh)
@@ -187,9 +221,9 @@ create_and_bind_nl_socket (void)
     struct timeval tv;
     tv.tv_sec = 5;
     tv.tv_usec = 0;
-    setsockopt(fdg.get(), SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);    
+    setsockopt(fdg.get(), SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
     return fdg;
-} 
+}
 
 
 void
@@ -203,13 +237,13 @@ netlink_rcv_main (fd_guard_t fdg, uint32_t pid, uint64_t seq)
 
         if ((rtn < 0)) {
             if (errno == EAGAIN) {
-                // Exit thread on timeout to avoid permanently waiting in case 
+                // Exit thread on timeout to avoid permanently waiting in case
                 // the netlink request never went through
                 PDS_TRACE_INFO("Netlink Recv Timeout");
                 return;
             }
             // Some socket error - try again
-            PDS_TRACE_ERR("Netlink Recv socket error %s %d, try again", 
+            PDS_TRACE_ERR("Netlink Recv socket error %s %d, try again",
                           strerror(errno), errno);
             continue;
         }
@@ -222,9 +256,9 @@ netlink_rcv_main (fd_guard_t fdg, uint32_t pid, uint64_t seq)
             PDS_TRACE_INFO("Netlink Recv response len %ld", rtn);
             auto nle = (struct nlmsgerr *) NLMSG_DATA(nlhdr);
             nlhdr = &(nle->msg);
-            if (!((nlhdr->nlmsg_seq == seq) && (nlhdr->nlmsg_pid == pid))) { 
-                PDS_TRACE_VERBOSE("Netlink Recv unknown msg pid %ld seq %lld exp pid %ld seq %lld", 
-                                   nlhdr->nlmsg_pid, nlhdr->nlmsg_seq, pid, seq); 
+            if (!((nlhdr->nlmsg_seq == seq) && (nlhdr->nlmsg_pid == pid))) {
+                PDS_TRACE_VERBOSE("Netlink Recv unknown msg pid %ld seq %lld exp pid %ld seq %lld",
+                                   nlhdr->nlmsg_pid, nlhdr->nlmsg_seq, pid, seq);
                 continue;
             }
             if (nle->error == 0) {
@@ -239,15 +273,15 @@ netlink_rcv_main (fd_guard_t fdg, uint32_t pid, uint64_t seq)
     }
 }
 
-void 
-config_linux_loopback_ip (const in_ipx_addr_t& ip, uint32_t prefix_len, bool del)
+void
+config_linux_intf_ip (uint32_t lnx_ifindex, const in_ipx_addr_t& ip,
+                           uint32_t prefix_len, bool del)
 {
     try {
         auto fdg = create_and_bind_nl_socket();
         int fd = fdg.get();
 
-        uint64_t seq = time(NULL); 
-        uint32_t lnx_ifindex = 1; // Assumption: IfIndex 1 is always loopback
+        uint64_t seq = time(NULL);
         uint32_t pid = pthread_self() << 16 | getpid();
 
         // Form netlink request
@@ -262,9 +296,15 @@ config_linux_loopback_ip (const in_ipx_addr_t& ip, uint32_t prefix_len, bool del
         send_nlmsg(fd, (nlmsghdr*)&nlmsg);
 
     } catch (Error& e) {
-        PDS_TRACE_ERR("Netlink %s", e.what()); 
+        PDS_TRACE_ERR("Netlink %s", e.what());
     }
 }
 
+void
+config_linux_loopback_ip (const in_ipx_addr_t& ip, uint32_t prefix_len, bool del)
+{
+    // Assumption: IfIndex 1 is always loopback
+    config_linux_intf_ip(1, ip, prefix_len, del);
+}
 
 } // End namespace

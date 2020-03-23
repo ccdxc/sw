@@ -24,6 +24,10 @@ void l2f_local_mac_ip_del(const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
                           mac_addr_t mac);
 void l2f_del_remote_macs_for_bd(state_t::context_t& state_ctxt, ms_bd_id_t bd_id,
                                 pds_batch_ctxt_t bctxt);
+// This version creates a new Batch context, populates the
+//  Remote mapping delete and returns the Batch context guard
+pds_batch_ctxt_guard_t
+l2f_del_remote_macs_for_bd (state_t::context_t& state_ctxt, ms_bd_id_t bd_id);
 
 class l2f_mai_t {
 public:    

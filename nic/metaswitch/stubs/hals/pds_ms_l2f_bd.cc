@@ -111,9 +111,9 @@ pds_subnet_spec_t l2f_bd_t::make_pds_subnet_spec_(void) {
     return spec;
 }
 
-pds_batch_ctxt_guard_t l2f_bd_t::make_batch_pds_spec_(state_t::context_t& state_ctxt,
+subnet_batches_t l2f_bd_t::make_batch_pds_spec_(state_t::context_t& state_ctxt,
                                                       bool async) {
-    pds_batch_ctxt_guard_t bctxt_guard_;
+    subnet_batches_t bctxt_guard_;
 
     if (async) {
         SDK_ASSERT(cookie_uptr_); // Cookie should not be empty
@@ -128,11 +128,12 @@ pds_batch_ctxt_guard_t l2f_bd_t::make_batch_pds_spec_(state_t::context_t& state_
         throw Error(std::string("PDS Batch Start failed for MS BD ")
                     .append(std::to_string(ips_info_.bd_id)));
     }
-    bctxt_guard_.set (bctxt);
+    bctxt_guard_.subnet_batch.set (bctxt);
 
     if (op_delete_) { // Delete
         // First delete remote mapping entries for all MACs on this BD
-        l2f_del_remote_macs_for_bd(state_ctxt, ips_info_.bd_id, bctxt);
+        bctxt_guard_.remote_mac_batch =
+            l2f_del_remote_macs_for_bd(state_ctxt, ips_info_.bd_id);
 
         auto if_key = make_pds_subnet_key_();
         if (!PDS_MOCK_MODE()) {
@@ -160,7 +161,7 @@ pds_batch_ctxt_guard_t l2f_bd_t::make_batch_pds_spec_(state_t::context_t& state_
     return bctxt_guard_;
 }
 
-pds_batch_ctxt_guard_t l2f_bd_t::prepare_pds(state_t::context_t& state_ctxt,
+subnet_batches_t l2f_bd_t::prepare_pds(state_t::context_t& state_ctxt,
                                              bool async) {
     auto& pds_spec = store_info_.subnet_obj->spec();
     PDS_TRACE_INFO ("MS BD %d Subnet %s VPC %s VNI %d IP %s",
@@ -281,7 +282,7 @@ NBB_BYTE l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
         // safe to release the cookie_uptr_ unique_ptr
         rc = ATG_ASYNC_COMPLETION;
         cookie = cookie_uptr_.release();
-        auto ret = pds_batch_commit(pds_bctxt_guard.release());
+        auto ret = pds_batch_commit(pds_bctxt_guard.subnet_batch.release());
         if (unlikely (ret != SDK_RET_OK)) {
             delete cookie;
             throw Error(std::string("Batch commit failed for Add-Update MS BD ")
@@ -311,7 +312,7 @@ NBB_BYTE l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
 }
 
 void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
-    pds_batch_ctxt_guard_t  pds_bctxt_guard;
+    subnet_batches_t  pds_bctxt_guard;
     op_delete_ = true;
 
     // MS stub Integration APIs do not support Async callback for deletes.
@@ -385,7 +386,19 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    if (pds_bctxt_guard.remote_mac_batch) {
+        auto ret = pds_batch_commit(pds_bctxt_guard.remote_mac_batch.release());
+        if (unlikely (ret != SDK_RET_OK)) {
+            delete cookie;
+            throw Error(std::string("Batch commit failed for deleting remote MACs"
+                                    " as part of delete MS BD ")
+                        .append(std::to_string(bd_id))
+                        .append(" err=").append(std::to_string(ret)));
+        }
+        PDS_TRACE_DEBUG ("MS BD %d: Delete PDS Batch commit successful"
+                         " for remote MACs on BD ", bd_id);
+    }
+    auto ret = pds_batch_commit(pds_bctxt_guard.subnet_batch.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for delete MS BD ")
@@ -402,7 +415,7 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
 }
 
 void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
-    pds_batch_ctxt_guard_t  pds_bctxt_guard;
+    subnet_batches_t  pds_bctxt_guard;
     ips_info_.bd_id = bd_id;
     if (ms_ifindex_to_pds_type(ifindex) != IF_TYPE_LIF) {
         PDS_TRACE_VERBOSE("Ignore Non-LIF interface 0x%x bind to BD %d",
@@ -455,7 +468,7 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = pds_batch_commit(pds_bctxt_guard.subnet_batch.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for MS BD ")
@@ -474,7 +487,7 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
 }
 
 void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
-    pds_batch_ctxt_guard_t  pds_bctxt_guard;
+    subnet_batches_t  pds_bctxt_guard;
     ips_info_.bd_id = bd_id;
 
     // BD Interface Unbind API does not support Async callback.
@@ -519,7 +532,7 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = pds_batch_commit(pds_bctxt_guard.subnet_batch.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for BD ")
@@ -541,7 +554,7 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
 sdk_ret_t l2f_bd_t::update_pds_synch(state_t::context_t&& in_state_ctxt,
                                      uint32_t      bd_id,
                                      subnet_obj_t* subnet_obj) {
-    pds_batch_ctxt_guard_t  pds_bctxt_guard;
+    subnet_batches_t  pds_bctxt_guard;
 
     { // Continue thread-safe context passed in to access/modify global state
         state_t::context_t state_ctxt (std::move(in_state_ctxt));
@@ -565,7 +578,7 @@ sdk_ret_t l2f_bd_t::update_pds_synch(state_t::context_t&& in_state_ctxt,
         // Ensure that state lock is released to avoid blocking NBASE thread
     } // End of state thread_context. Do Not access/modify global state
 
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = pds_batch_commit(pds_bctxt_guard.subnet_batch.release());
     if (unlikely (ret != SDK_RET_OK)) {
         PDS_TRACE_ERR ("MS BD %d: Add/Upd PDS Direct Update Batch commit"
                        "failed %d", ips_info_.bd_id, ret);

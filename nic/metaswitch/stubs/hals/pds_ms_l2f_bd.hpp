@@ -18,6 +18,11 @@ extern "C"
 
 namespace pds_ms {
 
+struct subnet_batches_t {
+    pds_batch_ctxt_guard_t remote_mac_batch;
+    pds_batch_ctxt_guard_t subnet_batch;
+};
+
 class l2f_bd_t {
 public:    
    NBB_BYTE handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd);
@@ -47,13 +52,13 @@ private:
     bool op_delete_ = false;
 
 private:
-    pds_batch_ctxt_guard_t make_batch_pds_spec_(state_t::context_t& state_ctxt,
+    subnet_batches_t make_batch_pds_spec_(state_t::context_t& state_ctxt,
                                                 bool async);
     void fetch_store_info_(state_t* state);
     void parse_ips_info_(ATG_BDPI_UPDATE_BD* bd_add_upd);
     pds_subnet_spec_t make_pds_subnet_spec_(void);
     pds_obj_key_t  make_pds_subnet_key_(void);
-    pds_batch_ctxt_guard_t prepare_pds(state_t::context_t& state_ctxt,
+    subnet_batches_t prepare_pds(state_t::context_t& state_ctxt,
                                        bool async);
 };
 

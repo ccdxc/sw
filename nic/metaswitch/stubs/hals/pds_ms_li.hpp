@@ -24,6 +24,10 @@ public:
     //--------------------------------------
     NBB_BYTE port_add_update(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips);
     NBB_BYTE port_delete(NBB_ULONG port_ifindex);
+    NBB_BYTE if_addr_set(NBB_ULONG ms_ifindex,
+                         ATG_LIPI_L3_IP_ADDR *ip_addr);
+    NBB_BYTE if_addr_del(NBB_ULONG ms_ifindex,
+                         ATG_LIPI_L3_IP_ADDR *ip_addr);
 
     //----------------------------------
     // VRF

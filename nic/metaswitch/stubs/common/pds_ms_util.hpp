@@ -144,6 +144,9 @@ public:
         pds_batch_ctxt_t bctxt = bctxt_;
         bctxt_ = 0; return bctxt;
     }
+    operator bool(void) {
+        return (bctxt_ != 0);
+    } 
 private:
     pds_batch_ctxt_t bctxt_ = 0;
 };

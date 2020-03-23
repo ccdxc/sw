@@ -87,6 +87,15 @@ NBB_BYTE li_integ_subcomp_t::softwif_addr_del(const NBB_CHAR *if_name,
     return ATG_OK;
 }
 
+NBB_BYTE li_integ_subcomp_t::if_addr_set(NBB_ULONG ms_ifindex,
+                                         ATG_LIPI_L3_IP_ADDR *ip_addr) {
+    return ATG_OK;
+}
+NBB_BYTE li_integ_subcomp_t::if_addr_del(NBB_ULONG ms_ifindex,
+                                         ATG_LIPI_L3_IP_ADDR *ip_addr) {
+    return ATG_OK;
+}
+
 sdk_ret_t
 li_vrf_update_pds_synch (state_t::context_t&& state_ctxt,
                          vpc_obj_t* vpc_obj)

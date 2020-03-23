@@ -39,6 +39,7 @@ public:
     void print_debug_str(void) override {};
     mac_store_t& mac_store(void) {return mac_store_;}
     void walk_macs(std::function<bool(const mac_addr_t& mac)>);
+    bool has_macs(void) {return !mac_store_.empty();}
 
 private:
     properties_t   prop_;
