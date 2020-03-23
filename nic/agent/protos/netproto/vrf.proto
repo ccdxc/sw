@@ -25,6 +25,7 @@ service VrfApiV1 {
         Method: ["list", "get", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
         Prefix: "api/vrfs"
+        Version: "V1"
     };
 
     rpc ListVrfs (api.ListWatchOptions) returns (VrfList) {};

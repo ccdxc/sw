@@ -301,6 +301,12 @@ func (smm *SmMirrorSessionInterface) handleMirrorSessionTimerEvent(et mirrorTime
 	}
 	switch et {
 	case mirrorSchTimer:
+		mss.programMirrorSession(&mss.MirrorSession.MirrorSession)
+
+		if mss.State == monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION ||
+			mss.State == monitoring.MirrorSessionState_SCHEDULED {
+			mss.MirrorSession.Write()
+		}
 		smm.addMirror(mss)
 	case mirrorExpTimer:
 		//smm.stopMirrorSession(mss)
@@ -560,6 +566,23 @@ func (smm *SmMirrorSessionInterface) getMirrorSession(name string) (*MirrorSessi
 	return ms, nil
 }
 
+func getMirrorCollectors(ms *monitoring.MirrorSession, collectors []*mirrorCollector) *mirrorSelectorCollectors {
+	mcol := &mirrorSelectorCollectors{
+		mirrorSession: ms.Name,
+		selector:      ms.Spec.Interfaces.Selector,
+	}
+	if ms.Spec.Interfaces.Direction == monitoring.Direction_RX.String() {
+		mcol.rxCollectors = collectors
+	} else if ms.Spec.Interfaces.Direction == monitoring.Direction_TX.String() {
+		mcol.txCollectors = collectors
+	} else {
+		mcol.txCollectors = collectors
+		mcol.rxCollectors = collectors
+	}
+
+	return mcol
+}
+
 func (smm *SmMirrorSessionInterface) getAllMirrorSessionCollectors() []*mirrorSelectorCollectors {
 
 	smm.Lock()
@@ -578,12 +601,7 @@ func (smm *SmMirrorSessionInterface) getAllMirrorSessionCollectors() []*mirrorSe
 				curCollectors = append(curCollectors, collector)
 			}
 		}
-		mcol := &mirrorSelectorCollectors{
-			mirrorSession: ms.MirrorSession.Name,
-			selector:      ms.MirrorSession.Spec.InterfaceSelector,
-			txCollectors:  curCollectors,
-			rxCollectors:  curCollectors,
-		}
+		mcol := getMirrorCollectors(&ms.MirrorSession.MirrorSession, curCollectors)
 		mcols = append(mcols, mcol)
 
 	}
@@ -594,7 +612,7 @@ func (smm *SmMirrorSessionInterface) getAllMirrorSessionCollectors() []*mirrorSe
 func (smm *SmMirrorSessionInterface) addInterfaceMirror(ms *MirrorSessionState) error {
 
 	//Process only if no match rules
-	if ms.MirrorSession.Spec.InterfaceSelector == nil {
+	if ms.MirrorSession.Spec.Interfaces == nil {
 		log.Infof("Skipping processing of mirror session %v  as interface selector not assigned yet", ms.MirrorSession.Name)
 		return nil
 	}
@@ -622,14 +640,9 @@ func (smm *SmMirrorSessionInterface) addInterfaceMirror(ms *MirrorSessionState) 
 
 	smgrMirrorInterface.addMirrorSession(ms)
 
-	if ms.MirrorSession.Spec.InterfaceSelector != nil {
+	if ms.MirrorSession.Spec.Interfaces != nil {
 		//Now evaluate the interfaces
-		selCollector := &mirrorSelectorCollectors{
-			rxCollectors:  mCollectors,
-			txCollectors:  mCollectors,
-			selector:      ms.MirrorSession.Spec.InterfaceSelector,
-			mirrorSession: ms.MirrorSession.Name,
-		}
+		selCollector := getMirrorCollectors(&ms.MirrorSession.MirrorSession, mCollectors)
 
 		err := smgrNetworkInterface.UpdateCollectorsMatchingSelector(nil, selCollector)
 		if err != nil {
@@ -706,9 +719,9 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 	var newSelCollector *mirrorSelectorCollectors
 
 	selectorChanged := true
-	if (ms.MirrorSession.Spec.InterfaceSelector == nil && nmirror.Spec.InterfaceSelector == nil) ||
-		(ms.MirrorSession.Spec.InterfaceSelector != nil && nmirror.Spec.InterfaceSelector != nil &&
-			ms.MirrorSession.Spec.InterfaceSelector.Print() == nmirror.Spec.InterfaceSelector.Print()) {
+	if (ms.MirrorSession.Spec.Interfaces == nil && nmirror.Spec.Interfaces == nil) ||
+		(ms.MirrorSession.Spec.Interfaces != nil && nmirror.Spec.Interfaces != nil &&
+			ms.MirrorSession.Spec.Interfaces.Selector.Print() == nmirror.Spec.Interfaces.Selector.Print()) {
 		selectorChanged = false
 	}
 
@@ -719,68 +732,50 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 		//Interface selector
 		//Collectors are same but label selectors have changed
 		// Remove current collectors and change label
-		if ms.MirrorSession.Spec.InterfaceSelector != nil {
-			oldSelCollector = &mirrorSelectorCollectors{
-				rxCollectors:  curCollectors,
-				txCollectors:  curCollectors,
-				selector:      ms.MirrorSession.Spec.InterfaceSelector,
-				mirrorSession: ms.MirrorSession.Name,
-			}
+		if ms.MirrorSession.Spec.Interfaces != nil {
+			oldSelCollector = getMirrorCollectors(&ms.MirrorSession.MirrorSession, curCollectors)
 		}
 
-		if nmirror.Spec.InterfaceSelector != nil {
+		if nmirror.Spec.Interfaces != nil {
 			//Now evaluate the interfaces
-			newSelCollector = &mirrorSelectorCollectors{
-				rxCollectors:  curCollectors,
-				txCollectors:  curCollectors,
-				selector:      nmirror.Spec.InterfaceSelector,
-				mirrorSession: ms.MirrorSession.Name,
-			}
+			newSelCollector = getMirrorCollectors(nmirror, curCollectors)
 		}
 
-	} else if len(addCollectors) != 0 || len(delCollectors) != 0 && !selectorChanged {
+	} else if (len(addCollectors) != 0 || len(delCollectors) != 0) && !selectorChanged {
 		//case 2: Collectors are different but label is the same
 		// Delete old collectors and new collectors to existing label
-		if ms.MirrorSession.Spec.InterfaceSelector != nil {
-			oldSelCollector = &mirrorSelectorCollectors{
-				rxCollectors:  delCollectors,
-				txCollectors:  delCollectors,
-				selector:      ms.MirrorSession.Spec.InterfaceSelector,
-				mirrorSession: ms.MirrorSession.Name,
-			}
+		if ms.MirrorSession.Spec.Interfaces != nil {
+			oldSelCollector = getMirrorCollectors(&ms.MirrorSession.MirrorSession, delCollectors)
 		}
 
-		if nmirror.Spec.InterfaceSelector != nil {
+		if nmirror.Spec.Interfaces != nil {
 			//Now evaluate the interfaces
-			newSelCollector = &mirrorSelectorCollectors{
-				rxCollectors:  addCollectors,
-				txCollectors:  addCollectors,
-				selector:      nmirror.Spec.InterfaceSelector,
-				mirrorSession: ms.MirrorSession.Name,
-			}
+			newSelCollector = getMirrorCollectors(nmirror, addCollectors)
 		}
 	} else {
 		//Now evaluate the interfaces
 		//case 3: Both Collectors and label has changed.
 		// For new label, send both new and old col collecotrs
 		// for old lablel, send the old collectors only.
-		if ms.MirrorSession.Spec.InterfaceSelector != nil {
-			oldSelCollector = &mirrorSelectorCollectors{
-				rxCollectors:  curCollectors,
-				txCollectors:  curCollectors,
-				selector:      ms.MirrorSession.Spec.InterfaceSelector,
-				mirrorSession: ms.MirrorSession.Name,
+		if ms.MirrorSession.Spec.Interfaces != nil {
+			oldSelCollector = getMirrorCollectors(&ms.MirrorSession.MirrorSession, curCollectors)
+		}
+		newCurCollectors := []*mirrorCollector{}
+		for _, col := range curCollectors {
+			found := false
+			for _, delCol := range delCollectors {
+				if delCol.obj.Spec.Destination == col.obj.Spec.Destination &&
+					delCol.obj.Tenant == col.obj.Tenant {
+					found = true
+				}
+			}
+			if !found {
+				newCurCollectors = append(newCurCollectors, col)
 			}
 		}
-
-		if nmirror.Spec.InterfaceSelector != nil {
-			addCollectors = append(addCollectors, curCollectors...)
-			newSelCollector = &mirrorSelectorCollectors{
-				rxCollectors:  addCollectors,
-				txCollectors:  addCollectors,
-				selector:      nmirror.Spec.InterfaceSelector,
-				mirrorSession: ms.MirrorSession.Name,
-			}
+		if nmirror.Spec.Interfaces != nil {
+			addCollectors = append(addCollectors, newCurCollectors...)
+			newSelCollector = getMirrorCollectors(nmirror, addCollectors)
 		}
 	}
 
@@ -808,8 +803,11 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 	}
 
 	ms.MirrorSession.Spec.Collectors = nmirror.Spec.Collectors
-	ms.MirrorSession.Spec.InterfaceSelector = nmirror.Spec.InterfaceSelector
-	log.Infof("Updated mirror session %v", ms.MirrorSession.Spec.InterfaceSelector.String())
+	ms.MirrorSession.Spec.Interfaces = nmirror.Spec.Interfaces
+
+	if ms.MirrorSession.Spec.Interfaces != nil {
+		log.Infof("Updated mirror session %v", ms.MirrorSession.Spec.Interfaces.Selector.String())
+	}
 	return nil
 
 }
@@ -979,14 +977,9 @@ func (smm *SmMirrorSessionInterface) deleteInterfaceMirror(ms *MirrorSessionStat
 
 	smgrMirrorInterface.deleteMirrorSession(ms)
 
-	if ms.MirrorSession.Spec.InterfaceSelector != nil {
+	if ms.MirrorSession.Spec.Interfaces != nil {
 		//Now evaluate the interfaces
-		oldSelCollector := &mirrorSelectorCollectors{
-			rxCollectors:  delCollectors,
-			txCollectors:  delCollectors,
-			selector:      ms.MirrorSession.Spec.InterfaceSelector,
-			mirrorSession: ms.MirrorSession.Name,
-		}
+		oldSelCollector := getMirrorCollectors(&ms.MirrorSession.MirrorSession, delCollectors)
 
 		err := smgrNetworkInterface.UpdateCollectorsMatchingSelector(oldSelCollector, nil)
 		if err != nil {

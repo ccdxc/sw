@@ -19,6 +19,7 @@ service AppApiV1 {
         Object: "App",
         Method: ["list", "get", "post", "put", "delete"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+        Version: "V1"
         Prefix: "api/apps"
     };
     rpc ListApps (api.ListWatchOptions) returns (AppList) {};

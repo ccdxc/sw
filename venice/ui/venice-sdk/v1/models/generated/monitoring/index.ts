@@ -88,6 +88,7 @@ export * from './monitoring-fwlog-policy.model';
 export * from './monitoring-fwlog-policy-list.model';
 export * from './monitoring-fwlog-policy-spec.model';
 export * from './monitoring-fwlog-policy-status.model';
+export * from './monitoring-interface-mirror.model';
 export * from './monitoring-match-rule.model';
 export * from './monitoring-match-selector.model';
 export * from './monitoring-matched-requirement.model';

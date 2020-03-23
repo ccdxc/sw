@@ -176,6 +176,7 @@ func (client *NimbusClient) diffCollectors(objList *netproto.CollectorList, reac
 			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.CollectorEvent{
 					EventType: api.EventType_DeleteEvent,
+
 					Collector: lobj,
 				}
 				log.Infof("diffCollectors(): Deleting object %+v", lobj.ObjectMeta)
@@ -194,6 +195,7 @@ func (client *NimbusClient) diffCollectors(objList *netproto.CollectorList, reac
 	for _, obj := range objmap {
 		evt := netproto.CollectorEvent{
 			EventType: api.EventType_UpdateEvent,
+
 			Collector: *obj,
 		}
 		client.lockObject(evt.Collector.GetObjectKind(), evt.Collector.ObjectMeta)
@@ -221,10 +223,14 @@ func (client *NimbusClient) processCollectorEvent(evt netproto.CollectorEvent, r
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
+
 			_, err = reactor.HandleCollector(types.Get, evt.Collector)
+
 			if err != nil {
 				// create the Collector
+
 				_, err = reactor.HandleCollector(types.Create, evt.Collector)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Collector | Key: %s | Err: %v", types.Operation(types.Create), evt.Collector.GetKey(), err))
 					client.debugStats.AddInt("CreateCollectorError", 1)
@@ -233,7 +239,9 @@ func (client *NimbusClient) processCollectorEvent(evt netproto.CollectorEvent, r
 				}
 			} else {
 				// update the Collector
+
 				_, err = reactor.HandleCollector(types.Update, evt.Collector)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Collector | Key: %s | Err: %v", types.Operation(types.Update), evt.Collector.GetKey(), err))
 					client.debugStats.AddInt("UpdateCollectorError", 1)
@@ -244,7 +252,9 @@ func (client *NimbusClient) processCollectorEvent(evt netproto.CollectorEvent, r
 
 		case api.EventType_DeleteEvent:
 			// update the Collector
+
 			_, err = reactor.HandleCollector(types.Delete, evt.Collector)
+
 			if err != nil {
 				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Collector | Key: %s | Err: %v", types.Operation(types.Delete), evt.Collector.GetKey(), err))
 				client.debugStats.AddInt("DeleteCollectorError", 1)
@@ -258,9 +268,11 @@ func (client *NimbusClient) processCollectorEvent(evt netproto.CollectorEvent, r
 		}
 		// send oper status and return if there is no error
 		if err == nil {
+
 			robj := netproto.CollectorEvent{
 				EventType: evt.EventType,
 				Collector: netproto.Collector{
+
 					TypeMeta:   evt.Collector.TypeMeta,
 					ObjectMeta: evt.Collector.ObjectMeta,
 					Status:     evt.Collector.Status,
@@ -271,7 +283,9 @@ func (client *NimbusClient) processCollectorEvent(evt netproto.CollectorEvent, r
 			ostream.Lock()
 			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.Collector.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
 			err := ostream.stream.Send(&robj)
+
 			if err != nil {
 				log.Errorf("failed to send Collector oper Status, %s", err)
 				client.debugStats.AddInt("CollectorOperSendError", 1)
@@ -295,6 +309,7 @@ func (client *NimbusClient) processCollectorDynamic(evt api.EventType,
 
 	collectorEvt := netproto.CollectorEvent{
 		EventType: evt,
+
 		Collector: *object,
 	}
 

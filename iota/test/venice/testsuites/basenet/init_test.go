@@ -21,12 +21,14 @@ var topoName = flag.String("topo", "3Venice_3NaplesSim", "topology name")
 var debugFlag = flag.Bool("debug", false, "set log level to debug")
 var scaleFlag = flag.Bool("scale", false, "enable scale configuration")
 var scaleDataFlag = flag.Bool("scale-data", false, "enable datapath scale")
+var stressFlag = flag.Uint64("stress", 1, "Stress, how many times to run")
 
 // TestSuite : techsupport test suite
 type TestSuite struct {
 	tb        *testbed.TestBed        // testbed
 	model     model.SysModelInterface // system model
 	scaleData bool                    // configuration if connections would need to scale
+	stress    uint64                  // stress
 }
 
 var ts *TestSuite
@@ -50,6 +52,7 @@ func TestIotaTechsupportTest(t *testing.T) {
 
 // BeforeSuite runs before the test suite and sets up the testbed
 var _ = BeforeSuite(func() {
+
 	tb, model, err := model.InitSuite(*topoName, *testbedParams, *scaleFlag, *scaleDataFlag)
 	Expect(err).ShouldNot(HaveOccurred())
 
@@ -63,6 +66,7 @@ var _ = BeforeSuite(func() {
 		tb:        tb,
 		model:     model,
 		scaleData: *scaleDataFlag,
+		stress:    *stressFlag,
 	}
 })
 

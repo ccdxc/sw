@@ -418,7 +418,8 @@ func (eh *NetworkSecurityPolicyTopic) WatchNetworkSecurityPolicys(watchOptions *
 	watchEvts := netproto.NetworkSecurityPolicyEventList{}
 	for _, obj := range objlist.NetworkSecurityPolicys {
 		watchEvt := netproto.NetworkSecurityPolicyEvent{
-			EventType:             api.EventType_CreateEvent,
+			EventType: api.EventType_CreateEvent,
+
 			NetworkSecurityPolicy: *obj,
 		}
 		watchEvts.NetworkSecurityPolicyEvents = append(watchEvts.NetworkSecurityPolicyEvents, &watchEvt)
@@ -476,7 +477,8 @@ func (eh *NetworkSecurityPolicyTopic) WatchNetworkSecurityPolicys(watchOptions *
 
 			// convert to netproto format
 			watchEvt := netproto.NetworkSecurityPolicyEvent{
-				EventType:             etype,
+				EventType: etype,
+
 				NetworkSecurityPolicy: *obj,
 			}
 			watchEvts.NetworkSecurityPolicyEvents = append(watchEvts.NetworkSecurityPolicyEvents, &watchEvt)
@@ -519,7 +521,9 @@ func (eh *NetworkSecurityPolicyTopic) updateNetworkSecurityPolicyOper(oper *netp
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			return eh.statusReactor.OnNetworkSecurityPolicyOperUpdate(nodeID, &oper.NetworkSecurityPolicy)
+
 		}
 	case api.EventType_DeleteEvent:
 		// incr stats
@@ -527,7 +531,9 @@ func (eh *NetworkSecurityPolicyTopic) updateNetworkSecurityPolicyOper(oper *netp
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			eh.statusReactor.OnNetworkSecurityPolicyOperDelete(nodeID, &oper.NetworkSecurityPolicy)
+
 		}
 	}
 

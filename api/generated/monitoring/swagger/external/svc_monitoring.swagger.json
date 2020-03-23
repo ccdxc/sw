@@ -396,6 +396,12 @@
             }
           },
           {
+            "name": "interfaces.direction",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "status.schedule-state",
             "in": "query",
             "required": false,
@@ -7088,6 +7094,12 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "interfaces.direction",
+            "in": "query",
+            "required": false,
+            "type": "string"
           },
           {
             "name": "status.schedule-state",
@@ -18753,6 +18765,31 @@
         }
       }
     },
+    "monitoringInterfaceMirror": {
+      "type": "object",
+      "required": [
+        "direction"
+      ],
+      "properties": {
+        "direction": {
+          "type": "string",
+          "enum": [
+            "both",
+            "tx",
+            "rx"
+          ],
+          "default": "both",
+          "x-ui-hints": {
+            "both": "Both",
+            "rx": "Rx",
+            "tx": "Tx"
+          }
+        },
+        "selector": {
+          "$ref": "#/definitions/labelsSelector"
+        }
+      }
+    },
     "monitoringMatchRule": {
       "type": "object",
       "properties": {
@@ -19021,8 +19058,8 @@
             "network-policy-drop": "Network Policy Drops"
           }
         },
-        "interface-selector": {
-          "$ref": "#/definitions/labelsSelector",
+        "interfaces": {
+          "$ref": "#/definitions/monitoringInterfaceMirror",
           "description": "If specified, will pick up interface matching the selector."
         }
       },

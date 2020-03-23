@@ -419,7 +419,8 @@ func (eh *VrfTopic) WatchVrfs(watchOptions *api.ListWatchOptions, stream netprot
 	for _, obj := range objlist.Vrfs {
 		watchEvt := netproto.VrfEvent{
 			EventType: api.EventType_CreateEvent,
-			Vrf:       *obj,
+
+			Vrf: *obj,
 		}
 		watchEvts.VrfEvents = append(watchEvts.VrfEvents, &watchEvt)
 	}
@@ -477,7 +478,8 @@ func (eh *VrfTopic) WatchVrfs(watchOptions *api.ListWatchOptions, stream netprot
 			// convert to netproto format
 			watchEvt := netproto.VrfEvent{
 				EventType: etype,
-				Vrf:       *obj,
+
+				Vrf: *obj,
 			}
 			watchEvts.VrfEvents = append(watchEvts.VrfEvents, &watchEvt)
 			if !running {
@@ -519,7 +521,9 @@ func (eh *VrfTopic) updateVrfOper(oper *netproto.VrfEvent, nodeID string) error 
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			return eh.statusReactor.OnVrfOperUpdate(nodeID, &oper.Vrf)
+
 		}
 	case api.EventType_DeleteEvent:
 		// incr stats
@@ -527,7 +531,9 @@ func (eh *VrfTopic) updateVrfOper(oper *netproto.VrfEvent, nodeID string) error 
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			eh.statusReactor.OnVrfOperDelete(nodeID, &oper.Vrf)
+
 		}
 	}
 

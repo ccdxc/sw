@@ -23,6 +23,14 @@ var typesMapMirror = map[string]*api.Struct{
 			"Apps": api.Field{Name: "Apps", CLITag: api.CLIInfo{ID: "applications", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "applications", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
+	"monitoring.InterfaceMirror": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(InterfaceMirror{}) },
+		Fields: map[string]api.Field{
+			"Direction": api.Field{Name: "Direction", CLITag: api.CLIInfo{ID: "direction", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "direction", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Selector": api.Field{Name: "Selector", CLITag: api.CLIInfo{ID: "selector", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "selector", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "labels.Selector"},
+		},
+	},
 	"monitoring.MatchRule": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MatchRule{}) },
 		Fields: map[string]api.Field{
@@ -95,6 +103,7 @@ var typesMapMirror = map[string]*api.Struct{
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"applications":     api.CLIInfo{Path: "Spec.MatchRules[].AppProtoSel.Apps", Skip: false, Insert: "", Help: ""},
 			"destination":      api.CLIInfo{Path: "Spec.Collectors[].ExportCfg.Destination", Skip: false, Insert: "", Help: ""},
+			"direction":        api.CLIInfo{Path: "Spec.Interfaces.Direction", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"ip-addresses":     api.CLIInfo{Path: "Spec.MatchRules[].Src.IPAddresses", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
@@ -126,7 +135,7 @@ var typesMapMirror = map[string]*api.Struct{
 
 			"PacketFilters": api.Field{Name: "PacketFilters", CLITag: api.CLIInfo{ID: "packet-filters", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-filters", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"InterfaceSelector": api.Field{Name: "InterfaceSelector", CLITag: api.CLIInfo{ID: "interface-selector", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interface-selector", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "labels.Selector"},
+			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{ID: "interfaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.InterfaceMirror"},
 		},
 	},
 	"monitoring.MirrorSessionStatus": &api.Struct{

@@ -29,6 +29,7 @@ import (
        {{$params := (getRestSvcOptions .)}}
        {{range $params}}
             {{$crudObject := .CrudObject}}
+            {{$version := .Version}}
 
 // Find{{$crudObject}} finds an {{$crudObject}} by object meta
 func (ms *MbusServer) Find{{$crudObject}}(objmeta *api.ObjectMeta) (*netproto.{{$crudObject}}, error) {
@@ -428,7 +429,11 @@ func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(watchOptions *api.ListWatc
 	for _, obj := range objlist.{{$crudObject}}s {
 		watchEvt := netproto.{{$crudObject}}Event{
 			EventType: api.EventType_CreateEvent,
-			{{$crudObject}}:       *obj,
+            {{if (eq $version "V2")}}
+			    {{$crudObject}}:  obj,
+            {{else}}
+			    {{$crudObject}}:  *obj,
+            {{end}}
 		}
 		watchEvts.{{$crudObject}}Events = append(watchEvts.{{$crudObject}}Events, &watchEvt)
 	}
@@ -486,7 +491,11 @@ func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(watchOptions *api.ListWatc
             // convert to netproto format
             watchEvt := netproto.{{$crudObject}}Event{
                 EventType: etype,
-                {{$crudObject}}:  *obj,
+                {{if (eq $version "V2")}}
+                    {{$crudObject}}:  obj,
+                {{else}}
+                    {{$crudObject}}:  *obj,
+                {{end}}
             }
             watchEvts.{{$crudObject}}Events = append(watchEvts.{{$crudObject}}Events, &watchEvt)
 		    if !running {
@@ -529,7 +538,11 @@ func (eh *{{$crudObject}}Topic) update{{$crudObject}}Oper(oper *netproto.{{$crud
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
-			return eh.statusReactor.On{{$crudObject}}OperUpdate(nodeID, &oper.{{$crudObject}})
+            {{if (eq $version "V2")}}
+			    return eh.statusReactor.On{{$crudObject}}OperUpdate(nodeID, oper.{{$crudObject}})
+            {{else}}
+			    return eh.statusReactor.On{{$crudObject}}OperUpdate(nodeID, &oper.{{$crudObject}})
+            {{end}}
 		}
 	case api.EventType_DeleteEvent:
 		// incr stats
@@ -537,14 +550,18 @@ func (eh *{{$crudObject}}Topic) update{{$crudObject}}Oper(oper *netproto.{{$crud
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
-			eh.statusReactor.On{{$crudObject}}OperDelete(nodeID, &oper.{{$crudObject}})
+            {{if (eq $version "V2")}}
+			    eh.statusReactor.On{{$crudObject}}OperDelete(nodeID, oper.{{$crudObject}})
+            {{else}}
+			    eh.statusReactor.On{{$crudObject}}OperDelete(nodeID, &oper.{{$crudObject}})
+            {{end}}
 		}
 	}
 
 	return nil
 }
 
-func (eh *{{$crudObject}}Topic) {{$crudObject}}OperUpdate(stream netproto.{{$crudObject}}ApiV1_{{$crudObject}}OperUpdateServer) error {
+func (eh *{{$crudObject}}Topic) {{$crudObject}}OperUpdate(stream netproto.{{$svcname}}_{{$crudObject}}OperUpdateServer) error {
     ctx := stream.Context()
     nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 

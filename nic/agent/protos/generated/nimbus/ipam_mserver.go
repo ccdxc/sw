@@ -418,7 +418,8 @@ func (eh *IPAMPolicyTopic) WatchIPAMPolicys(watchOptions *api.ListWatchOptions, 
 	watchEvts := netproto.IPAMPolicyEventList{}
 	for _, obj := range objlist.IPAMPolicys {
 		watchEvt := netproto.IPAMPolicyEvent{
-			EventType:  api.EventType_CreateEvent,
+			EventType: api.EventType_CreateEvent,
+
 			IPAMPolicy: *obj,
 		}
 		watchEvts.IPAMPolicyEvents = append(watchEvts.IPAMPolicyEvents, &watchEvt)
@@ -476,7 +477,8 @@ func (eh *IPAMPolicyTopic) WatchIPAMPolicys(watchOptions *api.ListWatchOptions, 
 
 			// convert to netproto format
 			watchEvt := netproto.IPAMPolicyEvent{
-				EventType:  etype,
+				EventType: etype,
+
 				IPAMPolicy: *obj,
 			}
 			watchEvts.IPAMPolicyEvents = append(watchEvts.IPAMPolicyEvents, &watchEvt)
@@ -519,7 +521,9 @@ func (eh *IPAMPolicyTopic) updateIPAMPolicyOper(oper *netproto.IPAMPolicyEvent, 
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			return eh.statusReactor.OnIPAMPolicyOperUpdate(nodeID, &oper.IPAMPolicy)
+
 		}
 	case api.EventType_DeleteEvent:
 		// incr stats
@@ -527,7 +531,9 @@ func (eh *IPAMPolicyTopic) updateIPAMPolicyOper(oper *netproto.IPAMPolicyEvent, 
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			eh.statusReactor.OnIPAMPolicyOperDelete(nodeID, &oper.IPAMPolicy)
+
 		}
 	}
 

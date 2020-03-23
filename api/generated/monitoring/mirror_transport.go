@@ -51,6 +51,40 @@ func DecodeGrpcRespAppProtoSelector(ctx context.Context, response interface{}) (
 	return response, nil
 }
 
+func encodeHTTPInterfaceMirror(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPInterfaceMirror(_ context.Context, r *http.Request) (interface{}, error) {
+	var req InterfaceMirror
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqInterfaceMirror encodes GRPC request
+func EncodeGrpcReqInterfaceMirror(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*InterfaceMirror)
+	return req, nil
+}
+
+// DecodeGrpcReqInterfaceMirror decodes GRPC request
+func DecodeGrpcReqInterfaceMirror(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*InterfaceMirror)
+	return req, nil
+}
+
+// EncodeGrpcRespInterfaceMirror encodes GRC response
+func EncodeGrpcRespInterfaceMirror(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespInterfaceMirror decodes GRPC response
+func DecodeGrpcRespInterfaceMirror(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPMatchRule(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

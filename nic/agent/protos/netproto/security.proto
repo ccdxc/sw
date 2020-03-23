@@ -19,6 +19,7 @@ service SecurityGroupApiV1 {
         Method: ["list", "post", "put", "delete"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
         Prefix: "api/sgs"
+        Version: "V1"
     };
 
     rpc GetSecurityGroup (api.ObjectMeta) returns (SecurityGroup) {};

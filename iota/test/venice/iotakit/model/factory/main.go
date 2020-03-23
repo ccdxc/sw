@@ -14,11 +14,11 @@ import (
 )
 
 // NewDefaultSysModel creates a sysmodel for a testbed
-func NewDefaultSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType) (*enterprise.SysModel, error) {
+func NewDefaultSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType, skipSetup bool) (*enterprise.SysModel, error) {
 
 	sm := &enterprise.SysModel{SysModel: base.SysModel{Type: common.DefaultModel}}
 
-	if err := sm.Init(tb, cfgType); err != nil {
+	if err := sm.Init(tb, cfgType, skipSetup); err != nil {
 		return nil, err
 	}
 
@@ -26,11 +26,11 @@ func NewDefaultSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType) (*enterpr
 }
 
 // NewVcenterSysModel creates a sysmodel for a testbed
-func NewVcenterSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType) (*vcenter.VcenterSysModel, error) {
+func NewVcenterSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType, skipSetup bool) (*vcenter.VcenterSysModel, error) {
 
 	vsm := &vcenter.VcenterSysModel{SysModel: enterprise.SysModel{SysModel: base.SysModel{Type: common.VcenterModel}}}
 
-	if err := vsm.SysModel.Init(tb, cfgType); err != nil {
+	if err := vsm.SysModel.Init(tb, cfgType, skipSetup); err != nil {
 		return nil, err
 	}
 
@@ -38,11 +38,11 @@ func NewVcenterSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType) (*vcenter
 }
 
 // NewCloudSysModel creates a sysmodel for a testbed
-func NewCloudSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType) (*cloud.SysModel, error) {
+func NewCloudSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType, skipSetup bool) (*cloud.SysModel, error) {
 
 	vsm := &cloud.SysModel{SysModel: base.SysModel{Type: common.CloudModel}}
 
-	if err := vsm.Init(tb, cfgType); err != nil {
+	if err := vsm.Init(tb, cfgType, skipSetup); err != nil {
 		return nil, errors.New("could not initialize config objects")
 
 	}
@@ -52,11 +52,11 @@ func NewCloudSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType) (*cloud.Sys
 }
 
 // NewBasenetSysModel creates a sysmodel for a testbed
-func NewBasenetSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType) (*basenet.SysModel, error) {
+func NewBasenetSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType, skipSetup bool) (*basenet.SysModel, error) {
 
 	vsm := &basenet.SysModel{SysModel: base.SysModel{Type: common.BaseNetModel}}
 
-	if err := vsm.Init(tb, cfgType); err != nil {
+	if err := vsm.Init(tb, cfgType, skipSetup); err != nil {
 		return nil, err
 	}
 

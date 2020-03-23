@@ -12,7 +12,6 @@ import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
-import "mirror.proto";
 
 // ---------------------------- Interface API ----------------------------
 // Interface controller api
@@ -22,6 +21,7 @@ service InterfaceApiV1 {
         Object: "Interface",
         Method: ["list", "get", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+        Version: "V1"
     };
 
     rpc ListInterfaces (api.ListWatchOptions) returns (InterfaceList) {};

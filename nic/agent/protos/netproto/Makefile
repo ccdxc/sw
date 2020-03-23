@@ -4,7 +4,7 @@ RestClientDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated
 
 # all the sources for which .pb.go is generated
 SRC := app.proto agg_watch.proto collector.proto endpoint.proto  flowexport.proto interface.proto ipam.proto match.proto mirror.proto namespace.proto network.proto port.proto profile.proto route.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto types.proto vrf.proto
-NIMBUS_SRC := app.proto endpoint.proto interface.proto ipam.proto network.proto profile.proto route.proto sgpolicy.proto secprofile.proto vrf.proto collector.proto
+NIMBUS_SRC := app.proto endpoint.proto interface.proto ipam.proto network.proto profile.proto route.proto sgpolicy.proto secprofile.proto vrf.proto collector.proto flowexport.proto mirror.proto
 
 #these wont have _api.go generated
 FILTER_OUT_API := agg_watch.proto  match.proto namespace.proto tenant.proto port.proto

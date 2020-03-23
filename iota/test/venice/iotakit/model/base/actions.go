@@ -137,7 +137,7 @@ func (sm *SysModel) VerifyNaplesStatus() error {
 				snic, err = sm.GetSmartNICByName(naplesConfig.Name)
 			}
 			if err != nil {
-				err := fmt.Errorf("Failed to get smartnc object for name %v(%v). Err: %+v", naplesConfig.Name, naplesConfig.NodeUuid, err)
+				err := fmt.Errorf("Failed to get smartnc object for name %v(%v). Err: %+v", naplesConfig.Name, vmac, err)
 				log.Errorf("%v", err)
 				return err
 			}

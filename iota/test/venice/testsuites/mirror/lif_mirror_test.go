@@ -30,7 +30,6 @@ var _ = Describe("Lif mirror tests", func() {
 	})
 	Context("Lif mirror tests", func() {
 
-		Skip("Skipping LIF mirror tests until Inband is enabled on production")
 		runDataPath := func(workloadPairs *objects.WorkloadPairCollection,
 			veniceCollector *objects.VeniceNodeCollection) error {
 			ctx, cancel := context.WithCancel(context.Background())

@@ -25,9 +25,9 @@ type SysModel struct {
 }
 
 //Init init the testbed
-func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType) error {
+func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSetup bool) error {
 
-	err := sm.SysModel.Init(tb, cfgType)
+	err := sm.SysModel.Init(tb, cfgType, skipSetup)
 	if err != nil {
 		return err
 	}
@@ -153,7 +153,6 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 
 	allocatedVlans := sm.Tb.AllocatedVlans()
 	for i := 0; i < defaultNumNetworks; i++ {
-		log.Infof("Allocated vlan %v\n", allocatedVlans)
 		nwMap[allocatedVlans[i]] = 0
 	}
 
@@ -229,53 +228,25 @@ func (sm *SysModel) BringupWorkloads() error {
 			return fmt.Errorf("Error creating IOTA workload. Resp: %+v", getResp.ApiResponse)
 		}
 
-		// check if all the.Workloads are already running
-		//Delete all workloads for now
-		allFound := false
-		for _, wrk := range wc.Workloads {
-			found := false
-			for _, gwrk := range getResp.Workloads {
-				if gwrk.WorkloadName == wrk.Name() {
-					wrk.SetMgmtIP(gwrk.MgmtIp)
-					wrk.SetInterface(gwrk.GetInterface())
-					found = true
-				}
-			}
-			if !found {
-				allFound = false
-			}
-		}
-
-		if !allFound {
-			log.Infof("not all.Workloads found")
-			getResp.WorkloadOp = iota.Op_DELETE
-			delResp, err := topoClient.DeleteWorkloads(context.Background(), getResp)
-			log.Debugf("Got get workload resp: %+v, err: %v", delResp, err)
-			if err != nil {
-				log.Errorf("Failed to delete old Apps. Err: %v", err)
-				return fmt.Errorf("Error deleting IOTA workload. err: %v", err)
-			}
-
-			// bringup the.Workloads
-			err = wc.Bringup(sm.Tb)
-			if err != nil {
-				return err
-			}
-		} else {
-			//Every workload is found, just send arping so that they can get discovered again by datapath
-			sm.WorkloadsSayHelloToDataPath()
-		}
-	} else {
-		err := wc.AllocateHostInterfaces(sm.Tb)
+		log.Infof("not all.Workloads found")
+		getResp.WorkloadOp = iota.Op_DELETE
+		delResp, err := topoClient.DeleteWorkloads(context.Background(), getResp)
+		log.Debugf("Got get workload resp: %+v, err: %v", delResp, err)
 		if err != nil {
-			log.Errorf("Error allocating interfaces %v", err)
-			return err
+			log.Errorf("Failed to delete old Apps. Err: %v", err)
+			return fmt.Errorf("Error deleting IOTA workload. err: %v", err)
 		}
-		// bringup the.Workloads
-		err = wc.Bringup(sm.Tb)
-		if err != nil {
-			return err
-		}
+	}
+
+	err := wc.AllocateHostInterfaces(sm.Tb)
+	if err != nil {
+		log.Errorf("Error allocating interfaces %v", err)
+		return err
+	}
+	// bringup the.Workloads
+	err = wc.Bringup(sm.Tb)
+	if err != nil {
+		return err
 	}
 
 	return nil

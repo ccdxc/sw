@@ -1241,7 +1241,7 @@ func TestGetSwaggerFile(t *testing.T) {
 }
 
 func TestGetNimbusManifest(t *testing.T) {
-	mfest, err := genNimbusManifest("/tmp/nimbus", "Endpoint", "EndpointApi")
+	mfest, err := genNimbusManifest("/tmp/nimbus", "Endpoint", "EndpointApi", "V1")
 	if err != nil {
 		t.Errorf("genManifest failed (%s)", err)
 	}
@@ -1260,12 +1260,12 @@ func TestGetNimbusManifest(t *testing.T) {
 	}
 	ofile.Close()
 
-	mfest, err = genNimbusManifest("/tmp/nimbus", "Interface", "InterfaceApi")
+	mfest, err = genNimbusManifest("/tmp/nimbus", "Interface", "InterfaceApi", "V1")
 	if err != nil {
 		t.Errorf("genManifest failed (%s)", err)
 	}
 
-	if len(mfest) != 2 {
+	if len(mfest) != 1 {
 		t.Errorf("genManifest failed (%s)", err)
 	}
 
@@ -1275,7 +1275,7 @@ func TestGetNimbusManifest(t *testing.T) {
 		t.Errorf("genManifest failed (%s)", err)
 	}
 
-	if len(mfest) == 2 {
+	if len(mfest) == 3 {
 		t.Errorf("genManifest failed (%s)", err)
 	}
 	mfest, err = getNimbusManifest("/tmp/nimbusXXX")

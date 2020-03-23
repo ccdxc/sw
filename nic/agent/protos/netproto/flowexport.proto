@@ -10,24 +10,37 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "match.proto";
-import "mirror.proto";
 
 // ---------------------------- FlowExportPolicy API ----------------------------
 
+
+
 // FlowExportPolicyApi REST interface for agent
 service FlowExportPolicyApiV1 {
+
+    // TODO uncomment Oper update when TPM uses nimbus
+    rpc WatchFlowExportPolicy (api.ObjectMeta) returns (stream FlowExportPolicyEventList) {};
+    rpc ListFlowExportPolicy (api.ObjectMeta) returns (FlowExportPolicyEventList) {};
+   // rpc FlowExportPolicyOperUpdate (stream FlowExportPolicyEvent) returns (api.TypeMeta) {};
+}
+
+// FlowExportPolicyApi REST interface for agent
+service FlowExportPolicyApiV2 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "FlowExportPolicy",
         Method: ["get", "list", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
+        Version: "V2"
     };
 
     // TODO uncomment Oper update when TPM uses nimbus
-    rpc WatchFlowExportPolicy (api.ObjectMeta) returns (stream FlowExportPolicyEventList) {};
-    rpc ListFlowExportPolicy (api.ObjectMeta) returns (FlowExportPolicyEventList) {};
-    //     rpc FlowExportPolicyOperUpdate (stream MirrorSessionEvent) returns (api.TypeMeta) {};
+    rpc WatchFlowExportPolicys (api.ListWatchOptions) returns (stream FlowExportPolicyEventList) {};
+    rpc ListFlowExportPolicys (api.ListWatchOptions) returns (FlowExportPolicyList) {};
+    rpc FlowExportPolicyOperUpdate (stream FlowExportPolicyEvent) returns (api.TypeMeta) {};
 }
+
+
 
 // FlowExportPolicy flow export Policy object
 message FlowExportPolicy {
@@ -70,12 +83,21 @@ message FlowExportPolicyStatus {
     uint64 FlowExportPolicyID  = 1 [(gogoproto.jsontag) = "id,omitempty"];
 }
 
+
+message FlowExportPolicyList {
+    repeated FlowExportPolicy FlowExportPolicys  = 1;
+}
+
+
 message FlowExportPolicyEvent {
     // event type create/update/delete
     api.EventType EventType = 1 [(gogoproto.nullable) = true,(gogoproto.jsontag) = "event-type,omitempty"];
 
     // flow export policy
-    FlowExportPolicy Policy = 2 [(gogoproto.jsontag) = "policy,omitempty"];
+    FlowExportPolicy Policy = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "flowexport-policy,omitempty"];
+    
+    // flow export policy (upgrade price!)
+    FlowExportPolicy FlowExportPolicy = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "flowexport-policy,omitempty"];
 }
 
 message FlowExportPolicyEventList {

@@ -419,7 +419,8 @@ func (eh *ProfileTopic) WatchProfiles(watchOptions *api.ListWatchOptions, stream
 	for _, obj := range objlist.Profiles {
 		watchEvt := netproto.ProfileEvent{
 			EventType: api.EventType_CreateEvent,
-			Profile:   *obj,
+
+			Profile: *obj,
 		}
 		watchEvts.ProfileEvents = append(watchEvts.ProfileEvents, &watchEvt)
 	}
@@ -477,7 +478,8 @@ func (eh *ProfileTopic) WatchProfiles(watchOptions *api.ListWatchOptions, stream
 			// convert to netproto format
 			watchEvt := netproto.ProfileEvent{
 				EventType: etype,
-				Profile:   *obj,
+
+				Profile: *obj,
 			}
 			watchEvts.ProfileEvents = append(watchEvts.ProfileEvents, &watchEvt)
 			if !running {
@@ -519,7 +521,9 @@ func (eh *ProfileTopic) updateProfileOper(oper *netproto.ProfileEvent, nodeID st
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			return eh.statusReactor.OnProfileOperUpdate(nodeID, &oper.Profile)
+
 		}
 	case api.EventType_DeleteEvent:
 		// incr stats
@@ -527,7 +531,9 @@ func (eh *ProfileTopic) updateProfileOper(oper *netproto.ProfileEvent, nodeID st
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			eh.statusReactor.OnProfileOperDelete(nodeID, &oper.Profile)
+
 		}
 	}
 

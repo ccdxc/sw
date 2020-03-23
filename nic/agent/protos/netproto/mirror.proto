@@ -12,18 +12,27 @@ import "github.com/pensando/sw/api/meta.proto";
 import "match.proto";
 
 // ---------------------------- MirrorSession API ----------------------------
+
 service MirrorSessionApiV1 {
+        //    TODO uncomment this when TSM uses nimbus
+        rpc WatchMirrorSessions (api.ObjectMeta) returns (stream MirrorSessionEventList) {};
+        rpc ListMirrorSessions (api.ObjectMeta) returns (MirrorSessionEventList) {};
+        //rpc MirrorSessionOperUpdate (stream MirrorSessionEvent) returns (api.TypeMeta) {};
+}
+    
+service MirrorSessionApiV2 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "MirrorSession",
         Method: ["list", "get", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
         Prefix: "api/mirror/sessions/"
+        Version: "V2"
     };
     //    TODO uncomment this when TSM uses nimbus
-    rpc WatchMirrorSessions (api.ObjectMeta) returns (stream MirrorSessionEventList) {};
-    rpc ListMirrorSessions (api.ObjectMeta) returns (MirrorSessionEventList) {};
-    //    rpc MirrorSessionOperUpdate (stream MirrorSessionEvent) returns (api.TypeMeta) {};
+    rpc WatchMirrorSessions (api.ListWatchOptions) returns (stream MirrorSessionEventList) {};
+    rpc ListMirrorSessions (api.ListWatchOptions) returns (MirrorSessionList) {};
+    rpc MirrorSessionOperUpdate (stream MirrorSessionEvent) returns (api.TypeMeta) {};
 }
 
 message MirrorSession {
@@ -50,16 +59,6 @@ message MirrorSessionSpec {
     MirrorDir               MirrorDirection = 5 [(gogoproto.jsontag) = "mirror-direction,omitempty", (venice.check) = "StrEnum(MirrorDir)"];
 }
 
-// MatchRule : This is used to select packets that need to be monitored (mirrored)
-message MatchRule {
-    // Either Src or Dst or both must be specified, both cannot be *
-    // Src = * when not specified
-    // When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored
-    MatchSelector       Src         = 1 [(gogoproto.jsontag) = "source,omitempty"];
-    // Dst = * when not specified
-    // When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored
-    MatchSelector       Dst         = 2 [(gogoproto.jsontag) = "destination,omitempty"];
-}
 
 
 // MirrorSessionStatus captures the sg policy status
@@ -81,6 +80,8 @@ message MirrorSessionEvent {
 message MirrorSessionEventList {
     repeated MirrorSessionEvent MirrorSessionEvents  = 1;
 }
+
+
 
 message MirrorExportConfig {
     // IP address or URL of the collector/entity to which the data is to be exported

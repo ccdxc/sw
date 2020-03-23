@@ -102,6 +102,7 @@ type PenctlCmdOpts struct {
 // RestServiceOptions holds raw REST options data from .proto files
 type RestServiceOptions struct {
 	CrudObject string
+	Version    string
 	Methods    []string
 	Pattern    string
 }
@@ -1169,6 +1170,7 @@ func getRestSvcOptions(s *descriptor.Service) ([]RestServiceOptions, error) {
 	for _, r := range i.([]*venice.RestEndpoint) {
 		var restService RestServiceOptions
 		restService.CrudObject = r.Object
+		restService.Version = r.Version
 		restService.Methods = r.Method
 		restService.Pattern = r.Pattern
 		restOptions = append(restOptions, restService)
@@ -1407,6 +1409,7 @@ func genManifest(desc *descriptor.File, path, pkg, file string) (map[string]mani
 type nimbusManifestFile struct {
 	Object  string
 	Service string
+	Version string
 }
 
 func parseNimbusManifestFile(raw []byte) map[string]nimbusManifestFile {
@@ -1414,10 +1417,11 @@ func parseNimbusManifestFile(raw []byte) map[string]nimbusManifestFile {
 	lines := bytes.Split(raw, []byte("\n"))
 	for _, line := range lines {
 		fields := bytes.Fields(line)
-		if len(fields) == 2 {
+		if len(fields) == 3 {
 			manifest[string(fields[0])] = nimbusManifestFile{
 				Object:  string(fields[0]),
 				Service: string(fields[1]),
+				Version: string(fields[2]),
 			}
 		}
 	}
@@ -1425,7 +1429,7 @@ func parseNimbusManifestFile(raw []byte) map[string]nimbusManifestFile {
 }
 
 // genNimbusManifest generates the current manifest of protos being processed.
-func genNimbusManifest(path, object, service string) (map[string]nimbusManifestFile, error) {
+func genNimbusManifest(path, object, service, version string) (map[string]nimbusManifestFile, error) {
 	var manifest map[string]nimbusManifestFile
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		glog.V(1).Infof("manifest [%s] not found", path)
@@ -1441,6 +1445,7 @@ func genNimbusManifest(path, object, service string) (map[string]nimbusManifestF
 	manifest[object] = nimbusManifestFile{
 		Object:  object,
 		Service: service,
+		Version: version,
 	}
 	return manifest, nil
 }

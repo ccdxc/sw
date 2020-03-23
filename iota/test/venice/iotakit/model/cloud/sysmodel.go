@@ -27,9 +27,9 @@ type SysModel struct {
 }
 
 //Init init the testbed
-func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType) error {
+func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSetup bool) error {
 
-	err := sm.SysModel.Init(tb, cfgType)
+	err := sm.SysModel.Init(tb, cfgType, skipSetup)
 	if err != nil {
 		return err
 	}

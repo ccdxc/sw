@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	"golang.org/x/sync/errgroup"
 )
 
 // CollectLogs collects all logs files from the testbed
@@ -1133,6 +1134,58 @@ func (sm *SysModel) AddVeniceNodes(names []string) error {
 	sm.SetupVeniceNodes()
 
 	return sm.InitCfgModel()
+
+}
+
+//ResetNaplesNodes resets naples nodes, expection is it will join back cluster as expected
+func (sm *SysModel) ResetNaplesNodes(nodes *objects.HostCollection) error {
+
+	resetNaples := func(host string, node *objects.Naples) error {
+		for _ = range node.GetTestNode().NaplesConfigs.Configs {
+			//TODO : for multiple naples
+			//entity := ncfg.Name
+			entity := node.GetTestNode().NodeName
+			cmds := []string{
+				"rm -rf /sysconfig/config0/*.db",
+				"rm -rf /sysconfig/config1/*.db",
+				"rm -rf /sysconfig/config0/*.pem",
+				"rm -rf /sysconfig/config1/*.pem",
+				"rm -rf echo classic > /sysconfig/config0/app_start.conf",
+			}
+			log.Infof("Reset naples %v", entity)
+			err := sm.Tb.SendSerialCommandToNaples(entity, cmds)
+			if err != nil {
+				return err
+			}
+			/*
+				trig.AddCommand("rm -rf /sysconfig/config0/*.db", entity, host)
+				trig.AddCommand("rm -rf /sysconfig/config1/*.db", entity, host)
+				trig.AddCommand("rm -rf /sysconfig/config0/*.pem", entity, host)
+				trig.AddCommand("rm -rf /sysconfig/config1/*.pem", entity, host)
+				trig.AddCommand("rm -rf echo classic > /sysconfig/config0/app_start.conf", entity, host)
+			*/
+		}
+		return nil
+	}
+
+	pool, _ := errgroup.WithContext(context.Background())
+	for _, h := range nodes.Hosts {
+		h := h
+		pool.Go(func() error {
+			err := resetNaples(h.GetIotaNode().Name, h.Naples)
+			if err != nil {
+				log.Errorf("Error resetting naples %v", err)
+				return err
+			}
+			return nil
+		})
+	}
+	err := pool.Wait()
+	if err != nil {
+		return err
+	}
+
+	return sm.ReloadHosts(nodes)
 
 }
 

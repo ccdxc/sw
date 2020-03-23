@@ -356,6 +356,7 @@ func (md *Memdb) WatchObjects(kind string, watcher *Watcher) error {
 	od := md.getObjdb(kind)
 
 	if !md.pushdb.KindEnabled(kind) {
+		log.Infof("PubDB watch for kind %v %v", kind, watcher.Name)
 		od.WatchLock.Lock()
 		od.watchers = append(od.watchers, watcher)
 		od.watchMap[watcher.Name] = watcher

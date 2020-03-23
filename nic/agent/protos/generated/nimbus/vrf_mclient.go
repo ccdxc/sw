@@ -176,7 +176,8 @@ func (client *NimbusClient) diffVrfs(objList *netproto.VrfList, reactor VrfReact
 			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.VrfEvent{
 					EventType: api.EventType_DeleteEvent,
-					Vrf:       lobj,
+
+					Vrf: lobj,
 				}
 				log.Infof("diffVrfs(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Vrf.GetObjectKind(), evt.Vrf.ObjectMeta)
@@ -194,7 +195,8 @@ func (client *NimbusClient) diffVrfs(objList *netproto.VrfList, reactor VrfReact
 	for _, obj := range objmap {
 		evt := netproto.VrfEvent{
 			EventType: api.EventType_UpdateEvent,
-			Vrf:       *obj,
+
+			Vrf: *obj,
 		}
 		client.lockObject(evt.Vrf.GetObjectKind(), evt.Vrf.ObjectMeta)
 		client.processVrfEvent(evt, reactor, ostream)
@@ -221,10 +223,14 @@ func (client *NimbusClient) processVrfEvent(evt netproto.VrfEvent, reactor VrfRe
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
+
 			_, err = reactor.HandleVrf(types.Get, evt.Vrf)
+
 			if err != nil {
 				// create the Vrf
+
 				_, err = reactor.HandleVrf(types.Create, evt.Vrf)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Vrf | Key: %s | Err: %v", types.Operation(types.Create), evt.Vrf.GetKey(), err))
 					client.debugStats.AddInt("CreateVrfError", 1)
@@ -233,7 +239,9 @@ func (client *NimbusClient) processVrfEvent(evt netproto.VrfEvent, reactor VrfRe
 				}
 			} else {
 				// update the Vrf
+
 				_, err = reactor.HandleVrf(types.Update, evt.Vrf)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Vrf | Key: %s | Err: %v", types.Operation(types.Update), evt.Vrf.GetKey(), err))
 					client.debugStats.AddInt("UpdateVrfError", 1)
@@ -244,7 +252,9 @@ func (client *NimbusClient) processVrfEvent(evt netproto.VrfEvent, reactor VrfRe
 
 		case api.EventType_DeleteEvent:
 			// update the Vrf
+
 			_, err = reactor.HandleVrf(types.Delete, evt.Vrf)
+
 			if err != nil {
 				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Vrf | Key: %s | Err: %v", types.Operation(types.Delete), evt.Vrf.GetKey(), err))
 				client.debugStats.AddInt("DeleteVrfError", 1)
@@ -258,9 +268,11 @@ func (client *NimbusClient) processVrfEvent(evt netproto.VrfEvent, reactor VrfRe
 		}
 		// send oper status and return if there is no error
 		if err == nil {
+
 			robj := netproto.VrfEvent{
 				EventType: evt.EventType,
 				Vrf: netproto.Vrf{
+
 					TypeMeta:   evt.Vrf.TypeMeta,
 					ObjectMeta: evt.Vrf.ObjectMeta,
 					Status:     evt.Vrf.Status,
@@ -271,7 +283,9 @@ func (client *NimbusClient) processVrfEvent(evt netproto.VrfEvent, reactor VrfRe
 			ostream.Lock()
 			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.Vrf.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
 			err := ostream.stream.Send(&robj)
+
 			if err != nil {
 				log.Errorf("failed to send Vrf oper Status, %s", err)
 				client.debugStats.AddInt("VrfOperSendError", 1)
@@ -295,7 +309,8 @@ func (client *NimbusClient) processVrfDynamic(evt api.EventType,
 
 	vrfEvt := netproto.VrfEvent{
 		EventType: evt,
-		Vrf:       *object,
+
+		Vrf: *object,
 	}
 
 	// add venice label to the object

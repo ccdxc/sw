@@ -103,6 +103,12 @@ export enum MonitoringFwlogPolicySpec_filter {
     'all' = "all",
 }
 
+export enum MonitoringInterfaceMirror_direction {
+    'both' = "both",
+    'tx' = "tx",
+    'rx' = "rx",
+}
+
 export enum MonitoringMatchedRequirement_operator {
     'equals' = "equals",
     'notequals' = "notequals",
@@ -280,6 +286,12 @@ export enum MonitoringFwlogPolicySpec_filter_uihint {
     'reject' = "Reject Logs",
 }
 
+export enum MonitoringInterfaceMirror_direction_uihint {
+    'both' = "Both",
+    'rx' = "Rx",
+    'tx' = "Tx",
+}
+
 export enum MonitoringMatchedRequirement_operator_uihint {
     'gt' = "greater than",
     'gte' = "greater than or equals",
@@ -392,6 +404,7 @@ export class AllEnums {
     MonitoringFlowExportPolicySpec_format = MonitoringFlowExportPolicySpec_format;
     MonitoringFwlogPolicySpec_format = MonitoringFwlogPolicySpec_format;
     MonitoringFwlogPolicySpec_filter = MonitoringFwlogPolicySpec_filter;
+    MonitoringInterfaceMirror_direction = MonitoringInterfaceMirror_direction;
     MonitoringMatchedRequirement_operator = MonitoringMatchedRequirement_operator;
     MonitoringMeasurementCriteria_function = MonitoringMeasurementCriteria_function;
     MonitoringMirrorCollector_type = MonitoringMirrorCollector_type;
@@ -417,6 +430,7 @@ export class AllEnums {
     MonitoringExternalCred_auth_type_uihint = MonitoringExternalCred_auth_type_uihint;
     MonitoringFwlogPolicySpec_format_uihint = MonitoringFwlogPolicySpec_format_uihint;
     MonitoringFwlogPolicySpec_filter_uihint = MonitoringFwlogPolicySpec_filter_uihint;
+    MonitoringInterfaceMirror_direction_uihint = MonitoringInterfaceMirror_direction_uihint;
     MonitoringMatchedRequirement_operator_uihint = MonitoringMatchedRequirement_operator_uihint;
     MonitoringMirrorCollector_type_uihint = MonitoringMirrorCollector_type_uihint;
     MonitoringMirrorSessionSpec_packet_filters_uihint = MonitoringMirrorSessionSpec_packet_filters_uihint;

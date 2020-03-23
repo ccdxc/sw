@@ -45,6 +45,7 @@ type SysModelInterface interface {
 	ForEachVeniceNode(fn objects.VeniceNodeIteratorFn) error
 	ForEachFakeNaples(fn objects.NaplesIteratorFn) error
 
+	Testbed() *testbed.TestBed
 	//deleteWorkload(wr *objects.Workload) error
 	//findWorkload(name string) *objects.Workload
 }
@@ -54,6 +55,7 @@ type ConfigIntf interface {
 	CleanupAllConfig() error
 	IsConfigPushComplete() (bool, error)
 	ConfigClient() objClient.ObjClient
+	SetConfigModel(testbed.ModelType) error
 }
 
 //ActionIntf defines all interfaces
@@ -86,6 +88,7 @@ type ClusterActionIntf interface {
 	VerifyRuleStats(timestr string, spc *objects.NetworkSecurityPolicyCollection, minCounts []map[string]float64) error
 
 	QueryMetricsByReporter(kind, reporter, timestr string) (*telemetryclient.MetricsQueryResponse, error)
+	ResetNaplesNodes(*objects.HostCollection) error
 
 	AddNaplesNodes(names []string) error
 	DeleteNaplesNodes(names []string) error
@@ -195,14 +198,26 @@ func NewSysModel(tb *testbed.TestBed, modelType common.ModelType) (SysModelInter
 
 	switch modelType {
 	case VcenterModel:
-		return factory.NewVcenterSysModel(tb, cfgModel.VcenterCfgType)
+		return factory.NewVcenterSysModel(tb, cfgModel.VcenterCfgType, false)
 	case CloudModel:
-		return factory.NewCloudSysModel(tb, cfgModel.CloudCfgType)
+		return factory.NewCloudSysModel(tb, cfgModel.CloudCfgType, false)
 	case BaseNetModel:
-		return factory.NewBasenetSysModel(tb, cfgModel.BasenetCfgType)
+		return factory.NewBasenetSysModel(tb, cfgModel.BasenetCfgType, false)
 	}
-	return factory.NewDefaultSysModel(tb, cfgModel.GsCfgType)
+	return factory.NewDefaultSysModel(tb, cfgModel.GsCfgType, false)
 
+}
+
+func ReinitSysModel(model SysModelInterface, modelType common.ModelType) (SysModelInterface, error) {
+	switch modelType {
+	case VcenterModel:
+		return factory.NewVcenterSysModel(model.Testbed(), cfgModel.VcenterCfgType, true)
+	case CloudModel:
+		return factory.NewCloudSysModel(model.Testbed(), cfgModel.CloudCfgType, true)
+	case BaseNetModel:
+		return factory.NewBasenetSysModel(model.Testbed(), cfgModel.BasenetCfgType, true)
+	}
+	return factory.NewDefaultSysModel(model.Testbed(), cfgModel.GsCfgType, true)
 }
 
 func getModelTypeFromTopo(mtype testbed.ModelType) common.ModelType {

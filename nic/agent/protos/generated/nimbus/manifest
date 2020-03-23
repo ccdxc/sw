@@ -1,13 +1,14 @@
 
-App AppApiV1
-Collector CollectorApiV1
-Endpoint EndpointApiV1
-IPAMPolicy IPAMPolicyApiV1
-Interface InterfaceApiV1
-Network NetworkApiV1
-NetworkSecurityPolicy NetworkSecurityPolicyApiV1
-Profile ProfileApiV1
-RouteTable RouteTableApiV1
-RoutingConfig RoutingConfigApiV1
-SecurityProfile SecurityProfileApiV1
-Vrf VrfApiV1
+App AppApiV1 V1 
+Collector CollectorApiV1 V1 
+Endpoint EndpointApiV1 V1 
+FlowExportPolicy FlowExportPolicyApiV2 V2 
+IPAMPolicy IPAMPolicyApiV1 V1 
+Interface InterfaceApiV1 V1 
+MirrorSession MirrorSessionApiV2 V2 
+Network NetworkApiV1 V1 
+NetworkSecurityPolicy NetworkSecurityPolicyApiV1 V1 
+Profile ProfileApiV1 V1 
+RoutingConfig RoutingConfigApiV1 V1 
+SecurityProfile SecurityProfileApiV1 V1 
+Vrf VrfApiV1 V1 

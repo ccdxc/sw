@@ -23,6 +23,7 @@ service NetworkSecurityPolicyApiV1 {
         Method: ["list", "get", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
         Prefix: "api/security/policies"
+        Version: "V1"
     };
 
     rpc ListNetworkSecurityPolicys (api.ListWatchOptions) returns (NetworkSecurityPolicyList) {};

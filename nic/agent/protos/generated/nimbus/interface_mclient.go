@@ -176,6 +176,7 @@ func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reac
 			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.InterfaceEvent{
 					EventType: api.EventType_DeleteEvent,
+
 					Interface: lobj,
 				}
 				log.Infof("diffInterfaces(): Deleting object %+v", lobj.ObjectMeta)
@@ -194,6 +195,7 @@ func (client *NimbusClient) diffInterfaces(objList *netproto.InterfaceList, reac
 	for _, obj := range objmap {
 		evt := netproto.InterfaceEvent{
 			EventType: api.EventType_UpdateEvent,
+
 			Interface: *obj,
 		}
 		client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
@@ -221,10 +223,14 @@ func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, r
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
+
 			_, err = reactor.HandleInterface(types.Get, evt.Interface)
+
 			if err != nil {
 				// create the Interface
+
 				_, err = reactor.HandleInterface(types.Create, evt.Interface)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Interface | Key: %s | Err: %v", types.Operation(types.Create), evt.Interface.GetKey(), err))
 					client.debugStats.AddInt("CreateInterfaceError", 1)
@@ -233,7 +239,9 @@ func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, r
 				}
 			} else {
 				// update the Interface
+
 				_, err = reactor.HandleInterface(types.Update, evt.Interface)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Interface | Key: %s | Err: %v", types.Operation(types.Update), evt.Interface.GetKey(), err))
 					client.debugStats.AddInt("UpdateInterfaceError", 1)
@@ -244,7 +252,9 @@ func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, r
 
 		case api.EventType_DeleteEvent:
 			// update the Interface
+
 			_, err = reactor.HandleInterface(types.Delete, evt.Interface)
+
 			if err != nil {
 				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Interface | Key: %s | Err: %v", types.Operation(types.Delete), evt.Interface.GetKey(), err))
 				client.debugStats.AddInt("DeleteInterfaceError", 1)
@@ -258,9 +268,11 @@ func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, r
 		}
 		// send oper status and return if there is no error
 		if err == nil {
+
 			robj := netproto.InterfaceEvent{
 				EventType: evt.EventType,
 				Interface: netproto.Interface{
+
 					TypeMeta:   evt.Interface.TypeMeta,
 					ObjectMeta: evt.Interface.ObjectMeta,
 					Status:     evt.Interface.Status,
@@ -271,7 +283,9 @@ func (client *NimbusClient) processInterfaceEvent(evt netproto.InterfaceEvent, r
 			ostream.Lock()
 			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.Interface.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
 			err := ostream.stream.Send(&robj)
+
 			if err != nil {
 				log.Errorf("failed to send Interface oper Status, %s", err)
 				client.debugStats.AddInt("InterfaceOperSendError", 1)
@@ -295,6 +309,7 @@ func (client *NimbusClient) processInterfaceDynamic(evt api.EventType,
 
 	interfaceEvt := netproto.InterfaceEvent{
 		EventType: evt,
+
 		Interface: *object,
 	}
 

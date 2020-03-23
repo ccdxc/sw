@@ -168,7 +168,7 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 		if err != nil {
 			return i, false, fmt.Errorf("unable to find the new profile")
 		}
-		if oldprofname != "" {
+		if oldprofname != "" && nwManaged && admitted { // validate update of profile only if the NIC is admitted and not decomissioned
 
 			errStr := fmt.Sprintf("Profile old :  %v %v  new: %v %v ", oldProfile.Spec.FwdMode, oldProfile.Spec.FlowPolicyMode, updProfile.Spec.FwdMode, updProfile.Spec.FlowPolicyMode)
 
@@ -179,17 +179,15 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 			}
 		}
 
-		// Prevent mode change (decommissioning) if NIC is NOT admitted
-		if !admitted {
-			if updNIC.Spec.MgmtMode != cluster.DistributedServiceCardSpec_NETWORK.String() {
+		// Reject user-initiated modifications of Spec fields like ID and NetworkMode, as NMD currently
+		// does not have code to react to the changes.
+		if apiutils.IsUserRequestCtx(ctx) {
+			// Prevent mode change if NIC is NOT admitted
+			if !admitted && updNIC.Spec.MgmtMode != curNIC.Spec.MgmtMode {
 				errStr := fmt.Sprintf("Management mode change not allowed for DistributedServiceCard because it is not in %s phase", cluster.DistributedServiceCardStatus_ADMITTED.String())
 				cl.logger.Errorf(errStr)
 				return i, true, fmt.Errorf(errStr)
 			}
-		}
-		// Reject user-initiated modifications of Spec fields like ID and NetworkMode, as NMD currently
-		// doesnot have code to react to the changes.
-		if apiutils.IsUserRequestCtx(ctx) {
 			// Workaround for ...
 			// Once the SmartNIC is admitted, disallow flipping "Spec.Admit" back to false
 			if admitted && updNIC.Spec.Admit == false && curNIC.Spec.Admit == true {

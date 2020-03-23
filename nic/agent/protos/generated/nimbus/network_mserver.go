@@ -419,7 +419,8 @@ func (eh *NetworkTopic) WatchNetworks(watchOptions *api.ListWatchOptions, stream
 	for _, obj := range objlist.Networks {
 		watchEvt := netproto.NetworkEvent{
 			EventType: api.EventType_CreateEvent,
-			Network:   *obj,
+
+			Network: *obj,
 		}
 		watchEvts.NetworkEvents = append(watchEvts.NetworkEvents, &watchEvt)
 	}
@@ -477,7 +478,8 @@ func (eh *NetworkTopic) WatchNetworks(watchOptions *api.ListWatchOptions, stream
 			// convert to netproto format
 			watchEvt := netproto.NetworkEvent{
 				EventType: etype,
-				Network:   *obj,
+
+				Network: *obj,
 			}
 			watchEvts.NetworkEvents = append(watchEvts.NetworkEvents, &watchEvt)
 			if !running {
@@ -519,7 +521,9 @@ func (eh *NetworkTopic) updateNetworkOper(oper *netproto.NetworkEvent, nodeID st
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			return eh.statusReactor.OnNetworkOperUpdate(nodeID, &oper.Network)
+
 		}
 	case api.EventType_DeleteEvent:
 		// incr stats
@@ -527,7 +531,9 @@ func (eh *NetworkTopic) updateNetworkOper(oper *netproto.NetworkEvent, nodeID st
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			eh.statusReactor.OnNetworkOperDelete(nodeID, &oper.Network)
+
 		}
 	}
 

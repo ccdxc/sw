@@ -419,7 +419,8 @@ func (eh *EndpointTopic) WatchEndpoints(watchOptions *api.ListWatchOptions, stre
 	for _, obj := range objlist.Endpoints {
 		watchEvt := netproto.EndpointEvent{
 			EventType: api.EventType_CreateEvent,
-			Endpoint:  *obj,
+
+			Endpoint: *obj,
 		}
 		watchEvts.EndpointEvents = append(watchEvts.EndpointEvents, &watchEvt)
 	}
@@ -477,7 +478,8 @@ func (eh *EndpointTopic) WatchEndpoints(watchOptions *api.ListWatchOptions, stre
 			// convert to netproto format
 			watchEvt := netproto.EndpointEvent{
 				EventType: etype,
-				Endpoint:  *obj,
+
+				Endpoint: *obj,
 			}
 			watchEvts.EndpointEvents = append(watchEvts.EndpointEvents, &watchEvt)
 			if !running {
@@ -519,7 +521,9 @@ func (eh *EndpointTopic) updateEndpointOper(oper *netproto.EndpointEvent, nodeID
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			return eh.statusReactor.OnEndpointOperUpdate(nodeID, &oper.Endpoint)
+
 		}
 	case api.EventType_DeleteEvent:
 		// incr stats
@@ -527,7 +531,9 @@ func (eh *EndpointTopic) updateEndpointOper(oper *netproto.EndpointEvent, nodeID
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			eh.statusReactor.OnEndpointOperDelete(nodeID, &oper.Endpoint)
+
 		}
 	}
 

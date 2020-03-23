@@ -24,6 +24,7 @@ service ProfileApiV1 {
         Method: ["list", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
         Prefix: "api/profiles"
+        Version: "V1"
     };
     rpc ListProfiles (api.ListWatchOptions) returns(ProfileList) {};
     rpc WatchProfiles (api.ListWatchOptions) returns(stream ProfileEventList){};

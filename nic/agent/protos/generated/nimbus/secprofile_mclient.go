@@ -175,7 +175,8 @@ func (client *NimbusClient) diffSecurityProfiles(objList *netproto.SecurityProfi
 			key := lobj.ObjectMeta.GetKey()
 			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.SecurityProfileEvent{
-					EventType:       api.EventType_DeleteEvent,
+					EventType: api.EventType_DeleteEvent,
+
 					SecurityProfile: lobj,
 				}
 				log.Infof("diffSecurityProfiles(): Deleting object %+v", lobj.ObjectMeta)
@@ -193,7 +194,8 @@ func (client *NimbusClient) diffSecurityProfiles(objList *netproto.SecurityProfi
 	// add/update all new objects
 	for _, obj := range objmap {
 		evt := netproto.SecurityProfileEvent{
-			EventType:       api.EventType_UpdateEvent,
+			EventType: api.EventType_UpdateEvent,
+
 			SecurityProfile: *obj,
 		}
 		client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
@@ -221,10 +223,14 @@ func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityPro
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
+
 			_, err = reactor.HandleSecurityProfile(types.Get, evt.SecurityProfile)
+
 			if err != nil {
 				// create the SecurityProfile
+
 				_, err = reactor.HandleSecurityProfile(types.Create, evt.SecurityProfile)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: SecurityProfile | Key: %s | Err: %v", types.Operation(types.Create), evt.SecurityProfile.GetKey(), err))
 					client.debugStats.AddInt("CreateSecurityProfileError", 1)
@@ -233,7 +239,9 @@ func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityPro
 				}
 			} else {
 				// update the SecurityProfile
+
 				_, err = reactor.HandleSecurityProfile(types.Update, evt.SecurityProfile)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: SecurityProfile | Key: %s | Err: %v", types.Operation(types.Update), evt.SecurityProfile.GetKey(), err))
 					client.debugStats.AddInt("UpdateSecurityProfileError", 1)
@@ -244,7 +252,9 @@ func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityPro
 
 		case api.EventType_DeleteEvent:
 			// update the SecurityProfile
+
 			_, err = reactor.HandleSecurityProfile(types.Delete, evt.SecurityProfile)
+
 			if err != nil {
 				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: SecurityProfile | Key: %s | Err: %v", types.Operation(types.Delete), evt.SecurityProfile.GetKey(), err))
 				client.debugStats.AddInt("DeleteSecurityProfileError", 1)
@@ -258,9 +268,11 @@ func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityPro
 		}
 		// send oper status and return if there is no error
 		if err == nil {
+
 			robj := netproto.SecurityProfileEvent{
 				EventType: evt.EventType,
 				SecurityProfile: netproto.SecurityProfile{
+
 					TypeMeta:   evt.SecurityProfile.TypeMeta,
 					ObjectMeta: evt.SecurityProfile.ObjectMeta,
 					Status:     evt.SecurityProfile.Status,
@@ -271,7 +283,9 @@ func (client *NimbusClient) processSecurityProfileEvent(evt netproto.SecurityPro
 			ostream.Lock()
 			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.SecurityProfile.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
 			err := ostream.stream.Send(&robj)
+
 			if err != nil {
 				log.Errorf("failed to send SecurityProfile oper Status, %s", err)
 				client.debugStats.AddInt("SecurityProfileOperSendError", 1)
@@ -294,7 +308,8 @@ func (client *NimbusClient) processSecurityProfileDynamic(evt api.EventType,
 	object *netproto.SecurityProfile, reactor SecurityProfileReactor) error {
 
 	securityprofileEvt := netproto.SecurityProfileEvent{
-		EventType:       evt,
+		EventType: evt,
+
 		SecurityProfile: *object,
 	}
 

@@ -17,12 +17,16 @@ message ObjectRln {
 message RestEndpoint {
   // Object for which the endpoint is being defined
   string Object = 1;
+
   // Methods allowed on the resource
   repeated string Method = 2;
   // Pattern for the URI
   string Pattern = 3;
   // Prefix for the URL
   string Prefix = 4;
+  
+  //version
+  string Version = 5;
 }
 
 // ObjectPrefix defines the way the object is identified in the kvstore and REST api.

@@ -18,6 +18,7 @@ service EndpointApiV1 {
         Object: "Endpoint",
         Method: ["list", "get", "post", "put", "delete"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
+        Version: "V1"
         Prefix: "api/endpoints"
     };
 

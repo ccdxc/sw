@@ -412,11 +412,23 @@ func (sma *SmNetworkInterface) findInterfacesByLabel(label map[string]string) ([
 	networkStates := []*NetworkInterfaceState{}
 	if labelIntfs, ok = sma.intfsByLabel[ls]; ok {
 		for _, intf := range labelIntfs.intfs {
-			networkStates = append(networkStates, intf)
+			if interfaceMirroringAllowed(intf.NetworkInterfaceState.Spec.Type) {
+				networkStates = append(networkStates, intf)
+			}
 		}
 	}
 
 	return networkStates, nil
+}
+
+func interfaceMirroringAllowed(intfType string) bool {
+
+	switch intfType {
+	case network.IFType_UPLINK_ETH.String():
+		return true
+	}
+
+	return false
 }
 
 func (sma *SmNetworkInterface) getInterfacesMatchingSelector(selector *labels.Selector) ([]*NetworkInterfaceState, error) {
@@ -427,7 +439,9 @@ func (sma *SmNetworkInterface) getInterfacesMatchingSelector(selector *labels.Se
 		label := labelIntfs.label
 		if selector.Matches(labels.Set(label)) {
 			for _, intf := range labelIntfs.intfs {
-				networkStates = append(networkStates, intf)
+				if interfaceMirroringAllowed(intf.NetworkInterfaceState.Spec.Type) {
+					networkStates = append(networkStates, intf)
+				}
 			}
 		}
 	}

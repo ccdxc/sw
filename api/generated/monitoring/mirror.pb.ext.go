@@ -54,6 +54,29 @@ func (x MirrorSessionSpec_MirrorPacketFilter) String() string {
 	return MirrorSessionSpec_MirrorPacketFilter_vname[int32(x)]
 }
 
+// Direction_normal is a map of normalized values for the enum
+var Direction_normal = map[string]string{
+	"both": "both",
+	"rx":   "rx",
+	"tx":   "tx",
+}
+
+var Direction_vname = map[int32]string{
+	0: "both",
+	1: "tx",
+	2: "rx",
+}
+
+var Direction_vvalue = map[string]int32{
+	"both": 0,
+	"tx":   1,
+	"rx":   2,
+}
+
+func (x Direction) String() string {
+	return Direction_vname[int32(x)]
+}
+
 // PacketCollectorType_normal is a map of normalized values for the enum
 var PacketCollectorType_normal = map[string]string{
 	"erspan": "erspan",
@@ -132,6 +155,33 @@ func (m *AppProtoSelector) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *AppProtoSelector) Defaults(ver string) bool {
 	var ret bool
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *InterfaceMirror) Clone(into interface{}) (interface{}, error) {
+	var out *InterfaceMirror
+	var ok bool
+	if into == nil {
+		out = &InterfaceMirror{}
+	} else {
+		out, ok = into.(*InterfaceMirror)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*InterfaceMirror))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *InterfaceMirror) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Direction = "both"
+	}
 	return ret
 }
 
@@ -292,6 +342,9 @@ func (m *MirrorSessionSpec) Defaults(ver string) bool {
 		i := m.Collectors[k]
 		ret = i.Defaults(ver) || ret
 	}
+	if m.Interfaces != nil {
+		ret = m.Interfaces.Defaults(ver) || ret
+	}
 	for k := range m.MatchRules {
 		i := m.MatchRules[k]
 		ret = i.Defaults(ver) || ret
@@ -379,6 +432,51 @@ func (m *AppProtoSelector) Validate(ver, path string, ignoreStatus bool, ignoreS
 }
 
 func (m *AppProtoSelector) Normalize() {
+
+}
+
+func (m *InterfaceMirror) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *InterfaceMirror) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Selector != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Selector"
+			if errs := m.Selector.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	if vs, ok := validatorMapMirror["InterfaceMirror"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapMirror["InterfaceMirror"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *InterfaceMirror) Normalize() {
+
+	m.Direction = Direction_normal[strings.ToLower(m.Direction)]
+
+	if m.Selector != nil {
+		m.Selector.Normalize()
+	}
 
 }
 
@@ -654,14 +752,14 @@ func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool, ignore
 		}
 	}
 
-	if m.InterfaceSelector != nil {
+	if m.Interfaces != nil {
 		{
 			dlmtr := "."
 			if path == "" {
 				dlmtr = ""
 			}
-			npath := path + dlmtr + "InterfaceSelector"
-			if errs := m.InterfaceSelector.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			npath := path + dlmtr + "Interfaces"
+			if errs := m.Interfaces.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -700,8 +798,8 @@ func (m *MirrorSessionSpec) Normalize() {
 
 	}
 
-	if m.InterfaceSelector != nil {
-		m.InterfaceSelector.Normalize()
+	if m.Interfaces != nil {
+		m.Interfaces.Normalize()
 	}
 
 	for k, v := range m.MatchRules {
@@ -777,6 +875,20 @@ func init() {
 			}
 		}
 
+		return nil
+	})
+
+	validatorMapMirror["InterfaceMirror"] = make(map[string][]func(string, interface{}) error)
+	validatorMapMirror["InterfaceMirror"]["all"] = append(validatorMapMirror["InterfaceMirror"]["all"], func(path string, i interface{}) error {
+		m := i.(*InterfaceMirror)
+
+		if _, ok := Direction_vvalue[m.Direction]; !ok {
+			vals := []string{}
+			for k1, _ := range Direction_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Direction", vals)
+		}
 		return nil
 	})
 

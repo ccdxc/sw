@@ -510,6 +510,8 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 	log.Infof("TOPO SVC | DEBUG | CleanUpTestBed. Received Request Msg: %v", req)
 	defer log.Infof("TOPO SVC | DEBUG | CleanUpTestBed Returned: %v", req)
 
+	var vlans []uint32
+	var err error
 	if len(req.Username) == 0 || len(req.Password) == 0 {
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
 		req.ApiResponse.ErrorMsg = fmt.Sprintf("Request must include a user name and password")
@@ -518,7 +520,7 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 
 	ts.tbInfo.resp = req
 
-	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.RebootNodes, req.GetNodes(), req.GetLicenses())
+	err = ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.RebootNodes, req.GetNodes(), req.GetLicenses())
 
 	if err != nil {
 		log.Errorf("TOPO SVC | InitNodes | cleanup Node Call Failed. %v", err)
@@ -526,6 +528,19 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 		req.ApiResponse.ErrorMsg = fmt.Sprintf("Topo SVC InitNodes | InitNodes Call Failed. %s", err.Error())
 		return req, nil
 	}
+
+	if ts.switchProgrammingRequired(req) {
+		if vlans, err = testbed.SetUpTestbedSwitch(req.DataSwitches, req.TestbedId, req.NativeVlan); err != nil {
+			log.Errorf("TOPO SVC | InitTestBed | Could not initialize switch id: %d, Err: %v", req.TestbedId, err)
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("Switch configuration failed %d. Err: %v", req.TestbedId, err)
+			return req, nil
+		}
+		ts.tbInfo.allocatedVlans = vlans
+	} else {
+		log.Infof("Skipping switch programming")
+	}
+	ts.tbInfo.resp.AllocatedVlans = ts.tbInfo.allocatedVlans
+	ts.tbInfo.id = req.TestbedId
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return req, nil

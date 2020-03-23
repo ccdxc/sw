@@ -185,7 +185,11 @@ func (client *NimbusClient) diff{{$value.Object}}sDynamic(objList *netproto.{{$v
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.{{$value.Object}}Event{
 					EventType: api.EventType_DeleteEvent,
-					{{$value.Object}}:  lobj,
+					{{if (eq $value.Version "V2")}}
+						{{$value.Object}}:  &lobj,
+					{{else}}
+						{{$value.Object}}:  lobj,
+					{{end}}
 				}
 				log.Infof("diff{{$value.Object}}s(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.{{$value.Object}}.GetObjectKind(), evt.{{$value.Object}}.ObjectMeta)
@@ -200,7 +204,11 @@ func (client *NimbusClient) diff{{$value.Object}}sDynamic(objList *netproto.{{$v
 	for _, obj := range objList.{{$value.Object}}s {
 		evt := netproto.{{$value.Object}}Event{
 			EventType: api.EventType_UpdateEvent,
-			{{$value.Object}}:  *obj,
+			{{if (eq $value.Version "V2")}}
+				{{$value.Object}}:  obj,
+			{{else}}
+				{{$value.Object}}:  *obj,
+			{{end}}
 		}
 		client.lockObject(evt.{{$value.Object}}.GetObjectKind(), evt.{{$value.Object}}.ObjectMeta)
 		err := client.process{{$value.Object}}Event(evt, reactor, nil)

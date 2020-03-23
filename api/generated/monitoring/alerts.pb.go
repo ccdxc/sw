@@ -61,6 +61,7 @@
 		SNMPTrapServer
 		SyslogExportConfig
 		AppProtoSelector
+		InterfaceMirror
 		MatchRule
 		MatchSelector
 		MirrorCollector

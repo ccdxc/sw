@@ -25,6 +25,7 @@ service PortApiV1 {
         Method: ["list", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
         Prefix: "api/ports"
+        Version: "V1"
     };
 
 //    rpc GetPort (api.ObjectMeta) returns (Port) {};

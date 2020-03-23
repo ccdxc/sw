@@ -1453,7 +1453,7 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 		// repeated venice coordinates : GRPC will be closed in HandleVeniceCoordinates, and we will call start again
 		// Upgrade : Before watchCtx is set, ReplayConfigs calls HandleProfile and that setsup the watches. As npm sync will not result in change of object
 		// and we wil not setup new watchers.
-		insertionKinds := []string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile"}
+		insertionKinds := []string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile", "MirrorSession", "FlowExportPolicy"}
 
 		log.Infof("Start InsertionMode Watcher")
 		startInsertionWatcher := func() {
@@ -1828,6 +1828,14 @@ func (i *IrisAPI) PurgeConfigs() error {
 	for _, col := range cols {
 		if _, err := i.HandleCollector(types.Delete, col); err != nil {
 			log.Errorf("Failed to purge the Collector. Err: %v", err)
+		}
+	}
+
+	p := netproto.Profile{TypeMeta: api.TypeMeta{Kind: "Profile"}}
+	profiles, _ := i.HandleProfile(types.List, p)
+	for _, profile := range profiles {
+		if _, err := i.HandleProfile(types.Delete, profile); err != nil {
+			log.Errorf("Failed to purge the Profiles. Err: %v", err)
 		}
 	}
 

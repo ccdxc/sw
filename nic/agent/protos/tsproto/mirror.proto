@@ -50,16 +50,6 @@ message MirrorSessionSpec {
     MirrorDir               MirrorDirection = 5 [(gogoproto.jsontag) = "mirror-direction,omitempty", (venice.check) = "StrEnum(MirrorDir)"];
 }
 
-// MatchRule : This is used to select packets that need to be monitored (mirrored)
-message MatchRule {
-    // Either Src or Dst or both must be specified, both cannot be *
-    // Src = * when not specified
-    // When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored
-    MatchSelector       Src         = 1 [(gogoproto.jsontag) = "source,omitempty"];
-    // Dst = * when not specified
-    // When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored
-    MatchSelector       Dst         = 2 [(gogoproto.jsontag) = "destination,omitempty"];
-}
 
 
 // MirrorSessionStatus captures the sg policy status

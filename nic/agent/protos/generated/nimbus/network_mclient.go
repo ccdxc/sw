@@ -176,7 +176,8 @@ func (client *NimbusClient) diffNetworks(objList *netproto.NetworkList, reactor 
 			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.NetworkEvent{
 					EventType: api.EventType_DeleteEvent,
-					Network:   lobj,
+
+					Network: lobj,
 				}
 				log.Infof("diffNetworks(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
@@ -194,7 +195,8 @@ func (client *NimbusClient) diffNetworks(objList *netproto.NetworkList, reactor 
 	for _, obj := range objmap {
 		evt := netproto.NetworkEvent{
 			EventType: api.EventType_UpdateEvent,
-			Network:   *obj,
+
+			Network: *obj,
 		}
 		client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
 		client.processNetworkEvent(evt, reactor, ostream)
@@ -221,10 +223,14 @@ func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, react
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
+
 			_, err = reactor.HandleNetwork(types.Get, evt.Network)
+
 			if err != nil {
 				// create the Network
+
 				_, err = reactor.HandleNetwork(types.Create, evt.Network)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Network | Key: %s | Err: %v", types.Operation(types.Create), evt.Network.GetKey(), err))
 					client.debugStats.AddInt("CreateNetworkError", 1)
@@ -233,7 +239,9 @@ func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, react
 				}
 			} else {
 				// update the Network
+
 				_, err = reactor.HandleNetwork(types.Update, evt.Network)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Network | Key: %s | Err: %v", types.Operation(types.Update), evt.Network.GetKey(), err))
 					client.debugStats.AddInt("UpdateNetworkError", 1)
@@ -244,7 +252,9 @@ func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, react
 
 		case api.EventType_DeleteEvent:
 			// update the Network
+
 			_, err = reactor.HandleNetwork(types.Delete, evt.Network)
+
 			if err != nil {
 				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Network | Key: %s | Err: %v", types.Operation(types.Delete), evt.Network.GetKey(), err))
 				client.debugStats.AddInt("DeleteNetworkError", 1)
@@ -258,9 +268,11 @@ func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, react
 		}
 		// send oper status and return if there is no error
 		if err == nil {
+
 			robj := netproto.NetworkEvent{
 				EventType: evt.EventType,
 				Network: netproto.Network{
+
 					TypeMeta:   evt.Network.TypeMeta,
 					ObjectMeta: evt.Network.ObjectMeta,
 					Status:     evt.Network.Status,
@@ -271,7 +283,9 @@ func (client *NimbusClient) processNetworkEvent(evt netproto.NetworkEvent, react
 			ostream.Lock()
 			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.Network.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
 			err := ostream.stream.Send(&robj)
+
 			if err != nil {
 				log.Errorf("failed to send Network oper Status, %s", err)
 				client.debugStats.AddInt("NetworkOperSendError", 1)
@@ -295,7 +309,8 @@ func (client *NimbusClient) processNetworkDynamic(evt api.EventType,
 
 	networkEvt := netproto.NetworkEvent{
 		EventType: evt,
-		Network:   *object,
+
+		Network: *object,
 	}
 
 	// add venice label to the object

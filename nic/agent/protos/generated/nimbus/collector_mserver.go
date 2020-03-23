@@ -419,6 +419,7 @@ func (eh *CollectorTopic) WatchCollectors(watchOptions *api.ListWatchOptions, st
 	for _, obj := range objlist.Collectors {
 		watchEvt := netproto.CollectorEvent{
 			EventType: api.EventType_CreateEvent,
+
 			Collector: *obj,
 		}
 		watchEvts.CollectorEvents = append(watchEvts.CollectorEvents, &watchEvt)
@@ -477,6 +478,7 @@ func (eh *CollectorTopic) WatchCollectors(watchOptions *api.ListWatchOptions, st
 			// convert to netproto format
 			watchEvt := netproto.CollectorEvent{
 				EventType: etype,
+
 				Collector: *obj,
 			}
 			watchEvts.CollectorEvents = append(watchEvts.CollectorEvents, &watchEvt)
@@ -519,7 +521,9 @@ func (eh *CollectorTopic) updateCollectorOper(oper *netproto.CollectorEvent, nod
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			return eh.statusReactor.OnCollectorOperUpdate(nodeID, &oper.Collector)
+
 		}
 	case api.EventType_DeleteEvent:
 		// incr stats
@@ -527,7 +531,9 @@ func (eh *CollectorTopic) updateCollectorOper(oper *netproto.CollectorEvent, nod
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			eh.statusReactor.OnCollectorOperDelete(nodeID, &oper.Collector)
+
 		}
 	}
 

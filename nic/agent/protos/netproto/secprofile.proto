@@ -22,6 +22,7 @@ service SecurityProfileApiV1 {
         Method: ["list", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
         Prefix: "api/security/profiles"
+        Version: "V1"
     };
 
     rpc ListSecurityProfiles (api.ListWatchOptions) returns (SecurityProfileList) {};

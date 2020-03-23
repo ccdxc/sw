@@ -618,10 +618,6 @@ class NaplesManagement(EntityManagement):
         return False
 
     def ReadExternalIP(self):
-        if not self.IsOOBUP():
-            print("OOB is not up, not reading external IP")
-            return
-
         self.__run_dhclient()
         for _ in range(5):
             output = self.RunCommandOnConsoleWithOutput("ifconfig " + GlobalOptions.mgmt_intf)
@@ -1431,13 +1427,14 @@ class PenOrchestrator:
             try:
                 for naples_inst in self.__naples:
                     naples_inst.Connect(force_connect=False)
-                    #Read Naples Gold FW version if system in good state.
-                    #If not able to read then we will reset
-                    naples_inst.ReadGoldFwVersion()
-               
+  
                     naples_inst.ReadInternalIP()
                     #Read External IP to try oob path first
                     naples_inst.ReadExternalIP()
+
+                  #Read Naples Gold FW version if system in good state.
+                    #If not able to read then we will reset
+                    naples_inst.ReadGoldFwVersion()
 
                 self.__host.WaitForSsh()
                 #need to unload driver as host might crash in ESX case.

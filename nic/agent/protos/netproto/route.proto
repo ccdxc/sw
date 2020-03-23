@@ -21,6 +21,7 @@ service RoutingConfigApiV1 {
         Method: ["list", "get", "post", "put", "delete"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
         Prefix: "api/routingconfigs"
+        Version: "V1"
     };
 
     rpc ListRoutingConfigs (api.ListWatchOptions) returns (RoutingConfigList) {};

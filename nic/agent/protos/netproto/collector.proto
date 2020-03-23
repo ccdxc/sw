@@ -19,6 +19,7 @@ service CollectorApiV1 {
         Object: "Collector",
         Method: ["list", "get", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
+        Version: "V1"
         Prefix: "api/collectors"
     };
     //    TODO uncomment this when TSM uses nimbus

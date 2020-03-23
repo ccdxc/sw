@@ -118,11 +118,11 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 			profileState.DscList[smartNic.ObjectMeta.Name] = profileVersion
 			sns.profileVersion = profileVersion
 			//sns.NodeVersion = cluster.DSCProfileVersion{}
-			if sm.isDscAdmitted(&smartNic.DistributedServiceCard) {
-				ret := profileState.PushObj.AddObjReceivers([]objReceiver.Receiver{sns.recvHandle})
-				if ret != nil {
-					log.Infof("Add receiver failed %v", ret)
-				}
+			ret := profileState.PushObj.AddObjReceivers([]objReceiver.Receiver{sns.recvHandle})
+			if ret != nil {
+				log.Infof("Add receiver failed %v", ret)
+			} else {
+				log.Infof("Added the dsc: %s to profile: %s", smartNic.Name, profName)
 			}
 			profileState.DSCProfile.Unlock()
 		}
@@ -220,9 +220,13 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 				profileState.DscList[smartNic.ObjectMeta.Name] = profileVersion
 				sns.profileVersion = profileVersion
 				//sns.NodeVersion = cluster.DSCProfileVersion{}
-				if sm.isDscAdmitted(&smartNic.DistributedServiceCard) {
-					profileState.PushObj.AddObjReceivers([]objReceiver.Receiver{sns.recvHandle})
+				ret := profileState.PushObj.AddObjReceivers([]objReceiver.Receiver{sns.recvHandle})
+				if ret != nil {
+					log.Infof("Add receiver failed %v", ret)
+				} else {
+					log.Infof("Added the dsc: %s to profile: %s", smartNic.Name, newProfile)
 				}
+
 				profileState.DSCProfile.Unlock()
 			}
 		}
@@ -232,8 +236,13 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 			oldProfileState.DSCProfile.Lock()
 			if _, ok := oldProfileState.DscList[nsnic.ObjectMeta.Name]; ok {
 				delete(oldProfileState.DscList, nsnic.ObjectMeta.Name)
+				ret := oldProfileState.PushObj.RemoveObjReceivers([]objReceiver.Receiver{sns.recvHandle})
+				if ret != nil {
+					log.Infof("Remove receiver failed %v", ret)
+				} else {
+					log.Infof("removed  the dsc: %s to profile: %s", smartNic.Name, oldProfile)
+				}
 
-				oldProfileState.PushObj.RemoveObjReceivers([]objReceiver.Receiver{sns.recvHandle})
 			}
 			oldProfileState.DSCProfile.Unlock()
 

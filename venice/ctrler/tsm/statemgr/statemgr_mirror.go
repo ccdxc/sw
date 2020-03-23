@@ -144,10 +144,10 @@ func (sm *Statemgr) UpdateMirrorSession(ms *monitoring.MirrorSession) error {
 				sm.writer.WriteMirrorSession(mss1.MirrorSession)
 			} else {
 				// copy new spec
-				curSelector := mss.Spec.InterfaceSelector
+				curInterfaces := mss.Spec.Interfaces
 				mss.MirrorSession.Spec = ms.Spec
 				mss.ObjectMeta = ms.ObjectMeta
-				if curSelector == nil && ms.Spec.InterfaceSelector != nil {
+				if curInterfaces == nil && ms.Spec.Interfaces != nil {
 					//Mirror Spec did not have interface selector, now added, hence delete the object
 					log.Infof("Deleting flow mirror session %v as it is changed to interfaces selector", ms.Name)
 					sm.memDB.DeleteObject(ms)
@@ -243,7 +243,7 @@ func (sm *Statemgr) CreateMirrorSession(ms *monitoring.MirrorSession) error {
 		mss.schTime = time.Now()
 	}
 
-	if mss.Spec.InterfaceSelector != nil {
+	if mss.Spec.Interfaces != nil {
 		log.Infof("Skipping mirror session %s processsing as interface selector is specified", mss.Name)
 		return nil
 	}
@@ -262,7 +262,7 @@ func (sm *Statemgr) DeleteMirrorSession(ms *monitoring.MirrorSession) {
 		return
 	}
 
-	if mss.Spec.InterfaceSelector == nil {
+	if mss.Spec.Interfaces == nil {
 		sm.deleteMirrorSession(mss)
 	}
 

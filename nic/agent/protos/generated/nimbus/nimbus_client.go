@@ -144,11 +144,17 @@ func (client *NimbusClient) processAggObjectWatchEvent(evt netproto.AggObjectEve
 	case "Endpoint":
 		err = client.processEndpointDynamic(evt.EventType, object.Message.(*netproto.Endpoint), reactor.(EndpointReactor))
 
+	case "FlowExportPolicy":
+		err = client.processFlowExportPolicyDynamic(evt.EventType, object.Message.(*netproto.FlowExportPolicy), reactor.(FlowExportPolicyReactor))
+
 	case "IPAMPolicy":
 		err = client.processIPAMPolicyDynamic(evt.EventType, object.Message.(*netproto.IPAMPolicy), reactor.(IPAMPolicyReactor))
 
 	case "Interface":
 		err = client.processInterfaceDynamic(evt.EventType, object.Message.(*netproto.Interface), reactor.(InterfaceReactor))
+
+	case "MirrorSession":
+		err = client.processMirrorSessionDynamic(evt.EventType, object.Message.(*netproto.MirrorSession), reactor.(MirrorSessionReactor))
 
 	case "Network":
 		err = client.processNetworkDynamic(evt.EventType, object.Message.(*netproto.Network), reactor.(NetworkReactor))
@@ -158,9 +164,6 @@ func (client *NimbusClient) processAggObjectWatchEvent(evt netproto.AggObjectEve
 
 	case "Profile":
 		err = client.processProfileDynamic(evt.EventType, object.Message.(*netproto.Profile), reactor.(ProfileReactor))
-
-	case "RouteTable":
-		err = client.processRouteTableDynamic(evt.EventType, object.Message.(*netproto.RouteTable), reactor.(RouteTableReactor))
 
 	case "RoutingConfig":
 		err = client.processRoutingConfigDynamic(evt.EventType, object.Message.(*netproto.RoutingConfig), reactor.(RoutingConfigReactor))
@@ -218,7 +221,8 @@ func (client *NimbusClient) diffAppsDynamic(objList *netproto.AppList, reactor A
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.AppEvent{
 					EventType: api.EventType_DeleteEvent,
-					App:       lobj,
+
+					App: lobj,
 				}
 				log.Infof("diffApps(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
@@ -233,7 +237,8 @@ func (client *NimbusClient) diffAppsDynamic(objList *netproto.AppList, reactor A
 	for _, obj := range objList.Apps {
 		evt := netproto.AppEvent{
 			EventType: api.EventType_UpdateEvent,
-			App:       *obj,
+
+			App: *obj,
 		}
 		client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
 		err := client.processAppEvent(evt, reactor, nil)
@@ -287,6 +292,7 @@ func (client *NimbusClient) diffCollectorsDynamic(objList *netproto.CollectorLis
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.CollectorEvent{
 					EventType: api.EventType_DeleteEvent,
+
 					Collector: lobj,
 				}
 				log.Infof("diffCollectors(): Deleting object %+v", lobj.ObjectMeta)
@@ -302,6 +308,7 @@ func (client *NimbusClient) diffCollectorsDynamic(objList *netproto.CollectorLis
 	for _, obj := range objList.Collectors {
 		evt := netproto.CollectorEvent{
 			EventType: api.EventType_UpdateEvent,
+
 			Collector: *obj,
 		}
 		client.lockObject(evt.Collector.GetObjectKind(), evt.Collector.ObjectMeta)
@@ -356,7 +363,8 @@ func (client *NimbusClient) diffEndpointsDynamic(objList *netproto.EndpointList,
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.EndpointEvent{
 					EventType: api.EventType_DeleteEvent,
-					Endpoint:  lobj,
+
+					Endpoint: lobj,
 				}
 				log.Infof("diffEndpoints(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
@@ -371,7 +379,8 @@ func (client *NimbusClient) diffEndpointsDynamic(objList *netproto.EndpointList,
 	for _, obj := range objList.Endpoints {
 		evt := netproto.EndpointEvent{
 			EventType: api.EventType_UpdateEvent,
-			Endpoint:  *obj,
+
+			Endpoint: *obj,
 		}
 		client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
 		err := client.processEndpointEvent(evt, reactor, nil)
@@ -379,6 +388,77 @@ func (client *NimbusClient) diffEndpointsDynamic(objList *netproto.EndpointList,
 		if err == nil {
 			mobj, err := protoTypes.MarshalAny(obj)
 			aggObj := netproto.AggObject{Kind: "Endpoint", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
+// diffFlowExportPolicysDynamic diffs local state with controller state
+func (client *NimbusClient) diffFlowExportPolicysDynamic(objList *netproto.FlowExportPolicyList, reactor FlowExportPolicyReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.FlowExportPolicy)
+	for _, obj := range objList.FlowExportPolicys {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	o := netproto.FlowExportPolicy{
+		TypeMeta: api.TypeMeta{Kind: "FlowExportPolicy"},
+	}
+
+	localObjs, err := reactor.HandleFlowExportPolicy(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: FlowExportPolicy | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListFlowExportPolicy()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.FlowExportPolicyEvent{
+					EventType: api.EventType_DeleteEvent,
+
+					FlowExportPolicy: &lobj,
+				}
+				log.Infof("diffFlowExportPolicys(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.FlowExportPolicy.GetObjectKind(), evt.FlowExportPolicy.ObjectMeta)
+				client.processFlowExportPolicyEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.FlowExportPolicys {
+		evt := netproto.FlowExportPolicyEvent{
+			EventType: api.EventType_UpdateEvent,
+
+			FlowExportPolicy: obj,
+		}
+		client.lockObject(evt.FlowExportPolicy.GetObjectKind(), evt.FlowExportPolicy.ObjectMeta)
+		err := client.processFlowExportPolicyEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := protoTypes.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "FlowExportPolicy", Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
 			robj := netproto.AggObjectEvent{
 				EventType: api.EventType_UpdateEvent,
@@ -424,7 +504,8 @@ func (client *NimbusClient) diffIPAMPolicysDynamic(objList *netproto.IPAMPolicyL
 			key := lobj.ObjectMeta.GetKey()
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.IPAMPolicyEvent{
-					EventType:  api.EventType_DeleteEvent,
+					EventType: api.EventType_DeleteEvent,
+
 					IPAMPolicy: lobj,
 				}
 				log.Infof("diffIPAMPolicys(): Deleting object %+v", lobj.ObjectMeta)
@@ -439,7 +520,8 @@ func (client *NimbusClient) diffIPAMPolicysDynamic(objList *netproto.IPAMPolicyL
 	// add/update all new objects
 	for _, obj := range objList.IPAMPolicys {
 		evt := netproto.IPAMPolicyEvent{
-			EventType:  api.EventType_UpdateEvent,
+			EventType: api.EventType_UpdateEvent,
+
 			IPAMPolicy: *obj,
 		}
 		client.lockObject(evt.IPAMPolicy.GetObjectKind(), evt.IPAMPolicy.ObjectMeta)
@@ -494,6 +576,7 @@ func (client *NimbusClient) diffInterfacesDynamic(objList *netproto.InterfaceLis
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.InterfaceEvent{
 					EventType: api.EventType_DeleteEvent,
+
 					Interface: lobj,
 				}
 				log.Infof("diffInterfaces(): Deleting object %+v", lobj.ObjectMeta)
@@ -509,6 +592,7 @@ func (client *NimbusClient) diffInterfacesDynamic(objList *netproto.InterfaceLis
 	for _, obj := range objList.Interfaces {
 		evt := netproto.InterfaceEvent{
 			EventType: api.EventType_UpdateEvent,
+
 			Interface: *obj,
 		}
 		client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
@@ -517,6 +601,77 @@ func (client *NimbusClient) diffInterfacesDynamic(objList *netproto.InterfaceLis
 		if err == nil {
 			mobj, err := protoTypes.MarshalAny(obj)
 			aggObj := netproto.AggObject{Kind: "Interface", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
+// diffMirrorSessionsDynamic diffs local state with controller state
+func (client *NimbusClient) diffMirrorSessionsDynamic(objList *netproto.MirrorSessionList, reactor MirrorSessionReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.MirrorSession)
+	for _, obj := range objList.MirrorSessions {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	o := netproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+	}
+
+	localObjs, err := reactor.HandleMirrorSession(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: MirrorSession | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListMirrorSession()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.MirrorSessionEvent{
+					EventType: api.EventType_DeleteEvent,
+
+					MirrorSession: &lobj,
+				}
+				log.Infof("diffMirrorSessions(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.MirrorSession.GetObjectKind(), evt.MirrorSession.ObjectMeta)
+				client.processMirrorSessionEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.MirrorSessions {
+		evt := netproto.MirrorSessionEvent{
+			EventType: api.EventType_UpdateEvent,
+
+			MirrorSession: obj,
+		}
+		client.lockObject(evt.MirrorSession.GetObjectKind(), evt.MirrorSession.ObjectMeta)
+		err := client.processMirrorSessionEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := protoTypes.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "MirrorSession", Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
 			robj := netproto.AggObjectEvent{
 				EventType: api.EventType_UpdateEvent,
@@ -563,7 +718,8 @@ func (client *NimbusClient) diffNetworksDynamic(objList *netproto.NetworkList, r
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.NetworkEvent{
 					EventType: api.EventType_DeleteEvent,
-					Network:   lobj,
+
+					Network: lobj,
 				}
 				log.Infof("diffNetworks(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
@@ -578,7 +734,8 @@ func (client *NimbusClient) diffNetworksDynamic(objList *netproto.NetworkList, r
 	for _, obj := range objList.Networks {
 		evt := netproto.NetworkEvent{
 			EventType: api.EventType_UpdateEvent,
-			Network:   *obj,
+
+			Network: *obj,
 		}
 		client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
 		err := client.processNetworkEvent(evt, reactor, nil)
@@ -631,7 +788,8 @@ func (client *NimbusClient) diffNetworkSecurityPolicysDynamic(objList *netproto.
 			key := lobj.ObjectMeta.GetKey()
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.NetworkSecurityPolicyEvent{
-					EventType:             api.EventType_DeleteEvent,
+					EventType: api.EventType_DeleteEvent,
+
 					NetworkSecurityPolicy: lobj,
 				}
 				log.Infof("diffNetworkSecurityPolicys(): Deleting object %+v", lobj.ObjectMeta)
@@ -646,7 +804,8 @@ func (client *NimbusClient) diffNetworkSecurityPolicysDynamic(objList *netproto.
 	// add/update all new objects
 	for _, obj := range objList.NetworkSecurityPolicys {
 		evt := netproto.NetworkSecurityPolicyEvent{
-			EventType:             api.EventType_UpdateEvent,
+			EventType: api.EventType_UpdateEvent,
+
 			NetworkSecurityPolicy: *obj,
 		}
 		client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
@@ -701,7 +860,8 @@ func (client *NimbusClient) diffProfilesDynamic(objList *netproto.ProfileList, r
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.ProfileEvent{
 					EventType: api.EventType_DeleteEvent,
-					Profile:   lobj,
+
+					Profile: lobj,
 				}
 				log.Infof("diffProfiles(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Profile.GetObjectKind(), evt.Profile.ObjectMeta)
@@ -716,7 +876,8 @@ func (client *NimbusClient) diffProfilesDynamic(objList *netproto.ProfileList, r
 	for _, obj := range objList.Profiles {
 		evt := netproto.ProfileEvent{
 			EventType: api.EventType_UpdateEvent,
-			Profile:   *obj,
+
+			Profile: *obj,
 		}
 		client.lockObject(evt.Profile.GetObjectKind(), evt.Profile.ObjectMeta)
 		err := client.processProfileEvent(evt, reactor, nil)
@@ -724,75 +885,6 @@ func (client *NimbusClient) diffProfilesDynamic(objList *netproto.ProfileList, r
 		if err == nil {
 			mobj, err := protoTypes.MarshalAny(obj)
 			aggObj := netproto.AggObject{Kind: "Profile", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
-				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
-			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
-			}
-			ostream.Unlock()
-		}
-	}
-}
-
-// diffRouteTablesDynamic diffs local state with controller state
-func (client *NimbusClient) diffRouteTablesDynamic(objList *netproto.RouteTableList, reactor RouteTableReactor,
-	ostream *AggWatchOStream) {
-	// build a map of objects
-	objmap := make(map[string]*netproto.RouteTable)
-	for _, obj := range objList.RouteTables {
-		key := obj.ObjectMeta.GetKey()
-		objmap[key] = obj
-	}
-
-	// see if we need to delete any locally found object
-	o := netproto.RouteTable{
-		TypeMeta: api.TypeMeta{Kind: "RouteTable"},
-	}
-
-	localObjs, err := reactor.HandleRouteTable(types.List, o)
-	if err != nil {
-		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RouteTable | Err: %v", types.Operation(types.List), err))
-	}
-	//localObjs := reactor.ListRouteTable()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.RouteTableEvent{
-					EventType:  api.EventType_DeleteEvent,
-					RouteTable: lobj,
-				}
-				log.Infof("diffRouteTables(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.RouteTable.GetObjectKind(), evt.RouteTable.ObjectMeta)
-				client.processRouteTableEvent(evt, reactor, nil)
-			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
-		}
-	}
-
-	// add/update all new objects
-	for _, obj := range objList.RouteTables {
-		evt := netproto.RouteTableEvent{
-			EventType:  api.EventType_UpdateEvent,
-			RouteTable: *obj,
-		}
-		client.lockObject(evt.RouteTable.GetObjectKind(), evt.RouteTable.ObjectMeta)
-		err := client.processRouteTableEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "RouteTable", Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
 			robj := netproto.AggObjectEvent{
 				EventType: api.EventType_UpdateEvent,
@@ -838,7 +930,8 @@ func (client *NimbusClient) diffRoutingConfigsDynamic(objList *netproto.RoutingC
 			key := lobj.ObjectMeta.GetKey()
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.RoutingConfigEvent{
-					EventType:     api.EventType_DeleteEvent,
+					EventType: api.EventType_DeleteEvent,
+
 					RoutingConfig: lobj,
 				}
 				log.Infof("diffRoutingConfigs(): Deleting object %+v", lobj.ObjectMeta)
@@ -853,7 +946,8 @@ func (client *NimbusClient) diffRoutingConfigsDynamic(objList *netproto.RoutingC
 	// add/update all new objects
 	for _, obj := range objList.RoutingConfigs {
 		evt := netproto.RoutingConfigEvent{
-			EventType:     api.EventType_UpdateEvent,
+			EventType: api.EventType_UpdateEvent,
+
 			RoutingConfig: *obj,
 		}
 		client.lockObject(evt.RoutingConfig.GetObjectKind(), evt.RoutingConfig.ObjectMeta)
@@ -907,7 +1001,8 @@ func (client *NimbusClient) diffSecurityProfilesDynamic(objList *netproto.Securi
 			key := lobj.ObjectMeta.GetKey()
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.SecurityProfileEvent{
-					EventType:       api.EventType_DeleteEvent,
+					EventType: api.EventType_DeleteEvent,
+
 					SecurityProfile: lobj,
 				}
 				log.Infof("diffSecurityProfiles(): Deleting object %+v", lobj.ObjectMeta)
@@ -922,7 +1017,8 @@ func (client *NimbusClient) diffSecurityProfilesDynamic(objList *netproto.Securi
 	// add/update all new objects
 	for _, obj := range objList.SecurityProfiles {
 		evt := netproto.SecurityProfileEvent{
-			EventType:       api.EventType_UpdateEvent,
+			EventType: api.EventType_UpdateEvent,
+
 			SecurityProfile: *obj,
 		}
 		client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
@@ -977,7 +1073,8 @@ func (client *NimbusClient) diffVrfsDynamic(objList *netproto.VrfList, reactor V
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.VrfEvent{
 					EventType: api.EventType_DeleteEvent,
-					Vrf:       lobj,
+
+					Vrf: lobj,
 				}
 				log.Infof("diffVrfs(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Vrf.GetObjectKind(), evt.Vrf.ObjectMeta)
@@ -992,7 +1089,8 @@ func (client *NimbusClient) diffVrfsDynamic(objList *netproto.VrfList, reactor V
 	for _, obj := range objList.Vrfs {
 		evt := netproto.VrfEvent{
 			EventType: api.EventType_UpdateEvent,
-			Vrf:       *obj,
+
+			Vrf: *obj,
 		}
 		client.lockObject(evt.Vrf.GetObjectKind(), evt.Vrf.ObjectMeta)
 		err := client.processVrfEvent(evt, reactor, nil)
@@ -1051,6 +1149,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 					msglist.Endpoints = append(msglist.Endpoints, obj.Message.(*netproto.Endpoint))
 					return
 
+				case "FlowExportPolicy":
+					msglist := lobj.objects.(*netproto.FlowExportPolicyList)
+					msglist.FlowExportPolicys = append(msglist.FlowExportPolicys, obj.Message.(*netproto.FlowExportPolicy))
+					return
+
 				case "IPAMPolicy":
 					msglist := lobj.objects.(*netproto.IPAMPolicyList)
 					msglist.IPAMPolicys = append(msglist.IPAMPolicys, obj.Message.(*netproto.IPAMPolicy))
@@ -1059,6 +1162,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 				case "Interface":
 					msglist := lobj.objects.(*netproto.InterfaceList)
 					msglist.Interfaces = append(msglist.Interfaces, obj.Message.(*netproto.Interface))
+					return
+
+				case "MirrorSession":
+					msglist := lobj.objects.(*netproto.MirrorSessionList)
+					msglist.MirrorSessions = append(msglist.MirrorSessions, obj.Message.(*netproto.MirrorSession))
 					return
 
 				case "Network":
@@ -1074,11 +1182,6 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 				case "Profile":
 					msglist := lobj.objects.(*netproto.ProfileList)
 					msglist.Profiles = append(msglist.Profiles, obj.Message.(*netproto.Profile))
-					return
-
-				case "RouteTable":
-					msglist := lobj.objects.(*netproto.RouteTableList)
-					msglist.RouteTables = append(msglist.RouteTables, obj.Message.(*netproto.RouteTable))
 					return
 
 				case "RoutingConfig":
@@ -1118,6 +1221,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 			msglist := listObj.objects.(*netproto.EndpointList)
 			msglist.Endpoints = append(msglist.Endpoints, obj.Message.(*netproto.Endpoint))
 
+		case "FlowExportPolicy":
+			listObj.objects = &netproto.FlowExportPolicyList{}
+			msglist := listObj.objects.(*netproto.FlowExportPolicyList)
+			msglist.FlowExportPolicys = append(msglist.FlowExportPolicys, obj.Message.(*netproto.FlowExportPolicy))
+
 		case "IPAMPolicy":
 			listObj.objects = &netproto.IPAMPolicyList{}
 			msglist := listObj.objects.(*netproto.IPAMPolicyList)
@@ -1127,6 +1235,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 			listObj.objects = &netproto.InterfaceList{}
 			msglist := listObj.objects.(*netproto.InterfaceList)
 			msglist.Interfaces = append(msglist.Interfaces, obj.Message.(*netproto.Interface))
+
+		case "MirrorSession":
+			listObj.objects = &netproto.MirrorSessionList{}
+			msglist := listObj.objects.(*netproto.MirrorSessionList)
+			msglist.MirrorSessions = append(msglist.MirrorSessions, obj.Message.(*netproto.MirrorSession))
 
 		case "Network":
 			listObj.objects = &netproto.NetworkList{}
@@ -1142,11 +1255,6 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 			listObj.objects = &netproto.ProfileList{}
 			msglist := listObj.objects.(*netproto.ProfileList)
 			msglist.Profiles = append(msglist.Profiles, obj.Message.(*netproto.Profile))
-
-		case "RouteTable":
-			listObj.objects = &netproto.RouteTableList{}
-			msglist := listObj.objects.(*netproto.RouteTableList)
-			msglist.RouteTables = append(msglist.RouteTables, obj.Message.(*netproto.RouteTable))
 
 		case "RoutingConfig":
 			listObj.objects = &netproto.RoutingConfigList{}
@@ -1188,11 +1296,17 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 		case "Endpoint":
 			client.diffEndpointsDynamic(lobj.objects.(*netproto.EndpointList), reactor.(EndpointReactor), ostream)
 
+		case "FlowExportPolicy":
+			client.diffFlowExportPolicysDynamic(lobj.objects.(*netproto.FlowExportPolicyList), reactor.(FlowExportPolicyReactor), ostream)
+
 		case "IPAMPolicy":
 			client.diffIPAMPolicysDynamic(lobj.objects.(*netproto.IPAMPolicyList), reactor.(IPAMPolicyReactor), ostream)
 
 		case "Interface":
 			client.diffInterfacesDynamic(lobj.objects.(*netproto.InterfaceList), reactor.(InterfaceReactor), ostream)
+
+		case "MirrorSession":
+			client.diffMirrorSessionsDynamic(lobj.objects.(*netproto.MirrorSessionList), reactor.(MirrorSessionReactor), ostream)
 
 		case "Network":
 			client.diffNetworksDynamic(lobj.objects.(*netproto.NetworkList), reactor.(NetworkReactor), ostream)
@@ -1202,9 +1316,6 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 
 		case "Profile":
 			client.diffProfilesDynamic(lobj.objects.(*netproto.ProfileList), reactor.(ProfileReactor), ostream)
-
-		case "RouteTable":
-			client.diffRouteTablesDynamic(lobj.objects.(*netproto.RouteTableList), reactor.(RouteTableReactor), ostream)
 
 		case "RoutingConfig":
 			client.diffRoutingConfigsDynamic(lobj.objects.(*netproto.RoutingConfigList), reactor.(RoutingConfigReactor), ostream)
@@ -1284,6 +1395,18 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
+		case "FlowExportPolicy":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
+			if _, ok := reactor.(FlowExportPolicyReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "FlowExportPolicyReactor")
+			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(FlowExportPolicyReactor).GetWatchOptions(ctx, "FlowExportPolicy")
+			aggKind.Options = listWatchOptions
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
+
 		case "IPAMPolicy":
 			//Make sure all kinds are implemented by the reactor to avoid later failures
 			if _, ok := reactor.(IPAMPolicyReactor); !ok {
@@ -1305,6 +1428,18 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			aggKind.Kind = kind
 			aggKind.Group = "netproto"
 			listWatchOptions := reactor.(InterfaceReactor).GetWatchOptions(ctx, "Interface")
+			aggKind.Options = listWatchOptions
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
+
+		case "MirrorSession":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
+			if _, ok := reactor.(MirrorSessionReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "MirrorSessionReactor")
+			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(MirrorSessionReactor).GetWatchOptions(ctx, "MirrorSession")
 			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
@@ -1341,18 +1476,6 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			aggKind.Kind = kind
 			aggKind.Group = "netproto"
 			listWatchOptions := reactor.(ProfileReactor).GetWatchOptions(ctx, "Profile")
-			aggKind.Options = listWatchOptions
-			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
-
-		case "RouteTable":
-			//Make sure all kinds are implemented by the reactor to avoid later failures
-			if _, ok := reactor.(RouteTableReactor); !ok {
-				return fmt.Errorf("Reactor does not implement %v", "RouteTableReactor")
-			}
-			aggKind := api.KindWatchOptions{}
-			aggKind.Kind = kind
-			aggKind.Group = "netproto"
-			listWatchOptions := reactor.(RouteTableReactor).GetWatchOptions(ctx, "RouteTable")
 			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 

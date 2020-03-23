@@ -23,6 +23,7 @@ service TunnelApiV1 {
         Method: ["list", "get", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
         Prefix: "api/tunnels"
+        Version: "V1"
     };
 
 //    rpc GetTunnel (api.ObjectMeta) returns (Tunnel) {};

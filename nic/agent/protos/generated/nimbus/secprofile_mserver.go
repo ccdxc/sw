@@ -418,7 +418,8 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(watchOptions *api.ListWatc
 	watchEvts := netproto.SecurityProfileEventList{}
 	for _, obj := range objlist.SecurityProfiles {
 		watchEvt := netproto.SecurityProfileEvent{
-			EventType:       api.EventType_CreateEvent,
+			EventType: api.EventType_CreateEvent,
+
 			SecurityProfile: *obj,
 		}
 		watchEvts.SecurityProfileEvents = append(watchEvts.SecurityProfileEvents, &watchEvt)
@@ -476,7 +477,8 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(watchOptions *api.ListWatc
 
 			// convert to netproto format
 			watchEvt := netproto.SecurityProfileEvent{
-				EventType:       etype,
+				EventType: etype,
+
 				SecurityProfile: *obj,
 			}
 			watchEvts.SecurityProfileEvents = append(watchEvts.SecurityProfileEvents, &watchEvt)
@@ -519,7 +521,9 @@ func (eh *SecurityProfileTopic) updateSecurityProfileOper(oper *netproto.Securit
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			return eh.statusReactor.OnSecurityProfileOperUpdate(nodeID, &oper.SecurityProfile)
+
 		}
 	case api.EventType_DeleteEvent:
 		// incr stats
@@ -527,7 +531,9 @@ func (eh *SecurityProfileTopic) updateSecurityProfileOper(oper *netproto.Securit
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			eh.statusReactor.OnSecurityProfileOperDelete(nodeID, &oper.SecurityProfile)
+
 		}
 	}
 

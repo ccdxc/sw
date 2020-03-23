@@ -126,7 +126,7 @@ const (
 
 func (inst *InstanceParams) getNicMgmtIP() (string, error) {
 
-	useInband := false
+	useInband := true
 	if inst.Resource.InbandMgmt {
 		useInband = true
 	}
@@ -527,7 +527,7 @@ func (tb *TestBed) addAvailableInstance(instance *InstanceParams) error {
 }
 
 //sendCommandToNaples utility to send command to naples
-func sendCommandToNaples(consoleIP, consolePort, cmd string) error {
+func sendCommandToNaples(consoleIP, consolePort string, cmds []string) error {
 
 	timeout := 10 * time.Second
 	prompt := regexp.MustCompile("#")
@@ -548,16 +548,19 @@ func sendCommandToNaples(consoleIP, consolePort, cmd string) error {
 	}
 	defer e.Close()
 
-	e.Expect(prompt, timeout)
-	e.Send(cmd + "\n")
-	e.Expect(prompt, timeout)
-	e.Send("exit\n")
+	for _, cmd := range cmds {
+		log.Infof("Sending cmd %v to %v %v", cmd, consoleIP, consolePort)
+		e.Expect(prompt, timeout)
+		e.Send(cmd + "\n")
+		e.Expect(prompt, timeout)
+	}
 
 	return nil
 }
 
 func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality iota.PersonalityType, node *TestNode) error {
 
+	var err error
 	// check if testbed node can take this personality
 	switch nodeType {
 	case iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM:
@@ -673,9 +676,10 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 						Name:           node.NodeName + "_naples" + "-" + strconv.Itoa(nicID),
 						NicHint:        port.MAC,
 					}
-					if tb.useNaplesMgmt {
-						//FIXME : First one is oob, so should be good for now
-						config.NaplesIpAddress = port.IP
+					//FIXME: for muliple naples
+					config.NaplesIpAddress, err = node.instParams.getNicMgmtIP()
+					if err != nil {
+						return err
 					}
 					node.NaplesConfigs.Configs = append(node.NaplesConfigs.Configs, config)
 					break
@@ -1208,8 +1212,22 @@ func (tb *TestBed) initNodeState() error {
 	return nil
 }
 
+//SendSerialCommandToNaples send a serial command to naples
+func (tb *TestBed) SendSerialCommandToNaples(nodeName string, cmds []string) error {
+	for _, node := range tb.Nodes {
+		if node.NodeName == nodeName {
+			return sendCommandToNaples(node.InstanceParams().NicConsoleIP,
+				node.InstanceParams().NicConsolePort, cmds)
+		}
+	}
+	return fmt.Errorf("Naples %v not found", nodeName)
+}
+
 // Start logging naples
 func (tb *TestBed) StartNaplesConsoleLogging() error {
+
+	log.Infof("Skipping console log capturing.")
+	return nil
 
 	if os.Getenv("NO_CONSOLE_LOG") != "" {
 		log.Infof("Skipping console log capturing.")

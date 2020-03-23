@@ -80,6 +80,9 @@ type ObjClient interface {
 	GetSmartNIC(name string) (sn *cluster.DistributedServiceCard, err error)
 	ListSmartNIC() (snl []*cluster.DistributedServiceCard, err error)
 	UpdateSmartNIC(sn *cluster.DistributedServiceCard) error
+	DecommissionSmartNIC(sn *cluster.DistributedServiceCard) error
+	AdmitSmartNIC(sn *cluster.DistributedServiceCard) error
+	DeleteSmartNIC(sn *cluster.DistributedServiceCard) error
 	GetSmartNICByName(snicName string) (sn *cluster.DistributedServiceCard, err error)
 
 	AddClusterNode(node *cluster.Node) (err error)
@@ -896,6 +899,47 @@ func (r *Client) UpdateSmartNIC(sn *cluster.DistributedServiceCard) error {
 		if err == nil {
 			break
 		}
+	}
+	return err
+}
+
+// DecommissionSmartNIC decommission it
+func (r *Client) DecommissionSmartNIC(sn *cluster.DistributedServiceCard) error {
+	var err error
+	sn.Spec.MgmtMode = cluster.DistributedServiceCardSpec_HOST.String()
+	for _, restcl := range r.restcls {
+		_, err = restcl.ClusterV1().DistributedServiceCard().Update(r.ctx, sn)
+		if err == nil {
+			break
+		}
+		log.Errorf("Error in decomissioning naples %v", err.Error())
+	}
+	return err
+}
+
+// AdmitSmartNIC decommission it
+func (r *Client) AdmitSmartNIC(sn *cluster.DistributedServiceCard) error {
+	var err error
+	sn.Spec.Admit = true
+	for _, restcl := range r.restcls {
+		_, err = restcl.ClusterV1().DistributedServiceCard().Update(r.ctx, sn)
+		if err == nil {
+			break
+		}
+		log.Errorf("Error in admitting naples %v", err.Error())
+	}
+	return err
+}
+
+// DeleteSmartNIC
+func (r *Client) DeleteSmartNIC(sn *cluster.DistributedServiceCard) error {
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.ClusterV1().DistributedServiceCard().Delete(r.ctx, &sn.ObjectMeta)
+		if err == nil {
+			break
+		}
+		log.Errorf("Error in deleting naples %v", err.Error())
 	}
 	return err
 }

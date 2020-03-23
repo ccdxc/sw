@@ -42,17 +42,17 @@ type API struct {
 	sync.Mutex
 	sync.WaitGroup
 	//watchMutex                                sync.Mutex     // This prevents nimbus internal wg reuse panic that happens on calling WatchAggregate while wg.Wait() is getting evaluated.
-	tsmWG, tpmWG                              sync.WaitGroup // TODO Temporary WGs till TPM and TSM move to nimbus and agg watch
-	nimbusClient                              *nimbus.NimbusClient
-	WatchCtx                                  context.Context
-	PipelineAPI                               types.PipelineAPI
-	InfraAPI                                  types.InfraAPI
-	ResolverClient                            resolver.Interface
-	RestServer                                *http.Server
-	npmClient, tsmClient, tpmClient, ifClient *rpckit.RPCClient
-	cancelWatcher                             context.CancelFunc
-	factory                                   *rpckit.RPCClientFactory
-	npmURL, tpmURL, tsmURL                    string
+	tsmWG, tpmWG           sync.WaitGroup // TODO Temporary WGs till TPM and TSM move to nimbus and agg watch
+	nimbusClient           *nimbus.NimbusClient
+	WatchCtx               context.Context
+	PipelineAPI            types.PipelineAPI
+	InfraAPI               types.InfraAPI
+	ResolverClient         resolver.Interface
+	RestServer             *http.Server
+	npmClient, ifClient    *rpckit.RPCClient
+	cancelWatcher          context.CancelFunc
+	factory                *rpckit.RPCClientFactory
+	npmURL, tpmURL, tsmURL string
 }
 
 // RestServer implements REST APIs
@@ -232,25 +232,13 @@ func (c *API) Start(ctx context.Context) error {
 			rpckit.WithBalancer(balancer.New(c.ResolverClient)),
 			rpckit.WithRemoteServerName(types.Npm))
 
-		c.tsmClient, _ = c.factory.NewRPCClient(
-			c.InfraAPI.GetDscName(),
-			c.tsmURL,
-			rpckit.WithBalancer(balancer.New(c.ResolverClient)),
-			rpckit.WithRemoteServerName(types.Tsm))
-
-		c.tpmClient, _ = c.factory.NewRPCClient(
-			c.InfraAPI.GetDscName(),
-			c.tpmURL,
-			rpckit.WithBalancer(balancer.New(c.ResolverClient)),
-			rpckit.WithRemoteServerName(types.Tpm))
-
 		c.ifClient, _ = c.factory.NewRPCClient(
 			c.InfraAPI.GetDscName(),
 			c.npmURL,
 			rpckit.WithBalancer(balancer.New(c.ResolverClient)),
 			rpckit.WithRemoteServerName(types.Npm))
 
-		if c.npmClient != nil && c.tpmClient != nil && c.tsmClient != nil && c.ifClient != nil {
+		if c.npmClient != nil && c.ifClient != nil {
 			log.Infof("Controller API: %s", types.InfoConnectedToNPM)
 			log.Infof("Controller API: %s", types.InfoConnectedToTSM)
 			log.Infof("Controller API: %s", types.InfoConnectedToTPM)
@@ -307,28 +295,8 @@ func (c *API) Start(ctx context.Context) error {
 
 		go c.netIfWorker(ctx)
 
-		c.tsmWG.Add(1)
-		tsmWatchCtx, tsmWatchCancel := context.WithCancel(c.WatchCtx)
-		go func() {
-			// TODO move this to AggWatch
-			if err := c.runMirrorSessionWatcher(tsmWatchCtx); err != nil {
-				log.Error(errors.Wrapf(types.ErrMirrorSessionWatch, "Controller API: %s", err))
-			}
-		}()
-
-		c.tpmWG.Add(1)
-		tpmWatchCtx, tpmWatchCancel := context.WithCancel(c.WatchCtx)
-		go func() {
-			// TODO move this to AggWatch
-			if err := c.runFlowExportPolicyWatcher(tpmWatchCtx); err != nil {
-				log.Error(errors.Wrapf(types.ErrFlowExportPolicyWatch, "Controller API: %s", err))
-			}
-		}()
-
 		// TODO Watch for Mirror and NetflowSessions
 		<-watchExited
-		tsmWatchCancel()
-		tpmWatchCancel()
 	}
 }
 
@@ -475,230 +443,7 @@ func (c *API) Stop() error {
 		}
 	}
 
-	if c.tsmClient != nil {
-		if err := c.tsmClient.Close(); err != nil {
-			log.Error(errors.Wrapf(types.ErrTSMWatcherClose, "Controller API: %s", err))
-		}
-	}
-
-	if c.tpmClient != nil {
-		if err := c.tpmClient.Close(); err != nil {
-			log.Error(errors.Wrapf(types.ErrTPMWatcherClose, "Controller API: %s", err))
-		}
-	}
-
 	return nil
-}
-
-func (c *API) runMirrorSessionWatcher(ctx context.Context) error {
-	defer c.tsmWG.Done()
-	for {
-		select {
-		case <-ctx.Done():
-			log.Infof("Controller API: %s", types.InfoTSMWatcherDone)
-			return nil
-		default:
-		}
-
-		mirrorClient := netproto.NewMirrorSessionApiV1Client(c.tsmClient.ClientConn)
-		if c.tsmClient == nil || mirrorClient == nil {
-			log.Error(errors.Wrapf(types.ErrTSMUnavailable, "Controller API: %v", c))
-			return errors.Wrapf(types.ErrTSMUnavailable, "Controller API: %v", c)
-		}
-		stream, err := mirrorClient.WatchMirrorSessions(c.WatchCtx, &api.ObjectMeta{})
-		if err != nil || stream == nil {
-			log.Error(errors.Wrapf(types.ErrMirrorSessionStream, "Controller API: %s", err))
-			return errors.Wrapf(types.ErrMirrorSessionStream, "Controller API: %s", err)
-		}
-
-		mc := make(chan *netproto.MirrorSessionEventList)
-		go func() {
-			defer close(mc)
-			for {
-				evtList, err := stream.Recv()
-				if err != nil {
-					log.Errorf("Error receiving from watch channel. Exiting trouble shooting watch. Err: %v", err)
-					return
-				}
-				mc <- evtList
-			}
-		}()
-
-	loop:
-		for {
-			select {
-			case evtList, ok := <-mc:
-				if !ok { // channel closed
-					log.Errorf("exit processing mirror policy")
-					time.Sleep(time.Second)
-					break loop
-				}
-				for _, evt := range evtList.MirrorSessionEvents {
-					func() {
-						log.Infof("Got Mirror Session Event. Evt: %v | Info: %s ", evt, types.InfoMirrorSessionEvt)
-						// Retry hardcoded
-						for iter := 0; iter < 3; iter++ {
-							var err error
-							var oper types.Operation
-
-							switch evt.EventType {
-							case api.EventType_CreateEvent:
-								oper = types.Create
-							case api.EventType_UpdateEvent:
-								oper = types.Update
-							case api.EventType_DeleteEvent:
-								oper = types.Delete
-							default:
-								log.Errorf("Invalid mirror event type: {%+v}", evt.EventType)
-								return
-							}
-
-							if _, err = c.PipelineAPI.HandleMirrorSession(oper, *evt.MirrorSession); err != nil {
-								log.Error(errors.Wrapf(types.ErrMirrorSessionControllerHandle, "Controller API: Oper: %s | Err: %s", oper.String(), err))
-							}
-
-							if err == nil { // return on success
-								return
-							}
-
-							log.Errorf("failed to apply %v %v, error: %v", evt.MirrorSession.GetName(), evt.EventType, err)
-							time.Sleep(time.Second * 5)
-						}
-
-						//recorder.Event(eventtypes.CONFIG_FAIL, fmt.Sprintf("Failed to %v %v %v",
-						//	strings.Split(strings.ToLower(evt.EventType.String()), "-event")[0], evt.MirrorSession.Kind, evt.MirrorSession.Name), evt.MirrorSession)
-					}()
-				}
-				// Resyncs are going to go away once mirror moves to agg watch
-				//case <-time.After(types.SyncInterval):
-				//	eventList, err := mirrorClient.ListMirrorSessions(ctx, &api.ObjectMeta{})
-				//	if err == nil {
-				//		ctrlMs := map[string]*netproto.MirrorSession{}
-				//		for i := range eventList.MirrorSessionEvents {
-				//			ev := eventList.MirrorSessionEvents[i]
-				//			ctrlMs[ev.MirrorSession.GetKey()] = ev.MirrorSession
-				//		}
-				//
-				//		// read policy from agent
-				//		agMs := client.tsagent.ListMirrorSession()
-				//		for _, pol := range agMs {
-				//			if _, ok := ctrlMs[pol.GetKey()]; !ok {
-				//				log.Infof("sync deleting mirror session %v", pol.GetKey())
-				//				if err := client.tsagent.DeleteMirrorSession(pol); err != nil {
-				//					log.Errorf("failed to delete %v, err: %v", pol.GetKey(), err)
-				//				}
-				//			}
-				//		}
-				//	}
-			}
-		}
-	}
-}
-
-func (c *API) runFlowExportPolicyWatcher(ctx context.Context) error {
-	defer c.tpmWG.Done()
-	for {
-		select {
-		case <-ctx.Done():
-			log.Infof("Controller API: %s", types.InfoTPMWatcherDone)
-			return nil
-		default:
-		}
-
-		if c.tpmClient == nil {
-			log.Error(errors.Wrapf(types.ErrTPMUnavailable, "Controller API: %v", c))
-			return errors.Wrapf(types.ErrTPMUnavailable, "Controller API: %v", c)
-		}
-
-		netflowClient := netproto.NewFlowExportPolicyApiV1Client(c.tpmClient.ClientConn)
-		stream, err := netflowClient.WatchFlowExportPolicy(c.WatchCtx, &api.ObjectMeta{})
-		if err != nil || stream == nil {
-			log.Error(errors.Wrapf(types.ErrFlowExportPolicyStream, "Controller API: %s", err))
-			return errors.Wrapf(types.ErrFlowExportPolicyStream, "Controller API: %s", err)
-		}
-
-		mc := make(chan *netproto.FlowExportPolicyEventList)
-		go func() {
-			defer close(mc)
-			for {
-				evtList, err := stream.Recv()
-				if err != nil {
-					log.Errorf("Error receiving from watch channel. Exiting trouble shooting watch. Err: %v", err)
-					return
-				}
-				mc <- evtList
-			}
-		}()
-
-	loop:
-		for {
-			select {
-			case evtList, ok := <-mc:
-				if !ok { // channel closed
-					log.Errorf("exit processing netflow policy")
-					time.Sleep(time.Second)
-					break loop
-				}
-				for _, evt := range evtList.FlowExportPolicyEvents {
-					func() {
-						log.Infof("Got Mirror Session Event. Evt: %v | Info: %s ", evt, types.InfoFlowExportPolicyEvt)
-						// Retry hardcoded
-						for iter := 0; iter < 3; iter++ {
-							var err error
-							var oper types.Operation
-
-							switch evt.EventType {
-							case api.EventType_CreateEvent:
-								oper = types.Create
-							case api.EventType_UpdateEvent:
-								oper = types.Update
-							case api.EventType_DeleteEvent:
-								oper = types.Delete
-							default:
-								log.Errorf("Invalid netflow event type: {%+v}", evt.EventType)
-								return
-							}
-
-							if _, err = c.PipelineAPI.HandleFlowExportPolicy(oper, *evt.Policy); err != nil {
-								log.Error(errors.Wrapf(types.ErrFlowExportPolicyControllerHandle, "Controller API: Oper: %s | Err: %s", oper.String(), err))
-							}
-
-							if err == nil { // return on success
-								return
-							}
-
-							log.Errorf("failed to apply %v %v, error: %v", evt.Policy.GetName(), evt.EventType, err)
-							time.Sleep(time.Second * 5)
-						}
-
-						//recorder.Event(eventtypes.CONFIG_FAIL, fmt.Sprintf("Failed to %v %v %v",
-						//	strings.Split(strings.ToLower(evt.EventType.String()), "-event")[0], evt.Policy.Kind, evt.Policy.Name), evt.Policy)
-					}()
-				}
-				// Resyncs are going to go away once netflow moves to agg watch
-				//case <-time.After(types.SyncInterval):
-				//	eventList, err := netflowClient.ListFlowExportPolicys(ctx, &api.ObjectMeta{})
-				//	if err == nil {
-				//		ctrlMs := map[string]*netproto.FlowExportPolicy{}
-				//		for i := range eventList.FlowExportPolicyEvents {
-				//			ev := eventList.FlowExportPolicyEvents[i]
-				//			ctrlMs[ev.FlowExportPolicy.GetKey()] = ev.FlowExportPolicy
-				//		}
-				//
-				//		// read policy from agent
-				//		agMs := client.tsagent.ListFlowExportPolicy()
-				//		for _, pol := range agMs {
-				//			if _, ok := ctrlMs[pol.GetKey()]; !ok {
-				//				log.Infof("sync deleting netflow session %v", pol.GetKey())
-				//				if err := client.tsagent.DeleteFlowExportPolicy(pol); err != nil {
-				//					log.Errorf("failed to delete %v, err: %v", pol.GetKey(), err)
-				//				}
-				//			}
-				//		}
-				//	}
-			}
-		}
-	}
 }
 
 func (c *API) netIfWorker(ctx context.Context) {

@@ -560,6 +560,17 @@
       },
       "description": "mirror watch events batched."
     },
+    "netprotoMirrorSessionList": {
+      "type": "object",
+      "properties": {
+        "MirrorSessions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoMirrorSession"
+          }
+        }
+      }
+    },
     "netprotoMirrorSessionSpec": {
       "type": "object",
       "required": [

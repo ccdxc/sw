@@ -14,6 +14,7 @@ import (
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
+	cfgModel "github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise/base"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/common"
@@ -46,11 +47,13 @@ type SysModel struct {
 	NoSetupDataPathAfterSwitch bool     // temp flag to set up datapath post naples
 	AutoDiscovery              bool     //whether discovery of venice from naples is auto
 
-	Tb *testbed.TestBed // testbed
+	SkipSetup  bool             //to do skip setup or not
+	SkipConfig bool             //to do skip reboot or not
+	Tb         *testbed.TestBed // testbed
 
 }
 
-func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType) error {
+func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSetup bool) error {
 	sm.Tb = tb
 	sm.NaplesHosts = make(map[string]*objects.Host)
 	sm.ThirdPartyHosts = make(map[string]*objects.Host)
@@ -63,7 +66,13 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType) error 
 	sm.FakeHosts = make(map[string]*objects.Host)
 	sm.WorkloadsObjs = make(map[string]*objects.Workload)
 
+	sm.SkipSetup = os.Getenv("SKIP_SETUP") != "" || skipSetup
+
 	return nil
+}
+
+func (sm *SysModel) Testbed() *testbed.TestBed {
+	return sm.Tb
 }
 
 func (sm *SysModel) ConfigClient() objClient.ObjClient {
@@ -118,8 +127,7 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 	}
 
 	//ReadNaples IP address from the json
-	skipSetup := os.Getenv("SKIP_SETUP")
-	if skipSetup != "" {
+	if sm.SkipSetup {
 		return sm.RestoreClusterDefaults(sm.Tb.Nodes)
 	}
 
@@ -778,7 +786,17 @@ func (sm *SysModel) DefaultNetworkSecurityPolicy() *objects.NetworkSecurityPolic
 
 // Networks returns a list of subnets
 func (sm *SysModel) Networks() *objects.NetworkCollection {
-	return nil
+	snc := objects.NetworkCollection{}
+	nws, err := sm.CfgModel.ListNetwork("")
+	if err != nil {
+		log.Errorf("Error listing networks %v", err)
+		return nil
+	}
+	for _, sn := range nws {
+		snc.AddSubnet(&objects.Network{VeniceNetwork: sn})
+	}
+
+	return &snc
 }
 
 // NewMirrorSession creates a new mirrorsession
@@ -806,4 +824,33 @@ func (sm *SysModel) QueryDropMetricsForWorkloadPairs(wpc *objects.WorkloadPairCo
 
 func (sm *SysModel) VerifyRuleStats(timestr string, spc *objects.NetworkSecurityPolicyCollection, minCounts []map[string]float64) error {
 	return errors.New("Not implemented")
+}
+
+func getCfgModelType(mtype testbed.ModelType) cfgModel.CfgType {
+	switch mtype {
+	case testbed.VcenterModel:
+		return cfgModel.VcenterCfgType
+	case testbed.CloudModel:
+		return cfgModel.VcenterCfgType
+	case testbed.BaseNetModel:
+		return cfgModel.VcenterCfgType
+	}
+
+	return cfgModel.GsCfgType
+}
+
+//SetConfigModel changes config model
+func (sm *SysModel) SetConfigModel(mType testbed.ModelType) error {
+
+	sm.CfgModel = enterprise.NewCfgModel(getCfgModelType(mType))
+	log.Infof("Setting config Model to %v ", mType)
+	if sm.CfgModel == nil {
+		return errors.New("could not initialize config objects")
+	}
+	err := sm.InitCfgModel()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

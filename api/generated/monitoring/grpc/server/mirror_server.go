@@ -49,6 +49,7 @@ func (s *smonitoringMirrorBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 	s.Messages = map[string]apiserver.Message{
 
 		"monitoring.AppProtoSelector":   apisrvpkg.NewMessage("monitoring.AppProtoSelector"),
+		"monitoring.InterfaceMirror":    apisrvpkg.NewMessage("monitoring.InterfaceMirror"),
 		"monitoring.MatchRule":          apisrvpkg.NewMessage("monitoring.MatchRule"),
 		"monitoring.MatchSelector":      apisrvpkg.NewMessage("monitoring.MatchSelector"),
 		"monitoring.MirrorCollector":    apisrvpkg.NewMessage("monitoring.MirrorCollector"),

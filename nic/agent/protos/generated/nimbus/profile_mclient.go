@@ -176,7 +176,8 @@ func (client *NimbusClient) diffProfiles(objList *netproto.ProfileList, reactor 
 			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.ProfileEvent{
 					EventType: api.EventType_DeleteEvent,
-					Profile:   lobj,
+
+					Profile: lobj,
 				}
 				log.Infof("diffProfiles(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Profile.GetObjectKind(), evt.Profile.ObjectMeta)
@@ -194,7 +195,8 @@ func (client *NimbusClient) diffProfiles(objList *netproto.ProfileList, reactor 
 	for _, obj := range objmap {
 		evt := netproto.ProfileEvent{
 			EventType: api.EventType_UpdateEvent,
-			Profile:   *obj,
+
+			Profile: *obj,
 		}
 		client.lockObject(evt.Profile.GetObjectKind(), evt.Profile.ObjectMeta)
 		client.processProfileEvent(evt, reactor, ostream)
@@ -221,10 +223,14 @@ func (client *NimbusClient) processProfileEvent(evt netproto.ProfileEvent, react
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
+
 			_, err = reactor.HandleProfile(types.Get, evt.Profile)
+
 			if err != nil {
 				// create the Profile
+
 				_, err = reactor.HandleProfile(types.Create, evt.Profile)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Profile | Key: %s | Err: %v", types.Operation(types.Create), evt.Profile.GetKey(), err))
 					client.debugStats.AddInt("CreateProfileError", 1)
@@ -233,7 +239,9 @@ func (client *NimbusClient) processProfileEvent(evt netproto.ProfileEvent, react
 				}
 			} else {
 				// update the Profile
+
 				_, err = reactor.HandleProfile(types.Update, evt.Profile)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Profile | Key: %s | Err: %v", types.Operation(types.Update), evt.Profile.GetKey(), err))
 					client.debugStats.AddInt("UpdateProfileError", 1)
@@ -244,7 +252,9 @@ func (client *NimbusClient) processProfileEvent(evt netproto.ProfileEvent, react
 
 		case api.EventType_DeleteEvent:
 			// update the Profile
+
 			_, err = reactor.HandleProfile(types.Delete, evt.Profile)
+
 			if err != nil {
 				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Profile | Key: %s | Err: %v", types.Operation(types.Delete), evt.Profile.GetKey(), err))
 				client.debugStats.AddInt("DeleteProfileError", 1)
@@ -258,9 +268,11 @@ func (client *NimbusClient) processProfileEvent(evt netproto.ProfileEvent, react
 		}
 		// send oper status and return if there is no error
 		if err == nil {
+
 			robj := netproto.ProfileEvent{
 				EventType: evt.EventType,
 				Profile: netproto.Profile{
+
 					TypeMeta:   evt.Profile.TypeMeta,
 					ObjectMeta: evt.Profile.ObjectMeta,
 					Status:     evt.Profile.Status,
@@ -271,7 +283,9 @@ func (client *NimbusClient) processProfileEvent(evt netproto.ProfileEvent, react
 			ostream.Lock()
 			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.Profile.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
 			err := ostream.stream.Send(&robj)
+
 			if err != nil {
 				log.Errorf("failed to send Profile oper Status, %s", err)
 				client.debugStats.AddInt("ProfileOperSendError", 1)
@@ -295,7 +309,8 @@ func (client *NimbusClient) processProfileDynamic(evt api.EventType,
 
 	profileEvt := netproto.ProfileEvent{
 		EventType: evt,
-		Profile:   *object,
+
+		Profile: *object,
 	}
 
 	// add venice label to the object

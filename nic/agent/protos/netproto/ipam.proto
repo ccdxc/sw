@@ -18,6 +18,7 @@ service IPAMPolicyApiV1 {
         Method: ["list"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
         Prefix: "api/ipam-policies"
+        Version: "V1"
     };
 
     rpc ListIPAMPolicys (api.ListWatchOptions) returns (IPAMPolicyList) {};

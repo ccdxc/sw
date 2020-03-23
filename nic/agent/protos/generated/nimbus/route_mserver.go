@@ -418,7 +418,8 @@ func (eh *RouteTableTopic) WatchRouteTables(watchOptions *api.ListWatchOptions, 
 	watchEvts := netproto.RouteTableEventList{}
 	for _, obj := range objlist.RouteTables {
 		watchEvt := netproto.RouteTableEvent{
-			EventType:  api.EventType_CreateEvent,
+			EventType: api.EventType_CreateEvent,
+
 			RouteTable: *obj,
 		}
 		watchEvts.RouteTableEvents = append(watchEvts.RouteTableEvents, &watchEvt)
@@ -476,7 +477,8 @@ func (eh *RouteTableTopic) WatchRouteTables(watchOptions *api.ListWatchOptions, 
 
 			// convert to netproto format
 			watchEvt := netproto.RouteTableEvent{
-				EventType:  etype,
+				EventType: etype,
+
 				RouteTable: *obj,
 			}
 			watchEvts.RouteTableEvents = append(watchEvts.RouteTableEvents, &watchEvt)
@@ -519,7 +521,9 @@ func (eh *RouteTableTopic) updateRouteTableOper(oper *netproto.RouteTableEvent, 
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			return eh.statusReactor.OnRouteTableOperUpdate(nodeID, &oper.RouteTable)
+
 		}
 	case api.EventType_DeleteEvent:
 		// incr stats
@@ -527,7 +531,9 @@ func (eh *RouteTableTopic) updateRouteTableOper(oper *netproto.RouteTableEvent, 
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			eh.statusReactor.OnRouteTableOperDelete(nodeID, &oper.RouteTable)
+
 		}
 	}
 
@@ -949,7 +955,8 @@ func (eh *RoutingConfigTopic) WatchRoutingConfigs(watchOptions *api.ListWatchOpt
 	watchEvts := netproto.RoutingConfigEventList{}
 	for _, obj := range objlist.RoutingConfigs {
 		watchEvt := netproto.RoutingConfigEvent{
-			EventType:     api.EventType_CreateEvent,
+			EventType: api.EventType_CreateEvent,
+
 			RoutingConfig: *obj,
 		}
 		watchEvts.RoutingConfigEvents = append(watchEvts.RoutingConfigEvents, &watchEvt)
@@ -1007,7 +1014,8 @@ func (eh *RoutingConfigTopic) WatchRoutingConfigs(watchOptions *api.ListWatchOpt
 
 			// convert to netproto format
 			watchEvt := netproto.RoutingConfigEvent{
-				EventType:     etype,
+				EventType: etype,
+
 				RoutingConfig: *obj,
 			}
 			watchEvts.RoutingConfigEvents = append(watchEvts.RoutingConfigEvents, &watchEvt)
@@ -1050,7 +1058,9 @@ func (eh *RoutingConfigTopic) updateRoutingConfigOper(oper *netproto.RoutingConf
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			return eh.statusReactor.OnRoutingConfigOperUpdate(nodeID, &oper.RoutingConfig)
+
 		}
 	case api.EventType_DeleteEvent:
 		// incr stats
@@ -1058,7 +1068,9 @@ func (eh *RoutingConfigTopic) updateRoutingConfigOper(oper *netproto.RoutingConf
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			eh.statusReactor.OnRoutingConfigOperDelete(nodeID, &oper.RoutingConfig)
+
 		}
 	}
 

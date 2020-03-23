@@ -175,7 +175,8 @@ func (client *NimbusClient) diffIPAMPolicys(objList *netproto.IPAMPolicyList, re
 			key := lobj.ObjectMeta.GetKey()
 			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.IPAMPolicyEvent{
-					EventType:  api.EventType_DeleteEvent,
+					EventType: api.EventType_DeleteEvent,
+
 					IPAMPolicy: lobj,
 				}
 				log.Infof("diffIPAMPolicys(): Deleting object %+v", lobj.ObjectMeta)
@@ -193,7 +194,8 @@ func (client *NimbusClient) diffIPAMPolicys(objList *netproto.IPAMPolicyList, re
 	// add/update all new objects
 	for _, obj := range objmap {
 		evt := netproto.IPAMPolicyEvent{
-			EventType:  api.EventType_UpdateEvent,
+			EventType: api.EventType_UpdateEvent,
+
 			IPAMPolicy: *obj,
 		}
 		client.lockObject(evt.IPAMPolicy.GetObjectKind(), evt.IPAMPolicy.ObjectMeta)
@@ -221,10 +223,14 @@ func (client *NimbusClient) processIPAMPolicyEvent(evt netproto.IPAMPolicyEvent,
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
+
 			_, err = reactor.HandleIPAMPolicy(types.Get, evt.IPAMPolicy)
+
 			if err != nil {
 				// create the IPAMPolicy
+
 				_, err = reactor.HandleIPAMPolicy(types.Create, evt.IPAMPolicy)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: IPAMPolicy | Key: %s | Err: %v", types.Operation(types.Create), evt.IPAMPolicy.GetKey(), err))
 					client.debugStats.AddInt("CreateIPAMPolicyError", 1)
@@ -233,7 +239,9 @@ func (client *NimbusClient) processIPAMPolicyEvent(evt netproto.IPAMPolicyEvent,
 				}
 			} else {
 				// update the IPAMPolicy
+
 				_, err = reactor.HandleIPAMPolicy(types.Update, evt.IPAMPolicy)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: IPAMPolicy | Key: %s | Err: %v", types.Operation(types.Update), evt.IPAMPolicy.GetKey(), err))
 					client.debugStats.AddInt("UpdateIPAMPolicyError", 1)
@@ -244,7 +252,9 @@ func (client *NimbusClient) processIPAMPolicyEvent(evt netproto.IPAMPolicyEvent,
 
 		case api.EventType_DeleteEvent:
 			// update the IPAMPolicy
+
 			_, err = reactor.HandleIPAMPolicy(types.Delete, evt.IPAMPolicy)
+
 			if err != nil {
 				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: IPAMPolicy | Key: %s | Err: %v", types.Operation(types.Delete), evt.IPAMPolicy.GetKey(), err))
 				client.debugStats.AddInt("DeleteIPAMPolicyError", 1)
@@ -258,9 +268,11 @@ func (client *NimbusClient) processIPAMPolicyEvent(evt netproto.IPAMPolicyEvent,
 		}
 		// send oper status and return if there is no error
 		if err == nil {
+
 			robj := netproto.IPAMPolicyEvent{
 				EventType: evt.EventType,
 				IPAMPolicy: netproto.IPAMPolicy{
+
 					TypeMeta:   evt.IPAMPolicy.TypeMeta,
 					ObjectMeta: evt.IPAMPolicy.ObjectMeta,
 					Status:     evt.IPAMPolicy.Status,
@@ -271,7 +283,9 @@ func (client *NimbusClient) processIPAMPolicyEvent(evt netproto.IPAMPolicyEvent,
 			ostream.Lock()
 			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.IPAMPolicy.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
 			err := ostream.stream.Send(&robj)
+
 			if err != nil {
 				log.Errorf("failed to send IPAMPolicy oper Status, %s", err)
 				client.debugStats.AddInt("IPAMPolicyOperSendError", 1)
@@ -294,7 +308,8 @@ func (client *NimbusClient) processIPAMPolicyDynamic(evt api.EventType,
 	object *netproto.IPAMPolicy, reactor IPAMPolicyReactor) error {
 
 	ipampolicyEvt := netproto.IPAMPolicyEvent{
-		EventType:  evt,
+		EventType: evt,
+
 		IPAMPolicy: *object,
 	}
 

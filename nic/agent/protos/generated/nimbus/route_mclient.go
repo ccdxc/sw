@@ -175,7 +175,8 @@ func (client *NimbusClient) diffRouteTables(objList *netproto.RouteTableList, re
 			key := lobj.ObjectMeta.GetKey()
 			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.RouteTableEvent{
-					EventType:  api.EventType_DeleteEvent,
+					EventType: api.EventType_DeleteEvent,
+
 					RouteTable: lobj,
 				}
 				log.Infof("diffRouteTables(): Deleting object %+v", lobj.ObjectMeta)
@@ -193,7 +194,8 @@ func (client *NimbusClient) diffRouteTables(objList *netproto.RouteTableList, re
 	// add/update all new objects
 	for _, obj := range objmap {
 		evt := netproto.RouteTableEvent{
-			EventType:  api.EventType_UpdateEvent,
+			EventType: api.EventType_UpdateEvent,
+
 			RouteTable: *obj,
 		}
 		client.lockObject(evt.RouteTable.GetObjectKind(), evt.RouteTable.ObjectMeta)
@@ -221,10 +223,14 @@ func (client *NimbusClient) processRouteTableEvent(evt netproto.RouteTableEvent,
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
+
 			_, err = reactor.HandleRouteTable(types.Get, evt.RouteTable)
+
 			if err != nil {
 				// create the RouteTable
+
 				_, err = reactor.HandleRouteTable(types.Create, evt.RouteTable)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RouteTable | Key: %s | Err: %v", types.Operation(types.Create), evt.RouteTable.GetKey(), err))
 					client.debugStats.AddInt("CreateRouteTableError", 1)
@@ -233,7 +239,9 @@ func (client *NimbusClient) processRouteTableEvent(evt netproto.RouteTableEvent,
 				}
 			} else {
 				// update the RouteTable
+
 				_, err = reactor.HandleRouteTable(types.Update, evt.RouteTable)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RouteTable | Key: %s | Err: %v", types.Operation(types.Update), evt.RouteTable.GetKey(), err))
 					client.debugStats.AddInt("UpdateRouteTableError", 1)
@@ -244,7 +252,9 @@ func (client *NimbusClient) processRouteTableEvent(evt netproto.RouteTableEvent,
 
 		case api.EventType_DeleteEvent:
 			// update the RouteTable
+
 			_, err = reactor.HandleRouteTable(types.Delete, evt.RouteTable)
+
 			if err != nil {
 				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RouteTable | Key: %s | Err: %v", types.Operation(types.Delete), evt.RouteTable.GetKey(), err))
 				client.debugStats.AddInt("DeleteRouteTableError", 1)
@@ -258,9 +268,11 @@ func (client *NimbusClient) processRouteTableEvent(evt netproto.RouteTableEvent,
 		}
 		// send oper status and return if there is no error
 		if err == nil {
+
 			robj := netproto.RouteTableEvent{
 				EventType: evt.EventType,
 				RouteTable: netproto.RouteTable{
+
 					TypeMeta:   evt.RouteTable.TypeMeta,
 					ObjectMeta: evt.RouteTable.ObjectMeta,
 					Status:     evt.RouteTable.Status,
@@ -271,7 +283,9 @@ func (client *NimbusClient) processRouteTableEvent(evt netproto.RouteTableEvent,
 			ostream.Lock()
 			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.RouteTable.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
 			err := ostream.stream.Send(&robj)
+
 			if err != nil {
 				log.Errorf("failed to send RouteTable oper Status, %s", err)
 				client.debugStats.AddInt("RouteTableOperSendError", 1)
@@ -294,7 +308,8 @@ func (client *NimbusClient) processRouteTableDynamic(evt api.EventType,
 	object *netproto.RouteTable, reactor RouteTableReactor) error {
 
 	routetableEvt := netproto.RouteTableEvent{
-		EventType:  evt,
+		EventType: evt,
+
 		RouteTable: *object,
 	}
 
@@ -463,7 +478,8 @@ func (client *NimbusClient) diffRoutingConfigs(objList *netproto.RoutingConfigLi
 			key := lobj.ObjectMeta.GetKey()
 			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.RoutingConfigEvent{
-					EventType:     api.EventType_DeleteEvent,
+					EventType: api.EventType_DeleteEvent,
+
 					RoutingConfig: lobj,
 				}
 				log.Infof("diffRoutingConfigs(): Deleting object %+v", lobj.ObjectMeta)
@@ -481,7 +497,8 @@ func (client *NimbusClient) diffRoutingConfigs(objList *netproto.RoutingConfigLi
 	// add/update all new objects
 	for _, obj := range objmap {
 		evt := netproto.RoutingConfigEvent{
-			EventType:     api.EventType_UpdateEvent,
+			EventType: api.EventType_UpdateEvent,
+
 			RoutingConfig: *obj,
 		}
 		client.lockObject(evt.RoutingConfig.GetObjectKind(), evt.RoutingConfig.ObjectMeta)
@@ -509,10 +526,14 @@ func (client *NimbusClient) processRoutingConfigEvent(evt netproto.RoutingConfig
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
+
 			_, err = reactor.HandleRoutingConfig(types.Get, evt.RoutingConfig)
+
 			if err != nil {
 				// create the RoutingConfig
+
 				_, err = reactor.HandleRoutingConfig(types.Create, evt.RoutingConfig)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RoutingConfig | Key: %s | Err: %v", types.Operation(types.Create), evt.RoutingConfig.GetKey(), err))
 					client.debugStats.AddInt("CreateRoutingConfigError", 1)
@@ -521,7 +542,9 @@ func (client *NimbusClient) processRoutingConfigEvent(evt netproto.RoutingConfig
 				}
 			} else {
 				// update the RoutingConfig
+
 				_, err = reactor.HandleRoutingConfig(types.Update, evt.RoutingConfig)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RoutingConfig | Key: %s | Err: %v", types.Operation(types.Update), evt.RoutingConfig.GetKey(), err))
 					client.debugStats.AddInt("UpdateRoutingConfigError", 1)
@@ -532,7 +555,9 @@ func (client *NimbusClient) processRoutingConfigEvent(evt netproto.RoutingConfig
 
 		case api.EventType_DeleteEvent:
 			// update the RoutingConfig
+
 			_, err = reactor.HandleRoutingConfig(types.Delete, evt.RoutingConfig)
+
 			if err != nil {
 				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RoutingConfig | Key: %s | Err: %v", types.Operation(types.Delete), evt.RoutingConfig.GetKey(), err))
 				client.debugStats.AddInt("DeleteRoutingConfigError", 1)
@@ -546,9 +571,11 @@ func (client *NimbusClient) processRoutingConfigEvent(evt netproto.RoutingConfig
 		}
 		// send oper status and return if there is no error
 		if err == nil {
+
 			robj := netproto.RoutingConfigEvent{
 				EventType: evt.EventType,
 				RoutingConfig: netproto.RoutingConfig{
+
 					TypeMeta:   evt.RoutingConfig.TypeMeta,
 					ObjectMeta: evt.RoutingConfig.ObjectMeta,
 					Status:     evt.RoutingConfig.Status,
@@ -559,7 +586,9 @@ func (client *NimbusClient) processRoutingConfigEvent(evt netproto.RoutingConfig
 			ostream.Lock()
 			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.RoutingConfig.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
 			err := ostream.stream.Send(&robj)
+
 			if err != nil {
 				log.Errorf("failed to send RoutingConfig oper Status, %s", err)
 				client.debugStats.AddInt("RoutingConfigOperSendError", 1)
@@ -582,7 +611,8 @@ func (client *NimbusClient) processRoutingConfigDynamic(evt api.EventType,
 	object *netproto.RoutingConfig, reactor RoutingConfigReactor) error {
 
 	routingconfigEvt := netproto.RoutingConfigEvent{
-		EventType:     evt,
+		EventType: evt,
+
 		RoutingConfig: *object,
 	}
 

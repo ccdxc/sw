@@ -24,6 +24,7 @@ service NetworkApiV1 {
         Method: ["list", "get", "post", "put", "delete"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
         Prefix: "api/networks"
+        Version: "V1"
     };
 
     rpc ListNetworks (api.ListWatchOptions) returns (NetworkList) {};

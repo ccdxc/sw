@@ -313,6 +313,26 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				addAggObjectEvent(mobj, obj.GetObjectMeta())
 			}
 
+		case "FlowExportPolicy":
+
+			if _, ok := eh.statusReactor.(FlowExportPolicyStatusReactor); ok {
+				filters = eh.statusReactor.(FlowExportPolicyStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			}
+
+			objlist, err := eh.server.ListFlowExportPolicys(context.Background(), nodeID, filters)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
 		case "IPAMPolicy":
 
 			if _, ok := eh.statusReactor.(IPAMPolicyStatusReactor); ok {
@@ -340,6 +360,26 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 			}
 
 			objlist, err := eh.server.ListInterfaces(context.Background(), nodeID, filters)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "MirrorSession":
+
+			if _, ok := eh.statusReactor.(MirrorSessionStatusReactor); ok {
+				filters = eh.statusReactor.(MirrorSessionStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			}
+
+			objlist, err := eh.server.ListMirrorSessions(context.Background(), nodeID, filters)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -400,26 +440,6 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 			}
 
 			objlist, err := eh.server.ListProfiles(context.Background(), nodeID, filters)
-			if err != nil {
-				log.Errorf("Error getting a list of objects. Err: %v", err)
-				return nil, err
-			}
-			for _, obj := range objlist {
-				mobj, err := types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return nil, err
-				}
-				addAggObjectEvent(mobj, obj.GetObjectMeta())
-			}
-
-		case "RouteTable":
-
-			if _, ok := eh.statusReactor.(RouteTableStatusReactor); ok {
-				filters = eh.statusReactor.(RouteTableStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
-			}
-
-			objlist, err := eh.server.ListRouteTables(context.Background(), nodeID, filters)
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return nil, err
@@ -559,6 +579,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Endpoint).GetObjectMeta())
 
+			case "FlowExportPolicy":
+				if _, ok := eh.statusReactor.(FlowExportPolicyStatusReactor); ok {
+					err = eh.statusReactor.(FlowExportPolicyStatusReactor).OnFlowExportPolicyOperUpdate(nodeID,
+						object.Message.(*netproto.FlowExportPolicy))
+					if err != nil {
+						log.Errorf("Error updating FlowExportPolicy oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.FlowExportPolicy).GetObjectMeta())
+
 			case "IPAMPolicy":
 				if _, ok := eh.statusReactor.(IPAMPolicyStatusReactor); ok {
 					err = eh.statusReactor.(IPAMPolicyStatusReactor).OnIPAMPolicyOperUpdate(nodeID,
@@ -578,6 +608,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 					}
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Interface).GetObjectMeta())
+
+			case "MirrorSession":
+				if _, ok := eh.statusReactor.(MirrorSessionStatusReactor); ok {
+					err = eh.statusReactor.(MirrorSessionStatusReactor).OnMirrorSessionOperUpdate(nodeID,
+						object.Message.(*netproto.MirrorSession))
+					if err != nil {
+						log.Errorf("Error updating MirrorSession oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.MirrorSession).GetObjectMeta())
 
 			case "Network":
 				if _, ok := eh.statusReactor.(NetworkStatusReactor); ok {
@@ -608,16 +648,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 					}
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Profile).GetObjectMeta())
-
-			case "RouteTable":
-				if _, ok := eh.statusReactor.(RouteTableStatusReactor); ok {
-					err = eh.statusReactor.(RouteTableStatusReactor).OnRouteTableOperUpdate(nodeID,
-						object.Message.(*netproto.RouteTable))
-					if err != nil {
-						log.Errorf("Error updating RouteTable oper state. Err: %v", err)
-					}
-				}
-				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.RouteTable).GetObjectMeta())
 
 			case "RoutingConfig":
 				if _, ok := eh.statusReactor.(RoutingConfigStatusReactor); ok {
@@ -683,6 +713,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Endpoint).GetObjectMeta())
 
+			case "FlowExportPolicy":
+				if _, ok := eh.statusReactor.(FlowExportPolicyStatusReactor); ok {
+					err = eh.statusReactor.(FlowExportPolicyStatusReactor).OnFlowExportPolicyOperDelete(nodeID,
+						object.Message.(*netproto.FlowExportPolicy))
+					if err != nil {
+						log.Errorf("Error updating FlowExportPolicy oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.FlowExportPolicy).GetObjectMeta())
+
 			case "IPAMPolicy":
 				if _, ok := eh.statusReactor.(IPAMPolicyStatusReactor); ok {
 					err = eh.statusReactor.(IPAMPolicyStatusReactor).OnIPAMPolicyOperDelete(nodeID,
@@ -702,6 +742,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 					}
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Interface).GetObjectMeta())
+
+			case "MirrorSession":
+				if _, ok := eh.statusReactor.(MirrorSessionStatusReactor); ok {
+					err = eh.statusReactor.(MirrorSessionStatusReactor).OnMirrorSessionOperDelete(nodeID,
+						object.Message.(*netproto.MirrorSession))
+					if err != nil {
+						log.Errorf("Error updating MirrorSession oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.MirrorSession).GetObjectMeta())
 
 			case "Network":
 				if _, ok := eh.statusReactor.(NetworkStatusReactor); ok {
@@ -732,16 +782,6 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 					}
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Profile).GetObjectMeta())
-
-			case "RouteTable":
-				if _, ok := eh.statusReactor.(RouteTableStatusReactor); ok {
-					err = eh.statusReactor.(RouteTableStatusReactor).OnRouteTableOperDelete(nodeID,
-						object.Message.(*netproto.RouteTable))
-					if err != nil {
-						log.Errorf("Error updating RouteTable oper state. Err: %v", err)
-					}
-				}
-				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.RouteTable).GetObjectMeta())
 
 			case "RoutingConfig":
 				if _, ok := eh.statusReactor.(RoutingConfigStatusReactor); ok {
@@ -999,6 +1039,16 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
 			}
 
+		case "FlowExportPolicy":
+			if _, ok := eh.statusReactor.(FlowExportPolicyStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(FlowExportPolicyStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
 		case "IPAMPolicy":
 			if _, ok := eh.statusReactor.(IPAMPolicyStatusReactor); ok {
 				watcher.Filters[kind.Kind] = eh.statusReactor.(IPAMPolicyStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
@@ -1012,6 +1062,16 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 		case "Interface":
 			if _, ok := eh.statusReactor.(InterfaceStatusReactor); ok {
 				watcher.Filters[kind.Kind] = eh.statusReactor.(InterfaceStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
+		case "MirrorSession":
+			if _, ok := eh.statusReactor.(MirrorSessionStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(MirrorSessionStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1042,16 +1102,6 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 		case "Profile":
 			if _, ok := eh.statusReactor.(ProfileStatusReactor); ok {
 				watcher.Filters[kind.Kind] = eh.statusReactor.(ProfileStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
-			} else {
-				filt := func(obj, prev memdb.Object) bool {
-					return true
-				}
-				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
-			}
-
-		case "RouteTable":
-			if _, ok := eh.statusReactor.(RouteTableStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(RouteTableStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1161,6 +1211,21 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 				addAggObjectEvent(mobj, obj.GetObjectMeta())
 			}
 
+		case "FlowExportPolicy":
+			objlist, err := eh.server.ListFlowExportPolicys(context.Background(), nodeID, watcher.Filters[kind])
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
 		case "IPAMPolicy":
 			objlist, err := eh.server.ListIPAMPolicys(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
@@ -1178,6 +1243,21 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Interface":
 			objlist, err := eh.server.ListInterfaces(context.Background(), nodeID, watcher.Filters[kind])
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "MirrorSession":
+			objlist, err := eh.server.ListMirrorSessions(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1223,21 +1303,6 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Profile":
 			objlist, err := eh.server.ListProfiles(context.Background(), nodeID, watcher.Filters[kind])
-			if err != nil {
-				log.Errorf("Error getting a list of objects. Err: %v", err)
-				return err
-			}
-			for _, obj := range objlist {
-				mobj, err := types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-				addAggObjectEvent(mobj, obj.GetObjectMeta())
-			}
-
-		case "RouteTable":
-			objlist, err := eh.server.ListRouteTables(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1389,6 +1454,17 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 					return err
 				}
 
+			case "FlowExportPolicy":
+				obj, err := FlowExportPolicyFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
 			case "IPAMPolicy":
 				obj, err := IPAMPolicyFromObj(evt.Obj)
 				if err != nil {
@@ -1402,6 +1478,17 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 			case "Interface":
 				obj, err := InterfaceFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			case "MirrorSession":
+				obj, err := MirrorSessionFromObj(evt.Obj)
 				if err != nil {
 					return err
 				}
@@ -1435,17 +1522,6 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 			case "Profile":
 				obj, err := ProfileFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "RouteTable":
-				obj, err := RouteTableFromObj(evt.Obj)
 				if err != nil {
 					return err
 				}

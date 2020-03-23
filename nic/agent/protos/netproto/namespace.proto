@@ -23,6 +23,7 @@ service NamespaceApiV1 {
         Method: ["list", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Name}",
         Prefix: "api/namespaces"
+        Version: "V1"
     };
 
 //    rpc GetNamespace (api.ObjectMeta) returns (Namespace) {};

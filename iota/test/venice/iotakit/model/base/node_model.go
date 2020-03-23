@@ -30,7 +30,8 @@ func (sm *SysModel) SwitchPorts() *objects.SwitchPortCollection {
 
 // Hosts returns list of all hosts in the system
 func (sm *SysModel) Hosts() *objects.HostCollection {
-	var hc objects.HostCollection
+
+	hc := objects.NewHostCollection(sm.ObjClient(), sm.Tb)
 	for _, hst := range sm.NaplesHosts {
 		hc.Hosts = append(hc.Hosts, hst)
 	}
@@ -43,7 +44,7 @@ func (sm *SysModel) Hosts() *objects.HostCollection {
 		hc.Hosts = append(hc.Hosts, hst)
 	}
 
-	return &hc
+	return hc
 }
 
 // HostWorkloads returns list of all hosts in the system along with their workloads
@@ -239,7 +240,9 @@ func (sm *SysModel) Naples() *objects.NaplesCollection {
 	for _, np := range sm.FakeNaples {
 		fakesNaples = append(fakesNaples, np)
 	}
-	return &objects.NaplesCollection{Nodes: naples, FakeNodes: fakesNaples}
+	return &objects.NaplesCollection{
+		CollectionCommon: objects.CollectionCommon{Client: sm.ObjClient(), Testbed: sm.Tb},
+		Nodes:            naples, FakeNodes: fakesNaples}
 }
 
 // ThirdParties return
@@ -249,7 +252,9 @@ func (sm *SysModel) ThirdParties() *objects.ThirdPartyCollection {
 		nodes = append(nodes, np)
 	}
 
-	return &objects.ThirdPartyCollection{Nodes: nodes}
+	return &objects.ThirdPartyCollection{
+		CollectionCommon: objects.CollectionCommon{Client: sm.ObjClient(), Testbed: sm.Tb},
+		Nodes:            nodes}
 }
 
 func (sm *SysModel) createVeniceNode(node *testbed.TestNode) error {

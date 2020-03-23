@@ -41,11 +41,28 @@ message MirrorSessionSpec {
         // ui-hint: Firewall Policy Drops
         FIREWALL_POLICY_DROP    = 3 [(venice.enumValueStr) = "firewall-policy-drop"];
     }
-    repeated string PacketFilters           = 5 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
+    repeated string PacketFilters        = 5 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
 
     // If specified, will pick up interface matching the selector
-    labels.Selector InterfaceSelector   = 7 [(gogoproto.jsontag) = "interface-selector,omitempty"];
+    InterfaceMirror Interfaces            = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "interfaces,omitempty"];
 }
+
+enum Direction {
+    // ui-hint: Both
+    BOTH        = 0 [(venice.enumValueStr) = "both"];
+    // ui-hint: Tx
+    TX          = 1 [(venice.enumValueStr) = "tx"];
+    // ui-hint: Rx
+    RX          = 2 [(venice.enumValueStr) = "rx"];
+}
+
+message InterfaceMirror {
+
+    string              Direction  = 1 [(gogoproto.jsontag) = "direction,omitempty", (venice.check) = "StrEnum(Direction)"];
+
+    labels.Selector     Selector   = 2 [(gogoproto.jsontag) = "selector,omitempty"];
+}
+
 
 // MirrorStartConditions - Conditions to start mirroring
 message MirrorStartConditions {

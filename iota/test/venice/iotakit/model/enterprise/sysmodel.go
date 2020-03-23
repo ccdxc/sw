@@ -104,8 +104,8 @@ type veniceConfigStatus struct {
 	} `json:"NodesStatus"`
 }
 
-func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType) error {
-	err := sm.SysModel.Init(tb, cfgType)
+func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSetup bool) error {
+	err := sm.SysModel.Init(tb, cfgType, skipSetup)
 	if err != nil {
 		return err
 	}
@@ -113,6 +113,7 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType) error 
 	if os.Getenv("NO_AUTO_DISCOVERY") != "" {
 		sm.AutoDiscovery = false
 	}
+
 	sm.sgpolicies = make(map[string]*objects.NetworkSecurityPolicy)
 	sm.msessions = make(map[string]*objects.MirrorSession)
 	sm.FakeNaples = make(map[string]*objects.Naples)
@@ -277,7 +278,6 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 
 	allocatedVlans := sm.Tb.AllocatedVlans()
 	for i := 0; i < defaultNumNetworks; i++ {
-		log.Infof("Allocated vlan %v\n", allocatedVlans)
 		nwMap[allocatedVlans[i]] = 0
 	}
 
@@ -388,8 +388,14 @@ func (sm *SysModel) BringupWorkloads() error {
 			sm.WorkloadsSayHelloToDataPath()
 		}
 	} else {
+
+		err := wc.AllocateHostInterfaces(sm.Tb)
+		if err != nil {
+			log.Errorf("Error allocating interfaces %v", err)
+			return err
+		}
 		// bringup the.Workloads
-		err := wc.Bringup(sm.Tb)
+		err = wc.Bringup(sm.Tb)
 		if err != nil {
 			return err
 		}

@@ -419,6 +419,7 @@ func (eh *InterfaceTopic) WatchInterfaces(watchOptions *api.ListWatchOptions, st
 	for _, obj := range objlist.Interfaces {
 		watchEvt := netproto.InterfaceEvent{
 			EventType: api.EventType_CreateEvent,
+
 			Interface: *obj,
 		}
 		watchEvts.InterfaceEvents = append(watchEvts.InterfaceEvents, &watchEvt)
@@ -477,6 +478,7 @@ func (eh *InterfaceTopic) WatchInterfaces(watchOptions *api.ListWatchOptions, st
 			// convert to netproto format
 			watchEvt := netproto.InterfaceEvent{
 				EventType: etype,
+
 				Interface: *obj,
 			}
 			watchEvts.InterfaceEvents = append(watchEvts.InterfaceEvents, &watchEvt)
@@ -519,7 +521,9 @@ func (eh *InterfaceTopic) updateInterfaceOper(oper *netproto.InterfaceEvent, nod
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			return eh.statusReactor.OnInterfaceOperUpdate(nodeID, &oper.Interface)
+
 		}
 	case api.EventType_DeleteEvent:
 		// incr stats
@@ -527,7 +531,9 @@ func (eh *InterfaceTopic) updateInterfaceOper(oper *netproto.InterfaceEvent, nod
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			eh.statusReactor.OnInterfaceOperDelete(nodeID, &oper.Interface)
+
 		}
 	}
 

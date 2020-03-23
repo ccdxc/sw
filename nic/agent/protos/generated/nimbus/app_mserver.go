@@ -419,7 +419,8 @@ func (eh *AppTopic) WatchApps(watchOptions *api.ListWatchOptions, stream netprot
 	for _, obj := range objlist.Apps {
 		watchEvt := netproto.AppEvent{
 			EventType: api.EventType_CreateEvent,
-			App:       *obj,
+
+			App: *obj,
 		}
 		watchEvts.AppEvents = append(watchEvts.AppEvents, &watchEvt)
 	}
@@ -477,7 +478,8 @@ func (eh *AppTopic) WatchApps(watchOptions *api.ListWatchOptions, stream netprot
 			// convert to netproto format
 			watchEvt := netproto.AppEvent{
 				EventType: etype,
-				App:       *obj,
+
+				App: *obj,
 			}
 			watchEvts.AppEvents = append(watchEvts.AppEvents, &watchEvt)
 			if !running {
@@ -519,7 +521,9 @@ func (eh *AppTopic) updateAppOper(oper *netproto.AppEvent, nodeID string) error 
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			return eh.statusReactor.OnAppOperUpdate(nodeID, &oper.App)
+
 		}
 	case api.EventType_DeleteEvent:
 		// incr stats
@@ -527,7 +531,9 @@ func (eh *AppTopic) updateAppOper(oper *netproto.AppEvent, nodeID string) error 
 
 		// trigger callbacks
 		if eh.statusReactor != nil {
+
 			eh.statusReactor.OnAppOperDelete(nodeID, &oper.App)
+
 		}
 	}
 

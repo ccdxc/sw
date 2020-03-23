@@ -175,7 +175,8 @@ func (client *NimbusClient) diffNetworkSecurityPolicys(objList *netproto.Network
 			key := lobj.ObjectMeta.GetKey()
 			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.NetworkSecurityPolicyEvent{
-					EventType:             api.EventType_DeleteEvent,
+					EventType: api.EventType_DeleteEvent,
+
 					NetworkSecurityPolicy: lobj,
 				}
 				log.Infof("diffNetworkSecurityPolicys(): Deleting object %+v", lobj.ObjectMeta)
@@ -193,7 +194,8 @@ func (client *NimbusClient) diffNetworkSecurityPolicys(objList *netproto.Network
 	// add/update all new objects
 	for _, obj := range objmap {
 		evt := netproto.NetworkSecurityPolicyEvent{
-			EventType:             api.EventType_UpdateEvent,
+			EventType: api.EventType_UpdateEvent,
+
 			NetworkSecurityPolicy: *obj,
 		}
 		client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
@@ -221,10 +223,14 @@ func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.Netwo
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
+
 			_, err = reactor.HandleNetworkSecurityPolicy(types.Get, evt.NetworkSecurityPolicy)
+
 			if err != nil {
 				// create the NetworkSecurityPolicy
+
 				_, err = reactor.HandleNetworkSecurityPolicy(types.Create, evt.NetworkSecurityPolicy)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: NetworkSecurityPolicy | Key: %s | Err: %v", types.Operation(types.Create), evt.NetworkSecurityPolicy.GetKey(), err))
 					client.debugStats.AddInt("CreateNetworkSecurityPolicyError", 1)
@@ -233,7 +239,9 @@ func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.Netwo
 				}
 			} else {
 				// update the NetworkSecurityPolicy
+
 				_, err = reactor.HandleNetworkSecurityPolicy(types.Update, evt.NetworkSecurityPolicy)
+
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: NetworkSecurityPolicy | Key: %s | Err: %v", types.Operation(types.Update), evt.NetworkSecurityPolicy.GetKey(), err))
 					client.debugStats.AddInt("UpdateNetworkSecurityPolicyError", 1)
@@ -244,7 +252,9 @@ func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.Netwo
 
 		case api.EventType_DeleteEvent:
 			// update the NetworkSecurityPolicy
+
 			_, err = reactor.HandleNetworkSecurityPolicy(types.Delete, evt.NetworkSecurityPolicy)
+
 			if err != nil {
 				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: NetworkSecurityPolicy | Key: %s | Err: %v", types.Operation(types.Delete), evt.NetworkSecurityPolicy.GetKey(), err))
 				client.debugStats.AddInt("DeleteNetworkSecurityPolicyError", 1)
@@ -258,9 +268,11 @@ func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.Netwo
 		}
 		// send oper status and return if there is no error
 		if err == nil {
+
 			robj := netproto.NetworkSecurityPolicyEvent{
 				EventType: evt.EventType,
 				NetworkSecurityPolicy: netproto.NetworkSecurityPolicy{
+
 					TypeMeta:   evt.NetworkSecurityPolicy.TypeMeta,
 					ObjectMeta: evt.NetworkSecurityPolicy.ObjectMeta,
 					Status:     evt.NetworkSecurityPolicy.Status,
@@ -271,7 +283,9 @@ func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.Netwo
 			ostream.Lock()
 			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.NetworkSecurityPolicy.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
+
 			err := ostream.stream.Send(&robj)
+
 			if err != nil {
 				log.Errorf("failed to send NetworkSecurityPolicy oper Status, %s", err)
 				client.debugStats.AddInt("NetworkSecurityPolicyOperSendError", 1)
@@ -294,7 +308,8 @@ func (client *NimbusClient) processNetworkSecurityPolicyDynamic(evt api.EventTyp
 	object *netproto.NetworkSecurityPolicy, reactor NetworkSecurityPolicyReactor) error {
 
 	networksecuritypolicyEvt := netproto.NetworkSecurityPolicyEvent{
-		EventType:             evt,
+		EventType: evt,
+
 		NetworkSecurityPolicy: *object,
 	}
 

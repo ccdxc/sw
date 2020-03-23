@@ -59,6 +59,7 @@ service TenantApiV1 {
         Method: ["list", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Name}",
         Prefix:"api/tenants",
+        Version: "V1"
     };
 
 //    rpc GetTenant (api.ObjectMeta) returns (Tenant) {};

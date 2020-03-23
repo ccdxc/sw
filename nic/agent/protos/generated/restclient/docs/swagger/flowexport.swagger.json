@@ -493,9 +493,13 @@
           "$ref": "#/definitions/apiEventType",
           "description": "event type create/update/delete."
         },
-        "policy": {
+        "flowexport-policy": {
           "$ref": "#/definitions/netprotoFlowExportPolicy",
           "description": "flow export policy."
+        },
+        "flowexport-policy": {
+          "$ref": "#/definitions/netprotoFlowExportPolicy",
+          "description": "flow export policy (upgrade price!)."
         }
       }
     },
@@ -506,6 +510,17 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/netprotoFlowExportPolicyEvent"
+          }
+        }
+      }
+    },
+    "netprotoFlowExportPolicyList": {
+      "type": "object",
+      "properties": {
+        "FlowExportPolicys": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoFlowExportPolicy"
           }
         }
       }

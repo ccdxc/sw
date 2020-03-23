@@ -1,0 +1,17 @@
+// network object
+
+syntax = "proto3";
+package dnetproto;
+
+// Mandatory imports.
+import "github.com/pensando/sw/nic/agent/protos/netproto/flowexport.proto";
+import "delphi.proto";
+
+// Endpoint Object
+message FlowExportPolicy {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta        = 1;
+    string              Key         = 2;
+    netproto.FlowExportPolicy FlowExportPolicy   = 3;
+}
+

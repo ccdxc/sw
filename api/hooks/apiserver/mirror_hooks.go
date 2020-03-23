@@ -68,12 +68,16 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 	// Filter validation, ALL_DROPS cannot be used with specific DROP conditions
 	// ALL_PKTS implies all good packets, it can be specified with DROP condition(s)
 
-	if len(ms.Spec.MatchRules) != 0 && ms.Spec.InterfaceSelector != nil {
-		return i, false, fmt.Errorf("Either Match rules or Interface selector can be set, not both")
+	if len(ms.Spec.MatchRules) != 0 && ms.Spec.Interfaces != nil {
+		return i, false, fmt.Errorf("Either Match rules or Interfaces can be set, not both")
 	}
 
-	if len(ms.Spec.PacketFilters) != 0 && ms.Spec.InterfaceSelector != nil {
-		return i, false, fmt.Errorf("Interface selector could only be set with no packet filters")
+	if len(ms.Spec.PacketFilters) != 0 && ms.Spec.Interfaces != nil {
+		return i, false, fmt.Errorf("Interfaces could only be set with no packet filters")
+	}
+
+	if ms.Spec.Interfaces != nil && ms.Spec.Interfaces.Selector == nil {
+		return i, false, fmt.Errorf("Interface selector must be specified with Interfaces option")
 	}
 
 	if len(ms.Spec.Collectors) == 0 || len(ms.Spec.Collectors) > veniceMaxCollectorsPerSession {
@@ -163,7 +167,7 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 			return i, false, fmt.Errorf("Cannot use multiple match-rules when match-all is used")
 		}
 	}
-	if ms.Spec.InterfaceSelector == nil && matchAll && !dropOnlyFilter {
+	if ms.Spec.Interfaces == nil && matchAll && !dropOnlyFilter {
 		return i, false, fmt.Errorf("Match-all type rule can be used only for mirror-on-drop")
 	}
 

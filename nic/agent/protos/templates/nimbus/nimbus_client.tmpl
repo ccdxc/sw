@@ -28,6 +28,7 @@ import (
        {{$params := (getRestSvcOptions .)}}
        {{range $params}}
             {{$crudObject := .CrudObject}}
+            {{$version := .Version}}
 
 
 type {{$crudObject}}Reactor interface {
@@ -36,7 +37,7 @@ type {{$crudObject}}Reactor interface {
 }
 type {{$crudObject}}OStream struct {
 	sync.Mutex
-	stream netproto.{{$crudObject}}ApiV1_{{$crudObject}}OperUpdateClient
+	stream netproto.{{$svcname}}_{{$crudObject}}OperUpdateClient
 }
 
 
@@ -55,7 +56,7 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 
 	// start the watch
 	watchOptions := reactor.GetWatchOptions(ctx, "{{$crudObject}}")
-	{{lower $crudObject}}RPCClient := netproto.New{{$crudObject}}ApiV1Client(client.rpcClient.ClientConn)
+	{{lower $crudObject}}RPCClient := netproto.New{{$svcname}}Client(client.rpcClient.ClientConn)
 	stream, err := {{lower $crudObject}}RPCClient.Watch{{$crudObject}}s(ctx, &watchOptions)
 	if err != nil {
 		log.Errorf("Error watching {{$crudObject}}. Err: %v", err)
@@ -142,7 +143,7 @@ func (client *NimbusClient) Watch{{$crudObject}}s(ctx context.Context, reactor {
 
 
 // watch{{$crudObject}}RecvLoop receives from stream and write it to a channel
-func (client *NimbusClient) watch{{$crudObject}}RecvLoop(stream netproto.{{$crudObject}}ApiV1_Watch{{$crudObject}}sClient, recvch chan<- *netproto.{{$crudObject}}Event) {
+func (client *NimbusClient) watch{{$crudObject}}RecvLoop(stream netproto.{{$svcname}}_Watch{{$crudObject}}sClient, recvch chan<- *netproto.{{$crudObject}}Event) {
 	defer close(recvch)
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
@@ -187,7 +188,11 @@ func (client *NimbusClient) diff{{$crudObject}}s(objList *netproto.{{$crudObject
 			if nobj, ok := objmap[key]; !ok {
 				evt := netproto.{{$crudObject}}Event{
 					EventType: api.EventType_DeleteEvent,
-					{{$crudObject}}:  lobj,
+					{{if (eq $version "V2")}}
+						{{$crudObject}}:  &lobj,
+					{{else}}
+						{{$crudObject}}:  lobj,
+					{{end}}
 				}
 				log.Infof("diff{{$crudObject}}s(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.{{$crudObject}}.GetObjectKind(), evt.{{$crudObject}}.ObjectMeta)
@@ -205,7 +210,11 @@ func (client *NimbusClient) diff{{$crudObject}}s(objList *netproto.{{$crudObject
 	for _, obj := range objmap {
 		evt := netproto.{{$crudObject}}Event{
 			EventType: api.EventType_UpdateEvent,
-			{{$crudObject}}:       *obj,
+			{{if (eq $version "V2")}}
+				{{$crudObject}}: obj,
+			{{else}}
+				{{$crudObject}}: *obj,
+			{{end}}
 		}
 		client.lockObject(evt.{{$crudObject}}.GetObjectKind(), evt.{{$crudObject}}.ObjectMeta)
 		client.process{{$crudObject}}Event(evt, reactor, ostream)
@@ -232,10 +241,18 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 		case api.EventType_CreateEvent:
 		fallthrough
 		case api.EventType_UpdateEvent:
-		  _, err = reactor.Handle{{$crudObject}}(types.Get, evt.{{$crudObject}})
+			{{if (eq $version "V2")}}
+		  		_, err = reactor.Handle{{$crudObject}}(types.Get, *evt.{{$crudObject}})
+			{{else}}
+		  		_, err = reactor.Handle{{$crudObject}}(types.Get, evt.{{$crudObject}})
+			{{end}}
 			if err != nil {
 				// create the {{$crudObject}}
-				_, err = reactor.Handle{{$crudObject}}(types.Create, evt.{{$crudObject}})
+				{{if (eq $version "V2")}}
+					_, err = reactor.Handle{{$crudObject}}(types.Create, *evt.{{$crudObject}})
+				{{else}}
+					_, err = reactor.Handle{{$crudObject}}(types.Create, evt.{{$crudObject}})
+				{{end}}
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: {{$crudObject}} | Key: %s | Err: %v", types.Operation(types.Create), evt.{{$crudObject}}.GetKey(), err))
 					client.debugStats.AddInt("Create{{$crudObject}}Error", 1)
@@ -244,7 +261,11 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 				}
 			} else {
 				// update the {{$crudObject}}
-				_, err = reactor.Handle{{$crudObject}}(types.Update, evt.{{$crudObject}})
+				{{if (eq $version "V2")}}
+					_, err = reactor.Handle{{$crudObject}}(types.Update, *evt.{{$crudObject}})
+				{{else}}
+					_, err = reactor.Handle{{$crudObject}}(types.Update, evt.{{$crudObject}})
+				{{end}}
 				if err != nil {
 					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: {{$crudObject}} | Key: %s | Err: %v", types.Operation(types.Update), evt.{{$crudObject}}.GetKey(), err))
 					client.debugStats.AddInt("Update{{$crudObject}}Error", 1)
@@ -255,7 +276,11 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 
 		case api.EventType_DeleteEvent:
 			// update the {{$crudObject}}
-			_, err = reactor.Handle{{$crudObject}}(types.Delete, evt.{{$crudObject}})
+			{{if (eq $version "V2")}}
+				_, err = reactor.Handle{{$crudObject}}(types.Delete, *evt.{{$crudObject}})
+			{{else}}
+				_, err = reactor.Handle{{$crudObject}}(types.Delete, evt.{{$crudObject}})
+			{{end}}
 			if err != nil {
 				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: {{$crudObject}} | Key: %s | Err: %v", types.Operation(types.Delete), evt.{{$crudObject}}.GetKey(), err))
 				client.debugStats.AddInt("Delete{{$crudObject}}Error", 1)
@@ -269,9 +294,15 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 		}
 		// send oper status and return if there is no error
 		if err == nil {
-			robj := netproto.{{$crudObject}}Event{
+			{{if (eq $version "V2")}}
+				robj := &netproto.{{$crudObject}}Event{
+				EventType:  evt.EventType,
+				{{$crudObject}}: &netproto.{{$crudObject}}{
+			{{else}}
+				robj := netproto.{{$crudObject}}Event{
 				EventType:  evt.EventType,
 				{{$crudObject}}: netproto.{{$crudObject}}{
+			{{end}}
 					TypeMeta:   evt.{{$crudObject}}.TypeMeta,
 					ObjectMeta: evt.{{$crudObject}}.ObjectMeta,
 					Status:     evt.{{$crudObject}}.Status,
@@ -282,7 +313,11 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 			ostream.Lock()
 			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.{{$crudObject}}.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
-			err := ostream.stream.Send(&robj)
+			{{if (eq $version "V2")}}
+				err := ostream.stream.Send(robj)
+			{{else}}
+				err := ostream.stream.Send(&robj)
+			{{end}}
 			if err != nil {
 				log.Errorf("failed to send {{$crudObject}} oper Status, %s", err)
 				client.debugStats.AddInt("{{$crudObject}}OperSendError", 1)
@@ -306,7 +341,11 @@ func (client *NimbusClient) process{{$crudObject}}Dynamic(evt api.EventType,
 
 	{{lower $crudObject}}Evt := netproto.{{$crudObject}}Event{
 		EventType: evt,
-		{{$crudObject}}:  *object,
+		{{if (eq $version "V2")}}
+			{{$crudObject}}:  object,
+		{{else}}
+			{{$crudObject}}:  *object,
+		{{end}}
 	}
 
 	// add venice label to the object
