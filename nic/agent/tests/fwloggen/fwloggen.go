@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
+	halproto "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/ipc"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -80,6 +80,8 @@ func fwlogGen(fwlogShm string, numEntries, rateps int) error {
 		for idx := 0; idx < nEntries; idx++ {
 			for _, fd := range ipcList {
 				ev := &halproto.FWEvent{
+					SourceVrf: uint64(1),
+					DestVrf:   uint64(1),
 					Sipv4:     uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
 					Dipv4:     uint32(192 + 168<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
 					Dport:     uint32(rand.Int31n(4096)),

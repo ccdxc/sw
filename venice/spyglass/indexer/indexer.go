@@ -286,7 +286,7 @@ func NewIndexer(ctx context.Context,
 	if indexer.watchVos {
 		// Create objstrore http client for fwlogs
 		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-			return createBucketClient(ctx, rsr, globals.ReservedFwLogsTenantName, fwlogsBucketName)
+			return createBucketClient(ctx, rsr, globals.DefaultTenant, fwlogsBucketName)
 		}, apiSrvWaitIntvl, maxAPISrvRetries)
 		if err != nil {
 			logger.Errorf("Failed to create objstore client for fwlogs")
@@ -632,7 +632,7 @@ func (idr *Indexer) initSearchDB() error {
 	if idr.watchVos {
 		// Create index and mapping for Firewall logs
 		if err :=
-			idr.createIndexHelper(globals.FwLogs, globals.ReservedFwLogsTenantName); err != nil && !elastic.IsIndexExists(err) {
+			idr.createIndexHelper(globals.FwLogs, globals.DefaultTenant); err != nil && !elastic.IsIndexExists(err) {
 			return err
 		}
 
@@ -756,7 +756,7 @@ func (idr *Indexer) updateLastProcessedkeys(lastProcessedKey string) {
 func (idr *Indexer) getLastProcessedKeys() (map[string]string, error) {
 	// Create objstrore http client for fwlogs
 	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-		return createBucketClient(idr.ctx, idr.rsr, globals.ReservedFwLogsTenantName, fwlogsSystemMetaBucketName)
+		return createBucketClient(idr.ctx, idr.rsr, globals.DefaultTenant, fwlogsSystemMetaBucketName)
 	}, apiSrvWaitIntvl, maxAPISrvRetries)
 
 	if err != nil {
@@ -767,7 +767,7 @@ func (idr *Indexer) getLastProcessedKeys() (map[string]string, error) {
 	client := result.(objstore.Client)
 	data, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		// PutObjectOfSize uploads object of "size' to object store
-		rc, err := client.GetObject(idr.ctx, "lastProcessedKeys")
+		rc, err := client.GetObject(idr.ctx, lastProcessedKeysObjectName)
 		if err != nil {
 			if strings.Contains(err.Error(), "bucket does not exist") {
 				return nil, nil
@@ -809,7 +809,7 @@ func (idr *Indexer) persistLastProcessedkeys() error {
 	idr.logger.Infof("start persising fwlogs lastProcessedObjectKey")
 	// Create objstrore http client for fwlogs
 	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-		return createBucketClient(ctx, idr.rsr, globals.ReservedFwLogsTenantName, fwlogsSystemMetaBucketName)
+		return createBucketClient(ctx, idr.rsr, globals.DefaultTenant, fwlogsSystemMetaBucketName)
 	}, apiSrvWaitIntvl, maxAPISrvRetries)
 
 	if err != nil {
@@ -841,7 +841,7 @@ func (idr *Indexer) persistLastProcessedkeys() error {
 				r := bytes.NewReader(data)
 				_, err = utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 					// PutObjectOfSize uploads object of "size' to object store
-					_, err := client.PutObjectOfSize(idr.ctx, "lastProcessedKeys", r, int64(len(data)), map[string]string{})
+					_, err := client.PutObjectOfSize(idr.ctx, lastProcessedKeysObjectName, r, int64(len(data)), map[string]string{})
 					return nil, err
 				}, apiSrvWaitIntvl, maxAPISrvRetries)
 

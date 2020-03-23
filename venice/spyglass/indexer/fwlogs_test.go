@@ -33,7 +33,14 @@ import (
 	vospkg "github.com/pensando/sw/venice/vos/pkg"
 )
 
-var apiServerAddr = flag.String("api-server-addr", globals.APIServer, "ApiServer gRPC endpoint")
+const (
+	fwlogsSystemMetaBucketName  = "fwlogssystemmeta"
+	lastProcessedKeysObjectName = "lastProcessedKeys"
+)
+
+var (
+	apiServerAddr = flag.String("api-server-addr", globals.APIServer, "ApiServer gRPC endpoint")
+)
 
 // TestAppendOnlyWriter tests the writer used for pushing fwlogs to elastic
 // Skipping this test until it also starts spinning up tmagent and fwlog generator
@@ -53,8 +60,8 @@ func SkipTestAppendOnlyWriter(t *testing.T) {
 		return esClient != nil, esClient
 	}, "failed to craete elastic client", "2s", "60s")
 
-	setupKibana(t, url)
-	defer stopKibana(t)
+	// setupKibana(t, url)
+	// defer stopKibana(t)
 
 	setupVos(t, ctx, logger, "127.0.0.1")
 	setupSpyglass(ctx, t, r, esClient, logger)
@@ -141,7 +148,7 @@ func setupVos(t *testing.T, ctx context.Context, logger log.Logger, url string) 
 		args := []string{globals.Vos, "server", "--address", fmt.Sprintf("%s:%s", url, globals.VosMinioPort), "/disk1"}
 		_, err := vospkg.New(ctx, false, url,
 			vospkg.WithBootupArgs(args),
-			vospkg.WithBucketDiskThresholds(map[string]float64{"/disk1/fwlogs.fwlogs": 0.000001}))
+			vospkg.WithBucketDiskThresholds(map[string]float64{"/disk1/default.fwlogs": 0.000001}))
 		AssertOk(t, err, "error in initiating Vos")
 	}()
 }
@@ -244,14 +251,14 @@ func verifyLastProcessedObjectKeys(ctx context.Context, t *testing.T, r resolver
 	var client objstore.Client
 	var err error
 	assert := func() (bool, interface{}) {
-		client, err = objstore.NewClient(globals.ReservedFwLogsTenantName, "fwlogssystemmeta", r)
+		client, err = objstore.NewClient(globals.DefaultTenant, fwlogsSystemMetaBucketName, r)
 		return err == nil, client
 	}
 	AssertEventually(t, assert, "error in creating objstore client", string("1s"), string("200s"))
 
 	data, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		// PutObjectOfSize uploads object of "size' to object store
-		rc, err := client.GetObject(ctx, "lastProcessedKeys")
+		rc, err := client.GetObject(ctx, lastProcessedKeysObjectName)
 		if err != nil {
 			return nil, err
 		}

@@ -351,7 +351,7 @@ func (g *grpcBackend) AutoWatchObject(opts *api.ListWatchOptions, stream objstor
 	if opts.ResourceVersion != "" ||
 		opts.LabelSelector != "" ||
 		opts.FieldSelector != "" ||
-		(bucket != fwlogsBucketName && opts.FieldChangeSelector != nil) {
+		(opts.Namespace != fwlogsBucketName && opts.FieldChangeSelector != nil) {
 		return errors.New("filtering is not supported")
 	}
 	errs := g.instance.RunPlugins(stream.Context(), opts.Namespace, vos.PreOp, vos.Watch, nil, g.client)

@@ -38,7 +38,7 @@ const (
 	metaCreationTime    = "Creation-Time"
 	metaFileName        = "file"
 	metaContentType     = "content-type"
-	fwlogsBucketName    = "fwlogs.fwlogs"
+	fwlogsBucketName    = "fwlogs"
 	diskUpdateWatchPath = "diskupdates"
 )
 
@@ -114,11 +114,6 @@ func (i *instance) createDefaultBuckets(client vos.BackendClient) error {
 		loop = false
 		for _, n := range objstore.Buckets_name {
 			name := "default." + strings.ToLower(n)
-
-			if n == "fwlogs" {
-				name = globals.ReservedFwLogsTenantName + "." + strings.ToLower(n)
-			}
-
 			if err = i.createBucket(name); err != nil {
 				log.Errorf("create bucket [%v] failed retry [%d] (%s)", name, retryCount, err)
 				loop = true
@@ -172,21 +167,10 @@ func (i *instance) createDiskUpdateWatcher(paths map[string]float64) error {
 func (i *instance) Watch(ctx context.Context,
 	path, peer string, handleFn apiintf.EventHandlerFn,
 	opts *api.ListWatchOptions) error {
-	// fieldChangeSelector is respected only for fwlogsbucket
-
 	wq := i.pfxWatcher.Add(path, peer)
 	cleanupFn := func() {
 		i.pfxWatcher.Del(path, peer)
 	}
-
-	// // Temporary fix for handling fwlogs notifications.
-	// // If version is set to MaxUint64 then watchEventQ will
-	// // not perform list operation. It will send the events
-	// // starting from the ones that are present in the queue.
-	// if path == fwlogsBucketName {
-	// 	wq.Dequeue(ctx, math.MaxUint64, handleFn, cleanupFn, opts)
-	// 	return nil
-	// }
 	wq.Dequeue(ctx, 0, handleFn, cleanupFn, opts)
 	return nil
 }
@@ -320,6 +304,6 @@ func WithBucketDiskThresholds(th map[string]float64) func(vos.Interface) {
 
 // GetBucketDiskThresholds returns the bucket disk thresholds
 func GetBucketDiskThresholds() map[string]float64 {
-	return map[string]float64{DiskPaths[0] + "/" + fwlogsBucketName: 50.00,
-		DiskPaths[1] + "/" + fwlogsBucketName: 50.00}
+	return map[string]float64{DiskPaths[0] + "/" + "default." + fwlogsBucketName: 50.00,
+		DiskPaths[1] + "/" + "default." + fwlogsBucketName: 50.00}
 }

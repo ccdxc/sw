@@ -135,9 +135,6 @@ func TestCreateBuckets(t *testing.T) {
 	Assert(t, fb.makeBucket == len(objstore.Buckets_name), "did not find correct number of calls [%v][%v]", fb.makeBucket, len(objstore.Buckets_name))
 	for k := range objstore.Buckets_value {
 		tenantName := "default"
-		if k == "fwlogs" {
-			tenantName = "fwlogs"
-		}
 		if v1, ok := bmap[tenantName+"."+k]; !ok {
 			t.Errorf("did not find key [%v]", k)
 		} else {
@@ -177,11 +174,11 @@ func TestOptions(t *testing.T) {
 	Assert(t, len(inst.bucketDiskThresholds) == 2, "fwlogs bucket diskthreshold is missing")
 
 	dth := GetBucketDiskThresholds()
-	Assert(t, len(dth) == 2, "incorrect disk threshold arguments, expected /disk1/fwlogs.fwlogs, /disk2/fwlogs.fwlogs")
-	th, ok := dth["/disk1/fwlogs.fwlogs"]
+	Assert(t, len(dth) == 2, "incorrect disk threshold arguments, expected /disk1/default.fwlogs, /disk2/default.fwlogs")
+	th, ok := dth["/disk1/default.fwlogs"]
 	Assert(t, th == 50.00, "incorrect threshold")
 	Assert(t, ok, "fwlogs bucket threshold missing")
-	th, ok = dth["/disk2/fwlogs.fwlogs"]
+	th, ok = dth["/disk2/default.fwlogs"]
 	Assert(t, th == 50.00, "incorrect threshold")
 	Assert(t, ok, "fwlogs bucket threshold missing")
 }

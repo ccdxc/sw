@@ -53,6 +53,7 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 	defer l.Close()
 	url := l.Addr().(*net.TCPAddr).String()
 	// url := "127.0.0.1:19001"
+	// url := "127.0.0.1:9000"
 
 	c := gomock.NewController(t)
 	defer c.Finish()
@@ -122,11 +123,21 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 
 	testObject := <-testChannel
 	Assert(t, testObject.ObjectName != "", "object name is empty")
-	Assert(t, testObject.BucketName != "", "bucket name is empty")
-	Assert(t, testObject.IndexBucketName != "", "index bucket name is empty")
+	Assert(t, testObject.BucketName == "default.fwlogs", "bucket name is not correct")
+	Assert(t, testObject.IndexBucketName == "meta-default.fwlogs", "index bucket name is not correct")
 	Assert(t, testObject.Data != "", "object data is empty")
 	Assert(t, testObject.Index != "", "index is empty")
 	Assert(t, len(testObject.Meta) == 7, "object meta is empty %s", testObject.Meta)
+	Assert(t, testObject.Meta["startts"] != "", "object meta's startts is empty")
+	Assert(t, testObject.Meta["endts"] != "", "object meta's endts is empty")
+	Assert(t, testObject.Meta["logcount"] == "1",
+		"object meta's log count is not correct, expectecd 1, received %d", testObject.Meta["logcount"])
+	Assert(t, testObject.Meta["nodeid"] == "1",
+		"object meta's nodeid is not correct, expectecd 1, received %d", testObject.Meta["nodeid"])
+	Assert(t, testObject.Meta["csvversion"] == "v1",
+		"object meta's data csv version is not correct, expectecd v1, received %d", testObject.Meta["csvversion"])
+	Assert(t, testObject.Meta["metaversion"] == "v1",
+		"object meta's meta csv version is not correct, expectecd v1, received %d", testObject.Meta["metaversion"])
 
 	// done := make(chan bool)
 	// <-done

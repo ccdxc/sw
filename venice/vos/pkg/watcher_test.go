@@ -92,7 +92,7 @@ func TestStoreImpl(t *testing.T) {
 	opts := api.ListWatchOptions{}
 	opts.FieldChangeSelector =
 		[]string{"00ae.cd00.112e/2020/3/17/2/2020-03-17T02:45:09_2020-03-17T02:45:10.csv.gzip"}
-	ret, err = s.List("fwlogs.fwlogs", "", opts)
+	ret, err = s.List("default.fwlogs", "", opts)
 	AssertOk(t, err, "list failed on fwlogs bucket")
 	Assert(t, len(ret) == 0, "list should not have returned any results")
 }

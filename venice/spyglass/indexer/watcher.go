@@ -103,11 +103,9 @@ func (idr *Indexer) createWatchers() error {
 		for _, bucket := range objstore.Buckets_name {
 			key := fmt.Sprintf("objstore-%s", bucket)
 			opts := api.ListWatchOptions{}
-
 			opts.Tenant = globals.DefaultTenant
 
 			if bucket == fwlogsBucketName {
-				opts.Tenant = globals.ReservedFwLogsTenantName
 				objectVersions := []string{}
 				for _, v := range idr.lastProcessedFwLogObjectKey {
 					objectVersions = append(objectVersions, v)

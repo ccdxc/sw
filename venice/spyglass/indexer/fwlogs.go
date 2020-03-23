@@ -18,8 +18,9 @@ import (
 )
 
 const (
-	fwlogsBucketName           = "fwlogs"
-	fwlogsSystemMetaBucketName = "fwlogssystemmeta"
+	fwlogsBucketName            = "fwlogs"
+	fwlogsSystemMetaBucketName  = "fwlogssystemmeta"
+	lastProcessedKeysObjectName = "lastProcessedKeys"
 )
 
 // FwLogV1 represents the fwlog V1 struct
@@ -177,67 +178,67 @@ func (idr *Indexer) parseFwLogsCsvV1(id int, key string, data [][]string, uuid s
 	for i := 1; i < len(data); i++ {
 		line := data[i]
 
-		ts, err := time.Parse(time.RFC3339, line[2])
+		ts, err := time.Parse(time.RFC3339, line[4])
 		if err != nil {
 			idr.logger.Errorf("Writer %d, object %s, error in parsing time %s", id, key, err.Error())
 			return nil, fmt.Errorf("Writer %d, object %s, error in parding time %s", id, key, err.Error())
 		}
 
-		sport, err := strconv.ParseUint(line[3], 10, 64)
+		sport, err := strconv.ParseUint(line[5], 10, 64)
 		if err != nil {
 			idr.logger.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 			return nil, fmt.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 		}
 
-		dport, err := strconv.ParseUint(line[4], 10, 64)
+		dport, err := strconv.ParseUint(line[6], 10, 64)
 		if err != nil {
 			idr.logger.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 			return nil, fmt.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 		}
 
-		ruleID, err := strconv.ParseUint(line[8], 10, 64)
+		ruleID, err := strconv.ParseUint(line[10], 10, 64)
 		if err != nil {
 			idr.logger.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 			return nil, fmt.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 		}
 
-		sessionID, err := strconv.ParseUint(line[9], 10, 64)
+		sessionID, err := strconv.ParseUint(line[11], 10, 64)
 		if err != nil {
 			idr.logger.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 			return nil, fmt.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 		}
 
-		icmpType, err := strconv.ParseUint(line[11], 10, 64)
+		icmpType, err := strconv.ParseUint(line[13], 10, 64)
 		if err != nil {
 			idr.logger.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 			return nil, fmt.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 		}
 
-		icmpID, err := strconv.ParseUint(line[12], 10, 64)
+		icmpID, err := strconv.ParseUint(line[14], 10, 64)
 		if err != nil {
 			idr.logger.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 			return nil, fmt.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 		}
 
-		icmpCode, err := strconv.ParseUint(line[13], 10, 64)
+		icmpCode, err := strconv.ParseUint(line[15], 10, 64)
 		if err != nil {
 			idr.logger.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 			return nil, fmt.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 		}
 
 		obj := FwLogV1{
-			Sipv4:      line[0],
-			Dipv4:      line[1],
+			Sipv4:      line[2],
+			Dipv4:      line[3],
 			Ts:         ts,
 			CreationTs: time.Now(),
 			Sport:      uint32(sport),
 			Dport:      uint32(dport),
-			Proto:      line[5],
-			Action:     line[6],
-			Direction:  line[7],
+			Proto:      line[7],
+			Action:     line[8],
+			Direction:  line[9],
 			RuleID:     ruleID,
 			SessionID:  sessionID,
-			Flowaction: line[10],
+			Flowaction: line[12],
 			Icmptype:   uint32(icmpType),
 			IcmpID:     uint32(icmpID),
 			Icmpcode:   uint32(icmpCode),
@@ -246,7 +247,7 @@ func (idr *Indexer) parseFwLogsCsvV1(id int, key string, data [][]string, uuid s
 		// prepare the index request
 		request := &elastic.BulkRequest{
 			RequestType: elastic.Index,
-			Index:       elastic.GetIndex(globals.FwLogs, globals.ReservedFwLogsTenantName),
+			Index:       elastic.GetIndex(globals.FwLogs, globals.DefaultTenant),
 			IndexType:   elastic.GetDocType(globals.FwLogs),
 			ID:          uuid + "-" + strconv.Itoa(i),
 			Obj:         obj, // req.object

@@ -39,7 +39,7 @@ const (
 	workItemBufferSize    = 1000
 	connectErr            = "connect:" // copied from vos
 	fwLogMetaVersion      = "v1"
-	fwlogsBucketName      = "fwlogs.fwlogs"
+	fwlogsBucketName      = "fwlogs"
 	fwLogCSVVersion       = "v1"
 )
 
@@ -68,8 +68,31 @@ type TestObject struct {
 type singleLog struct {
 	ts time.Time
 
+	srcVrf uint64
+
 	// Its an interface because CSV & JSON file formats need different data structures
 	log interface{}
+}
+
+// Maintains logs per vrf
+type vrfBufferedLogs struct {
+	bufferedLogs []interface{}
+	index        map[string]string
+
+	// StartTs & EndTs represent the timestamp of the first log and the last log in a window
+	startTs time.Time
+	prevTs  time.Time
+	endTs   time.Time
+
+	// This is the time when the logs for this vrf got reported to object store last time.
+	lastReportedTs time.Time
+}
+
+func newVrfBufferedLogs() *vrfBufferedLogs {
+	return &vrfBufferedLogs{
+		bufferedLogs: []interface{}{},
+		index:        map[string]string{},
+	}
 }
 
 // ObjStoreInit initializes minio and fwlog object
@@ -113,24 +136,24 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 		}
 	}(ctx, clientChannel)
 
-	bufferedLogs := []interface{}{}
-	index := map[string]string{}
+	perVrfBufferedLogs := map[uint64]*vrfBufferedLogs{}
 
-	// StartTs & EndTs represent the timestamp of the first log and the last log in a window
-	var startTs, endTs, prevTime time.Time
-
-	helper := func() {
+	helper := func(vrf uint64) {
 		if c != nil {
 			w.postWorkItem(transmitLogs(ctx,
-				c, bufferedLogs, index,
-				len(bufferedLogs), startTs, endTs,
+				c, vrf, perVrfBufferedLogs[vrf].bufferedLogs,
+				perVrfBufferedLogs[vrf].index,
+				len(perVrfBufferedLogs[vrf].bufferedLogs),
+				perVrfBufferedLogs[vrf].startTs,
+				perVrfBufferedLogs[vrf].endTs,
 				testChannel, nodeUUID, ff, zip,
 				singleBucket))
 		}
 
 		// If client has not been initialized yet then drop the collected logs and move on.
-		bufferedLogs = []interface{}{}
-		index = map[string]string{}
+		perVrfBufferedLogs[vrf].bufferedLogs = []interface{}{}
+		perVrfBufferedLogs[vrf].index = map[string]string{}
+		perVrfBufferedLogs[vrf].lastReportedTs = time.Now()
 	}
 
 	// Logs will get transmitted to the object store when:
@@ -167,33 +190,42 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 			// startTs gets set when:
 			// 1. logs buffer is empty - happens in the beginning
 			// 2. After latest buffer is sent to minio - happens when the hour changes
-
-			// Init prevtime
-			if prevTime.IsZero() {
-				prevTime = l.ts
+			pvbl, ok := perVrfBufferedLogs[l.srcVrf]
+			if !ok {
+				pvbl = newVrfBufferedLogs()
+				perVrfBufferedLogs[l.srcVrf] = pvbl
 			}
 
-			if len(bufferedLogs) == 0 {
-				startTs = l.ts
+			// Init prevtime
+			if pvbl.prevTs.IsZero() {
+				pvbl.prevTs = l.ts
+			}
+
+			if len(pvbl.bufferedLogs) == 0 {
+				pvbl.startTs = l.ts
 			}
 
 			// If the hour has changed or size has reached
 			// 6000 = 100 CPS * 60 seconds
-			if l.ts.Hour() != prevTime.Hour() || len(bufferedLogs) >= 6000 {
-				helper()
+			if l.ts.Hour() != pvbl.prevTs.Hour() || len(pvbl.bufferedLogs) >= 6000 {
+				helper(l.srcVrf)
 
 				// Reset the startTs
-				startTs = l.ts
+				pvbl.startTs = l.ts
 			}
-			bufferedLogs = append(bufferedLogs, l.log)
-			populateIndex(index, l)
+			pvbl.bufferedLogs = append(pvbl.bufferedLogs, l.log)
+			populateIndex(pvbl.index, l)
 
-			endTs = l.ts
-			prevTime = endTs
+			pvbl.endTs = l.ts
+			pvbl.prevTs = pvbl.endTs
 		case <-time.After(timerTickDuration):
 			ticks++
-			if ticks >= totalTicksForPeriodicTransmit && len(bufferedLogs) > 0 {
-				helper()
+			if ticks >= totalTicksForPeriodicTransmit {
+				for vrfid, perVrfLogs := range perVrfBufferedLogs {
+					if time.Now().Sub(perVrfLogs.lastReportedTs) >= periodicTransmitTime && len(perVrfLogs.bufferedLogs) > 0 {
+						helper(vrfid)
+					}
+				}
 				ticks = 0
 			}
 		}
@@ -201,11 +233,11 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 }
 
 func transmitLogs(ctx context.Context,
-	c objstore.Client, logs interface{}, index map[string]string, numLogs int, startTs time.Time, endTs time.Time,
+	c objstore.Client, vrf uint64, logs interface{}, index map[string]string, numLogs int, startTs time.Time, endTs time.Time,
 	testChannel chan<- TestObject, nodeUUID string, ff fileFormat, zip bool, singleBucket bool) func() {
 	return func() {
 		// TODO: this can be optimized. Bucket name should be calcualted only once per hour.
-		bucketName := getBucketName(bucketPrefix, nodeUUID, startTs, singleBucket)
+		bucketName := getBucketName(bucketPrefix, vrf, nodeUUID, startTs, singleBucket)
 		indexBucketName := getIndexBucketName(bucketName)
 
 		// The logs in input slice logs are already sorted according to their Ts.
@@ -312,7 +344,7 @@ func putObjectHelper(ctx context.Context,
 func getCSVObjectBuffer(logs interface{}, b *bytes.Buffer, zip bool) {
 	helper := func(csvBytes *bytes.Buffer) {
 		w := csv.NewWriter(csvBytes)
-		w.Write([]string{"sip",
+		w.Write([]string{"svrf", "dvrf", "sip",
 			"dip", "ts", "sport", "dport",
 			"proto", "act", "dir", "ruleid",
 			"sessionid", "sessionstate",
@@ -372,9 +404,14 @@ func getJSONIndexBuffer(logs interface{}, b *bytes.Buffer) {
 	// not implemented
 }
 
-func getBucketName(bucketPrefix string, dscID string, ts time.Time, singleBucket bool) string {
+func getBucketName(bucketPrefix string, vrf uint64, dscID string, ts time.Time, singleBucket bool) string {
 	var b bytes.Buffer
 	if singleBucket {
+		// We dont have any cross vrf scenarios as of now.
+		// So just the tenant name from source vrf.
+		tenantName := getTenantNameFromSourceVrf(vrf)
+		b.WriteString(tenantName)
+		b.WriteString(".")
 		b.WriteString(fwlogsBucketName)
 	} else {
 		y, m, d := ts.Date()
@@ -417,6 +454,8 @@ func createBucketClient(ctx context.Context, resolver resolver.Interface, tenant
 }
 
 func (s *PolicyState) handleObjStore(ev *halproto.FWEvent, ts time.Time) {
+	vrfSrc := fmt.Sprintf("%v", ev.GetSourceVrf())
+	vrfDest := fmt.Sprintf("%v", ev.GetDestVrf())
 	ipSrc := netutils.IPv4Uint32ToString(ev.GetSipv4())
 	ipDest := netutils.IPv4Uint32ToString(ev.GetDipv4())
 	dPort := fmt.Sprintf("%v", ev.GetDport())
@@ -437,6 +476,8 @@ func (s *PolicyState) handleObjStore(ev *halproto.FWEvent, ts time.Time) {
 	if s.objStoreFileFormat == jsonFileFormat {
 		fwLog := map[string]interface{}{
 			"ts":              ts,
+			"sourcevrf":       vrfSrc,
+			"destinationvrf":  vrfDest,
 			"source":          ipSrc,
 			"destination":     ipDest,
 			"sourceport":      sPort,
@@ -456,12 +497,14 @@ func (s *PolicyState) handleObjStore(ev *halproto.FWEvent, ts time.Time) {
 		}
 
 		// TODO: use sync pool
-		s.logsChannel <- singleLog{ts, fwLog}
+		s.logsChannel <- singleLog{ts, ev.GetSourceVrf(), fwLog}
 		return
 	}
 
 	// CSV file format
 	fwLog := []string{
+		vrfSrc,
+		vrfDest,
 		ipSrc,
 		ipDest,
 		ts.Format(time.RFC3339),
@@ -479,7 +522,12 @@ func (s *PolicyState) handleObjStore(ev *halproto.FWEvent, ts time.Time) {
 	}
 
 	// TODO: use sync pool
-	s.logsChannel <- singleLog{ts, fwLog}
+	s.logsChannel <- singleLog{ts, ev.GetSourceVrf(), fwLog}
+}
+
+func getTenantNameFromSourceVrf(vrf uint64) string {
+	// There is only 1 tenant as of now.
+	return "default"
 }
 
 func populateIndex(index map[string]string, l singleLog) {

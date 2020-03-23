@@ -43,8 +43,20 @@ func (s *storeImpl) Delete(key string, rev uint64, cb apiintf.SuccessCbFunc) (ru
 
 // List satisfies the apiintf.Store interface
 func (s *storeImpl) List(bucket, kind string, opts api.ListWatchOptions) ([]runtime.Object, error) {
-	if bucket == fwlogsBucketName {
-		return s.handleListFwLogsDuringGrpcInit(opts)
+	if bucket == diskUpdateWatchPath {
+		// diskUpdateWatchPath piggybacks on the general grpc notification streaming logic.
+		// As a side effect of that this method gets called on diskUpdateWatchPath as well,
+		// just ignore the call and return.
+		return []runtime.Object{}, nil
+	}
+
+	tokens := strings.Split(bucket, ".")
+	bucketName := tokens[1]
+	if bucketName == fwlogsBucketName {
+		if len(opts.FieldChangeSelector) != 0 {
+			return s.handleListFwLogsDuringGrpcInit(bucket, opts)
+		}
+		log.Infof("fwlogs lastProcessedKeys are empty, doing normal listing")
 	}
 
 	var ret []runtime.Object
@@ -212,7 +224,7 @@ func (w *storeWatcher) makeEvent(event minio.NotificationEvent) (kvstore.WatchEv
 	return retType, obj
 }
 
-func (s *storeImpl) handleListFwLogsDuringGrpcInit(opts api.ListWatchOptions) ([]runtime.Object, error) {
+func (s *storeImpl) handleListFwLogsDuringGrpcInit(bucket string, opts api.ListWatchOptions) ([]runtime.Object, error) {
 	results := []runtime.Object{}
 	wg := sync.WaitGroup{}
 
@@ -255,7 +267,7 @@ func (s *storeImpl) handleListFwLogsDuringGrpcInit(opts api.ListWatchOptions) ([
 				b.WriteString(strconv.Itoa(d))
 				b.WriteString("/")
 				b.WriteString(strconv.Itoa(h))
-				objCh := s.BaseBackendClient.ListObjectsV2(fwlogsBucketName, b.String(), true, doneCh)
+				objCh := s.BaseBackendClient.ListObjectsV2(bucket, b.String(), true, doneCh)
 				for mobj := range objCh {
 					// Ignore the objects that are less then the given last processed key
 					if strings.Compare(lastProcessedKey, mobj.Key) == 1 {
@@ -263,9 +275,9 @@ func (s *storeImpl) handleListFwLogsDuringGrpcInit(opts api.ListWatchOptions) ([
 					}
 
 					// List does not seem to be returing with UserMeta populated. Workaround by doing a stat.
-					stat, err := s.BaseBackendClient.StatObject(fwlogsBucketName, mobj.Key, minio.StatObjectOptions{})
+					stat, err := s.BaseBackendClient.StatObject(bucket, mobj.Key, minio.StatObjectOptions{})
 					if err != nil {
-						log.Errorf("failed to get stat for object [%v.%v](%s)", fwlogsBucketName, mobj.Key, err)
+						log.Errorf("failed to get stat for object [%v.%v](%s)", bucket, mobj.Key, err)
 						continue
 					}
 					lobj := &objstore.Object{
@@ -277,7 +289,7 @@ func (s *storeImpl) handleListFwLogsDuringGrpcInit(opts api.ListWatchOptions) ([
 							Digest: stat.ETag,
 						},
 					}
-					parts := strings.Split(fwlogsBucketName, ".")
+					parts := strings.Split(bucket, ".")
 					if len(parts) == 2 {
 						lobj.Tenant = parts[0]
 						lobj.Namespace = parts[1]
