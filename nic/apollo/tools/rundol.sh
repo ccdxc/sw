@@ -117,6 +117,7 @@ function finish () {
         stop_process
     fi
     collect_logs
+    ${PDSPKG_TOPDIR}/tools/print-cores.sh
     remove_stale_files
 }
 trap finish EXIT
