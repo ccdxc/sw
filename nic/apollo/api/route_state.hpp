@@ -114,17 +114,10 @@ public:
     sdk_ret_t insert(route *route);
 
     /// \brief     remove the given instance of route object from db
-    /// \param[in] route    route entry to be deleted from the db
+    /// \param[in] rt    route entry to be deleted from the db
     /// \return    pointer to the removed route instance or NULL,
     ///            if not found
-    route_table *remove(route *route);
-
-    /// \brief    remove current object from the databse(s) and swap it with the
-    ///           new instance of the obj (with same key)
-    /// \param[in] curr_route    current instance of the route
-    /// \param[in] new_route     new instance of the route
-    /// \return   SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(route *curr_route, route *new_route);
+    route *remove(route *rt);
 
     /// \brief     free route instance back to slab
     /// \param[in] route pointer to the allocated route instance
@@ -132,7 +125,7 @@ public:
 
     /// \brief     lookup a route in database given the key
     /// \param[in] key route key
-    route_table *find(pds_obj_key_t *key) const;
+    route *find(pds_obj_key_t *key) const;
 
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab

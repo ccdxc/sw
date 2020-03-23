@@ -223,8 +223,8 @@ private:
     ht_ctxt_t        ht_ctxt_;    ///< hash table context
     impl_base        *impl_;      ///< impl object instance
 
-    friend class route_table_state;    // route_table_state is friend
-                                       // of route_table
+    // route_table_state class is friend of route_table
+    friend class route_table_state;
 } __PACK__;
 
 /// \brief route class
@@ -300,13 +300,20 @@ public:
 
 private:
     /// \brief    constructor
-    route() {}
+    route() {
+        ht_ctxt_.reset();
+    }
 
     /// \brief    destructor
     ~route() {}
 
 private:
     pds_obj_key_t key_;    ///< route key
+
+    ///< hash table context
+    ht_ctxt_t        ht_ctxt_;
+    // route_table_state class is friend of route_table
+    friend class route_state;
 };
 
 /// \@}

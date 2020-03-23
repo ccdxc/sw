@@ -12,6 +12,11 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/route_state.hpp"
 
+// NOTE:
+// routes are stateless objects, PDS_ROUTE_HT_SIZE is just hash table size and
+// has no relation to the max. routes supported on NAPLES
+#define PDS_ROUTE_HT_SIZE        4096
+
 namespace api {
 
 /// \defgroup PDS_ROUTE_TABLE_STATE - route table state/db functionality
@@ -67,8 +72,8 @@ route_table_state::free(route_table *rtable) {
 }
 
 route_table *
-route_table_state::find(pds_obj_key_t *route_table_key) const {
-    return (route_table *)(route_table_ht_->lookup(route_table_key));
+route_table_state::find(pds_obj_key_t *key) const {
+    return (route_table *)(route_table_ht_->lookup(key));
 }
 
 sdk_ret_t
@@ -106,6 +111,51 @@ route_table_state::perish(const pds_obj_key_t& key) {
 sdk_ret_t
 route_table_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
     walk_cb(route_table_slab_, ctxt);
+    return SDK_RET_OK;
+}
+
+route_state::route_state() {
+    route_ht_ = ht::factory(PDS_ROUTE_HT_SIZE, route::route_key_func_get,
+                            sizeof(pds_obj_key_t));
+    SDK_ASSERT(route_ht_ != NULL);
+    route_slab_ = slab::factory("route", PDS_SLAB_ID_ROUTE,
+                                sizeof(route), 16, true, true, true, NULL);
+    SDK_ASSERT(route_slab_ != NULL);
+}
+
+route_state::~route_state() {
+    ht::destroy(route_ht_);
+    slab::destroy(route_slab_);
+}
+
+route *
+route_state::alloc(void) {
+    return ((route *)route_slab_->alloc());
+}
+
+sdk_ret_t
+route_state::insert(route *route) {
+    return route_ht_->insert_with_key(&route->key_, route, &route->ht_ctxt_);
+}
+
+route *
+route_state::remove(route *rt) {
+    return (route *)(route_ht_->remove(&rt->key_));
+}
+
+void
+route_state::free(route *route) {
+    route_slab_->free(route);
+}
+
+route *
+route_state::find(pds_obj_key_t *key) const {
+    return (route *)(route_ht_->lookup(key));
+}
+
+sdk_ret_t
+route_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    walk_cb(route_slab_, ctxt);
     return SDK_RET_OK;
 }
 
