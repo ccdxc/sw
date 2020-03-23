@@ -48,10 +48,10 @@ testbundles:
     precheckin:
         - networking/connectivity.testbundle
         - networking/telemetry_precheckin.testbundle
-        - networking/expanded_telemetry_classic.testbundle
         - filters/filters.testbundle
         - subifs/subifs-precheckin.testbundle
         - rx_mode/rx_mode.testbundle
+        - networking/lif_telemetry_precheckin.testbundle
         - classic/driver-features-sanity.testbundle
         - system/obfl_check.testbundle
         - sysmon/interrupts.testbundle
@@ -65,6 +65,7 @@ testbundles:
         - networking/telemetry.testbundle
         - flowlog/flowlog.testbundle
         - aging/aging_flowaware.testbundle
+        - networking/lif_telemetry.testbundle
         #- classic/rdma.testbundle
         - linktest/linktest.testbundle
         - filters/filters.testbundle

@@ -15,6 +15,10 @@ from scapy.utils import wrpcap
 from scapy import packet
 from scapy.all import Ether
 
+NUMBER_OF_TCP_ERSPAN_PACKETS_PER_SESSION  = 6
+NUMBER_OF_UDP_ERSPAN_PACKETS_PER_SESSION  = 2
+NUMBER_OF_ICMP_ERSPAN_PACKETS_PER_SESSION = 2
+
 def Setup(tc):
     #
     # Set up global variables
@@ -24,11 +28,14 @@ def Setup(tc):
     tc.udp_count = 1
     tc.icmp_count = 1
 
+    tc.tcp_close_val = None
+    tc.classic_mode = False
+    tc.ignore = False
+    tc.error = False
+
     #
     # Establish Workloads
     #
-    tc.classic_mode = None
-    tc.error = False
     result = eutils.establishWorkloads(tc)
     if result != api.types.status.SUCCESS:
         tc.error = True
@@ -42,7 +49,6 @@ def Setup(tc):
         tc.error = True
         return result
 
-    tc.classic_mode = False
     if api.IsBareMetalWorkloadType(tc.naples.node_name):
         tc.classic_mode = True
 
@@ -80,13 +86,6 @@ def Setup(tc):
         tc.error = True
         return result
 
-    eutils.debugWorkLoadTraces(tc)
-
-    #
-    # Retrieve relevant Table-Id's
-    #
-    eutils.retrieveTableIds(tc)
-
     #
     # Ignore non-applicable test-options in Sanity mode
     # - [vlan = native] is not supported until P4 issue on
@@ -96,16 +95,28 @@ def Setup(tc):
     #   support to enable the same
     # - Multi-collector testing is not enabled in freebsd
     #   environment until tcpdump capture on secondary-IP is resolved
+    # - Multi-collector testing is restricted to 2 in esx
+    #   environment until tcpdump capture on secondary-IP is resolved
     #
-    tc.ignore = False
-    if tc.args.type == 'sanity':
-        for c in range(0, len(tc.collector)):
-            if tc.iterators.collector == 'local' or\
-               (api.GetNodeOs(tc.naples.node_name) == 'freebsd' and\
-                tc.iterators.ccount > 1) or\
-               (tc.collector[c].IsNaples() and tc.iterators.vlan == 'native'):
-                tc.ignore = True
-                return api.types.status.SUCCESS
+    if tc.iterators.collector == 'local' or\
+       (api.GetNodeOs(tc.naples.node_name) == 'freebsd' and\
+        tc.iterators.ccount > 1) or\
+       (api.GetNodeOs(tc.naples.node_name) == 'esx' and\
+        tc.iterators.ccount > 2):
+        tc.ignore = True
+        return api.types.status.SUCCESS
+
+    for c in range(0, len(tc.collector)):
+        if tc.collector[c].IsNaples() and tc.iterators.vlan == 'native':
+            tc.ignore = True
+            return api.types.status.SUCCESS
+
+    eutils.debugWorkLoadTraces(tc)
+
+    #
+    # Retrieve relevant Table-Id's
+    #
+    eutils.retrieveTableIds(tc)
 
     #
     # Set up runtime validation knobs
@@ -132,12 +143,12 @@ def Trigger(tc):
     if tc.error == True:
         return api.types.status.FAILURE
 
-    tc.resp_tcpdump = None
+    tc.resp_tcpdump_erspan = None
     tc.resp_cleanup = None
 
     protoDir = api.GetTopologyDirectory() +\
                "/gen/telemetry/{}/{}".format('mirror', 'lif')
-    api.Logger.error("Template Config files location: ", protoDir)
+    api.Logger.info("Template Config files location: ", protoDir)
 
     policies = utils.GetTargetJsons('mirror', 'lif')
     for policy_json in policies:
@@ -183,6 +194,12 @@ def Trigger(tc):
             continue
 
         #
+        # Give a little time for Mirror-config to take effect
+        #
+        time.sleep(2)
+
+
+        #
         # Establish Forwarding set up between Naples-peer and Collectors
         #
         eutils.establishForwardingSetup(tc)
@@ -207,22 +224,24 @@ def Trigger(tc):
             tc.error = True
             return api.types.status.FAILURE
 
-        req_tcpdump = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+        req_tcpdump_erspan = api.Trigger_CreateExecuteCommandsRequest(\
+                             serial = True)
         for c in range(0, len(tc.collector)):
             #
             # Set up TCPDUMP's on the collector
             #
             if tc.collector[c].IsNaples():
-                cmd = "tcpdump -c 200 -XX -vv -nni %s ip proto gre and dst %s"%\
-                      (tc.collector[c].interface, tc.collector_ip_address[c])
+                cmd = "tcpdump -c 600 -XX -vv -nni %s ip proto gre and dst %s\
+                       --immediate-mode -U -w mirror-%d.pcap"%\
+                      (tc.collector[c].interface, tc.collector_ip_address[c], c)
             else:
-                cmd = "tcpdump -p -c 200 -XX -vv -nni %s ip proto gre\
-                       and dst %s" %\
-                      (tc.collector[c].interface, tc.collector_ip_address[c])
-            eutils.add_command(req_tcpdump, tc.collector[c], cmd, True)
+                cmd = "tcpdump -p -c 600 -XX -vv -nni %s ip proto gre\
+                       and dst %s --immediate-mode -U -w mirror-%d.pcap" %\
+                      (tc.collector[c].interface, tc.collector_ip_address[c], c)
+            eutils.add_command(req_tcpdump_erspan, tc.collector[c], cmd, True)
 
-        resp_tcpdump = api.Trigger(req_tcpdump)
-        for cmd in resp_tcpdump.commands:
+        resp_tcpdump_erspan = api.Trigger(req_tcpdump_erspan)
+        for cmd in resp_tcpdump_erspan.commands:
             api.PrintCommandResults(cmd)
 
         #
@@ -237,11 +256,14 @@ def Trigger(tc):
         #
         tc.dest_port = '120'
         if api.GetNodeOs(tc.naples.node_name) == 'linux':
-            eutils.triggerTrafficInClassicModeLinux(tc, tc.protocol, 
-                                           tc.udp_count, tc.icmp_count)
+            eutils.triggerTrafficInClassicModeLinux(tc)
         else:
-            eutils.triggerTrafficInHostPinModeOrFreeBSD(tc, tc.protocol, 
-                                           tc.udp_count, tc.icmp_count)
+            eutils.triggerTrafficInHostPinModeOrFreeBSD(tc)
+
+        #
+        # Dump sessions/flows/P4-tables for debug purposes
+        #
+        eutils.showSessionAndP4TablesForDebug(tc)
 
         #
         # Introduce a delay to make sure that TCPDUMP background
@@ -253,14 +275,10 @@ def Trigger(tc):
         #
         # Terminate TCPDUMP background process
         #
-        term_resp_tcpdump = api.Trigger_TerminateAllCommands(resp_tcpdump)
-        tc.resp_tcpdump = api.Trigger_AggregateCommandsResponse(resp_tcpdump,
-                                                              term_resp_tcpdump)
-
-        #
-        # Dump sessions/flows/P4-tables for debug purposes
-        #
-        eutils.showSessionAndP4TablesForDebug(tc)
+        term_resp_tcpdump_erspan = api.Trigger_TerminateAllCommands(\
+                                   resp_tcpdump_erspan)
+        tc.resp_tcpdump_erspan = api.Trigger_AggregateCommandsResponse(\
+                              resp_tcpdump_erspan, term_resp_tcpdump_erspan)
 
         # Delete the objects
         eutils.deGenerateLifInterfaceConfig(tc, tc.interface_objects, 
@@ -285,14 +303,28 @@ def Verify(tc):
     if tc.error == True:
         return api.types.status.FAILURE
 
-    if tc.resp_tcpdump is None or tc.resp_cleanup is None:
+    if tc.resp_tcpdump_erspan is None or tc.resp_cleanup is None:
         return api.types.status.FAILURE
 
     #
     # Validate ERSPAN packets reception
     #
-    res_1 = eutils.validateErspanPackets(tc, tc.protocol, tc.feature, 
-                                         tc.iterators.direction)
+    tc.tcp_erspan_pkts_expected = NUMBER_OF_TCP_ERSPAN_PACKETS_PER_SESSION
+    tc.udp_erspan_pkts_expected = NUMBER_OF_UDP_ERSPAN_PACKETS_PER_SESSION
+    tc.icmp_erspan_pkts_expected = (NUMBER_OF_UDP_ERSPAN_PACKETS_PER_SESSION+\
+                                    NUMBER_OF_ICMP_ERSPAN_PACKETS_PER_SESSION)
+
+    if tc.iterators.direction != 'both':
+        tc.tcp_erspan_pkts_expected >>= 1
+        tc.udp_erspan_pkts_expected >>= 1
+        tc.icmp_erspan_pkts_expected >>= 1
+
+    if tc.dupcheck == 'disable':
+        tc.tcp_erspan_pkts_expected  =  (tc.tcp_erspan_pkts_expected+1) << 1
+        tc.udp_erspan_pkts_expected  <<= 1
+        tc.icmp_erspan_pkts_expected <<= 1
+
+    res_1 = eutils.validateErspanPackets(tc)
 
     #
     # Validate Config-cleanup
@@ -309,9 +341,9 @@ def Teardown(tc):
         return api.types.status.SUCCESS
 
     #
-    # Restore current Time-Close configs
+    # Restore current Time-Close configs, if applicable
     #
-    if tc.classic_mode is not None and tc.classic_mode == False:
+    if tc.tcp_close_val is not None:
         update_timeout('tcp-close', tc.tcp_close_val)
 
     if tc.error == True:

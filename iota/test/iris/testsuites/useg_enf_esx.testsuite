@@ -44,10 +44,10 @@ testbundles:
         - flowlog/flowlog_precheckin.testbundle
         - networking/cps_precheckin.testbundle
         - networking/telemetry_precheckin.testbundle
-        - networking/expanded_telemetry.testbundle
         - firewall/policy_precheckin.testbundle
         - firewall/normalization.testbundle
         - aging/aging_precheckin.testbundle
+        - networking/lif_telemetry_precheckin.testbundle
         - penctl/penctl_hostpin.testbundle
         - p4ctl/p4ctl_hostpin.testbundle
         - naples_upgrade/naples_upgrade_hostpin.testbundle
@@ -67,6 +67,7 @@ testbundles:
         - linktest/linktest.testbundle
         - firewall/policy.testbundle
         - aging/aging.testbundle
+        - networking/lif_telemetry.testbundle
         - alg/alg.testbundle
         - firewall/conntrack.testbundle
         - firewall/normalization.testbundle

@@ -262,6 +262,9 @@ pd_mirror_session_create (pd_func_args_t *pd_func_args)
     }
     case MIRROR_DEST_ERSPAN: {
         action_data.action_id = MIRROR_ERSPAN_MIRROR_ID;
+        if (likely(is_platform_type_hw())) {
+            action_data.action_u.mirror_erspan_mirror.gre_seq_en = 1;
+        }
         action_data.action_u.mirror_erspan_mirror.truncate_len = args->session->truncate_len;
         if (args->dst_if) {
             dst_lport = if_get_lport_id(args->dst_if);

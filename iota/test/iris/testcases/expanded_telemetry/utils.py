@@ -16,10 +16,20 @@ from scapy.utils import rdpcap
 from scapy.utils import wrpcap
 from scapy import packet
 from scapy.all import Ether
+from scapy.all import Dot1Q
+from scapy.all import IP
+from scapy.all import TCP
+from scapy.all import UDP
+from scapy.all import ICMP
+from scapy.all import GRE
+from iota.test.utils.erspan import ERSPAN_III
+from iota.test.utils.erspan import PlatformSpecific
+from iota.test.utils.flowmon import *
 
-IP_PROTO_TCP  = 6
-IP_PROTO_UDP  = 17
-IP_PROTO_ICMP = 1
+IP_HEADER_LENGTH = 20
+IP_PROTO_TCP     = 6
+IP_PROTO_UDP     = 17
+IP_PROTO_ICMP    = 1
 
 DOT1Q_ETYPE      = 0x8100
 GRE_ENCAP_LENGTH = 38
@@ -28,15 +38,14 @@ ICMP_ECHO         = 0x0800
 ICMP_ECHO_REPLY   = 0x0000
 ICMP_PORT_UNREACH = 0x0303
 
-NUMBER_OF_TCP_ERSPAN_PACKETS_PER_SESSION  = 6
-NUMBER_OF_UDP_ERSPAN_PACKETS_PER_SESSION  = 2
-NUMBER_OF_ICMP_ERSPAN_PACKETS_PER_SESSION = 4
-
 NUMBER_OF_IPFIX_PACKETS_PER_SESSION = 10
 
 TCP_EXPORT_ENABLE_EXPECTED            = 2
 UDP_EXPORT_ENABLE_EXPECTED            = 20
 ICMP_EXPORT_ENABLE_EXPECTED           = 2
+
+IPFIX_TEMPLATE_SET_ID = 0x0002
+IPFIX_HEADER_LEN = 16
 
 #
 # Add a Command in the context of a Workload
@@ -57,7 +66,7 @@ def add_naples_command(req, naples, cmd):
 def establishWorkloads(tc):
     tc.workloads = api.GetWorkloads()
     if len(tc.workloads) == 0:
-        api.Logger.info("ERROR: No workloads")
+        api.Logger.error("ERROR: No workloads")
         return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
@@ -65,7 +74,6 @@ def establishWorkloads(tc):
 #
 # Identify Naples Workload which would be WUT (workload under test)
 #
-
 def establishNaplesWorkload(tc):
     tc.naples = None
     for wl in tc.workloads:
@@ -78,7 +86,7 @@ def establishNaplesWorkload(tc):
                 break
 
     if tc.naples is None:
-        api.Logger.info("ERROR: No Naples workload")
+        api.Logger.error("ERROR: No Naples workload")
         return api.types.status.FAILURE
 
     ip_mask = (0 - (1 << (32 - int(tc.naples.ip_prefix.split('/')[1]))))
@@ -95,6 +103,7 @@ def establishRemoteWorkloads(tc):
     tc.remote_workloads = []
     tc.naples_peer = None
     tc.collector = []
+    tc.bond0_collector_peer = None
 
     for wl in tc.workloads:
         if wl.node_name != tc.naples.node_name:
@@ -106,20 +115,32 @@ def establishRemoteWorkloads(tc):
                 if tc.iterators.peer == 'remote':
                     if tc.naples_peer is None:
                         tc.naples_peer = wl
+            if wl.uplink_vlan == 0:
                 if (tc.iterators.collector == 'remote' or\
                     tc.iterators.collector == 'all') and\
                     tc.classic_mode == False and\
                     len(tc.collector) < tc.iterators.ccount:
                     tc.collector.append(wl)
+        else:
+            if wl.uplink_vlan == 0:
+                if (tc.iterators.collector == 'remote' or\
+                    tc.iterators.collector == 'all') and\
+                    tc.classic_mode == False:
+                    tc.bond0_collector_peer = wl
+
     if len(tc.remote_workloads) == 0:
-        api.Logger.info("ERROR: No Remote workload")
+        api.Logger.error("ERROR: No Remote workload")
         return api.types.status.FAILURE
     if tc.iterators.peer == 'remote' and tc.naples_peer is None:
-        api.Logger.info("ERROR: No Remote Naples-peer workload")
+        api.Logger.error("ERROR: No Remote Naples-peer workload")
         return api.types.status.FAILURE
     if (tc.iterators.collector == 'remote' or tc.iterators.collector == 'all')\
         and tc.classic_mode == False and len(tc.collector) == 0:
-        api.Logger.info("ERROR: No Remote Collector workload")
+        api.Logger.error("ERROR: No Remote Collector workload")
+        return api.types.status.FAILURE
+    if (tc.iterators.collector == 'remote' or tc.iterators.collector == 'all')\
+        and tc.classic_mode == False and tc.bond0_collector_peer is None:
+        api.Logger.error("ERROR: No Bond0 Collector Peer workload")
         return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
@@ -140,20 +161,32 @@ def establishLocalWorkloads(tc):
                 if tc.iterators.peer == 'local':
                     if tc.naples_peer is None and wl != tc.naples:
                         tc.naples_peer = wl
+            if wl.uplink_vlan == 0:
                 if (tc.iterators.collector == 'local' or\
                     tc.iterators.collector == 'all') and\
                     tc.classic_mode == False and\
                     len(tc.collector) < tc.iterators.ccount:
                     tc.collector.append(wl)
+        else:
+            if wl.uplink_vlan == 0:
+                if (tc.iterators.collector == 'local' or\
+                    tc.iterators.collector == 'all') and\
+                    tc.classic_mode == False:
+                    tc.bond0_collector_peer = wl
+
     if len(tc.local_workloads) == 0:
-        api.Logger.info("ERROR: No Local workload")
+        api.Logger.error("ERROR: No Local workload")
         return api.types.status.FAILURE
     if tc.iterators.peer == 'local' and tc.naples_peer is None:
-        api.Logger.info("ERROR: No Local Naples-peer workload")
+        api.Logger.error("ERROR: No Local Naples-peer workload")
         return api.types.status.FAILURE
     if (tc.iterators.collector == 'local' or tc.iterators.collector == 'all')\
         and tc.classic_mode == False and len(tc.collector) == 0:
-        api.Logger.info("ERROR: No Local Collector workload")
+        api.Logger.error("ERROR: No Local Collector workload")
+        return api.types.status.FAILURE
+    if (tc.iterators.collector == 'local' or tc.iterators.collector == 'all')\
+        and tc.classic_mode == False and tc.bond0_collector_peer is None:
+        api.Logger.error("ERROR: No Bond0 Collector Peer workload")
         return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
@@ -164,23 +197,25 @@ def establishLocalWorkloads(tc):
 def establishCollectorSecondaryIPs(tc):
     tc.collector_ip_address = []
     tc.collector_seq_num = []
+    tc.collector_ipfix_records = []
     tc.collector_ipfix_pkts = []
+    tc.collector_ipfix_template_pkts = []
     tc.collector_tcp_pkts = []
     tc.collector_udp_pkts = []
     tc.collector_icmp_pkts = []
     tc.collector_other_pkts = []
-    tc.collector_validation_done = []
     tc.result = []
 
     for c in range(0, len(tc.collector)):
         tc.collector_ip_address.append(tc.collector[c].ip_address)
         tc.collector_seq_num.append(0)
+        tc.collector_ipfix_records.append(0)
         tc.collector_ipfix_pkts.append(0)
+        tc.collector_ipfix_template_pkts.append(0)
         tc.collector_tcp_pkts.append(0)
         tc.collector_udp_pkts.append(0)
         tc.collector_icmp_pkts.append(0)
         tc.collector_other_pkts.append(0)
-        tc.collector_validation_done.append(False)
         tc.result.append(api.types.status.SUCCESS)
 
     tc.sec_ip_count = 0
@@ -220,12 +255,13 @@ def establishCollectorSecondaryIPs(tc):
     c = 0
     while c < tc.sec_ip_count:
         tc.collector_seq_num.append(0)
+        tc.collector_ipfix_records.append(0)
         tc.collector_ipfix_pkts.append(0)
+        tc.collector_ipfix_template_pkts.append(0)
         tc.collector_tcp_pkts.append(0)
         tc.collector_udp_pkts.append(0)
         tc.collector_icmp_pkts.append(0)
         tc.collector_other_pkts.append(0)
-        tc.collector_validation_done.append(False)
         tc.result.append(api.types.status.SUCCESS)
         c += 1
 
@@ -256,7 +292,6 @@ def deEstablishCollectorSecondaryIPs(tc):
 #
 def establishCollectorWorkloadInClassicMode(tc, template_collector_ip):
     tc.bond0_collector = None
-    tc.bond0_collector_peer = None
     if tc.iterators.collector == 'local':
         wl_pool = tc.local_workloads
         wl_peer_pool = tc.remote_workloads
@@ -274,7 +309,7 @@ def establishCollectorWorkloadInClassicMode(tc, template_collector_ip):
             tc.bond0_collector = wl
             break
     if tc.bond0_collector is None:
-        api.Logger.info("ERROR: No Bond0 Collector workload")
+        api.Logger.error("ERROR: No Bond0 Collector workload")
         return api.types.status.FAILURE
     tc.collector.append(tc.bond0_collector)
 
@@ -289,7 +324,7 @@ def establishCollectorWorkloadInClassicMode(tc, template_collector_ip):
             break
 
     if tc.bond0_collector_peer is None:
-        api.Logger.info("ERROR: No Bond0 Collector Local workload")
+        api.Logger.error("ERROR: No Bond0 Collector Peer workload")
         return api.types.status.FAILURE
 
     api.Logger.info("NEW COLLECTOR ATTRIBUTES {} {} {} {} {} {} {} {} {} {} {}"\
@@ -559,18 +594,12 @@ def generateFlowMonConfig(tc, policy_json, newObjects):
 #
 def establishForwardingSetup(tc):
     #
-    # Start with a clean slate by clearing all sessions/flows
-    #
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    cmd = "/nic/bin/halctl clear session"
-    add_naples_command(req, tc.naples, cmd)
-
-    #
     # Make sure that Naples<=>Naples-peer Forwarding is set up
     #
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     if api.GetNodeOs(tc.naples_peer.node_name) == 'linux':
         cmd = "ping -I %s -c1 %s" %\
-              (tc.naples_peer.interface, tc.naples_peer.ip_address)
+              (tc.naples.interface, tc.naples_peer.ip_address)
     else:
         cmd = "ping -c1 %s" % (tc.naples_peer.ip_address)
     add_command(req, tc.naples, cmd, False)
@@ -582,29 +611,21 @@ def establishForwardingSetup(tc):
         cmd = "ping -c1 %s" % (tc.naples.ip_address)
     add_command(req, tc.naples_peer, cmd, False)
 
-    if tc.classic_mode == True:
-        for c in range(0, len(tc.collector)):
-            #
-            # Make sure that Collector<=>Collector-Peer Forwarding is set up
-            #
-            cmd = "ping -c1 %s" % (tc.collector_ip_address[c])
-            add_command(req, tc.bond0_collector_peer, cmd, False)
+    for c in range(0, len(tc.collector)):
+        #
+        # Make sure that Collector<=>Collector-Peer Forwarding is set up
+        #
+        cmd = "ping -c1 %s" % (tc.collector_ip_address[c])
+        add_command(req, tc.bond0_collector_peer, cmd, False)
 
-            cmd = "ping -c1 %s" % (tc.bond0_collector_peer.ip_address)
-            add_command(req, tc.collector[c], cmd, False)
-    else:
-        for c in range(0, len(tc.collector)):
-            #
-            # Make sure that Collector<=>Naples Forwarding is set up
-            #
-            cmd = "ping -c1 %s" % (tc.collector_ip_address[c])
-            add_command(req, tc.naples, cmd, False)
+        cmd = "ping -c1 %s" % (tc.bond0_collector_peer.ip_address)
+        add_command(req, tc.collector[c], cmd, False)
 
-            #
-            # Make sure that Collector<=>Naples-peer Forwarding is set up
-            #
-            cmd = "ping -c1 %s" % (tc.collector_ip_address[c])
-            add_command(req, tc.naples_peer, cmd, False)
+    #
+    # Start with a clean slate by clearing all sessions/flows
+    #
+    cmd = "/nic/bin/halctl clear session"
+    add_naples_command(req, tc.naples, cmd)
 
     resp = api.Trigger(req)
     for cmd in resp.commands:
@@ -613,11 +634,11 @@ def establishForwardingSetup(tc):
 #
 # Use Applicable tools to trigger packets in Classic-mode
 #
-def triggerTrafficInClassicModeLinux(tc, protocol, udp_count, icmp_count):
+def triggerTrafficInClassicModeLinux(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     # TCP
-    #if protocol == 'tcp' or protocol == 'all':
+    #if tc.protocol == 'tcp' or tc.protocol == 'all':
     #    cmd = "nc -l {}".format(int(tc.dest_port))
     #    add_command(req, tc.naples_peer, cmd, False)
     #    cmd = "nc {} {} -p {} "\
@@ -626,27 +647,27 @@ def triggerTrafficInClassicModeLinux(tc, protocol, udp_count, icmp_count):
     #    add_command(req, tc.naples, cmd, False)
 
     # UDP
-    if protocol == 'udp' or protocol == 'all':
+    if tc.protocol == 'udp' or tc.protocol == 'all':
         cmd = "nping --udp --dest-port {} --source-port {} --count {}\
                --interface {} --data-length {} {}"\
-              .format(int(tc.dest_port), int(tc.dest_port), udp_count,
+              .format(int(tc.dest_port), int(tc.dest_port), tc.udp_count,
                       tc.naples.interface, tc.iterators.pktsize*2, 
                       tc.naples_peer.ip_address)
         add_command(req, tc.naples, cmd, False)
 
         cmd = "nping --udp --dest-port {} --source-port {} --count {}\
                --interface {} --data-length {} {}"\
-              .format(int(tc.dest_port), int(tc.dest_port), udp_count,
+              .format(int(tc.dest_port), int(tc.dest_port), tc.udp_count,
                       tc.naples_peer.interface, tc.iterators.pktsize*2, 
                       tc.naples.ip_address)
         add_command(req, tc.naples_peer, cmd, False)
 
     # ICMP
-    if protocol == 'icmp' or protocol == 'all':
+    if tc.protocol == 'icmp' or tc.protocol == 'all':
         cmd = "nping --icmp --icmp-type 8 --count {} --interface {}\
                --data-length {} {}"\
-              .format(icmp_count, tc.naples.interface, tc.iterators.pktsize*2,
-                      tc.naples_peer.ip_address)
+              .format(tc.icmp_count, tc.naples.interface, 
+                      tc.iterators.pktsize*2, tc.naples_peer.ip_address)
         add_command(req, tc.naples, cmd, False)
 
     trig_resp = api.Trigger(req)
@@ -657,12 +678,16 @@ def triggerTrafficInClassicModeLinux(tc, protocol, udp_count, icmp_count):
 #
 # Use Applicable tools to trigger packets in Hostpin-mode
 #
-def triggerTrafficInHostPinModeOrFreeBSD(tc, protocol, udp_count, icmp_count):
+def triggerTrafficInHostPinModeOrFreeBSD(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
+    #
+    # TCP-traffic is used only in useg_enf mode and during
+    # sanity and regression runs to save time
+    #
     # TCP
-    if protocol == 'tcp' or protocol == 'all':
-        if tc.classic_mode == False:
+    if tc.protocol == 'tcp' or tc.protocol == 'all':
+        if tc.classic_mode == False and tc.args.type != 'precheckin':
     #       cmd = "nc -l {}".format(int(tc.dest_port))
     #       add_command(req, tc.naples_peer, cmd, False)
     #       cmd = "nc {} {} -p {} "\
@@ -678,25 +703,25 @@ def triggerTrafficInHostPinModeOrFreeBSD(tc, protocol, udp_count, icmp_count):
             add_command(req, tc.naples, cmd, False)
 
     # UDP
-    if protocol == 'udp' or protocol == 'all':
+    if tc.protocol == 'udp' or tc.protocol == 'all':
         cmd = "hping3 --udp --destport {} --baseport {} --count {} {}\
                -I {} --data {}"\
-              .format(int(tc.dest_port), int(tc.dest_port), udp_count,
+              .format(int(tc.dest_port), int(tc.dest_port), tc.udp_count,
                       tc.naples_peer.ip_address, tc.naples.interface,
                       tc.iterators.pktsize*2)
         add_command(req, tc.naples, cmd, False)
 
         cmd = "hping3 --udp --destport {} --baseport {} --count {} {}\
                -I {} --data {}"\
-              .format(int(tc.dest_port), int(tc.dest_port), udp_count,
+              .format(int(tc.dest_port), int(tc.dest_port), tc.udp_count,
                       tc.naples.ip_address, tc.naples_peer.interface, 
                       tc.iterators.pktsize*2)
         add_command(req, tc.naples_peer, cmd, False)
 
     # ICMP
-    if protocol == 'icmp' or protocol == 'all':
+    if tc.protocol == 'icmp' or tc.protocol == 'all':
         cmd = "hping3 --icmp --count {} {} -I {} --data {}"\
-              .format(icmp_count, tc.naples_peer.ip_address, 
+              .format(tc.icmp_count, tc.naples_peer.ip_address, 
                       tc.naples.interface, tc.iterators.pktsize*2)
         add_command(req, tc.naples, cmd, False)
 
@@ -723,13 +748,21 @@ def showSessionAndP4TablesForDebug(tc):
            .format(tc.omap_table_id)
     add_naples_command(req, tc.naples, cmd)
 
-    cmd = "/nic/bin/halctl show table dump --table-id {} | \
-           grep mirror_session_id | grep -v 0x0"\
-           .format(tc.flow_info_table_id)
+    #cmd = "/nic/bin/halctl show table dump --table-id {} | \
+    #       grep mirror_session_id | grep -v 0x0"\
+    #       .format(tc.flow_info_table_id)
+    #add_naples_command(req, tc.naples, cmd)
+
+    #cmd = '/nic/bin/halctl show table dump --table-id {} | \
+    #       grep "export_en=1"'.format(tc.flow_hash_table_id)
+    #add_naples_command(req, tc.naples, cmd)
+
+    cmd = "/nic/bin/halctl show session --yaml | grep mirrorsession: |\
+           grep -v 0"
     add_naples_command(req, tc.naples, cmd)
 
-    cmd = '/nic/bin/halctl show table dump --table-id {} | \
-           grep "export_en=1"'.format(tc.flow_hash_table_id)
+    cmd = "/nic/bin/halctl show session --yaml | grep flowexportenablebitmap |\
+           grep -v 0"
     add_naples_command(req, tc.naples, cmd)
 
     cmd = "/nic/bin/halctl show table dump --table-id {}"\
@@ -757,13 +790,21 @@ def showP4TablesForValidation(tc):
            grep mirror_session_id | grep -v 0x0".format(tc.omap_table_id)
     add_naples_command(req, tc.naples, cmd)
 
-    cmd = "/nic/bin/halctl show table dump --table-id {} | \
-           grep mirror_session_id | grep -v 0x0"\
-           .format(tc.flow_info_table_id)
+    #cmd = "/nic/bin/halctl show table dump --table-id {} | \
+    #       grep mirror_session_id | grep -v 0x0"\
+    #       .format(tc.flow_info_table_id)
+    #add_naples_command(req, tc.naples, cmd)
+
+    #cmd = '/nic/bin/halctl show table dump --table-id {} | \
+    #       grep "export_en=1"'.format(tc.flow_hash_table_id)
+    #add_naples_command(req, tc.naples, cmd)
+
+    cmd = "/nic/bin/halctl show session --yaml | grep mirrorsession: |\
+           grep -v 0"
     add_naples_command(req, tc.naples, cmd)
 
-    cmd = '/nic/bin/halctl show table dump --table-id {} | \
-           grep "export_en=1"'.format(tc.flow_hash_table_id)
+    cmd = "/nic/bin/halctl show session --yaml | grep flowexportenablebitmap |\
+           grep -v 0"
     add_naples_command(req, tc.naples, cmd)
 
     cmd = "/nic/bin/halctl show table dump --table-id {} | \
@@ -778,17 +819,17 @@ def showP4TablesForValidation(tc):
 # Validate function for sanity-checking IP-protocol embedded in the packet
 # being validated
 #
-def validate_ip_proto(tc, protocol, ip_proto):
-    if protocol == 'tcp' and ip_proto == IP_PROTO_TCP:
+def validate_ip_proto(tc, ip_proto):
+    if tc.protocol == 'tcp' and ip_proto == IP_PROTO_TCP:
         return api.types.status.SUCCESS
-    elif protocol == 'udp':
+    elif tc.protocol == 'udp':
         if (ip_proto == IP_PROTO_UDP) or\
            (tc.iterators.proto == 'mixed' and ip_proto == IP_PROTO_ICMP):
             return api.types.status.SUCCESS
-    elif protocol == 'icmp' and ip_proto == IP_PROTO_ICMP:
+    elif tc.protocol == 'icmp' and ip_proto == IP_PROTO_ICMP:
         return api.types.status.SUCCESS
 
-    api.Logger.info("ERROR: IP-Prococol {} {}".format(protocol, ip_proto))
+    api.Logger.error("ERROR: IP-Prococol {} {}".format(tc.protocol, ip_proto))
     return api.types.status.FAILURE
 
 #
@@ -803,7 +844,7 @@ def validate_vlan_tag(tc, tag_etype, vlan_tag):
         result = api.types.status.FAILURE
 
     if result == api.types.status.FAILURE:
-        api.Logger.info("ERROR: VLAN-Tag {} {} {}".format(tag_etype, vlan_tag,
+        api.Logger.error("ERROR: VLAN-Tag {} {} {}".format(tag_etype, vlan_tag,
                         int(tc.naples.uplink_vlan)))
 
     return result
@@ -812,18 +853,15 @@ def validate_vlan_tag(tc, tag_etype, vlan_tag):
 # Validate function for sanity-checking SIP/DIP/SPORT/DPORT embedded in the 
 # packet being validated
 #
-def validate_ip_tuple(tc, sip_msb, sip_lsb, dip_msb, dip_lsb, sport, dport,
-                      tag_etype, vlan_tag, ip_proto, c, feature):
-
-    sip = (sip_msb << 16) | sip_lsb
-    dip = (dip_msb << 16) | dip_lsb
+def validate_ip_tuple(tc, sip, dip, sport, dport, tag_etype, vlan_tag, 
+                      ip_proto, c):
 
     result = api.types.status.SUCCESS
     if sip == int(ipaddress.ip_address(tc.naples.ip_address)) and\
        dip == int(ipaddress.ip_address(tc.naples_peer.ip_address)):
         if ip_proto != IP_PROTO_ICMP and dport != int(tc.dest_port):
             result = api.types.status.FAILURE
-        elif feature != 'flowmon':
+        elif tc.feature != 'flowmon':
             if ip_proto == IP_PROTO_ICMP and sport != ICMP_ECHO and\
                sport != ICMP_ECHO_REPLY and sport != ICMP_PORT_UNREACH:
                 result = api.types.status.FAILURE
@@ -835,24 +873,24 @@ def validate_ip_tuple(tc, sip_msb, sip_lsb, dip_msb, dip_lsb, sport, dport,
             result = api.types.status.FAILURE
         elif ip_proto == IP_PROTO_UDP and dport != int(tc.dest_port):
             result = api.types.status.FAILURE
-        elif feature != 'flowmon':
+        elif tc.feature != 'flowmon':
             if ip_proto == IP_PROTO_ICMP and sport != ICMP_ECHO and\
                sport != ICMP_ECHO_REPLY and sport != ICMP_PORT_UNREACH:
                 result = api.types.status.FAILURE
             else:
                 result = validate_vlan_tag(tc, tag_etype, vlan_tag)
-    elif tc.classic_mode == False:
-        result = api.types.status.FAILURE
-    elif feature == 'lif-erspan':
+    elif tc.feature == 'lif-erspan':
         if ip_proto == IP_PROTO_UDP:
             tc.collector_udp_pkts[c] -= 1
             tc.collector_other_pkts[c] += 1
         elif ip_proto == IP_PROTO_ICMP:
             tc.collector_icmp_pkts[c] -= 1
             tc.collector_other_pkts[c] += 1
+    else:
+        result = api.types.status.FAILURE
 
     if result == api.types.status.FAILURE:
-        api.Logger.info("ERROR: SIP/DIP {} {} {} {} {} {} {} {} {} {}"\
+        api.Logger.error("ERROR: SIP/DIP {} {} {} {} {} {} {} {} {} {}"\
         .format(int(ipaddress.ip_address(tc.naples.ip_address)),
                 int(ipaddress.ip_address(tc.naples_peer.ip_address)), sip, dip,
                 ip_proto, sport, dport, tc.dest_port, tag_etype, vlan_tag))
@@ -862,195 +900,164 @@ def validate_ip_tuple(tc, sip_msb, sip_lsb, dip_msb, dip_lsb, sport, dport,
 #
 # Validate ERSPAN packets reception
 #
-def validateErspanPackets(tc, protocol, feature, direction):
-    tcp_erspan_pkts_expected = NUMBER_OF_TCP_ERSPAN_PACKETS_PER_SESSION
-    udp_erspan_pkts_expected = NUMBER_OF_UDP_ERSPAN_PACKETS_PER_SESSION
-    icmp_erspan_pkts_expected = NUMBER_OF_ICMP_ERSPAN_PACKETS_PER_SESSION
+def validateErspanPackets(tc):
 
-    if protocol == 'udp-mixed' or protocol == 'icmp':
-        icmp_erspan_pkts_expected = icmp_erspan_pkts_expected/2
-
-    if direction != 'both':
-        tcp_erspan_pkts_expected = tcp_erspan_pkts_expected/2
-        udp_erspan_pkts_expected = udp_erspan_pkts_expected/2
-        icmp_erspan_pkts_expected = icmp_erspan_pkts_expected/2
-
-    if tc.dupcheck == 'disable':
-        tcp_erspan_pkts_expected  =  (tcp_erspan_pkts_expected+1)*2
-        udp_erspan_pkts_expected  *= 2
-        icmp_erspan_pkts_expected *= 2
-
+    result = api.types.status.SUCCESS
     for c in range(0, len(tc.collector_ip_address)):
         tc.collector_tcp_pkts[c] = 0
         tc.collector_udp_pkts[c] = 0
         tc.collector_icmp_pkts[c] = 0
         tc.collector_other_pkts[c] = 0
-        tc.collector_validation_done[c] = False
-
-    result = api.types.status.SUCCESS
-    for cmd in tc.resp_tcpdump.commands:
-        if 'tcpdump' in cmd.command:
-            api.PrintCommandResults(cmd)
-            for line in cmd.stdout.split('\n'):
-                if 'GREv0' in line:
-                    #
-                    # Validate Collector IP-Address
-                    #
-                    w = 0
-                    for s in line.split():
-                        if w == 2:
-                            collector = s.replace(':', '')
-                            for c in range(0, len(tc.collector_ip_address)):
-                                if collector == tc.collector_ip_address[c]:
-                                    break
-                        elif w == 7:
-                            pkt_size = int(s, 10)
-                            if (pkt_size - GRE_ENCAP_LENGTH) >\
-                                tc.iterators.pktsize:
-                                api.Logger.info("ERROR: Packet-Size {} {}"\
-                                    .format(pkt_size, tc.iterators.pktsize))
-                                result = api.types.status.FAILURE
-                                break
-                        w += 1
-                elif '0x0040' in line:
-                    #
-                    # Validate VLAN for ERSPAN packets that embed 
-                    # tagged packets (only for uplink peers)
-                    #
-                    w = 0
-                    for s in line.split():
-                        if w == 4:
-                            tag_etype = int(s, 16)
-                        elif w == 5:
-                            vlan_tag = int(s, 16)
-                        w += 1
-                elif '0x0050:' in line:
-                    if tag_etype == DOT1Q_ETYPE:
-                        #
-                        # Validate IP-Protocol
-                        #
-                        # Extract Source/Destination IP-Addresses
-                        # for ERSPAN packets that embed tagged packets
-                        #
-                        w = 0
-                        for s in line.split():
-                            if w == 3:
-                                ip_proto = int(s, 16) & 0xFF
-                                if ip_proto == IP_PROTO_TCP:
-                                    tc.collector_tcp_pkts[c] += 1
-                                elif ip_proto == IP_PROTO_UDP:
-                                    tc.collector_udp_pkts[c] += 1
-                                elif ip_proto == IP_PROTO_ICMP:
-                                    tc.collector_icmp_pkts[c] += 1
-                                else:
-                                    tag_etype = 0
-                                    tc.collector_other_pkts[c] += 1
-                                    break
-                            elif w == 5:
-                                sip_msb = int(s, 16)
-                            elif w == 6:
-                                sip_lsb = int(s, 16)
-                            elif w == 7:
-                                dip_msb = int(s, 16)
-                            elif w == 8:
-                                dip_lsb = int(s, 16)
-                                break
-                            w += 1
-                    else:
-                        #
-                        # Validate IP-Protocol, Source/Destination 
-                        # IP-Addresses, L4-ports for
-                        # ERSPAN packets that embed untagged packets
-                        #
-                        w = 0
-                        for s in line.split():
-                            if w == 1:
-                                ip_proto = int(s, 16) & 0xFF
-                                if ip_proto == IP_PROTO_TCP:
-                                    tc.collector_tcp_pkts[c] += 1
-                                elif ip_proto == IP_PROTO_UDP:
-                                    tc.collector_udp_pkts[c] += 1
-                                elif ip_proto == IP_PROTO_ICMP:
-                                    tc.collector_icmp_pkts[c] += 1
-                                else:
-                                    tc.collector_other_pkts[c] += 1
-                                    break
-                            elif w == 3:
-                                sip_msb = int(s, 16)
-                            elif w == 4:
-                                sip_lsb = int(s, 16)
-                            elif w == 5:
-                                dip_msb = int(s, 16)
-                            elif w == 6:
-                                dip_lsb = int(s, 16)
-                            elif w == 7:
-                                sport = int(s, 16)
-                            elif w == 8:
-                                dport = int(s, 16)
-                                res = validate_ip_tuple(tc, sip_msb, sip_lsb, 
-                                      dip_msb, dip_lsb, sport, dport, 
-                                      tag_etype, vlan_tag, ip_proto, c, feature)
-                                if res != api.types.status.SUCCESS:
-                                    result = api.types.status.FAILURE
-                                break
-                            w += 1
-                elif '0x0060:' in line:
-                    if tag_etype == DOT1Q_ETYPE:
-                        #
-                        # Extract Source/Destination L4-ports
-                        # for ERSPAN packets that embed tagged packets
-                        # And validate IP-tuple
-                        #
-                        w = 0
-                        for s in line.split():
-                            if w == 1:
-                                sport = int(s, 16)
-                            elif w == 2:
-                                dport = int(s, 16)
-                                res = validate_ip_tuple(tc, sip_msb, sip_lsb, 
-                                      dip_msb, dip_lsb, sport, dport, 
-                                      tag_etype, vlan_tag, ip_proto, c, feature)
-                                if res != api.types.status.SUCCESS:
-                                    result = api.types.status.FAILURE
-                                break
-                            w += 1
-
-    #
-    # Validate Number-of-ERSPAN-pkts received by the Collector
-    #
-    for c in range(0, len(tc.collector_ip_address)):
         tc.result[c] = api.types.status.SUCCESS
 
+        # print command
+        cmd = tc.resp_tcpdump_erspan.commands[c]
+        api.PrintCommandResults(cmd)
+
+        # Read pcap file
+        pcap_file_name = ('mirror-%d.pcap'%c)
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        api.CopyFromWorkload(tc.collector[c].node_name, 
+            tc.collector[c].workload_name, [pcap_file_name], dir_path)
+
+        mirrorscapy = dir_path + '/' + pcap_file_name
+        api.Logger.info("File Name: %s" % (mirrorscapy))
+        try:
+            pkts = rdpcap(mirrorscapy)
+        except Exception as e:
+            api.Logger.error("ERROR: Exception {} in parsing pcap file."\
+                             .format(str(e)))
+            return api.types.status.FAILURE
+
+        # Parse pkts in pcap file
+        pkt_count = 0
+        seq_num_error = False
+        for pkt in pkts:
+            if pkt.haslayer(IP):
+                # Collector-IP validation
+                collector = pkt[IP].dst
+                if collector != tc.collector_ip_address[c]:
+                    api.Logger.error("ERROR: Collector-ip {} {}"\
+                               .format(collector, tc.collector_ip_address[c]))
+                    tc.result[c] = api.types.status.FAILURE
+                    break
+
+                # ERSPAN-Pkt-Size validation
+                iplen = pkt[IP].len
+                pkt_size = iplen - IP_HEADER_LENGTH - GRE_ENCAP_LENGTH
+                if (pkt_size - GRE_ENCAP_LENGTH) > tc.iterators.pktsize:
+                    api.Logger.error("ERROR: Packet-Size {} {}"\
+                                     .format(pkt_size, tc.iterators.pktsize))
+                    tc.result[c] = api.types.status.FAILURE
+
+            # GRE-Sequence-number validation (errors are ignored in
+            # in classic-mode until code-fix is in)
+            pkt_count += 1
+            if pkt.haslayer(GRE):
+                if pkt[GRE].seqnum_present == 1:
+                    curr_seq_num = pkt[GRE].seqence_number
+                    if pkt_count > 1 and\
+                       (curr_seq_num - tc.collector_seq_num[c]) != 1:
+                        api.Logger.error(\
+                        "ERROR: [IGNORE] GRE Seq-num seen: {} expected: {}"\
+                        .format(curr_seq_num, tc.collector_seq_num[c]+1))
+                        seq_num_error = True
+                        if tc.classic_mode == False:
+                            tc.result[c] = api.types.status.FAILURE
+                    tc.collector_seq_num[c] = curr_seq_num
+
+            # ERSPAN-pkt validation
+            if pkt.haslayer(ERSPAN_III):
+                # Extract Vlan-tag, if present
+                tag_etype = 0
+                vlan_tag = 0
+                if pkt[ERSPAN_III].haslayer(Dot1Q):
+                    tag_etype = DOT1Q_ETYPE
+                    vlan_tag = pkt[Dot1Q].vlan
+
+                ip_proto = 0
+                if pkt[ERSPAN_III].haslayer(IP):
+                    # Extract IP-Protocol from inner-IP-header
+                    ip_proto = int(pkt[ERSPAN_III][IP].proto)
+                    if ip_proto == IP_PROTO_TCP:
+                        tc.collector_tcp_pkts[c] += 1
+                    elif ip_proto == IP_PROTO_UDP:
+                        tc.collector_udp_pkts[c] += 1
+                    elif ip_proto == IP_PROTO_ICMP:
+                        tc.collector_icmp_pkts[c] += 1
+                    else:
+                        ip_proto = 0
+
+                    # Extract IP-addresses from inner-IP-header
+                    sip = int(ipaddress.ip_address(pkt[ERSPAN_III][IP].src))
+                    dip = int(ipaddress.ip_address(pkt[ERSPAN_III][IP].dst))
+
+                    if ip_proto != 0:
+                        # Extract L4-ports from inner-L4-header
+                        sport = 0
+                        dport = 0
+                        if pkt[ERSPAN_III].haslayer(TCP):
+                            sport = int(pkt[ERSPAN_III][TCP].sport)
+                            dport = int(pkt[ERSPAN_III][TCP].dport)
+                        elif pkt[ERSPAN_III].haslayer(UDP):
+                            sport = int(pkt[ERSPAN_III][UDP].sport)
+                            dport = int(pkt[ERSPAN_III][UDP].dport)
+                        elif pkt[ERSPAN_III].haslayer(ICMP):
+                            sport = (int(pkt[ERSPAN_III][ICMP].type) << 8) |\
+                                     int(pkt[ERSPAN_III][ICMP].code)
+
+                        # Validate IP-tuple from inner-IP-header
+                        res = validate_ip_tuple(tc, sip, dip, sport, dport, 
+                              tag_etype, vlan_tag, ip_proto, c)
+                        if res != api.types.status.SUCCESS:
+                            tc.result[c] = api.types.status.FAILURE
+
+                if ip_proto == 0:
+                    tc.collector_other_pkts[c] += 1
+                    if tc.feature == 'flow-erspan':
+                        tc.result[c] = api.types.status.FAILURE
+
+        #
+        # Validate Number-of-ERSPAN-pkts received by the Collector
         #
         # Perform TCP-pkt checks (only for hostpin mode, for now)
         #
-        if tc.classic_mode == False:
-            if protocol == 'tcp' or protocol == 'all':
-                if tc.collector_tcp_pkts[c] < tcp_erspan_pkts_expected or\
-                   tc.collector_tcp_pkts[c] > (tcp_erspan_pkts_expected+1):
+        if tc.classic_mode == False and tc.args.type != 'precheckin':
+            if tc.protocol == 'tcp' or tc.protocol == 'all':
+                if tc.collector_tcp_pkts[c] < tc.tcp_erspan_pkts_expected or\
+                   tc.collector_tcp_pkts[c] > (tc.tcp_erspan_pkts_expected+1):
                     tc.result[c] = api.types.status.FAILURE
 
         #
         # Perform UDP-pkt checks
         #
-        if protocol == 'udp' or protocol == 'udp-mixed' or protocol == 'all':
-            if tc.collector_udp_pkts[c] != udp_erspan_pkts_expected:
+        if tc.protocol == 'udp' or tc.protocol == 'udp-mixed' or\
+           tc.protocol == 'all':
+            if tc.collector_udp_pkts[c] != tc.udp_erspan_pkts_expected:
                 tc.result[c] = api.types.status.FAILURE
 
         #
         # Perform ICMP-pkt checks
         #
-        if protocol == 'icmp' or protocol == 'udp-mixed' or protocol == 'all':
-            if tc.collector_icmp_pkts[c] != icmp_erspan_pkts_expected:
+        if tc.protocol == 'icmp' or tc.protocol == 'udp-mixed' or\
+           tc.protocol == 'all':
+            if tc.collector_icmp_pkts[c] != tc.icmp_erspan_pkts_expected:
                 tc.result[c] = api.types.status.FAILURE
+
+        # For failed cases, print pkts for debug
+        if tc.result[c] == api.types.status.FAILURE or seq_num_error == True:
+            if tc.result[c] == api.types.status.FAILURE:
+                result = api.types.status.FAILURE
+            for pkt in pkts:
+                pkt.show()
 
     for c in range(0, len(tc.collector_ip_address)):
         if tc.result[c] == api.types.status.FAILURE:
-            api.Logger.info("ERROR: {} {} {} {} {} {} {} ERSPAN packets to {}"\
+            api.Logger.error("ERROR: {} {} {} {} {} {} {} ERSPAN packets to {}"\
             .format(tc.collector_tcp_pkts[c], tc.collector_udp_pkts[c],
                     tc.collector_icmp_pkts[c], tc.collector_other_pkts[c],
-                    tcp_erspan_pkts_expected, udp_erspan_pkts_expected,
-                    icmp_erspan_pkts_expected, tc.collector_ip_address[c]))
+                    tc.tcp_erspan_pkts_expected, tc.udp_erspan_pkts_expected,
+                    tc.icmp_erspan_pkts_expected, tc.collector_ip_address[c]))
             result = api.types.status.FAILURE
         else:
             api.Logger.info("Number of ERSPAN packets {} {} {} {} to {}"\
@@ -1063,117 +1070,127 @@ def validateErspanPackets(tc, protocol, feature, direction):
 #
 # Validate IPFIX packets reception
 #
-def validateIpFixPackets(tc, protocol, feature):
+def validateIpFixPackets(tc):
     result = api.types.status.SUCCESS
-    for cmd in tc.resp_tcpdump.commands:
-        if 'tcpdump' in cmd.command:
-            api.PrintCommandResults(cmd)
-            ipfix_pkts = 0
-            for c in range(0, len(tc.collector)):
-                tc.collector_ipfix_pkts[c] = 0
+    for c in range(0, len(tc.collector)):
+        tc.collector_ipfix_records[c] = 0
+        tc.collector_ipfix_pkts[c] = 0
+        tc.collector_ipfix_template_pkts[c] = 0
+        tc.result[c] = api.types.status.SUCCESS
 
-            for line in cmd.stdout.split('\n'):
-                if '.2055:' in line:
-                    #
-                    # Count IPFIX packets
-                    #
-                    ipfix_pkts += 1
+        # print command
+        cmd = tc.resp_tcpdump_flowmon.commands[c]
+        api.PrintCommandResults(cmd)
 
-                    #
-                    # Validate Collector IP-Address
-                    #
-                    w = 0
-                    for s in line.split():
-                        if w == 2:
-                            collector = s.replace('.2055:', '')
-                            match = False
-                            for idx in range(0, len(tc.collector_ip_address)):
-                                if collector == tc.collector_ip_address[idx]:
-                                    tc.collector_ipfix_pkts[idx] += 1
-                                    match_idx = idx
-                                    match = True
-                                    break
-                            if match == False:
-                                result = api.types.status.FAILURE
-                            break
-                        w += 1
-                elif '0x0030:' in line and match == True:
-                    #
-                    # Validate IPFIX Seq-number
-                    #
-                    w = 0
-                    for s in line.split():
-                        if w == 2:
-                            seq_msb = int(s, 16)
-                        elif w == 3:
-                            seq_lsb = int(s, 16)
-                            curr_seq_num = (seq_msb << 16) | seq_lsb
-                            if tc.collector_ipfix_pkts[match_idx] == 1:
-                                tc.collector_seq_num[match_idx] =\
-                                curr_seq_num
-                            else:
-                                if (curr_seq_num -\
-                                    tc.collector_seq_num[match_idx]) !=\
-                                    1:
-                                    api.Logger.info(\
-                                    "ERROR: IPFIX Seq-num {} {}"\
-                                    .format(curr_seq_num,
-                                    tc.collector_seq_num[match_idx]+1))
-                                    result = api.types.status.FAILURE
-                                tc.collector_seq_num[match_idx] =\
-                                curr_seq_num
-                            break
-                        w += 1
-                elif '0x0040:' in line:
-                    #
-                    # Validate Source/Destination IP-Addresses / Port
-                    # for ERSPAN packets that embed tagged packets
-                    #
-                    w = 0
-                    for s in line.split():
-                        if w == 2:
-                            sip_msb = int(s, 16)
-                        elif w == 3:
-                            sip_lsb = int(s, 16)
-                        elif w == 4:
-                            dip_msb = int(s, 16)
-                        elif w == 5:
-                            dip_lsb = int(s, 16)
-                        elif w == 6:
-                            ip_proto = int(s, 16) >> 8
-                            sport_msb = int(s, 16) & 0xFF
-                        elif w == 7:
-                            sport_lsb = int(s, 16) >> 8
-                            dport_msb = int(s, 16) & 0xFF
-                        elif w == 8:
-                            dport_lsb = int(s, 16) >> 8
+        # Read pcap file
+        pcap_file_name = ('flowmon-%d.pcap'%c)
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        api.CopyFromWorkload(tc.collector[c].node_name,
+            tc.collector[c].workload_name, [pcap_file_name], dir_path)
 
-                            res = validate_ip_proto(tc, protocol, ip_proto)
-                            if res != api.types.status.SUCCESS:
-                                result = api.types.status.FAILURE
+        flowmonscapy = dir_path + '/' + pcap_file_name
+        api.Logger.info("File Name: %s" % (flowmonscapy))
+        try:
+            pkts = rdpcap(flowmonscapy)
+        except Exception as e:
+            api.Logger.error("ERROR: Exception {} in parsing pcap file."\
+                             .format(str(e)))
+            return api.types.status.FAILURE
 
-                            sport = (sport_msb << 8) | sport_lsb
-                            dport = (dport_msb << 8) | dport_lsb
-                            res = validate_ip_tuple(tc, sip_msb, sip_lsb, 
-                                  dip_msb, dip_lsb, sport, dport, 
-                                  0, 0, ip_proto, c, feature)
-                            if res != api.types.status.SUCCESS:
-                                result = api.types.status.FAILURE
-                            break
-                        w += 1
+        # Parse pkts in pcap file
+        seq_num_error = False
+        for pkt in pkts:
+            if pkt.haslayer(IP):
+                # Collector-IP validation
+                collector = pkt[IP].dst
+                if collector != tc.collector_ip_address[c]:
+                    api.Logger.error("ERROR: Collector-ip {} {}"\
+                               .format(collector, tc.collector_ip_address[c]))
+                    tc.result[c] = api.types.status.FAILURE
+                    break
+
+            # Parse and validate IPFIX packet
+            if pkt.haslayer(Ipfix):
+                set_id = pkt[Ipfix].records[0].set_id
+                if set_id == IPFIX_TEMPLATE_SET_ID:
+                    tc.collector_ipfix_template_pkts[match_idx] += 1
+                    continue
+
+                # IPFIX-Sequence-number validation (errors are ignored in
+                # in classic-mode until code-fix is in)
+                tc.collector_ipfix_pkts[c] += 1
+
+                curr_seq_num = pkt[Ipfix].seq_num
+                if tc.collector_ipfix_pkts[c] > 1 and\
+                   (curr_seq_num - tc.collector_seq_num[c]) != 1:
+                    api.Logger.error(\
+                    "ERROR: [IGNORE] IPFIX Seq-num seen: {} expected: {}"\
+                    .format(curr_seq_num, tc.collector_seq_num[c]+1))
+                    seq_num_error = True
+                    if tc.classic_mode == False:
+                        tc.result[c] = api.types.status.FAILURE
+                tc.collector_seq_num[c] = curr_seq_num
+
+                # Validate IPFIX-records
+                total_len = pkt[Ipfix].len - IPFIX_HEADER_LEN
+                record_len = pkt[Ipfix].records[0].len
+
+                i = 0
+                while (total_len > 0):
+                    tc.collector_ipfix_records[c] += 1
+
+                    # Extract IP-tuple from IPFIX-record
+                    ip_proto = int(pkt[Ipfix].records[0][i].proto)
+                    sip = int(ipaddress.ip_address(pkt[Ipfix].records[0][i].
+                                                   ip_sa))
+                    dip = int(ipaddress.ip_address(pkt[Ipfix].records[0][i].
+                                                   ip_da))
+                    sport = int(pkt[Ipfix].records[0][i].sport)
+                    dport = int(pkt[Ipfix].records[0][i].dport)
+
+                    # Validate IP-tuple from inner-IP-header
+                    res = validate_ip_proto(tc, ip_proto)
+                    if res != api.types.status.SUCCESS:
+                        tc.result[c] = api.types.status.FAILURE
+
+                    res = validate_ip_tuple(tc, sip, dip, sport, dport, 0, 0, 
+                                            ip_proto, c)
+                    if res != api.types.status.SUCCESS:
+                        tc.result[c] = api.types.status.FAILURE
+
+                    total_len -= record_len
+                    i += 2
+
+        # For failed cases, print pkts for debug
+        if tc.result[c] == api.types.status.FAILURE or seq_num_error == True:
+            if tc.result[c] == api.types.status.FAILURE:
+                result = api.types.status.FAILURE
+            for pkt in pkts:
+                pkt.show()
 
     #
     # Validate Number-of-IPFIX-pkts received by the 
-    # Collector
+    # Collector(s)
     #
-    #if ipfix_pkts != NUMBER_OF_IPFIX_PACKETS_PER_SESSION:
-    if ipfix_pkts == 0:
-        api.Logger.info("ERROR: IPFIX packets {}".format(ipfix_pkts))
-        result = api.types.status.FAILURE
+    for c in range(0, len(tc.collector_ip_address)):
+        if tc.collector_ipfix_pkts[c] == 0:
+            result = api.types.status.FAILURE
 
-    for idx in range(0, len(tc.collector_ip_address)):
-        api.Logger.info("Number of IPFIX packets {} to {}"\
-        .format(tc.collector_ipfix_pkts[idx], tc.collector_ip_address[c]))
+            api.Logger.error("ERROR: Number of IPFIX Template packets {} to {}"\
+            .format(tc.collector_ipfix_template_pkts[c],
+                    tc.collector_ip_address[c]))
+            api.Logger.error("ERROR: Number of IPFIX packets {} to {}"\
+            .format(tc.collector_ipfix_pkts[c], tc.collector_ip_address[c]))
+            api.Logger.error("ERROR: Number of IPFIX records {} to {}"\
+            .format(tc.collector_ipfix_records[c], tc.collector_ip_address[c]))
+        else:
+            api.Logger.info("Number of IPFIX Template packets {} to {}"\
+            .format(tc.collector_ipfix_template_pkts[c],
+                    tc.collector_ip_address[c]))
+            api.Logger.info("Number of IPFIX packets {} to {}"\
+            .format(tc.collector_ipfix_pkts[c], tc.collector_ip_address[c]))
+            api.Logger.info("Number of IPFIX records {} to {}"\
+            .format(tc.collector_ipfix_records[c], tc.collector_ip_address[c]))
 
     return result
 
@@ -1186,19 +1203,19 @@ def validateConfigCleanup(tc):
         api.PrintCommandResults(cmd)
         if cmd.stdout != '':
             if 'table-id {}'.format(tc.lif_table_id) in cmd.command:
-                api.Logger.info("ERROR: lif-config Not Removed")
+                api.Logger.error("ERROR: lif-config Not Removed")
                 result = api.types.status.FAILURE
             elif 'table-id {}'.format(tc.omap_table_id) in cmd.command:
-                api.Logger.info("ERROR: omap-config Not Removed")
-                result = api.types.status.FAILURE
-            elif 'table-id {}'.format(tc.flow_info_table_id) in cmd.command:
-                api.Logger.info("ERROR: Flow-Info-config Not Removed")
+                api.Logger.error("ERROR: omap-config Not Removed")
                 result = api.types.status.FAILURE
             elif 'table-id {}'.format(tc.mirror_table_id) in cmd.command:
-                api.Logger.info("ERROR: Mirror-config Not Removed")
+                api.Logger.error("ERROR: Mirror-config Not Removed")
                 result = api.types.status.FAILURE
-            elif 'table-id {}'.format(tc.flow_hash_table_id) in cmd.command:
-                api.Logger.info("ERROR: Flow-Hash-config Not Removed")
+            elif 'mirrorsession:' in cmd.command:
+                api.Logger.error("ERROR: Flow-Erspan-config Not Removed")
+                result = api.types.status.FAILURE
+            elif 'flowexportenablebitmap' in cmd.command:
+                api.Logger.error("ERROR: Flow-Export-config Not Removed")
                 result = api.types.status.FAILURE
 
     return result

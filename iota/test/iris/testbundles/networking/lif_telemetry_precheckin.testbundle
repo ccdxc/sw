@@ -6,7 +6,7 @@
 # modes
 #
 meta:
-    name              : lif_telemetry
+    name              : lif_telemetry_precheckin
     nics              : [ pensando, mellanox, intel, broadcom ]
     os                : [ linux, esx, freebsd ]
     targetcount       : 1
@@ -18,11 +18,11 @@ testcases:
             type      : nested
             pktsize   : [128]
             peer      : [remote]
-            collector : [local, remote]
-            vlan      : [native, tag]
+            collector : [remote]
+            vlan      : [tag]
             iftype    : [uplink]
             direction : [ingress, egress, both]
-            ccount    : [1, 2, 3, 4, 5, 6, 7, 8]
+            ccount    : [1, 2]
         args          :
-            type      : sanity
+            type      : precheckin
 
