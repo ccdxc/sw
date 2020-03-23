@@ -1339,14 +1339,8 @@ sacl_init (void)
     sdk::asic::asic_mem_write(sacl_sport_addr, (uint8_t *)&data, sizeof(data));
 
     data = -1;
-    data &= ~(((uint64_t)0xFFFFFFFFFFULL) << 16);
-    data |= ((uint64_t)htons(g_sacl_proto_dport_class_id)) << 40;
-    sdk::asic::asic_mem_write(sacl_proto_dport_addr, (uint8_t *)&data,
-                              sizeof(data));
-
-    data = -1;
-    data &= ~(((uint64_t)0xFFFFFFFFFFULL) << 16);
-    data |= ((uint64_t)htons(g_sacl_proto_dport_class_id)) << 40;
+    data &= ~(((uint64_t)0xFFFFFFFFFFFFULL) << 16);
+    data |= ((uint64_t)htons(g_sacl_proto_dport_class_id)) << 48;
     sdk::asic::asic_mem_write(sacl_proto_dport_addr, (uint8_t *)&data,
                               sizeof(data));
 
