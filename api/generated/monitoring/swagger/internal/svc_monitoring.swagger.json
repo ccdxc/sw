@@ -373,7 +373,7 @@
           },
           {
             "name": "spec.packet-size",
-            "description": "PacketSize: Max size of a mirrored packet. PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice. For packets mirrored to Venice, max mirror packet size allowed is 256 B.",
+            "description": "PacketSize: Max size of a mirrored packet.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -7073,7 +7073,7 @@
           },
           {
             "name": "spec.packet-size",
-            "description": "PacketSize: Max size of a mirrored packet. PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice. For packets mirrored to Venice, max mirror packet size allowed is 256 B.",
+            "description": "PacketSize: Max size of a mirrored packet.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -18659,7 +18659,7 @@
         "packet-size": {
           "type": "integer",
           "format": "int64",
-          "description": "PacketSize: Max size of a mirrored packet. PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice. For packets mirrored to Venice, max mirror packet size allowed is 256 B."
+          "description": "PacketSize: Max size of a mirrored packet."
         },
         "start-condition": {
           "$ref": "#/definitions/monitoringMirrorStartConditions",

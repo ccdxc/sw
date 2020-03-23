@@ -325,8 +325,6 @@ func (m *MirrorSession) GetStatus() MirrorSessionStatus {
 // MirrorSessionSpec
 type MirrorSessionSpec struct {
 	// PacketSize: Max size of a mirrored packet.
-	// PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice.
-	// For packets mirrored to Venice, max mirror packet size allowed is 256 B
 	PacketSize uint32 `protobuf:"varint,1,opt,name=PacketSize,json=packet-size,omitempty,proto3" json:"packet-size,omitempty"`
 	// StartConditions
 	StartConditions MirrorStartConditions `protobuf:"bytes,2,opt,name=StartConditions,json=start-condition,inline" json:"start-condition,inline"`

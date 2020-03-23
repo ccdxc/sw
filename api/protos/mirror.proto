@@ -17,8 +17,6 @@ import "github.com/pensando/sw/api/labels/selector.proto";
 // MirrorSessionSpec
 message MirrorSessionSpec {
     // PacketSize: Max size of a mirrored packet.
-    // PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice.
-    // For packets mirrored to Venice, max mirror packet size allowed is 256 B
     uint32                  PacketSize      = 1 [(gogoproto.jsontag) = "packet-size,omitempty"];
 
     // StartConditions

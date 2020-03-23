@@ -27,7 +27,7 @@ export interface IMonitoringMirrorSessionSpec {
 export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitoringMirrorSessionSpec {
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
-    /** PacketSize: Max size of a mirrored packet. PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice. For packets mirrored to Venice, max mirror packet size allowed is 256 B. */
+    /** PacketSize: Max size of a mirrored packet. */
     'packet-size': number = null;
     /** StartConditions. */
     'start-condition': MonitoringMirrorStartConditions = null;
@@ -40,7 +40,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     'interfaces': MonitoringInterfaceMirror = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorSessionSpec]: PropInfoItem } = {
         'packet-size': {
-            description:  `PacketSize: Max size of a mirrored packet. PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice. For packets mirrored to Venice, max mirror packet size allowed is 256 B.`,
+            description:  `PacketSize: Max size of a mirrored packet.`,
             required: false,
             type: 'number'
         },
