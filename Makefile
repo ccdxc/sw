@@ -626,7 +626,7 @@ dind-cluster_1v4n:
 
 dind-cluster:
 	$(MAKE) dind-cluster-stop
-	#$(MAKE) venice-image
+	$(MAKE) venice-image
 	./test/e2e/dind/do.py -configFile ${E2E_CONFIG} -custom_config_file ${E2E_CUSTOM_CONFIG} -deployvc
 
 dind-cluster-cp:
