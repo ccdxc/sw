@@ -84,6 +84,7 @@ UPGRADE_TARGETS ?= ws-tools pull-assets-venice gen upgrade-build
 UPGRADE_BUILD_CMD ?= bash -c  "make ${UPGRADE_TARGETS}"
 PENCTL_BUILD_CMD ?= bash -c  "cd penctl && make"
 E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
+E2E_DEV_CONFIG ?= test/e2e/cluster/tb_config_dev_2.json
 E2E_CP_CONFIG ?= test/e2e/cloud/tb_config_cp.json
 E2E_CUSTOM_CONFIG ?= test/e2e/cluster/venice-conf.json
 GIT_COMMIT ?= $(shell git rev-list -1 HEAD --abbrev-commit)
@@ -618,9 +619,14 @@ pull-assets:
 	bash scripts/pull-assets.sh
 	$(MAKE) ws-tools
 
-dind-cluster:
+dind-cluster_1v4n:
 	$(MAKE) dind-cluster-stop
 	$(MAKE) venice-image
+	./test/e2e/dind/do.py -configFile ${E2E_DEV_CONFIG} -custom_config_file ${E2E_CUSTOM_CONFIG} -deployvc
+
+dind-cluster:
+	$(MAKE) dind-cluster-stop
+	#$(MAKE) venice-image
 	./test/e2e/dind/do.py -configFile ${E2E_CONFIG} -custom_config_file ${E2E_CUSTOM_CONFIG} -deployvc
 
 dind-cluster-cp:
@@ -633,6 +639,14 @@ dind-cluster-stop:
 
 dind-cluster-restart:
 	./test/e2e/dind/do.py -restart -configFile=./${E2E_CONFIG} -custom_config_file=./${E2E_CUSTOM_CONFIG}
+
+
+# Target to run venice e2e with 1 vencice 4 dsc on mac using a dind environment. Uses Agent with its datapath mocked
+e2e_dev_1v4n:
+	$(MAKE) dind-cluster_1v4n
+	$(MAKE) e2e-test_1v4n
+	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
+	#./test/e2e/dind/do.py -delete
 
 # Target to run venice e2e on mac using a dind environment. Uses Agent with its datapath mocked
 e2e:
@@ -676,6 +690,11 @@ e2e-ci:
 
 e2e-retest:
 	docker exec -it node0 sh -c 'PENS_SKIP_BOOTSTRAP=1 PENS_SKIP_AUTH=1 E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG} -ginkgo.v -timeout 45m ${E2E_SEED}'
+
+
+e2e-test_1v4n:
+	#docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/${E2E_DEV_CONFIG} -ginkgo.v -ginkgo.failFast -timeout 60m ${E2E_SEED}'
+
 e2e-test:
 	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/cluster -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG} -ginkgo.v -timeout 60m ${E2E_SEED}'
 

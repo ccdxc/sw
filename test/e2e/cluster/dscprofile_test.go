@@ -66,6 +66,62 @@ func (dscTg *dscProfileTestGroup) testProfileCreateDelete() {
 
 }
 
+func (dscTg *dscProfileTestGroup) testDSCUpdateWithSameProfile() {
+
+	insertionEnforced := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "insertion.enforced",
+		},
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "INSERTION",
+			FlowPolicyMode: "ENFORCED",
+		},
+	}
+
+	_, err := dscTg.suite.restSvc.ClusterV1().DSCProfile().Create(dscTg.suite.loggedInCtx, &insertionEnforced)
+	apiErr := apierrors.FromError(err)
+	log.Errorf("%v", apiErr)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	ctx := context.Background()
+	snIf := dscTg.suite.tu.APIClient.ClusterV1().DistributedServiceCard()
+	snics, _ := snIf.List(ctx, &api.ListWatchOptions{})
+	for _, snic := range snics {
+		snic.Spec.DSCProfile = "insertion.enforced"
+		_, err = snIf.Update(ctx, snic)
+	}
+	time.Sleep(time.Second)
+	Eventually(func() bool {
+		dstat, err := dscTg.suite.restSvc.ClusterV1().DSCProfile().Get(dscTg.suite.loggedInCtx, &insertionEnforced.ObjectMeta)
+		Expect(err).ShouldNot(HaveOccurred())
+		if dstat.Status.PropagationStatus.Pending != 0 {
+			log.Errorf("insertion.enforced Status rsg %v", dstat.Status)
+			return false
+		}
+		return true
+	}, 30, 1).Should(BeTrue(), "Failed to Propagate the profile")
+
+	//Verify the agent, status
+	snics, err = snIf.List(ctx, &api.ListWatchOptions{})
+	for _, snic := range snics {
+		snic.Spec.DSCProfile = insertionFWProfileName
+		_, err = snIf.Update(ctx, snic)
+	}
+	time.Sleep(time.Second)
+
+	Eventually(func() bool {
+		dstat, err := dscTg.suite.restSvc.ClusterV1().DSCProfile().Get(dscTg.suite.loggedInCtx, &insertionEnforced.ObjectMeta)
+		Expect(err).ShouldNot(HaveOccurred())
+		if dstat.Status.PropagationStatus.Pending != 0 {
+			log.Errorf("%s Status rsg %v", insertionFWProfileName, dstat.Status)
+
+			return false
+		}
+		return true
+	}, 30, 1).Should(BeTrue(), "Failed to Propagate the profile")
+}
+
 var _ = Describe("profile createdelete tests", func() {
 	Context("DSCProfile Creation & Deletion", func() {
 
@@ -74,6 +130,7 @@ var _ = Describe("profile createdelete tests", func() {
 
 		// test cases
 		It("DSCProfile should be created", dscProfileTg.testProfileCreateDelete)
+		It("DSCProfile should be updated", dscProfileTg.testDSCUpdateWithSameProfile)
 
 		AfterEach(dscProfileTg.teardownTest)
 	})

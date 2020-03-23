@@ -164,6 +164,8 @@ func (sm *Statemgr) OnDSCProfileUpdate(dscProfile *ctkit.DSCProfile, nfwp *clust
 	for dsc := range dscs {
 		dps.DscList[dsc] = dscProfileVersion{dscProfile.Name, nfwp.GenerationID}
 	}
+	dps.initNodeVersions()
+	sm.PeriodicUpdaterPush(dps)
 	return nil
 }
 
@@ -234,9 +236,13 @@ func (dps *DSCProfileState) updatePropagationStatus(genID string,
 	objs := dps.stateMgr.ListObjects("DistributedServiceCard")
 	newProp := &cluster.PropagationStatus{GenerationID: genID}
 	pendingNodes := []string{}
+	newProp.Updated = 0
 	for _, obj := range objs {
 		snic, err := DistributedServiceCardStateFromObj(obj)
 		if err != nil || !dps.stateMgr.isDscAdmitted(&snic.DistributedServiceCard.DistributedServiceCard) {
+			continue
+		}
+		if _, ok := dps.DscList[snic.DistributedServiceCard.Name]; !ok {
 			continue
 		}
 
@@ -316,17 +322,20 @@ func (sm *Statemgr) OnProfileDeleteReq(nodeID string, objinfo *netproto.Profile)
 
 // OnProfileOperUpdate gets called when policy updates arrive from agents
 func (sm *Statemgr) OnProfileOperUpdate(nodeID string, objinfo *netproto.Profile) error {
-	sm.UpdateDSCProfileStatus(nodeID, objinfo.ObjectMeta.Tenant, objinfo.ObjectMeta.Name, objinfo.ObjectMeta.GenerationID)
+	sm.UpdateDSCProfileStatusOnOperUpdate(nodeID, objinfo.ObjectMeta.Tenant, objinfo.ObjectMeta.Name, objinfo.ObjectMeta.GenerationID)
 	return nil
 }
 
 // OnProfileOperDelete gets called when policy delete arrives from agent
 func (sm *Statemgr) OnProfileOperDelete(nodeID string, objinfo *netproto.Profile) error {
+	log.Infof("received oper delete response")
+	sm.UpdateDSCProfileStatusOnOperDelete(nodeID, objinfo.ObjectMeta.Tenant, objinfo.ObjectMeta.Name, objinfo.ObjectMeta.GenerationID)
+
 	return nil
 }
 
-// UpdateDSCProfileStatus updates the profile status
-func (sm *Statemgr) UpdateDSCProfileStatus(nodeuuid, tenant, name, generationID string) {
+// UpdateDSCProfileStatusOnOperDelete updates the profile status on Delete response from Agent
+func (sm *Statemgr) UpdateDSCProfileStatusOnOperDelete(nodeuuid, tenant, name, generationID string) {
 	log.Infof("Update the profile status for profile %s tenant %s", name, tenant)
 	dscProfile, err := sm.FindDSCProfile(tenant, name)
 	if err != nil {
@@ -338,20 +347,52 @@ func (sm *Statemgr) UpdateDSCProfileStatus(nodeuuid, tenant, name, generationID 
 		if !sm.isDscHealthy(&snic.DistributedServiceCard.DistributedServiceCard) {
 			log.Infof("DSC %v unhealthy but ignoring to update dscprofile status with genId %v", nodeuuid, generationID)
 		}
+	} else {
+		return
 	}
 
 	// lock profile for concurrent modifications
 	dscProfile.DSCProfile.Lock()
 	defer dscProfile.DSCProfile.Unlock()
-	expVersion := dscProfile.DscList[snic.DistributedServiceCard.Name]
+	_, ok := dscProfile.DscList[snic.DistributedServiceCard.Name]
 
-	if expVersion.profileName == name && expVersion.agentGenID == generationID {
+	if !ok {
+		// update node version
+		delete(dscProfile.NodeVersions, nodeuuid)
+		sm.PeriodicUpdaterPush(dscProfile)
+	}
+}
+
+// UpdateDSCProfileStatusOnOperUpdate updates the profile status on Create/Update
+func (sm *Statemgr) UpdateDSCProfileStatusOnOperUpdate(nodeuuid, tenant, name, generationID string) {
+	log.Infof("Update the profile status for profile %s tenant %s", name, tenant)
+	dscProfile, err := sm.FindDSCProfile(tenant, name)
+	if err != nil {
+		return
+	}
+	// find smartnic object
+	snic, err := sm.FindDistributedServiceCard(tenant, nodeuuid)
+	if err == nil {
+		if !sm.isDscHealthy(&snic.DistributedServiceCard.DistributedServiceCard) {
+			log.Infof("DSC %v unhealthy but ignoring to update dscprofile status with genId %v", nodeuuid, generationID)
+		}
+	} else {
+		return
+	}
+
+	// lock profile for concurrent modifications
+	dscProfile.DSCProfile.Lock()
+	defer dscProfile.DSCProfile.Unlock()
+	expVersion, ok := dscProfile.DscList[snic.DistributedServiceCard.Name]
+
+	if ok && expVersion.profileName == name && expVersion.agentGenID == generationID {
+		log.Infof("updated the status")
 		// update node version
 		dscProfile.NodeVersions[nodeuuid] = generationID
 		// ToDo: Writing status from NPM conflicts with CMD in integ tests.
 		//  We have to fix this eventually
 		//snic.NodeVersion = cluster.DSCProfileVersion{ProfileName: name, GenerationID: generationID}
+		sm.PeriodicUpdaterPush(dscProfile)
 	}
-	sm.PeriodicUpdaterPush(dscProfile)
 
 }

@@ -2840,6 +2840,7 @@ func TestSmartNicCreateDelete(t *testing.T) {
 		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
 		ObjectMeta: api.ObjectMeta{
 			Name: "testDistributedServiceCard",
+			UUID: "0001.0203.0405",
 		},
 		Status: cluster.DistributedServiceCardStatus{
 			PrimaryMAC: "0001.0203.0405",
@@ -2907,6 +2908,8 @@ func TestSmartNicCreateDelete(t *testing.T) {
 	err = stateMgr.ctrler.DistributedServiceCard().Update(&newnic)
 	AssertOk(t, err, "Error DistributedServicesCard update failed")
 
+	stateMgr.UpdateDSCProfileStatusOnOperUpdate("testDistributedServiceCard", "default", "testDSCProfile", "1")
+
 	// delete the smartNic
 	err = stateMgr.ctrler.DistributedServiceCard().Delete(&snic)
 	AssertOk(t, err, "Error deleting the smartNic")
@@ -2923,6 +2926,8 @@ func TestSmartNicCreateDelete(t *testing.T) {
 		}
 		return false, nil
 	}, "Did not find DSC", "1ms", "2s")
+
+	stateMgr.UpdateDSCProfileStatusOnOperDelete("testDistributedServiceCard", "default", "testDSCProfile", "1")
 }
 
 func TestNetworkInterfaceConvert(t *testing.T) {
