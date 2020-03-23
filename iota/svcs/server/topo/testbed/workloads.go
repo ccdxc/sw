@@ -334,6 +334,12 @@ func (n *TestNode) DeleteWorkloads(w *iota.WorkloadMsg) (*iota.WorkloadMsg, erro
 		//return nil, fmt.Errorf("Deleting workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
 	}
 
+	for _, wload := range w.Workloads {
+		//Delete the workloads
+		n.workloadMap.Delete(wload.WorkloadName)
+
+	}
+
 	n.WorkloadResp = resp
 	return resp, nil
 }

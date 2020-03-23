@@ -1025,7 +1025,7 @@ class EsxHostManagement(HostManagement):
     def __esx_host_init(self):
         self.WaitForSsh(port=443)
         time.sleep(30)
-        if all(n.IsSSHUP() for n in self.naples):
+        if GlobalOptions.auto_discover or all(n.IsSSHUP() for n in self.naples):
             print ("All Naples OOB is up, skipping ctrl vm initialization.")
             return
         # Use first instance of naples

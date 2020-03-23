@@ -27,7 +27,6 @@ type TopologyService struct {
 	SSHConfig        *ssh.ClientConfig
 	tbInfo           testBedInfo
 	Nodes            map[string]testbed.TestNodeInterface
-	Workloads        map[string]*iota.Workload // list of workloads
 	ProvisionedNodes map[string]testbed.TestNodeInterface
 	downloadedImages bool
 	downloadedAssets bool
@@ -57,9 +56,7 @@ type DriverInfo struct {
 
 // NewTopologyServiceHandler Topo service handle
 func NewTopologyServiceHandler() *TopologyService {
-	topoServer := TopologyService{
-		Workloads: make(map[string]*iota.Workload),
-	}
+	topoServer := TopologyService{}
 	return &topoServer
 }
 
@@ -962,11 +959,6 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 
 	}
 
-	// save workload info
-	for _, w := range req.Workloads {
-		ts.Workloads[w.WorkloadName] = w
-	}
-
 	return req, nil
 }
 
@@ -1091,10 +1083,6 @@ func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.Worklo
 			}
 		}
 
-	}
-
-	for _, w := range req.Workloads {
-		delete(ts.Workloads, w.WorkloadName)
 	}
 
 	return req, nil

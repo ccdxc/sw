@@ -125,7 +125,7 @@ var _ = Describe("mirror tests", func() {
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 	})
-	Context("Mirror tests", func() {
+	Context("Flow Mirror tests", func() {
 		It("tags:sanity=true tags:type=basic;datapath=true;duration=short Mirror packets to collector and check TCPDUMP", func() {
 			if ts.tb.HasNaplesSim() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
@@ -185,7 +185,7 @@ var _ = Describe("mirror tests", func() {
 
 		})
 	})
-	Context("Scale mirror tests", func() {
+	Context("Flow Mirror tests : scale", func() {
 		It("tags:sanity=false tags:type=basic;datapath=true;duration=short Mirror packets to collector and check TCPDUMP at scale", func() {
 			if ts.tb.HasNaplesSim() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
