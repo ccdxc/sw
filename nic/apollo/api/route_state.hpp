@@ -162,5 +162,6 @@ route_table_find (pds_obj_key_t *key)
 }    // namespace api
 
 using api::route_table_state;
+using api::route_state;
 
 #endif    // __ROUTE_STATE_HPP__

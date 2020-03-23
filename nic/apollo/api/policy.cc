@@ -334,6 +334,73 @@ policy::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_POLICY, this);
 }
 
+policy_rule *
+policy_rule::factory(pds_policy_rule_spec_t *spec) {
+    return NULL;
+}
+
+void
+policy_rule::destroy(policy_rule *rt) {
+    SDK_ASSERT(FALSE);
+    return;
+}
+
+api_base *
+policy_rule::clone(api_ctxt_t *api_ctxt) {
+    return NULL;
+}
+
+sdk_ret_t
+policy_rule::free(policy_rule *rt) {
+    return SDK_RET_ERR;
+}
+
+policy_rule *
+policy_rule::build(pds_obj_key_t *key) {
+    return NULL;
+}
+
+void
+policy_rule::soft_delete(policy_rule *policy_rule) {
+    SDK_ASSERT(FALSE);
+}
+
+sdk_ret_t
+policy_rule::init_config(api_ctxt_t *api_ctxt) {
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
+policy_rule::add_deps(api_obj_ctxt_t *obj_ctxt) {
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
+policy_rule::add_to_db(void) {
+    return policy_rule_db()->insert(this);
+}
+
+sdk_ret_t
+policy_rule::del_from_db(void) {
+    if (policy_rule_db()->remove(this)) {
+        return SDK_RET_OK;
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
+}
+
+sdk_ret_t
+policy_rule::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+    if (policy_rule_db()->remove((policy_rule *)orig_obj)) {
+        return policy_rule_db()->insert(this);
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
+}
+
+sdk_ret_t
+policy_rule::delay_delete(void) {
+    return delay_delete_to_slab(PDS_SLAB_ID_POLICY_RULE, this);
+}
+
 /// @}    // end of PDS_POLICY
 
 }    // namespace api

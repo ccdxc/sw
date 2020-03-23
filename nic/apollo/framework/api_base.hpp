@@ -51,6 +51,14 @@ public:
         return NULL;
     }
 
+    /// \brief    clone this object and return cloned object
+    /// \return       new object instance of current object
+    /// \remark  this version of clone API is needed when we need to clone
+    ///          the object (and its impl) when we don't have a spec
+    virtual api_base *clone(void) {
+        return NULL;
+    }
+
     /// \brief    free all the memory associated with this object without
     ///           touching any of the databases or h/w etc.
     /// \param[in] obj_id     object identifier

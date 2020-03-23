@@ -69,7 +69,9 @@ namespace api {
     ENTRY(PDS_STATE_NAT,            19,            "nat")           \
     ENTRY(PDS_STATE_DHCP,           20,            "dhcp")          \
     ENTRY(PDS_STATE_LEARN,          21,            "learn")         \
-    ENTRY(PDS_STATE_MAX,            22,            "max")
+    ENTRY(PDS_STATE_ROUTE,          22,            "route")         \
+    ENTRY(PDS_STATE_POLICY_RULE,    23,            "policy-rule")   \
+    ENTRY(PDS_STATE_MAX,            24,            "max")
 
 SDK_DEFINE_ENUM(pds_state_t, PDS_STATE)
 SDK_DEFINE_ENUM_TO_STR(pds_state_t, PDS_STATE)
@@ -206,6 +208,12 @@ public:
     }
     dhcp_state *dhcp_db(void) {
         return (dhcp_state *)state_[PDS_STATE_DHCP];
+    }
+    route_state *route_db(void) {
+        return (route_state *)state_[PDS_STATE_ROUTE];
+    }
+    policy_rule_state *policy_rule_db(void) {
+        return (policy_rule_state *)state_[PDS_STATE_POLICY_RULE];
     }
     pds_event_cb_t event_cb(void) const { return event_cb_; }
     void set_event_cb(pds_event_cb_t event_cb) { event_cb_ = event_cb; }
@@ -386,6 +394,18 @@ static inline learn_state *
 learn_db (void)
 {
     return api::g_pds_state.learn_db();
+}
+
+static inline route_state *
+route_db (void)
+{
+    return api::g_pds_state.route_db();
+}
+
+static inline policy_rule_state *
+policy_rule_db (void)
+{
+    return api::g_pds_state.policy_rule_db();
 }
 
 #endif    // __PDS_STATE_HPP__

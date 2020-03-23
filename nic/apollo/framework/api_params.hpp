@@ -88,6 +88,10 @@ struct api_params_s {
         pds_dhcp_policy_spec_t       dhcp_policy_spec;
         pds_obj_key_t                security_profile_key;
         pds_security_profile_spec_t  security_profile_spec;
+        pds_obj_key_t                route_key;
+        pds_route_spec_t             route_spec;
+        pds_obj_key_t                policy_rule_key;
+        pds_policy_rule_spec_t       policy_rule_spec;
     };
 };
 

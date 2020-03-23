@@ -261,6 +261,22 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(policy_rule *rule);
 
+    /// \brief    build object given its key from the s/w and/or h/w state we
+    ///           have and return an instance of the object (this is useful for
+    ///           stateless objects to be operated on by framework during DELETE
+    ///           or UPDATE operations)
+    /// \param[in] key    key of object instance of interest
+    /// \return    security policy rule instance corresponding to the key or
+    ///            NULL if entry is not found
+    static policy_rule *build(pds_obj_key_t *key);
+
+    /// \brief    free a stateless entry's temporary s/w only resources like
+    ///           memory etc., for a stateless entry calling destroy() will
+    ///           remove resources from h/w, which can't be done during ADD/UPD
+    ///           etc. operations esp. when object is constructed on the fly
+    /// \param[in] rule    security policy rule to be freed
+    static void soft_delete(policy_rule *rule);
+
     /// \brief     initialize security policy rule instance with given config
     /// \param[in] api_ctxt API context carrying the configuration
     /// \return    SDK_RET_OK on success, failure status code on error
@@ -332,5 +348,6 @@ private:
 }    // namespace api
 
 using api::policy;
+using api::policy_rule;
 
 #endif    // __POLICY_HPP__

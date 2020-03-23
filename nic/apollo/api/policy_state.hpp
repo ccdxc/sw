@@ -206,5 +206,6 @@ security_profile_find (pds_obj_key_t *key)
 }    // namespace api
 
 using api::policy_state;
+using api::policy_rule_state;
 
 #endif    // __POLICY_STATE_HPP__
