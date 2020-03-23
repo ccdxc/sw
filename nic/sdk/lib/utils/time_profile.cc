@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "time_profile.hpp"
+#include "include/sdk/timestamp.hpp"
 
 namespace sdk {
 namespace utils {
@@ -32,18 +33,6 @@ print(void) {
 
 #endif
 
-static uint64_t
-timespec_diff(struct timespec *before, struct timespec *after) {
-    uint64_t nseconds = after->tv_sec - before->tv_sec;
-    nseconds = nseconds * 1000000000lu;
-    if (after->tv_nsec < before->tv_nsec) {
-        nseconds -= 1000000000lu;
-        after->tv_nsec += 1000000000lu;
-    }
-    nseconds += (after->tv_nsec - before->tv_nsec);
-    return nseconds;
-}
-
 void
 time_profile_info::start(void) {
     if (time_profile_enable) {
@@ -53,9 +42,12 @@ time_profile_info::start(void) {
 
 void
 time_profile_info::stop(void) {
+    struct timespec ts_diff;
+
     if (time_profile_enable) {
         clock_gettime(CLOCK_REALTIME, &after_);
-        total_ += timespec_diff(&before_, &after_);
+        ts_diff = sdk::timestamp_diff(&after_, &before_);
+        sdk::timestamp_to_nsecs(&ts_diff, &total_);
     }
 }
 

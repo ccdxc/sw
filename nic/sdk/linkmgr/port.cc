@@ -789,6 +789,10 @@ port::port_link_sm_an_process(void)
     bool an_good = false;
     int  timeout = MIN_PORT_TIMER_INTERVAL;
     an_ret_t an_ret = AN_DONE;
+    struct timespec before;
+    struct timespec after;
+    struct timespec ts_diff;
+    uint64_t timediff;
 
     switch(this->link_an_sm_) {
     case port_link_sm_t::PORT_LINK_SM_AN_DISABLED:
@@ -811,14 +815,20 @@ port::port_link_sm_an_process(void)
 
         SDK_PORT_SM_TRACE(this, "wait AN HCD");
 
-        // 5000 * 10 usecs = 50 msecs
-        for (int i = 0; i < 5000; ++i) {
+        clock_gettime(CLOCK_MONOTONIC, &before);
+        // 50 msecs spin for AN HCD resolution
+        do {
+            clock_gettime(CLOCK_MONOTONIC, &after);
             an_good = port_serdes_an_wait_hcd();
             if (an_good == true) {
                 break;
             }
-            usleep(10);
-        }
+            ts_diff = sdk::timestamp_diff(&after, &before);
+            sdk::timestamp_to_nsecs(&ts_diff, &timediff);
+            if (timediff > MAX_LINK_AN_WAIT_TIME) {
+                break;
+            }
+        } while (true);
 
         // If AN HCD doesn't resolve:
         //   If retry count < port_max_an_retries():
