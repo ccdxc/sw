@@ -1179,9 +1179,11 @@ static int _ionic_lif_rx_mode(struct ionic_lif *lif, unsigned int rx_mode)
 void ionic_set_rx_mode(struct net_device *netdev)
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
-	struct ionic_identity *ident = &lif->ionic->ident;
+	struct ionic_identity *ident;
 	unsigned int nfilters;
 	unsigned int rx_mode;
+
+	ident = &lif->ionic->ident;
 
 	rx_mode = IONIC_RX_MODE_F_UNICAST;
 	rx_mode |= (netdev->flags & IFF_MULTICAST) ? IONIC_RX_MODE_F_MULTICAST : 0;
@@ -2443,14 +2445,14 @@ static int ionic_set_vf_link_state(struct net_device *netdev, int vf, int set)
 	int ret;
 
 	switch (set) {
-	case IFLA_VF_LINK_STATE_AUTO:
-		data = IONIC_VF_LINK_STATUS_AUTO;
-		break;
 	case IFLA_VF_LINK_STATE_ENABLE:
 		data = IONIC_VF_LINK_STATUS_UP;
 		break;
 	case IFLA_VF_LINK_STATE_DISABLE:
 		data = IONIC_VF_LINK_STATUS_DOWN;
+		break;
+	case IFLA_VF_LINK_STATE_AUTO:
+		data = IONIC_VF_LINK_STATUS_AUTO;
 		break;
 	default:
 		return -EINVAL;
@@ -3416,6 +3418,7 @@ int ionic_lifs_size(struct ionic *ionic)
 	unsigned int nnqs_per_lif;
 	unsigned int dev_neth_eqs;
 	unsigned int dev_nintrs;
+	unsigned int min_intrs;
 	unsigned int nrdma_eqs;
 	unsigned int neth_eqs;
 	unsigned int nintrs;
@@ -3480,6 +3483,7 @@ try_again:
 		nintrs = nlifs + neth_eqs + nrdma_eqs;
 	else
 		nintrs = (1 + nxqs) + ((nlifs - 1) * 2) + nrdma_eqs;
+	min_intrs = 2;  /* adminq + 1 TxRx queue pair */
 
 	if (nintrs > dev_nintrs)
 		goto try_fewer;
@@ -3537,6 +3541,6 @@ try_fewer:
 		nxqs >>= 1;
 		goto try_again;
 	}
-	dev_err(ionic->dev, "Can't get minimum intrs from OS\n");
+	dev_err(ionic->dev, "Can't get minimum %d intrs from OS\n", min_intrs);
 	return -ENOSPC;
 }

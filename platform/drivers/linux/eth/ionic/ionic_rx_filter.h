@@ -18,9 +18,9 @@ struct ionic_rx_filter {
 #define IONIC_RX_FILTER_HLISTS		BIT(IONIC_RX_FILTER_HASH_BITS)
 #define IONIC_RX_FILTER_HLISTS_MASK	(IONIC_RX_FILTER_HLISTS - 1)
 struct ionic_rx_filters {
-	spinlock_t lock;				   /* filter list lock */
-	struct hlist_head by_hash[IONIC_RX_FILTER_HLISTS]; /* by skb hash */
-	struct hlist_head by_id[IONIC_RX_FILTER_HLISTS];   /* by filter_id */
+	spinlock_t lock;				    /* filter list lock */
+	struct hlist_head by_hash[IONIC_RX_FILTER_HLISTS];  /* by skb hash */
+	struct hlist_head by_id[IONIC_RX_FILTER_HLISTS];    /* by filter_id */
 };
 
 void ionic_rx_filter_free(struct ionic_lif *lif, struct ionic_rx_filter *f);

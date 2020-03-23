@@ -299,14 +299,12 @@ static int ionic_set_link_ksettings(struct net_device *netdev,
 				    const struct ethtool_link_ksettings *ks)
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
-	struct ionic *ionic = lif->ionic;
 	struct ionic_dev *idev = &lif->ionic->idev;
+	struct ionic *ionic = lif->ionic;
 	int err = 0;
 
 	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
 		return -EBUSY;
-
-	idev = &lif->ionic->idev;
 
 	/* set autoneg */
 	if (ks->base.autoneg != idev->port_info->config.an_enable) {
@@ -527,6 +525,7 @@ static int ionic_set_coalesce(struct net_device *netdev,
 	coal = ionic_coal_usec_to_hw(lif->ionic, coalesce->rx_coalesce_usecs);
 	if (!coal && coalesce->rx_coalesce_usecs)
 		coal = 1;
+
 	if (coal > IONIC_INTR_CTRL_COAL_MAX)
 		return -ERANGE;
 

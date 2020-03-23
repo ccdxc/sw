@@ -93,14 +93,14 @@ int ionic_dev_setup(struct ionic *ionic)
 		return -EFAULT;
 	}
 
-	idev->db_pages = bar->vaddr;
-	idev->phy_db_pages = bar->bus_addr;
-
 	idev->last_fw_status = 0xff;
 	timer_setup(&ionic->watchdog_timer, ionic_watchdog_cb, 0);
 	ionic->watchdog_period = IONIC_WATCHDOG_SECS * HZ;
 	mod_timer(&ionic->watchdog_timer,
 		  round_jiffies(jiffies + ionic->watchdog_period));
+
+	idev->db_pages = bar->vaddr;
+	idev->phy_db_pages = bar->bus_addr;
 
 	/* BAR2: optional controller memory mapping */
 	bar++;
