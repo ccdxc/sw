@@ -567,8 +567,6 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ep = (ep_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("EP create add cb {}", ep_l2_key_to_str(ep));
-
     // PD Call to allocate PD resources and HW programming
     pd::pd_ep_create_args_init(&pd_ep_args);
     pd_ep_args.ep = ep;
@@ -750,8 +748,6 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ep = (ep_t *)dhl_entry->obj;
     vrf = app_ctxt->vrf;
-
-    HAL_TRACE_DEBUG("EP create commit cb {}", ep_l2_key_to_str(ep));
 
     // Add EP to DBs
     ret = endpoint_add_to_db(ep, vrf);
@@ -972,9 +968,7 @@ ep_init_from_spec (ep_t *ep, const EndpointSpec& spec, bool create)
     // Initialize the EP
     ep->l2_key.l2_segid = l2seg->seg_id;
     MAC_UINT64_TO_ADDR(ep->l2_key.mac_addr, spec.key_or_handle().endpoint_key().l2_key().mac_address());
-    HAL_TRACE_DEBUG("L2seg id {}, Mac {} if {}", l2seg->seg_id,
-                    ether_ntoa((struct ether_addr*)(ep->l2_key.mac_addr)),
-                    hal_if->if_id);
+    HAL_TRACE_DEBUG("EP create {}, if: {}", ep_l2_key_to_str(ep), if_to_str(hal_if));
     ep->l2seg_handle = l2seg->hal_handle;
     ep->if_handle = hal_if->hal_handle;
     ep->vrf_handle = vrf->hal_handle;
@@ -2156,6 +2150,8 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
         goto end;
     }
 
+    HAL_TRACE_DEBUG("EP delete {}", ep_l2_key_to_str(ep));
+
     // check for change
     ret = endpoint_check_update(req, ep, &app_ctxt);
     if (ret != HAL_RET_OK) {
@@ -2537,7 +2533,7 @@ endpoint_delete (EndpointDeleteRequest& req,
         }
         goto end;
     }
-    HAL_TRACE_DEBUG("Deleting EP {}", ep_l2_key_to_str(ep));
+    HAL_TRACE_DEBUG("EP delete {}", ep_l2_key_to_str(ep));
 
     // validate the EP delete
     ret = validate_endpoint_delete(ep);
@@ -2801,8 +2797,8 @@ ep_l2_key_to_str (ep_t *ep)
     buf = ep_str[ep_str_next++ & 0x3];
     memset(buf, 0, 50);
     if (ep) {
-        snprintf(buf, 50, "%lu::%s", ep->l2_key.l2_segid,
-                 ether_ntoa((struct ether_addr *)(ep->l2_key.mac_addr)));
+        snprintf(buf, 50, "(l2seg: %lu, mac: %s)", ep->l2_key.l2_segid,
+                 macaddr2str(ep->l2_key.mac_addr));
     }
     return buf;
 }

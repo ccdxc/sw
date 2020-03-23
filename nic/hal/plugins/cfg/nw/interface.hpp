@@ -404,6 +404,7 @@ hal_ret_t get_lif_handle_for_app_redir_if(const InterfaceSpec& spec,
 if_t *if_lookup_key_or_handle(const InterfaceKeyHandle& key_handle);
 const char *if_spec_keyhandle_to_str(const InterfaceKeyHandle& key_handle);
 const char *if_keyhandle_to_str(if_t *hal_if);
+const char*if_to_str(if_t *hal_if);
 
 hal_ret_t lif_create(LifSpec& spec, LifResponse *rsp,
                      lif_hal_info_t *lif_hal_info);

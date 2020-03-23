@@ -6299,6 +6299,39 @@ if_keyhandle_to_str (if_t *hal_if)
 }
 
 const char*
+if_to_str (if_t *hal_if)
+{
+    static thread_local char       if_str[4][50];
+    static thread_local uint8_t    if_str_next = 0;
+    char                           *buf;
+
+    buf = if_str[if_str_next++ & 0x3];
+    memset(buf, 0, 50);
+    if (hal_if) {
+        switch(hal_if->if_type) {
+        case intf::IF_TYPE_ENIC:
+            snprintf(buf, 50, "Enic-%d", hal_if->if_id);
+            break;
+        case intf::IF_TYPE_CPU:
+            snprintf(buf, 50, "CPU-%d", hal_if->if_id);
+            break;
+        case intf::IF_TYPE_APP_REDIR:
+            snprintf(buf, 50, "App-redir-%d", hal_if->if_id);
+            break;
+        case intf::IF_TYPE_UPLINK:
+        case intf::IF_TYPE_UPLINK_PC:
+        case intf::IF_TYPE_TUNNEL:
+            snprintf(buf, 50, "%s", 
+                     eth_ifindex_to_str(hal_if->if_id).c_str());
+            break;
+        default:
+            snprintf(buf, 50, "None");
+        }
+    }
+    return buf;
+}
+
+const char*
 if_status_to_str (IfStatus status)
 {
     switch(status) {

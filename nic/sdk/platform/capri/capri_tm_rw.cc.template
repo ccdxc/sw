@@ -589,8 +589,8 @@ capri_tm_uplink_set_cam_type (tm_port_t port,
         cam_compare = 0;
 
     if (!capri_tm_port_is_uplink_port(port)) {
-        SDK_TRACE_ERR("%u is not a valid TM uplink port",
-                      port);
+        SDK_TRACE_VERBOSE("%u is not a valid TM uplink port",
+                          port);
         return sdk::SDK_RET_INVALID_ARG;
     }
 
@@ -1832,8 +1832,8 @@ capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
 
     if (!capri_tm_port_is_uplink_port(port)) {
-        SDK_TRACE_ERR("%u is not a valid TM uplink port",
-                      port);
+        SDK_TRACE_VERBOSE("%u is not a valid TM uplink port",
+                          port);
         return sdk::SDK_RET_INVALID_ARG;
     }
 
