@@ -1,11 +1,11 @@
 meta:
-    name    : underlay
+    name    : link_events
     os      : [ linux ]
     nicmode : classic
     nics    : [ pensando ]
 
 testcases:
-    -   name    : Ping_Underlay_Workloads
+    -   name    : Ping_Underlay_Switchport_Flap
         testcase: testcases.underlay.ping
         stress  : True
         args    :
@@ -14,7 +14,9 @@ testcases:
         iterators :
             type            : nested
             ipaf            : [ ipv4 ]
-            pktsize         : [ 64, 1024 ]
+            pktsize         : [ 64 ]
             connectivity    : [ underlay_lb, bgp_peer ]
-            interface       : [ switchports ]
-            port_status     : [ up ]
+            interface       : [ switchport0, switchport1 ]
+            #interface       : [ uplink0, uplink1, uplinks, switchport0, switchport1, switchports ]
+            port_status     : [ down, up ] 
+

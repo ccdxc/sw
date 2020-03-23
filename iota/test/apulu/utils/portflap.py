@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
-from time import *
+import iota.test.apulu.utils.misc as misc_utils
 from apollo.config.store import client as EzAccessStoreClient
 import iota.test.apulu.utils.pdsctl as pdsctl
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
@@ -15,7 +15,7 @@ verifyRetry = 120 #no of seconds to retry for
 uplinkDict = {UPLINK_PREFIX1: "Uplink0", UPLINK_PREFIX2: "Uplink1"}
 
 def getFirstOperDownPort(node):
-    sleep (3)
+    misc_utils.Sleep(3)
     if GlobalOptions.dryrun:
         return api.types.status.SUCCESS
 
@@ -34,7 +34,7 @@ def verifyDataPortState(naples_nodes, admin, oper):
     retry_remaining = verifyRetry
     ret = verifyDataPortStateHelper(naples_nodes, admin, oper)
     while api.types.status.FAILURE == ret and retry_remaining > 0:
-        sleep(1)
+        misc_utils.Sleep(1)
         retry_remaining = retry_remaining - 1
         ret = verifyDataPortStateHelper(naples_nodes, admin, oper)
     
@@ -83,7 +83,7 @@ def switchPortFlap(tc):
         api.Logger.error("Failed to flap the switch port")
         return ret
 
-    sleep(2) #give a short gap before printing status
+    misc_utils.Sleep(2) #give a short gap before printing status
     return api.types.status.SUCCESS
 
 def switchPortOp(naples_nodes, oper, id):
@@ -98,6 +98,8 @@ def switchPortOp(naples_nodes, oper, id):
         ret = api.ShutDataPorts(naples_nodes, num_ports, start_port_id)
     else:
         ret = api.UnShutDataPorts(naples_nodes, num_ports, start_port_id)
+    
+    misc_utils.Sleep(60)  #TBD: temporary fix to wait 60 seconds for bgp sessions
     
     if ret != api.types.status.SUCCESS:
         api.Logger.error(f"Failed to bring {oper} : {id}")
@@ -129,7 +131,7 @@ def setDataPortStatePerUplink(naples_nodes, oper, id):
             if ret != True:
                 api.Logger.error("oper:%s uplink failed at node %s : %s" %(oper, node, resp))
                 return api.types.status.FAILURE      
-        sleep(1) #give a short gap before printing status
+        misc_utils.Sleep(1) #give a short gap before printing status
         pdsctl.ExecutePdsctlShowCommand(node, "port status", yaml=False)
     return api.types.status.SUCCESS
 
@@ -146,7 +148,7 @@ def setDataPortState(naples_nodes, oper):
             if ret != True:
                 api.Logger.error("oper:%s uplink failed at node %s : %s" %(oper, node, resp))
                 return api.types.status.FAILURE      
-        sleep(3) #give a short gap before printing status
+        misc_utils.Sleep(3) #give a short gap before printing status
         pdsctl.ExecutePdsctlShowCommand(node, "port status", yaml=False)
     return api.types.status.SUCCESS
 

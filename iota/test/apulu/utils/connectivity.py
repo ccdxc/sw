@@ -8,7 +8,7 @@ def TriggerConnectivityTest(workload_pairs, proto, af, pktsize):
     if proto == 'icmp':
         cmd_cookies, resp = traffic_utils.pingWorkloads(workload_pairs, af, pktsize)
     elif proto in ['tcp','udp']:
-        cmd_cookies, resp = traffic_utils.iperfWorkloads(workload_pairs, af, proto, pktsize, "100G", 2, 4)
+        cmd_cookies, resp = traffic_utils.iperfWorkloads(workload_pairs, af, proto, pktsize, "10G", 1, 1)
     else:
         api.Logger.error("Proto %s unsupported" % proto)
     return cmd_cookies, resp

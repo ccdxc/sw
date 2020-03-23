@@ -12,11 +12,8 @@ testcases:
             type    : nested
             ipaf    : [ ipv4 ]
             proto   : [ icmp ]
-            #pktsize : [ 64, 128, 256, 512, 1024 ]
-            pktsize : [ 64, 1024 ]
-            #workload_type : [ remote ]
+            pktsize : [ 64 ]
             workload_type : [ local, remote ]
-            #workload_scope : [ intra-subnet ]
             workload_scope : [ intra-subnet, inter-subnet ]
 
     -   name    : Workload_Iperf
@@ -25,7 +22,7 @@ testcases:
         iterators :
             type    : nested
             ipaf    : [ ipv4 ]
-            proto   : [ udp ]
+            proto   : [ udp, tcp ]
             pktsize : [ 1024 ]
-            workload_type : [ remote ]
+            workload_type : [ remote, local ]
             workload_scope : [ intra-subnet, inter-subnet ]
