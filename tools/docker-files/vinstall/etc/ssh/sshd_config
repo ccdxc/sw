@@ -27,7 +27,8 @@ HostKey /etc/ssh/ssh_host_ed25519_key
 # Ciphers and keying
 #RekeyLimit default none
 # Begin Pensando Changes
-Ciphers chacha20-poly1305@openssh.com,aes128-ctr,aes192-ctr,aes256-ctr,aes128-gcm@openssh.com,aes256-gcm@openssh.com,aes128-cbc,aes192-cbc,aes256-cbc
+# disable cipheers in cbc mode
+Ciphers chacha20-poly1305@openssh.com,aes128-ctr,aes192-ctr,aes256-ctr,aes128-gcm@openssh.com,aes256-gcm@openssh.com
 KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha256,diffie-hellman-group14-sha1
 # End Pensando Changes
 
@@ -80,7 +81,12 @@ ChallengeResponseAuthentication no
 #KerberosUseKuserok yes
 
 # GSSAPI options
-GSSAPIAuthentication yes
+# Begin Pensando Changes
+# Disable GSSAPI auth as a mitigation for CVE-2018-15919
+# see https://access.redhat.com/security/cve/CVE-2018-15919
+#GSSAPIAuthentication yes
+GSSAPIAuthentication no
+# End Pensando Changes
 GSSAPICleanupCredentials no
 #GSSAPIStrictAcceptorCheck yes
 #GSSAPIKeyExchange no
@@ -124,7 +130,10 @@ X11Forwarding yes
 #VersionAddendum none
 
 # no default banner path
-#Banner none
+# Begin Pensando Changes
+# disable banner with version number
+Banner none
+# End Pensando Changes
 
 # Accept locale-related environment variables
 AcceptEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
