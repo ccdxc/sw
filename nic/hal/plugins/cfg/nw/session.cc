@@ -87,7 +87,7 @@ session_stats_t  *g_session_stats;
 session_limit_stats_tracker_t *g_session_limit_stats_trckr = NULL;
 
 sdk_spinlock_t          g_flow_telemetry_slock;
-flow_telemetry_state_t *g_flow_telemetry_state_age_head_p; 
+flow_telemetry_state_t *g_flow_telemetry_state_age_head_p;
 flow_telemetry_state_t *g_flow_telemetry_state_age_tail_p;
 uint16_t                g_age_timer_ticks;
 bool                    g_mpu_prog_gen_done = false;
@@ -108,7 +108,7 @@ extern class lif_mgr *g_lif_manager;
 #define HAL_SESSIONS_TO_SCAN_PER_INTVL             (2000)
 #define HAL_TCP_CLOSE_WAIT_INTVL                   (10 * TIME_MSECS_PER_SEC)
 #define MAX_TCP_TICKLES                             3
-#define HAL_MAX_SESSION_PER_ENQ                     128 
+#define HAL_MAX_SESSION_PER_ENQ                     128
 #define HAL_MAX_DATA_THREAD                        (g_hal_state->oper_db()->max_data_threads())
 #define HAL_MAX_ERRORS                              255
 #define HAL_SESSION_STATS_SHIFT                     7
@@ -1360,7 +1360,7 @@ session_update_list (dllist_ctxt_t *session_list, bool async, uint64_t featureid
     // update all sessions
     hal_ret_t ret = HAL_RET_OK;
     dllist_ctxt_t  *curr = NULL, *next = NULL;
-    
+
     dllist_for_each_safe(curr, next, session_list) {
         hal_handle_id_list_entry_t  *entry =
             dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
@@ -1376,7 +1376,7 @@ session_update_list (dllist_ctxt_t *session_list, bool async, uint64_t featureid
         dllist_del(&entry->dllist_ctxt);
         g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
     }
-    
+
     return ret;
 }
 
@@ -1518,7 +1518,7 @@ void incr_global_session_icmp_error_stats (uint8_t fte_id) {
 }
 
 void
-get_l2_flow_telemetry_key (flow_telemetry_state_t *flow_telemetry_state_p, 
+get_l2_flow_telemetry_key (flow_telemetry_state_t *flow_telemetry_state_p,
                            flowstats::L2FlowKey *key_p)
 {
     key_p->set_svrf(flow_telemetry_state_p->key.svrf);
@@ -1530,7 +1530,7 @@ get_l2_flow_telemetry_key (flow_telemetry_state_t *flow_telemetry_state_p,
 }
 
 void
-get_ipv4_flow_telemetry_key (flow_telemetry_state_t *flow_telemetry_state_p, 
+get_ipv4_flow_telemetry_key (flow_telemetry_state_t *flow_telemetry_state_p,
                              flowstats::IPv4FlowKey *key_p)
 {
     key_p->set_svrf(flow_telemetry_state_p->key.svrf);
@@ -1543,7 +1543,7 @@ get_ipv4_flow_telemetry_key (flow_telemetry_state_t *flow_telemetry_state_p,
 }
 
 void
-get_ipv6_flow_telemetry_key (flow_telemetry_state_t *flow_telemetry_state_p, 
+get_ipv6_flow_telemetry_key (flow_telemetry_state_t *flow_telemetry_state_p,
                              flowstats::IPv6FlowKey *key_p)
 {
     key_p->set_svrf(flow_telemetry_state_p->key.svrf);
@@ -1595,7 +1595,7 @@ get_ipv6_flow_proto_key (flow_key_t *flow_key_p, flowstats::IPv6FlowKey *key_p)
 }
 
 void
-initialize_flow_telemetry_hbm_stats_state (flow_t *flow_p, 
+initialize_flow_telemetry_hbm_stats_state (flow_t *flow_p,
                                            flow_state_t *flow_state_p)
 {
     flow_telemetry_state_t *flow_telemetry_state_p;
@@ -1604,7 +1604,7 @@ initialize_flow_telemetry_hbm_stats_state (flow_t *flow_p,
     flow_telemetry_state_p = flow_p->flow_telemetry_state_p;
     if (flow_p->flow_telemetry_enable_flags & (1 << FLOW_TELEMETRY_RAW)) {
         // Compute Delta-Packets/Bytes since last capture
-        delta_packets = (uint32_t) flow_state_p->packets - 
+        delta_packets = (uint32_t) flow_state_p->packets -
         flow_telemetry_state_p->u1.raw_metrics.last_flow_table_packets;
         delta_bytes = (uint32_t) flow_state_p->bytes - flow_telemetry_state_p->
                                  u1.raw_metrics.last_flow_table_bytes;
@@ -1634,7 +1634,7 @@ initialize_flow_telemetry_hbm_stats_state (flow_t *flow_p,
         // Compute Delta-Packets/Bytes since last capture
         delta_packets = (uint32_t) flow_state_p->drop_packets -
         flow_telemetry_state_p->u1.drop_metrics.last_flow_table_packets;
-        delta_bytes = (uint32_t) flow_state_p->drop_bytes - 
+        delta_bytes = (uint32_t) flow_state_p->drop_bytes -
         flow_telemetry_state_p->u1.drop_metrics.last_flow_table_bytes;
         flow_telemetry_state_p->u1.drop_metrics.last_flow_table_packets =
                                 (uint32_t) flow_state_p->drop_packets;
@@ -1682,7 +1682,7 @@ check_for_flow_telemetry_hbm_stats_state_reuse (flow_t *flow_p,
                     }
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_PERFORMANCE)) {
                     auto m_ptr = delphi::objects::L2FlowPerformanceMetrics::
                                  Find(key);
@@ -1692,7 +1692,7 @@ check_for_flow_telemetry_hbm_stats_state_reuse (flow_t *flow_p,
                     }
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
                     auto m_ptr = delphi::objects::L2FlowBehavioralMetrics::
                                  Find(key);
@@ -1725,7 +1725,7 @@ check_for_flow_telemetry_hbm_stats_state_reuse (flow_t *flow_p,
                     }
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_PERFORMANCE)) {
                     auto m_ptr = delphi::objects::IPv4FlowPerformanceMetrics::
                                  Find(key);
@@ -1735,7 +1735,7 @@ check_for_flow_telemetry_hbm_stats_state_reuse (flow_t *flow_p,
                     }
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_LATENCY)) {
                     auto m_ptr = delphi::objects::IPv4FlowLatencyMetrics::
                                  Find(key);
@@ -1745,7 +1745,7 @@ check_for_flow_telemetry_hbm_stats_state_reuse (flow_t *flow_p,
                     }
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
                     auto m_ptr = delphi::objects::IPv4FlowBehavioralMetrics::
                                  Find(key);
@@ -1778,7 +1778,7 @@ check_for_flow_telemetry_hbm_stats_state_reuse (flow_t *flow_p,
                     }
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_PERFORMANCE)) {
                     auto m_ptr = delphi::objects::IPv6FlowPerformanceMetrics::
                                  Find(key);
@@ -1788,7 +1788,7 @@ check_for_flow_telemetry_hbm_stats_state_reuse (flow_t *flow_p,
                     }
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_LATENCY)) {
                     auto m_ptr = delphi::objects::IPv6FlowLatencyMetrics::
                                  Find(key);
@@ -1798,7 +1798,7 @@ check_for_flow_telemetry_hbm_stats_state_reuse (flow_t *flow_p,
                     }
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
                     auto m_ptr = delphi::objects::IPv6FlowBehavioralMetrics::
                                  Find(key);
@@ -1865,7 +1865,7 @@ check_for_flow_telemetry_hbm_stats_state_reuse (flow_t *flow_p,
 }
 
 void
-allocate_flow_telemetry_hbm_stats_state (flow_t *flow_p, 
+allocate_flow_telemetry_hbm_stats_state (flow_t *flow_p,
                                          flow_state_t *flow_state_p)
 {
     sdk::lib::indexer::status rs;
@@ -1894,7 +1894,7 @@ allocate_flow_telemetry_hbm_stats_state (flow_t *flow_p,
     //
     // Convert Physical-Flow-Proto-State-ptr to Virtual-address
     //
-    pal_addr = g_flow_telemetry_hbm_start + 
+    pal_addr = g_flow_telemetry_hbm_start +
                idx * (1 << FLOW_TELEMETRY_STATS_SHIFT);
     sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(
                                         pal_addr, &vaddr);
@@ -1953,7 +1953,7 @@ allocate_flow_telemetry_hbm_stats_state (flow_t *flow_p,
 }
 
 void
-free_flow_telemetry_hbm_stats_state (flow_telemetry_state_t 
+free_flow_telemetry_hbm_stats_state (flow_telemetry_state_t
                                      *flow_telemetry_state_p)
 {
     g_flow_proto_state_indexer->free(flow_telemetry_state_p->stats_idx);
@@ -1989,7 +1989,7 @@ delete_flow_proto_state (flow_telemetry_state_t *flow_telemetry_state_p,
                     }
                 }
 
-                if (flow_telemetry_delete_flags & 
+                if (flow_telemetry_delete_flags &
                    (1 << FLOW_TELEMETRY_PERFORMANCE)) {
                     auto m_ptr = delphi::objects::L2FlowPerformanceMetrics::
                                  Find(key);
@@ -2001,7 +2001,7 @@ delete_flow_proto_state (flow_telemetry_state_t *flow_telemetry_state_p,
                     }
                 }
 
-                if (flow_telemetry_delete_flags & 
+                if (flow_telemetry_delete_flags &
                    (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
                     auto m_ptr = delphi::objects::L2FlowBehavioralMetrics::
                                  Find(key);
@@ -2038,7 +2038,7 @@ delete_flow_proto_state (flow_telemetry_state_t *flow_telemetry_state_p,
                     }
                 }
 
-                if (flow_telemetry_delete_flags & 
+                if (flow_telemetry_delete_flags &
                    (1 << FLOW_TELEMETRY_PERFORMANCE)) {
                     auto m_ptr = delphi::objects::IPv4FlowPerformanceMetrics::
                                  Find(key);
@@ -2050,7 +2050,7 @@ delete_flow_proto_state (flow_telemetry_state_t *flow_telemetry_state_p,
                     }
                 }
 
-                if (flow_telemetry_delete_flags & 
+                if (flow_telemetry_delete_flags &
                    (1 << FLOW_TELEMETRY_LATENCY)) {
                     auto m_ptr = delphi::objects::IPv4FlowLatencyMetrics::
                                  Find(key);
@@ -2061,7 +2061,7 @@ delete_flow_proto_state (flow_telemetry_state_t *flow_telemetry_state_p,
                     }
                 }
 
-                if (flow_telemetry_delete_flags & 
+                if (flow_telemetry_delete_flags &
                    (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
                     auto m_ptr = delphi::objects::IPv4FlowBehavioralMetrics::
                                  Find(key);
@@ -2098,7 +2098,7 @@ delete_flow_proto_state (flow_telemetry_state_t *flow_telemetry_state_p,
                     }
                 }
 
-                if (flow_telemetry_delete_flags & 
+                if (flow_telemetry_delete_flags &
                    (1 << FLOW_TELEMETRY_PERFORMANCE)) {
                     auto m_ptr = delphi::objects::IPv6FlowPerformanceMetrics::
                                  Find(key);
@@ -2110,7 +2110,7 @@ delete_flow_proto_state (flow_telemetry_state_t *flow_telemetry_state_p,
                     }
                 }
 
-                if (flow_telemetry_delete_flags & 
+                if (flow_telemetry_delete_flags &
                    (1 << FLOW_TELEMETRY_LATENCY)) {
                     auto m_ptr = delphi::objects::IPv6FlowLatencyMetrics::
                                  Find(key);
@@ -2121,7 +2121,7 @@ delete_flow_proto_state (flow_telemetry_state_t *flow_telemetry_state_p,
                     }
                 }
 
-                if (flow_telemetry_delete_flags & 
+                if (flow_telemetry_delete_flags &
                    (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
                     auto m_ptr = delphi::objects::IPv6FlowBehavioralMetrics::
                                  Find(key);
@@ -2161,7 +2161,7 @@ create_flow_proto_state (flow_t *flow_p)
     flow_telemetry_delete_flags = (~flow_p->flow_telemetry_enable_flags &
                                    flow_telemetry_state_p->present_flags);
     if (flow_telemetry_delete_flags)
-        delete_flow_proto_state(flow_telemetry_state_p, 
+        delete_flow_proto_state(flow_telemetry_state_p,
                                 flow_telemetry_delete_flags);
 
     // No need to create if FlowProto creation is not enabled or
@@ -2179,11 +2179,11 @@ create_flow_proto_state (flow_t *flow_p)
                                       u1.raw_metrics.instances;
     stats_addr[FLOW_TELEMETRY_DROP] = (mem_addr_t) &flow_telemetry_hbm_addr->
                                        u1.drop_metrics.instances;
-    stats_addr[FLOW_TELEMETRY_PERFORMANCE] = (mem_addr_t) 
+    stats_addr[FLOW_TELEMETRY_PERFORMANCE] = (mem_addr_t)
                      &flow_telemetry_hbm_addr->u1.performance_metrics.instances;
     stats_addr[FLOW_TELEMETRY_LATENCY] = (mem_addr_t) &flow_telemetry_hbm_addr->
                                           u1.latency_metrics.instances;
-    stats_addr[FLOW_TELEMETRY_BEHAVIORAL] = (mem_addr_t) 
+    stats_addr[FLOW_TELEMETRY_BEHAVIORAL] = (mem_addr_t)
                       &flow_telemetry_hbm_addr->u1.behavioral_metrics.instances;
 
     flow_type = flow_p->config.key.flow_type;
@@ -2195,30 +2195,30 @@ create_flow_proto_state (flow_t *flow_p)
                 get_l2_flow_telemetry_key(flow_telemetry_state_p, &key);
                 if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_RAW)) {
                     auto m_ptr = delphi::objects::L2FlowRawMetrics::
-                                 NewL2FlowRawMetrics(key, 
+                                 NewL2FlowRawMetrics(key,
                                  stats_addr[FLOW_TELEMETRY_RAW]);
                     SDK_ASSERT(m_ptr != NULL);
                 }
 
                 if (flow_telemetry_create_flags & (1 << FLOW_TELEMETRY_DROP)) {
                     auto m_ptr = delphi::objects::L2FlowDropMetrics::
-                                 NewL2FlowDropMetrics(key, 
+                                 NewL2FlowDropMetrics(key,
                                  stats_addr[FLOW_TELEMETRY_DROP]);
                     SDK_ASSERT(m_ptr != NULL);
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_PERFORMANCE)) {
                     auto m_ptr = delphi::objects::L2FlowPerformanceMetrics::
-                                 NewL2FlowPerformanceMetrics(key, 
+                                 NewL2FlowPerformanceMetrics(key,
                                  stats_addr[FLOW_TELEMETRY_PERFORMANCE]);
                     SDK_ASSERT(m_ptr != NULL);
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
                     auto m_ptr = delphi::objects::L2FlowBehavioralMetrics::
-                                 NewL2FlowBehavioralMetrics(key, 
+                                 NewL2FlowBehavioralMetrics(key,
                                  stats_addr[FLOW_TELEMETRY_BEHAVIORAL]);
                     SDK_ASSERT(m_ptr != NULL);
                 }
@@ -2243,7 +2243,7 @@ create_flow_proto_state (flow_t *flow_p)
                     SDK_ASSERT(m_ptr != NULL);
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_PERFORMANCE)) {
                     auto m_ptr = delphi::objects::IPv4FlowPerformanceMetrics::
                                  NewIPv4FlowPerformanceMetrics(key,
@@ -2251,7 +2251,7 @@ create_flow_proto_state (flow_t *flow_p)
                     SDK_ASSERT(m_ptr != NULL);
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_LATENCY)) {
                     auto m_ptr = delphi::objects::IPv4FlowLatencyMetrics::
                                  NewIPv4FlowLatencyMetrics(key,
@@ -2259,7 +2259,7 @@ create_flow_proto_state (flow_t *flow_p)
                     SDK_ASSERT(m_ptr != NULL);
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
                     auto m_ptr = delphi::objects::IPv4FlowBehavioralMetrics::
                                  NewIPv4FlowBehavioralMetrics(key,
@@ -2287,7 +2287,7 @@ create_flow_proto_state (flow_t *flow_p)
                     SDK_ASSERT(m_ptr != NULL);
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_PERFORMANCE)) {
                     auto m_ptr = delphi::objects::IPv6FlowPerformanceMetrics::
                                  NewIPv6FlowPerformanceMetrics(key,
@@ -2295,7 +2295,7 @@ create_flow_proto_state (flow_t *flow_p)
                     SDK_ASSERT(m_ptr != NULL);
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_LATENCY)) {
                     auto m_ptr = delphi::objects::IPv6FlowLatencyMetrics::
                                  NewIPv6FlowLatencyMetrics(key,
@@ -2303,7 +2303,7 @@ create_flow_proto_state (flow_t *flow_p)
                     SDK_ASSERT(m_ptr != NULL);
                 }
 
-                if (flow_telemetry_create_flags & 
+                if (flow_telemetry_create_flags &
                    (1 << FLOW_TELEMETRY_BEHAVIORAL)) {
                     auto m_ptr = delphi::objects::IPv6FlowBehavioralMetrics::
                                  NewIPv6FlowBehavioralMetrics(key,
@@ -2336,9 +2336,9 @@ enqueue_flow_telemetry_state_to_age_list (flow_t *flow_p)
         free_flow_telemetry_hbm_stats_state(flow_telemetry_state_p);
     }
     else {
-        // 
+        //
         // Enqueue Flow-Proto-State to Age-list queue
-        // 
+        //
         SDK_SPINLOCK_LOCK(&g_flow_telemetry_slock);
         if (g_flow_telemetry_state_age_tail_p == NULL) {
             g_flow_telemetry_state_age_head_p = flow_telemetry_state_p;
@@ -2349,7 +2349,7 @@ enqueue_flow_telemetry_state_to_age_list (flow_t *flow_p)
             g_flow_telemetry_state_age_tail_p->next_p = flow_telemetry_state_p;
             g_flow_telemetry_state_age_tail_p = flow_telemetry_state_p;
         }
-        flow_telemetry_state_p->u2.delayed_age_ticks = 
+        flow_telemetry_state_p->u2.delayed_age_ticks =
                                         FLOW_TELEMETRY_DELAYED_AGE_TICKS_40SECS;
         SDK_SPINLOCK_UNLOCK(&g_flow_telemetry_slock);
     }
@@ -2379,7 +2379,7 @@ dequeue_flow_telemetry_state_from_age_list (
     SDK_SPINLOCK_UNLOCK(&g_flow_telemetry_slock);
 
     // Free Flow-Proto-Stats-State after deleting Delphi object
-    delete_flow_proto_state(flow_telemetry_state_p, 
+    delete_flow_proto_state(flow_telemetry_state_p,
                             flow_telemetry_state_p->present_flags);
     free_flow_telemetry_hbm_stats_state(flow_telemetry_state_p);
 
@@ -2436,7 +2436,7 @@ check_and_generate_session_limit_event (session_t *session)
     bool                         low_threshold_reset = 0;
     bool                         high_threshold_reset = 0;
     uint32_t                     num_active_session = 0;
-    eventtypes::EventTypes       session_limit_event_reach, 
+    eventtypes::EventTypes       session_limit_event_reach,
                     session_limit_event_approach, session_limit_event;
     types::IPProtocol            ip_proto = types::IPPROTO_NONE;
     hal::nwsec_profile_t        *nwsec_prof = NULL;
@@ -2805,7 +2805,6 @@ session_update(const session_args_t *args, session_t *session)
 
     // Update this session to our db
     updt_session_to_db(args->sep, args->dep, session);
-    
     return ret;
 }
 
@@ -3102,12 +3101,12 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     tcp_session = (session->iflow->config.key.proto == IPPROTO_TCP);
 
     // Call applicable pd-session-get depending upon age_thread context or
-    // otherwise 
+    // otherwise
     args.session = session;
     args.session_state = session_state_p;
     pd_func_args.pd_session_get = &args;
     if (age_thread) {
-        // Pass Age-timer-ticks via session-state for pps / bw metrics 
+        // Pass Age-timer-ticks via session-state for pps / bw metrics
         // calculations
         session_state_p->current_age_timer_ticks = g_age_timer_ticks;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD,
@@ -3176,7 +3175,7 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
                     session_state_p->iflow_state.last_pkt_ts, ctime_ns, session_timeout);
 #endif
     if ((TIME_DIFF(ctime_ns, session_state_p->iflow_state.last_pkt_ts) >= session_timeout) ||
-        (tcp_session && session->conn_track_en && 
+        (tcp_session && session->conn_track_en &&
          session_state_p->iflow_state.state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD &&
          session_state_p->iflow_state.state != session->iflow->state)) {
         // session hasn't aged yet, move on
@@ -3191,7 +3190,7 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
         //check responder flow. Check for session state as we dont want to age half-closed
         //connections if half-closed timeout is disabled.
         if ((TIME_DIFF(ctime_ns, session_state_p->rflow_state.last_pkt_ts) >= session_timeout) ||
-            (tcp_session && session->conn_track_en && 
+            (tcp_session && session->conn_track_en &&
              session_state_p->rflow_state.state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD &&
              session_state_p->rflow_state.state != session->rflow->state)) {
             // responder flow seems to be active still
@@ -3251,7 +3250,7 @@ tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *timer_ctxt)
          session_state.iflow_state.packets < (ctx->session_state.iflow_state.packets + 1)) ||
         (ctx->aged_flow == SESSION_AGED_BOTH &&
         (session_state.iflow_state.state <= session::FLOW_TCP_STATE_FIN_RCVD) &&
-         session_state.iflow_state.packets <= (ctx->session_state.iflow_state.packets + 1))) { 
+         session_state.iflow_state.packets <= (ctx->session_state.iflow_state.packets + 1))) {
         ret = SESSION_AGED_IFLOW;
     }
 
@@ -3493,8 +3492,8 @@ session_age_cb (void *entry, void *ctxt)
                 tklectx->session_state = session_state;
                 tklectx->aged_flow = retval;
                 args->tctx_list[session->fte_id][args->num_ctx[session->fte_id]++] = tklectx;
-                HAL_TRACE_DEBUG("Alloced tickle context: {:p} packets {}", 
-                                (void *)tklectx, tklectx->session_state.iflow_state.packets); 
+                HAL_TRACE_DEBUG("Alloced tickle context: {:p} packets {}",
+                                (void *)tklectx, tklectx->session_state.iflow_state.packets);
 
                 // Stop processing if we have reached the maximum limit per FTE
                 // We will process the rest in the next round
@@ -3567,7 +3566,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     // Re-pick inband bond0's active link
     if (g_hal_state->inband_bond_mode() == hal::BOND_MODE_ACTIVE_BACKUP) {
-        ret = hal_if_pick_inb_bond_active(NULL, intf::IF_STATUS_DOWN, 
+        ret = hal_if_pick_inb_bond_active(NULL, intf::IF_STATUS_DOWN,
                                           &inb_bond_active_changed);
         if (inb_bond_active_changed) {
             ret = hal_if_inb_bond_active_changed(false);
@@ -3575,7 +3574,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     }
 
    if (!g_mpu_prog_gen_done) {
-        sret = sdk::p4::p4_dump_program_info(hal::g_hal_cfg.cfg_path.c_str()); 
+        sret = sdk::p4::p4_dump_program_info(hal::g_hal_cfg.cfg_path.c_str());
         if (sret == SDK_RET_OK) {
             HAL_TRACE_DEBUG("Generated mpu_prog_info");
             g_mpu_prog_gen_done = true;
@@ -3656,7 +3655,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
         bucket = (bucket + 1)%g_hal_state->session_hal_handle_ht()->num_buckets();
     }
 #if SESSION_AGE_DEBUG
-    HAL_TRACE_DEBUG("Num sessions: {} bucket {} buckets {} max buckets {}", 
+    HAL_TRACE_DEBUG("Num sessions: {} bucket {} buckets {} max buckets {}",
            num_sessions, bucket, bucket_no, g_hal_state->session_hal_handle_ht()->num_buckets());
 #endif
 
@@ -3725,7 +3724,8 @@ session_init (hal_cfg_t *hal_cfg)
 
     } else {
         sdk::types::mem_addr_t vaddr;
-        sdk::types::mem_addr_t pal_addr = get_mem_addr(CAPRI_HBM_REG_SESSION_SUMMARY_STATS);
+        sdk::types::mem_addr_t pal_addr =
+            asicpd_get_mem_addr(CAPRI_HBM_REG_SESSION_SUMMARY_STATS);
         HAL_TRACE_VERBOSE("Start addr: {:p}", pal_addr);
         SDK_ASSERT(pal_addr != INVALID_MEM_ADDRESS);
 
@@ -3751,7 +3751,7 @@ session_init (hal_cfg_t *hal_cfg)
                                           HAL_FLOW_TELEMETRY_MAX_STATS_STATE, true);
         SDK_ASSERT(g_flow_proto_state_indexer != NULL);
 
-        pal_addr = get_mem_addr(CAPRI_HBM_REG_FLOW_TELEMETRY_STATS);
+        pal_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_FLOW_TELEMETRY_STATS);
         SDK_ASSERT(pal_addr != INVALID_MEM_ADDRESS);
 
         g_flow_telemetry_hbm_start = pal_addr;
@@ -3894,7 +3894,7 @@ schedule_tcp_close_timer (session_t *session, nwsec_profile_t *nwsec_prof)
                 &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
         // Check and raise session limit approach/reached event
         check_and_generate_session_limit_event(session);
-    } 
+    }
 
     // Delete the previous timers if any and start a new one
     if (session->tcp_cxntrack_timer != NULL) {
@@ -3993,7 +3993,7 @@ schedule_tcp_half_closed_timer (session_t *session, nwsec_profile_t *nwsec_prof)
                 &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
         // Check and raise session limit approach/reached event
         check_and_generate_session_limit_event(session);
-    }  
+    }
 
     // Delete the previous timers if any and start a new one
     if (session->tcp_cxntrack_timer != NULL) {
@@ -4134,7 +4134,7 @@ session_set_tcp_state (session_t *session, hal::flow_role_t role,
                     &HAL_SESSION_STATS_PTR(session->fte_id)->tcp_half_open_sessions, true);
             // Check and raise session limit approach/reached event
             check_and_generate_session_limit_event(session);
-        } 
+        }
     } else {
         flow = session->rflow;
     }
@@ -4471,7 +4471,7 @@ session_send_tcp_fin (void *data) {
               if (sz)
                   fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
           }
-       
+
           HAL_FREE(HAL_MEM_ALLOC_SESS_UPGRADE_TCP_FIN, finargs);
     }
 
@@ -4479,7 +4479,7 @@ session_send_tcp_fin (void *data) {
 }
 
 hal_ret_t
-session_send_fin_list(dllist_ctxt_t *tcp_fin_list, bool async) 
+session_send_fin_list(dllist_ctxt_t *tcp_fin_list, bool async)
 {
     hal_ret_t ret = HAL_RET_OK;
     dllist_ctxt_t *curr = NULL, *next = NULL;
@@ -4504,7 +4504,7 @@ session_send_fin_list(dllist_ctxt_t *tcp_fin_list, bool async)
             count = 0;
             fin_list =  (tcpfin_list_args_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_UPGRADE_TCP_FIN_LIST,
                                    sizeof(tcpfin_list_args_t));
-            SDK_ASSERT(fin_list != NULL);    
+            SDK_ASSERT(fin_list != NULL);
         }
     }
     if (count) {
@@ -4565,7 +4565,7 @@ session_send_delete_list(dllist_ctxt_t *del_list)
 
 
 /*
- * Send batched deletes to FTE 
+ * Send batched deletes to FTE
  */
 hal_ret_t
 session_delete_all (void)
@@ -4594,7 +4594,7 @@ session_delete_all (void)
         list_entry->handle_id = session->hal_handle;
         dllist_add(list_head, &list_entry->dllist_ctxt);
 
-        return false; 
+        return false;
     };
 
     g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &ctxt);
@@ -4611,7 +4611,7 @@ hal_ret_t
 session_handle_upgrade (void)
 {
     sdk::lib::thread *curr_thread = hal::hal_get_current_thread();
-    
+
     struct session_upgrade_data_t {
         dllist_ctxt_t session_list;
         dllist_ctxt_t fin_list;
@@ -4622,7 +4622,7 @@ session_handle_upgrade (void)
     } ctxt;
     auto walk_func = [](void *entry, void *ctxt) {
         hal::session_t             *session = (session_t *)entry;
-        session_upgrade_data_t     *session_data = (session_upgrade_data_t *) ctxt; 
+        session_upgrade_data_t     *session_data = (session_upgrade_data_t *) ctxt;
         dllist_ctxt_t              *list_head =     &session_data->session_list;
         dllist_ctxt_t              *fin_list_head = &session_data->fin_list;
         ep_t                       *sep = NULL, *dep = NULL;
@@ -4686,7 +4686,7 @@ session_handle_upgrade (void)
     session_send_fin_list(&ctxt.fin_list, true);
     curr_thread->punch_heartbeat();
     session_send_delete_list(&ctxt.session_list);
-    
+
 
     return HAL_RET_OK;
 }

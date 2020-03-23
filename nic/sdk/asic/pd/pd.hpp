@@ -266,13 +266,12 @@ sdk_ret_t asicpd_rss_tbl_eng_cfg_get(const char *handle, uint32_t tableid,
                                      p4_tbl_eng_cfg_t *rss);
 void asicpd_rss_tbl_eng_cfg_modify(p4_tbl_eng_cfg_t *rss);
 
-// TODO: Fixup asicpd prefix for these newly added routines
-uint64_t get_mem_base(void);
-uint64_t get_mem_offset(const char *reg_name);
-uint64_t get_mem_addr(const char *reg_name);
-uint32_t get_mem_size_kb(const char *reg_name);
-mpartition_region_t *get_mem_region(char *name);
-mpartition_region_t *get_hbm_region_by_address(uint64_t addr);
+uint64_t asicpd_get_mem_base(void);
+uint64_t asicpd_get_mem_offset(const char *reg_name);
+uint64_t asicpd_get_mem_addr(const char *reg_name);
+uint32_t asicpd_get_mem_size_kb(const char *reg_name);
+mpartition_region_t *asicpd_get_mem_region(char *name);
+mpartition_region_t *asicpd_get_hbm_region_by_address(uint64_t addr);
 
 uint64_t asicpd_get_p4plus_table_mpu_pc(int tableid);
 void asicpd_program_p4plus_table_mpu_pc(int tableid, int stage_tbl_id,
@@ -304,8 +303,8 @@ using sdk::asic::pd::kNumQTypes;
 using sdk::asic::pd::kAllocUnit;
 using sdk::asic::pd::p4_tbl_eng_cfg_t;
 
-using sdk::asic::pd::get_mem_addr;
-using sdk::asic::pd::get_mem_size_kb;
-using sdk::asic::pd::get_hbm_region_by_address;
+using sdk::asic::pd::asicpd_get_mem_addr;
+using sdk::asic::pd::asicpd_get_mem_size_kb;
+using sdk::asic::pd::asicpd_get_hbm_region_by_address;
 
 #endif    // __SDK_ASIC_PD_HPP__

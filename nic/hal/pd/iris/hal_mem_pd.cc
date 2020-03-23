@@ -1191,7 +1191,7 @@ hal_pd_lif_stats_region_init (void)
     p4pd_error_t                rc;
     uint64_t                    stats_base_addr;
 
-    stats_base_addr = get_mem_addr(CAPRI_HBM_REG_LIF_STATS);
+    stats_base_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_LIF_STATS);
     // subtract 2G (saves ASM instructions)
     stats_base_addr -= ((uint64_t)1 << 31);
 
@@ -1217,7 +1217,7 @@ hal_pd_hwerr_stats_region_init (void)
     p4pd_error_t                rc;
     uint64_t                    stats_base_addr;
 
-    stats_base_addr = get_mem_addr(CAPRI_HBM_REG_P4_HWERR_STATS);
+    stats_base_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_P4_HWERR_STATS);
     // subtract 2G (saves ASM instructions)
     stats_base_addr -= ((uint64_t)1 << 31);
 

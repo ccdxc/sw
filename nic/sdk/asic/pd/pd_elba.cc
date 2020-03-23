@@ -715,37 +715,37 @@ asicpd_set_table_txdma_asm_base (int tableid, uint64_t asm_base)
 }
 
 mem_addr_t
-get_mem_base (void)
+asicpd_get_mem_base (void)
 {
     return elba_get_mem_base();
 }
 
 mem_addr_t
-get_mem_offset (const char *reg_name)
+asicpd_get_mem_offset (const char *reg_name)
 {
     return elba_get_mem_offset(reg_name);
 }
 
 uint64_t
-get_mem_addr (const char *reg_name)
+asicpd_get_mem_addr (const char *reg_name)
 {
     return elba_get_mem_addr(reg_name);
 }
 
 uint32_t
-get_mem_size_kb (const char *reg_name)
+asicpd_get_mem_size_kb (const char *reg_name)
 {
     return elba_get_mem_size_kb(reg_name);
 }
 
 mpartition_region_t *
-get_mem_region (char *reg_name)
+asicpd_get_mem_region (char *reg_name)
 {
     return elba_get_mem_region(reg_name);
 }
 
 mpartition_region_t *
-get_hbm_region_by_address (uint64_t addr)
+asicpd_get_hbm_region_by_address (uint64_t addr)
 {
     return elba_get_hbm_region_by_address(addr);
 }

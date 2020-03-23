@@ -209,7 +209,7 @@ asicpd_program_table_thread_constant (uint32_t tableid, uint8_t table_thread_id,
             tid = tbl_ctx.stage_tableid;
         }
         capri_table_constant_write(const_value, tbl_ctx.stage, tid,
-            (tbl_ctx.gress == P4_GRESS_INGRESS));
+                                   (tbl_ctx.gress == P4_GRESS_INGRESS));
     }
     return SDK_RET_OK;
 }
@@ -705,37 +705,37 @@ asicpd_set_table_txdma_asm_base (int tableid, uint64_t asm_base)
 }
 
 mem_addr_t
-get_mem_base (void)
+asicpd_get_mem_base (void)
 {
     return capri_get_mem_base();
 }
 
 mem_addr_t
-get_mem_offset (const char *reg_name)
+asicpd_get_mem_offset (const char *reg_name)
 {
     return capri_get_mem_offset(reg_name);
 }
 
 uint64_t
-get_mem_addr (const char *reg_name)
+asicpd_get_mem_addr (const char *reg_name)
 {
     return capri_get_mem_addr(reg_name);
 }
 
 uint32_t
-get_mem_size_kb (const char *reg_name)
+asicpd_get_mem_size_kb (const char *reg_name)
 {
     return capri_get_mem_size_kb(reg_name);
 }
 
 mpartition_region_t *
-get_mem_region (char *reg_name)
+asicpd_get_mem_region (char *reg_name)
 {
     return capri_get_mem_region(reg_name);
 }
 
 mpartition_region_t *
-get_hbm_region_by_address (uint64_t addr)
+asicpd_get_hbm_region_by_address (uint64_t addr)
 {
     return capri_get_hbm_region_by_address(addr);
 }

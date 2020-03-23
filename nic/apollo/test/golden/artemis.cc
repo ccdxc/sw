@@ -166,15 +166,15 @@ init_service_lif ()
     LIFQState qstate = {0};
 
     qstate.lif_id = ARTEMIS_SERVICE_LIF;
-    qstate.hbm_address = get_mem_addr(JLIFQSTATE);
+    qstate.hbm_address = asicpd_get_mem_addr(JLIFQSTATE);
     qstate.params_in.type[0].entries = 1;
     qstate.params_in.type[0].size = 1;
     push_qstate_to_capri(&qstate, 0);
 
     lifqstate_t lif_qstate = {0};
-    lif_qstate.ring0_base = get_mem_addr(JPKTBUFFER);
-    lif_qstate.ring1_base = get_mem_addr(JPKTDESC);
-    lif_qstate.ring_size = log2(get_mem_size_kb(JPKTBUFFER) / 10);
+    lif_qstate.ring0_base = asicpd_get_mem_addr(JPKTBUFFER);
+    lif_qstate.ring1_base = asicpd_get_mem_addr(JPKTDESC);
+    lif_qstate.ring_size = log2(asicpd_get_mem_size_kb(JPKTBUFFER) / 10);
     lif_qstate.total_rings = 1;
     write_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate,
                  sizeof(lif_qstate));
@@ -182,9 +182,9 @@ init_service_lif ()
     lifqstate_t txdma_qstate = {0};
     txdma_qstate.rxdma_cindex_addr =
         qstate.hbm_address + offsetof(lifqstate_t, sw_cindex);
-    txdma_qstate.ring0_base = get_mem_addr(JPKTBUFFER);
-    txdma_qstate.ring1_base = get_mem_addr(JPKTDESC);
-    txdma_qstate.ring_size = log2(get_mem_size_kb(JPKTBUFFER) / 10);
+    txdma_qstate.ring0_base = asicpd_get_mem_addr(JPKTBUFFER);
+    txdma_qstate.ring1_base = asicpd_get_mem_addr(JPKTDESC);
+    txdma_qstate.ring_size = log2(asicpd_get_mem_size_kb(JPKTBUFFER) / 10);
     txdma_qstate.total_rings = 1;
     write_qstate(qstate.hbm_address + sizeof(lifqstate_t),
                  (uint8_t *)&txdma_qstate, sizeof(txdma_qstate));
@@ -360,12 +360,12 @@ table_constants_init (void)
 {
     uint64_t stats_base_addr = 0;
 
-    stats_base_addr = get_mem_addr(MEM_REGION_METER_STATS_BASE);
+    stats_base_addr = asicpd_get_mem_addr(MEM_REGION_METER_STATS_BASE);
     stats_base_addr -= ((uint64_t)1 << 31);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_METER_STATS,
                                                  stats_base_addr);
 
-    stats_base_addr = get_mem_addr(MEM_REGION_SESSION_STATS_BASE);
+    stats_base_addr = asicpd_get_mem_addr(MEM_REGION_SESSION_STATS_BASE);
     stats_base_addr -= ((uint64_t)1 << 31);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION,
                                                  stats_base_addr);

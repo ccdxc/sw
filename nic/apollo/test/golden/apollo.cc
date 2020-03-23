@@ -602,15 +602,15 @@ init_service_lif ()
     LIFQState qstate = {0};
 
     qstate.lif_id = APOLLO_SERVICE_LIF;
-    qstate.hbm_address = get_mem_addr(JLIFQSTATE);
+    qstate.hbm_address = asicpd_get_mem_addr(JLIFQSTATE);
     qstate.params_in.type[0].entries = 1;
     qstate.params_in.type[0].size = 1; // 64B
     push_qstate_to_capri(&qstate, 0);
 
     lifqstate_t lif_qstate = {0};
-    lif_qstate.ring0_base = get_mem_addr(JPKTBUFFER);
-    lif_qstate.ring1_base = get_mem_addr(JPKTDESC);
-    lif_qstate.ring_size = log2(get_mem_size_kb(JPKTBUFFER) / 10);
+    lif_qstate.ring0_base = asicpd_get_mem_addr(JPKTBUFFER);
+    lif_qstate.ring1_base = asicpd_get_mem_addr(JPKTDESC);
+    lif_qstate.ring_size = log2(asicpd_get_mem_size_kb(JPKTBUFFER) / 10);
     lif_qstate.total_rings = 1;
     write_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate,
                  sizeof(lif_qstate));
@@ -618,9 +618,9 @@ init_service_lif ()
     lifqstate_t txdma_qstate = {0};
     txdma_qstate.rxdma_cindex_addr =
         qstate.hbm_address + offsetof(lifqstate_t, sw_cindex);
-    txdma_qstate.ring0_base = get_mem_addr(JPKTBUFFER);
-    txdma_qstate.ring1_base = get_mem_addr(JPKTDESC);
-    txdma_qstate.ring_size = log2(get_mem_size_kb(JPKTBUFFER) / 10);
+    txdma_qstate.ring0_base = asicpd_get_mem_addr(JPKTBUFFER);
+    txdma_qstate.ring1_base = asicpd_get_mem_addr(JPKTDESC);
+    txdma_qstate.ring_size = log2(asicpd_get_mem_size_kb(JPKTBUFFER) / 10);
     txdma_qstate.total_rings = 1;
     write_qstate(qstate.hbm_address + sizeof(lifqstate_t),
                  (uint8_t *)&txdma_qstate, sizeof(txdma_qstate));
@@ -805,12 +805,12 @@ vnic_tx_init ()
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
     local_vnic_info->skip_src_dst_check1 = true;
     memcpy(local_vnic_info->overlay_mac1, &g_layer1_smac, 6);
-    sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
+    sacl_hbm_addr = asicpd_get_mem_addr(JSACLV4BASE);
     memcpy(local_vnic_info->sacl_v4addr1, &sacl_hbm_addr,
            sizeof(local_vnic_info->sacl_v4addr1));
     memcpy(local_vnic_info->sacl_v4addr2, &sacl_hbm_addr,
            sizeof(local_vnic_info->sacl_v4addr2));
-    lpm_hbm_addr = get_mem_addr(JLPMV4BASE);
+    lpm_hbm_addr = asicpd_get_mem_addr(JLPMV4BASE);
     memcpy(local_vnic_info->lpm_v4addr1, &lpm_hbm_addr,
            sizeof(local_vnic_info->lpm_v4addr1));
     memcpy(local_vnic_info->lpm_v4addr2, &lpm_hbm_addr,
@@ -840,12 +840,12 @@ vnic_tx_init ()
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
     local_vnic_info->skip_src_dst_check1 = false;
     memcpy(local_vnic_info->overlay_mac1, &g_layer1_smac, 6);
-    sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
+    sacl_hbm_addr = asicpd_get_mem_addr(JSACLV4BASE);
     memcpy(local_vnic_info->sacl_v4addr1, &sacl_hbm_addr,
            sizeof(local_vnic_info->sacl_v4addr1));
     memcpy(local_vnic_info->sacl_v4addr2, &sacl_hbm_addr,
            sizeof(local_vnic_info->sacl_v4addr2));
-    lpm_hbm_addr = get_mem_addr(JLPMV4BASE);
+    lpm_hbm_addr = asicpd_get_mem_addr(JLPMV4BASE);
     memcpy(local_vnic_info->lpm_v4addr1, &lpm_hbm_addr,
            sizeof(local_vnic_info->lpm_v4addr1));
     memcpy(local_vnic_info->lpm_v4addr2, &lpm_hbm_addr,
@@ -873,7 +873,7 @@ vnic_rx_init ()
     local_vnic_info->epoch1 = EPOCH;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
     local_vnic_info->skip_src_dst_check1 = true;
-    sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
+    sacl_hbm_addr = asicpd_get_mem_addr(JSACLV4BASE);
     memcpy(local_vnic_info->sacl_v4addr1, &sacl_hbm_addr,
            sizeof(local_vnic_info->sacl_v4addr1));
     memcpy(local_vnic_info->sacl_v4addr2, &sacl_hbm_addr,
@@ -890,7 +890,7 @@ vnic_rx_init ()
     local_vnic_info->epoch1 = EPOCH;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
     local_vnic_info->skip_src_dst_check1 = true;
-    sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
+    sacl_hbm_addr = asicpd_get_mem_addr(JSACLV4BASE);
     memcpy(local_vnic_info->sacl_v4addr1, &sacl_hbm_addr,
            sizeof(local_vnic_info->sacl_v4addr1));
     memcpy(local_vnic_info->sacl_v4addr2, &sacl_hbm_addr,
@@ -907,7 +907,7 @@ vnic_rx_init ()
     local_vnic_info->epoch1 = EPOCH;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag3;
     local_vnic_info->skip_src_dst_check1 = true;
-    sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
+    sacl_hbm_addr = asicpd_get_mem_addr(JSACLV4BASE);
     memcpy(local_vnic_info->sacl_v4addr1, &sacl_hbm_addr,
            sizeof(local_vnic_info->sacl_v4addr1));
     memcpy(local_vnic_info->sacl_v4addr2, &sacl_hbm_addr,
@@ -925,7 +925,7 @@ vnic_rx_init ()
     local_vnic_info->epoch1 = EPOCH;
     local_vnic_info->local_vnic_tag = 0;
     local_vnic_info->skip_src_dst_check1 = false;
-    sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
+    sacl_hbm_addr = asicpd_get_mem_addr(JSACLV4BASE);
     memcpy(local_vnic_info->sacl_v4addr1, &sacl_hbm_addr,
            sizeof(local_vnic_info->sacl_v4addr1));
     memcpy(local_vnic_info->sacl_v4addr2, &sacl_hbm_addr,
@@ -1189,7 +1189,7 @@ rewrite_init (void)
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP, mytep_mac);
 
     uint64_t session_stats_addr;
-    session_stats_addr = get_mem_addr(JSTATSBASE);
+    session_stats_addr = asicpd_get_mem_addr(JSTATSBASE);
     // reset bit 31 (saves one ASM instruction)
     session_stats_addr &= ~((uint64_t)1 << 31);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION,
@@ -1214,13 +1214,13 @@ trie_mem_init (void)
     uint64_t data[8];
 
     memset(data, 0xFF, sizeof(data));
-    uint64_t lpm_hbm_addr = get_mem_addr(JLPMV4BASE);
+    uint64_t lpm_hbm_addr = asicpd_get_mem_addr(JLPMV4BASE);
     for (uint32_t i = 0; i < ROUTE_LPM_MEM_SIZE; i += sizeof(data)) {
         sdk::asic::asic_mem_write(lpm_hbm_addr + i, (uint8_t *)data,
                                   sizeof(data));
     }
 
-    uint64_t sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
+    uint64_t sacl_hbm_addr = asicpd_get_mem_addr(JSACLV4BASE);
     for (uint32_t i = 0; i < SACL_LPM_MEM_SIZE; i += sizeof(data)) {
         sdk::asic::asic_mem_write(sacl_hbm_addr + i, (uint8_t *)data,
                                   sizeof(data));
@@ -1231,7 +1231,7 @@ static void
 route_init (void)
 {
     uint32_t len;
-    uint64_t lpm_base_addr = get_mem_addr(JLPMV4BASE);
+    uint64_t lpm_base_addr = asicpd_get_mem_addr(JLPMV4BASE);
     route_actiondata_t sw_entry;
     cache_line_t cache_line;
 
@@ -1281,7 +1281,7 @@ sacl_init (void)
     uint64_t data;
     uint8_t c_data[64];
     uint16_t start_bit;
-    uint64_t sacl_base_addr = get_mem_addr(JSACLV4BASE);
+    uint64_t sacl_base_addr = asicpd_get_mem_addr(JSACLV4BASE);
     sacl_ip_actiondata_t sacl_ip;
     cache_line_t cache_line;
 

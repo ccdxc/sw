@@ -236,9 +236,9 @@ asicpd_program_hbm_table_base_addr (bool hw_init)
 
         if (tbl_ctx.table_thread_count > 1) {
             for (int j = 1; j < tbl_ctx.table_thread_count; j++) {
-                asic_program_hbm_table_base_addr(-1,
-                tbl_ctx.thread_table_id[j], tbl_ctx.tablename,
-                tbl_ctx.stage, pipe, hw_init);
+                asic_program_hbm_table_base_addr(-1, tbl_ctx.thread_table_id[j],
+                                                 tbl_ctx.tablename,
+                                                 tbl_ctx.stage, pipe, hw_init);
             }
         }
     }
@@ -319,7 +319,7 @@ asicpd_tbl_eng_cfg_get (p4pd_pipeline_t pipeline, p4_tbl_eng_cfg_t *cfg,
 
             SDK_ASSERT(ntbls < cfgs_max);
             if (tbl_ctx.table_location == P4_TBL_LOCATION_HBM) {
-                cfg[ntbls].mem_offset = get_mem_addr(tbl_ctx.tablename);
+                cfg[ntbls].mem_offset = asicpd_get_mem_addr(tbl_ctx.tablename);
             } else {
                 cfg[ntbls].mem_offset = INVALID_MEM_ADDRESS;
             }
@@ -368,7 +368,7 @@ asicpd_tbl_eng_cfg_get (p4pd_pipeline_t pipeline, p4_tbl_eng_cfg_t *cfg,
             }
             SDK_ASSERT(ntbls < cfgs_max);
             if (tbl_ctx.table_location == P4_TBL_LOCATION_HBM) {
-                cfg[ntbls].mem_offset = get_mem_addr(tbl_ctx.tablename);
+                cfg[ntbls].mem_offset = asicpd_get_mem_addr(tbl_ctx.tablename);
             } else {
                 cfg[ntbls].mem_offset = INVALID_MEM_ADDRESS;
             }
@@ -392,7 +392,7 @@ asicpd_tbl_eng_cfg_get (p4pd_pipeline_t pipeline, p4_tbl_eng_cfg_t *cfg,
             }
             SDK_ASSERT(ntbls < cfgs_max);
             if (tbl_ctx.table_location == P4_TBL_LOCATION_HBM) {
-                cfg[ntbls].mem_offset = get_mem_addr(tbl_ctx.tablename);
+                cfg[ntbls].mem_offset = asicpd_get_mem_addr(tbl_ctx.tablename);
             } else {
                 cfg[ntbls].mem_offset = INVALID_MEM_ADDRESS;
             }

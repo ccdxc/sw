@@ -147,9 +147,9 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_NMDR_RX_GC,
                            CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, "", 0, 0, NULL, NULL, false, 1, 0};
-    
+
     g_meta[types::WRING_TYPE_CPU_TX_DR] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_CPU_TX_DR, 
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_CPU_TX_DR,
                            CAPRI_HBM_CPU_TX_DR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
                            CAPRI_HBM_REG_CPU_TX_DESCR, 128, 0, NULL, NULL, false, 1, 0, 1};
 
@@ -189,13 +189,13 @@ wring_pd_meta_init() {
                            CAPRI_SEM_RNMDPR_BIG_ALLOC_RAW_ADDR,
                            NULL, NULL, false};
     g_meta[types::WRING_TYPE_NMDPR_BIG_RX].set_hw_meta_fn = p4pd_wring_set_rnmdpr_meta;
-    
+
     g_meta[types::WRING_TYPE_TCP_OOO_RX] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_TCP_OOO_QBASE_RING, CAPRI_TCP_ALLOC_OOQ_RING_SIZE,
-                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_TCP_OOO_QUEUE, 
-                           TCP_OOO_QUEUE_ALLOC_SIZE, 
+                           DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_TCP_OOO_QUEUE,
+                           TCP_OOO_QUEUE_ALLOC_SIZE,
                            CAPRI_SEM_TCP_OOQ_ALLOC_RAW_ADDR, NULL, NULL, false};
- 
+
     g_meta[types::WRING_TYPE_TCP_OOO_RX2TX] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_TCP_OOO_RX2TX_QUEUE,
                             CAPRI_OOO_RX2TX_RING_SLOTS, DEFAULT_WRING_SLOT_SIZE,
@@ -273,7 +273,8 @@ get_default_slot_value(types::WRingType type, uint32_t index, uint8_t* value)
     if(strlen(meta->obj_hbm_reg_name) <= 0) {
         memset(value, 0, meta->slot_size_in_bytes);
     } else {
-        wring_hw_id_t obj_addr_base = get_mem_addr(meta->obj_hbm_reg_name);
+        wring_hw_id_t obj_addr_base =
+            asicpd_get_mem_addr(meta->obj_hbm_reg_name);
         if(obj_addr_base == INVALID_MEM_ADDRESS) {
             HAL_TRACE_ERR("Failed to get the addr for the object");
             memset(value, 0, meta->slot_size_in_bytes);
@@ -288,12 +289,13 @@ get_default_slot_value(types::WRingType type, uint32_t index, uint8_t* value)
 }
 
 hal_ret_t
-wring_pd_get_base_addr(types::WRingType type, uint32_t wring_id, wring_hw_id_t* wring_base)
+wring_pd_get_base_addr(types::WRingType type, uint32_t wring_id,
+                       wring_hw_id_t* wring_base)
 {
     pd_wring_meta_t     *meta = &g_meta[type];
     wring_hw_id_t       addr = 0;
 
-    addr = get_mem_addr(meta->hbm_reg_name);
+    addr = asicpd_get_mem_addr(meta->hbm_reg_name);
     if(addr == INVALID_MEM_ADDRESS) {
         HAL_TRACE_ERR("Could not find addr for {} region", meta->hbm_reg_name);
         return HAL_RET_ERR;
@@ -346,9 +348,10 @@ wring_pd_table_init (types::WRingType type, uint32_t wring_id)
      * region base-address too, for faster lookups.
      */
     if (meta->obj_size) {
-        wring_obj_base = get_mem_addr(meta->obj_hbm_reg_name);
+        wring_obj_base = asicpd_get_mem_addr(meta->obj_hbm_reg_name);
         if (wring_obj_base == INVALID_MEM_ADDRESS) {
-	        HAL_TRACE_ERR("Could not find base addr for {} region", meta->obj_hbm_reg_name);
+	        HAL_TRACE_ERR("Could not find base addr for {} region",
+                          meta->obj_hbm_reg_name);
 	        return HAL_RET_ERR;
         }
 
@@ -360,11 +363,11 @@ wring_pd_table_init (types::WRingType type, uint32_t wring_id)
             wring_pd_set_meta_obj_base_addr(meta, wring_id, wring_obj_base);
         }
         HAL_TRACE_DEBUG("base-addr {:#x} size {} KB obj-base-addr {:#x} size {} KB",
-              wring_base, get_mem_size_kb(meta->hbm_reg_name),
-              wring_obj_base, get_mem_size_kb(meta->obj_hbm_reg_name));
+              wring_base, asicpd_get_mem_size_kb(meta->hbm_reg_name),
+              wring_obj_base, asicpd_get_mem_size_kb(meta->obj_hbm_reg_name));
     }
 
-    uint32_t reg_size = get_mem_size_kb(meta->hbm_reg_name);
+    uint32_t reg_size = asicpd_get_mem_size_kb(meta->hbm_reg_name);
     if(!reg_size) {
         HAL_TRACE_ERR("Could not find size for {} region", meta->hbm_reg_name);
         return HAL_RET_ERR;
@@ -620,7 +623,7 @@ barco_gcm0_get_hw_meta(pd_wring_t* wring_pd)
 }
 
 hal_ret_t
-armq_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot) 
+armq_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot)
 {
     wring->slot_value = ntohll(*(uint64_t *)slot);
     // clear the 63rd bit
@@ -802,7 +805,8 @@ p4pd_wring_set_rnmdpr_meta(pd_wring_t* wring_pd)
         HAL_TRACE_ERR("Failed to write data to hw)");
     }
 
-    addr = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_GC_GLOBAL_RNMDPR_FP_PI;
+    addr = asicpd_get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
+            CAPRI_GC_GLOBAL_RNMDPR_FP_PI;
     ci = wring->ci - CAPRI_RNMDPR_BIG_RING_SIZE;
     HAL_TRACE_DEBUG("Writing ci {} to addr: {:#x}", wring->ci, addr);
     sdk::asic::asic_mem_write(addr, (uint8_t *)&ci, sizeof(uint32_t));

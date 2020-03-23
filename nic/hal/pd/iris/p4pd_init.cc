@@ -327,7 +327,7 @@ p4pd_input_mapping_tunneled_init (p4pd_def_cfg_t *p4pd_def_cfg)
 }
 
 //-----------------------------------------------------------------------------
-//  NACL Stats init 
+//  NACL Stats init
 //  0: nop entry.
 //-----------------------------------------------------------------------------
 static hal_ret_t
@@ -1485,15 +1485,15 @@ p4pd_flow_hash_init (p4pd_def_cfg_t *p4pd_def_cfg)
     uint64_t                      size = 0;
 
     p4pd_table_properties_get(P4TBL_ID_FLOW_HASH, &tbl_ctx);
- 
+
     // Get the table size from hbm json to reset to 0
-    size = get_mem_size_kb(tbl_ctx.tablename) << 10;
+    size = asicpd_get_mem_size_kb(tbl_ctx.tablename) << 10;
     HAL_TRACE_DEBUG("Table name: {} depth: {} Base virtual memory: {} Base Physical Memory: {} table_sz: {}",
             tbl_ctx.tablename, tbl_ctx.tabledepth, tbl_ctx.base_mem_va, tbl_ctx.base_mem_pa, size);
     sdk::lib::pal_mem_set(tbl_ctx.base_mem_pa, 0, size);
     p4pd_table_properties_get(tbl_ctx.oflow_table_id, &tbl_ctx);
     // Get the table size from hbm json to reset to 0
-    size = get_mem_size_kb(tbl_ctx.tablename) << 10;
+    size = asicpd_get_mem_size_kb(tbl_ctx.tablename) << 10;
     HAL_TRACE_DEBUG("Table name: {} depth: {} Base virtual memory: {} Base Physical Memory: {} table_sz: {}",
           tbl_ctx.tablename, tbl_ctx.tabledepth, tbl_ctx.base_mem_va, tbl_ctx.base_mem_pa, size);
     sdk::lib::pal_mem_set(tbl_ctx.base_mem_pa, 0, size);

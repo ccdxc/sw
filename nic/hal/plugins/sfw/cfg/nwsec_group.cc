@@ -97,14 +97,14 @@ trim_mem_usage (const char *opn)
 }
 
 hal_ret_t
-rule_stats_cb (rule_ctr_t *ctr, bool add) 
+rule_stats_cb (rule_ctr_t *ctr, bool add)
 {
     sdk::lib::indexer::status rs;
     sdk::types::mem_addr_t vaddr, start_addr;
     uint32_t idx;
 
     if (add) {
-        start_addr = get_mem_addr(CAPRI_HBM_REG_NWSEC_RULE_STATS);
+        start_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_NWSEC_RULE_STATS);
         SDK_ASSERT(start_addr != INVALID_MEM_ADDRESS);
 
         rs = g_rule_stats_indexer->alloc(&idx);
@@ -124,7 +124,7 @@ rule_stats_cb (rule_ctr_t *ctr, bool add)
         auto rule_metrics_ptr = delphi::objects::RuleMetrics::Find(ctr->rule_key);
         if (rule_metrics_ptr != NULL) {
             delphi::objects::RuleMetrics::Release(rule_metrics_ptr);
-            rule_metrics_ptr->Delete(); 
+            rule_metrics_ptr->Delete();
         }
         g_rule_stats_indexer->free(ctr->stats_idx);
         ctr->rule_stats = NULL;
@@ -1155,7 +1155,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
                         __str_to_uuid((char *)app.msrpc_option_info().data(idx).program_id().c_str(),
                                       opt->msrpc_opts.uuids[idx].uuid);
                         opt->msrpc_opts.uuids[idx].timeout = app.msrpc_option_info().data(idx).idle_timeout();
-                        HAL_TRACE_VERBOSE("UUID: {} timeout: {} uuid_str: {}", 
+                        HAL_TRACE_VERBOSE("UUID: {} timeout: {} uuid_str: {}",
                                  fte::hex_str((uint8_t*)opt->msrpc_opts.uuids[idx].uuid, MAX_UUID_SZ),
                                  opt->msrpc_opts.uuids[idx].timeout, __uuid_to_str(opt->msrpc_opts.uuids[idx].uuid));
                     }
@@ -1301,13 +1301,13 @@ security_policy_lookup_key_or_handle(SecurityPolicyKeyHandle& kh)
 
 static hal_ret_t
 validate_nwsec_policy_create (nwsec::SecurityPolicySpec&     spec,
-                              nwsec_policy_t                 *nwsec_policy,   
+                              nwsec_policy_t                 *nwsec_policy,
                               nwsec::SecurityPolicyResponse  *rsp)
 {
     rule_cfg_t *rcfg = rule_cfg_get(nwsec_acl_ctx_name(nwsec_policy->key.vrf_id));
     if (rcfg != NULL) {
         return HAL_RET_POLICY_EXIST;
-    } 
+    }
     return HAL_RET_OK;
 }
 
@@ -1460,7 +1460,7 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
         nwsec_policy_free(nwsec_policy);
         goto end;
     }
-    
+
 
     nwsec_policy->hal_handle = hal_handle_alloc(HAL_OBJ_ID_SECURITY_POLICY);
     if (nwsec_policy->hal_handle == HAL_HANDLE_INVALID) {
@@ -1501,7 +1501,7 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
     sdk::lib::dllist_reset(&cfg_ctxt.dhl);
     sdk::lib::dllist_reset(&dhl_entry.dllist_ctxt);
     sdk::lib::dllist_add(&cfg_ctxt.dhl, &dhl_entry.dllist_ctxt);
-    
+
     ret = acl::acl_commit(app_ctxt.acl_ctx);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Policy commit failed with ret: {}", ret);
@@ -1646,7 +1646,7 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
         goto end;
     }
     acl::acl_deref(app_ctx.acl_ctx_clone);
-    
+
     if (app_ctx.acl_ctx) {
         HAL_TRACE_DEBUG("deleted acl");
         acl_deref(app_ctx.acl_ctx);

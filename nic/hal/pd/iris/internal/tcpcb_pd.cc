@@ -201,7 +201,7 @@ p4pd_add_or_del_tcp_rx_tcp_rtt_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_rtt_d.curr_ts = htonl(0xf0);
         data.u.tcp_rtt_d.rttvar_us = 0;
         data.u.tcp_rtt_d.rtt_updated = 0;
-        data.u.tcp_rtt_d.rtt_seq_tsoffset = htonl(tcpcb_pd->tcpcb->rtt_seq_tsoffset); 
+        data.u.tcp_rtt_d.rtt_seq_tsoffset = htonl(tcpcb_pd->tcpcb->rtt_seq_tsoffset);
         data.u.tcp_rtt_d.rtt_time = htonl(tcpcb_pd->tcpcb->rtt_time);
         data.u.tcp_rtt_d.ts_learned = tcpcb_pd->tcpcb->ts_learned;
     }
@@ -211,7 +211,7 @@ p4pd_add_or_del_tcp_rx_tcp_rtt_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         HAL_TRACE_ERR("Failed to create rx: tcp_rtt entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
     }
-    
+
     HAL_TRACE_DEBUG("Set RTO to {}", ntohl(data.u.tcp_rtt_d.rto));
     HAL_TRACE_DEBUG("Set rtt_seq_tsoffset to {}", ntohl(data.u.tcp_rtt_d.rtt_seq_tsoffset));
     return ret;
@@ -334,12 +334,14 @@ p4pd_add_or_del_tcpcb_rx_dma(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_DMA);
 
     if(!del) {
-        uint64_t stats_base = get_mem_addr(
+        uint64_t stats_base = asicpd_get_mem_addr(
                 CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS);
-        SDK_ASSERT(stats_base + tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
-                TCP_PER_FLOW_STATS_SIZE <= stats_base +
-                get_mem_size_kb(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) * 1024);
-        rx_dma_d.rx_stats_base = htonll(stats_base + 
+        SDK_ASSERT(stats_base + tcpcb_pd->tcpcb->cb_id *
+                   TCP_PER_FLOW_STATS_SIZE +
+                   TCP_PER_FLOW_STATS_SIZE <= stats_base +
+                   asicpd_get_mem_size_kb(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) *
+                   1024);
+        rx_dma_d.rx_stats_base = htonll(stats_base +
                 tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
                 TCP_RX_PER_FLOW_STATS_OFFSET);
         HAL_TRACE_DEBUG("tcp qid {}, rx stats base: {:#x}",
@@ -608,7 +610,7 @@ p4pd_get_tcp_rx_tcp_rtt_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->ts_time = ntohl(data.u.tcp_rtt_d.rtt_time);
     tcpcb_pd->tcpcb->rtt_time = ntohl(data.u.tcp_rtt_d.rtt_time);
     tcpcb_pd->tcpcb->ts_learned = data.u.tcp_rtt_d.ts_learned;
-    
+
     //tcpcb_pd->tcpcb->curr_ts = ntohl(data.u.tcp_rtt_d.curr_ts);
     //tcpcb_pd->tcpcb->rttvar_us = ntohl(data.u.tcp_rtt_d.rttvar_us);
     //tcpcb_pd->tcpcb->rtt_updated = ntohl(data.u.tcp_rtt_d.rtt_updated);
@@ -822,7 +824,7 @@ p4pd_get_tcpcb_rxdma_stats(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
     }
 
-    hwid = get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
+    hwid = asicpd_get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
                 tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
                 TCP_RX_PER_FLOW_STATS_OFFSET;
     if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&stats, sizeof(stats))) {
@@ -875,7 +877,7 @@ p4pd_get_tcpcb_txdma_stats(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
      }
 
-    hwid = get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
+    hwid = asicpd_get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
                 tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
                 TCP_TX_PER_FLOW_STATS_OFFSET;
     if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&stats, sizeof(stats))) {
@@ -958,7 +960,7 @@ debug_dol_init_timer_full_area(int state)
     uint8_t byte;
     uint64_t data[DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES * 2 * 8];
 
-    timer_key_hbm_base_addr = (uint64_t)get_mem_addr((char *)JTIMERS);
+    timer_key_hbm_base_addr = (uint64_t)asicpd_get_mem_addr((char *)JTIMERS);
     timer_key_hbm_base_addr += (DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES *
                     CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE * 64);
 
@@ -1022,7 +1024,7 @@ p4pd_add_or_del_tcp_ooo_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
             data.u.load_stage0_d.ooo_rx2tx_qbase = htonll(ooo_rx2tx_qbase);
         }
 
-        uint64_t mem_addr = (uint64_t)get_mem_addr(
+        uint64_t mem_addr = (uint64_t)asicpd_get_mem_addr(
                 CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_GC_GLOBAL_OOQ_TX2RX_FP_PI;
         data.u.load_stage0_d.ooo_rx2tx_free_pi_addr = htonll(mem_addr);
 
@@ -1145,7 +1147,7 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_extra_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.read_rx2tx_extra_d.rto = htonl(100);
         data.u.read_rx2tx_extra_d.state = (uint8_t)tcpcb_pd->tcpcb->state;
         data.u.read_rx2tx_extra_d.rcv_tsval = htonl(tcpcb_pd->tcpcb->ts_recent);
-        
+
 
     }
     HAL_TRACE_DEBUG("rx2tx extra add/del");
@@ -1264,11 +1266,13 @@ p4pd_add_or_del_tcp_tx_tso_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_TSO);
 
     if(!del) {
-        uint64_t stats_base = get_mem_addr(
+        uint64_t stats_base = asicpd_get_mem_addr(
                 CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS);
-        SDK_ASSERT(stats_base + tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
-                TCP_PER_FLOW_STATS_SIZE <= stats_base +
-                get_mem_size_kb(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) * 1024);
+        SDK_ASSERT(stats_base + tcpcb_pd->tcpcb->cb_id *
+                   TCP_PER_FLOW_STATS_SIZE +
+                   TCP_PER_FLOW_STATS_SIZE <= stats_base +
+                   asicpd_get_mem_size_kb(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) *
+                   1024);
         data.tx_stats_base = htonll(stats_base +
                 tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
                 TCP_TX_PER_FLOW_STATS_OFFSET);
@@ -1666,7 +1670,7 @@ p4pd_init_tcpcb_stats(pd_tcpcb_t* tcpcb_pd)
     tcp_rx_stats_t rx_stats = { 0 };
     tcp_tx_stats_t tx_stats = { 0 };
 
-    hwid = get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
+    hwid = asicpd_get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
                 tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
                 TCP_RX_PER_FLOW_STATS_OFFSET;
     if (!p4plus_hbm_write(hwid, (uint8_t *)&rx_stats, sizeof(rx_stats),
@@ -1675,7 +1679,7 @@ p4pd_init_tcpcb_stats(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
     }
 
-    hwid = get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
+    hwid = asicpd_get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
                 tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
                 TCP_TX_PER_FLOW_STATS_OFFSET;
     if (!p4plus_hbm_write(hwid, (uint8_t *)&tx_stats, sizeof(tx_stats),
@@ -1828,7 +1832,7 @@ pd_tcp_global_stats_get (pd_func_args_t *pd_func_args)
     sdk_ret_t ret;
 
     sdk::types::mem_addr_t stats_mem_addr =
-        get_mem_addr(TCP_PROXY_STATS);
+        asicpd_get_mem_addr(TCP_PROXY_STATS);
     HAL_TRACE_DEBUG("TCP global stats mem_addr: {:x}", stats_mem_addr);
 
     pd_tcp_global_stats_get_args_t *args = pd_func_args->pd_tcp_global_stats_get;
@@ -1857,13 +1861,13 @@ p4pd_update_sesq_ci_addr (uint32_t qid, uint64_t ci_addr)
     data.sesq_ci_addr = htonll(ci_addr);
 
     HAL_TRACE_DEBUG("Updating sesq_ci_addr for for TCP CB qid: {:#x} "
-                    "sesq_ci_addr: {:#x} TCPCB write addr: {:#x}", 
+                    "sesq_ci_addr: {:#x} TCPCB write addr: {:#x}",
                     qid, ci_addr, addr);
 
     if(!p4plus_hbm_write(addr,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
         HAL_TRACE_ERR("Failed to update sesq_ci_addr for for TCP CB qid: {:#x} "
-                      "sesq_ci_addr: {:#x} TCPCB write addr: {:#x}", 
+                      "sesq_ci_addr: {:#x} TCPCB write addr: {:#x}",
                       qid, ci_addr, addr);
         ret = HAL_RET_HW_FAIL;
     }

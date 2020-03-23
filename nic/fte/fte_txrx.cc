@@ -24,7 +24,7 @@
 #include "nic/hal/pd/hal_pd.hpp"
 
 #define FTE_EXPORT_STATS_SIZE     7
-#define FTE_LIFQ_METRICS_OFFSET   32 
+#define FTE_LIFQ_METRICS_OFFSET   32
 #define FTE_MAX_SOFTQ_BATCH_SZ    128
 namespace hal {
 extern hal::session_stats_t  *g_session_stats;
@@ -219,7 +219,7 @@ fte_softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data)
     return inst->softq_enqueue(fn, data);
 }
 typedef int softq_stats_t;
-hal_ret_t 
+hal_ret_t
 fte_softq_stats_get(uint8_t fte_id, int &stat) {
     if (fte_disabled_) {
         return HAL_RET_OK;
@@ -228,7 +228,7 @@ fte_softq_stats_get(uint8_t fte_id, int &stat) {
         stat = g_inst_list[fte_id]->softq_stats_get();
         return HAL_RET_OK;
     }
-    return HAL_RET_ERR; 
+    return HAL_RET_ERR;
 }
 
 //------------------------------------------------------------------------
@@ -314,7 +314,8 @@ inst_t::inst_t(uint8_t fte_id) :
         SDK_ASSERT(stats_.fte_hbm_stats != NULL);
     } else {
         sdk::types::mem_addr_t vaddr;
-        sdk::types::mem_addr_t start_addr = get_mem_addr(CAPRI_HBM_REG_PER_FTE_STATS);
+        sdk::types::mem_addr_t start_addr =
+            asicpd_get_mem_addr(CAPRI_HBM_REG_PER_FTE_STATS);
         HAL_TRACE_VERBOSE("Start address: {:p}", (void *)start_addr);
         SDK_ASSERT(start_addr != INVALID_MEM_ADDRESS);
 
@@ -337,7 +338,7 @@ inst_t::inst_t(uint8_t fte_id) :
         bzero(stats_.fte_hbm_stats, sizeof(fte_hbm_stats_t));
     }
 
-    if (hal::g_hal_state->is_microseg_enabled()) 
+    if (hal::g_hal_state->is_microseg_enabled())
         set_quiesce(false);
 }
 
@@ -473,7 +474,7 @@ uint16_t
 inst_t::softq_stats_get()
 {
     return softq_->get_queue_len();
-}      
+}
 
 //------------------------------------------------------------------------------
 // Process an event from softq
@@ -672,7 +673,7 @@ void inst_t::compute_pps(void)
      // Record the Max. PPS we've done
      if (stats_.fte_hbm_stats->cpsstats.pps > stats_.fte_hbm_stats->cpsstats.pps_hwm)
          stats_.fte_hbm_stats->cpsstats.pps_hwm = stats_.fte_hbm_stats->cpsstats.pps;
- 
+
      // Record the Max. CPS we've done
      if (stats_.fte_hbm_stats->cpsstats.cps > stats_.fte_hbm_stats->cpsstats.cps_hwm)
         stats_.fte_hbm_stats->cpsstats.cps_hwm = stats_.fte_hbm_stats->cpsstats.cps;
@@ -1000,7 +1001,7 @@ void inst_t::process_arq_new ()
                 ctx_->set_drop();
             }
 
-            if ((drop_pkt == false) && hal::g_session_stats && 
+            if ((drop_pkt == false) && hal::g_session_stats &&
                 unlikely(hal::g_session_stats[id_].total_active_sessions >= max_sessions_)) {
                 drop_pkt = true;
                 stats_.fte_hbm_stats->qstats.max_session_drop_pkts++;
@@ -1201,8 +1202,8 @@ fte_set_quiesce (uint8_t fte_id, bool quiesce)
 
 done:
     return;
- 
-} 
+
+}
 
 
 //------------------------------------------------------------------------------

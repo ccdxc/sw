@@ -82,7 +82,7 @@ asicpd_stats_addr_get (int tblid, uint32_t index,
     p4pd_table_properties_t       tbl_ctx;
     mem_addr_t                    stats_base_addr;
 
-    stats_base_addr = get_mem_addr(CAPRI_HBM_REG_P4_ATOMIC_STATS);
+    stats_base_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_P4_ATOMIC_STATS);
     SDK_ASSERT(stats_base_addr != INVALID_MEM_ADDRESS);
 
     for (int i = 0; i < arrlen; i++) {
@@ -110,9 +110,10 @@ asicpd_stats_region_init (asicpd_stats_region_info_t *region_arr, int arrlen)
     uint64_t                      stats_region_size;
 
     stats_region_start = stats_base_addr =
-        get_mem_addr(CAPRI_HBM_REG_P4_ATOMIC_STATS);
+        asicpd_get_mem_addr(CAPRI_HBM_REG_P4_ATOMIC_STATS);
     SDK_ASSERT(stats_base_addr != INVALID_MEM_ADDRESS);
-    stats_region_size = (get_mem_size_kb(CAPRI_HBM_REG_P4_ATOMIC_STATS) << 10);
+    stats_region_size =
+        (asicpd_get_mem_size_kb(CAPRI_HBM_REG_P4_ATOMIC_STATS) << 10);
 
     // subtract 2G (saves ASM instructions)
     stats_region_start -= ((uint64_t)1 << 31);

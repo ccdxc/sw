@@ -70,7 +70,8 @@ ipfix_test_init(uint32_t sindex, uint32_t eindex, uint16_t export_id) {
     uint64_t deny_packets = 0x0102030405060708ull;
 
     // last exported stats
-    uint64_t exported_stats_addr = get_mem_addr(IPFIX_EXPORTED_FLOW_STATS);
+    uint64_t exported_stats_addr =
+        asicpd_get_mem_addr(IPFIX_EXPORTED_FLOW_STATS);
     SDK_ASSERT(exported_stats_addr != INVALID_MEM_ADDRESS);
     uint64_t data, data_r = 0;
 

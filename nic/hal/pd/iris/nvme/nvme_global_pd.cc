@@ -20,9 +20,9 @@ pd_nvme_global_t *g_pd_nvme_global = NULL;
 
 
 static hal_ret_t
-setup_resourcecb (uint64_t data_addr, 
-                  int max_cmd_context, 
-                  int tx_max_pdu_context, 
+setup_resourcecb (uint64_t data_addr,
+                  int max_cmd_context,
+                  int tx_max_pdu_context,
                   int rx_max_pdu_context)
 {
     //Setup resourcecb
@@ -58,14 +58,15 @@ setup_resourcecb (uint64_t data_addr,
 
 static hal_ret_t
 setup_txhwxtscb (uint64_t data_addr)
-{  
+{
     hal_ret_t ret = HAL_RET_OK;
 
     //Setup Tx HW/Barco XTS CB
     nvme_txhwxtscb_t data = { 0 };
 
     data.log_sz = log2(CAPRI_BARCO_XTS_RING_SLOTS);
-    data.xts_ring_base_addr = get_mem_addr(CAPRI_HBM_REG_BARCO_RING_XTS0);
+    data.xts_ring_base_addr =
+        asicpd_get_mem_addr(CAPRI_HBM_REG_BARCO_RING_XTS0);
     data.ci = 0;
     data.pi = 0;
     data.choke_counter = 0;
@@ -83,14 +84,14 @@ setup_txhwxtscb (uint64_t data_addr)
 
 static hal_ret_t
 setup_txhwdgstcb (uint64_t data_addr)
-{  
+{
     hal_ret_t ret = HAL_RET_OK;
 
     //Setup Tx HW/Barco XTS CB
     nvme_txhwdgstcb_t data = { 0 };
 
     data.log_sz = log2(BARCO_CRYPTO_CP_RING_SIZE);
-    data.dgst_ring_base_addr = get_mem_addr(CAPRI_HBM_REG_BARCO_RING_CP);
+    data.dgst_ring_base_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_BARCO_RING_CP);
     data.ci = 0;
     data.pi = 0;
     data.choke_counter = 0;
@@ -114,7 +115,8 @@ setup_rxhwxtscb (uint64_t data_addr)
     nvme_rxhwxtscb_t data = { 0 };
 
     data.log_sz = log2(CAPRI_BARCO_XTS_RING_SLOTS);
-    data.xts_ring_base_addr = get_mem_addr(CAPRI_HBM_REG_BARCO_RING_XTS1);
+    data.xts_ring_base_addr =
+        asicpd_get_mem_addr(CAPRI_HBM_REG_BARCO_RING_XTS1);
     data.ci = 0;
     data.pi = 0;
     data.choke_counter = 0;
@@ -139,7 +141,7 @@ setup_rxhwdgstcb (uint64_t data_addr)
     nvme_rxhwdgstcb_t data = { 0 };
 
     data.log_sz = log2(BARCO_CRYPTO_DC_RING_SIZE);
-    data.dgst_ring_base_addr = get_mem_addr(CAPRI_HBM_REG_BARCO_RING_DC);
+    data.dgst_ring_base_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_BARCO_RING_DC);
     data.ci = 0;
     data.pi = 0;
     data.choke_counter = 0;
@@ -155,7 +157,7 @@ setup_rxhwdgstcb (uint64_t data_addr)
 }
 
 static hal_ret_t
-nvme_cmd_context_ring_entry_prepare (pd_nvme_global_t *nvme_global_pd, 
+nvme_cmd_context_ring_entry_prepare (pd_nvme_global_t *nvme_global_pd,
                                      void *tmp_cmd_context_ring,
                                      uint16_t index,
                                      uint16_t cmd_id)
@@ -201,7 +203,7 @@ nvme_cmd_context_ring_hbm_write (uint64_t dst_addr,
 }
 
 static hal_ret_t
-nvme_tx_pdu_context_ring_entry_prepare (pd_nvme_global_t *nvme_global_pd, 
+nvme_tx_pdu_context_ring_entry_prepare (pd_nvme_global_t *nvme_global_pd,
                                         void *tmp_tx_pdu_context_ring,
                                         uint16_t index,
                                         uint16_t pdu_id)
@@ -242,7 +244,7 @@ nvme_tx_pdu_context_ring_hbm_write (uint64_t dst_addr,
 }
 
 static hal_ret_t
-nvme_rx_pdu_context_ring_entry_prepare (pd_nvme_global_t *nvme_global_pd, 
+nvme_rx_pdu_context_ring_entry_prepare (pd_nvme_global_t *nvme_global_pd,
                                         void *tmp_rx_pdu_context_ring,
                                         uint16_t index,
                                         uint16_t pdu_id)
@@ -308,7 +310,7 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
                     "max_cmd_context: {} tx_max_pdu_context: {} "
                     "rx_max_pdu_context: {}",
                     max_lif, max_ns, max_sess,
-                    max_cmd_context, 
+                    max_cmd_context,
                     tx_max_pdu_context,
                     rx_max_pdu_context);
 
@@ -317,10 +319,11 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
     SDK_ASSERT(max_cmd_context <= nvme_hbm_resource_max(NVME_TYPE_CMD_CONTEXT));
     SDK_ASSERT(tx_max_pdu_context <= nvme_hbm_resource_max(NVME_TYPE_TX_PDU_CONTEXT));
     SDK_ASSERT(rx_max_pdu_context <= nvme_hbm_resource_max(NVME_TYPE_RX_PDU_CONTEXT));
-    SDK_ASSERT(nvme_hbm_offset(NVME_TYPE_MAX) <= (int)(get_mem_size_kb(CAPRI_HBM_REG_NVME) * 1024));
+    SDK_ASSERT(nvme_hbm_offset(NVME_TYPE_MAX) <=
+               (int) (asicpd_get_mem_size_kb(CAPRI_HBM_REG_NVME) * 1024));
 
 
-    uint64_t nvme_hbm_start = get_mem_addr(CAPRI_HBM_REG_NVME);
+    uint64_t nvme_hbm_start = asicpd_get_mem_addr(CAPRI_HBM_REG_NVME);
     //ns
     nvme_global_pd->nscb_base_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_NSCB);
 
@@ -346,19 +349,23 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
     nvme_global_pd->resourcecb_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RESOURCECB);
 
     //tx_hwxtscb
-    opaque_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(BARCO_RING_XTS0);
+    opaque_tag_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) +
+        get_opaque_tag_offset(BARCO_RING_XTS0);
     nvme_global_pd->tx_hwxtscb_addr = opaque_tag_addr;
 
     //rx_hwxtscb
-    opaque_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(BARCO_RING_XTS1);
+    opaque_tag_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) +
+        get_opaque_tag_offset(BARCO_RING_XTS1);
     nvme_global_pd->rx_hwxtscb_addr = opaque_tag_addr;
 
     //tx_hwdgstcb
-    opaque_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(BARCO_RING_CP);
+    opaque_tag_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) +
+        get_opaque_tag_offset(BARCO_RING_CP);
     nvme_global_pd->tx_hwdgstcb_addr = opaque_tag_addr;
 
     //rx_hwdgstcb
-    opaque_tag_addr = get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset(BARCO_RING_DC);
+    opaque_tag_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) +
+        get_opaque_tag_offset(BARCO_RING_DC);
     nvme_global_pd->rx_hwdgstcb_addr = opaque_tag_addr;
 
     //cmd context page
@@ -521,7 +528,7 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
 
 
 
-    ret = setup_resourcecb(nvme_global_pd->resourcecb_addr, 
+    ret = setup_resourcecb(nvme_global_pd->resourcecb_addr,
                            max_cmd_context, tx_max_pdu_context, rx_max_pdu_context);
 
     if (ret != HAL_RET_OK) {

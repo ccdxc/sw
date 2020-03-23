@@ -58,7 +58,7 @@ capri_toeplitz_init (int stage, int stage_tableid)
     tbl_id = stage_tableid;
 
 #ifdef MEM_REGION_RSS_INDIR_TABLE_NAME
-    tbl_base = get_mem_addr(MEM_REGION_RSS_INDIR_TABLE_NAME);
+    tbl_base = asicpd_get_mem_addr(MEM_REGION_RSS_INDIR_TABLE_NAME);
     SDK_ASSERT(tbl_base != INVALID_MEM_ADDRESS);
 #else
     SDK_ASSERT(0);

@@ -255,8 +255,8 @@ lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_create_args_t *args)
         ret = HAL_RET_NO_RESOURCE;
         goto end;
     }
-    
-    if (lif->type != types::LIF_TYPE_SWM) { 
+
+    if (lif->type != types::LIF_TYPE_SWM) {
         asicpd_scheduler_lif_params_t apd_lif;
         pd_lif_copy_asicpd_params(&apd_lif, pd_lif);
         //Allocate tx scheduler resource for this lif if qstate-map init is done.
@@ -893,7 +893,7 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
     delphi::objects::lifmetrics_t   lif_metrics = {0};
 
     sdk::types::mem_addr_t stats_mem_addr =
-        get_mem_addr(CAPRI_HBM_REG_LIF_STATS);
+        asicpd_get_mem_addr(CAPRI_HBM_REG_LIF_STATS);
 
     stats_mem_addr += pd_lif->hw_lif_id << LIF_STATS_SIZE_SHIFT;
 
@@ -1434,7 +1434,7 @@ pd_lif_pgm_mirror_session (pd_lif_t *pd_lif, if_t *hal_if,
     mirr_data.action_id = MIRROR_LOCAL_SPAN_ID;
     mirr_data.action_u.mirror_local_span.dst_lport = lport;
     mirr_data.action_u.mirror_local_span.qid_en = 0;
-    mirr_data.action_u.mirror_local_span.qid = 0; 
+    mirr_data.action_u.mirror_local_span.qid = 0;
 
     if (oper == TABLE_OPER_INSERT) {
         sdk_ret = mirr_dm->insert(&mirr_data, &pd_lif->rdma_sniff_mirr_idx);
@@ -1455,7 +1455,7 @@ pd_lif_pgm_mirror_session (pd_lif_t *pd_lif, if_t *hal_if,
                               lif_get_lif_id(lif), ret);
             } else {
                 HAL_TRACE_DEBUG("lif_id:{}, programmed mirror table at: {}",
-                                lif_get_lif_id(lif), 
+                                lif_get_lif_id(lif),
                                 pd_lif->rdma_sniff_mirr_idx);
             }
         }
@@ -1481,7 +1481,7 @@ pd_lif_depgm_mirror_session (pd_lif_t *pd_lif)
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("lif_id:{},unable to deprogram mirror table at: {}",
-                          lif_get_lif_id((lif_t *)pd_lif->pi_lif), 
+                          lif_get_lif_id((lif_t *)pd_lif->pi_lif),
                           pd_lif->rdma_sniff_mirr_idx);
         } else {
             HAL_TRACE_ERR("lif_id:{}, deprogrammed mirror table at: {} ",
@@ -1529,7 +1529,7 @@ pd_lif_pgm_tx_nacl (pd_lif_t *pd_lif, if_t *hal_if)
     data.action_u.nacl_nacl_permit.egress_mirror_en = 1;
     data.action_u.nacl_nacl_permit.egress_mirror_session_id = 0x1 << pd_lif->rdma_sniff_mirr_idx;
 
-    ret = acl_tbl->insert(&key, &mask, &data, ACL_RDMA_SNIFFER_PRIORITY, 
+    ret = acl_tbl->insert(&key, &mask, &data, ACL_RDMA_SNIFFER_PRIORITY,
                           &pd_lif->tx_handle);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to program TX NACL. ret: {}", ret);
@@ -1554,7 +1554,7 @@ pd_lif_depgm_tx_nacl (pd_lif_t *pd_lif)
     if (pd_lif->tx_handle != INVALID_INDEXER_INDEX) {
         ret = acl_tbl->remove(pd_lif->tx_handle);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Unable to deprogram NACL. {} ret: {}", 
+            HAL_TRACE_ERR("Unable to deprogram NACL. {} ret: {}",
                           pd_lif->tx_handle, ret);
         } else {
             HAL_TRACE_DEBUG("Deprogrammed NACL at: {}", pd_lif->tx_handle);
@@ -1600,7 +1600,7 @@ pd_lif_pgm_rx_nacl (pd_lif_t *pd_lif, if_t *hal_if)
     data.action_u.nacl_nacl_permit.ingress_mirror_en = 1;
     data.action_u.nacl_nacl_permit.ingress_mirror_session_id = 0x1 << pd_lif->rdma_sniff_mirr_idx;
 
-    ret = acl_tbl->insert(&key, &mask, &data, ACL_RDMA_SNIFFER_PRIORITY, 
+    ret = acl_tbl->insert(&key, &mask, &data, ACL_RDMA_SNIFFER_PRIORITY,
                           &pd_lif->rx_handle);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to program RX NACL. ret: {}", ret);
@@ -1625,7 +1625,7 @@ pd_lif_depgm_rx_nacl (pd_lif_t *pd_lif)
     if (pd_lif->rx_handle != INVALID_INDEXER_INDEX) {
         ret = acl_tbl->remove(pd_lif->rx_handle);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Unable to deprogram NACL. {} ret: {}", 
+            HAL_TRACE_ERR("Unable to deprogram NACL. {} ret: {}",
                           pd_lif->rx_handle, ret);
         } else {
             HAL_TRACE_DEBUG("Deprogrammed NACL at: {}", pd_lif->rx_handle);

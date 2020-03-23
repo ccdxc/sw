@@ -233,9 +233,9 @@ vnic_init (void)
     index = vid;
     data.action_id = VNIC_VNIC_MAPPING_ID;
     vnic_mapping->vnic = VNIC_ID;
-    slacl_hbm_addr = get_mem_addr("slacl");
+    slacl_hbm_addr = asicpd_get_mem_addr("slacl");
     memcpy(vnic_mapping->slacl_addr_1, &slacl_hbm_addr, sizeof(vnic_mapping->slacl_addr_1));
-    lpm_hbm_addr = get_mem_addr("lpm");
+    lpm_hbm_addr = asicpd_get_mem_addr("lpm");
     memcpy(vnic_mapping->lpm_addr_1, &lpm_hbm_addr, sizeof(vnic_mapping->lpm_addr_1));
 
     std::cout << std::endl << std::endl
@@ -310,7 +310,7 @@ get_slacl_addr_offset (uint32_t tbl_id, uint32_t index,
                        uint64_t *addr, uint32_t *start_bit, uint32_t *len,
                        uint32_t *word_bytes_p)
 {
-    uint64_t hbm_base_addr = get_mem_addr("slacl");
+    uint64_t hbm_base_addr = asicpd_get_mem_addr("slacl");
     uint64_t offset;
     uint32_t num_entries_packed = 1;
     uint32_t entry_width;
@@ -494,7 +494,7 @@ TEST_F(apollo_test, test1) {
         hal_conf_file = "conf/hal_apollo_rtl.json";
     }
 
-    asm_base_addr = (uint64_t)get_mem_addr((char *)JP4_PRGM);
+    asm_base_addr = (uint64_t) asicpd_get_mem_addr((char *)JP4_PRGM);
     ret = capri_load_mpu_programs("apollo", (char *)"obj/apollo/asm_bin",
                                   asm_base_addr, NULL, 0, NULL);
     ASSERT_NE(ret, -1);

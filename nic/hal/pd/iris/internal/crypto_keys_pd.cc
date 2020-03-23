@@ -201,7 +201,7 @@ crypto_init_ipsec_pad_table(void)
         ipsec_pad_bytes[i] = i+1;
     }
 
-    ipsec_pad_base_addr = get_mem_addr(CAPRI_HBM_REG_IPSEC_PAD_TABLE);
+    ipsec_pad_base_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_IPSEC_PAD_TABLE);
     if (ipsec_pad_base_addr != INVALID_MEM_ADDRESS) {
         p4plus_hbm_write(ipsec_pad_base_addr, ipsec_pad_bytes, MAX_IPSEC_PAD_SIZE,
                 P4PLUS_CACHE_ACTION_NONE);

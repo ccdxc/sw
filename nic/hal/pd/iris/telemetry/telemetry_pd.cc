@@ -93,7 +93,7 @@ pd_mirror_session_update (pd_func_args_t *pd_func_args)
 
     SDK_ASSERT(hw_id < MAX_MIRROR_SESSION_DEST);
 
-    HAL_TRACE_DEBUG("Update call for session {} with hw_id: {}", 
+    HAL_TRACE_DEBUG("Update call for session {} with hw_id: {}",
                     args->session->sw_id, hw_id);
     pdret = p4pd_entry_read(P4TBL_ID_MIRROR, hw_id, NULL,
                             NULL, (void *)&action_data);
@@ -152,7 +152,7 @@ pd_mirror_session_update (pd_func_args_t *pd_func_args)
 
     HAL_TRACE_DEBUG("dst_if_change: {}, dst_if: {}, tunnel_if_change: {}, tnnl_if: {}, "
                     "rtep_ep_exists: {}",
-                    args->dst_if_change, 
+                    args->dst_if_change,
                     args->dst_if ? if_keyhandle_to_str(args->dst_if) : "NULL",
                     args->tunnel_if_change,
                     args->tunnel_if ? if_keyhandle_to_str(args->tunnel_if) : "NULL",
@@ -163,7 +163,7 @@ pd_mirror_session_update (pd_func_args_t *pd_func_args)
 
     SDK_ASSERT(hw_id < MAX_MIRROR_SESSION_DEST);
 
-    HAL_TRACE_DEBUG("Update call for session {} with hw_id: {}", 
+    HAL_TRACE_DEBUG("Update call for session {} with hw_id: {}",
                     args->session->sw_id, hw_id);
     pdret = p4pd_entry_read(P4TBL_ID_MIRROR, hw_id, NULL,
                             NULL, (void *)&action_data);
@@ -179,7 +179,7 @@ pd_mirror_session_update (pd_func_args_t *pd_func_args)
             dst_lport = if_get_lport_id(args->dst_if);
         } else {
             dst_lport = 0;
-        } 
+        }
         action_data.action_u.mirror_erspan_mirror.dst_lport = dst_lport;
     }
     if (args->tunnel_if_change) {
@@ -293,7 +293,7 @@ pd_mirror_session_create (pd_func_args_t *pd_func_args)
     }
 
     // Do clock sync to P4 to make sure we have the latest time
-    // Note that this is only needed once after NTPD is started in 
+    // Note that this is only needed once after NTPD is started in
     // Naples. Today we dont have a notification from NMD to HAL on
     // that so we want to sync during mirror session create. This will
     // ensure clock delta to be written to P4 when we get decommisioned
@@ -384,7 +384,7 @@ hal_ret_t
 telemetry_export_dest_init(telemetry_export_dest_t *d)
 {
     HAL_TRACE_DEBUG("{}: Export Destination Init {}", __FUNCTION__, d->id);
-    uint64_t hbm_start = get_mem_addr(JP4_IPFIX);
+    uint64_t hbm_start = asicpd_get_mem_addr(JP4_IPFIX);
     d->skip_doorbell = false;
     d->base_addr = hbm_start + (d->id * TELEMETRY_IPFIX_BUFSIZE);
     d->buf_hdr.packet_start = sizeof(telemetry_pd_export_buf_header_t);
@@ -490,7 +490,7 @@ telemetry_export_dest_commit(telemetry_export_dest_t *d)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 pd_collector_ep_update (pd_func_args_t *pd_func_args)
 {
     hal_ret_t                        ret = HAL_RET_OK;
@@ -512,10 +512,10 @@ pd_collector_ep_update (pd_func_args_t *pd_func_args)
         if (telemetry_collector_id_db[i] > 0) {
             dst = &export_destinations[i];
             telemetry_export_dest_get_ip(dst, &cfg, false);
-            HAL_TRACE_DEBUG("Processing collector: {}, EP: {}", 
+            HAL_TRACE_DEBUG("Processing collector: {}, EP: {}",
                             ipaddr2str(&cfg.dst_ip), ipaddr2str(args->ip));
             if (!memcmp(&cfg.dst_ip, args->ip, sizeof(ip_addr_t))) {
-                HAL_TRACE_DEBUG("Updating collector: {}, skip_doorbell: {}", 
+                HAL_TRACE_DEBUG("Updating collector: {}, skip_doorbell: {}",
                                 ipaddr2str(args->ip), skip_doorbell);
                 dst->skip_doorbell = skip_doorbell;
                 if (!skip_doorbell) {
@@ -530,8 +530,8 @@ pd_collector_ep_update (pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_collector_populate_export_info (collector_config_t *cfg, 
-                                   ep_t *ep, 
+pd_collector_populate_export_info (collector_config_t *cfg,
+                                   ep_t *ep,
                                    telemetry_export_dest_t *dst)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -552,7 +552,7 @@ pd_collector_populate_export_info (collector_config_t *cfg,
     } else {
         dst->skip_doorbell = true;
     }
-    
+
     telemetry_export_dest_set_ip(dst, cfg->src_ip, true);
     telemetry_export_dest_set_ip(dst, cfg->dst_ip, false);
     telemetry_export_dest_set_mac(dst, cfg->src_mac, true);
@@ -577,7 +577,7 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     c_args = pd_func_args->pd_collector_create;
     cfg = c_args->cfg;
     HAL_TRACE_DEBUG("{}: CollectorID {}", __FUNCTION__, cfg->collector_id);
-    
+
     if (cfg->collector_id >= (TELEMETRY_NUM_EXPORT_DEST)) {
         HAL_TRACE_ERR(" invalid Id {}", cfg->collector_id );
         return HAL_RET_INVALID_ARG;
@@ -595,7 +595,7 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     args.vid = &cfg->vlan;
     pd_func_args1.pd_l2seg_get_fromcpu_vlanid = &args;
 
-    if (pd_l2seg_get_fromcpu_vlanid(&pd_func_args1) != HAL_RET_OK) { 
+    if (pd_l2seg_get_fromcpu_vlanid(&pd_func_args1) != HAL_RET_OK) {
         HAL_TRACE_DEBUG("{}: Could not retrieve CPU VLAN", __FUNCTION__);
         return HAL_RET_INVALID_ARG;
     }
@@ -614,18 +614,18 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     d->template_id = cfg->template_id;
     d->export_intvl = cfg->export_intvl;
     d->valid = true;
-    
+
     telemetry_export_dest_set_ip(d, cfg->src_ip, true);
     telemetry_export_dest_set_ip(d, cfg->dst_ip, false);
     telemetry_export_dest_set_mac(d, cfg->src_mac, true);
     telemetry_export_dest_set_mac(d, cfg->dest_mac, false);
     telemetry_export_dest_commit(d);
 #endif
-    
+
     hal_cfg = g_hal_state_pd->hal_cfg();
     SDK_ASSERT(hal_cfg);
     // Start timer for the collector, only in HW mode
-    d->db_timer = 
+    d->db_timer =
         sdk::lib::timer_schedule((HAL_TIMER_ID_IPFIX_MIN + d->id),
                                  (d->export_intvl * TIME_MSECS_PER_SEC),
                                  (void *) 0,
@@ -651,7 +651,7 @@ pd_collector_delete(pd_func_args_t *pd_func_args)
     c_args = pd_func_args->pd_collector_delete;
     cfg = c_args->cfg;
     HAL_TRACE_DEBUG("{}: CollectorID {}", __FUNCTION__, cfg->collector_id);
-    
+
     if (cfg->collector_id >= (TELEMETRY_NUM_EXPORT_DEST)) {
         HAL_TRACE_ERR(" invalid Id {}", cfg->collector_id );
         return HAL_RET_INVALID_ARG;
@@ -708,8 +708,8 @@ pd_collector_get(pd_func_args_t *pd_func_args)
     telemetry_export_dest_get_mac(d, cfg, false);
 
     sdk::types::mem_addr_t vaddr;
-    sdk::types::mem_addr_t stats_mem_addr = 
-                        get_mem_addr(CAPRI_HBM_REG_IPFIX_STATS);
+    sdk::types::mem_addr_t stats_mem_addr =
+                        asicpd_get_mem_addr(CAPRI_HBM_REG_IPFIX_STATS);
     SDK_ASSERT(stats_mem_addr != INVALID_MEM_ADDRESS);
 
     stats_mem_addr += ((1 << IPFIX_STATS_SHIFT)*cfg->collector_id);
@@ -787,7 +787,7 @@ pd_uplink_erspan_enable (pd_func_args_t *pd_func_args)
         omap_table = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
         SDK_ASSERT_RETURN((omap_table != NULL), HAL_RET_ERR);
 
-        pdret = p4pd_entry_read(P4TBL_ID_OUTPUT_MAPPING, lport_id, 
+        pdret = p4pd_entry_read(P4TBL_ID_OUTPUT_MAPPING, lport_id,
                                 NULL, NULL, (void *) &data);
         if (pdret != P4PD_SUCCESS) {
             // Entry-not found case
@@ -797,7 +797,7 @@ pd_uplink_erspan_enable (pd_func_args_t *pd_func_args)
         else {
             // Entry found case
             if (data.action_id != OUTPUT_MAPPING_SET_TM_OPORT_ID &&
-                data.action_id != 
+                data.action_id !=
                 OUTPUT_MAPPING_SET_TM_OPORT_ENFORCE_SRC_LPORT_ID) {
                 HAL_TRACE_ERR(
                 "OMAP Entry present with conflicting action {} {}",
@@ -877,7 +877,7 @@ pd_uplink_erspan_disable (pd_func_args_t *pd_func_args)
         omap_table = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
         SDK_ASSERT_RETURN((omap_table != NULL), HAL_RET_ERR);
 
-        pdret = p4pd_entry_read(P4TBL_ID_OUTPUT_MAPPING, lport_id, 
+        pdret = p4pd_entry_read(P4TBL_ID_OUTPUT_MAPPING, lport_id,
                                 NULL, NULL, (void *) &data);
         if (pdret != P4PD_SUCCESS) {
             HAL_TRACE_ERR("unable to read OMAP for lif_id: {} {}",
@@ -886,7 +886,7 @@ pd_uplink_erspan_disable (pd_func_args_t *pd_func_args)
         }
 
         if (data.action_id != OUTPUT_MAPPING_SET_TM_OPORT_ID &&
-            data.action_id != 
+            data.action_id !=
             OUTPUT_MAPPING_SET_TM_OPORT_ENFORCE_SRC_LPORT_ID) {
             HAL_TRACE_ERR(
             "OMAP Entry present with conflicting action {} {}",
