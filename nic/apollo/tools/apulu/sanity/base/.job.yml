@@ -21,7 +21,7 @@ targets:
 
   apulu/dol/vxlan:
     commands: ["make", "PIPELINE=apulu", "jobd/dol/apulu/vxlan"]
-    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    owners: ["email:param@pensando.io", "email:sai@pensando.io"]
     area:
     sub-area:
     feature:
@@ -30,16 +30,25 @@ targets:
 
   apulu/dol/lpm:
     commands: ["make", "PIPELINE=apulu", "jobd/dol/apulu/lpm"]
-    owners: ["email:sai@pensando.io", "email:param@pensando.io"]
+    owners: ["email:ajeer@pensando.io"]
     area:
     sub-area:
     feature:
     build-dependencies:
     - build-apulu-x86
 
-  apulu/dol/rfc:
-    commands: ["make", "PIPELINE=apulu", "jobd/dol/apulu/rfc"]
-    owners: ["email:sai@pensando.io", "email:param@pensando.io"]
+  apulu/dol/rfc_ingress:
+    commands: ["make", "PIPELINE=apulu", "jobd/dol/apulu/rfc_ingress"]
+    owners: ["email:ajeer@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apulu-x86
+
+  apulu/dol/rfc_egress:
+    commands: ["make", "PIPELINE=apulu", "jobd/dol/apulu/rfc_egress"]
+    owners: ["email:ajeer@pensando.io"]
     area:
     sub-area:
     feature:
@@ -57,7 +66,7 @@ targets:
 
   apulu/pds_scale_test_mock:
     commands: ["make", "PIPELINE=apulu", "jobd/apulu/pds_scale_test_mock"]
-    owners: ["email:kalyanbade@pensando.io", "email:akoradha@pensando.io" ]
+    owners: ["email:akoradha@pensando.io" ]
     area:
     sub-area:
     feature:
@@ -66,7 +75,7 @@ targets:
 
   apulu/valgrind:
     commands: ["make", "PIPELINE=apulu", "jobd/apulu/gtests-valgrind"]
-    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    owners: ["email:sai@pensando.io"]
     area:
     sub-area:
     feature:

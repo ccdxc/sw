@@ -486,24 +486,25 @@ jobd/dol/apulu/vxlan: ${JOBD_PREREQS}
 jobd/dol/apulu/l2: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --topo l2_hostvxlan --feature networking --dry
 
-.PHONY: jobd/dol/apulu/rfc
-jobd/dol/apulu/rfc: ${JOBD_PREREQS}
-    # ingress policy
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_disjoint --sub ipv4_ingress_disjoint,ipv4_ingress_disjoint
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_adjacent --sub ipv4_ingress_adjacent,ipv4_ingress_adjacent
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_1 --sub ipv4_ingress_overlap_1,ipv4_ingress_overlap_1
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_2 --sub ipv4_ingress_overlap_2,ipv4_ingress_overlap_2
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_3 --sub ipv4_ingress_overlap_3,ipv4_ingress_overlap_3
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_1 --sub ipv4_ingress_negative_1,ipv4_ingress_negative_1
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_2 --sub ipv4_ingress_negative_2,ipv4_ingress_negative_2
-    #egress policy
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_disjoint --sub ipv4_egress_disjoint,ipv4_ingress_disjoint
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_adjacent --sub ipv4_egress_adjacent,ipv4_ingress_adjacent
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_1 --sub ipv4_egress_overlap_1,ipv4_ingress_overlap_1
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_2 --sub ipv4_egress_overlap_2,ipv4_ingress_overlap_2
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_3 --sub ipv4_egress_overlap_3,ipv4_ingress_overlap_3
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_1 --sub ipv4_egress_negative_1,ipv4_ingress_negative_1
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_2 --sub ipv4_egress_negative_2,ipv4_ingress_negative_2
+.PHONY: jobd/dol/apulu/rfc_ingress
+jobd/dol/apulu/rfc_ingress: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_disjoint --sub ipv4_ingress_disjoint
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_adjacent --sub ipv4_ingress_adjacent
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_1 --sub ipv4_ingress_overlap_1
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_2 --sub ipv4_ingress_overlap_2
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_3 --sub ipv4_ingress_overlap_3
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_1 --sub ipv4_ingress_negative_1
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_2 --sub ipv4_ingress_negative_2
+
+.PHONY: jobd/dol/apulu/rfc_egress
+jobd/dol/apulu/rfc_egress: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_disjoint --sub ipv4_egress_disjoint
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_adjacent --sub ipv4_egress_adjacent
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_1 --sub ipv4_egress_overlap_1
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_2 --sub ipv4_egress_overlap_2
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_overlap_3 --sub ipv4_egress_overlap_3
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_1 --sub ipv4_egress_negative_1
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apulu --feature rfc --topo rfc_negative_2 --sub ipv4_egress_negative_2
 
 .PHONY: jobd/dol/apulu/lpm
 jobd/dol/apulu/lpm: ${JOBD_PREREQS}

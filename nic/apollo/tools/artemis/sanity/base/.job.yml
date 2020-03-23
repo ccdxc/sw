@@ -19,7 +19,7 @@ targets:
 
   artemis/pds_scale_test_mock:
     commands: ["make", "PIPELINE=artemis", "jobd/artemis/pds_scale_test_mock"]
-    owners: ["email:kalyanbade@pensando.io", "email:vijasrin@pensando.io" ]
+    owners: ["email:vijasrin@pensando.io" ]
     area:
     sub-area:
     feature:
@@ -28,7 +28,7 @@ targets:
 
   artemis/scale_test_sim:
     commands: ["make", "PIPELINE=artemis", "jobd/artemis/scale_test_sim"]
-    owners: ["email:kalyanbade@pensando.io", "email:vijasrin@pensando.io" ]
+    owners: ["email:vijasrin@pensando.io" ]
     area:
     sub-area:
     feature:
@@ -46,7 +46,7 @@ targets:
 
   artemis/dol/vxlan:
     commands: ["make", "PIPELINE=artemis", "jobd/dol/artemis/vxlan"]
-    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    owners: ["email:param@pensando.io", "email:sai@pensando.io"]
     area:
     sub-area:
     feature:

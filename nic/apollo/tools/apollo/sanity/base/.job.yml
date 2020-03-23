@@ -28,7 +28,7 @@ targets:
 
   apollo/dol/mplsoudp:
     commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/mplsoudp"]
-    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    owners: ["email:param@pensando.io", "email:sai@pensando.io"]
     area:
     sub-area:
     feature:
@@ -37,7 +37,7 @@ targets:
 
   apollo/dol/vxlan:
     commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/vxlan"]
-    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    owners: ["email:param@pensando.io", "email:sai@pensando.io"]
     area:
     sub-area:
     feature:
@@ -46,7 +46,7 @@ targets:
 
   apollo/dol/lpm:
     commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/lpm"]
-    owners: ["email:param@pensando.io"]
+    owners: ["email:ajeer@pensando.io"]
     area:
     sub-area:
     feature:
@@ -55,7 +55,7 @@ targets:
 
   apollo/dol/rfc:
     commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/rfc"]
-    owners: ["email:sai@pensando.io"]
+    owners: ["email:ajeer@pensando.io"]
     area:
     sub-area:
     feature:
@@ -73,7 +73,7 @@ targets:
 
   apollo/pds_scale_test_mock:
     commands: ["make", "PIPELINE=apollo", "jobd/apollo/pds_scale_test_mock"]
-    owners: ["email:kalyanbade@pensando.io", "email:vijasrin@pensando.io" ]
+    owners: ["email:vijasrin@pensando.io" ]
     area:
     sub-area:
     feature:
@@ -82,7 +82,7 @@ targets:
 
   apollo/pds_scale_test_mock_no_batch:
     commands: ["make", "PIPELINE=apollo", "jobd/apollo/pds_scale_test_mock_no_batch"]
-    owners: ["email:kalyanbade@pensando.io", "email:vijasrin@pensando.io" ]
+    owners: ["email:vijasrin@pensando.io" ]
     area:
     sub-area:
     feature:
@@ -118,7 +118,7 @@ targets:
 
   apollo/doc:
     commands: ["make", "PIPELINE=apollo", "jobd/apollo/doc"]
-    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    owners: ["email:hareesh@pensando.io"]
     area:
     sub-area:
     feature:
