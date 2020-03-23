@@ -64,6 +64,7 @@ class TestSuite:
     def __init__(self, spec):
         self.__spec = spec
         self.__testbundles = []
+        self.__testbunfiles = []
         self.__verifs = []
         self.__debugs = []
         self.__setups = []
@@ -179,26 +180,29 @@ class TestSuite:
         if getattr(self.__spec, 'common', None) and getattr(self.__spec.common, 'args', None):
             self.__common_args = self.__spec.common.args
 
+    def __append_testbundle(self, bunfile):
+        if not bunfile in self.__testbunfiles:
+            self.__testbunfiles.append(bunfile)
+
+            tbun = testbundle.TestBundle(bunfile, self)
+            self.__testbundles.append(tbun)
+
     def __import_testbundles(self):
         if not GlobalOptions.skip_sanity:
             for bunfile in self.__spec.testbundles.sanity:
-                tbun = testbundle.TestBundle(bunfile, self)
-                self.__testbundles.append(tbun)
+                self.__append_testbundle(bunfile)
 
         if GlobalOptions.extended:
             for bunfile in getattr(self.__spec.testbundles, 'extended', []):
-                tbun = testbundle.TestBundle(bunfile, self)
-                self.__testbundles.append(tbun)
+                self.__append_testbundle(bunfile)
 
         if GlobalOptions.regression:
             for bunfile in getattr(self.__spec.testbundles, 'regression', []):
-                tbun = testbundle.TestBundle(bunfile, self)
-                self.__testbundles.append(tbun)
+                self.__append_testbundle(bunfile)
 
         if GlobalOptions.precheckin:
             for bunfile in getattr(self.__spec.testbundles, 'precheckin', []):
-                tbun = testbundle.TestBundle(bunfile, self)
-                self.__testbundles.append(tbun)
+                self.__append_testbundle(bunfile)
 
     def __resolve_teardown(self):
         teardown_spec = getattr(self.__spec, 'teardown', [])

@@ -30,7 +30,7 @@ rdma_cq_rx_eqcb_process:
 
     seq             c1, EQ_P_INDEX, 0 //BD Slot
     // flip the color if cq is wrap around
-    tblmincri.c1    EQ_COLOR, 1, 1     
+    tblmincri.c1    EQ_COLOR, 1, 1
 
     phvwrpair       p.eqwqe.qid, K_CQ_ID, p.eqwqe.color, EQ_COLOR
     phvwrpair       p.eqwqe.code, EQE_CODE_CQ_NOTIFY, p.eqwqe.type, EQE_TYPE_CQ
