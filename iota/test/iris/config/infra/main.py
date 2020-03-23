@@ -78,15 +78,10 @@ class ConfigObject(DictObject):
         full_url = cfg_node.BaseUrl() + self.__rest_ep
         self.__update_raw()
         out = cfg_node.DoConfig(full_url, self.__raw, oper=CfgOper.ADD)
-        try:
-            if out["status-code"] == 200:
-                api.Logger.info("Push success for Key : ", self.Key())
-                return api.types.status.SUCCESS
-            else:
-                api.Logger.error("Push failed for Key : %s : %s" % (self.Key(), out))
-        except:
-            api.Logger.error("Push failed for Key : %s : %s" % (self.Key(), out))
-
+        if out and "status-code" in out and out["status-code"] == 200:
+            api.Logger.info("Push success for Key : ", self.Key())
+            return api.types.status.SUCCESS
+        api.Logger.error("Push failed for Key : %s : %s" % (self.Key(), out))
         return api.types.status.FAILURE
 
 
@@ -111,7 +106,7 @@ class ConfigObject(DictObject):
         full_url = self.RestObjURL(cfg_node.BaseUrl())
         self.__update_raw()
         out = cfg_node.DoConfig(full_url, self.__raw, oper=CfgOper.UPDATE)
-        if out["status-code"] == 200:
+        if out and "status-code" in out and out["status-code"] == 200:
             api.Logger.info("Update success for Key : ", self.Key())
             return api.types.status.SUCCESS
         api.Logger.error("Update failed for Key : %s : %s" % (self.Key(), out))
