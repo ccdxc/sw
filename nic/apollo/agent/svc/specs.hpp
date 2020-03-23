@@ -1929,9 +1929,12 @@ pds_port_proto_to_port_args (port_args_t *port_args,
         break;
     }
     port_args->user_admin_state = port_args->admin_state =
-                pds_port_proto_admin_state_to_sdk_admin_state(spec.adminstate());
+               pds_port_proto_admin_state_to_sdk_admin_state(spec.adminstate());
     port_args->port_speed = pds_port_proto_speed_to_sdk_speed(spec.speed());
-    port_args->fec_type = pds_port_proto_fec_type_to_sdk_fec_type(spec.fectype());
+    port_args->fec_type =
+                   pds_port_proto_fec_type_to_sdk_fec_type(spec.fectype());
+    port_args->user_fec_type = port_args->derived_fec_type =
+                                                      port_args->fec_type;
     port_args->auto_neg_cfg = port_args->auto_neg_enable = spec.autonegen();
     port_args->debounce_time = spec.debouncetimeout();
     port_args->mtu = spec.mtu();
@@ -4104,7 +4107,7 @@ pds_port_spec_to_proto (pds::PortSpec *spec,
     spec->set_speed(pds_port_sdk_speed_to_proto_speed(
                                       port_info->port_speed));
     spec->set_fectype(pds_port_sdk_fec_type_to_proto_fec_type
-                                      (port_info->fec_type));
+                                      (port_info->user_fec_type));
     spec->set_autonegen(port_info->auto_neg_cfg);
     spec->set_debouncetimeout(port_info->debounce_time);
     spec->set_mtu(port_info->mtu);
@@ -4164,6 +4167,8 @@ pds_port_status_to_proto (pds::PortStatus *status,
     }
     link_status->set_autonegen(port_info->auto_neg_enable);
     link_status->set_numlanes(port_info->num_lanes);
+    link_status->set_fectype(pds_port_sdk_fec_type_to_proto_fec_type
+                                                      (port_info->fec_type));
 
     if (port_info->port_type != port_type_t::PORT_TYPE_MGMT) {
         auto xcvr_status = status->mutable_xcvrstatus();

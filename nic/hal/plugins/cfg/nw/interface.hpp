@@ -304,6 +304,7 @@ typedef struct if_port_event_cb_ctxt_s {
     if_t *hal_if;
 } __PACK__ if_port_event_cb_ctxt_t;
 
+// TODO use sdk port_event_info_t
 typedef struct if_port_timer_ctxt_s {
     uint32_t           port_num;
     port_oper_status_t oper_status;
@@ -311,6 +312,7 @@ typedef struct if_port_timer_ctxt_s {
     port_speed_t       port_speed;
     port_type_t        port_type;
     uint32_t           num_lanes;
+    port_fec_type_t    fec_type;
 } __PACK__ if_port_timer_ctxt_t;
 
 typedef struct tnnlif_walk_ctxt_s {

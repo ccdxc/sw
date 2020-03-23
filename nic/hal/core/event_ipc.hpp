@@ -32,6 +32,7 @@ typedef struct port_event_info_s {
     uint32_t         id;
     port_event_t     event;
     port_speed_t     speed;
+    port_fec_type_t  fec_type;
 } port_event_info_t;
 
 // xcvr event specific information

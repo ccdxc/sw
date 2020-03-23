@@ -1221,6 +1221,7 @@ union ionic_port_config {
  * @id:                 port id
  * @speed:              link speed (in Mbps)
  * @link_down_count:    number of times link went from from up to down
+ * @fec_type:           fec type (enum ionic_port_fec_type)
  * @xcvr:               tranceiver status
  */
 struct ionic_port_status {
@@ -1228,7 +1229,8 @@ struct ionic_port_status {
 	__le32 speed;
 	u8     status;
 	__le16 link_down_count;
-	u8     rsvd[49];
+	u8     fec_type;
+	u8     rsvd[48];
 	struct ionic_xcvr_status  xcvr;
 } __attribute__((packed));
 

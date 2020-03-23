@@ -721,6 +721,49 @@ port_update_xcvr_event (void *pd_p, xcvr_event_info_t *xcvr_event_info)
     return SDK_RET_OK;
 }
 
+/// \brief      derive port_speed, fec_type and num_lanes based on transceiver
+//  \param[in]  phy_port port representing transceiver
+//  \param[out] port_speed derived based on transceiver
+//  \param[out] fec_type   derived based on port_speed
+//  \param[out] num_lanes  derived based on port_speed
+//  \return     #SDK_RET_OK on success, failure status code on error
+static sdk_ret_t
+port_args_set_by_xcvr_state_ (int phy_port, port_speed_t *port_speed,
+                              port_fec_type_t *fec_type, uint32_t *num_lanes)
+{
+    *port_speed = sdk::platform::cable_speed(phy_port-1);
+
+    // TODO FEC assumed based on cable speed
+    switch (*port_speed) {
+        case port_speed_t::PORT_SPEED_100G:
+            *fec_type = port_fec_type_t::PORT_FEC_TYPE_RS;
+            *num_lanes = 4;
+            break;
+
+        case port_speed_t::PORT_SPEED_40G:
+            *fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
+            *num_lanes = 4;
+            break;
+
+        case port_speed_t::PORT_SPEED_25G:
+            *fec_type = port_fec_type_t::PORT_FEC_TYPE_FC;
+            *num_lanes = 1;
+            break;
+
+        case port_speed_t::PORT_SPEED_10G:
+            *fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
+            *num_lanes = 1;
+            break;
+
+        default:
+            *fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
+            SDK_TRACE_ERR("Invalid port speed %u for phy_port %u",
+                          *port_speed, phy_port);
+            return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
+}
+
 //-----------------------------------------------------------------------------
 // set port args given transceiver state
 //-----------------------------------------------------------------------------
@@ -728,8 +771,7 @@ sdk_ret_t
 port_args_set_by_xcvr_state (port_args_t *port_args)
 {
     // if xcvr is inserted:
-    //     set the cable type
-    //     set AN? TODO
+    //     set port params based on cable
     // else:
     //     set admin_state as ADMIN_DOWN
     //     (only admin_state is down. user_admin_state as per request msg)
@@ -751,71 +793,54 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
             if (port_args->cable_type == cable_type_t::CABLE_TYPE_NONE) {
                 port_args->cable_type = cable_type_t::CABLE_TYPE_CU;
             }
-
             port_args->port_an_args =
                             sdk::platform::xcvr_get_an_args(phy_port - 1);
-
            SDK_TRACE_DEBUG("port : %u, phy_port : %u, user_cap : %u "
-                              "fec ability : %u, fec request : %u, "
-                              "cable_type : %u", port_args->port_num,
-                              phy_port, port_args->port_an_args->user_cap,
-                              port_args->port_an_args->fec_ability,
-                              port_args->port_an_args->fec_request,
-                              port_args->cable_type);
-
-            // If AN=true and
-            // (1) fiber cable is inserted OR
-            // (2) QSA is inserted,
-            // set the speed, fec, num_lanes based on cable
-            // TODO: to extend to QSFP also after initial validations on SFPs
+                           "fec ability : %u, fec request : %u, "
+                           "cable_type : %u", port_args->port_num,
+                           phy_port, port_args->port_an_args->user_cap,
+                           port_args->port_an_args->fec_ability,
+                           port_args->port_an_args->fec_request,
+                           port_args->cable_type);
             port_args->toggle_neg_mode = false;
+
+            // if AN=true and
+            // (1) fiber cable is inserted
+            //     auto_neg_enable = false
+            //     port_speed based on transceiver
+            //     derived_fec_type and num_lanes based on port_speed
+            // (2) SFP is inserted
+            //     port_speed based on transceiver
+            //     derived_fec_type and num_lanes based on port_speed
+            //     (2.1) CU SFP is inserted
+            //           Enable toggle mode - b/w AN and Fixed
+            // TODO: to extend to QSFP also after initial validations on SFPs
             if (port_args->auto_neg_enable == true) {
-                if ((port_args->cable_type == cable_type_t::CABLE_TYPE_FIBER) ||
-                    (sdk::platform::xcvr_type(phy_port-1) == xcvr_type_t::XCVR_TYPE_SFP)) {
-
+                if (port_args->cable_type == cable_type_t::CABLE_TYPE_FIBER) {
                     port_args->auto_neg_enable = false;
-                    port_args->port_speed =
-                        sdk::platform::cable_speed(phy_port-1);
-
-                    // TODO FEC assumed based on cable speed
-                    switch (port_args->port_speed) {
-                        case port_speed_t::PORT_SPEED_100G:
-                            port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_RS;
-                            port_args->num_lanes = 4;
-                            break;
-
-                        case port_speed_t::PORT_SPEED_40G:
-                            port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
-                            port_args->num_lanes = 4;
-                            break;
-
-                        case port_speed_t::PORT_SPEED_25G:
-                            port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_FC;
-                            port_args->num_lanes = 1;
-                            break;
-
-                        case port_speed_t::PORT_SPEED_10G:
-                            port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
-                            port_args->num_lanes = 1;
-                            break;
-
-                        default:
-                            port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
-                            break;
-                    }
+                    port_args_set_by_xcvr_state_(
+                                          phy_port, &port_args->port_speed,
+                                          &port_args->derived_fec_type,
+                                          &port_args->num_lanes);
                 }
-                if ((port_args->cable_type == cable_type_t::CABLE_TYPE_CU) &&
-                    (sdk::platform::xcvr_type(phy_port-1) == xcvr_type_t::XCVR_TYPE_SFP)) {
-                    // for these types, toggle between force/an till link-up - TOR/peer could have any
-                    port_args->toggle_neg_mode = true;
-                    SDK_TRACE_DEBUG("port %u CU-SFP toggle_neg_mode enabled",
-                                     port_args->port_num);
+                if (sdk::platform::xcvr_type(phy_port-1) ==
+                                                  xcvr_type_t::XCVR_TYPE_SFP) {
+                    port_args_set_by_xcvr_state_(
+                                          phy_port, &port_args->port_speed,
+                                          &port_args->derived_fec_type,
+                                          &port_args->num_lanes);
+                    if (port_args->cable_type == cable_type_t::CABLE_TYPE_CU) {
+                        // for these types, toggle between force/an till link-up
+                        // TOR/peer could have do either forced/an
+                        port_args->toggle_neg_mode = true;
+                        SDK_TRACE_DEBUG("port %u CU-SFP toggle_neg_mode "
+                                        "enabled", port_args->port_num);
+                    }
                 }
             }
             SDK_TRACE_DEBUG("port %u auto_neg_enable %u toggle an %u ",
                              port_args->port_num, port_args->auto_neg_enable,
                              port_args->toggle_neg_mode);
-
 
         } else {
             port_args->admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
@@ -884,7 +909,6 @@ port_create (port_args_t *args)
     port_p->set_mac_ch(args->mac_ch);
     port_p->set_num_lanes(args->num_lanes);
     port_p->set_debounce_time(args->debounce_time);
-    port_p->set_fec_type(args->fec_type);
     port_p->set_auto_neg_enable(args->auto_neg_enable);
     port_p->set_toggle_neg_mode(args->toggle_neg_mode);
     port_p->set_mtu(args->mtu);
@@ -903,6 +927,10 @@ port_create (port_args_t *args)
     // store the user configured num_lanes
     port_p->set_num_lanes_cfg(args->num_lanes_cfg);
 
+    // store the user configure fec type
+    port_p->set_user_fec_type(args->user_fec_type);
+
+    port_p->set_derived_fec_type(args->derived_fec_type);
     port_p->set_mac_fns(&mac_fns);
     port_p->set_serdes_fns(&serdes_fns);
 
@@ -1031,12 +1059,13 @@ port_update (void *pd_p, port_args_t *args)
     }
 
     // FEC_TYPE_NONE is valid
-    if (args->fec_type != port_p->fec_type()) {
+    if (args->user_fec_type != port_p->user_fec_type()) {
         SDK_TRACE_DEBUG("fec updated. new: %d, old: %d",
-                        args->fec_type, port_p->fec_type());
-        port_p->set_fec_type(args->fec_type);
+                        args->user_fec_type, port_p->user_fec_type());
+        port_p->set_user_fec_type(args->user_fec_type);
         configured = true;
     }
+    port_p->set_derived_fec_type(args->derived_fec_type);
 
     // MTU 0 is invalid
     if (args->mtu != 0 &&
@@ -1054,11 +1083,15 @@ port_update (void *pd_p, port_args_t *args)
         configured = true;
     }
 
-    if (args->auto_neg_enable != port_p->auto_neg_enable()) {
-        SDK_TRACE_DEBUG("AN updated. new: %d, old: %d",
-                        args->auto_neg_enable, port_p->auto_neg_enable());
-        port_p->set_auto_neg_enable(args->auto_neg_enable);
-        configured = true;
+    // toggle_neg_mode overrides auto_neg_enable
+    // check auto_neg_enable only if toggle_neg_mode is false
+    if (args->toggle_neg_mode == false) {
+        if (args->auto_neg_enable != port_p->auto_neg_enable()) {
+            SDK_TRACE_DEBUG("AN updated. new: %d, old: %d",
+                            args->auto_neg_enable, port_p->auto_neg_enable());
+            port_p->set_auto_neg_enable(args->auto_neg_enable);
+            configured = true;
+        }
     }
 
     if (args->toggle_neg_mode != port_p->toggle_neg_mode()) {
@@ -1205,6 +1238,8 @@ port_get (void *pd_p, port_args_t *args)
     args->mac_ch      = port_p->mac_ch();
     args->num_lanes   = port_p->num_lanes();
     args->fec_type    = port_p->fec_type();
+    args->user_fec_type = port_p->user_fec_type();
+    args->derived_fec_type = port_p->derived_fec_type();
     args->mtu         = port_p->mtu();
     args->debounce_time    = port_p->debounce_time();
     args->auto_neg_enable  = port_p->auto_neg_enable();

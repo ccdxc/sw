@@ -16,6 +16,7 @@ port_event_notify (port_event_info_t *port_event_info)
     hal::core::event_t event;
     port_event_t port_event = port_event_info->event;
     port_speed_t port_speed = port_event_info->speed;
+    port_fec_type_t fec_type = port_event_info->fec_type;
     uint32_t logical_port = port_event_info->logical_port;
     uint32_t ifindex = sdk::lib::catalog::logical_port_to_ifindex(logical_port);
 
@@ -26,6 +27,7 @@ port_event_notify (port_event_info_t *port_event_info)
     event.port.id = ifindex;
     event.port.event = port_event;
     event.port.speed = port_speed;
+    event.port.fec_type = fec_type;
     sdk::ipc::broadcast(event_id_t::EVENT_ID_PORT_STATUS, &event, sizeof(event));
 
     // publish to event recorder

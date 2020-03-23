@@ -35,7 +35,6 @@ namespace hal {
 
 static inline hal_ret_t
 hal_stream_port_status_update (port_event_info_t port_event) {
-    
     auto walk_cb = [](uint32_t event_id, void *entry, void *ctxt) {
         grpc::ServerWriter<EventResponse> *stream =
                  (grpc::ServerWriter<EventResponse> *)ctxt;
@@ -50,10 +49,13 @@ hal_stream_port_status_update (port_event_info_t port_event) {
                      linkmgr::sdk_port_oper_st_to_port_oper_st_spec(port_event->oper_status));
         link_status->set_port_speed(
                      linkmgr::sdk_port_speed_to_port_speed_spec(port_event->speed));
+        link_status->set_fec_type(
+                     linkmgr::sdk_port_fec_type_to_port_fec_type_spec(
+                                                   port_event->fec_type));
         link_status->set_auto_neg_enable(port_event->auto_neg_enable);
-        link_status->set_num_lanes(port_event->num_lanes); 
+        link_status->set_num_lanes(port_event->num_lanes);
         evtresponse.set_event_id(::event::EVENT_ID_PORT_STATE);
-        
+
         evtresponse.set_api_status(::types::ApiStatus::API_STATUS_OK);
         stream->Write(evtresponse);
         return true;
@@ -5539,6 +5541,7 @@ port_event_cb (port_event_info_t *port_event_info)
     ctxt->event      = port_event_info->event;
     ctxt->port_speed = port_event_info->speed;
     ctxt->port_type  = port_event_info->type;
+    ctxt->fec_type   = port_event_info->fec_type;
 
     // wait for the periodic thread to be ready before sending msg to it
     while (!sdk::lib::periodic_thread_is_ready()) {
@@ -5590,6 +5593,7 @@ port_update_admin_state (port_admin_state_t admin_state)
         port_args.admin_state = admin_state;
         port_args.auto_neg_enable = port_args.auto_neg_cfg;
         port_args.num_lanes = port_args.num_lanes_cfg;
+        port_args.fec_type = port_args.user_fec_type;
 
         hal_cfg_db_open(CFG_OP_WRITE);
 
@@ -5620,6 +5624,7 @@ port_event_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
     port_event_info.type  = port_ctxt->port_type;
     port_event_info.num_lanes = port_ctxt->num_lanes;
     port_event_info.oper_status = port_ctxt->oper_status;
+    port_event_info.fec_type = port_ctxt->fec_type;
 
     if ((update_admin_state == true) &&
         (port_ctxt->port_num == 9) &&

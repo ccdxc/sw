@@ -137,7 +137,7 @@ port::port_mac_cfg(void)
     mac_info.rx_pause_enable = this->rx_pause_enable_;
     mac_info.num_lanes = this->num_lanes_;
 
-    mac_info.fec       = static_cast<uint32_t>(this->fec_type_);
+    mac_info.fec       = static_cast<uint32_t>(fec_type());
     mac_info.loopback  =
         loopback_mode() == port_loopback_mode_t::PORT_LOOPBACK_MODE_MAC? 1 : 0;
 
@@ -283,8 +283,8 @@ port::port_speed_to_serdes_speed(port_speed_t port_speed)
 sdk_ret_t
 port::port_serdes_cfg(void)
 {
-    uint32_t      lane         = 0;
-    uint32_t      sbus_addr    = 0;
+    uint32_t      lane;
+    uint32_t      sbus_addr;
     serdes_info_t *serdes_info = NULL;
 
     port_speed_t serdes_speed =
@@ -292,7 +292,9 @@ port::port_serdes_cfg(void)
 
     for (lane = 0; lane < num_lanes_; ++lane) {
         sbus_addr = port_sbus_addr(lane);
-
+        if (sbus_addr == 0) {
+            continue;
+        }
         serdes_info = serdes_info_get(
                                     sbus_addr,
                                     static_cast<uint32_t>(serdes_speed),
@@ -313,10 +315,15 @@ port::port_serdes_cfg(void)
 sdk_ret_t
 port::port_serdes_tx_rx_enable(bool enable)
 {
-    uint32_t lane = 0;
+    uint32_t lane;
+    uint32_t sbus_addr;
+
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_fns()->serdes_tx_rx_enable(port_sbus_addr(lane),
-                                            enable);
+        sbus_addr = port_sbus_addr(lane);
+        if (sbus_addr == 0) {
+            continue;
+        }
+        serdes_fns()->serdes_tx_rx_enable(sbus_addr, enable);
     }
 
     return SDK_RET_OK;
@@ -325,13 +332,17 @@ port::port_serdes_tx_rx_enable(bool enable)
 sdk_ret_t
 port::port_serdes_output_enable(bool enable)
 {
-    uint32_t lane         = 0;
+    uint32_t lane;
     uint8_t  xcvr_en_mask = 0x0;
     sdk_ret_t sdk_ret = SDK_RET_OK;
+    uint32_t sbus_addr;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_fns()->serdes_output_enable(port_sbus_addr(lane),
-                                           enable);
+        sbus_addr = port_sbus_addr(lane);
+        if (sbus_addr == 0) {
+            continue;
+        }
+        serdes_fns()->serdes_output_enable(sbus_addr, enable);
         xcvr_en_mask |= (1 << lane);
     }
 
@@ -346,17 +357,21 @@ port::port_serdes_output_enable(bool enable)
                                    phy_port);
         }
     }
-
     return sdk_ret;
 }
 
 sdk_ret_t
 port::port_serdes_reset(bool reset)
 {
-    uint32_t lane = 0;
+    uint32_t lane;
+    uint32_t sbus_addr;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_fns()->serdes_spico_reset(port_sbus_addr(lane));
+        sbus_addr = port_sbus_addr(lane);
+        if (sbus_addr == 0) {
+            continue;
+        }
+        serdes_fns()->serdes_spico_reset(sbus_addr);
     }
 
     return SDK_RET_OK;
@@ -365,12 +380,18 @@ port::port_serdes_reset(bool reset)
 bool
 port::port_serdes_signal_detect(void)
 {
-    uint32_t lane = 0;
+    uint32_t lane;
     bool signal_detect = false;
+    uint32_t sbus_addr;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        signal_detect = serdes_fns()->serdes_signal_detect(
-                                        port_sbus_addr(lane));
+        sbus_addr = port_sbus_addr(lane);
+        if (sbus_addr == 0) {
+            // invalid config. fail signal detect
+            signal_detect = false;
+            break;
+        }
+        signal_detect = serdes_fns()->serdes_signal_detect(sbus_addr);
         if (signal_detect == false) {
             break;
         }
@@ -381,11 +402,18 @@ port::port_serdes_signal_detect(void)
 bool
 port::port_serdes_rdy(void)
 {
-    uint32_t lane = 0;
+    uint32_t lane;
     bool serdes_rdy = false;
+    uint32_t sbus_addr;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_rdy =  serdes_fns()->serdes_rdy(port_sbus_addr(lane));
+        sbus_addr = port_sbus_addr(lane);
+        if (sbus_addr == 0) {
+            // invalid config. fail serdes rdy
+            serdes_rdy = false;
+            break;
+        }
+        serdes_rdy =  serdes_fns()->serdes_rdy(sbus_addr);
         if (serdes_rdy == false) {
             break;
         }
@@ -422,10 +450,15 @@ port::port_dfe_tuning_enabled(void)
 int
 port::port_serdes_ical_start(void)
 {
-    uint32_t lane = 0;
+    uint32_t lane;
+    uint32_t sbus_addr;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_fns()->serdes_ical_start(port_sbus_addr(lane));
+        sbus_addr = port_sbus_addr(lane);
+        if (sbus_addr == 0) {
+            continue;
+        }
+        serdes_fns()->serdes_ical_start(sbus_addr);
     }
 
     return 0;
@@ -434,13 +467,18 @@ port::port_serdes_ical_start(void)
 int
 port::port_serdes_pcal_start(void)
 {
-    uint32_t lane = 0;
+    uint32_t lane;
+    uint32_t sbus_addr;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
+        sbus_addr = port_sbus_addr(lane);
+        if (sbus_addr == 0) {
+            continue;
+        }
         if (is_auto_neg()) {
-            serdes_fns()->serdes_an_pcal_start(port_sbus_addr(lane));
+            serdes_fns()->serdes_an_pcal_start(sbus_addr);
         } else {
-            serdes_fns()->serdes_pcal_start(port_sbus_addr(lane));
+            serdes_fns()->serdes_pcal_start(sbus_addr);
         }
     }
 
@@ -450,10 +488,15 @@ port::port_serdes_pcal_start(void)
 int
 port::port_serdes_pcal_continuous_start(void)
 {
-    uint32_t lane = 0;
+    uint32_t lane;
+    uint32_t sbus_addr;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        serdes_fns()->serdes_pcal_continuous_start(port_sbus_addr(lane));
+        sbus_addr = port_sbus_addr(lane);
+        if (sbus_addr == 0) {
+            continue;
+        }
+        serdes_fns()->serdes_pcal_continuous_start(sbus_addr);
     }
 
     return 0;
@@ -462,10 +505,16 @@ port::port_serdes_pcal_continuous_start(void)
 bool
 port::port_serdes_dfe_complete(void)
 {
-    uint32_t lane = 0;
+    uint32_t lane;
+    uint32_t sbus_addr;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        if (serdes_fns()->serdes_dfe_status(port_sbus_addr(lane)) != 1) {
+        sbus_addr = port_sbus_addr(lane);
+        if (sbus_addr == 0) {
+            // invalid config. fail dfe complete
+            return false;
+        }
+        if (serdes_fns()->serdes_dfe_status(sbus_addr) != 1) {
             return false;
         }
     }
@@ -490,7 +539,6 @@ port::port_serdes_an_start (void)
                                 sbus_addr,
                                 static_cast<uint32_t>(serdes_speed),
                                 sdk::types::cable_type_t::CABLE_TYPE_CU);
-
     memcpy (&serdes_info_an, serdes_info, sizeof(serdes_info_t));
 
     // 1G AN settings
@@ -509,15 +557,15 @@ port::port_serdes_an_start (void)
     // Do not configure lane 0 since AN is run on that lane
     for (uint32_t lane = 1; lane < num_lanes_; ++lane) {
         sbus_addr = port_sbus_addr(lane);
-
+        if (sbus_addr == 0) {
+            continue;
+        }
         serdes_info = serdes_info_get(
                                 sbus_addr,
                                 static_cast<uint32_t>(serdes_speed),
                                 sdk::types::cable_type_t::CABLE_TYPE_CU);
-
         serdes_fns()->serdes_cfg(sbus_addr, serdes_info);
     }
-
     // start AN
     return serdes_fns()->serdes_an_start(port_sbus_addr(0), &serdes_info_an,
                                          user_cap(), fec_ability(),
@@ -662,8 +710,9 @@ port::port_set_an_resolved_params_internal (port_speed_t speed, int num_lanes,
 {
     this->set_port_speed(speed);
     this->set_num_lanes(num_lanes);
-    this->set_fec_type(fec_type);
 
+    // oper fec type is used for programming MAC.
+    this->set_fec_type(fec_type);
     return 0;
 }
 
@@ -1054,6 +1103,9 @@ port::port_link_sm_process(bool start_en_timer)
                 // enable serdes tx and rx
                 port_serdes_tx_rx_enable(true);
 
+                // in fixed mode, oper fec_type = derived_fec_type
+                set_fec_type(derived_fec_type());
+
                 // transition to wait for serdes rdy state
                 this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY);
 
@@ -1066,6 +1118,8 @@ port::port_link_sm_process(bool start_en_timer)
                 if(serdes_rdy == false) {
                     set_num_serdes_ready_retries(num_serdes_ready_retries() + 1);
                     if (num_serdes_ready_retries() >= port_max_serdes_ready_retries()) {
+                        retry_sm = true;
+                        set_num_serdes_ready_retries(0);
                         // reset serdes and try SM again
                         port_link_sm_retry_enabled(true);
                         break;
@@ -1299,6 +1353,9 @@ port::port_link_sm_process(bool start_en_timer)
                 // add to link poll timer
                 port_link_poll_timer_add(this);
 
+                // update the AN oper mode
+                set_auto_neg_enable(is_auto_neg() == AUTO_NEG? true : false);
+
                 // notify others that link is up
                 port_event_notify(port_event_t::PORT_EVENT_LINK_UP);
                 break;
@@ -1412,6 +1469,7 @@ port::port_event_notify(port_event_t port_event)
     port_event_info.event = port_event;
     port_event_info.speed = port_speed();
     port_event_info.type = port_type();
+    port_event_info.fec_type = fec_type();
     port_event_info.num_lanes = num_lanes();
     port_event_info.oper_status = oper_status();
     port_event_info.auto_neg_enable = auto_neg_enable();

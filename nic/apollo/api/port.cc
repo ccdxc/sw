@@ -43,6 +43,7 @@ port_event_cb (port_event_info_t *port_event_info)
     pds_event_t pds_event;
     port_event_t port_event = port_event_info->event;
     port_speed_t port_speed = port_event_info->speed;
+    port_fec_type_t fec_type = port_event_info->fec_type;
     uint32_t logical_port = port_event_info->logical_port;
 
     sdk::linkmgr::port_set_leds(logical_port, port_event);
@@ -54,6 +55,7 @@ port_event_cb (port_event_info_t *port_event_info)
         sdk::lib::catalog::logical_port_to_ifindex(logical_port);
     event.port.event = port_event;
     event.port.speed = port_speed;
+    event.port.fec_type = fec_type;
     sdk::ipc::broadcast(EVENT_ID_PORT_STATUS, &event, sizeof(event));
 
     // notify the agent
@@ -218,6 +220,9 @@ create_port (pds_ifindex_t ifindex, port_args_t *port_args)
      */
     port_args->num_lanes_cfg = port_args->num_lanes;
 
+    // store user configured fec type
+    port_args->user_fec_type = port_args->derived_fec_type =
+                                                  port_args->fec_type;
     sdk::linkmgr::port_args_set_by_xcvr_state(port_args);
     port_info = sdk::linkmgr::port_create(port_args);
     if (port_info == NULL) {

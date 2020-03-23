@@ -324,11 +324,11 @@ devapi_impl::port_get_config_(sdk::linkmgr::port_args_t *port_args,
     port_config_t *config = (port_config_t *)ctxt;
 
     config->state =
-        sdk::lib::port_admin_state_enum_to_uint(port_args->admin_state);
+        sdk::lib::port_admin_state_enum_to_uint(port_args->user_admin_state);
     config->speed = sdk::lib::port_speed_enum_to_mbps(port_args->port_speed);
     config->mtu = port_args->mtu;
-    config->an_enable = port_args->auto_neg_enable;
-    config->fec_type = (uint8_t)port_args->fec_type;
+    config->an_enable = port_args->auto_neg_cfg;
+    config->fec_type = (uint8_t)port_args->user_fec_type;
     config->pause_type = (uint8_t)port_args->pause;
     if (port_args->tx_pause_enable == true) {
         config->pause_type |= PORT_CFG_PAUSE_F_TX;
@@ -361,6 +361,7 @@ devapi_impl::port_get_status_(sdk::linkmgr::port_args_t *port_args,
     status->status =
         sdk::lib::port_oper_state_enum_to_uint(port_args->oper_status);
     status->speed = sdk::lib::port_speed_enum_to_mbps(port_args->port_speed);
+    status->fec_type = (uint8_t)port_args->fec_type;
 
     status->xcvr.state = port_args->xcvr_event_info.state;
     status->xcvr.phy = port_args->xcvr_event_info.cable_type;
@@ -369,9 +370,9 @@ devapi_impl::port_get_status_(sdk::linkmgr::port_args_t *port_args,
            sizeof(status->xcvr.sprom));
 
     PDS_TRACE_VERBOSE(
-            "if 0x%x, status %u, xcvr state %u, pid %u",
+            "if 0x%x, status %u, fec_type %u, xcvr state %u, pid %u",
             sdk::lib::catalog::logical_port_to_ifindex(port_args->port_num),
-            status->status, status->xcvr.state,
+            status->status, status->fec_type, status->xcvr.state,
             status->xcvr.pid);
 }
 

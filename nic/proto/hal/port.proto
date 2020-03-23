@@ -192,8 +192,9 @@ message PortSpec {
 message PortLinkStatus {
     PortOperState oper_state      = 1; // operational state of port
     PortSpeed     port_speed      = 2; // operational speed of the port
-    bool          auto_neg_enable = 3; // operational state of AN
-    uint32        num_lanes       = 4; // operational value of num_lanes
+    PortFecType   fec_type        = 3; // operational FEC status
+    bool          auto_neg_enable = 4; // operational state of AN
+    uint32        num_lanes       = 5; // operational value of num_lanes
 }
 
 message PortStatus {

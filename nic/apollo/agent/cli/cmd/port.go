@@ -411,12 +411,12 @@ func printPortStatusHeader() {
 	fmt.Println("MAC-Info: MAC ID/MAC Channel/Num lanes")
 	fmt.Println("FEC-Type: FC - FireCode, RS - ReedSolomon")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-10s%-12s%-7s%-10s%-6s%-10s%-6s%-7s%-7s%-10s%-12s%-15s%-12s%-20s%-10s\n",
+	fmt.Printf("%-40s%-10s%-12s%-7s%-10s%-10s%-10s"+"%-6s%-7s%-7s%-10s%-12s"+"%-15s%-12s%-20s%-10s\n",
 		"Id", "Name", "IfIndex", "Speed", "MAC-Info", "FEC", "AutoNeg",
 		"MTU", "Pause", "Pause", "Debounce", "State",
 		"Transceiver", "NumLinkDown", "LinkSM", "Loopback")
-	fmt.Printf("%-40s%-10s%-12s%-7s%-10s%-6s%-10s%-6s%-7s%-7s%-10s%-12s%-15s%-12s%-20s%-10s\n",
-		"", "", "", "", "", "", "Cfg/Oper",
+	fmt.Printf("%-40s%-10s%-12s%-7s%-10s%-10s%-10s"+"%-6s%-7s%-7s%-10s%-12s"+"%-15s%-12s%-20s%-10s\n",
+		"", "", "", "", "", "Cfg/Oper", "Cfg/Oper",
 		"", "Type", "Tx/Rx", "(msecs)", "Admin/Oper",
 		"", "", "", "")
 	fmt.Println(hdrLine)
@@ -452,14 +452,16 @@ func printPortStatus(resp *pds.Port) {
 	operStatus := linkStatus.GetOperState()
 	xcvrStatus := status.GetXcvrStatus()
 	speed := spec.GetSpeed()
-	fecType := spec.GetFECType()
+	fecTypeCfg := spec.GetFECType()
+	fecTypeOper := linkStatus.GetFECType()
 	mtu := spec.GetMtu()
 	debounce := spec.GetDeBounceTimeout()
 
 	adminStateStr := strings.Replace(adminState.String(), "PORT_ADMIN_STATE_", "", -1)
 	operStatusStr := strings.Replace(operStatus.String(), "PORT_OPER_STATUS_", "", -1)
 	speedStr := strings.Replace(speed.String(), "PORT_SPEED_", "", -1)
-	fecStr := strings.Replace(fecType.String(), "PORT_FEC_TYPE_", "", -1)
+	fecCfgStr := strings.Replace(fecTypeCfg.String(), "PORT_FEC_TYPE_", "", -1)
+	fecOperStr := strings.Replace(fecTypeOper.String(), "PORT_FEC_TYPE_", "", -1)
 	loopbackModeStr := strings.Replace(spec.GetLoopbackMode().String(), "PORT_LOOPBACK_MODE_", "", -1)
 	pauseStr := strings.Replace(spec.GetPauseType().String(), "PORT_PAUSE_TYPE_", "", -1)
 	macStr := fmt.Sprintf("%d/%d/%d", status.GetMacId(), status.GetMacCh(), linkStatus.GetNumLanes())
@@ -484,10 +486,10 @@ func printPortStatus(resp *pds.Port) {
 		xcvrStr = xcvrStateStr
 	}
 
-	outStr := fmt.Sprintf("%-40s%-10s0x%-10x%-7s%-10s%-6s",
+	outStr := fmt.Sprintf("%-40s%-10s0x%-10x%-7s%-10s%4s/%-5s",
 		uuid.FromBytesOrNil(spec.GetId()).String(),
 		ifIndexToPortIdStr(status.GetIfIndex()), status.GetIfIndex(),
-		speedStr, macStr, fecStr)
+		speedStr, macStr, fecCfgStr, fecOperStr)
 	outStr += fmt.Sprintf("%2s/%-7s%-6d%-7s%2s/%-4s",
 		utils.BoolToString(spec.GetAutoNegEn()), utils.BoolToString(linkStatus.GetAutoNegEn()),
 		mtu, pauseStr, utils.BoolToString(spec.GetTxPauseEn()), utils.BoolToString(spec.GetRxPauseEn()))

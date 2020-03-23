@@ -618,12 +618,15 @@ port_create (port_args_t *port_args, hal_handle_t *hal_handle)
 
     // store user configured AN in another variable to be used
     // during xcvr insert/remove events
-    port_args->auto_neg_cfg     = port_args->auto_neg_enable;
+    port_args->auto_neg_cfg  = port_args->auto_neg_enable;
 
     // store user configured num_lanes in another variable to be used
     // during xcvr insert/remove events
-    port_args->num_lanes_cfg    = port_args->num_lanes;
+    port_args->num_lanes_cfg = port_args->num_lanes;
 
+    // store user configured fec type
+    port_args->user_fec_type = port_args->derived_fec_type =
+                                                  port_args->fec_type;
     // update port_args based on the xcvr state
     sdk::linkmgr::port_args_set_by_xcvr_state(port_args);
 
@@ -855,6 +858,9 @@ port_update (port_args_t *port_args)
     // during xcvr insert/remove events
     port_args->num_lanes_cfg    = port_args->num_lanes;
 
+    // store user configured fec type
+    port_args->user_fec_type = port_args->derived_fec_type =
+                                                  port_args->fec_type;
     // update port_args based on the xcvr state
     sdk::linkmgr::port_args_set_by_xcvr_state(port_args);
 

@@ -111,8 +111,9 @@ nicmgrapi::port_event_handler_(sdk::ipc::ipc_msg_ptr msg, const void *ctxt) {
     st.status =
         (event->port.event == port_event_t::PORT_EVENT_LINK_UP) ? 1 : 0;
     st.speed = sdk::lib::port_speed_enum_to_mbps(event->port.speed);
-    PDS_TRACE_DEBUG("Rcvd port event for ifidx 0x%x, speed %u, status %u",
-                    st.id, st.speed, st.status);
+    st.fec_type = (uint8_t)event->port.fec_type;
+    PDS_TRACE_DEBUG("Rcvd port event for ifidx 0x%x, speed %u, status %u "
+                    " fec_type %u", st.id, st.speed, st.status, st.fec_type);
     g_devmgr->LinkEventHandler(&st);
 }
 

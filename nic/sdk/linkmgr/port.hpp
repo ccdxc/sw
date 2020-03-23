@@ -119,6 +119,18 @@ public:
     port_fec_type_t fec_type(void) const { return this->fec_type_; }
     void set_fec_type(port_fec_type_t fec_type) { this->fec_type_ = fec_type; }
 
+    port_fec_type_t user_fec_type(void) const { return this->user_fec_type_; }
+    void set_user_fec_type(port_fec_type_t user_fec_type) {
+        this->user_fec_type_ = user_fec_type;
+    }
+
+    port_fec_type_t derived_fec_type(void) const {
+        return this->derived_fec_type_;
+    }
+    void set_derived_fec_type(port_fec_type_t derived_fec_type) {
+        this->derived_fec_type_ = derived_fec_type;
+    }
+
     bool auto_neg_enable(void) const { return this->auto_neg_enable_; }
     void set_auto_neg_enable(bool auto_neg_enable) {
         this->auto_neg_enable_ = auto_neg_enable;
@@ -402,7 +414,9 @@ private:
     port_link_sm_t            link_sm_;                   // port link state machine
     port_link_sm_t            link_dfe_sm_;               // port link DFE state machine
     port_link_sm_t            link_an_sm_;                // port link AN state machine
-    port_fec_type_t           fec_type_;                  // FEC type
+    port_fec_type_t           fec_type_;                  // operational FEC type
+    port_fec_type_t           user_fec_type_;             // configured FEC type
+    port_fec_type_t           derived_fec_type_;          // FEC derived based on AN or user config
     port_pause_type_t         pause_;                     // Enable MAC pause
     bool                      tx_pause_enable_;           // Enable MAC Tx Pause
     bool                      rx_pause_enable_;           // Enable MAC Rx Pause

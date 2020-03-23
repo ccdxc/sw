@@ -55,7 +55,9 @@ typedef struct port_args_s {
     port_admin_state_t    admin_state;                // admin state of the port
     port_admin_state_t    user_admin_state;           // user configured admin state of the port
     port_oper_status_t    oper_status;                // oper status of the port
-    port_fec_type_t       fec_type;                   // FEC type
+    port_fec_type_t       fec_type;                   // oper FEC type
+    port_fec_type_t       user_fec_type;              // configured FEC type
+    port_fec_type_t       derived_fec_type;           // fec type based on AN or user config
     port_pause_type_t     pause;                      // mac pause
     bool                  tx_pause_enable;            // mac tx pause enable
     bool                  rx_pause_enable;            // mac rx pause enable

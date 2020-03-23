@@ -311,6 +311,7 @@ message PortLinkStatus {
   types.PortSpeed  PortSpeed = 2; // operational speed of the port
   bool             AutoNegEn = 3; // operational state of AN
   uint32           NumLanes  = 4; // operational value of NumLanes
+  PortFecType      FECType   = 5; // operational fec type of port
 }
 
 message PortXcvrStatus {

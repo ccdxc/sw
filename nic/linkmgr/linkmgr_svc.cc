@@ -426,7 +426,7 @@ populate_port_get_response_spec (port_args_t *port_args,
                                           (port_args->user_admin_state));
         spec->set_fec_type(
                 linkmgr::sdk_port_fec_type_to_port_fec_type_spec
-                                          (port_args->fec_type));
+                                          (port_args->user_fec_type));
         spec->set_pause(
                 linkmgr::sdk_port_pause_type_to_port_pause_type_spec
                                           (port_args->pause));
@@ -465,7 +465,9 @@ populate_port_get_response_spec (port_args_t *port_args,
                                           port_args->port_speed));
         link_status->set_auto_neg_enable(port_args->auto_neg_enable);
         link_status->set_num_lanes(port_args->num_lanes);
-
+        link_status->set_fec_type(
+                     linkmgr::sdk_port_fec_type_to_port_fec_type_spec
+                                                (port_args->fec_type));
         // transceiver status
         xcvr_status->set_port(port_args->xcvr_event_info.phy_port);
         xcvr_status->set_state(port::PortXcvrState(

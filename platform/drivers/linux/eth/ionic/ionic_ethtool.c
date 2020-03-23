@@ -248,9 +248,9 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 		    __ETHTOOL_LINK_MODE_MASK_NBITS);
 
 #ifdef ETHTOOL_FEC_NONE
-	if (idev->port_info->config.fec_type == IONIC_PORT_FEC_TYPE_FC)
+	if (idev->port_info->status.fec_type == IONIC_PORT_FEC_TYPE_FC)
 		ethtool_link_ksettings_add_link_mode(ks, advertising, FEC_BASER);
-	else if (idev->port_info->config.fec_type == IONIC_PORT_FEC_TYPE_RS)
+	else if (idev->port_info->status.fec_type == IONIC_PORT_FEC_TYPE_RS)
 		ethtool_link_ksettings_add_link_mode(ks, advertising, FEC_RS);
 #endif
 
@@ -386,7 +386,7 @@ static int ionic_get_fecparam(struct net_device *netdev,
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
 
-	switch (lif->ionic->idev.port_info->config.fec_type) {
+	switch (lif->ionic->idev.port_info->status.fec_type) {
 	case IONIC_PORT_FEC_TYPE_NONE:
 		fec->active_fec = ETHTOOL_FEC_OFF;
 		break;
@@ -396,9 +396,25 @@ static int ionic_get_fecparam(struct net_device *netdev,
 	case IONIC_PORT_FEC_TYPE_FC:
 		fec->active_fec = ETHTOOL_FEC_BASER;
 		break;
+	default:
+		fec->active_fec = ETHTOOL_FEC_NONE;
+		break;
 	}
 
-	fec->fec = ETHTOOL_FEC_OFF | ETHTOOL_FEC_RS | ETHTOOL_FEC_BASER;
+	switch (lif->ionic->idev.port_info->config.fec_type) {
+	case IONIC_PORT_FEC_TYPE_NONE:
+		fec->fec = ETHTOOL_FEC_OFF;
+		break;
+	case IONIC_PORT_FEC_TYPE_RS:
+		fec->fec = ETHTOOL_FEC_RS;
+		break;
+	case IONIC_PORT_FEC_TYPE_FC:
+		fec->fec = ETHTOOL_FEC_BASER;
+		break;
+	default:
+		fec->fec = ETHTOOL_FEC_NONE;
+		break;
+	}
 
 	return 0;
 }

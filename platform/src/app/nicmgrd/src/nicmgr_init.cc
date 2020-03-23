@@ -80,8 +80,9 @@ port_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
     st.status =
         (event->port.event == port_event_t::PORT_EVENT_LINK_UP) ? 1 : 0;
     st.speed = sdk::lib::port_speed_enum_to_mbps(event->port.speed);
-    NIC_LOG_DEBUG("IPC, Rcvd port event for id {}, speed {}, status {}",
-                    st.id, st.speed, st.status);
+    st.fec_type = (uint8_t)event->port.fec_type;
+    NIC_LOG_DEBUG("IPC, Rcvd port event for id {}, speed {}, status {} "
+                  " fec_type {}", st.id, st.speed, st.status, st.fec_type);
     devmgr->LinkEventHandler(&st);
 }
 

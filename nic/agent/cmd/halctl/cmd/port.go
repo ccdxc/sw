@@ -573,13 +573,13 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func portShowHeaderPrint() {
-	hdrLine := strings.Repeat("-", 169)
+	hdrLine := strings.Repeat("-", 176)
 	fmt.Println("MAC-Info: MAC ID/MAC Channel/Num lanes          Debounce: Debounce time in ms")
 	fmt.Println("FEC-Type: FC - FireCode, RS - ReedSolomon")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-12s%-7s%-10s%-10s"+"%-12s%-15s"+"%-6s"+"%-6s%-8s%-8s"+"%-10s%-12s%-12s"+"%-12s%-20s%-10s\n",
-		"PortType/ID", "Speed", "MAC-Info", "FEC-Type",
-		"AutoNegCfg", "AutoNegEnable",
+	fmt.Printf("%-12s%-6s%-9s%-12s%-13s"+"%-11s%-12s"+"%-6s"+"%-6s%-8s%-8s"+"%-9s%-12s%-11s"+"%-12s%-20s%-10s\n",
+		"PortType/ID", "Speed", "MAC-Info", "FEC-TypeCfg", "FEC-TypeOper",
+		"AutoNegCfg", "AutoNegOper",
 		"MTU",
 		"Pause", "TxPause", "RxPause",
 		"Debounce", "AdminStatus", "OperStatus",
@@ -703,12 +703,17 @@ func portShowOneResp(resp *halproto.PortGetResponse) {
 	}
 	macStr := fmt.Sprintf("%d/%d/%d", spec.GetMacId(), spec.GetMacCh(), linkStatus.GetNumLanes())
 	speedStr := strings.Replace(spec.GetPortSpeed().String(), "PORT_SPEED_", "", -1)
-	fecStr := strings.Replace(spec.GetFecType().String(), "PORT_FEC_TYPE_", "", -1)
+	userFecStr := strings.Replace(spec.GetFecType().String(), "PORT_FEC_TYPE_", "", -1)
+	operFecStr := strings.Replace(linkStatus.GetFecType().String(), "PORT_FEC_TYPE_", "", -1)
 	linkSmStr := strings.Replace(resp.GetLinksmState().String(), "PORT_LINK_SM_", "", -1)
 	loopbackStr := strings.Replace(spec.GetLoopbackMode().String(), "PORT_LOOPBACK_MODE_", "", -1)
 
-	if strings.Compare(fecStr, "NONE") == 0 {
-		fecStr = "None"
+	if strings.Compare(userFecStr, "NONE") == 0 {
+		userFecStr = "None"
+	}
+
+	if strings.Compare(operFecStr, "NONE") == 0 {
+		operFecStr = "None"
 	}
 
 	portStr := utils.IfIndexToStr(spec.GetKeyOrHandle().GetPortId())
@@ -716,8 +721,8 @@ func portShowOneResp(resp *halproto.PortGetResponse) {
 	adminStateStr := strings.Replace(spec.GetAdminState().String(), "PORT_ADMIN_STATE_", "", -1)
 	operStatusStr := strings.Replace(linkStatus.GetOperState().String(), "PORT_OPER_STATUS_", "", -1)
 
-	fmt.Printf("%-12s%-7s%-10s%-10s"+"%-12t%-15t"+"%-6d"+"%-6s%-8t%-8t"+"%-10d%-12s%-12s"+"%-12d%-20s%-10s\n",
-		portStr, speedStr, macStr, fecStr,
+	fmt.Printf("%-12s%-6s%-9s%-12s%-13s"+"%-11t%-12t"+"%-6d"+"%-6s%-8t%-8t"+"%-9d%-12s%-11s"+"%-12d%-20s%-10s\n",
+		portStr, speedStr, macStr, userFecStr, operFecStr,
 		spec.GetAutoNegEnable(), linkStatus.GetAutoNegEnable(),
 		spec.GetMtu(),
 		pauseStr, spec.GetTxPauseEnable(), spec.GetRxPauseEnable(),

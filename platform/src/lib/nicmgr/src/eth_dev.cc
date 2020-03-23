@@ -1881,6 +1881,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
         port_status->id = 0;
         port_status->speed = IONIC_SPEED_100G;
         port_status->status = IONIC_PORT_OPER_STATUS_UP;
+        port_status->fec_type = IONIC_PORT_FEC_TYPE_NONE;
     } else {
         // Update port config
         rs = dev_api->port_get_config(spec->uplink_port_num, (port_config_t *)port_config);
@@ -2121,7 +2122,11 @@ Eth::LinkEventHandler(port_status_t *evd)
     if (port_status->status == IONIC_PORT_OPER_STATUS_UP && evd->status == IONIC_PORT_OPER_STATUS_DOWN)
         ++port_status->link_down_count;
     port_status->status = evd->status;
-
+    port_status->fec_type = evd->fec_type;
+    NIC_LOG_DEBUG("Link Event id: {} speed: {} status: {} fec_type: {}",
+                  port_status->id, port_status->speed,
+                  port_status->status == IONIC_PORT_OPER_STATUS_UP ? "UP" : "DOWN",
+                  port_status->fec_type);
     PortStatusUpdate(this);
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         EthLif *eth_lif = it->second;

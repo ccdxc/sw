@@ -39,6 +39,7 @@ typedef struct port_event_info_s {
     pds_ifindex_t    ifindex;
     port_event_t     event;
     port_speed_t     speed;
+    port_fec_type_t  fec_type;
 } port_event_info_t;
 
 // xcvr event specific information
