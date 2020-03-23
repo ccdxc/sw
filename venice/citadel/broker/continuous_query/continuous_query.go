@@ -149,62 +149,21 @@ func generateContinuousQueryMap(suffix string, rpSpec ContinuousQueryRetentionSp
 				END`,
 	}
 
-	ContinuousQueryMap["DropMetrics_"+suffix] = ContinuousQuerySpec{
-		CQName:                 "DropMetrics_" + suffix,
+	ContinuousQueryMap["IPv4FlowDropMetrics_"+suffix] = ContinuousQuerySpec{
+		CQName:                 "IPv4FlowDropMetrics_" + suffix,
 		DBName:                 "default",
 		RetentionPolicyName:    rpSpec.Name,
 		RetentionPolicyInHours: rpSpec.Hours,
-		Query: `CREATE CONTINUOUS QUERY DropMetrics_` + suffix + ` ON "default"
+		Query: `CREATE CONTINUOUS QUERY IPv4FlowDropMetrics_` + suffix + ` ON "default"
 				BEGIN
-					SELECT last("DropMalformedPkt") AS "DropMalformedPkt", 
-							last("DropParserIcrcError") AS "DropParserIcrcError", 
-							last("DropParseLenError") AS "DropParseLenError", 
-							last("DropHardwareError") AS "DropHardwareError", 
-							last("DropInputMapping") AS "DropInputMapping", 
-							last("DropInputMappingDejavu") AS "DropInputMappingDejavu", 
-							last("DropMultiDestNotPinnedUplink") AS "DropMultiDestNotPinnedUplink", 
-							last("DropFlowHit") AS "DropFlowHit", 
-							last("DropFlowMiss") AS "DropFlowMiss", 
-							last("DropNacl") AS "DropNacl", 
-							last("DropIpsg") AS "DropIpsg", 
-							last("DropIpNormalization") AS "DropIpNormalization", 
-							last("DropTcpNormalization") AS "DropTcpNormalization", 
-							last("DropTcpRstWithInvalidAckNum") AS "DropTcpRstWithInvalidAckNum", 
-							last("DropTcpNonSynFirstPkt") AS "DropTcpNonSynFirstPkt", 
-							last("DropIcmpNormalization") AS "DropIcmpNormalization", 
-							last("DropInputPropertiesMiss") AS "DropInputPropertiesMiss", 
-							last("DropTcpOutOfWindow") AS "DropTcpOutOfWindow", 
-							last("DropTcpSplitHandshake") AS "DropTcpSplitHandshake", 
-							last("DropTcpWinZeroDrop") AS "DropTcpWinZeroDrop", 
-							last("DropTcpDataAfterFin") AS "DropTcpDataAfterFin", 
-							last("DropTcpNonRstPktAfterRst") AS "DropTcpNonRstPktAfterRst", 
-							last("DropTcpInvalidResponderFirstPkt") AS "DropTcpInvalidResponderFirstPkt", 
-							last("DropTcpUnexpectedPkt") AS "DropTcpUnexpectedPkt", 
-							last("DropSrcLifMismatch") AS "DropSrcLifMismatch", 
-							last("DropVfIpLabelMismatch") AS "DropVfIpLabelMismatch", 
-							last("DropVfBadRrDstIp") AS "DropVfBadRrDstIp", 
-							last("DropIcmpFragPkt") AS "DropIcmpFragPkt" 
-					INTO "default"."` + rpSpec.Name + `"."DropMetrics_` + suffix + `"
-					FROM "DropMetrics"
-					GROUP BY time(` + rpSpec.GroupBy + `), "name", "reporterID", "tenant"
-				END`,
-	}
-
-	ContinuousQueryMap["EgressDropMetrics_"+suffix] = ContinuousQuerySpec{
-		CQName:                 "EgressDropMetrics_" + suffix,
-		DBName:                 "default",
-		RetentionPolicyName:    rpSpec.Name,
-		RetentionPolicyInHours: rpSpec.Hours,
-		Query: `CREATE CONTINUOUS QUERY EgressDropMetrics_` + suffix + ` ON "default"
-				BEGIN
-					SELECT last("DropOutputMapping") AS "DropOutputMapping", 
-							last("DropPruneSrcPort") AS "DropPruneSrcPort", 
-							last("DropMirror") AS "DropMirror", 
-							last("DropPolicer") AS "DropPolicer", 
-							last("DropCopp") AS "DropCopp", 
-							last("DropChecksumErr") AS "DropChecksumErr" 
-					INTO "default"."` + rpSpec.Name + `"."EgressDropMetrics_` + suffix + `"
-					FROM "EgressDropMetrics"
+					SELECT last("Instances") AS "Instances",
+							last("DropPackets") AS "DropPackets",
+							last("DropBytes") AS "DropBytes",
+							last("DropFirstTimestamp") AS "DropFirstTimestamp",
+							last("DropLastTimestamp") AS "DropLastTimestamp",
+							last("DropReason") AS "DropReason"
+					INTO "default"."` + rpSpec.Name + `"."IPv4FlowDropMetrics_` + suffix + `"
+					FROM "IPv4FlowDropMetrics"
 					GROUP BY time(` + rpSpec.GroupBy + `), "name", "reporterID", "tenant"
 				END`,
 	}
@@ -235,6 +194,7 @@ func generateContinuousQueryMap(suffix string, rpSpec ContinuousQueryRetentionSp
 				BEGIN
 					SELECT last("ConnectionsPerSecond") AS "ConnectionsPerSecond", 
 							last("RxBroadcastPackets") AS "RxBroadcastPackets",
+							last("RxBroadcastBytes") AS "RxBroadcastBytes",
 							last("RxDmaError") AS "RxDmaError",
 							last("RxDropBroadcastBytes") AS "RxDropBroadcastBytes",
 							last("RxDropBroadcastPackets") AS "RxDropBroadcastPackets",
@@ -319,6 +279,30 @@ func generateContinuousQueryMap(suffix string, rpSpec ContinuousQueryRetentionSp
 							last("UdpHits") AS "UdpHits" 
 					INTO "default"."` + rpSpec.Name + `"."RuleMetrics_` + suffix + `"
 					FROM "RuleMetrics"
+					GROUP BY time(` + rpSpec.GroupBy + `), "name", "reporterID", "tenant"
+				END`,
+	}
+
+	ContinuousQueryMap["FteLifQMetrics_"+suffix] = ContinuousQuerySpec{
+		CQName:                 "FteLifQMetrics_" + suffix,
+		DBName:                 "default",
+		RetentionPolicyName:    rpSpec.Name,
+		RetentionPolicyInHours: rpSpec.Hours,
+		Query: `CREATE CONTINUOUS QUERY FteLifQMetrics_` + suffix + ` ON "default"
+				BEGIN
+					SELECT last("FlowMissPackets") AS "FlowMissPackets",
+							last("FlowRetransmitPackets") AS "FlowRetransmitPackets",
+							last("L4RedirectPackets") AS "L4RedirectPackets",
+							last("AlgControlFlowPackets") AS "AlgControlFlowPackets",
+							last("TcpClosePackets") AS "TcpClosePackets",
+							last("TlsProxyPackets") AS "TlsProxyPackets",
+							last("FteSpanPackets") AS "FteSpanPackets",
+							last("SoftwareQueuePackets") AS "SoftwareQueuePackets",
+							last("QueuedTxPackets") AS "QueuedTxPackets",
+							last("FreedTxPackets") AS "FreedTxPackets",
+							last("MaxSessionThresholdDrops") AS "MaxSessionThresholdDrops"
+					INTO "default"."` + rpSpec.Name + `"."FteLifQMetrics_` + suffix + `"
+					FROM "FteLifQMetrics"
 					GROUP BY time(` + rpSpec.GroupBy + `), "name", "reporterID", "tenant"
 				END`,
 	}

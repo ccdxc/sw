@@ -20,6 +20,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/api"
+	mtypes "github.com/pensando/sw/metrics/types"
 	"github.com/pensando/sw/nic/agent/httputils"
 	genapi "github.com/pensando/sw/nic/agent/protos/generated/restapi/tmagent"
 	"github.com/pensando/sw/nic/agent/tmagent/types"
@@ -167,8 +168,19 @@ func (s *RestServer) ReportMetrics(frequency time.Duration, dclient clientApi.Cl
 	// set delphi client for ntranslate
 	metrics.SetDelphiClient(dclient)
 
+	dscMetricsList := map[string]int{}
+	for i, m := range mtypes.DscMetricsList {
+		dscMetricsList[m] = i
+	}
+
 	// create tsdb objects
 	for kind := range s.gensrv.GetPointsFuncList {
+		if _, ok := dscMetricsList[kind]; !ok {
+			log.Infof("skip metrics %v", kind)
+			continue
+		}
+		log.Infof("report metrics %v", kind)
+
 		obj, err := tsdb.NewObj(kind, nil, nil, nil)
 		if err != nil {
 			log.Errorf("failed to create tsdb object for kind: %s", kind)

@@ -7,9 +7,8 @@ var globalMetricsMap = map[string]map[string][]string{}
 var kindToFieldNameMap = map[string][]string{}
 
 // GetFieldNamesFromKind returns a list of all fields belonging to the given class
-func GetFieldNamesFromKind(class string) ([]string, bool) {
-	fields, found := kindToFieldNameMap[class]
-	return fields, found
+func GetFieldNamesFromKind(k string) []string {
+	return kindToFieldNameMap[k]
 }
 
 // GetAllFieldNames returns the union of all fields across different classes

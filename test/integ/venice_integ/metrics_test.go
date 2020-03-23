@@ -104,16 +104,19 @@ func (it *veniceIntegSuite) TestMetricsWithDefaultMeta(c *C) {
 	}
 
 	// don't set translator
-	iter, err := goproto.NewDropMetricsIterator()
+	iter, err := goproto.NewIPv4FlowDropMetricsIterator()
 	AssertOk(c, err, "Error creating metrics iterator")
 
 	// create an entry
-	tmtr, err := iter.Create(3000)
+	tmtr, err := iter.Create(goproto.IPv4FlowKey{
+		Sip: 0x10100001,
+		Dip: 0x10100001,
+	})
 	AssertOk(c, err, "Error creating test metrics entry")
 
 	// set some values
-	tmtr.SetDropFlowHit(200)
-	tmtr.SetDropFlowMiss(300)
+	tmtr.SetDropBytes(200)
+	tmtr.SetDropPackets(300)
 
 	// query
 	apiGwAddr := "localhost:" + it.config.APIGatewayPort
@@ -123,7 +126,7 @@ func (it *veniceIntegSuite) TestMetricsWithDefaultMeta(c *C) {
 	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error in logged in context")
 
-	fields := map[string]int{"DropFlowHit": 200, "DropFlowMiss": 300}
+	fields := map[string]int{"DropBytes": 200, "DropPackets": 300}
 
 	AssertEventually(c, func() (bool, interface{}) {
 		nodeQuery := &telemetry_query.MetricsQueryList{
@@ -132,7 +135,7 @@ func (it *veniceIntegSuite) TestMetricsWithDefaultMeta(c *C) {
 			Queries: []*telemetry_query.MetricsQuerySpec{
 				{
 					TypeMeta: api.TypeMeta{
-						Kind: "DropMetrics",
+						Kind: "IPv4FlowDropMetrics",
 					},
 				},
 			},

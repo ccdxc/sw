@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/pensando/sw/venice/utils/telemetryclient"
 	"os"
 	"time"
 
@@ -339,3 +340,9 @@ func (sm *SysModel) FindFwlogForWorkloadPairs(protocol, fwaction, timestr string
 func (sm *SysModel) GetFwLogObjectCount(tenantName string, bucketName string, objectKeyPrefix string) (int, error) {
 	return 0, fmt.Errorf("not implemented")
 }
+
+// QueryMetricsByReporter query metrics
+func (sm *SysModel) QueryMetricsByReporter(kind, reporter, timestr string) (*telemetryclient.MetricsQueryResponse, error) {
+	return nil, fmt.Errorf("not available")
+}
+

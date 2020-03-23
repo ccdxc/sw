@@ -235,3 +235,61 @@ func (sm *SysModel) QueryMetricsFields(kind, timestr string) (*telemetryclient.M
 
 	return result, err
 }
+
+
+func (sm *SysModel) QueryMetricsByReporter(kind, reporter, timestr string) (*telemetryclient.MetricsQueryResponse, error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+
+	tmcs, err := sm.TelemetryClient()
+	if err != nil {
+		return nil, err
+	}
+	stime := &api.Timestamp{}
+	if err := stime.Parse(timestr); err != nil {
+		return nil, fmt.Errorf("invalid time %v", timestr)
+	}
+
+	// build the query
+	query := &telemetry_query.MetricsQueryList{
+		Tenant:    globals.DefaultTenant,
+		Namespace: globals.DefaultNamespace,
+		Queries: []*telemetry_query.MetricsQuerySpec{
+			{
+				TypeMeta: api.TypeMeta{
+					Kind: kind,
+				},
+				Selector: &fields.Selector{
+
+					Requirements: []*fields.Requirement{
+						{
+							Key:"reporterID",
+							Operator:fields.Operator_equals.String(),
+							Values:[]string{reporter},
+						},
+					},
+				},
+				StartTime:    stime,
+				SortOrder:    "descending",
+				Pagination: &telemetry_query.PaginationSpec{
+					Count: 1,
+				},
+			},
+		},
+	}
+
+
+	var result *telemetryclient.MetricsQueryResponse
+	for _, tmc := range tmcs {
+		result, err = tmc.Metrics(ctx, query)
+		if err == nil {
+			return result, nil
+		}
+	}
+
+	log.Errorf("got error %v metrics fields query: %+v", err, query.Queries[0])
+
+	return result, err
+}

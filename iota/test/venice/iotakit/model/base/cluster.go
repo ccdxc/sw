@@ -655,7 +655,7 @@ func (sm *SysModel) CheckCitadelServiceStatus() error {
 	trig := sm.Tb.NewTrigger()
 	for _, node := range sm.VeniceNodeMap {
 		entity := node.Name() + "_venice"
-		trig.AddCommand(fmt.Sprintf(`curl  http://localhost:7086/query --data-urlencode "db=default" --data-urlencode "q=SELECT * FROM Node" `),
+		trig.AddCommand(fmt.Sprintf(`curl  http://localhost:7086/query --data-urlencode "db=default" --data-urlencode "q=SELECT * FROM Node LIMIT 100" `),
 			entity, node.Name())
 	}
 

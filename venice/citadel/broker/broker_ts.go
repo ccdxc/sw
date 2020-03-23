@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/log"
+
 	"github.com/imdario/mergo"
 	"github.com/influxdata/influxdb/models"
 	"github.com/influxdata/influxdb/query"
@@ -89,6 +91,10 @@ func (br *Broker) CreateDatabaseWithRetention(ctx context.Context, database stri
 				return err
 			}
 		}
+	}
+
+	for k, v := range cq.ContinuousQueryMap {
+		log.Infof("CQ: %v:%v", k, v)
 	}
 
 	err := br.RunContinuousQueries(ctx)
@@ -954,6 +960,7 @@ func (br *Broker) CreateContinuousQuery(ctx context.Context, database string, cq
 		}
 		// walk all replicas in the shard
 		for _, repl := range shard.Replicas {
+			log.Infof("create cq in shard:%v replica:%v(%v) %v", repl.ShardID, repl.ReplicaID, repl.IsPrimary, query)
 			err := br.createContinuousQueryInReplica(ctx, database, cqName, rpName, rpPeriod, query, repl)
 			if err != nil {
 				br.logger.Errorf("Error creating the continuous query in replica %v. Err: %v", repl, err)

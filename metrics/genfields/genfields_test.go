@@ -12,24 +12,20 @@ import (
 func TestGetFieldNamesFromKind(t *testing.T) {
 	// Simulated test case
 	kindToFieldNameMap["metric_zero"] = []string{}
-	v, ok := GetFieldNamesFromKind("metric_zero")
-	Assert(t, ok, fmt.Sprintf("failed to get field list"))
+	v := GetFieldNamesFromKind("metric_zero")
 	Assert(t, reflect.DeepEqual(v, kindToFieldNameMap["metric_zero"]), fmt.Sprintf("failed to get correct field list from kindToFieldNameMap"))
 
 	kindToFieldNameMap["metric_one"] = []string{"field_one"}
-	v, ok = GetFieldNamesFromKind("metric_one")
-	Assert(t, ok, fmt.Sprintf("failed to get field list"))
+	v = GetFieldNamesFromKind("metric_one")
 	Assert(t, reflect.DeepEqual(v, kindToFieldNameMap["metric_one"]), fmt.Sprintf("failed to get correct field list from kindToFieldNameMap"))
 
 	kindToFieldNameMap["metric_two"] = []string{"field_one", "field_two"}
-	v, ok = GetFieldNamesFromKind("metric_two")
-	Assert(t, ok, fmt.Sprintf("failed to get field list"))
+	v = GetFieldNamesFromKind("metric_two")
 	Assert(t, reflect.DeepEqual(v, kindToFieldNameMap["metric_two"]), fmt.Sprintf("failed to get correct field list from kindToFieldNameMap"))
 
 	// Real test case for three proto files
 	// If the original field config changed, the answer here must also be changed
-	v, ok = GetFieldNamesFromKind("IPv4FlowBehavioralMetrics")
-	Assert(t, ok, fmt.Sprintf("failed to get field list for flowstats IPv4FlowBehavioralMetrics"))
+	v = GetFieldNamesFromKind("IPv4FlowBehavioralMetrics")
 	flowstatsAnswer := []string{
 		"Instances",
 		"PpsThreshold",
@@ -45,8 +41,7 @@ func TestGetFieldNamesFromKind(t *testing.T) {
 	sort.Strings(flowstatsAnswer)
 	Assert(t, reflect.DeepEqual(v, flowstatsAnswer), fmt.Sprintf("failed to get correct field list from kindToFieldNameMap for flowstats IPv4FlowBehavioralMetrics"))
 
-	v, ok = GetFieldNamesFromKind("RuleMetrics")
-	Assert(t, ok, fmt.Sprintf("failed to get field list for rulestats RuleMetrics"))
+	v = GetFieldNamesFromKind("RuleMetrics")
 	rulestatsAnswer := []string{
 		"TcpHits",
 		"UdpHits",
@@ -59,8 +54,7 @@ func TestGetFieldNamesFromKind(t *testing.T) {
 	sort.Strings(rulestatsAnswer)
 	Assert(t, reflect.DeepEqual(v, rulestatsAnswer), fmt.Sprintf("failed to get correct field list from kindToFieldNameMap for rulestats RuleMetrics"))
 
-	v, ok = GetFieldNamesFromKind("FteLifQMetrics")
-	Assert(t, ok, fmt.Sprintf("failed to get field list for ftestats FteLifQMetrics"))
+	v = GetFieldNamesFromKind("FteLifQMetrics")
 	ftestatsAnswer := []string{
 		"FlowMissPackets",
 		"FlowRetransmitPackets",

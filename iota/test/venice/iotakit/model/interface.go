@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"github.com/pensando/sw/venice/utils/telemetryclient"
 	"time"
 
 	"github.com/onsi/gomega"
@@ -83,6 +84,9 @@ type ClusterActionIntf interface {
 	FindFwlogForWorkloadPairs(protocol, fwaction, timestr string, port uint32, wpc *objects.WorkloadPairCollection) error
 	GetFwLogObjectCount(tenantName string, bucketName string, objectKeyPrefix string) (int, error)
 	VerifyRuleStats(timestr string, spc *objects.NetworkSecurityPolicyCollection, minCounts []map[string]float64) error
+
+	QueryMetricsByReporter(kind, reporter, timestr string) (*telemetryclient.MetricsQueryResponse, error)
+
 	AddNaplesNodes(names []string) error
 	DeleteNaplesNodes(names []string) error
 	RemoveAddNaples(naples *objects.NaplesCollection) error
