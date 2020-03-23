@@ -1950,6 +1950,7 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
         eth_qstate_cfg_t eth;
     } cfg = {0};
     uint64_t addr, off;
+    asic_db_addr_t db_addr = { 0 };
 
     NIC_LOG_DEBUG("{}: {}: attr {}", hal_lif_info_.name, opcode_to_str(cmd->opcode), cmd->attr);
 
@@ -2001,6 +2002,16 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
             WRITE_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
             PAL_barrier();
             p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+            /* wake up the queue */
+            if (cmd->state == IONIC_LIF_ENABLE) {
+                db_addr.lif_id = hal_lif_info_.lif_id;
+                db_addr.q_type = ETH_HW_QTYPE_TX;
+                db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_EVAL,
+                                                    ASIC_DB_UPD_INDEX_UPDATE_NONE,
+                                                    false);
+                PAL_barrier();
+                sdk::asic::pd::asic_ring_db(&db_addr, (uint64_t)(qid << 24));
+            }
         }
         /* TODO: Need to implement queue flushing */
         if (cmd->state == IONIC_LIF_DISABLE)
@@ -2055,6 +2066,7 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
     } cfg = {0};
     struct admin_cfg_qstate admin_cfg = {0};
     struct notify_cfg_qstate notify_cfg = {0};
+    asic_db_addr_t db_addr = { 0 };
 
     NIC_LOG_DEBUG("{}: {}: type {} index {} oper {}", hal_lif_info_.name,
                   opcode_to_str((cmd_opcode_t)cmd->opcode), cmd->type, cmd->index, cmd->oper);
@@ -2120,6 +2132,16 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         WRITE_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        /* wake up the queue */
+        if (cmd->oper == IONIC_Q_ENABLE) {
+            db_addr.lif_id = hal_lif_info_.lif_id;
+            db_addr.q_type = ETH_HW_QTYPE_TX;
+            db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_EVAL,
+                                                ASIC_DB_UPD_INDEX_UPDATE_NONE,
+                                                false);
+            PAL_barrier();
+            sdk::asic::pd::asic_ring_db(&db_addr, (uint64_t)(cmd->index << 24));
+        }
         break;
     case IONIC_QTYPE_EQ:
         if (cmd->index >= spec->eq_count) {
