@@ -336,42 +336,78 @@ policy::delay_delete(void) {
 
 policy_rule *
 policy_rule::factory(pds_policy_rule_spec_t *spec) {
-    return NULL;
+    policy_rule *rule;
+
+    rule = policy_rule_db()->alloc();
+    if (rule) {
+        new (rule) policy_rule();
+    }
+    return rule;
 }
 
 void
-policy_rule::destroy(policy_rule *rt) {
-    SDK_ASSERT(FALSE);
-    return;
+policy_rule::destroy(policy_rule *rule) {
+    rule->~policy_rule();
+    policy_rule_db()->free(rule);
 }
 
 api_base *
 policy_rule::clone(api_ctxt_t *api_ctxt) {
+    policy_rule *cloned_rule;
+
+    cloned_rule = policy_rule_db()->alloc();
+    if (cloned_rule) {
+        new (cloned_rule) policy_rule();
+        if (cloned_rule->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
+    }
+    return cloned_rule;
+
+error:
+
+    cloned_rule->~policy_rule();
+    policy_rule_db()->free(cloned_rule);
     return NULL;
 }
 
 sdk_ret_t
-policy_rule::free(policy_rule *rt) {
-    return SDK_RET_ERR;
+policy_rule::free(policy_rule *rule) {
+    rule->~policy_rule();
+    policy_rule_db()->free(rule);
+    return SDK_RET_OK;
 }
 
 policy_rule *
 policy_rule::build(pds_obj_key_t *key) {
-    return NULL;
+    policy_rule *rule;
+
+    rule = policy_rule_db()->alloc();
+    if (rule) {
+        new (rule) policy_rule();
+        memcpy(&rule->key_, key, sizeof(*key));
+    }
+    return rule;
 }
 
 void
-policy_rule::soft_delete(policy_rule *policy_rule) {
-    SDK_ASSERT(FALSE);
+policy_rule::soft_delete(policy_rule *rule) {
+    rule->del_from_db();
+    rule->~policy_rule();
+    policy_rule_db()->free(rule);
 }
 
 sdk_ret_t
 policy_rule::init_config(api_ctxt_t *api_ctxt) {
-    return SDK_RET_ERR;
+    pds_policy_rule_spec_t *spec = &api_ctxt->api_params->policy_rule_spec;
+
+    memcpy(&key_, &spec->key, sizeof(key_));
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 policy_rule::add_deps(api_obj_ctxt_t *obj_ctxt) {
+    SDK_ASSERT(FALSE);
     return SDK_RET_ERR;
 }
 
