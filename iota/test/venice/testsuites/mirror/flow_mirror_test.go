@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -76,11 +75,11 @@ func GenerateSimpleTrafficMaps(pattern string, tmCount int, wlCount int) []traff
 func VerifyMirrorSessionTraffic(veniceCollector *objects.VeniceNodeCollection, wlPair *objects.WorkloadPairCollection, entry trafficMap) {
 	ctx, cancel := context.WithCancel(context.Background())
 	tcpdumpDone := make(chan error)
-	var tcpdumpOut string
 
+	var output int
 	go func() {
 		var err error
-		tcpdumpOut, err = veniceCollector.CaptureGRETCPDump(ctx)
+		output, err = veniceCollector.GetGRETCPDumpCount(ctx)
 		tcpdumpDone <- err
 	}()
 
@@ -107,7 +106,7 @@ func VerifyMirrorSessionTraffic(veniceCollector *objects.VeniceNodeCollection, w
 	cancel()
 	<-tcpdumpDone
 	//log.Infof("tcpdump output: %s",tcpdumpOut)
-	Expect(strings.Contains(tcpdumpOut, "GREv0, length")).Should(BeTrue())
+	Expect(output != 0).Should(BeTrue())
 	return
 }
 
@@ -140,10 +139,10 @@ var _ = Describe("mirror tests", func() {
 
 			ctx, cancel := context.WithCancel(context.Background())
 			tcpdumpDone := make(chan error)
-			var output string
+			var output int
 			go func() {
 				var err error
-				output, err = veniceCollector.CaptureGRETCPDump(ctx)
+				output, err = veniceCollector.GetGRETCPDumpCount(ctx)
 				tcpdumpDone <- err
 
 			}()
@@ -154,7 +153,7 @@ var _ = Describe("mirror tests", func() {
 			cancel()
 			<-tcpdumpDone
 
-			Expect(strings.Contains(output, "GREv0, length")).Should(BeTrue())
+			Expect(output != 0).Should(BeTrue())
 
 			// Clear collectors
 			msc.ClearCollectors()
@@ -167,7 +166,7 @@ var _ = Describe("mirror tests", func() {
 			tcpdumpDone = make(chan error)
 			go func() {
 				var err error
-				output, err = veniceCollector.CaptureGRETCPDump(ctx)
+				output, err = veniceCollector.GetGRETCPDumpCount(ctx)
 				tcpdumpDone <- err
 
 			}()
@@ -178,7 +177,7 @@ var _ = Describe("mirror tests", func() {
 			cancel()
 			<-tcpdumpDone
 
-			Expect(strings.Contains(output, "GREv0, length")).Should(BeTrue())
+			Expect(output != 0).Should(BeTrue())
 
 			// Delete the Mirror session
 			Expect(msc.Delete()).Should(Succeed())
