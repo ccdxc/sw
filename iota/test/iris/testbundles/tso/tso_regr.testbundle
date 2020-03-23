@@ -76,7 +76,7 @@ testcases:
             vlantag            : [ 'off' ]
             vxlan              : [ 'on']
             proto              : [ 'tcp', 'udp']
-            ipproto            : [ 'v4', 'v6']
+            ipproto            : [ 'v4']
         args    :
             timeout : 7200
             type: host
@@ -95,7 +95,7 @@ testcases:
             vlantag            : [ 'on' ]
             vxlan              : [ 'on']
             proto              : [ 'tcp', 'udp']
-            ipproto            : [ 'v4', 'v6']
+            ipproto            : [ 'v4']
         args    :
             timeout : 7200
             type: host
