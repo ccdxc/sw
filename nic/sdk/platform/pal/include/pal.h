@@ -60,6 +60,12 @@ int pal_mem_trace_control(const int on);
 void pal_reg_trace(const char *fmt, ...) __attribute__((format (printf, 1, 2)));
 void pal_mem_trace(const char *fmt, ...) __attribute__((format (printf, 1, 2)));
 
+static inline bool
+pal_swm_enabled (void)
+{
+    return (cpld_reg_rd(CPLD_REGISTER_CTRL) & CPLD_ALOM_PRESENT_BIT);
+}
+
 static inline size_t
 pal_memcpy (void *dst, const void *src, size_t n)
 {

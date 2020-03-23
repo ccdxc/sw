@@ -5,6 +5,7 @@
 #include "nic/hal/plugins/cfg/aclqos/acl.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/plugins/cfg/aclqos/acl_api.hpp"
+#include "nic/sdk/platform/pal/include/pal.h"
 
 namespace hal {
 
@@ -95,6 +96,33 @@ acl_install_ncsi_redirect (if_t *oob_mnic_enic, if_t *oob_uplink_if)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to install NCSI oob_mnic -> uplink. err: {}", ret);
     }
+
+    if (pal_swm_enabled()) {
+        acl_id = ACL_NCSI_OOB_REDIRECT_ID3;
+        priority = ACL_NCSI_OOB_BCAST_DROP_PRIORITY;
+
+        match = spec.mutable_match();
+        action = spec.mutable_action();
+        match->Clear();
+        action->Clear();
+        spec.mutable_key_or_handle()->set_acl_id(acl_id);
+        spec.set_priority(priority);
+
+        // Action
+        action->set_action(acl::AclAction::ACL_ACTION_DENY);
+
+        // Selector
+        match->mutable_src_if_key_handle()->set_interface_id(oob_mnic_enic->if_id);
+        match->mutable_internal_key()->set_outer_dst_mac(0xFFFFFFFFFFFF);
+        match->mutable_internal_mask()->set_outer_dst_mac(0xFFFFFFFFFFFF);
+
+        HAL_TRACE_DEBUG("Installing ACL for NCSI bcast drop oob_mnic -> uplink");
+        ret = hal::acl_create(spec, &rsp);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to install NCSI bcast drop oob_mnic -> uplink. "
+                          "err: {}", ret);
+        }
+    }
     return ret;
 }
 hal_ret_t
@@ -121,6 +149,18 @@ acl_uninstall_ncsi_redirect (void)
     ret = hal::acl_delete(req, &rsp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to uninstall NCSI oob_mnic -> uplink. err: {}", ret);
+    }
+
+    if (pal_swm_enabled()) {
+        acl_id = ACL_NCSI_OOB_REDIRECT_ID3;
+        req.mutable_key_or_handle()->set_acl_id(acl_id);
+
+        HAL_TRACE_DEBUG("UnInstalling ACL for ncsi bcast drop oob_mnic -> uplink");
+        ret = hal::acl_delete(req, &rsp);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to uninstall NCSI bcast drop oob_mnic -> uplink. "
+                          "err: {}", ret);
+        }
     }
     return ret;
 }
@@ -169,7 +209,7 @@ acl_install_bcast_all (if_t *hal_if)
     match->mutable_eth_selector()->set_dst_mac_mask(0xFFFFFFFFFFFF);
 #endif
 
-    HAL_TRACE_DEBUG("Installing ACL for all-bcast");
+    HAL_TRACE_DEBUG("Installing ACL for bcast-all");
     ret = hal::acl_create(spec, &rsp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to install bcast all. err: {}", ret);
