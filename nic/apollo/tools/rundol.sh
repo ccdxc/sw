@@ -83,6 +83,7 @@ function remove_db () {
     echo "===== Cleaning stale db ====="
     rm -f $PDSPKG_TOPDIR/pdsagent.db
     rm -f $PDSPKG_TOPDIR/pdsagent.db-lock
+    rm -f /tmp/*.db
 }
 
 function remove_stale_files () {
@@ -91,6 +92,7 @@ function remove_stale_files () {
     rm -f $PDSPKG_TOPDIR/conf/pipeline.json
     rm -f $PDSPKG_TOPDIR/conf/gen/dol_agentcfg.json
     rm -f $PDSPKG_TOPDIR/conf/gen/device_info.txt
+    rm -f /tmp/pen_* /dev/shm/pds_* /dev/shm/ipc_* /dev/shm/metrics_*
     rm -rf /sysconfig/config0
     remove_db
 }

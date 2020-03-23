@@ -1,7 +1,0 @@
-# Topology Specification
-meta:
-    id: TOPO_APOLLO2
-
-vpcs:
-    - spec  :   ref://store/specs/id=VPC
-      count :   1

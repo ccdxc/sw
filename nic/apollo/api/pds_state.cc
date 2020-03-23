@@ -125,6 +125,8 @@ pds_state::init(string pipeline, string cfg_file) {
     state_[PDS_STATE_NAT] = new nat_state();
     state_[PDS_STATE_DHCP] = new dhcp_state();
     state_[PDS_STATE_LEARN] = new learn_state();
+    state_[PDS_STATE_ROUTE] = new route_state();
+    state_[PDS_STATE_POLICY_RULE] = new policy_rule_state();
 
     // initialize the metrics
     port_metrics_hndl_ = sdk::metrics::create(&port_schema);
