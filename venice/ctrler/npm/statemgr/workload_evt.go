@@ -117,8 +117,8 @@ func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 	hsts.addWorkload(w)
 	err = ws.createEndpoints()
 
-	// Upon restart, if a migration is in progress and not timed out
-	if ws.Workload.Status.MigrationStatus != nil && ws.Workload.Status.MigrationStatus.Stage == workload.WorkloadMigrationStatus_MIGRATION_START.String() && ws.Workload.Status.MigrationStatus.Status != workload.WorkloadMigrationStatus_TIMED_OUT.String() {
+	// Upon restart, if a migration status is in non-terminal state (start or none)
+	if ws.isMigrating() {
 		var snic *DistributedServiceCardState
 		// find the smart nic by name or mac addr
 		for jj := range hsts.Host.Spec.DSCs {
@@ -144,10 +144,13 @@ func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 
 		err = sm.reconcileWorkload(w, hsts, snic)
 		// For Workloads moving from non_pensando to pensando host, ensure the appropriate state is slected
-		if err == nil && ws.Workload.Status.MigrationStatus.Status == workload.WorkloadMigrationStatus_STARTED.String() {
-			log.Infof("Handling migration for reconciled workload [%v]", ws.Workload.Name)
-			err = ws.handleMigration()
+		if err != nil {
+			log.Errorf("Failed to reconcile workload [%v]. Err : %v", ws.Workload.Name, err)
+			return err
 		}
+
+		log.Infof("Handling migration for reconciled workload [%v]", ws.Workload.Name)
+		return ws.handleMigration()
 	}
 
 	return err
@@ -167,8 +170,8 @@ func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nwrk *workload.Workload)
 		recreate = true
 	}
 
-	if nwrk.Status.MigrationStatus != nil && nwrk.Status.MigrationStatus.Stage != workload.WorkloadMigrationStatus_MIGRATION_NONE.String() {
-		log.Infof("Hot migration of workload %v stage %v", nwrk.Name, nwrk.Status.MigrationStatus.Stage)
+	if nwrk.Status.MigrationStatus != nil && (nwrk.Status.MigrationStatus.Status == workload.WorkloadMigrationStatus_STARTED.String() || nwrk.Status.MigrationStatus.Status == workload.WorkloadMigrationStatus_NONE.String()) {
+		log.Infof("Hot migration of workload [%v] stage [%v]", nwrk.Name, nwrk.Status.MigrationStatus.Stage)
 		ws, err := sm.FindWorkload(w.Tenant, w.Name)
 		if err != nil {
 			log.Errorf("Could not find workload. Err : %v", err)
@@ -339,6 +342,16 @@ func (ws *WorkloadState) createNetwork(netName string, extVlan uint32) error {
 
 	// create it in apiserver
 	return ws.stateMgr.ctrler.Network().Create(&nwt)
+}
+
+func (ws *WorkloadState) isMigrating() bool {
+	w := ws.Workload.Workload
+	if w.Status.MigrationStatus == nil {
+		return false
+	}
+
+	// If workload has not reached terminal state
+	return w.Status.MigrationStatus.Status == workload.WorkloadMigrationStatus_STARTED.String() || w.Status.MigrationStatus.Status == workload.WorkloadMigrationStatus_NONE.String()
 }
 
 // createEndpoints tries to create all endpoints for a workload
@@ -613,61 +626,72 @@ func (ws *WorkloadState) handleMigration() error {
 			ws.moveCancel = nil
 			ws.moveCtx = nil
 		}
-		var t time.Duration
-		var startTime time.Time
-		var err error
-
-		ws.migrationState.Lock()
-		ws.migrationEPCount = len(ws.Workload.Spec.Interfaces)
-		ws.migrationSuccessCount = 0
-		ws.migrationFailureCount = 0
-		ws.migrationState.Unlock()
-
-		t, err = time.ParseDuration(ws.Workload.Spec.MigrationTimeout)
-		if err != nil {
-			log.Errorf("Failed to parse migration timeout from the workload spec. Setting default timeout of %v. Err : %v", defaultMigrationTimeout, err)
-			t, _ = time.ParseDuration(defaultMigrationTimeout)
-		}
-
-		if ws.Workload.Status.MigrationStatus == nil {
-			log.Errorf("Migration status for the workload %v is nil. Cannot proceed with the endpoint move.", ws.Workload.Name)
-			return fmt.Errorf("nil migration status for the moving workload %v", ws.Workload.Name)
-		}
-
-		if ws.Workload.Status.MigrationStatus.GetStartedAt() != nil {
-			startTime, err = ws.Workload.Status.MigrationStatus.GetStartedAt().Time()
-		} else {
-			log.Errorf("Started time was nil. Setting the start time to %v", startTime)
-			startTime = time.Now()
-			ws.Workload.Status.MigrationStatus.StartedAt = &api.Timestamp{}
-			ws.Workload.Status.MigrationStatus.StartedAt.SetTime(startTime)
-		}
-		if err != nil {
-			startTime = time.Now()
-			log.Errorf("failed to parse start time %v. Setting migration start time to the current time %v. Err : %v", ws.Workload.Status.MigrationStatus.GetStartedAt(), startTime, err)
-		}
-
-		deadline := startTime.Add(t)
-		ws.moveCtx, ws.moveCancel = context.WithDeadline(context.Background(), deadline)
-
-		ws.moveWg.Add(1)
-		go ws.trackMigration()
-
 		ws.Workload.Status.MigrationStatus.Status = workload.WorkloadMigrationStatus_STARTED.String()
-		ws.Workload.Write()
+		fallthrough
 	case workload.WorkloadMigrationStatus_MIGRATION_FINAL_SYNC.String():
-		log.Infof("Orchestrator declared workload %v migration in last sync phase.", ws.Workload.Name)
+		fallthrough
 	case workload.WorkloadMigrationStatus_MIGRATION_DONE.String():
-		log.Infof("Orchestrator declared workload %v migration is done.", ws.Workload.Name)
+		log.Infof("Orchestrator set workload [%v] to migration stage [%v].", ws.Workload.Name, ws.Workload.Status.MigrationStatus.Stage)
+
+		// if moveCancel is nil for FINAL_SYNC and DONE state, it would mean that we got here after
+		// restart, all the variables have to be appropriately initialized in this case
+		if ws.moveCancel == nil {
+			var t time.Duration
+			var startTime time.Time
+			var err error
+
+			ws.migrationState.Lock()
+			ws.migrationEPCount = len(ws.Workload.Spec.Interfaces)
+			ws.migrationSuccessCount = 0
+			ws.migrationFailureCount = 0
+			ws.migrationState.Unlock()
+
+			t, err = time.ParseDuration(ws.Workload.Spec.MigrationTimeout)
+			if err != nil {
+				log.Errorf("Failed to parse migration timeout from the workload spec. Setting default timeout of %v. Err : %v", defaultMigrationTimeout, err)
+				t, _ = time.ParseDuration(defaultMigrationTimeout)
+			}
+
+			if ws.Workload.Status.MigrationStatus == nil {
+				log.Errorf("Migration status for the workload %v is nil. Cannot proceed with the endpoint move.", ws.Workload.Name)
+				return fmt.Errorf("nil migration status for the moving workload %v", ws.Workload.Name)
+			}
+
+			if ws.Workload.Status.MigrationStatus.GetStartedAt() != nil {
+				startTime, err = ws.Workload.Status.MigrationStatus.GetStartedAt().Time()
+			} else {
+				startTime = time.Now()
+				log.Errorf("Started time was nil. Setting the start time to %v", startTime)
+				ws.Workload.Status.MigrationStatus.StartedAt = &api.Timestamp{}
+				ws.Workload.Status.MigrationStatus.StartedAt.SetTime(startTime)
+			}
+			if err != nil {
+				startTime = time.Now()
+				log.Errorf("failed to parse start time %v. Setting migration start time to the current time %v. Err : %v", ws.Workload.Status.MigrationStatus.StartedAt, startTime, err)
+			}
+
+			deadline := startTime.Add(t)
+			ws.moveCtx, ws.moveCancel = context.WithDeadline(context.Background(), deadline)
+			log.Infof("deadline set to %v", deadline)
+
+			ws.moveWg.Add(1)
+			go ws.trackMigration()
+
+		}
+		ws.Workload.Write()
+
 	case workload.WorkloadMigrationStatus_MIGRATION_ABORT.String():
 		log.Infof("Stopping migration for all EPs of %v", ws.Workload.Name)
 		// Set the migration status to ABORTED and write it to API server so that EPs can refer to it
 		ws.Workload.Status.MigrationStatus.Status = workload.WorkloadMigrationStatus_FAILED.String()
 
-		ws.moveCancel()
-		ws.moveWg.Wait()
+		if ws.moveCancel != nil {
+			ws.moveCancel()
+			ws.moveWg.Wait()
+		}
 		ws.moveCtx = nil
 		ws.moveCancel = nil
+
 		ws.Workload.Status.MigrationStatus.CompletedAt = &api.Timestamp{}
 		ws.Workload.Status.MigrationStatus.CompletedAt.SetTime(time.Now())
 		ws.Workload.Write()
@@ -823,10 +847,7 @@ func (ws *WorkloadState) updateEndpoints() error {
 			case workload.WorkloadMigrationStatus_MIGRATION_FINAL_SYNC.String():
 				epInfo.Status.Migration.Status = workload.EndpointMigrationStatus_FINAL_SYNC.String()
 			case workload.WorkloadMigrationStatus_MIGRATION_DONE.String():
-				// To communicate completion of migration from workload to EP we set the NodeUUID
-				// of Status equal to Spec
-				epInfo.Status.NodeUUID = epInfo.Spec.NodeUUID
-				epInfo.Status.Migration.Status = workload.EndpointMigrationStatus_FINAL_SYNC.String()
+				//epInfo.Status.NodeUUID = epInfo.Spec.NodeUUID
 			case workload.WorkloadMigrationStatus_MIGRATION_ABORT.String():
 				epInfo.Spec.NodeUUID = epInfo.Status.NodeUUID
 				epInfo.Status.Migration.Status = workload.EndpointMigrationStatus_ABORTED.String()
@@ -849,8 +870,12 @@ func (ws *WorkloadState) updateEndpoints() error {
 
 func getWorkloadNameFromEPName(epName string) string {
 	idx := strings.LastIndex(epName, "-")
+
+	if idx < 0 {
+		return epName
+	}
 	wrkName := epName[:idx]
-	log.Infof("Got workload name %v for ep %v", wrkName, epName)
+	log.Infof("Got workload name [%v] for ep [%v].", wrkName, epName)
 	return wrkName
 }
 
@@ -886,7 +911,7 @@ func (ws *WorkloadState) isMigrationSuccess() bool {
 
 func (ws *WorkloadState) trackMigration() {
 	log.Infof("Tracking migration for Workload. %v", ws.Workload.Name)
-	checkDataplaneMigration := time.NewTicker(3 * time.Second)
+	checkDataplaneMigration := time.NewTicker(time.Second)
 	defer ws.moveWg.Done()
 
 	for {

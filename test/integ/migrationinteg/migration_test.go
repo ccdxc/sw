@@ -485,8 +485,8 @@ func (it *migrationTestSuite) TestMigrationAbortAfterTimeout(c *C) {
 		err = it.checkWorkloadMigrationStage(nwrk, workload.WorkloadMigrationStatus_MIGRATION_ABORT.String())
 		AssertOk(c, err, "workload migration did not move to migration-start stage")
 
-		// Ensure NPM has failed migration
-		err = it.checkWorkloadMigrationStatus(nwrk, workload.WorkloadMigrationStatus_FAILED.String())
+		// Workload's migration status shoud continue to say timed out
+		err = it.checkWorkloadMigrationStatus(nwrk, workload.WorkloadMigrationStatus_TIMED_OUT.String())
 		AssertOk(c, err, "workload migration did not move to started status")
 	}
 }
@@ -538,7 +538,7 @@ func (it *migrationTestSuite) TestMigrationLastSyncAfterTimeout(c *C) {
 		err := it.syncWorkloadMigration(&nwrk)
 		AssertOk(c, err, "failed to start final sync for workload")
 
-		// Ensure NPM has started migration
+		// Workload migration status should continue to stay as TIMED_OUT
 		err = it.checkWorkloadMigrationStatus(nwrk, workload.WorkloadMigrationStatus_TIMED_OUT.String())
 		AssertOk(c, err, "workload migration status changed from started")
 	}
