@@ -13,16 +13,15 @@
 #include "port_mac.hpp"
 #include "port_serdes.hpp"
 
-#define MAX_PORT_SERDES_READY_RETRIES   10
-#define MAX_PORT_QSFP_AN_HCD_RETRIES    10
-#define MAX_PORT_SFP_AN_HCD_RETRIES     4
-#define MAX_PORT_MAC_SYNC_RETRIES       10
-#define MAX_PORT_SERDES_DFE_RETRIES     5
-#define MAX_PORT_MAC_FAULTS_CHECK       3
-#define MAX_PORT_MAC_NOFAULTS_CHECK     3
-#define PORT_MAC_STAT_REPORT_SIZE       1024
-#define MIN_PORT_TIMER_INTERVAL         100            // msecs
-#define MAX_LINK_AN_WAIT_TIME           50 * 1000000   // in nanosecs
+#define MAX_PORT_SERDES_READY_RETRIES    10
+#define MAX_PORT_QSFP_AN_HCD_RETRIES     10
+#define MAX_PORT_SFP_AN_HCD_RETRIES       4
+#define MAX_PORT_MAC_SYNC_RETRIES        10
+#define MAX_PORT_SERDES_DFE_RETRIES       5
+#define MAX_PORT_MAC_FAULTS_CHECK         3
+#define MAX_PORT_MAC_NOFAULTS_CHECK       3
+#define PORT_MAC_STAT_REPORT_SIZE      1024
+#define MIN_PORT_TIMER_INTERVAL         100     // msecs
 
 namespace sdk {
 namespace linkmgr {
