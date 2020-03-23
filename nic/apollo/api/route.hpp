@@ -312,7 +312,7 @@ private:
 
     ///< hash table context
     ht_ctxt_t        ht_ctxt_;
-    // route_table_state class is friend of route_table
+    // route_state class is friend of route class
     friend class route_state;
 };
 

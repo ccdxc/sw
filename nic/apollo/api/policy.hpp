@@ -310,13 +310,20 @@ public:
 
 private:
     /// \brief    constructor
-    policy_rule() {}
+    policy_rule() {
+        ht_ctxt_.reset();
+    }
 
     /// \brief    destructor
     ~policy_rule() {}
 
 private:
     pds_obj_key_t key_;    ///< security policy rule key
+
+    ///< hash table context
+    ht_ctxt_t        ht_ctxt_;
+    // policy_rule_state class is friend of policy_rule
+    friend class policy_rule_state;
 };
 
 /// \@}

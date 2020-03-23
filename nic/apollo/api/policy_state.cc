@@ -12,6 +12,12 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/policy_state.hpp"
 
+// NOTE:
+// policy rules are stateless objects, PDS_SECURITY_POLICY_RULE_HT_SIZE is just
+// hash table size and has no relation to the max. security policy rules
+// supported on NAPLES
+#define PDS_SECURITY_POLICY_RULE_HT_SIZE        4096
+
 namespace api {
 
 /// \defgroup PDS_POLICY_STATE - security policy database functionality
@@ -141,6 +147,54 @@ sdk_ret_t
 policy_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
     walk_cb(policy_slab_, ctxt);
     walk_cb(security_profile_slab_, ctxt);
+    return SDK_RET_OK;
+}
+
+policy_rule_state::policy_rule_state(void) {
+    policy_rule_ht_ =
+        ht::factory(PDS_SECURITY_POLICY_RULE_HT_SIZE,
+                    policy_rule::policy_rule_key_func_get,
+                    sizeof(pds_obj_key_t));
+    SDK_ASSERT(policy_rule_ht_ != NULL);
+    policy_rule_slab_ =
+        slab::factory("security-policy-rule", PDS_SLAB_ID_POLICY_RULE,
+                      sizeof(policy_rule), 16, true, true, true, NULL);
+    SDK_ASSERT(policy_rule_slab_ != NULL);
+}
+
+policy_rule_state::~policy_rule_state() {
+    ht::destroy(policy_rule_ht_);
+    slab::destroy(policy_rule_slab_);
+}
+
+policy_rule *
+policy_rule_state::alloc(void) {
+    return ((policy_rule *)policy_rule_slab_->alloc());
+}
+
+sdk_ret_t
+policy_rule_state::insert(policy_rule *rule) {
+    return policy_rule_ht_->insert_with_key(&rule->key_, rule, &rule->ht_ctxt_);
+}
+
+policy_rule *
+policy_rule_state::remove(policy_rule *rule) {
+    return (policy_rule *)(policy_rule_ht_->remove(&rule->key_));
+}
+
+void
+policy_rule_state::free(policy_rule *rule) {
+    policy_rule_slab_->free(rule);
+}
+
+policy_rule *
+policy_rule_state::find(pds_obj_key_t *key) const {
+    return (policy_rule *)(policy_rule_ht_->lookup(key));
+}
+
+sdk_ret_t
+policy_rule_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    walk_cb(policy_rule_slab_, ctxt);
     return SDK_RET_OK;
 }
 

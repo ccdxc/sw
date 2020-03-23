@@ -160,7 +160,7 @@ public:
 
     /// \brief     lookup a security policy rule in database given the key
     /// \param[in] key security policy rule key
-    policy *find(pds_obj_key_t *key) const;
+    policy_rule *find(pds_obj_key_t *key) const;
 
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab
