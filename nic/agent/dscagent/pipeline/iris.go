@@ -36,6 +36,8 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+var knownUplinks = map[uint64]string{}
+
 // IrisAPI implements PipelineAPI for Iris Pipeline
 type IrisAPI struct {
 	sync.Mutex
@@ -1750,6 +1752,33 @@ func (i *IrisAPI) ReplayConfigs() error {
 		}
 	}
 
+	// Purge any old uplinks that are unknown
+	intfs, err := i.InfraAPI.List("Interface")
+	if err == nil {
+		for _, o := range intfs {
+			var intf netproto.Interface
+			err := intf.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to Interface. Err: %v", err)
+				continue
+			}
+			if intf.Spec.Type != netproto.InterfaceSpec_UPLINK_ETH.String() &&
+				intf.Spec.Type != netproto.InterfaceSpec_UPLINK_MGMT.String() {
+				log.Infof("Not purging Interface %v", intf.Spec.Type)
+				continue
+			}
+			if _, ok := knownUplinks[intf.Status.InterfaceID]; ok {
+				log.Infof("Not purging known Interface %v", intf.GetKey())
+				continue
+			}
+			log.Infof("Purging unknown uplink Interface %v", intf.GetKey())
+			if err := i.InfraAPI.Delete(intf.Kind, intf.GetKey()); err != nil {
+				log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "Interface: %s | Err: %v", intf.GetKey(), err))
+				return errors.Wrapf(types.ErrBoltDBStoreDelete, "Interface: %s | Err: %v", intf.GetKey(), err)
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -1862,11 +1891,26 @@ func (i *IrisAPI) createHostInterface(uid string, spec *halapi.LifSpec, status *
 		Intf: l,
 	}
 	i.InfraAPI.UpdateIfChannel() <- ifEvnt
-	dat, _ := l.Marshal()
-	if err := i.InfraAPI.Store(l.Kind, l.GetKey(), dat); err != nil {
-		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", l.GetKey(), err))
-		return err
+	dat, err := i.InfraAPI.Read(l.Kind, l.GetKey())
+	if err != nil {
+		dat, _ := l.Marshal()
+		if err := i.InfraAPI.Store(l.Kind, l.GetKey(), dat); err != nil {
+			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", l.GetKey(), err))
+			return err
+		}
+	} else {
+		var intf netproto.Interface
+		err = intf.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Interface: %s | Err: %v", l.GetKey(), err))
+			return errors.Wrapf(types.ErrUnmarshal, "Interface: %s | Err: %v", l.GetKey(), err)
+		}
+		log.Infof("Replaying existing Interface %v", intf.GetKey())
+		if _, err = i.HandleInterface(types.Update, intf); err != nil {
+			return err
+		}
 	}
+	knownUplinks[l.Status.InterfaceID] = ifName
 	return nil
 }
 
@@ -1913,11 +1957,26 @@ func (i *IrisAPI) createUplinkInterface(uid string, spec *halapi.PortSpec, statu
 		Intf: uplink,
 	}
 	i.InfraAPI.UpdateIfChannel() <- ifEvnt
-	dat, _ := uplink.Marshal()
-	if err := i.InfraAPI.Store(uplink.Kind, uplink.GetKey(), dat); err != nil {
-		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Uplink: %s | Uplink: %v", uplink.GetKey(), err))
-		return err
+	dat, err := i.InfraAPI.Read(uplink.Kind, uplink.GetKey())
+	if err != nil {
+		dat, _ := uplink.Marshal()
+		if err := i.InfraAPI.Store(uplink.Kind, uplink.GetKey(), dat); err != nil {
+			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Uplink: %s | Uplink: %v", uplink.GetKey(), err))
+			return err
+		}
+	} else {
+		var intf netproto.Interface
+		err = intf.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Interface: %s | Err: %v", uplink.GetKey(), err))
+			return errors.Wrapf(types.ErrUnmarshal, "Interface: %s | Err: %v", uplink.GetKey(), err)
+		}
+		log.Infof("Replaying existing Interface %v", intf.GetKey())
+		if _, err = i.HandleInterface(types.Update, intf); err != nil {
+			return err
+		}
 	}
+	knownUplinks[uplink.Status.InterfaceID] = ifName
 	return nil
 }
 
