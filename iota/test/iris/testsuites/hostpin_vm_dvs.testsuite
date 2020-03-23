@@ -4,7 +4,7 @@ meta:
     mode        : hybrid
     cfgmode     : netagent
     nicmode     : hostpin_dvs
-    enable      : True
+    enable      : False
     os          : [ esx ]
 
 packages:

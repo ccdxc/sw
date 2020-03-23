@@ -32,7 +32,8 @@ testcases:
             oper    : [ delete ]
         background_tasks:
             switchPortFlap   :
-                trigger         : repeat
+                trigger         : auto
+                run             : repeat
                 sleep_interval  : 20
                 terminate       : verify
 
@@ -45,6 +46,7 @@ testcases:
             oper    : [ update ]
         background_tasks:
             switchPortFlap  :
-                trigger         : repeat
+                trigger         : auto
+                run             : repeat
                 sleep_interval  : 20
                 terminate       : verify

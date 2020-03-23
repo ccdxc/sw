@@ -206,7 +206,7 @@ var (
 	DstIotaAgentBinary = fmt.Sprintf("%s/%s", DstIotaAgentDir, IotaAgentBinaryName)
 
 	// DataVmImageDirectory
-	IotaServerImgDir = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/logs", os.Getenv("GOPATH"))
+	IotaServerImgDir = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/images", os.Getenv("GOPATH"))
 
 	// IotaServerDir directory associated for iota server cache
 	IotaServerDir = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/logs", os.Getenv("GOPATH"))

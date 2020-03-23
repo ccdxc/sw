@@ -382,7 +382,7 @@ class TestcaseBackgroundTrigger:
         assert(callback_fn)
 
         self.__task_inst = taskmgr.BackgroundTask(callback_fn, self.__sleep_interval, 
-                                                  self.__trigger=='repeat', [args])
+                                                  self.__run=='repeat', [args])
         self.__task_inst.setName(self.__task)
         self.__task_inst.start()
         return types.status.SUCCESS

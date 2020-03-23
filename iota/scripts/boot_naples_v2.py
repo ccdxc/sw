@@ -422,12 +422,12 @@ class EntityManagement:
 
     @_exceptionWrapper(_errCodes.NAPLES_CMD_FAILED, "Naples command failed")
     def RunNaplesCmd(self, command, ignore_failure = False):
-        ret = {}
+        ret = []
         assert(ignore_failure == True or ignore_failure == False)
         for naples_inst in self.host.naples:
             full_command = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@%s %s" %\
                            (naples_inst.password, naples_inst.ipaddr, command)
-            ret[naples_inst.GetName()] = self.RunSshCmd(full_command, ignore_failure)
+            ret.append(self.RunSshCmd(full_command, ignore_failure))
         return ret
 
 class NaplesManagement(EntityManagement):
@@ -438,7 +438,7 @@ class NaplesManagement(EntityManagement):
         return
 
     def GetName(self):
-        return getattr(self.nic_spec, "NaplesName", "NA")
+        return getattr(self.nic_spec, "NaplesName", None)
 
     def SetHost(self, host):
         self.host = host
@@ -450,7 +450,7 @@ class NaplesManagement(EntityManagement):
     def __clearline(self):
         try:
             print("Clearing Console Server Line")
-            hdl = self.Spawn("telnet %s" % self.nic_spec.ConsoleIP, self.nic_spec.NaplesName)
+            hdl = self.Spawn("telnet %s" % self.nic_spec.ConsoleIP, self.GetName())
             idx = hdl.expect(["Username:", "Password:"])
             if idx == 0:
                 self.SendlineExpect(self.nic_spec.ConsoleUsername, "Password:", hdl = hdl)
@@ -565,7 +565,7 @@ class NaplesManagement(EntityManagement):
     def __connect_to_console(self):
         for _ in range(3):
             try:
-                self.hdl = self.Spawn("telnet %s %s" % ((self.nic_spec.ConsoleIP, self.nic_spec.ConsolePort)), self.nic_spec.NaplesName)
+                self.hdl = self.Spawn("telnet %s %s" % ((self.nic_spec.ConsoleIP, self.nic_spec.ConsolePort)), self.GetName())
                 midx = self.hdl.expect_exact([ "Escape character is '^]'.", pexpect.EOF])
                 if midx == 1:
                     raise Exception("Failed to connect to Console %s %d" % (self.nic_spec.ConsoleIP, self.nic_spec.ConsolePort))
@@ -1279,10 +1279,11 @@ class PenOrchestrator:
                 self.__host_password = warmd.Provision.Password
             self.__testbed.Nics = [nic]
 
-        print("Found %d Naples with host %s in testbed" % (len(self.__testbed.Nics), GlobalOptions.instance_name))
-        for nic in self.__testbed.Nics: 
-            name = "naples_%s_%s" % (nic.ConsoleIP, nic.ConsolePort)
-            setattr(nic, 'NaplesName', name)
+        if len(self.__testbed.Nics) > 1:
+            print("Found %d Naples with host %s in testbed" % (len(self.__testbed.Nics), GlobalOptions.instance_name))
+            for nic in self.__testbed.Nics: 
+                name = "naples_%s_%s" % (nic.ConsoleIP, nic.ConsolePort)
+                setattr(nic, 'NaplesName', name)
 
     def AtExitCleanup(self):
         if not self.__naples:
