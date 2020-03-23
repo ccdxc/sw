@@ -730,13 +730,13 @@ func generateLateralEP(infraAPI types.InfraAPI, intfClient halapi.InterfaceClien
 
 	log.Infof("Resolving for: %s", destIP)
 
-	//// Cache the handler for outer done. This needs to be called during the object deletes
-	refreshCtx, done := context.WithCancel(context.Background())
-	doneCache[destIP] = done
-
 	// Make sure only one loop for an IP
 	mac, ok := destIPToMAC.Load(destIP)
 	if !ok {
+		// Cache the handler for outer done. This needs to be called during the object deletes
+		refreshCtx, done := context.WithCancel(context.Background())
+		doneCache[destIP] = done
+
 		go startRefreshLoop(infraAPI, intfClient, epClient, vrfID, owner, refreshCtx, destIP)
 		// Give the routine a chance to run
 		time.Sleep(time.Second * 3)
