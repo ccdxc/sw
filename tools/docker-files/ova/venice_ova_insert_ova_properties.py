@@ -218,6 +218,13 @@ for section in cpu_mem_section:
     ndata = parseString(section)
     e[0].parentNode.insertBefore(ndata.documentElement, e[0])
 
+# 6. Override the virtual hardware and OS type. 
+#    Need vmx-13 and centos7_64Guest
+e = xdata.getElementsByTagName("vssd:VirtualSystemType")
+e[0].childNodes[0].replaceWholeText("vmx-13")
+e = xdata.getElementsByTagName("OperatingSystemSection")
+e[0].setAttribute("vmw:osType", "centos7_64Guest")
+
 # Write the new OVF file
 shutil.copy(filename, filename + ".save")
 fd = open(filename, "w+")
