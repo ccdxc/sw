@@ -644,37 +644,37 @@ def CheckFruInfo(n):
 
     if penctl_fru["manufacturing-date"] != naples_fru["manufacturing-date"]:
         api.Logger.info("Manufacturing date comparison failed. Penctl [{}] FRU [{}]".format(penctl_fru["manufacturing-date"], naples_fru["manufacturing-date"]))
-        api.types.status.FAILURE
+        return api.types.status.FAILURE
     if penctl_fru["manufacturer"] != naples_fru["manufacturer"]:
         api.Logger.info("Manufacturer comparison failed. Penctl [{}] FRU [{}]".format(penctl_fru["manufacturer"], naples_fru["manufacturer"]))
-        api.types.status.FAILURE
+        return api.types.status.FAILURE
     if penctl_fru["product-name"] != naples_fru["product-name"]:
         api.Logger.info("Product name comparison failed. Penctl [{}] FRU [{}]".format(penctl_fru["product-name"], naples_fru["product-name"]))
-        api.types.status.FAILURE
+        return api.types.status.FAILURE
     if penctl_fru["serial-number"] != naples_fru["serial-number"]:
         api.Logger.info("Serial number comparison failed. Penctl [{}] FRU [{}]".format(penctl_fru["serial-number"], naples_fru["serial-number"]))
-        api.types.status.FAILURE
+        return api.types.status.FAILURE
     if penctl_fru["part-number"] != naples_fru["part-number"]:
         api.Logger.info("Part number comparison failed. Penctl [{}] FRU [{}]".format(penctl_fru["part-number"], naples_fru["part-number"]))
-        api.types.status.FAILURE
+        return api.types.status.FAILURE
     if penctl_fru["board-id"] != naples_fru["board-id"]:
         api.Logger.info("Board ID comparison failed. Penctl [{}] FRU [{}]".format(penctl_fru["board-id"], naples_fru["board-id"]))
-        api.types.status.FAILURE
+        return api.types.status.FAILURE
     if penctl_fru["change-level"] != naples_fru["engineering-change-level"]:
         api.Logger.info("Change level comparison failed. Penctl [{}] FRU [{}]".format(penctl_fru["change-level"], naples_fru["engineering-change-level"]))
-        api.types.status.FAILURE
+        return api.types.status.FAILURE
     if penctl_fru["number-mac-addresses"] != naples_fru["num-mac-address"]:
         api.Logger.info("Number of mac address comparison failed. Penctl [{}] FRU [{}]".format(penctl_fru["number-mac-addresses"], naples_fru["num-mac-address"]))
-        api.types.status.FAILURE
+        return api.types.status.FAILURE
     penctlMac = penctl_fru["mac-string"]
     penctlMac = re.sub("\.|:", "", penctlMac)
     fruMac = naples_fru["mac-address"]
     fruMac = re.sub("\.|:", "", fruMac)
     if penctlMac != fruMac:
         api.Logger.info("Mac comparison failed. Penctl [{}] FRU [{}]".format(penctlMac, fruMac))
-        api.types.status.FAILURE
+        return api.types.status.FAILURE
 
-    api.types.status.SUCCESS
+    return api.types.status.SUCCESS
 
 
 #def IsNaplesHostManaged(n):
