@@ -753,7 +753,12 @@ _init_port (void)
                         DEV_TX_OFFLOAD_MBUF_FAST_FREE;
         }
 
-        local_port_conf.rx_adv_conf.rss_conf.rss_hf &=
+        local_port_conf.rxmode.mq_mode = ETH_MQ_RX_RSS;
+        local_port_conf.rxmode.max_rx_pkt_len = ETHER_MAX_LEN;
+        local_port_conf.rxmode.split_hdr_size = 0;
+        local_port_conf.rxmode.offloads = DEV_RX_OFFLOAD_CHECKSUM;
+
+        local_port_conf.rx_adv_conf.rss_conf.rss_hf |=
             dev_info.flow_type_rss_offloads;
 
         ret = rte_eth_dev_configure(portid, nb_rx_queue,

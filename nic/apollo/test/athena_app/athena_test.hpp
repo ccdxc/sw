@@ -3,6 +3,29 @@
 
 namespace fte_ath {
 
+typedef struct fte_h2s_sess_rewrite_s {
+    uint32_t sess_rewrite_id;
+    mac_addr_t substrate_dmac;
+    mac_addr_t substrate_smac;
+    uint16_t substrate_vlan;
+    uint32_t substrate_sip;
+    uint32_t substrate_dip;
+    uint32_t mpls1_label;
+    uint32_t mpls2_label;
+} fte_h2s_sess_rewrite_t;
+
+typedef struct fte_s2h_sess_rewrite_s {
+    uint32_t sess_rewrite_id;
+    mac_addr_t ep_dmac;
+    mac_addr_t ep_smac;
+    uint16_t vnic_vlan;
+} fte_s2h_sess_rewrite_t;
+
+typedef struct fte_sess_rewrite_s {
+    fte_h2s_sess_rewrite_t h2s_sess_rewrite;
+    fte_s2h_sess_rewrite_t s2h_sess_rewrite;
+} fte_sess_rewrite_t;
+
 extern uint32_t g_session_index;
 extern uint32_t g_session_rewrite_index;
 sdk_ret_t

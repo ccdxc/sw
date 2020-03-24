@@ -58,8 +58,34 @@ namespace fte_ath {
 #define HOST_TO_SWITCH 0x1
 #define SWITCH_TO_HOST 0x2
 
+#define MAX_VNIC_ID 2
+
+uint16_t g_vlan_to_vnic[] = { 0x0, 0x64, 0x65 };
+uint32_t g_mpls_label_to_vnic[] = { 0x0, 0x3E8, 0x3E9 };
+
+fte_sess_rewrite_t g_sess_rewrite[] = {
+    {
+        { 0 },
+        { 0 }
+    },
+    {
+        { 0x1, {0x00, 0x06, 0x07, 0x08, 0x09, 0x0a},
+          {0x00, 0x01, 0x02, 0x03, 0x04, 0x05}, 0x01,
+          0x04030201, 0x01020304, 0x12345, 0x3E9 },
+        { 0x2, {0x00, 0x00, 0x00, 0x40, 0x08, 0x01},
+          {0x00, 0x00, 0xF1, 0xD0, 0xD1, 0xD0}, 0x64 }
+    },
+    {
+        { 0x3, {0x00, 0x01, 0x02, 0x03, 0x04, 0x05},
+          {0x00, 0x06, 0x07, 0x08, 0x09, 0x0a}, 0x01,
+          0x01020304, 0x04030201, 0x54321, 0x3E8 },
+        { 0x4, {0x00, 0x00, 0xF1, 0xD0, 0xD1, 0xD0},
+          {0x00, 0x00, 0x00, 0x40, 0x08, 0x01}, 0x65 }
+    }
+};
+
 uint32_t g_session_index = 1;
-uint32_t g_session_rewrite_index = 1;
+uint32_t g_session_rewrite_index = 5;
 
 // H2S specific fields
 uint32_t g_h2s_vlan = 0x0002;
@@ -136,19 +162,58 @@ fte_flow_dump (void)
     return;
 }
 
+static uint16_t
+fte_get_vnic_from_vlan (uint16_t vlan_id)
+{
+    uint16_t i;
+
+    for (i = 1; i <= MAX_VNIC_ID; i++) {
+        if (g_vlan_to_vnic[i] == vlan_id) {
+            return i;
+        }
+    }
+    
+    return 0;
+}
+        
+static uint16_t
+fte_get_vnic_from_mpls_label (uint32_t mpls_label)
+{
+    uint16_t i;
+
+    for (i = 1; i <= MAX_VNIC_ID; i++) {
+        if (g_mpls_label_to_vnic[i] == mpls_label) {
+            return i;
+        }
+    }
+    
+    return 0;
+}
+        
 static sdk_ret_t
 fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
-                            uint8_t *dir, uint16_t *ip_off)
+                            uint8_t *dir, uint16_t *ip_off, uint16_t *vnic_id)
 {
     struct ether_hdr *eth0;
     struct ipv4_hdr *ip40;
     struct tcp_hdr *tcp0;
+    struct udp_hdr *udp0;
+    struct mpls_hdr *mpls0;
     uint16_t ip0_offset = 0;
+    uint16_t vlan_id = 0;
+    uint32_t mpls_label = 0;
     pds_flow_key_t *key = &(spec->key);
 
     // mbuf data starts at eth header
     eth0 = rte_pktmbuf_mtod(m, struct ether_hdr *);
     ip0_offset += sizeof(struct ether_hdr);
+
+    if ((rte_be_to_cpu_16(eth0->ether_type) != ETHER_TYPE_VLAN) &&
+        (rte_be_to_cpu_16(eth0->ether_type) != ETHER_TYPE_IPv4)) {
+        PDS_TRACE_DEBUG("Unsupported ether_type:0x%x \n",
+                        rte_be_to_cpu_16(eth0->ether_type));
+        return SDK_RET_INVALID_OP;
+    }
 
     if ((rte_be_to_cpu_16(eth0->ether_type) == ETHER_TYPE_VLAN)) {
         struct vlan_hdr *vh = (struct vlan_hdr *)(eth0 + 1);
@@ -161,28 +226,15 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
         }
 
         ip0_offset += (sizeof(struct vlan_hdr));
-        *dir = HOST_TO_SWITCH;
-        *ip_off = ip0_offset;
-    } else if ((rte_be_to_cpu_16(eth0->ether_type) ==
-        ETHER_TYPE_IPv4)) {
+        vlan_id = (rte_be_to_cpu_16(vh->vlan_tci) & 0x0fff);
+    }
 
-        struct ipv4_hdr *ip4;
-        struct udp_hdr *udp0;
-        struct mpls_hdr *mpls0;
+    ip40 = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *, ip0_offset);
+    udp0 = (struct udp_hdr *)(ip40 + 1);
 
-        ip4 = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *,
-                                      ip0_offset);
-        if (ip4->next_proto_id != IP_PROTOCOL_UDP) {
-            PDS_TRACE_DEBUG("Unsupported: NOT MPLSoUDP.\n");
-            return SDK_RET_INVALID_OP;
-        }
+    if ((ip40->next_proto_id == IP_PROTOCOL_UDP) &&
+        (rte_be_to_cpu_16(udp0->dst_port) == 0x19EB)) {
         ip0_offset += (sizeof(struct ipv4_hdr)); 
-
-        udp0 = (struct udp_hdr *)(ip4 + 1);
-        if (rte_be_to_cpu_16(udp0->dst_port) != 0x19EB) {
-            PDS_TRACE_DEBUG("Unsupported: NOT MPLSoUDP.\n");
-            return SDK_RET_INVALID_OP;
-        }
         ip0_offset += (sizeof(struct udp_hdr));
 
         mpls0 = (struct mpls_hdr *)(udp0 + 1);
@@ -205,13 +257,20 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
                     return SDK_RET_INVALID_OP;
                 }
             }
+            mpls_label = ((rte_be_to_cpu_16(mpls1->tag_msb) << 4) | mpls1->tag_lsb);
+            *vnic_id = fte_get_vnic_from_mpls_label(mpls_label);
         }
         *dir = SWITCH_TO_HOST;
         *ip_off = ip0_offset;
     } else {
-        PDS_TRACE_DEBUG("Unsupported ether_type:0x%x \n",
-                        rte_be_to_cpu_16(eth0->ether_type));
-        return SDK_RET_INVALID_OP;
+        *dir = HOST_TO_SWITCH;
+        *ip_off = ip0_offset;
+        *vnic_id = fte_get_vnic_from_vlan(vlan_id);
+    }
+
+    if (*vnic_id == 0) {
+        PDS_TRACE_DEBUG("vnic_id lookup failed.\n");
+        return SDK_RET_ERR;
     }
 
     ip40 = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *, ip0_offset);
@@ -263,15 +322,20 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
 }
 
 static void
-fte_flow_h2s_rewrite_mplsoudp (struct rte_mbuf *m, uint16_t ip_offset)
+fte_flow_h2s_rewrite_mplsoudp (struct rte_mbuf *m, uint16_t ip_offset, uint16_t vnic_id)
 {
     uint16_t total_encap_len;
     uint16_t mbuf_prepend_len;
     uint8_t *pkt_start;
+    struct ether_hdr *etherh;
+    struct vlan_hdr *vlanh;
     struct ipv4_hdr *ip4h;
     struct udp_hdr *udph;
+    struct mpls_hdr *mplsh;
     uint16_t ip_tot_len, udp_len;
+    fte_h2s_sess_rewrite_t *h2s_sess_rewrite;
 
+    h2s_sess_rewrite = &(g_sess_rewrite[vnic_id].h2s_sess_rewrite);
     total_encap_len = (sizeof(h2s_l2vlan_encap_hdr) +
                         sizeof(h2s_ip_encap_hdr) + 
                         sizeof(h2s_udp_encap_hdr) +
@@ -279,15 +343,24 @@ fte_flow_h2s_rewrite_mplsoudp (struct rte_mbuf *m, uint16_t ip_offset)
 
     mbuf_prepend_len = (total_encap_len - ip_offset);
     pkt_start = (uint8_t *)rte_pktmbuf_prepend(m, mbuf_prepend_len);
+    etherh = (struct ether_hdr *)pkt_start;
+    vlanh = (struct vlan_hdr *)(etherh + 1);
 
     memcpy(pkt_start, h2s_l2vlan_encap_hdr,
            sizeof(h2s_l2vlan_encap_hdr));
+    memcpy(etherh->d_addr.addr_bytes, (uint8_t *)&(h2s_sess_rewrite->substrate_dmac), ETHER_ADDR_LEN);
+    memcpy(etherh->s_addr.addr_bytes, (uint8_t *)&(h2s_sess_rewrite->substrate_smac), ETHER_ADDR_LEN);
+    vlanh->vlan_tci = (rte_be_to_cpu_16(vlanh->vlan_tci) & 0xf000);
+    vlanh->vlan_tci |= (h2s_sess_rewrite->substrate_vlan & 0x0fff);
+    vlanh->vlan_tci = rte_cpu_to_be_16(vlanh->vlan_tci);
     pkt_start += sizeof(h2s_l2vlan_encap_hdr);
 
     memcpy(pkt_start, h2s_ip_encap_hdr, sizeof(h2s_ip_encap_hdr));
     ip4h = (struct ipv4_hdr *)pkt_start;
     ip_tot_len = (m->pkt_len - sizeof(h2s_l2vlan_encap_hdr));
     ip4h->total_length = rte_cpu_to_be_16(ip_tot_len);
+    ip4h->src_addr = rte_cpu_to_be_32(h2s_sess_rewrite->substrate_sip);
+    ip4h->dst_addr = rte_cpu_to_be_32(h2s_sess_rewrite->substrate_dip);
     pkt_start += sizeof(h2s_ip_encap_hdr);
 
     memcpy(pkt_start, h2s_udp_encap_hdr, sizeof(h2s_udp_encap_hdr));
@@ -299,40 +372,58 @@ fte_flow_h2s_rewrite_mplsoudp (struct rte_mbuf *m, uint16_t ip_offset)
 
     memcpy(pkt_start, h2s_mpls_encap_hdrs,
            sizeof(h2s_mpls_encap_hdrs));
+    mplsh = (struct mpls_hdr *)pkt_start;
+    mplsh->tag_msb = rte_cpu_to_be_16((h2s_sess_rewrite->mpls1_label >> 4) & 0xffff);
+    mplsh->tag_lsb = (h2s_sess_rewrite->mpls1_label & 0xf);
+    mplsh += 1;
+    mplsh->tag_msb = rte_cpu_to_be_16((h2s_sess_rewrite->mpls2_label >> 4) & 0xffff);
+    mplsh->tag_lsb = (h2s_sess_rewrite->mpls2_label & 0xf);
 
     return;
 }
 
 static void
-fte_flow_s2h_rewrite (struct rte_mbuf *m, uint16_t ip_offset)
+fte_flow_s2h_rewrite (struct rte_mbuf *m, uint16_t ip_offset, uint16_t vnic_id)
 {
     uint16_t mbuf_adj_len;
     uint8_t *pkt_start;
+    struct ether_hdr *etherh;
+    struct vlan_hdr *vlanh;
+    fte_s2h_sess_rewrite_t *s2h_sess_rewrite;
+
+    s2h_sess_rewrite = &(g_sess_rewrite[vnic_id].s2h_sess_rewrite);
 
     mbuf_adj_len = (ip_offset - sizeof(s2h_l2vlan_encap_hdr));
     pkt_start = (uint8_t *)rte_pktmbuf_adj(m, mbuf_adj_len);
+    etherh = (struct ether_hdr *)pkt_start;
+    vlanh = (struct vlan_hdr *)(etherh + 1);
 
     memcpy(pkt_start, s2h_l2vlan_encap_hdr,
            sizeof(s2h_l2vlan_encap_hdr));
+    memcpy(etherh->d_addr.addr_bytes, (uint8_t *)&(s2h_sess_rewrite->ep_dmac), ETHER_ADDR_LEN);
+    memcpy(etherh->s_addr.addr_bytes, (uint8_t *)&(s2h_sess_rewrite->ep_smac), ETHER_ADDR_LEN);
+    vlanh->vlan_tci = (rte_be_to_cpu_16(vlanh->vlan_tci) & 0xf000);
+    vlanh->vlan_tci |= (s2h_sess_rewrite->vnic_vlan & 0x0fff);
+    vlanh->vlan_tci = rte_cpu_to_be_16(vlanh->vlan_tci);
 
     return;
 }
 
 static void
 fte_flow_pkt_rewrite (struct rte_mbuf *m, uint8_t dir,
-                      uint16_t ip_offset)
+                      uint16_t ip_offset, uint16_t vnic_id)
 {
     if (dir == HOST_TO_SWITCH) {
-        fte_flow_h2s_rewrite_mplsoudp(m, ip_offset);
+        fte_flow_h2s_rewrite_mplsoudp(m, ip_offset, vnic_id);
     } else {
-        fte_flow_s2h_rewrite(m, ip_offset);
+        fte_flow_s2h_rewrite(m, ip_offset, vnic_id);
     }
 
     return;
 }
 
 static sdk_ret_t
-fte_session_info_create (uint8_t dir, uint32_t session_index)
+fte_session_info_create (uint8_t dir, uint32_t session_index, uint16_t vnic_id)
 {
     pds_flow_session_spec_t spec;
 
@@ -341,9 +432,11 @@ fte_session_info_create (uint8_t dir, uint32_t session_index)
     spec.key.direction = dir;
 
     if (dir == HOST_TO_SWITCH) {
-        spec.data.host_to_switch_flow_info.rewrite_id = 1;
+        spec.data.host_to_switch_flow_info.rewrite_id = 
+            g_sess_rewrite[vnic_id].h2s_sess_rewrite.sess_rewrite_id; 
     } else {
-        spec.data.switch_to_host_flow_info.rewrite_id = 2;
+        spec.data.switch_to_host_flow_info.rewrite_id =
+            g_sess_rewrite[vnic_id].s2h_sess_rewrite.sess_rewrite_id; 
     }
 
     return pds_flow_session_info_create(&spec);
@@ -478,11 +571,12 @@ fte_flow_prog (struct rte_mbuf *m)
     pds_flow_spec_t flow_spec;
     uint8_t flow_dir;
     uint16_t ip_offset;
+    uint16_t vnic_id = 0;
 
     memset(&flow_spec, 0, sizeof(pds_flow_spec_t));
     flow_spec.key.vnic_id = g_h2s_vnic_id;
     ret = fte_flow_extract_prog_args(m, &flow_spec, &flow_dir,
-                                     &ip_offset);
+                                     &ip_offset, &vnic_id);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_DEBUG("fte_flow_extract_prog_args failed. \n");
         return ret;
@@ -491,9 +585,9 @@ fte_flow_prog (struct rte_mbuf *m)
     flow_spec.data.index = g_session_index;
 
     // PKT Rewrite
-    fte_flow_pkt_rewrite(m, flow_dir, ip_offset);
+    fte_flow_pkt_rewrite(m, flow_dir, ip_offset, vnic_id);
 
-    ret = fte_session_info_create(flow_dir, g_session_index);
+    ret = fte_session_info_create(flow_dir, g_session_index, vnic_id);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_DEBUG("fte_session_info_create failed. \n");
         return ret;
@@ -608,47 +702,49 @@ static sdk_ret_t
 fte_setup_flow (void)
 {
     sdk_ret_t       ret = SDK_RET_OK;
-    uint32_t        s2h_session_rewrite_id;
-    uint32_t        h2s_session_rewrite_id;
+    fte_h2s_sess_rewrite_t *h2s_sess_rewrite;
+    fte_s2h_sess_rewrite_t *s2h_sess_rewrite;
+     int i;
 
+    for (i = 1; i <= MAX_VNIC_ID; i++) {
     // Setup VNIC Mappings
-    ret = fte_vlan_to_vnic_map(g_h2s_vlan, g_h2s_vnic_id);
+    ret = fte_vlan_to_vnic_map(g_vlan_to_vnic[i], i);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_DEBUG("fte_vlan_to_vnic_map failed.\n");
         return ret;
     }
 
     // Setup VNIC Mappings
-    ret = fte_mpls_label_to_vnic_map(g_s2h_mpls2_label,
-                                     g_h2s_vnic_id);
+    ret = fte_mpls_label_to_vnic_map(g_mpls_label_to_vnic[i], i);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_DEBUG("fte_mpls_label_to_vnic_map failed.\n");
         return ret;
     }
 
-    h2s_session_rewrite_id = g_session_rewrite_index++;
-    ret = fte_h2s_v4_session_rewrite_mplsoudp(h2s_session_rewrite_id,
-                                              &substrate_dmac,
-                                              &substrate_smac,
-                                              substrate_vlan,
-                                              substrate_sip,
-                                              substrate_dip,
-                                              mpls1_label,
-                                              mpls2_label);
+    h2s_sess_rewrite = &(g_sess_rewrite[i].h2s_sess_rewrite);
+    ret = fte_h2s_v4_session_rewrite_mplsoudp(h2s_sess_rewrite->sess_rewrite_id,
+                                              &h2s_sess_rewrite->substrate_dmac,
+                                              &h2s_sess_rewrite->substrate_smac,
+                                              h2s_sess_rewrite->substrate_vlan,
+                                              h2s_sess_rewrite->substrate_sip,
+                                              h2s_sess_rewrite->substrate_dip,
+                                              h2s_sess_rewrite->mpls1_label,
+                                              h2s_sess_rewrite->mpls2_label);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_DEBUG("fte_h2s_v4_session_rewrite_mplsoudp "
                         "failed.\n");
         return ret;
     }
 
-    s2h_session_rewrite_id = g_session_rewrite_index++;
-    ret = fte_s2h_v4_session_rewrite(s2h_session_rewrite_id,
-                                     (mac_addr_t *)ep_dmac,
-                                     (mac_addr_t *)ep_smac,
-                                     g_h2s_vlan);
+    s2h_sess_rewrite = &(g_sess_rewrite[i].s2h_sess_rewrite);
+    ret = fte_s2h_v4_session_rewrite(s2h_sess_rewrite->sess_rewrite_id,
+                                     (mac_addr_t *)&s2h_sess_rewrite->ep_dmac,
+                                     (mac_addr_t *)&s2h_sess_rewrite->ep_smac,
+                                     s2h_sess_rewrite->vnic_vlan);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_DEBUG("fte_s2h_v4_session_rewrite failed.\n");
         return ret;
+    }
     }
 
     ret = fte_setup_static_flows();
