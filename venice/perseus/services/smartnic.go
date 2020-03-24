@@ -284,6 +284,8 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 		rtConfig, err := m.apiclient.NetworkV1().RoutingConfig().Get(ctx, &api.ObjectMeta{Name: evtNodeConfig.Spec.RoutingConfig})
 		if err != nil {
 			log.Errorf("failed to get routing config [%v](%s)", evtNodeConfig.Spec.RoutingConfig, err)
+			// next node update event will have to fix this.
+			return
 		}
 		err = m.configureBGP(ctx, rtConfig)
 		if err != nil {
