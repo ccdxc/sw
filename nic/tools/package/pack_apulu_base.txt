@@ -284,7 +284,7 @@ nic/build/$ARCH/$PIPELINE/bin/pciemgrd-gold                       /nic/bin/
 
 # dhcp server
 nic/tools/dhcp-server/S80dhcp-server                              /nic/tools/start-dhcpd.sh
-nic/dhcp-server/dhcpd                                             /etc/default/dhcpd
+nic/conf/dhcp-server/dhcpd                                        /etc/default/dhcpd
 nic/conf/dhcp-server/dhcpd.conf                                   /etc/dhcp/dhcpd.conf
 nic/sdk/third-party/dhcp-server-pkg/$ARCH/bin/omshell             /usr/bin/
 nic/sdk/third-party/dhcp-server-pkg/$ARCH/bin/dhcpd               /usr/sbin/
