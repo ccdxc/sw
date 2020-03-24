@@ -467,6 +467,32 @@ fte_flow_create(uint16_t vnic_id, ipv4_addr_t v4_addr_sip, ipv4_addr_t v4_addr_d
 }
 
 sdk_ret_t
+fte_flow_create_icmp(uint16_t vnic_id,
+        ipv4_addr_t v4_addr_sip, ipv4_addr_t v4_addr_dip,
+        uint8_t proto, uint8_t type, uint8_t code, uint16_t identifier,
+        pds_flow_spec_index_type_t index_type, uint32_t index)
+{
+    pds_flow_spec_t             spec;
+
+
+    spec.key.vnic_id = vnic_id;
+    spec.key.key_type = KEY_TYPE_IPV4;
+    memset(spec.key.ip_saddr, 0, sizeof(spec.key.ip_saddr));
+    memcpy(spec.key.ip_saddr, &v4_addr_sip, sizeof(ipv4_addr_t));
+    memset(spec.key.ip_daddr, 0, sizeof(spec.key.ip_daddr));
+    memcpy(spec.key.ip_daddr, &v4_addr_dip, sizeof(ipv4_addr_t));
+    spec.key.ip_proto = proto;
+    spec.key.l4.icmp.type = type;
+    spec.key.l4.icmp.code = code;
+    spec.key.l4.icmp.identifier = identifier;
+
+    spec.data.index_type = index_type;
+    spec.data.index = index;
+
+    return pds_flow_cache_entry_create(&spec);
+}
+
+sdk_ret_t
 fte_flow_create_v6(uint16_t vnic_id, ipv6_addr_t *v6_addr_sip,
         ipv6_addr_t *v6_addr_dip,
         uint8_t proto, uint16_t sport, uint16_t dport,
@@ -489,6 +515,35 @@ fte_flow_create_v6(uint16_t vnic_id, ipv6_addr_t *v6_addr_sip,
     spec.data.index = index;
 
     return pds_flow_cache_entry_create(&spec);
+}
+
+sdk_ret_t
+fte_flow_create_v6_icmp(uint16_t vnic_id, ipv6_addr_t *v6_addr_sip,
+        ipv6_addr_t *v6_addr_dip,
+        uint8_t proto, uint8_t type, uint8_t code, uint16_t identifier,
+        pds_flow_spec_index_type_t index_type, uint32_t index)
+{
+    pds_flow_spec_t             spec;
+
+
+    spec.key.vnic_id = vnic_id;
+    spec.key.key_type = KEY_TYPE_IPV6;
+    sdk::lib::memrev(spec.key.ip_saddr, (uint8_t *)v6_addr_sip,
+            sizeof(ipv6_addr_t));
+    sdk::lib::memrev(spec.key.ip_daddr, (uint8_t*)v6_addr_dip,
+            sizeof(ipv6_addr_t));
+    spec.key.ip_proto = proto;
+    spec.key.l4.icmp.type = type;
+    spec.key.l4.icmp.code = code;
+    spec.key.l4.icmp.identifier = identifier;
+
+    spec.data.index_type = index_type;
+    spec.data.index = index;
+
+    return pds_flow_cache_entry_create(&spec);
+    spec.key.l4.icmp.type = type;
+    spec.key.l4.icmp.code = code;
+    spec.key.l4.icmp.identifier = identifier;
 }
 
 sdk_ret_t

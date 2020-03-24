@@ -53,6 +53,9 @@ static uint8_t     g_h2s_proto = 0x11;
 static uint16_t    g_h2s_sport = 0x2001;
 static uint16_t    g_h2s_dport = 0x2002;
 
+static uint8_t      g_h2s_icmpv6_type = 0x80;
+static uint8_t      g_h2s_icmpv6_code = 0x0;
+static uint16_t     g_h2s_icmpv6_identifier = 0x1234;
 
 static ipv6_addr_t  g_h2s_sipv6 = 
                                 {
@@ -68,6 +71,9 @@ static ipv6_addr_t  g_h2s_dipv6 =
                                     0x00, 0x00, 0x00, 0x00,
                                     0x00, 0x00, 0x00, 0x02,
                                 };
+static uint8_t  g_h2s_proto_tcp = 0x06;
+//static uint8_t  g_h2s_proto_icmp = 0x01;
+static uint8_t  g_h2s_proto_icmpv6 = 0x3A;
     
 
 sdk_ret_t
@@ -167,9 +173,28 @@ fte_setup_static_flows (void)
         PDS_TRACE_DEBUG("fte_flow_create failed.\n");
         return ret;
     }
-    // Setup v6 Normalized Flow entry
+    // Setup v6 UDP Normalized Flow entry
     ret = fte_flow_create_v6(g_vnic1_id, &g_h2s_sipv6, &g_h2s_dipv6,
             g_h2s_proto, g_h2s_sport, g_h2s_dport,
+            PDS_FLOW_SPEC_INDEX_SESSION, vnic1_session_index);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_flow_create failed.\n");
+        return ret;
+    }
+
+    // Setup v6 TCP Normalized Flow entry
+    ret = fte_flow_create_v6(g_vnic1_id, &g_h2s_sipv6, &g_h2s_dipv6,
+            g_h2s_proto_tcp, g_h2s_sport, g_h2s_dport,
+            PDS_FLOW_SPEC_INDEX_SESSION, vnic1_session_index);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_flow_create failed.\n");
+        return ret;
+    }
+
+    // Setup v6 ICMP Normalized Flow entry
+    ret = fte_flow_create_v6_icmp(g_vnic1_id, &g_h2s_sipv6, &g_h2s_dipv6,
+            g_h2s_proto_icmpv6, g_h2s_icmpv6_type, g_h2s_icmpv6_code,
+            g_h2s_icmpv6_identifier,
             PDS_FLOW_SPEC_INDEX_SESSION, vnic1_session_index);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_DEBUG("fte_flow_create failed.\n");
@@ -256,9 +281,27 @@ fte_setup_static_flows (void)
         PDS_TRACE_DEBUG("fte_flow_create failed.\n");
         return ret;
     }
-    // Setup v6 Normalized Flow entry
+    // Setup v6 UDP Normalized Flow entry
     ret = fte_flow_create_v6(g_vnic2_id, &g_h2s_dipv6, &g_h2s_sipv6,
             g_h2s_proto, g_h2s_dport, g_h2s_sport,
+            PDS_FLOW_SPEC_INDEX_SESSION, vnic2_session_index);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_flow_create failed.\n");
+        return ret;
+    }
+    // Setup v6 TCP Normalized Flow entry
+    ret = fte_flow_create_v6(g_vnic2_id, &g_h2s_dipv6, &g_h2s_sipv6,
+            g_h2s_proto_tcp, g_h2s_dport, g_h2s_sport,
+            PDS_FLOW_SPEC_INDEX_SESSION, vnic2_session_index);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_flow_create failed.\n");
+        return ret;
+    }
+
+    // Setup v6 ICMP Normalized Flow entry
+    ret = fte_flow_create_v6_icmp(g_vnic2_id, &g_h2s_dipv6, &g_h2s_sipv6,
+            g_h2s_proto_icmpv6, g_h2s_icmpv6_type, g_h2s_icmpv6_code,
+            g_h2s_icmpv6_identifier,
             PDS_FLOW_SPEC_INDEX_SESSION, vnic2_session_index);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_DEBUG("fte_flow_create failed.\n");
