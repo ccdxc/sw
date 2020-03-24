@@ -74,7 +74,7 @@ pd_capri_hbm_write_mem (pd_func_args_t *pd_func_args)
     pd_capri_hbm_write_mem_args_t *args = pd_func_args->pd_capri_hbm_write_mem;
     sdk::asic::asic_mem_write(args->addr, (uint8_t *)args->buf, args->size);
 
-    reg = sdk::asic::pd::asicpd_get_hbm_region_by_address(args->addr);
+    reg = asicpd_get_hbm_region_by_address(args->addr);
     SDK_ASSERT(reg != NULL);
 
     if(is_region_cache_pipe_p4plus_all(reg)) {
@@ -165,7 +165,7 @@ pd_capri_barco_ring_meta_config_get (pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_capri_barco_asym_add_pend_req(pd_func_args_t *pd_func_args)
+pd_capri_barco_asym_add_pend_req (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_add_pend_req_args_t *args = pd_func_args->pd_capri_barco_asym_add_pend_req;
     return (capri_barco_asym_add_pend_req(args->hw_id,
@@ -174,7 +174,7 @@ pd_capri_barco_asym_add_pend_req(pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_capri_barco_asym_poll_pend_req(pd_func_args_t *pd_func_args)
+pd_capri_barco_asym_poll_pend_req (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_poll_pend_req_args_t *args = pd_func_args->pd_capri_barco_asym_poll_pend_req;
     return (capri_barco_asym_poll_pend_req(args->batch_size,
@@ -184,7 +184,7 @@ pd_capri_barco_asym_poll_pend_req(pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_capri_barco_asym_ecc_point_mul(pd_func_args_t *pd_func_args)
+pd_capri_barco_asym_ecc_point_mul (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_ecc_point_mul_args_t *args = pd_func_args->pd_capri_barco_asym_ecc_point_mul;
     return (capri_barco_asym_ecc_point_mul(     args->key_size,
@@ -203,7 +203,7 @@ pd_capri_barco_asym_ecc_point_mul(pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_capri_barco_asym_ecdsa_p256_setup_priv_key(pd_func_args_t *pd_func_args)
+pd_capri_barco_asym_ecdsa_p256_setup_priv_key (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_ecdsa_p256_setup_priv_key_args_t *args = pd_func_args->pd_capri_barco_asym_ecdsa_p256_setup_priv_key;
     return (capri_barco_asym_ecdsa_p256_setup_priv_key(args->p,
@@ -324,7 +324,7 @@ pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key (pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(pd_func_args_t *pd_func_args)
+pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key_args_t *args = pd_func_args->pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key;
     return (capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(args->p,
@@ -337,7 +337,7 @@ pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(pd_func_args_t *pd_func_arg
 }
 
 hal_ret_t
-pd_capri_barco_asym_rsa_setup_priv_key(pd_func_args_t *pd_func_args)
+pd_capri_barco_asym_rsa_setup_priv_key (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_asym_rsa_setup_priv_key_args_t *args = pd_func_args->pd_capri_barco_asym_rsa_setup_priv_key;
     return (capri_barco_asym_rsa_setup_priv_key(args->key_size,
@@ -423,7 +423,7 @@ pd_capri_barco_asym_rsa2k_sig_verify (pd_func_args_t *pd_func_args)
 }
 
 hal_ret_t
-pd_capri_barco_sym_hash_process_request (pd_func_args_t *pd_func_args)
+pd_capri_barco_sym_hash_process_request  (pd_func_args_t *pd_func_args)
 {
     pd_capri_barco_sym_hash_process_request_args_t *args = pd_func_args->pd_capri_barco_sym_hash_process_request;
     return (capri_barco_sym_hash_process_request(args->hash_type,
@@ -439,7 +439,7 @@ pd_capri_barco_sym_hash_process_request (pd_func_args_t *pd_func_args)
 
 // Enable MPU tracing on p4 ingress
 static hal_ret_t
-capri_p4_ingress_mpu_trace_enable(uint32_t stage_id,
+capri_p4_ingress_mpu_trace_enable (uint32_t stage_id,
                                   uint32_t mpu,
                                   uint8_t  enable,
                                   uint8_t  trace_enable,
@@ -489,7 +489,7 @@ capri_p4_ingress_mpu_trace_enable(uint32_t stage_id,
 
 // Enable MPU tracing on p4 egress
 static hal_ret_t
-capri_p4_egress_mpu_trace_enable(uint32_t stage_id,
+capri_p4_egress_mpu_trace_enable (uint32_t stage_id,
                                  uint32_t mpu,
                                  uint8_t  enable,
                                  uint8_t  trace_enable,
@@ -539,7 +539,7 @@ capri_p4_egress_mpu_trace_enable(uint32_t stage_id,
 
 // Enable MPU tracing on p4plus txdma
 static hal_ret_t
-capri_p4p_txdma_mpu_trace_enable(uint32_t stage_id,
+capri_p4p_txdma_mpu_trace_enable (uint32_t stage_id,
                                  uint32_t mpu,
                                  uint8_t  enable,
                                  uint8_t  trace_enable,
@@ -589,7 +589,7 @@ capri_p4p_txdma_mpu_trace_enable(uint32_t stage_id,
 
 // Enable MPU tracing on p4plus rxdma
 static hal_ret_t
-capri_p4p_rxdma_mpu_trace_enable(uint32_t stage_id,
+capri_p4p_rxdma_mpu_trace_enable (uint32_t stage_id,
                                  uint32_t mpu,
                                  uint8_t  enable,
                                  uint8_t  trace_enable,
@@ -638,7 +638,7 @@ capri_p4p_rxdma_mpu_trace_enable(uint32_t stage_id,
 }
 
 hal_ret_t
-pd_mpu_trace_enable(pd_func_args_t *pd_func_args)
+pd_mpu_trace_enable (pd_func_args_t *pd_func_args)
 {
     pd_mpu_trace_enable_args_t *args = pd_func_args->pd_mpu_trace_enable;
 
@@ -710,7 +710,7 @@ pd_mpu_trace_enable(pd_func_args_t *pd_func_args)
 
 // Enable MPU tracing on p4 ingress
 static hal_ret_t
-capri_dpp_int_credit(uint32_t instance, uint32_t value)
+capri_dpp_int_credit (uint32_t instance, uint32_t value)
 {
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
@@ -732,14 +732,13 @@ capri_dpp_int_credit(uint32_t instance, uint32_t value)
 }
 
 hal_ret_t
-pd_reg_write(pd_func_args_t *pd_func_args)
+pd_reg_write (pd_func_args_t *pd_func_args)
 {
     pd_reg_write_args_t *args = pd_func_args->pd_reg_write;
 
     switch (args->register_id) {
     case pd_reg_write_type_t::DPP_INT_CREDIT:
-        return capri_dpp_int_credit(args->instance,
-                                    args->value);
+        return capri_dpp_int_credit(args->instance, args->value);
     default:
         return HAL_RET_ERR;
     }
@@ -747,17 +746,19 @@ pd_reg_write(pd_func_args_t *pd_func_args)
     return HAL_RET_OK;
 }
 
-hal_ret_t   pd_quiesce_start(pd_func_args_t *pd_func_args)
+hal_ret_t
+pd_quiesce_start (pd_func_args_t *pd_func_args)
 {
     sdk_ret_t sdk_ret;
-    sdk_ret = sdk::platform::capri::capri_quiesce_start();
+    sdk_ret = sdk::asic::pd::asicpd_quiesce_start();
     return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
-hal_ret_t   pd_quiesce_stop(pd_func_args_t *pd_func_args)
+hal_ret_t
+pd_quiesce_stop (pd_func_args_t *pd_func_args)
 {
     sdk_ret_t sdk_ret;
-    sdk_ret = sdk::platform::capri::capri_quiesce_stop();
+    sdk_ret = sdk::asic::pd::asicpd_quiesce_stop();
     return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 

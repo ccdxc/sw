@@ -289,6 +289,15 @@ void asicpd_set_action_txdma_asm_base(int tableid, int actionid,
 void asicpd_set_table_rxdma_asm_base(int tableid, uint64_t asm_base);
 void asicpd_set_table_txdma_asm_base(int tableid, uint64_t asm_base);
 
+sdk_ret_t asicpd_tm_uplink_lif_set(tm_port_t port, uint32_t lif);
+sdk_ret_t asicpd_tm_enable_disable_uplink_port(tm_port_t port, bool enable);
+sdk_ret_t asicpd_tm_flush_uplink_port(tm_port_t port, bool enable);
+sdk_ret_t asicpd_tm_write_control_uplink_port(tm_port_t port, bool enable);
+sdk_ret_t asicpd_tm_drain_uplink_port(tm_port_t port);
+
+sdk_ret_t asicpd_quiesce_start(void);
+sdk_ret_t asicpd_quiesce_stop(void);
+
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk

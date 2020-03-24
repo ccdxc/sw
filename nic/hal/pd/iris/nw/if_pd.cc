@@ -317,7 +317,7 @@ pd_if_nwsec_update (pd_func_args_t *pd_func_args)
         case intf::IF_TYPE_UPLINK_PC:
             uplink_args.l2seg = args->l2seg;
             uplink_args.intf = args->intf;
-            ret = l2seg_uplink_upd_input_properties_tbl(&uplink_args, 
+            ret = l2seg_uplink_upd_input_properties_tbl(&uplink_args,
                                                         L2SEG_UPLINK_UPD_FLAGS_NWSEC_PROF,
                                                         args->nwsec_prof, 0, NULL);
             break;
@@ -467,7 +467,7 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg, li
                      * - No-op of rewrites.
                      */
                     vrf = vrf_lookup_by_handle(pi_l2seg->vrf_handle);
-                    if (l2seg_is_oob_mgmt(pi_l2seg) && 
+                    if (l2seg_is_oob_mgmt(pi_l2seg) &&
                         !vrf_if_is_designated_uplink(vrf, pi_if)) {
                         data->is_qid = 0;
                         data->rewrite_index = 0;
@@ -566,7 +566,6 @@ end:
 // Control Traffic Manager (TM) for uplinks
 //-----------------------------------------------------------------------------
 using sdk::platform::capri::tm_port_t;
-using sdk::platform::capri::capri_tm_enable_disable_uplink_port;
 hal_ret_t
 pd_uplink_tm_control (pd_func_args_t *pd_func_args)
 {
@@ -576,11 +575,12 @@ pd_uplink_tm_control (pd_func_args_t *pd_func_args)
     if (tm_args->tm_port == TM_PORT_UPLINK_ALL) {
         for (tm_port_t port = TM_UPLINK_PORT_BEGIN;
              port <= TM_UPLINK_PORT_END; port++) {
-            capri_tm_enable_disable_uplink_port(port, tm_args->en);
+            sdk::asic::pd::asicpd_tm_enable_disable_uplink_port(port,
+                                                                tm_args->en);
         }
     } else {
-        sdk::platform::capri::capri_tm_enable_disable_uplink_port(tm_args->tm_port,
-                                                                  tm_args->en);
+        sdk::asic::pd::asicpd_tm_enable_disable_uplink_port(tm_args->tm_port,
+                                                            tm_args->en);
     }
 
     return ret;

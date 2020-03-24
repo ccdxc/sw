@@ -8,6 +8,7 @@
 #include "platform/capri/capri_mon.hpp"
 #include "platform/capri/capri_tm_utils.hpp"
 #include "platform/capri/capri_sw_phv.hpp"
+#include "platform/capri/capri_quiesce.hpp"
 #include "asic/pd/pd.hpp"
 #include "asic/pd/pd_internal.hpp"
 #include "lib/utils/time_profile.hpp"
@@ -738,6 +739,48 @@ mpartition_region_t *
 asicpd_get_hbm_region_by_address (uint64_t addr)
 {
     return capri_get_hbm_region_by_address(addr);
+}
+
+sdk_ret_t
+asicpd_tm_uplink_lif_set (tm_port_t port, uint32_t lif)
+{
+    return capri_tm_uplink_lif_set(port, lif);
+}
+
+sdk_ret_t
+asicpd_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
+{
+    return capri_tm_enable_disable_uplink_port(port, enable);
+}
+
+sdk_ret_t
+asicpd_tm_flush_uplink_port (tm_port_t port, bool enable)
+{
+    return capri_tm_flush_uplink_port(port, enable);
+}
+
+sdk_ret_t
+asicpd_tm_write_control_uplink_port (tm_port_t port, bool enable)
+{
+    return capri_tm_write_control_uplink_port(port, enable);
+}
+
+sdk_ret_t
+asicpd_tm_drain_uplink_port (tm_port_t port)
+{
+    return capri_tm_drain_uplink_port(port);
+}
+
+sdk_ret_t
+asicpd_quiesce_start(void)
+{
+    return capri_quiesce_start();
+}
+
+sdk_ret_t
+asicpd_quiesce_stop (void)
+{
+    return capri_quiesce_stop();
 }
 
 }    // namespace pd
