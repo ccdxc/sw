@@ -1,0 +1,12 @@
+meta:
+    name    : techsupport
+    os      : [ linux, freebsd ]
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : techsupport
+        testcase: testcases.triggers.techsupport
+        stress  : True
+        iterators :
+            type      : simple
+            skipcores : [ False, True ]

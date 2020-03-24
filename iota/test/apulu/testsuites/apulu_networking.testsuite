@@ -49,6 +49,7 @@ testbundles:
         - vlanoffload/vlanoffload.testbundle
         - classic/driver-features-sanity.testbundle
         - reboot/reboot.testbundle
+        - techsupport/techsupport.testbundle
 
     regression:
         # Relative paths from iota/test/apulu/testbundles/

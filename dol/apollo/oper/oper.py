@@ -63,6 +63,9 @@ class TechSupportObject(base.ConfigObjectBase):
         self.PopulateRequest(grpcmsg)
         return grpcmsg
 
+    def SetSkipCores(self, skipCores):
+        self.SkipCores = skipCores
+
     def Collect(self):
         msg = self.GetGrpcTechSupportCollectMessage()
         resp = api.client[self.Node].Request(self.ObjType, 'TechSupportCollect', [msg])
@@ -83,6 +86,9 @@ class OperObjectsClient(base.ConfigClientBase):
 
     def GenerateObjects(self, node):
         self.GenerateTechSupportObjects(node)
+
+    def GetTechSupportObject(self, node):
+        return self.TechSupportObjs[node]
 
     def GetTechSupport(self, node):
         return self.TechSupportObjs[node].Collect()
