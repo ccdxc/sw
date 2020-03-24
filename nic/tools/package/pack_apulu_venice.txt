@@ -19,6 +19,7 @@ nic/apollo/tools/$PIPELINE/bringup_mgmt_ifs_venice.sh             /nic/tools/bri
 /usr/lib64/libltdl.so.7                                           /nic/lib64/
 nic/conf/$PIPELINE/device.json                                    /nic/conf/$PIPELINE/
 nic/conf/$PIPELINE/catalog.json                                   /nic/conf/$PIPELINE/
+nic/conf/$PIPELINE/serdes_68-0003.json                            /nic/conf/$PIPELINE/
 nic/sim/naples/start-naples.sh                                    /nic/tools/
 nic/sysmgr/src/$PIPELINE/pipeline-venice-sim.json                 /nic/conf/sysmgr_no_datapath.json
 nic/conf/$PIPELINE/hal.json                                       /nic/conf/$PIPELINE/
