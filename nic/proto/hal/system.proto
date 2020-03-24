@@ -30,7 +30,6 @@ service System {
   rpc ClearFteTxRxStats(types.Empty) returns (types.Empty) {}
   rpc ClearTableStats(types.Empty) returns (types.Empty) {}
   rpc ClearPbStats(types.Empty) returns (types.Empty) {}
-  rpc ForwardingModeGet(types.Empty) returns (ForwardingModeResponse) {}
   rpc FeatureProfileGet(types.Empty) returns (FeatureProfileResponse) {}
   rpc MicroSegUpdate(MicroSegUpdateRequestMsg) returns (MicroSegUpdateResponseMsg) {}
   // Nicmgr -> HAL micro seg status
@@ -432,11 +431,6 @@ enum FeatureProfile {
   FEATURE_PROFILE_VIRTUALIZED           = 4;
   FEATURE_PROFILE_PROXY                 = 5;
   FEATURE_PROFILE_DEVELOPER             = 6;  
-}
-
-message ForwardingModeResponse {
-  types.ApiStatus api_status = 1;
-  ForwardingMode  fwd_mode   = 2;
 }
 
 message FeatureProfileResponse {

@@ -68,13 +68,6 @@ var systemModeShowCmd = &cobra.Command{
 	Run:   systemModeShowCmdHandler,
 }
 
-var systemFwdModeShowCmd = &cobra.Command{
-	Use:   "forwarding-mode",
-	Short: "show system forwarding mode",
-	Long:  "show system forwarding mode",
-	Run:   systemFwdModeShowCmdHandler,
-}
-
 var systemFeatProfileShowCmd = &cobra.Command{
 	Use:   "feature-profile",
 	Short: "show system feature profile",
@@ -188,7 +181,6 @@ func init() {
 	systemShowCmd.AddCommand(threadShowCmd)
 	systemShowCmd.AddCommand(systemClockShowCmd)
 	systemShowCmd.AddCommand(systemFeatProfileShowCmd)
-	systemShowCmd.AddCommand(systemFwdModeShowCmd)
 	systemShowCmd.AddCommand(systemModeShowCmd)
 	systemShowCmd.AddCommand(systemInbMgmtIfShowCmd)
 	systemShowCmd.AddCommand(queueStatsCmd)
@@ -367,35 +359,6 @@ func systemInbMgmtShowCmdHandler(cmd *cobra.Command, args []string) {
 	} else {
 		fmt.Printf("Inband Mgmt If: %s\n", utils.IfIndexToStr(uint32(resp.GetInbMgmtIfId())))
 	}
-}
-
-func systemFwdModeShowCmdHandler(cmd *cobra.Command, args []string) {
-	// Connect to HAL
-	c, err := utils.CreateNewGRPCClient()
-	defer c.Close()
-	if err != nil {
-		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
-		os.Exit(1)
-	}
-	client := halproto.NewSystemClient(c)
-
-	// HAL call
-	var empty *halproto.Empty
-	resp, err := client.ForwardingModeGet(context.Background(), empty)
-	if err != nil {
-		fmt.Printf("Getting system forwarding mode failed. %v\n", err)
-		return
-	}
-
-	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
-		fmt.Printf("Operation failed with %v error\n", resp.GetApiStatus())
-		return
-	}
-
-	fwdMode := strings.Replace(resp.GetFwdMode().String(), "FORWARDING_MODE_", "", -1)
-	fwdMode = strings.Replace(fwdMode, "_", "-", -1)
-
-	fmt.Printf("Forwarding Mode: %s\n", fwdMode)
 }
 
 func handleSystemQueueStatsCmd(cmd *cobra.Command, args []string, inputQueue bool, outputQueue bool) {

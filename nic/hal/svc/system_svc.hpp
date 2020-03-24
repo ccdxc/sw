@@ -14,7 +14,6 @@ using sys::SystemGetRequest;
 using sys::SystemResponse;
 using sys::ApiStatsResponse;
 using sys::FeatureProfileResponse;
-using sys::ForwardingModeResponse;
 using sys::MicroSegRequestMsg;
 using sys::MicroSegResponseMsg;
 using sys::MicroSegSpec;
@@ -61,9 +60,6 @@ public:
     Status ClearPbStats(ServerContext *context,
                         const Empty *request,
                         Empty *rsp) override;
-    Status ForwardingModeGet(ServerContext *context,
-                             const Empty *request,
-                             ForwardingModeResponse *rsp) override;
     Status FeatureProfileGet(ServerContext *context,
                              const Empty *request,
                              FeatureProfileResponse *rsp) override;

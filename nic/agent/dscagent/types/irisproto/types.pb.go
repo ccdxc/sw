@@ -438,7 +438,6 @@
 		QInfo
 		FTEInfo
 		PMDStats
-		ForwardingModeResponse
 		FeatureProfileResponse
 		MicroSegEvent
 		MicroSegSpec

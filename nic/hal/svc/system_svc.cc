@@ -140,14 +140,6 @@ SystemServiceImpl::ClearPbStats(ServerContext *context,
 }
 
 Status
-SystemServiceImpl::ForwardingModeGet(ServerContext *context,
-                                     const Empty *request,
-                                     ForwardingModeResponse *rsp)
-{
-    return Status::OK;
-}
-
-Status
 SystemServiceImpl::FeatureProfileGet(ServerContext *context,
                                      const Empty *request,
                                      FeatureProfileResponse *rsp)

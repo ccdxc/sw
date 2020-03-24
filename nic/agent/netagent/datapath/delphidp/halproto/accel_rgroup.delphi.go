@@ -1323,7 +1323,6 @@ It has these top-level messages:
 	QInfo
 	FTEInfo
 	PMDStats
-	ForwardingModeResponse
 	FeatureProfileResponse
 	MicroSegEvent
 	MicroSegSpec

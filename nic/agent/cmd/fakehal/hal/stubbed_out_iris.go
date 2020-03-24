@@ -400,15 +400,6 @@ func (h Hal) ClearPbStats(ctx context.Context, req *irisproto.Empty) (*irisproto
 	return nil, nil
 }
 
-// ForwardingModeGet Stubbed out
-func (h Hal) ForwardingModeGet(ctx context.Context, req *irisproto.Empty) (*irisproto.ForwardingModeResponse, error) {
-	dat, _ := json.MarshalIndent(req, "", "  ")
-	log.Info("Got ForwardingModeGet Request:")
-	fmt.Println(string(dat))
-
-	return nil, nil
-}
-
 // FeatureProfileGet Stubbed out
 func (h Hal) FeatureProfileGet(ctx context.Context, req *irisproto.Empty) (*irisproto.FeatureProfileResponse, error) {
 	dat, _ := json.MarshalIndent(req, "", "  ")

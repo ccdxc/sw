@@ -14,7 +14,6 @@ using sys::ApiStatsEntry;
 using sys::SystemGetRequest;
 using sys::SystemResponse;
 using sys::FeatureProfileResponse;
-using sys::ForwardingModeResponse;
 using sys::MicroSegSpec;
 using sys::MicroSegResponse;
 using sys::MicroSegEvent;

@@ -6310,13 +6310,13 @@ if_to_str (if_t *hal_if)
     if (hal_if) {
         switch(hal_if->if_type) {
         case intf::IF_TYPE_ENIC:
-            snprintf(buf, 50, "Enic-%d", hal_if->if_id);
+            snprintf(buf, 50, "Enic-%lu", hal_if->if_id);
             break;
         case intf::IF_TYPE_CPU:
-            snprintf(buf, 50, "CPU-%d", hal_if->if_id);
+            snprintf(buf, 50, "CPU-%lu", hal_if->if_id);
             break;
         case intf::IF_TYPE_APP_REDIR:
-            snprintf(buf, 50, "App-redir-%d", hal_if->if_id);
+            snprintf(buf, 50, "App-redir-%lu", hal_if->if_id);
             break;
         case intf::IF_TYPE_UPLINK:
         case intf::IF_TYPE_UPLINK_PC:
