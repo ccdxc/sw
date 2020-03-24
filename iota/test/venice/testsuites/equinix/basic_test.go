@@ -1,4 +1,4 @@
-package techsupport_test
+package equinix_test
 
 import (
 	"context"

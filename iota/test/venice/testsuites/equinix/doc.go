@@ -1,3 +1,3 @@
-// Package techsupport has Venice techsupport tests
-// - Techsupport
-package techsupport
+// Package equinix has Venice equinix tests
+// - Equinix feature tests
+package equinix

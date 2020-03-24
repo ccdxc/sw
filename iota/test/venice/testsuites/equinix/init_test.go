@@ -1,6 +1,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
 
-package techsupport_test
+package equinix_test
 
 import (
 	"flag"
@@ -22,7 +22,7 @@ var debugFlag = flag.Bool("debug", false, "set log level to debug")
 var scaleFlag = flag.Bool("scale", false, "enable scale configuration")
 var scaleDataFlag = flag.Bool("scale-data", false, "enable datapath scale")
 
-// TestSuite : techsupport test suite
+// TestSuite : equinix test suite
 type TestSuite struct {
 	tb        *testbed.TestBed        // testbed
 	model     model.SysModelInterface // system model
@@ -31,7 +31,7 @@ type TestSuite struct {
 
 var ts *TestSuite
 
-func TestIotaTechsupportTest(t *testing.T) {
+func TestIotaEquinixTest(t *testing.T) {
 	// set log level
 	cfg := log.GetDefaultConfig("venice-e2e")
 	if *debugFlag {
@@ -45,7 +45,7 @@ func TestIotaTechsupportTest(t *testing.T) {
 		return
 	}
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Iota Techsupport E2E Suite")
+	RunSpecs(t, "Iota Equinix E2E Suite")
 }
 
 // BeforeSuite runs before the test suite and sets up the testbed
