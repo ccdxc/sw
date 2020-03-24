@@ -178,7 +178,8 @@ ionic_heartbeat_check(struct ionic *ionic)
 
 
 /* Devcmd Interface */
-u8 ionic_dev_cmd_status(struct ionic_dev *idev)
+enum ionic_status_code
+ionic_dev_cmd_status(struct ionic_dev *idev)
 {
         return ionic_readb_raw((vmk_VA)&idev->dev_cmd_regs->comp.status);
 }

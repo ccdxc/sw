@@ -26,6 +26,29 @@
 #define true 1
 #define HZ vmk_TimerCyclesPerSecond()
 
+/*
+ *****************************************************************************
+ * vSphere release verison definitions
+ *****************************************************************************
+*/
+
+#ifndef VSPHERE_VERS
+#define VSPHERE_VERS(n) (n)
+#endif
+
+#ifndef VSPHERE_VER
+#if VMKAPI_REVISION == VMK_REVISION_FROM_NUMBERS(2, 6, 0, 0)
+#define VSPHERE_VER 2020
+#elif VMKAPI_REVISION == VMK_REVISION_FROM_NUMBERS(2, 5, 0, 0)
+#define VSPHERE_VER 2017
+#elif VMKAPI_REVISION == VMK_REVISION_FROM_NUMBERS(2, 4, 0, 0)
+#define VSPHERE_VER 2016
+#else
+#error "Unknown VMKAPI version"
+#endif
+#endif
+
+
 VMK_ASSERT_LIST(ionic_types,
         VMK_ASSERT_ON_COMPILE(true == VMK_TRUE);
 )

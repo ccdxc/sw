@@ -10,6 +10,7 @@
 
 #include "ionic_log.h"
 #include "ionic_memory.h"
+#include "ionic_types.h"
 
 /*
  ******************************************************************************
@@ -72,7 +73,11 @@ ionic_dma_engine_create(const char *const name,                   // IN
         if (is_coherent) {
                 dma_engine_props.flags    = VMK_DMA_ENGINE_FLAGS_COHERENT;
         } else {
+#if VSPHERE_VER >= VSPHERE_VERS(2020)
+                dma_engine_props.flags    = VMK_DMA_ENGINE_FLAGS_NON_COHERENT;
+#else
                 dma_engine_props.flags    = VMK_DMA_ENGINE_FLAGS_NONE;
+#endif
         }
 
         status = vmk_DMAEngineCreate(&dma_engine_props,

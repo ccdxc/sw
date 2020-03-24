@@ -351,15 +351,19 @@ int ionic_netpoll(int budget, ionic_cq_cb cb,
 static VMK_ReturnStatus
 ionic_dev_cmd_check_error(struct ionic *ionic)
 {
-        VMK_ReturnStatus status = VMK_FAILURE;
+        VMK_ReturnStatus status;
+        enum ionic_status_code sc;
         struct ionic_dev *idev = &ionic->en_dev.idev;
 
-        status = ionic_dev_cmd_status(idev);
-        switch (status) {
+        sc = ionic_dev_cmd_status(idev);
+        switch (sc) {
                 case IONIC_RC_SUCCESS:
                 case IONIC_RC_EEXIST:
                 case IONIC_RC_ENOENT:
                         status = VMK_OK;
+                        break;
+                default:
+                        status = VMK_FAILURE;
         }
 
         if (status != VMK_OK) {

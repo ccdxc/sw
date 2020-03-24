@@ -227,7 +227,7 @@ VMK_ReturnStatus
 ionic_heartbeat_check(struct ionic *ionic);
 
 void ionic_dev_cmd_go(struct ionic_dev *idev, union ionic_dev_cmd *cmd);
-u8 ionic_dev_cmd_status(struct ionic_dev *idev);
+enum ionic_status_code ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
 
