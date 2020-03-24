@@ -26,22 +26,22 @@ namespace upg
 
 void           token_parse(std::string& text,
                            std::vector<std::string>& results);
-ev_tstamp      str_to_timeout(std::string& timeout);
-stage_id_t     name_to_stage_id(std::string stage);
-std::string    id_to_stage_name(stage_id_t stage);
-std::string    svc_sequence_to_str(svc_sequence_t svcs);
-std::string    transition_to_str(transition_t& transitions);
-std::string    script_to_str(scripts_t& scripts);
+ev_tstamp      str_to_timeout(const std::string& timeout);
+stage_id_t     name_to_stage_id(const std::string stage);
+std::string    id_to_stage_name(const stage_id_t stage);
+std::string    svc_sequence_to_str(const svc_sequence_t svcs);
+std::string    transition_to_str(const transition_t& transitions);
+std::string    script_to_str(const scripts_t& scripts);
 scripts_t      str_to_scripts(std::string scripts);
-upg_stage_t    upg_stage_id(stage_id_t id);
-svc_rsp_code_t svc_rsp_code(upg_status_t id);
-void           dump(transition_t& transitions);
-void           dump(scripts_t& scripts);
+upg_stage_t    upg_stage_id(const stage_id_t id);
+svc_rsp_code_t svc_rsp_code(const upg_status_t id);
+void           dump(const transition_t& transitions);
+void           dump(const scripts_t& scripts);
 void           dump(stage_t& stage);
 void           dump(stages_t& stages);
-void           dump(services_t& svcs);
-void           dump(svc_sequence_t& svcs);
-void           dump(stage_map_t& tran);
-void           dump(fsm& fsm);
+void           dump(const services_t& svcs);
+void           dump(const svc_sequence_t& svcs);
+void           dump(const stage_map_t& tran);
+void           dump(const fsm& fsm);
 
 }

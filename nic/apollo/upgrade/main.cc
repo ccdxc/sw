@@ -23,12 +23,6 @@ sdk::operd::logger_ptr g_upg_log = sdk::operd::logger::create(UPGRADE_LOG_NAME);
 
 }    // namespace upg
 
-static void inline
-print_usage (char **argv)
-{
-    fprintf(stdout, "Usage : ");
-}
-
 void
 upg_event_thread_init (void *ctxt)
 {
@@ -58,7 +52,7 @@ spawn_upg_event_thread (void)
             true);
 
     if (!g_upg_event_thread) {
-        g_upg_log->err("Upgrade event server thread create failure");
+        UPG_TRACE_ERR("Upgrade event server thread create failure");
         SDK_ASSERT(0);
     }
     g_upg_event_thread->start(g_upg_event_thread);
@@ -89,7 +83,7 @@ svc_init (void)
     // register for all the services
     server_builder->RegisterService(&upg_svc);
 
-    g_upg_log->info("gRPC server listening on ... %s",
+    UPG_TRACE_INFO("gRPC server listening on ... %s",
                     g_grpc_server_addr.c_str());
     std::unique_ptr<Server> server(server_builder->BuildAndStart());
     server->Wait();

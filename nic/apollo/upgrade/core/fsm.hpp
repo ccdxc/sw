@@ -25,7 +25,6 @@
 #include "nic/apollo/upgrade/core/service.hpp"
 #include "nic/apollo/upgrade/core/idl.hpp"
 
-#define DEFAULT_SVC_RSP_TIMEOUT 5
 
 namespace upg {
 #if 0
@@ -58,28 +57,65 @@ static  sdk_ret_t send_paralle_event(/* eventi, service ep order*/) {
 
 class fsm {
     public:
-        fsm(stage_id_t start = STAGE_ID_COMPAT_CHECK,
-                    stage_id_t end = STAGE_ID_EXIT);
-        ~fsm(void);
-        stage_id_t      current_stage(void);
-        void            set_current_stage(stage_id_t id);
-        stage_id_t      start_stage(void);
-        stage_id_t      end_stage(void);
-        uint32_t        pending_response(void);
-        void            set_pending_response(uint32_t count);
-        void            update_stage_progress(svc_rsp_code_t rsp);
-        ev_tstamp       timeout(void);
-        void            set_timeout(ev_tstamp timeout);
+       fsm(stage_id_t start = STAGE_ID_COMPAT_CHECK,
+                 stage_id_t end = STAGE_ID_EXIT) {
+            current_stage_    = start;
+            start_stage_      = start;
+            end_stage_        = end;
+            pending_response_ = 0;
+            size_             = 0;
+            timeout_          = DEFAULT_SVC_RSP_TIMEOUT;
+        }
+
+        ~fsm(void) {};
+
+        stage_id_t current_stage(void) const {
+            return current_stage_;
+        }
+
+        stage_id_t start_stage(void) const {
+            return start_stage_;
+        }
+
+        stage_id_t end_stage(void) const {
+            return end_stage_;
+        }
+
+        uint32_t pending_response(void) const {
+            return pending_response_;
+        }
+
+        void set_pending_response(const uint32_t count) {
+            pending_response_ = count;
+        }
+
+        void set_timeout(const ev_tstamp timeout) {
+            timeout_ = timeout;
+        }
+
+        ev_tstamp timeout(void) const {
+            return timeout_;
+        }
+
+        svc_sequence_t svc_sequence(void) const {
+            return svc_sequence_;
+        }
+
+        bool has_next_svc(void) const {
+            return pending_response_ > 0;
+        }
+
+        void            set_current_stage(const stage_id_t id);
+        void            update_stage_progress(const svc_rsp_code_t rsp);
         bool            is_current_stage_over(void);
-        bool            is_serial_event_sequence(void);
-        bool            has_next_svc(void);
-        bool            is_valid_service(std::string svc);
-        svc_t           next_svc(void);
-        void            timer_init(void* ctxt);
+        bool            is_serial_event_sequence(void) const;
+        bool            is_valid_service(const std::string svc) const;
+        svc_t           next_svc(void) const;
+        void            timer_init(const void* ctxt);
         void            timer_start(void);
         void            timer_stop(void);
         void            timer_set(void);
-        svc_sequence_t  svc_sequence(void);
+
     private:
         stage_id_t      current_stage_;
         stage_id_t      start_stage_;
@@ -89,10 +125,6 @@ class fsm {
         svc_sequence_t  svc_sequence_;
         ev_tstamp       timeout_;
 };
-
-static fsm            fsm_states;
-static ev_timer       timeout_watcher;
-static struct ev_loop *loop;
 
 void init(void *ctxt);
 sdk_ret_t do_switchover(void);

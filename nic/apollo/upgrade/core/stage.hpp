@@ -19,7 +19,7 @@
 #include "nic/apollo/upgrade/core/service.hpp"
 #include "nic/apollo/upgrade/core/idl.hpp"
 
-#define STAGE_COUNT         11
+#define DEFAULT_SVC_RSP_TIMEOUT 5
 
 namespace upg {
 
@@ -51,16 +51,6 @@ typedef enum stage_callback_t {
     POST_STAGE = 1
 } stage_callback_t;
 
-/// \brief        Exported API to register application function callback
-/// \param[in]    cb_type       Enum to differentiate pre or post callback
-/// \param[in]    cb_stage      Enum to identify stage
-/// \param[in]    callback      callback function
-/// \return       status to callback registration
-extern sdk_ret_t upg_register_stage_callback(stage_callback_t cb_type,
-                                             stage_id_t cb_stage,
-                                             void *(*callback)(void*),
-                                             void* arg);
-
 /// \brief  smallest data structure to decide what would be the next
 /// stage
 /// \remark
@@ -69,16 +59,45 @@ extern sdk_ret_t upg_register_stage_callback(stage_callback_t cb_type,
 ///  table for stage transition.
 class stage_transition_t {
 public:
-    stage_transition_t(void);
-    ~stage_transition_t(void);
-    stage_transition_t(stage_id_t curr, svc_rsp_code_t rsp,
-                       stage_id_t next);
-    stage_id_t     from(void);
-    void           set_from(stage_id_t id);
-    stage_id_t     to(void);
-    void           set_to(stage_id_t id);
-    svc_rsp_code_t svc_rsp_code(void);
-    void           set_svc_rsp_code(svc_rsp_code_t id);
+    stage_transition_t(void):
+        form_(STAGE_ID_EXIT),
+        svc_rsp_code_(SVC_RSP_CRIT)
+        ,to_(STAGE_ID_EXIT){};
+
+    stage_transition_t(stage_id_t curr,
+                                           svc_rsp_code_t rsp,
+                                           stage_id_t next) {
+        form_ = curr;
+        svc_rsp_code_ = rsp;
+        to_ = next;
+    };
+
+    ~stage_transition_t(void) {};
+
+    stage_id_t from(void) const {
+        return form_;
+    };
+
+    void set_from(stage_id_t id) {
+        form_ = id;
+    };
+
+    stage_id_t to(void) const {
+        return to_;
+    };
+
+    void set_to(stage_id_t id) {
+        to_ = id;
+    };
+
+    svc_rsp_code_t svc_rsp_code(void) const {
+        return svc_rsp_code_;
+    };
+
+    void set_svc_rsp_code(svc_rsp_code_t id) {
+        svc_rsp_code_ = id;
+    };
+
 private:
     stage_id_t     form_;
     svc_rsp_code_t svc_rsp_code_;
@@ -103,9 +122,16 @@ typedef boost::unordered_map<std::string, stage_id_t> stage_map_t;
 /// hook of any stage.
 class script_t {
 public:
-    script_t(std::string path="");
-    ~script_t(void);
-    std::string path(void);
+    script_t(std::string path) {
+        path_ = path;
+    };
+
+    ~script_t(void){};
+
+    std::string path(void) const {
+        return path_;
+    };
+
 private:
     std::string path_;
 };
@@ -120,19 +146,49 @@ typedef boost::container::vector<script_t> scripts_t;
 /// to the application.
 class stage_t {
 public:
-    stage_t(void);
-    stage_t(ev_tstamp svc_rsp_timeout, svc_sequence_t svc_seq,
-            event_sequence_t evt_seq,
-            transition_t transitions, scripts_t pre_sc,
-            scripts_t post_sc);
-    ~stage_t(void);
+    stage_t(void) {
+        svc_rsp_timeout_   = DEFAULT_SVC_RSP_TIMEOUT ;
+        event_sequence_    = PARALLEL;
+    };
 
-    ev_tstamp&        svc_rsp_timeout(void);
-    svc_sequence_t&   svc_sequence(void);
-    event_sequence_t& event_sequence(void);
-    transition_t&     transitions(void);
-    scripts_t&        pre_hook_scripts(void);
-    scripts_t&        post_hook_scripts(void);
+    stage_t(ev_tstamp svc_rsp_timeout, svc_sequence_t svc_seq,
+                     event_sequence_t evt_seq,
+                     transition_t transitions, scripts_t pre_sc,
+                     scripts_t post_sc) {
+        svc_rsp_timeout_       = svc_rsp_timeout ;
+        svc_sequence_      = svc_seq;
+        event_sequence_    = evt_seq;
+        transitions_       = transitions;
+        pre_hook_scripts_  = pre_sc ;
+        post_hook_scripts_ = post_sc;
+    };
+
+    ~stage_t(void) {};
+
+    ev_tstamp& svc_rsp_timeout(void) {
+        return svc_rsp_timeout_;
+    };
+
+    svc_sequence_t& svc_sequence(void) {
+        return svc_sequence_;
+    };
+
+    event_sequence_t& event_sequence(void) {
+        return event_sequence_;
+    };
+
+    transition_t& transitions(void) {
+        return transitions_;
+    };
+
+    scripts_t& pre_hook_scripts(void) {
+        return pre_hook_scripts_;
+    };
+
+    scripts_t& post_hook_scripts(void) {
+        return post_hook_scripts_;
+    };
+
 private:
     ev_tstamp        svc_rsp_timeout_;
     svc_sequence_t   svc_sequence_;
@@ -146,22 +202,17 @@ private:
 /// \brief A lookup container for stage id and object
 typedef boost::unordered_map< stage_id_t, stage_t> stages_t;
 
-static stages_t     fsm_stages;
-static stage_map_t  fsm_lookup_tbl;
+/// \brief        Exported API to register application function callback
+/// \param[in]    cb_type       Enum to differentiate pre or post callback
+/// \param[in]    cb_stage      Enum to identify stage
+/// \param[in]    callback      callback function
+/// \return       status to callback registration
+extern sdk_ret_t upg_register_stage_callback(stage_callback_t cb_type,
+                                             stage_id_t cb_stage,
+                                             void *(*callback)(void*),
+                                             void* arg);
 
-static const char *fsm_stageid_to_name [] =  {
-    [STAGE_ID_COMPAT_CHECK] = "compatcheck",
-    [STAGE_ID_START]        = "start",
-    [STAGE_ID_PREPARE]      = "prepare",
-    [STAGE_ID_BACKUP]       = "backup",
-    [STAGE_ID_SWITCHOVER]   = "switchover",
-    [STAGE_ID_VERIFY]       = "verify",
-    [STAGE_ID_FINISH]       = "finish",
-    [STAGE_ID_ABORT]        = "abort",
-    [STAGE_ID_ROLLBACK]     = "rollback",
-    [STAGE_ID_CRITICAL]     = "critical",
-    [STAGE_ID_EXIT]         = "exit"
-};
 
 }
 #endif    // __UPGRADE_FSM_STAGE_HPP___
+

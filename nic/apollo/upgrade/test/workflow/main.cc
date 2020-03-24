@@ -36,7 +36,6 @@ stage_to_upg_status (upg_stage_t evt)
     description   = pt.get<std::string>(test_id + "." + "description");
     upg_status    = (upg_status_t) pt.get<int>(test_id + "." + upg_stage);
     return upg_status;
-#endif
 
    // TODO: need to do this timeout injection from test json
    if (UPG_STAGE_PREPARE == evt) {
@@ -44,6 +43,7 @@ stage_to_upg_status (upg_stage_t evt)
        sleep (5);
        printf("\nSleep done ...\n");
    }
+#endif
     return UPG_STATUS_OK;
 }
 

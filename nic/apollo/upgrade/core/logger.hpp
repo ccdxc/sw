@@ -36,14 +36,15 @@ extern sdk::operd::logger_ptr g_upg_log;
     g_upg_log->debug("[%s:%u] " fmt, __FNAME__, __LINE__, ##__VA_ARGS__); \
 }
 
-#define UPG_TRACE(fmt, ...)      i                                        \
+#define UPG_TRACE(fmt, ...)                                               \
 {                                                                         \
     g_upg_log->trace("[%s:%u] " fmt, __FNAME__, __LINE__, ##__VA_ARGS__); \
 }
 
-#define UPG_TRACE_PRINT(str)                                              \
+#define UPG_TRACE_VERBOSE(str)                                            \
 {                                                                         \
-    std::cout<<std::endl<<str<<std::endl;                                 \
+    std::string s_ = str;                                                 \
+    UPG_TRACE("%s", s_.c_str());                                          \
 }
 
 }    // namespace upg

@@ -27,17 +27,53 @@ namespace upg {
 /// mechanism from parallel to serial.
 class idl_stage_t {
 public:
-    idl_stage_t(std::string stage, std::string timeout,
-                std::string svcs,std::string evt_seq,
-                std::string pre_hooks,std::string post_hooks);
-    idl_stage_t(void);
-    ~idl_stage_t(void);
-    std::string& stage(void);
-    std::string& svc_rsp_timeout(void);
-    std::string& svc_sequence(void);
-    std::string& event_sequence(void);
-    std::string& pre_hook_scripts(void);
-    std::string& post_hook_scripts(void);
+    idl_stage_t(void) {
+        stage_             = "";
+        svc_rsp_timeout_       = "";
+        svc_sequence_      = "";
+        event_sequence_    = "";
+        pre_hook_scripts_  = "";
+        post_hook_scripts_ = "";
+    };
+
+    idl_stage_t( std::string stage, std::string timeout,
+                              std::string svcs, std::string evt_seq,
+                              std::string pre_hooks,
+                              std::string post_hooks) {
+        stage_             = stage;
+        svc_rsp_timeout_       = timeout ;
+        svc_sequence_      = svcs ;
+        event_sequence_    = evt_seq ;
+        pre_hook_scripts_  = pre_hooks ;
+        post_hook_scripts_ = post_hooks ;
+    };
+
+    ~idl_stage_t(void) {};
+
+    std::string& stage(void) {
+        return stage_;
+    };
+
+    std::string& svc_rsp_timeout(void) {
+        return svc_rsp_timeout_;
+    };
+
+    std::string& svc_sequence(void) {
+        return svc_sequence_;
+    };
+
+    std::string& event_sequence(void) {
+        return event_sequence_;
+    };
+
+    std::string& pre_hook_scripts(void) {
+        return pre_hook_scripts_;
+    };
+
+    std::string& post_hook_scripts(void) {
+        return post_hook_scripts_;
+    };
+
 private:
     std::string stage_;
     std::string svc_rsp_timeout_;

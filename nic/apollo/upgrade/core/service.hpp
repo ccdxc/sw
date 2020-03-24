@@ -43,15 +43,32 @@ typedef enum event_sequence_t {
 /// \brief    A service is identified by a name(example: pdsagent)
 class svc_t {
 public:
-    svc_t(std::string name="");
-    ~svc_t(void);
-    std::string name(void);
-    std::string thread_name(void);
-    void        set_thread_name(std::string name);
-    uint32_t    thread_id(void);
-    void    set_thread_id(uint32_t id);
+    svc_t(std::string name="") : name_(name) { };
+
+    ~svc_t(void){};
+
+    std::string name(void) const {
+        return name_;
+    };
+
+    std::string thread_name(void) const {
+        return thread_name_;
+    };
+
+    uint32_t thread_id(void) const {
+        return thread_id_;
+    };
+
+    void set_thread_name(const std::string name) {
+        thread_name_= name;
+    };
+
+    void set_thread_id(const uint32_t id) {
+        thread_id_= id;
+    };
+
     svc_t& operator = (const svc_t &obj) ;
-    void dispatch_event(upg_stage_t event);
+    void dispatch_event(upg_stage_t event) const ;
 
 private:
     std::string  name_;
@@ -76,17 +93,27 @@ typedef boost::container::vector<svc_t> svc_sequence_t;
 /// new header needs to be generated.
 class services_t {
 public:
-    event_sequence_t event_sequence(void);
-    svc_sequence_t   svc_sequence(void);
-    void             set_event_sequence(event_sequence_t type);
-    void             add_svc(svc_t& service);
-    svc_t&           svc_by_name(std::string& name);
-    void             dispatch_event(upg_stage_t event);
+    void set_event_sequence(const event_sequence_t type) {
+        event_sequence_ = type;
+    };
+
+    event_sequence_t event_sequence(void) const {
+        return event_sequence_ ;
+    };
+
+    void add_svc(const svc_t& service ) {
+        svc_sequence_.push_back(service);
+    };
+
+    svc_sequence_t svc_sequence(void) const {
+        return svc_sequence_;
+    };
+
+    svc_t&           svc_by_name(const std::string& name);
+    void             dispatch_event(upg_stage_t event) const ;
 private:
     event_sequence_t event_sequence_;
     svc_sequence_t   svc_sequence_;
 };
-
-static services_t fsm_services;
 }
 #endif    // __UPGRADE_FSM_SVC_HPP_

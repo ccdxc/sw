@@ -26,9 +26,24 @@
 namespace upg
 {
 
+static const char *fsm_stageid_to_name [] =  {
+    [STAGE_ID_COMPAT_CHECK] = "compatcheck",
+    [STAGE_ID_START]        = "start",
+    [STAGE_ID_PREPARE]      = "prepare",
+    [STAGE_ID_BACKUP]       = "backup",
+    [STAGE_ID_SWITCHOVER]   = "switchover",
+    [STAGE_ID_VERIFY]       = "verify",
+    [STAGE_ID_FINISH]       = "finish",
+    [STAGE_ID_ABORT]        = "abort",
+    [STAGE_ID_ROLLBACK]     = "rollback",
+    [STAGE_ID_CRITICAL]     = "critical",
+    [STAGE_ID_EXIT]         = "exit"
+};
+
+
 // Overloaded dump functions can be used for debugging
 std::string
-svc_sequence_to_str (svc_sequence_t svcs)
+svc_sequence_to_str (const svc_sequence_t svcs)
 {
     std::string str = "svc_sequence_t : ";
     for (auto x: svcs) {
@@ -39,7 +54,7 @@ svc_sequence_to_str (svc_sequence_t svcs)
 }
 
 std::string
-transition_to_str (transition_t& transitions)
+transition_to_str (const transition_t& transitions)
 {
     std::string str = "(from:rsp:to) :"  ;
     for (auto x: transitions) {
@@ -52,7 +67,7 @@ transition_to_str (transition_t& transitions)
 }
 
 std::string
-script_to_str(scripts_t& scripts)
+script_to_str(const scripts_t& scripts)
 {
     std::string str;
     for (auto x: scripts) {
@@ -62,7 +77,7 @@ script_to_str(scripts_t& scripts)
 }
 
 void
-dump(fsm& fsm)
+dump(const fsm& fsm)
 {
     std::string str;
     stage_id_t start = fsm.start_stage();
@@ -80,11 +95,11 @@ dump(fsm& fsm)
     str += "\ttimeout       : " + std::to_string(fsm.timeout()) + "\n";
     str += "\tsvc sequence  : " + svc_sequence_to_str(fsm.svc_sequence());
 
-    UPG_TRACE_PRINT(str);
+    UPG_TRACE_VERBOSE(str);
 }
 
 void
-dump (transition_t& transitions)
+dump (const transition_t& transitions)
 {
     std::string str ;
     for (auto x: transitions) {
@@ -93,18 +108,18 @@ dump (transition_t& transitions)
         str += " to: "  + id_to_stage_name(x.to())+ "),";
     }
 
-    UPG_TRACE_PRINT(str);
+    UPG_TRACE_VERBOSE(str);
 }
 
 void
-dump (scripts_t& scripts)
+dump (const scripts_t& scripts)
 {
     std::string str;
     for (auto x: scripts) {
         str += x.path() + ", ";
     }
 
-    UPG_TRACE_PRINT(str);
+    UPG_TRACE_VERBOSE(str);
 }
 
 void
@@ -119,50 +134,50 @@ dump (stage_t& stage)
     str += "\n\t\t pre_hook      :" + script_to_str(stage.pre_hook_scripts());
     str += "\n\t\t post_hook     :" + script_to_str(stage.post_hook_scripts());
 
-    UPG_TRACE_PRINT(str);
+    UPG_TRACE_VERBOSE(str);
 }
 
 void
 dump (stages_t& stages)
 {
     std::string str = "stages_t : ";
-    UPG_TRACE_PRINT(str);
+    UPG_TRACE_VERBOSE(str);
     for (auto x: stages) {
         dump(x.second);
     }
 }
 
 void
-dump (services_t& svcs)
+dump (const services_t& svcs)
 {
     std::string str = "services_t : ";
     svc_sequence_t svc_list = svcs.svc_sequence();
     for (auto x: svc_list) {
          str += x.name() + ", ";
     }
-    UPG_TRACE_PRINT(str);
-    UPG_TRACE_PRINT("[" + std::to_string(svcs.event_sequence()) + "]");
+    UPG_TRACE_VERBOSE(str);
+    UPG_TRACE_VERBOSE("[" + std::to_string(svcs.event_sequence()) + "]");
 }
 
 void
-dump (svc_sequence_t& svcs)
+dump (const svc_sequence_t& svcs)
 {
     std::string str = "svc_sequence_t : ";
     for (auto x: svcs) {
          str += x.name() + ", ";
     }
-    UPG_TRACE_PRINT(str);
+    UPG_TRACE_VERBOSE(str);
 }
 
 void
-dump (stage_map_t& tran)
+dump (const stage_map_t& tran)
 {
     std::string str = "stage_map_t : ";
     for (std::pair<std::string, stage_id_t> element : tran) {
          str += "[ " + element.first;
          str += " ->" + std::to_string(element.second) + "], ";
     }
-    UPG_TRACE_PRINT(str);
+    UPG_TRACE_VERBOSE(str);
 }
 
 void
@@ -172,7 +187,7 @@ token_parse (std::string& text, std::vector<std::string>& results)
 };
 
 ev_tstamp
-str_to_timeout (std::string& timeout)
+str_to_timeout (const std::string& timeout)
 {
     if (timeout.empty()) {
         return (ev_tstamp) DEFAULT_SVC_RSP_TIMEOUT;
@@ -185,7 +200,7 @@ str_to_timeout (std::string& timeout)
 }
 
 stage_id_t
-name_to_stage_id (std::string stage)
+name_to_stage_id (const std::string stage)
 {
     // TODO: empty error
    stage_id_t id;
@@ -204,7 +219,7 @@ name_to_stage_id (std::string stage)
 };
 
 std::string
-id_to_stage_name (stage_id_t stage)
+id_to_stage_name (const stage_id_t stage)
 {
     // TODO: empty error
    std::string name;
@@ -239,7 +254,7 @@ str_to_scripts (std::string scripts)
 
 
 svc_rsp_code_t
-svc_rsp_code (upg_status_t id)
+svc_rsp_code (const upg_status_t id)
 {
     svc_rsp_code_t svc_rsp_id = SVC_RSP_NONE;
     switch (id) {
