@@ -573,7 +573,6 @@ func (sm *SysModel) AssociateHosts() error {
 	for k := range sm.FakeNaples {
 		delete(sm.FakeHosts, k)
 	}
-	sm.ListSmartNIC()
 	for simName, n := range sm.FakeNaples {
 		n.SmartNic.Labels = make(map[string]string)
 		for _, simNaples := range n.GetIotaNode().GetNaplesMultiSimConfig().GetSimsInfo() {
@@ -592,11 +591,11 @@ func (sm *SysModel) AssociateHosts() error {
 						h := objects.NewHost(obj, n.GetIotaNode(), n)
 						sm.FakeHosts[obj.GetName()] = h
 						//Add BM type to support upgrade
-						n.SmartNic.Labels["type"] = "sim"
+						/*n.SmartNic.Labels["type"] = "sim"
 						if err := sm.UpdateSmartNIC(n.SmartNic); err != nil {
 							log.Infof("Error updating smart nic object %v", err)
 							return err
-						}
+						}*/
 						break
 					}
 				}

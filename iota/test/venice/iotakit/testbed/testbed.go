@@ -236,7 +236,6 @@ type TestBed struct {
 	skipConfigSetup      bool                       // skip config setup
 	hasNaplesSim         bool                       // has Naples sim nodes in the topology
 	hasNaplesHW          bool                       // testbed has Naples HW in the topology
-	useNaplesMgmt        bool                       // use naples mgmt instead of int mnic
 	allocatedVlans       []uint32                   // VLANs allocated for this testbed
 	unallocatedInstances []*InstanceParams          // currently unallocated instances
 	testResult           map[string]bool            // test result
@@ -294,11 +293,6 @@ func GetTestbed(topoName string, paramsFile string) (*TestBed, error) {
 func newTestBed(topoName string, paramsFile string, skipSetup bool) (*TestBed, error) {
 	var params Params
 
-	usemgmt := false
-	if os.Getenv("USE_MGMT") != "" {
-		usemgmt = true
-	}
-
 	// find the topology by name
 	topo, ok := Topologies[topoName]
 	if !ok {
@@ -345,7 +339,6 @@ func newTestBed(topoName string, paramsFile string, skipSetup bool) (*TestBed, e
 		testResult:    make(map[string]bool),
 		taskResult:    make(map[string]error),
 		caseResult:    make(map[string]*TestCaseResult),
-		useNaplesMgmt: usemgmt,
 		warmdJsonFile: paramsFile,
 	}
 
@@ -1495,10 +1488,15 @@ func (tb *TestBed) setupTestBed() error {
 		node.instParams.NicMgmtIP = tbn.NicIpAddress
 
 		//Naples management should be used, no int mgmt present
-		if tb.useNaplesMgmt {
+		if os.Getenv("NO_INTERNAL_MGMT") != "" {
 			tbn.NoMgmt = true
-			tbn.AutoDiscoverOnInstall = true
 		}
+
+		tbn.AutoDiscoverOnInstall = true
+		if os.Getenv("NO_AUTO_DISCOVERY") != "" {
+			tbn.AutoDiscoverOnInstall = false
+		}
+
 		//For now hack up until we get the vendor information
 		if node.instParams.Resource.ServerType == "hpe" {
 			tbn.ServerType = "hpe"
