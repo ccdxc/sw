@@ -97,7 +97,7 @@ volatile uint8_t g_session_stats_updt_locked_ = 0;
 
 extern class lif_mgr *g_lif_manager;
 
-#define SESSION_SW_DEFAULT_TIMEOUT                 (3600)
+#define SESSION_SW_DEFAULT_TIMEOUT                 (120)
 #define SESSION_SW_DEFAULT_TCP_HALF_CLOSED_TIMEOUT (120 * TIME_MSECS_PER_SEC)
 #define SESSION_SW_DEFAULT_TCP_CLOSE_TIMEOUT       (15 * TIME_MSECS_PER_SEC)
 #define SESSION_SW_DEFAULT_TCP_CXNSETUP_TIMEOUT    (15 * TIME_MSECS_PER_SEC)

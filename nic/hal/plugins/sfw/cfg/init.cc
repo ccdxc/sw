@@ -37,7 +37,7 @@ sfw_populate_default_enforce_security_profile(SecurityProfileSpec &prof)
     prof.set_udp_drop_timeout(60);
     prof.set_icmp_drop_timeout(60);
     prof.set_drop_timeout(60);
-    prof.set_tcp_timeout(3600);
+    prof.set_tcp_timeout(120);
     prof.set_udp_timeout(30);
     prof.set_icmp_timeout(6);
     prof.set_cnxn_tracking_en(true);

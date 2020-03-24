@@ -143,7 +143,7 @@ message SecurityProfileSpec {
   uint32                       udp_drop_timeout                   = 8 [(gogoproto.moretags) = "range:1-172800, venice:default=60"];
   uint32                       icmp_drop_timeout                  = 9 [(gogoproto.moretags) = "range:1-300, venice:default=60"];
   uint32                       drop_timeout                       = 10 [(gogoproto.moretags) = "range:1-300, venice:default=60"];
-  uint32                       tcp_timeout                        = 11 [(gogoproto.moretags) = "range:1-172800, venice:default=3600"];
+  uint32                       tcp_timeout                        = 11 [(gogoproto.moretags) = "range:1-172800, venice:default=120"];
   uint32                       udp_timeout                        = 12 [(gogoproto.moretags) = "range:1-172800, venice:default=30"];
   uint32                       icmp_timeout                       = 13 [(gogoproto.moretags) = "range:1-172800, venice:default=6"];
 
