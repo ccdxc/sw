@@ -248,6 +248,12 @@ public:
     /// \param[in] obj_id    object id
     static bool contained(obj_id_t obj_id);
 
+    /// \brief return true if obj_id_a is contained in obj_id_b
+    ///        (i.e. obj_id_b is the object that can hold a set/list of
+    ///         instances of obj_id_a)
+    /// \param[in] obj_id    object id
+    static bool is_contained_in(obj_id_t obj_id_a, obj_id_t obj_id_b);
+
     /// \brief return true if object needs to be circulated to other components
     /// (potentially multiple) in the system
     /// \param[in] obj_id    object id

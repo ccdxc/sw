@@ -351,68 +351,94 @@ public:
     /// \param[in] upd_bmap  bitmap indicating which attributes of the API
     ///                      object are being updated
     /// \return pointer to the API object context containing cumulative update
-    ///         bitmap if there is any new update or else NULL
-    api_obj_ctxt_t *add_to_deps_list(obj_id_t obj_id, api_op_t api_op,
-                                     api_base *api_obj, uint64_t upd_bmap) {
-        api_obj_ctxt_t *octxt;
+    ///         bitmap, if there is any new update or else NULL. If any new
+    ///         update has been detected, it needs to trigger the dependency
+    ///         chain of the objects depending on it
+    api_obj_ctxt_t *add_to_deps_list(api_op_t api_op,
+                                     obj_id_t obj_id_a, api_base *api_obj_a,
+                                     obj_id_t obj_id_b, api_base *api_obj_b,
+                                     uint64_t upd_bmap) {
+                                     //obj_id_t obj_id, api_op_t api_op,
+                                     //api_base *api_obj, uint64_t upd_bmap) {
+        api_obj_ctxt_t *octxt = NULL;
+        api_obj_ctxt_t *octxt_a, *octxt_b;
 
-        if (api_obj->in_dirty_list()) {
+        if (api_obj_b->in_dirty_list()) {
+            PDS_TRACE_DEBUG("%s already in DoL", api_obj_b->key2str().c_str());
             // if needed, update the update bitmap to indicate that more udpates
             // are seen on an object thats being updated in this batch
-            if (batch_ctxt_.dom[api_obj]->cloned_obj) {
-                if ((batch_ctxt_.dom[api_obj]->upd_bmap & upd_bmap) !=
-                        upd_bmap) {
-                    batch_ctxt_.dom[api_obj]->upd_bmap |= upd_bmap;
-                    PDS_TRACE_DEBUG("%s already in DoL, updated upd bmap to "
-                                    "0x%lx", api_obj->key2str().c_str(),
-                                    batch_ctxt_.dom[api_obj]->upd_bmap);
-                    return batch_ctxt_.dom[api_obj];
+            octxt_b = batch_ctxt_.dom[api_obj_b];
+            if (octxt_b->cloned_obj) {
+                if ((octxt_b->upd_bmap & upd_bmap) != upd_bmap) {
+                    octxt_b->upd_bmap |= upd_bmap;
+                    PDS_TRACE_DEBUG("%s upd bmap updated to 0x%lx",
+                                    api_obj_b->key2str().c_str(),
+                                    octxt_b->upd_bmap);
+                    octxt = octxt_b;
+                    goto end;
                 }
-                // entry exists and the update was already noted
-                PDS_TRACE_DEBUG("%s already in DoL",
-                                api_obj->key2str().c_str());
-                return NULL;
+                // entry exists and the update was already known, no need to
+                // trigger further recursive dependency updates
+                goto end;
             }
 #if 0
-            // NOTE: re-ordering objects here will break functionality
+            // NOTE: re-ordering objects here will break functionality, so
+            //       commenting out !!!
             // if the object is in dirty list already, move it to the end
             // as this update can trigger other updates
-            batch_ctxt_.dol.remove(api_obj);
-            batch_ctxt_.dol.push_back(api_obj);
-#endif
+            batch_ctxt_.dol.remove(api_obj_b);
+            batch_ctxt_.dol.push_back(api_obj_b);
             // fall thru
-        }
-        if (api_obj->in_deps_list()) {
+#endif
+            goto end;
+        } else if (api_obj_b->in_deps_list()) {
+            PDS_TRACE_DEBUG("%s already in AoL", api_obj_b->key2str().c_str());
             // if needed, update the update bitmap
-            if ((batch_ctxt_.aom[api_obj]->upd_bmap & upd_bmap) != upd_bmap) {
-                batch_ctxt_.aom[api_obj]->upd_bmap |= upd_bmap;
+            octxt_b = batch_ctxt_.aom[api_obj_b];
+            if ((octxt_b->upd_bmap & upd_bmap) != upd_bmap) {
+                octxt_b->upd_bmap |= upd_bmap;
                 PDS_TRACE_DEBUG("%s already in AoL, update upd bmap to 0x%lx",
-                                api_obj->key2str().c_str(),
-                                batch_ctxt_.aom[api_obj]->upd_bmap);
-                return batch_ctxt_.aom[api_obj];
+                                api_obj_b->key2str().c_str(), octxt_b->upd_bmap);
+                octxt = octxt_b;
+                goto end;
             }
             // if the object is in deps list already, push it to the end
             // NOTE: this reshuffling doesn't help as the whole dependent
             //       list is processed after the dirty object list with updated
             //       specs anyway
-            batch_ctxt_.aol.remove(api_obj);
-            batch_ctxt_.aol.push_back(api_obj);
+            batch_ctxt_.aol.remove(api_obj_b);
+            batch_ctxt_.aol.push_back(api_obj_b);
             // entry exists and the update was already noted
-            PDS_TRACE_DEBUG("%s already in AoL", api_obj->key2str().c_str());
-            return NULL;
+            goto end;
         }
 
         // object not in dirty list or dependent list, add it now to
         // affected/dependent object list/map
-        octxt = api_obj_ctxt_alloc_();
+        octxt = octxt_b = api_obj_ctxt_alloc_();
         octxt->api_op = api_op;
-        octxt->obj_id = obj_id;
+        octxt->obj_id = obj_id_b;
         octxt->upd_bmap = upd_bmap;
-        api_obj->set_in_deps_list();
-        batch_ctxt_.aom[api_obj] = octxt;
-        batch_ctxt_.aol.push_back(api_obj);
+        api_obj_b->set_in_deps_list();
+        batch_ctxt_.aom[api_obj_b] = octxt;
+        batch_ctxt_.aol.push_back(api_obj_b);
         PDS_TRACE_DEBUG("Added %s to AoL, update bitmap 0x%lx",
-                        api_obj->key2str().c_str(), upd_bmap);
+                        api_obj_b->key2str().c_str(), upd_bmap);
+
+end:
+
+        // if A is an element of B, A must be added to the clist of B
+        // NOTE: A could be in dirty object list or dependent object list
+        //       by this time (route-table chg can trigger vpc -> subnet -> vnic
+        //       changes A could be subnet and B could vnic and A is in
+        //       aol list)
+        if (api_obj_a->in_dirty_list()) {
+            octxt_a = batch_ctxt_.dom[api_obj_a];
+        } else if (api_obj_a->in_deps_list()) {
+            octxt_a = batch_ctxt_.aom[api_obj_a];
+        }
+        if (api_base::is_contained_in(octxt_a->obj_id, octxt_b->obj_id)) {
+            octxt_b->clist.push_back(octxt_a);
+        }
         return octxt;
     }
 

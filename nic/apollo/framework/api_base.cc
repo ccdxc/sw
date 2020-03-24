@@ -560,6 +560,26 @@ api_base::contained(obj_id_t obj_id) {
 }
 
 bool
+api_base::is_contained_in(obj_id_t obj_id_a, obj_id_t obj_id_b) {
+    switch (obj_id_a) {
+    case OBJ_ID_POLICY_RULE:
+        if (obj_id_b == OBJ_ID_POLICY) {
+            return true;
+        }
+        return false;
+
+    case OBJ_ID_ROUTE:
+        if (obj_id_b == OBJ_ID_ROUTE_TABLE) {
+            return true;
+        }
+        return false;
+    default:
+        break;
+    }
+    return false;
+}
+
+bool
 api_base::circulate(obj_id_t obj_id) {
     switch (obj_id) {
     case OBJ_ID_DEVICE:
