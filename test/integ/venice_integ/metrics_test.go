@@ -110,7 +110,7 @@ func (it *veniceIntegSuite) TestMetricsWithDefaultMeta(c *C) {
 	// create an entry
 	tmtr, err := iter.Create(goproto.IPv4FlowKey{
 		Sip: 0x10100001,
-		Dip: 0x10100001,
+		Dip: 0x10100002,
 	})
 	AssertOk(c, err, "Error creating test metrics entry")
 
@@ -126,7 +126,7 @@ func (it *veniceIntegSuite) TestMetricsWithDefaultMeta(c *C) {
 	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error in logged in context")
 
-	fields := map[string]int{"DropBytes": 200, "DropPackets": 300}
+	mfields := map[string]int{"DropBytes": 200, "DropPackets": 300}
 
 	AssertEventually(c, func() (bool, interface{}) {
 		nodeQuery := &telemetry_query.MetricsQueryList{
@@ -136,6 +136,24 @@ func (it *veniceIntegSuite) TestMetricsWithDefaultMeta(c *C) {
 				{
 					TypeMeta: api.TypeMeta{
 						Kind: "IPv4FlowDropMetrics",
+					},
+					SortOrder: telemetry_query.SortOrder_Descending.String(),
+					Pagination: &telemetry_query.PaginationSpec{
+						Count: 1,
+					},
+					Selector: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							{
+								Key:      "destination",
+								Operator: fields.Operator_equals.String(),
+								Values:   []string{"16.16.0.2"},
+							},
+							{
+								Key:      "source",
+								Operator: fields.Operator_equals.String(),
+								Values:   []string{"16.16.0.1"},
+							},
+						},
 					},
 				},
 			},
@@ -154,7 +172,7 @@ func (it *veniceIntegSuite) TestMetricsWithDefaultMeta(c *C) {
 			// get index
 			cIndex := map[string]int{}
 			for i, c := range r.Columns {
-				if _, ok := fields[c]; ok {
+				if _, ok := mfields[c]; ok {
 					cIndex[c] = i
 				}
 			}
@@ -162,8 +180,8 @@ func (it *veniceIntegSuite) TestMetricsWithDefaultMeta(c *C) {
 			for _, t := range r.Values {
 				for k, v := range cIndex {
 					f := int(t[v].(float64))
-					if f != fields[k] {
-						it.logger.Errorf("received %v: %v", k, t[v])
+					if f != mfields[k] {
+						it.logger.Errorf("received %v: %v in %+v ", k, t[v], t)
 						return false, t[v]
 					}
 				}
