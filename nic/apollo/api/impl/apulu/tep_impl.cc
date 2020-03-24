@@ -210,6 +210,9 @@ tep_impl::activate_create_tunnel_table_(pds_epoch_t epoch, tep_entry *tep,
                 ((nexthop_group_impl *)nhgroup->impl())->hw_id();
             tep_data.tunnel_action.num_nexthops = nhgroup->num_nexthops();
         }
+    } else if (spec->nh_type == PDS_NH_TYPE_NONE) {
+        tep_data.tunnel_action.nexthop_base = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
+        tep_data.tunnel_action.num_nexthops = PDS_NUM_NH_NO_ECMP;
     } else {
         PDS_TRACE_ERR("Unsupported nh type %u in TEP %s spec",
                       spec->nh_type, spec->key.str());
@@ -347,6 +350,8 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
                           nh_impl->hw_id());
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
+    } else if (spec->nh_type == PDS_NH_TYPE_NONE) {
+        // no need to fix the nexthop in this case
     } else {
         PDS_TRACE_ERR("Unsupported nh type %u in TEP %s spec",
                       spec->nh_type, spec->key.str());

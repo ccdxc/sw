@@ -64,10 +64,24 @@ pds_tep_spec_t li_vxlan_port::make_pds_tep_spec_(void) {
 
     spec.ip_addr = ips_info_.src_ip;
     auto& tep_prop = store_info_.tep_obj->properties();
-    spec.nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
-    // Underlay NH is shared with Type 2 TEP
-    PDS_TRACE_DEBUG("Type 5 TEP setting Underlay NH Group %d", tep_prop.hal_uecmp_idx);
-    spec.nh_group = msidx2pdsobjkey(tep_prop.hal_uecmp_idx, true);
+    if (tep_prop.hal_uecmp_idx == PDS_MS_UECMP_INVALID_INDEX) {
+        // Metaswitch PSM deletes underlay Nexthops independent of EVPN.
+        // So its possible that when a L3 VXLAN Port is being added the
+        // underlying VXLAN tunnel has lost its underlay nexthop.
+        // One example -
+        // Special sequence of events caused by the static default route
+        // that kicks in immediately if both BGP underlay session routes
+        // are removed causing the deleted VXLAN ports to be added back
+        // immediately even though the underlyng TEP may not have been
+        // attached to underlay ECMP yet.
+        PDS_TRACE_DEBUG("Set Blackhole Underlay NH Group for Type5 TEP");
+        spec.nh_type = PDS_NH_TYPE_NONE;
+    } else {
+        spec.nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
+        // Underlay NH is shared with Type 2 TEP
+        PDS_TRACE_DEBUG("Set Underlay NH Group %d for Type 5 TEP", tep_prop.hal_uecmp_idx);
+        spec.nh_group = msidx2pdsobjkey(tep_prop.hal_uecmp_idx, true);
+    }
     spec.nat = false;
     return spec;
 }

@@ -349,22 +349,36 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
     NBB_BYTE rc = ATG_OK;
 
     if (!parse_ips_info_(add_upd_ecmp_ips)) {
-        // Non-direct pathset
-        if (ips_info_.ll_dp_corr_id == 0) {
-            // Blackhole Pathset - Synchronous return
-            return rc;
-        }
-
-        // Indirect Pathset - check if there is a TEP that refers to this
-        // which will need an update
+        // Received Pathset with Non-direct nextxhops.
+        // Check if this is an Indirect Pathset that is referenced by
+        // existing VXLAN Tunnels (TEPs)
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto tep_obj = state_ctxt.state()->indirect_ps_2_tep_obj(ips_info_.pathset_id,
                                                                  true /* Mark this PS as indirect
                                                                          if not done so yet */);
         if (tep_obj == nullptr) {
-            // This indirect Pathset is not referred to by any TEP
+            // This Pathset does not have any reference yet
+            // Nothing to do
             return rc;
         }
+        // This is an indirect pathset that is referenced by Tunnels
+        if (ips_info_.ll_dp_corr_id == 0) {
+            // The indirect pathset has lost its underlying direct pathset.
+            // It is soon either going to be deleted or updated with a
+            // new direct nexthop.
+            // Update the store for any Tunnels that refer to this
+            // indirect pathset. In case any Type 5 Tunnel gets created
+            // at this point we do not want it to pick up the stale underlying
+            // pathset. But do not disturb the dataplane since Metaswitch
+            // intermittently updates the indirect pathset with black-hole
+            // nexthops when switching direct next-hops upon link down
+            PDS_TRACE_DEBUG("MS Indirect Pathset %d TEP %s black-holed",
+                            ips_info_.pathset_id,
+                            ipaddr2str(&tep_obj->properties().tep_ip));
+            tep_obj->properties().hal_uecmp_idx = PDS_MS_UECMP_INVALID_INDEX;
+            return rc;
+        }
+
         li_vxlan_tnl tnl;
         // Alloc new cookie to capture async info
         cookie_uptr_.reset (new cookie_t);
