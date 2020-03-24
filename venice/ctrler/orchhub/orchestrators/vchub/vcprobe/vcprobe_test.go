@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/tsdb"
+
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 
@@ -89,6 +91,9 @@ func TestListAndWatch(t *testing.T) {
 	AssertOk(t, err, "failed host create")
 	_, err = dc.AddVM("vm1", "host1", []sim.VNIC{})
 	AssertOk(t, err, "failed vm create")
+
+	tsdb.Init(context.Background(), &tsdb.Opts{})
+	defer tsdb.Cleanup()
 
 	sm, _, err := smmock.NewMockStateManager()
 	if err != nil {
@@ -270,6 +275,9 @@ func TestDVSAndPG(t *testing.T) {
 
 	storeCh := make(chan defs.Probe2StoreMsg, 24)
 	eventCh := make(chan defs.Probe2StoreMsg, 24)
+
+	tsdb.Init(context.Background(), &tsdb.Opts{})
+	defer tsdb.Cleanup()
 
 	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")

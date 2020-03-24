@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/tsdb"
+
 	"github.com/vmware/govmomi/simulator"
 	"github.com/vmware/govmomi/vapi/tags"
 
@@ -52,6 +54,9 @@ func TestTags(t *testing.T) {
 	AssertOk(t, err, "Failed to create vm3")
 
 	storeCh := make(chan defs.Probe2StoreMsg, 100)
+
+	tsdb.Init(context.Background(), &tsdb.Opts{})
+	defer tsdb.Cleanup()
 
 	sm, _, err := smmock.NewMockStateManager()
 	AssertOk(t, err, "Failed to create state manager. ERR : %v", err)
@@ -205,6 +210,9 @@ func TestTagWriting(t *testing.T) {
 		Path:   "/sdk",
 	}
 	u.User = url.UserPassword(user, password)
+
+	tsdb.Init(context.Background(), &tsdb.Opts{})
+	defer tsdb.Cleanup()
 
 	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")

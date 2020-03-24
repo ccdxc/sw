@@ -8,6 +8,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/pensando/sw/venice/utils/tsdb"
+
 	"google.golang.org/grpc/grpclog"
 
 	"github.com/pensando/sw/api"
@@ -96,6 +98,9 @@ func (tInfo *tInfo) setup() error {
 		Logger:    l.WithContext("submodule", "pen-orchhub"),
 		VCHubOpts: []vchub.Option{vchub.WithMockProbe},
 	}
+	tsdb.Init(context.Background(), &tsdb.Opts{})
+	defer tsdb.Cleanup()
+
 	ctrler, err := orchhub.NewOrchCtrler(opts)
 	if err != nil || ctrler == nil {
 		log.Fatalf("Error creating controller instance: %v", err)

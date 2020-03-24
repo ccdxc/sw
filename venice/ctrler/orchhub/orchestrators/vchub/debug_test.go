@@ -1,10 +1,13 @@
 package vchub
 
 import (
+	"context"
 	"encoding/json"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/pensando/sw/venice/utils/tsdb"
 
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
@@ -40,6 +43,9 @@ func TestDebug(t *testing.T) {
 	AssertOk(t, err, "Failed to create host")
 	vm, err := dc1.AddVM("vm1", "host1", nil)
 	AssertOk(t, err, "Failed to create vm")
+
+	tsdb.Init(context.Background(), &tsdb.Opts{})
+	defer tsdb.Cleanup()
 
 	sm, _, err := smmock.NewMockStateManager()
 	if err != nil {
