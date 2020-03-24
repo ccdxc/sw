@@ -296,7 +296,7 @@ struct ionic_lif_cfg {
 	enum ionic_api_prsn prsn;
 
 	void *priv;
-	void (*reset_cb)(void *priv);	/* TODO something with this */
+	void (*reset_cb)(void *priv);
 };
 
 struct ionic_lif {
@@ -336,6 +336,7 @@ struct ionic_lif {
 	struct ionic_rxque **rxqs;
 
 	unsigned int nnqs;
+	unsigned int nrdma_eqs;
 	unsigned int nrdma_eqs_avail;
 	unsigned int ntxqs;
 	unsigned int nrxqs;

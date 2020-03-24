@@ -106,6 +106,14 @@ testcases:
             type: remote_only
 
     #=======================================
+    # Reset
+    #=======================================
+    -   name    : Reset_Rdma
+        testcase: testcases.rdma.rdma_reset
+        args    :
+            type: remote_only
+
+    #=======================================
     # Write
     #=======================================
     -   name    : Rc_WriteBw_BiDir_Cm

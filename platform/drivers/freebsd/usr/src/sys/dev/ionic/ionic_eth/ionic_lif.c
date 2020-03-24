@@ -2379,6 +2379,7 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	lif->ionic = ionic;
 	lif->index = index;
 	lif->nrdma_eqs_avail = ionic->nrdma_eqs_per_lif;
+	lif->nrdma_eqs = ionic->nrdma_eqs_per_lif;
 	lif->ntxqs = ionic->ntxqs_per_lif;
 	lif->nrxqs = ionic->nrxqs_per_lif;
 	lif->nnqs = ionic->nnqs_per_lif;

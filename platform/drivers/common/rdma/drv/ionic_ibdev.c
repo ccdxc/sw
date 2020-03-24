@@ -408,7 +408,7 @@ static void ionic_kill_ibdev_cb(void *dev_ptr)
 {
 	struct ionic_ibdev *dev = dev_ptr;
 
-	ibdev_warn(&dev->ibdev, "reset has been indicated\n");
+	ibdev_warn(&dev->ibdev, "reset callback starting\n");
 
 	ionic_kill_ibdev(dev, true);
 }

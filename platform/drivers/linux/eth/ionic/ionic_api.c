@@ -19,7 +19,7 @@ void *ionic_get_handle_from_netdev(struct net_device *netdev,
 		return ERR_PTR(-EINVAL);
 
 	lif = ionic_netdev_lif(netdev);
-	if (!lif || !lif->nrdma_eqs_avail)
+	if (!lif || !lif->nrdma_eqs)
 		return ERR_PTR(-ENXIO);
 
 	/* TODO: Rework if supporting more than one slave */
@@ -41,8 +41,31 @@ EXPORT_SYMBOL_GPL(ionic_api_stay_registered);
 void ionic_api_request_reset(void *handle)
 {
 	struct ionic_lif *lif = handle;
+	struct ionic *ionic;
+	int err;
 
-	dev_warn(&lif->netdev->dev, "request_reset: not implemented\n");
+	union ionic_dev_cmd cmd = {
+		.cmd.opcode = IONIC_CMD_RDMA_RESET_LIF,
+		.cmd.lif_index = cpu_to_le16(lif->slave_lif_cfg.index),
+	};
+
+	ionic = lif->ionic;
+
+	mutex_lock(&ionic->dev_cmd_lock);
+
+	ionic_dev_cmd_go(&ionic->idev, &cmd);
+	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+
+	mutex_unlock(&ionic->dev_cmd_lock);
+
+	if (err) {
+		netdev_warn(lif->netdev, "request_reset: error %d\n", err);
+		return;
+	}
+
+	if (lif->slave_lif_cfg.priv &&
+	    lif->slave_lif_cfg.reset_cb)
+		(*lif->slave_lif_cfg.reset_cb)(lif->slave_lif_cfg.priv);
 }
 EXPORT_SYMBOL_GPL(ionic_api_request_reset);
 
