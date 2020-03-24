@@ -556,6 +556,18 @@ capri_local_dbaddr (void)
 }
 
 inline uint64_t
+capri_local_db32_addr (void)
+{
+    uint64_t db_addr =
+#ifdef __aarch64__
+       CAP_ADDR_BASE_DB_WA_OFFSET +
+#endif // __aarch64__
+       CAP_WA_CSR_DHS_32B_DOORBELL_BYTE_ADDRESS;
+
+    return db_addr;
+}
+
+inline uint64_t
 capri_host_dbaddr (void)
 {
     return CAP_WA_CSR_DHS_HOST_DOORBELL_BYTE_ADDRESS;
@@ -615,6 +627,12 @@ uint64_t
 asic_local_dbaddr_get (void)
 {
     return sdk::platform::capri::capri_local_dbaddr();
+}
+
+uint64_t
+asic_local_db32_addr_get (void)
+{
+    return sdk::platform::capri::capri_local_db32_addr();
 }
 
 uint64_t

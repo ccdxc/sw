@@ -118,6 +118,7 @@ typedef enum asic_state_e {
 
 // Asic Doorbell address
 uint64_t asic_local_dbaddr_get(void);
+uint64_t asic_local_db32_addr_get(void);
 uint64_t asic_host_dbaddr_get(void);
 
 // returns true if the init type is SOFT, false otherwise

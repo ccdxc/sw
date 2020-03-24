@@ -1263,7 +1263,7 @@ FtlLif::ftl_lif_accel_aging_ctl_action(ftl_lif_event_t event,
     //FTL_LIF_FSM_LOG();
 
     devcmd_ctx.status = cmd->enable_sense ?
-                            accel_age_tmo_cb_select() : normal_age_tmo_cb_select();
+                        accel_age_tmo_cb_select() : normal_age_tmo_cb_select();
     return FTL_LIF_EV_NULL;
 }
 
@@ -1746,7 +1746,7 @@ ftl_lif_queues_ctl_t::start(void)
 ftl_status_code_t
 ftl_lif_queues_ctl_t::sched_start_single(uint32_t qid)
 {
-    uint64_t        db_data;
+    uint32_t        db_data;
 
     if (qid >= qcount()) {
         NIC_LOG_ERR("{}:qid {} exceeds qcount {}",
@@ -1762,8 +1762,8 @@ ftl_lif_queues_ctl_t::sched_start_single(uint32_t qid)
         /*
          * Doorbell update with a pndx increment
          */
-        db_data = FTL_LIF_DBDATA_SET(qid, 0);
-        db_pndx_inc.write64(db_data);
+        db_data = FTL_LIF_DBDATA32_SET(qid, 0);
+        db_pndx_inc.write32(db_data);
         break;
 
     default:
@@ -1824,7 +1824,7 @@ ftl_lif_queues_ctl_t::stop(void)
 ftl_status_code_t
 ftl_lif_queues_ctl_t::sched_stop_single(uint32_t qid)
 {
-    uint64_t        db_data;
+    uint32_t        db_data;
 
     if (qid >= qcount()) {
         NIC_LOG_ERR("{}:qid {} exceeds qcount {}",
@@ -1840,8 +1840,8 @@ ftl_lif_queues_ctl_t::sched_stop_single(uint32_t qid)
         /*
          * Doorbell update clear
          */
-        db_data = FTL_LIF_DBDATA_SET(qid, 0);
-        db_shed_clr.write64(db_data);
+        db_data = FTL_LIF_DBDATA32_SET(qid, 0);
+        db_shed_clr.write32(db_data);
         break;
 
     default:
@@ -1923,6 +1923,7 @@ ftl_lif_queues_ctl_t::dequeue_burst(uint32_t qid,
         qstate_access->small_write(offsetof(qstate_1ring_cb_t, c_ndx0),
                                    (uint8_t *)&qstate_1ring_cb.c_ndx0,
                                    sizeof(qstate_1ring_cb.c_ndx0));
+        qstate_access->cache_invalidate();
         *burst_count = read_count;
         return FTL_RC_SUCCESS;
     }
@@ -2171,6 +2172,7 @@ ftl_lif_queues_ctl_t::scanner_init_single(const scanner_init_single_cmd_t *cmd)
     qstate.summarize.poller_qstate_addr = poller_qstate_addr;
     qstate.metrics0.min_range_elapsed_ticks = ~qstate.metrics0.min_range_elapsed_ticks;
     qs_access.small_write(0, (uint8_t *)&qstate, sizeof(qstate));
+    qs_access.cache_invalidate();
 
     qstate_access.push_back(std::move(qs_access));
     return FTL_RC_SUCCESS;
@@ -2209,6 +2211,7 @@ ftl_lif_queues_ctl_t::poller_init_single(const poller_init_single_cmd_t *cmd)
     qstate.qdepth_shft = cmd->qdepth_shft;
     qstate.wring_base_addr = cmd->wring_base_addr;
     qs_access.small_write(0, (uint8_t *)&qstate, sizeof(qstate));
+    qs_access.cache_invalidate();
 
     qstate_access.push_back(std::move(qs_access));
 
@@ -2307,6 +2310,7 @@ poller_cb_deactivate(const mem_access_t *access)
     access->small_write(offsetof(qstate_1ring_cb_t, c_ndx0),
                         (uint8_t *)&qstate_1ring_cb.c_ndx0,
                         sizeof(qstate_1ring_cb.c_ndx0));
+    access->cache_invalidate();
 }
 
 static void
@@ -2326,7 +2330,7 @@ scanner_session_cb_activate(const mem_access_t *access)
     access->small_write(offsetof(scanner_session_qstate_t, cb) +
                         offsetof(scanner_session_cb_t, cb_activate),
                         (uint8_t *)&activate, sizeof(activate));
-    //access->cache_invalidate();
+    access->cache_invalidate();
 }
 
 static void
@@ -2347,7 +2351,7 @@ scanner_session_cb_deactivate(const mem_access_t *access)
     access->small_write(offsetof(scanner_session_qstate_t, summarize) +
                         offsetof(scanner_session_summarize_t, cb_activate),
                     (uint8_t *)&deactivate, sizeof(deactivate));
-    //access->cache_invalidate();
+    access->cache_invalidate();
 }
 
 /*
@@ -2503,16 +2507,23 @@ db_access_t::reset(enum ftl_qtype qtype,
     db_addr.lif_id = lif.LifIdGet();
     db_addr.q_type = (uint8_t)qtype;
     db_addr.upd = upd;
-    paddr = sdk::asic::pd::asic_localdb_addr(db_addr.lif_id,
-                                             db_addr.q_type,
-                                             db_addr.upd);
-    db_access.reset(paddr, sizeof(uint64_t));
+
+    /*
+     * Use 32-bit doorbells from ARM to benefit from Capri atomic 32-bit
+     * register writes. Note that this works as long as PID check isn't
+     * used and number of rings is 1 for the LIF. Also, number of queues
+     * must be 64K or less.
+     */
+    paddr = sdk::asic::pd::asic_localdb32_addr(db_addr.lif_id,
+                                               db_addr.q_type,
+                                               db_addr.upd);
+    db_access.reset(paddr, sizeof(uint32_t));
 }
 
 void
-db_access_t::write64(uint64_t data)
+db_access_t::write32(uint32_t data)
 {
-    volatile uint64_t *db = (volatile uint64_t *)db_access.va();
+    volatile uint32_t *db = (volatile uint32_t *)db_access.va();
 
     PAL_barrier();
     if (db) {

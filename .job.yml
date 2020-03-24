@@ -443,6 +443,7 @@ dependencies:
     - reference: iota/test/standalone/precheckin/esx
     - reference: iota/test/standalone/precheckin/linux
     - reference: nic/apollo/tools/apulu/sanity/base
+    - reference: nic/apollo/tools/athena/sanity/base
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/sysmgr:
@@ -480,6 +481,8 @@ dependencies:
     - reference: iota/test/standalone/sanity/apulu-networking-scale
   nic/conf/apollo:
     - reference: nic/apollo/tools/apollo/sanity/base
+  nic/conf/athena:
+    - reference: nic/apollo/tools/athena/sanity/base
   nic/conf/artemis:
     - reference: nic/apollo/tools/artemis/sanity/base
   nic/debug_cli/apollo:
@@ -539,6 +542,7 @@ dependencies:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
     - reference: nic/apollo/tools/apulu/sanity/base
+    - reference: nic/apollo/tools/athena/sanity/base
     - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale

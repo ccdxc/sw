@@ -60,6 +60,7 @@ uint64_t asic_hostdb_addr(uint16_t lif_id, uint8_t q_type, uint8_t upd);
 /// \param[in] update bits
 /// \return    doorbell address for the lif
 uint64_t asic_localdb_addr(uint16_t lif_id, uint8_t q_type, uint8_t upd);
+uint64_t asic_localdb32_addr(uint16_t lif_id, uint8_t q_type, uint8_t upd);
 
 /// \brief     ring host doorbell 64 bit data
 /// \param[in] doorbell address info

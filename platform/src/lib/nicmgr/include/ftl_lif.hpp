@@ -21,9 +21,13 @@
  * Local doorbell address formation
  */
 #define DB_QID_SHFT                     24
+#define DB32_QID_SHFT                   16
 
 #define FTL_LIF_DBDATA_SET(qid, pndx)                               \
     (((uint64_t)(qid) << DB_QID_SHFT) | (pndx))
+
+#define FTL_LIF_DBDATA32_SET(qid, pndx)                             \
+    (((uint64_t)(qid) << DB32_QID_SHFT) | (pndx))
 
 using namespace ftl_dev_if;
 
@@ -304,7 +308,7 @@ public:
 
     void reset(enum ftl_qtype qtype,
                uint32_t upd);
-    void write64(uint64_t data);
+    void write32(uint32_t data);
 
 private:
     FtlLif&                 lif;
