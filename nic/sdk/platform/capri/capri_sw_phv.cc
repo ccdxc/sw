@@ -22,7 +22,7 @@
 namespace sdk {
 namespace platform {
 namespace capri {
-            
+
 //16 64B PHV entries(Flits)
 #define CAPRI_SW_PHV_NUM_MEM_ENTRIES 16
 
@@ -214,20 +214,20 @@ capri_pr_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx, uint8_t num_fli
     cap_psp_csr_cfg_sw_phv_config_t &sw_phv_cfg = pr_psp_csr.cfg_sw_phv_config[prof_num];
     sw_phv_cfg.start_addr(start_idx);
     sw_phv_cfg.num_flits(num_flits-1);
-    sw_phv_cfg.insertion_period_clocks(100);
+    sw_phv_cfg.insertion_period_clocks(0);
     sw_phv_cfg.counter_max(0);
     sw_phv_cfg.qid_min(0);
-    sw_phv_cfg.qid_max(16777215); //16M
+    sw_phv_cfg.qid_max(0);
     sw_phv_cfg.write();
 
     cap_psp_csr_cfg_sw_phv_control_t &sw_phv_ctrl = pr_psp_csr.cfg_sw_phv_control[prof_num];
     sw_phv_ctrl.start_enable(1);
     sw_phv_ctrl.counter_repeat_enable(0);
-    sw_phv_ctrl.qid_repeat_enable(1);
+    sw_phv_ctrl.qid_repeat_enable(0);
     sw_phv_ctrl.localtime_enable(0);
     sw_phv_ctrl.frame_size_enable(0);
     sw_phv_ctrl.packet_len_enable(0);
-    sw_phv_ctrl.qid_enable(1);
+    sw_phv_ctrl.qid_enable(0);
     sw_phv_ctrl.write();
 
     SDK_TRACE_DEBUG("CAPRI-PHV-INJECT:: Software PHV injected. done");
@@ -357,7 +357,7 @@ capri_sw_phv_inject (asicpd_swphv_type_t type, uint8_t prof_num, uint8_t start_i
 {
     sdk_ret_t   ret = SDK_RET_OK;
 
-    SDK_TRACE_DEBUG("CAPRI-PHV-INJECT:: Injecting Software PHV type %d", 
+    SDK_TRACE_DEBUG("CAPRI-PHV-INJECT:: Injecting Software PHV type %d",
                     type);
 
     // switch based on pipeline type
@@ -391,7 +391,7 @@ capri_pr_psp_sw_phv_state (uint8_t prof_num, asicpd_sw_phv_state_t *state)
 
     cap_psp_csr_sta_sw_phv_state_t &sw_phv_state = pr_psp_csr.sta_sw_phv_state[prof_num];
     sw_phv_state.read();
-	
+
     cap_psp_csr_cfg_sw_phv_global_t &phv_global = pr_psp_csr.cfg_sw_phv_global;
     phv_global.read();
 
@@ -421,7 +421,7 @@ capri_pt_psp_sw_phv_state (uint8_t prof_num, asicpd_sw_phv_state_t *state)
     // read the status registers
     cap_psp_csr_sta_sw_phv_state_t &sw_phv_state = pt_psp_csr.sta_sw_phv_state[prof_num];
     sw_phv_state.read();
-	
+
     cap_psp_csr_cfg_sw_phv_global_t &phv_global = pt_psp_csr.cfg_sw_phv_global;
     phv_global.read();
 
@@ -451,7 +451,7 @@ capri_ppa_sw_phv_state (uint8_t pidx, uint8_t prof_num, asicpd_sw_phv_state_t *s
     // read the status registers
     cap_ppa_csr_sta_sw_phv_state_t &sw_phv_state = ppa_csr.sta_sw_phv_state[prof_num];
     sw_phv_state.read();
-	
+
     cap_ppa_csr_cfg_sw_phv_global_t &phv_global = ppa_csr.cfg_sw_phv_global;
     phv_global.read();
 
@@ -472,12 +472,12 @@ capri_ppa_sw_phv_state (uint8_t pidx, uint8_t prof_num, asicpd_sw_phv_state_t *s
 }
 
 // capri_sw_phv_get gets the current state of the PHV
-sdk_ret_t 
+sdk_ret_t
 capri_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num, asicpd_sw_phv_state_t *state)
 {
     sdk_ret_t   ret = SDK_RET_OK;
 
-    SDK_TRACE_DEBUG("CAPRI-PHV-STATE:: Getting Software PHV state for type %d", 
+    SDK_TRACE_DEBUG("CAPRI-PHV-STATE:: Getting Software PHV state for type %d",
                     type);
 
     // switch based on pipeline type

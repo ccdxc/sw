@@ -2,11 +2,13 @@
 
 #include "nic/include/pd_api.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/platform/utils/lif_mgr/lif_mgr.hpp"
 #include "nic/hal/pd/common_p4plus/common_p4plus.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
-#include "nic/hal/pd/capri/capri_sw_phv.hpp"
+
+using namespace sdk::asic::pd;
 
 namespace hal {
 namespace pd {
@@ -44,7 +46,8 @@ pd_asic_init (pd_func_args_t *pd_func_args)
     SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "Asic init failure, err : {}", ret);
 
-    ret = capri_sw_phv_init();
+    sdk_ret = asicpd_sw_phv_init();
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "Capri s/w phv init failure, err : {}", ret);
 

@@ -899,7 +899,7 @@ artemis_impl::pipeline_init(void) {
     ret = table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    ret = sdk::platform::capri::capri_sw_phv_init();
+    ret = sdk::asic::pd::asicpd_sw_phv_init();
     SDK_ASSERT(ret == SDK_RET_OK);
 
     bzero(data, ARTEMIS_PHV_SIZE);
