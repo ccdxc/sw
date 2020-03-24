@@ -177,11 +177,10 @@ route_table_feeder::status_compare(
 static route_table_feeder k_route_table_feeder;
 
 void sample_route_table_setup(
-    pds_batch_ctxt_t bctxt, ip_prefix_t base_route_pfx, uint8_t af,
+    pds_batch_ctxt_t bctxt, const string base_route_pfx, uint8_t af,
     uint32_t num_routes, uint32_t num_route_tables, uint32_t id) {
     // setup and teardown parameters should be in sync
-    k_route_table_feeder.init(ippfx2str(&base_route_pfx),
-                              af, num_routes,
+    k_route_table_feeder.init(base_route_pfx, af, num_routes,
                               num_route_tables, id);
     many_create(bctxt, k_route_table_feeder);
 }

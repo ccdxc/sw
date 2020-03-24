@@ -1844,22 +1844,22 @@ create_objects (void)
         }
     }
 
-    if (!apulu()) {
-        // create route tables
-        ret = create_route_tables(g_test_params.num_teps,
-                                  g_test_params.num_vpcs,
-                                  g_test_params.num_subnets,
-                                  g_test_params.num_routes,
-                                  &g_test_params.tep_pfx,
-                                  &g_test_params.route_pfx,
-                                  &g_test_params.v6_route_pfx,
-                                  g_test_params.num_nh,
-                                  TESTAPP_MAX_SERVICE_TEP,
-                                  TESTAPP_MAX_REMOTE_SERVICE_TEP);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
+    // create route tables
+    ret = create_route_tables(g_test_params.num_teps,
+                              g_test_params.num_vpcs,
+                              g_test_params.num_subnets,
+                              g_test_params.num_routes,
+                              &g_test_params.tep_pfx,
+                              &g_test_params.route_pfx,
+                              &g_test_params.v6_route_pfx,
+                              g_test_params.num_nh,
+                              TESTAPP_MAX_SERVICE_TEP,
+                              TESTAPP_MAX_REMOTE_SERVICE_TEP);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
 
+    if (!apulu()) {
         // create egress IPv4 security policies
         ret = create_security_policy(g_test_params.num_vpcs,
                                      g_test_params.num_subnets,

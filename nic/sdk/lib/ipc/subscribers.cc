@@ -38,9 +38,15 @@ void
 subscribers::shmopen(void) {
     int fd;
     struct stat st;
+    mode_t old_umask;
 
-    fd = shm_open(SUBS_SHM_FILE, O_RDWR | O_CREAT, 0600);
+    old_umask = umask(0);
+    fd = shm_open(SUBS_SHM_FILE, O_RDWR | O_CREAT, 0666);
+    if (fd == -1) {
+        printf("shm_open failed: %d\n", errno);
+    }
     assert(fd != -1);
+    umask(old_umask);
 
     // Make sure no two binaries are trying to use the same shared
     // memory with different size of subs. This still leaves the door

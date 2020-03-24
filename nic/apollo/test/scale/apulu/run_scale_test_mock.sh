@@ -20,6 +20,7 @@ if [[ "$1" ==  --cfg ]]; then
 fi
 
 function finish {
+    ${PDSPKG_TOPDIR}/tools/print-cores.sh
     echo "===== Collecting logs ====="
     ${NICDIR}/apollo/test/tools/savelogs.sh
     rm -f ${NICDIR}/conf/pipeline.json
