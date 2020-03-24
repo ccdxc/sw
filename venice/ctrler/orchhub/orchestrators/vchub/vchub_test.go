@@ -1351,10 +1351,10 @@ func TestUpdateUrl(t *testing.T) {
 		return true, nil
 	}, "Orch status never updated to success", "100ms", "5s")
 
+	// Update with new URL, expect to see the connection established succesfully
+	orchConfig.Spec.URI = newURL
+	vchub.UpdateConfig(orchConfig)
 	AssertEventually(t, func() (bool, interface{}) {
-		// Update with new URL, expect to see the connection established succesfully
-		orchConfig.Spec.URI = newURL
-		vchub.UpdateConfig(orchConfig)
 		o, err := vchub.StateMgr.Controller().Orchestrator().Find(&vchub.OrchConfig.ObjectMeta)
 		if err != nil {
 			return false, fmt.Errorf("Failed to find orchestrator object. Err : %v", err)
@@ -1366,10 +1366,10 @@ func TestUpdateUrl(t *testing.T) {
 		return true, nil
 	}, "Orch status never updated to success", "100ms", "5s")
 
+	// Update with bad URL, expect to see connection failure
+	orchConfig.Spec.URI = badURL
+	vchub.UpdateConfig(orchConfig)
 	AssertEventually(t, func() (bool, interface{}) {
-		// Update with bad URL, expect to see connection failure
-		orchConfig.Spec.URI = badURL
-		vchub.UpdateConfig(orchConfig)
 		o, err := vchub.StateMgr.Controller().Orchestrator().Find(&vchub.OrchConfig.ObjectMeta)
 		if err != nil {
 			return false, fmt.Errorf("Failed to find orchestrator object. Err : %v", err)
@@ -1424,10 +1424,10 @@ func TestUpdateOrchConfigCredential(t *testing.T) {
 		return true, nil
 	}, "Orch status never updated to success", "100ms", "5s")
 
+	// Update orchestrator config with incorrect password, expect to see connection failure
+	orchConfig.Spec.Credentials.Password = "badpw"
+	vchub.UpdateConfig(orchConfig)
 	AssertEventually(t, func() (bool, interface{}) {
-		// Update orchestrator config with incorrect password, expect to see connection failure
-		orchConfig.Spec.Credentials.Password = "badpw"
-		vchub.UpdateConfig(orchConfig)
 		o, err := vchub.StateMgr.Controller().Orchestrator().Find(&vchub.OrchConfig.ObjectMeta)
 		if err != nil {
 			return false, fmt.Errorf("Failed to find orchestrator object. Err : %v", err)
@@ -1438,10 +1438,10 @@ func TestUpdateOrchConfigCredential(t *testing.T) {
 		return true, nil
 	}, "Orch status never updated to failure", "100ms", "5s")
 
+	// Update orchestrator with correct password, expect to see connection established succesfully
+	orchConfig.Spec.Credentials.Password = defaultTestParams.TestPassword
+	vchub.UpdateConfig(orchConfig)
 	AssertEventually(t, func() (bool, interface{}) {
-		// Update orchestrator with correct password, expect to see connection established succesfully
-		orchConfig.Spec.Credentials.Password = defaultTestParams.TestPassword
-		vchub.UpdateConfig(orchConfig)
 		o, err := vchub.StateMgr.Controller().Orchestrator().Find(&vchub.OrchConfig.ObjectMeta)
 		if err != nil {
 			return false, fmt.Errorf("Failed to find orchestrator object. Err : %v", err)
@@ -1462,26 +1462,13 @@ func TestMultipleVcs(t *testing.T) {
 	orchConfigs := make([]*orchestration.Orchestrator, numConn)
 	vchubs := make([]*VCHub, numConn)
 
-	for i := 0; i < len(urls); i++ {
-		err := listener.GetAvailablePort()
-		if err != nil {
-			t.Fatalf("Failed to get available port")
-			return
-		}
-		urls[i] = listener.ListenURL.String()
-		print("\n full string: ", urls[i])
-	}
-
 	config := log.GetDefaultConfig("vchub_testMultipleVcs")
 	config.LogToStdout = true
 	config.Filter = log.AllowAllFilter
 	logger := log.SetConfig(config)
 
 	sm, _, err := smmock.NewMockStateManager()
-	if err != nil {
-		t.Fatalf("Failed to create state manager. Err : %v", err)
-		return
-	}
+	AssertOk(t, err, "Failed to create state manager. Err : %v", err)
 
 	u := &url.URL{
 		Scheme: "https",
@@ -1489,11 +1476,20 @@ func TestMultipleVcs(t *testing.T) {
 	}
 	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	for i := 0; i < len(urls); i++ {
+		err := listener.GetAvailablePort()
+		AssertOk(t, err, "Failed to get available port")
+		urls[i] = listener.ListenURL.String()
 		u.Host = urls[i]
 		vcsims[i], err = sim.NewVcSim(sim.Config{Addr: u.String()})
 		AssertOk(t, err, "Failed to create vcsim")
 		defer vcsims[i].Destroy()
+	}
+
+	time.Sleep(2 * time.Second)
+
+	for i := 0; i < len(urls); i++ {
 		orchConfigs[i] = smmock.GetOrchestratorConfig(urls[i], defaultTestParams.TestUser, defaultTestParams.TestPassword)
+		orchConfigs[i].Status.OrchID = int32(i)
 		err = sm.Controller().Orchestrator().Create(orchConfigs[i])
 		vchubs[i] = LaunchVCHub(sm, orchConfigs[i], logger)
 		defer vchubs[i].Destroy(false)
