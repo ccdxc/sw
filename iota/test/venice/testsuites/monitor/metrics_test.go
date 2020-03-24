@@ -3,11 +3,12 @@ package monitor_test
 import (
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/metrics/genfields"
 	"github.com/pensando/sw/metrics/types"
-	"github.com/pensando/sw/venice/citadel/broker/continuous_query"
-	"time"
+	cq "github.com/pensando/sw/venice/citadel/broker/continuous_query"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -67,7 +68,7 @@ var _ = Describe("metrics test", func() {
 			}
 			tms := time.Now().UTC().Add(time.Second * -30).Format(time.RFC3339)
 
-			for _, k:= range types.DscMetricsList {
+			for _, k := range types.DscMetricsList {
 				if k == "IPv4FlowDropMetrics" {
 					continue
 				}
@@ -126,7 +127,7 @@ var _ = Describe("metrics test", func() {
 				}
 				for _, m := range types.DscMetricsList {
 					// drop metrics are reported only on drop
-					if m == "IPv4FlowDropMetrics" {
+					if m == "IPv4FlowDropMetrics" || m == "DropMetrics" || m == "EgressDropMetrics" {
 						continue
 					}
 					cq := m + "_" + s
