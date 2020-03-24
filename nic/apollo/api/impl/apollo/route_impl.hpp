@@ -77,6 +77,16 @@ public:
         return SDK_RET_OK;
     }
 
+    /// \brief Update hardware
+    /// Update all h/w tables relevant to this object except stage 0 table(s),
+    /// if any, by updating packed entries with latest epoch
+    /// \param[in] orig_obj Old version of the unmodified object
+    /// \param[in] curr_obj Cloned and updated version of the object
+    /// \param[in] obj_ctxt Transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t update_hw(api_base *orig_obj, api_base *curr_obj,
+                                api_obj_ctxt_t *obj_ctxt) override;
+
     /// \brief     activate the epoch in the dataplane by programming
     ///            stage 0 tables, if any
     /// \param[in] api_obj  (cloned) API api object being activated

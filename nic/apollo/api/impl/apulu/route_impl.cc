@@ -399,6 +399,12 @@ cleanup:
 }
 
 sdk_ret_t
+route_table_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
+                            api_obj_ctxt_t *obj_ctxt) {
+    this->program_hw(curr_obj, obj_ctxt);
+}
+
+sdk_ret_t
 route_table_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                               pds_epoch_t epoch, api_op_t api_op,
                               api_obj_ctxt_t *obj_ctxt)
