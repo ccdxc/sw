@@ -495,8 +495,13 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
                     counter[FLOW_CLASSIFY_COUNTER_VPC_NOT_FOUND] += 1;
                     return;
                 }
+                if (PREDICT_FALSE(vpc->flags & PDS_VPP_VPC_FLAGS_CONTROL_VPC &&
+                    hdr->snat_type == ROUTE_RESULT_SNAT_TYPE_NONE)) {
+                    pkt_type = PDS_FLOW_L2N_INTRA_VCN_ROUTE;
+                } else {
+                    pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_DIS;
+                }
                 vnet_buffer(p)->pds_flow_data.egress_lkp_id = vpc->hw_bd_id;
-                pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_DIS;
             }
             if (hdr->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE) {
                 /* only from host supported for now */
@@ -540,27 +545,37 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
     } else {
         vnet_buffer(p)->pds_flow_data.egress_lkp_id = hdr->egress_bd_id;
         if (!hdr->drop && hdr->nexthop_id) {
-            // rflow is not mapping hit, its route hit.
-            // ingress bd id will be VPC bd id
-            if (dev->overlay_routing_en) {
-                pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_EN;
-            } else {
-                pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_DIS;
-            }
-            if (hdr->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE) {
-                /* Only static nat should be valid here */
-                /* TODO : From network pkt */
+            pds_impl_db_vpc_entry_t *vpc = pds_impl_db_vpc_get(hdr->vpc_id);
+            if (PREDICT_FALSE(!vpc)) {
                 *next = FLOW_CLASSIFY_NEXT_DROP;
-                counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-                // Enable once we handle Dnat cases
-#if 0
-                if (dev->overlay_routing_en) {
-                    pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_EN_NAT;
-                } else {
-                    pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_NAT;
-                }
-#endif
+                counter[FLOW_CLASSIFY_COUNTER_VPC_NOT_FOUND] += 1;
                 return;
+            }
+            if (PREDICT_FALSE(vpc->flags & PDS_VPP_VPC_FLAGS_CONTROL_VPC)) {
+                pkt_type = PDS_FLOW_N2L_INTRA_VCN_ROUTE;
+            } else {
+                // rflow is not mapping hit, its route hit.
+                // ingress bd id will be VPC bd id
+                if (dev->overlay_routing_en) {
+                    pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_EN;
+                } else {
+                    pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_DIS;
+                }
+                if (hdr->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE) {
+                    /* Only static nat should be valid here */
+                    /* TODO : From network pkt */
+                    *next = FLOW_CLASSIFY_NEXT_DROP;
+                    counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
+                    // Enable once we handle Dnat cases
+#if 0
+                    if (dev->overlay_routing_en) {
+                        pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_EN_NAT;
+                    } else {
+                        pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_NAT;
+                    }
+#endif
+                    return;
+                }
             }
         } else {
             // we cant make out r2l inter/intra subnet cases,
@@ -956,6 +971,13 @@ pds_flow_rewrite_flags_init (void)
             (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
             (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
 
+    // For intra VCN traffic, don't do routing rewrites
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_INTRA_VCN_ROUTE);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START);
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
+
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_R2L_INTRA_SUBNET);
     rewrite_flags->tx_rewrite =
             (TX_REWRITE_DMAC_FROM_MAPPING << TX_REWRITE_DMAC_START) |
@@ -1021,6 +1043,13 @@ pds_flow_rewrite_flags_init (void)
             (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
             (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
             (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+
+    // For intra VCN traffic, don't do routing rewrites
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_N2L_INTRA_VCN_ROUTE);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START);
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
 
     return;
 }
