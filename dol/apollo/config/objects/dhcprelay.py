@@ -60,12 +60,11 @@ class DhcpRelayObject(base.ConfigObjectBase):
     def PopulateAgentJson(self):
         #TODO revisit in case of multiple dhcp servers
         servers = []
-        for obj in DhcpRelayObjectClient.Objects(self.Node):
-            serverjson = {
-                "ip-address": str(obj.ServerIp),
-                "virtual-router": obj.Vpc,
-            }
-            servers.append(serverjson)
+        serverjson = {
+            "ip-address": self.ServerIp.exploded,
+            "virtual-router": str(self.Vpc)
+        }
+        servers.append(serverjson)
         spec = {
                 "kind": "IPAMPolicy",
                 "meta": {
@@ -78,9 +77,9 @@ class DhcpRelayObject(base.ConfigObjectBase):
                     },
                 },
                 "spec": {
-                    "type": 0,
+                    "type": "0",
                     "dhcp-relay": {
-                        "relay-servers": servers,
+                        "relay-servers": servers
                     }
                 }
             }
@@ -99,12 +98,11 @@ class DhcpRelayObject(base.ConfigObjectBase):
         if spec['spec']['spec']['type'] !=  0: return False
         operservers =  spec['spec']['spec']['relay-servers']
         cfgservers = []
-        for obj in DhcpRelayObjectClient.Objects(self.Node):
-            serverjson = {
-                "ip-address": str(obj.ServerIp),
-                "virtual-router": obj.Vpc,
-            }
-            cfgservers.append(serverjson)
+        serverjson = {
+            "ip-address": self.ServerIp.exploded,
+            "virtual-router": str(self.Vpc),
+        }
+        cfgservers.append(serverjson)
         if (len(cfgservers) != len(operservers)):
             logger.error(f"Mismatch in number of servers. cfg {len(cfgservers)}\
                  oper {len(operservers)}")
