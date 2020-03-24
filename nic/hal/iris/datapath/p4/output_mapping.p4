@@ -21,7 +21,7 @@ action redirect_to_cpu(dst_lif, egress_mirror_en,
     } else {
         modify_field(capri_intrinsic.tm_oq, control_tm_oq);
     }
-    modify_field(control_metadata.to_cpu, TRUE);
+    modify_field(control_metadata.apply_copp, TRUE);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
     modify_field(capri_intrinsic.lif, dst_lif);
     modify_field(control_metadata.p4plus_app_id, P4PLUS_APPTYPE_CPU);
@@ -48,7 +48,7 @@ action set_tm_oport_enforce_src_lport(vlan_strip, nports, egress_mirror_en,
                     encap_vlan_id, encap_vlan_id_valid, access_vlan_id,
                     egress_port1, egress_port2, egress_port3, egress_port4,
                     egress_port5, egress_port6, egress_port7, egress_port8,
-                    mnic_enforce_src_lport) {
+                    mnic_enforce_src_lport, apply_copp, copp_index) {
 
     modify_field(capri_intrinsic.lif, dst_lif);
     if ((mnic_enforce_src_lport != 0) and
@@ -62,7 +62,7 @@ action set_tm_oport_enforce_src_lport(vlan_strip, nports, egress_mirror_en,
                  encap_vlan_id, encap_vlan_id_valid, access_vlan_id,
                  egress_port1, egress_port2, egress_port3, egress_port4,
                  egress_port5, egress_port6, egress_port7, egress_port8,
-                 mnic_enforce_src_lport, 0);
+                 mnic_enforce_src_lport, 0, apply_copp, copp_index);
 }
 
 // When ever a new parameter is added to this set_tm_oport add to the
@@ -77,9 +77,10 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
                     encap_vlan_id, encap_vlan_id_valid, access_vlan_id,
                     egress_port1, egress_port2, egress_port3, egress_port4,
                     egress_port5, egress_port6, egress_port7, egress_port8,
-                    mnic_enforce_src_lport, nacl_egress_drop_en) {
+                    mnic_enforce_src_lport, nacl_egress_drop_en,
+                    apply_copp, copp_index) {
 
-    if ((nacl_egress_drop_en == TRUE) and 
+    if ((nacl_egress_drop_en == TRUE) and
         (control_metadata.nacl_egress_drop == TRUE)) {
         modify_field(control_metadata.egress_drop_reason,
                      EGRESS_DROP_OUTPUT_MAPPING);
@@ -109,8 +110,6 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
         }
     }
 
-
-
     modify_field(capri_intrinsic.lif, dst_lif);
     if (encap_vlan_id_valid == TRUE) {
         modify_field(rewrite_metadata.tunnel_vnid, encap_vlan_id);
@@ -125,6 +124,13 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
         remove_header(vlan_tag);
         subtract(capri_p4_intrinsic.packet_len,
                  capri_p4_intrinsic.packet_len, 4);
+    }
+
+    modify_field(scratch_metadata.flag, apply_copp);
+    if ((flow_lkp_metadata.pkt_type != PACKET_TYPE_UNICAST) and
+        (scratch_metadata.flag == TRUE)) {
+        modify_field(control_metadata.apply_copp, TRUE);
+        modify_field(copp_metadata.policer_index, copp_index);
     }
 
     // dummy ops to keep compiler happy

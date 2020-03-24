@@ -82,7 +82,7 @@ header_type control_metadata_t {
         recirc_reason                  : 2;
         uplink                         : 1;
         from_cpu                       : 1;
-        to_cpu                         : 1;
+        apply_copp                     : 1;
         cpu_copy                       : 1;
         src_lif                        : 11;
         lif_tx_stats_idx               : 16;

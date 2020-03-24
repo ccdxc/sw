@@ -73,7 +73,7 @@ table rx_policer_action {
 }
 
 control process_policer {
-    if (control_metadata.to_cpu == TRUE) {
+    if (control_metadata.apply_copp == TRUE) {
         apply(copp);
         apply(copp_action);
     } else {

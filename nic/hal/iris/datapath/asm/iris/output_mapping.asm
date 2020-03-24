@@ -59,9 +59,12 @@ set_tm_oport:
   phvwr       p.capri_p4_intrinsic_packet_len, r1
 
 set_tm_oport_common:
+  sne         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
+  seq.c1      c1, d.u.set_tm_oport_d.apply_copp, TRUE
+  phvwr.c1    p.control_metadata_apply_copp, TRUE
+  phvwr.c1    p.copp_metadata_policer_index, d.u.set_tm_oport_d.copp_index
   srlv        r6, d.{u.set_tm_oport_d.egress_port1...u.set_tm_oport_d.egress_port8}, r7
   phvwr       p.capri_intrinsic_tm_oport, r6
-  DBG_WR(0x10b, r6)
   phvwr       p.control_metadata_vlan_strip, d.u.set_tm_oport_d.vlan_strip
   seq.e       c1, d.u.set_tm_oport_d.encap_vlan_id_valid, TRUE
   phvwr.c1    p.rewrite_metadata_tunnel_vnid, d.u.set_tm_oport_d.encap_vlan_id
@@ -71,7 +74,7 @@ redirect_to_cpu:
   seq         c1, k.control_metadata_cpu_copy, TRUE
   phvwr.c1    p.capri_intrinsic_tm_oq, d.u.redirect_to_cpu_d.cpu_copy_tm_oq
   phvwr.!c1   p.capri_intrinsic_tm_oq, d.u.redirect_to_cpu_d.control_tm_oq
-  phvwr       p.control_metadata_to_cpu, TRUE
+  phvwr       p.control_metadata_apply_copp, TRUE
   seq         c1, d.u.redirect_to_cpu_d.egress_mirror_en, TRUE
   phvwr.c1    p.capri_intrinsic_tm_span_session, k.control_metadata_egress_mirror_session_id
   phvwrpair.e p.capri_intrinsic_tm_oport, TM_PORT_DMA, \
