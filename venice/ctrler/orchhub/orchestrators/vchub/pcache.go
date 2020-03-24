@@ -11,6 +11,7 @@ const workloadVnicKind = "workloadVnic"
 type vnicEntry struct {
 	PG         string
 	Port       string
+	IP         []string
 	MacAddress string
 }
 

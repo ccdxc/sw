@@ -6,6 +6,8 @@ import (
 	"sort"
 	"time"
 
+	govldtr "github.com/asaskevich/govalidator"
+	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
@@ -195,6 +197,8 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 			v.processVMName(prop, m.Originator, m.DcID, m.DcName, workloadObj)
 		case defs.VMPropRT:
 			hostChanged = v.processVMRuntime(prop, m.DcID, m.DcName, workloadObj)
+		case defs.VMPropGuest:
+			v.processVMGuestInfo(prop, m.DcID, m.DcName, workloadObj)
 		case defs.VMPropTag:
 			v.processTags(prop, m.Originator, m.DcID, m.DcName, workloadObj)
 		case defs.VMPropOverallStatus:
@@ -211,6 +215,16 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 			dcName := v.getDCNameForHost(workloadObj.Spec.HostName)
 			utils.AddOrchNamespaceLabel(workloadObj.Labels, dcName)
 		}
+	}
+
+	// populate IP addresses
+	for i, inf := range workloadObj.Spec.Interfaces {
+		entry := v.getVnicInfoForWorkload(workloadObj.Name, inf.MACAddress)
+		if entry == nil {
+			v.Log.Errorf("workload %s interface %s did not have vnic info", workloadObj.Name, inf.MACAddress)
+			continue
+		}
+		workloadObj.Spec.Interfaces[i].IpAddresses = entry.IP
 	}
 
 	if existingWorkload != nil && v.isWorkloadMigrating(existingWorkload) {
@@ -455,11 +469,16 @@ func (v *VCHub) resyncWorkloadByID(vmKey string, dcID string) {
 		return
 	}
 
-	m := defs.VCEventMsg{
+	m := v.convertWorkloadToEvent(dcID, destDC.Name, vm)
+	v.handleVM(m)
+}
+
+func (v *VCHub) convertWorkloadToEvent(dcID, dcName string, vm mo.VirtualMachine) defs.VCEventMsg {
+	return defs.VCEventMsg{
 		VcObject:   defs.VirtualMachine,
 		Key:        vm.Self.Value,
 		DcID:       dcID,
-		DcName:     destDC.Name,
+		DcName:     dcName,
 		Originator: v.VcID,
 		Changes: []types.PropertyChange{
 			types.PropertyChange{
@@ -477,9 +496,13 @@ func (v *VCHub) resyncWorkloadByID(vmKey string, dcID string) {
 				Op:   "add",
 				Val:  vm.Runtime,
 			},
+			types.PropertyChange{
+				Name: string(defs.VMPropGuest),
+				Op:   "add",
+				Val:  *(vm.Guest),
+			},
 		},
 	}
-	v.handleVM(m)
 }
 
 func (v *VCHub) handleVMotionDone(m defs.VMotionDoneMsg) {
@@ -849,6 +872,56 @@ func (v *VCHub) processVMRuntime(prop types.PropertyChange, dcID string, dcName 
 	return true
 }
 
+func (v *VCHub) processVMGuestInfo(prop types.PropertyChange, dcID string, dcName string, workload *workload.Workload) {
+	v.Log.Debugf("GuestInfo change for %s", workload.Name)
+	if prop.Val == nil {
+		return
+	}
+	guest, ok := prop.Val.(types.GuestInfo)
+	if !ok {
+		v.Log.Errorf("Property type wasn't VM guest info, %T, %v", prop.Val, prop.Val)
+		return
+	}
+
+	dc := v.GetDC(dcName)
+	if dc == nil {
+		v.Log.Errorf("Received Guest info for DC we don't have state for: %s", dcName)
+		return
+	}
+
+	workloadName := workload.Name
+
+	for _, nicInfo := range guest.Net {
+		pgObj := dc.GetPG(nicInfo.Network, "")
+		if pgObj == nil {
+			v.Log.Infof("Received EP guest info with PG we don't have state for: PG: %s DC: %s", nicInfo.Network, dcName)
+			continue
+		}
+
+		mac, err := conv.ParseMacAddr(nicInfo.MacAddress)
+		if err != nil {
+			v.Log.Errorf("Failed to parse mac address %s. Err : %v", nicInfo.MacAddress, err)
+			continue
+		}
+
+		entry := v.getVnicInfoForWorkload(workloadName, mac)
+		if entry == nil {
+			entry = &vnicEntry{
+				IP:         []string{},
+				MacAddress: mac,
+			}
+		}
+		for _, ip := range nicInfo.IpAddress {
+			// Only add if IPv4
+			if govldtr.IsIPv4(ip) {
+				entry.IP = append(entry.IP, ip)
+			}
+		}
+		v.Log.Debugf("Add vnic entry %v for workload %s", entry, workloadName)
+		v.addVnicInfoForWorkload(workloadName, entry)
+	}
+}
+
 func (v *VCHub) processVMName(prop types.PropertyChange, vcID string, dcID string, dcName string, workload *workload.Workload) {
 	if prop.Val == nil {
 		return
@@ -930,11 +1003,16 @@ func (v *VCHub) extractInterfaces(workloadName string, dcID string, dcName strin
 			continue
 		}
 
-		entry := &vnicEntry{
-			PG:         pgID,
-			Port:       port,
-			MacAddress: macStr,
+		entry := v.getVnicInfoForWorkload(workloadName, macStr)
+		if entry == nil {
+			entry = &vnicEntry{
+				IP:         []string{},
+				MacAddress: macStr,
+			}
 		}
+		entry.PG = pgID
+		entry.Port = port
+
 		v.Log.Debugf("Add vnic entry %v for workload %s", entry, workloadName)
 		v.addVnicInfoForWorkload(workloadName, entry)
 

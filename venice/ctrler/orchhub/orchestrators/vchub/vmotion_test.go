@@ -390,16 +390,30 @@ func TestVmotion(t *testing.T) {
 
 // Tests vmotion by triggering watch events
 func TestVmotionWithWatchers(t *testing.T) {
+	var vchub *VCHub
+	var s *sim.VcSim
+	testCtx, cancel := context.WithCancel(context.Background())
 	err := testutils.ValidateParams(defaultTestParams)
 	if err != nil {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
 	// SETTING UP LOGGER
-	config := log.GetDefaultConfig("vmotion_test")
+	config := log.GetDefaultConfig("vmotion_test_with_watchers")
 	config.LogToStdout = true
 	config.Filter = log.AllowAllFilter
 	logger := log.SetConfig(config)
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		cancel()
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+		if s != nil {
+			s.Destroy()
+		}
+	}()
 
 	u := &url.URL{
 		Scheme: "https",
@@ -408,9 +422,8 @@ func TestVmotionWithWatchers(t *testing.T) {
 	}
 	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
 
@@ -450,7 +463,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 		VcURL:  u,
 		OrchID: orchID,
 		VcID:   "VCProbe",
-		Ctx:    context.Background(),
+		Ctx:    testCtx,
 		Log:    logger.WithContext("submodule", "vcprobe"),
 		Wg:     &sync.WaitGroup{},
 	}
@@ -506,7 +519,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 	})
 	AssertOk(t, err, "Failed to create vm1")
 
-	vchub := LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+	vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
 	wlName := vchub.createVMWorkloadName("", vm1.Self.Value)
 	moveVMBack := func() {
 		// Move host back to host1 (cold migrate)
@@ -561,30 +574,39 @@ func TestVmotionWithWatchers(t *testing.T) {
 
 	addVnic := func() {
 		dc1.AddVnic(vm1, sim.VNIC{
-			MacAddress:   "aaaa.bbbb.eeee",
+			MacAddress:   "aa:aa:bb:bb:ee:ee",
 			PortgroupKey: pg.Reference().Value,
 			PortKey:      "12",
 		})
+		dc1.UpdateVMIP(vm1, "aa:aa:bb:bb:ee:ee", CreatePGName("n1"), []string{"1.1.1.1"})
+		guestNic := []types.GuestNicInfo{
+			{
+				MacAddress: "aa:aa:bb:bb:ee:ee",
+				Network:    CreatePGName("n1"),
+				IpAddress:  []string{"1.1.1.1"},
+			},
+		}
 		// Send event since watch does not work
-		vchub.vcEventCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value,
+		vchub.vcReadCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value, guestNic,
 			generateVNIC("aa:aa:bb:bb:dd:dd", "11", pg.Reference().Value, "E1000"),
 			generateVNIC("aa:aa:bb:bb:ee:ee", "12", pg.Reference().Value, "E1000"))
 	}
 
 	removeVnic := func() {
 		dc1.RemoveVnic(vm1, sim.VNIC{
-			MacAddress:   "aaaa.bbbb.eeee",
+			MacAddress:   "aa:aa:bb:bb:ee:ee",
 			PortgroupKey: pg.Reference().Value,
 			PortKey:      "12",
 		})
-		vchub.vcEventCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value,
+		dc1.RemoveVMIP(vm1, "aa:aa:bb:bb:ee:ee")
+		vchub.vcReadCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value, nil,
 			generateVNIC("aa:aa:bb:bb:dd:dd", "11", pg.Reference().Value, "E1000"))
 	}
 
 	vmConfigUpdate := func() {
 		err = dc1.UpdateVMHost(vm1, "host2")
 		AssertOk(t, err, "VM host update failed")
-		vchub.vcEventCh <- createVMHostUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value, penHost2.Obj.Self.Value)
+		vchub.vcReadCh <- createVMHostUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value, penHost2.Obj.Self.Value)
 	}
 
 	vmAbort := func() {
@@ -630,6 +652,18 @@ func TestVmotionWithWatchers(t *testing.T) {
 			}
 			if len(wl.Spec.Interfaces) != numVnics {
 				return false, fmt.Errorf("expected %d interfaces, found %d", numVnics, len(wl.Spec.Interfaces))
+			}
+			if numVnics == 2 {
+				// 2nd vnic should have IP info
+				found := false
+				for _, inf := range wl.Spec.Interfaces {
+					if len(inf.IpAddresses) != 0 {
+						found = true
+					}
+				}
+				if !found {
+					return false, fmt.Errorf("expected one of the interfaces to have an IP")
+				}
 			}
 			if wl.Spec.HostName != specHostName {
 				return false, fmt.Errorf("wl spec not on correct host, expected %s but found %s", specHostName, wl.Spec.HostName)
@@ -1048,7 +1082,11 @@ func createVMHostUpdateEvent(vcID, dcName, dcID, vmID, hostID string) defs.Probe
 	}
 }
 
-func createVnicUpdateEvent(vcID, dcName, dcID, vmID string, devices ...types.BaseVirtualDevice) defs.Probe2StoreMsg {
+func createVnicUpdateEvent(vcID, dcName, dcID, vmID string, nicInfo []types.GuestNicInfo, devices ...types.BaseVirtualDevice) defs.Probe2StoreMsg {
+	if nicInfo == nil {
+		nicInfo = []types.GuestNicInfo{}
+	}
+
 	return defs.Probe2StoreMsg{
 		MsgType: defs.VCEvent,
 		Val: defs.VCEventMsg{
@@ -1065,6 +1103,13 @@ func createVnicUpdateEvent(vcID, dcName, dcID, vmID string, devices ...types.Bas
 						Hardware: types.VirtualHardware{
 							Device: devices,
 						},
+					},
+				},
+				types.PropertyChange{
+					Op:   types.PropertyChangeOpAdd,
+					Name: "guest",
+					Val: types.GuestInfo{
+						Net: nicInfo,
 					},
 				},
 			},

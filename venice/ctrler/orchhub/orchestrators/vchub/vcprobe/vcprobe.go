@@ -22,6 +22,8 @@ const (
 	retryDelay = 500 * time.Millisecond
 )
 
+var vmProps = []string{"config", "name", "runtime", "guest"}
+
 type dcCtxEntry struct {
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -309,7 +311,6 @@ func (v *VCProbe) StartWatchForDC(dcName, dcID string) {
 
 	v.tryForever(func() bool {
 		v.Log.Debugf("VM watch Started on DC %s", dcName)
-		vmProps := []string{"config", "name", "runtime", "overallStatus", "customValue"}
 		v.startWatch(ctx, defs.VirtualMachine, vmProps, v.vcEventHandlerForDC(dcID, dcName), &ref)
 		if ctx.Err() != nil {
 			return false
@@ -469,7 +470,7 @@ func (v *VCProbe) ListObj(vcKind defs.VCObject, props []string, dst interface{},
 // ListVM returns a list of vms
 func (v *VCProbe) ListVM(dcRef *types.ManagedObjectReference) []mo.VirtualMachine {
 	var vms []mo.VirtualMachine
-	v.ListObj(defs.VirtualMachine, []string{"config", "name", "runtime"}, &vms, dcRef)
+	v.ListObj(defs.VirtualMachine, vmProps, &vms, dcRef)
 	return vms
 }
 
@@ -512,7 +513,7 @@ func (v *VCProbe) GetVM(vmID string) (mo.VirtualMachine, error) {
 	}
 	var vm mo.VirtualMachine
 	objVM := object.NewVirtualMachine(client.Client, vmRef)
-	err := objVM.Properties(v.ClientCtx, vmRef, []string{"config", "name", "runtime"}, &vm)
+	err := objVM.Properties(v.ClientCtx, vmRef, vmProps, &vm)
 	return vm, err
 }
 

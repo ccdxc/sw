@@ -297,20 +297,24 @@ func TestWorkloads(t *testing.T) {
 					Spec: workload.WorkloadSpec{
 						Interfaces: []workload.WorkloadIntfSpec{
 							workload.WorkloadIntfSpec{
-								MACAddress: "aabb.ccdd.eeff",
-								Network:    "PG1",
+								MACAddress:  "aabb.ccdd.eeff",
+								Network:     "PG1",
+								IpAddresses: []string{},
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress: "aabb.ccdd.ddff",
-								Network:    "PG2",
+								MACAddress:  "aabb.ccdd.ddff",
+								Network:     "PG2",
+								IpAddresses: []string{},
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress: "aabb.ccdd.ddee",
-								Network:    "PG3",
+								MACAddress:  "aabb.ccdd.ddee",
+								Network:     "PG3",
+								IpAddresses: []string{},
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress: "aabb.ccdd.ccee",
-								Network:    "PG4",
+								MACAddress:  "aabb.ccdd.ccee",
+								Network:     "PG4",
+								IpAddresses: []string{},
 							},
 						},
 					},
@@ -432,6 +436,51 @@ func TestWorkloads(t *testing.T) {
 						},
 					},
 				},
+				{
+					MsgType: defs.VCEvent,
+					Val: defs.VCEventMsg{
+						VcObject:   defs.VirtualMachine,
+						DcID:       dcName,
+						DcName:     dcName,
+						Key:        "virtualmachine-41",
+						Originator: "127.0.0.1:8990",
+						Changes: []types.PropertyChange{
+							types.PropertyChange{
+								Op:   types.PropertyChangeOpAdd,
+								Name: "guest",
+								Val: types.GuestInfo{
+									Net: []types.GuestNicInfo{
+										{
+											MacAddress: "aa:bb:cc:dd:ee:ff",
+											Network:    CreatePGName("PG1"),
+											IpAddress:  []string{"1.1.1.1", "fe80::eede:2031:aa18:ff3b", "1.1.1.2"},
+										},
+										{
+											MacAddress: "aa:aa:cc:dd:dd:ff",
+											Network:    CreatePGName("PG2"),
+											IpAddress:  []string{"fe80::eede:2031:aa18:ff3b"},
+										},
+										{ // PG3 shouldn't be added since we don't have state for it
+											MacAddress: "aa:aa:aa:dd:dd:ff",
+											Network:    "PG3",
+											IpAddress:  []string{"3.3.3.1", "3.3.3.2"},
+										},
+									},
+								},
+							},
+							types.PropertyChange{
+								Op:   types.PropertyChangeOpAdd,
+								Name: "runtime",
+								Val: types.VirtualMachineRuntimeInfo{
+									Host: &types.ManagedObjectReference{
+										Type:  "HostSystem",
+										Value: "hostsystem-21",
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
@@ -477,16 +526,19 @@ func TestWorkloads(t *testing.T) {
 					Spec: workload.WorkloadSpec{
 						Interfaces: []workload.WorkloadIntfSpec{
 							workload.WorkloadIntfSpec{
-								MACAddress: "aabb.ccdd.eeff",
-								Network:    "PG1",
+								MACAddress:  "aabb.ccdd.eeff",
+								Network:     "PG1",
+								IpAddresses: []string{"1.1.1.1", "1.1.1.2"},
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress: "aaaa.ccdd.ddff",
-								Network:    "PG2",
+								MACAddress:  "aaaa.ccdd.ddff",
+								Network:     "PG2",
+								IpAddresses: []string{},
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress: "aaaa.aadd.ddff",
-								Network:    "PG2",
+								MACAddress:  "aaaa.aadd.ddff",
+								Network:     "PG2",
+								IpAddresses: []string{},
 							},
 						},
 					},
@@ -681,12 +733,14 @@ func TestWorkloads(t *testing.T) {
 					Spec: workload.WorkloadSpec{
 						Interfaces: []workload.WorkloadIntfSpec{
 							workload.WorkloadIntfSpec{
-								MACAddress: "aabb.ccdd.eeff",
-								Network:    "PG1",
+								MACAddress:  "aabb.ccdd.eeff",
+								Network:     "PG1",
+								IpAddresses: []string{},
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress: "aabb.ccdd.ddff",
-								Network:    "PG2",
+								MACAddress:  "aabb.ccdd.ddff",
+								Network:     "PG2",
+								IpAddresses: []string{},
 							},
 						},
 					},

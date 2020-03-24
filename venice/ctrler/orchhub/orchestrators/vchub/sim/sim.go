@@ -585,6 +585,57 @@ func (v *Datacenter) UpdateVMHost(vm *simulator.VirtualMachine, hostName string)
 	return nil
 }
 
+// UpdateVMIP adds guest IP information
+func (v *Datacenter) UpdateVMIP(vm *simulator.VirtualMachine, macAddr string, netName string, ips []string) error {
+	vmMap := simulator.Map.Get(vm.Reference())
+	nicInfo := vm.Guest.Net
+	newItem := types.GuestNicInfo{
+		MacAddress: macAddr,
+		Network:    netName,
+		IpAddress:  ips,
+	}
+
+	added := false
+	for i, item := range vm.Guest.Net {
+		if item.MacAddress == macAddr {
+			added = true
+			vm.Guest.Net[i] = newItem
+			break
+		}
+	}
+
+	if !added {
+		nicInfo = append(nicInfo, newItem)
+	}
+
+	simulator.Map.Update(vmMap, []types.PropertyChange{
+		{Name: "guest", Val: vm.Guest},
+	})
+	return nil
+}
+
+// RemoveVMIP removes guest IP information
+func (v *Datacenter) RemoveVMIP(vm *simulator.VirtualMachine, macAddr string) error {
+	vmMap := simulator.Map.Get(vm.Reference())
+
+	indexToRemove := -1
+	for i, item := range vm.Guest.Net {
+		if item.MacAddress == macAddr {
+			indexToRemove = i
+			break
+		}
+	}
+
+	if indexToRemove >= 0 {
+		vm.Guest.Net = append(vm.Guest.Net[:indexToRemove], vm.Guest.Net[indexToRemove+1:]...)
+		simulator.Map.Update(vmMap, []types.PropertyChange{
+			{Name: "guest", Val: vm.Guest},
+		})
+	}
+
+	return nil
+}
+
 // AddHost adds a host to the DVS
 func (v *DVS) AddHost(host *Host) error {
 	ref := host.Obj.Reference()

@@ -944,10 +944,10 @@ func TestUsegVlanLimit(t *testing.T) {
 }
 
 func TestRapidEvents(t *testing.T) {
-	numDCs := 4
-	numHosts := 4 // Hosts per DC
-	numVMs := 4   // VMs per Host
-	numVNICs := 4 // VNICs per VM
+	numDCs := 1
+	numHosts := 10 // Hosts per DC
+	numVMs := 10   // VMs per Host
+	numVNICs := 4  // VNICs per VM
 
 	// STARTING SIM
 	u := &url.URL{

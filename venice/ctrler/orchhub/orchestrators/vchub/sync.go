@@ -444,30 +444,7 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs [
 	// Redundant creates will no-op
 
 	for _, vm := range vms {
-		m := defs.VCEventMsg{
-			VcObject:   defs.VirtualMachine,
-			Key:        vm.Self.Value,
-			DcID:       dc.Self.Value,
-			DcName:     dc.Name,
-			Originator: v.VcID,
-			Changes: []types.PropertyChange{
-				types.PropertyChange{
-					Name: string(defs.VMPropConfig),
-					Op:   "add",
-					Val:  *(vm.Config),
-				},
-				types.PropertyChange{
-					Name: string(defs.VMPropName),
-					Op:   "add",
-					Val:  vm.Name,
-				},
-				types.PropertyChange{
-					Name: string(defs.VMPropRT),
-					Op:   "add",
-					Val:  vm.Runtime,
-				},
-			},
-		}
+		m := v.convertWorkloadToEvent(dc.Self.Value, dc.Name, vm)
 		v.handleVM(m)
 	}
 }

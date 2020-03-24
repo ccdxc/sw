@@ -39,6 +39,7 @@ func TestList(t *testing.T) {
 	AssertOk(t, err, "failed to add nic")
 	vnicMac := "aaaa.bbbb.cccc"
 	vnicMac2 := "aaaa.bbbb.dddd"
+	vnicMac2IP := "1.1.1.1"
 	vm1, err := dc.AddVM("testVM", "host1", []VNIC{
 		VNIC{
 			MacAddress: vnicMac,
@@ -48,6 +49,7 @@ func TestList(t *testing.T) {
 	dc.AddVnic(vm1, VNIC{
 		MacAddress: vnicMac2,
 	})
+	dc.UpdateVMIP(vm1, vnicMac2, "", []string{vnicMac2IP})
 
 	var spec types.HostVirtualNicSpec
 	spec.Mac = "0011.2233.0001"
@@ -152,7 +154,7 @@ func TestList(t *testing.T) {
 
 	// Check VMs
 	var vms []mo.VirtualMachine
-	getKind(t, c, "VirtualMachine", []string{"name", "config"}, &vms)
+	getKind(t, c, "VirtualMachine", []string{"name", "config", "guest"}, &vms)
 	AssertEquals(t, 1, len(vms), "Recieved incorrect amount of vms")
 	AssertEquals(t, "testVM", vms[0].Name, "VM had incorrect name")
 	vnicCount := 0
@@ -164,6 +166,11 @@ func TestList(t *testing.T) {
 		vnicCount++
 		AssertOneOf(t, device.GetVirtualEthernetCard().MacAddress, []string{vnicMac, vnicMac2})
 	}
+	for _, d := range vms[0].Guest.Net {
+		if d.MacAddress == vnicMac2 {
+			AssertEquals(t, d.IpAddress, []string{vnicMac2IP}, "IP address did not match")
+		}
+	}
 	AssertEquals(t, 2, vnicCount, "Expected VM to have two vnics")
 
 	// Remove vnic
@@ -171,6 +178,8 @@ func TestList(t *testing.T) {
 		MacAddress: vnicMac2,
 	})
 	AssertOk(t, err, "falied to remove vnic")
+	dc.RemoveVMIP(vm1, vnicMac2)
+
 	vms = []mo.VirtualMachine{}
 	getKind(t, c, "VirtualMachine", []string{"name", "config"}, &vms)
 	AssertEquals(t, 1, len(vms), "Recieved incorrect amount of vms")

@@ -122,6 +122,8 @@ const (
 	VMPropName = VCProp("name")
 	// VMPropRT identifies the VM's runtime property
 	VMPropRT = VCProp("runtime")
+	// VMPropGuest identifies the VM's guest property
+	VMPropGuest = VCProp("guest")
 	// VMPropTag identifies the VM's tag property
 	VMPropTag = VCProp("tag")
 	// VMPropCustom identifies the VM's customValue property
