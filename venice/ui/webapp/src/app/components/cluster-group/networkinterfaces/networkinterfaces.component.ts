@@ -42,6 +42,11 @@ import * as _ from 'lodash';
  *
  */
 
+interface NetworkInterfaceUiModel {
+  associatedDSC: string;
+  networkinterfaceUIName: string;
+}
+
 @Component({
   selector: 'app-networkinterfaces',
   templateUrl: './networkinterfaces.component.html',
@@ -50,8 +55,6 @@ import * as _ from 'lodash';
   encapsulation: ViewEncapsulation.None
 })
 export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNetworkInterface, NetworkNetworkInterface> implements OnInit, OnDestroy {
-
-  public static NETWORKINTERFACE_FIELD_DSC: string = 'associatedDSC';
 
   @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
 
@@ -165,6 +168,7 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
           return;
         }
         this.naplesList = response.data as ClusterDistributedServiceCard[];
+        this._myDSCnameToMacMap = ObjectsRelationsUtility.buildDSCsNameMacMap(this.naplesList);
         this.handleDataReady();
       }
     );
@@ -187,11 +191,9 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
 
   handleDataReady() {
     // When naplesList and networkinterfaces list are ready, build networkinterface-dsc map.
-    if (this.naplesList && this.dataObjects) {
-      this._myDSCnameToMacMap = ObjectsRelationsUtility.buildDSCsNameMacMap(this.naplesList);
+    if (this.naplesList && this.naplesList.length > 0 && this.dataObjects) {
       this.dataObjects.forEach((networkNetworkInterface: NetworkNetworkInterface) => {
-        const dscname = this._myDSCnameToMacMap.macToNameMap[networkNetworkInterface.status.dsc];
-        networkNetworkInterface._ui[NetworkinterfacesComponent.NETWORKINTERFACE_FIELD_DSC] = (dscname) ? dscname : networkNetworkInterface.status.dsc;
+        this.updateOneNetworkInterface(networkNetworkInterface);
       });
       this.updateSelectedNetworkInterface();
     }
@@ -199,9 +201,35 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
 
   updateSelectedNetworkInterface() {
     if (this.selectedNetworkInterface && this._myDSCnameToMacMap) {
-      const dscname = this._myDSCnameToMacMap.macToNameMap[this.selectedNetworkInterface.status.dsc];
-      this.selectedNetworkInterface._ui[NetworkinterfacesComponent.NETWORKINTERFACE_FIELD_DSC] = (dscname) ? dscname : this.selectedNetworkInterface.status.dsc;
+      this.updateOneNetworkInterface(this.selectedNetworkInterface);
     }
+  }
+
+  updateOneNetworkInterface(selectedNetworkInterface: NetworkNetworkInterface) {
+    const dscname = this._myDSCnameToMacMap.macToNameMap[selectedNetworkInterface.status.dsc];
+    const uiModel: NetworkInterfaceUiModel = {
+      associatedDSC: (dscname) ? dscname : selectedNetworkInterface.status.dsc,
+      networkinterfaceUIName: this.geNetworkinterfaceUIName(selectedNetworkInterface)
+    };
+    selectedNetworkInterface._ui = uiModel;
+  }
+
+  geNetworkinterfaceUIName(selectedNetworkInterface: NetworkNetworkInterface, delimiter: string = '-'): string {
+    const niName = selectedNetworkInterface.meta.name;
+    const idx = niName.indexOf(delimiter);
+    const macPart = niName.substring(0, idx);
+    const typePart = niName.substring(idx + 1);
+    let dscname = this._myDSCnameToMacMap.macToNameMap[selectedNetworkInterface.status.dsc];
+    if (!dscname) {
+      // NI-name is 00ae.cd01.0ed8-uplink129 where NI.status.dsc is missing.
+      dscname = this._myDSCnameToMacMap.macToNameMap[macPart];
+      if (!dscname) {
+        // NI-name is 00aecd0115e0-pf-70
+        dscname = this._myDSCnameToMacMap.macToNameMap[Utility.chunk(macPart, 4).join('.')];
+      }
+    }
+    return dscname ? dscname + '-' + typePart : niName;
+
   }
 
   showDeleteIcon(): boolean {
@@ -314,11 +342,11 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
     this.dataObjects = this.dataObjectsBackUp;
   }
 
-   /**
-   * Execute table search
-   * @param field
-   * @param order
-   */
+  /**
+  * Execute table search
+  * @param field
+  * @param order
+  */
   onSearchWorkloads(field = this.tableContainer.sortField, order = this.tableContainer.sortOrder) {
     const searchResults = this.onSearchDataObjects(field, order, 'NetworkInterface', this.maxSearchRecords, this.advSearchCols, this.dataObjectsBackUp, this.advancedSearchComponent);
     if (searchResults && searchResults.length > 0) {
@@ -330,16 +358,16 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
   searchDSC(requirement: FieldsRequirement, data = this.dataObjects): any[] {
     const outputs: any[] = [];
     for (let i = 0; data && i < data.length; i++) {
-      const recordValue  = data[i]._ui.associatedDSC; //  data[i]._ui.associatedDSC is the dsc name
-        const searchValues = requirement.values;
-        let operator = String(requirement.operator);
-        operator = TableUtility.convertOperator(operator);
-        for (let j = 0; j < searchValues.length; j++) {
-          const activateFunc = TableUtility.filterConstraints[operator];
-          if (activateFunc && activateFunc(recordValue, searchValues[j])) {
-            outputs.push(data[i]);
-          }
+      const recordValue = data[i]._ui.associatedDSC; //  data[i]._ui.associatedDSC is the dsc name
+      const searchValues = requirement.values;
+      let operator = String(requirement.operator);
+      operator = TableUtility.convertOperator(operator);
+      for (let j = 0; j < searchValues.length; j++) {
+        const activateFunc = TableUtility.filterConstraints[operator];
+        if (activateFunc && activateFunc(recordValue, searchValues[j])) {
+          outputs.push(data[i]);
         }
+      }
     }
     return outputs;
   }

@@ -139,6 +139,9 @@ export class GenServiceUtility {
         }
       }
     }
+    /*
+    // 2020-03-23, As we use data-cache, we don't clear the this.cacheMap[key] to prevent VS-1306. Those pages subscribing to this.cacheMap[key]  is responsible for unsubscribing to the obsserver (this.cacheMap[key])
+    // Event when user logs out, app-content page remains in browser, if user logins againt this.cacheMap[key] will be available. If browser tab is taken out, all resource will be cleaned out by browser.
     for (const key in this.cacheMap) {
       if (this.cacheMap.hasOwnProperty(key)) {
         try {
@@ -148,7 +151,7 @@ export class GenServiceUtility {
         }
       }
     }
-
+    */
   }
 
   onLogout(payload: any) {

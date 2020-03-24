@@ -451,6 +451,15 @@ export class Utility {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
   }
 
+  /**
+   * chunk('00aecd010ed8', 4) => ["00ae", "cd01", "0ed8"]
+   * @param str
+   * @param size
+   */
+  static chunk(str: string , size: number) {
+    return str.match(new RegExp('.{1,' + size + '}', 'g'));
+}
+
   static s4() {
     return Math.floor((1 + Math.random()) * 0x10000)
       .toString(16)
