@@ -65,24 +65,27 @@ intf2_mac='00:ae:cd:00:4f:dd'
 intf1_underlay_mac='00:ae:cd:00:14:ce'
 intf2_underlay_mac='00:ae:cd:00:14:cd'
 
+# Tunnel object inputs (Underlay)
+tunnel_id=1
+tunnel_local_ip='1.0.0.2'
+tunnel_remote_ip='1.0.0.3'
+tunnel_mac='00:00:aa:aa:aa:a1'
+tunnel_vnid=0
+tunnel_nhid=2
+
 # VCN objects
-vcn_subnet_pfx='11.1.1.0/24'
+vcn_subnet_pfx='11.0.0.0/8'
 vcn_host_if_idx='0x80000046'
-vcn_prefix='11.1.1.2/24'
+vcn_intf_prefix='11.1.1.2/8'
+vcn_intf_ip='11.1.1.2'
 vcn_v4_router_ip='11.1.1.1'
 vcn_vpc_encap=12
 vcn_subnet_encap=11
 vcn_vpc_id=11
 vcn_virt_router_mac='00:66:01:00:00:01'
 vcn_vnic_mac='fe:ff:0b:01:01:02'
-#remote_vcn_vnic_mac='00:ae:cd:00:59:82'
-
-# Tunnel object inputs (Underlay)
-tunnel_local_ip='1.0.0.2'
-tunnel_remote_ip='1.0.0.3'
-tunnel_mac='00:00:aa:aa:aa:a1'
-tunnel_vnid=0
-tunnel_nhid=2
+vcn_route_prefix1='11.1.2.0/24'
+vcn_route_table_id=1
 
 # Subnet object inputs
 ipv4_subnet1='2.1.0.0/24'
@@ -97,6 +100,7 @@ virt_router_mac='00:55:01:00:00:01'
 # VNIC and mapping (local and remote) table objects 
 local_mapping_id=1
 remote_mapping_id=2
+vcn_mapping_id=3
 local_vnic_mac='00:ae:cd:00:08:11'
 remote_vnic_mac='00:ae:cd:00:00:0a'
 local_host_ip='2.1.0.2'
@@ -122,7 +126,9 @@ vpc2=vpc.VpcObject(vpc1_id, type=vpc_pb2.VPC_TYPE_TENANT, encaptype=types_pb2.EN
 vpc100=vpc.VpcObject(vpc2_id, type=vpc_pb2.VPC_TYPE_TENANT, encaptype=types_pb2.ENCAP_TYPE_VXLAN, encapvalue=vpc2_vxlan_encap )
 
 # Create VPC for VCN
-vcn_vpc=vpc.VpcObject(vcn_vpc_id, type=vpc_pb2.VPC_TYPE_TENANT, encaptype=types_pb2.ENCAP_TYPE_VXLAN, encapvalue=vcn_vpc_encap )
+vcn_route1=route.RouteObject(ipaddress.IPv4Network(vcn_route_prefix1), "tunnel", tunnel_id, None, False)
+vcn_route_table=route.RouteTableObject(vcn_route_table_id, types_pb2.IP_AF_INET, [vcn_route1])
+vcn_vpc=vpc.VpcObject(vcn_vpc_id, type=vpc_pb2.VPC_TYPE_CONTROL, encaptype=types_pb2.ENCAP_TYPE_VXLAN, encapvalue=vcn_vpc_encap, v4routetableid=vcn_route_table_id )
 
 # Create L3 Interfaces ..
 # id, iftype, ifadminstatus, vpcid, prefix, portid, encap, macaddr
@@ -130,7 +136,7 @@ intf1=interface.InterfaceObject( 1, interface_pb2.IF_TYPE_L3, interface_pb2.IF_S
 intf2=interface.InterfaceObject( 2, interface_pb2.IF_TYPE_L3, interface_pb2.IF_STATUS_UP, vpc2_id, intf2_prefix, 2, types_pb2.ENCAP_TYPE_NONE,intf2_mac, node_uuid=node_uuid )
 
 # Create VCN interface
-vcn0=interface.InterfaceObject( 3, interface_pb2.IF_TYPE_VENDOR_L3, interface_pb2.IF_STATUS_UP, prefix=vcn_prefix, macaddr=vcn_vnic_mac )
+vcn0=interface.InterfaceObject( 3, interface_pb2.IF_TYPE_VENDOR_L3, interface_pb2.IF_STATUS_UP, prefix=vcn_intf_prefix, macaddr=vcn_vnic_mac )
 
 
 # Create NH objects ..
@@ -141,7 +147,7 @@ nh2 = nh.NexthopObject( 2, 'underlay', 2, intf2_underlay_mac, vpc2_id )
 
 # Create Tunnel Objects ..
 # id, vpcid, localip, remoteip, macaddr, encaptype, vnid, nhid
-tunnel1 = tunnel.TunnelObject( 1,vpc1_id, tunnel_local_ip, tunnel_remote_ip,tunnel_mac, tunnel_pb2.TUNNEL_TYPE_NONE, types_pb2.ENCAP_TYPE_VXLAN, tunnel_vnid,tunnel_nhid) 
+tunnel1 = tunnel.TunnelObject( tunnel_id,vpc1_id, tunnel_local_ip, tunnel_remote_ip,tunnel_mac, tunnel_pb2.TUNNEL_TYPE_NONE, types_pb2.ENCAP_TYPE_VXLAN, tunnel_vnid,tunnel_nhid) 
 
 # Create DHCP Policy
 dhcp_policy1 = dhcp.DhcpPolicyObject(1, server_ip=subnet_gw_ip_addr, mtu=9216,  gateway_ip=subnet_gw_ip_addr)
@@ -160,7 +166,8 @@ vcn_subnet = subnet.SubnetObject( vcn_subnet_id, vcn_vpc_id, ipaddress.IPv4Netwo
 vnic1 = vnic.VnicObject(1, 1, local_vnic_mac, host_if_idx, False, 'VXLAN', fabric_encap, node_uuid=node_uuid )
 
 # Create VCN VNIC object
-vcn_vnic = vnic.VnicObject(2, vcn_subnet_id, vcn_vnic_mac, vcn_host_if_idx, False, 'VXLAN', vcn_subnet_encap, node_uuid=node_uuid )
+vcn_vnic_id = 2
+vcn_vnic = vnic.VnicObject(vcn_vnic_id, vcn_subnet_id, vcn_vnic_mac, vcn_host_if_idx, False, 'VXLAN', vcn_subnet_encap, node_uuid=node_uuid )
 
 
 # Create Mapping Objects 1 for local vnic and another for remote IP
@@ -170,6 +177,8 @@ map1_l = mapping.MappingObject( local_mapping_id, 'l3', local_vnic_mac, ipaddres
 
 map1_r = mapping.MappingObject( remote_mapping_id, 'l3', remote_vnic_mac, ipaddress.IPv4Address(remote_host_ip), vpc1_id, subnetid=1, tunnelid=1 )
 
+map1_vcn = mapping.MappingObject( vcn_mapping_id, 'l3', vcn_vnic_mac, ipaddress.IPv4Address(vcn_intf_ip), vcn_vpc_id, subnetid=vcn_subnet_id, vnicid=vcn_vnic_id )
+
 # Push the configuration
 api.client.Start(api.ObjectTypes.BATCH, batch1.GetGrpcMessage())
 
@@ -178,7 +187,6 @@ api.client.Create(api.ObjectTypes.SWITCH, [device1.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.VPC, [vpc2.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.VPC, [vpc100.GetGrpcCreateMessage()])
-api.client.Create(api.ObjectTypes.VPC, [vcn_vpc.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.INTERFACE, [intf1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.INTERFACE, [intf2.GetGrpcCreateMessage()])
@@ -189,6 +197,8 @@ api.client.Create(api.ObjectTypes.NH, [nh1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.NH, [nh2.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.TUNNEL, [tunnel1.GetGrpcCreateMessage()])
+api.client.Create(api.ObjectTypes.ROUTE, [vcn_route_table.GetGrpcCreateMessage()])
+api.client.Create(api.ObjectTypes.VPC, [vcn_vpc.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.DHCP_POLICY, [dhcp_policy1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.SUBNET, [subnet1.GetGrpcCreateMessage()])
@@ -196,6 +206,7 @@ api.client.Create(api.ObjectTypes.SUBNET, [vcn_subnet.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.VNIC, [vnic1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.VNIC, [vcn_vnic.GetGrpcCreateMessage()])
+api.client.Create(api.ObjectTypes.MAPPING, [map1_vcn.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.MAPPING, [map1_l.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.MAPPING, [map1_r.GetGrpcCreateMessage()])
 

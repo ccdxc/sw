@@ -99,8 +99,12 @@ static sdk::sdk_ret_t
 pds_cfg_db_vpc_set_cb (const pds_cfg_msg_t *msg)
 {
     int rc;
+    uint16_t flags = 0;
 
-    rc = pds_impl_db_vpc_set(msg->vpc.status.hw_id, msg->vpc.status.bd_hw_id);
+    if (msg->vpc.spec.type == PDS_VPC_TYPE_CONTROL) {
+        flags |= PDS_VPP_VPC_FLAGS_CONTROL_VPC;
+    }
+    rc = pds_impl_db_vpc_set(msg->vpc.status.hw_id, msg->vpc.status.bd_hw_id, flags);
 
     if (rc == 0) {
         return sdk::SDK_RET_OK;

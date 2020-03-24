@@ -55,7 +55,8 @@ class SubnetObject():
 
         spec.IPv4VirtualRouterIP = int(self.v4virtualrouterip)
         spec.VirtualRouterMac = utils.getmac2num(self.virtualroutermac)
-        spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.v4routetableid)
+        if self.v4routetableid:
+            spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.v4routetableid)
         #spec.IngV4SecurityPolicyId = self.ingv4securitypolicyid
         #spec.IngV6SecurityPolicyId = self.egrv4securitypolicyid
         #spec.EgV4SecurityPolicyId = self.egrv4securitypolicyid

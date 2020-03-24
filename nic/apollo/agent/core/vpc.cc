@@ -21,6 +21,7 @@ vpc_create_validate (pds_vpc_spec_t *spec)
         }
         break;
     case PDS_VPC_TYPE_TENANT:
+    case PDS_VPC_TYPE_CONTROL:
         break;
     default:
         PDS_TRACE_ERR("Failed to create vpc {}, invalid type {}",

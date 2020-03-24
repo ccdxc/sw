@@ -26,6 +26,7 @@ enum VPCType {
   VPC_TYPE_NONE     = 0;
   VPC_TYPE_UNDERLAY = 1;
   VPC_TYPE_TENANT   = 2;
+  VPC_TYPE_CONTROL  = 3;
 }
 
 // VPCSpec captures VPC configuration

@@ -6,6 +6,7 @@
 #define __VPP_ARP_PROXY_NODE_H__
 
 #include <nic/vpp/infra/utils.h>
+#include "arp_proxy.h"
 
 // ARP Proxy node
 #define foreach_arp_proxy_counter                           \
@@ -66,5 +67,11 @@ typedef struct arp_proxy_trace_s {
     mac_addr_t smac, vr_mac;
     u16 bd;
 } arp_proxy_trace_t;
+
+typedef struct arp_proxy_main_s {
+    arp_proxy_vendor_dst_mac_get_cb dst_mac_get_cb;
+} arp_proxy_main_t;
+
+extern arp_proxy_main_t arp_proxy_main;
 
 #endif    // __VPP_ARP_PROXY_NODE_H__

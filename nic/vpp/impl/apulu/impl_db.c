@@ -3,7 +3,6 @@
 //
 
 #include "impl_db.h"
-#include "pdsa_impl_db_hdlr.h"
 
 pds_impl_db_ctx_t impl_db_ctx;
 
@@ -117,12 +116,21 @@ IMPL_DB_ENTRY_GET(uint16_t, subnet);
 IMPL_DB_INIT(subnet, PDS_VPP_MAX_SUBNET, 0xffff);
 
 int
-pds_impl_db_vpc_set (uint16_t vpc_hw_id, uint16_t bd_hw_id)
+pds_impl_db_vpc_set (uint16_t vpc_hw_id, uint16_t bd_hw_id, uint16_t flags)
 {
     POOL_IMPL_DB_ADD(vpc, vpc_hw_id);
 
     vpc_info->hw_bd_id = bd_hw_id;
+    vpc_info->flags = flags;
     return 0;
+}
+
+uint8_t
+pds_impl_db_vpc_is_control_vpc (uint16_t vpc_hw_id)
+{
+    pds_impl_db_vpc_entry_t *entry = pds_impl_db_vpc_get(vpc_hw_id);
+
+    return (entry->flags & PDS_VPP_VPC_FLAGS_CONTROL_VPC);
 }
 
 IMPL_DB_ENTRY_DEL(uint16_t, vpc);

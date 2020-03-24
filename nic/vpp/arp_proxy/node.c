@@ -12,6 +12,8 @@ VLIB_PLUGIN_REGISTER () = {
 
 vlib_node_registration_t arp_proxy_node;
 
+arp_proxy_main_t arp_proxy_main;
+
 always_inline void
 arp_proxy_trace_fill (arp_proxy_trace_t *trace, ethernet_arp_header_t *arp,
                       mac_addr_t mac, u32 id)
@@ -24,6 +26,26 @@ arp_proxy_trace_fill (arp_proxy_trace_t *trace, ethernet_arp_header_t *arp,
                 ETH_ADDR_LEN);
     clib_memcpy(trace->vr_mac, mac, ETH_ADDR_LEN);
     trace->bd = id;
+}
+
+static int
+arp_proxy_dst_mac_get(void *hdr, mac_addr_t mac_addr, uint32_t dst_addr)
+{
+    u16 vpc_id;
+    u16 bd_id;
+    int ret = 0;
+
+    vpc_id = ((p4_rx_cpu_hdr_t *)hdr)->vpc_id;
+    bd_id = ((p4_rx_cpu_hdr_t *)hdr)->ingress_bd_id;
+
+    if (arp_proxy_main.dst_mac_get_cb &&
+        pds_impl_db_vpc_is_control_vpc(vpc_id)) {
+        ret = arp_proxy_main.dst_mac_get_cb(vpc_id, bd_id, mac_addr, dst_addr);
+    } else {
+        ret = pds_dst_mac_get(vpc_id, bd_id, mac_addr, dst_addr);
+    }
+
+    return ret;
 }
 
 always_inline void
@@ -59,7 +81,7 @@ arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
     if (PREDICT_TRUE(
             arp->opcode ==
             clib_host_to_net_u16 (ETHERNET_ARP_OPCODE_request))) {
-        if (0 != pds_dst_mac_get(p4_rx_meta, mac, dst)) {
+        if (0 != arp_proxy_dst_mac_get(p4_rx_meta, mac, dst)) {
             counter[ARP_PROXY_COUNTER_NO_MAC]++;
             goto error;
         }
@@ -288,3 +310,9 @@ VLIB_REGISTER_NODE (exit_node) = {
 
     .format_trace = arp_proxy_exit_trace,
 };
+
+void
+arp_proxy_register_vendor_dst_mac_get_cb(arp_proxy_vendor_dst_mac_get_cb cb)
+{
+    arp_proxy_main.dst_mac_get_cb = cb;
+}

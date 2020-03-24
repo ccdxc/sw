@@ -114,15 +114,11 @@ pds_mapping_dmac_get (mac_addr_t mac_addr, uint32_t dst_addr,
 // Based on the config, we get either the dst mac from remote mapping table
 // or subnet's vr mac from bd table
 int
-pds_dst_mac_get (void *hdr, mac_addr_t mac_addr, uint32_t dst_addr)
+pds_dst_mac_get (uint16_t vpc_id, uint16_t bd_id, mac_addr_t mac_addr,
+                 uint32_t dst_addr)
 {
-    uint16_t vpc_id;
-    uint16_t bd_id;
     int ret;
 
-    bd_id = ((p4_rx_cpu_hdr_t *)hdr)->ingress_bd_id;
-
-    vpc_id = ((p4_rx_cpu_hdr_t *)hdr)->vpc_id;
     ret = pds_mapping_dmac_get(mac_addr, dst_addr, vpc_id, bd_id);
     return ret;
 }

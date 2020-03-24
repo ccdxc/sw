@@ -29,6 +29,7 @@ typedef enum pds_vpc_type_e {
     PDS_VPC_TYPE_NONE     = 0,
     PDS_VPC_TYPE_UNDERLAY = 1,    ///< underlay VPC
     PDS_VPC_TYPE_TENANT   = 2,    ///< tenant/customer VPC
+    PDS_VPC_TYPE_CONTROL  = 3,    ///< management/control VPC
 } pds_vpc_type_t;
 
 /// \brief VPC specification

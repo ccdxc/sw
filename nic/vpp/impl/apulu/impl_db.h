@@ -13,6 +13,7 @@ extern "C" {
 #include <nic/vpp/infra/utils.h>
 #include <nic/apollo/p4/include/apulu_table_sizes.h>
 #include <api.h>
+#include "pdsa_impl_db_hdlr.h"
 
 #define PDS_VPP_MAX_SUBNET  BD_TABLE_SIZE
 #define PDS_VPP_MAX_VNIC    VNIC_INFO_TABLE_SIZE
@@ -46,6 +47,7 @@ typedef struct {
 
 typedef struct {
     u16 hw_bd_id;                   // vpc's bd id
+    u16 flags;                      // vpc flags
 } pds_impl_db_vpc_entry_t;
 
 typedef struct {

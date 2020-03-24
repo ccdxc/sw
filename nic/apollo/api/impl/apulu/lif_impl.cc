@@ -1174,7 +1174,9 @@ lif_impl::create_vendor_inband_lif_(pds_lif_spec_t *spec) {
     // allocate required nexthop to point to lif
     ret = nexthop_impl_db()->nh_idxr()->alloc(&nh_idx_);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to allocate nexthop entry for learn lif %s, "
+        vnic_impl_db()->vnic_idxr()->free(vnic_hw_id_);
+        vnic_hw_id_ = 0xFFFF;
+        PDS_TRACE_ERR("Failed to allocate nexthop entry for vendor lif %s, "
                       "id %u, err %u", name_, id_, ret);
         return ret;
     }
@@ -1195,6 +1197,8 @@ lif_impl::create_vendor_inband_lif_(pds_lif_spec_t *spec) {
 
 error:
 
+    vnic_impl_db()->vnic_idxr()->free(vnic_hw_id_);
+    vnic_hw_id_ = 0xFFFF;
     nexthop_impl_db()->nh_idxr()->free(nh_idx_);
     nh_idx_ = 0xFFFFFFFF;
     return ret;

@@ -9,3 +9,6 @@ nic/conf/$PIPELINE/device-pf8.json                                /nic/conf/devi
 
 # system level tools
 nic/apollo/tools/$PIPELINE/bringup_mgmt_ifs.sh                    /nic/tools/
+
+# VPP
+nic/build/$ARCH/$PIPELINE/lib/libpdsvendor_impl_ibm.so            /nic/lib/vpp_plugins

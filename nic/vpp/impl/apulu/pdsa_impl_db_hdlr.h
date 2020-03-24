@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include "nic/vpp/infra/ipc/pdsa_vpp_hdlr.h"
 
+#define PDS_VPP_VPC_FLAGS_CONTROL_VPC           0x0001
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,7 +33,9 @@ int pds_impl_db_subnet_set(uint8_t pfx_len,
                            uint32_t vnid);
 int pds_impl_db_subnet_del(uint16_t subnet_hw_id);
 
-int pds_impl_db_vpc_set(uint16_t vpc_hw_id, uint16_t bd_hw_id);
+int pds_impl_db_vpc_set(uint16_t vpc_hw_id, uint16_t bd_hw_id, uint16_t flags);
+
+uint8_t pds_impl_db_vpc_is_control_vpc (uint16_t vpc_hw_id);
 
 int pds_impl_db_vpc_del(uint16_t vpc_hw_id);
 
