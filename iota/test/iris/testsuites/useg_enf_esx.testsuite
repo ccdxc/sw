@@ -38,6 +38,10 @@ common:
     debugs:
         -   step : verif.utils.collect_logs_and_cores
 
+    triggers:
+        -   step : triggers.networking.trigger_link_flap
+            args : 
+                 background : False
 testbundles:
     precheckin:
         - networking/connectivity.testbundle
