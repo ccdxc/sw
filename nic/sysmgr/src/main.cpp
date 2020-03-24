@@ -43,7 +43,13 @@ main (int argc, char *argv[])
         exit(-1);
     }
     redirect_stds("sysmgr", getpid());
-    cpulock(0xffffffff);
+    if (getenv("SYSMGR_CORES") != NULL) {
+        unsigned long cores = std::stoul(getenv("SYSMGR_CORES"), nullptr, 16);
+        cpulock(cores);
+        g_log->info("Restricting sysmgr to 0x%lx cores", cores);
+    } else {
+        cpulock(0xffffffff);
+    }
 
     g_bus = init_bus(&g_bus_callbacks);
     g_events = init_events(spdlog::create<spdlog::sinks::null_sink_st>("null_logger"));

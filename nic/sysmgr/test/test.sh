@@ -8,6 +8,7 @@ TESTDIR=$(pwd)
 export OPERD_REGIONS="${TESTDIR}/operd-regions.json"
 export PENLOG_LOCATION="."
 export NO_WATCHDOG=1
+export SYSMGR_CORES="0x1"
 
 pushd ${TOPDIR}
 
@@ -58,7 +59,8 @@ runtest () {
 
 #runtest 10s test-respawn.json "Service example1 started"
 
-runtest 10s test.json "Service example2 started"
+runtest 10s test.json "Service example2 started" \
+        "Restricting sysmgr to 0x1 cores"
 
 runtest 10s test-exit-code.json "Service example2 Exited normally with code: 12" \
         "ProcessStatus example2, .*, 4, Exited normally with code: 12" \
