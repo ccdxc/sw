@@ -173,6 +173,7 @@ func verifyDataObject(c objstore.Client, objName string) {
 		Expect(line[11] != "").Should(BeTrue())
 		Expect(line[12] != "").Should(BeTrue())
 		Expect(line[13] != "").Should(BeTrue())
+		Expect(line[14] != "").Should(BeTrue())
 	}
 	// Expect(logCount != 0).Should(BeTrue())
 }

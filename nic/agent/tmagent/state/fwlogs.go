@@ -93,6 +93,7 @@ func (s *PolicyState) handleTsDB(ev *halproto.FWEvent, ts time.Time) {
 	dir := flowDirectionName[ev.GetDirection()]
 	state := strings.ToLower(strings.Replace(halproto.FlowLogEventType_name[int32(ev.GetFlowaction())], "LOG_EVENT_TYPE_", "", 1))
 	unixnano := ev.GetTimestamp()
+	appID := fmt.Sprintf("%v", ev.GetAppId()) // TODO: praveen convert to enum
 
 	if unixnano != 0 {
 		// if a timestamp was specified in the msg, use it
@@ -111,6 +112,7 @@ func (s *PolicyState) handleTsDB(ev *halproto.FWEvent, ts time.Time) {
 		"session-id":          ev.GetSessionId(),
 		"session-state":       state,
 		"timestamp":           ts.Format(time.RFC3339Nano),
+		"app-id":              appID,
 	}
 
 	// icmp fields

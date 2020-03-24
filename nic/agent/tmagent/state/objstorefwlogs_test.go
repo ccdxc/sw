@@ -113,6 +113,7 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 				Dipv4:     destIP,
 				Dport:     10000,
 				IpProt:    1,
+				AppId:     32,
 			},
 		},
 	}

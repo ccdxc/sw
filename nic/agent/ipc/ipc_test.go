@@ -103,7 +103,7 @@ func TestBasicIPC(t *testing.T) {
 	ipc1Info := ipc1.String()
 	Assert(t, strings.Contains(ipc1Info, "readindex: 0"), "invalid readindex", ipc1Info)
 	Assert(t, strings.Contains(ipc1Info, "writeindex: 0"), "invalid writeindex", ipc1Info)
-	Assert(t, strings.Contains(ipc1Info, "numbuffer: 2047"), "invalid num_buffer", ipc1Info)
+	Assert(t, strings.Contains(ipc1Info, "numbuffer: 1598"), "invalid num_buffer", ipc1Info)
 
 	client1 := newIPCClient(clientShm, 0)
 

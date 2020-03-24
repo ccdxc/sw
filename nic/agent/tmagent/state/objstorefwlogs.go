@@ -348,7 +348,8 @@ func getCSVObjectBuffer(logs interface{}, b *bytes.Buffer, zip bool) {
 			"dip", "ts", "sport", "dport",
 			"proto", "act", "dir", "ruleid",
 			"sessionid", "sessionstate",
-			"icmptype", "icmpid", "icmpcode"})
+			"icmptype", "icmpid", "icmpcode",
+			"appid"})
 		for _, l := range logs.([]interface{}) {
 			temp := l.([]string)
 			w.Write(temp)
@@ -471,6 +472,7 @@ func (s *PolicyState) handleObjStore(ev *halproto.FWEvent, ts time.Time) {
 		// if a timestamp was specified in the msg, use it
 		ts = time.Unix(0, unixnano)
 	}
+	appID := fmt.Sprintf("%v", ev.GetAppId()) // TODO: praveen convert to enum
 
 	// JSON file format
 	if s.objStoreFileFormat == jsonFileFormat {
@@ -487,7 +489,8 @@ func (s *PolicyState) handleObjStore(ev *halproto.FWEvent, ts time.Time) {
 			"direction":       dir,
 			"ruleid":          ruleID,
 			"sessionid":       sessionID,
-			"sessionstate":    state}
+			"sessionstate":    state,
+			"appid":           appID}
 
 		// icmp fields
 		if ev.GetIpProt() == halproto.IPProtocol_IPPROTO_ICMP {
@@ -519,6 +522,7 @@ func (s *PolicyState) handleObjStore(ev *halproto.FWEvent, ts time.Time) {
 		fmt.Sprintf("%v", int64(ev.GetIcmptype())),
 		fmt.Sprintf("%v", int64(ev.GetIcmpid())),
 		fmt.Sprintf("%v", int64(ev.GetIcmpcode())),
+		appID,
 	}
 
 	// TODO: use sync pool

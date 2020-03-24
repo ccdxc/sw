@@ -45,6 +45,7 @@ func NewFwEventGen(ctx context.Context, num int, vrf uint64) chan *halproto.FWEv
 				RuleId:     uint64(rand.Int63n(5000)),
 				Timestamp:  time.Now().UnixNano(),
 				SessionId:  uint64(i + 1),
+				AppId:      uint32(rand.Int31n(1000)),
 			}
 
 			// set vrf

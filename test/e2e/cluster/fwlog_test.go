@@ -447,6 +447,7 @@ var _ = Describe("fwlog policy tests", func() {
 					"session-id",
 					"session-state",
 					"timestamp",
+					"app-id",
 				}
 
 				fieldMap := map[string]string{

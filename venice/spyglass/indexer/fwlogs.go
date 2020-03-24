@@ -43,6 +43,7 @@ type FwLogV1 struct {
 	Icmpcode   uint32    `json:"icmpcode"`
 	IcmpID     uint32    `json:"icmpid"`
 	CreationTs time.Time `json:"creationts"`
+	AppID      string    `json:"appid"`
 }
 
 // FwLogObjectV1 represents an object created in objectstore for FwLogs.
@@ -242,6 +243,7 @@ func (idr *Indexer) parseFwLogsCsvV1(id int, key string, data [][]string, uuid s
 			Icmptype:   uint32(icmpType),
 			IcmpID:     uint32(icmpID),
 			Icmpcode:   uint32(icmpCode),
+			AppID:      line[14],
 		}
 
 		// prepare the index request

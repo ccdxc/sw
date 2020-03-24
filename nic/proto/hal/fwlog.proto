@@ -47,4 +47,6 @@ message FWEvent {
     uint32                icmpid             = 29; // flow key: icmp id
     uint64                iflow_packets      = 30; // iflow permitted packets
     uint64                rflow_packets      = 31; // rflow permitted packets
+    uint32                app_id             = 32; // l7 app id
+    uint32                app_id_state       = 33; // L7 app id state
 }

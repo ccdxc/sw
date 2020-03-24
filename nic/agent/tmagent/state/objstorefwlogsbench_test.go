@@ -122,6 +122,7 @@ func SkipBenchmarkMultiMatchQuery(b *testing.B) {
 							Dipv4:     destIP,
 							Dport:     uint32(10000 + i),
 							IpProt:    1,
+							AppId:     32,
 						},
 					})
 				}

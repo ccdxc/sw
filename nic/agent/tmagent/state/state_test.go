@@ -932,6 +932,7 @@ func TestProcessFWEvent(t *testing.T) {
 				Dipv4:     destIP,
 				Dport:     10000,
 				IpProt:    20000,
+				AppId:     32,
 			},
 		},
 	}
@@ -948,7 +949,7 @@ func TestProcessFWEvent(t *testing.T) {
 				for _, c := range v {
 
 					// rfc3164: [content:
-					// [{"action":"implicit_deny","destination-address":"192.168.20.1","destination-port":10000,
+					// [{"action":"implicit_deny","app-id":"32","destination-address":"192.168.20.1","destination-port":10000,
 					// "direction":"","protocol":"20000","rule-id":0,"session-id":0,"session-state":"flow_create",
 					// "source-address":"192.168.10.1","source-port":0,"timestamp":"0001-01-01T00:00:00Z"}]
 					l, err := parseRfc3164(c)
@@ -964,7 +965,8 @@ func TestProcessFWEvent(t *testing.T) {
 						"failed to match, expected %s, got %+v", e.fwEvent.Dipv4, m)
 					Assert(t, strings.Contains(fmt.Sprintf("%s", m), srcIPStr),
 						"failed to match, expected %s, got %+v", e.fwEvent.Sipv4, m)
-
+					Assert(t, strings.Contains(fmt.Sprintf("%s", m), "app-id"),
+						"failed to match, expected app-id field, got %+v", m)
 				}
 			} else {
 				for _, c := range v {
@@ -972,7 +974,7 @@ func TestProcessFWEvent(t *testing.T) {
 					AssertOk(t, err, "failed to get %s syslog", k)
 					m, ok := l["message"]
 					Assert(t, ok, "failed to get message from syslog  %+v", l)
-					// rfc5424: [app_name:pen-tmagent facility:16 hostname:rchirakk-cluster-1
+					// rfc5424: [app_name:pen-tmagent app-id:32 facility:16 hostname:rchirakk-cluster-1
 					// message:[{"action":"implicit_deny","destination-address":"192.168.20.1",
 					// "destination-port":10000,"direction":"","protocol":"20000","rule-id":0,
 					// "session-id":0,"session-state":"flow_create","source-address":"192.168.10.1",
@@ -986,6 +988,8 @@ func TestProcessFWEvent(t *testing.T) {
 						"failed to match, expected %v , got %+v", e.fwEvent.Dipv4, m)
 					Assert(t, strings.Contains(fmt.Sprintf("%s", m), srcIPStr),
 						"failed to match, expected %s, got %+v", e.fwEvent.Sipv4, m)
+					Assert(t, strings.Contains(fmt.Sprintf("%s", m), "app-id"),
+						"failed to match, expected app-id field, got %+v", m)
 				}
 			}
 		}

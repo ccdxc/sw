@@ -91,6 +91,7 @@ func fwlogGen(fwlogShm string, numEntries, rateps int) error {
 					Direction: uint32(rand.Int31n(2) + 1),
 					RuleId:    uint64(rand.Int63n(5000)),
 					SessionId: uint64(rand.Int63n(5000)),
+					AppId:     uint32(rand.Int31n(5000)),
 				}
 
 				if ev.IpProt == halproto.IPProtocol_IPPROTO_ICMP {
