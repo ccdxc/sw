@@ -23,15 +23,13 @@ HdlrResp
 upgrade_handler::CompatCheckHandler(UpgCtx& upgCtx)
 {
     std::string preVer, postVer;
-    HdlrResp    nicmgr_rsp, rsp;
+    HdlrResp    rsp;
 
     ::upgrade::UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, ::upgrade::DEVCONFVER, preVer);
     ::upgrade::UpgCtxApi::UpgCtxGetPostUpgTableVersion(upgCtx, ::upgrade::DEVCONFVER, postVer);
     HAL_TRACE_DEBUG("[upgrade] Handling compat checks msg ... preVer {} postVer {}", preVer, postVer);
 
-    nicmgr_rsp = upg_event_notify(MSG_ID_UPG_COMPAT_CHECK, upgCtx);
-    rsp = HdlrResp(::upgrade::SUCCESS, empty_str);
-    return combine_responses(nicmgr_rsp, rsp);
+    return HdlrResp(::upgrade::SUCCESS, empty_str);
 }
 
 //------------------------------------------------------------------------------
@@ -43,7 +41,7 @@ upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
     hal_ret_t                           ret;
     pd::pd_func_args_t                  pd_func_args = {0};
     pd::pd_uplink_tm_control_args_t     tm_args = {0};
-    HdlrResp                            rsp, nicmgr_rsp;
+    HdlrResp                            rsp;
 
     HAL_TRACE_DEBUG("[upgrade] Handling link down msg ...");
 
@@ -80,8 +78,7 @@ upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
 
     rsp = HdlrResp(::upgrade::SUCCESS, empty_str);
 err:
-    nicmgr_rsp = upg_event_notify(MSG_ID_UPG_LINK_DOWN, upgCtx);
-    return combine_responses(nicmgr_rsp, rsp);
+    return rsp;
 }
 
 //------------------------------------------------------------------------------
@@ -91,7 +88,7 @@ HdlrResp
 upgrade_handler::PostLinkUpHandler(UpgCtx& upgCtx)
 {
     HAL_TRACE_DEBUG("[upgrade] Handling Post LinkUp msg ...");
-    return upg_event_notify(MSG_ID_UPG_POST_LINK_UP, upgCtx);
+    return HdlrResp(::upgrade::SUCCESS, empty_str);
 }
 
 //------------------------------------------------------------------------------
@@ -101,7 +98,7 @@ HdlrResp
 upgrade_handler::ProcessQuiesceHandler(UpgCtx& upgCtx)
 {
     HAL_TRACE_DEBUG("[upgrade] Handling quiesce msg ...");
-    return upg_event_notify(MSG_ID_UPG_QUIESCE, upgCtx);
+    return HdlrResp(::upgrade::SUCCESS, empty_str);
 }
 
 
@@ -112,7 +109,7 @@ HdlrResp
 upgrade_handler::SaveStateHandler(UpgCtx& upgCtx)
 {
     HAL_TRACE_DEBUG("[upgrade] Handling save state msg ...");
-    return upg_event_notify(MSG_ID_UPG_SAVE_STATE, upgCtx);
+    return HdlrResp(::upgrade::SUCCESS, empty_str);
 }
 
 //------------------------------------------------------------------------------
@@ -122,7 +119,7 @@ HdlrResp
 upgrade_handler::FailedHandler(UpgCtx& upgCtx)
 {
     HAL_TRACE_DEBUG("[upgrade] Handling failed msg ...");
-    return upg_event_notify(MSG_ID_UPG_FAIL, upgCtx);
+    return HdlrResp(::upgrade::SUCCESS, empty_str);
 }
 
 //------------------------------------------------------------------------------
@@ -132,7 +129,7 @@ HdlrResp
 upgrade_handler::HostDownHandler(UpgCtx& upgCtx)
 {
     HAL_TRACE_DEBUG("[upgrade] Handling host down msg ...");
-    return upg_event_notify(MSG_ID_UPG_HOSTDOWN, upgCtx);
+    return HdlrResp(::upgrade::SUCCESS, empty_str);
 }
 
 //------------------------------------------------------------------------------
@@ -142,7 +139,7 @@ HdlrResp
 upgrade_handler::HostUpHandler(UpgCtx& upgCtx)
 {
     HAL_TRACE_DEBUG("[upgrade] Handling host up msg ...");
-    return upg_event_notify(MSG_ID_UPG_HOSTUP, upgCtx);
+    return HdlrResp(::upgrade::SUCCESS, empty_str);
 }
 
 //------------------------------------------------------------------------------
@@ -152,7 +149,7 @@ HdlrResp
 upgrade_handler::PostHostDownHandler(UpgCtx& upgCtx)
 {
     hal_ret_t ret = HAL_RET_OK;
-    HdlrResp  rsp, nicmgr_rsp;
+    HdlrResp  rsp;
 
     HAL_TRACE_DEBUG("[upgrade] Handling post host down msg ...");
 
@@ -182,8 +179,7 @@ upgrade_handler::PostHostDownHandler(UpgCtx& upgCtx)
     }
     rsp = HdlrResp(::upgrade::SUCCESS, empty_str);
 err:
-    nicmgr_rsp = upg_event_notify(MSG_ID_UPG_POST_HOSTDOWN, upgCtx);
-    return combine_responses(nicmgr_rsp, rsp);
+    return rsp;
 }
 
 //------------------------------------------------------------------------------
@@ -199,14 +195,14 @@ upgrade_handler::PostRestartHandler(UpgCtx& upgCtx)
 
     HAL_TRACE_DEBUG("[upgrade] Handling host up msg ...");
 
-    ::upgrade::UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, 
-                                                      ::upgrade::DEVCONFVER, 
+    ::upgrade::UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx,
+                                                      ::upgrade::DEVCONFVER,
                                                       preVer);
-    ::upgrade::UpgCtxApi::UpgCtxGetPostUpgTableVersion(upgCtx, 
-                                                       ::upgrade::DEVCONFVER, 
+    ::upgrade::UpgCtxApi::UpgCtxGetPostUpgTableVersion(upgCtx,
+                                                       ::upgrade::DEVCONFVER,
                                                        postVer);
     HAL_TRACE_DEBUG("[upgrade] Handling compat checks msg ... "
-                    "preVer {} postVer {}", 
+                    "preVer {} postVer {}",
                     preVer, postVer);
 
     // Check if A => B. Come up in microseg-enf if device.conf has hostpin
@@ -214,12 +210,14 @@ upgrade_handler::PostRestartHandler(UpgCtx& upgCtx)
         ret = hal::system_handle_a_to_b();
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Unable to handle A -> B");
+            rsp = HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
+            goto err;
         }
     }
 
-    hal_rsp = upg_event_notify(MSG_ID_UPG_POST_RESTART, upgCtx);
     rsp = HdlrResp(::upgrade::SUCCESS, empty_str);
-    return combine_responses(hal_rsp, rsp);
+err:
+    return rsp;
 #if 0
     HAL_TRACE_DEBUG("[upgrade] Handling post restart msg ...");
     // TODO: mostly regular asic init path should work here, no special handling
@@ -235,7 +233,7 @@ HdlrResp
 upgrade_handler::LinkUpHandler(UpgCtx& upgCtx)
 {
     HAL_TRACE_DEBUG("[upgrade] Handling link up msg ...");
-    return upg_event_notify(MSG_ID_UPG_LINK_UP, upgCtx);
+    return HdlrResp(::upgrade::SUCCESS, empty_str);
 }
 
 //------------------------------------------------------------------------------
@@ -245,7 +243,6 @@ void
 upgrade_handler::SuccessHandler(UpgCtx& upgCtx)
 {
     HAL_TRACE_DEBUG("[upgrade] Handling success msg ...");
-    upg_event_notify(MSG_ID_UPG_SUCCESS, upgCtx);
 }
 
 //------------------------------------------------------------------------------
@@ -255,7 +252,6 @@ void
 upgrade_handler::AbortHandler(UpgCtx& upgCtx)
 {
     HAL_TRACE_DEBUG("[upgrade] Handling abort msg ...");
-    upg_event_notify(MSG_ID_UPG_ABORT, upgCtx);
 }
 
 }    // namespace upgrade

@@ -9,6 +9,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/hal/core/event_ipc.hpp"
 #include "nic/hal/iris/upgrade/upgrade.hpp"
+#include "nic/hal/iris/upgrade/nicmgr_upgrade.hpp"
 
 namespace hal {
 namespace upgrade {
@@ -50,8 +51,6 @@ typedef struct upg_msg_s {
 
 void upg_event_init(void);
 HdlrResp upg_event_notify(upg_msg_id_t id, UpgCtx& upgCtx);
-HdlrResp combine_responses(HdlrResp &nicmgr_rsp, HdlrResp &rsp);
-void upg_async_status_update (bool status);
 
 }   // namespace upgrade
 }   // namespace hal

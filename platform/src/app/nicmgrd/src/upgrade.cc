@@ -7,6 +7,7 @@
 
 #include "nic/include/trace.hpp"
 #include "nic/include/base.hpp"
+#include "nic/include/hal_cfg.hpp"
 
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/nicmgr/include/eth_dev.hpp"
@@ -338,7 +339,7 @@ SaveEthDevInfo(struct EthDevInfo *eth_dev_info, EthDeviceInfo *proto_obj)
     proto_obj->mutable_eth_dev_res()->set_rom_mem_addr(eth_dev_info->eth_res->rom_mem_addr);
     proto_obj->mutable_eth_dev_res()->set_rom_mem_size(eth_dev_info->eth_res->rom_mem_size);
 
-    //save eth_dev specs 
+    //save eth_dev specs
     proto_obj->mutable_eth_dev_spec()->set_dev_uuid(eth_dev_info->eth_spec->dev_uuid);
     proto_obj->mutable_eth_dev_spec()->set_eth_type(eth_dev_info->eth_spec->eth_type);
     proto_obj->mutable_eth_dev_spec()->set_name(eth_dev_info->eth_spec->name);
@@ -599,10 +600,11 @@ nicmgr_upg_hndlr::upg_timer_func(void *obj)
         } else {
             status = true;
         }
-        // ipc is not possible, as it requires async from nicmgr to hal
-        // but hal to nicmgr upgrade requestes should be in sync
-        hal::upgrade::upg_async_status_update(status);
-        // sdk::ipc::broadcast(event_id_t::EVENT_ID_UPG_STAGE_STATUS, &status, sizeof(status));
+
+        // sending async upgrade status event to hal from nicmgr
+        sdk::ipc::request(hal::HAL_THREAD_ID_DELPHI_CLIENT,
+                          event_id_t::EVENT_ID_UPG_STAGE_STATUS,
+                          &status, sizeof(status), NULL);
 
         evutil_timer_stop(devmgr->ev_loop(), &ServiceTimer);
 

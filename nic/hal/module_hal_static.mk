@@ -95,6 +95,7 @@ MODULE_ARLIBS	= \
 	pdcapri \
 	pdcommon \
 	penipc \
+	penipc_ev \
 	penlog \
 	periodic \
 	rdmamgr_iris \

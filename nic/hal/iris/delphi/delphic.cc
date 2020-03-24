@@ -21,6 +21,7 @@ namespace svc {
 using namespace std;
 using grpc::Status;
 using hal::upgrade::upgrade_handler;
+using hal::upgrade::nicmgr_upgrade_handler;
 
 shared_ptr<delphi_client>    g_delphic;
 //------------------------------------------------------------------------------
@@ -64,6 +65,9 @@ delphi_client::delphi_client(delphi::SdkPtr &sdk)
     upgsdk_ =
         make_shared<::upgrade::UpgSdk>(sdk_, make_shared<upgrade_handler>(),
                                        "hal", ::upgrade::NON_AGENT, nullptr);
+    nicmgr_upgsdk_ =
+        make_shared<::upgrade::UpgSdk>(sdk_, make_shared<nicmgr_upgrade_handler>(),
+                                       "nicmgr", ::upgrade::NON_AGENT, nullptr);
 
     // create the InterfaceSpec reactor
     if_svc_ = std::make_shared<if_svc>(sdk);
@@ -108,13 +112,28 @@ delphi_client::init_done(void)
 
 // send upgrade stage status
 void
-delphi_client::send_upg_stage_status(bool status)
+delphi_client::send_upg_stage_status(delphic_upg_id_t upg_id, bool status)
 {
-   if (status) {
-        upgsdk_->SendAppRespSuccess();
-   } else {
-        upgsdk_->SendAppRespFail("Timeout occurred");
-   }
+    ::upgrade::UpgSdkPtr sdk;
+
+    switch (upg_id) { 
+    case DELPHIC_UPG_ID_HAL: { 
+        sdk = upgsdk_;
+        break;   
+    }
+    case DELPHIC_UPG_ID_NICMGR: { 
+        sdk = nicmgr_upgsdk_; 
+        break; 
+    } 
+    default: 
+        SDK_ASSERT(0); 
+    } 
+
+    if (status) {
+        sdk->SendAppRespSuccess();
+    } else {
+        sdk->SendAppRespFail("Timeout occurred");
+    }
 }
 
 // API to invoke when HAL is ready for external world

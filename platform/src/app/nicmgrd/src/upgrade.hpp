@@ -6,7 +6,6 @@
 #define __NICMGR_UPG_HPP__
 
 #include "nic/sdk/lib/shmmgr/shmmgr.hpp"
-#include "nic/upgrade_manager/export/upgcsdk/upgrade.hpp"
 #include "nic/upgrade_manager/export/upgcsdk/upgrade_ctx_api.hpp"
 #include "nic/upgrade_manager/export/upgcsdk/upgrade_handler.hpp"
 #include "nic/hal/iris/upgrade/upg_ipc.hpp"

@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = ipc_test.gtest
-MODULE_SOLIBS = utils logger penipc_ev
+MODULE_SOLIBS = utils logger penipc penipc_ev
 MODULE_LDLIBS = rt ev zmq
 MODULE_ARCH   = x86_64
 include ${MKDEFS}/post.mk

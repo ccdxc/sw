@@ -5,6 +5,6 @@ MODULE_TARGET = libpenipc_ev.lib
 MODULE_SOLIBS =
 MODULE_LDLIBS = ev zmq
 MODULE_FLAGS  = -Werror
-ALL_CC_FILES  = $(wildcard ${MODULE_SRC_DIR}/*.cc)
+ALL_CC_FILES  = $(wildcard ${MODULE_SRC_DIR}/*_ev.cc)
 MODULE_SRCS   = $(ALL_CC_FILES)
 include ${MKDEFS}/post.mk
