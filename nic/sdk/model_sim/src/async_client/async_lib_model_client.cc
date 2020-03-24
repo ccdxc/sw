@@ -21,7 +21,7 @@
 void *rsock;
 void *esock;
 void *__zmq_context;
-const char* __lmodel_env = getenv("CAPRI_MOCK_MODE");
+const char* __lmodel_env = getenv("ASIC_MOCK_MODE");
 const char* __write_verify_enable = getenv("CAPRI_WRITE_VERIFY_ENABLE");
 std::mutex g_zmq_mutex;
 
@@ -34,7 +34,7 @@ int lib_model_connect ()
 
     if (__lmodel_env)
         return 0;
-    
+
     __zmq_context = zmq_ctx_new ();
     printf ("Connecting to non-blocking ASIC model....\n");
 
@@ -48,7 +48,7 @@ int lib_model_connect ()
     FILE* urandom = fopen("/dev/urandom", "r");
     fread(&seed, sizeof(int), 1, urandom);
     fclose(urandom);
-    srand(seed); 
+    srand(seed);
     snprintf(identity, 10, "%04X-%04X", (rand() % 0x10000), (rand() % 0x10000));
     /* Open the dealer socket */
     const char* user_str = std::getenv("PWD");
@@ -61,7 +61,7 @@ int lib_model_connect ()
     rc = zmq_setsockopt (rsock, ZMQ_SNDTIMEO, &timeout_ms, sizeof(timeout_ms));
     rc = zmq_connect ((rsock), zmqsockstr);
     assert(rc == 0);
-    
+
     /* Open the subscriber socket */
     snprintf(zmqsockstr, 200, "ipc:///%s/zmqsock2", user_str);
     esock = zmq_socket (__zmq_context, ZMQ_SUB);
@@ -99,7 +99,7 @@ int lib_model_connect ()
     }
     printf ("ASIC model server connected!\n");
     zmq_close (s);
-    
+
     return (rc);
 }
 
@@ -110,7 +110,7 @@ int lib_model_conn_close ()
     std::lock_guard<std::mutex> lock(g_zmq_mutex);
     if (__lmodel_env)
         return 0;
-    
+
     zmq_close(rsock);
     zmq_close(esock);
     zmq_ctx_destroy(__zmq_context);
@@ -170,7 +170,7 @@ void step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)
     buffer_hdr_t *buff;
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_STEP_CPU_PKT;
-    buff->size = pkt_len; 
+    buff->size = pkt_len;
 
     if (__lmodel_env)
         return;

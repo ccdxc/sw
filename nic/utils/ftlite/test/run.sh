@@ -1,8 +1,8 @@
 #! /bin/bash
 export SWDIR=`git rev-parse --show-toplevel`
 export NICDIR=$SWDIR/nic/
-export CAPRI_MOCK_MODE=1
-export CAPRI_MOCK_MEMORY_MODE=1
+export ASIC_MOCK_MODE=1
+export ASIC_MOCK_MEMORY_MODE=1
 export BLDDIR=${NICDIR}/build/x86_64/artemis
 export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
 

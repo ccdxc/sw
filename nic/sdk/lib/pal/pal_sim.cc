@@ -190,7 +190,7 @@ pal_sim_connect (void)
 {
     int     rc;
 
-    if (getenv("CAPRI_MOCK_MODE")) {
+    if (getenv("ASIC_MOCK_MODE")) {
         return PAL_RET_OK;
     }
 
@@ -213,7 +213,7 @@ pal_sim_disconnect (void)
 {
     int     rc;
 
-    if (getenv("CAPRI_MOCK_MODE")) {
+    if (getenv("ASIC_MOCK_MODE")) {
         return PAL_RET_OK;
     }
 

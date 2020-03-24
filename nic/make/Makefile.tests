@@ -10,8 +10,8 @@ SNORT_EXPORT_DIR = $(TOPDIR)/hal/third-party/snort3/export
 SNORT_CMD_OPTS = SNORT_LUA_PATH=$(SNORT_EXPORT_DIR)/lua/ LUA_PATH="$(SNORT_EXPORT_DIR)/lua/?.lua;;" SNORT_DAQ_PATH=$(SNORT_EXPORT_DIR)/$(ARCH)/lib/
 CONFIG_PATH = $(TOPDIR)/conf
 LD_PATH = $(LD_LIBRARY_PATH):$(TOPDIR)/../bazel-bin/nic/sdk/model_sim/:$(SNORT_EXPORT_DIR)/$(ARCH)/lib/:$(TOPDIR)/sdk/obj/lib:$(TOPDIR)/sdk/obj/lib/external:$(TOPDIR)/hal/obj:$(TOPDIR)/hal/third-party/sknobs/x86_64/lib/
-CMD_OPTS = cd $(TOPDIR)/../bazel-bin && LD_LIBRARY_PATH=$(LD_PATH) CAPRI_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(CONFIG_PATH) COVFILE=$(COVFILE)
-PD_CMD_OPTS = cd $(TOPDIR)/../bazel-bin && LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(TOPDIR)/../bazel-bin/nic/sdk/model_sim/ CAPRI_MOCK_MODE=1 LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf
+CMD_OPTS = cd $(TOPDIR)/../bazel-bin && LD_LIBRARY_PATH=$(LD_PATH) ASIC_MOCK_MODE=1 WS_TOP=$(TOPDIR)/../../.. HAL_CONFIG_PATH=$(CONFIG_PATH) COVFILE=$(COVFILE)
+PD_CMD_OPTS = cd $(TOPDIR)/../bazel-bin && LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(TOPDIR)/../bazel-bin/nic/sdk/model_sim/ ASIC_MOCK_MODE=1 LD_PRELOAD=$(TOPDIR)/../bazel-bin/nic/hal/pd/utils/p4pd_mock/libp4pd_mock.so HAL_CONFIG_PATH=$(TOPDIR)/conf
 run-agent_api_test: $(GEN_TEST_RESULTS_DIR)/.dir
 	$(CMD_OPTS) ./nic/utils/agent_api/test/agent_api_test --gtest_output="xml:$(GEN_TEST_RESULTS_DIR)/agent_api_test.xml"
 

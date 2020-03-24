@@ -20,8 +20,8 @@
 
 static thread_local void *__zmq_sock;
 static thread_local void *__zmq_context;
-const char* __lmodel_env = getenv("CAPRI_MOCK_MODE");
-const char* __lmodel_mock_memory_mode = getenv("CAPRI_MOCK_MEMORY_MODE");
+const char* __lmodel_env = getenv("ASIC_MOCK_MODE");
+const char* __lmodel_mock_memory_mode = getenv("ASIC_MOCK_MEMORY_MODE");
 const char* __write_verify_enable = getenv("CAPRI_WRITE_VERIFY_ENABLE");
 std::mutex g_zmq_mutex;
 
@@ -87,7 +87,7 @@ int lib_model_connect ()
     int         rc;
     uint16_t    event;
     int         timeout_ms = MODEL_ZMQ_SOCK_TIMEOUT_SEC * 1000;
-    
+
     if (__lmodel_mock_memory_mode) {
         return mock_memory_init();
     }
@@ -111,7 +111,7 @@ int lib_model_connect ()
     int val = 1;
     rc = zmq_setsockopt (__zmq_sock, ZMQ_REQ_CORRELATE, &val, sizeof(int));
     rc = zmq_setsockopt (__zmq_sock, ZMQ_REQ_RELAXED, &val, sizeof(int));
-    
+
     /* Monitor the socket for the model to connect */
     rc = zmq_socket_monitor (__zmq_sock, "inproc://monitor.sock", ZMQ_EVENT_ALL);
     assert (rc == 0);
@@ -224,7 +224,7 @@ void step_cpu_pkt (const uint8_t* pkt, size_t pkt_len)
     buffer_hdr_t *buff;
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_STEP_CPU_PKT;
-    buff->size = pkt_len; 
+    buff->size = pkt_len;
 
     if (__lmodel_env)
         return;
@@ -327,7 +327,7 @@ bool read_mem (uint64_t addr, uint8_t * data, uint32_t size)
 
     char buffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
-    
+
     if (__lmodel_mock_memory_mode) {
         return mock_memory_read(addr, data, size);
     }
@@ -357,7 +357,7 @@ bool write_mem_pcie (uint64_t addr, uint8_t * data, uint32_t size)
 
     char buffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
-    
+
     if (__lmodel_mock_memory_mode) {
         return mock_memory_write(addr, data, size);
     }

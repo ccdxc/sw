@@ -37,7 +37,7 @@ public:
 
     bool read_unsupported(void) const {
         if (apulu()) { return false; }
-        return (::capri_mock_mode() ? true : false);
+        return (::asic_mock_mode() ? true : false);
     }
 
     // Build routines

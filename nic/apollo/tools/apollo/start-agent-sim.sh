@@ -7,8 +7,8 @@ NIC_DIR=`dirname $ABS_TOOLS_DIR/../../../..`
 export CONFIG_PATH=$NIC_DIR/conf/
 export LOG_DIR=$NIC_DIR/
 export PERSISTENT_LOG_DIR=$NIC_DIR/
-#export CAPRI_MOCK_MODE=1
-#export CAPRI_MOCK_MEMORY_MODE=1
+#export ASIC_MOCK_MODE=1
+#export ASIC_MOCK_MEMORY_MODE=1
 export VPP_IPC_MOCK_MODE=1
 export ZMQ_SOC_DIR=${NIC_DIR}
 echo "Starting Agent: `date +%x_%H:%M:%S:%N`"

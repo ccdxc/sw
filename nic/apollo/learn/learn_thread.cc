@@ -43,7 +43,7 @@ learning_enabled (void)
     // if we start learn thread in gtest, DPDK will assert as model is not
     // running, so disable learn thread while running under gtest
     // TODO: remove this after making sure gtest setup disables learning
-    if (getenv("CAPRI_MOCK_MODE")) {
+    if (getenv("ASIC_MOCK_MODE")) {
         return false;
     }
 

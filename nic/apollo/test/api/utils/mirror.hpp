@@ -51,7 +51,7 @@ public:
                         const pds_mirror_session_status_t *status2) const;
 
     bool read_unsupported(void) const {
-        return (::capri_mock_mode() ? true : false);
+        return (::asic_mock_mode() ? true : false);
     }
 
 };

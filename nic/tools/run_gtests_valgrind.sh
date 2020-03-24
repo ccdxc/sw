@@ -2,7 +2,7 @@
 export WS_TOP="/sw"
 export TOPDIR="/sw/nic"
 export NON_PERSISTENT_LOGDIR=${TOPDIR}
-export CAPRI_MOCK_MODE=1
+export ASIC_MOCK_MODE=1
 export BUILD_DIR=${TOPDIR}/build/x86_64/iris/
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 

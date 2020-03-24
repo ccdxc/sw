@@ -26,17 +26,7 @@ namespace sdk {
 namespace asic {
 namespace pd {
 
-static bool g_mock_mode_;
-
-__attribute__((constructor)) void
-asic_pd_init_(void)
-{
-    if (getenv("elba_MOCK_MODE")) {
-        g_mock_mode_ = true;
-    } else {
-        g_mock_mode_ = false;
-    }
-}
+extern bool g_mock_mode_;
 
 void
 asic_program_hbm_table_base_addr (int tableid, int stage_tableid,

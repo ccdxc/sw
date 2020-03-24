@@ -13,6 +13,7 @@ namespace sdk {
 namespace asic {
 namespace pd {
 
+bool g_mock_mode_;
 static uint64_t table_asm_base[P4TBL_ID_MAX];
 static uint64_t table_asm_err_offset[P4TBL_ID_MAX];
 
@@ -26,6 +27,12 @@ static uint64_t
 get_table_asm_err_offset (uint32_t tableid)
 {
     return table_asm_err_offset[tableid];
+}
+
+__attribute__((constructor)) void
+asic_pd_init_ (void)
+{
+    g_mock_mode_ = (getenv("ASIC_MOCK_MODE")) ? true : false;
 }
 
 void

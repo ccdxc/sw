@@ -5,7 +5,7 @@ export CONFIG_PATH=${NICDIR}/conf/
 export ZMQ_SOC_DIR=${NICDIR}
 export PATH=${PATH}:${BUILD_DIR}/bin
 export NON_PERSISTENT_LOGDIR=${NICDIR}
-unset CAPRI_MOCK_MODE
+unset ASIC_MOCK_MODE
 
 cleanup () {
     pkill agent

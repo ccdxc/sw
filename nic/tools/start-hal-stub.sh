@@ -7,4 +7,4 @@ export ZMQ_SOC_DIR=$NIC_DIR
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
 #export HAL_PLUGIN_PATH=$NIC_DIR/conf/plugins/
 
-CAPRI_MOCK_MODE=1 $NIC_DIR/build/x86_64/iris/bin/hal -c hal.json 2>&1
+ASIC_MOCK_MODE=1 $NIC_DIR/build/x86_64/iris/bin/hal -c hal.json 2>&1

@@ -26,8 +26,8 @@ export CONFIG_PATH=$NIC_DIR/conf/
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export LOG_DIR=$NIC_DIR/
 export PERSISTENT_LOG_DIR=$NIC_DIR/
-export CAPRI_MOCK_MODE=1
-export CAPRI_MOCK_MEMORY_MODE=1
+export ASIC_MOCK_MODE=1
+export ASIC_MOCK_MEMORY_MODE=1
 export COVFILE=$NIC_DIR/coverage/sim_bullseye_hal.cov
 export OPERD_REGIONS=$NIC_DIR/conf/operd-regions.json
 

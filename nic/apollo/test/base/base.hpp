@@ -86,20 +86,20 @@ artemis (void)
     return (pipeline_get() == "artemis");
 }
 
-// Returns true if CAPRI_MOCK_MODE is enabled, otherwise false
+// Returns true if ASIC_MOCK_MODE is enabled, otherwise false
 static inline bool
-capri_mock_mode (void)
+asic_mock_mode (void)
 {
-    static bool capri_mock_mode = true;
-    static bool capri_mock_mode_env_var_read = false;
+    static bool mock_mode = true;
+    static bool mock_mode_env_var_read = false;
 
-    if (!capri_mock_mode_env_var_read) {
-        if (getenv("CAPRI_MOCK_MODE") == NULL)
-            capri_mock_mode = false;
-        capri_mock_mode_env_var_read = true;
+    if (!mock_mode_env_var_read) {
+        if (getenv("ASIC_MOCK_MODE") == NULL)
+            mock_mode = false;
+        mock_mode_env_var_read = true;
     }
 
-    return capri_mock_mode;
+    return mock_mode;
 }
 
 // Returns true if VPP_IPC_MOCK_MODE is enabled, otherwise false

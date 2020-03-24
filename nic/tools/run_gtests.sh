@@ -7,7 +7,7 @@ export NICDIR=`dirname $ABS_TOOLS_DIR`
 export TOPDIR=$NICDIR
 export SDKDIR=${NICDIR}/sdk/
 export NON_PERSISTENT_LOGDIR=${TOPDIR}
-export CAPRI_MOCK_MODE=1
+export ASIC_MOCK_MODE=1
 export BUILD_DIR=${TOPDIR}/build/x86_64/iris/
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 
@@ -74,8 +74,8 @@ ${CMD_OPTS} vrf_upgrade_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/vrf_upg
 ${CMD_OPTS} filter_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/filter_test.xml"
 ${CMD_OPTS} mgmt_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/mgmt_test.xml"
 ${CMD_OPTS} snake_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/snake_test.xml"
-${CMD_OPTS} ncsi_test --gtest_filter=ncsi_test.qos --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/ncsi_test_qos.xml" 
-${CMD_OPTS} ncsi_test --gtest_filter=ncsi_test.test1 --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/ncsi_test_test1.xml" 
+${CMD_OPTS} ncsi_test --gtest_filter=ncsi_test.qos --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/ncsi_test_qos.xml"
+${CMD_OPTS} ncsi_test --gtest_filter=ncsi_test.test1 --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/ncsi_test_test1.xml"
 
 #${CMD_OPTS} fmiss_learn_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/fmiss_learn_test.xml"
 #${CMD_OPTS} arp_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/arp_test.xml"
@@ -110,8 +110,8 @@ LD_PRELOAD=${PRELOADS} tnnl_rw_tbl_test --gtest_output="xml:${GEN_TEST_RESULTS_D
 #    do printf "\nRunning $$i\n" && $$i --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/${basename{$$i}}.xml"; \
 #done \
 
-export CAPRI_MOCK_MEMORY_MODE=1
-# Any test using memhash library requires CAPRI_MOCK_MEMORY_MODE
+export ASIC_MOCK_MEMORY_MODE=1
+# Any test using memhash library requires ASIC_MOCK_MEMORY_MODE
 ${CMD_OPTS} alg_utils_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_utils_test.xml"
 ${CMD_OPTS} alg_rpc_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_rpc_test.xml"
 ${CMD_OPTS} alg_tftp_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_tftp_test.xml"

@@ -34,8 +34,8 @@ counter=$((600*TIMEOUT_SCALE))
 VPP_PKG_DIR=$NICDIR/sdk/third-party/vpp-pkg/x86_64
 
 #Set mock mode
-export CAPRI_MOCK_MODE=1
-export CAPRI_MOCK_MEMORY_MODE=1
+export ASIC_MOCK_MODE=1
+export ASIC_MOCK_MEMORY_MODE=1
 source $NICDIR/vpp/tools/setup-vpp-prerequisites.sh $NICDIR $PIPELINE
 
 echo "Starting VPP"
