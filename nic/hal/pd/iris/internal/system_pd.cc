@@ -20,8 +20,8 @@ namespace hal {
 namespace pd {
 
 static double g_clock_adjustment = 0;
-thread_local void *t_clock_delta_timer = NULL;
-thread_local void *t_clock_rollover_timer = NULL;
+void *g_clock_delta_timer = NULL;
+void *g_clock_rollover_timer = NULL;
 static clock_gettimeofday_t *g_hbm_clockaddr = NULL;
 static uint64_t g_clock_freq = 0;
 static struct clock_table_info_s {
@@ -742,7 +742,7 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
         uint64_t rollover_window = (HW_CLOCK_TICK_TO_NS(0xFFFFFFFFFFFF)-\
                                     (HAL_TIMER_ID_CLOCK_SYNC_INTVL_NS));
         if (hw_ns >= rollover_window) {
-            t_clock_rollover_timer =
+            g_clock_rollover_timer =
                         sdk::lib::timer_schedule(HAL_TIMER_ID_CLOCK_ROLLOVER, // timer_id
                                       (HW_CLOCK_TICK_TO_NS(0xFFFFFFFFFFFF)-hw_ns), //time to rollover
                                       (void *)0,    // ctxt
@@ -840,12 +840,12 @@ pd_clock_delta_comp (pd_func_args_t *pd_func_args)
     printf("Freq: %lu Adjustment: %lf\n", CLOCK_FREQ, g_clock_adjustment);
 
     clock_delta_comp_cb(NULL, HAL_TIMER_ID_CLOCK_SYNC, NULL);
-    t_clock_delta_timer =
+    g_clock_delta_timer =
         sdk::lib::timer_schedule(HAL_TIMER_ID_CLOCK_SYNC,            // timer_id
                                  HAL_TIMER_ID_CLOCK_SYNC_INTVL,
                                  (void *)0,    // ctxt
                                  clock_delta_comp_cb, true);
-    if (!t_clock_delta_timer) {
+    if (!g_clock_delta_timer) {
         return HAL_RET_ERR;
     }
     return HAL_RET_OK;
@@ -857,7 +857,12 @@ pd_clock_delta_comp (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_clock_trigger_sync (pd_func_args_t *pd_func_args)
 {
-    clock_delta_comp_cb(NULL, HAL_TIMER_ID_CLOCK_SYNC, NULL);
+    // We could be receiving the GRPC configs before
+    // we start the sync timer (from FTE thread init).
+    // We dont want to sync unless the timer is started
+    if (g_clock_delta_timer != NULL) {
+        clock_delta_comp_cb(NULL, HAL_TIMER_ID_CLOCK_SYNC, NULL);
+    }
 
     return HAL_RET_OK;
 }
