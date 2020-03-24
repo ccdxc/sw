@@ -42,8 +42,14 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     case OBJ_ID_ROUTE_TABLE:
         return route_table::factory(&api_ctxt->api_params->route_table_spec);
 
+    case OBJ_ID_ROUTE:
+        return route::factory(&api_ctxt->api_params->route_spec);
+
     case OBJ_ID_POLICY:
         return policy::factory(&api_ctxt->api_params->policy_spec);
+
+    case OBJ_ID_POLICY_RULE:
+        return policy_rule::factory(&api_ctxt->api_params->policy_rule_spec);
 
     case OBJ_ID_MIRROR_SESSION:
         return mirror_session::factory(&api_ctxt->api_params->mirror_session_spec);
@@ -135,6 +141,20 @@ api_base::build(api_ctxt_t *api_ctxt) {
         }
         return security_profile::build(&api_ctxt->api_params->security_profile_spec.key);
 
+    case OBJ_ID_ROUTE:
+        // route is a stateless object, so we need to build it on the fly
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return route::build(&api_ctxt->api_params->route_key);
+        }
+        return route::build(&api_ctxt->api_params->route_spec.key);
+
+    case OBJ_ID_POLICY_RULE:
+        // policy rule is a stateless object, so we need to build it on the fly
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return policy_rule::build(&api_ctxt->api_params->policy_rule_key);
+        }
+        return policy_rule::build(&api_ctxt->api_params->policy_rule_spec.key);
+
     default:
         PDS_TRACE_ERR("Method not implemented for obj id %u\n",
                       api_ctxt->obj_id);
@@ -164,6 +184,14 @@ api_base::soft_delete(obj_id_t obj_id, api_base *api_obj) {
 
     case OBJ_ID_SECURITY_PROFILE:
         security_profile::soft_delete((security_profile *)api_obj);
+        break;
+
+    case OBJ_ID_ROUTE:
+        route::soft_delete((route *)api_obj);
+        break;
+
+    case OBJ_ID_POLICY_RULE:
+        policy_rule::soft_delete((policy_rule *)api_obj);
         break;
 
     default:
@@ -199,8 +227,14 @@ api_base::free(obj_id_t obj_id, api_base *api_obj) {
     case OBJ_ID_ROUTE_TABLE:
         return route_table::free((route_table *)api_obj);
 
+    case OBJ_ID_ROUTE:
+        return route::free((route *)api_obj);
+
     case OBJ_ID_POLICY:
         return policy::free((policy *)api_obj);
+
+    case OBJ_ID_POLICY_RULE:
+        return policy_rule::free((policy_rule *)api_obj);
 
     case OBJ_ID_MIRROR_SESSION:
         return mirror_session::free((mirror_session *)api_obj);
@@ -284,11 +318,23 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
         }
         return route_table_db()->find(&api_ctxt->api_params->route_table_spec.key);
 
+    case OBJ_ID_ROUTE:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return route_db()->find(&api_ctxt->api_params->route_key);
+        }
+        return route_db()->find(&api_ctxt->api_params->route_spec.key);
+
     case OBJ_ID_POLICY:
         if (api_ctxt->api_op == API_OP_DELETE) {
             return policy_db()->find_policy(&api_ctxt->api_params->policy_key);
         }
         return policy_db()->find_policy(&api_ctxt->api_params->policy_spec.key);
+
+    case OBJ_ID_POLICY_RULE:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return policy_rule_db()->find(&api_ctxt->api_params->policy_rule_key);
+        }
+        return policy_rule_db()->find(&api_ctxt->api_params->policy_rule_spec.key);
 
     case OBJ_ID_NEXTHOP:
         if (api_ctxt->api_op == API_OP_DELETE) {
@@ -404,8 +450,16 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         api_obj = route_table_db()->find((pds_obj_key_t *)key);
         break;
 
+    case OBJ_ID_ROUTE:
+        api_obj = route_db()->find((pds_obj_key_t *)key);
+        break;
+
     case OBJ_ID_POLICY:
         api_obj = policy_db()->find_policy((pds_obj_key_t *)key);
+        break;
+
+    case OBJ_ID_POLICY_RULE:
+        api_obj = policy_rule_db()->find((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_MIRROR_SESSION:
@@ -471,8 +525,8 @@ api_base::stateless(obj_id_t obj_id) {
     case OBJ_ID_VPC_PEER:
     case OBJ_ID_NAT_PORT_BLOCK:
     case OBJ_ID_SECURITY_PROFILE:
-    case OBJ_ID_POLICY_RULE:
     case OBJ_ID_ROUTE:
+    case OBJ_ID_POLICY_RULE:
         return true;
 
     default:

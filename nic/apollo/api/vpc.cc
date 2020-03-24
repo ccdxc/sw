@@ -241,8 +241,10 @@ subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
         if ((subnet->v4_route_table() == PDS_ROUTE_TABLE_ID_INVALID) ||
             (subnet->v6_route_table() == PDS_ROUTE_TABLE_ID_INVALID)) {
             // this subnet inherited the vpc's routing table(s)
-            api_obj_add_to_deps(OBJ_ID_SUBNET, upd_ctxt->obj_ctxt->api_op,
-                                (api_base *)api_obj, upd_ctxt->upd_bmap);
+            api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                OBJ_ID_VPC, upd_ctxt->vpc,
+                                OBJ_ID_SUBNET, (api_base *)api_obj,
+                                upd_ctxt->upd_bmap);
         }
     }
     return false;

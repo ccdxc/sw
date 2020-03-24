@@ -96,6 +96,30 @@ error:
     return NULL;
 }
 
+api_base *
+policy::clone(void) {
+    policy *cloned_policy;
+
+    cloned_policy = policy_db()->alloc();
+    if (cloned_policy) {
+        new (cloned_policy) policy();
+        cloned_policy->impl_ = impl_->clone();
+        if (unlikely(cloned_policy->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone policy %s impl",
+                          key2str().c_str());
+            goto error;
+        }
+        cloned_policy->init_config_(this);
+    }
+    return cloned_policy;
+
+error:
+
+    cloned_policy->~policy();
+    policy_db()->free(cloned_policy);
+    return NULL;
+}
+
 sdk_ret_t
 policy::free(policy *policy) {
     if (policy->impl_) {
@@ -133,9 +157,20 @@ policy::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
+policy::init_config_(policy *policy) {
+    pds_obj_key_t key = policy->key();
+
+    memcpy(&key_, &key, sizeof(key_));
+    af_ = policy->af();
+    dir_ = policy->dir();
+    num_rules_ = policy->num_rules();
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 policy::program_create(api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Programming security policy %s, af %u, dir %u",
-                    key2str().c_str(), af_, dir_);
+    PDS_TRACE_DEBUG("Programming security policy %s, af %u",
+                    key2str().c_str(), af_);
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -156,9 +191,9 @@ subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
             for (uint8_t i = 0; i < subnet->num_ing_v4_policy(); i++) {
                 if (subnet->ing_v4_policy(i) ==
                         upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(OBJ_ID_SUBNET,
-                                        upd_ctxt->obj_ctxt->api_op,
-                                        (api_base *)api_obj,
+                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                        OBJ_ID_SUBNET, (api_base *)api_obj,
                                         upd_ctxt->upd_bmap);
                     goto end;
                 }
@@ -167,9 +202,9 @@ subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
             for (uint8_t i = 0; i < subnet->num_ing_v6_policy(); i++) {
                 if (subnet->ing_v6_policy(i) ==
                         upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(OBJ_ID_SUBNET,
-                                        upd_ctxt->obj_ctxt->api_op,
-                                        (api_base *)api_obj,
+                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                        OBJ_ID_SUBNET, (api_base *)api_obj,
                                         upd_ctxt->upd_bmap);
                     goto end;
                 }
@@ -180,9 +215,9 @@ subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
             for (uint8_t i = 0; i < subnet->num_egr_v4_policy(); i++) {
                 if (subnet->egr_v4_policy(i) ==
                         upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(OBJ_ID_SUBNET,
-                                        upd_ctxt->obj_ctxt->api_op,
-                                        (api_base *)api_obj,
+                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                        OBJ_ID_SUBNET, (api_base *)api_obj,
                                         upd_ctxt->upd_bmap);
                     goto end;
                 }
@@ -191,9 +226,9 @@ subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
             for (uint8_t i = 0; i < subnet->num_egr_v6_policy(); i++) {
                 if (subnet->egr_v6_policy(i) ==
                         upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(OBJ_ID_SUBNET,
-                                        upd_ctxt->obj_ctxt->api_op,
-                                        (api_base *)api_obj,
+                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                        OBJ_ID_SUBNET, (api_base *)api_obj,
                                         upd_ctxt->upd_bmap);
                     goto end;
                 }
@@ -206,6 +241,7 @@ end:
     return false;
 }
 
+// TODO: looks like this needs to be revisited since dir_ is not set anywhere
 static bool
 vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
     vnic_entry *vnic;
@@ -217,8 +253,9 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
             for (uint8_t i = 0; i < vnic->num_ing_v4_policy(); i++) {
                 if (vnic->ing_v4_policy(i) ==
                         upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
-                                        (api_base *)api_obj,
+                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                        OBJ_ID_VNIC, (api_base *)api_obj,
                                         upd_ctxt->upd_bmap);
                     goto end;
                 }
@@ -227,8 +264,9 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
             for (uint8_t i = 0; i < vnic->num_ing_v6_policy(); i++) {
                 if (vnic->ing_v6_policy(i) ==
                         upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
-                                        (api_base *)api_obj,
+                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                        OBJ_ID_VNIC, (api_base *)api_obj,
                                         upd_ctxt->upd_bmap);
                     goto end;
                 }
@@ -239,8 +277,9 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
             for (uint8_t i = 0; i < vnic->num_egr_v4_policy(); i++) {
                 if (vnic->egr_v4_policy(i) ==
                         upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
-                                        (api_base *)api_obj,
+                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                        OBJ_ID_VNIC, (api_base *)api_obj,
                                         upd_ctxt->upd_bmap);
                     goto end;
                 }
@@ -249,8 +288,9 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
             for (uint8_t i = 0; i < vnic->num_egr_v6_policy(); i++) {
                 if (vnic->egr_v6_policy(i) ==
                         upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
-                                        (api_base *)api_obj,
+                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                        OBJ_ID_VNIC, (api_base *)api_obj,
                                         upd_ctxt->upd_bmap);
                     goto end;
                 }
@@ -386,6 +426,8 @@ policy_rule::build(pds_obj_key_t *key) {
     if (rule) {
         new (rule) policy_rule();
         memcpy(&rule->key_, key, sizeof(*key));
+        // TODO: for delete case, we should look up in kvstore and populate the
+        //       policy's key as well
     }
     return rule;
 }
@@ -402,13 +444,29 @@ policy_rule::init_config(api_ctxt_t *api_ctxt) {
     pds_policy_rule_spec_t *spec = &api_ctxt->api_params->policy_rule_spec;
 
     memcpy(&key_, &spec->key, sizeof(key_));
+    memcpy(&policy_, &spec->policy, sizeof(policy_));
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 policy_rule::add_deps(api_obj_ctxt_t *obj_ctxt) {
-    SDK_ASSERT(FALSE);
-    return SDK_RET_ERR;
+    policy *policy;
+
+    if ((obj_ctxt->api_op == API_OP_CREATE) ||
+        (obj_ctxt->api_op == API_OP_UPDATE)) {
+        policy = policy_find(&policy_);
+        api_obj_add_to_deps(obj_ctxt->api_op,
+                            OBJ_ID_POLICY_RULE, this,
+                            OBJ_ID_POLICY, policy,
+                            (obj_ctxt->api_op == API_OP_CREATE) ?
+                                 PDS_POLICY_UPD_RULE_ADD :
+                                 PDS_POLICY_UPD_RULE_UPD);
+    } else {
+        // need to get route key -> route table key mapping and then
+        // route_table_find()
+        SDK_ASSERT(FALSE);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

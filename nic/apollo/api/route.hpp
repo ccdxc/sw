@@ -19,6 +19,10 @@
 
 namespace api {
 
+#define PDS_ROUTE_TABLE_UPD_ROUTE_ADD        0x1
+#define PDS_ROUTE_TABLE_UPD_ROUTE_DEL        0x2
+#define PDS_ROUTE_TABLE_UPD_ROUTE_UPD        0x4
+
 /// \defgroup PDS_ROUTE_TABLE - route table functionality
 /// \ingroup PDS_ROUTE
 /// @{
@@ -47,6 +51,12 @@ public:
     /// \param[in]    api_ctxt API context carrying object related configuration
     /// \return       new object instance of current object
     virtual api_base *clone(api_ctxt_t *api_ctxt) override;
+
+    /// \brief    clone this object and return cloned object
+    /// \return    new object instance of current object
+    /// \remark  this version of clone API is needed when we need to clone
+    ///          the object (and its impl) when we don't have a spec
+    virtual api_base *clone(void) override;
 
     /// \brief    free all the memory associated with this object without
     ///           touching any of the databases or h/w etc.
@@ -186,34 +196,38 @@ public:
     /// \return         key/id of the route table
     const pds_obj_key_t key(void) const { return key_; }
 
-    /**
-     * @brief return address family of this routing table
-     * @return IP_AF_IPV4, if routing table is IPv4 or else IP_AF_IPV6
-     */
+    /// \brief return address family of this routing table
+    /// \return IP_AF_IPV4, if routing table is IPv4 or else IP_AF_IPV6
     uint8_t af(void) const { return af_; }
 
-    /**
-     * @brief     return impl instance of this route table object
-     * @return    impl instance of the route table object
-     */
+    /// \brief return the number of routes in the route table
+    /// \return number of routes in the route table
+    uint32_t num_routes(void) const { return num_routes_; }
+
+    /// \brief     return impl instance of this route table object
+    /// \return    impl instance of the route table object
     impl_base *impl(void) { return impl_; }
 
 private:
-    /**< @brief    constructor */
+    /// \brief    constructor
     route_table();
 
-    /**< @brief    destructor */
+    /// \brief    destructor
     ~route_table();
 
     /// \brief      fill the route table sw spec
     /// \param[out] spec specification
     void fill_spec_(pds_route_table_spec_t *spec);
 
-    /**
-     * @brief     free h/w resources used by this object, if any
-     *            (this API is invoked during object deletes)
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
+    /// \brief     initialize route table instance with the given route table's
+    ///            config
+    /// \param[in] rtable    route table from which the config is copied from
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t init_config_(route_table *rtable);
+
+    /// \brief     free h/w resources used by this object, if any
+    ///            (this API is invoked during object deletes)
+    /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t nuke_resources_(void);
 
 private:
@@ -250,6 +264,22 @@ public:
     /// \param[in] rt route to be freed
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(route *route);
+
+    /// \brief    build object given its key from the s/w and/or h/w state we
+    ///           have and return an instance of the object (this is useful for
+    ///           stateless objects to be operated on by framework during DELETE
+    ///           or UPDATE operations)
+    /// \param[in] key    key of object instance of interest
+    /// \return    route instance corresponding to the key or NULL if
+    ///            entry is not found
+    static route *build(pds_obj_key_t *key);
+
+    /// \brief    free a stateless entry's temporary s/w only resources like
+    ///           memory etc., for a stateless entry calling destroy() will
+    ///           remove resources from h/w, which can't be done during ADD/UPD
+    ///           etc. operations esp. when object is constructed on the fly
+    /// \param[in] route    route to be freed
+    static void soft_delete(route *route);
 
     /// \brief     initialize route instance with the given config
     /// \param[in] api_ctxt API context carrying the configuration
@@ -308,7 +338,10 @@ private:
     ~route() {}
 
 private:
-    pds_obj_key_t key_;    ///< route key
+    /// route key
+    pds_obj_key_t key_;
+    /// route table (this route belongs to) key
+    pds_obj_key_t route_table_;
 
     ///< hash table context
     ht_ctxt_t        ht_ctxt_;
@@ -321,5 +354,6 @@ private:
 }    // namespace api
 
 using api::route_table;
+using api::route;
 
 #endif    // __ROUTE_HPP__

@@ -194,8 +194,10 @@ tep_upd_walk_cb_ (void *api_obj, void *ctxt) {
     tep = (tep_entry *)api_framework_obj((api_base *)api_obj);
     tep_key = upd_ctxt->tep->key();
     if ((tep->nh_type() == PDS_NH_TYPE_OVERLAY) && (tep->tep() == tep_key)) {
-        api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
-                             (api_base *)api_obj, upd_ctxt->upd_bmap);
+        api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                            OBJ_ID_TEP, upd_ctxt->tep,
+                            OBJ_ID_TEP, (api_base *)api_obj,
+                            upd_ctxt->upd_bmap);
     }
     return false;
 }

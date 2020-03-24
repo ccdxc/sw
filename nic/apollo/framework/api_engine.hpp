@@ -57,11 +57,15 @@ typedef enum api_batch_stage_e {
 ///   is owned by api_ctxt_t and hence when api_ctxt_t is being destroyed
 ///   we should return the api_params_t memory back to slab
 typedef struct api_obj_ctxt_s api_obj_ctxt_t;
+typedef list<api_obj_ctxt_t *> child_obj_ctxt_list_t;
 struct api_obj_ctxt_s {
-    api_op_t        api_op;         ///< de-duped/compressed API opcode
-    obj_id_t        obj_id;         ///< object identifier
-    api_params_t    *api_params;    ///< API specific parameters
-    api_base        *cloned_obj;    ///< cloned object, for UPD processing
+    api_op_t              api_op;         ///< de-duped/compressed API opcode
+    obj_id_t              obj_id;         ///< object identifier
+    api_params_t          *api_params;    ///< API specific parameters
+    api_base              *cloned_obj;    ///< cloned object, for UPD processing
+    child_obj_ctxt_list_t clist;          ///< list of contained/child objects
+                                          ///< resulting in the reprogramming
+                                          ///< of the container/parent object
 
     ///< object handlers can save arbitrary state across callbacks here and it
     ///< is opaque to the api engine
@@ -203,6 +207,7 @@ typedef struct api_counters_s {
         struct {
             uint32_t ok;
             uint32_t err;
+            uint32_t obj_clone_err;
         } upd;
     } obj_dep;
     // program config stage specific counters
@@ -526,6 +531,11 @@ private:
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t obj_dependency_computation_stage_(void);
 
+    /// \brief move container objects from dependency list to dirty list
+    ///        so we can go through proper resource reservation
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t promote_container_objs_(void);
+
     /// \brief reserve all needed resources for programming the config
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t resource_reservation_stage_(void);
@@ -626,14 +636,19 @@ api_engine *api_engine_get(void);
 
 /// \brief    given an api object, add it to the dependent object list and
 ///           recursively add any other objects that may needed to be updated
-/// \param[in] obj_id    object id identifying the API object
-/// \param[in] api_op    API operation due to which this call is triggered
-/// \param[in] api_obj   API object being added to the dependent list
-/// \param[in] upd_bmap  bitmap indicating which attributes of the API object
-///                      are being updated
+/// \param[in] api_op       API operation due to which this call is triggered
+/// \param[in] obj_id_a     object id of the affecting API object
+/// \param[in] api_obj_a    affecting API object
+/// \param[in] obj_id_b     object id of the affected API object
+/// \param[in] api_obj_b    affected API object, i.e. API object being added to
+///                         the dependent list
+/// \param[in] upd_bmap     bitmap indicating which attributes of the affected
+///                         API object are being updated
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t api_obj_add_to_deps(obj_id_t obj_id, api_op_t api_op,
-                              api_base *api_obj, uint64_t upd_bmap);
+sdk_ret_t api_obj_add_to_deps(api_op_t api_op,
+                              obj_id_t obj_id_a, api_base *api_obj_a,
+                              obj_id_t obj_id_b, api_base *api_obj_b,
+                              uint64_t upd_bmap);
 
 /// \@}
 

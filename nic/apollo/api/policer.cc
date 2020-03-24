@@ -194,8 +194,10 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt)
     vnic = (vnic_entry *)api_framework_obj((api_base *)api_obj);
     if ((vnic->policer(PDS_POLICER_DIR_INGRESS) == upd_ctxt->policer->key()) ||
         (vnic->policer(PDS_POLICER_DIR_EGRESS) == upd_ctxt->policer->key())) {
-        api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
-                            (api_base *)api_obj, upd_ctxt->upd_bmap);
+        api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                            OBJ_ID_POLICER, upd_ctxt->policer,
+                            OBJ_ID_VNIC, (api_base *)api_obj,
+                            upd_ctxt->upd_bmap);
     }
     return false;
 }

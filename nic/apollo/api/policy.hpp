@@ -19,6 +19,10 @@
 
 namespace api {
 
+#define PDS_POLICY_UPD_RULE_ADD        0x1
+#define PDS_POLICY_UPD_RULE_DEL        0x2
+#define PDS_POLICY_UPD_RULE_UPD        0x4
+
 /// \defgroup PDS_POLIOCY - security policy functionality
 /// \ingroup PDS_POLICY
 /// @{
@@ -47,6 +51,12 @@ public:
     /// \param[in]    api_ctxt API context carrying object related configuration
     /// \return       new object instance of current object
     virtual api_base *clone(api_ctxt_t *api_ctxt) override;
+
+    /// \brief    clone this object and return cloned object
+    /// \return    new object instance of current object
+    /// \remark  this version of clone API is needed when we need to clone
+    ///          the object (and its impl) when we don't have a spec
+    virtual api_base *clone(void) override;
 
     /// \brief    free all the memory associated with this object without
     ///           touching any of the databases or h/w etc.
@@ -186,22 +196,20 @@ public:
     /// \return    key/id of the policy
     const pds_obj_key_t key(void) const { return key_; }
 
-    /**
-     * @brief     return IP address family for this policy
-     * @return    IP_AF_IPV4 or IP_AF_IPV6 or IP_AF_NONE
-     */
+    /// \brief     return IP address family for this policy
+    /// \return    IP_AF_IPV4 or IP_AF_IPV6 or IP_AF_NONE
     uint8_t af(void) const { return af_; }
 
-    /**
-     * @brief     return the policy enforcement direction
-     * @return    RULE_DIR_INGRESS or RULE_DIR_EGRESS
-     */
+    /// \brief     return the number of rules in the policy
+    /// \return    the number of rules in the policy
+    uint32_t num_rules(void) const { return num_rules_; }
+
+    /// \brief     return the policy enforcement direction
+    /// \return    RULE_DIR_INGRESS or RULE_DIR_EGRESS
     rule_dir_t dir(void) const { return dir_; }
 
-    /**
-     * @brief     return impl instance of this security policy object
-     * @return    impl instance of the rout table object
-     */
+    /// \brief     return impl instance of this security policy object
+    /// \return    impl instance of the rout table object
     impl_base *impl(void) { return impl_; }
 
 private:
@@ -214,6 +222,11 @@ private:
     /// \brief      fill the policy sw spec
     /// \param[out] spec specification
     void fill_spec_(pds_policy_spec_t *spec);
+
+    /// \brief     initialize policy table instance with the given policy config
+    /// \param[in] policy    policy from which the config is copied from
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t init_config_(policy *policy);
 
     /// \brief     free h/w resources used by this object, if any
     ///           (this API is invoked during object deletes)
@@ -334,7 +347,10 @@ private:
     ~policy_rule() {}
 
 private:
-    pds_obj_key_t key_;    ///< security policy rule key
+    /// security policy rule key
+    pds_obj_key_t key_;
+    /// security policy (this rule belongs to) key
+    pds_obj_key_t policy_;
 
     ///< hash table context
     ht_ctxt_t        ht_ctxt_;

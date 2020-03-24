@@ -120,17 +120,20 @@ api_framework_obj (api_base *api_obj) {
 }
 
 sdk_ret_t
-api_obj_add_to_deps (obj_id_t obj_id, api_op_t api_op,
-                     api_base *api_obj, uint64_t upd_bmap) {
+api_obj_add_to_deps (api_op_t api_op,
+                     obj_id_t obj_id_a, api_base *api_obj_a,
+                     obj_id_t obj_id_b, api_base *api_obj_b,
+                     uint64_t upd_bmap) {
     api_obj_ctxt_t *octxt;
 
     PDS_TRACE_DEBUG("Adding %s to AoL, api op %u, upd bmap 0x%x",
-                    api_obj->key2str().c_str(), api_op, upd_bmap);
-    octxt = g_api_engine.add_to_deps_list(obj_id, api_op, api_obj, upd_bmap);
+                    api_obj_b->key2str().c_str(), api_op, upd_bmap);
+    octxt = g_api_engine.add_to_deps_list(obj_id_b, api_op,
+                                          api_obj_b, upd_bmap);
     if (octxt) {
         PDS_TRACE_DEBUG("Triggering recursive update on %s, update bmap 0x%x",
-                        api_obj->key2str().c_str(), octxt->upd_bmap);
-        api_obj->add_deps(octxt);
+                        api_obj_b->key2str().c_str(), octxt->upd_bmap);
+        api_obj_b->add_deps(octxt);
     }
     return SDK_RET_OK;
 }
@@ -499,6 +502,74 @@ error:
 }
 
 sdk_ret_t
+api_engine::add_deps_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+    // for contained/child objects, any of the ADD/DEL/UPD operations may
+    // affect the parent object (e.g. route obj will affect route table object
+    // if route is added or delete or updated and same with policy rule & policy
+    // objects.
+    // for all other objects, currently we need to add object dependencies only
+    // when a object is updated, however, it is possible in future that add or
+    // delete of these objects might impact other objects as well (current
+    // assumption is that it is handled in the agent when such a case arises)
+    if (api_base::contained(obj_ctxt->obj_id) ||
+        (obj_ctxt->api_op == API_OP_UPDATE)) {
+        // NOTE: we are invoking this method on the original unmodified object
+        return api_obj->add_deps(obj_ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+api_engine::obj_dependency_computation_stage_(void)
+{
+    sdk_ret_t ret;
+    api_base *api_obj;
+    api_obj_ctxt_t *obj_ctxt;
+
+    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
+                      sdk::SDK_RET_INVALID_ARG);
+    // walk over all the dirty objects and make a list of objects that are
+    // affected because of each dirty object
+    batch_ctxt_.stage = API_BATCH_STAGE_OBJ_DEPENDENCY;
+    for (auto it = batch_ctxt_.dol.begin();
+         it != batch_ctxt_.dol.end(); ++it) {
+        api_obj = *it;
+        obj_ctxt = batch_ctxt_.dom[*it];
+        ret = add_deps_(api_obj, obj_ctxt);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(err, 1);
+            goto error;
+        }
+        // if this API msg needs to relayed to other components as well,
+        // count it so we can allocate resources for all them in one shot
+        if ((obj_ctxt->api_op != API_OP_NONE) &&
+            api_base::circulate(obj_ctxt->obj_id)) {
+            batch_ctxt_.num_msgs++;
+        }
+    }
+
+    // if some of these APIs need to be shipped to other components, allocate
+    // memory for the necessary messages
+    if (batch_ctxt_.num_msgs) {
+        batch_ctxt_.pds_msgs =
+            (pds_msg_list_t *)core::pds_msg_list_alloc(PDS_MSG_TYPE_CFG,
+                                                       batch_ctxt_.epoch,
+                                                       batch_ctxt_.num_msgs);
+        if (batch_ctxt_.pds_msgs == NULL) {
+            PDS_TRACE_ERR("Failed to allocate memory for %u IPC msgs",
+                          batch_ctxt_.num_msgs);
+            ret = SDK_RET_OOM;
+        }
+    }
+    PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(ok, 1);
+    return SDK_RET_OK;
+
+error:
+
+    return ret;
+}
+
+sdk_ret_t
 api_engine::reserve_resources_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t     ret;
 
@@ -571,69 +642,6 @@ api_engine::resource_reservation_stage_(void)
             i++;
         }
     }
-    return SDK_RET_OK;
-
-error:
-
-    return ret;
-}
-
-sdk_ret_t
-api_engine::add_deps_(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    if (obj_ctxt->api_op != API_OP_UPDATE) {
-        // currently we need to add object dependencies only when a object is
-        // updated, however, it is possible in future that add or delete of
-        // an object might impact other objects as well ... current assumption
-        // is that it is handled in the agent when such a case arises
-        return SDK_RET_OK;
-    }
-    // NOTE: we are invoking this method on the original unmodified object
-    return api_obj->add_deps(obj_ctxt);
-}
-
-sdk_ret_t
-api_engine::obj_dependency_computation_stage_(void)
-{
-    sdk_ret_t ret;
-    api_base *api_obj;
-    api_obj_ctxt_t *obj_ctxt;
-
-    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
-                      sdk::SDK_RET_INVALID_ARG);
-    // walk over all the dirty objects and make a list of objects that are
-    // affected because of each dirty object
-    batch_ctxt_.stage = API_BATCH_STAGE_OBJ_DEPENDENCY;
-    for (auto it = batch_ctxt_.dol.begin();
-         it != batch_ctxt_.dol.end(); ++it) {
-        api_obj = *it;
-        obj_ctxt = batch_ctxt_.dom[*it];
-        ret = add_deps_(api_obj, obj_ctxt);
-        if (unlikely(ret != SDK_RET_OK)) {
-            PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(err, 1);
-            goto error;
-        }
-        // if this API msg needs to relayed to other components as well,
-        // count it so we can allocate resources for all them in one shot
-        if ((obj_ctxt->api_op != API_OP_NONE) &&
-            api_base::circulate(obj_ctxt->obj_id)) {
-            batch_ctxt_.num_msgs++;
-        }
-    }
-
-    // if some of these APIs need to be shipped to other components, allocate
-    // memory for the necessary messages
-    if (batch_ctxt_.num_msgs) {
-        batch_ctxt_.pds_msgs =
-            (pds_msg_list_t *)core::pds_msg_list_alloc(PDS_MSG_TYPE_CFG,
-                                                       batch_ctxt_.epoch,
-                                                       batch_ctxt_.num_msgs);
-        if (batch_ctxt_.pds_msgs == NULL) {
-            PDS_TRACE_ERR("Failed to allocate memory for %u IPC msgs",
-                          batch_ctxt_.num_msgs);
-            ret = SDK_RET_OOM;
-        }
-    }
-    PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(ok, 1);
     return SDK_RET_OK;
 
 error:
@@ -1054,6 +1062,38 @@ api_engine::batch_abort_(void) {
 }
 
 sdk_ret_t
+api_engine::promote_container_objs_ (void) {
+    api_base *api_obj;
+    api_obj_ctxt_t *octxt;
+
+    // walk over all the dependent objects
+    // TODO: handle this as part of obj_dependency_computation_stage_() itself
+    //       to avoid extra walk
+    for (auto it = batch_ctxt_.aol.begin(), aol_next_it = it;
+         it != batch_ctxt_.aol.end(); it = aol_next_it) {
+        aol_next_it++;
+        api_obj = *it;
+        octxt = batch_ctxt_.aom[api_obj];
+        if (api_base::container(octxt->obj_id) && octxt->clist.size()) {
+            // we need to move to this dirty obj list and map
+            del_from_deps_list_(it, api_obj);
+            // clone the object so we can do regular objet update and promote
+            // this object to dirty object list
+            SDK_ASSERT(octxt->cloned_obj == NULL);
+            octxt->cloned_obj = api_obj->clone();
+            if (unlikely(octxt->cloned_obj == NULL)) {
+                PDS_TRACE_ERR("Clone failed for obj %s",
+                              api_obj->key2str().c_str());
+                PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(obj_clone_err, 1);
+                return SDK_RET_OBJ_CLONE_ERR;
+            }
+            add_to_dirty_list_(api_obj, octxt);
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 api_engine::batch_commit_phase1_(void) {
     sdk_ret_t ret;
 
@@ -1082,6 +1122,17 @@ api_engine::batch_commit_phase1_(void) {
     }
     PDS_TRACE_INFO("Dependency object list size %u, map size %u",
                    batch_ctxt_.aol.size(), batch_ctxt_.aom.size());
+
+    // we have to promote container objects in the dependent object list
+    // to dirty object list (before resource reservation phase)
+    // NOTE: after this is done, no container object affected by the contained
+    //       object will be in the affected object list
+    ret = promote_container_objs_();
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("container object promotion failed, err %u",
+                      ret);
+        goto error;
+    }
 
     // start table mgmt. lib transaction
     PDS_TRACE_INFO("Initiating transaction begin for epoch %u",

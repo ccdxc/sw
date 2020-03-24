@@ -296,8 +296,10 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
 
     vnic = (vnic_entry *)api_framework_obj((api_base *)api_obj);
     if (vnic->subnet() == upd_ctxt->subnet->key()) {
-        api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
-                            (api_base *)api_obj, upd_ctxt->upd_bmap);
+        api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                            OBJ_ID_SUBNET, upd_ctxt->subnet,
+                            OBJ_ID_VNIC, (api_base *)api_obj,
+                            upd_ctxt->upd_bmap);
     }
     return false;
 }

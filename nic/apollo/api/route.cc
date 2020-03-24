@@ -64,27 +64,51 @@ route_table::destroy(route_table *rtable) {
 
 api_base *
 route_table::clone(api_ctxt_t *api_ctxt) {
-    route_table *rtable;
+    route_table *cloned_rtable;
 
-    rtable = route_table_db()->alloc();
-    if (rtable) {
-        new (rtable) route_table();
-        if (rtable->init_config(api_ctxt) != SDK_RET_OK) {
+    cloned_rtable = route_table_db()->alloc();
+    if (cloned_rtable) {
+        new (cloned_rtable) route_table();
+        if (cloned_rtable->init_config(api_ctxt) != SDK_RET_OK) {
             goto error;
         }
-        rtable->impl_ = impl_->clone();
-        if (unlikely(rtable->impl_ == NULL)) {
+        cloned_rtable->impl_ = impl_->clone();
+        if (unlikely(cloned_rtable->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone route table %s impl",
                           key2str().c_str());
             goto error;
         }
     }
-    return rtable;
+    return cloned_rtable;
 
 error:
 
-    rtable->~route_table();
-    route_table_db()->free(rtable);
+    cloned_rtable->~route_table();
+    route_table_db()->free(cloned_rtable);
+    return NULL;
+}
+
+api_base *
+route_table::clone(void) {
+    route_table *cloned_rtable;
+
+    cloned_rtable = route_table_db()->alloc();
+    if (cloned_rtable) {
+        new (cloned_rtable) route_table();
+        cloned_rtable->impl_ = impl_->clone();
+        if (unlikely(cloned_rtable->impl_ == NULL)) {
+            PDS_TRACE_ERR("Failed to clone route table %s impl",
+                          key2str().c_str());
+            goto error;
+        }
+        cloned_rtable->init_config_(this);
+    }
+    return cloned_rtable;
+
+error:
+
+    cloned_rtable->~route_table();
+    route_table_db()->free(cloned_rtable);
     return NULL;
 }
 
@@ -125,6 +149,16 @@ route_table::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
+route_table::init_config_(route_table *rtable) {
+    pds_obj_key_t key = rtable->key();
+
+    memcpy(&key_, &key, sizeof(key_));
+    af_ = rtable->af();
+    num_routes_ = rtable->num_routes();
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 route_table::program_create(api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Programming route table %s", key2str().c_str());
     return impl_->program_hw(this, obj_ctxt);
@@ -154,8 +188,10 @@ subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
     subnet = (subnet_entry *)api_framework_obj((api_base *)api_obj);
     if ((subnet->v4_route_table() == upd_ctxt->rtable->key()) ||
         (subnet->v6_route_table() == upd_ctxt->rtable->key())) {
-        api_obj_add_to_deps(OBJ_ID_SUBNET, upd_ctxt->obj_ctxt->api_op,
-                            (api_base *)api_obj, upd_ctxt->upd_bmap);
+        api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                            OBJ_ID_ROUTE_TABLE, upd_ctxt->rtable,
+                            OBJ_ID_SUBNET, (api_base *)api_obj,
+                            upd_ctxt->upd_bmap);
     }
     return false;
 }
@@ -168,8 +204,10 @@ vpc_upd_walk_cb_ (void *api_obj, void *ctxt) {
     vpc = (vpc_entry *)api_framework_obj((api_base *)api_obj);
     if ((vpc->v4_route_table() == upd_ctxt->rtable->key()) ||
         (vpc->v6_route_table() == upd_ctxt->rtable->key())) {
-        api_obj_add_to_deps(OBJ_ID_VPC, upd_ctxt->obj_ctxt->api_op,
-                            (api_base *)api_obj, upd_ctxt->upd_bmap);
+        api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                            OBJ_ID_ROUTE_TABLE, upd_ctxt->rtable,
+                            OBJ_ID_VPC, (api_base *)api_obj,
+                            upd_ctxt->upd_bmap);
     }
     return false;
 }
@@ -250,67 +288,124 @@ route_table::delay_delete(void) {
 
 route *
 route::factory(pds_route_spec_t *spec) {
-    return NULL;
+    route *rt;
+
+    // create route instance with defaults, if any
+    rt = route_db()->alloc();
+    if (rt) {
+        new (rt) route();
+    }
+    return rt;
 }
 
 void
 route::destroy(route *rt) {
-    SDK_ASSERT(FALSE);
-    return;
+    rt->~route();
+    route_db()->free(rt);
 }
 
 api_base *
 route::clone(api_ctxt_t *api_ctxt) {
+    route *cloned_route;
+
+    cloned_route = route_db()->alloc();
+    if (cloned_route) {
+        new (cloned_route) route();
+        if (cloned_route->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
+    }
+    return cloned_route;
+
+error:
+
+    cloned_route->~route();
+    route_db()->free(cloned_route);
     return NULL;
 }
 
 sdk_ret_t
 route::free(route *rt) {
-    return SDK_RET_ERR;
+    rt->~route();
+    route_db()->free(rt);
+    return SDK_RET_OK;
+}
+
+route *
+route::build(pds_obj_key_t *key) {
+    route *rt;
+
+    rt = route_db()->alloc();
+    if (rt) {
+        new (rt) route();
+        memcpy(&rt->key_, key, sizeof(*key));
+        // TODO: for delete case, we should look up in kvstore and populate the
+        //       route table's key as well
+    }
+    return rt;
+}
+
+void
+route::soft_delete(route *route) {
+    route->del_from_db();
+    route->~route();
+    route_db()->free(route);
 }
 
 sdk_ret_t
 route::init_config(api_ctxt_t *api_ctxt) {
-    return SDK_RET_ERR;
+    pds_route_spec_t *spec = &api_ctxt->api_params->route_spec;
+
+    memcpy(&key_, &spec->key, sizeof(key_));
+    memcpy(&route_table_, &spec->route_table, sizeof(route_table_));
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 route::add_deps(api_obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_ERR;
+    route_table *rtable;
+
+    if ((obj_ctxt->api_op == API_OP_CREATE) ||
+        (obj_ctxt->api_op == API_OP_UPDATE)) {
+        rtable = route_table_find(&route_table_);
+        api_obj_add_to_deps(obj_ctxt->api_op,
+                            OBJ_ID_ROUTE, this,
+                            OBJ_ID_ROUTE_TABLE, rtable,
+                            (obj_ctxt->api_op == API_OP_CREATE) ?
+                                 PDS_ROUTE_TABLE_UPD_ROUTE_ADD :
+                                 PDS_ROUTE_TABLE_UPD_ROUTE_UPD);
+    } else {
+        // need to get route key -> route table key mapping and then
+        // route_table_find()
+        SDK_ASSERT(FALSE);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 route::add_to_db(void) {
-    PDS_TRACE_VERBOSE("Adding table %s to db", key2str().c_str());
-    //return route_db()->insert(this);
-    return SDK_RET_ERR;
+    return route_db()->insert(this);
 }
 
 sdk_ret_t
 route::del_from_db(void) {
-#if 0
     if (route_db()->remove(this)) {
         return SDK_RET_OK;
     }
-#endif
     return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t
 route::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-#if 0
     if (route_db()->remove((route *)orig_obj)) {
         return route_db()->insert(this);
     }
     return SDK_RET_ENTRY_NOT_FOUND;
-#endif
-    return SDK_RET_ERR;
 }
 
 sdk_ret_t
 route::delay_delete(void) {
-    //return delay_delete_to_slab(PDS_SLAB_ID_ROUTE, this);
-    return SDK_RET_ERR;
+    return delay_delete_to_slab(PDS_SLAB_ID_ROUTE, this);
 }
 
 }    // namespace api
