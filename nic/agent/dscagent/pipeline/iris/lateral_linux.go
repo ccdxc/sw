@@ -33,9 +33,6 @@ var destIPToMAC sync.Map
 var arpCache sync.Map
 var mux sync.Mutex
 
-// MgmtIP is the global mgmt ip
-var MgmtIP string
-
 // ArpClient is the global arp client for netagent
 var ArpClient *arp.Client
 

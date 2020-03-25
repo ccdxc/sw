@@ -223,7 +223,7 @@ func (i *IrisAPI) PipelineInit() error {
 // HandleVeniceCoordinates initializes the pipeline when VeniceCoordinates are discovered
 func (i *IrisAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatus) {
 	log.Infof("Iris API: received venice co-ordinates [%v]", dsc)
-	mgmtIP, mgmtIntf, mgmtLink, err := utils.GetMgmtInfo(i.InfraAPI.GetConfig())
+	mgmtIntf, mgmtLink, err := utils.GetMgmtInfo(i.InfraAPI.GetConfig())
 	if err != nil {
 		log.Errorf("Failed to get the mgmt information. config: %v: %v", i.InfraAPI.GetConfig(), err)
 		return
@@ -242,7 +242,6 @@ func (i *IrisAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatus
 	}
 	iris.ArpClient = client
 	iris.MgmtLink = mgmtLink
-	iris.MgmtIP = mgmtIP
 	log.Infof("Starting the ARP watch loop")
 	go iris.ResolveWatch()
 }
@@ -1203,6 +1202,12 @@ func (i *IrisAPI) HandleMirrorSession(oper types.Operation, mirror netproto.Mirr
 		log.Error(err)
 		return nil, err
 	}
+	if oper == types.Create || oper == types.Update {
+		if ip := utils.GetMgmtIP(iris.MgmtLink); ip == "" {
+			log.Error(errors.Wrapf(types.ErrNoIpForMgmtIntf, "Could not get ip address for intf %v", iris.MgmtLink))
+			return nil, errors.Wrapf(types.ErrNoIpForMgmtIntf, "Could not get ip address for intf %v", iris.MgmtLink)
+		}
+	}
 	// Take a lock to ensure a single HAL API is active at any given point
 	err = iris.HandleMirrorSession(i.InfraAPI, i.TelemetryClient, i.IntfClient, i.EpClient, oper, mirror, vrf.Status.VrfID)
 	if err != nil {
@@ -1319,6 +1324,12 @@ func (i *IrisAPI) HandleFlowExportPolicy(oper types.Operation, netflow netproto.
 	if err != nil {
 		log.Error(err)
 		return nil, err
+	}
+	if oper == types.Create || oper == types.Update {
+		if ip := utils.GetMgmtIP(iris.MgmtLink); ip == "" {
+			log.Error(errors.Wrapf(types.ErrNoIpForMgmtIntf, "Could not get ip address for intf %v", iris.MgmtLink))
+			return nil, errors.Wrapf(types.ErrNoIpForMgmtIntf, "Could not get ip address for intf %v", iris.MgmtLink)
+		}
 	}
 	// Take a lock to ensure a single HAL API is active at any given point
 	err = iris.HandleFlowExportPolicy(i.InfraAPI, i.TelemetryClient, i.IntfClient, i.EpClient, oper, netflow, vrf.Status.VrfID)
@@ -1592,6 +1603,12 @@ func (i *IrisAPI) HandleCollector(oper types.Operation, col netproto.Collector) 
 		return nil, err
 	}
 
+	if oper == types.Create || oper == types.Update {
+		if ip := utils.GetMgmtIP(iris.MgmtLink); ip == "" {
+			log.Error(errors.Wrapf(types.ErrNoIpForMgmtIntf, "Could not get ip address for intf %v", iris.MgmtLink))
+			return nil, errors.Wrapf(types.ErrNoIpForMgmtIntf, "Could not get ip address for intf %v", iris.MgmtLink)
+		}
+	}
 	// Take a lock to ensure a single HAL API is active at any given point
 	if err := iris.HandleCollector(i.InfraAPI, i.TelemetryClient, i.IntfClient, i.EpClient, oper, col, vrf.Status.VrfID); err != nil {
 		log.Error(err)

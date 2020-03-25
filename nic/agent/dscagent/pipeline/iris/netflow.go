@@ -75,7 +75,8 @@ func createFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 			continue
 		}
 		compositeKey := fmt.Sprintf("%s/%s", netflow.GetKind(), collectorKey)
-		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, MgmtIP, dstIP, false); err != nil {
+		mgmtIP := commonUtils.GetMgmtIP(MgmtLink)
+		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP, dstIP, false); err != nil {
 			log.Error(errors.Wrapf(types.ErrNetflowCreateLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
 			return errors.Wrapf(types.ErrMirrorCreateLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
 		}
@@ -228,7 +229,8 @@ func deleteFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 func convertCollector(infraAPI types.InfraAPI, collector netproto.ExportConfig, netflow netproto.FlowExportPolicy, vrfID, l2SegID, collectorID uint64) *halapi.CollectorRequestMsg {
 	var port uint64
 	var protocol halapi.IPProtocol
-	srcIP := utils.ConvertIPAddresses(MgmtIP)[0]
+	mgmtIP := commonUtils.GetMgmtIP(MgmtLink)
+	srcIP := utils.ConvertIPAddresses(mgmtIP)[0]
 	dstIP := utils.ConvertIPAddresses(collector.Destination)[0]
 	if collector.Transport != nil {
 		port, _ = strconv.ParseUint(collector.Transport.GetPort(), 10, 64)
@@ -288,7 +290,8 @@ func sendTemplate(ctx context.Context, infraAPI types.InfraAPI, destIP net.IP, d
 		},
 	}
 
-	conn, err := nc.ListenPacket(ctx, "udp", fmt.Sprintf("%v:%v", MgmtIP, types.IPFIXSrcPort))
+	mgmtIP := commonUtils.GetMgmtIP(MgmtLink)
+	conn, err := nc.ListenPacket(ctx, "udp", fmt.Sprintf("%v:%v", mgmtIP, types.IPFIXSrcPort))
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrIPFIXPacketListen, "FlowExportPolicy: %s  | Err: %v", netflow.GetKey(), err))
 		return
