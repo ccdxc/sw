@@ -351,8 +351,8 @@ func (a *ApuluAPI) HandleVrf(oper types.Operation, vrf netproto.Vrf) (vrfs []net
 		}
 		vrf = existingVrf
 	}
-	log.Infof("Vrf: %+v | Op: %s | %s", vrf, oper, types.InfoHandleObjBegin)
-	defer log.Infof("Vrf: %v | Op: %s | %s", vrf.GetKey(), oper, types.InfoHandleObjEnd)
+	log.Infof("Vrf: %s | Op: %s | %s", vrf.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("Vrf: %s | Op: %s | %s", vrf.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
 	err = apulu.HandleVPC(a.InfraAPI, a.VPCClient, a.EvpnClient, oper, vrf)
@@ -464,8 +464,8 @@ func (a *ApuluAPI) HandleNetwork(oper types.Operation, network netproto.Network)
 		log.Errorf("Network: %v | Op: %s | Err: %s", network, oper, err)
 		return nil, err
 	}
-	log.Infof("Network: %v | Op: %s | %s", network.GetKey(), oper, types.InfoHandleObjBegin)
-	defer log.Infof("Network: %v | Op: %s | %s", network, oper, types.InfoHandleObjEnd)
+	log.Infof("Network: %s | Op: %s | %s", network.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("Network: %s | Op: %s | %s", network.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
 	err = apulu.HandleSubnet(a.InfraAPI, a.SubnetClient, a.EvpnClient, oper, network, vrf.Status.VrfID, uplinkIDs)
@@ -589,8 +589,8 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 
 	// Use the UUID from the cache when interacting with PDS Agent
 	intf.UUID = uidStr
-	log.Infof("Interface: %v | Op: %s | %s", intf, oper, types.InfoHandleObjBegin)
-	defer log.Infof("Interface: %v | Op: %s | Err: %v | %s", intf, oper, err, types.InfoHandleObjEnd)
+	log.Infof("Interface: %s | Op: %s | %s", intf.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("Interface: %s | Op: %s | Err: %v | %s", intf.GetKey(), oper, err, types.InfoHandleObjEnd)
 
 	// Check for Loopback Update
 	oldLoopbackIf := ""
@@ -749,8 +749,6 @@ func (a *ApuluAPI) HandleNetworkSecurityPolicy(oper types.Operation, nsp netprot
 
 		// Reuse ID from store
 		nsp.Status.NetworkSecurityPolicyID = existingNetworkSecurityPolicy.Status.NetworkSecurityPolicyID
-		log.Infof("Existing NetworkSecurityPolicy : %v", existingNetworkSecurityPolicy)
-		log.Infof("New NetworkSecurityPolicy: %v", nsp)
 
 	case types.Delete:
 		var existingNetworkSecurityPolicy netproto.NetworkSecurityPolicy
@@ -780,8 +778,8 @@ func (a *ApuluAPI) HandleNetworkSecurityPolicy(oper types.Operation, nsp netprot
 		return nil, err
 	}
 
-	log.Infof("NetworkSecurityPolicy: %v | Op: %s | %s", nsp.GetKey(), oper, types.InfoHandleObjBegin)
-	defer log.Infof("NetworkSecurityPolicy: %v | Op: %s | %s", nsp.GetKey(), oper, types.InfoHandleObjEnd)
+	log.Infof("NetworkSecurityPolicy: %s | Op: %s | %s", nsp.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("NetworkSecurityPolicy: %s | Op: %s | %s", nsp.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
 	err = apulu.HandleNetworkSecurityPolicy(a.InfraAPI, a.SecurityPolicySvcClient, oper, nsp, ruleIDToAppMapping)
@@ -896,8 +894,8 @@ func (a *ApuluAPI) HandleSecurityProfile(oper types.Operation, profile netproto.
 		}
 		profile = existingSecurityProfile
 	}
-	log.Infof("SecurityProfile: %v | Op: %s | %s", profile, oper, types.InfoHandleObjBegin)
-	defer log.Infof("SecurityProfile: %v | Op: %s | %s", profile, oper, types.InfoHandleObjEnd)
+	log.Infof("SecurityProfile: %s | Op: %s | %s", profile.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("SecurityProfile: %s | Op: %s | %s", profile.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
 	// Currently security profile is singleton and not associated with any VPC
@@ -1008,8 +1006,8 @@ func (a *ApuluAPI) HandleIPAMPolicy(oper types.Operation, policy netproto.IPAMPo
 		}
 		policy = existingPolicy
 	}
-	log.Infof("IPAMPolicy: %v | Op: %s | %s", policy, oper, types.InfoHandleObjBegin)
-	defer log.Infof("IPAMPolicy: %v | Op: %s | %s", policy, oper, types.InfoHandleObjEnd)
+	log.Infof("IPAMPolicy: %s | Op: %s | %s", policy.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("IPAMPolicy: %s | Op: %s | %s", policy.GetKey(), oper, types.InfoHandleObjEnd)
 
 	err = apulu.HandleIPAMPolicy(a.InfraAPI, a.DHCPRelayClient, oper, policy)
 	if err != nil {
@@ -1114,8 +1112,8 @@ func (a *ApuluAPI) HandleMirrorSession(oper types.Operation, mirror netproto.Mir
 		}
 		mirror = existingMirrorSession
 	}
-	log.Infof("MirrorSession: %v | Op: %s | %s", mirror, oper, types.InfoHandleObjBegin)
-	defer log.Infof("MirrorSession: %v | Op: %s | %s", mirror, oper, types.InfoHandleObjEnd)
+	log.Infof("MirrorSession: %s | Op: %s | %s", mirror.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("MirrorSession: %s | Op: %s | %s", mirror.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
 	mirrorDestToKeys := map[string]int{}
@@ -1205,8 +1203,8 @@ func (a *ApuluAPI) HandleRoutingConfig(oper types.Operation, rtcfg netproto.Rout
 		}
 		rtcfg = existingRtcfg
 	}
-	log.Infof("RoutingConfig: %v | Op: %s | %s", rtcfg, oper, types.InfoHandleObjBegin)
-	defer log.Infof("RoutingConfig: %v | Op: %s | %s", rtcfg.Name, oper, types.InfoHandleObjEnd)
+	log.Infof("RoutingConfig: %s | Op: %s | %s", rtcfg.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("RoutingConfig: %s | Op: %s | %s", rtcfg.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
 	err = validator.ValidateRoutingConfig(a.InfraAPI, rtcfg)
@@ -1288,8 +1286,8 @@ func (a *ApuluAPI) HandleRouteTable(oper types.Operation, routetableObj netproto
 		}
 		routetableObj = existingRtcfg
 	}
-	log.Infof("RouteTable: %v | Op: %s | %s", routetableObj, oper, types.InfoHandleObjBegin)
-	defer log.Infof("RouteTable: %v | Op: %s | %s", routetableObj, oper, types.InfoHandleObjEnd)
+	log.Infof("RouteTable: %s | Op: %s | %s", routetableObj.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("RouteTable: %s | Op: %s | %s", routetableObj.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
 	err = validator.ValidateRouteTable(a.InfraAPI, routetableObj)

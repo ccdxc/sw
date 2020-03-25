@@ -346,8 +346,8 @@ func (i *IrisAPI) HandleVrf(oper types.Operation, vrf netproto.Vrf) (vrfs []netp
 		}
 		vrf = existingVrf
 	}
-	log.Infof("Vrf: %v | Op: %s | %s", vrf, oper, types.InfoHandleObjBegin)
-	defer log.Infof("Vrf: %v | Op: %s | %s", vrf, oper, types.InfoHandleObjEnd)
+	log.Infof("Vrf: %s | Op: %s | %s", vrf.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("Vrf: %s | Op: %s | %s", vrf.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
 	err = iris.HandleVrf(i.InfraAPI, i.VrfClient, oper, vrf)
@@ -459,8 +459,8 @@ func (i *IrisAPI) HandleNetwork(oper types.Operation, network netproto.Network) 
 		log.Error(err)
 		return nil, err
 	}
-	log.Infof("Network: %v | Op: %s | %s", network, oper, types.InfoHandleObjBegin)
-	defer log.Infof("Network: %v | Op: %s | %s", network, oper, types.InfoHandleObjEnd)
+	log.Infof("Network: %s | Op: %s | %s", network.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("Network: %s | Op: %s | %s", network.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
 	err = iris.HandleL2Segment(i.InfraAPI, i.L2SegmentClient, oper, network, vrf.Status.VrfID, uplinkIDs)
@@ -577,8 +577,8 @@ func (i *IrisAPI) HandleEndpoint(oper types.Operation, endpoint netproto.Endpoin
 		return nil, err
 	}
 
-	log.Infof("Endpoint: %v | Op: %s | %s", endpoint, oper, types.InfoHandleObjBegin)
-	defer log.Infof("Endpoint: %v | Op: %s | %s", endpoint, oper, types.InfoHandleObjEnd)
+	log.Infof("Endpoint: %s | Op: %s | %s", endpoint.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("Endpoint: %s | Op: %s | %s", endpoint.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
 	err = iris.HandleEndpoint(i.InfraAPI, i.EpClient, i.IntfClient, oper, endpoint, vrf.Status.VrfID, network.Status.NetworkID)
@@ -692,8 +692,8 @@ func (i *IrisAPI) HandleInterface(oper types.Operation, intf netproto.Interface)
 		return nil, err
 	}
 
-	log.Infof("Interface: %v | Op: %s | %s", intf, oper, types.InfoHandleObjBegin)
-	defer log.Infof("Interface: %v | Op: %s | %s", intf, oper, types.InfoHandleObjEnd)
+	log.Infof("Interface: %s | Op: %s | %s", intf.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("Interface: %s | Op: %s | %s", intf.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
 	err = iris.HandleInterface(i.InfraAPI, i.IntfClient, oper, intf, collectorToIDMap)
@@ -807,8 +807,8 @@ func (i *IrisAPI) HandleTunnel(oper types.Operation, tunnel netproto.Tunnel) (tu
 		return nil, err
 	}
 
-	log.Infof("Tunnel: %v | Op: %s | %s", tunnel, oper, types.InfoHandleObjBegin)
-	defer log.Infof("Tunnel: %v | Op: %s | %s", tunnel, oper, types.InfoHandleObjEnd)
+	log.Infof("Tunnel: %s | Op: %s | %s", tunnel.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("Tunnel: %s | Op: %s | %s", tunnel.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
 	err = iris.HandleTunnel(i.InfraAPI, i.IntfClient, oper, tunnel, vrf.Status.VrfID)
@@ -943,8 +943,6 @@ func (i *IrisAPI) HandleNetworkSecurityPolicy(oper types.Operation, nsp netproto
 
 		// Reuse ID from store
 		nsp.Status.NetworkSecurityPolicyID = existingNetworkSecurityPolicy.Status.NetworkSecurityPolicyID
-		log.Infof("Existing NetworkSecurityPolicy : %v", existingNetworkSecurityPolicy)
-		log.Infof("New NetworkSecurityPolicy: %v", nsp)
 
 	case types.Delete:
 		var existingNetworkSecurityPolicy netproto.NetworkSecurityPolicy
@@ -1082,8 +1080,8 @@ func (i *IrisAPI) HandleSecurityProfile(oper types.Operation, profile netproto.S
 		}
 		profile = existingSecurityProfile
 	}
-	log.Infof("SecurityProfile: %v | Op: %s | %s", profile, oper, types.InfoHandleObjBegin)
-	defer log.Infof("SecurityProfile: %v | Op: %s | %s", profile, oper, types.InfoHandleObjEnd)
+	log.Infof("SecurityProfile: %s | Op: %s | %s", profile.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("SecurityProfile: %s | Op: %s | %s", profile.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
 	vrf, err := i.ValidateSecurityProfile(profile)
@@ -1189,8 +1187,8 @@ func (i *IrisAPI) HandleMirrorSession(oper types.Operation, mirror netproto.Mirr
 		}
 		mirror = existingMirrorSession
 	}
-	log.Infof("MirrorSession: %v | Op: %s | %s", mirror, oper, types.InfoHandleObjBegin)
-	defer log.Infof("MirrorSession: %v | Op: %s | %s", mirror, oper, types.InfoHandleObjEnd)
+	log.Infof("MirrorSession: %s | Op: %s | %s", mirror.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("MirrorSession: %s | Op: %s | %s", mirror.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
 	mirrorDestToKeys := map[string]int{}
@@ -1312,8 +1310,8 @@ func (i *IrisAPI) HandleFlowExportPolicy(oper types.Operation, netflow netproto.
 		}
 		netflow = existingFlowExportPolicy
 	}
-	log.Infof("FlowExportPolicy: %v | Op: %s | %s", netflow, oper, types.InfoHandleObjBegin)
-	defer log.Infof("FlowExportPolicy: %v | Op: %s | %s", netflow, oper, types.InfoHandleObjEnd)
+	log.Infof("FlowExportPolicy: %s | Op: %s | %s", netflow.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("FlowExportPolicy: %s | Op: %s | %s", netflow.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
 	collectorToKeys := map[string]int{}
@@ -1441,8 +1439,8 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 		return nil, nil
 
 	}
-	log.Infof("Profile: %v | Op: %s | %s", profile, oper, types.InfoHandleObjBegin)
-	defer log.Infof("Profile: %v | Op: %s | %s", profile, oper, types.InfoHandleObjEnd)
+	log.Infof("Profile: %s | Op: %s | %s", profile.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("Profile: %s | Op: %s | %s", profile.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
 	if err := validator.ValidateProfile(profile); err != nil {
@@ -1589,8 +1587,8 @@ func (i *IrisAPI) HandleCollector(oper types.Operation, col netproto.Collector) 
 		}
 		col = existingCollector
 	}
-	log.Infof("Collector: %v | Op: %s | %s", col, oper, types.InfoHandleObjBegin)
-	defer log.Infof("Collector: %v | Op: %s | %s", col, oper, types.InfoHandleObjEnd)
+	log.Infof("Collector: %s | Op: %s | %s", col.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("Collector: %s | Op: %s | %s", col.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
 	uniqueCollectors := map[string]bool{}
