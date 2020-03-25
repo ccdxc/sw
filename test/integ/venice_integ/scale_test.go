@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/dscagent"
 	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -46,7 +47,7 @@ func (it *veniceIntegSuite) TestScale(c *C) {
 	cfg.NetworkSecurityPolicyParams.NumRulesPerPolicy = 1000
 	cfg.AppParams.NumApps = 1000
 	cfg.NumDNSAlgs = 0
-	cfg.Smartnics = snicList
+	cfg.Smartnics = [][]*cluster.DistributedServiceCard{snicList}
 	cfg.Do()
 
 	it.createScaleConfig(loginCtx, c, cfg)
