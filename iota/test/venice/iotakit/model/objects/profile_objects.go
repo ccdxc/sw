@@ -66,32 +66,45 @@ func (p *DscProfile) Delete() error {
 //AttachNaples attach profile to naples
 func (p *DscProfile) AttachNaples(naples *NaplesCollection) error {
 
-	var err error
 	for _, node := range naples.Nodes {
-		node.SmartNic, err = p.client.GetSmartNIC(node.SmartNic.ObjectMeta.Name)
-		if err != nil {
-			log.Errorf("Error reading smartnic for profile uppate %v", err.Error())
-			return err
-		}
-		node.SmartNic.Spec.DSCProfile = p.Profile.Name
-		err := p.client.UpdateSmartNIC(node.SmartNic)
-		if err != nil {
-			log.Errorf("Error updating smartnic with profile %v", err.Error())
-			return err
+		for _, inst := range node.Instances {
+			dsc := inst.Dsc
+			curDsc, err := p.client.GetSmartNIC(dsc.ObjectMeta.Name)
+			if err != nil {
+				log.Errorf("Error reading smartnic for profile uppate %v", err.Error())
+				return err
+			}
+			dsc.Spec = curDsc.Spec
+			dsc.Status = curDsc.Status
+			dsc.ObjectMeta = curDsc.ObjectMeta
+
+			dsc.Spec.DSCProfile = p.Profile.Name
+			err = p.client.UpdateSmartNIC(dsc)
+			if err != nil {
+				log.Errorf("Error updating smartnic with profile %v", err.Error())
+				return err
+			}
 		}
 	}
 
 	for _, node := range naples.FakeNodes {
-		node.SmartNic, err = p.client.GetSmartNIC(node.SmartNic.ObjectMeta.Name)
-		if err != nil {
-			log.Errorf("Error reading smartnic for profile uppate %v", err.Error())
-			return err
-		}
-		node.SmartNic.Spec.DSCProfile = p.Profile.Name
-		err := p.client.UpdateSmartNIC(node.SmartNic)
-		if err != nil {
-			log.Errorf("Error updating smartnic with profile %v", err.Error())
-			return err
+		for _, inst := range node.Instances {
+			dsc := inst.Dsc
+			curDsc, err := p.client.GetSmartNIC(dsc.ObjectMeta.Name)
+			if err != nil {
+				log.Errorf("Error reading smartnic for profile uppate %v", err.Error())
+				return err
+			}
+			dsc.Spec = curDsc.Spec
+			dsc.Status = curDsc.Status
+			dsc.ObjectMeta = curDsc.ObjectMeta
+
+			dsc.Spec.DSCProfile = p.Profile.Name
+			err = p.client.UpdateSmartNIC(dsc)
+			if err != nil {
+				log.Errorf("Error updating smartnic with profile %v", err.Error())
+				return err
+			}
 		}
 	}
 

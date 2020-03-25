@@ -305,17 +305,21 @@ func (sm *SysModel) DenyVeniceNodesFromNaples(vnc *objects.VeniceNodeCollection,
 	for _, venice := range vnc.Nodes {
 
 		for _, n := range naples.Nodes {
-			cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP  -m comment --comment %s",
-				strings.Split(n.SmartNic.GetStatus().IPConfig.IPAddress, "/")[0], cookie)
-			trig.AddCommand(cmd, venice.Name()+"_venice", venice.Name())
-			trig.AddCommandWithRetriesOnFailures(cmd, venice.Name()+"_venice",
-				venice.Name(), 3)
-		}
-		for _, n := range naples.FakeNodes {
-			cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP  -m comment --comment %s",
-				strings.Split(n.SmartNic.GetStatus().IPConfig.IPAddress, "/")[0], cookie)
-			trig.AddCommandWithRetriesOnFailures(cmd, venice.Name()+"_venice",
-				venice.Name(), 3)
+			for _, inst := range n.Instances {
+				dsc := inst.Dsc
+				cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP  -m comment --comment %s",
+					strings.Split(dsc.GetStatus().IPConfig.IPAddress, "/")[0], cookie)
+				trig.AddCommand(cmd, venice.Name()+"_venice", venice.Name())
+				trig.AddCommandWithRetriesOnFailures(cmd, venice.Name()+"_venice",
+					venice.Name(), 3)
+			}
+			for _, n := range naples.FakeNodes {
+				cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP  -m comment --comment %s",
+					strings.Split(n.Instances[0].Dsc.GetStatus().IPConfig.IPAddress, "/")[0], cookie)
+				trig.AddCommandWithRetriesOnFailures(cmd, venice.Name()+"_venice",
+					venice.Name(), 3)
+
+			}
 		}
 	}
 
@@ -431,9 +435,12 @@ func (sm *SysModel) DisconnectNaples(npc *objects.NaplesCollection) error {
 	// ifconfig down command
 	for _, naples := range npc.Nodes {
 		for _, naplesConfig := range naples.GetIotaNode().GetNaplesConfigs().Configs {
-			if naplesConfig.NodeUuid == naples.Nodeuuid {
-				cmd := fmt.Sprintf("ifconfig %s down", naplesConfig.ControlIntf)
-				trig.AddCommand(cmd, naplesConfig.Name, naples.NodeName())
+			for _, inst := range naples.Instances {
+				dsc := inst.Dsc
+				if naplesConfig.NodeUuid == dsc.Status.PrimaryMAC {
+					cmd := fmt.Sprintf("ifconfig %s down", naplesConfig.ControlIntf)
+					trig.AddCommand(cmd, naplesConfig.Name, naples.NodeName())
+				}
 			}
 		}
 	}
@@ -465,9 +472,12 @@ func (sm *SysModel) ConnectNaples(npc *objects.NaplesCollection) error {
 	// ifconfig up command
 	for _, naples := range npc.Nodes {
 		for _, naplesConfig := range naples.GetIotaNode().GetNaplesConfigs().Configs {
-			if naplesConfig.NodeUuid == naples.Nodeuuid {
-				cmd := fmt.Sprintf("ifconfig %s %s/16 up", naplesConfig.ControlIntf, naplesConfig.ControlIp)
-				trig.AddCommand(cmd, naplesConfig.Name, naples.NodeName())
+			for _, inst := range naples.Instances {
+				dsc := inst.Dsc
+				if naplesConfig.NodeUuid == dsc.Status.PrimaryMAC {
+					cmd := fmt.Sprintf("ifconfig %s %s/16 up", naplesConfig.ControlIntf, naplesConfig.ControlIp)
+					trig.AddCommand(cmd, naplesConfig.Name, naples.NodeName())
+				}
 			}
 		}
 	}
@@ -502,7 +512,9 @@ func (sm *SysModel) RunNaplesCommand(npc *objects.NaplesCollection, cmd string) 
 	trig := sm.Tb.NewTrigger()
 
 	for _, naples := range npc.Nodes {
-		trig.AddCommand(cmd, naples.Name(), naples.NodeName())
+		for _, inst := range naples.Instances {
+			trig.AddCommand(cmd, inst.EntityName, naples.NodeName())
+		}
 	}
 
 	// run the trigger
@@ -689,7 +701,9 @@ func (sm *SysModel) GetNaplesEndpoints(npc *objects.NaplesCollection) (map[strin
 func (sm *SysModel) runCommandOnGivenNaples(np *objects.Naples, cmd string) (string, error) {
 	trig := sm.Tb.NewTrigger()
 
-	trig.AddCommand(cmd, np.Name(), np.NodeName())
+	for _, inst := range np.Instances {
+		trig.AddCommand(cmd, inst.EntityName, np.NodeName())
+	}
 	resp, err := trig.Run()
 	if err != nil {
 		return "", err
@@ -1141,7 +1155,7 @@ func (sm *SysModel) AddVeniceNodes(names []string) error {
 func (sm *SysModel) ResetNaplesNodes(nodes *objects.HostCollection) error {
 
 	resetNaples := func(host string, node *objects.Naples) error {
-		for _ = range node.GetTestNode().NaplesConfigs.Configs {
+		for _, config := range node.GetTestNode().NaplesConfigs.Configs {
 			//TODO : for multiple naples
 			//entity := ncfg.Name
 			entity := node.GetTestNode().NodeName
@@ -1153,7 +1167,7 @@ func (sm *SysModel) ResetNaplesNodes(nodes *objects.HostCollection) error {
 				"rm -rf echo classic > /sysconfig/config0/app_start.conf",
 			}
 			log.Infof("Reset naples %v", entity)
-			err := sm.Tb.SendSerialCommandToNaples(entity, cmds)
+			err := sm.Tb.SendSerialCommandToNaples(entity, config.NaplesIpAddress, cmds)
 			if err != nil {
 				return err
 			}

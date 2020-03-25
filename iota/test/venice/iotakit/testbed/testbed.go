@@ -1,6 +1,7 @@
 package testbed
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -127,8 +128,8 @@ const (
 func (inst *InstanceParams) getNicMgmtIP() (string, error) {
 
 	useInband := true
-	if inst.Resource.InbandMgmt {
-		useInband = true
+	if os.Getenv("USE_OOB") != "" {
+		useInband = false
 	}
 
 	for _, nic := range inst.Nics {
@@ -167,7 +168,7 @@ func (inst *InstanceParams) getInbandIPs() []string {
 type TestNode struct {
 	NodeName            string               // node name specific to this topology
 	NodeUUID            []string             // node UUID
-	HostIntfs           []string             // Hostinterfaces of the node
+	HostIntfs           map[string][]string  // Hostinterfaces of the node
 	Type                iota.TestBedNodeType // node type
 	Personality         iota.PersonalityType // node topology
 	NodeMgmtIP          string
@@ -553,7 +554,6 @@ func sendCommandToNaples(consoleIP, consolePort string, cmds []string) error {
 
 func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality iota.PersonalityType, node *TestNode) error {
 
-	var err error
 	// check if testbed node can take this personality
 	switch nodeType {
 	case iota.TestBedNodeType_TESTBED_NODE_TYPE_MULTI_SIM:
@@ -656,6 +656,7 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 				}
 			}
 
+			useInband := true
 			node.NaplesConfigs = iota.NaplesConfigs{Configs: []*iota.NaplesConfig{}}
 			for nicID, nic := range node.instParams.Nics {
 				for _, port := range nic.Ports {
@@ -669,11 +670,13 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 						Name:           node.NodeName + "_naples" + "-" + strconv.Itoa(nicID),
 						NicHint:        port.MAC,
 					}
-					//FIXME: for muliple naples
-					config.NaplesIpAddress, err = node.instParams.getNicMgmtIP()
-					if err != nil {
-						return err
+					for _, port := range nic.Ports {
+						if (useInband && port.Name == naplesInband) || (!useInband && port.Name == naplesOutband) {
+							config.NaplesIpAddress = port.IP
+							break
+						}
 					}
+
 					node.NaplesConfigs.Configs = append(node.NaplesConfigs.Configs, config)
 					break
 				}
@@ -749,11 +752,35 @@ func (tb *TestBed) GetNaplesID(nodeName string) (int, error) {
 	return 0, errors.New("ID not found")
 }
 
+func convertToVeniceFormatMac(s string) string {
+	mac := strings.Replace(s, ":", "", -1)
+	var buffer bytes.Buffer
+	i := 1
+	for _, rune := range mac {
+		buffer.WriteRune(rune)
+		if i != 0 && i%4 == 0 && i != len(mac) {
+			buffer.WriteRune('.')
+		}
+		i++
+	}
+	return buffer.String()
+}
+
 //GetHostIntfs get host ints of node
-func (tb *TestBed) GetHostIntfs(nodeName string) []string {
+func (tb *TestBed) GetHostIntfs(nodeName string, uuid string) []string {
 	for _, node := range tb.Nodes {
 		if node.NodeName == nodeName {
-			return node.HostIntfs
+			if uuid == "" || len(node.HostIntfs) == 1 {
+				for _, hostIntfs := range node.HostIntfs {
+					return hostIntfs
+				}
+
+			}
+			hostInts, ok := node.HostIntfs[uuid]
+			if ok {
+				return hostInts
+			}
+
 		}
 	}
 	return []string{}
@@ -1206,11 +1233,17 @@ func (tb *TestBed) initNodeState() error {
 }
 
 //SendSerialCommandToNaples send a serial command to naples
-func (tb *TestBed) SendSerialCommandToNaples(nodeName string, cmds []string) error {
+func (tb *TestBed) SendSerialCommandToNaples(nodeName, ip string, cmds []string) error {
 	for _, node := range tb.Nodes {
 		if node.NodeName == nodeName {
-			return sendCommandToNaples(node.InstanceParams().NicConsoleIP,
-				node.InstanceParams().NicConsolePort, cmds)
+			for _, inst := range node.InstanceParams().Nics {
+				for _, port := range inst.Ports {
+					if port.IP == ip {
+						return sendCommandToNaples(inst.ConsoleIP,
+							inst.ConsolePort, cmds)
+					}
+				}
+			}
 		}
 	}
 	return fmt.Errorf("Naples %v not found", nodeName)
@@ -1531,19 +1564,23 @@ func (tb *TestBed) setupTestBed() error {
 		}
 
 		// add switch port
-		for _, dn := range node.instParams.DataNetworks {
-			// create switch if it doesnt exist
-			ds, ok := dsmap[dn.SwitchIP]
-			if !ok {
-				ds = &iota.DataSwitch{}
-				ds.Ip = dn.SwitchIP
-				ds.Username = dn.SwitchUsername
-				ds.Password = dn.SwitchPassword
-				ds.Speed = iota.DataSwitch_Speed_auto
-				dsmap[dn.SwitchIP] = ds
+		for _, nic := range node.instParams.Nics {
+			for _, port := range nic.Ports {
+				if port.Name == naplesOutband {
+					continue
+				}
+				// create switch if it doesnt exist
+				ds, ok := dsmap[port.SwitchIP]
+				if !ok {
+					ds = &iota.DataSwitch{}
+					ds.Ip = port.SwitchIP
+					ds.Username = port.SwitchUsername
+					ds.Password = port.SwitchPassword
+					ds.Speed = iota.DataSwitch_Speed_auto
+					dsmap[port.SwitchIP] = ds
+				}
+				ds.Ports = append(ds.Ports, "e1/"+strconv.Itoa(port.SwitchPort))
 			}
-
-			ds.Ports = append(ds.Ports, dn.Name)
 		}
 	}
 	for _, ds := range dsmap {
@@ -1795,16 +1832,17 @@ func (tb *TestBed) setupTestBed() error {
 				nodeAdded = true
 				addedNodes = append(addedNodes, node)
 				//Update Instance to be used.
+				node.HostIntfs = make(map[string][]string)
 				if IsNaplesHW(node.Personality) {
 					tb.addToNaplesCache(node.NodeName, node.instParams.ID)
 					for iter, naplesConfig := range nr.GetNaplesConfigs().GetConfigs() {
 						node.NodeUUID = append(node.NodeUUID, naplesConfig.NodeUuid)
 						node.NaplesConfigs.Configs[iter].NodeUuid = naplesConfig.NodeUuid
 						node.NaplesConfigs.Configs[iter].NaplesIpAddress = naplesConfig.NaplesIpAddress
-						node.HostIntfs = append(node.HostIntfs, naplesConfig.HostIntfs...)
+						node.HostIntfs[convertToVeniceFormatMac(naplesConfig.NodeUuid)] = naplesConfig.HostIntfs
 					}
 				} else if IsThirdParty(node.Personality) {
-					node.HostIntfs = append(node.HostIntfs, nr.GetThirdPartyNicConfig().HostIntfs...)
+					node.HostIntfs[""] = nr.GetThirdPartyNicConfig().HostIntfs
 				}
 			}
 		}

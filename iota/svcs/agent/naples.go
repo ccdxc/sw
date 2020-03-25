@@ -1066,19 +1066,19 @@ func (naples *naplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 		in.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{}}
 	}*/
 
-//	var windowsPortNameMapping map[string]map[string]string
+	//	var windowsPortNameMapping map[string]map[string]string
 	if in.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_WINDOWS {
-/*
-		f, err := os.Open("/pensando/iota/name-mapping.json")
-		if err != nil {
-			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
-		}
-		err = json.NewDecoder(f).Decode(&windowsPortNameMapping)
-		if err != nil {
-			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
-		}
-		f.Close()
-*/
+		/*
+			f, err := os.Open("/pensando/iota/name-mapping.json")
+			if err != nil {
+				return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
+			}
+			err = json.NewDecoder(f).Decode(&windowsPortNameMapping)
+			if err != nil {
+				return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
+			}
+			f.Close()
+		*/
 	}
 
 	//cmd := []string{naplesScript}
@@ -1123,23 +1123,23 @@ func (naples *naplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 						//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
 					}
 				} else {
-/*
-					ifName := windowsPortNameMapping[naplesMgmtIntf]["Name"]
-					naples.logger.Infof("Bringing up intf : %v with IP %v", ifName, intfIP)
-					cmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Enable-NetAdapter -Name '" + ifName + "' -Confirm:$false"}
-					if _, stdout, err := Utils.Run(cmd, 0, false, false, nil); err != nil {
-						msg := fmt.Sprintf("Failed to bring interface %s up err : %s", naplesMgmtIntf, stdout)
-						naples.logger.Error(msg)
-						//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
-					}
-					cmd = []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Set-NetIPAddress -InterfaceAlias \"" + ifName + "\" -IPAddress " + intfIP + " -PrefixLength 24"}
-					if _, stdout, err := Utils.Run(cmd, 0, false, false, nil); err != nil {
-						msg := fmt.Sprintf("Failed to configure IP for interface %s err : %s", naplesMgmtIntf, stdout)
-						naples.logger.Error(msg)
-						//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+					/*
+						ifName := windowsPortNameMapping[naplesMgmtIntf]["Name"]
+						naples.logger.Infof("Bringing up intf : %v with IP %v", ifName, intfIP)
+						cmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Enable-NetAdapter -Name '" + ifName + "' -Confirm:$false"}
+						if _, stdout, err := Utils.Run(cmd, 0, false, false, nil); err != nil {
+							msg := fmt.Sprintf("Failed to bring interface %s up err : %s", naplesMgmtIntf, stdout)
+							naples.logger.Error(msg)
+							//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+						}
+						cmd = []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Set-NetIPAddress -InterfaceAlias \"" + ifName + "\" -IPAddress " + intfIP + " -PrefixLength 24"}
+						if _, stdout, err := Utils.Run(cmd, 0, false, false, nil); err != nil {
+							msg := fmt.Sprintf("Failed to configure IP for interface %s err : %s", naplesMgmtIntf, stdout)
+							naples.logger.Error(msg)
+							//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
 
-					}
-*/
+						}
+					*/
 				}
 			}
 		}
@@ -1151,10 +1151,10 @@ func (naples *naplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 			if in.GetOs() != iota.TestBedNodeOs_TESTBED_NODE_OS_WINDOWS {
 				cmd = append(cmd, "ifconfig", intf, "up")
 			} else {
-/*
-				ifName := windowsPortNameMapping[intf]["Name"]
-				cmd = []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Enable-NetAdapter -Name '" + ifName + "' -Confirm:$false"}
-*/
+				/*
+					ifName := windowsPortNameMapping[intf]["Name"]
+					cmd = []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Enable-NetAdapter -Name '" + ifName + "' -Confirm:$false"}
+				*/
 				cmd = []string{"echo"}
 			}
 

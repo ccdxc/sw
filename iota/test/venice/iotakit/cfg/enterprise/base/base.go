@@ -3,7 +3,6 @@ package base
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -27,7 +26,7 @@ import (
 type EntBaseCfg struct {
 	*objClient.Client
 	//naples map[string]*Naples // Naples instances
-	Dscs           []*cluster.DistributedServiceCard
+	Dscs           [][]*cluster.DistributedServiceCard
 	ThirdPartyDscs []*cluster.DistributedServiceCard
 	subnets        []*Network               // subnets
 	sgPolicies     []*NetworkSecurityPolicy // simulated security policies
@@ -121,7 +120,7 @@ type CfgObjects struct {
 
 //ConfigParams contoller
 type ConfigParams struct {
-	Dscs              []*cluster.DistributedServiceCard
+	Dscs              [][]*cluster.DistributedServiceCard
 	VeniceNodes       []*cluster.Node
 	FakeDscs          []*cluster.DistributedServiceCard
 	ThirdPartyDscs    []*cluster.DistributedServiceCard
@@ -204,7 +203,7 @@ func (gs *EntBaseCfg) PopulateConfig(params *ConfigParams) error {
 		cfg.AppParams.NumApps = 4
 	}
 
-	smartnics := []*cluster.DistributedServiceCard{}
+	smartnics := [][]*cluster.DistributedServiceCard{}
 	for _, naples := range params.Dscs {
 		smartnics = append(smartnics, naples)
 	}
@@ -214,7 +213,7 @@ func (gs *EntBaseCfg) PopulateConfig(params *ConfigParams) error {
 
 	//Add sim naples too.
 	for _, naples := range params.FakeDscs {
-		smartnics = append(smartnics, naples)
+		smartnics = append(smartnics, []*cluster.DistributedServiceCard{naples})
 	}
 
 	cfg.Smartnics = smartnics
@@ -249,10 +248,14 @@ func (gs *EntBaseCfg) PopulateConfig(params *ConfigParams) error {
 		for _, o := range cfg.ConfigItems.Hosts {
 			for _, realNaples := range params.Dscs {
 				//Get Real host first
-				if o.Spec.GetDSCs()[0].MACAddress == realNaples.Status.PrimaryMAC {
-					for _, wload := range cfg.ConfigItems.Workloads {
-						if wload.Spec.HostName == o.Name {
-							wloads = append(wloads, wload)
+				for _, dsc := range o.Spec.DSCs {
+					for _, naples := range realNaples {
+						if dsc.MACAddress == naples.Status.PrimaryMAC {
+							for _, wload := range cfg.ConfigItems.Workloads {
+								if wload.Spec.HostName == o.Name {
+									wloads = append(wloads, wload)
+								}
+							}
 						}
 					}
 				}
@@ -298,7 +301,8 @@ func (gs *EntBaseCfg) PopulateConfig(params *ConfigParams) error {
 		return nil
 	}
 
-	if params.Regenerate {
+	_, err := os.Stat(configFile)
+	if params.Regenerate || os.IsNotExist(err) {
 		//Generate fresh config if not skip setup
 		generateConfig()
 		// verify and keep the data in some file
@@ -323,24 +327,26 @@ func (gs *EntBaseCfg) PopulateConfig(params *ConfigParams) error {
 		copy(tbVlans, params.Vlans)
 
 		for _, o := range cfg.ConfigItems.Networks {
-			if len(tbVlans) == 0 {
-				return errors.New("Not enough vlans in the testbed for the config")
+			if len(tbVlans) != 0 {
+				nwMap[o.Spec.VlanID] = tbVlans[0]
+				//Change the network vlan to use the vlan ID allocated by testbed
+				o.Spec.VlanID = tbVlans[0]
+				tbVlans = tbVlans[1:]
 			}
-			nwMap[o.Spec.VlanID] = tbVlans[0]
-			//Change the network vlan to use the vlan ID allocated by testbed
-			o.Spec.VlanID = tbVlans[0]
-			tbVlans = tbVlans[1:]
 			err := gs.createNetwork(o)
 			if err != nil {
 				return err
 			}
 
 		}
-		for _, o := range cfg.ConfigItems.Workloads {
-			if wireVlan, ok := nwMap[o.Spec.Interfaces[0].ExternalVlan]; ok {
-				o.Spec.Interfaces[0].ExternalVlan = wireVlan
-			} else {
-				return fmt.Errorf("No testbed vlan found for external vlan %v", o.Spec.Interfaces[0].ExternalVlan)
+		if len(tbVlans) != 0 {
+			for _, o := range cfg.ConfigItems.Workloads {
+				if wireVlan, ok := nwMap[o.Spec.Interfaces[0].ExternalVlan]; ok {
+					o.Spec.Interfaces[0].ExternalVlan = wireVlan
+				} else {
+					return fmt.Errorf("No testbed vlan found for external vlan %v", o.Spec.Interfaces[0].ExternalVlan)
+				}
+
 			}
 		}
 
@@ -732,7 +738,7 @@ func (gs *EntBaseCfg) PushConfig() error {
 					done <- nil
 					return
 				}
-				log.Warnf("Propagation stats did not match for policy %v. %+v", o.ObjectMeta.Name, retSgp.Status.PropagationStatus)
+				log.Warnf("Propagation stats did not match for policy %v. %+v", o.ObjectMeta.Name, retSgp.Status.PropagationStatus, len(gs.Dscs))
 			}
 			done <- fmt.Errorf("unable to update policy '%s' on all naples %+v",
 				o.ObjectMeta.Name, o.Status.PropagationStatus)

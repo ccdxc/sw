@@ -38,11 +38,7 @@ var scaleCfgenParams = &Cfgen{
 				Name: "host-{{iter:hostid}}",
 			},
 			Spec: cluster.HostSpec{
-				DSCs: []cluster.DistributedServiceCardID{
-					{
-						MACAddress: "{{mac}}",
-					},
-				},
+				DSCs: []cluster.DistributedServiceCardID{},
 			},
 		},
 	},

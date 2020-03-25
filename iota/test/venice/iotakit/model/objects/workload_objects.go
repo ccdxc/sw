@@ -22,6 +22,7 @@ type Workload struct {
 	VeniceWorkload     *workload.Workload
 	host               *Host
 	subnet             *Network
+	dscUUID            string
 	IsFTPServerRunning bool // is FTP server running already on this workload
 }
 
@@ -48,7 +49,16 @@ func (w *Workload) Name() string {
 }
 
 func (w *Workload) NaplesUUID() string {
-	return w.host.Naples.SmartNic.Name
+	//TODO fix it later
+	return w.host.Naples.Instances[0].Dsc.Name
+}
+
+func (w *Workload) SetNaplesUUID(uuid string) {
+	w.dscUUID = uuid
+}
+
+func (w *Workload) GetNaplesUUID() string {
+	return w.dscUUID
 }
 
 func (w *Workload) Host() *Host {
@@ -56,7 +66,7 @@ func (w *Workload) Host() *Host {
 }
 
 func (w *Workload) NaplesMAC() string {
-	return w.host.Naples.Node.Nodeuuid
+	return w.host.Naples.Instances[0].Dsc.Status.PrimaryMAC
 }
 
 func (w *Workload) NodeName() string {
@@ -360,7 +370,7 @@ func (wpc *WorkloadPairCollection) ReversePairs() *WorkloadPairCollection {
 
 func (wc *WorkloadCollection) AllocateHostInterfaces(tb *testbed.TestBed) error {
 
-	var Workloads []*iota.Workload
+	var Workloads []*Workload
 	type hostIntAlloc struct {
 		intfs    []string
 		curIndex int
@@ -375,19 +385,20 @@ func (wc *WorkloadCollection) AllocateHostInterfaces(tb *testbed.TestBed) error 
 	// build workload list
 	for _, wrk := range wc.Workloads {
 		if _, ok := hostIntfMap[wrk.NodeName()]; !ok {
-			hostIntfs := tb.GetHostIntfs(wrk.NodeName())
+			hostIntfs := tb.GetHostIntfs(wrk.NodeName(), wrk.GetNaplesUUID())
 			if len(hostIntfs) == 0 {
 				return fmt.Errorf("Found no host interfaces on node %v", wrk.NodeName())
 			}
-			hostIntfMap[wrk.NodeName()] = &hostIntAlloc{intfs: hostIntfs}
+			hostIntfMap[wrk.NodeName()+wrk.GetNaplesUUID()] = &hostIntAlloc{intfs: hostIntfs}
 		}
 
-		Workloads = append(Workloads, wrk.iotaWorkload)
+		Workloads = append(Workloads, wrk)
 	}
 
 	for _, wrk := range Workloads {
-		hostAlloc, _ := hostIntfMap[wrk.NodeName]
-		wrk.ParentInterface = hostAlloc.intfs[hostAlloc.curIndex%len(hostAlloc.intfs)]
+		hostAlloc, _ := hostIntfMap[wrk.iotaWorkload.NodeName+wrk.GetNaplesUUID()]
+		wrk.iotaWorkload.ParentInterface = hostAlloc.intfs[hostAlloc.curIndex%len(hostAlloc.intfs)]
+		log.Infof("Alloc host intf %v %v", wrk.iotaWorkload.WorkloadName, wrk.iotaWorkload.ParentInterface)
 		hostAlloc.curIndex++
 	}
 	return nil

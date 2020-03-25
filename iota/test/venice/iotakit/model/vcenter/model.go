@@ -318,19 +318,28 @@ func (sm *VcenterSysModel) InitConfig(scale, scaleData bool) error {
 		Vlans:      sm.Tb.AllocatedVlans(),
 	}
 	for _, naples := range sm.NaplesNodes {
-		cfgParams.Dscs = append(cfgParams.Dscs, naples.SmartNic)
+		dscs := []*cluster.DistributedServiceCard{}
+		for _, inst := range naples.Instances {
+			dscs = append(dscs, inst.Dsc)
+		}
+		cfgParams.Dscs = append(cfgParams.Dscs, dscs)
+
 	}
 
 	index := 0
 	for name, node := range sm.ThirdPartyNodes {
-		node.Node.Nodeuuid = "50df.9ac7.c24" + fmt.Sprintf("%v", index)
-		n := getThirdPartyNic(name, node.Node.Nodeuuid)
-		cfgParams.Dscs = append(cfgParams.Dscs, n)
+		node.UUID = "50df.9ac7.c24" + fmt.Sprintf("%v", index)
+		n := getThirdPartyNic(name, node.UUID)
+		cfgParams.Dscs = append(cfgParams.Dscs, []*cluster.DistributedServiceCard{n})
 		index++
 	}
 
 	for _, naples := range sm.FakeNaples {
-		cfgParams.Dscs = append(cfgParams.Dscs, naples.SmartNic)
+		//cfgParams.Dscs = append(cfgParams.Dscs, naples.SmartNic)
+		cfgParams.FakeDscs = append(cfgParams.FakeDscs, naples.Instances[0].Dsc)
+		//node uuid already in format
+		cfgParams.NaplesLoopBackIPs[naples.UUID] = naples.IP()
+		naples.Instances[0].LoopbackIP = naples.IP()
 	}
 
 	err := sm.PopulateConfig(cfgParams)

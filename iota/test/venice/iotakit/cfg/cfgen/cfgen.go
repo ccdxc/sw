@@ -182,7 +182,7 @@ type Cfgen struct {
 	SubnetConfigParams
 
 	// user also inputs the SmartNICs in the cluster
-	Smartnics []*cluster.DistributedServiceCard
+	Smartnics [][]*cluster.DistributedServiceCard
 
 	// generated objects
 	WPairs      []*WPair
@@ -351,9 +351,12 @@ func (cfgen *Cfgen) genHosts() []*cluster.Host {
 	h := cfgen.HostParams.HostTemplate
 	h.ObjectMeta.Name = fmt.Sprintf("host-{{iter:1-%d}}", len(cfgen.Smartnics))
 	hostCtx := newIterContext()
+
 	for ii := 0; ii < len(cfgen.Smartnics); ii++ {
 		tHost := hostCtx.transform(h).(*cluster.Host)
-		tHost.Spec.DSCs[0].MACAddress = cfgen.Smartnics[ii].Status.PrimaryMAC
+		for jj := 0; jj < len(cfgen.Smartnics[ii]); jj++ {
+			tHost.Spec.DSCs = append(tHost.Spec.DSCs, cluster.DistributedServiceCardID{MACAddress: cfgen.Smartnics[ii][jj].Status.PrimaryMAC})
+		}
 
 		hosts = append(hosts, tHost)
 	}

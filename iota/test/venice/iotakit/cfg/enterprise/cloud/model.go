@@ -25,7 +25,7 @@ const configFile = "/tmp/scale-cfg.json"
 type CloudCfg struct {
 	*objClient.Client
 	//naples map[string]*Naples // Naples instances
-	Dscs []*cluster.DistributedServiceCard
+	Dscs [][]*cluster.DistributedServiceCard
 
 	params *base.ConfigParams
 	Cfg    *cfgen.Cfgen
@@ -101,7 +101,7 @@ func (cl *CloudCfg) PopulateConfig(params *base.ConfigParams) error {
 	cl.Cfg.NetworkSecurityPolicyParams.NumAppsPerRules = 3
 	cl.Cfg.AppParams.NumApps = 4
 
-	smartnics := []*cluster.DistributedServiceCard{}
+	smartnics := [][]*cluster.DistributedServiceCard{}
 	for _, naples := range params.Dscs {
 		smartnics = append(smartnics, naples)
 	}
@@ -110,7 +110,7 @@ func (cl *CloudCfg) PopulateConfig(params *base.ConfigParams) error {
 
 	//Add sim naples too.
 	for _, naples := range params.FakeDscs {
-		smartnics = append(smartnics, naples)
+		smartnics = append(smartnics, []*cluster.DistributedServiceCard{naples})
 	}
 
 	cl.Cfg.Smartnics = smartnics
@@ -301,13 +301,16 @@ func (cl *CloudCfg) setupLoopbacks() error {
 	defer cancelFunc()
 
 	expectedLoopbacks := len(cl.params.Dscs) + len(cl.params.FakeDscs)
+	log.Infof("Number of DSCs %v", expectedLoopbacks)
 L:
 	for true {
 		select {
 		case <-bkCtx.Done():
 			loopbackDSCs := make(map[string]bool)
-			for _, dsc := range cl.params.Dscs {
-				loopbackDSCs[dsc.Name] = false
+			for _, dscs := range cl.params.Dscs {
+				for _, dsc := range dscs {
+					loopbackDSCs[dsc.Name] = false
+				}
 			}
 			for _, dsc := range cl.params.FakeDscs {
 				loopbackDSCs[dsc.Name] = false
@@ -399,7 +402,9 @@ func (cl *CloudCfg) pushConfigViaRest() error {
 		dscs := cl.params.Dscs
 		for i := 2; i < len(r.Spec.BGPConfig.Neighbors); i++ {
 			neigh := r.Spec.BGPConfig.Neighbors[i]
-			neigh.IPAddress = strings.Split(dscs[i-2].Status.IPConfig.IPAddress, "/")[0]
+			for _, dsc := range dscs {
+				neigh.IPAddress = strings.Split(dsc[i-2].Status.IPConfig.IPAddress, "/")[0]
+			}
 		}
 
 		err := rClient.CreateRoutingConfig(r)

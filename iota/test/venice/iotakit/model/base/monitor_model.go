@@ -28,7 +28,10 @@ func (sm *SysModel) Events() *objects.EventsCollection {
 func (sm *SysModel) SystemBootEvents(npc *objects.NaplesCollection) *objects.EventsCollection {
 	var naplesNames []string
 	for _, naples := range npc.Nodes {
-		naplesNames = append(naplesNames, naples.Nodeuuid)
+		for _, inst := range naples.Instances {
+			dsc := inst.Dsc
+			naplesNames = append(naplesNames, dsc.Status.PrimaryMAC)
+		}
 	}
 
 	fieldSelector := fmt.Sprintf("type=%s,object-ref.kind=DistributedServiceCard,object-ref.name in (%v)",

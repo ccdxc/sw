@@ -15,15 +15,20 @@ type Node struct {
 	name      string
 	iotaNode  *iota.Node
 	testNode  *testbed.TestNode
-	Nodeuuid  string
 	IPAddress string
+	UUID      string
+}
+
+type NaplesInstance struct {
+	Dsc        *cluster.DistributedServiceCard
+	EntityName string
+	LoopbackIP string
 }
 
 // Naples represents a smart-nic
 type Naples struct {
 	Node
-	SmartNic   *cluster.DistributedServiceCard
-	LoopbackIP string
+	Instances []*NaplesInstance
 }
 
 // ThirdPartyNode represents non-naples
@@ -31,17 +36,22 @@ type ThirdPartyNode struct {
 	Node
 }
 
-func NewNaplesNode(name string, node *testbed.TestNode, sn *cluster.DistributedServiceCard) *Naples {
+func NewNaplesNode(name string, node *testbed.TestNode) *Naples {
 
 	return &Naples{
 		Node: Node{
 			testNode: node,
 			name:     name,
 			iotaNode: node.GetIotaNode(),
-			Nodeuuid: sn.Status.PrimaryMAC,
 		},
-		SmartNic: sn,
 	}
+}
+
+func (naples *Naples) AddDSC(name string, sn *cluster.DistributedServiceCard) {
+
+	naples.Instances = append(naples.Instances, &NaplesInstance{
+		Dsc: sn, EntityName: name,
+	})
 }
 
 func NewThirdPartyNode(name string, node *testbed.TestNode) *ThirdPartyNode {
@@ -103,7 +113,9 @@ type ThirdPartyCollection struct {
 func (npc *NaplesCollection) Names() []string {
 	var ret []string
 	for _, n := range npc.Nodes {
-		ret = append(ret, n.SmartNic.ObjectMeta.Name)
+		for _, inst := range n.Instances {
+			ret = append(ret, inst.Dsc.ObjectMeta.Name)
+		}
 	}
 
 	return ret
@@ -137,32 +149,46 @@ func (npc *NaplesCollection) SetDscProfile(profile *DscProfile) error {
 //ResetProfile resets profile
 func (npc *NaplesCollection) ResetProfile() error {
 
-	var err error
 	for _, node := range npc.Nodes {
-		node.SmartNic, err = npc.CollectionCommon.Client.GetSmartNIC(node.SmartNic.ObjectMeta.Name)
-		if err != nil {
-			log.Errorf("Error reading smartnic for profile uppate %v", err.Error())
-			return err
+		for _, inst := range node.Instances {
+			dsc := inst.Dsc
+			curDsc, err := npc.CollectionCommon.Client.GetSmartNIC(inst.Dsc.ObjectMeta.Name)
+			if err != nil {
+				log.Errorf("Error reading smartnic for profile uppate %v", err.Error())
+				return err
+			}
+			dsc.Spec = curDsc.Spec
+			dsc.Status = curDsc.Status
+			dsc.ObjectMeta = curDsc.ObjectMeta
+
+			dsc.Spec.DSCProfile = "default"
+			err = npc.CollectionCommon.Client.UpdateSmartNIC(dsc)
+			if err != nil {
+				log.Errorf("Error updating smartnic with profile %v", err.Error())
+				return err
+			}
 		}
-		node.SmartNic.Spec.DSCProfile = "default"
-		err := npc.CollectionCommon.Client.UpdateSmartNIC(node.SmartNic)
-		if err != nil {
-			log.Errorf("Error updating smartnic with profile %v", err.Error())
-			return err
-		}
+
 	}
 
 	for _, node := range npc.FakeNodes {
-		node.SmartNic, err = npc.CollectionCommon.Client.GetSmartNIC(node.SmartNic.ObjectMeta.Name)
-		if err != nil {
-			log.Errorf("Error reading smartnic for profile uppate %v", err.Error())
-			return err
-		}
-		node.SmartNic.Spec.DSCProfile = ""
-		err := npc.CollectionCommon.Client.UpdateSmartNIC(node.SmartNic)
-		if err != nil {
-			log.Errorf("Error updating smartnic with profile %v", err.Error())
-			return err
+		for _, inst := range node.Instances {
+			dsc := inst.Dsc
+			curDsc, err := npc.CollectionCommon.Client.GetSmartNIC(dsc.ObjectMeta.Name)
+			if err != nil {
+				log.Errorf("Error reading smartnic for profile uppate %v", err.Error())
+				return err
+			}
+			dsc.Spec = curDsc.Spec
+			dsc.Status = curDsc.Status
+			dsc.ObjectMeta = curDsc.ObjectMeta
+
+			dsc.Spec.DSCProfile = ""
+			err = npc.CollectionCommon.Client.UpdateSmartNIC(dsc)
+			if err != nil {
+				log.Errorf("Error updating smartnic with profile %v", err.Error())
+				return err
+			}
 		}
 	}
 
@@ -173,19 +199,25 @@ func (npc *NaplesCollection) ResetProfile() error {
 func (npc *NaplesCollection) Decommission() error {
 
 	for _, naples := range npc.Nodes {
-		log.Infof("Decommissioning naples %v", naples.SmartNic.Status.PrimaryMAC)
-		err := npc.Client.DecommissionSmartNIC(naples.SmartNic)
-		if err != nil {
-			log.Infof("Error decommissioning smart nic %v", err.Error())
-			return err
+		for _, inst := range naples.Instances {
+			dsc := inst.Dsc
+			log.Infof("Decommissioning naples %v", dsc.Status.PrimaryMAC)
+			err := npc.Client.DecommissionSmartNIC(dsc)
+			if err != nil {
+				log.Infof("Error decommissioning smart nic %v", err.Error())
+				return err
+			}
 		}
 	}
 
 	for _, naples := range npc.FakeNodes {
-		err := npc.Client.DecommissionSmartNIC(naples.SmartNic)
-		if err != nil {
-			log.Infof("Error decommissioning smart nic %v", err.Error())
-			return err
+		for _, inst := range naples.Instances {
+			dsc := inst.Dsc
+			err := npc.Client.DecommissionSmartNIC(dsc)
+			if err != nil {
+				log.Infof("Error decommissioning smart nic %v", err.Error())
+				return err
+			}
 		}
 	}
 
@@ -195,34 +227,47 @@ func (npc *NaplesCollection) Decommission() error {
 //Admit decomission naples
 func (npc *NaplesCollection) Admit() error {
 
-	var err error
 	for _, naples := range npc.Nodes {
-		log.Infof("Admit naples %v", naples.SmartNic.Status.PrimaryMAC)
+		for _, inst := range naples.Instances {
+			dsc := inst.Dsc
+			log.Infof("Admit naples %v", dsc.Status.PrimaryMAC)
 
-		naples.SmartNic, err = npc.Client.GetSmartNIC(naples.SmartNic.Status.PrimaryMAC)
-		if err != nil {
-			log.Errorf("Error reading smartnic for profile uppate %v", err.Error())
-			return err
-		}
+			curDsc, err := npc.Client.GetSmartNIC(dsc.Status.PrimaryMAC)
+			if err != nil {
+				log.Errorf("Error reading smartnic for profile uppate %v", err.Error())
+				return err
+			}
 
-		err := npc.Client.AdmitSmartNIC(naples.SmartNic)
-		if err != nil {
-			log.Infof("Error Admit smart nic %v", err.Error())
-			return err
+			dsc.Spec = curDsc.Spec
+			dsc.Status = curDsc.Status
+			dsc.ObjectMeta = curDsc.ObjectMeta
+
+			err = npc.Client.AdmitSmartNIC(dsc)
+			if err != nil {
+				log.Infof("Error Admit smart nic %v", err.Error())
+				return err
+			}
 		}
 	}
 
 	for _, naples := range npc.FakeNodes {
-		naples.SmartNic, err = npc.Client.GetSmartNIC(naples.SmartNic.Status.PrimaryMAC)
-		if err != nil {
-			log.Errorf("Error reading smartnic for profile uppate %v", err.Error())
-			return err
-		}
+		for _, inst := range naples.Instances {
+			dsc := inst.Dsc
+			curDsc, err := npc.Client.GetSmartNIC(dsc.Status.PrimaryMAC)
+			if err != nil {
+				log.Errorf("Error reading smartnic for profile uppate %v", err.Error())
+				return err
+			}
 
-		err = npc.Client.AdmitSmartNIC(naples.SmartNic)
-		if err != nil {
-			log.Infof("Error Admit smart nic %v", err.Error())
-			return err
+			dsc.Spec = curDsc.Spec
+			dsc.Status = curDsc.Status
+			dsc.ObjectMeta = curDsc.ObjectMeta
+
+			err = npc.Client.AdmitSmartNIC(dsc)
+			if err != nil {
+				log.Infof("Error Admit smart nic %v", err.Error())
+				return err
+			}
 		}
 	}
 
@@ -233,22 +278,28 @@ func (npc *NaplesCollection) Admit() error {
 func (npc *NaplesCollection) IsAdmitted() (bool, error) {
 
 	for _, naples := range npc.Nodes {
-		log.Infof("Admitting naples %v", naples.SmartNic.Status.PrimaryMAC)
-		snic, err := npc.Client.GetSmartNICByName(naples.SmartNic.Name)
-		if err != nil || !snic.Spec.Admit {
-			log.Infof("Snic not admitted  %v", snic)
-			msg := fmt.Sprintf("Snic not admitted %v", snic)
-			log.Infof(msg)
-			return false, fmt.Errorf(msg)
+		for _, inst := range naples.Instances {
+			dsc := inst.Dsc
+			log.Infof("Admitting naples %v", dsc.Status.PrimaryMAC)
+			snic, err := npc.Client.GetSmartNICByName(dsc.Name)
+			if err != nil || !snic.Spec.Admit {
+				log.Infof("Snic not admitted  %v", snic)
+				msg := fmt.Sprintf("Snic not admitted %v", snic)
+				log.Infof(msg)
+				return false, fmt.Errorf(msg)
+			}
 		}
 	}
 
 	for _, naples := range npc.FakeNodes {
-		snic, err := npc.Client.GetSmartNICByName(naples.SmartNic.Name)
-		if err != nil || !snic.Spec.Admit {
-			msg := fmt.Sprintf("Snic not admitted %v", snic)
-			log.Infof(msg)
-			return false, fmt.Errorf(msg)
+		for _, inst := range naples.Instances {
+			dsc := inst.Dsc
+			snic, err := npc.Client.GetSmartNICByName(dsc.Name)
+			if err != nil || !snic.Spec.Admit {
+				msg := fmt.Sprintf("Snic not admitted %v", snic)
+				log.Infof(msg)
+				return false, fmt.Errorf(msg)
+			}
 		}
 	}
 
@@ -259,18 +310,25 @@ func (npc *NaplesCollection) IsAdmitted() (bool, error) {
 func (npc *NaplesCollection) Delete() error {
 
 	for _, naples := range npc.Nodes {
-		err := npc.Client.DeleteSmartNIC(naples.SmartNic)
-		if err != nil {
-			log.Infof("Error deleting smart nic %v", err.Error())
-			return err
+		for _, inst := range naples.Instances {
+			dsc := inst.Dsc
+			err := npc.Client.DeleteSmartNIC(dsc)
+			if err != nil {
+				log.Infof("Error deleting smart nic %v", err.Error())
+				return err
+			}
 		}
+
 	}
 
 	for _, naples := range npc.FakeNodes {
-		err := npc.Client.DeleteSmartNIC(naples.SmartNic)
-		if err != nil {
-			log.Infof("Error deleting smart nic %v", err.Error())
-			return err
+		for _, inst := range naples.Instances {
+			dsc := inst.Dsc
+			err := npc.Client.DeleteSmartNIC(dsc)
+			if err != nil {
+				log.Infof("Error deleting smart nic %v", err.Error())
+				return err
+			}
 		}
 	}
 

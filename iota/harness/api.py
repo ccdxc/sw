@@ -831,6 +831,11 @@ def Trigger_WaitForAllCommands(exec_cmd_resp = None):
     return Trigger(term_req)
 
 
+def Trigger_UpdateNodeForCommands(exec_cmd_resp, originalNode, newNode):
+    for cmd in exec_cmd_resp.commands:
+        if cmd.node_name == originalNode:
+            term_cmd.node_name = newNode
+
 def Trigger_AggregateCommandsResponse(trig_resp, term_resp):
     if trig_resp == None or term_resp == None:
         return None

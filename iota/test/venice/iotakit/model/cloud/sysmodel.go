@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/pensando/sw/venice/utils/telemetryclient"
 	"os"
 	"sort"
 	"time"
+
+	"github.com/pensando/sw/venice/utils/telemetryclient"
 
 	"github.com/pensando/sw/api/generated/network"
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -157,14 +158,15 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 
 	wc := objects.NewWorkloadCollection(sm.ObjClient(), sm.Tb)
 
-	filter := fmt.Sprintf("spec.type=host-pf,status.dsc=%v", h.Naples.SmartNic.Status.PrimaryMAC)
+	//For now cloud has just 1 DSC
+	filter := fmt.Sprintf("spec.type=host-pf,status.dsc=%v", h.Naples.Instances[0].Dsc.Status.PrimaryMAC)
 	hostNwIntfs, err := sm.ObjClient().ListNetowrkInterfacesByFilter(filter)
 	if err != nil {
 		return nil, err
 	}
 
-	hostIntfs := sm.Tb.GetHostIntfs(h.GetIotaNode().Name)
-	numNetworks := len(sm.Tb.GetHostIntfs(h.GetIotaNode().Name))
+	hostIntfs := sm.Tb.GetHostIntfs(h.GetIotaNode().Name, "")
+	numNetworks := len(sm.Tb.GetHostIntfs(h.GetIotaNode().Name, ""))
 
 	if len(hostNwIntfs) != numNetworks {
 		msg := fmt.Sprintf("Number of host Nw interfaces (%v) is not equal to actual host interfaces (%v) ",

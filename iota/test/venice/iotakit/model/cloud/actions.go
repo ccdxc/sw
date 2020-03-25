@@ -29,30 +29,33 @@ func (sm *SysModel) VerifyNaplesStatus() error {
 		*/
 
 		// check smartnic status in Venice
-		snic, err := sm.GetSmartNICByName(np.Nodeuuid)
-		if err != nil {
-			err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", np.Nodeuuid, err)
-			log.Errorf("%v", err)
-			return err
-		}
+		for _, inst := range np.Instances {
+			dsc := inst.Dsc
+			snic, err := sm.GetSmartNICByName(dsc.Status.PrimaryMAC)
+			if err != nil {
+				err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", dsc.Status.PrimaryMAC, err)
+				log.Errorf("%v", err)
+				return err
+			}
 
-		log.Debugf("Got smartnic object: %+v", snic)
+			log.Debugf("Got smartnic object: %+v", snic)
 
-		if snic.Status.AdmissionPhase != cluster.DistributedServiceCardStatus_ADMITTED.String() {
-			log.Errorf("Invalid Naples status: %+v", snic)
-			return fmt.Errorf("Invalid admin phase for naples %v. Status: %+v", np.Name(), snic.Status)
-		}
-		if len(snic.Status.Conditions) < 1 {
-			log.Errorf("Invalid Naples status: %+v", snic)
-			return fmt.Errorf("No naples status reported for naples %v", np.Name())
-		}
-		if snic.Status.Conditions[0].Type != cluster.DSCCondition_HEALTHY.String() {
-			log.Errorf("Invalid Naples status: %+v", snic)
-			return fmt.Errorf("Invalid status condition-type %v for naples %v", snic.Status.Conditions[0].Type, np.Name())
-		}
-		if snic.Status.Conditions[0].Status != cluster.ConditionStatus_TRUE.String() {
-			log.Errorf("Invalid Naples status: %+v", snic)
-			return fmt.Errorf("Invalid status %v for naples %v", snic.Status.Conditions[0].Status, np.Name())
+			if snic.Status.AdmissionPhase != cluster.DistributedServiceCardStatus_ADMITTED.String() {
+				log.Errorf("Invalid Naples status: %+v", snic)
+				return fmt.Errorf("Invalid admin phase for naples %v. Status: %+v", np.Name(), snic.Status)
+			}
+			if len(snic.Status.Conditions) < 1 {
+				log.Errorf("Invalid Naples status: %+v", snic)
+				return fmt.Errorf("No naples status reported for naples %v", np.Name())
+			}
+			if snic.Status.Conditions[0].Type != cluster.DSCCondition_HEALTHY.String() {
+				log.Errorf("Invalid Naples status: %+v", snic)
+				return fmt.Errorf("Invalid status condition-type %v for naples %v", snic.Status.Conditions[0].Type, np.Name())
+			}
+			if snic.Status.Conditions[0].Status != cluster.ConditionStatus_TRUE.String() {
+				log.Errorf("Invalid Naples status: %+v", snic)
+				return fmt.Errorf("Invalid status %v for naples %v", snic.Status.Conditions[0].Status, np.Name())
+			}
 		}
 	}
 
@@ -181,23 +184,25 @@ func (sm *SysModel) VerifyBGPCluster() error {
 
 		for _, np := range sm.NaplesNodes {
 			verfied := false
-			ip := strings.Split(np.LoopbackIP, "/")[0]
-			for _, item := range data {
-				if ip == item.Spec.PeerAddr && item.Status.Status == "ESTABLISHED" {
-					verfied = true
-					break
+			for _, inst := range np.Instances {
+				ip := strings.Split(inst.LoopbackIP, "/")[0]
+				for _, item := range data {
+					if ip == item.Spec.PeerAddr && item.Status.Status == "ESTABLISHED" {
+						verfied = true
+						break
+					}
 				}
-			}
-			if !verfied {
-				msg := fmt.Sprintf("Naples %v (%v) not connected to bgp", np.IP(), ip)
-				log.Errorf(msg)
-				return errors.New(msg)
+				if !verfied {
+					msg := fmt.Sprintf("Naples %v (%v) not connected to bgp", np.IP(), ip)
+					log.Errorf(msg)
+					return errors.New(msg)
+				}
 			}
 		}
 
 		for _, np := range sm.FakeNaples {
 			verfied := false
-			ip := strings.Split(np.LoopbackIP, "/")[0]
+			ip := strings.Split(np.Instances[0].LoopbackIP, "/")[0]
 			for _, item := range data {
 				if ip == item.Spec.PeerAddr && item.Status.Status == "ESTABLISHED" {
 					verfied = true

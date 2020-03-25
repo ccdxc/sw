@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -199,7 +200,7 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 	nc := 0
 	for _, node := range sm.Tb.Nodes {
 		if testbed.IsNaplesHW(node.Personality) {
-			nc++
+			nc += len(node.NaplesConfigs.Configs)
 		}
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM {
 			nc = nc + int(node.NaplesMultSimConfig.NumInstances)
@@ -337,7 +338,12 @@ func (sm *SysModel) CreateNaples(node *testbed.TestNode) error {
 			return err
 		}
 
-		sm.NaplesNodes[naplesConfig.Name] = objects.NewNaplesNode(naplesConfig.Name, node, snic)
+		naplesNode, ok := sm.NaplesNodes[node.NodeName]
+		if !ok {
+			naplesNode = objects.NewNaplesNode(naplesConfig.Name, node)
+			sm.NaplesNodes[node.NodeName] = naplesNode
+		}
+		naplesNode.AddDSC(naplesConfig.Name, snic)
 	}
 
 	return nil
@@ -377,7 +383,8 @@ func (sm *SysModel) createMultiSimNaples(node *testbed.TestNode) error {
 			success = false
 			for _, snic := range snicList {
 				if snic.Spec.ID == simName {
-					sm.FakeNaples[simName] = objects.NewNaplesNode(simName, node, snic)
+					sm.FakeNaples[simName] = objects.NewNaplesNode(simName, node)
+					sm.FakeNaples[simName].AddDSC(simName, snic)
 					sm.FakeNaples[simName].SetIP(simInfo.GetIpAddress())
 					success = true
 				}
@@ -420,7 +427,8 @@ func (sm *SysModel) createControlSimNaples(node *testbed.TestNode) error {
 		success = false
 		for _, snic := range snicList {
 			if snic.Spec.ID == simName {
-				sm.FakeNaples[simName] = objects.NewNaplesNode(simName, node, snic)
+				sm.FakeNaples[simName] = objects.NewNaplesNode(simName, node)
+				sm.FakeNaples[simName].AddDSC(simName, snic)
 				sm.FakeNaples[simName].SetIP(node.GetIotaNode().GetNaplesControlSimConfig().ControlIp)
 				success = true
 			}
@@ -519,23 +527,25 @@ func (sm *SysModel) AssociateHosts() error {
 	}
 
 	if sm.Tb.IsMockMode() {
-		//One on One association if mock mode
-		convertMac := func(s string) string {
-			mac := strings.Replace(s, ".", "", -1)
-			var buffer bytes.Buffer
-			var l1 = len(mac) - 1
-			for i, rune := range mac {
-				buffer.WriteRune(rune)
-				if i%2 == 1 && i != l1 {
-					buffer.WriteRune(':')
+		/*
+			//One on One association if mock mode
+			convertMac := func(s string) string {
+				mac := strings.Replace(s, ".", "", -1)
+				var buffer bytes.Buffer
+				var l1 = len(mac) - 1
+				for i, rune := range mac {
+					buffer.WriteRune(rune)
+					if i%2 == 1 && i != l1 {
+						buffer.WriteRune(':')
+					}
 				}
+				return buffer.String()
 			}
-			return buffer.String()
-		}
-		//In mockmode we retrieve mac from the snicList, so we should convert to format that venice likes.
-		for _, naples := range sm.NaplesNodes {
-			naples.Nodeuuid = convertMac(naples.Nodeuuid)
-		}
+			//In mockmode we retrieve mac from the snicList, so we should convert to format that venice likes.
+			for _, naples := range sm.NaplesNodes {
+				//naples.Nodeuuid = convertMac(naples.Nodeuuid)
+			}
+		*/
 	}
 
 	for k := range sm.NaplesHosts {
@@ -543,29 +553,48 @@ func (sm *SysModel) AssociateHosts() error {
 	}
 
 	for _, n := range sm.NaplesNodes {
-		n.SmartNic.Labels = make(map[string]string)
-		nodeMac := strings.Replace(n.Nodeuuid, ":", "", -1)
-		nodeMac = strings.Replace(nodeMac, ".", "", -1)
-		for _, obj := range objs {
-			objMac := strings.Replace(obj.GetSpec().DSCs[0].MACAddress, ".", "", -1)
-			if objMac == nodeMac {
-				log.Infof("Associating host %v(ip:%v) with %v(ip:%v)\n", obj.GetName(),
-					n.IP(), n.Name(),
-					n.SmartNic.GetStatus().IPConfig.IPAddress)
-				bs := bitset.New(uint(4096))
-				bs.Set(0).Set(1).Set(4095)
+		for _, inst := range n.Instances {
+			dsc := inst.Dsc
+			dsc.Labels = make(map[string]string)
+			nodeMac := strings.Replace(dsc.Status.PrimaryMAC, ":", "", -1)
+			nodeMac = strings.Replace(nodeMac, ".", "", -1)
+			dscAssociated := false
+		L:
+			for _, obj := range objs {
+				for _, odsc := range obj.Spec.DSCs {
+					objMac := strings.Replace(odsc.MACAddress, ".", "", -1)
+					if objMac == nodeMac {
+						dscAssociated = true
+						log.Infof("Associating host %v(ip:%v) with %v(ip:%v)\n", obj.GetName(),
+							n.IP(), n.Name(),
+							dsc.GetStatus().IPConfig.IPAddress)
+						bs := bitset.New(uint(4096))
+						bs.Set(0).Set(1).Set(4095)
 
-				h := objects.NewHost(obj, n.GetIotaNode(), n)
-				sm.NaplesHosts[n.GetIotaNode().Name] = h
+						dsc, err = sm.GetSmartNIC(dsc.Name)
+						if err != nil {
+							log.Infof("Error reading smart nic object %v", err)
+							return err
+						}
 
-				//No need to Update the NIC: Add BM type to support upgrade
-				//Commenting for now, if this breaks vecenter sanity, looks here
-				/*n.SmartNic.Labels["type"] = "bm"
-				if err := sm.UpdateSmartNIC(n.SmartNic); err != nil {
-					log.Infof("Error updating smart nic object %v", err)
-					return err
-				}*/
-				break
+						//Add BM type to support upgrade
+						dsc.Labels = make(map[string]string)
+						dsc.Labels["type"] = "bm"
+						if err := sm.UpdateSmartNIC(dsc); err != nil {
+							log.Infof("Error updating smart nic object %v", err)
+							return err
+						}
+
+						h := objects.NewHost(obj, n.GetIotaNode(), n)
+						sm.NaplesHosts[n.GetIotaNode().Name] = h
+						break L
+					}
+				}
+			}
+			if !dscAssociated {
+				msg := fmt.Sprintf("Error associating DSC with  %v", dsc.Status.PrimaryMAC)
+				log.Infof(msg)
+				return fmt.Errorf(msg)
 			}
 		}
 	}
@@ -574,29 +603,37 @@ func (sm *SysModel) AssociateHosts() error {
 		delete(sm.FakeHosts, k)
 	}
 	for simName, n := range sm.FakeNaples {
-		n.SmartNic.Labels = make(map[string]string)
-		for _, simNaples := range n.GetIotaNode().GetNaplesMultiSimConfig().GetSimsInfo() {
-			if simNaples.GetName() == simName {
-				nodeMac := strings.Replace(simNaples.GetNodeUuid(), ":", "", -1)
-				nodeMac = strings.Replace(nodeMac, ".", "", -1)
-				for _, obj := range objs {
-					objMac := strings.Replace(obj.GetSpec().DSCs[0].MACAddress, ".", "", -1)
-					if objMac == nodeMac {
-						log.Infof("Associating host %v(ip:%v) with %v(%v on %v)\n", obj.GetName(),
-							n.GetIotaNode().GetIpAddress(), simName, simNaples.GetIpAddress(), n.GetIotaNode().Name)
-						bs := bitset.New(uint(4096))
-						bs.Set(0).Set(1).Set(4095)
+		for _, inst := range n.Instances {
+			dsc := inst.Dsc
+			dsc.Labels = make(map[string]string)
+			for _, simNaples := range n.GetIotaNode().GetNaplesMultiSimConfig().GetSimsInfo() {
+				if simNaples.GetName() == simName {
+					nodeMac := strings.Replace(simNaples.GetNodeUuid(), ":", "", -1)
+					nodeMac = strings.Replace(nodeMac, ".", "", -1)
+					for _, obj := range objs {
+						objMac := strings.Replace(obj.GetSpec().DSCs[0].MACAddress, ".", "", -1)
+						if objMac == nodeMac {
+							log.Infof("Associating host %v(ip:%v) with %v(%v on %v)\n", obj.GetName(),
+								n.GetIotaNode().GetIpAddress(), simName, simNaples.GetIpAddress(), n.GetIotaNode().Name)
+							bs := bitset.New(uint(4096))
+							bs.Set(0).Set(1).Set(4095)
 
-						// add it to database
-						h := objects.NewHost(obj, n.GetIotaNode(), n)
-						sm.FakeHosts[obj.GetName()] = h
-						//Add BM type to support upgrade
-						/*n.SmartNic.Labels["type"] = "sim"
-						if err := sm.UpdateSmartNIC(n.SmartNic); err != nil {
-							log.Infof("Error updating smart nic object %v", err)
-							return err
-						}*/
-						break
+							// add it to database
+							h := objects.NewHost(obj, n.GetIotaNode(), n)
+							sm.FakeHosts[obj.GetName()] = h
+							dsc, err = sm.GetSmartNIC(dsc.Name)
+							if err != nil {
+								log.Infof("Error reading smart nic object %v", err)
+								return err
+							}
+							//Add BM type to support upgrade
+							dsc.Labels = make(map[string]string)
+							dsc.Labels["type"] = "sim"
+							if err := sm.UpdateSmartNIC(dsc); err != nil {
+								log.Infof("Error updating smart nic object %v", err)
+								return err
+							}
+						}
 					}
 				}
 			}
@@ -608,11 +645,13 @@ func (sm *SysModel) AssociateHosts() error {
 	}
 	for _, n := range sm.ThirdPartyNodes {
 		for _, obj := range objs {
-			if obj.GetSpec().DSCs[0].MACAddress == n.Node.Nodeuuid {
-				h := objects.NewHost(obj, n.GetIotaNode(), nil)
-				log.Infof("Associating third party host %v(ip:%v) with %v(\n", obj.GetName(),
-					n.IP(), n.Name())
-				sm.ThirdPartyHosts[n.Name()] = h
+			for _, odsc := range obj.Spec.DSCs {
+				if odsc.MACAddress == n.UUID {
+					h := objects.NewHost(obj, n.GetIotaNode(), nil)
+					log.Infof("Associating third party host %v(ip:%v) with %v(\n", obj.GetName(),
+						n.IP(), n.Name())
+					sm.ThirdPartyHosts[n.Name()] = h
+				}
 			}
 		}
 
@@ -673,28 +712,32 @@ func (sm *SysModel) InitConfig(scale, scaleData bool) error {
 	}
 	cfgParams.NaplesLoopBackIPs = make(map[string]string)
 	for _, naples := range sm.NaplesNodes {
-		cfgParams.Dscs = append(cfgParams.Dscs, naples.SmartNic)
+		dscs := []*cluster.DistributedServiceCard{}
+		for _, inst := range naples.Instances {
+			dscs = append(dscs, inst.Dsc)
+		}
+		cfgParams.Dscs = append(cfgParams.Dscs, dscs)
 		for index, ncfg := range naples.GetTestNode().NaplesConfigs.Configs {
-			naples.LoopbackIP = sm.Tb.GetLoopBackIP(naples.GetIotaNode().Name, index+1)
-			cfgParams.NaplesLoopBackIPs[convertToVeniceFormatMac(ncfg.NodeUuid)] = naples.LoopbackIP
+			naples.Instances[index].LoopbackIP = sm.Tb.GetLoopBackIP(naples.GetIotaNode().Name, index+1)
+			cfgParams.NaplesLoopBackIPs[convertToVeniceFormatMac(ncfg.NodeUuid)] = naples.Instances[index].LoopbackIP
 		}
 	}
 
 	index := 0
 	for name, node := range sm.ThirdPartyNodes {
-		node.Node.Nodeuuid = "50df.9ac7.c24" + fmt.Sprintf("%v", index)
-		n := getThirdPartyNic(name, node.Node.Nodeuuid)
-		cfgParams.Dscs = append(cfgParams.Dscs, n)
+		node.UUID = "50df.9ac7.c24" + fmt.Sprintf("%v", index)
+		n := getThirdPartyNic(name, node.UUID)
+		cfgParams.Dscs = append(cfgParams.Dscs, []*cluster.DistributedServiceCard{n})
 		cfgParams.ThirdPartyDscs = append(cfgParams.ThirdPartyDscs, n)
 		index++
 	}
 
 	for _, naples := range sm.FakeNaples {
 		//cfgParams.Dscs = append(cfgParams.Dscs, naples.SmartNic)
-		cfgParams.FakeDscs = append(cfgParams.FakeDscs, naples.SmartNic)
+		cfgParams.FakeDscs = append(cfgParams.FakeDscs, naples.Instances[0].Dsc)
 		//node uuid already in format
-		cfgParams.NaplesLoopBackIPs[naples.Nodeuuid] = naples.IP()
-		naples.LoopbackIP = naples.IP()
+		cfgParams.NaplesLoopBackIPs[naples.Instances[0].Dsc.Status.PrimaryMAC] = naples.IP()
+		naples.Instances[0].LoopbackIP = naples.IP()
 	}
 
 	for _, node := range sm.VeniceNodeMap {
@@ -739,9 +782,12 @@ func (sm *SysModel) CreateSwitch(sw *iota.DataSwitch) (*objects.Switch, error) {
 
 	getHostName := func(ip, port string) (string, error) {
 		for _, node := range sm.Tb.Nodes {
-			for _, dn := range node.InstanceParams().DataNetworks {
-				if dn.Name == port && dn.SwitchIP == ip {
-					return node.NodeName, nil
+			for _, nic := range node.InstanceParams().Nics {
+				for _, nport := range nic.Ports {
+					portName := "e1/" + strconv.Itoa(nport.SwitchPort)
+					if portName == port && nport.SwitchIP == ip {
+						return node.NodeName, nil
+					}
 				}
 			}
 		}

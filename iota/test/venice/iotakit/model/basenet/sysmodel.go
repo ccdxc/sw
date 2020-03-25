@@ -149,17 +149,23 @@ const defaultNumNetworks = defaultWorkloadPerHost
 func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadCollection, error) {
 
 	wc := objects.NewWorkloadCollection(sm.ObjClient(), sm.Tb)
-	nwMap := make(map[uint32]uint32)
+	nwMap := make(map[uint32]int)
 
 	allocatedVlans := sm.Tb.AllocatedVlans()
 	for i := 0; i < defaultNumNetworks; i++ {
 		nwMap[allocatedVlans[i]] = 0
 	}
 
-	wloadsPerNetwork := defaultWorkloadPerHost / defaultNumNetworks
+	dscCnt := len(h.VeniceHost.Spec.DSCs)
+	wloadsPerNetwork := (defaultWorkloadPerHost / defaultNumNetworks) * dscCnt
+
+	type workloadIntfo struct {
+		wload *workload.Workload
+		uuid  string
+	}
 
 	//Keep track of number of.Workloads per network
-	wloadsToCreate := []*workload.Workload{}
+	wloadsToCreate := []workloadIntfo{}
 
 	wloads, err := sm.ListWorkloadsOnHost(h.VeniceHost)
 	if err != nil {
@@ -172,19 +178,25 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 		return nil, err
 	}
 
+	uuids := []string{}
+	for _, uuid := range h.VeniceHost.Spec.DSCs {
+		uuids = append(uuids, uuid.MACAddress)
+	}
+
 	for _, wload := range wloads {
 		nw := wload.GetSpec().Interfaces[0].GetExternalVlan()
 		if _, ok := nwMap[nw]; ok {
-			if nwMap[nw] >= ((uint32)(wloadsPerNetwork)) {
+			if nwMap[nw] >= (wloadsPerNetwork) {
 				//This network is done.
 				continue
 			}
+			uuid := uuids[nwMap[nw]%dscCnt]
+			wloadsToCreate = append(wloadsToCreate, workloadIntfo{wload: wload, uuid: uuid})
 			nwMap[nw]++
-			wloadsToCreate = append(wloadsToCreate, wload)
 			wload.Spec.Interfaces[0].MicroSegVlan = nw
-			log.Infof("Adding workload %v (host:%v iotaNode:%v nw:%v) to create list", wload.GetName(), h.VeniceHost.GetName(), h.Name(), nw)
+			log.Infof("Adding workload %v (host:%v(naples:%v) iotaNode:%v nw:%v) to create list", wload.GetName(), h.VeniceHost.GetName(), uuid, h.Name(), nw)
 
-			if len(wloadsToCreate) == defaultWorkloadPerHost {
+			if len(wloadsToCreate) == defaultWorkloadPerHost*dscCnt {
 				// We have enough.Workloads already for this host.
 				break
 			}
@@ -192,8 +204,9 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 	}
 
 	for _, wload := range wloadsToCreate {
-		sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(h, wload, sm.Tb.Topo.WorkloadType, sm.Tb.Topo.WorkloadImage, "", "")
-		wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.Name])
+		sm.WorkloadsObjs[wload.wload.Name] = objects.NewWorkload(h, wload.wload, sm.Tb.Topo.WorkloadType, sm.Tb.Topo.WorkloadImage, "", "")
+		sm.WorkloadsObjs[wload.wload.Name].SetNaplesUUID(wload.uuid)
+		wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.wload.Name])
 	}
 
 	return wc, nil
