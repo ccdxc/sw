@@ -122,7 +122,7 @@ var _ = Describe("metrics test", func() {
 			tms := time.Now().Add(time.Hour * -2).Format(time.RFC3339)
 
 			for s := range cq.RetentionPolicyMap {
-				if s == "1day" {
+				if s != "5minutes" {
 					continue
 				}
 				for _, m := range types.DscMetricsList {
