@@ -11,7 +11,7 @@ message LifMetrics {
         DisplayName: "Lif Packet Statistics",
         Description: "Key index - LIF ID",
         Scope: PerLIF,
-        Tags: [ Level7 ]
+        Tags: [ Level4 ]
     };
 
     fixed64        Key                              = 1; // Lif id

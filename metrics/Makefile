@@ -2,6 +2,7 @@
 # Each path where protos for metrics exist is listed below as a tuple of prefix and the path seperated by a :
 METRICS_PATHS =\
 	nicmgr:nic/proto/nicmgr \
+	linkmgr:nic/proto/linkmgr \
 	dropstats:nic/proto/dropstats \
 	ftestats:nic/proto/ftestats \
 	rulestats:nic/proto/rulestats \

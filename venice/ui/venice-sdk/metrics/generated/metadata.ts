@@ -2231,6 +2231,1383 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "scope": "PerFTE",
   "objectKind": "DistributedServiceCard"
 },
+  MacMetrics: {
+  "name": "MacMetrics",
+  "description": "Key index - PORT ID",
+  "displayName": "Port Packet Statistics",
+  "fields": [
+    {
+      "name": "FramesRxOk",
+      "displayName": "Rx OK Frames",
+      "description": "Frames received OK",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxAll",
+      "displayName": "Rx All Frames",
+      "description": "Frames Received All (Good and Bad Frames)",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxBadFcs",
+      "displayName": "Rx Bad FCS Frames",
+      "description": "Frames Received with Bad FCS",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxBadAll",
+      "displayName": "Rx All Bad Frames",
+      "description": "Frames with any bad (CRC, Length, Align)",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "OctetsRxOk",
+      "displayName": "Rx OK Octets",
+      "description": "Octets Received in Good Frames",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "OctetsRxAll",
+      "displayName": "Rx All Octets",
+      "description": "Octets Received (Good/Bad Frames)",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxUnicast",
+      "displayName": "Rx Unicast Frames",
+      "description": "Frames Received with Unicast Address",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxMulticast",
+      "displayName": "Rx Multicast Frames",
+      "description": "Frames Received with Multicast Address",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxBroadcast",
+      "displayName": "Rx Broadcast Frames",
+      "description": "Frames Received with Broadcast Address",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxPause",
+      "displayName": "Rx Pause Frames",
+      "description": "Frames Received of type PAUSE",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxBadLength",
+      "displayName": "Rx Bad Length Frames",
+      "description": "Frames Received with Bad Length",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxUndersized",
+      "displayName": "Rx Undersized Frames",
+      "description": "Frames Received Undersized",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxOversized",
+      "displayName": "Rx Oversized Frames",
+      "description": "Frames Received Oversized",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxFragments",
+      "displayName": "Rx Fragment Frames",
+      "description": "Fragments Received",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxJabber",
+      "displayName": "Rx Jabber Frames",
+      "description": "Jabber Received",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxPripause",
+      "displayName": "Rx Priority Pause Frames",
+      "description": "Priority Pause Frames Received",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxStompedCrc",
+      "displayName": "Rx Stomped CRC Frames",
+      "description": "Stomped CRC Frames Received",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxTooLong",
+      "displayName": "Rx Too long Frames",
+      "description": "Received Frames Too Long",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxVlanGood",
+      "displayName": "Rx Good VLAN Frames",
+      "description": "Received VLAN Frames (Good)",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxDropped",
+      "displayName": "Rx Dropped Frames",
+      "description": "Received Frames Dropped (Buffer Full)",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxLessThan_64B",
+      "displayName": "Rx Less than 64b Frames",
+      "description": "Frames Received Length less than 64",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_64B",
+      "displayName": "Rx 64b Frames",
+      "description": "Frames Received Length=64",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_65B_127B",
+      "displayName": "Rx 65b_127b Frames",
+      "description": "Frames Received Length=65~127",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_128B_255B",
+      "displayName": "Rx 128b_255b Frames",
+      "description": "Frames Received Length=128~255",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_256B_511B",
+      "displayName": "Rx 256b_511b Frames",
+      "description": "Frames Received Length=256~511",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_512B_1023B",
+      "displayName": "Rx 512b_1023b Frames",
+      "description": "Frames Received Length=512~1023",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_1024B_1518B",
+      "displayName": "Rx 1024b_1518b Frames",
+      "description": "Frames Received Length=1024~1518",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_1519B_2047B",
+      "displayName": "Rx 1519b_2047b Frames",
+      "description": "Frames Received Length=1519~2047",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_2048B_4095B",
+      "displayName": "Rx 2048b_4095b Frames",
+      "description": "Frames Received Length=2048~4095",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_4096B_8191B",
+      "displayName": "Rx 4096b_8191b Frames",
+      "description": "Frames Received Length=4096~8191",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_8192B_9215B",
+      "displayName": "Rx 8192b_9215b Frames",
+      "description": "Frames Received Length=8192~9215",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxOther",
+      "displayName": "Rx Other Frames",
+      "description": "Frames Received Length greater than 9215",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxOk",
+      "displayName": "Tx OK Frames",
+      "description": "Frames Transmitted OK",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxAll",
+      "displayName": "Tx All Frames",
+      "description": "Frames Transmitted All (Good/Bad Frames)",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxBad",
+      "displayName": "Tx Bad Frames",
+      "description": "Frames Transmitted Bad",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "OctetsTxOk",
+      "displayName": "Tx OK Octets",
+      "description": "Octets Transmitted Good",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "OctetsTxTotal",
+      "displayName": "Tx All Octets",
+      "description": "Octets Transmitted Total (Good/Bad)",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxUnicast",
+      "displayName": "Tx Unicast Frames",
+      "description": "Frames Transmitted with Unicast Address",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxMulticast",
+      "displayName": "Tx Multicast Frames",
+      "description": "Frames Transmitted with Multicast Address",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxBroadcast",
+      "displayName": "Tx Broadcast Frames",
+      "description": "Frames Transmitted with Broadcast Address",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxPause",
+      "displayName": "Tx Pause Frames",
+      "description": "Frames Transmitted of type PAUSE",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxPripause",
+      "displayName": "Tx Priority Pause Frames",
+      "description": "Frames Transmitted of type PriPAUSE",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxVlan",
+      "displayName": "Tx VLAN Frames",
+      "description": "Frames Transmitted VLAN",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxLessThan_64B",
+      "displayName": "Tx Less than 64b Frames",
+      "description": "Frames Transmitted Length<64",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTx_64B",
+      "displayName": "Tx 64b Frames",
+      "description": "Frames Transmitted Length=64",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTx_65B_127B",
+      "displayName": "Tx 65b_127b Frames",
+      "description": "Frames Transmitted Length=65~127",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTx_128B_255B",
+      "displayName": "Tx 128b_255b Frames",
+      "description": "Frames Transmitted Length=128~255",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTx_256B_511B",
+      "displayName": "Tx 256b_511b Frames",
+      "description": "Frames Transmitted Length=256~511",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTx_512B_1023B",
+      "displayName": "Tx 512b_1023b Frames",
+      "description": "Frames Transmitted Length=512~1023",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTx_1024B_1518B",
+      "displayName": "Tx 1024b_1518b Frames",
+      "description": "Frames Transmitted Length=1024~1518",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTx_1519B_2047B",
+      "displayName": "Tx 1519b_2047b Frames",
+      "description": "Frames Transmitted Length=1519~2047",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTx_2048B_4095B",
+      "displayName": "Tx 2048b_4095b Frames",
+      "description": "Frames Transmitted Length=2048~4095",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTx_4096B_8191B",
+      "displayName": "Tx 4096b_8191b Frames",
+      "description": "Frames Transmitted Length=4096~8191",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTx_8192B_9215B",
+      "displayName": "Tx 8192b_9215b Frames",
+      "description": "Frames Transmitted Length=8192~9215",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxOther",
+      "displayName": "Tx Other Frames",
+      "description": "Frames Transmitted Length greater than 9215",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxPri_0",
+      "displayName": "Tx Pri0 Frames",
+      "description": "Pri#0 Frames Transmitted",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxPri_1",
+      "displayName": "Tx Pri1 Frames",
+      "description": "Pri#1 Frames Transmitted",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxPri_2",
+      "displayName": "Tx Pri2 Frames",
+      "description": "Pri#2 Frames Transmitted",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxPri_3",
+      "displayName": "Tx Pri3 Frames",
+      "description": "Pri#3 Frames Transmitted",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxPri_4",
+      "displayName": "Tx Pri4 Frames",
+      "description": "Pri#4 Frames Transmitted",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxPri_5",
+      "displayName": "Tx Pri5 Frames",
+      "description": "Pri#5 Frames Transmitted",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxPri_6",
+      "displayName": "Tx Pri6 Frames",
+      "description": "Pri#6 Frames Transmitted",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxPri_7",
+      "displayName": "Tx Pri7 Frames",
+      "description": "Pri#7 Frames Transmitted",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxPri_0",
+      "displayName": "Rx Pri0 Frames",
+      "description": "Pri#0 Frames Received",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxPri_1",
+      "displayName": "Rx Pri1 Frames",
+      "description": "Pri#1 Frames Received",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxPri_2",
+      "displayName": "Rx Pri2 Frames",
+      "description": "Pri#2 Frames Received",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxPri_3",
+      "displayName": "Rx Pri3 Frames",
+      "description": "Pri#3 Frames Received",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxPri_4",
+      "displayName": "Rx Pri4 Frames",
+      "description": "Pri#4 Frames Received",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxPri_5",
+      "displayName": "Rx Pri5 Frames",
+      "description": "Pri#5 Frames Received",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxPri_6",
+      "displayName": "Rx Pri6 Frames",
+      "description": "Pri#6 Frames Received",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxPri_7",
+      "displayName": "Rx Pri7 Frames",
+      "description": "Pri#7 Frames Received",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxPripause_0_1UsCount",
+      "displayName": "Tx Pri0Pause1US Count",
+      "description": "Transmit Pri#0 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxPripause_1_1UsCount",
+      "displayName": "Tx Pri1Pause1US Count",
+      "description": "Transmit Pri#1 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxPripause_2_1UsCount",
+      "displayName": "Tx Pri2Pause1US Count",
+      "description": "Transmit Pri#2 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxPripause_3_1UsCount",
+      "displayName": "Tx Pri3Pause1US Count",
+      "description": "Transmit Pri#3 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxPripause_4_1UsCount",
+      "displayName": "Tx Pri4Pause1US Count",
+      "description": "Transmit Pri#4 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxPripause_5_1UsCount",
+      "displayName": "Tx Pri5Pause1US Count",
+      "description": "Transmit Pri#5 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxPripause_6_1UsCount",
+      "displayName": "Tx Pri6Pause1US Count",
+      "description": "Transmit Pri#6 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxPripause_7_1UsCount",
+      "displayName": "Tx Pri7Pause1US Count",
+      "description": "Transmit Pri#7 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxPripause_0_1UsCount",
+      "displayName": "Rx Pri0Pause1US Count",
+      "description": "Receive Pri#0 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxPripause_1_1UsCount",
+      "displayName": "Rx Pri1Pause1US Count",
+      "description": "Receive Pri#1 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxPripause_2_1UsCount",
+      "displayName": "Rx Pri2Pause1US Count",
+      "description": "Receive Pri#2 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxPripause_3_1UsCount",
+      "displayName": "Rx Pri3Pause1US Count",
+      "description": "Receive Pri#3 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxPripause_4_1UsCount",
+      "displayName": "Rx Pri4Pause1US Count",
+      "description": "Receive Pri#4 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxPripause_5_1UsCount",
+      "displayName": "Rx Pri5Pause1US Count",
+      "description": "Receive Pri#5 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxPripause_6_1UsCount",
+      "displayName": "Rx Pri6Pause1US Count",
+      "description": "Receive Pri#6 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxPripause_7_1UsCount",
+      "displayName": "Rx Pri7Pause1US Count",
+      "description": "Receive Pri#7 Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxPause_1UsCount",
+      "displayName": "Rx Pause1US Count",
+      "description": "Receive Standard Pause 1US Count",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxTruncated",
+      "displayName": "Tx Truncated Frames",
+      "description": "Frames Truncated",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level4"
+  ],
+  "scope": "PerPort",
+  "objectKind": "DistributedServiceCard"
+},
+  MgmtMacMetrics: {
+  "name": "MgmtMacMetrics",
+  "description": "Key index - PORT ID",
+  "displayName": "Mgmt Port Packet Statistics",
+  "fields": [
+    {
+      "name": "FramesRxOk",
+      "displayName": "Rx OK Frames",
+      "description": "Frames received OK",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxAll",
+      "displayName": "Rx All Frames",
+      "description": "Frames Received All (Good and Bad Frames)",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxBadFcs",
+      "displayName": "Rx Bad FCS Frames",
+      "description": "Frames Received with Bad FCS",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxBadAll",
+      "displayName": "Rx All Bad Frames",
+      "description": "Frames with any bad (CRC, Length, Align)",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "OctetsRxOk",
+      "displayName": "Rx OK Octets",
+      "description": "Octets Received in Good Frames",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "OctetsRxAll",
+      "displayName": "Rx All Octets",
+      "description": "Octets Received (Good/Bad Frames)",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxUnicast",
+      "displayName": "Rx Unicast Frames",
+      "description": "Frames Received with Unicast Address",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxMulticast",
+      "displayName": "Rx Multicast Frames",
+      "description": "Frames Received with Multicast Address",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxBroadcast",
+      "displayName": "Rx Broadcast Frames",
+      "description": "Frames Received with Broadcast Address",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxPause",
+      "displayName": "Rx Pause Frames",
+      "description": "Frames Received of type PAUSE",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxBadLength",
+      "displayName": "Rx Bad Length Frames",
+      "description": "Frames Received with Bad Length",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxUndersized",
+      "displayName": "Rx Undersized Frames",
+      "description": "Frames Received Undersized",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxOversized",
+      "displayName": "Rx Oversized Frames",
+      "description": "Frames Received Oversized",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxFragments",
+      "displayName": "Rx Fragment Frames",
+      "description": "Fragments Received",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxJabber",
+      "displayName": "Rx Jabber Frames",
+      "description": "Jabber Received",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_64B",
+      "displayName": "Rx 64b Frames",
+      "description": "Frames Received Length=64",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_65B_127B",
+      "displayName": "Rx 65b_127b Frames",
+      "description": "Frames Received Length=65~127",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_128B_255B",
+      "displayName": "Rx 128b_255b Frames",
+      "description": "Frames Received Length=128~255",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_256B_511B",
+      "displayName": "Rx 256b_511b Frames",
+      "description": "Frames Received Length=256~511",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_512B_1023B",
+      "displayName": "Rx 512b_1023b Frames",
+      "description": "Frames Received Length=512~1023",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRx_1024B_1518B",
+      "displayName": "Rx 1024b_1518b Frames",
+      "description": "Frames Received Length=1024~1518",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxGt_1518B",
+      "displayName": "Rx Greater than 1518b Frames",
+      "description": "Frames Received Length greater than 1518",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesRxFifoFull",
+      "displayName": "Rx FIFO Full Frames",
+      "description": "Frames Received FIFO Full",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxOk",
+      "displayName": "Tx OK Frames",
+      "description": "Frames Transmitted OK",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxAll",
+      "displayName": "Tx All Frames",
+      "description": "Frames Transmitted All (Good/Bad Frames)",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxBad",
+      "displayName": "Tx Bad Frames",
+      "description": "Frames Transmitted Bad",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "OctetsTxOk",
+      "displayName": "Tx OK Octets",
+      "description": "Octets Transmitted Good",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "OctetsTxTotal",
+      "displayName": "Tx All Octets",
+      "description": "Octets Transmitted Total (Good/Bad)",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxUnicast",
+      "displayName": "Tx Unicast Frames",
+      "description": "Frames Transmitted with Unicast Address",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxMulticast",
+      "displayName": "Tx Multicast Frames",
+      "description": "Frames Transmitted with Multicast Address",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxBroadcast",
+      "displayName": "Tx Broadcast Frames",
+      "description": "Frames Transmitted with Broadcast Address",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "FramesTxPause",
+      "displayName": "Tx Pause Frames",
+      "description": "Frames Transmitted of type PAUSE",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "PerPort",
+  "objectKind": "DistributedServiceCard"
+},
   AccelHwRingMetrics: {
   "name": "AccelHwRingMetrics",
   "description": "Key indices - RId: ring ID, SubRId: sub-ring ID",
@@ -2956,7 +4333,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     }
   ],
   "tags": [
-    "Level7"
+    "Level4"
   ],
   "scope": "PerLIF",
   "objectKind": "DistributedServiceCard"
