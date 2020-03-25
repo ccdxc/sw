@@ -202,18 +202,27 @@ func (m *ServiceHandlers) HandleRoutingConfigEvent(et kvstore.WatchEventType, ev
 var once sync.Once
 var pReq pdstypes.BGPPeerRequest
 
-func (m *ServiceHandlers) handleAutoConfig(in *network.RoutingConfig) *network.RoutingConfig {
+func (m *ServiceHandlers) handleAutoConfig(in *network.RoutingConfig) (*network.RoutingConfig, bool) {
+	var forceUpdate bool
 	if in == nil {
-		return nil
+		return nil, forceUpdate
 	}
 	ret := ref.DeepCopy(in).(*network.RoutingConfig)
 	if ret.Spec.BGPConfig == nil {
-		return ret
+		return ret, forceUpdate
 	}
 	var peers []*network.BGPNeighbor
+
 	for _, n := range ret.Spec.BGPConfig.Neighbors {
 		nip := net.ParseIP(n.IPAddress)
 		if nip.IsUnspecified() {
+			if m.naplesTemplate == nil {
+				forceUpdate = true
+			} else {
+				if m.naplesTemplate.MultiHop != n.MultiHop || m.naplesTemplate.Password != n.Password || m.naplesTemplate.Shutdown != n.Shutdown {
+					forceUpdate = true
+				}
+			}
 			m.naplesTemplate = &network.BGPNeighbor{
 				MultiHop: n.MultiHop,
 				Password: n.Password,
@@ -224,13 +233,13 @@ func (m *ServiceHandlers) handleAutoConfig(in *network.RoutingConfig) *network.R
 		peers = append(peers, n)
 	}
 	ret.Spec.BGPConfig.Neighbors = peers
-	return ret
+	return ret, forceUpdate
 }
 
 func (m *ServiceHandlers) configureBGP(ctx context.Context, in *network.RoutingConfig) error {
-	oldCfg := m.handleAutoConfig(cache.config)
-	rtCfg := m.handleAutoConfig(in)
-	if oldCfg != nil && rtCfg.ResourceVersion == oldCfg.ResourceVersion {
+	oldCfg, _ := m.handleAutoConfig(cache.config)
+	rtCfg, forceUpdate := m.handleAutoConfig(in)
+	if oldCfg != nil && rtCfg != nil && rtCfg.ResourceVersion == oldCfg.ResourceVersion {
 		log.Infof("Resouce version is same ignoring request [%v]", oldCfg.ResourceVersion)
 		return nil
 	}
@@ -255,6 +264,12 @@ func (m *ServiceHandlers) configureBGP(ctx context.Context, in *network.RoutingC
 		m.configurePeers()
 	case clientutils.Update:
 		CfgAsn = updCfg.Global.Request.LocalASN
+		forceUpdate = true
+	case clientutils.Delete:
+		// peers are already deleted
+		forceUpdate = false
+	}
+	if forceUpdate {
 		m.handleBGPConfigChange()
 	}
 	return nil
@@ -294,7 +309,7 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 	} else {
 		if cache.config != nil {
 			log.Infof("deleteing BGP config from node")
-			rtcfg := m.handleAutoConfig(cache.config)
+			rtcfg, _ := m.handleAutoConfig(cache.config)
 			updCfg, err := clientutils.GetBGPConfiguration(rtcfg, nil, "0.0.0.0", "0.0.0.0")
 			if err != nil {
 				log.Errorf("failed to get pegasus config (%s)", err)
