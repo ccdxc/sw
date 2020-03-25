@@ -322,8 +322,7 @@ policy::add_deps(api_obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 policy::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    // update is same as programming route table in different region
-    return impl_->program_hw(this, obj_ctxt);
+    return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
 
 sdk_ret_t
