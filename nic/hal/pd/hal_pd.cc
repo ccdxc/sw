@@ -156,7 +156,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_SESSION_DELETE, pd_session_delete);
     PD_FUNC_LOAD(PD_FUNC_ID_SESSION_UPDATE, pd_session_update);
     PD_FUNC_LOAD(PD_FUNC_ID_SESSION_GET, pd_session_get);
-    PD_FUNC_LOAD(PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD, 
+    PD_FUNC_LOAD(PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD,
                  pd_session_get_for_age_thread);
     PD_FUNC_LOAD(PD_FUNC_ID_BYPASS_FLOWID_GET, pd_get_cpu_bypass_flowid);
     PD_FUNC_LOAD(PD_FUNC_ID_FLOW_HASH_GET, pd_flow_hash_get);
@@ -433,10 +433,6 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_TABLE_PROPERTIES_GET, pd_table_properties_get);
 
     // capri
-    PD_FUNC_LOAD(PD_FUNC_ID_PUSH_QSTATE, pd_push_qstate_to_capri);
-    PD_FUNC_LOAD(PD_FUNC_ID_CLEAR_QSTATE, pd_clear_qstate);
-    PD_FUNC_LOAD(PD_FUNC_ID_READ_QSTATE, pd_read_qstate);
-    PD_FUNC_LOAD(PD_FUNC_ID_GET_PC_OFFSET, pd_get_pc_offset);
     PD_FUNC_LOAD(PD_FUNC_ID_HBM_READ, pd_capri_hbm_read_mem);
     PD_FUNC_LOAD(PD_FUNC_ID_HBM_WRITE, pd_capri_hbm_write_mem);
     PD_FUNC_LOAD(PD_FUNC_ID_PROG_LBL_TO_OFFSET, pd_capri_program_label_to_offset);

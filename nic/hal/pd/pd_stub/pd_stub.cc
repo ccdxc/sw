@@ -368,10 +368,6 @@ PD_FUNC_STUB(pd_asic_init);
 PD_FUNC_STUB(pd_table_properties_get);
 
 // capri
-PD_FUNC_STUB(pd_push_qstate_to_capri);
-PD_FUNC_STUB(pd_clear_qstate);
-PD_FUNC_STUB(pd_read_qstate);
-PD_FUNC_STUB(pd_get_pc_offset);
 PD_FUNC_STUB(pd_capri_hbm_read_mem);
 PD_FUNC_STUB(pd_capri_hbm_write_mem);
 PD_FUNC_STUB(pd_capri_program_label_to_offset);

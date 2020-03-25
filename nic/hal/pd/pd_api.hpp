@@ -2752,30 +2752,6 @@ typedef struct pd_rss_indir_table_entry_add_args_s {
     uint8_t qid;
 } __PACK__ pd_rss_indir_table_entry_add_args_t;
 
-// capri
-typedef struct pd_push_qstate_to_capri_args_s {
-    LIFQState *qstate;
-    uint32_t       cos;
-} __PACK__ pd_push_qstate_to_capri_args_t;
-
-typedef struct pd_clear_qstate_args_s {
-    LIFQState *qstate;
-} __PACK__ pd_clear_qstate_args_t;
-
-typedef struct pd_read_qstate_args_s {
-    uint64_t q_addr;
-    uint8_t *buf;
-    uint32_t q_size;
-} __PACK__ pd_read_qstate_args_t;
-
-typedef struct pd_get_pc_offset_args_s {
-    sdk::platform::utils::program_info * pinfo;
-    const char *handle;
-    const char *prog_name;
-    const char *label;
-    uint8_t *offset;
-} __PACK__ pd_get_pc_offset_args_t;
-
 typedef struct pd_capri_hbm_read_mem_args_s {
     uint64_t addr;
     uint8_t *buf;
@@ -3544,10 +3520,6 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_ASIC_INIT,             165, "PD_FUNC_ID_ASIC_INIT")\
     ENTRY(PD_FUNC_ID_GET_START_OFFSET,      166, "PD_FUNC_ID_GET_START_OFFSET")\
     ENTRY(PD_FUNC_ID_GET_REG_SIZE,          167, "PD_FUNC_ID_GET_REG_SIZE")\
-    ENTRY(PD_FUNC_ID_PUSH_QSTATE,           168, "PD_FUNC_ID_PUSH_QSTATE")\
-    ENTRY(PD_FUNC_ID_CLEAR_QSTATE,          169, "PD_FUNC_ID_CLEAR_QSTATE")\
-    ENTRY(PD_FUNC_ID_READ_QSTATE,           170, "PD_FUNC_ID_READ_QSTATE")\
-    ENTRY(PD_FUNC_ID_GET_PC_OFFSET,         171, "PD_FUNC_ID_GET_PC_OFFSET")\
     ENTRY(PD_FUNC_ID_HBM_READ,              172, "PD_FUNC_ID_HBM_READ")\
     ENTRY(PD_FUNC_ID_HBM_WRITE,             173, "PD_FUNC_ID_HBM_WRITE")\
     ENTRY(PD_FUNC_ID_PROG_LBL_TO_OFFSET,    174, "PD_FUNC_ID_PROG_LBL_TO_OFFSET")\
@@ -4087,10 +4059,6 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_table_properties_get);
 
         // capri
-        PD_UNION_ARGS_FIELD(pd_push_qstate_to_capri);
-        PD_UNION_ARGS_FIELD(pd_clear_qstate);
-        PD_UNION_ARGS_FIELD(pd_read_qstate);
-        PD_UNION_ARGS_FIELD(pd_get_pc_offset);
         PD_UNION_ARGS_FIELD(pd_capri_hbm_read_mem);
         PD_UNION_ARGS_FIELD(pd_capri_hbm_write_mem);
         PD_UNION_ARGS_FIELD(pd_capri_program_label_to_offset);
@@ -4600,10 +4568,6 @@ PD_FUNCP_TYPEDEF(pd_tcp_rings_poll);
 // capri
 PD_FUNCP_TYPEDEF(pd_get_start_offset);
 PD_FUNCP_TYPEDEF(pd_get_size_kb);
-PD_FUNCP_TYPEDEF(pd_push_qstate_to_capri);
-PD_FUNCP_TYPEDEF(pd_clear_qstate);
-PD_FUNCP_TYPEDEF(pd_read_qstate);
-PD_FUNCP_TYPEDEF(pd_get_pc_offset);
 PD_FUNCP_TYPEDEF(pd_capri_hbm_read_mem);
 PD_FUNCP_TYPEDEF(pd_capri_hbm_write_mem);
 PD_FUNCP_TYPEDEF(pd_capri_program_label_to_offset);

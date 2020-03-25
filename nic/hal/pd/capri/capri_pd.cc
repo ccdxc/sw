@@ -23,42 +23,6 @@ namespace hal {
 namespace pd {
 
 hal_ret_t
-pd_push_qstate_to_capri (pd_func_args_t *pd_func_args)
-{
-    pd_push_qstate_to_capri_args_t *args = pd_func_args->pd_push_qstate_to_capri;
-    push_qstate_to_capri(args->qstate, args->cos);
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-pd_clear_qstate (pd_func_args_t *pd_func_args)
-{
-    pd_clear_qstate_args_t *args = pd_func_args->pd_clear_qstate;
-    clear_qstate(args->qstate);
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-pd_read_qstate (pd_func_args_t *pd_func_args)
-{
-    pd_read_qstate_args_t *args = pd_func_args->pd_read_qstate;
-    read_qstate(args->q_addr, args->buf, args->q_size);
-    return HAL_RET_OK;
-}
-
-hal_ret_t
-pd_get_pc_offset (pd_func_args_t *pd_func_args)
-{
-    pd_get_pc_offset_args_t *args = pd_func_args->pd_get_pc_offset;
-    int32_t ret = get_pc_offset(args->pinfo, args->prog_name,
-                                args->label, args->offset);
-
-    SDK_ASSERT(ret == 0);
-    return HAL_RET_OK;
-
-}
-
-hal_ret_t
 pd_capri_hbm_read_mem (pd_func_args_t *pd_func_args)
 {
     pd_capri_hbm_read_mem_args_t *args = pd_func_args->pd_capri_hbm_read_mem;
