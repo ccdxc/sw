@@ -8,7 +8,6 @@ queue_name: baremetal
 
 # e2e-targets represent typically what is required by developers 
 e2e-targets:
-
  # single esx 6.7 instance with 1 Venice instance
  esx67WithVenice:
    commands: [ "cat /warmd.json && sleep 30000000"]
@@ -28,7 +27,10 @@ e2e-targets:
      - image: build-10
        count: 1
        resources:
-         server-type: any
+         servers:
+           - type: hpe
+           - type: server-a
+           - type: server-d
          nic-type: naples
    provision:
        username: vm
@@ -57,7 +59,10 @@ e2e-targets:
      - image: build-10
        count: 1
        resources:
-         server-type: any
+         servers:
+           - type: hpe
+           - type: server-a
+           - type: server-d
          nic-type: naples
    provision:
        username: vm
@@ -86,7 +91,10 @@ e2e-targets:
      - image: build-13
        count: 1
        resources:
-         server-type: any
+         servers:
+           - type: hpe
+           - type: server-a
+           - type: server-d
          nic-type: naples
    provision:
        username: vm
@@ -105,7 +113,10 @@ e2e-targets:
      - image: build-10
        count: 1
        resources:
-         server-type: any
+         servers:
+           - type: hpe
+           - type: server-a
+           - type: server-d
          nic-type: naples
    provision:
        username: vm
@@ -126,7 +137,10 @@ e2e-targets:
      - image: build-10
        count: 2
        resources:
-         server-type: any
+         servers:
+           - type: hpe
+           - type: server-a
+           - type: server-d
          nic-type: naples
    provision:
        username: vm
@@ -147,7 +161,10 @@ e2e-targets:
      - image: build-13
        count: 1
        resources:
-         server-type: any
+         servers:
+           - type: hpe
+           - type: server-a
+           - type: server-d
          nic-type: naples
    provision:
        username: vm
@@ -166,7 +183,10 @@ e2e-targets:
      - image: build-13
        count: 2
        resources:
-         server-type: any
+         servers:
+           - type: hpe
+           - type: server-a
+           - type: server-d
          nic-type: naples
    provision:
        username: vm
@@ -185,7 +205,10 @@ e2e-targets:
      - image: build-17
        count: 1
        resources:
-         server-type: any
+         servers:
+           - type: hpe
+           - type: server-a
+           - type: server-d
          nic-type: naples
    provision:
        username: vm
@@ -204,7 +227,10 @@ e2e-targets:
      - image: build-17
        count: 2
        resources:
-         server-type: any
+         servers:
+           - type: hpe
+           - type: server-a
+           - type: server-d
          nic-type: naples
    provision:
        username: vm
@@ -223,7 +249,10 @@ e2e-targets:
      - image: build-17
        count: 1
        resources:
-         server-type: any
+         servers:
+           - type: hpe
+           - type: server-a
+           - type: server-d
          nic-type: naples
    provision:
        username: vm
@@ -242,7 +271,10 @@ e2e-targets:
      - image: build-17
        count: 2
        resources:
-         server-type: any
+         servers:
+           - type: hpe
+           - type: server-a
+           - type: server-d
          nic-type: naples
    provision:
        username: vm
@@ -261,7 +293,8 @@ e2e-targets:
      - image: build-12
        count: 1
        resources:
-         server-type: any
+         servers:
+           - type: server-d
          nic-type: naples
    provision:
        username: vm
@@ -280,7 +313,8 @@ e2e-targets:
      - image: build-12
        count: 2
        resources:
-         server-type: any
+         servers:
+           - type: server-d
          nic-type: naples
    provision:
        username: vm

@@ -1,0 +1,307 @@
+---
+version: 2.0
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/iota/test/standalone"
+
+queue_name: baremetal
+
+# e2e-targets represent typically what is required by developers 
+e2e-targets:
+ # single esx 6.7 instance with 1 Venice instance
+ esx67WithVenice:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-160
+       count: 1
+       resources:
+         cpus: 4
+         memory: 8
+         pvt-networks:
+         - control-1
+         - control-2
+     - image: build-10
+       count: 1
+       resources:
+         servers:
+           - type: ae-hpe
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+ # single esx 6.7 instance with 3 Venice instance
+ esx67With3Venice:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-160
+       count: 3
+       resources:
+         cpus: 4
+         memory: 8
+         pvt-networks:
+         - control-1
+         - control-2
+     - image: build-10
+       count: 1
+       resources:
+         servers:
+           - type: ae-hpe
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+ # single instance of RHEL 8.0 with 1 Venice instance
+ rhel80WithVenice:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-160
+       count: 1
+       resources:
+         cpus: 4
+         memory: 8
+         pvt-networks:
+         - control-1
+         - control-2
+     - image: build-13
+       count: 1
+       resources:
+         servers:
+           - type: ae-hpe
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+
+ # single esx 6.7 instance
+ esx67:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-10
+       count: 1
+       resources:
+         servers:
+           - type: ae-hpe
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+ # two esx6.7 instances
+ 2esx67:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-10
+       count: 2
+       resources:
+         servers:
+           - type: ae-hpe
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+ # single instance of RHEL 8.0
+ rhel80:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-13
+       count: 1
+       resources:
+         servers:
+           - type: ae-hpe
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+
+ # two bare-metal instances of RHEL 8.0
+ 2rhel80:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-13
+       count: 2
+       resources:
+         servers:
+           - type: ae-hpe
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+
+ # single bare-metal instance of RHEL 7.6
+ rhel76:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-17
+       count: 1
+       resources:
+         servers:
+           - type: ae-hpe
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+
+ # two bare-metal instance of RHEL 7.6
+ 2rhel76:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-17
+       count: 2
+       resources:
+         servers:
+           - type: ae-hpe
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+ 
+ # single bare-metal instance of Ubuntu 18.04
+ ubuntu1804:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-17
+       count: 1
+       resources:
+         servers:
+           - type: ae-hpe
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+ 
+ # two bare-metal instance of Ubuntu 18.04
+ 2ubuntu1804:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-17
+       count: 2
+       resources:
+         servers:
+           - type: ae-hpe
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+ 
+ # single bare-metal instance of freebsd-11.2
+ freebsd11.2:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-12
+       count: 1
+       resources:
+         servers:
+           - type: server-d
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: freebsd
+
+ # two bare-metal instance of freebsd-11.2
+ 2freebsd11.2:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-12
+       count: 2
+       resources:
+         servers:
+           - type: server-d
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: freebsd
+logfiles:
+  - /sw/iota/iota_sanity_logs.tar.gz
+  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node1
+  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node2
+  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node1
+  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node2
