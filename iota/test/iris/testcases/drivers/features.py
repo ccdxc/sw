@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import time
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.testcases.drivers.common as common
@@ -6,6 +7,7 @@ import iota.test.iris.testcases.drivers.interface as interface
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 import iota.test.iris.testcases.drivers.verify as verify
 import iota.test.iris.utils.naples_workloads as workloads
+import iota.test.iris.utils.iperf as iperf
 
 
 INTF_TEST_TYPE_OOB_1G       = "oob-1g"
@@ -92,36 +94,40 @@ def Trigger(tc):
 
     w1 = tc.workloads[0]
     w2 = tc.workloads[1]
-    tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
-                   (w1.interface, w1.ip_address, w2.interface, w2.ip_address)
-    api.Logger.info("Starting Iperf test from %s" % (tc.cmd_descr))
-
+    
     proto = getattr(tc.iterators, "proto", 'tcp')
-
     number_of_iperf_threads = getattr(tc.args, "iperfthreads", 1)
-
     pktsize = getattr(tc.iterators, "pktsize", 512)
     ipproto = getattr(tc.iterators, "ipproto", 'v4')
+
+    server_ip = w1.ip_address
+    client_ip = w2.ip_address
+
+    tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
+                   (w1.interface, server_ip, w2.interface, client_ip)
+
+    api.Logger.info("Starting Iperf(%s/%s pktsize=%d) test from %s"
+                    % (proto, ipproto, pktsize, tc.cmd_descr))
 
     for i in range(number_of_iperf_threads):
         if proto == 'tcp':
             port = api.AllocateTcpPort()
         else:
             port = api.AllocateUdpPort()
-
-        iperf_server_cmd = cmd_builder.iperf_server_cmd(port = port)
+ 
+        iperf_server_cmd = iperf.ServerCmd(port)
         api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name, iperf_server_cmd, background = True)
 
-        iperf_client_cmd = cmd_builder.iperf_client_cmd(server_ip = w1.ip_address, port = port,
-                                 proto=proto, pktsize=pktsize, ipproto=ipproto)
+        iperf_client_cmd = iperf.ClientCmd(server_ip, port, time=10,
+                                 proto=proto, jsonOut=True, ipproto=ipproto, num_of_streams=number_of_iperf_threads,
+                                 pktsize=pktsize, client_ip=client_ip)
         api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name, iperf_client_cmd)
 
     trig_resp1 = api.Trigger(req1)
-    trig_resp2 = api.Trigger(req2)
-    term_resp1 = api.Trigger_TerminateAllCommands(trig_resp1)
+    time.sleep(10)
+    tc.resp = api.Trigger(req2)
 
-    response = api.Trigger_AggregateCommandsResponse(trig_resp1, term_resp1)
-    tc.resp = api.Trigger_AggregateCommandsResponse(response, trig_resp2)
+    term_resp1 = api.Trigger_TerminateAllCommands(trig_resp1)
 
     return api.types.status.SUCCESS
 
@@ -139,7 +145,20 @@ def Verify(tc):
 
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
+
         if cmd.exit_code != 0:
+            api.Logger.error("Iperf client exited with error")
+        if iperf.ConnectionTimedout(cmd.stdout):
+            api.Logger.error("Connection timeout, ignoring for now")
+            continue
+        if iperf.ControlSocketClosed(cmd.stdout):
+            api.Logger.error("Control socket cloned, ignoring for now")
+            continue
+        if iperf.ServerTerminated(cmd.stdout):
+            api.Logger.error("Iperf server terminated")
+            return api.types.status.FAILURE
+        if not iperf.Success(cmd.stdout):
+            api.Logger.error("Iperf failed", iperf.Error(cmd.stdout))
             return api.types.status.FAILURE
 
     return verify.driver_feature_verify(tc)

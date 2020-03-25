@@ -8,7 +8,7 @@ import iota.test.iris.utils.traffic as traffic
 #
 # LIF reset test, specific to FreeBSD
 # Basic:
-#  Filter list and VLAN  list must be changed after LIF reset
+#  Filter list and VLAN  list must be unchanged after LIF reset
 # Stress test:
 #  Use sysctl dev.ionic.0.reset=1 to do LIF reset and from other shell
 #  do reload of driver. System shouldn't panic.
@@ -16,7 +16,7 @@ import iota.test.iris.utils.traffic as traffic
 
 def getVlanList(node, intf):
     host_cmd = "sysctl dev." + host.GetNaplesSysctl(intf) + ".vlans | grep VLAN |  cut -d '[' -f 2 | cut -d ']' -f 1" 
-        
+
     req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
     api.Trigger_AddHostCommand(req, node, host_cmd)
     resp = api.Trigger(req)
@@ -39,7 +39,7 @@ def getVlanList(node, intf):
 
 def getFilterList(node, intf):
     host_cmd = "sysctl dev." + host.GetNaplesSysctl(intf) + ".filters  | grep MAC | cut -d ' ' -f 2" 
-        
+
     req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
     api.Trigger_AddHostCommand(req, node, host_cmd)
     resp = api.Trigger(req)
