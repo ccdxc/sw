@@ -374,7 +374,11 @@ def switch_profile(fwd_mode="TRANSPARENT", policy_mode="BASENET", push=True,
             obj.spec.policy_mode = policy_mode
 
     if push or push_base_profile:
-        ret = PushConfigObjects(objects)
+        if len(objects):
+            ret = PushConfigObjects(objects)
+        else:
+            api.Logger.error("Empty Profile object")
+            ret = api.types.status.FAILURE
 
     return ret
 
