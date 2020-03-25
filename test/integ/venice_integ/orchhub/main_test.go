@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 
@@ -190,9 +191,7 @@ func createOrchConfig(name, uri, user, pass, forceDCs string) (*orchestration.Or
 	}
 	config.Status.Defaults("all")
 	if len(forceDCs) != 0 {
-		config.Labels = map[string]string{
-			"force-dc-names": forceDCs,
-		}
+		config.Spec.ManageNamespaces = strings.Split(forceDCs, ",")
 	}
 	obj, err := tinfo.apicl.OrchestratorV1().Orchestrator().Create(context.Background(), config)
 	return obj, err

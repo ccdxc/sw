@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -59,17 +60,20 @@ func runStoreTC(t *testing.T, testCases []storeTC) {
 		}
 
 		orchConfig := statemgr.GetOrchestratorConfig("127.0.0.1:8990", "user", "pass")
+		orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+
 		err = sm.Controller().Orchestrator().Create(orchConfig)
 
 		pCache := pcache.NewPCache(sm, logger)
 		AssertOk(t, err, "failed to create useg mgr")
 		state := &defs.State{
-			VcID:       "127.0.0.1:8990",
-			Ctx:        ctx,
-			Log:        logger,
-			StateMgr:   sm,
-			OrchConfig: orchConfig,
-			Wg:         &sync.WaitGroup{},
+			VcID:         "127.0.0.1:8990",
+			Ctx:          ctx,
+			Log:          logger,
+			StateMgr:     sm,
+			OrchConfig:   orchConfig,
+			Wg:           &sync.WaitGroup{},
+			ForceDCNames: map[string]bool{utils.ManageAllDcs: true},
 		}
 
 		vchub := &VCHub{

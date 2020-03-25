@@ -132,7 +132,7 @@ type OrchestratorSpec struct {
 	Credentials *monitoring.ExternalCred `protobuf:"bytes,3,opt,name=Credentials,json=credentials,omitempty" json:"credentials,omitempty"`
 	//
 	LoginData map[string]string `protobuf:"bytes,4,rep,name=LoginData,json=login-data,omitempty" json:"login-data,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// Namespaces that will be managed by this orchestrator. "ALL" will manage all namespaces.
+	// Namespaces that will be managed by this orchestrator. "all_namespaces" will manage all namespaces.
 	ManageNamespaces []string `protobuf:"bytes,5,rep,name=ManageNamespaces,json=manage-namespaces,omitempty" json:"manage-namespaces,omitempty"`
 }
 

@@ -216,8 +216,7 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 		}
 		v.DcMapLock.Unlock()
 		// We create DVS and check networks
-		_, ok := v.ForceDCNames[name]
-		if len(v.ForceDCNames) > 0 && !ok {
+		if !v.isManagedNamespace(name) {
 			v.Log.Infof("Skipping DC event for DC %s", name)
 			continue
 		}

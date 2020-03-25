@@ -7,9 +7,12 @@ import (
 	"github.com/pensando/sw/venice/globals"
 )
 
+// Global constants
 const (
 	// Delim delimiter used when creating name when exposing objects between orch and venice
 	Delim = "-"
+	// Indicates managing all datacenters
+	ManageAllDcs = "all_namespaces"
 )
 
 var (

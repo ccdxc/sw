@@ -22,6 +22,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock"
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	orchutils "github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
@@ -438,6 +439,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 
 	// CREATING CONFIG
 	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{orchutils.ManageAllDcs}
 	orchConfig.Status.OrchID = 1
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
@@ -460,12 +462,13 @@ func TestVmotionWithWatchers(t *testing.T) {
 
 	orchID := fmt.Sprintf("orch%d", orchConfig.Status.OrchID)
 	state := defs.State{
-		VcURL:  u,
-		OrchID: orchID,
-		VcID:   "VCProbe",
-		Ctx:    testCtx,
-		Log:    logger.WithContext("submodule", "vcprobe"),
-		Wg:     &sync.WaitGroup{},
+		VcURL:        u,
+		OrchID:       orchID,
+		VcID:         "VCProbe",
+		Ctx:          testCtx,
+		Log:          logger.WithContext("submodule", "vcprobe"),
+		Wg:           &sync.WaitGroup{},
+		ForceDCNames: map[string]bool{orchutils.ManageAllDcs: true},
 	}
 
 	vcp := vcprobe.NewVCProbe(nil, nil, &state)

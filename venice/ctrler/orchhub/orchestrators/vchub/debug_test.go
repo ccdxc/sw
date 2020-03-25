@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/testutils"
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -56,6 +57,7 @@ func TestDebug(t *testing.T) {
 
 	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	orchConfig.Status.OrchID = 1
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 

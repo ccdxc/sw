@@ -312,11 +312,6 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
 
   getObjectValues(): IOrchestrationOrchestrator {
     const currValue: IOrchestrationOrchestrator =  this.newObject.getFormGroupValues();
-    if (!this.isInline) {
-      currValue.meta.labels = {
-        'force-dc-names': Utility.getGUID()
-      };
-    }
     if (this.pickedOption === 'ALL') {
       currValue.spec['manage-namespaces'] = ['ALL'];
     }

@@ -1135,14 +1135,15 @@ func setupTestVCHub(vcURL *url.URL, stateMgr *statemgr.Statemgr, config *orchest
 
 	orchID := fmt.Sprintf("orch-%d", config.Status.OrchID)
 	state := defs.State{
-		VcURL:      vcURL,
-		VcID:       config.GetName(),
-		OrchID:     orchID,
-		Ctx:        ctx,
-		Log:        logger.WithContext("submodule", fmt.Sprintf("VCHub-%s", config.GetName())),
-		StateMgr:   stateMgr,
-		OrchConfig: config,
-		Wg:         &sync.WaitGroup{},
+		VcURL:        vcURL,
+		VcID:         config.GetName(),
+		OrchID:       orchID,
+		Ctx:          ctx,
+		Log:          logger.WithContext("submodule", fmt.Sprintf("VCHub-%s", config.GetName())),
+		StateMgr:     stateMgr,
+		OrchConfig:   config,
+		Wg:           &sync.WaitGroup{},
+		ForceDCNames: map[string]bool{utils.ManageAllDcs: true},
 	}
 	vchub := &VCHub{}
 	vchub.State = &state

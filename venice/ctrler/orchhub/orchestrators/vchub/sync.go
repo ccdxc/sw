@@ -80,8 +80,7 @@ func (v *VCHub) sync() bool {
 	dcs := v.probe.ListDC()
 	for _, dc := range dcs {
 		// TODO: Remove
-		_, ok := v.ForceDCNames[dc.Name]
-		if len(v.ForceDCNames) > 0 && !ok {
+		if !v.isManagedNamespace(dc.Name) {
 			v.Log.Infof("Skipping DC %s", dc.Name)
 			continue
 		}

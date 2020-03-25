@@ -1,6 +1,8 @@
 package objects
 
 import (
+	"strings"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/orchestration"
@@ -62,8 +64,7 @@ func NewOrchestrator(client objClient.ObjClient, dcname, name, ip, user, passwor
 func (orch *Orchestrator) Commit() error {
 	//orch.client.
 
-	orch.orch.Labels = make(map[string]string)
-	orch.orch.Labels["force-dc-names"] = orch.DC
+	orch.orch.Spec.ManageNamespaces = strings.Split(orch.DC, ",")
 	return orch.client.CreateOrchestration(orch.orch)
 }
 

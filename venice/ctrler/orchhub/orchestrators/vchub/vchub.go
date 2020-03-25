@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"strings"
 	"sync"
 	"time"
 
@@ -94,19 +93,17 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	}
 	vcURL.User = url.UserPassword(config.Spec.Credentials.UserName, config.Spec.Credentials.Password)
 
-	if config.Labels == nil {
-		logger.Infof("No DCs specified, handle all DCs in a vcenter")
-		config.Labels = map[string]string{}
+	if config.Spec.ManageNamespaces == nil ||
+		len(config.Spec.ManageNamespaces) == 0 {
+		logger.Infof("No DCs specified, no DCs will be managed")
 	}
+
 	forceDCMap := map[string]bool{}
-	forceDC, ok := config.Labels["force-dc-names"]
-	if ok {
-		logger.Infof("Forced DC %s: Only events for this DC will be processed", forceDC)
-		forceDCs := strings.Split(forceDC, ",")
-		for _, dc := range forceDCs {
-			forceDCMap[dc] = true
-		}
+	logger.Infof("Forced DC %s: Only events for this(these) DC(s) will be processed", config.Spec.ManageNamespaces)
+	for _, dc := range config.Spec.ManageNamespaces {
+		forceDCMap[dc] = true
 	}
+
 	orchID := fmt.Sprintf("orch%d", config.Status.OrchID)
 	state := defs.State{
 		VcURL:        vcURL,
@@ -226,8 +223,7 @@ func (v *VCHub) deleteAllDVS() {
 	defer v.DcMapLock.Unlock()
 
 	for _, dc := range v.DcMap {
-		_, ok := v.ForceDCNames[dc.Name]
-		if len(v.ForceDCNames) > 0 && !ok {
+		if !v.isManagedNamespace(dc.Name) {
 			v.Log.Infof("Skipping deletion of DVS from %v.", dc.Name)
 			continue
 		}
@@ -271,6 +267,17 @@ func (v *VCHub) ListPensandoHosts(dcRef *types.ManagedObjectReference) []mo.Host
 		penHosts = append(penHosts, host)
 	}
 	return penHosts
+}
+
+// Check if the given DC(namespace) is managed by this vchub
+func (v *VCHub) isManagedNamespace(name string) bool {
+	if _, ok := v.ForceDCNames[name]; ok {
+		return true
+	}
+	if _, ok := v.ForceDCNames[utils.ManageAllDcs]; ok {
+		return true
+	}
+	return false
 }
 
 // CreateVmkWorkloadName returns vmk workload name string

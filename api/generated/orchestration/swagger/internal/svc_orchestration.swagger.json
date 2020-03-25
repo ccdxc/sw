@@ -439,7 +439,7 @@
           },
           {
             "name": "spec.manage-namespaces",
-            "description": "Namespaces that will be managed by this orchestrator. \"ALL\" will manage all namespaces.",
+            "description": "Namespaces that will be managed by this orchestrator. \"all_namespaces\" will manage all namespaces.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -1392,7 +1392,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Namespaces that will be managed by this orchestrator. \"ALL\" will manage all namespaces."
+          "description": "Namespaces that will be managed by this orchestrator. \"all_namespaces\" will manage all namespaces."
         }
       },
       "description": "OrchestratorSpec contains the configuration of the cluster."

@@ -27,6 +27,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock"
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils/usegvlanmgr"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
@@ -120,6 +121,7 @@ func TestVCWrite(t *testing.T) {
 	clusterID := defs.CreateClusterID(clusterItems[0].Cluster)
 
 	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 	AssertOk(t, err, "failed to create orch config")
@@ -324,6 +326,7 @@ func TestVCHub(t *testing.T) {
 	}
 
 	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -412,6 +415,7 @@ func TestVCHubDestroy1(t *testing.T) {
 	}
 
 	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -514,6 +518,7 @@ func TestVCHubDestroy2(t *testing.T) {
 	}
 
 	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -607,6 +612,7 @@ func TestVCHubDestroy3(t *testing.T) {
 	}
 
 	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -687,6 +693,8 @@ func TestDCWatchers(t *testing.T) {
 	}
 
 	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
 	vchub := LaunchVCHub(sm, orchConfig, logger)
@@ -792,6 +800,8 @@ func TestUsegVlanLimit(t *testing.T) {
 	}
 
 	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
 	orchInfo1 := []*network.OrchestratorInfo{
@@ -973,6 +983,8 @@ func TestRapidEvents(t *testing.T) {
 	}
 
 	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
 	vchub := LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
@@ -1333,6 +1345,7 @@ func TestUpdateUrl(t *testing.T) {
 	}
 
 	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -1508,4 +1521,234 @@ func TestMultipleVcs(t *testing.T) {
 		}
 		return true, nil
 	}, "Orch status never updated to success", "100ms", "5s")
+}
+
+func TestManageGivenNamespaces(t *testing.T) {
+	config := log.GetDefaultConfig("vchub_testManageNamespaces")
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger := log.SetConfig(config)
+
+	u := &url.URL{
+		Scheme: "https",
+		Host:   defaultTestParams.TestHostName,
+		Path:   "/sdk",
+	}
+	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
+
+	dcName1 := "PenDC1"
+	dcName2 := "PenDC2"
+	dcName3 := "PenDC3"
+
+	_, err = s.AddDC(dcName1)
+	AssertOk(t, err, "failed dc create")
+
+	_, err = s.AddDC(dcName2)
+	AssertOk(t, err, "failed dc create")
+
+	_, err = s.AddDC(dcName3)
+	AssertOk(t, err, "failed dc create")
+
+	sm, _, err := smmock.NewMockStateManager()
+	AssertOk(t, err, "Failed to create state manager. Err : %v", err)
+
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	// We just want to manage dcName1 and dcName2
+	orchConfig.Spec.ManageNamespaces = []string{dcName1, dcName2}
+
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+
+	vchub := LaunchVCHub(sm, orchConfig, logger)
+	defer vchub.Destroy(false)
+
+	// Check if dcName1 is managed by our orchestrator
+	AssertEventually(t, func() (bool, interface{}) {
+		dc := vchub.GetDC(dcName1)
+		if dc == nil {
+			return false, fmt.Errorf("Failed to find DC %s", dcName1)
+		}
+		dvs := dc.GetPenDVS(CreateDVSName(dcName1))
+		if dvs == nil {
+			return false, fmt.Errorf("Failed to find dvs in DC %s", dcName1)
+		}
+		return true, nil
+	}, "failed to find DVS")
+
+	// Check if dcName2 is managed by our orchestrator
+	AssertEventually(t, func() (bool, interface{}) {
+		dc := vchub.GetDC(dcName2)
+		if dc == nil {
+			return false, fmt.Errorf("Failed to find DC %s", dcName2)
+		}
+		dvs := dc.GetPenDVS(CreateDVSName(dcName2))
+		if dvs == nil {
+			return false, fmt.Errorf("Failed to find dvs in DC %s", dcName2)
+		}
+		return true, nil
+	}, "failed to find DVS")
+
+	// Since dcName3 is not managed by our orchestrator
+	AssertEventually(t, func() (bool, interface{}) {
+		dc := vchub.GetDC(dcName3)
+		if dc != nil {
+			return false, fmt.Errorf("Found DC %s, the expectation is NO DC is found", dcName3)
+		}
+		return true, nil
+	}, "found unexpected DC")
+}
+
+func TestManageAllNamespaces(t *testing.T) {
+	config := log.GetDefaultConfig("vchub_testManageAllNamespaces")
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger := log.SetConfig(config)
+
+	u := &url.URL{
+		Scheme: "https",
+		Host:   defaultTestParams.TestHostName,
+		Path:   "/sdk",
+	}
+	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
+
+	dcName1 := "PenDC1"
+	dcName2 := "PenDC2"
+	dcName3 := "PenDC3"
+
+	_, err = s.AddDC(dcName1)
+	AssertOk(t, err, "failed dc create")
+
+	_, err = s.AddDC(dcName2)
+	AssertOk(t, err, "failed dc create")
+
+	_, err = s.AddDC(dcName3)
+	AssertOk(t, err, "failed dc create")
+
+	sm, _, err := smmock.NewMockStateManager()
+	AssertOk(t, err, "Failed to create state manager. Err : %v", err)
+
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	// We just want to manage dcName1 and dcName2
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+
+	vchub := LaunchVCHub(sm, orchConfig, logger)
+	defer vchub.Destroy(false)
+
+	// Check if dcName1 is managed by our orchestrator
+	AssertEventually(t, func() (bool, interface{}) {
+		dc := vchub.GetDC(dcName1)
+		if dc == nil {
+			return false, fmt.Errorf("Failed to find DC %s", dcName1)
+		}
+		dvs := dc.GetPenDVS(CreateDVSName(dcName1))
+		if dvs == nil {
+			return false, fmt.Errorf("Failed to find dvs in DC %s", dcName1)
+		}
+		return true, nil
+	}, "failed to find DVS")
+
+	// Check if dcName2 is managed by our orchestrator
+	AssertEventually(t, func() (bool, interface{}) {
+		dc := vchub.GetDC(dcName2)
+		if dc == nil {
+			return false, fmt.Errorf("Failed to find DC %s", dcName2)
+		}
+		dvs := dc.GetPenDVS(CreateDVSName(dcName2))
+		if dvs == nil {
+			return false, fmt.Errorf("Failed to find dvs in DC %s", dcName2)
+		}
+		return true, nil
+	}, "failed to find DVS")
+
+	// Check if dcName3 is managed by our orchestrator
+	AssertEventually(t, func() (bool, interface{}) {
+		dc := vchub.GetDC(dcName3)
+		if dc == nil {
+			return false, fmt.Errorf("Failed to find DC %s", dcName3)
+		}
+		dvs := dc.GetPenDVS(CreateDVSName(dcName3))
+		if dvs == nil {
+			return false, fmt.Errorf("Failed to find dvs in DC %s", dcName3)
+		}
+		return true, nil
+	}, "failed to find DVS")
+}
+
+func TestManageNoNamespaces(t *testing.T) {
+	config := log.GetDefaultConfig("vchub_testManageNoNamespaces")
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger := log.SetConfig(config)
+
+	u := &url.URL{
+		Scheme: "https",
+		Host:   defaultTestParams.TestHostName,
+		Path:   "/sdk",
+	}
+	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
+
+	dcName1 := "PenDC1"
+	dcName2 := "PenDC2"
+	dcName3 := "PenDC3"
+
+	_, err = s.AddDC(dcName1)
+	AssertOk(t, err, "failed dc create")
+
+	_, err = s.AddDC(dcName2)
+	AssertOk(t, err, "failed dc create")
+
+	_, err = s.AddDC(dcName3)
+	AssertOk(t, err, "failed dc create")
+
+	sm, _, err := smmock.NewMockStateManager()
+	AssertOk(t, err, "Failed to create state manager. Err : %v", err)
+
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	// We just want to manage dcName1 and dcName2
+	orchConfig.Spec.ManageNamespaces = []string{}
+
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+
+	vchub := LaunchVCHub(sm, orchConfig, logger)
+	defer vchub.Destroy(false)
+
+	// Check if dcName1 is managed by our orchestrator
+	AssertEventually(t, func() (bool, interface{}) {
+		dc := vchub.GetDC(dcName1)
+		if dc != nil {
+			return false, fmt.Errorf("Found DC %s, the expectation is NO DC is found", dcName1)
+		}
+		return true, nil
+	}, "found unexpected DC")
+
+	// Check if dcName2 is managed by our orchestrator
+	AssertEventually(t, func() (bool, interface{}) {
+		dc := vchub.GetDC(dcName2)
+		if dc != nil {
+			return false, fmt.Errorf("Found DC %s, the expectation is NO DC is found", dcName2)
+		}
+		return true, nil
+	}, "found unexpected DC")
+
+	// Check if dcName3 is managed by our orchestrator
+	AssertEventually(t, func() (bool, interface{}) {
+		dc := vchub.GetDC(dcName3)
+		if dc != nil {
+			return false, fmt.Errorf("Found DC %s, the expectation is NO DC is found", dcName3)
+		}
+		return true, nil
+	}, "found unexpected DC")
 }

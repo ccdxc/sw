@@ -30,7 +30,7 @@ export class OrchestrationOrchestratorSpec extends BaseModel implements IOrchest
     /** Credentials for the orchestrator. */
     'credentials': MonitoringExternalCred = null;
     'login-data': object = null;
-    /** Namespaces that will be managed by this orchestrator. "ALL" will manage all namespaces. */
+    /** Namespaces that will be managed by this orchestrator. "all_namespaces" will manage all namespaces. */
     'manage-namespaces': Array<string> = null;
     public static propInfo: { [prop in keyof IOrchestrationOrchestratorSpec]: PropInfoItem } = {
         'type': {
@@ -55,7 +55,7 @@ export class OrchestrationOrchestratorSpec extends BaseModel implements IOrchest
             type: 'object'
         },
         'manage-namespaces': {
-            description:  `Namespaces that will be managed by this orchestrator. "ALL" will manage all namespaces.`,
+            description:  `Namespaces that will be managed by this orchestrator. "all_namespaces" will manage all namespaces.`,
             required: false,
             type: 'Array<string>'
         },
