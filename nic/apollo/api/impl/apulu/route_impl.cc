@@ -401,7 +401,7 @@ cleanup:
 sdk_ret_t
 route_table_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                             api_obj_ctxt_t *obj_ctxt) {
-    this->program_hw(curr_obj, obj_ctxt);
+    return this->program_hw(curr_obj, obj_ctxt);
 }
 
 sdk_ret_t
