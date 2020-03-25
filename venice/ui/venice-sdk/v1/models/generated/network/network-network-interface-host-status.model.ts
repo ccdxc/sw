@@ -11,6 +11,7 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface INetworkNetworkInterfaceHostStatus {
     'host-ifname'?: string;
     'device-id'?: string;
+    'mac-address'?: string;
     '_ui'?: any;
 }
 
@@ -22,6 +23,8 @@ export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INet
     'host-ifname': string = null;
     /** PCIE Device ID. */
     'device-id': string = null;
+    /** Mac address of the interface. */
+    'mac-address': string = null;
     public static propInfo: { [prop in keyof INetworkNetworkInterfaceHostStatus]: PropInfoItem } = {
         'host-ifname': {
             description:  `Interface name seen by the host driver.`,
@@ -30,6 +33,11 @@ export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INet
         },
         'device-id': {
             description:  `PCIE Device ID.`,
+            required: false,
+            type: 'string'
+        },
+        'mac-address': {
+            description:  `Mac address of the interface.`,
             required: false,
             type: 'string'
         },
@@ -83,6 +91,13 @@ export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INet
         } else {
             this['device-id'] = null
         }
+        if (values && values['mac-address'] != null) {
+            this['mac-address'] = values['mac-address'];
+        } else if (fillDefaults && NetworkNetworkInterfaceHostStatus.hasDefaultValue('mac-address')) {
+            this['mac-address'] = NetworkNetworkInterfaceHostStatus.propInfo['mac-address'].default;
+        } else {
+            this['mac-address'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -92,6 +107,7 @@ export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INet
             this._formGroup = new FormGroup({
                 'host-ifname': CustomFormControl(new FormControl(this['host-ifname']), NetworkNetworkInterfaceHostStatus.propInfo['host-ifname']),
                 'device-id': CustomFormControl(new FormControl(this['device-id']), NetworkNetworkInterfaceHostStatus.propInfo['device-id']),
+                'mac-address': CustomFormControl(new FormControl(this['mac-address']), NetworkNetworkInterfaceHostStatus.propInfo['mac-address']),
             });
         }
         return this._formGroup;
@@ -105,6 +121,7 @@ export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INet
         if (this._formGroup) {
             this._formGroup.controls['host-ifname'].setValue(this['host-ifname']);
             this._formGroup.controls['device-id'].setValue(this['device-id']);
+            this._formGroup.controls['mac-address'].setValue(this['mac-address']);
         }
     }
 }

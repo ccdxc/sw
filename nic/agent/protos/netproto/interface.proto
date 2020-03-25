@@ -109,6 +109,9 @@ message InterfaceHostStatus {
 
     // DSC is the name of the dsc it belongs to
     string DSC          = 2 [(gogoproto.jsontag) = "dsc,omitempty"];
+
+    // mac address of the interface
+    string MacAddress   = 3 [(gogoproto.jsontag) = "mac-address,omitempty"]; 
 }
 
 message InterfaceUplinkStatus {

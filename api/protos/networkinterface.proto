@@ -159,6 +159,9 @@ message NetworkInterfaceHostStatus {
 
     // PCIE Device ID.
     string DeviceID     = 2 [(gogoproto.jsontag) = "device-id,omitempty"];
+
+    // mac address of the interface.
+    string MACAddress   = 3 [(gogoproto.jsontag) = "mac-address,omitempty"]; 
 }
 
 

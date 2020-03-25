@@ -501,6 +501,10 @@
         "dsc": {
           "type": "string",
           "description": "DSC is the name of the dsc it belongs to."
+        },
+        "mac-address": {
+          "type": "string",
+          "description": "mac address of the interface."
         }
       },
       "description": "InterfaceHostStatus is populated for PF and VF."

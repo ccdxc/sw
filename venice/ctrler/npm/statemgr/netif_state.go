@@ -90,6 +90,7 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 	netif.Namespace = ""
 	netif.Status.IFHostStatus = &network.NetworkInterfaceHostStatus{
 		HostIfName: agentNetif.Status.IFHostStatus.HostIfName,
+		MACAddress: agentNetif.Status.IFHostStatus.MacAddress,
 	}
 	netif.Status.IFUplinkStatus = &network.NetworkInterfaceUplinkStatus{
 		// TBD: LinkSpeed: "tbf",

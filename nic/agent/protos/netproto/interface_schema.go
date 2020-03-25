@@ -68,6 +68,7 @@ var typesMapInterface = map[string]*api.Struct{
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"link-speed":       api.CLIInfo{Path: "Status.IFUplinkStatus.LinkSpeed", Skip: false, Insert: "", Help: ""},
+			"mac-address":      api.CLIInfo{Path: "Status.IFHostStatus.MacAddress", Skip: false, Insert: "", Help: ""},
 			"mirror-enabled":   api.CLIInfo{Path: "Status.MirrorEnabled", Skip: false, Insert: "", Help: ""},
 			"mtu":              api.CLIInfo{Path: "Spec.MTU", Skip: false, Insert: "", Help: ""},
 			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
@@ -109,6 +110,8 @@ var typesMapInterface = map[string]*api.Struct{
 			"HostIfName": api.Field{Name: "HostIfName", CLITag: api.CLIInfo{ID: "host-ifname", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "host-ifname", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"DSC": api.Field{Name: "DSC", CLITag: api.CLIInfo{ID: "dsc", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"MacAddress": api.Field{Name: "MacAddress", CLITag: api.CLIInfo{ID: "mac-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-address", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"netproto.InterfaceList": &api.Struct{

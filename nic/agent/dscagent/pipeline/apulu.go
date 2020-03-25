@@ -1664,12 +1664,20 @@ func (a *ApuluAPI) handleUplinkInterface(spec *halapi.PortSpec, status *halapi.P
 		Status: netproto.InterfaceStatus{
 			DSC:         a.InfraAPI.GetDscName(),
 			InterfaceID: uint64(status.GetIfIndex()),
-			OperStatus:  status.GetLinkStatus().GetOperState().String(),
 			IPAllocType: "DHCP",
 			IFUplinkStatus: netproto.InterfaceUplinkStatus{
 				PortID: spec.GetPortNumber(),
 			},
 		},
+	}
+
+	switch status.GetLinkStatus().GetOperState() {
+	case halapi.PortOperState_PORT_OPER_STATUS_UP:
+		i.Status.OperStatus = netproto.IFStatus_UP.String()
+	case halapi.PortOperState_PORT_OPER_STATUS_DOWN:
+		i.Status.OperStatus = netproto.IFStatus_DOWN.String()
+	default:
+		i.Status.OperStatus = netproto.IFStatus_UP.String()
 	}
 
 	curIntf := netproto.Interface{}

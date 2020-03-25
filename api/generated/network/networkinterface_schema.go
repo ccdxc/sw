@@ -91,6 +91,8 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 			"HostIfName": api.Field{Name: "HostIfName", CLITag: api.CLIInfo{ID: "host-ifname", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "host-ifname", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"DeviceID": api.Field{Name: "DeviceID", CLITag: api.CLIInfo{ID: "device-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "device-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"MACAddress": api.Field{Name: "MACAddress", CLITag: api.CLIInfo{ID: "mac-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-address", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"network.NetworkInterfaceSpec": &api.Struct{

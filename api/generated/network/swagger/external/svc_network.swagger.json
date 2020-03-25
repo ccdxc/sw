@@ -1020,6 +1020,13 @@
             "type": "string"
           },
           {
+            "name": "if-host-status.mac-address",
+            "description": "mac address of the interface.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "if-uplink-status.link-speed",
             "description": "LinkSpeed auto-negotiated.",
             "in": "query",
@@ -8509,6 +8516,10 @@
         "device-id": {
           "type": "string",
           "description": "PCIE Device ID."
+        },
+        "mac-address": {
+          "type": "string",
+          "description": "mac address of the interface."
         }
       },
       "description": "NetworkInterfaceHostStatus is populated for PF and VF."
