@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strings"
 
+	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/ctrler/tsm/statemgr"
 
@@ -19,7 +20,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/globals"
@@ -54,6 +54,19 @@ var _ = Describe("Config SnapShot and restore", func() {
 	})
 
 	AfterEach(func() {
+		ctx := ts.tu.MustGetLoggedInContext(context.Background())
+		s, err := mirrorRestIf.List(ctx, &api.ListWatchOptions{})
+		Expect(err).ShouldNot(HaveOccurred())
+		Eventually(func() bool {
+			By("Deleting MirrorSession ------")
+			for _, i := range s {
+				_, err := mirrorRestIf.Delete(ctx, i.GetObjectMeta())
+				if err != nil {
+					return false
+				}
+			}
+			return true
+		}, 30, 5).Should(BeTrue(), fmt.Sprintf("Failed to delete mirror session after testing process"))
 		restClient.Close()
 	})
 
@@ -103,7 +116,7 @@ var _ = Describe("Config SnapShot and restore", func() {
 							{
 								Type: "ERSPAN",
 								ExportCfg: &monitoring.MirrorExportConfig{
-									Destination: "100.1.1.1",
+									Destination: "192.168.1.10",
 								},
 							},
 						},
@@ -134,7 +147,7 @@ var _ = Describe("Config SnapShot and restore", func() {
 						{
 							Type: "ERSPAN",
 							ExportCfg: &monitoring.MirrorExportConfig{
-								Destination: fmt.Sprintf("192.168.30.1"),
+								Destination: fmt.Sprintf("192.168.1.%d", i+1),
 							},
 						},
 					}
@@ -201,7 +214,7 @@ var _ = Describe("Config SnapShot and restore", func() {
 						{
 							Type: "ERSPAN",
 							ExportCfg: &monitoring.MirrorExportConfig{
-								Destination: fmt.Sprintf("192.168.30.1"),
+								Destination: fmt.Sprintf("192.168.1.%d", i+1),
 							},
 						},
 					}

@@ -318,7 +318,8 @@ func (sm *Statemgr) scheduleMirrorSession(mss *MirrorSessionState) {
 		return
 	}
 	mss.setMirrorSessionRunning()
-	sm.memDB.UpdateObject(mss)
+	sm.memDB.DeleteObject(mss)
+	sm.memDB.AddObject(mss)
 	log.Infof("scheduleMirrorSession(): Mirror Session %v - %v", mss.Name, mss.Status.ScheduleState)
 	mss.schTimer = nil
 	if err := sm.writer.WriteMirrorSession(mss.MirrorSession); err != nil {

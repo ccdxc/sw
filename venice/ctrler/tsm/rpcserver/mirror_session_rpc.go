@@ -108,7 +108,7 @@ func (r *MirrorSessionRPCServer) ListMirrorSessionsActive(ctx context.Context, s
 	// Only the running sessions need to be sent to NICs
 	for _, mss := range mirrorSessions {
 		mss.Mutex.Lock()
-		if mss.State == monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION {
+		if mss.State != monitoring.MirrorSessionState_ACTIVE {
 			mss.Mutex.Unlock()
 			continue
 		}
@@ -212,6 +212,13 @@ func (r *MirrorSessionRPCServer) WatchMirrorSessions(sel *api.ObjectMeta, stream
 				mss.Mutex.Unlock()
 				continue
 			}
+
+			// only active session will be sent to naples, scheduled session not included
+			if (etype == api.EventType_CreateEvent || etype == api.EventType_UpdateEvent) && mss.State != monitoring.MirrorSessionState_ACTIVE {
+				mss.Mutex.Unlock()
+				continue
+			}
+
 			// convert to netproto object
 			tms := buildNICMirrorSession(mss)
 			mss.Mutex.Unlock()
