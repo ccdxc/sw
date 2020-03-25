@@ -1,7 +1,7 @@
 # {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = ${PIPELINE}_route_api_test.gtest
+MODULE_TARGET   = ${PIPELINE}_route_test.gtest
 MODULE_PIPELINE = apulu
 MODULE_ARCH     = x86_64
 MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl pdstest \

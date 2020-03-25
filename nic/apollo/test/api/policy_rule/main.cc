@@ -4,61 +4,43 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This file contains the all route test cases
+/// This file contains all policy rule test cases
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/test/api/utils/api_base.hpp"
-#include "nic/apollo/test/api/utils/batch.hpp"
-#include "nic/apollo/test/api/utils/nexthop.hpp"
-#include "nic/apollo/test/api/utils/route.hpp"
-#include "nic/apollo/test/api/utils/device.hpp"
-#include "nic/apollo/test/api/utils/tep.hpp"
+#include "nic/apollo/test/api/utils/policy.hpp"
 #include "nic/apollo/test/api/utils/vpc.hpp"
-#include "nic/apollo/test/api/utils/subnet.hpp"
-#include "nic/apollo/test/api/utils/if.hpp"
-#include "nic/apollo/test/api/utils/nexthop.hpp"
-#include "nic/apollo/test/api/utils/nexthop_group.hpp"
+#include "nic/apollo/test/api/utils/workflow.hpp"
 
 namespace test {
 namespace api {
 
 // globals
-static const std::string k_base_v4_pfx  = "100.100.100.1/16";
+static constexpr uint16_t g_num_stateful_rules = 64;
 
 //----------------------------------------------------------------------------
-// Route test class
+// Policy test class
 //----------------------------------------------------------------------------
 
-class route_test : public pds_test_base {
+class policy_rule_test : public ::pds_test_base {
 protected:
-    route_test() {}
-    virtual ~route_test() {}
+    policy_rule_test() {}
+    virtual ~policy_rule_test() {}
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
         if (!agent_mode()) {
             pds_test_base::SetUpTestCase(g_tc_params);
         }
+        g_trace_level = sdk::lib::SDK_TRACE_LEVEL_VERBOSE;
         pds_batch_ctxt_t bctxt = batch_start();
-        sample1_vpc_setup(bctxt, PDS_VPC_TYPE_TENANT);
-        sample_device_setup(bctxt);
-        sample_if_setup(bctxt);
-        sample_nexthop_setup(bctxt);
-        sample_nexthop_group_setup(bctxt);
-        sample_tep_setup(bctxt);
-        sample_subnet_setup(bctxt);
+        sample_vpc_setup(bctxt, PDS_VPC_TYPE_TENANT);
         batch_commit(bctxt);
     }
     static void TearDownTestCase() {
+        g_trace_level = sdk::lib::SDK_TRACE_LEVEL_DEBUG;
         pds_batch_ctxt_t bctxt = batch_start();
-        sample_subnet_teardown(bctxt);
-        sample_tep_teardown(bctxt);
-        sample_nexthop_group_teardown(bctxt);
-        sample_nexthop_teardown(bctxt);
-        sample_if_teardown(bctxt);
-        sample_device_teardown(bctxt);
-        sample1_vpc_teardown(bctxt, PDS_VPC_TYPE_TENANT);
+        sample_vpc_teardown(bctxt, PDS_VPC_TYPE_TENANT);
         batch_commit(bctxt);
         if (!agent_mode()) {
             pds_test_base::TearDownTestCase();
@@ -67,41 +49,41 @@ protected:
 };
 
 //----------------------------------------------------------------------------
-// Route test cases implementation
+// Policy rule test cases implementation
 //----------------------------------------------------------------------------
 
-/// \defgroup ROUTE_TESTS Route tests
+/// \defgroup POLICY_TEST Policy rule tests
 /// @{
 
-TEST_F(route_test, route_add) {
+TEST_F(policy_rule_test, rule_add) {
     pds_batch_ctxt_t bctxt;
 
     bctxt = batch_start();
-    sample_route_table_setup(bctxt, k_base_v4_pfx, IP_AF_IPV4, 10, 1, 1);
+    sample_policy_setup(bctxt);
     batch_commit(bctxt);
 
     bctxt = batch_start();
-    // TODO: add route(s)
+    // TODO: add policy rule(s)
     batch_commit(bctxt);
 
     bctxt = batch_start();
-    sample_route_table_teardown(bctxt, 1, 1);
+    sample_policy_teardown(bctxt);
     batch_commit(bctxt);
 }
 
-TEST_F(route_test, route_update) {
+TEST_F(policy_rule_test, rule_upd) {
     pds_batch_ctxt_t bctxt;
 
     bctxt = batch_start();
-    sample_route_table_setup(bctxt, k_base_v4_pfx, IP_AF_IPV4, 10, 1, 2);
+    sample_policy_setup(bctxt);
     batch_commit(bctxt);
 
     bctxt = batch_start();
-    // TODO: update route(s)
+    // TODO: update policy rule(s)
     batch_commit(bctxt);
 
     bctxt = batch_start();
-    sample_route_table_teardown(bctxt, 2, 1);
+    sample_policy_teardown(bctxt);
     batch_commit(bctxt);
 }
 

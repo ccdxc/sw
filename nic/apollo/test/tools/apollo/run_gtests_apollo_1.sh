@@ -17,7 +17,7 @@ run_gtest scale LOG="/dev/null" CFG=" -i ${NICDIR}/apollo/test/scale/scale_cfg.j
 run_gtest device
 run_gtest vpc
 run_gtest subnet
-run_gtest route LOG="/dev/null"
+run_gtest route_table LOG="/dev/null"
 run_gtest vnic
 run_gtest tep
 # run_gtest mapping LOG="/dev/null"

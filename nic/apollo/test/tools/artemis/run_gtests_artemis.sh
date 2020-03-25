@@ -12,7 +12,7 @@ setup
 run_gtest vpc_peer
 # run_gtest tep
 # run_gtest nh
-# run_gtest route LOG="/dev/null"
+# run_gtest route_table LOG="/dev/null"
 # run_gtest vnic
 # run_gtest svc_mapping
 run_gtest tag LOG="/dev/null"
