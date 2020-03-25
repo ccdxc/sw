@@ -34,7 +34,7 @@ pds_nat_port_block_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     api_ctxt = api::api_ctxt_alloc(OBJ_ID_NAT_PORT_BLOCK, op);
     if (likely(api_ctxt != NULL)) {
         if (op == API_OP_DELETE) {
-            api_ctxt->api_params->nat_port_block_key = *key;
+            api_ctxt->api_params->key = *key;
         } else {
             api_ctxt->api_params->nat_port_block_spec = *spec;
         }

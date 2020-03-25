@@ -32,7 +32,7 @@ pds_policy_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     api_ctxt = api::api_ctxt_alloc(OBJ_ID_POLICY, op);
     if (likely(api_ctxt != NULL)) {
         if (op == API_OP_DELETE) {
-            api_ctxt->api_params->policy_key = *key;
+            api_ctxt->api_params->key = *key;
         } else {
             api_ctxt->api_params->policy_spec = *spec;
             if (spec->rule_info == NULL) {
@@ -178,7 +178,7 @@ pds_security_profile_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     api_ctxt = api::api_ctxt_alloc(OBJ_ID_SECURITY_PROFILE, op);
     if (likely(api_ctxt != NULL)) {
         if (op == API_OP_DELETE) {
-            api_ctxt->api_params->security_profile_key = *key;
+            api_ctxt->api_params->key = *key;
         } else {
             api_ctxt->api_params->security_profile_spec = *spec;
         }

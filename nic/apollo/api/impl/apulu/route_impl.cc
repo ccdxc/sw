@@ -582,7 +582,7 @@ route_table_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         break;
 
     case API_OP_DELETE:
-        ret = route_table_db()->perish(obj_ctxt->api_params->route_table_key);
+        ret = route_table_db()->perish(obj_ctxt->api_params->key);
         break;
 
     default:

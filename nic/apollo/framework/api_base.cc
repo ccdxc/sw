@@ -101,7 +101,7 @@ api_base::build(api_ctxt_t *api_ctxt) {
         if (api_ctxt->api_op == API_OP_DELETE) {
             if (api_ctxt->api_params->key_type == API_OBJ_KEY_TYPE_UUID) {
                 // use primary key
-                return mapping_entry::build(&api_ctxt->api_params->mapping_key);
+                return mapping_entry::build(&api_ctxt->api_params->key);
             } else {
                 // use 2nd-ary key
                 return mapping_entry::build(&api_ctxt->api_params->mapping_skey);
@@ -121,7 +121,7 @@ api_base::build(api_ctxt_t *api_ctxt) {
         // VPC peering is a stateless object, so we need to construct the
         // object from the datapath tables
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return vpc_peer_entry::build(&api_ctxt->api_params->vpc_peer_key);
+            return vpc_peer_entry::build(&api_ctxt->api_params->key);
         }
         return vpc_peer_entry::build(&api_ctxt->api_params->vpc_peer_spec.key);
 
@@ -129,7 +129,7 @@ api_base::build(api_ctxt_t *api_ctxt) {
         // NAT port block is a stateless object, so we need to build it on the
         // fly
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return nat_port_block::build(&api_ctxt->api_params->nat_port_block_key);
+            return nat_port_block::build(&api_ctxt->api_params->key);
         }
         return nat_port_block::build(&api_ctxt->api_params->nat_port_block_spec.key);
 
@@ -137,21 +137,21 @@ api_base::build(api_ctxt_t *api_ctxt) {
         // security profile is a stateless object, so we need to build it on
         // the fly
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return security_profile::build(&api_ctxt->api_params->security_profile_key);
+            return security_profile::build(&api_ctxt->api_params->key);
         }
         return security_profile::build(&api_ctxt->api_params->security_profile_spec.key);
 
     case OBJ_ID_ROUTE:
         // route is a stateless object, so we need to build it on the fly
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return route::build(&api_ctxt->api_params->route_key);
+            return route::build(&api_ctxt->api_params->key);
         }
         return route::build(&api_ctxt->api_params->route_spec.key);
 
     case OBJ_ID_POLICY_RULE:
         // policy rule is a stateless object, so we need to build it on the fly
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return policy_rule::build(&api_ctxt->api_params->policy_rule_key);
+            return policy_rule::build(&api_ctxt->api_params->key);
         }
         return policy_rule::build(&api_ctxt->api_params->policy_rule_spec.key);
 
@@ -284,73 +284,73 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
 
     case OBJ_ID_IF:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return if_db()->find(&api_ctxt->api_params->if_key);
+            return if_db()->find(&api_ctxt->api_params->key);
         }
         return if_db()->find(&api_ctxt->api_params->if_spec.key);
 
     case OBJ_ID_VPC:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return vpc_db()->find(&api_ctxt->api_params->vpc_key);
+            return vpc_db()->find(&api_ctxt->api_params->key);
         }
         return vpc_db()->find(&api_ctxt->api_params->vpc_spec.key);
 
     case OBJ_ID_SUBNET:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return subnet_db()->find(&api_ctxt->api_params->subnet_key);
+            return subnet_db()->find(&api_ctxt->api_params->key);
         }
         return subnet_db()->find(&api_ctxt->api_params->subnet_spec.key);
 
     case OBJ_ID_TEP:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return tep_db()->find(&api_ctxt->api_params->tep_key);
+            return tep_db()->find(&api_ctxt->api_params->key);
         }
         return tep_db()->find(&api_ctxt->api_params->tep_spec.key);
 
     case OBJ_ID_VNIC:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return vnic_db()->find(&api_ctxt->api_params->vnic_key);
+            return vnic_db()->find(&api_ctxt->api_params->key);
         }
         return vnic_db()->find(&api_ctxt->api_params->vnic_spec.key);
 
     case OBJ_ID_ROUTE_TABLE:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return route_table_db()->find(&api_ctxt->api_params->route_table_key);
+            return route_table_db()->find(&api_ctxt->api_params->key);
         }
         return route_table_db()->find(&api_ctxt->api_params->route_table_spec.key);
 
     case OBJ_ID_ROUTE:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return route_db()->find(&api_ctxt->api_params->route_key);
+            return route_db()->find(&api_ctxt->api_params->key);
         }
         return route_db()->find(&api_ctxt->api_params->route_spec.key);
 
     case OBJ_ID_POLICY:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return policy_db()->find_policy(&api_ctxt->api_params->policy_key);
+            return policy_db()->find_policy(&api_ctxt->api_params->key);
         }
         return policy_db()->find_policy(&api_ctxt->api_params->policy_spec.key);
 
     case OBJ_ID_POLICY_RULE:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return policy_rule_db()->find(&api_ctxt->api_params->policy_rule_key);
+            return policy_rule_db()->find(&api_ctxt->api_params->key);
         }
         return policy_rule_db()->find(&api_ctxt->api_params->policy_rule_spec.key);
 
     case OBJ_ID_NEXTHOP:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return nexthop_db()->find(&api_ctxt->api_params->nexthop_key);
+            return nexthop_db()->find(&api_ctxt->api_params->key);
         }
         return nexthop_db()->find(&api_ctxt->api_params->nexthop_spec.key);
 
     case OBJ_ID_TAG:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return tag_db()->find(&api_ctxt->api_params->tag_key);
+            return tag_db()->find(&api_ctxt->api_params->key);
         }
         return tag_db()->find(&api_ctxt->api_params->tag_spec.key);
 
     case OBJ_ID_NEXTHOP_GROUP:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return nexthop_group_db()->find(&api_ctxt->api_params->nexthop_group_key);
+            return nexthop_group_db()->find(&api_ctxt->api_params->key);
         }
         return nexthop_group_db()->find(&api_ctxt->api_params->nexthop_group_spec.key);
 
@@ -358,7 +358,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
         if (api_ctxt->api_op == API_OP_DELETE) {
             if (api_ctxt->api_params->key_type == API_OBJ_KEY_TYPE_UUID) {
                 // use primary key
-                return mapping_db()->find(&api_ctxt->api_params->mapping_key);
+                return mapping_db()->find(&api_ctxt->api_params->key);
             } else {
                 // use 2nd-ary key
                 return mapping_db()->find(&api_ctxt->api_params->mapping_skey);
@@ -374,31 +374,31 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
 
     case OBJ_ID_POLICER:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return policer_db()->find(&api_ctxt->api_params->policer_key);
+            return policer_db()->find(&api_ctxt->api_params->key);
         }
         return policer_db()->find(&api_ctxt->api_params->policer_spec.key);
 
     case OBJ_ID_NAT_PORT_BLOCK:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return nat_db()->find(&api_ctxt->api_params->nat_port_block_key);
+            return nat_db()->find(&api_ctxt->api_params->key);
         }
         return nat_db()->find(&api_ctxt->api_params->nat_port_block_spec.key);
 
     case OBJ_ID_DHCP_POLICY:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return dhcp_db()->find(&api_ctxt->api_params->dhcp_policy_key);
+            return dhcp_db()->find(&api_ctxt->api_params->key);
         }
         return dhcp_db()->find(&api_ctxt->api_params->dhcp_policy_spec.key);
 
     case OBJ_ID_SECURITY_PROFILE:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return policy_db()->find_security_profile(&api_ctxt->api_params->security_profile_key);
+            return policy_db()->find_security_profile(&api_ctxt->api_params->key);
         }
         return policy_db()->find_security_profile(&api_ctxt->api_params->security_profile_spec.key);
 
     case OBJ_ID_MIRROR_SESSION:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return mirror_session_db()->find(&api_ctxt->api_params->mirror_session_key);
+            return mirror_session_db()->find(&api_ctxt->api_params->key);
         }
         return mirror_session_db()->find(&api_ctxt->api_params->mirror_session_spec.key);
 

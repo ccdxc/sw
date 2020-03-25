@@ -248,7 +248,7 @@ security_policy_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         break;
 
     case API_OP_DELETE:
-        ret = policy_db()->perish(obj_ctxt->api_params->policy_key);
+        ret = policy_db()->perish(obj_ctxt->api_params->key);
         break;
 
     default:

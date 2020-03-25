@@ -96,7 +96,7 @@ nat_port_block::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
     msg->cfg_msg.obj_id = OBJ_ID_NAT_PORT_BLOCK;
     if (obj_ctxt->api_op == API_OP_DELETE) {
         msg->cfg_msg.nat_port_block.key =
-            obj_ctxt->api_params->nat_port_block_key;
+            obj_ctxt->api_params->key;
     } else {
         msg->cfg_msg.nat_port_block.spec =
             obj_ctxt->api_params->nat_port_block_spec;

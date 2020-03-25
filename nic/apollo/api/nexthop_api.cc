@@ -31,7 +31,7 @@ pds_nexthop_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     api_ctxt = api::api_ctxt_alloc(OBJ_ID_NEXTHOP, op);
     if (likely(api_ctxt != NULL)) {
         if (op == API_OP_DELETE) {
-            api_ctxt->api_params->nexthop_key = *key;
+            api_ctxt->api_params->key = *key;
         } else {
             api_ctxt->api_params->nexthop_spec = *spec;
         }

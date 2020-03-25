@@ -24,7 +24,7 @@ pds_tep_api_handle (pds_batch_ctxt_t bctxt, api_op_t api_op, pds_obj_key_t *key,
     api_ctxt = api::api_ctxt_alloc(OBJ_ID_TEP, api_op);
     if (likely(api_ctxt != NULL)) {
         if (api_op == API_OP_DELETE) {
-            api_ctxt->api_params->tep_key = *key;
+            api_ctxt->api_params->key = *key;
         } else {
             api_ctxt->api_params->tep_spec = *spec;
         }

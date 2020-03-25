@@ -96,7 +96,7 @@ security_profile::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
     msg->cfg_msg.obj_id = OBJ_ID_SECURITY_PROFILE;
     if (obj_ctxt->api_op == API_OP_DELETE) {
         msg->cfg_msg.security_profile.key =
-            obj_ctxt->api_params->security_profile_key;
+            obj_ctxt->api_params->key;
     } else {
         msg->cfg_msg.security_profile.spec =
             obj_ctxt->api_params->security_profile_spec;

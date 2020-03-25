@@ -172,7 +172,7 @@ vpc_entry::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
     msg->cfg_msg.op = obj_ctxt->api_op;
     msg->cfg_msg.obj_id = OBJ_ID_VPC;
     if (obj_ctxt->api_op == API_OP_DELETE) {
-        msg->cfg_msg.vpc.key = obj_ctxt->api_params->vpc_key;
+        msg->cfg_msg.vpc.key = obj_ctxt->api_params->key;
     } else {
         msg->cfg_msg.vpc.spec = obj_ctxt->api_params->vpc_spec;
         if (impl_) {

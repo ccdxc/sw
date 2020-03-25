@@ -212,7 +212,7 @@ subnet_entry::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
     msg->cfg_msg.op = obj_ctxt->api_op;
     msg->cfg_msg.obj_id = OBJ_ID_SUBNET;
     if (obj_ctxt->api_op == API_OP_DELETE) {
-        msg->cfg_msg.subnet.key = obj_ctxt->api_params->subnet_key;
+        msg->cfg_msg.subnet.key = obj_ctxt->api_params->key;
     } else {
         msg->cfg_msg.subnet.spec = obj_ctxt->api_params->subnet_spec;
         if (impl_) {

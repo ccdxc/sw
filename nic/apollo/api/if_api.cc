@@ -32,7 +32,7 @@ pds_if_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     api_ctxt = api::api_ctxt_alloc(OBJ_ID_IF, op);
     if (likely(api_ctxt != NULL)) {
         if (op == API_OP_DELETE) {
-            api_ctxt->api_params->if_key = *key;
+            api_ctxt->api_params->key = *key;
         } else {
             api_ctxt->api_params->if_spec = *spec;
         }
