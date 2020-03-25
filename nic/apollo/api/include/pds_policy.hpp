@@ -106,7 +106,7 @@ typedef struct rule_info_s {
     uint32_t    num_rules;    ///< number of rules in the list
     rule_t      rules[0];     ///< list or rules
 } rule_info_t;
-#define POLICY_RULE_SET_SIZE(count)        \
+#define POLICY_RULE_INFO_SIZE(count)        \
             (sizeof(rule_info_t) + (count) * sizeof(rule_t))
 
 /// \brief    generic policy specification
@@ -132,11 +132,11 @@ struct pds_policy_spec_s {
         }
         rule_info =
             (rule_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
-                               POLICY_RULE_SET_SIZE(policy.rule_info->num_rules));
+                               POLICY_RULE_INFO_SIZE(policy.rule_info->num_rules));
         SDK_ASSERT(rule_info != NULL);
         key = policy.key;
         memcpy(rule_info, policy.rule_info,
-               POLICY_RULE_SET_SIZE(policy.rule_info->num_rules));
+               POLICY_RULE_INFO_SIZE(policy.rule_info->num_rules));
         return *this;
     }
 } __PACK__;

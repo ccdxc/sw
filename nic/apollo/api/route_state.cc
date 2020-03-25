@@ -57,15 +57,6 @@ route_table_state::remove(route_table *table) {
     return (route_table *)(route_table_ht_->remove(&table->key_));
 }
 
-sdk_ret_t
-route_table_state::update(route_table *curr_table, route_table *new_table) {
-    // lock();
-    // remove(curr_table);
-    // insert(new_table);
-    // unlock();
-    return sdk::SDK_RET_INVALID_OP;
-}
-
 void
 route_table_state::free(route_table *rtable) {
     route_table_slab_->free(rtable);

@@ -2126,7 +2126,7 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
     num_rules = proto_spec.rules_size();
     api_spec->rule_info =
         (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
-                                  POLICY_RULE_SET_SIZE(num_rules));
+                                  POLICY_RULE_INFO_SIZE(num_rules));
     if (unlikely(api_spec->rule_info == NULL)) {
         PDS_TRACE_ERR("Failed to allocate memory for security policy {}",
                       api_spec->key.id);

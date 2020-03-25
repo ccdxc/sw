@@ -59,6 +59,12 @@ public:
     /// \param[in] key security policy key
     policy *find_policy(pds_obj_key_t *key) const;
 
+    /// \brief     read policy rules from kvstore
+    /// \param[in]     key          key of the policy object
+    /// \param[in,out] rule_info   rule info to be filled up
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t retrieve_rules(pds_obj_key_t *key, rule_info_t *rule_info);
+
     /// \brief      persist the given security policy
     /// \param[in]  policy policy object instance
     /// \param[in]  spec    policy configuration to be persisted

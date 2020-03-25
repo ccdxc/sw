@@ -1453,7 +1453,7 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
 
     policy.rule_info =
         (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
-                                  POLICY_RULE_SET_SIZE(num_rules));
+                                  POLICY_RULE_INFO_SIZE(num_rules));
     policy.rule_info->af = ip_af;
     policy.rule_info->num_rules = num_rules;
     if (num_rules < num_sub_rules) {

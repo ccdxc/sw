@@ -466,19 +466,19 @@ route_table_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
         SDK_ASSERT((obj_ctxt->upd_bmap & (PDS_ROUTE_TABLE_UPD_ROUTE_ADD |
                                           PDS_ROUTE_TABLE_UPD_ROUTE_DEL |
                                           PDS_ROUTE_TABLE_UPD_ROUTE_UPD)) == 0);
-        PDS_TRACE_DEBUG("Processing route table update for %s with no "
-                        "individual route updates in this batch",
-                        new_rtable->key().str());
+        PDS_TRACE_DEBUG("Processing route table %s update with no individual "
+                        "route updates in this batch",
+                        new_rtable->key2str().c_str());
         return this->program_hw(curr_obj, obj_ctxt);
     }
 
     // we have few cases to handle here:
     // 1. route table object itself is being updated (some other attributes
     //    modifications and/or with new set of routes combined with
-    //    individual route add/del/update operations all combined in this
-    //    batch
+    //    individual route add/del/update operations - all in this batch
     // 2. route table object modification is solely because of individual
     //    route add/del/updates in this batch
+    // in both cases, we need to form new spec
     spec.key = new_rtable->key();
     if (obj_ctxt->upd_bmap & ~(PDS_ROUTE_TABLE_UPD_ROUTE_ADD |
                                PDS_ROUTE_TABLE_UPD_ROUTE_DEL |

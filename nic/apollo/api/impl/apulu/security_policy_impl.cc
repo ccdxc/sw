@@ -135,7 +135,94 @@ security_policy_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                                 api_obj_ctxt_t *obj_ctxt) {
-    return this->program_hw(curr_obj, obj_ctxt);
+    uint32_t num_rules;
+    pds_policy_spec_t spec;
+    sdk_ret_t ret = SDK_RET_OK;
+    policy *new_policy = (policy *)curr_obj;
+    policy *old_policy = (policy *)orig_obj;
+
+    if (obj_ctxt->clist.size() == 0) {
+        SDK_ASSERT((obj_ctxt->upd_bmap & (PDS_POLICY_UPD_RULE_ADD |
+                                          PDS_POLICY_UPD_RULE_DEL |
+                                          PDS_POLICY_UPD_RULE_UPD)) == 0);
+        PDS_TRACE_DEBUG("Processing policy %s update with no individual rule "
+                        "updates in this batch", new_policy->key2str().c_str());
+        return this->program_hw(curr_obj, obj_ctxt);
+    }
+
+    // we have few cases to handle here:
+    // 1. policy object itself is being updated (some other attributes
+    //    modifications and/or with new set of rules combined with
+    //    individual rule add/del/update operations - all in this batch
+    // 2. policy object modification is solely because of individual rule
+    //    add/del/updates in this batch
+    // in both cases, we need to form new spec
+    spec.key = new_policy->key();
+    if (obj_ctxt->upd_bmap & ~(PDS_POLICY_UPD_RULE_ADD |
+                               PDS_POLICY_UPD_RULE_DEL |
+                               PDS_POLICY_UPD_RULE_UPD)) {
+        // case 1 : both container and contained objects are being modified
+        //          (ADD/DEL/UPD), in this we can fully ignore the set of rules
+        //          that are persisted in kvstore
+        // number of new rules in the worst case will be total of what we have
+        // currently plus size of clist (assuming all contained objs are being
+        // added)
+        // TODO:
+        // keep track of this counter in obj_ctxt itself in API engine so we can
+        // catch errors where total capacity exceeds max. supported without any
+        // extra processing
+        num_rules = new_policy->num_rules() + obj_ctxt->clist.size();
+        spec.rule_info =
+            (rule_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_POLICY,
+                                      POLICY_RULE_INFO_SIZE(num_rules));
+        if (!spec.rule_info) {
+            PDS_TRACE_ERR("Failed to allocate memory for %u rules for "
+                          "policy %s update processing", num_rules,
+                          spec.key.str());
+            ret = SDK_RET_OOM;
+            goto end;
+        }
+        memcpy(&spec.rule_info, obj_ctxt->api_params->policy_spec.rule_info,
+               POLICY_RULE_INFO_SIZE(new_policy->num_rules()));
+    } else {
+        // case 2 : only contained objects are being modified (ADD/DEL/UPD),
+        //          form new spec that consists of current set of rules and
+        //          individual rule updates
+        // number of new rules in the worst case will be total of what we have
+        // currently plus size of clist (assuming all contained objs are being
+        // added)
+        // TODO:
+        // keep track of this counter in obj_ctxt itself in API engine so we can
+        // catch errors where total capacity exceeds max. supported without any
+        // extra processing
+        num_rules = old_policy->num_rules() + obj_ctxt->clist.size();
+        spec.rule_info =
+            (rule_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_POLICY,
+                                      POLICY_RULE_INFO_SIZE(num_rules));
+        if (!spec.rule_info) {
+            PDS_TRACE_ERR("Failed to allocate memory for %u rules for "
+                          "policy %s update processing", num_rules,
+                          spec.key.str());
+            ret = SDK_RET_OOM;
+            goto end;
+        }
+        ret = policy_db()->retrieve_rules(&spec.key, spec.rule_info);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to retrieve rules from kvstore for "
+                          "policy %s, err %u", spec.key.str(), ret);
+            goto end;
+        }
+    }
+
+    // TODO: compute the update spec now
+
+end:
+
+    if (spec.rule_info) {
+        SDK_FREE(PDS_MEM_ALLOC_ID_POLICY, spec.rule_info);
+        spec.rule_info = NULL;
+    }
+    return ret;
 }
 
 sdk_ret_t

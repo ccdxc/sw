@@ -55,7 +55,7 @@ create_rules(std::string cidr_str, uint8_t af, uint16_t num_rules,
 
     *rule_info =
         (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
-                                  POLICY_RULE_SET_SIZE(num_rules));
+                                  POLICY_RULE_INFO_SIZE(num_rules));
     (*rule_info)->af = af;
     (*rule_info)->num_rules = num_rules;
     test::extract_ip_pfx((char *)cidr_str.c_str(), &ip_pfx);
