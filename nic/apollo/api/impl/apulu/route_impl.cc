@@ -529,14 +529,12 @@ route_table_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
             ret = SDK_RET_OOM;
             goto end;
         }
-#if 0
         ret = route_table_db()->retrieve_routes(&spec.key, spec.route_info);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to retrieve routes from kvstore for route "
                           "table %s, err %u", spec.key.str(), ret);
             goto end;
         }
-#endif
     }
     ret = update_route_table_spec_(&spec, obj_ctxt);
     if (ret != SDK_RET_OK) {
