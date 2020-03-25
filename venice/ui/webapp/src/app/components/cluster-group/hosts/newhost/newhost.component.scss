@@ -196,9 +196,18 @@ fieldset {
 
 .newhost-sub-container {
   min-width: 250px;
-  margin-top: 6px
+  margin-top: 6px;
+  margin-right: 5px;
 }
 
 .newhost-general-box {
-  width: 250px;
+  min-width: 260px;
+}
+
+.newhost-and {
+  white-space: nowrap;
+  margin-top: 10px;
+  color: #6ba0e5;
+  display: inline-block;
+  cursor: pointer;
 }

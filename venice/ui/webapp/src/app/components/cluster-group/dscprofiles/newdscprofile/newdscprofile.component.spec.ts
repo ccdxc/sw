@@ -57,7 +57,7 @@ describe('NewdscprofileComponent', () => {
     fixture.detectChanges();
   });
 
-  xit('should create NewdscprofileComponent', () => {
+  it('should create NewdscprofileComponent', () => {
     expect(component).toBeTruthy();
   });
 });

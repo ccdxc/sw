@@ -10,7 +10,8 @@
       <div *ngIf="isInline || notAdmittedCount==0">
         <ng-container *ngTemplateOutlet="singleMode;"></ng-container>
       </div>
-      <div *ngIf="!isInline && notAdmittedCount!=0">
+      <div *ngIf="false && !isInline && notAdmittedCount!=0">
+        <!-- 2020-03-24 disable multiple add UI as it can not set two DSC to one host -->
         <ng-container *ngTemplateOutlet="multiAddMode;"></ng-container>
       </div>
     </div>
@@ -35,6 +36,18 @@
              [formGroupName]="index">
           <ng-container *ngTemplateOutlet="newHostCreation; context:{index:index}">
           </ng-container>
+          <div fxFlex="nogrow" fxLayout="row">
+            <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
+              <div fxFlex="55px" fxLayout="row" fxLayoutAlign="start end"
+                   class="newhost-fieldtitle newhost-and">
+                <span fxFlex="nogrow" *ngIf="radioValues.length < 2"
+                      (click)="addDSC()">+ ADD</span>
+                <mat-icon fxFlex="nogrow" [style.color]="'#767676'" [style.cursor]="'pointer'"
+                          *ngIf="radioValues.length > 1"
+                          (click)="removeDSC(index)">delete</mat-icon>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -113,7 +126,7 @@
 
           <mat-radio-group fxFlex="nogrow" class="newhost-attach-radio" fxLayout="start center"
                            fxLayoutAlign="start center" fxLayoutGap="10px"
-                           (change)="onRadioButtonChange($event)" [value]="radioValue">
+                           (change)="onRadioButtonChange($event, index)">
 
             <mat-radio-button fxFlex="nogrow" color="primary" fxLayoutAlign="start center"
                               [disableRipple]="true"
@@ -126,7 +139,7 @@
 
         </div>
         <div fxFlex="5px"></div>
-        <div [ngSwitch]="radioValue">
+        <div [ngSwitch]="radioValues[index]">
           <ng-container *ngSwitchCase="'id'">
             <div class="newhost-input-row">
               <span [ngClass]="{
