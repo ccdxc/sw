@@ -1,0 +1,148 @@
+{
+    "svc": {
+        "names": [ "sysmgr", "pds-agent"],
+        "event_sequence": "parallel",
+        "rsp_timeout": "1000ms"
+    },
+
+    "stages": {
+        "entry_stage": "compatcheck",
+
+        "compatcheck": {
+            "//": "compatchecks are done here",
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "start" },
+                { "name": "svc_rsp_fail", "next_stage": "exit"  },
+                { "name": "svc_rsp_crit", "next_stage": "exit"  },
+                { "name": "svc_no_rsp",   "next_stage": "exit"  }
+            ]
+        },
+
+        "start": {
+            "//": "stops external communication channels and",
+            "//": "prepare for B bringup",
+            "svc": {
+                "event_sequence": "serial",
+                "names": [ "sysmgr", "pds-agent" ]
+            },
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "backup" },
+                { "name": "svc_rsp_fail", "next_stage": "repeal" },
+                { "name": "svc_rsp_crit", "next_stage": "exit"   },
+                { "name": "svc_no_rsp",   "next_stage": "repeal" }
+            ]
+        },
+
+        "backup": {
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "prepare" },
+                { "name": "svc_rsp_fail", "next_stage": "repeal"  },
+                { "name": "svc_rsp_crit", "next_stage": "exit"    },
+                { "name": "svc_no_rsp",   "next_stage": "repeal"  }
+            ]
+        },
+
+        "prepare": {
+            "//": "shuting it down the services",
+            "svc": {
+                "event_sequence": "serial",
+                "names": [ "sysmgr", "pds-agent" ]
+            },
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "prepare_switchover" },
+                { "name": "svc_rsp_fail", "next_stage": "respawn"            },
+                { "name": "svc_rsp_crit", "next_stage": "respawn"            },
+                { "name": "svc_no_rsp",   "next_stage": "respawn"            }
+            ]
+        },
+
+        "prepare_switchover": {
+            "//" : "quiescing",
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "switchover" },
+                { "name": "svc_rsp_fail", "next_stage": "respawn"    },
+                { "name": "svc_rsp_crit", "next_stage": "respawn"    },
+                { "name": "svc_no_rsp",   "next_stage": "respawn"    }
+            ]
+        },
+
+        "switchover": {
+            "//": "kill A and bringup B",
+            "svc": {
+                "names": [ "sysmgr" ],
+                "event_sequence": "serial",
+                "rsp_timeout": "2000ms",
+            },
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "ready"   },
+                { "name": "svc_rsp_fail", "next_stage": "respawn" },
+                { "name": "svc_rsp_crit", "next_stage": "respawn" },
+                { "name": "svc_no_rsp",   "next_stage": "respawn" }
+            ]
+        },
+
+        "ready": {
+            "//": "runtime compatchecks, service readiness",
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "finish"   },
+                { "name": "svc_rsp_fail", "next_stage": "rollback" },
+                { "name": "svc_rsp_crit", "next_stage": "rollback" },
+                { "name": "svc_no_rsp",   "next_stage": "rollback" }
+            ]
+        },
+
+        "rollback": {
+            "rsp_timeout": "1000ms",
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "finish" },
+                { "name": "svc_rsp_fail", "next_stage": "exit"   },
+                { "name": "svc_rsp_crit", "next_stage": "exit"   },
+                { "name": "svc_no_rsp",   "next_stage": "exit"   }
+            ]
+        },
+
+        "repeal": {
+            "svc": {
+                "names": [ "sysmgr", "pds-agent" ],
+                "event_sequence": "serial",
+                "rsp_timeout": "2000ms",
+            },
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "finish" },
+                { "name": "svc_rsp_fail", "next_stage": "exit"   },
+                { "name": "svc_rsp_crit", "next_stage": "exit"   },
+                { "name": "svc_no_rsp",   "next_stage": "exit"   }
+           ]
+        },
+
+        "respawn": {
+            "svc": {
+                "names": [ "sysmgr" ],
+                "event_sequence": "serial",
+                "rsp_timeout": "2000ms",
+            },
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "finish" },
+                { "name": "svc_rsp_fail", "next_stage": "exit"   },
+                { "name": "svc_rsp_crit", "next_stage": "exit"   },
+                { "name": "svc_no_rsp",   "next_stage": "exit"   }
+           ]
+        },
+
+       "finish": {
+            "//": "todo: failure or failure-non-recovarable status to netagent",
+            "svc": {
+                "event_sequence": "serial",
+                "names": [ "pds-agent", "sysmgr" ]
+            },
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "exit" },
+                { "name": "svc_rsp_fail", "next_stage": "exit" },
+                { "name": "svc_rsp_crit", "next_stage": "exit" },
+                { "name": "svc_no_rsp",   "next_stage": "exit" }
+           ]
+        },
+
+        "exit": { }
+    }
+}

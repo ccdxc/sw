@@ -1,0 +1,160 @@
+{
+    "svc": {
+        "names": [ "sysmgr", "pds-agent"],
+        "event_sequence": "parallel",
+        "rsp_timeout": "1000ms"
+    },
+
+    "stages": {
+        "entry_stage": "compatcheck",
+
+        "compatcheck": {
+            "//": "compatchecks are done",
+            "ipc_domain": "A",
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "start" },
+                { "name": "svc_rsp_fail", "next_stage": "exit"  },
+                { "name": "svc_rsp_crit", "next_stage": "exit"  },
+                { "name": "svc_no_rsp",   "next_stage": "exit"  }
+            ]
+        },
+
+        "start": {
+            "//": "stops external communication channels and",
+            "//": "prepare for B bringup",
+            "ipc_domain": "A",
+            "svc": {
+                "event_sequence": "serial",
+                "names": [ "sysmgr", "pds-agent" ]
+            },
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "backup" },
+                { "name": "svc_rsp_fail", "next_stage": "repeal" },
+                { "name": "svc_rsp_crit", "next_stage": "exit"   },
+                { "name": "svc_no_rsp",   "next_stage": "repeal" }
+            ]
+        },
+
+        "backup": {
+            "ipc_domain": "A",
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "prepare" },
+                { "name": "svc_rsp_fail", "next_stage": "repeal"  },
+                { "name": "svc_rsp_crit", "next_stage": "exit"    },
+                { "name": "svc_no_rsp",   "next_stage": "repeal"  }
+            ]
+        },
+
+        "prepare": {
+            "//": "new services will be spawned in domain B and",
+            "//": "backed up data from A will be restored here",
+            "ipc_domain": "A",
+            "svc": {
+                "event_sequence": "serial",
+                "names": [ "sysmgr", "pds-agent" ]
+            },
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "ready"  },
+                { "name": "svc_rsp_fail", "next_stage": "repeal" },
+                { "name": "svc_rsp_crit", "next_stage": "repeal" },
+                { "name": "svc_no_rsp",   "next_stage": "repeal" }
+            ]
+        },
+
+       "ready": {
+            "//": "all services are ready on B",
+            "ipc_domain": "B",
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "sync"   },
+                { "name": "svc_rsp_fail", "next_stage": "repeal" },
+                { "name": "svc_rsp_crit", "next_stage": "repeal" },
+                { "name": "svc_no_rsp",   "next_stage": "repeal" }
+            ]
+        },
+
+        "sync": {
+            "//": "config replay and opearational states are synced",
+            "ipc_domain": "B",
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "prepare_switchover" },
+                { "name": "svc_rsp_fail", "next_stage": "repeal"             },
+                { "name": "svc_rsp_crit", "next_stage": "repeal"             },
+                { "name": "svc_no_rsp",   "next_stage": "repeal"             }
+            ]
+        },
+
+        "prepare_switchover": {
+            "//" : "quiescing",
+            "ipc_domain": "A",
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "switchover" },
+                { "name": "svc_rsp_fail", "next_stage": "repeal"     },
+                { "name": "svc_rsp_crit", "next_stage": "exit"       },
+                { "name": "svc_no_rsp",   "next_stage": "repeal"     }
+            ]
+        },
+
+        "switchover": {
+            "ipc_domain": "B",
+            "svc": {
+                "names": [ "pds-agent", "sysmgr" ],
+                "event_sequence": "serial",
+                "rsp_timeout": "2000ms",
+            },
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "finish"   },
+                { "name": "svc_rsp_fail", "next_stage": "rollback" },
+                { "name": "svc_rsp_crit", "next_stage": "exit"     },
+                { "name": "svc_no_rsp",   "next_stage": "rollback" }
+            ]
+        },
+
+        "rollback": {
+            "ipc_domain": "B",
+            "svc": {
+                "names": [ "pds-agent", "sysmgr" ],
+                "event_sequence": "serial",
+                "rsp_timeout": "2000ms",
+            },
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "repeal" },
+                { "name": "svc_rsp_fail", "next_stage": "exit"   },
+                { "name": "svc_rsp_crit", "next_stage": "exit"   },
+                { "name": "svc_no_rsp",   "next_stage": "exit"   }
+            ]
+        },
+
+        "repeal": {
+            "//": "todo: needs discussion here on sysmgr A/B",
+            "ipc_domain": "A",
+             "svc": {
+                "names": [ "sysmgr", "pds-agent" ],
+                "event_sequence": "serial",
+                "rsp_timeout": "2000ms",
+            },
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "finish" },
+                { "name": "svc_rsp_fail", "next_stage": "exit"   },
+                { "name": "svc_rsp_crit", "next_stage": "exit"   },
+                { "name": "svc_no_rsp",   "next_stage": "exit"   }
+           ]
+        },
+
+       "finish": {
+            "//": "todo: failure or failure-non-recovarable status to netagent",
+            "ipc_domain": "A",
+            "svc": {
+                "event_sequence": "serial",
+                "names": [ "pds-agent", "sysmgr" ]
+            },
+            "events": [
+                { "name": "svc_rsp_ok",   "next_stage": "exit" },
+                { "name": "svc_rsp_fail", "next_stage": "exit" },
+                { "name": "svc_rsp_crit", "next_stage": "exit" },
+                { "name": "svc_no_rsp",   "next_stage": "exit" }
+           ]
+        },
+
+        "exit": { }
+    }
+}
