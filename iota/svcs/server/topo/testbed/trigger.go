@@ -278,8 +278,10 @@ func (n *VcenterNode) TriggerWithContext(ctx context.Context,
 
 	if req.TriggerOp == iota.TriggerOp_TYPE_NONE {
 		log.Errorf("TOPO SVC | Trigger | Trigger call failed")
-		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
-		req.ApiResponse.ErrorMsg = fmt.Sprintf("Trigger must specify TriggerOp for workload op. Found: %v", req.TriggerOp)
+		req.ApiResponse = &iota.IotaAPIResponse{
+			ApiStatus: iota.APIResponseType_API_BAD_REQUEST,
+			ErrorMsg:  fmt.Sprintf("Trigger must specify TriggerOp for workload op. Found: %v", req.TriggerOp),
+		}
 		return req, nil
 	}
 
@@ -289,7 +291,6 @@ func (n *VcenterNode) TriggerWithContext(ctx context.Context,
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("Trigger command found to unprovisioned node : %v", cmd.NodeName)
 			return req, nil
 		}
-
 	}
 
 	if req.GetTriggerOp() == iota.TriggerOp_TERMINATE_ALL_CMDS ||

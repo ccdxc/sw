@@ -39,7 +39,6 @@ def verify_errors_lspci(node, os_type):
     pci_eth_device = '1dd8:1002'
     pci_root_device = '1dd8:1000'
     result = api.types.status.SUCCESS
-    uptime(node)
 
     if os_type == host.OS_TYPE_ESX:
         return api.types.status.SUCCESS
