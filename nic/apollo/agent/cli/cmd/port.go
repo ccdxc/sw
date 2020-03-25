@@ -629,7 +629,7 @@ func ifIndexToPortIdStr(ifIndex uint32) string {
 	ifType := (ifIndex >> ifTypeShift) & ifTypeMask
 	ifTypeStr := ifIndexToIfType(ifIndex)
 	switch ifType {
-	case ifTypeEth:
+	case ifTypeEth, ifTypeUplink:
 		slotStr := strconv.FormatUint(uint64(ifIndexToSlot(ifIndex)), 10)
 		parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
 		return ifTypeStr + slotStr + ifNameDelimiter + parentPortStr
