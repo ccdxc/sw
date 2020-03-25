@@ -34,8 +34,8 @@ func NewFirewallProfile(name string, client objClient.ObjClient, testbed *testbe
 					},
 					Spec: security.FirewallProfileSpec{
 						// FIXME: set short timeout value till HAL fixes the drop->allow transition issue
-						//set 10s defaults for other fields
-						SessionIdleTimeout:        "10s",
+						//set max(minRange,10) defaults for other fields
+						SessionIdleTimeout:        "30s",
 						TCPConnectionSetupTimeout: "10s",
 						TCPCloseTimeout:           "10s",
 						TCPHalfClosedTimeout:      "10s",

@@ -19,7 +19,7 @@ def SetTestSettings(tc):
         tc.flood_proto = 'tcp'
         tc.timeout_field = 'tcp-connection-setup'
         tc.metric_field = 'num_tcp_half_open_sessions'
-        test_timeout = '200s'
+        test_timeout = '60s'
     elif tc.proto == 'icmp':
         tc.flood_proto = 'udp'
         tc.timeout_field = 'udp-timeout'

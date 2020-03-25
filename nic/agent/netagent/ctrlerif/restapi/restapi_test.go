@@ -282,16 +282,16 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		},
 		Spec: netproto.SecurityProfileSpec{
 			Timeouts: &netproto.Timeouts{
-				SessionIdle:        "10s",
+				SessionIdle:        "30s",
 				TCP:                "1m",
 				TCPDrop:            "5s",
-				TCPConnectionSetup: "300ms",
-				TCPClose:           "1h",
+				TCPConnectionSetup: "1s",
+				TCPClose:           "300s",
 				Drop:               "30s",
 				UDP:                "5s",
 				UDPDrop:            "1s",
-				ICMP:               "100ms",
-				ICMPDrop:           "1h10m15s",
+				ICMP:               "1s",
+				ICMPDrop:           "300s",
 			},
 			RateLimits: &netproto.RateLimits{
 				TcpHalfOpenSessionLimit: 0,

@@ -15,35 +15,35 @@ import "sgpolicy.proto";
 // FirewallProfileSpec - spec part of FirewallProfile object
 message FirewallProfileSpec {
     // Session idle timeout removes/deletes the session/flow if there is inactivity; this value is superceded by any value specified in App object
-    string SessionIdleTimeout           = 1 [(gogoproto.jsontag) = "session-idle-timeout,omitempty", (venice.default) = "90s", (venice.check) = "Duration(0,0)"];
+    string SessionIdleTimeout           = 1 [(gogoproto.jsontag) = "session-idle-timeout,omitempty", (venice.default) = "90s", (venice.check) = "Duration(30s,172800s)"];
     // TCP Connection Setup Timeout is the period TCP session is kept to see the response of a SYN
-    string TCPConnectionSetupTimeout    = 2 [(gogoproto.jsontag) = "tcp-connection-setup-timeout,omitempty", (venice.default) = "30s", (venice.check) = "Duration(0,0)"];
+    string TCPConnectionSetupTimeout    = 2 [(gogoproto.jsontag) = "tcp-connection-setup-timeout,omitempty", (venice.default) = "30s", (venice.check) = "Duration(1s,60s)"];
     // TCP Close Timeout is the time for which TCP session is kept after a FIN is seen
-    string TCPCloseTimeout              = 3 [(gogoproto.jsontag) = "tcp-close-timeout,omitempty", (venice.default) = "15s", (venice.check) = "Duration(0,0)"];
+    string TCPCloseTimeout              = 3 [(gogoproto.jsontag) = "tcp-close-timeout,omitempty", (venice.default) = "15s", (venice.check) = "Duration(1s,300s)"];
     // TCP Half Closed Timeout is the time for which tCP session is kept when connection is half closed i.e. FIN sent by FIN_Ack not received
-    string TCPHalfClosedTimeout         = 4 [(gogoproto.jsontag) = "tcp-half-closed-timeout,omitempty", (venice.default) = "120s", (venice.check) = "Duration(0,0)"];
+    string TCPHalfClosedTimeout         = 4 [(gogoproto.jsontag) = "tcp-half-closed-timeout,omitempty", (venice.default) = "120s", (venice.check) = "Duration(1s,172800s)"];
     // TCP Drop Timeout is the period for which a drop entry is installed for a denied TCP flow
-    string TCPDropTimeout               = 5 [(gogoproto.jsontag) = "tcp-drop-timeout,omitempty", (venice.default) = "90s", (venice.check) = "Duration(0,0)"];
+    string TCPDropTimeout               = 5 [(gogoproto.jsontag) = "tcp-drop-timeout,omitempty", (venice.default) = "90s", (venice.check) = "Duration(1s,300s)"];
     // UDP Drop Timeout is the period for which a drop entry is installed for a denied UDP flow
-    string UDPDropTimeout               = 6 [(gogoproto.jsontag) = "udp-drop-timeout,omitempty", (venice.default) = "60s", (venice.check) = "Duration(0,0)"];
+    string UDPDropTimeout               = 6 [(gogoproto.jsontag) = "udp-drop-timeout,omitempty", (venice.default) = "60s", (venice.check) = "Duration(1s,172800s)"];
     // ICMP Drop Timeout is the period for which a drop entry is installed for a denied ICMP flow
-    string ICMPDropTimeout              = 7 [(gogoproto.jsontag) = "icmp-drop-timeout,omitempty", (venice.default) = "60s", (venice.check) = "Duration(0,0)"];
+    string ICMPDropTimeout              = 7 [(gogoproto.jsontag) = "icmp-drop-timeout,omitempty", (venice.default) = "60s", (venice.check) = "Duration(1s,300s)"];
     // Drop Timeout is the period for which a drop entry is installed for a denied non tcp/udp/icmp flow
-    string DropTimeout                  = 8 [(gogoproto.jsontag) = "drop-timeout,omitempty", (venice.default) = "60s", (venice.check) = "Duration(0,0)"];
+    string DropTimeout                  = 8 [(gogoproto.jsontag) = "drop-timeout,omitempty", (venice.default) = "60s", (venice.check) = "Duration(1s,300s)"];
     // Tcp Timeout is the period for which a TCP session is kept alive during inactivity
-    string TcpTimeout                   = 9 [(gogoproto.jsontag) = "tcp-timeout,omitempty", (venice.default) = "3600s", (venice.check) = "Duration(0,0)"];
+    string TcpTimeout                   = 9 [(gogoproto.jsontag) = "tcp-timeout,omitempty", (venice.default) = "3600s", (venice.check) = "Duration(1s,172800s)"];
     // Udp Timeout is the period for which a UDP session is kept alive during inactivity
-    string UdpTimeout                   = 10 [(gogoproto.jsontag) = "udp-timeout,omitempty", (venice.default) = "30s", (venice.check) = "Duration(0,0)"];
+    string UdpTimeout                   = 10 [(gogoproto.jsontag) = "udp-timeout,omitempty", (venice.default) = "30s", (venice.check) = "Duration(1s,172800s)"];
     // Icmp Timeout is the period for which a ICMP session is kept alive during inactivity
-    string IcmpTimeout                  = 11 [(gogoproto.jsontag) = "icmp-timeout,omitempty", (venice.default) = "6s", (venice.check) = "Duration(0,0)"];
+    string IcmpTimeout                  = 11 [(gogoproto.jsontag) = "icmp-timeout,omitempty", (venice.default) = "6s", (venice.check) = "Duration(1s,172800s)"];
 	// Tcp half open session limit config after which new open requests will be dropped
-	uint32 TcpHalfOpenSessionLimit      = 12 [(gogoproto.jsontag) = "tcp-half-open-session-limit,omitempty", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
+	uint32 TcpHalfOpenSessionLimit      = 12 [(gogoproto.jsontag) = "tcp-half-open-session-limit", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
 	// Udp active session limit config after which new requests will be dropped
-	uint32 UdpActiveSessionLimit        = 13 [(gogoproto.jsontag) = "udp-active-session-limit,omitempty", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
+	uint32 UdpActiveSessionLimit        = 13 [(gogoproto.jsontag) = "udp-active-session-limit", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
 	// Icmp active session limit config after which new requests will be dropped
-	uint32 IcmpActiveSessionLimit       = 14 [(gogoproto.jsontag) = "icmp-active-session-limit,omitempty", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
+	uint32 IcmpActiveSessionLimit       = 14 [(gogoproto.jsontag) = "icmp-active-session-limit", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
 	// Other Active Session limit config after which new requests will be dropped
-	uint32 OtherActiveSessionLimit      = 15 [(gogoproto.jsontag) = "other-active-session-limit,omitempty", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
+	uint32 OtherActiveSessionLimit      = 15 [(gogoproto.jsontag) = "other-active-session-limit", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
 }
 
 

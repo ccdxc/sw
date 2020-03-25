@@ -649,7 +649,7 @@ func (sm *SysModel) updateDefaultFwprofile() error {
 		},
 		// FIXME: set short timeout value till HAL fixes the drop->allow transition issue
 		Spec: security.FirewallProfileSpec{
-			SessionIdleTimeout:        "10s",
+			SessionIdleTimeout:        "30s",
 			TCPConnectionSetupTimeout: "10s",
 			TCPCloseTimeout:           "10s",
 			TCPHalfClosedTimeout:      "10s",

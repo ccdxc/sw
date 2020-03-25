@@ -448,26 +448,40 @@
     },
     "netprotoRateLimits": {
       "type": "object",
+      "required": [
+        "tcp-half-open-session-limit",
+        "udp-active-session-limit",
+        "icmp-active-session-limit",
+        "other-active-session-limit"
+      ],
       "properties": {
         "tcp-half-open-session-limit": {
           "type": "integer",
           "format": "int64",
-          "description": "Tcp Half OpenSession Limit."
+          "default": "0",
+          "maximum": 128000,
+          "description": "Tcp Half OpenSession Limit. Value should be between 0 and 128000."
         },
         "udp-active-session-limit": {
           "type": "integer",
           "format": "int64",
-          "description": "Udp Active Session Limit."
+          "default": "0",
+          "maximum": 128000,
+          "description": "Udp Active Session Limit. Value should be between 0 and 128000."
         },
         "icmp-active-session-limit": {
           "type": "integer",
           "format": "int64",
-          "description": "Icmp Active Session Limit."
+          "default": "0",
+          "maximum": 128000,
+          "description": "Icmp Active Session Limit. Value should be between 0 and 128000."
         },
         "other-active-session-limit": {
           "type": "integer",
           "format": "int64",
-          "description": "Other Active Session Limit."
+          "default": "0",
+          "maximum": 128000,
+          "description": "Other Active Session Limit. Value should be between 0 and 128000."
         }
       },
       "description": "RateLimits for security profile in x units."
@@ -561,50 +575,85 @@
     },
     "netprotoTimeouts": {
       "type": "object",
+      "required": [
+        "session-idle",
+        "tcp",
+        "tcp-drop",
+        "tcp-connection-setup",
+        "tcp-close",
+        "tcp-half-close",
+        "drop",
+        "udp",
+        "udp-drop",
+        "icmp",
+        "icmp-drop"
+      ],
       "properties": {
         "session-idle": {
           "type": "string",
-          "description": "SessionIdle Timeout."
+          "default": "90s",
+          "example": "2h",
+          "description": "SessionIdle Timeout. Should be a valid time duration between 30s and 48h0m0s."
         },
         "tcp": {
           "type": "string",
-          "description": "TCP Timeout."
+          "default": "3600s",
+          "example": "2h",
+          "description": "TCP Timeout. Should be a valid time duration between 1s and 48h0m0s."
         },
         "tcp-drop": {
           "type": "string",
-          "description": "TCP Drop Timeout."
+          "default": "90s",
+          "example": "2h",
+          "description": "TCP Drop Timeout. Should be a valid time duration between 1s and 5m0s."
         },
         "tcp-connection-setup": {
           "type": "string",
-          "description": "TCP Connection Setup Timeout."
+          "default": "30s",
+          "example": "2h",
+          "description": "TCP Connection Setup Timeout. Should be a valid time duration between 1s and 1m0s."
         },
         "tcp-close": {
           "type": "string",
-          "description": "TCP Close timeout."
+          "default": "15s",
+          "example": "2h",
+          "description": "TCP Close timeout. Should be a valid time duration between 1s and 5m0s."
         },
         "tcp-half-close": {
           "type": "string",
-          "description": "TCP Half Close timeout."
+          "default": "120s",
+          "example": "2h",
+          "description": "TCP Half Close timeout. Should be a valid time duration between 1s and 48h0m0s."
         },
         "drop": {
           "type": "string",
-          "description": "Drop timeout for non tcp, udp and icmp."
+          "default": "60s",
+          "example": "2h",
+          "description": "Drop timeout for non tcp, udp and icmp. Should be a valid time duration between 1s and 5m0s."
         },
         "udp": {
           "type": "string",
-          "description": "UDP Timeout."
+          "default": "30s",
+          "example": "2h",
+          "description": "UDP Timeout. Should be a valid time duration between 1s and 48h0m0s."
         },
         "udp-drop": {
           "type": "string",
-          "description": "UDP Drop Timeout."
+          "default": "60s",
+          "example": "2h",
+          "description": "UDP Drop Timeout. Should be a valid time duration between 1s and 48h0m0s."
         },
         "icmp": {
           "type": "string",
-          "description": "ICMP Timeout."
+          "default": "6s",
+          "example": "2h",
+          "description": "ICMP Timeout. Should be a valid time duration between 1s and 48h0m0s."
         },
         "icmp-drop": {
           "type": "string",
-          "description": "ICMP Drop Timeout."
+          "default": "60s",
+          "example": "2h",
+          "description": "ICMP Drop Timeout. Should be a valid time duration between 1s and 5m0s."
         }
       },
       "description": "Timeouts for the security profile in seconds, minutes etc, 1m, 45s."

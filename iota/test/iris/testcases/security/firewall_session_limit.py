@@ -13,7 +13,7 @@ def SetTestSettings(tc):
     if tc.proto == 'tcp':
         tc.timeout_field = 'tcp-connection-setup'
         tc.metric_field = 'num_tcp_half_open_sessions'
-        test_timeout = '200s'
+        test_timeout = '60s'
         tc.grep_str = 'TCP_HALF_OPEN_SESSION_LIMIT'
     elif tc.proto == 'icmp':
         tc.timeout_field = 'icmp-timeout'

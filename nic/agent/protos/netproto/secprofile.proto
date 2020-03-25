@@ -53,56 +53,56 @@ message SecurityProfileSpec {
     // Timeouts for the security profile
     Timeouts    Timeouts              = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "timeouts,omitempty"];
 	// Rate limits for the security profile
-	RateLimits  RateLimits            = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "rate-limits,omitempty"];
+	RateLimits  RateLimits            = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "rate-limits"];
 }
 
 
 // Timeouts for the security profile in seconds, minutes etc, 1m, 45s
 message Timeouts {
     //SessionIdle Timeout.
-    string SessionIdle          = 1  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "session-idle,omitempty"];
+    string SessionIdle          = 1  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "session-idle,omitempty", (venice.default) = "90s", (venice.check) = "Duration(30s,172800s)"];
 
     // TCP Timeout
-    string TCP                  = 2  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp,omitempty"];
+    string TCP                  = 2  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp,omitempty", (venice.default) = "3600s", (venice.check) = "Duration(1s,172800s)"];
 
     // TCP Drop Timeout
-    string TCPDrop              = 3  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-drop,omitempty"];
+    string TCPDrop              = 3  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-drop,omitempty", (venice.default) = "90s", (venice.check) = "Duration(1s,300s)"];
 
     // TCP Connection Setup Timeout
-    string TCPConnectionSetup   = 4  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-connection-setup,omitempty"];
+    string TCPConnectionSetup   = 4  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-connection-setup,omitempty", (venice.default) = "30s", (venice.check) = "Duration(1s,60s)"];
 
     // TCP Close timeout
-    string TCPClose             = 5  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-close,omitempty"];
+    string TCPClose             = 5  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-close,omitempty", (venice.default) = "15s", (venice.check) = "Duration(1s,300s)"];
 
     // TCP Half Close timeout
-    string TCPHalfClose         = 6  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-half-close,omitempty"];
+    string TCPHalfClose         = 6  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-half-close,omitempty", (venice.default) = "120s", (venice.check) = "Duration(1s,172800s)"];
 
     // Drop timeout for non tcp, udp and icmp
-    string Drop                 = 7  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "drop,omitempty"];
+    string Drop                 = 7  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "drop,omitempty", (venice.default) = "60s", (venice.check) = "Duration(1s,300s)"];
 
     // UDP Timeout
-    string UDP                  = 8  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "udp,omitempty"];
+    string UDP                  = 8  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "udp,omitempty", (venice.default) = "30s", (venice.check) = "Duration(1s,172800s)"];
 
     // UDP Drop Timeout
-    string UDPDrop              = 9  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "udp-drop,omitempty"];
+    string UDPDrop              = 9  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "udp-drop,omitempty", (venice.default) = "60s", (venice.check) = "Duration(1s,172800s)"];
 
     // ICMP Timeout
-    string ICMP                 = 10 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp,omitempty"];
+    string ICMP                 = 10 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp,omitempty", (venice.default) = "6s", (venice.check) = "Duration(1s,172800s)"];
 
     // ICMP Drop Timeout
-    string ICMPDrop             = 11 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp-drop,omitempty"];
+    string ICMPDrop             = 11 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp-drop,omitempty", (venice.default) = "60s", (venice.check) = "Duration(1s,300s)"];
 }
 
 // RateLimits for security profile in x units
 message RateLimits {
 	// Tcp Half OpenSession Limit
-	uint32 TcpHalfOpenSessionLimit  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-half-open-session-limit,omitempty"];
+	uint32 TcpHalfOpenSessionLimit  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-half-open-session-limit", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
 	// Udp Active Session Limit
-	uint32 UdpActiveSessionLimit    = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "udp-active-session-limit,omitempty"];
+	uint32 UdpActiveSessionLimit    = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "udp-active-session-limit", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
 	// Icmp Active Session Limit
-	uint32 IcmpActiveSessionLimit   = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp-active-session-limit,omitempty"];
+	uint32 IcmpActiveSessionLimit   = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp-active-session-limit", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
 	// Other Active Session Limit
-	uint32 OtherActiveSessionLimit  = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "other-active-session-limit,omitempty"];
+	uint32 OtherActiveSessionLimit  = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "other-active-session-limit", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
 }
 
 // SecurityProfileStatus captures the security profile status

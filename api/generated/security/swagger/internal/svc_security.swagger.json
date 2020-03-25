@@ -952,77 +952,77 @@
           },
           {
             "name": "spec.session-idle-timeout",
-            "description": "Session idle timeout removes/deletes the session/flow if there is inactivity; this value is superceded by any value specified in App object. Should be a valid time duration.",
+            "description": "Session idle timeout removes/deletes the session/flow if there is inactivity; this value is superceded by any value specified in App object. Should be a valid time duration between 30s and 48h0m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.tcp-connection-setup-timeout",
-            "description": "TCP Connection Setup Timeout is the period TCP session is kept to see the response of a SYN. Should be a valid time duration.",
+            "description": "TCP Connection Setup Timeout is the period TCP session is kept to see the response of a SYN. Should be a valid time duration between 1s and 1m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.tcp-close-timeout",
-            "description": "TCP Close Timeout is the time for which TCP session is kept after a FIN is seen. Should be a valid time duration.",
+            "description": "TCP Close Timeout is the time for which TCP session is kept after a FIN is seen. Should be a valid time duration between 1s and 5m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.tcp-half-closed-timeout",
-            "description": "TCP Half Closed Timeout is the time for which tCP session is kept when connection is half closed i.e. FIN sent by FIN_Ack not received. Should be a valid time duration.",
+            "description": "TCP Half Closed Timeout is the time for which tCP session is kept when connection is half closed i.e. FIN sent by FIN_Ack not received. Should be a valid time duration between 1s and 48h0m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.tcp-drop-timeout",
-            "description": "TCP Drop Timeout is the period for which a drop entry is installed for a denied TCP flow. Should be a valid time duration.",
+            "description": "TCP Drop Timeout is the period for which a drop entry is installed for a denied TCP flow. Should be a valid time duration between 1s and 5m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.udp-drop-timeout",
-            "description": "UDP Drop Timeout is the period for which a drop entry is installed for a denied UDP flow. Should be a valid time duration.",
+            "description": "UDP Drop Timeout is the period for which a drop entry is installed for a denied UDP flow. Should be a valid time duration between 1s and 48h0m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.icmp-drop-timeout",
-            "description": "ICMP Drop Timeout is the period for which a drop entry is installed for a denied ICMP flow. Should be a valid time duration.",
+            "description": "ICMP Drop Timeout is the period for which a drop entry is installed for a denied ICMP flow. Should be a valid time duration between 1s and 5m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.drop-timeout",
-            "description": "Drop Timeout is the period for which a drop entry is installed for a denied non tcp/udp/icmp flow. Should be a valid time duration.",
+            "description": "Drop Timeout is the period for which a drop entry is installed for a denied non tcp/udp/icmp flow. Should be a valid time duration between 1s and 5m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.tcp-timeout",
-            "description": "Tcp Timeout is the period for which a TCP session is kept alive during inactivity. Should be a valid time duration.",
+            "description": "Tcp Timeout is the period for which a TCP session is kept alive during inactivity. Should be a valid time duration between 1s and 48h0m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.udp-timeout",
-            "description": "Udp Timeout is the period for which a UDP session is kept alive during inactivity. Should be a valid time duration.",
+            "description": "Udp Timeout is the period for which a UDP session is kept alive during inactivity. Should be a valid time duration between 1s and 48h0m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.icmp-timeout",
-            "description": "Icmp Timeout is the period for which a ICMP session is kept alive during inactivity. Should be a valid time duration.",
+            "description": "Icmp Timeout is the period for which a ICMP session is kept alive during inactivity. Should be a valid time duration between 1s and 48h0m0s.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3421,77 +3421,77 @@
           },
           {
             "name": "spec.session-idle-timeout",
-            "description": "Session idle timeout removes/deletes the session/flow if there is inactivity; this value is superceded by any value specified in App object. Should be a valid time duration.",
+            "description": "Session idle timeout removes/deletes the session/flow if there is inactivity; this value is superceded by any value specified in App object. Should be a valid time duration between 30s and 48h0m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.tcp-connection-setup-timeout",
-            "description": "TCP Connection Setup Timeout is the period TCP session is kept to see the response of a SYN. Should be a valid time duration.",
+            "description": "TCP Connection Setup Timeout is the period TCP session is kept to see the response of a SYN. Should be a valid time duration between 1s and 1m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.tcp-close-timeout",
-            "description": "TCP Close Timeout is the time for which TCP session is kept after a FIN is seen. Should be a valid time duration.",
+            "description": "TCP Close Timeout is the time for which TCP session is kept after a FIN is seen. Should be a valid time duration between 1s and 5m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.tcp-half-closed-timeout",
-            "description": "TCP Half Closed Timeout is the time for which tCP session is kept when connection is half closed i.e. FIN sent by FIN_Ack not received. Should be a valid time duration.",
+            "description": "TCP Half Closed Timeout is the time for which tCP session is kept when connection is half closed i.e. FIN sent by FIN_Ack not received. Should be a valid time duration between 1s and 48h0m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.tcp-drop-timeout",
-            "description": "TCP Drop Timeout is the period for which a drop entry is installed for a denied TCP flow. Should be a valid time duration.",
+            "description": "TCP Drop Timeout is the period for which a drop entry is installed for a denied TCP flow. Should be a valid time duration between 1s and 5m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.udp-drop-timeout",
-            "description": "UDP Drop Timeout is the period for which a drop entry is installed for a denied UDP flow. Should be a valid time duration.",
+            "description": "UDP Drop Timeout is the period for which a drop entry is installed for a denied UDP flow. Should be a valid time duration between 1s and 48h0m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.icmp-drop-timeout",
-            "description": "ICMP Drop Timeout is the period for which a drop entry is installed for a denied ICMP flow. Should be a valid time duration.",
+            "description": "ICMP Drop Timeout is the period for which a drop entry is installed for a denied ICMP flow. Should be a valid time duration between 1s and 5m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.drop-timeout",
-            "description": "Drop Timeout is the period for which a drop entry is installed for a denied non tcp/udp/icmp flow. Should be a valid time duration.",
+            "description": "Drop Timeout is the period for which a drop entry is installed for a denied non tcp/udp/icmp flow. Should be a valid time duration between 1s and 5m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.tcp-timeout",
-            "description": "Tcp Timeout is the period for which a TCP session is kept alive during inactivity. Should be a valid time duration.",
+            "description": "Tcp Timeout is the period for which a TCP session is kept alive during inactivity. Should be a valid time duration between 1s and 48h0m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.udp-timeout",
-            "description": "Udp Timeout is the period for which a UDP session is kept alive during inactivity. Should be a valid time duration.",
+            "description": "Udp Timeout is the period for which a UDP session is kept alive during inactivity. Should be a valid time duration between 1s and 48h0m0s.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.icmp-timeout",
-            "description": "Icmp Timeout is the period for which a ICMP session is kept alive during inactivity. Should be a valid time duration.",
+            "description": "Icmp Timeout is the period for which a ICMP session is kept alive during inactivity. Should be a valid time duration between 1s and 48h0m0s.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -7220,67 +7220,67 @@
           "type": "string",
           "default": "90s",
           "example": "2h",
-          "description": "Session idle timeout removes/deletes the session/flow if there is inactivity; this value is superceded by any value specified in App object. Should be a valid time duration."
+          "description": "Session idle timeout removes/deletes the session/flow if there is inactivity; this value is superceded by any value specified in App object. Should be a valid time duration between 30s and 48h0m0s."
         },
         "tcp-connection-setup-timeout": {
           "type": "string",
           "default": "30s",
           "example": "2h",
-          "description": "TCP Connection Setup Timeout is the period TCP session is kept to see the response of a SYN. Should be a valid time duration."
+          "description": "TCP Connection Setup Timeout is the period TCP session is kept to see the response of a SYN. Should be a valid time duration between 1s and 1m0s."
         },
         "tcp-close-timeout": {
           "type": "string",
           "default": "15s",
           "example": "2h",
-          "description": "TCP Close Timeout is the time for which TCP session is kept after a FIN is seen. Should be a valid time duration."
+          "description": "TCP Close Timeout is the time for which TCP session is kept after a FIN is seen. Should be a valid time duration between 1s and 5m0s."
         },
         "tcp-half-closed-timeout": {
           "type": "string",
           "default": "120s",
           "example": "2h",
-          "description": "TCP Half Closed Timeout is the time for which tCP session is kept when connection is half closed i.e. FIN sent by FIN_Ack not received. Should be a valid time duration."
+          "description": "TCP Half Closed Timeout is the time for which tCP session is kept when connection is half closed i.e. FIN sent by FIN_Ack not received. Should be a valid time duration between 1s and 48h0m0s."
         },
         "tcp-drop-timeout": {
           "type": "string",
           "default": "90s",
           "example": "2h",
-          "description": "TCP Drop Timeout is the period for which a drop entry is installed for a denied TCP flow. Should be a valid time duration."
+          "description": "TCP Drop Timeout is the period for which a drop entry is installed for a denied TCP flow. Should be a valid time duration between 1s and 5m0s."
         },
         "udp-drop-timeout": {
           "type": "string",
           "default": "60s",
           "example": "2h",
-          "description": "UDP Drop Timeout is the period for which a drop entry is installed for a denied UDP flow. Should be a valid time duration."
+          "description": "UDP Drop Timeout is the period for which a drop entry is installed for a denied UDP flow. Should be a valid time duration between 1s and 48h0m0s."
         },
         "icmp-drop-timeout": {
           "type": "string",
           "default": "60s",
           "example": "2h",
-          "description": "ICMP Drop Timeout is the period for which a drop entry is installed for a denied ICMP flow. Should be a valid time duration."
+          "description": "ICMP Drop Timeout is the period for which a drop entry is installed for a denied ICMP flow. Should be a valid time duration between 1s and 5m0s."
         },
         "drop-timeout": {
           "type": "string",
           "default": "60s",
           "example": "2h",
-          "description": "Drop Timeout is the period for which a drop entry is installed for a denied non tcp/udp/icmp flow. Should be a valid time duration."
+          "description": "Drop Timeout is the period for which a drop entry is installed for a denied non tcp/udp/icmp flow. Should be a valid time duration between 1s and 5m0s."
         },
         "tcp-timeout": {
           "type": "string",
           "default": "3600s",
           "example": "2h",
-          "description": "Tcp Timeout is the period for which a TCP session is kept alive during inactivity. Should be a valid time duration."
+          "description": "Tcp Timeout is the period for which a TCP session is kept alive during inactivity. Should be a valid time duration between 1s and 48h0m0s."
         },
         "udp-timeout": {
           "type": "string",
           "default": "30s",
           "example": "2h",
-          "description": "Udp Timeout is the period for which a UDP session is kept alive during inactivity. Should be a valid time duration."
+          "description": "Udp Timeout is the period for which a UDP session is kept alive during inactivity. Should be a valid time duration between 1s and 48h0m0s."
         },
         "icmp-timeout": {
           "type": "string",
           "default": "6s",
           "example": "2h",
-          "description": "Icmp Timeout is the period for which a ICMP session is kept alive during inactivity. Should be a valid time duration."
+          "description": "Icmp Timeout is the period for which a ICMP session is kept alive during inactivity. Should be a valid time duration between 1s and 48h0m0s."
         },
         "tcp-half-open-session-limit": {
           "type": "integer",
