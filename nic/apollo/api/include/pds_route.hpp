@@ -29,6 +29,7 @@
 
 /// \brief route
 typedef struct pds_route_s {
+    pds_obj_key_t               key;      ///< route identifier
     ip_prefix_t                 prefix;   ///< prefix
     /// NOTE:
     /// 1. priority value must be non-zero
@@ -71,7 +72,7 @@ typedef struct route_info_s {
     uint32_t      num_routes; ///< number of routes in the list
     pds_route_t   routes[0];  ///< list or route rules
 } route_info_t;
-#define ROUTE_SET_SIZE(count)        \
+#define ROUTE_INFO_SIZE(count)        \
             (sizeof(route_info_t) + (count) * sizeof(pds_route_t))
 
 /// \brief route table configuration

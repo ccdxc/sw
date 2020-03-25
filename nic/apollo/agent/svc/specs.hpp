@@ -2825,7 +2825,7 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
     num_routes = proto_spec.routes_size();
     api_spec->route_info =
         (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                   ROUTE_SET_SIZE(num_routes));
+                                   ROUTE_INFO_SIZE(num_routes));
     if (unlikely(api_spec->route_info == NULL)) {
         PDS_TRACE_ERR("Failed to allocate memory for route table {}",
                       api_spec->key.id);

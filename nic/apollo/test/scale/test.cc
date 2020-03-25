@@ -66,7 +66,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
     }
     v6route_table.route_info =
         (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                   ROUTE_SET_SIZE(num_routes));
+                                   ROUTE_INFO_SIZE(num_routes));
     v6route_table.route_info->af = IP_AF_IPV6;
     v6route_table.route_info->num_routes = num_routes;
     for (uint32_t i = 1; i <= ntables; i++) {
@@ -126,7 +126,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     }
     route_table.route_info =
         (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                   ROUTE_SET_SIZE(num_routes));
+                                   ROUTE_INFO_SIZE(num_routes));
     route_table.route_info->af = IP_AF_IPV4;
     route_table.route_info->num_routes = num_routes;
     for (uint32_t i = 1; i <= ntables; i++) {

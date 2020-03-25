@@ -92,11 +92,11 @@ pds_route_table_read (_In_ pds_obj_key_t *key,
             if (ret != SDK_RET_OK) {
                 return ret;
             }
-            // buffer is smaller, read all routes and copy over the requested number
-            // allocate memory for reading all the routes
+            // buffer is smaller, read all routes and copy over the
+            // requested number allocate memory for reading all the routes
             route_info_t *route_info =
                 (route_info_t *)SDK_CALLOC(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                           ROUTE_SET_SIZE(entry->num_routes()));
+                                           ROUTE_INFO_SIZE(entry->num_routes()));
             route_info->num_routes = entry->num_routes();
             // retrieve all routes
             ret = route_table_db()->retrieve_routes(key, route_info);
@@ -105,7 +105,8 @@ pds_route_table_read (_In_ pds_obj_key_t *key,
                 return ret;
             }
             // copy over requested number of routes
-            memcpy(info->spec.route_info, route_info, ROUTE_SET_SIZE(num_routes_to_read));
+            memcpy(info->spec.route_info, route_info,
+                   ROUTE_INFO_SIZE(num_routes_to_read));
             info->spec.route_info->num_routes = num_routes_to_read;
             // free allocated memory
             SDK_FREE(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE, route_info);
@@ -114,8 +115,9 @@ pds_route_table_read (_In_ pds_obj_key_t *key,
             if (ret != SDK_RET_OK) {
                 return ret;
             }
-            // Read route table entries from lmdb
-            return route_table_db()->retrieve_routes(key, info->spec.route_info);
+            // read route table entries from lmdb
+            return route_table_db()->retrieve_routes(key,
+                                                     info->spec.route_info);
         }
     }
 }
@@ -194,12 +196,12 @@ void pds_route_table_spec_s::deepcopy_(const pds_route_table_spec_t& route_table
     PDS_TRACE_VERBOSE("Deep copying route table spec");
     route_info =
         (route_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                   ROUTE_SET_SIZE(route_table.route_info->num_routes));
+                            ROUTE_INFO_SIZE(route_table.route_info->num_routes));
     SDK_ASSERT(route_info != NULL);
     priv_mem_ = true;
     key = route_table.key;
     memcpy(route_info, route_table.route_info,
-           ROUTE_SET_SIZE(route_table.route_info->num_routes));
+           ROUTE_INFO_SIZE(route_table.route_info->num_routes));
 }
 
 void pds_route_table_spec_s::move_(pds_route_table_spec_t&& route_table) {

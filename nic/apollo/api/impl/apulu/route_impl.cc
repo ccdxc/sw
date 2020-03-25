@@ -192,12 +192,11 @@ route_table_impl::nuke_resources(api_base *api_obj) {
 
 #define dnat_info    action_u.dnat_dnat
 sdk_ret_t
-route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
     sdk_ret_t              ret;
     tep_entry              *tep;
     vpc_entry              *vpc;
     vnic_entry             *vnic;
-    pds_route_table_spec_t *spec;
     uint32_t               nh_val;
     pds_obj_key_t          vpc_key;
     route_table_t          *rtable;
@@ -206,7 +205,6 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     pds_route_t            *route_spec;
     dnat_actiondata_t      dnat_data;
 
-    spec = &obj_ctxt->api_params->route_table_spec;
     // allocate memory for the library to build route table
     rtable =
         (route_table_t *)
@@ -399,9 +397,168 @@ cleanup:
 }
 
 sdk_ret_t
+route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+    return program_route_table_(&obj_ctxt->api_params->route_table_spec);
+}
+
+sdk_ret_t
+route_table_impl::update_route_table_spec_(pds_route_table_spec_t *spec,
+                                           api_obj_ctxt_t *obj_ctxt) {
+    uint32_t i;
+    bool found;
+    pds_obj_key_t key;
+    api_obj_ctxt_t *octxt;
+
+    for (auto it = obj_ctxt->clist.begin(); it != obj_ctxt->clist.end(); it++) {
+        octxt = *it;
+        if (octxt->api_op == API_OP_CREATE) {
+            // add the route to the end of the table
+            spec->route_info->routes[spec->route_info->num_routes] =
+                octxt->api_params->route_spec.route;
+            spec->route_info->num_routes++;
+        } else {
+            // either DEL or UPD operation
+            if (octxt->api_op == API_OP_DELETE) {
+                key = octxt->api_params->route_key;
+            } else {
+                // update case
+                key = octxt->api_params->route_key;
+            }
+            // search and find the object to delete or modify
+            found = false;
+            for (i = 0; i < spec->route_info->num_routes; i++) {
+                if (key == spec->route_info->routes[i].key) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                PDS_TRACE_ERR("route %s not found in route table %s to "
+                              "perform api op %u",
+                              key.str(), spec->key.str(), octxt->api_op);
+                return SDK_RET_INVALID_ARG;
+            }
+            if (octxt->api_op == API_OP_DELETE) {
+                spec->route_info->routes[i] =
+                    spec->route_info->routes[spec->route_info->num_routes - 1];
+                spec->route_info->num_routes--;
+            } else {
+                // update case
+                spec->route_info->routes[i] =
+                    octxt->api_params->route_spec.route;
+            }
+        }
+    }
+    return SDK_RET_OK;
+}
+
+
+sdk_ret_t
 route_table_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                             api_obj_ctxt_t *obj_ctxt) {
-    return this->program_hw(curr_obj, obj_ctxt);
+    uint32_t num_routes;
+    sdk_ret_t ret = SDK_RET_OK;
+    pds_route_table_spec_t spec;
+    route_table *new_rtable = (route_table *)curr_obj;
+    route_table *old_rtable = (route_table *)orig_obj;
+
+    if (obj_ctxt->clist.size() == 0) {
+        SDK_ASSERT((obj_ctxt->upd_bmap & (PDS_ROUTE_TABLE_UPD_ROUTE_ADD |
+                                          PDS_ROUTE_TABLE_UPD_ROUTE_DEL |
+                                          PDS_ROUTE_TABLE_UPD_ROUTE_UPD)) == 0);
+        PDS_TRACE_DEBUG("Processing route table update for %s with no "
+                        "individual route updates in this batch",
+                        new_rtable->key().str());
+        return this->program_hw(curr_obj, obj_ctxt);
+    }
+
+    // we have few cases to handle here:
+    // 1. route table object itself is being updated (some other attributes
+    //    modifications and/or with new set of routes combined with
+    //    individual route add/del/update operations all combined in this
+    //    batch
+    // 2. route table object modification is solely because of individual
+    //    route add/del/updates in this batch
+    spec.key = new_rtable->key();
+    if (obj_ctxt->upd_bmap & ~(PDS_ROUTE_TABLE_UPD_ROUTE_ADD |
+                               PDS_ROUTE_TABLE_UPD_ROUTE_DEL |
+                               PDS_ROUTE_TABLE_UPD_ROUTE_UPD)) {
+        // case 1 : both container and contained objects are being modified
+        //          (ADD/DEL/UPD), in this we can fully ignore the set of routes
+        //          that are persisted in kvstore
+        // number of new routes in the worst case will be total of what we have
+        // currently plus size of clist (assuming all contained objs are being
+        // added)
+        // TODO:
+        // keep track of this counter in obj_ctxt itself in API engine so we can
+        // catch errors where total capacity exceeds max. supported without any
+        // extra processing
+        num_routes = new_rtable->num_routes() + obj_ctxt->clist.size();
+        spec.route_info =
+            (route_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                       ROUTE_INFO_SIZE(num_routes));
+        if (!spec.route_info) {
+            PDS_TRACE_ERR("Failed to allocate memory for %u routes for "
+                          "route table %s update processing", num_routes,
+                          spec.key.str());
+            ret = SDK_RET_OOM;
+            goto end;
+        }
+        memcpy(&spec.route_info,
+               obj_ctxt->api_params->route_table_spec.route_info,
+               ROUTE_INFO_SIZE(new_rtable->num_routes()));
+    } else {
+        // case 2 : only contained objects are being modified (ADD/DEL/UPD),
+        //          form new spec that consists of current set of routes and
+        //          individual route updates
+        // number of new routes in the worst case will be total of what we have
+        // currently plus size of clist (assuming all contained objs are being
+        // added)
+        // TODO:
+        // keep track of this counter in obj_ctxt itself in API engine so we can
+        // catch errors where total capacity exceeds max. supported without any
+        // extra processing
+        num_routes = old_rtable->num_routes() + obj_ctxt->clist.size();
+        spec.route_info =
+            (route_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                       ROUTE_INFO_SIZE(num_routes));
+        if (!spec.route_info) {
+            PDS_TRACE_ERR("Failed to allocate memory for %u routes for "
+                          "route table %s update processing", num_routes,
+                          spec.key.str());
+            ret = SDK_RET_OOM;
+            goto end;
+        }
+#if 0
+        ret = route_table_db()->retrieve_routes(&spec.key, spec.route_info);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to retrieve routes from kvstore for route "
+                          "table %s, err %u", spec.key.str(), ret);
+            goto end;
+        }
+#endif
+    }
+    ret = update_route_table_spec_(&spec, obj_ctxt);
+    if (ret != SDK_RET_OK) {
+        goto end;
+    }
+    PDS_TRACE_DEBUG("Route table %s size changed from %u to %u",
+                    spec.key.str(), old_rtable->num_routes(),
+                    spec.route_info->num_routes);
+    ret = program_route_table_(&spec);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program route table %s update, err %u",
+                      spec.key.str(), ret);
+        goto end;
+    }
+
+end:
+
+    if (spec.route_info) {
+        SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, spec.route_info);
+        spec.route_info = NULL;
+    }
+    return ret;
 }
 
 sdk_ret_t

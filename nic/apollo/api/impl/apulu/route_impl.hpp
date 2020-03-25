@@ -53,7 +53,7 @@ public:
 
     /// \brief     allocate/reserve h/w resources for this object
     /// \param[in] api_obj API object for which resources are being reserved
-    /// \param[in] obj_ctxt transient state associated with this API
+    /// \param[in] obj_ctxt transient state associated with this object
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t reserve_resources(api_base *api_obj,
                                         api_obj_ctxt_t *obj_ctxt) override;
@@ -73,7 +73,7 @@ public:
     /// \brief     program all h/w tables relevant to this object except
     ///            stage 0 table(s), if any
     /// \param[in] api_obj  API object holding the resources
-    /// \param[in] obj_ctxt transient state associated with this API
+    /// \param[in] obj_ctxt transient state associated with this object
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_hw(api_base *api_obj,
                                  api_obj_ctxt_t *obj_ctxt) override;
@@ -82,7 +82,7 @@ public:
     ///            stage 0 table(s), if any, by updating packed entries
     ///            with latest epoch#
     /// \param[in] api_obj  API object holding the resources
-    /// \param[in] obj_ctxt transient state associated with this API
+    /// \param[in] obj_ctxt transient state associated with this object
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_hw(api_base *api_obj,
                                  api_obj_ctxt_t *obj_ctxt) override {
@@ -94,7 +94,7 @@ public:
     /// if any, by updating packed entries with latest epoch
     /// \param[in] orig_obj Old version of the unmodified object
     /// \param[in] curr_obj Cloned and updated version of the object
-    /// \param[in] obj_ctxt Transient state associated with this API
+    /// \param[in] obj_ctxt Transient state associated with this object
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_hw(api_base *orig_obj, api_base *curr_obj,
                                 api_obj_ctxt_t *obj_ctxt) override;
@@ -105,7 +105,7 @@ public:
     /// \param[in] orig_obj previous/original unmodified object
     /// \param[in] epoch    epoch being activated
     /// \param[in] api_op   api operation
-    /// \param[in] obj_ctxt transient state associated with this API
+    /// \param[in] obj_ctxt transient state associated with this object
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_hw(api_base *api_obj, api_base *orig_obj,
                                   pds_epoch_t epoch, api_op_t api_op,
@@ -135,6 +135,21 @@ private:
     /// \brief      fill the route table status
     /// \param[out] status status
     void fill_status_(pds_route_table_status_t *status);
+
+    /// \brief helper routine to compile the routes from the API to h/w
+    ///        friendly form before the interval tree is computed
+    /// \param[in] spec    route table configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t program_route_table_(pds_route_table_spec_t *spec);
+
+    /// \brief helper routine to update the route table spec using the incoming
+    ///        route table config and/or individual route add/del/upd
+    ///        configurations along with persisted route database
+    /// \param[in] spec    route table configuration
+    /// \param[in] obj_ctxt transient state associated with this object
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t update_route_table_spec_(pds_route_table_spec_t *spec,
+                                       api_obj_ctxt_t *obj_ctxt);
 
 private:
     // P4 datapath specific state

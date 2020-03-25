@@ -19,9 +19,10 @@
 
 namespace api {
 
-#define PDS_ROUTE_TABLE_UPD_ROUTE_ADD        0x1
-#define PDS_ROUTE_TABLE_UPD_ROUTE_DEL        0x2
-#define PDS_ROUTE_TABLE_UPD_ROUTE_UPD        0x4
+#define PDS_ROUTE_TABLE_UPD_ROUTES           0x1
+#define PDS_ROUTE_TABLE_UPD_ROUTE_ADD        0x2
+#define PDS_ROUTE_TABLE_UPD_ROUTE_DEL        0x4
+#define PDS_ROUTE_TABLE_UPD_ROUTE_UPD        0x8
 
 /// \defgroup PDS_ROUTE_TABLE - route table functionality
 /// \ingroup PDS_ROUTE

@@ -79,7 +79,8 @@ route_table_state::find(pds_obj_key_t *key) const {
 sdk_ret_t
 route_table_state::retrieve_routes(pds_obj_key_t *key,
                                    route_info_t *route_info) {
-    size_t read_size = ROUTE_SET_SIZE(route_info->num_routes);
+    size_t read_size = ROUTE_INFO_SIZE(route_info->num_routes);
+
     return kvstore_->find(key, sizeof(pds_obj_key_t),
                           route_info, &read_size);
 }
@@ -91,7 +92,7 @@ route_table_state::persist(route_table *table, pds_route_table_spec_t *spec) {
     if (table->key_.valid()) {
         ret = kvstore_->insert(&table->key_, sizeof(table->key_),
                                spec->route_info,
-                               ROUTE_SET_SIZE(spec->route_info->num_routes));
+                               ROUTE_INFO_SIZE(spec->route_info->num_routes));
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed to persist route table %s in kvstore, err %u",
                           spec->key.str(), ret);

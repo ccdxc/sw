@@ -176,7 +176,9 @@ route_table::compute_update(api_obj_ctxt_t *obj_ctxt) {
         return SDK_RET_INVALID_ARG;
     }
     // in all other cases we have to recompute the route table and program in
-    // the datapath
+    // the datapath so we can assume that routes are being modified in all other
+    // cases
+    obj_ctxt->upd_bmap |= PDS_ROUTE_TABLE_UPD_ROUTES;
     return SDK_RET_OK;
 }
 

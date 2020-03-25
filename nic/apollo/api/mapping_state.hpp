@@ -63,7 +63,7 @@ public:
     /// \return    pointer to the mapping instance found or NULL
     mapping_entry *find(pds_mapping_key_t *skey) const;
 
-    /// \brief     Iterate through mapping entries through lmdb
+    /// \brief     iterate through mapping entries persisted in kvstore
     /// \param[in] cb      callback called on each entry
     /// \param[in] ctxt    opaque context passed to callback
     void kvstore_iterate(mapping_state_cb_t cb, void *ctxt);

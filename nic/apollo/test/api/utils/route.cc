@@ -82,7 +82,7 @@ route_table_feeder::spec_build(pds_route_table_spec_t *spec) const {
     this->key_build(&spec->key);
     spec->route_info =
             (route_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                       ROUTE_SET_SIZE(num_routes));
+                                       ROUTE_INFO_SIZE(num_routes));
     spec->route_info->af = this->af;
     spec->route_info->num_routes = this->num_routes;
     num_routes_per_type = num_routes/k_num_nhtypes_supported;
