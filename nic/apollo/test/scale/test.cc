@@ -37,8 +37,8 @@ uint32_t tep_id = 0;
 
 #define TEP_ID_START           1
 #define TEP_ID_MYTEP           TEP_ID_START
-#define HOST_LIF_ID_MIN        72
-#define HOST_LIF_ID_MAX        79
+#define HOST_LIF_ID_MIN        74
+#define HOST_LIF_ID_MAX        78
 
 #define POLICY_ID_BASE         1
 #define ROUTE_TABLE_ID_BASE    4096
@@ -1859,24 +1859,24 @@ create_objects (void)
         return ret;
     }
 
-    if (!apulu()) {
-        // create egress IPv4 security policies
-        ret = create_security_policy(g_test_params.num_vpcs,
-                                     g_test_params.num_subnets,
-                                     g_test_params.num_ipv4_rules,
-                                     IP_AF_IPV4, false);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-        // create ingress IPv4 security policies
-        ret = create_security_policy(g_test_params.num_vpcs,
-                                     g_test_params.num_subnets,
-                                     g_test_params.num_ipv4_rules,
-                                     IP_AF_IPV4, true);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
+    // create egress IPv4 security policies
+    ret = create_security_policy(g_test_params.num_vpcs,
+                                 g_test_params.num_subnets,
+                                 g_test_params.num_ipv4_rules,
+                                 IP_AF_IPV4, false);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    // create ingress IPv4 security policies
+    ret = create_security_policy(g_test_params.num_vpcs,
+                                 g_test_params.num_subnets,
+                                 g_test_params.num_ipv4_rules,
+                                 IP_AF_IPV4, true);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
 
+    if (!apulu()) {
         // create egress IPv6 security policies
         ret = create_security_policy(g_test_params.num_vpcs,
                                      g_test_params.num_subnets,

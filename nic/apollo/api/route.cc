@@ -247,8 +247,7 @@ route_table::fill_spec_(pds_route_table_spec_t *spec) {
     memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
     if (spec->route_info) {
         spec->route_info->af = af_;
-        spec->route_info->num_routes = 0;
-        // routes are not stored anywhere yet
+        spec->route_info->num_routes = num_routes_;
     }
 }
 

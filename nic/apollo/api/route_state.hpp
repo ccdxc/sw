@@ -64,6 +64,12 @@ public:
     /// \param[in] key route table key
     route_table *find(pds_obj_key_t *key) const;
 
+    /// \brief     read routes in route table from lmdb
+    /// \param[in] key          key of the route table
+    /// \param[in] route_info   route info to be filled up
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t retrieve_routes(pds_obj_key_t *key, route_info_t *route_info);
+
     /// \brief      persist the given route table
     /// \param[in]  table route table instance
     /// \param[in]  spec    route table configuration to be persisted

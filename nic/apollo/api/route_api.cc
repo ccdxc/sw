@@ -67,17 +67,57 @@ sdk_ret_t
 pds_route_table_read (_In_ pds_obj_key_t *key,
                       _Out_ pds_route_table_info_t *info)
 {
+    sdk_ret_t ret;
     route_table *entry;
 
     if (key == NULL || info == NULL) {
-        return sdk::SDK_RET_INVALID_ARG;
+        return SDK_RET_INVALID_ARG;
     }
 
     if ((entry = pds_route_table_find(key)) == NULL) {
-        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+        return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    return entry->read(info);
+    if (info->spec.route_info == NULL) {
+        return entry->read(info);
+    }
+
+    if (!info->spec.route_info->num_routes) {
+        info->spec.route_info->num_routes = entry->num_routes();
+        return SDK_RET_OK;
+    } else {
+        uint32_t num_routes_to_read = info->spec.route_info->num_routes;
+        if (num_routes_to_read < entry->num_routes()) {
+            ret = entry->read(info);
+            if (ret != SDK_RET_OK) {
+                return ret;
+            }
+            // buffer is smaller, read all routes and copy over the requested number
+            // allocate memory for reading all the routes
+            route_info_t *route_info =
+                (route_info_t *)SDK_CALLOC(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                           ROUTE_SET_SIZE(entry->num_routes()));
+            route_info->num_routes = entry->num_routes();
+            // retrieve all routes
+            ret = route_table_db()->retrieve_routes(key, route_info);
+            if (ret != SDK_RET_OK) {
+                SDK_FREE(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE, route_info);
+                return ret;
+            }
+            // copy over requested number of routes
+            memcpy(info->spec.route_info, route_info, ROUTE_SET_SIZE(num_routes_to_read));
+            info->spec.route_info->num_routes = num_routes_to_read;
+            // free allocated memory
+            SDK_FREE(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE, route_info);
+        } else {
+            ret = entry->read(info);
+            if (ret != SDK_RET_OK) {
+                return ret;
+            }
+            // Read route table entries from lmdb
+            return route_table_db()->retrieve_routes(key, info->spec.route_info);
+        }
+    }
 }
 
 sdk_ret_t

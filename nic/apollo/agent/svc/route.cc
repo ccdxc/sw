@@ -231,6 +231,10 @@ RouteSvcImpl::RouteTableGet(ServerContext *context,
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
         pds_route_table_api_info_to_proto(&info, proto_rsp);
+        if (info.spec.route_info) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
+            info.spec.route_info = NULL;
+        }
     }
 
     if (proto_req->id_size() == 0) {

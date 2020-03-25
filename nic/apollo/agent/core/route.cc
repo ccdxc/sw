@@ -135,7 +135,17 @@ route_table_get (pds_obj_key_t *key, pds_route_table_info_t *info)
 
     memcpy(&info->spec, spec, sizeof(pds_route_table_spec_t));
     if (!agent_state::state()->pds_mock_mode()) {
+        info->spec.route_info = (route_info_t *)SDK_CALLOC(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                                           ROUTE_SET_SIZE(0));
         ret = pds_route_table_read(key, info);
+        if (ret == SDK_RET_OK) {
+            uint32_t num_routes = info->spec.route_info->num_routes;
+            SDK_FREE(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE, info->spec.route_info);
+            info->spec.route_info = (route_info_t *)SDK_CALLOC(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                                               ROUTE_SET_SIZE(num_routes));
+            info->spec.route_info->num_routes = num_routes;
+            ret = pds_route_table_read(key, info);
+        }
     }
     return ret;
 }
@@ -150,10 +160,24 @@ route_table_get_all_cb (pds_route_table_spec_t *spec, void *ctxt)
     memset(&info, 0, sizeof(pds_route_table_info_t));
     memcpy(&info.spec, spec, sizeof(pds_route_table_spec_t));
     if (!agent_state::state()->pds_mock_mode()) {
+        info.spec.route_info = (route_info_t *)SDK_CALLOC(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                                          ROUTE_SET_SIZE(0));
         ret = pds_route_table_read(&spec->key, &info);
+        if (ret == SDK_RET_OK) {
+            uint32_t num_routes = info.spec.route_info->num_routes;
+            SDK_FREE(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
+            info.spec.route_info = (route_info_t *)SDK_CALLOC(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                                              ROUTE_SET_SIZE(num_routes));
+            info.spec.route_info->num_routes = num_routes;
+            ret = pds_route_table_read(&spec->key, &info);
+        }
     }
     if (ret == SDK_RET_OK) {
         cb_ctxt->cb(&info, cb_ctxt->ctxt);
+        if (info.spec.route_info) {
+            SDK_FREE(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
+            info.spec.route_info = NULL;
+        }
     }
     return ret;
 }

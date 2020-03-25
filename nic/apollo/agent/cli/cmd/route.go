@@ -30,7 +30,7 @@ var routeShowCmd = &cobra.Command{
 }
 
 func init() {
-	//	showCmd.AddCommand(routeShowCmd)
+	showCmd.AddCommand(routeShowCmd)
 	routeShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	routeShowCmd.Flags().StringVarP(&routeID, "route-id", "i", "", "Specify Route ID")
 }
@@ -93,10 +93,10 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printRouteHeader() {
-	hdrLine := strings.Repeat("-", 94)
+	hdrLine := strings.Repeat("-", 112)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-6s%-20s%-12s%-16s\n",
-		"ID", "IPAF", "Prefix", "NextHopType", "NextHopValue")
+	fmt.Printf("%-40s%-20s%-12s%-40s\n",
+		"ID", "Prefix", "NextHopType", "NextHop")
 	fmt.Println(hdrLine)
 }
 
@@ -105,37 +105,36 @@ func printRoute(rt *pds.RouteTable) {
 	routes := spec.GetRoutes()
 	first := true
 
-	fmt.Printf("%-40s%-6s", uuid.FromBytesOrNil(spec.GetId()).String(),
-		strings.Replace(spec.GetAf().String(), "IP_AF_", "", -1))
+	fmt.Printf("%-40s", uuid.FromBytesOrNil(spec.GetId()).String())
 
 	for _, route := range routes {
 		if first != true {
-			fmt.Printf("%-6s%-6s", "", "")
+			fmt.Printf("%-40s", "")
 		}
 		switch route.GetNh().(type) {
 		case *pds.RouteInfo_NextHop:
-			fmt.Printf("%-20s%-12s%-16s\n",
+			fmt.Printf("%-20s%-12s%-40s\n",
 				utils.IPPrefixToStr(route.GetPrefix()),
 				"IP",
 				utils.IPAddrToStr(route.GetNextHop()))
 			first = false
 		case *pds.RouteInfo_NexthopId:
-			fmt.Printf("%-20s%-12s%-16d\n",
+			fmt.Printf("%-20s%-12s%-40s\n",
 				utils.IPPrefixToStr(route.GetPrefix()),
 				"ID",
-				route.GetNexthopId)
+				uuid.FromBytesOrNil(route.GetNexthopId()).String())
 			first = false
 		case *pds.RouteInfo_VPCId:
-			fmt.Printf("%-20s%-12s%-16d\n",
+			fmt.Printf("%-20s%-12s%-40s\n",
 				utils.IPPrefixToStr(route.GetPrefix()),
 				"VPC",
-				route.GetVPCId())
+				uuid.FromBytesOrNil(route.GetVPCId()).String())
 			first = false
 		case *pds.RouteInfo_TunnelId:
-			fmt.Printf("%-20s%-12s%-16d\n",
+			fmt.Printf("%-20s%-12s%-40s\n",
 				utils.IPPrefixToStr(route.GetPrefix()),
 				"TEP",
-				route.GetTunnelId())
+				uuid.FromBytesOrNil(route.GetTunnelId()).String())
 			first = false
 		default:
 		}

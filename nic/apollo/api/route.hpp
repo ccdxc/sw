@@ -208,6 +208,12 @@ public:
     /// \return    impl instance of the route table object
     impl_base *impl(void) { return impl_; }
 
+    /**
+     * @brief     return num routes in this route table
+     * @return    num of routes
+     */
+     uint32_t num_routes(void) { return num_routes_; }
+
 private:
     /// \brief    constructor
     route_table();

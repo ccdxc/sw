@@ -77,6 +77,14 @@ route_table_state::find(pds_obj_key_t *key) const {
 }
 
 sdk_ret_t
+route_table_state::retrieve_routes(pds_obj_key_t *key,
+                                   route_info_t *route_info) {
+    size_t read_size = ROUTE_SET_SIZE(route_info->num_routes);
+    return kvstore_->find(key, sizeof(pds_obj_key_t),
+                          route_info, &read_size);
+}
+
+sdk_ret_t
 route_table_state::persist(route_table *table, pds_route_table_spec_t *spec) {
     sdk_ret_t ret;
 
