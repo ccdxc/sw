@@ -1447,6 +1447,12 @@ func isCoppTypeValid(coppType string) bool {
 		return true
 	case "dhcp":
 		return true
+	case "swm":
+		return true
+	case "inband":
+		return true
+	case "oob":
+		return true
 	default:
 		return false
 	}
@@ -1460,6 +1466,12 @@ func inputToCoppType(coppType string) halproto.CoppType {
 		return halproto.CoppType_COPP_TYPE_ARP
 	case "dhcp":
 		return halproto.CoppType_COPP_TYPE_DHCP
+	case "swm":
+		return halproto.CoppType_COPP_TYPE_SWM
+	case "inband":
+		return halproto.CoppType_COPP_TYPE_INBAND_MGMT
+	case "oob":
+		return halproto.CoppType_COPP_TYPE_OOB_MGMT
 	default:
 		return halproto.CoppType_COPP_TYPE_FLOW_MISS
 	}

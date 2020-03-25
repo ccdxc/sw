@@ -12,6 +12,7 @@
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/iris/p4pd_defaults.hpp"
+#include "nic/hal/pd/iris/internal/copp_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -1768,7 +1769,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     sdk_ret_t                   sdk_ret;
     uint8_t                     tm_oport            = 0;
     uint8_t                     p4plus_app_id       = 0;
-    output_mapping_actiondata_t   data;
+    output_mapping_actiondata_t data;
     directmap                   *dm_omap            = NULL;
     pd_lif_t                    *pd_lif             = NULL;
     lif_t                       *lif                = NULL;
@@ -1779,6 +1780,9 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     bool                        encap_vlan_id_valid = false;
     bool                        nacl_egress_drop_en = false;                       
     vlan_id_t                   encap_vlan          = 0;
+    copp_t                      *copp               = NULL;
+    bool                        copp_en             = 0;
+    uint32_t                    copp_hw_id          = 0;
 
     memset(&data, 0, sizeof(data));
 
@@ -1831,6 +1835,24 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
         encap_vlan_id_valid = true;
     }
 
+    // copp 
+    if (lif && (lif->type == types::LIF_TYPE_SWM ||
+                lif->type == types::LIF_TYPE_MNIC_INBAND_MANAGEMENT ||
+                lif->type == types::LIF_TYPE_MNIC_OOB_MANAGEMENT)) {
+        if (lif->type == types::LIF_TYPE_SWM) {
+            copp = find_copp_by_copp_type(COPP_TYPE_SWM);
+        } else if (lif->type == types::LIF_TYPE_MNIC_INBAND_MANAGEMENT) {
+            copp = find_copp_by_copp_type(COPP_TYPE_INBAND_MGMT);
+        } else {
+            copp = find_copp_by_copp_type(COPP_TYPE_OOB_MGMT);
+        }
+        copp_en = copp ? true : false;
+        copp_hw_id = copp ? copp->pd->hw_policer_id : 0;
+        HAL_TRACE_DEBUG("Enable copp for {} at idx: {}",
+                        (lif->type == types::LIF_TYPE_SWM) ? "swm" : 
+                        (lif->type == types::LIF_TYPE_MNIC_INBAND_MANAGEMENT) ? "inband" : "oob",
+                        copp_hw_id);
+    }
 
     // Enable it once DOL pushes filters
     if (false && set_drop) {
@@ -1864,6 +1886,8 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
                                                                                pd_lif->pi_lif,
                                                                                lif_upd) : false;
             om_tmoport_enforce.access_vlan_id      = access_vlan_classic;
+            om_tmoport_enforce.apply_copp          = copp_en;
+            om_tmoport_enforce.copp_index          = copp_hw_id;
         } else {
             data.action_id = OUTPUT_MAPPING_SET_TM_OPORT_ID;
             om_tmoport.nports              = 1;
@@ -1883,6 +1907,8 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
                                                                                lif_upd) : false;
             om_tmoport.access_vlan_id      = access_vlan_classic;
             om_tmoport.nacl_egress_drop_en = nacl_egress_drop_en;
+            om_tmoport.apply_copp          = copp_en;
+            om_tmoport.copp_index          = copp_hw_id;
         }
     }
 

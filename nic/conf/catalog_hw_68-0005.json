@@ -372,6 +372,18 @@
                     {
                         "key_or_handle" : { "copp_type" : "COPP_TYPE_DHCP" },
                         "policer" : { "pps_policer" : { "packets_per_sec" : 4000, "burst_packets" : 400} }
+                    },
+                    {
+                        "key_or_handle" : { "copp_type" : "COPP_TYPE_SWM" },
+                        "policer" : { "pps_policer" : { "packets_per_sec" : 4000, "burst_packets" : 400} }
+                    },
+                    {
+                        "key_or_handle" : { "copp_type" : "COPP_TYPE_INBAND_MGMT" },
+                        "policer" : { "pps_policer" : { "packets_per_sec" : 2000, "burst_packets" : 200} }
+                    },
+                    {
+                        "key_or_handle" : { "copp_type" : "COPP_TYPE_OOB_MGMT" },
+                        "policer" : { "pps_policer" : { "packets_per_sec" : 2000, "burst_packets" : 200} }
                     }
                 ]
             }

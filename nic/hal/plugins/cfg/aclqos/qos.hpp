@@ -383,7 +383,10 @@ find_qos_cos_info_from_spec(QosClassKeyHandle kh, hal_handle_t pinned_uplink,
     ENTRY(COPP_TYPE_FLOW_MISS,                  0, "flow-miss") \
     ENTRY(COPP_TYPE_ARP,                        1, "arp") \
     ENTRY(COPP_TYPE_DHCP,                       2, "dhcp") \
-    ENTRY(NUM_COPP_TYPES,                       3, "num-copp-types")
+    ENTRY(COPP_TYPE_SWM,                        3, "swm") \
+    ENTRY(COPP_TYPE_INBAND_MGMT,                4, "inband") \
+    ENTRY(COPP_TYPE_OOB_MGMT,                   5, "oob") \
+    ENTRY(NUM_COPP_TYPES,                       6, "num-copp-types")
 
 DEFINE_ENUM(copp_type_t, COPP_TYPES)
 #undef COPP_TYPES
@@ -430,6 +433,12 @@ copp_spec_copp_type_to_copp_type (kh::CoppType copp_type)
         return COPP_TYPE_ARP;
     case kh::COPP_TYPE_DHCP:
         return COPP_TYPE_DHCP;
+    case kh::COPP_TYPE_SWM:
+        return COPP_TYPE_SWM;
+    case kh::COPP_TYPE_INBAND_MGMT:
+        return COPP_TYPE_INBAND_MGMT;
+    case kh::COPP_TYPE_OOB_MGMT:
+        return COPP_TYPE_OOB_MGMT;
     default:
         SDK_ASSERT(0);
         return COPP_TYPE_FLOW_MISS;
@@ -446,6 +455,12 @@ copp_type_to_spec_type (copp_type_t copp_type)
         return kh::COPP_TYPE_ARP;
     case COPP_TYPE_DHCP:
         return kh::COPP_TYPE_DHCP;
+    case COPP_TYPE_SWM:
+        return kh::COPP_TYPE_SWM;
+    case COPP_TYPE_INBAND_MGMT:
+        return kh::COPP_TYPE_INBAND_MGMT;
+    case COPP_TYPE_OOB_MGMT:
+        return kh::COPP_TYPE_OOB_MGMT;
     default:
         SDK_ASSERT(0);
         return kh::COPP_TYPE_FLOW_MISS;

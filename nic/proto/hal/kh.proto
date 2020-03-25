@@ -419,9 +419,12 @@ message QosClassKeyHandle {
 
 // CoppType identifies the type of traffic for the copp policy
 enum CoppType {
-  COPP_TYPE_FLOW_MISS = 0;    // Flow miss pkts
-  COPP_TYPE_ARP       = 1;    // ARP
-  COPP_TYPE_DHCP      = 2;    // DHCP
+  COPP_TYPE_FLOW_MISS    = 0;    // Flow miss pkts
+  COPP_TYPE_ARP          = 1;    // ARP
+  COPP_TYPE_DHCP         = 2;    // DHCP
+  COPP_TYPE_SWM          = 3;    // SWM 
+  COPP_TYPE_INBAND_MGMT  = 4;    // Inband mgmt
+  COPP_TYPE_OOB_MGMT     = 5;    // OOB mgmt
 }
 
 // CoppKeyHandle uniquely identifies a Copp
