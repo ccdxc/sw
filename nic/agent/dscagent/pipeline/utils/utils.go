@@ -474,3 +474,12 @@ func GetMgmtInfo(config types.DistributedServiceCardStatus) (mgmtIP string, mgmt
 	err = errors.Wrapf(types.ErrNoIpForMgmtIntf, "Could not get ip address for intf %s", secondaryIntf)
 	return
 }
+
+// ConvertMAC converts a mac string to dotted string
+func ConvertMAC(mac string) string {
+	s := strings.Replace(mac, ":", "", -1)
+	for i := 4; i < len(s); i += 5 {
+		s = s[:i] + "." + s[i:]
+	}
+	return s
+}

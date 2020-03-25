@@ -59,10 +59,6 @@ func TestValidateEndpoint(t *testing.T) {
 	if _, _, err := ValidateEndpoint(infraAPI, endpoint); err != nil {
 		t.Fatal(err)
 	}
-	endpoint.Spec.IPv4Addresses = []string{"10.1.1.1/32", "10.1.1.2/32"}
-	if _, _, err := ValidateEndpoint(infraAPI, endpoint); err == nil {
-		t.Fatal(err)
-	}
 }
 
 func TestValidateCollector(t *testing.T) {

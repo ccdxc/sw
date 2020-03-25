@@ -181,7 +181,7 @@ func (i *IrisAPI) PipelineInit() error {
 	}
 
 	// Remove the colon from UUID
-	uid := strings.Join(strings.Split(resp.Uuid, ":"), "")
+	uid := utils.ConvertMAC(resp.Uuid)
 
 	i.initLifStream(uid)
 
