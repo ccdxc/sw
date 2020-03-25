@@ -119,6 +119,9 @@ type ObjectIntf interface {
 	ServiceStoppedEvents(since time.Time, npc *objects.NaplesCollection) *objects.EventsCollection
 	SystemBootEvents(npc *objects.NaplesCollection) *objects.EventsCollection
 	NewFirewallProfile(name string) *objects.FirewallProfileCollection
+	NewRoutingConfig(name string) (*objects.RoutingConfigCollection)
+	GetRoutingConfig(name string) (*objects.RoutingConfig, error)
+	ListRoutingConfig() (*objects.RoutingConfigCollection, error)
 }
 
 //NaplesActionIntf All actions related to naples

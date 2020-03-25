@@ -100,6 +100,12 @@ type ObjClient interface {
 
 	CreateOrchestration(orch *orchestration.Orchestrator) error
 	DeleteOrchestration(orch *orchestration.Orchestrator) error
+
+	CreateRoutingConfig(nwR *network.RoutingConfig) error
+	UpdateRoutingConfig(nwR *network.RoutingConfig) error
+	DeleteRoutingConfig(nwR *network.RoutingConfig) error
+	ListRoutingConfig() (objs []*network.RoutingConfig, err error)
+	GetRoutingConfig(name string)(objs *network.RoutingConfig, err error)
 }
 
 type VeniceConfigStatus struct {
@@ -1189,6 +1195,22 @@ func (r *Client) CreateRoutingConfig(nwR *network.RoutingConfig) error {
 
 }
 
+//UpdaetRoutingConfig updates routing config
+func (r *Client) UpdateRoutingConfig(nwR *network.RoutingConfig) error {
+
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.NetworkV1().RoutingConfig().Update(r.ctx, nwR)
+		if err == nil {
+			break
+		} else {
+			log.Errorf("Error updating Routing Config %v. Err: %s", nwR, err.Error())
+		}
+	}
+
+	return err
+}
+
 //CreateTenant create tenant
 func (r *Client) CreateTenant(ten *cluster.Tenant) error {
 
@@ -1261,7 +1283,7 @@ func (r *Client) DeleteRoutingConfig(nwR *network.RoutingConfig) error {
 
 }
 
-//ListRoutingConfig create routing config
+//ListRoutingConfig lists routing config
 func (r *Client) ListRoutingConfig() (objs []*network.RoutingConfig, err error) {
 
 	for _, restcl := range r.restcls {
@@ -1276,6 +1298,18 @@ func (r *Client) ListRoutingConfig() (objs []*network.RoutingConfig, err error) 
 
 }
 
+//GetRoutingConfig gets routing config by its name
+func (r *Client) GetRoutingConfig(name string) (obj *network.RoutingConfig, err error) {
+
+	for _, restcl := range r.restcls {
+		obj, err = restcl.NetworkV1().RoutingConfig().Get(r.ctx, &api.ObjectMeta{Name: name})
+		if err == nil {
+			break
+		}
+	}
+
+	return obj, err
+}
 //GetNpmDebugModuleURLs gets npm debug module
 func (r *Client) GetNpmDebugModuleURLs() (urls []string, err error) {
 	for _, restcl := range r.restcls {
