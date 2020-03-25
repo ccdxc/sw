@@ -16,6 +16,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/utils/nodewatcher"
+
 	export "github.com/pensando/sw/venice/utils/techsupport/exporter"
 
 	"github.com/pensando/sw/nic/agent/protos/tsproto"
@@ -53,6 +56,7 @@ type API struct {
 	cancelWatcher          context.CancelFunc
 	factory                *rpckit.RPCClientFactory
 	npmURL, tpmURL, tsmURL string
+	nodewatcher            nodewatcher.NodeInterface
 }
 
 // RestServer implements REST APIs
@@ -177,6 +181,24 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 				SendInterval:            time.Minute,
 				ConnectionRetryInterval: types.StatsRetryInterval,
 			})
+
+			node := &cluster.DistributedServiceCard{
+				TypeMeta: api.TypeMeta{
+					Kind: "DistributedServiceCard",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Name: c.InfraAPI.GetDscName(),
+				},
+			}
+
+			nw, err := nodewatcher.NewNodeWatcher(context.Background(), node, time.Minute, log.WithContext("pkg", "nodewatcher"))
+			if err != nil {
+				log.Errorf("failed start node metrics")
+			} else {
+				c.nodewatcher = nw
+				log.Infof("started node metrics watch")
+			}
+
 		} else {
 			log.Infof("Controller API: %s | Obj: %v", types.InfoUpdateVeniceCoordinates, obj.Controllers)
 			c.ResolverClient.UpdateServers(obj.Controllers)
@@ -208,6 +230,11 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 			log.Error(err)
 		}
 		tsdb.Cleanup()
+		if c.nodewatcher != nil {
+			c.nodewatcher.Close()
+			log.Infof("stopped node metrics")
+		}
+
 	}
 
 	return nil
