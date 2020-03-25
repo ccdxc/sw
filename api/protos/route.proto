@@ -124,10 +124,10 @@ message BGPConfig {
     uint32 ASNumber = 2 [(gogoproto.jsontag) = "as-number,omitempty"];
 
     // KeepaliveInterval is time interval at which keepalive messages are sent
-    uint32 KeepaliveInterval = 3 [(gogoproto.jsontag) = "keepalive-interval,omitempty", (venice.default) = "60", (venice.check) = "IntRange(0,3600)"];
+    uint32 KeepaliveInterval = 3 [(gogoproto.jsontag) = "keepalive-interval,", (venice.default) = "60", (venice.check) = "IntRange(0,3600)"];
 
     // Holdtime is time for which not receiving a keepalive message results in declaring the peer as dead
-    uint32 Holdtime = 4 [(gogoproto.jsontag) = "holdtime,omitempty", (venice.default) = "180", (venice.check) = "IntRange(0,3600)"];
+    uint32 Holdtime = 4 [(gogoproto.jsontag) = "holdtime,", (venice.default) = "180", (venice.check) = "IntRange(0,3600)"];
 
     // List of all neighbors.
     repeated BGPNeighbor Neighbors = 5 [(gogoproto.jsontag) = "neighbors,omitempty"];

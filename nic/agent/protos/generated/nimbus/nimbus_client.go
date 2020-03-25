@@ -165,6 +165,9 @@ func (client *NimbusClient) processAggObjectWatchEvent(evt netproto.AggObjectEve
 	case "Profile":
 		err = client.processProfileDynamic(evt.EventType, object.Message.(*netproto.Profile), reactor.(ProfileReactor))
 
+	case "RouteTable":
+		err = client.processRouteTableDynamic(evt.EventType, object.Message.(*netproto.RouteTable), reactor.(RouteTableReactor))
+
 	case "RoutingConfig":
 		err = client.processRoutingConfigDynamic(evt.EventType, object.Message.(*netproto.RoutingConfig), reactor.(RoutingConfigReactor))
 
@@ -904,6 +907,77 @@ func (client *NimbusClient) diffProfilesDynamic(objList *netproto.ProfileList, r
 	}
 }
 
+// diffRouteTablesDynamic diffs local state with controller state
+func (client *NimbusClient) diffRouteTablesDynamic(objList *netproto.RouteTableList, reactor RouteTableReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.RouteTable)
+	for _, obj := range objList.RouteTables {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	o := netproto.RouteTable{
+		TypeMeta: api.TypeMeta{Kind: "RouteTable"},
+	}
+
+	localObjs, err := reactor.HandleRouteTable(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RouteTable | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListRouteTable()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.RouteTableEvent{
+					EventType: api.EventType_DeleteEvent,
+
+					RouteTable: lobj,
+				}
+				log.Infof("diffRouteTables(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.RouteTable.GetObjectKind(), evt.RouteTable.ObjectMeta)
+				client.processRouteTableEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.RouteTables {
+		evt := netproto.RouteTableEvent{
+			EventType: api.EventType_UpdateEvent,
+
+			RouteTable: *obj,
+		}
+		client.lockObject(evt.RouteTable.GetObjectKind(), evt.RouteTable.ObjectMeta)
+		err := client.processRouteTableEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := protoTypes.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "RouteTable", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
 // diffRoutingConfigsDynamic diffs local state with controller state
 func (client *NimbusClient) diffRoutingConfigsDynamic(objList *netproto.RoutingConfigList, reactor RoutingConfigReactor,
 	ostream *AggWatchOStream) {
@@ -1184,6 +1258,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 					msglist.Profiles = append(msglist.Profiles, obj.Message.(*netproto.Profile))
 					return
 
+				case "RouteTable":
+					msglist := lobj.objects.(*netproto.RouteTableList)
+					msglist.RouteTables = append(msglist.RouteTables, obj.Message.(*netproto.RouteTable))
+					return
+
 				case "RoutingConfig":
 					msglist := lobj.objects.(*netproto.RoutingConfigList)
 					msglist.RoutingConfigs = append(msglist.RoutingConfigs, obj.Message.(*netproto.RoutingConfig))
@@ -1256,6 +1335,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 			msglist := listObj.objects.(*netproto.ProfileList)
 			msglist.Profiles = append(msglist.Profiles, obj.Message.(*netproto.Profile))
 
+		case "RouteTable":
+			listObj.objects = &netproto.RouteTableList{}
+			msglist := listObj.objects.(*netproto.RouteTableList)
+			msglist.RouteTables = append(msglist.RouteTables, obj.Message.(*netproto.RouteTable))
+
 		case "RoutingConfig":
 			listObj.objects = &netproto.RoutingConfigList{}
 			msglist := listObj.objects.(*netproto.RoutingConfigList)
@@ -1316,6 +1400,9 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 
 		case "Profile":
 			client.diffProfilesDynamic(lobj.objects.(*netproto.ProfileList), reactor.(ProfileReactor), ostream)
+
+		case "RouteTable":
+			client.diffRouteTablesDynamic(lobj.objects.(*netproto.RouteTableList), reactor.(RouteTableReactor), ostream)
 
 		case "RoutingConfig":
 			client.diffRoutingConfigsDynamic(lobj.objects.(*netproto.RoutingConfigList), reactor.(RoutingConfigReactor), ostream)
@@ -1476,6 +1563,18 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			aggKind.Kind = kind
 			aggKind.Group = "netproto"
 			listWatchOptions := reactor.(ProfileReactor).GetWatchOptions(ctx, "Profile")
+			aggKind.Options = listWatchOptions
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
+
+		case "RouteTable":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
+			if _, ok := reactor.(RouteTableReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "RouteTableReactor")
+			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(RouteTableReactor).GetWatchOptions(ctx, "RouteTable")
 			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 

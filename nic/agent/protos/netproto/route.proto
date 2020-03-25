@@ -36,6 +36,7 @@ service RouteTableApiV1 {
         Method: ["list", "get", "post", "put", "delete"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
         Prefix: "api/route-tables"
+        Version: "V1"
     };
 
     rpc ListRouteTables (api.ListWatchOptions) returns (RouteTableList) {};

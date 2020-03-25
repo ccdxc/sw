@@ -98,7 +98,7 @@ func (h *networkHooks) validateRoutingConfig(i interface{}, ver string, ignStatu
 			ret = append(ret, fmt.Errorf("holdtime cannot be smaller than 3secs"))
 		} else {
 			if in.Spec.BGPConfig.KeepaliveInterval*3 > in.Spec.BGPConfig.Holdtime {
-				ret = append(ret, fmt.Errorf("holdtime shuold be 3 times keepalive-interval or more"))
+				ret = append(ret, fmt.Errorf("holdtime should be 3 times keepalive-interval or more"))
 			}
 		}
 	}
