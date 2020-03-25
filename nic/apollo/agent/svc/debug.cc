@@ -359,6 +359,7 @@ DebugSvcImpl::SlabGet(ServerContext *context,
 
 static void
 populate_port_info (uint8_t port_num, uint16_t status,
+                    sdk::marvell::marvell_port_stats_t *stats,
                     pds::InternalPortResponseMsg *rsp) {
     bool is_up, full_duplex, txpause, fctrl;
     uint8_t speed;
@@ -386,6 +387,45 @@ populate_port_info (uint8_t port_num, uint16_t status,
     }
     internal_status->set_porttxpaused(txpause);
     internal_status->set_portflowctrl(fctrl);
+
+    pds::InternalPortStats *internal_stats = response->mutable_stats();
+
+    internal_stats->set_ingoodoctets(stats->in_good_octets);
+    internal_stats->set_outoctets(stats->out_octets);
+    internal_stats->set_inbadoctets(stats->in_bad_octets);
+    internal_stats->set_inunicast(stats->in_unicast);
+    internal_stats->set_inbroadcast(stats->in_broadcast);
+    internal_stats->set_inmulticast(stats->in_multicast);
+    internal_stats->set_inpause(stats->in_pause);
+    internal_stats->set_inundersize(stats->in_undersize);
+    internal_stats->set_infragments(stats->in_fragments);
+    internal_stats->set_inoversize(stats->in_oversize);
+    internal_stats->set_injabber(stats->in_jabber);
+    internal_stats->set_inrxerr(stats->in_rx_err);
+    internal_stats->set_infcserr(stats->in_fcs_err);
+
+    internal_stats->set_outunicast(stats->out_unicast);
+    internal_stats->set_outbroadcast(stats->out_broadcast);
+    internal_stats->set_outmulticast(stats->out_multicast);
+    internal_stats->set_outfcserr(stats->out_fcs_err);
+    internal_stats->set_outpause(stats->out_pause);
+    internal_stats->set_outcollisions(stats->out_collisions);
+    internal_stats->set_outdeferred(stats->out_deferred);
+    internal_stats->set_outsingle(stats->out_single);
+    internal_stats->set_outmultiple(stats->out_multiple);
+    internal_stats->set_outexcessive(stats->out_excessive);
+    internal_stats->set_outlate(stats->out_late);
+}
+
+static void
+marvell_get_port_info (uint8_t port_num, pds::InternalPortResponseMsg *rsp) {
+    sdk::marvell::marvell_port_stats_t  stats;
+    uint16_t data;
+
+    bzero(&stats, sizeof(stats));
+    sdk::marvell::marvell_get_port_status(port_num, &data);
+    sdk::marvell::marvell_get_port_stats(port_num, &stats);
+    populate_port_info(port_num, data, &stats, rsp);
 }
 
 Status
@@ -402,21 +442,18 @@ DebugSvcImpl::InternalPortGet(ServerContext *context,
         auto     request      = req->request(i);
         uint8_t  port_num     = (uint8_t)request.portnumber();
         bool     has_port_num = (port_num != 0);
-        uint16_t data;
 
         port_num = port_num - 1;
         if (has_port_num) {
             if (port_num < MARVELL_NPORTS) {
-                sdk::marvell::marvell_get_port_status(port_num, &data);
-                populate_port_info(port_num, data, rsp);
+                marvell_get_port_info(port_num, rsp);
             } else {
                 return Status(grpc::StatusCode::INVALID_ARGUMENT,
                               "Internal port number must be between 1-7");
             }
         } else {
             for (port_num = 0; port_num < MARVELL_NPORTS; port_num++) {
-                sdk::marvell::marvell_get_port_status(port_num, &data);
-                populate_port_info(port_num, data, rsp);
+                marvell_get_port_info(port_num, rsp);
             }
         }
     }

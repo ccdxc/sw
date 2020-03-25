@@ -497,10 +497,38 @@ message InternalPortStatus {
   bool                PortFlowCtrl   = 5;
 }
 
+message InternalPortStats {
+  uint64  InGoodOctets   = 2;    
+  uint64  OutOctets      = 3;
+  uint32  InBadOctets    = 4;
+  uint32  InUnicast      = 5;
+  uint32  Inbroadcast    = 6;
+  uint32  Inmulticast    = 7;
+  uint32  InPause        = 8;
+  uint32  InUndersize    = 9;
+  uint32  InFragments    = 10;
+  uint32  InOversize     = 11;
+  uint32  InJabber       = 12;
+  uint32  InRxErr        = 13;
+  uint32  InFcsErr       = 14;
+  uint32  OutUnicast     = 15;
+  uint32  OutBroadcast   = 16;
+  uint32  OutMulticast   = 17;
+  uint32  OutFcsErr      = 18;
+  uint32  OutPause       = 19;
+  uint32  OutCollisions  = 20;
+  uint32  OutDeferred    = 21;
+  uint32  OutSingle      = 22;
+  uint32  OutMultiple    = 23;
+  uint32  OutExcessive   = 24;
+  uint32  OutLate        = 25;
+}
+
 message InternalPortResponse {
   uint32              PortNumber     = 1;        // Port number
   string              PortDescr      = 2;        // Port Description
   InternalPortStatus  InternalStatus = 3;        // Internal port status
+  InternalPortStats   Stats          = 4;        // Internal ports stats
 }
 
 message InternalPortResponseMsg {

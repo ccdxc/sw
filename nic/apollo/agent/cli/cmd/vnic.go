@@ -189,15 +189,15 @@ func vnicShowStatisticsCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println("---")
 		}
 	} else {
-		hdrLine := strings.Repeat("-", 95)
+		hdrLine := strings.Repeat("-", 130)
 		fmt.Println(hdrLine)
-		fmt.Printf("%-40s%-11s%-11s%-11s%-11s\n",
+		fmt.Printf("%-40s%-22s%-22s%-22s%-22s\n",
 			"VnicID", "TxBytes", "TxPackets", "RxBytes", "RxPackets")
 		fmt.Println(hdrLine)
 		for _, resp := range respMsg.Response {
 			spec := resp.GetSpec()
 			stats := resp.GetStats()
-			fmt.Printf("%-40s%-11d%-11d%-11d%-11d\n",
+			fmt.Printf("%-40s%-22d%-22d%-22d%-22d\n",
 				uuid.FromBytesOrNil(spec.GetId()).String(),
 				stats.GetTxBytes(), stats.GetTxPackets(),
 				stats.GetRxBytes(), stats.GetRxPackets())
