@@ -18,7 +18,6 @@ class NodeObject():
 
         # save dscv0 mac
         for resp in objs[0].Response:
-            print(resp.Spec.Type)
             if resp.Spec.Type == types_pb2.LIF_TYPE_VENDOR_INBAND:
                 self.VcnIntfMacAddress = utils.getnum2mac(resp.Spec.MacAddress)
         return

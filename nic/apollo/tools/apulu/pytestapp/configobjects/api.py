@@ -6,6 +6,7 @@ import grpc
 import enum
 import pdb
 
+import types_pb2 as types_pb2
 import batch_pb2_grpc as batch_pb2_grpc
 import device_pb2_grpc as device_pb2_grpc
 import vpc_pb2_grpc as vpc_pb2_grpc
@@ -19,6 +20,7 @@ import mirror_pb2_grpc as mirror_pb2_grpc
 import interface_pb2_grpc as interface_pb2_grpc
 import nh_pb2_grpc as nh_pb2_grpc
 import dhcp_pb2_grpc as dhcp_pb2_grpc
+import nat_pb2_grpc as nat_pb2_grpc
 
 import logging
 console = logging.StreamHandler()
@@ -56,19 +58,21 @@ class ObjectTypes(enum.IntEnum):
     LIF = 12
     NH = 13
     DHCP_POLICY = 14
-    MAX = 15
+    NAT = 15
+    MAX = 16
 
 class ClientStub:
     def __init__(self, stubclass, channel, rpc_prefix):
         self.__stub = stubclass(channel)
         self.__rpcs = [None] * ApiOps.MAX
         self.__set_rpcs(rpc_prefix)
+        self.__rpc_prefix = rpc_prefix
         return
 
     def __set_one_rpc(self, op, rpc):
         self.__rpcs[op] = getattr(self.__stub, rpc, None)
-        if not self.__rpcs[op]:
-            logger.warn("%s is None for OP: %d" % (rpc, op))
+        #if not self.__rpcs[op]:
+            #logger.warn("%s is None for OP: %d" % (rpc, op))
         return
 
     def __set_rpcs(self, p):
@@ -85,6 +89,10 @@ class ClientStub:
         resps = []
         for obj in objs:
             resps.append(self.__rpcs[op](obj))
+        if resps:
+            print("grpc apistatus %s for object %s op %s" % (resps[0].ApiStatus, self.__rpc_prefix, op))
+        else:
+            print("Error object %s op %s" % (self.__rpc_prefix, op))
         return resps
 
 class ApolloAgentClientRequest:
@@ -153,6 +161,8 @@ class ApolloAgentClient:
                                                       self.__channel, 'MirrorSession')
         self.__stubs[ObjectTypes.DHCP_POLICY] = ClientStub(dhcp_pb2_grpc.DHCPSvcStub,
                                                    self.__channel, 'DHCPPolicy')
+        self.__stubs[ObjectTypes.NAT] = ClientStub(nat_pb2_grpc.NatSvcStub,
+                                                   self.__channel, 'NatPortBlock')
         return
 
     def Create(self, objtype, objs):

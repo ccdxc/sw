@@ -1,4 +1,5 @@
 import enum
+import socket
 
 def getnum2mac(mac):
     return ':'.join(format(s, '02x') for s in bytes.fromhex(hex(mac)[2:].zfill(12)))
@@ -121,3 +122,6 @@ def PortToEthIfIdx(port):
     ifidx = ifidx | (port << 16)
     ifidx = ifidx | 1
     return ifidx
+
+def GetIPProtoByName(protoname):
+    return socket.getprotobyname(protoname)

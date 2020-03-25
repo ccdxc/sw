@@ -7,12 +7,13 @@ import ipaddress
 import utils
 
 class RouteObject():
-    def __init__(self, prefix, nhtype, nhid, nataction, meteren):
+    def __init__(self, prefix, nhtype, nhid, nat_type=None, nat_addr_type="public", meteren=False):
         assert(nhtype == "tunnel")
         self.prefix = prefix
         self.nhtype = nhtype
         self.nhid = nhid
-        self.nataction = nataction
+        self.nat_type = nat_type
+        self.nat_addr_type = nat_addr_type
         self.meteren = meteren
 
 class RouteTableObject():
@@ -37,7 +38,13 @@ class RouteTableObject():
             rtspec.Prefix.Addr.Af = self.addrfamily
             rtspec.Prefix.Addr.V4Addr = int(route.prefix.network_address)
             rtspec.Prefix.Len = route.prefix.prefixlen
-            if route.nataction:
-                rtspec.NatAction = route.nataction
+            if route.nat_type:
+                if route.nat_type == "napt":
+                    if route.nat_addr_type == "public":
+                        rtspec.NatAction.SrcNatAction = types_pb2.NAT_ACTION_NAPT_PUBLIC
+                    else:
+                        rtspec.NatAction.SrcNatAction = types_pb2.NAT_ACTION_NAPT_SVC
+                elif route.nat_type == "static":
+                    rtspec.NatAction.SrcNatAction = types_pb2.NAT_ACTION_STATIC
             rtspec.MeterEn = route.meteren
         return grpcmsg

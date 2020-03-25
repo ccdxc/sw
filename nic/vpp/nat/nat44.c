@@ -723,6 +723,7 @@ nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
 
     nat_pb = vpc->nat_pb[nat_addr_type][nat_proto - 1];
     if (PREDICT_FALSE(pool_elts(nat_pb) == 0)) {
+        clib_spinlock_unlock(&vpc->lock);
         return NAT_ERR_NO_RESOURCE;
     }
 
