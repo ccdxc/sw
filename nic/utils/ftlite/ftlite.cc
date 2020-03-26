@@ -6,6 +6,7 @@
 #include "include/sdk/mem.hpp"
 #include "include/sdk/base.hpp"
 #include "lib/p4/p4_api.hpp"
+#include "nic/sdk/asic/asic.hpp"
 #include <nic/sdk/lib/pal/pal.hpp>
 
 #include "ftlite.hpp"
@@ -36,7 +37,7 @@ initialize_pds(void)
 {
     pal_ret_t    pal_ret;
     p4pd_error_t p4pd_ret;
-    capri_cfg_t  capri_cfg;
+    asic_cfg_t  asic_cfg;
     sdk_ret_t    ret;
 
     p4pd_cfg_t p4pd_cfg = {
@@ -65,15 +66,15 @@ initialize_pds(void)
     pal_ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW);
     SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
 
-    memset(&capri_cfg, 0, sizeof(capri_cfg_t));
-    capri_cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
-    std::string mpart_json = capri_cfg.cfg_path + "/apollo/hbm_mem.json";
-    capri_cfg.mempartition =
+    memset(&asic_cfg, 0, sizeof(asic_cfg_t));
+    asic_cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
+    std::string mpart_json = asic_cfg.cfg_path + "/apollo/hbm_mem.json";
+    asic_cfg.mempartition =
         sdk::platform::utils::mpartition::factory(mpart_json.c_str());
 
     /* do capri_state_pd_init needed by sdk capri
      * csr init is done inside capri_state_pd_init */
-    sdk::platform::capri::capri_state_pd_init(&capri_cfg);
+    sdk::platform::capri::capri_state_pd_init(&asic_cfg);
 
     /* do apollo specific initialization */
     p4pd_ret = p4pd_init(&p4pd_cfg);

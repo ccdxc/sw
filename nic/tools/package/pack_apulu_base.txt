@@ -73,6 +73,7 @@ nic/build/$ARCH/$PIPELINE/lib/libmtrack.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkp4.so                         /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkp4utils.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkasicrw.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkasiccmn.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkasicpd.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpack_bytes.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblmdb.so                          /nic/lib/

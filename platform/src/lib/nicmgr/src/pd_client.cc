@@ -930,7 +930,7 @@ bool
 PdClient::is_dev_hwinit_done (const char *dev_name)
 {
     // TODO, check for Dev Status in HW
-    if (!sdk::asic::is_hard_init()) {
+    if (!sdk::asic::asic_is_hard_init()) {
         if (!dev_name) {
             return true;
         } // else TODO
@@ -944,7 +944,7 @@ bool
 PdClient::is_lif_hwinit_done (uint32_t lif_id)
 {
     // TODO, check for LIF status in HW
-    if (!sdk::asic::is_hard_init()) {
+    if (!sdk::asic::asic_is_hard_init()) {
         return true;
     } else {
         return false;
@@ -955,7 +955,7 @@ bool
 PdClient::is_queue_hwinit_done (uint32_t lif_id, uint32_t qtype, uint32_t qid)
 {
     // TODO, check for Queue status in HW
-    if (!sdk::asic::is_hard_init()) {
+    if (!sdk::asic::asic_is_hard_init()) {
         return true;
     } else {
         return false;

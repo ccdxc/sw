@@ -82,7 +82,6 @@ void asic_ring_db(asic_db_addr_t *db_addr, uint32_t data);
 /// \param[in] doorbell data
 void asic_ring_db(asic_db_addr_t *db_addr, uint16_t data);
 
-
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk

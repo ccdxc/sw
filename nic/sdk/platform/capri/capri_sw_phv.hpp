@@ -14,9 +14,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "include/sdk/base.hpp"
-#include "asic/pd/pd.hpp"
+#include "asic/asic.hpp"
 
-using namespace sdk::asic::pd;
+using namespace sdk::asic;
 
 namespace sdk {
 namespace platform {
@@ -27,7 +27,7 @@ namespace capri {
 
 //@return int: Status of the operation
 
-    sdk_ret_t capri_sw_phv_init();
+sdk_ret_t capri_sw_phv_init();
 
 // capri_sw_phv_inject
 // API to inject a software PHV into the pipeline
@@ -39,8 +39,8 @@ namespace capri {
 // data: raw PHV data to inject (needs to contain num_flits * sizeof(flit) bytes of data)
 // @return int: Status of the operation
 //
-    sdk_ret_t capri_sw_phv_inject(asicpd_swphv_type_t type, uint8_t prof_num, 
-                                  uint8_t start_idx, uint8_t num_flits, void *data);
+sdk_ret_t capri_sw_phv_inject(asic_swphv_type_t type, uint8_t prof_num, 
+                              uint8_t start_idx, uint8_t num_flits, void *data);
 
 //
 // capri_sw_phv_get
@@ -49,11 +49,11 @@ namespace capri {
 // prof_num: profile number to use
 // state: current state of swphv injection to return
 //
-    sdk_ret_t capri_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num, 
-                                asicpd_sw_phv_state_t *state);
+sdk_ret_t capri_sw_phv_get(asic_swphv_type_t type, uint8_t prof_num, 
+                            asic_sw_phv_state_t *state);
 
-} // namespace capri
-} // namespace platform
-} // namespace sdk
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk
 
-#endif //__CAPRI_SW_PHV_HPP__
+#endif    // __CAPRI_SW_PHV_HPP__

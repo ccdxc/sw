@@ -9,7 +9,9 @@
 #include "platform/capri/capri_tm_utils.hpp"
 #include "platform/capri/capri_sw_phv.hpp"
 #include "platform/capri/capri_quiesce.hpp"
+#include "asic/asic.hpp"
 #include "asic/pd/pd.hpp"
+#include "asic/cmn/asic_state.hpp"
 #include "asic/pd/pd_internal.hpp"
 #include "lib/utils/time_profile.hpp"
 #include "platform/utils/mpartition.hpp"
@@ -559,14 +561,14 @@ asicpd_sw_phv_init (void)
 }
 
 sdk_ret_t
-asicpd_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num,
-                   asicpd_sw_phv_state_t *state)
+asicpd_sw_phv_get (asic_swphv_type_t type, uint8_t prof_num,
+                   asic_sw_phv_state_t *state)
 {
     return capri_sw_phv_get(type, prof_num, state);
 }
 
 sdk_ret_t
-asicpd_sw_phv_inject (asicpd_swphv_type_t type, uint8_t prof_num,
+asicpd_sw_phv_inject (asic_swphv_type_t type, uint8_t prof_num,
                       uint8_t start_idx, uint8_t num_flits, void *data)
 {
     return capri_sw_phv_inject(type, prof_num, start_idx, num_flits, data);
@@ -695,40 +697,79 @@ asicpd_set_table_txdma_asm_base (int tableid, uint64_t asm_base)
     capri_set_table_txdma_asm_base(tableid, asm_base);
 }
 
-mem_addr_t
-asicpd_get_mem_base (void)
+uint64_t
+asicpd_host_dbaddr_get (void)
 {
-    return capri_get_mem_base();
-}
-
-mem_addr_t
-asicpd_get_mem_offset (const char *reg_name)
-{
-    return capri_get_mem_offset(reg_name);
+    return capri_host_dbaddr();
 }
 
 uint64_t
-asicpd_get_mem_addr (const char *reg_name)
+asicpd_local_dbaddr_get (void)
 {
-    return capri_get_mem_addr(reg_name);
+    return capri_local_dbaddr();
 }
 
-uint32_t
-asicpd_get_mem_size_kb (const char *reg_name)
+uint64_t
+asicpd_local_db32_addr_get (void)
 {
-    return capri_get_mem_size_kb(reg_name);
+    return capri_local_db32_addr();
 }
 
-mpartition_region_t *
-asicpd_get_mem_region (char *reg_name)
+//------------------------------------------------------------------------------
+// perform all the CAPRI specific initialization
+//------------------------------------------------------------------------------
+sdk_ret_t
+asicpd_init (asic_cfg_t *cfg)
 {
-    return capri_get_mem_region(reg_name);
+    sdk_ret_t     ret;
+    asic_cfg_t    capri_cfg;
+
+    SDK_ASSERT(cfg != NULL);
+
+    ret = sdk::asic::asic_state_init(cfg);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "asic_state_init failure, err : %d", ret);
+
+    capri_cfg.default_config_dir = cfg->default_config_dir;
+    capri_cfg.cfg_path = cfg->cfg_path;
+    capri_cfg.admin_cos = cfg->admin_cos;
+    capri_cfg.repl_entry_width = cfg->repl_entry_width;
+    capri_cfg.catalog = cfg->catalog;
+    capri_cfg.mempartition = cfg->mempartition;
+    capri_cfg.p4_cache = true;
+    capri_cfg.p4plus_cache = true;
+    capri_cfg.llc_cache = true;
+    capri_cfg.platform = cfg->platform;
+    capri_cfg.num_pgm_cfgs = cfg->num_pgm_cfgs;
+    capri_cfg.pgm_name = cfg->pgm_name;
+    for (int i = 0; i < cfg->num_pgm_cfgs; i++) {
+        capri_cfg.pgm_cfg[i].path = cfg->pgm_cfg[i].path;
+    }
+    capri_cfg.num_asm_cfgs = cfg->num_asm_cfgs;
+    for (int i = 0; i < cfg->num_asm_cfgs; i++) {
+        capri_cfg.asm_cfg[i].name = cfg->asm_cfg[i].name;
+        capri_cfg.asm_cfg[i].path = cfg->asm_cfg[i].path;
+        capri_cfg.asm_cfg[i].symbols_func = cfg->asm_cfg[i].symbols_func;
+        capri_cfg.asm_cfg[i].base_addr = cfg->asm_cfg[i].base_addr;
+        capri_cfg.asm_cfg[i].sort_func =
+            cfg->asm_cfg[i].sort_func;
+    }
+    for (int i = 0; i < cfg->num_rings; i++) {
+        sdk::platform::ring ring;
+        ring.init(&cfg->ring_meta[i], cfg->mempartition);
+    }
+
+    capri_cfg.completion_func = cfg->completion_func;
+    capri_cfg.device_profile = cfg->device_profile;
+
+    //@@TODO - check and update redundant initializations within asic_state_init() and capri_init().
+    return capri_init(&capri_cfg);
 }
 
-mpartition_region_t *
-asicpd_get_hbm_region_by_address (uint64_t addr)
+sdk_ret_t
+asicpd_pgm_init (void)
 {
-    return capri_get_hbm_region_by_address(addr);
+    return capri_pgm_init();
 }
 
 sdk_ret_t

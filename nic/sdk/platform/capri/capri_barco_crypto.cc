@@ -11,7 +11,9 @@
 #include "platform/capri/capri_barco_res.hpp"
 #include "lib/indexer/indexer.hpp"
 #include "asic/rw/asicrw.hpp"
-#include "platform/capri/capri_hbm_rw.hpp"
+#include "asic/cmn/asic_hbm.hpp"
+
+using namespace sdk::asic;
 
 namespace sdk {
 namespace platform {
@@ -46,8 +48,8 @@ sdk_ret_t capri_barco_sym_key_init(void)
     sdk_ret_t           ret = SDK_RET_OK;
     uint32_t            region_sz = 0;
 
-    key_mem_base = capri_get_mem_addr(key_mem);
-    region_sz = capri_get_mem_size_kb(key_mem) * 1024;
+    key_mem_base = asic_get_mem_addr(key_mem);
+    region_sz = asic_get_mem_size_kb(key_mem) * 1024;
     key_mem_size = region_sz / CRYPTO_SYM_KEY_SIZE_MAX;
     assert(key_mem_size >= CRYPTO_KEY_COUNT_MAX);
 
@@ -71,7 +73,7 @@ sdk_ret_t capri_barco_crypto_init(platform_type_t platform)
     hens.cfg_he_ctl.sw_rst(0);
     hens.cfg_he_ctl.write();
 
-    key_desc_array_base = capri_get_mem_addr(key_desc_array);
+    key_desc_array_base = asic_get_mem_addr(key_desc_array);
     if (key_desc_array_base == INVALID_MEM_ADDRESS) {
         /* For non IRIS scenarios, the region may not be defined
          * in that case bail out silently
@@ -140,7 +142,7 @@ sdk_ret_t capri_barco_init_key(uint32_t key_idx, uint64_t key_addr)
     key_desc_addr = key_desc_array_base + (key_idx * BARCO_CRYPTO_KEY_DESC_SZ);
     memset(&key_desc, 0, sizeof(capri_barco_key_desc_t));
     key_desc.key_address = key_addr;
-    if (sdk::asic::asic_mem_write(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+    if (asic_mem_write(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
         SDK_TRACE_ERR("Failed to write Barco descriptor @ 0x%llx", (uint64_t) key_desc_addr); 
         return SDK_RET_INVALID_ARG;
     }
@@ -158,7 +160,7 @@ sdk_ret_t capri_barco_setup_key(uint32_t key_idx, crypto_key_type_t key_type, ui
 
     key_desc_addr = key_desc_array_base + (key_idx * BARCO_CRYPTO_KEY_DESC_SZ);
     SDK_TRACE_DEBUG("capri_barco_setup_key: key_desc_addr=0x%llx key_idx=%d", key_desc_addr, key_idx);
-    if (sdk::asic::asic_mem_read(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+    if (asic_mem_read(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
         SDK_TRACE_ERR("Failed to read Barco descriptor @ 0x%llx", (uint64_t) key_desc_addr); 
         return SDK_RET_INVALID_ARG;
     }
@@ -193,13 +195,13 @@ sdk_ret_t capri_barco_setup_key(uint32_t key_idx, crypto_key_type_t key_type, ui
     key_addr = key_desc.key_address;
     SDK_TRACE_DEBUG("capri_barco_setup_key key_addr=0x%llx", (uint64_t)key_addr);
     /* Write back key descriptor */
-    if (sdk::asic::asic_mem_write(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+    if (asic_mem_write(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
         SDK_TRACE_ERR("Failed to write Barco descriptor @ 0x%llx", (uint64_t) key_desc_addr); 
         return SDK_RET_INVALID_ARG;
     }
     SDK_TRACE_DEBUG("capri_barco_setup_key key=%s", barco_hex_dump(key,key_size));
     /* Write key memory */
-    if (sdk::asic::asic_mem_write(key_addr, key, key_size)) {
+    if (asic_mem_write(key_addr, key, key_size)) {
         SDK_TRACE_ERR("Failed to write key @ 0x%llx", (uint64_t) key_addr); 
         return SDK_RET_INVALID_ARG;
     }
@@ -215,7 +217,7 @@ sdk_ret_t capri_barco_read_key(uint32_t key_idx, crypto_key_type_t *key_type,
     uint32_t                cbkey_type;
 
     key_desc_addr = key_desc_array_base + (key_idx * BARCO_CRYPTO_KEY_DESC_SZ);
-    if (sdk::asic::asic_mem_read(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
+    if (asic_mem_read(key_desc_addr, (uint8_t*)&key_desc, sizeof(key_desc))) {
         SDK_TRACE_ERR("Failed to read Barco descriptor @ 0x%llx", (uint64_t) key_desc_addr); 
         return SDK_RET_INVALID_ARG;
     }
@@ -259,7 +261,7 @@ sdk_ret_t capri_barco_read_key(uint32_t key_idx, crypto_key_type_t *key_type,
     }
 
     key_addr = key_desc.key_address;
-    if (sdk::asic::asic_mem_read(key_addr, key, *key_size)) {
+    if (asic_mem_read(key_addr, key, *key_size)) {
         SDK_TRACE_ERR("Failed to read key @ 0x%llx", (uint64_t) key_addr); 
         return SDK_RET_INVALID_ARG;
     }
@@ -341,7 +343,7 @@ sdk_ret_t capri_barco_sym_free_key(int32_t key_idx)
 sdk_ret_t
 capri_barco_crypto_init_tls_pad_table(void)
 {
-    uint8_t  tls_pad_bytes[capri_get_mem_size_kb(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) * 1024], i, j;
+    uint8_t  tls_pad_bytes[asic_get_mem_size_kb(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) * 1024], i, j;
     uint64_t tls_pad_base_addr = 0;
 
     SDK_TRACE_DEBUG("Initializing TLS-proxy Pad Bytes table of size 0x%llx", sizeof(tls_pad_bytes));
@@ -358,9 +360,9 @@ capri_barco_crypto_init_tls_pad_table(void)
         }
     }
 
-    tls_pad_base_addr = capri_get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE);
+    tls_pad_base_addr = asic_get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE);
     if (tls_pad_base_addr != INVALID_MEM_ADDRESS) {
-        sdk::asic::asic_mem_write(tls_pad_base_addr, tls_pad_bytes, sizeof(tls_pad_bytes));
+        asic_mem_write(tls_pad_base_addr, tls_pad_bytes, sizeof(tls_pad_bytes));
     }
     return SDK_RET_OK;
 }
@@ -408,7 +410,7 @@ sdk_ret_t capri_barco_asym_read_key(int32_t key_idx, capri_barco_asym_key_desc_t
         return ret;
     }
 
-    if (sdk::asic::asic_mem_read(key_desc_addr, (uint8_t*)&key, sizeof(*key))) {
+    if (asic_mem_read(key_desc_addr, (uint8_t*)&key, sizeof(*key))) {
         SDK_TRACE_ERR("Failed to read Barco Asym key descriptor from 0x%llx", (uint64_t) key_desc_addr);
         return SDK_RET_INVALID_ARG;
     }
@@ -427,7 +429,7 @@ sdk_ret_t capri_barco_asym_write_key(int32_t key_idx, capri_barco_asym_key_desc_
         return ret;
     }
 
-    if (sdk::asic::asic_mem_write(key_desc_addr, (uint8_t*)key, sizeof(*key))) {
+    if (asic_mem_write(key_desc_addr, (uint8_t*)key, sizeof(*key))) {
         SDK_TRACE_ERR("Failed to write Barco Asym key descriptor @ 0x%llx", (uint64_t) key_desc_addr);
         return SDK_RET_INVALID_ARG;
     }

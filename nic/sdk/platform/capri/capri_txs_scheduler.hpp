@@ -13,7 +13,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "platform/capri/capri_cfg.hpp"
+#include "asic/asic.hpp"
 
 namespace sdk {
 namespace platform {
@@ -71,7 +71,7 @@ typedef struct capri_txs_policer_lif_params_s {
  * @return sdk_ret_t: Status of the operation
  */
 
-sdk_ret_t capri_txs_scheduler_init(uint32_t admin_cos, capri_cfg_t *capri_cfg);
+sdk_ret_t capri_txs_scheduler_init(uint32_t admin_cos, asic_cfg_t *capri_cfg);
 
 void capri_txs_timer_init_hsh_depth(uint32_t key_lines);
 

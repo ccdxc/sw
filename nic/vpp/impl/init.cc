@@ -36,7 +36,7 @@ initialize_pds(void)
 #endif
 
     // do soft init
-    sdk::asic::set_init_type(sdk::asic::asic_init_type_t::ASIC_INIT_TYPE_SOFT);
+    sdk::asic::asic_set_init_type(sdk::asic::asic_init_type_t::ASIC_INIT_TYPE_SOFT);
     memset(&init_params, 0, sizeof(init_params));
     init_params.init_mode = PDS_INIT_MODE_COLD_START;
     init_params.trace_cb  = pds_init_logger;

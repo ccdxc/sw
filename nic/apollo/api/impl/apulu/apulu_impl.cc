@@ -567,7 +567,7 @@ apulu_impl::pipeline_init(void) {
     SDK_ASSERT(ret == SDK_RET_OK);
 
     // skip the remaining if it is a soft initialization
-    if (sdk::asic::is_soft_init()) {
+    if (sdk::asic::asic_is_soft_init()) {
         return SDK_RET_OK;
     }
 
@@ -633,11 +633,11 @@ apulu_impl::upgrade_switchover(void) {
     std::list<qstate_cfg_t> q;
 
     // return error if the pipeline is not quiesced
-    if (!sdk::asic::is_quiesced()) {
+    if (!sdk::asic::asic_is_quiesced()) {
         return SDK_RET_ERR;
     }
     // program generated nic/pgm_bin (generated configs)
-    sdk::platform::capri::capri_pgm_init();
+    sdk::asic::pd::asicpd_pgm_init();
 
     // update the table engine configs
     for (uint32_t i = 0; i < sizeof(pipe)/sizeof(uint32_t); i++) {

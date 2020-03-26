@@ -34,26 +34,6 @@ typedef enum pd_adjust_perf_status {
     PD_PERF_INVALID = 2
 } pd_adjust_perf_status_t;
 
-// TODO: please move this to sdk/lib/p4 later !!
-typedef struct p4_table_mem_layout_ {
-    uint16_t    entry_width;    /* In units of memory words.. 16b  in case of PIPE tables */
-                                /* In units of bytes in case of HBM table */
-    uint16_t    entry_width_bits;
-    uint32_t    start_index;
-    uint32_t    end_index;
-    uint16_t    top_left_x;
-    uint16_t    top_left_y;
-    uint8_t     top_left_block;
-    uint16_t    btm_right_x;
-    uint16_t    btm_right_y;
-    uint8_t     btm_right_block;
-    uint8_t     num_buckets;
-    uint32_t    tabledepth;
-    mem_addr_t  base_mem_pa; /* Physical addres in  memory */
-    mem_addr_t  base_mem_va; /* Virtual  address in  memory */
-    char        *tablename;
-} p4_table_mem_layout_t;
-
 typedef struct llc_counters_s {
     uint32_t mask;
     uint32_t data[16];
@@ -85,47 +65,6 @@ typedef struct hbm_bw_samples_s {
 sdk_ret_t asicpd_read_table_constant(uint32_t tableid, uint64_t *value);
 sdk_ret_t asicpd_program_table_thread_constant(uint32_t tableid, uint8_t table_thread_id,
                                                uint64_t const_value);
-typedef struct lif_qtype_info_s {
-    uint8_t entries;
-    uint8_t size;
-    uint8_t cosA;
-    uint8_t cosB;
-} __PACK__ lif_qtype_info_t;
-
-const static uint32_t kNumQTypes = 8;
-const static uint32_t kAllocUnit = 4096;
-typedef struct lif_qstate_s {
-    uint32_t lif_id;
-    uint32_t allocation_size;
-    uint64_t hbm_address;
-    uint8_t hint_cos;
-    uint8_t enable;
-    struct {
-        lif_qtype_info_t qtype_info;
-        uint32_t hbm_offset;
-        uint32_t qsize;
-        uint32_t rsvd;
-        uint32_t num_queues;
-        uint8_t  coses;
-    } type[kNumQTypes];
-} __PACK__ lif_qstate_t;
-
-// sw phv pipeline type
-enum asicpd_swphv_type_t {
-    ASICPD_SWPHV_TYPE_RXDMA   = 0,    // P4+ RxDMA
-    ASICPD_SWPHV_TYPE_TXDMA   = 1,    // P4+ TxDMA
-    ASICPD_SWPHV_TYPE_INGRESS = 2,    // P4 Ingress
-    ASICPD_SWPHV_TYPE_EGRESS  = 3,    // P4 Egress
-};
-
-// sw phv injection state
-typedef struct asicpd_sw_phv_state_ {
-    bool        enabled;
-    bool        done;
-    uint32_t    current_cntr;
-    uint32_t    no_data_cntr;
-    uint32_t    drop_no_data_cntr;
-} asicpd_sw_phv_state_t;
 
 // this is mainly used during upgrade to modify the
 // table engine configuration to map to new hbm
@@ -222,9 +161,9 @@ sdk_ret_t asicpd_tm_get_clock_tick(uint64_t *tick);
 sdk_ret_t asicpd_tm_debug_stats_get(tm_port_t port,
                                     tm_debug_stats_t *debug_stats, bool reset);
 sdk_ret_t asicpd_sw_phv_init(void);
-sdk_ret_t asicpd_sw_phv_get(asicpd_swphv_type_t type, uint8_t prof_num,
-                            asicpd_sw_phv_state_t *state);
-sdk_ret_t asicpd_sw_phv_inject(asicpd_swphv_type_t type, uint8_t prof_num,
+sdk_ret_t asicpd_sw_phv_get(asic_swphv_type_t type, uint8_t prof_num,
+                            asic_sw_phv_state_t *state);
+sdk_ret_t asicpd_sw_phv_inject(asic_swphv_type_t type, uint8_t prof_num,
                                uint8_t start_idx, uint8_t num_flits,
                                void *data);
 
@@ -288,6 +227,14 @@ void asicpd_set_action_txdma_asm_base(int tableid, int actionid,
                                       uint64_t asm_base);
 void asicpd_set_table_rxdma_asm_base(int tableid, uint64_t asm_base);
 void asicpd_set_table_txdma_asm_base(int tableid, uint64_t asm_base);
+sdk_ret_t asicpd_init(asic_cfg_t *cfg);
+void asicpd_cleanup(void);
+sdk_ret_t asicpd_pgm_init(void);
+
+// Asic Doorbell address
+uint64_t asicpd_local_dbaddr_get(void);
+uint64_t asicpd_local_db32_addr_get(void);
+uint64_t asicpd_host_dbaddr_get(void);
 
 sdk_ret_t asicpd_tm_uplink_lif_set(tm_port_t port, uint32_t lif);
 sdk_ret_t asicpd_tm_enable_disable_uplink_port(tm_port_t port, bool enable);
@@ -302,16 +249,11 @@ sdk_ret_t asicpd_quiesce_stop(void);
 }    // namespace asic
 }    // namespace sdk
 
-using sdk::asic::pd::p4_table_mem_layout_t;
 using sdk::asic::pd::llc_counters_t;
 using sdk::asic::pd::scheduler_stats_t;
 using sdk::asic::pd::hbm_bw_samples_t;
-using sdk::asic::pd::lif_qstate_t;
-using sdk::asic::pd::lif_qtype_info_t;
-using sdk::asic::pd::kNumQTypes;
-using sdk::asic::pd::kAllocUnit;
 using sdk::asic::pd::p4_tbl_eng_cfg_t;
-
+using sdk::asic::pd::asic_pd_qstate_map_read;
 using sdk::asic::pd::asicpd_get_mem_addr;
 using sdk::asic::pd::asicpd_get_mem_size_kb;
 using sdk::asic::pd::asicpd_get_hbm_region_by_address;

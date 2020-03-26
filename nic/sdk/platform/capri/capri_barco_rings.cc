@@ -1,3 +1,4 @@
+#include "asic/cmn/asic_common.hpp"
 #include "platform/capri/capri_barco_rings.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "platform/capri/capri_barco_res.hpp"
@@ -5,6 +6,7 @@
 #include "platform/capri/capri_common.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
 #include "asic/rw/asicrw.hpp"
+#include "asic/cmn/asic_hbm.hpp"
 
 namespace sdk {
 namespace platform {
@@ -331,7 +333,7 @@ sdk_ret_t capri_barco_ring_common_init(capri_barco_ring_t *barco_ring)
     uint64_t                            ring_base = 0;
     uint32_t                            ring_size = 0;
 
-    ring_base = capri_get_mem_addr(barco_ring->hbm_region);
+    ring_base = sdk::asic::asic_get_mem_addr(barco_ring->hbm_region);
     if (ring_base == INVALID_MEM_ADDRESS) {
         SDK_TRACE_ERR("Failed to retrieve Barco Ring memory region for %s", barco_ring->ring_name);
         return SDK_RET_ERR;
@@ -342,7 +344,7 @@ sdk_ret_t capri_barco_ring_common_init(capri_barco_ring_t *barco_ring)
         return SDK_RET_ERR;
     }
 
-    ring_size = capri_get_mem_size_kb(barco_ring->hbm_region) * 1024;
+    ring_size = sdk::asic::asic_get_mem_size_kb(barco_ring->hbm_region) * 1024;
     if (ring_size < (uint32_t)(barco_ring->ring_size * barco_ring->descriptor_size)) {
         SDK_TRACE_ERR("Not enough memory for Barco Ring memory region %s", barco_ring->ring_name);
         return SDK_RET_ERR;
@@ -515,13 +517,13 @@ sdk_ret_t capri_barco_xts0_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = capri_get_mem_addr(key_desc_array);
+    key_array_base = sdk::asic::asic_get_mem_addr(key_desc_array);
     SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = capri_get_mem_size_kb(key_desc_array) * 1024;
+    region_sz = sdk::asic::asic_get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
 
     hese.dhs_crypto_ctl.xts_enc_key_array_base_w0.fld(key_array_base & 0xffffffff);
@@ -602,13 +604,13 @@ sdk_ret_t capri_barco_xts1_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = capri_get_mem_addr(key_desc_array);
+    key_array_base = sdk::asic::asic_get_mem_addr(key_desc_array);
     SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = capri_get_mem_size_kb(key_desc_array) * 1024;
+    region_sz = sdk::asic::asic_get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
 
     hese.dhs_crypto_ctl.xts_key_array_base_w0.fld(key_array_base & 0xffffffff);
@@ -689,13 +691,13 @@ sdk_ret_t capri_barco_mpp0_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = capri_get_mem_addr(key_desc_array);
+    key_array_base = sdk::asic::asic_get_mem_addr(key_desc_array);
     SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = capri_get_mem_size_kb(key_desc_array) * 1024;
+    region_sz = sdk::asic::asic_get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
 
     mpse.dhs_crypto_ctl.mpp0_key_array_base_w0.fld(key_array_base & 0xffffffff);
@@ -869,13 +871,13 @@ sdk_ret_t capri_barco_mpp1_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = capri_get_mem_addr(key_desc_array);
+    key_array_base = sdk::asic::asic_get_mem_addr(key_desc_array);
     SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = capri_get_mem_size_kb(key_desc_array) * 1024;
+    region_sz = sdk::asic::asic_get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
 
     mpse.dhs_crypto_ctl.mpp1_key_array_base_w0.fld(key_array_base & 0xffffffff);
@@ -962,13 +964,13 @@ sdk_ret_t capri_barco_mpp2_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = capri_get_mem_addr(key_desc_array);
+    key_array_base = sdk::asic::asic_get_mem_addr(key_desc_array);
     SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = capri_get_mem_size_kb(key_desc_array) * 1024;
+    region_sz = sdk::asic::asic_get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
 
     mpse.dhs_crypto_ctl.mpp2_key_array_base_w0.fld(key_array_base & 0xffffffff);
@@ -1055,13 +1057,13 @@ sdk_ret_t capri_barco_mpp3_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = capri_get_mem_addr(key_desc_array);
+    key_array_base = sdk::asic::asic_get_mem_addr(key_desc_array);
     SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = capri_get_mem_size_kb(key_desc_array) * 1024;
+    region_sz = sdk::asic::asic_get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
 
     mpse.dhs_crypto_ctl.mpp3_key_array_base_w0.fld(key_array_base & 0xffffffff);
@@ -1148,13 +1150,13 @@ sdk_ret_t capri_barco_gcm0_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = capri_get_mem_addr(key_desc_array);
+    key_array_base = sdk::asic::asic_get_mem_addr(key_desc_array);
     SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = capri_get_mem_size_kb(key_desc_array) * 1024;
+    region_sz = sdk::asic::asic_get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
     /* Sanity check that we have enough memory to support the keys scale needed */
     assert(key_array_key_count >= CRYPTO_KEY_COUNT_MAX);
@@ -1325,13 +1327,13 @@ sdk_ret_t capri_barco_gcm1_key_array_init(void)
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
-    key_array_base = capri_get_mem_addr(key_desc_array);
+    key_array_base = sdk::asic::asic_get_mem_addr(key_desc_array);
     SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
     assert((key_array_base & (BARCO_CRYPTO_KEY_DESC_ALIGN_BYTES - 1)) == 0);
-    region_sz = capri_get_mem_size_kb(key_desc_array) * 1024;
+    region_sz = sdk::asic::asic_get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
     /* Sanity check that we have enough memory to support the keys scale needed */
     assert(key_array_key_count >= CRYPTO_KEY_COUNT_MAX);
@@ -1810,7 +1812,7 @@ sdk_ret_t capri_barco_rings_init(platform_type_t platform)
         if (barco_rings[idx].ring_size != 0) {
             barco_rings[idx].opaqe_tag_value = 0x1;
             
-            opa_tag_addr = capri_get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset((barco_rings_t)idx);
+            opa_tag_addr = sdk::asic::asic_get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset((barco_rings_t)idx);
 
             SDK_TRACE_DEBUG("Ring: %s: Allocated opaque tag @ 0x%llx",
                 barco_rings[idx].ring_name, opa_tag_addr);

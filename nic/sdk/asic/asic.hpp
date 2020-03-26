@@ -18,6 +18,49 @@ namespace asic {
 #define SDK_ASIC_PGM_CFG_MAX        3
 #define SDK_ASIC_ASM_CFG_MAX        3
 
+#define SDK_ASIC_REPL_ENTRY_WIDTH   (64)
+#define SDK_ASIC_REPL_TABLE_DEPTH   (64*1024)
+
+#define NUM_MAX_COSES                           16
+
+#define ASIC_TXS_MAX_TABLE_ENTRIES              2048
+// 2K * 8K scheduler
+#define ASIC_TXS_SCHEDULER_MAP_MAX_ENTRIES      2048
+#define ASIC_TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY 8192
+// Timer definitions
+#define ASIC_TIMER_WHEEL_DEPTH                  4096
+#define ASIC_TIMER_NUM_KEY_PER_CACHE_LINE       16
+#define ASIC_TIMER_NUM_DATA_PER_CACHE_LINE      12
+// This needs to be a power of 2
+#define ASIC_TIMER_NUM_KEY_CACHE_LINES          1024
+
+// each line is 64B
+// Each key in key line takes up 1 line in data space
+#define ASIC_TIMER_HBM_DATA_SPACE \
+        (ASIC_TIMER_NUM_KEY_CACHE_LINES * ASIC_TIMER_NUM_KEY_PER_CACHE_LINE * 64)
+
+#define ASIC_TIMER_HBM_KEY_SPACE \
+        (ASIC_TIMER_NUM_KEY_CACHE_LINES * 64)
+
+#define ASIC_TIMER_HBM_SPACE \
+        (ASIC_TIMER_HBM_KEY_SPACE + ASIC_TIMER_HBM_DATA_SPACE)
+
+#define ASIC_MAX_TIMERS \
+        (ASIC_TIMER_NUM_KEY_CACHE_LINES * ASIC_TIMER_NUM_KEY_PER_CACHE_LINE * \
+         ASIC_TIMER_NUM_DATA_PER_CACHE_LINE)
+
+//16 64B PHV entries(Flits)
+#define ASIC_SW_PHV_NUM_MEM_ENTRIES 16
+
+//8 Profiles (config and control)
+#define ASIC_SW_PHV_NUM_PROFILES  8
+
+// Number of parser instances
+#define ASIC_NUM_PPA 2
+
+// Asic Flit size in bytes
+#define ASIC_FLIT_SIZE (512/8)
+
 typedef void (*completion_cb_t)(sdk_status_t status);
 
 typedef struct asic_pgm_cfg_s {
@@ -33,31 +76,48 @@ typedef struct asic_asm_cfg_s {
 } asic_asm_cfg_t;
 
 typedef struct asic_cfg_s {
-    sdk::platform::asic_type_t          asic_type;
-    std::string          default_config_dir;    // TODO: vasanth, pls. remove this up eventually
-    uint32_t             admin_cos;
-    uint32_t             repl_entry_width;
-    std::string          cfg_path;
-    std::string          pgm_name;
-    uint8_t              num_pgm_cfgs;
-    uint8_t              num_asm_cfgs;
-    uint8_t              num_rings;
-    asic_pgm_cfg_t       pgm_cfg[SDK_ASIC_PGM_CFG_MAX];
-    asic_asm_cfg_t       asm_cfg[SDK_ASIC_ASM_CFG_MAX];
-    sdk::lib::catalog    *catalog;
-    mpartition           *mempartition;
-    sdk::platform::ring_meta_t
-                         *ring_meta;
-    platform_type_t      platform;
-    completion_cb_t      completion_func;
-    bool                 is_slave;
+    sdk::platform::asic_type_t  asic_type;
+    std::string                 default_config_dir;
+    uint32_t                    admin_cos;
+    uint32_t                    repl_entry_width;
+    std::string                 cfg_path;
+    std::string                 pgm_name;
+    uint8_t                     num_pgm_cfgs;
+    uint8_t                     num_asm_cfgs;
+    uint8_t                     num_rings;
+    asic_pgm_cfg_t              pgm_cfg[SDK_ASIC_PGM_CFG_MAX];
+    asic_asm_cfg_t              asm_cfg[SDK_ASIC_ASM_CFG_MAX];
+    sdk::lib::catalog           *catalog;
+    mpartition                  *mempartition;
+    sdk::platform::ring_meta_t  *ring_meta;
+    platform_type_t             platform;
+    completion_cb_t             completion_func;
+    bool                        is_slave;
+    bool                        p4_cache;
+    bool                        p4plus_cache;
+    bool                        llc_cache;
     sdk::lib::device_profile_t  *device_profile;
 } asic_cfg_t;
 
-// initialize the asic
-sdk_ret_t asic_init(asic_cfg_t *asic_cfg);
-// cleanup asic initialization
-void asic_cleanup(void);
+// TODO: please move this to sdk/lib/p4 later !!
+typedef struct p4_table_mem_layout_ {
+    uint16_t    entry_width;    /* In units of memory words.. 16b  in case of PIPE tables */
+                                /* In units of bytes in case of HBM table */
+    uint16_t    entry_width_bits;
+    uint32_t    start_index;
+    uint32_t    end_index;
+    uint16_t    top_left_x;
+    uint16_t    top_left_y;
+    uint8_t     top_left_block;
+    uint16_t    btm_right_x;
+    uint16_t    btm_right_y;
+    uint8_t     btm_right_block;
+    uint8_t     num_buckets;
+    uint32_t    tabledepth;
+    mem_addr_t  base_mem_pa; /* Physical addres in  memory */
+    mem_addr_t  base_mem_va; /* Virtual  address in  memory */
+    char        *tablename;
+} p4_table_mem_layout_t;
 
 typedef enum asic_block_e {
     ASIC_BLOCK_PACKET_BUFFER,
@@ -91,7 +151,7 @@ typedef struct asic_hbm_bw_s {
 //           Will not launch the process threads as per the code flow.
 //           Example usage for this initialization is for "CLI" where it requires to
 //           access the registers or tables for debugging.
-//           Codes which are relevant for the above case should be put under is_soft_init()
+//           Codes which are relevant for the above case should be put under asic_is_soft_init()
 //
 // Upgrade : Will be setup by Upgrade manager before launching the new application.
 //           Does not initializes the registers as it is configured by the Hard init
@@ -116,20 +176,41 @@ typedef enum asic_state_e {
     ASIC_STATE_QUIESCED = 1
 } asic_state_t;
 
-// Asic Doorbell address
-uint64_t asic_local_dbaddr_get(void);
-uint64_t asic_local_db32_addr_get(void);
-uint64_t asic_host_dbaddr_get(void);
+typedef struct lif_qtype_info_s {
+    uint8_t entries;
+    uint8_t size;
+    uint8_t cosA;
+    uint8_t cosB;
+} __PACK__ lif_qtype_info_t;
+
+const static uint32_t kNumQTypes = 8;
+const static uint32_t kAllocUnit = 4096;
+
+typedef struct lif_qstate_s {
+    uint32_t lif_id;
+    uint32_t allocation_size;
+    uint64_t hbm_address;
+    uint8_t hint_cos;
+    uint8_t enable;
+    struct {
+        lif_qtype_info_t qtype_info;
+        uint32_t hbm_offset;
+        uint32_t qsize;
+        uint32_t rsvd;
+        uint32_t num_queues;
+        uint8_t  coses;
+    } type[kNumQTypes];
+} __PACK__ lif_qstate_t;
 
 // returns true if the init type is SOFT, false otherwise
-bool is_soft_init(void);
+bool asic_is_soft_init(void);
 // returns true if the init type is UPGRADE, false otherwise
 bool is_upgrade_init(void);
 // returns true if the init type is HARD, false otherwise(SOFT/UPGRADE)
-bool is_hard_init(void);
-void set_init_type(asic_init_type_t type);
+bool asic_is_hard_init(void);
+void asic_set_init_type(asic_init_type_t type);
 void set_state(asic_state_t state);
-bool is_quiesced(void);
+bool asic_is_quiesced(void);
 
 typedef enum p4plus_cache_action_e {
     P4PLUS_CACHE_ACTION_NONE        = 0x0,
@@ -140,7 +221,7 @@ typedef enum p4plus_cache_action_e {
 } p4plus_cache_action_t;
 
 // sw phv pipeline type
-typedef enum asic_swphv_type_t {
+typedef enum asic_swphv_type_e {
     ASIC_SWPHV_TYPE_RXDMA   = 0,    // P4+ RxDMA
     ASIC_SWPHV_TYPE_TXDMA   = 1,    // P4+ TxDMA
     ASIC_SWPHV_TYPE_INGRESS = 2,    // P4 Ingress
@@ -165,5 +246,11 @@ using sdk::asic::asic_cfg_t;
 using sdk::asic::asic_block_t;
 using sdk::asic::asic_bw_t;
 using sdk::asic::asic_hbm_bw_t;
+using sdk::asic::p4_table_mem_layout_t;
+using sdk::asic::lif_qstate_t;
+using sdk::asic::lif_qtype_info_t;
+using sdk::asic::kAllocUnit;
+using sdk::asic::kNumQTypes;
+
 
 #endif    // __SDK_ASIC_HPP__

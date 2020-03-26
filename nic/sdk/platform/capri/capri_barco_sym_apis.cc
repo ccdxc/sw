@@ -1,5 +1,8 @@
 #include <arpa/inet.h>
 #include "include/sdk/crypto_apis.hpp"
+#include "asic/rw/asicrw.hpp"
+#include "asic/cmn/asic_hbm.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "platform/capri/capri_barco_crypto.hpp"
 #include "platform/capri/capri_barco_res.hpp"
 #include "platform/capri/capri_barco_rings.hpp"
@@ -8,7 +11,6 @@
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "platform/capri/capri_common.hpp"
 #include "platform/capri/capri_barco.h"
-#include "asic/rw/asicrw.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
 
 namespace sdk {
@@ -1539,7 +1541,7 @@ sdk_ret_t capri_barco_setup_dummy_gcm1_req(uint32_t key_idx)
 
     assert((CAPRI_BARCO_RING_SLOTS & (CAPRI_BARCO_RING_SLOTS-1)) == 0);
 
-    gcm1_ring_base = capri_get_mem_addr(CAPRI_HBM_REG_BARCO_RING_GCM1);
+    gcm1_ring_base = sdk::asic::asic_get_mem_addr(CAPRI_HBM_REG_BARCO_RING_GCM1);
     for (idx = 0; idx < CAPRI_BARCO_RING_SLOTS; idx+=8) {
         gcm1_slot_addr = gcm1_ring_base + (idx << CAPRI_BARCO_SYM_REQ_DESC_SZ_SHIFT);
 

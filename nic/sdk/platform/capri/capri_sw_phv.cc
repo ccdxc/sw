@@ -22,23 +22,11 @@
 namespace sdk {
 namespace platform {
 namespace capri {
-
-//16 64B PHV entries(Flits)
-#define CAPRI_SW_PHV_NUM_MEM_ENTRIES 16
-
-//8 Profiles (config and control)
-#define CAPRI_SW_PHV_NUM_PROFILES  8
-
-// Number of parser instances
-#define CAPRI_NUM_PPA 2
-
-// Capri Flit size in bytes
-#define CAPRI_FLIT_SIZE (512/8)
-
-// capri_pd_flit_t is used to access PHV data one flit at a time
-typedef struct capri_pd_flit_ {
-    uint8_t flit_data[CAPRI_FLIT_SIZE];
-} capri_pd_flit_t;
+            
+// capri_flit_t is used to access PHV data one flit at a time
+typedef struct capri_flit_ {
+    uint8_t flit_data[ASIC_FLIT_SIZE];
+} capri_flit_t;
 
 
 // capri_psp_swphv_init Initializes TxDMA(pt)/RxDMA(pr) SW PHV generator profiles
@@ -60,13 +48,13 @@ capri_psp_swphv_init (bool rx)
     psp_csr->cfg_sw_phv_global.err_enable(0);
     psp_csr->cfg_sw_phv_global.write();
 
-    for (index = 0; index < CAPRI_SW_PHV_NUM_MEM_ENTRIES; index++) {
+    for (index = 0; index < ASIC_SW_PHV_NUM_MEM_ENTRIES; index++) {
         cap_psp_csr_dhs_sw_phv_mem_entry_t &phv_mem_entry = psp_csr->dhs_sw_phv_mem.entry[index];
         phv_mem_entry.data(0);
-	phv_mem_entry.write();
+        phv_mem_entry.write();
     }
 
-    for (index = 0; index < CAPRI_SW_PHV_NUM_PROFILES; index++) {
+    for (index = 0; index < ASIC_SW_PHV_NUM_PROFILES; index++) {
 
         cap_psp_csr_cfg_sw_phv_control_t &sw_phv_ctrl = psp_csr->cfg_sw_phv_control[index];
 
@@ -101,7 +89,7 @@ capri_ppa_swphv_init ()
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     int pidx = 0;
 
-    for (pidx = 0; pidx < CAPRI_NUM_PPA; pidx++) {
+    for (pidx = 0; pidx < ASIC_NUM_PPA; pidx++) {
         cap_ppa_csr_t &ppa_csr = cap0.ppa.ppa[pidx];
         cap_dpr_csr_t &dpr_csr = cap0.dpr.dpr[pidx];
         cap_dpp_csr_t &dpp_csr = cap0.dpp.dpp[pidx];
@@ -109,25 +97,25 @@ capri_ppa_swphv_init ()
 
         SDK_TRACE_DEBUG("CAPRI-PPA:: Initializing PPA Global Config");
 
-	// enable sw phv
+        // enable sw phv
         ppa_csr.cfg_sw_phv_global.start_enable(1);
         ppa_csr.cfg_sw_phv_global.err_enable(0);
-	ppa_csr.cfg_sw_phv_global.write();
+        ppa_csr.cfg_sw_phv_global.write();
 
-	// enable drop phvs
-	dpr_csr.cfg_global_2.dump_drop_no_data_phv(1);
-	dpr_csr.cfg_global_2.write();
-	dpp_csr.cfg_global_2.dump_drop_no_data_phv_0(1);
-	dpp_csr.cfg_global_2.dump_drop_no_data_phv_1(1);
-	dpp_csr.cfg_global_2.write();
+        // enable drop phvs
+        dpr_csr.cfg_global_2.dump_drop_no_data_phv(1);
+        dpr_csr.cfg_global_2.write();
+        dpp_csr.cfg_global_2.dump_drop_no_data_phv_0(1);
+        dpp_csr.cfg_global_2.dump_drop_no_data_phv_1(1);
+        dpp_csr.cfg_global_2.write();
 
-	// init phv entries
-        for (index = 0; index < CAPRI_SW_PHV_NUM_MEM_ENTRIES; index++) {
+        // init phv entries
+        for (index = 0; index < ASIC_SW_PHV_NUM_MEM_ENTRIES; index++) {
             cap_ppa_csr_dhs_sw_phv_mem_entry_t &phv_mem_entry = ppa_csr.dhs_sw_phv_mem.entry[index];
             phv_mem_entry.data(0);
         }
 
-        for (index = 0; index < CAPRI_SW_PHV_NUM_PROFILES; index++) {
+        for (index = 0; index < ASIC_SW_PHV_NUM_PROFILES; index++) {
 
             cap_ppa_csr_cfg_sw_phv_control_t &sw_phv_ctrl = ppa_csr.cfg_sw_phv_control[index];
 
@@ -138,7 +126,7 @@ capri_ppa_swphv_init ()
             sw_phv_ctrl.frame_size_enable(0);
             sw_phv_ctrl.packet_len_enable(0);
             sw_phv_ctrl.qid_enable(0);
-	    sw_phv_ctrl.write();
+            sw_phv_ctrl.write();
 
             cap_ppa_csr_cfg_sw_phv_config_t &sw_phv_cfg = ppa_csr.cfg_sw_phv_config[index];
 
@@ -148,7 +136,7 @@ capri_ppa_swphv_init ()
             sw_phv_cfg.counter_max(0);
             sw_phv_cfg.qid_min(0);
             sw_phv_cfg.qid_max(0);
-	    sw_phv_cfg.write();
+            sw_phv_cfg.write();
         }
     }
 
@@ -187,28 +175,28 @@ capri_pr_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx, uint8_t num_fli
     SDK_TRACE_DEBUG("CAPRI-PSP-PHV-INJECT:: Injecting Software PHV.");
 
     int index = 0;
-    capri_pd_flit_t *curr_flit_ptr = (capri_pd_flit_t *)data;
+    capri_flit_t *curr_flit_ptr = (capri_flit_t *)data;
 
     // write flit data
     for (index = 0; index < num_flits; index++) {
-	capri_pd_flit_t rdata;
-	// swap the bytes in data
-	int i;
-        for (i = 0; i < CAPRI_FLIT_SIZE; i++) {
-	    printf("%02x ", curr_flit_ptr->flit_data[i]);
-	    rdata.flit_data[CAPRI_FLIT_SIZE-1-i] = curr_flit_ptr->flit_data[i];
+        capri_flit_t rdata;
+        // swap the bytes in data
+        int i;
+        for (i = 0; i < ASIC_FLIT_SIZE; i++) {
+            printf("%02x ", curr_flit_ptr->flit_data[i]);
+            rdata.flit_data[ASIC_FLIT_SIZE-1-i] = curr_flit_ptr->flit_data[i];
         }
-	printf("\n");
-        for (i = 0; i < CAPRI_FLIT_SIZE; i++) {
-	    printf("%02x ", rdata.flit_data[i]);
-	}
-	printf("\n");
+        printf("\n");
+        for (i = 0; i < ASIC_FLIT_SIZE; i++) {
+            printf("%02x ", rdata.flit_data[i]);
+        }
+        printf("\n");
 
         cap_psp_csr_dhs_sw_phv_mem_entry_t &phv_mem_entry = pr_psp_csr.dhs_sw_phv_mem.entry[index];
-	cpp_int_helper::s_cpp_int_from_array(flit_data, 0, (CAPRI_FLIT_SIZE-1), (uint8_t *)curr_flit_ptr);
+        cpp_int_helper::s_cpp_int_from_array(flit_data, 0, (ASIC_FLIT_SIZE-1), (uint8_t *)curr_flit_ptr);
         phv_mem_entry.data(flit_data);
-	phv_mem_entry.write();
-	curr_flit_ptr++;
+        phv_mem_entry.write();
+        curr_flit_ptr++;
     }
 
     cap_psp_csr_cfg_sw_phv_config_t &sw_phv_cfg = pr_psp_csr.cfg_sw_phv_config[prof_num];
@@ -245,29 +233,29 @@ capri_pt_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx, uint8_t num_fli
     SDK_TRACE_DEBUG("CAPRI-PSP-PHV-INJECT:: Injecting Software PHV.");
 
     int index = 0;
-    capri_pd_flit_t *curr_flit_ptr = (capri_pd_flit_t *)data;
+    capri_flit_t *curr_flit_ptr = (capri_flit_t *)data;
     printf("PHV contents:\n");
 
     // write flit data
     for (index = 0; index < num_flits; index++) {
-	capri_pd_flit_t rdata;
-	// swap the bytes in data
-	int i;
-        for (i = 0; i < CAPRI_FLIT_SIZE; i++) {
-	    printf("%02x ", curr_flit_ptr->flit_data[i]);
-	    rdata.flit_data[CAPRI_FLIT_SIZE-1-i] = curr_flit_ptr->flit_data[i];
+        capri_flit_t rdata;
+        // swap the bytes in data
+        int i;
+        for (i = 0; i < ASIC_FLIT_SIZE; i++) {
+            printf("%02x ", curr_flit_ptr->flit_data[i]);
+            rdata.flit_data[ASIC_FLIT_SIZE-1-i] = curr_flit_ptr->flit_data[i];
         }
-	printf("\n");
-        for (i = 0; i < CAPRI_FLIT_SIZE; i++) {
-	    printf("%02x ", rdata.flit_data[i]);
-	}
-	printf("\n");
+        printf("\n");
+        for (i = 0; i < ASIC_FLIT_SIZE; i++) {
+            printf("%02x ", rdata.flit_data[i]);
+        }
+        printf("\n");
 
         cap_psp_csr_dhs_sw_phv_mem_entry_t &phv_mem_entry = pt_psp_csr.dhs_sw_phv_mem.entry[index];
-	cpp_int_helper::s_cpp_int_from_array(flit_data, 0, (CAPRI_FLIT_SIZE-1), curr_flit_ptr->flit_data);
+        cpp_int_helper::s_cpp_int_from_array(flit_data, 0, (ASIC_FLIT_SIZE-1), curr_flit_ptr->flit_data);
         phv_mem_entry.data(flit_data);
-	phv_mem_entry.write();
-	curr_flit_ptr++;
+        phv_mem_entry.write();
+        curr_flit_ptr++;
     }
 
     cap_psp_csr_cfg_sw_phv_config_t &sw_phv_cfg = pt_psp_csr.cfg_sw_phv_config[prof_num];
@@ -301,32 +289,32 @@ capri_ppa_sw_phv_inject (uint8_t pidx, uint8_t prof_num, uint8_t start_idx, uint
     cap_ppa_csr_t &ppa_csr = cap0.ppa.ppa[pidx];
     pu_cpp_int< 512 > flit_data;
 
-    SDK_TRACE_DEBUG("CAPRI-PHV-INJECT:: Injecting PHV into PPA %d", pidx);
+    SDK_TRACE_DEBUG("Injecting PHV into PPA %d", pidx);
 
     int index = 0;
-    capri_pd_flit_t *curr_flit_ptr = (capri_pd_flit_t *)data;
-    printf("PHV contents:\n");
+    capri_flit_t *curr_flit_ptr = (capri_flit_t *)data;
+    SDK_TRACE_DEBUG("PHV contents:\n");
 
     // write flit data
     for (index = 0; index < num_flits; index++) {
-	capri_pd_flit_t rdata;
-	// swap the bytes in data
-	int i;
-        for (i = 0; i < CAPRI_FLIT_SIZE; i++) {
-	    printf("%02x ", curr_flit_ptr->flit_data[i]);
-	    rdata.flit_data[CAPRI_FLIT_SIZE-1-i] = curr_flit_ptr->flit_data[i];
+        capri_flit_t rdata;
+        // swap the bytes in data
+        int i;
+        for (i = 0; i < ASIC_FLIT_SIZE; i++) {
+            printf("%02x ", curr_flit_ptr->flit_data[i]);
+            rdata.flit_data[ASIC_FLIT_SIZE-1-i] = curr_flit_ptr->flit_data[i];
         }
-	printf("\n");
-        for (i = 0; i < CAPRI_FLIT_SIZE; i++) {
-	    printf("%02x ", rdata.flit_data[i]);
-	}
-	printf("\n");
+        printf("\n");
+        for (i = 0; i < ASIC_FLIT_SIZE; i++) {
+            printf("%02x ", rdata.flit_data[i]);
+        }
+        printf("\n");
 
         cap_ppa_csr_dhs_sw_phv_mem_entry_t &phv_mem_entry = ppa_csr.dhs_sw_phv_mem.entry[index];
-	cpp_int_helper::s_cpp_int_from_array(flit_data, 0, (CAPRI_FLIT_SIZE-1), (uint8_t *)curr_flit_ptr);
+        cpp_int_helper::s_cpp_int_from_array(flit_data, 0, (ASIC_FLIT_SIZE-1), (uint8_t *)curr_flit_ptr);
         phv_mem_entry.data(flit_data);
-	phv_mem_entry.write();
-	curr_flit_ptr++;
+        phv_mem_entry.write();
+        curr_flit_ptr++;
     }
 
     cap_ppa_csr_cfg_sw_phv_config_t &sw_phv_cfg = ppa_csr.cfg_sw_phv_config[prof_num];
@@ -353,7 +341,7 @@ capri_ppa_sw_phv_inject (uint8_t pidx, uint8_t prof_num, uint8_t start_idx, uint
 
 // capri_sw_phv_inject injects a software PHV into a pipeline
 sdk_ret_t
-capri_sw_phv_inject (asicpd_swphv_type_t type, uint8_t prof_num, uint8_t start_idx, uint8_t num_flits, void *data)
+capri_sw_phv_inject (asic_swphv_type_t type, uint8_t prof_num, uint8_t start_idx, uint8_t num_flits, void *data)
 {
     sdk_ret_t   ret = SDK_RET_OK;
 
@@ -362,26 +350,27 @@ capri_sw_phv_inject (asicpd_swphv_type_t type, uint8_t prof_num, uint8_t start_i
 
     // switch based on pipeline type
     switch(type) {
-    case ASICPD_SWPHV_TYPE_RXDMA:
+    case ASIC_SWPHV_TYPE_RXDMA:
         ret = capri_pr_psp_sw_phv_inject(prof_num, start_idx, num_flits, data);
-	break;
-    case ASICPD_SWPHV_TYPE_TXDMA:
+        break;
+    case ASIC_SWPHV_TYPE_TXDMA:
         ret = capri_pt_psp_sw_phv_inject(prof_num, start_idx, num_flits, data);
-	break;
-    case ASICPD_SWPHV_TYPE_INGRESS:
+        break;
+    case ASIC_SWPHV_TYPE_INGRESS:
         ret = capri_ppa_sw_phv_inject(1, prof_num, start_idx, num_flits, data);
-	break;
-    case ASICPD_SWPHV_TYPE_EGRESS:
+        break;
+    case ASIC_SWPHV_TYPE_EGRESS:
         ret = capri_ppa_sw_phv_inject(0, prof_num, start_idx, num_flits, data);
-	break;
+        break;
+    default:
+        break;
     }
-
     return ret;
 }
 
 // capri_psp_sw_phv_state gets Rx/Tx DMA pipeline PHV state
 static sdk_ret_t
-capri_pr_psp_sw_phv_state (uint8_t prof_num, asicpd_sw_phv_state_t *state)
+capri_pr_psp_sw_phv_state (uint8_t prof_num, asic_sw_phv_state_t *state)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_psp_csr_t &pr_psp_csr = cap0.pr.pr.psp;
@@ -391,7 +380,6 @@ capri_pr_psp_sw_phv_state (uint8_t prof_num, asicpd_sw_phv_state_t *state)
 
     cap_psp_csr_sta_sw_phv_state_t &sw_phv_state = pr_psp_csr.sta_sw_phv_state[prof_num];
     sw_phv_state.read();
-
     cap_psp_csr_cfg_sw_phv_global_t &phv_global = pr_psp_csr.cfg_sw_phv_global;
     phv_global.read();
 
@@ -411,7 +399,7 @@ capri_pr_psp_sw_phv_state (uint8_t prof_num, asicpd_sw_phv_state_t *state)
 
 // capri_psp_sw_phv_state gets Rx/Tx DMA pipeline PHV state
 static sdk_ret_t
-capri_pt_psp_sw_phv_state (uint8_t prof_num, asicpd_sw_phv_state_t *state)
+capri_pt_psp_sw_phv_state (uint8_t prof_num, asic_sw_phv_state_t *state)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_psp_csr_t &pt_psp_csr = cap0.pt.pt.psp;
@@ -421,7 +409,6 @@ capri_pt_psp_sw_phv_state (uint8_t prof_num, asicpd_sw_phv_state_t *state)
     // read the status registers
     cap_psp_csr_sta_sw_phv_state_t &sw_phv_state = pt_psp_csr.sta_sw_phv_state[prof_num];
     sw_phv_state.read();
-
     cap_psp_csr_cfg_sw_phv_global_t &phv_global = pt_psp_csr.cfg_sw_phv_global;
     phv_global.read();
 
@@ -441,7 +428,7 @@ capri_pt_psp_sw_phv_state (uint8_t prof_num, asicpd_sw_phv_state_t *state)
 
 // capri_ppa_sw_phv_state gets P4 Ingress/Egress pipeline PHV state
 static sdk_ret_t
-capri_ppa_sw_phv_state (uint8_t pidx, uint8_t prof_num, asicpd_sw_phv_state_t *state)
+capri_ppa_sw_phv_state (uint8_t pidx, uint8_t prof_num, asic_sw_phv_state_t *state)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_ppa_csr_t &ppa_csr = cap0.ppa.ppa[pidx];
@@ -451,7 +438,6 @@ capri_ppa_sw_phv_state (uint8_t pidx, uint8_t prof_num, asicpd_sw_phv_state_t *s
     // read the status registers
     cap_ppa_csr_sta_sw_phv_state_t &sw_phv_state = ppa_csr.sta_sw_phv_state[prof_num];
     sw_phv_state.read();
-
     cap_ppa_csr_cfg_sw_phv_global_t &phv_global = ppa_csr.cfg_sw_phv_global;
     phv_global.read();
 
@@ -472,33 +458,33 @@ capri_ppa_sw_phv_state (uint8_t pidx, uint8_t prof_num, asicpd_sw_phv_state_t *s
 }
 
 // capri_sw_phv_get gets the current state of the PHV
-sdk_ret_t
-capri_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num, asicpd_sw_phv_state_t *state)
+sdk_ret_t 
+capri_sw_phv_get (asic_swphv_type_t type, uint8_t prof_num, asic_sw_phv_state_t *state)
 {
     sdk_ret_t   ret = SDK_RET_OK;
 
-    SDK_TRACE_DEBUG("CAPRI-PHV-STATE:: Getting Software PHV state for type %d",
-                    type);
+    SDK_TRACE_DEBUG("Getting Software PHV state for type %d",type);
 
     // switch based on pipeline type
     switch(type) {
-    case ASICPD_SWPHV_TYPE_RXDMA:
+    case ASIC_SWPHV_TYPE_RXDMA:
         ret = capri_pr_psp_sw_phv_state(prof_num, state);
-	break;
-    case ASICPD_SWPHV_TYPE_TXDMA:
+        break;
+    case ASIC_SWPHV_TYPE_TXDMA:
         ret = capri_pt_psp_sw_phv_state(prof_num, state);
-	break;
-    case ASICPD_SWPHV_TYPE_INGRESS:
+        break;
+    case ASIC_SWPHV_TYPE_INGRESS:
         ret = capri_ppa_sw_phv_state(1, prof_num, state);
-	break;
-    case ASICPD_SWPHV_TYPE_EGRESS:
+        break;
+    case ASIC_SWPHV_TYPE_EGRESS:
         ret = capri_ppa_sw_phv_state(0, prof_num, state);
-	break;
+        break;
+    default:
+        break;
     }
-
     return ret;
 }
 
-} // namespace capri
-} // namespace platform
-} // namespace sdk
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk

@@ -1,6 +1,8 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "asic/pd/pd.hpp"
+#include "asic/asic.hpp"
+#include "asic/cmn/asic_hbm.hpp"
 #include "asic/pd/pd_internal.hpp"
 #include "lib/utils/time_profile.hpp"
 #include "platform/utils/mpartition.hpp"
@@ -122,7 +124,7 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
     }
 
     // config only if it is  hard init
-    if (sdk::asic::is_hard_init()) {
+    if (sdk::asic::asic_is_hard_init()) {
         // P4+ MPU PC initialize
         for (uint32_t i = p4pd_rxdma_tableid_min_get();
              i < p4pd_rxdma_tableid_max_get(); i++) {
@@ -418,6 +420,49 @@ asicpd_tbl_eng_cfg_get (p4pd_pipeline_t pipeline, p4_tbl_eng_cfg_t *cfg,
     }
     return ntbls;
 }
+
+mem_addr_t
+asicpd_get_mem_base (void)
+{
+    return asic_get_mem_base();
+}
+
+mem_addr_t
+asicpd_get_mem_offset (const char *reg_name)
+{
+    return asic_get_mem_offset(reg_name);
+}
+
+uint64_t
+asicpd_get_mem_addr (const char *reg_name)
+{
+    return asic_get_mem_addr(reg_name);
+}
+
+uint32_t
+asicpd_get_mem_size_kb (const char *reg_name)
+{
+    return asic_get_mem_size_kb(reg_name);
+}
+
+mpartition_region_t *
+asicpd_get_mem_region (char *reg_name)
+{
+    return asic_get_mem_region(reg_name);
+}
+
+mpartition_region_t *
+asicpd_get_hbm_region_by_address (uint64_t addr)
+{
+    return asic_get_hbm_region_by_address(addr);
+}
+
+void
+asicpd_cleanup (void)
+{
+    sdk::p4::p4_cleanup();
+}
+
 
 }    // namespace pd
 }    // namespace asic

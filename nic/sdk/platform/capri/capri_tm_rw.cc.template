@@ -4643,7 +4643,7 @@ capri_tm_init (sdk::lib::catalog* catalog,
     set_tm_ctx(tm_cfg_profile, &asic_profile);
 
     // Below initialization happens only once after reset
-    if (!sdk::asic::is_hard_init()) {
+    if (!sdk::asic::asic_is_hard_init()) {
         return ret;
     }
 

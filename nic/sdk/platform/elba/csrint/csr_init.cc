@@ -1,5 +1,5 @@
 //
-// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //
 //===----------------------------------------------------------------------===//
 ///
@@ -8,7 +8,7 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#include "nic/sdk/platform/csr/asicrw_if.hpp"
+#include "platform/csr/asicrw_if.hpp"
 #include "third-party/asic/elba/model/utils/elb_csr_py_if.h"
 #include "third-party/asic/elba/model/elb_top/elb_top_csr.h"
 
@@ -25,13 +25,13 @@ csr_init ()
     cpu::access()->set_cur_if_name("cpu_if");
 
     // Register at top level for all MRL classes.
-    elb_top_csr_t *cap0_ptr = new elb_top_csr_t("elb0");
+    elb_top_csr_t *elb0_ptr = new elb_top_csr_t("elb0");
 
-    cap0_ptr->init(0);
-    ELB_BLK_REG_MODEL_REGISTER(elb_top_csr_t, 0, 0, cap0_ptr);
+    elb0_ptr->init(0);
+    ELB_BLK_REG_MODEL_REGISTER(elb_top_csr_t, 0, 0, elb0_ptr);
     register_chip_inst("elb0", 0, 0);
 }
 
-} // end namespace elba
-} // end namespace platform
-} // end namespace sdk
+}    // end namespace elba
+}    // end namespace platform
+}    // end namespace sdk

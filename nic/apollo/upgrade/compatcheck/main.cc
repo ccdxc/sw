@@ -95,7 +95,7 @@ init (std::string cfg_file, std::string profile, std::string pipeline)
     pds_init_params_t init_params;
 
     // soft init for safe side
-    sdk::asic::set_init_type(sdk::asic::asic_init_type_t::ASIC_INIT_TYPE_SOFT);
+    sdk::asic::asic_set_init_type(sdk::asic::asic_init_type_t::ASIC_INIT_TYPE_SOFT);
     memset(&init_params, 0, sizeof(init_params));
     init_params.init_mode = PDS_INIT_MODE_COLD_START;
     init_params.trace_cb  = upg::sdk_logger;

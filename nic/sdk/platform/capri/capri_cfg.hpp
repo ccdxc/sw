@@ -13,54 +13,17 @@ namespace sdk {
 namespace platform {
 namespace capri {
 
-#define CAPRI_REPL_ENTRY_WIDTH          (64)
-#define CAPRI_REPL_TABLE_DEPTH          (64*1024)
-#define CAPRI_PGM_CFG_MAX               3
-#define CAPRI_ASM_CFG_MAX               3
-
-
-typedef struct capri_pgm_cfg_s {
-    std::string                 path;
-} capri_pgm_cfg_t;
-
-typedef struct capri_asm_cfg_s {
-    std::string                 name;
-    std::string                 path;
-    std::string                 base_addr;
-    mpu_pgm_sort_t              sort_func;
-    mpu_pgm_symbols_t           symbols_func;
-} capri_asm_cfg_t;
-
-typedef struct capri_cfg_s {
-    std::string                 default_config_dir;
-    uint32_t                    admin_cos;
-    uint32_t                    repl_entry_width;
-    bool                        p4_cache;
-    bool                        p4plus_cache;
-    bool                        llc_cache;
-    std::string                 pgm_name;
-    uint8_t                     num_pgm_cfgs;
-    uint8_t                     num_asm_cfgs;
-    capri_pgm_cfg_t             pgm_cfg[CAPRI_PGM_CFG_MAX];
-    capri_asm_cfg_t             asm_cfg[CAPRI_ASM_CFG_MAX];
-    std::string                 cfg_path;
-    sdk::lib::catalog           *catalog;
-    mpartition                  *mempartition;
-    platform_type_t             platform;
-    sdk::asic::completion_cb_t  completion_func;
-    sdk::lib::device_profile_t  *device_profile;
-} capri_cfg_t;
-
 sdk_ret_t capri_load_config(char *pathname);
 sdk_ret_t capri_verify_config(char *config_dir);
-sdk_ret_t capri_upgrade_config(capri_cfg_t *cfg);
+sdk_ret_t capri_upgrade_config(asic_cfg_t *cfg);
+
+sdk_ret_t capri_init(asic_cfg_t *cfg);
+uint64_t capri_local_dbaddr(void);
+uint64_t capri_local_db32_addr(void);
+uint64_t capri_host_dbaddr(void);
 
 }    // namespace capri
 }    // namespace platform
 }    // namespace sdk
-
-using sdk::platform::capri::capri_cfg_t;
-using sdk::platform::capri::capri_asm_cfg_t;
-using sdk::platform::capri::capri_pgm_cfg_t;
 
 #endif    // __CAPRI_CFG_HPP__

@@ -792,7 +792,7 @@ TEST_F(artemis_test, test1)
     cfg.device_profile = &device_profile;
 
     printf("Doing asic init ...\n");
-    ret = sdk::asic::asic_init(&cfg);
+    ret = sdk::asic::pd::asicpd_init(&cfg);
     ASSERT_EQ(ret, SDK_RET_OK);
     printf("Doing p4pd init ...\n");
     ret = p4pd_init(&p4pd_cfg);

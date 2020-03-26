@@ -278,7 +278,7 @@ pds_init (pds_init_params_t *params)
     SDK_ASSERT(impl_base::init(params, &asic_cfg) == SDK_RET_OK);
 
     // skip the threads, ports and monitoring if it is soft initialization
-    if (sdk::asic::is_soft_init()) {
+    if (sdk::asic::asic_is_soft_init()) {
         return SDK_RET_OK;
     }
 
@@ -346,7 +346,7 @@ pds_teardown (void)
     sdk::linkmgr::linkmgr_threads_wait();
     core::threads_stop();
     core::threads_wait();
-    if (!sdk::asic::is_soft_init()) {
+    if (!sdk::asic::asic_is_soft_init()) {
         impl_base::destroy();
     }
     api::pds_state::destroy(&api::g_pds_state);

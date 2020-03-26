@@ -17,10 +17,11 @@
 #include "nic/p4/apollo/include/slacl_defines.h"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
+#include "nic/sdk/asic/asic.hpp"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 #include "nic/hal/pd/globalpd/gpd_utils.hpp"
 
-hal_ret_t capri_default_config_init(capri_cfg_t *cfg);
+hal_ret_t capri_default_config_init(asic_cfg_t *cfg);
 
 #define VLAN_ID 100
 #define VNIC_ID 10
@@ -476,7 +477,7 @@ TEST_F(apollo_test, test1) {
     };
     const char *hal_conf_file = "conf/hal.json";
     char *default_config_dir = NULL;
-    capri_cfg_t cfg;
+    asic_cfg_t cfg;
     sdk::lib::catalog    *catalog;
 
     printf("Connecting to ASIC SIM\n");

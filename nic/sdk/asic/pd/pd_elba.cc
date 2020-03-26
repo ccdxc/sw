@@ -570,14 +570,14 @@ asicpd_sw_phv_init (void)
 }
 
 sdk_ret_t
-asicpd_sw_phv_get (asicpd_swphv_type_t type, uint8_t prof_num,
-                   asicpd_sw_phv_state_t *state)
+asicpd_sw_phv_get (asic_swphv_type_t type, uint8_t prof_num,
+                   asic_sw_phv_state_t *state)
 {
     return elba_sw_phv_get(type, prof_num, state);
 }
 
 sdk_ret_t
-asicpd_sw_phv_inject (asicpd_swphv_type_t type, uint8_t prof_num,
+asicpd_sw_phv_inject (asic_swphv_type_t type, uint8_t prof_num,
                       uint8_t start_idx, uint8_t num_flits, void *data)
 {
     return elba_sw_phv_inject(type, prof_num, start_idx, num_flits, data);
@@ -703,42 +703,6 @@ void
 asicpd_set_table_txdma_asm_base (int tableid, uint64_t asm_base)
 {
     elba_set_table_txdma_asm_base(tableid, asm_base);
-}
-
-mem_addr_t
-asicpd_get_mem_base (void)
-{
-    return elba_get_mem_base();
-}
-
-mem_addr_t
-asicpd_get_mem_offset (const char *reg_name)
-{
-    return elba_get_mem_offset(reg_name);
-}
-
-uint64_t
-asicpd_get_mem_addr (const char *reg_name)
-{
-    return elba_get_mem_addr(reg_name);
-}
-
-uint32_t
-asicpd_get_mem_size_kb (const char *reg_name)
-{
-    return elba_get_mem_size_kb(reg_name);
-}
-
-mpartition_region_t *
-asicpd_get_mem_region (char *reg_name)
-{
-    return elba_get_mem_region(reg_name);
-}
-
-mpartition_region_t *
-asicpd_get_hbm_region_by_address (uint64_t addr)
-{
-    return elba_get_hbm_region_by_address(addr);
 }
 
 sdk_ret_t

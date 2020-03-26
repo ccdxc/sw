@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "include/sdk/base.hpp"
-#include "platform/capri/capri_cfg.hpp"
+#include "asic/asic.hpp"
 #include "asic/pd/pd.hpp"
 
 namespace sdk {
@@ -43,7 +43,7 @@ typedef struct p4plus_prog_s {
     p4pd_pipeline_t pipe;
 } p4plus_prog_t;
 
-sdk_ret_t capri_table_rw_init(capri_cfg_t *capri_cfg);
+sdk_ret_t capri_table_rw_init(asic_cfg_t *capri_cfg);
 int capri_p4plus_table_rw_init(void);
 void capri_mpu_icache_invalidate(void);
 

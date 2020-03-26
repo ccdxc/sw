@@ -24,7 +24,6 @@ cli_init (char *ptr)
 {
     pal_ret_t    pal_ret;
     p4pd_error_t p4pd_ret;
-    capri_cfg_t  capri_cfg;
     p4pd_cfg_t   p4pd_cfg, p4pd_rxdma_cfg, p4pd_txdma_cfg;
 
     printf("Initing: Please wait for the prompt ...\n");
@@ -81,7 +80,7 @@ cli_init (char *ptr)
 
     // asic_cfg.completion_func = asiccfg_init_completion_event;
     asic_cfg.completion_func = NULL;
-    SDK_ASSERT(sdk::asic::asic_init(&asic_cfg) == SDK_RET_OK);
+    SDK_ASSERT(sdk::asic::pd::asicpd_init(&asic_cfg) == SDK_RET_OK);
 
     // do iris specific initialization
     p4pd_ret = p4pd_init(&p4pd_cfg);

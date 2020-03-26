@@ -8,6 +8,7 @@ nic/build/x86_64/iris/lib/libevents_queue.so                        /nic/lib/
 nic/build/x86_64/iris/lib/libevents_recorder.so                     /nic/lib/
 nic/build/x86_64/iris/lib/libasicpd.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libsdkasicrw.so                           /nic/lib/
+nic/build/x86_64/iris/lib/libsdkasiccmn.so                           /nic/lib/
 nic/build/x86_64/iris/lib/libsdkasicpd.so                           /nic/lib/
 nic/build/x86_64/iris/lib/libbitmap.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libblock_list.so                          /nic/lib/

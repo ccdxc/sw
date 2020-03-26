@@ -5,6 +5,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/lock.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/pd.hpp"
@@ -21,7 +22,8 @@
 #endif
 // FIXME: Need to fix an issue with generated egress_phv.h
 // #include "gen/p4gen/p4/include/egress_phv.h"
-
+//
+using namespace sdk::asic;
 using namespace sdk::asic::pd;
 
 namespace hal {
@@ -36,12 +38,12 @@ pd_swphv_inject (pd_func_args_t *pd_func_args)
 {
     pd_swphv_inject_args_t *args = pd_func_args->pd_swphv_inject;
     uint8_t data[PD_IRIS_PHV_SIZE];
-    hal_ret_t ret = HAL_RET_OK;
-    sdk_ret_t sdk_ret;
-    bzero(data, PD_IRIS_PHV_SIZE);
-    uint32_t   lif_id = -1;
-    int        phv_size = 0;
+    hal_ret_t   ret = HAL_RET_OK;
+    sdk_ret_t   sdk_ret;
+    uint32_t    lif_id = -1;
+    int         phv_size = 0;
 
+    bzero(data, PD_IRIS_PHV_SIZE);
     // switch based on pipeline type
     switch(args->type) {
     case PD_SWPHV_TYPE_RXDMA:
@@ -112,8 +114,8 @@ pd_swphv_inject (pd_func_args_t *pd_func_args)
     HAL_TRACE_DEBUG("pd_swphv_inject: Injecting Software PHV type {} on lif {}. size of phv: {}", args->type, lif_id, phv_size);
 
     // Inject the phv
-    sdk_ret = asicpd_sw_phv_inject((asicpd_swphv_type_t)args->type,
-                                    0, 0, 1, data);
+    sdk_ret = asicpd_sw_phv_inject((asic_swphv_type_t)args->type, 0, 0, 1, data);
+
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     return ret;
 }
@@ -124,18 +126,18 @@ hal_ret_t
 pd_swphv_get_state (pd_func_args_t *pd_func_args)
 {
     pd_swphv_get_state_args_t *state = pd_func_args->pd_swphv_get_state;
-    asicpd_sw_phv_state_t    hw_state;
-    hal_ret_t   ret = HAL_RET_OK;
-    sdk_ret_t sdk_ret;
+    asic_sw_phv_state_t        hw_state;
+    hal_ret_t                  ret = HAL_RET_OK;
+    sdk_ret_t                  sdk_ret;
 
     HAL_TRACE_DEBUG("pd_swphv_get_state: getting Software PHV state for type {}", state->type);
 
-    // get it from capri PD
-    sdk_ret = asicpd_sw_phv_get((asicpd_swphv_type_t)state->type,
-                                0, &hw_state);
+    // get it from asic PD
+    sdk_ret = asicpd_sw_phv_get((asic_swphv_type_t)state->type, 0, &hw_state);
+
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-	return ret;
+        return ret;
     }
 
     // translate state

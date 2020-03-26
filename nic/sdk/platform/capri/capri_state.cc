@@ -2,7 +2,7 @@
 
 #include "include/sdk/base.hpp"
 #include "platform/capri/csrint/csr_init.hpp"
-#include "platform/capri/capri_cfg.hpp"
+#include "asic/asic.hpp"
 #include "platform/capri/capri_state.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
@@ -31,7 +31,7 @@ capri_state_pd::~capri_state_pd()
 // init() function to instantiate the state
 //------------------------------------------------------------------------------
 bool
-capri_state_pd::init(capri_cfg_t *cfg)
+capri_state_pd::init(asic_cfg_t *cfg)
 {
     if (cfg) {
         // BMAllocator based bmp range allocator to manage txs scheduler mapping
@@ -50,7 +50,7 @@ capri_state_pd::init(capri_cfg_t *cfg)
 // factory method
 //------------------------------------------------------------------------------
 capri_state_pd *
-capri_state_pd::factory(capri_cfg_t *cfg)
+capri_state_pd::factory(asic_cfg_t *cfg)
 {
     capri_state_pd *state;
 
@@ -64,7 +64,7 @@ capri_state_pd::factory(capri_cfg_t *cfg)
 }
 
 sdk_ret_t
-capri_state_pd_init(capri_cfg_t *cfg)
+capri_state_pd_init(asic_cfg_t *cfg)
 {
     if (g_capri_state_pd) {
         return SDK_RET_OK;

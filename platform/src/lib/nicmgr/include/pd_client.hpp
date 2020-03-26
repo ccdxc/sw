@@ -16,6 +16,7 @@
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/platform/rdmamgr/rdmamgr.hpp"
+#include "nic/sdk/asic/asic.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "nic/sdk/platform/capri/capri_state.hpp"

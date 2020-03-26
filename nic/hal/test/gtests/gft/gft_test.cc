@@ -1499,6 +1499,8 @@ TEST_F(gft_test, test1) {
     cfg.num_pgm_cfgs = 1;
     memset(cfg.pgm_cfg, 0, sizeof(cfg.pgm_cfg));
     cfg.pgm_cfg[0].path = std::string("pgm_bin");
+    cfg.num_rings = 0;
+    cfg.ring_meta = NULL;
 
     cfg.num_asm_cfgs = 1;
     memset(cfg.asm_cfg, 0, sizeof(cfg.asm_cfg));
@@ -1511,7 +1513,7 @@ TEST_F(gft_test, test1) {
     device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}};
     cfg.device_profile = &device_profile;
 
-    ret = sdk::asic::asic_init(&cfg);
+    ret = sdk::asic::pd::asicpd_init(&cfg);
     ASSERT_EQ(ret, SDK_RET_OK);
     ret = p4pd_init(&p4pd_cfg);
     ASSERT_EQ(ret, HAL_RET_OK);

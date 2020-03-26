@@ -1,0 +1,3065 @@
+//-----------------------------------------------------------------------------
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
+
+#include <stdio.h>
+#include <string>
+#include <errno.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <map>
+#include <cmath>
+
+#include "include/sdk/base.hpp"
+#include "include/sdk/mem.hpp"
+#include "include/sdk/lock.hpp"
+#include "platform/elba/elba_p4.hpp"
+#include "platform/elba/elba_tm_rw.hpp"
+#include "platform/elba/elba_state.hpp"
+#include "lib/bitmap/bitmap.hpp"
+#include "gen/platform/mem_regions.hpp"
+
+#include "third-party/asic/elba/model/utils/elb_blk_reg_model.h"
+#include "third-party/asic/elba/model/elb_top/elb_top_csr.h"
+#include "third-party/asic/elba/model/elb_pb/elb_pbc_csr.h"
+#include "third-party/asic/elba/verif/apis/elb_pb_api.h"
+#include "third-party/asic/elba/model/elb_pb/elb_pbc_decoders.h"
+#include "third-party/asic/elba/design/common/gen/elb_pf_decoders.h"
+
+namespace sdk {
+namespace platform {
+namespace elba {
+
+static cpp_int_helper cpp_helper;
+
+qos_profile_t qos_profile = {true, true, 9216, 8, 25, 27, 16, 2, {0, 24}};
+
+typedef struct elba_tm_cfg_profile_s {
+    uint32_t num_qs[NUM_TM_PORT_TYPES];
+    uint32_t jumbo_mtu[NUM_TM_PORT_TYPES];
+    uint32_t num_active_uplink_ports;
+    uint64_t hbm_fifo_base;
+    uint32_t hbm_fifo_size;
+    bool     sw_init_enabled;
+    bool     sw_cfg_write_enabled;
+    tm_q_t   *p4_high_perf_qs;
+    uint32_t num_p4_high_perf_qs;
+} elba_tm_cfg_profile_t;
+
+typedef struct elba_tm_port_asic_profile_s {
+    uint32_t reserved_mtus;
+    uint32_t headroom_cells;
+    uint32_t recirc_q;
+    bool     uses_credits;
+} elba_tm_asic_port_profile_t;
+
+typedef struct elba_tm_asic_profile_s {
+    uint32_t                     cell_alloc_units;
+    uint32_t                     hbm_fifo_alloc_units;
+    uint32_t                     hbm_fifo_control_scale_factor;
+    elba_tm_asic_port_profile_t port[NUM_TM_PORT_TYPES];
+    uint32_t                     hbm_fifo_reserved_bytes_per_context[NUM_TM_HBM_FIFO_TYPES];
+    uint32_t                     cpu_copy_tail_drop_threshold;
+    uint32_t                     span_tail_drop_threshold;
+} elba_tm_asic_profile_t;
+
+typedef struct elba_tm_buf_hbm_cfg_s {
+    bool valid;
+    uint64_t payload_offset;
+    uint64_t control_offset;
+    uint32_t payload_chunks;
+    uint32_t control_chunks;
+} elba_tm_buf_hbm_cfg_t;
+
+typedef struct elba_tm_buf_cfgs_s {
+    uint32_t               chunks_per_q[NUM_TM_PORT_TYPES];
+    elba_tm_buf_hbm_cfg_t hbm_fifo[NUM_TM_HBM_FIFO_TYPES][ELBA_TM_MAX_HBM_CONTEXTS];
+} elba_tm_buf_cfg_t;
+
+typedef struct elba_tm_hbm_context_stats_s {
+    uint64_t good_pkts_in;
+    uint64_t good_pkts_out;
+    uint64_t errored_pkts_in;
+    uint32_t max_oflow_fifo_depth;
+} elba_tm_hbm_context_stats_t;
+
+typedef struct elba_tm_shadow_stats_s {
+    sdk_spinlock_t slock; // Lock for accessing the stats
+    elba_tm_hbm_context_stats_t cur_vals[NUM_TM_HBM_FIFO_TYPES][ELBA_TM_MAX_HBM_CONTEXTS];
+    elba_tm_hbm_context_stats_t prev_vals[NUM_TM_HBM_FIFO_TYPES][ELBA_TM_MAX_HBM_CONTEXTS];
+} elba_tm_shadow_stats_t;
+
+typedef struct elba_tm_ctx_s {
+    elba_tm_shadow_stats_t stats;
+    elba_tm_asic_profile_t asic_profile;
+    elba_tm_cfg_profile_t  cfg_profile;
+    elba_tm_buf_cfg_t      buf_cfg;
+    std::atomic<bool>       init_complete;
+} elba_tm_ctx_t;
+
+elba_tm_ctx_t g_tm_ctx_;
+elba_tm_ctx_t *g_tm_ctx;
+
+static void
+set_tm_ctx (elba_tm_cfg_profile_t *tm_cfg_profile,
+            elba_tm_asic_profile_t *asic_profile)
+{
+    if (!g_tm_ctx) {
+        g_tm_ctx_.cfg_profile = *tm_cfg_profile;
+        g_tm_ctx_.asic_profile = *asic_profile;
+        SDK_SPINLOCK_INIT(&g_tm_ctx_.stats.slock, PTHREAD_PROCESS_PRIVATE);
+        g_tm_ctx = &g_tm_ctx_;
+    }
+}
+
+static elba_tm_ctx_t *
+tm_ctx (void)
+{
+    return g_tm_ctx;
+}
+
+static elba_tm_asic_profile_t *
+tm_asic_profile (void)
+{
+    return &tm_ctx()->asic_profile;
+}
+
+static elba_tm_cfg_profile_t *
+tm_cfg_profile (void)
+{
+    return &tm_ctx()->cfg_profile;
+}
+
+static inline bool
+tm_sw_init_enabled (void)
+{
+    return tm_cfg_profile()->sw_init_enabled;
+}
+
+static inline bool
+tm_sw_cfg_write_enabled (void)
+{
+    return tm_cfg_profile()->sw_cfg_write_enabled;
+}
+
+static void
+populate_asic_profile (elba_tm_asic_profile_t *asic_profile)
+{
+    // These are values based on performance numbers seen during rtl simulation
+    // When reserved_mtus is zero, it indicates that allocate whatever is left
+    memset(asic_profile, 0, sizeof(*asic_profile));
+    asic_profile->cell_alloc_units = 4;
+    asic_profile->hbm_fifo_alloc_units = ELBA_TM_HBM_FIFO_ALLOC_SIZE;
+    asic_profile->hbm_fifo_control_scale_factor = 50;
+    asic_profile->cpu_copy_tail_drop_threshold = 900;
+    asic_profile->span_tail_drop_threshold = 900;
+
+    asic_profile->port[TM_PORT_TYPE_UPLINK].reserved_mtus = 0;
+    asic_profile->port[TM_PORT_TYPE_UPLINK].headroom_cells = 100;
+
+    asic_profile->port[TM_PORT_TYPE_P4IG].reserved_mtus = 3;
+    asic_profile->port[TM_PORT_TYPE_P4IG].headroom_cells = 0;
+    asic_profile->port[TM_PORT_TYPE_P4IG].uses_credits = true;
+    asic_profile->port[TM_PORT_TYPE_P4IG].recirc_q = TM_P4_RECIRC_QUEUE;
+
+    asic_profile->port[TM_PORT_TYPE_P4EG].reserved_mtus = 3;
+    asic_profile->port[TM_PORT_TYPE_P4EG].headroom_cells = 0;
+    asic_profile->port[TM_PORT_TYPE_P4EG].uses_credits = true;
+    asic_profile->port[TM_PORT_TYPE_P4EG].recirc_q = TM_P4_RECIRC_QUEUE;
+
+    asic_profile->port[TM_PORT_TYPE_DMA].reserved_mtus = 0;
+    asic_profile->port[TM_PORT_TYPE_DMA].headroom_cells = 100;
+
+    asic_profile->hbm_fifo_reserved_bytes_per_context[TM_HBM_FIFO_TYPE_UPLINK] = 3*1024*1024; // 3MB
+    asic_profile->hbm_fifo_reserved_bytes_per_context[TM_HBM_FIFO_TYPE_TXDMA] = 9*1024*1024;; // 9MB
+}
+
+static inline uint32_t
+bytes_to_cells (uint32_t bytes)
+{
+    return (bytes + ELBA_TM_CELL_SIZE - 1)/ELBA_TM_CELL_SIZE;
+}
+
+static inline uint32_t
+cells_to_bytes (uint32_t cells)
+{
+    return cells * ELBA_TM_CELL_SIZE;
+}
+
+static inline uint32_t
+cells_to_chunks (uint32_t cells)
+{
+    return (cells + tm_asic_profile()->cell_alloc_units - 1)/
+        tm_asic_profile()->cell_alloc_units;
+}
+
+static inline uint32_t
+chunks_to_cells (uint32_t chunks)
+{
+    return chunks * tm_asic_profile()->cell_alloc_units;
+}
+
+static inline uint32_t
+hbm_bytes_to_chunks (uint32_t bytes)
+{
+    return (bytes + tm_asic_profile()->hbm_fifo_alloc_units - 1)/
+        tm_asic_profile()->hbm_fifo_alloc_units;
+}
+
+static inline uint32_t
+hbm_chunks_to_bytes (uint32_t chunks)
+{
+    return chunks * tm_asic_profile()->hbm_fifo_alloc_units;
+}
+
+static inline uint32_t
+elba_tm_get_max_cell_chunks_for_island (uint32_t island)
+{
+    uint32_t cells = 0;
+    SDK_ASSERT(island < ELBA_TM_NUM_BUFFER_ISLANDS);
+    if (tm_cfg_profile()->num_active_uplink_ports > 2) {
+        island = ELBA_TM_NUM_BUFFER_ISLANDS - island - 1;
+    }
+    if (island == 0) {
+        cells = ELBA_TM_BUFFER_ISLAND_0_CELL_COUNT;
+    } else if (island == 1) {
+        cells = ELBA_TM_BUFFER_ISLAND_1_CELL_COUNT;
+    }
+    return cells_to_chunks(cells);
+}
+
+static inline tm_port_type_e
+elba_tm_get_port_type (tm_port_t port)
+{
+    switch(port) {
+        case ELBA_TM_PORT_UPLINK_0:
+        case ELBA_TM_PORT_UPLINK_1:
+        case ELBA_TM_PORT_UPLINK_2:
+        case ELBA_TM_PORT_UPLINK_3:
+        case ELBA_TM_PORT_NCSI:
+            return TM_PORT_TYPE_UPLINK;
+        case ELBA_TM_PORT_DMA:
+            return TM_PORT_TYPE_DMA;
+        case ELBA_TM_PORT_EGRESS:
+            return TM_PORT_TYPE_P4EG;
+        case ELBA_TM_PORT_INGRESS:
+            return TM_PORT_TYPE_P4IG;
+    }
+    return NUM_TM_PORT_TYPES;
+}
+
+static inline bool
+is_active_uplink_port (tm_port_t port)
+{
+    if (port < tm_cfg_profile()->num_active_uplink_ports) {
+        return true;
+    }
+    return false;
+}
+
+static inline bool
+is_active_port (tm_port_t port)
+{
+    tm_port_type_e port_type;
+
+    port_type = elba_tm_get_port_type(port);
+    if (port_type == TM_PORT_TYPE_UPLINK) {
+        return (is_active_uplink_port(port) ||
+                (port == ELBA_TM_PORT_NCSI));
+    }
+    return true;
+}
+
+static inline uint32_t
+elba_tm_max_hbm_contexts_for_fifo (uint32_t fifo_type)
+{
+    switch (fifo_type) {
+        case TM_HBM_FIFO_TYPE_UPLINK:
+            return ELBA_TM_MAX_HBM_ETH_CONTEXTS;
+        case TM_HBM_FIFO_TYPE_TXDMA:
+            return ELBA_TM_MAX_HBM_DMA_CONTEXTS;
+        case NUM_TM_HBM_FIFO_TYPES:
+            return 0;
+    }
+    return 0;
+}
+
+static inline bool
+port_supports_hbm_contexts (tm_port_t port)
+{
+    return is_active_uplink_port(port) || (port == ELBA_TM_PORT_DMA);
+}
+
+static inline uint32_t
+elba_tm_get_num_iqs_for_port_type (tm_port_type_e port_type)
+{
+    switch(port_type) {
+        case TM_PORT_TYPE_UPLINK:
+            return 8;
+        case TM_PORT_TYPE_P4IG:
+        case TM_PORT_TYPE_P4EG:
+            return 32;
+        case TM_PORT_TYPE_DMA:
+            return 16;
+        case NUM_TM_PORT_TYPES:
+            return 0;
+    }
+    return 0;
+}
+
+uint32_t
+elba_tm_get_num_iqs_for_port (tm_port_t port)
+{
+    return elba_tm_get_num_iqs_for_port_type(elba_tm_get_port_type(port));
+}
+
+static inline uint32_t
+elba_tm_get_num_oqs_for_port_type (tm_port_type_e port_type)
+{
+    switch(port_type) {
+        case TM_PORT_TYPE_UPLINK:
+            return 16;
+        case TM_PORT_TYPE_P4IG:
+        case TM_PORT_TYPE_P4EG:
+        case TM_PORT_TYPE_DMA:
+            return 32;
+        case NUM_TM_PORT_TYPES:
+            return 0;
+    }
+    return 0;
+}
+
+uint32_t
+elba_tm_get_num_oqs_for_port (tm_port_t port)
+{
+    return elba_tm_get_num_oqs_for_port_type(elba_tm_get_port_type(port));
+}
+
+static inline uint32_t
+elba_tm_get_island_for_port_type (tm_port_type_e port_type)
+{
+    switch(port_type) {
+        case TM_PORT_TYPE_UPLINK:
+        case TM_PORT_TYPE_P4EG:
+            return 1;
+        case TM_PORT_TYPE_P4IG:
+        case TM_PORT_TYPE_DMA:
+            return 0;
+        case NUM_TM_PORT_TYPES:
+            return 0;
+    }
+
+    return 0;
+}
+
+static inline tm_hbm_fifo_type_e
+elba_tm_get_fifo_type_for_port (tm_port_t port)
+{
+    switch(elba_tm_get_port_type(port)) {
+        case TM_PORT_TYPE_UPLINK:
+            return TM_HBM_FIFO_TYPE_UPLINK;
+        case TM_PORT_TYPE_DMA:
+            return TM_HBM_FIFO_TYPE_TXDMA;
+        case TM_PORT_TYPE_P4EG:
+        case TM_PORT_TYPE_P4IG:
+        case NUM_TM_PORT_TYPES:
+            return NUM_TM_HBM_FIFO_TYPES;
+    }
+    return NUM_TM_HBM_FIFO_TYPES;
+}
+
+static inline bool
+tm_is_high_perf_q (tm_q_t q)
+{
+    for (unsigned int i = 0; i < tm_cfg_profile()->num_p4_high_perf_qs; i++) {
+        if (q == tm_cfg_profile()->p4_high_perf_qs[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+//:: from collections import OrderedDict
+//:: import math
+//:: TM_PORTS = 4 
+//:: QS = 32
+//:: L1_NODES = 16
+//:: L2_NODES = 4
+//:: e = [
+//::    "ELBA_TM_PORT_UPLINK_0",
+//::    "ELBA_TM_PORT_UPLINK_1",
+//::    "ELBA_TM_PORT_UPLINK_2",
+//::    "ELBA_TM_PORT_UPLINK_3",
+//::    "ELBA_TM_PORT_NCSI",
+//::    "ELBA_TM_PORT_DMA",
+//::    "ELBA_TM_PORT_EGRESS",
+//::    "ELBA_TM_PORT_INGRESS"]
+//::
+//:: port_info = OrderedDict()
+//::
+//:: for p in range(TM_PORTS):
+//::     pinfo = {}
+//::     pinfo["enum"] = e[p]
+//::     pinfo["qs"] = QS
+//::     pinfo["l1"] = L1_NODES
+//::     pinfo["l2"] = L2_NODES
+//::     pinfo["l3"] = 0
+//::     pinfo["has_hbm"] = False
+//::     pinfo["supports_credits"] = False
+//::     if p < 9:
+//::        pinfo["type"] = "uplink"
+//::        pinfo["pgs"] = 8
+//::        if e[p] != "ELBA_TM_PORT_NCSI":
+//::            pinfo["has_hbm"] = True
+//::        #endif
+//::     elif p < 10:
+//::        pinfo["type"] = "dma"
+//::        pinfo["pgs"] = 16
+//::        pinfo["l3"] = 1
+//::        pinfo["has_hbm"] = True
+//::     else:
+//::        pinfo["type"] = "p4"
+//::        pinfo["pgs"] = 32
+//::        pinfo["l3"] = 1
+//::        pinfo["supports_credits"] = True
+//::     #endif
+//::     port_info[p] = pinfo
+//:: #endfor
+//::
+//:: hbm_fifo_info = {
+//::                'TM_HBM_FIFO_TYPE_UPLINK': {'reg_name' : 'eth', 'count' : 32 },
+//::                'TM_HBM_FIFO_TYPE_TXDMA': {'reg_name' : 'tx', 'count' : 16 },
+//::                 }
+//::
+//:: import yaml
+//:: def get_reg_instances(regs, types):
+//:: import re
+//:: instances = []
+//:: for reg in sorted(regs.keys()):
+//::    regn = reg.split('.')[-1]
+//::    if types is None or len(set(regn.split('_')) & types):
+//::        instances.append(reg)
+//::    #endif
+//:: #endfor
+//:: return instances
+//:: #enddef
+//::
+//:: def parse_block(data, block, type, path_to_here, regs):
+//::     global parse_block
+//::     path = path_to_here[:]
+//::     block_type = data[block]['type']
+//::     if block_type == type:
+//::        regs[path] = data[block]['fields'].keys()
+//::        # sta_rpl_err doesn't seem to have type() method even though it's in
+//::        # yaml
+//::        if path == "pbc_csr.sta_pck_rpl_err":
+//::            regs[path].remove("type")
+//::        #endif
+//::        if path == "pbc_csr.sta_rpl_err":
+//::            regs[path].remove("type")
+//::        #endif
+//::        return
+//::     #endif
+//::     if block_type != 'block':
+//::         return
+//::     #endif
+//::     for field, field_d in data[block]['fields'].items():
+//::        lpath = path + '.' + field
+//::        is_array = False
+//::        if field_d['array'] != 1:
+//::            is_array = True
+//::        #endif
+//::        apath = lpath[:]
+//::        for i in range(field_d['array']):
+//::            if is_array:
+//::                apath = lpath + '[%d]' % i
+//::            #endif
+//::            parse_block(data, field_d['decoder'], type, apath, regs)
+//::        #endfor
+//::     #endfor
+//:: #enddef
+//::
+//:: def normalize(data):
+//::    d = {}
+//::    for block_name, block_data in data.items():
+//::        d[block_name] = {x.keys()[0]:x.values()[0] for x in block_data}
+//::        d[block_name]['fields'] = {x.keys()[0]:x.values()[0] for x in d[block_name]['fields']}
+//::        for field_name, field_d in d[block_name]['fields'].items():
+//::            d[block_name]['fields'][field_name] = {x.keys()[0]:x.values()[0] for x in field_d}
+//::        #endfor
+//::    #endfor
+//::    return d
+//:: #enddef
+//::
+//:: with open(_context['args']) as data_file:
+//::    data = yaml.load(data_file)
+//:: #endwith
+//:: regs = OrderedDict()
+//:: memories = OrderedDict()
+//::
+//:: data = normalize(data)
+//:: parse_block(data, 'elb_pbc_csr', 'register', 'pbc_csr', regs)
+//:: parse_block(data, 'elb_pbc_csr', 'memory', 'elb0.pb', memories)
+//::
+//:: def trace_register(inst_name, var_name="data"):
+//::    global regs
+//::    s = ''
+//::    fields = ['all']
+//::    if inst_name in regs:
+//::        fields += regs[inst_name]
+//::    #endif
+//::    for field in fields:
+//::        s += var_name + ''' <<"''' 
+//::        s += inst_name + '''.''' + field 
+//::        s += ''': 0x" << '''
+//::        s += inst_name + '''.''' + field + '''() << endl;\n'''
+//::    #endfor
+//::    return s
+//:: #enddef
+//::
+//::
+//:: fns = OrderedDict()
+//:: fns["debug"] = set(['cnt', 'sta', 'sat'])
+//:: fns["config"] = set(['cfg'])
+//::
+//:: for fn,types in fns.items():
+
+void
+elba_tm_dump_${fn}_regs (void)
+{
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    stringstream data;
+    data << hex << endl;
+//:: instances = get_reg_instances(regs, types)
+//:: for inst_name in instances:
+    ${inst_name}.read();
+    ${trace_register(inst_name)}
+//:: #endfor
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+}
+//:: #endfor
+//::
+
+bool
+elba_tm_port_is_uplink_port (uint32_t port)
+{
+    return ((port >= ELBA_TM_UPLINK_PORT_BEGIN) && (port <= ELBA_TM_UPLINK_PORT_END));
+}
+
+bool
+elba_tm_port_is_dma_port (uint32_t port)
+{
+    return ((port >= ELBA_TM_DMA_PORT_BEGIN) && (port <= ELBA_TM_DMA_PORT_END));
+}
+
+static bool
+elba_tm_is_valid_port (uint32_t port)
+{
+    return ((port >= ELBA_TM_PORT_UPLINK_0) && (port <= ELBA_TM_PORT_INGRESS));
+}
+
+sdk_ret_t
+elba_tm_uplink_iq_params_update (tm_port_t             port,
+                                 tm_q_t                iq,
+                                 tm_uplink_iq_params_t *iq_params)
+{
+    /* Do some sanity checks for port and iq */
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    tm_port_type_e port_type = elba_tm_get_port_type(port);
+    if (iq_params->mtu > tm_cfg_profile()->jumbo_mtu[port_type]) {
+        SDK_TRACE_ERR("Invalid mtu %u larger than the jumbo %u",
+                      iq_params->mtu, tm_cfg_profile()->jumbo_mtu[port_type]);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    if ((iq_params->p4_q < (signed)ELBA_TM_P4_UPLINK_IQ_OFFSET) ||
+        (iq_params->p4_q >= (signed)elba_tm_get_num_iqs_for_port_type(TM_PORT_TYPE_P4IG))) {
+        SDK_TRACE_ERR("Invalid P4 Oq %u for uplink port %u",
+                      iq_params->p4_q, port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    stringstream data;
+    data << hex << endl;
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+    cpp_int xoff_val;
+    cpp_int xon_val;
+    cpp_int oq_map_val;
+    cpp_int port_payload_occupancy_val;
+    uint32_t payload_occupancy;
+    uint32_t payload_occupancy_bytes;
+    uint32_t xoff_threshold;
+    uint32_t xon_threshold;
+    uint32_t hbm_context;
+    uint32_t num_hbm_contexts_per_port;
+    elb_pbc_oq_map_t oq_map_decoder;
+    oq_map_decoder.init();
+
+    num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                // P4 oq derivation register
+                pbc_csr.cfg_parser${p}.read();
+                oq_map_val = pbc_csr.cfg_parser${p}.oq_map();
+
+                cpp_helper.set_slc(oq_map_val, iq_params->p4_q,
+                                    iq * 5,
+                                    ((iq + 1) * 5) - 1);
+
+                pbc_csr.cfg_parser${p}.oq_map(oq_map_val);
+
+                oq_map_decoder.all(pbc_csr.cfg_parser${p}.oq_map());
+                oq_map_decoder.set_name("elb0.pb.pbc.cfg_parser${p}.decoder");
+                if (tm_sw_cfg_write_enabled()) {
+                    oq_map_decoder.show();
+
+                    ${trace_register("pbc_csr.cfg_parser" + str(p))}
+                    pbc_csr.cfg_parser${p}.write();
+                }
+
+                // MTU
+                pbc_csr.port_${p}.cfg_account_mtu_table.read();
+                switch (iq) {
+//::        for pg in range(port_info[p]["pgs"]):
+                    case ${pg}:
+                        {
+                            /* Update the MTU in the MTU register */
+                            pbc_csr.port_${p}.cfg_account_mtu_table.pg${pg}(
+                                bytes_to_cells(iq_params->mtu));
+                            break;
+                        }
+//::        #endfor
+                    default:
+                        return sdk::SDK_RET_ERR;
+                }
+
+                if (tm_sw_cfg_write_enabled()) {
+                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_account_mtu_table")}
+                    pbc_csr.port_${p}.cfg_account_mtu_table.write();
+                }
+
+                if (port_supports_hbm_contexts(port)) {
+                    // HBM Thresholds
+                    pf_csr.cfg_hbm_threshold.read();
+                    pf_csr.hbm_port_${p}.cfg_hbm_eth_payload_occupancy.read();
+
+                    port_payload_occupancy_val = pf_csr.hbm_port_${p}.cfg_hbm_eth_payload_occupancy.threshold();
+
+                    xoff_val = pf_csr.cfg_hbm_threshold.xoff();
+                    xon_val = pf_csr.cfg_hbm_threshold.xon();
+                    hbm_context = iq + (num_hbm_contexts_per_port * ${pinfo["enum"]});
+
+                    payload_occupancy = cpp_helper.get_slc(
+                        port_payload_occupancy_val,
+                        iq*19, ((iq + 1) * 19) - 1).convert_to<uint32_t>();
+
+                    payload_occupancy_bytes = payload_occupancy << 10;
+
+                    // xoff threshold is the value from the payload occupancy
+                    // threshold.
+                    // But in the csr we need to write the value from the base.
+                    // So subtract it from the payload occupancy threshold
+
+                    xoff_threshold = iq_params->xoff_threshold;
+                    if (xoff_threshold && (payload_occupancy_bytes > xoff_threshold)) {
+                        xoff_threshold = payload_occupancy_bytes - xoff_threshold;
+                    } else {
+                        xoff_threshold = 0;
+                    }
+
+                    // xoff and xon thresholds are in 512B units in register.
+                    // So right shift by 9 (using ceil value for xon and floor
+                    // for xoff)
+                    xoff_threshold >>= 9;
+                    xon_threshold = (iq_params->xon_threshold + (1<<9) - 1) >> 9;
+
+                    // 20 bits per hbm_context
+                    cpp_helper.set_slc(xoff_val, xoff_threshold,
+                                        hbm_context * 20, ((hbm_context + 1) * 20) - 1);
+                    // 20 bits per hbm_context
+                    cpp_helper.set_slc(xon_val, xon_threshold,
+                                        hbm_context * 20, ((hbm_context + 1) * 20) - 1);
+
+                    // TODO:write the user provided threshold values 
+                    //pf_csr.cfg_hbm_threshold.xoff(xoff_val);
+                    //pf_csr.cfg_hbm_threshold.xon(xon_val);
+                    // Write all the registers
+                    if (tm_sw_cfg_write_enabled()) {
+                        ${trace_register("pf_csr.cfg_hbm_threshold")}
+                        pf_csr.cfg_hbm_threshold.write();
+                    }
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_ERR;
+    }
+
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    SDK_TRACE_DEBUG("Updated the iq %u on port %u",
+                    iq, port);
+
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+elba_tm_uplink_input_map_update (tm_port_t port,
+                                 uint32_t dot1q_pcp,
+                                 tm_q_t iq)
+{
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+    stringstream data;
+    data << hex << endl;
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+    cpp_int tc_map_reg_val;
+    uint32_t tc;
+    uint32_t nbits;
+
+    tc = dot1q_pcp;
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                nbits = ${int(math.log(pinfo["pgs"], 2))};
+                pf_csr.hbm_port_${p}.cfg_hbm_tc_to_q.read();
+                tc_map_reg_val = pf_csr.hbm_port_${p}.cfg_hbm_tc_to_q.table();
+
+                cpp_helper.set_slc(tc_map_reg_val, iq,
+                                    tc * nbits,
+                                    ((tc+1) * nbits) - 1);
+
+                /* Update and write the tc to PG mapping */
+                pf_csr.hbm_port_${p}.cfg_hbm_tc_to_q.table(tc_map_reg_val);
+                if (tm_sw_cfg_write_enabled()) {
+                    ${trace_register("pf_csr.hbm_port_" + str(p) + ".cfg_hbm_tc_to_q")}
+                    pf_csr.hbm_port_${p}.cfg_hbm_tc_to_q.write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+elba_tm_uplink_input_dscp_map_update (tm_port_t port,
+                                      tm_uplink_input_dscp_map_t *dscp_map)
+{
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+    stringstream data;
+    data << hex << endl;
+    #if 0 /* TODO_ELBA */
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+    cpp_int dscp_map_val;
+    uint32_t tc;
+    int use_ip = 0;
+
+    tc = dscp_map->dot1q_pcp;
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pf_csr.hbm_port_${p}.cfg_hbm_parser.read();
+                dscp_map_val = pf_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map();
+
+                for (unsigned i = 0; i < SDK_ARRAY_SIZE(dscp_map->ip_dscp); i++) {
+                    if (dscp_map->ip_dscp[i]) {
+                        cpp_helper.set_slc(dscp_map_val,
+                                           tc,
+                                           i * 3,
+                                           ((i+1) * 3) - 1);
+                    }
+                }
+
+                use_ip = (dscp_map_val ? 1 : 0);
+
+                pf_csr.hbm_port_${p}.cfg_hbm_parser.use_dot1q(1);
+                pf_csr.hbm_port_${p}.cfg_hbm_parser.use_ip(use_ip);
+                pf_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map(dscp_map_val);
+                if (tm_sw_cfg_write_enabled()) {
+                    ${trace_register("pf_csr.hbm_port_" + str(p) + ".cfg_hbm_parser")}
+                    pf_csr.hbm_port_${p}.cfg_hbm_parser.write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+    #endif 
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    
+    return sdk::SDK_RET_OK;
+}
+
+
+sdk_ret_t
+elba_tm_uplink_oq_update (tm_port_t port,
+                          tm_q_t oq,
+                          bool xoff_enable,
+                          uint32_t xoff_cos)
+{
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    uint32_t xoff_enable_val;
+    cpp_int xoff2oq_map_val;
+    elb_pbc_eth_oq_xoff_map_t xoff2oq_map_decoder;
+    xoff2oq_map_decoder.init();
+
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    stringstream data;
+    data << hex << endl;
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_oq_xoff2oq.read();
+                xoff2oq_map_val = pbc_csr.port_${p}.cfg_oq_xoff2oq.map();
+
+                cpp_helper.set_slc(xoff2oq_map_val, xoff_cos, oq*3, ((oq+1)*3)-1);
+
+                // TODO: write to disable xoff by default
+                // pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
+
+                pbc_csr.port_${p}.cfg_mac_xoff.read();
+                xoff_enable_val = pbc_csr.port_${p}.cfg_mac_xoff.enable().convert_to<uint32_t>();
+                if (xoff_enable) {
+                    xoff_enable_val |= 1<<xoff_cos;
+                } else {
+                    xoff_enable_val &= ~(1<<xoff_cos);
+                }
+                // TODO: write to disable xoff by default
+                // pbc_csr.port_${p}.cfg_mac_xoff.enable(xoff_enable_val);
+
+                xoff2oq_map_decoder.all(pbc_csr.port_${p}.cfg_oq_xoff2oq.map());
+                xoff2oq_map_decoder.set_name("elb0.pb.pbc.port_${p}.cfg_oq_xoff2oq.decoder");
+                if (tm_sw_cfg_write_enabled()) {
+                    xoff2oq_map_decoder.show();
+
+                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_oq_xoff2oq")}
+                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_mac_xoff")}
+
+                    pbc_csr.port_${p}.cfg_oq_xoff2oq.write();
+                    pbc_csr.port_${p}.cfg_mac_xoff.write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+
+    return sdk::SDK_RET_OK;
+}
+
+//:: for level in range(3):
+//::    parent_level = level+1
+sdk_ret_t
+elba_tm_scheduler_map_update_l${level} (uint32_t port,
+                                        uint32_t node,
+                                        tm_queue_node_params_t *node_params)
+{
+#ifdef TODO_ELBA
+    stringstream data;
+    data << hex << endl;
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    (void)pbc_csr;
+    cpp_int node_val;
+    cpp_int strict_val;
+
+    uint32_t max_nodes = ELBA_TM_COUNT_L${level}_NODES;
+
+    if (node >= max_nodes) {
+        SDK_TRACE_ERR("node %u exceeds the number of valid level "
+                      "${level} nodes in port %u",
+                      node, port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["l"+str(parent_level)]:
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.read();
+                pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.read();
+
+                strict_val = pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.priority();
+                cpp_helper.set_slc(strict_val,
+                                    node_params->sched_type == TM_SCHED_TYPE_STRICT ? 1 : 0,
+                                    node,
+                                    node);
+
+                // Reset the current node's association in all the parent level
+                // nodes
+//::        for parent_node in range(pinfo["l"+str(parent_level)]):
+                // ${parent_node}
+                node_val = pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.node_${parent_node}();
+                // Associate/disassociate the current node with the parent node
+                cpp_helper.set_slc(node_val,
+                                    node_params->parent_node == ${parent_node} ? 1 : 0,
+                                    node,
+                                    node);
+                pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.node_${parent_node}(node_val);
+//::        #endfor
+                pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.priority(strict_val);
+
+                /* Write the registers */
+                if (tm_sw_cfg_write_enabled()) {
+                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_oq_arb_l" + str(parent_level) + "_selection")}
+                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_oq_arb_l" + str(parent_level) + "_strict")}
+
+                    pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_selection.write();
+                    pbc_csr.port_${p}.cfg_oq_arb_l${parent_level}_strict.write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_ERR;
+    }
+
+    pbc_csr.cfg_sched.read();
+    pbc_csr.cfg_sched.dhs_selection( ${level}*2 );
+    if (tm_sw_cfg_write_enabled()) {
+        ${trace_register("pbc_csr.cfg_sched")}
+        pbc_csr.cfg_sched.write();
+    }
+
+    pbc_csr.cfg_dhs_mem.address(port*max_nodes + node);
+    if (tm_sw_cfg_write_enabled()) {
+        ${trace_register("pbc_csr.cfg_dhs_mem")}
+        pbc_csr.cfg_dhs_mem.write();
+    }
+
+    uint64_t scheduler_rate;
+    if (node_params->sched_type == TM_SCHED_TYPE_STRICT) {
+        scheduler_rate = (uint64_t)ELBA_TM_SCHEDULER_RATE_REFRESH_INTERVAL_US*node_params->strict.rate;
+        scheduler_rate /= 1000000;
+        if (scheduler_rate >= (1ull << 32)) {
+            // This should never happen it's in 80 Tbps range
+            SDK_ASSERT(0);
+        }
+    }
+
+    uint32_t quota = (node_params->sched_type == TM_SCHED_TYPE_STRICT ?
+                      scheduler_rate : node_params->dwrr.weight);
+
+    pbc_csr.dhs_sched.entry[0].command(1);   //1: overwrite quota and credits
+    pbc_csr.dhs_sched.entry[0].current_credit(quota);
+    pbc_csr.dhs_sched.entry[0].quota(quota);
+    if (tm_sw_cfg_write_enabled()) {
+        ${trace_register("pbc_csr.dhs_sched.entry[0]")}
+        pbc_csr.dhs_sched.entry[0].write();
+    }
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    SDK_TRACE_DEBUG("Updated the output queue scheduler on port %u "
+                    "level %u, node %u",
+                    port, ${level}, node);
+
+#endif
+    return sdk::SDK_RET_OK;
+}
+
+//:: #endfor
+
+sdk_ret_t
+elba_tm_scheduler_map_update (uint32_t port,
+                               tm_queue_node_type_e node_type,
+                               uint32_t node,
+                               tm_queue_node_params_t *node_params)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+
+    if (!elba_tm_is_valid_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+    switch(node_type) {
+        case TM_QUEUE_NODE_TYPE_LEVEL_0:
+            ret = elba_tm_scheduler_map_update_l0(port, node, node_params);
+            break;
+        case TM_QUEUE_NODE_TYPE_LEVEL_1:
+            ret = elba_tm_scheduler_map_update_l1(port, node, node_params);
+            break;
+        case TM_QUEUE_NODE_TYPE_LEVEL_2:
+            ret = elba_tm_scheduler_map_update_l2(port, node, node_params);
+            break;
+    }
+    return ret;
+}
+
+/* Program the lif value on an uplink port */
+sdk_ret_t
+elba_tm_uplink_lif_set (uint32_t port,
+                         uint32_t lif)
+{
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    stringstream data;
+    data << hex << endl;
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+
+    pbc_csr.cfg_src_port_to_lif_map.read();
+    /* Update the value in the csr */
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] != "uplink":
+//::        continue
+//::    #endif
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.cfg_src_port_to_lif_map.entry_${p}(lif);
+                break;
+            }
+//:: #endfor
+        default:
+            return sdk::SDK_RET_ERR;
+    }
+
+    /* Write the csr */
+    ${trace_register("pbc_csr.cfg_src_port_to_lif_map")}
+    pbc_csr.cfg_src_port_to_lif_map.write();
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+
+    SDK_TRACE_DEBUG("Set the lif %u on port %u",
+                    lif, port);
+
+    return sdk::SDK_RET_OK;
+}
+
+uint32_t
+elba_tm_get_hbm_occupancy (tm_hbm_fifo_type_e fifo_type, uint32_t context)
+{
+    //elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    //elb_pf_csr_t &pf_csr = elb0.pf.pf;
+    uint32_t occupancy = UINT32_MAX;
+
+    if (context >= elba_tm_max_hbm_contexts_for_fifo(fifo_type)) {
+        SDK_TRACE_ERR("Invalid context %u for fifo %u", context, fifo_type);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    stringstream data;
+    data << hex << endl;
+    switch(fifo_type) {
+//:: for fifo_type, finfo in hbm_fifo_info.items():
+        case ${fifo_type}:
+            switch (context) {
+//::    for context in range(finfo['count']):
+                case ${context}:
+                    {
+                        // pf_csr.sta_hbm_${finfo["reg_name"]}_context_${context}.read();
+                        // ${trace_register("pf_csr.sta_hbm_" + finfo["reg_name"] + "_context_" + str(context))}
+                        // occupancy =
+                        //     pf_csr.sta_hbm_${finfo["reg_name"]}_context_${context}.depth().convert_to<uint32_t>();
+                    }
+                    break;
+//::    #endfor
+            }
+            break;
+//:: #endfor
+        default:
+            return occupancy;
+    }
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+
+    return occupancy;
+}
+
+static void
+elba_tm_get_buffer_occupancy (tm_port_t port, tm_q_t iq, 
+                               uint32_t *cell_occupancy, 
+                               uint32_t *peak_occupancy)
+{
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+        case ${pinfo["enum"]}:
+            {
+                // ${pinfo["enum"]}
+                pbc_csr.port_${p}.sta_account.read();
+                switch (iq) {
+//::        for pg in range(pinfo["pgs"]):
+                    case ${pg}:
+                        {
+                            *cell_occupancy = pbc_csr.port_${p}.sta_account.occupancy_${pg}().convert_to<uint32_t>();
+                            *peak_occupancy = pbc_csr.port_${p}.sta_account.sp_held_${pg}().convert_to<uint32_t>();
+                            break;
+                        }
+//::        #endfor
+                    default:
+                        return;
+                }
+                break;
+            }
+//:: #endfor
+        default:
+            break;
+    }
+}
+
+
+static sdk_ret_t
+elba_tm_drain_uplink_port (tm_port_t port)
+{
+    bool all_zeroes = false;
+    uint32_t tries = 0;
+    uint32_t max_tries = 1000;
+    uint32_t occupancy;
+    uint32_t num_hbm_contexts_per_port;
+    uint32_t context;
+    uint32_t i;
+
+    num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
+    while (port_supports_hbm_contexts(port) &&
+           !all_zeroes && (tries < max_tries)) {
+        all_zeroes = true;
+        for (i = 0; i < num_hbm_contexts_per_port; i++) {
+            context = (port * num_hbm_contexts_per_port) + i;
+            occupancy = elba_tm_get_hbm_occupancy(TM_HBM_FIFO_TYPE_UPLINK, context);
+            if (occupancy) {
+                all_zeroes = false;
+            }
+        }
+        // TODO: Do we need a sleep here ?
+        usleep(1000);
+        tries++;
+    }
+
+    if (!all_zeroes && port_supports_hbm_contexts(port)) {
+        SDK_TRACE_ERR("Port %u hbm queues not drained completely after %u tries",
+                      port, tries);
+        return sdk::SDK_RET_RETRY;
+    }
+
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+elba_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+
+    if (!elba_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    if (enable) {
+        /* Make sure the contexts are free */
+        ret = elba_tm_drain_uplink_port(port);
+        if (ret != sdk::SDK_RET_OK) {
+            SDK_TRACE_ERR("Port %u is not fully drained. Retry later", port);
+            return sdk::SDK_RET_RETRY;
+        }
+    }
+
+    stringstream data;
+    data << hex << endl;
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_write_control.read();
+                pbc_csr.port_${p}.cfg_oq.read();
+
+                pbc_csr.port_${p}.cfg_write_control.enable(enable ? 1 : 0);
+                pbc_csr.port_${p}.cfg_oq.flush(enable ? 0 : 1);
+
+                if (tm_sw_cfg_write_enabled()) {
+                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_write_control")}
+                    pbc_csr.port_${p}.cfg_write_control.write();
+
+                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_oq")}
+                    pbc_csr.port_${p}.cfg_oq.write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_ERR;
+    }
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+
+    /* If we're disabling the port, we need to wait until all HBM contexts are
+     * free
+     */
+    if (!enable) {
+        ret = elba_tm_drain_uplink_port(port);
+        if (ret != sdk::SDK_RET_OK) {
+            SDK_TRACE_ERR("Port %u is not fully drained", port);
+            // Ignore the return status and continue
+            ret = sdk::SDK_RET_OK;
+        }
+    }
+
+    SDK_TRACE_DEBUG("%s uplink port %u",
+                    enable ? "Enable" : "Disable", port);
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+elba_tm_hw_config_load_poll (int phase)
+{
+    if (phase == 0) {
+        elb_pb_init_done(0,0);
+    }
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+elba_tm_asic_init (void)
+{
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+
+    // Do a sw reset prior to reconfiguring the islands etc
+    pbc_csr.cfg_pbc_control.sw_reset(1);
+    pbc_csr.cfg_pbc_control.write();
+    pf_csr.cfg_hbm.control_sw_reset(1);
+    pf_csr.cfg_hbm.write();
+
+    pbc_csr.cfg_pbc_control.read();
+    pf_csr.cfg_hbm.read();
+
+    pbc_csr.cfg_pbc_control.sw_reset(0);
+    pbc_csr.cfg_pbc_control.write();
+    pf_csr.cfg_hbm.control_sw_reset(0);
+    pf_csr.cfg_hbm.write();
+
+    pbc_csr.cfg_pbc_control.read();
+    pf_csr.cfg_hbm.read();
+    //    elb_pb_init_start(0,0);
+    //    elb_pb_init_done(0,0);
+    return sdk::SDK_RET_OK;
+}
+
+static sdk_ret_t
+alloc_cells (tm_port_type_e port_type, uint32_t *pbc_cell_chunks,
+             elba_tm_buf_cfg_t *buf_cfg)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    uint32_t reserved_mtus;
+    uint32_t reserved_cells;
+    uint32_t headroom_cells;
+    uint32_t chunks_per_q;
+    uint32_t island;
+    uint32_t num_qs;
+    uint32_t reserved_chunks;
+    uint32_t high_perf_reserved_chunks;
+    uint32_t headroom_chunks;
+    uint32_t chunks_needed;
+    uint32_t num_high_perf_qs = tm_cfg_profile()->num_p4_high_perf_qs;
+
+    island = elba_tm_get_island_for_port_type(port_type);
+
+    num_qs = tm_cfg_profile()->num_qs[port_type];
+    if (port_type == TM_PORT_TYPE_UPLINK) {
+        num_qs =
+            1 + (tm_cfg_profile()->num_qs[port_type] * tm_cfg_profile()->num_active_uplink_ports);
+    }
+
+    reserved_mtus = tm_asic_profile()->port[port_type].reserved_mtus;
+    headroom_cells = tm_asic_profile()->port[port_type].headroom_cells;
+
+    headroom_chunks = cells_to_chunks(headroom_cells);
+
+    if (reserved_mtus) {
+        // Allocate reserved_mtus and headroom_cells from the given island
+        reserved_cells =
+            bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type]) * reserved_mtus;
+
+        reserved_chunks = cells_to_chunks(reserved_cells);
+
+        high_perf_reserved_chunks = reserved_chunks * 2;
+
+        chunks_needed = (reserved_chunks + headroom_chunks) * (num_qs - num_high_perf_qs);
+        chunks_needed = chunks_needed + 
+            (high_perf_reserved_chunks + headroom_chunks) * num_high_perf_qs;
+
+        if (pbc_cell_chunks[island] < chunks_needed) {
+            SDK_TRACE_ERR("Error allocating reserved pbc chunks "
+                          "island %u port_type %u num_qs %u reserved_cells %u "
+                          "headroom_cells %u available %u",
+                          island, port_type, num_qs, reserved_cells,
+                          headroom_cells, chunks_to_cells(pbc_cell_chunks[island]));
+            return sdk::SDK_RET_NO_RESOURCE;
+        }
+        pbc_cell_chunks[island] -= chunks_needed;
+        buf_cfg->chunks_per_q[port_type] = reserved_chunks;
+    } else {
+        // Allocate the remaining chunks in the island for every queue
+        chunks_per_q = pbc_cell_chunks[island]/num_qs;
+        if (chunks_per_q < headroom_chunks) {
+            SDK_TRACE_ERR("Error allocating remaining pbc chunks "
+                          "island %u port_type %u num_qs %u "
+                          "headroom_cells %u available %u per_q available %u",
+                          island, port_type, num_qs,
+                          headroom_cells,
+                          chunks_to_cells(pbc_cell_chunks[island]),
+                          chunks_to_cells(chunks_per_q));
+            return sdk::SDK_RET_NO_RESOURCE;
+        }
+        pbc_cell_chunks[island] -= chunks_per_q * num_qs;
+        buf_cfg->chunks_per_q[port_type] = chunks_per_q - headroom_chunks;
+    }
+    if (chunks_to_cells(buf_cfg->chunks_per_q[port_type]) <
+        bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type])) {
+        SDK_TRACE_ERR("Error reserved cells %u/bytes %u is less than the "
+                      "jumbo mtu  %u",
+                      chunks_to_cells(buf_cfg->chunks_per_q[port_type]),
+                      cells_to_bytes(chunks_to_cells(buf_cfg->chunks_per_q[port_type])),
+                      tm_cfg_profile()->jumbo_mtu[port_type]);
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+    SDK_TRACE_DEBUG("allocated cells %u port_type %u headroom %u",
+                    chunks_to_cells(buf_cfg->chunks_per_q[port_type]),
+                    port_type,
+                    chunks_to_cells(headroom_chunks));
+
+    return ret;
+}
+
+static sdk_ret_t
+elba_tm_alloc_pbc_buffers (elba_tm_buf_cfg_t *buf_cfg)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    uint32_t pbc_cell_chunks[ELBA_TM_NUM_BUFFER_ISLANDS] = {0};
+
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(pbc_cell_chunks); i++) {
+        pbc_cell_chunks[i] = elba_tm_get_max_cell_chunks_for_island(i);
+    }
+
+    /* First allocate buffer cells for the P4 ports and
+     * then distribute the remaining equally among the different classes
+     */
+    ret = alloc_cells(TM_PORT_TYPE_P4IG, pbc_cell_chunks, buf_cfg);
+    if (ret != sdk::SDK_RET_OK) {
+        return ret;
+    }
+
+    ret = alloc_cells(TM_PORT_TYPE_P4EG, pbc_cell_chunks, buf_cfg);
+    if (ret != sdk::SDK_RET_OK) {
+        return ret;
+    }
+
+    /* Now allocate the remaining uniformly */
+    ret = alloc_cells(TM_PORT_TYPE_UPLINK, pbc_cell_chunks, buf_cfg);
+    if (ret != sdk::SDK_RET_OK) {
+        return ret;
+    }
+
+    ret = alloc_cells(TM_PORT_TYPE_DMA, pbc_cell_chunks, buf_cfg);
+    if (ret != sdk::SDK_RET_OK) {
+        return ret;
+    }
+
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(pbc_cell_chunks); i++) {
+        SDK_TRACE_DEBUG("unallocated cells island %u cells %u",
+                        i, chunks_to_cells(pbc_cell_chunks[i]));
+    }
+
+    return sdk::SDK_RET_OK;
+}
+
+static sdk_ret_t
+elba_tm_alloc_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
+{
+    uint32_t num_hbm_contexts[NUM_TM_HBM_FIFO_TYPES] = {0};
+    uint64_t total_hbm_chunks;
+    uint32_t fifo_type;
+
+    // HBM allocation
+    //
+    // Out of the whole available HBM payload and control has to be carved.
+    // Control needs to be 1/50th of payload
+    num_hbm_contexts[TM_HBM_FIFO_TYPE_UPLINK] =
+        tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK] * tm_cfg_profile()->num_active_uplink_ports;
+    num_hbm_contexts[TM_HBM_FIFO_TYPE_TXDMA] = tm_cfg_profile()->num_qs[TM_PORT_TYPE_DMA];
+
+    total_hbm_chunks = tm_cfg_profile()->hbm_fifo_size/ELBA_TM_HBM_FIFO_ALLOC_SIZE;
+
+    // This calculation involves taking the floor value for both
+    // total_hbm_chunks and control_chunks
+    uint64_t control_chunks;
+    uint64_t payload_chunks;
+
+    control_chunks = total_hbm_chunks/(1 + tm_asic_profile()->hbm_fifo_control_scale_factor);
+    payload_chunks = control_chunks * tm_asic_profile()->hbm_fifo_control_scale_factor;
+    SDK_ASSERT((payload_chunks + control_chunks) <= total_hbm_chunks);
+
+    SDK_TRACE_DEBUG("Available hbm chunks total %u payload %u control %u",
+                    total_hbm_chunks, payload_chunks, control_chunks);
+
+    uint64_t total_reserved_hbm_chunks = 0;
+    uint64_t total_hbm_contexts = 0;
+    uint64_t reserved_hbm_chunks_per_context[NUM_TM_HBM_FIFO_TYPES] = {0};
+    for (fifo_type = 0; fifo_type < NUM_TM_HBM_FIFO_TYPES; fifo_type++) {
+        reserved_hbm_chunks_per_context[fifo_type] =
+            hbm_bytes_to_chunks(
+                tm_asic_profile()->hbm_fifo_reserved_bytes_per_context[fifo_type]);
+
+        if (num_hbm_contexts[fifo_type] > elba_tm_max_hbm_contexts_for_fifo(fifo_type)) {
+            SDK_TRACE_ERR("num hbm contexts %u for fifo %u exceeds "
+                          "max available %u",
+                          num_hbm_contexts[fifo_type],
+                          fifo_type,
+                          elba_tm_max_hbm_contexts_for_fifo(fifo_type));
+            return sdk::SDK_RET_INVALID_ARG;
+        }
+        uint64_t reserved_hbm_chunks =
+            reserved_hbm_chunks_per_context[fifo_type] * num_hbm_contexts[fifo_type];
+
+        total_reserved_hbm_chunks += reserved_hbm_chunks;
+        total_hbm_contexts += num_hbm_contexts[fifo_type];
+    }
+
+    if (payload_chunks < total_reserved_hbm_chunks) {
+        SDK_TRACE_ERR("Error allocating hbm fifo . Available chunks %u "
+                      "total reserved required %u ",
+                      payload_chunks, total_reserved_hbm_chunks);
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+    uint64_t rem_payload_chunks = payload_chunks - total_reserved_hbm_chunks;
+
+    // Allocate the rem_payload_chunks for the total number of queues
+    //
+    uint64_t payload_chunks_per_context = rem_payload_chunks/total_hbm_contexts;
+
+    SDK_TRACE_DEBUG("HBM fifo allocation total payload %u, reserved %u "
+                    "remaining %u total_contexts %u "
+                    "payload chunks per context %u",
+                    payload_chunks, total_reserved_hbm_chunks,
+                    rem_payload_chunks, total_hbm_contexts, payload_chunks_per_context);
+
+    uint64_t offset = 0;
+    for (fifo_type = 0; fifo_type < NUM_TM_HBM_FIFO_TYPES; fifo_type++) {
+        for (uint32_t context = 0; context < num_hbm_contexts[fifo_type]; context++) {
+            uint64_t payload_chunks_needed =
+                payload_chunks_per_context + reserved_hbm_chunks_per_context[fifo_type];
+            uint64_t control_chunks_needed =
+                (payload_chunks_needed + tm_asic_profile()->hbm_fifo_control_scale_factor - 1)/
+                tm_asic_profile()->hbm_fifo_control_scale_factor;
+
+            buf_cfg->hbm_fifo[fifo_type][context].valid = true;
+            buf_cfg->hbm_fifo[fifo_type][context].payload_offset = offset;
+            buf_cfg->hbm_fifo[fifo_type][context].payload_chunks = payload_chunks_needed;
+            offset += payload_chunks_needed;
+            buf_cfg->hbm_fifo[fifo_type][context].control_offset = offset;
+            buf_cfg->hbm_fifo[fifo_type][context].control_chunks = control_chunks_needed;
+            offset += control_chunks_needed;
+        }
+    }
+    SDK_ASSERT(offset <= (control_chunks + payload_chunks));
+    SDK_TRACE_DEBUG("unallocated hbm chunks %u total %u",
+                    (control_chunks + payload_chunks) - offset,
+                    total_hbm_chunks);
+    return sdk::SDK_RET_OK;
+}
+
+static bool
+iq_disabled (tm_port_t port, uint32_t iq)
+{
+    tm_port_type_e port_type;
+    bool disabled = false;
+    uint32_t max_iqs;
+    uint32_t num_iqs;
+    uint32_t disabled_iq_start, disabled_iq_end;
+
+    port_type = elba_tm_get_port_type(port);
+    num_iqs = tm_cfg_profile()->num_qs[port_type];
+
+    switch(port_type) {
+        case TM_PORT_TYPE_UPLINK:
+            if (port == ELBA_TM_PORT_NCSI) {
+                // On the BMC port, only one pg is supported
+                num_iqs = 1;
+            } else if (!is_active_uplink_port(port)) {
+                disabled = true;
+            }
+            if (iq >= num_iqs) {
+                disabled = true;
+            }
+            break;
+        case TM_PORT_TYPE_P4EG:
+        case TM_PORT_TYPE_P4IG:
+            max_iqs = elba_tm_get_num_iqs_for_port_type(port_type);
+            SDK_ASSERT(max_iqs > num_iqs);
+            disabled_iq_start = ELBA_TM_P4_UPLINK_IQ_OFFSET - (max_iqs - num_iqs) - 1;
+            disabled_iq_end = ELBA_TM_P4_UPLINK_IQ_OFFSET - 1;
+            if ((iq >= disabled_iq_start) && (iq < disabled_iq_end)) {
+                disabled = true;
+            }
+            break;
+        case TM_PORT_TYPE_DMA:
+            if (iq >= num_iqs) {
+                disabled = true;
+            }
+            break;
+        case NUM_TM_PORT_TYPES:
+            disabled = true;
+            break;
+    }
+
+    if (disabled) {
+        SDK_TRACE_DEBUG("iq %u on port %u disabled",
+                        iq, port);
+    }
+
+    return disabled;
+}
+
+static sdk_ret_t
+elba_tm_program_pbc_buffers (elba_tm_buf_cfg_t *buf_cfg)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    uint32_t reserved_min;
+    uint32_t headroom;
+    uint32_t xon_threshold;
+    tm_port_type_e port_type;
+
+    stringstream data;
+    data << hex << endl;
+    // Program the buffers
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+    port_type = elba_tm_get_port_type(${pinfo["enum"]});
+//::    for pg in range(port_info[p]["pgs"]):
+    reserved_min = 0;
+    headroom = 0;
+    xon_threshold = 0;
+    if (!iq_disabled(${pinfo["enum"]}, ${pg})) {
+        if (tm_asic_profile()->port[port_type].uses_credits &&
+            tm_asic_profile()->port[port_type].recirc_q != ${pg}) {
+            reserved_min = buf_cfg->chunks_per_q[port_type];
+
+            if (tm_is_high_perf_q(${pg})) {
+                reserved_min *= 2;
+            }
+            reserved_min = reserved_min +
+                cells_to_chunks(bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type])) + 2;
+            headroom = 0;
+        } else {
+            reserved_min = buf_cfg->chunks_per_q[port_type];
+            headroom = cells_to_chunks(tm_asic_profile()->port[port_type].headroom_cells);
+        }
+    }
+
+    if (headroom) {
+        SDK_ASSERT(chunks_to_cells(reserved_min) >=
+                   bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type]));
+        xon_threshold = chunks_to_cells(reserved_min) -
+            bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type]);
+    }
+
+    if (port_type == TM_PORT_TYPE_DMA) {
+        // Based on asic config
+        xon_threshold = 13;
+    }
+
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.read();
+    /* Update the PG parameters */
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.reserved_min(reserved_min);
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.headroom(headroom);
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.xon_threshold(xon_threshold);
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.low_limit(0);
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.alpha(0);
+
+    if (tm_sw_init_enabled()) {
+        ${trace_register("pbc_csr.port_" + str(p) + ".cfg_account_pg_" + str(pg))}
+        pbc_csr.port_${p}.cfg_account_pg_${pg}.write();
+    }
+//::    #endfor
+//:: #endfor
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    return ret;
+}
+
+static sdk_ret_t
+elba_tm_program_p4_credits (elba_tm_buf_cfg_t *buf_cfg)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    //elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    //elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    //tm_port_type_e port_type;
+    //uint32_t credit_enable;
+    // uint32_t credits;
+    // uint32_t qs_to_flush;
+    // uint32_t recirc_q_val;
+    cpp_int max_growth;
+    elb_pbc_max_growth_map_t max_growth_decoder;
+    max_growth_decoder.init();
+
+    stringstream data;
+    data << hex << endl;
+
+    // Program the buffers
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["supports_credits"]:
+    port_type = elba_tm_get_port_type(${pinfo["enum"]});
+    credit_enable = 0;
+    qs_to_flush = 0;
+    max_growth = 0;
+    recirc_q_val = 1<<tm_asic_profile()->port[port_type].recirc_q;
+//::        for pg in range(port_info[p]["pgs"]):
+    credits = 0;
+    if (!iq_disabled(${pinfo["enum"]}, ${pg})) {
+        if (tm_asic_profile()->port[port_type].uses_credits &&
+            (tm_asic_profile()->port[port_type].recirc_q != ${pg})) {
+
+            credits = chunks_to_cells(buf_cfg->chunks_per_q[port_type]);
+            if (tm_is_high_perf_q(${pg})) {
+                credits = chunks_to_cells(2 * buf_cfg->chunks_per_q[port_type]);
+            }
+
+            credit_enable |= 1<<${pg};
+
+            cpp_helper.set_slc(max_growth, 1, ${pg} * 5, ((${pg}+1)*5)-1);
+
+            // Program credits
+            // pbc_csr.port_${p}.dhs_oq_flow_control.entry[${pg}].read();
+            pbc_csr.port_${p}.dhs_oq_flow_control.entry[${pg}].entry(credits);
+            if (tm_sw_init_enabled()) {
+
+                ${trace_register("pbc_csr.port_" + str(p) + ".dhs_oq_flow_control.entry[" + str(pg) +"]")}
+                pbc_csr.port_${p}.dhs_oq_flow_control.entry[${pg}].write();
+            }
+        }
+    } else {
+        qs_to_flush |= 1<<${pg};
+    }
+//::        #endfor
+    // Program the credit_enable
+    if (credit_enable) {
+        pbc_csr.port_${p}.cfg_account_credit_return.read();
+        pbc_csr.port_${p}.cfg_oq_queue.read();
+        pbc_csr.cfg_credits_max_growth_${p}.read();
+
+        pbc_csr.port_${p}.cfg_account_credit_return.enable(credit_enable);
+        pbc_csr.port_${p}.cfg_oq_queue.recirc(recirc_q_val);
+        pbc_csr.port_${p}.cfg_oq_queue.flush(qs_to_flush);
+        pbc_csr.cfg_credits_max_growth_${p}.cells(max_growth);
+
+        max_growth_decoder.all(pbc_csr.cfg_credits_max_growth_${p}.cells());
+        max_growth_decoder.set_name("elb0.pb.pbc.cfg_credits_max_growth_${p}.decoder");
+        if (tm_sw_init_enabled()) {
+            max_growth_decoder.show();
+
+            ${trace_register("pbc_csr.port_" + str(p) + ".cfg_account_credit_return")}
+            ${trace_register("pbc_csr.port_" + str(p) + ".cfg_oq_queue")}
+            ${trace_register("pbc_csr.cfg_credits_max_growth_" + str(p))}
+
+            pbc_csr.port_${p}.cfg_account_credit_return.write();
+            pbc_csr.port_${p}.cfg_oq_queue.write();
+            pbc_csr.cfg_credits_max_growth_${p}.write();
+        }
+    }
+//::    #endif
+//:: #endfor
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+
+    return ret;
+}
+
+static sdk_ret_t
+elba_tm_program_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+    uint32_t num_hbm_contexts_per_port;
+    uint32_t context;
+    uint32_t num_contexts;
+    uint32_t base_offset;
+    cpp_int port_payload_base_val;
+    cpp_int port_payload_size_val;
+    cpp_int port_payload_occupancy_val;
+    cpp_int port_control_base_val;
+    cpp_int port_control_size_val;
+
+    cpp_int payload_base_val[NUM_TM_HBM_FIFO_TYPES];
+    cpp_int payload_size_val[NUM_TM_HBM_FIFO_TYPES];
+    cpp_int control_base_val[NUM_TM_HBM_FIFO_TYPES];
+    cpp_int control_size_val[NUM_TM_HBM_FIFO_TYPES];
+    cpp_int eth_xoff_val;
+    cpp_int eth_xon_val;
+    uint64_t payload_offset;
+    uint64_t payload_size;
+    uint64_t payload_occupancy;
+    uint64_t control_offset;
+    uint64_t control_size;
+    uint64_t xoff_threshold;
+    uint64_t xon_threshold;
+
+    uint32_t fifo_type;
+    
+    tm_port_type_e port_type;
+
+    // On active uplink ports and the DMA port, setup the HBM queues
+    num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
+
+    stringstream data;
+    data << hex << endl;
+
+//:: fifo_types = {"uplink": "TM_HBM_FIFO_TYPE_UPLINK" ,
+//::               "dma" : "TM_HBM_FIFO_TYPE_TXDMA" }
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["has_hbm"]:
+    // ${pinfo["enum"]}
+//::        fifo_type = fifo_types[pinfo["type"]]
+//::        reg_name = hbm_fifo_info[fifo_type]["reg_name"]
+//::        if pinfo["type"] == "uplink":
+    if (is_active_uplink_port(${pinfo["enum"]})) {
+        // If we are an active port, then setup the HBM fifo contexts
+        num_contexts = num_hbm_contexts_per_port;
+    } else {
+        num_contexts = 0;
+    }
+    base_offset = ${p} * num_contexts;
+//::        elif pinfo["type"] == "dma":
+    num_contexts = elba_tm_max_hbm_contexts_for_fifo(TM_HBM_FIFO_TYPE_TXDMA);
+    base_offset = 0;
+//::        #endif
+
+    port_type = elba_tm_get_port_type(${pinfo["enum"]});
+    fifo_type = ${fifo_type};
+    port_payload_base_val = 0;
+    port_payload_size_val = 0;
+    port_payload_occupancy_val = 0;
+    port_control_base_val = 0;
+    port_control_size_val = 0;
+
+    for (unsigned q = 0; q < num_contexts; q++) {
+        context = base_offset + q;
+
+        elba_tm_buf_hbm_cfg_t *hbm_cfg = &buf_cfg->hbm_fifo[fifo_type][context];
+        if (hbm_cfg->valid) {
+            payload_offset = hbm_cfg->payload_offset;
+            payload_size = hbm_cfg->payload_chunks;
+            // payload occupancy is in units of 1024 bytes
+            // program it to drop when 1 jumbo-mtu worth of bytes still free
+            payload_occupancy =
+                (hbm_chunks_to_bytes(payload_size) - tm_cfg_profile()->jumbo_mtu[port_type]) >> 10;
+
+            if (fifo_type == TM_HBM_FIFO_TYPE_UPLINK) {
+                // xoff_threshold is in units of 512 bytes
+                // program it to drop when 1000*64 bytes worth of bytes still free
+                xoff_threshold = 
+                    (hbm_chunks_to_bytes(payload_size) - 
+                     ELBA_TM_DEFAULT_XOFF_THRESHOLD_BYTES) >> 9;
+
+                // xon_threshold is in units of 512 bytes
+                // program it to drop when 2000*64 bytes worth of bytes still free
+                xon_threshold = 
+                    (hbm_chunks_to_bytes(payload_size) -
+                     ELBA_TM_DEFAULT_XON_THRESHOLD_BYTES) >> 9;
+            } else {
+                xoff_threshold = 0;
+                xon_threshold = 0;
+            }
+
+            control_offset = hbm_cfg->control_offset;
+            control_size = hbm_cfg->control_chunks;
+        } else {
+            payload_offset = 0;
+            payload_size = 0;
+            payload_occupancy = 0;
+            xoff_threshold = 0;
+            xon_threshold = 0; 
+            control_offset = 0;
+            control_size = 0;
+        }
+
+        // Per port registers
+        // 27 bits per hbm_q
+        cpp_helper.set_slc(port_payload_base_val, payload_offset,
+                            q * 27, ((q + 1) * 27) - 1);
+        // 23 bits per q
+        cpp_helper.set_slc(port_payload_size_val, payload_size ? payload_size - 1 : 0,
+                            q * 23, ((q + 1) * 23) - 1);
+        // 19 bits per q
+        cpp_helper.set_slc(port_payload_occupancy_val, payload_occupancy ? payload_occupancy - 1 : 0,
+                            q * 19, ((q + 1) * 19) - 1);
+        // 27 bits per q
+        cpp_helper.set_slc(port_control_base_val, control_offset,
+                            q * 27, ((q + 1) * 27) - 1);
+        // 23 bits per q
+        cpp_helper.set_slc(port_control_size_val, control_size ? control_size - 1 : 0,
+                            q * 23, ((q + 1) * 23) - 1);
+
+        // Global registers
+
+        // 27 bits per hbm_q
+        cpp_helper.set_slc(payload_base_val[fifo_type], payload_offset,
+                            context * 27, ((context + 1) * 27) - 1);
+        // 23 bits per context
+        cpp_helper.set_slc(payload_size_val[fifo_type], payload_size ? payload_size - 1 : 0,
+                            context * 23, ((context + 1) * 23) - 1);
+        // 27 bits per context
+        cpp_helper.set_slc(control_base_val[fifo_type], control_offset,
+                            context * 27, ((context + 1) * 27) - 1);
+        // 23 bits per context
+        cpp_helper.set_slc(control_size_val[fifo_type], control_size ? control_size - 1 : 0,
+                            context * 23, ((context + 1) * 23) - 1);
+
+        if (fifo_type == TM_HBM_FIFO_TYPE_UPLINK) {
+            // 20 bits per context
+            cpp_helper.set_slc(eth_xoff_val, xoff_threshold, 
+                               context * 20, ((context + 1) * 20) - 1);
+            // 20 bits per context
+            cpp_helper.set_slc(eth_xon_val, xon_threshold, 
+                               context * 20, ((context + 1) * 20) - 1);
+        }
+    }
+
+    pf_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload.base(port_payload_base_val);
+    pf_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload.mem_sz(port_payload_size_val);
+    pf_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload_occupancy.threshold(port_payload_occupancy_val);
+
+//::        if pinfo["type"] == "uplink":
+    pf_csr.hbm_port_${p}.cfg_hbm_${reg_name}_ctrl.base(port_control_base_val);
+    pf_csr.hbm_port_${p}.cfg_hbm_${reg_name}_ctrl.mem_sz(port_control_size_val);
+//::        #endif
+
+
+    pf_csr.hbm_port_${p}.cfg_hbm_context.read();
+    pf_csr.hbm_port_${p}.cfg_hbm_context.enable((1ull<<num_contexts)-1);
+
+    // enable no_drop by default in PB
+    pf_csr.hbm_port_${p}.cfg_hbm_context.no_drop((1ull << num_contexts) - 1);
+
+    // TODO use tm_sw_init_enabled below
+    pf_csr.hbm_port_${p}.cfg_hbm_context.write();
+
+    pf_csr.hbm_port_${p}.cfg_hbm_context.base(base_offset);
+    if (tm_sw_init_enabled()) {
+
+        ${trace_register("pf_csr.hbm_port_" + str(p) + ".cfg_hbm_" + reg_name + "_payload")}
+        pf_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload.write();
+
+        ${trace_register("pf_csr.hbm_port_" + str(p) + ".cfg_hbm_" + reg_name + "_payload_occupancy")}
+        pf_csr.hbm_port_${p}.cfg_hbm_${reg_name}_payload_occupancy.write();
+
+//::        if pinfo["type"] == "uplink":
+        ${trace_register("pf_csr.hbm_port_" + str(p) + ".cfg_hbm_" + reg_name + "_ctrl")}
+        pf_csr.hbm_port_${p}.cfg_hbm_${reg_name}_ctrl.write();
+//::        #endif
+
+        ${trace_register("pf_csr.hbm_port_" + str(p) + ".cfg_hbm_context")}
+        pf_csr.hbm_port_${p}.cfg_hbm_context.write();
+    }
+//::    #endif
+//:: #endfor
+
+//:: for fifo_type in fifo_types.values():
+//::    reg_name = hbm_fifo_info[fifo_type]["reg_name"]
+//::    if reg_name == "tx":
+//::        continue
+//::    #endif
+
+    pf_csr.cfg_hbm_${reg_name}_payload.base(payload_base_val[${fifo_type}]);
+    pf_csr.cfg_hbm_${reg_name}_payload.mem_sz(payload_size_val[${fifo_type}]);
+    pf_csr.cfg_hbm_${reg_name}_ctrl.base(control_base_val[${fifo_type}]);
+    pf_csr.cfg_hbm_${reg_name}_ctrl.mem_sz(control_size_val[${fifo_type}]);
+
+    // Write all the registers
+    {
+        elb_pbc_hbm_${reg_name}_ctl_t hbm_ctl_decoder;
+
+        hbm_ctl_decoder.init();
+        hbm_ctl_decoder.all(pf_csr.cfg_hbm_${reg_name}_payload.all());
+        hbm_ctl_decoder.set_name("elb0.pf.pf.cfg_hbm_${reg_name}_payload.decoder");
+//        hbm_ctl_decoder.show();
+
+        hbm_ctl_decoder.init();
+        hbm_ctl_decoder.all(pf_csr.cfg_hbm_${reg_name}_ctrl.all());
+        hbm_ctl_decoder.set_name("elb0.pf.pf.cfg_hbm_${reg_name}_ctrl.decoder");
+//        hbm_ctl_decoder.show();
+
+    }
+
+    if (tm_sw_init_enabled()) {
+        ${trace_register("pf_csr.cfg_hbm_" + reg_name + "_payload")}
+        ${trace_register("pf_csr.cfg_hbm_" + reg_name + "_ctrl")}
+
+        pf_csr.cfg_hbm_${reg_name}_payload.write();
+        pf_csr.cfg_hbm_${reg_name}_ctrl.write();
+    }
+//:: #endfor
+    
+    pf_csr.cfg_hbm_threshold.read();
+    pf_csr.cfg_hbm_threshold.xoff(eth_xoff_val);
+    pf_csr.cfg_hbm_threshold.xon(eth_xon_val);
+    if (tm_sw_init_enabled()) {
+        ${trace_register("pf_csr.cfg_hbm_threshold")};
+        pf_csr.cfg_hbm_threshold.write();
+    }
+
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+
+    return ret;
+}
+
+static sdk_ret_t
+elba_tm_program_buffers (elba_tm_buf_cfg_t *buf_cfg)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+
+    ret = elba_tm_program_pbc_buffers(buf_cfg);
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error programming pbc buffers ret %d",
+                      ret);
+        return ret;
+    }
+
+    ret = elba_tm_program_p4_credits(buf_cfg);
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error programming hbm buffers ret %d",
+                      ret);
+        return ret;
+    }
+    return ret;
+}
+
+static sdk_ret_t
+elba_tm_port_program_defaults (void)
+{
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    cpp_int tc_to_pg_val;
+    cpp_int xoff2oq_map_val;
+    tm_port_type_e port_type;
+    uint32_t mtu_cells;
+    uint32_t nbits;
+    uint32_t oq;
+
+    // For every port, program the tc_to_pg mapping
+    // and mtu
+
+    stringstream data;
+    data << hex << endl;
+
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+    // ${pinfo["enum"]}
+    port_type = elba_tm_get_port_type(${pinfo["enum"]});
+    tc_to_pg_val = 0;
+
+    pbc_csr.port_${p}.cfg_account_mtu_table.read();
+    pbc_csr.port_${p}.cfg_account_tc_to_pg.read();
+    pbc_csr.port_${p}.cfg_account_control.read();
+
+    pbc_csr.port_${p}.cfg_account_control.use_sp_as_wm(1);
+
+    mtu_cells = bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type]);
+//::    nbits = int(math.log(pinfo["pgs"], 2))
+//::    for pg in range(pinfo["pgs"]):
+    cpp_helper.set_slc(tc_to_pg_val, ${pg}, ${pg} * ${nbits}, ((${pg}+1) * ${nbits}) - 1);
+    pbc_csr.port_${p}.cfg_account_mtu_table.pg${pg}(mtu_cells);
+//::    #endfor
+    pbc_csr.port_${p}.cfg_account_tc_to_pg.table(tc_to_pg_val);
+
+    if (tm_sw_init_enabled()) {
+        elb_pbc_pg${pinfo["pgs"]}_map_t pg_map_decoder;
+        pg_map_decoder.init();
+        pg_map_decoder.all(pbc_csr.port_${p}.cfg_account_tc_to_pg.table());
+        pg_map_decoder.set_name("elb0.pb.pbc.port_${p}.cfg_account_tc_to_pg.decoder");
+        pg_map_decoder.show();
+
+        ${trace_register("pbc_csr.port_" + str(p) + ".cfg_account_mtu_table")}
+        ${trace_register("pbc_csr.port_" + str(p) + ".cfg_account_tc_to_pg")}
+        ${trace_register("pbc_csr.port_" + str(p) + ".cfg_account_control")}
+
+        pbc_csr.port_${p}.cfg_account_control.write();
+        pbc_csr.port_${p}.cfg_account_mtu_table.write();
+        pbc_csr.port_${p}.cfg_account_tc_to_pg.write();
+    }
+//:: #endfor
+
+    // On dma port, set the xoff to oq for flow control in RxDMA
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink" or pinfo["type"] == "dma":
+    // ${pinfo["enum"]}
+    port_type = elba_tm_get_port_type(${pinfo["enum"]});
+    xoff2oq_map_val = 0;
+    if (port_type == TM_PORT_TYPE_UPLINK) {
+        nbits = 3;
+    } else {
+        nbits = 5;
+    }
+    for (oq = 0; oq < elba_tm_get_num_oqs_for_port_type(port_type); oq++) {
+        cpp_helper.set_slc(xoff2oq_map_val, oq, oq*nbits, ((oq+1)*nbits)-1);
+    }
+
+    pbc_csr.port_${p}.cfg_oq_xoff2oq.read();
+    pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
+    if (tm_sw_init_enabled()) {
+        ${trace_register("pbc_csr.port_" + str(p) + ".cfg_oq_xoff2oq")}
+
+        pbc_csr.port_${p}.cfg_oq_xoff2oq.write();
+    }
+//::    #endif
+//:: #endfor
+
+    // On uplink ports, disable xoff on all oqs
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+    // ${pinfo["enum"]}
+    // pbc_csr.port_${p}.cfg_mac_xoff.read();
+    // TODO: write to disable xoff by default
+    // pbc_csr.port_${p}.cfg_mac_xoff.enable(0);
+    // if (tm_sw_init_enabled()) {
+    //    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_mac_xoff")}
+    //     pbc_csr.port_${p}.cfg_mac_xoff.write();
+    //}
+//::    #endif
+//:: #endfor
+
+    // On uplink ports, set the number of header bytes to remove
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+    // ${pinfo["enum"]}
+    port_type = elba_tm_get_port_type(${pinfo["enum"]});
+    pbc_csr.port_${p}.cfg_oq.read();
+//::    if pinfo["type"] == "uplink":
+    pbc_csr.port_${p}.cfg_oq.num_hdr_bytes(
+        ELBA_GLOBAL_INTRINSIC_HDR_SZ + ELBA_P4_INTRINSIC_HDR_SZ);
+    // Tell MAC to stomp CRC on error
+    pbc_csr.port_${p}.cfg_oq.hw_error_to_pbus(1);
+//::    #endif
+
+    if (tm_sw_init_enabled()) {
+        pbc_csr.port_${p}.cfg_oq.enable(1);
+        pbc_csr.port_${p}.cfg_oq.rewrite_enable(1);
+//::    if pinfo["supports_credits"]:
+        pbc_csr.port_${p}.cfg_oq.flow_control_enable_credits(
+            tm_asic_profile()->port[port_type].uses_credits ? 1 : 0);
+//::    #endif
+//::    if pinfo["enum"] == "TM_PORT_INGRESS":
+        pbc_csr.port_${p}.cfg_oq.packing_msb(
+            elba_tm_get_max_cell_chunks_for_island(0) >
+            elba_tm_get_max_cell_chunks_for_island(1) ? 1 : 0);
+//::    #endif
+//::    if pinfo["type"] == "dma" or pinfo["type"] == "uplink":
+        pbc_csr.port_${p}.cfg_oq.flow_control_enable_xoff(1);
+//::    #endif
+    }
+    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_oq")}
+    pbc_csr.port_${p}.cfg_oq.write();
+//:: #endfor
+
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    return sdk::SDK_RET_OK;
+}
+
+static sdk_ret_t
+elba_tm_init_pbc (elba_tm_buf_cfg_t *buf_cfg)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+
+    ret = elba_tm_alloc_pbc_buffers(buf_cfg);
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error allocating buffer configs %d", ret);
+        return ret;
+    }
+
+    ret = elba_tm_port_program_defaults();
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error programming port defaults %d", ret);
+        return ret;
+    }
+
+    ret = elba_tm_program_buffers(buf_cfg);
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error allocating buffer configs %d", ret);
+        return ret;
+    }
+
+    return sdk::SDK_RET_OK;
+}
+
+static sdk_ret_t
+elba_tm_init_hbm_q_map (void)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+    tm_port_type_e port_type;
+    uint32_t p4_oq;
+    cpp_int oq_map_val;
+    cpp_int hbm_tc_to_q_val;
+    elb_pbc_oq_map_t oq_map_decoder;
+    oq_map_decoder.init();
+
+    // Map traffic to the contexts
+    // On uplink by default, map everything to context 0
+    // On DMA port, map each iq to each context
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["has_hbm"] or pinfo["enum"] == "ELBA_TM_PORT_NCSI":
+    // ${pinfo["enum"]}
+    hbm_tc_to_q_val = 0;
+    port_type = elba_tm_get_port_type(${pinfo["enum"]});
+//::        if pinfo["type"] == "dma":
+    for (unsigned tc = 0; tc < tm_cfg_profile()->num_qs[port_type]; tc++) {
+        cpp_helper.set_slc(hbm_tc_to_q_val, tc, tc*4, ((tc+1)*4)-1);
+    }
+//::        #endif
+    pf_csr.hbm_port_${p}.cfg_hbm_tc_to_q.read();
+    pf_csr.hbm_port_${p}.cfg_hbm_tc_to_q.table(hbm_tc_to_q_val);
+
+    if (tm_sw_init_enabled()) {
+        elb_pbc_pg${pinfo["pgs"]}_map_t pg_map_decoder;
+        pg_map_decoder.init();
+        pg_map_decoder.all(pf_csr.hbm_port_${p}.cfg_hbm_tc_to_q.table());
+        pg_map_decoder.set_name("elb0.pb.pbc.hbm.hbm_port_${p}.cfg_hbm_tc_to_q.decoder");
+        pg_map_decoder.show();
+
+        stringstream data;
+        data << hex << endl;
+        ${trace_register("pf_csr.hbm_port_" + str(p) + ".cfg_hbm_tc_to_q")}
+        SDK_TRACE_DEBUG("%s", data.str().c_str());
+
+        pf_csr.hbm_port_${p}.cfg_hbm_tc_to_q.write();
+    }
+//::    #endif
+//:: #endfor
+
+    // Configure the parsers
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+    // ${pinfo["enum"]}
+    oq_map_val = 0;
+    p4_oq = ELBA_TM_P4_UPLINK_IQ_OFFSET;
+    port_type = elba_tm_get_port_type(${pinfo["enum"]});
+
+    pf_csr.hbm_port_${p}.cfg_hbm_parser.read();
+    pf_csr.hbm_port_${p}.cfg_hbm_parser.use_dot1q(1);
+    pf_csr.hbm_port_${p}.cfg_hbm_parser.use_ip(0);
+    pf_csr.hbm_port_${p}.cfg_hbm_parser.default_cos(0);
+    pf_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map(0);
+
+    for (unsigned tc = 0; tc < elba_tm_get_num_iqs_for_port_type(port_type); tc++) {
+        cpp_helper.set_slc(oq_map_val, p4_oq, tc * 5, ((tc+1)*5)-1);
+    }
+
+    pbc_csr.cfg_parser${p}.default_cos(0);
+    pbc_csr.cfg_parser${p}.oq_map(oq_map_val);
+
+    oq_map_decoder.all(pbc_csr.cfg_parser${p}.oq_map());
+    oq_map_decoder.set_name("elb0.pb.pbc.cfg_parser${p}.decoder");
+
+    if (tm_sw_init_enabled()) {
+        stringstream data;
+        data << hex << endl;
+        ${trace_register("pf_csr.hbm_port_" + str(p) + ".cfg_hbm_parser")}
+        ${trace_register("pbc_csr.cfg_parser" + str(p))}
+        SDK_TRACE_DEBUG("%s", data.str().c_str());
+
+        pf_csr.hbm_port_${p}.cfg_hbm_parser.write();
+        pbc_csr.cfg_parser${p}.write();
+    }
+//::    #endif
+//:: #endfor
+
+    return ret;
+}
+
+static sdk_ret_t
+elba_tm_init_hbm (elba_tm_buf_cfg_t *buf_cfg)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+
+    ret = elba_tm_alloc_hbm_buffers(buf_cfg);
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error allocating hbm buffers ret %d",
+                      ret);
+        return ret;
+    }
+
+    // Program the HBM buffers
+    ret = elba_tm_program_hbm_buffers(buf_cfg);
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error programming hbm buffers ret %d",
+                      ret);
+        return ret;
+    }
+
+    ret = elba_tm_init_hbm_q_map();
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error programming hbm q mapping ret %d",
+                      ret);
+        return ret;
+    }
+
+    uint32_t rate_limiter;
+    stringstream data;
+    data << hex << endl;
+    // On configure rate-limiter from HBM
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["has_hbm"]:
+    // ${pinfo["enum"]}
+    if (elba_tm_port_is_uplink_port(${pinfo["enum"]})) {
+        rate_limiter = (tm_cfg_profile()->num_active_uplink_ports * 2) - 1;
+    } else {
+        rate_limiter = 3;
+    }
+
+    pf_csr.hbm_port_${p}.cfg_hbm.read();
+    pf_csr.hbm_port_${p}.cfg_hbm.rate_limiter(rate_limiter);
+
+    pf_csr.hbm_port_${p}.cfg_hbm_read_fifo.read();
+    pf_csr.hbm_port_${p}.cfg_hbm_read_fifo.max_cells(0x78);
+    pf_csr.hbm_port_${p}.cfg_hbm_read_fifo.max_flits(0x78);
+    pf_csr.hbm_port_${p}.cfg_hbm_read_fifo.max_packets(0x28);
+
+    if (tm_sw_init_enabled()) {
+        ${trace_register("pf_csr.hbm_port_" + str(p) + ".cfg_hbm")}
+        pf_csr.hbm_port_${p}.cfg_hbm.write();
+        //:: # ${trace_register("pf_csr.hbm_port_" + str(p) + ".cfg_hbm_read_fifo")}
+        // TODO: this is not written in elb_pb_api.cc
+        // pf_csr.hbm_port_${p}.cfg_hbm_read_fifo.write();
+    }
+
+//::    #endif
+//:: #endfor
+
+    pf_csr.cfg_hbm_wb.read();
+    pf_csr.cfg_hbm_rb.read();
+    pf_csr.cfg_hbm_cut_thru.read();
+
+    pf_csr.cfg_hbm_rb.enable_wrr(0);
+
+    if (tm_sw_init_enabled()) {
+        // TODO: this is not written in elb_pb_api.cc
+        //:: # ${trace_register("pf_csr.cfg_hbm_wb")}
+        // pf_csr.cfg_hbm_wb.write();
+        ${trace_register("pf_csr.cfg_hbm_rb")}
+        pf_csr.cfg_hbm_rb.write();
+        //:: # ${trace_register("pf_csr.cfg_hbm_cut_thru")}
+        // pf_csr.cfg_hbm_cut_thru.write();
+    }
+
+    // AXI Base Address
+    pbc_csr.cfg_axi.read();
+    pbc_csr.cfg_axi.base_addr(g_elba_state_pd->mempartition()->base());
+    ${trace_register("pbc_csr.cfg_axi")}
+    pbc_csr.cfg_axi.write();
+
+    // AXI Base for buffer FIFOs
+    pf_csr.cfg_hbm_axi_base.read();
+    pf_csr.cfg_hbm_axi_base.addr(0x1300000000);
+    ${trace_register("pf_csr.cfg_hbm_axi_base")}
+    pf_csr.cfg_hbm_axi_base.write();
+
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+elba_tm_port_program_uplink_byte_count (void)
+{
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+
+    stringstream data;
+    data << hex << endl;
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["has_hbm"]:
+    // ${pinfo["enum"]}
+    if (elba_tm_port_is_uplink_port(${pinfo["enum"]})) {
+ 
+    pbc_csr.port_${p}.cfg_oq.read();
+    pbc_csr.port_${p}.cfg_oq.num_hdr_bytes(
+            ELBA_GLOBAL_INTRINSIC_HDR_SZ + ELBA_P4_INTRINSIC_HDR_SZ);
+    data <<"pbc_csr.port_${p}.cfg_oq.all: 0x" << pbc_csr.port_${p}.cfg_oq.all() << endl;
+    data <<"pbc_csr.port_${p}.cfg_oq.enable: 0x" << pbc_csr.port_${p}.cfg_oq.enable() << endl;
+    data <<"pbc_csr.port_${p}.cfg_oq.num_hdr_bytes: 0x" << pbc_csr.port_${p}.cfg_oq.num_hdr_bytes() << endl;
+    data <<"pbc_csr.port_${p}.cfg_oq.num_hdr_bytes_crypto: 0x" << pbc_csr.port_${p}.cfg_oq.num_hdr_bytes_crypto() << endl;
+    data <<"pbc_csr.port_${p}.cfg_oq.flush_hw_error: 0x" << pbc_csr.port_${p}.cfg_oq.flush_hw_error() << endl;
+    data <<"pbc_csr.port_${p}.cfg_oq.eg_ts_enable: 0x" << pbc_csr.port_${p}.cfg_oq.eg_ts_enable() << endl;
+    data <<"pbc_csr.port_${p}.cfg_oq.ipg_bytes: 0x" << pbc_csr.port_${p}.cfg_oq.ipg_bytes() << endl;
+    data <<"pbc_csr.port_${p}.cfg_oq.flush: 0x" << pbc_csr.port_${p}.cfg_oq.flush() << endl;
+    data <<"pbc_csr.port_${p}.cfg_oq.flow_control_enable_xoff: 0x" << pbc_csr.port_${p}.cfg_oq.flow_control_enable_xoff() << endl;
+    data <<"pbc_csr.port_${p}.cfg_oq.hw_error_to_pbus: 0x" << pbc_csr.port_${p}.cfg_oq.hw_error_to_pbus() << endl;
+    data <<"pbc_csr.port_${p}.cfg_oq.rewrite_enable: 0x" << pbc_csr.port_${p}.cfg_oq.rewrite_enable() << endl;
+
+    pbc_csr.port_${p}.cfg_oq.write();
+    }
+
+//::    #endif
+//:: #endfor
+
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+elba_pf_init (void)
+{
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+    //uint32_t rate_limiter;
+    stringstream data;
+    data << hex << endl;
+
+    pf_rslt_decoder_t def_rslt;
+    def_rslt.all(0);
+    def_rslt.out_pb(1);
+    def_rslt.pb_port(7);
+
+//:: for p in range(TM_PORTS):
+    pf_csr.hbm_port_${p}.cfg_hbm_parser_cam_miss.all(def_rslt.all());
+    pf_csr.hbm_port_${p}.cfg_hbm_parser_cam_miss.write();
+//:: #endfor
+
+
+
+    // On configure rate-limiter from HBM
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["has_hbm"]:
+
+    pf_csr.hbm_port_${p}.cfg_hbm.read();
+    //pf_csr.hbm_port_${p}.cfg_hbm.rate_limiter(rate_limiter);
+
+    pf_csr.hbm_port_${p}.cfg_hbm_read_fifo.read();
+    pf_csr.hbm_port_${p}.cfg_hbm_read_fifo.max_cells(0x78);
+    pf_csr.hbm_port_${p}.cfg_hbm_read_fifo.max_flits(0x78);
+    pf_csr.hbm_port_${p}.cfg_hbm_read_fifo.max_packets(0x28);
+//::    #endif
+//:: #endfor
+
+    pf_csr.cfg_hbm_wb.read();
+    pf_csr.cfg_hbm_rb.read();
+    pf_csr.cfg_hbm_cut_thru.read();
+
+    pf_csr.cfg_hbm_rb.enable_wrr(0);
+
+
+    // AXI Base Address
+    pbc_csr.cfg_axi.read();
+    pbc_csr.cfg_axi.base_addr(g_elba_state_pd->mempartition()->base());
+    ${trace_register("pbc_csr.cfg_axi")}
+    pbc_csr.cfg_axi.write();
+
+    // AXI Base for buffer FIFOs
+    pf_csr.cfg_hbm_axi_base.read();
+    pf_csr.cfg_hbm_axi_base.addr(0x1300000000);
+    ${trace_register("pf_csr.cfg_hbm_axi_base")}
+    pf_csr.cfg_hbm_axi_base.write();
+
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    return sdk::SDK_RET_OK;
+}
+
+
+static sdk_ret_t
+elba_tm_init_ports (void)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    elba_tm_buf_cfg_t buf_cfg = {0};
+
+    ret = elba_tm_init_pbc(&buf_cfg);
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error initing pbc %d", ret);
+        return ret;
+    }
+
+    ret = elba_tm_init_hbm(&buf_cfg);
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error initing hbm %d", ret);
+        return ret;
+    }
+
+    tm_ctx()->buf_cfg = buf_cfg;
+
+    return ret;
+}
+
+static sdk_ret_t
+elba_tm_global_init (void)
+{
+    // Init the FC mgr and RC
+    //
+    // There are only 2 combinations valid with min_cell, max_row as either
+    // 0, 4095 or 4096, 2559 . Choose one of them based on the island which
+    // needs more cells
+    uint32_t min_cells[] = { 0, 4096};
+    uint32_t max_row[] = {4095, 2559};
+//    uint32_t sched_timer;
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+
+    pf_rslt_decoder_t def_rslt;
+    def_rslt.all(0);
+    def_rslt.out_pb(1);
+    def_rslt.pb_port(7);
+
+//:: for p in range(TM_PORTS):
+    pf_csr.hbm_port_${p}.cfg_hbm_parser_cam_miss.all(def_rslt.all());
+    pf_csr.hbm_port_${p}.cfg_hbm_parser_cam_miss.write();
+//:: #endfor
+
+//:: for fifo_type, finfo in hbm_fifo_info.items():
+//::    reg_name = finfo["reg_name"]
+//::    if reg_name == "tx":
+//::        continue
+//::    #endif
+    pf_csr.cfg_hbm_${reg_name}_ctrl_init.head_start(1);
+    pf_csr.cfg_hbm_${reg_name}_ctrl_init.tail_start(1);
+    if (tm_sw_init_enabled()) {
+        stringstream data;
+        data << hex << endl;
+        ${trace_register("pf_csr.cfg_hbm_" + reg_name + "_ctrl_init")}
+        SDK_TRACE_DEBUG("%s", data.str().c_str());
+        pf_csr.cfg_hbm_${reg_name}_ctrl_init.write();
+    }
+//:: #endfor
+
+//:: for fifo_type, finfo in hbm_fifo_info.items():
+//::    reg_name = finfo["reg_name"]
+//::    if reg_name == "tx":
+//::        continue
+//::    #endif
+    pf_csr.cfg_hbm_${reg_name}_ctrl_init.head_start(0);
+    pf_csr.cfg_hbm_${reg_name}_ctrl_init.tail_start(0);
+    if (tm_sw_init_enabled()) {
+        stringstream data;
+        data << hex << endl;
+        ${trace_register("pf_csr.cfg_hbm_" + reg_name + "_ctrl_init")}
+        SDK_TRACE_DEBUG("%s", data.str().c_str());
+        pf_csr.cfg_hbm_${reg_name}_ctrl_init.write();
+    }
+//:: #endfor
+
+
+    pbc_csr.cfg_fc_mgr_0.init_start(1);
+    pbc_csr.cfg_fc_mgr_0.init_reset(0);
+    pbc_csr.cfg_fc_mgr_1.init_start(1);
+    pbc_csr.cfg_fc_mgr_1.init_reset(0);
+    if (elba_tm_get_max_cell_chunks_for_island(0) >
+        elba_tm_get_max_cell_chunks_for_island(1)) {
+        pbc_csr.cfg_fc_mgr_0.max_row(max_row[0]);
+        pbc_csr.cfg_fc_mgr_0.min_cell(min_cells[0]);
+        pbc_csr.cfg_fc_mgr_1.max_row(max_row[1]);
+        pbc_csr.cfg_fc_mgr_1.min_cell(min_cells[1]);
+        pbc_csr.cfg_island_control.map(0);
+    } else {
+        pbc_csr.cfg_fc_mgr_0.max_row(max_row[1]);
+        pbc_csr.cfg_fc_mgr_0.min_cell(min_cells[1]);
+        pbc_csr.cfg_fc_mgr_1.max_row(max_row[0]);
+        pbc_csr.cfg_fc_mgr_1.min_cell(min_cells[0]);
+        pbc_csr.cfg_island_control.map(1);
+    }
+
+    pbc_csr.cfg_rc.init_start(1);
+    pbc_csr.cfg_rc.init_reset(0);
+
+    return sdk::SDK_RET_OK;
+}
+
+static sdk_ret_t
+elba_tm_init_enable_ports (void)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+
+    tm_port_t port;
+    tm_port_type_e port_type;
+    uint32_t enable;
+    uint32_t rate_limiter;
+    uint32_t cut_thru;
+    bool set_rate_limiter;
+    bool set_cut_thru;
+    bool drop_on_error;
+
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+    // ${pinfo["enum"]}
+    port = ${pinfo["enum"]};
+    port_type = elba_tm_get_port_type(port);
+    enable = 0;
+    rate_limiter = (tm_cfg_profile()->num_active_uplink_ports * 2) - 1;
+    cut_thru = 0;
+
+//::    if pinfo["type"] == "p4":
+    uint32_t recirc_q = 0;
+//::    #endif
+    set_rate_limiter = false;
+    set_cut_thru = false;
+    drop_on_error = false;
+
+    if (is_active_port(${pinfo["enum"]})) {
+        enable = 1;
+    }
+
+    switch(port_type) {
+        case TM_PORT_TYPE_UPLINK:
+            drop_on_error = true;
+            if (port != ELBA_TM_PORT_NCSI) {
+                set_rate_limiter = true;
+            }
+            break;
+        case TM_PORT_TYPE_P4IG:
+        case TM_PORT_TYPE_P4EG:
+
+//::    if pinfo["type"] == "p4":
+            recirc_q = tm_asic_profile()->port[port_type].recirc_q;
+//::    #endif
+            set_cut_thru = true;
+            cut_thru = 0;
+            break;
+        case TM_PORT_TYPE_DMA:
+            drop_on_error = true;
+            set_cut_thru = true;
+            cut_thru = 0x1f;
+            break;
+        case NUM_TM_PORT_TYPES:
+            break;
+    }
+
+    pbc_csr.port_${p}.cfg_write_control.read();
+
+    pbc_csr.port_${p}.cfg_write_control.enable(enable);
+
+    if (set_rate_limiter) {
+        pbc_csr.port_${p}.cfg_write_control.rate_limiter(rate_limiter);
+    }
+
+    if (set_cut_thru) {
+        pbc_csr.port_${p}.cfg_write_control.cut_thru(cut_thru);
+    }
+
+    if (drop_on_error) {
+        pbc_csr.port_${p}.cfg_write_control.drop_on_error(1);
+    } else {
+        pbc_csr.port_${p}.cfg_write_control.drop_on_error(0);
+    }
+
+//::    if pinfo["type"] == "p4":
+    pbc_csr.port_${p}.cfg_write_control.recirc_enable(1);
+    pbc_csr.port_${p}.cfg_write_control.recirc_oq(recirc_q);
+//::    #endif
+
+    if (tm_sw_init_enabled()) {
+        stringstream data;
+        data << hex << endl;
+        ${trace_register("pbc_csr.port_" + str(p) + ".cfg_write_control")}
+        SDK_TRACE_DEBUG("%s", data.str().c_str());
+
+        pbc_csr.port_${p}.cfg_write_control.write();
+    }
+//:: #endfor
+
+    return ret;
+}
+
+static sdk_ret_t
+elba_tm_init_qos_profile (elba_tm_cfg_profile_t *tm_cfg_profile,
+                           sdk::lib::catalog *catalog)
+{
+    uint32_t interpipe_mtu;
+
+    tm_cfg_profile->sw_init_enabled = qos_profile.sw_init_enable;
+    tm_cfg_profile->sw_cfg_write_enabled = qos_profile.sw_cfg_write_enable;
+
+    tm_cfg_profile->hbm_fifo_base =
+            g_elba_state_pd->mempartition()->start_addr(
+                                            MEM_REGION_QOS_HBM_FIFO_NAME);
+    tm_cfg_profile->hbm_fifo_size =
+        g_elba_state_pd->mempartition()->size(MEM_REGION_QOS_HBM_FIFO_NAME);
+
+    tm_cfg_profile->num_active_uplink_ports = catalog->num_fp_ports();
+
+    if (tm_cfg_profile->num_active_uplink_ports <= 1) {
+        tm_cfg_profile->num_active_uplink_ports = 1;
+        SDK_TRACE_INFO("num_uplink_ports %u is not valid. resetting it to %u",
+                       catalog->num_fp_ports(),
+                       tm_cfg_profile->num_active_uplink_ports);
+    } else {
+        // Do not count the BMC port
+        tm_cfg_profile->num_active_uplink_ports -= 1;
+    }
+
+    tm_cfg_profile->jumbo_mtu[TM_PORT_TYPE_UPLINK] = qos_profile.jumbo_mtu;
+    interpipe_mtu = qos_profile.jumbo_mtu + ELBA_TM_MAX_INTERPIPE_HDR_SZ;
+    tm_cfg_profile->jumbo_mtu[TM_PORT_TYPE_P4IG] = interpipe_mtu;
+    tm_cfg_profile->jumbo_mtu[TM_PORT_TYPE_P4EG] = interpipe_mtu;
+    tm_cfg_profile->jumbo_mtu[TM_PORT_TYPE_DMA] = interpipe_mtu;
+
+    tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK] = qos_profile.num_uplink_qs;
+    tm_cfg_profile->num_qs[TM_PORT_TYPE_P4IG] = qos_profile.num_p4ig_qs;
+    tm_cfg_profile->num_qs[TM_PORT_TYPE_P4EG] = qos_profile.num_p4eg_qs;
+    tm_cfg_profile->num_qs[TM_PORT_TYPE_DMA] = qos_profile.num_dma_qs;
+
+    tm_cfg_profile->num_p4_high_perf_qs = qos_profile.num_p4_high_perf_qs;
+    if (tm_cfg_profile->num_p4_high_perf_qs) {
+        tm_cfg_profile->p4_high_perf_qs =
+            (tm_q_t *)SDK_MALLOC(sdk::SDK_MEM_ALLOC_PD,
+                                 tm_cfg_profile->num_p4_high_perf_qs * sizeof(tm_q_t));
+
+        memcpy(tm_cfg_profile->p4_high_perf_qs, qos_profile.p4_high_perf_qs,
+               tm_cfg_profile->num_p4_high_perf_qs * sizeof(tm_q_t));
+    }
+
+    if ((tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK] *
+         tm_cfg_profile->num_active_uplink_ports) > ELBA_TM_MAX_HBM_ETH_CONTEXTS) {
+        SDK_TRACE_INFO("num_uplink_ports %u  with %u qs cannot be supported"
+                       " reducing the num of qs to %u",
+                       tm_cfg_profile->num_active_uplink_ports,
+                       tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK],
+                       ELBA_TM_MAX_HBM_ETH_CONTEXTS/tm_cfg_profile->num_active_uplink_ports);
+        tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK] =
+            ELBA_TM_MAX_HBM_ETH_CONTEXTS/tm_cfg_profile->num_active_uplink_ports;
+    }
+
+    if (!tm_cfg_profile->hbm_fifo_size) {
+        SDK_TRACE_ERR("HBM allocation for QOS overflow fifo not available");
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+    return sdk::SDK_RET_OK;
+}
+
+static sdk_ret_t
+elba_tm_update_perf_run_config (void)
+{
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+    stringstream data;
+    data << hex << endl;
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+    // ${pinfo["enum"]}
+    pf_csr.hbm_port_${p}.cfg_hbm_parser.read();
+    pf_csr.hbm_port_${p}.cfg_hbm_parser.use_dot1q(0);
+    pf_csr.hbm_port_${p}.cfg_hbm_parser.use_ip(0);
+    pf_csr.hbm_port_${p}.cfg_hbm_parser.default_cos(0);
+    pf_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map(0);
+    ${trace_register("pf_csr.hbm_port_" + str(p) + ".cfg_hbm_parser")}
+    pf_csr.hbm_port_${p}.cfg_hbm_parser.write();
+//::    #endif
+//:: #endfor
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+elba_tm_init (sdk::lib::catalog* catalog)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    elba_tm_cfg_profile_t tm_cfg_profile_;
+    elba_tm_cfg_profile_t *tm_cfg_profile = &tm_cfg_profile_;
+
+    elba_tm_asic_profile_t asic_profile;
+
+    populate_asic_profile(&asic_profile);
+
+    ret = elba_tm_init_qos_profile(tm_cfg_profile, catalog);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Error initing qos profile. ret: %d",
+                      ret);
+        return ret;
+    }
+
+    SDK_TRACE_DEBUG("cfg-profile sw_init_en %u sw_cfg_write_en %u "
+                    "num_active_uplink_ports %u hbm_fifo_size %u hbm_fifo_base 0x%x",
+                    tm_cfg_profile->sw_init_enabled,
+                    tm_cfg_profile->sw_cfg_write_enabled,
+                    tm_cfg_profile->num_active_uplink_ports,
+                    tm_cfg_profile->hbm_fifo_size,
+                    tm_cfg_profile->hbm_fifo_base);
+    for (unsigned port_type = 0; port_type < NUM_TM_PORT_TYPES; port_type++) {
+        if (tm_cfg_profile->num_qs[port_type] >
+            elba_tm_get_num_iqs_for_port_type((tm_port_type_e)port_type)) {
+            SDK_TRACE_ERR("Error cfg-profile port_type %u num_qs %u "
+                          "supported %u",
+                          (tm_port_type_e)port_type, tm_cfg_profile->num_qs[port_type],
+                          elba_tm_get_num_iqs_for_port_type((tm_port_type_e)port_type));
+            return sdk::SDK_RET_INVALID_ARG;
+        }
+        SDK_TRACE_DEBUG("cfg-profile port_type %u num_qs %u jumbo_mtu %u ",
+                        (tm_port_type_e)port_type, tm_cfg_profile->num_qs[port_type],
+                        tm_cfg_profile->jumbo_mtu[port_type]);
+    }
+
+    set_tm_ctx(tm_cfg_profile, &asic_profile);
+
+    ret = elba_tm_global_init();
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error initing global config ret %d", ret);
+        return ret;
+    }
+    if (tm_sw_init_enabled()) {
+        // Poll for the completion of the inits
+        elb_pb_init_done(0,0);
+    }
+
+    ret = elba_tm_init_ports();
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error initing ports ret %d", ret);
+        return ret;
+    }
+
+    ret = elba_tm_init_enable_ports();
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error enabling ports ret %d", ret);
+        return ret;
+    }
+
+    char *perf_run = getenv("PERF_RUN");
+    if (perf_run) {
+        SDK_TRACE_DEBUG("perf-run env %s", perf_run);
+        if (!strcmp(perf_run, "true")) {
+            elba_tm_update_perf_run_config();
+        }
+    }
+    SDK_TRACE_DEBUG("Init completed");
+    tm_ctx()->init_complete.store(true);
+
+    return ret;
+}
+
+// Programs the base address in HBM for the replication table
+sdk_ret_t
+elba_tm_repl_table_base_addr_set (uint64_t addr)
+{
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    pbc_csr.cfg_rpl.read();
+    pbc_csr.cfg_rpl.base(addr);
+    pbc_csr.cfg_rpl.write();
+    return sdk::SDK_RET_OK;
+}
+
+// Programs the replication table token size
+sdk_ret_t
+elba_tm_repl_table_token_size_set (uint32_t size_in_bits)
+{
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+    pbc_csr.cfg_rpl.read();
+
+    // "Size of token in nodes. 0: 32 bits, 1: 48 bits, 2: 64 bits"
+    if (size_in_bits == 64) {
+        pbc_csr.cfg_rpl.token_size(2);
+    } else if (size_in_bits == 48) {
+        pbc_csr.cfg_rpl.token_size(1);
+    } else if (size_in_bits == 32) {
+        pbc_csr.cfg_rpl.token_size(0);
+    } else {
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    pbc_csr.cfg_rpl.write();
+    return sdk::SDK_RET_OK;
+}
+
+// Get hw clock 
+extern "C" sdk_ret_t
+elba_tm_get_clock_tick (uint64_t *tick)
+{
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pf_csr_t &pf_csr = elb0.pf.pf;
+
+    pf_csr.sta_hbm_timestamp.read();
+    *tick = (uint64_t)pf_csr.sta_hbm_timestamp.value().convert_to<uint64_t>();
+    return sdk::SDK_RET_OK;
+}
+
+#define CHECK_OVERFLOW_AND_UPDATE(c, p, n)       \
+{                                                \
+    c += (p > n) ? (UINT32_MAX - p) + n : n - p; \
+    p = n;                                       \
+}
+
+sdk_ret_t
+elba_tm_periodic_stats_update (void)
+{
+    uint32_t port_in, port_out;
+    uint32_t fifo_type;
+    uint32_t context;
+    elba_tm_hbm_context_stats_t *cur_vals;
+    elba_tm_hbm_context_stats_t *new_val;
+    elba_tm_hbm_context_stats_t *prev_vals;
+
+    elba_tm_hbm_context_stats_t new_vals[NUM_TM_HBM_FIFO_TYPES][ELBA_TM_MAX_HBM_CONTEXTS] = {};
+    cpp_int good_count_in;
+    cpp_int errored_count_in;
+    cpp_int watermark_in;
+    cpp_int good_count_out;
+    cpp_int errored_count_out;
+    cpp_int watermark_out;
+
+    if (!tm_ctx() || !tm_ctx()->init_complete.load()) {
+        return sdk::SDK_RET_OK;
+    }
+
+    // Read from asic
+    for (fifo_type = 0; fifo_type < NUM_TM_HBM_FIFO_TYPES; fifo_type++) {
+        for (context = 0; context < elba_tm_max_hbm_contexts_for_fifo(fifo_type);
+             context++) {
+            if (fifo_type == TM_HBM_FIFO_TYPE_UPLINK) {
+                port_in = 13;
+                port_out = 12;
+            } else {
+                port_in = 15;
+                port_out = 14;
+            }
+            new_val = &new_vals[fifo_type][context];
+            elb_pb_read_hbm_ctx_stat(0, 0, port_in, context, good_count_in,
+                                     errored_count_in, watermark_in);
+            elb_pb_read_hbm_ctx_stat(0, 0, port_out, context, good_count_out,
+                                     errored_count_out, watermark_out);
+            new_val->good_pkts_in = good_count_in.convert_to<uint32_t>();
+            new_val->good_pkts_out = good_count_out.convert_to<uint32_t>();
+            new_val->errored_pkts_in = errored_count_in.convert_to<uint32_t>();
+            new_val->max_oflow_fifo_depth = watermark_in.convert_to<uint32_t>();
+        }
+    }
+    // Take lock and update
+    SDK_SPINLOCK_LOCK(&tm_ctx()->stats.slock);
+    for (fifo_type = 0; fifo_type < NUM_TM_HBM_FIFO_TYPES; fifo_type++) {
+        for (context = 0; context < elba_tm_max_hbm_contexts_for_fifo(fifo_type);
+             context++) {
+            cur_vals = &tm_ctx()->stats.cur_vals[fifo_type][context];
+            prev_vals = &tm_ctx()->stats.prev_vals[fifo_type][context];
+            new_val = &new_vals[fifo_type][context];
+            CHECK_OVERFLOW_AND_UPDATE(cur_vals->good_pkts_in,
+                                      prev_vals->good_pkts_in,
+                                      new_val->good_pkts_in);
+            CHECK_OVERFLOW_AND_UPDATE(cur_vals->good_pkts_out,
+                                      prev_vals->good_pkts_out,
+                                      new_val->good_pkts_out);
+            CHECK_OVERFLOW_AND_UPDATE(cur_vals->errored_pkts_in,
+                                      prev_vals->errored_pkts_in,
+                                      new_val->errored_pkts_in);
+            cur_vals->max_oflow_fifo_depth = new_val->max_oflow_fifo_depth;
+        }
+    }
+    SDK_SPINLOCK_UNLOCK(&tm_ctx()->stats.slock);
+    return sdk::SDK_RET_OK;
+}
+
+static void
+elba_tm_get_context_stats (tm_hbm_fifo_type_e fifo_type, uint32_t context,
+                            elba_tm_hbm_context_stats_t *context_stats)
+{
+    if ((fifo_type >= NUM_TM_HBM_FIFO_TYPES) ||
+        (context >= elba_tm_max_hbm_contexts_for_fifo(fifo_type)))  {
+        *context_stats = {0};
+        return;
+    }
+    SDK_SPINLOCK_LOCK(&tm_ctx()->stats.slock);
+    *context_stats = tm_ctx()->stats.cur_vals[fifo_type][context];
+    SDK_SPINLOCK_UNLOCK(&tm_ctx()->stats.slock);
+}
+
+static void
+elba_tm_reset_context_stats (tm_hbm_fifo_type_e fifo_type, uint32_t context)
+{
+    if ((fifo_type >= NUM_TM_HBM_FIFO_TYPES) ||
+        (context >= elba_tm_max_hbm_contexts_for_fifo(fifo_type)))  {
+        return;
+    }
+    SDK_SPINLOCK_LOCK(&tm_ctx()->stats.slock);
+    tm_ctx()->stats.cur_vals[fifo_type][context] =
+                                    (const elba_tm_hbm_context_stats_t) {0};
+    SDK_SPINLOCK_UNLOCK(&tm_ctx()->stats.slock);
+}
+
+sdk_ret_t
+elba_tm_get_iq_stats (tm_port_t port, tm_q_t iq, tm_iq_stats_t *iq_stats)
+{
+    uint32_t num_hbm_contexts_per_port;
+    uint32_t context;
+    tm_port_type_e port_type;
+    tm_hbm_fifo_type_e fifo_type;
+    elba_tm_hbm_context_stats_t context_stats = {0};
+    uint32_t cur_occupancy, peak_occupancy;
+
+    if (!elba_tm_is_valid_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+    *iq_stats = (const tm_iq_stats_t) {0};
+
+    // Read the registers to figure out the current stats
+
+    if (port_supports_hbm_contexts(port)) {
+        port_type = elba_tm_get_port_type(port);
+        if (port_type == TM_PORT_TYPE_UPLINK) {
+            num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
+            context = (port * num_hbm_contexts_per_port) + iq;
+        } else {
+            context = iq;
+        }
+        fifo_type = elba_tm_get_fifo_type_for_port(port);
+
+        // Get the context stats from shadow
+        elba_tm_get_context_stats(fifo_type, context, &context_stats);
+
+        iq_stats->oflow.good_pkts_in = context_stats.good_pkts_in;
+        iq_stats->oflow.good_pkts_out = context_stats.good_pkts_out;
+        iq_stats->oflow.errored_pkts_in = context_stats.errored_pkts_in;
+        iq_stats->oflow.max_fifo_depth = ELBA_TM_HBM_FIFO_ALLOC_SIZE *
+                                            context_stats.max_oflow_fifo_depth;
+
+        // Get the current occupancy
+        iq_stats->oflow.fifo_depth = ELBA_TM_HBM_FIFO_ALLOC_SIZE *
+                                elba_tm_get_hbm_occupancy(fifo_type, context);
+    }
+    elba_tm_get_buffer_occupancy(port, iq, &cur_occupancy, &peak_occupancy);
+    iq_stats->buffer_occupancy = ELBA_TM_CELL_SIZE * cur_occupancy;
+    iq_stats->peak_occupancy = ELBA_TM_CELL_SIZE * peak_occupancy;
+
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+elba_tm_reset_iq_stats (tm_port_t port, tm_q_t iq)
+{
+    uint32_t num_hbm_contexts_per_port;
+    uint32_t context;
+    tm_port_type_e port_type;
+    tm_hbm_fifo_type_e fifo_type;
+
+    if (!elba_tm_is_valid_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    if (port_supports_hbm_contexts(port)) {
+        port_type = elba_tm_get_port_type(port);
+        if (port_type == TM_PORT_TYPE_UPLINK) {
+            num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
+            context = (port * num_hbm_contexts_per_port) + iq;
+        } else {
+            context = iq;
+        }
+        fifo_type = elba_tm_get_fifo_type_for_port(port);
+
+        // Reset the context stats in shadow
+        elba_tm_reset_context_stats(fifo_type, context);
+
+    }
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+elba_tm_get_oq_stats (tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats)
+{
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
+
+    if (!elba_tm_is_valid_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    pbc_csr.sta_oq[port].read();
+
+    // 16 bits per oq
+    oq_stats->queue_depth = cpp_helper.get_slc(pbc_csr.sta_oq[port].depth_value(),
+                                              oq*16,
+                                              (((oq+1)*16)-1)).convert_to<uint32_t>();
+    return sdk::SDK_RET_OK;
+}
+
+extern "C" sdk_ret_t
+elba_tm_get_pb_debug_stats (tm_port_t port, 
+                            tm_pb_debug_stats_t *debug_stats, 
+                            bool reset)
+{
+    return sdk::SDK_RET_OK;
+}
+
+}    // namespace elba
+}    // namespace platform
+}    // namespace sdk

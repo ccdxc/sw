@@ -439,7 +439,7 @@ lif_mgr::read_qstate_map(uint32_t lif_id, lif_qstate_t *qstate)
 
     qstate->lif_id = lif_id;
     LIF_MGR_API_START_LOCK();
-    ret = asic_pd_qstate_map_read(qstate);
+    ret = sdk::asic::pd::asic_pd_qstate_map_read(qstate);
     LIF_MGR_API_END_UNLOCK();
 
     return ret;

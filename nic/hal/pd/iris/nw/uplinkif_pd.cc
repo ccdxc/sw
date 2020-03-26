@@ -541,7 +541,7 @@ uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *pd_upif)
     uint8_t                     tm_oport = 0;
     output_mapping_actiondata_t   data;
     directmap                   *dm_omap = NULL;
-    // if_t                        *hal_if = (if_t *)pd_upif->pi_if;
+    //if_t                        *hal_if = (if_t *)pd_upif->pi_if;
 
     memset(&data, 0, sizeof(data));
 

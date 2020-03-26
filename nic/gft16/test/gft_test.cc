@@ -1535,7 +1535,7 @@ TEST_F(gft_test, test1) {
 
     cfg.completion_func = NULL;
 
-    ret = sdk::asic::asic_init(&cfg);
+    ret = sdk::asic::pd::asicpd_init(&cfg);
     ASSERT_EQ(ret, SDK_RET_OK);
     ret = p4pd_init(&p4pd_cfg);
     ASSERT_EQ(ret, HAL_RET_OK);

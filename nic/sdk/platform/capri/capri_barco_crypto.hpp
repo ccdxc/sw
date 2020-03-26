@@ -2,7 +2,7 @@
 #define __CAPRI_BARCO_CRYPTO_HPP__
 
 #include "include/sdk/base.hpp"
-#include "platform/capri/capri_cfg.hpp"
+#include "asic/asic.hpp"
 
 namespace sdk {
 namespace platform {

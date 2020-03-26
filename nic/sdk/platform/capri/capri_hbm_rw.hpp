@@ -3,10 +3,11 @@
 #ifndef __CAPRI_HBM_RW_HPP__
 #define __CAPRI_HBM_RW_HPP__
 
-#include "platform/capri/capri_cfg.hpp"
+#include "asic/asic.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "p4/loader/loader.hpp"
 #include "asic/asic.hpp"
+#include "asic/cmn/asic_hbm.hpp"
 
 namespace sdk {
 namespace platform {
@@ -28,7 +29,7 @@ using sdk::platform::utils::mpartition_region_t;
 #define MEM_REGION_RSS_INDIR_TABLE_NAME "rss_indir_table"
 #define MEM_REGION_MCAST_REPL_NAME "mcast_repl"
 
-void reset_hbm_regions(capri_cfg_t *cfg);
+void asic_reset_hbm_regions(asic_cfg_t *cfg);
 mpartition_region_t *capri_get_mem_region(char *name);
 uint64_t capri_get_mem_base(void);
 uint64_t capri_get_mem_offset(const char *reg_name);
@@ -64,10 +65,14 @@ sdk_ret_t capri_hbm_bw(uint32_t samples, uint32_t u_sleep,
                        bool ms_pcie, asic_hbm_bw_t *hbm_bw_arr);
 sdk_ret_t capri_nx_get_llc_counters(uint32_t *mask, uint32_t *rd_data);
 sdk_ret_t capri_nx_setup_llc_counters(uint32_t mask);
-sdk_ret_t capri_hbm_cache_init(capri_cfg_t *cfg);
-sdk_ret_t capri_hbm_cache_regions_init(void);
+sdk_ret_t capri_hbm_cache_init(asic_cfg_t *cfg);
+sdk_ret_t capri_hbm_cache_regions_init(asic_cfg_t *cfg);
 mpartition_region_t* capri_get_hbm_region_by_address(uint64_t addr);
 uint32_t capri_freq_get(void);
+sdk_ret_t capri_init (asic_cfg_t *cfg);
+uint64_t capri_local_dbaddr (void);
+uint64_t capri_local_db32_addr (void);
+uint64_t capri_host_dbaddr (void);
 
 }    // namespace capri
 }    // namespace platform

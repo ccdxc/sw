@@ -1,17 +1,20 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
-#include "platform/capri/capri_cfg.hpp"
+#include "asic/rw/asicrw.hpp"
+#include "asic/asic.hpp"
+#include "asic/cmn/asic_common.hpp"
+#include "asic/cmn/asic_init.hpp"
+#include "asic/cmn/asic_hbm.hpp"
+#include "asic/cmn/asic_cfg.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
 #include "platform/capri/capri_qstate.hpp"
 #include "platform/capri/capri_quiesce.hpp"
-#include "asic/rw/asicrw.hpp"
 #include "lib/p4/p4_api.hpp"
 #include "lib/pal/pal.hpp"
 #include "include/sdk/mem.hpp"
 #include "platform/capri/capri_pxb_pcie.hpp"
 #include "platform/capri/capri_state.hpp"
-#include "platform/capri/capri_common.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "platform/capri/capri_barco_crypto.hpp"
@@ -32,6 +35,8 @@
 #include "third-party/asic/capri/model/utils/cap_csr_py_if.h"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr_defines.h"
 
+using namespace sdk::asic;
+
 namespace sdk {
 namespace platform {
 namespace capri {
@@ -41,7 +46,7 @@ class capri_state_pd *g_capri_state_pd;
  * Load any bin files needed for initializing default configs
  */
 sdk_ret_t
-capri_default_config_init (capri_cfg_t *cfg)
+capri_default_config_init (asic_cfg_t *cfg)
 {
     sdk_ret_t   ret = SDK_RET_OK;
     std::string hbm_full_path;
@@ -61,7 +66,7 @@ capri_default_config_init (capri_cfg_t *cfg)
             return SDK_RET_OK;
         }
 
-        ret = capri_load_config((char *)full_path.c_str());
+        ret = sdk::asic::asic_load_config((char *)full_path.c_str());
         SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                                 "Error loading init phase %d binaries ret %d",
                                 i, ret);
@@ -78,7 +83,7 @@ capri_pgm_init (void)
 {
     sdk_ret_t      ret;
     std::string    full_path;
-    capri_cfg_t *cfg = g_capri_state_pd->cfg();
+    asic_cfg_t     *cfg = g_capri_state_pd->cfg();
 
     for (uint8_t i = 0; i < cfg->num_pgm_cfgs; i++) {
         full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name +
@@ -91,7 +96,7 @@ capri_pgm_init (void)
                           full_path.c_str());
             return SDK_RET_ERR;
         }
-        ret = capri_load_config((char *)full_path.c_str());
+        ret = sdk::asic::asic_load_config((char *)full_path.c_str());
         if (ret != SDK_RET_OK) {
             SDK_TRACE_ERR("Failed to load config %s", full_path);
             return ret;
@@ -102,85 +107,7 @@ capri_pgm_init (void)
 }
 
 static sdk_ret_t
-capri_asm_init (capri_cfg_t *cfg)
-{
-    int             iret = 0;
-    uint64_t        base_addr;
-    std::string     full_path;
-    uint32_t num_symbols = 0;
-    sdk::p4::p4_param_info_t *symbols = NULL;
-
-    for (uint8_t i = 0; i < cfg->num_asm_cfgs; i++) {
-        full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name +
-            "/" + cfg->asm_cfg[i].path;
-        SDK_TRACE_DEBUG("Loading ASM binaries from dir %s", full_path.c_str());
-
-        // Check if directory is present
-        if (access(full_path.c_str(), R_OK) < 0) {
-            SDK_TRACE_ERR("%s not_present/no_read_permissions",
-                full_path.c_str());
-            return SDK_RET_ERR;
-        }
-
-        symbols = NULL;
-        if (cfg->asm_cfg[i].symbols_func) {
-            num_symbols = cfg->asm_cfg[i].symbols_func((void **)&symbols, cfg->platform);
-        }
-
-        base_addr = capri_get_mem_addr(cfg->asm_cfg[i].base_addr.c_str());
-        SDK_TRACE_DEBUG("base addr 0x%llx", base_addr);
-        iret = sdk::p4::p4_load_mpu_programs(cfg->asm_cfg[i].name.c_str(),
-           (char *)full_path.c_str(),
-           base_addr,
-           symbols,
-           num_symbols,
-           cfg->asm_cfg[i].sort_func,
-           sdk::asic::is_soft_init());
-
-       if (symbols) {
-           for (uint32_t j = 0; j < num_symbols; j++) {
-               symbols[j].name = "";
-           }
-           ::free(symbols);
-       }
-
-       if (iret != 0) {
-          SDK_TRACE_ERR("Failed to load program %s", full_path);
-          return SDK_RET_ERR;
-       }
-   }
-
-    // Taking too much time
-    if (unlikely(cfg->platform == platform_type_t::PLATFORM_TYPE_SIM)) {
-        sdk::p4::p4_dump_program_info(cfg->cfg_path.c_str());
-    }
-
-   return SDK_RET_OK;
-}
-
-static sdk_ret_t
-capri_hbm_regions_init (capri_cfg_t *cfg)
-{
-    sdk_ret_t           ret = SDK_RET_OK;
-
-    // reset all the HBM regions that are marked for reset
-    reset_hbm_regions(cfg);
-
-    ret = capri_asm_init(cfg);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    ret = capri_pgm_init();
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    return ret;
-}
-
-static sdk_ret_t
-capri_cache_init (capri_cfg_t *cfg)
+capri_cache_init (asic_cfg_t *cfg)
 {
     sdk_ret_t   ret = SDK_RET_OK;
 
@@ -191,7 +118,7 @@ capri_cache_init (capri_cfg_t *cfg)
     }
 
     // Process all the regions.
-    ret = capri_hbm_cache_regions_init();
+    ret = capri_hbm_cache_regions_init(cfg);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -275,11 +202,11 @@ capri_prd_init()
 
 
 static sdk_ret_t
-capri_repl_init (capri_cfg_t *cfg)
+capri_repl_init (asic_cfg_t *cfg)
 {
-    uint64_t hbm_repl_table_offset = capri_get_mem_offset(MEM_REGION_MCAST_REPL_NAME);
+    uint64_t hbm_repl_table_offset = sdk::asic::asic_get_mem_offset(MEM_REGION_MCAST_REPL_NAME);
     if (hbm_repl_table_offset != INVALID_MEM_ADDRESS) {
-        capri_tm_repl_table_base_addr_set(hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH);
+        capri_tm_repl_table_base_addr_set(hbm_repl_table_offset / SDK_ASIC_REPL_ENTRY_WIDTH);
         capri_tm_repl_table_token_size_set(cfg->repl_entry_width * 8);
     }
     return SDK_RET_OK;
@@ -356,7 +283,7 @@ capri_block_info_init(void)
 // Reset all the capri blocks
 //------------------------------------------------------------------------------
 static sdk_ret_t
-capri_block_reset(capri_cfg_t *cfg)
+capri_block_reset(asic_cfg_t *cfg)
 {
     sdk_ret_t    ret         = SDK_RET_OK;
     int          chip_id     = 0;
@@ -377,7 +304,7 @@ capri_block_reset(capri_cfg_t *cfg)
 // Start the init of blocks
 //------------------------------------------------------------------------------
 static sdk_ret_t
-capri_block_init_start(capri_cfg_t *cfg)
+capri_block_init_start(asic_cfg_t *cfg)
 {
     sdk_ret_t    ret         = SDK_RET_OK;
     int          chip_id     = 0;
@@ -398,7 +325,7 @@ capri_block_init_start(capri_cfg_t *cfg)
 // Wait for the blocks to initialize
 //------------------------------------------------------------------------------
 static sdk_ret_t
-capri_block_init_done(capri_cfg_t *cfg)
+capri_block_init_done(asic_cfg_t *cfg)
 {
     sdk_ret_t    ret         = SDK_RET_OK;
     int          chip_id     = 0;
@@ -419,7 +346,7 @@ capri_block_init_done(capri_cfg_t *cfg)
 // Init all the capri blocks owned by SDK
 //------------------------------------------------------------------------------
 sdk_ret_t
-capri_block_init(capri_cfg_t *cfg)
+capri_block_init(asic_cfg_t *cfg)
 {
     sdk_ret_t           ret = SDK_RET_OK;
 
@@ -454,8 +381,8 @@ capri_block_init(capri_cfg_t *cfg)
 // - do all the parser/deparser related register programming
 // - do all the table configuration related register programming
 //------------------------------------------------------------------------------
-static sdk_ret_t
-capri_init (capri_cfg_t *cfg)
+sdk_ret_t
+capri_init (asic_cfg_t *cfg)
 {
     sdk_ret_t    ret;
 
@@ -471,8 +398,8 @@ capri_init (capri_cfg_t *cfg)
                             "capri_tbl_rw_init failure, err : %d", ret);
 
     // soft/upgrade, need to initialize only asm and tm.
-    if (!sdk::asic::is_hard_init()) {
-        ret = capri_asm_init(cfg);
+    if (!sdk::asic::asic_is_hard_init()) {
+        ret = sdk::asic::asic_asm_init(cfg);
         SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                                 "Capri ASM init failure, err : %d", ret);
         // initialize the profiles for capri register accesses by other modules (link manager).
@@ -483,9 +410,9 @@ capri_init (capri_cfg_t *cfg)
         goto end;
     }
 
-    ret = capri_hbm_regions_init(cfg);
+    ret = sdk::asic::asic_hbm_regions_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "Capri HBM region init failure, err : %d", ret);
+                            "Asic HBM region init failure, err : %d", ret);
 
     ret = capri_block_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
@@ -543,7 +470,7 @@ end:
     return ret;
 }
 
-inline uint64_t
+uint64_t
 capri_local_dbaddr (void)
 {
     uint64_t db_addr =
@@ -555,7 +482,7 @@ capri_local_dbaddr (void)
     return db_addr;
 }
 
-inline uint64_t
+uint64_t
 capri_local_db32_addr (void)
 {
     uint64_t db_addr =
@@ -567,7 +494,7 @@ capri_local_db32_addr (void)
     return db_addr;
 }
 
-inline uint64_t
+uint64_t
 capri_host_dbaddr (void)
 {
     return CAP_WA_CSR_DHS_HOST_DOORBELL_BYTE_ADDRESS;
@@ -575,120 +502,4 @@ capri_host_dbaddr (void)
 
 }    // namespace capri
 }    // namespace platform
-}    // namespace sdk
-
-namespace sdk {
-namespace asic {
-
-static asic_init_type_t asic_init_type = ASIC_INIT_TYPE_HARD;
-static asic_state_t asic_state = ASIC_STATE_RUNNING;
-
-__attribute__((constructor)) void asic_slave_init_(void) {
-    char *value;
-
-    if ((value = getenv("ASIC_SOFT_INIT"))) {
-        asic_init_type = ASIC_INIT_TYPE_SOFT;
-    } else {
-        asic_init_type = ASIC_INIT_TYPE_HARD;
-    }
-}
-
-bool
-is_soft_init (void)
-{
-    return asic_init_type == ASIC_INIT_TYPE_SOFT ? true : false;
-}
-
-bool
-is_hard_init (void)
-{
-    return asic_init_type == ASIC_INIT_TYPE_HARD ? true : false;
-}
-
-void
-set_init_type (asic_init_type_t type)
-{
-    asic_init_type = type;
-}
-
-void
-set_state (asic_state_t state)
-{
-    asic_state = state;
-}
-
-bool
-is_quiesced (void)
-{
-    return asic_state == ASIC_STATE_QUIESCED ? true : false;
-}
-
-uint64_t
-asic_local_dbaddr_get (void)
-{
-    return sdk::platform::capri::capri_local_dbaddr();
-}
-
-uint64_t
-asic_local_db32_addr_get (void)
-{
-    return sdk::platform::capri::capri_local_db32_addr();
-}
-
-uint64_t
-asic_host_dbaddr_get (void)
-{
-    return sdk::platform::capri::capri_host_dbaddr();
-}
-
-//------------------------------------------------------------------------------
-// perform all the CAPRI specific initialization
-//------------------------------------------------------------------------------
-sdk_ret_t
-asic_init (asic_cfg_t *cfg)
-{
-    capri_cfg_t    capri_cfg;
-
-    SDK_ASSERT(cfg != NULL);
-    capri_cfg.default_config_dir = cfg->default_config_dir;
-    capri_cfg.cfg_path = cfg->cfg_path;
-    capri_cfg.admin_cos = cfg->admin_cos;
-    capri_cfg.repl_entry_width = cfg->repl_entry_width;
-    capri_cfg.catalog = cfg->catalog;
-    capri_cfg.mempartition = cfg->mempartition;
-    capri_cfg.p4_cache = true;
-    capri_cfg.p4plus_cache = true;
-    capri_cfg.llc_cache = true;
-    capri_cfg.platform = cfg->platform;
-    capri_cfg.num_pgm_cfgs = cfg->num_pgm_cfgs;
-    capri_cfg.pgm_name = cfg->pgm_name;
-    for (int i = 0; i < cfg->num_pgm_cfgs; i++) {
-        capri_cfg.pgm_cfg[i].path = cfg->pgm_cfg[i].path;
-    }
-    capri_cfg.num_asm_cfgs = cfg->num_asm_cfgs;
-    for (int i = 0; i < cfg->num_asm_cfgs; i++) {
-        capri_cfg.asm_cfg[i].name = cfg->asm_cfg[i].name;
-        capri_cfg.asm_cfg[i].path = cfg->asm_cfg[i].path;
-        capri_cfg.asm_cfg[i].symbols_func = cfg->asm_cfg[i].symbols_func;
-        capri_cfg.asm_cfg[i].base_addr = cfg->asm_cfg[i].base_addr;
-        capri_cfg.asm_cfg[i].sort_func =
-            cfg->asm_cfg[i].sort_func;
-    }
-    for (int i = 0; i < cfg->num_rings; i++) {
-        sdk::platform::ring ring;
-        ring.init(&cfg->ring_meta[i], cfg->mempartition);
-    }
-
-    capri_cfg.completion_func = cfg->completion_func;
-    capri_cfg.device_profile = cfg->device_profile;
-    return capri_init(&capri_cfg);
-}
-
-void
-asic_cleanup (void)
-{
-    sdk::p4::p4_cleanup();
-}
-
-}    // namespace asic
 }    // namespace sdk

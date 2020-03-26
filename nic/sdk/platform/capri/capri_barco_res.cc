@@ -1,7 +1,7 @@
 #include "platform/capri/capri_barco_res.hpp"
-#include "platform/capri/capri_hbm_rw.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "asic/pd/pd.hpp"
+#include "asic/cmn/asic_hbm.hpp"
 
 namespace sdk {
 namespace platform {
@@ -260,7 +260,7 @@ sdk_ret_t capri_barco_res_allocator_init(void)
                        SDK_RET_OOM);
 
     for (idx = CRYPTO_BARCO_RES_MIN; idx < CRYPTO_BARCO_RES_MAX; idx++) {
-        region = capri_get_mem_addr(capri_barco_resources[idx].hbm_region_name);
+        region = sdk::asic::asic_get_mem_addr(capri_barco_resources[idx].hbm_region_name);
         if (region == INVALID_MEM_ADDRESS) {
             SDK_TRACE_ERR("Failed to retrieve %s memory region",
                     capri_barco_resources[idx].allocator_name);
@@ -273,7 +273,7 @@ sdk_ret_t capri_barco_res_allocator_init(void)
             return SDK_RET_ERR;
         }
 
-        region_size = capri_get_mem_size_kb(capri_barco_resources[idx].hbm_region_name) * 1024;
+        region_size = sdk::asic::asic_get_mem_size_kb(capri_barco_resources[idx].hbm_region_name) * 1024;
         if ((region_size/capri_barco_resources[idx].obj_size)
                 < capri_barco_resources[idx].obj_count) {
             SDK_TRACE_ERR("Memory region not large enough for %s, got %d, required %d",

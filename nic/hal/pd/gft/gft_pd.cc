@@ -653,7 +653,7 @@ pd_asic_init (pd_func_args_t *pd_func_args)
 
     args->cfg->completion_func = asiccfg_init_completion_event;
 
-    sdk_ret = sdk::asic::asic_init(args->cfg);
+    sdk_ret = sdk::asic::pd::asicpd_init(args->cfg);
     return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 

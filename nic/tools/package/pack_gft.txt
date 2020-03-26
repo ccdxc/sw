@@ -76,6 +76,7 @@ nic/build/$ARCH/$PIPELINE/lib/libsdkp4utils.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkp4.so                            /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libasicpd.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkasicrw.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkasiccmn.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkasicpd.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libhal_lib.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libprotobuf.so.14                      /nic/lib/

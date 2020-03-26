@@ -62,7 +62,7 @@ capri_impl::factory(asic_cfg_t *asic_cfg) {
 
 void
 capri_impl::destroy(capri_impl *impl) {
-    sdk::asic::asic_cleanup();
+    sdk::asic::pd::asicpd_cleanup();
     sdk::lib::pal_teardown(impl->asic_cfg_.platform);
 }
 
@@ -78,14 +78,14 @@ capri_impl::asic_init(asic_cfg_t *asic_cfg) {
 
     pal_ret = sdk::lib::pal_init(asic_cfg->platform);
     SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
-    ret = sdk::asic::asic_init(asic_cfg);
+    ret = sdk::asic::pd::asicpd_init(asic_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
 
     /**< stash the config, in case we need it at later point in time */
     asic_cfg_ = *asic_cfg;
 
     // set the reserved min for uplink ports
-    if (sdk::asic::is_hard_init()) {
+    if (sdk::asic::asic_is_hard_init()) {
         sdk::platform::capri::capri_tm_set_reserved_min(200);
     }
     return SDK_RET_OK;

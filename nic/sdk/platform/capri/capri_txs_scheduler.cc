@@ -6,8 +6,7 @@
  */
 
 #include "platform/capri/capri_txs_scheduler.hpp"
-#include "platform/capri/capri_common.hpp"
-#include "platform//capri/capri_cfg.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "platform/capri/capri_state.hpp"
 #include "lib/utils/utils.hpp"
 #include "platform/utils/mpartition.hpp"
@@ -70,7 +69,7 @@ capri_txs_timer_init_hsh_depth (uint32_t key_lines)
 
 // pre init and call timer hbm and sram init
 static void
-capri_txs_timer_init_pre (uint32_t key_lines, capri_cfg_t *capri_cfg)
+capri_txs_timer_init_pre (uint32_t key_lines, asic_cfg_t *capri_cfg)
 {
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     cap_txs_csr_t *txs_csr = &cap0.txs.txs;
@@ -103,7 +102,7 @@ capri_txs_timer_init_pre (uint32_t key_lines, capri_cfg_t *capri_cfg)
 
 // This is called after hbm and sram init
 static void
-capri_txs_timer_init_post (uint32_t key_lines, capri_cfg_t *capri_cfg)
+capri_txs_timer_init_post (uint32_t key_lines, asic_cfg_t *capri_cfg)
 {
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     cap_txs_csr_t *txs_csr = &cap0.txs.txs;
@@ -155,7 +154,7 @@ capri_txs_timer_init_post (uint32_t key_lines, capri_cfg_t *capri_cfg)
 
 
 sdk_ret_t
-capri_txs_scheduler_init (uint32_t admin_cos, capri_cfg_t *capri_cfg)
+capri_txs_scheduler_init (uint32_t admin_cos, asic_cfg_t *capri_cfg)
 {
 
     cap_top_csr_t       &cap0 = g_capri_state_pd->cap_top();

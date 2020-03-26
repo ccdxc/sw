@@ -1,11 +1,11 @@
-# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+# {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libsdkelba_csrint.so
 MODULE_DEFS     = ${NIC_CSR_DEFINES}
 MODULE_FLAGS    = -DELBA_SW ${NIC_CSR_FLAGS}
-MODULE_SOLIBS   := sdkcapri_asicrw_if
+MODULE_SOLIBS   := sdkcapri_asicrw_if pal
 MODULE_EXCLUDE_FLAGS = -O2
-MODULE_INCS     = ${NIC_CSR_INCS} ${MODULE_DIR} 
+MODULE_INCS     = ${ELBA_CSR_INCS} ${MODULE_DIR} 
 MODULE_SRCS     = ${ASIC_SRC}/elba/model/elb_top/elb_top_csr.cc \
                   ${ASIC_SRC}/elba/model/utils/elb_mem_access.cc \
                   ${ASIC_SRC}/elba/model/utils/elb_addr.cc \
@@ -147,7 +147,6 @@ MODULE_SRCS     = ${ASIC_SRC}/elba/model/elb_top/elb_top_csr.cc \
                   ${ASIC_SRC}/elba/model/elb_pic/elb_pic_decoders.cc \
                   ${ASIC_SRC}/elba/verif/apis/elb_mpu_api.cc \
                   ${ASIC_SRC}/ip/verif/pcpp/pknobs_reader.cc \
-                  ${SDKDIR}/platform/elba/csrint/csr_init.cc \
                   ${ASIC_SRC}/elba/model/elb_is/readonly/elb_is_csr.cc \
                   ${ASIC_SRC}/elba/model/elb_pcie/elb_pxe_csr.cc \
                   ${ASIC_SRC}/elba/model/elb_pcie/elb_pxinvm_csr.cc \
@@ -205,5 +204,6 @@ MODULE_SRCS     = ${ASIC_SRC}/elba/model/elb_top/elb_top_csr.cc \
                   ${ASIC_SRC}/elba/verif/apis/elb_pcie_api.cc \
                   ${ASIC_SRC}/elba/verif/apis/elb_sbus_api.cc \
                   $(wildcard ${ASIC_SRC}/elba/model/elb_dpa/*csr.cc) \
-                  $(wildcard ${ASIC_SRC}/elba/model/elb_pb/*port*csr.cc)
+                  $(wildcard ${ASIC_SRC}/elba/model/elb_pb/*port*csr.cc) \
+                  ${SDKDIR}/platform/elba/csrint/csr_init.cc
 include ${MKDEFS}/post.mk
