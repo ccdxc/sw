@@ -15,14 +15,9 @@ ulimit -l unlimited
 echo "Setting heap size based on the total memory..."
 mem_total=$(awk '/MemTotal/ {print $2}' /proc/meminfo)
 mem_total_in_gb=$(( mem_total / (1024 * 1024) ))
-heap_opts="-Xms1g -Xmx1g"
-if (( mem_total_in_gb < 32 ))
+heap_opts="-Xms2g -Xmx2g"
+if (( mem_total_in_gb > 32 ))
 then
-    heap_size=$(( mem_total_in_gb / 8))
-    if (( heap_size != 0 )); then
-        heap_opts=$(echo "-Xms${heap_size}g -Xmx${heap_size}g")
-    fi
-else
     #
     # The standard recommendation is to give 50% of the available/total memory to Elasticsearch heap,
     # while leaving the other 50% free. It won't go unused; Lucene will happily gobble up whatever is left over.
