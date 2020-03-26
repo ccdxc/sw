@@ -8,11 +8,14 @@
 
 #define PORT_1 0x11010001
 #define PORT_5 0x11020001
+#define AUX_FAN_PRESENT 1
+#define AUX_FAN_TEMP_HYSTERESIS 10
 
 void
 cpld_temp_event_cb (
                     sdk::platform::sensor::system_temperature_t *temperature)
 {
+    static uint32_t aux_fan_state;
     pal_write_core_temp(temperature->dietemp);
     pal_write_board_temp(temperature->localtemp);
     pal_write_hbm_temp(temperature->hbmtemp);
@@ -27,6 +30,18 @@ cpld_temp_event_cb (
     pal_write_qsfp_alarm_temp(temperature->xcvrtemp[1].alarm_temperature, QSFP_PORT2);
     pal_write_qsfp_warning_temp(temperature->xcvrtemp[0].warning_temperature, QSFP_PORT1);
     pal_write_qsfp_warning_temp(temperature->xcvrtemp[1].warning_temperature, QSFP_PORT2);
+
+    if (g_catalog->aux_fan() == AUX_FAN_PRESENT) {
+        if (aux_fan_state == 0 && 
+            temperature->hbmtemp > g_catalog->aux_fan_threshold()) {
+            aux_fan_state = 1;
+            pal_enable_auxiliary_fan();
+        } else if (aux_fan_state == 1 &&
+                   temperature->hbmtemp < (g_catalog->aux_fan_threshold() - AUX_FAN_TEMP_HYSTERESIS)) {
+            aux_fan_state = 0;
+            pal_disable_auxiliary_fan();
+        }
+    }
     return;
 }
 

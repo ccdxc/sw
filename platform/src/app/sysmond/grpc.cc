@@ -60,10 +60,6 @@ port_get (uint32_t port_id, port::PortOperState *port_status) {
     if (status.ok()) {
         if (port_handle_api_status(
             rsp_msg.response(0).api_status(), port_id) == true) {
-            TRACE_INFO(GetLogger(), "Port Get succeeded for port {}"
-                       "Port oper status {} Port type {} ", port_id,
-                       rsp_msg.response(0).status().link_status().oper_state(),
-                       rsp_msg.response(0).spec().port_type());
             *port_status = rsp_msg.response(0).status().link_status().oper_state();
         } else {
             return -1;

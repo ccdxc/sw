@@ -660,6 +660,8 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
                         prop_tree.get<uint32_t>("num_logical_oob_ports", 0);
     catalog_db_.num_fp_ports = prop_tree.get<uint32_t>("num_fp_ports", 0);
     catalog_db_.halfclock_hbmtemp = prop_tree.get<uint32_t>("halfclock_hbmtemp", 105);
+    catalog_db_.aux_fan = prop_tree.get<uint32_t>("aux_fan", 0);
+    catalog_db_.aux_fan_threshold = prop_tree.get<uint32_t>("aux_fan_threshold", 85);
 
     populate_voltages(prop_tree);
 

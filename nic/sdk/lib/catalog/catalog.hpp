@@ -152,7 +152,9 @@ typedef struct catalog_s {
     mac_profile_t              mac_profiles[MAC_MODE_MAX];            // MAC profiles
     mac_profile_t              mgmt_mac_profiles[MAC_MODE_MAX];       // MGMT MAC profiles
     catalog_voltage_t          voltages;                              // Voltage parameters for the board.
-    uint32_t                   halfclock_hbmtemp;                 // temp limit when system goes to half clock
+    uint32_t                   halfclock_hbmtemp;                     // temp limit when system goes to half clock
+    uint32_t                   aux_fan;                               // card has auxilary fan
+    uint32_t                   aux_fan_threshold;                     // temp at which the auilary fan needs to turn on
 
     // pcie parameters
     uint16_t                   pcie_vendorid;                         // pcie vendor id
@@ -221,6 +223,8 @@ public:
     uint32_t startup_vdd (void) const { return catalog_db_.voltages.startup_vdd; }
     uint32_t startup_arm (void) const { return catalog_db_.voltages.startup_arm; }
     uint32_t hbmtemperature_threshold (void) const { return catalog_db_.halfclock_hbmtemp; }
+    uint32_t aux_fan (void) const { return catalog_db_.aux_fan; }
+    uint32_t aux_fan_threshold (void) const { return catalog_db_.aux_fan_threshold; }
     uint32_t memory_capacity(void) const { return catalog_db_.memory_size; }
     std::string memory_capacity_str(void) const {
         if (catalog_db_.memory_size == 8) {

@@ -199,6 +199,18 @@ void
 pal_cpld_set_card_status(uint8_t status)
 {
 }
+
+int
+pal_enable_auxiliary_fan(void)
+{
+    return -1;
+}
+
+int
+pal_disable_auxiliary_fan(void)
+{
+    return -1;
+}
 #else
 #include <string.h>
 /* Public APIs */
@@ -395,5 +407,17 @@ pal_cpld_set_port1_link_status(uint8_t status)
 void
 pal_cpld_set_card_status(uint8_t status)
 {
+}
+
+int
+pal_enable_auxiliary_fan(void)
+{
+    return -1;
+}
+
+int
+pal_disable_auxiliary_fan(void)
+{
+    return -1;
 }
 #endif
