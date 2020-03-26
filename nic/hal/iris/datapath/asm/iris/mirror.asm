@@ -76,6 +76,7 @@ erspan_type_iii:
     phvwr           p.erspan_t3_span_id, k.capri_intrinsic_tm_span_session
 
 erspan_type_ii:
+    phvwr           p.control_metadata_dst_lport, d.u.erspan_mirror_d.dst_lport
     phvwr.c2        p.{vlan_tag_pcp...vlan_tag_etherType}, 0
     phvwrpair.c2    p.erspan_t2_vlan, k.vlan_tag_vid, \
                         p.erspan_t2_cos, k.vlan_tag_pcp

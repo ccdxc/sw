@@ -124,6 +124,13 @@ pd_mirror_session_update (pd_func_args_t *pd_func_args)
     }
     action_data.action_u.mirror_erspan_mirror.dst_lport = dst_lport;
     action_data.action_u.mirror_erspan_mirror.tunnel_rewrite_index = tnnl_rw_idx;
+    auto old_erspan_type = &(action_data.action_u.mirror_erspan_mirror.erspan_type);
+    auto new_erspan_type = args->session->mirror_destination_u.er_span_dest.type;
+    if (*old_erspan_type != new_erspan_type) {
+        HAL_TRACE_DEBUG("Update erspan_type {} => {}  for session {} with hw_id: {}",
+                        *old_erspan_type, new_erspan_type, args->session->sw_id, hw_id);
+        *old_erspan_type = new_erspan_type;
+    }
 
     // Update the dest_if
     if (action_data.action_id == MIRROR_ERSPAN_MIRROR_ID) {
@@ -262,10 +269,14 @@ pd_mirror_session_create (pd_func_args_t *pd_func_args)
     }
     case MIRROR_DEST_ERSPAN: {
         action_data.action_id = MIRROR_ERSPAN_MIRROR_ID;
-        if (likely(is_platform_type_hw())) {
+        auto erspan_type = args->session->mirror_destination_u.er_span_dest.type;
+        action_data.action_u.mirror_erspan_mirror.truncate_len = args->session->truncate_len;
+        action_data.action_u.mirror_erspan_mirror.erspan_type = erspan_type;
+        // If erspan type I, then gre_seq is not valid field.
+        if (likely(is_platform_type_hw()) &&
+            likely(erspan_type == ERSPAN_TYPE_II || erspan_type == ERSPAN_TYPE_III)) {
             action_data.action_u.mirror_erspan_mirror.gre_seq_en = 1;
         }
-        action_data.action_u.mirror_erspan_mirror.truncate_len = args->session->truncate_len;
         if (args->dst_if) {
             dst_lport = if_get_lport_id(args->dst_if);
         } else {

@@ -229,6 +229,7 @@ typedef struct mirror_session_s {
             ip_addr_t ip_da;
             uint8_t   ip_type;
             vrf_id_t  vrf_id;
+            uint8_t   type;
         } er_span_dest;
       struct r_span_dest_ {
             vlan_id_t vlan;

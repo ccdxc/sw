@@ -8,9 +8,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/spf13/cobra"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
@@ -49,6 +51,7 @@ func init() {
 	showCmd.AddCommand(flowMonitorShowCmd)
 	collectorShowCmd.Flags().Uint64Var(&collectorID, "collector-id", 1, "Specify collector id")
 	mirrorShowCmd.Flags().Uint64Var(&mirrorID, "mirror-session-id", 1, "Specify mirror session id")
+	mirrorShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	flowMonitorShowCmd.Flags().Uint64Var(&ruleID, "flow-monitor-rule-id", 1, "Specify flow-monitor rule id")
 }
 
@@ -269,14 +272,21 @@ func mirrorShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
-		spec := resp.GetSpec()
-		fmt.Println("\nMirror Session ID:                ", spec.GetKeyOrHandle().GetMirrorsessionId())
-		fmt.Println("Mirror Session HW ID:               ", resp.GetStatus().GetHandle())
-		fmt.Println("Mirror Session SnapLen:             ", spec.GetSnaplen())
-		fmt.Println("Mirror Session Tunnel Source        ", utils.IPAddrToStr(spec.GetErspanSpec().GetSrcIp()))
-		fmt.Println("Mirror Session Tunnel Destination   ", utils.IPAddrToStr(spec.GetErspanSpec().GetDestIp()))
+		if cmd != nil && cmd.Flags().Changed("yaml") {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b) + "\n")
+			fmt.Println("---")
+		} else {
+			spec := resp.GetSpec()
+			fmt.Println("\nMirror Session ID:                ", spec.GetKeyOrHandle().GetMirrorsessionId())
+			fmt.Println("Mirror Session HW ID:               ", resp.GetStatus().GetHandle())
+			fmt.Println("Mirror Session SnapLen:             ", spec.GetSnaplen())
+			fmt.Println("Mirror Session Tunnel Source        ", utils.IPAddrToStr(spec.GetErspanSpec().GetSrcIp()))
+			fmt.Println("Mirror Session Tunnel Destination   ", utils.IPAddrToStr(spec.GetErspanSpec().GetDestIp()))
+			fmt.Println("Mirror Session ERSPAN Type          ", spec.GetErspanSpec().GetType())
+		}
 	}
-
 }
 
 func collectorShowCmdHandler(cmd *cobra.Command, args []string) {

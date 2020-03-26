@@ -14,6 +14,7 @@
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
+#include "nic/hal/iris/datapath/p4/include/defines.h"
 
 #define TELEMETRY_FREE_RSP_RET_TRACE(free_fn, obj, rsp, ret, args...) \
     {                                                                 \
@@ -24,7 +25,6 @@
         HAL_TRACE_ERR(args);                                          \
         return ret;                                                   \
     }                                                                 \
-
 
 using hal::pd::pd_mirror_session_create_args_t;
 using hal::pd::pd_mirror_session_update_args_t;
@@ -443,6 +443,13 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
         auto ift = find_tnnlif_by_dst_ip(intf::IF_TUNNEL_ENCAP_TYPE_GRE,
                                          dst_addr);
         session->type = hal::MIRROR_DEST_ERSPAN;
+        auto erspan_type = erspan.type();
+        // TODO: cleanup code, when Netagent set correct erspan_type
+        if (erspan_type == 0) {
+            erspan_type = telemetry::ERSPAN_TYPE_3;
+        }
+        SDK_ASSERT(erspan_type == ERSPAN_TYPE_II || erspan_type == ERSPAN_TYPE_III);
+        session->mirror_destination_u.er_span_dest.type = erspan_type;
         session->dest_if = dest_if;
         args.tunnel_if = ift;
         args.dst_if = dest_if;
@@ -520,24 +527,34 @@ mirror_session_fill_rsp (void *entry, void *ctxt)
     response->mutable_status()->set_handle(hw_id);
     response->mutable_spec()->set_snaplen(session->truncate_len);
 
+    auto erspan = session->mirror_destination_u.er_span_dest;
     switch (session->type) {
     case hal::MIRROR_DEST_ERSPAN:
+        if (erspan.type == ERSPAN_TYPE_II) {
+            response->mutable_spec()->mutable_erspan_spec()->set_type(telemetry::ERSPAN_TYPE_2);
+        } else if (erspan.type == ERSPAN_TYPE_III) {
+            response->mutable_spec()->mutable_erspan_spec()->set_type(telemetry::ERSPAN_TYPE_3);
+        } else {
+            HAL_TRACE_ERR("Found unsupported erspan type {} in Mirror Session ID {} ",
+                          erspan.type, session->sw_id);
+        }
         response->mutable_spec()->mutable_erspan_spec()->mutable_src_ip()->\
-            set_v4_addr(session->mirror_destination_u.er_span_dest.ip_sa.addr.v4_addr);
+            set_v4_addr(erspan.ip_sa.addr.v4_addr);
         response->mutable_spec()->mutable_erspan_spec()->mutable_src_ip()->\
             set_ip_af(types::IPAddressFamily::IP_AF_INET);
 
         response->mutable_spec()->mutable_erspan_spec()->mutable_dest_ip()->\
-            set_v4_addr(session->mirror_destination_u.er_span_dest.ip_da.addr.v4_addr);
+            set_v4_addr(erspan.ip_da.addr.v4_addr);
         response->mutable_spec()->mutable_erspan_spec()->mutable_dest_ip()->\
             set_ip_af(types::IPAddressFamily::IP_AF_INET);
         break;
+
     default:
         break;
     }
 
     HAL_TRACE_VERBOSE("Added Mirror Session ID {} in get response",
-                    session->sw_id);
+                      session->sw_id);
     return false;
 }
 
