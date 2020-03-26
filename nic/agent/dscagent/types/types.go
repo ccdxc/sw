@@ -10,6 +10,7 @@ import (
 type DistributedServiceCardStatus struct {
 	DSCMode             string           `json:"dsc-mode,omitempty"`
 	DSCName             string           `json:"dsc-name,omitempty"`
+	DSCID               string           `json:"dsc-id,omitempty"`
 	MgmtIP              string           `json:"mgmt-ip,omitempty"`
 	MgmtIntf            string           `json:"mgmt-intf,omitempty"`
 	SecondaryMgmtIntfs  []string         `json:"secondary-mgmt-intfs,omitempty"`

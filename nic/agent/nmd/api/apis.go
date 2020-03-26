@@ -61,6 +61,7 @@ type NmdAPI interface {
 	SetInterfaceIPs(interfaceIPs map[uint32]*cluster.IPConfig)
 	PersistState(updateDelphi bool) error
 	SetMgmtInterface(intf string)
+	SetDSCID(name string)
 }
 
 // PlatformAPI is the API provided by PlatformAgent to NMD

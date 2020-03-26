@@ -488,3 +488,28 @@ func ConvertMAC(mac string) string {
 	}
 	return s
 }
+
+// ConvertLocalToVeniceInterfaceName handles conversion from locally used interface names to venice names.
+func ConvertLocalToVeniceInterfaceName(interfaceName, dscId, dscName string) (string, bool) {
+	veniceInterfaceName := interfaceName
+	if dscId != "" && dscName != dscId &&
+		!strings.HasPrefix(interfaceName, dscId) {
+		veniceInterfaceName = veniceInterfaceName[12:]
+		veniceInterfaceName = dscId + veniceInterfaceName
+		return veniceInterfaceName, true
+	}
+	return veniceInterfaceName, false
+}
+
+// ConvertVeniceToLocalInterfaceName handles conversion from venice interface names to locally used names.
+func ConvertVeniceToLocalInterfaceName(veniceInterfaceName, dscId, dscName string) (string, bool) {
+	interfaceName := veniceInterfaceName
+	if dscId != "" && dscName != dscId &&
+		strings.HasPrefix(interfaceName, dscId) {
+		interfaceName = strings.TrimPrefix(interfaceName, dscId)
+		dscName = strings.Join(strings.Split(dscName, "."), "")
+		interfaceName = dscName + interfaceName
+		return interfaceName, true
+	}
+	return interfaceName, false
+}

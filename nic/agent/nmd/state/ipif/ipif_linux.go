@@ -289,6 +289,8 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 
 	d.LeaseDuration = dur
 
+	d.Hostname = string(opts[dhcp4.OptionHostName])
+
 	renewCtx, renewCancel := context.WithCancel(context.Background())
 	if d.RenewCancel != nil {
 		log.Info("Clearing existing dhcp go routines")
@@ -324,6 +326,10 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 			}
 		}
 		d.nmd.SetInterfaceIPs(interfaceIPs)
+	}
+
+	if d.Hostname != "" && d.pipeline == globals.NaplesPipelineApollo {
+		d.nmd.SetDSCID(d.Hostname)
 	}
 
 	// Assign IP Address here

@@ -298,3 +298,8 @@ func (ag *NMD) PersistState(updateDelphi bool) error {
 func (ag *NMD) SetInterfaceIPs(interfaceIPs map[uint32]*cluster.IPConfig) {
 
 }
+
+// SetDSCID sets the DistributedServicesCard ID
+func (ag *NMD) SetDSCID(name string) {
+	return
+}

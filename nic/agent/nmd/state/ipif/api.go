@@ -65,6 +65,7 @@ type DHCPState struct {
 	CurState                string
 	DhcpCtx, RenewCtx       context.Context
 	DhcpCancel, RenewCancel context.CancelFunc
+	Hostname                string
 }
 
 // InterfaceIP captures the ip address info for the uplink interfaces supplied by the dhcp server

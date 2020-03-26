@@ -316,7 +316,7 @@ L:
 				loopbackDSCs[dsc.Name] = false
 			}
 			for _, intf := range loppbackIntfs {
-				loopbackDSCs[strings.Split(intf.Name, "-")[0]] = true
+				loopbackDSCs[intf.Status.DSC] = true
 			}
 
 			for dsc, val := range loopbackDSCs {
@@ -341,7 +341,7 @@ L:
 
 	for _, intf := range loppbackIntfs {
 
-		uuid := strings.Split(intf.Name, "-")[0]
+		uuid := intf.Status.DSC
 
 		loopbackIP, ok := cl.params.NaplesLoopBackIPs[uuid]
 		if !ok {

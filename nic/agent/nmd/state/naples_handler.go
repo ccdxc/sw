@@ -322,6 +322,10 @@ func (n *NMD) PersistState(updateDelphi bool) (err error) {
 		statusObj.DSCStaticRoutes = n.DSCStaticRoutes
 	}
 
+	if n.Pipeline != nil && n.Pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
+		statusObj.DSCID = n.config.Spec.ID
+	}
+
 	var resp Response
 	ticker := time.NewTicker(time.Minute)
 	if err := netutils.HTTPPost(agentModeChangeURL, &statusObj, &resp); err != nil {

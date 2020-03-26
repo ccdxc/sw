@@ -156,6 +156,10 @@ func (ag *mockAgent) SetInterfaceIPs(interfaceIPs map[uint32]*cluster.IPConfig) 
 	return
 }
 
+func (ag *mockAgent) SetDSCID(name string) {
+	return
+}
+
 type mockRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	nicdb      map[string]*cmd.DistributedServiceCard

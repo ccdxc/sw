@@ -204,13 +204,14 @@ func (a *ApuluAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatu
 		},
 	}
 
-	ifName, err := utils.GetIfName(a.InfraAPI.GetDscName(), utils.GetIfIndex(netproto.InterfaceSpec_LOOPBACK.String(), 0, 0, 1), "")
+	ifName, err := utils.GetIfName(a.InfraAPI.GetConfig().DSCID, utils.GetIfIndex(netproto.InterfaceSpec_LOOPBACK.String(), 0, 0, 1), "")
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrBadRequest,
 			"Failed to form interface name, uuid %v, loopback 0, err %v",
 			lb.UUID, err))
 		return
 	}
+
 	lb.Name = ifName
 
 	// Find if we already have the interface in BoltDB (in case of stateful reboot)
@@ -492,6 +493,13 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 	if err != nil {
 		log.Error(err)
 		return
+	}
+
+	localIntfName, updateNeeded := utils.ConvertVeniceToLocalInterfaceName(intf.Name, a.InfraAPI.GetConfig().DSCID, a.InfraAPI.GetDscName())
+	// Names would be different in venice only for local interfaces
+	_, ok := a.LocalInterfaces[localIntfName]
+	if ok && updateNeeded {
+		intf.Name = localIntfName
 	}
 
 	// Handle Get and LIST. This doesn't need any pipeline specific APIs

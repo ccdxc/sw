@@ -1580,6 +1580,11 @@ func (n *NMD) SetInterfaceIPs(interfaceIPs map[uint32]*cluster.IPConfig) {
 	}
 }
 
+// SetDSCID sets the DistributedServicesCard ID
+func (n *NMD) SetDSCID(name string) {
+	n.config.Spec.ID = name
+}
+
 func runCmd(cmdStr string) error {
 	log.Infof("Running : " + cmdStr)
 	cmd := exec.Command("bash", "-c", cmdStr)
