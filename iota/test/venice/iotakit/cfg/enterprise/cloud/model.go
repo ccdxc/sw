@@ -402,9 +402,8 @@ func (cl *CloudCfg) pushConfigViaRest() error {
 		dscs := cl.params.Dscs
 		for i := 2; i < len(r.Spec.BGPConfig.Neighbors); i++ {
 			neigh := r.Spec.BGPConfig.Neighbors[i]
-			for index := range dscs {
-				neigh.IPAddress = strings.Split(dscs[i-2][index].Status.IPConfig.IPAddress, "/")[0]
-			}
+			//Assuming only 1 DSC per host
+			neigh.IPAddress = strings.Split(dscs[i-2][0].Status.IPConfig.IPAddress, "/")[0]
 		}
 
 		err := rClient.CreateRoutingConfig(r)
