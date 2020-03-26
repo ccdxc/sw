@@ -222,9 +222,6 @@ server_loop(pciemgrenv_t *pme)
     pciemgrd_logconfig(pme);
     pciemgrd_sys_init(pme);
 
-    if ((r = open_hostports()) < 0) {
-        goto error_out;
-    }
     if ((r = pciehdev_open(&pme->params)) < 0) {
         pciesys_logerror("pciehdev_open failed: %d\n", r);
         goto close_port_error_out;
@@ -232,6 +229,9 @@ server_loop(pciemgrenv_t *pme)
     if ((r = pciehdev_register_event_handler(dev_evhandler)) < 0) {
         pciesys_logerror("pciehdev_register_event_handler failed %d\n", r);
         goto close_dev_error_out;
+    }
+    if ((r = open_hostports()) < 0) {
+        goto error_out;
     }
     if ((r = intr_init(pme)) < 0) {
         pciesys_logerror("intr_init failed %d\n", r);
