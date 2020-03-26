@@ -10,12 +10,16 @@ struct phv_         p;
 %%
 
 // r1 : packet length
+// c7 : tunnel_tos_override
 
 nexthop_info:
     seq             c1, k.p4e_i2e_nexthop_id, r0
     bcf             [c1], nexthop_invalid
     phvwr           p.{ethernet_00_dstAddr,ethernet_00_srcAddr}, \
                         d.{nexthop_info_d.dmaco,nexthop_info_d.smaco}
+    seq             c7, k.rewrite_metadata_tunnel_tos_override, TRUE
+    phvwr           p.rewrite_metadata_tunnel_tos, \
+                        k.rewrite_metadata_tunnel_tos2
     sne             c1, d.nexthop_info_d.tunnel2_id, r0
     bcf             [!c1], nexthop_info2
     add             r1, r0, k.capri_p4_intrinsic_packet_len
@@ -96,7 +100,8 @@ ipv4_vxlan_encap:
     phvwr           p.capri_deparser_len_ipv4_0_hdr_len, 20
     phvwr           p.ethernet_0_etherType, ETHERTYPE_IPV4
     add             r1, r1, 36
-    add             r7, k.rewrite_metadata_tunnel_tos, 0x45, 8
+    add.!c7         r7, k.rewrite_metadata_tunnel_tos, 0x45, 8
+    add.c7          r7, k.rewrite_metadata_tunnel_tos2, 0x45, 8
     phvwr           p.{ipv4_0_version,ipv4_0_ihl,ipv4_0_diffserv}, r7
     phvwr           p.ipv4_0_srcAddr, k.rewrite_metadata_device_ipv4_addr
     phvwr           p.ipv4_0_ttl, 64
@@ -130,7 +135,8 @@ ipv6_vxlan_encap:
                         ethernet_0_valid}, 0x1C1
     phvwr           p.ethernet_0_etherType, ETHERTYPE_IPV6
     add             r1, r1, 16
-    add             r7, k.rewrite_metadata_tunnel_tos, 0x6, 8
+    add.!c1         r7, k.rewrite_metadata_tunnel_tos, 0x6, 8
+    add.c1          r7, k.rewrite_metadata_tunnel_tos2, 0x6, 8
     phvwr           p.{ipv6_0_version,ipv6_0_trafficClass}, r7
     phvwr           p.ipv6_0_srcAddr, k.rewrite_metadata_device_ipv6_addr
     phvwr           p.{ipv6_0_nextHdr,ipv6_0_hopLimit}, (IP_PROTO_UDP << 8) | 64

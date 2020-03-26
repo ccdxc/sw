@@ -83,7 +83,8 @@ tunnel2_ipv4_encap:
     phvwr           p.capri_deparser_len_ipv4_00_hdr_len, 20
     cmov            r1, c6, (20 + 8 + 8), (20 + 8 + 4 - 14)
     add             r7, r7, r1
-    phvwr           p.{ipv4_00_version,ipv4_00_ihl}, 0x45
+    add             r1, k.rewrite_metadata_tunnel_tos, 0x45, 8
+    phvwr           p.{ipv4_00_version,ipv4_00_ihl,ipv4_00_diffserv}, r1
     or              r1, d.tunnel2_info_d.dipo, \
                         k.rewrite_metadata_device_ipv4_addr, 32
     phvwr           p.{ipv4_00_srcAddr,ipv4_00_dstAddr}, r1
@@ -142,7 +143,8 @@ tunnel2_ipv6_encap:
     // ipv6 header
     cmov            r1, c6, (8 + 8), (8 + 4 - 14)
     add             r7, r7, r1
-    phvwr           p.ipv6_00_version, 0x6
+    add             r1, k.rewrite_metadata_tunnel_tos, 0x6, 8
+    phvwr           p.{ipv6_00_version,ipv6_00_trafficClass}, r1
     phvwr           p.ipv6_00_srcAddr, k.rewrite_metadata_device_ipv6_addr
     phvwr           p.ipv6_00_dstAddr, d.tunnel2_info_d.dipo
     phvwr           p.{ipv6_00_nextHdr,ipv6_00_hopLimit}, (IP_PROTO_UDP << 8)|64

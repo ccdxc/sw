@@ -45,7 +45,8 @@ table ecmp {
 /******************************************************************************
  * Tunnel
  *****************************************************************************/
-action tunnel_info(nexthop_base, num_nexthops, vni, ip_type, dipo, dmaci) {
+action tunnel_info(nexthop_base, num_nexthops, vni, ip_type, dipo, dmaci,
+                   tos_override, tos) {
     modify_field(scratch_metadata.num_nexthops, num_nexthops);
     if (scratch_metadata.num_nexthops == 0) {
         egress_drop(P4E_DROP_NEXTHOP_INVALID);
@@ -64,6 +65,8 @@ action tunnel_info(nexthop_base, num_nexthops, vni, ip_type, dipo, dmaci) {
     }
     modify_field(rewrite_metadata.tunnel_dmaci, dmaci);
     modify_field(rewrite_metadata.tunnel_vni, vni);
+    modify_field(rewrite_metadata.tunnel_tos_override, tos_override);
+    modify_field(rewrite_metadata.tunnel_tos2, tos);
 }
 
 @pragma stage 3
@@ -200,6 +203,9 @@ action nexthop_info(lif, qtype, qid, vlan_strip_en, port, vlan, dmaco, smaco,
 
     modify_field(ethernet_00.dstAddr, dmaco);
     modify_field(ethernet_00.srcAddr, smaco);
+    if (rewrite_metadata.tunnel_tos_override == TRUE) {
+        modify_field(rewrite_metadata.tunnel_tos, rewrite_metadata.tunnel_tos2);
+    }
 
     if (control_metadata.rx_packet == FALSE) {
         if (TX_REWRITE(rewrite_metadata.flags, DMAC, FROM_MAPPING)) {
@@ -293,6 +299,7 @@ action tunnel2_ipv4_encap(vlan, dipo, encap_type) {
 
     modify_field(ipv4_00.version, 4);
     modify_field(ipv4_00.ihl, 5);
+    modify_field(ipv4_00.diffserv, rewrite_metadata.tunnel_tos);
     modify_field(ipv4_00.totalLen, scratch_metadata.ip_totallen);
     modify_field(ipv4_00.ttl, 64);
     modify_field(ipv4_00.protocol, IP_PROTO_UDP);
@@ -353,6 +360,7 @@ action tunnel2_ipv6_encap(vlan, dipo, encap_type) {
     }
 
     modify_field(ipv6_00.version, 6);
+    modify_field(ipv6_00.trafficClass, rewrite_metadata.tunnel_tos);
     modify_field(ipv6_00.payloadLen, scratch_metadata.ip_totallen);
     modify_field(ipv6_00.hopLimit, 64);
     modify_field(ipv6_00.nextHdr, IP_PROTO_UDP);

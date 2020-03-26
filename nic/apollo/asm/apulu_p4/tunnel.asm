@@ -20,6 +20,9 @@ tunnel_info:
     phvwr           p.rewrite_metadata_tunnel_vni, d.tunnel_info_d.vni
     phvwr           p.rewrite_metadata_ip_type, d.tunnel_info_d.ip_type
     phvwr           p.rewrite_metadata_tunnel_dmaci, d.tunnel_info_d.dmaci
+    phvwr           p.rewrite_metadata_tunnel_tos_override, \
+                        d.tunnel_info_d.tos_override
+    phvwr           p.rewrite_metadata_tunnel_tos2, d.tunnel_info_d.tos
     add.e           r1, d.tunnel_info_d.nexthop_base, r1
     phvwr.f         p.p4e_i2e_nexthop_id, r1
 
