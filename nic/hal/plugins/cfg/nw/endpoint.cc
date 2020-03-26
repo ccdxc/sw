@@ -756,10 +756,6 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         goto end;
     }
 
-    if (app_ctxt->vmotion_state != NONE) {
-        ep_handle_vmotion(ep, app_ctxt->vmotion_state);
-    }
-
 end:
     return ret;
 }
@@ -1258,7 +1254,7 @@ ep_get_session_info (ep_t *ep, SessionGetResponseMsg *rsp, uint64_t ts)
         dllist_for_each_safe(curr, next, &ep->session_list_head[fte_id]) {
             entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
             session_t *session  = hal::find_session_by_handle(entry->handle_id);
-            if (session) {
+            if (session && !session->aging_enqueued) {
                 // If timestamp is provided, then this request is part of TERM SYNC
                 // In case of term sync - Provide term sync only if all the following conditions
                 // met
