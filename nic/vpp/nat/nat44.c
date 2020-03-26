@@ -662,7 +662,7 @@ nat_get_pool_for_pvt_ip(nat_vpc_config_t *vpc, nat_port_block_t *nat_pb,
     ip4_address_t public_ip;
     nat_port_block_t *pb = NULL;
 
-    data = hash_get_mem(vpc->nat_pvt_ip_ht, &pvt_ip);
+    data = hash_get(vpc->nat_pvt_ip_ht, pvt_ip.as_u32);
     if (data) {
         public_ip.as_u32 = NAT_PVT_IP_HT_PUBLIC_IP(*data);
         pb = nat_get_port_block_from_pub_ip(vpc, nat_addr_type, nat_proto,
@@ -855,7 +855,7 @@ nat_flow_dealloc(u32 vpc_id, ip4_address_t dip, u16 dport, u8 protocol,
     nat_flow_get_and_del_src_endpoint_mapping(vpc, pvt_ip, pvt_port);
 
     hash_unset_mem_free(&vpc->nat_flow_ht, &key);
-    hash_unset_mem_free(&vpc->nat_pvt_ip_ht, &pvt_ip);
+    hash_unset(vpc->nat_pvt_ip_ht, pvt_ip.as_u32);
 
     pb = nat_get_port_block_from_pub_ip(vpc, nat_addr_type, nat_proto, sip);
     if (pb) {

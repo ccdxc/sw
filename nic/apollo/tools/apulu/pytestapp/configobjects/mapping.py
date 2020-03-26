@@ -9,7 +9,7 @@ import re
 
 
 class MappingObject():
-    def __init__(self, id, key_type, macaddr, ip, vpcid, subnetid=None, tunnelid=None, encaptype=None, encapslotid=None, nexthopgroupid=None, vnicid=None):
+    def __init__(self, id, key_type, macaddr, ip, vpcid, subnetid=None, tunnelid=None, encaptype=None, encapslotid=None, nexthopgroupid=None, vnicid=None, public_ip=None):
         self.id = id
         self.keytype = key_type
         self.macaddr  = utils.getmac2num(macaddr)
@@ -26,6 +26,9 @@ class MappingObject():
         self.encaptype = encaptype
         self.encapslotid = encapslotid
         self.vnicid = vnicid
+        self.public_ip = None
+        if public_ip:
+            self.public_ip = int(public_ip)
         return
 
     def GetGrpcCreateMessage(self):
@@ -45,7 +48,9 @@ class MappingObject():
            spec.NexthopGroupId = utils.PdsUuid.GetUUIDfromId(self.nexthopgroupid)
 
         spec.MACAddr  = self.macaddr
-        #spec.PublicIP = self.publicip
+        if self.public_ip:
+            spec.PublicIP.Af = types_pb2.IP_AF_INET
+            spec.PublicIP.V4Addr = self.public_ip
         #spec.ProviderIp = self.providerip
         if self.encaptype == types_pb2.ENCAP_TYPE_VXLAN:
            spec.Encap.type = self.encaptype

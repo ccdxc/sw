@@ -14,11 +14,13 @@ class SubnetObject():
         self.dhcp_policy_id = dhcp_policy_id
         self.uuid = utils.PdsUuid(self.id)
         self.v4prefix = v4prefix
-        self.hostifindex = int(hostifindex, 16)
-        if node_uuid:
-            self.hostifuuid = utils.PdsUuid(self.hostifindex, node_uuid)
-        else:
-            self.hostifuuid = utils.PdsUuid(self.hostifindex)
+        self.hostifuuid = None
+        if hostifindex:
+            self.hostifindex = int(hostifindex, 16)
+            if node_uuid:
+                self.hostifuuid = utils.PdsUuid(self.hostifindex, node_uuid)
+            else:
+                self.hostifuuid = utils.PdsUuid(self.hostifindex)
         self.v4virtualrouterip = v4virtualrouterip
         self.virtualroutermac = virtualroutermac
         self.fabricencap = fabricencap
@@ -44,6 +46,7 @@ class SubnetObject():
         spec.VirtualRouterMac = utils.getmac2num(self.virtualroutermac)
         if self.v4routetableid:
             spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.v4routetableid)
-        spec.HostIf = self.hostifuuid.GetUuid()
+        if self.hostifuuid:
+            spec.HostIf = self.hostifuuid.GetUuid()
         return grpcmsg
 
