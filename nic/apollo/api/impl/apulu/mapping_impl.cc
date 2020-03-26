@@ -900,12 +900,6 @@ mapping_impl::activate_delete_(pds_epoch_t epoch, mapping_entry *mapping) {
                           mapping->key2str().c_str(), ret);
             // continue cleanup !!
         }
-        if (!device_find()->overlay_routing_enabled()) {
-            if (mapping->skey().type == PDS_MAPPING_TYPE_L3) {
-                ret = mapping_impl_db()->remove_dhcp_binding(
-                          mapping->key().str());
-           }
-        }
     } else {
         PDS_TRACE_DEBUG("Deleting local mapping %s", mapping->key2str().c_str());
         ret = deactivate_ip_local_mapping_entry_(mapping->skey().vpc,
@@ -923,6 +917,12 @@ mapping_impl::activate_delete_(pds_epoch_t epoch, mapping_entry *mapping) {
             PDS_TRACE_ERR("Failed to delete local mapping %s, err %u",
                           mapping->key2str().c_str(), ret);
             // continue cleanup !!
+        }
+        if (!device_find()->overlay_routing_enabled()) {
+            if (mapping->skey().type == PDS_MAPPING_TYPE_L3) {
+                ret = mapping_impl_db()->remove_dhcp_binding(
+                          mapping->key().str());
+           }
         }
     }
     ret = mapping_db()->perish(mapping->key());
