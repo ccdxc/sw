@@ -419,10 +419,10 @@ route_table_impl::update_route_table_spec_(pds_route_table_spec_t *spec,
         } else {
             // either DEL or UPD operation
             if (octxt->api_op == API_OP_DELETE) {
-                key = octxt->api_params->route_key;
+                key = octxt->api_params->key;
             } else {
                 // update case
-                key = octxt->api_params->route_key;
+                key = octxt->api_params->key;
             }
             // search and find the object to delete or modify
             found = false;
