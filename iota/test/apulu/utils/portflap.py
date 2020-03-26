@@ -83,7 +83,7 @@ def switchPortFlap(tc):
         api.Logger.error("Failed to flap the switch port")
         return ret
 
-    misc_utils.Sleep(2) #give a short gap before printing status
+    misc_utils.Sleep(60) #give a gap to for bgp to reconcile
     return api.types.status.SUCCESS
 
 def switchPortOp(naples_nodes, oper, id):

@@ -46,7 +46,7 @@ testbundles:
         - networking/h2h.testbundle
         - api_crud/netagent_api_crud.testbundle
         - networking/link_events.testbundle
-        - networking/reboot.testbundle
+        - networking/node_events.testbundle
         #- networking/h2n.testbundle
 
     regression:

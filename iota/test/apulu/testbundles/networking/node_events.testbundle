@@ -1,5 +1,5 @@
 meta:
-    name    : reboot
+    name    : node_events
     os      : [ linux ]
     nicmode : classic
     nics    : [ pensando ]
