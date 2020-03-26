@@ -126,10 +126,11 @@ def configurationChangeEvent(tc):
         sys.exit(0)
 
     api.Logger.info("Running configurationChangeEvent...")
-    agent_api.DeleteSgPolicies()
     for proto in ["tcp", "udp"]:
         policies = utils.GetTargetJsons(proto)
         for policy_json in policies:
+            # Delete allow-all policy
+            agent_api.DeleteSgPolicies()
             api.Logger.info("Pushing Security policy: %s "%(policy_json))
             newObjects = agent_api.AddOneConfig(policy_json)
             ret = agent_api.PushConfigObjects(newObjects)
@@ -139,8 +140,8 @@ def configurationChangeEvent(tc):
                 api.Logger.error("Failed to delete config object for %s"%policy_json)
             if agent_api.RemoveConfigObjects(newObjects):
                 api.Logger.error("Failed to remove config object for %s"%policy_json)
-            newObjects = agent_api.QueryConfigs(kind='NetworkSecurityPolicy')
-            agent_api.PushConfigObjects(newObjects)
+            # Restore allow-all policy
+            agent_api.PushConfigObjects(agent_api.QueryConfigs(kind='NetworkSecurityPolicy'))
 
             if tc.cancel:
                 return api.types.status.SUCCESS
