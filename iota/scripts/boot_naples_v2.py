@@ -772,7 +772,10 @@ class NaplesManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Force switch to gold fw failed")
     def ForceSwitchToGoldFW(self):
-        self.__connect_to_console()
+        try:
+            self.__connect_to_console()
+        except:
+            pass
         self.__get_capri_prompt()
         self.hdl.sendline("boot goldfw")
         self.hdl.expect_exact("capri-gold login", timeout = 180)

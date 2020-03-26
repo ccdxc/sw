@@ -497,19 +497,19 @@ func (n *TestNode) RestartNode(method string, useNcsi bool) error {
 }
 
 func (n *TestNode) AgentDBGobFiles() []string {
-        agentDBFiles := []string{
-                constants.DstIotaDBDir + n.Node.Name + ".gob",
-                constants.DstIotaDBDir + n.Node.Name + "_workloads" + ".gob",
-        }
-        return agentDBFiles
+	agentDBFiles := []string{
+		constants.DstIotaDBDir + n.Node.Name + ".gob",
+		constants.DstIotaDBDir + n.Node.Name + "_workloads" + ".gob",
+	}
+	return agentDBFiles
 }
 
 func (n *TestNode) SavedDBGobFiles() []string {
-        agentDBFiles := []string{
-                constants.LocalAgentDBFolder + n.Node.Name + ".gob",
-                constants.LocalAgentDBFolder + n.Node.Name + "_workloads" + ".gob",
-        }
-        return agentDBFiles
+	agentDBFiles := []string{
+		constants.LocalAgentDBFolder + n.Node.Name + ".gob",
+		constants.LocalAgentDBFolder + n.Node.Name + "_workloads" + ".gob",
+	}
+	return agentDBFiles
 }
 
 // SaveNode saves and downloads the node-context to local-fs
@@ -521,15 +521,18 @@ func (n *TestNode) SaveNode(cfg *ssh.ClientConfig) error {
 		log.Errorf("Saving node %v failed. Err: %v", n.Node.Name, err)
 		return err
 	}
-        // Download agent context to local-fs
+	// Download agent context to local-fs
 	log.Infof("TOPO SVC | SaveNode | Downloading IotaAgent DB for %v", n.Node.Name)
 
-	if err := n.CopyFrom(cfg, constants.LocalAgentDBFolder, n.AgentDBGobFiles()); err != nil {
-		log.Errorf("TOPO SVC | InitTestBed | Failed to download agent db from TestNode: %v, IPAddress: %v", n.Node.Name, n.Node.IpAddress)
-		return err
+	for _, file := range n.AgentDBGobFiles() {
+		if err := n.CopyFrom(cfg, constants.LocalAgentDBFolder, []string{file}); err != nil {
+			//Workload files may be missing, ignore the error for now
+			log.Errorf("TOPO SVC | InitTestBed | Failed to download agent db from TestNode: %v, IPAddress: %v", n.Node.Name, n.Node.IpAddress)
+		}
+
 	}
 
-        return nil
+	return nil
 }
 
 // ReloadNode saves and reboots the nodes.
@@ -547,9 +550,9 @@ func (n *TestNode) ReloadNode(name string, restoreState bool, method string, use
 		sshCfg = n.info.SSHCfg
 	}
 
-        if err := n.SaveNode(sshCfg); err != nil {
+	if err := n.SaveNode(sshCfg); err != nil {
 		return err
-        }
+	}
 
 	if err := n.RestartNode(method, useNcsi); err != nil {
 		log.Errorf("Restart node %v failed. Err: %v", n.Node.Name, err)

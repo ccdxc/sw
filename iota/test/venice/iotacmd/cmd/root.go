@@ -11,7 +11,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/iota/test/venice/iotakit/model"
-	"github.com/pensando/sw/iota/test/venice/iotakit/model/common"
 	Testbed "github.com/pensando/sw/iota/test/venice/iotakit/testbed"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -128,7 +127,7 @@ func initialize() {
 		errorExit("failed to setup testbed", err)
 	}
 
-	setupModel, err = model.NewSysModel(tb, common.DefaultModel)
+	setupModel, err = model.NewSysModel(tb)
 	if err != nil || setupModel == nil {
 		errorExit("failed to setup model", err)
 	}

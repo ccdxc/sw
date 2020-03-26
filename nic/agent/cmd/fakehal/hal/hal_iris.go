@@ -454,6 +454,37 @@ func (h Hal) PortGet(ctx context.Context, req *irisproto.PortGetRequestMsg) (*ir
 	return &irisproto.PortGetResponseMsg{
 		Response: []*irisproto.PortGetResponse{
 			{
+				Spec: &irisproto.PortSpec{
+					PortType: irisproto.PortType_PORT_TYPE_ETH,
+					KeyOrHandle: &irisproto.PortKeyHandle{
+						KeyOrHandle: &irisproto.PortKeyHandle_PortId{
+							PortId: 1,
+						},
+					},
+				},
+				Status: &irisproto.PortStatus{
+					IfIndex: 1,
+					LinkStatus: &irisproto.PortLinkStatus{
+						OperState: irisproto.PortOperState_PORT_OPER_STATUS_UP,
+					},
+				},
+				ApiStatus: irisproto.ApiStatus_API_STATUS_OK,
+			},
+			{
+				Spec: &irisproto.PortSpec{
+					PortType: irisproto.PortType_PORT_TYPE_ETH,
+					KeyOrHandle: &irisproto.PortKeyHandle{
+						KeyOrHandle: &irisproto.PortKeyHandle_PortId{
+							PortId: 2,
+						},
+					},
+				},
+				Status: &irisproto.PortStatus{
+					IfIndex: 2,
+					LinkStatus: &irisproto.PortLinkStatus{
+						OperState: irisproto.PortOperState_PORT_OPER_STATUS_UP,
+					},
+				},
 				ApiStatus: irisproto.ApiStatus_API_STATUS_OK,
 			},
 		},

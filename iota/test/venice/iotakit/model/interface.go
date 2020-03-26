@@ -2,8 +2,9 @@ package model
 
 import (
 	"context"
-	"github.com/pensando/sw/venice/utils/telemetryclient"
 	"time"
+
+	"github.com/pensando/sw/venice/utils/telemetryclient"
 
 	"github.com/onsi/gomega"
 	"github.com/pensando/sw/api/generated/monitoring"
@@ -206,8 +207,9 @@ type WorkloadActionIntf interface {
 }
 
 //NewSysModel creates new model based on type
-func NewSysModel(tb *testbed.TestBed, modelType common.ModelType) (SysModelInterface, error) {
+func NewSysModel(tb *testbed.TestBed) (SysModelInterface, error) {
 
+	modelType := getModelTypeFromTopo(tb.Topo.Model)
 	switch modelType {
 	case VcenterModel:
 		return factory.NewVcenterSysModel(tb, cfgModel.VcenterCfgType, false)
@@ -264,7 +266,7 @@ func InitSuite(topoName, paramsFile string, scale, scaleData bool) (*testbed.Tes
 	}
 
 	// create sysmodel
-	model, err := NewSysModel(tb, getModelTypeFromTopo(tb.Topo.Model))
+	model, err := NewSysModel(tb)
 	if err != nil {
 		tb.CollectLogs()
 		return nil, nil, err

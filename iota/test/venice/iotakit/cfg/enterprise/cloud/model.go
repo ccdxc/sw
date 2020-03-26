@@ -402,8 +402,8 @@ func (cl *CloudCfg) pushConfigViaRest() error {
 		dscs := cl.params.Dscs
 		for i := 2; i < len(r.Spec.BGPConfig.Neighbors); i++ {
 			neigh := r.Spec.BGPConfig.Neighbors[i]
-			for _, dsc := range dscs {
-				neigh.IPAddress = strings.Split(dsc[i-2].Status.IPConfig.IPAddress, "/")[0]
+			for index := range dscs {
+				neigh.IPAddress = strings.Split(dscs[i-2][index].Status.IPConfig.IPAddress, "/")[0]
 			}
 		}
 

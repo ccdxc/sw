@@ -975,9 +975,9 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 	trig := sm.Tb.NewTrigger()
 	for _, node := range nodes {
 		if testbed.IsNaplesHW(node.Personality) {
-			modeNW := "oob"
-			if node.InstanceParams().Resource.InbandMgmt {
-				modeNW = "inband"
+			modeNW := "inband"
+			if os.Getenv("USE_OOB") != "" {
+				modeNW = "oob"
 			}
 			for _, naplesConfig := range node.NaplesConfigs.Configs {
 

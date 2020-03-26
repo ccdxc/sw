@@ -988,6 +988,20 @@ bundle-upgrade-image:
 	cd upgrade-bundle && tar -cf bundle.tar venice.tgz  naples_fw.tar venice_appl_os.tgz metadata.json
 	cd upgrade-bundle && cat metadata.json ; ls -al; tar -tvf bundle.tar
 
+bundle-same-upgrade-image:
+	mkdir -p upgrade-bundle/bin
+	mkdir -p upgrade-bundle/nic
+	mkdir -p upgrade-bundle/bin/venice-install
+	ln -f bin/venice.tgz upgrade-bundle/bin/venice.tgz
+	ln -f nic/naples_fw_.tar upgrade-bundle/nic/naples_fw.tar
+	touch upgrade-bundle/bin/venice-install/venice_appl_os.tgz
+	@ #bundle.py creates metadata.json for the bundle image
+	@tools/scripts/bundle.py -v ${BUNDLE_UPGRADE_VERSION}  -d ${BUILD_DATE} -p "upgrade-bundle/"
+	ln -f upgrade-bundle/bin/venice.tgz upgrade-bundle/venice.tgz
+	ln -f upgrade-bundle/nic/naples_fw.tar upgrade-bundle/naples_fw.tar
+	cd upgrade-bundle && tar -cf bundle.tar venice.tgz  naples_fw.tar metadata.json
+	cd upgrade-bundle && cat metadata.json ; ls -al; tar -tvf bundle.tar
+
 VENICE_RELEASE_TAG := v0.3
 gs-venice-release: venice-image
 	docker pull ${REGISTRY_URL}/${DIND_CONTAINER}

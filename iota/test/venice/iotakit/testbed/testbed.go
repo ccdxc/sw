@@ -657,6 +657,9 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 			}
 
 			useInband := true
+			if os.Getenv("USE_OOB") != "" {
+				useInband = false
+			}
 			node.NaplesConfigs = iota.NaplesConfigs{Configs: []*iota.NaplesConfig{}}
 			for nicID, nic := range node.instParams.Nics {
 				for _, port := range nic.Ports {
