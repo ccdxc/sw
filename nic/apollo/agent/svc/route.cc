@@ -245,3 +245,118 @@ RouteSvcImpl::RouteTableGet(ServerContext *context,
     return Status::OK;
 }
 
+Status
+RouteSvcImpl::RouteCreate(ServerContext *context,
+                          const pds::RouteRequest *proto_req,
+                          pds::RouteResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_route_spec_t api_spec;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::CANCELLED;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, route "
+                          "creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
+    memset(&api_spec, 0, sizeof(pds_route_spec_t));
+    auto request = proto_req->request();
+    ret = pds_route_proto_to_api_spec(&api_spec, request);
+    if (unlikely(ret != SDK_RET_OK)) {
+        goto end;
+    }
+    ret = pds_route_create(&api_spec, bctxt);
+    if (ret != SDK_RET_OK) {
+        goto end;
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+}
+
+Status
+RouteSvcImpl::RouteUpdate(ServerContext *context,
+                          const pds::RouteRequest *proto_req,
+                          pds::RouteResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_route_spec_t api_spec;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::CANCELLED;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, route "
+                          "update failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
+    memset(&api_spec, 0, sizeof(pds_route_spec_t));
+    auto request = proto_req->request();
+    ret = pds_route_proto_to_api_spec(&api_spec, request);
+    if (unlikely(ret != SDK_RET_OK)) {
+        goto end;
+    }
+    ret = pds_route_update(&api_spec, bctxt);
+    if (ret != SDK_RET_OK) {
+        goto end;
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+}

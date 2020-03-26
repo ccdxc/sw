@@ -40,8 +40,10 @@ message NATAction {
 
 // route configuration information
 message RouteInfo {
+  // optional route id needed if incremental route ADD/DEL/UPD functionality is needed
+  bytes               Id             = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IP prefix
-  types.IPPrefix      Prefix         = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPPrefix      Prefix         = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // priority of the route
   // NOTE:
   // 1. priority value must be non-zero
@@ -51,31 +53,31 @@ message RouteInfo {
   // 4. if no priority value is set (i.e. 0) then route priority is computed as
   //    128 - <prefix length>, so longer prefixes will have higher precedence
   //    over shorter ones giving regular LPM semantics
-  uint32              Priority       = 2 [(gogoproto.moretags) = "meta:range:1-65535"];
+  uint32              Priority       = 3 [(gogoproto.moretags) = "meta:range:1-65535"];
   // route either points to a Nexthop ID or peer-VPC in case of VPC peering
   oneof nh {
       // TODO: this should be obsoleted in apollo, TunnelId should be used
-      types.IPAddress NextHop        = 3;
+      types.IPAddress NextHop        = 4;
       // nexthop for this route
-      bytes           NexthopId      = 4;
+      bytes           NexthopId      = 5;
       // ECMP nexthop for this route
-      bytes           NexthopGroupId = 5;
+      bytes           NexthopGroupId = 6;
       // peer VPC in case of VPC peering
-      bytes           VPCId          = 6;
+      bytes           VPCId          = 7;
       // Tunnel this prefix is pointing to
-      bytes           TunnelId       = 7;
+      bytes           TunnelId       = 8;
       // vnic this prefix is pointing to
-      bytes           VnicId         = 8;
+      bytes           VnicId         = 9;
   }
   // if NATAction is set, source and/or destination NAT will be performed on
   // the packet and if destination NAT is performed, another route lookup
   // will be done in the same route table with the post-NAT destination IP
   // address being rewritten
-  NATAction           NatAction      = 9;
+  NATAction           NatAction      = 10;
   // if MeterEn is true, when traffic from a vnic hits the route and
   // metering is enabled on that vnic, such traffic is accounted (bytes &
   // packets) against the vnic
-  bool                MeterEn        = 10;
+  bool                MeterEn        = 11;
 }
 
 // route table specification

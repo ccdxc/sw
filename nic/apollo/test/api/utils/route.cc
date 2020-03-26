@@ -118,6 +118,7 @@ route_table_feeder::spec_fill(pds_nh_type_t type,
     uint32_t base_id = 1;
     uint32_t base_tep_id = 2;
 
+    spec->route_info->routes[index].key = int2pdsobjkey(index + 1);
     spec->route_info->routes[index].nh_type = type;
     switch (type) {
     case PDS_NH_TYPE_OVERLAY:
