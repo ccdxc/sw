@@ -10,6 +10,7 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IMonitoringMirrorExportConfig {
     'destination': string;
+    'gateway'?: string;
     '_ui'?: any;
 }
 
@@ -19,11 +20,18 @@ export class MonitoringMirrorExportConfig extends BaseModel implements IMonitori
     '_ui': any = {};
     /** IP address of the collector/entity to which the data is to be exported. Should be a valid IPv4 address. */
     'destination': string = null;
+    /** IP address of the gateway to reach the collector. */
+    'gateway': string = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorExportConfig]: PropInfoItem } = {
         'destination': {
             description:  `IP address of the collector/entity to which the data is to be exported. Should be a valid IPv4 address.`,
             hint:  '10.1.1.1 ',
             required: true,
+            type: 'string'
+        },
+        'gateway': {
+            description:  `IP address of the gateway to reach the collector.`,
+            required: false,
             type: 'string'
         },
     }
@@ -69,6 +77,13 @@ export class MonitoringMirrorExportConfig extends BaseModel implements IMonitori
         } else {
             this['destination'] = null
         }
+        if (values && values['gateway'] != null) {
+            this['gateway'] = values['gateway'];
+        } else if (fillDefaults && MonitoringMirrorExportConfig.hasDefaultValue('gateway')) {
+            this['gateway'] = MonitoringMirrorExportConfig.propInfo['gateway'].default;
+        } else {
+            this['gateway'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -77,6 +92,7 @@ export class MonitoringMirrorExportConfig extends BaseModel implements IMonitori
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'destination': CustomFormControl(new FormControl(this['destination'], [required, ]), MonitoringMirrorExportConfig.propInfo['destination']),
+                'gateway': CustomFormControl(new FormControl(this['gateway']), MonitoringMirrorExportConfig.propInfo['gateway']),
             });
         }
         return this._formGroup;
@@ -89,6 +105,7 @@ export class MonitoringMirrorExportConfig extends BaseModel implements IMonitori
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['destination'].setValue(this['destination']);
+            this._formGroup.controls['gateway'].setValue(this['gateway']);
         }
     }
 }

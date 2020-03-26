@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	govldtr "github.com/asaskevich/govalidator"
+
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
 	apiintf "github.com/pensando/sw/api/interfaces"
@@ -23,7 +25,7 @@ type mirrorSessionHooks struct {
 const (
 	// Finalize these parameters once we decide how to store the packets captured by Venice
 	veniceMaxPacketSize           = 256
-	veniceMaxCollectorsPerSession = 8
+	veniceMaxCollectorsPerSession = 4
 )
 
 func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
@@ -84,15 +86,42 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 		return i, false, fmt.Errorf("Need atleast one mirror collector, upto %d max", veniceMaxCollectorsPerSession)
 	}
 	numVeniceCollectors := 0
+
+	var mirrors monitoring.MirrorSessionList
+	mirror := monitoring.MirrorSession{}
+	mirrorKey := strings.TrimSuffix(mirror.MakeKey(string(apiclient.GroupMonitoring)), "/")
+	if err := kv.List(ctx, mirrorKey, &mirrors); err != nil {
+		return nil, true, fmt.Errorf("failed to list mirrors. Err: %v", err)
+	}
+	expConfig := make(map[string]*monitoring.MirrorExportConfig)
+	for _, mir := range mirrors.Items {
+		for _, col := range mir.Spec.Collectors {
+			if col.ExportCfg != nil {
+				expConfig[col.ExportCfg.Destination] = col.ExportCfg
+			}
+		}
+	}
 	for _, c := range ms.Spec.Collectors {
 		if c.Type == monitoring.PacketCollectorType_ERSPAN.String() {
 			if c.ExportCfg == nil || c.ExportCfg.Destination == "" {
 				return i, false, fmt.Errorf("Provide valid destination for ERSPAN collector")
 			}
+
+			if c.ExportCfg.Gateway != "" && !govldtr.IsIPv4(c.ExportCfg.Gateway) {
+				return i, false, fmt.Errorf("Gateway can be empty or must be a valid IPv4 address")
+			}
 			// Checking for Destition and other parameters inside ExportCfg XXX
 		} else {
 			// this is already checked by venice.check
 			return i, false, fmt.Errorf("Unsupported collector type")
+		}
+
+		if c.ExportCfg != nil {
+			existingCfg, ok := expConfig[c.ExportCfg.Destination]
+			if ok && existingCfg.Gateway != c.ExportCfg.Gateway {
+				return i, false, fmt.Errorf("Collector %v already added with different gateway %v, current %v",
+					c.ExportCfg.Destination, existingCfg.Gateway, c.ExportCfg.Gateway)
+			}
 		}
 	}
 	if numVeniceCollectors > 0 && ms.Spec.PacketSize > veniceMaxPacketSize {

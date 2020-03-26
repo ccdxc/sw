@@ -505,7 +505,8 @@
     "netprotoMirrorExportConfig": {
       "type": "object",
       "required": [
-        "destination"
+        "destination",
+        "gateway"
       ],
       "properties": {
         "destination": {
@@ -513,6 +514,12 @@
           "minLength": 1,
           "maxLength": 2048,
           "description": "IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 1 and 2048."
+        },
+        "gateway": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "Length of string should be between 1 and 2048."
         }
       }
     },

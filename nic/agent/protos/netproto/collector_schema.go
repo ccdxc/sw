@@ -54,6 +54,7 @@ var typesMapCollector = map[string]*api.Struct{
 		CLITags: map[string]api.CLIInfo{
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"destination":      api.CLIInfo{Path: "Spec.Destination", Skip: false, Insert: "", Help: ""},
+			"gateway":          api.CLIInfo{Path: "Spec.Gateway", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"id":               api.CLIInfo{Path: "Status.Collector", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
@@ -96,6 +97,8 @@ var typesMapCollector = map[string]*api.Struct{
 			"Destination": api.Field{Name: "Destination", CLITag: api.CLIInfo{ID: "destination", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"PacketSize": api.Field{Name: "PacketSize", CLITag: api.CLIInfo{ID: "packet-size", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "packet-size", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"Gateway": api.Field{Name: "Gateway", CLITag: api.CLIInfo{ID: "gateway", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "gateway", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"netproto.CollectorStatus": &api.Struct{

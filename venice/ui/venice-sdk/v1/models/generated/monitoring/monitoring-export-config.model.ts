@@ -11,6 +11,7 @@ import { MonitoringExternalCred, IMonitoringExternalCred } from './monitoring-ex
 
 export interface IMonitoringExportConfig {
     'destination': string;
+    'gateway': string;
     'transport'?: string;
     'credentials'?: IMonitoringExternalCred;
     '_ui'?: any;
@@ -22,6 +23,8 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
     '_ui': any = {};
     /** IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 1 and 2048. */
     'destination': string = null;
+    /** Gateway of the dest IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 0 and 2048. */
+    'gateway': string = null;
     /** Protocol and Port number where an external collector is gathering the data example "UDP/2055". Should be a valid layer 3 or layer 4 protocol and port/type. */
     'transport': string = null;
     /** Credentials provide secure access to the collector. */
@@ -29,6 +32,11 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
     public static propInfo: { [prop in keyof IMonitoringExportConfig]: PropInfoItem } = {
         'destination': {
             description:  `IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 1 and 2048.`,
+            required: true,
+            type: 'string'
+        },
+        'gateway': {
+            description:  `Gateway of the dest IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 0 and 2048.`,
             required: true,
             type: 'string'
         },
@@ -87,6 +95,13 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
         } else {
             this['destination'] = null
         }
+        if (values && values['gateway'] != null) {
+            this['gateway'] = values['gateway'];
+        } else if (fillDefaults && MonitoringExportConfig.hasDefaultValue('gateway')) {
+            this['gateway'] = MonitoringExportConfig.propInfo['gateway'].default;
+        } else {
+            this['gateway'] = null
+        }
         if (values && values['transport'] != null) {
             this['transport'] = values['transport'];
         } else if (fillDefaults && MonitoringExportConfig.hasDefaultValue('transport')) {
@@ -107,6 +122,7 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'destination': CustomFormControl(new FormControl(this['destination'], [required, minLengthValidator(1), maxLengthValidator(2048), ]), MonitoringExportConfig.propInfo['destination']),
+                'gateway': CustomFormControl(new FormControl(this['gateway'], [required, maxLengthValidator(2048), ]), MonitoringExportConfig.propInfo['gateway']),
                 'transport': CustomFormControl(new FormControl(this['transport']), MonitoringExportConfig.propInfo['transport']),
                 'credentials': CustomFormGroup(this['credentials'].$formGroup, MonitoringExportConfig.propInfo['credentials'].required),
             });
@@ -126,6 +142,7 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['destination'].setValue(this['destination']);
+            this._formGroup.controls['gateway'].setValue(this['gateway']);
             this._formGroup.controls['transport'].setValue(this['transport']);
             this['credentials'].setFormGroupValuesToBeModelValues();
         }

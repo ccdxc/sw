@@ -153,6 +153,7 @@ func convertFlowExportPolicy(fePolicy *monitoring.FlowExportPolicy) *netproto.Fl
 		}
 		e := netproto.ExportConfig{
 			Destination: exp.Destination,
+			Gateway:     exp.Gateway,
 			Transport:   &protoPort,
 		}
 

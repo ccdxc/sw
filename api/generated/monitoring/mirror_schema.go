@@ -61,6 +61,8 @@ var typesMapMirror = map[string]*api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MirrorExportConfig{}) },
 		Fields: map[string]api.Field{
 			"Destination": api.Field{Name: "Destination", CLITag: api.CLIInfo{ID: "destination", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Gateway": api.Field{Name: "Gateway", CLITag: api.CLIInfo{ID: "gateway", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "gateway", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"monitoring.MirrorSession": &api.Struct{
@@ -104,6 +106,7 @@ var typesMapMirror = map[string]*api.Struct{
 			"applications":     api.CLIInfo{Path: "Spec.MatchRules[].AppProtoSel.Apps", Skip: false, Insert: "", Help: ""},
 			"destination":      api.CLIInfo{Path: "Spec.Collectors[].ExportCfg.Destination", Skip: false, Insert: "", Help: ""},
 			"direction":        api.CLIInfo{Path: "Spec.Interfaces.Direction", Skip: false, Insert: "", Help: ""},
+			"gateway":          api.CLIInfo{Path: "Spec.Collectors[].ExportCfg.Gateway", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"ip-addresses":     api.CLIInfo{Path: "Spec.MatchRules[].Src.IPAddresses", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},

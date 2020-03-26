@@ -449,7 +449,8 @@
     "netprotoExportConfig": {
       "type": "object",
       "required": [
-        "destination"
+        "destination",
+        "gateway"
       ],
       "properties": {
         "destination": {
@@ -462,6 +463,12 @@
           "$ref": "#/definitions/netprotoProtoPort",
           "example": "tcp/1234, arp",
           "description": "protocol and Port number where an external collector is gathering the data example \"TCP/2055\". Should be a valid layer 3 or layer 4 protocol and port/type."
+        },
+        "gateway": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "Gateway of IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 1 and 2048."
         }
       }
     },

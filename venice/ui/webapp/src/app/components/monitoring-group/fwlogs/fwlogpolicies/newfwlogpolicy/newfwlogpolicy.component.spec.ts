@@ -77,6 +77,7 @@ describe('NewfwlogpolicyComponent', () => {
         targets: [
           {
             destination: '1.1.1.1',
+            gateway: null,
             transport: 'tcp/90'
           }
         ],
@@ -109,6 +110,7 @@ describe('NewfwlogpolicyComponent', () => {
         targets: [
           {
             destination: '1.1.1.1',
+            gateway: null,
             transport: 'tcp/90'
           }
         ],

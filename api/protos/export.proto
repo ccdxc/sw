@@ -26,12 +26,15 @@ message ExportConfig {
     // IP address or URL of the collector/entity to which the data is to be exported
     string Destination = 1 [(gogoproto.jsontag) = "destination,omitempty", (venice.check)="StrLen(1,2048)"];
 
+    // Gateway of the dest IP address or URL of the collector/entity to which the data is to be exported
+    string Gateway = 2 [(gogoproto.jsontag) = "gateway,omitempty", (venice.check)="StrLen(0,2048)"];
+
     // protocol and Port number where an external collector is gathering the data
     // example "UDP/2055"
-    string Transport = 2 [(gogoproto.jsontag) = "transport,omitempty", (venice.check)="EmptyOr(ProtoPort())"];
+    string Transport = 3 [(gogoproto.jsontag) = "transport,omitempty", (venice.check)="EmptyOr(ProtoPort())"];
 
     // Credentials provide secure access to the collector
-    ExternalCred Credentials = 3 [(gogoproto.jsontag) = "credentials,omitempty"];
+    ExternalCred Credentials = 4 [(gogoproto.jsontag) = "credentials,omitempty"];
 }
 
 // ------------------------ ExternalCred Object ----------------------------

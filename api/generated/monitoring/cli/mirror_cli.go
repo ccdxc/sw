@@ -36,6 +36,13 @@ var CreateMirrorSessionFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "gateway",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "ip-addresses",
 		Type:   "StringSlice",
 		Help:   "",

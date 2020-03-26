@@ -21,6 +21,8 @@ var typesMapFlowexport = map[string]*api.Struct{
 			"Destination": api.Field{Name: "Destination", CLITag: api.CLIInfo{ID: "destination", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Transport": api.Field{Name: "Transport", CLITag: api.CLIInfo{ID: "proto-port", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "proto-port", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.ProtoPort"},
+
+			"Gateway": api.Field{Name: "Gateway", CLITag: api.CLIInfo{ID: "gateway", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "gateway", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"netproto.FlowExportPolicy": &api.Struct{
@@ -63,6 +65,7 @@ var typesMapFlowexport = map[string]*api.Struct{
 			"api-version":       api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"destination":       api.CLIInfo{Path: "Spec.Exports[].Destination", Skip: false, Insert: "", Help: ""},
 			"format":            api.CLIInfo{Path: "Spec.Format", Skip: false, Insert: "", Help: ""},
+			"gateway":           api.CLIInfo{Path: "Spec.Exports[].Gateway", Skip: false, Insert: "", Help: ""},
 			"generation-id":     api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"id":                api.CLIInfo{Path: "Status.FlowExportPolicyID", Skip: false, Insert: "", Help: ""},
 			"interval":          api.CLIInfo{Path: "Spec.Interval", Skip: false, Insert: "", Help: ""},

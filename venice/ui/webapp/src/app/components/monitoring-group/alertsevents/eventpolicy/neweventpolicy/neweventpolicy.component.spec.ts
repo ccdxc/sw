@@ -73,6 +73,7 @@ describe('NeweventpolicyComponent', () => {
         targets: [
           {
             destination: '1.1.1.1',
+            gateway: null,
             transport: 'tcp/90'
           }
         ],
@@ -103,6 +104,7 @@ describe('NeweventpolicyComponent', () => {
         format: MonitoringEventPolicySpec_format['syslog-rfc5424'],
         targets: [
           {
+            gateway: null,
             destination: '1.1.1.1',
             transport: 'tcp/90'
           }

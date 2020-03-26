@@ -106,7 +106,9 @@ func buildDSCMirrorSession(mss *MirrorSessionState) *netproto.MirrorSession {
 		}
 		tc := netproto.MirrorCollector{
 			//Type:      c.Type,
-			ExportCfg: netproto.MirrorExportConfig{Destination: export.Destination},
+			ExportCfg: netproto.MirrorExportConfig{Destination: export.Destination,
+				Gateway: export.Gateway,
+			},
 		}
 		tSpec.Collectors = append(tSpec.Collectors, tc)
 	}
@@ -389,7 +391,7 @@ func (smm *SmMirrorSessionInterface) findCollector(tenant, vrf, dest string) (*m
 	return nil, errors.New("Collector not found")
 }
 
-func (smm *SmMirrorSessionInterface) addCollector(tenant, vrf, dest string) (*mirrorCollector, error) {
+func (smm *SmMirrorSessionInterface) addCollector(tenant, vrf, dest, gateway string) (*mirrorCollector, error) {
 
 	smm.Lock()
 	defer smm.Unlock()
@@ -412,6 +414,7 @@ func (smm *SmMirrorSessionInterface) addCollector(tenant, vrf, dest string) (*mi
 		Spec: netproto.CollectorSpec{
 			Destination: dest,
 			VrfName:     vrf,
+			Gateway:     gateway,
 		},
 	}
 
@@ -627,7 +630,7 @@ func (smm *SmMirrorSessionInterface) addInterfaceMirror(ms *MirrorSessionState) 
 		mcol, err := smgrMirrorInterface.findCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace, collector.ExportCfg.Destination)
 		if err != nil {
 			mcol, err = smgrMirrorInterface.addCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace,
-				collector.ExportCfg.Destination)
+				collector.ExportCfg.Destination, collector.ExportCfg.Gateway)
 			if err != nil {
 				log.Errorf("Error Adding collector %+v. Err: %v", collector.ExportCfg.Destination, err)
 				return err
@@ -705,7 +708,8 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 			}
 			delCollectors = append(delCollectors, mcol)
 		} else if cref.cnt == 2 {
-			mcol, err := smgrMirrorInterface.addCollector(nmirror.Tenant, nmirror.Namespace, cref.col.ExportCfg.Destination)
+			mcol, err := smgrMirrorInterface.addCollector(nmirror.Tenant, nmirror.Namespace,
+				cref.col.ExportCfg.Destination, cref.col.ExportCfg.Gateway)
 			if err != nil {
 				log.Infof("Error adding collector %v", err)
 				return fmt.Errorf("Error adding collector %v", err)

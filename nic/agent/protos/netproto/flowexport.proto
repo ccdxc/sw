@@ -73,10 +73,13 @@ message FlowExportPolicySpec {
 message ExportConfig {
     // IP address or URL of the collector/entity to which the data is to be exported
     string Destination = 1 [(gogoproto.jsontag) = "destination,omitempty", (venice.check)="StrLen(1,2048)"];
-
+    
     // protocol and Port number where an external collector is gathering the data
     // example "TCP/2055"
     netproto.ProtoPort Transport = 2 [(gogoproto.jsontag) = "proto-port,omitempty", (venice.check)="EmptyOr(ProtoPort())"];
+
+    // Gateway of IP address or URL of the collector/entity to which the data is to be exported
+    string Gateway = 3 [(gogoproto.jsontag) = "gateway,omitempty", (venice.check)="StrLen(1,2048)"];
 }
 
 message FlowExportPolicyStatus {

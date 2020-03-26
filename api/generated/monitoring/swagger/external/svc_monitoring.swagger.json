@@ -18421,7 +18421,8 @@
     "monitoringExportConfig": {
       "type": "object",
       "required": [
-        "destination"
+        "destination",
+        "gateway"
       ],
       "properties": {
         "destination": {
@@ -18429,6 +18430,11 @@
           "minLength": 1,
           "maxLength": 2048,
           "description": "IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 1 and 2048."
+        },
+        "gateway": {
+          "type": "string",
+          "maxLength": 2048,
+          "description": "Gateway of the dest IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 0 and 2048."
         },
         "transport": {
           "type": "string",
@@ -18946,6 +18952,10 @@
           "type": "string",
           "example": "10.1.1.1 ",
           "description": "IP address of the collector/entity to which the data is to be exported. Should be a valid IPv4 address."
+        },
+        "gateway": {
+          "type": "string",
+          "description": "IP address of the gateway to reach the collector."
         }
       }
     },

@@ -86,6 +86,7 @@ message MirrorSessionEventList {
 message MirrorExportConfig {
     // IP address or URL of the collector/entity to which the data is to be exported
     string Destination = 1 [(gogoproto.jsontag) = "destination,omitempty", (venice.check) = "StrLen(1,2048)"];
+    string Gateway     = 2 [(gogoproto.jsontag) = "gateway,omitempty", (venice.check) = "StrLen(1,2048)"];
 }
 
 // Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)
