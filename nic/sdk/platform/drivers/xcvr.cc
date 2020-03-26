@@ -388,12 +388,6 @@ xcvr_valid (int port)
     if (!xcvr_valid_check_enabled()) {
         return true;
     }
-
-    // if older boards, return true
-    if (sdk::lib::pal_cpld_rev_old() == true) {
-        return true;
-    }
-
     return xcvr_state(port) == xcvr_state_t::XCVR_SPROM_READ? true : false;
 }
 

@@ -24,7 +24,6 @@ typedef enum qsfp_page {
     QSFP_PAGE_LOW,
 } qsfp_page_t;
 
-#define MAX_CPLD_REV_OLD  0x6
 #define QSFP_PAGE_OFFSET  127
 #define MAX_QSFP_RETRIES  5
 
@@ -227,12 +226,6 @@ pal_get_cpld_rev(void) {
 static inline int
 pal_get_cpld_id(void) {
     return gl_pal_info.rwvecs.get_cpld_id();
-}
-
-inline bool
-pal_cpld_rev_old (void)
-{
-    return pal_get_cpld_rev() <= MAX_CPLD_REV_OLD? true : false;
 }
 
 static inline int
