@@ -630,9 +630,12 @@ func (idr *Indexer) initSearchDB() error {
 	}
 
 	if idr.watchVos {
-		// Create index and mapping for Firewall logs
-		if err :=
-			idr.createIndexHelper(globals.FwLogs, globals.DefaultTenant); err != nil && !elastic.IsIndexExists(err) {
+		// create fwlogs template; once the template is created, elasticsearch automatically
+		// applies the properties for any new indices that's matching the pattern. As the index call
+		// automatically creates the index when it does not exists, we don't need to explicitly
+		// create hourly fwlogs index.
+		if err := idr.createFwLogsIndexTemplate(); err != nil {
+			idr.logger.Errorf("failed to create fwlogs template in elastic, err: %v", err)
 			return err
 		}
 
@@ -852,5 +855,24 @@ func (idr *Indexer) persistLastProcessedkeys() error {
 			}
 		}
 	}()
+	return nil
+}
+
+// createFwLogsIndexTemplate helper function to create index template for fwlogs.
+func (idr *Indexer) createFwLogsIndexTemplate() error {
+	mapping, err := idr.getIndexMapping(globals.FwLogs)
+
+	if err != nil {
+		idr.logger.Errorf("failed get elastic mapping for fwlog object, err: %v", err)
+		return err
+	}
+
+	// create events template
+	if err := idr.elasticClient.CreateIndexTemplate(
+		context.Background(), elastic.GetTemplateName(globals.FwLogs), mapping); err != nil {
+		idr.logger.Errorf("failed to create events index template, err: %v", err)
+		return err
+	}
+
 	return nil
 }

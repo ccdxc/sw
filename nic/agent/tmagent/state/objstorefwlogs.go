@@ -7,7 +7,6 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
 	"io"
 	"strconv"
@@ -29,7 +28,6 @@ type fileFormat byte
 
 const (
 	csvFileFormat fileFormat = iota
-	jsonFileFormat
 )
 
 const (
@@ -107,13 +105,15 @@ func (s *PolicyState) ObjStoreInit(nodeUUID string,
 	w := newWorkers(s.ctx, numLogTransmitWorkers, workItemBufferSize)
 
 	go periodicTransmit(s.ctx, rc, s.logsChannel,
-		periodicTransmitTime, testChannel, nodeUUID, s.objStoreFileFormat, s.zipObjects, s.singleBucket, w)
+		periodicTransmitTime, testChannel, nodeUUID,
+		s.objStoreFileFormat, s.zipObjects, s.singleBucket, w)
 	return nil
 }
 
 func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan singleLog,
 	periodicTransmitTime time.Duration, testChannel chan<- TestObject,
-	nodeUUID string, ff fileFormat, zip bool, singleBucket bool, w *workers) {
+	nodeUUID string, ff fileFormat, zip bool, singleBucket bool,
+	w *workers) {
 
 	var c objstore.Client
 	clientChannel := make(chan interface{}, 1)
@@ -241,7 +241,7 @@ func transmitLogs(ctx context.Context,
 		indexBucketName := getIndexBucketName(bucketName)
 
 		// The logs in input slice logs are already sorted according to their Ts.
-		// Every entry in the logs slice, convert to CSV or JSON and write to buffer.
+		// Every entry in the logs slice, convert to CSV and write to buffer.
 		// TODO: What format is needed by GraphDB?
 
 		var objNameBuffer, objBuffer, indexBuffer bytes.Buffer
@@ -264,22 +264,12 @@ func transmitLogs(ctx context.Context,
 		objNameBuffer.WriteString(fStartTs)
 		objNameBuffer.WriteString("_")
 		objNameBuffer.WriteString(fEndTs)
-
-		if ff == csvFileFormat {
-			objNameBuffer.WriteString(".csv")
-			if zip {
-				objNameBuffer.WriteString(".gzip")
-			}
-			getCSVObjectBuffer(logs, &objBuffer, zip)
-			getCSVIndexBuffer(index, &indexBuffer, zip)
-		} else {
-			objNameBuffer.WriteString(".json")
-			if zip {
-				objNameBuffer.WriteString(".gzip")
-			}
-			getJSONObjectBuffer(logs, &objBuffer)
-			getJSONIndexBuffer(index, &indexBuffer)
+		objNameBuffer.WriteString(".csv")
+		if zip {
+			objNameBuffer.WriteString(".gzip")
 		}
+		getCSVObjectBuffer(logs, &objBuffer, zip)
+		getCSVIndexBuffer(index, &indexBuffer, zip)
 
 		// Object meta
 		meta := map[string]string{}
@@ -301,16 +291,21 @@ func transmitLogs(ctx context.Context,
 				Index:           indexBuffer.String(),
 				Meta:            meta,
 			}
+			metric.addSuccess()
+			return
 		}
 
 		// PutObject uploads an object to the object store
 		r := bytes.NewReader(objBuffer.Bytes())
-		putObjectHelper(ctx, c, bucketName, objNameBuffer.String(), r, len(objBuffer.Bytes()), meta, meta["logcount"], true)
+		putObjectHelper(ctx, c, bucketName,
+			objNameBuffer.String(), r, len(objBuffer.Bytes()),
+			meta, meta["logcount"], true)
 
 		// The index's object name is same as the data object name
 		ir := bytes.NewReader(indexBuffer.Bytes())
-		putObjectHelper(ctx, c, indexBucketName, objNameBuffer.String(), ir, len(indexBuffer.Bytes()), map[string]string{}, "", false)
-
+		putObjectHelper(ctx, c, indexBucketName,
+			objNameBuffer.String(), ir, len(indexBuffer.Bytes()),
+			map[string]string{}, "", false)
 	}
 }
 
@@ -332,7 +327,13 @@ func putObjectHelper(ctx context.Context,
 	if err != nil {
 		log.Errorf("dropping, bucket %s, time %s, logcount %s, data len %d, tries %d, err %s",
 			bucketName, time.Now().String(), logcount, size, tries, err)
+		metric.addDrop()
 		return
+	}
+
+	metric.addSuccess()
+	if tries != 0 {
+		metric.addRetries(tries)
 	}
 
 	if dolog {
@@ -390,19 +391,6 @@ func getCSVIndexBuffer(index map[string]string, b *bytes.Buffer, zip bool) {
 	zw := gzip.NewWriter(b)
 	zw.Write(csvBytes.Bytes())
 	zw.Close()
-}
-
-func getJSONObjectBuffer(logs interface{}, b *bytes.Buffer) {
-	for _, l := range logs.([]interface{}) {
-		temp := l.(map[string]interface{})
-		ml, _ := json.Marshal(temp)
-		(*b).Write(ml)
-		(*b).WriteString("\n")
-	}
-}
-
-func getJSONIndexBuffer(logs interface{}, b *bytes.Buffer) {
-	// not implemented
 }
 
 func getBucketName(bucketPrefix string, vrf uint64, dscID string, ts time.Time, singleBucket bool) string {
@@ -473,36 +461,6 @@ func (s *PolicyState) handleObjStore(ev *halproto.FWEvent, ts time.Time) {
 		ts = time.Unix(0, unixnano)
 	}
 	appID := fmt.Sprintf("%v", ev.GetAppId()) // TODO: praveen convert to enum
-
-	// JSON file format
-	if s.objStoreFileFormat == jsonFileFormat {
-		fwLog := map[string]interface{}{
-			"ts":              ts,
-			"sourcevrf":       vrfSrc,
-			"destinationvrf":  vrfDest,
-			"source":          ipSrc,
-			"destination":     ipDest,
-			"sourceport":      sPort,
-			"destinationport": dPort,
-			"protocol":        ipProt,
-			"action":          action,
-			"direction":       dir,
-			"ruleid":          ruleID,
-			"sessionid":       sessionID,
-			"sessionstate":    state,
-			"appid":           appID}
-
-		// icmp fields
-		if ev.GetIpProt() == halproto.IPProtocol_IPPROTO_ICMP {
-			fwLog["icmptype"] = int64(ev.GetIcmptype())
-			fwLog["icmpid"] = int64(ev.GetIcmpid())
-			fwLog["icmpcode"] = int64(ev.GetIcmpcode())
-		}
-
-		// TODO: use sync pool
-		s.logsChannel <- singleLog{ts, ev.GetSourceVrf(), fwLog}
-		return
-	}
 
 	// CSV file format
 	fwLog := []string{

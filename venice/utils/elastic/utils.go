@@ -96,7 +96,7 @@ func GetIndex(dtype globals.DataType, tenant string) string {
 	switch dtype {
 	case globals.FwLogs:
 		hour := getClockHourTimeForIndex(time.Now(), 6)
-		return strings.ToLower(fmt.Sprintf("%s.%s.%s", ExternalIndexPrefix, GetDocType(dtype), hour))
+		return strings.ToLower(fmt.Sprintf("%s.%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype), hour))
 	case globals.FwLogsObjects:
 		return strings.ToLower(fmt.Sprintf("%s.%s", InternalIndexPrefix, GetDocType(dtype)))
 	case globals.Configs:
@@ -143,7 +143,7 @@ func GetDocType(dtype globals.DataType) string {
 // GetTemplateName returns the template name for the given data type
 func GetTemplateName(dtype globals.DataType) string {
 	switch dtype {
-	case globals.Events, globals.AuditLogs:
+	case globals.Events, globals.AuditLogs, globals.FwLogs:
 		return fmt.Sprintf("%s-template", GetDocType(dtype))
 	}
 

@@ -549,3 +549,43 @@ func TestElasticMapper(t *testing.T) {
 		})
 	}
 }
+
+func TestMapperDisableIndexing(t *testing.T) {
+	_, ok := isIndexingDisabled[elastic.GetDocType(globals.FwLogs)]["rule-id"]
+	Assert(t, ok, "indexing is enabled on fwlogs::ruleid")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogs)]["session-id"]
+	Assert(t, ok, "indexing is enabled on fwlogs::sessid")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogs)]["flow-action"]
+	Assert(t, ok, "indexing is enabled on fwlogs::flowaction")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogs)]["icmp-type"]
+	Assert(t, ok, "indexing is enabled on fwlogs::icmptype")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogs)]["icmp-id"]
+	Assert(t, ok, "indexing is enabled on fwlogs::icmpid")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogs)]["icmp-code"]
+	Assert(t, ok, "indexing is enabled on fwlogs::icmpcode")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogs)]["direction"]
+	Assert(t, ok, "indexing is enabled on fwlogs::dir")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogs)]["source-ip"]
+	Assert(t, !ok, "indexing is disabled on fwlogs::sip")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogs)]["destination-ip"]
+	Assert(t, !ok, "indexing is disabled on fwlogs::dip")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogs)]["source-port"]
+	Assert(t, !ok, "indexing is disabled on fwlogs::sport")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogs)]["destination-port"]
+	Assert(t, !ok, "indexing is disabled on fwlogs::dport")
+
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogsObjects)]["bucket"]
+	Assert(t, ok, "indexing is enabled on fwlogobjects::bucket")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogsObjects)]["logscount"]
+	Assert(t, ok, "indexing is enabled on fwlogobjects::logscount")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogsObjects)]["startts"]
+	Assert(t, ok, "indexing is enabled on fwlogobjects::startts")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogsObjects)]["endts"]
+	Assert(t, ok, "indexing is enabled on fwlogobjects::endts")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogsObjects)]["key"]
+	Assert(t, !ok, "indexing is disabled on fwlogobjects::key")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogsObjects)]["tenant"]
+	Assert(t, !ok, "indexing is disabled on fwlogobjects::tenant")
+	_, ok = isIndexingDisabled[elastic.GetDocType(globals.FwLogsObjects)]["dscid"]
+	Assert(t, !ok, "indexing is disabled on fwlogobjects::dscid")
+}

@@ -133,7 +133,7 @@ var _ = Describe("tests for storing firewall logs in object store", func() {
 		})
 
 		It("verify logs on elastic", func() {
-			dataIndex := elastic.GetIndex(globals.FwLogs, globals.ReservedFwLogsTenantName)
+			dataIndex := elastic.GetIndex(globals.FwLogs, globals.DefaultTenant)
 			verifyIndexExistsOnElastic(esClient, dataIndex)
 			verifyLogsOnElastic(esClient, fwLogClient, dataIndex)
 		})
@@ -315,9 +315,9 @@ func verifyLogsOnElastic(c elastic.ESClient, fwLogClient objstore.Client, indexN
 
 		// construct the query
 		query := es.NewBoolQuery().
-			Must(es.NewMatchQuery("sip", sip)).
-			Must(es.NewMatchQuery("dip", dip)).
-			Must(es.NewMatchQuery("proto", proto))
+			Must(es.NewMatchQuery("source-ip", sip)).
+			Must(es.NewMatchQuery("destination-ip", dip)).
+			Must(es.NewMatchQuery("protocol", proto))
 
 		// execute query
 		result, err := c.Search(context.Background(),
@@ -361,14 +361,14 @@ func verifyMinioObjectsOnElastic(c elastic.ESClient, fwLogClient objstore.Client
 
 			// execute query
 			result, err := c.Search(context.Background(),
-				indexName,    // index
-				"",           // skip the index type
-				query,        // query to be executed
-				nil,          // no aggregation
-				0,            // from
-				maxResults,   // to
-				"creationTs", // sorting is required
-				true)         // sort in desc order
+				indexName,       // index
+				"",              // skip the index type
+				query,           // query to be executed
+				nil,             // no aggregation
+				0,               // from
+				maxResults,      // to
+				"creation-time", // sorting is required
+				true)            // sort in desc order
 
 			Expect(err).NotTo(HaveOccurred())
 
@@ -395,47 +395,57 @@ func verifyIndexExistsOnElastic(c elastic.ESClient, indexName string) {
 
 func compareAndVerifyLogLineInCsvAndElastic(csvLine []string, elasticMap map[string]interface{}) {
 
-	// fmt.Println("**** csv data ****", csvLine)
-	// fmt.Println("**** elastic data ****", elasticMap)
+	fmt.Println("**** csv data ****", csvLine)
+	fmt.Println("**** elastic data ****", elasticMap)
 
 	// "sport", "dport",
 	// "proto", "act", "dir", "ruleid",
 	// "sessionid", "sessionstate",
 	// "icmptype", "icmpid", "icmpcode"
-	Expect(csvLine[2] == elasticMap["sip"].(string)).Should(BeTrue())
-	Expect(csvLine[3] == elasticMap["dip"].(string)).Should(BeTrue())
+	Expect(csvLine[2] == elasticMap["source-ip"].(string)).Should(BeTrue())
+	Expect(csvLine[3] == elasticMap["destination-ip"].(string)).Should(BeTrue())
 
 	sport, err := strconv.ParseUint(csvLine[5], 10, 64)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(float64(sport) == elasticMap["sport"].(float64)).Should(BeTrue())
+	Expect(float64(sport) == elasticMap["source-port"].(float64)).Should(BeTrue())
 
 	dport, err := strconv.ParseUint(csvLine[6], 10, 64)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(float64(dport) == elasticMap["dport"].(float64)).Should(BeTrue())
+	Expect(float64(dport) == elasticMap["destination-port"].(float64)).Should(BeTrue())
 
-	Expect(csvLine[7] == elasticMap["proto"].(string)).Should(BeTrue())
+	Expect(csvLine[7] == elasticMap["protocol"].(string)).Should(BeTrue())
 	Expect(csvLine[8] == elasticMap["action"].(string)).Should(BeTrue())
-	Expect(csvLine[9] == elasticMap["dir"].(string)).Should(BeTrue())
+	Expect(csvLine[9] == elasticMap["direction"].(string)).Should(BeTrue())
 
 	ruleID, err := strconv.ParseUint(csvLine[10], 10, 64)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(float64(ruleID) == elasticMap["ruleid"].(float64)).Should(BeTrue())
+	if _, ok := elasticMap["rule-id"]; ok {
+		Expect(float64(ruleID) == elasticMap["rule-id"].(float64)).Should(BeTrue())
+	}
 
 	sessionID, err := strconv.ParseUint(csvLine[11], 10, 64)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(float64(sessionID) == elasticMap["sessid"].(float64)).Should(BeTrue())
+	if _, ok := elasticMap["session-id"]; ok {
+		Expect(float64(sessionID) == elasticMap["session-id"].(float64)).Should(BeTrue())
+	}
 
-	Expect(csvLine[12] == elasticMap["flowaction"].(string)).Should(BeTrue())
+	Expect(csvLine[12] == elasticMap["flow-action"].(string)).Should(BeTrue())
 
 	icmpType, err := strconv.ParseUint(csvLine[13], 10, 64)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(float64(icmpType) == elasticMap["icmptype"].(float64)).Should(BeTrue())
+	if _, ok := elasticMap["icmp-type"]; ok {
+		Expect(float64(icmpType) == elasticMap["icmp-type"].(float64)).Should(BeTrue())
+	}
 
 	icmpID, err := strconv.ParseUint(csvLine[14], 10, 64)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(float64(icmpID) == elasticMap["icmpid"].(float64)).Should(BeTrue())
+	if _, ok := elasticMap["icmp-id"]; ok {
+		Expect(float64(icmpID) == elasticMap["icmp-id"].(float64)).Should(BeTrue())
+	}
 
 	icmpCode, err := strconv.ParseUint(csvLine[15], 10, 64)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(float64(icmpCode) == elasticMap["icmpcode"].(float64)).Should(BeTrue())
+	if _, ok := elasticMap["icmp-code"]; ok {
+		Expect(float64(icmpCode) == elasticMap["icmp-code"].(float64)).Should(BeTrue())
+	}
 }

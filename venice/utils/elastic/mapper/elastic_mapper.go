@@ -74,6 +74,46 @@ var fieldOrTypeOverride = map[string]map[string]string{
 		// special types mapping
 		"Timestamp": "date",
 	},
+	// Fwlogs DocType
+	elastic.GetDocType(globals.FwLogs): {
+		// special types mapping
+		"Timestamp": "date",
+	},
+}
+
+// Fields that don not indexing should be listed here.
+// Please read "https://www.elastic.co/guide/en/elasticsearch/reference/6.3/enabled.html"
+// for understanding how it works & gets configured in elastic.
+var isIndexingDisabled = map[string]map[string]struct{}{
+	elastic.GetDocType(globals.FwLogs): {
+		"rule-id":         struct{}{},
+		"session-id":      struct{}{},
+		"flow-action":     struct{}{},
+		"icmp-type":       struct{}{},
+		"icmp-id":         struct{}{},
+		"icmp-code":       struct{}{},
+		"time":            struct{}{},
+		"direction":       struct{}{},
+		"destination-vrf": struct{}{},
+		"source-vrf":      struct{}{},
+		"policy-name":     struct{}{},
+		"kind":            struct{}{},
+		"api-version":     struct{}{},
+		"mod-time":        struct{}{},
+		"namespace":       struct{}{},
+		"uuid":            struct{}{},
+		"generation-id":   struct{}{},
+		"name":            struct{}{},
+		"tenant":          struct{}{},
+		"labels":          struct{}{},
+		"self-link":       struct{}{},
+	},
+	elastic.GetDocType(globals.FwLogsObjects): {
+		"logscount": struct{}{},
+		"startts":   struct{}{},
+		"endts":     struct{}{},
+		"bucket":    struct{}{},
+	},
 }
 
 func defaultOptions() *options {
@@ -255,6 +295,15 @@ func mapper(docType, key string, val reflect.Value, config map[string]interface{
 
 	log.Debugf("%s mapper configmap: %v N:%v T:%v K:%v concrete-value: %v",
 		indent, config, key, val.Type().Name(), val.Kind(), val.Interface())
+
+	// check using feild name whether indexing is disabled on the field
+	if _, ok := isIndexingDisabled[docType][key]; ok {
+		eType := elastic.Mapping{
+			"enabled": false,
+		}
+		config[key] = eType
+		return
+	}
 
 	// check for override by field name
 	if kind, ok := fieldOrTypeOverride[docType][key]; ok {

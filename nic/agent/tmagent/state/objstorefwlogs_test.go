@@ -140,21 +140,27 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 	Assert(t, testObject.Meta["metaversion"] == "v1",
 		"object meta's meta csv version is not correct, expectecd v1, received %d", testObject.Meta["metaversion"])
 
+	// Check metrics
+	Assert(t, metric.fwlogDrops.Value() == int64(0), "fwlog object got dropped")
+	Assert(t, metric.fwlogSuccess.Value() == int64(1), "fwlog object success metric is 0, expected 1")
+
+	// TestObjStoreErrors tests the error scenarios in the object store pipeline
+	t.Run("TestObjStoreErrors", func(t *testing.T) {
+		// Pass nil resolver
+		err = ps.ObjStoreInit("1", nil, time.Duration(1)*time.Second, nil)
+		Assert(t, err != nil, "failed to init objectstore")
+	})
+
+	// TestInternalUntriggeredFunctions tests the functions that are not triggered by the testcases written above
+	t.Run("TestInternalUntriggeredFunctions", func(t *testing.T) {
+		metric.addDrop()
+		Assert(t, metric.fwlogDrops.Value() == 1, "fwlogDrops metric did not update")
+		metric.addSuccess()
+		Assert(t, metric.fwlogSuccess.Value() == 2, "fwlogSuccess metric did not update")
+		metric.addRetries(5)
+		Assert(t, metric.fwlogRetries.Get("5").String() == "1", "fwlogRetries metric did not update")
+	})
+
 	// done := make(chan bool)
 	// <-done
-}
-
-// TestObjStoreErrors tests the error scenarios in the object store pipeline
-func TestObjStoreErrors(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	ps, err := NewTpAgent(ctx, strings.Split(types.DefaultAgentRestURL, ":")[1])
-	AssertOk(t, err, "failed to create tp agent")
-	Assert(t, ps != nil, "invalid policy state received")
-	defer ps.Close()
-
-	// Pass nil resolver
-	err = ps.ObjStoreInit("1", nil, time.Duration(1)*time.Second, nil)
-	Assert(t, err != nil, "failed to init objectstore")
 }

@@ -1,6 +1,9 @@
 package indexer
 
 import (
+	"fmt"
+
+	"github.com/pensando/sw/api/generated/fwlog"
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -160,11 +163,12 @@ func (idr *Indexer) getIndexMapping(dType globals.DataType) (string, error) {
 
 	case globals.FwLogs:
 		// get the elastic mapping config
-		config, err := mapper.ElasticMapper(FwLogV1{},
+		config, err := mapper.ElasticMapper(fwlog.FwLog{},
 			elastic.GetDocType(dType),
 			mapper.WithShardCount(3),
-			mapper.WithReplicaCount(2),
+			mapper.WithReplicaCount(1),
 			mapper.WithMaxInnerResults(globals.SpyglassMaxResults),
+			mapper.WithIndexPatterns(fmt.Sprintf("*.%s.*", elastic.GetDocType(dType))),
 			mapper.WithCharFilter())
 		if err != nil {
 			idr.logger.Errorf("Failed to generate elastic mapping for docType: %d, err: %v",

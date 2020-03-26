@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"expvar"
 	"flag"
 	"fmt"
+	"net/http"
 	"os/exec"
 	"strings"
 	"testing"
@@ -13,6 +15,7 @@ import (
 
 	dctypes "github.com/docker/docker/api/types"
 	dc "github.com/docker/docker/client"
+	"github.com/gorilla/mux"
 	es "github.com/olivere/elastic"
 
 	"github.com/pensando/sw/api"
@@ -110,6 +113,10 @@ func setupSpyglass(ctx context.Context, t *testing.T,
 		err = idxer.Start()
 		AssertOk(t, err, "failed to start indexer")
 	}(r)
+
+	router := mux.NewRouter()
+	router.Methods("GET").Subrouter().Handle("/debug/vars", expvar.Handler())
+	go http.ListenAndServe(fmt.Sprintf("127.0.0.1:%s", globals.SpyglassRESTPort), router)
 }
 
 func setupKibana(t *testing.T, elasticURL string) {
@@ -213,7 +220,7 @@ func verifyAndReturnFirewallIndexName(t *testing.T, esClient elastic.ESClient) s
 }
 
 func verifyDiskMonitoring(ctx context.Context, t *testing.T, esClient elastic.ESClient, logger log.Logger) {
-	query := es.NewMatchQuery("bucket", "fwlogs")
+	query := es.NewMatchAllQuery()
 	oldCount := 0
 	assert := func() (bool, interface{}) {
 		result, err := esClient.Search(ctx,

@@ -89,7 +89,7 @@ func (idr *Indexer) cleanupOldObjects() {
 }
 
 func (idr *Indexer) deleteOldestFwLogObjects() (int, error) {
-	query := es.NewMatchQuery("bucket", "fwlogs")
+	query := es.NewMatchAllQuery()
 	maxResults := 10000
 	if idr.numFwLogObjectsToDelete < 10000 {
 		maxResults = idr.numFwLogObjectsToDelete

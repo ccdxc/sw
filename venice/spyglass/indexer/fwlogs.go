@@ -10,7 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogo/protobuf/types"
+
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/fwlog"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -22,29 +25,6 @@ const (
 	fwlogsSystemMetaBucketName  = "fwlogssystemmeta"
 	lastProcessedKeysObjectName = "lastProcessedKeys"
 )
-
-// FwLogV1 represents the fwlog V1 struct
-type FwLogV1 struct {
-	Flowaction string    `json:"flowaction"`
-	Sourcevrf  uint64    `json:"svrf"`
-	Destvrf    uint64    `json:"dvrf"`
-	IPVer      uint32    `json:"ipver"`
-	Sipv4      string    `json:"sip"`
-	Dipv4      string    `json:"dip"`
-	Sport      uint32    `json:"sport"`
-	Dport      uint32    `json:"dport"`
-	Proto      string    `json:"proto"`
-	Direction  string    `json:"dir"`
-	Action     string    `json:"action"`
-	Ts         time.Time `json:"time"`
-	SessionID  uint64    `json:"sessid"`
-	RuleID     uint64    `json:"ruleid"`
-	Icmptype   uint32    `json:"icmptype"`
-	Icmpcode   uint32    `json:"icmpcode"`
-	IcmpID     uint32    `json:"icmpid"`
-	CreationTs time.Time `json:"creationts"`
-	AppID      string    `json:"appid"`
-}
 
 // FwLogObjectV1 represents an object created in objectstore for FwLogs.
 // Each object is either a csv or a json file zipped file and has
@@ -147,7 +127,7 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 	data := output.([][]string)
 
 	if meta["Csvversion"] == "v1" {
-		output, err := idr.parseFwLogsCsvV1(id, key, data, uuid)
+		output, err := idr.parseFwLogsCsvV1(id, key, data, uuid, meta)
 		if err != nil {
 			return err
 		}
@@ -173,7 +153,7 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 	return nil
 }
 
-func (idr *Indexer) parseFwLogsCsvV1(id int, key string, data [][]string, uuid string) ([][]*elastic.BulkRequest, error) {
+func (idr *Indexer) parseFwLogsCsvV1(id int, key string, data [][]string, uuid string, meta map[string]string) ([][]*elastic.BulkRequest, error) {
 	output := [][]*elastic.BulkRequest{}
 	fwlogs := []*elastic.BulkRequest{}
 	for i := 1; i < len(data); i++ {
@@ -182,7 +162,19 @@ func (idr *Indexer) parseFwLogsCsvV1(id int, key string, data [][]string, uuid s
 		ts, err := time.Parse(time.RFC3339, line[4])
 		if err != nil {
 			idr.logger.Errorf("Writer %d, object %s, error in parsing time %s", id, key, err.Error())
-			return nil, fmt.Errorf("Writer %d, object %s, error in parding time %s", id, key, err.Error())
+			return nil, fmt.Errorf("Writer %d, object %s, error in parsing time %s", id, key, err.Error())
+		}
+
+		timestamp, err := types.TimestampProto(ts)
+		if err != nil {
+			idr.logger.Errorf("Writer %d, object %s, error in converting time to proto %s", id, key, err.Error())
+			return nil, fmt.Errorf("Writer %d, object %s, error in converting time to proto %s", id, key, err.Error())
+		}
+
+		srcVRF, err := strconv.ParseUint(line[0], 10, 64)
+		if err != nil {
+			idr.logger.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
+			return nil, fmt.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 		}
 
 		sport, err := strconv.ParseUint(line[5], 10, 64)
@@ -227,24 +219,24 @@ func (idr *Indexer) parseFwLogsCsvV1(id int, key string, data [][]string, uuid s
 			return nil, fmt.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 		}
 
-		obj := FwLogV1{
-			Sipv4:      line[2],
-			Dipv4:      line[3],
-			Ts:         ts,
-			CreationTs: time.Now(),
-			Sport:      uint32(sport),
-			Dport:      uint32(dport),
-			Proto:      line[7],
+		obj := fwlog.FwLog{
+			SrcVRF:     srcVRF,
+			SrcIP:      line[2],
+			DestIP:     line[3],
+			SrcPort:    uint32(sport),
+			DestPort:   uint32(dport),
+			Protocol:   line[7],
 			Action:     line[8],
 			Direction:  line[9],
 			RuleID:     ruleID,
 			SessionID:  sessionID,
-			Flowaction: line[12],
-			Icmptype:   uint32(icmpType),
+			ReporterID: meta["Nodeid"],
+			FlowAction: line[12],
+			IcmpType:   uint32(icmpType),
 			IcmpID:     uint32(icmpID),
-			Icmpcode:   uint32(icmpCode),
-			AppID:      line[14],
+			IcmpCode:   uint32(icmpCode),
 		}
+		obj.ObjectMeta.CreationTime = api.Timestamp{Timestamp: *timestamp}
 
 		// prepare the index request
 		request := &elastic.BulkRequest{

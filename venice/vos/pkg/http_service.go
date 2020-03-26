@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"expvar"
 	"fmt"
 	"io"
 	"net"
@@ -47,6 +48,8 @@ func (h *httpHandler) start(ctx context.Context, port string, config *tls.Config
 	h.handler.Post(apiPrefix+uploadImagesPath, h.uploadImagesHandler)
 	log.InfoLog("msg", "adding path", "path", apiPrefix+uploadSnapshotsPath)
 	h.handler.Post(apiPrefix+uploadSnapshotsPath, h.uploadSnapshotsHandler)
+	log.InfoLog("msg", "adding path", "path", "/debug/vars")
+	h.handler.Get("/debug/vars", expvar.Handler())
 
 	done := make(chan error)
 	var ln net.Listener

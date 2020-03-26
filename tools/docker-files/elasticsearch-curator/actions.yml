@@ -56,5 +56,25 @@ actions:
       source: creation_date
     - filtertype: pattern
       kind: regex
-      value: '(^.*external.default.configs.*$|searchguard)'  # exclude configs and searchguard indices from getting deleted
+      value: '(^.*external.default.configs.*$|searchguard|^.*firewalllogs.*$)'  # exclude configs, searchguard, firewalllogs indices from getting deleted
       exclude: True
+  4.:
+    action: delete_indices
+    description: Delete firewall logs indices that are older than 24 hours
+    options:
+      ignore_empty_list: True # ignore empty actionable list and exit cleanly
+      timeout_override:
+      continue_if_exception: False
+      disable_action: False
+    filters:
+    - filtertype: pattern
+      kind: regex
+      value: '^.*firewalllogs.*$'
+      exclude:
+    - filtertype: age
+      source: name
+      direction: older
+      timestring: '%Y-%m-%dt%H'
+      unit: hours
+      unit_count: 24
+      exclude:

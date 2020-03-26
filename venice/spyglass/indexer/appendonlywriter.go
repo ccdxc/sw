@@ -75,6 +75,7 @@ func (idr *Indexer) helper(id, timeout int, reqs []*elastic.BulkRequest) {
 			for {
 				if failedBulkCount == timeout {
 					idr.logger.Errorf("Writer: %d elastic write failed for %d seconds. so, dropping the request", id, timeout)
+					metric.addDrop()
 					break
 				}
 
@@ -86,6 +87,7 @@ func (idr *Indexer) helper(id, timeout int, reqs []*elastic.BulkRequest) {
 					idr.logger.Errorf("Writer: %d Failed to perform bulk indexing, resp: %+v err: %+v",
 						id, result, err)
 					failedBulkCount++
+					metric.addRetries(failedBulkCount)
 					continue
 				}
 
