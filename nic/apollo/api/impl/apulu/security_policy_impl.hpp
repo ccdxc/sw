@@ -120,6 +120,21 @@ private:
     /// \brief  destructor
     ~security_policy_impl() {}
 
+    /// \brief helper routine to compile the rules from the API to h/w
+    ///        friendly form before the RFC tables are computed
+    /// \param[in] spec    policy configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t program_security_policy_(pds_policy_spec_t *spec);
+
+    /// \brief helper routine to update the policy spec using the incoming
+    ///        policy config and/or individual rule add/del/upd configurations
+    ///        along with persisted policy database
+    /// \param[in] spec    policy configuration
+    /// \param[in] obj_ctxt transient state associated with this object
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t update_policy_spec_(pds_policy_spec_t *spec,
+                                  api_obj_ctxt_t *obj_ctxt);
+
     /// \brief      fill the policy status
     /// \param[out] status status
     void fill_status_(pds_policy_status_t *status);

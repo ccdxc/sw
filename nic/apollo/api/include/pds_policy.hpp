@@ -94,6 +94,7 @@ typedef union rule_action_data_s {
 
 /// \brief    generic rule
 typedef struct rule_s {
+    pds_obj_key_t         key;            ///< rule identifier
     bool                  stateful;       ///< true, if rule is stateful
     uint32_t              priority;       ///< rule Priority
     rule_match_t          match;          ///< rule match

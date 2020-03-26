@@ -109,12 +109,9 @@ security_policy_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
-security_policy_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t            ret;
-    pds_policy_spec_t    *spec;
-    rfc::policy_t        policy;
-
-    spec = &obj_ctxt->api_params->policy_spec;
+security_policy_impl::program_security_policy_(pds_policy_spec_t *spec) {
+    sdk_ret_t ret;
+    rfc::policy_t policy;
 
     memset(&policy, 0, sizeof(policy));
     policy.af = spec->rule_info->af;
@@ -130,6 +127,63 @@ security_policy_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         PDS_TRACE_ERR("Failed to build RFC policy table, err %u", ret);
     }
     return ret;
+}
+
+sdk_ret_t
+security_policy_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+    return program_security_policy_(&obj_ctxt->api_params->policy_spec);
+}
+
+sdk_ret_t
+security_policy_impl::update_policy_spec_(pds_policy_spec_t *spec,
+                                          api_obj_ctxt_t *obj_ctxt) {
+    uint32_t i;
+    bool found;
+    pds_obj_key_t key;
+    api_obj_ctxt_t *octxt;
+
+    for (auto it = obj_ctxt->clist.begin(); it != obj_ctxt->clist.end(); it++) {
+        octxt = *it;
+        if (octxt->api_op == API_OP_CREATE) {
+            // add the route to the end of the table
+            spec->rule_info->rules[spec->rule_info->num_rules] =
+                octxt->api_params->policy_rule_spec.rule;
+            spec->rule_info->num_rules++;
+        } else {
+            // either DEL or UPD operation
+            if (octxt->api_op == API_OP_DELETE) {
+                key = octxt->api_params->key;
+            } else {
+                // update case
+                key = octxt->api_params->policy_rule_spec.key;
+            }
+            // search and find the object to delete or modify
+            found = false;
+            for (i = 0; i < spec->rule_info->num_rules; i++) {
+                if (key == spec->rule_info->rules[i].key) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                PDS_TRACE_ERR("policy rule %s not found in policy %s to "
+                              "perform api op %u",
+                              key.str(), spec->key.str(), octxt->api_op);
+                return SDK_RET_INVALID_ARG;
+            }
+            if (octxt->api_op == API_OP_DELETE) {
+                // move the last rule to this spot
+                spec->rule_info->rules[i] =
+                    spec->rule_info->rules[spec->rule_info->num_rules - 1];
+                spec->rule_info->num_rules--;
+            } else {
+                // update case
+                spec->rule_info->rules[i] =
+                    octxt->api_params->policy_rule_spec.rule;
+            }
+        }
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -214,7 +268,21 @@ security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
         }
     }
 
-    // TODO: compute the update spec now
+    // compute the updated spec now
+    ret = update_policy_spec_(&spec, obj_ctxt);
+    if (ret != SDK_RET_OK) {
+        goto end;
+    }
+    PDS_TRACE_DEBUG("Policy %s rule count changed from %u to %u",
+                    spec.key.str(), old_policy->num_rules(),
+                    spec.rule_info->num_rules);
+    // and program it in the pipeline
+    ret = program_security_policy_(&spec);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program policy %s update, err %u",
+                      spec.key.str(), ret);
+        goto end;
+    }
 
 end:
 

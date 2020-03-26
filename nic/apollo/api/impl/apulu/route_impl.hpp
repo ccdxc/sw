@@ -132,10 +132,6 @@ private:
     /// \brief destructor
     ~route_table_impl() {}
 
-    /// \brief      fill the route table status
-    /// \param[out] status status
-    void fill_status_(pds_route_table_status_t *status);
-
     /// \brief helper routine to compile the routes from the API to h/w
     ///        friendly form before the interval tree is computed
     /// \param[in] spec    route table configuration
@@ -150,6 +146,10 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t update_route_table_spec_(pds_route_table_spec_t *spec,
                                        api_obj_ctxt_t *obj_ctxt);
+
+    /// \brief      fill the route table status
+    /// \param[out] status status
+    void fill_status_(pds_route_table_status_t *status);
 
 private:
     // P4 datapath specific state

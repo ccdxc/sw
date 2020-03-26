@@ -422,7 +422,7 @@ route_table_impl::update_route_table_spec_(pds_route_table_spec_t *spec,
                 key = octxt->api_params->key;
             } else {
                 // update case
-                key = octxt->api_params->key;
+                key = octxt->api_params->route_spec.key;
             }
             // search and find the object to delete or modify
             found = false;
@@ -536,13 +536,15 @@ route_table_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
             goto end;
         }
     }
+    // compute the udpated spec now
     ret = update_route_table_spec_(&spec, obj_ctxt);
     if (ret != SDK_RET_OK) {
         goto end;
     }
-    PDS_TRACE_DEBUG("Route table %s size changed from %u to %u",
+    PDS_TRACE_DEBUG("Route table %s route count changed from %u to %u",
                     spec.key.str(), old_rtable->num_routes(),
                     spec.route_info->num_routes);
+    // and program it in the pipeline
     ret = program_route_table_(&spec);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program route table %s update, err %u",
