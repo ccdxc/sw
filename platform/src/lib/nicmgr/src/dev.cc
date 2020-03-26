@@ -159,6 +159,10 @@ DeviceManager::DeviceManager(devicemgr_cfg_t *cfg)
     if (platform_is_hw(platform)) {
         pciemgr = new class pciemgr("nicmgrd", pcie_evhandler, EV_A);
     }
+
+    NIC_LOG_INFO("Starting Heartbeat timer");
+    evutil_timer_start(EV_A_ &heartbeat_timer, DeviceManager::HeartbeatEventHandler, this, 0.0, HEARTBEAT_PERIOD_S);
+    clock_gettime(CLOCK_MONOTONIC, &hb_last);
 }
 
 static std::string
@@ -490,10 +494,6 @@ DeviceManager::LoadProfile(string device_json_file, bool init_pci)
         pciemgr->finalize();
     }
 
-    NIC_LOG_INFO("Starting Heartbeat timer");
-    evutil_timer_start(EV_A_ &heartbeat_timer, DeviceManager::HeartbeatEventHandler, this, 0.0, HEARTBEAT_PERIOD_S);
-    clock_gettime(CLOCK_MONOTONIC, &hb_last);
-
     upg_state = DEVICES_ACTIVE_STATE;
     NIC_LOG_DEBUG("Loading Config Done in {:.3f}s",
             (double)(clock() - tStart)/CLOCKS_PER_SEC);
@@ -596,9 +596,6 @@ DeviceManager::RestoreDevice(enum DeviceType type, void *dev_state)
     default:
         break;
     }
-
-    evutil_timer_start(EV_A_ &heartbeat_timer, DeviceManager::HeartbeatEventHandler, this, 0.0, HEARTBEAT_PERIOD_S);
-    clock_gettime(CLOCK_MONOTONIC, &hb_last);
 
     upg_state = DEVICES_ACTIVE_STATE;
 }
