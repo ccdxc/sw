@@ -9,6 +9,7 @@
 #include <inttypes.h>
 #include <sys/time.h>
 #include <sys/param.h>
+#include <linux/pci_regs.h>
 
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"
@@ -53,7 +54,7 @@
 #define LOG_DELAY_MAX_US        MIN_TO_USEC(60)
 #define LOG_DELAY_RST_US        MIN_TO_USEC(60)
 #define LINK_UP_TIMEOUT         MIN_TO_USEC(5)
-#define LTSSMST_THRESHOLD       20
+#define LTSSMST_THRESHOLD       25
 
 typedef struct pcie_health_info_s {
     pcieportst_t portst;        // pcieport state
@@ -61,6 +62,7 @@ typedef struct pcie_health_info_s {
     uint32_t aer_uesta;         // AER Uncorrectable Error Status
     uint32_t aer_cesta;         // AER Correctable Error Status
     uint32_t physl_sta;         // physical layer cap status
+    uint16_t devctl;            // PCIE cap Device Control
     uint16_t lnksta2;           // PCIE cap Link Status 2
     int recovery;               // core_initiated_recovery
     int cap_gen;                // capable speed
@@ -75,8 +77,10 @@ typedef struct pcie_health_state_s {
     pcie_health_info_t hinew;   // current health
     pcie_health_info_t hiold;   // last event detected
     pcie_health_info_t hilog;   // last event logged
+    uint32_t macupgen;          // mac up generation
     uint64_t macuptm;           // mac came up out of reset
     uint64_t logdelay;          // delay to next time to log
+    uint64_t intr_ltssmst;      // intr_ltssmst snapshot
     char reason[80];            // reason for current event
 } pcie_health_state_t;
 
@@ -140,18 +144,29 @@ gather_health_info(const int port)
     pcieport_t *p = pcieport_get(port);
     if (p) {
         nhi->portst = p->state;
-        nhi->intr_ltssmst = p->stats.intr_ltssmst;
-        if (p->state >= PCIEPORTST_MACUP) {
+        if (p->state >= PCIEPORTST_MACUP &&
+            p->macup == hs->macupgen) {
             // save (first) mac up time, so we can check linkup timeout
-            if (!hs->macuptm) hs->macuptm = nhi->tstamp;
+            if (!hs->macuptm) {
+                hs->macuptm = nhi->tstamp;
+                hs->intr_ltssmst = p->stats.intr_ltssmst;
+                pciesys_loginfo("gather: new mac up time, "
+                                "ltssmst %" PRIu64 "\n", hs->intr_ltssmst);
+            }
             if (p->state < PCIEPORTST_UP &&
                 nhi->tstamp - hs->macuptm > LINK_UP_TIMEOUT) {
                 nhi->linkuptmo = 1; // waited long enough for link up
             }
         } else {
-            // not up, reset macuptm
-            if (hs->macuptm) hs->macuptm = 0;
+            // not up (or bounced), reset macuptm/gen
+            if (hs->macuptm) {
+                pciesys_loginfo("gather: reset mac up time\n");
+                hs->macuptm = 0;
+            }
+            hs->macupgen = p->macup;
         }
+        // subtract baseline so capturing only this link up session
+        nhi->intr_ltssmst = p->stats.intr_ltssmst - hs->intr_ltssmst;
         if (pcieport_is_accessible(port)) {
             nhi->cap_gen = p->cap_gen;
             nhi->cap_width = p->cap_width;
@@ -159,7 +174,8 @@ gather_health_info(const int port)
         }
     }
     if (pcieport_is_accessible(port)) {
-        nhi->lnksta2 = portcfg_readw(port, PORTCFG_CAP_PCIE + 0x32);
+        nhi->devctl    = portcfg_readw(port, PORTCFG_CAP_PCIE + 0x8);
+        nhi->lnksta2   = portcfg_readw(port, PORTCFG_CAP_PCIE + 0x32);
         nhi->aer_uesta = portcfg_readd(port, PORTCFG_CAP_AER + 0x4);
         nhi->aer_cesta = portcfg_readd(port, PORTCFG_CAP_AER + 0x10);
 
@@ -173,6 +189,16 @@ gather_health_info(const int port)
     }
 }
 
+//
+// Process the health information to determine if a health log event
+// needs to be generated for the current state.
+//
+// N.B. Each test should somehow take into account the state at the
+// last log event in "hilog".  Compare against was was logged about
+// before to generate log events only for *new* conditions.  This will
+// prevent an error condition from continuously flooding the logs with
+// the same health event.
+//
 static void
 process_health_info(const int port)
 {
@@ -226,6 +252,31 @@ process_health_info(const int port)
     if (nhi->intr_ltssmst - lhi->intr_ltssmst >= LTSSMST_THRESHOLD) {
         set_reason(hs, "intr_ltssmst %" PRIu64, nhi->intr_ltssmst);
         goto want_log;
+    }
+    // perf: check devctl ExtTag, MaxPayload, MaxReadReq
+    // for best results, we want full hw capability selected
+    if (nhi->portst >= PCIEPORTST_UP &&
+        nhi->devctl != lhi->devctl) {
+        const int enc_to_sz[8] = { 128, 256, 512, 1024, 2048, 4096, -6, -7 };
+
+        if ((nhi->devctl & PCI_EXP_DEVCTL_EXT_TAG) == 0) {
+            set_reason(hs, "devctl 0x%04x exttag disabled", nhi->devctl);
+            goto want_log;
+        }
+        const uint16_t payloadenc = (nhi->devctl >>  5) & 0x7;
+        const int payloadsz = enc_to_sz[payloadenc];
+        if (payloadsz < 256) {
+            set_reason(hs, "devctl 0x%04x maxpayload %d",
+                       nhi->devctl, payloadsz);
+            goto want_log;
+        }
+        const uint16_t readreqenc = (nhi->devctl >> 12) & 0x7;
+        const int readreqsz = enc_to_sz[readreqenc];
+        if (readreqsz < 512) {
+            set_reason(hs, "devctl 0x%04x maxreadreq %d",
+                       nhi->devctl, readreqsz);
+            goto want_log;
+        }
     }
     return;
 

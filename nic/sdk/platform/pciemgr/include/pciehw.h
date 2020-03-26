@@ -75,6 +75,7 @@ typedef union pciehwbar_u {
         u_int8_t cfgidx;                /* config bars index (0-5) */
         u_int32_t pmtb;                 /* pmt base  for bar */
         u_int32_t pmtc;                 /* pmt count for bar */
+        u_int64_t addr;                 /* addr of this bar */
     };
     u_int8_t _pad[64];
 } pciehwbar_t;

@@ -378,6 +378,7 @@ pcieport_showport(const int port)
     P("sris", "%d", p->sris);
     P("vga_support", "%d", p->vga_support);
     P("reduce_rx_cred", "%d", p->reduce_rx_cred);
+    P("macup", "%d", p->macup);
     P("state", "%s", pcieport_stname(p->state));
     P("event", "%s", pcieport_evname(p->event));
     P("fault_reason", "%s", p->fault_reason);

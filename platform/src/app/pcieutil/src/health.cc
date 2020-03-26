@@ -8,6 +8,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <cinttypes>
+#include <linux/pci_regs.h>
 
 #include "cap_top_csr_defines.h"
 #include "cap_pp_c_hdr.h"
@@ -42,6 +43,7 @@ healthdetails(int argc, char *argv[])
         return;
     }
 
+    // make sure all lanes are detected
     const uint16_t port_lanes = pal_reg_rd32(PP_(PORT_P_STA_P_PORT_LANES_7_0));
     printf("port_lanes.detected: 0x%02x\n", port_lanes & 0xff);
     printf("port_lanes.active:   0x%02x\n", (port_lanes >> 8) & 0xff);
@@ -50,20 +52,33 @@ healthdetails(int argc, char *argv[])
     const uint64_t kgen = pal_reg_rd64_safe(PXC_(CFG_C_MAC_K_GEN, port));
     printf("port%d mac_k_gen 0x%" PRIx64 "\n", port, kgen);
 
-    const uint16_t lnksta2 = portcfg_readw(port, PORTCFG_CAP_PCIE + 0x32);
+    // bridge LnkSta2 register - check gen3 equalization phases
+    const uint16_t lnksta2 = portcfg_readw(port,
+                                           PORTCFG_CAP_PCIE + PCI_EXP_LNKSTA2);
     printf("port%d lnksta2: 0x%04x", port, lnksta2);
 #define PRBIT(v, pos, name) \
     printf(" %s%c", #name, (v) & (1 << (pos)) ? '+' : '-')
     PRBIT(lnksta2,  0, Deemph);
-    PRBIT(lnksta2,  1, EqualCmp);
-    PRBIT(lnksta2,  2, EqualPh1);
-    PRBIT(lnksta2,  3, EqualPh2);
-    PRBIT(lnksta2,  4, EqualPh3);
-    PRBIT(lnksta2,  5, EqualReq);
+    PRBIT(lnksta2,  1, EqCmp);
+    PRBIT(lnksta2,  2, EqPh1);
+    PRBIT(lnksta2,  3, EqPh2);
+    PRBIT(lnksta2,  4, EqPh3);
+    PRBIT(lnksta2,  5, EqReq);
     PRBIT(lnksta2,  6, Retimer);
     PRBIT(lnksta2,  7, Retimer2);
     PRBIT(lnksta2, 15, DRSMsg);
     printf("\n");
+
+    const uint16_t devctl = portcfg_readw(port,
+                                          PORTCFG_CAP_PCIE + PCI_EXP_DEVCTL);
+    const uint16_t payloadenc = (devctl >>  5) & 0x7;
+    const uint16_t readreqenc = (devctl >> 12) & 0x7;
+    const int enc_to_sz[8] = { 128, 256, 512, 1024, 2048, 4096, -6, -7 };
+    printf("port%d devctl 0x%04x", port, devctl);
+    PRBIT(devctl, 4, RlxdOrd);
+    PRBIT(devctl, 8, ExtTag);
+    printf(" MaxPayload %d MaxReadReq %d\n",
+           enc_to_sz[payloadenc], enc_to_sz[readreqenc]);
 }
 CMDFUNC(healthdetails,
 "pcie link health details",

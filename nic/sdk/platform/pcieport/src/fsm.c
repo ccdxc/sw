@@ -257,7 +257,7 @@ pcieport_linkdn(pcieport_t *p)
 static void
 pcieport_macup(pcieport_t *p)
 {
-    pcieport_event_macup(p, 0);
+    pcieport_event_macup(p, ++p->macup);
 }
 
 static void

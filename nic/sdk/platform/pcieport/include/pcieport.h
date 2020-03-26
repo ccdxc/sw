@@ -72,6 +72,7 @@ union pcieport_u {
         char fault_reason[80];
         char last_fault_reason[80];
         pcieport_stats_t stats;
+        u_int32_t macup;
     };
     u_int8_t _pad[2048];
 };

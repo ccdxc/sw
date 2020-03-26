@@ -728,13 +728,14 @@ pciehw_sriov_ctrl(pciehwdev_t *phwdev,
 {
     if (ctrl != phwdev->sriovctrl) {
 
-        pciesys_loginfo("cfgwr_sriov_ctrl: %s "
-                        "ctrl 0x%04x (%svfe %smse) numvfs %d->%d\n",
+        pciesys_loginfo("%s "
+                        "sriov_ctrl 0x%04x vfe%c mse%c ari%c numvfs %d\n",
                         pciehwdev_get_name(phwdev),
                         ctrl,
-                        ctrl & PCI_SRIOV_CTRL_VFE ? "" : "!",
-                        ctrl & PCI_SRIOV_CTRL_MSE ? "" : "!",
-                        phwdev->numvfs, numvfs);
+                        ctrl & PCI_SRIOV_CTRL_VFE ? '+' : '-',
+                        ctrl & PCI_SRIOV_CTRL_MSE ? '+' : '-',
+                        ctrl & PCI_SRIOV_CTRL_ARI ? '+' : '-',
+                        numvfs);
 
         pciehw_sriov_ctrl_numvfs(phwdev, ctrl, numvfs);
         phwdev->sriovctrl = ctrl;
