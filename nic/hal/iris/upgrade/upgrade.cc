@@ -222,7 +222,6 @@ err:
     HAL_TRACE_DEBUG("[upgrade] Handling post restart msg ...");
     // TODO: mostly regular asic init path should work here, no special handling
     // needed
-    return upg_event_notify(MSG_ID_UPG_POST_RESTART, upgCtx);
 #endif
 }
 

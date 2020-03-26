@@ -17,6 +17,8 @@ namespace hal {
 namespace upgrade {
 
 class nicmgr_upgrade_handler : public ::upgrade::UpgHandler {
+    uint32_t prevExecState;
+
 public:
     nicmgr_upgrade_handler() {}
     HdlrResp CompatCheckHandler(UpgCtx& upgCtx);
@@ -32,6 +34,7 @@ public:
     void SuccessHandler(UpgCtx& upgCtx);
     void AbortHandler(UpgCtx& upgCtx);
     HdlrResp FailedHandler(UpgCtx& upgCtx);
+
 };
 
 }    // namespace upgrade

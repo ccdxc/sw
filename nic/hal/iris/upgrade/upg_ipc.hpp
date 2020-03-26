@@ -50,7 +50,8 @@ typedef struct upg_msg_s {
 } upg_msg_t;
 
 void upg_event_init(void);
-HdlrResp upg_event_notify(upg_msg_id_t id, UpgCtx& upgCtx);
+HdlrResp upg_event_notify(upg_msg_id_t id, UpgCtx& upgCtx,
+                          uint32_t prevstate);
 
 }   // namespace upgrade
 }   // namespace hal
