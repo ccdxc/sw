@@ -1630,167 +1630,140 @@ func (i *IrisAPI) HandleRouteTable(oper types.Operation, routetableObj netproto.
 func (i *IrisAPI) ReplayConfigs() error {
 
 	// Replay Network Object
-	networks, err := i.InfraAPI.List("Network")
-	if err == nil {
-		for _, o := range networks {
-			var network netproto.Network
-			err := network.Unmarshal(o)
-			if err != nil {
-				log.Errorf("Failed to unmarshal object to Network. Err: %v", err)
-				continue
-			}
-			creator, ok := network.ObjectMeta.Labels["CreatedBy"]
-			if ok && creator == "Venice" {
-				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", network.Kind, network.GetKey())
-				i.InfraAPI.Delete(network.Kind, network.GetKey())
+	nwKind := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+	}
+	networks, _ := i.HandleNetwork(types.List, nwKind)
+	for _, nt := range networks {
+		creator, ok := nt.ObjectMeta.Labels["CreatedBy"]
+		if ok && creator == "Venice" {
+			log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", nt.Kind, nt.GetKey())
+			i.InfraAPI.Delete(nt.Kind, nt.GetKey())
 
-				log.Info("Replaying persisted Network objects")
-				if _, err := i.HandleNetwork(types.Create, network); err != nil {
-					log.Errorf("Failed to recreate Network: %v. Err: %v", network.GetKey(), err)
-				}
+			log.Infof("Replaying persisted Network Object: %v", nt.GetKey())
+			if _, err := i.HandleNetwork(types.Create, nt); err != nil {
+				log.Errorf("Failed to recreate Network: %v. Err: %v", nt.GetKey(), err)
 			}
 		}
 	}
 
 	// Replay Endpoint Object
-	endpoints, err := i.InfraAPI.List("Endpoint")
-	if err == nil {
-		for _, o := range endpoints {
-			var endpoint netproto.Endpoint
-			err := endpoint.Unmarshal(o)
-			if err != nil {
-				log.Errorf("Failed to unmarshal object to Endpoint. Err: %v", err)
-				continue
-			}
-			creator, ok := endpoint.ObjectMeta.Labels["CreatedBy"]
-			if ok && creator == "Venice" {
-				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", endpoint.Kind, endpoint.GetKey())
-				i.InfraAPI.Delete(endpoint.Kind, endpoint.GetKey())
+	epKind := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+	}
+	endpoints, _ := i.HandleEndpoint(types.List, epKind)
+	for _, ep := range endpoints {
+		creator, ok := ep.ObjectMeta.Labels["CreatedBy"]
+		if ok && creator == "Venice" {
+			log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", ep.Kind, ep.GetKey())
+			i.InfraAPI.Delete(ep.Kind, ep.GetKey())
 
-				log.Info("Replaying persisted Endpoint objects")
-				if _, err := i.HandleEndpoint(types.Create, endpoint); err != nil {
-					log.Errorf("Failed to recreate Endpoint: %v. Err: %v", endpoint.GetKey(), err)
-				}
+			log.Infof("Replaying persisted Network Object: %v", ep.GetKey())
+			if _, err := i.HandleEndpoint(types.Create, ep); err != nil {
+				log.Errorf("Failed to recreate Endpoint: %v. Err: %v", ep.GetKey(), err)
 			}
 		}
 	}
 
-	// Replay Tunnel Object
-	tunnels, err := i.InfraAPI.List("Tunnel")
-	if err == nil {
-		for _, o := range tunnels {
-			var tunnel netproto.Tunnel
-			err := tunnel.Unmarshal(o)
-			if err != nil {
-				log.Errorf("Failed to unmarshal object to Tunnel. Err: %v", err)
-				continue
-			}
-			creator, ok := tunnel.ObjectMeta.Labels["CreatedBy"]
-			if ok && creator == "Venice" {
-				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", tunnel.Kind, tunnel.GetKey())
-				i.InfraAPI.Delete(tunnel.Kind, tunnel.GetKey())
-
-				log.Info("Replaying persisted Tunnel objects")
-				if _, err := i.HandleTunnel(types.Create, tunnel); err != nil {
-					log.Errorf("Failed to recreate Tunnel: %v. Err: %v", tunnel.GetKey(), err)
-				}
-			}
-		}
-	}
+	//// Replay Tunnel Object Tunnel Replay is not needed since its not created by Venice. Uncomment this when Venice supports tunnel creations
+	//tunnels, err := i.InfraAPI.List("Tunnel")
+	//if err == nil {
+	//	for _, o := range tunnels {
+	//		var tunnel netproto.Tunnel
+	//		err := tunnel.Unmarshal(o)
+	//		if err != nil {
+	//			log.Errorf("Failed to unmarshal object to Tunnel. Err: %v", err)
+	//			continue
+	//		}
+	//		creator, ok := tunnel.ObjectMeta.Labels["CreatedBy"]
+	//		if ok && creator == "Venice" {
+	//			log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", tunnel.Kind, tunnel.GetKey())
+	//			i.InfraAPI.Delete(tunnel.Kind, tunnel.GetKey())
+	//
+	//			log.Info("Replaying persisted Tunnel objects")
+	//			if _, err := i.HandleTunnel(types.Create, tunnel); err != nil {
+	//				log.Errorf("Failed to recreate Tunnel: %v. Err: %v", tunnel.GetKey(), err)
+	//			}
+	//		}
+	//	}
+	//}
 
 	// Replay NetworkSecurityPolicy Object
-	policies, err := i.InfraAPI.List("NetworkSecurityPolicy")
-	if err == nil {
-		for _, o := range policies {
-			var sgp netproto.NetworkSecurityPolicy
-			err := sgp.Unmarshal(o)
-			if err != nil {
-				log.Errorf("Failed to unmarshal object to NetworkSecurityPolicy. Err: %v", err)
-				continue
-			}
-			creator, ok := sgp.ObjectMeta.Labels["CreatedBy"]
-			if ok && creator == "Venice" {
-				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", sgp.Kind, sgp.GetKey())
-				i.InfraAPI.Delete(sgp.Kind, sgp.GetKey())
+	nspKind := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+	}
+	policies, _ := i.HandleNetworkSecurityPolicy(types.List, nspKind)
+	for _, policy := range policies {
+		creator, ok := policy.ObjectMeta.Labels["CreatedBy"]
+		if ok && creator == "Venice" {
+			log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", policy.Kind, policy.GetKey())
+			i.InfraAPI.Delete(policy.Kind, policy.GetKey())
 
-				log.Info("Replaying persisted NetworkSecurityPolicy objects")
-				if _, err := i.HandleNetworkSecurityPolicy(types.Create, sgp); err != nil {
-					log.Errorf("Failed to recreate NetworkSecurityPolicy: %v. Err: %v", sgp.GetKey(), err)
-				}
+			log.Infof("Replaying persisted NetworkSecurityPolicy Object: %v", policy.GetKey())
+			if _, err := i.HandleNetworkSecurityPolicy(types.Create, policy); err != nil {
+				log.Errorf("Failed to recreate NetworkSecurityPolicy: %v. Err: %v", policy.GetKey(), err)
 			}
 		}
 	}
 
 	// Replay Collector Object
-	cols, err := i.InfraAPI.List("Collector")
-	if err == nil {
-		for _, o := range cols {
-			var collector netproto.Collector
-			err := collector.Unmarshal(o)
-			if err != nil {
-				log.Errorf("Failed to unmarshal object to Collector. Err: %v", err)
-				continue
-			}
-			creator, ok := collector.ObjectMeta.Labels["CreatedBy"]
-			if ok && creator == "Venice" {
-				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", collector.Kind, collector.GetKey())
-				i.InfraAPI.Delete(collector.Kind, collector.GetKey())
+	collKind := netproto.Collector{
+		TypeMeta: api.TypeMeta{Kind: "Collector"},
+	}
+	collectors, _ := i.HandleCollector(types.List, collKind)
+	for _, collector := range collectors {
+		creator, ok := collector.ObjectMeta.Labels["CreatedBy"]
+		if ok && creator == "Venice" {
+			log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", collector.Kind, collector.GetKey())
+			i.InfraAPI.Delete(collector.Kind, collector.GetKey())
 
-				log.Info("Replaying persisted Collector object")
-				if _, err := i.HandleCollector(types.Create, collector); err != nil {
-					log.Errorf("Failed to recreate Collector: %v. Err: %v", collector.GetKey(), err)
-				}
+			log.Infof("Replaying persisted Collector Object: %v", collector.GetKey())
+			if _, err := i.HandleCollector(types.Create, collector); err != nil {
+				log.Errorf("Failed to recreate Collector: %v. Err: %v", collector.GetKey(), err)
 			}
 		}
 	}
 
 	// Replay SecurityProfile Object
-	secProfiles, err := i.InfraAPI.List("SecurityProfile")
-	if err == nil {
-		for _, o := range secProfiles {
-			var secProfile netproto.SecurityProfile
-			err := secProfile.Unmarshal(o)
-			if err != nil {
-				log.Errorf("Failed to unmarshal object to SecurityProfile. Err: %v", err)
-				continue
-			}
-			creator, ok := secProfile.ObjectMeta.Labels["CreatedBy"]
-			if ok && creator == "Venice" {
-				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", secProfile.Kind, secProfile.GetKey())
-				i.InfraAPI.Delete(secProfile.Kind, secProfile.GetKey())
+	secProfileKind := netproto.SecurityProfile{
+		TypeMeta: api.TypeMeta{Kind: "SecurityProfile"},
+	}
+	secProfiles, _ := i.HandleSecurityProfile(types.List, secProfileKind)
+	for _, profile := range secProfiles {
+		creator, ok := profile.ObjectMeta.Labels["CreatedBy"]
+		if ok && creator == "Venice" {
+			log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", profile.Kind, profile.GetKey())
+			i.InfraAPI.Delete(profile.Kind, profile.GetKey())
 
-				log.Info("Replaying persisted SecurityProfile object")
-				if _, err := i.HandleSecurityProfile(types.Create, secProfile); err != nil {
-					log.Errorf("Failed to recreate SecurityProfile: %v. Err: %v", secProfile.GetKey(), err)
-				}
+			log.Infof("Replaying persisted SecurityProfile Object: %v", profile.GetKey())
+			if _, err := i.HandleSecurityProfile(types.Create, profile); err != nil {
+				log.Errorf("Failed to recreate SecurityProfile: %v. Err: %v", profile.GetKey(), err)
 			}
 		}
 	}
 
 	// Purge any old uplinks that are unknown
-	intfs, err := i.InfraAPI.List("Interface")
-	if err == nil {
-		for _, o := range intfs {
-			var intf netproto.Interface
-			err := intf.Unmarshal(o)
-			if err != nil {
-				log.Errorf("Failed to unmarshal object to Interface. Err: %v", err)
-				continue
-			}
-			if intf.Spec.Type != netproto.InterfaceSpec_UPLINK_ETH.String() &&
-				intf.Spec.Type != netproto.InterfaceSpec_UPLINK_MGMT.String() {
-				log.Infof("Not purging Interface %v", intf.Spec.Type)
-				continue
-			}
-			if _, ok := knownUplinks[intf.Status.InterfaceID]; ok {
-				log.Infof("Not purging known Interface %v", intf.GetKey())
-				continue
-			}
-			log.Infof("Purging unknown uplink Interface %v", intf.GetKey())
-			if err := i.InfraAPI.Delete(intf.Kind, intf.GetKey()); err != nil {
-				log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "Interface: %s | Err: %v", intf.GetKey(), err))
-				return errors.Wrapf(types.ErrBoltDBStoreDelete, "Interface: %s | Err: %v", intf.GetKey(), err)
-			}
+	// Replay Interface Object
+	intfKind := netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+	}
+	interfaces, _ := i.HandleInterface(types.List, intfKind)
+	for _, intf := range interfaces {
+		if intf.Spec.Type != netproto.InterfaceSpec_UPLINK_ETH.String() &&
+			intf.Spec.Type != netproto.InterfaceSpec_UPLINK_MGMT.String() {
+			log.Infof("Not purging Interface %v", intf.Spec.Type)
+			continue
+		}
+
+		if _, ok := knownUplinks[intf.Status.InterfaceID]; ok {
+			log.Infof("Not purging known Interface %v", intf.GetKey())
+			continue
+		}
+
+		log.Infof("Purging unknown uplink Interface %v", intf.GetKey())
+		if err := i.InfraAPI.Delete(intf.Kind, intf.GetKey()); err != nil {
+			log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "Interface: %s | Err: %v", intf.GetKey(), err))
+			return errors.Wrapf(types.ErrBoltDBStoreDelete, "Interface: %s | Err: %v", intf.GetKey(), err)
 		}
 	}
 
