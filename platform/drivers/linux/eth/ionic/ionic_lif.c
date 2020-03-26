@@ -1679,6 +1679,7 @@ static void ionic_txrx_deinit(struct ionic_lif *lif)
 		ionic_rx_flush(&lif->rxqcqs[i].qcq->cq);
 		ionic_rx_empty(&lif->rxqcqs[i].qcq->q);
 	}
+	lif->rx_mode = 0;
 }
 
 static void ionic_txrx_free(struct ionic_lif *lif)
