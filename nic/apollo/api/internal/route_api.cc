@@ -82,6 +82,7 @@ typedef struct route_entry_s {
 } route_entry_t;
 static route_entry_t g_route_db[PDS_MAX_UNDERLAY_ROUTES];
 
+#if 0
 sdk_ret_t
 pds_underlay_route_create (_In_ pds_route_spec_t *spec)
 {
@@ -100,43 +101,69 @@ pds_underlay_route_create (_In_ pds_route_spec_t *spec)
 
     return SDK_RET_OK;
 }
+#endif
+
+static sdk_ret_t
+pds_update_teps (void)
+{
+    return SDK_RET_OK;
+}
 
 sdk_ret_t
 pds_underlay_route_update (_In_ pds_route_spec_t *spec)
 {
+    bool found = false;
+
     for (uint32_t i = 0; i < g_num_routes; i++) {
-        if (g_route_db[i].valid && (g_route_db[i].spec.key == spec->key)) {
+        if (g_route_db[i].valid &&
+            (ip_prefix_is_equal(&g_route_db[i].spec.route.prefix,
+                                &spec->route.prefix))) {
+            PDS_TRACE_DEBUG("Updating underlay route %s",
+                            ippfx2str(&spec->route.prefix));
             g_route_db[i].spec = *spec;
-            // TODO: do TEP walk !!
-            return SDK_RET_OK;
+            found = true;
+            break;
         }
     }
-    PDS_TRACE_ERR("Failed to update route %s, route not found",
-                  spec->key.str());
-    return SDK_RET_ENTRY_NOT_FOUND;
+    if (!found) {
+        PDS_TRACE_DEBUG("Creating underlay route %s",
+                        ippfx2str(&spec->route.prefix));
+        if (g_num_routes >= PDS_MAX_UNDERLAY_ROUTES) {
+            PDS_TRACE_ERR("Failed to create route %s, underlay route table "
+                          "is full", ippfx2str(&spec->route.prefix));
+            return SDK_RET_NO_RESOURCE;
+        }
+        g_route_db[g_num_routes].valid = TRUE;
+        g_num_routes++;
+    }
+    return pds_update_teps();
 }
 
 sdk_ret_t
-pds_underlay_route_delete (_In_ pds_obj_key_t *key)
+pds_underlay_route_delete (_In_ ip_prefix_t *prefix)
 {
     for (uint32_t i = 0; i < g_num_routes; i++) {
-        if (g_route_db[i].valid && (g_route_db[i].spec.key == *key)) {
-            // replace this with the last valid route
+        if (g_route_db[i].valid &&
+            (ip_prefix_is_equal(&g_route_db[i].spec.route.prefix, prefix))) {
+            // replace this with the last valid route and fill this slot
             g_route_db[i] = g_route_db[g_num_routes - 1];
             g_route_db[g_num_routes - 1].valid = FALSE;
             g_num_routes--;
-            return SDK_RET_OK;
+            return pds_update_teps();
         }
     }
-    PDS_TRACE_ERR("Failed to delete route %s, route not found", key->str());
+    PDS_TRACE_ERR("Failed to delete route %s, route not found",
+                  ippfx2str(prefix));
     return SDK_RET_INVALID_OP;
 }
 
+#if 0
 pds_obj_key_t
 pds_underlay_nexthop (_In_ ip_addr_t ip_addr)
 {
     // TODO
     return k_pds_obj_key_invalid;
 }
+#endif
 
 }    // namespace api
