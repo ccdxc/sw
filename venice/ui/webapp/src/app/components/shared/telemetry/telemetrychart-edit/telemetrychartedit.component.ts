@@ -286,4 +286,17 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
     return null;
   }
 
+  onAfterToggleGraph(event) {
+    if (event.collapsed) {
+      const $ = Utility.getJQuery();
+      $('.telemetrychartedit-panel .ui-panel').css('height', '40px');
+    }
+  }
+
+  onBeforeToggleGraph(event) {
+    if (event.collapsed) {
+      const $ = Utility.getJQuery();
+      $('.telemetrychartedit-panel .ui-panel').css('height', '100%');
+    }
+  }
 }

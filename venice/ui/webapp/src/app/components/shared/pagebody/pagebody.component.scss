@@ -44,12 +44,12 @@
 /* avoid UI issue of having uncessary space gap */
 .pagebody-content {
   height: 100%;
-  width: calc(100% - 17px);
+  width: 100%;
   position: relative;
 }
 
 .pagebody-content-container {
   height: 100%;
-  width: calc(100% + 17px);
-  overflow-y: scroll;
+  width: 100%;
+  overflow-y: auto;
 }
