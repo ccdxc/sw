@@ -116,8 +116,6 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 				w.logger.Errorf("Node Watcher: failed to read virtual memory info, error: %v", err)
 				continue
 			}
-
-			w.logger.Errorf("+++++++++nodewatch  %+v", w)
 			memUsedPercent := math.Floor(vmstat.UsedPercent*100) / 100
 			w.metricObj.MemAvailable.Set(float64(vmstat.Available))
 			w.metricObj.MemFree.Set(float64(vmstat.Free))

@@ -79,6 +79,7 @@ import (
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/nodewatcher"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/strconv"
@@ -708,6 +709,18 @@ func (it *veniceIntegSuite) startAgent(c *check.C, veniceURL string) {
 		logger.Infof("RestURL: %v", agentTypes.DefaultAgentRestURL)
 		time.Sleep(time.Second * 5)
 
+		rc := it.resolverClient
+
+		// report node metrics
+		node := &cluster.DistributedServiceCard{
+			TypeMeta: api.TypeMeta{
+				Kind: "DistributedServiceCard",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name: dscAgent.InfraAPI.GetDscName(),
+			},
+		}
+
 		snic := naples{
 			macAddr:  snicMac,
 			snicName: snicName,
@@ -716,9 +729,19 @@ func (it *veniceIntegSuite) startAgent(c *check.C, veniceURL string) {
 		it.snics = append(it.snics, &snic)
 
 		if i == 0 { // start only 1 instance
+			_, err = nodewatcher.NewNodeWatcher(it.ctx, node, 10*time.Second, it.logger)
+			if err != nil {
+				log.Fatalf("Error creating NodeWatcher. Err: %v", err)
+			}
+
 			tpState, err := tmstate.NewTpAgent(it.ctx, globals.AgentRESTPort)
 			if err != nil {
 				log.Fatalf("failed to init tmagent state, err: %v", err)
+			}
+
+			// Init the TSDB
+			if err := tpState.TsdbInit(fmt.Sprintf("tmagent-%d", i), rc); err != nil {
+				log.Fatalf("failed to init tsdb, err: %v", err)
 			}
 
 			tmpFd, err := ioutil.TempFile("/tmp", "palazzo-fwlogshm")
