@@ -241,10 +241,11 @@ func TestOrchestratorPreCommit(t *testing.T) {
 	}
 
 	testCases := []testCase{
-		{apiintf.CreateOper, makeOrchObj("orch1", "10.1.1.1"), nil},                                                     // First object no conflicts
-		{apiintf.CreateOper, makeOrchObj("orch2", "11.1.1.1"), nil},                                                     // Second object no conflicts
-		{apiintf.CreateOper, makeOrchObj("orch3", "11.1.1.1"), fmt.Errorf("URI is already used by Orchestrator orch2")}, // Third object with conflict
-		{apiintf.UpdateOper, makeOrchObj("orch1", "11.1.1.1"), fmt.Errorf("URI is already used by Orchestrator orch2")}, // first object update with conflict
+		{apiintf.CreateOper, makeOrchObj("orch1", "10.1.1.1"), nil},                                                           // First object no conflicts
+		{apiintf.CreateOper, makeOrchObj("orch2", "11.1.1.1"), nil},                                                           // Second object no conflicts
+		{apiintf.CreateOper, makeOrchObj("orch3", "11.1.1.1"), fmt.Errorf("URI is already used by Orchestrator orch2")},       // Third object with conflict
+		{apiintf.UpdateOper, makeOrchObj("orch1", "11.1.1.1"), fmt.Errorf("URI is already used by Orchestrator orch2")},       // first object update with conflict
+		{apiintf.CreateOper, makeOrchObj("orch4", "{10.30.1.181:8989}"), fmt.Errorf("{10.30.1.181:8989} is not a valid URI")}, // object with bad uri
 	}
 
 	ctx := context.TODO()

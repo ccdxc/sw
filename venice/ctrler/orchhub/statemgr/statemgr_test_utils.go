@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // MockInstanceManager is the mock instance manager state
@@ -32,6 +33,9 @@ func NewMockInstanceManger(instanceManagerCh chan *kvstore.WatchEvent) *MockInst
 
 // NewMockStateManager returns a new mock state manager
 func NewMockStateManager() (*Statemgr, *MockInstanceManager, error) {
+	if !tsdb.IsInitialized() {
+		tsdb.Init(context.Background(), &tsdb.Opts{})
+	}
 	instanceMgrCh := make(chan *kvstore.WatchEvent, 64)
 
 	stateMgr, err := NewStatemgr(globals.APIServer, nil, log.GetNewLogger(log.GetDefaultConfig("orhhub-test")), instanceMgrCh)

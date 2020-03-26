@@ -3,6 +3,9 @@ package impl
 import (
 	"context"
 	"fmt"
+	"net/url"
+
+	"github.com/vmware/govmomi/vim25/soap"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/orchestration"
@@ -31,6 +34,7 @@ type orchHooks struct {
 
 func (o *orchHooks) validateOrchestrator(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string,
 	oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	o.logger.DebugLog("method", "validateOrchestrator", "msg", "Validating Orch config")
 
 	orch, ok := i.(orchestration.Orchestrator)
 	if !ok {
@@ -45,8 +49,20 @@ func (o *orchHooks) validateOrchestrator(ctx context.Context, kv kvstore.Interfa
 		return nil, true, fmt.Errorf("Error retrieving orchestrators: %v", err)
 	}
 
+	o.logger.DebugLog("retrieved %d items", len(orchs.Items))
 	if len(orchs.Items) >= maxOrchSupported {
 		return nil, true, fmt.Errorf("Unable to support more than %v orchestrators", maxOrchSupported)
+	}
+
+	// Verify URI
+	vcURL := &url.URL{
+		Scheme: "https",
+		Host:   orch.Spec.URI,
+		Path:   "/sdk",
+	}
+	if _, err := soap.ParseURL(vcURL.String()); err != nil {
+		o.logger.Infof("Failed to parse URI %s: %s", orch.Spec.URI, err)
+		return i, true, fmt.Errorf("%s is not a valid URI", orch.Spec.URI)
 	}
 
 	for _, otherOrch := range orchs.Items {
@@ -108,5 +124,5 @@ func registerOrchestrationHooks(svc apiserver.Service, l log.Logger) {
 
 func init() {
 	apisrv := apisrvpkg.MustGetAPIServer()
-	apisrv.RegisterHooksCb("orchestration.OrchestrationV1", registerOrchestrationHooks)
+	apisrv.RegisterHooksCb("orchestration.OrchestratorV1", registerOrchestrationHooks)
 }

@@ -20,7 +20,9 @@ func TestHosts(t *testing.T) {
 	dcName := "DC1"
 	dvsName := CreateDVSName(dcName)
 	pNicMac := append(createPenPnicBase(), 0xbb, 0x00, 0x00)
+	pNicMac2 := append(createPenPnicBase(), 0xbb, 0x00, 0x01)
 	macStr := conv.MacString(pNicMac)
+	macStr2 := conv.MacString(pNicMac2)
 
 	testCases := []storeTC{
 		{
@@ -61,12 +63,14 @@ func TestHosts(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
+												Key: "pnic-1",
 												Mac: macStr,
 											},
 										},
 										ProxySwitch: []types.HostProxySwitch{
 											types.HostProxySwitch{
 												DvsName: dvsName,
+												Pnic:    []string{"pnic-1"},
 											},
 										},
 									},
@@ -138,11 +142,17 @@ func TestHosts(t *testing.T) {
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
 												Mac: macStr,
+												Key: "pnic-1",
+											},
+											types.PhysicalNic{
+												Mac: macStr2,
+												Key: "pnic-2",
 											},
 										},
 										ProxySwitch: []types.HostProxySwitch{
 											types.HostProxySwitch{
 												DvsName: dvsName,
+												Pnic:    []string{"pnic-1"},
 											},
 										},
 									},
@@ -168,11 +178,17 @@ func TestHosts(t *testing.T) {
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
 												Mac: macStr,
+												Key: "pnic-1",
+											},
+											types.PhysicalNic{
+												Mac: macStr2,
+												Key: "pnic-2",
 											},
 										},
 										ProxySwitch: []types.HostProxySwitch{
 											types.HostProxySwitch{
 												DvsName: dvsName,
+												Pnic:    []string{"pnic-2"},
 											},
 										},
 									},
@@ -235,6 +251,91 @@ func TestHosts(t *testing.T) {
 			},
 		},
 		{
+			name: "host update - remove naples pnic",
+			events: []defs.Probe2StoreMsg{
+				{
+					MsgType: defs.VCEvent,
+					Val: defs.VCEventMsg{
+						VcObject:   defs.HostSystem,
+						DcID:       dcName,
+						DcName:     dcName,
+						Key:        "hostsystem-41",
+						Originator: "127.0.0.1:8990",
+						Changes: []types.PropertyChange{
+							types.PropertyChange{
+								Op:   types.PropertyChangeOpAdd,
+								Name: "config",
+								Val: types.HostConfigInfo{
+									Network: &types.HostNetworkInfo{
+										Pnic: []types.PhysicalNic{
+											types.PhysicalNic{
+												Mac: macStr,
+												Key: "pnic-1",
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
+												Pnic:    []string{"pnic-1"},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					MsgType: defs.VCEvent,
+					Val: defs.VCEventMsg{
+						VcObject:   defs.HostSystem,
+						DcID:       dcName,
+						DcName:     dcName,
+						Key:        "hostsystem-41",
+						Originator: "127.0.0.1:8990",
+						Changes: []types.PropertyChange{
+							types.PropertyChange{
+								Op:   types.PropertyChangeOpAdd,
+								Name: "config",
+								Val: types.HostConfigInfo{
+									Network: &types.HostNetworkInfo{
+										Pnic: []types.PhysicalNic{
+											types.PhysicalNic{
+												Mac: macStr,
+												Key: "pnic-1",
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
+			},
+			verify: func(v *VCHub) {
+				expMeta := &api.ObjectMeta{
+					Name: v.createHostName(dcName, "hostsystem-41"),
+				}
+
+				time.Sleep(50 * time.Millisecond)
+
+				AssertEventually(t, func() (bool, interface{}) {
+					hostAPI := v.StateMgr.Controller().Host()
+					_, err := hostAPI.Find(expMeta)
+					return err != nil, nil
+				}, "Host should not be in statemgr")
+			},
+		},
+		{
 			name: "host redundant update",
 			events: []defs.Probe2StoreMsg{
 				{
@@ -254,11 +355,13 @@ func TestHosts(t *testing.T) {
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
 												Mac: macStr,
+												Key: "pnic-1",
 											},
 										},
 										ProxySwitch: []types.HostProxySwitch{
 											types.HostProxySwitch{
 												DvsName: dvsName,
+												Pnic:    []string{"pnic-1", "pnic-2"},
 											},
 										},
 									},
@@ -323,11 +426,13 @@ func TestHosts(t *testing.T) {
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
 												Mac: macStr,
+												Key: "pnic-1",
 											},
 										},
 										ProxySwitch: []types.HostProxySwitch{
 											types.HostProxySwitch{
 												DvsName: dvsName,
+												Pnic:    []string{"pnic-1", "pnic-2"},
 											},
 										},
 									},

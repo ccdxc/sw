@@ -1243,11 +1243,13 @@ func createHostEvent(dcName, dcID, hostName, hostID, dvsName, macStr string) def
 							Pnic: []types.PhysicalNic{
 								types.PhysicalNic{
 									Mac: macStr,
+									Key: "pnic-2",
 								},
 							},
 							ProxySwitch: []types.HostProxySwitch{
 								types.HostProxySwitch{
 									DvsName: dvsName,
+									Pnic:    []string{"pnic-1", "pnic-2"},
 								},
 							},
 						},

@@ -536,6 +536,9 @@ func (v *Datacenter) RemoveVnic(vmSim *simulator.VirtualMachine, vnic VNIC) erro
 			devices = append(devices, d)
 		}
 	}
+	if len(devices) == 0 {
+		return fmt.Errorf("No match for %s", vnic.MacAddress)
+	}
 
 	config.DeviceChange, _ = devices.ConfigSpec(types.VirtualDeviceConfigSpecOperationRemove)
 	task, err := vm.Reconfigure(context.Background(), config)
@@ -652,6 +655,10 @@ func (v *DVS) AddHost(host *Host) error {
 	dvsProxy := types.HostProxySwitch{
 		ConfigNumPorts: 512,
 		DvsName:        v.Obj.Name,
+	}
+	// add all pnics as connected to dvs uplinks
+	for _, pnic := range host.Obj.Config.Network.Pnic {
+		dvsProxy.Pnic = append(dvsProxy.Pnic, pnic.Key)
 	}
 	host.Obj.Config.Network.ProxySwitch = append(host.Obj.Config.Network.ProxySwitch, dvsProxy)
 	v.Obj.Config.GetDVSConfigInfo().Host = append(v.Obj.Config.GetDVSConfigInfo().Host, newMember)

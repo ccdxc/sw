@@ -16,7 +16,7 @@ type ProbeMock struct {
 	// dc -> pgName -> config
 	pgStateMap map[string](map[string]*types.DVPortgroupConfigSpec)
 	// dc -> dvsName -> portKey -> port info
-	dvsStateMap map[string](map[string](map[string]types.DistributedVirtualPort))
+	DvsStateMap map[string](map[string](map[string]types.DistributedVirtualPort))
 }
 
 // NewProbeMock creates a mock wrapper around the given probe
@@ -24,7 +24,7 @@ func NewProbeMock(probe *vcprobe.VCProbe) *ProbeMock {
 	return &ProbeMock{
 		VCProbe:     probe,
 		pgStateMap:  map[string](map[string]*types.DVPortgroupConfigSpec){},
-		dvsStateMap: map[string](map[string](map[string]types.DistributedVirtualPort)){},
+		DvsStateMap: map[string](map[string](map[string]types.DistributedVirtualPort)){},
 	}
 }
 
@@ -132,7 +132,7 @@ func (v *ProbeMock) ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDist
 
 // UpdateDVSPortsVlan stores the changes locally since vcsim does not support reconfigureDVS
 func (v *ProbeMock) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcprobe.PenDVSPortSettings, retry int) error {
-	dc := v.dvsStateMap[dcName]
+	dc := v.DvsStateMap[dcName]
 	portConfigs := map[string]types.DistributedVirtualPort{}
 	if dc == nil {
 		dc = map[string](map[string]types.DistributedVirtualPort){}
@@ -170,14 +170,14 @@ func (v *ProbeMock) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcpr
 	}
 
 	dc[dvsName] = portConfigs
-	v.dvsStateMap[dcName] = dc
+	v.DvsStateMap[dcName] = dc
 
 	return nil
 }
 
 // GetPenDVSPorts returns port settings
 func (v *ProbeMock) GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, retry int) ([]types.DistributedVirtualPort, error) {
-	dc := v.dvsStateMap[dcName]
+	dc := v.DvsStateMap[dcName]
 	portsRet := []types.DistributedVirtualPort{}
 
 	portSettings := map[string]types.DistributedVirtualPort{}

@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
@@ -159,7 +160,7 @@ func TestVmotion(t *testing.T) {
 	// Create a VM on host1
 	vm1, err := dc.AddVM("vm1", "host1", []sim.VNIC{
 		sim.VNIC{
-			MacAddress:   "aaaa.bbbb.ddde",
+			MacAddress:   "aa:aa:bb:bb:dd:dd",
 			PortgroupKey: pg.Reference().Value,
 			PortKey:      "11",
 		},
@@ -426,6 +427,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
+	dc2, err := s.AddDC("DC2")
 	AssertOk(t, err, "failed dc create")
 
 	// SETTING UP STATE MANAGER
@@ -450,6 +452,10 @@ func TestVmotionWithWatchers(t *testing.T) {
 			Name:      orchConfig.Name,
 			Namespace: defaultTestParams.TestDCName,
 		},
+		{
+			Name:      orchConfig.Name,
+			Namespace: "DC2",
+		},
 	}
 	_, err = smmock.CreateNetwork(sm, "default", "n1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo1)
 	AssertOk(t, err, "Failed to create network")
@@ -457,7 +463,13 @@ func TestVmotionWithWatchers(t *testing.T) {
 	// Create VC objects (network, host, 2 vm)
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
-	dvs, err := dc1.AddDVS(dvsCreateSpec)
+	dvs1, err := dc1.AddDVS(dvsCreateSpec)
+	AssertOk(t, err, "failed dvs create")
+
+	pvlanConfigSpecArray = testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
+	dvsCreateSpec = testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
+	dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().Name = CreateDVSName("DC2")
+	dvs2, err := dc2.AddDVS(dvsCreateSpec)
 	AssertOk(t, err, "failed dvs create")
 
 	orchID := fmt.Sprintf("orch%d", orchConfig.Status.OrchID)
@@ -482,21 +494,22 @@ func TestVmotionWithWatchers(t *testing.T) {
 	}, "Session is not Ready", "1s", "10s")
 
 	spec := testutils.GenPGConfigSpec(CreatePGName("n1"), 2, 3)
-	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec, defaultRetryCount)
+	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs1.Obj.Name, &spec, defaultRetryCount)
 	AssertOk(t, err, "failed to create pg")
 	pg, err := mockProbe.GetPenPG(defaultTestParams.TestDCName, CreatePGName("n1"), 1)
+	AssertOk(t, err, "Failed to get pg")
+
+	spec = testutils.GenPGConfigSpec(CreatePGName("n1"), 2, 3)
+	err = mockProbe.AddPenPG(dc2.Obj.Name, dvs2.Obj.Name, &spec, defaultRetryCount)
+	AssertOk(t, err, "failed to create pg")
+	pg2, err := mockProbe.GetPenPG("DC2", CreatePGName("n1"), 1)
 	AssertOk(t, err, "Failed to get pg")
 
 	// Create Host1 (pensando)
 	penHost1, err := dc1.AddHost("host1")
 	AssertOk(t, err, "failed to add Host to DC")
-	err = dvs.AddHost(penHost1)
-	AssertOk(t, err, "failed to add Host to DVS")
-
-	// Create Host2 (pensndo)
-	penHost2, err := dc1.AddHost("host2")
-	AssertOk(t, err, "failed to add Host to DC")
-	err = dvs.AddHost(penHost2)
+	penHost1.Obj.Name = "host1"
+	err = dvs1.AddHost(penHost1)
 	AssertOk(t, err, "failed to add Host to DVS")
 
 	pNicMac := append(createPenPnicBase(), 0xbb, 0x00, 0x00)
@@ -504,18 +517,38 @@ func TestVmotionWithWatchers(t *testing.T) {
 	err = penHost1.AddNic("vmnic0", conv.MacString(pNicMac))
 	AssertOk(t, err, "failed to add pNic")
 
+	// Create Host2 (pensando)
+	penHost2, err := dc1.AddHost("host2")
+	AssertOk(t, err, "failed to add Host to DC")
+	penHost2.Obj.Name = "host2"
+	err = dvs1.AddHost(penHost2)
+	AssertOk(t, err, "failed to add Host to DVS")
+
 	pNicMac2 := append(createPenPnicBase(), 0xcc, 0x00, 0x00)
 	// Make it Pensando host
 	err = penHost2.AddNic("vmnic0", conv.MacString(pNicMac2))
 	AssertOk(t, err, "failed to add pNic")
 
+	// Create Host3 (pensando) on DC2
+	penHost3, err := dc2.AddHost("host3")
+	AssertOk(t, err, "failed to add Host to DC")
+	penHost3.Obj.Name = "host3"
+	err = dvs2.AddHost(penHost3)
+	AssertOk(t, err, "failed to add Host to DVS")
+
+	pNicMac3 := append(createPenPnicBase(), 0xdd, 0x00, 0x00)
+	// Make it Pensando host
+	err = penHost3.AddNic("vmnic0", conv.MacString(pNicMac3))
+	AssertOk(t, err, "failed to add pNic")
+
 	penHost1.ClearVmkNics()
 	penHost2.ClearVmkNics()
+	penHost3.ClearVmkNics()
 
 	// Create a VM on host1
 	vm1, err := dc1.AddVM("vm1", "host1", []sim.VNIC{
 		sim.VNIC{
-			MacAddress:   "aaaa.bbbb.dddd",
+			MacAddress:   "aa:aa:bb:bb:dd:dd",
 			PortgroupKey: pg.Reference().Value,
 			PortKey:      "11",
 		},
@@ -524,33 +557,32 @@ func TestVmotionWithWatchers(t *testing.T) {
 
 	vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
 	wlName := vchub.createVMWorkloadName("", vm1.Self.Value)
-	moveVMBack := func() {
+	deleteVM := func(sendEvent bool) {
+		// VM must be back on host in DC1 for deletions to work
 		// Move host back to host1 (cold migrate)
 		err = dc1.UpdateVMHost(vm1, "host1")
 		AssertOk(t, err, "VM host update failed")
-		// Send event since watch does not work
-		vchub.vcReadCh <- createVMHostUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value, penHost1.Obj.Self.Value)
-		// Wait for vm to be on host1
-		// Wait for vm to be present in vchub
-		AssertEventually(t, func() (bool, interface{}) {
-			meta := &api.ObjectMeta{
-				Name: vchub.createVMWorkloadName("", vm1.Self.Value),
-				// TODO: Don't use default tenant
-				Tenant:    globals.DefaultTenant,
-				Namespace: globals.DefaultNamespace,
+		err := dc1.DeleteVM(vm1)
+		AssertOk(t, err, "Failed to delete vm")
+		if sendEvent {
+			m := defs.Probe2StoreMsg{
+				MsgType: defs.VCEvent,
+				Val: defs.VCEventMsg{
+					VcObject:   defs.VirtualMachine,
+					Key:        vm1.Self.Value,
+					DcID:       dc1.Obj.Self.Value,
+					DcName:     dc1.Obj.Name,
+					Originator: vchub.VcID,
+					Changes:    []types.PropertyChange{},
+					UpdateType: types.ObjectUpdateKindLeave,
+				},
 			}
-
-			wl, err := sm.Controller().Workload().Find(meta)
-			if err != nil {
-				return false, err
-			}
-			if wl.Spec.HostName != vchub.createHostName("", penHost1.Obj.Self.Value) {
-				return false, fmt.Errorf("wl not on correct host")
-			}
-			return true, nil
-		}, "workload not found")
+			vchub.vcReadCh <- m
+		}
 	}
 
+	// Wait for sync to run
+	time.Sleep(2 * time.Second)
 	// Build helper functions for the test cases
 
 	waitVMReady := func() {
@@ -571,16 +603,38 @@ func TestVmotionWithWatchers(t *testing.T) {
 		}, "workload not found")
 	}
 
-	vMotionStart := func() {
-		vchub.vcEventCh <- createVmotionStartEvent(vm1.Self.Value, penHost2.Obj.Self.Value, dc1.Obj.Self.Value)
+	vMotionStart := func(dstHost *sim.Host, dstDC *sim.Datacenter) {
+		vchub.vcEventCh <- createVmotionStartEvent(vm1.Self.Value, dstHost.Obj.Self.Value, dstDC.Obj.Self.Value)
 	}
 
-	addVnic := func() {
+	addVnic := func(isAcrossDC bool) {
+		var pgObj *object.DistributedVirtualPortgroup
+		port := "11"
+		if isAcrossDC {
+			pgObj = pg2
+			port = "21"
+			dc1.RemoveVnic(vm1, sim.VNIC{
+				MacAddress:   "aa:aa:bb:bb:dd:dd",
+				PortgroupKey: pg.Reference().Value,
+				PortKey:      "11",
+			})
+
+			// Update vnics to new DC pg
+			dc1.AddVnic(vm1, sim.VNIC{
+				MacAddress:   "aa:aa:bb:bb:dd:dd",
+				PortgroupKey: pg2.Reference().Value,
+				PortKey:      "21", // change port to check stale port is removed
+			})
+		} else {
+			pgObj = pg
+		}
+
 		dc1.AddVnic(vm1, sim.VNIC{
 			MacAddress:   "aa:aa:bb:bb:ee:ee",
-			PortgroupKey: pg.Reference().Value,
+			PortgroupKey: pgObj.Reference().Value,
 			PortKey:      "12",
 		})
+
 		dc1.UpdateVMIP(vm1, "aa:aa:bb:bb:ee:ee", CreatePGName("n1"), []string{"1.1.1.1"})
 		guestNic := []types.GuestNicInfo{
 			{
@@ -591,29 +645,62 @@ func TestVmotionWithWatchers(t *testing.T) {
 		}
 		// Send event since watch does not work
 		vchub.vcReadCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value, guestNic,
-			generateVNIC("aa:aa:bb:bb:dd:dd", "11", pg.Reference().Value, "E1000"),
-			generateVNIC("aa:aa:bb:bb:ee:ee", "12", pg.Reference().Value, "E1000"))
+			generateVNIC("aa:aa:bb:bb:dd:dd", port, pgObj.Reference().Value, "E1000"),
+			generateVNIC("aa:aa:bb:bb:ee:ee", "12", pgObj.Reference().Value, "E1000"))
 	}
 
-	removeVnic := func() {
-		dc1.RemoveVnic(vm1, sim.VNIC{
-			MacAddress:   "aa:aa:bb:bb:ee:ee",
-			PortgroupKey: pg.Reference().Value,
-			PortKey:      "12",
-		})
-		dc1.RemoveVMIP(vm1, "aa:aa:bb:bb:ee:ee")
-		vchub.vcReadCh <- createVnicUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value, nil,
-			generateVNIC("aa:aa:bb:bb:dd:dd", "11", pg.Reference().Value, "E1000"))
-	}
+	vmConfigUpdate := func(dstHost *sim.Host, dstDC *sim.Datacenter, isAcrossDC bool) {
 
-	vmConfigUpdate := func() {
-		err = dc1.UpdateVMHost(vm1, "host2")
+		err = dstDC.UpdateVMHost(vm1, dstHost.Obj.Name)
 		AssertOk(t, err, "VM host update failed")
-		vchub.vcReadCh <- createVMHostUpdateEvent(vchub.OrchID, dc1.Obj.Name, dc1.Obj.Self.Value, vm1.Self.Value, penHost2.Obj.Self.Value)
+		ev := createVMHostUpdateEvent(vchub.OrchID, dstDC.Obj.Name, dstDC.Obj.Self.Value, vm1.Self.Value, dstHost.Obj.Self.Value)
+		vchub.vcReadCh <- ev
 	}
 
-	vmAbort := func() {
-		vchub.vcEventCh <- createVmotionAbortEvent(vm1.Self.Value, penHost2.Obj.Self.Value, dc1.Obj.Self.Value)
+	vmAbort := func(dstHost *sim.Host, dstDC *sim.Datacenter, isAcrossDC bool) {
+		if isAcrossDC {
+			// Set vnics back - blanket remove all and add all
+			dstDC.RemoveVnic(vm1, sim.VNIC{
+				MacAddress:   "aa:aa:bb:bb:dd:dd",
+				PortgroupKey: pg.Reference().Value,
+				PortKey:      "11",
+			})
+			// AssertOk(t, err, "failed to add vnic")
+			dstDC.RemoveVnic(vm1, sim.VNIC{
+				MacAddress:   "aa:aa:bb:bb:ee:ee",
+				PortgroupKey: pg.Reference().Value,
+				PortKey:      "12",
+			})
+			// AssertOk(t, err, "failed to add vnic")
+			dstDC.RemoveVnic(vm1, sim.VNIC{
+				MacAddress:   "aa:aa:bb:bb:dd:dd",
+				PortgroupKey: pg2.Reference().Value,
+				PortKey:      "11",
+			})
+			// AssertOk(t, err, "failed to add vnic")
+			dstDC.RemoveVnic(vm1, sim.VNIC{
+				MacAddress:   "aa:aa:bb:bb:ee:ee",
+				PortgroupKey: pg2.Reference().Value,
+				PortKey:      "12",
+			})
+			// AssertOk(t, err, "failed to add vnic")
+
+			// Update vnics to new DC pg
+			err = dc1.AddVnic(vm1, sim.VNIC{
+				MacAddress:   "aa:aa:bb:bb:dd:dd",
+				PortgroupKey: pg.Reference().Value,
+				PortKey:      "11",
+			})
+			AssertOk(t, err, "failed to add vnic")
+			err = dc1.AddVnic(vm1, sim.VNIC{
+				MacAddress:   "aa:aa:bb:bb:ee:ee",
+				PortgroupKey: pg.Reference().Value,
+				PortKey:      "12",
+			})
+			AssertOk(t, err, "failed to add vnic")
+		}
+
+		vchub.vcEventCh <- createVmotionAbortEvent(vm1.Self.Value, dstHost.Obj.Self.Value, dstDC.Obj.Self.Value)
 	}
 
 	updateMigrationStatus := func(status string) {
@@ -631,7 +718,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 		sm.Controller().Workload().SyncUpdate(&newWl)
 	}
 
-	verifyWorkload := func(specHost *sim.Host, statusHost *sim.Host, numVnics int) {
+	verifyWorkload := func(specHost *sim.Host, statusHost *sim.Host, numVnics int, isAcrossDC bool) {
 		AssertEventually(t, func() (bool, interface{}) {
 			meta := &api.ObjectMeta{
 				Name: vchub.createVMWorkloadName("", vm1.Self.Value),
@@ -667,6 +754,18 @@ func TestVmotionWithWatchers(t *testing.T) {
 				if !found {
 					return false, fmt.Errorf("expected one of the interfaces to have an IP")
 				}
+				if isAcrossDC && statusHost != nil {
+					port := "11"
+					if statusHost.Obj.Name != "host1" {
+						port = "21"
+					}
+					// port override should be on port 21
+					probe := vchub.probe.(*mock.ProbeMock)
+					config := probe.DvsStateMap["DC2"][CreateDVSName("DC2")]
+					if _, ok := config[port]; !ok {
+						return false, fmt.Errorf("No vlan override was set on portkey %s", port)
+					}
+				}
 			}
 			if wl.Spec.HostName != specHostName {
 				return false, fmt.Errorf("wl spec not on correct host, expected %s but found %s", specHostName, wl.Spec.HostName)
@@ -678,358 +777,358 @@ func TestVmotionWithWatchers(t *testing.T) {
 		}, "workload verify failed")
 	}
 
-	verifyVnicReset := func() {
-		AssertEventually(t, func() (bool, interface{}) {
-			meta := &api.ObjectMeta{
-				Name: vchub.createVMWorkloadName("", vm1.Self.Value),
-				// TODO: Don't use default tenant
-				Tenant:    globals.DefaultTenant,
-				Namespace: globals.DefaultNamespace,
-			}
-
-			wl, err := sm.Controller().Workload().Find(meta)
-			if err != nil {
-				return false, err
-			}
-			if len(wl.Spec.Interfaces) != 1 {
-				return false, fmt.Errorf("expected 1 interfaces, found %d", len(wl.Spec.Interfaces))
-			}
-			return true, nil
-		}, "workload not found")
-	}
-
 	recreateVM := func() {
 		vnics := []sim.VNIC{
 			sim.VNIC{
-				MacAddress:   "aaaa.bbbb.dddd",
+				MacAddress:   "aa:aa:bb:bb:dd:dd",
 				PortgroupKey: pg.Reference().Value,
 				PortKey:      "11",
 			},
 		}
 		vm1, err = dc1.AddVM("vm1", "host1", vnics)
 		AssertOk(t, err, "Failed to create vm1")
+
+		// Reset port overrides
+		probe := vchub.probe.(*mock.ProbeMock)
+		config := probe.DvsStateMap["DC2"][CreateDVSName("DC2")]
+		ports := []string{}
+		for key := range config {
+			ports = append(ports, key)
+		}
+		for _, key := range ports {
+			delete(config, key)
+		}
+
 		vchub.vcReadCh <- createVMEvent(dc1.Obj.Name, dc1.Obj.Self.Value, "vm1", vm1.Self.Value, penHost1.Obj.Self.Value, vnics)
 		wlName = vchub.createVMWorkloadName("", vm1.Self.Value)
 		waitVMReady()
 	}
 
 	waitVMReady()
-	{
-		/** ---------- VMotion Happy case ----------
-		1. VM moves from h1 -> h2
-		2. VM update host config
-		3. Datapath says completed
-		4. VM migration completed
-		*/
+	testCases := func(dstHost *sim.Host, dstDC *sim.Datacenter) {
+		isAcrossDC := dstDC.Obj.Name != defaultTestParams.TestDCName
+		{
+			/** ---------- VMotion Happy case ----------
+			1. VM moves from h1 -> h2
+			2. VM update host config
+			3. Datapath says completed
+			4. VM migration completed
+			*/
 
-		logger.Infof("===== VMotion Happy case =====")
+			logger.Infof("===== VMotion Happy case - AcrossDC: %v =====", isAcrossDC)
 
-		// Start migration
-		vMotionStart()
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+			// Start migration
+			vMotionStart(dstHost, dstDC)
+			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
 
-		// Add vnic, should be ignored since we are migrating
-		addVnic()
+			// Add vnic, should be ignored since we are migrating
+			addVnic(isAcrossDC)
 
-		// Trigger config update
-		vmConfigUpdate()
+			// Trigger config update
+			vmConfigUpdate(dstHost, dstDC, isAcrossDC)
 
-		// Check Migration final sync
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
-		verifyWorkload(penHost2, penHost1, 1)
+			// Check Migration final sync
+			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
+			verifyWorkload(dstHost, penHost1, 1, isAcrossDC)
 
-		// Update data path
-		updateMigrationStatus(statusDone)
+			// Update data path
+			updateMigrationStatus(statusDone)
 
-		// Check finish migration
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
+			// Check finish migration
+			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
 
-		// Now that we are done migrating, verify new vnic was added
-		verifyWorkload(penHost2, nil, 2)
+			// Now that we are done migrating, verify new vnic was added
+			verifyWorkload(dstHost, nil, 2, isAcrossDC)
 
-		// CLEANUP
-		removeVnic()
-		verifyVnicReset()
-		moveVMBack()
-	}
+			// CLEANUP
+			deleteVM(false)
+			recreateVM()
+		}
 
-	{
-		/** ---------- VMotion Happy abort ----------
-		1. VM moves from h1 -> h2
-		2. VM abort
-		3. Datapath says failed
-		4. VM migration completed
-		*/
-		logger.Infof("===== VMotion Happy abort =====")
+		{
+			/** ---------- VMotion Happy abort ----------
+			1. VM moves from h1 -> h2
+			2. VM abort
+			3. Datapath says failed
+			4. VM migration completed
+			*/
+			logger.Infof("===== VMotion Happy abort - AcrossDC: %v =====", isAcrossDC)
 
-		// Start migration
-		vMotionStart()
+			// Start migration
+			vMotionStart(dstHost, dstDC)
 
-		// Add vnic, should be ignored since we are migrating
-		addVnic()
+			// Add vnic, should be ignored since we are migrating
+			addVnic(isAcrossDC)
 
-		// Check Migration Start
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
-		verifyWorkload(penHost2, penHost1, 1)
+			// Check Migration Start
+			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+			verifyWorkload(dstHost, penHost1, 1, isAcrossDC)
 
-		// Trigger abort
-		vmAbort()
+			// Trigger abort
+			vmAbort(dstHost, dstDC, isAcrossDC)
 
-		// Check Migration abort
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationAbort)
+			// Check Migration abort
+			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationAbort)
 
-		// Update data path to failed
-		updateMigrationStatus(statusFailed)
+			// Update data path to failed
+			updateMigrationStatus(statusFailed)
 
-		// Now that we are done migrating, verify new vnic was added
-		verifyWorkload(penHost1, nil, 2)
+			// Now that we are done migrating, verify new vnic was added
+			verifyWorkload(penHost1, nil, 2, isAcrossDC)
 
-		// CLEANUP
-		// remove vnic, move back vm
-		removeVnic()
+			// CLEANUP
+			// remove vnic, move back vm
+			deleteVM(false)
+			recreateVM()
+		}
 
-		verifyVnicReset()
-	}
+		{
+			/** ---------- VMotion datapath fail ----------
+			1. VM moves from h1 -> h2
+			2. VM update host config
+			3. Datapath says failed
+			4. VM migration completed
+			*/
 
-	{
-		/** ---------- VMotion datapath fail ----------
-		1. VM moves from h1 -> h2
-		2. VM update host config
-		3. Datapath says failed
-		4. VM migration completed
-		*/
+			logger.Infof("===== VMotion datapath fail =====")
 
-		logger.Infof("===== VMotion datapath fail =====")
+			// Start migration
+			vMotionStart(dstHost, dstDC)
 
-		// Start migration
-		vMotionStart()
+			// Check Migration Start
+			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
 
-		// Check Migration Start
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+			// Add vnic, should be ignored since we are migrating
+			addVnic(isAcrossDC)
 
-		// Add vnic, should be ignored since we are migrating
-		addVnic()
+			// Trigger config update
+			vmConfigUpdate(dstHost, dstDC, isAcrossDC)
 
-		// Trigger config update
-		vmConfigUpdate()
+			// Check Migration final sync
+			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
+			verifyWorkload(dstHost, penHost1, 1, isAcrossDC)
 
-		// Check Migration final sync
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
-		verifyWorkload(penHost2, penHost1, 1)
+			// Update data path
+			updateMigrationStatus(statusFailed)
 
-		// Update data path
-		updateMigrationStatus(statusFailed)
+			// Check finish migration
+			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
 
-		// Check finish migration
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
+			// Now that we are done migrating, verify new vnic was added
+			verifyWorkload(dstHost, nil, 2, isAcrossDC)
 
-		// Now that we are done migrating, verify new vnic was added
-		verifyWorkload(penHost2, nil, 2)
+			// CLEANUP
+			deleteVM(false)
+			recreateVM()
+		}
 
-		// CLEANUP
-		removeVnic()
-		verifyVnicReset()
-		moveVMBack()
-	}
+		{
+			/** ---------- VMotion datapath timeout (missed vm Complete) -------
+			1. VM moves from h1 -> h2
+			2. Datapath says timeout
+			4. VM gets resynced
+			*/
 
-	{
-		/** ---------- VMotion datapath timeout (missed vm Complete) -------
-		1. VM moves from h1 -> h2
-		2. Datapath says timeout
-		4. VM gets resynced
-		*/
+			logger.Infof("===== VMotion datapath timeout - AcrossDC: %v =====", isAcrossDC)
 
-		logger.Infof("===== VMotion datapath timeout =====")
+			// Start migration
+			vMotionStart(dstHost, dstDC)
 
-		// Start migration
-		vMotionStart()
+			// Check Migration Start
+			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
 
-		// Check Migration Start
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+			// Add vnic, should be ignored since we are migrating
+			// isAcrossDC is always false here as
+			// we won't finish migration to dest host
+			addVnic(false)
+			verifyWorkload(dstHost, penHost1, 1, isAcrossDC)
 
-		// Add vnic, should be ignored since we are migrating
-		addVnic()
-		verifyWorkload(penHost2, penHost1, 1)
+			// Update data path
+			updateMigrationStatus(statusTimedOut)
 
-		// Update data path
-		updateMigrationStatus(statusTimedOut)
+			// Check finish migration
+			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
 
-		// Check finish migration
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
+			// Now that we are done migrating, verify new vnic was added
+			// verify we are on the old host
+			verifyWorkload(penHost1, nil, 2, isAcrossDC)
 
-		// Now that we are done migrating, verify new vnic was added
-		// verify we are on the old host
-		verifyWorkload(penHost1, nil, 2)
+			// CLEANUP
+			deleteVM(false)
+			recreateVM()
+		}
 
-		// CLEANUP
-		// remove vnic, move back vm
-		removeVnic()
-		verifyVnicReset()
-	}
+		{
+			/** ---------- VMotion delete before datapath finishes ----------
+			1. VM moves from h1 -> h2
+			2. VM update host config
+			3. VM deleted
+			*/
 
-	{
-		/** ---------- VMotion delete before datapath finishes ----------
-		1. VM moves from h1 -> h2
-		2. VM update host config
-		3. VM deleted
-		*/
+			logger.Infof("===== VMotion delete before datapath finishes - AcrossDC: %v =====", isAcrossDC)
+			vMotionStart(dstHost, dstDC)
+			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
 
-		logger.Infof("===== VMotion delete before datapath finishes =====")
-		vMotionStart()
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+			addVnic(isAcrossDC)
 
-		addVnic()
+			vmConfigUpdate(dstHost, dstDC, isAcrossDC)
 
-		vmConfigUpdate()
+			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
+			verifyWorkload(dstHost, penHost1, 1, isAcrossDC)
 
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
-		verifyWorkload(penHost2, penHost1, 1)
+			deleteVM(true)
 
-		err := dc1.DeleteVM(vm1)
-		AssertOk(t, err, "failed to delete VM")
+			AssertEventually(t, func() (bool, interface{}) {
+				meta := &api.ObjectMeta{
+					Name: vchub.createVMWorkloadName("", vm1.Self.Value),
+					// TODO: Don't use default tenant
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
 
-		AssertEventually(t, func() (bool, interface{}) {
-			meta := &api.ObjectMeta{
-				Name: vchub.createVMWorkloadName("", vm1.Self.Value),
-				// TODO: Don't use default tenant
-				Tenant:    globals.DefaultTenant,
-				Namespace: globals.DefaultNamespace,
+				workload, err := sm.Controller().Workload().Find(meta)
+				if !isAcrossDC && err == nil {
+					return false, fmt.Errorf("Expected workload to be deleted, found %v", workload)
+				} else if isAcrossDC && err != nil {
+					return false, fmt.Errorf("Expected workload to be present since we should have ignored DC delete event")
+				}
+				return true, nil
+			}, "workload should have been deleted")
+
+			// CLEANUP - recreate workload on host1
+			recreateVM()
+		}
+
+		/** ------------- RESTART CASES --------------- */
+
+		{
+			/** ---------- Restart during host config update ----------
+			1. VM moves from h1 -> h2
+			2. Kill VCHub
+			3. VM update host config
+			4. VCHub comes back, final sync should start
+			5. Kill VCHub
+			6. Datapath says completed
+			7. VCHub comes back, finish migration called
+			8. VM migration completed
+			*/
+			if !isAcrossDC { // Doesn't work with sim as inventory watches think VM is in the wrong DC when the watch restarts
+				logger.Infof("===== Restart during host config update - AcrossDC: %v =====", isAcrossDC)
+				vMotionStart(dstHost, dstDC)
+				checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+
+				addVnic(isAcrossDC)
+				vchub.Destroy(false)
+
+				vmConfigUpdate(dstHost, dstDC, isAcrossDC)
+
+				vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+				time.Sleep(1 * time.Second)                      // Time for sync to run
+				verifyWorkload(dstHost, penHost1, 1, isAcrossDC) // Verify sync isn't writing any state
+
+				checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
+
+				vchub.Destroy(false)
+
+				updateMigrationStatus(statusDone)
+
+				vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+				checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
+
+				verifyWorkload(dstHost, nil, 2, isAcrossDC)
+
+				// CLEANUP
+				deleteVM(false)
+				recreateVM()
 			}
+		}
 
-			_, err := sm.Controller().Workload().Find(meta)
-			if err == nil {
-				return false, fmt.Errorf("Expected workload to be deleted")
+		{
+			/** ---------- Restart during data path failure ----------
+			1. VM moves from h1 -> h2
+			2. VM update host config
+			3. Kill VCHub
+			4. Datapath says failure
+			5. Start VCHub
+			6. VCHub comes back, finish migration called
+			8. VM migration completed
+			*/
+			if !isAcrossDC { // Doesn't work with sim as inventory watches think VM is in the wrong DC when the watch restarts
+				logger.Infof("===== Restart during data path failure - AcrossDC: %v =====", isAcrossDC)
+				vMotionStart(dstHost, dstDC)
+				checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+
+				addVnic(isAcrossDC)
+
+				vmConfigUpdate(dstHost, dstDC, isAcrossDC)
+
+				checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
+				verifyWorkload(dstHost, penHost1, 1, isAcrossDC) // Verify sync isn't writing any state
+
+				vchub.Destroy(false)
+
+				updateMigrationStatus(statusFailed)
+
+				vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+				checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
+
+				verifyWorkload(dstHost, nil, 2, isAcrossDC)
+				// CLEANUP
+				deleteVM(false)
+				recreateVM()
 			}
-			return true, nil
-		}, "workload should have been deleted")
+		}
 
-		// CLEANUP - recreate workload on host1
-		recreateVM()
+		{
+			/** ---------- VM deleted after VMotion with restart ----------
+			1. VM moves from h1 -> h2
+			2. VM update host config
+			3. Kill VCHub
+			4. Datapath says completed
+			5. Delete VM in vcenter
+			6. VCHub comes back, finish migration called, vm deleted after
+			*/
+			logger.Infof("===== VM deleted after VMotion with restart - AcrossDC: %v =====", isAcrossDC)
+			vMotionStart(dstHost, dstDC)
+			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
+
+			addVnic(isAcrossDC)
+
+			vmConfigUpdate(dstHost, dstDC, isAcrossDC)
+
+			checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
+			verifyWorkload(dstHost, penHost1, 1, isAcrossDC)
+
+			vchub.Destroy(false)
+
+			updateMigrationStatus(statusDone)
+
+			deleteVM(false)
+
+			vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+			AssertEventually(t, func() (bool, interface{}) {
+				meta := &api.ObjectMeta{
+					Name: vchub.createVMWorkloadName("", vm1.Self.Value),
+					// TODO: Don't use default tenant
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				}
+
+				workload, err := sm.Controller().Workload().Find(meta)
+				if !isAcrossDC && err == nil {
+					return false, fmt.Errorf("Expected workload to be deleted, found %v", workload)
+				} else if isAcrossDC && err != nil {
+					return false, fmt.Errorf("Expected workload to be present since we should have ignored DC delete event")
+				}
+				return true, nil
+			}, "workload should have been deleted")
+			// CLEANUP - recreate workload on host1
+			recreateVM()
+		}
 	}
 
-	/** ------------- RESTART CASES --------------- */
-
-	{
-		/** ---------- Restart during host config update ----------
-		1. VM moves from h1 -> h2
-		2. Kill VCHub
-		3. VM update host config
-		4. VCHub comes back, final sync should start
-		5. Kill VCHub
-		6. Datapath says completed
-		7. VCHub comes back, finish migration called
-		8. VM migration completed
-		*/
-		logger.Infof("===== Restart during host config update =====")
-		vMotionStart()
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
-
-		addVnic()
-		vchub.Destroy(false)
-
-		vmConfigUpdate()
-
-		vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
-		time.Sleep(1 * time.Second)           // Time for sync to run
-		verifyWorkload(penHost2, penHost1, 1) // Verify sync isn't writing any state
-
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
-
-		vchub.Destroy(false)
-
-		updateMigrationStatus(statusDone)
-
-		vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
-
-		verifyWorkload(penHost2, nil, 2)
-
-		// CLEANUP
-		removeVnic()
-		verifyVnicReset()
-		moveVMBack()
-	}
-
-	{
-		/** ---------- Restart during data path failure ----------
-		1. VM moves from h1 -> h2
-		2. VM update host config
-		3. Kill VCHub
-		4. Datapath says failure
-		5. Start VCHub
-		6. VCHub comes back, finish migration called
-		8. VM migration completed
-		*/
-		logger.Infof("===== Restart during data path failure =====")
-		vMotionStart()
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
-
-		addVnic()
-
-		vmConfigUpdate()
-
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
-		verifyWorkload(penHost2, penHost1, 1) // Verify sync isn't writing any state
-
-		vchub.Destroy(false)
-
-		updateMigrationStatus(statusFailed)
-
-		vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationDone)
-
-		verifyWorkload(penHost2, nil, 2)
-		// CLEANUP
-		removeVnic()
-		verifyVnicReset()
-		moveVMBack()
-	}
-
-	{
-		/** ---------- VM deleted after VMotion with restart ----------
-		1. VM moves from h1 -> h2
-		2. VM update host config
-		3. Kill VCHub
-		4. Datapath says completed
-		5. Delete VM in vcenter
-		6. VCHub comes back, finish migration called, vm deleted after
-		*/
-		logger.Infof("===== VM deleted after VMotion with restart =====")
-		vMotionStart()
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationStart)
-
-		addVnic()
-
-		vmConfigUpdate()
-
-		checkMigrationState(t, sm, vchub.OrchID, wlName, stageMigrationFinalSync)
-		verifyWorkload(penHost2, penHost1, 1)
-
-		vchub.Destroy(false)
-
-		updateMigrationStatus(statusDone)
-
-		err := dc1.DeleteVM(vm1)
-		AssertOk(t, err, "failed to delete VM")
-
-		vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
-		AssertEventually(t, func() (bool, interface{}) {
-			meta := &api.ObjectMeta{
-				Name: vchub.createVMWorkloadName("", vm1.Self.Value),
-				// TODO: Don't use default tenant
-				Tenant:    globals.DefaultTenant,
-				Namespace: globals.DefaultNamespace,
-			}
-
-			_, err := sm.Controller().Workload().Find(meta)
-			if err == nil {
-				return false, fmt.Errorf("Expected workload to be deleted")
-			}
-			return true, nil
-		}, "workload should have been deleted")
-		// CLEANUP - recreate workload on host1
-		recreateVM()
-	}
+	testCases(penHost2, dc1)
+	testCases(penHost3, dc2)
 
 	vchub.Destroy(false)
 }

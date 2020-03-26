@@ -16,23 +16,25 @@ import (
 	conv "github.com/pensando/sw/venice/utils/strconv"
 )
 
-func (v *VCHub) penDVSForVcHost(dcName string, hConfig *types.HostConfigInfo) *PenDVS {
+func (v *VCHub) penDVSForVcHost(dcName string, hConfig *types.HostConfigInfo) (*PenDVS, []string) {
+	var pnics []string
 	if hConfig == nil || hConfig.Network == nil {
-		return nil
+		return nil, pnics
 	}
 	penDC := v.GetDC(dcName)
 	if penDC == nil {
-		return nil
+		return nil, pnics
 	}
 	var penDVS *PenDVS
 	for _, dvsProxy := range hConfig.Network.ProxySwitch {
 		v.Log.Debugf("Proxy switch %s", dvsProxy.DvsName)
 		penDVS = penDC.GetDVS(dvsProxy.DvsName)
 		if penDVS != nil {
+			pnics = dvsProxy.Pnic
 			break
 		}
 	}
-	return penDVS
+	return penDVS, pnics
 }
 
 func (v *VCHub) handleHost(m defs.VCEventMsg) {
@@ -121,7 +123,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		return
 	}
 
-	penDVS := v.penDVSForVcHost(m.DcName, hConfig)
+	penDVS, pNicsUsed := v.penDVSForVcHost(m.DcName, hConfig)
 	if penDVS == nil {
 		// This host in not on pen-dvs, ignore it
 		v.Log.Infof("Host %s is not added to pensando DVS", m.Key)
@@ -141,6 +143,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		return nwInfo.Pnic[i].Mac < nwInfo.Pnic[j].Mac
 	})
 
+	naplesPnicUsed := false
 	for _, pnic := range nwInfo.Pnic {
 		macStr, err := conv.ParseMacAddr(pnic.Mac)
 		if err != nil {
@@ -150,19 +153,39 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		if !netutils.IsPensandoMACAddress(macStr) {
 			continue
 		}
-		DSCs = append(DSCs, cluster.DistributedServiceCardID{
-			MACAddress: macStr,
-		})
-		// TODO : Currently we do not allow more than one DSC per host to be added to Venice.
-		// Currently hConfig.Network.ProxySwitch[].Pnic[] is not checked to see if the host is
-		// connected to penDVS or not. When multiple DSCs are present, EP->DSC mapping gets tricky
-		// it depends on how PG's uplink teaming is configured
-		break
+		if len(DSCs) == 0 {
+			// Only one DSC is supported per host.. for now it must be the first DSC
+			// TODO: support for multiple DSCs per host
+			DSCs = append(DSCs, cluster.DistributedServiceCardID{
+				MACAddress: macStr,
+			})
+		}
+		for _, pn := range pNicsUsed {
+			if pn == pnic.Key {
+				naplesPnicUsed = true
+				break
+			}
+		}
 	}
 
 	if len(DSCs) == 0 {
 		// Not a pensando host
 		v.Log.Infof("Host %s is ignored - not a Pensando host", m.Key)
+		if existingHost != nil {
+			// host was removed from Pen-DVS, cleanup any workloads on it and
+			// delete the host
+			v.hostRemovedFromDVS(existingHost)
+		}
+		return
+	}
+
+	if !naplesPnicUsed {
+		v.Log.Infof("Host %s is ignored - Naples Pnic is not connected to Pensando DVS", m.Key)
+		if existingHost != nil {
+			// host was removed from Pen-DVS, cleanup any workloads on it and
+			// delete the host
+			v.hostRemovedFromDVS(existingHost)
+		}
 		return
 	}
 

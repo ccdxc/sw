@@ -2,11 +2,14 @@ package vchub
 
 import (
 	"fmt"
+	"strconv"
+
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils/usegvlanmgr"
 )
 
 /**
  * Debug commands
- * action URL: /debug-state
  * params:
  *    key: Name of the orch config
  *    action: Type of debug request
@@ -23,6 +26,10 @@ import (
  *
  * action: sync - Triggers a sync
  *
+ * action: vlanSpace - Sets the size of the vlan space
+ * params:
+ *       count: size of vlan space per host
+ *
  */
 
 // DebugUseg is the action string for triggering useg debugging
@@ -37,6 +44,9 @@ const DebugState = "state"
 // DebugSync is the action string for triggering sync
 const DebugSync = "sync"
 
+// DebugVlanSpace is the action string for triggering sync
+const DebugVlanSpace = "vlanSpace"
+
 func (v *VCHub) debugHandler(action string, params map[string]string) (interface{}, error) {
 
 	switch action {
@@ -48,9 +58,28 @@ func (v *VCHub) debugHandler(action string, params map[string]string) (interface
 		return v.debugState(params)
 	case DebugSync:
 		return v.debugSync(params)
+	case DebugVlanSpace:
+		return v.debugVlanSpace(params)
 	default:
 		return nil, fmt.Errorf("VCHub debug does not support action %s", action)
 	}
+}
+
+func (v *VCHub) debugVlanSpace(params map[string]string) (interface{}, error) {
+	countStr, ok := params["count"]
+	if !ok {
+		return nil, fmt.Errorf("count is a required param")
+	}
+	count, err := strconv.Atoi(countStr)
+	if err != nil {
+		return nil, err
+	}
+	newMax := useg.FirstUsegVlan + count
+	if newMax > 4095 {
+		return nil, fmt.Errorf("Vlan space is not allowed to be more than 4095")
+	}
+	usegvlanmgr.VlanMax = newMax
+	return nil, nil
 }
 
 func (v *VCHub) debugUseg(params map[string]string) (interface{}, error) {
