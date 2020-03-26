@@ -3,6 +3,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
+#include "gen/p4gen/p4/include/ftl.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "lib/table/tcam/tcam.hpp"
@@ -438,12 +439,14 @@ p4pd_session_state_init (void)
 static hal_ret_t
 p4pd_flow_stats_init (void)
 {
-    hal_ret_t               ret;
-    sdk_ret_t               sdk_ret;
-    sldirectmap            *dm;
-    flow_stats_actiondata_t   data = { 0 };
+    hal_ret_t                   ret;
+    sdk_ret_t                   sdk_ret;
+    sldirectmap                 *dm;
+    flow_stats_actiondata_t     data = { 0 };
+    struct flow_stats_entry_t   fs_entry;
     sdk::table::sdk_table_api_params_t  params;
 
+    fs_entry.clear();
     dm = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
     SDK_ASSERT(dm != NULL);
 
@@ -452,7 +455,9 @@ p4pd_flow_stats_init (void)
     bzero(&params, sizeof(sdk::table::sdk_table_api_params_t));
     params.handle.pindex(FLOW_STATS_NOP_ENTRY);
     params.actiondata = &data;
-    sdk_ret = dm->insert_withid(&params);
+    sdk_ret = dm->reserve_index(&params);
+    SDK_ASSERT(sdk_ret == SDK_RET_OK);
+    sdk_ret = fs_entry.write(FLOW_STATS_NOP_ENTRY);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",
@@ -463,7 +468,9 @@ p4pd_flow_stats_init (void)
     // claim one more entry to be in sync with flow info table
     params.handle.pindex(FLOW_STATS_RSVD_ENTRY);
     params.actiondata = &data;
-    sdk_ret = dm->insert_withid(&params);
+    sdk_ret = dm->reserve_index(&params);
+    SDK_ASSERT(sdk_ret == SDK_RET_OK);
+    sdk_ret = fs_entry.write(FLOW_STATS_RSVD_ENTRY);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow stats table write failure, idx : {}, err : {}",

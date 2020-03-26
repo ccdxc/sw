@@ -302,6 +302,7 @@ action flow_stats(last_seen_timestamp, permit_packets, permit_bytes,
 @pragma stage 5
 @pragma hbm_table
 @pragma table_write
+@pragma capi_bitfields_struct
 table flow_stats {
     reads {
         flow_info_metadata.flow_index : exact;

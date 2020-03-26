@@ -7,6 +7,7 @@
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/sdk/include/sdk/lock.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
+#include "gen/p4gen/p4/include/ftl.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include "nic/hal/pd/iris/nw/session_pd.hpp"
@@ -69,9 +70,7 @@ p4pd_add_upd_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t permit_pac
 {
     hal_ret_t ret;
     sdk_ret_t sdk_ret;
-    sldirectmap *stats_table = NULL;
-    flow_stats_actiondata_t d = { 0 };
-    sdk_table_api_params_t params;
+    struct flow_stats_entry_t fs_entry;
 
     if (!update && (*assoc_hw_idx)) {
         HAL_TRACE_VERBOSE("Hw entry already created Hw index:{}", *assoc_hw_idx);
@@ -79,41 +78,32 @@ p4pd_add_upd_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t permit_pac
     }
 
     SDK_ASSERT(assoc_hw_idx != NULL);
-    stats_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
-    SDK_ASSERT(stats_table != NULL);
-
-    d.action_id = FLOW_STATS_FLOW_STATS_ID;
+    fs_entry.clear();
     // P4 has 32 bits so we have to use top 32 bits. We lose the precision by 2^16 ns
-    d.action_u.flow_stats_flow_stats.last_seen_timestamp = clock >> 16;
+    fs_entry.set_last_seen_timestamp(clock >> 16);
+    fs_entry.set_permit_packets(permit_packets);
+    fs_entry.set_permit_bytes(permit_bytes);
+    fs_entry.set_drop_packets(drop_packets);
+    fs_entry.set_drop_bytes(drop_bytes);
+    if (!update) {
+        sldirectmap *stats_table = NULL;
+        sdk_table_api_params_t params;
 
-    memcpy(d.action_u.flow_stats_flow_stats.permit_packets, &permit_packets, sizeof(uint64_t));
-    memcpy(d.action_u.flow_stats_flow_stats.permit_bytes, &permit_bytes, sizeof(uint64_t));
-    memcpy(d.action_u.flow_stats_flow_stats.drop_packets, &drop_packets, sizeof(uint64_t));
-    memcpy(d.action_u.flow_stats_flow_stats.drop_bytes, &drop_bytes, sizeof(uint64_t));
-
-    bzero(&params, sizeof(sdk_table_api_params_t));
-    params.actiondata = &d;
-
-    if (update) {
-        params.handle.pindex(*assoc_hw_idx);
-        sdk_ret = stats_table->update(&params);
-    } else {
-        // insert the entry
-        sdk_ret = stats_table->insert(&params);
+        bzero(&params, sizeof(sdk_table_api_params_t));
+        stats_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
+        SDK_ASSERT(stats_table != NULL);
+        stats_table->reserve(&params);
+        SDK_ASSERT(params.handle.pvalid());
+        *assoc_hw_idx = params.handle.pindex();
     }
+    sdk_ret = fs_entry.write(*assoc_hw_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow stats table write failure, err : {}", ret);
         return ret;
     }
- 
-    SDK_ASSERT(params.handle.pvalid());
-    *assoc_hw_idx = params.handle.pindex();
-
     HAL_TRACE_VERBOSE("Setting the last seen timestamp: {} clock {} hwIndx: {}",
-                      d.action_u.flow_stats_flow_stats.last_seen_timestamp,
-                      clock, *assoc_hw_idx);
-
+                      fs_entry.get_last_seen_timestamp(), clock, *assoc_hw_idx);
     return HAL_RET_OK;
 }
 
@@ -1416,13 +1406,12 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     pd_conv_hw_clock_to_sw_clock_args_t clock_args = {0};
     pd_flow_get_args_t *args = pd_func_args->pd_flow_get;
     sdk_ret_t sdk_ret;
-    flow_stats_actiondata_t d = {0};
     flow_info_actiondata_t f = {0};
     sldirectmap *info_table = NULL;
-    sldirectmap *stats_table = NULL;
     pd_flow_t pd_flow;
     session_t *session = NULL;
     sdk_table_api_params_t params;
+    struct flow_stats_entry_t fs_entry;
 
     if (args->pd_session == NULL ||
         ((pd_session_t *)args->pd_session)->session == NULL) {
@@ -1430,8 +1419,6 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     }
 
     session = (session_t *)((pd_session_t *)args->pd_session)->session;
-    stats_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
-    SDK_ASSERT(stats_table != NULL);
 
     if (args->aug == false) {
         if (args->role == FLOW_ROLE_INITIATOR) {
@@ -1447,11 +1434,9 @@ pd_flow_get (pd_func_args_t *pd_func_args)
         }
     }
 
-    bzero(&params, sizeof(sdk_table_api_params_t));
-    params.handle.pindex(pd_flow.assoc_hw_id);
-    params.actiondata = &d;
+    fs_entry.clear();
     // read the d-vector
-    sdk_ret = stats_table->get(&params);
+    sdk_ret = fs_entry.read(pd_flow.assoc_hw_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error reading stats action entry flow {} hw-id {} ret {}",
@@ -1459,12 +1444,12 @@ pd_flow_get (pd_func_args_t *pd_func_args)
         return ret;
     }
 
-    args->flow_state->packets = BYTES_TO_UINT64(d.action_u.flow_stats_flow_stats.permit_packets);
-    args->flow_state->bytes = BYTES_TO_UINT64(d.action_u.flow_stats_flow_stats.permit_bytes);
-    args->flow_state->drop_packets = BYTES_TO_UINT64(d.action_u.flow_stats_flow_stats.drop_packets);
-    args->flow_state->drop_bytes = BYTES_TO_UINT64(d.action_u.flow_stats_flow_stats.drop_bytes);
+    args->flow_state->packets = fs_entry.get_permit_packets();
+    args->flow_state->bytes = fs_entry.get_permit_bytes();
+    args->flow_state->drop_packets = fs_entry.get_drop_packets();
+    args->flow_state->drop_bytes = fs_entry.get_drop_bytes();
 
-    clock_args.hw_tick = d.action_u.flow_stats_flow_stats.last_seen_timestamp;
+    clock_args.hw_tick = fs_entry.get_last_seen_timestamp();
     clock_args.hw_tick = (clock_args.hw_tick << 16);
     clock_args.sw_ns = &args->flow_state->last_pkt_ts;
     pd_func_args->pd_conv_hw_clock_to_sw_clock = &clock_args;
@@ -1503,8 +1488,6 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
     hal_ret_t                            ret;
     pd_conv_hw_clock_to_sw_clock_args_t  clock_args;
     pd_flow_get_args_t                  *args;
-    flow_stats_actiondata_t              d;
-    sldirectmap                         *stats_table;
     pd_flow_t                            pd_flow;
     flow_telemetry_state_t              *flow_telemetry_state_p;
     sdk_ret_t                            sdk_ret;
@@ -1514,7 +1497,7 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
     uint64_t                             pps = 0, bw = 0;
     uint64_t                             flow_table_packets, flow_table_bytes;
     uint32_t                             delta_packets, delta_bytes;
-    sdk_table_api_params_t               params;
+    flow_stats_entry_t                   fs_entry;
 
     args = pd_func_args->pd_flow_get;
     if (args->pd_session == NULL ||
@@ -1529,13 +1512,8 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
     }
 
     // read the d-vector
-    stats_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
-    SDK_ASSERT(stats_table != NULL);
-
-    bzero(&params, sizeof(sdk_table_api_params_t));
-    params.handle.pindex(pd_flow.assoc_hw_id);
-    params.actiondata = &d;
-    sdk_ret = stats_table->get(&params);
+    fs_entry.clear();
+    sdk_ret = fs_entry.read(pd_flow.assoc_hw_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         session_t *session;
@@ -1548,7 +1526,7 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
     }
 
     //Retrieve Last-seen-packet-timestamp in this Flow-context
-    clock_args.hw_tick = d.action_u.flow_stats_flow_stats.last_seen_timestamp;
+    clock_args.hw_tick = fs_entry.get_last_seen_timestamp();
     clock_args.hw_tick = (clock_args.hw_tick << 16);
     clock_args.sw_ns = &args->flow_state->last_pkt_ts;
     pd_func_args->pd_conv_hw_clock_to_sw_clock = &clock_args;
@@ -1558,28 +1536,22 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
     // drop_packets symptoms observed in Flow-stats-table D-vector
     //
     // Flow-Age thread creates such states in HBM (for exposition via gRPC)
-    current_hw_drop_packets = BYTES_TO_UINT64(d.action_u.flow_stats_flow_stats.
-                                              drop_packets);
+    current_hw_drop_packets = fs_entry.get_drop_packets();
     flow_telemetry_state_p = flow_p->flow_telemetry_state_p;
     if (flow_telemetry_state_p == NULL) {
 
         // Gather Flow Raw Stats in scratch buffer
-        args->flow_state->packets = BYTES_TO_UINT64(d.action_u.
-                                    flow_stats_flow_stats.permit_packets);
-        args->flow_state->bytes = BYTES_TO_UINT64(d.action_u.
-                                  flow_stats_flow_stats.permit_bytes);
+        args->flow_state->packets = fs_entry.get_permit_packets();
+        args->flow_state->bytes = fs_entry.get_permit_bytes();
         args->flow_state->drop_packets = current_hw_drop_packets;
-        args->flow_state->drop_bytes = BYTES_TO_UINT64(d.action_u.
-                                       flow_stats_flow_stats.drop_bytes);
-        args->flow_state->exception_bmap = d.action_u.
-                                           flow_stats_flow_stats.drop_reason;
+        args->flow_state->drop_bytes = fs_entry.get_drop_bytes();
+        args->flow_state->exception_bmap = fs_entry.get_drop_reason();
 
         // Create FlowDropProto on first Non-firewall-policy flow-drop seen
         flow_p->flow_telemetry_create_flags = flow_p->
                                               flow_telemetry_enable_flags;
         if (current_hw_drop_packets == 0 ||
-            d.action_u.flow_stats_flow_stats.drop_reason == 
-           (1 << DROP_FLOW_HIT)) {
+            fs_entry.get_drop_reason() == (1 << DROP_FLOW_HIT)) {
             flow_p->flow_telemetry_create_flags &= ~(1 << FLOW_TELEMETRY_DROP);
         }
         return ret;
@@ -1591,10 +1563,8 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
 
     if (flow_p->flow_telemetry_enable_flags & (1 << FLOW_TELEMETRY_RAW)) {
         // Get current snapshot of Packets/Bytes
-        flow_table_packets = BYTES_TO_UINT64(
-                             d.action_u.flow_stats_flow_stats.permit_packets);
-        flow_table_bytes = BYTES_TO_UINT64(
-                           d.action_u.flow_stats_flow_stats.permit_bytes);
+        flow_table_packets = fs_entry.get_permit_packets();
+        flow_table_bytes = fs_entry.get_permit_bytes();
 
         // Compute Delta-Packets/Bytes since last capture
         delta_packets = (uint32_t) flow_table_packets - flow_telemetry_state_p->
@@ -1627,10 +1597,8 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
             flow_telemetry_state_p->u1.drop_metrics.last_timestamp = ctime_ns;
 
             // Get current snapshot of Packets/Bytes
-            flow_table_packets = BYTES_TO_UINT64(
-                                 d.action_u.flow_stats_flow_stats.drop_packets);
-            flow_table_bytes = BYTES_TO_UINT64(
-                               d.action_u.flow_stats_flow_stats.drop_bytes);
+            flow_table_packets = fs_entry.get_drop_packets();
+            flow_table_bytes = fs_entry.get_drop_bytes();
 
             // Compute Delta-Packets/Bytes since last capture
             delta_packets = (uint32_t) flow_table_packets - 
@@ -1647,7 +1615,7 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
             flow_telemetry_state_p->u1.drop_metrics.packets += delta_packets;
             flow_telemetry_state_p->u1.drop_metrics.bytes += delta_bytes;
             flow_telemetry_state_p->u1.drop_metrics.reason |= 
-                                   d.action_u.flow_stats_flow_stats.drop_reason;
+                                    fs_entry.get_drop_reason();
         }
     }
 
