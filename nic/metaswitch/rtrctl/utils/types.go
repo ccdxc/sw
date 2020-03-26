@@ -336,6 +336,7 @@ func newEVPNType5Route(in *EVPNType5Route) *ShadowEVPNType5Route {
 		EthTagID:       binary.BigEndian.Uint32(in.EthTagID),
 		IPPrefix:       net.IP(in.IPPrefix).String(),
 		GWIPAddress:    net.IP(in.GWIPAddress).String(),
+		MPLSLabel1:     label2int(in.MPLSLabel1),
 	}
 }
 
@@ -561,6 +562,7 @@ type ShadowBGPNLRIPrefixStatus struct {
 	ASPathStr   string
 	PathOrigId  string
 	NextHopAddr string
+	RouteSource string
 	*pds.BGPNLRIPrefixStatus
 }
 
@@ -600,6 +602,14 @@ func BGPASPath(ASSize int, ASPath []byte) string {
     return ASStr
 }
 
+func BGPRouteSource(routeSrc pds.NLRISrc, peerip *pds.IPAddress) string {
+	if (routeSrc != pds.NLRISrc_NLRI_PEER) {
+		return "LOCAL"
+	}
+	return PdsIPToString(peerip)
+}
+
+
 func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixStatus {
       var pathOrigId string
 
@@ -624,6 +634,7 @@ func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixSta
 		PathOrigId:          pathOrigId,
 		NextHopAddr:         net.IP(in.NextHopAddr).String(),
 		Prefix:              NewNLRIPrefix(int(in.Afi), int(in.Safi), in.Prefix),
+		RouteSource:         BGPRouteSource(in.RouteSource, in.PeerAddr),
 		BGPNLRIPrefixStatus: in,
 	}
 }

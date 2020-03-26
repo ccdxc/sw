@@ -141,8 +141,9 @@ Remote Address         : %v
 Remote ASN             : %d
 Authentication         : %v
 Flags                  : [ RR Client: %v / Send Community: %v / Ext Community: %v ]
-Timers                 : [ Holdtime: %v seconds / Keepalive: %v seconds ]
-
+ConfiguredTimers       : [ Holdtime: %v seconds / Keepalive: %v seconds ]
+NegotiatedTimers       : [ Holdtime: %v seconds / Keepalive: %v seconds ]
+TTL                    : %d
 Status                 : %v
 Previous State         : %v
 Last Err Recvd         : [ %v ]
@@ -185,7 +186,8 @@ func bgpPeersShowCmdHandler(cmd *cobra.Command, args []string) error {
 				fmt.Printf(bgpPeerDetStr, peer.Spec.Id, peer.Spec.State, peer.Spec.LocalAddr,
 					peer.Status.LocalAddr, peer.Spec.PeerAddr, peer.Spec.RemoteASN, peer.Spec.Password,
 					peer.Spec.RRClient, peer.Spec.SendComm, peer.Spec.SendExtComm, peer.Spec.HoldTime,
-					peer.Spec.KeepAlive, peer.Status.Status, peer.Status.PrevStatus,
+					peer.Spec.KeepAlive, peer.Status.HoldTime, peer.Status.KeepAlive, peer.Spec.TTL,
+					peer.Status.Status, peer.Status.PrevStatus,
 					peer.Status.LastErrorRcvd, peer.Status.LastErrorSent)
 			} else {
 				fmt.Printf(bgpPeerFmt, peer.Spec.Id, peer.Spec.State, peer.Spec.PeerAddr, peer.Spec.RemoteASN, peer.Spec.Password, peer.Status.Status)
@@ -265,7 +267,7 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 const (
 	bgpNLRI = `   %s NextHop %v AS Path [ %v ]
-      Originator %v Route Source %d
+      RouteSource %s Originator ID %v
 `
 )
 
@@ -328,7 +330,7 @@ func bgpNlriShowCmdHandler(cmd *cobra.Command, _afisafi string, args []string) e
 				best = " "
 			}
 			fmt.Printf(bgpNLRI, best, nlri.NextHopAddr, nlri.ASPathStr,
-				nlri.PathOrigId, nlri.RouteSource)
+				nlri.RouteSource, nlri.PathOrigId)
 			attrString := nlri.Prefix.AttrString()
 			if attrString != "" {
 				fmt.Println(nlri.Prefix.AttrString())

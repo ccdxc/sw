@@ -225,6 +225,10 @@ message BGPPeerStatus {
   bytes           LastErrorSent = 4 [(venice.pdsaFields) = {Field: "last_error_sent"}];
   // selected local address of the peer
   types.IPAddress LocalAddr     = 5 [(venice.pdsaFields) = {Field: "selected_local_addr"}];
+  // BGP session holdtime in seconds established with peer
+  uint32          HoldTime      = 6 [(venice.pdsaFields) = {Field: "hold_time"}];
+  // BGP session keepalive in seconds established with peer
+  uint32          KeepAlive     = 7 [(venice.pdsaFields) = {Field: "keep_alive"}];
 }
 
 // BGP peer object
@@ -463,6 +467,8 @@ message BGPNLRIPrefixStatus {
   BGPASSize ASSize         = 12 [(venice.pdsaFields) = {Field: "as_size"}];
   // Is this route part of an ECMP set
   bool    EcmpRoute        = 13 [(venice.pdsaFields) = {Field: "ecmp"}];
+  // Peer IP
+  types.IPAddress PeerAddr = 14 [(venice.pdsaFields) = {Field: "remote_addr"}];
 }
 
 // BGP NLRI prefix key object

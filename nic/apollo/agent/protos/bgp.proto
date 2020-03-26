@@ -162,9 +162,9 @@ message BGPPeerSpec {
   BGPPeerRRClient  RRClient     = 8;
   // BGP session connect-retry timer in seconds
   uint32           ConnectRetry = 9;
-  // BGP session holdtime timer in seconds
+  // BGP session configured holdtime timer in seconds
   uint32           HoldTime     = 10;
-  // BGP session keepalive timer in seconds
+  // BGP session configured keepalive timer in seconds
   uint32           KeepAlive    = 11;
   // MD5 authentication
   bytes            Password     = 12;
@@ -184,6 +184,10 @@ message BGPPeerStatus {
   bytes           LastErrorSent = 4;
   // selected local address of the peer
   types.IPAddress LocalAddr     = 5;
+  // BGP session holdtime in seconds established with peer
+  uint32          HoldTime      = 6;
+  // BGP session keepalive in seconds established with peer
+  uint32          KeepAlive     = 7;
 }
 
 // BGP peer object
@@ -381,6 +385,8 @@ message BGPNLRIPrefixStatus {
   BGPASSize ASSize         = 12;
   // Is this route part of an ECMP set
   bool    EcmpRoute        = 13;
+  // Peer IP
+  types.IPAddress PeerAddr = 14;
 }
 
 // BGP NLRI prefix key object
