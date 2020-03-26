@@ -215,7 +215,9 @@ nic/build/$ARCH/$PIPELINE/lib/libagentclient.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/pdsagent                            /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/pdsctl                              /nic/bin/
 
+# Techsupport
 nic/build/$ARCH/$PIPELINE/bin/techsupport                         /nic/bin/
+nic/apollo/tools/collect_techsupport.sh                           /nic/tools/
 
 # Drivers
 platform/drivers/linux/eth/ionic/ionic_mnic.ko                    /nic/bin/
