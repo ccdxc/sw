@@ -122,7 +122,7 @@ static const struct {
 static void
 rdma_stats_hdrs_init()
 {
-    pd::pd_capri_hbm_write_mem_args_t args = {0};
+    pd::pd_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t pd_func_args = {0};
 
     args.addr = asicpd_get_mem_addr(CAPRI_HBM_REG_RDMA_STATS_HDRS);
@@ -143,7 +143,7 @@ rdma_stats_hdrs_init()
     HAL_TRACE_DEBUG("{}: Writing rdma stats headers to addr {:#x} size {}\n",
                     __FUNCTION__, args.addr, args.size);
 
-    pd_func_args.pd_capri_hbm_write_mem = &args;
+    pd_func_args.pd_hbm_write_mem = &args;
     pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
 }
 

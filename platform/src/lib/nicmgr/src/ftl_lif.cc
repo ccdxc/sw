@@ -16,6 +16,7 @@
 #include "nic/sdk/platform/capri/capri_txs_scheduler.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 
 #include "logger.hpp"
 #include "ftl_dev.hpp"
@@ -2491,7 +2492,7 @@ mem_access_t::cache_invalidate(uint32_t offset,
      * access the required invalidate register.
      */
     PAL_barrier();
-    p4plus_invalidate_cache(paddr + offset, sz, P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(paddr + offset, sz, P4PLUS_CACHE_INVALIDATE_TXDMA);
 }
 
 /*

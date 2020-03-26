@@ -28,7 +28,7 @@ namespace elba {
 //
 //  @return hal_ret_t: Status of the operation
 //
-extern "C" sdk_ret_t elba_pxb_pcie_init();
+sdk_ret_t elba_pxb_pcie_init();
 
 // elba_pxb_cfg_lif_bdf
 // API to configure a LIF with a BDF
@@ -38,7 +38,7 @@ extern "C" sdk_ret_t elba_pxb_pcie_init();
 //
 // @return hal_ret_t: Status of the operation
 //
-extern "C" sdk_ret_t elba_pxb_cfg_lif_bdf (uint32_t lif, uint16_t bdf);
+sdk_ret_t elba_pxb_cfg_lif_bdf(uint32_t lif, uint16_t bdf);
 
 }    // namespace elba
 }    // namespace platform

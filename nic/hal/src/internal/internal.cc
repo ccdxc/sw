@@ -59,12 +59,12 @@ void getprogram_address(const internal::ProgramAddressReq &req,
     internal::ProgramAddressResp *resp = rsp->add_response();
     pd::pd_func_args_t          pd_func_args = {0};
     if (req.resolve_label()) {
-        pd::pd_capri_program_label_to_offset_args_t args = {0};
+        pd::pd_program_label_to_offset_args_t args = {0};
         args.handle = req.handle().c_str();
         args.prog_name = (char *)req.prog_name().c_str();
         args.label_name = (char *)req.label().c_str();
         args.offset = &addr;
-        pd_func_args.pd_capri_program_label_to_offset = &args;
+        pd_func_args.pd_program_label_to_offset = &args;
         hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
         if (ret != HAL_RET_OK) {
             resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
@@ -72,11 +72,11 @@ void getprogram_address(const internal::ProgramAddressReq &req,
             resp->set_addr(addr);
         }
     } else {
-        pd::pd_capri_program_to_base_addr_args_t base_args = {0};
+        pd::pd_program_to_base_addr_args_t base_args = {0};
         base_args.handle = req.handle().c_str();
         base_args.prog_name = (char *)req.prog_name().c_str();
         base_args.base_addr = &addr;
-        pd_func_args.pd_capri_program_to_base_addr = &base_args;
+        pd_func_args.pd_program_to_base_addr = &base_args;
         hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_TO_BASE_ADDR, &pd_func_args);
         if (ret != HAL_RET_OK) {
             resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
@@ -114,11 +114,11 @@ void allochbm_address(const internal::HbmAddressReq &req,
 void configurelif_bdf(const internal::LifBdfReq &req,
                       internal::LifBdfResp *resp)
 {
-    pd::pd_capri_pxb_cfg_lif_bdf_args_t args = {0};
+    pd::pd_pxb_cfg_lif_bdf_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
     args.lif = req.lif();
     args.bdf = req.bdf();
-    pd_func_args.pd_capri_pxb_cfg_lif_bdf = &args;
+    pd_func_args.pd_pxb_cfg_lif_bdf = &args;
     int ret = (int)pd::hal_pd_call(pd::PD_FUNC_ID_PXB_CFG_LIF_BDF, &pd_func_args);
 
     resp->set_lif(req.lif());

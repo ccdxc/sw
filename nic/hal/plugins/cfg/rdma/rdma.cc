@@ -470,12 +470,12 @@ rdma_pt_entry_write (uint16_t lif, uint32_t offset, uint64_t pg_ptr)
     capri_hbm_write_mem((uint64_t)(pt_table_base_addr +
         (offset * sizeof(uint64_t))), (uint8_t*)&pg_ptr, sizeof(pg_ptr));
 #endif
-    pd::pd_capri_hbm_write_mem_args_t args = {0};
+    pd::pd_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
     args.addr = (uint64_t)(pt_table_base_addr + (offset * sizeof(uint64_t)));
     args.buf = (uint8_t*)&pg_ptr;
     args.size = sizeof(pg_ptr);
-    pd_func_args.pd_capri_hbm_write_mem = &args;
+    pd_func_args.pd_hbm_write_mem = &args;
     pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
 }
 
@@ -489,12 +489,12 @@ rdma_pt_entry_read (uint16_t lif, uint32_t offset, uint64_t *pg_ptr)
     pt_table_base_addr = sram_lif_entry.pt_base_addr_page_id;
     pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
 
-    pd::pd_capri_hbm_write_mem_args_t args = {0};
+    pd::pd_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
     args.addr = (uint64_t)(pt_table_base_addr + (offset * sizeof(uint64_t)));
     args.buf = (uint8_t*)pg_ptr;
     args.size = sizeof(uint64_t);
-    pd_func_args.pd_capri_hbm_write_mem = &args;
+    pd_func_args.pd_hbm_write_mem = &args;
     pd::hal_pd_call(pd::PD_FUNC_ID_HBM_READ, &pd_func_args);
 }
 
@@ -522,13 +522,13 @@ stage0_rdma_cq_rx_prog_addr(uint64_t* offset)
     char progname[] = "rxdma_stage0.bin";
     char labelname[]= "rdma_cq_rx_stage0";
 
-    pd::pd_capri_program_label_to_offset_args_t args = {0};
+    pd::pd_program_label_to_offset_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
     args.handle = "p4plus";
     args.prog_name = progname;
     args.label_name = labelname;
     args.offset = offset;
-    pd_func_args.pd_capri_program_label_to_offset = &args;
+    pd_func_args.pd_program_label_to_offset = &args;
     hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
 
     //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
@@ -549,13 +549,13 @@ stage0_rdma_cq_tx_prog_addr(uint64_t* offset)
     char progname[] = "txdma_stage0.bin";
     char labelname[]= "rdma_cq_tx_stage0";
 
-    pd::pd_capri_program_label_to_offset_args_t args = {0};
+    pd::pd_program_label_to_offset_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
     args.handle = "p4plus";
     args.prog_name = progname;
     args.label_name = labelname;
     args.offset = offset;
-    pd_func_args.pd_capri_program_label_to_offset = &args;
+    pd_func_args.pd_program_label_to_offset = &args;
     hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
 
     //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
@@ -574,13 +574,13 @@ stage0_rdma_aq_rx_prog_addr(uint64_t* offset)
     char progname[] = "rxdma_stage0.bin";
     char labelname[]= "rdma_aq_rx_stage0";
 
-    pd::pd_capri_program_label_to_offset_args_t args = {0};
+    pd::pd_program_label_to_offset_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
     args.handle = "p4plus";
     args.prog_name = progname;
     args.label_name = labelname;
     args.offset = offset;
-    pd_func_args.pd_capri_program_label_to_offset = &args;
+    pd_func_args.pd_program_label_to_offset = &args;
     hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
 
     //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
@@ -599,13 +599,13 @@ stage0_rdma_aq_tx_prog_addr(uint64_t* offset)
     char progname[] = "txdma_stage0.bin";
     char labelname[]= "rdma_aq_tx_stage0";
 
-    pd::pd_capri_program_label_to_offset_args_t args = {0};
+    pd::pd_program_label_to_offset_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
     args.handle = "p4plus";
     args.prog_name = progname;
     args.label_name = labelname;
     args.offset = offset;
-    pd_func_args.pd_capri_program_label_to_offset = &args;
+    pd_func_args.pd_program_label_to_offset = &args;
     hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
 
     //HAL_TRACE_DEBUG("{}: ret: {}, offset: {}\n",
@@ -632,7 +632,7 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
     HAL_TRACE_DEBUG("{}: Inputs: lif: {} ahid: {} header_template_size: {}",
                     __FUNCTION__, lif, spec.ahid(), spec.header_template().size());
 
-    pd::pd_capri_hbm_write_mem_args_t args = {0};
+    pd::pd_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
 
     ah_table_base_addr = rdma_lif_at_base_addr(lif);
@@ -644,7 +644,7 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
     args.addr = (uint64_t)header_template_addr;
     args.buf = (uint8_t *)&ah_entry;
     args.size =  sizeof(ah_entry_t);
-    pd_func_args.pd_capri_hbm_write_mem = &args;
+    pd_func_args.pd_hbm_write_mem = &args;
     pd::hal_pd_call(pd::PD_FUNC_ID_HBM_WRITE, &pd_func_args);
 
     HAL_TRACE_DEBUG("{} ah_table_base_addr: {:#x}, header_template_addr: {:#x}, header_template_size: {}\n",

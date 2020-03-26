@@ -9,6 +9,7 @@
 #include "platform/capri/capri_tm_utils.hpp"
 #include "platform/capri/capri_sw_phv.hpp"
 #include "platform/capri/capri_quiesce.hpp"
+#include "platform/capri/capri_pxb_pcie.hpp"
 #include "asic/asic.hpp"
 #include "asic/pd/pd.hpp"
 #include "asic/cmn/asic_state.hpp"
@@ -39,12 +40,18 @@ asic_program_hbm_table_base_addr (int tableid, int stage_tableid,
                                       stage, pipe, hw_init);
 }
 
+void
+asicpd_p4_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
+                            p4pd_table_cache_t cache)
+{
+    return p4_invalidate_cache(addr, size_in_bytes, cache);
+}
+
 bool
 asicpd_p4plus_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
                                 p4plus_cache_action_t action)
 {
-    return p4plus_invalidate_cache(addr, size_in_bytes,
-            (sdk::platform::capri::p4plus_cache_action_t) action);
+    return p4plus_invalidate_cache(addr, size_in_bytes, action);
 }
 
 uint8_t
@@ -482,8 +489,7 @@ asic_pd_p4plus_invalidate_cache (mpartition_region_t *reg,
     }
 
     if (action != P4PLUS_CACHE_ACTION_NONE) {
-        p4plus_invalidate_cache(q_addr, size,
-            (sdk::platform::capri::p4plus_cache_action_t) action);
+        p4plus_invalidate_cache(q_addr, size, action);
     }
 
     return SDK_RET_OK;
@@ -812,6 +818,12 @@ sdk_ret_t
 asicpd_quiesce_stop (void)
 {
     return capri_quiesce_stop();
+}
+
+sdk_ret_t
+asicpd_pxb_cfg_lif_bdf (uint32_t lif, uint16_t bdf)
+{
+    return capri_pxb_cfg_lif_bdf(lif, bdf);
 }
 
 }    // namespace pd

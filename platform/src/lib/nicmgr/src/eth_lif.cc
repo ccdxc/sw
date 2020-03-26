@@ -28,6 +28,7 @@ namespace psp
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "gen/platform/mem_regions.hpp"
@@ -407,7 +408,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         }
         MEM_SET(addr, 0, fldsiz(eth_rx_qstate_t, q.intr.pc_offset), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
     }
 
     for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
@@ -418,7 +419,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         }
         MEM_SET(addr, 0, fldsiz(eth_tx_qstate_t, q.intr.pc_offset), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
     active_q_ref_cnt = 0;
@@ -432,7 +433,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         }
         MEM_SET(addr, 0, fldsiz(admin_qstate_t, pc_offset), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
     // Initialize NotifyQ
@@ -477,10 +478,12 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
     // Init the stats region
     MEM_SET(lif_stats_addr, 0, LIF_STATS_SIZE, 0);
-    p4plus_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
-                            P4PLUS_CACHE_INVALIDATE_BOTH);
-    p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats), P4_TBL_CACHE_INGRESS);
-    p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats), P4_TBL_CACHE_EGRESS);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
+                                                  P4PLUS_CACHE_INVALIDATE_BOTH);
+    sdk::asic::pd::asicpd_p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
+                                              P4_TBL_CACHE_INGRESS);
+    sdk::asic::pd::asicpd_p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
+                                              P4_TBL_CACHE_EGRESS);
 
     state = LIF_STATE_INIT;
 
@@ -588,7 +591,7 @@ EthLif::Reset()
         }
         MEM_SET(addr, 0, fldsiz(eth_rx_qstate_t, q.intr.pc_offset), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
     }
 
     for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
@@ -599,7 +602,7 @@ EthLif::Reset()
         }
         MEM_SET(addr, 0, fldsiz(eth_tx_qstate_t, q.intr.pc_offset), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
     active_q_ref_cnt = 0;
@@ -613,7 +616,7 @@ EthLif::Reset()
         }
         MEM_SET(addr, 0, fldsiz(admin_qstate_t, pc_offset), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
     // Reset EDMA service
@@ -1275,7 +1278,7 @@ EthLif::EQInit(void *req, void *req_data, void *resp, void *resp_data)
     addr = res->rx_eq_base + cmd->index * sizeof(qstate);
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_RXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_RXDMA);
 
     /* init tx eq */
     if (spec->host_dev) {
@@ -1286,7 +1289,7 @@ EthLif::EQInit(void *req, void *req_data, void *resp, void *resp_data)
     addr = res->tx_eq_base + cmd->index * sizeof(qstate);
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     comp->hw_index = cmd->index;
     comp->hw_type = ETH_HW_QTYPE_NONE;
@@ -1460,7 +1463,7 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     comp->hw_index = cmd->index;
     comp->hw_type = ETH_HW_QTYPE_TX;
@@ -1623,7 +1626,7 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_BOTH);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_BOTH);
 
     comp->hw_index = cmd->index;
     comp->hw_type = ETH_HW_QTYPE_RX;
@@ -1722,7 +1725,7 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     comp->hw_index = cmd->index;
     comp->hw_type = ETH_HW_QTYPE_SVC;
@@ -1838,7 +1841,7 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     comp->hw_index = cmd->index;
     comp->hw_type = ETH_HW_QTYPE_ADMIN;
@@ -1981,7 +1984,7 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
             }
             WRITE_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
             PAL_barrier();
-            p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+            sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
         }
         for (uint32_t qid = 0; qid < spec->txq_count; qid++) {
             addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_TX, qid);
@@ -2001,7 +2004,7 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
             }
             WRITE_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
             PAL_barrier();
-            p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+            sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
             /* wake up the queue */
             if (cmd->state == IONIC_LIF_ENABLE) {
                 db_addr.lif_id = hal_lif_info_.lif_id;
@@ -2035,10 +2038,12 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
         switch (cmd->stats_ctl) {
         case IONIC_STATS_CTL_RESET:
             MEM_SET(lif_stats_addr, 0, LIF_STATS_SIZE, 0);
-            p4plus_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
-                                    P4PLUS_CACHE_INVALIDATE_BOTH);
-            p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats), P4_TBL_CACHE_INGRESS);
-            p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats), P4_TBL_CACHE_EGRESS);
+            sdk::asic::pd::asicpd_p4plus_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
+                                                          P4PLUS_CACHE_INVALIDATE_BOTH);
+            sdk::asic::pd::asicpd_p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
+                                                      P4_TBL_CACHE_INGRESS);
+            sdk::asic::pd::asicpd_p4_invalidate_cache(lif_stats_addr, sizeof(struct ionic_lif_stats),
+                                                      P4_TBL_CACHE_EGRESS);
             break;
         default:
             NIC_LOG_ERR("{}: UNKNOWN COMMAND {} FOR IONIC_LIF_ATTR_STATS_CTRL", hal_lif_info_.name,
@@ -2104,7 +2109,7 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         }
         WRITE_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
         /* TODO: Need to implement queue flushing */
         if (cmd->oper == IONIC_Q_DISABLE)
             ev_sleep(RXDMA_Q_QUIESCE_WAIT_S);
@@ -2131,7 +2136,7 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         }
         WRITE_MEM(addr + off, (uint8_t *)&cfg.eth, sizeof(cfg.eth), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         /* wake up the queue */
         if (cmd->oper == IONIC_Q_ENABLE) {
             db_addr.lif_id = hal_lif_info_.lif_id;
@@ -2162,7 +2167,7 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         }
         WRITE_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(eth_eq_qstate_t), P4PLUS_CACHE_INVALIDATE_RXDMA);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_eq_qstate_t), P4PLUS_CACHE_INVALIDATE_RXDMA);
 
         addr = res->tx_eq_base + cmd->index * sizeof(eth_eq_qstate_t);
         READ_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
@@ -2175,7 +2180,7 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         }
         WRITE_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(eth_eq_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_eq_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     case IONIC_QTYPE_ADMINQ:
         if (cmd->index >= spec->adminq_count) {
@@ -2197,7 +2202,7 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         WRITE_MEM(addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg, sizeof(admin_cfg),
                   0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     case IONIC_QTYPE_NOTIFYQ:
         if (cmd->index >= 1) {
@@ -2219,7 +2224,7 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         WRITE_MEM(addr + offsetof(notify_qstate_t, cfg), (uint8_t *)&notify_cfg,
                   sizeof(notify_cfg), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(notify_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(notify_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     default:
         NIC_LOG_ERR("{}: invalid qtype {}", hal_lif_info_.name, cmd->type);
@@ -2510,12 +2515,12 @@ EthLif::_CmdRDMAResetLIF(void *req, void *req_data, void *resp, void *resp_data)
         }
         MEM_SET(addr, 0, 1, 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
 
         addr += sizeof(cqcb_t);
         MEM_SET(addr, 0, 1, 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
     }
 
     for (uint64_t qid = 0; qid < spec->rdma_rq_count; qid++) {
@@ -2527,12 +2532,12 @@ EthLif::_CmdRDMAResetLIF(void *req, void *req_data, void *resp, void *resp_data)
         }
         MEM_SET(addr, 0, 1, 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
 
         addr += sizeof(cqcb_t);
         MEM_SET(addr, 0, 1, 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
     }
 
     for (uint64_t qid = 0; qid < spec->rdma_cq_count; qid++) {
@@ -2544,7 +2549,7 @@ EthLif::_CmdRDMAResetLIF(void *req, void *req_data, void *resp, void *resp_data)
         }
         MEM_SET(addr, 0, 1, 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
     }
 
     for (uint32_t qid = spec->adminq_count; qid < spec->adminq_count + spec->rdma_aq_count;
@@ -2557,13 +2562,13 @@ EthLif::_CmdRDMAResetLIF(void *req, void *req_data, void *resp, void *resp_data)
         }
         MEM_SET(addr, 0, 1, 0);
         PAL_barrier();
-        p4plus_invalidate_cache(addr, sizeof(aqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(aqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
     }
 
     addr = pd->rdma_get_kt_base_addr(lif_id);
     MEM_SET(addr, 0, spec->key_count * sizeof(key_entry_t), 0);
     PAL_barrier();
-    p4plus_invalidate_cache(addr, spec->key_count * sizeof(key_entry_t),
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, spec->key_count * sizeof(key_entry_t),
                             P4PLUS_CACHE_INVALIDATE_BOTH);
 
     return (IONIC_RC_SUCCESS);
@@ -2605,7 +2610,7 @@ EthLif::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
     WRITE_MEM(addr, (uint8_t *)&eqcb, sizeof(eqcb), 0);
-    p4plus_invalidate_cache(addr, sizeof(eqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
 
     return (IONIC_RC_SUCCESS);
 }

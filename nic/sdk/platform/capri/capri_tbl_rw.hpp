@@ -26,14 +26,6 @@ namespace capri {
 #define CAPRI_OK (0)
 #define CAPRI_FAIL (-1)
 
-typedef enum {
-    P4PLUS_CACHE_ACTION_NONE        = 0x0,
-    P4PLUS_CACHE_INVALIDATE_RXDMA   = 0x1,
-    P4PLUS_CACHE_INVALIDATE_TXDMA   = 0x2,
-    P4PLUS_CACHE_INVALIDATE_BOTH    = P4PLUS_CACHE_INVALIDATE_RXDMA |
-                                      P4PLUS_CACHE_INVALIDATE_TXDMA
-} p4plus_cache_action_t;
-
 typedef struct p4plus_prog_s {
     int stageid;
     int stage_tableid;
@@ -179,11 +171,6 @@ sdk_ret_t capri_tbl_eng_cfg_modify(p4pd_pipeline_t pipeline,
 } // namespace platform
 } // namespace sdk
 
-using sdk::platform::capri::p4plus_cache_action_t;
-using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_ACTION_NONE;
-using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_RXDMA;
-using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_TXDMA;
-using sdk::platform::capri::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_BOTH;
 using sdk::platform::capri::p4plus_prog_t;
 
 #endif

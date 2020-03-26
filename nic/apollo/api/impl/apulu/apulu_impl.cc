@@ -20,6 +20,7 @@
 // TODO: clean this up
 #include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/platform/capri/capri_common.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 
 #include "nic/sdk/platform/ring/ring.hpp"
 #include "nic/sdk/platform/pal/include/pal_mem.h"
@@ -662,7 +663,7 @@ apulu_impl::upgrade_switchover(void) {
             return SDK_RET_ERR;
         }
         PAL_barrier();
-        p4plus_invalidate_cache(it->addr, it->size, P4PLUS_CACHE_INVALIDATE_BOTH);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(it->addr, it->size, P4PLUS_CACHE_INVALIDATE_BOTH);
     }
 
     // update rss config

@@ -463,7 +463,6 @@ asicpd_cleanup (void)
     sdk::p4::p4_cleanup();
 }
 
-
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk

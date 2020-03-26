@@ -13,6 +13,8 @@
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "asic/rw/asicrw.hpp"
+#include "asic/asic.hpp"
+#include "asic/pd/pd.hpp"
 
 #include "eth_p4pd.hpp"
 
@@ -125,8 +127,8 @@ p4plus_rxdma_rss_indir_update (uint32_t hw_lif_id,
         return ret;
     }
 
-    p4plus_invalidate_cache(addr, sizeof(data.action_u),
-                            P4PLUS_CACHE_INVALIDATE_RXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(data.action_u),
+                                                  P4PLUS_CACHE_INVALIDATE_RXDMA);
 
     return ret;
 }

@@ -216,8 +216,8 @@ NotifyQ::TxQInit(const notifyq_init_cmd_t *cmd,
     qstate.host_intr_assert_index = intr_base + cmd->intr_index;
     WRITE_MEM(qstate_addr, (uint8_t *)&qstate, sizeof(qstate), 0);
     PAL_barrier();
-    p4plus_invalidate_cache(qstate_addr, sizeof(qstate),
-                            P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(qstate_addr, sizeof(qstate),
+                                                  P4PLUS_CACHE_INVALIDATE_TXDMA);
     return true;
 }
 
@@ -291,8 +291,8 @@ NotifyQ::TxQReset(void)
     WRITE_MEM(qstate_addr + offsetof(notify_qstate_t, cfg), (uint8_t *)&cfg,
               sizeof(cfg), 0);
     PAL_barrier();
-    p4plus_invalidate_cache(qstate_addr, sizeof(notify_qstate_t),
-                            P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(qstate_addr, sizeof(notify_qstate_t),
+                                                  P4PLUS_CACHE_INVALIDATE_TXDMA);
     tx_head = 0;
 
     return true;

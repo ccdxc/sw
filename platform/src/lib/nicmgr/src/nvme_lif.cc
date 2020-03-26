@@ -18,6 +18,7 @@
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/nvme/nvme_common.h"
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/include/edmaq.h"
@@ -803,7 +804,7 @@ NvmeLif::nvme_lif_edmaq_init_action(nvme_lif_event_t event)
     WRITE_MEM(addr, (uint8_t *)&dq_qstate, sizeof(dq_qstate), 0);
 
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(edma_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(edma_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     return NVME_LIF_EV_NULL;
 }
@@ -888,8 +889,8 @@ NvmeLif::nvme_lif_adminq_init_action(nvme_lif_event_t event)
     WRITE_MEM(acq_addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     PAL_barrier();
-    p4plus_invalidate_cache(asq_addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
-    p4plus_invalidate_cache(acq_addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(asq_addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(acq_addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     adminq = new AdminQ(LifNameGet().c_str(),
                         pd, LifIdGet(),

@@ -153,7 +153,8 @@ void asic_pd_set_half_clock(int chip_id, int inst_id);
 sdk_ret_t asic_pd_unravel_hbm_intrs(bool *iscattrip, bool *iseccerr,
                                     bool logging=false);
 sdk_ret_t asicpd_toeplitz_init(const char *handle, uint32_t table_id);
-
+void asicpd_p4_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
+                                p4pd_table_cache_t cache);
 bool asicpd_p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                                     p4plus_cache_action_t action);
 int asicpd_p4plus_table_init(p4plus_table_params_t *table_params);
@@ -244,6 +245,7 @@ sdk_ret_t asicpd_tm_drain_uplink_port(tm_port_t port);
 
 sdk_ret_t asicpd_quiesce_start(void);
 sdk_ret_t asicpd_quiesce_stop(void);
+sdk_ret_t asicpd_pxb_cfg_lif_bdf(uint32_t lif, uint16_t bdf);
 
 }    // namespace pd
 }    // namespace asic

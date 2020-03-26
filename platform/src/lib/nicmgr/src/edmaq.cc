@@ -9,6 +9,7 @@
 #include "cap_pics_c_hdr.h"
 #include "cap_wa_c_hdr.h"
 
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/platform/capri/capri_common.hpp"
 
 
@@ -109,7 +110,7 @@ EdmaQ::Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(edma_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(edma_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     init = true;
 
@@ -139,8 +140,8 @@ EdmaQ::Reset()
 
     MEM_SET(addr, 0, fldsiz(edma_qstate_t, pc_offset), 0);
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(edma_qstate_t),
-                            P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(edma_qstate_t),
+                                                  P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     db_addr.lif_id = lif;
     db_addr.q_type = qtype;
@@ -173,8 +174,8 @@ EdmaQ::Debug(bool enable)
     WRITE_MEM(addr + offsetof(struct edma_qstate, cfg),
         (uint8_t *)&cfg, sizeof(cfg), 0);
 
-    p4plus_invalidate_cache(addr, sizeof(edma_qstate_t),
-        P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(edma_qstate_t),
+                                                  P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     return true;
 }

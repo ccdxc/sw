@@ -9,6 +9,7 @@
 #include "platform/elba/elba_tm_utils.hpp"
 #include "platform/elba/elba_sw_phv.hpp"
 #include "platform/elba/elba_quiesce.hpp"
+#include "platform/capri/elba_pxb_pcie.hpp"
 #include "asic/pd/pd.hpp"
 #include "asic/pd/pd_internal.hpp"
 #include "lib/utils/time_profile.hpp"
@@ -37,12 +38,18 @@ asic_program_hbm_table_base_addr (int tableid, int stage_tableid,
                                      stage, pipe, hw_init);
 }
 
+void
+asicpd_p4_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
+                            p4pd_table_cache_t cache)
+{
+    return p4_invalidate_cache(addr, size_in_bytes, cache);
+}
+
 bool
 asicpd_p4plus_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
                                 p4plus_cache_action_t action)
 {
-    return p4plus_invalidate_cache(addr, size_in_bytes,
-                (sdk::platform::elba::p4plus_cache_action_t) action);
+    return p4plus_invalidate_cache(addr, size_in_bytes, action);
 }
 
 uint8_t
@@ -491,8 +498,7 @@ asic_pd_p4plus_invalidate_cache (mpartition_region_t *reg, uint64_t q_addr,
     }
 
     if (action != P4PLUS_CACHE_ACTION_NONE) {
-        p4plus_invalidate_cache(q_addr, size,
-            (sdk::platform::elba::p4plus_cache_action_t) action);
+        p4plus_invalidate_cache(q_addr, size, action);
     }
 
     return SDK_RET_OK;
@@ -746,6 +752,13 @@ asicpd_quiesce_stop (void)
 {
     return elba_quiesce_stop();
 }
+
+sdk_ret_t
+asicpd_pxb_cfg_lif_bdf (uint32_t lif, uint16_t bdf)
+{
+    return elba_pxb_cfg_lif_bdf(lif, bdf);
+}
+
 
 }    // namespace pd
 }    // namespace asic

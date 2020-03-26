@@ -28,6 +28,7 @@
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/platform/capri/capri_state.hpp"
 #include "platform/src/lib/nicmgr/include/rdma_dev.hpp"
+#include "asic/pd/pd.hpp"
 
 #include "gen/platform/mem_regions.hpp"
 
@@ -1991,9 +1992,12 @@ eth_stats_reset(uint16_t lif)
 
     printf("\naddr: 0x%lx\n\n", addr);
     sdk::lib::pal_mem_set(addr, 0, sizeof(struct ionic_lif_stats), 0);
-    p4plus_invalidate_cache(addr, sizeof(struct ionic_lif_stats), P4PLUS_CACHE_INVALIDATE_BOTH);
-    p4_invalidate_cache(addr, sizeof(struct ionic_lif_stats), P4_TBL_CACHE_INGRESS);
-    p4_invalidate_cache(addr, sizeof(struct ionic_lif_stats), P4_TBL_CACHE_EGRESS);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(struct ionic_lif_stats),
+                                                  P4PLUS_CACHE_INVALIDATE_BOTH);
+    sdk::asic::pd::asicpd_p4_invalidate_cache(addr, sizeof(struct ionic_lif_stats),
+                                              P4_TBL_CACHE_INGRESS);
+    sdk::asic::pd::asicpd_p4_invalidate_cache(addr, sizeof(struct ionic_lif_stats),
+                                              P4_TBL_CACHE_EGRESS);
 }
 
 void

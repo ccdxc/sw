@@ -433,11 +433,11 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_TABLE_PROPERTIES_GET, pd_table_properties_get);
 
     // capri
-    PD_FUNC_LOAD(PD_FUNC_ID_HBM_READ, pd_capri_hbm_read_mem);
-    PD_FUNC_LOAD(PD_FUNC_ID_HBM_WRITE, pd_capri_hbm_write_mem);
-    PD_FUNC_LOAD(PD_FUNC_ID_PROG_LBL_TO_OFFSET, pd_capri_program_label_to_offset);
-    PD_FUNC_LOAD(PD_FUNC_ID_PXB_CFG_LIF_BDF, pd_capri_pxb_cfg_lif_bdf);
-    PD_FUNC_LOAD(PD_FUNC_ID_PROG_TO_BASE_ADDR, pd_capri_program_to_base_addr);
+    PD_FUNC_LOAD(PD_FUNC_ID_HBM_READ, pd_hbm_read_mem);
+    PD_FUNC_LOAD(PD_FUNC_ID_HBM_WRITE, pd_hbm_write_mem);
+    PD_FUNC_LOAD(PD_FUNC_ID_PROG_LBL_TO_OFFSET, pd_program_label_to_offset);
+    PD_FUNC_LOAD(PD_FUNC_ID_PXB_CFG_LIF_BDF, pd_pxb_cfg_lif_bdf);
+    PD_FUNC_LOAD(PD_FUNC_ID_PROG_TO_BASE_ADDR, pd_program_to_base_addr);
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_ASYM_REQ_DSC_GET, pd_capri_barco_asym_req_descr_get);
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_SYM_REQ_DSC_GET, pd_capri_barco_symm_req_descr_get);
     PD_FUNC_LOAD(PD_FUNC_ID_BARCO_RING_META_GET, pd_capri_barco_ring_meta_get);

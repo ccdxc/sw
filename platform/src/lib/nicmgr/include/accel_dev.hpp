@@ -13,6 +13,8 @@
 
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/devapi/devapi.hpp"
+#include "nic/sdk/asic/asic.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 
 #include "device.hpp"
 #include "pd_client.hpp"

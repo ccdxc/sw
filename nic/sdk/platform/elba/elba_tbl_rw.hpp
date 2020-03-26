@@ -156,6 +156,9 @@ extern "C" void elba_p4plus_recirc_init(void);
 
 extern "C" uint8_t elba_get_action_pc(uint32_t tableid, uint8_t actionid);
 
+extern "C" void p4_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
+                                    p4pd_table_cache_t cache);
+
 extern "C" bool p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                                         p4plus_cache_action_t action);
 

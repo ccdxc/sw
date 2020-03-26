@@ -251,6 +251,11 @@ using sdk::asic::lif_qstate_t;
 using sdk::asic::lif_qtype_info_t;
 using sdk::asic::kAllocUnit;
 using sdk::asic::kNumQTypes;
+using sdk::asic::p4plus_cache_action_t;
+using sdk::asic::p4plus_cache_action_t::P4PLUS_CACHE_ACTION_NONE;
+using sdk::asic::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_RXDMA;
+using sdk::asic::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_TXDMA;
+using sdk::asic::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_BOTH;
 
 
 #endif    // __SDK_ASIC_HPP__

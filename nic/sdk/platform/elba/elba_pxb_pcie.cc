@@ -12,7 +12,7 @@ namespace sdk {
 namespace platform {
 namespace elba {
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_pxb_pcie_init ()
 {
     elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
@@ -38,7 +38,7 @@ elba_pxb_pcie_init ()
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_pxb_cfg_lif_bdf (uint32_t lif, uint16_t bdf)
 {
     elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);

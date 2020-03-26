@@ -20,6 +20,7 @@
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "nic/asm/eth/virtio_defines.h"
 #include "nic/sdk/platform/fru/fru.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/include/edmaq.h"
 
 #include "logger.hpp"
@@ -286,7 +287,7 @@ VirtIOLif::ResetRxQstate(int rx_qid)
     WRITE_MEM(addr, (uint8_t *)&rxq, sizeof(rxq), 0);
 
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(rxq), P4PLUS_CACHE_INVALIDATE_RXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(rxq), P4PLUS_CACHE_INVALIDATE_RXDMA);
 }
 
 void
@@ -325,7 +326,7 @@ VirtIOLif::SetupRxQstate(int rx_qid,
     WRITE_MEM(addr, (uint8_t *)&rxq, sizeof(rxq), 0);
 
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(rxq), P4PLUS_CACHE_INVALIDATE_RXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(rxq), P4PLUS_CACHE_INVALIDATE_RXDMA);
 
     // enable promoscuous mode (and broadcast, allmulti)
     dev_api->lif_upd_rx_mode(hal_lif_info_.lif_id, true, true, true);
@@ -340,7 +341,7 @@ VirtIOLif::ResetTxQstate(int tx_qid)
     WRITE_MEM(addr, (uint8_t *)&txq, sizeof(txq), 0);
 
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(txq), P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(txq), P4PLUS_CACHE_INVALIDATE_TXDMA);
 }
 
 void
@@ -379,7 +380,7 @@ VirtIOLif::SetupTxQstate(int tx_qid,
     WRITE_MEM(addr, (uint8_t *)&txq, sizeof(txq), 0);
 
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(txq), P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(txq), P4PLUS_CACHE_INVALIDATE_TXDMA);
 }
 
 void

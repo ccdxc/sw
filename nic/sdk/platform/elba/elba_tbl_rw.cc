@@ -610,15 +610,15 @@ elba_p4p_stage_id_init (void)
 }
 
 static inline bool
-p4plus_invalidate_cache_aligned(uint64_t addr, uint32_t size_in_bytes,
-        p4plus_cache_action_t action)
+p4plus_invalidate_cache_aligned (uint64_t addr, uint32_t size_in_bytes,
+                                 p4plus_cache_action_t action)
 {
     return true;
 }
 
 extern "C" bool
-p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
-        p4plus_cache_action_t action)
+p4plus_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
+                         p4plus_cache_action_t action)
 {
     bool ret;
 
@@ -634,6 +634,12 @@ p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
     return ret;
 }
 
+extern "C" void
+p4_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
+                     p4pd_table_cache_t cache)
+{
+    //@@TODO - implement for elba
+}
 
 extern "C" void
 elba_deparser_init(int tm_port_ingress, int tm_port_egress) {

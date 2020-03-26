@@ -368,11 +368,11 @@ PD_FUNC_STUB(pd_asic_init);
 PD_FUNC_STUB(pd_table_properties_get);
 
 // capri
-PD_FUNC_STUB(pd_capri_hbm_read_mem);
-PD_FUNC_STUB(pd_capri_hbm_write_mem);
-PD_FUNC_STUB(pd_capri_program_label_to_offset);
-PD_FUNC_STUB(pd_capri_pxb_cfg_lif_bdf);
-PD_FUNC_STUB(pd_capri_program_to_base_addr);
+PD_FUNC_STUB(pd_hbm_read_mem);
+PD_FUNC_STUB(pd_hbm_write_mem);
+PD_FUNC_STUB(pd_program_label_to_offset);
+PD_FUNC_STUB(pd_pxb_cfg_lif_bdf);
+PD_FUNC_STUB(pd_program_to_base_addr);
 PD_FUNC_STUB(pd_capri_barco_asym_req_descr_get);
 PD_FUNC_STUB(pd_capri_barco_symm_req_descr_get);
 PD_FUNC_STUB(pd_capri_barco_ring_meta_get);

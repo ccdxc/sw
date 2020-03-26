@@ -2752,35 +2752,35 @@ typedef struct pd_rss_indir_table_entry_add_args_s {
     uint8_t qid;
 } __PACK__ pd_rss_indir_table_entry_add_args_t;
 
-typedef struct pd_capri_hbm_read_mem_args_s {
+typedef struct pd_hbm_read_mem_args_s {
     uint64_t addr;
     uint8_t *buf;
     uint32_t size;
-} __PACK__ pd_capri_hbm_read_mem_args_t;
+} __PACK__ pd_hbm_read_mem_args_t;
 
-typedef struct pd_capri_hbm_write_mem_args_s {
+typedef struct pd_hbm_write_mem_args_s {
     uint64_t addr;
     const uint8_t *buf;
     uint32_t size;
-} __PACK__ pd_capri_hbm_write_mem_args_t;
+} __PACK__ pd_hbm_write_mem_args_t;
 
-typedef struct pd_capri_program_label_to_offset_args_s {
+typedef struct pd_program_label_to_offset_args_s {
     const char *handle;
     char *prog_name;
     char *label_name;
     uint64_t *offset;
-} __PACK__ pd_capri_program_label_to_offset_args_t;
+} __PACK__ pd_program_label_to_offset_args_t;
 
-typedef struct pd_capri_pxb_cfg_lif_bdf_args_s {
+typedef struct pd_pxb_cfg_lif_bdf_args_s {
     uint32_t lif;
     uint16_t bdf;
-} __PACK__ pd_capri_pxb_cfg_lif_bdf_args_t;
+} __PACK__ pd_pxb_cfg_lif_bdf_args_t;
 
-typedef struct pd_capri_program_to_base_addr_args_s {
+typedef struct pd_program_to_base_addr_args_s {
     const char *handle;
     char *prog_name;
     uint64_t *base_addr;
-} __PACK__ pd_capri_program_to_base_addr_args_t;
+} __PACK__ pd_program_to_base_addr_args_t;
 
 typedef struct pd_capri_barco_asym_req_descr_get_args_s {
     uint32_t slot_index;
@@ -4059,11 +4059,11 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_table_properties_get);
 
         // capri
-        PD_UNION_ARGS_FIELD(pd_capri_hbm_read_mem);
-        PD_UNION_ARGS_FIELD(pd_capri_hbm_write_mem);
-        PD_UNION_ARGS_FIELD(pd_capri_program_label_to_offset);
-        PD_UNION_ARGS_FIELD(pd_capri_pxb_cfg_lif_bdf);
-        PD_UNION_ARGS_FIELD(pd_capri_program_to_base_addr);
+        PD_UNION_ARGS_FIELD(pd_hbm_read_mem);
+        PD_UNION_ARGS_FIELD(pd_hbm_write_mem);
+        PD_UNION_ARGS_FIELD(pd_program_label_to_offset);
+        PD_UNION_ARGS_FIELD(pd_pxb_cfg_lif_bdf);
+        PD_UNION_ARGS_FIELD(pd_program_to_base_addr);
         PD_UNION_ARGS_FIELD(pd_capri_barco_asym_req_descr_get);
         PD_UNION_ARGS_FIELD(pd_capri_barco_symm_req_descr_get);
         PD_UNION_ARGS_FIELD(pd_capri_barco_ring_meta_get);
@@ -4568,11 +4568,11 @@ PD_FUNCP_TYPEDEF(pd_tcp_rings_poll);
 // capri
 PD_FUNCP_TYPEDEF(pd_get_start_offset);
 PD_FUNCP_TYPEDEF(pd_get_size_kb);
-PD_FUNCP_TYPEDEF(pd_capri_hbm_read_mem);
-PD_FUNCP_TYPEDEF(pd_capri_hbm_write_mem);
-PD_FUNCP_TYPEDEF(pd_capri_program_label_to_offset);
-PD_FUNCP_TYPEDEF(pd_capri_pxb_cfg_lif_bdf);
-PD_FUNCP_TYPEDEF(pd_capri_program_to_base_addr);
+PD_FUNCP_TYPEDEF(pd_hbm_read_mem);
+PD_FUNCP_TYPEDEF(pd_hbm_write_mem);
+PD_FUNCP_TYPEDEF(pd_program_label_to_offset);
+PD_FUNCP_TYPEDEF(pd_pxb_cfg_lif_bdf);
+PD_FUNCP_TYPEDEF(pd_program_to_base_addr);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_req_descr_get);
 PD_FUNCP_TYPEDEF(pd_capri_barco_symm_req_descr_get);
 PD_FUNCP_TYPEDEF(pd_capri_barco_ring_meta_get);

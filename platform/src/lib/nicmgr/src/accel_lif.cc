@@ -19,6 +19,8 @@
 
 #include "gen/proto/nicmgr/accel_metrics.pb.h"
 
+#include "nic/sdk/asic/asic.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
@@ -1260,8 +1262,8 @@ AccelLif::accel_lif_reset_action(accel_lif_event_t event)
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, enable),
                   (uint8_t *)&enable, sizeof(enable), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(qstate_addr, sizeof(storage_seq_qstate_t),
-                                P4PLUS_CACHE_INVALIDATE_TXDMA);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(qstate_addr, sizeof(storage_seq_qstate_t),
+                                                      P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
     // Disable adminq
@@ -1276,8 +1278,8 @@ AccelLif::accel_lif_reset_action(accel_lif_event_t event)
         WRITE_MEM(qstate_addr + offsetof(admin_qstate_t, pc_offset),
                   &pc_offs, sizeof(pc_offs), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(qstate_addr, sizeof(admin_qstate_t),
-                                P4PLUS_CACHE_INVALIDATE_TXDMA);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(qstate_addr, sizeof(admin_qstate_t),
+                                                      P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
     AccelLifUtils::time_expiry_set(fsm_ctx.ts,
@@ -1543,7 +1545,7 @@ AccelLif::accel_lif_adminq_init_action(accel_lif_event_t event)
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     cpl->qid = cmd->index;
     cpl->qtype = STORAGE_SEQ_QTYPE_ADMIN;
@@ -2009,8 +2011,8 @@ AccelLif::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
     WRITE_MEM(qstate_addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
     PAL_barrier();
-    p4plus_invalidate_cache(qstate_addr, sizeof(qstate),
-                            P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(qstate_addr, sizeof(qstate),
+                                                  P4PLUS_CACHE_INVALIDATE_TXDMA);
     qinfo_metrics_update(qid, qstate_addr, qstate);
     return ACCEL_RC_SUCCESS;
 }
@@ -2046,8 +2048,8 @@ AccelLif::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, enable),
                   (uint8_t *)&value, sizeof(value), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(qstate_addr, sizeof(storage_seq_qstate_t),
-                                P4PLUS_CACHE_INVALIDATE_TXDMA);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(qstate_addr, sizeof(storage_seq_qstate_t),
+                                                      P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     case STORAGE_SEQ_QTYPE_ADMIN:
         if (cmd->index >= spec->adminq_count) {
@@ -2067,8 +2069,8 @@ AccelLif::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
         WRITE_MEM(qstate_addr + offsetof(admin_qstate_t, cfg),
                   (uint8_t *)&admin_cfg, sizeof(admin_cfg), 0);
         PAL_barrier();
-        p4plus_invalidate_cache(qstate_addr, sizeof(storage_seq_qstate_t),
-                                P4PLUS_CACHE_INVALIDATE_TXDMA);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(qstate_addr, sizeof(storage_seq_qstate_t),
+                                                      P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     default:
         return ACCEL_RC_EQTYPE;

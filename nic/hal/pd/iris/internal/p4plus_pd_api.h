@@ -7,7 +7,8 @@
 
 #include <stdint.h>
 #include "nic/sdk/asic/rw/asicrw.hpp"
-#include "platform/capri/capri_tbl_rw.hpp"
+#include "asic/asic.hpp"
+#include "asic/pd/pd.hpp"
 
 /* PC address offset coming out of stage 0 CB is shifted left by 6 bits as stage0 pc
  * start is assumed to be 64B cacheline aligned
@@ -21,12 +22,12 @@ typedef int p4pd_error_t;
 #endif
 
 static inline bool
-p4plus_hbm_write(uint64_t addr, uint8_t* data, uint32_t size_in_bytes,
-        p4plus_cache_action_t action)
+p4plus_hbm_write (uint64_t addr, uint8_t* data, uint32_t size_in_bytes,
+                  p4plus_cache_action_t action)
 {
     sdk_ret_t rv = sdk::asic::asic_mem_write(addr, data, size_in_bytes);
     if (action != P4PLUS_CACHE_ACTION_NONE) {
-        p4plus_invalidate_cache(addr, size_in_bytes, action);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, size_in_bytes, action);
     }
     return rv == SDK_RET_OK ? true : false;
 }
