@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Equinx Bring up", func() {
+var _ = Describe("Equinix Bring up", func() {
 	BeforeEach(func() {
 		// verify cluster is in good health
 		Eventually(func() error {

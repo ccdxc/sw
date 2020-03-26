@@ -829,21 +829,6 @@ func (sm *SysModel) DefaultNetworkSecurityPolicy() *objects.NetworkSecurityPolic
 	return nil
 }
 
-// Networks returns a list of subnets
-func (sm *SysModel) Networks() *objects.NetworkCollection {
-	snc := objects.NetworkCollection{}
-	nws, err := sm.CfgModel.ListNetwork("")
-	if err != nil {
-		log.Errorf("Error listing networks %v", err)
-		return nil
-	}
-	for _, sn := range nws {
-		snc.AddSubnet(&objects.Network{VeniceNetwork: sn})
-	}
-
-	return &snc
-}
-
 // NewMirrorSession creates a new mirrorsession
 func (sm *SysModel) NewMirrorSession(name string) *objects.MirrorSessionCollection {
 	return objects.NewMirrorSession(name, sm.ObjClient(), sm.Tb)

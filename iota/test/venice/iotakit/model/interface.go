@@ -11,6 +11,7 @@ import (
 
 	cfgModel "github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/base"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/common"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/factory"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
@@ -119,9 +120,17 @@ type ObjectIntf interface {
 	ServiceStoppedEvents(since time.Time, npc *objects.NaplesCollection) *objects.EventsCollection
 	SystemBootEvents(npc *objects.NaplesCollection) *objects.EventsCollection
 	NewFirewallProfile(name string) *objects.FirewallProfileCollection
-	NewRoutingConfig(name string) (*objects.RoutingConfigCollection)
+	NewRoutingConfig(name string) *objects.RoutingConfigCollection
 	GetRoutingConfig(name string) (*objects.RoutingConfig, error)
 	ListRoutingConfig() (*objects.RoutingConfigCollection, error)
+	NewVPC(tenant string, name string, rmac string, vni uint32) *objects.VpcObjCollection
+	GetVPC(name string, tenant string) (*objects.Vpc, error)
+
+	NewNetwork(nwp *base.NetworkParams) *objects.NetworkCollection
+	GetNetwork(tenant string, name string) (*objects.Network, error)
+
+	NewTenant(name string) *objects.Tenant
+	GetTenant(name string) (*objects.Tenant, error)
 }
 
 //NaplesActionIntf All actions related to naples

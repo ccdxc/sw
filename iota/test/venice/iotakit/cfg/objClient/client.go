@@ -36,10 +36,10 @@ type ObjClient interface {
 	ListHost() (objs []*cluster.Host, err error)
 	DeleteHost(wrkld *cluster.Host) error
 
-	ListTenant() (objs []*cluster.Tenant, err error)
-
 	CreateNetwork(obj *network.Network) error
+	UpdateNetwork(obj *network.Network) error
 	ListNetwork(string) (objs []*network.Network, err error)
+	GetNetwork(tenant string, nwName string) (nw *network.Network, err error)
 	DeleteNetwork(obj *network.Network) error
 
 	CreateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error
@@ -105,7 +105,17 @@ type ObjClient interface {
 	UpdateRoutingConfig(nwR *network.RoutingConfig) error
 	DeleteRoutingConfig(nwR *network.RoutingConfig) error
 	ListRoutingConfig() (objs []*network.RoutingConfig, err error)
-	GetRoutingConfig(name string)(objs *network.RoutingConfig, err error)
+	GetRoutingConfig(name string) (objs *network.RoutingConfig, err error)
+	ListVPC(tenant string) ([]*network.VirtualRouter, error)
+	GetVPC(name string, tenant string) (obj *network.VirtualRouter, err error)
+	CreateVPC(vrf *network.VirtualRouter) error
+	UpdateVPC(obj *network.VirtualRouter) error
+	DeleteVPC(obj *network.VirtualRouter) (err error)
+
+	ListTenant() (objs []*cluster.Tenant, err error)
+	GetTenant(name string) (objs *cluster.Tenant, err error)
+	CreateTenant(ten *cluster.Tenant) error
+	DeleteTenant(obj *cluster.Tenant) (err error)
 }
 
 type VeniceConfigStatus struct {
@@ -243,6 +253,42 @@ func (r *Client) DeleteNetwork(obj *network.Network) error {
 	}
 
 	return err
+}
+
+// UpdateNetwork creates an Network in venice
+func (r *Client) UpdateNetwork(obj *network.Network) error {
+
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.NetworkV1().Network().Update(r.ctx, obj)
+		if err == nil {
+			break
+		}
+	}
+
+	return err
+}
+
+// ListNetwork gets all networks from venice cluster
+func (r *Client) GetNetwork(tenant string, nwName string) (nw *network.Network, err error) {
+
+	if tenant == "" {
+		tenant = globals.DefaultTenant
+	}
+
+	objMeta := &api.ObjectMeta{
+		Name:   nwName,
+		Tenant: tenant,
+	}
+
+	for _, restcl := range r.restcls {
+		nw, err = restcl.NetworkV1().Network().Get(r.ctx, objMeta)
+		if err == nil {
+			break
+		}
+	}
+
+	return nw, err
 }
 
 //CreateNetworkSecurityPolicy create policy
@@ -574,6 +620,25 @@ func (r *Client) ListVPC(tenant string) (objs []*network.VirtualRouter, err erro
 	return objs, err
 }
 
+func (r *Client) GetVPC(name string, tenant string) (obj *network.VirtualRouter, err error) {
+
+	if tenant == "" {
+		tenant = globals.DefaultTenant
+	}
+
+	objMeta := &api.ObjectMeta{Tenant: tenant, Name: name}
+
+	for _, restcl := range r.restcls {
+		obj, err = restcl.NetworkV1().VirtualRouter().Get(r.ctx, objMeta)
+
+		if err == nil {
+			break
+		}
+	}
+
+	return obj, err
+}
+
 // DeleteVRF deletes all network object
 func (r *Client) DeleteVPC(obj *network.VirtualRouter) (err error) {
 
@@ -600,6 +665,18 @@ func (r *Client) ListTenant() (objs []*cluster.Tenant, err error) {
 	}
 
 	return objs, err
+}
+
+func (r *Client) GetTenant(name string) (obj *cluster.Tenant, err error) {
+
+	for _, restcl := range r.restcls {
+		obj, err = restcl.ClusterV1().Tenant().Get(r.ctx, &api.ObjectMeta{Name: name})
+		if err == nil {
+			break
+		}
+	}
+
+	return obj, err
 }
 
 // DeleteTenant deletes
@@ -851,7 +928,7 @@ func (r *Client) DeleteClusterNode(node *cluster.Node) (err error) {
 	}
 	log.Info("Initiating deleted competed..")
 	if err != nil {
-		log.Errorf("Error deleting cluster nodeß %v", err)
+		log.Errorf("Error deleting cluster nodeÃÂ %v", err)
 	}
 	return err
 }
@@ -1249,6 +1326,22 @@ func (r *Client) CreateVPC(vrf *network.VirtualRouter) error {
 
 }
 
+//UpdateVPC creates vpcs
+func (r *Client) UpdateVPC(vrf *network.VirtualRouter) error {
+
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.NetworkV1().VirtualRouter().Update(r.ctx, vrf)
+		if err == nil {
+			break
+		} else {
+			log.Errorf("Error updating VPC %v. Err: %s", vrf, err.Error())
+		}
+	}
+
+	return err
+}
+
 //CreateIPAMPolicy creates ipams
 func (r *Client) CreateIPAMPolicy(pol *network.IPAMPolicy) error {
 
@@ -1310,6 +1403,7 @@ func (r *Client) GetRoutingConfig(name string) (obj *network.RoutingConfig, err 
 
 	return obj, err
 }
+
 //GetNpmDebugModuleURLs gets npm debug module
 func (r *Client) GetNpmDebugModuleURLs() (urls []string, err error) {
 	for _, restcl := range r.restcls {

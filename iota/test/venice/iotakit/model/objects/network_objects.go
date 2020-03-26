@@ -5,6 +5,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/willf/bitset"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // Network represents a Vlan with a subnet (called network in venice)
@@ -49,4 +50,44 @@ func (snc *NetworkCollection) Any(num int) *NetworkCollection {
 	}
 
 	return &newSnc
+}
+
+// Commit writes the VPC config to venice
+func (nwc *NetworkCollection) Commit() error {
+	if nwc.HasError() {
+		return nwc.err
+	}
+	for _, nw := range nwc.subnets {
+		err := nwc.Client.CreateNetwork(nw.VeniceNetwork)
+		if err != nil {
+			err = nwc.Client.UpdateNetwork(nw.VeniceNetwork)
+
+			if err != nil {
+				nwc.err = err
+				log.Infof("Creating/updating network failed %v", err)
+				return err
+			}
+		}
+
+		log.Debugf("Created/updated network : %#v", nwc.Subnets())
+	}
+
+	return nil
+}
+
+// Delete deletes all networks/subnets in collection
+func (nwc *NetworkCollection) Delete() error {
+	if nwc.err != nil {
+		return nwc.err
+	}
+
+	// walk all sessions and delete them
+	for _, nw := range nwc.subnets {
+		err := nwc.Client.DeleteNetwork(nw.VeniceNetwork)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
