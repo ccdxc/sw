@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/pensando/sw/venice/utils/tokenauth/readutils"
+
 	"github.com/gogo/protobuf/types"
 
 	"google.golang.org/grpc"
@@ -19,7 +21,6 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
-	"github.com/pensando/sw/venice/utils/tokenauth"
 )
 
 type client struct {
@@ -135,7 +136,7 @@ func getHTTPClient(name string, rslvr resolver.Interface) (*netutils.HTTPClient,
 	if err != nil {
 		return nil, err
 	}
-	tlsCert, err := tokenauth.ParseNodeToken(resp.Token)
+	tlsCert, err := readutils.ParseNodeToken(resp.Token)
 	if err != nil {
 		return nil, err
 	}

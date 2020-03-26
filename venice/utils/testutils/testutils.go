@@ -59,6 +59,16 @@ func AssertOk(tb TBApi, err error, format string, args ...interface{}) {
 	}
 }
 
+// AssertError fails the test if an err is nil.
+func AssertError(tb TBApi, err error, format string, args ...interface{}) {
+	if err == nil {
+		_, file, line, _ := runtime.Caller(1)
+		msg := fmt.Sprintf(format, args...)
+		tb.Fatalf("\033[31m%s:%d: %s. error expected but found: %v\033[39m\n\n", filepath.Base(file), line, msg, err)
+		tb.FailNow()
+	}
+}
+
 // AssertEquals fails the test if exp is not equal to act.
 func AssertEquals(tb TBApi, exp, act interface{}, format string, args ...interface{}) {
 	if !reflect.DeepEqual(exp, act) {

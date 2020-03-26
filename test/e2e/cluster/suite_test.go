@@ -44,10 +44,11 @@ func TestE2ETest(t *testing.T) {
 
 // All the test config, state and any helper caches for running this test
 type TestSuite struct {
-	tu              *testutils.TestUtils
-	restSvc         apiclient.Services
-	netagentClients []*restclient.AgentClient
-	loggedInCtx     context.Context
+	tu                 *testutils.TestUtils
+	restSvc            apiclient.Services
+	netagentClients    []*restclient.AgentClient
+	loggedInCtx        context.Context
+	naplesNameToMACMap map[string]string
 }
 
 var ts *TestSuite
@@ -57,7 +58,8 @@ var _ = BeforeSuite(func() {
 
 	flag.Parse()
 	ts = &TestSuite{
-		tu: testutils.New(nil, *configFile),
+		tu:                 testutils.New(nil, *configFile),
+		naplesNameToMACMap: make(map[string]string),
 	}
 	ts.tu.Init()
 
@@ -132,6 +134,10 @@ var _ = BeforeSuite(func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			resp.Body.Close()
 
+			// cache name:mac mapping
+			nodeMAC := naples.Status.Fru.MacStr
+			ts.naplesNameToMACMap[ts.tu.NaplesNodes[idx]] = nodeMAC
+
 			By(fmt.Sprintf("Creating host obj naples%d-host", idx+1))
 			// Create a Host object
 			host := &cluster.Host{
@@ -141,7 +147,7 @@ var _ = BeforeSuite(func() {
 				Spec: cluster.HostSpec{
 					DSCs: []cluster.DistributedServiceCardID{
 						{
-							MACAddress: naples.Status.Fru.MacStr,
+							MACAddress: nodeMAC,
 						},
 					},
 				},

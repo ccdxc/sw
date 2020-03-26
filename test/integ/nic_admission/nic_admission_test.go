@@ -17,6 +17,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/tokenauth/readutils"
+
 	"github.com/vishvananda/netlink"
 
 	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
@@ -66,7 +68,6 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	venicetestutils "github.com/pensando/sw/venice/utils/testutils"
-	tokenauthutils "github.com/pensando/sw/venice/utils/tokenauth"
 	ventrace "github.com/pensando/sw/venice/utils/trace"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
@@ -591,7 +592,7 @@ func getAgentRESTClient(t *testing.T, auth bool) (*netutils.HTTPClient, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Error generating node auth token: %s", token)
 		}
-		tlsCert, err := tokenauthutils.ParseNodeToken(token)
+		tlsCert, err := readutils.ParseNodeToken(token)
 		if err != nil {
 			return nil, fmt.Errorf("Error parsing node auth token")
 		}

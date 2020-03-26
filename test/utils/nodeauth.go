@@ -11,11 +11,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/tokenauth/readutils"
+
 	"github.com/pensando/sw/api/generated/tokenauth"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
-	tokenauthutils "github.com/pensando/sw/venice/utils/tokenauth"
 )
 
 const maxRetry = 5
@@ -88,7 +89,7 @@ func GetNodeAuthTokenTempFile(ctx context.Context, endpointURL string, audience 
 	if err != nil {
 		return "", err
 	}
-	tokenFile, err := ioutil.TempFile("", "node-auth-token")
+	tokenFile, err := ioutil.TempFile("", "node-auth-token-*")
 	if err != nil {
 		return "", err
 	}
@@ -99,11 +100,11 @@ func GetNodeAuthTokenTempFile(ctx context.Context, endpointURL string, audience 
 
 // GetNodeAuthTokenHTTPClient returns an HTTP client with a node auth token fetched from the supplied endpointURL
 func GetNodeAuthTokenHTTPClient(ctx context.Context, tokenEndpointURL string, audience []string) (*netutils.HTTPClient, error) {
-	nodeAuthToken, err := GetNodeAuthToken(ctx, tokenEndpointURL, []string{"*"})
+	nodeAuthToken, err := GetNodeAuthToken(ctx, tokenEndpointURL, audience)
 	if err != nil {
 		return nil, fmt.Errorf("Error getting TokenAuthNode: %v", err)
 	}
-	tlsCert, err := tokenauthutils.ParseNodeToken(nodeAuthToken)
+	tlsCert, err := readutils.ParseNodeToken(nodeAuthToken)
 	if err != nil {
 		return nil, fmt.Errorf("Error parsing TokenAuthNode: %v", err)
 	}

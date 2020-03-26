@@ -8,7 +8,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -16,13 +15,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/tokenauth/readutils"
+
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/log"
-)
-
-const (
-	audiencePath = "audience"
 )
 
 // MakeNodeToken creates a node auth token with the supplied parameters and signs is with the input CA
@@ -34,7 +31,7 @@ func MakeNodeToken(ca *certmgr.CertificateAuthority, clusterName string, audienc
 
 	var URIs []*url.URL
 	if len(audience) > 0 {
-		audienceURIStr := fmt.Sprintf("venice://%s/%s?%s", clusterName, audiencePath, strings.Join(audience, "&"))
+		audienceURIStr := fmt.Sprintf("venice://%s/%s?%s", clusterName, readutils.AudiencePath, strings.Join(audience, "&"))
 		audienceURI, err := url.Parse(audienceURIStr)
 		if err == nil {
 			URIs = append(URIs, audienceURI)
@@ -99,35 +96,4 @@ func MakeNodeToken(ca *certmgr.CertificateAuthority, clusterName string, audienc
 	}
 	w.Flush()
 	return token.String(), nil
-}
-
-// ParseNodeToken converts a node auth token string into a tls.Certificate struc
-func ParseNodeToken(token string) (tls.Certificate, error) {
-	pemBlocks := []byte(token)
-	return tls.X509KeyPair(pemBlocks, pemBlocks)
-}
-
-// GetNodeTokenAttributes returns audience in a token
-func GetNodeTokenAttributes(token string) ([]string, error) {
-	tlsCert, err := ParseNodeToken(token)
-	if err != nil {
-		return nil, fmt.Errorf("Error parsing token: %v", err)
-	}
-	if len(tlsCert.Certificate) < 1 {
-		return nil, fmt.Errorf("No certificates found in token")
-	}
-	cert, err := x509.ParseCertificate(tlsCert.Certificate[0])
-	if err != nil {
-		return nil, fmt.Errorf("Error parsing certificate: %v", err)
-	}
-	var audience []string
-	for _, attr := range cert.URIs {
-		switch attr.Path {
-		case "/" + audiencePath:
-			audience = append(audience, strings.Split(attr.RawQuery, "&")...)
-		default:
-			log.Errorf("Found unknwon attribute in token: %s", attr)
-		}
-	}
-	return audience, nil
 }

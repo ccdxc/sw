@@ -15,8 +15,11 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// Authorizer is a pluggable function that returns true when the supplied request is authorized, false otherwise
-type Authorizer func(r *http.Request) error
+// Authorizer is a pluggable interface that allows users to implement and wire their own implementations.
+type Authorizer interface {
+	// authorize returns true when the supplied request is authorized, false otherwise
+	Authorize(r *http.Request) error
+}
 
 // ReverseProxyRouter is a HTTP/HTTPs reverse proxy based on gorilla mux
 type ReverseProxyRouter struct {
@@ -70,7 +73,7 @@ func logTLSInfo(next http.Handler) http.Handler {
 func (rpr *ReverseProxyRouter) authorize(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if rpr.authorizer != nil {
-			err := rpr.authorizer(r)
+			err := rpr.authorizer.Authorize(r)
 			if err != nil {
 				log.Infof("Authorization failed for request: %+v", r)
 				http.Error(w, err.Error(), http.StatusUnauthorized)

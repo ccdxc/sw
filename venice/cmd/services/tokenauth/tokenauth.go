@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/tokenauth"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/certs"
-	tokenauthutils "github.com/pensando/sw/venice/utils/tokenauth"
 )
 
 // TokenAuth represents an instance of the TokenAuth service
@@ -34,6 +35,11 @@ func (n *TokenAuth) GenerateNodeToken(audience []string, validityStart, validity
 	if audience == nil || len(audience) == 0 {
 		return "", fmt.Errorf("Audience must be specified")
 	}
+	for _, a := range audience {
+		if a == "" {
+			return "", fmt.Errorf("Audience entry can not be an empty string")
+		}
+	}
 	var err error
 	var notBefore, notAfter time.Time
 	if validityStart != nil {
@@ -53,5 +59,5 @@ func (n *TokenAuth) GenerateNodeToken(audience []string, validityStart, validity
 		notAfter = certs.EndOfTime
 	}
 
-	return tokenauthutils.MakeNodeToken(n.ca, n.clusterName, audience, notBefore, notAfter)
+	return tokenauth.MakeNodeToken(n.ca, n.clusterName, audience, notBefore, notAfter)
 }

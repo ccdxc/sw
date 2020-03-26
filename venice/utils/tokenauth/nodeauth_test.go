@@ -3,18 +3,18 @@
 package tokenauth
 
 import (
-	"encoding/pem"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/tokenauth/readutils"
+
 	"github.com/pensando/sw/venice/utils/certmgr"
-	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/keymgr"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-func TestMakeParseNodeToken(t *testing.T) {
+func TestMakeNodeToken(t *testing.T) {
 	be, err := keymgr.NewDefaultBackend("certmgr")
 	AssertOk(t, err, "Error instantiating KeyMgr backend")
 	defer be.Close()
@@ -56,32 +56,10 @@ func TestMakeParseNodeToken(t *testing.T) {
 			"Testcase %d, unexpected error: %v", i, err)
 
 		if err == nil {
-			outAudience, err := GetNodeTokenAttributes(token)
+			outAudience, err := readutils.GetNodeTokenAttributes(token)
 			AssertOk(t, err, "Testcase %d, error parsing token: %v", i, err)
 			Assert(t, (len(tc.audience) == 0 && len(outAudience) == 0) || reflect.DeepEqual(outAudience, tc.audience),
 				"Testcase %d. audience mismatch. Have: %#v, want: %#v", i, outAudience, tc.audience)
 		}
 	}
-
-	// negative testcases
-	_, err = GetNodeTokenAttributes("")
-	Assert(t, err != nil, "GetNodeTokenAttributes did not return expected error")
-	_, err = GetNodeTokenAttributes("Hello")
-	Assert(t, err != nil, "GetNodeTokenAttributes did not return expected error")
-
-	token, err := MakeNodeToken(ca, "tc", []string{"foo"}, notBefore, notAfter)
-	AssertOk(t, err, "Error generating node token")
-	var tokenWithoutCert []byte
-	pemData := []byte(token)
-	for {
-		block, rest := pem.Decode(pemData)
-		Assert(t, block != nil, "Didn't find key block in token")
-		if block.Type == certs.PrivateKeyPemBlockType {
-			tokenWithoutCert = pem.EncodeToMemory(block)
-			break
-		}
-		pemData = rest
-	}
-	_, err = GetNodeTokenAttributes(string(tokenWithoutCert))
-	Assert(t, err != nil, "GetNodeTokenAttributes did not return expected error")
 }

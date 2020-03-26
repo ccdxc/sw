@@ -3,25 +3,22 @@
 package state
 
 import (
-	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/tls"
-	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"strings"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/tokenauth/readutils"
+
+	"github.com/pensando/sw/venice/utils/revproxy"
+
 	"github.com/pensando/sw/nic/agent/nmd/utils"
-	"github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/revproxy"
 )
 
 const (
@@ -83,7 +80,7 @@ var revProxyConfig = map[string]string{
 	"/api/diagnostics/": "http://127.0.0.1:" + globals.NaplesDiagnosticsRestPort,
 }
 
-var protectedCommands = []string{
+var protectedNmdCommands = []string{
 	"setsshauthkey",
 	"penrmauthkeys",
 	"penrmsshdfiles",
@@ -95,66 +92,28 @@ var protectedCommands = []string{
 	"startsshd",
 }
 
-func authorizeProtectedCommands(req *http.Request) error {
-	// We want to make sure that we authorize only protected commands but
-	// also that we don't get fooled by malformed requests.
-
-	// Per Go http docs, Empty Method is ok and it means "GET"
-
-	if req.URL == nil {
-		log.Errorf("Error authorizing request, empty URL")
-		return fmt.Errorf("Error authorizing request, empty URL")
-	}
-
-	// if it is not a command, nothing to authorize
-	if !strings.HasPrefix(req.URL.Path, "/cmd") {
-		return nil
-	}
-
-	if req.Body == nil {
-		log.Errorf("Error authorizing request, empty body")
-		return fmt.Errorf("Error authorizing cmd request, empty body")
-	}
-
-	var bodyBytes []byte
-	// if we weren't able to read the entire req, better to bail out and let client retry
-	bodyBytes, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		log.Errorf("Error authorizing request %s %s: %v", req.Method, req.URL, err)
-		return fmt.Errorf("Error authorizing request: %v", err)
-	}
-
-	// Restore the io.ReadCloser to its original state, otherwise the handler won't be able to read it
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
-
-	cmdReq := nmd.DistributedServiceCardCmdExecute{}
-	err = json.Unmarshal(bodyBytes, &cmdReq)
-	if err != nil {
-		log.Errorf("Error authorizing request %s %s: %v", req.Method, req.URL, err)
-		return fmt.Errorf("Error authorizing request: %v", err)
-	}
-
-	for _, pc := range protectedCommands {
-		if cmdReq.Executable == pc && (req.TLS == nil || len(req.TLS.VerifiedChains) == 0) {
-			log.Errorf("Authorization failed: command %s requires authorization token", pc)
-			return fmt.Errorf("Authorization failed: command %s requires authorization token", pc)
-		}
-	}
-	return nil
-}
-
-func getRevProxyTLSConfig() (*tls.Config, revproxy.Authorizer, error) {
+func (n *NMD) getRevProxyTLSConfig() (*tls.Config, revproxy.Authorizer, error) {
 	var clientAuth tls.ClientAuthType
 	var authz revproxy.Authorizer
 
 	trustRoots, isClusterRoots, err := utils.GetNaplesTrustRoots()
 	if isClusterRoots {
-		// trust roots are Venice cluster trust roots, client cert is mandatory, no need to further authorize
+		// trust roots are Venice cluster trust roots, client cert is mandatory, only authorize based on mac address
 		clientAuth = tls.RequireAndVerifyClientCert
+		authz = &MacBasedAuthorizer{
+			macAddr:           n.macAddr,
+			audienceExtractor: readutils.ExtractAudienceFromVeniceCert,
+		}
 	} else {
 		// trust roots are Pensando support CA trust roots, client cert is optional, authorize protected commands
 		clientAuth = tls.VerifyClientCertIfGiven
-		authz = authorizeProtectedCommands
+		authz = &ProtectedCommandsAuthorizer{
+			protectedCommands: protectedNmdCommands,
+			chainedAuthorizer: &MacBasedAuthorizer{
+				macAddr:           n.macAddr,
+				audienceExtractor: ExtractAudienceFromCertForHostManagedDSC,
+			},
+		}
 	}
 
 	if err != nil {
@@ -197,7 +156,7 @@ func getRevProxyTLSConfig() (*tls.Config, revproxy.Authorizer, error) {
 // StartReverseProxy starts the reverse proxy for all NAPLES REST APIs
 func (n *NMD) StartReverseProxy() error {
 	// if we have persisted root of trust, require client auth
-	tlsConfig, authz, err := getRevProxyTLSConfig()
+	tlsConfig, authz, err := n.getRevProxyTLSConfig()
 	if err != nil {
 		log.Errorf("Error getting TLS config for reverse proxy: %v", err)
 	}

@@ -6,11 +6,16 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/golang/mock/gomock"
+
+	mock_revproxy "github.com/pensando/sw/venice/utils/revproxy/mock"
 
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/log"
@@ -80,7 +85,7 @@ func TestRevProxy(t *testing.T) {
 			defer resp.Body.Close()
 			data, err := ioutil.ReadAll(resp.Body)
 			AssertOk(t, err, "failed to read response %s", URL)
-			Assert(t, string(data) == key, "proxy routed %v to wrong process exptreced %v got %v", URL, string(data), key)
+			Assert(t, string(data) == key, "proxy routed %v to wrong process expected %v got %v", URL, string(data), key)
 		}
 	}
 
@@ -125,7 +130,13 @@ func TestRevProxy(t *testing.T) {
 	clientCert, err := certs.SignCSRwithCA(clientCSR, caCert, caKey, certs.WithValidityDays(1))
 	AssertOk(t, err, "Error signing client CSR")
 
-	err = srv.Start(&serverTLSConfig, nil)
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockAuthorizer := mock_revproxy.NewMockAuthorizer(mockCtrl)
+	mockAuthorizer.EXPECT().Authorize(gomock.Any()).Return(nil).Times(1)
+
+	err = srv.Start(&serverTLSConfig, mockAuthorizer)
 	AssertOk(t, err, "Error starting proxy with TLS")
 	url = srv.GetListenURL()
 	// Verify that without client cert request is rejected
@@ -146,4 +157,9 @@ func TestRevProxy(t *testing.T) {
 	}
 	resp, err = client.Get("https://" + url + "/api/v1/naples")
 	AssertOk(t, err, "HTTPS request failed")
+
+	// now let the authorizer fail after TLS connection has succeeded
+	mockAuthorizer.EXPECT().Authorize(gomock.Any()).Return(errors.New("Authorization failed")).Times(1)
+	resp, err = client.Get("https://" + url + "/api/v1/naples")
+	Assert(t, resp != nil && strings.Contains(resp.Status, "401 Unauthorized"), "HTTPS request succeeded when Authorization failed")
 }
