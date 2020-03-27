@@ -27,7 +27,7 @@ def ServerCmd(port = None, time=None, run_core=None, jsonOut=False, naples=False
 def ClientCmd(server_ip, port = None, time=10, pktsize=None, proto='tcp', run_core=None,
               ipproto='v4', bandwidth="100G", num_of_streams = None, jsonOut=False,
               connect_timeout=None, client_ip=None, client_port=None, packet_count=None,
-              naples=False, mss=None):
+              naples=False, msssize=None):
     assert(port)
     cmd = ["iperf3", "-c", str(server_ip), "-p", str(port), "-b", str(bandwidth)]
 
@@ -63,9 +63,9 @@ def ClientCmd(server_ip, port = None, time=10, pktsize=None, proto='tcp', run_co
 
     if pktsize:
         cmd.extend(["-l", str(pktsize)])
-
-    if mss:
-        cmd.extend(["-l", str(mss)])
+    
+    if msssize:
+        cmd.extend(["-M", str(msssize)])
         
     if ipproto == 'v6':
         cmd.append("-6")

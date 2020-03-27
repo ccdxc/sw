@@ -45,7 +45,7 @@ testcases:
             #TSO requires rx and tx cheksum
             rx_check_sum       : [ 'on']
             tx_check_sum       : [ 'on']
-            pktsize            : [  8192 ]
+            pktsize            : [  4096 ]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :

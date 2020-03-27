@@ -89,6 +89,12 @@ def Setup(tc):
 def Trigger(tc):
     if api.IsDryrun(): return api.types.status.SUCCESS
 
+    # Determine where the commands will be run - host or Naples.
+    test_type = getattr(tc.args, "test-type", INTF_TEST_TYPE_HOST)
+    is_naples_cmd = True
+    if test_type == INTF_TEST_TYPE_HOST:
+        is_naples_cmd = False
+
     req1 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     req2 = api.Trigger_CreateExecuteCommandsRequest(serial = False)
 
@@ -115,12 +121,12 @@ def Trigger(tc):
         else:
             port = api.AllocateUdpPort()
  
-        iperf_server_cmd = iperf.ServerCmd(port)
+        iperf_server_cmd = iperf.ServerCmd(port, naples = is_naples_cmd)
         api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name, iperf_server_cmd, background = True)
 
         iperf_client_cmd = iperf.ClientCmd(server_ip, port, time=10,
                                  proto=proto, jsonOut=True, ipproto=ipproto, num_of_streams=number_of_iperf_threads,
-                                 pktsize=pktsize, client_ip=client_ip)
+                                 pktsize=pktsize, client_ip=client_ip, naples = is_naples_cmd)
         api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name, iperf_client_cmd)
 
     trig_resp1 = api.Trigger(req1)
