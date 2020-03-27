@@ -726,10 +726,12 @@ port_update_xcvr_event (void *pd_p, xcvr_event_info_t *xcvr_event_info)
 //  \param[out] port_speed derived based on transceiver
 //  \param[out] fec_type   derived based on port_speed
 //  \param[out] num_lanes  derived based on port_speed
+//  \param[out] toggle_fec toggle FEC modes during fixed speed bringup
 //  \return     #SDK_RET_OK on success, failure status code on error
 static sdk_ret_t
 port_args_set_by_xcvr_state_ (int phy_port, port_speed_t *port_speed,
-                              port_fec_type_t *fec_type, uint32_t *num_lanes)
+                              port_fec_type_t *fec_type, uint32_t *num_lanes,
+                              bool *toggle_fec_mode)
 {
     *port_speed = sdk::platform::cable_speed(phy_port-1);
 
@@ -746,7 +748,8 @@ port_args_set_by_xcvr_state_ (int phy_port, port_speed_t *port_speed,
             break;
 
         case port_speed_t::PORT_SPEED_25G:
-            *fec_type = port_fec_type_t::PORT_FEC_TYPE_FC;
+            *toggle_fec_mode = true;
+            *fec_type = sdk::platform::xcvr_fec_type(phy_port-1);
             *num_lanes = 1;
             break;
 
@@ -802,7 +805,9 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
                            port_args->port_an_args->fec_ability,
                            port_args->port_an_args->fec_request,
                            port_args->cable_type);
+
             port_args->toggle_neg_mode = false;
+            port_args->toggle_fec_mode = false;
 
             // if AN=true and
             // (1) fiber cable is inserted
@@ -821,14 +826,16 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
                     port_args_set_by_xcvr_state_(
                                           phy_port, &port_args->port_speed,
                                           &port_args->derived_fec_type,
-                                          &port_args->num_lanes);
+                                          &port_args->num_lanes,
+                                          &port_args->toggle_fec_mode);
                 }
                 if (sdk::platform::xcvr_type(phy_port-1) ==
                                                   xcvr_type_t::XCVR_TYPE_SFP) {
                     port_args_set_by_xcvr_state_(
                                           phy_port, &port_args->port_speed,
                                           &port_args->derived_fec_type,
-                                          &port_args->num_lanes);
+                                          &port_args->num_lanes,
+                                          &port_args->toggle_fec_mode);
                     if (port_args->cable_type == cable_type_t::CABLE_TYPE_CU) {
                         // for these types, toggle between force/an till link-up
                         // TOR/peer could have do either forced/an
@@ -838,9 +845,12 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
                     }
                 }
             }
-            SDK_TRACE_DEBUG("port %u auto_neg_enable %u toggle an %u ",
-                             port_args->port_num, port_args->auto_neg_enable,
-                             port_args->toggle_neg_mode);
+            SDK_TRACE_DEBUG("port %u auto_neg_enable %u toggle_an %u "
+                            "derived_fec_type %u, toggle_fec %u",
+                            port_args->port_num, port_args->auto_neg_enable,
+                            port_args->toggle_neg_mode,
+                            port_args->derived_fec_type,
+                            port_args->toggle_fec_mode);
 
         } else {
             port_args->admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
@@ -911,6 +921,7 @@ port_create (port_args_t *args)
     port_p->set_debounce_time(args->debounce_time);
     port_p->set_auto_neg_enable(args->auto_neg_enable);
     port_p->set_toggle_neg_mode(args->toggle_neg_mode);
+    port_p->set_toggle_fec_mode(args->toggle_fec_mode);
     port_p->set_mtu(args->mtu);
     port_p->set_pause(args->pause);
     port_p->set_tx_pause_enable(args->tx_pause_enable);
@@ -1066,6 +1077,7 @@ port_update (void *pd_p, port_args_t *args)
         configured = true;
     }
     port_p->set_derived_fec_type(args->derived_fec_type);
+    port_p->set_toggle_fec_mode(args->toggle_fec_mode);
 
     // MTU 0 is invalid
     if (args->mtu != 0 &&

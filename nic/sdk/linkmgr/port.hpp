@@ -23,6 +23,7 @@
 #define PORT_MAC_STAT_REPORT_SIZE       1024
 #define MIN_PORT_TIMER_INTERVAL         100            // msecs
 #define MAX_LINK_AN_WAIT_TIME           50 * 1000000   // in nanosecs
+#define MAX_PORT_FEC_RETRIES            3              // FC/RS/None FEC
 
 namespace sdk {
 namespace linkmgr {
@@ -144,6 +145,11 @@ public:
     bool toggle_neg_mode(void) const { return this->toggle_neg_mode_; }
     void set_toggle_neg_mode(bool toggle_neg_mode) {
         this->toggle_neg_mode_ = toggle_neg_mode;
+    }
+
+    bool toggle_fec_mode(void) const { return this->toggle_fec_mode_; }
+    void set_toggle_fec_mode(bool toggle_fec_mode) {
+        this->toggle_fec_mode_ = toggle_fec_mode;
     }
 
     port_pause_type_t pause(void) const { return this->pause_; }
@@ -282,6 +288,9 @@ public:
 
     // MAC CFG
     sdk_ret_t port_mac_cfg(void);
+
+    // MAC FEC CFG
+    sdk_ret_t port_mac_cfg_fec(port_fec_type_t fec_type);
 
     // mac enable or disable
     sdk_ret_t port_mac_enable(bool);
@@ -426,6 +435,7 @@ private:
     sdk::event_thread::timer_t link_debounce_timer_;       // port link debounce timer
     bool                      toggle_neg_mode_;           // for SFP+ toggle between auto_neg/force modes until link-up
     neg_mode_t                last_neg_mode_;             // last toggle was auto_neg or force mode
+    bool                      toggle_fec_mode_;           // for SFP+ toggle between RS/FC/None fec modes
     uint32_t                  mac_id_;                    // mac instance for this port
     uint32_t                  mac_ch_;                    // mac channel within mac instance
     uint32_t                  num_lanes_;                 // number of lanes for this port
@@ -460,8 +470,10 @@ private:
 
     uint32_t port_max_an_retries(void);
     uint32_t port_max_serdes_ready_retries(void);
-    neg_mode_t is_auto_neg (void);
-    void toggle_negotiation_mode (void);
+    neg_mode_t is_auto_neg(void);
+    void toggle_negotiation_mode(void);
+    void toggle_fec_type(void);
+
     // MAC port num calculation based on mac instance and mac channel
     uint32_t  port_mac_port_num_calc(void);
 

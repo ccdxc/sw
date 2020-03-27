@@ -93,6 +93,12 @@ qsfp_sprom_parse (int port, uint8_t *data)
     // TODO reset when removed?
     xcvr_set_an_args(port, 0, false, 0);
 
+    // default fec type = none
+    xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_NONE);
+
+    // parse the length fields
+    xcvr_parse_length(port, data);
+
     switch (data[QSFP_OFFSET_ETH_COMPLIANCE_CODES]) {
     case 0x0:
         SDK_TRACE_DEBUG("Xcvr port %d QSFP eth spec unspecified compliance code 0x0", port);
@@ -143,6 +149,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_AOC);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
+        xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_RS);
         break;
 
     case 0x2:
@@ -150,6 +157,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_SR4);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
+        xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_RS);
         break;
 
     case 0x3:
@@ -157,6 +165,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_LR4);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
+        xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_RS);
         break;
 
     case 0x4:
@@ -164,6 +173,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_ER4);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
+        xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_RS);
         break;
 
     case 0x6:
@@ -171,6 +181,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_CWDM4);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
+        xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_RS);
         break;
 
     case 0x7:
@@ -178,6 +189,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_PSM4);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
+        xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_RS);
         break;
 
     case 0x8:
@@ -185,6 +197,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_ACC);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
+        xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_RS);
         break;
 
     case 0xb:
@@ -195,6 +208,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
                          true,
                          AN_FEC_REQ_25GB_RSFEC);
         xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
+        xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_RS);
         break;
 
     case 0x10:
@@ -213,6 +227,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_AOC);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
+        xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_RS);
         break;
 
     case 0x19:
@@ -220,6 +235,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_ACC);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
         xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
+        xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_RS);
         break;
 
     case 0x1A:
@@ -241,6 +257,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
                          AN_USER_CAP_100GBKR4 | AN_USER_CAP_100GBCR4,
                          true,
                          AN_FEC_REQ_25GB_RSFEC);
+        xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_RS);
     }
 
     return SDK_RET_OK;

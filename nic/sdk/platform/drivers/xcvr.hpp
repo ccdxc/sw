@@ -123,6 +123,12 @@ typedef struct xcvr_s {
     bool           debounce;
     port_an_args_t port_an_args;
     port_speed_t   cable_speed;     // speed of inserted xcvr
+    port_fec_type_t fec_type;       // default fec type for xcvr
+    uint32_t length_om3;
+    uint32_t length_smfkm;
+    uint32_t length_om2;
+    uint32_t length_om1;
+    uint32_t length_dac;
 
     // Transceiver data
     uint8_t        cache[XCVR_SPROM_CACHE_SIZE];
@@ -247,16 +253,58 @@ xcvr_set_valid_check (bool enable)
     xcvr_valid_enable = enable;
 }
 
-inline port_speed_t
+static inline port_speed_t
 cable_speed (int port)
 {
     return g_xcvr[port].cable_speed;
 }
 
-inline void
+static inline void
 xcvr_set_cable_speed (int port, port_speed_t speed)
 {
     g_xcvr[port].cable_speed = speed;
+}
+
+static inline void
+xcvr_set_fec_type (int port, port_fec_type_t fec_type)
+{
+    g_xcvr[port].fec_type = fec_type;
+}
+
+static inline port_fec_type_t
+xcvr_fec_type (int port)
+{
+    return g_xcvr[port].fec_type;
+}
+
+static inline uint32_t
+xcvr_length_dac (int port)
+{
+    return g_xcvr[port].length_dac;
+}
+
+static inline void
+xcvr_parse_length (int port, uint8_t *data)
+{
+    xcvr_t *xcvr = &g_xcvr[port];
+
+    xcvr->length_om3 = 0;
+    xcvr->length_smfkm = data[14];
+    xcvr->length_om2 = data[16];
+    xcvr->length_om1 = data[17];
+    xcvr->length_dac = data[18];
+
+    if (xcvr_type(port) == xcvr_type_t::XCVR_TYPE_SFP) {
+        xcvr->length_om3 = data[19];
+
+		// convert from units of 10m to meters
+        xcvr->length_om1 *= 10;
+        xcvr->length_om2 *= 10;
+        xcvr->length_om3 *= 10;
+    } else {
+		// convert from units of 2m to meters
+        xcvr->length_om3 = data[15] * 2;
+    }
 }
 
 } // namespace platform

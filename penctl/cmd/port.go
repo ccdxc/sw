@@ -44,12 +44,11 @@ var portStatusShowCmd = &cobra.Command{
 }
 
 var portUpdateCmd = &cobra.Command{
-	Use:    "port",
-	Short:  "update port object",
-	Long:   "update port object",
-	Args:   cobra.NoArgs,
-	Hidden: true,
-	RunE:   portUpdateCmdHandler,
+	Use:   "port",
+	Short: "update port object",
+	Long:  "update port object",
+	Args:  cobra.NoArgs,
+	RunE:  portUpdateCmdHandler,
 }
 
 var portStatsShowCmd = &cobra.Command{

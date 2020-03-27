@@ -128,6 +128,37 @@ port::port_mac_port_num_calc(void)
 }
 
 sdk_ret_t
+port::port_mac_cfg_fec(port_fec_type_t fec_type)
+{
+    mac_info_t mac_info;
+    memset(&mac_info, 0, sizeof(mac_info_t));
+
+    mac_info.mac_id    = this->mac_id_;
+    mac_info.mac_ch    = this->mac_ch_;
+    mac_info.speed     = static_cast<uint32_t>(this->port_speed_);
+
+    mac_info.mtu       = this->mtu_;
+    mac_info.pause     = this->pause_;
+    mac_info.tx_pause_enable = this->tx_pause_enable_;
+    mac_info.rx_pause_enable = this->rx_pause_enable_;
+    mac_info.num_lanes = this->num_lanes_;
+
+    mac_info.fec       = static_cast<uint32_t>(fec_type);
+    mac_info.loopback  =
+        loopback_mode() == port_loopback_mode_t::PORT_LOOPBACK_MODE_MAC? 1 : 0;
+
+    // Enable Tx padding. Disable Rx padding
+    mac_info.tx_pad_enable = 1;
+    mac_info.rx_pad_enable = 0;
+
+    mac_info.force_global_init = false;
+
+    mac_fns()->mac_cfg_fec(&mac_info);
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 port::port_mac_cfg(void)
 {
     mac_info_t mac_info;
@@ -481,7 +512,7 @@ port::port_serdes_pcal_start(void)
         if (sbus_addr == 0) {
             continue;
         }
-        if (is_auto_neg()) {
+        if (is_auto_neg() == AUTO_NEG) {
             serdes_fns()->serdes_an_pcal_start(sbus_addr);
         } else {
             serdes_fns()->serdes_pcal_start(sbus_addr);
@@ -717,8 +748,8 @@ port::port_set_an_resolved_params_internal (port_speed_t speed, int num_lanes,
     this->set_port_speed(speed);
     this->set_num_lanes(num_lanes);
 
-    // oper fec type is used for programming MAC.
-    this->set_fec_type(fec_type);
+    // in AN mode, oper fec_type = AN resolved fec type
+    set_fec_type(fec_type);
     return 0;
 }
 
@@ -1004,6 +1035,7 @@ port::port_link_sm_process(bool start_en_timer)
     bool retry_sm   = false;
     an_ret_t an_ret = AN_DONE;
     dfe_ret_t dfe_ret = DFE_DONE;
+    uint8_t fec_retries;
 
     while (true) {
         retry_sm = false;
@@ -1022,8 +1054,9 @@ port::port_link_sm_process(bool start_en_timer)
                 timer_stop(link_bringup_timer());
                 timer_stop(link_debounce_timer());
 
-                //make the an/fixed mode toggle here - 25G-CU only
+                // make the an/fixed mode toggle here - 25G-CU only
                 toggle_negotiation_mode();
+
                 // pull the stats and save in persist storage before bringing down
                 port_mac_stats_persist_update();
 
@@ -1068,6 +1101,9 @@ port::port_link_sm_process(bool start_en_timer)
                     break;
                 }
 
+                // reset counter for FEC retry with different FEC modes
+                fec_retries = 0;
+
                 SDK_PORT_SM_DEBUG(this, "Enabled");
 
                 // transition to AN cfg state
@@ -1075,7 +1111,7 @@ port::port_link_sm_process(bool start_en_timer)
 
              case port_link_sm_t::PORT_LINK_SM_AN_CFG:
 
-                if (is_auto_neg()) {
+                if (is_auto_neg() == AUTO_NEG) {
                     an_ret = port_link_sm_an_process();
 
                     if (an_ret == AN_RESET) {
@@ -1157,11 +1193,14 @@ port::port_link_sm_process(bool start_en_timer)
                 port_mac_enable(true);
                 port_mac_soft_reset(false);
 
-                if (is_auto_neg()) {
+                if (is_auto_neg() == AUTO_NEG) {
                     // Restart AN if link training failed.
                     if (port_serdes_an_link_train_check() == false ||
                             port_serdes_eye_check() == false ) {
                         set_num_link_train_retries(num_link_train_retries() + 1);
+
+                        // if LT fails MAX times, retry enabled after timeout
+                        // else retry enabled in the same loop
                         if (num_link_train_retries() == MAX_LINK_TRAIN_FAIL_COUNT) {
                             set_num_link_train_retries(0);
                             timeout = rand() % 2 == 0? 500 : MIN_PORT_TIMER_INTERVAL;
@@ -1265,10 +1304,20 @@ port::port_link_sm_process(bool start_en_timer)
                     if (num_mac_sync_retries() >= MAX_PORT_MAC_SYNC_RETRIES) {
                         retry_sm = true;
                         set_num_mac_sync_retries(0);
-                        port_link_sm_retry_enabled(false);
+
+                        // if MAC doesn't sync in fixed/forced mode, then
+                        // try with different FEC modes
+                        if ((is_auto_neg() == FIXED_NEG) &&
+                                (toggle_fec_mode() == true) &&
+                                (++fec_retries < MAX_PORT_FEC_RETRIES)) {
+                            toggle_fec_type();
+                        } else {
+                            port_link_sm_retry_enabled(false);
+                        }
                         break;
                     }
-
+                    // reduce MAC sync timer to 100ms
+                    timeout = 100;
                     this->bringup_timer_val_ += timeout;
                     port_timer_start(link_bringup_timer(), timeout);
                     break;
@@ -1397,8 +1446,29 @@ void
 port::toggle_negotiation_mode (void)
 {
     if (this->toggle_neg_mode_ == true) {
-        this->last_neg_mode_ = (this->last_neg_mode_ == AUTO_NEG)?FIXED_NEG:AUTO_NEG;
+        this->last_neg_mode_ =
+              (this->last_neg_mode_ == AUTO_NEG)? FIXED_NEG : AUTO_NEG;
     }
+}
+
+void
+port::toggle_fec_type (void) {
+    switch (fec_type()) {
+    case port_fec_type_t::PORT_FEC_TYPE_FC:
+        set_fec_type(port_fec_type_t::PORT_FEC_TYPE_RS);
+        break;
+
+    case port_fec_type_t::PORT_FEC_TYPE_RS:
+        set_fec_type(port_fec_type_t::PORT_FEC_TYPE_NONE);
+        break;
+
+    case port_fec_type_t::PORT_FEC_TYPE_NONE:
+    default:
+        set_fec_type(port_fec_type_t::PORT_FEC_TYPE_FC);
+        break;
+    }
+    SDK_TRACE_DEBUG("Trying fec_type %u", fec_type());
+    port_mac_cfg_fec(fec_type());
 }
 
 sdk_ret_t
@@ -1641,7 +1711,7 @@ port::port_link_sm_retry_enabled(bool serdes_reset)
     }
     this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_ENABLED);
 
-    //make the an/fixed mode toggle here - 25G-CU only
+    // make the an/fixed mode toggle here - 25G-CU only
     toggle_negotiation_mode();
 
     return SDK_RET_OK;

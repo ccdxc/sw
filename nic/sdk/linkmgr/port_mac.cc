@@ -445,6 +445,21 @@ mac_global_init(uint32_t inst_id)
 }
 
 static int
+mac_cfg_fec_hw (mac_info_t *mac_info)
+{
+    int          chip_id       = 0;
+    uint32_t     inst_id       = mac_info->mac_id;
+    uint32_t     start_lane    = mac_info->mac_ch;
+    uint32_t     num_lanes     = mac_info->num_lanes;
+    uint32_t     fec           = mac_info->fec;
+
+    for (uint32_t ch = start_lane; ch < start_lane + num_lanes; ch++) {
+        cap_mx_set_fec(chip_id, inst_id, ch, fec);
+    }
+    return 0;
+}
+
+static int
 mac_cfg_hw (mac_info_t *mac_info)
 {
     int          chip_id       = 0;
@@ -749,6 +764,12 @@ mac_tx_drain_hw (uint32_t mac_inst, uint32_t mac_ch, bool drain)
 //----------------------------------------------------------------------------
 
 static int
+mac_mgmt_cfg_fec_hw (mac_info_t *mac_info)
+{
+    return 0;
+}
+
+static int
 mac_mgmt_cfg_hw (mac_info_t *mac_info)
 {
     int          chip_id       = 0;
@@ -972,6 +993,12 @@ mac_cfg_default (mac_info_t *mac_info)
 }
 
 static int
+mac_cfg_fec_default (mac_info_t *mac_info)
+{
+    return 0;
+}
+
+static int
 mac_enable_default (uint32_t port_num, uint32_t speed,
                     uint32_t num_lanes, bool enable)
 {
@@ -1069,6 +1096,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     platform_type_t platform_type = cfg->platform_type;
 
     mac_fn->mac_cfg            = &mac_cfg_default;
+    mac_fn->mac_cfg_fec        = &mac_cfg_fec_default;
     mac_fn->mac_enable         = &mac_enable_default;
     mac_fn->mac_soft_reset     = &mac_soft_reset_default;
     mac_fn->mac_stats_reset    = &mac_stats_reset_default;
@@ -1085,6 +1113,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     mac_fn->mac_tx_drain       = &mac_tx_drain_default;
 
     mac_mgmt_fn->mac_cfg            = &mac_cfg_default;
+    mac_mgmt_fn->mac_cfg_fec        = &mac_cfg_fec_default;
     mac_mgmt_fn->mac_enable         = &mac_enable_default;
     mac_mgmt_fn->mac_soft_reset     = &mac_soft_reset_default;
     mac_mgmt_fn->mac_stats_reset    = &mac_stats_reset_default;
@@ -1110,6 +1139,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     case platform_type_t::PLATFORM_TYPE_MOCK:
         // Faults and Sync is mocked
         mac_fn->mac_cfg            = &mac_cfg_hw;
+        mac_fn->mac_cfg_fec        = &mac_cfg_fec_hw;
         mac_fn->mac_enable         = &mac_enable_hw;
         mac_fn->mac_soft_reset     = &mac_soft_reset_hw;
         mac_fn->mac_stats_reset    = &mac_stats_reset_hw;
@@ -1123,6 +1153,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_tx_drain       = &mac_tx_drain_hw;
 
         mac_mgmt_fn->mac_cfg          = &mac_mgmt_cfg_hw;
+        mac_mgmt_fn->mac_cfg_fec      = &mac_mgmt_cfg_fec_hw;
         mac_mgmt_fn->mac_enable       = &mac_mgmt_enable_hw;
         mac_mgmt_fn->mac_soft_reset   = &mac_mgmt_soft_reset_hw;
         mac_mgmt_fn->mac_faults_get   = &mac_mgmt_faults_get_hw;
@@ -1137,6 +1168,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
     case platform_type_t::PLATFORM_TYPE_ZEBU:
     case platform_type_t::PLATFORM_TYPE_HW:
         mac_fn->mac_cfg            = &mac_cfg_hw;
+        mac_fn->mac_cfg_fec        = &mac_cfg_fec_hw;
         mac_fn->mac_enable         = &mac_enable_hw;
         mac_fn->mac_soft_reset     = &mac_soft_reset_hw;
         mac_fn->mac_stats_reset    = &mac_stats_reset_hw;
@@ -1153,6 +1185,7 @@ port_mac_fn_init(linkmgr_cfg_t *cfg)
         mac_fn->mac_tx_drain       = &mac_tx_drain_hw;
 
         mac_mgmt_fn->mac_cfg         = &mac_mgmt_cfg_hw;
+        mac_mgmt_fn->mac_cfg_fec     = &mac_mgmt_cfg_fec_hw;
         mac_mgmt_fn->mac_enable      = &mac_mgmt_enable_hw;
         mac_mgmt_fn->mac_soft_reset  = &mac_mgmt_soft_reset_hw;
         mac_mgmt_fn->mac_faults_get  = &mac_mgmt_faults_get_hw;

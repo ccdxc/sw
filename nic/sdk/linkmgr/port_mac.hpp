@@ -42,6 +42,7 @@ typedef struct mac_info_s {
 
 typedef struct mac_fn_s_ {
     int (*mac_cfg)(mac_info_t *mac_info);
+    int (*mac_cfg_fec)(mac_info_t *mac_info);
     int (*mac_enable)(uint32_t port_num, uint32_t speed,
                       uint32_t num_lanes, bool enable);
     int (*mac_soft_reset)(uint32_t port_num, uint32_t speed,
