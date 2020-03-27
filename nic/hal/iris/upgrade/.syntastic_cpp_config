@@ -1,7 +1,0 @@
--I ../../../..
--I ../../../sdk
--I ../../../sdk/include
--I ../../../build/aarch64/iris
--I ../../../hal/third-party/spdlog/include
--I ../../../sdk/third-party/libev/include
--std=c++11

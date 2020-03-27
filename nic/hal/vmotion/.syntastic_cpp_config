@@ -1,9 +1,0 @@
--I ../../..
--I ../../sdk
--I ../../sdk/third-party/libev/include
--I ../../sdk/include
--I ../third-party/spdlog/include
--I ../../build/aarch64/iris
--I ../../build/x86_64/iris
--D__FNAME__
--std=c++11

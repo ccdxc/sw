@@ -1,6 +1,0 @@
--I ../..
--I ../sdk
--I ../sdk/include
--I ../hal/third-party/spdlog/include
--I ../bazel-sw/external/com_github_google_protobuf
--std=c++11

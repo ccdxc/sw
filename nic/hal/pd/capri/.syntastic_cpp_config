@@ -1,8 +1,0 @@
--I ../../../capsim/lib/libcapisa/include
--I ../../../capsim/lib/libmpuobj/include
--I ../../../hal/third-party/spdlog/include
--I ../../../include
--I ../../../..
--I ../../../../nic/sdk/include
--I ../../../../nic/sdk
--std=c++11

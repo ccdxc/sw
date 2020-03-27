@@ -1,5 +1,0 @@
--I ../../../..
--I ../../../third-party/spdlog/include
--I ../../../bazel-sw/external/com_github_google_protobuf
--I ../../../../nic/third-party/googletest-release-1.8.0/googletest/include
--std=c++11

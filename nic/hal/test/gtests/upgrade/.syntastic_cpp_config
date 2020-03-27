@@ -1,9 +1,0 @@
--I ../../../../..
--I ../../../../sdk/third-party/googletest-release-1.8.0/googletest/include
--I ../../../../sdk
--I ../../../../sdk/third-party/libev/include
--I ../../../../sdk/include
--I ../../../../build/x86_64/iris
--I ../../../../build/aarch64/iris
--I ../../../../hal/third-party/spdlog/include
--std=c++11

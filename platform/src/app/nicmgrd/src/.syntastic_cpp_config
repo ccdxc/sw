@@ -1,9 +1,0 @@
--I ../../../../..
--I ../../../../../nic/hal/third-party/spdlog/include
--I ../../../../../nic/sdk
--I ../../../../../nic/sdk/platform/devapi
--I ../../../../../nic/build/x86_64/iris
--I ../../../../../nic/build/aarch64/iris
--I ../../../../../nic/sdk/third-party/libev/include
--D__FNAME__
--std=c++11

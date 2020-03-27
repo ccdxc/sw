@@ -1,9 +1,0 @@
--I ../../../../include
--I ../../../../gen
--I ../../../../..
--I ../../../../../nic/sdk
--I ../../../../../nic/sdk/include
--I ../../../../third-party/crc32
--I ../../../../hal/third-party/spdlog/include
--I ../../../../third-party/googletest-release-1.8.0/googletest/include
--std=c++11

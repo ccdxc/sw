@@ -1,7 +1,0 @@
--I ../../include
--I ../src/
--I ../../gen/
--I ../pd/common/
--I ../../third-party/googletest-release-1.8.0/googletest/include
--I ../../third-party/spdlog/include
--std-c++11

@@ -1,9 +1,0 @@
--I ../..
--I ../sdk
--I ../sdk/third-party/libev/include
--I ../sdk/include
--I third-party/spdlog/include
--I ../build/aarch64/iris
--I ../bazel-sw/external/com_github_google_protobuf
--D__FNAME__
--std=c++11
