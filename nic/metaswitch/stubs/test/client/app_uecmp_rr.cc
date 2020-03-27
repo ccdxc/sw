@@ -131,7 +131,11 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false, bool updat
             pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index_2);
         } else {
             pds_if.key = test::uuid_from_objid(k_l3_if_id);
-            pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
+            if (update) {
+                pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = ipv4;
+            } else {
+                pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
+            }
             pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index);
         }
         pds_if.type = PDS_IF_TYPE_L3;
@@ -1046,6 +1050,14 @@ int main(int argc, char** argv)
         } else if (!strcmp(argv[1], "bgp-upeer-passwd-reset")) {
             // First underlay peer
             create_bgp_peer_proto_grpc();
+            return 0;
+        } else if (!strcmp(argv[1], "if-update1")) {
+            // Update
+            create_intf_proto_grpc(false, false, true, 0x05050505);
+            return 0;
+        } else if (!strcmp(argv[1], "if-update2")) {
+            // Update
+            create_intf_proto_grpc(false, false, true, g_test_conf_.local_ip_addr);
             return 0;
         }
     }

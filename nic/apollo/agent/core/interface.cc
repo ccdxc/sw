@@ -14,9 +14,10 @@ interface_create (pds_if_spec_t *spec,
                   pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
-
-    if (agent_state::state()->device()->overlay_routing_en) {
-        // call the metaswitch api
+    if ((spec->type == PDS_IF_TYPE_L3) ||
+        (spec->type == PDS_IF_TYPE_LOOPBACK)) {
+        // L3 and loopback interfaces are always sent to control-plane
+        // irrespective of overlay routing mode
         if ((ret = pds_ms::interface_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create interface {}, err {}",
                           spec->key.str(), ret);
@@ -35,7 +36,6 @@ interface_create (pds_if_spec_t *spec,
             return ret;
         }
     }
-
     return SDK_RET_OK;
 }
 
@@ -45,8 +45,10 @@ interface_update (pds_if_spec_t *spec,
 {
     sdk_ret_t ret;
 
-    if (agent_state::state()->device()->overlay_routing_en) {
-        // call the metaswitch api
+    if ((spec->type == PDS_IF_TYPE_L3) ||
+        (spec->type == PDS_IF_TYPE_LOOPBACK)) {
+        // L3 and loopback interfaces are always sent to control-plane
+        // irrespective of overlay routing mode
         if ((ret = pds_ms::interface_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update interface {}, err {}",
                           spec->key.str(), ret);
@@ -74,27 +76,27 @@ interface_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
-    if (agent_state::state()->device()->overlay_routing_en) {
-        // call the metaswitch api
-        if ((ret = pds_ms::interface_delete(key, bctxt)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to delete interface {}, err {}",
-                          key->str(), ret);
-            return ret;
-        }
-    } else if (!agent_state::state()->pds_mock_mode()) {
+    // attempt to delete from control-plane
+    ret = pds_ms::interface_delete(key, bctxt);
+
+    if (ret == SDK_RET_ENTRY_NOT_FOUND) {
+        // if this interface is not found in control-plane then
+        // it might be a non-L3, non-loopback interface 
+        PDS_TRACE_DEBUG("Deleting non-controlplane interface {}", key->str());
+
         pds_if_info_t info;
         if (pds_if_read(key, &info) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete interface {}, interface not found",
                           key->str());
             return sdk::SDK_RET_ENTRY_EXISTS;
         }
-        if ((ret = pds_if_delete(key, bctxt)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to delete interface {}, err {}",
-                          key->str(), ret);
-            return ret;
-        }
+        ret = pds_if_delete(key, bctxt);
     }
-
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to delete interface {}, err {}",
+                      key->str(), ret);
+        return ret;
+    }
     return SDK_RET_OK;
 }
 

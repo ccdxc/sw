@@ -22,8 +22,10 @@ void underlay_ecmp_ips_feeder_t::init(std::vector<nhinfo_t>&& nhs) {
     uint32_t l3_if = 200; // Dummy number used to generate L3If UUId
     auto state_ctxt = pds_ms::state_t::thread_context();
     for (auto& nhi: nhs) {
-        auto l3_if_uuid = pds_ms::msidx2pdsobjkey(l3_if);
-        auto new_if_obj = new pds_ms::if_obj_t(nhi.l3_ifindex, l3_if_uuid);
+        // Form a dummy if spec
+        pds_if_spec_t spec = {0};
+        spec.key = pds_ms::msidx2pdsobjkey(l3_if);
+        auto new_if_obj = new pds_ms::if_obj_t(nhi.l3_ifindex, spec);
         state_ctxt.state()->if_store().add_upd(nhi.l3_ifindex, new_if_obj);
         ms_iflist.push_back(nhi.l3_ifindex);
         ++ l3_if;

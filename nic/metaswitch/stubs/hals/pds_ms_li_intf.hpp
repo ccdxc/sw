@@ -22,10 +22,13 @@ extern "C"
 
 namespace pds_ms {
 
+sdk_ret_t li_intf_update_pds_ipaddr (NBB_ULONG ms_ifindex);
+
 class li_intf_t {
 public:    
-   NBB_BYTE handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd);
-   void handle_delete(NBB_ULONG phy_port_ifindex);
+    NBB_BYTE handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd);
+    void handle_delete(NBB_ULONG phy_port_ifindex);
+    sdk_ret_t update_pds_ipaddr(NBB_ULONG ms_ifindex);
 
 private:
     struct ips_info_t {
@@ -49,11 +52,13 @@ private:
 
 private:
     bool cache_new_obj_in_cookie_(void);
-    pds_batch_ctxt_guard_t make_batch_pds_spec_(void);
+    pds_batch_ctxt_guard_t make_batch_pds_spec_(bool async=true);
     void fetch_store_info_(pds_ms::state_t* state);
     void parse_ips_info_(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd);
     pds_if_spec_t make_pds_if_spec_(void);
     pds_obj_key_t make_pds_if_key_(void);
+    pds_batch_ctxt_guard_t prepare_pds(state_t::context_t& state_ctxt,
+                                       bool async = true);
 };
 
 } // End namespace

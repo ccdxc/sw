@@ -140,39 +140,40 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
 }
 
 pds_obj_key_t li_intf_t::make_pds_if_key_(void) {
-    return store_info_.phy_port_if_obj->phy_port_properties().l3_if_uuid;
+    return store_info_.phy_port_if_obj->phy_port_properties().l3_if_spec.key;
 }
 
 pds_if_spec_t li_intf_t::make_pds_if_spec_(void) {
-    pds_if_spec_t spec = {0};
-    spec.key = make_pds_if_key_();
-    if (ips_info_.switchport) {
-        // Create non L3 interface in HAL
-        spec.type = PDS_IF_TYPE_NONE;
-    } else {
-        spec.type = PDS_IF_TYPE_L3;
+    pds_if_spec_t spec =
+        store_info_.phy_port_if_obj->phy_port_properties().l3_if_spec;
+    // TODO: Temporarily convert IPv4 to host-order before pushing to HAL.
+    // Permanent fix involves pushing it in host-order from gRPC Client
+    // and convert to network-order before configuring Metaswitch.
+    auto& ip_addr = spec.l3_if_info.ip_prefix.addr;
+    if (ip_addr.af == IP_AF_IPV4) {
+        ip_addr.addr.v4_addr = ntohl(ip_addr.addr.v4_addr);
     }
     auto& port_prop = store_info_.phy_port_if_obj->phy_port_properties();
     spec.admin_state =
         (port_prop.admin_state) ? PDS_IF_STATE_UP : PDS_IF_STATE_DOWN;
-
-    auto ifindex = ms_to_pds_eth_ifindex (ips_info_.ifindex);
-    spec.l3_if_info.port = api::uuid_from_objid(ifindex);
-
-    PDS_TRACE_INFO("Populate PDS IfSpec MS L3IfIndex 0x%x PDS EthIfIndex 0x%x L3 UUID %s Port UUID %s",
-                   ips_info_.ifindex, ifindex, spec.key.str(),
-                   spec.l3_if_info.port.str());
     memcpy (spec.l3_if_info.mac_addr, port_prop.mac_addr, ETH_ADDR_LEN);
+
+    PDS_TRACE_INFO("Populate PDS IfSpec MS L3IfIndex 0x%x L3 UUID %s"
+                   " Port UUID %s IPPrefix %s",
+                   ips_info_.ifindex, spec.key.str(),
+                   spec.l3_if_info.port.str(), ippfx2str(&spec.l3_if_info.ip_prefix));
     return spec;
 }
 
-pds_batch_ctxt_guard_t li_intf_t::make_batch_pds_spec_(void) {
+pds_batch_ctxt_guard_t li_intf_t::make_batch_pds_spec_(bool async) {
     pds_batch_ctxt_guard_t bctxt_guard_;
 
-    SDK_ASSERT(cookie_uptr_); // Cookie should not be empty
-    pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH, PDS_BATCH_PARAMS_ASYNC,
+    // Cookie should not be empty in case of async
+    SDK_ASSERT(!async || cookie_uptr_);
+    pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH, 
+                           (async) ? PDS_BATCH_PARAMS_ASYNC : false,
                            pds_ms::hal_callback,
-                           cookie_uptr_.get()};
+                           (async) ? cookie_uptr_.get() : nullptr};
     auto bctxt = pds_batch_start(&bp);
     if (unlikely (!bctxt)) {
         throw Error(std::string("PDS Batch Start failed for MS If ")
@@ -204,6 +205,17 @@ pds_batch_ctxt_guard_t li_intf_t::make_batch_pds_spec_(void) {
         }
     }
     return bctxt_guard_;
+}
+
+pds_batch_ctxt_guard_t li_intf_t::prepare_pds(state_t::context_t& state_ctxt,
+                                             bool async) {
+
+    auto pds_bctxt_guard = make_batch_pds_spec_(async); 
+
+    // If we have batched multiple IPS earlier, flush it now
+    // Cannot add Interface Create/Update to an existing batch
+    state_ctxt.state()->flush_outstanding_pds_batch();
+    return pds_bctxt_guard;
 }
 
 NBB_BYTE li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
@@ -239,11 +251,7 @@ NBB_BYTE li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ip
             return rc;
         }
 
-        pds_bctxt_guard = make_batch_pds_spec_();
-        // If we have batched multiple IPS earlier flush it now
-        // Cannot add a Intf create to an existing batch
-        state_ctxt.state()->flush_outstanding_pds_batch();
-
+        pds_bctxt_guard = prepare_pds(state_ctxt);
     } // End of state thread_context
       // Do Not access/modify global state after this
 
@@ -322,4 +330,53 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
     PDS_TRACE_INFO ("MS If 0x%lx: Delete IPS no-op", ips_info_.ifindex);
 }
 
+sdk_ret_t li_intf_t::update_pds_ipaddr(NBB_ULONG ms_ifindex) {
+    pds_batch_ctxt_guard_t  pds_bctxt_guard;
+    {
+        // Only L3 interface address can be updated. Send the current
+        // interface address to Metaswitch. If address is same then metaswitch
+        // will treat it as a no-op
+        auto state_ctxt = pds_ms::state_t::thread_context();
+        auto if_obj = state_ctxt.state()->if_store().get(ms_ifindex);
+        if (if_obj == nullptr) {
+            return SDK_RET_OK;
+        }
+        auto& phy_port_prop = if_obj->phy_port_properties();
+        if (!phy_port_prop.hal_created) {
+            PDS_TRACE_DEBUG("MS IfIndex 0x Ignore IP Update before HAL Create", 
+                            ms_ifindex);
+            return SDK_RET_OK;
+        }
+        PDS_TRACE_DEBUG("MS IfIndex 0x IP update", ms_ifindex);
+
+        ips_info_.ifindex = ms_ifindex;
+        store_info_.phy_port_if_obj = if_obj;
+        pds_bctxt_guard = prepare_pds(state_ctxt, false /* synchronous */);
+
+        // This is a synchronous batch commit.
+        // Ensure that state lock is released to avoid blocking NBASE thread
+    } // End of state thread_context. Do Not access/modify global state
+
+    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    if (unlikely (ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR ("MS IfIndex 0x%x: Add/Upd IP address Batch commit"
+                       "failed %d", ips_info_.ifindex, ret);
+        return ret;
+    }
+
+    PDS_TRACE_DEBUG ("MS IfIndex 0x%x: Add/Upd IP address Batch commit successful",
+                     ips_info_.ifindex);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t li_intf_update_pds_ipaddr (NBB_ULONG ms_ifindex)
+{
+    try {
+        li_intf_t intf;
+        return intf.update_pds_ipaddr(ms_ifindex);
+    } catch (Error& e) {
+        PDS_TRACE_ERR ("Interface IP address Update processing failed %s", e.what());
+        return SDK_RET_ERR;
+    }
+}
 } // End namespace

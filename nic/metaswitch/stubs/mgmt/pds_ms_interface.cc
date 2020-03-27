@@ -11,6 +11,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_li_intf.hpp"
 
 namespace pds_ms {
 
@@ -222,7 +223,7 @@ interface_uuid_alloc(const pds_obj_key_t& key, uint32_t &ms_ifindex,
 }
 
 static void
-l3_intf_create (const pds_obj_key_t& if_uuid, ms_ifindex_t ms_ifindex,
+l3_intf_create (const pds_if_spec_t* if_spec, ms_ifindex_t ms_ifindex,
                 uint32_t eth_ifindex)
 {
     auto state_ctxt = pds_ms::state_t::thread_context();
@@ -237,7 +238,7 @@ l3_intf_create (const pds_obj_key_t& if_uuid, ms_ifindex_t ms_ifindex,
         return;
     }
 
-    auto new_if_obj = new pds_ms::if_obj_t(ms_ifindex, if_uuid);
+    auto new_if_obj = new pds_ms::if_obj_t(ms_ifindex, *if_spec);
     auto& phy_port_prop = new_if_obj->phy_port_properties();
 
     auto if_name = pds_ifindex_to_ifname(eth_ifindex);
@@ -269,7 +270,7 @@ interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
             PDS_TRACE_INFO("L3 Intf Create:: UUID %s Eth[0x%X] to MS[0x%X]]",
                             spec->key.str(), eth_ifindex, ms_ifindex);
 
-            l3_intf_create(spec->key, ms_ifindex, eth_ifindex);
+            l3_intf_create(spec, ms_ifindex, eth_ifindex);
 
             // Cache Intf UUID to MS IfIndex
             interface_uuid_alloc(spec->key, ms_ifindex, eth_ifindex,
@@ -346,6 +347,29 @@ interface_delete (pds_obj_key_t* key, pds_batch_ctxt_t bctxt)
     return SDK_RET_OK;
 }
 
+static bool chk_and_upd_l3_spec_ (ms_ifindex_t ms_ifindex, pds_if_spec_t* spec)
+{
+    auto state_ctxt = pds_ms::state_t::thread_context();
+    // Check for IP address change
+    auto if_obj = state_ctxt.state()->if_store().get(ms_ifindex);
+    if (if_obj == nullptr) {
+        return false;
+    }
+    bool ip_change = false;
+    auto& port_prop = if_obj->phy_port_properties();
+    auto& old_ip_prefix = port_prop.l3_if_spec.l3_if_info.ip_prefix;
+    auto& new_ip_prefix = spec->l3_if_info.ip_prefix;
+    if (!ip_prefix_is_equal(&old_ip_prefix, &new_ip_prefix)) {
+        PDS_TRACE_DEBUG("MSIfIndex 0x%x Change in IP", ms_ifindex);
+        ip_change = true;
+    } else {
+        PDS_TRACE_DEBUG("MSIfIndex 0x%x No change in IP", ms_ifindex);
+    }
+    // Copy the spec to the store
+    port_prop.l3_if_spec = *spec;
+    return ip_change;
+}
+
 sdk_ret_t
 interface_update (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
@@ -358,9 +382,14 @@ interface_update (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
         // Fill MS IfIndex from UUID cache
         auto ifinfo = interface_uuid_fetch(spec->key);
         auto ms_ifindex = ifinfo.ms_ifindex;
-        // Only L3 interface address can be updated. Send the current
-        // interface address to Metaswitch. If address is same then metaswitch
-        // will treat it as a no-ip
+        bool ip_change = false;
+
+        if (spec->type == PDS_IF_TYPE_L3) {
+            ip_change = chk_and_upd_l3_spec_(ms_ifindex, spec);
+        }
+
+        // Send the update to Metaswitch - if there is no change in 
+        // parameters CTM will treat it as a no-op
         ret_status = process_interface_update(spec, ms_ifindex,
                                               AMB_ROW_ACTIVE, true);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
@@ -370,7 +399,9 @@ interface_update (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
                             spec->key.str(), ms_ifindex, ret_status);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
-    
+        if (ip_change) {
+            li_intf_update_pds_ipaddr(ms_ifindex);
+        }
         PDS_TRACE_DEBUG ("Intf update for UUID %s successfully processed",
                           spec->key.str());
     } catch (const Error& e) {

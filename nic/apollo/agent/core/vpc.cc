@@ -45,7 +45,10 @@ vpc_create (pds_obj_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         PDS_TRACE_ERR("Failed to create vpc {}, err {}", spec->key.str(), ret);
         return ret;
     }
-    if (agent_state::state()->device()->overlay_routing_en) {
+
+    // underlay VPC is always sent to control-plane
+    if ((agent_state::state()->device()->overlay_routing_en) ||
+        (spec->type == PDS_VPC_TYPE_UNDERLAY)) {
         // call the metaswitch api
         if ((ret = pds_ms::vpc_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create vpc {}, err {}",
@@ -100,7 +103,9 @@ vpc_update (pds_obj_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         return ret;
     }
 
-    if (agent_state::state()->device()->overlay_routing_en) {
+    // underlay VPC is always sent to control-plane
+    if ((agent_state::state()->device()->overlay_routing_en) ||
+        (spec->type == PDS_VPC_TYPE_UNDERLAY)) {
         // call the metaswitch api
         if ((ret = pds_ms::vpc_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update vpc {}, err {}",
@@ -143,7 +148,10 @@ vpc_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
         PDS_TRACE_ERR("Failed to delete vpc {}, vpc not found", key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-    if (agent_state::state()->device()->overlay_routing_en) {
+
+    // underlay VPC is always sent to control-plane
+    if ((agent_state::state()->device()->overlay_routing_en) ||
+        (spec->type == PDS_VPC_TYPE_UNDERLAY)) {
         // call the metaswitch api
         if ((ret = pds_ms::vpc_delete(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete vpc {}, err {}",
