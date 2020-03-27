@@ -53,6 +53,11 @@ namespace fte_ath {
 #define IP_PROTOCOL_TCP 0x06
 #define IP_PROTOCOL_UDP 0x11
 #define IP_PROTOCOL_ICMP 0x01
+#define IP_PROTOCOL_ICMPV6 0x3A
+
+#define IPV4_ADDR_LEN 4
+#define IPV6_ADDR_LEN 16
+#define IPV6_HDR_LEN 40
 
 // Flow direction bitmask
 #define HOST_TO_SWITCH 0x1
@@ -202,6 +207,8 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
     uint16_t ip0_offset = 0;
     uint16_t vlan_id = 0;
     uint32_t mpls_label = 0;
+    uint8_t protocol = 0;
+    uint16_t sport = 0, dport = 0;
     pds_flow_key_t *key = &(spec->key);
 
     // mbuf data starts at eth header
@@ -209,7 +216,8 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
     ip0_offset += sizeof(struct ether_hdr);
 
     if ((rte_be_to_cpu_16(eth0->ether_type) != ETHER_TYPE_VLAN) &&
-        (rte_be_to_cpu_16(eth0->ether_type) != ETHER_TYPE_IPv4)) {
+        (rte_be_to_cpu_16(eth0->ether_type) != ETHER_TYPE_IPv4) &&
+        (rte_be_to_cpu_16(eth0->ether_type) != ETHER_TYPE_IPv6)) {
         PDS_TRACE_DEBUG("Unsupported ether_type:0x%x \n",
                         rte_be_to_cpu_16(eth0->ether_type));
         return SDK_RET_INVALID_OP;
@@ -232,7 +240,8 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
     ip40 = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *, ip0_offset);
     udp0 = (struct udp_hdr *)(ip40 + 1);
 
-    if ((ip40->next_proto_id == IP_PROTOCOL_UDP) &&
+    if (((ip40->version_ihl >> 4) == 4) &&
+        (ip40->next_proto_id == IP_PROTOCOL_UDP) &&
         (rte_be_to_cpu_16(udp0->dst_port) == 0x19EB)) {
         ip0_offset += (sizeof(struct ipv4_hdr)); 
         ip0_offset += (sizeof(struct udp_hdr));
@@ -276,8 +285,6 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
     ip40 = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *, ip0_offset);
     if ((ip40->version_ihl >> 4) == 4) {
         uint32_t src_ip, dst_ip;
-        uint8_t protocol;
-        uint16_t sport = 0, dport = 0;
 
         protocol = ip40->next_proto_id;
         if ((protocol != IP_PROTOCOL_TCP) &&
@@ -290,33 +297,49 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
         src_ip = rte_be_to_cpu_32(ip40->src_addr);
         dst_ip = rte_be_to_cpu_32(ip40->dst_addr);
         key->key_type = KEY_TYPE_IPV4;
-        memcpy(key->ip_saddr, &src_ip, sizeof(uint32_t));
-        memcpy(key->ip_daddr, &dst_ip, sizeof(uint32_t));
-        key->ip_proto = protocol;
+        memcpy(key->ip_saddr, &src_ip, IPV4_ADDR_LEN);
+        memcpy(key->ip_daddr, &dst_ip, IPV4_ADDR_LEN);
 
         tcp0 = (struct tcp_hdr *) (((uint8_t *) ip40) +
                 ((ip40->version_ihl & IPV4_HDR_IHL_MASK) *
                 IPV4_IHL_MULTIPLIER));
-        if (protocol == IP_PROTOCOL_ICMP) {
-            struct icmp_hdr *icmph = ((struct icmp_hdr *)tcp0);
+    } else {
+        struct ipv6_hdr *ip60 = (struct ipv6_hdr *)ip40;
 
-            key->l4.icmp.type = icmph->icmp_type;
-            key->l4.icmp.code = icmph->icmp_code;
-            key->l4.icmp.identifier =
-                (rte_be_to_cpu_16(icmph->icmp_ident) & 0xff);
-        } else {
-            sport = rte_be_to_cpu_16(tcp0->src_port);
-            dport = rte_be_to_cpu_16(tcp0->dst_port);
-            key->l4.tcp_udp.sport = sport;
-            key->l4.tcp_udp.dport = dport;
+        protocol = ip60->proto;
+        if ((protocol != IP_PROTOCOL_TCP) &&
+            (protocol != IP_PROTOCOL_UDP) && 
+            (protocol != IP_PROTOCOL_ICMPV6)) {
+            PDS_TRACE_DEBUG("Unsupported IPV6 Proto:%u\n", protocol);
+            return SDK_RET_INVALID_OP;
         }
 
-        // TODO: To be reomved. Debug purpose
-        memcpy(&dump_flow_key, &(spec->key), sizeof(pds_flow_key_t));
-    } else {
-        PDS_TRACE_DEBUG("IPv6 support is yet to be added.\n");
-        return SDK_RET_INVALID_OP;
+        key->key_type = KEY_TYPE_IPV6;
+        sdk::lib::memrev(key->ip_saddr, ip60->src_addr, IPV6_ADDR_LEN);
+        sdk::lib::memrev(key->ip_daddr, ip60->dst_addr, IPV6_ADDR_LEN);
+
+        tcp0 = (struct tcp_hdr *) (((uint8_t *) ip60) +
+                    IPV6_HDR_LEN);
     }
+
+    key->ip_proto = protocol;
+    if ((protocol == IP_PROTOCOL_ICMP) ||
+        (protocol == IP_PROTOCOL_ICMPV6)) {
+        struct icmp_hdr *icmph = ((struct icmp_hdr *)tcp0);
+
+        key->l4.icmp.type = icmph->icmp_type;
+        key->l4.icmp.code = icmph->icmp_code;
+        key->l4.icmp.identifier =
+            (rte_be_to_cpu_16(icmph->icmp_ident) & 0xff);
+    } else {
+        sport = rte_be_to_cpu_16(tcp0->src_port);
+        dport = rte_be_to_cpu_16(tcp0->dst_port);
+        key->l4.tcp_udp.sport = sport;
+        key->l4.tcp_udp.dport = dport;
+    }
+
+    // TODO: To be reomved. Debug purpose
+    memcpy(&dump_flow_key, &(spec->key), sizeof(pds_flow_key_t));
 
     return SDK_RET_OK;
 }
@@ -389,6 +412,7 @@ fte_flow_s2h_rewrite (struct rte_mbuf *m, uint16_t ip_offset, uint16_t vnic_id)
     uint8_t *pkt_start;
     struct ether_hdr *etherh;
     struct vlan_hdr *vlanh;
+    struct ipv4_hdr *ipv4h;
     fte_s2h_sess_rewrite_t *s2h_sess_rewrite;
 
     s2h_sess_rewrite = &(g_sess_rewrite[vnic_id].s2h_sess_rewrite);
@@ -405,6 +429,11 @@ fte_flow_s2h_rewrite (struct rte_mbuf *m, uint16_t ip_offset, uint16_t vnic_id)
     vlanh->vlan_tci = (rte_be_to_cpu_16(vlanh->vlan_tci) & 0xf000);
     vlanh->vlan_tci |= (s2h_sess_rewrite->vnic_vlan & 0x0fff);
     vlanh->vlan_tci = rte_cpu_to_be_16(vlanh->vlan_tci);
+
+    ipv4h = (struct ipv4_hdr *)(vlanh + 1); 
+    if ((ipv4h->version_ihl >> 4) != 4) {
+        vlanh->eth_proto = rte_cpu_to_be_16(ETHER_TYPE_IPv6);
+    }
 
     return;
 }
@@ -654,6 +683,7 @@ fte_flow_prog (struct rte_mbuf *m)
         return ret;
     }
 
+    g_session_index++;
     fte_flow_dump();
     return ret;    
 }
