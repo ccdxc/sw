@@ -26,7 +26,6 @@ modules:
     - module:
         name    : L2L_VPC_IPV4_TCP_QTAG
         spec    : local2local.testspec
-        ignore  : True
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_VPC,Label=NETWORKING
 

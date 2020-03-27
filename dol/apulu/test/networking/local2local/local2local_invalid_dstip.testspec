@@ -102,11 +102,11 @@ session:
         trigger:
             descriptors:
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC1
-                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
-                - descriptor:
                     object  : ref://testcase/descriptors/id=DESC3
                     ring    : callback://networking/packets/GetRingFromMapping/type=remote,qid=RX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
 
         expect:
             delay    :    1
