@@ -913,7 +913,11 @@ func (naples *naplesHwNode) addNodeEntities(in *iota.Node) error {
 			if naplesCfg.Name != entityEntry.Name {
 				continue
 			}
-			if err := wload.BringUp(naplesCfg.GetNaplesIpAddress(),
+			ip := naplesCfg.NaplesIpAddress
+			if naplesCfg.NaplesSecondaryIpAddress != "" {
+				ip = naplesCfg.NaplesSecondaryIpAddress
+			}
+			if err := wload.BringUp(ip,
 				strconv.Itoa(sshPort), naplesCfg.GetNaplesUsername(), naplesCfg.GetNaplesPassword()); err != nil {
 				naples.logger.Errorf("Naples Hw entity type add failed %v", err.Error())
 				//Ignore error as runner might copy the pub key to remote entity later.
@@ -1142,6 +1146,14 @@ func (naples *naplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 					*/
 				}
 			}
+		} else {
+			//
+			naplesIPddress, err := naples.getNaplesMgmtIP(nodOSMap[in.GetOs()], naplesConfig.GetNicType(), naplesConfig.GetNicHint())
+			if err != nil {
+				msg := fmt.Sprintf("Error in reading naples mgmt IP address : %s", err.Error())
+				naples.logger.Error(msg)
+			}
+			naplesConfig.NaplesSecondaryIpAddress = naplesIPddress
 		}
 
 		for _, intf := range naplesConfig.HostIntfs {

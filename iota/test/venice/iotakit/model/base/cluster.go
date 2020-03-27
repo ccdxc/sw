@@ -967,7 +967,7 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 
 	err = sm.readNodeUUIDs(nodes)
 	if err != nil {
-		log.Infof("Reading nod uuids failed.")
+		log.Infof("Reading node uuids failed.")
 		return err
 	}
 
@@ -999,7 +999,7 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 
 				// trigger mode switch
 				for _, naples := range node.NaplesConfigs.Configs {
-					penctlNaplesURL := "http://" + naples.NaplesIpAddress
+					penctlNaplesURL := "http://" + naples.NaplesSecondaryIpAddress
 					cmd := fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network %s --controllers %s --id %s --primary-mac %s",
 						penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, modeNW, veniceIPs, naplesConfig.Name, naplesConfig.NodeUuid)
 					trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
@@ -1057,6 +1057,7 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 		} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 			return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
 		}
+
 	}
 
 	return nil

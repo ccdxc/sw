@@ -663,6 +663,7 @@ func (n *VcenterNode) ReloadNode(name string, restoreState bool, method string, 
 				}
 				dvsSpec := vmware.DVSwitchSpec{Hosts: hostSpecs,
 					Name: n.DistributedSwitch, Cluster: n.ClusterName,
+					Version:  constants.DvsVersion,
 					MaxPorts: 10,
 					Pvlans: []vmware.DvsPvlanPair{vmware.DvsPvlanPair{Primary: constants.VcenterPvlanStart,
 						Secondary: constants.VcenterPvlanStart, Type: "promiscuous"}}}

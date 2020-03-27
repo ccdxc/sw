@@ -88,6 +88,9 @@ func (sm *SysModel) enableSSHDOnNaples(nodes []*testbed.TestNode) error {
 			for _, naples := range node.NaplesConfigs.Configs {
 				//enable sshd
 				penctlNaplesURL := "http://" + naples.NaplesIpAddress
+				if naples.NaplesSecondaryIpAddress != "" {
+					penctlNaplesURL = "http://" + naples.NaplesSecondaryIpAddress
+				}
 				cmd := fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s -a %s system enable-sshd",
 					penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, constants.PenctlAuthTokenFileName)
 				trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)

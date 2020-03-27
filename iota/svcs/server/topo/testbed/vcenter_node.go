@@ -145,6 +145,7 @@ func (n *VcenterNode) initVcenter() error {
 
 	dvsSpec := vmware.DVSwitchSpec{Hosts: hostSpecs,
 		Name: n.DistributedSwitch, Cluster: n.ClusterName,
+		Version:  constants.DvsVersion,
 		MaxPorts: 100}
 
 	start := n.Node.GetVcenterConfig().PvlanStart

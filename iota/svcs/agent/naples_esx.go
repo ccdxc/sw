@@ -558,26 +558,31 @@ func (node *esxHwNode) addNaplesEntity(in *iota.Node) error {
 							return err
 						}
 					}
-
-					if naplesCfg.NaplesIpAddress == "" || strings.HasPrefix(naplesCfg.NaplesIpAddress, "169.254") {
-						if ip, err = node.setUpNaplesMgmtIP(naplesCfg.NicHint); err != nil {
-							return err
-						}
-					} else {
-						//Honor the IP address specifed by caller.
-						ip = naplesCfg.NaplesIpAddress
+					if ip, err = node.setUpNaplesMgmtIP(naplesCfg.NicHint); err != nil {
+						return err
 					}
 
-					//Send the IP back in case it is different
-					naplesCfg.NaplesIpAddress = ip
+					if naplesCfg.NaplesIpAddress == "" || strings.HasPrefix(naplesCfg.NaplesIpAddress, "169.254") {
+						//Send the IP back in case it is different
+						naplesCfg.NaplesIpAddress = ip
+					} else {
+						//Honor the IP address specifed by caller.
+						//Set the second IP as back door
+						naplesCfg.NaplesSecondaryIpAddress = ip
+					}
+
 				}
 			}
 
 			/*It is like running in a vm as its accesible only by ssh */
 			wload = Workload.NewWorkload(Workload.WorkloadTypeRemote, entityEntry.GetName(), node.name, node.logger)
 			for _, naplesCfg := range in.GetNaplesConfigs().GetConfigs() {
-				if err := wload.BringUp(naplesCfg.GetNaplesIpAddress(),
-					strconv.Itoa(sshPort), naplesCfg.GetNaplesUsername(), naplesCfg.GetNaplesPassword()); err != nil {
+
+				ip := naplesCfg.NaplesIpAddress
+				if naplesCfg.NaplesSecondaryIpAddress != "" {
+					ip = naplesCfg.NaplesSecondaryIpAddress
+				}
+				if err := wload.BringUp(ip, strconv.Itoa(sshPort), naplesCfg.GetNaplesUsername(), naplesCfg.GetNaplesPassword()); err != nil {
 					node.logger.Errorf("Naples bring up failed, ignoring %v", err.Error())
 					//return err
 				}

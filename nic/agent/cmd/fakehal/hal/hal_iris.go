@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"time"
 
@@ -445,6 +446,13 @@ func (h Hal) PortDelete(ctx context.Context, req *irisproto.PortDeleteRequestMsg
 	}, nil
 }
 
+const (
+	ifTypeShift       = 28
+	ifSlotShift       = 24
+	ifParentPortShift = 16
+	ifTypeMask        = 0xF
+)
+
 // PortGet stubbed out
 func (h Hal) PortGet(ctx context.Context, req *irisproto.PortGetRequestMsg) (*irisproto.PortGetResponseMsg, error) {
 	dat, _ := json.MarshalIndent(req, "", "  ")
@@ -463,7 +471,7 @@ func (h Hal) PortGet(ctx context.Context, req *irisproto.PortGetRequestMsg) (*ir
 					},
 				},
 				Status: &irisproto.PortStatus{
-					IfIndex: 1,
+					IfIndex: 1 << ifTypeShift,
 					LinkStatus: &irisproto.PortLinkStatus{
 						OperState: irisproto.PortOperState_PORT_OPER_STATUS_UP,
 					},
@@ -480,7 +488,7 @@ func (h Hal) PortGet(ctx context.Context, req *irisproto.PortGetRequestMsg) (*ir
 					},
 				},
 				Status: &irisproto.PortStatus{
-					IfIndex: 2,
+					IfIndex: 1 << ifTypeShift,
 					LinkStatus: &irisproto.PortLinkStatus{
 						OperState: irisproto.PortOperState_PORT_OPER_STATUS_UP,
 					},
@@ -682,11 +690,24 @@ func (h Hal) SystemGet(ctx context.Context, req *irisproto.SystemGetRequest) (*i
 
 // SystemUUIDGet Stubbed out
 func (h Hal) SystemUUIDGet(ctx context.Context, req *irisproto.Empty) (*irisproto.SystemResponse, error) {
-	dat, _ := json.MarshalIndent(req, "", "  ")
-	log.Info("Got SystemUUIDGet Request:")
-	fmt.Println(string(dat))
+
+	var dat map[string]interface{}
+	byt, err := ioutil.ReadFile("/tmp/fru.json")
+	if err != nil {
+		log.Errorf("Failed to read contents of fru.json")
+		return &irisproto.SystemResponse{
+			ApiStatus: irisproto.ApiStatus_API_STATUS_ERR,
+		}, nil
+	}
+	if err := json.Unmarshal(byt, &dat); err != nil {
+		log.Errorf("Failed to unmarshal fru.json.")
+		return &irisproto.SystemResponse{
+			ApiStatus: irisproto.ApiStatus_API_STATUS_ERR,
+		}, nil
+	}
 
 	return &irisproto.SystemResponse{
+		Uuid:      dat["mac-address"].(string),
 		ApiStatus: irisproto.ApiStatus_API_STATUS_OK,
 	}, nil
 }

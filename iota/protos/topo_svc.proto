@@ -338,23 +338,26 @@ message NaplesConfig {
     // Naples IP in hw mode.
     string naples_ip_address     = 6;
 
-    // Naples username in hw mode.
-    string naples_username       = 7;
+    // Naples IP in hw mode.
+    string naples_secondary_ip_address  = 7;
 
     // Naples username in hw mode.
-    string naples_password       = 8;
+    string naples_username       = 8;
+
+    // Naples username in hw mode.
+    string naples_password       = 9;
 
     // Nic type
-    string nic_type              = 9;
+    string nic_type              = 10;
 
     // hint, if there are more than 1 naples in system
-    string nic_hint             = 10;
+    string nic_hint             = 11;
 
     // nodeuuid return as part read
-    string node_uuid            = 11;
+    string node_uuid            = 12;
 
     // unique Identifier
-    string name                 = 12;
+    string name                 = 13;
 }
 
 message NaplesConfigs {

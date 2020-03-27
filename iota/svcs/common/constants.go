@@ -175,6 +175,8 @@ const (
 	VcenterPvlanPairCount = 64
 
 	VcenterPvlanStart = 2048
+
+	DvsVersion = "6.6.0"
 )
 
 // incrementing constants. List all constants whose value you don't care here

@@ -1150,6 +1150,7 @@ func (tb *TestBed) AddNodes(personality iota.PersonalityType, names []string) ([
 				node.NodeUUID = append(node.NodeUUID, naplesConfig.NodeUuid)
 				node.NaplesConfigs.Configs[iter].NodeUuid = naplesConfig.NodeUuid
 				node.NaplesConfigs.Configs[iter].NaplesIpAddress = naplesConfig.NaplesIpAddress
+				node.NaplesConfigs.Configs[iter].NaplesSecondaryIpAddress = naplesConfig.NaplesSecondaryIpAddress
 			}
 		}
 
@@ -1842,6 +1843,7 @@ func (tb *TestBed) setupTestBed() error {
 						node.NodeUUID = append(node.NodeUUID, naplesConfig.NodeUuid)
 						node.NaplesConfigs.Configs[iter].NodeUuid = naplesConfig.NodeUuid
 						node.NaplesConfigs.Configs[iter].NaplesIpAddress = naplesConfig.NaplesIpAddress
+						node.NaplesConfigs.Configs[iter].NaplesSecondaryIpAddress = naplesConfig.NaplesSecondaryIpAddress
 						node.HostIntfs[convertToVeniceFormatMac(naplesConfig.NodeUuid)] = naplesConfig.HostIntfs
 					}
 				} else if IsThirdParty(node.Personality) {

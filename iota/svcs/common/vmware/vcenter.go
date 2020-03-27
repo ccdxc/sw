@@ -688,6 +688,7 @@ type DVSwitchSpec struct {
 	MaxPorts   int32
 	Pvlans     []DvsPvlanPair
 	PortGroups []DvsPortGroup
+	Version    string
 }
 
 type DvsPvlanPair struct {
@@ -1547,6 +1548,9 @@ func (dc *DataCenter) AddDvs(vspec DVSwitchSpec) error {
 					NumStandalonePorts: vspec.MaxPorts,
 				},
 				PvlanConfigSpec: pvlanConfigSpec,
+			},
+			ProductInfo: &types.DistributedVirtualSwitchProductSpec{
+				Version: vspec.Version,
 			},
 		}
 
