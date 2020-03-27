@@ -12,7 +12,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/nodewatcher"
+	"github.com/pensando/sw/venice/utils/nodemetrics"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
@@ -34,7 +34,7 @@ type metricsService struct {
 	ctx         context.Context
 	cancelFn    context.CancelFunc
 	metrics     *types.ClusterMetrics
-	nodeWatcher nodewatcher.NodeInterface
+	nodeMetrics nodemetrics.NodeInterface
 }
 
 // NewMetricsService returns a new metricsService instance
@@ -79,12 +79,12 @@ func (ms *metricsService) Start() error {
 	nodeMeta := &cluster.Node{}
 	nodeMeta.Defaults("all")
 	nodeMeta.Name = ms.nodeID
-	nodeWatcher, err := nodewatcher.NewNodeWatcher(ms.ctx, nodeMeta, ms.tsdbOpts.SendInterval, log.WithContext("pkg", "nodewatcher"))
+	nm, err := nodemetrics.NewNodeMetrics(ms.ctx, nodeMeta, ms.tsdbOpts.SendInterval, log.WithContext("pkg", "nodemetrics"))
 	if err != nil {
 		return fmt.Errorf("Error starting node watcher: %v", err)
 	}
 
-	ms.nodeWatcher = nodeWatcher
+	ms.nodeMetrics = nm
 	ms.running = true
 	log.Infof("Started metrics service")
 	return nil
@@ -96,7 +96,7 @@ func (ms *metricsService) Stop() {
 	defer ms.Unlock()
 	ms.running = false
 	log.Infof("Stopping metrics service")
-	ms.nodeWatcher.Close()
+	ms.nodeMetrics.Close()
 	if ms.cancelFn != nil {
 		ms.cancelFn()
 	}

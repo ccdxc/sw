@@ -8,7 +8,7 @@ import (
 
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/nodewatcher"
+	"github.com/pensando/sw/venice/utils/nodemetrics"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -23,7 +23,7 @@ func TestMetricsService(t *testing.T) {
 	tsdb.Cleanup()
 	MetricsSendInterval = testSendInterval
 	dbName = tmock.DbName
-	nodewatcher.SetMinimumFrequency(testSendInterval)
+	nodemetrics.SetMinimumFrequency(testSendInterval)
 
 	ms := NewMetricsService("testNode", "testCluster", nil) // no resolver
 	Assert(t, !ms.IsRunning(), "MS should not be running before Start() is called")
@@ -65,7 +65,7 @@ func TestMetricsService(t *testing.T) {
 	time.Sleep(2 * testSendInterval)
 
 	nodeTags := map[string]string{"Tenant": "default", "Namespace": "default", "Kind": "Node", "Name": "testNode"}
-	// these numbers must match the nodeMetrics definition in sw/venice/utils/nodewatcher/nodewatcher.go
+	// these numbers must match the nodeMetrics definition in sw/venice/utils/nodemetrics/nodemetrics.go
 	numInts := 0
 	numFloats := 12
 	numBools := 0

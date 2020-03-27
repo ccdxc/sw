@@ -20,7 +20,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/nodewatcher"
+	"github.com/pensando/sw/venice/utils/nodemetrics"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/systemd"
 )
@@ -119,8 +119,8 @@ func main() {
 		if err == nil {
 			log.Infof("Overriding default Cluster Metrics Send Interval. New value: %v", cmsi)
 			services.MetricsSendInterval = cmsi
-			if cmsi < nodewatcher.GetMinimumFrequency() {
-				nodewatcher.SetMinimumFrequency(cmsi)
+			if cmsi < nodemetrics.GetMinimumFrequency() {
+				nodemetrics.SetMinimumFrequency(cmsi)
 			}
 		} else {
 			log.Errorf("Invalid ClusterMetricsSendInterval: %v", cmsiOpt)

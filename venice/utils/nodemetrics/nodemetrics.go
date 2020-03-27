@@ -1,6 +1,6 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
-package nodewatcher
+package nodemetrics
 
 import (
 	"context"
@@ -46,8 +46,8 @@ type nodeMetrics struct {
 	InterfaceTxBytes api.Gauge
 }
 
-// nodewatcher monitors system resources. It can run on Venice Nodes or on NAPLES.
-type nodewatcher struct {
+// nodemetrics monitors system resources. It can run on Venice Nodes or on NAPLES.
+type nodemetrics struct {
 	ctx       context.Context
 	cancel    context.CancelFunc
 	wg        sync.WaitGroup
@@ -57,14 +57,14 @@ type nodewatcher struct {
 	logger    log.Logger
 }
 
-// NodeInterface provides functions to manage nodewatcher
+// NodeInterface provides functions to manage nodemetrics
 type NodeInterface interface {
 	Close()
 }
 
-// NewNodeWatcher starts a watcher that monitors system resources.
+// NewNodeMetrics starts a watcher that monitors system resources.
 // TSDB must have been initialized with tsdb.Init() before calling this function
-func NewNodeWatcher(pctx context.Context, obj runtime.Object, frequency time.Duration, logger log.Logger) (NodeInterface, error) {
+func NewNodeMetrics(pctx context.Context, obj runtime.Object, frequency time.Duration, logger log.Logger) (NodeInterface, error) {
 	if frequency < minFrequency {
 		return nil, fmt.Errorf("minimum frequency is %v, got %v", minFrequency, frequency)
 	}
@@ -77,7 +77,7 @@ func NewNodeWatcher(pctx context.Context, obj runtime.Object, frequency time.Dur
 	}
 
 	ctx, cancel := context.WithCancel(pctx)
-	w := &nodewatcher{
+	w := &nodemetrics{
 		ctx:       ctx,
 		cancel:    cancel,
 		frequency: frequency,
@@ -96,13 +96,13 @@ func NewNodeWatcher(pctx context.Context, obj runtime.Object, frequency time.Dur
 }
 
 // Close stops node watcher
-func (w *nodewatcher) Close() {
+func (w *nodemetrics) Close() {
 	w.cancel()
 	w.wg.Wait()
 }
 
 // periodically updates the system metrics.
-func (w *nodewatcher) periodicUpdate(ctx context.Context) {
+func (w *nodemetrics) periodicUpdate(ctx context.Context) {
 	defer w.wg.Done()
 	for {
 		select {

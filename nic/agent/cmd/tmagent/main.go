@@ -14,7 +14,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/venice/utils/nodewatcher"
+	"github.com/pensando/sw/venice/utils/nodemetrics"
 
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	dnetproto "github.com/pensando/sw/nic/agent/protos/generated/delphi/netproto/delphi"
@@ -40,7 +40,7 @@ type TelemetryAgent struct {
 	resolverClient resolver.Interface
 	mode           string
 	restServer     *restapi.RestServer
-	nodewatcher    nodewatcher.NodeInterface
+	nodeMetrics    nodemetrics.NodeInterface
 }
 
 type service struct {
@@ -144,8 +144,8 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.DistributedServiceCar
 		}
 
 		// stop node watcher
-		if s.tmagent.nodewatcher != nil {
-			s.tmagent.nodewatcher.Close()
+		if s.tmagent.nodeMetrics != nil {
+			s.tmagent.nodeMetrics.Close()
 		}
 
 		// stop metrics
@@ -179,12 +179,12 @@ func (ta *TelemetryAgent) reportMetrics(rc resolver.Interface, dclient clientApi
 		},
 	}
 
-	nodeWatcher, err := nodewatcher.NewNodeWatcher(ta.ctx, node, reportInterval, log.WithContext("pkg", "nodewatcher"))
+	nm, err := nodemetrics.NewNodeMetrics(ta.ctx, node, reportInterval, log.WithContext("pkg", "nodemetrics"))
 	if err != nil {
 		return err
 	}
 
-	ta.nodewatcher = nodeWatcher
+	ta.nodeMetrics = nm
 
 	// report delphi metrics
 	ta.restServer.ReportMetrics(reportInterval, dclient)

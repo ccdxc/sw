@@ -79,7 +79,7 @@ import (
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/nodewatcher"
+	"github.com/pensando/sw/venice/utils/nodemetrics"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/strconv"
@@ -729,9 +729,9 @@ func (it *veniceIntegSuite) startAgent(c *check.C, veniceURL string) {
 		it.snics = append(it.snics, &snic)
 
 		if i == 0 { // start only 1 instance
-			_, err = nodewatcher.NewNodeWatcher(it.ctx, node, 10*time.Second, it.logger)
+			_, err = nodemetrics.NewNodeMetrics(it.ctx, node, 10*time.Second, it.logger)
 			if err != nil {
-				log.Fatalf("Error creating NodeWatcher. Err: %v", err)
+				log.Fatalf("Error creating nodemetrics. Err: %v", err)
 			}
 
 			tpState, err := tmstate.NewTpAgent(it.ctx, globals.AgentRESTPort)
