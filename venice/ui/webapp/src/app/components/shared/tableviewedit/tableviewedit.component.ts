@@ -18,7 +18,7 @@ import { TableMenuItem } from '../tableheader/tableheader.component';
 import { TableUtility } from './tableutility';
 import { LocalSearchRequest, AdvancedSearchComponent } from '../advanced-search/advanced-search.component';
 import { SafeStylePipe } from '../Pipes/SafeStyle.pipe';
-import { AbstractControl } from '@angular/forms';
+import { AbstractControl, ValidatorFn, ValidationErrors } from '@angular/forms';
 
 /**
  * Table view edit component provides an easy way for other pages
@@ -745,6 +745,8 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
   @Input() objectData: I;
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
+  isSingleton: boolean = false;
+
   oldButtons: ToolbarButton[] = [];
 
   abstract getClassName(): string;
@@ -833,7 +835,8 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
     const policy: I = this.getObjectValues();
     let handler: Observable<{ body: I | IApiStatus | Error, statusCode: number }>;
 
-    if (this.isInline) {
+    // If object is a singleton and the object already exists, we use updateObject(xx).
+    if (this.isInline || (this.isSingleton && this.objectData != null)) {
       // the name is gone when we call getFormGroupValues
       // This is beacuse we disabled it in the form group to stop the user from editing it.
       // When you disable an angular control, in doesn't show up when you get the value of the group
@@ -849,7 +852,8 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
 
     handler.subscribe(
       (response) => {
-        if (this.isInline) {
+        // in edit mode or isSingleton, use update message.
+        if (this.isInline || this.isSingleton) {
           this.controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, this.generateUpdateSuccessMsg(policy));
           this.onSaveSuccess(false);
         } else {
@@ -906,6 +910,45 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
     });
   }
 
+  isFieldEmpty(field: AbstractControl): boolean {
+    return Utility.isEmpty(field.value);
+  }
+
+  /**
+   * Utility function to check whether input for "timeout" field has value input.
+   * @param fieldName
+   */
+  isTimeoutValid(fieldName: string): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const val: string = control.value;
+      if (!val) {
+        return null;
+      }
+      if (!Utility.isTimeoutValid(val)) {
+        return {
+          [fieldName]: {
+            required: false,
+            message: 'Invalid time out value. Only h, m, s, ms, us, and ns are allowed'
+          }
+        };
+      }
+      return null;
+    };
+  }
+
+  /**
+   * Helper function to add an validator to a form control
+   * @param ctrl
+   * @param validator
+   */
+  addFieldValidator(ctrl: AbstractControl, validator: ValidatorFn) {
+    if (!ctrl.validator) {
+      ctrl.setValidators([validator]);
+    } else {
+      // check if ctrl.validator
+      (Array.isArray(ctrl.validator)) ? ctrl.setValidators([...ctrl.validator, validator]) : ctrl.setValidators([ctrl.validator, validator]);
+    }
+  }
 
 
 }

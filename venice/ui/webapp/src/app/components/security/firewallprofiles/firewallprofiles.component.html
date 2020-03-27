@@ -1,0 +1,270 @@
+<app-pagebody [icon]="bodyIcon" header="Firewall Profile" class="firewallprofiles">
+  <app-tableviewedit fxLayout="column" class="firewallprofiles-widget" [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand" [data]="dataObjects" [cols]="cols"
+                     [createTemplate]="createTemplate"
+                     [captionTemplate]="captionTemplate">
+  </app-tableviewedit>
+</app-pagebody>
+
+<!--
+This tableviewedit does not have table body on purpose. 
+.firewallprofiles-widget .ui-table-scrollable-wrapper css class:  hide table
+-->
+<ng-template #captionTemplate let-count="count">
+  <div fxFlex="auto" fxLayout="column">
+    <div *ngIf="selectedFirewallProfile" fxFlex="auto" fxLayout="row"
+         class="firewallprofiles-detail-container">
+      <ng-container *ngTemplateOutlet="selectedFirewallProfileDetail;"></ng-container>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #createTemplate>
+  <app-newfirewallprofile [@slideInOut] (formClose)="creationFormClose()"
+                          [objectData]="selectedFirewallProfile"
+                          fxFlex="none"></app-newfirewallprofile>
+</ng-template>
+
+<ng-template #selectedFirewallProfileDetail>
+  <div fxFlex *ngIf="selectedFirewallProfile">
+    <div fxFlex fxLayout="column">
+      <div class="firewallprofiles-detail-header" fxFlex fxLayout="row">
+        <a fxFlex fxLayoutAlign="start center">Details</a>
+      </div>
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">Name:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.meta.name}}</a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">Tenant:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.meta.tenant}}</a>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">Modification
+              Time:</a>
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-value">
+              {{ dateToString(this.selectedFirewallProfile.meta['mod-time'])}}
+            </a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">Creation
+              Time:</a>
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-value">
+              {{ dateToString(this.selectedFirewallProfile.meta['creation-time'])}}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="firewallprofiles-detail-header" fxFlex fxLayout="row">
+        <br /> <a fxFlex fxLayoutAlign="start center">Specs</a>
+      </div>
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">Session Idle
+              Timeout:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['session-idle-timeout']}}</a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">TCP
+              Connection Setup Timeout:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['tcp-connection-setup-timeout']}}</a>
+          </div>
+        </div>
+      </div>
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">TCP Close
+              Timeout:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['tcp-close-timeout']}}</a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">TCP Half
+              Closed Timeout:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['tcp-half-closed-timeout']}}</a>
+          </div>
+        </div>
+      </div>
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">TCP Drop
+              Timeout:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['tcp-drop-timeout']}}</a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">UDP Drop
+              Timeout:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['udp-drop-timeout']}}</a>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">ICMP Drop
+              Timeout:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['icmp-drop-timeout']}}</a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">Drop
+              Timeout:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['drop-timeout']}}</a>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">TCP
+              Timeout:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['tcp-timeout']}}</a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">UDP
+              Timeout:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['udp-timeout']}}</a>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">ICMP
+              Timeout:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['icmp-timeout']}}</a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">TCP Half Open
+              Session Limit:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['tcp-half-open-session-limit']? this.selectedFirewallProfile.spec['tcp-half-open-session-limit']:'disabled'}}</a>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">UDP Active
+              Session Limit:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['udp-active-session-limit']?this.selectedFirewallProfile.spec['udp-active-session-limit']:'disabled'}}</a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">ICMP Active
+              Session Limit:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['icmp-active-session-limit']?this.selectedFirewallProfile.spec['icmp-active-session-limit']:'disabled'}}</a>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-key">Other Active
+              Session Limit:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-value">{{this.selectedFirewallProfile.spec['other-active-session-limit']?this.selectedFirewallProfile.spec['other-active-session-limit']:'disabled'}}</a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <!-- empty column -->
+          </div>
+        </div>
+      </div>
+
+      <div class="firewallprofiles-detail-header" fxFlex fxLayout="row">
+        <br /> <a fxFlex fxLayoutAlign="start center">Status</a>
+      </div>
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center"
+               class="firewallprofiles-detail-key">Propagation:</a>
+            <a fxFlex fxLayoutAlign="start center" class="firewallprofiles-detail-value">
+              <div
+                   class="firewallprofiles-summary-panel-content-value firewallprofiles-summary-panel-content-value-warning"
+                   *ngIf="selectedFirewallProfile?.status['propagation-status']['generation-id'] != selectedFirewallProfile?.meta['generation-id']">
+                Policy not propagated</div>
+              <div
+                   class="firewallprofiles-summary-panel-content-value  firewallprofiles-summary-panel-content-value-warning firewallprofiles-summary-panel-content-value-link"
+                   *ngIf="selectedFirewallProfile?.status['propagation-status']['generation-id'] == selectedFirewallProfile?.meta['generation-id'] && selectedFirewallProfile?.status['propagation-status'].pending>0"
+                   (click)="viewPendingNaplesList()"
+                   [matTooltip]="viewPendingNaples ? 'Click to hide Pending Distributed Services Card List' : 'Click to view Pending Distributed Services Cards List'">
+                {{selectedFirewallProfile.status['propagation-status'].pending}} Out Of
+                {{selectedFirewallProfile.status['propagation-status'].pending + selectedFirewallProfile.status['propagation-status'].updated }}
+                Pending
+              </div>
+              <div class="firewallprofiles-summary-panel-content-value"
+                   *ngIf="selectedFirewallProfile?.status['propagation-status']['generation-id'] == selectedFirewallProfile?.meta['generation-id'] && selectedFirewallProfile?.status['propagation-status'].pending==0">
+                Complete
+              </div>
+
+            </a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <div [@slideInOut] class="firewallprofiles-summary-panel-content-pendingNaples"
+                 *ngIf="selectedFirewallProfile?.status['propagation-status']['pending-dscs'].length>0 && viewPendingNaples">
+              <div class="firewallprofiles-summary-panel-content-pendingNaples-grid">
+                <div
+                     *ngFor="let nicMac of selectedFirewallProfile?.status['propagation-status']['pending-dscs']">
+                  <a routerLink="/cluster/dscs/{{nicMac}}"
+                     class="firewallprofiles-summary-panel-content-nic-div-link">{{getNaplesName(nicMac)}}</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</ng-template>

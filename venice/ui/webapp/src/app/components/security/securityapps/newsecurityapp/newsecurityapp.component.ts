@@ -523,22 +523,6 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     };
   }
 
-  isTimeoutValid(fieldName: string): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors | null => {
-      const val: string = control.value;
-      if (!val) {
-        return null;
-      }
-      if (!Utility.isTimeoutValid(val)) {
-        return {
-          [fieldName]: {
-            required: false,
-            message: 'Invalid time out value. Only h, m, s, ms, us, and ns are allowed'
-          }
-        };
-      }
-      return null;
-    };
-  }
+
 }
 

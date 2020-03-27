@@ -237,14 +237,19 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
   }
 
   areSelectedRowsDeletable(): boolean {
-    if (!this.uiconfigsService.isAuthorized(UIRolePermissions.networknetworkinterface_update)) {
+    if (!this.uiconfigsService.isAuthorized(UIRolePermissions.networknetworkinterface_delete)) {
       return false;
     }
     const selectedRows = this.getSelectedDataObjects();
     if (selectedRows.length === 0) {
       return false;
     }
-    return true;
+    const list = selectedRows.filter((rowData: ClusterDSCProfile) => {
+      const uiData: DSCProfileUiModel = rowData._ui as DSCProfileUiModel;
+      return uiData.associatedDSCS && uiData.associatedDSCS.length > 0;
+    }
+    );
+    return (list.length === 0);
   }
 
   /**

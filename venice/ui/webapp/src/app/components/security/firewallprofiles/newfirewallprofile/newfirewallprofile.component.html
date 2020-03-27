@@ -1,0 +1,203 @@
+<div class="newfirewallprofile-container">
+  <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
+  <div fxFlex="auto" fxLayout="row" fxLayoutAlign="start stretch"
+       class="newfirewallprofile-content">
+    <div fxFlex="auto" fxLayout="column">
+
+
+      <div class="newfirewallprofile-flex-container" [formGroup]="newObject.$formGroup">
+
+        <div class="newfirewallprofile-child">
+          <ng-container
+                        *ngTemplateOutlet="meta;context:{newfirewallprofileForm: newObject.$formGroup}">
+          </ng-container>
+          <ng-container
+                        *ngTemplateOutlet="spec;context:{newfirewallprofileForm: newObject.$formGroup}">
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #divider>
+  <div fxFlex="20px" fxLayout="row">
+    <div fxFlex="30px"></div>
+    <div fxFlex="auto" class="newfirewallprofile-divider"></div>
+    <div fxFlex="30px"></div>
+  </div>
+</ng-template>
+
+<ng-template #meta let-newfirewallprofileForm="newfirewallprofileForm">
+  <div fxFlex="none" fxLayout="column" class="newfirewallprofile-row"
+       [formGroup]="newfirewallprofileForm.get('meta')">
+    <div fxLayout="row" class="newfirewallprofile-input-padding">
+      <span [ngClass]="{
+          'newfirewallprofile-general-box': true,
+          'requiredField': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
+          }">
+        <input fxFlex="300px" [formControl]="newObject.$formGroup.get(['meta', 'name'])"
+               appErrorTooltip
+               class="newfirewallprofile-input-common" matspellcheck="false" type="text" pInputText
+               appFloatLabel="Unique Firewall Profile Name">
+      </span>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #spec let-newfirewallprofileForm='newfirewallprofileForm'>
+  <div fxFlex="none" fxLayout="column" class="newfirewallprofile-row"
+       [formGroup]="newfirewallprofileForm.get('spec')">
+    <div fxFlex fxLayout="row">
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px"
+                 [formControl]="newObject.$formGroup.get(['spec', 'session-idle-timeout'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="text" pInputText
+                 appFloatLabel="Session Idle Timeout">
+        </div>
+      </div>
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px"
+                 [formControl]="newObject.$formGroup.get(['spec', 'tcp-connection-setup-timeout'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="text" pInputText
+                 appFloatLabel="TCP Connection Setup Timeout">
+        </div>
+      </div>
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px"
+                 [formControl]="newObject.$formGroup.get(['spec', 'tcp-close-timeout'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="text" pInputText
+                 appFloatLabel="TCP Close Timeout">
+        </div>
+      </div>
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px"
+                 [formControl]="newObject.$formGroup.get(['spec', 'tcp-half-closed-timeout'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="text" pInputText
+                 appFloatLabel="TCP Half Closed Timeout">
+        </div>
+      </div>
+    </div>
+
+    <div fxFlex fxLayout="row">
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px"
+                 [formControl]="newObject.$formGroup.get(['spec', 'tcp-drop-timeout'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="text" pInputText
+                 appFloatLabel="TCP Drop Timeout">
+        </div>
+      </div>
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px"
+                 [formControl]="newObject.$formGroup.get(['spec', 'udp-drop-timeout'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="text" pInputText
+                 appFloatLabel="UDP Drop Timeout">
+        </div>
+      </div>
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px"
+                 [formControl]="newObject.$formGroup.get(['spec', 'icmp-drop-timeout'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="text" pInputText
+                 appFloatLabel="ICMP Drop Timeout">
+        </div>
+      </div>
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px" [formControl]="newObject.$formGroup.get(['spec', 'drop-timeout'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="text" pInputText
+                 appFloatLabel="Drop Timeout">
+        </div>
+      </div>
+    </div>
+
+    <div fxFlex fxLayout="row">
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px" [formControl]="newObject.$formGroup.get(['spec', 'tcp-timeout'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="text" pInputText
+                 appFloatLabel="TCP Timeout">
+        </div>
+      </div>
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px" [formControl]="newObject.$formGroup.get(['spec', 'udp-timeout'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="text" pInputText
+                 appFloatLabel="UDP Timeout">
+        </div>
+      </div>
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px" [formControl]="newObject.$formGroup.get(['spec', 'icmp-timeout'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="text" pInputText
+                 appFloatLabel="ICMP Timeout">
+        </div>
+      </div>
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <!-- <div fxLayout="row">
+          <input fxFlex="200px" [formControl]="newObject.$formGroup.get(['spec', 'drop-timeout'])"
+            appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false" type="text" pInputText
+            appFloatLabel="DROP Timeout">
+        </div> -->
+      </div>
+    </div>
+
+    <!-- below are session limits -->
+    <div fxFlex fxLayout="row">
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px"
+                 [formControl]="newObject.$formGroup.get(['spec', 'tcp-half-open-session-limit'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="number" pInputText
+                 appFloatLabel="TCP Half Open Session Limit" min='0' max='128000'>
+        </div>
+      </div>
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px"
+                 [formControl]="newObject.$formGroup.get(['spec', 'udp-active-session-limit'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="number" pInputText
+                 appFloatLabel="UDP Active Session Limit" min='0' max='128000'>
+        </div>
+      </div>
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px"
+                 [formControl]="newObject.$formGroup.get(['spec', 'icmp-active-session-limit'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="number" pInputText
+                 appFloatLabel="UDP Active Session Limit" min='0' max='128000'>
+        </div>
+      </div>
+      <div fxFlex fxLayout="column" class="newfirewallprofile-column">
+        <div fxLayout="row">
+          <input fxFlex="200px"
+                 [formControl]="newObject.$formGroup.get(['spec', 'other-active-session-limit'])"
+                 appErrorTooltip class="newfirewallprofile-input-common" matspellcheck="false"
+                 type="number" pInputText
+                 appFloatLabel="Other Active Session Limit" min='0' max='128000'>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</ng-template>

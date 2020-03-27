@@ -1,0 +1,51 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.firewallprofiles {
+  @include primary-font();
+}
+
+.firewallprofiles-widget {
+  @include primary-font();
+  height: 100%;
+}
+
+.firewallprofiles-detail-header {
+  margin: 5px 0px;
+  font-size: 16px;
+}
+
+.firewallprofiles-button,
+.firewallprofiles-update-button {
+  padding-left: $horizontal-gutter;
+  padding-right: $horizontal-gutter;
+}
+
+// hide the firewallprofiles table
+.firewallprofiles-widget .ui-table-scrollable-wrapper {
+  display: none;
+}
+
+.firewallprofiles-summary-panel-content-value-warning {
+  color: #dd3b09 !important;
+  cursor: pointer;
+}
+
+.firewallprofiles-summary-panel-content-pendingNaples-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.firewallprofiles-summary-panel-content-nic-div-link {
+  margin-right: 10px;
+  color: #007bff !important;
+  text-decoration: none;
+  background-color: transparent;
+}
+
+.firewallprofiles-detail-value {
+  @include primary-font();
+  color: #676763;
+}

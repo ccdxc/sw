@@ -454,7 +454,6 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
       this.saveBatchMode();
     }
   }
-
   getTooltip() {
     return this.createButtonTooltip;
   }

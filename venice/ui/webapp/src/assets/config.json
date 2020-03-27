@@ -3,7 +3,8 @@
     "help",
     "apiCapture",
     "dataCache",
-    "fwLogs"
+    "fwLogs",
+    "troubleshooting"
   ],
   "condition-thresholds": {
     "critical": 95,

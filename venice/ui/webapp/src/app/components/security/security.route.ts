@@ -33,6 +33,15 @@ const routes: Routes = [
         loadChildren: '@app/components/security/securitygroups/securitygroups.module#SecuritygroupsModule'
       }
     ]
+  },
+  {
+    path: 'firewallprofiles',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/security/firewallprofiles/firewallprofiles.module#FirewallprofilesModule'
+      }
+    ]
   }
 ];
 

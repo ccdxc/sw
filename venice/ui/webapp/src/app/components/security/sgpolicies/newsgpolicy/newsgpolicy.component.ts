@@ -420,13 +420,6 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
     return IPUtility.isValidIPWithOptionalMask(ip);
   }
 
-  addFieldValidator(ctrl: AbstractControl, validator: ValidatorFn) {
-    if (!ctrl.validator) {
-      ctrl.setValidators([validator]);
-    } else {
-      ctrl.setValidators([ctrl.validator, validator]);
-    }
-  }
 
   isProtocolFieldValid(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {

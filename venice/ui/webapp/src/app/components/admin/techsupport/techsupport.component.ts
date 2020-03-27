@@ -130,7 +130,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     return JSON.stringify(this.expandedRowData, null, 1);
   }
 
-  displayColumn(data, col): any {
+  displayColumn(data: MonitoringTechSupportRequest, col: TableCol): any {
     const fields = col.field.split('.');
     const value = Utility.getObjectValueByPropertyPath(data, fields);
     const column = col.field;

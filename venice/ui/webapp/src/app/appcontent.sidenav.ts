@@ -128,6 +128,14 @@ export const sideNavMenu: SideNavItem[] = [
         },
         roleGuard: UIRolePermissions.securityapp_read,
         link: ['/security', 'securityapps']
+      },
+      {
+        label: 'Firewall Profiles',
+        icon: {
+          cssClass: 'app-l-side-nav-security-apps'
+        },
+        roleGuard: UIRolePermissions.securityfirewallprofile_read,
+        link: ['/security', 'firewallprofiles']
       }
     ]
   },

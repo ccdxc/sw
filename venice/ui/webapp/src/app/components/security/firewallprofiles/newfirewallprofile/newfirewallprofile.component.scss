@@ -1,0 +1,164 @@
+@import 'src/global-mixins';
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+@import "src/global-mixins";
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.newfirewallprofile-button {
+  @include primary-font(16px, #ffffff);
+  height: 30px;
+  text-align: center;
+  display: block;
+  padding: 0px 10px;
+}
+
+.newfirewallprofile-container {
+  background: white;
+
+  &:hover {
+    background: white;
+  }
+
+  .newfirewallprofile-flex-container {
+    display: flex;
+    justify-content: center;
+    flex-flow: row wrap;
+    flex-direction: row;
+
+    app-orderedlist {
+      width: calc(50%) -20px;
+      min-width: 550px;
+      max-width: 750px;
+      margin: 10px;
+    }
+
+    .newfirewallprofile-child:first-child {
+      padding: 0 30px 0 30px;
+      flex-direction: column;
+    }
+
+    .newfirewallprofile-child:not(:first-child) {
+      padding: 20px 0px 30px 0px;
+    }
+  }
+
+
+  .newRollout-NodeType-container {
+    display: flex;
+    justify-content: flex-start;
+    flex-flow: row wrap;
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.newfirewallprofile-row {
+  margin: 10px 10px;
+}
+
+
+.newfirewallprofile-content {
+  background: white;
+  min-height: 180px;
+  margin-top: 4 * $vertical-gutter;
+  @include primary-font();
+}
+
+.newfirewallprofile-font {
+  @include primary-font();
+}
+
+.newfirewallprofile-row {
+  .newfirewallprofile-input-padding {
+    margin-top: 20px !important;
+    align-items: baseline;
+  }
+}
+
+.newfirewallprofile-column {
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+.newfirewallprofile-input-common {
+  height: 30px !important;
+}
+
+.newfirewallprofile-name {
+  margin-left: 0px;
+}
+
+.newfirewallprofile-save,
+.newfirewallprofile-cancel {
+  display: inline-block;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+}
+
+
+
+.newfirewallprofile-text.newfirewallprofile-text-upgradetype {
+  margin-left: 30px;
+}
+
+.newfirewallprofile-and {
+  color: #6ba0e5;
+  display: inline-block;
+
+  >span:hover {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  >mat-icon:hover {
+    cursor: pointer;
+  }
+}
+
+.newfirewallprofile-toolbar-button {
+  @include primary-font(16px, #ffffff);
+  height: 30px;
+  text-align: center;
+  width: 120px;
+  display: block;
+  padding: 0px 10px;
+}
+
+/** customize calendar's internal input */
+.newfirewallprofile-calendar>input.ui-inputtext {
+  padding: 5px !important;
+}
+
+.newfirewallprofile-divider {
+  border-bottom: 1px solid #dddddd;
+}
+
+.newfirewallprofile-toggle {
+  margin: 0 10px 10px 0;
+  @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
+}
+
+.newfirewallprofile-title {
+  margin: 20px;
+  @include primary-font(18px, #676763, 500);
+}
+
+
+//VS-492  firefox issue with input.type=number. Ensure not breaking other browsers
+.newfirewallprofile .newfirewallprofile-row input.ui-inputtext:not(.ui-dropdown-filter) {
+  padding: 0px 10px;
+}
+
+.newfirewallprofile-order-template.newfirewallprofile-hide-primeng-panel .newfirewallprofile-select-panel {
+  display: none;
+}
+
+.newfirewallprofile .label.newfirewallprofile-schedulenow-text.ui-chkbox-label.ui-label-disabled {
+  opacity: 0.5;
+}
+
+.newfirewallprofile .newfirewallprofile-schedulenow-text.ui-label-disabled {
+  opacity: 0.5;
+}

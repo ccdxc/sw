@@ -1,25 +1,26 @@
-import { Component, ChangeDetectorRef, OnInit, ViewChild, ViewEncapsulation, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Animations } from '@app/animations';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
-import { BaseComponent } from '@app/components/base/base.component';
+import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrender.component';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
+import { CustomExportMap, TableCol } from '@app/components/shared/tableviewedit';
+import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { SecurityApp, ISecurityApp, IApiStatus } from '@sdk/v1/models/generated/security';
-import { Table } from 'primeng/table';
-import { Observable } from 'rxjs';
-import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrender.component';
-import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
-import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
-import { Animations } from '@app/animations';
+import { IApiStatus, ISecurityApp, SecurityApp } from '@sdk/v1/models/generated/security';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
+import { Table } from 'primeng/table';
+import { Observable, Subscription } from 'rxjs';
 
+interface PartialTableCol {
+  field: string;
+}
 
-import { Subscription } from 'rxjs';
-import { Icon } from '@app/models/frontend/shared/icon.interface';
-import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-securityapps',
@@ -132,7 +133,7 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
     return 'Are you sure you want to delete security app : ' + object.meta.name;
   }
 
-  generateDeleteSuccessMsg(object: SecurityApp) {
+  generateDeleteSuccessMsg(object: ISecurityApp) {
     return 'Deleted security app ' + object.meta.name;
   }
 
@@ -201,29 +202,35 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
     return false;
   }
 
-  displaySpecAlgType(rowData, col) {
+  displaySpecAlgType(rowData: SecurityApp, col: TableCol) {
     return this.displayColumn(rowData, col, false);
   }
 
-  displayColumn(Data, col, hasUiHintMap: boolean = true): any {
+  /**
+   * col: TableCol|PartialTableCol make html (line 79) {{displayColumn(this.selectedApp, {'field': 'spec.alg.type'})}} pas compilation process.
+   * @param rowData
+   * @param col
+   * @param hasUiHintMap
+   */
+  displayColumn(rowData: SecurityApp, col: TableCol|PartialTableCol, hasUiHintMap: boolean = true): any {
     const fields = col.field.split('.');
     if (fields.includes('alg')) {
-      if (Data.spec == null) {
+      if (rowData.spec == null) {
         return '';
       }
     }
     let value = null;
-    if (!fields.includes('alg') || Data.spec.alg) {
-      value = Utility.getObjectValueByPropertyPath(Data, fields);
+    if (!fields.includes('alg') || rowData.spec.alg) {
+      value = Utility.getObjectValueByPropertyPath(rowData, fields);
     }
     const column = col.field;
     if (fields.includes('alg')) {
-      if (Data.spec.alg == null) {
+      if (rowData.spec.alg == null) {
         value = '';
       } else {
         value = 'ALG Type: ' + value;
       }
-      const protocolValues = Utility.getObjectValueByPropertyPath(Data, ['spec', 'proto-ports']);
+      const protocolValues = Utility.getObjectValueByPropertyPath(rowData, ['spec', 'proto-ports']);
       if (protocolValues) {
         const protoarray = [];
         for (const i of protocolValues) {
