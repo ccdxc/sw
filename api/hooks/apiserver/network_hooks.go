@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -16,7 +15,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/workload"
-	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
@@ -85,10 +84,7 @@ func (h *networkHooks) validateRoutingConfig(i interface{}, ver string, ignStatu
 		return nil
 	}
 	var autoCfg, evpn, ipv4 bool
-	rip := net.ParseIP(in.Spec.BGPConfig.RouterId)
-	if rip.IsUnspecified() {
-		autoCfg = true
-	}
+	autoCfg = in.Spec.BGPConfig.DSCAutoConfig
 	// validate Holdtime and Keepalive timers
 	if in.Spec.BGPConfig.Holdtime != 0 && in.Spec.BGPConfig.KeepaliveInterval == 0 || in.Spec.BGPConfig.Holdtime == 0 && in.Spec.BGPConfig.KeepaliveInterval != 0 {
 		ret = append(ret, fmt.Errorf("inconsistent holdtime and keepalive-interval values, either both should be zero or both should be non-zero"))
@@ -102,12 +98,18 @@ func (h *networkHooks) validateRoutingConfig(i interface{}, ver string, ignStatu
 			}
 		}
 	}
+	if in.Spec.BGPConfig.RouterId != "" && in.Spec.BGPConfig.DSCAutoConfig {
+		ret = append(ret, fmt.Errorf("router id cannot be specified when dsc-auto-config is true"))
+	}
 	peerMap := make(map[string]bool)
 	for _, n := range in.Spec.BGPConfig.Neighbors {
 		if len(n.EnableAddressFamilies) != 1 {
 			ret = append(ret, fmt.Errorf("there should be one address family %v", n.EnableAddressFamilies))
 		}
-		if n.IPAddress == "0.0.0.0" {
+		if n.DSCAutoConfig {
+			if n.IPAddress != "" {
+				ret = append(ret, fmt.Errorf("peer IP Address not allowed when dsc-auto-config is true"))
+			}
 			switch n.EnableAddressFamilies[0] {
 			case network.BGPAddressFamily_L2vpnEvpn.String():
 				if evpn {
@@ -120,7 +122,7 @@ func (h *networkHooks) validateRoutingConfig(i interface{}, ver string, ignStatu
 				}
 			case network.BGPAddressFamily_IPv4Unicast.String():
 				if !autoCfg {
-					ret = append(ret, fmt.Errorf("auto-config peer only allowed when Router ID is also 0.0.0.0"))
+					ret = append(ret, fmt.Errorf("dsc-auto-config peer only allowed when BGP config is also dsc-auto-config"))
 				}
 				if ipv4 {
 					ret = append(ret, fmt.Errorf("only one auto-config peer per address family [ipv4-unicast] allowed"))
@@ -132,10 +134,14 @@ func (h *networkHooks) validateRoutingConfig(i interface{}, ver string, ignStatu
 				}
 			}
 		} else {
-			if _, ok := peerMap[n.IPAddress]; ok {
-				ret = append(ret, fmt.Errorf("duplicate peer in spec [%v]", n.IPAddress))
+			if n.IPAddress == "" {
+				ret = append(ret, fmt.Errorf("IPAddress should be specified if DSCAutoConfig is false"))
+			} else {
+				if _, ok := peerMap[n.IPAddress]; ok {
+					ret = append(ret, fmt.Errorf("duplicate peer in spec [%v]", n.IPAddress))
+				}
+				peerMap[n.IPAddress] = true
 			}
-			peerMap[n.IPAddress] = true
 		}
 	}
 	return ret

@@ -178,22 +178,22 @@ var scaleCfgenParams = &Cfgen{
 			},
 			Spec: network.RoutingConfigSpec{
 				BGPConfig: &network.BGPConfig{
-					ASNumber:  100, //Static testbeds had this AS number
-					RouterId:  "0.0.0.0",
-					Neighbors: []*network.BGPNeighbor{},
+					ASNumber:      100, //Static testbeds had this AS number
+					DSCAutoConfig: true,
+					Neighbors:     []*network.BGPNeighbor{},
 				},
 			},
 		},
 		UnderlayBgpNeihbourTemplate: &network.BGPNeighbor{
 			RemoteAS:              600, //Static testbed has this AS number
 			MultiHop:              10,
-			IPAddress:             "0.0.0.0",
+			DSCAutoConfig:         true,
 			EnableAddressFamilies: []string{"ipv4-unicast"},
 		},
 		OverlayBgpNeihbourTemplate: &network.BGPNeighbor{
 			RemoteAS:              100, //Static testbed has this AS number
 			MultiHop:              10,
-			IPAddress:             "0.0.0.0",
+			DSCAutoConfig:         true,
 			EnableAddressFamilies: []string{"l2vpn-evpn"},
 		},
 	},

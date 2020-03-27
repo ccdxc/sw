@@ -212,17 +212,8 @@ func (m *ServiceHandlers) handleAutoConfig(in *network.RoutingConfig) (*network.
 		return ret, forceUpdate
 	}
 	var peers []*network.BGPNeighbor
-
 	for _, n := range ret.Spec.BGPConfig.Neighbors {
-		nip := net.ParseIP(n.IPAddress)
-		if nip.IsUnspecified() {
-			if m.naplesTemplate == nil {
-				forceUpdate = true
-			} else {
-				if m.naplesTemplate.MultiHop != n.MultiHop || m.naplesTemplate.Password != n.Password || m.naplesTemplate.Shutdown != n.Shutdown {
-					forceUpdate = true
-				}
-			}
+		if n.DSCAutoConfig {
 			m.naplesTemplate = &network.BGPNeighbor{
 				MultiHop: n.MultiHop,
 				Password: n.Password,
@@ -243,7 +234,7 @@ func (m *ServiceHandlers) configureBGP(ctx context.Context, in *network.RoutingC
 		log.Infof("Resouce version is same ignoring request [%v]", oldCfg.ResourceVersion)
 		return nil
 	}
-	updCfg, err := clientutils.GetBGPConfiguration(oldCfg, rtCfg, "0.0.0.0", "0.0.0.0")
+	updCfg, err := clientutils.GetBGPConfiguration(oldCfg, rtCfg, "0.0.0.0", rtCfg.Spec.BGPConfig.RouterId)
 	if err != nil {
 		return errors.Wrap(err, "failed to construct pegasus config")
 	}

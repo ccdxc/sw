@@ -94,7 +94,7 @@ message BGPNeighbor {
 
     // Neighbor IP Address.
     string IPAddress                        = 2 [(gogoproto.jsontag) = "ip-address,omitempty",
-                                                (venice.check) = "IPAddr()"];
+                                                (venice.check) = "EmptyOr(IPAddr())"];
 
     // ASN the neighbor belongs to.
     uint32 RemoteAS                         = 3 [(gogoproto.jsontag) = "remote-as,omitempty"];
@@ -112,25 +112,31 @@ message BGPNeighbor {
                                                 (gogoproto.jsontag) = "password,omitempty",
                                                 (venice.check) = "EmptyOr(StrLen(1, 128))"];
 
-    // use loopback interface as source IP address for protocol session
-    bool SourceFromLoopback                 = 7 [(gogoproto.jsontag) = "source-from-loopback,omitempty"];
+    // DSCAutoConfig sets the flag that this neighbor config is to be used as a template for auto configuration.
+    bool DSCAutoConfig                      = 7 [(gogoproto.jsontag) = "dsc-auto-config,omitempty"];
 }
 
 message BGPConfig {
     // Router ID for the BGP Instance.
-    string RouterId = 1 [(gogoproto.jsontag) = "router-id,omitempty", (venice.check) = "IPAddr()"];
+    string RouterId                 = 1 [(gogoproto.jsontag) = "router-id,omitempty",
+                                        (venice.check) = "EmptyOr(IPAddr())"];
 
     // Local ASN for the BGP Instance.
-    uint32 ASNumber = 2 [(gogoproto.jsontag) = "as-number,omitempty"];
+    uint32 ASNumber                 = 2 [(gogoproto.jsontag) = "as-number,omitempty"];
 
-    // KeepaliveInterval is time interval at which keepalive messages are sent
-    uint32 KeepaliveInterval = 3 [(gogoproto.jsontag) = "keepalive-interval,", (venice.default) = "60", (venice.check) = "IntRange(0,3600)"];
+    // KeepaliveInterval is time interval at which keepalive messages are sent.
+    uint32 KeepaliveInterval        = 3 [(gogoproto.jsontag) = "keepalive-interval,omitempty",
+                                        (venice.default) = "60", (venice.check) = "IntRange(0,3600)"];
 
-    // Holdtime is time for which not receiving a keepalive message results in declaring the peer as dead
-    uint32 Holdtime = 4 [(gogoproto.jsontag) = "holdtime,", (venice.default) = "180", (venice.check) = "IntRange(0,3600)"];
+    // Holdtime is time for which not receiving a keepalive message results in declaring the peer as dead.
+    uint32 Holdtime                 = 4 [(gogoproto.jsontag) = "holdtime,omitempty",
+                                        (venice.default) = "180", (venice.check) = "IntRange(0,3600)"];
+
+    // DSCAutoConfig sets the flag that this config is to be used as a template for auto configuration.
+    bool DSCAutoConfig              = 5 [(gogoproto.jsontag) = "dsc-auto-config,omitempty"];
 
     // List of all neighbors.
-    repeated BGPNeighbor Neighbors = 5 [(gogoproto.jsontag) = "neighbors,omitempty"];
+    repeated BGPNeighbor Neighbors = 6 [(gogoproto.jsontag) = "neighbors,omitempty"];
 }
 
 message RoutingConfigSpec {

@@ -11,12 +11,12 @@ import { NetworkBGPNeighbor_enable_address_families,  } from './enums';
 
 export interface INetworkBGPNeighbor {
     'shutdown'?: boolean;
-    'ip-address': string;
+    'ip-address'?: string;
     'remote-as'?: number;
     'multi-hop': number;
     'enable-address-families': Array<NetworkBGPNeighbor_enable_address_families>;
     'password'?: string;
-    'source-from-loopback'?: boolean;
+    'dsc-auto-config'?: boolean;
     '_ui'?: any;
 }
 
@@ -36,8 +36,8 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
     'enable-address-families': Array<NetworkBGPNeighbor_enable_address_families> = null;
     /** Enable Password authentication. Disabled if the string is empty. Length of string should be between 1 and 128. */
     'password': string = null;
-    /** Use loopback interface as source IP address for protocol session. */
-    'source-from-loopback': boolean = null;
+    /** DSCAutoConfig sets the flag that this neighbor config is to be used as a template for auto configuration. */
+    'dsc-auto-config': boolean = null;
     public static propInfo: { [prop in keyof INetworkBGPNeighbor]: PropInfoItem } = {
         'shutdown': {
             description:  `Shutdown this neighbor session.`,
@@ -47,7 +47,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
         'ip-address': {
             description:  `Neighbor IP Address. Should be a valid v4 or v6 IP address.`,
             hint:  '10.1.1.1, ff02::5 ',
-            required: true,
+            required: false,
             type: 'string'
         },
         'remote-as': {
@@ -73,8 +73,8 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
             required: false,
             type: 'string'
         },
-        'source-from-loopback': {
-            description:  `Use loopback interface as source IP address for protocol session.`,
+        'dsc-auto-config': {
+            description:  `DSCAutoConfig sets the flag that this neighbor config is to be used as a template for auto configuration.`,
             required: false,
             type: 'boolean'
         },
@@ -157,12 +157,12 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
         } else {
             this['password'] = null
         }
-        if (values && values['source-from-loopback'] != null) {
-            this['source-from-loopback'] = values['source-from-loopback'];
-        } else if (fillDefaults && NetworkBGPNeighbor.hasDefaultValue('source-from-loopback')) {
-            this['source-from-loopback'] = NetworkBGPNeighbor.propInfo['source-from-loopback'].default;
+        if (values && values['dsc-auto-config'] != null) {
+            this['dsc-auto-config'] = values['dsc-auto-config'];
+        } else if (fillDefaults && NetworkBGPNeighbor.hasDefaultValue('dsc-auto-config')) {
+            this['dsc-auto-config'] = NetworkBGPNeighbor.propInfo['dsc-auto-config'].default;
         } else {
-            this['source-from-loopback'] = null
+            this['dsc-auto-config'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -172,12 +172,12 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'shutdown': CustomFormControl(new FormControl(this['shutdown']), NetworkBGPNeighbor.propInfo['shutdown']),
-                'ip-address': CustomFormControl(new FormControl(this['ip-address'], [required, ]), NetworkBGPNeighbor.propInfo['ip-address']),
+                'ip-address': CustomFormControl(new FormControl(this['ip-address']), NetworkBGPNeighbor.propInfo['ip-address']),
                 'remote-as': CustomFormControl(new FormControl(this['remote-as']), NetworkBGPNeighbor.propInfo['remote-as']),
                 'multi-hop': CustomFormControl(new FormControl(this['multi-hop'], [required, minValueValidator(1), maxValueValidator(255), ]), NetworkBGPNeighbor.propInfo['multi-hop']),
                 'enable-address-families': CustomFormControl(new FormControl(this['enable-address-families']), NetworkBGPNeighbor.propInfo['enable-address-families']),
                 'password': CustomFormControl(new FormControl(this['password'], [minLengthValidator(1), maxLengthValidator(128), ]), NetworkBGPNeighbor.propInfo['password']),
-                'source-from-loopback': CustomFormControl(new FormControl(this['source-from-loopback']), NetworkBGPNeighbor.propInfo['source-from-loopback']),
+                'dsc-auto-config': CustomFormControl(new FormControl(this['dsc-auto-config']), NetworkBGPNeighbor.propInfo['dsc-auto-config']),
             });
         }
         return this._formGroup;
@@ -195,7 +195,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
             this._formGroup.controls['multi-hop'].setValue(this['multi-hop']);
             this._formGroup.controls['enable-address-families'].setValue(this['enable-address-families']);
             this._formGroup.controls['password'].setValue(this['password']);
-            this._formGroup.controls['source-from-loopback'].setValue(this['source-from-loopback']);
+            this._formGroup.controls['dsc-auto-config'].setValue(this['dsc-auto-config']);
         }
     }
 }

@@ -176,7 +176,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 			b := c.Spec.BGPConfig
 			newCfg = &bgpConfig{
 				uid:       uid.Bytes(),
-				routerID:  b.RouterId,
+				routerID:  newLb,
 				asn:       b.ASNumber,
 				keepalive: b.KeepaliveInterval,
 				holdtime:  b.Holdtime,
@@ -214,7 +214,7 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 			}
 			newCfg = &bgpConfig{
 				uid:       uid.Bytes(),
-				routerID:  b.RouterId,
+				routerID:  newLb,
 				asn:       b.ASNumber,
 				keepalive: b.KeepaliveInterval,
 				holdtime:  b.Holdtime,
@@ -262,7 +262,6 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 			b := c.Spec.BGPConfig
 			oldCfg = &bgpConfig{
 				uid:       uid.Bytes(),
-				routerID:  b.RouterId,
 				asn:       b.ASNumber,
 				keepalive: b.KeepaliveInterval,
 				holdtime:  b.Holdtime,
@@ -303,7 +302,6 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 			b := c.Spec.BGPConfig
 			oldCfg = &bgpConfig{
 				uid:       uid.Bytes(),
-				routerID:  b.RouterId,
 				asn:       b.ASNumber,
 				keepalive: b.KeepaliveInterval,
 				holdtime:  b.Holdtime,
@@ -340,10 +338,10 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 		ret.Uuid = newCfg.uid
 		ret.GlobalOper = Create
 		var rid uint32
-		if newCfg.routerID == "0.0.0.0" || newCfg.routerID == "" {
-			rid = ip2uint32Big(newLb)
+		if newLb == "" {
+			rid = ip2uint32Big("0.0.0.0")
 		} else {
-			rid = ip2uint32Big(newCfg.routerID)
+			rid = ip2uint32Big(newLb)
 		}
 		ret.Global.Request = &types.BGPSpec{
 			Id:       newCfg.uid,
@@ -365,10 +363,10 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 			}
 			ret.GlobalOper = Update
 			var rid uint32
-			if newCfg.routerID == "0.0.0.0" || newCfg.routerID == "" {
-				rid = ip2uint32Big(newLb)
+			if newLb == "" {
+				rid = ip2uint32Big("0.0.0.0")
 			} else {
-				rid = ip2uint32Big(newCfg.routerID)
+				rid = ip2uint32Big(newLb)
 			}
 			ret.Global = types.BGPRequest{
 				Request: &types.BGPSpec{

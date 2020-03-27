@@ -194,16 +194,15 @@ func TestValidateHooks(t *testing.T) {
 	rtcfg := network.RoutingConfig{
 		Spec: network.RoutingConfigSpec{
 			BGPConfig: &network.BGPConfig{
-				RouterId: "1.1.1.1",
 				ASNumber: 1000,
 				Neighbors: []*network.BGPNeighbor{
 					{
-						IPAddress:             "0.0.0.0",
+						DSCAutoConfig:         true,
 						EnableAddressFamilies: []string{"l2vpn-evpn"},
 						RemoteAS:              1000,
 					},
 					{
-						IPAddress:             "0.0.0.0",
+						DSCAutoConfig:         true,
 						EnableAddressFamilies: []string{"ipv4-unicast"},
 						RemoteAS:              1000,
 					},
@@ -213,14 +212,14 @@ func TestValidateHooks(t *testing.T) {
 	}
 	errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
 	Assert(t, len(errs) > 0, "Expecting errors %s", errs)
-	rtcfg.Spec.BGPConfig.RouterId = "0.0.0.0"
+	rtcfg.Spec.BGPConfig.DSCAutoConfig = true
 	errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
 	Assert(t, len(errs) > 0, "Expecting errors %s", errs)
 	rtcfg.Spec.BGPConfig.Neighbors[1].RemoteAS = 2000
 	errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
 	Assert(t, len(errs) == 0, "found errors %s", errs)
 	rtcfg.Spec.BGPConfig.Neighbors = append(rtcfg.Spec.BGPConfig.Neighbors, &network.BGPNeighbor{
-		IPAddress:             "0.0.0.0",
+		DSCAutoConfig:         true,
 		EnableAddressFamilies: []string{"ipv4-unicast"},
 		RemoteAS:              1000,
 	})
@@ -294,7 +293,6 @@ func TestPrecommitHooks(t *testing.T) {
 	existingrtcfg := network.RoutingConfig{
 		Spec: network.RoutingConfigSpec{
 			BGPConfig: &network.BGPConfig{
-				RouterId: "1.1.1.1",
 				ASNumber: 1000,
 			},
 		},
@@ -307,7 +305,6 @@ func TestPrecommitHooks(t *testing.T) {
 	rtCfg := network.RoutingConfig{
 		Spec: network.RoutingConfigSpec{
 			BGPConfig: &network.BGPConfig{
-				RouterId: "1.1.1.1",
 				ASNumber: 1000,
 			},
 		},

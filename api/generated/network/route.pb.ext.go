@@ -1024,7 +1024,7 @@ func init() {
 
 	validatorMapRoute["BGPConfig"]["all"] = append(validatorMapRoute["BGPConfig"]["all"], func(path string, i interface{}) error {
 		m := i.(*BGPConfig)
-		if err := validators.IPAddr(m.RouterId); err != nil {
+		if err := validators.EmptyOr(validators.IPAddr, m.RouterId, nil); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"RouterId", err.Error())
 		}
 		return nil
@@ -1048,7 +1048,7 @@ func init() {
 
 	validatorMapRoute["BGPNeighbor"]["all"] = append(validatorMapRoute["BGPNeighbor"]["all"], func(path string, i interface{}) error {
 		m := i.(*BGPNeighbor)
-		if err := validators.IPAddr(m.IPAddress); err != nil {
+		if err := validators.EmptyOr(validators.IPAddr, m.IPAddress, nil); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"IPAddress", err.Error())
 		}
 		return nil

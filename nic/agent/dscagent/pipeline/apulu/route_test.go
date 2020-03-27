@@ -76,12 +76,12 @@ func TestExpandRoutingConfig(t *testing.T) {
 	in := netproto.RoutingConfig{
 		Spec: netproto.RoutingConfigSpec{
 			BGPConfig: &netproto.BGPConfig{
-				RouterId: "0.0.0.0",
-				ASNumber: 1000,
+				ASNumber:      1000,
+				DSCAutoConfig: true,
 				Neighbors: []*netproto.BGPNeighbor{
 					{
 						Shutdown:              false,
-						IPAddress:             "0.0.0.0",
+						DSCAutoConfig:         true,
 						RemoteAS:              2000,
 						MultiHop:              10,
 						EnableAddressFamilies: []string{"ipv4-unicast"},
@@ -109,7 +109,7 @@ func TestExpandRoutingConfig(t *testing.T) {
 	}
 	// Base with unspecified + neighbors
 	out := expandRoutingConfig(mockApi, "0.0.0.0", &in)
-	Assert(t, len(out.Spec.BGPConfig.Neighbors) == 2, "did not match number of neighbors", len(out.Spec.BGPConfig.Neighbors))
+	Assert(t, len(out.Spec.BGPConfig.Neighbors) == 2, "did not match number of neighbor %d", len(out.Spec.BGPConfig.Neighbors))
 
 	expSet := mapset.NewSetFromSlice([]interface{}{"12.1.1.2:ipv4-unicast", "12.1.2.2:ipv4-unicast"})
 	gotSet := mapset.NewSet()
@@ -123,19 +123,19 @@ func TestExpandRoutingConfig(t *testing.T) {
 	in = netproto.RoutingConfig{
 		Spec: netproto.RoutingConfigSpec{
 			BGPConfig: &netproto.BGPConfig{
-				RouterId: "0.0.0.0",
-				ASNumber: 1000,
+				DSCAutoConfig: true,
+				ASNumber:      1000,
 				Neighbors: []*netproto.BGPNeighbor{
 					{
 						Shutdown:              false,
-						IPAddress:             "0.0.0.0",
+						DSCAutoConfig:         true,
 						RemoteAS:              2000,
 						MultiHop:              10,
 						EnableAddressFamilies: []string{"ipv4-unicast"},
 					},
 					{
 						Shutdown:              false,
-						IPAddress:             "0.0.0.0",
+						DSCAutoConfig:         true,
 						RemoteAS:              2000,
 						MultiHop:              10,
 						EnableAddressFamilies: []string{"l2vpn-evpn"},
@@ -192,19 +192,19 @@ func TestExpandRoutingConfig(t *testing.T) {
 	in = netproto.RoutingConfig{
 		Spec: netproto.RoutingConfigSpec{
 			BGPConfig: &netproto.BGPConfig{
-				RouterId: "0.0.0.0",
-				ASNumber: 1000,
+				DSCAutoConfig: true,
+				ASNumber:      1000,
 				Neighbors: []*netproto.BGPNeighbor{
 					{
 						Shutdown:              false,
-						IPAddress:             "0.0.0.0",
+						DSCAutoConfig:         true,
 						RemoteAS:              2000,
 						MultiHop:              10,
 						EnableAddressFamilies: []string{"ipv4-unicast"},
 					},
 					{
 						Shutdown:              false,
-						IPAddress:             "0.0.0.0",
+						DSCAutoConfig:         true,
 						RemoteAS:              2000,
 						MultiHop:              10,
 						EnableAddressFamilies: []string{"l2vpn-evpn"},
@@ -237,19 +237,19 @@ func TestExpandRoutingConfig(t *testing.T) {
 	in = netproto.RoutingConfig{
 		Spec: netproto.RoutingConfigSpec{
 			BGPConfig: &netproto.BGPConfig{
-				RouterId: "0.0.0.0",
-				ASNumber: 1000,
+				DSCAutoConfig: true,
+				ASNumber:      1000,
 				Neighbors: []*netproto.BGPNeighbor{
 					{
 						Shutdown:              false,
-						IPAddress:             "0.0.0.0",
+						DSCAutoConfig:         true,
 						RemoteAS:              2000,
 						MultiHop:              10,
 						EnableAddressFamilies: []string{"ipv4-unicast"},
 					},
 					{
 						Shutdown:              false,
-						IPAddress:             "0.0.0.0",
+						DSCAutoConfig:         true,
 						RemoteAS:              2000,
 						MultiHop:              10,
 						EnableAddressFamilies: []string{"l2vpn-evpn"},

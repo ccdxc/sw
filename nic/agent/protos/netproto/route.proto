@@ -112,14 +112,16 @@ message BGPNeighbor {
     uint32 MultiHop                         = 4 [(gogoproto.jsontag) = "multi-hop,omitempty", (venice.check) = "IntRange(0, 256)"];
     repeated string EnableAddressFamilies   = 5 [(gogoproto.jsontag) = "enable-address-families,omitempty", (venice.check) = "StrEnum(BGPAddressFamily)"];
     string Password                         = 6 [(gogoproto.jsontag) = "password,omitempty"];
+    bool DSCAutoConfig                      = 7 [(gogoproto.jsontag) = "dsc-auto-config,omitempty"];
 }
         
 message BGPConfig {
-    string RouterId = 1 [(gogoproto.jsontag) = "router-id,omitempty", (venice.check) = "IPAddr()"];
+    string RouterId = 1 [(gogoproto.jsontag) = "router-id,omitempty", (venice.check) = "EmptyOr(IPAddr())"];
     uint32 ASNumber = 2 [(gogoproto.jsontag) = "as-number,omitempty"];
     repeated BGPNeighbor Neighbors = 3 [(gogoproto.jsontag) = "neighbors,omitempty"];
     uint32 KeepaliveInterval = 4 [(gogoproto.jsontag) = "keepalive-interval,omitempty"];
     uint32 Holdtime = 5 [(gogoproto.jsontag) = "holdtime,omitempty"];
+    bool DSCAutoConfig = 6 [(gogoproto.jsontag) = "dsc-auto-config,omitempty"];
 }
 
 message RoutingConfigSpec {

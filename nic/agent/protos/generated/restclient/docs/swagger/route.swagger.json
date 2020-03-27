@@ -540,9 +540,6 @@
     },
     "netprotoBGPConfig": {
       "type": "object",
-      "required": [
-        "router-id"
-      ],
       "properties": {
         "router-id": {
           "type": "string",
@@ -566,6 +563,10 @@
         "holdtime": {
           "type": "integer",
           "format": "int64"
+        },
+        "dsc-auto-config": {
+          "type": "boolean",
+          "format": "boolean"
         }
       }
     },
@@ -609,6 +610,10 @@
         },
         "password": {
           "type": "string"
+        },
+        "dsc-auto-config": {
+          "type": "boolean",
+          "format": "boolean"
         }
       }
     },

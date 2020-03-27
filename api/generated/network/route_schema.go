@@ -26,6 +26,8 @@ var typesMapRoute = map[string]*api.Struct{
 
 			"Holdtime": api.Field{Name: "Holdtime", CLITag: api.CLIInfo{ID: "holdtime", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "holdtime", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
+			"DSCAutoConfig": api.Field{Name: "DSCAutoConfig", CLITag: api.CLIInfo{ID: "dsc-auto-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc-auto-config", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
+
 			"Neighbors": api.Field{Name: "Neighbors", CLITag: api.CLIInfo{ID: "neighbors", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "neighbors", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.BGPNeighbor"},
 		},
 	},
@@ -44,7 +46,7 @@ var typesMapRoute = map[string]*api.Struct{
 
 			"Password": api.Field{Name: "Password", CLITag: api.CLIInfo{ID: "password", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"SourceFromLoopback": api.Field{Name: "SourceFromLoopback", CLITag: api.CLIInfo{ID: "source-from-loopback", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source-from-loopback", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
+			"DSCAutoConfig": api.Field{Name: "DSCAutoConfig", CLITag: api.CLIInfo{ID: "dsc-auto-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc-auto-config", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"network.EVPNConfig": &api.Struct{
@@ -188,6 +190,7 @@ var typesMapRoute = map[string]*api.Struct{
 		CLITags: map[string]api.CLIInfo{
 			"api-version":             api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"as-number":               api.CLIInfo{Path: "Spec.BGPConfig.ASNumber", Skip: false, Insert: "", Help: ""},
+			"dsc-auto-config":         api.CLIInfo{Path: "Spec.BGPConfig.DSCAutoConfig", Skip: false, Insert: "", Help: ""},
 			"enable-address-families": api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].EnableAddressFamilies", Skip: false, Insert: "", Help: ""},
 			"generation-id":           api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"holdtime":                api.CLIInfo{Path: "Spec.BGPConfig.Holdtime", Skip: false, Insert: "", Help: ""},
@@ -204,7 +207,6 @@ var typesMapRoute = map[string]*api.Struct{
 			"router-id":               api.CLIInfo{Path: "Spec.BGPConfig.RouterId", Skip: false, Insert: "", Help: ""},
 			"self-link":               api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"shutdown":                api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].Shutdown", Skip: false, Insert: "", Help: ""},
-			"source-from-loopback":    api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].SourceFromLoopback", Skip: false, Insert: "", Help: ""},
 			"tenant":                  api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"uuid":                    api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},

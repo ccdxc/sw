@@ -85,7 +85,7 @@ func convertRoutingConfig(rtcfg *RoutingConfigState) *netproto.RoutingConfig {
 
 	if rtcfg.RoutingConfig.Spec.BGPConfig != nil {
 		obj.Spec.BGPConfig = &netproto.BGPConfig{
-			RouterId:          rtcfg.RoutingConfig.Spec.BGPConfig.RouterId,
+			DSCAutoConfig:     rtcfg.RoutingConfig.Spec.BGPConfig.DSCAutoConfig,
 			ASNumber:          rtcfg.RoutingConfig.Spec.BGPConfig.ASNumber,
 			KeepaliveInterval: rtcfg.RoutingConfig.Spec.BGPConfig.KeepaliveInterval,
 			Holdtime:          rtcfg.RoutingConfig.Spec.BGPConfig.Holdtime,
@@ -98,6 +98,7 @@ func convertRoutingConfig(rtcfg *RoutingConfigState) *netproto.RoutingConfig {
 			neighbor.RemoteAS = nbr.RemoteAS
 			neighbor.MultiHop = nbr.MultiHop
 			neighbor.Password = nbr.Password
+			neighbor.DSCAutoConfig = nbr.DSCAutoConfig
 			for _, addr := range nbr.EnableAddressFamilies {
 				neighbor.EnableAddressFamilies = append(neighbor.EnableAddressFamilies, addr)
 			}

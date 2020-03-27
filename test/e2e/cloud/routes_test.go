@@ -428,19 +428,19 @@ var _ = Describe("Cloud E2E", func() {
 				},
 				Spec: network.RoutingConfigSpec{
 					BGPConfig: &network.BGPConfig{
-						RouterId:          "0.0.0.0",
+						DSCAutoConfig:     true,
 						ASNumber:          65000,
 						KeepaliveInterval: 30,
 						Holdtime:          90,
 						Neighbors: []*network.BGPNeighbor{
 							{
-								IPAddress:             "0.0.0.0",
+								DSCAutoConfig:         true,
 								RemoteAS:              65514,
 								MultiHop:              10,
 								EnableAddressFamilies: []string{network.BGPAddressFamily_IPv4Unicast.String()},
 							},
 							{
-								IPAddress:             "0.0.0.0",
+								DSCAutoConfig:         true,
 								RemoteAS:              65000,
 								MultiHop:              10,
 								EnableAddressFamilies: []string{network.BGPAddressFamily_L2vpnEvpn.String()},

@@ -27,6 +27,8 @@ var typesMapRoute = map[string]*api.Struct{
 			"KeepaliveInterval": api.Field{Name: "KeepaliveInterval", CLITag: api.CLIInfo{ID: "keepalive-interval", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "keepalive-interval", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"Holdtime": api.Field{Name: "Holdtime", CLITag: api.CLIInfo{ID: "holdtime", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "holdtime", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"DSCAutoConfig": api.Field{Name: "DSCAutoConfig", CLITag: api.CLIInfo{ID: "dsc-auto-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc-auto-config", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"netproto.BGPNeighbor": &api.Struct{
@@ -43,6 +45,8 @@ var typesMapRoute = map[string]*api.Struct{
 			"EnableAddressFamilies": api.Field{Name: "EnableAddressFamilies", CLITag: api.CLIInfo{ID: "enable-address-families", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enable-address-families", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Password": api.Field{Name: "Password", CLITag: api.CLIInfo{ID: "password", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"DSCAutoConfig": api.Field{Name: "DSCAutoConfig", CLITag: api.CLIInfo{ID: "dsc-auto-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc-auto-config", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"netproto.EVPNConfig": &api.Struct{
@@ -206,6 +210,7 @@ var typesMapRoute = map[string]*api.Struct{
 		CLITags: map[string]api.CLIInfo{
 			"api-version":             api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"as-number":               api.CLIInfo{Path: "Spec.BGPConfig.ASNumber", Skip: false, Insert: "", Help: ""},
+			"dsc-auto-config":         api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].DSCAutoConfig", Skip: false, Insert: "", Help: ""},
 			"enable-address-families": api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].EnableAddressFamilies", Skip: false, Insert: "", Help: ""},
 			"generation-id":           api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"holdtime":                api.CLIInfo{Path: "Spec.BGPConfig.Holdtime", Skip: false, Insert: "", Help: ""},

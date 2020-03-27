@@ -75,22 +75,16 @@ func expandRoutingConfig(infraAPI types.InfraAPI, lbIp string, rtCfg *netproto.R
 	if rtCfg.Spec.BGPConfig == nil {
 		return ret
 	}
-	var autoConfig bool
 
 	dsccfg := infraAPI.GetConfig()
 
 	log.Infof("DSCConfig Controllers[%v] Interfaces[%v]", dsccfg.Controllers, dsccfg.DSCInterfaceIPs)
 
-	ret.Spec.BGPConfig.RouterId = lbIp
 	ret.Spec.BGPConfig.Holdtime, ret.Spec.BGPConfig.KeepaliveInterval = rtCfg.Spec.BGPConfig.Holdtime, rtCfg.Spec.BGPConfig.KeepaliveInterval
 	ret.Spec.BGPConfig.ASNumber = rtCfg.Spec.BGPConfig.ASNumber
 	var expCfgs []string
 	for _, n := range rtCfg.Spec.BGPConfig.Neighbors {
-		rip := net.ParseIP(n.IPAddress)
-
-		// if set to 0.0.0.0 auto configure the neighborts learnt via DHCP
-		if rip.IsUnspecified() {
-			autoConfig = true
+		if n.DSCAutoConfig {
 			if len(n.EnableAddressFamilies) != 1 {
 				log.Errorf("number of address families not 1 in auto-config")
 				continue
@@ -139,9 +133,6 @@ func expandRoutingConfig(infraAPI types.InfraAPI, lbIp string, rtCfg *netproto.R
 		log.Infof("Expand - peer [%+v]", peer)
 	}
 
-	if autoConfig {
-
-	}
 	log.Infof("expandedConfig: [%d] peers - %v", len(expCfgs), expCfgs)
 	return ret
 }
@@ -192,27 +183,22 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		return nil
 	}
 	log.Infof("RoutingConfig: %s Begin create", rtCfg.GetKey())
-	rid := rtCfg.Spec.BGPConfig.RouterId
-	rip := net.ParseIP(rtCfg.Spec.BGPConfig.RouterId)
 
-	// For now till NPM does proper filtering of RoutingConfig only accept Routing Config with AutoConfig
-	if !rip.IsUnspecified() {
-		log.Infof("ignoring Routing Config with set Router ID [%v]", rtCfg.Name)
+	if !rtCfg.Spec.BGPConfig.DSCAutoConfig {
+		log.Infof("ignoring Routing Config which is not auto-config object [%v]", rtCfg.Name)
 		return nil
 	}
-
 	dsccfg := infraAPI.GetConfig()
 	ctx := context.TODO()
-	log.Infof("RID calculation [%s][%s] Interfaces [%v]", rid, dsccfg.LoopbackIP, dsccfg.DSCInterfaceIPs)
+	log.Infof("RID calculation [%s] Interfaces [%v]", dsccfg.LoopbackIP, dsccfg.DSCInterfaceIPs)
 
-	rid = getRouterID(infraAPI)
+	rid := getRouterID(infraAPI)
 	if rid == "" {
 		log.Errorf("BGP Create could not get IP Address for router ID ")
 		return errors.Wrap(types.ErrInvalidIP, "could not determine Router ID")
 	}
 	log.Infof("Choosing RID [%v]", rid)
 	newCfg := expandRoutingConfig(infraAPI, rid, &rtCfg)
-	newCfg.Spec.BGPConfig.RouterId = rid
 	cfg, err := clientutils.GetBGPConfiguration(nil, newCfg, "0.0.0.0", rid)
 	if err != nil {
 		log.Errorf("BGPConfig: GetConfig failed | Err: %s", err)
@@ -246,11 +232,8 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		log.Infof("ignoring Routing Config [%v]", rtCfg.Name)
 		return nil
 	}
-	rip := net.ParseIP(rtCfg.Spec.BGPConfig.RouterId)
-
-	// For now till NPM does proper filtering of RoutingConfig only accept Routing Config with AutoConfig
-	if !rip.IsUnspecified() {
-		log.Infof("ignoring Routing Config with set Router ID [%v]", rtCfg.Name)
+	if !rtCfg.Spec.BGPConfig.DSCAutoConfig {
+		log.Infof("ignoring Routing Config which is not auto-config object [%v]", rtCfg.Name)
 		return nil
 	}
 
@@ -290,11 +273,8 @@ func deleteRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		return nil
 	}
 
-	rip := net.ParseIP(rtCfg.Spec.BGPConfig.RouterId)
-
-	// For now till NPM does proper filtering of RoutingConfig only accept Routing Config with AutoConfig
-	if !rip.IsUnspecified() {
-		log.Infof("ignoring Routing Config with set Router ID [%v]", rtCfg.Name)
+	if !rtCfg.Spec.BGPConfig.DSCAutoConfig {
+		log.Infof("ignoring Routing Config which is not auto-config object [%v]", rtCfg.Name)
 		return nil
 	}
 

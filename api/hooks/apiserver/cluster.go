@@ -1140,6 +1140,9 @@ func (cl *clusterHooks) nodePreCommitHook(ctx context.Context, kvs kvstore.Inter
 		if err != nil {
 			return i, false, fmt.Errorf("Routing configuration not found")
 		}
+		if rcfg.Spec.BGPConfig != nil && rcfg.Spec.BGPConfig.DSCAutoConfig {
+			return i, false, fmt.Errorf("routing config with dsc-auto-config enabled cannot be attached to a Node")
+		}
 		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(rkey), ">", 0))
 	}
 

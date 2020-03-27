@@ -602,7 +602,7 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 
 	// Check for Loopback Update
 	oldLoopbackIf := ""
-	if intf.Spec.Type != netproto.InterfaceSpec_LOOPBACK.String() {
+	if intf.Spec.Type == netproto.InterfaceSpec_LOOPBACK.String() {
 		cfg := a.InfraAPI.GetConfig()
 		oldLoopbackIf = cfg.LoopbackIP
 	}

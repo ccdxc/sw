@@ -2623,6 +2623,14 @@
             "required": false,
             "type": "integer",
             "format": "int64"
+          },
+          {
+            "name": "bgp-config.dsc-auto-config",
+            "description": "DSCAutoConfig sets the flag that this config is to be used as a template for auto configuration.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -8035,7 +8043,6 @@
     "networkBGPConfig": {
       "type": "object",
       "required": [
-        "router-id",
         "keepalive-interval",
         "holdtime"
       ],
@@ -8064,6 +8071,11 @@
           "maximum": 3600,
           "description": "Holdtime is time for which not receiving a keepalive message results in declaring the peer as dead. Value should be between 0 and 3600."
         },
+        "dsc-auto-config": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "DSCAutoConfig sets the flag that this config is to be used as a template for auto configuration."
+        },
         "neighbors": {
           "type": "array",
           "items": {
@@ -8076,7 +8088,6 @@
     "networkBGPNeighbor": {
       "type": "object",
       "required": [
-        "ip-address",
         "multi-hop",
         "enable-address-families"
       ],
@@ -8122,10 +8133,10 @@
           "maxLength": 128,
           "description": "Enable Password authentication. Disabled if the string is empty. Length of string should be between 1 and 128."
         },
-        "source-from-loopback": {
+        "dsc-auto-config": {
           "type": "boolean",
           "format": "boolean",
-          "description": "use loopback interface as source IP address for protocol session."
+          "description": "DSCAutoConfig sets the flag that this neighbor config is to be used as a template for auto configuration."
         }
       }
     },

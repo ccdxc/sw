@@ -658,6 +658,7 @@ e2e:
 cloud-e2e:
 	if [ -z ${BYPASS_CLOUD_SIM} ]; then \
 		JOB_ID=1 IGNORE_BUILD_PIPELINE=1 FLAVOR=-venice PIPELINE=apulu ${MAKE} -C nic jobd/e2e/naples-sim-image; \
+		tar -zxvf nic/obj/images/naples-release-v1.tgz -C nic/obj/images/ \
 	fi
 	docker load -i nic/obj/images/naples-docker-v1.tgz; \
 	if [ -z ${BYPASS_PEGASUS} ]; then \

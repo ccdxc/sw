@@ -36,6 +36,13 @@ var CreateRoutingConfigFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "dsc-auto-config",
+		Type:   "Bool",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "enable-address-families",
 		Type:   "StringSlice",
 		Help:   "",
@@ -93,13 +100,6 @@ var CreateRoutingConfigFlags = []gen.CliFlag{
 	},
 	{
 		ID:     "shutdown",
-		Type:   "StringSlice",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "source-from-loopback",
 		Type:   "StringSlice",
 		Help:   "",
 		Skip:   false,
