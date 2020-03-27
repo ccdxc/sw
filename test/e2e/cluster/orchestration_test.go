@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/orchestration"
+	orchutils "github.com/pensando/sw/venice/ctrler/orchhub/utils"
 )
 
 const (
@@ -126,6 +127,8 @@ var _ = Describe("orchestration object tests", func() {
 				return nil
 			}, 10, 1).Should(BeNil())
 
+			_, err = ts.tu.APIClient.OrchestratorV1().Orchestrator().Delete(ts.loggedInCtx, &orch.ObjectMeta)
+			Expect(err).Should(BeNil())
 		})
 
 		It("Orchestration operations should succeed", func() {
@@ -136,7 +139,7 @@ var _ = Describe("orchestration object tests", func() {
 			}, 10, 1).Should(BeNil())
 
 			time.Sleep(5 * time.Second)
-			opts := api.ListWatchOptions{LabelSelector: "vcenter.orch-name=vcenter"}
+			opts := api.ListWatchOptions{LabelSelector: fmt.Sprintf("%v=vcenter", orchutils.OrchNameKey)}
 
 			_, err := ts.tu.APIClient.ClusterV1().Host().List(ts.loggedInCtx, &opts)
 			Expect(err).Should(BeNil())
