@@ -1359,10 +1359,10 @@ capri_barco_init_drbg (void)
     /*
      * Initialize the Barco TRNG module.
      */
-    SDK_TRACE_DEBUG("[DRBG] initializing ...");
+    SDK_TRACE_DEBUG("initializing ...");
     strcpy((char *)psnl_str_p, "cap/he/drbg/pensando-pers-string"); // Less than 32 bytes
     psnl_str_p_len = strlen((const char *)psnl_str_p);
-    SDK_TRACE_DEBUG("[DRBG] generated personalized string P -- %s len %d", psnl_str_p, psnl_str_p_len);
+    SDK_TRACE_DEBUG("generated personalized string P -- %s len %d", psnl_str_p, psnl_str_p_len);
     cap_drbg_write_ram_psnl_str_p(0, psnl_str_p, psnl_str_p_len, true);
 
     ////////////// TRNG
@@ -1379,34 +1379,34 @@ capri_barco_init_drbg (void)
     cap_trng_set_ctl_reg(0, 0x406F1, true);
     do {
       val = cap_trng_get_status(0, true);
-        //SDK_TRACE_DEBUG("[DRBG] TRNG status = 0x%lx", val);
+        //SDK_TRACE_DEBUG("TRNG status = 0x%lx", val);
         val = cap_trng_get_fifo_level(0, true);
-        //SDK_TRACE_DEBUG("[DRBG] TRNG fifo level = 0x%lx", val);
+        //SDK_TRACE_DEBUG("TRNG fifo level = 0x%lx", val);
     } while (0); //val < 0x20);
 
     //////////// DRBG
     rng = 0;
     rng |= (0x1 << 0); ///NDRNG
-    SDK_TRACE_DEBUG("[DRBG] rng = 0x%lx", rng);
+    SDK_TRACE_DEBUG("rng = 0x%lx", rng);
     rng |= (0x1 << 2); ///DRNG
-    SDK_TRACE_DEBUG("[DRBG] rng = 0x%lx", rng);
+    SDK_TRACE_DEBUG("rng = 0x%lx", rng);
     rng |= (0x80 << 4); //size
-    SDK_TRACE_DEBUG("[DRBG] rng = 0x%lx", rng);
+    SDK_TRACE_DEBUG("rng = 0x%lx", rng);
     rng |= (0x0 << 29); ///TestDRNG
-    SDK_TRACE_DEBUG("[DRBG] rng = 0x%lx", rng);
+    SDK_TRACE_DEBUG("rng = 0x%lx", rng);
     rng |= ((psnl_str_p_len << 3) << 16); ///PSize
-    SDK_TRACE_DEBUG("[DRBG] rng = 0x%lx", rng);
+    SDK_TRACE_DEBUG("rng = 0x%lx", rng);
     rng |= (0x1 << 31); ///start 0
-    SDK_TRACE_DEBUG("[DRBG] set rng = 0x%lx", rng);
+    SDK_TRACE_DEBUG("set rng = 0x%lx", rng);
     cap_drbg_set_ctl_rng(0, rng, true);
 
-    SDK_TRACE_DEBUG("[DRBG] start polling gs");
+    SDK_TRACE_DEBUG("start polling gs");
     gs = 1;
     do {
         gs = cap_drbg_get_ctl_gs(0, true);
-        //SDK_TRACE_DEBUG("[DRBG] continue polling gs");
+        //SDK_TRACE_DEBUG("continue polling gs");
     } while (gs != 0);
-    SDK_TRACE_DEBUG("[DRBG] Initialization done");
+    SDK_TRACE_DEBUG("Initialization done");
 
     /*
      * Generate the random number once from ARM cpu, for the first use by the
@@ -1414,23 +1414,23 @@ capri_barco_init_drbg (void)
      * (Eventually with a timer-based DRBG producer ring infra in data-path, we'll
      * not need this).
      */
-    SDK_TRACE_DEBUG("[DRBG] generate random number with buffer id 0");
+    SDK_TRACE_DEBUG("generate random number with buffer id 0");
     rng = 0;
     rng |= (0x1 << 0); //NDRNG
     rng |= (0x0 << 2); //DRNG
     rng |= (0x80 << 4); //size
     rng |= (0x0 << 29); //TestDRNG
     rng |= (0x1 << 31); //start
-    SDK_TRACE_DEBUG("[DRBG] set rng = 0x%llx", rng);
+    SDK_TRACE_DEBUG("set rng = 0x%llx", rng);
     cap_drbg_set_ctl_rng(0, rng, true);
 
-    SDK_TRACE_DEBUG("[DRBG] start polling gs");
+    SDK_TRACE_DEBUG("start polling gs");
     gs = 1;
     do {
         gs = cap_drbg_get_ctl_gs(0, true);
-        //SDK_TRACE_DEBUG("[DRBG] continue polling gs");
+        //SDK_TRACE_DEBUG("continue polling gs");
     } while (gs != 0);
-    SDK_TRACE_DEBUG("[DRBG] generate random number complete!");
+    SDK_TRACE_DEBUG("generate random number complete!");
 
     cap_drbg_read_ram_rand_num0(0, num0, 512, true);
     CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Random number set 0:", (char *)num0, 512);
@@ -1446,7 +1446,7 @@ sdk_ret_t capri_barco_setup_dummy_gcm1_req(uint32_t key_idx)
     uint64_t                    ilist_msg_descr_addr = 0, olist_msg_descr_addr = 0;
     uint64_t                    ilist_mem_addr = 0, olist_mem_addr = 0, auth_tag_mem_addr = 0;
     uint64_t                    iv_addr = 0, status_addr = 0, db_addr = 0;
-    barco_symm_req_descriptor_t sym_req_descr; 
+    barco_symm_req_descriptor_t sym_req_descr;
     barco_sym_msg_descriptor_t  ilist_msg_descr, olist_msg_descr;
     uint64_t                    gcm1_ring_base = 0, gcm1_slot_addr = 0;
     uint32_t                    idx = 0;
@@ -1461,7 +1461,7 @@ sdk_ret_t capri_barco_setup_dummy_gcm1_req(uint32_t key_idx)
     }
     SDK_TRACE_DEBUG(PRE_HDR":Allocated memory @ 0x%llx to support dummy GCM request descriptor", mem_addr);
 
-    
+
     ilist_msg_descr_addr = curr_addr = mem_addr;
     curr_addr += sizeof(barco_sym_msg_descriptor_t);    /* 64B */
 
@@ -1471,7 +1471,7 @@ sdk_ret_t capri_barco_setup_dummy_gcm1_req(uint32_t key_idx)
     /* 16B input */
     ilist_mem_addr = curr_addr;
     curr_addr += CAPRI_BARCO_GCM_DUMMY_INPUT_SZ;        /* 144B */
-    
+
     /* 16B output */
     olist_mem_addr = curr_addr;
     curr_addr += CAPRI_BARCO_GCM_DUMMY_OUTPUT_SZ;       /* 160B */

@@ -42,7 +42,7 @@ capri_psp_swphv_init (bool rx)
 
     int index = 0;
 
-    SDK_TRACE_DEBUG("CAPRI-PSP:: Initializing PSP Global Config");
+    SDK_TRACE_DEBUG("Initializing PSP Global Config");
 
     psp_csr->cfg_sw_phv_global.start_enable(1);
     psp_csr->cfg_sw_phv_global.err_enable(0);
@@ -95,7 +95,7 @@ capri_ppa_swphv_init ()
         cap_dpp_csr_t &dpp_csr = cap0.dpp.dpp[pidx];
         int index = 0;
 
-        SDK_TRACE_DEBUG("CAPRI-PPA:: Initializing PPA Global Config");
+        SDK_TRACE_DEBUG("Initializing PPA Global Config");
 
         // enable sw phv
         ppa_csr.cfg_sw_phv_global.start_enable(1);
@@ -172,7 +172,7 @@ capri_pr_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx, uint8_t num_fli
     cap_psp_csr_t &pr_psp_csr = cap0.pr.pr.psp;
     pu_cpp_int< 512 > flit_data;
 
-    SDK_TRACE_DEBUG("CAPRI-PSP-PHV-INJECT:: Injecting Software PHV.");
+    SDK_TRACE_DEBUG("Injecting Software PHV.");
 
     int index = 0;
     capri_flit_t *curr_flit_ptr = (capri_flit_t *)data;
@@ -218,7 +218,7 @@ capri_pr_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx, uint8_t num_fli
     sw_phv_ctrl.qid_enable(0);
     sw_phv_ctrl.write();
 
-    SDK_TRACE_DEBUG("CAPRI-PHV-INJECT:: Software PHV injected. done");
+    SDK_TRACE_DEBUG("Software PHV injected. done");
     return SDK_RET_OK;
 }
 
@@ -230,7 +230,7 @@ capri_pt_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx, uint8_t num_fli
     cap_psp_csr_t &pt_psp_csr = cap0.pt.pt.psp;
     pu_cpp_int< 512 > flit_data;
 
-    SDK_TRACE_DEBUG("CAPRI-PSP-PHV-INJECT:: Injecting Software PHV.");
+    SDK_TRACE_DEBUG("Injecting Software PHV.");
 
     int index = 0;
     capri_flit_t *curr_flit_ptr = (capri_flit_t *)data;
@@ -277,7 +277,7 @@ capri_pt_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx, uint8_t num_fli
     sw_phv_ctrl.qid_enable(0);
     sw_phv_ctrl.write();
 
-    SDK_TRACE_DEBUG("CAPRI-PHV-INJECT:: Software PHV injected. done");
+    SDK_TRACE_DEBUG("Software PHV injected. done");
     return SDK_RET_OK;
 }
 
@@ -345,8 +345,8 @@ capri_sw_phv_inject (asic_swphv_type_t type, uint8_t prof_num, uint8_t start_idx
 {
     sdk_ret_t   ret = SDK_RET_OK;
 
-    SDK_TRACE_DEBUG("CAPRI-PHV-INJECT:: Injecting Software PHV type %d",
-                    type);
+
+    SDK_TRACE_DEBUG("Injecting Software PHV type %d", type);
 
     // switch based on pipeline type
     switch(type) {
@@ -375,7 +375,7 @@ capri_pr_psp_sw_phv_state (uint8_t prof_num, asic_sw_phv_state_t *state)
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_psp_csr_t &pr_psp_csr = cap0.pr.pr.psp;
 
-    SDK_TRACE_DEBUG("CAPRI-PSP-PHV-STATE:: Getting Software PHV.");
+    SDK_TRACE_DEBUG("Getting Software PHV.");
 
 
     cap_psp_csr_sta_sw_phv_state_t &sw_phv_state = pr_psp_csr.sta_sw_phv_state[prof_num];
@@ -404,7 +404,7 @@ capri_pt_psp_sw_phv_state (uint8_t prof_num, asic_sw_phv_state_t *state)
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_psp_csr_t &pt_psp_csr = cap0.pt.pt.psp;
 
-    SDK_TRACE_DEBUG("CAPRI-PSP-PHV-STATE:: Getting Software PHV state.");
+    SDK_TRACE_DEBUG("Getting Software PHV state.");
 
     // read the status registers
     cap_psp_csr_sta_sw_phv_state_t &sw_phv_state = pt_psp_csr.sta_sw_phv_state[prof_num];
@@ -433,7 +433,7 @@ capri_ppa_sw_phv_state (uint8_t pidx, uint8_t prof_num, asic_sw_phv_state_t *sta
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_ppa_csr_t &ppa_csr = cap0.ppa.ppa[pidx];
 
-    SDK_TRACE_DEBUG("CAPRI-PHV-STATE:: Getting Software PHV state");
+    SDK_TRACE_DEBUG("Getting Software PHV state");
 
     // read the status registers
     cap_ppa_csr_sta_sw_phv_state_t &sw_phv_state = ppa_csr.sta_sw_phv_state[prof_num];
@@ -463,7 +463,7 @@ capri_sw_phv_get (asic_swphv_type_t type, uint8_t prof_num, asic_sw_phv_state_t 
 {
     sdk_ret_t   ret = SDK_RET_OK;
 
-    SDK_TRACE_DEBUG("Getting Software PHV state for type %d",type);
+    SDK_TRACE_DEBUG("Getting Software PHV state for type %d", type);
 
     // switch based on pipeline type
     switch(type) {
