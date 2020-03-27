@@ -19,7 +19,7 @@ export NICMGR_LOG_LEVEL=debug
 export NICMGR_CONFIG_PATH=$PLATFORM_DIR/etc/nicmgrd
 export NICMGR_LIBRARY_PATH=$PLATFORM_DIR/lib:$NIC_DIR/lib:$NIC_DIR/conf/sdk
 export HAL_LIBRARY_PATH=$HAL_LIBRARY_PATH:$NICMGR_LIBRARY_PATH
-rm -f $PERSISTENT_LOGDIR/nicmgr.log*
+mv $PERSISTENT_LOGDIR/nicmgr.log $PERSISTENT_LOGDIR/nicmgr_old.log
 
 # remove logs
 rm -f $PERSISTENT_LOGDIR/hal.log*
