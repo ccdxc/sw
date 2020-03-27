@@ -143,16 +143,17 @@ type workloadPairCollection struct {
 	pairs []*workloadPair
 }
 
+// ObjClient returns objclient object for entbasecfg
 func (gs *EntBaseCfg) ObjClient() objClient.ObjClient {
 	return gs.Client
 }
 
-//InitClient init client
+// InitClient init client
 func (gs *EntBaseCfg) InitClient(ctx context.Context, urls []string) {
 	gs.Client = objClient.NewClient(ctx, urls).(*objClient.Client)
 }
 
-//WriteConfig saves config
+// WriteConfig saves config
 func (gs *EntBaseCfg) WriteConfig() {
 	ofile, err := os.OpenFile(configFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
@@ -762,6 +763,7 @@ func (gs *EntBaseCfg) PushConfig() error {
 	return nil
 }
 
+// CleanupAllConfig clean up all config
 func (gs *EntBaseCfg) CleanupAllConfig() error {
 	var err error
 

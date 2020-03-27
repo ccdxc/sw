@@ -54,6 +54,7 @@ type SysModel struct {
 
 }
 
+// Init init sys model
 func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSetup bool) error {
 	sm.Tb = tb
 	sm.NaplesHosts = make(map[string]*objects.Host)
@@ -72,10 +73,12 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSe
 	return nil
 }
 
+// Testbed get testbed obj
 func (sm *SysModel) Testbed() *testbed.TestBed {
 	return sm.Tb
 }
 
+// ConfigClient get objclient
 func (sm *SysModel) ConfigClient() objClient.ObjClient {
 	return sm.CfgModel.ObjClient()
 }
@@ -253,6 +256,7 @@ L:
 
 }
 
+// InitCfgModel init cfg model
 func (sm *SysModel) InitCfgModel() error {
 
 	veniceCtx, err := sm.VeniceLoggedInCtx(context.TODO())
@@ -280,7 +284,7 @@ func convertToVeniceFormatMac(s string) string {
 	return buffer.String()
 }
 
-// createNaples creates a naples instance
+// CreateNaples creates a naples instance
 func (sm *SysModel) CreateNaples(node *testbed.TestNode) error {
 
 	snicInRange := func(macAddr string) (sn *cluster.DistributedServiceCard, err error) {
@@ -778,7 +782,7 @@ func (sm *SysModel) InitConfig(scale, scaleData bool) error {
 	return nil
 }
 
-// createHost creates a new host instance
+// CreateSwitch creates a new switch
 func (sm *SysModel) CreateSwitch(sw *iota.DataSwitch) (*objects.Switch, error) {
 
 	smSw := objects.NewSwitch(sw)
@@ -811,6 +815,7 @@ func (sm *SysModel) CreateSwitch(sw *iota.DataSwitch) (*objects.Switch, error) {
 	return smSw, nil
 }
 
+// Cleanup TODO
 func (sm *SysModel) Cleanup() error {
 	// collect all log files
 	sm.CollectLogs()
@@ -847,14 +852,12 @@ func (sm *SysModel) MirrorSessions() *objects.MirrorSessionCollection {
 	return &msc
 }
 
+// NewNetworkSecurityPolicy TODO
 func (sm *SysModel) NewNetworkSecurityPolicy(name string) *objects.NetworkSecurityPolicyCollection {
 	return nil
 }
 
-func (sm *SysModel) QueryDropMetricsForWorkloadPairs(wpc *objects.WorkloadPairCollection, timestr string) error {
-	return errors.New("Not implemented")
-}
-
+// VerifyRuleStats TODO
 func (sm *SysModel) VerifyRuleStats(timestr string, spc *objects.NetworkSecurityPolicyCollection, minCounts []map[string]float64) error {
 	return errors.New("Not implemented")
 }

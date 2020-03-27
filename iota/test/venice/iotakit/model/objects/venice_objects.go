@@ -7,11 +7,16 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/telemetry_query"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
 	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/telemetryclient"
 )
 
 // VeniceNode represents a venice node
@@ -42,7 +47,8 @@ func (v *VeniceNode) GetTestNode() *testbed.TestNode {
 // VeniceNodeCollection is collection of venice nodes
 type VeniceNodeCollection struct {
 	CollectionCommon
-	Nodes []*VeniceNode
+	Nodes        []*VeniceNode
+	TelemetryCli []*telemetryclient.TelemetryClient
 }
 
 // VeniceContainer represents a venice container
@@ -58,6 +64,7 @@ type VeniceContainerCollection struct {
 	Containers []*VeniceContainer
 }
 
+// NewVeniceNodeCollection create a new VeniceNodeCollection
 func NewVeniceNodeCollection(client objClient.ObjClient, testbed *testbed.TestBed) *VeniceNodeCollection {
 	return &VeniceNodeCollection{
 		CollectionCommon: CollectionCommon{Client: client,
@@ -233,6 +240,7 @@ nodeLoop:
 	return ret, nil
 }
 
+// CaptureGRETCPDump capture the gre tcp dump
 func (vnc *VeniceNodeCollection) CaptureGRETCPDump(ctx context.Context) (string, error) {
 
 	trig := vnc.Testbed.NewTrigger()
@@ -254,6 +262,7 @@ func (vnc *VeniceNodeCollection) CaptureGRETCPDump(ctx context.Context) (string,
 	return stopResp[0].GetStdout(), nil
 }
 
+// GetGRETCPDumpCount get gre tcp dump count
 func (vnc *VeniceNodeCollection) GetGRETCPDumpCount(ctx context.Context) (int, error) {
 
 	trig := vnc.Testbed.NewTrigger()
@@ -464,6 +473,300 @@ func (vnc *VeniceNodeCollection) GetVeniceContainersWithService(service string, 
 		vContCollection.Containers = append(vContCollection.Containers, vContainer)
 	}
 	return &vContCollection, nil
+}
+
+// InitTelemetryClient init telemetry clients for each venice node
+func (vnc *VeniceNodeCollection) InitTelemetryClient() error {
+	// if we are already connected, just return the client
+
+	var telemecls []*telemetryclient.TelemetryClient
+	for _, url := range vnc.Client.Urls() {
+		// connect to Venice
+		tmc, err := telemetryclient.NewTelemetryClient(url)
+		if err != nil {
+			log.Errorf("Error connecting to Venice %v. Err: %v", url, err)
+			return err
+		}
+
+		telemecls = append(telemecls, tmc)
+	}
+	vnc.TelemetryCli = telemecls
+
+	return nil
+}
+
+// QueryMetricsByReporter query metrics
+func (vnc *VeniceNodeCollection) QueryMetricsByReporter(kind, reporter, timestr string) (*telemetryclient.MetricsQueryResponse, error) {
+	err := vnc.InitTelemetryClient()
+	if err != nil {
+		return nil, err
+	}
+	stime := &api.Timestamp{}
+	if err := stime.Parse(timestr); err != nil {
+		return nil, fmt.Errorf("invalid time %v", timestr)
+	}
+
+	// build the query
+	query := &telemetry_query.MetricsQueryList{
+		Tenant:    globals.DefaultTenant,
+		Namespace: globals.DefaultNamespace,
+		Queries: []*telemetry_query.MetricsQuerySpec{
+			{
+				TypeMeta: api.TypeMeta{
+					Kind: kind,
+				},
+				Selector: &fields.Selector{
+
+					Requirements: []*fields.Requirement{
+						{
+							Key:      "reporterID",
+							Operator: fields.Operator_equals.String(),
+							Values:   []string{reporter},
+						},
+					},
+				},
+				StartTime: stime,
+				SortOrder: "descending",
+				Pagination: &telemetry_query.PaginationSpec{
+					Count: 1,
+				},
+			},
+		},
+	}
+
+	var result *telemetryclient.MetricsQueryResponse
+	for _, tmc := range vnc.TelemetryCli {
+		result, err = tmc.Metrics(vnc.Client.Context(), query)
+		if err == nil {
+			return result, nil
+		}
+	}
+
+	log.Errorf("got error %v metrics fields query: %+v", err, query.Queries[0])
+
+	return result, err
+}
+
+// QueryFwlog queries firewall log
+func (vnc *VeniceNodeCollection) QueryFwlog(protocol, fwaction, timestr string, port uint32) (*telemetry_query.FwlogsQueryResponse, error) {
+	// validate parameters
+	_, ok := telemetry_query.FwlogActions_value[fwaction]
+	if !ok {
+		log.Errorf("Invalid firewall action %s", fwaction)
+		return nil, fmt.Errorf("Invalid fwaction")
+	}
+	stime := &api.Timestamp{}
+	stime.Parse(timestr)
+
+	// build the query
+	query := telemetry_query.FwlogsQueryList{
+		Tenant:    globals.DefaultTenant,
+		Namespace: globals.DefaultNamespace,
+		Queries: []*telemetry_query.FwlogsQuerySpec{
+			{
+				Protocols: []string{protocol},
+				DestPorts: []uint32{port},
+				Actions:   []string{fwaction},
+				StartTime: stime,
+			},
+		},
+	}
+
+	var err error
+	var result *telemetry_query.FwlogsQueryResponse
+	for _, tmc := range vnc.TelemetryCli {
+		result, err = tmc.Fwlogs(vnc.Client.Context(), &query)
+		if err == nil {
+			break
+		}
+	}
+
+	return result, err
+}
+
+// QueryMetricsSelector query metrics selector
+func (vnc *VeniceNodeCollection) QueryMetricsSelector(kind, timestr string, sel fields.Selector) (*telemetryclient.MetricsQueryResponse, error) {
+	stime := &api.Timestamp{}
+	if err := stime.Parse(timestr); err != nil {
+		log.Errorf("failed to parse time %v", timestr)
+		return nil, err
+	}
+
+	// build the query
+	query := &telemetry_query.MetricsQueryList{
+		Tenant:    globals.DefaultTenant,
+		Namespace: globals.DefaultNamespace,
+		Queries: []*telemetry_query.MetricsQuerySpec{
+			{
+				TypeMeta: api.TypeMeta{
+					Kind: kind,
+				},
+				Selector:     &sel,
+				StartTime:    stime,
+				GroupbyField: "reporterID",
+				SortOrder:    "descending",
+				Pagination: &telemetry_query.PaginationSpec{
+					Count: 1,
+				},
+			},
+		},
+	}
+
+	log.Debugf("Sending metrics query: %+v", query.Queries[0])
+
+	var err error
+	var result *telemetryclient.MetricsQueryResponse
+	for _, tmc := range vnc.TelemetryCli {
+		result, err = tmc.Metrics(vnc.Client.Context(), query)
+		if err == nil {
+			break
+		}
+	}
+
+	return result, err
+}
+
+// QueryMetrics queries venice metrics
+func (vnc *VeniceNodeCollection) QueryMetrics(kind, name, timestr string, count int32) (*telemetryclient.MetricsQueryResponse, error) {
+	stime := &api.Timestamp{}
+	if err := stime.Parse(timestr); err != nil {
+		log.Errorf("failed to parse time %v", timestr)
+		return nil, err
+	}
+
+	// build the query
+	query := &telemetry_query.MetricsQueryList{
+		Tenant:    globals.DefaultTenant,
+		Namespace: globals.DefaultNamespace,
+		Queries: []*telemetry_query.MetricsQuerySpec{
+			{
+				TypeMeta: api.TypeMeta{
+					Kind: kind,
+				},
+				Selector: &fields.Selector{
+					Requirements: []*fields.Requirement{
+						{
+							Key:    "name",
+							Values: []string{name},
+						},
+					},
+				},
+				// Name: name,
+				StartTime:    stime,
+				GroupbyField: "reporterID",
+				SortOrder:    "descending",
+				Pagination: &telemetry_query.PaginationSpec{
+					Count: count,
+				},
+			},
+		},
+	}
+
+	log.Debugf("Sending metrics query: %+v", query.Queries[0])
+
+	var err error
+	var result *telemetryclient.MetricsQueryResponse
+	for _, tmc := range vnc.TelemetryCli {
+		result, err = tmc.Metrics(vnc.Client.Context(), query)
+		if err == nil {
+			break
+		}
+	}
+
+	return result, err
+}
+
+// QueryMetricsFields query metrics fields
+func (vnc *VeniceNodeCollection) QueryMetricsFields(kind, timestr string) (*telemetryclient.MetricsQueryResponse, error) {
+	stime := &api.Timestamp{}
+	if err := stime.Parse(timestr); err != nil {
+		log.Errorf("failed to parse time %v", timestr)
+		return nil, err
+	}
+
+	// build the query
+	query := &telemetry_query.MetricsQueryList{
+		Tenant:    globals.DefaultTenant,
+		Namespace: globals.DefaultNamespace,
+		Queries: []*telemetry_query.MetricsQuerySpec{
+			{
+				TypeMeta: api.TypeMeta{
+					Kind: kind,
+				},
+				StartTime:    stime,
+				GroupbyField: "reporterID",
+				Pagination: &telemetry_query.PaginationSpec{
+					Count: 1,
+				},
+			},
+		},
+	}
+
+	log.Debugf("Sending metrics fields query: %+v", query.Queries[0])
+
+	var err error
+	var result *telemetryclient.MetricsQueryResponse
+	for _, tmc := range vnc.TelemetryCli {
+		result, err = tmc.Metrics(vnc.Client.Context(), query)
+		if err == nil {
+			break
+		}
+	}
+
+	return result, err
+}
+
+// QueryDropMetricsForWorkloadPairs query drop metrics for workload pairs
+func (vnc *VeniceNodeCollection) QueryDropMetricsForWorkloadPairs(wpc *WorkloadPairCollection, timestr string) error {
+	for _, pair := range wpc.Pairs {
+		dstIPAddr := pair.Second.GetIP()
+		srcIPAddr := pair.First.GetIP()
+		sel := fields.Selector{
+			Requirements: []*fields.Requirement{
+				{
+					Key:    "source",
+					Values: []string{srcIPAddr},
+				},
+				{
+					Key:    "destination",
+					Values: []string{dstIPAddr},
+				},
+			},
+		}
+		res, err := vnc.QueryMetricsSelector("IPv4FlowDropMetrics", timestr, sel)
+		if err != nil {
+			return err
+		}
+		log.Infof("Done with query selection")
+		testFields := map[string]string{
+			"DropPackets": "1",
+			"DropReason":  "1",
+		}
+
+		for _, rslt := range res.Results {
+			log.Infof("Results %d", len(rslt.Series))
+			for _, series := range rslt.Series {
+				// find the column
+				log.Infof("series")
+				cIndex := map[string]int{}
+				for i, c := range series.Columns {
+					if _, ok := testFields[c]; ok {
+						cIndex[c] = i
+
+					}
+				}
+				for _, t := range series.Values {
+					for k, v := range cIndex {
+						temp := fmt.Sprintf("%d", int(t[v].(float64)))
+						if temp != testFields[k] {
+							return fmt.Errorf("received %v : %v expected: %v", k, temp, testFields[k])
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
 }
 
 //RunCommand runs command int the container

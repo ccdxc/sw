@@ -8,8 +8,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/telemetryclient"
-
 	"github.com/pensando/sw/api/generated/network"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
@@ -89,7 +87,7 @@ func (sm *SysModel) SetupVeniceNaples() error {
 	return nil
 }
 
-//Do cleanup
+// Cleanup Do cleanup
 func (sm *SysModel) Cleanup() error {
 	// collect all log files
 	sm.CollectLogs()
@@ -351,9 +349,4 @@ func (sm *SysModel) FindFwlogForWorkloadPairs(protocol, fwaction, timestr string
 // GetFwLogObjectCount gets the object count for firewall logs under the bucket with the given name
 func (sm *SysModel) GetFwLogObjectCount(tenantName string, bucketName string, objectKeyPrefix string) (int, error) {
 	return 0, fmt.Errorf("not implemented")
-}
-
-// QueryMetricsByReporter query metrics
-func (sm *SysModel) QueryMetricsByReporter(kind, reporter, timestr string) (*telemetryclient.MetricsQueryResponse, error) {
-	return nil, fmt.Errorf("not available")
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// Naples represents a smart-nic
+// Node represents a smart-nic
 type Node struct {
 	name      string
 	iotaNode  *iota.Node
@@ -19,6 +19,7 @@ type Node struct {
 	UUID      string
 }
 
+// NaplesInstance represents a naples instance
 type NaplesInstance struct {
 	Dsc        *cluster.DistributedServiceCard
 	EntityName string
@@ -36,8 +37,8 @@ type ThirdPartyNode struct {
 	Node
 }
 
+// NewNaplesNode create a new naples node obj
 func NewNaplesNode(name string, node *testbed.TestNode) *Naples {
-
 	return &Naples{
 		Node: Node{
 			testNode: node,
@@ -47,6 +48,7 @@ func NewNaplesNode(name string, node *testbed.TestNode) *Naples {
 	}
 }
 
+// AddDSC add a dsc instance
 func (naples *Naples) AddDSC(name string, sn *cluster.DistributedServiceCard) {
 
 	naples.Instances = append(naples.Instances, &NaplesInstance{
@@ -54,6 +56,7 @@ func (naples *Naples) AddDSC(name string, sn *cluster.DistributedServiceCard) {
 	})
 }
 
+// NewThirdPartyNode create a new thrid party node obj
 func NewThirdPartyNode(name string, node *testbed.TestNode) *ThirdPartyNode {
 
 	return &ThirdPartyNode{
@@ -65,6 +68,7 @@ func NewThirdPartyNode(name string, node *testbed.TestNode) *ThirdPartyNode {
 	}
 }
 
+// IP get mgmtIP
 func (n *Node) IP() string {
 	if n.IPAddress != "" {
 		return n.IPAddress
@@ -72,26 +76,32 @@ func (n *Node) IP() string {
 	return n.testNode.InstanceParams().NicMgmtIP
 }
 
+// SetIP set up IP address for node
 func (n *Node) SetIP(ip string) {
 	n.IPAddress = ip
 }
 
+// Name get node name
 func (n *Node) Name() string {
 	return n.name
 }
 
+// NodeName get iota node name
 func (n *Node) NodeName() string {
 	return n.iotaNode.Name
 }
 
+// GetIotaNode get iota node obj
 func (n *Node) GetIotaNode() *iota.Node {
 	return n.iotaNode
 }
 
+// GetTestNode get test node obj
 func (n *Node) GetTestNode() *testbed.TestNode {
 	return n.testNode
 }
 
+// Personality returns iota personality type
 func (n *Node) Personality() iota.PersonalityType {
 	return n.testNode.Personality
 }
@@ -140,13 +150,13 @@ func (npc *NaplesCollection) Any(num int) *NaplesCollection {
 	return newNpc
 }
 
-//SetDscProfile sets DSC profile for the given naples
+// SetDscProfile sets DSC profile for the given naples
 func (npc *NaplesCollection) SetDscProfile(profile *DscProfile) error {
 
 	return profile.AttachNaples(npc)
 }
 
-//ResetProfile resets profile
+// ResetProfile resets profile
 func (npc *NaplesCollection) ResetProfile() error {
 
 	for _, node := range npc.Nodes {
@@ -195,7 +205,7 @@ func (npc *NaplesCollection) ResetProfile() error {
 	return nil
 }
 
-//Decommission decomission naples
+// Decommission decomission naples
 func (npc *NaplesCollection) Decommission() error {
 
 	for _, naples := range npc.Nodes {
@@ -224,7 +234,7 @@ func (npc *NaplesCollection) Decommission() error {
 	return nil
 }
 
-//Admit decomission naples
+// Admit decomission naples
 func (npc *NaplesCollection) Admit() error {
 
 	for _, naples := range npc.Nodes {
@@ -336,26 +346,26 @@ func (npc *NaplesCollection) Delete() error {
 }
 
 // SelectByPercentage returns a collection with the specified napls based on percentage.
-func (naples *NaplesCollection) SelectByPercentage(percent int) (*NaplesCollection, error) {
+func (npc *NaplesCollection) SelectByPercentage(percent int) (*NaplesCollection, error) {
 	if percent > 100 {
 		return nil, fmt.Errorf("Invalid percentage input %v", percent)
 	}
 
-	if naples.err != nil {
-		return nil, fmt.Errorf("naples collection error (%s)", naples.err)
+	if npc.err != nil {
+		return nil, fmt.Errorf("naples collection error (%s)", npc.err)
 	}
 
 	ret := &NaplesCollection{}
-	for _, entry := range naples.Nodes {
+	for _, entry := range npc.Nodes {
 		ret.Nodes = append(ret.Nodes, entry)
-		if (len(ret.Nodes)) >= (len(naples.Nodes)+len(naples.FakeNodes))*percent/100 {
+		if (len(ret.Nodes)) >= (len(npc.Nodes)+len(npc.FakeNodes))*percent/100 {
 			break
 		}
 	}
 
-	for _, entry := range naples.FakeNodes {
+	for _, entry := range npc.FakeNodes {
 
-		if (len(ret.Nodes) + len(ret.FakeNodes)) >= (len(naples.Nodes)+len(naples.FakeNodes))*percent/100 {
+		if (len(ret.Nodes) + len(ret.FakeNodes)) >= (len(npc.Nodes)+len(npc.FakeNodes))*percent/100 {
 			break
 		}
 		ret.FakeNodes = append(ret.FakeNodes, entry)
@@ -368,10 +378,10 @@ func (naples *NaplesCollection) SelectByPercentage(percent int) (*NaplesCollecti
 }
 
 //RunCommand runs command on the naples nodes
-func (naples *NaplesCollection) RunCommand(node *Naples, cmd string) (string, string, int32, error) {
+func (npc *NaplesCollection) RunCommand(node *Naples, cmd string) (string, string, int32, error) {
 
 	//Derivce the container ID
-	trig := naples.Testbed.NewTrigger()
+	trig := npc.Testbed.NewTrigger()
 
 	entity := node.iotaNode.Name + "_naples"
 

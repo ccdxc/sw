@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/pensando/sw/venice/utils/telemetryclient"
 	"os"
 	"time"
+
+	"github.com/pensando/sw/venice/utils/telemetryclient"
 
 	"github.com/pensando/sw/api/generated/workload"
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -329,4 +330,3 @@ func (sm *SysModel) GetFwLogObjectCount(tenantName string, bucketName string, ob
 func (sm *SysModel) QueryMetricsByReporter(kind, reporter, timestr string) (*telemetryclient.MetricsQueryResponse, error) {
 	return nil, fmt.Errorf("not available")
 }
-

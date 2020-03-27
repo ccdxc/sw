@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/telemetryclient"
-
 	"github.com/onsi/gomega"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/rollout"
@@ -89,7 +87,6 @@ type ClusterActionIntf interface {
 	GetFwLogObjectCount(tenantName string, bucketName string, objectKeyPrefix string) (int, error)
 	VerifyRuleStats(timestr string, spc *objects.NetworkSecurityPolicyCollection, minCounts []map[string]float64) error
 
-	QueryMetricsByReporter(kind, reporter, timestr string) (*telemetryclient.MetricsQueryResponse, error)
 	ResetNaplesNodes(*objects.HostCollection) error
 
 	AddNaplesNodes(names []string) error
@@ -200,8 +197,6 @@ type WorkloadActionIntf interface {
 	DropIcmpFlowTTLSession(wpc *objects.WorkloadPairCollection, cmd string) error
 	NetcatWrapper(wpc *objects.WorkloadPairCollection, serverOpt, clientOpt string, port int, expFail bool, expClientExitCode int32, expOutput string) error
 	FuzIt(wpc *objects.WorkloadPairCollection, numConns int, proto, port string) error
-
-	QueryDropMetricsForWorkloadPairs(wpc *objects.WorkloadPairCollection, timestr string) error
 
 	MoveWorkloads(*objects.WorkloadCollection, *objects.HostCollection) error
 }

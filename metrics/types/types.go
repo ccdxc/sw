@@ -14,3 +14,10 @@ var DscMetricsList = []string{
 	"RuleMetrics",
 	"SessionSummaryMetrics",
 }
+
+// CloudDscMetricsList is the list of metrics saved in Venice for cloud pipeline, last updated: 03/11/2020
+var CloudDscMetricsList = []string{
+	"MacMetrics",
+	"MgmtMacMetrics",
+	"LifMetrics",
+}

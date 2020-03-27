@@ -9,6 +9,7 @@ type GsCfg struct {
 	base.EntBaseCfg
 }
 
+// NewGsCfg create a new gs cfg
 func NewGsCfg() *GsCfg {
 	return &GsCfg{}
 }

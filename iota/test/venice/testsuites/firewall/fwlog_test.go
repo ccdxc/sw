@@ -18,7 +18,6 @@ var _ = Describe("fwlog tests", func() {
 		Eventually(func() error {
 			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
-
 	})
 
 	AfterEach(func() {

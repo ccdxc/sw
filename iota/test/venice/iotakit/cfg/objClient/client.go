@@ -118,6 +118,7 @@ type ObjClient interface {
 	DeleteTenant(obj *cluster.Tenant) (err error)
 }
 
+// VeniceConfigStatus saves venice status information
 type VeniceConfigStatus struct {
 	KindObjects struct {
 		App                   int `json:"App"`
@@ -152,32 +153,33 @@ type VeniceConfigStatus struct {
 	} `json:"NodesStatus"`
 }
 
+// VeniceRawData saves venice diagnosis information
 type VeniceRawData struct {
 	Diagnostics struct {
 		String string `json:"string"`
 	} `json:"diagnostics"`
 }
 
-//Client rest client handler
+// Client rest client handler
 type Client struct {
 	ctx     context.Context
 	restcls []apiclient.Services
 	urls    []string
 }
 
-//NewClient rest client
+// NewClient rest client
 func NewClient(ctx context.Context, urls []string) ObjClient {
 	client := &Client{ctx: ctx, urls: urls}
 	client.init()
 	return client
 }
 
-//Context for rest operation
+// Context get client context
 func (r *Client) Context() context.Context {
 	return r.ctx
 }
 
-//Context for rest operation
+// Urls get client URLs
 func (r *Client) Urls() []string {
 	return r.urls
 }
@@ -209,6 +211,7 @@ func (r *Client) init() error {
 	return err
 }
 
+// CreateHost create a cluster host
 func (r *Client) CreateHost(host *cluster.Host) error {
 
 	var err error
@@ -601,7 +604,7 @@ func (r *Client) DeleteIPAMPolicy(obj *network.IPAMPolicy) (err error) {
 	return err
 }
 
-// ListVRFs list
+// ListVPC list all vpc obj
 func (r *Client) ListVPC(tenant string) (objs []*network.VirtualRouter, err error) {
 
 	if tenant == "" {
@@ -620,6 +623,7 @@ func (r *Client) ListVPC(tenant string) (objs []*network.VirtualRouter, err erro
 	return objs, err
 }
 
+// GetVPC get vpc obj
 func (r *Client) GetVPC(name string, tenant string) (obj *network.VirtualRouter, err error) {
 
 	if tenant == "" {
@@ -639,7 +643,7 @@ func (r *Client) GetVPC(name string, tenant string) (obj *network.VirtualRouter,
 	return obj, err
 }
 
-// DeleteVRF deletes all network object
+// DeleteVPC deletes all vpc objects
 func (r *Client) DeleteVPC(obj *network.VirtualRouter) (err error) {
 
 	for _, restcl := range r.restcls {
@@ -1014,7 +1018,7 @@ func (r *Client) AdmitSmartNIC(sn *cluster.DistributedServiceCard) error {
 	return err
 }
 
-// DeleteSmartNIC
+// DeleteSmartNIC delete a dsc obj from cluster
 func (r *Client) DeleteSmartNIC(sn *cluster.DistributedServiceCard) error {
 	var err error
 	for _, restcl := range r.restcls {
@@ -1027,6 +1031,7 @@ func (r *Client) DeleteSmartNIC(sn *cluster.DistributedServiceCard) error {
 	return err
 }
 
+// GetSmartNICByName get dsc obj by name
 func (r *Client) GetSmartNICByName(snicName string) (sn *cluster.DistributedServiceCard, err error) {
 	snicList, err := r.ListSmartNIC()
 	if err != nil {
@@ -1158,7 +1163,7 @@ func (r *Client) DeleteMirrorSession(msp *monitoring.MirrorSession) error {
 	return err
 }
 
-// CreateeDscProfile Creates DSC Profile
+// CreateDscProfile Creates DSC Profile
 func (r *Client) CreateDscProfile(obj *cluster.DSCProfile) error {
 	//Need a clean way
 	if os.Getenv("RELEASE_A") != "" {
