@@ -101,14 +101,16 @@ TEST_F(route_test, route_add) {
 
     bctxt = batch_start();
     sample_route_table_setup(bctxt, k_base_v4_pfx, IP_AF_IPV4, 10, 1, 1);
+    batch_commit(bctxt);
 
+    bctxt = batch_start();
     test::extract_ip_pfx(k_base_v4_pfx_2.c_str(), &ip_pfx);
     for (uint32_t i = 0; i < add_route_count; i++) {
         ip_prefix_ip_next(&ip_pfx, &ip_addr);
         ip_pfx.addr = ip_addr;
         route_spec_fill(&route_spec, 100+i, 1, &ip_pfx);
         ret = pds_route_create(&route_spec, bctxt);
-        SDK_ASSERT(ret == SDK_RET_OK);
+        ASSERT_TRUE(ret == SDK_RET_OK);
     }
     batch_commit(bctxt);
 
@@ -117,8 +119,8 @@ TEST_F(route_test, route_add) {
                                                       ROUTE_INFO_SIZE(0));
     key = int2pdsobjkey(1);
     ret = pds_route_table_read(&key, &info);
-    SDK_ASSERT(ret == SDK_RET_OK);
-    SDK_ASSERT(info.spec.route_info->num_routes == (10 + add_route_count));
+    ASSERT_TRUE(ret == SDK_RET_OK);
+    ASSERT_TRUE(info.spec.route_info->num_routes == (10 + add_route_count));
     SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
     bctxt = batch_start();
     sample_route_table_teardown(bctxt, 1, 1);
@@ -140,7 +142,7 @@ TEST_F(route_test, route_update) {
     test::extract_ip_pfx(k_base_v4_pfx_3.c_str(), &ip_pfx);
     route_spec_fill(&route_spec, 1, 1, &ip_pfx);
     ret = pds_route_update(&route_spec, bctxt);
-    SDK_ASSERT(ret == SDK_RET_OK);
+    ASSERT_TRUE(ret == SDK_RET_OK);
     batch_commit(bctxt);
 
     // read 1st route from route table
@@ -150,8 +152,8 @@ TEST_F(route_test, route_update) {
     info.spec.route_info->num_routes = 1;
     key = int2pdsobjkey(1);
     ret = pds_route_table_read(&key, &info);
-    SDK_ASSERT(ret == SDK_RET_OK);
-    SDK_ASSERT(memcmp(&info.spec.route_info->routes[0].prefix,
+    ASSERT_TRUE(ret == SDK_RET_OK);
+    ASSERT_TRUE(memcmp(&info.spec.route_info->routes[0].prefix,
                       &ip_pfx, sizeof(ip_prefix_t) == 0));
     SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
 

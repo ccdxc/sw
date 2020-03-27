@@ -228,13 +228,13 @@ public:
     void clear_in_dirty_list(void) { in_dol_ = 0; }
 
     /// \brief mark the object as dependent object
-    void set_in_deps_list(void) { in_dol_ = 1; }
+    void set_in_deps_list(void) { in_aol_ = 1; }
 
     /// \brief returns true if the object is in dependent list
-    bool in_deps_list(void) const { return in_dol_ ? true : false; }
+    bool in_deps_list(void) const { return in_aol_ ? true : false; }
 
     /// \brief clear the dependent object bit on this object
-    void clear_in_deps_list(void) { in_dol_ = 0; }
+    void clear_in_deps_list(void) { in_aol_ = 0; }
 
     /// \brief return true if object is 'stateless' given an object id
     /// \param[in] obj_id    object id
