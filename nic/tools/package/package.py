@@ -276,7 +276,7 @@ if arm_pkg == 0:
 if args.target != 'host':
     cmd = "mkdir -p " + output_dir + "/nic/etc/"
     call(cmd, shell=True)
-    cmd = "./nic/tools/gen_version.py --output-dir " + output_dir + "/nic/etc/"
+    cmd = "./nic/tools/gen_version.py --pipeline " + args.pipeline + " --output-dir " + output_dir + "/nic/etc/"
     call(cmd, shell=True)
 
 ############################

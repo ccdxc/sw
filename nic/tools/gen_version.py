@@ -10,6 +10,10 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
+parser.add_argument('--pipeline', dest='pipeline',
+                    default='iris',
+                    help='asic pipeline')
+
 parser.add_argument('--output-dir', dest='output_dir',
                     default='.',
                     help='output dir to generate version file')
@@ -29,6 +33,7 @@ nic_build_time = subprocess.run(['date'], stdout=subprocess.PIPE).stdout.decode(
 nic_sha        = subprocess.run(['git', 'log', '-1', '--pretty=format:\'%H\''], stdout=subprocess.PIPE).stdout.decode('utf-8').strip('\n')
 
 version_dict["sw"]               = {}
+version_dict["sw"]["pipeline"]   = args.pipeline
 version_dict["sw"]["version"]    = nic_version
 version_dict["sw"]["tag"]        = nic_version
 version_dict["sw"]["sha"]        = nic_sha
