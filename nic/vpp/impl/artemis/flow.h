@@ -307,7 +307,7 @@ pds_flow_rewrite_flags_init (void)
 }
 
 always_inline void
-pds_flow_pipeline_init (void)
+pds_flow_pipeline_init (vlib_main_t *vm)
 {
     return;
 }
