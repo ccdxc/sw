@@ -177,6 +177,18 @@ private:
     /// \param[in] intf  interface obj being programmed
     /// \param[in] spec  interface configuration
     /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_l3_if_(std::string, if_entry *intf, pds_if_spec_t *spec);
+
+    /// \brief     remove ip address on mgmt interface (ctrl0)
+    /// \param[in] intf  interface obj being programmed
+    /// \param[in] spec  interface configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t deactivate_l3_if_(std::string, if_entry *intf);
+
+    /// \brief     configure ip address on mgmt interface (ctrl0)
+    /// \param[in] intf  interface obj being programmed
+    /// \param[in] spec  interface configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_vendor_l3_if_(if_entry *intf, pds_if_spec_t *spec);
 
     /// \brief     remove ip address on mgmt interface (ctrl0)

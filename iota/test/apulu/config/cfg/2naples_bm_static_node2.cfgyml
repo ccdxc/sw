@@ -9,7 +9,7 @@ device:
     bridging    : false # false (default), true
     learning    : false # false (default), true
     overlay     : false # false (default), true
-    ipaddress   : '1.0.0.3' # Taken from resmgr
+    ipaddress   : '14.14.14.14' # Taken from resmgr
     gateway     : '1.0.0.1' # Taken from resmgr
     macaddress  : macaddr/0000.bbbb.bbb1
     encap       : vxlan # vxlan or mplsodup
@@ -35,16 +35,21 @@ vpc:
         - iid           : 1
           iftype        : l3
           ifadminstatus : UP
-          ipprefix      : '1.1.0.103\24'
+          ipprefix      : '14.1.0.1\24'
           macaddress    : macaddr/00ae.cd00.14ce
           portid        : 1
           encap         : none
         - iid           : 2
           iftype        : l3
           ifadminstatus : UP
-          ipprefix      : '1.2.0.103\24'
+          ipprefix      : '14.2.0.1\24'
           macaddress    : macaddr/00ae.cd00.14cd
           portid        : 2
+          encap         : none
+        - iid           : 3
+          iftype        : loopback
+          ifadminstatus : UP
+          ipprefix      : '14.14.14.14\32'
           encap         : none
       nexthop:
         - id         : 1
@@ -59,20 +64,42 @@ vpc:
           macaddress : macaddr/00ae.cd00.4fdd
       bgpglobal:
         - localasn      : 100
-          routerid      : 10.10.10.10
+          routerid      : 14.14.14.14
       bgppeer:
         # underlay bgp peer 1
-        - peeraddr      : 10.1.0.2
-          localaddr     : 10.1.0.1
+        - peeraddr      : 14.1.0.2
+          localaddr     : 14.1.0.1
+          adminstate    : 1
+          sendcomm      : true
+          sendextcomm   : true
+          connectretry  : 5
+          rrclient      : false
+          # specify interface to override ip addresses from testbed json
+          #interface     : "Uplink0"
           remoteasn     : 600
+          holdtime      : 180
+          keepalive     : 60
           bgppeeraf:
+              peeraddr  : 14.1.0.2
+              localaddr : 14.1.0.1
               afi       : ipv4
               safi      : unicast
         # underlay bgp peer 2
-        - peeraddr      : 10.2.0.2
-          localaddr     : 10.2.0.1
+        - peeraddr      : 14.2.0.2
+          localaddr     : 14.2.0.1
+          adminstate    : 1
+          sendcomm      : true
+          sendextcomm   : true
+          connectretry  : 5
+          rrclient      : false
+          # specify interface to override ip addresses from testbed json
+          #interface     : "Uplink1"
           remoteasn     : 600
+          holdtime      : 180
+          keepalive     : 60
           bgppeeraf:
+              peeraddr  : 14.2.0.2
+              localaddr : 14.2.0.1
               afi       : ipv4
               safi      : unicast
     - id         : 1
@@ -83,8 +110,8 @@ vpc:
         - id         : 1
           count      : 1
           type       : underlay
-          srcaddr    : '1.0.0.3'
-          dstaddr    : '1.0.0.2'
+          srcaddr    : '14.14.14.14'
+          dstaddr    : '13.13.13.13'
           macaddress : macaddr/0000.bbbb.bbb1
           encap      : vxlan
           nhid       : 1
