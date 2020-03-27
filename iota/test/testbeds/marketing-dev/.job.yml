@@ -6,7 +6,7 @@ image:
 
 queue_name: baremetal
 
-# e2e-targets represent typically what is required by developers 
+# e2e-targets represent typically what is required by developers
 e2e-targets:
  # single esx 6.7 instance with 1 Venice instance
  esx67WithVenice:
@@ -239,7 +239,7 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
- 
+
  # two bare-metal instance of Ubuntu 18.04
  2ubuntu1804:
    commands: [ "cat /warmd.json && sleep 30000000"]
@@ -259,16 +259,16 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
- 
- # single bare-metal instance of freebsd-11.2
- freebsd11.2:
+
+ # single bare-metal instance of freebsd-12.1
+ freebsd12.1:
    commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:ci-status@pensando.io"]
    area:
    sub-area:
    feature:
    clusters:
-     - image: build-12
+     - image: build-14
        count: 1
        resources:
          servers:
@@ -280,15 +280,15 @@ e2e-targets:
        vars:
           BmOs: freebsd
 
- # two bare-metal instance of freebsd-11.2
- 2freebsd11.2:
+ # two bare-metal instance of freebsd-12.1
+ 2freebsd12.1:
    commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:ci-status@pensando.io"]
    area:
    sub-area:
    feature:
    clusters:
-     - image: build-12
+     - image: build-14
        count: 2
        resources:
          servers:

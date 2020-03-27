@@ -6,7 +6,7 @@ image:
 
 queue_name: baremetal
 
-# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
 e2e-targets:
  # baremetal
 # e2e-freebsd-regression-rdma:
@@ -20,7 +20,7 @@ e2e-targets:
 #     - build-iris-arm
 #     - build-iota
 #   clusters:
-#     - image: build-12
+#     - image: build-14
 #       count: 2
 #       resources:
 #         # Freebsd works with only server-d
@@ -49,7 +49,7 @@ e2e-targets:
 #     - build-iris-arm
 #     - build-iota
 #   clusters:
-#     - image: build-12
+#     - image: build-14
 #       count: 2
 #       resources:
 #         # Freebsd works with only server-d
@@ -65,7 +65,7 @@ e2e-targets:
 #          BmOs: freebsd
 #          VmOs: freebsd
 #          EsxUsername: root
-#          EsxPassword: Pen0trl! 
+#          EsxPassword: Pen0trl!
 # e2e-freebsd-regression-rdma-stress:
 #   commands: ["sh", "-c", "make regression-rdma-stress && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle mtu,rdma_stress"]
 #   owners: ["email:rdma-dpath@pensando.io"]
@@ -77,7 +77,7 @@ e2e-targets:
 #     - build-iris-arm
 #     - build-iota
 #   clusters:
-#     - image: build-12
+#     - image: build-14
 #       count: 2
 #       resources:
 #         # Freebsd works with only server-d
@@ -105,7 +105,7 @@ e2e-targets:
 #     - build-iris-arm
 #     - build-iota
 #   clusters:
-#     - image: build-12
+#     - image: build-14
 #       count: 2
 #       resources:
 #         # Freebsd works with only server-d
@@ -131,7 +131,7 @@ e2e-targets:
      - build-iris-arm
      - build-iota
    clusters:
-     - image: build-12
+     - image: build-14
        count: 2
        resources:
          # Freebsd works with only server-d

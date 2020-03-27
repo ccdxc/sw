@@ -45,7 +45,7 @@ req_rx_stats_process:
 
     add              GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS //BD Slot
 
-    bbeq             K_MAX_RECIRC_CNT_ERR, 1, max_recirc_cnt_err 
+    bbeq             K_MAX_RECIRC_CNT_ERR, 1, max_recirc_cnt_err
     tbladd           d.np_ecn_marked_packets, CAPRI_KEY_FIELD(to_s7_stats_info, np_ecn_marked_packets)  // BD Slot
 
     bbeq             K_LIF_ERROR_ID_VLD, 1, handle_error_lif_stats

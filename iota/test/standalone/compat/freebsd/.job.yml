@@ -6,7 +6,7 @@ image:
 
 queue_name: baremetal
 
-# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
 e2e-targets:
   # baremetal
   e2e-freebsd-fwdr-compat:
@@ -19,7 +19,7 @@ e2e-targets:
        - build-iris-arm
        - build-iota
      clusters:
-       - image: build-12
+       - image: build-14
          count: 2
          resources:
            # Freebsd works with only server-d
