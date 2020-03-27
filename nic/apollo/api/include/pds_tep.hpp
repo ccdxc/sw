@@ -71,9 +71,9 @@ typedef struct pds_tep_spec_s {
     ///    2nd tunnel's encap is MPLSoUDP
     /// 2. 2nd tunnel can't point to another tunnel
     union {
-        pds_obj_key_t nh;                ///< underlay nexthop
+        pds_obj_key_t nh;          ///< underlay nexthop
         pds_obj_key_t nh_group;    ///< underlay nexthop group
-        pds_obj_key_t tep;                   ///< another tunnel/TEP
+        pds_obj_key_t tep;         ///< another tunnel/TEP
     };
 } __PACK__ pds_tep_spec_t;
 

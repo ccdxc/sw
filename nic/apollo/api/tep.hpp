@@ -199,6 +199,10 @@ public:
     /// \return    ethernet MAC address of this TEP (configured/learnt)
     mac_addr_t& mac(void) { return mac_; }
 
+    /// \brief     return fabric encap information of the TEP
+    /// \return    fabric encap type and value
+    pds_encap_t encap(void) const { return fabric_encap_; }
+
     /// \brief    return the nexthop type
     /// \return    type of the nexthop this TEP is pointing to
     pds_nh_type_t nh_type(void) const { return nh_type_; }

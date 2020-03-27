@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/internal/pds_route.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -73,7 +74,8 @@ void pds_route_table_spec_s::move_(pds_route_table_spec_t&& route_table) {
 
 namespace api {
 
-#define PDS_MAX_UNDERLAY_ROUTES    1
+#define PDS_MAX_UNDERLAY_ROUTES                   1
+#define PDS_UNDERLAY_ROUTE_API_EPOCH_START        0x00800000
 uint32_t g_num_routes = 0;
 typedef struct route_entry_s {
     uint8_t valid:1;
@@ -81,6 +83,7 @@ typedef struct route_entry_s {
     pds_route_spec_t spec;
 } route_entry_t;
 static route_entry_t g_route_db[PDS_MAX_UNDERLAY_ROUTES];
+static uint32_t g_route_api_epoch_ = PDS_UNDERLAY_ROUTE_API_EPOCH_START;
 
 #if 0
 sdk_ret_t
@@ -103,10 +106,55 @@ pds_underlay_route_create (_In_ pds_route_spec_t *spec)
 }
 #endif
 
+static bool
+tep_upd_walk_cb_ (void *obj, void *ctxt) {
+    sdk_ret_t ret;
+    pds_tep_spec_t spec;
+    tep_entry *tep = (tep_entry *)obj;
+    pds_batch_ctxt_t bctxt = (pds_batch_ctxt_t)ctxt;
+
+    if (tep->nh_type() == PDS_NH_TYPE_OVERLAY) {
+        // tunnel pointing to another tunnel, skip this
+        return false;
+    }
+    spec.key = tep->key();
+    spec.remote_ip = tep->ip();
+    memcpy(spec.mac, tep->mac(), ETH_ADDR_LEN);
+    spec.type = tep->type();
+    spec.encap = tep->encap();
+
+    if (g_num_routes == 0) {
+        // TEP walk triggered by route delete
+        spec.nh_type = PDS_NH_TYPE_NONE;
+    } else {
+        // TEP walk triggered by route add/update,
+        // 1st route is the best route !!
+        spec.nh_type = g_route_db[0].spec.route.nh_type;
+        if (spec.nh_type == PDS_NH_TYPE_UNDERLAY_ECMP) {
+            spec.nh_group = g_route_db[0].spec.route.nh_group;
+        } else if (spec.nh_type == PDS_NH_TYPE_UNDERLAY) {
+            spec.nh = g_route_db[0].spec.route.nh;
+        }
+    }
+    ret = pds_tep_update(&spec, bctxt);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to update TEP %s, err %u", spec.key.str(), ret);
+        // update other TEPs still !!
+    }
+    return false;
+}
+
 static sdk_ret_t
 pds_update_teps (void)
 {
-    return SDK_RET_OK;
+    pds_batch_ctxt_t bctxt;
+    pds_batch_params_t batch_params = { 0 };
+
+    batch_params.epoch = g_route_api_epoch_;
+    batch_params.async = false;
+    bctxt = pds_batch_start(&batch_params);
+    tep_db()->walk(tep_upd_walk_cb_, (void *)bctxt);
+    return pds_batch_commit(bctxt);
 }
 
 sdk_ret_t
