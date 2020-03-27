@@ -161,10 +161,10 @@ func convertFlowExportPolicy(fePolicy *monitoring.FlowExportPolicy) *netproto.Fl
 	}
 
 	flowExportPolicy.Spec = netproto.FlowExportPolicySpec{
-		VrfName:          flowExportPolicy.Spec.VrfName,
-		Interval:         flowExportPolicy.Spec.Interval,
-		TemplateInterval: flowExportPolicy.Spec.TemplateInterval,
-		Format:           flowExportPolicy.Spec.Format,
+		VrfName:          fePolicy.Spec.VrfName,
+		Interval:         fePolicy.Spec.Interval,
+		TemplateInterval: fePolicy.Spec.TemplateInterval,
+		Format:           fePolicy.Spec.Format,
 		Exports:          exports,
 		MatchRules:       matchRules,
 	}
