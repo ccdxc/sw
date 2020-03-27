@@ -171,6 +171,12 @@ class SubnetObject(base.ConfigObjectBase):
     def AllocIPv4Address(self):
         return Resmgr.GetIPv4AddrFromSubnetPool(self.SubnetId)
 
+    def GetIPv4VRIP(self):
+        return str(self.VirtualRouterIPAddr[1])
+
+    def GetVRMacAddr(self):
+        return self.VirtualRouterMACAddr.get()
+
     def __set_vrouter_attributes(self):
         # 1st IP address of the subnet becomes the vrouter.
         if self.IpV6Valid:

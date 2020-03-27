@@ -1,0 +1,34 @@
+meta:
+    name    : arp_proxy
+    os      : [ linux ]
+    nicmode : classic
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : ARP_All_Workloads
+        testcase: testcases.arp_proxy.arp_proxy
+        iterators :
+            type    : simple
+            workload_type : [ remote, local ]
+
+    -   name    : ARP_VRIP
+        testcase: testcases.arp_proxy.arp_proxy
+
+    -   name    : ARP_DuplicateAddressDetection
+        testcase: testcases.arp_proxy.arp_proxy
+        args    :
+            type: DAD
+        iterators :
+            type    : simple
+            workload_type : [ remote, local ]
+
+    -   name    : ARP_Self_AddressDetection
+        testcase: testcases.arp_proxy.arp_proxy
+
+    -   name    : ARP_InterSubnet_Workloads
+        testcase: testcases.arp_proxy.arp_proxy
+        iterators :
+            type    : nested
+            workload_type : [ remote, local ]
+            workload_scope : [ inter-subnet ]
+

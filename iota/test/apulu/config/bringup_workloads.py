@@ -1,11 +1,6 @@
 #! /usr/bin/python3
-import pdb
-import os
-import json
 import sys
-
 import iota.harness.api as api
-import iota.harness.infra.utils.parser as parser
 import iota.harness.infra.resmgr as resmgr
 
 import iota.test.apulu.config.api as config_api
@@ -47,7 +42,7 @@ def _add_exposed_ports(wl_msg):
     for _ in range(__max_udp_ports):
         udp_port = wl_msg.exposed_ports.add()
         udp_port.Port = "1001"
-        udp_port.Proto = "udp"      
+        udp_port.Proto = "udp"
 
 
 def __add_workloads(redirect_port):

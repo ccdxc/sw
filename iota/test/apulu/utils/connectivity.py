@@ -1,6 +1,9 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.test.utils.traffic as traffic_utils
+import iota.test.apulu.config.api as config_api
+import apollo.config.objects.subnet as subnet
+import apollo.config.objects.vnic as vnic
 
 def TriggerConnectivityTest(workload_pairs, proto, af, pktsize):
     cmd_cookies = []
@@ -11,25 +14,127 @@ def TriggerConnectivityTest(workload_pairs, proto, af, pktsize):
         cmd_cookies, resp = traffic_utils.iperfWorkloads(workload_pairs, af, proto, pktsize, "1K", 1, 1)
     else:
         api.Logger.error("Proto %s unsupported" % proto)
+
     return cmd_cookies, resp
 
-def VerifyConnectivityTest(proto, cmd_cookies, resp):
-    if proto == 'icmp':
-        if traffic_utils.verifyPing(cmd_cookies, resp) != api.types.status.SUCCESS:
+def VerifyConnectivityTest(proto, cmd_cookies, resp, expected_exit_code=0):
+    if proto == 'icmp' or proto == 'arp':
+        if traffic_utils.verifyPing(cmd_cookies, resp, expected_exit_code) != api.types.status.SUCCESS:
             return api.types.status.FAILURE
     if proto in ['tcp','udp']:
         if traffic_utils.verifyIPerf(cmd_cookies, resp) != api.types.status.SUCCESS:
             return api.types.status.FAILURE
+
     return api.types.status.SUCCESS
 
 # Testcases which want to test connectivity after a trigger, through
 # different protocol packets with multiple packet sizes can use this API.
-def ConnectivityTest(workload_pairs, proto_list, ipaf_list, pktsize_list):
+def ConnectivityTest(workload_pairs, proto_list, ipaf_list, pktsize_list, expected_exit_code=0):
     cmd_cookies = []
     resp = None
     for af in ipaf_list:
         for proto in proto_list:
             for pktsize in pktsize_list:
                 cmd_cookies, resp = TriggerConnectivityTest(workload_pairs, proto, af, pktsize)
-                return VerifyConnectivityTest(proto, cmd_cookies, resp)
+                return VerifyConnectivityTest(proto, cmd_cookies, resp, expected_exit_code)
     return api.types.status.SUCCESS
+
+def Get_workload_type(tc):
+    type = config_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY
+
+    if not hasattr(tc.iterators, 'workload_type'):
+        return type
+
+    if tc.iterators.workload_type == 'local':
+        type = config_api.WORKLOAD_PAIR_TYPE_LOCAL_ONLY
+    elif tc.iterators.workload_type == 'remote':
+        type = config_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY
+    elif tc.iterators.workload_type == 'igw':
+        type = config_api.WORKLOAD_PAIR_TYPE_IGW_ONLY
+
+    return type
+
+def Get_workload_scope(tc):
+    scope = config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET
+
+    if not hasattr(tc.iterators, 'workload_scope'):
+        return scope
+    if tc.iterators.workload_scope == 'intra-subnet':
+        scope = config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET
+    elif tc.iterators.workload_scope == 'inter-subnet':
+        scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET
+    elif tc.iterators.workload_scope == 'inter-vpc':
+        scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_VPC
+
+    return scope
+
+def ConnectivityARPingTest(workload_pairs, args=None):
+    probe_count = 3
+    sent_probes = dict()
+    if args == 'DAD':
+        cmd_cookies, resp = traffic_utils.ARPingWorkloads(workload_pairs, False, True)
+    elif args == 'Update':
+        cmd_cookies, resp = traffic_utils.ARPingWorkloads(workload_pairs, True)
+    else:
+        cmd_cookies, resp = traffic_utils.ARPingWorkloads(workload_pairs)
+
+    for pair in workload_pairs:
+        wl = pair[0]
+        cur_cnt = sent_probes.get(wl.node_name, 0)
+        sent_probes.update({wl.node_name: cur_cnt + probe_count})
+
+    return cmd_cookies, resp, sent_probes
+
+def ConnectivityVRIPTest(scope=config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET, args=None):
+    cmd_cookies = []
+    cmd = None
+    probe_count = 3
+    sent_probes = dict()
+
+    if not api.IsSimulation():
+        req = api.Trigger_CreateAllParallelCommandsRequest()
+    else:
+        req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+
+    naplesHosts = api.GetNaplesHostnames()
+    vnics = []
+    subnets = []
+    for node in naplesHosts:
+        vnics.extend(vnic.client.Objects(node))
+        subnets.extend(subnet.client.Objects(node))
+
+    if scope == config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET:
+        for vnic1 in vnics:
+            wl = config_api.FindWorkloadByVnic(vnic1)
+            assert(wl)
+            dest_ip = vnic1.SUBNET.GetIPv4VRIP()
+            api.Logger.info(f"arp between {wl.ip_address} and {dest_ip}")
+            cmd = traffic_utils.PingCmdBuilder('arp', wl, dest_ip, args)
+
+            api.Logger.verbose(" ARP cmd %s " % (cmd))
+            api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, cmd)
+            cmd_cookies.append(cmd)
+            cur_cnt = sent_probes.get(wl.node_name, 0)
+            sent_probes.update({wl.node_name: cur_cnt + probe_count})
+    else:
+        for vnic1 in vnics:
+            wl = config_api.FindWorkloadByVnic(vnic1)
+            assert(wl)
+            for subnet1 in subnets:
+                if subnet1.Node != vnic1.Node:
+                    continue
+                if scope == config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET and (vnic1.SUBNET.GID() == subnet1.GID()):
+                    continue
+                dest_ip = subnet1.GetIPv4VRIP()
+                api.Logger.info(f"arp between {wl.ip_address} and {dest_ip}")
+                cmd = traffic_utils.PingCmdBuilder('arp', wl, dest_ip, args)
+
+                api.Logger.verbose(" ARP cmd %s " % (cmd))
+                api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, cmd)
+                cmd_cookies.append(cmd)
+                cur_cnt = sent_probes.get(wl.node_name, 0)
+                sent_probes.update({wl.node_name: cur_cnt + probe_count})
+
+    resp = api.Trigger(req)
+
+    return cmd_cookies, resp, sent_probes

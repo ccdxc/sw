@@ -5,6 +5,7 @@ import iota.test.iris.utils.iperf as iperf
 
 __PING_CMD = "ping"
 __PING6_CMD = "ping6"
+__ARP_CMD = "arping"
 
 __IPV4_HEADER_SIZE = 20
 __IPV6_HEADER_SIZE = 40
@@ -65,7 +66,7 @@ def pingWorkloads(workload_pairs, af="ipv4", packet_size=64, count=3, interval=0
         req = api.Trigger_CreateAllParallelCommandsRequest()
     else:
         req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-    
+
     for pair in workload_pairs:
         w1 = pair[0]
         w2 = pair[1]
@@ -102,7 +103,7 @@ def iperfWorkloads(workload_pairs, af="ipv4", proto="tcp", packet_size=64,
     clientCmds = []
     cmdDesc = []
     ipproto = __get_ipproto(af)
-    
+
     if not api.IsSimulation():
         serverReq = api.Trigger_CreateAllParallelCommandsRequest()
         clientReq = api.Trigger_CreateAllParallelCommandsRequest()
@@ -174,3 +175,62 @@ def verifyIPerf(cmd_cookies, response, exit_code=0):
     api.Logger.info("Number of connection timeouts : {}".format(conn_timedout))
     api.Logger.info("Number of control socket errors : {}".format(control_socker_err))
     return result
+
+
+def PingCmdBuilder(proto, src_wl, dest_ip, args=None):
+    cmd = None
+    if proto == 'arp':
+        if args == 'DAD':
+            arp_base_cmd = __get_arp_base_cmd(src_wl, False, True)
+        elif args == 'update':
+            arp_base_cmd = __get_arp_base_cmd(src_wl, True)
+        else:
+            arp_base_cmd = __get_arp_base_cmd(src_wl)
+
+        addr = __get_workload_address(src_wl, "ipv4")
+        dest_addr = " %s" %(addr)
+        if args != 'update':
+            dest_addr = " %s" %(dest_ip)
+        cmd = arp_base_cmd + dest_addr
+    return cmd
+
+def __get_arp_base_cmd(workload,  update_neighbor=False, send_dad=False, count=3, deadline=3):
+    arp_cmd = __ARP_CMD
+
+    if update_neighbor is True:
+        arp_cmd += " -U "
+
+    if send_dad is True:
+        arp_cmd += " -D "
+
+    arp_cmd += " -c %d -w %d -I %s" %(count, deadline, workload.interface)
+    return arp_cmd
+
+def ARPingWorkloads(workload_pairs, update_neighbor=False, send_dad=False, count=3, deadline=3):
+    cmd_cookies = []
+
+    if not api.IsSimulation():
+        req = api.Trigger_CreateAllParallelCommandsRequest()
+    else:
+        req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+
+    for pair in workload_pairs:
+        w1 = pair[0]
+        w2 = pair[1]
+
+        arp_base_cmd = __get_arp_base_cmd(w1, update_neighbor, send_dad, count, deadline)
+        addr = __get_workload_address(w1, "ipv4")
+        if update_neighbor is True:
+            dest_addr = " %s" %(addr)
+        else:
+            addr = __get_workload_address(w2, "ipv4")
+            dest_addr = " %s" %(addr)
+        arp_cmd = arp_base_cmd + dest_addr
+
+        api.Logger.verbose(" ARP cmd %s " % (arp_cmd))
+        api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, arp_cmd)
+        cmd_cookies.append(arp_cmd)
+
+    resp = api.Trigger(req)
+    return cmd_cookies, resp
+
