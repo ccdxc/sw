@@ -61,7 +61,7 @@ Eth::eth_type_to_str(EthDevType type)
         CASE(ETH_MNIC_INBAND_MGMT);
         CASE(ETH_MNIC_CPU);
         CASE(ETH_MNIC_LEARN);
-        CASE(ETH_MNIC_INBAND_VENDOR);
+        CASE(ETH_MNIC_CONTROL);
     default:
         return "Unknown";
     }
@@ -84,8 +84,8 @@ Eth::str_to_eth_type(std::string const &s)
         return ETH_MNIC_CPU;
     } else if (s == "learn") {
         return ETH_MNIC_LEARN;
-    } else if (s == "inband_vendor") {
-        return ETH_MNIC_INBAND_VENDOR;
+    } else if (s == "control") {
+        return ETH_MNIC_CONTROL;
     } else {
         NIC_LOG_ERR("Unknown ETH dev type: {}", s);
         return ETH_UNKNOWN;
@@ -661,7 +661,7 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
         eth_spec->eth_type == ETH_MNIC_OOB_MGMT ||
         eth_spec->eth_type == ETH_MNIC_INTERNAL_MGMT ||
         eth_spec->eth_type == ETH_MNIC_INBAND_MGMT ||
-        eth_spec->eth_type == ETH_MNIC_INBAND_VENDOR) {
+        eth_spec->eth_type == ETH_MNIC_CONTROL) {
         eth_spec->qos_group = val.get<string>("qos_group", "CONTROL");
     } else {
         eth_spec->qos_group = val.get<string>("qos_group", "DEFAULT");
@@ -2082,7 +2082,7 @@ Eth::HalEventHandler(bool status)
         // Create the MNIC devices
         if (spec->eth_type == ETH_MNIC_OOB_MGMT || spec->eth_type == ETH_MNIC_INTERNAL_MGMT ||
             spec->eth_type == ETH_MNIC_INBAND_MGMT || spec->eth_type == ETH_MNIC_CPU ||
-            spec->eth_type == ETH_MNIC_LEARN || spec->eth_type == ETH_MNIC_INBAND_VENDOR) {
+            spec->eth_type == ETH_MNIC_LEARN || spec->eth_type == ETH_MNIC_CONTROL) {
             if (!CreateLocalDevice()) {
                 NIC_LOG_ERR("{}: Failed to create device", spec->name);
             }
@@ -2343,8 +2343,8 @@ Eth::ConvertDevTypeToLifType(EthDevType dev_type)
         return sdk::platform::LIF_TYPE_MNIC_CPU;
     case ETH_MNIC_LEARN:
         return sdk::platform::LIF_TYPE_LEARN;
-    case ETH_MNIC_INBAND_VENDOR:
-        return sdk::platform::LIF_TYPE_VENDOR_INBAND;
+    case ETH_MNIC_CONTROL:
+        return sdk::platform::LIF_TYPE_CONTROL;
     default:
         return sdk::platform::LIF_TYPE_NONE;
     }

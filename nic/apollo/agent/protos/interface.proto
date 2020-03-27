@@ -30,7 +30,7 @@ enum IfType {
   // loopback interface
   IF_TYPE_LOOPBACK  = 4;
   // inband management/control interface
-  IF_TYPE_VENDOR_L3 = 5;
+  IF_TYPE_CONTROL   = 5;
 }
 
 // IfStatus status reflects the operational status of Interface
@@ -82,11 +82,12 @@ message LoopbackIfSpec {
   types.IPPrefix Prefix = 1 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
-// Inband management/control interface configuration
-message VendorL3IfSpec {
+// Inband control interface configuration
+message ControlIfSpec {
   // IP address hosted on the inband control interface
-  types.IPPrefix Prefix     = 1 [(gogoproto.moretags) = "meta:mandatory"];
-  uint64         MACAddress = 2;
+  types.IPPrefix    Prefix     = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint64            MACAddress = 2;
+  types.IPAddress   Gateway    = 3;
 }
 
 // InterfaceSpec is used to add or update of an interface
@@ -106,7 +107,7 @@ message InterfaceSpec {
     UplinkPCSpec   UplinkPCSpec    = 5 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_UPLINK_PC}"];
     L3IfSpec       L3IfSpec        = 6 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_L3}"];
     LoopbackIfSpec LoopbackIfSpec  = 7 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_LOOPBACK"];
-    VendorL3IfSpec VendorL3IfSpec  = 8 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_VENDOR_L3"];
+    ControlIfSpec  ControlIfSpec   = 8 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_CONTROL"];
   }
   // Tx/egress mirror session id list, if any
   repeated bytes TxMirrorSessionId = 9;

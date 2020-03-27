@@ -9,7 +9,7 @@ import re
 
 
 class L3IfObject():
-    def __init__(self, vpcid, prefix, portid, encap, macaddr, node_uuid):
+    def __init__(self, vpcid, prefix, portid, encap, macaddr, node_uuid=None):
         self.vpcid       = vpcid
         self.prefix      = ipaddress.IPv4Interface(prefix)
         self.portid      = portid
@@ -23,22 +23,23 @@ class L3IfObject():
         return
 
 class MgmtIfObject():
-    def __init__(self, prefix, macaddr):
+    def __init__(self, prefix, macaddr, gateway=None):
         self.prefix      = ipaddress.IPv4Interface(prefix)
         self.macaddr     = macaddr
+        self.gateway     = gateway
         return
 
 
 class InterfaceObject():
-    def __init__(self, id, iftype, ifadminstatus, vpcid=None, prefix=None, portid=None, encap=None, macaddr=None, node_uuid=None):
+    def __init__(self, id, iftype, ifadminstatus, vpcid=None, prefix=None, portid=None, encap=None, macaddr=None, node_uuid=None, gateway=None):
         self.id = id
         self.uuid = utils.PdsUuid(self.id)
         self.iftype = iftype
         self.ifadminstatus = ifadminstatus
         if iftype == interface_pb2.IF_TYPE_L3:
             self.ifobj = L3IfObject( vpcid, prefix, portid, encap, macaddr, node_uuid )
-        elif iftype == interface_pb2.IF_TYPE_VENDOR_L3:
-            self.ifobj = MgmtIfObject( prefix, macaddr )
+        elif iftype == interface_pb2.IF_TYPE_CONTROL:
+            self.ifobj = MgmtIfObject( prefix, macaddr, gateway=gateway )
         return
 
     def GetGrpcCreateMessage(self):
@@ -55,9 +56,12 @@ class InterfaceObject():
             spec.L3IfSpec.PortId = self.ifobj.portuuid.GetUuid()
             spec.L3IfSpec.Encap.type = self.ifobj.encap
             spec.L3IfSpec.MACAddress = utils.getmac2num(self.ifobj.macaddr,reorder=False)
-        elif self.iftype == interface_pb2.IF_TYPE_VENDOR_L3:
-            spec.VendorL3IfSpec.Prefix.Addr.Af = 1
-            spec.VendorL3IfSpec.Prefix.Len = int(self.ifobj.prefix._prefixlen)
-            spec.VendorL3IfSpec.Prefix.Addr.V4Addr = int(self.ifobj.prefix.ip)
-            spec.VendorL3IfSpec.MACAddress = utils.getmac2num(self.ifobj.macaddr,reorder=False)
+        elif self.iftype == interface_pb2.IF_TYPE_CONTROL:
+            spec.ControlIfSpec.Prefix.Addr.Af = 1
+            spec.ControlIfSpec.Prefix.Len = int(self.ifobj.prefix._prefixlen)
+            spec.ControlIfSpec.Prefix.Addr.V4Addr = int(self.ifobj.prefix.ip)
+            spec.ControlIfSpec.MACAddress = utils.getmac2num(self.ifobj.macaddr,reorder=False)
+            if self.ifobj.gateway:
+                spec.ControlIfSpec.Gateway.Af = types_pb2.IP_AF_INET
+                spec.ControlIfSpec.Gateway.V4Addr = int(self.ifobj.gateway)
         return grpcmsg

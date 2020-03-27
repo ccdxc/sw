@@ -169,48 +169,90 @@ if_impl::program_l3_if_(if_entry *intf, pds_if_spec_t *spec) {
 }
 
 static inline std::string
-get_set_interface_address_cmd (std::string if_name, ip_prefix_t ip_prefix)
+get_set_interface_address_cmd (std::string ns, std::string if_name,
+                               ip_prefix_t ip_prefix)
 {
     char cmd[PATH_MAX];
     ipv4_addr_t mask = ipv4_prefix_len_to_mask(ip_prefix.len);
 
-    snprintf(cmd, PATH_MAX, "ifconfig %s %s netmask %s up",
-             if_name.c_str(), ipaddr2str(&ip_prefix.addr),
-             ipv4addr2str(mask));
+    if (ns.empty()) {
+        snprintf(cmd, PATH_MAX, "ifconfig %s %s netmask %s up",
+                 if_name.c_str(), ipaddr2str(&ip_prefix.addr),
+                 ipv4addr2str(mask));
+    } else {
+        snprintf(cmd, PATH_MAX, "ip netns exec %s ifconfig %s %s netmask %s up",
+                 ns.c_str(), if_name.c_str(),
+                 ipaddr2str(&ip_prefix.addr), ipv4addr2str(mask));
+    }
     return std::string(cmd);
 }
 
 static inline std::string
-get_set_interface_hw_address_cmd (std::string if_name, mac_addr_t mac_addr)
+get_set_interface_hw_address_cmd (std::string ns, std::string if_name,
+                                  mac_addr_t mac_addr)
 {
     char cmd[PATH_MAX];
 
-    snprintf(cmd, PATH_MAX, "ip link set %s address %s",
-             if_name.c_str(), macaddr2str(mac_addr));
+    if (ns.empty()) {
+        snprintf(cmd, PATH_MAX, "ip link set %s address %s",
+                 if_name.c_str(), macaddr2str(mac_addr));
+    } else {
+        snprintf(cmd, PATH_MAX, "ip netns exec %s ip link set %s address %s",
+                 ns.c_str(), if_name.c_str(), macaddr2str(mac_addr));
+    }
+    return std::string(cmd);
+}
+
+static inline std::string
+get_default_route_add_cmd (std::string ns, ip_addr_t gateway)
+{
+    char cmd[PATH_MAX];
+
+    if (ns.empty()) {
+        snprintf(cmd, PATH_MAX, "ip route add 0.0.0.0/0 via %s",
+                 ipaddr2str(&gateway));
+    } else {
+        snprintf(cmd, PATH_MAX, "ip netns exec %s ip route add 0.0.0.0/0 via %s",
+                 ns.c_str(), ipaddr2str(&gateway));
+    }
     return std::string(cmd);
 }
 
 sdk_ret_t
-if_impl::activate_vendor_l3_if_(if_entry *intf, pds_if_spec_t *spec) {
+if_impl::activate_control_if_(if_entry *intf, pds_if_spec_t *spec) {
     int rc;
     auto ifcmd = get_set_interface_address_cmd(
-                    std::string(PDS_IMPL_VENDOR_L3_IF_NAME),
-                    spec->vendor_l3_if_info.ip_prefix);
+                    std::string(PDS_IMPL_CONTROL_NAMESPACE),
+                    std::string(PDS_IMPL_CONTROL_IF_NAME),
+                    spec->control_if_info.ip_prefix);
     auto ifhwcmd = get_set_interface_hw_address_cmd(
-                    std::string(PDS_IMPL_VENDOR_L3_IF_NAME),
-                    spec->vendor_l3_if_info.mac_addr);
+                    std::string(PDS_IMPL_CONTROL_NAMESPACE),
+                    std::string(PDS_IMPL_CONTROL_IF_NAME),
+                    spec->control_if_info.mac_addr);
 
     PDS_TRACE_DEBUG("%s", ifcmd.c_str());
     rc = system(ifcmd.c_str());
     if (rc == -1) {
-        PDS_TRACE_ERR("set mgmt if address failed with ret %d", rc);
+        PDS_TRACE_ERR("set control if address failed with ret %d", rc);
         return SDK_RET_ERR;
     }
 
     rc = system(ifhwcmd.c_str());
     if (rc == -1) {
-        PDS_TRACE_ERR("set mgmt if mac address failed with ret %d", rc);
+        PDS_TRACE_ERR("set control if mac address failed with ret %d", rc);
         return SDK_RET_ERR;
+    }
+
+    if (!ip_addr_is_zero(&spec->control_if_info.gateway)) {
+        auto routecmd = get_default_route_add_cmd(
+                std::string(PDS_IMPL_CONTROL_NAMESPACE),
+                spec->control_if_info.gateway);
+        PDS_TRACE_DEBUG("%s", routecmd.c_str());
+        rc = system(routecmd.c_str());
+        if (rc == -1) {
+            PDS_TRACE_ERR("route add for control network failed with ret %d", rc);
+            return SDK_RET_ERR;
+        }
     }
 
     return SDK_RET_OK;
@@ -261,33 +303,64 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
         }
     } else if (spec->type == PDS_IF_TYPE_L3) {
         ret = program_l3_if_(intf, spec);
-    } else if (spec->type == PDS_IF_TYPE_VENDOR_L3) {
-        ret = activate_vendor_l3_if_(intf, spec);
+    } else if (spec->type == PDS_IF_TYPE_CONTROL) {
+        ret = activate_control_if_(intf, spec);
     }
     return SDK_RET_OK;
 }
 
 static inline std::string
-get_unset_interface_address_cmd (std::string if_name)
+get_unset_interface_address_cmd (std::string ns, std::string if_name)
 {
     char cmd[PATH_MAX];
 
-    snprintf(cmd, PATH_MAX, "ifconfig %s 0.0.0.0 netmask 0.0.0.0",
-             if_name.c_str());
+    if (ns.empty()) {
+        snprintf(cmd, PATH_MAX, "ifconfig %s 0.0.0.0",
+                 if_name.c_str());
+    } else {
+        snprintf(cmd, PATH_MAX, "ip netns exec %s ifconfig %s 0.0.0.0",
+                 ns.c_str(), if_name.c_str());
+    }
+    return std::string(cmd);
+}
+
+static inline std::string
+get_default_route_del_cmd (std::string ns)
+{
+    char cmd[PATH_MAX];
+
+    if (ns.empty()) {
+        snprintf(cmd, PATH_MAX, "ip route del 0.0.0.0/0");
+    } else {
+        snprintf(cmd, PATH_MAX, "ip netns exec %s ip route del 0.0.0.0/0",
+                 ns.c_str());
+    }
     return std::string(cmd);
 }
 
 sdk_ret_t
-if_impl::deactivate_vendor_l3_if_(if_entry *intf) {
+if_impl::deactivate_control_if_(if_entry *intf) {
     int rc;
     auto ifcmd = get_unset_interface_address_cmd(
-            std::string(PDS_IMPL_VENDOR_L3_IF_NAME));
+            std::string(PDS_IMPL_CONTROL_NAMESPACE),
+            std::string(PDS_IMPL_CONTROL_IF_NAME));
 
     PDS_TRACE_DEBUG("%s", ifcmd.c_str());
     rc = system(ifcmd.c_str());
     if (rc == -1) {
-        PDS_TRACE_ERR("unset mgmt if address failed with ret %d", rc);
+        PDS_TRACE_ERR("unset control if address failed with ret %d", rc);
         return SDK_RET_ERR;
+    }
+
+    auto gateway = intf->control_gateway();
+    if (!ip_addr_is_zero(&gateway)) {
+        auto routecmd = get_default_route_del_cmd(
+                std::string(PDS_IMPL_CONTROL_NAMESPACE));
+        rc = system(routecmd.c_str());
+        if (rc == -1) {
+            PDS_TRACE_ERR("route del for control network failed with ret %d", rc);
+            return SDK_RET_ERR;
+        }
     }
 
     return SDK_RET_OK;
@@ -321,8 +394,8 @@ if_impl::activate_delete_(pds_epoch_t epoch, if_entry *intf) {
             PDS_TRACE_ERR("Failed to program P4I_DEVICE_INFO table");
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
-    } else if (intf->type() == PDS_IF_TYPE_VENDOR_L3) {
-        ret = deactivate_vendor_l3_if_(intf);
+    } else if (intf->type() == PDS_IF_TYPE_CONTROL) {
+        ret = deactivate_control_if_(intf);
     } else {
         PDS_TRACE_ERR("Delete unsupported for interface type %u",
                       intf->type());
@@ -343,8 +416,8 @@ if_impl::activate_update_(pds_epoch_t epoch, if_entry *intf,
             return SDK_RET_INVALID_OP;
         }
         return SDK_RET_OK;
-    } else if (spec->type == PDS_IF_TYPE_VENDOR_L3) {
-        ret = activate_vendor_l3_if_(intf, spec);
+    } else if (spec->type == PDS_IF_TYPE_CONTROL) {
+        ret = activate_control_if_(intf, spec);
     }
     SDK_ASSERT_RETURN((spec->type == PDS_IF_TYPE_L3), SDK_RET_INVALID_ARG);
     return program_l3_if_(intf, spec);

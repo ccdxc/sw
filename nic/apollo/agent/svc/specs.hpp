@@ -496,8 +496,8 @@ pds_if_type_to_proto_if_type (pds_if_type_t type)
         return pds::IF_TYPE_L3;
     case PDS_IF_TYPE_LOOPBACK:
         return pds::IF_TYPE_LOOPBACK;
-    case PDS_IF_TYPE_VENDOR_L3:
-        return pds::IF_TYPE_VENDOR_L3;
+    case PDS_IF_TYPE_CONTROL:
+        return pds::IF_TYPE_CONTROL;
     default:
         return pds::IF_TYPE_NONE;
     }
@@ -571,16 +571,23 @@ pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
             }
         }
         break;
-    case PDS_IF_TYPE_VENDOR_L3:
+    case PDS_IF_TYPE_CONTROL:
         {
-            auto proto_vendor_l3_if = proto_spec->mutable_vendorl3ifspec();
-            auto af = api_spec->vendor_l3_if_info.ip_prefix.addr.af;
+            auto proto_control_if = proto_spec->mutable_controlifspec();
+            auto af = api_spec->control_if_info.ip_prefix.addr.af;
             if (af == IP_AF_IPV4 || af == IP_AF_IPV6) {
-                ippfx_api_spec_to_proto_spec(proto_vendor_l3_if->mutable_prefix(),
-                                             &api_spec->vendor_l3_if_info.ip_prefix);
+                ippfx_api_spec_to_proto_spec(proto_control_if->mutable_prefix(),
+                                             &api_spec->control_if_info.ip_prefix);
             }
-            proto_vendor_l3_if->set_macaddress(
-                MAC_TO_UINT64(api_spec->vendor_l3_if_info.mac_addr));
+            proto_control_if->set_macaddress(
+                MAC_TO_UINT64(api_spec->control_if_info.mac_addr));
+            if (api_spec->control_if_info.gateway.af == IP_AF_IPV4) {
+                ipv4addr_api_spec_to_proto_spec(proto_control_if->mutable_gateway(),
+                                                &api_spec->control_if_info.gateway.addr.v4_addr);
+            } else {
+                ipv6addr_api_spec_to_proto_spec(proto_control_if->mutable_gateway(),
+                                                &api_spec->control_if_info.gateway.addr.v6_addr);
+            }
         }
         break;
     default:
@@ -678,7 +685,7 @@ pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
                                       proto_spec.uplinkspec().portid());
         break;
 
-    case pds::IF_TYPE_VENDOR_L3:
+    case pds::IF_TYPE_CONTROL:
         if (proto_spec.txmirrorsessionid_size()) {
             PDS_TRACE_ERR("Tx Mirroring not supported on inband interface {}",
                           api_spec->key.str());
@@ -689,11 +696,13 @@ pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
                           api_spec->key.str());
             return SDK_RET_INVALID_ARG;
         }
-        api_spec->type = PDS_IF_TYPE_VENDOR_L3;
-        ippfx_proto_spec_to_api_spec(&api_spec->vendor_l3_if_info.ip_prefix,
-                                     proto_spec.vendorl3ifspec().prefix());
-        MAC_UINT64_TO_ADDR(api_spec->vendor_l3_if_info.mac_addr,
-                           proto_spec.vendorl3ifspec().macaddress());
+        api_spec->type = PDS_IF_TYPE_CONTROL;
+        ippfx_proto_spec_to_api_spec(&api_spec->control_if_info.ip_prefix,
+                                     proto_spec.controlifspec().prefix());
+        MAC_UINT64_TO_ADDR(api_spec->control_if_info.mac_addr,
+                           proto_spec.controlifspec().macaddress());
+        ipaddr_proto_spec_to_api_spec(&api_spec->control_if_info.gateway,
+                                      proto_spec.controlifspec().gateway());
         break;
 
     default:
@@ -839,8 +848,8 @@ pds_lif_type_to_proto_lif_type (lif_type_t lif_type)
         return types::LIF_TYPE_DATAPATH;
     case lif_type_t::LIF_TYPE_LEARN:
         return types::LIF_TYPE_LEARN;
-    case lif_type_t::LIF_TYPE_VENDOR_INBAND:
-        return types::LIF_TYPE_VENDOR_INBAND;
+    case lif_type_t::LIF_TYPE_CONTROL:
+        return types::LIF_TYPE_CONTROL;
     default:
         break;
     }

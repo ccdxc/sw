@@ -47,7 +47,7 @@ typedef enum lif_type_e {
     LIF_TYPE_SWM,
     LIF_TYPE_LEARN,
     LIF_TYPE_SERVICE,
-    LIF_TYPE_VENDOR_INBAND,
+    LIF_TYPE_CONTROL,
 } lif_type_t;
 
 typedef struct lif_queue_info_s {

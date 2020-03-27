@@ -16,9 +16,9 @@ class NodeObject():
         macaddress = utils.PdsUuid.GetUuidMacString((objs[0].Response[0].Spec.Id))
         self.MacAddress = macaddress
 
-        # save dscv0 mac
+        # save ctrl0 mac
         for resp in objs[0].Response:
-            if resp.Spec.Type == types_pb2.LIF_TYPE_VENDOR_INBAND:
+            if resp.Spec.Type == types_pb2.LIF_TYPE_CONTROL:
                 self.VcnIntfMacAddress = utils.getnum2mac(resp.Spec.MacAddress)
         return
 

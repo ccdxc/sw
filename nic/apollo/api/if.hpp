@@ -223,6 +223,10 @@ public:
     /// \return   IP prefix configured on this interface
     ip_prefix_t& l3_ip_prefix(void) { return if_info_.l3_.ip_pfx_; }
 
+    /// \brief    return gateway for control interface
+    /// \return   gateway ip for control interface
+    ip_addr_t& control_gateway(void) { return if_info_.control_.gateway_; }
+
     /// \brief    set the opaque port info for this port
     /// \param[in] port_info    pointer to the port specific information
     void set_port_info(void *port_info) {
@@ -292,7 +296,8 @@ private:
             struct {
                 ip_prefix_t ip_pfx_;   ///< IP subnet of this interface
                 mac_addr_t mac_;       ///< MAC address of this interface
-            } vendor_l3_;
+                ip_addr_t gateway_;
+            } control_;
         };
     } if_info_;
 

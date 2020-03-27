@@ -128,7 +128,7 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                 return SDK_RET_INVALID_ARG;
             }
             if (unlikely(lif->type() != sdk::platform::LIF_TYPE_HOST &&
-                         lif->type() != sdk::platform::LIF_TYPE_VENDOR_INBAND)) {
+                         lif->type() != sdk::platform::LIF_TYPE_CONTROL)) {
                 PDS_TRACE_ERR("Incorrect type %u lif %s in vnic %s spec",
                               lif->type(), spec->host_if.str(),
                               spec->key.str());

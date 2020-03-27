@@ -81,7 +81,7 @@ vcn_subnet_pfx='11.0.0.0/8'
 vcn_host_if_idx='0x80000046'
 vcn_intf_prefix='11.1.1.2/8'
 vcn_intf_ip=ipaddress.IPv4Address('11.1.1.2')
-vcn_v4_router_ip='11.1.1.1'
+vcn_v4_router_ip=ipaddress.IPv4Address('11.1.1.1')
 vcn_vpc_encap=11
 vcn_subnet_encap=12
 vcn_vpc_id=11
@@ -157,7 +157,7 @@ intf1=interface.InterfaceObject( 1, interface_pb2.IF_TYPE_L3, interface_pb2.IF_S
 intf2=interface.InterfaceObject( 2, interface_pb2.IF_TYPE_L3, interface_pb2.IF_STATUS_UP, vpc2_id, intf2_prefix, 2, types_pb2.ENCAP_TYPE_NONE,intf2_mac, node_uuid=node_uuid )
 
 # Create VCN interface
-vcn0=interface.InterfaceObject( 3, interface_pb2.IF_TYPE_VENDOR_L3, interface_pb2.IF_STATUS_UP, prefix=vcn_intf_prefix, macaddr=vcn_vnic_mac )
+vcn0=interface.InterfaceObject( 3, interface_pb2.IF_TYPE_CONTROL, interface_pb2.IF_STATUS_UP, prefix=vcn_intf_prefix, macaddr=vcn_vnic_mac, gateway=vcn_v4_router_ip )
 
 
 # Create NH objects ..
@@ -186,7 +186,7 @@ subnet1 = subnet.SubnetObject( 1, vpc1_id, ipaddress.IPv4Network(ipv4_subnet1), 
 subnet2 = subnet.SubnetObject( 2, vpc1_id, ipaddress.IPv4Network(ipv4_subnet2), subnet2_host_if_idx, ipaddress.IPv4Address(subnet2_v4_router_ip), subnet2_virt_router_mac, subnet1_route_table_id, 'VXLAN', subnet2_fabric_encap, node_uuid=node_uuid )
 
 # VCN subnet
-vcn_subnet = subnet.SubnetObject( vcn_subnet_id, vcn_vpc_id, ipaddress.IPv4Network(vcn_subnet_pfx), vcn_host_if_idx, ipaddress.IPv4Address(vcn_v4_router_ip), vcn_virt_router_mac, 0, 'VXLAN', vcn_subnet_encap, node_uuid=node_uuid )
+vcn_subnet = subnet.SubnetObject( vcn_subnet_id, vcn_vpc_id, ipaddress.IPv4Network(vcn_subnet_pfx), vcn_host_if_idx, vcn_v4_router_ip, vcn_virt_router_mac, 0, 'VXLAN', vcn_subnet_encap, node_uuid=node_uuid )
 
 
 # Create VNIC object

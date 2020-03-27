@@ -36,7 +36,7 @@ typedef enum pds_if_type_e {
     // Loopback interface
     PDS_IF_TYPE_LOOPBACK  = 5,
     // Vendor specific L3 interface
-    PDS_IF_TYPE_VENDOR_L3 = 6,
+    PDS_IF_TYPE_CONTROL   = 6,
 } pds_if_type_t;
 
 static inline pds_if_type_t
@@ -90,10 +90,11 @@ typedef struct pds_loopback_info_s {
 } __PACK__ pds_loopback_info_t;
 
 /// \brief inband control interface specific configuration
-typedef struct pds_vendor_l3_if_s {
+typedef struct pds_control_if_s {
     ip_prefix_t    ip_prefix;     ///< IP address and subnet host on this intf
     mac_addr_t     mac_addr;      ///< MAC address of this interface
-} __PACK__ pds_vendor_l3_if_t;
+    ip_addr_t      gateway;
+} __PACK__ pds_control_if_t;
 
 /// \brief interface specification
 typedef struct pds_if_spec_s {
@@ -105,7 +106,7 @@ typedef struct pds_if_spec_s {
         pds_uplink_pc_info_t uplink_pc_info;
         pds_l3_if_info_t     l3_if_info;
         pds_loopback_info_t  loopback_if_info;
-        pds_vendor_l3_if_t   vendor_l3_if_info;
+        pds_control_if_t     control_if_info;
     };
     // Tx/egress mirror session id list, if any
     uint8_t num_tx_mirror_sessions;
