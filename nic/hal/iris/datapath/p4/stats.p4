@@ -57,9 +57,32 @@ action ingress_tx_stats(ucast_bytes, ucast_pkts, mcast_bytes, mcast_pkts,
     // 1. Uplink port for packets coming from Host side OR
     // 2. Host Port (when there is one PF to Uplink mapping) and
     //    the PF is always in promiscuous mode.
-    if (control_metadata.clear_promiscuous_repl == TRUE and
-        flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
-        modify_field(capri_intrinsic.tm_replicate_en, FALSE);
+    // if (control_metadata.clear_promiscuous_repl == TRUE and
+    //     flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
+    //     modify_field(capri_intrinsic.tm_replicate_en, FALSE);
+    // }
+
+    // policy_enf_cfg_en: 1 and flow_miss and clear_promiscuous_repl and Ucast: dst_lport: 0
+    // policy_enf_cfg_en: 1 and flow_hit and clear_promiscuous_repl and Ucast: tm_repl_en: 0
+    // policy_enf_cfg_en: 0 and clear_promiscuous_repl and Ucast: tm_repl_en: 0
+    if (l4_metadata.policy_enf_cfg_en == TRUE) {
+        if (control_metadata.flow_miss_ingress == TRUE) {
+            if ((control_metadata.clear_promiscuous_repl == TRUE) and
+                (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST)) {
+                // Replication list is empty so only cpu copy will be honored
+                // modify_field(control_metadata.dst_lport, 0);
+            }
+        } else {
+            if ((control_metadata.clear_promiscuous_repl == TRUE) and
+                (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST)) {
+                modify_field(capri_intrinsic.tm_replicate_en, FALSE);
+            }
+        }
+    } else {
+        if ((control_metadata.clear_promiscuous_repl == TRUE) and
+            (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST)) {
+            modify_field(capri_intrinsic.tm_replicate_en, FALSE);
+        }
     }
 
     modify_field(control_metadata.i2e_flags,

@@ -1314,6 +1314,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     HAL_TRACE_DEBUG("pinned uplink's lport: {}", inp_prop.dst_lport);
 
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
+#if 0
         /*
          * Transparent Flow Aware:
          * Ucast Packets from host: repl_ptr + 2. Empty OIFL but cpu copy.
@@ -1321,7 +1322,8 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
          * generating a copy to uplink. Preventing that.
          */
         inp_prop.clear_promiscuous_repl = 0;
-#if 0
+#endif
+
         if (g_hal_state->allow_local_switch_for_promiscuous()) {
             if (l2seg->single_wire_mgmt) {
                 inp_prop.clear_promiscuous_repl = 0;
@@ -1351,7 +1353,6 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
             // no need to replicate. just send to uplink
             inp_prop.clear_promiscuous_repl = 1;
         }
-#endif
     } else {
         // This function will never be called for ENICs of type other than classic
         SDK_ASSERT(0);

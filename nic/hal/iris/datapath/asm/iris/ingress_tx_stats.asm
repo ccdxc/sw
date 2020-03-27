@@ -75,17 +75,23 @@ ingress_tx_stats:
     .brend
 
 ingress_tx_stats2:
+    seq         c1, k.l4_metadata_policy_enf_cfg_en, TRUE
+    bcf         [!c1], ingress_tx_stats_no_repl
+    seq         c2, k.control_metadata_flow_miss_ingress, TRUE
+    bcf         [c2], ingress_tx_stats_frag
+
+ingress_tx_stats_no_repl:
     seq         c2, k.control_metadata_clear_promiscuous_repl, TRUE
-    // c3 is used later too.
     seq         c3, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
     setcf       c2, [c2 & c3]
     phvwr.c2    p.capri_intrinsic_tm_replicate_en, 0
+
+ingress_tx_stats_frag:
     or          r1, r0, k.control_metadata_uplink, P4_I2E_FLAGS_UPLINK
     or          r1, r1, k.l3_metadata_ip_frag, P4_I2E_FLAGS_IP_FRAGMENT
     phvwrm      p.control_metadata_i2e_flags, r1, \
                     ((1 << P4_I2E_FLAGS_UPLINK) | \
                      (1 << P4_I2E_FLAGS_IP_FRAGMENT))
-
 
 #include "tcp_options_fixup.h"
 

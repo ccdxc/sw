@@ -93,8 +93,6 @@ header_type control_metadata_t {
         rdma_enabled                   : 1;
         src_lport                      : 11;
         dst_lport                      : 11;
-        src_class_e                    : 1;
-        dst_class_e                    : 1;
         clear_promiscuous_repl         : 1;
         i2e_flags                      : 8;
         flow_miss_ingress              : 1;  // workaround for predication

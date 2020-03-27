@@ -31,23 +31,22 @@ native_ipv4_packet_common:
   add           r6, k.ipv4_ihl, k.tcp_dataOffset
   sub           r7, k.ipv4_totalLen, r6, 2
 
-  phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.ipv4_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[31:0], k.ipv4_srcAddr
 
+  or            r1, k.ipv4_ttl, k.ethernet_dstAddr, 8
   phvwrpair     p.flow_lkp_metadata_lkp_srcMacAddr, k.ethernet_srcAddr, \
-                p.flow_lkp_metadata_lkp_dstMacAddr, k.ethernet_dstAddr
+                p.{flow_lkp_metadata_lkp_dstMacAddr,flow_lkp_metadata_ip_ttl}, \
+                    r1
 
-  phvwr         p.flow_lkp_metadata_ip_ttl, k.ipv4_ttl
-
-  phvwr         p.flow_lkp_metadata_ipv4_flags, k.ipv4_flags
-  phvwr         p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl
+  or            r7, r7[15:0], k.ipv4_flags, 17
+  phvwrpair     p.{flow_lkp_metadata_ipv4_flags,flow_info_metadata_flow_role,\
+                    l4_metadata_tcp_data_len}, r7, \
+                    p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl
 
   bbeq          k.esp_valid, TRUE, native_ipv4_esp_packet
   phvwr         p.{tunnel_metadata_tunnel_type,tunnel_metadata_tunnel_vni}, r0
 
-  seq           c1, k.ipv4_dstAddr[31:28], 0xF
-  phvwr.c1      p.control_metadata_dst_class_e, TRUE
   seq           c1, k.roce_bth_valid, TRUE
   cmov          r1, c1, r0, k.udp_srcPort
   or            r1, r1, k.udp_dstPort, 16
@@ -57,7 +56,7 @@ native_ipv4_packet_common:
   seq.!c1       c1, k.ipv4_protocol, IP_PROTO_ICMP
   phvwr.!c1     p.{flow_lkp_metadata_lkp_dport,flow_lkp_metadata_lkp_sport}, r0
   phvwr.e       p.flow_lkp_metadata_lkp_proto, k.ipv4_protocol
-  phvwr.f       p.l4_metadata_tcp_data_len, r7
+  phvwr.f       p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
 
 native_ipv4_esp_packet:
   phvwr.e       p.flow_lkp_metadata_lkp_proto, IP_PROTO_IPSEC_ESP

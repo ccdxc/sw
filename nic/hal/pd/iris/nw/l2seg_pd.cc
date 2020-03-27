@@ -1982,15 +1982,16 @@ pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
             HAL_TRACE_DEBUG("Processing IF: {}", *p_hdl_id);
             hal_if = find_if_by_handle(*p_hdl_id);
             if_type = hal::intf_get_if_type(hal_if);
-            HAL_TRACE_DEBUG("Processing IF: {}, type: {}", *p_hdl_id, if_type);
+            HAL_TRACE_DEBUG("Processing IF: {}, type: {}", if_keyhandle_to_str(hal_if), if_type);
             switch(if_type) {
             case intf::IF_TYPE_ENIC:
+                HAL_TRACE_DEBUG("Reprogramming input props for: {}", if_to_str(hal_if));
                 ret = pd_enicif_upd_inp_prop_l2seg(hal_if, l2seg,
                                                    ENICIF_UPD_FLAGS_NUM_PROM_LIFS,
                                                    pd_l2seg->num_prom_lifs);
                 break;
             case intf::IF_TYPE_UPLINK:
-                // SDK_ASSERT(0);
+                HAL_TRACE_DEBUG("Reprogramming input props for: {}", if_to_str(hal_if));
                 up_args.l2seg = l2seg;
                 up_args.intf = hal_if;
                 ret = l2seg_uplink_upd_input_properties_tbl(&up_args,

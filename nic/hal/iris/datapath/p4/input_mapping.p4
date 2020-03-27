@@ -37,9 +37,6 @@ action tunneled_ipv4_packet() {
         set_packet_type(ethernet.dstAddr);
     }
 
-    if ((inner_ipv4.srcAddr & 0xF0000000) == 0xF0000000) {
-        modify_field(control_metadata.src_class_e, TRUE);
-    }
     if (tunnel_metadata.tunnel_type == INGRESS_TUNNEL_TYPE_MPLS_L3VPN) {
         modify_field(tunnel_metadata.tunnel_type, 0);
         modify_field(tunnel_metadata.tunnel_vni, 0);
@@ -116,9 +113,6 @@ action native_ipv4_packet() {
 
     modify_field(tunnel_metadata.tunnel_type, 0);
     modify_field(tunnel_metadata.tunnel_vni, 0);
-    if ((ipv4.dstAddr & 0xF0000000) == 0xF0000000) {
-        modify_field(control_metadata.dst_class_e, TRUE);
-    }
 
     // Just to make NCC happy. CRITICAL::Could not allocate memory for ingress tcam table 'input_mapping_native'.
     modify_field(scratch_metadata.lif, capri_intrinsic.lif);
@@ -243,96 +237,14 @@ table input_mapping_native2 {
     default_action : native_ipv6_packet2;
 }
 
-// bounce_vnid: vnid of the incoming l2 segment used when packets
-//              are vxlan encaped and sent to the node where the
-//              EP is moved to. Even when we are operating in
-//              underlay mode, we will have from config the vnid
-//              for each l2 segment and that will be programmed as
-//              bounce_vnid
-//              Same value is used for in case of flow miss for
-//              multiacast traffic in case we are in host pinning and
-//              overlay mode where one copy of packet is sent to uplink
-//              to GIPo with this VNID.
-// action input_properties(vrf, classic_vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id,
-//                         flow_miss_idx, ipsg_enable, l4_profile_idx,
-//                         dst_lport, src_lport, allow_flood, bounce_vnid,
-//                         mirror_on_drop_en, mirror_on_drop_session_id,
-//                         clear_promiscuous_repl, nic_mode, mode_switch_en) {
-//     modify_field(flow_lkp_metadata.lkp_vrf, vrf);
-//     modify_field(flow_lkp_metadata.lkp_classic_vrf, classic_vrf);
-//     modify_field(flow_lkp_metadata.lkp_dir, dir);
-//     modify_field(control_metadata.mdest_flow_miss_action, mdest_flow_miss_action);
-//     modify_field(control_metadata.flow_miss_qos_class_id, flow_miss_qos_class_id);
-//     modify_field(control_metadata.flow_miss_idx, flow_miss_idx);
-//     modify_field(control_metadata.ipsg_enable, ipsg_enable);
-//     modify_field(l4_metadata.profile_idx, l4_profile_idx);
-//     modify_field(control_metadata.src_lif, capri_intrinsic.lif);
-//     modify_field(control_metadata.src_lport, src_lport);
-//     modify_field(control_metadata.dst_lport, dst_lport);
-//     modify_field(control_metadata.allow_flood, allow_flood);
-//     modify_field(flow_miss_metadata.tunnel_vnid, bounce_vnid);
-//     modify_field(control_metadata.mirror_on_drop_en, mirror_on_drop_en);
-//     modify_field(control_metadata.mirror_on_drop_session_id,
-//                  mirror_on_drop_session_id);
-//     modify_field(control_metadata.clear_promiscuous_repl, clear_promiscuous_repl);
-//     modify_field(control_metadata.nic_mode, nic_mode);
-//     modify_field(control_metadata.mode_switch_en, mode_switch_en);
-//     if ((nic_mode == NIC_MODE_CLASSIC) or (mode_switch_en == 1)) {
-//         modify_field(control_metadata.registered_mac_launch, 1);
-//     }
-// }
-
-// vrf & uplink_vrf: 
-//  - GS: 
-//    - Network -> * : [Shared] 
-//      - l2seg -> l2seg1, l2seg2
-//      - vrf: l2seg's vrf, which is used for flow lookup
-//      - uplink_vrf: 
-//        - Mcast: l2seg1 or l2seg2's vrf, will be used for reg_macs lookup
-//        - Ucast/Bcast: l2seg's vrf, will be used for reg_macs lookup 
-//      - if_label_check_en : 1
-//      - if_label_check_fail_drop : 1
-//      - mseg_bm_bc_repls : 1
-//      - mseg_bm_mc_repls : 1
-//    - Network -> * : [Not-Shared]
-//      - l2seg -> l2seg
-//      - vrf: l2seg's vrf, for flow lookup
-//      - uplink_vrf: l2seg's vrf, for all traffic
-//      - mseg_bm_bc_repls : 1
-//      - mseg_bm_mc_repls : 1
-//    - Host -> *
-//      - vrf: l2seg's vrf, for flow lookup
-//      - uplink_vrf: l2seg's vrf, for all traffic, for reg_macs' lookup
-//      - if_label_check_en : 1
-//      - if_label_check_fail_drop : 0                                                 
-//      - mseg_bm_bc_repls : 1
-//      - mseg_bm_mc_repls : 1
-//    - Network -> Inb/SWM/Internal or Inb/SWM/Internal -> * 
-//      - vrf: l2seg1 or l2seg2's vrf, for flow lookup
-//      - uplink_vrf: l2seg1 or l2seg2's vrf, will be used for reg_macs lookup
-//      - mseg_bm_bc_repls : 0
-//      - mseg_bm_mc_repls : 0
-// - Baremetal
-//   - BM EPs
-//     - vrf, uplink_vrf: Same 
-//     - if_label_check_en : 0
-//     - if_label_check_fail_drop : 0
-//     - mseg_bm_bc_repls : 1
-//     - mseg_bm_mc_repls : 1
-//   - Mgmt EPs
-//     - vrf, uplink_vrf: Same 
-//     - if_label_check_en : 0
-//     - if_label_check_fail_drop : 0
-//     - mseg_bm_bc_repls : 0
-//     - mseg_bm_mc_repls : 0
-//     
-action input_properties(vrf, reg_mac_vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id,
-                        flow_miss_idx, ipsg_enable, l4_profile_idx,
-                        dst_lport, src_lport, rewrite_index, tunnel_rewrite_index, bounce_vnid, 
-                        mirror_on_drop_en, mirror_on_drop_session_id,
-                        clear_promiscuous_repl, if_label_check_en, if_label_check_fail_drop,
-                        src_if_label, mseg_bm_bc_repls, mseg_bm_mc_repls, flow_learn,
-                        uuc_fl_pe_sup_en, has_prom_host_lifs) {
+action input_properties(vrf, reg_mac_vrf, dir, flow_miss_qos_class_id,
+                        flow_miss_idx, ipsg_enable, clear_promiscuous_repl,
+                        l4_profile_idx, dst_lport, src_lport, rewrite_index,
+                        tunnel_rewrite_index, bounce_vnid, mirror_on_drop_en,
+                        mirror_on_drop_session_id, mdest_flow_miss_action,
+                        if_label_check_en, if_label_check_fail_drop,
+                        mseg_bm_bc_repls, mseg_bm_mc_repls, flow_learn,
+                        src_if_label, uuc_fl_pe_sup_en, has_prom_host_lifs) {
     modify_field(flow_lkp_metadata.lkp_vrf, vrf);
     modify_field(flow_lkp_metadata.lkp_dir, dir);
     modify_field(control_metadata.mdest_flow_miss_action, mdest_flow_miss_action);
@@ -401,50 +313,6 @@ table input_properties {
     size : INPUT_PROPERTIES_TABLE_SIZE;
 }
 
-// For the case where packets from VMs are coming with Micro-VLAN and
-// packets going to Uplink are going out with User-VLAN, we will need
-// to insert two entries into this table so that one entry with
-// Micro-VLAN derives the input_properties and the other entry with
-// User-VLAN will be used for dejavu check.
-// action input_properties_mac_vlan(src_lif, src_lif_check_en,
-//                                  vrf, dir, mdest_flow_miss_action,
-//                                  flow_miss_qos_class_id,
-//                                  flow_miss_idx, ipsg_enable,
-//                                  l4_profile_idx, dst_lport, src_lport,
-//                                  allow_flood, rewrite_index,
-//                                  tunnel_rewrite_index, tunnel_vnid,
-//                                  tunnel_originate, mirror_on_drop_en,
-//                                  mirror_on_drop_session_id) {
-//     adjust_lkp_fields();
-// 
-//     // if table is a miss, return. do not perform rest of the actions.
-// 
-//     // dejavu check
-//     if ((src_lif_check_en == TRUE) and (src_lif != capri_intrinsic.lif)) {
-//         modify_field(control_metadata.drop_reason, DROP_INPUT_MAPPING_DEJAVU);
-//         drop_packet();
-//     }
-// 
-//     // These tunnel related params are used for multicast/bradcast with
-//     // host pinning and overlay enabled.
-//     // tunnel_vnid is common to both input_properties and
-//     // input_properties_mac_vlan table and used for bounce cases too.
-//     modify_field(flow_miss_metadata.rewrite_index, rewrite_index);
-//     modify_field(flow_miss_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
-//     modify_field(flow_miss_metadata.tunnel_originate, tunnel_originate);
-// 
-//     modify_field(control_metadata.src_lif, src_lif);
-// 
-//     input_properties(vrf, 0, dir, mdest_flow_miss_action, flow_miss_qos_class_id,
-//                      flow_miss_idx, ipsg_enable, l4_profile_idx, dst_lport,
-//                      src_lport, allow_flood, tunnel_vnid, mirror_on_drop_en,
-//                      mirror_on_drop_session_id, 0, NIC_MODE_SMART, 0);
-// 
-//     // dummy ops to keep compiler happy
-//     modify_field(scratch_metadata.src_lif_check_en, src_lif_check_en);
-// }
-
-// skip_flow_update: Set only for GS WL's network entry
 action input_properties_mac_vlan(vrf, dir, mdest_flow_miss_action,
                                  flow_miss_qos_class_id,
                                  flow_miss_idx, ipsg_enable,
@@ -463,33 +331,24 @@ action input_properties_mac_vlan(vrf, dir, mdest_flow_miss_action,
         // return;
     }
 
-    // These tunnel related params are used for multicast/bradcast with
-    // host pinning and overlay enabled.
-    // tunnel_vnid is common to both input_properties and
-    // input_properties_mac_vlan table and used for bounce cases too.
-    // modify_field(flow_miss_metadata.rewrite_index, rewrite_index);
-    // modify_field(flow_miss_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
-    // modify_field(flow_miss_metadata.tunnel_originate, tunnel_originate);
-
     modify_field(control_metadata.ep_learn_en, ep_learn_en);
     // modify_field(rewrite_metadata.rewrite_index, rewrite_index);
     modify_field(flow_miss_metadata.tunnel_originate, tunnel_originate);
 
-
-    input_properties(vrf, vrf, dir, mdest_flow_miss_action, flow_miss_qos_class_id,
-                     flow_miss_idx, ipsg_enable, l4_profile_idx, dst_lport,
-                     src_lport, rewrite_index, tunnel_rewrite_index, tunnel_vnid, mirror_on_drop_en,
-                     mirror_on_drop_session_id, 
+    input_properties(vrf, vrf, dir, flow_miss_qos_class_id,
+                     flow_miss_idx, ipsg_enable,
                      0,  // clear_promiscuous_repl
+                     l4_profile_idx, dst_lport, src_lport, rewrite_index,
+                     tunnel_rewrite_index, tunnel_vnid, mirror_on_drop_en,
+                     mirror_on_drop_session_id, mdest_flow_miss_action,
                      1,  // if_label_check_en
                      0,  // if_label_check_fail_drop
-                     src_if_label,
                      1,  // mseg_bm_bc_repls
                      1,  // mseg_bm_mc_repls
                      1,  // flow_learn
+                     src_if_label,
                      1,  // uuc_fl_pe_sup_en
                      0); // has_prom_host_lifs
-
     modify_field(scratch_metadata.src_if_label, src_if_label);
 }
 
