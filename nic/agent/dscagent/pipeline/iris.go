@@ -1628,6 +1628,41 @@ func (i *IrisAPI) HandleRouteTable(oper types.Operation, routetableObj netproto.
 
 // ReplayConfigs replays last known configs from boltDB
 func (i *IrisAPI) ReplayConfigs() error {
+	// Purge/Replay/Reconcile interfaces first. Since this gets used in subsequent configs.
+	intfKind := netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+	}
+	interfaces, _ := i.HandleInterface(types.List, intfKind)
+	for _, intf := range interfaces {
+		// Check for key incompat issues. Objects retured via LIST must return OK when we do a GET.
+		// If this doesn't happen it means that boltDB has stale keys or key naming changes have gone in the interim.
+		if _, err := i.HandleInterface(types.Get, intf); err != nil {
+			// This is a stale interface object with inconsitent naming convention. Deleting this since we need to keep
+			// the state consistent
+			key := fmt.Sprintf("%s-%s-%s", intfKind.Kind, intf.Tenant, intf.Name)
+			log.Infof("Deleting inconsistent key: %v", key)
+			if err := i.InfraAPI.Delete(intfKind.Kind, key); err != nil {
+				log.Error(errors.Wrapf(types.ErrInconsistentInterfaceDelete, "Interface: %s | Err: %v", key, err))
+			}
+			continue
+		}
+
+		if intf.Spec.Type != netproto.InterfaceSpec_UPLINK_ETH.String() &&
+			intf.Spec.Type != netproto.InterfaceSpec_UPLINK_MGMT.String() {
+			log.Infof("Not purging Interface %v", intf.Spec.Type)
+			continue
+		}
+
+		if _, ok := knownUplinks[intf.Status.InterfaceID]; ok {
+			log.Infof("Not purging known Interface %v", intf.GetKey())
+			continue
+		}
+
+		log.Infof("Purging unknown uplink Interface %v", intf.GetKey())
+		if err := i.InfraAPI.Delete(intf.Kind, intf.GetKey()); err != nil {
+			log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "Interface: %s | Err: %v", intf.GetKey(), err))
+		}
+	}
 
 	// Replay Network Object
 	nwKind := netproto.Network{
@@ -1741,32 +1776,6 @@ func (i *IrisAPI) ReplayConfigs() error {
 			}
 		}
 	}
-
-	// Purge any old uplinks that are unknown
-	// Replay Interface Object
-	intfKind := netproto.Interface{
-		TypeMeta: api.TypeMeta{Kind: "Interface"},
-	}
-	interfaces, _ := i.HandleInterface(types.List, intfKind)
-	for _, intf := range interfaces {
-		if intf.Spec.Type != netproto.InterfaceSpec_UPLINK_ETH.String() &&
-			intf.Spec.Type != netproto.InterfaceSpec_UPLINK_MGMT.String() {
-			log.Infof("Not purging Interface %v", intf.Spec.Type)
-			continue
-		}
-
-		if _, ok := knownUplinks[intf.Status.InterfaceID]; ok {
-			log.Infof("Not purging known Interface %v", intf.GetKey())
-			continue
-		}
-
-		log.Infof("Purging unknown uplink Interface %v", intf.GetKey())
-		if err := i.InfraAPI.Delete(intf.Kind, intf.GetKey()); err != nil {
-			log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "Interface: %s | Err: %v", intf.GetKey(), err))
-			return errors.Wrapf(types.ErrBoltDBStoreDelete, "Interface: %s | Err: %v", intf.GetKey(), err)
-		}
-	}
-
 	return nil
 }
 

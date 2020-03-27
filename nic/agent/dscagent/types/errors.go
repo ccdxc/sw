@@ -140,6 +140,7 @@ const (
 	ErrTechSupportArtifactCleanup            = Error("ErrTechSupportArtifactCleanup")
 	ErrNoIpForMgmtIntf                       = Error("ErrNoIpForMgmtIntf")
 	ErrFailedToGetMgmtLink                   = Error("ErrFailedToGetMgmtLink")
+	ErrInconsistentInterfaceDelete           = Error("ErrInconsistentInterfaceDelete")
 )
 
 // Const Info
