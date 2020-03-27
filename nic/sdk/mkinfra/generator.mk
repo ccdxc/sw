@@ -235,9 +235,11 @@ define INCLUDE_MODULEMK
         $${TGID}_EXPORT_LIBS        := $$(strip $$(call CANPATH,$${MODULE_EXPORT_LIBS}))
         $${TGID}_EXPORT_BINS        := $$(strip $$(call CANPATH,$${MODULE_EXPORT_BINS}))
         ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
-            EXPORT_PREREQS              += $$(join $$(addprefix ${BLD_OUT_DIR}/,$$(subst .,_,$${MODULE_TARGET})),\
-                                               $$(addprefix /,$${MODULE_TARGET}))
-            EXPORT_TARGETIDS            += $${TGID}
+            ifeq "$${$${TGID}_ASIC}" "${ASIC}"
+                EXPORT_PREREQS              += $$(join $$(addprefix ${BLD_OUT_DIR}/,$$(subst .,_,$${MODULE_TARGET})),\
+                                                   $$(addprefix /,$${MODULE_TARGET}))
+                EXPORT_TARGETIDS            += $${TGID}
+            endif
         endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".tenjin"
         $${TGID}_BASECMD            := $${MODULE_BASECMD}
@@ -342,11 +344,13 @@ define PROCESS_MODULEMK_OBJS
 endef
 
 define PROCESS_MODULEMK_DEPS
-    ifeq "$${${1}_RECIPE_TYPE}" "TENJIN"
-        ${1}_DEPS   += $${${1}_GENERATOR} $${${1}_TEMPLATE} $${${1}_ARGS} $${${1}_MODULE_MK}
-    else
-        ${1}_DEPS       += $${${1}_SOLIB_DEPS} $${${1}_ARLIB_DEPS} ${COMMON_DEPS} $${${1}_PREREQS} $${${1}_MODULE_MK}
-        ${1}_MMD_DEPS   := $${${1}_OBJS:%.o=%.d}
+    ifeq "$${${1}_ASIC}" "${ASIC}"
+        ifeq "$${${1}_RECIPE_TYPE}" "TENJIN"
+            ${1}_DEPS   += $${${1}_GENERATOR} $${${1}_TEMPLATE} $${${1}_ARGS} $${${1}_MODULE_MK}
+        else
+            ${1}_DEPS       += $${${1}_SOLIB_DEPS} $${${1}_ARLIB_DEPS} ${COMMON_DEPS} $${${1}_PREREQS} $${${1}_MODULE_MK}
+            ${1}_MMD_DEPS   := $${${1}_OBJS:%.o=%.d}
+        endif
     endif
 endef
 
