@@ -501,31 +501,32 @@ pds_vnic_l2_rewrite_internal (vlib_buffer_t *p, u16 *next, u32 *counter)
 {
     // Ethernet
     u16 vnic_id;
-    pds_impl_db_vnic_entry_t *vnic_info = NULL;
-    pds_impl_db_subnet_entry_t *subnet_info = NULL;
     ethernet_header_t *eth0;
+    u8 *src_mac, *dst_mac;
+    u8 vnic_not_found, subnet_not_found;
 
     vlib_buffer_advance(p, - sizeof (ethernet_header_t));
     eth0 = vlib_buffer_get_current(p);
 
     // extract vnic and subnet info
     vnic_id = vnet_buffer(p)->pds_tx_data.vnic_id;
-    vnic_info = pds_impl_db_vnic_get(vnic_id);
-    if(vnic_info == NULL) {
-        *next = VNIC_L2_REWRITE_NEXT_UNKNOWN;
-        counter[VNIC_L2_REWRITE_COUNTER_VNIC_NOT_FOUND] += 1;
-        return;
-    }
-    subnet_info = pds_impl_db_subnet_get(vnic_info->subnet_hw_id);
-    if(subnet_info == NULL) {
-        *next = VNIC_L2_REWRITE_NEXT_UNKNOWN;
-        counter[VNIC_L2_REWRITE_COUNTER_SUBNET_NOT_FOUND] += 1;
-        return;
+    if (0 != pds_vnic_l2_rewrite_info_get(vnic_id, &src_mac, &dst_mac,
+             &vnic_not_found, &subnet_not_found)) {
+        if (vnic_not_found) {
+            *next = VNIC_L2_REWRITE_NEXT_UNKNOWN;
+            counter[VNIC_L2_REWRITE_COUNTER_VNIC_NOT_FOUND] += 1;
+            return;
+        }
+        if (subnet_not_found){
+            *next = VNIC_L2_REWRITE_NEXT_UNKNOWN;
+            counter[VNIC_L2_REWRITE_COUNTER_SUBNET_NOT_FOUND] += 1;
+            return;
+        }
     }
 
     eth0->type =  clib_net_to_host_u16(ETHERNET_TYPE_IP4);
-    clib_memcpy(&eth0->dst_address, &eth0->src_address, ETH_ADDR_LEN);
-    clib_memcpy(&eth0->src_address, subnet_info->mac, ETH_ADDR_LEN);
+    clib_memcpy(&eth0->dst_address, src_mac, ETH_ADDR_LEN);
+    clib_memcpy(&eth0->src_address, dst_mac, ETH_ADDR_LEN);
     *next = VNIC_L2_REWRITE_NEXT_TX_OUT;
     counter[VNIC_L2_REWRITE_COUNTER_TX_OUT] += 1;
 

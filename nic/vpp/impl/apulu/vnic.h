@@ -58,6 +58,27 @@ pds_vnic_add_tx_hdrs (vlib_buffer_t *b, u16 vnic_nh_hw_id)
     tx->lif_flags = clib_host_to_net_u16(tx->lif_flags);
 }
 
+always_inline int
+pds_vnic_l2_rewrite_info_get (u16 vnic_id, u8 **src_mac, u8 **dst_mac,
+                              u8 *vnic_not_found, u8 *subnet_not_found)
+{
+    pds_impl_db_vnic_entry_t *vnic_info = NULL;
+    pds_impl_db_subnet_entry_t *subnet_info = NULL;
+
+    vnic_info = pds_impl_db_vnic_get(vnic_id);
+    if(vnic_info == NULL) {
+        *vnic_not_found = 1;
+        return -1;
+    }
+    subnet_info = pds_impl_db_subnet_get(vnic_info->subnet_hw_id);
+    if(subnet_info == NULL) {
+        *subnet_not_found = 1;
+        return -1;
+    }
+    *src_mac = subnet_info->mac;
+    *dst_mac = vnic_info->mac;
+    return 0;
+}
 #ifdef __cplusplus
 }
 #endif
