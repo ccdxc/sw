@@ -163,7 +163,7 @@ func TestNodeObject(t *testing.T) {
 			Suspend:                   false,
 			DSCsOnly:                  false,
 			DSCMustMatchConstraint:    true, // hence venice upgrade only
-			UpgradeType:               rollout.RolloutSpec_Disruptive.String(),
+			UpgradeType:               rollout.RolloutSpec_Graceful.String(),
 		},
 		Status: rollout.RolloutActionStatus{
 			OperationalState: rollout.RolloutPhase_PROGRESSING.String(),

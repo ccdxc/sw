@@ -47,7 +47,7 @@ func (sm *Statemgr) CreateDSCRolloutState(ro *protos.DSCRollout, ros *RolloutSta
 		var op, nextOp protos.DSCOp
 		opStatus := "success"
 		switch ros.Spec.UpgradeType {
-		case roproto.RolloutSpec_Disruptive.String():
+		case roproto.RolloutSpec_Graceful.String():
 			op = protos.DSCOp_DSCPreCheckForDisruptive
 			nextOp = protos.DSCOp_DSCDisruptiveUpgrade
 		case roproto.RolloutSpec_OnNextHostReboot.String():
