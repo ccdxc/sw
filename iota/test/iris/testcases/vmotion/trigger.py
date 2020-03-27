@@ -74,14 +74,18 @@ def start_fuz(tc, fuz_run_time = __fuz_run_time):
                        (server.workload_name, server.ip_address, client.workload_name, client.ip_address)
         tc.cmd_descr.append(cmd_descr)
         num_sessions = int(getattr(tc.args, "num_sessions", 1))
-        api.Logger.info("Starting Fuz test from %s num-sessions %d" % (cmd_descr, num_sessions))
 
         serverCmd = None
         clientCmd = None
         port = api.AllocateTcpPort()
 
+        api.Logger.info("Starting Fuz test from %s num-sessions %d port %d" % (cmd_descr, num_sessions, port))
+
         serverCmd = tc.fuz_exec[server.workload_name]  + " -port " + str(port)
         clientCmd = tc.fuz_exec[client.workload_name]  + " -conns " + str(num_sessions) + " -duration " + str(__fuz_run_time) + " -attempts 1 -read-timeout 100 -talk " + server.ip_address + ":" + str(port)
+
+        api.Logger.info("Server command %s" %serverCmd)
+        api.Logger.info("Client command %s" %clientCmd)
 
         tc.serverCmds.append(serverCmd)
         tc.clientCmds.append(clientCmd)

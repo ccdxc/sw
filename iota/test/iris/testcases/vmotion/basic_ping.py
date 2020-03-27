@@ -100,7 +100,23 @@ def start_fuz(tc):
     return api.types.status.SUCCESS
 
 
+def update_node_info(tc, cmd_resp):
+    wl_moving = {} 
+    for move_info in tc.move_info:
+        wl_moving[move_info.wl.workload_name] = move_info
+    for cmd in cmd_resp.commands:
+        if cmd.entity_name in wl_moving.keys():
+            move_info = wl_moving[cmd.entity_name]
+            api.Logger.info("updating node in for entity {} to node {}", 
+                             cmd.entity_name, move_info.new_node) 
+            api.Trigger_UpdateNodeForCommands(cmd_resp, cmd.entity_name, 
+                                              move_info.old_node, 
+                                              move_info.new_node)
+              
 def wait_and_verify_fuz(tc):
+    update_node_info(tc, tc.server_resp)
+    update_node_info(tc, tc.fuz_client_resp)
+
     tc.fuz_client_resp = api.Trigger_WaitForAllCommands(tc.fuz_client_resp)
     api.Trigger_TerminateAllCommands(tc.server_resp)
     for idx, cmd in enumerate(tc.fuz_client_resp.commands):
