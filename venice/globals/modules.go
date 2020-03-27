@@ -18,6 +18,7 @@ const (
 	ElasticSearch         = "pen-elastic"
 	ElasticSearchCurator  = "pen-elastic-curator"
 	EvtsProxy             = "pen-evtsproxy"
+	FakeHal               = "pen-fakehal"
 	KubeAPIServer         = "pen-kube-apiserver"
 	KubeScheduler         = "pen-kube-scheduler"
 	KubeControllerManager = "pen-kube-controller-manager"
