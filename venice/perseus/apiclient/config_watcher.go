@@ -196,6 +196,8 @@ func (k *CfgWatcherService) waitForAPIServerOrCancel() {
 func (k *CfgWatcherService) stopWatchers() {
 	k.smartNICWatcher.Stop()
 	k.networkInterfaceWatcher.Stop()
+	k.routingConfigWatcher.Stop()
+	k.nodeConfigWatcher.Stop()
 }
 
 // runUntilCancel implements the config Watcher service.
@@ -222,7 +224,6 @@ func (k *CfgWatcherService) runUntilCancel() {
 				k.logger.Errorf("Waiting for DistributedServiceCard watch to succeed for %v seconds", ii)
 			}
 		case <-k.ctx.Done():
-			k.stopWatchers()
 			return
 		}
 	}
