@@ -426,16 +426,6 @@ class NexthopObjectClient(base.ConfigClientBase):
             return False
         return True
 
-    def UpdateUnderlayObjects(self, node):
-        if utils.IsDryRun(): return True
-        cfgObjects = self.__underlay_objs[node].values()
-        logger.info(f"Updating {len(cfgObjects)} underlay {self.ObjType.name} Objects in {node}")
-        result = list(map(lambda x: utils.UpdateObject(x), cfgObjects))
-        if not all(result):
-            logger.info(f"Updating {len(cfgObjects)} underlay {self.ObjType.name} Objects FAILED in {node}")
-            return False
-        return True
-
     def RollbackUpdateObjects(self, node):
         if utils.IsPipelineApulu():
             cfgObjects = self.__underlay_objs[node].values()

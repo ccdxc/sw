@@ -66,7 +66,6 @@ class InterfaceInfoObject(base.ConfigObjectBase):
                 self.VrfName = f'Vpc{spec.vpcid}'
             if (hasattr(ifspec, 'ipprefix')):
                 self.ip_prefix = ipaddress.ip_network(ifspec.ipprefix.replace('\\', '/'), False)
-                self.if_ip_prefix = ipaddress.ip_interface(ifspec.ipprefix.replace('\\', '/'))
             else:
                 self.ip_prefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
             self.ethifidx = getattr(spec, 'ethifidx', -1)
@@ -248,7 +247,6 @@ class InterfaceObject(base.ConfigObjectBase):
             spec.L3IfSpec.MACAddress = self.IfInfo.macaddr.getnum()
             spec.L3IfSpec.VpcId = utils.PdsUuid.GetUUIDfromId(self.IfInfo.VpcId, api.ObjectTypes.VPC)
             utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.L3IfSpec.Prefix)
-            utils.GetRpcIfIPPrefix(self.IfInfo.if_ip_prefix, spec.L3IfSpec.Prefix)
             # Metaswitch treats IPv4 address as an array - so requires it in Network order
             cp_utils.IPv4EndianReverse(spec.L3IfSpec.Prefix.Addr)
 
@@ -336,7 +334,6 @@ class InterfaceObjectClient(base.ConfigClientBase):
         self.__uplinkl3ifs_iter = defaultdict(dict)
         self.__hostifs = defaultdict(dict)
         self.__hostifs_iter = defaultdict(dict)
-        self.__inband_mgmt_ifs = defaultdict(dict)
         return
 
     def GetInterfaceObject(self, node, infid):
@@ -350,11 +347,6 @@ class InterfaceObjectClient(base.ConfigClientBase):
     def GetHostInterfaceName(self, node, hostifindex):
         if self.__hostifs[node]:
             return self.__hostifs[node].get(hostifindex, None)
-        return None
-
-    def GetNHInterfaceMac(self, node, ifname):
-        if self.__inband_mgmt_ifs[node]:
-            return self.__inband_mgmt_ifs[node].get(ifname, None)
         return None
 
     def GetL3UplinkInterface(self, node):
@@ -395,13 +387,6 @@ class InterfaceObjectClient(base.ConfigClientBase):
                 continue
             for lif in r.Response:
                 intf_type = lif.Spec.Type
-                if intf_type == types_pb2.LIF_TYPE_INBAND_MGMT:
-                    key = self.GetKeyfromSpec(lif.Spec)
-                    intf_name = lif.Status.Name
-                    intf_mac = objects.MacAddressBase(integer=lif.Spec.MacAddress)
-                    self.__inband_mgmt_ifs[node].update({intf_name: intf_mac})
-                    logger.info(f"Adding inband-mgmt-if {intf_name}-{intf_mac} in {node}")
-                    continue
                 if intf_type != types_pb2.LIF_TYPE_HOST:
                     continue
                 key = self.GetKeyfromSpec(lif.Spec)
@@ -545,7 +530,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
                 msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), cfgObjects))
                 api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
                 list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
-            if ((EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled() and utils.IsDol()) or (not EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled() and not utils.IsDol())):
+            if EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled() and utils.IsDol():
                 # create loopback interface
                 lo_obj = self.__loopback_if[node]
                 logger.info(f"Creating 1 Loopback {self.ObjType.name} Objects in {node}")

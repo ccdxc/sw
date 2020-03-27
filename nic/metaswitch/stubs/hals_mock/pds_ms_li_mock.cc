@@ -113,8 +113,4 @@ li_vrf_underlay_vpc_delete_pds_synch (pds_obj_key_t& vpc_key)
 {
     return SDK_RET_OK;
 }
-sdk_ret_t li_intf_update_pds_ipaddr (NBB_ULONG ms_ifindex)
-{
-    return SDK_RET_OK;
-}
 } // End namespace

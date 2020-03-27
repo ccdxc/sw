@@ -160,8 +160,7 @@ void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
                 throw Error(std::string("Underlay ECMP with unknown dest interface ")
                             .append(std::to_string (nh.ms_ifindex)));
             }
-            nhgroup_spec.nexthops[i].l3_if = 
-                phy_if_obj->phy_port_properties().l3_if_spec.key;
+            nhgroup_spec.nexthops[i].l3_if = phy_if_obj->phy_port_properties().l3_if_uuid;
 
             memcpy(nhgroup_spec.nexthops[i].underlay_mac, nh.mac_addr.m_mac,
                    ETH_ADDR_LEN);

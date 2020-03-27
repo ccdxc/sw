@@ -297,8 +297,7 @@ class ApolloAgentClient:
         if not self.__connect():
             assert(0)
         self.__create_stubs()
-        if GlobalOptions.netagent:
-            self.__create_restreq_table()
+        self.__create_restreq_table()
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         return
 
