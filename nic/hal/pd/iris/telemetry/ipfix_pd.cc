@@ -233,7 +233,7 @@ ipfix_doorbell_ring_cb (void *timer, uint32_t timer_id, void *ctxt)
     coll_id = qid = timer_id - HAL_TIMER_ID_IPFIX_MIN;
     dst = &export_destinations[coll_id];
     if (dst->skip_doorbell) {
-        HAL_TRACE_DEBUG("Skipping doorbell for collector id: {}", coll_id);
+        HAL_TRACE_VERBOSE("Skipping doorbell for collector id: {}", coll_id);
         goto end;
     }
 
@@ -250,8 +250,9 @@ ipfix_doorbell_ring_cb (void *timer, uint32_t timer_id, void *ctxt)
     lif_manager()->write_qstate(lif_id, 0, qid,
                                 (uint8_t *)&qstate, sizeof(qstate));
 
-    HAL_TRACE_DEBUG("cpupkt: ringing Doorbell with addr: {:#x} data: {:#x} time: {}",
-                    address, data, timev);
+    HAL_TRACE_VERBOSE("IPFIX collector: {}: ringing Doorbell with addr: {:#x} "
+                      "data: {:#x} time: {}",
+                      coll_id, address, data, timev);
     sdk::asic::asic_ring_doorbell(address, data);
 
 end:

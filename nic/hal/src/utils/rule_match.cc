@@ -480,13 +480,13 @@ init_rule_data(rule_data_t *rule_data, void *usr_data, void *ctr)
     memset(rule_data, 0, sizeof(rule_data_t));
     ref_init(&rule_data->ref_cnt, [] (const ref_t *ref) {
         rule_data_t *data = container_of(ref, rule_data_t, ref_cnt);
-        HAL_TRACE_DEBUG("Freeing rule data {:p}", (void *)&data->ref_cnt);
+        HAL_TRACE_VERBOSE("Freeing rule data {:p}", (void *)&data->ref_cnt);
         ref_dec((acl::ref_t *)data->ctr);
         ref_dec((acl::ref_t *)data->user_data);
         g_hal_state->rule_data_slab()->free(data);
     });
 
-    HAL_TRACE_DEBUG("Allocing rule data {:p}", (void *)&rule_data->ref_cnt);
+    HAL_TRACE_VERBOSE("Allocing rule data {:p}", (void *)&rule_data->ref_cnt);
     ref_inc((const acl::ref_t *)usr_data);
     rule_data->user_data = usr_data;
     rule_data->ctr = ctr;
