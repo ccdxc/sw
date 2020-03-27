@@ -17,6 +17,7 @@
 extern "C" {
 #endif
 
+// Flow hash table set/get API wrappers
 static inline void
 ftlv6_set_index (flow_hash_entry_t *entry, uint32_t index)
 {
@@ -124,6 +125,67 @@ static inline void
 ftlv6_get_key_dst_ip (flow_hash_entry_t *entry, uint8_t *dst)
 {
     return entry->get_key_metadata_dst(dst);
+}
+
+// DNAT hash table set/get API wrappers
+static inline void
+dnat_set_map_ip (dnat_hash_entry_t *entry, uint8_t *ipaddr)
+{
+    return entry->set_addr(ipaddr);
+}
+
+static inline void
+dnat_set_map_addr_type (dnat_hash_entry_t *entry, uint8_t addr_type)
+{
+    return entry->set_addr_type(addr_type);
+}
+
+static inline void
+dnat_set_key_ip (dnat_hash_entry_t *entry, uint8_t *ipaddr)
+{
+    return entry->set_key_metadata_dst(ipaddr);
+}
+
+static inline void
+dnat_set_key_vnic_id (dnat_hash_entry_t *entry, uint16_t vnic_id)
+{
+    return entry->set_key_metadata_vnic_id(vnic_id);
+}
+
+static inline void
+dnat_set_key_ktype (dnat_hash_entry_t *entry, uint8_t ktype)
+{
+    return entry->set_key_metadata_ktype(ktype);
+}
+
+static inline void
+dnat_get_map_ip (dnat_hash_entry_t *entry, uint8_t *ipaddr)
+{
+    return entry->get_addr(ipaddr);
+}
+
+static inline uint8_t
+dnat_get_map_addr_type (dnat_hash_entry_t *entry)
+{
+    return entry->get_addr_type();
+}
+
+static inline void
+dnat_get_key_ip (dnat_hash_entry_t *entry, uint8_t *ipaddr)
+{
+    return entry->get_key_metadata_dst(ipaddr);
+}
+
+static inline uint16_t
+dnat_get_key_vnic_id (dnat_hash_entry_t *entry)
+{
+    return entry->get_key_metadata_vnic_id();
+}
+
+static inline uint8_t
+dnat_get_key_ktype (dnat_hash_entry_t *entry)
+{
+    return entry->get_key_metadata_ktype();
 }
 
 #ifdef __cplusplus

@@ -79,14 +79,9 @@ typedef struct pds_flow_spec_s {
     pds_flow_data_t    data;    ///< flow data
 } __PACK__ pds_flow_spec_t;
 
-/// \brief Flow status
-typedef struct pds_flow_status_s {
-} __PACK__ pds_flow_status_t; 
-
 /// \brief Flow information
 typedef struct pds_flow_info_s {
     pds_flow_spec_t      spec;        ///< specification
-    pds_flow_status_t    status;      ///< operational status
 } __PACK__ pds_flow_info_t;
 
 /// \brief Flow iterate callback arg
@@ -129,17 +124,6 @@ typedef struct pds_flow_stats_t {
 /// \remark    This function needs to be defined by the application.
 typedef void (*pds_flow_iter_cb_t) (pds_flow_iter_cb_arg_t *);
 
-/// \brief     create flow cache table
-/// \return    #SDK_RET_OK on success, failure status code on error
-/// \remark    This needs to be called precise once by application.
-sdk_ret_t pds_flow_cache_create(void);
-
-/// \brief     set valid core id.
-/// \return    void
-/// \remark    A valid core id should be passed
-//             This needs to be called on every data core of the application
-void pds_flow_cache_set_core_id(uint32_t core_id);
-
 /// \brief     create flow cache entry
 /// \param[in] spec flow specification
 /// \return    #SDK_RET_OK on success, failure status code on error
@@ -165,10 +149,6 @@ sdk_ret_t pds_flow_cache_entry_update(pds_flow_spec_t *spec);
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid flow key should be passed
 sdk_ret_t pds_flow_cache_entry_delete(pds_flow_key_t *key);
-
-/// \brief     delete flow cache table
-/// \remark    This needs to be called precise once by application.
-void pds_flow_cache_delete(void);
 
 /// \brief     iterate through flow cache table
 /// \param[in] iterate callback function

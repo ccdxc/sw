@@ -12,6 +12,7 @@ action dnat_hash(entry_valid, pad, addr_type, addr,
         // if hardware register indicates hit, take the results
         modify_field(ingress_recirc_header.dnat_done, TRUE);
         modify_field(key_metadata.src, addr);
+        modify_field(key_metadata.ktype, addr_type);
 
 
         // if hardware register indicates miss, compare hashes with r1
@@ -73,6 +74,7 @@ action dnat_hash(entry_valid, pad, addr_type, addr,
 
 @pragma stage 1
 @pragma hbm_table
+@pragma capi_bitfields_struct
 table dnat {
     reads {
         key_metadata.vnic_id            : exact;

@@ -22,6 +22,7 @@ extern "C" {
 /// \brief Maximum table indices
 #define PDS_VLAN_ID_MAX       (4096)
 #define PDS_MPLS_LABEL_MAX    (1048576)
+#define PDS_VNIC_ID_MAX       (512)
 
 /// \brief VNIC type
 typedef enum pds_vnic_type_e {

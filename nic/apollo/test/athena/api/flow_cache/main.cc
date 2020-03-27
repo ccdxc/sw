@@ -15,6 +15,13 @@
 #include "ftl_p4pd_mock.hpp"
 #include "ftltest_utils.hpp"
 
+extern "C" {
+// Function prototypes
+sdk_ret_t pds_flow_cache_create(void);
+void pds_flow_cache_delete(void);
+void pds_flow_cache_set_core_id(uint32_t core_id);
+}
+
 namespace test {
 namespace api {
 
@@ -92,9 +99,6 @@ TEST_F(flow_cache_test, flow_cache_crud) {
     SDK_ASSERT(pds_flow_cache_entry_iterate(dump_flow, &iter_cb_arg) ==
                SDK_RET_OK);
 
-    // Update seems to be not really updating the flow data
-    // TODO: Need to verify and fix this
-#if 0
     memset(&spec, 0, sizeof(spec)); 
     fill_key(2, &spec.key);
     fill_data(2, PDS_FLOW_SPEC_INDEX_SESSION, &spec.data);
@@ -105,7 +109,6 @@ TEST_F(flow_cache_test, flow_cache_crud) {
     SDK_ASSERT(pds_flow_cache_entry_read(&key, &info) == SDK_RET_OK);
     SDK_ASSERT(info.spec.data.index_type == PDS_FLOW_SPEC_INDEX_SESSION);
     SDK_ASSERT(info.spec.data.index == 2);
-#endif
 
     memset(&info, 0, sizeof(info));
     fill_key(2, &key);

@@ -268,9 +268,23 @@ pds_flow_cache_entry_update (pds_flow_spec_t *spec)
     sdk_ret_t ret;
     sdk_table_api_params_t params = { 0 };
     flow_hash_entry_t entry;
+    uint32_t index;
+    pds_flow_spec_index_type_t index_type;
 
     if (!spec) {
         PDS_TRACE_ERR("spec is null");
+        return SDK_RET_INVALID_ARG;
+    }
+    if (spec->key.key_type == KEY_TYPE_INVALID ||
+        spec->key.key_type >= KEY_TYPE_MAX) {
+        PDS_TRACE_ERR("Key type %u invalid", spec->key.key_type);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    index = spec->data.index;
+    index_type = spec->data.index_type;
+    if (index > PDS_FLOW_SESSION_INFO_ID_MAX) {
+        PDS_TRACE_ERR("session id %u is invalid", index);
         return SDK_RET_INVALID_ARG;
     }
 
@@ -278,6 +292,8 @@ pds_flow_cache_entry_update (pds_flow_spec_t *spec)
     if ((ret = flow_cache_entry_setup_key(&entry, &spec->key))
              != SDK_RET_OK)
          return ret;
+    ftlv6_set_index(&entry, index);
+    ftlv6_set_index_type(&entry, index_type);
     params.entry = &entry;
     return ftl_table->update(&params);
 }
@@ -291,6 +307,11 @@ pds_flow_cache_entry_delete (pds_flow_key_t *key)
 
     if (!key) {
         PDS_TRACE_ERR("key is null");
+        return SDK_RET_INVALID_ARG;
+    }
+    if (key->key_type == KEY_TYPE_INVALID ||
+        key->key_type >= KEY_TYPE_MAX) {
+        PDS_TRACE_ERR("Key type %u invalid", key->key_type);
         return SDK_RET_INVALID_ARG;
     }
 
