@@ -27,6 +27,12 @@ port::port_debounce_timer_cb(void)
 {
     // Notify if link is still down
     if (port_link_status() == false) {
+        // link bringup time = last_up_ts - last_down_ts
+        // set last_down_ts:
+        //  - on link down event
+        //  - link is enabled from config
+        set_last_down_ts();
+
         // Disable notifies link down if link was UP before
         port_disable();
 
@@ -1004,9 +1010,6 @@ port::port_link_sm_process(bool start_en_timer)
 
         switch (this->link_sm_) {
             case port_link_sm_t::PORT_LINK_SM_DISABLED:
-                // set the link down ts
-                set_last_down_ts();
-
                 // Enable MAC TX drain and set Tx/Rx=0x0
                 port_mac_tx_drain(true);
 
@@ -1047,6 +1050,13 @@ port::port_link_sm_process(bool start_en_timer)
 
             case port_link_sm_t::PORT_LINK_SM_ENABLED:
 
+                // link bringup time = last_up_ts - last_down_ts
+                // set last_down_ts:
+                //  - on link down event
+                //  - link is enabled from config
+                if (start_en_timer == true) {
+                    set_last_down_ts();
+                }
                 if ((start_en_timer == true) ||
                     (SDK_ATOMIC_LOAD_BOOL(&hal_cfg) == true)) {
                     // if this is invoked by cfg thread, start the timer so that
