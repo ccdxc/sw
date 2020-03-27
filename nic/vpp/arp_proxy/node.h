@@ -18,7 +18,7 @@
     _(DAD_DROP, "Duplicate address detection drops")        \
 
 #define foreach_arp_proxy_next                              \
-    _(EXIT, "pds-arp-proxy-exit")                           \
+    _(EXIT, "pds-vnic-tx")                                  \
     _(DROP, "error-drop")
 
 typedef enum
@@ -36,31 +36,6 @@ typedef enum
 #undef _
     ARP_PROXY_N_NEXT,
 } arp_proxy_next_t;
-
-// ARP proxy exit node
-#define foreach_arp_proxy_exit_counter                      \
-    _(BUILD_P4_HDR, "Build P4 header" )                     \
-    _(VNIC_MISSING_DROP, "vnic non-existing in vpp" )       \
-
-#define foreach_arp_proxy_exit_next                         \
-    _(INTF_OUT, "interface-tx" )                            \
-    _(DROP, "error-drop")                                   \
-
-typedef enum
-{
-#define _(n,s) ARP_PROXY_EXIT_COUNTER_##n,
-    foreach_arp_proxy_exit_counter
-#undef _
-    ARP_PROXY_EXIT_COUNTER_LAST,
-} arp_proxy_exit_counter_t;
-
-typedef enum
-{
-#define _(n,s) ARP_PROXY_EXIT_NEXT_##n,
-    foreach_arp_proxy_exit_next
-#undef _
-    ARP_PROXY_EXIT_N_NEXT,
-} arp_proxy_exit_next_t;
 
 typedef struct arp_proxy_trace_s {
     ip4_address_t src, dst;

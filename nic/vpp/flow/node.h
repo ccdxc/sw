@@ -22,6 +22,7 @@
         _(IP4_TUN_FLOW_PROG, "pds-tunnel-ip4-flow-program" )        \
         _(IP6_TUN_FLOW_PROG, "pds-tunnel-ip6-flow-program" )        \
         _(IP4_NAT, "pds-nat44" )                                    \
+        _(ICMP_VRIP, "ip4-icmp-echo-request")                       \
         _(DROP, "error-drop")                                       \
 
 #define foreach_flow_classify_counter                               \
@@ -34,7 +35,9 @@
         _(MAX_EXCEEDED, "Session count exceeded packets")           \
         _(VNIC_NOT_FOUND, "Unknown vnic")                           \
         _(VPC_NOT_FOUND, "Unknown vpc")                             \
+        _(ICMP_VRIP, "VR IPv4 request packets received")            \
         _(UNKOWN, "Unknown flow packets")                           \
+        _(VRIP_DROP, "Unknown VR IPv4 packets")                     \
 
 #define foreach_flow_prog_next                                      \
         _(FWD_FLOW, "pds-fwd-flow" )                                \
@@ -241,7 +244,7 @@ always_inline void * pds_flow_prog_get_table6_or_l2(void)
 always_inline void pds_session_id_alloc2(u32 *ses_id0, u32 *ses_id1)
 {
     pds_flow_main_t *fm = &pds_flow_main;
-    pds_flow_session_id_thr_local_pool_t    *thr_local_pool = 
+    pds_flow_session_id_thr_local_pool_t    *thr_local_pool =
                      &fm->session_id_thr_local_pool[vlib_get_thread_index()];
     uint16_t        refill_count;
     pds_flow_hw_ctx_t *ctx;

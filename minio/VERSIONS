@@ -1,13 +1,13 @@
 # format: <name> <version>
 third_party_libs 1.1.180
 lkl_libs 1.1.11
-vpp 7c47547e9fb326907b9a643b6e0de28e15f01e5f
+vpp 66cb0a2ea4c38b3ad3583845c72a7904a6b6b421
 openssl_libs 1.1.0.2
 platform_libs 0.0.43
 storage_libs 0.0.1
 asic_libs fd7c20fce138741f08565dba9615e9e33aa1ddb9
 ncc_tools 1.0.1
-sorrento_tools 48da2bf33b0fc0c7bd8180b6b92955f845902a35 
+sorrento_tools 48da2bf33b0fc0c7bd8180b6b92955f845902a35
 pbc_config fd7c20fce138741f08565dba9615e9e33aa1ddb9
 upgrade 1.0.20
 iota 1.0.3

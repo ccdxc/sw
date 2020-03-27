@@ -123,3 +123,16 @@ modules:
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
 
+    - module:
+        name    : L2_IPV4_VRIP_ICMP_ECHO_QTAG
+        spec    : local2remote_vrip_icmp_request.testspec
+        ignore  : True
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L3_IPV4_VRIP_ICMP_ECHO_QTAG
+        spec    : local2remote_vrip_icmp_request.testspec
+        ignore  : True
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING

@@ -6,6 +6,7 @@
 #include <vnet/ip/ip4_packet.h>
 #include <init.h>
 #include <api.h>
+#include <vnic.h>
 #include <pdsa_impl_db_hdlr.h>
 #include "node.h"
 
@@ -16,6 +17,8 @@ VLIB_PLUGIN_REGISTER () = {
 static pds_infra_main_t infra_main;
 static vlib_node_registration_t pds_ip4_linux_inject_node;
 static vlib_node_registration_t pds_p4cpu_hdr_lookup_node;
+static vlib_node_registration_t pds_vnic_tx_node,
+                                pds_vnic_l2_rewrite_node;
 
 // ipc init routine
 extern int pds_vpp_ipc_init(void);
@@ -493,12 +496,221 @@ VLIB_REGISTER_NODE(pds_p4cpu_hdr_lookup_node, static) = {
     .format_trace = format_pds_p4cpu_hdr_lookup_trace,
 };
 
+always_inline void
+pds_vnic_l2_rewrite_internal (vlib_buffer_t *p, u16 *next, u32 *counter)
+{
+    // Ethernet
+    u16 vnic_id;
+    pds_impl_db_vnic_entry_t *vnic_info = NULL;
+    pds_impl_db_subnet_entry_t *subnet_info = NULL;
+    ethernet_header_t *eth0;
+
+    vlib_buffer_advance(p, - sizeof (ethernet_header_t));
+    eth0 = vlib_buffer_get_current(p);
+
+    // extract vnic and subnet info
+    vnic_id = vnet_buffer(p)->pds_tx_data.vnic_id;
+    vnic_info = pds_impl_db_vnic_get(vnic_id);
+    if(vnic_info == NULL) {
+        *next = VNIC_L2_REWRITE_NEXT_UNKNOWN;
+        counter[VNIC_L2_REWRITE_COUNTER_VNIC_NOT_FOUND] += 1;
+        return;
+    }
+    subnet_info = pds_impl_db_subnet_get(vnic_info->subnet_hw_id);
+    if(subnet_info == NULL) {
+        *next = VNIC_L2_REWRITE_NEXT_UNKNOWN;
+        counter[VNIC_L2_REWRITE_COUNTER_SUBNET_NOT_FOUND] += 1;
+        return;
+    }
+
+    eth0->type =  clib_net_to_host_u16(ETHERNET_TYPE_IP4);
+    clib_memcpy(&eth0->dst_address, &eth0->src_address, ETH_ADDR_LEN);
+    clib_memcpy(&eth0->src_address, subnet_info->mac, ETH_ADDR_LEN);
+    *next = VNIC_L2_REWRITE_NEXT_TX_OUT;
+    counter[VNIC_L2_REWRITE_COUNTER_TX_OUT] += 1;
+
+    vlib_buffer_advance(p, - VPP_ARM_TO_P4_HDR_SZ);
+    return;
+}
+
+static uword
+pds_vnic_l2_rewrite (vlib_main_t *vm,
+                     vlib_node_runtime_t *node,
+                     vlib_frame_t *from_frame)
+{
+    u32 counter[VNIC_L2_REWRITE_COUNTER_LAST] = {0};
+    u32 *from;
+
+    from = vlib_frame_vector_args (from_frame);
+    if (node->flags & VLIB_NODE_FLAG_TRACE)
+        vlib_trace_frame_buffers_only (vm, node, from, from_frame->n_vectors,
+                                       /* stride */ 1,
+                                       sizeof (vnic_l2_rewrite_trace_t));
+
+    PDS_PACKET_LOOP_START {
+
+        PDS_PACKET_DUAL_LOOP_START(READ, READ) {
+            pds_vnic_l2_rewrite_internal(PDS_PACKET_BUFFER(0),
+                                   PDS_PACKET_NEXT_NODE_PTR(0), counter);
+            pds_vnic_l2_rewrite_internal(PDS_PACKET_BUFFER(1),
+                                   PDS_PACKET_NEXT_NODE_PTR(1), counter);
+        } PDS_PACKET_DUAL_LOOP_END;
+
+        PDS_PACKET_SINGLE_LOOP_START {
+            pds_vnic_l2_rewrite_internal(PDS_PACKET_BUFFER(0),
+                                   PDS_PACKET_NEXT_NODE_PTR(0), counter);
+        } PDS_PACKET_SINGLE_LOOP_END;
+
+    } PDS_PACKET_LOOP_END;
+
+#define _(n, s)                                                         \
+    vlib_node_increment_counter (vm, pds_vnic_l2_rewrite_node.index,    \
+                                 VNIC_L2_REWRITE_COUNTER_##n,           \
+                                 counter[VNIC_L2_REWRITE_COUNTER_##n]);
+    foreach_vnic_l2_rewrite_counter
+#undef _
+
+    return from_frame->n_vectors;
+
+}
+
+static char * pds_vnic_l2_rewrite_error_strings[] = {
+#define _(n,s) s,
+    foreach_vnic_l2_rewrite_counter
+#undef _
+};
+
+static u8 *
+format_pds_vnic_l2_rewrite_trace (u8 *s, va_list *args)
+{
+    CLIB_UNUSED (vlib_main_t * vm) = va_arg(*args, vlib_main_t *);
+    CLIB_UNUSED (vlib_node_t * node) = va_arg(*args, vlib_node_t *);
+    vnic_l2_rewrite_trace_t *t = va_arg(*args, vnic_l2_rewrite_trace_t *);
+
+    s = format (s, "%U",
+                format_ip4_header, t->packet_data, sizeof (t->packet_data));
+    return s;
+}
+
+VLIB_REGISTER_NODE (pds_vnic_l2_rewrite_node, static) = {
+    .function = pds_vnic_l2_rewrite,
+    .name = "pds-vnic-l2-rewrite",
+
+    .vector_size = sizeof(u32),  // takes a vector of packets
+
+    .n_errors = VNIC_L2_REWRITE_COUNTER_LAST,
+    .error_strings = pds_vnic_l2_rewrite_error_strings,
+    .n_next_nodes = VNIC_L2_REWRITE_N_NEXT,
+    .next_nodes = {
+#define _(s,n) [VNIC_L2_REWRITE_NEXT_##s] = n,
+    foreach_vnic_l2_rewrite_next
+#undef _
+    },
+
+    .format_trace = format_pds_vnic_l2_rewrite_trace,
+};
+
+always_inline void
+pds_vnic_tx_internal (vlib_main_t *vm, vlib_buffer_t *p, u16 *next, u32 *counter)
+{
+    u16 vnic_nh_hw_id;
+    vlib_node_runtime_t *node;
+
+    vnic_nh_hw_id = vnet_buffer(p)->pds_tx_data.vnic_nh_hw_id;
+    if (PREDICT_FALSE(vnic_nh_hw_id == 0)) {
+        *next = VNIC_TX_NEXT_DROP;
+        counter[VNIC_TX_COUNTER_FAILED]++;
+    } else {
+        pds_vnic_add_tx_hdrs(p, vnic_nh_hw_id);
+        *next = VNIC_TX_NEXT_INTF_OUT;
+        counter[VNIC_TX_COUNTER_SUCCESS]++;
+    }
+
+    node = vlib_node_get_runtime(vm, pds_vnic_tx_node.index);
+    if (node->flags & VLIB_NODE_FLAG_TRACE) {
+        vnic_tx_trace_t *t0;
+        if (p->flags & VLIB_BUFFER_IS_TRACED) {
+            t0 = vlib_add_trace(vm, node, p, sizeof(t0[0]));
+            t0->vnic_nh_hw_id = vnic_nh_hw_id;
+        }
+    }
+}
+
+static uword
+pds_vnic_tx (vlib_main_t *vm,
+             vlib_node_runtime_t *node,
+             vlib_frame_t *from_frame)
+{
+    u32 counter[VNIC_TX_COUNTER_LAST] = {0};
+
+    PDS_PACKET_LOOP_START {
+
+        PDS_PACKET_DUAL_LOOP_START(READ, WRITE) {
+            pds_vnic_tx_internal(vm, PDS_PACKET_BUFFER(0),
+                                 PDS_PACKET_NEXT_NODE_PTR(0), counter);
+            pds_vnic_tx_internal(vm, PDS_PACKET_BUFFER(1),
+                                 PDS_PACKET_NEXT_NODE_PTR(1), counter);
+        } PDS_PACKET_DUAL_LOOP_END;
+
+        PDS_PACKET_SINGLE_LOOP_START {
+            pds_vnic_tx_internal(vm, PDS_PACKET_BUFFER(0),
+                                 PDS_PACKET_NEXT_NODE_PTR(0), counter);
+        } PDS_PACKET_SINGLE_LOOP_END;
+
+    } PDS_PACKET_LOOP_END;
+
+#define _(n, s)                                                 \
+    vlib_node_increment_counter (vm, pds_vnic_tx_node.index,    \
+                                 VNIC_TX_COUNTER_##n,           \
+                                 counter[VNIC_TX_COUNTER_##n]);
+    foreach_vnic_tx_counter
+#undef _
+
+    return from_frame->n_vectors;
+}
+
+static char * pds_vnic_tx_error_strings[] = {
+#define _(n,s) s,
+    foreach_vnic_tx_counter
+#undef _
+};
+
+static u8 *
+format_pds_vnic_tx_trace (u8 *s, va_list *args)
+{
+    CLIB_UNUSED (vlib_main_t * vm) = va_arg(*args, vlib_main_t *);
+    CLIB_UNUSED (vlib_node_t * node) = va_arg(*args, vlib_node_t *);
+    vnic_tx_trace_t *t = va_arg(*args, vnic_tx_trace_t *);
+
+    s = format (s, "Nexthop id %d", t->vnic_nh_hw_id);
+    return s;
+}
+
+VLIB_REGISTER_NODE (pds_vnic_tx_node, static) = {
+    .function = pds_vnic_tx,
+    .name = "pds-vnic-tx",
+
+    .vector_size = sizeof(u32),  // takes a vector of packets
+
+    .n_errors = VNIC_TX_COUNTER_LAST,
+    .error_strings = pds_vnic_tx_error_strings,
+    .n_next_nodes = VNIC_TX_N_NEXT,
+    .next_nodes = {
+#define _(s,n) [VNIC_TX_NEXT_##s] = n,
+    foreach_vnic_tx_next
+#undef _
+    },
+
+    .format_trace = format_pds_vnic_tx_trace,
+};
+
+
 /* Don't change this function name as all other plugin
  * inits have to run after this init. So all other plugins
- * Refer to this function name 
+ * Refer to this function name
  */
 static clib_error_t *
-pds_infra_init (vlib_main_t * vm) 
+pds_infra_init (vlib_main_t * vm)
 {
     int ret;
     int no_threads = vec_len(vlib_worker_threads);

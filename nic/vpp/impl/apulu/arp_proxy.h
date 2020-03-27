@@ -6,7 +6,6 @@
 #define __VPP_IMPL_APULU_ARP_PROXY_H__
 
 #include <nic/apollo/api/impl/apulu/nacl_data.h>
-#include "p4_cpu_hdr_utils.h"
 #include <impl_db.h>
 #include <api.h>
 
@@ -27,19 +26,5 @@ pds_arp_proxy_pipeline_init (void)
     }
     return;
 }
-
-always_inline void
-pds_arp_proxy_add_tx_hdrs_x1 (vlib_buffer_t *b, u16 vnic_nh_hw_id)
-{
-    p4_tx_cpu_hdr_t *tx;
-
-    tx = vlib_buffer_get_current(b);
-    tx->lif_flags = 0;
-    tx->nexthop_valid = 1;
-    tx->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    tx->nexthop_id = clib_host_to_net_u16(vnic_nh_hw_id);
-    tx->lif_flags = clib_host_to_net_u16(tx->lif_flags);
-}
-
 
 #endif      //__VPP_IMPL_APULU_ARP_PROXY_H__

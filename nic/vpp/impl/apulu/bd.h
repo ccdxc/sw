@@ -25,14 +25,14 @@ pds_subnet_check(u16 bd_id, u32 ip_addr)
 
     subnet = pds_impl_db_subnet_get(bd_id);
     if (PREDICT_FALSE(subnet == NULL)) {
-        return FALSE;
+        return -1;
     }
     mask = IPV4_MASK << (IPV4_PFX_LEN - subnet->prefix_len);
     if (PREDICT_FALSE((ip_addr & mask) != (subnet->vr_ip.ip4.as_u32 & mask))) {
-        return FALSE;
+        return -1;
     }
 
-    return TRUE;
+    return 0;
 }
 
 #ifdef __cplusplus

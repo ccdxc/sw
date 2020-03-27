@@ -466,7 +466,7 @@ pds_flow_prog_trace_add (vlib_main_t *vm,
 always_inline void
 pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                                u32 session_id,
-                               u8 is_ip4, u8 is_l2, 
+                               u8 is_ip4, u8 is_l2,
                                u8 flow_exists)
 {
     udp_header_t        *udp0;
@@ -748,9 +748,9 @@ pds_flow_prog (vlib_main_t *vm,
                     flow_exists1 = 0;
                 }
             }
-            pds_flow_extract_prog_args_x1(b0, session_id0, is_ip4, is_l2, 
+            pds_flow_extract_prog_args_x1(b0, session_id0, is_ip4, is_l2,
                                           flow_exists0);
-            pds_flow_extract_prog_args_x1(b1, session_id1, is_ip4, is_l2, 
+            pds_flow_extract_prog_args_x1(b1, session_id1, is_ip4, is_l2,
                                           flow_exists1);
             offset0 = pds_flow_prog_get_next_offset(b0);
             offset1 = pds_flow_prog_get_next_offset(b1);
@@ -770,7 +770,7 @@ pds_flow_prog (vlib_main_t *vm,
                           vnet_buffer(b0)->pds_flow_data.ses_id :
                           pds_session_id_alloc();
             flow_exists0 = vnet_buffer(b0)->pds_flow_data.ses_id ? 1 : 0;
-            pds_flow_extract_prog_args_x1(b0, session_id0, is_ip4, is_l2, 
+            pds_flow_extract_prog_args_x1(b0, session_id0, is_ip4, is_l2,
                                           flow_exists0);
             offset0 = pds_flow_prog_get_next_offset(b0);
             vlib_buffer_advance(b0, offset0);
@@ -1023,7 +1023,7 @@ pds_flow_classify (vlib_main_t *vm,
 
     if (PREDICT_FALSE(!ftl_init_done)) {
         ftlv4_set_thread_id(pds_flow_prog_get_table4(), node->thread_index);
-        ftlv6_set_thread_id(pds_flow_prog_get_table6_or_l2(), 
+        ftlv6_set_thread_id(pds_flow_prog_get_table6_or_l2(),
                             node->thread_index);
         ftl_init_done = 1;
     }
@@ -1121,7 +1121,8 @@ pds_flow_init (vlib_main_t * vm)
     pds_flow_cfg_init();
     pds_flow_dump_init();
 
-    pds_flow_pipeline_init();
+    pds_flow_pipeline_init(vm);
+
     return 0;
 }
 

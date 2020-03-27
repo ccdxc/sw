@@ -48,6 +48,12 @@ arp_proxy_dst_mac_get(void *hdr, mac_addr_t mac_addr, uint32_t dst_addr)
     return ret;
 }
 
+void
+arp_proxy_register_vendor_dst_mac_get_cb(arp_proxy_vendor_dst_mac_get_cb cb)
+{
+    arp_proxy_main.dst_mac_get_cb = cb;
+}
+
 always_inline void
 arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
                     vlib_node_runtime_t *node, vlib_main_t *vm)
@@ -64,16 +70,16 @@ arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
 
     p4_rx_meta = (void*) (vlib_buffer_get_current(p0));
     bd_id = pds_ingress_bd_id_get(p4_rx_meta);
-    if (PREDICT_FALSE(!pds_vnic_data_fill(p4_rx_meta, &vnic_nh_hw_id,
-                                          &offset))) {
+    if (PREDICT_FALSE(pds_vnic_data_fill(p4_rx_meta, &vnic_nh_hw_id,
+                                         &offset))) {
         counter[ARP_PROXY_COUNTER_VNIC_MISSING]++;
         goto error;
     }
-    vnet_buffer(p0)->pds_arp_data.vnic_nh_hw_id = vnic_nh_hw_id;
+    vnet_buffer(p0)->pds_tx_data.vnic_nh_hw_id = vnic_nh_hw_id;
 
     arp = (ethernet_arp_header_t*) (vlib_buffer_get_current(p0) + offset);
     dst = clib_net_to_host_u32(arp->ip4_over_ethernet[1].ip4.data_u32);
-    if (PREDICT_FALSE(!pds_subnet_check(bd_id, dst))) {
+    if (PREDICT_FALSE(pds_subnet_check(bd_id, dst))) {
         counter[ARP_PROXY_COUNTER_SUBNET_CHECK_FAIL]++;
         goto error;
     }
@@ -233,86 +239,3 @@ VLIB_INIT_FUNCTION (arp_proxy_init) =
     .runs_after = VLIB_INITS("pds_infra_init"),
 };
 
-vlib_node_registration_t exit_node;
-
-always_inline void
-arp_proxy_exit_internal (vlib_buffer_t *p, u16 *next, u32 *counter)
-{
-    u16 vnic_nh_hw_id;
-
-    vnic_nh_hw_id = vnet_buffer(p)->pds_arp_data.vnic_nh_hw_id;
-    pds_arp_proxy_add_tx_hdrs_x1(p, vnic_nh_hw_id);
-    *next = ARP_PROXY_EXIT_NEXT_INTF_OUT;
-    counter[ARP_PROXY_EXIT_COUNTER_BUILD_P4_HDR]++;
-}
-
-static uword
-arp_proxy_exit (vlib_main_t *vm,
-                vlib_node_runtime_t *node,
-                vlib_frame_t *from_frame)
-{
-    u32 counter[ARP_PROXY_COUNTER_LAST] = {0};
-
-    PDS_PACKET_LOOP_START {
-
-        PDS_PACKET_DUAL_LOOP_START (WRITE, WRITE) {
-            arp_proxy_exit_internal(PDS_PACKET_BUFFER(0),
-                                    PDS_PACKET_NEXT_NODE_PTR(0), counter);
-            arp_proxy_exit_internal(PDS_PACKET_BUFFER(1),
-                                    PDS_PACKET_NEXT_NODE_PTR(1), counter);
-        } PDS_PACKET_DUAL_LOOP_END;
-
-        PDS_PACKET_SINGLE_LOOP_START {
-            arp_proxy_exit_internal(PDS_PACKET_BUFFER(0),
-                                    PDS_PACKET_NEXT_NODE_PTR(0), counter);
-        } PDS_PACKET_SINGLE_LOOP_END;
-
-    } PDS_PACKET_LOOP_END;
-
-#define _(n, s) \
-    vlib_node_increment_counter (vm, node->node_index,           \
-            ARP_PROXY_COUNTER_##n,                               \
-            counter[ARP_PROXY_COUNTER_##n]);
-    foreach_arp_proxy_counter
-#undef _
-
-    return from_frame->n_vectors;
-}
-
-static u8 *
-arp_proxy_exit_trace (u8 * s, va_list * args)
-{
-    s = format(s, "exit trace");
-    return s;
-}
-
-static char * arp_proxy_exit_error_strings[] = {
-#define _(n,s) s,
-    foreach_arp_proxy_exit_counter
-#undef _
-};
-
-VLIB_REGISTER_NODE (exit_node) = {
-    .function = arp_proxy_exit,
-    .name = "pds-arp-proxy-exit",
-    /* Takes a vector of packets. */
-    .vector_size = sizeof (u32),
-
-    .n_errors = ARP_PROXY_COUNTER_LAST,
-    .error_strings = arp_proxy_exit_error_strings,
-
-    .n_next_nodes = ARP_PROXY_EXIT_N_NEXT,
-    .next_nodes = {
-#define _(s,n) [ARP_PROXY_EXIT_NEXT_##s] = n,
-    foreach_arp_proxy_exit_next
-#undef _
-    },
-
-    .format_trace = arp_proxy_exit_trace,
-};
-
-void
-arp_proxy_register_vendor_dst_mac_get_cb(arp_proxy_vendor_dst_mac_get_cb cb)
-{
-    arp_proxy_main.dst_mac_get_cb = cb;
-}

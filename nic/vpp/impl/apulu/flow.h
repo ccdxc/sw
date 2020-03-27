@@ -159,7 +159,7 @@ skip_prog:
 always_inline int
 pds_flow_prog_get_next_offset (vlib_buffer_t *p0)
 {
-    if (PREDICT_TRUE(vnet_buffer(p0)->pds_flow_data.flags & 
+    if (PREDICT_TRUE(vnet_buffer(p0)->pds_flow_data.flags &
                      (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV4_2_VALID |
                       VPP_CPU_FLAGS_IPV6_1_VALID | VPP_CPU_FLAGS_IPV6_2_VALID))) {
         return -(APULU_P4_TO_ARM_HDR_SZ +
@@ -173,7 +173,7 @@ pds_flow_prog_get_next_offset (vlib_buffer_t *p0)
                  (vnet_buffer(p0)->pds_flow_data.l2_inner_offset -
                   vnet_buffer(p0)->l2_hdr_offset));
     }
-    
+
     return -APULU_P4_TO_ARM_HDR_SZ;
 }
 
@@ -246,7 +246,7 @@ pds_flow_add_vxlan_template (vlib_buffer_t *b0)
           vxlan_hdr_len)) + APULU_ARM_TO_P4_HDR_SZ);
     clib_memcpy(hdr, fm->rx_vxlan_template, vxlan_hdr_len);
     hdr->vxlan.vni_reserved = vnid; // vnid store in network byte order
-    hdr->ip4.length += orig_len; 
+    hdr->ip4.length += orig_len;
     hdr->ip4.length = clib_host_to_net_u16(hdr->ip4.length);
     hdr->udp.length += orig_len;
     hdr->udp.length = clib_host_to_net_u16(hdr->udp.length);
@@ -363,8 +363,8 @@ pds_flow_key2str (void *key)
     } else {
         // Key type MAC - L2 flow
         sprintf(str, "Src:%s Dst:%s EtherType:%u VNIC:%u",
-                ether_ntoa((struct ether_addr *)k->key_metadata_src), 
-                ether_ntoa((struct ether_addr *)k->key_metadata_dst), 
+                ether_ntoa((struct ether_addr *)k->key_metadata_src),
+                ether_ntoa((struct ether_addr *)k->key_metadata_dst),
                 k->key_metadata_dport, k->key_metadata_flow_lkp_id);
     }
     return str;
@@ -443,7 +443,7 @@ pds_flow_classify_get_advance_offset (vlib_buffer_t *b)
                 (vnet_buffer(b)->pds_flow_data.l2_inner_offset -
                  vnet_buffer(b)->l2_hdr_offset));
     }
-    
+
     return VPP_P4_TO_ARM_HDR_SZ;
 }
 
@@ -593,6 +593,52 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
     return;
 }
 
+always_inline int
+pds_flow_vr_ip_ping (p4_rx_cpu_hdr_t *hdr, vlib_buffer_t *vlib, u16 nh_hw_id,
+                     u8 is_ip4, u16 *next, u32 *counter)
+{
+    uint16_t bd_id;
+    uint32_t vrip = 0;
+    uint8_t *vrmac;
+    icmp46_header_t *icmp0;
+
+    if (is_ip4) {
+        ip4_header_t *ip40;
+        u32 dst_ip;
+        u8 protocol;
+
+        ip40 = vlib_buffer_get_current(vlib);
+        dst_ip = clib_net_to_host_u32(ip40->dst_address.as_u32);
+        protocol = ip40->protocol;
+        icmp0 = (icmp46_header_t *) (((u8 *) ip40) +
+                (vnet_buffer (vlib)->l4_hdr_offset -
+                 vnet_buffer (vlib)->l3_hdr_offset));
+
+        bd_id = ((p4_rx_cpu_hdr_t *)hdr)->egress_bd_id;
+        pds_impl_db_vr_ip_mac_get(bd_id, &vrip, &vrmac);
+        if (dst_ip == vrip) {
+            if (protocol == IP_PROTOCOL_ICMP) {
+                if (PREDICT_TRUE(icmp0->type == ICMP4_echo_request)) {
+                    vnet_buffer(vlib)->pds_tx_data.vnic_id = hdr->vnic_id;
+                    vnet_buffer(vlib)->pds_tx_data.vnic_nh_hw_id = nh_hw_id;
+                    vnet_buffer(vlib)->sw_if_index[VLIB_TX] =
+                        vnet_buffer(vlib)->sw_if_index[VLIB_RX];
+                    *next = FLOW_CLASSIFY_NEXT_ICMP_VRIP;
+                    counter[FLOW_CLASSIFY_COUNTER_ICMP_VRIP] += 1;
+                    return 0;
+                }
+            }
+            *next = FLOW_CLASSIFY_NEXT_DROP;
+            counter[FLOW_CLASSIFY_COUNTER_VRIP_DROP] += 1;
+            return 0;
+        }
+    } else {
+        // IPv6 not supported
+        return -1;
+    }
+    return -1;
+}
+
 always_inline void
 pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
                         u16 *next0, u16 *next1, u32 *counter)
@@ -720,8 +766,16 @@ pak_done:
 
     if ((flags0 == flags1) && !next_determined) {
         if ((flags0 == VPP_CPU_FLAGS_IPV4_1_VALID)) {
-            *next0 = *next1 = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
-            counter[FLOW_CLASSIFY_COUNTER_IP4_FLOW] += 2;
+            if (pds_flow_vr_ip_ping(hdr0, p0, vnic0->nh_hw_id,
+                                    true, next0, counter)) {
+                *next0 = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
+                counter[FLOW_CLASSIFY_COUNTER_IP4_FLOW] += 1;
+            }
+            if (pds_flow_vr_ip_ping(hdr1, p1, vnic1->nh_hw_id,
+                                    true, next1, counter)) {
+                *next1 = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
+                counter[FLOW_CLASSIFY_COUNTER_IP4_FLOW] += 1;
+            }
         } else if (flags0 & VPP_CPU_FLAGS_IPV4_2_VALID) {
             *next0 = *next1 = FLOW_CLASSIFY_NEXT_IP4_TUN_FLOW_PROG;
             counter[FLOW_CLASSIFY_COUNTER_IP4_TUN_FLOW] += 2;
@@ -734,8 +788,11 @@ pak_done:
 
     if ((next_determined & 0x1) == 0) {
         if ((flags0 == VPP_CPU_FLAGS_IPV4_1_VALID)) {
-            *next0 = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
-            counter[FLOW_CLASSIFY_COUNTER_IP4_FLOW] += 1;
+            if (pds_flow_vr_ip_ping(hdr0, p0, vnic0->nh_hw_id,
+                                    true, next0, counter)) {
+                *next0 = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
+                counter[FLOW_CLASSIFY_COUNTER_IP4_FLOW] += 1;
+            }
         } else if (flags0 & VPP_CPU_FLAGS_IPV4_2_VALID) {
             *next0 = FLOW_CLASSIFY_NEXT_IP4_TUN_FLOW_PROG;
             counter[FLOW_CLASSIFY_COUNTER_IP4_TUN_FLOW] += 1;
@@ -747,8 +804,11 @@ pak_done:
 
     if ((next_determined & 0x2) == 0) {
         if ((flags1 == VPP_CPU_FLAGS_IPV4_1_VALID)) {
-            *next1 = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
-            counter[FLOW_CLASSIFY_COUNTER_IP4_FLOW] += 1;
+            if (pds_flow_vr_ip_ping(hdr1, p1, vnic1->nh_hw_id,
+                                    true, next1, counter)) {
+                *next1 = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
+                counter[FLOW_CLASSIFY_COUNTER_IP4_FLOW] += 1;
+            }
         } else if (flags1 & VPP_CPU_FLAGS_IPV4_2_VALID) {
             *next1 = FLOW_CLASSIFY_NEXT_IP4_TUN_FLOW_PROG;
             counter[FLOW_CLASSIFY_COUNTER_IP4_TUN_FLOW] += 1;
@@ -785,7 +845,7 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     }
     vnet_buffer(p)->pds_flow_data.flow_hash = hdr->flow_hash;
     vnet_buffer(p)->pds_flow_data.flags |= flag_orig |
-        (hdr->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) | 
+        (hdr->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
         (((!hdr->rx_packet) && hdr->is_local) << VPP_CPU_FLAGS_FLOW_L2L_POS) |
         (vnic->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
     nexthop = hdr->nexthop_id;
@@ -818,15 +878,18 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     }
 
     if ((flags == VPP_CPU_FLAGS_IPV4_1_VALID)) {
-        *next = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
-        counter[FLOW_CLASSIFY_COUNTER_IP4_FLOW] += 1;
+        if (pds_flow_vr_ip_ping(hdr, p, vnic->nh_hw_id,
+                                true, next, counter)) {
+            *next = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
+            counter[FLOW_CLASSIFY_COUNTER_IP4_FLOW] += 1;
+        }
     } else if (flags & VPP_CPU_FLAGS_IPV4_2_VALID) {
         *next = FLOW_CLASSIFY_NEXT_IP4_TUN_FLOW_PROG;
         counter[FLOW_CLASSIFY_COUNTER_IP4_TUN_FLOW] += 1;
     } else {
         *next = FLOW_CLASSIFY_NEXT_L2_FLOW_PROG;
         counter[FLOW_CLASSIFY_NEXT_L2_FLOW_PROG] += 1;
-    } 
+    }
 
 end:
     return;
@@ -1055,9 +1118,9 @@ pds_flow_rewrite_flags_init (void)
 }
 
 always_inline void
-pds_flow_pipeline_init (void)
+pds_flow_pipeline_init (vlib_main_t * vm)
 {
-    pds_infra_api_reg_t params = {0}; 
+    pds_infra_api_reg_t params = {0};
     //vlib_node_t *flow;
 
     params.nacl_id = NACL_DATA_ID_FLOW_MISS_IP4_IP6;
@@ -1069,11 +1132,13 @@ pds_flow_pipeline_init (void)
     params.handoff_thread = ~0;
     params.offset = 0;
     params.unreg = 0;
-    
+
     if (0 != pds_register_nacl_id_to_node(&params)) {
         ASSERT(0);
     }
+
+    icmp_echo_request_register_next_node(vm, (u8 *) "pds-vnic-l2-rewrite");
+
     return;
 }
-
 #endif    // __VPP_IMPL_APULU_FLOW_H__

@@ -79,6 +79,7 @@ pds_impl_db_##obj##_entry_t * pds_impl_db_##obj##_get(type hw_id);
 #undef _
 
 pds_impl_db_device_entry_t * pds_impl_db_device_get(void);
+void pds_impl_db_vr_ip_mac_get (uint16_t subnet, uint32_t *vr_ip, uint8_t **vr_mac);
 
 #ifdef __cplusplus
 }
