@@ -17,6 +17,7 @@
 #include "lib/utils/time_profile.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "platform/capri/capri_toeplitz.hpp"
+#include "platform/capri/capri_barco_asym_apis.hpp"
 // TODO: move out pipeline related code out of sdk
 #if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(ATHENA)
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
@@ -824,6 +825,170 @@ sdk_ret_t
 asicpd_pxb_cfg_lif_bdf (uint32_t lif, uint16_t bdf)
 {
     return capri_pxb_cfg_lif_bdf(lif, bdf);
+}
+
+sdk_ret_t
+asicpd_barco_asym_ecc_point_mul (uint16_t key_size, uint8_t *p,
+                                 uint8_t *n, uint8_t *xg, uint8_t *yg,
+                                 uint8_t *a, uint8_t *b, uint8_t *x1,
+                                 uint8_t *y1, uint8_t *k, uint8_t *x3,
+                                 uint8_t *y3)
+{
+    return capri_barco_asym_ecc_point_mul(key_size, p, n, xg, yg, a, b, x1,
+                                          y1, k, x3, y3);
+}
+
+sdk_ret_t
+asicpd_barco_asym_ecdsa_p256_setup_priv_key (uint8_t *p, uint8_t *n,
+                                             uint8_t *xg, uint8_t *yg,
+                                             uint8_t *a, uint8_t *b,
+                                             uint8_t *da, int32_t *key_idx)
+{
+    return capri_barco_asym_ecdsa_p256_setup_priv_key(p, n, xg, yg,
+                                                       a, b, da, key_idx);
+}
+
+sdk_ret_t
+asicpd_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p,
+                                      uint8_t *n, uint8_t *xg,
+                                      uint8_t *yg, uint8_t *a,
+                                      uint8_t *b, uint8_t *da,
+                                      uint8_t *k, uint8_t *h,
+                                      uint8_t *r, uint8_t *s,
+                                      bool async_en,
+                                      const uint8_t *unique_key)
+{
+    return capri_barco_asym_ecdsa_p256_sig_gen(key_idx, p, n, xg, yg, a,
+                                               b, da, k, h, r, s,
+                                               async_en, unique_key);
+}
+
+sdk_ret_t
+asicpd_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
+                                         uint8_t *xg, uint8_t *yg,
+                                         uint8_t *a, uint8_t *b,
+                                         uint8_t *xq, uint8_t *yq,
+                                         uint8_t *r, uint8_t *s,
+                                         uint8_t *h, bool async_en,
+                                         const uint8_t *unique_key)
+{
+    return capri_barco_asym_ecdsa_p256_sig_verify(p, n, xg, yg, a, b,
+                                                  xq, yq, r, s, h,
+                                                  async_en, unique_key);
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
+                                 uint8_t *m,  uint8_t *c,
+                                 bool async_en,
+                                 const uint8_t *unique_key)
+{
+    return capri_barco_asym_rsa2k_encrypt(n, e, m, c, async_en, unique_key);
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n,
+                               uint8_t *e, uint8_t *m,  uint8_t *c,
+                               bool async_en, const uint8_t *unique_key)
+{
+    return capri_barco_asym_rsa_encrypt(key_size, n, e, m, c, async_en,
+                                        unique_key);
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c, uint8_t *m)
+{
+    return capri_barco_asym_rsa2k_decrypt(n, d, c, m);
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p,
+                                     uint8_t *q, uint8_t *dp,
+                                     uint8_t *dq, uint8_t *qinv,
+                                     uint8_t *c, uint8_t *m,
+                                     bool async_en,
+                                     const uint8_t *unique_key)
+{
+    return capri_barco_asym_rsa2k_crt_decrypt(key_idx, p, q, dp, dq, qinv,
+                                              c, m, async_en, unique_key);
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa2k_setup_sig_gen_priv_key (uint8_t *n, uint8_t *d,
+                                                int32_t *key_idx)
+{
+    return capri_barco_asym_rsa2k_setup_sig_gen_priv_key(n, d, key_idx);
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q,
+                                                   uint8_t *dp, uint8_t *dq,
+                                                   uint8_t *qinv,
+                                                   int32_t* key_idx)
+{
+    return capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(p, q, dp, dq,
+                                                             qinv, key_idx);
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa_setup_priv_key(uint16_t key_size, uint8_t *n,
+                                     uint8_t *d, int32_t* key_idx)
+{
+    return capri_barco_asym_rsa_setup_priv_key(key_size, n, d, key_idx);
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n,
+                                uint8_t *d, uint8_t *h, uint8_t *s,
+                                bool async_en, const uint8_t *unique_key)
+{
+    return capri_barco_asym_rsa2k_sig_gen(key_idx, n, d, h, s, async_en,
+                                          unique_key);
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa_sig_gen(uint16_t key_size, int32_t key_idx,
+                              uint8_t *n, uint8_t *d,
+                              uint8_t *h, uint8_t *s,
+                              bool async_en, const uint8_t *unique_key)
+{
+    return capri_barco_asym_rsa_sig_gen(key_size, key_idx, n, d, h, s,
+                                        async_en, unique_key);
+}
+
+sdk_ret_t
+asicpd_barco_asym_fips_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
+                                    uint8_t *n, uint8_t *e, uint8_t *msg,
+                                    uint16_t msg_len, uint8_t *s,
+                                    uint8_t hash_type, uint8_t sig_scheme,
+                                    bool async_en, const uint8_t *unique_key)
+{
+    return capri_barco_asym_fips_rsa_sig_gen(key_size, key_idx, n, e, msg,
+                                          msg_len, s,
+                                          (hash_type_t) hash_type,
+                                          (rsa_signature_scheme_t) sig_scheme,
+                                          async_en, unique_key);
+}
+
+sdk_ret_t
+asicpd_barco_asym_fips_rsa_sig_verify (uint16_t key_size, uint8_t *n,
+                                       uint8_t *e, uint8_t *msg,
+                                       uint16_t msg_len, uint8_t *s,
+                                       uint8_t hash_type, uint8_t sig_scheme,
+                                       bool async_en,
+                                       const uint8_t *unique_key)
+{
+    return capri_barco_asym_fips_rsa_sig_verify(key_size, n, e, msg, msg_len, s,
+                                          (hash_type_t) hash_type,
+                                          (rsa_signature_scheme_t) sig_scheme,
+                                          async_en, unique_key);
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
+                                    uint8_t *h, uint8_t *s)
+{
+    return capri_barco_asym_rsa2k_sig_verify(n, e, h, s);
 }
 
 }    // namespace pd

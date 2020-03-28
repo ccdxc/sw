@@ -9,7 +9,7 @@
 #include "platform/elba/elba_tm_utils.hpp"
 #include "platform/elba/elba_sw_phv.hpp"
 #include "platform/elba/elba_quiesce.hpp"
-#include "platform/capri/elba_pxb_pcie.hpp"
+#include "platform/elba/elba_pxb_pcie.hpp"
 #include "asic/pd/pd.hpp"
 #include "asic/pd/pd_internal.hpp"
 #include "lib/utils/time_profile.hpp"
@@ -742,7 +742,7 @@ asicpd_tm_drain_uplink_port (tm_port_t port)
 }
 
 sdk_ret_t
-asicpd_quiesce_start(void)
+asicpd_quiesce_start (void)
 {
     return elba_quiesce_start();
 }
@@ -759,6 +759,151 @@ asicpd_pxb_cfg_lif_bdf (uint32_t lif, uint16_t bdf)
     return elba_pxb_cfg_lif_bdf(lif, bdf);
 }
 
+sdk_ret_t
+asicpd_barco_asym_ecc_point_mul (uint16_t key_size, uint8_t *p,
+                                 uint8_t *n, uint8_t *xg, uint8_t *yg,
+                                 uint8_t *a, uint8_t *b, uint8_t *x1,
+                                 uint8_t *y1, uint8_t *k, uint8_t *x3,
+                                 uint8_t *y3)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_ecdsa_p256_setup_priv_key (uint8_t *p, uint8_t *n,
+                                             uint8_t *xg, uint8_t *yg,
+                                             uint8_t *a, uint8_t *b,
+                                             uint8_t *da, int32_t *key_idx)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_ecdsa_p256_sig_gen (int32_t key_idx, uint8_t *p,
+                                      uint8_t *n, uint8_t *xg,
+                                      uint8_t *yg, uint8_t *a,
+                                      uint8_t *b, uint8_t *da,
+                                      uint8_t *k, uint8_t *h,
+                                      uint8_t *r, uint8_t *s,
+                                      bool async_en,
+                                      const uint8_t *unique_key)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_ecdsa_p256_sig_verify (uint8_t *p, uint8_t *n,
+                                         uint8_t *xg, uint8_t *yg,
+                                         uint8_t *a, uint8_t *b,
+                                         uint8_t *xq, uint8_t *yq,
+                                         uint8_t *r, uint8_t *s,
+                                         uint8_t *h, bool async_en,
+                                         const uint8_t *unique_key)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa2k_encrypt (uint8_t *n, uint8_t *e,
+                                 uint8_t *m,  uint8_t *c,
+                                 bool async_en,
+                                 const uint8_t *unique_key)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa_encrypt (uint16_t key_size, uint8_t *n,
+                               uint8_t *e, uint8_t *m,  uint8_t *c,
+                               bool async_en, const uint8_t *unique_key)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa2k_decrypt (uint8_t *n, uint8_t *d, uint8_t *c, uint8_t *m)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa2k_crt_decrypt (int32_t key_idx, uint8_t *p,
+                                     uint8_t *q, uint8_t *dp,
+                                     uint8_t *dq, uint8_t *qinv,
+                                     uint8_t *c, uint8_t *m,
+                                     bool async_en,
+                                     const uint8_t *unique_key)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa2k_setup_sig_gen_priv_key (uint8_t *n, uint8_t *d,
+                                                int32_t *key_idx)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q,
+                                                   uint8_t *dp, uint8_t *dq,
+                                                   uint8_t *qinv,
+                                                   int32_t* key_idx)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa_setup_priv_key(uint16_t key_size, uint8_t *n,
+                                     uint8_t *d, int32_t* key_idx)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n,
+                                uint8_t *d, uint8_t *h, uint8_t *s,
+                                bool async_en, const uint8_t *unique_key)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa_sig_gen(uint16_t key_size, int32_t key_idx,
+                              uint8_t *n, uint8_t *d,
+                              uint8_t *h, uint8_t *s,
+                              bool async_en, const uint8_t *unique_key)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_fips_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
+                                    uint8_t *n, uint8_t *e, uint8_t *msg,
+                                    uint16_t msg_len, uint8_t *s,
+                                    uint8_t hash_type, uint8_t sig_scheme,
+                                    bool async_en, const uint8_t *unique_key)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_fips_rsa_sig_verify (uint16_t key_size, uint8_t *n,
+                                       uint8_t *e, uint8_t *msg,
+                                       uint16_t msg_len, uint8_t *s,
+                                       uint8_t hash_type, uint8_t sig_scheme,
+                                       bool async_en,
+                                       const uint8_t *unique_key)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
+                                    uint8_t *h, uint8_t *s)
+{
+    return SDK_RET_INVALID_OP;
+}
 
 }    // namespace pd
 }    // namespace asic

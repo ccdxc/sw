@@ -2820,7 +2820,7 @@ typedef struct pd_capri_barco_asym_poll_pend_req_args_s {
     uint32_t *ids;
 } __PACK__ pd_capri_barco_asym_poll_pend_req_args_t;
 
-typedef struct pd_capri_barco_asym_ecc_point_mul_args_s {
+typedef struct pd_barco_asym_ecc_point_mul_args_s {
     uint16_t key_size;
     uint8_t *p;
     uint8_t *n;
@@ -2833,9 +2833,9 @@ typedef struct pd_capri_barco_asym_ecc_point_mul_args_s {
     uint8_t *k;
     uint8_t *x3;
     uint8_t *y3;
-} __PACK__ pd_capri_barco_asym_ecc_point_mul_args_t;
+} __PACK__ pd_barco_asym_ecc_point_mul_args_t;
 
-typedef struct pd_capri_barco_asym_ecdsa_p256_setup_priv_key_args_s {
+typedef struct pd_barco_asym_ecdsa_p256_setup_priv_key_args_s {
     uint8_t *p;
     uint8_t *n;
     uint8_t *xg;
@@ -2844,9 +2844,9 @@ typedef struct pd_capri_barco_asym_ecdsa_p256_setup_priv_key_args_s {
     uint8_t *b;
     uint8_t *da;
     int32_t *key_idx;
-} __PACK__ pd_capri_barco_asym_ecdsa_p256_setup_priv_key_args_t;
+} __PACK__ pd_barco_asym_ecdsa_p256_setup_priv_key_args_t;
 
-typedef struct pd_capri_barco_asym_ecdsa_p256_sig_gen_args_s {
+typedef struct pd_barco_asym_ecdsa_p256_sig_gen_args_s {
     int32_t key_idx;
     uint8_t *p;
     uint8_t *n;
@@ -2861,9 +2861,9 @@ typedef struct pd_capri_barco_asym_ecdsa_p256_sig_gen_args_s {
     uint8_t *s;
     bool    async_en;
     const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_capri_barco_asym_ecdsa_p256_sig_gen_args_t;
+} __PACK__ pd_barco_asym_ecdsa_p256_sig_gen_args_t;
 
-typedef struct pd_capri_barco_asym_ecdsa_p256_sig_verify_args_s {
+typedef struct pd_barco_asym_ecdsa_p256_sig_verify_args_s {
     uint8_t *p;
     uint8_t *n;
     uint8_t *xg;
@@ -2877,18 +2877,18 @@ typedef struct pd_capri_barco_asym_ecdsa_p256_sig_verify_args_s {
     uint8_t *h;
     bool async_en;
     const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_capri_barco_asym_ecdsa_p256_sig_verify_args_t;
+} __PACK__ pd_barco_asym_ecdsa_p256_sig_verify_args_t;
 
-typedef struct pd_capri_barco_asym_rsa2k_encrypt_args_s {
+typedef struct pd_barco_asym_rsa2k_encrypt_args_s {
     uint8_t *n;
     uint8_t *e;
     uint8_t *m;
     uint8_t *c;
     bool async_en;
     const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_capri_barco_asym_rsa2k_encrypt_args_t;
+} __PACK__ pd_barco_asym_rsa2k_encrypt_args_t;
 
-typedef struct pd_capri_barco_asym_rsa_encrypt_args_s {
+typedef struct pd_barco_asym_rsa_encrypt_args_s {
     uint16_t key_size;
     uint8_t *n;
     uint8_t *e;
@@ -2896,16 +2896,16 @@ typedef struct pd_capri_barco_asym_rsa_encrypt_args_s {
     uint8_t *c;
     bool async_en;
     const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_capri_barco_asym_rsa_encrypt_args_t;
+} __PACK__ pd_barco_asym_rsa_encrypt_args_t;
 
-typedef struct pd_capri_barco_asym_rsa2k_decrypt_args_s {
+typedef struct pd_barco_asym_rsa2k_decrypt_args_s {
     uint8_t *n;
     uint8_t *d;
     uint8_t *c;
     uint8_t *m;
-} __PACK__ pd_capri_barco_asym_rsa2k_decrypt_args_t;
+} __PACK__ pd_barco_asym_rsa2k_decrypt_args_t;
 
-typedef struct pd_capri_barco_asym_rsa2k_crt_decrypt_args_s {
+typedef struct pd_barco_asym_rsa2k_crt_decrypt_args_s {
     int32_t key_idx;
     uint8_t *p;
     uint8_t *q;
@@ -2916,31 +2916,31 @@ typedef struct pd_capri_barco_asym_rsa2k_crt_decrypt_args_s {
     uint8_t *m;
     bool async_en;
     const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_capri_barco_asym_rsa2k_crt_decrypt_args_t;
+} __PACK__ pd_barco_asym_rsa2k_crt_decrypt_args_t;
 
-typedef struct pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key_args_s {
+typedef struct pd_barco_asym_rsa2k_setup_sig_gen_priv_key_args_s {
     uint8_t *n;
     uint8_t *d;
     int32_t *key_idx;
-} __PACK__ pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key_args_t;
+} __PACK__ pd_barco_asym_rsa2k_setup_sig_gen_priv_key_args_t;
 
-typedef struct pd_capri_barco_asym_rsa_setup_priv_key_args_s {
+typedef struct pd_barco_asym_rsa_setup_priv_key_args_s {
     uint16_t key_size;
     uint8_t *n;
     uint8_t *d;
     int32_t *key_idx;
-} __PACK__ pd_capri_barco_asym_rsa_setup_priv_key_args_t;
+} __PACK__ pd_barco_asym_rsa_setup_priv_key_args_t;
 
-typedef struct pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key_args_s {
+typedef struct pd_barco_asym_rsa2k_crt_setup_decrypt_priv_key_args_s {
     uint8_t *p;
     uint8_t *q;
     uint8_t *dp;
     uint8_t *dq;
     uint8_t *qinv;
     int32_t *key_idx;
-} __PACK__ pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key_args_t;
+} __PACK__ pd_barco_asym_rsa2k_crt_setup_decrypt_priv_key_args_t;
 
-typedef struct pd_capri_barco_asym_rsa2k_sig_gen_args_s {
+typedef struct pd_barco_asym_rsa2k_sig_gen_args_s {
     int32_t key_idx;
     uint8_t *n;
     uint8_t *d;
@@ -2948,9 +2948,9 @@ typedef struct pd_capri_barco_asym_rsa2k_sig_gen_args_s {
     uint8_t *s;
     bool async_en;
     const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_capri_barco_asym_rsa2k_sig_gen_args_t;
+} __PACK__ pd_barco_asym_rsa2k_sig_gen_args_t;
 
-typedef struct pd_capri_barco_asym_rsa_sig_gen_args_s {
+typedef struct pd_barco_asym_rsa_sig_gen_args_s {
     uint16_t key_size;
     int32_t key_idx;
     uint8_t *n;
@@ -2959,9 +2959,9 @@ typedef struct pd_capri_barco_asym_rsa_sig_gen_args_s {
     uint8_t *s;
     bool async_en;
     const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_capri_barco_asym_rsa_sig_gen_args_t;
+} __PACK__ pd_barco_asym_rsa_sig_gen_args_t;
 
-typedef struct pd_capri_barco_asym_fips_rsa_sig_gen_args_s {
+typedef struct pd_barco_asym_fips_rsa_sig_gen_args_s {
     uint16_t key_size;
     int32_t key_idx;
     uint8_t *n;
@@ -2973,9 +2973,9 @@ typedef struct pd_capri_barco_asym_fips_rsa_sig_gen_args_s {
     types::RSASignatureScheme    sig_scheme;
     bool async_en;
     const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_capri_barco_asym_fips_rsa_sig_gen_args_t;
+} __PACK__ pd_barco_asym_fips_rsa_sig_gen_args_t;
 
-typedef struct pd_capri_barco_asym_fips_rsa_sig_verify_args_s {
+typedef struct pd_barco_asym_fips_rsa_sig_verify_args_s {
     uint16_t key_size;
     int32_t key_idx;
     uint8_t *n;
@@ -2987,14 +2987,14 @@ typedef struct pd_capri_barco_asym_fips_rsa_sig_verify_args_s {
     types::RSASignatureScheme    sig_scheme;
     bool async_en;
     const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_capri_barco_asym_fips_rsa_sig_verify_args_t;
+} __PACK__ pd_barco_asym_fips_rsa_sig_verify_args_t;
 
-typedef struct pd_capri_barco_asym_rsa2k_sig_verify_args_s {
+typedef struct pd_barco_asym_rsa2k_sig_verify_args_s {
     uint8_t *n;
     uint8_t *e;
     uint8_t *h;
     uint8_t *s;
-} __PACK__ pd_capri_barco_asym_rsa2k_sig_verify_args_t;
+} __PACK__ pd_barco_asym_rsa2k_sig_verify_args_t;
 
 typedef struct pd_capri_barco_sym_hash_process_request_args_s {
     CryptoApiHashType hash_type;
@@ -4068,22 +4068,22 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_capri_barco_symm_req_descr_get);
         PD_UNION_ARGS_FIELD(pd_capri_barco_ring_meta_get);
         PD_UNION_ARGS_FIELD(pd_capri_barco_ring_meta_config_get);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecc_point_mul);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecdsa_p256_setup_priv_key);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecdsa_p256_sig_gen);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_ecdsa_p256_sig_verify);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa2k_encrypt);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa_encrypt);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa2k_decrypt);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa2k_crt_decrypt);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa_setup_priv_key);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa2k_sig_gen);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa_sig_gen);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_fips_rsa_sig_gen);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_fips_rsa_sig_verify);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_rsa2k_sig_verify);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_ecc_point_mul);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_ecdsa_p256_setup_priv_key);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_ecdsa_p256_sig_gen);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_ecdsa_p256_sig_verify);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa2k_encrypt);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa_encrypt);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa2k_decrypt);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa2k_crt_decrypt);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa2k_setup_sig_gen_priv_key);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa_setup_priv_key);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa2k_sig_gen);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa_sig_gen);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_fips_rsa_sig_gen);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_fips_rsa_sig_verify);
+        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa2k_sig_verify);
         PD_UNION_ARGS_FIELD(pd_capri_barco_sym_hash_process_request);
         PD_UNION_ARGS_FIELD(pd_capri_barco_asym_add_pend_req);
         PD_UNION_ARGS_FIELD(pd_capri_barco_asym_poll_pend_req);
@@ -4577,22 +4577,22 @@ PD_FUNCP_TYPEDEF(pd_capri_barco_asym_req_descr_get);
 PD_FUNCP_TYPEDEF(pd_capri_barco_symm_req_descr_get);
 PD_FUNCP_TYPEDEF(pd_capri_barco_ring_meta_get);
 PD_FUNCP_TYPEDEF(pd_capri_barco_ring_meta_config_get);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecc_point_mul);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_setup_priv_key);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_sig_gen);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_ecdsa_p256_sig_verify);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_encrypt);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa_encrypt);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_decrypt);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_crt_decrypt);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_setup_sig_gen_priv_key);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa_setup_priv_key);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_sig_gen);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa_sig_gen);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_fips_rsa_sig_gen);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_fips_rsa_sig_verify);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_rsa2k_sig_verify);
+PD_FUNCP_TYPEDEF(pd_barco_asym_ecc_point_mul);
+PD_FUNCP_TYPEDEF(pd_barco_asym_ecdsa_p256_setup_priv_key);
+PD_FUNCP_TYPEDEF(pd_barco_asym_ecdsa_p256_sig_gen);
+PD_FUNCP_TYPEDEF(pd_barco_asym_ecdsa_p256_sig_verify);
+PD_FUNCP_TYPEDEF(pd_barco_asym_rsa2k_encrypt);
+PD_FUNCP_TYPEDEF(pd_barco_asym_rsa_encrypt);
+PD_FUNCP_TYPEDEF(pd_barco_asym_rsa2k_decrypt);
+PD_FUNCP_TYPEDEF(pd_barco_asym_rsa2k_crt_decrypt);
+PD_FUNCP_TYPEDEF(pd_barco_asym_rsa2k_setup_sig_gen_priv_key);
+PD_FUNCP_TYPEDEF(pd_barco_asym_rsa_setup_priv_key);
+PD_FUNCP_TYPEDEF(pd_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
+PD_FUNCP_TYPEDEF(pd_barco_asym_rsa2k_sig_gen);
+PD_FUNCP_TYPEDEF(pd_barco_asym_rsa_sig_gen);
+PD_FUNCP_TYPEDEF(pd_barco_asym_fips_rsa_sig_gen);
+PD_FUNCP_TYPEDEF(pd_barco_asym_fips_rsa_sig_verify);
+PD_FUNCP_TYPEDEF(pd_barco_asym_rsa2k_sig_verify);
 PD_FUNCP_TYPEDEF(pd_capri_barco_sym_hash_process_request);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_add_pend_req);
 PD_FUNCP_TYPEDEF(pd_capri_barco_asym_poll_pend_req);
