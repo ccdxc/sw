@@ -34,7 +34,7 @@ func main() {
 		LogToFile:   true,
 		FileCfg: log.FileConfig{
 			Filename:   types.NetagentLogFile,
-			MaxSize:    2,
+			MaxSize:    5,
 			MaxBackups: 1,
 			MaxAge:     7,
 		},
