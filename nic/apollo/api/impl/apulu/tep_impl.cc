@@ -14,10 +14,27 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/tep.hpp"
+#include "nic/apollo/api/internal/pds_route.hpp"
 #include "nic/apollo/api/impl/apulu/tep_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
+
+#define PDS_NUM_NH_NO_ECMP                 1
+#define tunnel_action                      action_u.tunnel_tunnel_info
+#define tunnel2_action                     action_u.tunnel2_tunnel2_info
+
+#define PDS_IMPL_FILL_TEP_DATA_FROM_NH(tep_data, nh_hw_id)                     \
+{                                                                              \
+    (tep_data)->tunnel_action.nexthop_base = (nh_hw_id);                       \
+    (tep_data)->tunnel_action.num_nexthops = PDS_NUM_NH_NO_ECMP;               \
+}
+
+#define PDS_IMPL_FILL_TEP_DATA_FROM_NH_GROUP(tep_data, base_nh_hw_id, num_nh)  \
+{                                                                              \
+    (tep_data)->tunnel_action.nexthop_base = (base_nh_hw_id);                  \
+    (tep_data)->tunnel_action.num_nexthops = (num_nh);                         \
+}
 
 namespace api {
 namespace impl {
@@ -149,48 +166,77 @@ tep_impl::nuke_resources(api_base *api_obj) {
     return SDK_RET_OK;
 }
 
-#define PDS_NUM_NH_NO_ECMP 1
-#define tunnel_action     action_u.tunnel_tunnel_info
-#define tunnel2_action    action_u.tunnel2_tunnel2_info
+static inline sdk_ret_t
+fill_p4_tep_data_from_nh_ (tep_entry *tep, pds_obj_key_t *nh_key,
+                           tunnel_actiondata_t *tep_data)
+{
+    nexthop *nh;
+    sdk_ret_t ret;
+    nexthop_impl *nh_impl;
+
+    nh = nexthop_db()->find(nh_key);
+    if (unlikely(nh == NULL)) {
+        PDS_TRACE_ERR("nh %s in TEP %s not found",
+                      nh_key->str(), tep->key2str().c_str());
+        return SDK_RET_INVALID_ARG;
+    }
+    nh_impl = (nexthop_impl *)nh->impl();
+    PDS_IMPL_FILL_TEP_DATA_FROM_NH(tep_data, nh_impl->hw_id());
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+fill_p4_tep_data_from_nhgroup_ (tep_entry *tep, pds_obj_key_t *nhgroup_key,
+                                tunnel_actiondata_t *tep_data)
+{
+    sdk_ret_t ret;
+    nexthop_group *nhgroup;
+    nexthop_group_impl *nhgroup_impl;
+
+    nhgroup = nexthop_group_db()->find(nhgroup_key);
+    if (unlikely(nhgroup == NULL)) {
+        PDS_TRACE_ERR("nhgroup %s in TEP %s not found",
+                      nhgroup_key->str(), tep->key2str().c_str());
+        return SDK_RET_INVALID_ARG;
+    }
+    nhgroup_impl = (nexthop_group_impl *)nhgroup->impl();
+    PDS_IMPL_FILL_TEP_DATA_FROM_NH_GROUP(tep_data,
+                                         nhgroup_impl->nh_base_hw_id(),
+                                         nhgroup->num_nexthops());
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 tep_impl::activate_create_tunnel_table_(pds_epoch_t epoch, tep_entry *tep,
                                         pds_tep_spec_t *spec) {
-    nexthop *nh;
     sdk_ret_t ret;
     tep_entry *tep2;
     pds_obj_key_t nh_key;
     p4pd_error_t p4pd_ret;
-    nexthop_impl *nh_impl;
-    nexthop_group *nhgroup;
+    pds_nh_type_t nh_type;
     bool program_tep2 = false;
     pds_obj_key_t nhgroup_key;
-    nexthop_group_impl *nhgroup_impl;
     tunnel_actiondata_t tep_data = { 0 };
     tunnel2_actiondata_t tep2_data = { 0 };
 
-    if (spec->nh_type == PDS_NH_TYPE_UNDERLAY_ECMP) {
-        nhgroup = nexthop_group_db()->find(&spec->nh_group);
-        if (unlikely(nhgroup == NULL)) {
-            PDS_TRACE_ERR("nhgroup %s in TEP %s not found",
-                          spec->nh_group.str(), spec->key.str());
-            return SDK_RET_INVALID_ARG;
+    switch (spec->nh_type) {
+    case PDS_NH_TYPE_UNDERLAY_ECMP:
+        ret = fill_p4_tep_data_from_nhgroup_(tep, &spec->nh_group, &tep_data);
+        if (ret != SDK_RET_OK) {
+            return ret;
         }
-        nhgroup_impl = (nexthop_group_impl *)nhgroup->impl();
-        tep_data.tunnel_action.nexthop_base = nhgroup_impl->nh_base_hw_id();
-        tep_data.tunnel_action.num_nexthops = nhgroup->num_nexthops();
         program_tep2 = true;
-    } else if (spec->nh_type == PDS_NH_TYPE_UNDERLAY) {
-        nh = nexthop_db()->find(&spec->nh);
-        if (unlikely(nh == NULL)) {
-            PDS_TRACE_ERR("nh %s in TEP %s not found",
-                          spec->nh.str(), spec->key.str());
-            return SDK_RET_INVALID_ARG;
+        break;
+
+    case PDS_NH_TYPE_UNDERLAY:
+        ret = fill_p4_tep_data_from_nh_(tep, &spec->nh, &tep_data);
+        if (ret != SDK_RET_OK) {
+            return ret;
         }
-        nh_impl = (nexthop_impl *) nh->impl();
-        tep_data.tunnel_action.nexthop_base = nh_impl->hw_id();
-        tep_data.tunnel_action.num_nexthops = PDS_NUM_NH_NO_ECMP;
         program_tep2 = true;
-    } else if (spec->nh_type == PDS_NH_TYPE_OVERLAY) {
+        break;
+
+    case PDS_NH_TYPE_OVERLAY:
         // tunnel pointing to another tunnel case, do recursive resolution
         tep2 = tep_db()->find(&spec->tep);
         if (unlikely(tep2 != NULL)) {
@@ -200,24 +246,55 @@ tep_impl::activate_create_tunnel_table_(pds_epoch_t epoch, tep_entry *tep,
         }
         if (tep2->nh_type() == PDS_NH_TYPE_UNDERLAY) {
             nh_key = tep2->nh();
-            nh_impl = (nexthop_impl *)nexthop_db()->find(&nh_key)->impl();
-            tep_data.tunnel_action.nexthop_base = nh_impl->hw_id();
-            tep_data.tunnel_action.num_nexthops = PDS_NUM_NH_NO_ECMP;
+            ret = fill_p4_tep_data_from_nh_(tep, &nh_key, &tep_data);
+            if (ret != SDK_RET_OK) {
+                return ret;
+            }
         } else if (tep2->nh_type() == PDS_NH_TYPE_UNDERLAY_ECMP) {
             nhgroup_key = tep2->nh_group();
-            nhgroup = nexthop_group_db()->find(&spec->nh_group);
-            tep_data.tunnel_action.nexthop_base =
-                ((nexthop_group_impl *)nhgroup->impl())->hw_id();
-            tep_data.tunnel_action.num_nexthops = nhgroup->num_nexthops();
+            ret = fill_p4_tep_data_from_nhgroup_(tep, &nhgroup_key, &tep_data);
+            if (ret != SDK_RET_OK) {
+                return ret;
+            }
         }
-    } else if (spec->nh_type == PDS_NH_TYPE_NONE) {
-        tep_data.tunnel_action.nexthop_base = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
-        tep_data.tunnel_action.num_nexthops = PDS_NUM_NH_NO_ECMP;
-    } else {
+        break;
+
+    case PDS_NH_TYPE_BLACKHOLE:
+        PDS_IMPL_FILL_TEP_DATA_FROM_NH(&tep_data,
+                                       PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID);
+        break;
+
+    case PDS_NH_TYPE_NONE:
+        // consult the underlay route db to figure out the nexthop for this
+        if (pds_underlay_nexthop(spec->remote_ip.addr.v4_addr,
+                                 &nh_type, &nh_key) == SDK_RET_OK) {
+            if (nh_type == PDS_NH_TYPE_UNDERLAY) {
+                ret = fill_p4_tep_data_from_nh_(tep, &nh_key, &tep_data);
+                if (ret != SDK_RET_OK) {
+                    return ret;
+                }
+            } else if (nh_type == PDS_NH_TYPE_UNDERLAY_ECMP) {
+                ret = fill_p4_tep_data_from_nhgroup_(tep, &nh_key, &tep_data);
+                if (ret != SDK_RET_OK) {
+                    return ret;
+                }
+            }
+        } else {
+            // TEP reachability is unknown, use system drop nexthop
+            PDS_TRACE_DEBUG("TEP %s reachability unknown, using black hole "
+                            "nexthop", spec->tep.str());
+            PDS_IMPL_FILL_TEP_DATA_FROM_NH(&tep_data,
+                                           PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID);
+        }
+        break;
+
+    default:
         PDS_TRACE_ERR("Unsupported nh type %u in TEP %s spec",
                       spec->nh_type, spec->key.str());
         SDK_ASSERT_RETURN(false, SDK_RET_INVALID_ARG);
+        break;
     }
+
     if (spec->encap.type != PDS_ENCAP_TYPE_NONE) {
         tep_data.tunnel_action.vni = spec->encap.val.value;
     }

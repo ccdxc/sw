@@ -125,7 +125,7 @@ tep_upd_walk_cb_ (void *obj, void *ctxt) {
 
     if (g_num_routes == 0) {
         // TEP walk triggered by route delete
-        spec.nh_type = PDS_NH_TYPE_NONE;
+        spec.nh_type = PDS_NH_TYPE_BLACKHOLE;
     } else {
         // TEP walk triggered by route add/update,
         // 1st route is the best route !!
@@ -205,13 +205,25 @@ pds_underlay_route_delete (_In_ ip_prefix_t *prefix)
     return SDK_RET_INVALID_OP;
 }
 
-#if 0
-pds_obj_key_t
-pds_underlay_nexthop (_In_ ip_addr_t ip_addr)
+sdk_ret_t
+pds_underlay_nexthop (_In_ ipv4_addr_t ip_addr, _Out_ pds_nh_type_t *nh_type,
+                      _Out_ pds_obj_key_t *nh)
 {
-    // TODO
-    return k_pds_obj_key_invalid;
+    if (g_num_routes == 0) {
+        // TEP walk triggered by route delete
+        *nh_type = PDS_NH_TYPE_BLACKHOLE;
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+    // 1st route is the best route !!
+    *nh_type = g_route_db[0].spec.route.nh_type;
+    if (*nh_type == PDS_NH_TYPE_UNDERLAY_ECMP) {
+        *nh = g_route_db[0].spec.route.nh_group;
+    } else if (*nh_type == PDS_NH_TYPE_UNDERLAY) {
+        *nh = g_route_db[0].spec.route.nh;
+    } else {
+        *nh_type = PDS_NH_TYPE_BLACKHOLE;
+    }
+    return SDK_RET_OK;
 }
-#endif
 
 }    // namespace api
