@@ -7,8 +7,8 @@
 	It is generated from these files:
 		ipam.proto
 		lb.proto
-		networkinterface.proto
 		network.proto
+		networkinterface.proto
 		route.proto
 		service.proto
 		svc_network.proto
@@ -24,6 +24,10 @@
 		LbPolicy
 		LbPolicySpec
 		LbPolicyStatus
+		Network
+		NetworkSpec
+		NetworkStatus
+		OrchestratorInfo
 		NetworkInterface
 		NetworkInterfaceHostStatus
 		NetworkInterfaceSpec
@@ -31,10 +35,6 @@
 		NetworkInterfaceUplinkStatus
 		PauseSpec
 		TransceiverStatus
-		Network
-		NetworkSpec
-		NetworkStatus
-		OrchestratorInfo
 		BGPConfig
 		BGPNeighbor
 		EVPNConfig
