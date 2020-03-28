@@ -303,6 +303,10 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
     if (dev_api != NULL) {
         Create();
     }
+
+    // Init stats timer
+    ev_timer_init(&stats_timer, &EthLif::StatsUpdate, 0.0, 0.1);
+    stats_timer.data = this;
 }
 
 void
@@ -470,7 +474,8 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         host_lif_stats_addr = cmd->info_pa + offsetof(struct ionic_lif_info, stats);
         NIC_LOG_INFO("{}: host_lif_stats_addr {:#x}", hal_lif_info_.name, host_lif_stats_addr);
 
-        evutil_timer_start(EV_A_ & stats_timer, &EthLif::StatsUpdate, this, 0.0, 0.2);
+        // Start stats timer
+        ev_timer_start(EV_A_ & stats_timer);
     }
 
     // Init the status block
@@ -632,7 +637,7 @@ EthLif::Reset()
     // Disable Stats
     if (host_lif_stats_addr != 0) {
         host_lif_stats_addr = 0;
-        evutil_timer_stop(EV_A_ & stats_timer);
+        ev_timer_stop(EV_A_ & stats_timer);
     }
 
     state = LIF_STATE_RESET;
@@ -2971,27 +2976,15 @@ EthLif::SetHalClient(devapi *dapi)
  */
 
 void
-EthLif::StatsUpdate(void *obj)
+EthLif::StatsUpdate(EV_P_ ev_timer *w, int events)
 {
-    EthLif *eth = (EthLif *)obj;
-
-    struct edmaq_ctx ctx = { .cb = &EthLif::StatsUpdateComplete, .obj = obj };
+    EthLif *eth = (EthLif *)w->data;
 
     if (eth->lif_stats_addr != 0 && eth->host_lif_stats_addr != 0) {
-        auto posted = eth->edmaq_async->Post(
-            eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            eth->lif_stats_addr, eth->host_lif_stats_addr, sizeof(struct ionic_lif_stats), &ctx);
-        if (posted)
-            evutil_timer_stop(eth->loop, &eth->stats_timer);
+        eth->edmaq_async->Post(eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
+                                eth->lif_stats_addr, eth->host_lif_stats_addr,
+                                sizeof(struct ionic_lif_stats), NULL);
     }
-}
-
-void
-EthLif::StatsUpdateComplete(void *obj)
-{
-    EthLif *eth = (EthLif *)obj;
-
-    evutil_timer_again(eth->loop, &eth->stats_timer);
 }
 
 int

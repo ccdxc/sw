@@ -15,7 +15,6 @@
 
 #include "nic/sdk/lib/indexer/indexer.hpp"
 #include "nic/sdk/platform/devapi/devapi.hpp"
-#include "nic/sdk/platform/evutils/include/evutils.h"
 
 #ifdef __aarch64__
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
@@ -201,10 +200,10 @@ class Eth : public Device
     uint32_t port_pb_stats_size;
     // Tasks
     EV_P;
-    evutil_prepare devcmd_prepare = {0};
-    evutil_check devcmd_check = {0};
-    evutil_timer devcmd_timer = {0};
-    evutil_timer stats_timer = {0};
+    ev_prepare devcmd_prepare = {0};
+    ev_check devcmd_check = {0};
+    ev_timer devcmd_timer = {0};
+    ev_timer stats_timer = {0};
 
     // Device Constructors
     bool CreateLocalDevice();
@@ -214,7 +213,10 @@ class Eth : public Device
     void DevcmdRegsReset();
 
     /* Command Handlers */
-    static void DevcmdPoll(void *obj);
+    static void DevcmdPreparePoll(EV_P_ ev_prepare *w, int events);
+    static void DevcmdCheckPoll(EV_P_ ev_check *w, int events);
+    static void DevcmdTimerPoll(EV_P_ ev_timer *w, int events);
+    void DevcmdPoll();
 
     status_code_t _CmdIdentify(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdInit(void *req, void *req_data, void *resp, void *resp_data);
@@ -238,8 +240,7 @@ class Eth : public Device
     status_code_t _CmdLifReset(void *req, void *req_data, void *resp, void *resp_data);
 
     // Tasks
-    static void StatsUpdate(void *obj);
-    static void StatsUpdateComplete(void *obj);
+    static void StatsUpdate(EV_P_ ev_timer *w, int events);
     static void PortConfigUpdate(void *obj);
     static void PortStatusUpdate(void *obj);
 

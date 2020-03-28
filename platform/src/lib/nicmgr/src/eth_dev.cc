@@ -378,10 +378,22 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
     PortMacStatsMappingInit(spec, pd);
     PortPbStatsMappingInit(spec, pd);
 
-    // Enable Devcmd Handling
-    evutil_add_prepare(EV_A_ & devcmd_prepare, Eth::DevcmdPoll, this);
-    evutil_add_check(EV_A_ & devcmd_check, Eth::DevcmdPoll, this);
-    evutil_timer_start(EV_A_ & devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
+    // Init Devcmd Handling
+    ev_prepare_init(&devcmd_prepare, Eth::DevcmdPreparePoll);
+    devcmd_prepare.data = this;
+    ev_check_init(&devcmd_check, Eth::DevcmdCheckPoll);
+    devcmd_check.data = this;
+    ev_timer_init(&devcmd_timer, Eth::DevcmdTimerPoll, 0.0, 0.001);
+    devcmd_timer.data = this;
+
+    // Start Devcmd Handling
+    ev_prepare_start(EV_A_ & devcmd_prepare);
+    ev_check_start(EV_A_ & devcmd_check);
+    ev_timer_start(EV_A_ & devcmd_timer);
+
+    // Init stats timer
+    ev_timer_init(&stats_timer, &Eth::StatsUpdate, 0.0, 0.1);
+    stats_timer.data = this;
 
     active_lif_set.clear();
 }
@@ -537,10 +549,22 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
     PortMacStatsMappingInit(spec, pd);
     PortPbStatsMappingInit(spec, pd);
 
-    // Enable Devcmd Handling
-    evutil_add_prepare(EV_A_ & devcmd_prepare, Eth::DevcmdPoll, this);
-    evutil_add_check(EV_A_ & devcmd_check, Eth::DevcmdPoll, this);
-    evutil_timer_start(EV_A_ & devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
+    // Init Devcmd Handling
+    ev_prepare_init(&devcmd_prepare, Eth::DevcmdPreparePoll);
+    devcmd_prepare.data = this;
+    ev_check_init(&devcmd_check, Eth::DevcmdCheckPoll);
+    devcmd_check.data = this;
+    ev_timer_init(&devcmd_timer, Eth::DevcmdTimerPoll, 0.0, 0.001);
+    devcmd_timer.data = this;
+
+    // Start Devcmd Handling
+    ev_prepare_start(EV_A_ & devcmd_prepare);
+    ev_check_start(EV_A_ & devcmd_check);
+    ev_timer_start(EV_A_ & devcmd_timer);
+
+    // Init stats timer
+    ev_timer_init(&stats_timer, &Eth::StatsUpdate, 0.0, 0.1);
+    stats_timer.data = this;
 
     // initialize heartbeat as 0 when device got created.
     regs->info.fw_heartbeat = 0;
@@ -921,22 +945,38 @@ Eth::DevcmdRegsReset()
 }
 
 void
-Eth::DevcmdPoll(void *obj)
+Eth::DevcmdPreparePoll(EV_P_ ev_prepare *w, int events)
 {
-    Eth *dev = (Eth *)obj;
+    ((Eth *)w->data)->DevcmdPoll();
+}
 
+void
+Eth::DevcmdCheckPoll(EV_P_ ev_check *w, int events)
+{
+    ((Eth *)w->data)->DevcmdPoll();
+}
+
+void
+Eth::DevcmdTimerPoll(EV_P_ ev_timer *w, int events)
+{
+    ((Eth *)w->data)->DevcmdPoll();
+}
+
+void
+Eth::DevcmdPoll()
+{
 #ifndef __aarch64__
-    READ_MEM(dev->devcmd_mem_addr, (uint8_t *)&dev->devcmd->doorbell,
-             sizeof(dev->devcmd->doorbell), 0);
+    READ_MEM(devcmd_mem_addr, (uint8_t *)&devcmd->doorbell,
+             sizeof(devcmd->doorbell), 0);
 #endif
-    if (dev->devcmd->doorbell & 0x1) {
-        NIC_LOG_INFO("{}: Devcmd doorbell", dev->spec->name);
-        dev->devcmd->doorbell = 0x0;
+    if (devcmd->doorbell & 0x1) {
+        NIC_LOG_INFO("{}: Devcmd doorbell", spec->name);
+        devcmd->doorbell = 0x0;
 #ifndef __aarch64__
-        WRITE_MEM(dev->devcmd_mem_addr, (uint8_t *)&dev->devcmd->doorbell,
-                  sizeof(dev->devcmd->doorbell), 0);
+        WRITE_MEM(devcmd_mem_addr, (uint8_t *)&devcmd->doorbell,
+                  sizeof(devcmd->doorbell), 0);
 #endif
-        dev->DevcmdHandler();
+        DevcmdHandler();
     }
 }
 
@@ -1903,8 +1943,9 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
                      "host_port_mac_stats_addr {:#x} host_port_pb_stats_addr {:#x}",
                      spec->name, spec->uplink_port_num,
                      host_port_mac_stats_addr, host_port_pb_stats_addr);
-        evutil_timer_start(EV_A_ & stats_timer, &Eth::StatsUpdate, this, 0.0, 0.5);
 
+        // Start stats timer
+        ev_timer_start(EV_A_ &stats_timer);
     }
 
     // TODO: Workaround for linkmgr not setting port id
@@ -1951,7 +1992,7 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
 
     if (spec->eth_type == ETH_HOST && cmd->index == 0 && host_port_mac_stats_addr != 0) {
         NIC_LOG_INFO("{}: port{}: Stopping stats update", spec->name, spec->uplink_port_num);
-        evutil_timer_stop(EV_A_ & stats_timer);
+        ev_timer_stop(EV_A_ & stats_timer);
     }
 
     ret = eth_lif->Reset();
@@ -1994,9 +2035,9 @@ Eth::CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data)
  */
 
 void
-Eth::StatsUpdate(void *obj)
+Eth::StatsUpdate(EV_P_ ev_timer *w, int events)
 {
-    Eth *eth = (Eth *)obj;
+    Eth *eth = (Eth *)w->data;
     EthLif *eth_lif = NULL;
 
     auto it = eth->lif_map.find(eth->dev_resources.lif_base);
@@ -2006,31 +2047,19 @@ Eth::StatsUpdate(void *obj)
     }
     eth_lif = it->second;
 
-    struct edmaq_ctx ctx = { .cb = &Eth::StatsUpdateComplete, .obj = obj };
-
     if (eth->port_mac_stats_addr != 0 && eth->host_port_mac_stats_addr != 0) {
-        auto posted = eth_lif->EdmaAsyncProxy(
-            eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            eth->port_mac_stats_addr, eth->host_port_mac_stats_addr, sizeof(struct ionic_port_stats), &ctx);
+        eth_lif->EdmaAsyncProxy(eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
+                                eth->port_mac_stats_addr, eth->host_port_mac_stats_addr,
+                                sizeof(struct ionic_port_stats), NULL);
 
         if (eth->port_pb_stats_addr != 0 && eth->host_port_pb_stats_addr != 0) {
-            eth_lif->EdmaAsyncProxy(
-                eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-                eth->port_pb_stats_addr, eth->host_port_pb_stats_addr, sizeof(struct ionic_port_pb_stats), &ctx);
+            eth_lif->EdmaAsyncProxy(eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
+                                    eth->port_pb_stats_addr, eth->host_port_pb_stats_addr,
+                                    sizeof(struct ionic_port_pb_stats), NULL);
         }
-
-        if (posted)
-            evutil_timer_stop(eth->loop, &eth->stats_timer);
     }
 }
 
-void
-Eth::StatsUpdateComplete(void *obj)
-{
-    Eth *eth = (Eth *)obj;
-
-    evutil_timer_again(eth->loop, &eth->stats_timer);
-}
 
 void
 Eth::PortConfigUpdate(void *obj)

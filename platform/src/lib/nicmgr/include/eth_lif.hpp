@@ -10,6 +10,7 @@ using namespace std;
 #include "nic/include/edmaq.h"
 #include "nic/sdk/platform/devapi/devapi.hpp"
 #include "pd_client.hpp"
+#include "ev.h"
 
 namespace pt = boost::property_tree;
 
@@ -187,7 +188,7 @@ class EthLif
     map<uint64_t, uint16_t> vlans;
     map<uint64_t, tuple<uint64_t, uint16_t>> mac_vlans;
     // Tasks
-    evutil_timer stats_timer = {0};
+    ev_timer stats_timer = {0};
 
     // ref_cnt for queues for this lif
     uint32_t active_q_ref_cnt;
@@ -234,8 +235,7 @@ class EthLif
     status_code_t _CmdFwControl(void *req, void *req_data, void *resp, void *resp_data);
 
     // Callbacks
-    static void StatsUpdate(void *obj);
-    static void StatsUpdateComplete(void *obj);
+    static void StatsUpdate(EV_P_ ev_timer *w, int events);
 
     // Helper methods
     void FreeUpMacFilters();
