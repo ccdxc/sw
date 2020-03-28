@@ -880,7 +880,7 @@ func TestFutureRollout(t *testing.T) {
 			Suspend:                   false,
 			DSCsOnly:                  true,
 			DSCMustMatchConstraint:    false, // hence smartnic upgrade only
-			UpgradeType:               roproto.RolloutSpec_Graceful.String(),
+			UpgradeType:               roproto.RolloutSpec_Disruptive.String(),
 		},
 	}
 	evt := kvstore.WatchEvent{

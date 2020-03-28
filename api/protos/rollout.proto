@@ -67,10 +67,10 @@ message RolloutSpec {
     // When DSCMustMatchConstraint is true, Any DSC which does not match OrderConstraints does not go through rollout.
     bool DSCMustMatchConstraint            = 10 [(gogoproto.jsontag) = "dsc-must-match-constraint,omitempty"];
 
-    // By default the upgrade is Graceful. However the API can specify the type of upgrade.
+    // By default the upgrade is Disruptive. However the API can specify the type of upgrade.
     enum DSCUpgradeType {
-        //ui-hint: Graceful
-        Graceful          = 0;
+        //ui-hint: Disruptive
+        Disruptive          = 0;
         //ui-hint: OnNextHostReboot
         OnNextHostReboot    = 1 [(venice.enumValueStr) = "on-next-reboot"];
     }

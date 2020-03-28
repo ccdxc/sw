@@ -533,7 +533,7 @@ func (ros *RolloutState) preUpgradeSmartNICs() {
 
 	var op protos.DSCOp
 	switch ros.Spec.UpgradeType {
-	case roproto.RolloutSpec_Graceful.String():
+	case roproto.RolloutSpec_Disruptive.String():
 		op = protos.DSCOp_DSCPreCheckForDisruptive
 	case roproto.RolloutSpec_OnNextHostReboot.String():
 		op = protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot
@@ -722,7 +722,7 @@ func (ros *RolloutState) doUpdateSmartNICs() {
 
 	var op protos.DSCOp
 	switch ros.Spec.UpgradeType {
-	case roproto.RolloutSpec_Graceful.String():
+	case roproto.RolloutSpec_Disruptive.String():
 		op = protos.DSCOp_DSCDisruptiveUpgrade
 	case roproto.RolloutSpec_OnNextHostReboot.String():
 		op = protos.DSCOp_DSCUpgOnNextHostReboot

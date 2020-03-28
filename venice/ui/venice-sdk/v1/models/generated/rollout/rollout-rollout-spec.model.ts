@@ -108,7 +108,7 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
         },
         'upgrade-type': {
             enum: RolloutRolloutSpec_upgrade_type_uihint,
-            default: 'graceful',
+            default: 'disruptive',
             required: true,
             type: 'string'
         },

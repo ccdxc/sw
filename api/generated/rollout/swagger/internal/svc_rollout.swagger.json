@@ -1597,12 +1597,12 @@
         "upgrade-type": {
           "type": "string",
           "enum": [
-            "graceful",
+            "disruptive",
             "on-next-reboot"
           ],
-          "default": "graceful",
+          "default": "disruptive",
           "x-ui-hints": {
-            "graceful": "Graceful",
+            "disruptive": "Disruptive",
             "on-next-reboot": "OnNextHostReboot"
           }
         },

@@ -174,7 +174,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 		var op protos.DSCOp
 		ros.restart = true
 		switch ros.Spec.UpgradeType {
-		case roproto.RolloutSpec_Graceful.String():
+		case roproto.RolloutSpec_Disruptive.String():
 			op = protos.DSCOp_DSCPreCheckForDisruptive
 		case roproto.RolloutSpec_OnNextHostReboot.String():
 			op = protos.DSCOp_DSCPreCheckForUpgOnNextHostReboot
