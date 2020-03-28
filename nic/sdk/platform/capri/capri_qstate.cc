@@ -15,14 +15,16 @@ namespace capri {
 
 template <typename T>
 void
-clear_qstate_entry(T *entry) {
+clear_qstate_entry(T *entry)
+{
     entry->vld(1);
     entry->write();
 }
 
 template <typename T>
 void
-reset_qstate_entry(T *entry) {
+reset_qstate_entry(T *entry)
+{
     entry->vld(0);
     entry->write();
 }
@@ -59,7 +61,7 @@ capri_reset_qstate_map (uint32_t lif_id)
 
 template <typename T>
 void
-capri_set_qstate_map(lif_qstate_t *qstate, T *entry, uint8_t enable)
+capri_set_qstate_map (lif_qstate_t *qstate, T *entry, uint8_t enable)
 {
     entry->qstate_base(qstate->hbm_address >> 12);
     CAPRI_SET_QSTATE_MAP_ENTRY(0);
@@ -151,7 +153,7 @@ capri_read_qstate_map (lif_qstate_t *qstate)
 }
 
 void
-capri_reprogram_qstate_map(uint32_t lif_id, uint8_t enable)
+capri_reprogram_qstate_map (uint32_t lif_id, uint8_t enable)
 {
     lif_qstate_t qstate;
     memset(&qstate, 0, sizeof(lif_qstate_t));
@@ -173,7 +175,8 @@ capri_write_qstate (uint64_t q_addr, const uint8_t *buf, uint32_t q_size)
 }
 
 sdk_ret_t
-capri_clear_qstate_mem(uint64_t base_addr, uint32_t size) {
+capri_clear_qstate_mem (uint64_t base_addr, uint32_t size)
+{
     sdk_ret_t ret = SDK_RET_OK;
     // qstate is a multiple for 4K So it is safe to assume
     // 256 byte boundary.
@@ -189,16 +192,16 @@ capri_clear_qstate_mem(uint64_t base_addr, uint32_t size) {
 }
 
 sdk_ret_t
-capri_clear_qstate(lif_qstate_t *qstate)
+capri_clear_qstate (lif_qstate_t *qstate)
 {
     return capri_clear_qstate_mem(qstate->hbm_address, qstate->allocation_size);
 }
 
-
-
 // Deprecated: Cleanup
 template <typename T>
-void set_qstate_entry(LIFQState *qstate, T *entry, int cos) {
+void
+set_qstate_entry(LIFQState *qstate, T *entry, int cos)
+{
     entry->qstate_base(qstate->hbm_address >> 12);
     entry->length0(qstate->params_in.type[0].entries);
     entry->size0(qstate->params_in.type[0].size);
@@ -226,7 +229,9 @@ void set_qstate_entry(LIFQState *qstate, T *entry, int cos) {
 // Below 2 APIs are for retrieving lif base addr and other params upon upgrade
 // we want to recover state by reading ASIC
 template <typename T>
-void get_qstate_entry_base_address(T *entry, uint64_t *lif_base_addr) {
+void
+get_qstate_entry_base_address (T *entry, uint64_t *lif_base_addr)
+{
     entry->read();
     if (entry->vld() == 1) {
         *lif_base_addr = (uint64_t) (entry->qstate_base() << 12);
@@ -237,7 +242,9 @@ void get_qstate_entry_base_address(T *entry, uint64_t *lif_base_addr) {
 
 // Deprecated: Cleanup
 template <typename T>
-void get_qstate_lif_params(LIFQState *qstate, T *entry, uint32_t *is_valid) {
+void
+get_qstate_lif_params (LIFQState *qstate, T *entry, uint32_t *is_valid)
+{
 
     entry->read();
     *is_valid = (uint32_t)entry->vld();
@@ -261,7 +268,9 @@ void get_qstate_lif_params(LIFQState *qstate, T *entry, uint32_t *is_valid) {
 }
 
 // Deprecated: Cleanup
-void push_qstate_to_capri(LIFQState *qstate, int cos) {
+void
+push_qstate_to_capri (LIFQState *qstate, int cos)
+{
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
 
     if (!qstate->params_in.dont_zero_memory) {
@@ -276,7 +285,9 @@ void push_qstate_to_capri(LIFQState *qstate, int cos) {
 }
 
 // Deprecated: Cleanup
-void clear_qstate(LIFQState *qstate) {
+void
+clear_qstate (LIFQState *qstate)
+{
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
 
     auto *wa_entry = &cap0.db.wa.dhs_lif_qstate_map.entry[qstate->lif_id];
@@ -288,7 +299,9 @@ void clear_qstate(LIFQState *qstate) {
 }
 
 // Deprecated: Cleanup
-void read_lif_params_from_capri(LIFQState *qstate) {
+void
+read_lif_params_from_capri (LIFQState *qstate)
+{
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     uint32_t is_valid = 0;
 
@@ -297,8 +310,9 @@ void read_lif_params_from_capri(LIFQState *qstate) {
     get_qstate_lif_params(qstate, psp_entry, &is_valid);
 }
 
-
-int32_t read_qstate(uint64_t q_addr, uint8_t *buf, uint32_t q_size) {
+int32_t
+read_qstate (uint64_t q_addr, uint8_t *buf, uint32_t q_size)
+{
     sdk_ret_t rv = sdk::asic::asic_mem_read(q_addr, buf, q_size);
     if (rv != SDK_RET_OK) {
         return -EIO;
@@ -306,7 +320,9 @@ int32_t read_qstate(uint64_t q_addr, uint8_t *buf, uint32_t q_size) {
     return 0;
 }
 
-int32_t write_qstate(uint64_t q_addr, const uint8_t *buf, uint32_t q_size) {
+int32_t
+write_qstate (uint64_t q_addr, const uint8_t *buf, uint32_t q_size)
+{
     sdk_ret_t rc = sdk::asic::asic_mem_write(q_addr, (uint8_t *)buf, q_size);
     if (rc != SDK_RET_OK) {
         return -EIO;
@@ -314,10 +330,10 @@ int32_t write_qstate(uint64_t q_addr, const uint8_t *buf, uint32_t q_size) {
     return 0;
 }
 
-int32_t get_pc_offset(program_info *pinfo,
-                      const char *prog_name,
-                      const char *label,
-                      uint8_t *offset) {
+int32_t
+get_pc_offset (program_info *pinfo, const char *prog_name,
+               const char *label, uint8_t *offset)
+{
     mem_addr_t off;
 
     off = pinfo->symbol_address((char *)prog_name, (char *)label);

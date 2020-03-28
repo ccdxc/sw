@@ -6,10 +6,13 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/hal_trace.hpp"
 #include "nic/hal/pd/pd_api.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/system.hpp"
 #include "nic/hal/iris/upgrade/upg_ipc.hpp"
+
+using namespace sdk::asic::pd;
 
 namespace hal {
 namespace upgrade {
@@ -148,6 +151,7 @@ upgrade_handler::HostUpHandler(UpgCtx& upgCtx)
 HdlrResp
 upgrade_handler::PostHostDownHandler(UpgCtx& upgCtx)
 {
+    sdk_ret_t sdk_ret;
     hal_ret_t ret = HAL_RET_OK;
     HdlrResp  rsp;
 
@@ -162,7 +166,8 @@ upgrade_handler::PostHostDownHandler(UpgCtx& upgCtx)
     }
 
     // quiesece the pipeline
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_START, NULL);
+    sdk_ret = asicpd_quiesce_start();
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to quiesce. Failing ...");
         rsp = HdlrResp(::upgrade::INPROGRESS, HAL_RET_ENTRIES_str(ret));

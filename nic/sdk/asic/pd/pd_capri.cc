@@ -17,7 +17,12 @@
 #include "lib/utils/time_profile.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "platform/capri/capri_toeplitz.hpp"
+#include "platform/capri/capri_pxb_pcie.hpp"
+#include "include/sdk/crypto_apis.hpp"
+#include "platform/capri/capri_barco_rings.hpp"
+#include "platform/capri/capri_barco_sym_apis.hpp"
 #include "platform/capri/capri_barco_asym_apis.hpp"
+#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 // TODO: move out pipeline related code out of sdk
 #if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(ATHENA)
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
@@ -809,8 +814,188 @@ asicpd_tm_drain_uplink_port (tm_port_t port)
     return capri_tm_drain_uplink_port(port);
 }
 
+// Enable MPU tracing on p4plus rxdma
 sdk_ret_t
-asicpd_quiesce_start(void)
+asicpd_p4p_rxdma_mpu_trace_enable (uint32_t stage_id, uint32_t mpu,
+                                   uint8_t  enable, uint8_t  trace_enable,
+                                   uint8_t  phv_debug, uint8_t  phv_error,
+                                   uint64_t watch_pc, uint64_t base_addr,
+                                   uint8_t  table_key, uint8_t  instructions,
+                                   uint8_t  wrap, uint8_t  reset,
+                                   uint32_t buf_size)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    SDK_TRACE_DEBUG ("RXDMA: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d} wrap {:d}",
+                     stage_id, mpu, base_addr, enable, reset, wrap);
+    SDK_TRACE_DEBUG ("RXDMA: trace_enable {:d} phv_debug {:d} phv_error {:d} watch_pc {:d} table_key {:d}",
+                     trace_enable, phv_debug, phv_error, watch_pc, table_key);
+    SDK_TRACE_DEBUG ("RXDMA: instructions {:d} buf_size {:d}",
+                     instructions, buf_size);
+
+    // TODO max check on mpu and stage_id
+
+    cap0.pcr.mpu[stage_id].trace[mpu].read();
+    cap0.pcr.mpu[stage_id].trace[mpu].phv_debug(phv_debug);
+    cap0.pcr.mpu[stage_id].trace[mpu].phv_error(phv_error);
+
+    if (watch_pc != 0) {
+        cap0.pcr.mpu[stage_id].trace[mpu].watch_pc(watch_pc >> 6); // TODO
+        cap0.pcr.mpu[stage_id].trace[mpu].watch_enable(1);
+    } else {
+        cap0.pcr.mpu[stage_id].trace[mpu].watch_enable(0);
+    }
+
+    cap0.pcr.mpu[stage_id].trace[mpu].base_addr(base_addr >> 6);
+    cap0.pcr.mpu[stage_id].trace[mpu].table_and_key(table_key);
+    cap0.pcr.mpu[stage_id].trace[mpu].instructions(instructions);
+    cap0.pcr.mpu[stage_id].trace[mpu].wrap(wrap);
+    cap0.pcr.mpu[stage_id].trace[mpu].rst(reset);
+    cap0.pcr.mpu[stage_id].trace[mpu].buf_size((uint32_t)log2(buf_size));
+    cap0.pcr.mpu[stage_id].trace[mpu].enable(enable);
+    cap0.pcr.mpu[stage_id].trace[mpu].trace_enable(trace_enable);
+    cap0.pcr.mpu[stage_id].trace[mpu].write();
+
+    return SDK_RET_OK;
+}
+
+// Enable MPU tracing on p4plus txdma
+sdk_ret_t
+asicpd_p4p_txdma_mpu_trace_enable (uint32_t stage_id, uint32_t mpu,
+                                   uint8_t  enable, uint8_t  trace_enable,
+                                   uint8_t  phv_debug, uint8_t  phv_error,
+                                   uint64_t watch_pc, uint64_t base_addr,
+                                   uint8_t  table_key, uint8_t  instructions,
+                                   uint8_t  wrap, uint8_t  reset,
+                                   uint32_t buf_size)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    SDK_TRACE_DEBUG ("TXDMA: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d} wrap {:d}",
+                     stage_id, mpu, base_addr, enable, reset, wrap);
+    SDK_TRACE_DEBUG ("TXDMA: trace_enable {:d} phv_debug {:d} phv_error {:d} watch_pc {:d} table_key {:d}",
+                     trace_enable, phv_debug, phv_error, watch_pc, table_key);
+    SDK_TRACE_DEBUG ("TXDMA: instructions {:d} buf_size {:d}",
+                     instructions, buf_size);
+
+    // TODO max check on mpu and stage_id
+
+    cap0.pct.mpu[stage_id].trace[mpu].read();
+    cap0.pct.mpu[stage_id].trace[mpu].phv_debug(phv_debug);
+    cap0.pct.mpu[stage_id].trace[mpu].phv_error(phv_error);
+
+    if (watch_pc != 0) {
+        cap0.pct.mpu[stage_id].trace[mpu].watch_pc(watch_pc >> 6); // TODO
+        cap0.pct.mpu[stage_id].trace[mpu].watch_enable(1);
+    } else {
+        cap0.pct.mpu[stage_id].trace[mpu].watch_enable(0);
+    }
+
+    cap0.pct.mpu[stage_id].trace[mpu].base_addr(base_addr >> 6);
+    cap0.pct.mpu[stage_id].trace[mpu].table_and_key(table_key);
+    cap0.pct.mpu[stage_id].trace[mpu].instructions(instructions);
+    cap0.pct.mpu[stage_id].trace[mpu].wrap(wrap);
+    cap0.pct.mpu[stage_id].trace[mpu].rst(reset);
+    cap0.pct.mpu[stage_id].trace[mpu].buf_size((uint32_t)log2(buf_size));
+    cap0.pct.mpu[stage_id].trace[mpu].enable(enable);
+    cap0.pct.mpu[stage_id].trace[mpu].trace_enable(trace_enable);
+    cap0.pct.mpu[stage_id].trace[mpu].write();
+
+    return SDK_RET_OK;
+}
+
+// Enable MPU tracing on p4 ingress
+sdk_ret_t
+asicpd_p4_ingress_mpu_trace_enable (uint32_t stage_id, uint32_t mpu,
+                                    uint8_t  enable, uint8_t  trace_enable,
+                                    uint8_t  phv_debug, uint8_t  phv_error,
+                                    uint64_t watch_pc, uint64_t base_addr,
+                                    uint8_t  table_key, uint8_t  instructions,
+                                    uint8_t  wrap, uint8_t  reset,
+                                    uint32_t buf_size)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    SDK_TRACE_DEBUG ("INGRESS: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d} wrap {:d}",
+                     stage_id, mpu, base_addr, enable, reset, wrap);
+    SDK_TRACE_DEBUG ("INGRESS: trace_enable {:d} phv_debug {:d} phv_error {:d} watch_pc {:d} table_key {:d}",
+                     trace_enable, phv_debug, phv_error, watch_pc, table_key);
+    SDK_TRACE_DEBUG ("INGRESS: instructions {:d} buf_size {:d}",
+                     instructions, buf_size);
+
+    // TODO max check on mpu and stage_id
+
+    cap0.sgi.mpu[stage_id].trace[mpu].read();
+    cap0.sgi.mpu[stage_id].trace[mpu].phv_debug(phv_debug);
+    cap0.sgi.mpu[stage_id].trace[mpu].phv_error(phv_error);
+
+    if (watch_pc != 0) {
+        cap0.sgi.mpu[stage_id].trace[mpu].watch_pc(watch_pc >> 6); // TODO
+        cap0.sgi.mpu[stage_id].trace[mpu].watch_enable(1);
+    } else {
+        cap0.sgi.mpu[stage_id].trace[mpu].watch_enable(0);
+    }
+
+    cap0.sgi.mpu[stage_id].trace[mpu].base_addr(base_addr >> 6);
+    cap0.sgi.mpu[stage_id].trace[mpu].table_and_key(table_key);
+    cap0.sgi.mpu[stage_id].trace[mpu].instructions(instructions);
+    cap0.sgi.mpu[stage_id].trace[mpu].wrap(wrap);
+    cap0.sgi.mpu[stage_id].trace[mpu].rst(reset);
+    cap0.sgi.mpu[stage_id].trace[mpu].buf_size((uint32_t)log2(buf_size));
+    cap0.sgi.mpu[stage_id].trace[mpu].enable(enable);
+    cap0.sgi.mpu[stage_id].trace[mpu].trace_enable(trace_enable);
+    cap0.sgi.mpu[stage_id].trace[mpu].write();
+
+    return SDK_RET_OK;
+}
+
+// Enable MPU tracing on p4 egress
+sdk_ret_t
+asicpd_p4_egress_mpu_trace_enable (uint32_t stage_id, uint32_t mpu,
+                                   uint8_t  enable, uint8_t  trace_enable,
+                                   uint8_t  phv_debug, uint8_t  phv_error,
+                                   uint64_t watch_pc, uint64_t base_addr,
+                                   uint8_t  table_key, uint8_t  instructions,
+                                   uint8_t  wrap, uint8_t  reset,
+                                   uint32_t buf_size)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    SDK_TRACE_DEBUG ("EGRESS: stage {:d} mpu {:d} base_addr {:#x} enable {:d} reset {:d} wrap {:d}",
+                     stage_id, mpu, base_addr, enable, reset, wrap);
+    SDK_TRACE_DEBUG ("EGRESS: trace_enable {:d} phv_debug {:d} phv_error {:d} watch_pc {:d} table_key {:d}",
+                     trace_enable, phv_debug, phv_error, watch_pc, table_key);
+    SDK_TRACE_DEBUG ("EGRESS: instructions {:d} buf_size {:d}",
+                     instructions, buf_size);
+
+    // TODO max check on mpu and stage_id
+
+    cap0.sge.mpu[stage_id].trace[mpu].read();
+    cap0.sge.mpu[stage_id].trace[mpu].phv_debug(phv_debug);
+    cap0.sge.mpu[stage_id].trace[mpu].phv_error(phv_error);
+
+    if (watch_pc != 0) {
+        cap0.sge.mpu[stage_id].trace[mpu].watch_pc(watch_pc >> 6); // TODO
+        cap0.sge.mpu[stage_id].trace[mpu].watch_enable(1);
+    } else {
+        cap0.sge.mpu[stage_id].trace[mpu].watch_enable(0);
+    }
+
+    cap0.sge.mpu[stage_id].trace[mpu].base_addr(base_addr >> 6);
+    cap0.sge.mpu[stage_id].trace[mpu].table_and_key(table_key);
+    cap0.sge.mpu[stage_id].trace[mpu].instructions(instructions);
+    cap0.sge.mpu[stage_id].trace[mpu].wrap(wrap);
+    cap0.sge.mpu[stage_id].trace[mpu].rst(reset);
+    cap0.sge.mpu[stage_id].trace[mpu].buf_size((uint32_t)log2(buf_size));
+    cap0.sge.mpu[stage_id].trace[mpu].enable(enable);
+    cap0.sge.mpu[stage_id].trace[mpu].trace_enable(trace_enable);
+    cap0.sge.mpu[stage_id].trace[mpu].write();
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+asicpd_quiesce_start (void)
 {
     return capri_quiesce_start();
 }
@@ -819,12 +1004,6 @@ sdk_ret_t
 asicpd_quiesce_stop (void)
 {
     return capri_quiesce_stop();
-}
-
-sdk_ret_t
-asicpd_pxb_cfg_lif_bdf (uint32_t lif, uint16_t bdf)
-{
-    return capri_pxb_cfg_lif_bdf(lif, bdf);
 }
 
 sdk_ret_t
@@ -921,36 +1100,36 @@ asicpd_barco_asym_rsa2k_setup_sig_gen_priv_key (uint8_t *n, uint8_t *d,
 }
 
 sdk_ret_t
-asicpd_barco_asym_rsa2k_crt_setup_decrypt_priv_key(uint8_t *p, uint8_t *q,
-                                                   uint8_t *dp, uint8_t *dq,
-                                                   uint8_t *qinv,
-                                                   int32_t* key_idx)
+asicpd_barco_asym_rsa2k_crt_setup_decrypt_priv_key (uint8_t *p, uint8_t *q,
+                                                    uint8_t *dp, uint8_t *dq,
+                                                    uint8_t *qinv,
+                                                    int32_t* key_idx)
 {
     return capri_barco_asym_rsa2k_crt_setup_decrypt_priv_key(p, q, dp, dq,
                                                              qinv, key_idx);
 }
 
 sdk_ret_t
-asicpd_barco_asym_rsa_setup_priv_key(uint16_t key_size, uint8_t *n,
-                                     uint8_t *d, int32_t* key_idx)
+asicpd_barco_asym_rsa_setup_priv_key (uint16_t key_size, uint8_t *n,
+                                      uint8_t *d, int32_t* key_idx)
 {
     return capri_barco_asym_rsa_setup_priv_key(key_size, n, d, key_idx);
 }
 
 sdk_ret_t
-asicpd_barco_asym_rsa2k_sig_gen(int32_t key_idx, uint8_t *n,
-                                uint8_t *d, uint8_t *h, uint8_t *s,
-                                bool async_en, const uint8_t *unique_key)
+asicpd_barco_asym_rsa2k_sig_gen (int32_t key_idx, uint8_t *n,
+                                 uint8_t *d, uint8_t *h, uint8_t *s,
+                                 bool async_en, const uint8_t *unique_key)
 {
     return capri_barco_asym_rsa2k_sig_gen(key_idx, n, d, h, s, async_en,
                                           unique_key);
 }
 
 sdk_ret_t
-asicpd_barco_asym_rsa_sig_gen(uint16_t key_size, int32_t key_idx,
-                              uint8_t *n, uint8_t *d,
-                              uint8_t *h, uint8_t *s,
-                              bool async_en, const uint8_t *unique_key)
+asicpd_barco_asym_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
+                               uint8_t *n, uint8_t *d,
+                               uint8_t *h, uint8_t *s,
+                               bool async_en, const uint8_t *unique_key)
 {
     return capri_barco_asym_rsa_sig_gen(key_size, key_idx, n, d, h, s,
                                         async_en, unique_key);
@@ -989,6 +1168,87 @@ asicpd_barco_asym_rsa2k_sig_verify (uint8_t *n, uint8_t *e,
                                     uint8_t *h, uint8_t *s)
 {
     return capri_barco_asym_rsa2k_sig_verify(n, e, h, s);
+}
+
+// Enable MPU tracing on p4 ingress
+sdk_ret_t
+asicpd_dpp_int_credit (uint32_t instance, uint32_t value)
+{
+    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+
+    SDK_TRACE_DEBUG ("INGRESS: instance {:d} value {:d}", instance, value);
+
+    cap0.dpp.dpp[instance].int_credit.int_test_set.ptr_credit_ovflow_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.ptr_credit_undflow_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.pkt_credit_ovflow_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.pkt_credit_undflow_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.framer_credit_ovflow_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.framer_credit_undflow_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.framer_hdrfld_vld_ovfl_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.framer_hdrfld_offset_ovfl_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.int_test_set.err_framer_hdrsize_zero_ovfl_interrupt(value);
+    cap0.dpp.dpp[instance].int_credit.write();
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+asicpd_pxb_cfg_lif_bdf (uint32_t lif, uint16_t bdf)
+{
+    return capri_pxb_cfg_lif_bdf(lif, bdf);
+}
+
+sdk_ret_t
+asicpd_barco_asym_req_descr_get (uint32_t slot_index, void *asym_req_descr)
+{
+    return capri_barco_asym_req_descr_get(slot_index,
+                                          (barco_asym_descr_t *)asym_req_descr);
+}
+
+sdk_ret_t
+asicpd_barco_symm_req_descr_get (uint8_t ring_type, uint32_t slot_index,
+                                 void *symm_req_descr)
+{
+    return capri_barco_symm_req_descr_get((barco_rings_t) ring_type, slot_index,
+                                          (barco_symm_descr_t *)symm_req_descr);
+}
+
+sdk_ret_t
+asicpd_barco_ring_meta_get (uint8_t ring_type, uint32_t *pi, uint32_t *ci)
+{
+    return capri_barco_ring_meta_get((barco_rings_t) ring_type, pi, ci);
+}
+
+sdk_ret_t
+asicpd_barco_get_meta_config_info (uint8_t ring_type, void *meta)
+{
+    return capri_barco_get_meta_config_info((barco_rings_t) ring_type,
+                                            (barco_ring_meta_config_t *)meta);
+}
+
+sdk_ret_t
+asicpd_barco_asym_add_pend_req (uint32_t hw_id, uint32_t sw_id)
+{
+    return capri_barco_asym_add_pend_req(hw_id, sw_id);
+}
+
+sdk_ret_t
+asicpd_barco_asym_poll_pend_req (uint32_t batch_size, uint32_t* id_count,
+                                 uint32_t *ids)
+{
+    return capri_barco_asym_poll_pend_req(batch_size, id_count, ids);
+}
+
+sdk_ret_t
+asicpd_barco_sym_hash_process_request (uint8_t hash_type, bool generate,
+                                       unsigned char *key, int key_len,
+                                       unsigned char *data, int data_len,
+                                       uint8_t *output_digest, int digest_len)
+{
+    return capri_barco_sym_hash_process_request((CryptoApiHashType) hash_type,
+                                                generate, key, key_len, data,
+                                                data_len, output_digest,
+                                                digest_len);
 }
 
 }    // namespace pd

@@ -2771,38 +2771,11 @@ typedef struct pd_program_label_to_offset_args_s {
     uint64_t *offset;
 } __PACK__ pd_program_label_to_offset_args_t;
 
-typedef struct pd_pxb_cfg_lif_bdf_args_s {
-    uint32_t lif;
-    uint16_t bdf;
-} __PACK__ pd_pxb_cfg_lif_bdf_args_t;
-
 typedef struct pd_program_to_base_addr_args_s {
     const char *handle;
     char *prog_name;
     uint64_t *base_addr;
 } __PACK__ pd_program_to_base_addr_args_t;
-
-typedef struct pd_capri_barco_asym_req_descr_get_args_s {
-    uint32_t slot_index;
-    barco_asym_descr_t *asym_req_descr;
-} __PACK__ pd_capri_barco_asym_req_descr_get_args_t;
-
-typedef struct pd_capri_barco_symm_req_descr_get_args_s {
-    types::BarcoRings ring_type;
-    uint32_t slot_index;
-    barco_symm_descr_t *symm_req_descr;
-} __PACK__ pd_capri_barco_symm_req_descr_get_args_t;
-
-typedef struct pd_capri_barco_ring_meta_get_args_s {
-    types::BarcoRings ring_type;
-    uint32_t *pi;
-    uint32_t *ci;
-} __PACK__ pd_capri_barco_ring_meta_get_args_t;
-
-typedef struct pd_capri_barco_ring_meta_config_get_args_s {
-    types::BarcoRings ring_type;
-    barco_ring_meta_config_t *meta;
-} __PACK__ pd_capri_barco_ring_meta_config_get_args_t;
 
 // crypto
 typedef struct pd_capri_barco_asym_async_args_s {
@@ -2810,135 +2783,11 @@ typedef struct pd_capri_barco_asym_async_args_s {
     const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
 } pd_capri_barco_asym_async_args_t;
 
-typedef struct pd_capri_barco_asym_add_pend_req_args_s {
-    uint32_t hw_id;
-    uint32_t sw_id;
-} pd_capri_barco_asym_add_pend_req_args_t;
-typedef struct pd_capri_barco_asym_poll_pend_req_args_s {
+typedef struct pd_barco_asym_poll_pend_req_args_s {
     uint32_t batch_size;
     uint32_t *id_count;
     uint32_t *ids;
-} __PACK__ pd_capri_barco_asym_poll_pend_req_args_t;
-
-typedef struct pd_barco_asym_ecc_point_mul_args_s {
-    uint16_t key_size;
-    uint8_t *p;
-    uint8_t *n;
-    uint8_t *xg;
-    uint8_t *yg;
-    uint8_t *a;
-    uint8_t *b;
-    uint8_t *x1;
-    uint8_t *y1;
-    uint8_t *k;
-    uint8_t *x3;
-    uint8_t *y3;
-} __PACK__ pd_barco_asym_ecc_point_mul_args_t;
-
-typedef struct pd_barco_asym_ecdsa_p256_setup_priv_key_args_s {
-    uint8_t *p;
-    uint8_t *n;
-    uint8_t *xg;
-    uint8_t *yg;
-    uint8_t *a;
-    uint8_t *b;
-    uint8_t *da;
-    int32_t *key_idx;
-} __PACK__ pd_barco_asym_ecdsa_p256_setup_priv_key_args_t;
-
-typedef struct pd_barco_asym_ecdsa_p256_sig_gen_args_s {
-    int32_t key_idx;
-    uint8_t *p;
-    uint8_t *n;
-    uint8_t *xg;
-    uint8_t *yg;
-    uint8_t *a;
-    uint8_t *b;
-    uint8_t *da;
-    uint8_t *k;
-    uint8_t *h;
-    uint8_t *r;
-    uint8_t *s;
-    bool    async_en;
-    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_barco_asym_ecdsa_p256_sig_gen_args_t;
-
-typedef struct pd_barco_asym_ecdsa_p256_sig_verify_args_s {
-    uint8_t *p;
-    uint8_t *n;
-    uint8_t *xg;
-    uint8_t *yg;
-    uint8_t *a;
-    uint8_t *b;
-    uint8_t *xq;
-    uint8_t *yq;
-    uint8_t *r;
-    uint8_t *s;
-    uint8_t *h;
-    bool async_en;
-    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_barco_asym_ecdsa_p256_sig_verify_args_t;
-
-typedef struct pd_barco_asym_rsa2k_encrypt_args_s {
-    uint8_t *n;
-    uint8_t *e;
-    uint8_t *m;
-    uint8_t *c;
-    bool async_en;
-    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_barco_asym_rsa2k_encrypt_args_t;
-
-typedef struct pd_barco_asym_rsa_encrypt_args_s {
-    uint16_t key_size;
-    uint8_t *n;
-    uint8_t *e;
-    uint8_t *m;
-    uint8_t *c;
-    bool async_en;
-    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_barco_asym_rsa_encrypt_args_t;
-
-typedef struct pd_barco_asym_rsa2k_decrypt_args_s {
-    uint8_t *n;
-    uint8_t *d;
-    uint8_t *c;
-    uint8_t *m;
-} __PACK__ pd_barco_asym_rsa2k_decrypt_args_t;
-
-typedef struct pd_barco_asym_rsa2k_crt_decrypt_args_s {
-    int32_t key_idx;
-    uint8_t *p;
-    uint8_t *q;
-    uint8_t *dp;
-    uint8_t *dq;
-    uint8_t *qinv;
-    uint8_t *c;
-    uint8_t *m;
-    bool async_en;
-    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_barco_asym_rsa2k_crt_decrypt_args_t;
-
-typedef struct pd_barco_asym_rsa2k_setup_sig_gen_priv_key_args_s {
-    uint8_t *n;
-    uint8_t *d;
-    int32_t *key_idx;
-} __PACK__ pd_barco_asym_rsa2k_setup_sig_gen_priv_key_args_t;
-
-typedef struct pd_barco_asym_rsa_setup_priv_key_args_s {
-    uint16_t key_size;
-    uint8_t *n;
-    uint8_t *d;
-    int32_t *key_idx;
-} __PACK__ pd_barco_asym_rsa_setup_priv_key_args_t;
-
-typedef struct pd_barco_asym_rsa2k_crt_setup_decrypt_priv_key_args_s {
-    uint8_t *p;
-    uint8_t *q;
-    uint8_t *dp;
-    uint8_t *dq;
-    uint8_t *qinv;
-    int32_t *key_idx;
-} __PACK__ pd_barco_asym_rsa2k_crt_setup_decrypt_priv_key_args_t;
+} __PACK__ pd_barco_asym_poll_pend_req_args_t;
 
 typedef struct pd_barco_asym_rsa2k_sig_gen_args_s {
     int32_t key_idx;
@@ -2949,63 +2798,6 @@ typedef struct pd_barco_asym_rsa2k_sig_gen_args_s {
     bool async_en;
     const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
 } __PACK__ pd_barco_asym_rsa2k_sig_gen_args_t;
-
-typedef struct pd_barco_asym_rsa_sig_gen_args_s {
-    uint16_t key_size;
-    int32_t key_idx;
-    uint8_t *n;
-    uint8_t *d;
-    uint8_t *h;
-    uint8_t *s;
-    bool async_en;
-    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_barco_asym_rsa_sig_gen_args_t;
-
-typedef struct pd_barco_asym_fips_rsa_sig_gen_args_s {
-    uint16_t key_size;
-    int32_t key_idx;
-    uint8_t *n;
-    uint8_t *e;
-    uint8_t *msg;
-    uint16_t msg_len;
-    uint8_t *s;
-    types::HashType  hash_type;
-    types::RSASignatureScheme    sig_scheme;
-    bool async_en;
-    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_barco_asym_fips_rsa_sig_gen_args_t;
-
-typedef struct pd_barco_asym_fips_rsa_sig_verify_args_s {
-    uint16_t key_size;
-    int32_t key_idx;
-    uint8_t *n;
-    uint8_t *e;
-    uint8_t *msg;
-    uint16_t msg_len;
-    uint8_t *s;
-    types::HashType  hash_type;
-    types::RSASignatureScheme    sig_scheme;
-    bool async_en;
-    const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
-} __PACK__ pd_barco_asym_fips_rsa_sig_verify_args_t;
-
-typedef struct pd_barco_asym_rsa2k_sig_verify_args_s {
-    uint8_t *n;
-    uint8_t *e;
-    uint8_t *h;
-    uint8_t *s;
-} __PACK__ pd_barco_asym_rsa2k_sig_verify_args_t;
-
-typedef struct pd_capri_barco_sym_hash_process_request_args_s {
-    CryptoApiHashType hash_type;
-    bool generate;
-    unsigned char *key;
-    int key_len;
-    unsigned char *data;
-    int data_len;
-    uint8_t *output_digest;
-    int digest_len;
-} __PACK__ pd_capri_barco_sym_hash_process_request_args_t;
 
 // Accelerator ring group
 typedef struct pd_accel_rgroup_init_args_s {
@@ -3206,12 +2998,6 @@ typedef struct pd_get_slab_args_s {
     hal_slab_t slab_id;
     sdk::lib::slab *slab;
 } __PACK__ pd_get_slab_args_t;
-
-// quiesce
-typedef struct pd_quiesce_start_args_s {
-} pd_quiesce_start_args_t;
-typedef struct pd_quiesce_stop_args_s {
-} pd_quiesce_stop_args_t;
 
 // TM Enable / Disable for Uplinks
 typedef struct pd_uplink_tm_control_args_s {
@@ -3523,21 +3309,11 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_HBM_READ,              172, "PD_FUNC_ID_HBM_READ")\
     ENTRY(PD_FUNC_ID_HBM_WRITE,             173, "PD_FUNC_ID_HBM_WRITE")\
     ENTRY(PD_FUNC_ID_PROG_LBL_TO_OFFSET,    174, "PD_FUNC_ID_PROG_LBL_TO_OFFSET")\
-    ENTRY(PD_FUNC_ID_PXB_CFG_LIF_BDF,       175, "PD_FUNC_ID_PXB_CFG_LIF_BDF")\
     ENTRY(PD_FUNC_ID_QOS_GET_ADMIN_COS,     176, "PD_FUNC_ID_QOS_GET_ADMIN_COS")\
     ENTRY(PD_FUNC_ID_PROG_TO_BASE_ADDR,     177, "PD_FUNC_ID_PROG_TO_BASE_ADDR")\
-    ENTRY(PD_FUNC_ID_BARCO_ASYM_REQ_DSC_GET,178, "PD_FUNC_ID_BARCO_ASYM_REQ_DSC_GET")\
-    ENTRY(PD_FUNC_ID_BARCO_SYM_REQ_DSC_GET, 179, "PD_FUNC_ID_BARCO_SYM_REQ_DSC_GET")\
-    ENTRY(PD_FUNC_ID_BARCO_RING_META_GET,   180, "PD_FUNC_ID_BARCO_RING_META_GET")\
     ENTRY(PD_FUNC_ID_BARCO_ASYM_ECC_MUL,    181, "PD_FUNC_ID_BARCO_ASYM_ECC_MUL")\
     ENTRY(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_GEN, 182, "PD_FUNC_ID_BARCO_ASYM_ECDSA_P256")\
-    ENTRY(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER, 183, "PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SIG_VER")\
-    ENTRY(PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT, 184, "PD_FUNC_ID_BARCO_ASYM_RSA2K_ENCRYPT")\
-    ENTRY(PD_FUNC_ID_BARCO_ASYM_RSA2K_DECRYPT, 185, "PD_FUNC_ID_BARCO_ASYM_RSA2K_DECRYPT")\
-    ENTRY(PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT, 186, "PD_FUNC_ID_BARCO_ASYM_RSA2K_CRT_DECRYPT")\
     ENTRY(PD_FUNC_ID_BARCO_ASYM_RSA_SIG_GEN, 187, "PD_FUNC_ID_BARCO_ASYM_RSA_SIG_GEN")\
-    ENTRY(PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY, 188, "PD_FUNC_ID_BARCO_ASYM_RSA2K_SIG_VERIFY")\
-    ENTRY(PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ, 189, "PD_FUNC_ID_BARCO_SYM_HASH_PROC_REQ")\
     ENTRY(PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE, 190, "PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE") \
     ENTRY(PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE, 191, "PD_FUNC_ID_GFT_HDR_TRANSPOSITION_PROFILE_CREATE") \
     ENTRY(PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE, 192, "PD_FUNC_ID_GFT_EXACT_MATCH_FLOW_ENTRY_CREATE") \
@@ -3566,7 +3342,6 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_DROP_MONITOR_RULE_GET,    215, "PD_FUNC_ID_DROP_MONITOR_RULE_GET")\
     ENTRY(PD_FUNC_ID_VRF_RESTORE,              216, "PD_FUNC_ID_VRF_RESTORE") \
     ENTRY(PD_FUNC_ID_TABLE_PROPERTIES_GET,     217, "PD_FUNC_ID_TABLE_PROPERTIES_GET") \
-    ENTRY(PD_FUNC_ID_ASYM_RSA2K_SETUP_SIG_GEN_PRIV_KEY, 218, "PD_FUNC_ID_ASYM_RSA2K_SETUP_SIG_GEN_PRIV_KEY")\
     ENTRY(PD_FUNC_ID_VRF_GET,                  219, "PD_FUNC_ID_VRF_GET") \
     ENTRY(PD_FUNC_ID_QOS_CLASS_GET,            220, "PD_FUNC_ID_QOS_CLASS_GET") \
     ENTRY(PD_FUNC_ID_QOS_CLASS_RESTORE,        221, "PD_FUNC_ID_QOS_CLASS_RESTORE") \
@@ -3574,7 +3349,6 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_COPP_RESTORE,             223, "PD_FUNC_ID_COPP_RESTORE") \
     ENTRY(PD_FUNC_ID_ACL_GET,                  224, "PD_FUNC_ID_ACL_GET") \
     ENTRY(PD_FUNC_ID_ACL_RESTORE,              225, "PD_FUNC_ID_ACL_RESTORE") \
-    ENTRY(PD_FUNC_ID_BARCO_ASYM_ECDSA_P256_SETUP_PRIV_KEY, 226, "PD_FUNC_ID_ASYM_ECDSA_P256_SETUP_PRIV_KEY")\
     ENTRY(PD_FUNC_ID_TABLE_METADATA_GET,       227, "PD_FUNC_ID_TABLE_METADATA_GET") \
     ENTRY(PD_FUNC_ID_TABLE_GET,                228, "PD_FUNC_ID_TABLE_GET") \
     ENTRY(PD_FUNC_ID_BYPASS_FLOWID_GET,        229, "PD_FUNC_ID_BYPASS_FLOWID_GET")\
@@ -3589,17 +3363,12 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_DELETE,     238, "PD_FUNC_ID_IPSEC_DECRYPT_DELETE") \
     ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_UPDATE,     239, "PD_FUNC_ID_IPSEC_DECRYPT_UPDATE") \
     ENTRY(PD_FUNC_ID_IPSEC_DECRYPT_GET,        240, "PD_FUNC_ID_IPSEC_DECRYPT_GET")    \
-    ENTRY(PD_FUNC_ID_ASYM_RSA2K_CRT_SETUP_DECRYPT_PRIV_KEY, 241, "PD_FUNC_ID_ASYM_RSA2K_CRT_SETUP_DECRYPT_PRIV_KEY")\
     ENTRY(PD_FUNC_ID_L2SEG_RESTORE,            242, "PD_FUNC_ID_L2SEG_RESTORE")    \
     ENTRY(PD_FUNC_ID_NWSEC_PROF_RESTORE,       243, "PD_FUNC_ID_NWSEC_PROF_RESTORE") \
     ENTRY(PD_FUNC_ID_NWSEC_PROF_GET,           244, "PD_FUNC_ID_NWSEC_PROF_GET")\
     ENTRY(PD_FUNC_ID_IF_RESTORE,               245, "PD_FUNC_ID_IF_RESTORE") \
     ENTRY(PD_FUNC_ID_EP_RESTORE,               246, "PD_FUNC_ID_EP_RESTORE")\
-    ENTRY(PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ,  247, "PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ") \
-    ENTRY(PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ, 248, "PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ") \
     ENTRY(PD_FUNC_ID_EGRESS_DROP_STATS_GET,    249, "PD_FUNC_ID_EGRESS_DROP_STATS_GET") \
-    ENTRY(PD_FUNC_ID_QUIESCE_START,            250, "PD_FUNC_ID_QUIESCE_START")\
-    ENTRY(PD_FUNC_ID_QUIESCE_STOP,             251, "PD_FUNC_ID_QUIESCE_STOP")\
     ENTRY(PD_FUNC_ID_TCP_PROXY_CB_CREATE,      252, "PD_FUNC_ID_TCP_PROXY_CB_CREATE")          \
     ENTRY(PD_FUNC_ID_TCP_PROXY_CB_DELETE,      253, "PD_FUNC_ID_TCP_PROXY_CB_DELETE")          \
     ENTRY(PD_FUNC_ID_TCP_PROXY_CB_UPDATE,      254, "PD_FUNC_ID_TCP_PROXY_CB_UPDATE")          \
@@ -3676,13 +3445,10 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_NVME_CQ_GET,              325, "PD_FUNC_ID_NVME_CQ_GET")\
     ENTRY(PD_FUNC_ID_UPG_TABLE_RESET,          326, "PD_FUNC_ID_UPG_TABLE_RESET")\
     ENTRY(PD_FUNC_ID_ASYM_RSA_SETUP_PRIV_KEY,  327, "PD_FUNC_ID_ASYM_RSA_SETUP_PRIV_KEY")\
-    ENTRY(PD_FUNC_ID_BARCO_ASYM_FIPS_RSA_SIG_GEN, 328, "PD_FUNC_ID_BARCO_ASYM_FIPS_RSA_SIG_GEN")\
     ENTRY(PD_FUNC_ID_BARCO_ASYM_FIPS_RSA_SIG_VERIFY, 329, "PD_FUNC_ID_BARCO_ASYM_FIPS_RSA_SIG_VERIFY")\
-    ENTRY(PD_FUNC_ID_BARCO_ASYM_RSA_ENCRYPT,   330, "PD_FUNC_ID_BARCO_ASYM_RSA_ENCRYPT")\
     ENTRY(PD_FUNC_ID_TCP_RINGS_CTXT_INIT,      331, "PD_FUNC_ID_TCP_RINGS_CTXT_INIT")\
     ENTRY(PD_FUNC_ID_TCP_RINGS_REGISTER,       332, "PD_FUNC_ID_TCP_RINGS_REGISTER")\
     ENTRY(PD_FUNC_ID_TCP_RINGS_POLL,           333, "PD_FUNC_ID_TCP_RINGS_POLL")\
-    ENTRY(PD_FUNC_ID_BARCO_RING_META_CONFIG_GET, 334, "PD_FUNC_ID_BARCO_RING_META_CONFIG_GET")\
     ENTRY(PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD, 335, "PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD")        \
     ENTRY(PD_FUNC_ID_CLOCK_TRIGGER_SYNC,         336, "PD_FUNC_ID_CLOCK_TRIGGER_SYNC")\
     ENTRY(PD_FUNC_ID_EP_NORMALIZATION,           338, "PD_FUNC_ID_EP_NORMALIZATION")\
@@ -4062,31 +3828,8 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_hbm_read_mem);
         PD_UNION_ARGS_FIELD(pd_hbm_write_mem);
         PD_UNION_ARGS_FIELD(pd_program_label_to_offset);
-        PD_UNION_ARGS_FIELD(pd_pxb_cfg_lif_bdf);
         PD_UNION_ARGS_FIELD(pd_program_to_base_addr);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_req_descr_get);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_symm_req_descr_get);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_ring_meta_get);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_ring_meta_config_get);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_ecc_point_mul);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_ecdsa_p256_setup_priv_key);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_ecdsa_p256_sig_gen);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_ecdsa_p256_sig_verify);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa2k_encrypt);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa_encrypt);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa2k_decrypt);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa2k_crt_decrypt);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa2k_setup_sig_gen_priv_key);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa_setup_priv_key);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
         PD_UNION_ARGS_FIELD(pd_barco_asym_rsa2k_sig_gen);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa_sig_gen);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_fips_rsa_sig_gen);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_fips_rsa_sig_verify);
-        PD_UNION_ARGS_FIELD(pd_barco_asym_rsa2k_sig_verify);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_sym_hash_process_request);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_add_pend_req);
-        PD_UNION_ARGS_FIELD(pd_capri_barco_asym_poll_pend_req);
 
 #ifdef GFT
         // gft exact match profile apis
@@ -4120,10 +3863,6 @@ typedef struct pd_func_args_s {
         // swphv
         PD_UNION_ARGS_FIELD(pd_swphv_inject);
         PD_UNION_ARGS_FIELD(pd_swphv_get_state);
-
-        // quiesce
-        PD_UNION_ARGS_FIELD(pd_quiesce_start);
-        PD_UNION_ARGS_FIELD(pd_quiesce_stop);
 
         // pb
         PD_UNION_ARGS_FIELD(pd_pb_stats_get);
@@ -4571,31 +4310,8 @@ PD_FUNCP_TYPEDEF(pd_get_size_kb);
 PD_FUNCP_TYPEDEF(pd_hbm_read_mem);
 PD_FUNCP_TYPEDEF(pd_hbm_write_mem);
 PD_FUNCP_TYPEDEF(pd_program_label_to_offset);
-PD_FUNCP_TYPEDEF(pd_pxb_cfg_lif_bdf);
 PD_FUNCP_TYPEDEF(pd_program_to_base_addr);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_req_descr_get);
-PD_FUNCP_TYPEDEF(pd_capri_barco_symm_req_descr_get);
-PD_FUNCP_TYPEDEF(pd_capri_barco_ring_meta_get);
-PD_FUNCP_TYPEDEF(pd_capri_barco_ring_meta_config_get);
-PD_FUNCP_TYPEDEF(pd_barco_asym_ecc_point_mul);
-PD_FUNCP_TYPEDEF(pd_barco_asym_ecdsa_p256_setup_priv_key);
-PD_FUNCP_TYPEDEF(pd_barco_asym_ecdsa_p256_sig_gen);
-PD_FUNCP_TYPEDEF(pd_barco_asym_ecdsa_p256_sig_verify);
-PD_FUNCP_TYPEDEF(pd_barco_asym_rsa2k_encrypt);
-PD_FUNCP_TYPEDEF(pd_barco_asym_rsa_encrypt);
-PD_FUNCP_TYPEDEF(pd_barco_asym_rsa2k_decrypt);
-PD_FUNCP_TYPEDEF(pd_barco_asym_rsa2k_crt_decrypt);
-PD_FUNCP_TYPEDEF(pd_barco_asym_rsa2k_setup_sig_gen_priv_key);
-PD_FUNCP_TYPEDEF(pd_barco_asym_rsa_setup_priv_key);
-PD_FUNCP_TYPEDEF(pd_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
 PD_FUNCP_TYPEDEF(pd_barco_asym_rsa2k_sig_gen);
-PD_FUNCP_TYPEDEF(pd_barco_asym_rsa_sig_gen);
-PD_FUNCP_TYPEDEF(pd_barco_asym_fips_rsa_sig_gen);
-PD_FUNCP_TYPEDEF(pd_barco_asym_fips_rsa_sig_verify);
-PD_FUNCP_TYPEDEF(pd_barco_asym_rsa2k_sig_verify);
-PD_FUNCP_TYPEDEF(pd_capri_barco_sym_hash_process_request);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_add_pend_req);
-PD_FUNCP_TYPEDEF(pd_capri_barco_asym_poll_pend_req);
 
 #ifdef GFT
 // gft exact match profile apis
@@ -4638,10 +4354,6 @@ PD_FUNCP_TYPEDEF(pd_get_slab);
 // swphv
 PD_FUNCP_TYPEDEF(pd_swphv_inject);
 PD_FUNCP_TYPEDEF(pd_swphv_get_state);
-
-// quiesce
-PD_FUNCP_TYPEDEF(pd_quiesce_start);
-PD_FUNCP_TYPEDEF(pd_quiesce_stop);
 
 // pb
 PD_FUNCP_TYPEDEF(pd_pb_stats_get);

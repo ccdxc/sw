@@ -50,7 +50,8 @@ pd_hbm_write_mem (pd_func_args_t *pd_func_args)
     }
 
     if (action != P4PLUS_CACHE_ACTION_NONE) {
-        sdk::asic::pd::asicpd_p4plus_invalidate_cache(args->addr, args->size, action);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(args->addr,
+                                                      args->size, action);
     }
 
     return HAL_RET_OK;
@@ -59,25 +60,20 @@ pd_hbm_write_mem (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_program_label_to_offset (pd_func_args_t *pd_func_args)
 {
-    pd_program_label_to_offset_args_t *args = pd_func_args->pd_program_label_to_offset;
+    pd_program_label_to_offset_args_t *args =
+        pd_func_args->pd_program_label_to_offset;
+
     sdk::p4::p4_program_label_to_offset(args->handle, args->prog_name,
                                   args->label_name, args->offset);
     return HAL_RET_OK;
 }
 
 hal_ret_t
-pd_pxb_cfg_lif_bdf (pd_func_args_t *pd_func_args)
-{
-    sdk_ret_t sret;
-    pd_pxb_cfg_lif_bdf_args_t *args = pd_func_args->pd_pxb_cfg_lif_bdf;
-    sret = sdk::asic::pd::asicpd_pxb_cfg_lif_bdf(args->lif, args->bdf);
-    return hal_sdk_ret_to_hal_ret(sret);
-}
-
-hal_ret_t
 pd_program_to_base_addr (pd_func_args_t *pd_func_args)
 {
-    pd_program_to_base_addr_args_t *args = pd_func_args->pd_program_to_base_addr;
+    pd_program_to_base_addr_args_t *args =
+        pd_func_args->pd_program_to_base_addr;
+
     if(sdk::p4::p4_program_to_base_addr(args->handle,
                                         args->prog_name, args->base_addr) != 0)
         return HAL_RET_ERR;

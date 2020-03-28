@@ -371,28 +371,9 @@ PD_FUNC_STUB(pd_table_properties_get);
 PD_FUNC_STUB(pd_hbm_read_mem);
 PD_FUNC_STUB(pd_hbm_write_mem);
 PD_FUNC_STUB(pd_program_label_to_offset);
-PD_FUNC_STUB(pd_pxb_cfg_lif_bdf);
 PD_FUNC_STUB(pd_program_to_base_addr);
-PD_FUNC_STUB(pd_capri_barco_asym_req_descr_get);
-PD_FUNC_STUB(pd_capri_barco_symm_req_descr_get);
-PD_FUNC_STUB(pd_capri_barco_ring_meta_get);
-PD_FUNC_STUB(pd_capri_barco_ring_meta_config_get);
-PD_FUNC_STUB(pd_capri_barco_asym_ecc_point_mul_p256);
-PD_FUNC_STUB(pd_barco_asym_ecdsa_p256_setup_priv_key);
-PD_FUNC_STUB(pd_barco_asym_ecdsa_p256_sig_gen);
-PD_FUNC_STUB(pd_barco_asym_ecdsa_p256_sig_verify);
-PD_FUNC_STUB(pd_barco_asym_rsa2k_encrypt);
-PD_FUNC_STUB(pd_barco_asym_rsa_encrypt);
-PD_FUNC_STUB(pd_barco_asym_rsa2k_decrypt);
-PD_FUNC_STUB(pd_barco_asym_rsa2k_crt_decrypt);
-PD_FUNC_STUB(pd_barco_asym_rsa2k_setup_sig_gen_priv_key);
-PD_FUNC_STUB(pd_barco_asym_rsa_setup_priv_key);
-PD_FUNC_STUB(pd_barco_asym_rsa2k_crt_setup_decrypt_priv_key);
+PD_FUNC_STUB(pd_barco_asym_ecc_point_mul_p256);
 PD_FUNC_STUB(pd_barco_asym_rsa2k_sig_gen);
-PD_FUNC_STUB(pd_barco_asym_rsa2k_sig_verify);
-PD_FUNC_STUB(pd_capri_barco_asym_add_pend_req);
-PD_FUNC_STUB(pd_capri_barco_asym_poll_pend_req);
-PD_FUNC_STUB(pd_capri_barco_sym_hash_process_request);
 
 // clock
 PD_FUNC_STUB(pd_conv_hw_clock_to_sw_clock);
@@ -407,10 +388,6 @@ PD_FUNC_STUB(pd_gft_exact_match_flow_entry_create)
 
 // slab
 PD_FUNC_STUB(pd_get_slab);
-
-// quiesce
-PD_FUNC_STUB(pd_quiesce_start);
-PD_FUNC_STUB(pd_quiesce_stop);
 
 // pb
 PD_FUNC_STUB(pd_pb_stats_get);

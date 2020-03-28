@@ -237,12 +237,18 @@ typedef struct capri_barco_ring_s {
 #define CAPRI_HBM_REG_BARCO_RING_DC_HOT  "brq-ring-dc-hot"
 #define CAPRI_HBM_REG_OPAQUE_TAG         "opaque_tag"
 
-sdk_ret_t capri_barco_ring_queue_request(barco_rings_t barco_ring_type, void *req, uint32_t *req_tag, bool);
+sdk_ret_t capri_barco_ring_queue_request(barco_rings_t barco_ring_type,
+                                         void *req, uint32_t *req_tag, bool);
 bool capri_barco_ring_poll(barco_rings_t barco_ring_type, uint32_t req_tag);
-  sdk_ret_t capri_barco_asym_req_descr_get(uint32_t slot_index, barco_asym_descr_t *asym_req_descr);
-sdk_ret_t capri_barco_symm_req_descr_get(barco_rings_t ring_type, uint32_t slot_index,
-					 barco_symm_descr_t *symm_req_descr);
-sdk_ret_t capri_barco_ring_meta_get(barco_rings_t ring_type, uint32_t *pi, uint32_t *ci);
+
+sdk_ret_t capri_barco_asym_req_descr_get(uint32_t slot_index,
+                                         barco_asym_descr_t *asym_req_descr);
+sdk_ret_t capri_barco_symm_req_descr_get(barco_rings_t ring_type,
+                                         uint32_t slot_index,
+                                         barco_symm_descr_t *symm_req_descr);
+
+sdk_ret_t capri_barco_ring_meta_get(barco_rings_t ring_type, uint32_t *pi,
+                                    uint32_t *ci);
 
 typedef int (*barco_response_cb)(void *user_ctx, void *response);
 

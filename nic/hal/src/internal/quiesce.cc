@@ -2,24 +2,26 @@
 #include "nic/hal/hal.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
+
+using namespace sdk::asic::pd;
 
 namespace hal {
 
-hal_ret_t quiesce_start(void)
+hal_ret_t
+quiesce_start (void)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    hal::pd::pd_func_args_t args;
-
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_START, &args);
-    return ret;
+    sdk_ret_t sdk_ret;
+    sdk_ret = asicpd_quiesce_start();
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
-hal_ret_t quiesce_stop(void)
+hal_ret_t
+quiesce_stop(void)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    hal::pd::pd_func_args_t args;
-
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_STOP, &args);
-    return ret;
+    sdk_ret_t sdk_ret;
+    sdk_ret = asicpd_quiesce_stop();
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
+
 } /* hal */

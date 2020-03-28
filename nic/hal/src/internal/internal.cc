@@ -13,6 +13,7 @@
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/platform/marvell/marvell.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
@@ -49,7 +50,8 @@ using intf::InterfaceL2SegmentResponse;
 using intf::GetQStateRequestMsg;
 using intf::GetQStateResponseMsg;
 using intf::SetQStateRequestMsg;
-using intf::SetQStateResponseMsg;
+
+using namespace sdk::asic::pd;
 
 namespace hal {
 
@@ -77,7 +79,8 @@ void getprogram_address(const internal::ProgramAddressReq &req,
         base_args.prog_name = (char *)req.prog_name().c_str();
         base_args.base_addr = &addr;
         pd_func_args.pd_program_to_base_addr = &base_args;
-        hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_TO_BASE_ADDR, &pd_func_args);
+        hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_TO_BASE_ADDR,
+                                        &pd_func_args);
         if (ret != HAL_RET_OK) {
             resp->set_addr(0xFFFFFFFFFFFFFFFFULL);
         } else {
@@ -111,15 +114,12 @@ void allochbm_address(const internal::HbmAddressReq &req,
     }
 }
 
-void configurelif_bdf(const internal::LifBdfReq &req,
+void configurelif_bdf (const internal::LifBdfReq &req,
                       internal::LifBdfResp *resp)
 {
-    pd::pd_pxb_cfg_lif_bdf_args_t args = {0};
-    pd::pd_func_args_t          pd_func_args = {0};
-    args.lif = req.lif();
-    args.bdf = req.bdf();
-    pd_func_args.pd_pxb_cfg_lif_bdf = &args;
-    int ret = (int)pd::hal_pd_call(pd::PD_FUNC_ID_PXB_CFG_LIF_BDF, &pd_func_args);
+    int ret;
+
+    ret = (int) asicpd_pxb_cfg_lif_bdf(req.lif(), req.bdf());
 
     resp->set_lif(req.lif());
     resp->set_bdf(req.bdf());
@@ -132,7 +132,7 @@ hal_ret_t log_flow (fwlog::FWEvent &req, internal::LogFlowResponse *rsp) {
 }
 
 hal_ret_t quiesce_msg_snd(const types::Empty &request,
-                          types::Empty* rsp) 
+                          types::Empty* rsp)
 {
 #ifdef SIM
     HAL_TRACE_DEBUG("QuiesceMsgSnd Request");
@@ -141,24 +141,20 @@ hal_ret_t quiesce_msg_snd(const types::Empty &request,
     return HAL_RET_OK;
 }
 
-hal_ret_t quiesce_start(const types::Empty &request,
-                        types::Empty* rsp)
+hal_ret_t
+quiesce_start(const types::Empty &request, types::Empty* rsp)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    hal::pd::pd_func_args_t args = {0};
-
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_START, &args);
-    return ret;
+    sdk_ret_t sdk_ret;
+    sdk_ret = asicpd_quiesce_start();
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
-hal_ret_t quiesce_stop(const types::Empty &request,
-                       types::Empty* rsp)
+hal_ret_t
+quiesce_stop(const types::Empty &request, types::Empty* rsp)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    hal::pd::pd_func_args_t args = {0};
-
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_STOP, &args);
-    return ret;
+    sdk_ret_t sdk_ret;
+    sdk_ret = asicpd_quiesce_stop();
+    return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 hal_ret_t testsendfin_req(internal::TestSendFinRequest& req,
@@ -261,7 +257,7 @@ internal_port_get (internal::InternalPortRequest& req,
     port_num = (uint8_t)req.port_number();
     has_port_num = (port_num != 0);
     port_num = port_num - 1;
-    
+
     if (has_port_num) {
         if (port_num < MARVELL_NPORTS) {
             sdk::marvell::marvell_get_port_status(port_num, &data);
@@ -283,7 +279,7 @@ internal_port_get (internal::InternalPortRequest& req,
     return HAL_RET_OK;
 }
 
-static inline 
+static inline
 void timeit(const std::string &msg, int count, std::function<void()> fn)
 {
     HAL_TRACE_DEBUG("{} {}", msg, count);
@@ -309,7 +305,7 @@ hal_ret_t testfteinject_packets (internal::TestInjectFtePacketRequest& req,
     dstep = hal::find_ep_by_handle(req.destination_endpoint().endpoint_handle());
     if (srcep == NULL || dstep == NULL) {
         HAL_TRACE_ERR("Null eps -- bailing");
-        return HAL_RET_OK;    
+        return HAL_RET_OK;
     }
     for (uint32_t sport = 1; sport <= num_flows; sport++) {
         for (uint32_t dport = 1; dport <= 1000; dport++) {

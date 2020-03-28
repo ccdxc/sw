@@ -243,6 +243,58 @@ sdk_ret_t asicpd_tm_flush_uplink_port(tm_port_t port, bool enable);
 sdk_ret_t asicpd_tm_write_control_uplink_port(tm_port_t port, bool enable);
 sdk_ret_t asicpd_tm_drain_uplink_port(tm_port_t port);
 
+sdk_ret_t asicpd_p4p_rxdma_mpu_trace_enable(uint32_t stage_id,
+                                            uint32_t mpu,
+                                            uint8_t enable,
+                                            uint8_t trace_enable,
+                                            uint8_t phv_debug,
+                                            uint8_t phv_error,
+                                            uint64_t watch_pc,
+                                            uint64_t base_addr,
+                                            uint8_t table_key,
+                                            uint8_t instructions,
+                                            uint8_t wrap,
+                                            uint8_t reset,
+                                            uint32_t buf_size);
+sdk_ret_t asicpd_p4p_txdma_mpu_trace_enable(uint32_t stage_id,
+                                            uint32_t mpu,
+                                            uint8_t enable,
+                                            uint8_t trace_enable,
+                                            uint8_t phv_debug,
+                                            uint8_t phv_error,
+                                            uint64_t watch_pc,
+                                            uint64_t base_addr,
+                                            uint8_t table_key,
+                                            uint8_t instructions,
+                                            uint8_t wrap,
+                                            uint8_t reset,
+                                            uint32_t buf_size);
+sdk_ret_t asicpd_p4_ingress_mpu_trace_enable(uint32_t stage_id,
+                                             uint32_t mpu,
+                                             uint8_t enable,
+                                             uint8_t trace_enable,
+                                             uint8_t phv_debug,
+                                             uint8_t phv_error,
+                                             uint64_t watch_pc,
+                                             uint64_t base_addr,
+                                             uint8_t table_key,
+                                             uint8_t instructions,
+                                             uint8_t wrap,
+                                             uint8_t reset,
+                                             uint32_t buf_size);
+sdk_ret_t asicpd_p4_egress_mpu_trace_enable(uint32_t stage_id,
+                                            uint32_t mpu,
+                                            uint8_t enable,
+                                            uint8_t trace_enable,
+                                            uint8_t phv_debug,
+                                            uint8_t phv_error,
+                                            uint64_t watch_pc,
+                                            uint64_t base_addr,
+                                            uint8_t table_key,
+                                            uint8_t instructions,
+                                            uint8_t wrap, uint8_t reset,
+                                            uint32_t buf_size);
+
 sdk_ret_t asicpd_quiesce_start(void);
 sdk_ret_t asicpd_quiesce_stop(void);
 sdk_ret_t asicpd_pxb_cfg_lif_bdf(uint32_t lif, uint16_t bdf);
@@ -328,6 +380,34 @@ sdk_ret_t asicpd_barco_asym_fips_rsa_sig_verify(uint16_t key_size, uint8_t *n,
                                                 const uint8_t *unique_key);
 sdk_ret_t asicpd_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
                                              uint8_t *h, uint8_t *s);
+
+sdk_ret_t asicpd_dpp_int_credit(uint32_t instance, uint32_t value);
+
+sdk_ret_t asicpd_pxb_cfg_lif_bdf(uint32_t lif, uint16_t bdf);
+
+
+sdk_ret_t asicpd_barco_asym_req_descr_get(uint32_t slot_index,
+                                          void *asym_req_descr);
+sdk_ret_t asicpd_barco_symm_req_descr_get(uint8_t ring_type,
+                                          uint32_t slot_index,
+                                          void *symm_req_descr);
+
+sdk_ret_t asicpd_barco_ring_meta_get(uint8_t ring_type, uint32_t *pi,
+                                     uint32_t *ci);
+sdk_ret_t asicpd_barco_get_meta_config_info(uint8_t ring_type,
+                                            void *meta);
+
+sdk_ret_t asicpd_barco_asym_add_pend_req(uint32_t hw_id, uint32_t sw_id);
+sdk_ret_t asicpd_barco_asym_poll_pend_req(uint32_t batch_size,
+                                          uint32_t* id_count, uint32_t *ids);
+sdk_ret_t asicpd_barco_sym_hash_process_request(uint8_t hash_type,
+                                                bool generate,
+                                                unsigned char *key,
+                                                int key_len,
+                                                unsigned char *data,
+                                                int data_len,
+                                                uint8_t *output_digest,
+                                                int digest_len);
 
 }    // namespace pd
 }    // namespace asic

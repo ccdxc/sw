@@ -120,7 +120,7 @@ static const struct {
 };
 
 static void
-rdma_stats_hdrs_init()
+rdma_stats_hdrs_init(void)
 {
     pd::pd_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t pd_func_args = {0};

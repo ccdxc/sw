@@ -7,6 +7,9 @@
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
+
+using namespace sdk::asic::pd;
 
 namespace hal {
 
@@ -49,22 +52,18 @@ hal_ret_t barco_get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr)
 hal_ret_t barco_get_req_descr_entry(BarcoGetReqDescrEntryRequest& request,
 				BarcoGetReqDescrEntryResponseMsg *response_msg)
 {
+    sdk_ret_t          sdk_ret;
     hal_ret_t          ret = HAL_RET_OK;
     barco_symm_descr_t symm_req_descr;
     barco_asym_descr_t asym_req_descr;
-    pd::pd_capri_barco_asym_req_descr_get_args_t args;
-    pd::pd_capri_barco_symm_req_descr_get_args_t sym_args;
-    pd::pd_func_args_t          pd_func_args = {0};
 
     BarcoGetReqDescrEntryResponse *response = response_msg->add_response();
 
     switch (request.ring_type()) {
     case types::BARCO_RING_ASYM:
         memset(&asym_req_descr, 0, sizeof(asym_req_descr));
-        args.slot_index = request.slot_index();
-        args.asym_req_descr = &asym_req_descr;
-        pd_func_args.pd_capri_barco_asym_req_descr_get = &args;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_ASYM_REQ_DSC_GET, &pd_func_args);
+        sdk_ret = asicpd_barco_asym_req_descr_get(request.slot_index(), &asym_req_descr);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 	if (ret != HAL_RET_OK) {
 	    HAL_TRACE_ERR("BarcoGetReqDescr({}-{:d}): Failed to get Asym req "
 			  "descriptor, err: {}", types::BarcoRings_Name(request.ring_type()),
@@ -85,11 +84,9 @@ hal_ret_t barco_get_req_descr_entry(BarcoGetReqDescrEntryRequest& request,
 	break;
     default:
         memset(&symm_req_descr, 0, sizeof(symm_req_descr));
-        sym_args.ring_type = request.ring_type();
-        sym_args.slot_index = request.slot_index();
-        sym_args.symm_req_descr = &symm_req_descr;
-        pd_func_args.pd_capri_barco_symm_req_descr_get = &sym_args;
-        ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_SYM_REQ_DSC_GET, &pd_func_args);
+        sdk_ret = asicpd_barco_symm_req_descr_get((barco_rings_t) request.ring_type(), 
+                                              request.slot_index(), &symm_req_descr);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 	if (ret != HAL_RET_OK) {
 	    HAL_TRACE_ERR("BarcoGetReqDescr({}-{:d}): Failed to get Symm req "
 			  "descriptor, err: {}", types::BarcoRings_Name(request.ring_type()),
@@ -123,28 +120,26 @@ hal_ret_t barco_get_req_descr_entry(BarcoGetReqDescrEntryRequest& request,
     return HAL_RET_OK;
 }
 
-hal_ret_t barco_get_ring_meta(BarcoGetRingMetaRequest& request,
-			                  BarcoGetRingMetaResponseMsg *response_msg)
+hal_ret_t
+barco_get_ring_meta(BarcoGetRingMetaRequest& request,
+                    BarcoGetRingMetaResponseMsg *response_msg)
 {
+    sdk_ret_t          sdk_ret;
     hal_ret_t          ret = HAL_RET_OK;
     uint32_t           pi = 0, ci = 0;
-    pd::pd_capri_barco_ring_meta_get_args_t args;
-    pd::pd_func_args_t          pd_func_args = {0};
     BarcoGetRingMetaResponse *response = response_msg->add_response();
 
-    args.ring_type = request.ring_type();
-    args.pi = &pi;
-    args.ci = &ci;
-    pd_func_args.pd_capri_barco_ring_meta_get = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_RING_META_GET, &pd_func_args);
+    sdk_ret = asicpd_barco_ring_meta_get((barco_rings_t) request.ring_type(),
+                                         &pi, &ci);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("BarcoGetRingMeta({}): Failed to get PI/CI, "
-		      "err: {}", types::BarcoRings_Name(request.ring_type()), ret);
-	response->set_api_status(types::API_STATUS_ERR);
-	return HAL_RET_HW_FAIL;
+        HAL_TRACE_ERR("BarcoGetRingMeta({}): Failed to get PI/CI,  err: {}",
+                      types::BarcoRings_Name(request.ring_type()), ret);
+        response->set_api_status(types::API_STATUS_ERR);
+        return HAL_RET_HW_FAIL;
     }
     HAL_TRACE_DEBUG("BarcoGetRingMeta({}): Got PI {:d} CI {:d} ",
-		    types::BarcoRings_Name(request.ring_type()), pi, ci);
+                    types::BarcoRings_Name(request.ring_type()), pi, ci);
 
     // fill in the common fields in the response
     response->set_ring_type(request.ring_type());
@@ -155,27 +150,27 @@ hal_ret_t barco_get_ring_meta(BarcoGetRingMetaRequest& request,
     return HAL_RET_OK;
 }
 
-hal_ret_t barco_get_ring_meta_config(BarcoGetRingMetaConfigRequest& request,
-			             BarcoGetRingMetaConfigResponseMsg *response_msg)
+hal_ret_t
+barco_get_ring_meta_config(BarcoGetRingMetaConfigRequest& request,
+                           BarcoGetRingMetaConfigResponseMsg *response_msg)
 {
+    sdk_ret_t          sdk_ret;
     hal_ret_t          ret = HAL_RET_OK;
-    pd::pd_capri_barco_ring_meta_config_get_args_t args;
     barco_ring_meta_config_t meta = {0};
-    pd::pd_func_args_t          pd_func_args = {0};
     BarcoGetRingMetaConfigResponse *response = response_msg->add_response();
 
-    args.ring_type = request.ring_type();
-    args.meta = &meta;
-    pd_func_args.pd_capri_barco_ring_meta_config_get = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_BARCO_RING_META_CONFIG_GET, &pd_func_args);
+    sdk_ret =
+        asicpd_barco_get_meta_config_info((barco_rings_t) request.ring_type(),
+                                          &meta);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("BarcoGetRingMetaConfig({}): Failed, "
-		      "err: {}", types::BarcoRings_Name(request.ring_type()), ret);
-	response->set_api_status(types::API_STATUS_ERR);
-	return HAL_RET_HW_FAIL;
+        HAL_TRACE_ERR("BarcoGetRingMetaConfig({}): Failed, " "err: {}",
+                      types::BarcoRings_Name(request.ring_type()), ret);
+        response->set_api_status(types::API_STATUS_ERR);
+        return HAL_RET_HW_FAIL;
     }
     HAL_TRACE_DEBUG("BarcoGetRingMetaConfig({}): succeeded ",
-		    types::BarcoRings_Name(request.ring_type()));
+                    types::BarcoRings_Name(request.ring_type()));
 
     // fill in the common fields in the response
     response->set_ring_type(request.ring_type());
@@ -191,6 +186,5 @@ hal_ret_t barco_get_ring_meta_config(BarcoGetRingMetaConfigRequest& request,
     response->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }
-
 
 }

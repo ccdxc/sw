@@ -9,8 +9,11 @@
 #include "nic/hal/tls/tls_api.hpp"
 #include "nic/hal/src/internal/tls_proxy_cb.hpp"
 #include "nic/hal/src/internal/internal.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 
 #define TLS_DDOL_ARM_LOOP_CTRL_PKTS     16   /* Loopback control packets in ARM */
+
+using namespace sdk::asic::pd;
 
 namespace hal {
 namespace proxy {
@@ -106,18 +109,14 @@ tls_exec(fte::ctx_t& ctx)
 hal_ret_t
 tls_poll_asym_pend_req_q(void)
 {
+    sdk_ret_t      sdk_ret;
     hal_ret_t      ret = HAL_RET_OK;
     uint32_t       batch_size = 1;
     uint32_t       qid_count = 0;
     uint32_t       qid[batch_size] = {0};
-    pd::pd_func_args_t pd_func_args = {0};
 
-    hal::pd::pd_capri_barco_asym_poll_pend_req_args_t args = {0};
-    args.batch_size = batch_size;
-    args.id_count = &qid_count;
-    args.ids = qid;
-    pd_func_args.pd_capri_barco_asym_poll_pend_req = &args;
-    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_BARCO_ASYM_POLL_PEND_REQ, &pd_func_args);
+    sdk_ret = asicpd_barco_asym_poll_pend_req(batch_size, &qid_count, qid);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to poll barco pending queue: {}", ret);
         return ret;

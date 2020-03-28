@@ -6,7 +6,10 @@
 #include "nic/hal/tls/ssl_helper.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/pd/pd_api_c.h"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include <openssl/engine.h>
+
+using namespace sdk::asic::pd;
 
 #define WHERE_INFO(ssl, w, flag, msg) { \
     if(w & flag) { \
@@ -288,11 +291,9 @@ SSLConnection::get_hs_args(hs_out_args_t& args)
 }
 
 hal_ret_t
-SSLConnection::handle_ssl_async()
+SSLConnection::handle_ssl_async(void)
 {
     size_t num_fds = 0, num_del_fds = 0;
-    hal::pd::pd_capri_barco_asym_add_pend_req_args_t args = {0};
-    hal::pd::pd_func_args_t          pd_func_args = {0};
 
     HAL_TRACE_DEBUG("SSL: id: {} waiting for async", id);
 
@@ -304,10 +305,7 @@ SSLConnection::handle_ssl_async()
             HAL_TRACE_DEBUG("SSL: number of added async fds: {}", num_fds);
             for(size_t i = 0; i < num_fds; i++) {
                 HAL_TRACE_DEBUG("SSL: id: {} received fd: {}", id, fds[i]);
-                args.hw_id = fds[i];
-                args.sw_id = id;
-                pd_func_args.pd_capri_barco_asym_add_pend_req = &args;
-                hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_BARCO_ASYM_ADD_PEND_REQ, &pd_func_args);
+                asicpd_barco_asym_add_pend_req(fds[i], id);
             }
         }
     }
