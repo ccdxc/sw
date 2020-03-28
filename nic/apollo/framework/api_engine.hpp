@@ -42,8 +42,8 @@ typedef enum api_batch_stage_e {
     API_BATCH_STAGE_NONE,                 ///< Invalid stage
     API_BATCH_STAGE_INIT,                 ///< Initialization stage
     API_BATCH_STAGE_PRE_PROCESS,          ///< Pre-processing stage
-    API_BATCH_STAGE_RESERVE_RESOURCES,    ///< Reserve resources, if any
     API_BATCH_STAGE_OBJ_DEPENDENCY,       ///< Dependency resolution stage
+    API_BATCH_STAGE_RESERVE_RESOURCES,    ///< Reserve resources, if any
     API_BATCH_STAGE_PROGRAM_CONFIG,       ///< Table programming stage
     API_BATCH_STAGE_CONFIG_ACTIVATE,      ///< Epoch activation stage
     API_BATCH_STAGE_ABORT,                ///< Abort stage
