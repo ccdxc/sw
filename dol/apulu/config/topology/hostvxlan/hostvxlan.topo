@@ -179,6 +179,7 @@ node:
                 - count : 4
           nat:
             count : 2
+            prefixlen : 32
             addrtype : PUBLIC_AND_SERVICE
             protocol : tcp,udp,icmp
           nexthop:

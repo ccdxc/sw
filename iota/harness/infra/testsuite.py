@@ -373,6 +373,8 @@ class TestSuite:
 
     def checkPci(self):
         result = types.status.SUCCESS
+        if GlobalOptions.dryrun:
+            return result
         for node in self.GetTopology().GetNodes():
             msg = "calling verify_pci.verify_error_lspci() for node {0}".format(node.Name())
             Logger.debug(msg)
@@ -398,6 +400,8 @@ class TestSuite:
             Logger.debug("failed to save test results to file {0}. error was: {1}".format(filename,traceback.format_exc()))
 
     def ExitHandler(self):
+        if GlobalOptions.dryrun:
+            return
         logcollector.CollectLogs()
         logcollector.CollectTechSupport(self.Name())
         self.CollectCores()

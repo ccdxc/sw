@@ -158,16 +158,12 @@ class VpcObject(base.ConfigObjectBase):
 
         # Generate NAT Port Block configuration
         if hasattr(spec, 'nat'):
-            self.NatPrefix = {}
             self.__nat_pool = {}
-            self.NatPrefix[utils.NAT_ADDR_TYPE_PUBLIC] = \
-                Resmgr.GetVpcInternetNatPoolPfx(self.VPCId)
-            self.NatPrefix[utils.NAT_ADDR_TYPE_SERVICE] = \
-                Resmgr.GetVpcInfraNatPoolPfx(self.VPCId)
+            prefix_len = getattr(spec.nat, 'prefixlen', 32)
             self.__nat_pool[utils.NAT_ADDR_TYPE_PUBLIC] = \
-                Resmgr.CreateIpv4AddrPool(self.NatPrefix[utils.NAT_ADDR_TYPE_PUBLIC])
+                iter(Resmgr.GetVpcInternetNatPoolPfx(self.VPCId).subnets(new_prefix=prefix_len))
             self.__nat_pool[utils.NAT_ADDR_TYPE_SERVICE] = \
-                Resmgr.CreateIpv4AddrPool(self.NatPrefix[utils.NAT_ADDR_TYPE_SERVICE])
+                iter(Resmgr.GetVpcInfraNatPoolPfx(self.VPCId).subnets(new_prefix=prefix_len))
             nat_pb.client.GenerateObjects(node, self, spec)
 
         # Generate BGP configuration
@@ -220,7 +216,7 @@ class VpcObject(base.ConfigObjectBase):
     def AllocIPv4SubnetPrefix(self, poolid):
         return next(self.__ip_subnet_prefix_pool[1][poolid])
 
-    def AllocNatAddr(self, nat_type):
+    def AllocNatPrefix(self, nat_type, sublen=1):
         return next(self.__nat_pool[nat_type])
 
     def GetProviderIPAddr(self, count):

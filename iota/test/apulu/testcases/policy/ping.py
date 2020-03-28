@@ -14,9 +14,9 @@ def Setup(tc):
     elif tc.args.type == 'remote_only':
         tc.workload_pairs = config_api.GetPingableWorkloadPairs(
             wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
-    elif tc.args.type == 'igw_only':
+    elif tc.args.type == 'igw_napt_only':
         tc.workload_pairs = config_api.GetPingableWorkloadPairs(
-            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_ONLY)
+            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY)
 
     if len(tc.workload_pairs) == 0:
         api.Logger.error("Skipping Testcase due to no workload pairs.")

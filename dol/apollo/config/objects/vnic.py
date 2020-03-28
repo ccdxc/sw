@@ -82,6 +82,7 @@ class VnicObject(base.ConfigObjectBase):
         self.Mutable = True if (utils.IsUpdateSupported() and self.IsOriginFixed()) else False
         self.LocalVnic = getattr(spec, 'localvnic', False)
         self.IgwVnic = getattr(spec, 'igwvnic', False)
+        self.HasPublicIp = getattr(spec, 'public', False)
         remote_routes = getattr(spec, 'remoteroutes', None)
         if remote_routes:
             self.RemoteRoutes = remote_routes.replace('\\', '/').split(',')
