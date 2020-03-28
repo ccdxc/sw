@@ -213,6 +213,11 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.DistributedServiceCard) error {
 		if err := n.PersistState(isEmulation); err != nil {
 			return errInternalServer(err)
 		}
+
+		if err := n.PostStatusToAgent(); err != nil {
+			log.Errorf("Failed to post status to agent. Err: %v", err)
+		}
+
 		// Ensure all links are brought down before performing any mode change operation
 		// Only in HOST Managed mode we bring the interfaces down
 		if err := bringAllLinksDown(); err != nil {
@@ -280,6 +285,20 @@ func (n *NMD) PersistState(updateDelphi bool) (err error) {
 	}
 	n.config.Status.Mode = n.config.Spec.Mode
 
+	if updateDelphi && n.Pipeline != nil {
+		if err = n.Pipeline.WriteDelphiObjects(); err != nil {
+			return err
+		}
+	}
+
+	return
+}
+
+// PostStatusToAgent posts the mode, venice coordinates and other info
+// from nmd to agent
+func (n *NMD) PostStatusToAgent() (err error) {
+	n.config.Status.Mode = n.config.Spec.Mode
+
 	var controllers []string
 	//var mgmtIntf string
 	//
@@ -342,12 +361,6 @@ func (n *NMD) PersistState(updateDelphi bool) (err error) {
 				}
 			}
 		}()
-	}
-
-	if updateDelphi && n.Pipeline != nil {
-		if err = n.Pipeline.WriteDelphiObjects(); err != nil {
-			return err
-		}
 	}
 
 	return
@@ -491,6 +504,11 @@ func (n *NMD) runAdmissionControlLoop() {
 
 // triggerAdmissionEvents triggers Admission, NTP and state persistence.
 func (n *NMD) triggerAdmissionEvents() error {
+	if err := n.stateMachine.FSM.Event("doPostStatusToAgent", n); err != nil {
+		log.Errorf("Post status to agent event failed. Err: %v", err)
+		return fmt.Errorf("Post Status to Agent transition event failed. Err: %v", err)
+	}
+
 	if err := n.stateMachine.FSM.Event("doNTP", n); err != nil {
 		log.Errorf("NTP Sync mode transition event failed. Err: %v", err)
 		return fmt.Errorf("NTP Sync mode transition event failed. Err: %v", err)

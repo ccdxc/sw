@@ -202,6 +202,7 @@ func NewNMD(pipeline Pipeline,
 			DSCName:  fru.MacStr,
 		},
 	}
+
 	// List available NaplesProfiles
 
 	// check if naples config exists in emdb

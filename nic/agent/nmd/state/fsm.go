@@ -25,7 +25,8 @@ func NewNMDStateMachine() *NMDStateMachine {
 			fsm.Events{
 				{Name: "doStatic", Src: []string{"init"}, Dst: "doStatic"},
 				{Name: "doDynamic", Src: []string{"init"}, Dst: "doDynamic"},
-				{Name: "doNTP", Src: []string{"doDynamic", "doStatic"}, Dst: "doNTP"},
+				{Name: "doPostStatusToAgent", Src: []string{"doStatic", "doDynamic"}, Dst: "doPostStatusToAgent"},
+				{Name: "doNTP", Src: []string{"doPostStatusToAgent"}, Dst: "doNTP"},
 				{Name: "doAdmission", Src: []string{"doNTP"}, Dst: "doAdmission"},
 				{Name: "doUpgrade", Src: []string{"doAdmission"}, Dst: "doUpgrade"},
 			},
@@ -75,6 +76,22 @@ func NewNMDStateMachine() *NMDStateMachine {
 						}
 						log.Infof("Running dhclient on discovered mgmt interface. %v", mgmtIntf)
 						e.Err = runCmd(fmt.Sprintf("dhclient %s", mgmtIntf))
+					}
+				},
+
+				"doPostStatusToAgent": func(e *fsm.Event) {
+					log.Infof("Entered State: %v", e.Event)
+					nmd, ok := e.Args[0].(*NMD)
+					if !ok {
+						log.Error("Failed to cast event args to type NMD.")
+						e.Err = errors.New("failed to cast event args to type NMD")
+						return
+					}
+
+					if err := nmd.PostStatusToAgent(); err != nil {
+						log.Errorf("Failed to post status to agent. Err: %v", err)
+						e.Err = err
+						return
 					}
 				},
 
