@@ -18449,8 +18449,11 @@
             "tx": "Tx"
           }
         },
-        "selector": {
-          "$ref": "#/definitions/labelsSelector"
+        "selectors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/labelsSelector"
+          }
         }
       }
     },

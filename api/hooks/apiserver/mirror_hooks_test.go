@@ -233,7 +233,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 			},
 
 			Interfaces: &monitoring.InterfaceMirror{
-				Selector: labels.SelectorFromSet(labels.Set{"app": "procurement"}),
+				Selectors: []*labels.Selector{labels.SelectorFromSet(labels.Set{"app": "procurement"})},
 			},
 		},
 	},
@@ -257,7 +257,7 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 				},
 			},
 			Interfaces: &monitoring.InterfaceMirror{
-				Selector: labels.SelectorFromSet(labels.Set{"app": "procurement"}),
+				Selectors: []*labels.Selector{labels.SelectorFromSet(labels.Set{"app": "procurement"})},
 			},
 		},
 	},

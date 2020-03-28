@@ -78,7 +78,7 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 		return i, false, fmt.Errorf("Interfaces could only be set with no packet filters")
 	}
 
-	if ms.Spec.Interfaces != nil && ms.Spec.Interfaces.Selector == nil {
+	if ms.Spec.Interfaces != nil && (ms.Spec.Interfaces.Selectors == nil || len(ms.Spec.Interfaces.Selectors) == 0) {
 		return i, false, fmt.Errorf("Interface selector must be specified with Interfaces option")
 	}
 

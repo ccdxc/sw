@@ -272,7 +272,7 @@ func createMirror(stateMgr *Statemgr, tenant, mirrorName string, startConditions
 	}
 
 	if selector != nil {
-		mr.Spec.Interfaces = &monitoring.InterfaceMirror{Selector: selector}
+		mr.Spec.Interfaces = &monitoring.InterfaceMirror{Selectors: []*labels.Selector{selector}}
 	}
 	if startConditions != nil {
 		schAfter := time.Duration(uint64(startConditions.ScheduleTime.Seconds) * uint64(time.Second))
@@ -306,7 +306,7 @@ func updateMirror(stateMgr *Statemgr, tenant, mirrorName string, startConditions
 	}
 
 	if selector != nil {
-		mr.Spec.Interfaces = &monitoring.InterfaceMirror{Selector: selector}
+		mr.Spec.Interfaces = &monitoring.InterfaceMirror{Selectors: []*labels.Selector{selector}}
 	}
 
 	if startConditions != nil {
@@ -340,7 +340,7 @@ func updateInterfaceMirror(stateMgr *Statemgr, tenant, mirrorName string, direct
 	}
 
 	if selector != nil {
-		mr.Spec.Interfaces = &monitoring.InterfaceMirror{Selector: selector, Direction: direction.String()}
+		mr.Spec.Interfaces = &monitoring.InterfaceMirror{Selectors: []*labels.Selector{selector}, Direction: direction.String()}
 	}
 
 	err := stateMgr.ctrler.MirrorSession().Update(&mr)
@@ -359,7 +359,7 @@ func deleteMirror(stateMgr *Statemgr, tenant, mirrorName string, selector *label
 		Spec: monitoring.MirrorSessionSpec{},
 	}
 	if selector != nil {
-		mr.Spec.Interfaces = &monitoring.InterfaceMirror{Selector: selector}
+		mr.Spec.Interfaces = &monitoring.InterfaceMirror{Selectors: []*labels.Selector{selector}}
 	}
 
 	// create sg
@@ -4000,7 +4000,7 @@ func TestNetworkInterfaceCreateDeleteMultiple(t *testing.T) {
 		AssertOk(t, err, "Error creating interface ")
 		Assert(t, len(intfs) == i+1, "Number of interfaces don't match")
 
-		intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(label1))
+		intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 		AssertOk(t, err, "Error creating interface ")
 		Assert(t, len(intfs) == i+1, "Number of interfaces don't match")
 
@@ -4165,7 +4165,7 @@ func TestMirrorCreateDeleteWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4190,7 +4190,7 @@ func TestMirrorCreateDeleteWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4267,7 +4267,7 @@ func TestMirrorCreateUpdateLabelWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4292,7 +4292,7 @@ func TestMirrorCreateUpdateLabelWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4312,7 +4312,7 @@ func TestMirrorCreateUpdateLabelWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4387,7 +4387,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4412,7 +4412,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4437,7 +4437,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4457,7 +4457,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4531,7 +4531,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection(t *testin
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4557,7 +4557,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection(t *testin
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4587,7 +4587,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection(t *testin
 		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4607,7 +4607,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection(t *testin
 		return false, nil
 	}, "Mirror session found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4682,7 +4682,7 @@ func TestMirrorCreateUpdateLaterLabelWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4702,7 +4702,7 @@ func TestMirrorCreateUpdateLaterLabelWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4727,7 +4727,7 @@ func TestMirrorCreateUpdateLaterLabelWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4820,7 +4820,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4834,7 +4834,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterface(t *testing.T) {
 		Assert(t, ok, "Collector not present")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label2)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4855,7 +4855,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4865,7 +4865,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterface(t *testing.T) {
 		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label2)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4891,7 +4891,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterface(t *testing.T) {
 		return false, nil
 	}, "Mirror session found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label2)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -4989,7 +4989,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T)
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5003,7 +5003,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T)
 		Assert(t, ok, "Collector not present")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label2)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5024,7 +5024,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T)
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5040,7 +5040,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T)
 		Assert(t, ok, "Collector not present")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label2)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5066,7 +5066,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T)
 		return false, nil
 	}, "Mirror session found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label2)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5075,7 +5075,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T)
 		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5151,7 +5151,7 @@ func TestNetworkInterfaceUpdateLabelWithMirror(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == 0, "Number of interfaces don't match")
 
@@ -5176,7 +5176,7 @@ func TestNetworkInterfaceUpdateLabelWithMirror(t *testing.T) {
 		}, "Interface not found", "1ms", "1s")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5205,7 +5205,7 @@ func TestNetworkInterfaceUpdateLabelWithMirror(t *testing.T) {
 		}, "Interface not found", "1ms", "1s")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == 0, "Number of interfaces don't match")
 
@@ -5294,7 +5294,7 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5310,7 +5310,7 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 		Assert(t, ok, "Collector not present")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label2)})
 	AssertOk(t, err, "Error find interfaces")
 	log.Infof("Number of interfaces %v %v", len(intfs), numOfIntfs)
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
@@ -5342,7 +5342,7 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 		}, "Interface not found", "1ms", "1s")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label2)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs+numOfIntfs2, "Number of interfaces don't match")
 
@@ -5359,7 +5359,7 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror1"})
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == 0, "Number of interfaces don't match")
 
@@ -5382,7 +5382,7 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 		}, "Interface not found", "1ms", "1s")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label2)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs2, "Number of interfaces don't match")
 
@@ -5399,7 +5399,7 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror1"})
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5428,7 +5428,7 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 		return false, nil
 	}, "Mirror session found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5448,7 +5448,7 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 		return false, nil
 	}, "Mirror session found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label2)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label2)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5678,7 +5678,7 @@ func TestWatcherWithMirrorCreateDelete(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5745,7 +5745,7 @@ func TestWatcherWithMirrorCreateDelete(t *testing.T) {
 		AssertOk(t, err, "Error verifying objects")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5838,7 +5838,7 @@ func TestWatcherWithMirrorCreateDeleteMultipleTimes(t *testing.T) {
 			return false, nil
 		}, "Mirror session not found", "1ms", "1s")
 
-		intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+		intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 		AssertOk(t, err, "Error find interfaces")
 		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5904,7 +5904,7 @@ func TestWatcherWithMirrorCreateDeleteMultipleTimes(t *testing.T) {
 			AssertOk(t, err, "Error verifying objects")
 		}
 
-		intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+		intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 		AssertOk(t, err, "Error find interfaces")
 		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -5997,7 +5997,7 @@ func TestWatcherWithMirrorCreateFakeUpdate(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -6133,7 +6133,7 @@ func TestWatcherWithMirrorCreateFakeUpdate(t *testing.T) {
 		AssertOk(t, err, "Error verifying objects")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -6239,7 +6239,7 @@ func TestWatcherWithMirrorCreateUpdateDelete(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -6384,7 +6384,7 @@ func TestWatcherWithMirrorCreateUpdateDelete(t *testing.T) {
 		AssertOk(t, err, "Error verifying objects")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -6472,7 +6472,7 @@ func TestWatcherWithMirrorCreateUpdateRemoveCollector(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -6620,7 +6620,7 @@ func TestWatcherWithMirrorCreateUpdateRemoveCollector(t *testing.T) {
 		AssertOk(t, err, "Error verifying objects")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -6726,7 +6726,7 @@ func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -6837,7 +6837,7 @@ func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
 		AssertOk(t, err, "Error verifying objects")
 	}
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -6910,7 +6910,7 @@ func TestM(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
@@ -6935,7 +6935,7 @@ func TestM(t *testing.T) {
 		return false, nil
 	}, "Mirror session found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector(labels.SelectorFromSet(labels.Set(label1)))
+	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
 	AssertOk(t, err, "Error find interfaces")
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 

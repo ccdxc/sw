@@ -466,7 +466,7 @@ func NewMirroSessionState(mirror *ctkit.MirrorSession, stateMgr *SmMirrorSession
 }
 
 type mirrorSelectorCollectors struct {
-	selector      *labels.Selector
+	selectors     []*labels.Selector
 	txCollectors  []*mirrorCollector
 	rxCollectors  []*mirrorCollector
 	mirrorSession string
@@ -572,7 +572,7 @@ func (smm *SmMirrorSessionInterface) getMirrorSession(name string) (*MirrorSessi
 func getMirrorCollectors(ms *monitoring.MirrorSession, collectors []*mirrorCollector) *mirrorSelectorCollectors {
 	mcol := &mirrorSelectorCollectors{
 		mirrorSession: ms.Name,
-		selector:      ms.Spec.Interfaces.Selector,
+		selectors:     ms.Spec.Interfaces.Selectors,
 	}
 	if ms.Spec.Interfaces.Direction == monitoring.Direction_RX.String() {
 		mcol.rxCollectors = collectors
@@ -656,6 +656,38 @@ func (smm *SmMirrorSessionInterface) addInterfaceMirror(ms *MirrorSessionState) 
 	return nil
 }
 
+func selectorsEqual(sel []*labels.Selector, otherSel []*labels.Selector) bool {
+	sliceEqual := func(X, Y []string) bool {
+		m := make(map[string]int)
+
+		for _, y := range Y {
+			m[y]++
+		}
+
+		for _, x := range X {
+			if m[x] > 0 {
+				m[x]--
+				continue
+			}
+			//not present or execess
+			return false
+		}
+
+		return len(m) == 0
+	}
+
+	firstSelectors := []string{}
+	otherSelectors := []string{}
+	for _, i := range sel {
+		firstSelectors = append(firstSelectors, i.Print())
+	}
+	for _, i := range otherSel {
+		otherSelectors = append(otherSelectors, i.Print())
+	}
+
+	return sliceEqual(firstSelectors, otherSelectors)
+}
+
 //OnMirrorSessionUpdate mirror session update handle
 func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionState, nmirror *monitoring.MirrorSession) error {
 	log.Infof("Got mirror update for %#v", nmirror.ObjectMeta)
@@ -725,7 +757,7 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 	selectorChanged := true
 	if (ms.MirrorSession.Spec.Interfaces == nil && nmirror.Spec.Interfaces == nil) ||
 		(ms.MirrorSession.Spec.Interfaces != nil && nmirror.Spec.Interfaces != nil &&
-			ms.MirrorSession.Spec.Interfaces.Selector.Print() == nmirror.Spec.Interfaces.Selector.Print()) {
+			selectorsEqual(ms.MirrorSession.Spec.Interfaces.Selectors, nmirror.Spec.Interfaces.Selectors)) {
 		selectorChanged = false
 	}
 
@@ -810,7 +842,9 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 	ms.MirrorSession.Spec.Interfaces = nmirror.Spec.Interfaces
 
 	if ms.MirrorSession.Spec.Interfaces != nil {
-		log.Infof("Updated mirror session %v", ms.MirrorSession.Spec.Interfaces.Selector.String())
+		for index, selector := range ms.MirrorSession.Spec.Interfaces.Selectors {
+			log.Infof("Updated mirror session  with index : %v selector %v", index, selector.String())
+		}
 	}
 	return nil
 

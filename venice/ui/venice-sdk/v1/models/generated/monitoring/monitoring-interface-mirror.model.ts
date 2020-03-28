@@ -12,7 +12,7 @@ import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
 
 export interface IMonitoringInterfaceMirror {
     'direction': MonitoringInterfaceMirror_direction;
-    'selector'?: ILabelsSelector;
+    'selectors'?: Array<ILabelsSelector>;
     '_ui'?: any;
 }
 
@@ -21,7 +21,7 @@ export class MonitoringInterfaceMirror extends BaseModel implements IMonitoringI
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
     'direction': MonitoringInterfaceMirror_direction = null;
-    'selector': LabelsSelector = null;
+    'selectors': Array<LabelsSelector> = null;
     public static propInfo: { [prop in keyof IMonitoringInterfaceMirror]: PropInfoItem } = {
         'direction': {
             enum: MonitoringInterfaceMirror_direction_uihint,
@@ -29,7 +29,7 @@ export class MonitoringInterfaceMirror extends BaseModel implements IMonitoringI
             required: true,
             type: 'string'
         },
-        'selector': {
+        'selectors': {
             required: false,
             type: 'object'
         },
@@ -57,7 +57,7 @@ export class MonitoringInterfaceMirror extends BaseModel implements IMonitoringI
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['selector'] = new LabelsSelector();
+        this['selectors'] = new Array<LabelsSelector>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -78,9 +78,9 @@ export class MonitoringInterfaceMirror extends BaseModel implements IMonitoringI
             this['direction'] = null
         }
         if (values) {
-            this['selector'].setValues(values['selector'], fillDefaults);
+            this.fillModelArray<LabelsSelector>(this, 'selectors', values['selectors'], LabelsSelector);
         } else {
-            this['selector'].setValues(null, fillDefaults);
+            this['selectors'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -90,11 +90,13 @@ export class MonitoringInterfaceMirror extends BaseModel implements IMonitoringI
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'direction': CustomFormControl(new FormControl(this['direction'], [required, enumValidator(MonitoringInterfaceMirror_direction), ]), MonitoringInterfaceMirror.propInfo['direction']),
-                'selector': CustomFormGroup(this['selector'].$formGroup, MonitoringInterfaceMirror.propInfo['selector'].required),
+                'selectors': new FormArray([]),
             });
+            // generate FormArray control elements
+            this.fillFormArray<LabelsSelector>('selectors', this['selectors'], LabelsSelector);
             // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('selector') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('selector').get(field);
+            Object.keys((this._formGroup.get('selectors') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('selectors').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -108,7 +110,7 @@ export class MonitoringInterfaceMirror extends BaseModel implements IMonitoringI
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['direction'].setValue(this['direction']);
-            this['selector'].setFormGroupValuesToBeModelValues();
+            this.fillModelArray<LabelsSelector>(this, 'selectors', this['selectors'], LabelsSelector);
         }
     }
 }

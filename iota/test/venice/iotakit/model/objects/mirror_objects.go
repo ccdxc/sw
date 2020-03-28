@@ -172,7 +172,7 @@ func (msc *MirrorSessionCollection) SetInterfaceSelector(selector *labels.Select
 
 	for _, sess := range msc.Sessions {
 		sess.VeniceMirrorSess.Spec.Interfaces = &monitoring.InterfaceMirror{
-			Selector: selector,
+			Selectors: []*labels.Selector{selector},
 		}
 	}
 

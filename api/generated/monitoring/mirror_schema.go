@@ -28,7 +28,7 @@ var typesMapMirror = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Direction": api.Field{Name: "Direction", CLITag: api.CLIInfo{ID: "direction", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "direction", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Selector": api.Field{Name: "Selector", CLITag: api.CLIInfo{ID: "selector", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "selector", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "labels.Selector"},
+			"Selectors": api.Field{Name: "Selectors", CLITag: api.CLIInfo{ID: "selectors", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "selectors", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "labels.Selector"},
 		},
 	},
 	"monitoring.MatchRule": &api.Struct{

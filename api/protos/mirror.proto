@@ -56,9 +56,9 @@ enum Direction {
 
 message InterfaceMirror {
 
-    string              Direction  = 1 [(gogoproto.jsontag) = "direction,omitempty", (venice.check) = "StrEnum(Direction)"];
+    string                    Direction  = 1 [(gogoproto.jsontag) = "direction,omitempty", (venice.check) = "StrEnum(Direction)"];
 
-    labels.Selector     Selector   = 2 [(gogoproto.jsontag) = "selector,omitempty"];
+    repeated labels.Selector  Selectors   = 2 [(gogoproto.jsontag) = "selectors,omitempty"];
 }
 
 

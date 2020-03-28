@@ -441,17 +441,14 @@ func (m *InterfaceMirror) References(tenant string, path string, resp map[string
 
 func (m *InterfaceMirror) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
-
-	if m.Selector != nil {
-		{
-			dlmtr := "."
-			if path == "" {
-				dlmtr = ""
-			}
-			npath := path + dlmtr + "Selector"
-			if errs := m.Selector.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
-				ret = append(ret, errs...)
-			}
+	for k, v := range m.Selectors {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sSelectors[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
 		}
 	}
 	if vs, ok := validatorMapMirror["InterfaceMirror"][ver]; ok {
@@ -474,8 +471,11 @@ func (m *InterfaceMirror) Normalize() {
 
 	m.Direction = Direction_normal[strings.ToLower(m.Direction)]
 
-	if m.Selector != nil {
-		m.Selector.Normalize()
+	for k, v := range m.Selectors {
+		if v != nil {
+			v.Normalize()
+			m.Selectors[k] = v
+		}
 	}
 
 }

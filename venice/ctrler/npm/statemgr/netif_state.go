@@ -432,13 +432,13 @@ func interfaceMirroringAllowed(intfType string) bool {
 	return false
 }
 
-func (sma *SmNetworkInterface) getInterfacesMatchingSelector(selector *labels.Selector) ([]*NetworkInterfaceState, error) {
+func (sma *SmNetworkInterface) getInterfacesMatchingSelector(selectors []*labels.Selector) ([]*NetworkInterfaceState, error) {
 
 	networkStates := []*NetworkInterfaceState{}
 
 	for _, labelIntfs := range sma.intfsByLabel {
 		label := labelIntfs.label
-		if selector.Matches(labels.Set(label)) {
+		if selectorsMatch(selectors, labels.Set(label)) {
 			for _, intf := range labelIntfs.intfs {
 				if interfaceMirroringAllowed(intf.NetworkInterfaceState.Spec.Type) {
 					networkStates = append(networkStates, intf)
@@ -575,6 +575,20 @@ func updateInterfaceRequired(intfColState *intfCollectorState) bool {
 	return false
 }
 
+func selectorsMatch(selectors []*labels.Selector, l labels.Set) bool {
+
+	if len(l) == 0 {
+		return false
+	}
+	for ii := range selectors {
+		if matches := selectors[ii].Matches(l); !matches {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (sma *SmNetworkInterface) updateMirror(nw *NetworkInterfaceState) error {
 
 	collectorIntfState := make(map[string]*intfCollectorState)
@@ -591,7 +605,7 @@ func (sma *SmNetworkInterface) updateMirror(nw *NetworkInterfaceState) error {
 	mcollectors := smgrMirrorInterface.getAllMirrorSessionCollectors()
 
 	for _, mcol := range mcollectors {
-		if mcol.selector.Matches(labels.Set(nw.NetworkInterfaceState.Labels)) {
+		if selectorsMatch(mcol.selectors, labels.Set(nw.NetworkInterfaceState.Labels)) {
 			//Mirror selector still matches
 			nw.txCollectors = updateCollectors(intfState, collectorAdd, collectorTxDir, nw.NetworkInterfaceState.Name, receiver, nw.txCollectors, mcol.txCollectors)
 			nw.rxCollectors = updateCollectors(intfState, collectorAdd, collectorRxDir, nw.NetworkInterfaceState.Name, receiver, nw.rxCollectors, mcol.rxCollectors)
@@ -637,18 +651,18 @@ func (sma *SmNetworkInterface) UpdateCollectorsMatchingSelector(oldSelCol *mirro
 	collectorIntfState := make(map[string]*intfCollectorState)
 
 	if newSelCol != nil {
-		nwInterfaceStates, err := sma.getInterfacesMatchingSelector(newSelCol.selector)
+		nwInterfaceStates, err := sma.getInterfacesMatchingSelector(newSelCol.selectors)
 		if err != nil {
-			log.Errorf("Error finding interfaces matching selector %v %v", newSelCol.selector.String(), err.Error())
+			log.Errorf("Error finding interfaces matching selector %v %v", newSelCol.selectors, err.Error())
 			return err
 		}
 		setupInitialStates(nwInterfaceStates, collectorIntfState)
 	}
 
-	if oldSelCol != nil && oldSelCol.selector != nil {
-		oldNwInterfaceStates, err := sma.getInterfacesMatchingSelector(oldSelCol.selector)
+	if oldSelCol != nil && oldSelCol.selectors != nil {
+		oldNwInterfaceStates, err := sma.getInterfacesMatchingSelector(oldSelCol.selectors)
 		if err != nil {
-			log.Errorf("Error finding interfaces matching selector %v %v", oldSelCol.selector.String(), err.Error())
+			log.Errorf("Error finding interfaces matching selector %v %v", oldSelCol.selectors, err.Error())
 			return err
 		}
 		setupInitialStates(oldNwInterfaceStates, collectorIntfState)
@@ -661,14 +675,14 @@ func (sma *SmNetworkInterface) UpdateCollectorsMatchingSelector(oldSelCol *mirro
 			log.Errorf("Error finding receiver %v", err.Error())
 			continue
 		}
-		if oldSelCol != nil && oldSelCol.selector.Matches(labels.Set(nw.NetworkInterfaceState.Labels)) {
+		if oldSelCol != nil && selectorsMatch(oldSelCol.selectors, labels.Set(nw.NetworkInterfaceState.Labels)) {
 			nw.txCollectors = updateCollectors(nwColState, collectorDelete, collectorTxDir, nw.NetworkInterfaceState.Name, receiver, nw.txCollectors, oldSelCol.txCollectors)
 			nw.rxCollectors = updateCollectors(nwColState, collectorDelete, collectorRxDir, nw.NetworkInterfaceState.Name, receiver, nw.rxCollectors, oldSelCol.rxCollectors)
 			removeMirrorSession(nw, oldSelCol.mirrorSession)
 			log.Infof("Removing mirror %v for DSC %v Intf %v",
 				oldSelCol.mirrorSession, nw.NetworkInterfaceState.Status.DSC, nw.NetworkInterfaceState.Name)
 		}
-		if newSelCol != nil && newSelCol.selector.Matches(labels.Set(nw.NetworkInterfaceState.Labels)) {
+		if newSelCol != nil && selectorsMatch(newSelCol.selectors, labels.Set(nw.NetworkInterfaceState.Labels)) {
 			nw.txCollectors = updateCollectors(nwColState, collectorAdd, collectorTxDir, nw.NetworkInterfaceState.Name, receiver, nw.txCollectors, newSelCol.txCollectors)
 			nw.rxCollectors = updateCollectors(nwColState, collectorAdd, collectorRxDir, nw.NetworkInterfaceState.Name, receiver, nw.rxCollectors, newSelCol.rxCollectors)
 			addMirrorSession(nw, newSelCol.mirrorSession)
