@@ -1,0 +1,190 @@
+{
+    "network" : {
+        "uplink" : [
+            { "id" : 128, "port": 285278209 },
+            { "id" : 129, "port": 285343745 },
+            { "id" : 130, "port": 285409281, "oob" : "true" }
+        ]
+    },
+
+    "mnic_dev" : [
+        {
+            "name" : "oob_mnic0",
+            "dev_uuid" : 11,
+            "type": "oob_mgmt",
+            "lif_count" : 1,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4,
+            "network" : {
+                "uplink" : 285409281
+            }
+        },
+        {
+            "name" : "dsc0",
+            "dev_uuid" : 12,
+            "type": "inband_mgmt",
+            "lif_count" : 1,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4,
+            "network" : {
+                "uplink" : 285278209
+            }
+        },
+        {
+            "name" : "dsc1",
+            "dev_uuid" : 13,
+            "type": "inband_mgmt",
+            "lif_count" : 1,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4,
+            "network" : {
+                "uplink" : 285343745
+            }
+        },
+        {
+            "name" : "cpu_mnic1",
+            "dev_uuid" : 14,
+            "type": "learn",
+            "lif_count" : 1,
+            "rxq_count" : 4,
+            "txq_count" : 4,
+            "adminq_count" : 1,
+            "intr_count" : 16
+        },
+        {
+            "name" : "cpu_mnic0",
+            "dev_uuid" : 15,
+            "type": "cpu",
+            "lif_count" : 1,
+            "rxq_count" : 4,
+            "txq_count" : 4,
+            "adminq_count" : 1,
+            "intr_count" : 16
+        },
+        {
+            "name" : "ctrl0",
+            "dev_uuid" : 16,
+            "type": "control",
+            "lif_count" : 1,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4
+        }
+    ],
+    "eth_dev" : [
+        {
+            "name" : "eth0",
+            "dev_uuid" : 1,
+            "type": "host",
+            "lif_count" : 1,
+            "rxq_count" : 16,
+            "txq_count" : 16,
+            "adminq_count" : 16,
+            "intr_count" : 64,
+            "qos_group" : "DEFAULT",
+            "pcie" : {
+                "port" : 0,
+                "num_vfs" : 0,
+                "oprom": "uefi"
+            }
+        },
+        {
+            "name" : "eth1",
+            "dev_uuid" : 2,
+            "type": "host",
+            "lif_count" : 1,
+            "rxq_count" : 16,
+            "txq_count" : 16,
+            "adminq_count" : 16,
+            "intr_count" : 64,
+            "qos_group" : "DEFAULT",
+            "pcie" : {
+                "port" : 0,
+                "num_vfs" : 0,
+                "oprom": "uefi"
+            }
+        },
+        {
+            "name" : "eth2",
+            "dev_uuid" : 3,
+            "type": "host",
+            "lif_count" : 1,
+            "rxq_count" : 16,
+            "txq_count" : 16,
+            "adminq_count" : 16,
+            "intr_count" : 64,
+            "pcie" : {
+                "port" : 0,
+                "num_vfs" : 0,
+                "oprom": "uefi"
+            }
+        },
+        {
+            "name" : "eth3",
+            "dev_uuid" : 4,
+            "type": "host",
+            "lif_count" : 1,
+            "rxq_count" : 16,
+            "txq_count" : 16,
+            "adminq_count" : 16,
+            "intr_count" : 64,
+            "pcie" : {
+                "port" : 0,
+                "num_vfs" : 0,
+                "oprom": "uefi"
+            }
+        },
+        {
+            "name" : "eth4",
+            "dev_uuid" : 5,
+            "type": "host",
+            "lif_count" : 1,
+            "rxq_count" : 16,
+            "txq_count" : 16,
+            "adminq_count" : 16,
+            "intr_count" : 64,
+            "pcie" : {
+                "port" : 0,
+                "num_vfs" : 0,
+                "oprom": "uefi"
+            }
+        },
+        {
+            "name" : "eth5",
+            "dev_uuid" : 6,
+            "type": "host",
+            "lif_count" : 1,
+            "rxq_count" : 16,
+            "txq_count" : 16,
+            "adminq_count" : 16,
+            "intr_count" : 64,
+            "pcie" : {
+                "port" : 0,
+                "num_vfs" : 0,
+                "oprom": "uefi"
+            }
+        },
+        {
+            "name" : "eth6",
+            "dev_uuid" : 7,
+            "type": "host",
+            "lif_count" : 1,
+            "rxq_count" : 16,
+            "txq_count" : 16,
+            "adminq_count" : 16,
+            "intr_count" : 64,
+            "pcie" : {
+                "port" : 0,
+                "num_vfs" : 0,
+                "oprom": "uefi"
+            }
+        }
+    ]
+}

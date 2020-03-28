@@ -3,7 +3,11 @@ nic/conf/$PIPELINE/pipeline.json                                  /nic/conf/
 nic/sysmgr/src/$PIPELINE/pipeline.json                            /nic/conf/sysmgr.json
 nic/conf/$PIPELINE/techsupport.json                               /nic/conf/
 nic/conf/$PIPELINE/device-pf2.json                                /nic/conf/
+nic/conf/$PIPELINE/device-pf3.json                                /nic/conf/
+nic/conf/$PIPELINE/device-pf4.json                                /nic/conf/
+nic/conf/$PIPELINE/device-pf5.json                                /nic/conf/
 nic/conf/$PIPELINE/device-pf6.json                                /nic/conf/
+nic/conf/$PIPELINE/device-pf7.json                                /nic/conf/
 nic/conf/$PIPELINE/device-pf8.json                                /nic/conf/
 nic/conf/$PIPELINE/device-pf8.json                                /nic/conf/device.json
 
