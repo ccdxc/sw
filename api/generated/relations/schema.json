@@ -35,8 +35,20 @@
   "cluster.DistributedServiceCardSpec": [
     {
       "Type": "NamedRef",
+      "To": "network/RoutingConfig",
+      "Field": "RoutingConfig"
+    },
+    {
+      "Type": "NamedRef",
       "To": "cluster/DSCProfile",
       "Field": "DSCProfile"
+    }
+  ],
+  "cluster.NodeSpec": [
+    {
+      "Type": "NamedRef",
+      "To": "network/RoutingConfig",
+      "Field": "RoutingConfig"
     }
   ],
   "monitoring.AlertPolicySpec": [

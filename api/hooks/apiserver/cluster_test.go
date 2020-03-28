@@ -214,7 +214,6 @@ func TestNodeObject(t *testing.T) {
 	_, kvw, err := cl.nodePreCommitHook(ctx, kvs, txn, "/test/key1", apiintf.CreateOper, false, nd)
 	AssertOk(t, err, "expecting to succeed")
 	Assert(t, kvw, "expecging kvwrite to be true")
-	Assert(t, len(txn.Cmps) == 1, "expecting one comparator on the treansaction [%v]", txn.Cmps)
 	dscKey := nic.MakeKey(string(apiclient.GroupCluster))
 	_ = kvs.Getfn(ctx, dscKey, &nic)
 	Assert(t, &nic != nil, "Object must be available")

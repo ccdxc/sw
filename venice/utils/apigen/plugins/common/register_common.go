@@ -1107,4 +1107,5 @@ func RegisterOptionParsers() {
 	reg.RegisterOptionParser("venice.pdsaFields", parsePdsaFieldOptions)
 	reg.RegisterOptionParser("venice.pdsaSetGlobOpts", parseGlobalOpts)
 	reg.RegisterOptionParser("venice.pdsaGetGlobOpts", parseGlobalOpts)
+	reg.RegisterOptionParser("venice.filterImport", parseStringSliceOptions)
 }

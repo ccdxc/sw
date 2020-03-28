@@ -259,7 +259,8 @@ message Node {
 // NodeSpec contains the configuration of the node.
 message NodeSpec {
     // RoutingConfig the routing configuration
-    string RoutingConfig            = 1 [(gogoproto.jsontag) = "routing-config,omitempty"];
+    string RoutingConfig            = 1 [(gogoproto.jsontag) = "routing-config,omitempty",
+                                        (venice.objRelation) = {Type: "NamedRef", To: "network/RoutingConfig"}];
 }
 
 // NodeStatus contains the current state of the node.

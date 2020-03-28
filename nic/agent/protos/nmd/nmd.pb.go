@@ -25,7 +25,7 @@ import _ "google.golang.org/genproto/googleapis/api/annotations"
 import _ "github.com/pensando/sw/venice/utils/apigen/annotations"
 import _ "github.com/gogo/protobuf/gogoproto"
 import api "github.com/pensando/sw/api"
-import cluster1 "github.com/pensando/sw/api/generated/cluster"
+import cluster2 "github.com/pensando/sw/api/generated/cluster"
 
 import io "io"
 
@@ -248,7 +248,7 @@ type DistributedServiceCardSpec struct {
 	// ID is used as a user friendly identifier in logs/events
 	ID string `protobuf:"bytes,2,opt,name=ID,proto3" json:"ID,omitempty"`
 	// IPConfig defines the static IP configuration. If not specified, DHCP will be attempted
-	IPConfig *cluster1.IPConfig `protobuf:"bytes,3,opt,name=IPConfig" json:"ip-config,omitempty"`
+	IPConfig *cluster2.IPConfig `protobuf:"bytes,3,opt,name=IPConfig" json:"ip-config,omitempty"`
 	// Operational mode of the NIC
 	Mode string `protobuf:"bytes,4,opt,name=Mode,proto3" json:"mode"`
 	// Operational mode of the NIC
@@ -282,7 +282,7 @@ func (m *DistributedServiceCardSpec) GetID() string {
 	return ""
 }
 
-func (m *DistributedServiceCardSpec) GetIPConfig() *cluster1.IPConfig {
+func (m *DistributedServiceCardSpec) GetIPConfig() *cluster2.IPConfig {
 	if m != nil {
 		return m.IPConfig
 	}
@@ -328,7 +328,7 @@ func (m *DistributedServiceCardSpec) GetDSCProfile() string {
 type DistributedServiceCardStatus struct {
 	// Current phase of the NIC adapter in the system
 	AdmissionPhase string             `protobuf:"bytes,1,opt,name=AdmissionPhase,proto3" json:"phase,omitempty"`
-	IPConfig       *cluster1.IPConfig `protobuf:"bytes,2,opt,name=IPConfig" json:"ip-config,omitempty"`
+	IPConfig       *cluster2.IPConfig `protobuf:"bytes,2,opt,name=IPConfig" json:"ip-config,omitempty"`
 	// Resolved Controllers/Venice IPs
 	Controllers     []string `protobuf:"bytes,3,rep,name=Controllers" json:"controllers,omitempty"`
 	TransitionPhase string   `protobuf:"bytes,4,opt,name=TransitionPhase,proto3" json:"transition-phase,omitempty"`
@@ -358,7 +358,7 @@ func (m *DistributedServiceCardStatus) GetAdmissionPhase() string {
 	return ""
 }
 
-func (m *DistributedServiceCardStatus) GetIPConfig() *cluster1.IPConfig {
+func (m *DistributedServiceCardStatus) GetIPConfig() *cluster2.IPConfig {
 	if m != nil {
 		return m.IPConfig
 	}
@@ -1578,7 +1578,7 @@ func (m *DistributedServiceCardSpec) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.IPConfig == nil {
-				m.IPConfig = &cluster1.IPConfig{}
+				m.IPConfig = &cluster2.IPConfig{}
 			}
 			if err := m.IPConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -1825,7 +1825,7 @@ func (m *DistributedServiceCardStatus) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.IPConfig == nil {
-				m.IPConfig = &cluster1.IPConfig{}
+				m.IPConfig = &cluster2.IPConfig{}
 			}
 			if err := m.IPConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

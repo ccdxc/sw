@@ -1322,6 +1322,17 @@ func (m *NetworkInfo) Normalize() {
 
 func (m *Node) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "spec"
+
+		m.Spec.References(tenant, tag, resp)
+
+	}
 }
 
 func (m *Node) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -1446,6 +1457,29 @@ func (m *NodeInfo) Normalize() {
 
 func (m *NodeSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "routing-config"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "RoutingConfig",
+			}
+		}
+
+		if m.RoutingConfig != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/network/"+"routing-config/"+m.RoutingConfig)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *NodeSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {

@@ -527,6 +527,29 @@ func (m *DistributedServiceCardSpec) References(tenant string, path string, resp
 			resp[tag] = uref
 		}
 	}
+	{
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "routing-config"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "RoutingConfig",
+			}
+		}
+
+		if m.RoutingConfig != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/network/"+"routing-config/"+m.RoutingConfig)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *DistributedServiceCardSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {

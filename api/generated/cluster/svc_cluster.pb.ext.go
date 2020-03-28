@@ -1206,6 +1206,20 @@ func (m *AutoMsgLicenseWatchHelper_WatchEvent) Normalize() {
 
 func (m *AutoMsgNodeWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AutoMsgNodeWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -1236,6 +1250,19 @@ func (m *AutoMsgNodeWatchHelper) Normalize() {
 
 func (m *AutoMsgNodeWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
 }
 
 func (m *AutoMsgNodeWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
@@ -1640,6 +1667,20 @@ func (m *LicenseList) Normalize() {
 
 func (m *NodeList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
+	{
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *NodeList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {

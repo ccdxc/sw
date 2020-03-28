@@ -23,7 +23,11 @@ var ObjRelations = map[string][]apiintf.ObjRelation{
 		{Type: "WeakRef", To: "bookstore/Book", Field: "Book"},
 	},
 	"cluster.DistributedServiceCardSpec": []apiintf.ObjRelation{
+		{Type: "NamedRef", To: "network/RoutingConfig", Field: "RoutingConfig"},
 		{Type: "NamedRef", To: "cluster/DSCProfile", Field: "DSCProfile"},
+	},
+	"cluster.NodeSpec": []apiintf.ObjRelation{
+		{Type: "NamedRef", To: "network/RoutingConfig", Field: "RoutingConfig"},
 	},
 	"monitoring.AlertPolicySpec": []apiintf.ObjRelation{
 		{Type: "NamedRef", To: "monitoring/AlertDestination", Field: "Destinations"},

@@ -43,6 +43,7 @@ import (
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
+	"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -4485,4 +4486,138 @@ func TestSaveRestoreOperation(t *testing.T) {
 	rs, err = restcl.ClusterV1().SnapshotRestore().Restore(ctx, &resReq)
 	AssertOk(t, err, "restore should have succeeded")
 	Assert(t, rs.Status.Status == cluster.SnapshotRestoreStatus_Completed.String(), "restore status not completed [%v]", rs.Status.Status)
+}
+
+func TestRoutingConfigReferences(t *testing.T) {
+	// Enable license
+	// Disable network level security policies
+	fts := []cluster.Feature{
+		{FeatureKey: featureflags.OverlayRouting, License: ""},
+	}
+	featureflags.Update(fts)
+
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
+	if err != nil {
+		t.Fatalf("cannot create REST client")
+	}
+	defer restcl.Close()
+
+	ctx := context.Background()
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
+
+	// gRPC client
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	if err != nil {
+		t.Fatalf("cannot create grpc client")
+	}
+	defer apicl.Close()
+
+	// Create a DSC object
+	prof := &cluster.DSCProfile{
+		ObjectMeta: api.ObjectMeta{
+			Name: cluster.DSCProfileSpec_BASENET.String(),
+		},
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        cluster.DSCProfileSpec_TRANSPARENT.String(),
+			FlowPolicyMode: cluster.DSCProfileSpec_BASENET.String(),
+		},
+	}
+	_, err = apicl.ClusterV1().DSCProfile().Create(ctx, prof)
+	AssertOk(t, err, "failed to create dsc profile")
+	dsc := &cluster.DistributedServiceCard{
+		ObjectMeta: api.ObjectMeta{
+			Name: "rtcfg",
+		},
+		Spec: cluster.DistributedServiceCardSpec{
+			ID:          "xxx",
+			MgmtMode:    cluster.DistributedServiceCardSpec_NETWORK.String(),
+			NetworkMode: cluster.DistributedServiceCardSpec_OOB.String(),
+			DSCProfile:  cluster.DSCProfileSpec_BASENET.String(),
+		},
+		Status: cluster.DistributedServiceCardStatus{
+			AdmissionPhase: cluster.DistributedServiceCardStatus_ADMITTED.String(),
+		},
+	}
+
+	_, err = apicl.ClusterV1().DistributedServiceCard().Create(ctx, dsc)
+	AssertOk(t, err, "failed to create DSC (%v)", apierrors.FromError(err))
+
+	dsc.Spec.RoutingConfig = "rtcfg"
+
+	_, err = restcl.ClusterV1().DistributedServiceCard().Update(ctx, dsc)
+	Assert(t, err != nil, " expecting to fail ")
+
+	// Create Routing Config
+	rtCfg := &network.RoutingConfig{
+		ObjectMeta: api.ObjectMeta{
+			Name: "rtcfg",
+		},
+	}
+
+	_, err = restcl.NetworkV1().RoutingConfig().Create(ctx, rtCfg)
+	AssertOk(t, err, "failed to create routing config (%s)", err)
+
+	_, err = restcl.ClusterV1().DistributedServiceCard().Update(ctx, dsc)
+	AssertOk(t, err, " expecting to succeed (%s) ", err)
+
+	// Create a Node Object
+	node := &cluster.Node{
+		ObjectMeta: api.ObjectMeta{
+			Name: "node1",
+		},
+		Spec: cluster.NodeSpec{},
+		Status: cluster.NodeStatus{
+			Phase: cluster.NodeStatus_JOINED.String(),
+		},
+	}
+
+	_, err = apicl.ClusterV1().Node().Create(ctx, node)
+	AssertOk(t, err, "failed to create network (%v)", apierrors.FromError(err))
+
+	node.Spec.RoutingConfig = "rtcfg2"
+
+	_, err = restcl.ClusterV1().Node().Update(ctx, node)
+	Assert(t, err != nil, "expecting to fail")
+
+	rtCfg2 := &network.RoutingConfig{
+		ObjectMeta: api.ObjectMeta{
+			Name: "rtcfg2",
+		},
+	}
+
+	_, err = restcl.NetworkV1().RoutingConfig().Create(ctx, rtCfg2)
+	AssertOk(t, err, "failed to create routing config (%s)", err)
+
+	_, err = restcl.ClusterV1().Node().Update(ctx, node)
+	AssertOk(t, err, "expecting to succeed")
+
+	// try to delete Routing Config
+	_, err = restcl.NetworkV1().RoutingConfig().Delete(ctx, &rtCfg2.ObjectMeta)
+	Assert(t, err != nil, "expecting to fail")
+
+	node.Spec.RoutingConfig = "rtcfg"
+
+	_, err = restcl.ClusterV1().Node().Update(ctx, node)
+	AssertOk(t, err, "expecting to succeed")
+
+	_, err = restcl.NetworkV1().RoutingConfig().Delete(ctx, &rtCfg2.ObjectMeta)
+	AssertOk(t, err, "expecting to succeed")
+
+	_, err = restcl.NetworkV1().RoutingConfig().Delete(ctx, &rtCfg2.ObjectMeta)
+	Assert(t, err != nil, "expecting to fail")
+	// clear DSC config
+	dsc.Spec.RoutingConfig = ""
+	_, err = restcl.ClusterV1().DistributedServiceCard().Update(ctx, dsc)
+	AssertOk(t, err, "failed to delete (%v)", apierrors.FromError(err))
+
+	node.Spec.RoutingConfig = ""
+	_, err = restcl.ClusterV1().Node().Update(ctx, node)
+	AssertOk(t, err, "failed to delete (%v)", apierrors.FromError(err))
+
+	_, err = restcl.NetworkV1().RoutingConfig().Delete(ctx, &rtCfg.ObjectMeta)
+	AssertOk(t, err, "expecting to succeed")
 }

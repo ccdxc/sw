@@ -1123,29 +1123,6 @@ func (cl *clusterHooks) checkFFBootstrap(ctx context.Context, kv kvstore.Interfa
 }
 
 func (cl *clusterHooks) nodePreCommitHook(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
-	node, ok := i.(cluster.Node)
-	if !ok {
-		return i, false, fmt.Errorf("invalid kind processing Node object")
-	}
-
-	if node.Spec.RoutingConfig != "" {
-		rcfg := network.RoutingConfig{
-			ObjectMeta: api.ObjectMeta{
-				Name:   node.Spec.RoutingConfig,
-				Tenant: globals.DefaultTenant,
-			},
-		}
-		rkey := rcfg.MakeKey(string(apiclient.GroupNetwork))
-		err := kvs.Get(ctx, rkey, &rcfg)
-		if err != nil {
-			return i, false, fmt.Errorf("Routing configuration not found")
-		}
-		if rcfg.Spec.BGPConfig != nil && rcfg.Spec.BGPConfig.DSCAutoConfig {
-			return i, false, fmt.Errorf("routing config with dsc-auto-config enabled cannot be attached to a Node")
-		}
-		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(rkey), ">", 0))
-	}
-
 	//create default firewall profile under the following conditions
 	// 1. upgrade from A Release to B Release (1.3 to 1.4 & up)
 	// 2. apiserver restart during upgrade

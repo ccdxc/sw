@@ -11,6 +11,9 @@ import "github.com/pensando/sw/api/meta.proto";
 
 import "cluster.proto";
 
+option (venice.filterImport) = "route.proto";
+import "route.proto";
+
 //------------------------------------ Distributed Service Card  -------------------------------------------
 //
 // DistributedServiceCard represents the Naples I/O subsystem
@@ -98,7 +101,7 @@ message DistributedServiceCardSpec {
     repeated string Controllers     = 7 [(gogoproto.jsontag) = "controllers,omitempty"];
 
     // RoutingConfig is the routing configuration for the underlay routed network that this DSC participates in.
-    string RoutingConfig            = 8 [(gogoproto.jsontag) = "routing-config,omitempty"];
+    string RoutingConfig            = 8 [(gogoproto.jsontag) = "routing-config,omitempty", (venice.objRelation) = {Type: "NamedRef", To: "network/RoutingConfig"}];
 
     string DSCProfile               = 9 [(venice.objRelation) = {Type: "NamedRef", To: "cluster/DSCProfile"}, (gogoproto.jsontag) = "dscprofile, omitempty"];
 }

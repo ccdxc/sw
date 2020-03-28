@@ -925,9 +925,31 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 			savedSci = saveSrcCodeInfo(f)
 			// Add api/meta.prot if it is not in dependencies
 			depFound := false
+
+			// get all the filtered imports
+			filterImports := []string{}
+			opts := f.GetOptions()
+			if opts != nil {
+				fi, err := getExtension(opts, "venice.filterImport")
+				if err == nil {
+					filterImports = append(filterImports, fi.([]string)...)
+				}
+			}
+
+			finalDeps := []string{}
 			for _, d := range f.GetDependency() {
+				filter := false
 				if d == apiMetaImport {
 					depFound = true
+				}
+				for _, fi := range filterImports {
+					if fi == d {
+						filter = true
+						break
+					}
+				}
+				if !filter {
+					finalDeps = append(finalDeps, d)
 				}
 			}
 
@@ -1057,8 +1079,10 @@ func AddAutoGrpcEndpoints(req *plugin.CodeGeneratorRequest) {
 			}
 
 			if !depFound && (len(crudMsgMap) > 0 || len(f.Service) > 0) {
-				f.Dependency = append(f.Dependency, apiMetaImport)
+				finalDeps = append(finalDeps, apiMetaImport)
 			}
+			f.Dependency = finalDeps
+
 			// Insert new message type for WatchEvents and List
 			for v := range crudMsgMap {
 				insertGrpcAutoMsgs(f, &savedSci, v)

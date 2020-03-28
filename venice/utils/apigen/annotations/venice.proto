@@ -98,6 +98,9 @@ extend google.protobuf.FileOptions {
   // fileCategory specifies the API category this file belongs to.
   //   the category shows up as /<category>/<api-group/<version>/...
   string fileCategory = 51237;
+  // filterImport is an internal annotation that will filter out imports
+  //  used expressly to workaround circular dependencies for dependency mapping
+  repeated string filterImport = 51238;
 };
 
 // Venice Option extensions applicable at the Service level.
