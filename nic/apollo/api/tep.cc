@@ -97,7 +97,7 @@ tep_entry::free(tep_entry *tep) {
 sdk_ret_t
 tep_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
-        return impl_->reserve_resources(this, obj_ctxt);
+        return impl_->reserve_resources(this, orig_obj, obj_ctxt);
     }
     return SDK_RET_OK;
 }

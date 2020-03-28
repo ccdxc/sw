@@ -43,7 +43,8 @@ meter_impl::destroy(meter_impl *impl) {
 // reserve_resources() logic is same for both API_OP_CREATE and API_OP_UPDATE
 // as update doesn't reuse any of the existing resources for this object
 sdk_ret_t
-meter_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+meter_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
+                              api_obj_ctxt_t *obj_ctxt) {
     uint32_t lpm_block_id;
     pds_meter_spec_t *spec = &obj_ctxt->api_params->meter_spec;
 

@@ -14,6 +14,7 @@
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
+#include "nic/apollo/api/route.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
 
 namespace api {
@@ -52,10 +53,11 @@ public:
     static sdk_ret_t free(route_table_impl *impl);
 
     /// \brief     allocate/reserve h/w resources for this object
-    /// \param[in] api_obj API object for which resources are being reserved
+    /// \param[in] api_obj  object for which resources are being reserved
+    /// \param[in] orig_obj old version of the unmodified object
     /// \param[in] obj_ctxt transient state associated with this object
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t reserve_resources(api_base *api_obj,
+    virtual sdk_ret_t reserve_resources(api_base *api_obj, api_base *orig_obj,
                                         api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief     free h/w resources used by this object, if any
@@ -138,14 +140,24 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t program_route_table_(pds_route_table_spec_t *spec);
 
-    /// \brief helper routine to update the route table spec using the incoming
-    ///        route table config and/or individual route add/del/upd
-    ///        configurations along with persisted route database
+    /// \brief update the given spec based on the contained/child nodes
+    ///        in the object context
     /// \param[in] spec    route table configuration
     /// \param[in] obj_ctxt transient state associated with this object
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t update_route_table_spec_(pds_route_table_spec_t *spec,
                                        api_obj_ctxt_t *obj_ctxt);
+
+    /// \brief helper routine to update the route table spec using the incoming
+    ///        route table config and/or individual route add/del/upd
+    ///        configurations along with persisted route database
+    /// \param[in] new_rtable   cloned route table instance
+    /// \param[in] orig_rtable  original route table instance
+    /// \param[in] obj_ctxt transient state associated with this object
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t compute_updated_spec_(route_table *new_rtable,
+                                    route_table *orig_rtable,
+                                    api_obj_ctxt_t *obj_ctxt);
 
     /// \brief      fill the route table status
     /// \param[out] status status

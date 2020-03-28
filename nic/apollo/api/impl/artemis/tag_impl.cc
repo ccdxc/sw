@@ -46,7 +46,8 @@ tag_impl::destroy(tag_impl *impl) {
 //       API_OP_UPDATE as update doesn't reuse any of the existing resources
 //       for this object
 sdk_ret_t
-tag_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+tag_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
+                            api_obj_ctxt_t *obj_ctxt) {
     uint32_t lpm_block_id;
     pds_tag_spec_t *spec = &obj_ctxt->api_params->tag_spec;
 

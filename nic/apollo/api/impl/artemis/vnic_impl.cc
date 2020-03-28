@@ -53,7 +53,8 @@ vnic_impl::destroy(vnic_impl *impl) {
 }
 
 sdk_ret_t
-vnic_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+vnic_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
+                             api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     sdk_table_api_params_t api_params = { 0 };

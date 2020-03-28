@@ -44,7 +44,8 @@ vpc_impl::destroy(vpc_impl *impl) {
 }
 
 sdk_ret_t
-vpc_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+vpc_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
+                            api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     uint32_t idx;
     tep1_rx_swkey_t tep1_rx_key = { 0 };

@@ -70,7 +70,8 @@ vpc_impl::free(vpc_impl *impl) {
 }
 
 sdk_ret_t
-vpc_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+vpc_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
+                            api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     vni_swkey_t vni_key =  { 0 };

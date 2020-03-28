@@ -61,7 +61,7 @@ dhcp_policy_impl::free(dhcp_policy_impl *impl) {
 }
 
 sdk_ret_t
-dhcp_policy_impl::reserve_resources(api_base *api_obj,
+dhcp_policy_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                                     api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;

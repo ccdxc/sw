@@ -132,7 +132,7 @@ policy::free(policy *policy) {
 
 sdk_ret_t
 policy::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    return impl_->reserve_resources(this, obj_ctxt);
+    return impl_->reserve_resources(this, orig_obj, obj_ctxt);
 }
 
 sdk_ret_t
@@ -322,7 +322,16 @@ policy::add_deps(api_obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 policy::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    return impl_->update_hw(orig_obj, this, obj_ctxt);
+    sdk_ret_t ret;
+
+    ret = impl_->update_hw(orig_obj, this, obj_ctxt);
+    // for container objects, element count can change during update processing
+    // so we need to reflect that in the object
+    if (ret == SDK_RET_OK) {
+        num_rules_ =
+            obj_ctxt->api_params->policy_spec.rule_info->num_rules;
+    }
+    return ret;
 }
 
 sdk_ret_t
@@ -450,10 +459,21 @@ policy_rule::init_config(api_ctxt_t *api_ctxt) {
 sdk_ret_t
 policy_rule::add_deps(api_obj_ctxt_t *obj_ctxt) {
     policy *policy;
+    pds_obj_key_t policy_key;
 
     if ((obj_ctxt->api_op == API_OP_CREATE) ||
         (obj_ctxt->api_op == API_OP_UPDATE)) {
-        policy = policy_find(&policy_);
+        if (obj_ctxt->cloned_obj) {
+            policy_key = ((policy_rule *)obj_ctxt->cloned_obj)->policy_;
+        } else {
+            policy_key = policy_;
+        }
+        policy = policy_find(&policy_key);
+        if (!policy) {
+            PDS_TRACE_ERR("Failed to perform api op %u on rule %s, "
+                          "policy %s not found", obj_ctxt->api_op, key_.str(),
+                          policy_key.str());
+        }
         api_obj_add_to_deps(obj_ctxt->api_op,
                             OBJ_ID_POLICY_RULE, this,
                             OBJ_ID_POLICY, policy,

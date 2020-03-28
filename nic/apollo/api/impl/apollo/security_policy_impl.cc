@@ -43,7 +43,7 @@ security_policy_impl::destroy(security_policy_impl *impl) {
 }
 
 sdk_ret_t
-security_policy_impl::reserve_resources(api_base *api_obj,
+security_policy_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                                         api_obj_ctxt_t *obj_ctxt) {
     uint32_t             policy_block_id;
     pds_policy_spec_t    *spec;

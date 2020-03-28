@@ -64,7 +64,8 @@ if_impl::free(if_impl *impl) {
 }
 
 sdk_ret_t
-if_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+if_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
+                           api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     pds_if_spec_t *spec = &obj_ctxt->api_params->if_spec;
@@ -124,7 +125,7 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
 
     PDS_TRACE_DEBUG("Activating if 0x%x, type %u, admin state %u",
                     spec->key.id, spec->type, spec->admin_state);
-                    
+
     if (spec->type == PDS_IF_TYPE_UPLINK) {
         PDS_TRACE_DEBUG("pds_ifindex_t: %x, logical_port:%u\n",
                 intf->ifindex(), sdk::lib::catalog::ifindex_to_logical_port(intf->ifindex()));
@@ -139,7 +140,7 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
             PDS_TRACE_ERR("Failed to program uplink 0x%s's lif %u in TM "
                           "register", spec->key.id, hw_id_);
         }
-    } 
+    }
 
     return SDK_RET_OK;
 }

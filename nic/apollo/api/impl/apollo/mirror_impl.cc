@@ -42,7 +42,8 @@ mirror_impl::destroy(mirror_impl *impl) {
 }
 
 sdk_ret_t
-mirror_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+mirror_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
+                               api_obj_ctxt_t *obj_ctxt) {
     pds_mirror_session_spec_t *spec;
 
     // allocate hw id for this session

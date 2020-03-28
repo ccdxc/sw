@@ -124,7 +124,7 @@ route_table::free(route_table *rtable) {
 
 sdk_ret_t
 route_table::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    return impl_->reserve_resources(this, obj_ctxt);
+    return impl_->reserve_resources(this, orig_obj, obj_ctxt);
 }
 
 sdk_ret_t
@@ -233,14 +233,22 @@ route_table::add_deps(api_obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 route_table::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    // update is same as programming route table in different region
-    return impl_->update_hw(orig_obj, this, obj_ctxt);
+    sdk_ret_t ret;
+
+    ret = impl_->update_hw(orig_obj, this, obj_ctxt);
+    // for container objects, element count can change during update processing
+    // so we need to reflect that in the object
+    if (ret == SDK_RET_OK) {
+        num_routes_ =
+            obj_ctxt->api_params->route_table_spec.route_info->num_routes;
+    }
+    return ret;
 }
 
 sdk_ret_t
 route_table::activate_config(pds_epoch_t epoch, api_op_t api_op,
                              api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Activating route table %s config", key2str().c_str());
+    PDS_TRACE_DEBUG("Activating %s config", key2str().c_str());
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
@@ -340,8 +348,8 @@ route::build(pds_obj_key_t *key) {
     if (rt) {
         new (rt) route();
         memcpy(&rt->key_, key, sizeof(*key));
-        // TODO: for delete case, we should look up in kvstore and populate the
-        //       route table's key as well
+        // TODO: for delete case, we should look up in kvstore and
+        //       populate the route table's key as well
     }
     return rt;
 }
@@ -365,11 +373,23 @@ route::init_config(api_ctxt_t *api_ctxt) {
 sdk_ret_t
 route::add_deps(api_obj_ctxt_t *obj_ctxt) {
     route_table *rtable;
+    pds_obj_key_t route_table_key;
 
     if ((obj_ctxt->api_op == API_OP_CREATE) ||
         (obj_ctxt->api_op == API_OP_UPDATE)) {
-        rtable = route_table_find(&route_table_);
-        api_obj_add_to_deps(obj_ctxt->api_op,
+        if (obj_ctxt->cloned_obj) {
+            route_table_key = ((route *)obj_ctxt->cloned_obj)->route_table_;
+        } else {
+            route_table_key = route_table_;
+        }
+        rtable = route_table_find(&route_table_key);
+        if (!rtable) {
+            PDS_TRACE_ERR("Failed to perform api op %u on route %s, "
+                          "route table %s not found",
+                          obj_ctxt->api_op, key_.str(), route_table_key.str());
+            return SDK_RET_INVALID_ARG;
+        }
+        api_obj_add_to_deps(API_OP_UPDATE,
                             OBJ_ID_ROUTE, this,
                             OBJ_ID_ROUTE_TABLE, rtable,
                             (obj_ctxt->api_op == API_OP_CREATE) ?

@@ -56,7 +56,8 @@ tep_impl::destroy(tep_impl *impl) {
 }
 
 sdk_ret_t
-tep_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+tep_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
+                            api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     uint32_t idx;
     pds_tep_spec_t *spec;

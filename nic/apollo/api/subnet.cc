@@ -113,7 +113,7 @@ subnet_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
         if (impl_) {
-            ret = impl_->reserve_resources(this, obj_ctxt);
+            ret = impl_->reserve_resources(this, orig_obj, obj_ctxt);
         } else {
             if (subnet_db()->subnet_idxr()->alloc(&this->hw_id_) ==
                     sdk::lib::indexer::SUCCESS) {

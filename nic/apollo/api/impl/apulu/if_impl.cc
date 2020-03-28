@@ -64,7 +64,8 @@ if_impl::free(if_impl *impl) {
 }
 
 sdk_ret_t
-if_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+if_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
+                           api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
     if_entry *intf = (if_entry *)api_obj;

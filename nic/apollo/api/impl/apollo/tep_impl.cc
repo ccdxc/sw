@@ -50,7 +50,8 @@ tep_impl::destroy(tep_impl *impl) {
 }
 
 sdk_ret_t
-tep_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+tep_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
+                            api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     uint32_t idx;
     sdk_table_api_params_t tparams;

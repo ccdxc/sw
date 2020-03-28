@@ -93,7 +93,8 @@ svc_mapping_impl::build(pds_svc_mapping_key_t *key, svc_mapping *mapping) {
 }
 
 sdk_ret_t
-svc_mapping_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+svc_mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
+                                    api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     pds_svc_mapping_spec_t *spec;

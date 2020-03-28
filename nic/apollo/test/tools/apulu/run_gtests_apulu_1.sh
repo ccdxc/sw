@@ -18,7 +18,7 @@ run_gtest device
 run_gtest vpc
 run_gtest subnet
 run_gtest route_table LOG="/dev/null"
-#run_gtest route
+run_gtest route
 run_gtest nh
 run_gtest nh_group
 run_gtest vnic

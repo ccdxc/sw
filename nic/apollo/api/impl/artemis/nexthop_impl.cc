@@ -44,7 +44,8 @@ nexthop_impl::destroy(nexthop_impl *impl) {
 }
 
 sdk_ret_t
-nexthop_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+nexthop_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
+                                api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     pds_nexthop_spec_t *spec;
 

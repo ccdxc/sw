@@ -95,7 +95,7 @@ policer_entry::free(policer_entry *policer) {
 
 sdk_ret_t
 policer_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    return impl_->reserve_resources(this, obj_ctxt);
+    return impl_->reserve_resources(this, orig_obj, obj_ctxt);
 }
 
 sdk_ret_t

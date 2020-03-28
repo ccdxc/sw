@@ -49,7 +49,7 @@ route_table_impl::destroy(route_table_impl *impl) {
 //       API_OP_UPDATE as update doesn't reuse any of the existing resources
 //       for this object
 sdk_ret_t
-route_table_impl::reserve_resources(api_base *orig_obj,
+route_table_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                                     api_obj_ctxt_t *obj_ctxt) {
     uint32_t                  lpm_block_id;
     pds_route_table_spec_t    *spec;

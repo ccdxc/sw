@@ -94,13 +94,14 @@ TEST_F(route_test, route_add) {
     pds_batch_ctxt_t bctxt;
     pds_route_spec_t route_spec;
     pds_route_table_info_t info;
-    uint32_t add_route_count = 5;
+    uint32_t num_routes = 1, add_route_count = 5;
     ip_prefix_t ip_pfx;
     ip_addr_t ip_addr;
     pds_obj_key_t key;
 
     bctxt = batch_start();
-    sample_route_table_setup(bctxt, k_base_v4_pfx, IP_AF_IPV4, 10, 1, 1);
+    sample_route_table_setup(bctxt, k_base_v4_pfx, IP_AF_IPV4,
+                             num_routes, 1, 1);
     batch_commit(bctxt);
 
     bctxt = batch_start();
@@ -115,13 +116,16 @@ TEST_F(route_test, route_add) {
     batch_commit(bctxt);
 
     memset(&info, 0, sizeof(pds_route_table_info_t));
-    info.spec.route_info = (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                                      ROUTE_INFO_SIZE(0));
+    info.spec.route_info =
+        (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                   ROUTE_INFO_SIZE(0));
     key = int2pdsobjkey(1);
     ret = pds_route_table_read(&key, &info);
     ASSERT_TRUE(ret == SDK_RET_OK);
-    ASSERT_TRUE(info.spec.route_info->num_routes == (10 + add_route_count));
+    ASSERT_TRUE(info.spec.route_info->num_routes ==
+                (num_routes + add_route_count));
     SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
+
     bctxt = batch_start();
     sample_route_table_teardown(bctxt, 1, 1);
     batch_commit(bctxt);
@@ -130,31 +134,36 @@ TEST_F(route_test, route_add) {
 TEST_F(route_test, route_update) {
     sdk_ret_t ret;
     ip_prefix_t ip_pfx;
+    uint32_t num_routes = 1;
     pds_route_spec_t route_spec;
     pds_route_table_info_t info;
     pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
 
     bctxt = batch_start();
-    sample_route_table_setup(bctxt, k_base_v4_pfx, IP_AF_IPV4, 10, 1, 2);
+    sample_route_table_setup(bctxt, k_base_v4_pfx, IP_AF_IPV4,
+                             num_routes, 1, 2);
+    batch_commit(bctxt);
 
     // update 1st route
+    bctxt = batch_start();
     test::extract_ip_pfx(k_base_v4_pfx_3.c_str(), &ip_pfx);
-    route_spec_fill(&route_spec, 1, 1, &ip_pfx);
+    route_spec_fill(&route_spec, 1, 2, &ip_pfx);
     ret = pds_route_update(&route_spec, bctxt);
     ASSERT_TRUE(ret == SDK_RET_OK);
     batch_commit(bctxt);
 
     // read 1st route from route table
     memset(&info, 0, sizeof(pds_route_table_info_t));
-    info.spec.route_info = (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                                      ROUTE_INFO_SIZE(1));
+    info.spec.route_info =
+        (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                   ROUTE_INFO_SIZE(1));
     info.spec.route_info->num_routes = 1;
-    key = int2pdsobjkey(1);
+    key = int2pdsobjkey(2);
     ret = pds_route_table_read(&key, &info);
     ASSERT_TRUE(ret == SDK_RET_OK);
     ASSERT_TRUE(memcmp(&info.spec.route_info->routes[0].prefix,
-                      &ip_pfx, sizeof(ip_prefix_t) == 0));
+                       &ip_pfx, sizeof(ip_prefix_t)) == 0);
     SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
 
     bctxt = batch_start();

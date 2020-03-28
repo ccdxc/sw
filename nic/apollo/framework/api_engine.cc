@@ -1089,7 +1089,18 @@ api_engine::promote_container_objs_ (void) {
                 PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(obj_clone_err, 1);
                 return SDK_RET_OBJ_CLONE_ERR;
             }
+            // allocate api params, it will be used to populate spec while
+            // handling this container object update
+            octxt->api_params = (api_params_t *)api_params_slab()->alloc();
+            if (octxt->api_params == NULL) {
+                PDS_TRACE_ERR("Failed to allocate api params for obj %s",
+                              api_obj->key2str().c_str());
+                PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(obj_clone_err, 1);
+                return SDK_RET_OBJ_CLONE_ERR;
+            }
             add_to_dirty_list_(api_obj, octxt);
+            PDS_TRACE_VERBOSE("Promoted %s from aol to dol",
+                              api_obj->key2str().c_str());
         }
     }
     return SDK_RET_OK;

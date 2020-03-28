@@ -91,10 +91,11 @@ public:
 
     /// \brief Allocate/reserve h/w resources for this object
     ///
+    /// \param[in] api_obj  object for which resources are being reserved for
     /// \param[in] orig_obj Old version of the unmodified object
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t reserve_resources(api_base *orig_obj,
+    virtual sdk_ret_t reserve_resources(api_base *api_obj, api_base *orig_obj,
                                         api_obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_INVALID_OP;
     }

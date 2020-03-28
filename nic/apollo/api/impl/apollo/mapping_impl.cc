@@ -443,7 +443,8 @@ error:
 }
 
 sdk_ret_t
-mapping_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
+                                api_obj_ctxt_t *obj_ctxt) {
     pds_mapping_spec_t    *spec;
     vpc_entry             *vpc;
 

@@ -380,7 +380,8 @@ mapping_impl::reserve_remote_mapping_resources_(mapping_entry *mapping,
 }
 
 sdk_ret_t
-mapping_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
+                                api_obj_ctxt_t *obj_ctxt) {
     vpc_entry *vpc;
     subnet_entry *subnet;
     pds_mapping_spec_t *spec;

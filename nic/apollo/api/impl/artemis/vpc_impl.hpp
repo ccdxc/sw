@@ -44,10 +44,11 @@ public:
     static void destroy(vpc_impl *impl);
 
     /// \brief      allocate/reserve h/w resources for this object
+    /// \param[in]  api_obj  object for which resources are being reserved
     /// \param[in]  orig_obj old version of the unmodified object
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t reserve_resources(api_base *orig_obj,
+    virtual sdk_ret_t reserve_resources(api_base *api_obj, api_base *orig_obj,
                                         api_obj_ctxt_t *obj_ctxt) override;
 
     /// \brief  free h/w resources used by this object, if any

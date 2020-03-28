@@ -117,13 +117,13 @@ vpc_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-vpc_entry::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+vpc_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret = SDK_RET_OK;
 
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
         if (impl_) {
-            ret = impl_->reserve_resources(this, obj_ctxt);
+            ret = impl_->reserve_resources(this, orig_obj, obj_ctxt);
         } else {
             if (vpc_db()->vpc_idxr()->alloc((uint32_t *)&this->hw_id_) !=
                 sdk::lib::indexer::SUCCESS) {
