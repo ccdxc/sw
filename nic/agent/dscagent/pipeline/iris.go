@@ -1670,11 +1670,14 @@ func (i *IrisAPI) ReplayConfigs() error {
 	}
 	networks, _ := i.HandleNetwork(types.List, nwKind)
 	for _, nt := range networks {
-		creator, ok := nt.ObjectMeta.Labels["CreatedBy"]
-		if ok && creator == "Venice" {
+		// Do not delete default network created in PipelineInit
+		if nt.ObjectMeta.Name != types.InternalDefaultUntaggedNetwork {
 			log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", nt.Kind, nt.GetKey())
 			i.InfraAPI.Delete(nt.Kind, nt.GetKey())
+		}
 
+		creator, ok := nt.ObjectMeta.Labels["CreatedBy"]
+		if ok && creator == "Venice" {
 			log.Infof("Replaying persisted Network Object: %v", nt.GetKey())
 			if _, err := i.HandleNetwork(types.Create, nt); err != nil {
 				log.Errorf("Failed to recreate Network: %v. Err: %v", nt.GetKey(), err)
@@ -1688,11 +1691,11 @@ func (i *IrisAPI) ReplayConfigs() error {
 	}
 	endpoints, _ := i.HandleEndpoint(types.List, epKind)
 	for _, ep := range endpoints {
+		log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", ep.Kind, ep.GetKey())
+		i.InfraAPI.Delete(ep.Kind, ep.GetKey())
+
 		creator, ok := ep.ObjectMeta.Labels["CreatedBy"]
 		if ok && creator == "Venice" {
-			log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", ep.Kind, ep.GetKey())
-			i.InfraAPI.Delete(ep.Kind, ep.GetKey())
-
 			log.Infof("Replaying persisted Network Object: %v", ep.GetKey())
 			if _, err := i.HandleEndpoint(types.Create, ep); err != nil {
 				log.Errorf("Failed to recreate Endpoint: %v. Err: %v", ep.GetKey(), err)
@@ -1700,28 +1703,23 @@ func (i *IrisAPI) ReplayConfigs() error {
 		}
 	}
 
-	//// Replay Tunnel Object Tunnel Replay is not needed since its not created by Venice. Uncomment this when Venice supports tunnel creations
-	//tunnels, err := i.InfraAPI.List("Tunnel")
-	//if err == nil {
-	//	for _, o := range tunnels {
-	//		var tunnel netproto.Tunnel
-	//		err := tunnel.Unmarshal(o)
-	//		if err != nil {
-	//			log.Errorf("Failed to unmarshal object to Tunnel. Err: %v", err)
-	//			continue
-	//		}
-	//		creator, ok := tunnel.ObjectMeta.Labels["CreatedBy"]
-	//		if ok && creator == "Venice" {
-	//			log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", tunnel.Kind, tunnel.GetKey())
-	//			i.InfraAPI.Delete(tunnel.Kind, tunnel.GetKey())
-	//
-	//			log.Info("Replaying persisted Tunnel objects")
-	//			if _, err := i.HandleTunnel(types.Create, tunnel); err != nil {
-	//				log.Errorf("Failed to recreate Tunnel: %v. Err: %v", tunnel.GetKey(), err)
-	//			}
-	//		}
-	//	}
-	//}
+	// Replay Tunnel Object Tunnel Replay is not needed since its not created by Venice. Uncomment this when Venice supports tunnel creations. Tunnel objects are deleted from the DB on config replay.
+	tlKind := netproto.Tunnel{
+		TypeMeta: api.TypeMeta{Kind: "Tunnel"},
+	}
+	tunnels, _ := i.HandleTunnel(types.List, tlKind)
+	for _, tl := range tunnels {
+		log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", tl.Kind, tl.GetKey())
+		i.InfraAPI.Delete(tl.Kind, tl.GetKey())
+
+		//	creator, ok := ep.ObjectMeta.Labels["CreatedBy"]
+		//	if ok && creator == "Venice" {
+		//		log.Infof("Replaying persisted Tunnel Object: %v", tl.GetKey())
+		//		if _, err := i.HandleTunnel(types.Create, tl); err != nil {
+		//			log.Errorf("Failed to recreate Tunnel: %v. Err: %v", tl.GetKey(), err)
+		//		}
+		//	}
+	}
 
 	// Replay NetworkSecurityPolicy Object
 	nspKind := netproto.NetworkSecurityPolicy{
@@ -1729,11 +1727,11 @@ func (i *IrisAPI) ReplayConfigs() error {
 	}
 	policies, _ := i.HandleNetworkSecurityPolicy(types.List, nspKind)
 	for _, policy := range policies {
+		log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", policy.Kind, policy.GetKey())
+		i.InfraAPI.Delete(policy.Kind, policy.GetKey())
+
 		creator, ok := policy.ObjectMeta.Labels["CreatedBy"]
 		if ok && creator == "Venice" {
-			log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", policy.Kind, policy.GetKey())
-			i.InfraAPI.Delete(policy.Kind, policy.GetKey())
-
 			log.Infof("Replaying persisted NetworkSecurityPolicy Object: %v", policy.GetKey())
 			if _, err := i.HandleNetworkSecurityPolicy(types.Create, policy); err != nil {
 				log.Errorf("Failed to recreate NetworkSecurityPolicy: %v. Err: %v", policy.GetKey(), err)
@@ -1747,11 +1745,11 @@ func (i *IrisAPI) ReplayConfigs() error {
 	}
 	collectors, _ := i.HandleCollector(types.List, collKind)
 	for _, collector := range collectors {
+		log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", collector.Kind, collector.GetKey())
+		i.InfraAPI.Delete(collector.Kind, collector.GetKey())
+
 		creator, ok := collector.ObjectMeta.Labels["CreatedBy"]
 		if ok && creator == "Venice" {
-			log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", collector.Kind, collector.GetKey())
-			i.InfraAPI.Delete(collector.Kind, collector.GetKey())
-
 			log.Infof("Replaying persisted Collector Object: %v", collector.GetKey())
 			if _, err := i.HandleCollector(types.Create, collector); err != nil {
 				log.Errorf("Failed to recreate Collector: %v. Err: %v", collector.GetKey(), err)
@@ -1765,17 +1763,46 @@ func (i *IrisAPI) ReplayConfigs() error {
 	}
 	secProfiles, _ := i.HandleSecurityProfile(types.List, secProfileKind)
 	for _, profile := range secProfiles {
+		log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", profile.Kind, profile.GetKey())
+		i.InfraAPI.Delete(profile.Kind, profile.GetKey())
+
 		creator, ok := profile.ObjectMeta.Labels["CreatedBy"]
 		if ok && creator == "Venice" {
-			log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", profile.Kind, profile.GetKey())
-			i.InfraAPI.Delete(profile.Kind, profile.GetKey())
-
 			log.Infof("Replaying persisted SecurityProfile Object: %v", profile.GetKey())
 			if _, err := i.HandleSecurityProfile(types.Create, profile); err != nil {
 				log.Errorf("Failed to recreate SecurityProfile: %v. Err: %v", profile.GetKey(), err)
 			}
 		}
 	}
+
+	// Replay Mirror Sessions Mirror Sessions replay logic is not baked yet, for now we rely on Venice to push the objects. Mirror objects are deleted from the DB on config replay.
+	mrKind := netproto.MirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
+	}
+	mirrors, _ := i.HandleMirrorSession(types.List, mrKind)
+	for _, mr := range mirrors {
+		log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", mr.Kind, mr.GetKey())
+		i.InfraAPI.Delete(mr.Kind, mr.GetKey())
+
+		//	creator, ok := ep.ObjectMeta.Labels["CreatedBy"]
+		//	if ok && creator == "Venice" {
+		//		log.Infof("Replaying persisted Mirror Object: %v", mr.GetKey())
+		//		if _, err := i.HandleMirrorSession(types.Create, mr); err != nil {
+		//			log.Errorf("Failed to recreate MirrorSession: %v. Err: %v", mr.GetKey(), err)
+		//		}
+		//	}
+	}
+
+	// Purge Flowexport policies
+	feKind := netproto.FlowExportPolicy{
+		TypeMeta: api.TypeMeta{Kind: "FlowExportPolicy"},
+	}
+	fepolicies, _ := i.HandleFlowExportPolicy(types.List, feKind)
+	for _, fe := range fepolicies {
+		log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", fe.Kind, fe.GetKey())
+		i.InfraAPI.Delete(fe.Kind, fe.GetKey())
+	}
+
 	return nil
 }
 

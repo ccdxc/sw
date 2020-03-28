@@ -4,7 +4,6 @@ package iris
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net"
 	"strconv"
@@ -37,15 +36,10 @@ func HandleNetworkSecurityPolicy(infraAPI types.InfraAPI, client halapi.NwSecuri
 }
 
 func createNetworkSecurityPolicyHandler(infraAPI types.InfraAPI, client halapi.NwSecurityClient, nsp netproto.NetworkSecurityPolicy, vrfID uint64, ruleIDToAppMapping *sync.Map) error {
-	c, _ := json.Marshal(nsp)
-	log.Infof("Create SGP Req to Agent: %v", string(c))
 
 	nspReqMsg := convertNetworkSecurityPolicy(nsp, vrfID, ruleIDToAppMapping)
-	b, _ := json.Marshal(nspReqMsg)
-	log.Infof("Create SGP Req to Datapath: %s", string(b))
 
 	resp, err := client.SecurityPolicyCreate(context.Background(), nspReqMsg)
-	log.Infof("Datapath Create SGP Response: %v", resp)
 	if resp != nil {
 		if err := utils.HandleErr(types.Create, resp.Response[0].ApiStatus, err, fmt.Sprintf("Create Failed for %s | %s", nsp.GetKind(), nsp.GetKey())); err != nil {
 			return err
@@ -61,15 +55,10 @@ func createNetworkSecurityPolicyHandler(infraAPI types.InfraAPI, client halapi.N
 }
 
 func updateNetworkSecurityPolicyHandler(infraAPI types.InfraAPI, client halapi.NwSecurityClient, nsp netproto.NetworkSecurityPolicy, vrfID uint64, ruleIDToAppMapping *sync.Map) error {
-	c, _ := json.Marshal(nsp)
-	log.Infof("Update SGP Req to Agent: %s", string(c))
 
 	nspReqMsg := convertNetworkSecurityPolicy(nsp, vrfID, ruleIDToAppMapping)
-	b, _ := json.Marshal(nspReqMsg)
-	log.Infof("Update SGP Req to Datapath: %s", string(b))
-	resp, err := client.SecurityPolicyUpdate(context.Background(), nspReqMsg)
-	log.Infof("Datapath Update SGP Response: %v", resp)
 
+	resp, err := client.SecurityPolicyUpdate(context.Background(), nspReqMsg)
 	if resp != nil {
 		if err := utils.HandleErr(types.Update, resp.Response[0].ApiStatus, err, fmt.Sprintf("Update Failed for %s | %s", nsp.GetKind(), nsp.GetKey())); err != nil {
 			return err
