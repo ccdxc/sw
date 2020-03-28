@@ -10,7 +10,6 @@
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "platform/utils/lif_manager_base.hpp"
-#include "platform/capri/capri_qstate.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
@@ -18,13 +17,11 @@
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 #include "nic/hal/pd/globalpd/gpd_utils.hpp"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
-#include "nic/platform/capri/capri_p4.hpp"
 #include "nic/p4/common/defines.h"
 #include "gen/p4gen/hello/include/p4pd.h"
 #include "nic/sdk/lib/device/device.hpp"
 
 using namespace sdk::platform::utils;
-using namespace sdk::platform::capri;
 
 uint8_t g_snd_pkt1[] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xC1,

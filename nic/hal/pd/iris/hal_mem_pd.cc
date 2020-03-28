@@ -54,7 +54,6 @@
 #include "nic/hal/pd/iris/internal/proxyccb_pd.hpp"
 //#include "nic/hal/pd/iris/dos/dos_pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/sdk/asic/pd/scheduler.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"

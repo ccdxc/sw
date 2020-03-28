@@ -60,6 +60,22 @@ elba_state_pd::factory (asic_cfg_t *cfg)
     return state;
 }
 
+sdk_ret_t
+elba_state_pd_init (asic_cfg_t *cfg)
+{
+    if (g_elba_state_pd) {
+        return SDK_RET_OK;
+    }
+
+    sdk::platform::elba::csr_init();
+
+    g_elba_state_pd = sdk::platform::elba::elba_state_pd::factory(cfg);
+    SDK_ASSERT_TRACE_RETURN((g_elba_state_pd != NULL), SDK_RET_INVALID_ARG,
+                            "Failed to instantiate Elba PD");
+    return SDK_RET_OK;
+}
+
+
 }    // namespace elba
 }    // namespace platform
 }    // namespace sdk

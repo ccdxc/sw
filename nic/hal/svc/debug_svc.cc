@@ -10,8 +10,6 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/src/debug/debug.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
-#include "nic/sdk/platform/capri/capri_tm_utils.hpp"
-#include "nic/sdk/platform/capri/capri_p4.hpp"
 #include "nic/hal/src/debug/snake.hpp"
 #include "nic/include/asic_pd.hpp"
 #include "nic/linkmgr/linkmgr_debug.hpp"

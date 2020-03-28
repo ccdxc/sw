@@ -12,7 +12,6 @@
 #include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/sdk/platform/capri/capri_p4.hpp"
-#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf_api.hpp"
 
 namespace hal {

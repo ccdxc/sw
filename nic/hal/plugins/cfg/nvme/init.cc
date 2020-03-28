@@ -1,12 +1,10 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 #include "nic/hal/hal.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/plugins/cfg/nvme/nvme.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/p4/common/defines.h"
-#include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
 #include "gen/hal/svc/nvme_svc_gen.hpp"
 
 using grpc::Server;

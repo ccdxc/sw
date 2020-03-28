@@ -19,7 +19,6 @@
 #include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "lib/bm_allocator/bm_allocator.hpp"
-#include "platform/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/pd/iris/flow/flow_table_pd.hpp"
 

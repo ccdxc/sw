@@ -19,14 +19,11 @@
 #include "nic/sdk/lib/p4/p4_utils.hpp"
 #include "lib/table/directmap/directmap.hpp"
 #include "lib/table/common/table.hpp"
-#include "platform/capri/capri_common.hpp"
 #include "platform/src/lib/nicmgr/include/eth_if.h"
 #include "platform/src/lib/nicmgr/include/virtio_if.h"
 #include "platform/utils/mpartition.hpp"
-#include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/lib/device/device.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
-#include "nic/sdk/platform/capri/capri_state.hpp"
 #include "platform/src/lib/nicmgr/include/rdma_dev.hpp"
 #include "asic/pd/pd.hpp"
 
@@ -71,7 +68,7 @@
 directmap    **p4plus_rxdma_dm_tables_;
 directmap    **p4plus_txdma_dm_tables_;
 
-using namespace sdk::platform::capri;
+using namespace sdk::asic::pd;
 using namespace sdk::platform::utils;
 
 typedef struct {
@@ -2287,7 +2284,7 @@ void
 pd_init()
 {
     int ret;
-    capri_state_pd_init(NULL);
+    asicpd_state_pd_init(NULL);
 
     ret = p4plus_rxdma_init_tables();
     assert(ret == 0);
@@ -2295,7 +2292,7 @@ pd_init()
     assert(ret == 0);
 
 #if !defined(APOLLO) || !defined(ARTEMIS) || !defined(APULU) || !defined(ATHENA)
-    ret = capri_p4plus_table_rw_init();
+    ret = asicpd_p4plus_table_rw_init();
     assert(ret == 0);
 #endif
 }

@@ -12,14 +12,11 @@
 #include "lib/table/common/table.hpp"
 #include "lib/bm_allocator/bm_allocator.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "platform/capri/capri_common.hpp"
-#include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/platform/rdmamgr/rdmamgr.hpp"
 #include "nic/sdk/asic/asic.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "platform/utils/mpartition.hpp"
-#include "nic/sdk/platform/capri/capri_state.hpp"
 #include "platform/src/lib/eth_p4plus/eth_p4pd.hpp"
 
 // Memory bar should be multiple of 8 MB

@@ -17,11 +17,6 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 
-// TODO: clean this up
-#include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
-#include "nic/sdk/platform/capri/capri_common.hpp"
-#include "nic/sdk/asic/pd/pd.hpp"
-
 #include "nic/sdk/platform/ring/ring.hpp"
 #include "nic/sdk/platform/pal/include/pal_mem.h"
 #include "nic/apollo/core/trace.hpp"
@@ -530,8 +525,8 @@ apulu_impl::p4plus_table_init_(void) {
     prog.pipe = P4_PIPELINE_RXDMA;
     // configure only in hardinit
     if (api::g_pds_state.cold_boot()) {
-        sdk::platform::capri::capri_p4plus_table_init(&prog,
-                                                      api::g_pds_state.platform_type());
+        sdk::asic::pd::asicpd_p4plus_table_init(&prog,
+                                                api::g_pds_state.platform_type());
     } else {
         // for upgrade init, save the information and will be applied after p4 quiesce
         table_engine_cfg_backup_(P4_PIPELINE_RXDMA);
@@ -547,8 +542,8 @@ apulu_impl::p4plus_table_init_(void) {
     prog.pipe = P4_PIPELINE_TXDMA;
     // configure only in hardinit
     if (api::g_pds_state.cold_boot()) {
-        sdk::platform::capri::capri_p4plus_table_init(&prog,
-                                                      api::g_pds_state.platform_type());
+        sdk::asic::pd::asicpd_p4plus_table_init(&prog,
+                                                api::g_pds_state.platform_type());
     } else {
         // for upgrade init, save the information and will be applied after p4 quiesce
         table_engine_cfg_backup_(P4_PIPELINE_TXDMA);

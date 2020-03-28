@@ -950,7 +950,7 @@ capri_table_rw_init (asic_cfg_t *capri_cfg)
     return (SDK_RET_OK);
 }
 
-int
+sdk_ret_t
 capri_p4plus_table_rw_init (void)
 {
     // !!!!!!
@@ -960,7 +960,7 @@ capri_p4plus_table_rw_init (void)
     capri_p4plus_shadow_init();
     sdk::platform::capri::csr_init();
 
-     return (CAPRI_OK);
+     return (SDK_RET_OK);
 }
 
 uint8_t

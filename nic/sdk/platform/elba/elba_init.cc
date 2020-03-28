@@ -444,9 +444,9 @@ elba_init (asic_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((cfg != NULL), SDK_RET_INVALID_ARG, "Invalid cfg");
     SDK_TRACE_DEBUG("Initializing Elba");
 
-    g_elba_state_pd = sdk::platform::elba::elba_state_pd::factory(cfg);
-    SDK_ASSERT_TRACE_RETURN((g_elba_state_pd != NULL), SDK_RET_INVALID_ARG,
-                            "Failed to instantiate Elba PD");
+    ret = sdk::platform::elba::elba_state_pd_init(cfg);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "elba_state_pd_init failure, err : %d", ret);
 
     if (elba_table_rw_init(cfg) != ELBA_OK) {
         return SDK_RET_ERR;

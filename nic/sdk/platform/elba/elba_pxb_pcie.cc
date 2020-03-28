@@ -13,7 +13,7 @@ namespace platform {
 namespace elba {
 
 sdk_ret_t
-elba_pxb_pcie_init ()
+elba_pxb_pcie_init (void)
 {
     elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
     elb_pxb_csr_t &pxb_csr = elb0.pxb.pxb;

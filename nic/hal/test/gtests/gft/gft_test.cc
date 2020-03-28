@@ -12,7 +12,6 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "gen/p4gen/gft/include/p4pd.h"
 #include "nic/p4/gft/include/defines.h"
-#include "platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/asic_pd.hpp"

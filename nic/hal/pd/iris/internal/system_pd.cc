@@ -705,7 +705,7 @@ pd_clock_detail_get (pd_func_args_t *pd_func_args)
     pd_func_args_t                      conv_func_args;
 
     // Read hw time
-    capri_tm_get_clock_tick(&hw_ns);
+    sdk::asic::pd::asicpd_tm_get_clock_tick(&hw_ns);
     HAL_TRACE_DEBUG("Hardware tick:{}", hw_ns);
     args->hw_clock = HW_CLOCK_TICK_TO_NS(hw_ns);
     args->sw_delta = g_hal_state_pd->clock_delta();
@@ -730,7 +730,7 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
     timespec_t            sw_ts;
 
     // Read hw time
-    capri_tm_get_clock_tick(&hw_tick);
+    sdk::asic::pd::asicpd_tm_get_clock_tick(&hw_tick);
     hw_ns = HW_CLOCK_TICK_TO_NS(hw_tick);
 
     // get current time

@@ -34,6 +34,8 @@ private:
 };
 extern class elba_state_pd *g_elba_state_pd;
 
+sdk_ret_t elba_state_pd_init(asic_cfg_t *cfg);
+
 }    // namespace elba
 }    // namespace platform
 }    // namespace sdk

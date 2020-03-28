@@ -3,7 +3,6 @@
  */
 #include "logger.h"
 #include "LogMsg.h"
-#include "nic/sdk/platform/capri/csrint/csr_init.hpp"
 
 ::utils::log *g_trace_logger;
 ::utils::log *obfl_trace_logger;

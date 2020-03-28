@@ -11,7 +11,7 @@
 #include "nic/sdk/lib/ipc/ipc_ev.hpp"
 #include "lib/event_thread/event_thread.hpp"
 #include "platform/evutils/include/evutils.h"
-#include "platform/capri/csrint/csr_init.hpp"
+#include "asic/pd/pd.hpp"
 #include "platform/asicerror/interrupts.hpp"
 
 #define SYSMOND_TIMER_ID_POLL 1
@@ -132,7 +132,7 @@ main(int argc, char *argv[])
     // event cb init
     event_cb_init();
 
-    sdk::platform::capri::csr_init();
+    sdk::asic::pd::asicpd_csr_init();
 
     g_catalog = sdk::lib::catalog::factory();
 

@@ -158,6 +158,8 @@ void asicpd_p4_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
 bool asicpd_p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                                     p4plus_cache_action_t action);
 int asicpd_p4plus_table_init(p4plus_table_params_t *table_params);
+int asicpd_p4plus_table_init(p4plus_prog_t *prog,
+                             platform_type_t platform_type);
 sdk_ret_t asicpd_tm_get_clock_tick(uint64_t *tick);
 sdk_ret_t asicpd_tm_debug_stats_get(tm_port_t port,
                                     tm_debug_stats_t *debug_stats, bool reset);
@@ -231,6 +233,10 @@ void asicpd_set_table_txdma_asm_base(int tableid, uint64_t asm_base);
 sdk_ret_t asicpd_init(asic_cfg_t *cfg);
 void asicpd_cleanup(void);
 sdk_ret_t asicpd_pgm_init(void);
+sdk_ret_t asicpd_p4plus_table_rw_init(void);
+sdk_ret_t asicpd_state_pd_init(asic_cfg_t *cfg);
+void asicpd_csr_init(void);
+
 
 // Asic Doorbell address
 uint64_t asicpd_local_dbaddr_get(void);

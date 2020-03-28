@@ -10,6 +10,7 @@
 #include "platform/utils/mpartition.hpp"
 #include "platform/ring/ring.hpp"
 #include "p4/loader/loader.hpp"
+#include "lib/p4/p4_api.hpp"
 #include "lib/device/device.hpp"
 
 namespace sdk {
@@ -118,6 +119,15 @@ typedef struct p4_table_mem_layout_ {
     mem_addr_t  base_mem_va; /* Virtual  address in  memory */
     char        *tablename;
 } p4_table_mem_layout_t;
+
+typedef struct p4plus_prog_s {
+    int stageid;
+    int stage_tableid;
+    int stage_tableid_off;
+    const char *control;
+    const char *prog_name;
+    p4pd_pipeline_t pipe;
+} p4plus_prog_t;
 
 typedef enum asic_block_e {
     ASIC_BLOCK_PACKET_BUFFER,
@@ -251,6 +261,7 @@ using sdk::asic::lif_qstate_t;
 using sdk::asic::lif_qtype_info_t;
 using sdk::asic::kAllocUnit;
 using sdk::asic::kNumQTypes;
+using sdk::asic::p4plus_prog_t;
 using sdk::asic::p4plus_cache_action_t;
 using sdk::asic::p4plus_cache_action_t::P4PLUS_CACHE_ACTION_NONE;
 using sdk::asic::p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_RXDMA;

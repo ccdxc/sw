@@ -13,7 +13,6 @@
 
 #include "nic/include/base.hpp"
 #include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/capri/capri_txs_scheduler.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
@@ -802,7 +801,7 @@ FtlLif::ftl_lif_hal_up_action(ftl_lif_event_t event,
     cosB = 0;
     ctl_cosA = 1;
 
-    hw_coreclk_freq = sdk::platform::capri::capri_get_coreclk_freq(pd->platform_);
+    hw_coreclk_freq = sdk::asic::pd::asicpd_get_coreclk_freq(pd->platform_);
     NIC_LOG_DEBUG("{}: hw_coreclk_freq {}", LifNameGet(), hw_coreclk_freq);
     hw_ns_per_tick = hw_coreclk_freq ?
                      (double)1E9 / (double)hw_coreclk_freq : 0;

@@ -5,11 +5,13 @@
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
 #include "platform/capri/capri_qstate.hpp"
+#include "platform/capri/capri_state.hpp"
 #include "platform/capri/capri_mon.hpp"
 #include "platform/capri/capri_tm_utils.hpp"
 #include "platform/capri/capri_sw_phv.hpp"
 #include "platform/capri/capri_quiesce.hpp"
 #include "platform/capri/capri_pxb_pcie.hpp"
+#include "platform/capri/csrint/csr_init.hpp"
 #include "asic/asic.hpp"
 #include "asic/pd/pd.hpp"
 #include "asic/cmn/asic_state.hpp"
@@ -551,6 +553,13 @@ asicpd_p4plus_table_init (platform_type_t platform_type,
                                    stage_tableid_txdma_act_ext);
 }
 
+int
+asicpd_p4plus_table_init (p4plus_prog_t *prog,
+                          platform_type_t platform_type)
+{
+    return capri_p4plus_table_init(prog, platform_type);
+}
+
 sdk_ret_t
 asicpd_tm_get_clock_tick (uint64_t *tick)
 {
@@ -782,6 +791,24 @@ sdk_ret_t
 asicpd_pgm_init (void)
 {
     return capri_pgm_init();
+}
+
+sdk_ret_t
+asicpd_p4plus_table_rw_init (void)
+{
+    return capri_p4plus_table_rw_init();
+}
+
+sdk_ret_t
+asicpd_state_pd_init (asic_cfg_t *cfg)
+{
+    return capri_state_pd_init(cfg);
+}
+
+void
+asicpd_csr_init (void)
+{
+    csr_init();
 }
 
 sdk_ret_t

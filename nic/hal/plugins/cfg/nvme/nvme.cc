@@ -16,7 +16,6 @@
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "nic/sdk/nvme/nvme_common.h"
 #include "nic/include/nvme_dpath.h"
-#include "nic/sdk/platform/capri/capri_barco_rings.hpp"
 #include "nvme_global.hpp"
 #include "nvme_sesscb.hpp"
 #include "nvme_ns.hpp"

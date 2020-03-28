@@ -10,11 +10,8 @@
 #include <arpa/inet.h>
 #include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "platform/capri/capri_txs_scheduler.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/hal.hpp"
-#include "platform/capri/capri_common.hpp"
 #include "nvme_cq_pd.hpp"
 #include "nvme_global_pd.hpp"
 #include "nvme_pd.hpp"

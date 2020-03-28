@@ -3,6 +3,7 @@
 #include "nic/include/hal.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
 #include "platform/capri/capri_pxb_pcie.hpp"
@@ -23,11 +24,11 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
 {
     uint32_t    i = 0;
     uint64_t    offset;
-    uint32_t capri_coreclk_freq; //Mhz
+    uint32_t    hw_coreclk_freq; //Mhz
 
-    capri_coreclk_freq = (uint32_t)(sdk::platform::capri::capri_get_coreclk_freq(platform_type) / 1000000);
+    hw_coreclk_freq = (uint32_t)(sdk::asic::pd::asicpd_get_coreclk_freq(platform_type) / 1000000);
 
-    HAL_TRACE_DEBUG("Capri core clock freq is {} Mhz", capri_coreclk_freq);
+    HAL_TRACE_DEBUG("Capri core clock freq is {} Mhz", hw_coreclk_freq);
 
 
     *p4plus_symbols = (sdk::p4::p4_param_info_t *)
@@ -275,7 +276,7 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     i++;
 
     symbols[i].name = NUM_CLOCK_TICKS_PER_US;
-    symbols[i].val = capri_coreclk_freq;
+    symbols[i].val = hw_coreclk_freq;
     i++;
 
     symbols[i].name = QOS_DSCP_COS_MAP_BASE;

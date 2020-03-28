@@ -6,7 +6,6 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/p4/common/defines.h"
-#include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
 #ifdef __x86_64__
 #include "gen/hal/svc/rdma_svc_gen.hpp"
 #endif

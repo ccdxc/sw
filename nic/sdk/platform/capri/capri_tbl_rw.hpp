@@ -26,17 +26,8 @@ namespace capri {
 #define CAPRI_OK (0)
 #define CAPRI_FAIL (-1)
 
-typedef struct p4plus_prog_s {
-    int stageid;
-    int stage_tableid;
-    int stage_tableid_off;
-    const char *control;
-    const char *prog_name;
-    p4pd_pipeline_t pipe;
-} p4plus_prog_t;
-
 sdk_ret_t capri_table_rw_init(asic_cfg_t *capri_cfg);
-int capri_p4plus_table_rw_init(void);
+sdk_ret_t capri_p4plus_table_rw_init(void);
 void capri_mpu_icache_invalidate(void);
 
 void capri_table_rw_cleanup();
@@ -170,7 +161,5 @@ sdk_ret_t capri_tbl_eng_cfg_modify(p4pd_pipeline_t pipeline,
 } // namespace capri
 } // namespace platform
 } // namespace sdk
-
-using sdk::platform::capri::p4plus_prog_t;
 
 #endif

@@ -5,11 +5,13 @@
 #include "platform/elba/elba_tbl_rw.hpp"
 #include "platform/elba/elba_txs_scheduler.hpp"
 #include "platform/elba/elba_qstate.hpp"
+#include "platform/elba/elba_state.hpp"
 #include "platform/elba/elba_mon.hpp"
 #include "platform/elba/elba_tm_utils.hpp"
 #include "platform/elba/elba_sw_phv.hpp"
 #include "platform/elba/elba_quiesce.hpp"
 #include "platform/elba/elba_pxb_pcie.hpp"
+#include "platform/elba/csrint/csr_init.hpp"
 #include "asic/pd/pd.hpp"
 #include "asic/pd/pd_internal.hpp"
 #include "lib/utils/time_profile.hpp"
@@ -634,6 +636,24 @@ asicpd_rss_tbl_eng_cfg_modify (p4_tbl_eng_cfg_t *rss)
 {
     elba_rss_table_config(rss->stage, rss->stage_tableid, rss->mem_offset,
                           rss->asm_base);
+}
+
+sdk_ret_t
+asicpd_p4plus_table_rw_init (void)
+{
+    return elba_p4plus_table_rw_init();
+}
+
+sdk_ret_t
+asicpd_state_pd_init (asic_cfg_t *cfg)
+{
+    return elba_state_pd_init(cfg);
+}
+
+void
+asicpd_csr_init (void)
+{
+    csr_init();
 }
 
 sdk_ret_t

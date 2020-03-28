@@ -16,7 +16,6 @@
 #include <google/protobuf/util/json_util.h>
 #include <fcntl.h>
 #include <malloc.h>
-#include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"

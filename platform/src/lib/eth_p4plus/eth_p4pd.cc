@@ -10,7 +10,6 @@
 
 #include "lib/p4/p4_api.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
-#include "platform/capri/capri_tbl_rw.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "asic/rw/asicrw.hpp"
 #include "asic/asic.hpp"

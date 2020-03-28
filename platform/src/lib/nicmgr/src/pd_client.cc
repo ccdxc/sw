@@ -3,7 +3,7 @@
 */
 
 #include <cstring>
-
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "gen/platform/mem_regions.hpp"
 
 #include "nic/p4/common/defines.h"
@@ -14,7 +14,7 @@
 #include "rdma_dev.hpp"
 #include "nicmgr_init.hpp"
 
-using namespace sdk::platform::capri;
+using namespace sdk::asic::pd;
 using namespace sdk::platform::utils;
 
 #define ENTRY_TRACE_EN          true
@@ -485,8 +485,8 @@ PdClient::init()
     int ret;
 
 #ifdef IRIS
-    // initialize capri_state_pd
-    sdk::platform::capri::capri_state_pd_init(NULL);
+    // initialize asicpd_state_pd
+    sdk::asic::pd::asicpd_state_pd_init(NULL);
 #endif
 
     NIC_LOG_DEBUG("Loading p4plus RxDMA asic lib tables cfg_path: {}...", hal_cfg_path_);
@@ -507,7 +507,7 @@ PdClient::init()
 
 #ifdef IRIS
     NIC_LOG_DEBUG("Initializing table rw ...");
-    ret = capri_p4plus_table_rw_init();
+    ret = asicpd_p4plus_table_rw_init();
     assert(ret == 0);
 #endif
 

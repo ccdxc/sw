@@ -3,11 +3,9 @@
 //-----------------------------------------------------------------------------
 
 #include "nvme_global_pd.hpp"
-#include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/sdk/platform/capri/capri_barco_rings.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
-#include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/sdk/nvme/nvme_common.h"
 #include "p4pd_nvme_api.h"

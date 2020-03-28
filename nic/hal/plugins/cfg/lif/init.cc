@@ -5,7 +5,6 @@
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/hal_cfg.hpp"
-#include "platform/capri/capri_common.hpp"
 #include "nic/hal/src/internal/cpulif.hpp"
 #include "nic/hal/src/internal/cpucb.hpp"
 
@@ -14,7 +13,6 @@ using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 
-using namespace sdk::platform::capri;
 using namespace sdk::platform::utils;
 
 namespace hal {

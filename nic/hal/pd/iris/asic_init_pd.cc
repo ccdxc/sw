@@ -6,7 +6,6 @@
 #include "nic/sdk/platform/utils/lif_mgr/lif_mgr.hpp"
 #include "nic/hal/pd/common_p4plus/common_p4plus.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
-#include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
 
 using namespace sdk::asic::pd;
 

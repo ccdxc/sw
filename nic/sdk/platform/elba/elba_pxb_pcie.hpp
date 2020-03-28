@@ -28,7 +28,7 @@ namespace elba {
 //
 //  @return hal_ret_t: Status of the operation
 //
-sdk_ret_t elba_pxb_pcie_init();
+sdk_ret_t elba_pxb_pcie_init(void);
 
 // elba_pxb_cfg_lif_bdf
 // API to configure a LIF with a BDF

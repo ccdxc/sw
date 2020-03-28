@@ -3,7 +3,6 @@
 // These functions act as a pass through for PD access by PI.
 
 #include "nic/include/pd_api.hpp"
-#include "nic/sdk/platform/capri/capri_barco_rings.hpp"
 #include "nic/hal/pd/capri/accel/accel_rgroup.hpp"
 
 namespace hal {
