@@ -93,22 +93,35 @@ func (client *NimbusClient) unlockObject(kind string, ometa api.ObjectMeta) {
 }
 
 // watchAggWatchRecvLoop receives from stream and write it to a channel
-func (client *NimbusClient) watchAggWatchRecvLoop(stream netproto.AggWatchApiV1_WatchObjectsClient, recvch chan<- *netproto.AggObjectEvent) {
+func (client *NimbusClient) watchAggWatchRecvLoop(ctx context.Context, stream netproto.AggWatchApiV1_WatchObjectsClient, recvch chan<- *netproto.AggObjectEvent) {
 	defer close(recvch)
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
 
 	// loop till the end
-	for {
-		// receive from stream
-		objList, err := stream.Recv()
-		if err != nil {
-			log.Errorf("Error receiving from watch channel. Exiting Agg watch. Err: %v", err)
-			return
+	done := make(chan error)
+	go func() {
+		for {
+			// receive from stream
+			objList, err := stream.Recv()
+			if err != nil {
+				log.Errorf("Error receiving from watch channel. Exiting Agg watch. Err: %v", err)
+				done <- nil
+				return
+			}
+
+			for _, evt := range objList.AggObjectEvents {
+				recvch <- evt
+			}
 		}
-		for _, evt := range objList.AggObjectEvents {
-			recvch <- evt
-		}
+	}()
+	select {
+	case <-done:
+		return
+	case <-ctx.Done():
+		stream.CloseSend()
+		//steam close should close the channel
+		<-done
 	}
 }
 
@@ -1650,7 +1663,7 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 
 	// start grpc stream recv
 	recvCh := make(chan *netproto.AggObjectEvent, evChanLength)
-	go client.watchAggWatchRecvLoop(stream, recvCh)
+	go client.watchAggWatchRecvLoop(ctx, stream, recvCh)
 
 	// loop till the end
 	for {

@@ -198,11 +198,28 @@ func (pf *objPushFilter) AddWatcher(kind string, watcher *Watcher) error {
 		if _, ok := pf.watchMap[bitID]; !ok {
 			pf.watchMap[bitID] = make(map[string]*Watcher)
 		}
+		log.Infof("PushDB watch for kind %v name %v", kind, watcher.Name)
 		pf.watchMap[bitID][kind] = watcher
 		return nil
 	}
 
 	return fmt.Errorf("Watcher %v not registered yet", watcher.Name)
+}
+
+func (pf *objPushFilter) GetWatchers(kind string) (*DBWatchers, error) {
+	pf.Lock()
+	defer pf.Unlock()
+	dbwatchers := &DBWatchers{DBType: "PushDB", Kind: kind}
+	for _, recv := range pf.idMap {
+		bitID := recv.(*receiver).bitID
+		if _, ok := pf.watchMap[bitID]; ok {
+			if watcher, ok := pf.watchMap[bitID][kind]; ok {
+				dbwatchers.Watchers = append(dbwatchers.Watchers,
+					DBWatch{Name: watcher.Name, Status: "Active"})
+			}
+		}
+	}
+	return dbwatchers, nil
 }
 
 func (pf *objPushFilter) RemoveWatcher(kind string, watcher *Watcher) error {
@@ -211,6 +228,7 @@ func (pf *objPushFilter) RemoveWatcher(kind string, watcher *Watcher) error {
 	if recv, ok := pf.idMap[watcher.Name]; ok {
 		bitID := recv.(*receiver).bitID
 		delete(pf.watchMap, bitID)
+		log.Infof("Pushdb unwatch for kind %v name %v", kind, watcher.Name)
 		return nil
 	}
 

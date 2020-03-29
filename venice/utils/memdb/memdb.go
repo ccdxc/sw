@@ -356,13 +356,12 @@ func (md *Memdb) WatchObjects(kind string, watcher *Watcher) error {
 	od := md.getObjdb(kind)
 
 	if !md.pushdb.KindEnabled(kind) {
-		log.Infof("PubDB watch for kind %v %v", kind, watcher.Name)
+		log.Infof("PubDB watch for kind %v name %v", kind, watcher.Name)
 		od.WatchLock.Lock()
 		od.watchers = append(od.watchers, watcher)
 		od.watchMap[watcher.Name] = watcher
 		od.WatchLock.Unlock()
 	} else {
-		log.Infof("PushDB watch for kind %v", kind)
 		return md.pushdb.AddWatcher(kind, watcher)
 	}
 
@@ -381,6 +380,7 @@ func (md *Memdb) StopWatchObjects(kind string, watcher *Watcher) error {
 			if other == watcher {
 				od.watchers = append(od.watchers[:i], od.watchers[i+1:]...)
 				delete(od.watchMap, watcher.Name)
+				log.Infof("PubDB unwatch for kind %v name %v", kind, watcher.Name)
 				break
 			}
 		}
@@ -1017,4 +1017,44 @@ func (md *Memdb) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(contents)
+}
+
+//GetWatchers gets watchers for db
+func (md *Memdb) GetWatchers(kind string) (*DBWatchers, error) {
+
+	od := md.getObjdb(kind)
+	dbwatchers := &DBWatchers{DBType: "PubDB", Kind: kind}
+
+	od.WatchLock.Lock()
+	defer od.WatchLock.Unlock()
+	for _, watcher := range od.watchMap {
+		dbwatchers.Watchers = append(dbwatchers.Watchers, DBWatch{Name: watcher.Name, Status: "Active"})
+	}
+
+	return dbwatchers, nil
+}
+
+//DBWatch db watch
+type DBWatch struct {
+	Name              string
+	Status            string
+	RegisteredCount   int
+	UnRegisteredCount int
+}
+
+//DBWatchers status of DB watchers
+type DBWatchers struct {
+	DBType   string
+	Kind     string
+	Watchers []DBWatch
+}
+
+// GetDBWatchers get DB watchers
+func (md *Memdb) GetDBWatchers(kind string) (*DBWatchers, error) {
+
+	if !md.pushdb.KindEnabled(kind) {
+		return md.GetWatchers(kind)
+	}
+
+	return md.pushdb.GetWatchers(kind)
 }

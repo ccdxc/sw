@@ -255,6 +255,20 @@ func (d *diagHandler) HandleRequest(ctx context.Context, req *diagapi.Diagnostic
 			ret.Content = strings.Replace(string(str), "\\\"", "\"", -1)
 		}
 
+	case "watch-db":
+		kind, ok := params["kind"]
+		if !ok {
+			ret.Content = "kind was not specified"
+		} else {
+			objs := d.stateMgr.GetDBWatchStatus(kind)
+			str, err := json.Marshal(objs)
+			if err != nil {
+				ret.Content = fmt.Sprintf("marshall returned error (%s)", err)
+			} else {
+				ret.Content = strings.Replace(string(str), "\\\"", "\"", -1)
+			}
+		}
+
 	case "config-stats":
 		cfgPushStats := d.stateMgr.GetConfigPushStats()
 		str, err := json.Marshal(cfgPushStats)

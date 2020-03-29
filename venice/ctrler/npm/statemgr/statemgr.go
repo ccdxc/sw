@@ -867,6 +867,24 @@ type configPushStatus struct {
 	NodesStatus []*nodeStatus
 }
 
+//DBWatch db watch
+type DBWatch struct {
+	Name              string
+	status            string
+	registeredCount   int
+	unRegisteredCount int
+}
+
+//DBWatchers status of DB watchers
+type DBWatchers struct {
+	DBType   string
+	Watchers []DBWatch
+}
+
+type dbWatchStatus struct {
+	KindWatchers map[string]DBWatchers
+}
+
 type stat struct {
 	MinMs, MaxMs, MeanMs float64
 }
@@ -1022,6 +1040,13 @@ func (sm *Statemgr) GetConfigPushStatus() interface{} {
 		}
 	}
 	return pushStatus
+}
+
+//GetDBWatchStatus for debugging
+func (sm *Statemgr) GetDBWatchStatus(kind string) interface{} {
+
+	dbWatcher, _ := sm.mbus.GetDBWatchers(kind)
+	return dbWatcher
 }
 
 //StartAppWatch stops App watch, used of testing

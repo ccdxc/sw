@@ -169,6 +169,11 @@ func (ms *MbusServer) DumpDatabase() ([]byte, error) {
 	return ms.memDB.MarshalJSON()
 }
 
+// GetDBWatchers gets DB watchers
+func (ms *MbusServer) GetDBWatchers(kind string) (*memdb.DBWatchers, error) {
+	return ms.memDB.GetDBWatchers(kind)
+}
+
 // NewMbusServer creates a new instance of message bus server
 func NewMbusServer(svcName string, grpcServer *rpckit.RPCServer) *MbusServer {
 	mbusServer := MbusServer{
