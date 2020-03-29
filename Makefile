@@ -957,6 +957,7 @@ bundle-image:
 	ln -f nic/naples_fw_.tar bin/bundle/naples_fw.tar
 	ln -f bin/venice-install/venice_appl_os.tgz bin/bundle/venice_appl_os.tgz
 	cd bin/bundle && tar -cf bundle.tar venice.tgz  naples_fw.tar venice_appl_os.tgz metadata.json
+	cd bin/bundle && rm -f venice.tgz naples_fw.tar venice_appl_os.tgz
 
 bundle-apulu-image:
 	cd bin/venice-install && tar -cf - initrd0.img  squashfs.img  vmlinuz0  | gzip -1 -c > venice_appl_os.tgz
@@ -973,6 +974,10 @@ bundle-apulu-image:
 	ln -f apulu-bundle/bin/venice-install/venice_appl_os.tgz apulu-bundle/venice_appl_os.tgz
 	cd apulu-bundle && tar -cf bundle.tar venice.tgz  naples_fw.tar venice_appl_os.tgz metadata.json
 	cd apulu-bundle && cat metadata.json ; ls -al; tar -tvf bundle.tar
+	#cd apulu-bundle && rm -f venice.tgz naples_fw.tar venice_appl_os.tgz
+	#cd apulu-bundle && rm -f bin/venice.tgz nic/naples_fw.tar bin/venice-install/venice_appl_os.tgz
+	ls -al bin
+	ls -al nic
 
 bundle-upgrade-image:
 	mkdir -p upgrade-bundle/bin
@@ -988,6 +993,8 @@ bundle-upgrade-image:
 	ln -f upgrade-bundle/bin/venice-install/venice_appl_os.tgz upgrade-bundle/venice_appl_os.tgz
 	cd upgrade-bundle && tar -cf bundle.tar venice.tgz  naples_fw.tar venice_appl_os.tgz metadata.json
 	cd upgrade-bundle && cat metadata.json ; ls -al; tar -tvf bundle.tar
+	#cd upgrade-bundle && rm -f venice.tgz naples_fw.tar venice_appl_os.tgz
+	#cd upgrade-bundle && rm -f bin/venice.tgz nic/naples_fw.tar bin/venice-install/venice_appl_os.tgz
 
 bundle-same-upgrade-image:
 	mkdir -p upgrade-bundle/bin

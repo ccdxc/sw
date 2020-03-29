@@ -577,7 +577,6 @@ func (node *esxHwNode) addNaplesEntity(in *iota.Node) error {
 			/*It is like running in a vm as its accesible only by ssh */
 			wload = Workload.NewWorkload(Workload.WorkloadTypeRemote, entityEntry.GetName(), node.name, node.logger)
 			for _, naplesCfg := range in.GetNaplesConfigs().GetConfigs() {
-
 				ip := naplesCfg.NaplesIpAddress
 				if naplesCfg.NaplesSecondaryIpAddress != "" {
 					ip = naplesCfg.NaplesSecondaryIpAddress

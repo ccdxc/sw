@@ -76,7 +76,8 @@ type ClusterActionIntf interface {
 	VerifyTechsupportStatus(techsupportName string) error
 
 	GetRolloutObject(scaleData bool) (*rollout.Rollout, error)
-	PerformRollout(rollout *rollout.Rollout, scaleData bool) error
+	CreateRolloutObject(bundleType, rolloutName string) (*rollout.Rollout, error)
+	PerformRollout(rollout *rollout.Rollout, scaleData bool, bundleType string) error
 	VerifyRolloutStatus(rolloutName string) error
 
 	VerifyPolicyStatus(spc *objects.NetworkSecurityPolicyCollection) error

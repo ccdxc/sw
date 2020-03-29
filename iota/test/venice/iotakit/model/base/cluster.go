@@ -805,40 +805,6 @@ func (sm *SysModel) CheckNaplesHealth(node *objects.Naples) error {
 			NetworkMode     string   `protobuf:"bytes,6,opt,name=NetworkMode,proto3" json:"network-mode"`
 		}
 	}
-
-	// NAPLES is supposed to be part of a Cluster, so we need auth token to talk to Agent
-	veniceCtx, err := sm.VeniceLoggedInCtx(context.Background())
-	if err != nil {
-		nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
-		log.Errorf("%v", nerr)
-		return nerr
-	}
-	ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
-	defer cancel()
-	agentClient, err := utils.GetNodeAuthTokenHTTPClient(ctx, sm.GetVeniceURL()[0], []string{"*"})
-	if err != nil {
-		nerr := fmt.Errorf("Could not get naples authenticated client from Venice: %v", err)
-		log.Errorf("%v", nerr)
-		return nerr
-	}
-	status, err := agentClient.Req("GET", "https://"+nodeIP+":8888/api/v1/naples/", nil, &naplesStatus)
-	if err != nil || status != http.StatusOK {
-		nerr := fmt.Errorf("Could not get naples status from NMD. Status: %v, err: %v", status, err)
-		log.Errorf("%v", nerr)
-		return nerr
-	}
-	//mode := "OOB"
-	//for _, naples := range sm.NaplesNodes {
-	//	if naples.Nodeuuid == node.Nodeuuid && naples.GetTestNode().InstanceParams().Resource.InbandMgmt {
-	//		mode = "INBAND"
-	//	}
-	//}
-	// check naples status
-	if naplesStatus.Spec.Mode != "NETWORK" {
-		nerr := fmt.Errorf("Invalid NMD mode configuration: %+v", naplesStatus.Spec)
-		log.Errorf("%v", nerr)
-		return nerr
-	}
 	/*if testbed.IsNaplesHW(node.Personality()) {
 		if !strings.Contains(naplesStatus.Status.TransitionPhase, "REGISTRATION_DONE") {
 			nerr := fmt.Errorf("Invalid NMD phase: %v", naplesStatus.Status.TransitionPhase)
@@ -852,6 +818,71 @@ func (sm *SysModel) CheckNaplesHealth(node *objects.Naples) error {
 			return nerr
 		}
 	}*/
+		veniceCtx, err := sm.VeniceLoggedInCtx(context.Background())
+		if err != nil {
+			nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
+			log.Errorf("%v", nerr)
+			return nerr
+		}
+		ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
+		defer cancel()
+		agentClient, err := utils.GetNodeAuthTokenHTTPClient(ctx, sm.GetVeniceURL()[0], []string{"*"})
+		if err != nil {
+			nerr := fmt.Errorf("Could not get naples authenticated client from Venice: %v", err)
+			log.Errorf("%v", nerr)
+			return nerr
+		}
+
+	if os.Getenv("RELEASE_A") != "" {
+		// get naples info from Netagent
+		// Note: struct redefined here to avoid dependency on netagent package
+		var naplesInfo struct {
+			UUID                 string   `json:"naples-uuid,omitempty"`
+			ControllerIPs        []string `json:"controller-ips,omitempty"`
+			Mode                 string   `json:"naples-mode,omitempty"`
+			IsNpmClientConnected bool     `json:"is-npm-client-connected,omitempty"`
+		}
+		status, kerr := agentClient.Req("GET", "https://"+nodeIP+":8888/api/system/info/", nil, &naplesInfo)
+		if kerr != nil || status != http.StatusOK {
+			nerr := fmt.Errorf("Error checking netagent health. Status: %v, err: %v", status, kerr)
+			log.Errorf("%v", nerr)
+			return nerr
+		}
+
+		if !strings.Contains(naplesInfo.Mode, "network-managed") {
+			nerr := fmt.Errorf("Naples/Netagent is in incorrect mode: %s", naplesInfo.Mode)
+			log.Errorf("%v", nerr)
+			return nerr
+		} else if !naplesInfo.IsNpmClientConnected {
+			nerr := fmt.Errorf("Netagent NPM client is not connected to Venice")
+			log.Errorf("%v", nerr)
+			return nerr
+		}
+
+		return nil
+	} else {
+
+		// NAPLES is supposed to be part of a Cluster, so we need auth token to talk to Agent
+		status, err := agentClient.Req("GET", "https://"+nodeIP+":8888/api/v1/naples/", nil, &naplesStatus)
+		if err != nil || status != http.StatusOK {
+			nerr := fmt.Errorf("Could not get naples status from NMD. Status: %v, err: %v", status, err)
+			log.Errorf("%v", nerr)
+			return nerr
+		}
+		//mode := "OOB"
+		//for _, naples := range sm.NaplesNodes {
+		//	if naples.Nodeuuid == node.Nodeuuid && naples.GetTestNode().InstanceParams().Resource.InbandMgmt {
+		//		mode = "INBAND"
+		//	}
+		//}
+		// check naples status
+		if naplesStatus.Spec.Mode != "NETWORK" {
+			nerr := fmt.Errorf("Invalid NMD mode configuration: %+v", naplesStatus.Spec)
+			log.Errorf("%v", nerr)
+			return nerr
+		}
+
+	}
 
 	// get naples info from Netagent
 	// Note: struct redefined here to avoid dependency on netagent package
@@ -863,9 +894,9 @@ func (sm *SysModel) CheckNaplesHealth(node *objects.Naples) error {
 		IsConnectedToVenice bool     `json:"is-connected-to-venice"`
 	}
 
-	status, err = agentClient.Req("GET", "https://"+nodeIP+":8888/api/mode/", nil, &naplesInfo)
-	if err != nil || status != http.StatusOK {
-		nerr := fmt.Errorf("Error checking netagent health. Status: %v, err: %v", status, err)
+	status, perr := agentClient.Req("GET", "https://"+nodeIP+":8888/api/mode/", nil, &naplesInfo)
+	if perr != nil || status != http.StatusOK {
+		nerr := fmt.Errorf("Error checking netagent health. Status: %v, err: %v", status, perr)
 		log.Errorf("%v", nerr)
 		return nerr
 	}
@@ -967,7 +998,7 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 
 	err = sm.readNodeUUIDs(nodes)
 	if err != nil {
-		log.Infof("Reading node uuids failed.")
+		log.Infof("Error reading node uuids %v", err.Error())
 		return err
 	}
 
@@ -1029,37 +1060,35 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode, noReboot boo
 		}
 	}
 
-	if !sm.AutoDiscovery {
+	if sm.AutoDiscovery {
+		return nil
+	}
+	//No longeer reload  of naples is needed : Auto Discovery / DSCProfile change should help
+	// Retaining this, in case , we have to revert
+	var hostNames string
+	nodeMsg := &iota.NodeMsg{
+		ApiResponse: &iota.IotaAPIResponse{},
+		Nodes:       []*iota.Node{},
+	}
+	for _, node := range nodes {
+		if testbed.IsNaplesHW(node.Personality) {
+			nodeMsg.Nodes = append(nodeMsg.Nodes, &iota.Node{Name: node.NodeName})
+			hostNames += node.NodeName + ", "
 
-		//No longeer reload  of naples is needed : Auto Discovery / DSCProfile change should help
-		// Retaining this, in case , we have to revert
-		var hostNames string
-		nodeMsg := &iota.NodeMsg{
-			ApiResponse: &iota.IotaAPIResponse{},
-			Nodes:       []*iota.Node{},
-		}
-		for _, node := range nodes {
-			if testbed.IsNaplesHW(node.Personality) {
-				nodeMsg.Nodes = append(nodeMsg.Nodes, &iota.Node{Name: node.NodeName})
-				hostNames += node.NodeName + ", "
-
-			}
-		}
-		log.Info("Reload Naples")
-
-		reloadMsg := &iota.ReloadMsg{
-			NodeMsg: nodeMsg,
-		}
-		topoClient := iota.NewTopologyApiClient(sm.Tb.Client().Client)
-		reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
-		if err != nil {
-			return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
-		} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-			return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
 		}
 
 	}
 
+	reloadMsg := &iota.ReloadMsg{
+		NodeMsg: nodeMsg,
+	}
+	topoClient := iota.NewTopologyApiClient(sm.Tb.Client().Client)
+	reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
+	if err != nil {
+		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
+	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
+	}
 	return nil
 }
 
@@ -1121,6 +1150,9 @@ func (sm *SysModel) enableSSH(nodes []*testbed.TestNode, token string) error {
 			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 			for _, naples := range node.NaplesConfigs.Configs {
 				penctlNaplesURL := "http://" + naples.NaplesIpAddress
+				if naples.NaplesSecondaryIpAddress != "" {
+					penctlNaplesURL = "http://" + naples.NaplesSecondaryIpAddress
+				}
 				cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s  -a %s update ssh-pub-key -f ~/.ssh/id_rsa.pub",
 					penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile)
 				trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)

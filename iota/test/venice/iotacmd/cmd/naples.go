@@ -131,7 +131,7 @@ func doNaplesUpgrade(percent int) error {
 		return err
 	}
 
-	err = setupModel.PerformRollout(rollout, true)
+	err = setupModel.PerformRollout(rollout, true, "upgrade-bundle")
 	if err != nil {
 		return err
 	}

@@ -49,8 +49,8 @@ func processMetadataFile(metadata string) map[string]map[string]string {
 	return versionMap
 }
 
-func getCmdGitVersion() string {
-	metadataFile := fmt.Sprintf("%s/src/github.com/pensando/sw/upgrade-bundle/metadata.json", os.Getenv("GOPATH"))
+func getImageVersion(bundleType string) string {
+	metadataFile := fmt.Sprintf("%s/src/github.com/pensando/sw/%s/metadata.json", os.Getenv("GOPATH"), bundleType)
 	versionMap := processMetadataFile(metadataFile)
 	if versionMap != nil {
 		return versionMap["Bundle"]["Version"]
@@ -58,6 +58,45 @@ func getCmdGitVersion() string {
 	return ""
 }
 
+// CreateRolloutObject gets rollout instance
+func (sm *SysModel) CreateRolloutObject(bundleType, name string) (*rollout.Rollout, error) {
+
+	seconds := time.Now().Unix()
+	scheduledStartTime := &api.Timestamp{
+		Timestamp: types.Timestamp{
+			Seconds: seconds + 30, //Add a scheduled rollout with 30 second delay
+		},
+	}
+
+	version := getImageVersion(bundleType)
+	log.Errorf("getImageVersion %s", version)
+	if version == "" {
+		log.Errorf("ts:%s Build Failure. Couldnt get version.json", time.Now().String())
+		return nil, errors.New("Build Failure. Couldnt get version information")
+	}
+
+
+	return &rollout.Rollout{
+		TypeMeta: api.TypeMeta{
+			Kind: "Rollout",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: name,
+		},
+		Spec: rollout.RolloutSpec{
+			Version:                   version,
+			ScheduledStartTime:        scheduledStartTime,
+			ScheduledEndTime:          nil,
+			Strategy:                  "LINEAR",
+			MaxParallel:               1,
+			MaxNICFailuresBeforeAbort: 2,
+			OrderConstraints:          nil,
+			Suspend:                   false,
+			DSCsOnly:                  false,
+			UpgradeType:               "Disruptive",
+		},
+	}, nil
+}
 // GetRolloutObject gets rollout instance
 func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 
@@ -88,7 +127,7 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 	var order []*labels.Selector
 	order = append(order, &orderelem)
 
-	version := getCmdGitVersion()
+	version := getImageVersion("upgrade-bundle")
 	log.Errorf("Calling GetGitVersion %s", version)
 	if version == "" {
 		log.Errorf("ts:%s Build Failure. Couldnt get version.json", time.Now().String())
@@ -153,7 +192,7 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 }
 
 // PerformImageUpload triggers image upgrade
-func (sm *SysModel) PerformImageUpload() error {
+func (sm *SysModel) PerformImageUpload(bundleType string) error {
 
 	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancelFunc()
@@ -161,7 +200,7 @@ func (sm *SysModel) PerformImageUpload() error {
 	if err != nil {
 		return err
 	}
-	_, err = sm.UploadBundle(ctx, "bundle.tar")
+	_, err = sm.UploadBundle(ctx, bundleType)
 	if err != nil {
 		log.Infof("Error (%+v) uploading bundle.", err)
 		return err
@@ -170,24 +209,28 @@ func (sm *SysModel) PerformImageUpload() error {
 }
 
 // UploadBundle performs a rollout in the cluster
-func (sm *SysModel) UploadBundle(ctx context.Context, filename string) (int, error) {
+func (sm *SysModel) UploadBundle(ctx context.Context, bundleType string) (int, error) {
 
-	rolloutFile := fmt.Sprintf("%s/src/github.com/pensando/sw/upgrade-bundle/bundle.tar", os.Getenv("GOPATH"))
+	rolloutFile := fmt.Sprintf("%s/src/github.com/pensando/sw/%s/bundle.tar", os.Getenv("GOPATH"), bundleType)
+	log.Infof("ts:%s Rollout Upload file name [%s]", time.Now().String(), rolloutFile)
 	r, w := io.Pipe()
 	m := multipart.NewWriter(w)
 	go func() {
 		defer w.Close()
 		defer m.Close()
-		part, err := m.CreateFormFile("file", filename)
+		part, err := m.CreateFormFile("file", "bundle.tar")
 		if err != nil {
+			log.Infof("CreateFromFile failed %+v", err)
 			return
 		}
 		file, err := os.Open(rolloutFile)
 		if err != nil {
+			log.Infof("Open of file %s failed %+v", rolloutFile, err)
 			return
 		}
 		defer file.Close()
-		if _, err = io.Copy(part, file); err != nil {
+		if sz, err := io.Copy(part, file); err != nil {
+			log.Infof("io copy failed %+v  %+v", sz,  err)
 			return
 		}
 	}()
@@ -642,7 +685,7 @@ outerLoop:
 }
 
 // PerformRollout performs a rollout in the cluster
-func (sm *SysModel) PerformRollout(rollout *rollout.Rollout, scaleData bool) error {
+func (sm *SysModel) PerformRollout(rollout *rollout.Rollout, scaleData bool, bundleType string) error {
 	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 15*time.Minute)
 	defer cancelFunc()
 	ctx, err := sm.VeniceLoggedInCtx(bkCtx)
@@ -656,7 +699,7 @@ func (sm *SysModel) PerformRollout(rollout *rollout.Rollout, scaleData bool) err
 	}
 	//cleanup the existing rollout object with the same name
 	//fetch the image and upload
-	err = sm.PerformImageUpload()
+	err = sm.PerformImageUpload(bundleType)
 	if err != nil {
 		log.Infof("Errored PerformImageUpload")
 		return err

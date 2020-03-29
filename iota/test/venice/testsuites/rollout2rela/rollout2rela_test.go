@@ -1,4 +1,4 @@
-package rollout_test
+package rollout2rela_test
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("rollout tests", func() {
+var _ = Describe("rollout rela to tot tests", func() {
 	BeforeEach(func() {
 		// verify cluster is in good health
 		Eventually(func() error {
@@ -33,18 +33,17 @@ var _ = Describe("rollout tests", func() {
 
 	})
 
-	Context("Iota Rollout tests", func() {
+	Context("Iota Rollout rela to tot tests", func() {
+		It("Perform rela to tot Rollout", func() {
 
-		It("Perform Rollout", func() {
-
-			rollout, err := ts.model.GetRolloutObject(ts.scaleData)
+			rollout, err := ts.model.CreateRolloutObject("upgrade-bundle", "release_a_iris")
 			Expect(err).ShouldNot(HaveOccurred())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(40)
 			log.Infof(" Length workloadPairs %v", len(workloadPairs.ListIPAddr()))
 			Expect(len(workloadPairs.ListIPAddr()) != 0).Should(BeTrue())
 
-			err = ts.model.PerformRollout(rollout, ts.scaleData, "upgrade-bundle")
+			err = ts.model.PerformRollout(rollout, ts.scaleData, "upgrade-bundle") //TOT' Image
 			Expect(err).ShouldNot(HaveOccurred())
 			rerr := make(chan bool)
 			go func() {
@@ -77,7 +76,7 @@ var _ = Describe("rollout tests", func() {
 			}
 			Expect(errWaitingForFuz()).ShouldNot(HaveOccurred())
 			return
-
 		})
+
 	})
 })
