@@ -345,8 +345,7 @@ policy::fill_spec_(pds_policy_spec_t *spec) {
     memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
     if (spec->rule_info) {
         spec->rule_info->af = af_;
-        spec->rule_info->num_rules = 0;
-        // rules are not stored anywhere yet
+        spec->rule_info->num_rules = num_rules_;
     }
 }
 

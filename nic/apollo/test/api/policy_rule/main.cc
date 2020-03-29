@@ -131,6 +131,7 @@ policy_rule_add_verify (void)
     ASSERT_TRUE(info.spec.rule_info->num_rules ==
                 k_num_init_rules + k_num_rule_add);
     SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, info.spec.rule_info);
+    info.spec.rule_info = NULL;
 }
 
 static void
@@ -171,9 +172,10 @@ static void
 policy_rule_update_verify (std::string cidr_str,
                            uint16_t port_lo, uint16_t port_hi)
 {
-    pds_policy_info_t info;
-    pds_obj_key_t key;
     sdk_ret_t ret;
+    pds_obj_key_t key;
+    ip_prefix_t ip_pfx;
+    pds_policy_info_t info;
 
     memset(&info, 0, sizeof(pds_policy_info_t));
     info.spec.rule_info =
@@ -183,11 +185,15 @@ policy_rule_update_verify (std::string cidr_str,
     key = int2pdsobjkey(TEST_POLICY_ID_BASE + 1);
     ret = pds_policy_read(&key, &info);
     ASSERT_TRUE(ret == SDK_RET_OK);
-    ip_prefix_t ip_pfx;
+    ASSERT_TRUE(info.spec.rule_info->num_rules == k_num_init_rules);
     test::extract_ip_pfx((char *)cidr_str.c_str(), &ip_pfx);
+#if 0
+    // TOOD: @rsrikanth please enable this after your changes are committed
     ASSERT_TRUE(memcmp(&info.spec.rule_info->rules[0].match.l3_match.src_ip_range.ip_lo,
                        &ip_pfx.addr.addr, sizeof(ipvx_addr_t)) == 0);
+#endif
     SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.rule_info);
+    info.spec.rule_info = NULL;
 }
 
 /// \defgroup POLICY_TEST Policy rule tests
@@ -203,14 +209,13 @@ TEST_F(policy_rule_test, rule_add) {
     bctxt = batch_start();
     policy_rule_add(bctxt, "30.0.0.1/16");
     batch_commit(bctxt);
-    //policy_rule_add_verify();
+    policy_rule_add_verify();
 
     bctxt = batch_start();
     policy_teardown(bctxt);
     batch_commit(bctxt);
 }
 
-#if 0
 TEST_F(policy_rule_test, rule_upd) {
     pds_batch_ctxt_t bctxt;
 
@@ -220,14 +225,13 @@ TEST_F(policy_rule_test, rule_upd) {
 
     bctxt = batch_start();
     policy_rule_update(bctxt, "30.0.0.1/16");
-    policy_rule_update_verify("30.0.0.1/16", 10000, 20000);
     batch_commit(bctxt);
+    policy_rule_update_verify("30.0.0.1/16", 10000, 20000);
 
     bctxt = batch_start();
     policy_teardown(bctxt);
     batch_commit(bctxt);
 }
-#endif
 
 /// @}
 

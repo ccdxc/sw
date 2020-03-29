@@ -180,13 +180,11 @@ pds_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
 
 sdk_ret_t
 pds_state::transaction_begin(void) {
-    //return mapping_db()->transaction_begin();
     return kvstore_->txn_start(sdk::lib::kvstore::TXN_TYPE_READ_WRITE);
 }
 
 sdk_ret_t
 pds_state::transaction_end(bool abort) {
-    //return mapping_db()->transaction_end(abort);
     if (abort) {
         return kvstore_->txn_abort();
     }
