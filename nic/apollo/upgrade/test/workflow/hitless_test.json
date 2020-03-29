@@ -1,6 +1,6 @@
 {
     "svc": {
-        "names": [ "sysmgr", "pds-agent"],
+        "names": [ "svc1", "svc2"],
         "event_sequence": "parallel",
         "rsp_timeout": "1000ms"
     },
@@ -25,7 +25,7 @@
             "ipc_domain": "A",
             "svc": {
                 "event_sequence": "serial",
-                "names": [ "sysmgr", "pds-agent" ]
+                "names": [ "svc1", "svc2" ]
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "backup" },
@@ -51,7 +51,7 @@
             "ipc_domain": "A",
             "svc": {
                 "event_sequence": "serial",
-                "names": [ "sysmgr", "pds-agent" ]
+                "names": [ "svc1", "svc2" ]
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "ready"  },
@@ -97,7 +97,7 @@
         "switchover": {
             "ipc_domain": "B",
             "svc": {
-                "names": [ "pds-agent", "sysmgr" ],
+                "names": [ "svc2", "svc1" ],
                 "event_sequence": "serial",
                 "rsp_timeout": "2000ms"
             },
@@ -112,7 +112,7 @@
         "rollback": {
             "ipc_domain": "B",
             "svc": {
-                "names": [ "pds-agent", "sysmgr" ],
+                "names": [ "svc2", "svc1" ],
                 "event_sequence": "serial",
                 "rsp_timeout": "2000ms"
             },
@@ -125,10 +125,10 @@
         },
 
         "repeal": {
-            "//": "todo: needs discussion here on sysmgr A/B",
+            "//": "todo: needs discussion here on svc1 A/B",
             "ipc_domain": "A",
              "svc": {
-                "names": [ "sysmgr", "pds-agent" ],
+                "names": [ "svc1", "svc2" ],
                 "event_sequence": "serial",
                 "rsp_timeout": "2000ms"
             },
@@ -145,7 +145,7 @@
             "ipc_domain": "A",
             "svc": {
                 "event_sequence": "serial",
-                "names": [ "pds-agent", "sysmgr" ]
+                "names": [ "svc2", "svc1" ]
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "exit" },

@@ -162,11 +162,21 @@ class GenerateStateMachine(object):
         """ Create and return global service event sequence """
         event_sequence = self.__get_data_by_key_walk__(
             default="parallel",
-            key_path=self.event_seq_fmt)
+            key_path=self.default_event_seq_fmt)
 
         event_sequence = self.event_sequence.format(
             self.__to_evt_seq_id__(event_sequence)) + os.linesep
         return event_sequence
+
+    def make_idl_entry_stage(self):
+        """ Create and return entry stage """
+        entry_stage = self.__get_data_by_key_walk__(
+            default="compatcheck",
+            key_path=self.default_entry_stage_fmt)
+
+        entry_stage = self.entry_stage.format(
+            self.__to_stage_id__(entry_stage)) + os.linesep
+        return entry_stage
 
     def make_idl_stage_transition(self):
         """ Create and return global stage transition  """
@@ -196,12 +206,13 @@ class GenerateStateMachine(object):
         return self.__construct_data_block__(self.idl_stage_cfg, objects)
 
     def build_header_file(self, idl_transition, idl_svc, idl_event_sequence,
-                          idl_stages):
+                          idl_stages, idl_entry_stage):
         """ Create and return header part of the file including #define,
         #includes
         """
         if all(obj is not None for obj in [idl_transition, idl_svc,
-                                           idl_event_sequence, idl_stages]):
+                                           idl_event_sequence, idl_stages,
+                                           idl_entry_stage]):
 
             header_file_data = self.__make_header__() + os.linesep
             header_file_data = header_file_data + idl_transition + os.linesep
@@ -209,6 +220,7 @@ class GenerateStateMachine(object):
             header_file_data = header_file_data + idl_event_sequence + \
                                os.linesep
             header_file_data = header_file_data + idl_stages + os.linesep
+            header_file_data = header_file_data + idl_entry_stage + os.linesep
             header_file_data = header_file_data + self.__make_footer__() + \
                                os.linesep
 
@@ -250,39 +262,44 @@ class GenerateStateMachine(object):
 
     def __load_fmt__(self):
         """ Initialize constants key format/patters  """
-        self.event_seq_fmt = "svc.event_sequence"
+        self.default_event_seq_fmt = "svc.event_sequence"
+        self.default_rsp_timeout_fmt = "svc.rsp_timeout"
+        self.default_entry_stage_fmt = "stages.entry_stage"
         self.rsp_keys_to_walk_fmt = "stages.{0}.events.{1}.name"
         self.next_stage_keys_to_walk_fmt = "stages.{0}.events.{1}.next_stage"
-        self.rsp_timeout_format = "stages.{0}.rsp_timeout"
-        self.svc_seq_format = "stages.{0}.svc.event_sequence"
-        self.pre_hook_list_format = "stages.{0}.pre_hooks"
-        self.post_hook_list_format = "stages.{0}.post_hooks"
-        self.svc_list_format = "stages.{0}.svc.names"
-        self.idl_stage_format = "idl_stage_t({0}){1}"
-        self.idl_stage_cfg = "idl_stage_t idl_stages_cfg[]"
-        self.idl_svc_cfg = "svc_t svc[]"
-        self.stage_transition = "stage_transition_t stage_transitions[]"
+        self.rsp_timeout_fmt = "stages.{0}.svc.rsp_timeout"
+        self.svc_seq_fmt = "stages.{0}.svc.event_sequence"
+        self.pre_hook_list_fmt = "stages.{0}.pre_hooks"
+        self.post_hook_list_fmt = "stages.{0}.post_hooks"
+        self.svc_list_fmt = "stages.{0}.svc.names"
+        self.idl_stage_fmt = "idl_upg_stage({0}){1}"
+        self.idl_stage_cfg = "idl_upg_stage idl_stages_cfg[]"
+        self.idl_svc_cfg = "upg_svc svc[]"
+        self.stage_transition = "upg_stage_transition stage_transitions[]"
         self.event_sequence = "event_sequence_t event_sequence = {0};"
+        self.entry_stage = "upg_stage_t entry_stage = {0};"
 
     def __load_stages__(self):
         """ Initialize constants key-value pair of stages and enum """
-        self.stage_name_to_id["compatcheck"] = "STAGE_ID_COMPAT_CHECK"
-        self.stage_name_to_id["start"] = "STAGE_ID_START"
-        self.stage_name_to_id["prepare"] = "STAGE_ID_PREPARE"
-        self.stage_name_to_id["backup"] = "STAGE_ID_BACKUP"
-        self.stage_name_to_id["switchover"] = "STAGE_ID_SWITCHOVER"
-        self.stage_name_to_id["verify"] = "STAGE_ID_VERIFY"
-        self.stage_name_to_id["finish"] = "STAGE_ID_FINISH"
-        self.stage_name_to_id["abort"] = "STAGE_ID_ABORT"
-        self.stage_name_to_id["rollback"] = "STAGE_ID_ROLLBACK"
-        self.stage_name_to_id["critical"] = "STAGE_ID_CRITICAL"
-        self.stage_name_to_id["exit"] = "STAGE_ID_EXIT"
+        self.stage_name_to_id["compatcheck"] = "UPG_STAGE_COMPAT_CHECK"
+        self.stage_name_to_id["start"] = "UPG_STAGE_START"
+        self.stage_name_to_id["prepare"] = "UPG_STAGE_PREPARE"
+        self.stage_name_to_id["backup"] = "UPG_STAGE_BACKUP"
+        self.stage_name_to_id["repeal"] = "UPG_STAGE_REPEAL"
+        self.stage_name_to_id["rollback"] = "UPG_STAGE_ROLLBACK"
+        self.stage_name_to_id["sync"] = "UPG_STAGE_SYNC"
+        self.stage_name_to_id["prepare_switchover"]= "UPG_STAGE_PREP_SWITCHOVER"
+        self.stage_name_to_id["switchover"] = "UPG_STAGE_SWITCHOVER"
+        self.stage_name_to_id["ready"] = "UPG_STAGE_READY"
+        self.stage_name_to_id["respawn"] = "UPG_STAGE_RESPAWN"
+        self.stage_name_to_id["finish"] = "UPG_STAGE_FINISH"
+        self.stage_name_to_id["exit"] = "UPG_STAGE_EXIT"
 
     def __load_svs_rsp_name_to_id__(self):
         """
-         Initialize constants key-value pair of service response
-         and enum constants
-         """
+        Initialize constants key-value pair of service response
+        and enum constants
+        """
         self.svs_rsp_name_to_id["svc_rsp_ok"] = "SVC_RSP_OK"
         self.svs_rsp_name_to_id["svc_rsp_fail"] = "SVC_RSP_FAIL"
         self.svs_rsp_name_to_id["svc_rsp_crit"] = "SVC_RSP_CRIT"
@@ -321,7 +338,10 @@ class GenerateStateMachine(object):
             return self.svs_rsp_name_to_id[key]
 
     def __get_stages__(self):
-        return self.stage_name_to_id.keys()
+        stages = list(self.__get_data_by_key_walk__("stages").keys())
+        stages.remove("entry_stage")
+        stages.remove("exit")
+        return stages
 
     def __get_svc_rsp__(self):
         return self.svs_rsp_name_to_id.keys()
@@ -392,7 +412,7 @@ class GenerateStateMachine(object):
             svc_name = self.__get_data_by_key_walk__("{0}.{1}".
                                                      format(svc_keys_to_walk,
                                                             svc))
-            obj = "{0}{1}{2}{3}{4}".format('\tsvc_t(', '"', svc_name, '")',
+            obj = "{0}{1}{2}{3}{4}".format('\tupg_svc(', '"', svc_name, '")',
                                            ',\n')
             self.svc_list.append(obj)
 
@@ -400,12 +420,20 @@ class GenerateStateMachine(object):
 
     def __generate_stages__(self):
         """ Return IDL stage objects  """
-        rsp_timeout_format = self.rsp_timeout_format
-        svc_seq_format = self.svc_seq_format
-        pre_hook_list_format = self.pre_hook_list_format
-        post_hook_list_format = self.post_hook_list_format
-        svc_list_format = self.svc_list_format
-        idl_stage_format = self.idl_stage_format
+        rsp_timeout_format = self.rsp_timeout_fmt
+        svc_seq_format = self.svc_seq_fmt
+        pre_hook_list_format = self.pre_hook_list_fmt
+        post_hook_list_format = self.post_hook_list_fmt
+        svc_list_format = self.svc_list_fmt
+        idl_stage_format = self.idl_stage_fmt
+
+        default_timeout = self.__get_data_by_key_walk__(
+                default="",
+                key_path=self.default_rsp_timeout_fmt)
+
+        default_event_sequence = self.__get_data_by_key_walk__(
+                default="",
+                key_path=self.default_event_seq_fmt)
 
         for current_stage in self.__get_stages__():
             timeout_keys_to_walk = rsp_timeout_format.format(current_stage)
@@ -416,11 +444,11 @@ class GenerateStateMachine(object):
                 current_stage)
 
             rsp_timeout = self.__get_data_by_key_walk__(
-                default="",
+                default=default_timeout,
                 key_path=timeout_keys_to_walk)
 
             event_sequence = self.__get_data_by_key_walk__(
-                default="",
+                default=default_event_sequence,
                 key_path=svc_seq_keys_to_walk)
 
             svc_list = self.__get_data_by_key_walk__(
@@ -454,7 +482,6 @@ class GenerateStateMachine(object):
     def __get_stage_transaction_obj__(self, stage_curr=None, svc_rsp=None,
                                       stage_next=None):
         """ Return stage transition objects  """
-
         if stage_curr is None or svc_rsp is None or stage_next is None:
             frame_info = inspect.getframeinfo(inspect.currentframe())
             file = str(frame_info.filename) + str(frame_info.lineno)
@@ -463,7 +490,7 @@ class GenerateStateMachine(object):
         stage_from = self.__to_stage_id__(stage_curr)
         stage_to = self.__to_stage_id__(stage_next)
         rsp = self.__to_svs_rsp_name_to_id__(svc_rsp)
-        obj = "stage_transition_t( {0}, {1}, {2} )".format(stage_from, rsp,
+        obj = "upg_stage_transition( {0}, {1}, {2} )".format(stage_from, rsp,
                                                            stage_to)
         return obj
 
@@ -473,13 +500,15 @@ class GenerateStateMachine(object):
         include_path1 = '"nic/apollo/upgrade/core/stage.hpp"'
         include_path2 = '"nic/apollo/upgrade/core/service.hpp"'
         include_path3 = '"nic/apollo/upgrade/core/idl.hpp"'
+        include_path4 = '"nic/apollo/upgrade/include/upgrade.hpp"'
         upg_namespace = "namespace upg {"
 
         header = "#ifndef " + header_name + os.linesep
         header = header + "#define " + header_name + 2 * os.linesep
         header = header + "#include " + include_path1 + os.linesep
         header = header + "#include " + include_path2 + os.linesep
-        header = header + "#include " + include_path3 + 2 * os.linesep
+        header = header + "#include " + include_path3 + os.linesep
+        header = header + "#include " + include_path4 + 2 * os.linesep
         header = header + upg_namespace + os.linesep
         return header
 
@@ -503,9 +532,11 @@ def main(input_json, output_pds_fsm):
     transitions = obj.make_idl_stage_transition()
     services = obj.make_idl_svc_cfg()
     event_sequence = obj.make_idl_event_sequence()
+    entry_stage = obj.make_idl_entry_stage();
     stages = obj.make_idl_stage_cfg()
-    hpp = obj.build_header_file(transitions, services, event_sequence, stages)
-    #print(hpp)
+    hpp = obj.build_header_file(transitions, services, event_sequence, stages,
+                                entry_stage)
+    print(hpp)
     obj.dump_header(hpp)
     sys.exit(0)
 
@@ -544,5 +575,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     main(args.input_file_name, args.output_file_name)
     sys.exit(0)
-
-

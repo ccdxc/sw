@@ -21,44 +21,17 @@
 #include "nic/sdk/platform/pal/include/pal.h"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "platform/pal/include/pal.h"
+#include "nic/apollo/upgrade/include/upgrade.hpp"
 #include "nic/apollo/upgrade/core/stage.hpp"
 #include "nic/apollo/upgrade/core/service.hpp"
 #include "nic/apollo/upgrade/core/idl.hpp"
 
 
 namespace upg {
-#if 0
-    //static sdk_ret_t (* send_event)(stage_id_t);
-    static sdk_ret_t (* pre_hook_callbacks[STAGE_COUNT])(void) = { NULL };
-    static sdk_ret_t (* post_hook_callbacks[STAGE_COUNT])(void) = { NULL };
-#endif
-
-// NOTE:
-// ASSUMPTIONS:
-//  - It is a valid script and reviewd internally.
-//  - This script hasn't been compromised with malicious code.
-//  - Application using  this upgrade code lib doesnt have
-//    set-user-ID or set-group-ID privilege.
-//  - System() is a cross-platform call, so the script it is
-//    executing needs to be tested on the target before.
-#if 0
-static  sdk_ret_t execute_script(/* eventid, service ep order*/) {
-    SDK_RET_OK;
-}
-
-static  sdk_ret_t send_serial_event(/* eventid, service ep order*/) {
-    SDK_RET_OK;
-}
-
-static  sdk_ret_t send_paralle_event(/* eventi, service ep order*/) {
-    SDK_RET_OK;
-}
-#endif
-
 class fsm {
     public:
-       fsm(stage_id_t start = STAGE_ID_COMPAT_CHECK,
-                 stage_id_t end = STAGE_ID_EXIT) {
+        fsm(upg_stage_t start = UPG_STAGE_COMPAT_CHECK,
+            upg_stage_t end   = UPG_STAGE_EXIT) {
             current_stage_    = start;
             start_stage_      = start;
             end_stage_        = end;
@@ -69,15 +42,19 @@ class fsm {
 
         ~fsm(void) {};
 
-        stage_id_t current_stage(void) const {
+        upg_stage_t current_stage(void) const {
             return current_stage_;
         }
 
-        stage_id_t start_stage(void) const {
+        upg_stage_t start_stage(void) const {
             return start_stage_;
         }
 
-        stage_id_t end_stage(void) const {
+        void set_start_stage(const upg_stage_t entry_stage) {
+            start_stage_ = entry_stage;
+        }
+
+        upg_stage_t end_stage(void) const {
             return end_stage_;
         }
 
@@ -97,7 +74,7 @@ class fsm {
             return timeout_;
         }
 
-        svc_sequence_t svc_sequence(void) const {
+        svc_sequence_list svc_sequence(void) const {
             return svc_sequence_;
         }
 
@@ -105,31 +82,27 @@ class fsm {
             return pending_response_ > 0;
         }
 
-        void            set_current_stage(const stage_id_t id);
+        void            set_current_stage(const upg_stage_t id);
         void            update_stage_progress(const svc_rsp_code_t rsp);
         bool            is_current_stage_over(void);
         bool            is_serial_event_sequence(void) const;
         bool            is_valid_service(const std::string svc) const;
-        svc_t           next_svc(void) const;
+        std::string     next_svc(void) const;
         void            timer_init(const void* ctxt);
         void            timer_start(void);
         void            timer_stop(void);
         void            timer_set(void);
 
     private:
-        stage_id_t      current_stage_;
-        stage_id_t      start_stage_;
-        stage_id_t      end_stage_;
-        uint32_t        pending_response_;
-        uint32_t        size_;
-        svc_sequence_t  svc_sequence_;
-        ev_tstamp       timeout_;
+        upg_stage_t       current_stage_;
+        upg_stage_t       start_stage_;
+        upg_stage_t       end_stage_;
+        uint32_t          pending_response_;
+        uint32_t          size_;
+        svc_sequence_list svc_sequence_;
+        ev_tstamp         timeout_;
 };
 
 void init(void *ctxt);
-sdk_ret_t do_switchover(void);
-sdk_ret_t register_callback(stage_callback_t cb_type, stage_id_t cb_stage,
-                            void *(*callback)(void *), void *arg);
-
 }
 #endif    //  __UPG_FSM_HPP__

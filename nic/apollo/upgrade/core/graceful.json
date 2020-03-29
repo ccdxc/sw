@@ -71,7 +71,7 @@
             "svc": {
                 "names": [ "sysmgr" ],
                 "event_sequence": "serial",
-                "rsp_timeout": "2000ms",
+                "rsp_timeout": "2000ms"
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "ready"   },
@@ -92,7 +92,6 @@
         },
 
         "rollback": {
-            "rsp_timeout": "1000ms",
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "finish" },
                 { "name": "svc_rsp_fail", "next_stage": "exit"   },
@@ -105,7 +104,7 @@
             "svc": {
                 "names": [ "sysmgr", "pds-agent" ],
                 "event_sequence": "serial",
-                "rsp_timeout": "2000ms",
+                "rsp_timeout": "2000ms"
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "finish" },
@@ -119,7 +118,7 @@
             "svc": {
                 "names": [ "sysmgr" ],
                 "event_sequence": "serial",
-                "rsp_timeout": "2000ms",
+                "rsp_timeout": "2000ms"
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "finish" },

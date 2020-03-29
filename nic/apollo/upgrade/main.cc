@@ -10,7 +10,7 @@
 #include "nic/apollo/upgrade/svc/upgrade.hpp"
 #include "nic/apollo/upgrade/include/upgrade.hpp"
 #include "nic/apollo/upgrade/core/fsm.hpp"
-#include "nic/apollo/upgrade/core/ipc/notify_endpoint.hpp"
+#include "nic/apollo/upgrade/core/ipc/ipc.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;

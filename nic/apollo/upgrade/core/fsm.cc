@@ -22,69 +22,117 @@
 #include "nic/apollo/upgrade/core/utils.hpp"
 #include "nic/apollo/upgrade/core/fsm.hpp"
 #include "gen/proto/upg_fsm.hpp"
-#include "nic/apollo/upgrade/core/ipc/notify_endpoint.hpp"
+#include "nic/apollo/upgrade/core/ipc/ipc.hpp"
 
 namespace upg {
 
 namespace {
-    static services_t     fsm_services;
-    static fsm            fsm_states;
-    static ev_timer       timeout_watcher;
-    static struct ev_loop *loop;
-    static stages_t       fsm_stages;
-    static stage_map_t    fsm_lookup_tbl;
+    static struct ev_loop    *loop;
+    static ev_timer          timeout_watcher;
+    static fsm               fsm_states;
+    static upg_stages_map    fsm_stages;
+    static upg_svc_map       fsm_services;
+    static svc_sequence_list default_svc_names;
+    static stage_map         fsm_lookup_tbl;
 }
 
 static void
-dispatch_event (stage_id_t id)
+dispatch_event (ipc::ipc_svc_dom_id_t dom, upg_stage_t id, upg_svc svc)
 {
-    std::string stage_name;
-    stage_name = id_to_stage_name(id);
-
+    // TODO: domain
+    std::string stage_name(upg_stage2str(id));
+    UPG_TRACE_VERBOSE("Sending event %s to svc: %s ipc_id: %d\n",
+                      stage_name.c_str(), svc.name().c_str(), svc.ipc_id());
     SDK_ASSERT(fsm_stages.find(id) != fsm_stages.end());
-
-    upg_event_msg_t    next_event;
-    next_event.stage = upg_stage_id(id);
-    broadcast_notification(next_event);
-
+    svc.dispatch_event(dom, id);
 }
 
-static void
-dispatch_event (stage_id_t id, svc_t& svc)
-{
-    std::string stage_name;
-    stage_name = id_to_stage_name(id);
 
+static void
+dispatch_event (ipc::ipc_svc_dom_id_t dom, upg_stage_t id)
+{
+    std::string stage_name(upg_stage2str(id));
     SDK_ASSERT(fsm_stages.find(id) != fsm_stages.end());
+    UPG_TRACE_VERBOSE("Broadcasting event %s\n", stage_name.c_str());
 
-    svc.dispatch_event(upg_stage_id(id));
-
-}
-
-static void
-update_thread_id(std::string name, uint32_t thread_id)
-{
-    svc_t service = fsm_services.svc_by_name(name);
-    service.set_thread_id(thread_id);
-    service.set_thread_name(name);
-
-    for (auto& stage: fsm_stages) {
-        for (auto& svc_instance : stage.second.svc_sequence()) {
-            if (name.compare(svc_instance.name()) == 0) {
-                svc_instance.set_thread_id(thread_id);
-                svc_instance.set_thread_name(name);
-            }
-        }
+    for (auto& name: fsm_states.svc_sequence()) {
+        SDK_ASSERT(fsm_services.find(name) != fsm_services.end());
+        upg_svc svc = fsm_services[name];
+        dispatch_event(dom, id, svc);
     }
 }
 
 static void
+update_ipc_id (std::string name, uint32_t ipc_id)
+{
+    SDK_ASSERT(fsm_services.find(name) != fsm_services.end());
+
+    upg_svc service     = fsm_services[name];
+    service.set_ipc_id(ipc_id);
+    fsm_services[name]  = service;
+    UPG_TRACE_VERBOSE("Updating IPC id of service: %s,"
+                      " ipc id: %d\n ", name.c_str(), ipc_id);
+}
+
+static void
+move_to_nextstage (void)
+{
+    // TODO: domain
+    ipc::ipc_svc_dom_id_t domain = ipc::IPC_SVC_DOM_ID_A;
+
+    std::string name(upg_stage2str(fsm_states.current_stage()));
+    if (fsm_states.is_serial_event_sequence()) {
+        UPG_TRACE_VERBOSE("Moving to next stage (serial): %s\n", name.c_str());
+        dump(fsm_states);
+        if (fsm_states.has_next_svc()) {
+            upg_stage_t id = fsm_states.current_stage();
+            std::string svc_name = fsm_states.next_svc();
+            SDK_ASSERT(fsm_services.find(svc_name) !=
+                       fsm_services.end());
+            upg_svc svc = fsm_services[svc_name];
+            fsm_states.timer_stop();
+            fsm_states.timer_start();
+            dispatch_event(domain, id, svc);
+        } else {
+            UPG_TRACE_VERBOSE("Oops! no service to send request.");
+            SDK_ASSERT(0);
+        }
+    } else {
+        UPG_TRACE_VERBOSE("Moving to next stage (parallel): %s\n",name.c_str());
+        dump(fsm_states);
+        upg_stage_t id = fsm_states.current_stage();
+        fsm_states.timer_stop();
+        fsm_states.timer_start();
+        dispatch_event(domain, id);
+    }
+}
+
+static void
+send_ipc_to_next_service(void)
+{
+    ipc::ipc_svc_dom_id_t domain = ipc::IPC_SVC_DOM_ID_A;
+
+    UPG_TRACE_VERBOSE("Send serial request.");
+    if (!fsm_states.has_next_svc()) {
+        // Stage must have pending svc
+        // if it is not over yet
+        SDK_ASSERT(0);
+    } else {
+        upg_stage_t id = fsm_states.current_stage();
+        std::string svc_name = fsm_states.next_svc();
+        SDK_ASSERT(fsm_services.find(svc_name) != fsm_services.end());
+        upg_svc svc = fsm_services[svc_name];
+        dispatch_event(domain, id, svc);
+    }
+}
+
+void
 upg_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *req_cookie,
                    const void *ctxt)
 {
-    UPG_TRACE_VERBOSE("RSP Event handler called.");
+    UPG_TRACE_VERBOSE("IPC response event handler called.");
 
-    stage_id_t id           = fsm_states.current_stage();
+    upg_stage_t id          = fsm_states.current_stage();
     upg_event_msg_t *event  = (upg_event_msg_t *)msg->data();
     std::string thread_name = event->rsp_thread_name;
 
@@ -94,138 +142,93 @@ upg_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *req_cookie,
            upg_status2str(event->rsp_status),
            event->rsp_thread_name,
            event->rsp_thread_id);
-    dump(fsm_states);
 
-    if (event->stage == upg_stage_id(id) &&
-        fsm_states.is_valid_service(thread_name)) {
+    if (event->stage == id && fsm_states.is_valid_service(thread_name)) {
 
-        if (event->stage == upg_stage_id(fsm_states.start_stage())) {
-            update_thread_id(thread_name, event->rsp_thread_id );
+        if (event->stage == fsm_states.start_stage()) {
+            update_ipc_id(thread_name, event->rsp_thread_id );
         }
 
         fsm_states.update_stage_progress(svc_rsp_code(event->rsp_status));
-
-        if ( fsm_states.is_current_stage_over()) {
-            stage_id_t id = fsm_states.current_stage();
+        if (fsm_states.is_current_stage_over()) {
+            upg_stage_t id = fsm_states.current_stage();
             fsm_states.set_current_stage(id);
             if (fsm_states.current_stage() == fsm_states.end_stage()) {
                 // TODO:
-                UPG_TRACE_VERBOSE("Upgrade is over Exiting..");
+                UPG_TRACE_VERBOSE("Upgrade is successful.");
                 exit(0);
-
             } else {
-                std::string stage =id_to_stage_name(fsm_states.current_stage());
-                if (fsm_states.is_serial_event_sequence()) {
-                    UPG_TRACE_VERBOSE("Moving to Next stage (" + stage +
-                                    ") in serial order..");
-                    if (fsm_states.has_next_svc()) {
-                        stage_id_t id = fsm_states.current_stage();
-                        svc_t svc = fsm_states.next_svc();
-                        dispatch_event(id, svc);
-                    } else {
-                        // No svc ? but not end stage?
-                        // Alert: something went wrong
-                        SDK_ASSERT(0);
-                    }
-                } else {
-                    UPG_TRACE_VERBOSE("Moving to Next stage (" + stage +
-                                    ") in parallel order..");
-                    stage_id_t id = fsm_states.current_stage();
-                    dispatch_event(id);
-                }
+                move_to_nextstage();
             }
         } else if (fsm_states.is_serial_event_sequence() &&
                    (fsm_states.current_stage() != fsm_states.start_stage()) ) {
-            UPG_TRACE_VERBOSE("Send serial request..");
-            if (!fsm_states.has_next_svc()) {
-                // Stage must have pending svc
-                // if it is not over yet
-                SDK_ASSERT(0);
-            } else {
-                stage_id_t id = fsm_states.current_stage();
-                svc_t svc = fsm_states.next_svc();
-                dispatch_event(id, svc);
-            }
+            send_ipc_to_next_service();
         } else {
-            UPG_TRACE_VERBOSE("Its a parallel stage (or start"
-                            " stage) and event already broadcasted.");
+            UPG_TRACE_VERBOSE("Stage progress is updated.");
         }
     } else {
-        // TODO: Not workign
-        UPG_TRACE_VERBOSE("Dropping response from a previous stage..");
+        UPG_TRACE_VERBOSE("Dropping event response, not expecting it !");
     }
 
-    dump(fsm_states);
-    UPG_TRACE_VERBOSE("RSP Event handler Done..");
+    UPG_TRACE_VERBOSE("Done with IPC response event handler.");
 }
 
 static void
 timeout_cb (EV_P_ ev_timer *w, int revents)
 {
 
-    UPG_TRACE_VERBOSE("**** Timer expired ****");
+    UPG_TRACE_VERBOSE("Timer expired !");
     fsm_states.timer_stop();
     fsm_states.update_stage_progress(SVC_RSP_NONE);
-    stage_id_t id = fsm_states.current_stage();
-    std::string name = id_to_stage_name(id);
-    fsm_states.set_current_stage(id);
-    UPG_TRACE_VERBOSE("Timer expired: Moving to next stage (" + name + ")");
-    fsm_states.timer_start();
-    dispatch_event(id);
-    if (fsm_states.current_stage() == fsm_states.end_stage()) {
-        // TODO:
-        UPG_TRACE_VERBOSE("Upgrade Failed !!");
+
+    if (fsm_states.current_stage() != fsm_states.end_stage()) {
+        move_to_nextstage();
+    } else {
+        UPG_TRACE_VERBOSE("Upgrade Failed !");
         exit(1);
     }
 }
 
-static stage_id_t
-lookup_stage_transition (stage_id_t cur, svc_rsp_code_t rsp)
+static upg_stage_t
+lookup_stage_transition (upg_stage_t cur, svc_rsp_code_t rsp)
 {
-    stage_id_t next_stage = STAGE_ID_EXIT ;
+    upg_stage_t next_stage = UPG_STAGE_EXIT ;
     next_stage = fsm_lookup_tbl[std::to_string(cur) +std::to_string(rsp)];
     return next_stage;
 }
 
 // Note: please do not call this in ctor
-void fsm::set_current_stage(const stage_id_t stage_id) {
+void fsm::set_current_stage(const upg_stage_t stage_id) {
     current_stage_ = stage_id;
 
     SDK_ASSERT(fsm_stages.find(start_stage_) != fsm_stages.end());
 
-    stage_t stage     = fsm_stages[current_stage_];
+    upg_stage stage   = fsm_stages[current_stage_];
     svc_sequence_     = stage.svc_sequence();
     size_             = 0;
     for (auto x: svc_sequence_) {
-       // UPG_TRACE_VERBOSE("name : " + x.name());
         size_++;
     }
     pending_response_ = size_;
     timeout_          = stage.svc_rsp_timeout();
+    timeout_          = double(timeout_* 1.0) / 1000;
 
-    // dump(stage);
-
-    timeout_ = double(timeout_* 1.0) / 1000;
-
-
-    std::string str   = __PRETTY_FUNCTION__   ;
-    str += " pending response :" + std::to_string(pending_response_);
-    str += " : " + svc_sequence_to_str(svc_sequence_);
-    str += " timeout : " + std::to_string(timeout_);
-    UPG_TRACE_VERBOSE(str);
+    UPG_TRACE_VERBOSE("\n stage :%s , pending response : %d, svc sequence: %s,"
+                      " timeout: %f \n ", upg_stage2str(current_stage_),
+                      pending_response_,
+                      svc_sequence_to_str(svc_sequence_).c_str(), timeout_);
 }
 
 
 void fsm::timer_stop(void)
 {
-    UPG_TRACE_VERBOSE("Stopping the timer..");
+    UPG_TRACE_VERBOSE("Stopping the timer !");
     ev_timer_stop(loop, &timeout_watcher);
 }
 
 void fsm::timer_init(const void* ctxt)
 {
-    UPG_TRACE_VERBOSE("Initializing the timer with timeout:" +
-                    std::to_string(timeout_));
+    UPG_TRACE_VERBOSE("Initializing the timer with timeout: %f", timeout_);
 
     sdk::event_thread::event_thread *curr_thread;
     curr_thread = (sdk::event_thread::event_thread *)ctxt;
@@ -236,31 +239,31 @@ void fsm::timer_init(const void* ctxt)
 
 void fsm::timer_set(void)
 {
-    UPG_TRACE_VERBOSE("Setting the timer :" + std::to_string(timeout_));
+    UPG_TRACE_VERBOSE("Setting the timer : %f", timeout_);
     ev_timer_set(&timeout_watcher, timeout_, 0.0);
 }
 
 void fsm::timer_start (void)
 {
-    UPG_TRACE_VERBOSE("Starting the timer..");
+    UPG_TRACE_VERBOSE("Starting the timer.");
     ev_timer_start(loop, &timeout_watcher);
 }
 
 void fsm::update_stage_progress(const svc_rsp_code_t rsp) {
     if (rsp != SVC_RSP_OK) {
         switch (rsp) {
-        case UPG_STATUS_FAIL:
-            UPG_TRACE_VERBOSE("Got failure svc response");
-            break;
-        case UPG_STATUS_CRITICAL:
-            // TODO: if ( critical ??)
-            UPG_TRACE_VERBOSE("Got critical svc response");
-            break;
-        case SVC_RSP_NONE:
-            UPG_TRACE_VERBOSE("Timer expired, no svc response so far");
-            break;
-        default:
-            break;
+            case UPG_STATUS_FAIL:
+                UPG_TRACE_VERBOSE("Got failure svc response");
+                break;
+            case UPG_STATUS_CRITICAL:
+                // TODO: if ( critical ??)
+                UPG_TRACE_VERBOSE("Got critical svc response");
+                break;
+            case SVC_RSP_NONE:
+                UPG_TRACE_VERBOSE("Timer expired, no svc response so far.");
+                break;
+            default:
+                break;
         }
         // TODO: if current stage is ( exit/rollback ??)
         current_stage_ = lookup_stage_transition(current_stage_, rsp);
@@ -284,24 +287,22 @@ void fsm::update_stage_progress(const svc_rsp_code_t rsp) {
             size_          = 0;
             // TODO: if ( critical ??)
         }
-        UPG_TRACE_VERBOSE(str);
+        UPG_TRACE_VERBOSE("%s", str.c_str());
     }
 }
 
 bool fsm::is_valid_service(const std::string svc) const {
-     for (auto x: svc_sequence_) {
-         if (svc.compare(x.name()) == 0) {
-             return true;
-         }
-     }
-    std::string str = svc;
-    str += " : is not a valid service.";
-    UPG_TRACE_VERBOSE(str);
+    for (auto x: svc_sequence_) {
+        if (svc.compare(x) == 0) {
+            return true;
+        }
+    }
+    UPG_TRACE_VERBOSE("\n %s is not a valid service.\n", svc.c_str());
     return false;
 }
 
-svc_t fsm::next_svc(void) const {
-    svc_t svc;
+std::string fsm::next_svc(void) const {
+    std::string svc;
     SDK_ASSERT(pending_response_ > 0);
     svc = svc_sequence_[size_ - pending_response_] ;
     return svc;
@@ -311,13 +312,12 @@ bool fsm::is_current_stage_over(void) {
     SDK_ASSERT(pending_response_ >= 0);
 
     if (pending_response_ == 0 ) {
-        std::string str = " Pending rsp: " + std::to_string(pending_response_);
-        UPG_TRACE_VERBOSE(str);
 
-        SDK_ASSERT(fsm_stages.find(current_stage_) != fsm_stages.end());
+        SDK_ASSERT((current_stage_ == UPG_STAGE_EXIT) ||
+                   (fsm_stages.find(current_stage_) != fsm_stages.end()));
 
         if (current_stage_ != end_stage_) {
-            stage_t stage     = fsm_stages[current_stage_];
+            upg_stage stage   = fsm_stages[current_stage_];
             timeout_          = stage.svc_rsp_timeout();
             svc_sequence_     = stage.svc_sequence();
             size_             = 0;
@@ -341,25 +341,23 @@ bool fsm::is_current_stage_over(void) {
 
 bool fsm::is_serial_event_sequence(void) const {
     SDK_ASSERT(fsm_stages.find(current_stage_) != fsm_stages.end());
-    stage_t stage     = fsm_stages[current_stage_];
+    upg_stage stage     = fsm_stages[current_stage_];
     return stage.event_sequence() == SERIAL;
 }
 
 
-static svc_sequence_t
+static svc_sequence_list
 str_to_svc_sequence (std::string& svc_seq)
 {
-
+    svc_sequence_list svcs_sequence;
     if (svc_seq.empty()) {
-        return fsm_services.svc_sequence();
-    }
-    std::vector<std::string> svcs;
-    token_parse(svc_seq, svcs);
-    svc_sequence_t svcs_sequence;
-    for (std::string& name:svcs){
-        svc_t svc;
-        svc = fsm_services.svc_by_name(name);
-        svcs_sequence.push_back(svc);
+        svcs_sequence = default_svc_names;
+    } else {
+        std::vector<std::string> svcs;
+        token_parse(svc_seq, svcs);
+        for (std::string& name:svcs){
+            svcs_sequence.push_back(name);
+        }
     }
     return svcs_sequence;
 };
@@ -369,44 +367,31 @@ str_to_event_sequence (std::string& evt_seq)
 {
     event_sequence_t seq=PARALLEL;
     if (evt_seq.empty()) {
-        seq = fsm_services.event_sequence();
+        seq = event_sequence;
     } else if (boost::iequals(evt_seq, "parallel")) {
         seq =  PARALLEL;
     } else if (boost::iequals(evt_seq, "serial")) {
         seq = SERIAL;
     } else {
-        // erro
         SDK_ASSERT(0);
     }
-    // TODO: more validation
     return seq;
 };
-
-static transition_t
-to_transition (stage_id_t stage_id)
-{
-    transition_t transitions;
-    for (stage_transition_t& stage: stage_transitions) {
-        if (stage_id == stage.from()){
-            transitions.push_back(stage);
-        }
-    }
-    return transitions;
-}
 
 static void
 init_svc (void)
 {
-    fsm_services.set_event_sequence(event_sequence);
-    for (svc_t& service: svc) {
-        fsm_services.add_svc(service);
+    for (upg_svc& service: svc) {
+        fsm_services[service.name()] = service;
+        default_svc_names.push_back(service.name());
     }
+
 }
 
 static void
-init_lookup_table (void)
+init_stage_transitions (void)
 {
-    for (stage_transition_t& stage: stage_transitions) {
+    for (upg_stage_transition& stage: stage_transitions) {
         std::string key;
         key = std::to_string(stage.from()) +
             std::to_string(stage.svc_rsp_code());
@@ -417,47 +402,40 @@ init_lookup_table (void)
 static void
 init_fsm_stages (void)
 {
-    stage_id_t          stage_id;
+    upg_stage_t         stage_id;
     ev_tstamp           svc_rsp_timeout;
-    svc_sequence_t      svcs_seq;
+    svc_sequence_list   svcs_seq;
     event_sequence_t    event_seq;
-    transition_t        transitions;
-    scripts_t           prehook;
-    scripts_t           posthook;
+    upg_scripts         prehook;
+    upg_scripts         posthook;
 
-    // fsm_stages is ordered by stage_id_t
-    for (idl_stage_t& stage : idl_stages_cfg) {
-        stage_id    = name_to_stage_id(stage.stage());
-        svc_rsp_timeout = str_to_timeout(stage.svc_rsp_timeout());
-        svcs_seq    = str_to_svc_sequence(stage.svc_sequence());
-        event_seq   = str_to_event_sequence(stage.event_sequence());
-        transitions = to_transition(stage_id);
-        prehook     = str_to_scripts(stage.pre_hook_scripts());
-        posthook    = str_to_scripts(stage.post_hook_scripts());
+    for (idl_upg_stage& stage : idl_stages_cfg) {
+        stage_id             = name_to_stage_id(stage.stage());
+        svcs_seq             = str_to_svc_sequence(stage.svc_sequence());
+        event_seq            = str_to_event_sequence(stage.event_sequence());
+        prehook              = str_to_scripts(stage.pre_hook_scripts());
+        posthook             = str_to_scripts(stage.post_hook_scripts());
+        svc_rsp_timeout      = str_to_timeout(stage.svc_rsp_timeout());
 
-        fsm_stages[stage_id] =  stage_t(svc_rsp_timeout, svcs_seq,
-                                      event_seq, transitions,
-                                      prehook,posthook);
+        fsm_stages[stage_id] =  upg_stage(svc_rsp_timeout, svcs_seq,
+                                        event_seq, prehook,posthook);
     }
 }
 
 static void
 init_fsm (void* ctxt)
 {
-    upg_event_msg_t                 event;
-    stage_id_t start_stage          = fsm_states.start_stage();
-    event.stage                     = upg_stage_id(start_stage);
+    fsm_states.set_start_stage(entry_stage);
+
+    upg_stage_t start_stage = fsm_states.start_stage();
 
     SDK_ASSERT(fsm_stages.find(start_stage) != fsm_stages.end());
     fsm_states.timer_init(ctxt);
     fsm_states.set_current_stage(start_stage);
 
-    sdk::ipc::reg_response_handler(PDS_IPC_MSG_ID_UPGRADE,
-                                   upg_event_handler, NULL);
-    // dump(fsm_states);
-    // TODO: main thread blocking due to this
     fsm_states.timer_start();
-    sdk::ipc::broadcast(PDS_IPC_MSG_ID_UPGRADE, &event, sizeof(event));
+    ipc::init(upg_event_handler);
+    ipc::broadcast(ipc::IPC_SVC_DOM_ID_A, fsm_states.start_stage(), NULL);
     return;
 }
 
@@ -465,41 +443,8 @@ void
 init (void* ctxt)
 {
     init_svc();
-    init_lookup_table();
+    init_stage_transitions();
     init_fsm_stages();
     init_fsm(ctxt);
-
-#if 0
-    dump(fsm_stages);
-    dump(fsm_services);
-    dump(fsm_lookup_tbl);
-#endif
-}
-
-static sdk_ret_t
-register_callback_inernal (stage_callback_t cb_type, stage_id_t cb_stage,
-                   void *(*callback)(void *), void *arg)
-{
-    // TODO:
-    //
-    sdk_ret_t ret;
-
-    ret = SDK_RET_OK;
-    return ret;
-}
-
-sdk_ret_t
-register_callback (stage_callback_t cb_type, stage_id_t cb_stage,
-                   void *(*callback)(void *), void *arg)
-{
-    // TODO:
-    //
-    return register_callback_inernal(cb_type, cb_stage, callback, arg);
-}
-
-sdk_ret_t
-do_switchover (void)
-{
-    return SDK_RET_OK;
 }
 }

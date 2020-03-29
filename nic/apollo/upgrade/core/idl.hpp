@@ -25,18 +25,18 @@ namespace upg {
 /// example one can override api response timeout for specific stage,
 /// one can change the order of services and change the event sending
 /// mechanism from parallel to serial.
-class idl_stage_t {
+class idl_upg_stage {
 public:
-    idl_stage_t(void) {
+    idl_upg_stage(void) {
         stage_             = "";
-        svc_rsp_timeout_       = "";
+        svc_rsp_timeout_   = "";
         svc_sequence_      = "";
         event_sequence_    = "";
         pre_hook_scripts_  = "";
         post_hook_scripts_ = "";
     };
 
-    idl_stage_t( std::string stage, std::string timeout,
+    idl_upg_stage( std::string stage, std::string timeout,
                               std::string svcs, std::string evt_seq,
                               std::string pre_hooks,
                               std::string post_hooks) {
@@ -48,7 +48,7 @@ public:
         post_hook_scripts_ = post_hooks ;
     };
 
-    ~idl_stage_t(void) {};
+    ~idl_upg_stage(void) {};
 
     std::string& stage(void) {
         return stage_;

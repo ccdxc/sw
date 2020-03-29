@@ -25,12 +25,17 @@ typedef enum upg_stage_e {
     UPG_STAGE_COMPAT_CHECK,     ///< upgarde ready check
     UPG_STAGE_START,            ///< start an upgrade
     UPG_STAGE_PREPARE,          ///< prepare for an upgrade
-    UPG_STAGE_ABORT,            ///< abort the on-going upgrade
-    UPG_STAGE_VERIFY,           ///< verify the new upgrade
+    UPG_STAGE_BACKUP,           ///< backup config for an upgrade
+    UPG_STAGE_REPEAL,           ///< abort the on-going upgrade
     UPG_STAGE_ROLLBACK,         ///< rollback to the previous version
+    UPG_STAGE_SYNC,             ///< config replay and opearational state synce
+    UPG_STAGE_PREP_SWITCHOVER,  ///< quiescing gefore switch to the new version
     UPG_STAGE_SWITCHOVER,       ///< switch to the new version
-    UPG_STAGE_EXIT,             ///< exit previous or new depends on upgrade status.
-    UPG_STAGE_MAX,              ///< invalid
+    UPG_STAGE_READY,            ///< readiness check of new version
+    UPG_STAGE_RESPAWN,          ///< restart new version
+    UPG_STAGE_FINISH,           ///< failure or failure-non-recovarable status to netagent
+    UPG_STAGE_EXIT,             ///< exit from upgrade.
+    UPG_STAGE_MAX               ///< invalid
 } upg_stage_t;
 
 /// \brief upgrade operational table state actions
@@ -62,21 +67,27 @@ typedef struct upg_event_msg_s {
     char           rsp_thread_name[64];   ///< response thread name
     uint32_t       rsp_thread_id;         ///< response thread id. can be used
                                           ///< to send unicast ipc to this thread
+    void           *rsp_cookie;
     // TODO other infos
 } __PACK__ upg_event_msg_t;
 
 // trace utilities
 // stage to string
 static const char *upg_stage_name[] =  {
-    [UPG_STAGE_NONE]         = "none",
-    [UPG_STAGE_COMPAT_CHECK] = "compatcheck",
-    [UPG_STAGE_START]        = "start",
-    [UPG_STAGE_PREPARE]      = "prepare",
-    [UPG_STAGE_ABORT]        = "abort",
-    [UPG_STAGE_VERIFY]       = "verify",
-    [UPG_STAGE_ROLLBACK]     = "rollback",
-    [UPG_STAGE_SWITCHOVER]   = "switchover",
-    [UPG_STAGE_EXIT]         = "exit",
+    [UPG_STAGE_NONE]            = "none",
+    [UPG_STAGE_COMPAT_CHECK]    = "compatcheck",
+    [UPG_STAGE_START]           = "start",
+    [UPG_STAGE_PREPARE]         = "prepare",
+    [UPG_STAGE_BACKUP]          = "backup",
+    [UPG_STAGE_REPEAL]          = "repeal",
+    [UPG_STAGE_ROLLBACK]        = "rollback",
+    [UPG_STAGE_SYNC]            = "sync",
+    [UPG_STAGE_PREP_SWITCHOVER] = "prepare_switchover",
+    [UPG_STAGE_SWITCHOVER]      = "switchover",
+    [UPG_STAGE_READY]           = "ready",
+    [UPG_STAGE_RESPAWN]         = "respawn",
+    [UPG_STAGE_FINISH]          = "finish",
+    [UPG_STAGE_EXIT]            = "exit",
 };
 
 static inline const char *

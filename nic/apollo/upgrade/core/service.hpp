@@ -16,6 +16,7 @@
 #include <boost/assign/list_of.hpp>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/upgrade/include/upgrade.hpp"
+#include "nic/apollo/upgrade/core/ipc/ipc.hpp"
 
 namespace upg {
 /// \brief Core upgrade acceptable service response
@@ -32,7 +33,7 @@ typedef enum svc_rsp_code_t {
 
 /// \brief
 /// \remark
-/// How to send different upgrade events (_stage_id_t) to list of
+/// How to send different upgrade events (upg_stage_t) to list of
 /// interested services. events can be send either 'serial'  or
 /// 'parallel' order to services.
 typedef enum event_sequence_t {
@@ -41,79 +42,38 @@ typedef enum event_sequence_t {
 } event_sequence_t;
 
 /// \brief    A service is identified by a name(example: pdsagent)
-class svc_t {
+class upg_svc {
 public:
-    svc_t(std::string name="") : name_(name) { };
+    upg_svc(std::string name="") : name_(name) { };
 
-    ~svc_t(void){};
+    ~upg_svc(void){};
 
     std::string name(void) const {
         return name_;
     };
 
-    std::string thread_name(void) const {
-        return thread_name_;
+    uint32_t ipc_id(void) const {
+        return ipc_id_;
     };
 
-    uint32_t thread_id(void) const {
-        return thread_id_;
+    void set_ipc_id(const uint32_t id) {
+        ipc_id_= id;
     };
 
-    void set_thread_name(const std::string name) {
-        thread_name_= name;
-    };
-
-    void set_thread_id(const uint32_t id) {
-        thread_id_= id;
-    };
-
-    svc_t& operator = (const svc_t &obj) ;
-    void dispatch_event(upg_stage_t event) const ;
+    upg_svc& operator = (const upg_svc &obj) ;
+    void dispatch_event(ipc::ipc_svc_dom_id_t dom,
+                        upg_stage_t event) const ;
 
 private:
     std::string  name_;
-    uint32_t     thread_id_;
-    std::string  thread_name_;
+    uint32_t     ipc_id_;
 };
 
 /// \brief a container for a ordered list of interested services
-typedef boost::container::vector<svc_t> svc_sequence_t;
+typedef boost::container::vector<std::string> svc_sequence_list;
 
-/// \brief    A global service configuration
-/// \remark
-///  This is kinda default policy holder for all services and pds
-/// upgrade logic. It holds the behaviour of event sequencing and
-/// service order, a default behavior which guides upgrade orchestrator
-/// how each interested service should receive event whether in a serial
-/// order as specified in svc_sequence_t or in parallel.
-///
-/// This default behaviour can be altered when in each stage specifies
-/// their custom policy by defining svc_sequence_t and event_sequence_t.
-/// This customization has to be done from pds upgrade json file and a
-/// new header needs to be generated.
-class services_t {
-public:
-    void set_event_sequence(const event_sequence_t type) {
-        event_sequence_ = type;
-    };
+/// \brief a container for a ordered list of interested services
+typedef boost::unordered_map<std::string, upg_svc> upg_svc_map;
 
-    event_sequence_t event_sequence(void) const {
-        return event_sequence_ ;
-    };
-
-    void add_svc(const svc_t& service ) {
-        svc_sequence_.push_back(service);
-    };
-
-    svc_sequence_t svc_sequence(void) const {
-        return svc_sequence_;
-    };
-
-    svc_t&           svc_by_name(const std::string& name);
-    void             dispatch_event(upg_stage_t event) const ;
-private:
-    event_sequence_t event_sequence_;
-    svc_sequence_t   svc_sequence_;
-};
 }
 #endif    // __UPGRADE_FSM_SVC_HPP_
