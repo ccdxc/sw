@@ -9,6 +9,8 @@ interface EventType {
 export const categoryToEventType: { [cat: string]: string[] } = {
   : [
     'DISK_THRESHOLD_EXCEEDED',
+    'MIGRATION_FAILED',
+    'MIGRATION_TIMED_OUT',
     'ORCH_CONFIG_PUSH_FAILURE',
     'ORCH_CONNECTION_ERROR',
     'ORCH_INVALID_ACTION',
@@ -25,6 +27,7 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'DSC_DEADMITTED',
     'DSC_DECOMMISSIONED',
     'DSC_HEALTHY',
+    'DSC_NOT_ADMITTED',
     'DSC_REJECTED',
     'DSC_UNHEALTHY',
     'DSC_UNREACHABLE',
@@ -32,6 +35,7 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'ELECTION_NOTIFICATION_FAILED',
     'ELECTION_STARTED',
     'ELECTION_STOPPED',
+    'HOST_DSC_MODE_INCOMPATIBLE',
     'HOST_DSC_SPEC_CONFLICT',
     'ICMP_ACTIVE_SESSION_LIMIT_APPROACH',
     'ICMP_ACTIVE_SESSION_LIMIT_REACHED',
@@ -95,6 +99,16 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "DISK_THRESHOLD_EXCEEDED",
       "Severity": EventsEvent_severity.critical,
       "Desc": "Disk threshold exceeded",
+  },
+  'MIGRATION_FAILED' : {
+      "Name": "MIGRATION_FAILED",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Migration Failed",
+  },
+  'MIGRATION_TIMED_OUT' : {
+      "Name": "MIGRATION_TIMED_OUT",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Migration Timed out",
   },
   'ORCH_CONFIG_PUSH_FAILURE' : {
       "Name": "ORCH_CONFIG_PUSH_FAILURE",
@@ -166,6 +180,11 @@ export const eventTypes: { [name: string]: EventType } = {
       "Severity": EventsEvent_severity.info,
       "Desc": "DSC is healthy",
   },
+  'DSC_NOT_ADMITTED' : {
+      "Name": "DSC_NOT_ADMITTED",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Workload provisioned on a host with no admitted DSC",
+  },
   'DSC_REJECTED' : {
       "Name": "DSC_REJECTED",
       "Severity": EventsEvent_severity.warn,
@@ -200,6 +219,11 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "ELECTION_STOPPED",
       "Severity": EventsEvent_severity.warn,
       "Desc": "Leader election stopped",
+  },
+  'HOST_DSC_MODE_INCOMPATIBLE' : {
+      "Name": "HOST_DSC_MODE_INCOMPATIBLE",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Host and DSC modes are incompatible.",
   },
   'HOST_DSC_SPEC_CONFLICT' : {
       "Name": "HOST_DSC_SPEC_CONFLICT",

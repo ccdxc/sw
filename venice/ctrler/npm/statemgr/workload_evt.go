@@ -10,9 +10,13 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/workload"
+	"github.com/pensando/sw/events/generated/eventtypes"
+	orchutils "github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -117,31 +121,60 @@ func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 	hsts.addWorkload(w)
 	err = ws.createEndpoints()
 
-	// Upon restart, if a migration status is in non-terminal state (start or none)
-	if ws.isMigrating() {
-		var snic *DistributedServiceCardState
-		// find the smart nic by name or mac addr
-		for jj := range hsts.Host.Spec.DSCs {
-			if hsts.Host.Spec.DSCs[jj].ID != "" {
-				snic, err = sm.FindDistributedServiceCardByHname(hsts.Host.Spec.DSCs[jj].ID)
-				if err == nil {
-					break
-				}
-				log.Errorf("Error finding smart nic for name %v", hsts.Host.Spec.DSCs[jj].ID)
-			} else if hsts.Host.Spec.DSCs[jj].MACAddress != "" {
-				snicMac := hsts.Host.Spec.DSCs[jj].MACAddress
-				snic, err = sm.FindDistributedServiceCardByMacAddr(snicMac)
-				if err == nil {
-					break
-				}
-				log.Errorf("Error finding smart nic for mac add %v", snicMac)
+	var snic *DistributedServiceCardState
+	// find the smart nic by name or mac addr
+	for jj := range hsts.Host.Spec.DSCs {
+		if hsts.Host.Spec.DSCs[jj].ID != "" {
+			snic, err = sm.FindDistributedServiceCardByHname(hsts.Host.Spec.DSCs[jj].ID)
+			if err == nil {
+				break
+			}
+			log.Errorf("Error finding smart nic for name %v", hsts.Host.Spec.DSCs[jj].ID)
+		} else if hsts.Host.Spec.DSCs[jj].MACAddress != "" {
+			snicMac := hsts.Host.Spec.DSCs[jj].MACAddress
+			snic, err = sm.FindDistributedServiceCardByMacAddr(snicMac)
+			if err == nil {
+				break
+			}
+			log.Errorf("Error finding smart nic for mac add %v", snicMac)
+		}
+	}
+
+	if snic == nil || snic.DistributedServiceCard.Status.AdmissionPhase != cluster.DistributedServiceCardStatus_ADMITTED.String() {
+		recorder.Event(eventtypes.DSC_NOT_ADMITTED,
+			fmt.Sprintf("DSC for host [%v] not admitted.", hsts.Host.Name),
+			nil)
+
+		return nil
+	}
+
+	orchNameValue, isHostOrchhubManaged := host.Host.Labels[orchutils.OrchNameKey]
+	if isHostOrchhubManaged {
+		log.Infof("The host [%v] is managed by orchhub.", host.Host.Name)
+
+		if !snic.isOrchestratorCompatible() {
+			recorder.Event(eventtypes.HOST_DSC_MODE_INCOMPATIBLE,
+				fmt.Sprintf("DSC [%v] mode is incompatible with Host", snic.DistributedServiceCard.Name),
+				nil)
+			return nil
+		}
+		if snic.DistributedServiceCard.Labels == nil {
+			snic.DistributedServiceCard.Labels = make(map[string]string)
+		}
+
+		_, ok := snic.DistributedServiceCard.Labels[orchutils.OrchNameKey]
+		if !ok {
+			// Add Orchhub label to the DSC object
+			snic.DistributedServiceCard.Labels[orchutils.OrchNameKey] = orchNameValue
+			err := snic.stateMgr.ctrler.DistributedServiceCard().Update(&snic.DistributedServiceCard.DistributedServiceCard)
+			if err != nil {
+				log.Errorf("Failed to update orchhub label for DSC [%v]. Err : %v", snic.DistributedServiceCard.Name, err)
 			}
 		}
+	}
 
-		if snic == nil {
-			return fmt.Errorf("could not find snic for the workload [%v]", ws.Workload.Name)
-		}
-
+	// Upon restart, if a migration is in progress and not timed out
+	if ws.isMigrating() {
 		err = sm.reconcileWorkload(w, hsts, snic)
 		// For Workloads moving from non_pensando to pensando host, ensure the appropriate state is slected
 		if err != nil {
@@ -920,6 +953,9 @@ func (ws *WorkloadState) trackMigration() {
 			if ws.Workload.Status.MigrationStatus.Stage == workload.WorkloadMigrationStatus_MIGRATION_ABORT.String() {
 				ws.Workload.Status.MigrationStatus.Status = workload.WorkloadMigrationStatus_FAILED.String()
 				log.Errorf("Workload [%v] migration aborted.", ws.Workload.Name)
+				recorder.Event(eventtypes.MIGRATION_FAILED,
+					fmt.Sprintf("Worklaod [%v] migration failed", ws.Workload.Name),
+					nil)
 			} else if ws.Workload.Status.MigrationStatus.Status == workload.WorkloadMigrationStatus_STARTED.String() {
 				// In case of timeout move the EPs to the new HOST
 				log.Errorf("Workload [%v] migration timed out.", ws.Workload.Name)
@@ -927,6 +963,9 @@ func (ws *WorkloadState) trackMigration() {
 				ws.Workload.Status.MigrationStatus.CompletedAt = &api.Timestamp{}
 				ws.Workload.Status.MigrationStatus.CompletedAt.SetTime(time.Now())
 				ws.Workload.Write()
+				recorder.Event(eventtypes.MIGRATION_TIMED_OUT,
+					fmt.Sprintf("Worklaod [%v] migration timed out", ws.Workload.Name),
+					nil)
 			}
 
 			return
@@ -946,6 +985,9 @@ func (ws *WorkloadState) trackMigration() {
 				ws.Workload.Status.MigrationStatus.CompletedAt = &api.Timestamp{}
 				ws.Workload.Status.MigrationStatus.CompletedAt.SetTime(time.Now())
 				ws.Workload.Write()
+				recorder.Event(eventtypes.MIGRATION_FAILED,
+					fmt.Sprintf("Worklaod [%v] migration failed", ws.Workload.Name),
+					nil)
 				return
 			}
 		}

@@ -303,6 +303,9 @@ func (s *snetworkRouteBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 					// Add system labels that are on the existing object
 					for k, v := range ret.Labels {
 						if strings.HasPrefix(k, globals.SystemLabelPrefix) {
+							if n.Labels == nil {
+								n.Labels = make(map[string]string)
+							}
 							n.Labels[k] = v
 						}
 					}
@@ -588,6 +591,9 @@ func (s *snetworkRouteBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 					// Add system labels that are on the existing object
 					for k, v := range ret.Labels {
 						if strings.HasPrefix(k, globals.SystemLabelPrefix) {
+							if n.Labels == nil {
+								n.Labels = make(map[string]string)
+							}
 							n.Labels[k] = v
 						}
 					}

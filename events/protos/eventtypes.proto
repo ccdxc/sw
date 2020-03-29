@@ -179,6 +179,15 @@ enum EventTypes {
                                            (severity)    = INFO,
                                            (desc)        = "DSC decommissioned from the cluster"];
 
+    DSC_NOT_ADMITTED                = 108 [(category)    = Cluster,
+                                           (severity)    = WARN,
+                                           (desc)        = "Workload provisioned on a host with no admitted DSC"];
+
+    HOST_DSC_MODE_INCOMPATIBLE      = 109 [(category)    = Cluster,
+                                           (severity)    = WARN,
+                                           (desc)        = "Host and DSC modes are incompatible."];
+
+
     // ----------------------------- API Gateway events ---------------------- //
     AUTO_GENERATED_TLS_CERT         = 200 [(category)    = Cluster,
                                            (severity)    = WARN,
@@ -337,16 +346,22 @@ enum EventTypes {
                                                      (severity) = CRITICAL,
                                                      (desc)     = "OTHER Session Limit reached"];
     // ------------------------- Orchestration events ------------------------- //
-    ORCH_CONNECTION_ERROR                     = 1001 [(category) = Orchestration,
+    ORCH_CONNECTION_ERROR                  = 1001 [(category) = Orchestration,
                                            (severity) = WARN,
                                            (desc)     = "Failed to connect to orchestrator"];
-    ORCH_LOGIN_FAILURE                          = 1002 [(category) = Orchestration,
+    ORCH_LOGIN_FAILURE                     = 1002 [(category) = Orchestration,
                                            (severity) = CRITICAL,
                                            (desc)     = "Login credentials were invalid for orchestrator."];
-    ORCH_CONFIG_PUSH_FAILURE                  = 1003 [(category) = Orchestration,
+    ORCH_CONFIG_PUSH_FAILURE               = 1003 [(category) = Orchestration,
                                            (severity) = WARN,
                                            (desc)     = "Failed to push some configurations to orchestrator"];
-    ORCH_INVALID_ACTION                          = 1004 [(category) = Orchestration,
+    ORCH_INVALID_ACTION                    = 1004 [(category) = Orchestration,
                                            (severity) = WARN,
                                            (desc)     = "User performed an action that is not supported"];
+    MIGRATION_FAILED                       = 1005 [(category) = Orchestration,
+                                           (severity) = WARN,
+                                           (desc)     = "Migration Failed"];
+    MIGRATION_TIMED_OUT                    = 1006 [(category) = Orchestration,
+                                           (severity) = WARN,
+                                           (desc)     = "Migration Timed out"];
 }

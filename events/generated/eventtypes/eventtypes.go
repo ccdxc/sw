@@ -244,6 +244,20 @@ func init() {
 		Desc:       "DSC decommissioned from the cluster",
 		SuppressMM: false}
 
+	eventTypes[DSC_NOT_ADMITTED] = &EventTypeAttributes{
+		EType:      DSC_NOT_ADMITTED.String(),
+		Severity:   "warn",
+		Category:   "cluster",
+		Desc:       "Workload provisioned on a host with no admitted DSC",
+		SuppressMM: false}
+
+	eventTypes[HOST_DSC_MODE_INCOMPATIBLE] = &EventTypeAttributes{
+		EType:      HOST_DSC_MODE_INCOMPATIBLE.String(),
+		Severity:   "warn",
+		Category:   "cluster",
+		Desc:       "Host and DSC modes are incompatible.",
+		SuppressMM: false}
+
 	eventTypes[AUTO_GENERATED_TLS_CERT] = &EventTypeAttributes{
 		EType:      AUTO_GENERATED_TLS_CERT.String(),
 		Severity:   "warn",
@@ -515,6 +529,20 @@ func init() {
 		Severity:   "warn",
 		Category:   "",
 		Desc:       "User performed an action that is not supported",
+		SuppressMM: false}
+
+	eventTypes[MIGRATION_FAILED] = &EventTypeAttributes{
+		EType:      MIGRATION_FAILED.String(),
+		Severity:   "warn",
+		Category:   "",
+		Desc:       "Migration Failed",
+		SuppressMM: false}
+
+	eventTypes[MIGRATION_TIMED_OUT] = &EventTypeAttributes{
+		EType:      MIGRATION_TIMED_OUT.String(),
+		Severity:   "warn",
+		Category:   "",
+		Desc:       "Migration Timed out",
 		SuppressMM: false}
 
 }

@@ -9,6 +9,9 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
+	"github.com/pensando/sw/events/generated/eventtypes"
+	orchutils "github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb/objReceiver"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -50,6 +53,21 @@ func (sns *DistributedServiceCardState) Write() error {
 	}*/
 	return err
 
+}
+
+func (sns *DistributedServiceCardState) isOrchestratorCompatible() bool {
+	dscProfile := sns.DistributedServiceCard.Spec.DSCProfile
+	dscProfileState, _ := sns.stateMgr.FindDSCProfile("default", dscProfile)
+	if dscProfileState == nil {
+		log.Errorf("Failed to get DSC profile [%v]", dscProfile)
+		return false
+	}
+
+	if dscProfileState.DSCProfile.Spec.FwdMode != cluster.DSCProfileSpec_INSERTION.String() || dscProfileState.DSCProfile.Spec.FlowPolicyMode != cluster.DSCProfileSpec_ENFORCED.String() {
+		return false
+	}
+
+	return true
 }
 
 //GetDistributedServiceCardWatchOptions gets options
@@ -240,7 +258,7 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 				if ret != nil {
 					log.Infof("Remove receiver failed %v", ret)
 				} else {
-					log.Infof("removed  the dsc: %s to profile: %s", smartNic.Name, oldProfile)
+					log.Infof("removed the dsc: %s to profile: %s", smartNic.Name, oldProfile)
 				}
 
 			}
@@ -252,6 +270,16 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 	}
 
 	sns.DistributedServiceCard.DistributedServiceCard = *nsnic
+
+	_, ok := sns.DistributedServiceCard.Labels[orchutils.OrchNameKey]
+	if ok {
+		if !sns.isOrchestratorCompatible() {
+			recorder.Event(eventtypes.HOST_DSC_MODE_INCOMPATIBLE,
+				fmt.Sprintf("DSC [%v] mode is incompatible with Host", sns.DistributedServiceCard.Name),
+				nil)
+			return nil
+		}
+	}
 
 	// Update SGPolicies
 	policies, _ := sm.ListSgpolicies()

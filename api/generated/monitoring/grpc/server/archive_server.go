@@ -298,6 +298,9 @@ func (s *smonitoringArchiveBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sc
 					// Add system labels that are on the existing object
 					for k, v := range ret.Labels {
 						if strings.HasPrefix(k, globals.SystemLabelPrefix) {
+							if n.Labels == nil {
+								n.Labels = make(map[string]string)
+							}
 							n.Labels[k] = v
 						}
 					}

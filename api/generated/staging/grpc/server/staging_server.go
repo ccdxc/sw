@@ -297,6 +297,9 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					// Add system labels that are on the existing object
 					for k, v := range ret.Labels {
 						if strings.HasPrefix(k, globals.SystemLabelPrefix) {
+							if n.Labels == nil {
+								n.Labels = make(map[string]string)
+							}
 							n.Labels[k] = v
 						}
 					}
@@ -582,6 +585,9 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					// Add system labels that are on the existing object
 					for k, v := range ret.Labels {
 						if strings.HasPrefix(k, globals.SystemLabelPrefix) {
+							if n.Labels == nil {
+								n.Labels = make(map[string]string)
+							}
 							n.Labels[k] = v
 						}
 					}
@@ -867,6 +873,9 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					// Add system labels that are on the existing object
 					for k, v := range ret.Labels {
 						if strings.HasPrefix(k, globals.SystemLabelPrefix) {
+							if n.Labels == nil {
+								n.Labels = make(map[string]string)
+							}
 							n.Labels[k] = v
 						}
 					}

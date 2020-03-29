@@ -6,6 +6,16 @@
    "Desc": "Disk threshold exceeded"
   },
   {
+   "Name": "MIGRATION_FAILED",
+   "Severity": "warn",
+   "Desc": "Migration Failed"
+  },
+  {
+   "Name": "MIGRATION_TIMED_OUT",
+   "Severity": "warn",
+   "Desc": "Migration Timed out"
+  },
+  {
    "Name": "ORCH_CONFIG_PUSH_FAILURE",
    "Severity": "warn",
    "Desc": "Failed to push some configurations to orchestrator"
@@ -78,6 +88,11 @@
    "Desc": "DSC is healthy"
   },
   {
+   "Name": "DSC_NOT_ADMITTED",
+   "Severity": "warn",
+   "Desc": "Workload provisioned on a host with no admitted DSC"
+  },
+  {
    "Name": "DSC_REJECTED",
    "Severity": "warn",
    "Desc": "DSC admission request was rejected"
@@ -111,6 +126,11 @@
    "Name": "ELECTION_STOPPED",
    "Severity": "warn",
    "Desc": "Leader election stopped"
+  },
+  {
+   "Name": "HOST_DSC_MODE_INCOMPATIBLE",
+   "Severity": "warn",
+   "Desc": "Host and DSC modes are incompatible."
   },
   {
    "Name": "HOST_DSC_SPEC_CONFLICT",
