@@ -2,10 +2,14 @@
  *  {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
  */
 
-#include "includes.h"
+#include <pkt.h>
+#include <session.h>
+#include "node.h"
+#include <flow.h>
 #include "pdsa_hdlr.h"
 #include "pdsa_uds_hdlr.h"
 #include <nic/vpp/infra/utils.h>
+#include <vnet/buffer.h>
 
 pds_flow_main_t pds_flow_main;
 
@@ -220,9 +224,12 @@ format_pds_session_prog_trace (u8 * s, va_list * args)
     CLIB_UNUSED(vlib_main_t * vm) = va_arg(*args, vlib_main_t *);
     CLIB_UNUSED(vlib_node_t * node) = va_arg(*args, vlib_node_t *);
     session_prog_trace_t *t = va_arg(*args, session_prog_trace_t *);
+    u8 *session_data = NULL;
+    u32 size;
 
+    session_get_addr(t->session_id, &session_data, &size);
     s = format(s, "Session ID %u,\nData: %U", t->session_id,
-               format_hex_bytes, t->data, sizeof(t->data));
+               format_hex_bytes, session_data, size);
     return s;
 }
 
@@ -242,19 +249,11 @@ pds_session_prog_trace_add (vlib_main_t *vm,
             if (b0->flags & VLIB_BUFFER_IS_TRACED) {
                 t0 = vlib_add_trace(vm, node, b0, sizeof(t0[0]));
                 t0->session_id = vnet_buffer(b0)->pds_flow_data.ses_id;
-                clib_memcpy(t0->data,
-                            (vlib_buffer_get_current(b0) -
-                             pds_session_get_advance_offset()),
-                            sizeof(t0->data));
             }
 
             if (b1->flags & VLIB_BUFFER_IS_TRACED) {
                 t1 = vlib_add_trace(vm, node, b1, sizeof(t1[0]));
                 t1->session_id = vnet_buffer(b1)->pds_flow_data.ses_id;
-                clib_memcpy(t1->data,
-                            (vlib_buffer_get_current(b1) -
-                             pds_session_get_advance_offset()),
-                            sizeof(t0->data));
             }
 
         } PDS_PACKET_TRACE_DUAL_LOOP_END;
@@ -268,10 +267,6 @@ pds_session_prog_trace_add (vlib_main_t *vm,
             if (b0->flags & VLIB_BUFFER_IS_TRACED) {
                 t0 = vlib_add_trace(vm, node, b0, sizeof(t0[0]));
                 t0->session_id = vnet_buffer(b0)->pds_flow_data.ses_id;
-                clib_memcpy(t0->data,
-                            (vlib_buffer_get_current(b0) -
-                             pds_session_get_advance_offset()),
-                            sizeof(t0->data));
             }
         } PDS_PACKET_TRACE_SINGLE_LOOP_END;
     } PDS_PACKET_TRACE_LOOP_END;
@@ -649,31 +644,42 @@ always_inline void
 pds_flow_program_hw_ip4 (u16 *next, u32 *counter)
 {
     int i, size = ftlv4_cache_get_count();
+    u32 i_pindex, i_sindex, r_pindex, r_sindex;
     ftlv4 *table = pds_flow_prog_get_table4();
+    int ret;
 
-    for (i = 0; i < size; i++) {
+    for (i = 0; i < size; i+=2) {
         uint32_t session_id = ftlv4_cache_get_session_index(i);
 
-        if (PREDICT_TRUE(session_id > 0) &&
-            PREDICT_TRUE(0 == ftlv4_cache_program_index(table, i))) {
-            counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
-            next[i/2] = pds_flow_prog_get_next_node();
-        } else {
-            counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
-            next[i/2] = FLOW_PROG_NEXT_DROP;
-            if (session_id) {
-                pds_session_id_dealloc(session_id);
-            }
-            if (i % 2) {
-                /* Remove last entry as local flow succeeded
-                 * but remote entry failed */
-                if (PREDICT_FALSE(0 != ftlv4_cache_delete_index(table, i-1))) {
-                    counter[FLOW_PROG_COUNTER_FLOW_DELETE_FAILED]++;
-                }
-            } else {
-                /* Skip remote flow entry as local entry failed */
-                i++;
-            }
+        ret = ftlv4_cache_program_index(table, i, &i_pindex, &i_sindex);
+        if (PREDICT_FALSE(ret != 0)) {
+            goto err_iflow;
+        }
+        ret = ftlv4_cache_program_index(table, i+1, &r_pindex, &r_sindex);
+        if (PREDICT_FALSE(ret != 0)) {
+            goto err_rflow;
+        }
+        pds_session_set_data(session_id, i_pindex,
+                             i_sindex, r_pindex,
+                             r_sindex,
+                             pds_flow_trans_proto(ftlv4_cache_get_proto(i)),
+                             true);
+        counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
+        next[i/2] = pds_flow_prog_get_next_node();
+        continue;
+
+    err_rflow:
+        // Remove last entry as local flow succeeded
+        // but remote entry failed
+        ret = ftlv4_cache_delete_index(table, i);
+        if (PREDICT_FALSE(0 != ret)) {
+            counter[FLOW_PROG_COUNTER_FLOW_DELETE_FAILED]++;
+        }
+    err_iflow:
+        counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
+        next[i/2] = FLOW_PROG_NEXT_DROP;
+        if (session_id) {
+            pds_session_id_dealloc(session_id);
         }
     }
 }
@@ -683,30 +689,41 @@ pds_flow_program_hw_ip6_or_l2 (u16 *next, u32 *counter)
 {
     int i, size = ftlv6_cache_get_count();
     ftlv6 *table = pds_flow_prog_get_table6_or_l2();
+    u32 i_pindex, i_sindex, r_pindex, r_sindex;
+    int ret;
 
-    for (i = 0; i < size; i++) {
+    for (i = 0; i < size; i+=2) {
         uint32_t session_id = ftlv6_cache_get_session_index(i);
 
-        if (PREDICT_TRUE(session_id > 0) &&
-            PREDICT_TRUE(0 == ftlv6_cache_program_index(table, i))) {
-            counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
-            next[i/2] = pds_flow_prog_get_next_node();
-        } else {
-            counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
-            next[i/2] = FLOW_PROG_NEXT_DROP;
-            if (session_id) {
-                pds_session_id_dealloc(session_id);
-            }
-            if (i % 2) {
-                /* Remove last entry as local flow succeeded
-                 * but remote entry failed */
-                if (PREDICT_FALSE(0 != ftlv6_cache_delete_index(table, i-1))) {
-                    counter[FLOW_PROG_COUNTER_FLOW_DELETE_FAILED]++;
-                }
-            } else {
-                /* Skip remote flow entry as local entry failed */
-                i++;
-            }
+        ret = ftlv6_cache_program_index(table, i, &i_pindex, &i_sindex);
+        if (PREDICT_FALSE(ret != 0)) {
+            goto err_iflow;
+        }
+        ret = ftlv6_cache_program_index(table, i+1, &r_pindex, &r_sindex);
+        if (PREDICT_FALSE(ret != 0)) {
+            goto err_rflow;
+        }
+        pds_session_set_data(session_id, i_pindex,
+                             i_sindex, r_pindex,
+                             r_sindex,
+                             pds_flow_trans_proto(ftlv6_cache_get_proto(i)),
+                             false);
+        counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
+        next[i/2] = pds_flow_prog_get_next_node();
+        continue;
+
+    err_rflow:
+        // Remove last entry as local flow succeeded
+        // but remote entry failed
+        ret = ftlv6_cache_delete_index(table, i);
+        if (PREDICT_FALSE(0 != ret)) {
+            counter[FLOW_PROG_COUNTER_FLOW_DELETE_FAILED]++;
+        }
+    err_iflow:
+        counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
+        next[i/2] = FLOW_PROG_NEXT_DROP;
+        if (session_id) {
+            pds_session_id_dealloc(session_id);
         }
     }
 }
@@ -1091,13 +1108,15 @@ pds_flow_init (vlib_main_t * vm)
 
     fm->max_sessions = pds_session_get_max();
     pool_init_fixed(fm->session_index_pool, fm->max_sessions);
+    clib_memset(fm->session_index_pool, 0,
+                fm->max_sessions * sizeof(pds_flow_hw_ctx_t));
 
     vec_validate(fm->session_id_thr_local_pool,
                  no_of_threads - 1);
     clib_memset(fm->session_id_thr_local_pool, 0,
                 (sizeof(pds_flow_session_id_thr_local_pool_t) * no_of_threads));
     pds_flow_rewrite_flags_init();
-    if (0 != initialize_flow()) {
+    if (0 != initialize_session()) {
         ASSERT(0);
     }
 
@@ -1115,10 +1134,7 @@ pds_flow_init (vlib_main_t * vm)
         fm->session_id_thr_local_pool[i].pool_count = -1;
     }
 
-    vec_validate(fm->flow_idle_timeout, IPPROTO_MAX - 1);
-
     pdsa_flow_hdlr_init();
-    pds_flow_cfg_init();
     pds_flow_dump_init();
 
     pds_flow_pipeline_init(vm);

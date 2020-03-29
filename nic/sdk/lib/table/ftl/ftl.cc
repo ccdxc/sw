@@ -113,11 +113,12 @@ ftl_base::destroy(ftl_base *t) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 ftl_base::ctxinit_(sdk_table_api_op_t op,
-                   sdk_table_api_params_t *params) {
+                   sdk_table_api_params_t *params,
+                   bool skip_hash) {
     int index;
 
     FTL_TRACE_VERBOSE("op:%d", op);
-    if (SDK_TABLE_API_OP_IS_CRUD(op)) {
+    if (!skip_hash && SDK_TABLE_API_OP_IS_CRUD(op)) {
         auto ret = genhash_(params);
         if (ret != SDK_RET_OK) {
             FTL_TRACE_ERR("failed to generate hash, ret:%d", ret);
@@ -230,6 +231,33 @@ ftl_base::get(sdk_table_api_params_t *params) {
     }
 
     ret = static_cast<main_table*>(main_table_)->get_(get_apictx(0));
+    if (ret != SDK_RET_OK) {
+        FTL_TRACE_ERR("get_ failed. ret:%d", ret);
+        goto get_return;
+    }
+
+get_return:
+    astats_[thread_id()].get(ret);
+    FTL_API_END_(ret);
+    return ret;
+}
+
+sdk_ret_t
+ftl_base::get_with_handle(sdk_table_api_params_t *params) {
+    sdk_ret_t ret = SDK_RET_OK;
+    Apictx *ctx;
+
+    FTL_API_BEGIN_();
+
+    ret = ctxinit_(sdk::table::SDK_TABLE_API_GET, params);
+    if (ret != SDK_RET_OK) {
+        FTL_TRACE_ERR("failed to create api context. ret:%d", ret);
+        goto get_return;
+    }
+
+    ctx = get_apictx(0);
+
+    ret = static_cast<main_table*>(main_table_)->get_with_handle_(ctx);
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("get_ failed. ret:%d", ret);
         goto get_return;

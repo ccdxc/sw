@@ -168,10 +168,12 @@ ftlv6_cache_advance_count (int val)
 }
 
 int
-ftlv6_cache_program_index (ftlv6 *obj, uint16_t id)
+ftlv6_cache_program_index (ftlv6 *obj, uint16_t id, uint32_t *pindex, 
+                           uint32_t *sindex)
 {
     return ftl_insert(obj, g_ip6_flow_cache.flow + id,
                       g_ip6_flow_cache.hash[id],
+                      pindex, sindex,
                       g_ip6_flow_cache.flags[id].log,
                       g_ip6_flow_cache.flags[id].update);
 }
@@ -194,6 +196,12 @@ uint32_t
 ftlv6_cache_get_session_index (int id)
 {
     return ftl_get_session_id(g_ip6_flow_cache.flow + id);
+}
+
+uint8_t
+ftlv6_cache_get_proto(int id)
+{
+    return ftl_get_proto(g_ip6_flow_cache.flow + id);
 }
 
 void
@@ -225,10 +233,12 @@ void
 ftlv6_cache_batch_flush (ftlv6 *obj, int *status)
 {
     int i;
+    uint32_t pindex, sindex;
 
     for (i = 0; i < g_ip6_flow_cache.count; i++) {
        status[i] = ftl_insert(obj, g_ip6_flow_cache.flow + i,
                               g_ip6_flow_cache.hash[i],
+                              &pindex, &sindex,
                               g_ip6_flow_cache.flags[i].log,
                               g_ip6_flow_cache.flags[i].update);
     }

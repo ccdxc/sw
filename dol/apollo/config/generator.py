@@ -17,6 +17,7 @@ from apollo.config.objects.tunnel import client as TunnelClient
 from apollo.config.objects.route import client as RouteTableClient
 from apollo.config.objects.tag import client as TagClient
 from apollo.config.objects.policy import client as PolicyClient
+from apollo.config.objects.security_profile import client as SecurityProfileClient
 from apollo.config.objects.lmapping import client as LmappingClient
 from apollo.config.objects.rmapping import client as RmappingClient
 from apollo.config.objects.vnic import client as VnicClient
@@ -56,6 +57,7 @@ def __initialize_object_info():
     ObjectInfo[APIObjTypes.RMAPPING.name.lower()] = RmappingClient
     ObjectInfo[APIObjTypes.ROUTE.name.lower()] = RouteTableClient
     ObjectInfo[APIObjTypes.POLICY.name.lower()] = PolicyClient
+    ObjectInfo[APIObjTypes.SECURITY_PROFILE.name.lower()] = SecurityProfileClient
     ObjectInfo[APIObjTypes.MIRROR.name.lower()] = MirrorClient
     ObjectInfo[APIObjTypes.METER.name.lower()] = MeterClient
     ObjectInfo[APIObjTypes.TAG.name.lower()] = TagClient
@@ -112,6 +114,9 @@ def __generate(node, topospec):
     # TODO: move it under underlay_vpc
     DHCPRelayClient.GenerateObjects(node, topospec)
 
+    # Generate security policy configuration
+    SecurityProfileClient.GenerateObjects(node, topospec)
+
     # Generate VPC configuration
     VpcClient.GenerateObjects(node, topospec)
 
@@ -148,6 +153,8 @@ def __create(node):
 
     # Create VPC Objects
     VpcClient.CreateObjects(node)
+
+    SecurityProfileClient.CreateObjects(node)
 
     # Commit the Batch
     BatchClient.Commit(node)

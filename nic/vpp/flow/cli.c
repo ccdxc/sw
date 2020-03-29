@@ -6,6 +6,7 @@
 #include <vlib/vlib.h>
 #include <vnet/vnet.h>
 #include <vnet/plugin/plugin.h>
+#include <session.h>
 #include "node.h"
 #include "cli_helper.h"
 

@@ -102,7 +102,8 @@ class ObjectTypes(enum.IntEnum):
     BGP_EVPN_IP_VRF_RT = 28
     STATIC_ROUTE = 29
     OPER = 30
-    MAX = 31
+    SECURITY_PROFILE = 31
+    MAX = 32
 
 class ClientModule:
     def __init__(self, module, msg_prefix):
@@ -358,6 +359,8 @@ class ApolloAgentClient:
                                                       self.__channel, 'RouteTable')
         self.__stubs[ObjectTypes.POLICY] = ClientStub(policy_pb2_grpc.SecurityPolicySvcStub,
                                                       self.__channel, 'SecurityPolicy')
+        self.__stubs[ObjectTypes.SECURITY_PROFILE] = ClientStub(policy_pb2_grpc.SecurityPolicySvcStub,
+                                                      self.__channel, 'SecurityProfile')
         self.__stubs[ObjectTypes.MIRROR] = ClientStub(mirror_pb2_grpc.MirrorSvcStub,
                                                       self.__channel, 'MirrorSession')
         self.__stubs[ObjectTypes.NEXTHOP] = ClientStub(nh_pb2_grpc.NhSvcStub,
@@ -405,6 +408,7 @@ class ApolloAgentClient:
         self.__msgreqs[ObjectTypes.NEXTHOPGROUP] = ClientModule(nh_pb2, 'NhGroup')
         self.__msgreqs[ObjectTypes.ROUTE] = ClientModule(route_pb2, 'RouteTable')
         self.__msgreqs[ObjectTypes.POLICY] = ClientModule(policy_pb2, 'SecurityPolicy')
+        self.__msgreqs[ObjectTypes.SECURITY_PROFILE] = ClientModule(policy_pb2, 'SecurityProfile')
         self.__msgreqs[ObjectTypes.SUBNET] = ClientModule(subnet_pb2, 'Subnet')
         self.__msgreqs[ObjectTypes.TAG] = ClientModule(tags_pb2, 'Tag')
         self.__msgreqs[ObjectTypes.TUNNEL] = ClientModule(tunnel_pb2, 'Tunnel')

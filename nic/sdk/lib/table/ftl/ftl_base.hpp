@@ -23,7 +23,8 @@ private:
 
 private:
     sdk_ret_t ctxinit_(sdk_table_api_op_t op,
-                       sdk_table_api_params_t *params);
+                       sdk_table_api_params_t *params,
+                       bool skip_hash = false);
 
 protected:
     sdk::table::properties_t *props_;
@@ -44,6 +45,7 @@ public:
     sdk_ret_t update(sdk_table_api_params_t *params);
     sdk_ret_t remove(sdk_table_api_params_t *params);
     sdk_ret_t get(sdk_table_api_params_t *params);
+    sdk_ret_t get_with_handle(sdk_table_api_params_t *params);
     sdk_ret_t stats_get(sdk_table_api_stats_t *api_stats,
                         sdk_table_stats_t *table_stats,
                         bool use_local_thread_id=true, uint32_t id=0);

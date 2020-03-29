@@ -5,6 +5,8 @@
 #ifndef __VPP_IMPL_ARTEMIS_FLOW_H__
 #define __VPP_IMPL_ARTEMIS_FLOW_H__
 
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <gen/p4gen/artemis/include/p4pd.h>
 #include <nic/apollo/p4/include/artemis_defines.h>
 #include <stddef.h>

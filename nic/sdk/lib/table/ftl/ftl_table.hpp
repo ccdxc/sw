@@ -71,16 +71,20 @@ private:
     sdk_ret_t dealloc_(Apictx *ctx);
     sdk_ret_t init_(sdk::table::properties_t *props);
     sdk_ret_t initctx_(Apictx *ctx);
+    sdk_ret_t initctx_with_handle_(Apictx *ctx);
     sdk_ret_t insert_(Apictx *ctx);
     sdk_ret_t remove_(Apictx *ctx);
     sdk_ret_t find_(Apictx *ctx,
                     Apictx **retctx);
+    sdk_ret_t get_with_handle_(Apictx *ctx);
     sdk_ret_t iterate_(Apictx *ctx);
     sdk_ret_t clear_(Apictx *ctx);
     sdk_ret_t defragment_(Apictx *ctx);
     sdk_ret_t tail_(Apictx *ctx,
                     Apictx **retctx);
     Apictx *ctxnew_(Apictx *src);
+    void lock_(Apictx *ctx);
+    void unlock_(Apictx *ctx);
 
 
 public:
@@ -101,6 +105,7 @@ private:
 private:
     sdk_ret_t init_(sdk::table::properties_t *props);
     sdk_ret_t initctx_(Apictx *ctx);
+    sdk_ret_t initctx_with_handle_(Apictx *ctx);
     sdk_ret_t insert_(Apictx *ctx);
     sdk_ret_t insert_with_handle_(Apictx *ctx);
     sdk_ret_t remove_(Apictx *ctx);

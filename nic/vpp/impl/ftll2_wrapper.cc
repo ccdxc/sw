@@ -155,10 +155,12 @@ ftll2_cache_advance_count (int val)
 }
 
 int
-ftll2_cache_program_index (ftll2 *obj, uint16_t id)
+ftll2_cache_program_index (ftll2 *obj, uint16_t id, uint32_t *pindex, 
+                           uint32_t *sindex)
 {
     return ftl_insert(obj, g_l2_flow_cache.flow + id,
                       g_l2_flow_cache.hash[id],
+                      pindex, sindex,
                       g_l2_flow_cache.flags[id].log,
                       g_l2_flow_cache.flags[id].update);
 }
@@ -181,6 +183,12 @@ uint32_t
 ftll2_cache_get_session_index (int id)
 {
     return ftl_get_session_id(g_l2_flow_cache.flow + id);
+}
+
+uint8_t
+ftll2_cache_get_proto(int id)
+{
+    return ftl_get_proto(g_l2_flow_cache.flow + id);
 }
 
 void
@@ -212,10 +220,12 @@ void
 ftll2_cache_batch_flush (ftll2 *obj, int *status)
 {
     int i;
+    uint32_t pindex, sindex;
 
     for (i = 0; i < g_l2_flow_cache.count; i++) {
        status[i] = ftl_insert(obj, g_l2_flow_cache.flow + i,
                               g_l2_flow_cache.hash[i],
+                              &pindex, &sindex,
                               g_l2_flow_cache.flags[i].log,
                               g_l2_flow_cache.flags[i].update);
     }

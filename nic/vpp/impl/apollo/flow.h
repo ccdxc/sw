@@ -5,6 +5,8 @@
 #ifndef __VPP_IMPL_APOLLO_FLOW_H__
 #define __VPP_IMPL_APOLLO_FLOW_H__
 
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <gen/p4gen/apollo/include/p4pd.h>
 #include <nic/apollo/p4/include/defines.h>
 
@@ -297,4 +299,5 @@ pds_flow_pipeline_init (vlib_main_t *vm)
 {
     return;
 }
+
 #endif    // __VPP_IMPL_APOLLO_FLOW_H__

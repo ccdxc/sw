@@ -2,32 +2,36 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 
-#include <arpa/inet.h>
+#include <system.h>
 #include "node.h"
+#include "pdsa_hdlr.h"
 
 void
-pds_flow_idle_timeout_get (uint32_t *flow_idle_timeout, size_t sz)
+pds_flow_cfg_set (uint8_t con_track_en,
+                  uint32_t tcp_syn_timeout,
+                  uint32_t tcp_half_close_timeout,
+                  uint32_t tcp_close_timeout,
+                  const uint32_t *flow_idle_timeout,
+                  const uint32_t *flow_drop_timeout)
 {
     pds_flow_main_t *fm = &pds_flow_main;
+    int i;
 
-    clib_memcpy(flow_idle_timeout, fm->flow_idle_timeout, sz);
-}
+    fm->con_track_en = con_track_en;
+    fm->tcp_con_setup_timeout = PDS_FLOW_SEC_TO_TIMER_TICK(tcp_syn_timeout);
+    fm->tcp_half_close_timeout =
+            PDS_FLOW_SEC_TO_TIMER_TICK(tcp_half_close_timeout);
+    fm->tcp_close_timeout =
+            PDS_FLOW_SEC_TO_TIMER_TICK(tcp_close_timeout);
 
-void
-pds_flow_idle_timeout_set (const uint32_t *flow_idle_timeout, size_t sz)
-{
-    pds_flow_main_t *fm = &pds_flow_main;
-
-    clib_memcpy(fm->flow_idle_timeout, flow_idle_timeout, sz);
-}
-
-void
-pds_flow_cfg_init (void)
-{
-    uint32_t flow_idle_timeouts[IPPROTO_MAX];
-
-    memset(flow_idle_timeouts, 0, sizeof(flow_idle_timeouts));
-
-    // initialize flow config to not age
-    pds_flow_idle_timeout_set(flow_idle_timeouts, sizeof(flow_idle_timeouts));
+    for (i = PDS_FLOW_PROTO_START; i < PDS_FLOW_PROTO_END; i++) {
+        vec_elt(fm->idle_timeout, i) =
+                PDS_FLOW_SEC_TO_TIMER_TICK(flow_idle_timeout[i]);
+        vec_elt(fm->idle_timeout_ticks, i) =
+                pds_system_get_ticks(flow_idle_timeout[i]);
+        vec_elt(fm->drop_timeout, i) =
+                PDS_FLOW_SEC_TO_TIMER_TICK(flow_drop_timeout[i]);
+        vec_elt(fm->drop_timeout_ticks, i) =
+                        pds_system_get_ticks(flow_drop_timeout[i]);
+    }
 }

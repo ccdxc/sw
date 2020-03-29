@@ -89,6 +89,23 @@ main_table::initctx_(Apictx *ctx) {
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+main_table::initctx_with_handle_(Apictx *ctx) {
+
+    ctx->table_id = table_id_;
+
+    // Derive the table_index
+    if (ctx->params->handle.pvalid()) {
+        ctx->table_index = ctx->params->handle.pindex();
+    } else if (ctx->params->handle.svalid()) {
+        ctx->table_index = ctx->params->handle.sindex();
+    }
+    FTL_TRACE_VERBOSE("M: TID:%d Idx:%d", ctx->table_id, ctx->table_index);
+    ctx->bucket = &buckets_[ctx->table_index];
+
+    return SDK_RET_OK;
+}
+
 //---------------------------------------------------------------------------
 // main_table insert_: Insert entry to main table
 //---------------------------------------------------------------------------
@@ -265,6 +282,25 @@ done:
     return ret;
 }
 
+sdk_ret_t
+main_table::get_with_handle_(Apictx *ctx) {
+    sdk_ret_t ret = SDK_RET_OK;
+    SDK_ASSERT(initctx_with_handle_(ctx) == SDK_RET_OK);
+
+    if (ctx->params->handle.svalid()) {
+        return hint_table_->get_with_handle_(ctx);
+    }
+
+    lock_(ctx);
+
+    ret = ctx->bucket->read_(ctx);
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    ctx->params->entry->copy_key_data(ctx->entry);
+
+    unlock_(ctx);
+    return ret;
+}
 //---------------------------------------------------------------------------
 // main_table iterate_: Iterate entries from main table
 //---------------------------------------------------------------------------

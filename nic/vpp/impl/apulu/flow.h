@@ -5,9 +5,13 @@
 #ifndef __VPP_IMPL_APULU_FLOW_H__
 #define __VPP_IMPL_APULU_FLOW_H__
 
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <gen/p4gen/apulu/include/p4pd.h>
+#include <session.h>
 #include <api.h>
 #include <impl_db.h>
+#include <feature.h>
 #include <nic/apollo/api/impl/apulu/nacl_data.h>
 #include <vlib/vlib.h>
 #include <vnet/vxlan/vxlan_packet.h>
@@ -79,7 +83,8 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         *next0 = SESSION_PROG_NEXT_DROP;
     } else {
 skip_prog0:
-        *next0 = SESSION_PROG_NEXT_FWD_FLOW;
+        *next0 = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW : 
+                                            SESSION_PROG_NEXT_FWD_FLOW;
         vnet_buffer(b0)->pds_flow_data.lif = ses_info0->lif;
     }
 
@@ -107,7 +112,8 @@ skip_prog0:
         *next1 = SESSION_PROG_NEXT_DROP;
     } else {
 skip_prog1:
-        *next1 = SESSION_PROG_NEXT_FWD_FLOW;
+        *next1 = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW :
+                                            SESSION_PROG_NEXT_FWD_FLOW;
         vnet_buffer(b1)->pds_flow_data.lif = ses_info1->lif;
     }
 
@@ -150,7 +156,8 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         next[0] = SESSION_PROG_NEXT_DROP;
     } else {
 skip_prog:
-        next[0] = SESSION_PROG_NEXT_FWD_FLOW;
+        next[0] = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW :
+                                             SESSION_PROG_NEXT_FWD_FLOW;
         vnet_buffer(b)->pds_flow_data.lif = ses_info0->lif;
     }
     vlib_buffer_advance(b, pds_session_get_advance_offset());
@@ -676,12 +683,12 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
             vnet_buffer(p0)->pds_flow_data.flags |=
                     VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID;
         }
-        vnet_buffer(p0)->pds_flow_data.flags |= flag_orig0 |
+        vnet_buffer(p0)->pds_flow_data.flags |= flags0 |
             (hdr0->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
             (((!hdr0->rx_packet) && hdr0->is_local) <<
             VPP_CPU_FLAGS_FLOW_L2L_POS) |
             (vnic0->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
-
+        vnet_buffer(p0)->pds_flow_data.tcp_flags = hdr0->tcp_flags;
         nexthop = hdr0->nexthop_id;
         if ((!hdr0->mapping_hit || hdr0->rx_packet) && !hdr0->drop) {
             vnet_buffer(p0)->pds_flow_data.nexthop = nexthop |
@@ -725,11 +732,12 @@ next_pak:
             vnet_buffer(p1)->pds_flow_data.flags |=
                     VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID;
         }
-        vnet_buffer(p1)->pds_flow_data.flags |= flag_orig1 |
+        vnet_buffer(p1)->pds_flow_data.flags |= flags1 |
             (hdr1->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
             (((!hdr1->rx_packet) && hdr1->is_local) <<
             VPP_CPU_FLAGS_FLOW_L2L_POS) |
             (vnic1->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
+        vnet_buffer(p1)->pds_flow_data.tcp_flags = hdr1->tcp_flags;
         nexthop = hdr1->nexthop_id;
         if ((!hdr1->mapping_hit || hdr1->rx_packet) && !hdr1->drop) {
             vnet_buffer(p1)->pds_flow_data.nexthop = nexthop |
@@ -848,6 +856,7 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
         (hdr->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
         (((!hdr->rx_packet) && hdr->is_local) << VPP_CPU_FLAGS_FLOW_L2L_POS) |
         (vnic->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
+    vnet_buffer(p)->pds_flow_data.tcp_flags = hdr->tcp_flags;
     nexthop = hdr->nexthop_id;
     if ((!hdr->mapping_hit || hdr->rx_packet) && !hdr->drop) {
         vnet_buffer(p)->pds_flow_data.nexthop = nexthop |

@@ -74,6 +74,11 @@ class OriginTypes(enum.IntEnum):
      DISCOVERED = 1
      IMPLICITLY_CREATED = 2
 
+class SecurityRuleActionType(enum.IntEnum):
+    NONE = 0
+    ALLOW = 1
+    DENY = 2
+
 class ChosenFlowObjs:
     def __init__(self):
         self.select_objs = False

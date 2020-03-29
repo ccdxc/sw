@@ -140,6 +140,16 @@ hint_table::dealloc_(Apictx *ctx) {
     return SDK_RET_OK;
 }
 
+inline void
+hint_table::lock_(Apictx *ctx) {
+    buckets_[ctx->table_index].lock_();
+}
+
+inline void
+hint_table::unlock_(Apictx *ctx) {
+    buckets_[ctx->table_index].unlock_();
+}
+
 sdk_ret_t
 hint_table::initctx_(Apictx *ctx) {
     // All hint_table api contexts must have parent api context.
@@ -154,9 +164,23 @@ hint_table::initctx_(Apictx *ctx) {
 
     FTL_TRACE_VERBOSE("%s: TID:%d Idx:%d", ctx->idstr(),
                       ctx->table_id, ctx->table_index);
-    return ctx->bucket->read_(ctx);
+    return SDK_RET_OK;
 }
 
+sdk_ret_t
+hint_table::initctx_with_handle_(Apictx *ctx) {
+    ctx->table_index = ctx->params->handle.sindex();
+    // Save the table_id
+    ctx->table_id = table_id_;
+    // Save the bucket for this context
+    ctx->bucket = &buckets_[ctx->table_index];
+    ctx->level++;
+
+    FTL_TRACE_VERBOSE("%s: TID:%d Idx:%d", ctx->idstr(),
+                      ctx->table_id, ctx->table_index);
+    return SDK_RET_OK;
+}
+    
 sdk_ret_t
 hint_table::insert_(Apictx *pctx) {
 __label__ done;
@@ -179,6 +203,8 @@ __label__ done;
     // Initialize the context
     SDK_ASSERT_RETURN(initctx_(hctx) == SDK_RET_OK, SDK_RET_ERR);
 
+    lock_(hctx);
+    hctx->bucket->read_(hctx);
     ret = hctx->bucket->insert_(hctx);
     if (unlikely(ret == SDK_RET_COLLISION)) {
         // Recursively call the insert_ with hint table context
@@ -191,6 +217,7 @@ __label__ done;
     }
 
 done:
+    unlock_(hctx);
     return ret;
 }
 
@@ -223,6 +250,9 @@ hint_table::tail_(Apictx *ctx,
     // Initialize the context
     SDK_ASSERT_RETURN(initctx_(tctx) == SDK_RET_OK, SDK_RET_ERR);
 
+    lock_(tctx);
+    tctx->bucket->read_(tctx);
+
     auto ret = tctx->bucket->find_last_hint_(tctx);
     if (ret == SDK_RET_OK) {
         FTL_TRACE_VERBOSE("%s: find_last_hint_ Ctx: [%s], ret:%d", tctx->idstr(),
@@ -247,6 +277,7 @@ hint_table::tail_(Apictx *ctx,
         // failure case: destroy the context
     }
 
+    unlock_(tctx);
     return ret;
 }
 
@@ -303,6 +334,10 @@ __label__ done;
     // Initialize the context
     auto hctx = ctxnew_(ctx);
     SDK_ASSERT_RETURN(initctx_(hctx) == SDK_RET_OK, SDK_RET_ERR);
+
+    lock_(hctx);
+    hctx->bucket->read_(hctx);
+
     // Remove entry from the bucket
     auto ret = hctx->bucket->remove_(hctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "bucket remove r:%d", ret);
@@ -319,6 +354,7 @@ __label__ done;
     }
 
 done:
+    unlock_(hctx);
     return ret;
 }
 
@@ -327,11 +363,14 @@ done:
 //---------------------------------------------------------------------------
 sdk_ret_t
 hint_table::find_(Apictx *ctx,
-                      Apictx **match_ctx) {
+                  Apictx **match_ctx) {
 __label__ done;
     // Initialize the context
     auto hctx = ctxnew_(ctx);
     SDK_ASSERT_RETURN(initctx_(hctx) == SDK_RET_OK, SDK_RET_ERR);
+
+    lock_(hctx);
+    hctx->bucket->read_(hctx);
 
     // Remove entry from the bucket
     auto ret = hctx->bucket->find_(hctx);
@@ -340,7 +379,8 @@ __label__ done;
     if (hctx->exmatch) {
         // This means there was an exact match in the hint table
         *match_ctx = hctx;
-        return SDK_RET_OK;
+        ret = SDK_RET_OK;
+        goto done;
     } else {
         // We only found a matching hint, so find the entry recursively
         ret = find_(hctx, match_ctx);
@@ -348,7 +388,20 @@ __label__ done;
 
     SDK_ASSERT(*match_ctx != hctx);
 done:
+    unlock_(hctx);
     return ret;
+}
+
+sdk_ret_t
+hint_table::get_with_handle_(Apictx *ctx) {
+    SDK_ASSERT(initctx_with_handle_(ctx) == SDK_RET_OK);
+
+    lock_(ctx);
+    ctx->bucket->read_(ctx);
+    ctx->params->entry->copy_key_data(ctx->entry);
+    unlock_(ctx);
+    
+    return SDK_RET_OK;
 }
 
 //---------------------------------------------------------------------------

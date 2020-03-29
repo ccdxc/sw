@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include "node.h"
 #include <pkt.h>
+#include <session.h>
 #include <flow.h>
 
 #endif  //__VPP_FLOW_INCLUDES_H__

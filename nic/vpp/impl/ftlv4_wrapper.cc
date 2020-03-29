@@ -16,6 +16,9 @@
 #include "nic/vpp/infra/operd/flow_export.h"
 #include <pd_utils.h>
 #include <ftl_wrapper.h>
+#include <session.h>
+
+extern uint64_t pds_session_get_timestamp(uint32_t ses);
 
 using namespace sdk;
 using namespace sdk::table;
@@ -46,7 +49,8 @@ ftlv4_create (void *key2str,
 
 static int
 ftlv4_insert (ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
-              uint8_t log, uint8_t update)
+              uint32_t *pindex, uint32_t *sindex, uint8_t log,
+              uint8_t update)
 {
     sdk_table_api_params_t params = {0};
 
@@ -69,6 +73,14 @@ ftlv4_insert (ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
     if (SDK_RET_OK != obj->insert(&params)) {
         return -1;
     }
+
+    if (params.handle.svalid()) {
+        *pindex = (uint32_t) (~0L);
+        *sindex = params.handle.sindex();
+    } else {
+        *pindex = params.handle.pindex();
+    }
+
     if (log) {
         pds_operd_export_flow_ip4(entry->get_key_metadata_ipv4_src(),
                                   entry->get_key_metadata_ipv4_dst(),
@@ -108,6 +120,34 @@ ftlv4_remove (ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
     }
     return 0;
 }
+
+int 
+ftlv4_remove_with_handle(ftlv4 *obj, uint32_t index, bool primary)
+{
+    sdk_table_api_params_t params = {0};
+    ipv4_flow_hash_entry_t v4entry;
+
+    if (get_skip_ftl_program()) {
+        return 0;
+    }
+
+    if (primary) {
+        params.handle.pindex(index);
+    } else {
+        params.handle.sindex(index);
+    }
+    params.entry = &v4entry;
+
+    if (SDK_RET_OK != obj->get_with_handle(&params)) {
+        return -1;
+    }
+
+    if (!ftlv4_remove(obj, &v4entry, 0, 0)) {
+        return -1;
+    }
+
+    return 0;
+}   
 
 int
 ftlv4_clear (ftlv4 *obj, bool clear_global_state,
@@ -180,8 +220,13 @@ ftlv4_dump_hw_entry_detail_iter_cb (sdk_table_api_params_t *params)
         session_get_addr(hwentry->get_session_index(), &entry, &size);
         fprintf(fp, " Session data: ");
         for (uint32_t i = 0; i < size; i++) {
-            fprintf(fp, "%x", entry[i]);
+            fprintf(fp, "%02x", entry[i]);
         }
+        fprintf(fp, "\n");
+        uint32_t ses = hwentry->get_session_index();
+        fprintf(fp, "Timestamp %lu addr 0x%p data %lu start 0x%p ses %u\n",
+                pds_session_get_timestamp(ses), entry + 36,
+                (uint64_t)((uint64_t *) (entry + 36)), entry, ses);
         fprintf(fp, "\n");
     }
 }
@@ -347,6 +392,12 @@ ftlv4_get_session_id (ipv4_flow_hash_entry_t *entry)
     return entry->get_session_index();
 }
 
+static uint8_t
+ftlv4_get_proto(ipv4_flow_hash_entry_t *entry)
+{
+    return entry->get_key_metadata_proto();
+}
+
 void
 ftlv4_cache_batch_init (void)
 {
@@ -387,10 +438,12 @@ ftlv4_cache_advance_count (int val)
 }
 
 int
-ftlv4_cache_program_index (ftlv4 *obj, uint16_t id)
+ftlv4_cache_program_index (ftlv4 *obj, uint16_t id, uint32_t *pindex, 
+                           uint32_t *sindex)
 {
     return ftlv4_insert(obj, g_ip4_flow_cache.ip4_flow + id,
                         g_ip4_flow_cache.ip4_hash[id],
+                        pindex, sindex,
                         g_ip4_flow_cache.flags[id].log,
                         g_ip4_flow_cache.flags[id].update);
 }
@@ -415,6 +468,12 @@ ftlv4_cache_get_session_index (int id)
     return ftlv4_get_session_id(g_ip4_flow_cache.ip4_flow + id);
 }
 
+uint8_t
+ftlv4_cache_get_proto(int id)
+{
+    return ftlv4_get_proto(g_ip4_flow_cache.ip4_flow + id);
+}
+
 void
 ftlv4_cache_set_epoch (uint8_t val)
 {
@@ -425,10 +484,12 @@ void
 ftlv4_cache_batch_flush (ftlv4 *obj, int *status)
 {
     int i;
+    uint32_t pindex, sindex;
 
     for (i = 0; i < g_ip4_flow_cache.count; i++) {
        status[i] = ftlv4_insert(obj, g_ip4_flow_cache.ip4_flow + i,
                                 g_ip4_flow_cache.ip4_hash[i],
+                                &pindex, &sindex,
                                 g_ip4_flow_cache.flags[i].log,
                                 g_ip4_flow_cache.flags[i].update);
     }

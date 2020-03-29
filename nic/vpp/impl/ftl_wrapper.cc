@@ -17,6 +17,9 @@
 #include <pd_utils.h>
 #include <ftl_wrapper.h>
 #include <ftl_utils.hpp>
+#include <session.h>
+
+extern uint64_t pds_session_get_timestamp(uint32_t ses);
 
 using namespace sdk;
 using namespace sdk::table;
@@ -24,10 +27,7 @@ using namespace sdk::platform;
 
 extern "C" {
 
-static p4pd_table_properties_t g_session_tbl_ctx;
-
 static int skip_ftl_program = 0;
-static int skip_session_program = 0;
 
 static sdk_table_api_stats_t g_api_stats;
 static sdk_table_stats_t g_table_stats;
@@ -38,94 +38,10 @@ set_skip_ftl_program (int val)
     skip_ftl_program = val;
 }
 
-void
-set_skip_session_program (int val)
-{
-    skip_session_program = val;
-}
-
 int
 get_skip_ftl_program (void)
 {
     return skip_ftl_program;
-}
-
-int
-get_skip_session_program (void)
-{
-    return skip_session_program;
-}
-
-int
-initialize_flow (void)
-{
-    p4pd_error_t p4pd_ret;
-
-    p4pd_ret = p4pd_table_properties_get(P4TBL_ID_SESSION, &g_session_tbl_ctx);
-    SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
-
-    return 0;
-}
-
-int
-session_program (uint32_t ses_id, void *action)
-{
-    p4pd_error_t p4pd_ret0;
-    uint32_t tableid = P4TBL_ID_SESSION;
-
-    if (get_skip_session_program()) {
-        return 0;
-    }
-
-    p4pd_ret0 = p4pd_global_entry_write(tableid, ses_id,
-                                        NULL, NULL, action);
-    if (p4pd_ret0 != P4PD_SUCCESS) {
-        return -1;
-    }
-    return 0;
-}
-void
-session_insert (uint32_t ses_id, void *ses_info)
-{
-    uint64_t entry_addr = (ses_id * g_session_tbl_ctx.hbm_layout.entry_width);
-    uint64_t *src_addr = (uint64_t *)ses_info;
-
-    if (get_skip_session_program()) {
-        return;
-    }
-
-    if (likely(g_session_tbl_ctx.base_mem_va)) {
-        uint64_t *dst_addr = (uint64_t *)
-                              (g_session_tbl_ctx.base_mem_va + entry_addr);
-        for (uint16_t i = 0;
-             i < (g_session_tbl_ctx.hbm_layout.entry_width / sizeof(uint64_t)); i++) {
-            dst_addr[i] = src_addr[i];
-        }
-    } else {
-        pal_mem_write(g_session_tbl_ctx.base_mem_pa, (uint8_t *)src_addr, 
-                      g_session_tbl_ctx.hbm_layout.entry_width);
-    }
-    capri::capri_hbm_table_entry_cache_invalidate(g_session_tbl_ctx.cache,
-                                                  entry_addr,
-                                                  g_session_tbl_ctx.hbm_layout.entry_width,
-                                                  g_session_tbl_ctx.base_mem_pa);
-}
-
-void
-session_get_addr (uint32_t ses_id, uint8_t **ses_addr, uint32_t *entry_size)
-{
-    static thread_local uint8_t *ret_addr =
-        (uint8_t *) calloc(g_session_tbl_ctx.hbm_layout.entry_width, 1);
-    *entry_size = g_session_tbl_ctx.hbm_layout.entry_width;
-    if (likely(g_session_tbl_ctx.base_mem_va)) {
-        *ses_addr = (uint8_t *) (g_session_tbl_ctx.base_mem_va +
-                    (ses_id * (*entry_size)));
-    } else {
-       pal_mem_read((g_session_tbl_ctx.base_mem_pa + (ses_id * (*entry_size))),
-                    ret_addr, *entry_size);
-       *ses_addr = ret_addr;
-    }
-    return;
 }
 
 void
@@ -252,9 +168,10 @@ ftl_create (void *key2str, void *appdata2str)
 }
 
 int
-ftl_insert (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
-            uint8_t log, uint8_t update)
-{
+ftl_insert (ftl *obj, flow_hash_entry_t *entry, uint32_t hash, 
+            uint32_t *pindex, uint32_t *sindex, uint8_t log,
+            uint8_t update)
+{ 
     sdk_table_api_params_t params = {0};
 
     if (get_skip_ftl_program()) {
@@ -276,6 +193,13 @@ ftl_insert (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
  
     if (SDK_RET_OK != obj->insert(&params)) {
         return -1;
+    }
+
+    if (params.handle.svalid()) {
+        *pindex = (uint32_t) (~0L);
+        *sindex = params.handle.sindex();
+    } else {
+        *pindex = params.handle.pindex();
     }
 
     if (log) {
@@ -317,6 +241,7 @@ ftl_remove (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
     if (SDK_RET_OK != obj->remove(&params)) {
         return -1;
     }
+    
     if (log) {
         // TODO: avoid memcpy, instead get pointer
         uint8_t src[16], dst[16];
@@ -335,6 +260,34 @@ ftl_remove (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
                                      ftl_get_lookup_id(entry), 0, 1);
         }
     }
+    return 0;
+}
+
+int
+ftl_remove_with_handle(ftl *obj, uint32_t index, bool primary)
+{
+    sdk_table_api_params_t params = {0};
+    flow_hash_entry_t entry;
+
+    if (get_skip_ftl_program()) {
+        return 0;
+    }
+
+    if (primary) {
+        params.handle.pindex(index);
+    } else {
+        params.handle.sindex(index);
+    }
+    params.entry = &entry;
+
+    if (SDK_RET_OK != obj->get_with_handle(&params)) {
+        return -1;
+    }
+
+    if (!ftl_remove(obj, &entry, 0, 0)) {
+        return -1;
+    }
+
     return 0;
 }
 
@@ -403,8 +356,13 @@ ftl_dump_hw_entry_detail_iter_cb (sdk_table_api_params_t *params)
         session_get_addr(hwentry->get_session_index(), &entry, &size);
         fprintf(fp, " Session data: ");
         for (uint32_t i = 0; i < size; i++) {
-            fprintf(fp, "%x", entry[i]);
+            fprintf(fp, "%02x", entry[i]);
         }
+        fprintf(fp, "\n");
+        uint32_t ses = hwentry->get_session_index();
+        fprintf(fp, "Timestamp %lu addr 0x%p data %lu start 0x%p ses %u\n",
+                pds_session_get_timestamp(ses), entry + 36,
+                (uint64_t)((uint64_t *) (entry + 36)), entry, ses);
         fprintf(fp, "\n");
     }
 }
@@ -509,6 +467,12 @@ uint32_t
 ftl_get_session_id (flow_hash_entry_t *entry)
 {
     return entry->get_session_index();
+}
+
+uint8_t
+ftl_get_proto(flow_hash_entry_t *entry)
+{
+    return entry->get_key_metadata_proto();
 }
 
 void

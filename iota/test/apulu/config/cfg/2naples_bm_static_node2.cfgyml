@@ -26,6 +26,9 @@ uplink:
         mode    : switch
         status  : UP
 
+security_profile:
+    - id        : 1
+
 vpc:
     - id         : 100
       stack      : ipv4 # dual, ipv4 , ipv6

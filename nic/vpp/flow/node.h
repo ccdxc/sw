@@ -6,10 +6,20 @@
 #define __VPP_FLOW_NODE_H__
 
 #include <vlib/vlib.h>
+#undef TCP_FLAG_CWR
+#undef TCP_FLAG_ECE
+#undef TCP_FLAG_URG
+#undef TCP_FLAG_ACK
+#undef TCP_FLAG_PSH
+#undef TCP_FLAG_RST
+#undef TCP_FLAG_SYN
+#undef TCP_FLAG_FIN
 #include <vnet/ip/ip.h>
+#include <vppinfra/tw_timer_16t_1w_2048sl.h>
 #include <vnet/udp/udp_packet.h>
 #include <nic/p4/common/defines.h>
 #include <ftl_wrapper.h>
+#include "pdsa_hdlr.h"
 
 #define MAX_FLOWS_PER_FRAME (VLIB_FRAME_SIZE * 2)
 #define PDS_FLOW_SESSION_POOL_COUNT_MAX VLIB_FRAME_SIZE
@@ -60,11 +70,22 @@
 
 #define foreach_session_prog_next                                   \
         _(FWD_FLOW, "pds-fwd-flow" )                                \
+        _(AGE_FLOW, "pds-flow-age-setup" )                          \
         _(DROP, "error-drop")                                       \
 
 #define foreach_session_prog_counter                                \
         _(SESSION_SUCCESS, "Session programming success" )          \
         _(SESSION_FAILED, "Session programming failed")             \
+
+#define foreach_flow_age_setup_next                                 \
+        _(FWD_FLOW, "pds-fwd-flow" )                                \
+        _(DROP, "error-drop")                                       \
+
+#define foreach_flow_age_setup_counter                              \
+        _(SYN, "SYN packet processed" )                             \
+        _(FIN, "FIN packet processed")                              \
+        _(RST, "RST packet processed" )                             \
+        _(OTHER, "Other packet processed")                          \
 
 typedef enum
 {
@@ -151,13 +172,68 @@ typedef struct flow_classify_trace_s {
 
 typedef struct session_prog_trace_s {
     u32 session_id;
-    u8  data[64];
 } session_prog_trace_t;
 
-typedef struct pds_flow_hw_ctx_s {
-    u16 ingress_bd;
-} pds_flow_hw_ctx_t;
+typedef enum
+{
+#define _(s,n) FLOW_AGE_SETUP_NEXT_##s,
+    foreach_flow_age_setup_next
+#undef _
+    FLOW_AGE_SETUP_N_NEXT,
+} flow_age_setup_next_t;
 
+typedef enum
+{
+#define _(n,s) FLOW_AGE_SETUP_COUNTER_##n,
+    foreach_flow_age_setup_counter
+#undef _
+    FLOW_AGE_SETUP_COUNTER_LAST,
+} flow_age_setup_counter_t;
+
+typedef enum {
+    PDS_FLOW_STATE_CONN_SETUP,
+    PDS_FLOW_STATE_ESTABLISHED,
+    PDS_FLOW_STATE_HALF_CLOSE_IFLOW,
+    PDS_FLOW_STATE_HALF_CLOSE_RFLOW,
+    PDS_FLOW_STATE_CLOSE,
+} pds_flow_state;
+
+typedef enum {
+    PDS_FLOW_CONN_SETUP_TIMER,
+    PDS_FLOW_IDLE_TIMER,
+    PDS_FLOW_KEEP_ALIVE_TIMER,
+    PDS_FLOW_HALF_CLOSE_TIMER,
+    PDS_FLOW_CLOSE_TIMER,
+    PDS_FLOW_DROP_TIMER,
+    PDS_FLOW_N_TIMERS,
+} pds_flow_timer;
+
+typedef CLIB_PACKED(struct pds_flow_index_s_ {
+    u8 index[3];
+    struct {
+        u32 table_id : 23;
+        u32 primary : 1;
+    };
+}) pds_flow_index_t;
+
+// Store iflow and rflow index for each allocated session
+typedef CLIB_PACKED(struct pds_flow_hw_ctx_s {
+    u32 proto : 2; // enum pds_flow_protocol
+    u32 inuse : 1;
+    u32 v4 : 1; // v4 or v6 table
+    u32 flow_state : 3; // enum pds_flow_state
+    u32 keep_alive_retry : 2;
+    u32 timer_hdl : 23;
+    u16 ingress_bd;
+    pds_flow_index_t iflow;
+    pds_flow_index_t rflow;
+    // lock per session entry: since iflow/rflow index may get updated from
+    // other threads, we need lock here.
+    volatile u8 lock;
+    // make 4 byte aligned.
+    u8 reserved_1;
+    u16 reserved_2; 
+}) pds_flow_hw_ctx_t;
 
 typedef struct pds_flow_session_id_thr_local_pool_s {
     int16_t         pool_count;
@@ -170,17 +246,26 @@ typedef struct pds_flow_rewrite_flags_s {
 } pds_flow_rewrite_flags_t;
 
 typedef struct pds_flow_main_s {
-    u64 no_threads;
     volatile u32 *flow_prog_lock;
     ftlv4 *table4;
     ftlv6 *table6_or_l2;
     pds_flow_hw_ctx_t *session_index_pool;
     pds_flow_session_id_thr_local_pool_t *session_id_thr_local_pool;
     pds_flow_rewrite_flags_t *rewrite_flags;
-    u32 max_sessions;
-    u32 *flow_idle_timeout;
     char *stats_buf;
     u8 *rx_vxlan_template;
+    f64 tcp_con_setup_timeout;
+    f64 tcp_half_close_timeout;
+    f64 tcp_close_timeout;
+    f64 *idle_timeout;
+    f64 *drop_timeout;
+    u64 *idle_timeout_ticks;
+    u64 *drop_timeout_ticks;
+    // per worker worker timer wheel
+    tw_timer_wheel_16t_1w_2048sl_t *timer_wheel;
+    u32 max_sessions;
+    u8 no_threads;
+    u8 con_track_en;
 } pds_flow_main_t;
 
 typedef enum {
@@ -268,6 +353,7 @@ always_inline void pds_session_id_alloc2(u32 *ses_id0, u32 *ses_id1)
         thr_local_pool->pool_count++;
         pool_get(fm->session_index_pool, ctx);
         ctx->ingress_bd = 0;
+        ctx->inuse = 0;
         thr_local_pool->session_ids[thr_local_pool->pool_count] =
              ctx - fm->session_index_pool + 1;
         refill_count--;
@@ -306,6 +392,7 @@ always_inline u32 pds_session_id_alloc(void)
         thr_local_pool->pool_count++;
         pool_get(fm->session_index_pool, ctx);
         ctx->ingress_bd = 0;
+        ctx->inuse = 0;
         thr_local_pool->session_ids[thr_local_pool->pool_count] =
             ctx - fm->session_index_pool + 1;
         refill_count--;
@@ -326,6 +413,80 @@ always_inline void pds_session_id_dealloc(u32 ses_id)
     pds_flow_prog_lock();
     pool_put_index(fm->session_index_pool, (ses_id - 1));
     pds_flow_prog_unlock();
+    return;
+}
+
+always_inline pds_flow_hw_ctx_t * pds_flow_get_hw_ctx (u32 ses_id)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+    pds_flow_hw_ctx_t *ctx;
+
+    ctx = pool_elt_at_index(fm->session_index_pool, (ses_id - 1));
+    return ctx;
+}
+
+always_inline pds_flow_hw_ctx_t * pds_flow_get_hw_ctx_lock (u32 ses_id)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+    pds_flow_hw_ctx_t *ctx;
+
+    ctx = pool_elt_at_index(fm->session_index_pool, (ses_id - 1));
+    while (clib_atomic_test_and_set(&ctx->lock));
+    return ctx;
+}
+
+always_inline void pds_flow_hw_ctx_lock (pds_flow_hw_ctx_t *ctx)
+{
+    while (clib_atomic_test_and_set(&ctx->lock));
+}
+
+always_inline void pds_flow_hw_ctx_unlock (pds_flow_hw_ctx_t *ctx)
+{
+    clib_atomic_release(&ctx->lock);
+}
+
+always_inline pds_flow_protocol pds_flow_trans_proto(u8 proto)
+{
+    if (PREDICT_TRUE(proto == IP_PROTOCOL_TCP)) {
+        return PDS_FLOW_PROTO_TCP;
+    }
+    if (proto == IP_PROTOCOL_UDP) {
+        return PDS_FLOW_PROTO_UDP;
+    }
+    if (proto == IP_PROTOCOL_ICMP) {
+        return PDS_FLOW_PROTO_ICMP;
+    }
+    return PDS_FLOW_PROTO_OTHER;
+}
+
+always_inline void pds_session_set_data(u32 ses_id, u32 i_pindex,
+                                        u32 i_sindex, u32 r_pindex,
+                                        u32 r_sindex, pds_flow_protocol proto,
+                                        bool v4)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+
+    //pds_flow_prog_lock();
+    pds_flow_hw_ctx_t *data = pool_elt_at_index(fm->session_index_pool,
+                                                (ses_id - 1));
+    if (i_pindex != ((u32) (~0L))) {
+        data->iflow.table_id = i_pindex;
+        data->iflow.primary = 1;
+    } else {
+        data->iflow.table_id = i_sindex;
+        data->iflow.primary = 0;
+    }
+    if (i_pindex != ((u32) (~0L))) {
+        data->rflow.table_id = r_pindex;
+        data->rflow.primary = 1;
+    } else {
+        data->rflow.table_id = r_sindex;
+        data->rflow.primary = 0;
+    }
+    data->inuse = 1;
+    data->proto = proto;
+    data->v4 = v4;
+    //pds_flow_prog_unlock();
     return;
 }
 

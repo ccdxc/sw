@@ -5,6 +5,8 @@
 #ifndef __VPP_INFRA_PKT_H__
 #define __VPP_INFRA_PKT_H__
 
+#include <vlib/vlib.h>
+#include <vnet/buffer.h>
 #include <p4_cpu_hdr_utils.h>
 
 #define PDS_PACKET_LOOP_START                                               \
@@ -88,43 +90,43 @@
 #define PDS_PACKET_NEXT_NODE_ARR            (_nexts)
 #define PDS_PACKET_BUFFER_INDEX_PTR(_id)    (_from + _id)
 
-__clib_unused static uint8_t
+__clib_unused always_inline uint8_t
 pds_p4_rx_get_l2_offset (p4_rx_cpu_hdr_t *hdr)
 {
     return hdr->l2_offset;
 }
 
-__clib_unused static uint8_t
+__clib_unused always_inline uint8_t
 pds_p4_rx_get_l3_offset (p4_rx_cpu_hdr_t *hdr)
 {
     return hdr->l3_offset;
 }
 
-__clib_unused static uint8_t
+__clib_unused always_inline uint8_t
 pds_p4_rx_get_l4_offset (p4_rx_cpu_hdr_t *hdr)
 {
     return hdr->l4_offset;
 }
 
-__clib_unused static uint8_t
+__clib_unused always_inline uint8_t
 pds_p4_rx_get_inner_l2_offset (p4_rx_cpu_hdr_t *hdr)
 {
     return hdr->l2_inner_offset;
 }
 
-__clib_unused static uint8_t
+__clib_unused always_inline uint8_t
 pds_p4_rx_get_inner_l3_offset (p4_rx_cpu_hdr_t *hdr)
 {
     return hdr->l3_inner_offset;
 }
 
-__clib_unused static uint8_t
+__clib_unused always_inline uint8_t
 pds_p4_rx_get_inner_l4_offset (p4_rx_cpu_hdr_t *hdr)
 {
     return hdr->l4_inner_offset;
 }
 
-__clib_unused static uint8_t
+__clib_unused always_inline uint8_t
 pds_p4_rx_get_payload_offset (p4_rx_cpu_hdr_t *hdr)
 {
     return hdr->payload_offset;

@@ -42,6 +42,9 @@ uplink:
         mode    : switch
         status  : UP
 
+security_profile:
+    - id        : 1
+
 vpc:
     # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
     - stack  : dual # dual, ipv4 , ipv6

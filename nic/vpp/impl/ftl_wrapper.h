@@ -35,22 +35,9 @@ typedef struct flow_flags_s {
 
 // Prototypes
 
-int initialize_flow(void);
-
 void set_skip_ftl_program(int val);
 
-void set_skip_session_program(int val);
-
 int get_skip_ftl_program(void);
-
-int get_skip_session_program(void);
-
-int session_program(uint32_t ses_id, void *action);
-
-void session_insert(uint32_t ses_id, void *ses_info);
-
-void session_get_addr(uint32_t ses_id, uint8_t **ses_addr,
-                      uint32_t *entry_size);
 
 void ftl_init_stats_cache(void);
 
@@ -62,10 +49,12 @@ void ftl_dump_stats(ftl *obj, char *buf, int max_len);
 
 ftl * ftl_create(void *key2str, void *appdata2str);
 
-int ftl_insert(ftl *obj, flow_entry *entry, uint32_t hash, uint8_t log, 
-               uint8_t update);
+int ftl_insert(ftl *obj, flow_entry *entry, uint32_t hash, uint32_t *pindex, 
+               uint32_t *sindex, uint8_t log, uint8_t update);
 
 int ftl_remove(ftl *obj, flow_entry *entry, uint32_t hash, uint8_t log);
+
+int ftl_remove_with_handle(ftl *obj, uint32_t index, bool primary);
 
 int ftl_clear(ftl *obj, bool clear_global_state, bool clear_thread_local_state);
 
@@ -80,6 +69,10 @@ void ftl_set_session_index(flow_entry *entry, uint32_t session);
 void ftl_set_epoch(flow_entry *entry, uint8_t val);
 
 uint32_t ftl_get_session_id(flow_entry *entry);
+
+uint8_t ftl_get_proto(flow_entry *entry);
+
+uint8_t ftl_get_proto(flow_entry *entry);
 
 void ftl_set_thread_id(ftl *obj, uint32_t thread_id);
 
@@ -143,13 +136,16 @@ int ftlv4_cache_get_count(void);
 
 void ftlv4_cache_advance_count(int val);
 
-int ftlv4_cache_program_index(ftlv4 *obj, uint16_t id);
+int ftlv4_cache_program_index(ftlv4 *obj, uint16_t id,
+                              uint32_t *pindex, uint32_t *sindex);
 
 int ftlv4_cache_delete_index(ftlv4 *obj, uint16_t id);
 
 void ftlv4_cache_set_session_index(uint32_t val);
 
 uint32_t ftlv4_cache_get_session_index(int id);
+
+uint8_t ftlv4_cache_get_proto(int id);
 
 void ftlv4_cache_set_epoch(uint8_t val);
 
@@ -162,8 +158,6 @@ void ftlv4_cache_set_update_flag(uint8_t update);
 void ftlv4_cache_batch_flush(ftlv4 *obj, int *status);
 
 void ftlv4_set_thread_id(ftlv4 *obj, uint32_t thread_id);
-
-ftl * ftl_create(void *key2str, void *appdata2str);
 
 void ftlv6_delete(ftlv6 *obj);
 
@@ -209,13 +203,16 @@ int ftlv6_cache_get_count(void);
 
 void ftlv6_cache_advance_count(int val);
 
-int ftlv6_cache_program_index(ftlv6 *obj, uint16_t id);
+int ftlv6_cache_program_index(ftlv6 *obj, uint16_t id,
+                              uint32_t *pindex, uint32_t *sindex);
 
 int ftlv6_cache_delete_index(ftlv6 *obj, uint16_t id);
 
 void ftlv6_cache_set_session_index(uint32_t val);
 
 uint32_t ftlv6_cache_get_session_index(int id);
+
+uint8_t ftlv6_cache_get_proto(int id);
 
 void ftlv6_cache_set_epoch(uint8_t val);
 
@@ -250,6 +247,8 @@ void ftll2_set_key(flow_entry *entry,
                    uint16_t lookup_id);
 
 int ftlv4_remove(ftlv4 *obj, v4_flow_entry *entry, uint32_t hash, uint8_t log);
+
+int ftlv4_remove_with_handle(ftlv4 *obj, uint32_t index, bool primary);
 
 int ftlv6_remove(ftlv6 *obj, flow_entry *entry, uint32_t hash, uint8_t log);
 

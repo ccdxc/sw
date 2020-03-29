@@ -39,7 +39,7 @@ pds_get_flow_log_en (vlib_buffer_t *p0)
     return 0;
 }
 
-u8 *
+__clib_unused static u8 *
 format_pds_p4_rx_cpu_hdr (u8 * s, va_list * args)
 {
     p4_rx_cpu_hdr_t *t = va_arg (*args, p4_rx_cpu_hdr_t *);
@@ -53,7 +53,7 @@ format_pds_p4_rx_cpu_hdr (u8 * s, va_list * args)
     return s;
 }
 
-u8 *
+__clib_unused static u8 *
 format_pds_p4_tx_cpu_hdr (u8 * s, va_list * args)
 {
     p4_tx_cpu_hdr_t *t = va_arg (*args, p4_tx_cpu_hdr_t *);

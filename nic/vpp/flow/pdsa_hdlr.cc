@@ -59,20 +59,33 @@ clear_flow_entry (pds_flow_key_t *key)
 static sdk::sdk_ret_t
 pdsa_flow_cfg_set (const pds_cfg_msg_t *msg)
 {
-    uint32_t new_flow_idle_timeouts[IPPROTO_MAX];
+    uint32_t new_flow_idle_timeouts[PDS_FLOW_PROTO_END];
+    uint32_t new_flow_drop_timeouts[PDS_FLOW_PROTO_END];
     auto sp_msg = &msg->security_profile;
 
-    memset(new_flow_idle_timeouts, 0, sizeof(new_flow_idle_timeouts));
+    new_flow_idle_timeouts[PDS_FLOW_PROTO_TCP] =
+                                        sp_msg->spec.tcp_idle_timeout;
+    new_flow_idle_timeouts[PDS_FLOW_PROTO_UDP] =
+                                        sp_msg->spec.udp_idle_timeout;
+    new_flow_idle_timeouts[PDS_FLOW_PROTO_ICMP] =
+                                        sp_msg->spec.icmp_idle_timeout;
+    new_flow_idle_timeouts[PDS_FLOW_PROTO_OTHER] =
+                                        sp_msg->spec.other_idle_timeout;
+    new_flow_drop_timeouts[PDS_FLOW_PROTO_TCP] =
+                                        sp_msg->spec.tcp_drop_timeout;
+    new_flow_drop_timeouts[PDS_FLOW_PROTO_UDP] =
+                                        sp_msg->spec.udp_drop_timeout;
+    new_flow_drop_timeouts[PDS_FLOW_PROTO_ICMP] = 
+                                        sp_msg->spec.icmp_drop_timeout;
+    new_flow_drop_timeouts[PDS_FLOW_PROTO_OTHER] =
+                                        sp_msg->spec.other_drop_timeout;
 
-    for (int idx = 0; idx < IPPROTO_MAX; idx++) {
-        new_flow_idle_timeouts[idx] = sp_msg->spec.other_idle_timeout;
-    }
-    new_flow_idle_timeouts[IPPROTO_TCP]  = sp_msg->spec.tcp_idle_timeout;
-    new_flow_idle_timeouts[IPPROTO_UDP]  = sp_msg->spec.udp_idle_timeout;
-    new_flow_idle_timeouts[IPPROTO_ICMP] = sp_msg->spec.icmp_idle_timeout;
-
-    pds_flow_idle_timeout_set(new_flow_idle_timeouts,
-                              sizeof(new_flow_idle_timeouts));
+    pds_flow_cfg_set(sp_msg->spec.conn_track_en,
+                     sp_msg->spec.tcp_syn_timeout,
+                     sp_msg->spec.tcp_halfclose_timeout,
+                     sp_msg->spec.tcp_close_timeout,
+                     new_flow_idle_timeouts,
+                     new_flow_drop_timeouts);
 
     return sdk::SDK_RET_OK;
 }
@@ -80,11 +93,10 @@ pdsa_flow_cfg_set (const pds_cfg_msg_t *msg)
 static sdk::sdk_ret_t
 pdsa_flow_cfg_clear (const pds_cfg_msg_t *msg)
 {
-    uint32_t new_flow_idle_timeouts[IPPROTO_MAX];
+    uint32_t new_flow_idle_timeouts[PDS_FLOW_PROTO_END] = {0};
 
-    memset(new_flow_idle_timeouts, 0, sizeof(new_flow_idle_timeouts));
-    pds_flow_idle_timeout_set(new_flow_idle_timeouts,
-                              sizeof(new_flow_idle_timeouts));
+    pds_flow_cfg_set(0, 0, 0, 0,
+                     new_flow_idle_timeouts, new_flow_idle_timeouts);
 
     return sdk::SDK_RET_OK;
 }
