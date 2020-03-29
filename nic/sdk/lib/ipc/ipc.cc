@@ -11,6 +11,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 #include <queue>
 #include <string>
 #include <vector>
@@ -499,6 +500,83 @@ ipc_service::subscribe(uint32_t msg_code, subscription_cb callback,
 void
 ipc_service::set_drip_feeding(bool enabled) {
     this->serializing_enabled_ = enabled;
+}
+
+async_client_ptr
+async_client::create(uint32_t client_id, fd_watch_cb fd_watch_cb,
+                      const void *user_ctx) {
+    return std::make_shared<async_client>(client_id, fd_watch_cb, user_ctx);
+}
+
+async_client_ptr
+async_client::create(uint32_t client_id, fd_watch_ms_cb fd_watch_ms_cb) {
+    return std::make_shared<async_client>(client_id, fd_watch_ms_cb);
+}
+
+async_client::async_client(uint32_t client_id, fd_watch_cb fd_watch_cb,
+                            const void *user_ctx) {
+    this->ipc_service_ = new ipc_service_async(client_id, fd_watch_cb,
+                                               user_ctx);
+}
+
+async_client::async_client(uint32_t client_id, fd_watch_ms_cb fd_watch_ms_cb) {
+    this->ipc_service_ = new ipc_service_async(client_id, fd_watch_ms_cb);
+}
+
+async_client::~async_client() {
+    // todo: fixme: uninplemented
+    // delete this->ipc_service_;
+}
+
+void
+async_client::request(uint32_t recipient, uint32_t msg_code, const void *data,
+                      size_t data_length, const void *cookie) {
+    lock.lock();
+    this->ipc_service_->request(recipient, msg_code, data, data_length, NULL,
+                                cookie);
+    lock.unlock();
+}
+
+void
+async_client::request(uint32_t recipient, uint32_t msg_code, const void *data,
+                      size_t data_length, response_oneshot_cb cb,
+                      const void *cookie) {
+    lock.lock();
+    this->ipc_service_->request(recipient, msg_code, data, data_length, cb,
+                                cookie);
+    lock.unlock();
+}
+
+void
+async_client::broadcast(uint32_t msg_code, const void *data,
+                        size_t data_length) {
+    lock.lock();
+    this->ipc_service_->broadcast(msg_code, data, data_length);
+    lock.unlock();
+}
+
+void
+async_client::reg_request_handler(uint32_t msg_code, request_cb callback,
+                                  const void *ctx) {
+    lock.lock();
+    this->ipc_service_->reg_request_handler(msg_code, callback, ctx);
+    lock.unlock();
+}
+
+void
+async_client::reg_response_handler(uint32_t msg_code, response_cb callback,
+                                   const void *ctx) {
+    lock.lock();
+    this->ipc_service_->reg_response_handler(msg_code, callback, ctx);
+    lock.unlock();
+}
+
+void
+async_client::subscribe(uint32_t msg_code, subscription_cb callback,
+                        const void *ctx) {
+    lock.lock();
+    this->ipc_service_->subscribe(msg_code, callback, ctx);
+    lock.unlock();
 }
 
 // We use this as for non asynchronous thread creating a client

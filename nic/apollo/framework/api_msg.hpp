@@ -15,6 +15,7 @@
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
+#include "nic/sdk/lib/ipc/ipc.hpp"
 
 using std::vector;
 
@@ -40,6 +41,8 @@ typedef struct batch_info_s {
     pds_async_rsp_cb_t    response_cb;
     ///< list of api calls to process in this batch
     vector<api_ctxt_t *> apis;
+    ///< the ipc handle to use to send this message
+    sdk::ipc::async_client_ptr ipc_client;
 } batch_info_t;
 
 /// \brief    IPC message sent to config thread for API processing

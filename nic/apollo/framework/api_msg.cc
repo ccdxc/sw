@@ -33,6 +33,9 @@ api_msg_alloc (void)
     }
 
     api_msg = new (mem) api_msg_t();
+
+    api_msg->batch.ipc_client = nullptr;
+
     return api_msg;
 }
 
@@ -140,7 +143,12 @@ process_api (pds_batch_ctxt_t bctxt, api_ctxt_t *api_ctxt)
         return SDK_RET_OK;
     }
     // batch commit happening, ship APIs to API thread
-    if (api_msg->batch.async) {
+    if (api_msg->batch.ipc_client != nullptr) {
+        api_msg->batch.ipc_client->request(
+            core::PDS_THREAD_ID_API, API_MSG_ID_BATCH, api_msg,
+            sizeof(*api_msg), api_process_async_result_, api_msg);
+        return SDK_RET_OK;
+    } else if (api_msg->batch.async) {
         sdk::ipc::request(core::PDS_THREAD_ID_API, API_MSG_ID_BATCH, api_msg,
                           sizeof(*api_msg), api_process_async_result_, api_msg);
         return SDK_RET_OK;
