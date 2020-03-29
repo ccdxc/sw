@@ -42,7 +42,8 @@ initialize_pds(void)
     init_params.trace_cb  = pds_init_logger;
     init_params.pipeline  = pipeline;
     init_params.cfg_file  = cfg_file;
-    init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
+    init_params.memory_profile = PDS_MEMORY_PROFILE_DEFAULT;
+    init_params.device_profile = PDS_DEVICE_PROFILE_DEFAULT;
     ret = pds_init(&init_params);
     SDK_ASSERT(ret == SDK_RET_OK);
 

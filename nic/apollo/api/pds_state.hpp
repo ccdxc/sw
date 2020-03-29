@@ -124,14 +124,26 @@ public:
     platform_type_t platform_type(void) const { return platform_type_; }
     sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
     sdk_ret_t walk(state_walk_cb_t walk_cb, void *ctxt) override;
-    void set_scale_profile(pds_scale_profile_t profile) {
-        scale_profile_ = profile;
+    void set_memory_profile(pds_memory_profile_t profile) {
+        memory_profile_ = profile;
     }
+    void set_device_profile(pds_device_profile_t profile) {
+        device_profile_ = profile;
+    }
+    pds_memory_profile_t memory_profile(void) const { return memory_profile_; }
+    pds_device_profile_t device_profile(void) const { return device_profile_; }
+    void set_memory_profile_string(string profile) {
+        memory_profile_str_ = profile;
+    }
+    void set_device_profile_string(string profile) {
+        device_profile_str_ = profile;
+    }
+    string memory_profile_string(void) { return memory_profile_str_; }
+    string device_profile_string(void) { return device_profile_str_; }
     sdk::lib::kvstore *kvstore(void) const { return kvstore_; }
     void *port_metrics_handle(void) const { return port_metrics_hndl_; }
     void *mgmt_port_metrics_handle(void) const { return mgmt_port_metrics_hndl_; }
     void *hostif_metrics_handle(void) const { return hostif_metrics_hndl_; }
-    pds_scale_profile_t scale_profile(void) const { return scale_profile_; }
     bool vpp_ipc_mock(void) const { return vpp_ipc_mock_; }
     void set_control_cores_mask(uint64_t control_cores_mask) {
         control_cores_mask_ = control_cores_mask;
@@ -245,7 +257,10 @@ private:
     catalog                 *catalog_;
     mpartition              *mpartition_;
     platform_type_t         platform_type_;
-    pds_scale_profile_t     scale_profile_;
+    pds_memory_profile_t    memory_profile_;
+    pds_device_profile_t    device_profile_;
+    string                  memory_profile_str_;
+    string                  device_profile_str_;
     // TODO: remove this after we phase out apollo/artemis tests
     bool                    vpp_ipc_mock_;
     program_info            *pginfo_;

@@ -32,7 +32,7 @@ func createDeviceHandler(client halapi.DeviceSvcClient, lbip *halapi.IPAddress) 
 	deviceRequest := &halapi.DeviceRequest{
 		Request: &halapi.DeviceSpec{
 			DevOperMode:      halapi.DeviceOperMode_DEVICE_OPER_MODE_HOST,
-			Profile:          halapi.DeviceProfile_DEVICE_PROFILE_DEFAULT,
+			MemoryProfile:    halapi.MemoryProfile_MEMORY_PROFILE_DEFAULT,
 			BridgingEn:       true,
 			LearningEn:       true,
 			LearnAgeTimeout:  300,
@@ -56,7 +56,7 @@ func updateDeviceHandler(client halapi.DeviceSvcClient, lbip *halapi.IPAddress) 
 	deviceRequest := &halapi.DeviceRequest{
 		Request: &halapi.DeviceSpec{
 			DevOperMode:      halapi.DeviceOperMode_DEVICE_OPER_MODE_HOST,
-			Profile:          halapi.DeviceProfile_DEVICE_PROFILE_DEFAULT,
+			MemoryProfile:    halapi.MemoryProfile_MEMORY_PROFILE_DEFAULT,
 			BridgingEn:       true,
 			LearningEn:       true,
 			LearnAgeTimeout:  300,

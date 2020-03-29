@@ -97,8 +97,8 @@ upg_init (pds_init_params_t *params)
         }
     }
     if (shm_create) {
-        g_upg_state->set_scale_profile(params->scale_profile);
-    } else if (g_upg_state->scale_profile() != params->scale_profile) {
+        g_upg_state->set_memory_profile(params->memory_profile);
+    } else if (g_upg_state->memory_profile() != params->memory_profile) {
         PDS_TRACE_ERR("Upgrade scale profile mismatch");
         return SDK_RET_ERR;
     }

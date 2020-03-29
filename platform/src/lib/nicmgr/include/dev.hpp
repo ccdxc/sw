@@ -19,6 +19,7 @@
 #include "nic/sdk/platform/devapi/devapi.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
+#include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
 #include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
@@ -82,6 +83,16 @@ typedef struct devicemgr_cfg_s {
     sdk::lib::dev_forwarding_mode_t fwd_mode;
     bool micro_seg_en;
     sdk::lib::shmmgr *shm_mgr;
+    // pipeline string indicates which p4 pipine is loaded in the datapath
+    std::string pipeline;
+    // memory profile is used to pick mem json file, this can be for different
+    // scale and/or different combination of features
+    std::string memory_profile;
+    // device profile is used to pick the right device json file, this is for
+    // different scale and/or combination of device types
+    std::string device_profile;
+    // catalog file captures h/w specific attributes
+    sdk::lib::catalog *catalog;
     EV_P;
 } devicemgr_cfg_t;
 
@@ -131,7 +142,8 @@ public:
     void SetHalClient(devapi *dev_api);
 
     int GenerateQstateInfoJson(std::string qstate_info_file);
-    void GetConfigFiles(string device_conf_file, string &hbm_mem_json_file, string &device_json_file);
+    void GetConfigFiles(devicemgr_cfg_t *cfg, string &hbm_mem_json_file,
+                        string &device_json_file);
     PdClient *GetPdClient(void) { return pd; }
     devapi *DevApi(void) { return dev_api; }
 

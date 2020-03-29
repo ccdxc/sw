@@ -102,7 +102,7 @@ init (std::string cfg_file, std::string profile, std::string pipeline)
     init_params.pipeline  = pipeline;
     init_params.cfg_file  = cfg_file;
     init_params.event_cb  = compat_check;
-    init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT; // TODO: Read from existing config
+    init_params.memory_profile = PDS_MEMORY_PROFILE_DEFAULT; // TODO: Read from existing config
     pds_init(&init_params);
     // cannot use pds_init return value as we are exiting the execution
     // by returning error.

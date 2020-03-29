@@ -10,7 +10,8 @@
 
 namespace core {
 
-sdk_ret_t agent_init(std::string cfg_file, std::string profile, std::string pipeline);
+sdk_ret_t agent_init(std::string cfg_file, std::string memory_profile,
+                     std::string device_profile, std::string pipeline);
 
 }    // namespace core
 

@@ -31,6 +31,21 @@ typedef enum pds_device_oper_mode_e {
     PDS_DEV_OPER_MODE_HOST = 2,
 } pds_device_oper_mode_t;
 
+typedef enum pds_device_profile_e {
+    PDS_DEVICE_PROFILE_DEFAULT = 0,
+    PDS_DEVICE_PROFILE_2PF     = 1,
+    PDS_DEVICE_PROFILE_3PF     = 2,
+    PDS_DEVICE_PROFILE_4PF     = 3,
+    PDS_DEVICE_PROFILE_5PF     = 4,
+    PDS_DEVICE_PROFILE_6PF     = 5,
+    PDS_DEVICE_PROFILE_7PF     = 6,
+    PDS_DEVICE_PROFILE_8PF     = 7,
+} pds_device_profile_t;
+
+typedef enum pds_memory_profile_e {
+    PDS_MEMORY_PROFILE_DEFAULT = 0,
+} pds_memory_profile_t;
+
 /// \brief device specification
 typedef struct pds_device_s {
     ip_addr_t              device_ip_addr;     ///< device IP address
@@ -41,6 +56,8 @@ typedef struct pds_device_s {
     uint32_t               learn_age_timeout;  ///< MAC, IP aging timeout (in seconds)  for learnt entries
     bool                   overlay_routing_en; ///< enable or disable control plane stack
                                                ///  for overlay routing
+    pds_device_profile_t   device_profile;     ///< device profile
+    pds_memory_profile_t   memory_profile;     ///< memory profile
     pds_device_oper_mode_t dev_oper_mode;      ///< device operational mode
 } __PACK__ pds_device_spec_t;
 

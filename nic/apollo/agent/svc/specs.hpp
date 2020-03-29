@@ -3569,6 +3569,38 @@ pds_device_api_spec_to_proto (pds::DeviceSpec *proto_spec,
         proto_spec->set_devopermode(pds::DEVICE_OPER_MODE_NONE);
         break;
     }
+    switch (api_spec->device_profile) {
+    case PDS_DEVICE_PROFILE_2PF:
+        proto_spec->set_deviceprofile(pds::DEVICE_PROFILE_2PF);
+        break;
+    case PDS_DEVICE_PROFILE_3PF:
+        proto_spec->set_deviceprofile(pds::DEVICE_PROFILE_3PF);
+        break;
+    case PDS_DEVICE_PROFILE_4PF:
+        proto_spec->set_deviceprofile(pds::DEVICE_PROFILE_4PF);
+        break;
+    case PDS_DEVICE_PROFILE_5PF:
+        proto_spec->set_deviceprofile(pds::DEVICE_PROFILE_5PF);
+        break;
+    case PDS_DEVICE_PROFILE_6PF:
+        proto_spec->set_deviceprofile(pds::DEVICE_PROFILE_6PF);
+        break;
+    case PDS_DEVICE_PROFILE_7PF:
+        proto_spec->set_deviceprofile(pds::DEVICE_PROFILE_7PF);
+        break;
+    case PDS_DEVICE_PROFILE_8PF:
+        proto_spec->set_deviceprofile(pds::DEVICE_PROFILE_8PF);
+        break;
+    default:
+        proto_spec->set_deviceprofile(pds::DEVICE_PROFILE_DEFAULT);
+        break;
+    }
+    switch (api_spec->memory_profile) {
+    case PDS_MEMORY_PROFILE_DEFAULT:
+    default:
+        proto_spec->set_memoryprofile(pds::MEMORY_PROFILE_DEFAULT);
+        break;
+    }
 }
 
 // populate proto buf status from device API status
@@ -3632,6 +3664,38 @@ pds_device_proto_to_api_spec (pds_device_spec_t *api_spec,
         break;
     default:
         api_spec->dev_oper_mode = PDS_DEV_OPER_MODE_NONE;
+        break;
+    }
+    switch (proto_spec.deviceprofile()) {
+    case pds::DEVICE_PROFILE_2PF:
+        api_spec->device_profile = PDS_DEVICE_PROFILE_2PF;
+        break;
+    case pds::DEVICE_PROFILE_3PF:
+        api_spec->device_profile = PDS_DEVICE_PROFILE_3PF;
+        break;
+    case pds::DEVICE_PROFILE_4PF:
+        api_spec->device_profile = PDS_DEVICE_PROFILE_4PF;
+        break;
+    case pds::DEVICE_PROFILE_5PF:
+        api_spec->device_profile = PDS_DEVICE_PROFILE_5PF;
+        break;
+    case pds::DEVICE_PROFILE_6PF:
+        api_spec->device_profile = PDS_DEVICE_PROFILE_6PF;
+        break;
+    case pds::DEVICE_PROFILE_7PF:
+        api_spec->device_profile = PDS_DEVICE_PROFILE_7PF;
+        break;
+    case pds::DEVICE_PROFILE_8PF:
+        api_spec->device_profile = PDS_DEVICE_PROFILE_8PF;
+        break;
+    default:
+        api_spec->device_profile = PDS_DEVICE_PROFILE_DEFAULT;
+        break;
+    }
+    switch (proto_spec.memoryprofile()) {
+    case pds::MEMORY_PROFILE_DEFAULT:
+    default:
+        api_spec->memory_profile = PDS_MEMORY_PROFILE_DEFAULT;
         break;
     }
     return SDK_RET_OK;

@@ -182,6 +182,40 @@ sysmon_init (void)
 
 }    // namespace api
 
+std::string
+pds_memory_profile_to_string (pds_memory_profile_t profile)
+{
+    switch (profile) {
+    case PDS_MEMORY_PROFILE_DEFAULT:
+    default:
+        return std::string("");
+    }
+}
+
+std::string
+pds_device_profile_to_string (pds_device_profile_t profile)
+{
+    switch (profile) {
+    case PDS_DEVICE_PROFILE_2PF:
+        return std::string("pf2");
+    case PDS_DEVICE_PROFILE_3PF:
+        return std::string("pf3");
+    case PDS_DEVICE_PROFILE_4PF:
+        return std::string("pf4");
+    case PDS_DEVICE_PROFILE_5PF:
+        return std::string("pf5");
+    case PDS_DEVICE_PROFILE_6PF:
+        return std::string("pf6");
+    case PDS_DEVICE_PROFILE_7PF:
+        return std::string("pf7");
+    case PDS_DEVICE_PROFILE_8PF:
+        return std::string("pf8");
+    case PDS_DEVICE_PROFILE_DEFAULT:
+    default:
+        return std::string("");
+    }
+}
+
 /**
  * @brief        initialize PDS HAL
  * @param[in]    params init time parameters
@@ -196,7 +230,6 @@ pds_init (pds_init_params_t *params)
     std::string       mac_str;
     mac_addr_t        mac_addr;
 
-    // TODO read from device.conf
     sdk::lib::device_profile_t device_profile = { 0 };
     device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}};
 
@@ -235,24 +268,24 @@ pds_init (pds_init_params_t *params)
     SDK_ASSERT(ret == SDK_RET_OK);
 
     // parse hbm memory region configuration file
-    if (params->scale_profile == PDS_SCALE_PROFILE_DEFAULT) {
+    if (params->memory_profile == PDS_MEMORY_PROFILE_DEFAULT) {
         mem_json = "hbm_mem.json";
-    } else if (params->scale_profile == PDS_SCALE_PROFILE_P1) {
-        mem_json =  "hbm_mem_p1.json";
-    } else if (params->scale_profile == PDS_SCALE_PROFILE_P2) {
-        mem_json = "hbm_mem_p2.json";
     } else {
         PDS_TRACE_ERR("Unknown profile %u, aborting ...",
-                      params->scale_profile);
+                      params->memory_profile);
         return SDK_RET_INVALID_ARG;
     }
     api::g_pds_state.set_mempartition_cfg(mem_json);
     mem_json = api::g_pds_state.cfg_path() + "/" + params->pipeline + "/" +
                    api::g_pds_state.catalogue()->memory_capacity_str() + "/" + mem_json;
 
-    api::g_pds_state.set_scale_profile(params->scale_profile);
-    PDS_TRACE_INFO("Initializing PDS with %s, profile %u",
-                   mem_json.c_str(), params->scale_profile);
+    api::g_pds_state.set_device_profile(params->device_profile);
+    api::g_pds_state.set_memory_profile(params->memory_profile);
+    PDS_TRACE_INFO("Initializing PDS with %s, device profile %u, memory profile %u",
+                   mem_json.c_str(), params->device_profile, params->memory_profile);
+
+    api::g_pds_state.set_memory_profile_string(pds_memory_profile_to_string(params->memory_profile));
+    api::g_pds_state.set_device_profile_string(pds_device_profile_to_string(params->device_profile));
 
     // check if the memory carving configuration file exists
     if (access(mem_json.c_str(), R_OK) < 0) {

@@ -446,14 +446,7 @@ main (int argc, char **argv)
     init_params.trace_cb  = core::sdk_logger;
     init_params.pipeline  = pipeline;
     init_params.cfg_file  = cfg_file;
-    init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
-    if (!profile.empty()) {
-        if (profile.compare("p1") == 0) {
-            init_params.scale_profile = PDS_SCALE_PROFILE_P1;
-        } else if (profile.compare("p2") == 0) {
-            init_params.scale_profile = PDS_SCALE_PROFILE_P2;
-        }
-    }
+    init_params.memory_profile = PDS_MEMORY_PROFILE_DEFAULT;
     // initialize the logger instance
     core::logger_init();
 

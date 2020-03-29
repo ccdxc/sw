@@ -81,14 +81,45 @@ device_profile_update (pds::DeviceProfile profile)
     boost::property_tree::ptree pt, output;
     boost::property_tree::ptree::iterator pos;
 
+    try {
+        // copy existing data from device.conf
+        std::ifstream json_cfg(DEVICE_CONF_FILE);
+        read_json(json_cfg, pt);
+
+        for (pos = pt.begin(); pos != pt.end();) {
+            output.put(pos->first.data(), pos->second.data());
+            ++pos;
+        }
+    } catch (...) {}
+
     if (profile == pds::DEVICE_PROFILE_DEFAULT) {
-        output.put("profile", "default");
-    } else if (profile == pds::DEVICE_PROFILE_P1) {
-        output.put("profile", "p1");
-    } else if (profile == pds::DEVICE_PROFILE_P2) {
-        output.put("profile", "p2");
+        output.put("device-profile", "default");
+    } else if (profile == pds::DEVICE_PROFILE_2PF) {
+        output.put("device-profile", "2pf");
+    } else if (profile == pds::DEVICE_PROFILE_3PF) {
+        output.put("device-profile", "3pf");
+    } else if (profile == pds::DEVICE_PROFILE_4PF) {
+        output.put("device-profile", "4pf");
+    } else if (profile == pds::DEVICE_PROFILE_5PF) {
+        output.put("device-profile", "5pf");
+    } else if (profile == pds::DEVICE_PROFILE_6PF) {
+        output.put("device-profile", "6pf");
+    } else if (profile == pds::DEVICE_PROFILE_7PF) {
+        output.put("device-profile", "7pf");
+    } else if (profile == pds::DEVICE_PROFILE_8PF) {
+        output.put("device-profile", "8pf");
     }
-    output.put("port-admin-state", "PORT_ADMIN_STATE_ENABLE");
+
+    boost::property_tree::write_json(DEVICE_CONF_FILE, output);
+
+    return;
+}
+
+static inline void
+memory_profile_update (pds::MemoryProfile profile)
+{
+    boost::property_tree::ptree pt, output;
+    boost::property_tree::ptree::iterator pos;
 
     try {
         // copy existing data from device.conf
@@ -100,6 +131,12 @@ device_profile_update (pds::DeviceProfile profile)
             ++pos;
         }
     } catch (...) {}
+
+    if (profile == pds::MEMORY_PROFILE_DEFAULT) {
+        output.put("memory-profile", "default");
+    }
+    output.put("port-admin-state", "PORT_ADMIN_STATE_ENABLE");
+
     boost::property_tree::write_json(DEVICE_CONF_FILE, output);
 
     return;
@@ -122,7 +159,8 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
 
     // create an internal batch, if this is not part of an existing API batch
     bctxt = proto_req->batchctxt().batchcookie();
-    auto profile = proto_req->request().profile();
+    auto memory_profile = proto_req->request().memoryprofile();
+    auto device_profile = proto_req->request().deviceprofile();
     if (bctxt == PDS_BATCH_CTXT_INVALID) {
         batch_params.epoch = core::agent_state::state()->new_epoch();
         batch_params.async = false;
@@ -148,10 +186,14 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
         memcpy(core::agent_state::state()->device(), &api_spec, sizeof(pds_device_spec_t));
     }
 
-    // update device.conf with profile
+    // update device.conf with memory-profile
     // TODO: ideally this should be done during commit time (and we need to
     //       handle aborting/rollback here)
-    device_profile_update(profile);
+    memory_profile_update(memory_profile);
+
+    // update device.conf with device-profile
+    device_profile_update(device_profile);
+
     if (batched_internally) {
         // commit the internal batch
         ret = pds_batch_commit(bctxt);
@@ -212,7 +254,14 @@ end:
     return Status::OK;
 }
 
-static sdk_ret_t
+static void
+device_spec_fill (pds_device_spec_t *spec)
+{
+    spec->device_profile = api::g_pds_state.device_profile();
+    spec->memory_profile = api::g_pds_state.memory_profile();
+}
+
+static void
 device_status_fill (pds_device_status_t *status)
 {
     std::string   mac_str;
@@ -228,7 +277,13 @@ device_status_fill (pds_device_status_t *status)
     } else if (mem_str == "8g") {
         status->memory_cap = 8;
     }
+}
 
+sdk_ret_t
+device_info_fill (pds_device_info_t *info)
+{
+    device_spec_fill(&info->spec);
+    device_status_fill(&info->status);
     return SDK_RET_OK;
 }
 
@@ -248,7 +303,7 @@ DeviceSvcImpl::DeviceGet(ServerContext *context,
     } else {
         memset(&info, 0, sizeof(pds_device_info_t));
         if (!core::agent_state::state()->pds_mock_mode()) {
-            ret = device_status_fill(&info.status);
+            ret = device_info_fill(&info);
         }
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));

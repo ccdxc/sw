@@ -26,7 +26,7 @@ namespace api {
 /// as this is used across upgrades, all the modifications should be
 /// done to the end
 typedef struct __attribute__((packed)) upg_pstate_s {
-    pds_scale_profile_t scale_profile; ///< running profile
+    pds_memory_profile_t memory_profile; ///< running profile
     uint32_t service_lif_id;           ///< running service lif id
 } upg_pstate_t;
 
@@ -63,8 +63,8 @@ public:
     // shared memory manager. all the states are saved on this during upgrade
     shmmgr *shm_mgr(void) { return shm_mmgr_; }
     // compare the profile of the running with the new by saving it in shared memory
-    void set_scale_profile(pds_scale_profile_t profile) {pstate_->scale_profile = profile; }
-    pds_scale_profile_t scale_profile(void) { return pstate_->scale_profile; }
+    void set_memory_profile(pds_memory_profile_t profile) {pstate_->memory_profile = profile; }
+    pds_memory_profile_t memory_profile(void) { return pstate_->memory_profile; }
     // table engine configuration. will be extracted during pre-upgrade and will be
     // applied during the final stage of the upgrade.
     uint32_t tbl_eng_cfg(p4pd_pipeline_t pipe, p4_tbl_eng_cfg_t **cfg, uint32_t *max_cfgs);

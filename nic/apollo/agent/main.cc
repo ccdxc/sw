@@ -133,16 +133,17 @@ int
 main (int argc, char **argv)
 {
     int          oc;
-    string       cfg_path, cfg_file, profile, pipeline, file;
+    string       cfg_path, cfg_file, memory_profile, device_profile, pipeline, file;
     boost::property_tree::ptree pt;
     sdk_ret_t    ret;
 
     struct option longopts[] = {
-       { "config",    required_argument, NULL, 'c' },
-       { "profile",   required_argument, NULL, 'p' },
-       { "feature",   required_argument, NULL, 'f' },
-       { "help",      no_argument,       NULL, 'h' },
-       { 0,           0,                 0,     0 }
+       { "config",          required_argument, NULL, 'c' },
+       { "memory-profile",  required_argument, NULL, 'p' }, // TODO change to -m
+       { "device-profile",  required_argument, NULL, 'd' },
+       { "feature",         required_argument, NULL, 'f' },
+       { "help",            no_argument,       NULL, 'h' },
+       { 0,                 0,                 0,     0 }
     };
 
     // parse CLI options
@@ -160,14 +161,23 @@ main (int argc, char **argv)
 
         case 'p':
             if (optarg) {
-                profile = std::string(optarg);
+                memory_profile = std::string(optarg);
             } else {
-                fprintf(stderr, "profile is not specified\n");
+                fprintf(stderr, "memory profile is not specified\n");
                 print_usage(argv);
                 exit(1);
             }
             break;
 
+        case 'd':
+            if (optarg) {
+                device_profile = std::string(optarg);
+            } else {
+                fprintf(stderr, "device profile is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
 
         case 'h':
             print_usage(argv);
@@ -231,7 +241,8 @@ main (int argc, char **argv)
     }
 
     // initialize the agent
-    if ((ret = core::agent_init(cfg_file, profile, pipeline)) != SDK_RET_OK) {
+    if ((ret = core::agent_init(cfg_file, memory_profile,
+                                device_profile, pipeline)) != SDK_RET_OK) {
         fprintf(stderr, "Agent initialization failed, err %u", ret);
     }
 

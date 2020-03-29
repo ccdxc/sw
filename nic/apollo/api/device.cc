@@ -148,6 +148,8 @@ device_entry::fill_spec_(pds_device_spec_t *spec) {
     spec->gateway_ip_addr = gw_ip_addr_;
     spec->dev_oper_mode = oper_mode_;
     spec->learn_age_timeout = learn_age_timeout_;
+    spec->device_profile = api::g_pds_state.device_profile();
+    spec->memory_profile = api::g_pds_state.memory_profile();
 }
 
 void

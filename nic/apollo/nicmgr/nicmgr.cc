@@ -42,7 +42,7 @@ prepare_callback (sdk::event_thread::prepare_t *prepare, void *ctx)
 void
 nicmgrapi::nicmgr_thread_init(void *ctxt) {
     pds_state *state;
-    string config_file;
+    string device_cfg_file;
     sdk::event_thread::event_thread *curr_thread;
     devicemgr_cfg_t cfg;
 
@@ -50,11 +50,18 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     state = (pds_state *)sdk::lib::thread::current_thread()->data();
     curr_thread = (sdk::event_thread::event_thread *)ctxt;
 
-#ifdef __x86_64__
-    config_file = state->cfg_path() + "/" + state->pipeline() + "/device.json";
-#else
-    config_file = state->cfg_path() + "/device.json";
-#endif
+    // compute the device profile json file to be used
+    if (state->platform_type() == platform_type_t::PLATFORM_TYPE_SIM) {
+        device_cfg_file =
+            state->cfg_path() + "/" + state->pipeline() + "/device.json";
+    } else {
+        if (state->device_profile() == PDS_DEVICE_PROFILE_DEFAULT) {
+            device_cfg_file = state->cfg_path() + "/device.json";
+        } else {
+            device_cfg_file =
+                state->cfg_path() + "/device-" + state->device_profile_string() + ".json";
+        }
+    }
 
     // instantiate the logger
     utils::logger::init();
@@ -67,11 +74,15 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     cfg.fwd_mode = sdk::lib::FORWARDING_MODE_NONE;
     cfg.micro_seg_en = false;
     cfg.shm_mgr = NULL;
+    cfg.pipeline = state->pipeline();
+    cfg.memory_profile = state->memory_profile_string();
+    cfg.device_profile = state->device_profile_string();
+    cfg.catalog = state->catalogue();
     cfg.EV_A = curr_thread->ev_loop();
 
     g_devmgr = new DeviceManager(&cfg);
     SDK_ASSERT(g_devmgr);
-    g_devmgr->LoadProfile(config_file, true);
+    g_devmgr->LoadProfile(device_cfg_file, true);
 
     sdk::ipc::subscribe(EVENT_ID_PORT_STATUS, port_event_handler_, NULL);
     sdk::ipc::subscribe(EVENT_ID_XCVR_STATUS, xcvr_event_handler_, NULL);

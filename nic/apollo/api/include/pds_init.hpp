@@ -15,6 +15,7 @@
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_event.hpp"
+#include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_upgrade.hpp"
 
 /// \defgroup PDS_INIT Initialization and teardown API
@@ -28,37 +29,17 @@ typedef enum pds_init_mode_e {
     PDS_INIT_MODE_POST_UPGRADE,    ///< initialize using state preserved, if any
 } pds_init_mode_t;
 
-/// \brief Initialization profiles
-typedef enum pds_scale_profile_e {
-    PDS_SCALE_PROFILE_DEFAULT,
-    ///< P1 = 128 VPCs, 128 subnets, 1K vnics, 1M mappings,
-    ///<      128 IPv4 route tables, with max. of 256K routes per table
-    ///<      128 IPv6 route tables, with max. of 64k routes per table
-    ///<      8M flows
-    PDS_SCALE_PROFILE_P1,
-    ///< P2 = 64 VPCs, 64 subnets, 64 vnics, 1M mappings,
-    ///       64 IPv4 route tables, with max. of 1K routes per table
-    ///       64 IPv6 route tables, with max. of 1K routes per table
-    ///       8M IPv4 flows + 8M IPv6 flows, 64 IPv4 meter LPMs with max. of 1K
-    ///       prefixes, 64 IPv6 meter LPMs wth max. of 1K prefixes, 1 IPv4
-    ///       service tag LPM with max. of 256k prefixes, 1 IPv6 service tag
-    ///       LPM with max. of 16k prefixes, 128 IPv4 security rule tables with
-    ///       max. of 1K rules each, 128 IPv6 security rule tables with max. of
-    ///       1K rules each
-    PDS_SCALE_PROFILE_P2,
-} pds_scale_profile_t;
-
 /// \brief Initialization parameters
 typedef struct pds_init_params_s {
     pds_init_mode_t           init_mode;        ///< mode of initialization
     sdk_logger::trace_cb_t    trace_cb;         ///< callback for trace msgs
     std::string               pipeline;         ///< P4 program pipeline name
                                                 ///< only "apollo" supported now
-    pds_scale_profile_t       scale_profile;    ///< scale profile for pipeline
+    pds_memory_profile_t      memory_profile;   ///< memory profile for pipeline
                                                 ///< NOTE: memory carving config
                                                 ///<       is picked based on
                                                 ///<        this profile
-    std::string               device_profile;   ///< PF/VF device profile
+    pds_device_profile_t      device_profile;   ///< PF/VF device profile
     std::string               cfg_file;         ///< config files directory path
                                                 ///< all config files are present,
                                                 ///< files under \<cfg_path\>/pipeline/

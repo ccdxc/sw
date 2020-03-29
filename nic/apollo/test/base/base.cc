@@ -88,14 +88,7 @@ pds_test_base::SetUpTestCase(test_case_params_t& params)
     init_params.trace_cb  = trace_cb;
     init_params.pipeline  = ::pipeline_get();
     init_params.cfg_file  = std::string(params.cfg_file);
-    init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
-    if (!params.profile.empty()) {
-        if (params.profile.compare("p1") == 0) {
-            init_params.scale_profile = PDS_SCALE_PROFILE_P1;
-        } else if (params.profile.compare("p2") == 0) {
-            init_params.scale_profile = PDS_SCALE_PROFILE_P2;
-        }
-    }
+    init_params.memory_profile = PDS_MEMORY_PROFILE_DEFAULT;
     pds_init(&init_params);
 }
 

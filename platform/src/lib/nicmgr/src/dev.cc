@@ -128,7 +128,7 @@ DeviceManager::DeviceManager(devicemgr_cfg_t *cfg)
 
     sdk::lib::pal_init(platform);
 
-    GetConfigFiles(cfg->device_conf_file, hbm_mem_json_file, device_json_file);
+    GetConfigFiles(cfg, hbm_mem_json_file, device_json_file);
 
     this->loop = (cfg->loop == NULL) ? EV_DEFAULT : cfg->loop;
     this->fwd_mode = cfg->fwd_mode;
@@ -176,35 +176,48 @@ hal_cfg_path()
 }
 
 void
-DeviceManager::GetConfigFiles(string device_conf_file, string &hbm_mem_json_file,
+DeviceManager::GetConfigFiles(devicemgr_cfg_t *cfg, string &hbm_mem_json_file,
                               string &device_json_file)
 {
-    sdk::lib::device *device = NULL;
-    sdk::lib::dev_feature_profile_t feature_profile;
-    string profile_name;
     std::string hal_cfg_dir = hal_cfg_path();
 
-    device = sdk::lib::device::factory(device_conf_file);
+#if defined(IRIS)
+    string profile_name;
+    sdk::lib::device *device = NULL;
+    sdk::lib::dev_feature_profile_t feature_profile;
+
+    device = sdk::lib::device::factory(cfg->device_conf_file);
     feature_profile = device->get_feature_profile();
-
-     profile_name = std::string(DEV_FEATURE_PROFILE_str(feature_profile));
-     profile_name.replace(0, std::string("FEATURE_PROFILE").length(), "");
-     std::transform(profile_name.begin(), profile_name.end(),
-                    profile_name.begin(), ::tolower);
-
-    // Handle for other pipelines
-#if defined(APOLLO)
-     hbm_mem_json_file = hal_cfg_dir + "/apollo/hbm_mem.json";
-#elif defined(ARTEMIS)
-     hbm_mem_json_file = hal_cfg_dir + "/artemis/hbm_mem.json";
-#elif defined(APULU)
-     hbm_mem_json_file = hal_cfg_dir + "/apulu/8g/hbm_mem.json";
-#elif defined(ATHENA)
-     hbm_mem_json_file = hal_cfg_dir + "/athena/hbm_mem.json";
+    profile_name = std::string(DEV_FEATURE_PROFILE_str(feature_profile));
+    profile_name.replace(0, std::string("FEATURE_PROFILE").length(), "");
+    std::transform(profile_name.begin(), profile_name.end(),
+                   profile_name.begin(), ::tolower);
+    hbm_mem_json_file =  hal_cfg_dir + "/" +
+        "iris" + "/hbm_mem" + profile_name + ".json";
+    device_json_file =
+        string("/platform/etc/nicmgrd/device" + profile_name + ".json");
 #else
-     hbm_mem_json_file =  hal_cfg_dir + "/" +
-         "iris" + "/hbm_mem" + profile_name + ".json";
-     device_json_file = string("/platform/etc/nicmgrd/device" + profile_name + ".json");
+    hbm_mem_json_file = hal_cfg_dir + "/" + cfg->pipeline + "/" +
+                            cfg->catalog->memory_capacity_str() + "/";
+    if (cfg->memory_profile.empty() ||
+        (cfg->memory_profile.compare("default") == 0)) {
+        hbm_mem_json_file += "hbm_mem.json";
+    } else {
+         hbm_mem_json_file += "hbm_mem_" + cfg->memory_profile + ".json";
+    }
+    hbm_mem_json_file = hal_cfg_dir + "/apulu/8g/hbm_mem.json";
+
+    if (cfg->platform_type == platform_type_t::PLATFORM_TYPE_SIM) {
+        device_json_file = hal_cfg_dir + "/" + cfg->pipeline + "/device.json";
+    } else {
+        device_json_file = hal_cfg_dir + "/";
+        if (cfg->device_profile.empty() ||
+            (cfg->device_profile.compare("default") == 0)) {
+           device_json_file += "device.json";
+        } else {
+           device_json_file += "device-" + cfg->device_profile + ".json";
+        }
+    }
 #endif
 
     NIC_LOG_DEBUG("HBM json file: {}, Device json file: {}",

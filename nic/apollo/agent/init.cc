@@ -137,7 +137,8 @@ sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
 // initialize PDS library
 //------------------------------------------------------------------------------
 static inline sdk_ret_t
-init_pds (std::string cfg_file, std::string profile, std::string pipeline)
+init_pds (std::string cfg_file, std::string memory_profile,
+          std::string device_profile, std::string pipeline)
 {
     sdk_ret_t ret;
     pds_init_params_t init_params;
@@ -147,12 +148,23 @@ init_pds (std::string cfg_file, std::string profile, std::string pipeline)
     init_params.trace_cb  = sdk_logger;
     init_params.pipeline  = pipeline;
     init_params.cfg_file  = cfg_file;
-    init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
-    if (!profile.empty()) {
-        if (profile.compare("p1") == 0) {
-            init_params.scale_profile = PDS_SCALE_PROFILE_P1;
-        } else if (profile.compare("p2") == 0) {
-            init_params.scale_profile = PDS_SCALE_PROFILE_P2;
+    init_params.memory_profile = PDS_MEMORY_PROFILE_DEFAULT;
+    init_params.device_profile = PDS_DEVICE_PROFILE_DEFAULT;
+    if (!device_profile.empty()) {
+        if (device_profile.compare("2pf") == 0) {
+            init_params.device_profile = PDS_DEVICE_PROFILE_2PF;
+        } else if (device_profile.compare("3pf") == 0) {
+            init_params.device_profile = PDS_DEVICE_PROFILE_3PF;
+        } else if (device_profile.compare("4pf") == 0) {
+            init_params.device_profile = PDS_DEVICE_PROFILE_4PF;
+        } else if (device_profile.compare("5pf") == 0) {
+            init_params.device_profile = PDS_DEVICE_PROFILE_5PF;
+        } else if (device_profile.compare("6pf") == 0) {
+            init_params.device_profile = PDS_DEVICE_PROFILE_6PF;
+        } else if (device_profile.compare("7pf") == 0) {
+            init_params.device_profile = PDS_DEVICE_PROFILE_7PF;
+        } else if (device_profile.compare("8pf") == 0) {
+            init_params.device_profile = PDS_DEVICE_PROFILE_8PF;
         }
     }
     init_params.event_cb = handle_event_ntfn;
@@ -214,6 +226,24 @@ logger_init (void)
 }
 
 //------------------------------------------------------------------------------
+// Get memory profile from device.conf
+//------------------------------------------------------------------------------
+static inline std::string
+memory_profile_read (void)
+{
+    boost::property_tree::ptree pt;
+
+    PDS_TRACE_DEBUG("Reading memory profile...");
+    try {
+        std::ifstream json_cfg(DEVICE_CONF_FILE);
+        read_json(json_cfg, pt);
+        return pt.get<std::string>("memory-profile", "default");
+    } catch (...) {
+        return std::string("default");
+    }
+}
+
+//------------------------------------------------------------------------------
 // Get device profile from device.conf
 //------------------------------------------------------------------------------
 static inline std::string
@@ -221,11 +251,11 @@ device_profile_read (void)
 {
     boost::property_tree::ptree pt;
 
-    PDS_TRACE_DEBUG("Read device profile...");
+    PDS_TRACE_DEBUG("Reading device profile...");
     try {
         std::ifstream json_cfg(DEVICE_CONF_FILE);
         read_json(json_cfg, pt);
-        return pt.get<std::string>("profile", "default");
+        return pt.get<std::string>("device-profile", "default");
     } catch (...) {
         return std::string("default");
     }
@@ -281,16 +311,22 @@ spawn_routing_thread (void)
 // initialize the agent
 //------------------------------------------------------------------------------
 sdk_ret_t
-agent_init (std::string cfg_file, std::string profile, std::string pipeline)
+agent_init (std::string cfg_file, std::string memory_profile,
+            std::string device_profile, std::string pipeline)
 {
     sdk_ret_t    ret;
 
     // initialize the logger instance
     logger_init();
 
-    // read device profile, if it exists
-    if (profile.empty()) {
-        profile = device_profile_read();
+    // read memory profile, if it exists
+    if (memory_profile.empty()) {
+        memory_profile = memory_profile_read();
+    }
+
+    // read device profile
+    if (device_profile.empty()) {
+        device_profile = device_profile_read();
     }
 
     // init agent state
@@ -300,7 +336,7 @@ agent_init (std::string cfg_file, std::string profile, std::string pipeline)
     }
 
     // initialize PDS library
-    ret = init_pds(cfg_file, profile, pipeline);
+    ret = init_pds(cfg_file, memory_profile, device_profile, pipeline);
 
     // spawn service server thread
     ret = spawn_svc_server_thread();
