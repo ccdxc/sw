@@ -49,6 +49,7 @@ testbundles:
         - vlanoffload/vlanoffload.testbundle
         - classic/driver-features-sanity.testbundle
         - reboot/reboot.testbundle
+        - p4ctl/p4ctl.testbundle
         - techsupport/techsupport.testbundle
 
     regression:

@@ -8,7 +8,7 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    tc.ret = test.test_list_cmd(tc.node_name)
+    tc.ret = test.test_read_table_index_cmd(tc.node_name)
     return api.types.status.SUCCESS
 
 def Verify(tc):

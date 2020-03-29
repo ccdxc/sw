@@ -53,7 +53,7 @@ testbundles:
         - aging/aging_precheckin.testbundle
         - networking/lif_telemetry_precheckin.testbundle
         - penctl/penctl_hostpin.testbundle
-        - p4ctl/p4ctl_hostpin.testbundle
+        - p4ctl/p4ctl_precheckin.testbundle
         - naples_upgrade/naples_upgrade_hostpin.testbundle
         - system/obfl_check.testbundle
         - sysmon/interrupts.testbundle
@@ -79,7 +79,7 @@ testbundles:
         - mnic/mnic_hostpin.testbundle
         - mnic/mnic_hostpin_naples_only.testbundle
         - penctl/penctl_hostpin.testbundle
-        - p4ctl/p4ctl_hostpin.testbundle
+        - p4ctl/p4ctl.testbundle
         - naples_upgrade/naples_upgrade_hostpin.testbundle
         - system/obfl_check.testbundle
         - sysmon/interrupts.testbundle

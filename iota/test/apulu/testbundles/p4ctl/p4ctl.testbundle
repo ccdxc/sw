@@ -1,0 +1,16 @@
+meta:
+    name    : p4ctl
+    os      : [ linux ]
+    nics    : [ pensando, mellanox, intel ]
+    targetcount : 10
+
+testcases:
+    -   name    : CHECK_TABLE_LIST
+        testcase: testcases.p4ctl.list_table
+
+    -   name    : CHECK_HELP
+        testcase: testcases.p4ctl.help
+
+    -   name    : CHECK_READ_TABLE
+        testcase: testcases.p4ctl.read_table
+        ignore  : True

@@ -14,6 +14,7 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/api/impl/athena/impl_utils.hpp"
 #include "nic/debug_cli/include/cli.hpp"
+#include "nic/sdk/asic/cmn/asic_state.hpp"
 
 static bool pd_inited = 0;
 int
@@ -39,6 +40,7 @@ cli_init (char *ptr)
     asic_cfg.mempartition =
         sdk::platform::utils::mpartition::factory(mpart_json.c_str());
 
+    SDK_ASSERT(sdk::asic::asic_state_init(&asic_cfg) == SDK_RET_OK);
     // do capri_state_pd_init needed by sdk capri
     // csr init is done inside capri_state_pd_init
     sdk::platform::capri::capri_state_pd_init(&asic_cfg);

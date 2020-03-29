@@ -1,5 +1,5 @@
 meta:
-    name    : p4ctl
+    name    : p4ctl_precheckin
     os      : [ linux, freebsd, esx ]
     nics    : [ pensando, mellanox, intel ]
     targetcount : 10

@@ -161,7 +161,7 @@ device::populate_device(ptree &pt)
         }
 
         if (it->first == FEATURE_PROFILE_KEY_STR) {
-            printf("Assigning feature profile\n");
+            SDK_TRACE_DEBUG("Assigning feature profile\n");
             if (is_integer_(it->second.get_value<std::string>())) {
                 device_db_.feature_profile = (dev_feature_profile_t)pt.get<int>(FEATURE_PROFILE_KEY_STR);
             } else {

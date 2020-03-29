@@ -857,10 +857,16 @@ def populate_table(ctx):
 //::    #endfor
         # endfor table
 
-def table_dump():
+def table_dump(out_json=False):
     tbl_dir = os.environ['HAL_CONFIG_PATH']
     with open(tbl_dir + "/${pddict['pipeline']}/capri_p4_table_map.json") as data_file:
         data = json.load(data_file)
+        if out_json:
+            print("---")
+            tables = data['tables']
+            print(json.dumps(tables))
+            return
+
         print("=================================================================================")
         print( "{:<30} {:<6} {:<10} {:<10} {:<5} {:<10} {:<7}".format("Table","TblId", "Type", "In/Egress", "Stage", "StageTblID", "Size"))
         print("=================================================================================")

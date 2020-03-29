@@ -154,9 +154,9 @@ def table(ctx):
 
 # debug hardware table list
 @table.command(name="list")
-#@click.option("-f", "--file", "file_name", default="", multiple=False)
-def list_table():
-    backend.table_dump()
+@click.option("--out_json", is_flag=True)
+def list_table(out_json):
+    backend.table_dump(out_json)
     pass
 
 # debug hardware table read

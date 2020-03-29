@@ -26,7 +26,7 @@ cli_init (char *ptr)
     p4pd_error_t p4pd_ret;
     p4pd_cfg_t   p4pd_cfg, p4pd_rxdma_cfg, p4pd_txdma_cfg;
 
-    printf("Initing: Please wait for the prompt ...\n");
+    //printf("Initing: Please wait for the prompt ...\n");
 
     // initialize logger
     cli_logger_init();
