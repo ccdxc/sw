@@ -1056,6 +1056,9 @@ public:
 //::                if not is_table_index_based(table, pddict):
         set_entry_valid(0);
 //::                #endif
+//::                if gen_actionid == True:
+        set_actionid(0);
+//::                #endif
     }
 
 //::                ######################################
