@@ -254,7 +254,17 @@ var _ = Describe("fwlog policy tests", func() {
 						for _, policy := range naplesPol {
 							napleFwlogMap[policy.GetKey()] = policy.Spec
 						}
-						Expect(reflect.DeepEqual(fwlogMap, napleFwlogMap)).To(Equal(true))
+						for policyKey, policySpec := range fwlogMap {
+							spec, ok := napleFwlogMap[policyKey]
+							if !ok {
+								By(fmt.Sprintf("Cannot find %s on naples side", policyKey))
+								return fmt.Errorf("Cannot find %s on naples side", policyKey)
+							}
+							if !reflect.DeepEqual(spec, policySpec) {
+								By(fmt.Sprintf("fwlog policy spec is not identical, expect %+v, get %+v", policySpec, spec))
+								return fmt.Errorf("fwlog policy spec is not identical, expect %+v, get %+v", policySpec, spec)
+							}
+						}
 
 					} else {
 						return fmt.Errorf("failed to get fwlog policy from naples %s . got (%s)", naples, st)
