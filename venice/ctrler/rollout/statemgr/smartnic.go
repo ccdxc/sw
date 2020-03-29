@@ -166,7 +166,7 @@ func (snicState *DSCRolloutState) UpdateDSCRolloutStatus(newStatus *protos.DSCRo
 			if s.OpStatus != opStatusSuccess {
 				snicState.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_FAILED, fmt.Sprintf("Force Rollout to version(%s) failed", s.Version), smartnicState.DistributedServiceCard)
 			}
-			if s.Op == protos.DSCOp_DSCDisruptiveUpgrade {
+			if s.Op == protos.DSCOp_DSCDisruptiveUpgrade && snicState.Statemgr.writer.CheckRolloutInProgress() == false {
 				log.Infof("Received status disruptive upgrade. Delete DSCRollout Object")
 				snicState.Statemgr.DeleteDSCRolloutState(snicState.DSCRollout)
 			}

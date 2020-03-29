@@ -48,6 +48,9 @@ func (d *dummyWriter) Close() error {
 func (d *dummyWriter) WriteRolloutAction(ro *roproto.Rollout) error {
 	return nil
 }
+func (d *dummyWriter) CheckRolloutInProgress() bool {
+	return true
+}
 func (d *dummyWriter) GetClusterVersion() string {
 	return ""
 }

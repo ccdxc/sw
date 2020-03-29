@@ -25,6 +25,7 @@ type Writer interface {
 	GetAPIClient() (apiclient.Services, error)
 	GetClusterVersion() string
 	SetRolloutBuildVersion(string) error
+	CheckRolloutInProgress() bool
 }
 
 // APISrvWriter is the writer instance
@@ -62,6 +63,32 @@ func (wr *APISrvWriter) GetAPIClient() (apiclient.Services, error) {
 
 	wr.apicl = apicl
 	return apicl, err
+}
+
+// CheckRolloutInProgress returns true if rollout is in progress or errored
+func (wr *APISrvWriter) CheckRolloutInProgress() bool {
+
+	// get the api client
+	apicl, err := wr.GetAPIClient()
+	if err != nil {
+		log.Infof("Updating Rollout Failed to connect get APIClient %v", err)
+		return true
+	}
+
+	obj := api.ObjectMeta{
+		Name: "version",
+	}
+
+	vobj, err := apicl.ClusterV1().Version().Get(context.Background(), &obj)
+	if err != nil {
+		log.Errorf("Failed to get cluster object (%+v)", err)
+		return true
+	}
+	log.Debugf("Version Object %+v", vobj)
+	if vobj.Status.RolloutBuildVersion == "" {
+		return false
+	}
+	return true
 }
 
 // GetClusterVersion returns running venice version
