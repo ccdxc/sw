@@ -2730,6 +2730,7 @@ session_update(const session_args_t *args, session_t *session)
     pd::pd_session_update_args_t    pd_session_args;
     pd::pd_func_args_t              pd_func_args = {0};
     vrf_t                          *vrf = NULL;
+    uint8_t                         export_en_old = 0;
 
     //SDK_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
 
@@ -2740,15 +2741,21 @@ session_update(const session_args_t *args, session_t *session)
 
     HAL_TRACE_VERBOSE("Updating session {:p} VRF: {}", (void *)session, args->vrf_handle);
 
-    vrf = vrf_lookup_by_handle(args->vrf_handle);
-    //SDK_ASSERT_RETURN((vrf != NULL), HAL_RET_INVALID_ARG);
-
-    // fetch the security profile, if any
-    if (vrf != NULL && vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
-        nwsec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
+    if (args->vrf_handle) {
+        vrf = vrf_lookup_by_handle(args->vrf_handle);
+        SDK_ASSERT_RETURN((vrf != NULL), HAL_RET_INVALID_ARG);
     }
 
+    // fetch the security profile, if any
+    nwsec_prof = find_nwsec_profile_by_handle(
+                        g_hal_state->oper_db()->customer_default_security_profile_hdl());
+
     session->idle_timeout = args->session->idle_timeout;
+
+    // Copy the export enable bitmap before
+    // we overwrite. This is needed for clearing
+    // stats in PD
+    export_en_old = session->iflow->pgm_attrs.export_en;
 
     if (args->iflow[0]) {
         session->iflow->config = *args->iflow[0];
@@ -2791,6 +2798,7 @@ session_update(const session_args_t *args, session_t *session)
     pd_session_args.update_iflow = args->update_iflow;
     pd_session_args.update_rflow = args->update_rflow;
     pd_session_args.nwsec_prof = nwsec_prof;
+    pd_session_args.export_en_old  = export_en_old;
 
     pd_func_args.pd_session_update = &pd_session_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_UPDATE, &pd_func_args);

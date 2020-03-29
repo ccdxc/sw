@@ -24,6 +24,7 @@
 #include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
 
 using sdk::table::sdk_table_api_params_t;
 
@@ -382,6 +383,7 @@ p4pd_del_session_state_table_entry (uint32_t session_state_idx)
     }
     return ret;
 }
+
 //------------------------------------------------------------------------------
 // program flow info table entry at either given index or if given index is 0
 // allocate an index and return that
@@ -391,8 +393,8 @@ p4pd_del_session_state_table_entry (uint32_t session_state_idx)
 // 2. twice nat not supported
 //-----------------------------------------------------------------------------
 hal_ret_t
-p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
-                                    flow_role_t role, bool aug, uint64_t clock)
+p4pd_add_upd_flow_info_table_entry (pd_session_create_args_t *args, pd_flow_t *flow_pd,
+                                    flow_role_t role, bool aug)
 {
     hal_ret_t ret;
     sdk_ret_t sdk_ret;
@@ -403,6 +405,8 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
     pd_session_t *sess_pd = NULL;
     bool entry_exists = false;
     sdk_table_api_params_t params;
+    session_t *session = args->session;
+    uint64_t   clock = args->clock;
 
     sess_pd = session->pd;
 
@@ -464,6 +468,11 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
             d.action_u.flow_info_flow_info.ingress_mirror_session_id ? 1 : 0;
 
         if (flow_attrs->export_en) {
+            sdk::types::mem_addr_t vaddr;
+            sdk::types::mem_addr_t stats_mem_addr =
+                              asicpd_get_mem_addr(IPFIX_EXPORTED_FLOW_STATS);
+            SDK_ASSERT(stats_mem_addr != INVALID_MEM_ADDRESS);
+
             d.action_u.flow_info_flow_info.export_id1 =
                                                  flow_attrs->export_id1;
             d.action_u.flow_info_flow_info.export_id2 =
@@ -472,6 +481,46 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
                                                  flow_attrs->export_id3;
             d.action_u.flow_info_flow_info.export_id4 =
                                                  flow_attrs->export_id4;
+
+            if (!entry_exists) {
+                uint8_t idx = 0;
+                /*
+ 		 * IPFIX EXTENDED stats table is organized as 1M entries of 32Bytes per
+ 		 * export id and we support 16 exporters in all. Hence the address would be
+ 		 * (region-start-address)+(exporter_idx (0-3)* (entry-size(32B) * flow-table-depth))+(flow-index*32B)
+ 		 */ 
+                while (idx < 4) { 
+                    if (flow_attrs->export_en & (0x1 << idx)) {
+                        sdk::types::mem_addr_t mem_addr = 
+                              (stats_mem_addr + ((idx << 5) << 20)) + (flow_pd->assoc_hw_id << 5);
+
+                        sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(mem_addr, &vaddr);
+                        SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
+                        bzero(&vaddr, 32); 
+                    }
+                    idx++;
+                }
+            } else {
+                uint8_t idx = 0;
+                /*
+                 * IPFIX EXTENDED stats table is organized as 1M entries of 32Bytes per
+                 * export id and we support 16 exporters in all. Hence the address would be
+                 * (region-start-address)+(exporter_idx (0-3) * entry-size(32B) * flow-table-depth)+(flow-index*32B)
+                 * During updates, do not bzero regions for exisiting collectors
+                 */
+                while ((idx < 4)) {
+                    if ((flow_attrs->export_en & (0x1 << idx)) &&
+                        (!(args->export_en_old & (0x1 << idx)))) {
+                        sdk::types::mem_addr_t mem_addr =
+                              (stats_mem_addr + ((idx << 5) << 20)) + (flow_pd->assoc_hw_id << 5);
+
+                        sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(mem_addr, &vaddr);
+                        SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
+                        bzero(&vaddr, 32);
+                    }
+                    idx++;
+                }  
+            }
         }
 
 #if 0
@@ -625,30 +674,30 @@ p4pd_add_flow_info_table_entries (pd_session_create_args_t *args)
 
     // program flow_info table entry for rflow
     if (session_pd->rflow.valid) {
-        ret = p4pd_add_upd_flow_info_table_entry(args->session, &session_pd->rflow,
-                                                 FLOW_ROLE_RESPONDER, false, args->clock);
+        ret = p4pd_add_upd_flow_info_table_entry(args, &session_pd->rflow,
+                                                 FLOW_ROLE_RESPONDER, false);
         if (ret != HAL_RET_OK) {
             p4pd_del_flow_info_table_entry(session_pd->iflow.assoc_hw_id);
             return ret;
         }
         if (session_pd->rflow_aug.valid) {
-            ret = p4pd_add_upd_flow_info_table_entry(args->session, &session_pd->rflow_aug,
-                                                     FLOW_ROLE_RESPONDER, true, args->clock);
+            ret = p4pd_add_upd_flow_info_table_entry(args, &session_pd->rflow_aug,
+                                                     FLOW_ROLE_RESPONDER, true);
             if (ret != HAL_RET_OK) {
                 return ret;
             }
         }
     }
 
-    ret = p4pd_add_upd_flow_info_table_entry(args->session, &session_pd->iflow,
-                                             FLOW_ROLE_INITIATOR, false, args->clock);
+    ret = p4pd_add_upd_flow_info_table_entry(args, &session_pd->iflow,
+                                             FLOW_ROLE_INITIATOR, false);
     if (ret != HAL_RET_OK) {
         return ret;
     }
 
     if (session_pd->iflow_aug.valid) {
-        ret = p4pd_add_upd_flow_info_table_entry(args->session, &session_pd->iflow_aug,
-                                                 FLOW_ROLE_INITIATOR, true, args->clock);
+        ret = p4pd_add_upd_flow_info_table_entry(args, &session_pd->iflow_aug,
+                                                 FLOW_ROLE_INITIATOR, true);
         if (ret != HAL_RET_OK) {
             return ret;
         }
@@ -1173,11 +1222,15 @@ pd_session_update (pd_func_args_t *pd_func_args)
         args->last_seen_clock = clock;
     }
 
-    // update/add flow stats entries first
-    ret = p4pd_add_upd_flow_stats_table_entries(session_pd, (pd_session_create_args_t *)args, true);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Flow stats table entry upd failure");
-        return ret;
+    // Do this only if we want to write specific stats
+    // there for example: Vmotion
+    if (args->session_state) {
+       // update/add flow stats entries first
+       ret = p4pd_add_upd_flow_stats_table_entries(session_pd, (pd_session_create_args_t *)args, true);
+       if (ret != HAL_RET_OK) {
+           HAL_TRACE_ERR("Flow stats table entry upd failure");
+           return ret;
+       }
     }
 
     // if connection tracking is on, add flow state entry for this session

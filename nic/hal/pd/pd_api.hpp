@@ -909,6 +909,7 @@ typedef struct pd_session_create_args_s {
     SessionResponse    *rsp;
     uint64_t            clock;
     uint64_t            last_seen_clock;
+    uint8_t             export_en_old;
 } __PACK__ pd_session_create_args_t;
 
 static inline void
@@ -958,6 +959,7 @@ typedef struct pd_session_update_args_s {
     SessionResponse    *rsp;
     uint64_t            clock;
     uint64_t            last_seen_clock;
+    uint8_t             export_en_old;
 } __PACK__ pd_session_update_args_t;
 
 static inline void
