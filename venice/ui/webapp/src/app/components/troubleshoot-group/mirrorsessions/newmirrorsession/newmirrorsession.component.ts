@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input, ChangeDetectionStrategy } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
@@ -22,9 +22,17 @@ import { OrderedItem } from '@app/components/shared/orderedlist/orderedlist.comp
 import { SelectItem } from 'primeng/api';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { minValueValidator } from '@sdk/v1/utils/validators';
+import { NetworkNetworkInterface, NetworkNetworkInterfaceSpec_type } from '@sdk/v1/models/generated/network';
+import { NetworkService } from '@app/services/generated/network.service';
+import {SearchExpression, SearchInputTypeValue, SearchModelField, SearchSpec} from '@app/components/search';
+import { LabelsSelector, ILabelsSelector } from '@sdk/v1/models/generated/monitoring/labels-selector.model';
+import { MonitoringInterfaceMirror, IMonitoringInterfaceMirror } from '@sdk/v1/models/generated/monitoring/monitoring-interface-mirror.model';
+
 
 const PACKET_FILTERS_ERRORMSG: string =
-    'At least one match rule must be specified if packet filter is set to All Packets.';
+  'At least one match rule must be specified';
+  // Since Packet Filter UI control is not shown, this part of the string is not to be shown yet"
+  // + 'if packet filter is set to All Packets.';
 
 @Component({
   selector: 'app-newmirrorsession',
@@ -32,6 +40,7 @@ const PACKET_FILTERS_ERRORMSG: string =
   styleUrls: ['./newmirrorsession.component.scss'],
   encapsulation: ViewEncapsulation.None,
   animations: Animations,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSession, MonitoringMirrorSession> implements OnInit, AfterViewInit {
 
@@ -45,8 +54,8 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   MACS_TOOLTIP: string = 'Type in mac address and hit enter or space key to add more.';
   PROTS_ERRORMSG: string = 'Invalid Protocol/Port';
   PROTS_TOOLTIP: string = 'Type in valid layer3 or layer 4 protocol and protocol/port, ' +
-                          'hit enter or space key to add more. Port can be individual or range.' +
-                          'for example: icmp, any/2345, tcp/60001-60100...';
+    'hit enter or space key to add more. Port can be individual or range.' +
+    'for example: icmp, any/2345, tcp/60001-60100...';
 
   createButtonTooltip: string = '';
   minDate: Date = new Date();
@@ -66,18 +75,25 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   APPS_OPTION: string = 'applications';
 
   protoAppOptions = [
-    {label: 'PROTO-PORTS', value: this.PROTO_PORTS_OPTION},
-    {label: 'APPS', value: this.APPS_OPTION},
+    { label: 'PROTO-PORTS', value: this.PROTO_PORTS_OPTION },
+    { label: 'APPS', value: this.APPS_OPTION },
   ];
 
   securityAppsEventUtility: HttpEventUtility<SecurityApp>;
   securityApps: ReadonlyArray<SecurityApp> = [];
   securityAppOptions: SelectItem[] = [];
 
+  labelMatchCount: number = 0;
+  repeaterReady: boolean = false;
+  matchMap: Map<string, any> = new Map<string, any>();
+  allNIList: string[] = [];
+  radioSelection: string = 'rules';
+
   constructor(protected _controllerService: ControllerService,
     protected _monitoringService: MonitoringService,
     protected securityService: SecurityService,
     protected uiconfigsService: UIConfigsService,
+    protected networkService: NetworkService,
   ) {
     super(_controllerService, uiconfigsService, MonitoringMirrorSession);
   }
@@ -106,6 +122,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
 
   postNgInit(): void {
     this.getSecurityApps();
+    this.getNILabels();
 
     // change the hour seconds to 0 and 0 to avoid confusion of local vs utc
     // seems backend has iisue, seconds can not be 0, otherwise the schdedule
@@ -120,18 +137,15 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       item.value === MonitoringMirrorSessionSpec_packet_filters['all-packets']
     );
 
-    this.labelData = [
-      {
-        key: { label: 'text', value: '' },
-        operators: [{ label: 'equals', value: 'in' }],
-        fieldType: ValueType.inputField,
-        valueType: ValueType.inputField,
-        keyLabel: 'Label Key',
-        valueLabel: 'Label Value'
-      }
-    ];
-
     if (this.isInline) {
+
+      const interfaceObj = this.newObject.$formGroup.get(['spec', 'interfaces']).value;
+      if (interfaceObj && interfaceObj.selectors && interfaceObj.selectors.length > 0) {
+        this.radioSelection = 'labels';
+      } else {
+        this.radioSelection = 'rules';
+      }
+
       // conver date from staring to Date Object
       const dateValue = this.newObject.$formGroup.get(['spec', 'start-condition', 'schedule-time']).value;
       if (dateValue) {
@@ -142,9 +156,9 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       }
 
       // process interface selectors
-      if (this.objectData.spec['interface-selector']) {
+      if (this.objectData.spec['interfaces'] && this.objectData.spec['interfaces']['selectors'].length) {
         const searchExpressons: ILabelsRequirement[] =
-          this.objectData.spec['interface-selector'].requirements;
+          this.objectData.spec['interfaces']['selectors'][0].requirements;
         const list = [];
         searchExpressons.forEach((item) => {
           const op = item.operator;
@@ -248,38 +262,56 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       }
     }
 
-    for (let i = 0; i < this.rules.length; i++) {
-      const rule: MonitoringMatchRule = this.rules[i].data.rule;
-      if (!(rule.$formGroup.get(['source', 'ip-addresses']).valid)) {
-        this.createButtonTooltip =
-          'Error: Rule ' + (i + 1) + ' source IP adresses are invalid.';
+    if (this.radioSelection === 'labels') {
+      // validate interface selector
+      if (this.labelMatchCount === 0) {
+        this.createButtonTooltip = 'Selected Labels should match atleast one Network Interface.';
         return false;
       }
-      if (!(rule.$formGroup.get(['source', 'mac-addresses']).valid)) {
-        this.createButtonTooltip =
-          'Error: Rule ' + (i + 1) + ' source MAC adresses are invalid.';
-        return false;
-      }
-      if (!(rule.$formGroup.get(['destination', 'ip-addresses']).valid)) {
-        this.createButtonTooltip =
-          'Error: Rule ' + (i + 1) + ' destination IP adresses are invalid.';
-        return false;
-      }
-      if (!(rule.$formGroup.get(['destination', 'mac-addresses']).valid)) {
-        this.createButtonTooltip =
-          'Error: Rule ' + (i + 1) + ' destination MAC adresses are invalid.';
-        return false;
-      }
-      if (!(rule.$formGroup.get(['app-protocol-selectors', 'proto-ports']).valid)) {
-        this.createButtonTooltip =
-          'Error: Rule ' + (i + 1) + ' protocol/ports are invalid.';
-        return false;
-      }
-    }
 
-    if (this.areAllRulesEmpty()) {
-      this.createButtonTooltip = 'At least one match rule must be specified.';
-      return false;
+      for (let i = 0; i < this.labelOutput.length ; i++) {
+        const obj = this.labelOutput[i];
+        if ( !(obj.key) || !(obj.values) || !(obj.operators)) {
+          this.createButtonTooltip = 'Atleast one label is incomplete.';
+          return false;
+        }
+      }
+
+    } else {
+      // validate rules
+      if (this.areAllRulesEmpty()) {
+        this.createButtonTooltip = 'At least one match rule must be specified.';
+        return false;
+      }
+
+      for (let i = 0; i < this.rules.length; i++) {
+        const rule: MonitoringMatchRule = this.rules[i].data.rule;
+        if (!(rule.$formGroup.get(['source', 'ip-addresses']).valid)) {
+          this.createButtonTooltip =
+            'Error: Rule ' + (i + 1) + ' source IP adresses are invalid.';
+          return false;
+        }
+        if (!(rule.$formGroup.get(['source', 'mac-addresses']).valid)) {
+          this.createButtonTooltip =
+            'Error: Rule ' + (i + 1) + ' source MAC adresses are invalid.';
+          return false;
+        }
+        if (!(rule.$formGroup.get(['destination', 'ip-addresses']).valid)) {
+          this.createButtonTooltip =
+            'Error: Rule ' + (i + 1) + ' destination IP adresses are invalid.';
+          return false;
+        }
+        if (!(rule.$formGroup.get(['destination', 'mac-addresses']).valid)) {
+          this.createButtonTooltip =
+            'Error: Rule ' + (i + 1) + ' destination MAC adresses are invalid.';
+          return false;
+        }
+        if (!(rule.$formGroup.get(['app-protocol-selectors', 'proto-ports']).valid)) {
+          this.createButtonTooltip =
+            'Error: Rule ' + (i + 1) + ' protocol/ports are invalid.';
+          return false;
+        }
+      }
     }
 
     if (!this.newObject.$formGroup.valid) {
@@ -295,7 +327,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
       return 'Error: Name field is empty.';
     }
-    if (!this.newObject.$formGroup.get(['meta', 'name']).valid)  {
+    if (!this.newObject.$formGroup.get(['meta', 'name']).valid) {
       return 'Error: Name field is invalid.';
     }
     return this.createButtonTooltip;
@@ -315,9 +347,47 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     currValue.spec['match-rules'] = this.rules.map(r => {
       return r.data.rule.getFormGroupValues();
     });
-    const repeaterSearchExpression = SearchUtil.convertFormArrayToSearchExpression(this.labelOutput);
-    currValue.spec['interface-selector'].requirements = repeaterSearchExpression as ILabelsRequirement[];
+    const repeaterSearchExpression = this.convertFormArrayToSearchExpression(this.labelOutput);
+    currValue.spec['interfaces'] = new MonitoringInterfaceMirror();
+    currValue.spec['interfaces']['selectors'] = new Array<LabelsSelector>();
+    currValue.spec['interfaces']['selectors'].push(new LabelsSelector());
+    currValue.spec['interfaces']['selectors'][0].requirements = repeaterSearchExpression as ILabelsRequirement[];
+
+    if (this.radioSelection === 'labels') {
+      currValue.spec['match-rules'] = [];
+      currValue.spec['packet-filters'] = [];
+    } else {
+      currValue.spec['interfaces'] = null;
+    }
+
     return currValue;
+  }
+
+  convertFormArrayToSearchExpression(value, addMetatag: boolean = false) {
+    const data = value;
+    if (data == null) {
+      return null;
+    }
+
+    let retData = data.filter((item) => {
+      return !Utility.isEmpty(item.key) && !Utility.isEmpty(item.values) && item.values.length !== 0;
+    });
+    // make sure the value field is an array
+    retData = retData.map((item) => {
+      const tag = item.key;
+      const keyValue = ((addMetatag) ? 'meta.labels.' : '')  + tag;
+      // modify here to trim each string of the array
+      const valValues = Array.isArray(item.values) ?
+        item.values : item.values.trim().split(',');
+      const trimmedValues = valValues.map(each => (each) ? each.trim() : each);
+      const searchExpression: SearchExpression = {
+        key:  keyValue,
+        operator: item.operators,
+        values: trimmedValues
+      };
+      return searchExpression;
+    });
+    return retData;
   }
 
   protected buildLabelFormControlList(searchExpressons: ILabelsRequirement[]): FormControl[] {
@@ -379,6 +449,8 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
    * This API serves html template. When repeater's value is changed, we update labelOutput value.
    */
   handleLabelRepeaterData(values: any) {
+    const matches = this.getMatches(values);
+    this.labelMatchCount = matches.length;
     this.labelOutput = values;
   }
 
@@ -424,7 +496,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
 
   editRule(index) {
     // Collapse any other open rules, and make index rule open
-    this.rules.forEach( (r, i) => {
+    this.rules.forEach((r, i) => {
       if (i === index) {
         r.inEdit = true;
       } else {
@@ -527,6 +599,135 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
 
   generateUpdateSuccessMsg(object: IMonitoringMirrorSession): string {
     return 'Updated mirror session ' + object.meta.name;
+  }
+
+  isShowAddCollector(): boolean {
+    const collectors = this.newObject.$formGroup.get(['spec', 'collectors']) as FormArray;
+    if (collectors.length < 4) {
+      return true;
+    }
+    return false;
+  }
+
+  getMatches(selectors) {
+    let matchList = [];
+    let first: boolean = true;
+    for (const x of selectors) {
+      if (x['key'] && x['operators'] && x['values']) {
+        const matches = this.getRuleMatches(x);
+        if (first) {
+          matchList = matches;
+          first = false;
+        } else {
+          matchList = [...matchList].filter(i => matches.includes(i));
+        }
+      }
+    }
+    return matchList;
+  }
+
+  getRuleMatches(rule): any {
+    const key = rule['key'];
+    const op = rule['operators'];
+    const val = rule['values'];
+    let matches = [];
+    if (this.matchMap[key] != null && this.matchMap[key][val] != null && this.matchMap[key][val].length !== 0) {
+      matches = this.matchMap[key][val];
+    }
+
+    if (op === 'in') {
+      return matches;
+    } else {
+      return [...this.allNIList].filter(i => !matches.includes(i));
+    }
+  }
+
+  getNILabels() {
+    const sub = this.networkService.ListNetworkInterfacesCache().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        const body: NetworkNetworkInterface[] = response.data as NetworkNetworkInterface[];
+        this.matchMap = new Map<string, any>();
+        this.labelData = [];
+        this.allNIList = [];
+        this.buildLabelInformation(body);
+        this.buildLabelInformationFromMirrorSessions();
+        this.buildLabelData();
+      }
+    );
+    this.subscriptions.push(sub);
+  }
+
+  buildLabelInformationFromMirrorSessions() {
+    for (const obj of this.existingObjects) {
+      if (obj.spec.interfaces && obj.spec.interfaces.selectors.length && obj.spec.interfaces.selectors[0]) {
+        for (const i of obj.spec.interfaces.selectors[0].requirements ) {
+          const key = i.key;
+          const values = i.values;
+          if (this.matchMap[key] == null) {
+            console.log('key doesnt exist anymore');
+            this.matchMap[key] = new Map<string, any>();
+          }
+          for (const v of values) {
+            if (this.matchMap[key][v] == null) {
+              console.log('Key value pair doesnt exist anymore');
+              this.matchMap[key][v] = [];
+            }
+          }
+        }
+      }
+    }
+  }
+
+  buildLabelInformation(networkInterfaces: NetworkNetworkInterface[]) {
+
+    if (networkInterfaces.length) {
+      networkInterfaces.forEach((item: NetworkNetworkInterface) => {
+        if (item.meta && item.meta.labels && item.spec.type === NetworkNetworkInterfaceSpec_type['uplink-eth']) {
+          for (const key of Object.keys(item.meta.labels)) {
+            if (this.matchMap[key] == null) {
+              this.matchMap[key] = new Map<string, any>();
+            }
+            if (this.matchMap[key][item.meta.labels[key]] == null) {
+              this.matchMap[key][item.meta.labels[key]] = [];
+            }
+            this.matchMap[key][item.meta.labels[key]].push(item.meta.uuid);
+          }
+        }
+        this.allNIList.push(item.meta.uuid);
+      });
+    }
+  }
+
+  buildLabelData() {
+    for (const key of Object.keys(this.matchMap)) {
+      const valList = [];
+      for (const val of Object.keys(this.matchMap[key])) {
+        valList.push({ value: val, label: val });
+      }
+
+      const label = {
+        key: { value: key, label: key },
+        values: valList,
+        operators: SearchUtil.stringOperators,
+        fieldType: ValueType.singleSelect,
+        valueType: ValueType.multiSelect,
+        keyLabel: 'Label Key',
+        valueLabel: 'Label Value'
+      };
+      this.labelData.push(label);
+    }
+    this.repeaterReady = true;
+  }
+
+  buildKeyPlaceholder(repeater: any, keyFormName: string): string {
+    return 'key';
+  }
+
+  buildValuePlaceholder(repeater: any, keyFormName: string): string {
+    return 'value';
   }
 
 }

@@ -7,6 +7,11 @@ $dary-grey: #a9a9a9;
 .newMirrorSession-container {
   margin: 10px;
 
+  .newmirrorsession-row {
+    min-width: 625px;
+    margin: 0px auto;
+  }
+
   .newmirrorsession-inline-buttoncontainer {
     margin: 5px 0px;
 
@@ -18,6 +23,19 @@ $dary-grey: #a9a9a9;
       line-height: 25px;
       margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
     }
+  }
+
+  .newmirrorsession-label-match-count {
+    padding-left: 10px;
+    padding-bottom: 20px;
+  }
+
+  .newmirrorsession-select-panel {
+    display: none;
+  }
+
+  .newmirrorsession-radio-text {
+    @include primary-font(16px);
   }
 
   .newmirrorsession-general-inputbox,
@@ -225,4 +243,12 @@ fieldset {
   .ui-shadow {
     box-shadow: none;
   }
+}
+
+.newmirrorsession-fieldtitle {
+  margin: $vertical-gutter $horizontal-gutter;
+}
+
+.newmirrorsession-delete {
+  margin-top: 10px;
 }

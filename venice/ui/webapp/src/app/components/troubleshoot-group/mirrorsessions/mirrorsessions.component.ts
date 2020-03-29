@@ -54,8 +54,8 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
     { field: 'spec.packet-size', header: 'Packet Size', sortable: false, width: '100px', },
     // { field: 'spec.packet-filters', header: 'Packet Filters', sortable: false, width: 10 },
     { field: 'spec.collectors', header: 'collectors', sortable: false, width: 10 },
-    // { field: 'spec.interface-selector', header: 'Interface Selectors', sortable: false, width: 10 },
-    { field: 'spec.match-rules', header: 'Match Rules', sortable: false, width: 40 },
+    { field: 'spec.interfaces.selectors', header: 'Interface Selectors', sortable: false, width: 20 },
+    { field: 'spec.match-rules', header: 'Match Rules', sortable: false, width: 30 },
     // { field: 'status.oper-state', header: 'OP Status', sortable: true, width: '175px' }
   ];
 
@@ -125,7 +125,7 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
       buttons = [{
         cssClass: 'global-button-primary mirrorsessions-toolbar-button mirrorsessions-toolbar-button-ADD',
         text: 'ADD MIRROR SESSION',
-        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+        computeClass: () => (this.shouldEnableButtons && this.dataObjects.length < 8) ? '' : 'global-button-disabled',
         callback: () => { this.createNewObject(); }
       }];
     }
@@ -140,8 +140,12 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
     const value = Utility.getObjectValueByPropertyPath(data, fields);
     const column = col.field;
     switch (column) {
-      case 'spec.interface-selector':
-        return this.displayColumn_interfaceselectors(value);
+      case 'spec.interfaces.selectors':
+        // currently we pick the 1st selector from array
+        if (Array.isArray(value) && value.length) {
+          return this.displayColumn_interfaceselectors(value[0]);
+        }
+        return '';
       case 'spec.collectors':
         return this.displayColumn_collectors(value);
       case 'spec.match-rules':

@@ -60,6 +60,6 @@
 
 <ng-template #expandTemplate let-rowData let-col="col">
   <app-newmirrorsession [objectData]="rowData" [isInline]="true" (formClose)="closeRowExpand()"
-                        fxFlex="none">
+                        fxFlex="none" [existingObjects]='dataObjects'>
   </app-newmirrorsession>
 </ng-template>

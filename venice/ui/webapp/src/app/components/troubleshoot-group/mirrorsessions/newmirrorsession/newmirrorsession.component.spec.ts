@@ -19,7 +19,7 @@ import { SecurityService } from '@app/services/generated/security.service';
 import { AuthService } from '@app/services/auth.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-
+import { NetworkService } from '@app/services/generated/network.service';
 import { NewmirrorsessionComponent } from './newmirrorsession.component';
 
 describe('NewmirrorsessionComponent', () => {
@@ -51,7 +51,8 @@ describe('NewmirrorsessionComponent', () => {
         MatIconRegistry,
         SecurityService,
         MessageService,
-        MonitoringService
+        MonitoringService,
+        NetworkService
       ]
     })
     .compileComponents();
