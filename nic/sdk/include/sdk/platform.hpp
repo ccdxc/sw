@@ -42,25 +42,32 @@ SDK_DEFINE_ENUM_TO_STR(asic_type_t, ASIC_TYPE)
 SDK_DEFINE_MAP_EXTERN(asic_type_t, ASIC_TYPE)
 // #undef ASIC_TYPE
 
-#define BOOT_TYPE(ENTRY)                                                    \
-    ENTRY(SDK_BOOT_TYPE_COLD,      0, "SDK_BOOT_TYPE_COLD")                 \
-    ENTRY(SDK_BOOT_TYPE_ISSU,      1, "SDK_BOOT_TYPE_ISSU")                 \
+#define UPGRADE_MODE(ENTRY)                                               \
+    ENTRY(UPGRADE_MODE_NONE,       0, "UPGRADE_MODE_NONE")                \
+    ENTRY(UPGRADE_MODE_GRACEFUL,   1, "UPGRADE_MODE_GRACEFUL")            \
+    ENTRY(UPGRADE_MODE_HITLESS,    2, "UPGRADE_MODE_HITLESS")             \
 
-SDK_DEFINE_ENUM(boot_type_t,        BOOT_TYPE)
-SDK_DEFINE_ENUM_TO_STR(boot_type_t, BOOT_TYPE)
-SDK_DEFINE_MAP_EXTERN(boot_type_t,  BOOT_TYPE)
-// #undef BOOT_TYPE
+SDK_DEFINE_ENUM(upg_mode_t,        UPGRADE_MODE)
+SDK_DEFINE_ENUM_TO_STR(upg_mode_t, UPGRADE_MODE)
+SDK_DEFINE_MAP_EXTERN(upg_mode_t,  UPGRADE_MODE)
+// #undef UPGRADE_MODE
 
 static inline bool
-boot_type_cold (boot_type_t type)
+upgrade_mode_none (upg_mode_t type)
 {
-    return type == SDK_BOOT_TYPE_COLD;
+    return type == UPGRADE_MODE_NONE;
 }
 
 static inline bool
-boot_type_issu (boot_type_t type)
+upgrade_mode_hitless (upg_mode_t type)
 {
-    return type == SDK_BOOT_TYPE_ISSU;
+    return type == UPGRADE_MODE_HITLESS;
+}
+
+static inline bool
+upgrade_mode_graceful (upg_mode_t type)
+{
+    return type == UPGRADE_MODE_GRACEFUL;
 }
 
 }    // namespace platform
@@ -68,7 +75,7 @@ boot_type_issu (boot_type_t type)
 
 using sdk::platform::platform_type_t;
 using sdk::platform::asic_type_t;
-using sdk::platform::boot_type_t;
+using sdk::platform::upg_mode_t;
 
 #endif    // __SDK_PLATFORM_HPP__
 

@@ -15,11 +15,11 @@
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/core/core.hpp"
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/nicmgr/nicmgr.hpp"
+#include "nic/apollo/api/upgrade_state.hpp"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
-#include "nic/apollo/core/event.hpp"
-#include "nic/apollo/core/core.hpp"
 
 /// \defgroup PDS_NICMGR
 /// @{
@@ -37,6 +37,43 @@ prepare_callback (sdk::event_thread::prepare_t *prepare, void *ctx)
     if (utils::logger::logger()) {
         utils::logger::logger()->flush();
     }
+}
+
+static void
+nicmgr_upg_ev_compat_check_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+{
+    // TODO
+}
+
+static void
+nicmgr_upg_ev_backup_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+{
+
+}
+
+static void
+nicmgr_upg_ev_link_down_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+{
+
+}
+
+static void
+nicmgr_upg_ev_hostdev_reset_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+{
+
+}
+
+static void
+nicmgr_upg_ev_quiesce_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+{
+
+}
+
+
+static void
+nicmgr_upg_ev_repeal_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+{
+
 }
 
 void
@@ -89,6 +126,20 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     sdk::ipc::subscribe(EVENT_ID_PDS_HAL_UP, hal_up_event_handler_, NULL);
     sdk::event_thread::prepare_init(&g_ev_prepare, prepare_callback, NULL);
     sdk::event_thread::prepare_start(&g_ev_prepare);
+
+    // register for upgrade events
+    sdk::ipc::reg_request_handler(EVENT_ID_UPG_COMPAT_CHECK,
+                                  nicmgr_upg_ev_compat_check_cb, NULL);
+    sdk::ipc::reg_request_handler(EVENT_ID_UPG_BACKUP,
+                                  nicmgr_upg_ev_backup_cb, NULL);
+    sdk::ipc::reg_request_handler(EVENT_ID_UPG_LINK_DOWN,
+                                  nicmgr_upg_ev_link_down_cb, NULL);
+    sdk::ipc::reg_request_handler(EVENT_ID_UPG_HOSTDEV_RESET,
+                                  nicmgr_upg_ev_hostdev_reset_cb, NULL);
+    sdk::ipc::reg_request_handler(EVENT_ID_UPG_QUIESCE,
+                                  nicmgr_upg_ev_quiesce_cb, NULL);
+    sdk::ipc::reg_request_handler(EVENT_ID_UPG_REPEAL,
+                                  nicmgr_upg_ev_repeal_cb, NULL);
 
     PDS_TRACE_INFO("Listening to events ...");
 }

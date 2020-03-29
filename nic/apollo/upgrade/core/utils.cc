@@ -296,7 +296,7 @@ upg_stage_id (stage_id_t id)
         break;
     case STAGE_ID_FINISH:
     case STAGE_ID_VERIFY:
-        upg_stage_id = UPG_STAGE_INIT;
+        upg_stage_id = UPG_STAGE_VERIFY;
         break;
     case STAGE_ID_ABORT:
         upg_stage_id = UPG_STAGE_ABORT;

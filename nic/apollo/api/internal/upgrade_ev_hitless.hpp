@@ -4,60 +4,57 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This module defines event callbacks during process upgrade
+/// This module defines event handlers during process upgrade
 ///
 //----------------------------------------------------------------------------
 
-/// \defgroup UPGRADE Upgrade event callbacks
-/// \ingroup  UPG_EVENTCB
+/// \defgroup UPGRADE Upgrade event handlers
+/// \ingroup  UPG_EVENT_HDLR
 /// @{
 ///
 
-#ifndef __UPGRADE_EVENT_CB_HPP__
-#define __UPGRADE_EVENT_CB_HPP__
+#ifndef __API_UPGRADE_EV_HITLESS_HPP__
+#define __API_UPGRADE_EV_HITLESS_HPP__
 
-namespace upg {
+using upg::upg_ev_hdlr_t;
+using upg::upg_ev_params_t;
 
-/// \brief upgrade event context
-typedef struct upg_event_ctxt_s {
-    // empty now
-} upg_event_ctxt_t;
+namespace api {
 
-/// \brief upgrade event callback function
-typedef sdk_ret_t (*upg_event_cb_t)(upg_event_ctxt_t *upg_ev_ctxt);
-
-/// thread id from which upgrade event callbacks are registerd
-typedef uint32_t upg_thread_id_t;
-
-/// \brief upgrade event callbacks
-/// callback functions for upgrading process/thread A to B
+/// \brief upgrade event handlers to the registered thread
+/// functions for upgrading process/thread A to B
 /// A is the currently running process and B is the new process
 /// each process/thread should implement this and act on these events.
-typedef struct upg_event_s {
+typedef struct upg_ev_hitless_s {
     /// registering thread id
     /// used for debug traces. no other significance.
     upg_thread_id_t  thread_id;
 
     /// compat checks should be done here (on A)
-    upg_event_cb_t compat_check_cb;
+    upg_ev_hdlr_t compat_check;
+
+    /// start of a new upgrade, mount check the existance of B should be
+    /// done here (on A).
+    upg_ev_hdlr_t start;
 
     /// software states should be saved here (on A).
-    upg_event_cb_t backup_cb;
+    upg_ev_hdlr_t backup;
 
     /// upgrade specific bringup should be done here (on B)
     /// the bringup shouldn't touch the shared hw resources with A
     /// [Ex: polling LIFs, ports, etc )
-    upg_event_cb_t init_cb;
+    /// below functions should check the bringup status of A
+    upg_ev_hdlr_t ready;
 
-    /// software state restore, oper table copy should be done here (on B)
-    upg_event_cb_t restore_cb;
+    /// oper state syncing, config replay should be done here (on B)
+    upg_ev_hdlr_t sync;
 
     /// threads should be paused here to a safe point for switchover (on A)
-    upg_event_cb_t sw_quiesce_cb;
+    upg_ev_hdlr_t quiesce;
 
     /// pipeline switch should be done here (on B)
     /// if it is success, it can start shared resource access
-    upg_event_cb_t switchover_cb;
+    upg_ev_hdlr_t switchover;
 
     /// abort an upgrade (on A / B)
     /// an abort (on A)
@@ -68,20 +65,21 @@ typedef struct upg_event_s {
     ///   sofware quiesce state.
     ///   after switchover, requires the threads to rollback and go to software
     ///   quiesce state.
-    upg_event_cb_t abort_cb;
+    upg_ev_hdlr_t repeal;
 
     /// completed the upgrade (on A / B)
     /// threads should shutdown by receiving this event
-    upg_event_cb_t exit_cb;
-} upg_event_t;
+    upg_ev_hdlr_t exit;
+
+} upg_ev_hitless_t;
 
 /// register the thread to the main upgrade event handler
-void upg_event_cb_register(upg_event_t &upg_ev);
+void upg_ev_thread_hdlr_register(upg_ev_hitless_t &hdlr);
 
-}    // namespace upg
+}   // namespace api
 
-using upg::upg_event_ctxt_t;
+using api::upg_ev_hitless_t;
 
 /// @}
 
-#endif     // __UPGRADE_EVENT_CB_HPP__
+#endif   // __API_UPGRADE_EV_HITLESS_HPP__

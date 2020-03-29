@@ -73,6 +73,9 @@ private:
                                     const void *ctxt);
 };
 
+sdk_ret_t upg_graceful_init(void);
+sdk_ret_t upg_hitless_init(void);
+
 }    // namespace nicmgr
 
 /// \@}

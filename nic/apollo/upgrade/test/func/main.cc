@@ -73,20 +73,20 @@ TEST_F(upg_func_gtest, table_property_get_set) {
 
 // This test validates the pds upgrade fucntions
 TEST_F(upg_func_gtest, start_switch) {
-    pds_upg_spec_t spec;
+    upg::upg_ev_params_t params;
     sdk_ret_t ret;
 
-    spec.stage = UPG_STAGE_START;
-    ret = pds_upgrade(&spec);
+    params.id = UPG_EV_START;
+    ret = pds_upgrade(&params);
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    spec.stage = UPG_STAGE_PREPARE;
-    ret = pds_upgrade(&spec);
+    params.id = UPG_EV_PREPARE;
+    ret = pds_upgrade(&params);
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    spec.stage = UPG_STAGE_SWITCHOVER;
+    params.id = UPG_EV_SWITCHOVER;
     sdk::platform::capri::capri_quiesce_start();
-    ret = pds_upgrade(&spec);
+    ret = pds_upgrade(&params);
     sdk::platform::capri::capri_quiesce_stop();
     SDK_ASSERT(ret == SDK_RET_OK);
 }

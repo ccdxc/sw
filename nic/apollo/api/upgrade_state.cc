@@ -51,9 +51,6 @@ upg_state::init_(bool shm_create) {
         return SDK_RET_ERR;
     }
 
-    // set the upgrade stage to default
-    last_spec_.stage = UPG_STAGE_NONE;
-
     PDS_TRACE_DEBUG("Upgrade shared mem %s done", op);
     return SDK_RET_OK;
 }

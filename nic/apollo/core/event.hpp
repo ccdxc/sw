@@ -30,6 +30,16 @@ typedef enum event_id_e {
     EVENT_ID_IP_LEARN           = 8,
     EVENT_ID_MAC_AGE            = 9,
     EVENT_ID_IP_AGE             = 10,
+    EVENT_ID_UPG_COMPAT_CHECK   = 11,
+    EVENT_ID_UPG_START          = 12,
+    EVENT_ID_UPG_BACKUP         = 13,
+    EVENT_ID_UPG_LINK_DOWN      = 14,
+    EVENT_ID_UPG_HOSTDEV_RESET  = 15,
+    EVENT_ID_UPG_QUIESCE        = 16,
+    EVENT_ID_UPG_SWITCHOVER     = 17,
+    EVENT_ID_UPG_READY          = 18,
+    EVENT_ID_UPG_REPEAL         = 19,
+    EVENT_ID_UPG_EXIT           = 20,
 } event_id_t;
 
 namespace core {

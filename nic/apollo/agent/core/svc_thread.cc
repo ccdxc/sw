@@ -10,8 +10,9 @@
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/core.hpp"
-#include "nic/apollo/agent/core/upgrade_event.hpp"
+#include "nic/apollo/upgrade/include/ev.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
+#include "nic/apollo/api/include/pds_upgrade.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "gen/proto/debug.pb.h"
 
@@ -87,14 +88,35 @@ svc_server_accept_cb (sdk::event_thread::io_t *io, int fd, int events)
     sdk::event_thread::io_start(cmd_read_io);
 }
 
+static void
+upg_ev_fill (upg::upg_ev_t *ev)
+{
+    ev->svc_id = PDS_AGENT_THREAD_ID_SVC_SERVER;
+    strncpy(ev->svc_name, UPG_EV_PDS_AGENT_NAME, sizeof(ev->svc_name));
+    ev->compat_check = pds_upgrade;
+    ev->start = pds_upgrade;
+    ev->backup = pds_upgrade;
+    ev->prepare = pds_upgrade;
+    ev->prepare_switchover = pds_upgrade;
+    ev->switchover = pds_upgrade;
+    ev->rollback = pds_upgrade;
+    ev->ready = pds_upgrade;
+    ev->repeal = pds_upgrade;
+    ev->finish = pds_upgrade;
+    ev->exit = pds_upgrade;
+}
+
+
 void
 svc_server_thread_init (void *ctxt)
 {
     int fd;
     struct sockaddr_un sock_addr;
+    upg::upg_ev_t ev;
 
     // register for upgrade events
-    upg_event_subscribe();
+    upg_ev_fill(&ev);
+    upg::upg_ev_hdlr_register(ev);
 
     // initialize unix socket
     if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {

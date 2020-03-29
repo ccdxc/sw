@@ -82,8 +82,8 @@ compat_check (const pds_event_t *event)
     if (event->event_id != PDS_EVENT_ID_UPG) {
         return SDK_RET_OK;
     }
-    const pds_upg_spec_t *spec = &event->upg_spec;
-    SDK_ASSERT (spec->stage == UPG_STAGE_NONE);
+    const upg::upg_ev_params_t *params = &event->upg_params;
+    SDK_ASSERT (params->id == UPG_EV_NONE);
     (void)mpartition_validate();
     // need to terminate the pds_init
     return SDK_RET_ERR;

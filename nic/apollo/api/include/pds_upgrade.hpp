@@ -12,28 +12,19 @@
 #define __INCLUDE_API_PDS_UPGRADE_HPP__
 
 #include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/include/sdk/platform.hpp"
 #include "nic/apollo/api/include/pds.hpp"
-#include "nic/apollo/upgrade/include/upgrade.hpp"
+#include "nic/apollo/upgrade/include/ev.hpp"
 
 /// \defgroup PDS_UPGRADE PDS Upgrade API
 /// @{
 
-/// \brief upgrade specification
-typedef struct pds_upg_spec_s {
-    upg_stage_t stage;      ///< stage to be advanced
-} pds_upg_spec_t;
-
 /// \brief upgrade request
 /// this implements a stateless upgrade sequences.
 /// it is the responsibilty of the upg manager to invoke the stages in proper order.
-/// \param[in] spec specification
+/// \param[in] params upgrade event parameter
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_upgrade(pds_upg_spec_t *spec);
-
-// every application registers to upgrade manager with its process name
-// this should match with the name mentioned in upgrade.json
-// changing this will break ISSU (in service software upgrade)
-#define UPG_PDS_AGENT_NAME "pdsagent"
+sdk_ret_t pds_upgrade(upg::upg_ev_params_t *params);
 
 /// @}
 

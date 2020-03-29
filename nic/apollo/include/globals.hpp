@@ -47,8 +47,21 @@ typedef enum pds_ipc_id_s {
 /// messages from upgrade manager. modifying this id will break ISSU
 typedef enum pds_ipc_msg_id_s {
     PDS_IPC_MSG_ID_HAL_MIN = 0,
-    PDS_IPC_MSG_ID_HAL_MAX = 55,
+    PDS_IPC_MSG_ID_HAL_MAX = 40,
     PDS_IPC_MSG_ID_UPGRADE = (PDS_IPC_MSG_ID_HAL_MAX + 1),
+    PDS_IPC_MSG_ID_UPG_COMPAT_CHECK,
+    PDS_IPC_MSG_ID_UPG_START,
+    PDS_IPC_MSG_ID_UPG_BACKUP,
+    PDS_IPC_MSG_ID_UPG_PREPARE,
+    PDS_IPC_MSG_ID_UPG_READY,
+    PDS_IPC_MSG_ID_UPG_SYNC,
+    PDS_IPC_MSG_ID_UPG_PREPARE_SWITCHOVER,
+    PDS_IPC_MSG_ID_UPG_SWITCHOVER,
+    PDS_IPC_MSG_ID_UPG_ROLLBACK,
+    PDS_IPC_MSG_ID_UPG_REPEAL,
+    PDS_IPC_MSG_ID_UPG_FINISH,
+    PDS_IPC_MSG_ID_UPG_EXIT,
+    PDS_IPC_MSG_ID_UPGRADE_MAX = 60,
 } pds_ipc_msg_id_t;
 
 }    // namespace

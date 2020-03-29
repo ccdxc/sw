@@ -12,6 +12,7 @@
 #define __INCLUDE_UPGRADE_HPP__
 
 #include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/include/sdk/platform.hpp"
 #include "nic/apollo/include/globals.hpp"
 
 /// \defgroup UPG Upgrade Manager
@@ -25,19 +26,12 @@ typedef enum upg_stage_e {
     UPG_STAGE_START,            ///< start an upgrade
     UPG_STAGE_PREPARE,          ///< prepare for an upgrade
     UPG_STAGE_ABORT,            ///< abort the on-going upgrade
-    UPG_STAGE_INIT,             ///< initialize the new upgrade
+    UPG_STAGE_VERIFY,           ///< verify the new upgrade
     UPG_STAGE_ROLLBACK,         ///< rollback to the previous version
     UPG_STAGE_SWITCHOVER,       ///< switch to the new version
     UPG_STAGE_EXIT,             ///< exit previous or new depends on upgrade status.
     UPG_STAGE_MAX,              ///< invalid
 } upg_stage_t;
-
-/// \brief upgrade modes
-typedef enum upg_mode_e {
-    UPG_MODE_NONE = 0,
-    UPG_MODE_DISRUPTIVE,        ///< disruptive upgrade
-    UPG_MODE_ISSU               ///< non disruptive in service software upgrade
-} upg_mode_t;
 
 /// \brief upgrade operational table state actions
 typedef enum upg_oper_state_action_e {
@@ -62,7 +56,8 @@ typedef enum upg_status_e {
 /// we should not add anything in the middle.
 /// TODO: should i convert to protobuf and send
 typedef struct upg_event_msg_s {
-    upg_stage_t    stage;                 ///< request stage
+    upg_stage_t  stage;                   ///< request stage
+    sdk::platform::upg_mode_t mode;       ///< upgrade mode
     upg_status_t   rsp_status;            ///< response status
     char           rsp_thread_name[64];   ///< response thread name
     uint32_t       rsp_thread_id;         ///< response thread id. can be used
@@ -78,7 +73,7 @@ static const char *upg_stage_name[] =  {
     [UPG_STAGE_START]        = "start",
     [UPG_STAGE_PREPARE]      = "prepare",
     [UPG_STAGE_ABORT]        = "abort",
-    [UPG_STAGE_INIT]         = "init",
+    [UPG_STAGE_VERIFY]       = "verify",
     [UPG_STAGE_ROLLBACK]     = "rollback",
     [UPG_STAGE_SWITCHOVER]   = "switchover",
     [UPG_STAGE_EXIT]         = "exit",

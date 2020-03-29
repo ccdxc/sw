@@ -15,9 +15,9 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/lib/shmmgr/shmmgr.hpp"
-#include "nic/apollo/upgrade/include/event_cb.hpp"
 #include "nic/apollo/api/include/pds_upgrade.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
+#include "nic/apollo/api/internal/upgrade_ev.hpp"
 
 namespace api {
 
@@ -78,18 +78,21 @@ public:
     std::list<qstate_cfg_t> &qstate_cfg(void) { return qstate_cfgs_; }
     // table engine rss configuration
     void tbl_eng_rss_cfg(p4_tbl_eng_cfg_t **cfg) { *cfg = &tbl_eng_cfg_rss_; }
-    // last completed upgrade specification
-    upg_stage_t last_stage(void) { return last_spec_.stage; }
-    void set_spec(pds_upg_spec_t *spec) { last_spec_ = *spec; }
     // register event threads
-    // don't change the push_front as pipeline event will be registered first
-    // and it should be executed last
-    void register_ev_thread(upg::upg_event_t &ev) { ev_threads_.push_front(ev); }
-    std::list<upg::upg_event_t> &ev_threads(void) { return ev_threads_; }
+    void register_ev_thread_hdlr(upg_ev_hitless_t &ev) {
+        ev_threads_hdlr_hl_.push_front(ev);
+    }
+    std::list<upg_ev_hitless_t> &ev_threads_hdlr_hitless(void) {
+        return ev_threads_hdlr_hl_;
+    }
+    void register_ev_thread_hdlr(upg_ev_graceful_t &ev) {
+        ev_threads_hdlr_gf_.push_front(ev);
+    }
+    std::list<upg_ev_graceful_t> &ev_threads_hdlr_graceful(void) {
+        return ev_threads_hdlr_gf_;
+    }
 
 private:
-    /// last successfully completed spec request
-    pds_upg_spec_t   last_spec_;
     /// shared memory manager
     shmmgr           *shm_mmgr_;
     /// preserved state
@@ -103,7 +106,8 @@ private:
     /// rss table engine config requires special handling in capri programming
     p4_tbl_eng_cfg_t tbl_eng_cfg_rss_;
     /// upgrade event callbacks registered by pds threads
-    std::list<upg::upg_event_t> ev_threads_;
+    std::list<upg_ev_graceful_t> ev_threads_hdlr_gf_;
+    std::list<upg_ev_hitless_t> ev_threads_hdlr_hl_;
 private:
     sdk_ret_t init_(bool create);
 };
