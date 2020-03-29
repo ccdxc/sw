@@ -198,4 +198,4 @@ hal_deinit (void)
     return;
 }
 
-}
+} // End namespace

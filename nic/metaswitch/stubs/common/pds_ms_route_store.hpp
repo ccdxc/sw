@@ -30,8 +30,13 @@ namespace pds_ms {
 class route_table_obj_t : public slab_obj_t<route_table_obj_t>,
                           public base_obj_t {
 public:
-    route_table_obj_t(pds_obj_key_t key, uint8_t af)
+    route_table_obj_t(pds_obj_key_t key, uint8_t af, bool underlay=false)
         : key_(key), af_(af) {
+        if (underlay) {
+            // We dont fill the route table for Underlay 
+            // Use minimum capacity
+            routes_capacity_ = 2;
+        }
         realloc_();
     }
     pds_obj_key_t key(void) const {return key_;}

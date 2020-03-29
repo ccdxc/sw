@@ -20,6 +20,7 @@ extern "C"
 #include <o0mac.h>
 #include <ropi.h>
 }
+
 namespace pds_ms {
 
 using pds_ms::ms_ifindex_t;
@@ -36,7 +37,8 @@ private:
     struct ips_info_t {
         uint32_t vrf_id;
         ip_prefix_t pfx;
-        uint32_t overlay_ecmp_id; // Overlay ECMP ID correlator
+        uint32_t ecmp_id; // Overlay ECMP ID DP correlator
+        uint32_t pathset_id; // Overlay Pathset ID
     };
 
 private:
@@ -56,6 +58,8 @@ private:
     void make_pds_rttable_spec_(pds_route_table_spec_t &rttbl,
                                 const pds_obj_key_t& rttable_key);
     pds_obj_key_t make_pds_rttable_key_(void);
+    sdk_ret_t underlay_route_add_upd_();
+    sdk_ret_t underlay_route_del_();
 };
 
 } // End namespace

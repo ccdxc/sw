@@ -164,6 +164,8 @@ public:
     vector<bgp_peer_pend_obj_t>& get_bgp_peer_pend(void) {return bgp_peer_pend_;}
     static void redo_bgp_peer_pend(vector<bgp_peer_pend_obj_t>&);
 
+    bool overlay_routing_en() {return overlay_routing_en_;}
+    void set_overlay_routing_en(bool enable) {overlay_routing_en_ = enable;}
 
 private:
     static mgmt_state_t* g_state_;
@@ -184,6 +186,7 @@ private:
     slab_uptr_t slabs_ [PDS_MS_MGMT_MAX_SLAB_ID];
     bgp_peer_store_t  bgp_peer_store_;
     std::vector<bgp_peer_pend_obj_t> bgp_peer_pend_;
+    bool overlay_routing_en_ = false;
 
 private:
     mgmt_state_t(void);

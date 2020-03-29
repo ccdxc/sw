@@ -5,6 +5,7 @@
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_vpc_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vrf.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 
@@ -160,6 +161,12 @@ process_vpc_update (ms_vrf_id_t    vrf_id,
     return pds_ms::mgmt_state_t::ms_response_wait();
 }
 
+static bool overlay_routing_enabled_()
+{
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    return mgmt_ctxt.state()->overlay_routing_en();
+}
+
 static types::ApiStatus
 process_underlay_vpc_create ()
 {
@@ -168,10 +175,20 @@ process_underlay_vpc_create ()
     conf.row_status  = AMB_ROW_ACTIVE;
 
     // Create new instance of RTM and initiate Joins
-    PDS_TRACE_INFO("Underlay VRF creation request received");
+    PDS_TRACE_INFO("Underlay VPC creation request received");
 
     PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
+    // Underlay only control-plane model requires user configured
+    // VXLAN Tunnels to be stitched to underlay nexthop group.
+    // Until the Metaswitch support for configured VXLAN tunnels
+    // is available the stop-gap solution is to push underlay routes to
+    // HAL API thread and have it stitch the TEPs to the Underlay NH groups.
+    // This requires even default RTM component to join the FTM component.
+    if (!overlay_routing_enabled_()) { 
+        PDS_TRACE_DEBUG("Overlay Routing disabled, enable underlay routes to HAL");
+        pds_ms_rtm_ftm_join(&conf, PDS_MS_RTM_DEF_ENT_INDEX);
+    }
     pds_ms_ft_stub_create (&conf);    // FT stub
     pds_ms_rtm_ft_stub_join (&conf, PDS_MS_RTM_DEF_ENT_INDEX);
 
@@ -254,6 +271,8 @@ vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         pds_cache_vpc_spec(spec, vrf_id, false);
 
         if (spec->type != PDS_VPC_TYPE_UNDERLAY) {
+            // Create VRF in Metaswitch and send component Join
+            // Metaswitch invokes LI Stub which will push the VPC to HAL
             ret_status = process_vpc_update (vrf_id, rtm_index, AMB_ROW_ACTIVE);
             if (ret_status != types::ApiStatus::API_STATUS_OK) {
                 PDS_TRACE_ERR ("Failed to process VPC %s VRF %d create (error=%d)",
@@ -263,6 +282,8 @@ vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
                 return pds_ms_api_to_sdk_ret (ret_status);
             }
         } else {
+            // Default VRF is already created in Metaswitch by default
+            // Send component Join and manually push the VPC to HAL
             ret_status = process_underlay_vpc_create();
             if (ret_status != types::ApiStatus::API_STATUS_OK) {
                 PDS_TRACE_ERR ("Failed to process underlay VPC %s create (error=%d)",

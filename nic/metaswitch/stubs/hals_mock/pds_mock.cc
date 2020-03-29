@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------
 
 #include "nic/apollo/api/include/pds_batch.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 
 sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
 {
@@ -12,4 +13,3 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
 sdk_ret_t pds_batch_destroy(pds_batch_ctxt_t bctxt) {
     return SDK_RET_OK;
 }
-

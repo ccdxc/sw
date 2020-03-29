@@ -31,6 +31,7 @@ public:
    // Synchronous HAL update completion
    sdk_ret_t update_pds_synch(state_t::context_t&& state_ctxt,
                               vpc_obj_t* bd_obj);
+   sdk_ret_t underlay_create_pds_synch(pds_vpc_spec_t& vpc_spec);
 
 private:
     struct ips_info_t {

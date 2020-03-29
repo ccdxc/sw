@@ -24,6 +24,7 @@
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <mutex>
 #include <memory>
+#include <unordered_set>
 
 #define PDS_BATCH_PARAMS_EPOCH  1
 #define PDS_BATCH_PARAMS_ASYNC  true
@@ -43,6 +44,7 @@ enum slab_id_e {
     PDS_MS_COOKIE_SLAB_ID,
     PDS_MS_MAX_SLAB_ID
 };
+
 // Singleton that holds all global state for the PDS-MS stubs
 class state_t {
 public:
@@ -140,6 +142,17 @@ public:
     tep_obj_t* indirect_ps_2_tep_obj(ms_ps_id_t indirect_pathset,
                                      bool mark_indirect_if_not_found = false);
 
+    void add_ignored_prefix(const ip_prefix_t& prefix) {
+        ignored_prefixes_.insert(prefix); 
+    }
+    bool reset_ignored_prefix(const ip_prefix_t& prefix) {
+        auto it = ignored_prefixes_.find(prefix);
+        if (it == ignored_prefixes_.end()) {
+            return false;
+        }
+        ignored_prefixes_.erase(it);
+        return true;
+    }
 
 private:
     static constexpr uint32_t k_max_fp_ports = 2;
@@ -163,6 +176,8 @@ private:
     uint32_t lnx_ifindex_table_[k_max_fp_ports] = {0};
     // Back-ref from Indirect Pathset (Cascaded) to TEP
     std::unordered_map<ms_ps_id_t,ip_addr_t> indirect_ps_2_tep_tbl_;
+
+    std::unordered_set<ip_prefix_t, ip_prefix_hash> ignored_prefixes_;
 
 private:
     state_t(void);

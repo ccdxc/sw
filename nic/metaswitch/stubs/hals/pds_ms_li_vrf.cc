@@ -10,6 +10,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_tbl_idx.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <li_fte.hpp>
 #include <li_lipi_slave_join.hpp>
@@ -102,7 +103,7 @@ pds_batch_ctxt_guard_t li_vrf_t::make_batch_pds_spec_(bool async) {
     }
     pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH,
                            async ? PDS_BATCH_PARAMS_ASYNC : false, 
-                           pds_ms::hal_callback,
+                           async ? pds_ms::hal_callback : nullptr,
                            async ? cookie_uptr_.get() : nullptr};
     auto bctxt = pds_batch_start(&bp);
 
@@ -127,17 +128,19 @@ pds_batch_ctxt_guard_t li_vrf_t::make_batch_pds_spec_(bool async) {
 
         if (op_create_) {
             // Create a new route table in case of VPC create op
-            auto rttbl_spec = make_pds_rttable_spec_();
-
-            if (!PDS_MOCK_MODE()) {
-                if (!is_pds_obj_key_invalid(rttbl_spec.key)) {
+            if (!is_pds_obj_key_invalid(vpc_spec.v4_route_table)) {
+                auto rttbl_spec = make_pds_rttable_spec_();
+                if (!PDS_MOCK_MODE()) {
                     ret = pds_route_table_create(&rttbl_spec, bctxt);
                     if (unlikely(ret != SDK_RET_OK)) {
-                        throw Error(std::string("PDS Route Table Create failed for MS VRF ")
+                        throw Error(std::string("PDS Route Table Create failed"
+                                                " for MS VRF ")
                                     .append(std::to_string(ips_info_.vrf_id))
                                     .append(" err=").append(std::to_string(ret)));
                     }
                 }
+            }
+            if (!PDS_MOCK_MODE()) {
                 ret = pds_vpc_create(&vpc_spec, bctxt);
             }
         } else {
@@ -422,40 +425,59 @@ li_vrf_update_pds_synch (state_t::context_t&& state_ctxt, vpc_obj_t* vpc_obj)
     }
 }
 
-sdk_ret_t
-li_vrf_underlay_vpc_commit_pds_synch (pds_vpc_spec_t& vpc_spec,
-                                   bool is_create)
-{
-    if (PDS_MOCK_MODE()) {
-        return SDK_RET_OK;
-    }
-    pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH, false,
-                           nullptr, nullptr};
+sdk_ret_t li_vrf_t::underlay_create_pds_synch(pds_vpc_spec_t& vpc_spec) {
+    ips_info_.vrf_id = PDS_MS_DEFAULT_VRF_ID;
+    auto rttbl_key = vpc_spec.v4_route_table;
+    op_create_ = true;
 
-    auto bctxt = pds_batch_start(&bp);
-    sdk_ret_t ret;
+    vpc_obj_t vpc_obj(ips_info_.vrf_id, vpc_spec);
 
-    if (is_create) {
-        ret = pds_vpc_create(&vpc_spec, bctxt);
-    } else {
-        ret = pds_vpc_update(&vpc_spec, bctxt);
+    // Create new RouteTbl Object to own route_info buffer 
+    std::unique_ptr<route_table_obj_t> new_route_tbl_obj;
+
+    if (!is_pds_obj_key_invalid(rttbl_key)) {
+        // Create route table entry in store if a valid UUID
+        // is specified in VPC spec
+        new_route_tbl_obj.reset (new route_table_obj_t(rttbl_key, IP_AF_IPV4,
+                                                       true /* underlay */));
     }
+    // Update the local store info context so that the make_pds_spec
+    // refers to the latest fields
+    store_info_.vpc_obj = &vpc_obj;
+    store_info_.route_tbl_obj = new_route_tbl_obj.get();
+
+    auto pds_bctxt_guard = make_batch_pds_spec_(false /* sync */);
+    auto ret = pds_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
-        PDS_TRACE_ERR("Underlay VPC PDS Direct VPC Create failed for %s err=%d",
-                      vpc_spec.key.str(), ret);
-        return ret;
+        throw Error(std::string("Underlay VPC Create Batch commit failed")
+                    .append(" err=").append(std::to_string(ret)));
     }
-
-    ret = pds_batch_commit(bctxt);
-    if (unlikely (ret != SDK_RET_OK)) {
-        PDS_TRACE_ERR ("Underlay VPC PDS Direct VPC Create Batch commit failed for %s err=%d",
-                      vpc_spec.key.str(), ret);
-        return ret;
+    if (new_route_tbl_obj) {
+        auto state_ctxt = pds_ms::state_t::thread_context();
+        state_ctxt.state()->route_table_store().add_upd(rttbl_key, std::move(new_route_tbl_obj));
     }
-
     PDS_TRACE_DEBUG ("Underlay VPC PDS Direct VPC Create Batch commit suuccessful for %s",
                       vpc_spec.key.str());
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+li_vrf_underlay_vpc_commit_pds_synch (pds_vpc_spec_t& vpc_spec,
+                                      bool is_create)
+{
+    if (!is_create) {
+        // Only Underlay VPC create is handled for now
+        PDS_TRACE_ERR ("Underlay VPC update is not supported %s",
+                       vpc_spec.key.str());
+        return SDK_RET_ERR;
+    }
+    try {
+        li_vrf_t vrf;
+        return vrf.underlay_create_pds_synch(vpc_spec);
+    } catch (Error& e) {
+        PDS_TRACE_ERR ("VRF Add Update processing failed %s", e.what());
+        return SDK_RET_ERR;
+    }
 }
 
 sdk_ret_t

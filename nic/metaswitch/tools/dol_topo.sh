@@ -24,6 +24,7 @@ MIB_PY=/sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.
 
 RR=0
 AUTO=0
+UNDERLAY=0
 
 CMDARGS=$*
 argc=$#
@@ -33,6 +34,9 @@ for (( j=0; j<argc; j++ )); do
         RR=1
     elif [ ${argv[j]} == '--auto' ];then
         AUTO=1
+    fi
+    if [ ${argv[j]} == '--underlay' ];then
+        UNDERLAY=1
     fi
 done
 
@@ -70,6 +74,10 @@ docker network create -d macvlan --subnet $SUBNET2 --gateway 11.1.1.254 -o paren
 
 for i in {1..3}
 do
+    if [ "$i" = "3" ] && [ $UNDERLAY == 1 ]; then
+        echo "Skip CTR3 in Underlay mode"
+        continue
+    fi
     docker run -dit --rm -e PYTHONPATH=/sw/nic/third-party/metaswitch/code/comn/tools/mibapi --sysctl net.ipv6.conf.all.disable_ipv6=1 --net="$SUBNET"1 --privileged --name "$CONTAINER"$i -v $SW_DIR:/sw  -v /vol/builds:/vol/builds -w /sw/nic pensando/nic > /dev/null
     id=$(docker ps --format {{.Names}}| grep "$CONTAINER"$i)
     ip=$(docker exec -it "$CONTAINER"$i ip -o -4 addr list eth0 | awk '{print $4}' | cut -d "/" -f 1)
@@ -114,6 +122,10 @@ fi
 for i in {2..3}
 do
     ret=0
+    if [ "$i" = "3" ] && [ $UNDERLAY == 1 ]; then
+        echo "Skip CTR3 in Underlay mode"
+        continue
+    fi
     if [ "$i" = "3" ] && [ $RR == 1 ]; then
         echo "Starting Pegasus in "$CONTAINER"$i"
         docker exec -dit -w "$DOL_CFG"$i -e LD_LIBRARY_PATH=/sw/nic/third-party/metaswitch/output/x86_64/ "$CONTAINER"$i sh -c '/sw/nic/build/x86_64/apulu/bin/pegasus' || ret=$?
@@ -133,7 +145,14 @@ do
     done
 done
 
-docker exec -it "$CONTAINER"3 python $MIB_PY set localhost evpnEntTable evpnEntEntityIndex=2 evpnEntLocalRouterAddressType=inetwkAddrTypeIpv4 evpnEntLocalRouterAddress='0x3 0x3 0x3 0x3'
+if [ $UNDERLAY == 0 ]; then
+    docker exec -it "$CONTAINER"3 python $MIB_PY set localhost evpnEntTable evpnEntEntityIndex=2 evpnEntLocalRouterAddressType=inetwkAddrTypeIpv4 evpnEntLocalRouterAddress='0x3 0x3 0x3 0x3'
+fi
+
+rrcmd='/sw/nic/build/x86_64/apulu/bin/pds_ms_uecmp_rr_grpc_test'
+if [ $UNDERLAY = 1 ]; then
+    rrcmd='/sw/nic/build/x86_64/apulu/bin/pds_ms_uecmp_rr_grpc_test underlay'
+fi
 
 for i in {1..3}
 do
@@ -141,11 +160,15 @@ do
         echo "Skip configuring DUT in AUTO mode"
         continue
     fi
+    if [ $UNDERLAY == 1 ] && [ "$i" = "3" ]; then
+        echo "Skip configuring CTR3 in Underlay mode"
+        continue
+    fi
     ret=0
     if [ $RR == 1 ]; then
         echo "push "$DOL_CFG"$i/evpn.json RR config to "$CONTAINER"$i"
-        docker exec -it -e CONFIG_PATH="$DOL_CFG"$i  "$CONTAINER"$i sh -c '/sw/nic/build/x86_64/apulu/bin/pds_ms_uecmp_rr_grpc_test' || ret=$?
-    else    
+        docker exec -it -e CONFIG_PATH="$DOL_CFG"$i  "$CONTAINER"$i sh -c "$rrcmd" || ret=$?
+    else   
         echo "push "$DOL_CFG"$i/evpn.json config to "$CONTAINER"$i"
         docker exec -it -e CONFIG_PATH="$DOL_CFG"$i  "$CONTAINER"$i sh -c '/sw/nic/build/x86_64/apulu/bin/pds_ms_uecmp_grpc_test' || ret=$?
     fi
@@ -153,6 +176,10 @@ do
         echo "failed to push config to "$CONTAINER"$i: $ret"
     fi
 done
+
+if [ $UNDERLAY == 1 ]; then
+    exit
+fi
 
 echo "Originate EVPN Type 5 route from "$CONTAINER"2"
 # Create an connected L3 interface subnet in Tenant VRF to act as nexthop for the prefix so that the Prefix gets advertised to EVPN

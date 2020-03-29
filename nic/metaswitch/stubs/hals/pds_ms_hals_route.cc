@@ -9,7 +9,9 @@
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_tbl_idx.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_utils.hpp"
+#include "nic/apollo/api/internal/pds_route.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <hals_c_includes.hpp>
 #include <hals_ropi_slave_join.hpp>
@@ -35,7 +37,9 @@ void hals_route_t::populate_route_id(ATG_ROPI_ROUTE_ID* route_id) {
 bool hals_route_t::parse_ips_info_(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) {
     populate_route_id(&add_upd_route_ips->route_id);
     // Populate the correlator
-    NBB_CORR_GET_VALUE(ips_info_.overlay_ecmp_id, add_upd_route_ips->
+    NBB_CORR_GET_VALUE(ips_info_.pathset_id, add_upd_route_ips->
+                       route_properties.pathset_id);
+    NBB_CORR_GET_VALUE(ips_info_.ecmp_id, add_upd_route_ips->
                        route_properties.dp_pathset_correlator);
     return true;
 }
@@ -58,7 +62,7 @@ void hals_route_t::make_pds_rttable_spec_(pds_route_table_spec_t &rttable,
     // Populate the new route
     route_.prefix = ips_info_.pfx;
     route_.nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
-    route_.nh_group = msidx2pdsobjkey(ips_info_.overlay_ecmp_id);
+    route_.nh_group = msidx2pdsobjkey(ips_info_.ecmp_id);
 
     { // Enter thread-safe context to access/modify global state
         auto state = pds_ms::state_t::thread_context().state();
@@ -130,21 +134,53 @@ pds_batch_ctxt_guard_t hals_route_t::make_batch_pds_spec_(const pds_obj_key_t&
     return bctxt_guard_;
 }
 
+sdk_ret_t hals_route_t::underlay_route_add_upd_() {
+    pds_route_spec_t route_spec = {0};
+    auto& route = route_spec.route;
+    route.prefix = ips_info_.pfx;
+    route.nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
+    route.nh_group = msidx2pdsobjkey(ips_info_.ecmp_id, true);
+    return api::pds_underlay_route_update(&route_spec);
+}
+
+sdk_ret_t hals_route_t::underlay_route_del_() {
+    return api::pds_underlay_route_delete(&ips_info_.pfx);
+}
+
 NBB_BYTE hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
     NBB_BYTE rc = ATG_OK;
 
     parse_ips_info_(add_upd_route_ips);
 
-    PDS_TRACE_DEBUG("Route Add IPS VRF %d Prefix %s Type %d Overlay ECMP %d",
-                     ips_info_.vrf_id, ipaddr2str(&ips_info_.pfx.addr),
-                     add_upd_route_ips->route_properties.type,
-                     ips_info_.overlay_ecmp_id);
-
     if ((add_upd_route_ips->route_properties.type == ATG_ROPI_ROUTE_CONNECTED) ||
         (add_upd_route_ips->route_properties.type == ATG_ROPI_ROUTE_LOCAL_ADDRESS)) {
-        PDS_TRACE_DEBUG("Ignore connected route");
+        PDS_TRACE_DEBUG("Ignore connected prefix %s route add",
+                        ippfx2str(&ips_info_.pfx));
+        auto state_ctxt = pds_ms::state_t::thread_context();
+        state_ctxt.state()->add_ignored_prefix(ips_info_.pfx);
         return rc;
+    }
+
+    PDS_TRACE_DEBUG("Route Add IPS VRF %d Prefix %s Type %d Pathset %d ECMP DP Corr %d",
+                     ips_info_.vrf_id, ippfx2str(&ips_info_.pfx),
+                     add_upd_route_ips->route_properties.type,
+                     ips_info_.pathset_id, ips_info_.ecmp_id);
+
+    if (ips_info_.vrf_id == PDS_MS_DEFAULT_VRF_ID) {
+        // We should not reach here in Overlay routing mode.
+        // But Underlay only control-plane model requires user configured
+        // VXLAN Tunnels to be stitched to underlay nexthop group.
+        // Until the Metaswitch support for configured VXLAN tunnels
+        // is available the stop-gap solution is to push underlay routes to
+        // HAL API thread and have it stitch the TEPs to the Underlay NH groups.
+        //
+        // TODO: Special case - temporarily push underlay routes
+        // to the internal API for walking and stitching TEPs. 
+        // This check to be removed later allowing it to fall through to
+        // async batch mode when HAL API thread starts supporting
+        // TEP stitching natively.
+        return underlay_route_add_upd_();
     }
 
     // Alloc new cookie and cache IPS
@@ -269,7 +305,20 @@ void hals_route_t::handle_delete(ATG_ROPI_ROUTE_ID route_id) {
     // if there is a subsequent create from MS.
 
     populate_route_id(&route_id);
+    {
+        auto state_ctxt = pds_ms::state_t::thread_context();
+        if (state_ctxt.state()->reset_ignored_prefix(ips_info_.pfx)) {
+            PDS_TRACE_DEBUG("Ignore connected prefix %s route delete",
+                            ippfx2str(&ips_info_.pfx));
+            return;
+        }
+    }
     PDS_TRACE_INFO ("MS Route %s: Delete IPS", ippfx2str(&ips_info_.pfx));
+
+    if (ips_info_.vrf_id == PDS_MS_DEFAULT_VRF_ID) {
+        underlay_route_del_();
+        return;
+    }
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();

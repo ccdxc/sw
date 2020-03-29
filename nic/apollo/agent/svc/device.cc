@@ -8,6 +8,7 @@
 #include "nic/apollo/agent/svc/device.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_device.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
 
 #include <boost/property_tree/ptree.hpp>
@@ -51,6 +52,7 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
     }
 
     pds_device_proto_to_api_spec(api_spec, proto_req->request());
+    pds_ms::device_create(api_spec);
     if (!core::agent_state::state()->pds_mock_mode()) {
         ret = pds_device_create(api_spec, bctxt);
         if (ret != SDK_RET_OK) {

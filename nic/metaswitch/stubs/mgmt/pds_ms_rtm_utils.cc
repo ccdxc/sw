@@ -286,6 +286,15 @@ pds_ms_rtm_ft_stub_join (pds_ms_config_t *conf, int entity_index)
     pds_ms_row_update_rtm_mj (conf);
 }
 
+NBB_VOID pds_ms_rtm_ftm_join (pds_ms_config_t *conf, int entity_index)
+{
+    conf->entity_index          = entity_index;
+    conf->admin_status          = AMB_ADMIN_STATUS_UP;
+    conf->slave_entity_index    = PDS_MS_FTM_ENT_INDEX;
+    conf->slave_type            = AMB_RTM_ARI_PARTNER_FTM;
+    pds_ms_row_update_rtm_mj (conf);
+}
+
 NBB_VOID
 pds_ms_rtm_create (pds_ms_config_t *conf, int entity_index, bool is_default)
 {
@@ -313,10 +322,7 @@ pds_ms_rtm_create (pds_ms_config_t *conf, int entity_index, bool is_default)
 
     } else {
         // Join FTM only for Tenant VRF to configure Type 5 routes to ROPI stub 
-        conf->slave_entity_index    = PDS_MS_FTM_ENT_INDEX;
-        conf->slave_type            = AMB_RTM_ARI_PARTNER_FTM;
-        conf->admin_status          = AMB_ADMIN_STATUS_UP;
-        pds_ms_row_update_rtm_mj (conf);
+        pds_ms_rtm_ftm_join(conf, entity_index);
     }
 
     NBB_TRC_EXIT();

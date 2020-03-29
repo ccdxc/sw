@@ -37,31 +37,11 @@ extern "C" {
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_evpn_utils_gen.hpp"
 #include "gen/proto/cp_test.pb.h"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_tbl_idx.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 
 #define PDS_MS_CTM_GRPC_CORRELATOR 0x101
 #define PDS_MS_CTM_STUB_INIT_CORRELATOR 0x42
-#define PDS_MS_DEFAULT_VRF_ID     0
-#define PDS_MS_BGP_RM_ENT_INDEX   1
-#define PDS_MS_BGP_NM_ENT_INDEX   1
-#define PDS_MS_SCK_ENT_INDEX      1
-#define PDS_MS_I3_ENT_INDEX       1
-#define PDS_MS_LI_ENT_INDEX       1
-#define PDS_MS_LIM_ENT_INDEX      1
-#define PDS_MS_L2F_ENT_INDEX      1
-#define PDS_MS_NAR_ENT_INDEX      1
-#define PDS_MS_NRM_ENT_INDEX      1
-#define PDS_MS_RTM_DEF_ENT_INDEX  1 // Default VRF
-#define PDS_MS_PSM_ENT_INDEX      1
-#define PDS_MS_SMI_ENT_INDEX      1
-#define PDS_MS_FTM_ENT_INDEX      1
-#define PDS_MS_FT_ENT_INDEX       1
-#define PDS_MS_HALS_ENT_INDEX     1
-#define PDS_MS_EVPN_ENT_INDEX     2 // Use a different entity id than BGP
-                                    // Required to redistribute routes to EVPN
-                                    // (Type 5 test) 
-#define PDS_MS_BGP_ROUTE_MAP_DEF_INDEX  1
-#define PDS_MS_BGP_ROUTE_MAP_DEF_NUBMER 1
 using namespace std;
 
 const char* pds_ms_api_ret_str (types::ApiStatus api_err);
@@ -321,6 +301,7 @@ NBB_VOID pds_ms_psm_create (pds_ms_config_t *conf);
 NBB_VOID pds_ms_rtm_ft_stub_join(pds_ms_config_t *conf, int entity_index);
 NBB_VOID pds_ms_rtm_create (pds_ms_config_t *conf, int entity_index,
                             bool is_default);
+NBB_VOID pds_ms_rtm_ftm_join (pds_ms_config_t *conf, int entity_index);
 NBB_VOID pds_ms_bgp_create (pds_ms_config_t *conf);
 NBB_VOID pds_ms_evpn_create (pds_ms_config_t *conf);
 void pds_ms_evpn_rtm_join(pds_ms_config_t *conf, int rtm_entity_index);

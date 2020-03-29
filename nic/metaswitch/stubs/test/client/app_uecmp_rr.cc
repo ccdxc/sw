@@ -48,6 +48,7 @@ using namespace std;
 using namespace pds;
 using namespace types;
 
+static bool underlay_only = false;
 static test_config_t g_test_conf_;
 static unique_ptr<pds::DeviceSvc::Stub> g_device_stub_;
 static unique_ptr<pds::IfSvc::Stub>     g_if_stub_;
@@ -74,14 +75,14 @@ static constexpr int k_l3_if_id  = 400;
 static constexpr int k_l3_if_id_2  = 410;
 static constexpr int k_lo_if_id  = 401;
 
-static void create_device_proto_grpc () {
+static void create_device_proto_grpc (bool overlay_routing = true) {
     ClientContext   context;
     DeviceRequest   request;
     DeviceResponse  response;
     Status          ret_status;
     pds_device_spec_t device_spec = {0};
 
-    device_spec.overlay_routing_en = TRUE;
+    device_spec.overlay_routing_en = (overlay_routing) ? TRUE : FALSE;
     device_spec.device_ip_addr.af  = types::IP_AF_INET;
     device_spec.device_ip_addr.addr.v4_addr = (g_test_conf_.local_lo_ip_addr);
     device_spec.gateway_ip_addr.af          = types::IP_AF_INET;
@@ -649,8 +650,12 @@ static void create_underlay_vpc_proto_grpc () {
 
     auto proto_spec = request.add_request();
     proto_spec->set_id(pds_ms::msidx2pdsobjkey(k_underlay_vpc_id).id, PDS_MAX_KEY_LEN);
-    pds_obj_key_t rttable_id = {0};
-    proto_spec->set_v4routetableid(rttable_id.id, PDS_MAX_KEY_LEN);
+    if (!underlay_only) {
+        pds_obj_key_t rttable_id = {0};
+        proto_spec->set_v4routetableid(rttable_id.id, PDS_MAX_KEY_LEN);
+    } else {
+        proto_spec->set_v4routetableid(pds_ms::msidx2pdsobjkey(k_underlay_rttbl_id).id);
+    }
     proto_spec->set_type(pds::VPC_TYPE_UNDERLAY);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_NONE);
@@ -885,11 +890,16 @@ int main(int argc, char** argv)
     g_rr_bgp_stub_     = BGPSvc::NewStub (rr_channel);
     g_rr_route_stub_   = CPRouteSvc::NewStub (rr_channel);
 
-    if (argc == 1)
-    {
+
+    if (argc == 2 && !strcmp(argv[1], "underlay")) {
+        cout << "Underlay only test" << std::endl;
+        underlay_only = true;
+    } 
+
+    if (argc == 1 || underlay_only) {
         // Send protos to grpc server
         if (g_node_id != 3) {
-            create_device_proto_grpc();
+            create_device_proto_grpc(underlay_only ? false : true);
             create_underlay_vpc_proto_grpc();
         }
         // Create loopback intf for TEP IP on PDSA
@@ -923,7 +933,11 @@ int main(int argc, char** argv)
             create_bgp_peer_af_proto_grpc();
             create_bgp_peer_proto_grpc(false, true /* second peer */);
             create_bgp_peer_af_proto_grpc(false, true);
-            sleep(5);
+            sleep (5);
+        }
+        if (underlay_only)  { 
+            printf ("Testapp Config Init is successful!\n");
+            return 0;
         }
         if (g_node_id == 3) {
             create_route_proto_grpc();

@@ -182,6 +182,7 @@ pds_underlay_route_update (_In_ pds_route_spec_t *spec)
             return SDK_RET_NO_RESOURCE;
         }
         g_route_db[g_num_routes].valid = TRUE;
+        g_route_db[g_num_routes].spec = *spec;
         g_num_routes++;
     }
     return pds_update_teps();

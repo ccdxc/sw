@@ -17,9 +17,8 @@
 
 namespace api {
 
-sdk_ret_t pds_underlay_route_create(_In_ pds_route_spec_t *spec);
 sdk_ret_t pds_underlay_route_update(_In_ pds_route_spec_t *spec);
-sdk_ret_t pds_underlay_route_delete(_In_ pds_obj_key_t *key);
+sdk_ret_t pds_underlay_route_delete(_In_ ip_prefix_t *prefix);
 sdk_ret_t pds_underlay_nexthop(_In_ ipv4_addr_t ip_addr,
                                _Out_ pds_nh_type_t *nh_type,
                                _Out_ pds_obj_key_t *nh);
