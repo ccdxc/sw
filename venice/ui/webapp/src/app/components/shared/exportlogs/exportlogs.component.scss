@@ -1,0 +1,89 @@
+@import 'src/global-mixins';
+
+.export-logs-summary-header {
+  color: #484848;
+  font-family: "Fira Sans Condensed";
+  font-size: 20px;
+  font-weight: normal;
+  padding: 12px 24px;
+  margin-left: 10px;
+}
+
+.export-logs-submit {
+  padding: 12px 24px 24px;
+}
+
+.export-logs-label {
+  width: 40px;
+  padding-left: 13px;
+  padding-bottom: 5px;
+}
+
+.export-logs-label-invalid {
+  color: #cd0a0a;
+}
+
+.export-logs-name-input {
+  height: 30px;
+  min-width: 300px;
+  padding-left: 10px;
+}
+
+.export-logs-time-input {
+  max-width: 650px;
+}
+
+.export-logs-checkbox-div {
+  margin-left: 10px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.export-logs-query-button {
+  @include primary-font(14px, #676763);
+  font-family: 'Fira Sans Condensed';
+  font-weight: 500;
+  margin-left: 10px;
+  margin-top: 10px;
+  background-color: #e7e7e3;
+  border-radius: 2px;
+  border: none;
+  padding: 5px 10px;
+
+  &:hover {
+    background-color: #cfcfcb;
+    color: #1b1d1f;
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.export-logs-checkbox {
+  outline: none;
+
+  .ui-chkbox-box {
+    outline: none;
+    box-shadow: none;
+
+    &.ui-state-active {
+      border: 1px solid #86a8d7 !important;
+      background: #86a8d7 !important;
+      color: #FFFFFF;
+    }
+  }
+}
+
+.export-logs-checkbox-label {
+  margin-bottom: 0px;
+}
+
+.export-logs-json {
+  overflow: auto;
+  min-width: 450px;
+  max-height: 400px;
+  @include primary-font(14px, #676763);
+  font-family: 'Fira Sans Condensed';
+  font-weight: 500;
+}

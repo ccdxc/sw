@@ -42,6 +42,15 @@ const routes: Routes = [
     ]
   },
   {
+    path: 'archive',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/monitoring-group/archivelogs/archivelog.module#ArchivelogModule'
+      }
+    ]
+  },
+  {
     path: 'fwlogpolicies',
     children: [
       {

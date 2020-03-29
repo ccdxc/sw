@@ -220,7 +220,7 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
 
   getTooltip(): string {
     this.isFormValid();
-    return Utility.isEmpty(this.validationMessage) ? 'Ready to save flow export policy' : this.validationMessage;
+    return Utility.isEmpty(this.validationMessage) ? 'Ready to save new workload' : this.validationMessage;
   }
 
 

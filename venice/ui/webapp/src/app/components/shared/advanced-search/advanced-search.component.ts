@@ -5,8 +5,8 @@ import {
   OnInit,
   Output,
   ViewChild,
-  ViewEncapsulation
-} from '@angular/core';
+  ViewEncapsulation,
+ } from '@angular/core';
 import * as _ from 'lodash';
 import * as moment from 'moment';
 import { RepeaterComponent, RepeaterData, RepeaterItem, ValueType } from 'web-app-framework';
@@ -16,9 +16,11 @@ import { TableCol } from '@components/shared/tableviewedit';
 import { Animations } from '@app/animations';
 import { SearchExpression } from '@app/components/search';
 import { ControllerService } from '@app/services/controller.service';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { AdvancedSearchExpression } from '.';
 import { SearchSearchRequest, SearchSearchRequest_sort_order, FieldsRequirement, IFieldsRequirement } from '@sdk/v1/models/generated/search';
 import { Utility } from '@common/Utility';
+import { IMonitoringArchiveQuery } from '@sdk/v1/models/generated/monitoring';
 
 /**
  * Advanced Search Component
@@ -77,6 +79,7 @@ export class AdvancedSearchComponent implements OnInit {
   @Output() repeaterValues: EventEmitter<any> = new EventEmitter();
   @Output() searchEmitter: EventEmitter<any> = new EventEmitter();
   @Output() cancelEmitter: EventEmitter<any> = new EventEmitter();
+  @Output() archiveQuery: EventEmitter<IMonitoringArchiveQuery> = new EventEmitter<IMonitoringArchiveQuery>();
 
   localSearchFields: { [key: string]: boolean } = {};
   showAdvancedPanel: boolean = false;
@@ -85,7 +88,10 @@ export class AdvancedSearchComponent implements OnInit {
   generalSearch: string = '';
   valueLabelToValueMap = {};
   buildFieldValuePlaceholder = SearchUtil.buildFieldValuePlaceholder;
-  constructor(private controlerService: ControllerService) {
+
+  searchArchiveQuery: IMonitoringArchiveQuery = {};
+
+  constructor(private controllerService: ControllerService) {
   }
 
   customValueOnBlur = ($event: any, repeaterItem: RepeaterItem) => {
@@ -113,6 +119,7 @@ export class AdvancedSearchComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.searchArchiveQuery = {};
     this.fieldData = this.generateFieldData(this.customQueryOptions);
     this.genValueLabelToFieldMap();
   }
@@ -410,6 +417,11 @@ export class AdvancedSearchComponent implements OnInit {
       };
       searchSearchRequest = new SearchSearchRequest(payload, false);  // we don't to fill default values. So set the second parameter as false;
     }
+
+    if (kind === 'AuditEvent' || kind === 'Event') {
+      this.generateArchiveQuery(searchSearchRequest);
+    }
+
     searchSearchRequest.query.kinds = [kind];
     searchSearchRequest['sort-by'] = field;
     searchSearchRequest['sort-order'] = sortOrder;
@@ -417,6 +429,16 @@ export class AdvancedSearchComponent implements OnInit {
     searchSearchRequest['max-results'] = maxRecords;
     searchSearchRequest['aggregate'] = aggregate;
     return searchSearchRequest;
+  }
+
+  generateArchiveQuery(searchReq) {
+    this.searchArchiveQuery.fields = searchReq.query.fields;
+    this.searchArchiveQuery.labels = searchReq.query.labels;
+    this.searchArchiveQuery.texts = searchReq.query.texts;
+  }
+
+  emitArchiveQuery() {
+    this.archiveQuery.emit(this.searchArchiveQuery);
   }
 
   /**

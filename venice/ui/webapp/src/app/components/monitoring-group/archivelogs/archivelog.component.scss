@@ -1,0 +1,53 @@
+@import 'src/global-mixins';
+
+.archiverequests {
+  @include primary-font();
+}
+
+.archiverequests-widget {
+  height: 100%;
+
+  .global-primeng-table .ui-table .ui-table-tbody>tr,
+  .global-primeng-table-lazyload .ui-table .ui-table-tbody>tr {
+    height: 80px;
+  }
+}
+
+.archiverequests-toolbar-button {
+  @include primary-font(16px, #ffffff);
+  height: 30px;
+  font-weight: 500;
+  text-align: center;
+  display: block;
+  padding: 0px 10px;
+  min-width: 80px;
+}
+
+.archiverequests-download-file-link {
+  margin: 2px;
+}
+
+.archive-bad-icon {
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+.archiverequests-selected-nodes {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 100%;
+}
+
+.archive-status-reason {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.archiverequests-detail-div {
+  padding: 10px;
+  width: 100%;
+  max-height: 250px;
+  overflow: auto;
+}

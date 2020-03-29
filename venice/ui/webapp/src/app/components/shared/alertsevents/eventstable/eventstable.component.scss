@@ -26,3 +26,26 @@
   padding-bottom: 5px;
   @include primary-font(14px, #676763);
 }
+
+.archive-status-outer-container {
+  margin-left: 1px;
+  margin-right: 1px;
+  border-top: 2px solid #e7e7e3;
+  border-left: 1px solid #e7e7e3;
+  border-right: 1px solid #e7e7e3;
+}
+
+.archive-status-container {
+  margin: 15px;
+  @include primary-font(16px, #676763);
+}
+
+.action-clickable {
+  @include primary-font(16px, #6ba0e5);
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+    color: #6ba0e5;
+  }
+}

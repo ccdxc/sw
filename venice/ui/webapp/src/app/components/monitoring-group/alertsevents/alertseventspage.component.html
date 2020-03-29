@@ -1,4 +1,5 @@
 <app-pagebody>
-  <app-shared-alertsevents style="height: 100%" (activeTab)="setTabToolbar($event)">
+  <app-shared-alertsevents #alertsEventsComponent style="height: 100%"
+                           (activeTab)="setTabToolbar($event)" [showEventsAdvSearch]=true>
   </app-shared-alertsevents>
 </app-pagebody>

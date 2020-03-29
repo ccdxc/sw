@@ -1,0 +1,36 @@
+<div>
+  <div class="export-logs-summary-header">
+    Archive Request
+  </div>
+  <div [formGroup]="newObject.$formGroup.get(['meta'])" class="export-logs-submit">
+    <div [class]="'export-logs-label'">
+      NAME:
+    </div>
+    <div class="export-logs-name-input">
+      <input formControlName="name"
+             class="export-logs-name-input"
+             placeholder="Archive Request Name..." pInputText
+             appErrorTooltip spellcheck="false" type="text">
+    </div>
+    <div class="export-logs-checkbox-div">
+      <p-checkbox name="specify-timerange" styleClass="export-logs-checkbox"
+                  labelStyleClass="export-logs-checkbox-label" binary="true"
+                  label="SPECIFY TIMERANGE"
+                  [(ngModel)]="showTimerange" [ngModelOptions]="{standalone: true}"></p-checkbox>
+    </div>
+    <div class="export-logs-time-input" *ngIf="showTimerange">
+      <app-timerange [startTime]="'now - M'" [showOverlay]=false
+                     [selectedTimeRange]="archiveRequestTimeRange"
+                     (timeRange)="getArchiveTimeRange($event)"></app-timerange>
+    </div>
+    <button class="export-logs-query-button" (click)="showArchiveQuery()">
+      VIEW SEARCH QUERY
+    </button>
+    <p-dialog header="Archive Query" [(visible)]="displayQuery"
+              (onHide)="hideArchiveQuery()" [draggable]="false">
+      <div class="export-logs-json">
+        <pre>{{archiveQueryFormatted}}</pre>
+      </div>
+    </p-dialog>
+  </div>
+</div>

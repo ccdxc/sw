@@ -169,6 +169,22 @@ export const sideNavMenu: SideNavItem[] = [
         link: ['/monitoring', 'alertsevents']
       },
       {
+        label: 'Archive Logs',
+        icon: {
+          cssClass: 'material-icons',
+          matIconName: 'event_available'
+        },
+        roleGuard: {
+          opt: [
+            UIRolePermissions.monitoringarchiverequest_create,
+            UIRolePermissions.auditevent_read,
+            UIRolePermissions.eventsevent_read,
+            UIRolePermissions.objstoreobject_create
+          ]
+        },
+        link: ['/monitoring', 'archive']
+      },
+      {
         label: 'Metrics',
         icon: {
           cssClass: 'material-icons',

@@ -15,13 +15,15 @@
 
 <ng-template #EventsTableTemplate>
   <div class="alertsevents-events-table">
-    <app-eventstable style="height: 100%" [selector]="selector"
-                     [pollingServiceKey]="pollingServiceKey" [searchedEvent]="this.searchedEvent">
+    <app-eventstable #eventsTableComponent style="height: 100%" [selector]="selector"
+                     [pollingServiceKey]="pollingServiceKey" [searchedEvent]="this.searchedEvent"
+                     [showEventsAdvSearch]="showEventsAdvSearch">
     </app-eventstable>
   </div>
 </ng-template>
 
 <ng-template #AlertsTableTemplate>
-  <app-alertstable style="height: 100%" [selector]="selector" [searchedAlert]="this.searchedAlert">
+  <app-alertstable style="height: 100%" [selector]="selector" [searchedAlert]="this.searchedAlert"
+                   [showAlertsAdvSearch]="showAlertsAdvSearch">
   </app-alertstable>
 </ng-template>

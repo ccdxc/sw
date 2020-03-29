@@ -41,6 +41,10 @@ app-shared-alertsevents {
     height: 100%;
   }
 
+  .mat-tab-body-content {
+    overflow: hidden !important;
+  }
+
   mat-tab-group {
     height: 100%;
   }

@@ -1,12 +1,37 @@
-<div class="alertsevents-events-table" style="height: 100%">
-  <app-tableviewedit style="height: 100%" fxLayout="column" [data]="dataObjects"
-                     [showRowExpand]="showRowExpand"
-                     [cols]="cols" [virtualRowHeight]="36" [sortField]="'meta.mod-time'"
-                     [dataKey]="'meta.name'" [sortOrder]="-1"
-                     [captionTemplate]="captionTemplate" [bodyTemplate]="bodyTemplate"
-                     (rowClick)="selectEvent($event)">
-  </app-tableviewedit>
+<div class="alertsevents-events-table" fxLayout="column" style="height: 100%">
+  <div *ngIf="displayArchPanel" fxFlex="auto" fxLayout="row"
+       class="archive-status-outer-container">
+    <div [ngSwitch]="requestStatus">
+      <div *ngSwitchCase="'running'" class="archive-status-container">
+        Archive Request "{{requestName}}" is being PROCESSED. Please wait for the request to
+        complete.
+        <!-- TODO: Hiding Cancel for now. Currently, CANCEL API is not ready; no cancel permission -->
+        <!-- or click <span class="action-clickable"
+              (click)="onCancelRecord($event)">Cancel</span> to cancel the request! -->
+      </div>
+      <div *ngSwitchCase="'completed'" class="archive-status-container">
+        Archive Request "{{requestName}}" is PROCESSED. Click <a class="action-clickable"
+           (click)="$event.stopPropagation()"
+           href="{{firstElem.status.uri !== undefined || firstElem.status.uri !== null ? firstElem.status.uri : ''}}">Download</a>
+        to download the file!
+      </div>
+      <div *ngSwitchDefault class="archive-status-container">
+        Archive Request "{{requestName}}" {{requestStatus}}!
+      </div>
+    </div>
+  </div>
+  <div fxLayout="row" fxFlex="auto">
+    <app-tableviewedit style="height: 100%" fxLayout="column" [data]="dataObjects"
+                       [showRowExpand]="showRowExpand"
+                       [cols]="cols" [virtualRowHeight]="36" [sortField]="'meta.mod-time'"
+                       [dataKey]="'meta.name'" [sortOrder]="-1"
+                       [captionTemplate]="captionTemplate" [bodyTemplate]="bodyTemplate"
+                       [createTemplate]="createTemplate" [creatingMode]="creatingMode"
+                       (rowClick)="selectEvent($event)">
+    </app-tableviewedit>
+  </div>
 </div>
+
 <ng-template #captionTemplate>
   <div fxFlex="auto" fxLayout="column">
     <div *ngIf="this.selectedEvent" [@slideInOut] fxFlex="auto" fxLayout="row"
@@ -57,11 +82,22 @@
                     labelStyleClass="alertsevents-checkbox-label" binary="true"
                     label="Show Debug Events"
                     [(ngModel)]="showDebugEvents" (onChange)="showDebugPressed()"></p-checkbox>
-        <app-timerange fxFlex="nogrow" [selectedTimeRange]="eventsSelectedTimeRange"
+        <app-timerange fxFlex="nogrow"
+                       [selectedTimeRange]="eventsSelectedTimeRange"
                        (timeRange)="setEventsTimeRange($event)"
                        [hiddenTimeRangeOptions]="['Previous month']"></app-timerange>
       </div>
     </app-tableheader>
+    <div fxLayout="row" *ngIf="showEventsAdvSearch" style="border-top: 1px solid #d9d9d9;">
+      <app-advanced-search #advancedSearchComponent
+                           (repeaterValues)="handleFieldRepeaterData($event)"
+                           [formArray]="fieldFormArray" [cols]="advSearchCols"
+                           (archiveQuery)="getArchiveQuery($event)"
+                           (cancelEmitter)="onCancelEventSearch($event)"
+                           (searchEmitter)="getAdvSearchEvents()"
+                           kind="Event" fxFlex="grow">
+      </app-advanced-search>
+    </div>
   </div>
 </ng-template>
 
@@ -165,9 +201,6 @@
     <ng-container *ngSwitchCase="'meta.mod-time'">
       {{rowData.meta['mod-time'] | PrettyDate }}
     </ng-container>
-    <ng-container *ngSwitchCase="'meta.creation-time'">
-      {{rowData.meta['creation-time'] | PrettyDate }}
-    </ng-container>
     <ng-container *ngSwitchCase="'severity'">
       <mat-icon *ngIf="rowData.severity === 'critical'"
                 class="alertsevents-icon global-alert-critical-icon">
@@ -198,4 +231,10 @@
       {{displayColumn(rowData, col)}}
     </ng-container>
   </ng-container>
+</ng-template>
+
+<ng-template #createTemplate>
+  <app-exportlogs #exportLogsComponent (formClose)="creationFormClose()"
+                  (archiveStatus)="showArchiveStatusPanel()"
+                  [archiveQuery]="eventArchiveQuery" queryType="Event"></app-exportlogs>
 </ng-template>

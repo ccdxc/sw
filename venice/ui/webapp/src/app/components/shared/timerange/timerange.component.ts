@@ -58,6 +58,7 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy, OnC
   @Input() endTime: string = 'now';
   @Input() selectedTimeRange: TimeRange;
   @Input() maxTimePeriod: moment.Duration;
+  @Input() showOverlay: boolean = true;
 
   // min-max start and end date  // VS-1063
   @Input() minStartSelectDateValue: Date = null;
@@ -105,7 +106,7 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy, OnC
       text: 'Previous month',
       startTime: 'now - 2M',
       endTime: 'now - M',
-    },
+    }
   ];
   @Output() timeRange: EventEmitter<TimeRange> = new EventEmitter<TimeRange>();
 
@@ -157,18 +158,20 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy, OnC
     // If a user enters an invalid time range, and then closes the
     // overlay, the next time they open the overlay it should show
     // the values for the current timerange that is in effect.
-    const sub = this.overlayPanel.onShow.subscribe(() => {
-      if (this.lastSelectedTimeRange == null) {
-        return;
-      }
-      const start = this.lastSelectedTimeRange.startTime.getString();
-      const end = this.lastSelectedTimeRange.endTime.getString();
-      this.timeFormGroup.reset({
-        startTime: start,
-        endTime: end
+    if (this.showOverlay) {
+      const sub = this.overlayPanel.onShow.subscribe(() => {
+        if (this.lastSelectedTimeRange == null) {
+          return;
+        }
+        const start = this.lastSelectedTimeRange.startTime.getString();
+        const end = this.lastSelectedTimeRange.endTime.getString();
+        this.timeFormGroup.reset({
+          startTime: start,
+          endTime: end
+        });
       });
-    });
-    this.subscriptions.push(sub);
+      this.subscriptions.push(sub);
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -197,7 +200,10 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy, OnC
       startTime: startTime,
       endTime: endTime
     });
-    this.overlayPanel.hide();
+
+    if (this.showOverlay) {
+      this.overlayPanel.hide();
+    }
   }
 
   /**
@@ -275,7 +281,6 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy, OnC
       this.displayString = timeRange.toString();
 
       return null;
-
     };
   }
 

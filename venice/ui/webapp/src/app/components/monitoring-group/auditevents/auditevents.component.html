@@ -1,45 +1,80 @@
 <app-pagebody class="auditevents" header="Audit Events" [icon]="bodyicon">
   <!-- Since we are manually calculating table dimensions, whenever this panel changes
         state we need to recalculate the table -->
-  <app-advanced-search #advancedSearchComponent
-                       (repeaterValues)="handleFieldRepeaterData($event)"
-                       [formArray]="fieldFormArray" [cols]="cols"
-                       (cancelEmitter)="onCancelAuditSearch($event)"
-                       (searchEmitter)="getAuditevents()"
-                       kind="AuditEvent">
-  </app-advanced-search>
-
-  <app-tableviewedit fxLayout="column" class="auditevents-widget"
-                     [showRowExpand]="showRowExpand"
-                     [data]="dataObjects"
-                     [cols]="cols"
-                     [sortField]="startingSortField"
-                     [sortOrder]="startingSortOrder"
-                     [tableLoading]="loading"
-                     [disableTableWhenRowExpanded]="disableTableWhenRowExpanded"
-
-                     [runDoCheck]="false"
-                     [expandedRowData]="expandedRowData"
-                     [captionTemplate]="captionTemplate"
-                     [bodyTemplate]="bodyTemplate"
-                     [expandTemplate]="expandTemplate"
-                     (lazyLoadEvent)="onTableSort($event)"
-                     (rowClick)="onAuditeventsTableRowClick($event)"
-                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
-  </app-tableviewedit>
-
+  <div *ngIf="displayArchPanel" fxFlex="auto" fxLayout="row"
+       class="archive-status-outer-container">
+    <div [ngSwitch]="requestStatus">
+      <div *ngSwitchCase="'running'" class="archive-status-container">
+        Archive Request "{{requestName}}" is being PROCESSED. Please wait for the request to
+        complete.
+        <!-- TODO: Hiding Cancel for now. Currently, CANCEL API is not ready; no cancel permission -->
+        <!-- or click <span class="action-clickable"
+              (click)="onCancelRecord($event)">Cancel</span> to cancel the request! -->
+      </div>
+      <div *ngSwitchCase="'completed'" class="archive-status-container">
+        Archive Request "{{requestName}}" is PROCESSED. Click <a class="action-clickable"
+           (click)="$event.stopPropagation()"
+           href="{{firstElem.status.uri !== undefined || firstElem.status.uri !== null ? firstElem.status.uri : ''}}">Download</a>
+        to download the file!
+      </div>
+      <div *ngSwitchDefault class="archive-status-container">
+        Archive Request "{{requestName}}" {{requestStatus}}!
+      </div>
+    </div>
+  </div>
+  <div fxLayout="row" fxFlex="auto">
+    <app-tableviewedit fxLayout="column" class="auditevents-widget"
+                       [showRowExpand]="showRowExpand"
+                       [data]="dataObjects"
+                       [cols]="cols"
+                       [sortField]="startingSortField"
+                       [sortOrder]="startingSortOrder"
+                       [tableLoading]="loading"
+                       [disableTableWhenRowExpanded]="disableTableWhenRowExpanded"
+                       [creatingMode]="creatingMode"
+                       [createTemplate]="createTemplate"
+                       [runDoCheck]="false"
+                       [expandedRowData]="expandedRowData"
+                       [captionTemplate]="captionTemplate"
+                       [bodyTemplate]="bodyTemplate"
+                       [expandTemplate]="expandTemplate"
+                       (lazyLoadEvent)="onTableSort($event)"
+                       (rowClick)="onAuditeventsTableRowClick($event)"
+                       (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+    </app-tableviewedit>
+  </div>
 </app-pagebody>
+
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Audit Events" [max]="maxRecords" [total]="displayRecords" fxFlex="auto"
-                   fxLayout="row" [tableMenuItems]="tableMenuItems"
-                   [enableColumnSelect]="true" [icon]="headerIcon" [cols]="cols"
-                   (columnSelectChange)="onColumnSelectChange($event)"
-                   [lastUpdateTime]="lastUpdateTime" [showRefreshIcon]="true" [showTotalHits]="true"
-                   (refreshIconClick)="getAuditevents()" class="audit-table-header">
-    <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
-  </app-tableheader>
+  <div fxFlex fxLayout="column">
+    <div fxLayout="row" style="border-bottom: 1px solid #d9d9d9;">
+      <app-tableheader title="Audit Events" [max]="maxRecords" [total]="displayRecords"
+                       fxFlex="auto"
+                       fxLayout="row" [tableMenuItems]="tableMenuItems"
+                       [enableColumnSelect]="true" [icon]="headerIcon" [cols]="cols"
+                       (columnSelectChange)="onColumnSelectChange($event)"
+                       [lastUpdateTime]="lastUpdateTime" [showRefreshIcon]="true"
+                       [showTotalHits]="true"
+                       (refreshIconClick)="getAuditevents()" class="audit-table-header">
+        <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
+      </app-tableheader>
+    </div>
+
+    <div fxLayout="row">
+      <app-advanced-search #advancedSearchComponent
+                           (repeaterValues)="handleFieldRepeaterData($event)"
+                           [formArray]="fieldFormArray" [cols]="cols"
+                           (archiveQuery)="getArchiveQuery($event)"
+                           (cancelEmitter)="onCancelAuditSearch($event)"
+                           (searchEmitter)="getAuditevents()"
+                           kind="AuditEvent" fxFlex="grow">
+      </app-advanced-search>
+    </div>
+  </div>
+
+
 </ng-template>
 
 <ng-template #bodyTemplate let-rowData let-col="col">
@@ -63,7 +98,12 @@
 
 <ng-template #actionButtonsTemplate>
   <div matTooltip="Total audit event records" class="audit-table-header-title">
-    {{ (totalHitRecords >   maxRecords  && totalHitRecords < veniceRecords)? '| Search criteria matches ' +   totalHitRecords : '' }}
+    {{ (totalHitRecords >   maxRecords  && totalHitRecords < veniceRecords)? ' | Search criteria matches ' +   totalHitRecords : ' ' }}
     | System has ({{veniceRecords | number}}) records
   </div>
+</ng-template>
+
+<ng-template #createTemplate>
+  <app-exportlogs (formClose)="creationFormClose()" [archiveQuery]="auditArchiveQuery"
+                  queryType="AuditEvent"></app-exportlogs>
 </ng-template>

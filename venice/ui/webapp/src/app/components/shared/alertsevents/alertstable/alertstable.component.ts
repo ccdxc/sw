@@ -36,6 +36,7 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
   // where the source node matches
   @Input() selector: AlertsEventsSelector;
   @Input() searchedAlert: string;
+  @Input() showAlertsAdvSearch: boolean = false;
 
   // this property indicate if user is authorized to update alerts
   alertUpdatable: boolean = true;

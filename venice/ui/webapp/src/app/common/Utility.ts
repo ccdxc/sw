@@ -78,9 +78,11 @@ export class Utility {
   public static UPDATE_FAILED_SUMMARY = 'Update Failed';
   public static CREATE_FAILED_SUMMARY = 'Create Failed';
   public static DELETE_FAILED_SUMMARY = 'Delete Failed';
+  public static CANCEL_FAILED_SUMMARY = 'Cancel Failed';
   public static UPDATE_SUCCESS_SUMMARY = 'Update Successful';
   public static CREATE_SUCCESS_SUMMARY = 'Create Successful';
   public static DELETE_SUCCESS_SUMMARY = 'Delete Successful';
+  public static CANCEL_SUCCESS_SUMMARY = 'Cancel Successful';
   public static VENICE_CONNECT_FAILURE_SUMMARY = 'Failed to connect to Venice';
   public static ROLLOUT_IMGAGE_NAMESPACE = 'images';
   // In RBAC, when kind is ['AuditEvent', 'FwlogsQuery', 'Event'] , there is no group

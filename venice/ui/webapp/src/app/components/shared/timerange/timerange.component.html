@@ -1,14 +1,26 @@
-<div>
-  <div class="timerange-button" (click)="timeRangePanel.toggle($event)">
-    {{ displayString }}
+<!-- showOverlay Boolean allows timerange widget to have two modes viz. one with overlay and one without it -->
+<div *ngIf="showOverlay">
+  <div>
+    <div class="timerange-button" (click)="timeRangePanel.toggle($event)">
+      {{ displayString }}
+    </div>
   </div>
+
+  <p-overlayPanel #timeRangePanel appendTo="body" styleClass="timerange-overlay-panel"
+                  [autoZIndex]="false">
+    <ng-container *ngTemplateOutlet="body"></ng-container>
+  </p-overlayPanel>
 </div>
 
-<p-overlayPanel #timeRangePanel appendTo="body" styleClass="timerange-overlay-panel"
-                [autoZIndex]="false">
+<div *ngIf="!showOverlay">
+  <ng-container *ngTemplateOutlet="body"></ng-container>
+</div>
+
+<ng-template #body>
   <div fxFlex="noshrink" fxLayout="column" class="timerange-overlay">
     <div fxFlex="nogrow" fxLayout="row" fxLayoutGap="15px"
          [formGroup]="timeFormGroup">
+
       <div fxFlex="auto" fxLayout="column" class="timerange-value">
         <div class="timerange-time-text">START:</div>
         <div fxFlex="auto" fxLayout="row">
@@ -52,6 +64,5 @@
         {{ opt.text }}
       </div>
     </div>
-
   </div>
-</p-overlayPanel>
+</ng-template>

@@ -22,6 +22,7 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { ActivatedRoute } from '@angular/router';
+import { EventstableComponent } from './eventstable/eventstable.component';
 
 
 export interface AlertsEventsSelector {
@@ -54,6 +55,7 @@ export interface AlertsEventsSelector {
 })
 export class AlertseventsComponent extends BaseComponent implements OnInit {
 
+  @ViewChild('eventsTableComponent') eventsTableComponent: EventstableComponent;
   // Used as the key for uniquely identifying poll requests.
   // If there are going to be two of these components alive at the same time,
   // this field is required for them to have independent queries.
@@ -61,6 +63,8 @@ export class AlertseventsComponent extends BaseComponent implements OnInit {
   // If provided, will only show alerts and events
   // where the source node matches
   @Input() selector: AlertsEventsSelector;
+  @Input() showAlertsAdvSearch: boolean = false;
+  @Input() showEventsAdvSearch: boolean = false;
   @Output() activeTab: EventEmitter<string> = new EventEmitter<string>();
 
   tabIndex: number = 0;
@@ -101,4 +105,9 @@ export class AlertseventsComponent extends BaseComponent implements OnInit {
     this.tabIndex = event;
     this.emitActiveTab(event);
   }
+
+  createArchivePanel() {
+    this.eventsTableComponent.createNewObject();
+  }
+
 }

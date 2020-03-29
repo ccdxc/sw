@@ -1,0 +1,116 @@
+<app-pagebody class="archiverequests" header="Archive Log Requests" [icon]="bodyicon">
+  <app-tableviewedit fxLayout="column" class="archiverequests-widget"
+                     [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand"
+                     [data]="dataObjects"
+                     [cols]="cols"
+                     [expandedRowData]="expandedRowData"
+                     [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     [actionTemplate]="actionTemplate"
+                     [expandTemplate]="expandTemplate"
+                     [enableCheckbox]="true"
+                     [tableLoading]="tableLoading"
+                     (rowClick)="onArchiveRequestsTableRowClick($event)"
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+  </app-tableviewedit>
+
+</app-pagebody>
+
+<ng-template #captionTemplate let-count="count">
+  <app-tableheader title="Archive Logs" [total]="count" fxFlex="auto" fxLayout="row"
+                   [tableMenuItems]="tableMenuItems" [enableColumnSelect]="false" [cols]="cols"
+                   (columnSelectChange)="onColumnSelectChange($event)" [icon]="headerIcon">
+
+    <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
+  </app-tableheader>
+</ng-template>
+
+<ng-template #actionButtonsTemplate>
+  <div fxFlex="none" fxLayoutAlign="start center"
+       *roleGuard="'monitoringarchiverequest_delete'">
+    <!-- TABLE FUNCTION ICONS HERE -->
+    <mat-icon class="global-multi-records-delete-icon"
+              *ngIf="hasSelectedRows()"
+              [matTooltip]="'Delete selected archive log requests'"
+              (click)="onDeleteSelectedRows($event)">delete</mat-icon>
+  </div>
+
+</ng-template>
+
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'meta.creation-time'">
+      {{rowData.meta['creation-time'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchCase="'spec.query.start-time'">
+      {{rowData.spec.query['start-time'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchCase="'spec.query.end-time'">
+      {{rowData.spec.query['end-time'] | PrettyDate }}
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'status.status'">
+      <div *ngIf="!isArchiveCompleted(rowData, col)">
+        {{displayColumn(rowData, col)}}
+        <span *ngIf="timeoutOrFailure(rowData)"
+              class="archive-status-reason">{{rowData.status.reason}}</span>
+        <mat-icon *ngIf="timeoutOrFailure(rowData)"
+                  fxFlex="nogrow" [inline]="true" [matTooltip]="rowData.status.reason"
+                  class="global-alert-critical-icon archive-bad-icon">error</mat-icon>
+        <a *ngIf="timeoutOrFailure(rowData) && triggerBuildDownloadZip(rowData) "
+           class="archiverequests-download-file-link" (click)="$event.stopPropagation()"
+           href="{{rowData._ui['archivelogsdownload']}}"
+           [matTooltip]="'Download all available files'">Download Logs</a>
+      </div>
+
+      <div *ngIf="timeoutOrFailure(rowData)" [matTooltip]="displayMessage(rowData)">
+        {{displayMessage(rowData)}}</div>
+
+      <div *ngIf="isArchiveCompleted(rowData, col)" fxLayout="column">
+        <div fxLayout="row"> Success </div>
+        <a class="archiverequests-download-file-link" (click)="$event.stopPropagation()"
+           href="{{rowData._ui['archivelogsdownload']}}"
+           [matTooltip]="'Download all files'">Download Logs</a>
+      </div>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'spec.type'">
+      <div class="archiverequests-log-types">{{displayColumn(rowData, col)}}
+      </div>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'spec.query'">
+      <div class="archiverequests-criteria">{{displayColumn(rowData, col)}}
+      </div>
+    </ng-container>
+
+    <ng-container *ngSwitchDefault>
+      <div [innerHTML]="displayColumn(rowData, col)">
+      </div>
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<ng-template #actionTemplate let-rowData>
+  <!-- TODO: Hiding Cancel for now. Currently, CANCEL API is not ready; no cancel permission -->
+  <!-- <div class="global-column-action-icon-container  global-column-action-icon-container-archive_{{rowData.meta.name}}"
+       fxLayout="row" fxLayoutGap="5px" *ngIf="showCancelIcon(rowData)">
+    <mat-icon *roleGuard="'monitoringarchiverequest_delete'" matTooltip="Cancel Archive"
+              class="global-table-action-icon"
+              (click)="onCancelRecord($event, rowData)">cancel</mat-icon>
+  </div> -->
+
+  <div class="global-column-action-icon-container  global-column-action-icon-container-archive_{{rowData.meta.name}}"
+       fxLayout="row" fxLayoutGap="5px" *ngIf="showDeleteIcon(rowData)">
+    <mat-icon *roleGuard="'monitoringarchiverequest_delete'" matTooltip="Delete Archive"
+              class="global-table-action-icon"
+              (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+  </div>
+</ng-template>
+
+<ng-template #expandTemplate let-rowData let-columns="columns">
+  <div class="archiverequests-detail-div ">
+    <pre>{{displayArchiveRequest()}}</pre>
+  </div>
+</ng-template>

@@ -121,6 +121,14 @@ export class UIConfigsService {
         UIRolePermissions.monitoringeventpolicy_read,
       ]
     },
+    'monitoring/archive': {
+      requiredPerm: [
+        UIRolePermissions['monitoringarchiverequest_all-actions'],
+        UIRolePermissions['eventsevent_read'],
+        UIRolePermissions['auditevent_read'],
+        UIRolePermissions['objstoreobject_create']
+      ],
+    },
     'monitoring/fwlogs': {
       requiredFeatures: [
         Features.fwlogs,

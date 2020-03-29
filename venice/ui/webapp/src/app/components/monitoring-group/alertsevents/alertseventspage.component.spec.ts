@@ -103,8 +103,9 @@ describe('AlertseventspageComponent', () => {
       component.setTabToolbar('events');
       fixture.detectChanges();
 
-      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
-      expect(toolbarSpy.calls.mostRecent().args[0].buttons[0].text).toBe('EVENT POLICIES');
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(2);
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons[0].text).toBe('EXPORT EVENTS');
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons[1].text).toBe('EVENT POLICIES');
     });
 
     it('alert policy only', () => {
