@@ -36,11 +36,7 @@ def uptime(node):
 
 def verify_errors_lspci(node, os_type):
 
-    pci_eth_device = '1dd8:1002'
-    pci_root_device = '1dd8:1000'
-    result = api.types.status.SUCCESS
-
-    if os_type == host.OS_TYPE_ESX:
+    if os_type == host.OS_TYPE_ESX or os_type == host.OS_TYPE_WINDOWS:
         return api.types.status.SUCCESS
 
     if not api.IsNaplesNode(node):

@@ -570,7 +570,11 @@ func (app *bareMetalWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 			return "", errors.Errorf("Could not bring up parent interface %s : %s", spec.Parent, stdout)
 		}
 	case "windows":
-		cmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Enable-NetAdapter \"" + windowsPortNameMapping[spec.Parent]["Name"] + "\" -Confirm:$false"}
+		name, ok := windowsPortNameMapping[spec.Parent]["Name"]
+		if !ok {
+			break
+		}
+		cmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Enable-NetAdapter \"" + name + "\" -Confirm:$false"}
 		if retCode, stdout, _ := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
 			return "", errors.Errorf("Could not bring up parent interface %s with command %v: %s", spec.Parent, cmd, stdout)
 		}
@@ -651,7 +655,8 @@ func (app *bareMetalWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 			output := strings.Split(spec.IPV4Address, "/")
 			intfInfo, ok := windowsPortNameMapping[spec.Parent]
 			if !ok {
-				return "", errors.Errorf("Failed to find port")
+				break
+				// return "", errors.Errorf("Failed to find port")
 			}
 			cmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "New-NetIPAddress -InterfaceAlias \"" + intfInfo["Name"] + "\" -IPAddress " + output[0] + " -PrefixLength " + output[1]}
 			if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
@@ -679,7 +684,8 @@ func (app *bareMetalWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 			output := strings.Split(spec.IPV6Address, "/")
 			intfInfo, ok := windowsPortNameMapping[spec.Parent]
 			if !ok {
-				return "", errors.Errorf("Failed to find port")
+				break
+				// return "", errors.Errorf("Failed to find port")
 			}
 			cmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "New-NetIPAddress -InterfaceAlias \"" + intfInfo["Name"] + "\" -AddressFamily IPv6 -IPAddress " + output[0] + " -PrefixLength " + output[1]}
 			if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {

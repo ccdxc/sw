@@ -44,4 +44,4 @@ fi
 
 # Generate tarball of the prepared package
 cd "$GEN_DIR/.."
-asset-pull windows-driver 1.0.21 $GEN_PKG
+asset-pull windows-driver 1.0.28 $GEN_PKG

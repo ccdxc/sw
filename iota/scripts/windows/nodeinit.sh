@@ -33,7 +33,7 @@ while($args.Count -gt 0 -and $loop -eq $true) {
 
 
 function Enable-Interface {
-	echo "Enable-Interface"
+	echo "Enable Interface"
 	$netAdapters = Get-NetAdapter -InterfaceDescription 'Pensando*' | ? Virtual -eq $false | select Name,Status,ifIndex
 	echo $netAdapters
 	foreach ($netAdapter in $netAdapters){
@@ -70,77 +70,112 @@ function Disable-DHCP {
 }
 
 
-function Extract-ZIP($file, $destination){
-	$shell = new-object -com shell.application
-	$zip = $shell.NameSpace($file)
-	foreach($item in $zip.items())
-	{
-		$shell.Namespace($destination).copyhere($item, 0x14)
-	}
-}
-
 function Discover-Devices($noScan) {
 	while($noScan -ne 0){
 		Start-Sleep -s 5
 		# Scanning for hardware device
-		# devcon rescan
+		& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' rescan
 		$noScan--;
 	}
+}
+
+
+function Uninstall-Driver {
+	# clean up driver installation
+	echo "Un-installing driver"
+	# Running exe to un-install driver
+	# Disable all the IONIC devices
+	& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' disable 'PCI\VEN_1DD8&DEV_1002*' 'PCI\VEN_1DD8&DEV_1004*'
+
+	# Delete the IONIC driver from driver store
+	& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' drivernodes 'PCI\VEN_1DD8&DEV_1002*' 'PCI\VEN_1DD8&DEV_1004*' | Select-String -Pattern 'Inf file is (.*.inf)' | Get-Unique | ForEach-Object {
+		$infName = $_.Matches.Groups[1].Value.Trim().Split("\\")[-1]
+		& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' -f dp_delete $infName
+	}
+
+	# Make sure the IONIC driver does not show up in the Driver store.
+	# List all OEM driver packages installed in the Driver store
+	# https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/devcon-dp-enum
+	& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' dp_enum
+
+	# Remove all the IONIC devices
+	& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' remove 'PCI\VEN_1DD8&DEV_1002*' 'PCI\VEN_1DD8&DEV_1004*'
+
+	# Rescan the device list.
+	# https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/devcon-rescan
+	& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' rescan
+
+	# Make sure devices are not bound to the driver.
+	# https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/devcon-drivernodes
+	& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' drivernodes 'PCI\VEN_1DD8&DEV_1002*' 'PCI\VEN_1DD8&DEV_1004*'
+
+	echo "Un-installed driver successfully"
 }
 
 
 if ($skipInstall) {
 	echo "user requested to skip install"
 } else {
-	$currentPath = (Get-Location).tostring()
-	$exeFile = "$(Join-Path -Path $currentPath -ChildPath "IonicConfig.exe")"
 	if($cleanUp){
-		$i = 2;
-		# clean up driver installation
-		echo "Un-installing driver skipped"
-		# Running exe to un-install driver
-
-#		while($i -ne 0) {
-#			$proc = Start-Process -Verb runAs "powershell" -ArgumentList "$exeFile -uninstall '$(Join-Path -Path $currentPath -ChildPath "ionic64.inf")' > log.txt"
-#			$i--;
-#			Start-Sleep -s 2
-#		}
-#		echo "Un-installed driver successfully"
+		Uninstall-Driver
 	}else{
-		#Install driver
-		#echo "Installing driver"
-		#echo $currentPath
+		$netAdapters = Get-NetAdapter -InterfaceDescription 'Pensando*' | ? Virtual -eq $false | select Name,Status,ifIndex
+		$numPorts = @($netAdapters).count
+		if ($numPorts -gt 0) {
+			Uninstall-Driver
+		}
+
+		echo "Installing driver"
+		$currentPath = (Get-Location).tostring()
+		cd temp
+
+		# unzip
+		expand-archive -path "drivers-windows.zip" -force
+
+		# Running exe to install driver
+		$Env:Path += "C:\Program Files (x86)\Windows Kits\10\Tools\x64\"
+
+		# Add OEM driver package to Driver store
+		# https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/devcon-dp-add
+		#devcon.exe install '.\drivers-windows\ionic64.inf' 'PCI\VEN_1DD8&DEV_1004'
+		#devcon.exe install '.\drivers-windows\ionic64.inf' 'PCI\VEN_1DD8&DEV_1002'
+		pnputil /add-driver '.\drivers-windows\ionic64.inf' /install
+
+		# List all OEM driver packages installed in the Driver store
+		# https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/devcon-dp-enum
+		& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' dp_enum
+
+		# Rescan the device list. This should bind the driver to device.
+		# https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/devcon-rescan
+		& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' rescan
+		#Discover-Devices -noScan 2
+		# workaround
+		Start-Sleep -s 3
+		& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' disable 'PCI\VEN_1DD8&DEV_1002'
+		Start-Sleep -s 3
+		& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' enable 'PCI\VEN_1DD8&DEV_1002'
+
+		# Make sure devices are bound to the driver.
+		# https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/devcon-drivernodes
+		& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' drivernodes 'PCI\VEN_1DD8&DEV_1002*' 'PCI\VEN_1DD8&DEV_1004*'
 
 		$netAdapters = Get-NetAdapter -InterfaceDescription 'Pensando*' | ? Virtual -eq $false | select Name,Status,ifIndex
-
+		echo $netAdapters
 		$numPorts = @($netAdapters).count
+
 		if ($numPorts -eq 0) {
-			echo "Installing Driver"
+			echo "No naples interface found"
+			exit 1
+		}
 
-			expand-archive -path "temp/drivers-windows.zip" -destinationpath $currentPath -force
-			#Extract-ZIP -File "$(Join-Path -Path $currentPath -ChildPath "drivers-windows.zip")" -Destination $currentPath
-
-			# Running exe to install driver 
-			Start-Process -Verb runAs "powershell" -ArgumentList "$exeFile -install '$(Join-Path -Path $currentPath -ChildPath "ionic64.inf")' > log.txt"
-
-			Discover-Devices -noScan 2
-			#Enable-Interface
-
-			$netAdapters = Get-NetAdapter -InterfaceDescription 'Pensando*' | ? Virtual -eq $false | select Name,Status,ifIndex
-			echo $netAdapters
-			$numPorts = @($netAdapters).count
-
-			if ($numPorts -eq 0) {
-				echo "No naples interface found"
+		# Enable Interface
+		echo "Enable Interface"
+		foreach ($netAdapter in $netAdapters) {
+			if ($netAdapter.Status -eq "Not Present") {
+				echo "Interface not working", $netdapter.Name
 				exit 1
 			}
-
-			echo "Enable Interface"
-			foreach ($netAdapter in $netAdapters) {
-				Enable-NetAdapter -Name $netAdapter.Name -Confirm:$false
-			}
-		} else {
-			echo "Driver installed, skipping"
+			Enable-NetAdapter -Name $netAdapter.Name -Confirm:$false
 		}
 
 		Disable-DHCP
@@ -151,9 +186,6 @@ if ($skipInstall) {
 		}
 
 		$mgmtIFs = Get-Management-Interface
-#		$netAdapters = Get-NetAdapter -InterfaceDescription 'Pensando*' | ? Virtual -eq $false | select Name,Status,ifIndex
-
-#		$numNic = @($netAdapters).count
 		$numMgmt = @($mgmtIFs).count
 		$numMgmtExpected = $numPorts/3
 
@@ -178,6 +210,7 @@ if ($skipInstall) {
 		foreach ($mgmtIF in $mgmtIFs){
 			$mgmtIP = $ownIP.replace("XX", $mgmtIF.Bus)
 			$mnicIP = $trgIP.replace("XX", $mgmtIF.Bus)
+			echo "Mgmt IP: $mnicIP"
 
 			$netAdapter = Get-NetAdapter -Name $mgmtIF.Name -Physical
 			$netAddress = Get-NetIPAddress -InterfaceIndex $netAdapter.ifIndex | select InterfaceAlias,Name,IPV4Address
@@ -185,19 +218,16 @@ if ($skipInstall) {
 				# Assign IP address to interface
 				New-NetIPAddress -InterfaceIndex $netAdapter.ifIndex -IPAddress $mgmtIP -PrefixLength 24
 				Set-NetIPAddress -InterfaceIndex $netAdapter.ifIndex -IPAddress $mgmtIP -PrefixLength 24
+				$netAddress = Get-NetIPAddress -InterfaceIndex $netAdapter.ifIndex | select InterfaceAlias,IPV4Address
 			}
 
-			$netAddress = Get-NetIPAddress -InterfaceIndex $netAdapter.ifIndex | select InterfaceAlias,IPV4Address | Format-Table
-			echo $netAddress
-
-			$pingStatus = test-connection $mnicIP -Count 5 -Quiet
+			$pingStatus = Test-Connection -ComputerName $mnicIP -Count 5 -Quiet
 			if ($pingStatus -ne $true){
 				echo "Ping test failed"
-				echo $pingStatus
 				# TODO Implement  ./print-cores.sh script
-				exit 0 
+				exit 0
 			} else {
-				echo "Ping test passed for IP: $mnicIP"
+				echo "Ping test passed"
 			}
 		}
 	}
@@ -205,4 +235,3 @@ if ($skipInstall) {
 EOF
 cd /mnt/c/Windows
 System32/WindowsPowerShell/v1.0/powershell.exe temp/$filename "$@"
-echo "Successfully executed"

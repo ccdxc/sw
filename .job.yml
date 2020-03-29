@@ -182,6 +182,8 @@ jobs:
     labels: ["precommit"]
   iota/test/standalone/precheckin/linux:
     labels: ["precommit"]
+  iota/test/standalone/precheckin/windows:
+    labels: ["daily"]
   iota/test/standalone/precheckin/freebsd:
     labels: ["daily"]
   iota/test/standalone/precheckin/linux-rdma:

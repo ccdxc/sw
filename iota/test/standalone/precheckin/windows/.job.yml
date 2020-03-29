@@ -23,7 +23,7 @@ e2e-targets:
        count: 2
        resources:
          servers:
-           --type: server-a
+           - type: server-a
          nic-type: naples
          # Required when RDMA is enabled
          constraints:
