@@ -14,9 +14,8 @@ import (
 // ControllerAPI implements north bound APIs for DSCAgent
 type ControllerAPI interface {
 	HandleVeniceCoordinates(obj DistributedServiceCardStatus) error
-	Start(ctx context.Context) error
+	Start(kinds []string) error
 	Stop() error
-	WatchObjects(kinds []string)
 	WatchTechSupport()
 }
 

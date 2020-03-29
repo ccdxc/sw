@@ -19,6 +19,7 @@ type DistributedServiceCardStatus struct {
 	DSCInterfaceIPs     []DSCInterfaceIP `json:"dsc-interfaces,omitempty"`
 	DSCStaticRoutes     []DSCStaticRoute `json:"dsc-static-routes,omitempty"`
 	LoopbackIP          string           `json:"loopback-ip"`
+	AdmissionState      string           `json:"admission-state.omitempty"`
 }
 
 //DSCInterfaceIP captures the IP interface info of DSC interfaces

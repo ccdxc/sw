@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"os"
+	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -42,18 +44,17 @@ import (
 type API struct {
 	sync.Mutex
 	sync.WaitGroup
-	//watchMutex                                sync.Mutex     // This prevents nimbus internal wg reuse panic that happens on calling WatchAggregate while wg.Wait() is getting evaluated.
-	tsmWG, tpmWG           sync.WaitGroup // TODO Temporary WGs till TPM and TSM move to nimbus and agg watch
-	nimbusClient           *nimbus.NimbusClient
-	WatchCtx               context.Context
-	PipelineAPI            types.PipelineAPI
-	InfraAPI               types.InfraAPI
-	ResolverClient         resolver.Interface
-	RestServer             *http.Server
-	npmClient, ifClient    *rpckit.RPCClient
-	cancelWatcher          context.CancelFunc
-	factory                *rpckit.RPCClientFactory
-	npmURL, tpmURL, tsmURL string
+	nimbusClient        *nimbus.NimbusClient
+	WatchCtx            context.Context
+	PipelineAPI         types.PipelineAPI
+	InfraAPI            types.InfraAPI
+	ResolverClient      resolver.Interface
+	RestServer          *http.Server
+	npmClient, ifClient *rpckit.RPCClient
+	cancelWatcher       context.CancelFunc
+	factory             *rpckit.RPCClientFactory
+	npmURL              string
+	kinds               []string // Captures the current Watch Kinds
 }
 
 // RestServer implements REST APIs
@@ -63,13 +64,12 @@ type RestServer struct {
 }
 
 // NewControllerAPI returns a new Controller API Handler
-func NewControllerAPI(p types.PipelineAPI, i types.InfraAPI, npmURL, tpmURL, tsmURL, restURL string) *API {
+func NewControllerAPI(p types.PipelineAPI, i types.InfraAPI, npmURL, restURL string) *API {
 	c := &API{
 		PipelineAPI: p,
 		InfraAPI:    i,
 		npmURL:      npmURL,
-		tpmURL:      tpmURL,
-		tsmURL:      tsmURL,
+		kinds:       types.BaseNetKinds,
 	}
 	c.RestServer = c.newRestServer(restURL, c.PipelineAPI)
 	return c
@@ -132,38 +132,29 @@ func (c *API) newRestServer(url string, pipelineAPI types.PipelineAPI) *http.Ser
 
 // HandleVeniceCoordinates is the server side method for NetAgent to act on the mode switch and connect to Venice
 func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) error {
-	c.Lock()
-	defer c.Unlock()
-
 	log.Infof("Controller API: %s | Obj: %v", types.InfoHandlingVeniceCoordinates, obj)
-
 	if strings.Contains(strings.ToLower(obj.DSCMode), "network") && len(obj.Controllers) != 0 {
-		//// Reject incomplete configs TODO Remove this hack -> hack commented out with watch mutexes
-		//if len(obj.MgmtIP) == 0 || len(obj.MgmtIntf) == 0 {
-		//	log.Infof("Ignoring incomplete mode change spec. Obj: %v", obj)
-		//	return nil
-		//}
-		//
-		//// Check for idempotency.
-		//existingCfg := c.InfraAPI.GetConfig()
-		//log.Infof("Controller API: Testing for config idempotency. Existing Cfg: %v | New Config: %v", existingCfg, obj)
-		//sort.Strings(existingCfg.Controllers)
-		//sort.Strings(obj.Controllers)
-		//
-		//if reflect.DeepEqual(existingCfg.Controllers, obj.Controllers) {
-		//	log.Infof("Controller API: %s", types.InfoIgnoreVeniceCoordinatesUpdate)
-		//	return nil
-		//}
 		// restore the Loopback IP if it is set.
 		cfg := c.InfraAPI.GetConfig()
 		if cfg.LoopbackIP != "" {
 			obj.LoopbackIP = cfg.LoopbackIP
 		}
-		c.InfraAPI.StoreConfig(obj)
+		// Check for Admission Idempotency.
+		sort.Strings(cfg.Controllers)
+		sort.Strings(obj.Controllers)
+		if cfg.IsConnectedToVenice && reflect.DeepEqual(cfg.Controllers, obj.Controllers) {
+			log.Infof("Controller API: %s | Obj: %v | Cfg: %v ", types.InfoIgnoreDuplicateVeniceCoodrinates, obj, cfg)
+			return nil
+		}
 
-		// Ensure that the controller API is registered with the pipeline
-		log.Infof("Controller API: %v", c)
-		c.PipelineAPI.RegisterControllerAPI(c)
+		// Clean up older go-routines. This makes calls to Start idempotent
+		log.Info("Controller API stopping watches")
+		if err := c.Stop(); err != nil {
+			log.Error(errors.Wrapf(types.ErrControllerWatcherStop, "Controller API: %s", err))
+		}
+
+		c.Lock()
+		c.InfraAPI.StoreConfig(obj)
 
 		// let the pipeline do its thing
 		c.PipelineAPI.HandleVeniceCoordinates(obj)
@@ -183,41 +174,71 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 			c.ResolverClient.UpdateServers(obj.Controllers)
 		}
 
-		// Clean up older go-routines. This makes calls to Start idempotent
-		if err := c.Stop(); err != nil {
-			log.Error(errors.Wrapf(types.ErrControllerWatcherStop, "Controller API: %s", err))
-		}
-
 		c.factory = rpckit.NewClientFactory(c.InfraAPI.GetDscName())
-		log.Infof("Controller API: %s | Info: %s", c.factory, types.InfoRPClientFactoryInit)
-		c.WatchCtx, c.cancelWatcher = context.WithCancel(context.Background())
-		c.Add(1)
-		// Start NPM Watcher Loop
+		c.Unlock()
+
 		go func() {
-			if err := c.Start(c.WatchCtx); err != nil {
+			log.Infof("Controller API: %s | Info: %s", c.factory, types.InfoRPClientFactoryInit)
+			if err := c.Start(c.kinds); err != nil {
 				log.Error(errors.Wrapf(types.ErrNPMControllerStart, "Controller API: %s", err))
 			}
 		}()
 
 	} else if strings.Contains(strings.ToLower(obj.DSCMode), "host") {
-		c.InfraAPI.StoreConfig(obj)
 		if err := c.Stop(); err != nil {
 			log.Error(errors.Wrapf(types.ErrControllerWatcherStop, "Controller API: %s", err))
 		}
+		tsdb.Cleanup()
+		c.InfraAPI.StoreConfig(obj)
 
 		if err := c.PipelineAPI.PurgeConfigs(); err != nil {
 			log.Error(err)
 		}
-		tsdb.Cleanup()
 	}
+	return nil
+}
+
+// Start starts watchers for a given kind. Calls to start are idempotent
+func (c *API) Start(kinds []string) error {
+	// Clean up older go-routines. This makes calls to Start idempotent
+	if err := c.Stop(); err != nil {
+		log.Error(errors.Wrapf(types.ErrControllerWatcherStop, "Controller API: %s", err))
+	}
+
+	// Start a new watch context
+	c.WatchCtx, c.cancelWatcher = context.WithCancel(context.Background())
+
+	c.Add(1)
+	go func() {
+		if err := c.start(c.WatchCtx, kinds); err != nil {
+			log.Error(errors.Wrapf(types.ErrNPMControllerStart, "Controller API: %s", err))
+		}
+	}()
+
+	// Init TSDB
+	opts := &tsdb.Opts{
+		ClientName:              types.Netagent + c.InfraAPI.GetDscName(),
+		ResolverClient:          c.ResolverClient,
+		Collector:               types.Collector,
+		DBName:                  "default",
+		SendInterval:            types.StatsSendInterval,
+		ConnectionRetryInterval: types.StatsRetryInterval,
+	}
+
+	tsdb.Init(c.WatchCtx, opts)
+	log.Infof("Controller API: %s", types.InfoTSDBInitDone)
 
 	return nil
 }
 
 // Start starts the control loop for connecting to Venice
 // Caller must be holding the lock
-func (c *API) Start(ctx context.Context) error {
+func (c *API) start(ctx context.Context, kinds []string) error {
+	log.Infof("Controller API acquiring lock for kind: %v", c.kinds)
 	defer c.Done()
+	c.Lock()
+	defer c.Unlock()
+	c.kinds = kinds
 	for {
 		select {
 		case <-ctx.Done():
@@ -225,6 +246,7 @@ func (c *API) Start(ctx context.Context) error {
 			return nil
 		default:
 		}
+		log.Infof("Controller API: Locking acquired for kinds: %v", c.kinds)
 
 		// TODO unify this on Venice side to have a single config controller
 		c.npmClient, _ = c.factory.NewRPCClient(
@@ -241,8 +263,6 @@ func (c *API) Start(ctx context.Context) error {
 
 		if c.npmClient != nil && c.ifClient != nil {
 			log.Infof("Controller API: %s", types.InfoConnectedToNPM)
-			log.Infof("Controller API: %s", types.InfoConnectedToTSM)
-			log.Infof("Controller API: %s", types.InfoConnectedToTPM)
 			c.InfraAPI.NotifyVeniceConnection()
 		} else {
 			// Loop forever connect to all controllers NPM, TPM and TSM. Handle cascading closures to prevent leaks
@@ -251,25 +271,10 @@ func (c *API) Start(ctx context.Context) error {
 					log.Error(errors.Wrapf(types.ErrNPMWatcherClose, "Controller API: %s", err))
 				}
 			}
-
-			//TODO uncomment this once the TSM and TPM move to agg watch.
-			//if c.tsmClient != nil {
-			//	if err := c.npmClient.Close(); err != nil {
-			//		log.Error(errors.Wrapf(types.ErrTSMWatcherClose, "Controller API: %s", err))
-			//	}
-			//}
-			//
-			//if c.tpmClient != nil {
-			//	if err := c.npmClient.Close(); err != nil {
-			//		log.Error(errors.Wrapf(types.ErrTPMWatcherClose, "Controller API: %s", err))
-			//	}
-			//}
 			log.Infof("Controller API: %s", types.InfoControllerReconnecting)
 			time.Sleep(types.ControllerWaitDelay)
 			continue
 		}
-
-		log.Infof("Controller API: %s", types.InfoTSDBInitDone)
 
 		nimbusClient, err := nimbus.NewNimbusClient(c.InfraAPI.GetDscName(), c.npmURL, c.npmClient)
 		if err != nil {
@@ -281,16 +286,9 @@ func (c *API) Start(ctx context.Context) error {
 
 		watchExited := make(chan bool)
 		go func() {
-			c.WatchObjects([]string{"Profile", "IPAMPolicy", "Interface", "Collector"})
+			c.watchObjects()
 			watchExited <- true
 		}()
-
-		// TODO temporarily commented out to debug.
-		//go func() {
-		//	if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"IPAMPolicy"}, c.PipelineAPI); err != nil {
-		//		log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
-		//	}
-		//}()
 
 		// Start Interface update
 
@@ -301,26 +299,25 @@ func (c *API) Start(ctx context.Context) error {
 	}
 }
 
-func (c *API) WatchObjects(kinds []string) {
-
+func (c *API) watchObjects() {
 	if c.WatchCtx == nil {
-		log.Infof("Controller API: AggWatch not started WatchCtx is not set | Kinds: %v", kinds)
+		log.Infof("Controller API: AggWatch not started WatchCtx is not set | Kinds: %v", c.kinds)
 		return
 	}
 	if c.nimbusClient == nil {
-		log.Infof("Controller API: AggWatch not started Nimbus client is nil | Kinds: %v", kinds)
+		log.Infof("Controller API: AggWatch not started Nimbus client is nil | Kinds: %v", c.kinds)
 		return
 
 	}
 
-	log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStarted, kinds)
-	// Add to the WG so that when Stop() is invoked we wait for all wather to exit
+	log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStarted, c.kinds)
+	// Add to the WG so that when Stop() is invoked we wait for all watchers to exit
 	// before cleaning up the RPC clients
 	c.Add(1)
-	if err := c.nimbusClient.WatchAggregate(c.WatchCtx, kinds, c.PipelineAPI); err != nil {
+	if err := c.nimbusClient.WatchAggregate(c.WatchCtx, c.kinds, c.PipelineAPI); err != nil {
 		log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
 	}
-	log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStopped, kinds)
+	log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStopped, c.kinds)
 	c.Done()
 }
 
@@ -433,17 +430,19 @@ func (c *API) Stop() error {
 	}
 
 	c.cancelWatcher()
-	log.Infof("Controller API: %s", types.InfoNPMWatcherReaped)
 
+	// Wait for nimbus client to drain all active watchers
 	c.Wait()
+
+	c.WatchCtx = nil
 	c.cancelWatcher = nil
+	c.nimbusClient = nil
 
 	if c.npmClient != nil {
 		if err := c.npmClient.Close(); err != nil {
 			log.Error(errors.Wrapf(types.ErrNPMWatcherClose, "Controller API: %s", err))
 		}
 	}
-
 	return nil
 }
 
@@ -612,8 +611,6 @@ func (c *API) getMappingHandler(r *http.Request) (interface{}, error) {
 
 func (c *API) handleDSCInterfaceInfo(obj types.DistributedServiceCardStatus) {
 	//Handle DSC Interface Info
-	c.Lock()
-	defer c.Unlock()
 	if strings.Contains(strings.ToLower(obj.DSCMode), "network") {
 		log.Infof("Controller API: handleDSCInterfaceInfo | Obj: %v", obj)
 

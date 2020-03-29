@@ -1453,47 +1453,11 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 		return nil, err
 	}
 
-	//ToDo: have to check for idemptonet calls??
 	if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_INSERTION.String()) {
-		// Once we are in this mode, we should not stop this routine.
-		// On ctrler restart : WatchObjects will exit
-		//                     newNimbusClient will be recreated
-		//                      newWatchCtx witll be create in Start()
-		// repeated venice coordinates : GRPC will be closed in HandleVeniceCoordinates, and we will call start again
-		// Upgrade : Before watchCtx is set, ReplayConfigs calls HandleProfile and that setsup the watches. As npm sync will not result in change of object
-		// and we wil not setup new watchers.
-		insertionKinds := []string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile", "MirrorSession", "FlowExportPolicy"}
-
-		log.Infof("Start InsertionMode Watcher")
-		startInsertionWatcher := func() {
-			for {
-				if i.ControllerAPI == nil {
-					log.Info("Wait for controller registration")
-					time.Sleep(time.Second)
-					continue
-				}
-				log.Infof("AggWatchers Start for kinds %s", insertionKinds)
-				i.ControllerAPI.WatchObjects(insertionKinds)
-				log.Infof("Watchers stopped for kinds %s", insertionKinds)
-				time.Sleep(time.Minute)
-			}
-		}
-		go startInsertionWatcher()
+		i.startDynamicWatch(types.InsertionKinds)
+	} else if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_FLOWAWARE.String()) {
+		i.startDynamicWatch(types.FlowAwareKinds)
 	}
-	// ToDO remove this commented out code
-	//if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_TRANSPARENT.String()) {
-	//	go func() {
-	//		i.ControllerAPI.WatchObjects([]string{"Interface", "Collector"})
-	//	}()
-	//} else { // We support only insertion enforced
-	//	go func() {
-	//		i.ControllerAPI.WatchObjects([]string{"App", "NetworkSecurityPolicy"})
-	//	}()
-	//	go func() {
-	//		i.ControllerAPI.WatchObjects([]string{"Vrf", "Network", "Endpoint", "SecurityProfile"})
-	//	}()
-	//}
-
 	return
 }
 
@@ -2103,4 +2067,26 @@ func (i *IrisAPI) isLocalEP(nodeuuid string) bool {
 // HandleDSCL3Interface handles configuring L3 interfaces on DSC interfaces
 func (i *IrisAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
 	return errors.Wrapf(types.ErrNotImplemented, "Handle CP Routing Config not implemented by Iris Pipeline")
+}
+
+// TODO Move this into InfraAPI to avoid code duplication
+func (i *IrisAPI) startDynamicWatch(kinds []string) {
+	log.Infof("Starting Dynamic Watches for kinds: %v", kinds)
+	startWatcher := func() {
+		ticker := time.NewTicker(time.Second * 30)
+		for {
+			select {
+			case <-ticker.C:
+				if i.ControllerAPI == nil {
+					log.Info("Waiting for controller registration")
+				} else {
+					log.Infof("AggWatchers Start for kinds %s", kinds)
+					i.ControllerAPI.Start(kinds)
+					return
+				}
+			}
+		}
+
+	}
+	go startWatcher()
 }

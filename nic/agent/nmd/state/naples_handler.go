@@ -327,6 +327,7 @@ func (n *NMD) PostStatusToAgent() (err error) {
 		MgmtIntf:           n.config.Status.ManagementInterface,
 		SecondaryMgmtIntfs: secondaryMgmtIntfs,
 		Controllers:        controllers,
+		AdmissionState:     n.config.Status.AdmissionPhase,
 	}
 
 	if n.config.Status.IPConfig != nil {
@@ -352,6 +353,39 @@ func (n *NMD) PostStatusToAgent() (err error) {
 			for {
 				select {
 				case <-ticker.C:
+					// Reinit the status object
+					// TODO Add documentation/best-practice guide to explain how it might be simple to follow standard GO idiom of Share memory by communicating.
+					// Earlier in release A here we used to communicate by sharing memory. Essentially the singleton DSC Object was shared between CMD and NPM in order to communicate.
+					// This control loop allows to synchronize updates to DSC Object by essentially deferring watch establishing till the naples is admitted. The following changes in unison
+					// allows this to work:
+					//	1. Moving of Config Replays out of HandleVeniceCooridnates - DscAgent changes
+					//	2. Ensuring Agent will reject HandleVeniceCoordinates if the DSC is not admitted. - DscAgent changes
+					//	3. NMD Honoring agent errors and retrying the coordinates push and updating agent of the current admission status on every retry. - NMD Changes, this current loop
+
+					// This doesn't have a test case yet. But be careful of changing this behavior without significant tests and repeated sanity runs. Any changes here we need to ensure that the iris and and cloud e2e passes.
+
+					// TODO A cleaner way to handle this is decouple NPM from touch DSCObject all together. NMD should be the single owner of the DSC Object
+
+					statusObj := agentTypes.DistributedServiceCardStatus{
+						DSCMode:            n.config.Status.Mode,
+						DSCName:            n.config.Status.DSCName,
+						MgmtIntf:           n.config.Status.ManagementInterface,
+						SecondaryMgmtIntfs: secondaryMgmtIntfs,
+						Controllers:        controllers,
+						AdmissionState:     n.config.Status.AdmissionPhase,
+					}
+
+					if n.config.Status.IPConfig != nil {
+						statusObj.MgmtIP = n.config.Status.IPConfig.IPAddress
+					}
+
+					if len(n.DSCInterfaceIPs) != 0 {
+						statusObj.DSCInterfaceIPs = n.DSCInterfaceIPs
+					}
+
+					if len(n.DSCStaticRoutes) != 0 {
+						statusObj.DSCStaticRoutes = n.DSCStaticRoutes
+					}
 					err := netutils.HTTPPost(agentModeChangeURL, &statusObj, &resp)
 					if err != nil {
 						log.Errorf("NetAgent failed to respond to mode change. Resp: %v | Err: %v", resp, err)

@@ -147,20 +147,8 @@ func (a *ApuluAPI) PipelineInit() error {
 	// handle all the metrics
 	apulu.HandleMetrics(a.InfraAPI, a.OperClient)
 	// Ensure that the watches for all objects are set up since Apulu doesn't have a profile that dictates which objects to be watched
-	go func() {
-		for {
-			if a.ControllerAPI == nil {
-				// Wait till Controller API is correctly registered
-				time.Sleep(time.Minute)
-				continue
-			}
-			log.Infof("AggWatchers Start for kinds %s", types.AllKinds)
-			a.ControllerAPI.WatchObjects(types.AllKinds)
-			log.Infof("AggWatchers Stop for kinds %s", types.AllKinds)
-			time.Sleep(time.Minute)
-		}
 
-	}()
+	a.startDynamicWatch(types.CloudPipelineKinds)
 
 	// Start a tech support watcher. Ideally this should be handled via nimbus aggregate watch. In such a case we could have
 	// reused the above code. Tech Support has a separate controller which prevents us from doing this.
@@ -1927,4 +1915,26 @@ func (a *ApuluAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
 // HandleCollector handles CRUD Methods for Collector Object
 func (a *ApuluAPI) HandleCollector(oper types.Operation, col netproto.Collector) (cols []netproto.Collector, err error) {
 	return nil, nil
+}
+
+// TODO Move this into InfraAPI to avoid code duplication
+func (a *ApuluAPI) startDynamicWatch(kinds []string) {
+	log.Infof("Starting Dynamic Watches for kinds: %v", kinds)
+	startWatcher := func() {
+		ticker := time.NewTicker(time.Second * 30)
+		for {
+			select {
+			case <-ticker.C:
+				if a.ControllerAPI == nil {
+					log.Info("Waiting for controller registration")
+				} else {
+					log.Infof("AggWatchers Start for kinds %s", types.InsertionKinds)
+					a.ControllerAPI.Start(kinds)
+					return
+				}
+			}
+		}
+
+	}
+	go startWatcher()
 }

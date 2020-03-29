@@ -37,10 +37,14 @@ func NewDSCAgent(logger log.Logger, npmURL, tpmURL, tsmURL, restURL string) (*DS
 
 	d := DSCAgent{
 		PipelineAPI:   pipelineAPI,
-		ControllerAPI: controller.NewControllerAPI(pipelineAPI, infraAPI, npmURL, tpmURL, tsmURL, restURL),
+		ControllerAPI: controller.NewControllerAPI(pipelineAPI, infraAPI, npmURL, restURL),
 		InfraAPI:      infraAPI,
 		Logger:        logger,
 	}
+
+	// Ensure that the controller API is registered with the pipeline
+	log.Infof("Controller API: %v", d.ControllerAPI)
+	d.PipelineAPI.RegisterControllerAPI(d.ControllerAPI)
 
 	return &d, nil
 }

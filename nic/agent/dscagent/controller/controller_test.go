@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver/mock"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -23,7 +24,7 @@ func TestControllerAPINetworkMode(t *testing.T) {
 	var l netutils.TestListenAddr
 	err := l.GetAvailablePort()
 	AssertOk(t, err, "failed to get an available port for REST Server")
-	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), fakeServer.grpcServer.GetListenURL(), fakeServer.grpcServer.GetListenURL(), l.ListenURL.String())
+	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), l.ListenURL.String())
 	defer c.Stop()
 	o := types.DistributedServiceCardStatus{
 		DSCName:  "mock-dsc",
@@ -42,7 +43,7 @@ func TestControllerAPIHostMode(t *testing.T) {
 	err := l.GetAvailablePort()
 	AssertOk(t, err, "failed to get an available port for REST Server")
 
-	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), fakeServer.grpcServer.GetListenURL(), fakeServer.grpcServer.GetListenURL(), l.ListenURL.String())
+	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), l.ListenURL.String())
 	defer c.Stop()
 	c.ResolverClient = &mock.ResolverClient{}
 	o := types.DistributedServiceCardStatus{
@@ -59,7 +60,7 @@ func TestAppWatch(t *testing.T) {
 	var l netutils.TestListenAddr
 	err := l.GetAvailablePort()
 	AssertOk(t, err, "failed to get an available port for REST Server")
-	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), fakeServer.grpcServer.GetListenURL(), fakeServer.grpcServer.GetListenURL(), l.ListenURL.String())
+	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), l.ListenURL.String())
 	defer c.Stop()
 
 	// Create App
@@ -445,13 +446,47 @@ func TestEndpointWatch(t *testing.T) {
 	}, "NetAgent did not get Endpoint Delete.")
 }
 
+func TestDynamicWatch(t *testing.T) {
+	t.Parallel()
+	var l netutils.TestListenAddr
+	err := l.GetAvailablePort()
+	AssertOk(t, err, "failed to get an available port for REST Server")
+	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), "")
+	defer c.Stop()
+	o := types.DistributedServiceCardStatus{
+		DSCName:  "mock-dsc",
+		DSCMode:  "network_managed_inband",
+		MgmtIP:   "42.42.42.42/24",
+		MgmtIntf: "lo",
+	}
+	err = c.HandleVeniceCoordinates(o)
+	startWatcher := func() {
+		ticker := time.NewTicker(time.Second * 30)
+		for {
+			select {
+			case <-ticker.C:
+				if c == nil {
+					log.Info("Waiting for controller registration")
+				} else {
+					log.Infof("AggWatchers Start for kinds %s", types.InsertionKinds)
+					c.Start(types.InsertionKinds)
+					return
+				}
+			}
+		}
+
+	}
+	go startWatcher()
+	c.Start(types.InsertionKinds)
+}
+
 // ##################################### Corner Test Cases  #####################################
 func TestControllerAPIDefaultRestURL(t *testing.T) {
 	t.Parallel()
 	var l netutils.TestListenAddr
 	err := l.GetAvailablePort()
 	AssertOk(t, err, "failed to get an available port for REST Server")
-	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), fakeServer.grpcServer.GetListenURL(), fakeServer.grpcServer.GetListenURL(), "")
+	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), "")
 	defer c.Stop()
 	o := types.DistributedServiceCardStatus{
 		DSCName:     "mock-dsc",
@@ -470,7 +505,7 @@ func TestControllerAPIMalformedRestURL(t *testing.T) {
 	var l netutils.TestListenAddr
 	err := l.GetAvailablePort()
 	AssertOk(t, err, "failed to get an available port for REST Server")
-	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), fakeServer.grpcServer.GetListenURL(), fakeServer.grpcServer.GetListenURL(), "bad-url-%^&&")
+	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), "bad-url-%^&&")
 	defer c.Stop()
 	o := types.DistributedServiceCardStatus{
 		DSCName:     "mock-dsc",

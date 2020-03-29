@@ -126,23 +126,7 @@ func (i *FakeAgentAPI) PipelineInit() error {
 	}
 
 	log.Infof("setting up the watchers")
-
-	go func() {
-		for {
-			if i.ControllerAPI == nil {
-				log.Infof("Wait for controller registration")
-				// Wait till Controller API is correctly registered
-				time.Sleep(time.Second)
-				continue
-			}
-			log.Infof("Watch all objects")
-			i.ControllerAPI.WatchObjects([]string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile", "RouteTable", "RoutingConfig", "MirrorSession"})
-			log.Infof("Watchers stopped for all kinds")
-			time.Sleep(time.Second)
-		}
-
-	}()
-
+	i.startDynamicWatch(types.InsertionKinds)
 	return nil
 }
 
@@ -1464,14 +1448,11 @@ func (i *FakeAgentAPI) HandleProfile(oper types.Operation, profile netproto.Prof
 	//ToDo: have to check for idemptonet calls??
 	if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_TRANSPARENT.String()) {
 		go func() {
-			i.ControllerAPI.WatchObjects([]string{"Interface", "Collector"})
+			i.ControllerAPI.Start(types.BaseNetKinds)
 		}()
 	} else { // We support only insertion enforced
 		go func() {
-			i.ControllerAPI.WatchObjects([]string{"App", "NetworkSecurityPolicy"})
-		}()
-		go func() {
-			i.ControllerAPI.WatchObjects([]string{"Vrf", "Network", "Endpoint", "SecurityProfile"})
+			i.ControllerAPI.Start(types.InsertionKinds)
 		}()
 	}
 
@@ -1778,4 +1759,26 @@ func (i *FakeAgentAPI) HandleCollector(oper types.Operation, col netproto.Collec
 // HandletechSupport stubbed out
 func (i *FakeAgentAPI) HandleTechSupport(obj tsproto.TechSupportRequest) (string, error) {
 	return "", errors.Wrapf(types.ErrNotImplemented, "Handle Tech Support not implemented by Iris Pipeline")
+}
+
+// TODO Move this into InfraAPI to avoid code duplication
+func (i *FakeAgentAPI) startDynamicWatch(kinds []string) {
+	log.Infof("Starting Dynamic Watches for kinds: %v", kinds)
+	startWatcher := func() {
+		ticker := time.NewTicker(time.Second * 30)
+		for {
+			select {
+			case <-ticker.C:
+				if i.ControllerAPI == nil {
+					log.Info("Waiting for controller registration")
+				} else {
+					log.Infof("AggWatchers Start for kinds %s", types.InsertionKinds)
+					i.ControllerAPI.Start(kinds)
+					return
+				}
+			}
+		}
+
+	}
+	go startWatcher()
 }

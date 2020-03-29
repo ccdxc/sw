@@ -523,7 +523,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	c = NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), fakeServer.grpcServer.GetListenURL(), fakeServer.grpcServer.GetListenURL(), ctrlerLis.ListenURL.String())
+	c = NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), ctrlerLis.ListenURL.String())
 	defer c.Stop()
 
 	code := m.Run()

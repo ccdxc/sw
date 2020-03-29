@@ -13,8 +13,17 @@ import (
 // Operation is the type of the CRUD Operation
 type Operation int
 
-// AllKinds captures all the objects that agent will watch from Venice
-var AllKinds = []string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile", "RouteTable", "RoutingConfig"}
+// CloudPipelineKinds captures all the objects that agent will watch from Venice
+var CloudPipelineKinds = []string{"Interface", "Collector", "IPAMPolicy", "App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile", "RouteTable", "RoutingConfig"}
+
+// BaseNetKinds captures all the objects needed for Transparent Basenet Profile
+var BaseNetKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector"}
+
+// FlowAwareKinds catpures all the objects needed for FlowAware Profile
+var FlowAwareKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", "MirrorSession", "FlowExportPolicy"}
+
+// InsertionKinds captures all the objects needed for Insertion USeg Enforced Profile
+var InsertionKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", "MirrorSession", "FlowExportPolicy", "App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile"}
 
 // IPAddressKind captures the type of IPAddress options, Singleton, Hyphen separated range or CIDR
 type IPAddressKind int

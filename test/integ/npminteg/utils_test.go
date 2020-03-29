@@ -60,15 +60,16 @@ func CreateAgent(logger log.Logger, veniceURL, nodeUUID string) (*Dpagent, error
 	// Handle mode change
 
 	o := types.DistributedServiceCardStatus{
-		DSCName:     nodeUUID,
-		DSCMode:     "network_managed_inband",
-		MgmtIP:      "42.42.42.42/24",
-		MgmtIntf:    "lo",
-		Controllers: []string{veniceURL},
+		DSCName:        nodeUUID,
+		DSCMode:        "network_managed_inband",
+		MgmtIP:         "42.42.42.42/24",
+		MgmtIntf:       "lo",
+		AdmissionState: "admitted", // Fake admission status
+		Controllers:    []string{veniceURL},
 	}
 	err = nagent.ControllerAPI.HandleVeniceCoordinates(o)
 	logger.Infof("RestURL: %v", lis.ListenURL.String())
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 30)
 
 	if err != nil {
 		log.Errorf("Failed to perform mode switch. Err: %v", err)

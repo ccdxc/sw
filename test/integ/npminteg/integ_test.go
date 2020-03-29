@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/api/generated/cluster"
+
 	"golang.org/x/net/context"
 	"gopkg.in/check.v1"
 	. "gopkg.in/check.v1"
@@ -47,8 +49,8 @@ import (
 const (
 	numIntegTestAgents = 3
 	integTestNpmRPCURL = "localhost:9595"
-	integTestTpmRPCURL = "localhost:9093"
-	integTestTsmRPCURL = "localhost:9500"
+	//integTestTpmRPCURL = "localhost:9093"
+	//integTestTsmRPCURL = "localhost:9500"
 	integTestRESTURL   = "localhost:9596"
 	agentDatapathKind  = "mock"
 	integTestApisrvURL = "localhost:8082"
@@ -146,31 +148,31 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	}
 	m.AddServiceInstance(&npmSi)
 
-	tpmSi := types.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: "pen-tpm-test",
-		},
-		Service: globals.Tpm,
-		Node:    "localhost",
-		URL:     integTestTpmRPCURL,
-	}
-	m.AddServiceInstance(&tpmSi)
-
-	tsmSi := types.ServiceInstance{
-		TypeMeta: api.TypeMeta{
-			Kind: "ServiceInstance",
-		},
-		ObjectMeta: api.ObjectMeta{
-			Name: "pen-tsm-test",
-		},
-		Service: globals.Tsm,
-		Node:    "localhost",
-		URL:     integTestTsmRPCURL,
-	}
-	m.AddServiceInstance(&tsmSi)
+	//tpmSi := types.ServiceInstance{
+	//	TypeMeta: api.TypeMeta{
+	//		Kind: "ServiceInstance",
+	//	},
+	//	ObjectMeta: api.ObjectMeta{
+	//		Name: "pen-tpm-test",
+	//	},
+	//	Service: globals.Tpm,
+	//	Node:    "localhost",
+	//	URL:     integTestTpmRPCURL,
+	//}
+	//m.AddServiceInstance(&tpmSi)
+	//
+	//tsmSi := types.ServiceInstance{
+	//	TypeMeta: api.TypeMeta{
+	//		Kind: "ServiceInstance",
+	//	},
+	//	ObjectMeta: api.ObjectMeta{
+	//		Name: "pen-tsm-test",
+	//	},
+	//	Service: globals.Tsm,
+	//	Node:    "localhost",
+	//	URL:     integTestTsmRPCURL,
+	//}
+	//m.AddServiceInstance(&tsmSi)
 
 	// start API server
 	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", logger.WithContext("submodule", "pen-apiserver"))
@@ -201,13 +203,13 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	it.npmCtrler = ctrler
 	it.resolverClient = rc
 
-	pm, err := tpm.NewPolicyManager(integTestTpmRPCURL, rc, "localhost:")
-	c.Assert(err, check.IsNil)
-	it.tpmCtrler = pm
-
-	tsCtrler, err := tsm.NewTsCtrler(integTestTsmRPCURL, "localhost:", globals.APIServer, rc)
-	c.Assert(err, check.IsNil)
-	it.tsmCtrler = tsCtrler
+	//pm, err := tpm.NewPolicyManager(integTestTpmRPCURL, rc, "localhost:")
+	//c.Assert(err, check.IsNil)
+	//it.tpmCtrler = pm
+	//
+	//tsCtrler, err := tsm.NewTsCtrler(integTestTsmRPCURL, "localhost:", globals.APIServer, rc)
+	//c.Assert(err, check.IsNil)
+	//it.tsmCtrler = tsCtrler
 
 	log.Infof("Creating %d/%d agents", it.numAgents, *numHosts)
 
@@ -252,6 +254,42 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	}
 	time.Sleep(time.Second * 2)
 
+	// Ensure we push an insertion enforced profile
+
+	dscProfile1 := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "insertion.enforced1",
+			Namespace: "",
+			Tenant:    "",
+		},
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "INSERTION",
+			FlowPolicyMode: "ENFORCED",
+		},
+	}
+
+	_, err = it.apisrvClient.ClusterV1().DSCProfile().Create(ctx, &dscProfile1)
+	if err != nil {
+		c.Fatalf("Failed to get APIServer handler. Err: %v", err)
+	}
+
+	meta := &api.ObjectMeta{
+		Name:   it.agents[0].dscAgent.InfraAPI.GetConfig().DSCName,
+		Tenant: "default",
+	}
+
+	dsc, err := it.apisrvClient.ClusterV1().DistributedServiceCard().Get(ctx, meta)
+	if err != nil {
+		c.Fatalf("Failed to get dsc. Err: %v", err)
+	}
+
+	dsc.Spec.DSCProfile = "insertion.enforced1"
+	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(ctx, dsc)
+	if err != nil {
+		c.Fatalf("Error DistributedServicesCard update failed. Err: %v", err)
+	}
+	time.Sleep(time.Second * 5)
 }
 
 func (it *integTestSuite) SetUpTest(c *C) {
