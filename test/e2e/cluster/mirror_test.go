@@ -302,7 +302,7 @@ var _ = Describe("mirror session tests", func() {
 					}
 				}
 				return true
-			}, 5, 1).Should(BeTrue(), fmt.Sprintf("Failed to start %s", ms.Name))
+			}, 120, 30).Should(BeTrue(), fmt.Sprintf("Failed to start %s", ms.Name))
 
 			// Update mirror session match rules
 			tms.Spec.MatchRules = []monitoring.MatchRule{
@@ -342,7 +342,7 @@ var _ = Describe("mirror session tests", func() {
 					}
 				}
 				return true
-			}, 120, 60).Should(BeTrue(), fmt.Sprintf("Failed to start %s", ms.Name))
+			}, 120, 30).Should(BeTrue(), fmt.Sprintf("Failed to start %s", ms.Name))
 		})
 
 		It("Should run mirror sessions after shcedule time", func() {
