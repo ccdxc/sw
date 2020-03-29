@@ -1,4 +1,5 @@
 import iota.harness.api as api
+from ipaddress import ip_address, ip_network
 
 def GetBondWorkloadPair(node_name=None):
     pairs = []
@@ -13,5 +14,8 @@ def GetBondWorkloadPair(node_name=None):
                 continue
             if wl.uplink_vlan != 0:
                 continue
+            if ip_address(node.GetBondIp()) not in ip_network(wl.ip_prefix, strict=False):
+                continue
+
             pairs.append([node, wl])
     return pairs

@@ -28,7 +28,6 @@ testcases:
     -   name    : Ping_Bond
         testcase: testcases.networking.ping_bond
         stress  : True
-        ignore  : True
         iterators :
             type    : nested
             pktsize : [64, 256, 1024]
@@ -47,7 +46,6 @@ testcases:
     -   name    : Iperf_Bond
         testcase: testcases.networking.iperf_bond
         stress  : True
-        ignore  : True 
         iterators:
             type      : nested
             proto     : [ tcp ]
