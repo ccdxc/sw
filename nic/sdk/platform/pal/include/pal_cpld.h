@@ -30,6 +30,10 @@
 #define CPLD_REGISTER_QSFP_PORT2_WARNING_TEMP 0x37
 #define CPLD_REGISTER_SYSTEM_HEALTH0          0x38
 #define CPLD_REGISTER_SYSTEM_HEALTH1          0x39
+#define CPLD_REGISTER_MAJOR_FW_VER            0x3a
+#define CPLD_REGISTER_MINOR_FW_VER            0x3b
+#define CPLD_REGISTER_MAINTANENCE_FW_VER      0x3c
+#define CPLD_REGISTER_PIPELINE_FW             0x3d
 #define CPLD_CONF_FLASH_READ_BYTE             0x50
 #define CPLD_DATA_CACHE_END_ADDR              0x5f
 #define CPLD_REGISTER_ID                      0x80
@@ -156,4 +160,6 @@ void pal_write_hbmcritical_temp(int data);
 void pal_write_hbmfatal_temp(int data);
 int pal_enable_auxiliary_fan(void);
 int pal_disable_auxiliary_fan(void);
+int pal_write_fw_ver_to_cpld(uint32_t major_ver, uint32_t minor_ver,
+                             uint32_t maint_ver, uint32_t pipeline);
 #endif

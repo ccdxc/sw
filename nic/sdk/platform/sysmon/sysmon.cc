@@ -85,9 +85,11 @@ sysmon_init (sysmon_cfg_t *sysmon_cfg)
 
     SDK_TRACE_INFO("Monitoring system events");
 
-    //check for panic dump
+    // check for panic dump
     checkpanicdump();
-    //sysmon_ipc_init();
+
+    // update the firmware version in cpld
+    updatefwversion();
 
     SDK_TRACE_INFO("HBM Threshold temperature is %u",
                    g_sysmon_cfg.catalog->hbmtemperature_threshold());

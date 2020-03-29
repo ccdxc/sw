@@ -181,6 +181,11 @@ pal_disable_auxiliary_fan(void)
     return -1;
 }
 
+int pal_write_fw_ver_to_cpld(uint32_t major_ver, uint32_t minor_ver,
+                             uint32_t maint_ver, uint32_t pipeline)
+{
+    return -1;
+}
 #else
 #include <string.h>
 
@@ -620,5 +625,19 @@ int
 pal_disable_auxiliary_fan(void)
 {
     return cpld_reg_bit_reset(CPLD_REGISTER_CTRL2, CPLD_AUX_FAN_ON);
+}
+
+int pal_write_fw_ver_to_cpld(uint32_t major_ver, uint32_t minor_ver,
+                             uint32_t maint_ver, uint32_t pipeline)
+{
+    major_ver = (major_ver > 255) ? 255 : major_ver;
+    minor_ver = (minor_ver > 255) ? 255 : minor_ver;
+    maint_ver = (maint_ver > 255) ? 255 : maint_ver;
+    pipeline = (pipeline > 255) ? 255 : pipeline;
+    cpld_reg_wr(CPLD_REGISTER_MAJOR_FW_VER, major_ver);
+    cpld_reg_wr(CPLD_REGISTER_MINOR_FW_VER, minor_ver);
+    cpld_reg_wr(CPLD_REGISTER_MAINTANENCE_FW_VER, maint_ver);
+    cpld_reg_wr(CPLD_REGISTER_PIPELINE_FW, pipeline);
+    return 0;
 }
 #endif

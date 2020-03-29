@@ -53,6 +53,7 @@ static monfunc_t monfunc_t_##fnc \
 }
 
 int configurefrequency(void);
+void updatefwversion(void);
 void checkpanicdump(void);
 void sysmgrsystemled(systemled_t led);
 void checkcattrip(void);

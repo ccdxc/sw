@@ -211,6 +211,12 @@ pal_disable_auxiliary_fan(void)
 {
     return -1;
 }
+
+int pal_write_fw_ver_to_cpld(uint32_t major_ver, uint32_t minor_ver,
+                             uint32_t maint_ver, uint32_t pipeline)
+{
+    return -1;
+}
 #else
 #include <string.h>
 /* Public APIs */
@@ -417,6 +423,12 @@ pal_enable_auxiliary_fan(void)
 
 int
 pal_disable_auxiliary_fan(void)
+{
+    return -1;
+}
+
+int pal_write_fw_ver_to_cpld(uint32_t major_ver, uint32_t minor_ver,
+                             uint32_t maint_ver, uint32_t pipeline)
 {
     return -1;
 }
