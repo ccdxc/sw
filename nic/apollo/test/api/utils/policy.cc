@@ -64,6 +64,7 @@ create_rules(std::string cidr_str, uint8_t af, uint16_t num_rules,
         num_range_rules = (ip_pfx.addr.af == IP_AF_IPV6)?
                            MAX_RANGE_RULES_V6 : MAX_RANGE_RULES_V4;
         for (uint32_t i = 0; i < num_rules; i++) {
+            (*rule_info)->rules[i].key = int2pdsobjkey(i+1);
             (*rule_info)->rules[i].match.l4_match.sport_range.port_lo = 0;
             (*rule_info)->rules[i].match.l4_match.sport_range.port_hi = 65535;
             (*rule_info)->rules[i].match.l4_match.dport_range.port_lo = 0;
@@ -103,6 +104,7 @@ create_rules(std::string cidr_str, uint8_t af, uint16_t num_rules,
         }
     } else {
         for (uint32_t i = 0; i < num_rules; i++) {
+            (*rule_info)->rules[i].key = int2pdsobjkey(i+1);
             if (stateful_rules) {
                 (*rule_info)->rules[i].stateful = true;
                 (*rule_info)->rules[i].match.l4_match.sport_range.port_lo = 0;
