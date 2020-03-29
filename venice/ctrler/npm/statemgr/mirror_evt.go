@@ -379,9 +379,6 @@ func collectorKey(tenant, vrf, dest string) string {
 
 func (smm *SmMirrorSessionInterface) findCollector(tenant, vrf, dest string) (*mirrorCollector, error) {
 
-	smm.Lock()
-	defer smm.Unlock()
-
 	key := collectorKey(tenant, vrf, dest)
 	col, ok := smm.collectors[key]
 	if ok {
@@ -392,9 +389,6 @@ func (smm *SmMirrorSessionInterface) findCollector(tenant, vrf, dest string) (*m
 }
 
 func (smm *SmMirrorSessionInterface) addCollector(tenant, vrf, dest, gateway string) (*mirrorCollector, error) {
-
-	smm.Lock()
-	defer smm.Unlock()
 
 	key := collectorKey(tenant, vrf, dest)
 	col, ok := smm.collectors[key]
@@ -435,9 +429,6 @@ func (smm *SmMirrorSessionInterface) addCollector(tenant, vrf, dest, gateway str
 }
 
 func (smm *SmMirrorSessionInterface) deleteCollector(tenant, vrf, dest string) (*mirrorCollector, error) {
-
-	smm.Lock()
-	defer smm.Unlock()
 
 	key := collectorKey(tenant, vrf, dest)
 	col, ok := smm.collectors[key]
@@ -540,17 +531,12 @@ func (smm *SmMirrorSessionInterface) addMirror(ms *MirrorSessionState) error {
 
 //AddMirrorSession add mirror session
 func (smm *SmMirrorSessionInterface) addMirrorSession(ms *MirrorSessionState) error {
-	smm.Lock()
-	defer smm.Unlock()
 	smm.mirrorSessions[ms.MirrorSession.GetKey()] = ms
 	return nil
 }
 
 //deleteMirrorSession delete mirror session
 func (smm *SmMirrorSessionInterface) deleteMirrorSession(ms *MirrorSessionState) error {
-	smm.Lock()
-	defer smm.Unlock()
-
 	delete(smm.mirrorSessions, ms.MirrorSession.GetKey())
 	return nil
 }
@@ -614,6 +600,8 @@ func (smm *SmMirrorSessionInterface) getAllMirrorSessionCollectors() []*mirrorSe
 
 func (smm *SmMirrorSessionInterface) addInterfaceMirror(ms *MirrorSessionState) error {
 
+	smm.Lock()
+	defer smm.Unlock()
 	//Process only if no match rules
 	if ms.MirrorSession.Spec.Interfaces == nil {
 		log.Infof("Skipping processing of mirror session %v  as interface selector not assigned yet", ms.MirrorSession.Name)
@@ -692,6 +680,8 @@ func selectorsEqual(sel []*labels.Selector, otherSel []*labels.Selector) bool {
 func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionState, nmirror *monitoring.MirrorSession) error {
 	log.Infof("Got mirror update for %#v", nmirror.ObjectMeta)
 
+	smm.Lock()
+	defer smm.Unlock()
 	// see if anything changed
 
 	currentCollectors := ms.MirrorSession.Spec.GetCollectors()
@@ -825,6 +815,7 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 		if col.refCount == 0 {
 			col.pushObj.RemoveAllObjReceivers()
 			refs := make(map[string]apiintf.ReferenceObj)
+			log.Infof("Deleting collector as no referenees %v", col.obj.GetKey())
 			col.pushObj.DeleteObjectWithReferences(col.obj.GetKey(), col.obj, refs)
 		}
 	}
@@ -834,6 +825,7 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 		if col.refCount == 0 {
 			col.pushObj.RemoveAllObjReceivers()
 			refs := make(map[string]apiintf.ReferenceObj)
+			log.Infof("Deleting collector as no referenees %v", col.obj.GetKey())
 			col.pushObj.DeleteObjectWithReferences(col.obj.GetKey(), col.obj, refs)
 		}
 	}

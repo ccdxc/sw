@@ -692,8 +692,8 @@ func (sma *SmNetworkInterface) UpdateCollectorsMatchingSelector(oldSelCol *mirro
 
 		if updateInterfaceRequired(nwColState) {
 			//Sendupdate
-			log.Infof("Sending mirror update for DSC %v Intf %v Collectors %v ",
-				nw.NetworkInterfaceState.Status.DSC, nw.NetworkInterfaceState.Name, nw.txCollectors)
+			log.Infof("Sending mirror update for DSC %v Intf %v Tx Collectors %v Rx Collectors %v",
+				nw.NetworkInterfaceState.Status.DSC, nw.NetworkInterfaceState.Name, nw.txCollectors, nw.rxCollectors)
 			err = nw.pushObject.UpdateObjectWithReferences(nw.NetworkInterfaceState.MakeKey(string(apiclient.GroupNetwork)),
 				convertNetworkInterfaceObject(nw), references(nw.NetworkInterfaceState))
 			if err != nil {
@@ -702,8 +702,8 @@ func (sma *SmNetworkInterface) UpdateCollectorsMatchingSelector(oldSelCol *mirro
 			}
 			sma.sm.PeriodicUpdaterPush(nw)
 		} else {
-			log.Infof("No mirror update for DSC %v Intf %v Collectors %v ",
-				nw.NetworkInterfaceState.Status.DSC, nw.NetworkInterfaceState.Name, nw.txCollectors)
+			log.Infof("No mirror update for DSC %v Intf %v Tx Collectors %v  Rx Collectors %v",
+				nw.NetworkInterfaceState.Status.DSC, nw.NetworkInterfaceState.Name, nw.txCollectors, nw.rxCollectors)
 		}
 	}
 
