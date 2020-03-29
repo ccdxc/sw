@@ -466,8 +466,7 @@ const char *k_dhcp_ctl_ip = "127.0.0.1";
 const int k_dhcp_ctl_port = 7911;
 
 static sdk_ret_t
-do_insert_dhcp_binding(dhcpctl_handle &dhcp_connection, const pds_mapping_spec_t *spec)
-{
+do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, const pds_mapping_spec_t *spec) {
     dhcpctl_status ret;
     dhcpctl_data_string ipaddr = NULL;
     dhcpctl_data_string mac = NULL;
@@ -479,13 +478,13 @@ do_insert_dhcp_binding(dhcpctl_handle &dhcp_connection, const pds_mapping_spec_t
         return SDK_RET_OK;
     }
 
-    // We enter this block in two cases to establish the connection with the 
+    // we enter this block in two cases to establish the connection with the 
     // dhcpd server.
-    // 1. When this code path is excercised for the first time after pds-agent
+    // 1. when this code path is excercised for the first time after pds-agent
     //    starts.
-    // 2. After dhcpd restarts.
-    if (!dhcp_connection) {
-        ret = dhcpctl_connect(&dhcp_connection, k_dhcp_ctl_ip, k_dhcp_ctl_port,
+    // 2. after dhcpd restarts.
+    if (!(*dhcp_connection)) {
+        ret = dhcpctl_connect(dhcp_connection, k_dhcp_ctl_ip, k_dhcp_ctl_port,
                               dhcpctl_null_handle);
         if (ret != ISC_R_SUCCESS) {
             PDS_TRACE_ERR("Failed to connect to dhcpd, err %u", ret);
@@ -493,7 +492,7 @@ do_insert_dhcp_binding(dhcpctl_handle &dhcp_connection, const pds_mapping_spec_t
         }
     }
 
-    ret = dhcpctl_new_object(&host, dhcp_connection, "host");
+    ret = dhcpctl_new_object(&host, *dhcp_connection, "host");
     if (ret != ISC_R_SUCCESS) {
         PDS_TRACE_ERR("Failed to allocate host object, err %u", ret);
         return SDK_RET_OOM;
@@ -523,7 +522,7 @@ do_insert_dhcp_binding(dhcpctl_handle &dhcp_connection, const pds_mapping_spec_t
     dhcpctl_set_string_value(host, spec->key.str(), "name");
     dhcpctl_set_int_value(host, 1, "hardware-type");
 
-    ret = dhcpctl_open_object(host, dhcp_connection,
+    ret = dhcpctl_open_object(host, *dhcp_connection,
                               DHCPCTL_CREATE|DHCPCTL_EXCL);
     if (ret != ISC_R_SUCCESS) {
         PDS_TRACE_ERR("dhcp open object failure, err %u", ret);
@@ -549,36 +548,34 @@ do_insert_dhcp_binding(dhcpctl_handle &dhcp_connection, const pds_mapping_spec_t
 }
 
 sdk_ret_t
-mapping_impl_state::insert_dhcp_binding(const pds_mapping_spec_t *spec)
-{
+mapping_impl_state::insert_dhcp_binding(const pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
 
-    // If dhcpd restarts the omapi control channel between pds-agent
+    // if dhcpd restarts the omapi control channel between pds-agent
     // and dhcpd will be broken. In that case we need to clear dhcp_connection_
     // and retry so that the control channel will be re-established.
-    ret = do_insert_dhcp_binding(dhcp_connection_, spec);
+    ret = do_insert_dhcp_binding(&dhcp_connection_, spec);
     if (ret == SDK_RET_ERR) {
         dhcp_connection_ = NULL;
-        ret = do_insert_dhcp_binding(dhcp_connection_, spec);
+        ret = do_insert_dhcp_binding(&dhcp_connection_, spec);
     }
 
     return ret;
 }
 
 static sdk_ret_t
-do_remove_dhcp_binding(dhcpctl_handle &dhcp_connection, const char *hostname)
-{
+do_remove_dhcp_binding (dhcpctl_handle *dhcp_connection, const char *hostname) {
     dhcpctl_status ret = 0;
     dhcpctl_status waitstatus = 0;
     dhcpctl_handle host = NULL;
 
-    // We enter this block in two cases to establish the connection with the 
+    // we enter this block in two cases to establish the connection with the 
     // dhcpd server.
-    // 1. When this code path is excercised for the first time after pds-agent
+    // 1. when this code path is excercised for the first time after pds-agent
     //    starts.
-    // 2. After dhcpd restarts.
-    if (!dhcp_connection) {
-        ret = dhcpctl_connect(&dhcp_connection, k_dhcp_ctl_ip, k_dhcp_ctl_port,
+    // 2. after dhcpd restarts.
+    if (!(*dhcp_connection)) {
+        ret = dhcpctl_connect(dhcp_connection, k_dhcp_ctl_ip, k_dhcp_ctl_port,
                               dhcpctl_null_handle);
         if (ret != ISC_R_SUCCESS) {
             PDS_TRACE_ERR("Failed to connect to dhcpd, err %u", ret);
@@ -587,7 +584,7 @@ do_remove_dhcp_binding(dhcpctl_handle &dhcp_connection, const char *hostname)
     }
 
     memset(&host, 0, sizeof(host));
-    ret = dhcpctl_new_object(&host, dhcp_connection, "host");
+    ret = dhcpctl_new_object(&host, *dhcp_connection, "host");
     if (ret != ISC_R_SUCCESS) {
         PDS_TRACE_ERR("Failed to allocate host object, err %u", ret);
         return SDK_RET_OOM;
@@ -600,7 +597,7 @@ do_remove_dhcp_binding(dhcpctl_handle &dhcp_connection, const char *hostname)
         return SDK_RET_OOM;
     }
 
-    ret = dhcpctl_open_object(host, dhcp_connection, 0);
+    ret = dhcpctl_open_object(host, *dhcp_connection, 0);
     if (ret != ISC_R_SUCCESS) {
         PDS_TRACE_ERR("dhcp open object failed, err %u", ret);
         omapi_object_dereference(&host, MDL);
@@ -614,7 +611,7 @@ do_remove_dhcp_binding(dhcpctl_handle &dhcp_connection, const char *hostname)
         return SDK_RET_ERR;
     }
 
-    ret = dhcpctl_object_remove(dhcp_connection, host);
+    ret = dhcpctl_object_remove(*dhcp_connection, host);
     if (ret != ISC_R_SUCCESS) {
         PDS_TRACE_ERR("dhcp object remove failure, err %u", ret);
         omapi_object_dereference(&host, MDL);
@@ -633,17 +630,16 @@ do_remove_dhcp_binding(dhcpctl_handle &dhcp_connection, const char *hostname)
 }
 
 sdk_ret_t
-mapping_impl_state::remove_dhcp_binding(const char *hostname)
-{
+mapping_impl_state::remove_dhcp_binding(const char *hostname) {
     sdk_ret_t ret = SDK_RET_OK;
 
-    // If dhcpd restarts the omapi control channel between pds-agent
+    // if dhcpd restarts the omapi control channel between pds-agent
     // and dhcpd will be broken. In that case we need to clear dhcp_connection_
     // and retry so that the control channel will be re-established.
-    ret = do_remove_dhcp_binding(dhcp_connection_, hostname);
+    ret = do_remove_dhcp_binding(&dhcp_connection_, hostname);
     if (ret == SDK_RET_ERR) {
         dhcp_connection_ = NULL;
-        ret = do_remove_dhcp_binding(dhcp_connection_, hostname);
+        ret = do_remove_dhcp_binding(&dhcp_connection_, hostname);
     }
 
     return ret;
