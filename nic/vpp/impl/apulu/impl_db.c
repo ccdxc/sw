@@ -8,9 +8,16 @@ pds_impl_db_ctx_t impl_db_ctx;
 
 #define POOL_IMPL_DB_ADD(obj, hw_id)                            \
     pds_impl_db_##obj##_entry_t *obj##_info;                    \
+    u16 offset;                                                 \
+    offset = vec_elt(impl_db_ctx.obj##_pool_idx, hw_id);        \
+    if (offset == 0xffff) {                                     \
     pool_get(impl_db_ctx.obj##_pool_base, obj##_info);          \
-    u16 offset = obj##_info - impl_db_ctx.obj##_pool_base;      \
+    offset = obj##_info - impl_db_ctx.obj##_pool_base;          \
     vec_elt(impl_db_ctx.obj##_pool_idx, hw_id) = offset;        \
+    } else {                                                    \
+    obj##_info =  pool_elt_at_index(impl_db_ctx.obj##_pool_base,\
+                                    offset);                    \
+    }                                                           \
 
 #define POOL_IMPL_DB_GET(obj, hw_id)                            \
     pds_impl_db_##obj##_entry_t *obj##_info;                    \
