@@ -27,3 +27,26 @@ testcases:
             ipaf    : [ ipv4 ]
             pktsize : [ 64 ]
 
+    -   name    : Iperf_IGW_NAPT_TCP
+        testcase: testcases.networking.iperf
+        args    :
+            type : igw_napt_only
+            num_streams : 10
+
+        iterators :
+            type      : nested
+            ipaf      : [ ipv4 ]
+            pktsize   : [ 64 ]
+            protocol  : [ tcp ]
+
+    -   name    : Iperf_IGW_NAPT_UDP
+        testcase: testcases.networking.iperf
+        args    :
+            type : igw_napt_only
+            num_streams : 10
+
+        iterators :
+            type      : nested
+            ipaf      : [ ipv4 ]
+            pktsize   : [ 64 ]
+            protocol  : [ udp ]

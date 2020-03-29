@@ -50,7 +50,7 @@ def Get_workload_type(tc):
     elif tc.iterators.workload_type == 'remote':
         type = config_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY
     elif tc.iterators.workload_type == 'igw':
-        type = config_api.WORKLOAD_PAIR_TYPE_IGW_ONLY
+        type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY
 
     return type
 

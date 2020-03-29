@@ -5,8 +5,8 @@ import iota.harness.api as api
 import iota.test.apulu.config.api as config_api
 import iota.test.utils.traffic as traffic_utils
 import iota.test.apulu.utils.flow as flow_utils
-import apollo.config.objects.nat_pb as nat_pb
 from iota.harness.infra.glopts import GlobalOptions
+import apollo.config.objects.nat_pb as nat_pb
 
 def Setup(tc):
     if tc.args.type == 'local_only':
@@ -55,13 +55,11 @@ def Verify(tc):
             return api.types.status.SUCCESS
 
         if post_stats.InUseCount - tc.nat_pre_stats.InUseCount != 1:
-            api.Logger.error(f"NAT in use count did not go up as expected " \
-                             "{tc.nat_pre_stats.InUseCount}:{post_stats.InUseCount}")
+            api.Logger.error(f"NAT in use count did not go up as expected {tc.nat_pre_stats.InUseCount}:{post_stats.InUseCount}")
             return api.types.status.FAILURE
 
         if post_stats.SessionCount - tc.nat_pre_stats.SessionCount != 1:
-            api.Logger.error(f"NAT session count did not go up as expected " \
-                             "{tc.nat_pre_stats.SessionCount}:{post_stats.SessionCount}")
+            api.Logger.error(f"NAT session count did not go up as expected {tc.nat_pre_stats.SessionCount}:{post_stats.SessionCount}")
             return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
