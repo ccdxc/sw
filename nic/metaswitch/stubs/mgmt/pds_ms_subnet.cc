@@ -371,6 +371,9 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     types::ApiStatus ret_status;
     ms_bd_id_t bd_id = 0;
 
+    // lock to allow only one grpc thread processing at a time
+    std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
+
     try {
         // Guard to release all pending UUIDs in case of any failures
         mgmt_uuid_guard_t uuid_guard;
@@ -407,6 +410,9 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     types::ApiStatus ret_status;
     ms_bd_id_t bd_id = 0;
     bool delete_completed = false;
+
+    // lock to allow only one grpc thread processing at a time
+    std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
 
     try {
         // Guard to release all pending UUIDs in case of any failures
@@ -512,6 +518,9 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     subnet_upd_flags_t  ms_upd_flags;
     types::ApiStatus ret_status;
     ms_bd_id_t bd_id;
+
+    // lock to allow only one grpc thread processing at a time
+    std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
 
     try {
         // Guard to release all pending UUIDs in case of any failures

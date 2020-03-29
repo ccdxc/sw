@@ -261,6 +261,9 @@ vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
     types::ApiStatus ret_status;
     ms_vrf_id_t vrf_id = 0;
 
+    // lock to allow only one grpc thread processing at a time
+    std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
+
     try {
         // Guard to release all pending UUIDs in case of any failures
         mgmt_uuid_guard_t uuid_guard;
@@ -325,6 +328,9 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
                        spec->key.str());
         return SDK_RET_INVALID_OP;
     }
+
+    // lock to allow only one grpc thread processing at a time
+    std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
     try {
         // Guard to release all pending UUIDs in case of any failures
         mgmt_uuid_guard_t uuid_guard;
@@ -361,6 +367,9 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 sdk_ret_t
 vpc_update (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
+    // lock to allow only one grpc thread processing at a time
+    std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
+
     // Enter thread-safe context to access/modify global state
     try {
         // Guard to release all pending UUIDs in case of any failures

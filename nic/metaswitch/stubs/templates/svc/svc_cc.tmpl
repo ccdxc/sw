@@ -43,6 +43,8 @@ Status
     }
     types::ApiStatus ret = types::API_STATUS_OK;
     PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}}");
+    // lock to allow only one grpc thread processing at a time
+    std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
     try {
     ret = {{$pkgName}}::{{$param.ActionFn}}(req, resp);
     } catch (const pds_ms::Error& e) {
@@ -70,10 +72,12 @@ Status
     {{$pkgName}}::{{.ResponseType.Name}} proto_resp;
     types::ApiStatus ret = types::API_STATUS_OK;
     {{if (HasSuffix $rpc "Update")}}
-       PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Update");
+    PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}} Update");
     {{else}}
     PDS_TRACE_INFO("Received gRPC {{.RequestType.Name}}");
     {{end}}
+    // lock to allow only one grpc thread processing at a time
+    std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
     try {
     // Guard to release all pending UUIDs in case of any failures
     pds_ms::mgmt_uuid_guard_t uuid_guard;

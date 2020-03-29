@@ -13,6 +13,7 @@ namespace pds_ms {
 mgmt_state_t* mgmt_state_t::g_state_ = nullptr;
 bool mgmt_state_t::g_response_ready_ = false;
 std::mutex mgmt_state_t::g_cv_mtx_;
+std::mutex mgmt_state_t::g_grpc_lock_;
 std::recursive_mutex mgmt_state_t::g_state_mtx_;
 std::condition_variable mgmt_state_t::g_cv_resp_;
 types::ApiStatus mgmt_state_t::g_ms_response_;

@@ -163,6 +163,7 @@ public:
     }
     vector<bgp_peer_pend_obj_t>& get_bgp_peer_pend(void) {return bgp_peer_pend_;}
     static void redo_bgp_peer_pend(vector<bgp_peer_pend_obj_t>&);
+    static std::mutex& grpc_lock() {return g_grpc_lock_;}
 
     bool overlay_routing_en() {return overlay_routing_en_;}
     void set_overlay_routing_en(bool enable) {overlay_routing_en_ = enable;}
@@ -172,6 +173,7 @@ private:
     // Predicate to avoid spurious wake-up calls
     static bool g_response_ready_;
     static std::mutex g_cv_mtx_;
+    static std::mutex g_grpc_lock_;
     static std::recursive_mutex g_state_mtx_;
     static std::condition_variable g_cv_resp_;
     static types::ApiStatus g_ms_response_;

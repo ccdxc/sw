@@ -257,6 +257,9 @@ interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
     types::ApiStatus ret_status;
     uint32_t ms_ifindex = 0;
 
+    // lock to allow only one grpc thread processing at a time
+    std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
+
     try {
         // Guard to release all pending UUIDs in case of any failures
         mgmt_uuid_guard_t uuid_guard;
@@ -312,6 +315,9 @@ interface_delete (pds_obj_key_t* key, pds_batch_ctxt_t bctxt)
 {
     types::ApiStatus ret_status;
     
+    // lock to allow only one grpc thread processing at a time
+    std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
+
     try {
         // Guard to release all pending UUIDs in case of any failures
         mgmt_uuid_guard_t uuid_guard;
@@ -351,6 +357,9 @@ interface_update (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     types::ApiStatus ret_status;
     
+    // lock to allow only one grpc thread processing at a time
+    std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
+
     try {
         // Guard to release all pending UUIDs in case of any failures
         mgmt_uuid_guard_t uuid_guard;
