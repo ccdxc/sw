@@ -17,7 +17,8 @@ testcases:
             # objects tested with delete config.
             # TODO: nh-group
             # route object excluded from local2remote tests, because no hit
-            objtype : [ device, vpc, subnet, vnic, tunnel, lmapping, rmapping, nexthop, interface ]
+            #objtype : [ device, vpc, subnet, vnic, tunnel, lmapping, rmapping, nexthop, interface ]
+            objtype : [ device, subnet, vnic, tunnel, lmapping, rmapping, nexthop ]
             oper    : [ [delete] ]
 
     -   name    : API_CRUD_For_Update_Ping_Traffic
@@ -44,7 +45,8 @@ testcases:
             #ipaf   : [ ipv4, ipv6 ]
             ipaf    : [ ipv4 ]
             # TODO: nh-group
-            objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, interface, lmapping, rmapping ]
+            #objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, interface, lmapping, rmapping ]
+            objtype : [ device, subnet, vnic, nexthop, tunnel, lmapping, rmapping ]
             oper    : [ [create, create], [delete, read, update, read] ]
 
     -   name    : 2_Object_Idempotency_Ping_Traffic
@@ -56,7 +58,8 @@ testcases:
             type    : nested
             #ipaf   : [ ipv4, ipv6 ]
             ipaf    : [ ipv4 ]
-            objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, interface, lmapping, rmapping ]
+            #objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, interface, lmapping, rmapping ]
+            objtype : [ device, subnet, vnic, nexthop, tunnel, lmapping, rmapping ]
             oper    : [ [delete, delete] ]
 
     -   name    : 3_Object_Idempotency_Ping_Traffic
@@ -68,6 +71,7 @@ testcases:
             type    : nested
             #ipaf   : [ ipv4, ipv6 ]
             ipaf    : [ ipv4 ]
-            objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, interface, lmapping, rmapping ]
+            #objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, interface, lmapping, rmapping ]
+            objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, lmapping, rmapping ]
             oper    : [ [update, create] ]
 

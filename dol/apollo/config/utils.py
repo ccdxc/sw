@@ -689,6 +689,11 @@ def GetRpcIPv6Prefix(srcpfx, dstpfx):
     dstpfx.Len = srcpfx.prefixlen
     dstpfx.Addr = srcpfx.network_address.packed
 
+def GetRpcIfIPPrefix(srcpfx, dstpfx):
+    dstpfx.Len = ipaddress.ip_network(srcpfx.network).prefixlen
+    dstpfx.Addr.Af = types_pb2.IP_AF_INET
+    dstpfx.Addr.V4Addr = int(ipaddress.ip_address(srcpfx.ip))
+
 def GetRpcIPAddr(srcaddr, dstaddr):
     if srcaddr.version == IP_VERSION_6:
         dstaddr.Af = types_pb2.IP_AF_INET6

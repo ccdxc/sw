@@ -50,6 +50,31 @@ def __generate_rmappings_from_lmappings():
             api.Logger.info(f"Generated {num} RMAPPING Objects in {targetNode}")
     return
 
+def __update_nexthops_from_uplink_info():
+    nodes = api.GetNaplesHostnames()
+    nhClient = config_api.GetObjClient('nexthop')
+    interfaceClient = config_api.GetObjClient('interface')
+    for targetNode in nodes:
+        nexthops = nhClient.GetUnderlayNexthops(targetNode)
+        if len(nexthops) == 0:
+            # Skip updating nexthops if none of them are created via config
+            api.Logger.info(f"Skipping updating nexthops as none exist in {targetNode}")
+            continue
+        num = 0
+        for nh in nexthops:
+            api.Logger.info(f"Updating NH {nh} in node {targetNode}")
+            for srcNode in nodes:
+                if targetNode == srcNode:
+                    continue
+                peer_intf_mac = interfaceClient.GetNHInterfaceMac(srcNode, 'dsc0')
+                api.Logger.info(f"Updating NH {nh} with intf-mac {peer_intf_mac} of {srcNode}")
+                nh.underlayMACAddr = peer_intf_mac
+                num += 1
+        nhClient.UpdateUnderlayObjects(targetNode)
+        api.Logger.info(f"Updated {num} NH Objects in {targetNode}")
+    return
+
+
 def Main(args):
     defs.DOL_PATH = "/iota/"
     defs.TEST_TYPE = "IOTA"
@@ -65,4 +90,8 @@ def Main(args):
         generator.Main(node, cfgspec, api.GetNicMgmtIP(node))
 
     __generate_rmappings_from_lmappings()
+
+    # Update static NextHop objects with the mac-addresses of the peer's interfaces
+    # This is temporary until the dynamic underlay NH stitching support comes in soon.
+    __update_nexthops_from_uplink_info()
     return api.types.status.SUCCESS

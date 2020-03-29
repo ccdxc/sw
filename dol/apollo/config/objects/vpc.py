@@ -138,7 +138,10 @@ class VpcObject(base.ConfigObjectBase):
                 vpc_peerid = self.VPCId - maxcount + 1
             else:
                 vpc_peerid = self.VPCId + 1
-            route.client.GenerateObjects(node, self, spec, vpc_peerid)
+            # For underlay-vpc, the route-table is implicitly created, so our
+            # routetable object create is not needed (will fail with exists error).
+            if spec.type != 'underlay':
+                route.client.GenerateObjects(node, self, spec, vpc_peerid)
 
         # Generate Meter configuration
         meter.client.GenerateObjects(node, self, spec)
