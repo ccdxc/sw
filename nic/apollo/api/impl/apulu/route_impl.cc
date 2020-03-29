@@ -213,7 +213,7 @@ route_table_impl::compute_updated_spec_(route_table *new_rtable,
             return SDK_RET_OOM;
         }
         // copy all routes from the spec into this new route info
-        memcpy(new_route_info, &spec->route_info,
+        memcpy(new_route_info, spec->route_info,
                ROUTE_INFO_SIZE(new_rtable->num_routes()));
         // free the old route info and replace the spec with new one
         if (spec->route_info) {

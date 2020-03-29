@@ -474,7 +474,7 @@ policy_rule::add_deps(api_obj_ctxt_t *obj_ctxt) {
                           "policy %s not found", obj_ctxt->api_op, key_.str(),
                           policy_key.str());
         }
-        api_obj_add_to_deps(obj_ctxt->api_op,
+        api_obj_add_to_deps(API_OP_UPDATE,
                             OBJ_ID_POLICY_RULE, this,
                             OBJ_ID_POLICY, policy,
                             (obj_ctxt->api_op == API_OP_CREATE) ?

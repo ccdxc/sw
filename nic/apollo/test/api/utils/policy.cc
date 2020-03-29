@@ -21,10 +21,17 @@ policy_feeder::init(pds_obj_key_t key,
                     uint16_t stateful_rules,
                     uint8_t af,
                     std::string cidr_str,
-                    uint32_t num_policy) {
-    uint32_t max_rules = ((af == IP_AF_IPV4) ?
-                            PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY :
-                            PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY);
+                    uint32_t num_policy,
+                    uint32_t num_rules_per_policy) {
+    uint32_t max_rules;
+
+    if (num_rules_per_policy) {
+        max_rules = num_rules_per_policy;
+    } else {
+        max_rules = ((af == IP_AF_IPV4) ?
+                          PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY :
+                          PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY);
+    }
     memset(&this->spec, 0, sizeof(pds_policy_spec_t));
     this->spec.key = key;
     this->af = af;

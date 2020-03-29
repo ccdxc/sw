@@ -27,12 +27,13 @@ public:
     policy_feeder() { };
     policy_feeder(policy_feeder& feeder) {
         init(feeder.spec.key, feeder.stateful_rules,
-             feeder.af, feeder.cidr_str, feeder.num_obj);
+             feeder.af, feeder.cidr_str, feeder.num_obj, feeder.num_rules);
     }
 
     // Initialize feeder with the base set of values
     void init(pds_obj_key_t key, uint16_t stateful_rules, uint8_t af,
-              std::string cidr_str, uint32_t num_policy = 1);
+              std::string cidr_str, uint32_t num_policy = 1,
+              uint32_t num_rules_per_policy = 0);
 
     // Iterate helper routines
     void iter_next(int width = 1);

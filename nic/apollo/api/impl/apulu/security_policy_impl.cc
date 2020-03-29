@@ -67,22 +67,23 @@ security_policy_impl::free(security_policy_impl *impl) {
 sdk_ret_t
 security_policy_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                                         api_obj_ctxt_t *obj_ctxt) {
-    uint32_t             policy_block_id;
-    pds_policy_spec_t    *spec;
+    pds_policy_spec_t *spec;
+    policy *security_policy;
+    uint32_t policy_block_id;
 
-    spec = &obj_ctxt->api_params->policy_spec;
+    security_policy = (policy *)api_obj;
     // record the fact that resource reservation was attempted
     // NOTE: even if we partially acquire resources and fail eventually,
     //       this will ensure that proper release of resources will happen
     api_obj->set_rsvd_rsc();
     // allocate available block for this security policy
-    if (security_policy_impl_db()->security_policy_idxr(spec->rule_info->af)->alloc(
+    if (security_policy_impl_db()->security_policy_idxr(security_policy->af())->alloc(
             &policy_block_id) != SDK_RET_OK) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
     security_policy_root_addr_ =
-        security_policy_impl_db()->security_policy_region_addr(spec->rule_info->af) +
-            (security_policy_impl_db()->security_policy_table_size(spec->rule_info->af) *
+        security_policy_impl_db()->security_policy_region_addr(security_policy->af()) +
+            (security_policy_impl_db()->security_policy_table_size(security_policy->af()) *
                  policy_block_id);
     return SDK_RET_OK;
 }
@@ -190,10 +191,13 @@ sdk_ret_t
 security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                                 api_obj_ctxt_t *obj_ctxt) {
     uint32_t num_rules;
-    pds_policy_spec_t spec;
+    pds_policy_spec_t *spec;
+    rule_info_t *new_rule_info;
     sdk_ret_t ret = SDK_RET_OK;
     policy *new_policy = (policy *)curr_obj;
     policy *old_policy = (policy *)orig_obj;
+
+    PDS_TRACE_DEBUG("Updating policy %s", new_policy->key2str().c_str());
 
     if (obj_ctxt->clist.size() == 0) {
         SDK_ASSERT((obj_ctxt->upd_bmap & (PDS_POLICY_UPD_RULE_ADD |
@@ -211,7 +215,7 @@ security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     // 2. policy object modification is solely because of individual rule
     //    add/del/updates in this batch
     // in both cases, we need to form new spec
-    spec.key = new_policy->key();
+    spec = &obj_ctxt->api_params->policy_spec;
     if (obj_ctxt->upd_bmap & ~(PDS_POLICY_UPD_RULE_ADD |
                                PDS_POLICY_UPD_RULE_DEL |
                                PDS_POLICY_UPD_RULE_UPD)) {
@@ -226,18 +230,23 @@ security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
         // catch errors where total capacity exceeds max. supported without any
         // extra processing
         num_rules = new_policy->num_rules() + obj_ctxt->clist.size();
-        spec.rule_info =
+        new_rule_info =
             (rule_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_POLICY,
                                       POLICY_RULE_INFO_SIZE(num_rules));
-        if (!spec.rule_info) {
+        if (!new_rule_info) {
             PDS_TRACE_ERR("Failed to allocate memory for %u rules for "
                           "policy %s update processing", num_rules,
-                          spec.key.str());
+                          spec->key.str());
             ret = SDK_RET_OOM;
             goto end;
         }
-        memcpy(&spec.rule_info, obj_ctxt->api_params->policy_spec.rule_info,
+        memcpy(new_rule_info, spec->rule_info,
                POLICY_RULE_INFO_SIZE(new_policy->num_rules()));
+        if (spec->rule_info) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_POLICY, spec->rule_info);
+            spec->rule_info = NULL;
+        }
+        spec->rule_info = new_rule_info;
     } else {
         // case 2 : only contained objects are being modified (ADD/DEL/UPD),
         //          form new spec that consists of current set of rules and
@@ -249,46 +258,49 @@ security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
         // keep track of this counter in obj_ctxt itself in API engine so we can
         // catch errors where total capacity exceeds max. supported without any
         // extra processing
+        spec->key = new_policy->key();
         num_rules = old_policy->num_rules() + obj_ctxt->clist.size();
-        spec.rule_info =
+        spec->rule_info =
             (rule_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_POLICY,
                                       POLICY_RULE_INFO_SIZE(num_rules));
-        if (!spec.rule_info) {
+        if (!spec->rule_info) {
             PDS_TRACE_ERR("Failed to allocate memory for %u rules for "
                           "policy %s update processing", num_rules,
-                          spec.key.str());
+                          spec->key.str());
             ret = SDK_RET_OOM;
             goto end;
         }
-        ret = policy_db()->retrieve_rules(&spec.key, spec.rule_info);
+        spec->rule_info->num_rules = old_policy->num_rules();
+        ret = policy_db()->retrieve_rules(&spec->key, spec->rule_info);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to retrieve rules from kvstore for "
-                          "policy %s, err %u", spec.key.str(), ret);
+                          "policy %s, err %u", spec->key.str(), ret);
             goto end;
         }
     }
 
     // compute the updated spec now
-    ret = update_policy_spec_(&spec, obj_ctxt);
+    ret = update_policy_spec_(spec, obj_ctxt);
     if (ret != SDK_RET_OK) {
         goto end;
     }
     PDS_TRACE_DEBUG("Policy %s rule count changed from %u to %u",
-                    spec.key.str(), old_policy->num_rules(),
-                    spec.rule_info->num_rules);
+                    spec->key.str(), old_policy->num_rules(),
+                    spec->rule_info->num_rules);
     // and program it in the pipeline
-    ret = program_security_policy_(&spec);
+    ret = program_security_policy_(spec);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program policy %s update, err %u",
-                      spec.key.str(), ret);
+                      spec->key.str(), ret);
         goto end;
     }
+    return SDK_RET_OK;
 
 end:
 
-    if (spec.rule_info) {
-        SDK_FREE(PDS_MEM_ALLOC_ID_POLICY, spec.rule_info);
-        spec.rule_info = NULL;
+    if (spec->rule_info) {
+        SDK_FREE(PDS_MEM_ALLOC_ID_POLICY, spec->rule_info);
+        spec->rule_info = NULL;
     }
     return ret;
 }
