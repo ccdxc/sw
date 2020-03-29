@@ -312,6 +312,7 @@ class TestcaseData:
         return self.__instid
 
     def SetStatus(self, status):
+        Logger.info("setting TestcaseData {0} status to {1}".format(self.GetInst(), status))
         self.__status = status
         return
 
