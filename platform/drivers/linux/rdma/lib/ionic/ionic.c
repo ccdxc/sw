@@ -156,8 +156,6 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 
 	verbs_set_ops(&ctx->vctx, &ionic_ctx_ops);
 
-	ctx->lockfree = false;
-
 	if (dev->abi_ver <= 1) {
 		ctx->spec = 0;
 	} else {

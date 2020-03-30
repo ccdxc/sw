@@ -181,8 +181,6 @@ static int ionic_init_context(struct verbs_device *vdev,
 
 	ionic_set_ops(ibctx);
 
-	ctx->lockfree = false;
-
 	if (dev->abi_ver <= 1) {
 		ctx->spec = 0;
 	} else {

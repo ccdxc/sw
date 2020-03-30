@@ -42,7 +42,6 @@ struct ionic_latencies;
 struct ionic_ctx {
 	struct verbs_context	vctx;
 
-	bool			lockfree;
 	int			spec;
 	uint32_t		pg_shift;
 
@@ -80,6 +79,7 @@ struct ionic_cq {
 	bool			color;
 	bool			deferred_arm;
 	bool			deferred_arm_sol_only;
+	bool			lockfree;
 	int			reserve;
 	uint16_t		arm_any_prod;
 	uint16_t		arm_sol_prod;
@@ -107,6 +107,7 @@ struct ionic_qp {
 	uint32_t		qpid;
 	bool			has_sq;
 	bool			has_rq;
+	bool			lockfree;
 
 	bool			sig_all;
 
