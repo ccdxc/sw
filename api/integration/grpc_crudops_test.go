@@ -2663,6 +2663,7 @@ func TestStaging(t *testing.T) {
 			_, err := apicl.ClusterV1().Host().Create(ctx, &host)
 			if err != nil {
 				log.Errorf("failed to create Host [%v](%s)", host.Name, err)
+				return err
 			}
 			return nil
 		}
@@ -2671,6 +2672,59 @@ func TestStaging(t *testing.T) {
 		AssertOk(t, err, "failed to start work farm (%s)", err)
 		stats := <-statsCh
 		t.Logf("Host create stats [%v]", stats)
+
+		// Before creating Workloads, ensure that all hosts have been created
+		HostCreateCheckFunc := func(ctx context.Context, id, iter int, userCtx interface{}) error {
+			expHost := cluster.Host{
+				ObjectMeta: api.ObjectMeta{
+					Name: fmt.Sprintf("scaleHost-%d", iter),
+				},
+				Spec: cluster.HostSpec{
+					DSCs: []cluster.DistributedServiceCardID{
+						{MACAddress: makeMac(iter)},
+					},
+				},
+			}
+			// List all hosts
+			actualHosts, err := apicl.ClusterV1().Host().List(ctx, &api.ListWatchOptions{})
+			if err != nil {
+				log.Errorf("fst [%v](%s)", expHost.ObjectMeta.Name, err)
+				return err
+			}
+			if len(actualHosts) != numHosts {
+				err = fmt.Errorf("Expected Hostcount was not equal to actual host [%d]/[%d]", numHosts, len(actualHosts))
+				return err
+			}
+			for _, actualHost := range actualHosts {
+				actualName := actualHost.Name
+				if strings.HasPrefix(actualName, "scaleHost-") {
+					// Verify that the ObjName is of expected type
+					num, _ := strconv.Atoi((strings.Split(actualName, "scaleHost-")[1]))
+					if (num > numHosts) || (num < 0) {
+						log.Errorf("HostName is not of expected type: %s", actualName)
+						return fmt.Errorf("HostName is not of expected type: %s", actualName)
+					}
+					// Verify the spec matches
+					if !reflect.DeepEqual(&expHost.Spec, actualHost.Spec) {
+						log.Errorf("Expected Host was not equal to actual host [%+v]/[%+v]", expHost.Spec, actualHost.Spec)
+						err = fmt.Errorf("Expected Host was not equal to actual host [%+v]/[%+v]", expHost.Spec, actualHost.Spec)
+					}
+				} else {
+					log.Errorf("HostName is not of expected type: %s", actualName)
+					return fmt.Errorf("HostName is not of expected type: %s", actualName)
+				}
+				if !reflect.DeepEqual(&expHost, actualHost) {
+					log.Errorf("Expected Host was not equal to actual host [%+v]/[%+v]", expHost.Spec, actualHost.Spec)
+					err = fmt.Errorf("Expected Host was not equal to actual host [%+v]/[%+v]", expHost.Spec, actualHost.Spec)
+				}
+			}
+			return err
+		}
+		wf0 := workfarm.New(1, time.Second*60, HostCreateCheckFunc)
+		statsCh, err = wf0.Run(ctx, 1, 0, time.Second*60, nil)
+		AssertOk(t, err, "failed to start work farm (%s)", err)
+		stats = <-statsCh
+		t.Logf("Host Get stats [%v]", stats)
 
 		wlCreateFn := func(ctx context.Context, id, iter int, userCtx interface{}) error {
 			wl := workload.Workload{
