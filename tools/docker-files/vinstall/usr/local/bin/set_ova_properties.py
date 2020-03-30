@@ -16,20 +16,19 @@ import md5
 import time
 from StringIO import StringIO
 from xml.dom.minidom import parseString
-from pprint import pprint
+import pprint
+from config_venice_networking import *
 
 state_file = "/data/var/init_ova.done"
 log_file = "/data/var/log/init_ova.log"
 rpctool_path = "/usr/bin/vmware-rpctool"
 ovfenv_cmd = "%s 'info-get guestinfo.ovfEnv'" % rpctool_path
 
-nmcli_intf_tmpl = 'nmcli con add type ethernet con-name {conname} ifname {ifname} ip4 {ipaddress}/{masklen} gw4 {gateway} ipv4.dns "{dnslist}" ipv4.dns-search {domain}'
+# nmcli_intf_tmpl = 'nmcli con add type ethernet con-name {conname} ifname {ifname} ip4 {ipaddress}/{masklen} gw4 {gateway} ipv4.dns "{dnslist}" ipv4.dns-search {domain}'
 
-dns_tmpl = ""
+# network_tmpl = "{hostname}\n"
 
-network_tmpl = "{hostname}\n"
-
-hosts_tmpl = "{ipaddress} {hostname}.{domain} {hostname}\n"
+# hosts_tmpl = "{ipaddress} {hostname}.{domain} {hostname}\n"
 
 def calculate_cidr_len(mask):
     return sum(bin(int(x)).count('1') for x in mask.split('.'))
@@ -50,7 +49,6 @@ def is_vmware_env():
     return True
 
 def get_ovf_properties():
-    global dns_tmpl
     # Return a dict of OVF properties in the ovfenv
     properties = {}
     try:
@@ -67,7 +65,7 @@ def get_ovf_properties():
     for property in raw_data.getElementsByTagName('Property'):
         key, value = [ property.attributes['oe:key'].value,
                        property.attributes['oe:value'].value ]
-        properties[key] = value
+        properties[key] = value.strip()
     # Before we start, we need to make sure network manager is running
     for i in range(10):
       cmd = "systemctl is-active NetworkManager"
@@ -80,16 +78,12 @@ def get_ovf_properties():
         write_log("* network manager check error: " + e.output)
       time.sleep(30)
     # Get the interface name and MAC
-    cmd = "nmcli device status | grep ethernet | awk '{print $1}' | head -n 1"
-    output = subprocess.check_output(cmd, shell=True)
-    properties["ifname"] = output.strip()
-    cmd = "ip link show dev " + properties["ifname"] + " | grep link | awk '{print $2}'"
-    output = subprocess.check_output(cmd, shell=True)
-    properties["ifmac"] = output.strip()
+    properties["ifname"] = get_if_name()
+    properties["ifmac"] = get_if_mac(properties["ifname"])
     # Need to check if the OVF properties is blank then it means DHCP is used
     # If it is DHCP, we will need to determine what the IP is so we can use to bootstrap venice
     if ( properties["ipaddress"] == "" ):
-        properties["addrconf"] = "dhcp"
+        properties["addrtype"] = "dhcp"
         # Try to parse the IP address. Since DHCP may take a while we will need to loop 
         start_time = int(time.time())
         cmd = "ip addr show dev " + properties["ifname"] + " | grep 'inet ' | awk '{print $2}'"
@@ -109,17 +103,16 @@ def get_ovf_properties():
         properties["masklen"] = cidr_len
         properties["netmask"] = calcDottedNetmask(int(cidr_len))
     else:
-        properties["addrconf"] = "static"
+        properties["addrtype"] = "static"
+        if not properties["gateway"].strip():
+            del properties["gateway"]
         properties["masklen"] = calculate_cidr_len(properties["netmask"])
-        # properties["conname"] = "static-" + properties["ifname"]
         properties["conname"] = get_con_name()
-        # Generate the DNS config
-        dns_id = 1
-        dns_list = [d.strip() for d in properties["dns"].split(',')]
-        properties["dnslist"] = " ".join(dns_list)
-        for dns in dns_list:
-            dns_tmpl += "DNS%i=%s\n" % ( dns_id, dns )
-            dns_id += 1
+        if properties["dns"].strip():
+            dns_list = [d.strip() for d in properties["dns"].split(',')]
+            properties["dnslist"] = " ".join(dns_list)
+        # if properties["routes"].strip():
+        #     properties['routes'] = opts.routes
     return properties
 
 def write_config_file( filename, content, flag ):
@@ -127,8 +120,8 @@ def write_config_file( filename, content, flag ):
     fd.write(content)
     fd.close() 
 
-def config_networking():
-    if ( properties["addrconf"] == "static" ):
+def _config_networking():
+    if ( properties["addrtype"] == "static" ):
         write_log("* Creating networking config..")
         # First we need to find the UUID of existing config
         cmd = "nmcli con | grep %s | awk '{print $(NF-2)}'" % properties["ifname"]
@@ -143,12 +136,12 @@ def config_networking():
     else:
         write_log("* Skip creating networking config since DHCP is used. This is not recommended..")
     # Create the hostname file
-    write_config_file( "/etc/hostname", network_tmpl.format(**properties), "w+" )
-    write_config_file( "/etc/hosts", hosts_tmpl.format(**properties), "a+" )
+    # write_config_file( "/etc/hostname", network_tmpl.format(**properties), "w+" )
+    # write_config_file( "/etc/hosts", hosts_tmpl.format(**properties), "a+" )
     # For some reason we still need to change the hostname
-    subprocess.call("hostname " + properties['hostname'], shell=True)
+    # subprocess.call("hostname " + properties['hostname'], shell=True)
 
-def config_root_password():
+def _config_root_password():
     cmd = "echo '%s' | passwd --stdin root" % properties["password"] 
     output = subprocess.check_output(cmd, shell=True)
 
@@ -157,35 +150,33 @@ def write_log(msg):
     print msg 
     log_fd.write(str(datetime.datetime.now()) + ": " + msg)
 
-def get_con_name():
+def _get_con_name():
     m = md5.new()
     m.update(str(time.time()))
     return m.hexdigest()
 
 # Start here
 if os.path.exists(state_file):
-    sys.exit()
+    sys.exit(0)
 if not is_vmware_env():
-    sys.exit()
+    sys.exit(0)
 
 log_fd = open(log_file, "w+")
 properties = get_ovf_properties()
 if ( properties is None ):
     write_log("* Skip creating networking config because ova properties not found")
     open(state_file, 'a').close()
-    sys.exit()
-pprint(properties, indent=4, width=80)
-write_log(json.dumps(properties, indent=4) + "\n")
-config_networking()
-config_root_password()
+    sys.exit(1)
 
-# Execute the pensave command to make the change persistent
-cmd = "/usr/local/bin/pensave-config.sh" 
-output = subprocess.check_output(cmd, shell=True)
+# pp = pprint.PrettyPrinter(indent=4)
+# pp.pprint(properties)
+write_log(json.dumps(properties, indent=4) + "\n")
+config_password(properties)
+config_hostname(properties)
+config_networking(properties)
 
 # Close all the log files and done
 log_fd.close()
 open(state_file, 'a').close()
-
 
 sys.exit(0)
