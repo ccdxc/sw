@@ -28,8 +28,3 @@ def GetEVPNCfg(EVPNCfg):
         return evpn_pb2.EVPN_CFG_MANUAL
     else:
         return evpn_pb2.EVPN_CFG_INVALID
-
-def IPv4EndianReverse(ipaddr):
-    if ipaddr.Af == types_pb2.IP_AF_INET:
-       u32 = ipaddr.V4Addr
-       ipaddr.V4Addr = struct.unpack("<I", struct.pack(">I", u32))[0]

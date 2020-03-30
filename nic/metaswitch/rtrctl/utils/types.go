@@ -379,13 +379,6 @@ type UserPrefix interface {
 // Uint32ToIPv4Address returns an IP Address string given an integer
 func Uint32ToIPv4Address(in uint32) string {
 	ip := make(net.IP, 4)
-	binary.LittleEndian.PutUint32(ip, in)
-	return ip.String()
-}
-
-// NetUint32ToIPv4Address returns an IP Address string given an integer in bigendian
-func NetUint32ToIPv4Address(in uint32) string {
-	ip := make(net.IP, 4)
 	binary.BigEndian.PutUint32(ip, in)
 	return ip.String()
 }
@@ -420,8 +413,8 @@ func NewBGPSpec(in *pds.BGPSpec) *ShadowBgpSpec {
 	return &ShadowBgpSpec{
 		BGPSpec:  in,
 		Id:       uidstr,
-		RouterId:  NetUint32ToIPv4Address(in.RouterId),
-		ClusterId: NetUint32ToIPv4Address(in.ClusterId),
+		RouterId:  Uint32ToIPv4Address(in.RouterId),
+		ClusterId: Uint32ToIPv4Address(in.ClusterId),
 	}
 }
 

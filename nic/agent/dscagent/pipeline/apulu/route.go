@@ -12,6 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	msTypes "github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -30,11 +31,10 @@ func ip2uint32(ipstr string) uint32 {
 	log.Info("parsing IP address ", ipstr)
 	ip := net.ParseIP(ipstr).To4()
 	if ip != nil {
-		return (((uint32(ip[3])*256)+uint32(ip[2]))*256+uint32(ip[1]))*256 + uint32(ip[0])
+		return utils.Ipv4Touint32(ip)
 	}
 	log.Errorf("unable to parse IP address %s", ipstr)
 	return 0
-	// return (((uint32(ip[0])*256)+uint32(ip[1]))*256+uint32(ip[2]))*256 + uint32(ip[3])
 }
 
 func ip2PDSType(ipstr string) *pdstypes.IPAddress {

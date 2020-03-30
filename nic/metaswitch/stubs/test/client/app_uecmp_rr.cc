@@ -198,7 +198,7 @@ static void create_bgp_global_proto_grpc () {
     auto proto_spec = request.mutable_request();
     proto_spec->set_id (pds_ms::msidx2pdsobjkey(k_bgp_id).id);
     proto_spec->set_localasn (g_test_conf_.local_asn);
-    proto_spec->set_routerid(ntohl(g_test_conf_.local_lo_ip_addr));
+    proto_spec->set_routerid(g_test_conf_.local_lo_ip_addr);
 
     printf ("Pushing BGP Global proto...\n");
     if (g_node_id == 3) {

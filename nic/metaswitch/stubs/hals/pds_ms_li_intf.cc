@@ -146,13 +146,6 @@ pds_obj_key_t li_intf_t::make_pds_if_key_(void) {
 pds_if_spec_t li_intf_t::make_pds_if_spec_(void) {
     pds_if_spec_t spec =
         store_info_.phy_port_if_obj->phy_port_properties().l3_if_spec;
-    // TODO: Temporarily convert IPv4 to host-order before pushing to HAL.
-    // Permanent fix involves pushing it in host-order from gRPC Client
-    // and convert to network-order before configuring Metaswitch.
-    auto& ip_addr = spec.l3_if_info.ip_prefix.addr;
-    if (ip_addr.af == IP_AF_IPV4) {
-        ip_addr.addr.v4_addr = ntohl(ip_addr.addr.v4_addr);
-    }
     auto& port_prop = store_info_.phy_port_if_obj->phy_port_properties();
     spec.admin_state =
         (port_prop.admin_state) ? PDS_IF_STATE_UP : PDS_IF_STATE_DOWN;

@@ -303,18 +303,6 @@ func Ipv4Touint32(ip net.IP) uint32 {
 	return binary.BigEndian.Uint32(ip)
 }
 
-// HostOrderIpv4Touint32 converts net.IP considered as host order bytes to 32 bit integer
-//  TODO: Assumes system byteorder to be little endian. FIX check true order of the system
-func HostOrderIpv4Touint32(ip net.IP) uint32 {
-	if ip == nil {
-		return 0
-	}
-	if len(ip) == 16 {
-		return binary.LittleEndian.Uint32(ip[12:16])
-	}
-	return binary.LittleEndian.Uint32(ip)
-}
-
 func ifIndexToSlot(ifIndex uint32) uint32 {
 	return (ifIndex >> ifSlotShift) & ifSlotMask
 }

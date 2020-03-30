@@ -55,11 +55,11 @@ NBB_VOID pds_ms_convert_amb_ip_addr_to_ip_addr (NBB_BYTE      *amb_ip_addr,
                                                 NBB_LONG      type,
                                                 NBB_ULONG     len,
                                                 ip_addr_t     *pds_ms_ip_addr);
-NBB_VOID  pds_ms_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pds_ms_ip_addr, 
-                                               NBB_LONG      *type, 
-                                               NBB_ULONG     *len, 
-                                               NBB_BYTE      *amb_ip_addr,
-                                               bool          is_zero_ip_valid);
+NBB_VOID  pds_ms_convert_ip_addr_to_amb_ip_addr (const ip_addr_t& pds_ms_ip_addr,
+                                                 NBB_LONG      *type,
+                                                 NBB_ULONG     *len,
+                                                 NBB_BYTE      *ambip_addr,
+                                                 bool          is_zero_ip_valid);
 
 bool ip_addr_spec_to_ip_addr (const types::IPAddress& in_ipaddr,
                               ip_addr_t *out_ipaddr);

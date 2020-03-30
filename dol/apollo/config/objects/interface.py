@@ -249,14 +249,10 @@ class InterfaceObject(base.ConfigObjectBase):
             spec.L3IfSpec.VpcId = utils.PdsUuid.GetUUIDfromId(self.IfInfo.VpcId, api.ObjectTypes.VPC)
             utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.L3IfSpec.Prefix)
             utils.GetRpcIfIPPrefix(self.IfInfo.if_ip_prefix, spec.L3IfSpec.Prefix)
-            # Metaswitch treats IPv4 address as an array - so requires it in Network order
-            cp_utils.IPv4EndianReverse(spec.L3IfSpec.Prefix.Addr)
 
         if self.Type == topo.InterfaceTypes.LOOPBACK:
             spec.Type = interface_pb2.IF_TYPE_LOOPBACK
             utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.LoopbackIfSpec.Prefix)
-            # Metaswitch treats IPv4 address as an array - so requires it in Network order
-            cp_utils.IPv4EndianReverse(spec.LoopbackIfSpec.Prefix.Addr)
         return
 
     def PopulateAgentJson(self):

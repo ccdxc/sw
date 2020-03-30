@@ -155,7 +155,7 @@ func ConvertIPPrefix(address string) (ipAddress *halapi.IPPrefix, err error) {
 		Addr: &halapi.IPAddress{
 			Af: halapi.IPAF_IP_AF_INET,
 			V4OrV6: &halapi.IPAddress_V4Addr{
-				V4Addr: utils.HostOrderIpv4Touint32(addr),
+				V4Addr: utils.Ipv4Touint32(addr),
 			},
 		},
 		Len: uint32(len),

@@ -10,7 +10,7 @@ node:
         stack           : ipv4 # ipv4 (default), ipv6
         bridging        : false # false (default), true
         learning        : false # false (default), true
-        ipaddress       : '1.1.1.1'
+        ipaddress       : '100.100.1.1'
         gateway         : None # Taken from resmgr
         encap           : vxlan # vxlan or mplsodup
         overlayrouting  : true
@@ -20,7 +20,7 @@ node:
             - id : 2
               count : 1
               type  : underlay
-              dstaddr : '2.2.2.2'
+              dstaddr : '200.200.2.2'
             - id : 3
               count : 1
               type  : underlay-ecmp
@@ -79,7 +79,7 @@ node:
             - iid           : 3
               iftype        : loopback
               ifadminstatus : UP
-              ipprefix      : '1.1.1.1\32'
+              ipprefix      : '100.100.1.1\32'
               encap         : none
           policy:
             - type : specific
@@ -206,7 +206,7 @@ node:
             - type: base
               routetype: overlap
               count : 1
-              v4base: '67.0.0.0\16'
+              v4base: '128.16.0.0\16'
               v4prefixlen: 24
               nv4routes   : 10
               v6base: '2003::\65'

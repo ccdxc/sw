@@ -45,11 +45,11 @@ ip_addr_spec_to_ip_addr (const types::IPAddress& in_ipaddr,
 }
 
 NBB_VOID
-pds_ms_convert_ip_addr_to_amb_ip_addr (ip_addr_t   pds_ms_ip_addr, 
-                                     NBB_LONG      *type, 
-                                     NBB_ULONG     *len, 
-                                     NBB_BYTE      *amb_ip_addr,
-                                     bool          is_zero_ip_valid)
+pds_ms_convert_ip_addr_to_amb_ip_addr (const ip_addr_t&   pds_ms_ip_addr, 
+                                       NBB_LONG      *type, 
+                                       NBB_ULONG     *len, 
+                                       NBB_BYTE      *amb_ip_addr,
+                                       bool          is_zero_ip_valid)
 {
     switch (pds_ms_ip_addr.af)
     {
@@ -73,7 +73,11 @@ pds_ms_convert_ip_addr_to_amb_ip_addr (ip_addr_t   pds_ms_ip_addr,
         return;
     }
 
-    NBB_MEMCPY (amb_ip_addr, &pds_ms_ip_addr.addr, *len);
+    if (pds_ms_ip_addr.af == IP_AF_IPV4) {
+        NBB_PUT_LONG (amb_ip_addr, pds_ms_ip_addr.addr.v4_addr);
+    } else {
+        NBB_MEMCPY (amb_ip_addr, &pds_ms_ip_addr.addr, len);
+    }
     return;
 }
 
@@ -100,7 +104,11 @@ pds_ms_convert_amb_ip_addr_to_ip_addr (NBB_BYTE      *amb_ip_addr,
         default:
             assert(0);
     }
-    NBB_MEMCPY (&proto_ip_addr->addr, amb_ip_addr, len);
+    if (proto_ip_addr->af == IP_AF_IPV4) {
+        NBB_GET_LONG (proto_ip_addr->addr.v4_addr, amb_ip_addr);
+    } else {
+        NBB_MEMCPY (&proto_ip_addr->addr, amb_ip_addr, len);
+    }
     return;
 }
 

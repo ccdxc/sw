@@ -72,15 +72,6 @@ func ip2uint32(ipstr string) uint32 {
 	if len(ip) == 0 {
 		return 0
 	}
-	return (((uint32(ip[3])*256)+uint32(ip[2]))*256+uint32(ip[1]))*256 + uint32(ip[0])
-}
-
-func ip2uint32Big(ipstr string) uint32 {
-	ip := net.ParseIP(ipstr).To4()
-	if len(ip) == 0 {
-		log.Errorf("failed to parse the IP address [%v]", ipstr)
-		return 0
-	}
 	return binary.BigEndian.Uint32(ip)
 }
 
@@ -339,9 +330,9 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 		ret.GlobalOper = Create
 		var rid uint32
 		if newLb == "" {
-			rid = ip2uint32Big("0.0.0.0")
+			rid = ip2uint32("0.0.0.0")
 		} else {
-			rid = ip2uint32Big(newLb)
+			rid = ip2uint32(newLb)
 		}
 		ret.Global.Request = &types.BGPSpec{
 			Id:       newCfg.uid,
@@ -364,9 +355,9 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 			ret.GlobalOper = Update
 			var rid uint32
 			if newLb == "" {
-				rid = ip2uint32Big("0.0.0.0")
+				rid = ip2uint32("0.0.0.0")
 			} else {
-				rid = ip2uint32Big(newLb)
+				rid = ip2uint32(newLb)
 			}
 			ret.Global = types.BGPRequest{
 				Request: &types.BGPSpec{

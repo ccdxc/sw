@@ -12,12 +12,12 @@ MIB_PY=/sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.
 
 ###################################################
 #
-#                      Cntr 3
-#                         |  10.3
-#                         |
-#              10.1 --------------- 10.2
-#   (1.1.1.1) Cntr 1               Cntr 2  (2.2.2.2)
-#              11.1 --------------- 11.2
+#                           Cntr 3
+#                             |  10.3 (210.210.3.3)
+#                             |
+#                  10.1 --------------- 10.2
+#   (100.100.1.1) Cntr 1               Cntr 2  (200.200.2.2)
+#                  11.1 --------------- 11.2
 #
 #
 ###################################################
@@ -88,8 +88,8 @@ do
         echo "and eth1 $ip2"
     elif [ $RR == 1 ]; then
         # RR has no Linux route programming - so configure explicit route to TEP IPs
-        docker exec -dit "$CONTAINER"3 ip route add 1.1.1.1/32 via 10.1.1.1
-        docker exec -dit "$CONTAINER"3 ip route add 2.2.2.2/32 via 10.1.1.2
+        docker exec -dit "$CONTAINER"3 ip route add 100.100.1.1/32 via 10.1.1.1
+        docker exec -dit "$CONTAINER"3 ip route add 200.200.2.2/32 via 10.1.1.2
     fi
     docker exec -dit "$CONTAINER"$i cp "$DOL_CFG"$i/fru.json /tmp/fru.json
 done
@@ -146,7 +146,7 @@ do
 done
 
 if [ $UNDERLAY == 0 ]; then
-    docker exec -it "$CONTAINER"3 python $MIB_PY set localhost evpnEntTable evpnEntEntityIndex=2 evpnEntLocalRouterAddressType=inetwkAddrTypeIpv4 evpnEntLocalRouterAddress='0x3 0x3 0x3 0x3'
+    docker exec -it "$CONTAINER"3 python $MIB_PY set localhost evpnEntTable evpnEntEntityIndex=2 evpnEntLocalRouterAddressType=inetwkAddrTypeIpv4 evpnEntLocalRouterAddress='0xd2 0xd2 0x3 0x3'
 fi
 
 rrcmd='/sw/nic/build/x86_64/apulu/bin/pds_ms_uecmp_rr_grpc_test'

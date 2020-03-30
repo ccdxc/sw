@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"net"
 	"sync"
@@ -74,7 +75,7 @@ func ip2uint32(ipstr string) uint32 {
 	if len(ip) == 0 {
 		return 0
 	}
-	return (((uint32(ip[3])*256)+uint32(ip[2]))*256+uint32(ip[1]))*256 + uint32(ip[0])
+	return binary.BigEndian.Uint32(ip)
 }
 
 func ip2PDSType(ipstr string) *pdstypes.IPAddress {
