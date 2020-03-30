@@ -644,7 +644,7 @@ pd_table_stats_get(pd_func_args_t *pd_func_args)
         }
         stats_entry = rsp->mutable_stats()->mutable_table_stats()->
             add_table_stats();
-     	pd_system_populate_table_stats(stats_entry, (p4pd_table_id)i);
+        pd_system_populate_table_stats(stats_entry, (p4pd_table_id)i);
     }
 
     return ret;
@@ -768,8 +768,8 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     clock_gettime(CLOCK_REALTIME, &sw_ts);
     sdk::timestamp_to_nsecs(&sw_ts, &sw_ns);
-    
-    capri_hbm_table_entry_cache_invalidate((p4pd_table_cache_t)g_clock_table_info.cache, 0, 
+
+    capri_hbm_table_entry_cache_invalidate((p4pd_table_cache_t)g_clock_table_info.cache, 0,
                                  g_clock_table_info.entry_width, g_clock_table_info.start_addr);
     bzero(g_hbm_clockaddr, sizeof(clock_gettimeofday_t));
     sdk::lib::memrev(g_hbm_clockaddr->time_in_ns, (uint8_t *)&sw_ns, CLOCK_WIDTH);
@@ -783,12 +783,12 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
 hal_ret_t
 pd_set_clock_multiplier (pd_func_args_t *pd_func_args)
 {
-    pd_set_clock_multiplier_args_t *args = 
+    pd_set_clock_multiplier_args_t *args =
                                        pd_func_args->pd_set_clock_multiplier;
- 
+
     // Read the multiplier again in case there is a change in frequency
-    g_clock_freq = args->frequency; 
-    g_clock_table_info.multiplier = 
+    g_clock_freq = args->frequency;
+    g_clock_table_info.multiplier =
                    g_hal_state->catalog()->clock_get_multiplier(g_clock_freq);
     pd_clock_trigger_sync(pd_func_args);
 
@@ -804,7 +804,7 @@ pd_clock_delta_comp (pd_func_args_t *pd_func_args)
     p4pd_table_properties_t tinfo;
     sdk::types::mem_addr_t start_addr, vaddr;
 
-    // This is to sync P4 clock to 
+    // This is to sync P4 clock to
     // linux clock. We dont need this in SIM
     if (!is_platform_type_hw())
         return HAL_RET_OK;
@@ -1015,9 +1015,11 @@ pd_system_drop_stats_get (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_span_threshold_update (pd_func_args_t *pd_func_args)
 {
-    pd_span_threshold_update_args_t *args = pd_func_args->pd_span_threshold_update;
+    pd_span_threshold_update_args_t *args =
+        pd_func_args->pd_span_threshold_update;
 
-    if(capri_tm_set_span_threshold(args->span_threshold) != SDK_RET_OK) {
+    if (sdk::asic::pd::asicpd_tm_set_span_threshold(args->span_threshold) !=
+        SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to set span queue threshold");
         return HAL_RET_ERR;
     }

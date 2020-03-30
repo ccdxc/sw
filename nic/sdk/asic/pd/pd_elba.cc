@@ -1035,8 +1035,21 @@ asicpd_barco_sym_hash_process_request (uint8_t hash_type, bool generate,
 }
 
 sdk_ret_t
-asicpd_barco_get_capabilities(uint8_t ring_type, bool *sw_reset_capable,
-                              bool *sw_enable_capable)
+asicpd_barco_get_capabilities (uint8_t ring_type, bool *sw_reset_capable,
+                               bool *sw_enable_capable)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+void
+asicpd_table_constant_write (uint64_t val, uint32_t stage,
+                             uint32_t stage_tableid, bool ingress)
+{
+    elba_table_constant_write(val, stage, stage_tableid, ingress);
+}
+
+sdk_ret_t
+asicpd_tm_set_span_threshold (uint32_t span_threshold)
 {
     return SDK_RET_INVALID_OP;
 }

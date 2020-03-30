@@ -65,6 +65,8 @@
 #include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 #include "nic/hal/pd/iris/telemetry/telemetry_pd.hpp"
 
+using namespace sdk::asic::pd;
+
 namespace hal {
 namespace pd {
 
@@ -1196,15 +1198,15 @@ hal_pd_lif_stats_region_init (void)
 
     rc = p4pd_table_properties_get(P4TBL_ID_INGRESS_TX_STATS, &tbl_ctx);
     SDK_ASSERT(rc == P4PD_SUCCESS);
-    capri_table_constant_write(stats_base_addr,
-                               tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+    asicpd_table_constant_write(stats_base_addr,
+                                tbl_ctx.stage, tbl_ctx.stage_tableid,
+                                (tbl_ctx.gress == P4_GRESS_INGRESS));
 
     rc = p4pd_table_properties_get(P4TBL_ID_TX_STATS, &tbl_ctx);
     SDK_ASSERT(rc == P4PD_SUCCESS);
-    capri_table_constant_write(stats_base_addr,
-                               tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+    asicpd_table_constant_write(stats_base_addr,
+                                tbl_ctx.stage, tbl_ctx.stage_tableid,
+                                (tbl_ctx.gress == P4_GRESS_INGRESS));
 
     return HAL_RET_OK;
 }
@@ -1222,16 +1224,16 @@ hal_pd_hwerr_stats_region_init (void)
 
     rc = p4pd_table_properties_get(P4TBL_ID_DROP_STATS, &tbl_ctx);
     SDK_ASSERT(rc == P4PD_SUCCESS);
-    capri_table_constant_write(stats_base_addr,
-                               tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+    asicpd_table_constant_write(stats_base_addr,
+                                tbl_ctx.stage, tbl_ctx.stage_tableid,
+                                (tbl_ctx.gress == P4_GRESS_INGRESS));
 
     stats_base_addr += 512;
     rc = p4pd_table_properties_get(P4TBL_ID_EGRESS_DROP_STATS, &tbl_ctx);
     SDK_ASSERT(rc == P4PD_SUCCESS);
-    capri_table_constant_write(stats_base_addr,
-                               tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+    asicpd_table_constant_write(stats_base_addr,
+                                tbl_ctx.stage, tbl_ctx.stage_tableid,
+                                (tbl_ctx.gress == P4_GRESS_INGRESS));
 
     return HAL_RET_OK;
 }
