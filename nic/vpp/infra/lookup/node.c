@@ -525,8 +525,8 @@ pds_vnic_l2_rewrite_internal (vlib_buffer_t *p, u16 *next, u32 *counter)
     }
 
     eth0->type =  clib_net_to_host_u16(ETHERNET_TYPE_IP4);
-    clib_memcpy(&eth0->dst_address, src_mac, ETH_ADDR_LEN);
-    clib_memcpy(&eth0->src_address, dst_mac, ETH_ADDR_LEN);
+    clib_memcpy(&eth0->dst_address, dst_mac, ETH_ADDR_LEN);
+    clib_memcpy(&eth0->src_address, src_mac, ETH_ADDR_LEN);
     *next = VNIC_L2_REWRITE_NEXT_TX_OUT;
     counter[VNIC_L2_REWRITE_COUNTER_TX_OUT] += 1;
 
