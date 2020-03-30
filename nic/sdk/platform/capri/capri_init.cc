@@ -55,8 +55,8 @@ capri_default_config_init (asic_cfg_t *cfg)
     int         i;
 
     for (i = 0; i < num_phases; i++) {
-        full_path =  std::string(cfg->cfg_path) + "/init_bins/" + cfg->default_config_dir + "/init_" +
-                                            std::to_string(i) + "_bin";
+        full_path =  std::string(cfg->cfg_path) + "/init_bins/" +
+            cfg->default_config_dir + "/init_" + std::to_string(i) + "_bin";
 
         SDK_TRACE_DEBUG("Init phase %d Binaries dir: %s", i, full_path.c_str());
 
@@ -204,11 +204,16 @@ capri_prd_init()
 static sdk_ret_t
 capri_repl_init (asic_cfg_t *cfg)
 {
-    uint64_t hbm_repl_table_offset = sdk::asic::asic_get_mem_offset(MEM_REGION_MCAST_REPL_NAME);
+    uint64_t hbm_repl_table_offset =
+        sdk::asic::asic_get_mem_offset(MEM_REGION_MCAST_REPL_NAME);
+
     if (hbm_repl_table_offset != INVALID_MEM_ADDRESS) {
-        capri_tm_repl_table_base_addr_set(hbm_repl_table_offset / SDK_ASIC_REPL_ENTRY_WIDTH);
+        capri_tm_repl_table_base_addr_set(hbm_repl_table_offset /
+                                          SDK_ASIC_REPL_ENTRY_WIDTH);
+
         capri_tm_repl_table_token_size_set(cfg->repl_entry_width * 8);
     }
+
     return SDK_RET_OK;
 }
 

@@ -18,7 +18,6 @@ namespace capri {
 uint32_t port_10_ref_credits[MAX_PORT10_FLOW_CTRL_ENTRIES];
 uint32_t port_11_ref_credits[MAX_PORT11_FLOW_CTRL_ENTRIES];
 
-
 static inline void
 config_dump (void)
 {
@@ -31,7 +30,9 @@ config_dump (void)
 
     data << hex << endl;
 
-    for (int i=0; i < top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry(); i++) {
+    for (int i = 0;
+         i < top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry();
+         i++) {
         top_csr.pb.pbc.port_11.dhs_oq_flow_control.entry[i].read();
         tmp = top_csr.pb.pbc.port_11.dhs_oq_flow_control.entry[i].entry().convert_to<uint32_t>();
         SDK_TRACE_DEBUG("Port 11[%d] : 0x%x", i, tmp);
@@ -42,14 +43,22 @@ config_dump (void)
     pbc_csr.cfg_credits_max_growth_11.read();
     pbc_csr.port_11.cfg_oq.read();
 
-    data <<"pbc_csr.port_11.cfg_account_credit_return.all: 0x" << pbc_csr.port_11.cfg_account_credit_return.all() << endl;
-    data <<"pbc_csr.port_11.cfg_account_credit_return.enable: 0x" << pbc_csr.port_11.cfg_account_credit_return.enable() << endl;
-    data <<"pbc_csr.port_11.cfg_oq_queue.all: 0x" << pbc_csr.port_11.cfg_oq_queue.all() << endl;
-    data <<"pbc_csr.port_11.cfg_oq_queue.recirc: 0x" << pbc_csr.port_11.cfg_oq_queue.recirc() << endl;
-    data <<"pbc_csr.port_11.cfg_oq_queue.enable: 0x" << pbc_csr.port_11.cfg_oq_queue.enable() << endl;
-    data <<"pbc_csr.port_11.cfg_oq_queue.flush: 0x" << pbc_csr.port_11.cfg_oq_queue.flush() << endl;
-    data <<"pbc_csr.cfg_credits_max_growth_11.all: 0x" << pbc_csr.cfg_credits_max_growth_11.all() << endl;
-    data <<"pbc_csr.cfg_credits_max_growth_11.cells: 0x" << pbc_csr.cfg_credits_max_growth_11.cells() << endl;
+    data <<"pbc_csr.port_11.cfg_account_credit_return.all: 0x" <<
+        pbc_csr.port_11.cfg_account_credit_return.all() << endl;
+    data <<"pbc_csr.port_11.cfg_account_credit_return.enable: 0x" <<
+        pbc_csr.port_11.cfg_account_credit_return.enable() << endl;
+    data <<"pbc_csr.port_11.cfg_oq_queue.all: 0x" <<
+        pbc_csr.port_11.cfg_oq_queue.all() << endl;
+    data <<"pbc_csr.port_11.cfg_oq_queue.recirc: 0x" <<
+        pbc_csr.port_11.cfg_oq_queue.recirc() << endl;
+    data <<"pbc_csr.port_11.cfg_oq_queue.enable: 0x" <<
+        pbc_csr.port_11.cfg_oq_queue.enable() << endl;
+    data <<"pbc_csr.port_11.cfg_oq_queue.flush: 0x" <<
+        pbc_csr.port_11.cfg_oq_queue.flush() << endl;
+    data <<"pbc_csr.cfg_credits_max_growth_11.all: 0x" <<
+        pbc_csr.cfg_credits_max_growth_11.all() << endl;
+    data <<"pbc_csr.cfg_credits_max_growth_11.cells: 0x" <<
+        pbc_csr.cfg_credits_max_growth_11.cells() << endl;
 
     SDK_TRACE_DEBUG("%s", data.str().c_str());
     data.str("");
@@ -148,10 +157,7 @@ config_dump (void)
                     psp_csr.sta_flow.sv21_ma_phv_drdy().convert_to<int>(),
                     psp_csr.sta_flow.pr_pkt_ff_almost_full().convert_to<int>(),
                     psp_csr.sta_flow.ptd_npv_phv_full().convert_to<int>());
-
-
 }
-
 
 sdk_ret_t
 capri_quiesce_start (void)
@@ -176,7 +182,8 @@ capri_quiesce_start (void)
         SDK_TRACE_DEBUG("Failed p4p tx poll");
         ret = SDK_RET_ERR;
     }
-    ret_val = cap_top_quiesce_pb_poll(chip_id, port_10_ref_credits, port_11_ref_credits, 100);
+    ret_val = cap_top_quiesce_pb_poll(chip_id, port_10_ref_credits,
+                                      port_11_ref_credits, 100);
     if (ret_val != 0) {
         SDK_TRACE_DEBUG("Failed pb poll");
         ret = SDK_RET_ERR;
@@ -199,7 +206,6 @@ capri_quiesce_start (void)
    // SDK_TRACE_DEBUG(" %s End ret: %d", __FUNCTION__, ret_val);
     return ret;
 }
-
 
 sdk_ret_t
 capri_quiesce_stop (void)
@@ -227,18 +233,26 @@ capri_quiesce_init (void)
 
     //SDK_TRACE_DEBUG("Port10: 0x%x", top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry());
     //SDK_TRACE_DEBUG("Port11: 0x%x", top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry());
-    SDK_ASSERT(top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry() == MAX_PORT10_FLOW_CTRL_ENTRIES);
-    SDK_ASSERT(top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry() == MAX_PORT11_FLOW_CTRL_ENTRIES);
+    SDK_ASSERT(top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry() ==
+               MAX_PORT10_FLOW_CTRL_ENTRIES);
+    SDK_ASSERT(top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry() ==
+               MAX_PORT11_FLOW_CTRL_ENTRIES);
 
-    for (int i=0; i < top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry(); i++) {
+    for (int i = 0;
+         i < top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry();
+         i++) {
         top_csr.pb.pbc.port_10.dhs_oq_flow_control.entry[i].read();
-		port_10_ref_credits[i] = top_csr.pb.pbc.port_10.dhs_oq_flow_control.entry[i].entry().convert_to<uint32_t>();
+        port_10_ref_credits[i] =
+            top_csr.pb.pbc.port_10.dhs_oq_flow_control.entry[i].entry().convert_to<uint32_t>();
         //SDK_TRACE_DEBUG("Port 10[%d] : 0x%x", i, port_10_ref_credits[i]);
     }
 
-    for (int i=0; i < top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry(); i++) {
+    for (int i = 0;
+         i < top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry();
+         i++) {
         top_csr.pb.pbc.port_11.dhs_oq_flow_control.entry[i].read();
-		port_11_ref_credits[i] = top_csr.pb.pbc.port_11.dhs_oq_flow_control.entry[i].entry().convert_to<uint32_t>();
+        port_11_ref_credits[i] =
+            top_csr.pb.pbc.port_11.dhs_oq_flow_control.entry[i].entry().convert_to<uint32_t>();
         //SDK_TRACE_DEBUG("Port 11[%d] : 0x%x", i, port_11_ref_credits[i]);
     }
 

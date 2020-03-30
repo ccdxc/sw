@@ -15,7 +15,7 @@ namespace capri {
 sdk_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 sdk_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
-        void *req, uint32_t *req_tag, bool);
+                                         void *req, uint32_t *req_tag, bool);
 sdk_ret_t capri_barco_gcm0_init(capri_barco_ring_t *barco_ring);
 sdk_ret_t capri_barco_gcm1_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_gcm0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
@@ -29,7 +29,7 @@ bool capri_barco_xts0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 sdk_ret_t capri_barco_xts1_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_xts1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 sdk_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring,
-					void *req, uint32_t *req_tag, bool);
+                                        void *req, uint32_t *req_tag, bool);
 sdk_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring);
 sdk_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring);
 sdk_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring);
@@ -37,11 +37,13 @@ sdk_ret_t capri_barco_mpp3_init(capri_barco_ring_t *barco_ring);
 sdk_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_cp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 sdk_ret_t capri_barco_cp_hot_init(capri_barco_ring_t *barco_ring);
-bool capri_barco_cp_hot_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
+bool capri_barco_cp_hot_poller(capri_barco_ring_t *barco_ring,
+                               uint32_t req_tag);
 sdk_ret_t capri_barco_dc_init(capri_barco_ring_t *barco_ring);
 bool capri_barco_dc_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 sdk_ret_t capri_barco_dc_hot_init(capri_barco_ring_t *barco_ring);
-bool capri_barco_dc_hot_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
+bool capri_barco_dc_hot_poller(capri_barco_ring_t *barco_ring,
+                               uint32_t req_tag);
 bool capri_barco_mpp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 
 capri_barco_ring_t  barco_rings[] = {
@@ -328,25 +330,30 @@ capri_barco_ring_t  barco_rings[] = {
     },
 };
 
-sdk_ret_t capri_barco_ring_common_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t
+capri_barco_ring_common_init (capri_barco_ring_t *barco_ring)
 {
     uint64_t                            ring_base = 0;
     uint32_t                            ring_size = 0;
 
     ring_base = sdk::asic::asic_get_mem_addr(barco_ring->hbm_region);
     if (ring_base == INVALID_MEM_ADDRESS) {
-        SDK_TRACE_ERR("Failed to retrieve Barco Ring memory region for %s", barco_ring->ring_name);
+        SDK_TRACE_ERR("Failed to retrieve Barco Ring memory region for %s",
+                      barco_ring->ring_name);
         return SDK_RET_ERR;
     }
 
     if (ring_base & (barco_ring->ring_alignment - 1)) {
-        SDK_TRACE_ERR("Failed to retrieve aligned Barco Ring memory region for %s", barco_ring->ring_name);
+        SDK_TRACE_ERR("Failed to retrieve aligned Barco Ring memory region for %s",
+                      barco_ring->ring_name);
         return SDK_RET_ERR;
     }
 
     ring_size = sdk::asic::asic_get_mem_size_kb(barco_ring->hbm_region) * 1024;
-    if (ring_size < (uint32_t)(barco_ring->ring_size * barco_ring->descriptor_size)) {
-        SDK_TRACE_ERR("Not enough memory for Barco Ring memory region %s", barco_ring->ring_name);
+    if (ring_size < (uint32_t)(barco_ring->ring_size *
+                               barco_ring->descriptor_size)) {
+        SDK_TRACE_ERR("Not enough memory for Barco Ring memory region %s",
+                      barco_ring->ring_name);
         return SDK_RET_ERR;
     }
 
@@ -355,27 +362,31 @@ sdk_ret_t capri_barco_ring_common_init(capri_barco_ring_t *barco_ring)
     return SDK_RET_OK;
 }
 
-sdk_ret_t capri_barco_asym_key_array_init(void)
+sdk_ret_t
+capri_barco_asym_key_array_init (void)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hese_csr_t &                    hese = cap0.md.hese;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    uint64_t                            asym_key_array_base;
-    uint32_t                            asym_key_array_key_count;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hese_csr_t &hese = cap0.md.hese;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint64_t asym_key_array_base;
+    uint32_t asym_key_array_key_count;
 
-    ret = capri_barco_res_region_get(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, &asym_key_array_base);
+    ret = capri_barco_res_region_get(CRYPTO_BARCO_RES_ASYM_KEY_DESCR,
+                                     &asym_key_array_base);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("Could not retrieve the Asym Crypto Key Descr region");
         return ret;
     }
 
-    ret = capri_barco_res_obj_count_get(CRYPTO_BARCO_RES_ASYM_KEY_DESCR, &asym_key_array_key_count);
+    ret = capri_barco_res_obj_count_get(CRYPTO_BARCO_RES_ASYM_KEY_DESCR,
+                                        &asym_key_array_key_count);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("Could not retrieve the Asym Crypto Key Descr count");
         return ret;
     }
 
-    hese.dhs_crypto_ctl.pk_key_array_base_w0.fld(asym_key_array_base & 0xffffffff);
+    hese.dhs_crypto_ctl.pk_key_array_base_w0.fld(asym_key_array_base &
+                                                 0xffffffff);
     hese.dhs_crypto_ctl.pk_key_array_base_w0.write();
     hese.dhs_crypto_ctl.pk_key_array_base_w1.fld(asym_key_array_base >> 32);
     hese.dhs_crypto_ctl.pk_key_array_base_w1.write();
@@ -397,18 +408,18 @@ sdk_ret_t capri_barco_asym_key_array_init(void)
     hese.dhs_crypto_ctl.pk_axi_status.write();
 
     SDK_TRACE_DEBUG("Barco Asym Key Descriptor Array of count %d setup @ 0x%llx",
-            asym_key_array_key_count, asym_key_array_base);
+                    asym_key_array_key_count, asym_key_array_base);
 
     return ret;
 }
 
-
-sdk_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t
+capri_barco_asym_init (capri_barco_ring_t *barco_ring)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
-    //cap_hese_csr_t &                    hese = cap0.md.hese;
-    sdk_ret_t                           ret = SDK_RET_OK;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &hens = cap0.md.hens;
+    //cap_hese_csr_t &hese = cap0.md.hese;
+    sdk_ret_t ret = SDK_RET_OK;
 
     ret = capri_barco_ring_common_init(barco_ring);
     if (ret != SDK_RET_OK) {
@@ -422,49 +433,60 @@ sdk_ret_t capri_barco_asym_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.pk_soft_rst.fld(0);
     hens.dhs_crypto_ctl.pk_soft_rst.write();
 
-    hens.dhs_crypto_ctl.pk_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    hens.dhs_crypto_ctl.pk_ring_base_w0.fld((uint32_t)(barco_ring->ring_base &
+                                                       0xffffffff));
     hens.dhs_crypto_ctl.pk_ring_base_w0.write();
-    hens.dhs_crypto_ctl.pk_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    hens.dhs_crypto_ctl.pk_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >>
+                                                       32));
     hens.dhs_crypto_ctl.pk_ring_base_w1.write();
 
     hens.dhs_crypto_ctl.pk_ring_size.fld(barco_ring->ring_size);
     hens.dhs_crypto_ctl.pk_ring_size.write();
 
-    hens.dhs_crypto_ctl.pk_ci_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    hens.dhs_crypto_ctl.pk_ci_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr &
+                                                     0xffffffff));
     hens.dhs_crypto_ctl.pk_ci_addr_w0.write();
-    hens.dhs_crypto_ctl.pk_ci_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    hens.dhs_crypto_ctl.pk_ci_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >>
+                                                     32));
     hens.dhs_crypto_ctl.pk_ci_addr_w1.write();
 
     hens.dhs_crypto_ctl.pk_producer_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.pk_producer_idx.write();
-    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.pk_producer_idx.get_offset();
+    barco_ring->producer_idx_addr =
+        hens.dhs_crypto_ctl.pk_producer_idx.get_offset();
 
     // CI is read-only
     //hens.dhs_crypto_ctl.pk_consumer_idx.fld(barco_ring->consumer_idx);
     //hens.dhs_crypto_ctl.pk_consumer_idx.write();
 
     SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     return capri_barco_asym_key_array_init();
 }
 
-
-bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+bool
+capri_barco_asym_poller (capri_barco_ring_t *barco_ring, uint32_t req_tag)
 {
-    bool                                ret = FALSE;
-    uint32_t                            curr_opaque_tag = 0;
+    bool ret = FALSE;
+    uint32_t curr_opaque_tag = 0;
 
     /* The opaque tag address is used as the CI address for the Asym ring */
-    if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag, sizeof(curr_opaque_tag))) {
+    if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr,
+                                 (uint8_t*)&curr_opaque_tag,
+                                 sizeof(curr_opaque_tag))) {
         SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%llx",
-                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
+                      barco_ring->ring_name,
+                      (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
         if ((int32_t(curr_opaque_tag - req_tag)) > 0) {
-            SDK_TRACE_DEBUG("Poll:%s: Check for req: %d: Retrieved opaque tag addr: 0x%llx value: %d", 
-                    barco_ring->ring_name, req_tag, barco_ring->opaque_tag_addr, curr_opaque_tag);
+            SDK_TRACE_DEBUG("Poll:%s: Check for req: %d: Retrieved opaque tag addr: 0x%llx value: %d",
+                            barco_ring->ring_name,
+                            req_tag, barco_ring->opaque_tag_addr,
+                            curr_opaque_tag);
 
             ret = TRUE;
         }
@@ -473,30 +495,34 @@ bool capri_barco_asym_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     return ret;
 }
 
-sdk_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
-					 void *req, uint32_t *req_tag, bool schedule_barco)
+sdk_ret_t
+capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
+                               void *req, uint32_t *req_tag,
+                               bool schedule_barco)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
-    uint64_t                            slot_addr = 0;
-    sdk_ret_t                           ret = SDK_RET_OK;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &hens = cap0.md.hens;
+    uint64_t slot_addr = 0;
+    sdk_ret_t ret = SDK_RET_OK;
 
-    slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
+    slot_addr = barco_ring->ring_base + (barco_ring->producer_idx *
+                                         barco_ring->descriptor_size);
 
-    if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
+    if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req,
+                                  barco_ring->descriptor_size)) {
         SDK_TRACE_ERR("Failed to write descriptor entry for %s  @ 0x%llx",
-                barco_ring->ring_name,
-                (uint64_t) slot_addr);
+                      barco_ring->ring_name,
+                      (uint64_t) slot_addr);
         ret = SDK_RET_INVALID_ARG;
     }
     else {
         *req_tag = barco_ring->producer_idx;;
-        barco_ring->producer_idx = (barco_ring->producer_idx + 1) & (barco_ring->ring_size - 1);
+        barco_ring->producer_idx = (barco_ring->producer_idx + 1) &
+            (barco_ring->ring_size - 1);
 
         /* Barco doorbell */
         hens.dhs_crypto_ctl.pk_producer_idx.fld(barco_ring->producer_idx);
         hens.dhs_crypto_ctl.pk_producer_idx.write();
-
     }
 
     return ret;
@@ -505,15 +531,16 @@ sdk_ret_t capri_barco_asym_queue_request(struct capri_barco_ring_s *barco_ring,
 /*
  * Only encryption works on xts0 and decryption on xts1
  */
-sdk_ret_t capri_barco_xts0_key_array_init(void)
+sdk_ret_t
+capri_barco_xts0_key_array_init (void)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hese_csr_t &                    hese = cap0.md.hese;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    uint64_t                            key_array_base;
-    uint32_t                            key_array_key_count;
-    char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
-    uint32_t                            region_sz = 0;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hese_csr_t &hese = cap0.md.hese;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint64_t key_array_base;
+    uint32_t key_array_key_count;
+    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
@@ -526,7 +553,8 @@ sdk_ret_t capri_barco_xts0_key_array_init(void)
     region_sz = sdk::asic::asic_get_mem_size_kb(key_desc_array) * 1024;
     key_array_key_count = region_sz / BARCO_CRYPTO_KEY_DESC_SZ;
 
-    hese.dhs_crypto_ctl.xts_enc_key_array_base_w0.fld(key_array_base & 0xffffffff);
+    hese.dhs_crypto_ctl.xts_enc_key_array_base_w0.fld(key_array_base &
+                                                      0xffffffff);
     hese.dhs_crypto_ctl.xts_enc_key_array_base_w0.write();
     hese.dhs_crypto_ctl.xts_enc_key_array_base_w1.fld(key_array_base >> 32);
     hese.dhs_crypto_ctl.xts_enc_key_array_base_w1.write();
@@ -539,13 +567,13 @@ sdk_ret_t capri_barco_xts0_key_array_init(void)
     return ret;
 }
 
-
-sdk_ret_t capri_barco_xts0_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t
+capri_barco_xts0_init (capri_barco_ring_t *barco_ring)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
-    //cap_hese_csr_t &                    hese = cap0.md.hese;
-    sdk_ret_t                           ret = SDK_RET_OK;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &hens = cap0.md.hens;
+    //cap_hese_csr_t &hese = cap0.md.hese;
+    sdk_ret_t ret = SDK_RET_OK;
 
     ret = capri_barco_ring_common_init(barco_ring);
     if (ret != SDK_RET_OK) {
@@ -559,48 +587,56 @@ sdk_ret_t capri_barco_xts0_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.xts_enc_soft_rst.fld(0);
     hens.dhs_crypto_ctl.xts_enc_soft_rst.write();
 
-    hens.dhs_crypto_ctl.xts_enc_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    hens.dhs_crypto_ctl.xts_enc_ring_base_w0.fld((uint32_t)(barco_ring->ring_base &
+                                                            0xffffffff));
     hens.dhs_crypto_ctl.xts_enc_ring_base_w0.write();
-    hens.dhs_crypto_ctl.xts_enc_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    hens.dhs_crypto_ctl.xts_enc_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >>
+                                                            32));
     hens.dhs_crypto_ctl.xts_enc_ring_base_w1.write();
 
     hens.dhs_crypto_ctl.xts_enc_ring_size.fld(barco_ring->ring_size);
     hens.dhs_crypto_ctl.xts_enc_ring_size.write();
 
-    hens.dhs_crypto_ctl.xts_enc_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    hens.dhs_crypto_ctl.xts_enc_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr &
+                                                               0xffffffff));
     hens.dhs_crypto_ctl.xts_enc_opa_tag_addr_w0.write();
-    hens.dhs_crypto_ctl.xts_enc_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    hens.dhs_crypto_ctl.xts_enc_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >>
+                                                               32));
     hens.dhs_crypto_ctl.xts_enc_opa_tag_addr_w1.write();
 
     hens.dhs_crypto_ctl.xts_enc_producer_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.xts_enc_producer_idx.write();
-    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.xts_enc_producer_idx.get_offset();
+    barco_ring->producer_idx_addr =
+        hens.dhs_crypto_ctl.xts_enc_producer_idx.get_offset();
 
     // CI is read-only
     //hens.dhs_crypto_ctl.xts_enc_consumer_idx.fld(barco_ring->consumer_idx);
     //hens.dhs_crypto_ctl.xts_enc_consumer_idx.write();
 
     SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     return capri_barco_xts0_key_array_init();
 }
 
-bool capri_barco_xts0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+bool
+capri_barco_xts0_poller (capri_barco_ring_t *barco_ring, uint32_t req_tag)
 {
     /* TBD */
     return FALSE;
 }
 
-sdk_ret_t capri_barco_xts1_key_array_init(void)
+sdk_ret_t
+capri_barco_xts1_key_array_init (void)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hese_csr_t &                    hese = cap0.md.hese;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    uint64_t                            key_array_base;
-    uint32_t                            key_array_key_count;
-    char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
-    uint32_t                            region_sz = 0;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hese_csr_t &hese = cap0.md.hese;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint64_t key_array_base;
+    uint32_t key_array_key_count;
+    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
@@ -626,13 +662,13 @@ sdk_ret_t capri_barco_xts1_key_array_init(void)
     return ret;
 }
 
-
-sdk_ret_t capri_barco_xts1_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t
+capri_barco_xts1_init (capri_barco_ring_t *barco_ring)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
-    //cap_hese_csr_t &                    hese = cap0.md.hese;
-    sdk_ret_t                           ret = SDK_RET_OK;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &hens = cap0.md.hens;
+    //cap_hese_csr_t &hese = cap0.md.hese;
+    sdk_ret_t ret = SDK_RET_OK;
 
     ret = capri_barco_ring_common_init(barco_ring);
     if (ret != SDK_RET_OK) {
@@ -646,48 +682,56 @@ sdk_ret_t capri_barco_xts1_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.xts_soft_rst.fld(0);
     hens.dhs_crypto_ctl.xts_soft_rst.write();
 
-    hens.dhs_crypto_ctl.xts_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    hens.dhs_crypto_ctl.xts_ring_base_w0.fld((uint32_t)(barco_ring->ring_base &
+                                                        0xffffffff));
     hens.dhs_crypto_ctl.xts_ring_base_w0.write();
-    hens.dhs_crypto_ctl.xts_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    hens.dhs_crypto_ctl.xts_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >>
+                                                        32));
     hens.dhs_crypto_ctl.xts_ring_base_w1.write();
 
     hens.dhs_crypto_ctl.xts_ring_size.fld(barco_ring->ring_size);
     hens.dhs_crypto_ctl.xts_ring_size.write();
 
-    hens.dhs_crypto_ctl.xts_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    hens.dhs_crypto_ctl.xts_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr &
+                                                           0xffffffff));
     hens.dhs_crypto_ctl.xts_opa_tag_addr_w0.write();
-    hens.dhs_crypto_ctl.xts_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    hens.dhs_crypto_ctl.xts_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >>
+                                                           32));
     hens.dhs_crypto_ctl.xts_opa_tag_addr_w1.write();
 
     hens.dhs_crypto_ctl.xts_producer_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.xts_producer_idx.write();
-    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.xts_producer_idx.get_offset();
+    barco_ring->producer_idx_addr =
+        hens.dhs_crypto_ctl.xts_producer_idx.get_offset();
 
     // CI is read-only
     //hens.dhs_crypto_ctl.xts_consumer_idx.fld(barco_ring->consumer_idx);
     //hens.dhs_crypto_ctl.xts_consumer_idx.write();
 
     SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+                    barco_ring->ring_name,
+                    barco_ring->ring_base, barco_ring->ring_size);
 
     return capri_barco_xts1_key_array_init();
 }
 
-bool capri_barco_xts1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+bool
+capri_barco_xts1_poller (capri_barco_ring_t *barco_ring, uint32_t req_tag)
 {
     /* TBD */
     return FALSE;
 }
 
-sdk_ret_t capri_barco_mpp0_key_array_init(void)
+sdk_ret_t
+capri_barco_mpp0_key_array_init (void)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_mpse_csr_t &                    mpse = cap0.mp.mpse;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    uint64_t                            key_array_base;
-    uint32_t                            key_array_key_count;
-    char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
-    uint32_t                            region_sz = 0;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpse_csr_t &mpse = cap0.mp.mpse;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint64_t key_array_base;
+    uint32_t key_array_key_count;
+    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
@@ -722,16 +766,17 @@ sdk_ret_t capri_barco_mpp0_key_array_init(void)
     mpse.dhs_crypto_ctl.mpp0_axi_status.write();
 
     SDK_TRACE_DEBUG("Barco MPP0 Key Descriptor Array of count %d setup @ 0x%llx",
-            key_array_key_count, key_array_base);
+                    key_array_key_count, key_array_base);
 
     return ret;
 }
 
-sdk_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t
+capri_barco_mpp0_init (capri_barco_ring_t *barco_ring)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_mpns_csr_t &                    mpns = cap0.mp.mpns;
-    sdk_ret_t                           ret = SDK_RET_OK;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpns_csr_t &mpns = cap0.mp.mpns;
+    sdk_ret_t ret = SDK_RET_OK;
 
     ret = capri_barco_ring_common_init(barco_ring);
     if (ret != SDK_RET_OK) {
@@ -743,7 +788,6 @@ sdk_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring)
     mpns.cfg_mp_ctl.sw_rst(0);
     mpns.cfg_mp_ctl.write();
 
-
     /* Reset MPP0 ring */
     mpns.dhs_crypto_ctl.mpp0_soft_rst.fld(0xffffffff);
     mpns.dhs_crypto_ctl.mpp0_soft_rst.write();
@@ -751,42 +795,51 @@ sdk_ret_t capri_barco_mpp0_init(capri_barco_ring_t *barco_ring)
     mpns.dhs_crypto_ctl.mpp0_soft_rst.fld(0);
     mpns.dhs_crypto_ctl.mpp0_soft_rst.write();
 
-    mpns.dhs_crypto_ctl.mpp0_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    mpns.dhs_crypto_ctl.mpp0_ring_base_w0.fld((uint32_t)(barco_ring->ring_base &
+                                                         0xffffffff));
     mpns.dhs_crypto_ctl.mpp0_ring_base_w0.write();
-    mpns.dhs_crypto_ctl.mpp0_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    mpns.dhs_crypto_ctl.mpp0_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >>
+                                                         32));
     mpns.dhs_crypto_ctl.mpp0_ring_base_w1.write();
 
     mpns.dhs_crypto_ctl.mpp0_ring_size.fld(barco_ring->ring_size);
     mpns.dhs_crypto_ctl.mpp0_ring_size.write();
 
-    mpns.dhs_crypto_ctl.mpp0_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    mpns.dhs_crypto_ctl.mpp0_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr &
+                                                            0xffffffff));
     mpns.dhs_crypto_ctl.mpp0_opa_tag_addr_w0.write();
-    mpns.dhs_crypto_ctl.mpp0_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    mpns.dhs_crypto_ctl.mpp0_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >>
+                                                            32));
     mpns.dhs_crypto_ctl.mpp0_opa_tag_addr_w1.write();
 
     mpns.dhs_crypto_ctl.mpp0_producer_idx.fld(barco_ring->producer_idx);
     mpns.dhs_crypto_ctl.mpp0_producer_idx.write();
-    barco_ring->producer_idx_addr = mpns.dhs_crypto_ctl.mpp0_producer_idx.get_offset();
+    barco_ring->producer_idx_addr =
+        mpns.dhs_crypto_ctl.mpp0_producer_idx.get_offset();
 
     // CI is read-only
     //mpns.dhs_crypto_ctl.mpp0_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp0_consumer_idx.write();
 
     SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     return capri_barco_mpp0_key_array_init();
 }
 
-bool capri_barco_mpp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+bool
+capri_barco_mpp_poller (capri_barco_ring_t *barco_ring, uint32_t req_tag)
 {
-    bool                                ret = FALSE;
-    uint32_t                            curr_opaque_tag = 0;
+    bool ret = FALSE;
+    uint32_t curr_opaque_tag = 0;
 
-    if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
-			   sizeof(curr_opaque_tag))) {
+    if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr,
+                                 (uint8_t*)&curr_opaque_tag,
+                                 sizeof(curr_opaque_tag))) {
         SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%llx",
-                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
+                      barco_ring->ring_name,
+                      (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
@@ -798,8 +851,8 @@ bool capri_barco_mpp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     return ret;
 
 #if 0
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_mpns_csr_t &                    mpns = cap0.mp.mpns;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpns_csr_t &mpns = cap0.mp.mpns;
 
     /* TBD - use Doorbell address in req descriptor  to track request completions */
     if (mpns.dhs_crypto_ctl.mpp0_consumer_idx.fld() != barco_ring->consumer_idx) {
@@ -811,14 +864,16 @@ bool capri_barco_mpp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 #endif
 }
 
-sdk_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring, void *req,
-					uint32_t *req_tag, bool schedule_barco)
+sdk_ret_t
+capri_barco_mpp_queue_request (struct capri_barco_ring_s *barco_ring,
+                               void *req, uint32_t *req_tag,
+                               bool schedule_barco)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_mpns_csr_t &                    mpns = cap0.mp.mpns;
-    uint64_t                            slot_addr = 0;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    barco_symm_req_descriptor_t         *sym_req_descr = NULL;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpns_csr_t &mpns = cap0.mp.mpns;
+    uint64_t slot_addr = 0;
+    sdk_ret_t ret = SDK_RET_OK;
+    barco_symm_req_descriptor_t *sym_req_descr = NULL;
 
     /*
      * We'll use the opaque-tag address to track response from
@@ -838,16 +893,18 @@ sdk_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring, v
     sym_req_descr->doorbell_data = barco_ring->opaqe_tag_value;
 #endif
 
-    slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
+    slot_addr = barco_ring->ring_base + (barco_ring->producer_idx *
+                                         barco_ring->descriptor_size);
 
-    if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
+    if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req,
+                                  barco_ring->descriptor_size)) {
         SDK_TRACE_ERR("Failed to write MPP Req descriptor entry for %s  @ 0x%llx",
-                barco_ring->ring_name,
-                (uint64_t) slot_addr);
+                      barco_ring->ring_name, (uint64_t) slot_addr);
         ret = SDK_RET_INVALID_ARG;
     }
     else {
-        barco_ring->producer_idx = (barco_ring->producer_idx + 1) & (barco_ring->ring_size - 1);
+        barco_ring->producer_idx = (barco_ring->producer_idx + 1) &
+            (barco_ring->ring_size - 1);
 
         /* Barco doorbell */
         mpns.dhs_crypto_ctl.mpp0_producer_idx.fld(barco_ring->producer_idx);
@@ -859,15 +916,16 @@ sdk_ret_t capri_barco_mpp_queue_request(struct capri_barco_ring_s *barco_ring, v
     return ret;
 }
 
-sdk_ret_t capri_barco_mpp1_key_array_init(void)
+sdk_ret_t
+capri_barco_mpp1_key_array_init (void)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_mpse_csr_t &                    mpse = cap0.mp.mpse;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    uint64_t                            key_array_base;
-    uint32_t                            key_array_key_count;
-    char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
-    uint32_t                            region_sz = 0;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpse_csr_t &mpse = cap0.mp.mpse;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint64_t key_array_base;
+    uint32_t key_array_key_count;
+    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
@@ -902,16 +960,17 @@ sdk_ret_t capri_barco_mpp1_key_array_init(void)
     mpse.dhs_crypto_ctl.mpp1_axi_status.write();
 
     SDK_TRACE_DEBUG("Barco MPP1 Key Descriptor Array of count %d setup @ 0x%llx",
-            key_array_key_count, key_array_base);
+                    key_array_key_count, key_array_base);
 
     return ret;
 }
 
-sdk_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t
+capri_barco_mpp1_init (capri_barco_ring_t *barco_ring)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_mpns_csr_t &                    mpns = cap0.mp.mpns;
-    sdk_ret_t                           ret = SDK_RET_OK;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpns_csr_t &mpns = cap0.mp.mpns;
+    sdk_ret_t ret = SDK_RET_OK;
 
     ret = capri_barco_ring_common_init(barco_ring);
     if (ret != SDK_RET_OK) {
@@ -925,42 +984,49 @@ sdk_ret_t capri_barco_mpp1_init(capri_barco_ring_t *barco_ring)
     mpns.dhs_crypto_ctl.mpp1_soft_rst.fld(0);
     mpns.dhs_crypto_ctl.mpp1_soft_rst.write();
 
-    mpns.dhs_crypto_ctl.mpp1_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    mpns.dhs_crypto_ctl.mpp1_ring_base_w0.fld((uint32_t)(barco_ring->ring_base &
+                                                         0xffffffff));
     mpns.dhs_crypto_ctl.mpp1_ring_base_w0.write();
-    mpns.dhs_crypto_ctl.mpp1_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    mpns.dhs_crypto_ctl.mpp1_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >>
+                                                         32));
     mpns.dhs_crypto_ctl.mpp1_ring_base_w1.write();
 
     mpns.dhs_crypto_ctl.mpp1_ring_size.fld(barco_ring->ring_size);
     mpns.dhs_crypto_ctl.mpp1_ring_size.write();
 
-    mpns.dhs_crypto_ctl.mpp1_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    mpns.dhs_crypto_ctl.mpp1_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr &
+                                                            0xffffffff));
     mpns.dhs_crypto_ctl.mpp1_opa_tag_addr_w0.write();
-    mpns.dhs_crypto_ctl.mpp1_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    mpns.dhs_crypto_ctl.mpp1_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >>
+                                                            32));
     mpns.dhs_crypto_ctl.mpp1_opa_tag_addr_w1.write();
 
     mpns.dhs_crypto_ctl.mpp1_producer_idx.fld(barco_ring->producer_idx);
     mpns.dhs_crypto_ctl.mpp1_producer_idx.write();
-    barco_ring->producer_idx_addr = mpns.dhs_crypto_ctl.mpp1_producer_idx.get_offset();
+    barco_ring->producer_idx_addr =
+        mpns.dhs_crypto_ctl.mpp1_producer_idx.get_offset();
 
     // CI is read-only
     //mpns.dhs_crypto_ctl.mpp1_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp1_consumer_idx.write();
 
     SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     return capri_barco_mpp1_key_array_init();
 }
 
-sdk_ret_t capri_barco_mpp2_key_array_init(void)
+sdk_ret_t
+capri_barco_mpp2_key_array_init (void)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_mpse_csr_t &                    mpse = cap0.mp.mpse;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    uint64_t                            key_array_base;
-    uint32_t                            key_array_key_count;
-    char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
-    uint32_t                            region_sz = 0;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpse_csr_t &mpse = cap0.mp.mpse;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint64_t key_array_base;
+    uint32_t key_array_key_count;
+    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
@@ -995,16 +1061,17 @@ sdk_ret_t capri_barco_mpp2_key_array_init(void)
     mpse.dhs_crypto_ctl.mpp2_axi_status.write();
 
     SDK_TRACE_DEBUG("Barco MPP2 Key Descriptor Array of count %d setup @ 0x%llx",
-            key_array_key_count, key_array_base);
+                    key_array_key_count, key_array_base);
 
     return ret;
 }
 
-sdk_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t
+capri_barco_mpp2_init (capri_barco_ring_t *barco_ring)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_mpns_csr_t &                    mpns = cap0.mp.mpns;
-    sdk_ret_t                           ret = SDK_RET_OK;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpns_csr_t &mpns = cap0.mp.mpns;
+    sdk_ret_t ret = SDK_RET_OK;
 
     ret = capri_barco_ring_common_init(barco_ring);
     if (ret != SDK_RET_OK) {
@@ -1018,42 +1085,49 @@ sdk_ret_t capri_barco_mpp2_init(capri_barco_ring_t *barco_ring)
     mpns.dhs_crypto_ctl.mpp2_soft_rst.fld(0);
     mpns.dhs_crypto_ctl.mpp2_soft_rst.write();
 
-    mpns.dhs_crypto_ctl.mpp2_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    mpns.dhs_crypto_ctl.mpp2_ring_base_w0.fld((uint32_t)(barco_ring->ring_base &
+                                                         0xffffffff));
     mpns.dhs_crypto_ctl.mpp2_ring_base_w0.write();
-    mpns.dhs_crypto_ctl.mpp2_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    mpns.dhs_crypto_ctl.mpp2_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >>
+                                                         32));
     mpns.dhs_crypto_ctl.mpp2_ring_base_w1.write();
 
     mpns.dhs_crypto_ctl.mpp2_ring_size.fld(barco_ring->ring_size);
     mpns.dhs_crypto_ctl.mpp2_ring_size.write();
 
-    mpns.dhs_crypto_ctl.mpp2_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    mpns.dhs_crypto_ctl.mpp2_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr &
+                                                            0xffffffff));
     mpns.dhs_crypto_ctl.mpp2_opa_tag_addr_w0.write();
-    mpns.dhs_crypto_ctl.mpp2_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    mpns.dhs_crypto_ctl.mpp2_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >>
+                                                            32));
     mpns.dhs_crypto_ctl.mpp2_opa_tag_addr_w1.write();
 
     mpns.dhs_crypto_ctl.mpp2_producer_idx.fld(barco_ring->producer_idx);
     mpns.dhs_crypto_ctl.mpp2_producer_idx.write();
-    barco_ring->producer_idx_addr = mpns.dhs_crypto_ctl.mpp2_producer_idx.get_offset();
+    barco_ring->producer_idx_addr =
+        mpns.dhs_crypto_ctl.mpp2_producer_idx.get_offset();
 
     // CI is read-only
     //mpns.dhs_crypto_ctl.mpp2_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp2_consumer_idx.write();
 
     SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     return capri_barco_mpp2_key_array_init();
 }
 
-sdk_ret_t capri_barco_mpp3_key_array_init(void)
+sdk_ret_t
+capri_barco_mpp3_key_array_init(void)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_mpse_csr_t &                    mpse = cap0.mp.mpse;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    uint64_t                            key_array_base;
-    uint32_t                            key_array_key_count;
-    char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
-    uint32_t                            region_sz = 0;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpse_csr_t &mpse = cap0.mp.mpse;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint64_t key_array_base;
+    uint32_t key_array_key_count;
+    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
@@ -1088,16 +1162,17 @@ sdk_ret_t capri_barco_mpp3_key_array_init(void)
     mpse.dhs_crypto_ctl.mpp3_axi_status.write();
 
     SDK_TRACE_DEBUG("Barco MPP3 Key Descriptor Array of count %d setup @ 0x%llx",
-            key_array_key_count, key_array_base);
+                    key_array_key_count, key_array_base);
 
     return ret;
 }
 
-sdk_ret_t capri_barco_mpp3_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t
+capri_barco_mpp3_init (capri_barco_ring_t *barco_ring)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_mpns_csr_t &                    mpns = cap0.mp.mpns;
-    sdk_ret_t                           ret = SDK_RET_OK;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpns_csr_t &mpns = cap0.mp.mpns;
+    sdk_ret_t ret = SDK_RET_OK;
 
     ret = capri_barco_ring_common_init(barco_ring);
     if (ret != SDK_RET_OK) {
@@ -1111,42 +1186,49 @@ sdk_ret_t capri_barco_mpp3_init(capri_barco_ring_t *barco_ring)
     mpns.dhs_crypto_ctl.mpp3_soft_rst.fld(0);
     mpns.dhs_crypto_ctl.mpp3_soft_rst.write();
 
-    mpns.dhs_crypto_ctl.mpp3_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    mpns.dhs_crypto_ctl.mpp3_ring_base_w0.fld((uint32_t)(barco_ring->ring_base &
+                                                         0xffffffff));
     mpns.dhs_crypto_ctl.mpp3_ring_base_w0.write();
-    mpns.dhs_crypto_ctl.mpp3_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    mpns.dhs_crypto_ctl.mpp3_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >>
+                                                         32));
     mpns.dhs_crypto_ctl.mpp3_ring_base_w1.write();
 
     mpns.dhs_crypto_ctl.mpp3_ring_size.fld(barco_ring->ring_size);
     mpns.dhs_crypto_ctl.mpp3_ring_size.write();
 
-    mpns.dhs_crypto_ctl.mpp3_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    mpns.dhs_crypto_ctl.mpp3_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr &
+                                                            0xffffffff));
     mpns.dhs_crypto_ctl.mpp3_opa_tag_addr_w0.write();
-    mpns.dhs_crypto_ctl.mpp3_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    mpns.dhs_crypto_ctl.mpp3_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >>
+                                                            32));
     mpns.dhs_crypto_ctl.mpp3_opa_tag_addr_w1.write();
 
     mpns.dhs_crypto_ctl.mpp3_producer_idx.fld(barco_ring->producer_idx);
     mpns.dhs_crypto_ctl.mpp3_producer_idx.write();
-    barco_ring->producer_idx_addr = mpns.dhs_crypto_ctl.mpp3_producer_idx.get_offset();
+    barco_ring->producer_idx_addr =
+        mpns.dhs_crypto_ctl.mpp3_producer_idx.get_offset();
 
     // CI is read-only
     //mpns.dhs_crypto_ctl.mpp3_consumer_idx.fld(barco_ring->consumer_idx);
     //mpns.dhs_crypto_ctl.mpp3_consumer_idx.write();
 
     SDK_TRACE_DEBUG("Barco ring \"%s\" base setup @ 0x%llx, descriptor count %d",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     return capri_barco_mpp3_key_array_init();
 }
 
-sdk_ret_t capri_barco_gcm0_key_array_init(void)
+sdk_ret_t
+capri_barco_gcm0_key_array_init (void)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hese_csr_t &                    hese = cap0.md.hese;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    uint64_t                            key_array_base;
-    uint32_t                            key_array_key_count;
-    char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
-    uint32_t                            region_sz = 0;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hese_csr_t &hese = cap0.md.hese;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint64_t key_array_base;
+    uint32_t key_array_key_count;
+    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
@@ -1188,14 +1270,13 @@ sdk_ret_t capri_barco_gcm0_key_array_init(void)
     return ret;
 }
 
-sdk_ret_t capri_barco_gcm0_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t
+capri_barco_gcm0_init (capri_barco_ring_t *barco_ring)
 {
-
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    uint32_t                            gcm0_pi, gcm0_ci;
-
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &hens = cap0.md.hens;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint32_t gcm0_pi, gcm0_ci;
 
     ret = capri_barco_ring_common_init(barco_ring);
     if (ret != SDK_RET_OK) {
@@ -1209,42 +1290,50 @@ sdk_ret_t capri_barco_gcm0_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.gcm0_soft_rst.fld(0);
     hens.dhs_crypto_ctl.gcm0_soft_rst.write();
 
-    hens.dhs_crypto_ctl.gcm0_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    hens.dhs_crypto_ctl.gcm0_ring_base_w0.fld((uint32_t)(barco_ring->ring_base &
+                                                         0xffffffff));
     hens.dhs_crypto_ctl.gcm0_ring_base_w0.write();
-    hens.dhs_crypto_ctl.gcm0_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    hens.dhs_crypto_ctl.gcm0_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >>
+                                                         32));
     hens.dhs_crypto_ctl.gcm0_ring_base_w1.write();
 
     hens.dhs_crypto_ctl.gcm0_ring_size.fld(barco_ring->ring_size);
     hens.dhs_crypto_ctl.gcm0_ring_size.write();
 
-    hens.dhs_crypto_ctl.gcm0_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    hens.dhs_crypto_ctl.gcm0_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr &
+                                                            0xffffffff));
     hens.dhs_crypto_ctl.gcm0_opa_tag_addr_w0.write();
-    hens.dhs_crypto_ctl.gcm0_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    hens.dhs_crypto_ctl.gcm0_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >>
+                                                            32));
     hens.dhs_crypto_ctl.gcm0_opa_tag_addr_w1.write();
 
     gcm0_pi = hens.dhs_crypto_ctl.gcm0_producer_idx.fld().convert_to<uint32_t>();
     gcm0_ci = hens.dhs_crypto_ctl.gcm0_consumer_idx.fld().convert_to<uint32_t>();
-    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.gcm0_producer_idx.get_offset();
+    barco_ring->producer_idx_addr =
+        hens.dhs_crypto_ctl.gcm0_producer_idx.get_offset();
 
     assert((gcm0_pi == 0) && (gcm0_ci == 0));
 
     return capri_barco_gcm0_key_array_init();
 }
 
-bool capri_barco_gcm0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+bool
+capri_barco_gcm0_poller (capri_barco_ring_t *barco_ring, uint32_t req_tag)
 {
-    bool                                ret = FALSE;
-    uint32_t                            curr_opaque_tag = 0;
+    bool ret = FALSE;
+    uint32_t curr_opaque_tag = 0;
 
-    if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
-			   sizeof(curr_opaque_tag))) {
+    if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr,
+                                 (uint8_t*)&curr_opaque_tag,
+                                 sizeof(curr_opaque_tag))) {
         SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%llx",
-                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
+                      barco_ring->ring_name,
+                      (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
-        SDK_TRACE_DEBUG("Poll:%s: Retrievd opaque tag value: %d", barco_ring->ring_name,
-			curr_opaque_tag);
+        SDK_TRACE_DEBUG("Poll:%s: Retrievd opaque tag value: %d",
+                        barco_ring->ring_name, curr_opaque_tag);
         /* TODO: Handle wraparounds */
         if (curr_opaque_tag >= req_tag)
             ret = TRUE;
@@ -1253,8 +1342,8 @@ bool capri_barco_gcm0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     return ret;
 
 #if 0
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &hens = cap0.md.hens;
 
     /* TBD - use Doorbell address in req descriptor  to track request completions */
     if (hens.dhs_crypto_ctl.gcm0_consumer_idx.fld() != barco_ring->consumer_idx) {
@@ -1266,14 +1355,16 @@ bool capri_barco_gcm0_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 #endif
 }
 
-sdk_ret_t capri_barco_gcm0_queue_request(struct capri_barco_ring_s *barco_ring, void *req,
-			  		uint32_t *req_tag, bool schedule_barco)
+sdk_ret_t
+capri_barco_gcm0_queue_request (struct capri_barco_ring_s *barco_ring,
+                                void *req, uint32_t *req_tag,
+                                bool schedule_barco)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
-    uint64_t                            slot_addr = 0;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    barco_symm_req_descriptor_t         *sym_req_descr = NULL;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &hens = cap0.md.hens;
+    uint64_t slot_addr = 0;
+    sdk_ret_t ret = SDK_RET_OK;
+    barco_symm_req_descriptor_t *sym_req_descr = NULL;
 
     /*
      * We'll use the opaque-tag address to track response from
@@ -1293,16 +1384,19 @@ sdk_ret_t capri_barco_gcm0_queue_request(struct capri_barco_ring_s *barco_ring, 
     sym_req_descr->doorbell_data = barco_ring->opaqe_tag_value;
 #endif
 
-    slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
+    slot_addr = barco_ring->ring_base + (barco_ring->producer_idx *
+                                         barco_ring->descriptor_size);
 
-    if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
+    if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req,
+                                  barco_ring->descriptor_size)) {
         SDK_TRACE_ERR("Failed to write MPP Req descriptor entry for %s  @ 0x%llx",
                 barco_ring->ring_name,
                 (uint64_t) slot_addr);
         ret = SDK_RET_INVALID_ARG;
     }
 
-    barco_ring->producer_idx = (barco_ring->producer_idx + 1) & (barco_ring->ring_size - 1);
+    barco_ring->producer_idx = (barco_ring->producer_idx + 1) &
+        (barco_ring->ring_size - 1);
 
     if (schedule_barco) {
 
@@ -1315,15 +1409,16 @@ sdk_ret_t capri_barco_gcm0_queue_request(struct capri_barco_ring_s *barco_ring, 
     return ret;
 }
 
-sdk_ret_t capri_barco_gcm1_key_array_init(void)
+sdk_ret_t
+capri_barco_gcm1_key_array_init (void)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hese_csr_t &                    hese = cap0.md.hese;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    uint64_t                            key_array_base;
-    uint32_t                            key_array_key_count;
-    char                                key_desc_array[] = CAPRI_BARCO_KEY_DESC;
-    uint32_t                            region_sz = 0;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hese_csr_t &hese = cap0.md.hese;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint64_t key_array_base;
+    uint32_t key_array_key_count;
+    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
@@ -1360,19 +1455,18 @@ sdk_ret_t capri_barco_gcm1_key_array_init(void)
     hese.dhs_crypto_ctl.gcm1_axi_status.write();
 
     SDK_TRACE_DEBUG("Barco gcm1 Key Descriptor Array of count %d setup @ 0x%llx",
-            key_array_key_count, key_array_base);
+                    key_array_key_count, key_array_base);
 
     return ret;
 }
 
-sdk_ret_t capri_barco_gcm1_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t
+capri_barco_gcm1_init (capri_barco_ring_t *barco_ring)
 {
-
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    uint32_t                            gcm1_pi, gcm1_ci;
-
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &hens = cap0.md.hens;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint32_t gcm1_pi, gcm1_ci;
 
     ret = capri_barco_ring_common_init(barco_ring);
     if (ret != SDK_RET_OK) {
@@ -1386,37 +1480,41 @@ sdk_ret_t capri_barco_gcm1_init(capri_barco_ring_t *barco_ring)
     hens.dhs_crypto_ctl.gcm1_soft_rst.fld(0);
     hens.dhs_crypto_ctl.gcm1_soft_rst.write();
 
-    hens.dhs_crypto_ctl.gcm1_ring_base_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    hens.dhs_crypto_ctl.gcm1_ring_base_w0.fld((uint32_t)(barco_ring->ring_base &
+                                                         0xffffffff));
     hens.dhs_crypto_ctl.gcm1_ring_base_w0.write();
-    hens.dhs_crypto_ctl.gcm1_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    hens.dhs_crypto_ctl.gcm1_ring_base_w1.fld((uint32_t)(barco_ring->ring_base >>
+                                                         32));
     hens.dhs_crypto_ctl.gcm1_ring_base_w1.write();
 
     hens.dhs_crypto_ctl.gcm1_ring_size.fld(barco_ring->ring_size);
     hens.dhs_crypto_ctl.gcm1_ring_size.write();
 
-    hens.dhs_crypto_ctl.gcm1_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr & 0xffffffff));
+    hens.dhs_crypto_ctl.gcm1_opa_tag_addr_w0.fld((uint32_t)(barco_ring->opaque_tag_addr &
+                                                            0xffffffff));
     hens.dhs_crypto_ctl.gcm1_opa_tag_addr_w0.write();
-    hens.dhs_crypto_ctl.gcm1_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >> 32));
+    hens.dhs_crypto_ctl.gcm1_opa_tag_addr_w1.fld((uint32_t)(barco_ring->opaque_tag_addr >>
+                                                            32));
     hens.dhs_crypto_ctl.gcm1_opa_tag_addr_w1.write();
 
     gcm1_pi = hens.dhs_crypto_ctl.gcm1_producer_idx.fld().convert_to<uint32_t>();
     gcm1_ci = hens.dhs_crypto_ctl.gcm1_consumer_idx.fld().convert_to<uint32_t>();
-    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.gcm1_producer_idx.get_offset();
+    barco_ring->producer_idx_addr =
+        hens.dhs_crypto_ctl.gcm1_producer_idx.get_offset();
 
     assert((gcm1_pi == 0) && (gcm1_ci == 0));
-
 
     return capri_barco_gcm1_key_array_init();
 }
 
-
-sdk_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t
+capri_barco_cp_init (capri_barco_ring_t *barco_ring)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    uint32_t                            reg_lo;
-    uint32_t                            reg_hi;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &hens = cap0.md.hens;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint32_t reg_lo;
+    uint32_t reg_hi;
 
     ret = capri_barco_ring_common_init(barco_ring);
     if (ret != SDK_RET_OK) {
@@ -1429,9 +1527,9 @@ sdk_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring)
      */
     hens.dhs_crypto_ctl.cp_cfg_glb.read();
     reg_lo = (hens.dhs_crypto_ctl.cp_cfg_glb.fld().convert_to<uint32_t>() &
-              ~BARCO_CRYPTO_CP_CFG_GLB_HDR_VER_MASK)    |
-             BARCO_CRYPTO_CP_CFG_GLB_SOFT_RESET         |
-             BARCO_CRYPTO_CP_CFG_GLB_HDR_VER;
+              ~BARCO_CRYPTO_CP_CFG_GLB_HDR_VER_MASK) |
+        BARCO_CRYPTO_CP_CFG_GLB_SOFT_RESET |
+        BARCO_CRYPTO_CP_CFG_GLB_HDR_VER;
     hens.dhs_crypto_ctl.cp_cfg_glb.fld(reg_lo);
     hens.dhs_crypto_ctl.cp_cfg_glb.write();
 
@@ -1454,7 +1552,7 @@ sdk_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring)
              BARCO_CRYPTO_CP_UENG_LO_EN_ALL;
     hens.dhs_crypto_ctl.cp_cfg_ueng_w1.read();
     reg_hi = (hens.dhs_crypto_ctl.cp_cfg_ueng_w1.fld().convert_to<uint32_t>()   &
-              ~BARCO_CRYPTO_CP_UENG_HI_HMEM_FILL_ZERO) | 
+              ~BARCO_CRYPTO_CP_UENG_HI_HMEM_FILL_ZERO) |
              (BARCO_CRYPTO_CP_UENG_HI_SHA_DATA_UNCOMP  | BARCO_CRYPTO_CP_UENG_HI_CSUM_ON_UNCOMP |
               BARCO_CRYPTO_CP_UENG_HI_INTEG_APP_STATUS);
     hens.dhs_crypto_ctl.cp_cfg_ueng_w0.fld(reg_lo);
@@ -1490,27 +1588,31 @@ sdk_ret_t capri_barco_cp_init(capri_barco_ring_t *barco_ring)
     return SDK_RET_OK;
 }
 
-bool capri_barco_cp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+bool
+capri_barco_cp_poller (capri_barco_ring_t *barco_ring, uint32_t req_tag)
 {
     /* TBD */
     return FALSE;
 }
 
-sdk_ret_t capri_barco_cp_hot_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t
+capri_barco_cp_hot_init (capri_barco_ring_t *barco_ring)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    uint32_t                            reg_lo;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &hens = cap0.md.hens;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint32_t reg_lo;
 
     ret = capri_barco_ring_common_init(barco_ring);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
-    hens.dhs_crypto_ctl.cp_cfg_hotq_base_adr_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    hens.dhs_crypto_ctl.cp_cfg_hotq_base_adr_w0.fld((uint32_t)(barco_ring->ring_base &
+                                                               0xffffffff));
     hens.dhs_crypto_ctl.cp_cfg_hotq_base_adr_w0.write();
-    hens.dhs_crypto_ctl.cp_cfg_hotq_base_adr_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    hens.dhs_crypto_ctl.cp_cfg_hotq_base_adr_w1.fld((uint32_t)(barco_ring->ring_base >>
+                                                               32));
     hens.dhs_crypto_ctl.cp_cfg_hotq_base_adr_w1.write();
 
     /*
@@ -1518,8 +1620,8 @@ sdk_ret_t capri_barco_cp_hot_init(capri_barco_ring_t *barco_ring)
      */
     hens.dhs_crypto_ctl.cp_cfg_dist.read();
     reg_lo = (hens.dhs_crypto_ctl.cp_cfg_dist.fld().convert_to<uint32_t>()  &
-              ~BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE(BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_MASK))   |
-             BARCO_CRYPTO_CP_DIST_DESC_HOTQ_EN                                                  |
+              ~BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE(BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_MASK)) |
+             BARCO_CRYPTO_CP_DIST_DESC_HOTQ_EN |
              BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE(BARCO_CRYPTO_CP_HOT_RING_SIZE);
     hens.dhs_crypto_ctl.cp_cfg_dist.fld(reg_lo);
     hens.dhs_crypto_ctl.cp_cfg_dist.write();
@@ -1529,18 +1631,21 @@ sdk_ret_t capri_barco_cp_hot_init(capri_barco_ring_t *barco_ring)
     barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.cp_cfg_hotq_pd_idx.get_offset();
 
     SDK_TRACE_DEBUG("Barco compression hot ring \"%s\" base setup @ 0x%llx, descriptor count %d",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     return SDK_RET_OK;
 }
 
-bool capri_barco_cp_hot_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+bool
+capri_barco_cp_hot_poller (capri_barco_ring_t *barco_ring, uint32_t req_tag)
 {
     /* TBD */
     return FALSE;
 }
 
-sdk_ret_t capri_barco_dc_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t
+capri_barco_dc_init (capri_barco_ring_t *barco_ring)
 {
     cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     cap_hens_csr_t &                    hens = cap0.md.hens;
@@ -1620,27 +1725,31 @@ sdk_ret_t capri_barco_dc_init(capri_barco_ring_t *barco_ring)
     return SDK_RET_OK;
 }
 
-bool capri_barco_dc_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+bool
+capri_barco_dc_poller (capri_barco_ring_t *barco_ring, uint32_t req_tag)
 {
     /* TBD */
     return FALSE;
 }
 
-sdk_ret_t capri_barco_dc_hot_init(capri_barco_ring_t *barco_ring)
+sdk_ret_t
+capri_barco_dc_hot_init (capri_barco_ring_t *barco_ring)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    uint32_t                            reg_lo;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &hens = cap0.md.hens;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint32_t reg_lo;
 
     ret = capri_barco_ring_common_init(barco_ring);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
-    hens.dhs_crypto_ctl.dc_cfg_hotq_base_adr_w0.fld((uint32_t)(barco_ring->ring_base & 0xffffffff));
+    hens.dhs_crypto_ctl.dc_cfg_hotq_base_adr_w0.fld((uint32_t)(barco_ring->ring_base &
+                                                               0xffffffff));
     hens.dhs_crypto_ctl.dc_cfg_hotq_base_adr_w0.write();
-    hens.dhs_crypto_ctl.dc_cfg_hotq_base_adr_w1.fld((uint32_t)(barco_ring->ring_base >> 32));
+    hens.dhs_crypto_ctl.dc_cfg_hotq_base_adr_w1.fld((uint32_t)(barco_ring->ring_base >>
+                                                               32));
     hens.dhs_crypto_ctl.dc_cfg_hotq_base_adr_w1.write();
 
     /*
@@ -1648,42 +1757,49 @@ sdk_ret_t capri_barco_dc_hot_init(capri_barco_ring_t *barco_ring)
      */
     hens.dhs_crypto_ctl.dc_cfg_dist.read();
     reg_lo = (hens.dhs_crypto_ctl.dc_cfg_dist.fld().convert_to<uint32_t>()  &
-             ~BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE(BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_MASK))    |
-             BARCO_CRYPTO_DC_DIST_DESC_HOTQ_EN                                                  |
+             ~BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE(BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE_MASK)) |
+             BARCO_CRYPTO_DC_DIST_DESC_HOTQ_EN |
              BARCO_CRYPTO_DC_DIST_DESC_HOTQ_SIZE(BARCO_CRYPTO_DC_HOT_RING_SIZE);
     hens.dhs_crypto_ctl.dc_cfg_dist.fld(reg_lo);
     hens.dhs_crypto_ctl.dc_cfg_dist.write();
 
     hens.dhs_crypto_ctl.dc_cfg_hotq_pd_idx.fld(barco_ring->producer_idx);
     hens.dhs_crypto_ctl.dc_cfg_hotq_pd_idx.write();
-    barco_ring->producer_idx_addr = hens.dhs_crypto_ctl.dc_cfg_hotq_pd_idx.get_offset();
+    barco_ring->producer_idx_addr =
+        hens.dhs_crypto_ctl.dc_cfg_hotq_pd_idx.get_offset();
 
     SDK_TRACE_DEBUG("Barco decompression hot ring \"%s\" base setup @ 0x%llx, descriptor count %d",
-            barco_ring->ring_name, barco_ring->ring_base, barco_ring->ring_size);
+                    barco_ring->ring_name, barco_ring->ring_base,
+                    barco_ring->ring_size);
 
     return SDK_RET_OK;
 }
 
-bool capri_barco_dc_hot_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+bool
+capri_barco_dc_hot_poller (capri_barco_ring_t *barco_ring, uint32_t req_tag)
 {
     /* TBD */
     return FALSE;
 }
 
-bool capri_barco_gcm1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
+bool
+capri_barco_gcm1_poller (capri_barco_ring_t *barco_ring, uint32_t req_tag)
 {
-    bool                                ret = FALSE;
-    uint32_t                            curr_opaque_tag = 0;
+    bool ret = FALSE;
+    uint32_t curr_opaque_tag = 0;
 
-    if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr, (uint8_t*)&curr_opaque_tag,
-			   sizeof(curr_opaque_tag))) {
+    if (sdk::asic::asic_mem_read(barco_ring->opaque_tag_addr,
+                                 (uint8_t*)&curr_opaque_tag,
+                                 sizeof(curr_opaque_tag))) {
         SDK_TRACE_ERR("Poll:%s: Failed to retrieve current opaque tag value @ 0x%llx",
-                barco_ring->ring_name, (uint64_t) barco_ring->opaque_tag_addr);
+                      barco_ring->ring_name,
+                      (uint64_t) barco_ring->opaque_tag_addr);
         return FALSE;
     }
     else {
-        SDK_TRACE_DEBUG("Poll:%s: Retrievd opaque tag value: %s", barco_ring->ring_name,
-			curr_opaque_tag);
+        SDK_TRACE_DEBUG("Poll:%s: Retrievd opaque tag value: %s",
+                        barco_ring->ring_name,
+                        curr_opaque_tag);
         /* TODO: Handle wraparounds */
         if (curr_opaque_tag >= req_tag)
             ret = TRUE;
@@ -1692,11 +1808,12 @@ bool capri_barco_gcm1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
     return ret;
 
 #if 0
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &hens = cap0.md.hens;
 
     /* TBD - use Doorbell address in req descriptor  to track request completions */
-    if (hens.dhs_crypto_ctl.gcm1_consumer_idx.fld() != barco_ring->consumer_idx) {
+    if (hens.dhs_crypto_ctl.gcm1_consumer_idx.fld() !=
+        barco_ring->consumer_idx) {
         /* New responses available */
         return TRUE;
     }
@@ -1705,14 +1822,16 @@ bool capri_barco_gcm1_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag)
 #endif
 }
 
-sdk_ret_t capri_barco_gcm1_queue_request(struct capri_barco_ring_s *barco_ring, void *req,
-			  		uint32_t *req_tag, bool schedule_barco)
+sdk_ret_t
+capri_barco_gcm1_queue_request (struct capri_barco_ring_s *barco_ring,
+                                void *req, uint32_t *req_tag,
+                                bool schedule_barco)
 {
-    cap_top_csr_t &                     cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_hens_csr_t &                    hens = cap0.md.hens;
-    uint64_t                            slot_addr = 0;
-    sdk_ret_t                           ret = SDK_RET_OK;
-    barco_symm_req_descriptor_t         *sym_req_descr = NULL;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_hens_csr_t &hens = cap0.md.hens;
+    uint64_t slot_addr = 0;
+    sdk_ret_t ret = SDK_RET_OK;
+    barco_symm_req_descriptor_t *sym_req_descr = NULL;
 
     /*
      * We'll use the opaque-tag address to track response from
@@ -1732,19 +1851,20 @@ sdk_ret_t capri_barco_gcm1_queue_request(struct capri_barco_ring_s *barco_ring, 
     sym_req_descr->doorbell_data = barco_ring->opaqe_tag_value;
 #endif
 
-    slot_addr = barco_ring->ring_base + (barco_ring->producer_idx * barco_ring->descriptor_size);
+    slot_addr = barco_ring->ring_base + (barco_ring->producer_idx *
+                                         barco_ring->descriptor_size);
 
-    if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req, barco_ring->descriptor_size)) {
+    if (sdk::asic::asic_mem_write(slot_addr, (uint8_t*)req,
+                                  barco_ring->descriptor_size)) {
         SDK_TRACE_ERR("Failed to write MPP Req descriptor entry for %s  @ 0x%llx",
-                barco_ring->ring_name,
-                (uint64_t) slot_addr);
+                      barco_ring->ring_name, (uint64_t) slot_addr);
         ret = SDK_RET_INVALID_ARG;
     }
 
-    barco_ring->producer_idx = (barco_ring->producer_idx + 1) & (barco_ring->ring_size - 1);
+    barco_ring->producer_idx = (barco_ring->producer_idx + 1) &
+        (barco_ring->ring_size - 1);
 
     if (schedule_barco) {
-
         /* Barco doorbell */
         hens.dhs_crypto_ctl.gcm1_producer_idx.fld(barco_ring->producer_idx);
         hens.dhs_crypto_ctl.gcm1_producer_idx.write();
@@ -1754,9 +1874,10 @@ sdk_ret_t capri_barco_gcm1_queue_request(struct capri_barco_ring_s *barco_ring, 
     return ret;
 }
 
-bool capri_barco_ring_poll(barco_rings_t barco_ring_type, uint32_t req_tag)
+bool
+capri_barco_ring_poll (barco_rings_t barco_ring_type, uint32_t req_tag)
 {
-    capri_barco_ring_t          *barco_ring;
+    capri_barco_ring_t *barco_ring;
 
     barco_ring = &barco_rings[barco_ring_type];
     if (barco_ring->poller) {
@@ -1766,9 +1887,11 @@ bool capri_barco_ring_poll(barco_rings_t barco_ring_type, uint32_t req_tag)
     return FALSE;
 }
 
-sdk_ret_t capri_barco_ring_queue_request(barco_rings_t barco_ring_type, void *req, uint32_t *req_tag, bool schedule_barco)
+sdk_ret_t
+capri_barco_ring_queue_request(barco_rings_t barco_ring_type, void *req,
+                               uint32_t *req_tag, bool schedule_barco)
 {
-    capri_barco_ring_t          *barco_ring;
+    capri_barco_ring_t *barco_ring;
 
     /* TODO:
      *  - Locking when queue is shared across multiple CPUs
@@ -1778,29 +1901,32 @@ sdk_ret_t capri_barco_ring_queue_request(barco_rings_t barco_ring_type, void *re
     return barco_ring->queue_request(barco_ring, req, req_tag, schedule_barco);
 }
 
-sdk_ret_t capri_barco_ring_consume(barco_rings_t barco_ring_type)
+sdk_ret_t
+capri_barco_ring_consume (barco_rings_t barco_ring_type)
 {
-    capri_barco_ring_t          *barco_ring;
+    capri_barco_ring_t *barco_ring;
 
     barco_ring = &barco_rings[barco_ring_type];
-    barco_ring->consumer_idx = (barco_ring->consumer_idx + 1) & (barco_ring->ring_size - 1);
+    barco_ring->consumer_idx = (barco_ring->consumer_idx + 1) &
+        (barco_ring->ring_size - 1);
     return SDK_RET_OK;
 }
 
-
-sdk_ret_t capri_barco_rings_init(platform_type_t platform)
+sdk_ret_t
+capri_barco_rings_init (platform_type_t platform)
 {
-    uint16_t        idx;
-    uint64_t        opa_tag_addr = 0;
-    uint32_t        opa_tag_def_val = 0;
-    uint64_t        shadow_pndx_addr = 0;
-    uint64_t        shadow_pndx_def_val = 0;
-    uint64_t        shadow_pndx_total = 0;
-    uint32_t        shadow_pndx_size = 0;
-    sdk_ret_t       ret = SDK_RET_OK;
+    uint16_t idx;
+    uint64_t opa_tag_addr = 0;
+    uint32_t opa_tag_def_val = 0;
+    uint64_t shadow_pndx_addr = 0;
+    uint64_t shadow_pndx_def_val = 0;
+    uint64_t shadow_pndx_total = 0;
+    uint32_t shadow_pndx_size = 0;
+    sdk_ret_t ret = SDK_RET_OK;
 
     shadow_pndx_total = CRYPTO_BARCO_RES_HBM_MEM_512B_SIZE;
-    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B, NULL, &shadow_pndx_addr);
+    ret = capri_barco_res_alloc(CRYPTO_BARCO_RES_HBM_MEM_512B, NULL,
+                                &shadow_pndx_addr);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("Failed to allocate shadow pndx storage for rings");
         return ret;
@@ -1811,18 +1937,22 @@ sdk_ret_t capri_barco_rings_init(platform_type_t platform)
 
         if (barco_rings[idx].ring_size != 0) {
             barco_rings[idx].opaqe_tag_value = 0x1;
-            
-            opa_tag_addr = sdk::asic::asic_get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) + get_opaque_tag_offset((barco_rings_t)idx);
+
+            opa_tag_addr =
+                sdk::asic::asic_get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) +
+                get_opaque_tag_offset((barco_rings_t)idx);
 
             SDK_TRACE_DEBUG("Ring: %s: Allocated opaque tag @ 0x%llx",
-                barco_rings[idx].ring_name, opa_tag_addr);
-            if(sdk::asic::asic_mem_write(opa_tag_addr, (uint8_t *)&opa_tag_def_val, sizeof(opa_tag_def_val))) {
+                            barco_rings[idx].ring_name, opa_tag_addr);
+            if(sdk::asic::asic_mem_write(opa_tag_addr,
+                                         (uint8_t *)&opa_tag_def_val,
+                                         sizeof(opa_tag_def_val))) {
                 SDK_TRACE_ERR("Ring: %s: Failed to initialized opaque tag @ 0x%llx",
-                    barco_rings[idx].ring_name, opa_tag_addr);
+                              barco_rings[idx].ring_name, opa_tag_addr);
                 return SDK_RET_HW_PROGRAM_ERR;
-            } 
+            }
             SDK_TRACE_DEBUG("Ring: %s: initialized opaque tag to 0 @ 0x%llx",
-                barco_rings[idx].ring_name, opa_tag_addr);
+                            barco_rings[idx].ring_name, opa_tag_addr);
 
             barco_rings[idx].opaque_tag_addr = opa_tag_addr;
         }
@@ -1835,12 +1965,13 @@ sdk_ret_t capri_barco_rings_init(platform_type_t platform)
                 return SDK_RET_HW_PROGRAM_ERR;
             }
             barco_rings[idx].shadow_pndx_addr = shadow_pndx_addr;
-            if(sdk::asic::asic_mem_write(shadow_pndx_addr, (uint8_t *)&shadow_pndx_def_val,
-                                   shadow_pndx_size)) {
+            if(sdk::asic::asic_mem_write(shadow_pndx_addr,
+                                         (uint8_t *)&shadow_pndx_def_val,
+                                         shadow_pndx_size)) {
                 SDK_TRACE_ERR("Ring: %s: Failed to initialize shadow pndx @ 0x%llx",
                               barco_rings[idx].ring_name, shadow_pndx_addr);
                 return SDK_RET_HW_PROGRAM_ERR;
-            } 
+            }
             SDK_TRACE_DEBUG("Ring: %s: initialized shadow pndx to 0 @ 0x%llx",
                             barco_rings[idx].ring_name, shadow_pndx_addr);
             shadow_pndx_addr += shadow_pndx_size;
@@ -1857,23 +1988,27 @@ sdk_ret_t capri_barco_rings_init(platform_type_t platform)
         if (barco_rings[idx].init) {
             ret = barco_rings[idx].init(&barco_rings[idx]);
             if (ret != SDK_RET_OK) {
-                SDK_TRACE_ERR("Failed to initialize Barco Ring %s", barco_rings[idx].ring_name);
+                SDK_TRACE_ERR("Failed to initialize Barco Ring %s",
+                              barco_rings[idx].ring_name);
                 return ret;
             }
         }
 
     }
+
     return ret;
 }
 
-sdk_ret_t get_opaque_tag_addr(barco_rings_t ring_type, uint64_t* addr)
+sdk_ret_t
+get_opaque_tag_addr (barco_rings_t ring_type, uint64_t* addr)
 {
     *addr = barco_rings[ring_type].opaque_tag_addr;
     return SDK_RET_OK;
 }
 
-sdk_ret_t capri_barco_get_meta_config_info(barco_rings_t ring_type,
-                                           barco_ring_meta_config_t *meta)
+sdk_ret_t
+capri_barco_get_meta_config_info (barco_rings_t ring_type,
+                                  barco_ring_meta_config_t *meta)
 {
     meta->shadow_pndx_addr = barco_rings[ring_type].shadow_pndx_addr;
     meta->desc_size = barco_rings[ring_type].descriptor_size;
@@ -1885,23 +2020,27 @@ sdk_ret_t capri_barco_get_meta_config_info(barco_rings_t ring_type,
     meta->ring_size = barco_rings[ring_type].ring_size;
     return SDK_RET_OK;
 }
-sdk_ret_t capri_barco_get_capabilities(barco_rings_t ring_type,
-                                       bool *sw_reset_capable, bool *sw_enable_capable)
+
+sdk_ret_t
+capri_barco_get_capabilities (barco_rings_t ring_type, bool *sw_reset_capable,
+                              bool *sw_enable_capable)
 {
     *sw_reset_capable = barco_rings[ring_type].sw_reset_capable;
     *sw_enable_capable = barco_rings[ring_type].sw_enable_capable;
     return SDK_RET_OK;
 }
 
-sdk_ret_t capri_barco_asym_req_descr_get(uint32_t slot_index, barco_asym_descr_t *asym_req_descr)
+sdk_ret_t
+capri_barco_asym_req_descr_get (uint32_t slot_index,
+                                barco_asym_descr_t *asym_req_descr)
 {
   /* To be implemented */
-
   return SDK_RET_OK;
 }
 
-sdk_ret_t capri_barco_symm_req_descr_get(barco_rings_t ring_type, uint32_t slot_index,
-					 barco_symm_descr_t *symm_req_descr)
+sdk_ret_t
+capri_barco_symm_req_descr_get (barco_rings_t ring_type, uint32_t slot_index,
+                                barco_symm_descr_t *symm_req_descr)
 {
     barco_symm_req_descriptor_t *req_descr;
     capri_barco_ring_t          *barco_ring;
@@ -1914,14 +2053,13 @@ sdk_ret_t capri_barco_symm_req_descr_get(barco_rings_t ring_type, uint32_t slot_
     uint32_t index = (slot_index % barco_ring->ring_size);
     slot_addr = barco_ring->ring_base + (index * barco_ring->descriptor_size);
     SDK_TRACE_DEBUG("%s@%d: Ring base 0x%llx, slot_addr 0x%llx, read size %d",
-		    barco_ring->ring_name, barco_ring->ring_size,
-            barco_ring->ring_base, (uint64_t) slot_addr,
-		    barco_ring->descriptor_size);
+                    barco_ring->ring_name, barco_ring->ring_size,
+                    barco_ring->ring_base, (uint64_t) slot_addr,
+                    barco_ring->descriptor_size);
 
     if (sdk::asic::asic_mem_read(slot_addr, value, sizeof(value))) {
         SDK_TRACE_ERR("%s@0x%llx: Failed to read Symmetric request descriptor entry",
-                barco_ring->ring_name,
-                (uint64_t) slot_addr);
+                      barco_ring->ring_name, (uint64_t) slot_addr);
         return SDK_RET_INVALID_ARG;
     }
 
@@ -1943,34 +2081,37 @@ sdk_ret_t capri_barco_symm_req_descr_get(barco_rings_t ring_type, uint32_t slot_
 
     if (req_descr->iv_address) {
         if(sdk::asic::asic_mem_read(req_descr->iv_address,
-	    		   (uint8_t*)&symm_req_descr->salt,
-	    		   sizeof(symm_req_descr->salt))) {
+                                    (uint8_t*)&symm_req_descr->salt,
+                                    sizeof(symm_req_descr->salt))) {
            SDK_TRACE_ERR("%s@0x%llx: Failed to read the Salt information from HBM",
-	    	     barco_ring->ring_name, (uint64_t) req_descr->iv_address);
+                         barco_ring->ring_name, (uint64_t) req_descr->iv_address);
         }
         if(sdk::asic::asic_mem_read(req_descr->iv_address + 4,
-	    		   (uint8_t*)&symm_req_descr->explicit_iv,
-	    		   sizeof(symm_req_descr->explicit_iv))) {
+                                    (uint8_t*)&symm_req_descr->explicit_iv,
+                                    sizeof(symm_req_descr->explicit_iv))) {
             SDK_TRACE_ERR("%s@0x%llx: Failed to read the explicit IV information from HBM",
-	    	      barco_ring->ring_name, (uint64_t) (req_descr->iv_address + 4));
+                          barco_ring->ring_name,
+                          (uint64_t) (req_descr->iv_address + 4));
         }
     }
     if (req_descr->status_addr) {
         if(sdk::asic::asic_mem_read(req_descr->status_addr,
-	    		   (uint8_t*)&symm_req_descr->barco_status,
-	   		   sizeof(symm_req_descr->barco_status))) {
-           SDK_TRACE_ERR("%s@0x%llx: Failed to read the Barco Status information from HBM",
-	    	     barco_ring->ring_name, (uint64_t) req_descr->status_addr);
+                                    (uint8_t*)&symm_req_descr->barco_status,
+                                    sizeof(symm_req_descr->barco_status))) {
+            SDK_TRACE_ERR("%s@0x%llx: Failed to read the Barco Status information from HBM",
+                          barco_ring->ring_name,
+                          (uint64_t) req_descr->status_addr);
         }
     }
     return SDK_RET_OK;
 }
 
-sdk_ret_t capri_barco_ring_meta_get(barco_rings_t ring_type, uint32_t *pi, uint32_t *ci)
+sdk_ret_t
+capri_barco_ring_meta_get (barco_rings_t ring_type, uint32_t *pi, uint32_t *ci)
 {
-    cap_top_csr_t &             cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_mpns_csr_t &            mpns = cap0.mp.mpns;
-    cap_hens_csr_t &            hens = cap0.md.hens;
+    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_mpns_csr_t &mpns = cap0.mp.mpns;
+    cap_hens_csr_t &hens = cap0.md.hens;
 
     /*
      * Read the PI/CI registers for the corresponding barco ring.
@@ -1978,27 +2119,35 @@ sdk_ret_t capri_barco_ring_meta_get(barco_rings_t ring_type, uint32_t *pi, uint3
     switch(ring_type) {
     case BARCO_RING_GCM0:
         hens.dhs_crypto_ctl.gcm0_producer_idx.read();
-        *pi = hens.dhs_crypto_ctl.gcm0_producer_idx.fld().convert_to<uint32_t>();
+        *pi =
+            hens.dhs_crypto_ctl.gcm0_producer_idx.fld().convert_to<uint32_t>();
         hens.dhs_crypto_ctl.gcm0_consumer_idx.read();
-        *ci = hens.dhs_crypto_ctl.gcm0_consumer_idx.fld().convert_to<uint32_t>();
+        *ci =
+            hens.dhs_crypto_ctl.gcm0_consumer_idx.fld().convert_to<uint32_t>();
         break;
     case BARCO_RING_GCM1:
         hens.dhs_crypto_ctl.gcm1_producer_idx.read();
-        *pi = hens.dhs_crypto_ctl.gcm1_producer_idx.fld().convert_to<uint32_t>();
+        *pi =
+            hens.dhs_crypto_ctl.gcm1_producer_idx.fld().convert_to<uint32_t>();
         hens.dhs_crypto_ctl.gcm1_consumer_idx.read();
-        *ci = hens.dhs_crypto_ctl.gcm1_consumer_idx.fld().convert_to<uint32_t>();
+        *ci =
+            hens.dhs_crypto_ctl.gcm1_consumer_idx.fld().convert_to<uint32_t>();
         break;
     case BARCO_RING_MPP0:
       mpns.dhs_crypto_ctl.mpp0_producer_idx.read();
-      *pi = mpns.dhs_crypto_ctl.mpp0_producer_idx.fld().convert_to<uint32_t>();
+      *pi =
+          mpns.dhs_crypto_ctl.mpp0_producer_idx.fld().convert_to<uint32_t>();
       mpns.dhs_crypto_ctl.mpp0_consumer_idx.read();
-      *ci = mpns.dhs_crypto_ctl.mpp0_consumer_idx.fld().convert_to<uint32_t>();
+      *ci =
+          mpns.dhs_crypto_ctl.mpp0_consumer_idx.fld().convert_to<uint32_t>();
       break;
     case BARCO_RING_MPP1:
       mpns.dhs_crypto_ctl.mpp1_producer_idx.read();
-      *pi = mpns.dhs_crypto_ctl.mpp1_producer_idx.fld().convert_to<uint32_t>();
+      *pi =
+          mpns.dhs_crypto_ctl.mpp1_producer_idx.fld().convert_to<uint32_t>();
       mpns.dhs_crypto_ctl.mpp1_consumer_idx.read();
-      *ci = mpns.dhs_crypto_ctl.mpp1_consumer_idx.fld().convert_to<uint32_t>();
+      *ci =
+          mpns.dhs_crypto_ctl.mpp1_consumer_idx.fld().convert_to<uint32_t>();
       break;
     case BARCO_RING_MPP2:
       mpns.dhs_crypto_ctl.mpp2_producer_idx.read();
@@ -2014,12 +2163,12 @@ sdk_ret_t capri_barco_ring_meta_get(barco_rings_t ring_type, uint32_t *pi, uint3
       break;
     default:
       SDK_TRACE_ERR("%s: Ring type not supported yet",
-		    barco_rings[ring_type].ring_name);
+                    barco_rings[ring_type].ring_name);
       return SDK_RET_INVALID_ARG;
       break;
     }
     SDK_TRACE_DEBUG("%s: PI %d, CI %d",
-		    barco_rings[ring_type].ring_name, *pi, *ci);
+                    barco_rings[ring_type].ring_name, *pi, *ci);
     return SDK_RET_OK;
 }
 

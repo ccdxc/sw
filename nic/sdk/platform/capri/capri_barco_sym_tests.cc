@@ -82,7 +82,7 @@ static struct st {
         {
 	  0xba, 0xb5, 0x30, 0x58, 0xae, 0x86, 0x1a, 0x7f,
 	  0x19, 0x1a, 0xbe, 0x2d, 0x01, 0x45, 0xcb, 0xb1,
-	  0x23, 0x77, 0x6a, 0x63, 0x69, 0xee, 0x3f, 0x9d, 
+	  0x23, 0x77, 0x6a, 0x63, 0x69, 0xee, 0x3f, 0x9d,
 	  0x79, 0xce, 0x45, 0x56, 0x67, 0xe4, 0x11, 0xdd
 	}
     },
@@ -199,11 +199,11 @@ static struct st2 {
     }, 64,
     {//ciphertext
       0xa3, 0xf8, 0xea, 0x42, 0xe5, 0xcb, 0x44, 0x28,
-      0x17, 0x27, 0xe5, 0x2b, 0xdc, 0xc8, 0x5e, 0x5c, 
+      0x17, 0x27, 0xe5, 0x2b, 0xdc, 0xc8, 0x5e, 0x5c,
       0x1a, 0xbc, 0x6e, 0x6c, 0x7e, 0x58, 0x41, 0x7f,
-      0xe1, 0xed, 0x46, 0x6d, 0xee, 0x24, 0xa8, 0xef, 
+      0xe1, 0xed, 0x46, 0x6d, 0xee, 0x24, 0xa8, 0xef,
       0xbd, 0xef, 0xbf, 0x21, 0x5a, 0x72, 0x21, 0xa1,
-      0x8e, 0x99, 0x02, 0xcc, 0x07, 0xeb, 0x39, 0x29, 
+      0x8e, 0x99, 0x02, 0xcc, 0x07, 0xeb, 0x39, 0x29,
       0x6c, 0x16, 0x3a, 0x4f, 0x88, 0xd9, 0xa5, 0x3f,
       0xc4, 0x12, 0xe8, 0x78, 0x44, 0xc2, 0xa2, 0x60
     }, 64
@@ -212,7 +212,8 @@ static struct st2 {
 
 #define _API_PARAM_DEBUG_
 
-  sdk_ret_t capri_barco_sym_hash_sha_test (CryptoApiHashType hash_type, bool generate)
+sdk_ret_t
+capri_barco_sym_hash_sha_test (CryptoApiHashType hash_type, bool generate)
 {
     sdk_ret_t           ret = SDK_RET_OK;
     const uint8_t       *exp_digest;
@@ -292,43 +293,58 @@ static struct st2 {
     }
 
     SDK_TRACE_DEBUG("Running %s-%s test on data: 0x%llx, data-len: %d:, key: 0x%llx, key-len: %d\n",
-                    CryptoApiHashType_Name(hash_type), generate ? "generate" : "verify",
-                    input_data, input_datalen, key ? key : (unsigned char *)"", key_len);
+                    CryptoApiHashType_Name(hash_type),
+                    generate ? "generate" : "verify",
+                    input_data, input_datalen,
+                    key ? key : (unsigned char *)"", key_len);
 
-    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Input Data bytes:", (char *)input_data, input_datalen);
+    CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Input Data bytes:",
+                                  (char *)input_data, input_datalen);
 
     ret = capri_barco_sym_hash_process_request(hash_type, generate,
                                                key, key_len,
                                                input_data, input_datalen,
-                                               generate ? digest_output : (uint8_t *) exp_digest,
-					       generate ? sizeof(digest_output) : exp_digestlen);
+                                               generate ? digest_output :
+                                               (uint8_t *) exp_digest,
+                                               generate ?
+                                               sizeof(digest_output) :
+                                               exp_digestlen);
 
     if (key_len) {
-	CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Input HMAC Key:", (char *)key, key_len);
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Input HMAC Key:", (char *)key,
+                                      key_len);
     }
 
     if (generate) {
-        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Output Digest:", (char *)digest_output,
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Output Digest:",
+                                      (char *)digest_output,
                                       exp_digestlen);
 
-	CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Expected Digest:", (char *)exp_digest,
-				      exp_digestlen);
-	if (memcmp(digest_output, exp_digest, exp_digestlen)) {
-  	    SDK_TRACE_DEBUG("%s Hash generate test FAILED", CryptoApiHashType_Name(hash_type));
-	} else {
-  	    SDK_TRACE_DEBUG("%s Hash generate test PASSED", CryptoApiHashType_Name(hash_type));
-	}
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Expected Digest:",
+                                      (char *)exp_digest,
+                                      exp_digestlen);
+
+        if (memcmp(digest_output, exp_digest, exp_digestlen)) {
+            SDK_TRACE_DEBUG("%s Hash generate test FAILED",
+                            CryptoApiHashType_Name(hash_type));
+        } else {
+            SDK_TRACE_DEBUG("%s Hash generate test PASSED",
+                            CryptoApiHashType_Name(hash_type));
+        }
     } else {
-	CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Verified Digest:", (char *)exp_digest,
-				      exp_digestlen);
-        SDK_TRACE_DEBUG("%s Hash verify test %s", CryptoApiHashType_Name(hash_type),
-			ret == 0 ? "PASSED" : "FAILED");
+        CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Verified Digest:",
+                                      (char *)exp_digest,
+                                      exp_digestlen);
+        SDK_TRACE_DEBUG("%s Hash verify test %s",
+                        CryptoApiHashType_Name(hash_type),
+                        ret == 0 ? "PASSED" : "FAILED");
     }
-  
+
     return ret;
 }
 
-sdk_ret_t capri_barco_sym_hash_run_tests (void)
+sdk_ret_t
+capri_barco_sym_hash_run_tests (void)
 {
     sdk_ret_t       ret = SDK_RET_OK;
 
@@ -369,121 +385,160 @@ sdk_ret_t capri_barco_sym_hash_run_tests (void)
 
 #endif
 
-    ret = capri_barco_sym_aes_encrypt_process_request(CAPRI_SYMM_ENCTYPE_AES_CCM, true,
-						      aes_enc[1].key, aes_enc[1].key_len,
-						      aes_enc[1].aad, aes_enc[1].aad_len,
-						      aes_enc[1].plaintext, aes_enc[1].plaintext_len,
-						      aes_enc[1].iv, aes_enc[1].iv_len,
-						      ciphertext, aes_enc[1].ciphertext_len,
-						      auth_tag, aes_enc[1].auth_tag_len, true);
-
+    ret = capri_barco_sym_aes_encrypt_process_request(CAPRI_SYMM_ENCTYPE_AES_CCM,
+                                                      true,
+                                                      aes_enc[1].key,
+                                                      aes_enc[1].key_len,
+                                                      aes_enc[1].aad,
+                                                      aes_enc[1].aad_len,
+                                                      aes_enc[1].plaintext,
+                                                      aes_enc[1].plaintext_len,
+                                                      aes_enc[1].iv,
+                                                      aes_enc[1].iv_len,
+                                                      ciphertext,
+                                                      aes_enc[1].ciphertext_len,
+                                                      auth_tag,
+                                                      aes_enc[1].auth_tag_len,
+                                                      true);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_DEBUG("AES-CCM Encrypt test FAILED: api failure");
     } else {
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Received cipher-text:",
-				      (char *)ciphertext, aes_enc[1].ciphertext_len);
+                                      (char *)ciphertext,
+                                      aes_enc[1].ciphertext_len);
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Expected cipher-text:",
-				      (char *)aes_enc[1].ciphertext, aes_enc[1].ciphertext_len);
+                                      (char *)aes_enc[1].ciphertext,
+                                      aes_enc[1].ciphertext_len);
 
-
-        if (memcmp(ciphertext, aes_enc[1].ciphertext, aes_enc[1].ciphertext_len)) {
-            SDK_TRACE_DEBUG("AES-CCM Encrypt test FAILED: ciphertext do not match!!"); 
-	} else {
-	   SDK_TRACE_DEBUG("AES-CCM Encrypt test PASSED: ciphertexts match");
-	}
+        if (memcmp(ciphertext, aes_enc[1].ciphertext,
+                   aes_enc[1].ciphertext_len)) {
+            SDK_TRACE_DEBUG("AES-CCM Encrypt test FAILED: ciphertext do not match!!");
+        } else {
+            SDK_TRACE_DEBUG("AES-CCM Encrypt test PASSED: ciphertexts match");
+        }
 
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Received auth-tag:",
-				      (char *)auth_tag, aes_enc[1].auth_tag_len);
+                                      (char *)auth_tag,
+                                      aes_enc[1].auth_tag_len);
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Expected auth-tag:",
-				      (char *)aes_enc[1].auth_tag, aes_enc[1].auth_tag_len);
+                                      (char *)aes_enc[1].auth_tag,
+                                      aes_enc[1].auth_tag_len);
 
         if (memcmp(auth_tag, aes_enc[1].auth_tag, aes_enc[1].auth_tag_len)) {
-            SDK_TRACE_DEBUG("AES-CCM Encrypt test FAILED: auth-tag do not match!!"); 
-	} else {
-	    SDK_TRACE_DEBUG("AES-CCM Encrypt test PASSED: auth-tag match");
-	}
+            SDK_TRACE_DEBUG("AES-CCM Encrypt test FAILED: auth-tag do not match!!");
+        } else {
+            SDK_TRACE_DEBUG("AES-CCM Encrypt test PASSED: auth-tag match");
+        }
     }
 
     uint8_t plaintext[128];
 
-    ret = capri_barco_sym_aes_encrypt_process_request(CAPRI_SYMM_ENCTYPE_AES_CCM, false,
-						      aes_enc[1].key, aes_enc[1].key_len,
-						      aes_enc[1].aad, aes_enc[1].aad_len,
-						      plaintext, aes_enc[1].plaintext_len,
-						      aes_enc[1].iv, aes_enc[1].iv_len,
-						      aes_enc[1].ciphertext, aes_enc[1].ciphertext_len,
-						      aes_enc[1].auth_tag, aes_enc[1].auth_tag_len, true);
+    ret = capri_barco_sym_aes_encrypt_process_request(CAPRI_SYMM_ENCTYPE_AES_CCM,
+                                                      false,
+                                                      aes_enc[1].key,
+                                                      aes_enc[1].key_len,
+                                                      aes_enc[1].aad,
+                                                      aes_enc[1].aad_len,
+                                                      plaintext,
+                                                      aes_enc[1].plaintext_len,
+                                                      aes_enc[1].iv,
+                                                      aes_enc[1].iv_len,
+                                                      aes_enc[1].ciphertext,
+                                                      aes_enc[1].ciphertext_len,
+                                                      aes_enc[1].auth_tag,
+                                                      aes_enc[1].auth_tag_len,
+                                                      true);
 
     if (ret != SDK_RET_OK) {
         SDK_TRACE_DEBUG("AES-CCM Decrypt test FAILED: api failure %d", ret);
     } else {
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Received plain-text:",
-				      (char *)plaintext, aes_enc[1].plaintext_len);
+                                      (char *)plaintext,
+                                      aes_enc[1].plaintext_len);
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Expected plain-text:",
-				      (char *)aes_enc[1].plaintext, aes_enc[1].plaintext_len);
+                                      (char *)aes_enc[1].plaintext,
+                                      aes_enc[1].plaintext_len);
 
 
         if (memcmp(plaintext, aes_enc[1].plaintext, aes_enc[1].plaintext_len)) {
-            SDK_TRACE_DEBUG("AES-CCM Decrypt test FAILED: plaintext do not match!!"); 
-	} else {
-	   SDK_TRACE_DEBUG("AES-CCM Decrypt test PASSED: plaintexts match");
-	}
+            SDK_TRACE_DEBUG("AES-CCM Decrypt test FAILED: plaintext do not match!!");
+        } else {
+            SDK_TRACE_DEBUG("AES-CCM Decrypt test PASSED: plaintexts match");
+        }
     }
 
     return ret;
 }
 
-
-sdk_ret_t capri_barco_sym_run_aes_gcm_1K_test (void)
+sdk_ret_t
+capri_barco_sym_run_aes_gcm_1K_test (void)
 {
     sdk_ret_t       ret = SDK_RET_OK;
 
     uint8_t auth_tag[64], ciphertext[128];
 
     for (int i = 0; i < 1000; i++) {
-        ret = capri_barco_sym_aes_encrypt_process_request(CAPRI_SYMM_ENCTYPE_AES_GCM, true,
-						      aes_enc[1].key, aes_enc[1].key_len,
-						      aes_enc[1].aad, aes_enc[1].aad_len,
-						      aes_enc[1].plaintext, aes_enc[1].plaintext_len,
-						      aes_enc[1].iv, aes_enc[1].iv_len,
-						      ciphertext, aes_enc[1].ciphertext_len,
-                            			  auth_tag, aes_enc[1].auth_tag_len, false);
+        ret = capri_barco_sym_aes_encrypt_process_request(CAPRI_SYMM_ENCTYPE_AES_GCM,
+                                                          true,
+                                                          aes_enc[1].key,
+                                                          aes_enc[1].key_len,
+                                                          aes_enc[1].aad,
+                                                          aes_enc[1].aad_len,
+                                                          aes_enc[1].plaintext,
+                                                          aes_enc[1].plaintext_len,
+                                                          aes_enc[1].iv,
+                                                          aes_enc[1].iv_len,
+                                                          ciphertext,
+                                                          aes_enc[1].ciphertext_len,
+                                                          auth_tag,
+                                                          aes_enc[1].auth_tag_len,
+                                                          false);
     }
 
-    ret = capri_barco_sym_aes_encrypt_process_request(CAPRI_SYMM_ENCTYPE_AES_GCM, true,
-						      aes_enc[1].key, aes_enc[1].key_len,
-						      aes_enc[1].aad, aes_enc[1].aad_len,
-						      aes_enc[1].plaintext, aes_enc[1].plaintext_len,
-						      aes_enc[1].iv, aes_enc[1].iv_len,
-						      ciphertext, aes_enc[1].ciphertext_len,
-                            			  auth_tag, aes_enc[1].auth_tag_len, true);
-    
-
+    ret = capri_barco_sym_aes_encrypt_process_request(CAPRI_SYMM_ENCTYPE_AES_GCM,
+                                                      true,
+                                                      aes_enc[1].key,
+                                                      aes_enc[1].key_len,
+                                                      aes_enc[1].aad,
+                                                      aes_enc[1].aad_len,
+                                                      aes_enc[1].plaintext,
+                                                      aes_enc[1].plaintext_len,
+                                                      aes_enc[1].iv,
+                                                      aes_enc[1].iv_len,
+                                                      ciphertext,
+                                                      aes_enc[1].ciphertext_len,
+                                                      auth_tag,
+                                                      aes_enc[1].auth_tag_len,
+                                                      true);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_DEBUG("AES-GCM Encrypt test FAILED: api failure");
     } else {
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Received cipher-text:",
-				      (char *)ciphertext, aes_enc[1].ciphertext_len);
+                                      (char *)ciphertext,
+                                      aes_enc[1].ciphertext_len);
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Expected cipher-text:",
-				      (char *)aes_enc[1].ciphertext, aes_enc[1].ciphertext_len);
+                                      (char *)aes_enc[1].ciphertext,
+                                      aes_enc[1].ciphertext_len);
 
-
-        if (memcmp(ciphertext, aes_enc[1].ciphertext, aes_enc[1].ciphertext_len)) {
-            SDK_TRACE_DEBUG("AES-CCM Encrypt test FAILED: ciphertext do not match!!"); 
-	} else {
-	   SDK_TRACE_DEBUG("AES-CCM Encrypt test PASSED: ciphertexts match");
-	}
+        if (memcmp(ciphertext, aes_enc[1].ciphertext,
+                   aes_enc[1].ciphertext_len)) {
+            SDK_TRACE_DEBUG("AES-CCM Encrypt test FAILED: ciphertext do not match!!");
+        } else {
+            SDK_TRACE_DEBUG("AES-CCM Encrypt test PASSED: ciphertexts match");
+        }
 
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Received auth-tag:",
-				      (char *)auth_tag, aes_enc[1].auth_tag_len);
+                                      (char *)auth_tag,
+                                      aes_enc[1].auth_tag_len);
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Expected auth-tag:",
-				      (char *)aes_enc[1].auth_tag, aes_enc[1].auth_tag_len);
+                                      (char *)aes_enc[1].auth_tag,
+                                      aes_enc[1].auth_tag_len);
 
         if (memcmp(auth_tag, aes_enc[1].auth_tag, aes_enc[1].auth_tag_len)) {
-            SDK_TRACE_DEBUG("AES-CCM Encrypt test FAILED: auth-tag do not match!!"); 
-	} else {
-	    SDK_TRACE_DEBUG("AES-CCM Encrypt test PASSED: auth-tag match");
-	}
+            SDK_TRACE_DEBUG("AES-CCM Encrypt test FAILED: auth-tag do not match!!");
+        } else {
+            SDK_TRACE_DEBUG("AES-CCM Encrypt test PASSED: auth-tag match");
+        }
     }
 
 #if 0
@@ -491,28 +546,37 @@ sdk_ret_t capri_barco_sym_run_aes_gcm_1K_test (void)
     //GCM Decrypt
     uint8_t plaintext[128];
 
-    ret = capri_barco_sym_aes_encrypt_process_request(CAPRI_SYMM_ENCTYPE_AES_GCM, false,
-						      aes_enc[1].key, aes_enc[1].key_len,
-						      aes_enc[1].aad, aes_enc[1].aad_len,
-						      plaintext, aes_enc[1].plaintext_len,
-						      aes_enc[1].iv, aes_enc[1].iv_len,
-						      aes_enc[1].ciphertext, aes_enc[1].ciphertext_len,
-						      aes_enc[1].auth_tag, aes_enc[1].auth_tag_len, true);
-
+    ret = capri_barco_sym_aes_encrypt_process_request(CAPRI_SYMM_ENCTYPE_AES_GCM,
+                                                      false,
+                                                      aes_enc[1].key,
+                                                      aes_enc[1].key_len,
+                                                      aes_enc[1].aad,
+                                                      aes_enc[1].aad_len,
+                                                      plaintext,
+                                                      aes_enc[1].plaintext_len,
+                                                      aes_enc[1].iv,
+                                                      aes_enc[1].iv_len,
+                                                      aes_enc[1].ciphertext,
+                                                      aes_enc[1].ciphertext_len,
+                                                      aes_enc[1].auth_tag,
+                                                      aes_enc[1].auth_tag_len,
+                                                      true);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_DEBUG("AES-CCM Decrypt test FAILED: api failure %d", ret);
     } else {
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Received plain-text:",
-				      (char *)plaintext, aes_enc[1].plaintext_len);
+                                      (char *)plaintext,
+                                      aes_enc[1].plaintext_len);
         CAPRI_BARCO_API_PARAM_HEXDUMP((char *)"Expected plain-text:",
-				      (char *)aes_enc[1].plaintext, aes_enc[1].plaintext_len);
+                                      (char *)aes_enc[1].plaintext,
+                                      aes_enc[1].plaintext_len);
 
 
         if (memcmp(plaintext, aes_enc[1].plaintext, aes_enc[1].plaintext_len)) {
-            SDK_TRACE_DEBUG("AES-CCM Decrypt test FAILED: plaintext do not match!!"); 
-	} else {
-	   SDK_TRACE_DEBUG("AES-CCM Decrypt test PASSED: plaintexts match");
-	}
+            SDK_TRACE_DEBUG("AES-CCM Decrypt test FAILED: plaintext do not match!!");
+        } else {
+            SDK_TRACE_DEBUG("AES-CCM Decrypt test PASSED: plaintexts match");
+        }
     }
 #endif
 

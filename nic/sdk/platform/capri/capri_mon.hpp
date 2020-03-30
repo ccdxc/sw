@@ -59,7 +59,8 @@ pen_adjust_perf_status_t capri_adjust_perf(int chip_id, int inst_id,
                                           pen_adjust_index_t &idx,
                                           pen_adjust_perf_type_t perf_type);
 void capri_set_half_clock(int chip_id, int inst_id);
-sdk_ret_t capri_unravel_hbm_intrs(bool *iscattrip, bool *iseccerr, bool logging);
+sdk_ret_t capri_unravel_hbm_intrs(bool *iscattrip, bool *iseccerr,
+                                  bool logging);
 
 } // namespace capri
 } // namespace platform

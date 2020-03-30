@@ -18,7 +18,7 @@ namespace platform {
 namespace capri {
 
 sdk_ret_t
-capri_pxb_pcie_init ()
+capri_pxb_pcie_init (void)
 {
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pxb_csr_t &pxb_csr = cap0.pxb.pxb;
@@ -42,7 +42,6 @@ capri_pxb_pcie_init ()
     pxb_csr.cfg_pcie_local_memaddr_decode.atomic(CAPRI_PCIE_ATOMIC_REGION_ID);
     pxb_csr.cfg_pcie_local_memaddr_decode.rc_cfg(0);
     pxb_csr.cfg_pcie_local_memaddr_decode.write();
-
 
     return sdk::SDK_RET_OK;
 }

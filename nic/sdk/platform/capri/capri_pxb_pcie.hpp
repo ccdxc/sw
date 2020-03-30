@@ -28,13 +28,12 @@ namespace capri {
 #define CAPRI_PCIE_ATOMIC_BASE_ADDR \
             CAPRI_PCIE_ATOMIC_BASE_ADDR_GET(CAPRI_PCIE_ATOMIC_REGION_ID, CAPRI_PCIE_ATOMIC_PAGE_ID)
 
-
 /** capri_pxb_pcie_init
  * API to init the pxb pcie module
  *
  * @return hal_ret_t: Status of the operation
  */
-sdk_ret_t capri_pxb_pcie_init();
+sdk_ret_t capri_pxb_pcie_init(void);
 
 /** capri_pxb_cfg_lif_bdf
  * API to configure a LIF with a BDF

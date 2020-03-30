@@ -51,10 +51,12 @@ cap_nx_read_pb_axi_cnt(int rd) { // 1=>rd , 0=> wr
     uint32_t rd_data1[2];
     uint32_t rd_data0[2];
     if (rd == 1) {
-        rd_data0[0] = cap_nx_block_read(0, RBM_BRIDGE_(PB_M_3_150_AM_CNTR0), 1, false, 1);
+        rd_data0[0] = cap_nx_block_read(0, RBM_BRIDGE_(PB_M_3_150_AM_CNTR0),
+                                        1, false, 1);
         return (unsigned int)rd_data0[0];
     } else {
-        rd_data1[0] = cap_nx_block_read(0, RBM_BRIDGE_(PB_M_3_150_AM_CNTR1), 1, false, 1);
+        rd_data1[0] = cap_nx_block_read(0, RBM_BRIDGE_(PB_M_3_150_AM_CNTR1),
+                                        1, false, 1);
         return (unsigned int)rd_data1[0];
     }
 }
@@ -124,7 +126,9 @@ asic_reset_hbm_regions (asic_cfg_t *capri_cfg)
                 uint8_t zeros[1024] = {0};
                 int64_t rem = reg->size;
                 while (rem > 0) {
-                    sdk::asic::asic_mem_write(pa, zeros, (uint64_t)rem > sizeof(zeros) ? sizeof(zeros) : rem);
+                    sdk::asic::asic_mem_write(pa, zeros, (uint64_t)rem >
+                                              sizeof(zeros) ? sizeof(zeros) :
+                                              rem);
                     pa += sizeof(zeros);
                     rem -= sizeof(zeros);
                 }
@@ -272,7 +276,8 @@ capri_hbm_cache_program_region (mpartition_region_t *reg,
                                 bool slave,
                                 bool master)
 {
-    cap_pics_csr_t & pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0, inst_id);
+    cap_pics_csr_t & pics_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pics_csr_t, 0,
+                                                         inst_id);
     if (slave) {
         pics_csr.picc.filter_addr_lo_s.data[filter_idx].read();
         pics_csr.picc.filter_addr_lo_s.data[filter_idx].value(
@@ -397,14 +402,16 @@ capri_hbm_cache_regions_init (asic_cfg_t *cfg)
 
         if (is_region_cache_pipe_p4_ig(reg)) {
             if ((p4ig_reg.start_offset == 0) ||
-                ((p4ig_reg.start_offset + p4ig_reg.size) != (reg->start_offset))) {
+                ((p4ig_reg.start_offset + p4ig_reg.size) !=
+                 (reg->start_offset))) {
                 SDK_TRACE_DEBUG("Programming %s to P4IG cache(region 1), "
                                 "start=%lx size=%u index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(reg->start_offset),
                                 reg->size, p4ig_filter_idx);
                 p4ig_reg.start_offset = reg->start_offset;
                 p4ig_reg.size = reg->size;
-                capri_hbm_cache_program_region(&p4ig_reg, 1, p4ig_filter_idx, 1, 0);
+                capri_hbm_cache_program_region(&p4ig_reg, 1, p4ig_filter_idx,
+                                               1, 0);
                 p4ig_filter_idx++;
             } else {
                 p4ig_reg.size += reg->size;
@@ -412,20 +419,23 @@ capri_hbm_cache_regions_init (asic_cfg_t *cfg)
                                 "start=%lx size=%u index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(p4ig_reg.start_offset),
                                 p4ig_reg.size, p4ig_filter_idx - 1);
-                capri_hbm_cache_program_region(&p4ig_reg, 1, p4ig_filter_idx - 1, 1, 0);
+                capri_hbm_cache_program_region(&p4ig_reg, 1,
+                                               p4ig_filter_idx -1, 1, 0);
             }
         }
 
         if (is_region_cache_pipe_p4_eg(reg)) {
             if ((p4eg_reg.start_offset == 0) ||
-                ((p4eg_reg.start_offset + p4eg_reg.size) != (reg->start_offset))) {
+                ((p4eg_reg.start_offset + p4eg_reg.size) !=
+                 (reg->start_offset))) {
                 SDK_TRACE_DEBUG("Programming %s to P4EG cache(region 2), "
                                 "start=%lx size=%u index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(reg->start_offset),
                                 reg->size, p4eg_filter_idx);
                 p4eg_reg.start_offset = reg->start_offset;
                 p4eg_reg.size = reg->size;
-                capri_hbm_cache_program_region(&p4eg_reg, 2, p4eg_filter_idx, 1, 0);
+                capri_hbm_cache_program_region(&p4eg_reg, 2,
+                                               p4eg_filter_idx, 1, 0);
                 p4eg_filter_idx++;
             } else {
                 p4eg_reg.size += reg->size;
@@ -433,28 +443,34 @@ capri_hbm_cache_regions_init (asic_cfg_t *cfg)
                                 "start=%lx size=%u index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(p4eg_reg.start_offset),
                                 p4eg_reg.size, p4eg_filter_idx - 1);
-                capri_hbm_cache_program_region(&p4eg_reg, 2, p4eg_filter_idx - 1, 1, 0);
+                capri_hbm_cache_program_region(&p4eg_reg, 2,
+                                               p4eg_filter_idx - 1, 1, 0);
             }
         }
 
         if (is_region_cache_pipe_p4plus_txdma(reg)) {
             if ((p4plus_txdma_reg.start_offset == 0) ||
-                ((p4plus_txdma_reg.start_offset + p4plus_txdma_reg.size) != (reg->start_offset))) {
+                ((p4plus_txdma_reg.start_offset + p4plus_txdma_reg.size) !=
+                 (reg->start_offset))) {
                 SDK_TRACE_DEBUG("Programming %s to P4PLUS TXDMA cache(region 3), "
                                 "start=%lx size=%u index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(reg->start_offset),
                                 reg->size, p4plus_txdma_filter_idx);
                 p4plus_txdma_reg.start_offset = reg->start_offset;
                 p4plus_txdma_reg.size = reg->size;
-                capri_hbm_cache_program_region(&p4plus_txdma_reg, 3, p4plus_txdma_filter_idx, 1, 1);
+                capri_hbm_cache_program_region(&p4plus_txdma_reg, 3,
+                                               p4plus_txdma_filter_idx, 1, 1);
                 p4plus_txdma_filter_idx++;
             } else {
                 p4plus_txdma_reg.size += reg->size;
                 SDK_TRACE_DEBUG("Programming %s to P4PLUS TXDMA cache(region 3) (merge), "
                                 "start=%lx size=%u index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(p4plus_txdma_reg.start_offset),
-                                p4plus_txdma_reg.size, p4plus_txdma_filter_idx - 1);
-                capri_hbm_cache_program_region(&p4plus_txdma_reg, 3, p4plus_txdma_filter_idx - 1, 1, 1);
+                                p4plus_txdma_reg.size,
+                                p4plus_txdma_filter_idx - 1);
+                capri_hbm_cache_program_region(&p4plus_txdma_reg, 3,
+                                               p4plus_txdma_filter_idx - 1, 1,
+                                               1);
             }
         }
 
@@ -467,15 +483,19 @@ capri_hbm_cache_regions_init (asic_cfg_t *cfg)
                                 reg->size, p4plus_rxdma_filter_idx);
                 p4plus_rxdma_reg.start_offset = reg->start_offset;
                 p4plus_rxdma_reg.size = reg->size;
-                capri_hbm_cache_program_region(&p4plus_rxdma_reg, 0, p4plus_rxdma_filter_idx, 1, 1);
+                capri_hbm_cache_program_region(&p4plus_rxdma_reg, 0,
+                                               p4plus_rxdma_filter_idx, 1, 1);
                 p4plus_rxdma_filter_idx++;
             } else {
                 p4plus_rxdma_reg.size += reg->size;
                 SDK_TRACE_DEBUG("Programming %s to P4PLUS RXDMA cache(region 0) (merge), "
                                 "start=%lx size=%u index=%u", reg->mem_reg_name,
                                 cfg->mempartition->addr(p4plus_rxdma_reg.start_offset),
-                                p4plus_rxdma_reg.size, p4plus_rxdma_filter_idx - 1);
-                capri_hbm_cache_program_region(&p4plus_rxdma_reg, 0, p4plus_rxdma_filter_idx - 1, 1, 1);
+                                p4plus_rxdma_reg.size,
+                                p4plus_rxdma_filter_idx - 1);
+                capri_hbm_cache_program_region(&p4plus_rxdma_reg, 0,
+                                               p4plus_rxdma_filter_idx - 1,
+                                               1, 1);
             }
         }
 
@@ -636,10 +656,14 @@ populate_hbm_bw (uint64_t max_rd, uint64_t max_wr,
                  asic_hbm_bw_t *hbm_bw,
                  uint32_t num_bits, uint32_t window_size)
 {
-    hbm_bw->max.read  = (max_rd * (num_bits * capri_freq)/1000.0f) / window_size;
-    hbm_bw->max.write = (max_wr * (num_bits * capri_freq)/1000.0f) / window_size;
-    hbm_bw->avg.read  = (avg_rd * (num_bits * capri_freq)/1000.0f) / window_size;
-    hbm_bw->avg.write = (avg_wr * (num_bits * capri_freq)/1000.0f) / window_size;
+    hbm_bw->max.read  = (max_rd *
+                         (num_bits * capri_freq)/1000.0f) / window_size;
+    hbm_bw->max.write = (max_wr *
+                         (num_bits * capri_freq)/1000.0f) / window_size;
+    hbm_bw->avg.read  = (avg_rd *
+                         (num_bits * capri_freq)/1000.0f) / window_size;
+    hbm_bw->avg.write = (avg_wr *
+                         (num_bits * capri_freq)/1000.0f) / window_size;
 
     SDK_TRACE_DEBUG("AVG_RD: %llu, AVG_WR: %llu, "
                     "MAX_RD: %llu, MAX_WR: %llu",

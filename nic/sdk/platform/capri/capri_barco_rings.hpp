@@ -172,7 +172,8 @@ sdk_ret_t pd_crypto_asym_dma_descr_init(void);
 
 typedef sdk_ret_t (*barco_ring_init_t) (struct capri_barco_ring_s *);
 typedef bool (*barco_ring_poller_t) (struct capri_barco_ring_s *, uint32_t);
-typedef sdk_ret_t (*barco_ring_queue_request) (struct capri_barco_ring_s *, void *, uint32_t *, bool);
+typedef sdk_ret_t (*barco_ring_queue_request) (struct capri_barco_ring_s *,
+                                               void *, uint32_t *, bool);
 
 typedef struct capri_barco_ring_s {
     char                ring_name[32];      /*  Friendly name for logging       */
@@ -304,7 +305,8 @@ static inline int get_opaque_tag_offset(barco_rings_t ring_type)
 sdk_ret_t capri_barco_get_meta_config_info(barco_rings_t ring_type,
                                            barco_ring_meta_config_t *meta);
 sdk_ret_t capri_barco_get_capabilities(barco_rings_t ring_type,
-                                       bool *sw_reset_capable, bool *sw_enable_capable);
+                                       bool *sw_reset_capable,
+                                       bool *sw_enable_capable);
 
 }    // namespace capri
 }    // namespace platform

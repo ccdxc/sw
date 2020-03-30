@@ -15,7 +15,7 @@ namespace capri {
 
 template <typename T>
 void
-clear_qstate_entry(T *entry)
+clear_qstate_entry (T *entry)
 {
     entry->vld(1);
     entry->write();
@@ -23,7 +23,7 @@ clear_qstate_entry(T *entry)
 
 template <typename T>
 void
-reset_qstate_entry(T *entry)
+reset_qstate_entry (T *entry)
 {
     entry->vld(0);
     entry->write();
@@ -149,7 +149,6 @@ capri_read_qstate_map (lif_qstate_t *qstate)
     qstate->lif_id = lif_id;
     auto *pr_entry = &cap0.pr.pr.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     capri_get_qstate_map(qstate, pr_entry);
-
 }
 
 void
@@ -200,7 +199,7 @@ capri_clear_qstate (lif_qstate_t *qstate)
 // Deprecated: Cleanup
 template <typename T>
 void
-set_qstate_entry(LIFQState *qstate, T *entry, int cos)
+set_qstate_entry (LIFQState *qstate, T *entry, int cos)
 {
     entry->qstate_base(qstate->hbm_address >> 12);
     entry->length0(qstate->params_in.type[0].entries);

@@ -63,7 +63,8 @@ typedef struct hbm_bw_samples_s {
 } __PACK__ hbm_bw_samples_t;
 
 sdk_ret_t asicpd_read_table_constant(uint32_t tableid, uint64_t *value);
-sdk_ret_t asicpd_program_table_thread_constant(uint32_t tableid, uint8_t table_thread_id,
+sdk_ret_t asicpd_program_table_thread_constant(uint32_t tableid,
+                                               uint8_t table_thread_id,
                                                uint64_t const_value);
 
 // this is mainly used during upgrade to modify the

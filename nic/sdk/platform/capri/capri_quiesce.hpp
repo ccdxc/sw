@@ -9,9 +9,9 @@ namespace sdk {
 namespace platform {
 namespace capri {
 
-sdk_ret_t   capri_quiesce_start(void);
-sdk_ret_t   capri_quiesce_stop(void);
-sdk_ret_t   capri_quiesce_init(void);
+sdk_ret_t capri_quiesce_start(void);
+sdk_ret_t capri_quiesce_stop(void);
+sdk_ret_t capri_quiesce_init(void);
 
 } // namespace capri
 } // namespace platform
