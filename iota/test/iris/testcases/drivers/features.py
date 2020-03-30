@@ -1,13 +1,14 @@
 #! /usr/bin/python3
 import time
 import iota.harness.api as api
+import iota.test.iris.utils.iperf as iperf
+import iota.test.utils.naples_host as host
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.testcases.drivers.common as common
 import iota.test.iris.testcases.drivers.interface as interface
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 import iota.test.iris.testcases.drivers.verify as verify
 import iota.test.iris.utils.naples_workloads as workloads
-import iota.test.iris.utils.iperf as iperf
 
 
 INTF_TEST_TYPE_OOB_1G       = "oob-1g"
@@ -21,22 +22,22 @@ def getIntMgmtWorkloadPairs():
     pairs = []
     host_wls = workloads.GetIntMgmtHostWorkloads()
     naples_wls = workloads.GetIntMgmtNaplestWorkloads()
-    for w1 in host_wls:
-        for w2 in naples_wls:
-            if w1.node_name == w2.node_name:
-                pairs.append((w1,w2))
+    for srv in host_wls:
+        for cli in naples_wls:
+            if srv.node_name == cli.node_name:
+                pairs.append((srv,cli))
     return pairs
 
 def getRemoteWorkloadPairs():
     pairs = []
     wpairs = api.GetRemoteWorkloadPairs()
-    for w1, w2 in wpairs:
+    for srv, cli in wpairs:
         if taggedWorkload:
-            if w1.encap_vlan != 0 and w1.encap_vlan == w2.encap_vlan:
-                pairs.append((w1,w2))
+            if srv.encap_vlan != 0 and srv.encap_vlan == cli.encap_vlan:
+                pairs.append((srv,cli))
         else:
-            if w1.encap_vlan == 0 and w2.encap_vlan == 0:
-                pairs.append((w1,w2))
+            if srv.encap_vlan == 0 and cli.encap_vlan == 0:
+                pairs.append((srv,cli))
 
     return pairs
 
@@ -62,8 +63,8 @@ def Setup(tc):
     if api.IsDryrun(): return api.types.status.SUCCESS
     tc.nodes = api.GetWorkloadNodeHostnames()
     tc.node_intfs = {}
-    w1,w2 = _get_workloads(tc)
-    tc.workloads = [w1, w2]
+    srv,cli = _get_workloads(tc)
+    tc.workloads = [srv, cli]
     #for node in tc.nodes:
     #    tc.node_intfs[node] = interface.GetNodeInterface(node)
 
@@ -80,7 +81,6 @@ def Setup(tc):
         return api.types.status.FAILURE
 
     api.Logger.info("Setting driver features : Success")
-
     if getattr(tc.args, 'capture_pcap', False):
         if common.start_pcap_capture(tc) != api.types.status.SUCCESS:
             return api.types.status.FAILURE
@@ -89,28 +89,32 @@ def Setup(tc):
 def Trigger(tc):
     if api.IsDryrun(): return api.types.status.SUCCESS
 
+    srv = tc.workloads[0]
+    cli = tc.workloads[1]
+    
     # Determine where the commands will be run - host or Naples.
     test_type = getattr(tc.args, "test-type", INTF_TEST_TYPE_HOST)
     is_naples_cmd = True
     if test_type == INTF_TEST_TYPE_HOST:
         is_naples_cmd = False
+        # XXX: wait for BSD host stack,
+        # we see connection failures. 
+        if api.GetNodeOs(srv.node_name) == host.OS_TYPE_BSD:
+            time.sleep(5)
 
-    req1 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    req2 = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    srv_req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cli_req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
 
-    w1 = tc.workloads[0]
-    w2 = tc.workloads[1]
-    
     proto = getattr(tc.iterators, "proto", 'tcp')
     number_of_iperf_threads = getattr(tc.args, "iperfthreads", 1)
     pktsize = getattr(tc.iterators, "pktsize", 512)
     ipproto = getattr(tc.iterators, "ipproto", 'v4')
 
-    server_ip = w1.ip_address
-    client_ip = w2.ip_address
+    server_ip = srv.ip_address
+    client_ip = cli.ip_address
 
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
-                   (w1.interface, server_ip, w2.interface, client_ip)
+                   (srv.interface, server_ip, cli.interface, client_ip)
 
     api.Logger.info("Starting Iperf(%s/%s pktsize=%d) test from %s"
                     % (proto, ipproto, pktsize, tc.cmd_descr))
@@ -122,18 +126,18 @@ def Trigger(tc):
             port = api.AllocateUdpPort()
  
         iperf_server_cmd = iperf.ServerCmd(port, naples = is_naples_cmd)
-        api.Trigger_AddCommand(req1, w1.node_name, w1.workload_name, iperf_server_cmd, background = True)
+        api.Trigger_AddCommand(srv_req, srv.node_name, srv.workload_name, iperf_server_cmd, background = True)
 
         iperf_client_cmd = iperf.ClientCmd(server_ip, port, time=10,
                                  proto=proto, jsonOut=True, ipproto=ipproto, num_of_streams=number_of_iperf_threads,
                                  pktsize=pktsize, client_ip=client_ip, naples = is_naples_cmd)
-        api.Trigger_AddCommand(req2, w2.node_name, w2.workload_name, iperf_client_cmd)
+        api.Trigger_AddCommand(cli_req, cli.node_name, cli.workload_name, iperf_client_cmd)
 
-    trig_resp1 = api.Trigger(req1)
+    srv_resp = api.Trigger(srv_req)
     time.sleep(10)
-    tc.resp = api.Trigger(req2)
+    tc.cli_resp = api.Trigger(cli_req)
 
-    term_resp1 = api.Trigger_TerminateAllCommands(trig_resp1)
+    srv_resp1 = api.Trigger_TerminateAllCommands(srv_resp)
 
     return api.types.status.SUCCESS
 
@@ -146,26 +150,31 @@ def Verify(tc):
             api.Logger.info("pcap caputre failed")
             return ret
 
-    if tc.resp is None:
+    if tc.cli_resp is None:
         return api.types.status.FAILURE
 
-    for cmd in tc.resp.commands:
+    for cmd in tc.cli_resp.commands:
         api.PrintCommandResults(cmd)
 
         if cmd.exit_code != 0:
             api.Logger.error("Iperf client exited with error")
-        if iperf.ConnectionTimedout(cmd.stdout):
-            api.Logger.error("Connection timeout, ignoring for now")
-            continue
-        if iperf.ControlSocketClosed(cmd.stdout):
-            api.Logger.error("Control socket cloned, ignoring for now")
-            continue
-        if iperf.ServerTerminated(cmd.stdout):
-            api.Logger.error("Iperf server terminated")
-            return api.types.status.FAILURE
-        if not iperf.Success(cmd.stdout):
-            api.Logger.error("Iperf failed", iperf.Error(cmd.stdout))
-            return api.types.status.FAILURE
+            if iperf.ConnectionTimedout(cmd.stdout):
+                api.Logger.error("Connection timeout, ignoring for now")
+                continue
+            if iperf.ControlSocketClosed(cmd.stdout):
+                api.Logger.error("Control socket cloned, ignoring for now")
+                continue
+            if iperf.ServerTerminated(cmd.stdout):
+                api.Logger.error("Iperf server terminated")
+                return api.types.status.FAILURE
+            if not iperf.Success(cmd.stdout):
+                api.Logger.error("Iperf failed", iperf.Error(cmd.stdout))
+                return api.types.status.FAILURE
+        elif not api.GlobalOptions.dryrun:
+            api.Logger.info("Iperf Send Rate in Gbps ", iperf.GetSentGbps(cmd.stdout))
+            api.Logger.info("Iperf Receive Rate in Gbps ", iperf.GetReceivedGbps(cmd.stdout))
+
+    api.Logger.info("iperf test successfull")
 
     return verify.driver_feature_verify(tc)
 

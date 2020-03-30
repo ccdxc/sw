@@ -27,7 +27,7 @@ def verifyMTUchange(tc):
             api.Logger.verbose("MTU filter : verifyMTUchange skipping peer node ", w.node_name, w.interface, configured_mtu, expected_mtu)
             continue
         if configured_mtu != expected_mtu:
-            api.Logger.critical("MTU filter : verifyMTUchange failed for ", w.interface, configured_mtu, expected_mtu)
+            api.Logger.error("MTU filter : verifyMTUchange failed for ", w.interface, configured_mtu, expected_mtu)
             host_utils.debug_dump_interface_info(w.node_name, w.interface)
             result = api.types.status.FAILURE
     return result
@@ -42,7 +42,7 @@ def changeWorkloadIntfMTU(new_mtu, node_name=None):
                 continue
         cmd = host_utils.setInterfaceMTU(w.node_name, w.interface, new_mtu)
         if cmd.exit_code != 0:
-            api.Logger.critical("MTU filter : changeWorkloadIntfMTU failed for ", w.node_name, w.interface, new_mtu)
+            api.Logger.error("MTU filter : changeWorkloadIntfMTU failed for ", w.node_name, w.interface, new_mtu)
             api.PrintCommandResults(cmd)
             host_utils.debug_dump_interface_info(w.node_name, w.interface)
             result = api.types.status.FAILURE
@@ -95,7 +95,7 @@ def initPeerNode(naples_node, new_mtu=__MAX_MTU):
             continue
         cmd = host_utils.setInterfaceMTU(w.node_name, w.interface, new_mtu)
         if cmd.exit_code != 0:
-            api.Logger.critical("MTU filter : initPeerNode failed for ", w.node_name, w.interface, new_mtu)
+            api.Logger.error("MTU filter : initPeerNode failed for ", w.node_name, w.interface, new_mtu)
             api.PrintCommandResults(cmd)
             host_utils.debug_dump_interface_info(w.node_name, w.interface)
             result = api.types.status.FAILURE

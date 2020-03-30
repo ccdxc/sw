@@ -124,7 +124,7 @@ def getTxNoCsumStats(node, intf):
     if api.GetNodeOs(node.node_name) == host.OS_TYPE_BSD:
         return getBsdStats(node, intf, 'txq[0-9]*.\.no_csum')
     elif api.GetNodeOs(node.node_name) == host.OS_TYPE_LINUX:
-        return getLinuxStats(node, intf, 'tx_no_csum\|tx.*csum_none')
+        return getLinuxStats(node, intf, 'tx_[0-9]*_csum_none')
     
     return None
 
@@ -135,7 +135,7 @@ def getTxCsumStats(node, intf):
     if api.GetNodeOs(node.node_name) == host.OS_TYPE_BSD:
         return getBsdStats(node, intf, 'txq[0-9]*.\.csum')
     elif api.GetNodeOs(node.node_name) == host.OS_TYPE_LINUX:
-        return getLinuxStats(node, intf, 'tx_csum')
+        return getLinuxStats(node, intf, 'tx_[0-9]*_csum:')
     
     return None
 

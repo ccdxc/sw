@@ -138,6 +138,8 @@ def Trigger(tc):
     return status
 
 def Verify(tc):
+    # Wait for previous resets to finish.
+    time.sleep(5)
     ping_cookies, ping_resp = traffic.pingAllRemoteWloadPairs()
     return traffic.verifyPing(ping_cookies, ping_resp)
 

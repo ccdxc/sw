@@ -4,14 +4,14 @@ import pdb
 def debug_dump_display_info(resp):
     result = api.types.status.SUCCESS
     if resp is None:
-        api.Logger.critical("debug_dump_display_info failed - no response")
+        api.Logger.error("debug_dump_display_info failed - no response")
         return api.types.status.FAILURE
     commands = resp.commands
     for cmd in commands:
         # pretty output of each cmd
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
-            api.Logger.critical("debug_dump_display_info failed for %s" % (cmd))
+            api.Logger.error("debug_dump_display_info failed for %s" % (cmd))
             result = api.types.status.FAILURE
     return result
 
