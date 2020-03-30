@@ -11,6 +11,9 @@
 //::    elif pddict['p4plus_module'] == 'txdma':
 //::        start_table_base = 201
 //::        prefix = 'p4pd_txdma'
+//::    elif pddict['p4plus_module'] == 'sxdma':
+//::        start_table_base = 401
+//::        prefix = 'p4pd_sxdma'
 //::    else:
 //::        start_table_base = 301
 //::        prefix = 'p4pd_p4plus'
