@@ -36,10 +36,12 @@ subnet_entry::subnet_entry() {
     num_ing_v6_policy_ = 0;
     num_egr_v4_policy_ = 0;
     num_egr_v6_policy_ = 0;
+    num_dhcp_policy_ = 0;
     memset(&ing_v4_policy_, 0, sizeof ing_v4_policy_);
     memset(&ing_v6_policy_, 0, sizeof ing_v6_policy_);
     memset(&egr_v4_policy_, 0, sizeof egr_v4_policy_);
     memset(&egr_v6_policy_, 0, sizeof egr_v6_policy_);
+    memset(&dhcp_policy_, 0, sizeof dhcp_policy_);
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
 }
@@ -163,13 +165,14 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
         "Initializing subnet (vpc %s, subnet %s), v4/v6 pfx %s/%s,\n"
         "v4/v6 VR IP %s/%s, VR MAC %s, v4/v6 route table %s/%s\n"
         "num ingress v4/v6 policy %u/%u, num egress v4/v6 policy %u/%u, "
-        "vnid %u", spec->vpc.str(), spec->key.str(),
+        "num dhcp policy %u, vnid %u", spec->vpc.str(), spec->key.str(),
         ipv4pfx2str(&spec->v4_prefix), ippfx2str(&spec->v6_prefix),
         ipv4addr2str(spec->v4_vr_ip), ipaddr2str(&spec->v6_vr_ip),
         macaddr2str(spec->vr_mac), spec->v4_route_table.str(),
         spec->v6_route_table.str(), spec->num_ing_v4_policy,
         spec->num_ing_v6_policy, spec->num_egr_v4_policy,
-        spec->num_egr_v6_policy, spec->fabric_encap.val.vnid);
+        spec->num_egr_v6_policy, spec->num_dhcp_policy,
+        spec->fabric_encap.val.vnid);
 
     key_ = spec->key;
     vpc_ = spec->vpc;
@@ -191,6 +194,10 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     num_egr_v6_policy_ = spec->num_egr_v6_policy;
     for (uint8_t i = 0; i < num_egr_v6_policy_; i++) {
         egr_v6_policy_[i] = spec->egr_v6_policy[i];
+    }
+    num_dhcp_policy_ = spec->num_dhcp_policy;
+    for (uint8_t i = 0; i < num_dhcp_policy_; i++) {
+        dhcp_policy_[i] = spec->dhcp_policy[i];
     }
     v4_vr_ip_ = spec->v4_vr_ip;
     v6_vr_ip_ = spec->v6_vr_ip;
@@ -381,6 +388,10 @@ subnet_entry::fill_spec_(pds_subnet_spec_t *spec) {
     spec->num_egr_v6_policy = num_egr_v6_policy_;
     for (i = 0; i < num_egr_v6_policy_; i++) {
         spec->egr_v6_policy[i] = egr_v6_policy_[i];
+    }
+    spec->num_dhcp_policy = num_dhcp_policy_;
+    for (i = 0; i < num_dhcp_policy_; i++) {
+        spec->dhcp_policy[i] = dhcp_policy_[i];
     }
     memcpy(&spec->vr_mac, vr_mac_, sizeof(mac_addr_t));
     spec->fabric_encap = fabric_encap_;

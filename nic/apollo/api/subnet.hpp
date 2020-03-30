@@ -272,6 +272,18 @@ public:
         return egr_v6_policy_[n];
     }
 
+    /// \brief          return the number of dhcp policies on the subnet
+    /// \return         number of dhcp relay/proxy policies on the subnet
+    uint8_t num_dhcp_policy(void) const {
+        return num_dhcp_policy_;
+    }
+
+    /// \brief          return dhcp proxy policy on the subnet
+    /// \return         dhcp proxy policy on the subnet
+    pds_obj_key_t dhcp_proxy_policy(void) const {
+        return dhcp_policy_[0];
+    }
+
     /// \brief      return host interface on which this subnet is deployed
     /// \return     host interface on which this subnet is deployed
     pds_obj_key_t host_if(void) const { return host_if_; }
@@ -318,6 +330,10 @@ private:
     uint8_t num_egr_v6_policy_;
     /// egress IPv6 policies
     pds_obj_key_t egr_v6_policy_[PDS_MAX_SUBNET_POLICY];
+    /// dhcp relay/proxy policies
+    uint8_t num_dhcp_policy_;
+    pds_obj_key_t dhcp_policy_[PDS_MAX_SUBNET_DHCP_POLICY];
+ 
     ipv4_addr_t v4_vr_ip_;            ///< IPv4 virtual router IP
     ip_addr_t v6_vr_ip_;              ///< IPv6 virtual router IP
     mac_addr_t vr_mac_;               ///< virtual router MAC

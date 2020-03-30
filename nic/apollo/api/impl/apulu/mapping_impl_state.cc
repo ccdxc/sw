@@ -13,6 +13,7 @@
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
+#include "nic/apollo/api/dhcp_state.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/mapping_impl.hpp"
@@ -466,12 +467,18 @@ const char *k_dhcp_ctl_ip = "127.0.0.1";
 const int k_dhcp_ctl_port = 7911;
 
 static sdk_ret_t
-do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, const pds_mapping_spec_t *spec) {
+do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, pds_mapping_spec_t *spec) {
     dhcpctl_status ret;
     dhcpctl_data_string ipaddr = NULL;
     dhcpctl_data_string mac = NULL;
+    dhcpctl_data_string statements;
     dhcpctl_status waitstatus = 0;
     dhcpctl_handle host = NULL;
+    subnet_entry *subnet;
+    pds_obj_key_t dhcp_policy_key; 
+    dhcp_policy *policy;
+    int index = 0;
+    int statements_len = 600;
 
     if (spec->skey.ip_addr.af != IP_AF_IPV4) {
         // No V6 support for now
@@ -498,6 +505,13 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, const pds_mapping_spec_
         return SDK_RET_OOM;
     }
 
+    // name
+    dhcpctl_set_string_value(host, spec->key.str(), "name");
+
+    // hardware-type
+    dhcpctl_set_int_value(host, 1, "hardware-type");
+
+    // ip address
     memset(&ipaddr, 0, sizeof ipaddr);
     ret = omapi_data_string_new (&ipaddr, IP4_ADDR8_LEN, MDL);
     if (ret != ISC_R_SUCCESS) {
@@ -508,6 +522,7 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, const pds_mapping_spec_
     sdk::lib::memrev(ipaddr->value, (uint8_t *)&spec->skey.ip_addr.addr.v4_addr, IP4_ADDR8_LEN);
     dhcpctl_set_value (host, ipaddr, "ip-address");
 
+    // hardware mac address
     memset(&mac, 0, sizeof(mac));
     ret = omapi_data_string_new(&mac, sizeof(spec->overlay_mac), MDL);
     if (ret != ISC_R_SUCCESS) {
@@ -519,8 +534,77 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, const pds_mapping_spec_
     memcpy(mac->value, spec->overlay_mac, sizeof(spec->overlay_mac));
     dhcpctl_set_value(host, mac, "hardware-address");
 
-    dhcpctl_set_string_value(host, spec->key.str(), "name");
-    dhcpctl_set_int_value(host, 1, "hardware-type");
+    // Find the DHCP policy on the subnet if any
+    subnet = subnet_find(&spec->subnet);
+    dhcp_policy_key = subnet->dhcp_proxy_policy();
+    policy = dhcp_policy_find(&dhcp_policy_key);
+
+    // DHCP option statements
+    if (policy) {
+        memset(&statements, 0, sizeof(statements));
+        ret = omapi_data_string_new(&statements, statements_len, MDL);
+        if (ret != ISC_R_SUCCESS) {
+            PDS_TRACE_ERR("Failed to allocate data string, err %u", ret);
+            omapi_object_dereference(&host, MDL);
+            omapi_data_string_dereference(&ipaddr, MDL);
+            omapi_data_string_dereference(&mac, MDL);
+            return SDK_RET_OOM;
+        }
+
+        // gateway ip
+        if (policy->gateway_ip().addr.v4_addr) {
+            uint32_t ip = policy->gateway_ip().addr.v4_addr;
+            char *bytes = (char *)&ip;
+            int buf_len = statements_len - index;
+
+            index += snprintf((char *)(statements->value + index), buf_len,
+                              "option routers=%d:%d:%d:%d; ",
+                              bytes[0], bytes[1], bytes[2], bytes[3]);
+        }
+
+        // DNS server
+        if (policy->dns_server_ip().addr.v4_addr) {
+            uint32_t ip = policy->dns_server_ip().addr.v4_addr;
+            char *bytes = (char *)&ip;
+            int buf_len = statements_len - index;
+            index += snprintf((char *)(statements->value + index), buf_len,
+                              "option domain-name-servers=%d:%d:%d:%d; ",
+                              bytes[0], bytes[1], bytes[2], bytes[3]);
+        }
+        
+        // NTP server
+        if (policy->ntp_server_ip().addr.v4_addr) {
+            uint32_t ip = policy->ntp_server_ip().addr.v4_addr;
+            char *bytes = (char *)&ip;
+            int buf_len = statements_len - index;
+            index += snprintf((char *)(statements->value + index), buf_len,
+                              "option ntp-servers=%d:%d:%d:%d; ",
+                              bytes[0], bytes[1], bytes[2], bytes[3]);
+        }
+
+        // domain name
+        if(strlen(policy->domain_name())) {
+            int buf_len = statements_len - index;
+            index += snprintf((char *)(statements->value + index), buf_len,
+                              "option domain-name=%s; ", policy->domain_name());
+        }
+
+        // mtu
+        if (policy->mtu()) {
+            char mtu[11];
+            snprintf(mtu, sizeof(mtu), "%u", policy->mtu());
+            int buf_len = statements_len - index;
+            index += snprintf((char *)(statements->value + index), buf_len,
+                              "option interface-mtu=%s; ", mtu);
+        }
+
+        // lease timeout
+        if (policy->lease_timeout()) {
+            // TBD
+        }
+
+        dhcpctl_set_value(host, statements, "statements");
+    }
 
     ret = dhcpctl_open_object(host, *dhcp_connection,
                               DHCPCTL_CREATE|DHCPCTL_EXCL);
@@ -529,6 +613,9 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, const pds_mapping_spec_
         omapi_object_dereference(&host, MDL);
         omapi_data_string_dereference(&ipaddr, MDL);
         omapi_data_string_dereference(&mac, MDL);
+        if (policy) {
+            omapi_data_string_dereference(&statements, MDL);
+        }
         return SDK_RET_ERR;
     }
 
@@ -538,17 +625,23 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, const pds_mapping_spec_
         omapi_object_dereference(&host, MDL);
         omapi_data_string_dereference(&ipaddr, MDL);
         omapi_data_string_dereference(&mac, MDL);
+        if (policy) {
+            omapi_data_string_dereference(&statements, MDL);
+        }
         return SDK_RET_ERR;
     }
 
     omapi_object_dereference(&host, MDL);
     omapi_data_string_dereference(&ipaddr, MDL);
     omapi_data_string_dereference(&mac, MDL);
+    if (policy) {
+        omapi_data_string_dereference(&statements, MDL);
+    }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-mapping_impl_state::insert_dhcp_binding(const pds_mapping_spec_t *spec) {
+mapping_impl_state::insert_dhcp_binding(pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
 
     // if dhcpd restarts the omapi control channel between pds-agent

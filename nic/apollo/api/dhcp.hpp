@@ -179,6 +179,34 @@ public:
     /// \return    type of the DHCP policy object
     pds_dhcp_policy_type_t type(void) const { return type_; }
 
+    /// \brief     return server IP of the DHCP policy object
+    /// \return    server IP 
+    const ip_addr_t server_ip(void) const { return server_ip_; }
+
+    /// \brief     return mtu of the DHCP policy object
+    /// \return    mtu
+    uint32_t mtu(void) const { return mtu_; }
+
+    /// \brief     return gateway IP of the DHCP policy object
+    /// \return    gateway IP 
+    const ip_addr_t gateway_ip(void) const { return gateway_ip_; }
+
+    /// \brief     return DNS server IP of the DHCP policy object
+    /// \return    DNS server IP 
+    const ip_addr_t dns_server_ip(void) const { return dns_server_ip_; }
+
+    /// \brief     return NTP server IP of the DHCP policy object
+    /// \return    NTP server IP 
+    const ip_addr_t ntp_server_ip(void) const { return ntp_server_ip_; }
+
+    /// \brief     return ptr to the domain_name of the DHCP policy object
+    /// \return    ptr to domain_name
+    const char *domain_name(void) const { return domain_name_; }
+
+    /// \brief     return the lease timeout  of the DHCP policy object
+    /// \return    lease timeout
+    uint32_t lease_timeout(void) const { return lease_timeout_; }
+
     /// \brief     return impl instance of this DHCP policy object
     /// \return    impl instance of the DHCP policy object
     impl_base *impl(void) { return impl_; }
@@ -205,6 +233,27 @@ private:
 
     /// DHCP policy type
     pds_dhcp_policy_type_t type_;
+
+    /// DHCP server IP
+    ip_addr_t server_ip_;
+
+    /// MTU specified to clients
+    uint32_t mtu_;
+
+    /// gateway IP 
+    ip_addr_t gateway_ip_;
+
+    /// DNS server IP
+    ip_addr_t dns_server_ip_;
+
+    /// NTP server IP
+    ip_addr_t ntp_server_ip_;
+
+    /// domain_name
+    char domain_name_[PDS_MAX_DOMAIN_NAME_LEN + 1];
+
+    /// DHCP lease timeout
+    uint32_t lease_timeout_;
 
     /// hash table context
     ht_ctxt_t ht_ctxt_;

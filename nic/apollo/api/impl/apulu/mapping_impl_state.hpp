@@ -79,7 +79,7 @@ public:
     /// \brief add dhcp binding for this mapping
     /// \param[in] spec    mapping configuration
     /// \return   SDK_RET_OK on success, failure status code on error
-    sdk_ret_t insert_dhcp_binding(const pds_mapping_spec_t *spec);
+    sdk_ret_t insert_dhcp_binding(pds_mapping_spec_t *spec);
 
     /// \brief add remove binding corresponding to this mapping
     /// \param[in] hostnmae    hostname corresponding to the mapping

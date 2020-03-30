@@ -21,6 +21,14 @@ namespace api {
 
 dhcp_policy::dhcp_policy() {
     impl_ = NULL;
+    server_ip_ = {0};
+    mtu_ = 0;
+    gateway_ip_ = {0};
+    dns_server_ip_ = {0};
+    ntp_server_ip_ = {0};
+    memset(domain_name_, '\0', sizeof(domain_name_));
+    lease_timeout_ = 0;
+ 
     ht_ctxt_.reset();
 }
 
@@ -126,11 +134,21 @@ dhcp_policy::init_config(api_ctxt_t *api_ctxt) {
     ip_addr_t mytep_ip;
     device_entry *device;
     pds_dhcp_policy_spec_t *spec;
+    pds_dhcp_proxy_spec_t *dhcp_proxy_spec;
 
     spec = &api_ctxt->api_params->dhcp_policy_spec;
     key_ = spec->key;
     type_ = spec->type;
-    if (spec->type == PDS_DHCP_POLICY_TYPE_RELAY) {
+    if (spec->type == PDS_DHCP_POLICY_TYPE_PROXY) {
+        dhcp_proxy_spec = &spec->proxy_spec;
+        server_ip_ = dhcp_proxy_spec->server_ip;
+        mtu_ = dhcp_proxy_spec->mtu;
+        gateway_ip_ = dhcp_proxy_spec->gateway_ip;
+        dns_server_ip_ = dhcp_proxy_spec->dns_server_ip;
+        ntp_server_ip_ = dhcp_proxy_spec->ntp_server_ip;
+        memcpy(domain_name_, dhcp_proxy_spec->domain_name, sizeof(domain_name_));
+        lease_timeout_ = dhcp_proxy_spec->lease_timeout;
+    } else if (spec->type == PDS_DHCP_POLICY_TYPE_RELAY) {
         PDS_TRACE_DEBUG("DHCP server IP %s",
                         ipaddr2str(&spec->relay_spec.server_ip));
         if (spec->relay_spec.server_ip.af != IP_AF_IPV4) {
@@ -195,7 +213,20 @@ dhcp_policy::activate_config(pds_epoch_t epoch, api_op_t api_op,
 
 void
 dhcp_policy::fill_spec_(pds_dhcp_policy_spec_t *spec) {
-    // TODO:
+    spec->key = key_;
+    spec->type = type_;
+    pds_dhcp_proxy_spec_t *dhcp_proxy_spec;
+
+    if (spec->type == PDS_DHCP_POLICY_TYPE_PROXY) {
+        dhcp_proxy_spec = &spec->proxy_spec;
+        dhcp_proxy_spec->server_ip = server_ip_;
+        dhcp_proxy_spec->mtu = mtu_;
+        dhcp_proxy_spec->gateway_ip = gateway_ip_;
+        dhcp_proxy_spec->dns_server_ip = dns_server_ip_;
+        dhcp_proxy_spec->ntp_server_ip = ntp_server_ip_;
+        memcpy(dhcp_proxy_spec->domain_name, domain_name_, sizeof(domain_name_));
+        dhcp_proxy_spec->lease_timeout = lease_timeout_;
+    }
 }
 
 sdk_ret_t
