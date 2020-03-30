@@ -57,11 +57,15 @@ static pciesys_logger_t default_logger = {
 };
 
 static pciesys_logger_t *current_logger = &default_logger;
+static pciesys_pri_t current_logger_pri = PCIESYS_PRI_LOW;
 
 void
-pciesys_set_logger(pciesys_logger_t *logger)
+pciesys_set_logger(pciesys_logger_t *logger, pciesys_pri_t pri)
 {
-    current_logger = logger;
+    if (pri > current_logger_pri) {
+        current_logger = logger;
+        current_logger_pri = pri;
+    }
 }
 
 void
@@ -121,11 +125,15 @@ static pciesys_sbus_locker_t default_sbus_locker = {
 };
 
 static pciesys_sbus_locker_t *sbus_locker = &default_sbus_locker;
+static pciesys_pri_t sbus_locker_pri = PCIESYS_PRI_LOW;
 
 void
-pciesys_set_sbus_locker(pciesys_sbus_locker_t *locker)
+pciesys_set_sbus_locker(pciesys_sbus_locker_t *locker, pciesys_pri_t pri)
 {
-    sbus_locker = locker;
+    if (pri > sbus_locker_pri) {
+        sbus_locker = locker;
+        sbus_locker_pri = pri;
+    }
 }
 
 void

@@ -36,7 +36,14 @@ typedef struct pciesys_logger_s {
     void (*logflush)(void);
 } pciesys_logger_t;
 
-void pciesys_set_logger(pciesys_logger_t *logger);
+typedef enum pciesys_pri_e {
+    PCIESYS_PRI_LOW,
+    PCIESYS_PRI_SYSMON,
+    PCIESYS_PRI_PCIEMGR,
+    PCIESYS_PRI_HIGH,
+} pciesys_pri_t;
+
+void pciesys_set_logger(pciesys_logger_t *logger, pciesys_pri_t pri);
 
 void pciesys_sbus_lock(void);
 void pciesys_sbus_unlock(void);
@@ -46,7 +53,7 @@ typedef struct pciesys_sbus_locker_s {
     void (*sbus_unlock)(void);
 } pciesys_sbus_locker_t;
 
-void pciesys_set_sbus_locker(pciesys_sbus_locker_t *locker);
+void pciesys_set_sbus_locker(pciesys_sbus_locker_t *locker, pciesys_pri_t pri);
 
 #ifdef __cplusplus
 }

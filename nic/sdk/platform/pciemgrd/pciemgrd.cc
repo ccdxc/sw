@@ -588,7 +588,7 @@ pciemgrd_sbus_locker_init(pciemgrenv_t *pme)
         .sbus_unlock = pciemgrd_sbus_unlock,
     };
 
-    pciesys_set_sbus_locker(&sbus_locker);
+    pciesys_set_sbus_locker(&sbus_locker, PCIESYS_PRI_PCIEMGR);
 }
 
 static void

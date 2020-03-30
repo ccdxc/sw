@@ -397,7 +397,7 @@ checkpciehealth(void)
     static int inited;
 
     if (!inited) {
-        pciesys_set_logger(&pciesys_logger);
+        pciesys_set_logger(&pciesys_logger, PCIESYS_PRI_SYSMON);
         pciehdev_open(NULL);
         portmap_init_from_catalog(g_sysmon_cfg.catalog);
         inited = 1;

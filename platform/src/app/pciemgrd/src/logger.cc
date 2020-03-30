@@ -111,5 +111,5 @@ logger_init(void)
     static evutil_prepare logprep;
     evutil_add_prepare(EV_DEFAULT_ &logprep, logflush_cb, NULL);
 
-    pciesys_set_logger(&pciemgrd_logger);
+    pciesys_set_logger(&pciemgrd_logger, PCIESYS_PRI_PCIEMGR);
 }

@@ -101,5 +101,5 @@ logger_init(void)
     spdlogger->set_level(default_loglevel());
     spdlogger->flush_on(spdlog::level::debug);
 
-    pciesys_set_logger(&pciemgrd_logger);
+    pciesys_set_logger(&pciemgrd_logger, PCIESYS_PRI_PCIEMGR);
 }
