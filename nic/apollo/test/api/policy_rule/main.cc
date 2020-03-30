@@ -169,8 +169,7 @@ policy_rule_update (pds_batch_ctxt_t bctxt, std::string cidr_str)
 }
 
 static void
-policy_rule_update_verify (std::string cidr_str,
-                           uint16_t port_lo, uint16_t port_hi)
+policy_rule_update_verify (std::string cidr_str)
 {
     sdk_ret_t ret;
     pds_obj_key_t key;
@@ -180,19 +179,24 @@ policy_rule_update_verify (std::string cidr_str,
     memset(&info, 0, sizeof(pds_policy_info_t));
     info.spec.rule_info =
         (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
-                                  POLICY_RULE_INFO_SIZE(1));
-    info.spec.rule_info->num_rules = 1;
+                                  POLICY_RULE_INFO_SIZE(0));
     key = int2pdsobjkey(TEST_POLICY_ID_BASE + 1);
     ret = pds_policy_read(&key, &info);
     ASSERT_TRUE(ret == SDK_RET_OK);
     ASSERT_TRUE(info.spec.rule_info->num_rules == k_num_init_rules);
+    SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, info.spec.rule_info);
+
+    info.spec.rule_info =
+            (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                                      POLICY_RULE_INFO_SIZE(k_num_init_rules));
+    info.spec.rule_info->num_rules = k_num_init_rules;
+    ret = pds_policy_read(&key, &info);
+    ASSERT_TRUE(ret == SDK_RET_OK);
     test::extract_ip_pfx((char *)cidr_str.c_str(), &ip_pfx);
-#if 0
-    // TOOD: @rsrikanth please enable this after your changes are committed
     ASSERT_TRUE(memcmp(&info.spec.rule_info->rules[0].match.l3_match.src_ip_range.ip_lo,
                        &ip_pfx.addr.addr, sizeof(ipvx_addr_t)) == 0);
-#endif
     SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.rule_info);
+
     info.spec.rule_info = NULL;
 }
 
@@ -226,7 +230,7 @@ TEST_F(policy_rule_test, rule_upd) {
     bctxt = batch_start();
     policy_rule_update(bctxt, "30.0.0.1/16");
     batch_commit(bctxt);
-    policy_rule_update_verify("30.0.0.1/16", 10000, 20000);
+    policy_rule_update_verify("30.0.0.1/16");
 
     bctxt = batch_start();
     policy_teardown(bctxt);

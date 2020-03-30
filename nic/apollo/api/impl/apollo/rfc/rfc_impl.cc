@@ -99,10 +99,12 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
         rfc_policy_rule_dump(policy, rule_num);
         if (ip_prefix_is_zero(&rule->match.l3_match.dst_ip_pfx)) {
             // ingress policy
+            rule->match.l3_match.src_ip_pfx.addr.af = policy->af;
             itable_add_address_inodes(rule_num, addr_inode,
                                       &rule->match.l3_match.src_ip_pfx);
         } else {
             // egress policy
+            rule->match.l3_match.dst_ip_pfx.addr.af = policy->af;
             itable_add_address_inodes(rule_num, addr_inode,
                                       &rule->match.l3_match.dst_ip_pfx);
         }

@@ -34,9 +34,10 @@ typedef enum rule_dir_e {
 
 /// \brief type of the IP field used in rule match
 typedef enum ip_match_type_s {
-    IP_MATCH_PREFIX = 0,    ///< match based on the prefix
-    IP_MATCH_RANGE  = 1,    ///< match based on the range
-    IP_MATCH_TAG    = 2,    ///< match based on the tag
+    IP_MATCH_NONE   = 0,    ///< match none
+    IP_MATCH_PREFIX = 1,    ///< match based on the prefix
+    IP_MATCH_RANGE  = 2,    ///< match based on the range
+    IP_MATCH_TAG    = 3,    ///< match based on the tag
 } ip_match_type_t;
 
 /// \brief    rule L3 match criteria

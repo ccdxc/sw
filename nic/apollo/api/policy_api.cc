@@ -65,15 +65,60 @@ pds_policy_create (_In_ pds_policy_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 sdk_ret_t
 pds_policy_read (_In_ pds_obj_key_t *key, _Out_ pds_policy_info_t *info)
 {
+    sdk_ret_t ret;
     policy *entry;
 
-    if (key == NULL || info == NULL)
+    if (key == NULL || info == NULL) {
         return SDK_RET_INVALID_ARG;
+    }
 
-    if ((entry = pds_policy_entry_find(key)) == NULL)
+    if ((entry = pds_policy_entry_find(key)) == NULL) {
         return SDK_RET_ENTRY_NOT_FOUND;
+    }
 
-    return entry->read(info);
+    if (info->spec.rule_info == NULL) {
+        return entry->read(info);
+    }
+
+    if (!info->spec.rule_info->num_rules) {
+        info->spec.rule_info->num_rules = entry->num_rules();
+    } else {
+        uint32_t num_rules_to_read = info->spec.rule_info->num_rules;
+        if (num_rules_to_read < entry->num_rules()) {
+            ret = entry->read(info);
+            if (ret != SDK_RET_OK) {
+                return ret;
+            }
+            // buffer is smaller, read all rules and copy over the
+            // requested number allocate memory for reading all the rules
+            rule_info_t *rule_info =
+                (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                                          POLICY_RULE_INFO_SIZE(entry->num_rules()));
+            rule_info->num_rules = entry->num_rules();
+            // retrieve all rules
+            ret = policy_db()->retrieve_rules(key, rule_info);
+            if (ret != SDK_RET_OK) {
+                SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rule_info);
+                return ret;
+            }
+            // copy over requested number of rules
+            memcpy(info->spec.rule_info, rule_info,
+                   POLICY_RULE_INFO_SIZE(num_rules_to_read));
+            info->spec.rule_info->num_rules = num_rules_to_read;
+            // free allocated memory
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rule_info);
+        } else {
+            ret = entry->read(info);
+            if (ret != SDK_RET_OK) {
+                return ret;
+            }
+            // read rules from lmdb
+            return policy_db()->retrieve_rules(key,
+                                               info->spec.rule_info);
+        }
+    }
+
+    return ret;
 }
 
 typedef struct pds_policy_read_args_s {
@@ -87,14 +132,29 @@ pds_policy_info_from_entry (void *entry, void *ctxt)
     policy *pol = (policy *)entry;
     pds_policy_read_args_t *args = (pds_policy_read_args_t *)ctxt;
     pds_policy_info_t info;
+    uint32_t num_rules = 0;
 
     memset(&info, 0, sizeof(pds_policy_info_t));
 
-    // call entry read
+    // read number of rules and allocate memory for rules
+    num_rules = pol->num_rules();
+    info.spec.rule_info =
+        (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                                  POLICY_RULE_INFO_SIZE(num_rules));
+    info.spec.rule_info->num_rules = num_rules;
+
+    // entry read
     pol->read(&info);
+
+    // retrieve rules from kvstore
+    return policy_db()->retrieve_rules(&info.spec.key, info.spec.rule_info);
 
     // call cb on info
     args->cb(&info, args->ctxt);
+
+    // free memory
+    SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, info.spec.rule_info);
+    info.spec.rule_info = NULL;
 
     return false;
 }

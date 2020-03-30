@@ -128,6 +128,11 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
             itable_add_tag_inodes(rule_num, stag_inode,
                                   rule->match.l3_match.src_tag);
             stag_inode += 2;
+        } else if (rule->match.l3_match.src_match_type == IP_MATCH_NONE) {
+            rule->match.l3_match.src_ip_pfx.addr.af = policy->af;
+            itable_add_address_inodes(rule_num, sip_inode,
+                                      &rule->match.l3_match.src_ip_pfx);
+            sip_inode += 2;
         }
 
         // handle destination IP match conditions
@@ -143,6 +148,11 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
             itable_add_tag_inodes(rule_num, dtag_inode,
                                   rule->match.l3_match.dst_tag);
             dtag_inode += 2;
+        } else if (rule->match.l3_match.dst_match_type == IP_MATCH_NONE) {
+            rule->match.l3_match.dst_ip_pfx.addr.af = policy->af;
+            itable_add_address_inodes(rule_num, dip_inode,
+                                      &rule->match.l3_match.dst_ip_pfx);
+            dip_inode += 2;
         }
 
         // handle source port match condition

@@ -1981,34 +1981,11 @@ pds_proto_action_to_rule_action (types::SecurityRuleAction action)
 }
 
 static inline sdk_ret_t
-pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy,
-                                         uint32_t rule_id, uint8_t af,
+pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy_key,
+                                         pds_obj_key_t rule,
                                          rule_match_t *match,
-                                         const pds::SecurityRuleInfo &proto_rule)
+                                         const types::RuleMatch &proto_match)
 {
-    if (unlikely(proto_rule.priority() > PDS_MAX_RULE_PRIORITY)) {
-        PDS_TRACE_ERR("Security policy {}, rule {} priority {} is invalid, "
-                      "must be <= {}",
-                      policy.str(), rule_id, proto_rule.priority(),
-                      PDS_MAX_RULE_PRIORITY);
-        return SDK_RET_INVALID_ARG;
-    }
-
-    if (unlikely(proto_rule.has_match() == false)) {
-        PDS_TRACE_ERR("Security policy {}, rule {} has no match condition, "
-                      "IP protocol is a mandatory match condition",
-                      policy.str(), rule_id);
-        return SDK_RET_INVALID_ARG;
-    }
-
-    if (unlikely(proto_rule.match().has_l3match() == false)) {
-        PDS_TRACE_ERR("Security policy {}, rule {} has no L3 match condition, "
-                      "IP protocol is a mandatory match condition",
-                      policy.str(), rule_id);
-        return SDK_RET_INVALID_ARG;
-    }
-
-    const types::RuleMatch& proto_match = proto_rule.match();
     const types::RuleL3Match& proto_l3_match = proto_match.l3match();
     match->l3_match.ip_proto = proto_l3_match.protocol();
     if ((match->l3_match.ip_proto != IP_PROTO_UDP) &&
@@ -2016,7 +1993,7 @@ pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy,
         (match->l3_match.ip_proto != IP_PROTO_ICMP) &&
         (match->l3_match.ip_proto != IP_PROTO_ICMPV6)) {
         PDS_TRACE_ERR("Security policy {}, rule {} with unsupported IP "
-                      "protocol {}", policy.str(), rule_id,
+                      "protocol {}", policy_key.str(), rule.str(),
                       match->l3_match.ip_proto);
         return SDK_RET_INVALID_ARG;
     }
@@ -2032,9 +2009,7 @@ pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy,
         match->l3_match.src_match_type = IP_MATCH_TAG;
         match->l3_match.src_tag = proto_l3_match.srctag();
     } else {
-        // TODO: introduce IP_MATCH_NONE and clean this up
-        match->l3_match.src_match_type = IP_MATCH_PREFIX;
-        match->l3_match.src_ip_pfx.addr.af = af;
+        match->l3_match.src_match_type = IP_MATCH_NONE;
     }
     if (proto_l3_match.has_dstprefix()) {
         match->l3_match.dst_match_type = IP_MATCH_PREFIX;
@@ -2048,20 +2023,18 @@ pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy,
         match->l3_match.dst_match_type = IP_MATCH_TAG;
         match->l3_match.dst_tag = proto_l3_match.dsttag();
     } else {
-        // TODO: introduce IP_MATCH_NONE and clean this up
-        match->l3_match.dst_match_type = IP_MATCH_PREFIX;
-        match->l3_match.dst_ip_pfx.addr.af = af;
+        match->l3_match.dst_match_type = IP_MATCH_NONE;
     }
 
-    if (proto_rule.match().has_l4match() &&
-        (proto_rule.match().l4match().has_ports() ||
-         proto_rule.match().l4match().has_typecode())) {
+    if (proto_match.has_l4match() &&
+        (proto_match.l4match().has_ports() ||
+         proto_match.l4match().has_typecode())) {
         const types::RuleL4Match& proto_l4_match = proto_match.l4match();
         if (proto_l4_match.has_ports()) {
             if ((match->l3_match.ip_proto != IP_PROTO_UDP) &&
                 (match->l3_match.ip_proto != IP_PROTO_TCP)) {
-                PDS_TRACE_ERR("Invalid port config in security policy {}, "
-                              "rule {}", policy.str(), rule_id);
+                PDS_TRACE_ERR("Invalid port config in security policy {}"
+                              ", rule {}", policy_key.str(), rule.str());
                 return SDK_RET_INVALID_ARG;
             }
             if (proto_l4_match.ports().has_srcportrange()) {
@@ -2071,9 +2044,8 @@ pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy,
                 match->l4_match.sport_range.port_hi = sport_range.porthigh();
                 if (unlikely(match->l4_match.sport_range.port_lo >
                              match->l4_match.sport_range.port_hi)) {
-                    PDS_TRACE_ERR("Invalid src port range in security "
-                                  "policy {}, rule {}",
-                                  policy.str(), rule_id);
+                    PDS_TRACE_ERR("Invalid src port range in security policy {}"
+                                  ", rule {}", policy_key.str(), rule.str());
                     return SDK_RET_INVALID_ARG;
                 }
             } else {
@@ -2087,9 +2059,8 @@ pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy,
                 match->l4_match.dport_range.port_hi = dport_range.porthigh();
                 if (unlikely(match->l4_match.dport_range.port_lo >
                              match->l4_match.dport_range.port_hi)) {
-                    PDS_TRACE_ERR("Invalid dst port range in security "
-                                  "policy {}, rule {}",
-                                  policy.str(), rule_id);
+                    PDS_TRACE_ERR("Invalid dst port range in security policy {}"
+                                  ", rule {}", policy_key.str(), rule.str());
                     return SDK_RET_INVALID_ARG;
                 }
             } else {
@@ -2100,7 +2071,7 @@ pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy,
             if ((match->l3_match.ip_proto != IP_PROTO_ICMP) &&
                 (match->l3_match.ip_proto != IP_PROTO_ICMPV6)) {
                 PDS_TRACE_ERR("Invalid ICMP config in security policy {}, "
-                              "rule {}", policy.str(), rule_id);
+                              "rule {}", policy_key.str(), rule.str());
                 return SDK_RET_INVALID_ARG;
             }
             const types::ICMPMatch& typecode = proto_l4_match.typecode();
@@ -2121,6 +2092,64 @@ pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy,
         }
     }
     return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+pds_policy_rule_proto_to_api_spec_common (rule_t *rule,
+                                          const pds::SecurityRuleInfo &proto_rule,
+                                          pds_obj_key_t policy_key)
+{
+    sdk_ret_t ret;
+
+    pds_obj_key_proto_to_api_spec(&rule->key, proto_rule.id());
+
+    if (unlikely(proto_rule.priority() > PDS_MAX_RULE_PRIORITY)) {
+        PDS_TRACE_ERR("Security policy {}, rule {} priority {} is invalid,"
+                      " must be <= {}", policy_key.str(),
+                      rule->key.str(), proto_rule.priority(),
+                      PDS_MAX_RULE_PRIORITY);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    if (unlikely(proto_rule.has_match() == false)) {
+        PDS_TRACE_ERR("Security policy {}, rule {} has no match condition",
+                      policy_key.str(), rule->key.str());
+        return SDK_RET_INVALID_ARG;
+    }
+
+    if (unlikely(proto_rule.match().has_l3match() == false)) {
+        PDS_TRACE_ERR("Security policy {}, rule {} has no L3 match condition, "
+                      "IP protocol is a mandatory match condition",
+                      policy_key.str(), rule->key.str());
+        return SDK_RET_INVALID_ARG;
+    }
+
+    rule->stateful = proto_rule.stateful();
+    rule->priority = proto_rule.priority();
+    rule->action_data.fw_action.action =
+                pds_proto_action_to_rule_action(proto_rule.action());
+
+    ret = pds_policy_rule_match_proto_to_api_spec(policy_key, rule->key,
+                  &rule->match, proto_rule.match());
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed converting security policy {} rule {} spec,"
+                      " err {}", policy_key.str(), rule->key.str(), ret);
+    }
+
+    return ret;
+}
+
+// build policy rule API spec from protobuf spec
+static inline sdk_ret_t
+pds_policy_rule_proto_to_api_spec (pds_policy_rule_spec_t *api_spec,
+                                   const pds::SecurityRuleSpec &proto_spec)
+{
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
+    pds_obj_key_proto_to_api_spec(&api_spec->policy,
+                                  proto_spec.securitypolicyid());
+    return pds_policy_rule_proto_to_api_spec_common(&api_spec->rule,
+                                                    proto_spec.securityrule(),
+                                                    api_spec->policy);
 }
 
 // build policy API spec from protobuf spec
@@ -2148,17 +2177,12 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
     }
     api_spec->rule_info->num_rules = num_rules;
     for (uint32_t i = 0; i < num_rules; i++) {
-        const pds::SecurityRuleInfo &proto_rule = proto_spec.rules(i);
-        api_spec->rule_info->rules[i].priority = proto_rule.priority();
-        api_spec->rule_info->rules[i].stateful = proto_rule.stateful();
-        api_spec->rule_info->rules[i].action_data.fw_action.action =
-            pds_proto_action_to_rule_action(proto_rule.action());
-        ret = pds_policy_rule_match_proto_to_api_spec(api_spec->key, i + 1,
-                  api_spec->rule_info->af, &api_spec->rule_info->rules[i].match,
-                  proto_rule);
+        ret = pds_policy_rule_proto_to_api_spec_common(&api_spec->rule_info->rules[i],
+                                                       proto_spec.rules(i),
+                                                       api_spec->key);
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed converting policy {} spec, err {}",
-                          api_spec->key.id, ret);
+                          api_spec->key.str(), ret);
             goto cleanup;
         }
     }
@@ -2197,6 +2221,7 @@ pds_policy_api_spec_to_proto (pds::SecurityPolicySpec *proto_spec,
     for (uint32_t i = 0; i < api_spec->rule_info->num_rules; i++) {
         pds::SecurityRuleInfo *proto_rule = proto_spec->add_rules();
         rule_t *api_rule = &api_spec->rule_info->rules[i];
+        proto_rule->set_id(api_rule->key.id, PDS_MAX_KEY_LEN);
         proto_rule->set_priority(api_rule->priority);
         proto_rule->set_action(pds_rule_action_to_proto_action(&api_rule->action_data));
         proto_rule->set_stateful(api_rule->stateful);
@@ -2825,79 +2850,87 @@ pds_nat_port_block_api_info_to_proto (const pds_nat_port_block_info_t *api_info,
 }
 
 static inline sdk_ret_t
-pds_route_proto_to_api_spec (pds_route_spec_t *api_spec,
-                             const pds::RouteSpec &proto_spec)
+pds_route_proto_to_api_spec_common (pds_route_t *route,
+                                    const pds::RouteInfo &proto_route)
 {
-    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
-    pds_obj_key_proto_to_api_spec(&api_spec->route_table, proto_spec.routetableid());
-    pds_obj_key_proto_to_api_spec(&api_spec->route.key, proto_spec.id());
-    ippfx_proto_spec_to_api_spec(&api_spec->route.prefix,
-                                 proto_spec.route().prefix());
-    api_spec->route.prio = proto_spec.route().priority();
-    switch (proto_spec.route().nh_case()) {
+    pds_obj_key_proto_to_api_spec(&route->key, proto_route.id());
+    ippfx_proto_spec_to_api_spec(&route->prefix,
+                                 proto_route.prefix());
+    route->prio = proto_route.priority();
+    switch (proto_route.nh_case()) {
     case pds::RouteInfo::kNextHop:
     case pds::RouteInfo::kTunnelId:
-        api_spec->route.nh_type = PDS_NH_TYPE_OVERLAY;
-        pds_obj_key_proto_to_api_spec(&api_spec->route.tep,
-                                      proto_spec.route().tunnelid());
+        route->nh_type = PDS_NH_TYPE_OVERLAY;
+        pds_obj_key_proto_to_api_spec(&route->tep,
+                                      proto_route.tunnelid());
         break;
     case pds::RouteInfo::kNexthopGroupId:
         // NOTE: UNDERLAY_ECMP is not done in the datapath
-        api_spec->route.nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
-        pds_obj_key_proto_to_api_spec(&api_spec->route.nh_group,
-                                      proto_spec.route().nexthopgroupid());
+        route->nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
+        pds_obj_key_proto_to_api_spec(&route->nh_group,
+                                      proto_route.nexthopgroupid());
         break;
     case pds::RouteInfo::kVPCId:
-        pds_obj_key_proto_to_api_spec(&api_spec->route.vpc,
-                                      proto_spec.route().vpcid());
-        api_spec->route.nh_type = PDS_NH_TYPE_PEER_VPC;
+        pds_obj_key_proto_to_api_spec(&route->vpc,
+                                      proto_route.vpcid());
+        route->nh_type = PDS_NH_TYPE_PEER_VPC;
         break;
     case pds::RouteInfo::kVnicId:
-        pds_obj_key_proto_to_api_spec(&api_spec->route.vnic,
-                                      proto_spec.route().vnicid());
-        api_spec->route.nh_type = PDS_NH_TYPE_VNIC;
+        pds_obj_key_proto_to_api_spec(&route->vnic,
+                                      proto_route.vnicid());
+        route->nh_type = PDS_NH_TYPE_VNIC;
         break;
     case pds::RouteInfo::kNexthopId:
-        api_spec->route.nh_type = PDS_NH_TYPE_IP;
-        pds_obj_key_proto_to_api_spec(&api_spec->route.nh,
-                                      proto_spec.route().nexthopid());
+        route->nh_type = PDS_NH_TYPE_IP;
+        pds_obj_key_proto_to_api_spec(&route->nh,
+                                      proto_route.nexthopid());
         break;
     default:
-        api_spec->route.nh_type = PDS_NH_TYPE_BLACKHOLE;
+        route->nh_type = PDS_NH_TYPE_BLACKHOLE;
         break;
     }
-    if (proto_spec.route().has_nataction()) {
-        auto nat_action = proto_spec.route().nataction();
+    if (proto_route.has_nataction()) {
+        auto nat_action = proto_route.nataction();
         switch (nat_action.srcnataction()) {
         case types::NAT_ACTION_STATIC:
-            api_spec->route.nat.src_nat_type =
+            route->nat.src_nat_type =
                 PDS_NAT_TYPE_STATIC;
             break;
         case types::NAT_ACTION_NAPT_PUBLIC:
-            api_spec->route.nat.src_nat_type =
+            route->nat.src_nat_type =
                 PDS_NAT_TYPE_NAPT_PUBLIC;
             break;
         case types::NAT_ACTION_NAPT_SVC:
-            api_spec->route.nat.src_nat_type =
+            route->nat.src_nat_type =
                 PDS_NAT_TYPE_NAPT_SVC;
             break;
         case types::NAT_ACTION_NONE:
         default:
-            api_spec->route.nat.src_nat_type =
+            route->nat.src_nat_type =
                 PDS_NAT_TYPE_NONE;
             break;
         }
         if (nat_action.has_dstnatip()) {
             ipaddr_proto_spec_to_api_spec(
-                &api_spec->route.nat.dst_nat_ip,
+                &route->nat.dst_nat_ip,
                 nat_action.dstnatip());
         } else {
-            memset(&api_spec->route.nat.dst_nat_ip, 0,
-                   sizeof(api_spec->route.nat.dst_nat_ip));
+            memset(&route->nat.dst_nat_ip, 0,
+                   sizeof(route->nat.dst_nat_ip));
         }
     }
-    api_spec->route.meter = proto_spec.route().meteren();
+    route->meter = proto_route.meteren();
+
     return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+pds_route_proto_to_api_spec (pds_route_spec_t *api_spec,
+                             const pds::RouteSpec &proto_spec)
+{
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
+    pds_obj_key_proto_to_api_spec(&api_spec->route_table, proto_spec.routetableid());
+    return pds_route_proto_to_api_spec_common(&api_spec->route, proto_spec.route());
 }
 
 static inline sdk_ret_t
@@ -2932,77 +2965,8 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
     api_spec->route_info->enable_pbr = proto_spec.enablepbr();
     api_spec->route_info->num_routes = num_routes;
     for (uint32_t i = 0; i < num_routes; i++) {
-        const pds::RouteInfo &proto_route = proto_spec.routes(i);
-        pds_obj_key_proto_to_api_spec(&api_spec->route_info->routes[i].key,
-                                      proto_route.id());
-        ippfx_proto_spec_to_api_spec(&api_spec->route_info->routes[i].prefix,
-                                     proto_route.prefix());
-        if (api_spec->route_info->enable_pbr) {
-            api_spec->route_info->routes[i].prio = proto_route.priority();
-        }
-        switch (proto_route.nh_case()) {
-        case pds::RouteInfo::kNextHop:
-        case pds::RouteInfo::kTunnelId:
-            api_spec->route_info->routes[i].nh_type = PDS_NH_TYPE_OVERLAY;
-            pds_obj_key_proto_to_api_spec(&api_spec->route_info->routes[i].tep,
-                                          proto_route.tunnelid());
-            break;
-        case pds::RouteInfo::kNexthopGroupId:
-            // NOTE: UNDERLAY_ECMP is not done in the datapath
-            api_spec->route_info->routes[i].nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
-            pds_obj_key_proto_to_api_spec(&api_spec->route_info->routes[i].nh_group,
-                                          proto_route.nexthopgroupid());
-            break;
-        case pds::RouteInfo::kVPCId:
-            pds_obj_key_proto_to_api_spec(&api_spec->route_info->routes[i].vpc,
-                                          proto_route.vpcid());
-            api_spec->route_info->routes[i].nh_type = PDS_NH_TYPE_PEER_VPC;
-            break;
-        case pds::RouteInfo::kVnicId:
-            pds_obj_key_proto_to_api_spec(&api_spec->route_info->routes[i].vnic,
-                                          proto_route.vnicid());
-            api_spec->route_info->routes[i].nh_type = PDS_NH_TYPE_VNIC;
-            break;
-        case pds::RouteInfo::kNexthopId:
-            api_spec->route_info->routes[i].nh_type = PDS_NH_TYPE_IP;
-            pds_obj_key_proto_to_api_spec(&api_spec->route_info->routes[i].nh,
-                                          proto_route.nexthopid());
-            break;
-        default:
-            api_spec->route_info->routes[i].nh_type = PDS_NH_TYPE_BLACKHOLE;
-            break;
-        }
-        if (proto_route.has_nataction()) {
-            auto nat_action = proto_route.nataction();
-            switch (nat_action.srcnataction()) {
-            case types::NAT_ACTION_STATIC:
-                api_spec->route_info->routes[i].nat.src_nat_type =
-                    PDS_NAT_TYPE_STATIC;
-                break;
-            case types::NAT_ACTION_NAPT_PUBLIC:
-                api_spec->route_info->routes[i].nat.src_nat_type =
-                    PDS_NAT_TYPE_NAPT_PUBLIC;
-                break;
-            case types::NAT_ACTION_NAPT_SVC:
-                api_spec->route_info->routes[i].nat.src_nat_type =
-                    PDS_NAT_TYPE_NAPT_SVC;
-                break;
-            case types::NAT_ACTION_NONE:
-            default:
-                api_spec->route_info->routes[i].nat.src_nat_type =
-                    PDS_NAT_TYPE_NONE;
-                break;
-            }
-            if (nat_action.has_dstnatip()) {
-                ipaddr_proto_spec_to_api_spec(
-                    &api_spec->route_info->routes[i].nat.dst_nat_ip,
-                    nat_action.dstnatip());
-            } else {
-                memset(&api_spec->route_info->routes[i].nat.dst_nat_ip, 0,
-                       sizeof(api_spec->route_info->routes[i].nat.dst_nat_ip));
-            }
-        }
-        api_spec->route_info->routes[i].meter = proto_route.meteren();
+        pds_route_proto_to_api_spec_common(&api_spec->route_info->routes[i],
+                                           proto_spec.routes(i));
     }
     return SDK_RET_OK;
 }

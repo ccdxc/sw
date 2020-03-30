@@ -86,7 +86,19 @@ policy_get (pds_obj_key_t *key, pds_policy_info_t *info)
 
     memset(info, 0, sizeof(pds_policy_info_t));
     if (!agent_state::state()->pds_mock_mode()) {
+        info->spec.rule_info =
+            (rule_info_t *)SDK_CALLOC(api::PDS_MEM_ALLOC_SECURITY_POLICY,
+                                      POLICY_RULE_INFO_SIZE(0));
         ret = pds_policy_read(key, info);
+        if (ret == SDK_RET_OK) {
+            uint32_t num_rules = info->spec.rule_info->num_rules;
+            SDK_FREE(api::PDS_MEM_ALLOC_SECURITY_POLICY, info->spec.rule_info);
+            info->spec.rule_info =
+                (rule_info_t *)SDK_CALLOC(api::PDS_MEM_ALLOC_SECURITY_POLICY,
+                                          POLICY_RULE_INFO_SIZE(num_rules));
+            info->spec.rule_info->num_rules = num_rules;
+            ret = pds_policy_read(key, info);
+        }
     }
     return ret;
 }

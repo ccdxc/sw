@@ -33,15 +33,17 @@ service SecurityPolicySvc {
 
 // SecurityRuleInfo is a single rule in the security policy
 message SecurityRuleInfo {
+  // optional rule id needed if incremental route ADD/DEL/UPD functionality is needed
+  bytes                     Id      = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // stateful rule results in flow/session creation whereas stateless rule
   // will not result in flow creation
-  bool                     Stateful = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  bool                     Stateful = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // rule match criteria
-  types.RuleMatch          Match    = 2;
+  types.RuleMatch          Match    = 3;
   // priority of this rule (lower the numeric value, higher the priority is)
-  uint32                   Priority = 3 [(gogoproto.moretags) = "meta:range:0-1022"];
+  uint32                   Priority = 4 [(gogoproto.moretags) = "meta:range:0-1022"];
   // action to take when this rule is matched
-  types.SecurityRuleAction Action   = 4 [(gogoproto.moretags) = "meta:mandatory"];
+  types.SecurityRuleAction Action   = 5 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // security policy configuration

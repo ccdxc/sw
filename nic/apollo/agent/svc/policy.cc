@@ -219,6 +219,10 @@ SecurityPolicySvcImpl::SecurityPolicyGet(ServerContext *context,
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
         pds_policy_api_info_to_proto(&info, proto_rsp);
+        if (info.spec.rule_info) {
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, info.spec.rule_info);
+            info.spec.rule_info = NULL;
+        }
     }
 
     if (proto_req->id_size() == 0) {
@@ -425,5 +429,119 @@ SecurityPolicySvcImpl::SecurityProfileGet(ServerContext *context,
                                           pds::SecurityProfileGetResponse *proto_rsp) {
     // TODO: @rsrikanth please take care of this one
     PDS_TRACE_ERR("SecurityProfile GET not implemented");
+    return Status::CANCELLED;
+}
+
+Status
+SecurityPolicySvcImpl::SecurityRuleCreate(ServerContext *context,
+                                          const pds::SecurityRuleRequest *proto_req,
+                                          pds::SecurityRuleResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_policy_rule_spec_t api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::CANCELLED;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, security rule "
+                          "creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::CANCELLED;
+        }
+        batched_internally = true;
+    }
+
+    memset(&api_spec, 0, sizeof(pds_policy_rule_spec_t));
+    ret = pds_policy_rule_proto_to_api_spec(&api_spec,
+                                            proto_req->request());
+    if (unlikely(ret != SDK_RET_OK)) {
+        goto end;
+    }
+    ret = pds_policy_rule_create(&api_spec, bctxt);
+    if (ret != SDK_RET_OK) {
+        goto end;
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
+end:
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
+}
+
+Status
+SecurityPolicySvcImpl::SecurityRuleUpdate(ServerContext *context,
+                                          const pds::SecurityRuleRequest *proto_req,
+                                          pds::SecurityRuleResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_policy_rule_spec_t api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::CANCELLED;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, security rule "
+                          "update failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::CANCELLED;
+        }
+        batched_internally = true;
+    }
+
+    memset(&api_spec, 0, sizeof(pds_policy_spec_t));
+    ret = pds_policy_rule_proto_to_api_spec(&api_spec,
+                                            proto_req->request());
+    if (unlikely(ret != SDK_RET_OK)) {
+        goto end;
+    }
+    ret = pds_policy_rule_update(&api_spec, bctxt);
+    if (ret != SDK_RET_OK) {
+        goto end;
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
     return Status::CANCELLED;
 }

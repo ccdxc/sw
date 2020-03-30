@@ -84,7 +84,6 @@ pds_route_table_read (_In_ pds_obj_key_t *key,
 
     if (!info->spec.route_info->num_routes) {
         info->spec.route_info->num_routes = entry->num_routes();
-        return SDK_RET_OK;
     } else {
         uint32_t num_routes_to_read = info->spec.route_info->num_routes;
         if (num_routes_to_read < entry->num_routes()) {
