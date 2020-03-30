@@ -77,7 +77,7 @@ class BgpObject(base.ConfigObjectBase):
         peers = []
         for obj in BGPPeerClient.Objects(self.Node):
             peerjson = {
-                    "ip-address": obj.PeerAddr.exploded,
+                    "dsc-auto-config" : True,
                     "remote-as": obj.RemoteASN,
                     "enable-address-families": [f"{obj.PeerAf.Afi}-{obj.PeerAf.Safi}"]
                 }
@@ -96,7 +96,7 @@ class BgpObject(base.ConfigObjectBase):
               },
               "spec": {
                   "bgp-config": {
-                      "router-id": ipaddress.ip_address(0).exploded,
+                      "dsc-auto-config": True,
                       "as-number": self.LocalASN,
                       "neighbors" :  peers,
                       "keepalive-interval" : self.KeepAliveInterval,
