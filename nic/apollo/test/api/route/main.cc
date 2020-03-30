@@ -132,7 +132,6 @@ TEST_F(route_test, route_add_1) {
     batch_commit(bctxt);
 }
 
-#if 0
 /// do route table and individual route(s) add in same batch
 TEST_F(route_test, route_add_2) {
     sdk_ret_t ret;
@@ -173,6 +172,7 @@ TEST_F(route_test, route_add_2) {
     batch_commit(bctxt);
 }
 
+#if 0
 /// do route table add and then individual route(s) add/del in same batch
 TEST_F(route_test, route_add_del_1) {
     sdk_ret_t ret;
@@ -257,7 +257,6 @@ TEST_F(route_test, route_upd_1) {
     batch_commit(bctxt);
 }
 
-#if 0
 /// add route table and update individual route(s) in same batch
 TEST_F(route_test, route_upd_2) {
     sdk_ret_t ret;
@@ -296,7 +295,6 @@ TEST_F(route_test, route_upd_2) {
     sample_route_table_teardown(bctxt, 2, 1);
     batch_commit(bctxt);
 }
-#endif
 
 /// @}
 

@@ -160,8 +160,18 @@ route_table::init_config_(route_table *rtable) {
 
 sdk_ret_t
 route_table::program_create(api_obj_ctxt_t *obj_ctxt) {
+    sdk_ret_t ret;
+
     PDS_TRACE_DEBUG("Programming route table %s", key2str().c_str());
-    return impl_->program_hw(this, obj_ctxt);
+    ret = impl_->program_hw(this, obj_ctxt);
+    // for container objects, element count can change during create processing
+    // as individual route add/del/upd can happen in the same batch as route
+    // table create, so we need to reflect that in the object
+    if (ret == SDK_RET_OK) {
+        num_routes_ =
+            obj_ctxt->api_params->route_table_spec.route_info->num_routes;
+    }
+    return ret;
 }
 
 sdk_ret_t
@@ -235,9 +245,11 @@ sdk_ret_t
 route_table::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
 
+    PDS_TRACE_DEBUG("Updating route table %s", key2str().c_str());
     ret = impl_->update_hw(orig_obj, this, obj_ctxt);
     // for container objects, element count can change during update processing
-    // so we need to reflect that in the object
+    // as individual route add/del/upd can happen in the same batch as route
+    // table create, so we need to reflect that in the object
     if (ret == SDK_RET_OK) {
         num_routes_ =
             obj_ctxt->api_params->route_table_spec.route_info->num_routes;

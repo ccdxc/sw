@@ -176,8 +176,8 @@ route_table_impl::compute_updated_spec_(route_table *new_rtable,
     }
 
     // we have two cases to handle here:
-    // 1. route table object itself is being updated (some other attributes
-    //    modifications and/or with new set of routes combined with
+    // 1. route table object itself is being added/updated (some other
+    //    attributes modifications and/or with new set of routes combined with
     //    individual route add/del/upd operations, all in this batch
     //    and in this case, we need to create a new spec that "combines"
     //    incoming spec with individual route add/del/upd operations
@@ -187,9 +187,10 @@ route_table_impl::compute_updated_spec_(route_table *new_rtable,
     //    individual route add/del/upd operations
     // in both cases, we need to form new spec
     spec = &obj_ctxt->api_params->route_table_spec;
-    if (obj_ctxt->upd_bmap & ~(PDS_ROUTE_TABLE_UPD_ROUTE_ADD |
-                               PDS_ROUTE_TABLE_UPD_ROUTE_DEL |
-                               PDS_ROUTE_TABLE_UPD_ROUTE_UPD)) {
+    if ((obj_ctxt->api_op == API_OP_CREATE) ||
+        (obj_ctxt->upd_bmap & ~(PDS_ROUTE_TABLE_UPD_ROUTE_ADD |
+                                PDS_ROUTE_TABLE_UPD_ROUTE_DEL |
+                                PDS_ROUTE_TABLE_UPD_ROUTE_UPD))) {
         // case 1 : both container and contained objects are being modified
         //          (ADD/DEL/UPD), in this we can fully ignore the set of routes
         //          that are persisted in kvstore
@@ -284,7 +285,9 @@ route_table_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
     pds_route_t *route_spec;
     pds_route_table_spec_t *spec;
 
-    if (obj_ctxt->api_op == API_OP_UPDATE) {
+    if ((obj_ctxt->api_op == API_OP_UPDATE) || obj_ctxt->clist.size()) {
+        // if this is CREATE batched with individual route add/del/update
+        // operations or update of any kind, we may have to update the spec
         compute_updated_spec_((route_table *)api_obj,
                               (route_table *)orig_obj, obj_ctxt);
     }
@@ -579,114 +582,14 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 route_table_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                             api_obj_ctxt_t *obj_ctxt) {
-    uint32_t num_routes;
-    sdk_ret_t ret = SDK_RET_OK;
-    pds_route_table_spec_t spec;
-    route_table *new_rtable = (route_table *)curr_obj;
-    route_table *old_rtable = (route_table *)orig_obj;
+    sdk_ret_t ret;
 
-#if 0
-    if (obj_ctxt->clist.size() == 0) {
-        SDK_ASSERT((obj_ctxt->upd_bmap & (PDS_ROUTE_TABLE_UPD_ROUTE_ADD |
-                                          PDS_ROUTE_TABLE_UPD_ROUTE_DEL |
-                                          PDS_ROUTE_TABLE_UPD_ROUTE_UPD)) == 0);
-        PDS_TRACE_DEBUG("Processing route table %s update with no individual "
-                        "route updates in this batch",
-                        new_rtable->key2str().c_str());
-        return this->program_hw(curr_obj, obj_ctxt);
-    }
-
-    // we have few cases to handle here:
-    // 1. route table object itself is being updated (some other attributes
-    //    modifications and/or with new set of routes combined with
-    //    individual route add/del/update operations - all in this batch
-    // 2. route table object modification is solely because of individual
-    //    route add/del/updates in this batch
-    // in both cases, we need to form new spec
-    spec.key = new_rtable->key();
-    if (obj_ctxt->upd_bmap & ~(PDS_ROUTE_TABLE_UPD_ROUTE_ADD |
-                               PDS_ROUTE_TABLE_UPD_ROUTE_DEL |
-                               PDS_ROUTE_TABLE_UPD_ROUTE_UPD)) {
-        // case 1 : both container and contained objects are being modified
-        //          (ADD/DEL/UPD), in this we can fully ignore the set of routes
-        //          that are persisted in kvstore
-        // number of new routes in the worst case will be total of what we have
-        // currently plus size of clist (assuming all contained objs are being
-        // added)
-        // TODO:
-        // keep track of this counter in obj_ctxt itself in API engine so we can
-        // catch errors where total capacity exceeds max. supported without any
-        // extra processing
-        num_routes = new_rtable->num_routes() + obj_ctxt->clist.size();
-        spec.route_info =
-            (route_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                       ROUTE_INFO_SIZE(num_routes));
-        if (!spec.route_info) {
-            PDS_TRACE_ERR("Failed to allocate memory for %u routes for "
-                          "route table %s update processing", num_routes,
-                          spec.key.str());
-            ret = SDK_RET_OOM;
-            goto end;
-        }
-        memcpy(&spec.route_info,
-               obj_ctxt->api_params->route_table_spec.route_info,
-               ROUTE_INFO_SIZE(new_rtable->num_routes()));
-    } else {
-        // case 2 : only contained objects are being modified (ADD/DEL/UPD),
-        //          form new spec that consists of current set of routes and
-        //          individual route updates
-        // number of new routes in the worst case will be total of what we have
-        // currently plus size of clist (assuming all contained objs are being
-        // added)
-        // TODO:
-        // keep track of this counter in obj_ctxt itself in API engine so we can
-        // catch errors where total capacity exceeds max. supported without any
-        // extra processing
-        num_routes = old_rtable->num_routes() + obj_ctxt->clist.size();
-        spec.route_info =
-            (route_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                       ROUTE_INFO_SIZE(num_routes));
-        if (!spec.route_info) {
-            PDS_TRACE_ERR("Failed to allocate memory for %u routes for "
-                          "route table %s update processing", num_routes,
-                          spec.key.str());
-            ret = SDK_RET_OOM;
-            goto end;
-        }
-        ret = route_table_db()->retrieve_routes(&spec.key, spec.route_info);
-        if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to retrieve routes from kvstore for route "
-                          "table %s, err %u", spec.key.str(), ret);
-            goto end;
-        }
-    }
-    // compute the udpated spec now
-    ret = update_route_table_spec_(&spec, obj_ctxt);
-    if (ret != SDK_RET_OK) {
-        goto end;
-    }
-    PDS_TRACE_DEBUG("Route table %s route count changed from %u to %u",
-                    spec.key.str(), old_rtable->num_routes(),
-                    spec.route_info->num_routes);
-#endif
-
-    // and program it in the pipeline
-    //ret = program_route_table_(&spec);
+    // program route table in the pipeline
     ret = program_route_table_(&obj_ctxt->api_params->route_table_spec);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program route table %s update, err %u",
-                      spec.key.str(), ret);
-        goto end;
+        PDS_TRACE_ERR("Failed to update route table %s update, err %u",
+                      obj_ctxt->api_params->route_table_spec.key.str(), ret);
     }
-
-end:
-
-#if 0
-    if (spec.route_info) {
-        SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, spec.route_info);
-        spec.route_info = NULL;
-    }
-#endif
     return ret;
 }
 

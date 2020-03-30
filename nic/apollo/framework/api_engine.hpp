@@ -436,7 +436,7 @@ end:
         } else if (api_obj_a->in_deps_list()) {
             octxt_a = batch_ctxt_.aom[api_obj_a];
         }
-        if (api_base::is_contained_in(octxt_a->obj_id, octxt_b->obj_id)) {
+        if (api_base::is_contained_in(obj_id_a, obj_id_b)) {
             octxt_b->clist.push_back(octxt_a);
         }
         return octxt;
