@@ -270,7 +270,7 @@ func (dps *DSCProfileState) updatePropagationStatus(genID string,
 // Write write the object to api server
 func (dps *DSCProfileState) Write() error {
 	var err error
-	log.Infof("push periodically status")
+	log.Infof("dscProfile %s Evaluate status", dps.DSCProfile.Name)
 	dps.DSCProfile.Lock()
 	defer dps.DSCProfile.Unlock()
 	prop := &dps.DSCProfile.Status.PropagationStatus
@@ -279,6 +279,7 @@ func (dps *DSCProfileState) Write() error {
 		dps.DSCProfile.Status.PropagationStatus = *newProp
 		err = dps.DSCProfile.Write()
 		if err != nil {
+			log.Errorf("dscProfile %s Update failed %s", dps.DSCProfile.Name, err)
 			dps.DSCProfile.Status.PropagationStatus = *prop
 		}
 	}
@@ -328,15 +329,13 @@ func (sm *Statemgr) OnProfileOperUpdate(nodeID string, objinfo *netproto.Profile
 
 // OnProfileOperDelete gets called when policy delete arrives from agent
 func (sm *Statemgr) OnProfileOperDelete(nodeID string, objinfo *netproto.Profile) error {
-	log.Infof("received oper delete response")
 	sm.UpdateDSCProfileStatusOnOperDelete(nodeID, objinfo.ObjectMeta.Tenant, objinfo.ObjectMeta.Name, objinfo.ObjectMeta.GenerationID)
-
 	return nil
 }
 
 // UpdateDSCProfileStatusOnOperDelete updates the profile status on Delete response from Agent
 func (sm *Statemgr) UpdateDSCProfileStatusOnOperDelete(nodeuuid, tenant, name, generationID string) {
-	log.Infof("Update the profile status for profile %s tenant %s", name, tenant)
+	log.Infof("OnOperDelete: received status for profile %s tenant %s nodeuud %s", name, tenant, nodeuuid)
 	dscProfile, err := sm.FindDSCProfile(tenant, name)
 	if err != nil {
 		return
@@ -357,6 +356,7 @@ func (sm *Statemgr) UpdateDSCProfileStatusOnOperDelete(nodeuuid, tenant, name, g
 	_, ok := dscProfile.DscList[snic.DistributedServiceCard.Name]
 
 	if !ok {
+		log.Infof("OnOperDelete: received status for profile %s tenant %s nodeuud %s", name, tenant, nodeuuid)
 		// update node version
 		delete(dscProfile.NodeVersions, nodeuuid)
 		sm.PeriodicUpdaterPush(dscProfile)
@@ -365,7 +365,7 @@ func (sm *Statemgr) UpdateDSCProfileStatusOnOperDelete(nodeuuid, tenant, name, g
 
 // UpdateDSCProfileStatusOnOperUpdate updates the profile status on Create/Update
 func (sm *Statemgr) UpdateDSCProfileStatusOnOperUpdate(nodeuuid, tenant, name, generationID string) {
-	log.Infof("Update the profile status for profile %s tenant %s", name, tenant)
+	log.Infof("OnOperUpdate: received status for profile %s tenant %s nodeuud %s", name, tenant, nodeuuid)
 	dscProfile, err := sm.FindDSCProfile(tenant, name)
 	if err != nil {
 		return
@@ -386,7 +386,7 @@ func (sm *Statemgr) UpdateDSCProfileStatusOnOperUpdate(nodeuuid, tenant, name, g
 	expVersion, ok := dscProfile.DscList[snic.DistributedServiceCard.Name]
 
 	if ok && expVersion.profileName == name && expVersion.agentGenID == generationID {
-		log.Infof("updated the status")
+		log.Infof("OnOperUpdate:Enqueue profile for status %s tenant %s nodeuud %s", name, tenant, nodeuuid)
 		// update node version
 		dscProfile.NodeVersions[nodeuuid] = generationID
 		// ToDo: Writing status from NPM conflicts with CMD in integ tests.
