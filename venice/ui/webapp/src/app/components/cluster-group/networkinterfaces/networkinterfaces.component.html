@@ -62,6 +62,9 @@
     <ng-container *ngSwitchCase="'meta.name'">
       {{rowData._ui.networkinterfaceUIName}}
     </ng-container>
+    <ng-container *ngSwitchCase="'status'">
+      {{rowData.spec['admin-status']}}/{{rowData.status['oper-status']}}
+    </ng-container>
     <ng-container *ngSwitchCase="'meta.creation-time'">
       {{rowData.meta['creation-time'] | PrettyDate }}
     </ng-container>

@@ -87,10 +87,9 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
     { field: 'meta.name', header: 'Name', class: 'networkinterfaces-column-name', sortable: true, width: 15, notReorderable: true },
     { field: 'status.dsc', header: 'DSC', class: ' networkinterfaces-column-dsc', sortable: true, width: 15 },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'networkinterfaces-column-date', sortable: true, width: '180px', notReorderable: true },
-    { field: 'spec.admin-status', header: 'Admin Status', class: ' networkinterfaces-column-admintype', sortable: false, width: 45 },
+    { field: 'status', header: 'Admin/Op Status', class: ' networkinterfaces-column-opstatus', sortable: true, width: 15 },
     { field: 'spec.type', header: 'Type', class: ' networkinterfaces-column-type', sortable: true, width: 15 },
-    { field: 'meta.labels', header: 'Labels', class: '', sortable: true, width: 7 },
-    { field: 'status.oper-status', header: 'OP Status', class: ' networkinterfaces-column-opstatus', sortable: true, width: 15 }
+    { field: 'meta.labels', header: 'Labels', class: '', sortable: true, width: 7 }
   ];
 
   exportFilename: string = 'Venice-networkinterfaces';
@@ -220,6 +219,9 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
     const macPart = niName.substring(0, idx);
     const typePart = niName.substring(idx + 1);
     let dscname = this._myDSCnameToMacMap.macToNameMap[selectedNetworkInterface.status.dsc];
+    if (niName.indexOf(dscname) === 0) {
+      return niName; // VS-1374 as niName='systest-naples-6-uplink-1-2' and dscname = 'systest-naples-6'
+    }
     if (!dscname) {
       // NI-name is 00ae.cd01.0ed8-uplink129 where NI.status.dsc is missing.
       dscname = this._myDSCnameToMacMap.macToNameMap[macPart];
