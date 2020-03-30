@@ -229,12 +229,12 @@ typedef struct if_s {
     void                *pd_if;
 
     // MirrorSessions related fields
-    if_mirror_info_t    mirror_cfg;
-    uint8_t             tx_mirror_session_id[MAX_MIRROR_SESSION_DEST];
-    uint8_t             rx_mirror_session_id[MAX_MIRROR_SESSION_DEST];
-    uint8_t             programmed_tx_session_id_bitmap;
-    uint8_t             programmed_rx_session_id_bitmap;
-    uplink_erspan_direction_t direction;
+    if_mirror_info_t    mirror_cfg; // from cfg tx & rx mirror sessions
+    uint8_t             tx_mirror_session_id[MAX_MIRROR_SESSION_DEST]; // sw mirr sess id. TODO: Cleanup
+    uint8_t             rx_mirror_session_id[MAX_MIRROR_SESSION_DEST]; // sw mirr sess id. TODO: Cleanup
+    uint8_t             programmed_tx_session_id_bitmap; // hw mirr sess id
+    uint8_t             programmed_rx_session_id_bitmap; // hw mirr sess id
+    uplink_erspan_direction_t direction; // temp variable for PD commn.
 } __PACK__ if_t;
 
 typedef struct if_create_app_ctxt_s {

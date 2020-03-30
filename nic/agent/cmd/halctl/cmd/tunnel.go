@@ -282,7 +282,7 @@ func tunnelShowHeader() {
 	fmt.Printf("\n")
 	hdrLine := strings.Repeat("-", 67)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-27s%-10s%-10s%-10s%-10s\n",
+	fmt.Printf("%-15s%-10s%-15s%-15s%-10s\n",
 		"Id", "EncType", "LTep", "RTep", "VrfId")
 	fmt.Println(hdrLine)
 }
@@ -294,19 +294,19 @@ func tunnelShowOneResp(resp *halproto.InterfaceGetResponse) {
 	}
 	encType := resp.GetSpec().GetIfTunnelInfo().GetEncapType()
 	ifID := fmt.Sprintf("tunnel-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
-	fmt.Printf("%-27s%-10s",
+	fmt.Printf("%-15s%-10s",
 		ifID,
 		utils.TnnlEncTypeToStr(encType))
 	if encType == halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_VXLAN {
-		fmt.Printf("%-10s%-10s",
+		fmt.Printf("%-15s%-15s",
 			utils.IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetVxlanInfo().GetLocalTep()),
 			utils.IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetVxlanInfo().GetRemoteTep()))
 	} else if encType == halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_GRE {
-		fmt.Printf("%-10s%-10s",
+		fmt.Printf("%-15s%-15s",
 			utils.IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetGreInfo().GetSource()),
 			utils.IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetGreInfo().GetDestination()))
 	} else if encType == halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS {
-		fmt.Printf("%-10s%-10s", "-", "-")
+		fmt.Printf("%-15s%-15s", "-", "-")
 	}
 	fmt.Printf("%-10d\n",
 		resp.GetSpec().GetIfTunnelInfo().GetVrfKeyHandle().GetVrfId())

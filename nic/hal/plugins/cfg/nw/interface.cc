@@ -1020,9 +1020,10 @@ end:
 }
 
 static bool
-has_if_mirror_sessions_changed (if_t *hal_if, if_mirror_info_t *mirror_spec)
+has_if_mirror_sessions_changed (if_t *hal_if, if_mirror_info_t *mirror_spec, 
+                                uplink_erspan_direction_t dir)
 {
-    if (hal_if->direction == UPLINK_ERSPAN_DIRECTION_EGRESS) {
+    if (dir == UPLINK_ERSPAN_DIRECTION_EGRESS) {
         if (hal_if->mirror_cfg.tx_sessions_count != mirror_spec->
                                                     tx_sessions_count)
             return true;
@@ -1034,7 +1035,7 @@ has_if_mirror_sessions_changed (if_t *hal_if, if_mirror_info_t *mirror_spec)
         }
     }
 
-    if (hal_if->direction == UPLINK_ERSPAN_DIRECTION_INGRESS) {
+    if (dir == UPLINK_ERSPAN_DIRECTION_INGRESS) {
         if (hal_if->mirror_cfg.rx_sessions_count != mirror_spec->
                                                     rx_sessions_count)
             return true;
@@ -2011,13 +2012,17 @@ if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
         ret = HAL_RET_INVALID_ARG;
     }
 
-    hal_if->direction = UPLINK_ERSPAN_DIRECTION_INGRESS;
-    if (has_if_mirror_sessions_changed(hal_if, app_ctxt->mirror_spec))
+    if (has_if_mirror_sessions_changed(hal_if, app_ctxt->mirror_spec,
+                                       UPLINK_ERSPAN_DIRECTION_INGRESS)) {
         *has_changed = true;
+        HAL_TRACE_DEBUG("RX mirror sessions changed");
+    }
 
-    hal_if->direction = UPLINK_ERSPAN_DIRECTION_EGRESS;
-    if (has_if_mirror_sessions_changed(hal_if, app_ctxt->mirror_spec))
+    if (has_if_mirror_sessions_changed(hal_if, app_ctxt->mirror_spec,
+                                       UPLINK_ERSPAN_DIRECTION_EGRESS)) {
         *has_changed = true;
+        HAL_TRACE_DEBUG("TX mirror sessions changed");
+    }
 
     return ret;
 }
@@ -2941,6 +2946,7 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
     {
         auto tunnel_if_info = spec->mutable_if_tunnel_info();
         tunnel_if_info->set_encap_type(hal_if->encap_type);
+        tunnel_if_info->mutable_vrf_key_handle()->set_vrf_id(hal_if->tid);
         if (hal_if->encap_type == intf::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
             auto vxlan_info = tunnel_if_info->mutable_vxlan_info();
             ip_addr_to_spec(vxlan_info->mutable_local_tep(),
