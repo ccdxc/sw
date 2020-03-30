@@ -1,13 +1,13 @@
 {
-    "cpld_id" : "0x15",
+    "cpld_id" : "0x1C",
     "max_mpu_per_stage" : "4",
     "mpu_trace_size" : "2048",
     "cores_mask": "0xf",
-    "form_factor": "HH3/4L",
-    "emmc_size": "32",
+    "form_factor": "FHHL",
+    "emmc_size": "16",
     "memory_size": "8",
     "num_asics" : "1",
-    "board_type" : "Naples100 Vomero",
+    "board_type" : "Naples100 IBM",
     "voltages" :
     {
         "startup_arm" : "",
@@ -38,7 +38,7 @@
     ],
 
     "pcie" : {
-	"subdeviceid"   : "4009",
+	"subdeviceid"   : "400a",
 	"portspecs"	:
 	[
 	    { "host":"0", "port":"0", "gen":"3", "width":"16" }
@@ -70,9 +70,9 @@
     "num_fp_ports": "3",
     "fp_ports" :
     [
-        { "port_num" : "1", "type" : "eth",  "num_lanes" : "4", "admin-state" : "enable", "breakout_modes" : [ "4x25G", "4x10G", "2x50G" ] },
-        { "port_num" : "2", "type" : "eth",  "num_lanes" : "4", "admin-state" : "enable","breakout_modes" : [ "4x25G", "4x10G", "2x50G" ] },
-        { "port_num" : "3", "type" : "mgmt", "num_lanes" : "1", "admin-state" : "disable","breakout_modes" : [] }
+        { "port_num" : "1", "type" : "eth",  "num_lanes" : "4", "breakout_modes" : [ "4x25G", "4x10G", "2x50G" ] },
+        { "port_num" : "2", "type" : "eth",  "num_lanes" : "4", "breakout_modes" : [ "4x25G", "4x10G", "2x50G" ] },
+        { "port_num" : "3", "type" : "mgmt", "num_lanes" : "1", "breakout_modes" : [] }
     ],
 
     "num_logical_ports" : "9",

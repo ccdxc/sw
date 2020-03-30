@@ -9,6 +9,14 @@ nic/conf/catalog_hw_68-0004.json                                    /nic/conf/
 nic/conf/catalog_hw_68-0005.json                                    /nic/conf/
 nic/conf/catalog_hw_68-0006.json                                    /nic/conf/
 nic/conf/catalog_hw_68-0007.json                                    /nic/conf/
+nic/conf/catalog_hw_68-0008.json                                    /nic/conf/
+nic/conf/catalog_hw_68-0009.json                                    /nic/conf/
+nic/conf/catalog_hw_68-0011.json                                    /nic/conf/
+nic/conf/catalog_hw_68-0013.json                                    /nic/conf/
+nic/conf/catalog_hw_P18669-001.json                                 /nic/conf/
+nic/conf/catalog_hw_P18670-001.json                                 /nic/conf/
+nic/conf/catalog_hw_P18671-001.json                                 /nic/conf/
+nic/conf/catalog_hw_P26967-B21.json                                 /nic/conf/
 nic/conf/serdes_68-0003.json                                        /nic/conf/
 nic/conf/serdes_68-0004.json                                        /nic/conf/
 nic/conf/serdes_68-0005.json                                        /nic/conf/
