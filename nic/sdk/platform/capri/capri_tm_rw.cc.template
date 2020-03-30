@@ -163,12 +163,12 @@ populate_asic_profile (capri_tm_asic_profile_t *asic_profile)
     asic_profile->port[TM_PORT_TYPE_P4IG].reserved_mtus = 3;
     asic_profile->port[TM_PORT_TYPE_P4IG].headroom_cells = 0;
     asic_profile->port[TM_PORT_TYPE_P4IG].uses_credits = true;
-    asic_profile->port[TM_PORT_TYPE_P4IG].recirc_q = TM_P4_RECIRC_QUEUE;
+    asic_profile->port[TM_PORT_TYPE_P4IG].recirc_q = CAPRI_TM_P4_RECIRC_QUEUE;
 
     asic_profile->port[TM_PORT_TYPE_P4EG].reserved_mtus = 3;
     asic_profile->port[TM_PORT_TYPE_P4EG].headroom_cells = 0;
     asic_profile->port[TM_PORT_TYPE_P4EG].uses_credits = true;
-    asic_profile->port[TM_PORT_TYPE_P4EG].recirc_q = TM_P4_RECIRC_QUEUE;
+    asic_profile->port[TM_PORT_TYPE_P4EG].recirc_q = CAPRI_TM_P4_RECIRC_QUEUE;
 
     asic_profile->port[TM_PORT_TYPE_DMA].reserved_mtus = 0;
     asic_profile->port[TM_PORT_TYPE_DMA].headroom_cells = 100;
@@ -241,21 +241,21 @@ static inline tm_port_type_e
 capri_tm_get_port_type (tm_port_t port)
 {
     switch(port) {
-        case TM_PORT_UPLINK_0:
-        case TM_PORT_UPLINK_1:
-        case TM_PORT_UPLINK_2:
-        case TM_PORT_UPLINK_3:
-        case TM_PORT_UPLINK_4:
-        case TM_PORT_UPLINK_5:
-        case TM_PORT_UPLINK_6:
-        case TM_PORT_UPLINK_7:
-        case TM_PORT_NCSI:
+        case CAPRI_TM_PORT_UPLINK_0:
+        case CAPRI_TM_PORT_UPLINK_1:
+        case CAPRI_TM_PORT_UPLINK_2:
+        case CAPRI_TM_PORT_UPLINK_3:
+        case CAPRI_TM_PORT_UPLINK_4:
+        case CAPRI_TM_PORT_UPLINK_5:
+        case CAPRI_TM_PORT_UPLINK_6:
+        case CAPRI_TM_PORT_UPLINK_7:
+        case CAPRI_TM_PORT_NCSI:
             return TM_PORT_TYPE_UPLINK;
-        case TM_PORT_DMA:
+        case CAPRI_TM_PORT_DMA:
             return TM_PORT_TYPE_DMA;
-        case TM_PORT_EGRESS:
+        case CAPRI_TM_PORT_EGRESS:
             return TM_PORT_TYPE_P4EG;
-        case TM_PORT_INGRESS:
+        case CAPRI_TM_PORT_INGRESS:
             return TM_PORT_TYPE_P4IG;
     }
     return NUM_TM_PORT_TYPES;
@@ -278,7 +278,7 @@ is_active_port (tm_port_t port)
     port_type = capri_tm_get_port_type(port);
     if (port_type == TM_PORT_TYPE_UPLINK) {
         return (is_active_uplink_port(port) ||
-                (port == TM_PORT_NCSI));
+                (port == CAPRI_TM_PORT_NCSI));
     }
     return true;
 }
@@ -300,7 +300,7 @@ capri_tm_max_hbm_contexts_for_fifo (uint32_t fifo_type)
 static inline bool
 port_supports_hbm_contexts (tm_port_t port)
 {
-    return is_active_uplink_port(port) || (port == TM_PORT_DMA);
+    return is_active_uplink_port(port) || (port == CAPRI_TM_PORT_DMA);
 }
 
 static inline uint32_t
@@ -399,18 +399,18 @@ tm_is_high_perf_q (tm_q_t q)
 //:: L1_NODES = 16
 //:: L2_NODES = 4
 //:: e = [
-//::    "TM_PORT_UPLINK_0",
-//::    "TM_PORT_UPLINK_1",
-//::    "TM_PORT_UPLINK_2",
-//::    "TM_PORT_UPLINK_3",
-//::    "TM_PORT_UPLINK_4",
-//::    "TM_PORT_UPLINK_5",
-//::    "TM_PORT_UPLINK_6",
-//::    "TM_PORT_UPLINK_7",
-//::    "TM_PORT_NCSI",
-//::    "TM_PORT_DMA",
-//::    "TM_PORT_EGRESS",
-//::    "TM_PORT_INGRESS"]
+//::    "CAPRI_TM_PORT_UPLINK_0",
+//::    "CAPRI_TM_PORT_UPLINK_1",
+//::    "CAPRI_TM_PORT_UPLINK_2",
+//::    "CAPRI_TM_PORT_UPLINK_3",
+//::    "CAPRI_TM_PORT_UPLINK_4",
+//::    "CAPRI_TM_PORT_UPLINK_5",
+//::    "CAPRI_TM_PORT_UPLINK_6",
+//::    "CAPRI_TM_PORT_UPLINK_7",
+//::    "CAPRI_TM_PORT_NCSI",
+//::    "CAPRI_TM_PORT_DMA",
+//::    "CAPRI_TM_PORT_EGRESS",
+//::    "CAPRI_TM_PORT_INGRESS"]
 //::
 //:: port_info = OrderedDict()
 //::
@@ -426,7 +426,7 @@ tm_is_high_perf_q (tm_q_t q)
 //::     if p < 9:
 //::        pinfo["type"] = "uplink"
 //::        pinfo["pgs"] = 8
-//::        if e[p] != "TM_PORT_NCSI":
+//::        if e[p] != "CAPRI_TM_PORT_NCSI":
 //::            pinfo["has_hbm"] = True
 //::        #endif
 //::     elif p < 10:
@@ -560,19 +560,19 @@ capri_tm_dump_${fn}_regs (void)
 bool
 capri_tm_port_is_uplink_port (uint32_t port)
 {
-    return ((port >= TM_UPLINK_PORT_BEGIN) && (port <= TM_UPLINK_PORT_END));
+    return ((port >= CAPRI_TM_UPLINK_PORT_BEGIN) && (port <= CAPRI_TM_UPLINK_PORT_END));
 }
 
 bool
 capri_tm_port_is_dma_port (uint32_t port)
 {
-    return ((port >= TM_DMA_PORT_BEGIN) && (port <= TM_DMA_PORT_END));
+    return ((port >= CAPRI_TM_DMA_PORT_BEGIN) && (port <= CAPRI_TM_DMA_PORT_END));
 }
 
 static bool
 capri_tm_is_valid_port (uint32_t port)
 {
-    return ((port >= TM_PORT_UPLINK_0) && (port <= TM_PORT_INGRESS));
+    return ((port >= CAPRI_TM_PORT_UPLINK_0) && (port <= CAPRI_TM_PORT_INGRESS));
 }
 
 sdk_ret_t
@@ -2183,7 +2183,7 @@ iq_disabled (tm_port_t port, uint32_t iq)
 
     switch(port_type) {
         case TM_PORT_TYPE_UPLINK:
-            if (port == TM_PORT_NCSI) {
+            if (port == CAPRI_TM_PORT_NCSI) {
                 // On the BMC port, only one pg is supported
                 //num_iqs = 1;
                 // On the BMC port, two PGs are supported
@@ -2909,7 +2909,7 @@ capri_tm_port_program_defaults (void)
         pbc_csr.port_${p}.cfg_oq.flow_control_enable_credits(
             tm_asic_profile()->port[port_type].uses_credits ? 1 : 0);
 //::    #endif
-//::    if pinfo["enum"] == "TM_PORT_INGRESS":
+//::    if pinfo["enum"] == "CAPRI_TM_PORT_INGRESS":
         pbc_csr.port_${p}.cfg_oq.packing_msb(
             capri_tm_get_max_cell_chunks_for_island(0) >
             capri_tm_get_max_cell_chunks_for_island(1) ? 1 : 0);
@@ -4107,7 +4107,7 @@ capri_tm_init_hbm_q_map (void)
     // On DMA port, map each iq to each context
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
-//::    if pinfo["has_hbm"] or pinfo["enum"] == "TM_PORT_NCSI":
+//::    if pinfo["has_hbm"] or pinfo["enum"] == "CAPRI_TM_PORT_NCSI":
     // ${pinfo["enum"]}
     hbm_tc_to_q_val = 0;
     port_type = capri_tm_get_port_type(${pinfo["enum"]});
@@ -4440,7 +4440,7 @@ capri_tm_init_enable_ports (void)
     }
     switch(port_type) {
         case TM_PORT_TYPE_UPLINK:
-            if (port != TM_PORT_NCSI) {
+            if (port != CAPRI_TM_PORT_NCSI) {
                 set_rate_limiter = true;
             }
             break;
@@ -5155,18 +5155,18 @@ capri_tm_get_port_mon_in (int chip_id,
 
     // port monitor order in HW - INGRESS, EGRESS, DMA, ETH
     switch (tm_port) {
-        case TM_PORT_INGRESS:
+        case CAPRI_TM_PORT_INGRESS:
             cur_address = 0 + tm_iq;
             break;
 
-        case TM_PORT_EGRESS:
-            cur_address = capri_tm_get_num_iqs_for_port(TM_PORT_INGRESS) +
+        case CAPRI_TM_PORT_EGRESS:
+            cur_address = capri_tm_get_num_iqs_for_port(CAPRI_TM_PORT_INGRESS) +
                           tm_iq;
             break;
 
-        case TM_PORT_DMA:
-            cur_address = capri_tm_get_num_iqs_for_port(TM_PORT_INGRESS) +
-                          capri_tm_get_num_iqs_for_port(TM_PORT_EGRESS)  +
+        case CAPRI_TM_PORT_DMA:
+            cur_address = capri_tm_get_num_iqs_for_port(CAPRI_TM_PORT_INGRESS) +
+                          capri_tm_get_num_iqs_for_port(CAPRI_TM_PORT_EGRESS)  +
                           tm_iq;
             break;
 
@@ -5178,9 +5178,9 @@ capri_tm_get_port_mon_in (int chip_id,
                 //                 tm_port, tm_iq);
                 return 0;
             }
-            cur_address = capri_tm_get_num_iqs_for_port(TM_PORT_INGRESS) +
-                          capri_tm_get_num_iqs_for_port(TM_PORT_EGRESS)  +
-                          capri_tm_get_num_iqs_for_port(TM_PORT_DMA)     +
+            cur_address = capri_tm_get_num_iqs_for_port(CAPRI_TM_PORT_INGRESS) +
+                          capri_tm_get_num_iqs_for_port(CAPRI_TM_PORT_EGRESS)  +
+                          capri_tm_get_num_iqs_for_port(CAPRI_TM_PORT_DMA)     +
                           (capri_tm_get_num_iqs_for_port(TM_PORT_TYPE_UPLINK)
                                                               * tm_port) +
                           tm_iq;
@@ -5233,9 +5233,9 @@ capri_tm_get_current_credits (tm_port_t tm_port,
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
 
-    if (tm_port == TM_PORT_EGRESS) {
+    if (tm_port == CAPRI_TM_PORT_EGRESS) {
         *val = pbc_csr.port_10.dhs_oq_flow_control.entry[oq].entry().convert_to<uint32_t>();
-    } else if (tm_port == TM_PORT_INGRESS) {
+    } else if (tm_port == CAPRI_TM_PORT_INGRESS) {
         *val = pbc_csr.port_11.dhs_oq_flow_control.entry[oq].entry().convert_to<uint32_t>();
     } else {
         return SDK_RET_ERR;

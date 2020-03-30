@@ -26,7 +26,6 @@
 #include "platform/capri/capri_qstate.hpp"
 #include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
-#include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
@@ -261,7 +260,7 @@ p4plus_table_init (platform_type_t platform_type)
     prog.control = "apulu_txdma";
     prog.prog_name = "txdma_stage0.bin";
     prog.pipe = P4_PIPELINE_TXDMA;
-    sdk::platform::capri::capri_p4plus_table_init(&prog, platform_type);
+    sdk::asic::pd::asicpd_p4plus_table_init(&prog, platform_type);
 }
 
 static void

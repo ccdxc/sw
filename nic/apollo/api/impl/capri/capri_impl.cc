@@ -12,6 +12,7 @@
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/platform/sensor/sensor.hpp"
 #include "nic/sdk/third-party/asic/capri/verif/apis/cap_freq_api.h"
+#include "nic/sdk/asic/port.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/third-party/asic/capri/verif/apis/cap_freq_api.h"
 #include "nic/apollo/core/trace.hpp"

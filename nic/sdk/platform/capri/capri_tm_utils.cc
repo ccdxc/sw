@@ -32,7 +32,7 @@ capri_thresholds_get (capri_thresholds_t *thresholds)
 {
     sdk_ret_t ret = SDK_RET_OK;
 
-    for (uint32_t port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+    for (uint32_t port = CAPRI_TM_UPLINK_PORT_BEGIN; port <= CAPRI_TM_UPLINK_PORT_END; port++) {
         thresholds->occupancy[port].port = port;
         for (uint32_t i = 0; i < CAPRI_QUEUES_PER_PORT; i++) {
             thresholds->occupancy[port].queue_occupancy[i] =
@@ -126,7 +126,7 @@ capri_queue_credits_get (queue_credits_get_cb_t cb,
     port_queue_credit_t credits = {0};
     uint32_t oq;
 
-    for (port = TM_P4_PORT_BEGIN; port <= TM_P4_PORT_END; port++) {
+    for (port = CAPRI_TM_P4_PORT_BEGIN; port <= CAPRI_TM_P4_PORT_END; port++) {
         credits.num_queues = capri_tm_get_num_oqs_for_port(port);
         credits.queues = (sdk::asic::pd::queue_credit_t *)SDK_CALLOC(
                          SDK_MEM_ALLOC_INFRA, sizeof(queue_credit_t) * credits.num_queues);

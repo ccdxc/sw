@@ -305,9 +305,9 @@ sdk_ret_t capri_tm_drain_uplink_port(tm_port_t port);
 static inline int
 capri_tm_port_to_fp_port (uint32_t tm_port)
 {
-    SDK_ASSERT((tm_port >= TM_UPLINK_PORT_BEGIN) &&
-               (tm_port <= TM_UPLINK_PORT_END));
-    return tm_port - TM_UPLINK_PORT_BEGIN + 1;
+    SDK_ASSERT((tm_port >= CAPRI_TM_UPLINK_PORT_BEGIN) &&
+               (tm_port <= CAPRI_TM_UPLINK_PORT_END));
+    return tm_port - CAPRI_TM_UPLINK_PORT_BEGIN + 1;
 }
 
 void capri_tm_dump_debug_regs(void);

@@ -21,7 +21,7 @@
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/sdk/platform/capri/capri_p4.hpp"
+#include "nic/sdk/asic/port.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/apollo/test/base/base.hpp"
 #include "nic/apollo/test/base/utils.hpp"

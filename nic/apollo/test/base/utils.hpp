@@ -9,7 +9,7 @@
 #include <vector>
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/sdk/platform/capri/capri_p4.hpp" //UPLINK_0/1
+#include "nic/sdk/asic/port.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #ifndef SIM
 #include "nic/sdk/platform/fru/fru.hpp"

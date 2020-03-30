@@ -5,10 +5,10 @@
 #include <netinet/in.h>
 #include <pthread.h>
 #include <nic/sdk/asic/pd/pd.hpp>
+#include <nic/sdk/asic/port.hpp>
 #include <nic/sdk/include/sdk/table.hpp>
 #include <nic/sdk/lib/p4/p4_utils.hpp>
 #include <nic/sdk/lib/p4/p4_api.hpp>
-#include <nic/sdk/platform/capri/capri_p4.hpp>
 #include <nic/sdk/platform/capri/capri_tbl_rw.hpp>
 #include <nic/p4/common/defines.h>
 #include <nic/apollo/p4/include/defines.h>

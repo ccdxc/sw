@@ -11,7 +11,6 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/platform.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
-#include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/p4/p4_utils.hpp"
 #include "nic/apollo/core/trace.hpp"

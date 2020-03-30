@@ -12,6 +12,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
+#include "nic/sdk/asic/port.hpp"
 #include "nic/sdk/platform/capri/capri_tm_utils.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"

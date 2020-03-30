@@ -16,7 +16,6 @@
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 // TODO: clean this up
-#include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/platform/capri/capri_common.hpp"
 #include "nic/sdk/platform/ring/ring.hpp"
 #include "nic/apollo/core/trace.hpp"
@@ -600,7 +599,7 @@ athena_impl::p4plus_table_init_(void) {
     prog.control = "athena_rxdma";
     prog.prog_name = "rxdma_stage0.bin";
     prog.pipe = P4_PIPELINE_RXDMA;
-    sdk::platform::capri::capri_p4plus_table_init(&prog, api::g_pds_state.platform_type());
+    sdk::asic::pd::asicpd_p4plus_table_init(&prog, api::g_pds_state.platform_type());
 
     p4pd_global_table_properties_get(P4_P4PLUS_TXDMA_TBL_ID_TX_TABLE_S0_T0,
                                      &tbl_ctx_txdma_act);
@@ -610,7 +609,7 @@ athena_impl::p4plus_table_init_(void) {
     prog.control = "athena_txdma";
     prog.prog_name = "txdma_stage0.bin";
     prog.pipe = P4_PIPELINE_TXDMA;
-    sdk::platform::capri::capri_p4plus_table_init(&prog, api::g_pds_state.platform_type());
+    sdk::asic::pd::asicpd_p4plus_table_init(&prog, api::g_pds_state.platform_type());
 
     return SDK_RET_OK;
 }

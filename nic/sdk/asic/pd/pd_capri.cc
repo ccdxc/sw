@@ -1,6 +1,6 @@
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 
-#include "platform/capri/capri_p4.hpp"
+#include "asic/port.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"

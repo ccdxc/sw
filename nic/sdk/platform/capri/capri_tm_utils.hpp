@@ -40,7 +40,7 @@ typedef struct capri_threshold_s {
 } capri_threshold_t;
 
 typedef struct capri_thresholds_s {
-    capri_occupancy_t occupancy[TM_NUM_UPLINK_PORTS];
+    capri_occupancy_t occupancy[CAPRI_TM_NUM_UPLINK_PORTS];
     capri_threshold_t threshold[CAPRI_TM_MAX_HBM_ETH_CONTEXTS];
 } capri_thresholds_t;
 

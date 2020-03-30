@@ -10,6 +10,7 @@
 
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/sdk/asic/port.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
@@ -22,7 +23,6 @@
 #include "nic/apollo/api/impl/artemis/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/artemis/vpc_impl.hpp"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
-#include "nic/sdk/platform/capri/capri_p4.hpp"
 
 using sdk::table::sdk_table_api_params_t;
 

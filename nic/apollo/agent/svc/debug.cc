@@ -3,8 +3,6 @@
 // -----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/table.hpp"
-#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
-#include "nic/sdk/platform/capri/capri_tm_utils.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/platform/marvell/marvell.hpp"

@@ -5,11 +5,11 @@
 //----------------------------------------------------------------------------
 
 #include <gtest/gtest.h>
+#include "nic/sdk/asic/port.hpp"
 #include "nic/apollo/test/scale/test.hpp"
 #include "nic/apollo/test/scale/pkt.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
-#include "nic/sdk/platform/capri/capri_p4.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/apollo/p4/include/artemis_defines.h"
 

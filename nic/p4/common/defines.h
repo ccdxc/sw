@@ -2,7 +2,7 @@
 #define __P4_COMMON_DEFINES_H__
 
 // Add a "if asic == capri" check to support more asics in future.
-#include "platform/capri/capri_p4.hpp"
+#include "asic/port.hpp"
 
 #define TRUE                           1
 #define FALSE                          0
