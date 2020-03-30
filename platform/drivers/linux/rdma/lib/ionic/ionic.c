@@ -82,16 +82,6 @@ static int ionic_env_lats(void)
 	return ionic_env_val("IONIC_LATS");
 }
 
-static int ionic_env_lockfree(void)
-{
-	return ionic_env_val("IONIC_LOCKFREE");
-}
-
-static int ionic_env_spec(int kspec)
-{
-	return ionic_env_val_def("IONIC_SPEC", kspec);
-}
-
 static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 						 int cmd_fd,
 						 void *private_data)
@@ -166,12 +156,12 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 
 	verbs_set_ops(&ctx->vctx, &ionic_ctx_ops);
 
-	ctx->lockfree = ionic_env_lockfree();
+	ctx->lockfree = false;
 
 	if (dev->abi_ver <= 1) {
 		ctx->spec = 0;
 	} else {
-		ctx->spec = ionic_env_spec(resp.max_spec);
+		ctx->spec = resp.max_spec;
 		if (ctx->spec < 0 || ctx->spec > 16)
 			ctx->spec = 0;
 	}

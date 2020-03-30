@@ -82,7 +82,6 @@ static void ionic_debug_file_init(void)
 	pthread_once(&once, ionic_debug_file_open);
 }
 
-#endif /* NOT_UPSTREAM */
 static int ionic_env_val_def(const char *name, int def)
 {
 	const char *env = getenv(name);
@@ -98,7 +97,6 @@ static int ionic_env_val(const char *name)
 	return ionic_env_val_def(name, 0);
 }
 
-#ifdef NOT_UPSTREAM
 static int ionic_env_debug(void)
 {
 	if (!(IONIC_DEBUG))
@@ -126,16 +124,6 @@ static int ionic_env_lats(void)
 }
 
 #endif /* IONIC_LIB_STATS */
-static int ionic_env_lockfree(void)
-{
-	return ionic_env_val("IONIC_LOCKFREE");
-}
-
-static int ionic_env_spec(int kspec)
-{
-	return ionic_env_val_def("IONIC_SPEC", kspec);
-}
-
 #ifdef __FreeBSD__
 static int ionic_init_context(struct verbs_device *vdev,
 			      struct ibv_context *ibctx,
@@ -234,12 +222,12 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 	verbs_set_ops(&ctx->vctx, &ionic_ctx_ops);
 #endif
 
-	ctx->lockfree = ionic_env_lockfree();
+	ctx->lockfree = false;
 
 	if (dev->abi_ver <= 1) {
 		ctx->spec = 0;
 	} else {
-		ctx->spec = ionic_env_spec(resp.max_spec);
+		ctx->spec = resp.max_spec;
 		if (ctx->spec < 0 || ctx->spec > 16)
 			ctx->spec = 0;
 	}

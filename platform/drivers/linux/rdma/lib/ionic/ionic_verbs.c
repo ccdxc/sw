@@ -16,21 +16,17 @@
 
 #include "ionic.h"
 
-#ifndef IONIC_LOCKFREE
-#define IONIC_LOCKFREE false
-#endif
-
 #define ionic_spin_lock(ctx, lock) do {			\
-	if (!(IONIC_LOCKFREE) && !(ctx)->lockfree)	\
+	if (!(ctx)->lockfree)				\
 		pthread_spin_lock(lock);		\
 } while (0)
 
 #define ionic_spin_trylock(ctx, lock)			\
-	(((IONIC_LOCKFREE) || (ctx)->lockfree) ?	\
+	((ctx)->lockfree ?				\
 	 0 : pthread_spin_trylock(lock))
 
 #define ionic_spin_unlock(ctx, lock) do {		\
-	if (!(IONIC_LOCKFREE) && !(ctx)->lockfree)	\
+	if (!(ctx)->lockfree)				\
 		pthread_spin_unlock(lock);		\
 } while (0)
 
