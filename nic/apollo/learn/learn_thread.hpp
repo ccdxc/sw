@@ -30,9 +30,8 @@ void learn_thread_exit_fn(void *ctxt);
 // callback function invoked to process events received
 void learn_thread_event_cb(void *msg, void *ctxt);
 
-// callback functions invoked to process mapping CRUD apis called by control
-// plane
-void learn_thread_ipc_cp_cb(sdk::ipc::ipc_msg_ptr msg, const void *ctxt);
+// callback functions invoked to process mapping CRUD apis
+void learn_thread_ipc_qpi_cb(sdk::ipc::ipc_msg_ptr msg, const void *ctxt);
 
 // callback to poll for packets on learn thread
 void learn_thread_pkt_poll_timer_cb(event::timer_t *timer);

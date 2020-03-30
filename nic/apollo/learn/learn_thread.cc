@@ -13,8 +13,8 @@
 #include "nic/sdk/lib/dpdk/dpdk.hpp"
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/api/pds_state.hpp"
-#include "nic/apollo/learn/ep_learn_local.hpp"
 #include "nic/apollo/learn/learn_impl_base.hpp"
 #include "nic/apollo/learn/learn_thread.hpp"
 #include "nic/apollo/learn/learn.hpp"
@@ -65,6 +65,7 @@ learn_thread_event_cb (void *msg, void *ctxt)
 }
 
 #define learn_lif learn_db()->learn_lif()
+
 void
 learn_thread_pkt_poll_timer_cb (event::timer_t *timer)
 {
@@ -75,8 +76,6 @@ learn_thread_pkt_poll_timer_cb (event::timer_t *timer)
     if (unlikely(!rx_pkts || !rx_count)) {
         return;
     }
-
-    PDS_TRACE_VERBOSE("received %u packets on learn lif", rx_count);
     LEARN_COUNTER_ADD(rx_pkts, rx_count);
 
     for (uint16_t i = 0; i < rx_count; i++) {
@@ -84,10 +83,19 @@ learn_thread_pkt_poll_timer_cb (event::timer_t *timer)
     }
 }
 
+// note: wrapper functions ensure that remote mapping spec is provided,
+// not local mapping spec
 void
-learn_thread_ipc_cp_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
+learn_thread_ipc_api_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
 {
-    return;
+    sdk_ret_t ret;
+    api::api_msg_t *api_msg  = (api::api_msg_t *)msg->data();
+
+    PDS_TRACE_DEBUG("Rcvd API batch message");
+    SDK_ASSERT(api_msg != nullptr);
+    SDK_ASSERT(api_msg->msg_id == api::API_MSG_ID_BATCH);
+    ret = process_api_batch(api_msg);
+    sdk::ipc::respond(msg, &ret, sizeof(ret));
 }
 
 static bool
@@ -131,7 +139,7 @@ learn_thread_ipc_clear_cmd_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
 
     switch(req->id) {
     case LEARN_CLEAR_MAC:
-        PDS_TRACE_INFO("received clear request for MAC %s/%s",
+        PDS_TRACE_INFO("Received clear request for MAC %s/%s",
                        macaddr2str(mac_key->mac_addr),
                        mac_key->subnet.str());
         mac_entry = (ep_mac_entry *) learn_db()->ep_mac_db()->find(mac_key);
@@ -146,14 +154,13 @@ learn_thread_ipc_clear_cmd_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
         }
         break;
     case LEARN_CLEAR_MAC_ALL:
-        PDS_TRACE_INFO("received request to clear all MAC");
+        PDS_TRACE_INFO("Received request to clear all MAC");
         learn_db()->ep_mac_db()->walk(ep_mac_entry_clear_cb, &ret);
         break;
     case LEARN_CLEAR_IP:
-        PDS_TRACE_INFO("received clear request for IP %s/%s",
+        PDS_TRACE_INFO("Received clear request for IP %s/%s",
                        ipaddr2str(&ip_key->ip_addr), ip_key->vpc.str());
-        ip_entry = (ep_ip_entry *)
-                    learn_db()->ep_ip_db()->find(ip_key);
+        ip_entry = (ep_ip_entry *)learn_db()->ep_ip_db()->find(ip_key);
         if (ip_entry) {
             ret = ip_ageout(ip_entry);
         } else {
@@ -161,7 +168,7 @@ learn_thread_ipc_clear_cmd_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
         }
         break;
     case LEARN_CLEAR_IP_ALL:
-        PDS_TRACE_INFO("received request to clear all IP");
+        PDS_TRACE_INFO("Received request to clear all IP");
         learn_db()->ep_ip_db()->walk(ep_ip_entry_clear_cb, &ret);
         break;
     default:
@@ -181,8 +188,7 @@ learn_thread_init_fn (void *ctxt)
     SDK_ASSERT(learn_db()->init() == SDK_RET_OK);
 
     // control plane message handler
-    sdk::ipc::reg_request_handler(LEARN_MSG_ID_MAPPING_API,
-                                  learn_thread_ipc_cp_cb,
+    sdk::ipc::reg_request_handler(LEARN_MSG_ID_API, learn_thread_ipc_api_cb,
                                   NULL);
     sdk::ipc::reg_request_handler(LEARN_MSG_ID_CLEAR_CMD,
                                   learn_thread_ipc_clear_cmd_cb,

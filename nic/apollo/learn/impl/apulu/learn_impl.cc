@@ -51,7 +51,6 @@ learn_lif_name (void)
 static pds_obj_key_t
 bdid_to_subnet (uint16_t bd_hw_id)
 {
-
     api::impl::subnet_impl *impl;
     pds_obj_key_t *subnet;
 

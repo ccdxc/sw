@@ -27,6 +27,104 @@ namespace event = sdk::event_thread;
 namespace learn {
 
 sdk_ret_t
+delete_local_ip_mapping (ep_ip_entry *ip_entry, pds_batch_ctxt_t bctxt)
+{
+    pds_mapping_key_t mapping_key;
+    const ep_ip_key_t *ep_ip_key = ip_entry->key();
+
+    mapping_key.type = PDS_MAPPING_TYPE_L3;
+    mapping_key.vpc = ep_ip_key->vpc;
+    mapping_key.ip_addr = ep_ip_key->ip_addr ;
+    return api::pds_local_mapping_delete(&mapping_key, bctxt);
+}
+
+sdk_ret_t
+delete_ip_entry (ep_ip_entry *ip_entry, ep_mac_entry *mac_entry)
+{
+    sdk_ret_t ret;
+
+    event::timer_stop(ip_entry->timer());
+    ip_entry->set_state(EP_STATE_DELETED);
+    mac_entry->del_ip(ip_entry);
+
+    ret = ip_entry->del_from_db();
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to delete EP %s from db, error code %u",
+                      ip_entry->key2str().c_str(), ret);
+        return ret;
+    }
+    ret = ip_entry->delay_delete();
+    if (ret == SDK_RET_OK) {
+        // if this was the last IP on this EP, start MAC aging timer
+        if (mac_entry->ip_count() == 0) {
+            mac_aging_timer_restart(mac_entry);
+        }
+    }
+    return ret;
+}
+
+sdk_ret_t
+delete_ip_from_ep (ep_ip_entry *ip_entry, ep_mac_entry *mac_entry)
+{
+    sdk_ret_t ret;
+
+    ret = delete_local_ip_mapping(ip_entry, PDS_BATCH_CTXT_INVALID);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to delete IP mapping for EP %s, error code %u",
+                      ip_entry->key2str().c_str(), ret);
+        return ret;
+    }
+
+    PDS_TRACE_INFO("Deleting IP mapping %s", ip_entry->key2str().c_str());
+    return delete_ip_entry(ip_entry, mac_entry);
+}
+
+sdk_ret_t
+delete_vnic (ep_mac_entry *mac_entry, pds_batch_ctxt_t bctxt)
+{
+    pds_obj_key_t vnic_key;
+
+    vnic_key = api::uuid_from_objid(mac_entry->vnic_obj_id());
+    return pds_vnic_delete(&vnic_key, bctxt);
+}
+
+sdk_ret_t
+delete_mac_entry (ep_mac_entry *mac_entry)
+{
+    sdk_ret_t ret;
+
+    timer_stop(mac_entry->timer());
+    mac_entry->set_state(EP_STATE_DELETED);
+    learn_db()->vnic_obj_id_free(mac_entry->vnic_obj_id());
+
+    ret = mac_entry->del_from_db();
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to delete EP %s from db, error code %u",
+                      mac_entry->key2str().c_str(), ret);
+        return ret;
+    }
+    PDS_TRACE_INFO("Deleted EP %s", mac_entry->key2str().c_str());
+    return mac_entry->delay_delete();
+}
+
+// note: caller should clear all IPs linked to this MAC
+// before invoking this function.
+sdk_ret_t
+delete_ep (ep_mac_entry *mac_entry)
+{
+    sdk_ret_t ret;
+
+    ret = delete_vnic(mac_entry, PDS_BATCH_CTXT_INVALID);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to delete EP %s, error code %u",
+                      mac_entry->key2str().c_str(), ret);
+        return ret;
+    }
+    LEARN_COUNTER_INCR(api_calls);
+    return delete_mac_entry(mac_entry);
+}
+
+sdk_ret_t
 mac_ageout (ep_mac_entry *mac_entry)
 {
     sdk_ret_t ret;
@@ -68,107 +166,12 @@ ip_ageout (ep_ip_entry *ip_entry)
     if (unlikely(ret != SDK_RET_OK)) {
         return ret;
     }
-    // if this was the last IP on this EP, start MAC aging timer
-    if (mac_entry->ip_count() == 0) {
-        mac_aging_timer_restart(mac_entry);
-    }
     broadcast_learn_event(&event);
     return SDK_RET_OK;
 }
 
-static sdk_ret_t
-delete_ip_mapping (ep_ip_entry *ip_entry)
-{
-    pds_mapping_key_t mapping_key;
-    const ep_ip_key_t *ep_ip_key = ip_entry->key();
-
-    mapping_key.type = PDS_MAPPING_TYPE_L3;
-    mapping_key.vpc = ep_ip_key->vpc;
-    mapping_key.ip_addr = ep_ip_key->ip_addr ;
-    return api::pds_local_mapping_delete(&mapping_key, PDS_BATCH_CTXT_INVALID);
-}
-
-static sdk_ret_t
-delete_ip_entry (ep_ip_entry *ip_entry, ep_mac_entry *mac_entry)
-{
-    sdk_ret_t ret;
-
-    event::timer_stop(ip_entry->timer());
-    ip_entry->set_state(EP_STATE_DELETED);
-    mac_entry->del_ip(ip_entry);
-
-    ret = ip_entry->del_from_db();
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to delete EP %s from db, error code %u",
-                      ip_entry->key2str().c_str(), ret);
-        return ret;
-    }
-    return ip_entry->delay_delete();
-}
-
-sdk_ret_t
-delete_ip_from_ep (ep_ip_entry *ip_entry, ep_mac_entry *mac_entry)
-{
-    sdk_ret_t ret;
-
-    ret = delete_ip_mapping(ip_entry);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to delete IP mapping for EP %s, error code %u",
-                      ip_entry->key2str().c_str(), ret);
-        return ret;
-    }
-
-    PDS_TRACE_INFO("Deleting IP mapping %s", ip_entry->key2str().c_str());
-    return delete_ip_entry(ip_entry, mac_entry);
-}
-
-static sdk_ret_t
-delete_vnic (ep_mac_entry *mac_entry)
-{
-    pds_obj_key_t vnic_key;
-
-    vnic_key = api::uuid_from_objid(mac_entry->vnic_obj_id());
-    return pds_vnic_delete(&vnic_key, PDS_BATCH_CTXT_INVALID);
-}
-
-static sdk_ret_t
-delete_mac_entry (ep_mac_entry *mac_entry)
-{
-    sdk_ret_t ret;
-
-    timer_stop(mac_entry->timer());
-    mac_entry->set_state(EP_STATE_DELETED);
-    learn_db()->vnic_obj_id_free(mac_entry->vnic_obj_id());
-
-    ret = mac_entry->del_from_db();
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to delete EP %s from db, error code %u",
-                      mac_entry->key2str().c_str(), ret);
-        return ret;
-    }
-    PDS_TRACE_INFO("Deleted EP %s", mac_entry->key2str().c_str());
-    return mac_entry->delay_delete();
-}
-
-// note: caller should clear all IPs linked to this MAC
-// before invoking this function.
-sdk_ret_t
-delete_ep (ep_mac_entry *mac_entry)
-{
-    sdk_ret_t ret;
-
-    ret = delete_vnic(mac_entry);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to delete EP %s, error code %u",
-                      mac_entry->key2str().c_str(), ret);
-        return ret;
-    }
-    LEARN_COUNTER_INCR(api_calls);
-    return delete_mac_entry(mac_entry);
-}
-
 void
-send_arp_probe (ep_ip_entry *ip_entry)
+send_arp_probe (vnic_entry *vnic, ipv4_addr_t v4_addr)
 {
     void *mbuf;
     char *tx_hdr;
@@ -176,20 +179,16 @@ send_arp_probe (ep_ip_entry *ip_entry)
     arp_hdr_t *arp_hdr;
     arp_data_ipv4_t *arp_data;
     impl::p4_tx_info_t tx_info = { 0 };
-    pds_obj_key_t vnic_key;
-    vnic_entry *vnic;
     pds_obj_key_t subnet_key;
     subnet_entry *subnet;
 
-    vnic_key = api::uuid_from_objid(ip_entry->vnic_obj_id());
-    vnic = vnic_db()->find(&vnic_key);
     subnet_key = vnic->subnet();
     subnet = subnet_db()->find(&subnet_key);
 
     mbuf = learn_lif_alloc_mbuf();
     if (unlikely(mbuf == nullptr)) {
         PDS_TRACE_ERR("Failed to allocate pkt buffer for ARP probe, EP %s, "
-                      "%s, %s", ip_entry->key2str().c_str(),
+                      "%s, %s", ipv4addr2str(v4_addr),
                       subnet->key2str().c_str(), vnic->key2str().c_str());
         return;
     }
@@ -215,16 +214,27 @@ send_arp_probe (ep_ip_entry *ip_entry)
     MAC_ADDR_COPY(arp_data->smac, subnet->vr_mac());
     arp_data->sip = 0;
     memset(arp_data->tmac, 0, ETH_ADDR_LEN);
-    arp_data->tip = htonl(ip_entry->key()->ip_addr.addr.v4_addr);
+    arp_data->tip = htonl(v4_addr);
 
     // padding
     memset((arp_data + 1), 0, ARP_PKT_ETH_FRAME_LEN - ARP_PKT_LEN);
 
     // add ARM to P4 tx header and send the pkt
     tx_info.nh_type = impl::LEARN_NH_TYPE_VNIC;
-    tx_info.vnic_key = vnic_key;
+    tx_info.vnic_key = vnic->key();
     impl::arm_to_p4_tx_hdr_fill(tx_hdr, &tx_info);
     learn_lif_send_pkt(mbuf);
+}
+
+void
+send_arp_probe (ep_ip_entry *ip_entry)
+{
+    pds_obj_key_t vnic_key;
+    vnic_entry *vnic;
+
+    vnic_key = api::uuid_from_objid(ip_entry->vnic_obj_id());
+    vnic = vnic_db()->find(&vnic_key);
+    send_arp_probe(vnic, ip_entry->key()->ip_addr.addr.v4_addr);
 }
 
 static void

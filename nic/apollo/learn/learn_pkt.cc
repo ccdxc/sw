@@ -4,27 +4,20 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// learn object handling for local endpoints
+/// process packets received on learn lif
 ///
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/include/sdk/l2.hpp"
 #include "nic/sdk/include/sdk/l4.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
-#include "nic/apollo/api/pds_state.hpp"
-#include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/learn/ep_aging.hpp"
-#include "nic/apollo/learn/ep_ip_state.hpp"
-#include "nic/apollo/learn/ep_learn_local.hpp"
-#include "nic/apollo/learn/ep_mac_state.hpp"
 #include "nic/apollo/learn/ep_utils.hpp"
-#include "nic/apollo/learn/learn_state.hpp"
-#include "nic/apollo/learn/learn_thread.hpp"
+#include "nic/apollo/learn/learn_ctxt.hpp"
 #include "nic/apollo/learn/utils.hpp"
 
 namespace learn {
@@ -36,53 +29,58 @@ using namespace sdk::types;
 
 // find out if given MAC or IP is learnt on remote TEP
 static bool
-remote_mapping_find (local_learn_ctxt_t *ctxt, pds_mapping_type_t mapping_type)
+remote_mapping_find (learn_ctxt_t *ctxt, pds_mapping_type_t mapping_type)
 {
     pds_mapping_key_t mkey;
     sdk_ret_t ret;
 
-    mkey.type = mapping_type;
-    if (mkey.type == PDS_MAPPING_TYPE_L2) {
-        mkey.subnet = ctxt->mac_key.subnet;
-        MAC_ADDR_COPY(mkey.mac_addr, ctxt->mac_key.mac_addr);
+    if (mapping_type == PDS_MAPPING_TYPE_L2) {
+        ep_mac_to_pds_mapping_key(&ctxt->mac_key, &mkey);
     } else {
-        mkey.vpc = ctxt->ip_key.vpc;
-        mkey.ip_addr = ctxt->ip_key.ip_addr;
+        ep_ip_to_pds_mapping_key(&ctxt->ip_key, &mkey);
     }
-
     ret = impl::remote_mapping_find(&mkey);
     SDK_ASSERT((ret == SDK_RET_OK || ret == SDK_RET_ENTRY_NOT_FOUND));
     return (ret == SDK_RET_OK);
 }
 
 static bool
-detect_l2l_move (local_learn_ctxt_t *ctxt, pds_mapping_type_t mapping_type)
+detect_l2l_move (learn_ctxt_t *ctxt, pds_mapping_type_t mapping_type)
 {
     pds_obj_key_t vnic_key;
     vnic_entry *vnic;
     pds_ifindex_t ifindex;
     bool l2l_move = false;
+    impl::learn_info_t  *impl = &ctxt->pkt_ctxt.impl_info;
 
     if (mapping_type == PDS_MAPPING_TYPE_L2) {
-        // check if existing VNIC for the MAC address is on different LIF than
-        // the one on which this pkt arrived
+        // L2L move for MAC
+        // 1) same MAC, subnet is now associated with different LIF, subnet has
+        //    removed LIFs, in this case, update VNIC but keep IPs learnt
+        // 2) MAC is seen with different VLAN tag than what we learnt before,
+        //    in this case, update VNIC with new VLAN tag and keep IPs intact
+        // 3) VLAN has changed
+        //    note, if both LIF and VLAN changed,we will handle correctly since
+        //    VNIC spec is always rebuilt
         vnic_key = api::uuid_from_objid(ctxt->mac_entry->vnic_obj_id());
         vnic = vnic_db()->find(&vnic_key);
-        ifindex = (pds_ifindex_t) LIF_IFINDEX(ctxt->impl_info.lif);
-
-        l2l_move = (api::objid_from_uuid(vnic->host_if()) != ifindex);
-        // TODO: check if VLAN has changed
+        ifindex = (pds_ifindex_t) LIF_IFINDEX(impl->lif);
+        l2l_move = (api::objid_from_uuid(vnic->host_if()) != ifindex) ||
+                   (vnic->vnic_encap().val.vlan_tag !=
+                    impl->encap.val.vlan_tag);
+        // encap comparison above assumes encap type is 802.1Q
     } else {
         // check if existing MAC address mapped to this IP is different from the
-        // one seen in the packet
-        uint32_t vnic_obj_id = ctxt->mac_entry->vnic_obj_id();
-        l2l_move = (!ctxt->ip_entry->vnic_compare(vnic_obj_id));
+        // one seen in the packet, if yes, move the IP to the MAC seen in the
+        // packet, this could be an existing MAC or a new MAC
+        l2l_move = (memcmp(ctxt->ip_entry->mac_entry()->key()->mac_addr,
+                           ctxt->mac_key.mac_addr, ETH_ADDR_LEN) != 0);
     }
     return l2l_move;
 }
 
 static ep_learn_type_t
-detect_learn_type (local_learn_ctxt_t *ctxt, pds_mapping_type_t mapping_type)
+detect_learn_type (learn_ctxt_t *ctxt, pds_mapping_type_t mapping_type)
 {
     ep_learn_type_t learn_type;
     bool is_local;
@@ -115,15 +113,16 @@ detect_learn_type (local_learn_ctxt_t *ctxt, pds_mapping_type_t mapping_type)
 }
 
 static bool
-extract_ip_learn_info (char *pkt_data, local_learn_ctxt_t *ctxt)
+extract_ip_learn_info (char *pkt_data, learn_ctxt_t *ctxt)
 {
     ip_addr_t *ip = &ctxt->ip_key.ip_addr;
+    impl::learn_info_t *impl = &ctxt->pkt_ctxt.impl_info;
 
-    switch (ctxt->impl_info.pkt_type) {
+    switch (impl->pkt_type) {
     case PKT_TYPE_DHCP:
     {
         dhcp_header_t *dhcp = (dhcp_header_t *) (pkt_data +
-                                                 ctxt->impl_info.l3_offset +
+                                                 impl->l3_offset +
                                                  IPV4_MIN_HDR_LEN +
                                                  UDP_HDR_LEN);
         dhcp_option_t *op = dhcp->options;
@@ -154,8 +153,7 @@ extract_ip_learn_info (char *pkt_data, local_learn_ctxt_t *ctxt)
     }
     case PKT_TYPE_ARP:
     {
-        arp_hdr_t *arp_hdr = (arp_hdr_t *) (pkt_data +
-                                            ctxt->impl_info.l3_offset);
+        arp_hdr_t *arp_hdr = (arp_hdr_t *) (pkt_data + impl->l3_offset);
         arp_data_ipv4_t *arp_data = (arp_data_ipv4_t *) (arp_hdr + 1);
 
         if (ntohs(arp_hdr->ptype) != ETH_TYPE_IPV4) {
@@ -172,7 +170,7 @@ extract_ip_learn_info (char *pkt_data, local_learn_ctxt_t *ctxt)
         break;
     }
     case PKT_TYPE_IPV4:
-        IPV4_HDR_SIP_GET(pkt_data + ctxt->impl_info.l3_offset, ip->addr.v4_addr);
+        IPV4_HDR_SIP_GET(pkt_data + impl->l3_offset, ip->addr.v4_addr);
         // dhcp packets other than ack have src IP set to 0.0.0.0
         if (ip->addr.v4_addr == 0) {
             return false;
@@ -190,14 +188,15 @@ extract_ip_learn_info (char *pkt_data, local_learn_ctxt_t *ctxt)
 }
 
 static sdk_ret_t
-extract_learn_info (char *pkt_data, local_learn_ctxt_t *ctxt)
+extract_learn_info (char *pkt_data, learn_ctxt_t *ctxt)
 {
     char *src_mac;
+    impl::learn_info_t *impl = &ctxt->pkt_ctxt.impl_info;
 
     // MAC addr is always available, populate ep->mac_key
-    src_mac = pkt_data + ctxt->impl_info.l2_offset + ETH_ADDR_LEN;
+    src_mac = pkt_data + impl->l2_offset + ETH_ADDR_LEN;
     MAC_ADDR_COPY(&ctxt->mac_key.mac_addr, src_mac);
-    ctxt->mac_key.subnet = ctxt->impl_info.subnet;
+    ctxt->mac_key.subnet = impl->subnet;
     ctxt->mac_entry = ep_mac_db()->find(&ctxt->mac_key);
     ctxt->mac_learn_type = detect_learn_type(ctxt, PDS_MAPPING_TYPE_L2);
 
@@ -213,128 +212,7 @@ extract_learn_info (char *pkt_data, local_learn_ctxt_t *ctxt)
 }
 
 static sdk_ret_t
-process_new_mac (local_learn_ctxt_t *ctxt)
-{
-    sdk_ret_t ret;
-    pds_vnic_spec_t spec = { 0 };
-    uint32_t vnic_obj_id;
-
-    // allocate MAC entry, VNIC object id and create new vnic
-    ret = learn_db()->vnic_obj_id_alloc(&vnic_obj_id);
-    if (unlikely(ret != SDK_RET_OK)) {
-        PDS_TRACE_ERR("Failed to allocate VNIC object id, error code %u", ret);
-        ctxt->pkt_drop_reason = PKT_DROP_REASON_RES_ALLOC_FAIL;
-        return ret;
-    }
-    ctxt->mac_entry = ep_mac_entry::factory(&ctxt->mac_key, vnic_obj_id);
-    if (unlikely(ctxt->mac_entry == nullptr)) {
-        learn_db()->vnic_obj_id_free(vnic_obj_id);
-        PDS_TRACE_ERR("Failed to allocate MAC entry");
-        ctxt->pkt_drop_reason = PKT_DROP_REASON_RES_ALLOC_FAIL;
-        return SDK_RET_ERR;
-    }
-
-    // TODO: encode learn module specific identifier in uuid
-    spec.key = api::uuid_from_objid(vnic_obj_id);
-    spec.subnet = ctxt->mac_key.subnet;
-    spec.fabric_encap.type = PDS_ENCAP_TYPE_NONE;
-    spec.vnic_encap = ctxt->impl_info.encap;
-    MAC_ADDR_COPY(spec.mac_addr, ctxt->mac_key.mac_addr);
-    spec.host_if = api::uuid_from_objid(LIF_IFINDEX(ctxt->impl_info.lif));
-
-    PDS_TRACE_INFO("Creating VNIC %s for EP %s", spec.key.str(), ctxt->str());
-    return pds_vnic_create(&spec, ctxt->bctxt);
-}
-
-static sdk_ret_t
-process_l2l_mac_move (local_learn_ctxt_t *ctxt)
-{
-    return SDK_RET_INVALID_OP;
-}
-
-static sdk_ret_t
-process_r2l_mac_move (local_learn_ctxt_t *ctxt)
-{
-    return SDK_RET_INVALID_OP;
-}
-
-static sdk_ret_t
-process_mac_learn_info (local_learn_ctxt_t *ctxt)
-{
-    switch (ctxt->mac_learn_type) {
-    case LEARN_TYPE_NEW_LOCAL:
-        return process_new_mac(ctxt);
-    case LEARN_TYPE_MOVE_L2L:
-        return process_l2l_mac_move(ctxt);
-    case LEARN_TYPE_MOVE_R2L:
-        return process_r2l_mac_move(ctxt);
-    case LEARN_TYPE_NONE:
-        return SDK_RET_OK;
-    default:
-        break;
-    }
-    return SDK_RET_ERR;
-}
-
-static sdk_ret_t
-process_new_ip (local_learn_ctxt_t *ctxt)
-{
-    pds_local_mapping_spec_t spec{};
-    uint32_t vnic_obj_id;
-
-    vnic_obj_id = ctxt->mac_entry->vnic_obj_id();
-    ctxt->ip_entry = ep_ip_entry::factory(&ctxt->ip_key, vnic_obj_id);
-    if (unlikely(ctxt->ip_entry == nullptr)) {
-        PDS_TRACE_ERR("Failed to allocate IP entry for EP %s", ctxt->str());
-        ctxt->pkt_drop_reason = PKT_DROP_REASON_RES_ALLOC_FAIL;
-        return SDK_RET_ERR;
-    }
-
-    // create local l3 mapping
-    spec.skey.type = PDS_MAPPING_TYPE_L3;
-    spec.skey.vpc = ctxt->ip_key.vpc;
-    spec.skey.ip_addr = ctxt->ip_key.ip_addr;
-    spec.vnic = api::uuid_from_objid(vnic_obj_id);
-    spec.subnet = ctxt->mac_key.subnet;
-    spec.num_tags = 0;
-    MAC_ADDR_COPY(spec.vnic_mac, ctxt->mac_key.mac_addr);
-
-    PDS_TRACE_INFO("Creating IP mapping for EP %s", ctxt->str());
-    return pds_local_mapping_create(&spec, ctxt->bctxt);
-}
-
-static sdk_ret_t
-process_l2l_ip_move (local_learn_ctxt_t *ctxt)
-{
-    return SDK_RET_INVALID_OP;
-}
-
-static sdk_ret_t
-process_r2l_ip_move (local_learn_ctxt_t *ctxt)
-{
-    return SDK_RET_INVALID_OP;
-}
-
-static sdk_ret_t
-process_ip_learn_info (local_learn_ctxt_t *ctxt)
-{
-    switch (ctxt->ip_learn_type) {
-    case LEARN_TYPE_NEW_LOCAL:
-        return process_new_ip(ctxt);
-    case LEARN_TYPE_MOVE_L2L:
-        return process_l2l_ip_move(ctxt);
-    case LEARN_TYPE_MOVE_R2L:
-        return process_r2l_ip_move(ctxt);
-    case LEARN_TYPE_NONE:
-        return SDK_RET_OK;
-    default:
-        break;
-    }
-    return SDK_RET_ERR;
-}
-
-static sdk_ret_t
-validate_learn (local_learn_ctxt_t *ctxt)
+validate_learn (learn_ctxt_t *ctxt)
 {
     // TODO: validate that learning mac/IP is OK
     //
@@ -349,45 +227,27 @@ validate_learn (local_learn_ctxt_t *ctxt)
 }
 
 static sdk_ret_t
-process_learn_info (local_learn_ctxt_t *ctxt)
-{
-    sdk_ret_t ret;
-
-    // process MAC learn first and then IP learn as we need VNIC object id to
-    // create IP mapping
-    ret = process_mac_learn_info(ctxt);
-    if (unlikely(ret != SDK_RET_OK)) {
-        PDS_TRACE_ERR("Failed to process MAC learn for EP %s (error code %u)",
-                      ctxt->str(), ret);
-        return ret;
-    }
-    if (ctxt->ip_learn_type != LEARN_TYPE_INVALID) {
-        ret = process_ip_learn_info(ctxt);
-        if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failed to process MAC learn for EP %s "
-                          "(error code %u)", ctxt->str(), ret);
-        }
-    }
-    return ret;
-}
-
-static sdk_ret_t
-update_ep_mac (local_learn_ctxt_t *ctxt)
+update_ep_mac (learn_ctxt_t *ctxt)
 {
     switch (ctxt->mac_learn_type) {
     case LEARN_TYPE_NONE:
         // nothing to do
         break;
     case LEARN_TYPE_NEW_LOCAL:
+    case LEARN_TYPE_MOVE_R2L:
         ctxt->mac_entry->set_state(EP_STATE_CREATED);
         ctxt->mac_entry->add_to_db();
         // start MAC aging timer
         mac_aging_timer_restart(ctxt->mac_entry);
-        broadcast_mac_event(EVENT_ID_MAC_LEARN, ctxt->mac_entry);
+        if (ctxt->mac_learn_type == LEARN_TYPE_NEW_LOCAL) {
+            broadcast_mac_event(EVENT_ID_MAC_LEARN, ctxt->mac_entry);
+        }
         LEARN_COUNTER_INCR(vnics);
         break;
     case LEARN_TYPE_MOVE_L2L:
-    case LEARN_TYPE_MOVE_R2L:
+        // nothing to do
+        // TODO: do we need to broadcast event to MS?
+        break;
     default:
         SDK_ASSERT_RETURN(false, SDK_RET_ERR);
     }
@@ -395,22 +255,40 @@ update_ep_mac (local_learn_ctxt_t *ctxt)
 }
 
 static sdk_ret_t
-update_ep_ip (local_learn_ctxt_t *ctxt)
+update_ep_ip (learn_ctxt_t *ctxt)
 {
+    sdk_ret_t ret;
+    ep_ip_entry *old_ip_entry;
+
     switch (ctxt->ip_learn_type) {
     case LEARN_TYPE_NONE:
         // we may be under ARP probe, update the state
         ctxt->ip_entry->set_state(EP_STATE_CREATED);
         break;
     case LEARN_TYPE_NEW_LOCAL:
+    case LEARN_TYPE_MOVE_R2L:
         ctxt->ip_entry->set_state(EP_STATE_CREATED);
         ctxt->ip_entry->add_to_db();
         ctxt->mac_entry->add_ip(ctxt->ip_entry);
-        broadcast_ip_event(EVENT_ID_IP_LEARN, ctxt->ip_entry);
+        if (ctxt->ip_learn_type == LEARN_TYPE_NEW_LOCAL) {
+            broadcast_ip_event(EVENT_ID_IP_LEARN, ctxt->ip_entry);
+        }
         LEARN_COUNTER_INCR(l3_mappings);
         break;
     case LEARN_TYPE_MOVE_L2L:
-    case LEARN_TYPE_MOVE_R2L:
+        old_ip_entry = ctxt->pkt_ctxt.old_ip_entry;
+        // TODO: remove this check once deletes are batched with create
+        if (old_ip_entry) {
+            ret = delete_ip_entry(old_ip_entry, old_ip_entry->mac_entry());
+            if (ret!= SDK_RET_OK) {
+                // newly allocated ip entry is cleaned up by ctxt reset
+                return ret;
+            }
+        }
+        ctxt->ip_entry->set_state(EP_STATE_CREATED);
+        ctxt->ip_entry->add_to_db();
+        ctxt->mac_entry->add_ip(ctxt->ip_entry);
+        break;
     default:
         SDK_ASSERT_RETURN(false, SDK_RET_ERR);
     }
@@ -426,7 +304,7 @@ update_ep_ip (local_learn_ctxt_t *ctxt)
 }
 
 static sdk_ret_t
-update_ep (local_learn_ctxt_t *ctxt)
+update_ep (learn_ctxt_t *ctxt)
 {
     sdk_ret_t ret;
 
@@ -450,7 +328,7 @@ update_ep (local_learn_ctxt_t *ctxt)
 }
 
 static inline sdk_ret_t
-add_tx_pkt_hdr (void *mbuf, local_learn_ctxt_t *ctxt)
+add_tx_pkt_hdr (void *mbuf, learn_ctxt_t *ctxt)
 {
     impl::p4_tx_info_t tx_info;
     char *tx_hdr;
@@ -458,22 +336,22 @@ add_tx_pkt_hdr (void *mbuf, local_learn_ctxt_t *ctxt)
     // remove cpu to arm rx hdr and insert arm to cpu tx hdr
     tx_hdr = learn_lif_mbuf_rx_to_tx(mbuf);
     if (tx_hdr == nullptr) {
-        ctxt->pkt_drop_reason = PKT_DROP_REASON_MBUF_ERR;
+        ctxt->pkt_ctxt.pkt_drop_reason = PKT_DROP_REASON_MBUF_ERR;
         return SDK_RET_ERR;
     }
 
-    tx_info.slif = ctxt->impl_info.lif;
+    tx_info.slif = ctxt->pkt_ctxt.impl_info.lif;
     tx_info.nh_type = impl::LEARN_NH_TYPE_NONE;
     impl::arm_to_p4_tx_hdr_fill(learn_lif_mbuf_data_start(mbuf), &tx_info);
     return SDK_RET_OK;
 }
 
 static sdk_ret_t
-reinject_pkt_to_p4 (void *mbuf, local_learn_ctxt_t *ctxt)
+reinject_pkt_to_p4 (void *mbuf, learn_ctxt_t *ctxt)
 {
     // check if packet needs to be dropped
-    if (ctxt->impl_info.hints & LEARN_HINT_ARP_REPLY) {
-        ctxt->pkt_drop_reason = PKT_DROP_REASON_ARP_REPLY;
+    if (ctxt->pkt_ctxt.impl_info.hints & LEARN_HINT_ARP_REPLY) {
+        ctxt->pkt_ctxt.pkt_drop_reason = PKT_DROP_REASON_ARP_REPLY;
         return SDK_RET_ERR;
     }
 
@@ -488,18 +366,21 @@ reinject_pkt_to_p4 (void *mbuf, local_learn_ctxt_t *ctxt)
 void
 process_learn_pkt (void *mbuf)
 {
-    local_learn_ctxt_t ctxt = { 0 };
+    learn_ctxt_t ctxt = { 0 };
     sdk_ret_t ret;
     char *pkt_data = learn_lif_mbuf_data_start(mbuf);
-
+#ifdef BATCH_SUPPORT
     pds_batch_params_t batch_params {learn_db()->epoch_next(), false, nullptr,
                                       nullptr};
+#endif
+
+    ctxt.ctxt_type = LEARN_CTXT_TYPE_PKT;
 
     // default drop reason
-    ctxt.pkt_drop_reason = PKT_DROP_REASON_PARSE_ERR;
+    ctxt.pkt_ctxt.pkt_drop_reason = PKT_DROP_REASON_PARSE_ERR;
 
     // get impl specific p4 header results
-    ret = impl::extract_info_from_p4_hdr(pkt_data, &ctxt.impl_info);
+    ret = impl::extract_info_from_p4_hdr(pkt_data, &ctxt.pkt_ctxt.impl_info);
     if (unlikely(ret != SDK_RET_OK)) {
         goto error;
     }
@@ -519,30 +400,34 @@ process_learn_pkt (void *mbuf)
     }
 
     // now process the learn start API batch
+#ifdef BATCH_SUPPORT
     ctxt.bctxt = pds_batch_start(&batch_params);
     if (unlikely(ctxt.bctxt == PDS_BATCH_CTXT_INVALID)) {
         PDS_TRACE_ERR("Failed to start a batch for %s", ctxt.str());
         ctxt.pkt_drop_reason = PKT_DROP_REASON_RES_ALLOC_FAIL;
         goto error;
     }
+#else
+    // each API is committed individually
+    ctxt.bctxt = PDS_BATCH_CTXT_INVALID;
+#endif
 
     // process learn info and update batch with required apis
-    ret = process_learn_info(&ctxt);
+    ret = process_learn(&ctxt);
     if (unlikely(ret != SDK_RET_OK)) {
         goto error;
     }
 
+#ifdef BATCH_SUPPORT
     // submit the apis in sync mode
     ret = pds_batch_commit(ctxt.bctxt);
+    ctxt.bctxt = PDS_BATCH_CTXT_INVALID;
     LEARN_COUNTER_INCR(api_calls);
     if (unlikely(ret != SDK_RET_OK)) {
         LEARN_COUNTER_INCR(api_failure);
         goto error;
     }
-
-    // we are done with the batch, clear batch context to avoid trying to free
-    // it on error path
-    ctxt.bctxt = PDS_BATCH_CTXT_INVALID;
+#endif
 
     // apis executed successfully, update sw state and notify cp
     ret = update_ep(&ctxt);
@@ -559,8 +444,9 @@ process_learn_pkt (void *mbuf)
 error:
 
     // clean up any allocated resources
+    // TODO: update pkt_drop_reason from ret code
+    learn_lif_drop_pkt(mbuf, ctxt.pkt_ctxt.pkt_drop_reason);
     ctxt.reset();
-    learn_lif_drop_pkt(mbuf, ctxt.pkt_drop_reason);
 }
 
 }    // namespace learn
