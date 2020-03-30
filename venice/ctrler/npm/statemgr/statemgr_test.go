@@ -231,6 +231,31 @@ func createTenant(t *testing.T, stateMgr *Statemgr, tenant string) error {
 		return false, nil
 	}, "Tenant not foud", "1ms", "1s")
 
+	dscProfile := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "insertion.enforced1",
+			Namespace: "",
+			Tenant:    "",
+		},
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "INSERTION",
+			FlowPolicyMode: "ENFORCED",
+		},
+	}
+
+	// create a network
+	stateMgr.ctrler.DSCProfile().Create(&dscProfile)
+	AssertEventually(t, func() (bool, interface{}) {
+
+		_, err := stateMgr.FindDSCProfile("", "insertion.enforced1")
+		if err == nil {
+			return true, nil
+		}
+		fmt.Printf("Error find ten %v\n", err)
+		return false, nil
+	}, "Profile not foud", "1ms", "1s")
+
 	return nil
 }
 
@@ -2808,7 +2833,7 @@ func TestDSCProfileCreateUpdateDelete(t *testing.T) {
 	// List Profile
 	dsclist, err := stateMgr.ListDSCProfiles()
 	AssertOk(t, err, "Error listing DSC Profiles")
-	Assert(t, (len(dsclist) == 1), "invalid number of dsc profiles")
+	Assert(t, (len(dsclist) == 2), "invalid number of dsc profiles")
 	// delete the smartNic
 	err = stateMgr.ctrler.DSCProfile().Delete(&dscprof)
 	AssertOk(t, err, "Error deleting the dscProfile")

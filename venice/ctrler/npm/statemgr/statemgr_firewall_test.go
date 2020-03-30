@@ -402,7 +402,9 @@ func createSmartNic(s *Statemgr, name string) (*cluster.DistributedServiceCard, 
 			Namespace: "default",
 			Tenant:    "default",
 		},
-		Spec: cluster.DistributedServiceCardSpec{},
+		Spec: cluster.DistributedServiceCardSpec{
+			DSCProfile: "insertion.enforced1",
+		},
 		Status: cluster.DistributedServiceCardStatus{
 			AdmissionPhase: cluster.DistributedServiceCardStatus_ADMITTED.String(),
 			Conditions: []cluster.DSCCondition{
@@ -723,6 +725,97 @@ func TestNetworkSecurityPolicySmartNICEvents(t *testing.T) {
 
 		return true, nil
 	}, "NetworkSecurityPolicy propagation state incorrect", "300ms", "10s")
+}
+
+func TestNetworkSecurityPolicyPropogation(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	_, err = createSmartNic(stateMgr, "testSmartnic1")
+
+	updateSmartNic(stateMgr, "testSmartnic1")
+	createPolicy(stateMgr, "testPolicy1", "1")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindSgpolicy("default", "testPolicy1")
+		if err == nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Sg not found", "1ms", "1s")
+
+	_, err = getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic1")
+	Assert(t, err != nil, "Couldn't get policy version for node")
+
+	// verify propagation status
+	AssertEventually(t, func() (bool, interface{}) {
+		sgp, err := stateMgr.FindSgpolicy("default", "testPolicy1")
+		if err != nil {
+			return false, err
+		}
+		prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
+		log.Infof("Got propagation status: %#v", prop)
+		if prop.Updated != 0 || prop.Pending != 1 || prop.GenerationID != "1" || prop.MinVersion != "" {
+			return true, nil
+		}
+
+		return false, sgp
+	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+
+	_, err = createSmartNic(stateMgr, "testSmartnic2")
+
+	_, err = getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic2")
+	AssertOk(t, err, "Couldn't get policy version for node")
+	// send update from naples
+	stateMgr.UpdateSgpolicyStatus("testSmartnic2", "default", "testPolicy1", "1")
+
+	version, err := getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic2")
+	AssertOk(t, err, "Couldn't get policy version for node")
+	AssertEquals(t, "1", version, "Policy version not correct for node")
+
+	// verify propagation status
+	AssertEventually(t, func() (bool, interface{}) {
+		sgp, err := stateMgr.FindSgpolicy("default", "testPolicy1")
+		if err != nil {
+			return false, err
+		}
+		prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
+		log.Infof("Got propagation status: %#v", prop)
+		if prop.Updated != 0 || prop.Pending != 1 || prop.GenerationID != "1" || prop.MinVersion != "" {
+			return true, nil
+		}
+
+		return false, sgp
+	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+
+	updateSmartNic(stateMgr, "testSmartnic2")
+
+	_, err = getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic2")
+	Assert(t, err != nil, "Couldn't get policy version for node")
+
+	// verify propagation status
+	AssertEventually(t, func() (bool, interface{}) {
+		sgp, err := stateMgr.FindSgpolicy("default", "testPolicy1")
+		if err != nil {
+			return false, err
+		}
+		prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
+		log.Infof("Got propagation status: %#v", prop)
+		if prop.Updated != 0 || prop.Pending != 1 || prop.GenerationID != "1" || prop.MinVersion != "" {
+			return true, nil
+		}
+
+		return false, sgp
+	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+
 }
 
 func getFwProfileVersionForNode(s *Statemgr, fwprofilename, nodename string) (string, error) {

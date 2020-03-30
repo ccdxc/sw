@@ -11,6 +11,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/labels"
@@ -40,6 +41,12 @@ type updatable interface {
 	GetKey() string
 }
 
+// dscUpdateIntf
+type dscUpdateIntf interface {
+	processDSCUpdate(dsc *cluster.DistributedServiceCard) error
+	GetKey() string
+}
+
 // Topics are the Nimbus message bus topics
 type Topics struct {
 	AppTopic                   *nimbus.AppTopic
@@ -58,11 +65,12 @@ type Topics struct {
 // Statemgr is the object state manager
 type Statemgr struct {
 	sync.Mutex
-	mbus                          *nimbus.MbusServer     // nimbus server
-	periodicUpdaterQueue          chan updatable         // queue for periodically writing items back to apiserver
-	ctrler                        ctkit.Controller       // controller instance
-	topics                        Topics                 // message bus topics
-	networkLocks                  map[string]*sync.Mutex // lock for performing network operation
+	mbus                          *nimbus.MbusServer       // nimbus server
+	periodicUpdaterQueue          chan updatable           // queue for periodically writing items back to apiserver
+	dscUpdateNotifObjects         map[string]dscUpdateIntf // objects which are watching dsc update
+	ctrler                        ctkit.Controller         // controller instance
+	topics                        Topics                   // message bus topics
+	networkLocks                  map[string]*sync.Mutex   // lock for performing network operation
 	logger                        log.Logger
 	ModuleReactor                 ctkit.ModuleHandler
 	TenantReactor                 ctkit.TenantHandler
@@ -303,7 +311,8 @@ func (sm *Statemgr) Stop() error {
 
 func initStatemgr() {
 	singletonStatemgr = Statemgr{
-		networkLocks: make(map[string]*sync.Mutex),
+		networkLocks:          make(map[string]*sync.Mutex),
+		dscUpdateNotifObjects: make(map[string]dscUpdateIntf),
 	}
 	featuremgrs = make(map[string]FeatureStateMgr)
 }
@@ -318,6 +327,26 @@ func MustGetStatemgr() *Statemgr {
 func (sm *Statemgr) Register(name string, svc FeatureStateMgr) {
 	featuremgrs[name] = svc
 
+}
+
+func (sm *Statemgr) registerForDscUpdate(object dscUpdateIntf) {
+	sm.Lock()
+	defer sm.Unlock()
+	sm.dscUpdateNotifObjects[object.GetKey()] = object
+}
+
+func (sm *Statemgr) unRegisterForDscUpdate(object dscUpdateIntf) {
+	sm.Lock()
+	defer sm.Unlock()
+	delete(sm.dscUpdateNotifObjects, object.GetKey())
+}
+
+func (sm *Statemgr) sendDscUpdateNotification(dsc *cluster.DistributedServiceCard) {
+	sm.Lock()
+	defer sm.Unlock()
+	for _, obj := range sm.dscUpdateNotifObjects {
+		obj.processDSCUpdate(dsc)
+	}
 }
 
 // AddObject adds object to memDb

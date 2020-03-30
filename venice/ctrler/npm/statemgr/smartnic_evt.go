@@ -5,6 +5,7 @@ package statemgr
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -115,6 +116,7 @@ func NewDistributedServiceCardState(smartNic *ctkit.DistributedServiceCard, stat
 func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedServiceCard) error {
 	log.Infof("Creating smart nic: %+v", smartNic)
 
+	defer sm.sendDscUpdateNotification(&smartNic.DistributedServiceCard)
 	// create new smartNic object
 	sns, err := NewDistributedServiceCardState(smartNic, sm)
 	if err != nil {
@@ -215,6 +217,7 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedServiceCard, nsnic *cluster.DistributedServiceCard) error {
 	// see if we already have the smartNic
 	log.Infof("Update of DistributedServiceCard")
+	defer sm.sendDscUpdateNotification(nsnic)
 	sns, err := DistributedServiceCardStateFromObj(smartNic)
 	if err != nil {
 		log.Errorf("Error finding smartnic. Err: %v", err)
@@ -498,4 +501,19 @@ func (sm *Statemgr) isDscHealthy(nsnic *cluster.DistributedServiceCard) bool {
 // isDscAdmitted returns true if the DSC is admited into the cluster
 func (sm *Statemgr) isDscAdmitted(nsnic *cluster.DistributedServiceCard) bool {
 	return nsnic.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String()
+}
+
+// isDscInInsertionMode returns true if the DSC in insertion mode cluster
+func (sm *Statemgr) isDscInInsertionMode(nsnic *cluster.DistributedServiceCard) bool {
+
+	if !sm.isDscAdmitted(nsnic) {
+		return false
+	}
+
+	profileState, err := sm.FindDSCProfile("", nsnic.Spec.DSCProfile)
+	if err != nil {
+		return false
+	}
+
+	return strings.ToLower(profileState.DSCProfile.DSCProfile.Spec.FwdMode) == strings.ToLower(cluster.DSCProfileSpec_INSERTION.String())
 }

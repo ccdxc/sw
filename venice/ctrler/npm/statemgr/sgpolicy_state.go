@@ -12,6 +12,7 @@ import (
 	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -248,11 +249,25 @@ func (sgp *SgpolicyState) initNodeVersions() error {
 
 	// walk all smart nics
 	for _, dsc := range dscs {
-		if sgp.stateMgr.isDscAdmitted(&dsc.DistributedServiceCard.DistributedServiceCard) {
+		if sgp.stateMgr.isDscInInsertionMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
 			if _, ok := sgp.NodeVersions[dsc.DistributedServiceCard.Name]; !ok {
 				sgp.NodeVersions[dsc.DistributedServiceCard.Name] = ""
 			}
 		}
+	}
+
+	return nil
+}
+
+// processDSCUpdate sgpolicy update handles for DSC
+func (sgp *SgpolicyState) processDSCUpdate(dsc *cluster.DistributedServiceCard) error {
+
+	if sgp.stateMgr.isDscInInsertionMode(dsc) {
+		log.Infof("DSC %v is being tracked for propogation status for policy %s", dsc.Name, sgp.GetKey())
+		sgp.NodeVersions[dsc.Name] = ""
+	} else {
+		log.Infof("DSC %v is being untracked for propogation status for policy %s", dsc.Name, sgp.GetKey())
+		delete(sgp.NodeVersions, dsc.Name)
 	}
 
 	return nil
@@ -389,6 +404,7 @@ func (sm *Statemgr) OnNetworkSecurityPolicyCreate(sgp *ctkit.NetworkSecurityPoli
 
 	sgps.initNodeVersions()
 	sm.PeriodicUpdaterPush(sgps)
+	sm.registerForDscUpdate(sgps)
 
 	return nil
 }
@@ -481,6 +497,10 @@ func (sm *Statemgr) OnNetworkSecurityPolicyDelete(sgpo *ctkit.NetworkSecurityPol
 		log.Errorf("Can not find the sg policy %s|%s", sgpo.Tenant, sgpo.Name)
 		return err
 	}
+
+	//unsubscribe for dsc update
+	sm.unRegisterForDscUpdate(sgp)
+
 	// delete it from the DB
 	log.Infof("Sending delete to mbus for %#v", sgpo.NetworkSecurityPolicy.ObjectMeta)
 	return sm.mbus.DeleteObjectWithReferences(sgpo.MakeKey("security"),

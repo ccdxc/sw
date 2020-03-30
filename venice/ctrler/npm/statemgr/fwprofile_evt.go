@@ -10,6 +10,7 @@ import (
 	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -161,6 +162,36 @@ func (sm *Statemgr) propgatationStatusDifferent(
 	return false
 }
 
+// initNodeVersions initializes node versions for the policy
+func (fps *FirewallProfileState) initNodeVersions() error {
+	dscs, _ := fps.stateMgr.ListDistributedServiceCards()
+
+	// walk all smart nics
+	for _, dsc := range dscs {
+		if fps.stateMgr.isDscInInsertionMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
+			if _, ok := fps.NodeVersions[dsc.DistributedServiceCard.Name]; !ok {
+				fps.NodeVersions[dsc.DistributedServiceCard.Name] = ""
+			}
+		}
+	}
+
+	return nil
+}
+
+// processDSCUpdate sgpolicy update handles for DSC
+func (fps *FirewallProfileState) processDSCUpdate(dsc *cluster.DistributedServiceCard) error {
+
+	if fps.stateMgr.isDscInInsertionMode(dsc) {
+		log.Infof("DSC %v is being tracked for propogation status for fwprofile %s", dsc.Name, fps.GetKey())
+		fps.NodeVersions[dsc.Name] = ""
+	} else {
+		log.Infof("DSC %v is being untracked for propogation status for fwprofile %s", dsc.Name, fps.GetKey())
+		delete(fps.NodeVersions, dsc.Name)
+	}
+
+	return nil
+}
+
 // Write writes the object to api server
 func (fps *FirewallProfileState) Write() error {
 	fps.FirewallProfile.Lock()
@@ -227,6 +258,7 @@ func (sm *Statemgr) OnFirewallProfileCreate(fwProfile *ctkit.FirewallProfile) er
 		dsc.DistributedServiceCard.Unlock()
 	}
 	sm.PeriodicUpdaterPush(fps)
+	sm.registerForDscUpdate(fps)
 
 	// store it in local DB
 	sm.mbus.AddObjectWithReferences(fwProfile.MakeKey("security"), convertFirewallProfile(fps), references(fwProfile))
@@ -274,6 +306,8 @@ func (sm *Statemgr) OnFirewallProfileDelete(fwProfile *ctkit.FirewallProfile) er
 
 	log.Infof("Deleting fwProfile: %+v", fwProfile)
 
+	//unsubscribe for dsc update
+	sm.unRegisterForDscUpdate(fps)
 	// delete the object
 	return sm.mbus.DeleteObjectWithReferences(fwProfile.MakeKey("security"),
 		convertFirewallProfile(fps), references(fwProfile))
