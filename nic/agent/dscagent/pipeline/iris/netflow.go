@@ -76,7 +76,7 @@ func createFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 		}
 		compositeKey := fmt.Sprintf("%s/%s", netflow.GetKind(), collectorKey)
 		mgmtIP := commonUtils.GetMgmtIP(MgmtLink)
-		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP, dstIP, false); err != nil {
+		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP, dstIP, c.Gateway, false); err != nil {
 			log.Error(errors.Wrapf(types.ErrNetflowCreateLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
 			return errors.Wrapf(types.ErrMirrorCreateLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
 		}

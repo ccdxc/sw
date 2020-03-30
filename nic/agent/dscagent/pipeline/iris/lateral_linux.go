@@ -43,8 +43,8 @@ var MgmtLink netlink.Link
 var GwCache = map[string]string{}
 
 // CreateLateralNetAgentObjects creates lateral objects for telmetry objects and does refcounting. This is temporary code till HAL subsumes ARP'ing for dest IPs
-func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, vrfID uint64, owner string, mgmtIP, destIP string, tunnelOp bool) error {
-	log.Infof("Creating Lateral NetAgent objects. Owner: %v MgmtIP: %v DestIP: %v TunnelOp: %v", owner, mgmtIP, destIP, tunnelOp)
+func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, vrfID uint64, owner string, mgmtIP, destIP, gwIP string, tunnelOp bool) error {
+	log.Infof("Creating Lateral NetAgent objects. Owner: %v MgmtIP: %v DestIP: %v gatewayIP: %v TunnelOp: %v", owner, mgmtIP, destIP, gwIP, tunnelOp)
 	var (
 		ep                    *netproto.Endpoint
 		err                   error
@@ -103,7 +103,7 @@ func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 	log.Infof("One or more lateral object creation needed. CreateEP: %v, CreateTunnel: %v", !collectorKnown, !tunnelKnown)
 
 	if !collectorKnown {
-		ep, err = generateLateralEP(infraAPI, intfClient, epClient, vrfID, owner, destIP)
+		ep, err = generateLateralEP(infraAPI, intfClient, epClient, vrfID, owner, destIP, gwIP)
 		if err != nil {
 			return err
 		}
@@ -305,13 +305,13 @@ func DeleteLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 	return nil
 }
 
-func startRefreshLoop(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, vrfID uint64, owner string, refreshCtx context.Context, destIP string) {
-	log.Infof("Starting ARP refresh loop for %s", destIP)
+func startRefreshLoop(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, vrfID uint64, owner string, refreshCtx context.Context, destIP, gwIP string) {
+	log.Infof("Starting ARP refresh loop for %s, gatewayIP:%s", destIP, gwIP)
 
 	var oldMAC string
 	ticker := time.NewTicker(refreshDuration)
-	go func(refreshCtx context.Context, IP string) {
-		mac := resolveIPAddress(refreshCtx, IP)
+	go func(refreshCtx context.Context, IP, gIP string) {
+		mac := resolveIPAddress(refreshCtx, IP, gIP)
 		log.Infof("Resolved MAC 1st Tick: %s", mac)
 		if mac != oldMAC {
 			if err := createOrUpdateLateralEP(infraAPI, intfClient, epClient, vrfID, owner, IP, mac); err != nil {
@@ -325,7 +325,7 @@ func startRefreshLoop(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient
 		for {
 			select {
 			case <-ticker.C:
-				mac = resolveIPAddress(refreshCtx, IP)
+				mac = resolveIPAddress(refreshCtx, IP, gIP)
 				if mac != oldMAC {
 					if err := deleteOrUpdateLateralEP(infraAPI, intfClient, epClient, vrfID, owner, IP); err != nil {
 						log.Errorf("Failed to delete or update lateral endpoint IP: %s. Err: %v", IP, err)
@@ -346,10 +346,10 @@ func startRefreshLoop(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient
 				return
 			}
 		}
-	}(refreshCtx, destIP)
+	}(refreshCtx, destIP, gwIP)
 }
 
-func resolveIPAddress(ctx context.Context, destIP string) string {
+func resolveIPAddress(ctx context.Context, destIP, gwIP string) string {
 	addrs, err := netlink.AddrList(MgmtLink, netlink.FAMILY_V4)
 	if err != nil || len(addrs) == 0 {
 		log.Errorf("Failed to list management interface addresses. Err: %v", err)
@@ -361,18 +361,20 @@ func resolveIPAddress(ctx context.Context, destIP string) string {
 
 	// Check if in the same subnet
 	if !mgmtSubnet.Contains(net.ParseIP(destIP)) {
-		routes, err := netlink.RouteGet(net.ParseIP(destIP))
-		if err != nil || len(routes) == 0 {
-			log.Errorf("No routes found for the dest IP %s. Err: %v", destIP, err)
-			return ""
-		}
+		if gwIP == "" {
+			routes, err := netlink.RouteGet(net.ParseIP(destIP))
+			if err != nil || len(routes) == 0 {
+				log.Errorf("No routes found for the dest IP %s. Err: %v", destIP, err)
+				return ""
+			}
 
-		// Pick the first route. Dest IP in not in the local subnet. Use GW IP as the destIP for ARP'ing
-		if routes[0].Gw == nil {
-			log.Errorf("Default gateway not configured for destIP %s.", destIP)
-			return ""
+			// Pick the first route. Dest IP in not in the local subnet. Use GW IP as the destIP for ARP'ing
+			if routes[0].Gw == nil {
+				log.Errorf("Default gateway not configured for destIP %s.", destIP)
+				return ""
+			}
+			gwIP = routes[0].Gw.String()
 		}
-		gwIP := routes[0].Gw.String()
 		log.Infof("Dest IP %s not in management subnet %v. Using Gateway IP: %v  as destIP for ARPing...", destIP, mgmtSubnet, gwIP)
 		// Update destIP to be GwIP
 		GwCache[destIP] = gwIP
@@ -721,7 +723,7 @@ func dedupReferences(compositeKey string) {
 	lateralDB[compositeKey] = lateralDB[compositeKey][:marker+1]
 }
 
-func generateLateralEP(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, vrfID uint64, owner, destIP string) (*netproto.Endpoint, error) {
+func generateLateralEP(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, vrfID uint64, owner, destIP, gwIP string) (*netproto.Endpoint, error) {
 	var dMAC string
 	epIP := destIP
 
@@ -734,7 +736,7 @@ func generateLateralEP(infraAPI types.InfraAPI, intfClient halapi.InterfaceClien
 		refreshCtx, done := context.WithCancel(context.Background())
 		doneCache[destIP] = done
 
-		go startRefreshLoop(infraAPI, intfClient, epClient, vrfID, owner, refreshCtx, destIP)
+		go startRefreshLoop(infraAPI, intfClient, epClient, vrfID, owner, refreshCtx, destIP, gwIP)
 		// Give the routine a chance to run
 		time.Sleep(time.Second * 3)
 		return nil, nil

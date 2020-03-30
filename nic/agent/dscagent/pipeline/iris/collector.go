@@ -59,7 +59,7 @@ func createCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 	if !foundCollector {
 		compositeKey := fmt.Sprintf("%s/%s", col.GetKind(), destKey)
 		mgmtIP := commonUtils.GetMgmtIP(MgmtLink)
-		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP, dstIP, true); err != nil {
+		if err := CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, compositeKey, mgmtIP, dstIP, col.Spec.Gateway, true); err != nil {
 			log.Error(errors.Wrapf(types.ErrMirrorCreateLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err))
 			return errors.Wrapf(types.ErrMirrorCreateLateralObjects, "Collector: %s | Err: %v", col.GetKey(), err)
 		}

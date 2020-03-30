@@ -127,7 +127,7 @@ func TestMirrorSessionCreateVeniceKnownCollector(t *testing.T) {
 		},
 	}
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, "", true)
 	if err != nil {
 		t.Fatal("Failed to create lateral objects in netagent")
 	}
@@ -300,7 +300,7 @@ func TestNetflowSessionCreateVeniceKnownCollector(t *testing.T) {
 		},
 	}
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy.GetKey(), mgmtIP, destIPOutSideSubnet, false)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy.GetKey(), mgmtIP, destIPOutSideSubnet, "", false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
 	// Assert Nw and EP counts are the same before and after lateral obj creates
@@ -375,7 +375,7 @@ func TestMirrorSessionCreateUnknownCollector(t *testing.T) {
 		},
 	}
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, "", true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
@@ -479,7 +479,7 @@ func TestNetflowSessionCreateUnknownCollector(t *testing.T) {
 		},
 	}
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy.GetKey(), mgmtIP, destIPOutSideSubnet, false)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy.GetKey(), mgmtIP, destIPOutSideSubnet, "", false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
@@ -595,7 +595,7 @@ func TestNetflowSessionAndMirrorSessionPointingToSameCollector(t *testing.T) {
 	}
 
 	// Create and validate fe policies
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy.GetKey(), mgmtIP, destIPOutSideSubnet, false)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy.GetKey(), mgmtIP, destIPOutSideSubnet, "", false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
 	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
@@ -622,7 +622,7 @@ func TestNetflowSessionAndMirrorSessionPointingToSameCollector(t *testing.T) {
 	Assert(t, err != nil, "Lateral tunnel obj found, when it is not expected to be created. Found: %v", dat)
 
 	// Create and validate mirror session
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, "", true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
 	// Ensure all lateral objects are created
@@ -754,10 +754,10 @@ func TestTwoMirrorSessionCreateVeniceKnownCollector(t *testing.T) {
 	listTun, _ := infraAPI.List("Tunnel")
 	oldTunCount := len(listTun)
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms1.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms1.GetKey(), mgmtIP, destIPOutSideSubnet, "", true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms2.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms2.GetKey(), mgmtIP, destIPOutSideSubnet, "", true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
 	lateralObjMeta := api.ObjectMeta{
@@ -953,10 +953,10 @@ func TestTwoNetflowSessionCreateVeniceKnownCollector(t *testing.T) {
 	listTun, _ := infraAPI.List("Tunnel")
 	oldTunCount := len(listTun)
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy1.GetKey(), mgmtIP, destIPOutSideSubnet, false)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy1.GetKey(), mgmtIP, destIPOutSideSubnet, "", false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy2.GetKey(), mgmtIP, destIPOutSideSubnet, false)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy2.GetKey(), mgmtIP, destIPOutSideSubnet, "", false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
 	lateralObjMeta := api.ObjectMeta{
@@ -1058,10 +1058,10 @@ func TestTwoMirrorSessionCreatesWithSameUnknownCollectorIP(t *testing.T) {
 		},
 	}
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms1.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms1.GetKey(), mgmtIP, destIPOutSideSubnet, "", true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms2.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms2.GetKey(), mgmtIP, destIPOutSideSubnet, "", true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
@@ -1214,10 +1214,10 @@ func TestTwoNetflowSessionCreatesWithSameUnknownCollector(t *testing.T) {
 		},
 	}
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy1.GetKey(), mgmtIP, destIPOutSideSubnet, false)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy1.GetKey(), mgmtIP, destIPOutSideSubnet, "", false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy2.GetKey(), mgmtIP, destIPOutSideSubnet, false)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy2.GetKey(), mgmtIP, destIPOutSideSubnet, "", false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
@@ -1354,13 +1354,13 @@ func TestTwoNetflowSessionCreatesIdempotency(t *testing.T) {
 		},
 	}
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy1.GetKey(), mgmtIP, destIPOutSideSubnet, false)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy1.GetKey(), mgmtIP, destIPOutSideSubnet, "", false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
 	listEp, _ := infraAPI.List("Endpoint")
 	epCountAfter1stCreate := len(listEp)
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy2.GetKey(), mgmtIP, destIPOutSideSubnet, false)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy2.GetKey(), mgmtIP, destIPOutSideSubnet, "", false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 	listEp, _ = infraAPI.List("Endpoint")
 	epCountAfter2ndCreate := len(listEp)
@@ -1458,7 +1458,7 @@ func TestTwoMirrorSessionCreatesIdempotency(t *testing.T) {
 		},
 	}
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms1.GetKey(), mgmtIP, destIPOutSideSubnet, false)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms1.GetKey(), mgmtIP, destIPOutSideSubnet, "", false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
 	listEp, _ := infraAPI.List("Endpoint")
@@ -1466,7 +1466,7 @@ func TestTwoMirrorSessionCreatesIdempotency(t *testing.T) {
 	listTun, _ := infraAPI.List("Tunnel")
 	tunnelCountAfter1stCreate := len(listTun)
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms2.GetKey(), mgmtIP, destIPOutSideSubnet, false)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms2.GetKey(), mgmtIP, destIPOutSideSubnet, "", false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 	listEp, _ = infraAPI.List("Endpoint")
 	epCountAfter2ndCreate := len(listEp)
@@ -1551,7 +1551,7 @@ func TestCreateDeleteLateralObjUnknownCollectorWithTunnel(t *testing.T) {
 		},
 	}
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, "", true)
 
 	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
@@ -1656,7 +1656,7 @@ func TestCreateDeleteLateralObjUnknownCollectorWithoutTunnel(t *testing.T) {
 		},
 	}
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy.GetKey(), mgmtIP, destIPOutSideSubnet, false)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, fePolicy.GetKey(), mgmtIP, destIPOutSideSubnet, "", false)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
 	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
@@ -1766,7 +1766,7 @@ func TestCreateDeleteLateralObjVeniceKnownCollectorWithTunnel(t *testing.T) {
 	listTun, _ := infraAPI.List("Tunnel")
 	oldTunCount := len(listTun)
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, "", true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 	lateralObjMeta := api.ObjectMeta{
 		Tenant:    "default",
@@ -1849,7 +1849,7 @@ func TestFailedARPResolutionRetry(t *testing.T) {
 	ArpClient = client
 	MgmtLink = mgmtLink
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, "", true)
 	AssertOk(t, err, "Creating lateral objects must succeed.")
 	mac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if ok {
@@ -1934,7 +1934,7 @@ func TestFailedARPResolution(t *testing.T) {
 	MgmtLink = mgmtLink
 	defer ArpClient.Close()
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), mgmtIP, destIPOutSideSubnet, "", true)
 	AssertOk(t, err, "Creating lateral objects must succeed.")
 	mac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if ok {
@@ -1993,10 +1993,10 @@ func TestTwoMirrorSessionCreatesWithSameUnknownCollectorMac(t *testing.T) {
 		},
 	}
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms1.GetKey(), mgmtIP, destIPOutSideSubnet, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms1.GetKey(), mgmtIP, destIPOutSideSubnet, "", true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms2.GetKey(), mgmtIP, destIPOutSideSubnet1, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms2.GetKey(), mgmtIP, destIPOutSideSubnet1, "", true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 	dmac, ok := destIPToMAC.Load(destIPOutSideSubnet)
 	if !ok {
@@ -2118,10 +2118,10 @@ func TestTwoMirrorSessionCreatesWithSameIP(t *testing.T) {
 		},
 	}
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms1.GetKey(), mgmtIP, destIPOutSideSubnet1, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms1.GetKey(), mgmtIP, destIPOutSideSubnet1, "", true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 
-	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms2.GetKey(), mgmtIP, destIPOutSideSubnet1, true)
+	err = CreateLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms2.GetKey(), mgmtIP, destIPOutSideSubnet1, "", true)
 	AssertOk(t, err, "Failed to create lateral objects in netagent")
 	dmac1, ok := destIPToMAC.Load(destIPOutSideSubnet1)
 	if !ok {
