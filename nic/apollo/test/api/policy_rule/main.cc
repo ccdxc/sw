@@ -77,7 +77,7 @@ policy_teardown(pds_batch_ctxt_t bctxt) {
 }
 
 static void
-policy_rule_add (pds_batch_ctxt_t bctxt, std::string cidr_str)
+policy_add_rules (pds_batch_ctxt_t bctxt, std::string cidr_str)
 {
     uint32_t add_rule_count = k_num_rule_add;
     pds_policy_rule_spec_t spec;
@@ -115,7 +115,7 @@ policy_rule_add (pds_batch_ctxt_t bctxt, std::string cidr_str)
 }
 
 static void
-policy_rule_add_verify (void)
+policy_add_rules_verify (void)
 {
     pds_policy_info_t info;
     pds_obj_key_t key;
@@ -203,7 +203,8 @@ policy_rule_update_verify (std::string cidr_str)
 /// \defgroup POLICY_TEST Policy rule tests
 /// @{
 
-TEST_F(policy_rule_test, rule_add) {
+/// do policy and individual rule(s) add in separate batches
+TEST_F(policy_rule_test, rule_add_1) {
     pds_batch_ctxt_t bctxt;
 
     bctxt = batch_start();
@@ -211,16 +212,55 @@ TEST_F(policy_rule_test, rule_add) {
     batch_commit(bctxt);
 
     bctxt = batch_start();
-    policy_rule_add(bctxt, "30.0.0.1/16");
+    policy_add_rules(bctxt, "30.0.0.1/16");
     batch_commit(bctxt);
-    policy_rule_add_verify();
+
+    policy_add_rules_verify();
 
     bctxt = batch_start();
     policy_teardown(bctxt);
     batch_commit(bctxt);
 }
 
-TEST_F(policy_rule_test, rule_upd) {
+#if 0
+/// do policy and individual rule(s) add in same batch
+TEST_F(policy_rule_test, rule_add_2) {
+    pds_batch_ctxt_t bctxt;
+
+    bctxt = batch_start();
+    policy_setup(bctxt);
+    policy_add_rules(bctxt, "30.0.0.1/16");
+    batch_commit(bctxt);
+
+    policy_add_rules_verify();
+
+    bctxt = batch_start();
+    policy_teardown(bctxt);
+    batch_commit(bctxt);
+}
+
+/// do policy add and then individual rule(s) add/del in same batch
+TEST_F(policy_rule_test, rule_add_del_1) {
+    pds_batch_ctxt_t bctxt;
+
+    bctxt = batch_start();
+    policy_setup(bctxt);
+    policy_add_rules(bctxt, "30.0.0.1/16");
+    // @rsrinkanth, can u make this API generic to take API op, num rules,
+    // policy key etc. ?
+    policy_del_rules(...);
+    batch_commit(bctxt);
+
+    policy_add_rules_verify();
+
+    bctxt = batch_start();
+    policy_teardown(bctxt);
+    batch_commit(bctxt);
+}
+#endif
+
+/// add policy and update individual rule(s) in separate batches
+TEST_F(policy_rule_test, rule_upd_1) {
     pds_batch_ctxt_t bctxt;
 
     bctxt = batch_start();
@@ -230,12 +270,31 @@ TEST_F(policy_rule_test, rule_upd) {
     bctxt = batch_start();
     policy_rule_update(bctxt, "30.0.0.1/16");
     batch_commit(bctxt);
+
     policy_rule_update_verify("30.0.0.1/16");
 
     bctxt = batch_start();
     policy_teardown(bctxt);
     batch_commit(bctxt);
 }
+
+#if 0
+/// add policy and update individual rule(s) in same batch
+TEST_F(policy_rule_test, rule_upd_2) {
+    pds_batch_ctxt_t bctxt;
+
+    bctxt = batch_start();
+    policy_setup(bctxt);
+    policy_rule_update(bctxt, "30.0.0.1/16");
+    batch_commit(bctxt);
+
+    policy_rule_update_verify("30.0.0.1/16");
+
+    bctxt = batch_start();
+    policy_teardown(bctxt);
+    batch_commit(bctxt);
+}
+#endif
 
 /// @}
 
