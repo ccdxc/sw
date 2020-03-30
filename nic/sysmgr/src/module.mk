@@ -11,11 +11,11 @@ ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cpp \
 	                     ${MODULE_SRC_DIR}/iris/*.cpp)
 ALL_TEST_FILES  = $(wildcard ${MODULE_SRC_DIR}/*_test.cpp)
 else
-MODULE_SOLIBS   = pal logger
+MODULE_SOLIBS   = pal logger operd operd_alerts
 MODULE_LDLIBS   = rt ev pthread z dl operd
 MODULE_ARLIBS   =
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cpp \
-	                     ${MODULE_SRC_DIR}/apollo/*.cpp)
+	                     ${MODULE_SRC_DIR}/${PIPELINE}/*.cpp)
 ALL_TEST_FILES  = $(wildcard ${MODULE_SRC_DIR}/*_test.cpp)
 endif
 MODULE_SRCS     = $(filter-out $(ALL_TEST_FILES), $(ALL_CC_FILES))

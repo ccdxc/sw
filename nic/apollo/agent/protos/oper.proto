@@ -24,6 +24,9 @@ service OperSvc {
 
   // Metrics exposes the metric counters kept by components
   rpc MetricsGet(stream MetricsGetRequest) returns (stream MetricsGetResponse) {}
+
+  // Alerts exposes the alerts produced by various services/processes
+  rpc AlertsGet(types.Empty) returns (stream AlertsGetResponse) {}
 }
 
 // TechSupportSpec defines the configuration of the techsupport object
@@ -153,4 +156,27 @@ message FlowLog {
   uint64                   RflowBytes   = 13;
   // responder flow packet count
   uint64                   RflowPackets = 14;
+}
+
+enum AlertSeverity {
+  DEBUG    = 0;
+  INFO     = 1;
+  WARN     = 2;
+  CRITICAL = 3;
+}
+
+message Alert {
+  uint64        Timestamp   = 1;
+  string        Name        = 2;
+  string        Category    = 3;
+  AlertSeverity Severity    = 4;
+  string        Description = 5;
+  string        Message     = 6;
+}
+
+// Alerts get response
+message AlertsGetResponse {
+  // success or failure status
+  types.ApiStatus   ApiStatus = 1;
+  Alert             Response  = 2;
 }

@@ -8,8 +8,9 @@ extern "C" {
 
 typedef enum  {
     OPERD_DECODER_PLAIN_TEXT = 0,
-    OPERD_DECODER_VPP = 1,
-    OPERD_DECODER_MAX = 256,
+    OPERD_DECODER_ALERTS     = 1,
+    OPERD_DECODER_VPP        = 51,
+    OPERD_DECODER_MAX        = 255,
 } operd_decoders;
 
 typedef size_t (*decoder_fn)(uint8_t encoder, const char *data,

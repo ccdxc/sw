@@ -15,5 +15,12 @@
             "command": "/nic/bin/operdvppconsumer /var/log/pensando/vpp_flow.log"
         },
         "input": ["vpp"]
+    },
+    {
+        "output": {
+            "type": "library",
+            "location": "/nic/lib/libalerts_operd_con.so"
+        },
+        "input": ["alerts"]
     }
 ]

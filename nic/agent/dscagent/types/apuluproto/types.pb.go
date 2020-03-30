@@ -178,6 +178,8 @@
 		CountersStatus
 		MetricsGetResponse
 		FlowLog
+		Alert
+		AlertsGetResponse
 		CPRouteStatus
 		CPRouteKey
 		CPRouteKeyHandle

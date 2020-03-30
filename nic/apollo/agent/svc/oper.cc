@@ -16,10 +16,13 @@
 #include "nic/apollo/agent/svc/oper.hpp"
 #include "nic/sdk/lib/metrics/metrics.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/sdk/lib/operd/operd.hpp"
+#include "nic/operd/alerts/alerts.hpp"
 
 using grpc::Status;
 using grpc::ServerContext;
 using grpc::ServerReaderWriter;
+using grpc::ServerWriter;
 using types::Empty;
 
 using pds::OperSvc;
@@ -27,6 +30,7 @@ using pds::TechSupportRequest;
 using pds::TechSupportResponse;
 using pds::MetricsGetRequest;
 using pds::MetricsGetResponse;
+using pds::AlertsGetResponse;
 
 typedef std::shared_ptr<MetricsGetResponse> MetricsGetResponsePtr;
 
@@ -116,6 +120,32 @@ metrics_read (std::string name, sdk::metrics::key_t key,
     rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
 }
 
+static void
+alerts_log_to_obj (sdk::operd::log_ptr log, std::shared_ptr<AlertsGetResponse> rsp)
+{
+    const char *data = log->data();
+    int alert_id = *(int *)data;
+    const char *message = data + sizeof(int);
+    alert_t prototype = operd::alerts::alerts[alert_id];
+    ::pds::Alert *alert = rsp->mutable_response();
+
+    alert->set_name(prototype.name);
+    alert->set_category(prototype.category);
+    alert->set_description(prototype.description);
+    alert->set_message(message);
+    if (strcmp(prototype.severity, "DEBUG") == 0) {
+        alert->set_severity(pds::DEBUG);
+    } else if (strcmp(prototype.severity, "INFO") == 0) {
+        alert->set_severity(pds::INFO);
+    } else if (strcmp(prototype.severity, "WARN") == 0) {
+        alert->set_severity(pds::WARN);
+    } else if (strcmp(prototype.severity, "CRITICAL") == 0){
+        alert->set_severity(pds::CRITICAL);
+    }
+
+    rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+}
+
 static inline int
 get_exit_status (int rc)
 {
@@ -178,5 +208,29 @@ OperSvcImpl::MetricsGet(ServerContext* context,
         }
         pthread_yield();
     } while (true);
+    return Status::OK;
+}
+
+Status
+OperSvcImpl::AlertsGet(ServerContext *context, const Empty *req,
+                       ServerWriter<AlertsGetResponse> *stream) {
+    sdk::operd::consumer_ptr source = std::make_shared<sdk::operd::region>("alerts");
+
+    while (true) {
+        sdk::operd::log_ptr log = source->read();
+
+        if (log != nullptr) {
+            std::shared_ptr<AlertsGetResponse> resp =
+                std::make_shared<AlertsGetResponse>();
+
+            alerts_log_to_obj(log, resp);
+            
+            if (!stream->Write(*resp.get())) {
+                // Client closed connection
+                break;
+            }
+        }
+        sleep(5);
+    }
     return Status::OK;
 }

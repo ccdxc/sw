@@ -11,6 +11,7 @@
 using grpc::Status;
 using grpc::ServerContext;
 using grpc::ServerReaderWriter;
+using grpc::ServerWriter;
 using types::Empty;
 
 using pds::OperSvc;
@@ -18,6 +19,7 @@ using pds::TechSupportRequest;
 using pds::TechSupportResponse;
 using pds::MetricsGetRequest;
 using pds::MetricsGetResponse;
+using pds::AlertsGetResponse;
 
 class OperSvcImpl final : public OperSvc::Service {
 public:
@@ -27,6 +29,10 @@ public:
     Status MetricsGet(
         ServerContext* context,
         ServerReaderWriter<MetricsGetResponse, MetricsGetRequest>* stream)
+        override;
+
+    Status AlertsGet(ServerContext *context, const Empty *req,
+                     ServerWriter<AlertsGetResponse>* stream)
         override;
 };
 

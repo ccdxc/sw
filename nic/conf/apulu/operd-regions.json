@@ -1,4 +1,8 @@
 {
+    "alerts": {
+        "chunk-count": 1024,
+        "severity": 7
+    },
     "sysmgr": {
         "chunk-count": 1024,
         "severity": 3

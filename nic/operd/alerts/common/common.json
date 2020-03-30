@@ -1,0 +1,20 @@
+[
+    {
+        "name": "SERVICE_STARTED",
+        "category": "System",
+        "severity": "DEBUG",
+        "description": "Service started"
+    },
+    {
+        "name": "NAPLES_SERVICE_STOPPED",
+        "category": "System",
+        "severity": "CRITICAL",
+        "description": "Naples service stopped"
+    },
+    {
+        "name": "SYSTEM_COLDBOOT",
+        "category": "System",
+        "severity": "WARN",
+        "description": "System cold booted"
+    }
+]

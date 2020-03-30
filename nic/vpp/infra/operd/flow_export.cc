@@ -5,7 +5,7 @@
 #include "lib/operd/operd.hpp"
 #include "lib/operd/logger.hpp"
 #include "lib/operd/decoder.h"
-#include "nic/operd/vpp/flow_decoder.h"
+#include "nic/operd/decoders/vpp/flow_decoder.h"
 #include "flow_export.h"
 
 #define PDS_OPERD_PRODUCER_NAME "vpp"
