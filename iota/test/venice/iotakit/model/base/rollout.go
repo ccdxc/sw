@@ -11,6 +11,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"os/exec"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -26,6 +29,36 @@ import (
 const (
 	rolloutName = "e2e_rollout"
 )
+type BuildMeta struct {
+	Repo            string
+	Branch          string
+	Prefix          string
+	Label           string
+	NextBuildNumber int
+}
+
+func getLatestBuildVersionInfo(targetBranch string) (string, int, error) {
+	jsonURL := []string{"-s", "http://jobd.pensando.io:3456/tags"}
+	out, err := exec.Command("curl", jsonURL...).CombinedOutput()
+	outStr := strings.TrimSpace(string(out))
+	fmt.Println(fmt.Sprintf("curl output: %s, err: %v\n", outStr, err))
+	if err != nil {
+		fmt.Println(fmt.Sprintf("curl Error: %s, err: %v\n", outStr, err))
+		fmt.Println()
+	}
+	jsonResponseBytes := []byte(outStr)
+	var buildMetas = []*BuildMeta{}
+	err = json.Unmarshal(jsonResponseBytes, &buildMetas)
+	if err != nil {
+		return "", 0, fmt.Errorf("Unable to unmarshal response from jobd [%v]",err)
+	}
+	for _, bm := range buildMetas {
+		if bm.Branch == targetBranch {
+			return bm.Prefix, bm.NextBuildNumber, nil
+		}
+	}
+	return "", 0, fmt.Errorf("No build metadata found for targetBranch: %s", targetBranch)
+}
 
 func processMetadataFile(metadata string) map[string]map[string]string {
 	versionMap := make(map[string]map[string]string)
@@ -100,6 +133,7 @@ func (sm *SysModel) CreateRolloutObject(bundleType, name string) (*rollout.Rollo
 // GetRolloutObject gets rollout instance
 func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 
+	version := ""
 	seconds := time.Now().Unix()
 	scheduledStartTime := &api.Timestamp{
 		Timestamp: types.Timestamp{
@@ -116,6 +150,37 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 		fmt.Println()
 	}*/
 
+	bundleLocalFilePath := fmt.Sprintf("%s/src/github.com/pensando/sw/upgrade-bundle/bundle.tar", os.Getenv("GOPATH"))
+
+	versionPrefix, buildNumber, err := getLatestBuildVersionInfo("master")
+	if err != nil {
+		log.Errorf("ts:%s Unable to fetch latest build version information: %s", time.Now().String(), err)
+		return nil, errors.New("Unable to fetch latest build version information")
+	}
+	for b := buildNumber; b > 0; b-- {
+		version = versionPrefix + "-" + strconv.Itoa(b)
+		log.Errorf("ts:%s Trying to download bundle.tar, version: %s", time.Now().String(), version)
+		url := fmt.Sprintf("http://pxe.pensando.io/builds/hourly/%s/bundle/bundle.tar", version)
+	jsonUrl := []string{url, "--output", bundleLocalFilePath, "-f" }
+
+		fmt.Println(fmt.Sprintf("curl string: %v\n", jsonUrl))
+		out, err := exec.Command("curl", jsonUrl...).CombinedOutput()
+		outStr := strings.TrimSpace(string(out))
+		fmt.Println(fmt.Sprintf("curl output: %s, err: %v\n", outStr, err))
+		if strings.Contains(outStr, "404 Not Found") || strings.Contains(outStr, " error: ") {
+			log.Errorf("ts:%s Error when trying to download Bundle with version: %s, response: %s", time.Now().String(), version, outStr)
+			fmt.Println(fmt.Sprintf("curl Error: %s, err: %v\n", outStr, err))
+			fmt.Println()
+		} else {
+			fmt.Println(fmt.Sprintf("curl success: %s\n", outStr))
+			fmt.Println()
+			break
+		}
+	}
+
+	log.Infof("ts:%s Successfully downloaded bundle.tar for version: %s", time.Now().String(), version)
+
+
 	var req labels.Requirement
 	req.Key = "type"
 	req.Operator = "in"
@@ -127,8 +192,7 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 	var order []*labels.Selector
 	order = append(order, &orderelem)
 
-	version := getImageVersion("upgrade-bundle")
-	log.Errorf("Calling GetGitVersion %s", version)
+	log.Errorf("rollout version %s", version)
 	if version == "" {
 		log.Errorf("ts:%s Build Failure. Couldnt get version.json", time.Now().String())
 		return nil, errors.New("Build Failure. Couldnt get version information")
