@@ -142,8 +142,8 @@ class NatPbObjectClient(base.ConfigClientBase):
                 prefix_internet = NULL
                 prefix_infra = NULL
             protos = nat_spec.protocol.split(',')
-            port_lo, port_hi = ResmgrClient[node].GetNatPoolPortRange()
             for proto in protos:
+                port_lo, port_hi = ResmgrClient[node].GetNatPoolPortRange(proto)
                 if prefix_internet:
                     obj = NatPbObject(node, parent, prefix_internet, port_lo, \
                         port_hi, proto, utils.NAT_ADDR_TYPE_PUBLIC)

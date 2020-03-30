@@ -480,7 +480,9 @@ class Resmgr(base.ConfigObjectBase):
         return ipaddress.IPv4Network(pfxstr)
 
     @staticmethod
-    def GetNatPoolPortRange():
+    def GetNatPoolPortRange(proto):
+        if proto == 'icmp':
+            return 0,0
         return 10000,20000
 
 client = dict()
