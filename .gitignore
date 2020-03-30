@@ -65,3 +65,6 @@ venice/ui/linux_signing_key.pub
 
 # Remove penctl autocompletion file
 penctl.sh
+
+# Ignore .syntastic_cpp_config
+**/.syntastic_cpp_config
