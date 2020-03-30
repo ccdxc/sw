@@ -39,12 +39,11 @@ upgrade_handler::CompatCheckHandler(UpgCtx& upgCtx)
 // handler to bring link(s) down
 //------------------------------------------------------------------------------
 HdlrResp
-upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
+upgrade_handler::LinkDownHandler (UpgCtx& upgCtx)
 {
-    hal_ret_t                           ret;
-    pd::pd_func_args_t                  pd_func_args = {0};
-    pd::pd_uplink_tm_control_args_t     tm_args = {0};
-    HdlrResp                            rsp;
+    sdk_ret_t sdk_ret;
+    hal_ret_t ret;
+    HdlrResp rsp;
 
     HAL_TRACE_DEBUG("[upgrade] Handling link down msg ...");
 
@@ -52,7 +51,8 @@ upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
     if (hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) {
         ret = session_handle_upgrade();
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("[upgrade] Session handle upgrade failed, err {}", ret);
+            HAL_TRACE_DEBUG("[upgrade] Session handle upgrade failed, err {}",
+                            ret);
             rsp = HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
             goto err;
         }
@@ -68,11 +68,8 @@ upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
     }
 
     // flush PB/TM for all uplinks
-    tm_args.en      = false;
-    tm_args.tm_port = TM_PORT_UPLINK_ALL;
-    pd_func_args.pd_uplink_tm_control = &tm_args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_UPLINK_TM_CONTROL,
-                          &pd_func_args);
+    sdk_ret = asicpd_tm_enable_disable_uplink_port(false, TM_PORT_UPLINK_ALL);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("[upgrade] Unable to flush PB for uplinks. err: {}", ret);
         rsp = HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));

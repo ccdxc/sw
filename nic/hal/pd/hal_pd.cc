@@ -502,9 +502,6 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_SNAKE_TEST_CREATE, pd_snake_test_create);
     PD_FUNC_LOAD(PD_FUNC_ID_SNAKE_TEST_DELETE, pd_snake_test_delete);
 
-    // Uplink TM Control
-    PD_FUNC_LOAD(PD_FUNC_ID_UPLINK_TM_CONTROL, pd_uplink_tm_control);
-
     // nvme sesscb pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_NVME_SESSCB_CREATE, pd_nvme_sesscb_create);
     //PD_FUNC_LOAD(PD_FUNC_ID_NVME_SESSCB_DELETE, pd_nvme_sesscb_delete);

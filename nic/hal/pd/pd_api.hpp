@@ -3001,12 +3001,6 @@ typedef struct pd_get_slab_args_s {
     sdk::lib::slab *slab;
 } __PACK__ pd_get_slab_args_t;
 
-// TM Enable / Disable for Uplinks
-typedef struct pd_uplink_tm_control_args_s {
-    bool        en;
-    tm_port_t   tm_port;
-} pd_uplink_tm_control_args_t;
-
 // fte span
 typedef struct pd_fte_span_create_args_s {
     fte_span_t               *fte_span;
@@ -3415,7 +3409,6 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_L2SEG_PIN_UPLINK_CHANGE,  293, "PD_FUNC_ID_L2SEG_PIN_UPLINK_CHANGE") \
     ENTRY(PD_FUNC_ID_CPU_POLL_RECV_NEW,        294, "PD_FUNC_ID_CPU_POLL_RECV_NEW") \
     ENTRY(PD_FUNC_ID_CPU_SEND_NEW,             295, "PD_FUNC_ID_CPU_SEND_NEW")\
-    ENTRY(PD_FUNC_ID_UPLINK_TM_CONTROL,        296, "PD_FUNC_ID_UPLINK_TM_CONTROL") \
     ENTRY(PD_FUNC_ID_LIF_SCHED_CONTROL,        297, "PD_FUNC_ID_LIF_SCHED_CONTROL") \
     ENTRY(PD_FUNC_ID_QOS_CLASS_THRESHOLDS_GET, 298, "PD_FUNC_ID_QOS_CLASS_THRESHOLDS_GET") \
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_INIT,        299, "PD_FUNC_ID_ACCEL_RGROUP_INIT")\
@@ -3897,9 +3890,6 @@ typedef struct pd_func_args_s {
         // Snake tests
         PD_UNION_ARGS_FIELD(pd_snake_test_create);
         PD_UNION_ARGS_FIELD(pd_snake_test_delete);
-
-        // Uplink TM Control
-        PD_UNION_ARGS_FIELD(pd_uplink_tm_control);
 
         // nvme_sesscb calls
         PD_UNION_ARGS_FIELD(pd_nvme_sesscb_create);
@@ -4389,8 +4379,6 @@ PD_FUNCP_TYPEDEF(pd_tcp_global_stats_get);
 // snake tests
 PD_FUNCP_TYPEDEF(pd_snake_test_create);
 PD_FUNCP_TYPEDEF(pd_snake_test_delete);
-
-PD_FUNCP_TYPEDEF(pd_uplink_tm_control);
 
 // nvme_sesscb calls
 PD_FUNCP_TYPEDEF(pd_nvme_sesscb_create);

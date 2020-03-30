@@ -561,29 +561,5 @@ end:
     return HAL_RET_OK;
 }
 
-//-----------------------------------------------------------------------------
-// Control Traffic Manager (TM) for uplinks
-//-----------------------------------------------------------------------------
-using sdk::platform::capri::tm_port_t;
-hal_ret_t
-pd_uplink_tm_control (pd_func_args_t *pd_func_args)
-{
-    hal_ret_t                      ret = HAL_RET_OK;
-    pd_uplink_tm_control_args_t    *tm_args = pd_func_args->pd_uplink_tm_control;
-
-    if (tm_args->tm_port == TM_PORT_UPLINK_ALL) {
-        for (tm_port_t port = TM_UPLINK_PORT_BEGIN;
-             port <= TM_UPLINK_PORT_END; port++) {
-            sdk::asic::pd::asicpd_tm_enable_disable_uplink_port(port,
-                                                                tm_args->en);
-        }
-    } else {
-        sdk::asic::pd::asicpd_tm_enable_disable_uplink_port(tm_args->tm_port,
-                                                            tm_args->en);
-    }
-
-    return ret;
-}
-
 }    // namespace pd
 }    // namespace hal
