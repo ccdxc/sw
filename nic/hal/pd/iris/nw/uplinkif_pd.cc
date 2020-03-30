@@ -191,25 +191,12 @@ uplinkif_pd_alloc_res(pd_uplinkif_t *pd_upif)
     indexer::status      rs = indexer::SUCCESS;
 
     // Allocate lif hwid
-#if 0
-    rs = g_hal_state_pd->lif_hwid_idxr()->
-        alloc((uint32_t *)&pd_upif->hw_lif_id);
-    if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("failed to alloc hw_lif_id err: {}",
-                      rs);
-        pd_upif->hw_lif_id = INVALID_INDEXER_INDEX;
-        return HAL_RET_NO_RESOURCE;
-    }
-#endif
     pd_upif->hw_lif_id = if_allocate_hwlif_id();
     if (pd_upif->hw_lif_id == INVALID_INDEXER_INDEX) {
         HAL_TRACE_ERR("failed to alloc hw_lif_id err: {}", rs);
-        return HAL_RET_NO_RESOURCE;
+        ret = HAL_RET_NO_RESOURCE;
+        goto end;
     }
-    HAL_TRACE_DEBUG("if_id:{} allocated hw_lif_id: {}",
-                    if_get_if_id((if_t *)pd_upif->pi_if),
-                    pd_upif->hw_lif_id);
-
     // TODO: The macro of 32 is define in dev.hpp in platform.
     //       Needs to work on a single place to define the id splits.
     // Nicmgr uses hw_lif_ids of above 32 for host lifs.
@@ -222,29 +209,27 @@ uplinkif_pd_alloc_res(pd_uplinkif_t *pd_upif)
         SDK_ASSERT_RETURN(pd_upif->hw_lif_id <= 32, HAL_RET_NO_RESOURCE);
     }
 
-
     // Allocate ifpc id
     rs = g_hal_state_pd->uplinkifpc_hwid_idxr()->
         alloc((uint32_t *)&pd_upif->up_ifpc_id);
     if (rs != indexer::SUCCESS) {
         HAL_TRACE_ERR("failed to alloc uplink_ifpc_id err: {}", rs);
         pd_upif->up_ifpc_id = INVALID_INDEXER_INDEX;
-        return HAL_RET_NO_RESOURCE;
+        ret = HAL_RET_NO_RESOURCE;
+        goto end;
     }
-    HAL_TRACE_DEBUG("if_id:{} allocated uplink_ifpc_id: {}",
-                    if_get_if_id((if_t *)pd_upif->pi_if),
-                    pd_upif->up_ifpc_id);
-
     // Allocate lport
     rs = g_hal_state_pd->lport_idxr()->alloc((uint32_t *)&pd_upif->
             upif_lport_id);
     if (rs != indexer::SUCCESS) {
         HAL_TRACE_ERR("failed to alloc uplink_ifpc_id err: {}", rs);
         pd_upif->upif_lport_id = INVALID_INDEXER_INDEX;
-        return HAL_RET_NO_RESOURCE;
+        ret = HAL_RET_NO_RESOURCE;
     }
-    HAL_TRACE_DEBUG("if_id:{} allocated lport_id:{}",
-                    if_get_if_id((if_t *)pd_upif->pi_if),
+end:
+    HAL_TRACE_DEBUG("if:{}, hw_lif_id: {}, uplink_ifpc_id:{}, lport_id:{}", 
+                    if_to_str((if_t *)pd_upif->pi_if), pd_upif->hw_lif_id, 
+                    pd_upif->up_ifpc_id,
                     pd_upif->upif_lport_id);
     return ret;
 }
@@ -319,19 +304,8 @@ uplinkif_pd_dealloc_res(pd_uplinkif_t *upif_pd)
     indexer::status     rs;
 
     if (upif_pd->hw_lif_id != INVALID_INDEXER_INDEX) {
-#if 0
-        rs = g_hal_state_pd->lif_hwid_idxr()->free(upif_pd->hw_lif_id);
-        if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("failed to free hw_lif_id err: {}",
-                          upif_pd->hw_lif_id);
-            ret = HAL_RET_INVALID_OP;
-            goto end;
-        }
-#endif
         if_free_hwlif_id(upif_pd->hw_lif_id);
-
-        HAL_TRACE_DEBUG("freed hw_lif_id: {}",
-                        upif_pd->hw_lif_id);
+        HAL_TRACE_DEBUG("freed hw_lif_id: {}", upif_pd->hw_lif_id);
     }
 
     if (upif_pd->up_ifpc_id != INVALID_INDEXER_INDEX) {
@@ -342,9 +316,7 @@ uplinkif_pd_dealloc_res(pd_uplinkif_t *upif_pd)
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
-
-        HAL_TRACE_DEBUG("freed uplink_ifpc_id: {}",
-                        upif_pd->up_ifpc_id);
+        HAL_TRACE_DEBUG("freed uplink_ifpc_id: {}", upif_pd->up_ifpc_id);
     }
 
     if (upif_pd->upif_lport_id != INVALID_INDEXER_INDEX) {
@@ -355,9 +327,7 @@ uplinkif_pd_dealloc_res(pd_uplinkif_t *upif_pd)
             ret = HAL_RET_INVALID_OP;
             goto end;
         }
-
-        HAL_TRACE_DEBUG("freed lport_id: {}",
-                        upif_pd->upif_lport_id);
+        HAL_TRACE_DEBUG("freed lport_id: {}", upif_pd->upif_lport_id);
     }
 
 end:

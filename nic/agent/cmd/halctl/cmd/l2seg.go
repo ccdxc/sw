@@ -287,9 +287,9 @@ func l2segShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("B-M-P-SB-SM:   Bcast, Mcast, Prom , Shared BC, Shared MC Repl indices\n")
 	fmt.Printf("#EPs:          Num. of EPs in L2seg                  IFs:         Member Interfaces\n")
 	fmt.Printf("PinUplnkId:    Pinned Uplink Interface ID            Attach:      Attached L2segs\n")
-	hdrLine := strings.Repeat("-", 80)
+	hdrLine := strings.Repeat("-", 100)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-8s%-5s%-6s%-10s%-40s%-5s%-10s%-10s%-20s\n",
+	fmt.Printf("%-8s%-5s%-6s%-10s%-20s%-5s%-15s%-10s%-20s\n",
 		"Id", "Mode", "vrfId", "WireEncap", "OIFLs", "#EPs", "IFs", "PinUp", "Attach.")
 	fmt.Println(hdrLine)
 }
@@ -303,7 +303,7 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 
 	if len(ifList) > 0 {
 		for i := 0; i < len(ifList); i++ {
-			ifStr += fmt.Sprintf("%d ", ifList[i].GetIfHandle())
+			ifStr += fmt.Sprintf("%s ", utils.IfIndexToStr(uint32(ifList[i].GetInterfaceId())))
 		}
 	} else {
 		ifStr += "None"
@@ -407,7 +407,7 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		attachStr += "-"
 	}
 
-	fmt.Printf("%-8d%-5s%-6d%-10s%-40s%-5d%-10s%-11s%-20s\n",
+	fmt.Printf("%-8d%-5s%-6d%-10s%-20s%-5d%-15s%-11s%-20s\n",
 		resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
 		vrfTypeStr,
 		resp.GetSpec().GetVrfKeyHandle().GetVrfId(),

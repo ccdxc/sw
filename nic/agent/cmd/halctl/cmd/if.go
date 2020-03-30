@@ -12,6 +12,7 @@ import (
 	"net"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -1073,12 +1074,21 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 	ifShowHeader()
 
 	// Print IFs
+	m := make(map[uint64]*halproto.InterfaceGetResponse)
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 			continue
 		}
-		ifShowOneResp(resp)
+		m[resp.GetSpec().GetKeyOrHandle().GetInterfaceId()] = resp
+	}
+	var keys []uint64
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	for _, k := range keys {
+		ifShowOneResp(m[k])
 	}
 }
 
@@ -1341,20 +1351,17 @@ func ifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func ifShowHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("Id:    Interface ID         Handle: IF's handle\n")
-	fmt.Printf("Ifype: Interface type\n")
-	hdrLine := strings.Repeat("-", 78)
+	fmt.Printf("If:    Interface	\n")
+	fmt.Printf("TXMirror: TX Mirror Sessions		RXMirror: RX Mirror Sessions\n")
+	hdrLine := strings.Repeat("-", 52)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-22s%-10s%-10s%-18s%-18s\n",
-		"Id", "Handle", "IfType", "TxMirrorSessions", "RxMirrorSessions")
+	fmt.Printf("%-15s%-18s%-18s\n",
+		"If", "TxMirror", "RxMirror")
 	fmt.Println(hdrLine)
 }
 
 func ifShowOneResp(resp *halproto.InterfaceGetResponse) {
-	fmt.Printf("%-22d%-10d%-10s",
-		resp.GetSpec().GetKeyOrHandle().GetInterfaceId(),
-		resp.GetStatus().GetIfHandle(),
-		ifTypeToStr(resp.GetSpec().GetType()))
+	fmt.Printf("%-15s", ifRespToStr(resp))
 
 	indent := 0
 	for _, mirrorID := range resp.GetSpec().TxMirrorSessions {

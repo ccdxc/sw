@@ -2907,6 +2907,7 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
     hal_ret_t                   ret         = HAL_RET_OK;
     pd::pd_func_args_t          pd_func_args = {};
     l2seg_t                     *shared_l2seg = NULL;
+    if_t                        *hal_if = NULL;
 
     // fill config spec of this L2 segment
     rsp->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf_lookup_by_handle(l2seg->vrf_handle)->vrf_id);
@@ -2936,7 +2937,8 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
         for (const void *ptr : *l2seg->mbrif_list) {
             p_hdl_id = (hal_handle_t *)ptr;
             auto ifkh = rsp->mutable_spec()->add_if_key_handle();
-            ifkh->set_if_handle(*p_hdl_id);
+            hal_if = find_if_by_handle(*p_hdl_id);
+            ifkh->set_interface_id(hal_if ? hal_if->if_id : 0);
         }
     }
 #define HAL_MAX_NUM_UPLINKS 3

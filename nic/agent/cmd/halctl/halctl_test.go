@@ -452,7 +452,7 @@ func (h *halCtlSuite) TestInterfaceGet(c *C) {
 		resp, err = h.getInterfaces(ifGetReqMsg)
 		return err == nil, nil
 	}, "Failed to get Interfaces")
-	AssertEquals(c, true, strings.Contains(resp, "1                     0"), fmt.Sprintf("halctl returned: %v", resp))
+	AssertEquals(c, true, strings.Contains(resp, "Enic-4"), fmt.Sprintf("halctl returned: %v", resp))
 	//AssertEquals(c, true, strings.Contains(resp, "segmentid: 1"), fmt.Sprintf("halctl returned: %v", resp))
 }
 

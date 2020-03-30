@@ -3801,8 +3801,9 @@ uplink_if_create (const InterfaceSpec& spec, if_t *hal_if)
     hal_if->native_l2seg = spec.if_uplink_info().native_l2segment_id();
     hal_if->is_oob_management = spec.if_uplink_info().is_oob_management();
     hal_if->if_op_status = uplink_if_get_oper_state(g_hal_state->catalog()->ifindex_to_logical_port(hal_if->fp_port_num));
-    HAL_TRACE_DEBUG("Uplink fp_port_num: {}, asic_port_num: {}, Status: {}, native_l2seg_id: {},"
+    HAL_TRACE_DEBUG("Uplink {}, fp_port_num: {}, asic_port_num: {}, Status: {}, native_l2seg_id: {}, "
                     "is_oob: {}",
+                    if_to_str(hal_if),
                     hal_if->fp_port_num,
                     hal_if->uplink_port_num,
                     if_status_to_str(hal_if->if_op_status),
