@@ -52,6 +52,12 @@ athena_impl_state::athena_impl_state(pds_state *state) {
     table_params.entry_trace_en = true;
     nacl_tbl_ = sltcam::factory(&table_params);
     SDK_ASSERT(nacl_tbl() != NULL);
+
+    memset(&table_params, 0, sizeof(table_params));
+    table_params.table_id = P4TBL_ID_CHECKSUM;
+    table_params.entry_trace_en = true;
+    checksum_tbl_= sltcam::factory(&table_params);
+    SDK_ASSERT(checksum_tbl() != NULL);
 }
 
 athena_impl_state::~athena_impl_state() {

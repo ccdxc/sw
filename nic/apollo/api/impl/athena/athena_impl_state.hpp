@@ -45,6 +45,7 @@ public:
     sltcam *ingress_drop_stats_tbl(void) { return ingress_drop_stats_tbl_; }
     sltcam *egress_drop_stats_tbl(void) { return egress_drop_stats_tbl_; }
     sltcam *nacl_tbl(void) { return nacl_tbl_; }
+    sltcam *checksum_tbl(void) { return checksum_tbl_; }
 
     friend class athena_impl;         ///< friend of athena_impl_state
 
@@ -54,6 +55,7 @@ private:
     sltcam *ingress_drop_stats_tbl_;    ///< ingress drop stats table
     sltcam *egress_drop_stats_tbl_;     ///< egress drop stats table
     sltcam *nacl_tbl_;                  ///< NACL tcam table
+    sltcam *checksum_tbl_;              ///< Checksum tcam table
     sdk::table::handle_t key_native_tbl_hdls_[MAX_KEY_NATIVE_TBL_ENTRIES];
     sdk::table::handle_t key_tunneled_tbl_hdls_[MAX_KEY_TUNNELED_TBL_ENTRIES];
     sdk::table::handle_t ingress_drop_stats_tbl_hdls_[P4I_DROP_REASON_MAX + 1];

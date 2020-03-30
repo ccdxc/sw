@@ -186,7 +186,7 @@ athena_gtest_setup_flows_tcp(void)
 }
 
 /*
- * Host to Switch UDP flow: Packet to be sent
+ * Host to Switch TCP flow: Packet to be sent
  */
 static uint8_t g_snd_pkt_ipv4_tcp_h2s[] = {
     0x00, 0x00, 0xF1, 0xD0, 0xD1, 0xD0, 0x00, 0x00,
@@ -205,7 +205,7 @@ static uint8_t g_snd_pkt_ipv4_tcp_h2s[] = {
     0x75, 0x76, 0x77, 0x7A, 0x78, 0x79
 };
 /*
- * Host to Switch UDP flow: Expected Packet
+ * Host to Switch TCP flow: Expected Packet
  */
 
 static uint8_t g_rcv_pkt_ipv4_tcp_h2s[] = {

@@ -224,6 +224,7 @@ action session_rewrite_ipv4_snat(ipv4_addr_snat,
     if (control_metadata.direction == RX_FROM_SWITCH) {
         modify_field(ipv4_2.srcAddr, ipv4_addr_snat);
     }
+    modify_field(control_metadata.update_checksum, TRUE);
 }
 
 action session_rewrite_ipv4_dnat(ipv4_addr_dnat, 
@@ -237,6 +238,7 @@ action session_rewrite_ipv4_dnat(ipv4_addr_dnat,
     if (control_metadata.direction == RX_FROM_SWITCH) {
         modify_field(ipv4_2.dstAddr, ipv4_addr_dnat);
     }
+    modify_field(control_metadata.update_checksum, TRUE);
 }
 
 action session_rewrite_ipv4_pat( ipv4_addr_spat, ipv4_addr_dpat, l4_port_spat,
@@ -266,6 +268,7 @@ action session_rewrite_ipv4_pat( ipv4_addr_spat, ipv4_addr_dpat, l4_port_spat,
     if (l4_port_dpat != 0) {
         modify_field(tcp.dstPort, l4_port_dpat);
     }
+    modify_field(control_metadata.update_checksum, TRUE);
 }
 
 action session_rewrite_ipv6_snat(ipv6_addr_snat,
@@ -279,6 +282,7 @@ action session_rewrite_ipv6_snat(ipv6_addr_snat,
     if (control_metadata.direction == RX_FROM_SWITCH) {
         modify_field(ipv6_2.srcAddr, ipv6_addr_snat);
     }
+    modify_field(control_metadata.update_checksum, TRUE);
 }
 
 action session_rewrite_ipv6_dnat(ipv6_addr_dnat, 
@@ -292,10 +296,11 @@ action session_rewrite_ipv6_dnat(ipv6_addr_dnat,
     if (control_metadata.direction == RX_FROM_SWITCH) {
         modify_field(ipv6_2.dstAddr, ipv6_addr_dnat);
     }
+    modify_field(control_metadata.update_checksum, TRUE);
 }
 
 
-@pragma stage 5
+@pragma stage 4
 @pragma hbm_table
 @pragma index_table
 @pragma capi_bitfields_struct
@@ -410,7 +415,7 @@ action session_rewrite_encap_geneve(
     modify_field(scratch_metadata.originator_physical_ip, originator_physical_ip);
 }
 
-@pragma stage 5
+@pragma stage 4
 @pragma hbm_table
 @pragma index_table
 @pragma capi_bitfields_struct

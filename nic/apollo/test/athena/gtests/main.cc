@@ -279,6 +279,73 @@ create_s2h_session_rewrite(uint32_t session_rewrite_id,
 }
 
 sdk_ret_t
+create_s2h_session_rewrite_nat_ipv4(uint32_t session_rewrite_id,
+        mac_addr_t *ep_dmac, mac_addr_t *ep_smac, uint16_t vnic_vlan,
+        pds_flow_session_rewrite_nat_type_t nat_type,
+        ipv4_addr_t ipv4_addr)
+{ 
+    sdk_ret_t                                   ret = SDK_RET_OK;
+    pds_flow_session_rewrite_spec_t             spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_rewrite_id = session_rewrite_id;
+
+    spec.data.strip_encap_header = TRUE;
+    spec.data.strip_l2_header = TRUE;
+    spec.data.strip_vlan_tag = TRUE;
+
+    spec.data.nat_info.nat_type = nat_type;
+    spec.data.nat_info.u.ipv4_addr = (uint32_t) ipv4_addr;
+
+    spec.data.encap_type = ENCAP_TYPE_L2;
+    sdk::lib::memrev(spec.data.u.l2_encap.dmac, (uint8_t*)ep_dmac, sizeof(mac_addr_t));
+    sdk::lib::memrev(spec.data.u.l2_encap.smac, (uint8_t*)ep_smac, sizeof(mac_addr_t));
+    spec.data.u.l2_encap.insert_vlan_tag = TRUE;
+    spec.data.u.l2_encap.vlan_id = vnic_vlan;
+
+    ret = pds_flow_session_rewrite_create(&spec);
+    if (ret != SDK_RET_OK) {
+        printf("Failed to program session rewrite s2h info : %u\n", ret);
+    }
+
+    return ret;
+}
+
+sdk_ret_t
+create_s2h_session_rewrite_nat_ipv6(uint32_t session_rewrite_id,
+        mac_addr_t *ep_dmac, mac_addr_t *ep_smac, uint16_t vnic_vlan,
+        pds_flow_session_rewrite_nat_type_t nat_type,
+        ipv6_addr_t *ipv6_addr)
+{ 
+    sdk_ret_t                                   ret = SDK_RET_OK;
+    pds_flow_session_rewrite_spec_t             spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_rewrite_id = session_rewrite_id;
+
+    spec.data.strip_encap_header = TRUE;
+    spec.data.strip_l2_header = TRUE;
+    spec.data.strip_vlan_tag = TRUE;
+
+    spec.data.nat_info.nat_type = nat_type;
+    sdk::lib::memrev(spec.data.nat_info.u.ipv6_addr, (uint8_t *)ipv6_addr,
+            sizeof(ipv6_addr_t));
+
+    spec.data.encap_type = ENCAP_TYPE_L2;
+    sdk::lib::memrev(spec.data.u.l2_encap.dmac, (uint8_t*)ep_dmac, sizeof(mac_addr_t));
+    sdk::lib::memrev(spec.data.u.l2_encap.smac, (uint8_t*)ep_smac, sizeof(mac_addr_t));
+    spec.data.u.l2_encap.insert_vlan_tag = TRUE;
+    spec.data.u.l2_encap.vlan_id = vnic_vlan;
+
+    ret = pds_flow_session_rewrite_create(&spec);
+    if (ret != SDK_RET_OK) {
+        printf("Failed to program session rewrite s2h info : %u\n", ret);
+    }
+
+    return ret;
+}
+
+sdk_ret_t
 create_h2s_session_rewrite_mplsoudp(uint32_t session_rewrite_id,
         mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac,
         uint16_t substrate_vlan,
@@ -295,6 +362,89 @@ create_h2s_session_rewrite_mplsoudp(uint32_t session_rewrite_id,
     spec.data.strip_vlan_tag = TRUE;
 
     spec.data.nat_info.nat_type = REWRITE_NAT_TYPE_NONE;
+
+    spec.data.encap_type = ENCAP_TYPE_MPLSOUDP;
+    sdk::lib::memrev(spec.data.u.mplsoudp_encap.l2_encap.dmac, (uint8_t*)substrate_dmac, sizeof(mac_addr_t));
+    sdk::lib::memrev(spec.data.u.mplsoudp_encap.l2_encap.smac, (uint8_t*)substrate_smac, sizeof(mac_addr_t));
+    spec.data.u.mplsoudp_encap.l2_encap.insert_vlan_tag = TRUE;
+    spec.data.u.mplsoudp_encap.l2_encap.vlan_id = substrate_vlan;
+
+    spec.data.u.mplsoudp_encap.ip_encap.ip_saddr = substrate_sip;
+    spec.data.u.mplsoudp_encap.ip_encap.ip_daddr = substrate_dip;
+
+    spec.data.u.mplsoudp_encap.mpls1_label = mpls1_label;
+    spec.data.u.mplsoudp_encap.mpls2_label = mpls2_label;
+
+    ret = pds_flow_session_rewrite_create(&spec);
+    if (ret != SDK_RET_OK) {
+        printf("Failed to program session rewrite h2s info : %u\n", ret);
+    }
+
+    return ret;
+}
+
+sdk_ret_t
+create_h2s_session_rewrite_mplsoudp_nat_ipv4(uint32_t session_rewrite_id,
+        mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac,
+        uint16_t substrate_vlan,
+        uint32_t substrate_sip, uint32_t substrate_dip,
+        uint32_t mpls1_label, uint32_t mpls2_label,
+        pds_flow_session_rewrite_nat_type_t nat_type,
+        ipv4_addr_t ipv4_addr)
+{ 
+    sdk_ret_t                                   ret = SDK_RET_OK;
+    pds_flow_session_rewrite_spec_t             spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_rewrite_id = session_rewrite_id;
+
+    spec.data.strip_l2_header = TRUE;
+    spec.data.strip_vlan_tag = TRUE;
+
+    spec.data.nat_info.nat_type = nat_type;
+    spec.data.nat_info.u.ipv4_addr = (uint32_t) ipv4_addr;
+
+    spec.data.encap_type = ENCAP_TYPE_MPLSOUDP;
+    sdk::lib::memrev(spec.data.u.mplsoudp_encap.l2_encap.dmac, (uint8_t*)substrate_dmac, sizeof(mac_addr_t));
+    sdk::lib::memrev(spec.data.u.mplsoudp_encap.l2_encap.smac, (uint8_t*)substrate_smac, sizeof(mac_addr_t));
+    spec.data.u.mplsoudp_encap.l2_encap.insert_vlan_tag = TRUE;
+    spec.data.u.mplsoudp_encap.l2_encap.vlan_id = substrate_vlan;
+
+    spec.data.u.mplsoudp_encap.ip_encap.ip_saddr = substrate_sip;
+    spec.data.u.mplsoudp_encap.ip_encap.ip_daddr = substrate_dip;
+
+    spec.data.u.mplsoudp_encap.mpls1_label = mpls1_label;
+    spec.data.u.mplsoudp_encap.mpls2_label = mpls2_label;
+
+    ret = pds_flow_session_rewrite_create(&spec);
+    if (ret != SDK_RET_OK) {
+        printf("Failed to program session rewrite h2s info : %u\n", ret);
+    }
+
+    return ret;
+}
+
+sdk_ret_t
+create_h2s_session_rewrite_mplsoudp_nat_ipv6(uint32_t session_rewrite_id,
+        mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac,
+        uint16_t substrate_vlan,
+        uint32_t substrate_sip, uint32_t substrate_dip,
+        uint32_t mpls1_label, uint32_t mpls2_label,
+        pds_flow_session_rewrite_nat_type_t nat_type,
+        ipv6_addr_t *ipv6_addr)
+{ 
+    sdk_ret_t                                   ret = SDK_RET_OK;
+    pds_flow_session_rewrite_spec_t             spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_rewrite_id = session_rewrite_id;
+
+    spec.data.strip_l2_header = TRUE;
+    spec.data.strip_vlan_tag = TRUE;
+
+    spec.data.nat_info.nat_type = nat_type;
+    sdk::lib::memrev(spec.data.nat_info.u.ipv6_addr, (uint8_t *)ipv6_addr,
+            sizeof(ipv6_addr_t));
 
     spec.data.encap_type = ENCAP_TYPE_MPLSOUDP;
     sdk::lib::memrev(spec.data.u.mplsoudp_encap.l2_encap.dmac, (uint8_t*)substrate_dmac, sizeof(mac_addr_t));
@@ -456,6 +606,11 @@ setup_flows(void)
         return ret;
     }
 
+    ret = athena_gtest_setup_flows_nat();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
     return ret;
 }
 
@@ -558,6 +713,9 @@ TEST(athena_gtest, sim)
 
     /* ICMP Flow tests */
     ASSERT_TRUE(athena_gtest_test_flows_icmp() == SDK_RET_OK);
+
+    /* NAT Flow tests */
+    ASSERT_TRUE(athena_gtest_test_flows_nat() == SDK_RET_OK);
 
     iterate_dump_flows();
 

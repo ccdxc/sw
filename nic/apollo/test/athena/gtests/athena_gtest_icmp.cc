@@ -449,16 +449,14 @@ athena_gtest_test_flows_icmp(void)
             sizeof(g_snd_pkt_ipv6_icmp_h2s), g_h_port,
             g_rcv_pkt_ipv6_icmp_h2s, sizeof(g_rcv_pkt_ipv6_icmp_h2s), g_s_port);
     if (ret != SDK_RET_OK) {
-        //return ret;
-        ret = SDK_RET_OK;
+        return ret;
     }
 
     ret = send_packet("ICMP-IPv6: s2h pkt", g_snd_pkt_ipv6_icmp_s2h,
             sizeof(g_snd_pkt_ipv6_icmp_s2h), g_s_port,
             g_rcv_pkt_ipv6_icmp_s2h, sizeof(g_rcv_pkt_ipv6_icmp_s2h), g_h_port);
     if (ret != SDK_RET_OK) {
-        //return ret;
-        ret = SDK_RET_OK;
+        return ret;
     }
     return ret;
 }

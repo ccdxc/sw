@@ -205,6 +205,8 @@ action init_config() {
              offset_metadata.l2_1);
     if (capri_intrinsic.tm_oq != TM_P4_RECIRC_QUEUE) {
         modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
+    } else {
+        modify_field(capri_intrinsic.tm_oq, capri_intrinsic.tm_iq);
     }
 
     if (control_metadata.skip_flow_lkp == TRUE) {

@@ -72,7 +72,7 @@ session_rewrite_ipv4_snat:
     seq             c1, k.control_metadata_direction, RX_FROM_SWITCH
     phvwr.c1        p.ipv4_2_srcAddr, D(ipv4_addr_snat)
     phvwr.!c1       p.ipv4_1_srcAddr, D(ipv4_addr_snat)
-    nop.e
+    phvwr.e         p.control_metadata_update_checksum, TRUE
     nop
 
 
@@ -85,7 +85,7 @@ session_rewrite_ipv4_dnat:
     seq             c1, k.control_metadata_direction, RX_FROM_SWITCH
     phvwr.c1        p.ipv4_2_dstAddr, D(ipv4_addr_dnat)
     phvwr.!c1       p.ipv4_1_dstAddr, D(ipv4_addr_dnat)
-    nop.e
+    phvwr.e         p.control_metadata_update_checksum, TRUE
     nop
 
 
@@ -113,7 +113,7 @@ session_rewrite_ipv4_pat_h2s:
     sne             c2, D(ipv4_addr_dpat), r0
     phvwr.c2        p.ipv4_1_dstAddr, D(ipv4_addr_dpat)
     
-    nop.e
+    phvwr.e         p.control_metadata_update_checksum, TRUE
     nop
 
 session_rewrite_ipv4_pat_s2h:
@@ -123,7 +123,7 @@ session_rewrite_ipv4_pat_s2h:
     sne             c2, D(ipv4_addr_dpat), r0
     phvwr.c2        p.ipv4_2_dstAddr, D(ipv4_addr_dpat)
 
-    nop.e
+    phvwr.e         p.control_metadata_update_checksum, TRUE
     nop
 
 
@@ -136,7 +136,7 @@ session_rewrite_ipv6_snat:
     seq             c1, k.control_metadata_direction, RX_FROM_SWITCH
     phvwr.c1        p.ipv6_2_srcAddr, D(ipv6_addr_snat)
     phvwr.!c1       p.ipv6_1_srcAddr, D(ipv6_addr_snat)
-    nop.e
+    phvwr.e         p.control_metadata_update_checksum, TRUE
     nop
 
 
@@ -149,7 +149,7 @@ session_rewrite_ipv6_dnat:
     seq             c1, k.control_metadata_direction, RX_FROM_SWITCH
     phvwr.c1        p.ipv6_2_dstAddr, D(ipv6_addr_dnat)
     phvwr.!c1       p.ipv6_1_dstAddr, D(ipv6_addr_dnat)
-    nop.e
+    phvwr.e         p.control_metadata_update_checksum, TRUE
     nop
 
 

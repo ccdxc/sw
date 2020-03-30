@@ -430,96 +430,286 @@ athena_impl::stats_init_(void) {
     return SDK_RET_OK;
 }
 
+
 sdk_ret_t
 athena_impl::checksum_init_(void)
 {
     uint64_t idx;
-    p4pd_error_t p4pd_ret;
-    checksum_swkey_t key;
-    checksum_actiondata_t data;
+    sdk_ret_t               ret;
+    checksum_swkey_t        key;
+    checksum_swkey_mask_t   mask;
+    checksum_actiondata_t   data;
+    sdk_table_api_params_t  tparams;
 
     memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
-    key.ipv4_1_valid = 1;
-    data.action_id = CHECKSUM_UPDATE_IPV4_CHECKSUM_ID;
-    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
-                                       idx, NULL, NULL, &data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
-    }
 
-    memset(&key, 0, sizeof(key));
-    memset(&data, 0, sizeof(data));
     key.ipv4_1_valid = 1;
     key.udp_1_valid = 1;
+    mask.ipv4_1_valid_mask = 1;
+    mask.udp_1_valid_mask = 1;
     data.action_id = CHECKSUM_UPDATE_IPV4_UDP_CHECKSUM_ID;
-    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
-                                       idx, NULL, NULL, &data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   CHECKSUM_UPDATE_IPV4_UDP_CHECKSUM_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->checksum_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry for action ID: %u, ret: %u\n",
+               data.action_id, ret);
+        return ret;
     }
 
     memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+
     key.ipv4_1_valid = 1;
     key.tcp_valid = 1;
+    mask.ipv4_1_valid_mask = 1;
+    mask.tcp_valid_mask = 1;
     data.action_id = CHECKSUM_UPDATE_IPV4_TCP_CHECKSUM_ID;
-    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
-                                       idx, NULL, NULL, &data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   CHECKSUM_UPDATE_IPV4_TCP_CHECKSUM_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->checksum_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry for action ID: %u, ret: %u\n",
+               data.action_id, ret);
+        return ret;
     }
 
     memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+
     key.ipv4_1_valid = 1;
     key.icmp_valid = 1;
+    mask.ipv4_1_valid_mask = 1;
+    mask.icmp_valid_mask = 1;
     data.action_id = CHECKSUM_UPDATE_IPV4_ICMP_CHECKSUM_ID;
-    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
-                                       idx, NULL, NULL, &data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   CHECKSUM_UPDATE_IPV4_ICMP_CHECKSUM_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->checksum_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry for action ID: %u, ret: %u\n",
+               data.action_id, ret);
+        return ret;
     }
 
     memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+
+    key.ipv4_1_valid = 1;
+    mask.ipv4_1_valid_mask = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_CHECKSUM_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   CHECKSUM_UPDATE_IPV4_CHECKSUM_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->checksum_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry for action ID: %u, ret: %u\n",
+               data.action_id, ret);
+    }
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
     key.ipv6_1_valid = 1;
     key.udp_1_valid = 1;
+    mask.ipv6_1_valid_mask = 1;
+    mask.udp_1_valid_mask = 1;
     data.action_id = CHECKSUM_UPDATE_IPV6_UDP_CHECKSUM_ID;
-    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
-                                       idx, NULL, NULL, &data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   CHECKSUM_UPDATE_IPV6_UDP_CHECKSUM_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->checksum_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry for action ID: %u, ret: %u\n",
+               data.action_id, ret);
+        return ret;
     }
 
     memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+
     key.ipv6_1_valid = 1;
     key.tcp_valid = 1;
+    mask.ipv6_1_valid_mask = 1;
+    mask.tcp_valid_mask = 1;
     data.action_id = CHECKSUM_UPDATE_IPV6_TCP_CHECKSUM_ID;
-    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
-                                       idx, NULL, NULL, &data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   CHECKSUM_UPDATE_IPV6_TCP_CHECKSUM_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->checksum_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry for action ID: %u, ret: %u\n",
+               data.action_id, ret);
+        return ret;
     }
 
     memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+
     key.ipv6_1_valid = 1;
     key.icmp_valid = 1;
+    mask.ipv6_1_valid_mask = 1;
+    mask.icmp_valid_mask = 1;
     data.action_id = CHECKSUM_UPDATE_IPV6_ICMP_CHECKSUM_ID;
-    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
-                                       idx, NULL, NULL, &data);
-    if (p4pd_ret != P4PD_SUCCESS) {
-        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   CHECKSUM_UPDATE_IPV6_ICMP_CHECKSUM_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->checksum_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry for action ID: %u, ret: %u\n",
+               data.action_id, ret);
+        return ret;
     }
+
+    /* Layer 2 checksum support */
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    key.ipv4_2_valid = 1;
+    key.udp_2_valid = 1;
+    mask.ipv4_2_valid_mask = 1;
+    mask.udp_2_valid_mask = 1;
+    data.action_id = CHECKSUM_UPDATE_L2_IPV4_UDP_CHECKSUM_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   CHECKSUM_UPDATE_L2_IPV4_UDP_CHECKSUM_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->checksum_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry for action ID: %u, ret: %u\n",
+               data.action_id, ret);
+        return ret;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    key.ipv4_2_valid = 1;
+    key.tcp_valid = 1;
+    mask.ipv4_2_valid_mask = 1;
+    mask.tcp_valid_mask = 1;
+    data.action_id = CHECKSUM_UPDATE_L2_IPV4_TCP_CHECKSUM_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   CHECKSUM_UPDATE_L2_IPV4_TCP_CHECKSUM_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->checksum_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry for action ID: %u, ret: %u\n",
+               data.action_id, ret);
+        return ret;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    key.ipv4_2_valid = 1;
+    key.icmp_valid = 1;
+    mask.ipv4_2_valid_mask = 1;
+    mask.icmp_valid_mask = 1;
+    data.action_id = CHECKSUM_UPDATE_L2_IPV4_ICMP_CHECKSUM_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   CHECKSUM_UPDATE_L2_IPV4_ICMP_CHECKSUM_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->checksum_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry for action ID: %u, ret: %u\n",
+               data.action_id, ret);
+        return ret;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    key.ipv4_2_valid = 1;
+    mask.ipv4_2_valid_mask = 1;
+    data.action_id = CHECKSUM_UPDATE_L2_IPV4_CHECKSUM_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   CHECKSUM_UPDATE_L2_IPV4_CHECKSUM_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->checksum_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry for action ID: %u, ret: %u\n",
+               data.action_id, ret);
+    }
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    key.ipv6_2_valid = 1;
+    key.udp_2_valid = 1;
+    mask.ipv6_2_valid_mask = 1;
+    mask.udp_2_valid_mask = 1;
+    data.action_id = CHECKSUM_UPDATE_L2_IPV6_UDP_CHECKSUM_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   CHECKSUM_UPDATE_L2_IPV6_UDP_CHECKSUM_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->checksum_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry for action ID: %u, ret: %u\n",
+               data.action_id, ret);
+        return ret;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    key.ipv6_2_valid = 1;
+    key.tcp_valid = 1;
+    mask.ipv6_2_valid_mask = 1;
+    mask.tcp_valid_mask = 1;
+    data.action_id = CHECKSUM_UPDATE_L2_IPV6_TCP_CHECKSUM_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   CHECKSUM_UPDATE_L2_IPV6_TCP_CHECKSUM_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->checksum_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry for action ID: %u, ret: %u\n",
+               data.action_id, ret);
+        return ret;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    key.ipv6_2_valid = 1;
+    key.icmp_valid = 1;
+    mask.ipv6_2_valid_mask = 1;
+    mask.icmp_valid_mask = 1;
+    data.action_id = CHECKSUM_UPDATE_L2_IPV6_ICMP_CHECKSUM_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   CHECKSUM_UPDATE_L2_IPV6_ICMP_CHECKSUM_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->checksum_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program entry for action ID: %u, ret: %u\n",
+               data.action_id, ret);
+        return ret;
+    }
+
     return SDK_RET_OK;
 }
 
