@@ -1034,6 +1034,13 @@ asicpd_barco_sym_hash_process_request (uint8_t hash_type, bool generate,
     return SDK_RET_INVALID_OP;
 }
 
+sdk_ret_t
+asicpd_barco_get_capabilities(uint8_t ring_type, bool *sw_reset_capable,
+                              bool *sw_enable_capable)
+{
+    return SDK_RET_INVALID_OP;
+}
+
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk

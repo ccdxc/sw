@@ -415,6 +415,9 @@ sdk_ret_t asicpd_barco_sym_hash_process_request(uint8_t hash_type,
                                                 uint8_t *output_digest,
                                                 int digest_len);
 
+sdk_ret_t asicpd_barco_get_capabilities(uint8_t ring_type,
+                                        bool *sw_reset_capable,
+                                        bool *sw_enable_capable);
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk

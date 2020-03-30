@@ -10,10 +10,11 @@
  * Operations on user selected group of Accelerator rings and sub-rings.
  */
 
+using namespace sdk::asic::pd;
+
 #define ACCEL_RGROUP_METRICS_TIMER_MS   500
 
 namespace hal {
-
 namespace pd {
 
 /*
@@ -140,7 +141,7 @@ namespace pd {
             iter++;                                                         \
         }                                                                   \
     } while (false)
-    
+
 /*
  * Calculate offset into metrics memory
  */
@@ -170,12 +171,14 @@ accel_ctl(void)
  * Get sw_reset capability
  */
 static inline bool
-accel_ring_sw_reset_capable(types::BarcoRings ring_type)
+accel_ring_sw_reset_capable (types::BarcoRings ring_type)
 {
     bool    sw_reset_capable;
     bool    sw_enable_capable;
 
-    capri_barco_get_capabilities((barco_rings_t)ring_type, &sw_reset_capable, &sw_enable_capable);
+    asicpd_barco_get_capabilities((barco_rings_t)ring_type,
+                                  &sw_reset_capable,
+                                  &sw_enable_capable);
     return sw_reset_capable;
 }
 
@@ -500,7 +503,7 @@ accel_rgroup_pndx_set(const char *rgroup_name,
 /*
  * Retrieve config info for all rings in a group.
  */
-hal_ret_t 
+hal_ret_t
 accel_rgroup_info_get(const char *rgroup_name,
                       uint32_t sub_ring,
                       accel_rgroup_ring_info_cb_t cb_func,
@@ -521,7 +524,7 @@ accel_rgroup_info_get(const char *rgroup_name,
 /*
  * Retrieve indices for all rings in a group.
  */
-hal_ret_t 
+hal_ret_t
 accel_rgroup_indices_get(const char *rgroup_name,
                          uint32_t sub_ring,
                          accel_rgroup_ring_indices_cb_t cb_func,
@@ -542,7 +545,7 @@ accel_rgroup_indices_get(const char *rgroup_name,
 /*
  * Retrieve metrics for all rings in a group.
  */
-hal_ret_t 
+hal_ret_t
 accel_rgroup_metrics_get(const char *rgroup_name,
                          uint32_t sub_ring,
                          accel_rgroup_ring_metrics_cb_t cb_func,
@@ -563,7 +566,7 @@ accel_rgroup_metrics_get(const char *rgroup_name,
 /*
  * Retrieve miscellaneous config/status for all rings in a group.
  */
-hal_ret_t 
+hal_ret_t
 accel_rgroup_misc_get(const char *rgroup_name,
                       uint32_t sub_ring,
                       accel_rgroup_ring_misc_cb_t cb_func,
@@ -582,7 +585,7 @@ accel_rgroup_misc_get(const char *rgroup_name,
 }
 
 /*
- * Add a ring by name to a ring group. The ring must have 
+ * Add a ring by name to a ring group. The ring must have
  * supported ring_ops.
  */
 hal_ret_t
@@ -602,7 +605,7 @@ accel_rgroup_t::ring_add(const std::string& ring_name,
         return HAL_RET_ENTRY_EXISTS;
     }
 
-    elem_map.insert(std::make_pair(ring_name, 
+    elem_map.insert(std::make_pair(ring_name,
                                    std::make_pair(ring_ops, ring_handle)));
     return HAL_RET_OK;
 }
@@ -679,7 +682,7 @@ accel_rgroup_t::pndx_set(uint32_t sub_ring,
 /*
  * Retrieve config info on all rings in a group.
  */
-hal_ret_t 
+hal_ret_t
 accel_rgroup_t::info_get(uint32_t sub_ring,
                          accel_rgroup_ring_info_cb_t cb_func,
                          void *user_ctx)
@@ -693,7 +696,7 @@ accel_rgroup_t::info_get(uint32_t sub_ring,
 /*
  * Retrieve current ring indices on all rings in a group.
  */
-hal_ret_t 
+hal_ret_t
 accel_rgroup_t::indices_get(uint32_t sub_ring,
                             accel_rgroup_ring_indices_cb_t cb_func,
                             void *user_ctx)
@@ -707,7 +710,7 @@ accel_rgroup_t::indices_get(uint32_t sub_ring,
 /*
  * Retrieve current ring metrics on all rings in a group.
  */
-hal_ret_t 
+hal_ret_t
 accel_rgroup_t::metrics_get(uint32_t sub_ring,
                             accel_rgroup_ring_metrics_cb_t cb_func,
                             void *user_ctx)
@@ -721,7 +724,7 @@ accel_rgroup_t::metrics_get(uint32_t sub_ring,
 /*
  * Retrieve  miscellaneous config/status on all rings in a group.
  */
-hal_ret_t 
+hal_ret_t
 accel_rgroup_t::misc_get(uint32_t sub_ring,
                          accel_rgroup_ring_misc_cb_t cb_func,
                          void *user_ctx)
@@ -735,7 +738,7 @@ accel_rgroup_t::misc_get(uint32_t sub_ring,
 /*
  * All supported ring_ops methods begin here
  */
-hal_ret_t 
+hal_ret_t
 accel_ring_cp_t::reset_set(uint32_t ring_handle,
                            uint32_t sub_ring,
                            uint32_t *last_ring_handle,
@@ -750,7 +753,7 @@ accel_ring_cp_t::reset_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_cp_t::enable_set(uint32_t ring_handle,
                             uint32_t sub_ring,
                             uint32_t *last_ring_handle,
@@ -764,7 +767,7 @@ accel_ring_cp_t::enable_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_cp_t::pndx_set(uint32_t ring_handle,
                           uint32_t sub_ring,
                           uint32_t *last_ring_handle,
@@ -782,11 +785,10 @@ accel_ring_cp_t::pndx_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
-accel_ring_cp_t::info_get(uint32_t ring_handle,
-                          uint32_t sub_ring,
-                          accel_rgroup_ring_info_cb_t cb_func,
-                          void *usr_ctx)
+hal_ret_t
+accel_ring_cp_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
+                           accel_rgroup_ring_info_cb_t cb_func,
+                           void *usr_ctx)
 {
     accel_rgroup_ring_info_t    info = {0};
 
@@ -795,14 +797,15 @@ accel_ring_cp_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
-                                 &info.sw_enable_capable);
+    asicpd_barco_get_capabilities((barco_rings_t)ring_type,
+                                  &info.sw_reset_capable,
+                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_cp_t::indices_get(uint32_t ring_handle,
                              uint32_t sub_ring,
                              accel_rgroup_ring_indices_cb_t cb_func,
@@ -822,7 +825,7 @@ accel_ring_cp_t::indices_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_cp_t::metrics_get(uint32_t ring_handle,
                              uint32_t sub_ring,
                              accel_rgroup_ring_metrics_cb_t cb_func,
@@ -842,7 +845,7 @@ accel_ring_cp_t::metrics_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_cp_t::misc_get(uint32_t ring_handle,
                           uint32_t sub_ring,
                           accel_rgroup_ring_misc_cb_t cb_func,
@@ -895,7 +898,7 @@ accel_ring_cp_t::misc_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_cp_hot_t::reset_set(uint32_t ring_handle,
                                uint32_t sub_ring,
                                uint32_t *last_ring_handle,
@@ -909,7 +912,7 @@ accel_ring_cp_hot_t::reset_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_cp_hot_t::enable_set(uint32_t ring_handle,
                                 uint32_t sub_ring,
                                 uint32_t *last_ring_handle,
@@ -923,7 +926,7 @@ accel_ring_cp_hot_t::enable_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_cp_hot_t::pndx_set(uint32_t ring_handle,
                               uint32_t sub_ring,
                               uint32_t *last_ring_handle,
@@ -941,11 +944,11 @@ accel_ring_cp_hot_t::pndx_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
-accel_ring_cp_hot_t::info_get(uint32_t ring_handle,
-                              uint32_t sub_ring,
-                              accel_rgroup_ring_info_cb_t cb_func,
-                              void *usr_ctx)
+hal_ret_t
+accel_ring_cp_hot_t::info_get (uint32_t ring_handle,
+                               uint32_t sub_ring,
+                               accel_rgroup_ring_info_cb_t cb_func,
+                               void *usr_ctx)
 {
     accel_rgroup_ring_info_t    info = {0};
 
@@ -954,14 +957,15 @@ accel_ring_cp_hot_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
-                                 &info.sw_enable_capable);
+    asicpd_barco_get_capabilities((barco_rings_t)ring_type,
+                                  &info.sw_reset_capable,
+                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_cp_hot_t::indices_get(uint32_t ring_handle,
                                  uint32_t sub_ring,
                                  accel_rgroup_ring_indices_cb_t cb_func,
@@ -981,7 +985,7 @@ accel_ring_cp_hot_t::indices_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_cp_hot_t::metrics_get(uint32_t ring_handle,
                                  uint32_t sub_ring,
                                  accel_rgroup_ring_metrics_cb_t cb_func,
@@ -1001,7 +1005,7 @@ accel_ring_cp_hot_t::metrics_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_cp_hot_t::misc_get(uint32_t ring_handle,
                               uint32_t sub_ring,
                               accel_rgroup_ring_misc_cb_t cb_func,
@@ -1022,7 +1026,7 @@ accel_ring_cp_hot_t::misc_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_dc_t::reset_set(uint32_t ring_handle,
                            uint32_t sub_ring,
                            uint32_t *last_ring_handle,
@@ -1037,7 +1041,7 @@ accel_ring_dc_t::reset_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_dc_t::enable_set(uint32_t ring_handle,
                             uint32_t sub_ring,
                             uint32_t *last_ring_handle,
@@ -1051,7 +1055,7 @@ accel_ring_dc_t::enable_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_dc_t::pndx_set(uint32_t ring_handle,
                           uint32_t sub_ring,
                           uint32_t *last_ring_handle,
@@ -1069,11 +1073,10 @@ accel_ring_dc_t::pndx_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
-accel_ring_dc_t::info_get(uint32_t ring_handle,
-                          uint32_t sub_ring,
-                          accel_rgroup_ring_info_cb_t cb_func,
-                          void *usr_ctx)
+hal_ret_t
+accel_ring_dc_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
+                           accel_rgroup_ring_info_cb_t cb_func,
+                           void *usr_ctx)
 {
     accel_rgroup_ring_info_t    info = {0};
 
@@ -1082,14 +1085,15 @@ accel_ring_dc_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
-                                 &info.sw_enable_capable);
+    asicpd_barco_get_capabilities((barco_rings_t)ring_type,
+                                  &info.sw_reset_capable,
+                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_dc_t::indices_get(uint32_t ring_handle,
                              uint32_t sub_ring,
                              accel_rgroup_ring_indices_cb_t cb_func,
@@ -1109,7 +1113,7 @@ accel_ring_dc_t::indices_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_dc_t::metrics_get(uint32_t ring_handle,
                              uint32_t sub_ring,
                              accel_rgroup_ring_metrics_cb_t cb_func,
@@ -1129,7 +1133,7 @@ accel_ring_dc_t::metrics_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_dc_t::misc_get(uint32_t ring_handle,
                           uint32_t sub_ring,
                           accel_rgroup_ring_misc_cb_t cb_func,
@@ -1182,7 +1186,7 @@ accel_ring_dc_t::misc_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_dc_hot_t::reset_set(uint32_t ring_handle,
                                uint32_t sub_ring,
                                uint32_t *last_ring_handle,
@@ -1196,7 +1200,7 @@ accel_ring_dc_hot_t::reset_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_dc_hot_t::enable_set(uint32_t ring_handle,
                                 uint32_t sub_ring,
                                 uint32_t *last_ring_handle,
@@ -1210,7 +1214,7 @@ accel_ring_dc_hot_t::enable_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_dc_hot_t::pndx_set(uint32_t ring_handle,
                               uint32_t sub_ring,
                               uint32_t *last_ring_handle,
@@ -1228,11 +1232,10 @@ accel_ring_dc_hot_t::pndx_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
-accel_ring_dc_hot_t::info_get(uint32_t ring_handle,
-                              uint32_t sub_ring,
-                              accel_rgroup_ring_info_cb_t cb_func,
-                              void *usr_ctx)
+hal_ret_t
+accel_ring_dc_hot_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
+                               accel_rgroup_ring_info_cb_t cb_func,
+                               void *usr_ctx)
 {
     accel_rgroup_ring_info_t    info = {0};
 
@@ -1241,14 +1244,15 @@ accel_ring_dc_hot_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
-                                 &info.sw_enable_capable);
+    asicpd_barco_get_capabilities((barco_rings_t)ring_type,
+                                  &info.sw_reset_capable,
+                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_dc_hot_t::indices_get(uint32_t ring_handle,
                                  uint32_t sub_ring,
                                  accel_rgroup_ring_indices_cb_t cb_func,
@@ -1268,7 +1272,7 @@ accel_ring_dc_hot_t::indices_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_dc_hot_t::metrics_get(uint32_t ring_handle,
                                  uint32_t sub_ring,
                                  accel_rgroup_ring_metrics_cb_t cb_func,
@@ -1288,7 +1292,7 @@ accel_ring_dc_hot_t::metrics_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_dc_hot_t::misc_get(uint32_t ring_handle,
                               uint32_t sub_ring,
                               accel_rgroup_ring_misc_cb_t cb_func,
@@ -1309,7 +1313,7 @@ accel_ring_dc_hot_t::misc_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_xts0_t::reset_set(uint32_t ring_handle,
                              uint32_t sub_ring,
                              uint32_t *last_ring_handle,
@@ -1324,7 +1328,7 @@ accel_ring_xts0_t::reset_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_xts0_t::enable_set(uint32_t ring_handle,
                               uint32_t sub_ring,
                               uint32_t *last_ring_handle,
@@ -1338,7 +1342,7 @@ accel_ring_xts0_t::enable_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_xts0_t::pndx_set(uint32_t ring_handle,
                             uint32_t sub_ring,
                             uint32_t *last_ring_handle,
@@ -1356,11 +1360,10 @@ accel_ring_xts0_t::pndx_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
-accel_ring_xts0_t::info_get(uint32_t ring_handle,
-                            uint32_t sub_ring,
-                            accel_rgroup_ring_info_cb_t cb_func,
-                            void *usr_ctx)
+hal_ret_t
+accel_ring_xts0_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
+                             accel_rgroup_ring_info_cb_t cb_func,
+                             void *usr_ctx)
 {
     accel_rgroup_ring_info_t    info = {0};
 
@@ -1369,14 +1372,15 @@ accel_ring_xts0_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
-                                 &info.sw_enable_capable);
+    asicpd_barco_get_capabilities((barco_rings_t)ring_type,
+                                  &info.sw_reset_capable,
+                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_xts0_t::indices_get(uint32_t ring_handle,
                                uint32_t sub_ring,
                                accel_rgroup_ring_indices_cb_t cb_func,
@@ -1396,7 +1400,7 @@ accel_ring_xts0_t::indices_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_xts0_t::metrics_get(uint32_t ring_handle,
                                uint32_t sub_ring,
                                accel_rgroup_ring_metrics_cb_t cb_func,
@@ -1416,7 +1420,7 @@ accel_ring_xts0_t::metrics_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_xts0_t::misc_get(uint32_t ring_handle,
                             uint32_t sub_ring,
                             accel_rgroup_ring_misc_cb_t cb_func,
@@ -1441,7 +1445,7 @@ accel_ring_xts0_t::misc_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_xts1_t::reset_set(uint32_t ring_handle,
                              uint32_t sub_ring,
                              uint32_t *last_ring_handle,
@@ -1456,7 +1460,7 @@ accel_ring_xts1_t::reset_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_xts1_t::enable_set(uint32_t ring_handle,
                               uint32_t sub_ring,
                               uint32_t *last_ring_handle,
@@ -1470,7 +1474,7 @@ accel_ring_xts1_t::enable_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_xts1_t::pndx_set(uint32_t ring_handle,
                             uint32_t sub_ring,
                             uint32_t *last_ring_handle,
@@ -1488,11 +1492,11 @@ accel_ring_xts1_t::pndx_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
-accel_ring_xts1_t::info_get(uint32_t ring_handle,
-                            uint32_t sub_ring,
-                            accel_rgroup_ring_info_cb_t cb_func,
-                            void *usr_ctx)
+hal_ret_t
+accel_ring_xts1_t::info_get (uint32_t ring_handle,
+                             uint32_t sub_ring,
+                             accel_rgroup_ring_info_cb_t cb_func,
+                             void *usr_ctx)
 {
     accel_rgroup_ring_info_t    info = {0};
 
@@ -1501,14 +1505,15 @@ accel_ring_xts1_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
-                                 &info.sw_enable_capable);
+    asicpd_barco_get_capabilities((barco_rings_t)ring_type,
+                                  &info.sw_reset_capable,
+                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_xts1_t::indices_get(uint32_t ring_handle,
                                uint32_t sub_ring,
                                accel_rgroup_ring_indices_cb_t cb_func,
@@ -1528,7 +1533,7 @@ accel_ring_xts1_t::indices_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_xts1_t::metrics_get(uint32_t ring_handle,
                                uint32_t sub_ring,
                                accel_rgroup_ring_metrics_cb_t cb_func,
@@ -1548,7 +1553,7 @@ accel_ring_xts1_t::metrics_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_xts1_t::misc_get(uint32_t ring_handle,
                             uint32_t sub_ring,
                             accel_rgroup_ring_misc_cb_t cb_func,
@@ -1573,7 +1578,7 @@ accel_ring_xts1_t::misc_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_gcm0_t::reset_set(uint32_t ring_handle,
                              uint32_t sub_ring,
                              uint32_t *last_ring_handle,
@@ -1588,7 +1593,7 @@ accel_ring_gcm0_t::reset_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_gcm0_t::enable_set(uint32_t ring_handle,
                               uint32_t sub_ring,
                               uint32_t *last_ring_handle,
@@ -1602,7 +1607,7 @@ accel_ring_gcm0_t::enable_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_gcm0_t::pndx_set(uint32_t ring_handle,
                             uint32_t sub_ring,
                             uint32_t *last_ring_handle,
@@ -1620,11 +1625,10 @@ accel_ring_gcm0_t::pndx_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
-accel_ring_gcm0_t::info_get(uint32_t ring_handle,
-                            uint32_t sub_ring,
-                            accel_rgroup_ring_info_cb_t cb_func,
-                            void *usr_ctx)
+hal_ret_t
+accel_ring_gcm0_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
+                             accel_rgroup_ring_info_cb_t cb_func,
+                             void *usr_ctx)
 {
     accel_rgroup_ring_info_t    info = {0};
 
@@ -1633,14 +1637,15 @@ accel_ring_gcm0_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
-                                 &info.sw_enable_capable);
+    asicpd_barco_get_capabilities((barco_rings_t)ring_type,
+                                  &info.sw_reset_capable,
+                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_gcm0_t::metrics_get(uint32_t ring_handle,
                                uint32_t sub_ring,
                                accel_rgroup_ring_metrics_cb_t cb_func,
@@ -1660,7 +1665,7 @@ accel_ring_gcm0_t::metrics_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_gcm0_t::indices_get(uint32_t ring_handle,
                                uint32_t sub_ring,
                                accel_rgroup_ring_indices_cb_t cb_func,
@@ -1680,7 +1685,7 @@ accel_ring_gcm0_t::indices_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_gcm0_t::misc_get(uint32_t ring_handle,
                             uint32_t sub_ring,
                             accel_rgroup_ring_misc_cb_t cb_func,
@@ -1705,7 +1710,7 @@ accel_ring_gcm0_t::misc_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_gcm1_t::reset_set(uint32_t ring_handle,
                              uint32_t sub_ring,
                              uint32_t *last_ring_handle,
@@ -1720,7 +1725,7 @@ accel_ring_gcm1_t::reset_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_gcm1_t::enable_set(uint32_t ring_handle,
                               uint32_t sub_ring,
                               uint32_t *last_ring_handle,
@@ -1734,7 +1739,7 @@ accel_ring_gcm1_t::enable_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_gcm1_t::pndx_set(uint32_t ring_handle,
                             uint32_t sub_ring,
                             uint32_t *last_ring_handle,
@@ -1752,11 +1757,10 @@ accel_ring_gcm1_t::pndx_set(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
-accel_ring_gcm1_t::info_get(uint32_t ring_handle,
-                            uint32_t sub_ring,
-                            accel_rgroup_ring_info_cb_t cb_func,
-                            void *usr_ctx)
+hal_ret_t
+accel_ring_gcm1_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
+                             accel_rgroup_ring_info_cb_t cb_func,
+                             void *usr_ctx)
 {
     accel_rgroup_ring_info_t    info = {0};
 
@@ -1765,14 +1769,15 @@ accel_ring_gcm1_t::info_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     accel_ring_meta_config_get(ring_type, &info);
-    capri_barco_get_capabilities((barco_rings_t)ring_type, &info.sw_reset_capable,
-                                 &info.sw_enable_capable);
+    asicpd_barco_get_capabilities((barco_rings_t)ring_type,
+                                  &info.sw_reset_capable,
+                                  &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_gcm1_t::indices_get(uint32_t ring_handle,
                                uint32_t sub_ring,
                                accel_rgroup_ring_indices_cb_t cb_func,
@@ -1792,7 +1797,7 @@ accel_ring_gcm1_t::indices_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_gcm1_t::metrics_get(uint32_t ring_handle,
                                uint32_t sub_ring,
                                accel_rgroup_ring_metrics_cb_t cb_func,
@@ -1812,7 +1817,7 @@ accel_ring_gcm1_t::metrics_get(uint32_t ring_handle,
     return HAL_RET_OK;
 }
 
-hal_ret_t 
+hal_ret_t
 accel_ring_gcm1_t::misc_get(uint32_t ring_handle,
                             uint32_t sub_ring,
                             accel_rgroup_ring_misc_cb_t cb_func,
