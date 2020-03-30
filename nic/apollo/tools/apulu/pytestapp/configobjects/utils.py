@@ -26,24 +26,36 @@ def getmac2num(mac,reorder=False):
 PENSANDO_NIC_MAC = 0x022222111111
 PDS_UUID_MAGIC_BYTE_VAL = 0x4242
 PDS_UUID_BYTE_ORDER = "little"
+PDS_NODE_UUID_BYTE_ORDER = "big"
 
 PDS_UUID_LEN = 16
-PDS_UUID_ID_LEN = 8
+PDS_UUID_ID_LEN = 4
+PDS_UUID_OBJTYPE_LEN = 2
+PDS_UUID_RESERVED_LEN = 2
 PDS_UUID_MAGIC_BYTE_LEN = 2
 PDS_UUID_SYSTEM_MAC_LEN = 6
 
 PDS_UUID_ID_OFFSET_START = 0
 PDS_UUID_ID_OFFSET_END = PDS_UUID_ID_OFFSET_START + PDS_UUID_ID_LEN
-PDS_UUID_MAGIC_BYTE_OFFSET_START = PDS_UUID_ID_OFFSET_END
+
+PDS_UUID_OBJTYPE_OFFSET_START = PDS_UUID_ID_OFFSET_END
+PDS_UUID_OBJTYPE_OFFSET_END = PDS_UUID_OBJTYPE_OFFSET_START + PDS_UUID_OBJTYPE_LEN
+
+PDS_UUID_RESERVED_OFFSET_START = PDS_UUID_OBJTYPE_OFFSET_END
+PDS_UUID_RESERVED_OFFSET_END = PDS_UUID_RESERVED_OFFSET_START + PDS_UUID_RESERVED_LEN
+
+PDS_UUID_MAGIC_BYTE_OFFSET_START = PDS_UUID_RESERVED_OFFSET_END
 PDS_UUID_MAGIC_BYTE_OFFSET_END = PDS_UUID_MAGIC_BYTE_OFFSET_START + PDS_UUID_MAGIC_BYTE_LEN
+
 PDS_UUID_SYSTEM_MAC_OFFSET_START = PDS_UUID_MAGIC_BYTE_OFFSET_END
 
 PDS_UUID_MAGIC_BYTE = PDS_UUID_MAGIC_BYTE_VAL.to_bytes(PDS_UUID_MAGIC_BYTE_LEN, PDS_UUID_BYTE_ORDER)
-PDS_UUID_SYSTEM_MAC = PENSANDO_NIC_MAC.to_bytes(PDS_UUID_SYSTEM_MAC_LEN, "big")
+# only for SIM
+PDS_UUID_SYSTEM_MAC = PENSANDO_NIC_MAC.to_bytes(PDS_UUID_SYSTEM_MAC_LEN, PDS_NODE_UUID_BYTE_ORDER)
 
 class PdsUuid:
 
-    def __init__(self, value, node_uuid=None):
+    def __init__(self, value, node_uuid=None, objtype=None):
 
         if node_uuid:
             node_uuid = int(node_uuid, 16)
@@ -51,7 +63,8 @@ class PdsUuid:
 
         if isinstance(value, int):
             self.Id = value
-            self.Uuid = PdsUuid.GetUUIDfromId(self.Id, node_uuid)
+            self.Type = objtype
+            self.Uuid = PdsUuid.GetUUIDfromId(self.Id, node_uuid, self.Type)
         elif isinstance(value, bytes):
             self.Uuid = value
             self.Id = PdsUuid.GetIdfromUUID(self.Uuid)
@@ -92,13 +105,17 @@ class PdsUuid:
         return int.from_bytes(uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END], PDS_UUID_BYTE_ORDER)
 
     @staticmethod
-    def GetUUIDfromId(id, node_uuid=None):
+    def GetUUIDfromId(id, node_uuid=None, objtype=None):
         if not node_uuid:
             node_uuid = PDS_UUID_SYSTEM_MAC
         # uuid is of 16 bytes
         uuid = bytearray(PDS_UUID_LEN)
-        # first 8 bytes ==> id
+        # first 4 bytes ==> id
         uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END] = id.to_bytes(PDS_UUID_ID_LEN, PDS_UUID_BYTE_ORDER)
+        # next 2 bytes ==> object type (except HAL created objects like lifs & ports)
+        if objtype:
+            uuid[PDS_UUID_OBJTYPE_OFFSET_START:PDS_UUID_OBJTYPE_OFFSET_END] = objtype.to_bytes(PDS_UUID_OBJTYPE_LEN, PDS_UUID_BYTE_ORDER)
+        # next 2 bytes ==> reserved (0x0000)
         # next 2 bytes ==> magic byte (0x4242)
         uuid[PDS_UUID_MAGIC_BYTE_OFFSET_START:PDS_UUID_MAGIC_BYTE_OFFSET_END] = PDS_UUID_MAGIC_BYTE
         # next 6 bytes ==> system mac (0x022222111111)

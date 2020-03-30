@@ -21,6 +21,7 @@ import interface_pb2_grpc as interface_pb2_grpc
 import nh_pb2_grpc as nh_pb2_grpc
 import dhcp_pb2_grpc as dhcp_pb2_grpc
 import nat_pb2_grpc as nat_pb2_grpc
+import bgp_pb2_grpc as bgp_pb2_grpc
 
 import logging
 console = logging.StreamHandler()
@@ -59,7 +60,10 @@ class ObjectTypes(enum.IntEnum):
     NH = 13
     DHCP_POLICY = 14
     NAT = 15
-    MAX = 16
+    BGP = 16
+    BGP_PEER = 17
+    BGP_PEER_AF = 18
+    MAX = 19
 
 class ClientStub:
     def __init__(self, stubclass, channel, rpc_prefix):
@@ -163,6 +167,12 @@ class ApolloAgentClient:
                                                    self.__channel, 'DHCPPolicy')
         self.__stubs[ObjectTypes.NAT] = ClientStub(nat_pb2_grpc.NatSvcStub,
                                                    self.__channel, 'NatPortBlock')
+        self.__stubs[ObjectTypes.BGP] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
+                                                   self.__channel, 'BGP')
+        self.__stubs[ObjectTypes.BGP_PEER] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
+                                                   self.__channel, 'BGPPeer')
+        self.__stubs[ObjectTypes.BGP_PEER_AF] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
+                                                   self.__channel, 'BGPPeerAf')
         return
 
     def Create(self, objtype, objs):

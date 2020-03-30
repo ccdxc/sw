@@ -15,6 +15,7 @@ import mirror
 import interface
 import nh
 import node
+import bgp
 
 import netaddr
 import argparse
@@ -47,7 +48,7 @@ os.environ['AGENT_GRPC_PORT'] = naplesport
 node_uuid=node.NodeObject().GetNodeMac()
 
 # Device object inputs
-local_tep_ip='1.0.0.3'
+local_tep_ip='14.14.14.14'
 gateway_ip='1.0.0.1'
 local_tep_mac='00:00:bb:bb:bb:b1'
 
@@ -58,17 +59,36 @@ vpc2_id=100
 vpc2_vxlan_encap=1002
 
 # L3-interface (underlay) objects
-intf1_prefix='1.1.0.103/24'
-intf2_prefix='1.2.0.103/24'
+loopback_prefix='14.14.14.14/32'
+intf1_prefix='13.1.0.2/24'
+intf2_prefix='13.2.0.2/24'
 intf1_mac='00:ae:cd:00:14:ce'
 intf2_mac='00:ae:cd:00:14:cd'
 intf1_underlay_mac='00:ae:cd:00:4f:de'
 intf2_underlay_mac='00:ae:cd:00:4f:dd'
 
+# BGP config
+local_asn = 200
+router_id = ipaddress.IPv4Address('14.14.14.14')
+
+local_addr1 = ipaddress.IPv4Address('13.1.0.2')
+peer_addr1 = ipaddress.IPv4Address('13.1.0.1')
+admin_state = 1
+send_comm = True
+send_ext_comm = True
+connect_retry = 5
+rrclient = False
+remote_asn = 100
+holdtime = 180
+keepalive = 60
+
+local_addr2 = ipaddress.IPv4Address('13.2.0.2')
+peer_addr2 = ipaddress.IPv4Address('13.2.0.1')
+
 # Tunnel object inputs (Underlay)
 tunnel_id=1
-tunnel_local_ip='1.0.0.3'
-tunnel_remote_ip='1.0.0.2'
+tunnel_local_ip='14.14.14.14'
+tunnel_remote_ip='13.13.13.13'
 tunnel_mac='00:00:bb:bb:bb:b1'
 tunnel_vnid=0
 tunnel_nhid=2
@@ -143,7 +163,7 @@ device1=device.DeviceObject(ipaddress.IPv4Address(local_tep_ip),ipaddress.IPv4Ad
 vpc1=vpc.VpcObject(vpc1_id, type=vpc_pb2.VPC_TYPE_TENANT, encaptype=types_pb2.ENCAP_TYPE_VXLAN, encapvalue=vpc1_vxlan_encap )
 
 # Create VPC for Infra
-vpc100=vpc.VpcObject(vpc2_id, type=vpc_pb2.VPC_TYPE_TENANT, encaptype=types_pb2.ENCAP_TYPE_VXLAN, encapvalue=vpc2_vxlan_encap )
+vpc100=vpc.VpcObject(vpc2_id, type=vpc_pb2.VPC_TYPE_UNDERLAY, encaptype=types_pb2.ENCAP_TYPE_VXLAN, encapvalue=vpc2_vxlan_encap )
 
 # Create VPC for VCN
 vcn_route1=route.RouteObject(ipaddress.IPv4Network(vcn_route_prefix1), "tunnel", tunnel_id)
@@ -154,9 +174,19 @@ vcn_vpc=vpc.VpcObject(vcn_vpc_id, type=vpc_pb2.VPC_TYPE_CONTROL, encaptype=types
 # id, iftype, ifadminstatus, vpcid, prefix, portid, encap, macaddr
 intf1=interface.InterfaceObject( 1, interface_pb2.IF_TYPE_L3, interface_pb2.IF_STATUS_UP, vpc2_id, intf1_prefix, 1, types_pb2.ENCAP_TYPE_NONE,intf1_mac, node_uuid=node_uuid )
 intf2=interface.InterfaceObject( 2, interface_pb2.IF_TYPE_L3, interface_pb2.IF_STATUS_UP, vpc2_id, intf2_prefix, 2, types_pb2.ENCAP_TYPE_NONE,intf2_mac, node_uuid=node_uuid )
+lo1=interface.InterfaceObject( 3, interface_pb2.IF_TYPE_LOOPBACK, interface_pb2.IF_STATUS_UP, prefix=loopback_prefix )
+
+# BGP config
+bgp1=bgp.BgpObject(1, local_asn, router_id)
+
+bgp_peer1=bgp.BgpPeerObject(1, local_addr1, peer_addr1, admin_state, send_comm, send_ext_comm, connect_retry, rrclient, remote_asn, holdtime, keepalive)
+bgp_peer_af1=bgp.BgpPeerAfObject(1, local_addr1, peer_addr1)
+
+bgp_peer2=bgp.BgpPeerObject(2, local_addr2, peer_addr2, admin_state, send_comm, send_ext_comm, connect_retry, rrclient, remote_asn, holdtime, keepalive)
+bgp_peer_af2=bgp.BgpPeerAfObject(2, local_addr2, peer_addr2)
 
 # Create VCN interface
-vcn0=interface.InterfaceObject( 3, interface_pb2.IF_TYPE_CONTROL, interface_pb2.IF_STATUS_UP, prefix=vcn_intf_prefix, macaddr=vcn_vnic_mac, gateway=vcn_v4_router_ip )
+vcn0=interface.InterfaceObject( 100, interface_pb2.IF_TYPE_CONTROL, interface_pb2.IF_STATUS_UP, prefix=vcn_intf_prefix, macaddr=vcn_vnic_mac, gateway=vcn_v4_router_ip )
 
 
 # Create NH objects ..
@@ -217,6 +247,13 @@ api.client.Create(api.ObjectTypes.VPC, [vpc100.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.INTERFACE, [intf1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.INTERFACE, [intf2.GetGrpcCreateMessage()])
+api.client.Create(api.ObjectTypes.INTERFACE, [lo1.GetGrpcCreateMessage()])
+
+api.client.Create(api.ObjectTypes.BGP, [bgp1.GetGrpcCreateMessage()])
+api.client.Create(api.ObjectTypes.BGP_PEER, [bgp_peer1.GetGrpcCreateMessage()])
+api.client.Create(api.ObjectTypes.BGP_PEER_AF, [bgp_peer_af1.GetGrpcCreateMessage()])
+api.client.Create(api.ObjectTypes.BGP_PEER, [bgp_peer2.GetGrpcCreateMessage()])
+api.client.Create(api.ObjectTypes.BGP_PEER_AF, [bgp_peer_af2.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.INTERFACE, [vcn0.GetGrpcCreateMessage()])
 

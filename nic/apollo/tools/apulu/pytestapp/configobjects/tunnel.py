@@ -35,6 +35,6 @@ class TunnelObject():
         spec.RemoteIP.Af = types_pb2.IP_AF_INET
         spec.RemoteIP.V4Addr = int(self.remoteip)
         spec.MACAddress = self.macaddr
-        spec.NexthopId = utils.PdsUuid.GetUUIDfromId(self.nhid)
+        #spec.NexthopId = utils.PdsUuid.GetUUIDfromId(self.nhid)
 
         return grpcmsg
