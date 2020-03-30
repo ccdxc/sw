@@ -501,7 +501,7 @@ TEST_F(apollo_test, test1) {
     std::ifstream json_cfg(hal_conf_file);
     ret = p4pd_init(&p4pd_cfg);
     ASSERT_NE(ret, -1);
-    ret = capri_table_rw_init(NULL);
+    ret = sdk::asic::pd::asicpd_table_rw_init(NULL);
     ASSERT_NE(ret, -1);
     ret = capri_hbm_cache_init(NULL);
     ASSERT_NE(ret, -1);

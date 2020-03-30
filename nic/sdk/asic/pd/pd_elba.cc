@@ -1054,6 +1054,11 @@ asicpd_tm_set_span_threshold (uint32_t span_threshold)
     return SDK_RET_INVALID_OP;
 }
 
+asicpd_table_rw_init (asic_cfg_t *cfg)
+{
+    return elba_table_rw_init(cfg);
+}
+
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk

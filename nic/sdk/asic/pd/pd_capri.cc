@@ -1287,6 +1287,12 @@ asicpd_barco_get_capabilities (uint8_t ring_type, bool *sw_reset_capable,
                                          sw_enable_capable);
 }
 
+sdk_ret_t
+asicpd_table_rw_init (asic_cfg_t *cfg)
+{
+    return capri_table_rw_init(cfg);
+}
+
 void
 asicpd_table_constant_write (uint64_t val, uint32_t stage,
                              uint32_t stage_tableid, bool ingress)

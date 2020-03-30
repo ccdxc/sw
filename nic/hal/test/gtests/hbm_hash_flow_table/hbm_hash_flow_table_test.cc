@@ -41,7 +41,6 @@ protected:
 
 };
 
-
 typedef struct hbm_hash_key_s {
     int a;
     int b;
@@ -1405,8 +1404,6 @@ TEST_F(hbm_hash_test, test19) {
         count++;
     }
 
-
-
 #if 0
     // Remvoe the entries
     for (std::vector<int>::iterator it=myvector.begin(); it!=myvector.end(); ++it) {
@@ -1430,7 +1427,11 @@ TEST_F(hbm_hash_test, test19) {
                     fl->table_num_inserts(), fl->table_num_insert_errors(),
                     fl->table_num_deletes(), fl->table_num_delete_errors());
 }
-int main(int argc, char **argv) {
+
+int
+main(int argc, char **argv)
+{
+    sdk_ret_t rs;
     std::string logfile;
 
     ::testing::InitGoogleTest(&argc, argv);
@@ -1445,8 +1446,10 @@ int main(int argc, char **argv) {
         .p4pd_txdma_pgm_name = "p4plus",
         .cfg_path            = std::getenv("HAL_CONFIG_PATH"),
     };
+
     p4pd_init(&p4pd_cfg);
-    assert(sdk::platform::capri::capri_table_rw_init(NULL) != -1);
+    rs = sdk::asic::pd::asicpd_table_rw_init(NULL);
+    assert(rs == SDK_RET_OK);
 
     // testing::GTEST_FLAG(filter) = "-*test18*";
     int res = RUN_ALL_TESTS();

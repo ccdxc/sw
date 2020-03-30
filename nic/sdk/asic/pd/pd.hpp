@@ -390,9 +390,6 @@ sdk_ret_t asicpd_barco_asym_rsa2k_sig_verify(uint8_t *n, uint8_t *e,
 
 sdk_ret_t asicpd_dpp_int_credit(uint32_t instance, uint32_t value);
 
-sdk_ret_t asicpd_pxb_cfg_lif_bdf(uint32_t lif, uint16_t bdf);
-
-
 sdk_ret_t asicpd_barco_asym_req_descr_get(uint32_t slot_index,
                                           void *asym_req_descr);
 sdk_ret_t asicpd_barco_symm_req_descr_get(uint8_t ring_type,
@@ -400,7 +397,7 @@ sdk_ret_t asicpd_barco_symm_req_descr_get(uint8_t ring_type,
                                           void *symm_req_descr);
 
 sdk_ret_t asicpd_barco_ring_meta_get(uint8_t ring_type, uint32_t *pi,
-                                     uint32_t *ci);
+                                      uint32_t *ci);
 sdk_ret_t asicpd_barco_get_meta_config_info(uint8_t ring_type,
                                             void *meta);
 
@@ -419,6 +416,8 @@ sdk_ret_t asicpd_barco_sym_hash_process_request(uint8_t hash_type,
 sdk_ret_t asicpd_barco_get_capabilities(uint8_t ring_type,
                                         bool *sw_reset_capable,
                                         bool *sw_enable_capable);
+
+sdk_ret_t asicpd_table_rw_init(asic_cfg_t *cfg);
 
 void asicpd_table_constant_write(uint64_t val, uint32_t stage,
                                  uint32_t stage_tableid, bool ingress);
