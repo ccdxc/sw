@@ -24,49 +24,6 @@ func checkIPAddrInFwlog(ips []string, res []*telemetry_query.FwlogsQueryResult) 
 	return false
 }
 
-// FindFwlogForWorkloadPairs finds workload ip addresses in firewall log
-func (sm *SysModel) FindFwlogForWorkloadPairs(protocol, fwaction, timestr string, port uint32, wpc *objects.WorkloadPairCollection) error {
-	// get node collection and init telemetry client
-	vnc := sm.VeniceNodes()
-	err := vnc.InitTelemetryClient()
-	if err != nil {
-		return err
-	}
-
-	res, err := vnc.QueryFwlog(protocol, fwaction, timestr, port)
-	if err != nil {
-		return err
-	}
-	if res == nil {
-		log.Errorf("result is nil. Check if telemetry client is initialized or not.")
-		return fmt.Errorf("Error get nil result. Check if telemetry client is initialized or not")
-	}
-
-	for _, ips := range wpc.ListIPAddr() {
-		if checkIPAddrInFwlog(ips, res.Results) != true {
-			err := fmt.Errorf("did not find %v in fwlog", ips)
-			log.Errorf("fwlog query failed, %v", err)
-			for _, r := range res.Results {
-				for i, l := range r.Logs {
-					log.Infof("[%-3d] %v ", i+1, l.String())
-				}
-			}
-			sm.ForEachNaples(func(nc *objects.NaplesCollection) error {
-				if out, err := sm.RunNaplesCommand(nc,
-					"/nic/bin/shmdump -file=/dev/shm/fwlog_ipc_shm -type=fwlog"); err == nil {
-					log.Infof(strings.Join(out, ","))
-				} else {
-					log.Infof("failed to run shmdump, %v", err)
-				}
-				return nil
-			})
-			return err
-		}
-	}
-
-	return nil
-}
-
 // VerifyRuleStats verifies rule stats for policies
 func (sm *SysModel) VerifyRuleStats(timestr string, spc *objects.NetworkSecurityPolicyCollection, minCounts []map[string]float64) error {
 	stsc, err := spc.Status()

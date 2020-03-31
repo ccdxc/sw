@@ -54,11 +54,9 @@ var _ = Describe("rulestats tests", func() {
 			time.Sleep(time.Second * 30)
 
 			// check fwlog, enable when fwlogs are reported to Venice
-			/*
-				Eventually(func() error {
-					return ts.model.FindFwlogForWorkloadPairs("TCP", "allow", startTime.String(), 8000, workloadPairs)
-				}).Should(Succeed())
-			*/
+			Eventually(func() error {
+				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "TCP", 8000, "allow", workloadPairs)
+			}).Should(Succeed())
 
 			// verify TCP hits and total hits got incremented
 			expCount := []map[string]float64{{"TotalHits": 1, "TcpHits": 1}}
@@ -89,11 +87,9 @@ var _ = Describe("rulestats tests", func() {
 			time.Sleep(time.Second * 30)
 
 			// check fwlog ,enable when fwlogs are reported to Venice
-			/*
-				Eventually(func() error {
-					return ts.model.FindFwlogForWorkloadPairs("UDP", "allow", startTime.String(), 9000, workloadPairs)
-				}).Should(Succeed())
-			*/
+			Eventually(func() error {
+				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "UDP", 9000, "allow", workloadPairs)
+			}).Should(Succeed())
 
 			// verify UDP hits and total hits got incremented
 			expCount := []map[string]float64{{"TotalHits": 1, "UdpHits": 1}}
@@ -125,11 +121,9 @@ var _ = Describe("rulestats tests", func() {
 			time.Sleep(time.Second * 30)
 
 			// check fwlog, enable when fwlogs are reported to Venice
-			/*
-				Eventually(func() error {
-					return ts.model.FindFwlogForWorkloadPairs("ICMP", "allow", startTime.String(), 0, workloadPairs.ReversePairs())
-				}).Should(Succeed())
-			*/
+			Eventually(func() error {
+				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "ICMP", 0, "allow", workloadPairs)
+			}).Should(Succeed())
 
 			// verify ICMP hits and total hits got incremented
 			expCount := []map[string]float64{{"TotalHits": 1, "IcmpHits": 1}}

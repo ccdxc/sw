@@ -3,7 +3,10 @@
 package state
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
+	"encoding/csv"
 	"fmt"
 	"net"
 	"net/http"
@@ -106,14 +109,22 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 	}{
 		{
 			fwEvent: &halproto.FWEvent{
-				SourceVrf: 1000,
-				DestVrf:   1001,
-				Fwaction:  halproto.SecurityAction_SECURITY_RULE_ACTION_DENY,
-				Sipv4:     srcIP,
-				Dipv4:     destIP,
-				Dport:     10000,
-				IpProt:    1,
-				AppId:     32,
+				SourceVrf:       65,
+				DestVrf:         65,
+				Sipv4:           srcIP,
+				Dipv4:           destIP,
+				Dport:           10000,
+				IpProt:          1,
+				Fwaction:        halproto.SecurityAction_SECURITY_RULE_ACTION_DENY,
+				Direction:       0,
+				Alg:             halproto.ALGName_APP_SVC_TFTP,
+				SessionId:       uint64(1000),
+				ParentSessionId: uint64(1001),
+				RuleId:          uint64(1000),
+				Icmptype:        0,
+				Icmpcode:        0,
+				Icmpid:          0,
+				AppId:           32,
 			},
 		},
 	}
@@ -126,7 +137,7 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 	Assert(t, testObject.ObjectName != "", "object name is empty")
 	Assert(t, testObject.BucketName == "default.fwlogs", "bucket name is not correct")
 	Assert(t, testObject.IndexBucketName == "meta-default.fwlogs", "index bucket name is not correct")
-	Assert(t, testObject.Data != "", "object data is empty")
+	verifyData(t, testObject.Data)
 	Assert(t, testObject.Index != "", "index is empty")
 	Assert(t, len(testObject.Meta) == 7, "object meta is empty %s", testObject.Meta)
 	Assert(t, testObject.Meta["startts"] != "", "object meta's startts is empty")
@@ -163,4 +174,24 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 
 	// done := make(chan bool)
 	// <-done
+}
+
+func verifyData(t *testing.T, data bytes.Buffer) {
+	reader := bytes.NewReader(data.Bytes())
+	Assert(t, data.Len() != 0, "data is empty")
+	zipReader, err := gzip.NewReader(reader)
+	AssertOk(t, err, "error in unzipping data")
+
+	rd := csv.NewReader(zipReader)
+	AssertOk(t, err, "error in reading csv file")
+	lines, err := rd.ReadAll()
+	Assert(t, len(lines) == 2, "incorrect number of logs in the file")
+
+	Assert(t, lines[1][0] == "65", "incorrect src vrf")
+	Assert(t, lines[1][1] == "65", "incorrect dest vrf")
+	Assert(t, lines[1][2] == "192.168.10.1", "incorrect source ip")
+	Assert(t, lines[1][3] == "192.168.20.1", "incorrect dest ip")
+	Assert(t, lines[1][16] == "32", "incorrect app id")
+	Assert(t, lines[1][17] == "TFTP", "incorrect alg, %s", lines[1][17])
+	Assert(t, lines[1][18] == "1", "incorrect count")
 }

@@ -53,7 +53,7 @@ type TestObject struct {
 	ObjectName string
 
 	// Data represents the actual logs
-	Data string
+	Data bytes.Buffer
 
 	// Index's data
 	Index string
@@ -261,9 +261,9 @@ func transmitLogs(ctx context.Context,
 			objNameBuffer.WriteString(strconv.Itoa(h))
 			objNameBuffer.WriteString("/")
 		}
-		objNameBuffer.WriteString(fStartTs)
+		objNameBuffer.WriteString(strings.ReplaceAll(fStartTs, ":", ""))
 		objNameBuffer.WriteString("_")
-		objNameBuffer.WriteString(fEndTs)
+		objNameBuffer.WriteString(strings.ReplaceAll(fEndTs, ":", ""))
 		objNameBuffer.WriteString(".csv")
 		if zip {
 			objNameBuffer.WriteString(".gzip")
@@ -287,7 +287,7 @@ func transmitLogs(ctx context.Context,
 				BucketName:      bucketName,
 				IndexBucketName: indexBucketName,
 				ObjectName:      objNameBuffer.String(),
-				Data:            objBuffer.String(),
+				Data:            objBuffer,
 				Index:           indexBuffer.String(),
 				Meta:            meta,
 			}
@@ -350,7 +350,7 @@ func getCSVObjectBuffer(logs interface{}, b *bytes.Buffer, zip bool) {
 			"proto", "act", "dir", "ruleid",
 			"sessionid", "sessionstate",
 			"icmptype", "icmpid", "icmpcode",
-			"appid"})
+			"appid", "alg", "count"})
 		for _, l := range logs.([]interface{}) {
 			temp := l.([]string)
 			w.Write(temp)
@@ -455,12 +455,18 @@ func (s *PolicyState) handleObjStore(ev *halproto.FWEvent, ts time.Time) {
 	ruleID := fmt.Sprintf("%v", ev.GetRuleId())
 	sessionID := fmt.Sprintf("%v", ev.GetSessionId())
 	state := strings.ToLower(strings.Replace(halproto.FlowLogEventType_name[int32(ev.GetFlowaction())], "LOG_EVENT_TYPE_", "", 1))
+	alg := fmt.Sprintf("%v", strings.TrimPrefix(ev.GetAlg().String(), "APP_SVC_"))
+	// iflowPackets := fmt.Sprintf("%v", ev.GetIflowPackets())
+	// rflowPackets := fmt.Sprintf("%v", ev.GetRflowPackets())
 	unixnano := ev.GetTimestamp()
 	if unixnano != 0 {
 		// if a timestamp was specified in the msg, use it
 		ts = time.Unix(0, unixnano)
 	}
 	appID := fmt.Sprintf("%v", ev.GetAppId()) // TODO: praveen convert to enum
+
+	// Since no aggregation is done as fo now, just report count=1 for every log.
+	count := "1"
 
 	// CSV file format
 	fwLog := []string{
@@ -481,6 +487,8 @@ func (s *PolicyState) handleObjStore(ev *halproto.FWEvent, ts time.Time) {
 		fmt.Sprintf("%v", int64(ev.GetIcmpid())),
 		fmt.Sprintf("%v", int64(ev.GetIcmpcode())),
 		appID,
+		alg,
+		count,
 	}
 
 	// TODO: use sync pool

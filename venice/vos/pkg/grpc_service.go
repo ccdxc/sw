@@ -439,8 +439,14 @@ func (g *grpcBackend) DownloadFile(obj *objstore.Object, stream objstore.Objstor
 		return apierrors.ToGrpcError(err, []string{"valid types: " + str}, int32(codes.InvalidArgument), "", nil)
 	}
 	bucket := obj.Tenant + "." + obj.Namespace
+	name := obj.Name
+	if obj.Namespace == fwlogsBucketName {
+		// convert 1st 5 "_" to "/"
+		name = strings.Replace(name, "_", "/", 5)
+		log.Infof("got call to DownloadFile, new name %s, bucket %s", name, bucket)
+	}
 	buf := make([]byte, 1024*1024)
-	fr, err := g.client.GetStoreObject(stream.Context(), bucket, obj.Name, minio.GetObjectOptions{})
+	fr, err := g.client.GetStoreObject(stream.Context(), bucket, name, minio.GetObjectOptions{})
 	if err != nil {
 		return apierrors.ToGrpcError("client error", []string{err.Error()}, int32(codes.Internal), "", nil)
 	}
@@ -480,7 +486,7 @@ func (g *grpcBackend) DownloadFile(obj *objstore.Object, stream objstore.Objstor
 		}
 		return apierrors.ToGrpcError("failed to complete PostOp checks", strs, int32(codes.Internal), "", nil)
 	}
-	log.Infof("download complete for file [%v/%v] size (%d)", bucket, obj.Name, totsize)
+	log.Infof("download complete for file [%v/%v] size (%d)", bucket, name, totsize)
 	return nil
 }
 

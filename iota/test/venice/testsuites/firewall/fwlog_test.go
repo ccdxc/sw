@@ -40,7 +40,6 @@ var _ = Describe("fwlog tests", func() {
 
 	Context("tags:type=basic;datapath=true;duration=short verify fwlog on traffic ", func() {
 		It("tags:sanity=true should log ICMP allow in fwlog", func() {
-			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -48,8 +47,6 @@ var _ = Describe("fwlog tests", func() {
 			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			//Naples time is set in UTC
-			startTime := time.Now().UTC()
 
 			policy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "icmp", "PERMIT")
 			Expect(policy.Commit()).ShouldNot(HaveOccurred())
@@ -67,20 +64,18 @@ var _ = Describe("fwlog tests", func() {
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.FindFwlogForWorkloadPairs("ICMP", "allow", startTime.String(), 0, workloadPairs.ReversePairs())
+				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "ICMP", 0, "allow", workloadPairs)
 			}).Should(Succeed())
 		})
 
 		It("tags:sanity=true should log TCP/8000 allow in fwlog", func() {
-			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			//Naples time is set in UTC
-			startTime := time.Now().UTC()
+
 			policy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "tcp/0-65535", "PERMIT")
 			Expect(policy.Commit()).ShouldNot(HaveOccurred())
 
@@ -97,12 +92,11 @@ var _ = Describe("fwlog tests", func() {
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.FindFwlogForWorkloadPairs("TCP", "allow", startTime.String(), 8000, workloadPairs)
+				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "TCP", 8000, "allow", workloadPairs)
 			}).Should(Succeed())
 		})
 
 		It("should log UDP/9000 allow in fwlog", func() {
-			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -110,8 +104,7 @@ var _ = Describe("fwlog tests", func() {
 			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			//Naples time is set in UTC
-			startTime := time.Now().UTC()
+
 			// allow policy
 			policy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "udp/0-65535", "PERMIT")
 			Expect(policy.Commit()).ShouldNot(HaveOccurred())
@@ -129,19 +122,16 @@ var _ = Describe("fwlog tests", func() {
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.FindFwlogForWorkloadPairs("UDP", "allow", startTime.String(), 9000, workloadPairs)
+				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "UDP", 9000, "allow", workloadPairs)
 			}).Should(Succeed())
 		})
 
 		It("should log ICMP deny in fwlog", func() {
-			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
 			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
-			//Naples time is set in UTC
-			startTime := time.Now().UTC()
 
 			// deny policy
 			denyPolicy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "icmp", "DENY")
@@ -162,19 +152,16 @@ var _ = Describe("fwlog tests", func() {
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.FindFwlogForWorkloadPairs("ICMP", "deny", startTime.String(), 0, workloadPairs.ReversePairs())
+				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "ICMP", 0, "deny", workloadPairs)
 			}).Should(Succeed())
 		})
 
 		It("tags:sanity=true should log TCP/8100 deny in fwlog", func() {
-			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
 			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
-			//Naples time is set in UTC
-			startTime := time.Now().UTC()
 
 			// deny policy
 			debyPolicy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "tcp/0-65535", "DENY")
@@ -195,12 +182,11 @@ var _ = Describe("fwlog tests", func() {
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.FindFwlogForWorkloadPairs("TCP", "deny", startTime.String(), 8100, workloadPairs)
+				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "TCP", 8100, "deny", workloadPairs)
 			}).Should(Succeed())
 		})
 
 		It("should log UDP/9100 deny in fwlog", func() {
-			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -218,8 +204,7 @@ var _ = Describe("fwlog tests", func() {
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			//Naples time is set in UTC
-			startTime := time.Now().UTC()
+
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			Eventually(func() error {
@@ -228,19 +213,16 @@ var _ = Describe("fwlog tests", func() {
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.FindFwlogForWorkloadPairs("UDP", "deny", startTime.String(), 9100, workloadPairs)
+				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "UDP", 9100, "deny", workloadPairs)
 			}).Should(Succeed())
 		})
 
 		It("should log ICMP reject in fwlog", func() {
-			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
 			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
-			//Naples time is set in UTC
-			startTime := time.Now().UTC()
 
 			// reject policy
 			denyPolicy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "icmp", "REJECT")
@@ -259,19 +241,16 @@ var _ = Describe("fwlog tests", func() {
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.FindFwlogForWorkloadPairs("ICMP", "reject", startTime.String(), 0, workloadPairs.ReversePairs())
+				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "ICMP", 0, "reject", workloadPairs)
 			}).Should(Succeed())
 		})
 
 		It("should log TCP/8200 reject in fwlog", func() {
-			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
 			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
-			//Naples time is set in UTC
-			startTime := time.Now().UTC()
 
 			// deny policy
 			denyPolicy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "tcp/0-65535", "REJECT")
@@ -292,12 +271,11 @@ var _ = Describe("fwlog tests", func() {
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.FindFwlogForWorkloadPairs("TCP", "reject", startTime.String(), 8200, workloadPairs)
+				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "TCP", 8200, "reject", workloadPairs)
 			}).Should(Succeed())
 		})
 
 		It("should log UDP/9200 reject in fwlog", func() {
-			Skip("skip fwlog tests, logs are not reported to Venice")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -315,8 +293,7 @@ var _ = Describe("fwlog tests", func() {
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			//Naples time is set in UTC
-			startTime := time.Now().UTC()
+
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			Eventually(func() error {
@@ -325,7 +302,7 @@ var _ = Describe("fwlog tests", func() {
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.FindFwlogForWorkloadPairs("UDP", "reject", startTime.String(), 9200, workloadPairs)
+				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "UDP", 9200, "reject", workloadPairs)
 			}).Should(Succeed())
 		})
 	})

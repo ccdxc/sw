@@ -3,12 +3,15 @@
 package cluster
 
 import (
+	"bytes"
 	"compress/gzip"
 	"context"
 	"crypto/tls"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +21,8 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/pensando/sw/api"
+	loginctx "github.com/pensando/sw/api/login/context"
+
 	// es "github.com/olivere/elastic"
 	"github.com/pensando/sw/nic/agent/tmagent/state/fwgen/fwevent"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
@@ -36,7 +41,7 @@ const (
 	elasticContextDeadline = 90 * time.Second
 )
 
-var _ = Describe("tests for storing firewall logs in object store", func() {
+var _ = Describe("firewall log tests", func() {
 
 	var (
 		esClient        elastic.ESClient
@@ -44,7 +49,7 @@ var _ = Describe("tests for storing firewall logs in object store", func() {
 		fwLogMetaClient objstore.Client
 	)
 
-	Context("firewall logs with object store and elastic", func() {
+	Context("e2e tests", func() {
 		BeforeEach(func() {
 			validateCluster()
 			if esClient == nil {
@@ -56,7 +61,7 @@ var _ = Describe("tests for storing firewall logs in object store", func() {
 			}
 		})
 
-		It("push fwlogs", func() {
+		It("push fwlogs to object store", func() {
 			snIf := ts.tu.APIClient.ClusterV1().DistributedServiceCard()
 			snics, _ := snIf.List(context.Background(), &api.ListWatchOptions{})
 			for _, snic := range snics {
@@ -132,6 +137,12 @@ var _ = Describe("tests for storing firewall logs in object store", func() {
 			}
 		})
 
+		It("veirfy file through PSM REST API", func() {
+			objName, err := getLastObjectName(fwLogClient, "")
+			Expect(err).NotTo(HaveOccurred())
+			downloadCsvFileViaPSMRESTAPI("fwlogs", objName, ts.tu.APIGwAddr)
+		})
+
 		It("verify logs on elastic", func() {
 			dataIndex := elastic.GetIndex(globals.FwLogs, globals.DefaultTenant)
 			verifyIndexExistsOnElastic(esClient, dataIndex)
@@ -151,8 +162,9 @@ var _ = Describe("tests for storing firewall logs in object store", func() {
 })
 
 func verifyDataObject(c objstore.Client, objName string) {
-	data, err := getObjectAndParseCsv(c, objName)
-	Expect(err).NotTo(HaveOccurred())
+	// data, err := getObjectAndParseCsv(c, objName)
+	// Expect(err).NotTo(HaveOccurred())
+	data := downloadCsvFileViaPSMRESTAPI("fwlogs", objName, ts.tu.APIGwAddr)
 	Expect(len(data) != 0).Should(BeTrue())
 	logCount := 0
 	for i := 1; i < len(data); i++ {
@@ -301,8 +313,8 @@ func verifyLogsOnElastic(c elastic.ESClient, fwLogClient objstore.Client, indexN
 	objName, err := getLastObjectName(fwLogClient, "")
 	Expect(err).NotTo(HaveOccurred())
 
-	data, err := getObjectAndParseCsv(fwLogClient, objName)
-	Expect(err).NotTo(HaveOccurred())
+	// data, err := getObjectAndParseCsv(fwLogClient, objName)
+	data := downloadCsvFileViaPSMRESTAPI("fwlogs", objName, ts.tu.APIGwAddr)
 	Expect(len(data) != 0).Should(BeTrue())
 	notFound := 0
 	for i := 1; i < len(data); i++ {
@@ -398,10 +410,6 @@ func compareAndVerifyLogLineInCsvAndElastic(csvLine []string, elasticMap map[str
 	fmt.Println("**** csv data ****", csvLine)
 	fmt.Println("**** elastic data ****", elasticMap)
 
-	// "sport", "dport",
-	// "proto", "act", "dir", "ruleid",
-	// "sessionid", "sessionstate",
-	// "icmptype", "icmpid", "icmpcode"
 	Expect(csvLine[2] == elasticMap["source-ip"].(string)).Should(BeTrue())
 	Expect(csvLine[3] == elasticMap["destination-ip"].(string)).Should(BeTrue())
 
@@ -448,4 +456,62 @@ func compareAndVerifyLogLineInCsvAndElastic(csvLine []string, elasticMap map[str
 	if _, ok := elasticMap["icmp-code"]; ok {
 		Expect(float64(icmpCode) == elasticMap["icmp-code"].(float64)).Should(BeTrue())
 	}
+}
+
+func downloadCsvFileViaPSMRESTAPI(bucketName, objectName string, url string) [][]string {
+	By(fmt.Sprintf("downloading object %s, using url %s", objectName, url))
+	ctx := ts.tu.MustGetLoggedInContext(context.Background())
+	// replace first 5 "/" with "_"
+	name := strings.Replace(objectName, "/", "_", 5)
+	uri := fmt.Sprintf("https://%s/objstore/v1/downloads/%s/%s", url, bucketName, name)
+	req, err := http.NewRequest("GET", uri, nil)
+	Expect(err).NotTo(HaveOccurred())
+	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
+	Expect(ok).Should(BeTrue())
+
+	req.Header.Set("Authorization", authzHeader)
+	transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	client := &http.Client{Transport: transport}
+	resp, err := client.Do(req)
+	Expect(err).NotTo(HaveOccurred())
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(resp.StatusCode == http.StatusOK).Should(BeTrue())
+
+	// body is a zipped file
+	reader := bytes.NewReader(body)
+	Expect(len(body) != 0).Should(BeTrue())
+
+	zipReader, err := gzip.NewReader(reader)
+	Expect(err).NotTo(HaveOccurred())
+
+	rd := csv.NewReader(zipReader)
+	lines, err := rd.ReadAll()
+	Expect(err).NotTo(HaveOccurred())
+	Expect(len(lines) != 0).Should(BeTrue())
+	By(fmt.Sprintf("downloaded object, data %s", lines))
+	return lines
+}
+
+// findFwlog finds fwlog in the latest file
+func findFwlog(c objstore.Client, srcIP, destIP string, port uint32, protocol, fwaction string) []string {
+	objName, err := getLastObjectName(c, "")
+	Expect(err).NotTo(HaveOccurred())
+	lines := downloadCsvFileViaPSMRESTAPI("fwlogs", objName, ts.tu.APIGwAddr)
+	for _, line := range lines {
+		if matchLine(line, srcIP, destIP, port, protocol, fwaction) {
+			return line
+		}
+	}
+	return []string{}
+}
+
+func matchLine(line []string, srcIP, destIP string, port uint32, protocol, fwaction string) bool {
+	return line[2] == srcIP &&
+		line[3] == destIP &&
+		line[4] == strconv.Itoa(int(port)) &&
+		line[7] == protocol &&
+		line[8] == fwaction
 }

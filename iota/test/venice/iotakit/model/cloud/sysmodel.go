@@ -344,8 +344,9 @@ func (sm *SysModel) DefaultNetworkSecurityPolicy() *objects.NetworkSecurityPolic
 	return nil
 }
 
-//FindFwlogForWorkloadPairs find fwlog pairs
-func (sm *SysModel) FindFwlogForWorkloadPairs(protocol, fwaction, timestr string, port uint32, wpc *objects.WorkloadPairCollection) error {
+// FindFwlogForWorkloadPairsFromObjStore find fwlog pairs
+func (sm *SysModel) FindFwlogForWorkloadPairsFromObjStore(tenantName,
+	protocol string, port uint32, fwaction string, wpc *objects.WorkloadPairCollection) error {
 	return fmt.Errorf("not implemented")
 }
 

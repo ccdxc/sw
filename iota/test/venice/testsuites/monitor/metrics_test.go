@@ -32,8 +32,8 @@ var _ = Describe("metrics test", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling flow drop stats on naples sim")
 			}
-			//spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "any", "PERMIT")
-			//Expect(spc.Commit()).ShouldNot(HaveOccurred())
+			// spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "any", "PERMIT")
+			// Expect(spc.Commit()).ShouldNot(HaveOccurred())
 
 			//Verif policy was propagted correctly
 
@@ -54,11 +54,9 @@ var _ = Describe("metrics test", func() {
 			time.Sleep(time.Second * 30)
 
 			// check fwlog, enable when fwlogs are reported to Venice
-			/*
-				Eventually(func() error {
-					return ts.model.FindFwlogForWorkloadPairs("ICMP", "allow", startTime.String(), 0, workloadPairs.ReversePairs())
-				}).Should(Succeed())
-			*/
+			// Eventually(func() error {
+			// 	return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "ICMP", 0, "allow", workloadPairs)
+			// }).Should(Succeed())
 
 			Eventually(func() error {
 				return vnc.QueryDropMetricsForWorkloadPairs(workloadPairs, startTime)
