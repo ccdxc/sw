@@ -33,6 +33,26 @@ func NewDscProfileInsertion(client objClient.ObjClient, name string) *DscProfile
 	}
 }
 
+//NewDscProfileFlowAware  creates flow aware profile
+func NewDscProfileFlowAware(client objClient.ObjClient, name string) *DscProfile {
+
+	return &DscProfile{
+		client: client,
+		Profile: &cluster.DSCProfile{
+			TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      name,
+				Namespace: "",
+				Tenant:    "",
+			},
+			Spec: cluster.DSCProfileSpec{
+				FwdMode:        "TRANSPARENT",
+				FlowPolicyMode: "FLOWAWARE",
+			},
+		},
+	}
+}
+
 //NewDscProfileBasenet creates basenet profile
 func NewDscProfileBasenet(client objClient.ObjClient, name string) *DscProfile {
 

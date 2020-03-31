@@ -28,6 +28,7 @@ type EntBaseCfg struct {
 	//naples map[string]*Naples // Naples instances
 	Dscs           [][]*cluster.DistributedServiceCard
 	ThirdPartyDscs []*cluster.DistributedServiceCard
+	FakeDscs       []*cluster.DistributedServiceCard
 	subnets        []*Network               // subnets
 	sgPolicies     []*NetworkSecurityPolicy // simulated security policies
 	apps           []*App                   // simulated apps
@@ -211,6 +212,7 @@ func (gs *EntBaseCfg) PopulateConfig(params *ConfigParams) error {
 
 	gs.Dscs = params.Dscs
 	gs.ThirdPartyDscs = params.ThirdPartyDscs
+	gs.FakeDscs = params.FakeDscs
 
 	//Add sim naples too.
 	for _, naples := range params.FakeDscs {
@@ -727,19 +729,26 @@ func (gs *EntBaseCfg) PushConfig() error {
 			// verify that sgpolicy object has reached all naples
 			startTime := time.Now()
 			iter := 1
+
+			totalDscs := 0
+			for _, dsc := range gs.Dscs {
+				totalDscs += len(dsc)
+			}
+			totalDscs += len(gs.FakeDscs)
+
 			for ; iter <= 2000; iter++ {
 				time.Sleep(time.Second * time.Duration(iter))
 				retSgp, err := rClient.GetNetworkSecurityPolicy(&o.ObjectMeta)
 				if err != nil {
 					done <- fmt.Errorf("error getting back policy %s %v", o.ObjectMeta.Name, err.Error())
 					return
-				} else if retSgp.Status.PropagationStatus.Updated == int32(len(gs.Dscs)) {
+				} else if retSgp.Status.PropagationStatus.Updated == int32(totalDscs) {
 					duration := TimeTrack(startTime, "Sg Policy Push").String()
 					cfgPushTime.Object.SgPolicy = duration
 					done <- nil
 					return
 				}
-				log.Warnf("Propagation stats did not match for policy %v. %+v", o.ObjectMeta.Name, retSgp.Status.PropagationStatus, len(gs.Dscs))
+				log.Warnf("Propagation stats did not match for policy %v. %+v %v", o.ObjectMeta.Name, retSgp.Status.PropagationStatus, totalDscs)
 			}
 			done <- fmt.Errorf("unable to update policy '%s' on all naples %+v",
 				o.ObjectMeta.Name, o.Status.PropagationStatus)

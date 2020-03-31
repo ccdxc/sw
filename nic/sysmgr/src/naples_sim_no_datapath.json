@@ -69,6 +69,10 @@
         {
             "kind": "service",
             "service-name": "delphi"
+        },
+        {
+            "kind": "service",
+            "service-name": "fakehal"
         }
     ],
     "flags": [],

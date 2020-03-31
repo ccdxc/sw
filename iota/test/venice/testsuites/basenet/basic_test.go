@@ -3,6 +3,7 @@ package basenet_test
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/pensando/sw/iota/test/venice/iotakit/model"
 
@@ -15,7 +16,9 @@ import (
 
 var _ = Describe("Basnet Sanity", func() {
 
+	dataPathEnabled := true
 	var dscInsertionProfile *objects.DscProfile
+	var dscFlowawareProfile *objects.DscProfile
 	BeforeEach(func() {
 		// verify cluster is in good health
 		Eventually(func() error {
@@ -23,23 +26,126 @@ var _ = Describe("Basnet Sanity", func() {
 		}).Should(Succeed())
 		dscInsertionProfile = objects.NewDscProfileInsertion(ts.model.ConfigClient(), "dscInsertion")
 		Expect(dscInsertionProfile.Commit()).Should(Succeed())
+		dscFlowawareProfile = objects.NewDscProfileFlowAware(ts.model.ConfigClient(), "dscFlowaware")
+		Expect(dscFlowawareProfile.Commit()).Should(Succeed())
 	})
 	AfterEach(func() {
 		//Delete if insertion profile exists
+		ts.model.CleanupAllConfig()
 		dscInsertionProfile.Delete()
+		dscFlowawareProfile.Delete()
 		ts.tb.AfterTestCommon()
 	})
 
 	Context("Basenet Tests", func() {
 
-		It("Reset naples and expected to join back cluster", func() {
+		runDataPath := func(workloadPairs *objects.WorkloadPairCollection,
+			veniceCollector *objects.VeniceNodeCollection) error {
+			ctx, cancel := context.WithCancel(context.Background())
+			tcpdumpDone := make(chan error)
+			var output int
+			go func() {
+				var err error
+				output, err = veniceCollector.GetGRETCPDumpCount(ctx)
+				tcpdumpDone <- err
+
+			}()
+
+			//Sleep for a while so that tcpdump starts
+			time.Sleep(2 * time.Second)
+			ts.model.PingPairs(workloadPairs)
+			cancel()
+			err := <-tcpdumpDone
+
+			if err != nil {
+				return fmt.Errorf("Error running command.")
+			}
+
+			if output == 0 {
+				return fmt.Errorf("Did not receive mirror packets")
+			}
+
+			return nil
+		}
+
+		verifyDatapathCollection := func(workloadPairs *objects.WorkloadPairCollection,
+			veniceCollector *objects.VeniceNodeCollection) error {
+			if !dataPathEnabled {
+				return nil
+			}
+			return runDataPath(workloadPairs, veniceCollector)
+		}
+
+		verifyNoDatapathCollection := func(workloadPairs *objects.WorkloadPairCollection,
+			veniceCollector *objects.VeniceNodeCollection) error {
+			if !dataPathEnabled {
+				return nil
+			}
+			err := runDataPath(workloadPairs, veniceCollector)
+			if err != nil {
+				return nil
+			}
+			return fmt.Errorf("Collector still found packets..")
+		}
+
+		It("Move Naples to flow aware mode and make sure cluster is normal and reset", func() {
 			for i := 0; i < int(ts.stress); i++ {
-				log.Infof("Resetting Naples iteration %v", i+1)
-				Expect(ts.model.ResetNaplesNodes(ts.model.Hosts())).Should(Succeed())
-				// wait for cluster to be back in good state
+
+				//Make sure flow aware mirroing works
+				veniceCollector := ts.model.VeniceNodes().Leader()
+				// add permit rules for workload pairs
+				workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
+				msc := ts.model.NewMirrorSession("test-mirror").AddRulesForWorkloadPairs(workloadPairs, "icmp")
+				msc.AddVeniceCollector(veniceCollector, "udp/4545", 0)
+				Expect(msc.Commit()).Should(Succeed())
+
 				Eventually(func() error {
-					return ts.model.VerifyClusterStatus()
+					return verifyNoDatapathCollection(workloadPairs, veniceCollector)
 				}).Should(Succeed())
+
+				Expect(ts.model.Naples().SetDscProfile(dscFlowawareProfile)).Should(Succeed())
+				//Ping should succeed
+				Eventually(func() error {
+					return ts.model.PingPairs(ts.model.WorkloadPairs().WithinNetwork())
+				}).Should(Succeed())
+
+				Eventually(func() error {
+					return verifyDatapathCollection(workloadPairs, veniceCollector)
+				}).Should(Succeed())
+
+				Expect(ts.model.Naples().Decommission()).Should(Succeed())
+				Eventually(func() error {
+					admit, _ := ts.model.Naples().IsAdmitted()
+					if !admit {
+						return nil
+					}
+					return fmt.Errorf("Naples still admitted")
+				}).Should(Succeed())
+
+				Expect(ts.model.Naples().ResetProfile()).Should(Succeed())
+				Expect(ts.model.Naples().Admit()).Should(Succeed())
+				//reload Nodes so that it can Join
+				Eventually(func() error {
+					return ts.model.ReloadHosts(ts.model.Hosts())
+				}).Should(Succeed())
+
+				Eventually(func() error {
+					admit, err := ts.model.Naples().IsAdmitted()
+					if err == nil && admit {
+						return nil
+					}
+					return fmt.Errorf("Naples not admitted")
+				}).Should(Succeed())
+
+				Eventually(func() error {
+					return verifyNoDatapathCollection(workloadPairs, veniceCollector)
+				}).Should(Succeed())
+
+				//Ping should work as expected
+				Eventually(func() error {
+					return ts.model.PingPairs(ts.model.WorkloadPairs().WithinNetwork())
+				}).Should(Succeed())
+
 			}
 		})
 
@@ -170,5 +276,111 @@ var _ = Describe("Basnet Sanity", func() {
 			}
 
 		})
+
+		It("Move Naples to flow aware mode to insertion mode and make sure cluster is normal and reset", func() {
+			var err error
+			for i := 0; i < int(ts.stress); i++ {
+				veniceCollector := ts.model.VeniceNodes().Leader()
+				// add permit rules for workload pairs
+				workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
+				msc := ts.model.NewMirrorSession("test-mirror").AddRulesForWorkloadPairs(workloadPairs, "icmp")
+				msc.AddVeniceCollector(veniceCollector, "udp/4545", 0)
+				Expect(msc.Commit()).Should(Succeed())
+
+				Eventually(func() error {
+					return verifyNoDatapathCollection(workloadPairs, veniceCollector)
+				}).Should(Succeed())
+
+				Expect(ts.model.Naples().SetDscProfile(dscFlowawareProfile)).Should(Succeed())
+				//Ping should succeed
+				Eventually(func() error {
+					return ts.model.PingPairs(ts.model.WorkloadPairs().WithinNetwork())
+				}).Should(Succeed())
+
+				Eventually(func() error {
+					return verifyDatapathCollection(workloadPairs, veniceCollector)
+				}).Should(Succeed())
+
+				Expect(ts.model.Naples().SetDscProfile(dscInsertionProfile)).Should(Succeed())
+
+				//Ping should fail as expected
+				Eventually(func() error {
+					return ts.model.PingPairs(ts.model.WorkloadPairs().WithinNetwork())
+				}).ShouldNot(Succeed())
+
+				workloads := ts.model.Workloads()
+				Expect(ts.model.TeardownWorkloads(workloads)).Should(Succeed())
+
+				ts.model, err = model.ReinitSysModel(ts.model, common.DefaultModel)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				err := ts.model.SetupDefaultConfig(context.Background(), false, false)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				workloadPairs = ts.model.WorkloadPairs().WithinNetwork().Any(4)
+
+				err = ts.model.DefaultNetworkSecurityPolicy().Delete()
+				Expect(err).ShouldNot(HaveOccurred())
+				spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "icmp", "PERMIT")
+				spc.AddRulesForWorkloadPairs(workloadPairs.ReversePairs(), "icmp", "PERMIT")
+				Expect(spc.Commit()).Should(Succeed())
+
+				//Ping should succed as expected
+				Eventually(func() error {
+					return ts.model.PingPairs(workloadPairs)
+				}).Should(Succeed())
+
+				Expect(ts.model.CleanupAllConfig()).Should(Succeed())
+				//Ping should not succeed
+				Eventually(func() error {
+					return ts.model.PingPairs(workloadPairs)
+				}).ShouldNot(Succeed())
+
+				Expect(ts.model.Naples().Decommission()).Should(Succeed())
+				Eventually(func() error {
+					admit, _ := ts.model.Naples().IsAdmitted()
+					if !admit {
+						return nil
+					}
+					return fmt.Errorf("Naples still admitted")
+				}).Should(Succeed())
+
+				Expect(ts.model.Naples().ResetProfile()).Should(Succeed())
+				Expect(ts.model.Naples().Admit()).Should(Succeed())
+
+				workloads = ts.model.Workloads()
+				Expect(ts.model.TeardownWorkloads(workloads)).Should(Succeed())
+
+				ts.model, err = model.ReinitSysModel(ts.model, common.BaseNetModel)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				err = ts.model.SetupDefaultConfig(context.Background(), false, false)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				//reload Nodes so that it can Join
+				Eventually(func() error {
+					return ts.model.ReloadHosts(ts.model.Hosts())
+				}).Should(Succeed())
+
+				Eventually(func() error {
+					admit, err := ts.model.Naples().IsAdmitted()
+					if err == nil && admit {
+						return nil
+					}
+					return fmt.Errorf("Naples not admitted")
+				}).Should(Succeed())
+
+				Eventually(func() error {
+					return verifyNoDatapathCollection(workloadPairs, veniceCollector)
+				}).Should(Succeed())
+
+				//Ping should work as expected
+				Eventually(func() error {
+					return ts.model.PingPairs(ts.model.WorkloadPairs().WithinNetwork())
+				}).Should(Succeed())
+
+			}
+		})
+
 	})
 })

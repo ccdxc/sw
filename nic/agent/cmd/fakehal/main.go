@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	hal "github.com/pensando/sw/nic/agent/cmd/fakehal/hal"
@@ -40,6 +41,10 @@ func main() {
 	// Initialize logger config
 	logger := log.SetConfig(logConfig)
 	defer logger.Close()
+
+	if envHalPort := os.Getenv("HAL_GRPC_PORT"); envHalPort != "" && envHalPort != types.HalGRPCDefaultPort {
+		*halPort = envHalPort
+	}
 
 	halURL := fmt.Sprintf("127.0.0.1:%s", *halPort)
 	hal.NewFakeHalServer(halURL)

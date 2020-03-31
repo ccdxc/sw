@@ -198,7 +198,7 @@ func (npc *NaplesCollection) ResetProfile() error {
 			dsc.Status = curDsc.Status
 			dsc.ObjectMeta = curDsc.ObjectMeta
 
-			dsc.Spec.DSCProfile = ""
+			dsc.Spec.DSCProfile = "default"
 			err = npc.CollectionCommon.Client.UpdateSmartNIC(dsc)
 			if err != nil {
 				log.Errorf("Error updating smartnic with profile %v", err.Error())
@@ -299,7 +299,7 @@ func (npc *NaplesCollection) IsAdmitted() (bool, error) {
 			snic, err := npc.Client.GetSmartNICByName(dsc.Name)
 			if err != nil || !snic.Spec.Admit {
 				log.Infof("Snic not admitted  %v", snic)
-				msg := fmt.Sprintf("Snic not admitted %v", snic)
+				msg := fmt.Sprintf("Snic not admitted %v %v %v", snic, dsc.Name, err)
 				log.Infof(msg)
 				return false, fmt.Errorf(msg)
 			}
@@ -311,7 +311,7 @@ func (npc *NaplesCollection) IsAdmitted() (bool, error) {
 			dsc := inst.Dsc
 			snic, err := npc.Client.GetSmartNICByName(dsc.Name)
 			if err != nil || !snic.Spec.Admit {
-				msg := fmt.Sprintf("Snic not admitted %v", snic)
+				msg := fmt.Sprintf("Snic not admitted %v %v %v", snic, dsc.Name, err)
 				log.Infof(msg)
 				return false, fmt.Errorf(msg)
 			}

@@ -1040,7 +1040,7 @@ func (r *Client) GetSmartNICByName(snicName string) (sn *cluster.DistributedServ
 
 	// walk all smartnics and see if the mac addr range matches
 	for _, snic := range snicList {
-		if snic.Spec.ID == snicName {
+		if snic.Spec.ID == snicName || snic.Name == snicName {
 			return snic, nil
 		}
 	}
