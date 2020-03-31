@@ -176,10 +176,10 @@ export const sideNavMenu: SideNavItem[] = [
         },
         roleGuard: {
           opt: [
-            UIRolePermissions.monitoringarchiverequest_create,
+            UIRolePermissions.monitoringarchiverequest_read,
             UIRolePermissions.auditevent_read,
             UIRolePermissions.eventsevent_read,
-            UIRolePermissions.objstoreobject_create
+            UIRolePermissions.objstoreobject_read
           ]
         },
         link: ['/monitoring', 'archive']
@@ -372,6 +372,7 @@ export const sideNavMenu: SideNavItem[] = [
           cssClass: 'material-icons',
           matIconName: 'library_books'
         },
+        roleGuard: UIRolePermissions.adminrole,
         featureGuard: Features.apiCapture,
         link: ['/admin', 'api']
       }

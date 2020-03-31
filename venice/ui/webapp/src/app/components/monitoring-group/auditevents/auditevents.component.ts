@@ -227,7 +227,7 @@ export class AuditeventsComponent extends TablevieweditAbstract<IAuditAuditEvent
 
   checkPermissions(): boolean {
     const boolArchiveRequestActions = this.uiconfigsService.isAuthorized(UIRolePermissions['monitoringarchiverequest_all-actions']);
-    const boolObjStoreCreate = this.uiconfigsService.isAuthorized(UIRolePermissions['objstoreobject_create']);
+    const boolObjStoreCreate = this.uiconfigsService.isAuthorized(UIRolePermissions.objstoreobject_create);
     return (boolObjStoreCreate && boolArchiveRequestActions);
   }
 

@@ -123,10 +123,10 @@ export class UIConfigsService {
     },
     'monitoring/archive': {
       requiredPerm: [
-        UIRolePermissions['monitoringarchiverequest_all-actions'],
-        UIRolePermissions['eventsevent_read'],
-        UIRolePermissions['auditevent_read'],
-        UIRolePermissions['objstoreobject_create']
+        UIRolePermissions.monitoringarchiverequest_read,
+        UIRolePermissions.eventsevent_read,
+        UIRolePermissions.auditevent_read,
+        UIRolePermissions.objstoreobject_read
       ],
     },
     'monitoring/fwlogs': {
