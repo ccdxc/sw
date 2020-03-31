@@ -50,16 +50,6 @@ std::string hex_str(const uint8_t *buf, size_t sz)
     return result.str();
 }
 
-#define BYTES_TO_UINT64(addr) \
-    (((uint64_t)(addr)[0] & 0xFF)               | \
-     ((uint64_t)((addr)[1] & 0xFF) << 8)        | \
-     ((uint64_t)((addr)[2] & 0xFF) << 16)       | \
-     ((uint64_t)((addr)[3] & 0xFF) << 24)       | \
-     ((uint64_t)((addr)[4] & 0xFF) << 32)       | \
-     ((uint64_t)((addr)[5] & 0xFF) << 40)       | \
-     ((uint64_t)((addr)[6] & 0xFF) << 48)       | \
-     ((uint64_t)((addr)[7] & 0xFF) << 56))
-
 //------------------------------------------------------------------------------
 // program flow stats table entry and return the index at which
 // the entry is programmed
@@ -253,27 +243,18 @@ p4pd_add_upd_session_state_table_entry (pd_session_t *session_pd,
 {
     hal_ret_t                ret;
     sdk_ret_t                sdk_ret;
-    sldirectmap             *session_state_table;
     flow_t                   *iflow, *rflow;
-    session_state_actiondata_t d = { 0 };
     session_t                *session = (session_t *)session_pd->session;
-    sdk_table_api_params_t   params;
+    struct tcp_session_state_info_entry_t tcp_entry;
 
     SDK_ASSERT(session_pd != NULL);
     iflow = session->iflow;
     rflow = session->rflow;
     SDK_ASSERT((iflow != NULL) && (rflow != NULL));
 
-    session_state_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
-    SDK_ASSERT(session_state_table != NULL);
-
-    bzero(&params, sizeof(sdk_table_api_params_t));
-    params.actiondata = &d;
-
+    tcp_entry.clear();
     if (update) {
-        params.handle.pindex(session_pd->session_state_idx);
-
-        sdk_ret = session_state_table->get(&params);
+        sdk_ret = tcp_entry.read(session_pd->session_state_idx);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("sess table update entry: {} not found", session_pd->session_state_idx);
@@ -282,76 +263,64 @@ p4pd_add_upd_session_state_table_entry (pd_session_t *session_pd,
     }
     HAL_TRACE_DEBUG("sess table updt:{} Index:{}", update, session_pd->session_state_idx);
 
-    // populate the action information
-    d.action_id = SESSION_STATE_TCP_SESSION_STATE_INFO_ID;
-
     if (session_state) {
         // session specific information
-        d.action_u.session_state_tcp_session_state_info.tcp_ts_option_negotiated =
-            session_state->tcp_ts_option;
-        d.action_u.session_state_tcp_session_state_info.tcp_sack_perm_option_negotiated =
-            session_state->tcp_sack_perm_option;
+        tcp_entry.set_tcp_ts_option_negotiated(session_state->tcp_ts_option);
+        tcp_entry.set_tcp_sack_perm_option_negotiated(session_state->tcp_sack_perm_option);
 
         // initiator flow specific information
-        d.action_u.session_state_tcp_session_state_info.iflow_tcp_state =
-            session_state->iflow_state.state;
-        d.action_u.session_state_tcp_session_state_info.iflow_tcp_seq_num =
-            session_state->iflow_state.tcp_seq_num;
-        d.action_u.session_state_tcp_session_state_info.iflow_tcp_ack_num =
-            session_state->iflow_state.tcp_ack_num;
-        d.action_u.session_state_tcp_session_state_info.iflow_tcp_win_sz =
-            session_state->iflow_state.tcp_win_sz;
-        d.action_u.session_state_tcp_session_state_info.iflow_tcp_win_scale =
-            session_state->iflow_state.tcp_win_scale;
-        d.action_u.session_state_tcp_session_state_info.iflow_tcp_mss =
-            session_state->iflow_state.tcp_mss;
-        d.action_u.session_state_tcp_session_state_info.iflow_tcp_ws_option_sent =
-            session_state->iflow_state.tcp_ws_option_sent;
-        d.action_u.session_state_tcp_session_state_info.iflow_tcp_ts_option_sent =
-            session_state->iflow_state.tcp_ts_option_sent;
-        d.action_u.session_state_tcp_session_state_info.iflow_tcp_sack_perm_option_sent =
-            session_state->iflow_state.tcp_sack_perm_option_sent;
-        d.action_u.session_state_tcp_session_state_info.iflow_exceptions_seen =
-            session_state->iflow_state.exception_bmap;
+        tcp_entry.set_iflow_tcp_state(session_state->iflow_state.state);
+        tcp_entry.set_iflow_tcp_seq_num(session_state->iflow_state.tcp_seq_num);
+        tcp_entry.set_iflow_tcp_ack_num(session_state->iflow_state.tcp_ack_num);
+        tcp_entry.set_iflow_tcp_win_sz(session_state->iflow_state.tcp_win_sz);
+        tcp_entry.set_iflow_tcp_win_scale(session_state->iflow_state.tcp_win_scale);
+        tcp_entry.set_iflow_tcp_mss(session_state->iflow_state.tcp_mss);
+        tcp_entry.set_iflow_tcp_ws_option_sent(
+            session_state->iflow_state.tcp_ws_option_sent);
+        tcp_entry.set_iflow_tcp_ts_option_sent(
+            session_state->iflow_state.tcp_ts_option_sent);
+        tcp_entry.set_iflow_tcp_sack_perm_option_sent(
+            session_state->iflow_state.tcp_sack_perm_option_sent);
+        tcp_entry.set_iflow_exceptions_seen(
+            session_state->iflow_state.exception_bmap);
 
         // responder flow specific information
-        d.action_u.session_state_tcp_session_state_info.rflow_tcp_state =
-            session_state->rflow_state.state;
-        d.action_u.session_state_tcp_session_state_info.rflow_tcp_seq_num =
-            session_state->rflow_state.tcp_seq_num;
-        d.action_u.session_state_tcp_session_state_info.rflow_tcp_ack_num =
-            session_state->rflow_state.tcp_ack_num;
-        d.action_u.session_state_tcp_session_state_info.rflow_tcp_win_sz =
-            session_state->rflow_state.tcp_win_sz;
-        d.action_u.session_state_tcp_session_state_info.rflow_tcp_win_scale =
-            session_state->rflow_state.tcp_win_scale;
-        d.action_u.session_state_tcp_session_state_info.rflow_tcp_mss =
-            session_state->rflow_state.tcp_mss;
-        d.action_u.session_state_tcp_session_state_info.rflow_exceptions_seen =
-            session_state->rflow_state.exception_bmap;
+        tcp_entry.set_rflow_tcp_state(session_state->rflow_state.state);
+        tcp_entry.set_rflow_tcp_seq_num(session_state->rflow_state.tcp_seq_num);
+        tcp_entry.set_rflow_tcp_ack_num(session_state->rflow_state.tcp_ack_num);
+        tcp_entry.set_rflow_tcp_win_sz(session_state->rflow_state.tcp_win_sz);
+        tcp_entry.set_rflow_tcp_win_scale(
+            session_state->rflow_state.tcp_win_scale);
+        tcp_entry.set_rflow_tcp_mss(session_state->rflow_state.tcp_mss);
+        tcp_entry.set_rflow_exceptions_seen(
+            session_state->rflow_state.exception_bmap);
 
-        d.action_u.session_state_tcp_session_state_info.syn_cookie_delta =
-            session_state->iflow_state.syn_ack_delta;
+        tcp_entry.set_syn_cookie_delta(session_state->iflow_state.syn_ack_delta);
     }
 
-    d.action_u.session_state_tcp_session_state_info.flow_rtt_seq_check_enabled =
+    bool flow_rtt_seq_check_enabled =
         nwsec_profile ?  nwsec_profile->tcp_rtt_estimate_en : FALSE;
+    tcp_entry.set_flow_rtt_seq_check_enabled(flow_rtt_seq_check_enabled);
 
-    if (update) {
-        // update the entry
-        sdk_ret = session_state_table->update(&params);
-    } else {
-        // insert the entry
-        sdk_ret = session_state_table->insert(&params);
+    // allocate an index table if its not an update
+    if (!update) {
+        sldirectmap             *session_state_table;
+        sdk_table_api_params_t  params;
+
+        session_state_table = (sldirectmap *)
+            g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
+        SDK_ASSERT(session_state_table != NULL);
+        bzero(&params, sizeof(sdk_table_api_params_t));
+        session_state_table->reserve(&params);
+        SDK_ASSERT(params.handle.pvalid());
+        session_pd->session_state_idx = params.handle.pindex();
     }
+    sdk_ret = tcp_entry.write(session_pd->session_state_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("session state table write failure, err : {}", ret);
         return ret;
     }
-
-    SDK_ASSERT(params.handle.pvalid());
-    session_pd->session_state_idx = params.handle.pindex();
     return HAL_RET_OK;
 }
 
@@ -1334,12 +1303,9 @@ pd_session_get (pd_func_args_t *pd_func_args)
     pd_session_get_args_t *args = pd_func_args->pd_session_get;
     pd_func_args_t pd_func_args1 = {0};
     sdk_ret_t sdk_ret;
-    session_state_actiondata_t d = {0};
-    sldirectmap *session_state_table = NULL;
     session_state_t *ss = args->session_state;
     pd_flow_get_args_t flow_get_args;
     pd_session_t *pd_session;
-    session_state_tcp_session_state_info_t info;
     sdk_table_api_params_t   params;
 
     if (args->session == NULL || args->session->pd == NULL) {
@@ -1348,42 +1314,38 @@ pd_session_get (pd_func_args_t *pd_func_args)
     pd_session = args->session->pd;
 
     if (args->session->conn_track_en) {
-        session_state_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
-        SDK_ASSERT(session_state_table != NULL);
+        struct tcp_session_state_info_entry_t tcp_entry;
 
-        bzero(&params, sizeof(sdk_table_api_params_t));
-        params.handle.pindex(pd_session->session_state_idx);
-        params.actiondata = &d;
-        sdk_ret = session_state_table->get(&params);
+        tcp_entry.clear();
+        sdk_ret = tcp_entry.read(pd_session->session_state_idx);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret == HAL_RET_OK) {
-            info = d.action_u.session_state_tcp_session_state_info;
-            ss->tcp_ts_option = info.tcp_ts_option_negotiated;
-            ss->tcp_sack_perm_option = info.tcp_sack_perm_option_negotiated;
+            ss->tcp_ts_option = tcp_entry.get_tcp_ts_option_negotiated();
+            ss->tcp_sack_perm_option = tcp_entry.get_tcp_sack_perm_option_negotiated();
 
             // Initiator flow specific information
-            ss->iflow_state.state = (session::FlowTCPState)info.iflow_tcp_state;
-            ss->iflow_state.tcp_seq_num = info.iflow_tcp_seq_num;
-            ss->iflow_state.tcp_ack_num = info.iflow_tcp_ack_num;
-            ss->iflow_state.tcp_win_sz = info.iflow_tcp_win_sz;
-            ss->iflow_state.syn_ack_delta = info.syn_cookie_delta;
-            ss->iflow_state.tcp_mss = info.iflow_tcp_mss;
-            ss->iflow_state.tcp_win_scale = info.iflow_tcp_win_scale;
-            ss->iflow_state.tcp_ws_option_sent = info.iflow_tcp_ws_option_sent;
-            ss->iflow_state.tcp_ts_option_sent = info.iflow_tcp_ts_option_sent;
+            ss->iflow_state.state = (session::FlowTCPState)tcp_entry.get_iflow_tcp_state();
+            ss->iflow_state.tcp_seq_num = tcp_entry.get_iflow_tcp_seq_num();
+            ss->iflow_state.tcp_ack_num = tcp_entry.get_iflow_tcp_ack_num();
+            ss->iflow_state.tcp_win_sz = tcp_entry.get_iflow_tcp_win_sz();
+            ss->iflow_state.syn_ack_delta = tcp_entry.get_syn_cookie_delta();
+            ss->iflow_state.tcp_mss = tcp_entry.get_iflow_tcp_mss();
+            ss->iflow_state.tcp_win_scale = tcp_entry.get_iflow_tcp_win_scale();
+            ss->iflow_state.tcp_ws_option_sent = tcp_entry.get_iflow_tcp_ws_option_sent();
+            ss->iflow_state.tcp_ts_option_sent = tcp_entry.get_iflow_tcp_ts_option_sent();
             ss->iflow_state.tcp_sack_perm_option_sent =
-                                          info.iflow_tcp_sack_perm_option_sent;
-            ss->iflow_state.exception_bmap = info.iflow_exceptions_seen;
+                                          tcp_entry.get_iflow_tcp_sack_perm_option_sent();
+            ss->iflow_state.exception_bmap = tcp_entry.get_iflow_exceptions_seen();
 
             // Responder flow specific information
             ss->rflow_state.state =
-              (session::FlowTCPState)info.rflow_tcp_state;
-            ss->rflow_state.tcp_seq_num = info.rflow_tcp_seq_num;
-            ss->rflow_state.tcp_ack_num = info.rflow_tcp_ack_num;
-            ss->rflow_state.tcp_win_sz = info.rflow_tcp_win_sz;
-            ss->rflow_state.tcp_mss = info.rflow_tcp_mss;
-            ss->rflow_state.tcp_win_scale = info.rflow_tcp_win_scale;
-            ss->rflow_state.exception_bmap = info.rflow_exceptions_seen;
+              (session::FlowTCPState)tcp_entry.get_rflow_tcp_state();
+            ss->rflow_state.tcp_seq_num = tcp_entry.get_rflow_tcp_seq_num();
+            ss->rflow_state.tcp_ack_num = tcp_entry.get_rflow_tcp_ack_num();
+            ss->rflow_state.tcp_win_sz = tcp_entry.get_rflow_tcp_win_sz();
+            ss->rflow_state.tcp_mss = tcp_entry.get_rflow_tcp_mss();
+            ss->rflow_state.tcp_win_scale = tcp_entry.get_rflow_tcp_win_scale();
+            ss->rflow_state.exception_bmap = tcp_entry.get_rflow_exceptions_seen();
         }
     }
 
@@ -1787,9 +1749,7 @@ pd_session_get_for_age_thread (pd_func_args_t *pd_func_args)
     pd_flow_get_args_t                      flow_get_args;
     pd_func_args_t                          pd_func_args1;
     session_state_actiondata_t              d;
-    sldirectmap                            *session_state_table;
     session_state_t                        *ss;
-    session_state_tcp_session_state_info_t  info;
     sdk_table_api_params_t                 params;
 
     args = pd_func_args->pd_session_get;
@@ -1800,42 +1760,38 @@ pd_session_get_for_age_thread (pd_func_args_t *pd_func_args)
 
     ss = args->session_state;
     if (args->session->conn_track_en) {
-        session_state_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
-        SDK_ASSERT(session_state_table != NULL);
+        struct tcp_session_state_info_entry_t tcp_entry;
 
-        bzero(&params, sizeof(sdk_table_api_params_t));
-        params.handle.pindex(pd_session->session_state_idx);
-        params.actiondata = &d;
-        sdk_ret = session_state_table->get(&params);
+        tcp_entry.clear();
+        sdk_ret = tcp_entry.read(pd_session->session_state_idx);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret == HAL_RET_OK) {
-            info = d.action_u.session_state_tcp_session_state_info;
-            ss->tcp_ts_option = info.tcp_ts_option_negotiated;
-            ss->tcp_sack_perm_option = info.tcp_sack_perm_option_negotiated;
+            ss->tcp_ts_option = tcp_entry.get_tcp_ts_option_negotiated();
+            ss->tcp_sack_perm_option = tcp_entry.get_tcp_sack_perm_option_negotiated();
 
             // Initiator flow specific information
-            ss->iflow_state.state = (session::FlowTCPState)info.iflow_tcp_state;
-            ss->iflow_state.tcp_seq_num = info.iflow_tcp_seq_num;
-            ss->iflow_state.tcp_ack_num = info.iflow_tcp_ack_num;
-            ss->iflow_state.tcp_win_sz = info.iflow_tcp_win_sz;
-            ss->iflow_state.syn_ack_delta = info.syn_cookie_delta;
-            ss->iflow_state.tcp_mss = info.iflow_tcp_mss;
-            ss->iflow_state.tcp_win_scale = info.iflow_tcp_win_scale;
-            ss->iflow_state.tcp_ws_option_sent = info.iflow_tcp_ws_option_sent;
-            ss->iflow_state.tcp_ts_option_sent = info.iflow_tcp_ts_option_sent;
+            ss->iflow_state.state = (session::FlowTCPState)tcp_entry.get_iflow_tcp_state();
+            ss->iflow_state.tcp_seq_num = tcp_entry.get_iflow_tcp_seq_num();
+            ss->iflow_state.tcp_ack_num = tcp_entry.get_iflow_tcp_ack_num();
+            ss->iflow_state.tcp_win_sz = tcp_entry.get_iflow_tcp_win_sz();
+            ss->iflow_state.syn_ack_delta = tcp_entry.get_syn_cookie_delta();
+            ss->iflow_state.tcp_mss = tcp_entry.get_iflow_tcp_mss();
+            ss->iflow_state.tcp_win_scale = tcp_entry.get_iflow_tcp_win_scale();
+            ss->iflow_state.tcp_ws_option_sent = tcp_entry.get_iflow_tcp_ws_option_sent();
+            ss->iflow_state.tcp_ts_option_sent = tcp_entry.get_iflow_tcp_ts_option_sent();
             ss->iflow_state.tcp_sack_perm_option_sent =
-                                          info.iflow_tcp_sack_perm_option_sent;
-            ss->iflow_state.exception_bmap = info.iflow_exceptions_seen;
+                                          tcp_entry.get_iflow_tcp_sack_perm_option_sent();
+            ss->iflow_state.exception_bmap = tcp_entry.get_iflow_exceptions_seen();
 
             // Responder flow specific information
             ss->rflow_state.state =
-              (session::FlowTCPState)info.rflow_tcp_state;
-            ss->rflow_state.tcp_seq_num = info.rflow_tcp_seq_num;
-            ss->rflow_state.tcp_ack_num = info.rflow_tcp_ack_num;
-            ss->rflow_state.tcp_win_sz = info.rflow_tcp_win_sz;
-            ss->rflow_state.tcp_mss = info.rflow_tcp_mss;
-            ss->rflow_state.tcp_win_scale = info.rflow_tcp_win_scale;
-            ss->rflow_state.exception_bmap = info.rflow_exceptions_seen;
+              (session::FlowTCPState)tcp_entry.get_rflow_tcp_state();
+            ss->rflow_state.tcp_seq_num = tcp_entry.get_rflow_tcp_seq_num();
+            ss->rflow_state.tcp_ack_num = tcp_entry.get_rflow_tcp_ack_num();
+            ss->rflow_state.tcp_win_sz = tcp_entry.get_rflow_tcp_win_sz();
+            ss->rflow_state.tcp_mss = tcp_entry.get_rflow_tcp_mss();
+            ss->rflow_state.tcp_win_scale = tcp_entry.get_rflow_tcp_win_scale();
+            ss->rflow_state.exception_bmap = tcp_entry.get_rflow_exceptions_seen();
         }
     }
 
