@@ -35,13 +35,10 @@ func (s *workloadHooks) validateIPAddressHook(ctx context.Context, kvs kvstore.I
 	}
 
 	switch oper {
-	case apiintf.CreateOper:
-		fallthrough
-	case apiintf.UpdateOper:
-
+	case apiintf.CreateOper, apiintf.UpdateOper:
 		for _, intf := range workload.Spec.Interfaces {
 			if len(intf.IpAddresses) > globals.MaxAllowedIPPerInterface {
-				msg := fmt.Sprintf("failed to create workload object: %s, exceeds number of IPs per interface which is %d", workload.Name, globals.MaxAllowedIPPerInterface)
+				msg := fmt.Sprintf("failed to %s workload object: %s, exceeds number of IPs per interface which is %d", oper, workload.Name, globals.MaxAllowedIPPerInterface)
 				log.Error(msg)
 				return i, false, fmt.Errorf(msg)
 			}
@@ -49,7 +46,7 @@ func (s *workloadHooks) validateIPAddressHook(ctx context.Context, kvs kvstore.I
 			for _, ip := range intf.IpAddresses {
 				ipAddress := net.ParseIP(strings.TrimSpace(ip))
 				if len(ipAddress) <= 0 {
-					msg := fmt.Sprintf("failed to create workload object: %s, IP addresss %v invalid", workload.Name, globals.MaxAllowedIPPerInterface)
+					msg := fmt.Sprintf("failed to %s workload object: %s, IP addresss %v invalid", oper, workload.Name, globals.MaxAllowedIPPerInterface)
 					log.Error(msg)
 					return i, false, fmt.Errorf(msg)
 				}

@@ -152,6 +152,7 @@ func (s *Session) clearSession() {
 		}
 	}
 	// Stop watchers and Event receivers
+	s.ClientCtx = nil
 	if s.clientCancel != nil {
 		s.clientCancel()
 	}
@@ -161,7 +162,6 @@ func (s *Session) clearSession() {
 	s.tagClient = nil
 	s.eventMgr = nil
 	s.clientCancel = nil
-	s.ClientCtx = nil
 }
 
 // PeriodicSessionCheck starts a goroutine that re-establishes the session

@@ -19,7 +19,11 @@ func (v *VCHub) sync() bool {
 	v.Log.Infof("VCHub sync called")
 
 	v.syncLock.Lock()
-	defer v.syncLock.Unlock()
+	v.syncDone = false
+	defer func() {
+		v.syncDone = true
+		v.syncLock.Unlock()
+	}()
 
 	v.Log.Infof("VCHub %v syncing........", v)
 
@@ -332,10 +336,29 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs [
 		}
 		if _, ok := vmMap[workload.Name]; !ok {
 			// workload no longer exists
-			v.Log.Debugf("Deleting stale workload %s", workload.Name)
+			v.Log.Infof("Found stale workload %s", workload.Name)
+			if v.isWorkloadMigrating(&workload.Workload) && v.isVMotionAcrossDC(&workload.Workload) {
+				// Fetch the workload to see where it is
+				vmKey := v.parseVMKeyFromWorkloadName(workload.Workload.Name)
+				// check finish migration
+				_, err := v.probe.GetVM(vmKey, defaultRetryCount)
+				if err != nil {
+					v.Log.Infof("Failed to find VM %s, deleting %s", vmKey, err)
+					v.deleteWorkload(&workload.Workload)
+					continue
+				}
+				// Check if across DC vmotion is in final sync. If so, datapath may have already written state
+				if v.isWorkloadMigrating(&workload.Workload) && workload.Workload.Status.MigrationStatus.Stage == stageMigrationFinalSync {
+					v.Log.Infof("Across DC vmotion is in final sync, check datapath value...")
+					v.handleWorkloadEvent(kvstore.Updated, &workload.Workload)
+				}
+				continue
+			}
+			v.Log.Infof("Deleting stale workload %s", workload.Name)
 			v.deleteWorkload(&workload.Workload)
 			continue
 		}
+
 		// build useg state
 		hostName := workload.Spec.HostName
 		for _, inf := range workload.Spec.Interfaces {
@@ -345,6 +368,10 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs [
 					v.Log.Errorf("Setting vlan %d for vnic %s returned %s", inf.MicroSegVlan, inf.MACAddress, err)
 				}
 			}
+		}
+
+		if v.isWorkloadMigrating(&workload.Workload) && workload.Workload.Status.MigrationStatus.Stage == stageMigrationFinalSync {
+			v.handleWorkloadEvent(kvstore.Updated, &workload.Workload)
 		}
 	}
 

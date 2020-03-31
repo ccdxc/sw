@@ -364,4 +364,7 @@ enum EventTypes {
     MIGRATION_TIMED_OUT                    = 1006 [(category) = Orchestration,
                                            (severity) = WARN,
                                            (desc)     = "Migration Timed out"];
+    ORCH_ALREADY_MANAGED                   = 1007 [(category) = Orchestration,
+                                           (severity) = WARN,
+                                           (desc)     = "Another PSM may be managing the same namespace"];
 }

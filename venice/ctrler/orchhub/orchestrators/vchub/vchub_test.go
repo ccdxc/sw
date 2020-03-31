@@ -126,7 +126,7 @@ func TestVCWrite(t *testing.T) {
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 	AssertOk(t, err, "failed to create orch config")
 
-	vchub := LaunchVCHub(sm, orchConfig, logger)
+	vchub := LaunchVCHub(sm, orchConfig, logger, WithTagSyncDelay(2*time.Second))
 
 	// Give time for VCHub to come up
 	time.Sleep(2 * time.Second)
@@ -393,7 +393,7 @@ func TestVCHubDestroy1(t *testing.T) {
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
 
-	err = probe.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, retryCount)
+	err = probe.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, nil, retryCount)
 
 	dvsName := CreateDVSName(defaultTestParams.TestDCName)
 	dvs, ok := dc1.GetDVS(dvsName)
@@ -496,7 +496,7 @@ func TestVCHubDestroy2(t *testing.T) {
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
 
-	err = probe.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, retryCount)
+	err = probe.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, nil, retryCount)
 
 	dvsName := CreateDVSName(defaultTestParams.TestDCName)
 	dvs, ok := dc1.GetDVS(dvsName)
@@ -591,7 +591,7 @@ func TestVCHubDestroy3(t *testing.T) {
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
 
-	err = probe.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, retryCount)
+	err = probe.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, nil, retryCount)
 	dvsName := CreateDVSName(defaultTestParams.TestDCName)
 	dvs, ok := dc1.GetDVS(dvsName)
 	Assert(t, ok, "failed dvs create")
@@ -779,7 +779,7 @@ func TestUsegVlanLimit(t *testing.T) {
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
 
-	err = probe.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, retryCount)
+	err = probe.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, nil, retryCount)
 	dvsName := CreateDVSName(defaultTestParams.TestDCName)
 	dvs, ok := dc1.GetDVS(dvsName)
 	Assert(t, ok, "failed dvs create")

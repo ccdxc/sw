@@ -83,16 +83,24 @@ func (v *VCHub) handleWorkloadEvent(evtType kvstore.WatchEventType, obj *workloa
 	v.Log.Infof("Handling workload event %v", obj)
 	if obj.Status.MigrationStatus != nil {
 		// Read current state of object in case we already processed it (during sync)
+		// TODO: read from statemgr instead of pcache
 		wl := v.pCache.GetWorkloadByName(obj.Name)
-		if wl == nil {
+		v.Log.Infof("pcache version of object %v", obj)
+		if wl == nil || wl.Status.MigrationStatus == nil {
 			return
+		}
+		if wl.Status.MigrationStatus.Stage == stageMigrationDone || wl.Status.MigrationStatus.Stage == stageMigrationNone {
+			return // Migration in terminal state already or not started
 		}
 		switch wl.Status.MigrationStatus.Status {
 		case statusTimedOut:
+			v.Log.Infof("Processing timeout for %s", wl.Name)
 			v.finishMigration(wl)
 			v.resyncWorkload(wl)
 		case statusDone, statusFailed:
+			v.Log.Infof("Processing status done/failed for %s", wl.Name)
 			if wl.Status.MigrationStatus.Stage != stageMigrationAbort && wl.Status.MigrationStatus.Stage != stageMigrationDone {
+				v.Log.Infof("Calling finish migration for %s", wl.Name)
 				v.finishMigration(wl)
 			}
 			v.resyncWorkload(wl)
@@ -158,6 +166,13 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 		workloadObj = &temp
 	}
 
+	// AFTER START MIGRATION - PCACHE HAS object with old host in spec.
+	// migrating object is never pushed
+	// when object in pcache  has correct interfaces AND correct host, we call finish migration
+	// Delete object in pcache (pcache delete only)
+
+	// During resync?
+
 	// Only trust this if we are migrating
 	// Otherwise, host might be old (VMotion timeout)
 	wlDcName := v.getDCNameForHost(workloadObj.Spec.HostName)
@@ -190,7 +205,7 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 	}
 
 	// Tracks whether we received a host update event
-	hostChanged := false
+	receivedRuntimeEvent := false
 
 	for _, prop := range m.Changes {
 		switch defs.VCProp(prop.Name) {
@@ -199,7 +214,7 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 		case defs.VMPropName:
 			v.processVMName(prop, m.Originator, m.DcID, m.DcName, workloadObj)
 		case defs.VMPropRT:
-			hostChanged = v.processVMRuntime(prop, m.DcID, m.DcName, workloadObj)
+			receivedRuntimeEvent = v.processVMRuntime(prop, m.DcID, m.DcName, workloadObj)
 		case defs.VMPropGuest:
 			v.processVMGuestInfo(prop, m.DcID, m.DcName, workloadObj)
 		case defs.VMPropTag:
@@ -236,15 +251,14 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 		// HACK - don't accept vnic changes during vMotion
 		// If config prop was sent with wrong info.. it will result in change in Spec.Interfaces, if
 		// not, validateVnicInformation will revalidate PG's to make sure we have reliable information
-		if len(workloadObj.Spec.Interfaces) != len(existingWorkload.Spec.Interfaces) ||
-			!v.validateVnicInformation(existingWorkload) {
+		if len(workloadObj.Spec.Interfaces) != len(existingWorkload.Spec.Interfaces) {
 			v.Log.Infof("Interfaces cannot be changed during vMotion")
 			// We operate on a copy of workload, return w/o pcache.Set() so that
 			// any changes made here are not committed or seen by next processing
 		}
 
 		if existingWorkload.Spec.HostName != workloadObj.Spec.HostName {
-			v.Log.Infof("Ignore VM host change during migration for vm %s", existingWorkload.Name)
+			v.Log.Infof("Ignore VM host change during migration for vm %s. Have %s, event has %s", existingWorkload.Name, existingWorkload.Spec.HostName, workloadObj.Spec.HostName)
 		}
 
 		if workloadObj.Spec.HostName == "" && existingWorkload != nil &&
@@ -252,7 +266,32 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 			v.Log.Infof("VM %s - host got removed, could be a vmotion across vCenters", m.Key)
 		}
 
-		if existingWorkload.Spec.HostName == workloadObj.Spec.HostName && hostChanged {
+		if !v.validateVnicInformation(existingWorkload) {
+			v.Log.Infof("vnic information was not valid")
+			return
+		}
+
+		if !receivedRuntimeEvent && v.isVMotionAcrossDC(workloadObj) {
+			v.Log.Infof("Checking vCenter for VM's host info")
+			// For vmotion across DCs, we may have received host update event in a different event than new vnic info
+			// Go to vcenter and verify the host value
+			// TODO: can optimize by only fetching runtime property instead of all properties
+			vm, err := v.probe.GetVM(m.Key, defaultRetryCount)
+			if err != nil {
+				v.Log.Errorf("Failed to get VM %s, err %s", m.Key, err)
+				return
+			}
+
+			runtimeProp := types.PropertyChange{
+				Name: string(defs.VMPropRT),
+				Op:   "add",
+				Val:  vm.Runtime,
+			}
+			v.processVMRuntime(runtimeProp, m.DcID, m.DcName, workloadObj)
+			receivedRuntimeEvent = true
+		}
+
+		if existingWorkload.Spec.HostName == workloadObj.Spec.HostName && receivedRuntimeEvent {
 			// existing workload's host is changed to new host when migration starts
 			// vcenter keeps the old host in its vm object until migration is complete
 			// so when host from vcenter matches the host in existing workload object, it can be
@@ -264,12 +303,20 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 				v.finalSyncMigration(existingWorkload)
 			}
 		}
+
 		// Workload in migration should not be updated
 		return
 	}
 
 	v.syncUsegs(m.DcID, m.DcName, m.Key, existingWorkload, workloadObj)
+	// TODO: pcache debug logs not showing up in debug mode
 	v.pCache.Set(workloadKind, workloadObj)
+}
+
+func (v *VCHub) isVMotionAcrossDC(workloadObj *workload.Workload) bool {
+	destDC := v.getDCNameForHost(workloadObj.Spec.HostName)
+	srcDC := v.getDCNameForHost(workloadObj.Status.HostName)
+	return srcDC != destDC
 }
 
 func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
@@ -442,7 +489,11 @@ func (v *VCHub) releaseOldUsegs(wlObj *workload.Workload) {
 func (v *VCHub) resyncWorkload(wlObj *workload.Workload) {
 	v.Log.Infof("resyncing workload %s", wlObj.Name)
 	vmKey := v.parseVMKeyFromWorkloadName(wlObj.Name)
-	vm, err := v.probe.GetVM(vmKey)
+	vm, err := v.probe.GetVM(vmKey, defaultRetryCount)
+	if err != nil {
+		v.Log.Errorf("Failed to get VM %s, err %s", vmKey, err)
+		return
+	}
 
 	labelDcName, ok := utils.GetOrchNamespaceFromObj(wlObj.Labels)
 	if !ok {
@@ -607,7 +658,7 @@ func (v *VCHub) releaseUsegVlans(wlObj *workload.Workload, old bool) error {
 				intf.MACAddress, wlObj.Name, hostName)
 			err := dvs.UsegMgr.ReleaseVlanForVnic(intf.MACAddress, hostName)
 			if err != nil {
-				return fmt.Errorf("Failed to release vlan %d on host %s", intf.MicroSegVlan, hostName)
+				return fmt.Errorf("Failed to release vlan %d on host %s: %s", intf.MicroSegVlan, hostName, err)
 			}
 		}
 	} else {
@@ -616,7 +667,7 @@ func (v *VCHub) releaseUsegVlans(wlObj *workload.Workload, old bool) error {
 				intf.MACAddress, wlObj.Name, hostName)
 			err := dvs.UsegMgr.ReleaseVlanForVnic(intf.MACAddress, hostName)
 			if err != nil {
-				return fmt.Errorf("Failed to release vlan %d on host %s", intf.MicroSegVlan, hostName)
+				return fmt.Errorf("Failed to release vlan %d on host %s: %s", intf.MicroSegVlan, hostName, err)
 			}
 		}
 	}
@@ -704,7 +755,7 @@ func (v *VCHub) isWorkloadMigrating(wlObj *workload.Workload) bool {
 		stage = wlObj.Status.MigrationStatus.Stage
 		status = wlObj.Status.MigrationStatus.Status
 	}
-	v.Log.Debugf("checking if Workload %s is migrating: Stage %s, Status %s", wlObj.Name,
+	v.Log.Infof("checking if Workload %s is migrating: Stage %s, Status %s", wlObj.Name,
 		stage, status)
 	return apiserverutils.IsWorkloadMigrating(wlObj)
 }
@@ -899,6 +950,7 @@ func (v *VCHub) processVMRuntime(prop types.PropertyChange, dcID string, dcName 
 		return false
 	}
 	hostName := v.createHostName(dcID, rt.Host.Value)
+	v.Log.Infof("Runtime host change event to %s", hostName)
 	workload.Spec.HostName = hostName
 	return true
 }
@@ -938,15 +990,39 @@ func (v *VCHub) processVMGuestInfo(prop types.PropertyChange, dcID string, dcNam
 		entry := v.getVnicInfoForWorkload(workloadName, mac)
 		if entry == nil {
 			entry = &vnicEntry{
-				IP:         []string{},
 				MacAddress: mac,
 			}
 		}
-		for _, ip := range nicInfo.IpAddress {
+
+		// Currently apiserver only allows one IP per interface.
+		// Pick IP that has state == preferred.
+		// If multiple, we pick the first one sorted by string
+
+		entry.IP = []string{}
+		preferredIPs := []string{}
+		allIPs := []string{}
+		if nicInfo.IpConfig == nil {
+			continue
+		}
+		for _, ipInfo := range nicInfo.IpConfig.IpAddress {
 			// Only add if IPv4
+			ip := ipInfo.IpAddress
 			if govldtr.IsIPv4(ip) {
-				entry.IP = append(entry.IP, ip)
+				allIPs = append(allIPs, ip)
+				if ipInfo.State == "preferred" {
+					preferredIPs = append(preferredIPs, ip)
+				}
 			}
+		}
+		if len(preferredIPs) != 0 {
+			// Sort and take first
+			sort.Strings(preferredIPs) // Note: this does string sorting, not IP sorting.
+			entry.IP = append(entry.IP, preferredIPs[0])
+			v.Log.Infof("Adding preferred IP %s", preferredIPs[0])
+		} else if len(allIPs) != 0 {
+			sort.Strings(allIPs) // Note: this does string sorting, not IP sorting.
+			entry.IP = append(entry.IP, allIPs[0])
+			v.Log.Infof("Adding IP %s", allIPs[0])
 		}
 		v.Log.Debugf("Add vnic entry %v for workload %s", entry, workloadName)
 		v.addVnicInfoForWorkload(workloadName, entry)
@@ -979,6 +1055,7 @@ func (v *VCHub) processVMConfig(prop types.PropertyChange, vcID string, dcID str
 		addNameLabel(workload.Labels, vmConfig.Name)
 	}
 	interfaces := v.extractInterfaces(workload.Name, dcID, dcName, vmConfig)
+	v.Log.Infof("interface change event")
 	workload.Spec.Interfaces = interfaces
 }
 

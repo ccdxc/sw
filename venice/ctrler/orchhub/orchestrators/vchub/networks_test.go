@@ -44,7 +44,7 @@ func TestNetworks(t *testing.T) {
 			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
-				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).Times(1)
+				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 				mockProbe.EXPECT().GetPGConfig(dcName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("doesn't exist")).Times(1)
 				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
 					Common: object.NewCommon(nil,
@@ -207,7 +207,7 @@ func TestNetworks(t *testing.T) {
 								PvlanId: 3,
 							},
 						},
-					}, gomock.Any()).Return(nil).Times(1)
+					}, gomock.Any(), gomock.Any()).Return(nil).Times(1)
 				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
 					Common: object.NewCommon(nil,
 						types.ManagedObjectReference{
@@ -299,7 +299,7 @@ func TestNetworks(t *testing.T) {
 			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
-				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).Times(1)
+				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
 					Common: object.NewCommon(nil,
 						types.ManagedObjectReference{
@@ -349,7 +349,7 @@ func TestNetworks(t *testing.T) {
 			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
-				mockProbe.EXPECT().AddPenPG("dispName", gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+				mockProbe.EXPECT().AddPenPG("dispName", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 				mockProbe.EXPECT().GetPenPG("dispName", gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
 					Common: object.NewCommon(nil,
 						types.ManagedObjectReference{
@@ -361,7 +361,7 @@ func TestNetworks(t *testing.T) {
 				mockProbe.EXPECT().StartWatchForDC("dispName", dcName).Times(1)
 				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().TagObjWithVlan(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-				mockProbe.EXPECT().AddPenDVS("dispName", gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().AddPenDVS("dispName", gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().GetPenDVS("dispName", gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualSwitch{
 					Common: object.NewCommon(nil,
 						types.ManagedObjectReference{

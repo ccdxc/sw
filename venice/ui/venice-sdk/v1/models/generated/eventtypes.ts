@@ -11,6 +11,7 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'DISK_THRESHOLD_EXCEEDED',
     'MIGRATION_FAILED',
     'MIGRATION_TIMED_OUT',
+    'ORCH_ALREADY_MANAGED',
     'ORCH_CONFIG_PUSH_FAILURE',
     'ORCH_CONNECTION_ERROR',
     'ORCH_INVALID_ACTION',
@@ -109,6 +110,11 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "MIGRATION_TIMED_OUT",
       "Severity": EventsEvent_severity.warn,
       "Desc": "Migration Timed out",
+  },
+  'ORCH_ALREADY_MANAGED' : {
+      "Name": "ORCH_ALREADY_MANAGED",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Another PSM may be managing the same namespace",
   },
   'ORCH_CONFIG_PUSH_FAILURE' : {
       "Name": "ORCH_CONFIG_PUSH_FAILURE",

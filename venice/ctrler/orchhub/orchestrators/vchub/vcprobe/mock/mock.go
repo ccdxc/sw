@@ -14,7 +14,7 @@ import (
 type ProbeMock struct {
 	*vcprobe.VCProbe
 	// dc -> pgName -> config
-	pgStateMap map[string](map[string]*types.DVPortgroupConfigSpec)
+	PgStateMap map[string](map[string]*types.DVPortgroupConfigSpec)
 	// dc -> dvsName -> portKey -> port info
 	DvsStateMap map[string](map[string](map[string]types.DistributedVirtualPort))
 }
@@ -23,20 +23,20 @@ type ProbeMock struct {
 func NewProbeMock(probe *vcprobe.VCProbe) *ProbeMock {
 	return &ProbeMock{
 		VCProbe:     probe,
-		pgStateMap:  map[string](map[string]*types.DVPortgroupConfigSpec){},
+		PgStateMap:  map[string](map[string]*types.DVPortgroupConfigSpec){},
 		DvsStateMap: map[string](map[string](map[string]types.DistributedVirtualPort)){},
 	}
 }
 
 // AddPenPG creates a PG
-func (v *ProbeMock) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec, retry int) error {
-	dc := v.pgStateMap[dcName]
+func (v *ProbeMock) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec, isEqual vcprobe.IsPGConfigEqual, retry int) error {
+	dc := v.PgStateMap[dcName]
 	if dc == nil {
 		dc = map[string]*types.DVPortgroupConfigSpec{}
-		v.pgStateMap[dcName] = dc
+		v.PgStateMap[dcName] = dc
 	}
 	dc[pgConfigSpec.Name] = pgConfigSpec
-	return v.VCProbe.AddPenPG(dcName, dvsName, pgConfigSpec, retry)
+	return v.VCProbe.AddPenPG(dcName, dvsName, pgConfigSpec, isEqual, retry)
 }
 
 func extractVlanSpec(spec *types.DVPortgroupConfigSpec) (types.BaseVmwareDistributedVirtualSwitchVlanSpec, error) {
@@ -81,7 +81,7 @@ func (v *ProbeMock) ListPG(dcRef *types.ManagedObjectReference) []mo.Distributed
 		}
 	}
 
-	pgMap := v.pgStateMap[dcName]
+	pgMap := v.PgStateMap[dcName]
 	for _, pg := range pgs {
 		config := pgMap[pg.Name]
 		if config == nil {
@@ -103,7 +103,7 @@ func (v *ProbeMock) GetPGConfig(dcName string, pgName string, ps []string, retry
 	if err != nil {
 		return nil, err
 	}
-	pgMap := v.pgStateMap[dcName]
+	pgMap := v.PgStateMap[dcName]
 	config := pgMap[pgName]
 	if config == nil {
 		return pgObj, nil

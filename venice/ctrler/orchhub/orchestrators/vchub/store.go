@@ -76,6 +76,8 @@ func (v *VCHub) startEventsListener() {
 
 					v.probe.StartWatchers()
 
+					v.watchStarted = true
+
 				} else {
 					v.Log.Infof("Updating orchestrator connection status to %v",
 						orchestration.OrchestratorStatus_Failure.String())
@@ -111,7 +113,7 @@ func (v *VCHub) startEventsListener() {
 			v.processVeniceEventsLock.Lock()
 			processEvent := v.processVeniceEvents
 			v.processVeniceEventsLock.Unlock()
-			v.Log.Errorf("Received API event")
+			v.Log.Infof("Received API event")
 
 			if ok && processEvent {
 				switch obj := evt.Object.(type) {
@@ -122,6 +124,8 @@ func (v *VCHub) startEventsListener() {
 					v.Log.Infof("Processing workload event %s", obj.Name)
 					v.handleWorkloadEvent(evt.Type, obj)
 				}
+			} else {
+				v.Log.Infof("Skipped API Event %v", ok && processEvent)
 			}
 		}
 	}

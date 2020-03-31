@@ -15,9 +15,30 @@ import (
 type PenDVSPortSettings map[string]types.BaseVmwareDistributedVirtualSwitchVlanSpec
 
 // AddPenDVS adds a new PenDVS to the given vcprobe instance
-func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, retry int) error {
+func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, equalFn IsDVSConfigEqual, retry int) error {
+	dvsName := dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().Name
+	getAndCheck := func(finder *find.Finder) (*object.DistributedVirtualSwitch, *mo.DistributedVirtualSwitch, bool, error) {
+		dvsObj, err := v.getPenDVS(dcName, dvsName, finder)
+		if err != nil {
+			v.Log.Errorf("Failed to get DVS")
+			return nil, nil, false, err
+		}
+
+		var dvs mo.DistributedVirtualSwitch
+		err = dvsObj.Properties(v.ClientCtx, dvsObj.Reference(), []string{"config"}, &dvs)
+		if err != nil {
+			v.Log.Errorf("Failed at getting dvs properties, err: %s", err)
+			return nil, nil, false, err
+		}
+		// Check if config is equal
+		if equalFn != nil && equalFn(dvsCreateSpec, &dvs) {
+			v.Log.Infof("DC: %s - DVS %s  config in vCenter is equal to given spec", dcName, dvsName)
+			return dvsObj, &dvs, true, nil
+		}
+		return dvsObj, &dvs, false, nil
+	}
+
 	fn := func() (interface{}, error) {
-		dvsName := dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().Name
 		client := v.GetClientWithRLock()
 		finder := v.CreateFinder(client)
 		defer v.ReleaseClientsRLock()
@@ -25,29 +46,27 @@ func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, r
 		// Check if it exists first
 		var task *object.Task
 		var err error
-		if dvsObj, err := v.getPenDVS(dcName, dvsName, finder); err == nil {
-			var dvs mo.DistributedVirtualSwitch
-			err = dvsObj.Properties(v.ClientCtx, dvsObj.Reference(), []string{"config"}, &dvs)
-			if err != nil {
-				v.Log.Errorf("Failed at getting dvs properties, err: %s", err)
-				return nil, err
+		dvsObj, dvs, isEqual, err := getAndCheck(finder)
+		if err == nil {
+			if isEqual {
+				return nil, nil
 			}
 
 			dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().ConfigVersion = dvs.Config.GetDVSConfigInfo().ConfigVersion
 			v.Log.Infof("DC: %s - DVS already exists, reconfiguring...", dcName)
 			task, err = dvsObj.Reconfigure(v.ClientCtx, dvsCreateSpec.ConfigSpec.GetDVSConfigSpec())
 		} else {
-			dc, err := finder.Datacenter(v.ClientCtx, dcName)
-			if err != nil {
+			dc, finderErr := finder.Datacenter(v.ClientCtx, dcName)
+			if finderErr != nil {
 				v.Log.Errorf("Datacenter: %s doesn't exist, err: %s", dcName, err)
-				return nil, err
+				return nil, finderErr
 			}
 
 			finder.SetDatacenter(dc)
 
-			folders, err := dc.Folders(v.ClientCtx)
-			if err != nil {
-				return nil, err
+			folders, folderErr := dc.Folders(v.ClientCtx)
+			if folderErr != nil {
+				return nil, folderErr
 			}
 
 			task, err = folders.NetworkFolder.CreateDVS(v.ClientCtx, *dvsCreateSpec)
@@ -55,12 +74,24 @@ func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, r
 
 		if err != nil {
 			v.Log.Errorf("Failed at creating dvs: %s, err: %s", dvsName, err)
+
+			_, _, isEqual, err1 := getAndCheck(finder)
+			if err1 == nil && isEqual {
+				return nil, nil
+			}
+
 			return nil, err
 		}
 
 		_, err = task.WaitForResult(v.ClientCtx, nil)
 		if err != nil {
 			v.Log.Errorf("Failed at waiting results of creating dvs: %s, err: %s", dvsName, err)
+
+			_, _, isEqual, err1 := getAndCheck(finder)
+			if err1 == nil && isEqual {
+				return nil, nil
+			}
+
 			return nil, err
 		}
 

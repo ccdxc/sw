@@ -16,6 +16,11 @@
    "Desc": "Migration Timed out"
   },
   {
+   "Name": "ORCH_ALREADY_MANAGED",
+   "Severity": "warn",
+   "Desc": "Another PSM may be managing the same namespace"
+  },
+  {
    "Name": "ORCH_CONFIG_PUSH_FAILURE",
    "Severity": "warn",
    "Desc": "Failed to push some configurations to orchestrator"

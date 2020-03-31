@@ -545,6 +545,13 @@ func init() {
 		Desc:       "Migration Timed out",
 		SuppressMM: false}
 
+	eventTypes[ORCH_ALREADY_MANAGED] = &EventTypeAttributes{
+		EType:      ORCH_ALREADY_MANAGED.String(),
+		Severity:   "warn",
+		Category:   "",
+		Desc:       "Another PSM may be managing the same namespace",
+		SuppressMM: false}
+
 }
 
 func GetEventTypeAttrs(eType EventType) *EventTypeAttributes {

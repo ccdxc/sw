@@ -41,7 +41,9 @@ func (d *DeltaStrSet) AddSingle(l string) {
 
 // RemoveSingle removes an item from the set
 func (d *DeltaStrSet) RemoveSingle(l string) {
-	delete(d.items, l)
+	if _, ok := d.items[l]; ok {
+		delete(d.items, l)
+	}
 }
 
 // Diff returns the difference set(i.e. l - d).

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
@@ -53,6 +54,37 @@ func (d *PenDVS) AddPenPG(pgName string, networkMeta api.ObjectMeta) error {
 	return err
 }
 
+func (d *PenDVS) createPGConfigCheck(pvlan int) vcprobe.IsPGConfigEqual {
+	return func(spec *types.DVPortgroupConfigSpec, config *mo.DistributedVirtualPortgroup) bool {
+
+		policy, ok := config.Config.Policy.(*types.VMwareDVSPortgroupPolicy)
+		if !ok {
+			d.Log.Infof("ConfigCheck: dvs.Config was of type %T", config.Config.Policy)
+			return false
+		}
+		if !policy.VlanOverrideAllowed ||
+			!policy.PortConfigResetAtDisconnect {
+			d.Log.Infof("ConfigCheck: dvs policy settings were incorrect")
+			return false
+		}
+		portConfig, ok := config.Config.DefaultPortConfig.(*types.VMwareDVSPortSetting)
+		if !ok {
+			d.Log.Infof("ConfigCheck: portConfig was of type %T", config.Config.DefaultPortConfig)
+			return false
+		}
+		pvlanConfig, ok := portConfig.Vlan.(*types.VmwareDistributedVirtualSwitchPvlanSpec)
+		if !ok {
+			d.Log.Infof("ConfigCheck: pvlanConfig was of type %T", portConfig.Vlan)
+			return false
+		}
+		if pvlanConfig.PvlanId != int32(pvlan) {
+			d.Log.Infof("ConfigCheck: pvlan did not match")
+			return false
+		}
+		return true
+	}
+}
+
 // AddPenPGWithVlan creates a PG with the given pvlan values
 func (d *PenDVS) AddPenPGWithVlan(pgName string, networkMeta api.ObjectMeta, primaryVlan, secondaryVlan int) error {
 	d.Lock()
@@ -93,7 +125,7 @@ func (d *PenDVS) AddPenPGWithVlan(pgName string, networkMeta api.ObjectMeta, pri
 		}
 	}
 
-	err = d.probe.AddPenPG(d.DcName, d.DvsName, &spec, defaultRetryCount)
+	err = d.probe.AddPenPG(d.DcName, d.DvsName, &spec, d.createPGConfigCheck(secondaryVlan), defaultRetryCount)
 	if err != nil {
 		return err
 	}

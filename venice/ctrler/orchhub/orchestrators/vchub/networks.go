@@ -39,10 +39,12 @@ func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.N
 			penDC, ok := v.DcMap[dc]
 			v.DcMapLock.Unlock()
 			if !ok {
+				v.Log.Infof("no state for DC %s", dc)
 				continue
 			}
 			pgName := CreatePGName(nw.Name)
 			if evtType == kvstore.Created {
+				v.Log.Infof("Adding PG %s in DC %s", pgName, dc)
 				penDC.AddPG(pgName, nw.ObjectMeta, "")
 			} else {
 				// err is already logged inside function

@@ -251,7 +251,7 @@ func TestWorkloads(t *testing.T) {
 			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
-				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().GetPGConfig(dcName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("doesn't exist")).AnyTimes()
 				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
 					Common: object.NewCommon(nil,
@@ -460,16 +460,45 @@ func TestWorkloads(t *testing.T) {
 											MacAddress: "aa:bb:cc:dd:ee:ff",
 											Network:    CreatePGName("PG1"),
 											IpAddress:  []string{"1.1.1.1", "fe80::eede:2031:aa18:ff3b", "1.1.1.2"},
+											IpConfig: &types.NetIpConfigInfo{
+												IpAddress: []types.NetIpConfigInfoIpAddress{
+													types.NetIpConfigInfoIpAddress{
+														IpAddress: "1.1.1.1",
+														State:     "unknown",
+													},
+													types.NetIpConfigInfoIpAddress{
+														IpAddress: "fe80::eede:2031:aa18:ff3b",
+														State:     "preferred",
+													},
+													types.NetIpConfigInfoIpAddress{
+														IpAddress: "1.1.1.2",
+														State:     "preferred",
+													},
+												},
+											},
 										},
 										{
 											MacAddress: "aa:aa:cc:dd:dd:ff",
 											Network:    CreatePGName("PG2"),
 											IpAddress:  []string{"fe80::eede:2031:aa18:ff3b"},
+											IpConfig:   nil,
 										},
 										{ // PG3 shouldn't be added since we don't have state for it
 											MacAddress: "aa:aa:aa:dd:dd:ff",
 											Network:    "PG3",
 											IpAddress:  []string{"3.3.3.1", "3.3.3.2"},
+											IpConfig: &types.NetIpConfigInfo{
+												IpAddress: []types.NetIpConfigInfoIpAddress{
+													types.NetIpConfigInfoIpAddress{
+														IpAddress: "3.3.3.1",
+														State:     "preferred",
+													},
+													types.NetIpConfigInfoIpAddress{
+														IpAddress: "3.3.3.2",
+														State:     "",
+													},
+												},
+											},
 										},
 									},
 								},
@@ -491,7 +520,7 @@ func TestWorkloads(t *testing.T) {
 			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
-				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().GetPGConfig(dcName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("doesn't exist")).AnyTimes()
 				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
 					Common: object.NewCommon(nil,
@@ -534,7 +563,7 @@ func TestWorkloads(t *testing.T) {
 							workload.WorkloadIntfSpec{
 								MACAddress:  "aabb.ccdd.eeff",
 								Network:     "PG1",
-								IpAddresses: []string{"1.1.1.1", "1.1.1.2"},
+								IpAddresses: []string{"1.1.1.2"},
 							},
 							workload.WorkloadIntfSpec{
 								MACAddress:  "aaaa.ccdd.ddff",
@@ -700,7 +729,7 @@ func TestWorkloads(t *testing.T) {
 			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
-				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().GetPGConfig(dcName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("doesn't exist")).AnyTimes()
 				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
 					Common: object.NewCommon(nil,
@@ -878,7 +907,7 @@ func TestWorkloads(t *testing.T) {
 			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
-				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().GetPGConfig(dcName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("doesn't exist")).AnyTimes()
 				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
 					Common: object.NewCommon(nil,
@@ -1033,7 +1062,7 @@ func TestWorkloads(t *testing.T) {
 			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
-				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().GetPGConfig(dcName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("doesn't exist")).AnyTimes()
 				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
 					Common: object.NewCommon(nil,

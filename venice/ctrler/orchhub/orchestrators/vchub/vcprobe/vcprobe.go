@@ -34,15 +34,46 @@ type dcCtxEntry struct {
 type VCProbe struct {
 	*defs.State
 	*session.Session
+	TagsProbeInf
 	outbox       chan<- defs.Probe2StoreMsg
 	eventCh      chan<- defs.Probe2StoreMsg
-	tp           *tagsProbe
 	Started      bool
 	vcProbeLock  sync.Mutex
 	dcCtxMapLock sync.Mutex
 	// Map from ID to ctx to use
 	dcCtxMap map[string]dcCtxEntry
 }
+
+// KindTagMapEntry needed as explicit type for gomock to compile successfully
+type KindTagMapEntry map[string][]string
+
+// TagsProbeInf is the interface Probe implements
+type TagsProbeInf interface {
+	// Tag methods
+	// Read methods
+	StartWatch()
+	SetupBaseTags() bool
+	GetPensandoTagsOnObjects(refs []types.ManagedObjectReference) (map[string]KindTagMapEntry, error)
+
+	// Write methods
+	TagObjsAsManaged(refs []types.ManagedObjectReference) error
+	TagObjAsManaged(ref types.ManagedObjectReference) error
+	RemoveTagObjManaged(ref types.ManagedObjectReference) error
+	TagObjWithVlan(ref types.ManagedObjectReference, vlan int) error
+	RemoveTagObjVlan(ref types.ManagedObjectReference) error
+	RemoveTag(ref types.ManagedObjectReference, tagName string) error
+	RemovePensandoTags(ref types.ManagedObjectReference) []error
+
+	// Utility
+	IsManagedTag(tag string) bool
+	IsVlanTag(tag string) (int, bool)
+}
+
+// IsPGConfigEqual checks whether the create config is equal to the existing config
+type IsPGConfigEqual func(spec *types.DVPortgroupConfigSpec, config *mo.DistributedVirtualPortgroup) bool
+
+// IsDVSConfigEqual checks whether the create config is equal to the existing config
+type IsDVSConfigEqual func(spec *types.DVSCreateSpec, config *mo.DistributedVirtualSwitch) bool
 
 // ProbeInf is the interface Probe implements
 type ProbeInf interface {
@@ -58,14 +89,14 @@ type ProbeInf interface {
 	ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem
 	StopWatchForDC(dcName, dcID string)
 	StartWatchForDC(dcName, dcID string)
-	GetVM(vmID string) (mo.VirtualMachine, error)
+	GetVM(vmID string, retry int) (mo.VirtualMachine, error)
 
 	// datacenter.go functions
 	AddPenDC(dcName string, retry int) error
 	RemovePenDC(dcName string, retry int) error
 
 	// port_group.go functions
-	AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec, retry int) error
+	AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec, equalFn IsPGConfigEqual, retry int) error
 
 	GetPenPG(dcName string, pgName string, retry int) (*object.DistributedVirtualPortgroup, error)
 
@@ -74,18 +105,14 @@ type ProbeInf interface {
 	RemovePenPG(dcName, pgName string, retry int) error
 
 	// distributed_vswitch.go functions
-	AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, retry int) error
+	AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, equalFn IsDVSConfigEqual, retry int) error
 	GetPenDVS(dcName, dvsName string, retry int) (*object.DistributedVirtualSwitch, error)
 	UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVSPortSettings, retry int) error
 	GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, retry int) ([]types.DistributedVirtualPort, error)
 	RemovePenDVS(dcName, dvsName string, retry int) error
 
 	// Tag methods
-	TagObjAsManaged(ref types.ManagedObjectReference) error
-	RemoveTagObjManaged(ref types.ManagedObjectReference) error
-	TagObjWithVlan(ref types.ManagedObjectReference, vlan int) error
-	RemoveTagObjVlan(ref types.ManagedObjectReference) error
-	RemovePensandoTags(ref types.ManagedObjectReference) []error
+	TagsProbeInf
 }
 
 // NewVCProbe returns a new probe
@@ -163,23 +190,7 @@ func (v *VCProbe) connectionListen() {
 			return
 		case connErr := <-v.ConnUpdate:
 			if connErr == nil {
-				// Verify if tags are created now that session is ready
-				// If tag server is having issues (503 service unavailable),
-				// we don't want to block processing vcenter events
-				// If after blocking for 500ms the tags are not set up, we start a routine
-				// in the backround to retry the tag creation, and move on
-				v.Log.Infof("Connection successful, setting up tags...")
-				ctx, tCancel := context.WithTimeout(v.ClientCtx, 500*time.Millisecond)
-				tagsCreated := v.tp.SetupVCTags(ctx)
-				tCancel()
-				if !tagsCreated {
-					v.Log.Infof("Tags setup failed in timelimit, retrying in the background....")
-					v.WatcherWg.Add(1)
-					go func() {
-						defer v.WatcherWg.Done()
-						v.tp.SetupVCTags(v.ClientCtx)
-					}()
-				}
+				v.Log.Infof("Connection successful")
 			}
 
 			if v.outbox != nil {
@@ -203,7 +214,11 @@ func (v *VCProbe) tryForever(fn func() bool) {
 	go func() {
 		defer v.WatcherWg.Done()
 		for {
-			if v.ClientCtx.Err() != nil {
+			ctx := v.ClientCtx
+			if ctx == nil {
+				return
+			}
+			if ctx.Err() != nil {
 				return
 			}
 			retry := fn()
@@ -230,18 +245,20 @@ func (v *VCProbe) StartWatchers() {
 		if !v.Started || !v.IsSessionReady() {
 			return
 		}
-		for v.ClientCtx.Err() == nil {
+		ctx := v.ClientCtx
+		// ClientCtx can potentially be nil since we haven't got the clientLock.
+		for ctx != nil && ctx.Err() == nil {
 
 			// DC watch
 			v.tryForever(func() bool {
 				v.Log.Infof("DC watch Started")
-				v.startWatch(v.ClientCtx, defs.Datacenter, []string{"name"},
+				v.startWatch(ctx, defs.Datacenter, []string{"name"},
 					v.sendVCEvent, nil)
 				return true
 			})
 
 			v.tryForever(func() bool {
-				v.tp.StartWatch()
+				v.TagsProbeInf.StartWatch()
 				v.Log.Infof("tag probe finished")
 				return true
 			})
@@ -250,7 +267,7 @@ func (v *VCProbe) StartWatchers() {
 			// 	v.startWatch(defs.VmwareDistributedVirtualSwitch, []string{"config"}, v.processDVSEvent)
 			// })
 			select {
-			case <-v.ClientCtx.Done():
+			case <-ctx.Done():
 			}
 
 		}
@@ -292,7 +309,11 @@ func (v *VCProbe) StartWatchForDC(dcName, dcID string) {
 	}
 
 	// Starting watches on objects inside the given DC
-	ctx, cancel := context.WithCancel(v.ClientCtx)
+	clientCtx := v.ClientCtx
+	if clientCtx == nil {
+		return
+	}
+	ctx, cancel := context.WithCancel(clientCtx)
 	v.dcCtxMap[dcID] = dcCtxEntry{ctx, cancel}
 
 	ref := types.ManagedObjectReference{
@@ -504,43 +525,54 @@ func (v *VCProbe) ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem
 }
 
 // GetVM fetches the given VM by ID
-func (v *VCProbe) GetVM(vmID string) (mo.VirtualMachine, error) {
-	client := v.GetClientWithRLock()
-	defer v.ReleaseClientsRLock()
-	vmRef := types.ManagedObjectReference{
-		Type:  string(defs.VirtualMachine),
-		Value: vmID,
+func (v *VCProbe) GetVM(vmID string, retry int) (mo.VirtualMachine, error) {
+	fn := func() (interface{}, error) {
+		client := v.GetClientWithRLock()
+		defer v.ReleaseClientsRLock()
+		vmRef := types.ManagedObjectReference{
+			Type:  string(defs.VirtualMachine),
+			Value: vmID,
+		}
+		var vm mo.VirtualMachine
+		objVM := object.NewVirtualMachine(client.Client, vmRef)
+		err := objVM.Properties(v.ClientCtx, vmRef, vmProps, &vm)
+		return vm, err
 	}
-	var vm mo.VirtualMachine
-	objVM := object.NewVirtualMachine(client.Client, vmRef)
-	err := objVM.Properties(v.ClientCtx, vmRef, vmProps, &vm)
-	return vm, err
+	ret, err := v.withRetry(fn, retry)
+	if ret == nil {
+		return mo.VirtualMachine{}, err
+	}
+	return ret.(mo.VirtualMachine), err
 }
 
-// TagObjAsManaged tags the given ref with a Pensando managed tag
-func (v *VCProbe) TagObjAsManaged(ref types.ManagedObjectReference) error {
-	return v.tp.TagObjAsManaged(ref)
-}
+// // TagObjAsManaged tags the given ref with a Pensando managed tag
+// func (v *VCProbe) TagObjAsManaged(ref types.ManagedObjectReference) error {
+// 	return v.tp.TagObjAsManaged(ref)
+// }
 
-// RemoveTagObjManaged removes the pensando managed tag
-func (v *VCProbe) RemoveTagObjManaged(ref types.ManagedObjectReference) error {
-	return v.tp.RemoveTagObjManaged(ref)
-}
+// func (v *VCProbe) SetupBaseTags() {
+// 	v.tp.SetupBaseTags()
+// }
 
-// TagObjWithVlan tags the object with the given vlan value
-func (v *VCProbe) TagObjWithVlan(ref types.ManagedObjectReference, vlanValue int) error {
-	return v.tp.TagObjWithVlan(ref, vlanValue)
-}
+// // RemoveTagObjManaged removes the pensando managed tag
+// func (v *VCProbe) RemoveTagObjManaged(ref types.ManagedObjectReference) error {
+// 	return v.tp.RemoveTagObjManaged(ref)
+// }
 
-// RemoveTagObjVlan removes the vlan tag on the given object
-func (v *VCProbe) RemoveTagObjVlan(ref types.ManagedObjectReference) error {
-	return v.tp.RemoveTagObjVlan(ref)
-}
+// // TagObjWithVlan tags the object with the given vlan value
+// func (v *VCProbe) TagObjWithVlan(ref types.ManagedObjectReference, vlanValue int) error {
+// 	return v.tp.TagObjWithVlan(ref, vlanValue)
+// }
 
-// RemovePensandoTags removes all pensando tags
-func (v *VCProbe) RemovePensandoTags(ref types.ManagedObjectReference) []error {
-	return v.tp.RemovePensandoTags(ref)
-}
+// // RemoveTagObjVlan removes the vlan tag on the given object
+// func (v *VCProbe) RemoveTagObjVlan(ref types.ManagedObjectReference) error {
+// 	return v.tp.RemoveTagObjVlan(ref)
+// }
+
+// // RemovePensandoTags removes all pensando tags
+// func (v *VCProbe) RemovePensandoTags(ref types.ManagedObjectReference) []error {
+// 	return v.tp.RemovePensandoTags(ref)
+// }
 
 func (v *VCProbe) withRetry(fn func() (interface{}, error), count int) (interface{}, error) {
 	if count < 1 {
@@ -549,7 +581,8 @@ func (v *VCProbe) withRetry(fn func() (interface{}, error), count int) (interfac
 	i := 0
 	var ret interface{}
 	err := fmt.Errorf("Client Ctx cancelled")
-	for i < count && v.ClientCtx.Err() == nil {
+	ctx := v.ClientCtx
+	for i < count && ctx != nil && ctx.Err() == nil {
 		ret, err = fn()
 		if err == nil {
 			return ret, err
@@ -560,7 +593,7 @@ func (v *VCProbe) withRetry(fn func() (interface{}, error), count int) (interfac
 			v.CheckSession = true
 		}
 		select {
-		case <-v.ClientCtx.Done():
+		case <-ctx.Done():
 			return nil, err
 		case <-time.After(retryDelay):
 		}

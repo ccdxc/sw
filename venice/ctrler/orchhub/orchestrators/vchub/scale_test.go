@@ -115,7 +115,7 @@ func TestVCScaleHost(t *testing.T) {
 	smmock.CreateNetwork(sm, "default", "vMotion_PG", "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
 	// Add PG to mockProbe (this is weird, this should be part of sim)
 	// vcHub should provide this function ??
-	mockProbe.AddPenPG(defaultTestParams.TestDCName, dvsName, &pgConfigSpec[0], retryCount)
+	mockProbe.AddPenPG(defaultTestParams.TestDCName, dvsName, &pgConfigSpec[0], nil, retryCount)
 	pg, err := mockProbe.GetPenPG(defaultTestParams.TestDCName, CreatePGName("vMotion_PG"), retryCount)
 	AssertOk(t, err, "failed to add portgroup")
 

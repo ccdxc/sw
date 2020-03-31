@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/events/generated/eventtypes"
@@ -33,6 +34,46 @@ type PenDVS struct {
 // The value of this map represents the new setting of this port
 type PenDVSPortSettings map[string]*types.VMwareDVSPortSetting
 
+// Only handles config spec being all creates, (not modifies or deletes)
+func (d *PenDC) dvsConfigCheck(spec *types.DVSCreateSpec, dvs *mo.DistributedVirtualSwitch) bool {
+	config, ok := dvs.Config.(*types.VMwareDVSConfigInfo)
+	if !ok {
+		d.Log.Infof("ConfigCheck: dvs.Config was of type %T", dvs.Config)
+		return false
+	}
+
+	configSpec, ok := spec.ConfigSpec.(*types.VMwareDVSConfigSpec)
+	if !ok {
+		d.Log.Infof("ConfigCheck: spec.ConfigSpec was of type %T", spec.ConfigSpec)
+		return false
+	}
+	pvlanItems := map[int32]types.VMwareDVSPvlanMapEntry{}
+	for _, item := range configSpec.PvlanConfigSpec {
+		key := item.PvlanEntry.PrimaryVlanId
+		pvlanItems[key] = item.PvlanEntry
+	}
+
+	if len(config.PvlanConfig) != len(pvlanItems) {
+		d.Log.Infof("ConfigCheck: length of pvlanItems were not equal")
+		return false
+	}
+
+	for _, item := range config.PvlanConfig {
+		key := item.PrimaryVlanId
+		entry, ok := pvlanItems[key]
+		if !ok {
+			d.Log.Infof("ConfigCheck: config has no pvlan entry for %s", key)
+			return false
+		}
+		if entry.SecondaryVlanId != item.SecondaryVlanId ||
+			entry.PvlanType != item.PvlanType {
+			d.Log.Infof("ConfigCheck: config for %s did not have same secondary vlan or pvlan type: %v", key, entry)
+			return false
+		}
+	}
+	return true
+}
+
 // AddPenDVS adds a new PenDVS to the given vcprobe instance
 func (d *PenDC) AddPenDVS(dvsCreateSpec *types.DVSCreateSpec) error {
 	d.Lock()
@@ -40,7 +81,7 @@ func (d *PenDC) AddPenDVS(dvsCreateSpec *types.DVSCreateSpec) error {
 	dcName := d.Name
 	dvsName := dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().Name
 
-	err := d.probe.AddPenDVS(dcName, dvsCreateSpec, defaultRetryCount)
+	err := d.probe.AddPenDVS(dcName, dvsCreateSpec, d.dvsConfigCheck, defaultRetryCount)
 	if err != nil {
 		d.Log.Errorf("Failed to create %s in DC %s: %s", dvsName, dcName, err)
 		return err

@@ -10,6 +10,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/vmware/govmomi"
+	"github.com/vmware/govmomi/vapi/rest"
+	"github.com/vmware/govmomi/vapi/tags"
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
@@ -120,14 +123,14 @@ func TestVCSyncPG(t *testing.T) {
 	}, "Session is not Ready", "1s", "10s")
 
 	spec := testutils.GenPGConfigSpec(CreatePGName("pgStale"), 2, 3)
-	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec, retryCount)
+	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec, nil, retryCount)
 	AssertOk(t, err, "failed to create pg")
 
 	spec1 := testutils.GenPGConfigSpec(CreatePGName("pgModified"), 4, 5)
 	spec1.DefaultPortConfig.(*types.VMwareDVSPortSetting).Vlan = &types.VmwareDistributedVirtualSwitchVlanIdSpec{
 		VlanId: 4,
 	}
-	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec1, retryCount)
+	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec1, nil, retryCount)
 	AssertOk(t, err, "failed to create pg")
 
 	defer vchub.Destroy(true)
@@ -474,7 +477,7 @@ func TestVCSyncVM(t *testing.T) {
 	time.Sleep(3 * time.Second)
 
 	spec := testutils.GenPGConfigSpec(CreatePGName("pg1"), 2, 3)
-	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec, retryCount)
+	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec, nil, retryCount)
 	AssertOk(t, err, "failed to create pg")
 	pg1, err := mockProbe.GetPenPG(dc1.Obj.Name, CreatePGName("pg1"), retryCount)
 	AssertOk(t, err, "failed to get pg")
@@ -730,7 +733,7 @@ func TestVCSyncVmkNics(t *testing.T) {
 	smmock.CreateNetwork(sm, "default", "vMotion_PG", "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
 	// Add PG to mockProbe (this is weird, this should be part of sim)
 	// vcHub should provide this function ??
-	mockProbe.AddPenPG(defaultTestParams.TestDCName, dvsName, &pgConfigSpec[0], retryCount)
+	mockProbe.AddPenPG(defaultTestParams.TestDCName, dvsName, &pgConfigSpec[0], nil, retryCount)
 	pg, err := mockProbe.GetPenPG(defaultTestParams.TestDCName, CreatePGName("vMotion_PG"), retryCount)
 	AssertOk(t, err, "failed to add portgroup")
 
@@ -871,6 +874,250 @@ func TestVCSyncVmkNics(t *testing.T) {
 	verifyVmkworkloads(testWorkloadMap, "VmkWorkload create with EP failed via watch")
 }
 
+func TestVCSyncTags(t *testing.T) {
+	// Any objects we are managing should have pensando managed tags written to them
+	// VLAN tags should be added to PGs
+	// If user removes this tag, it should be re-added
+	// If user has this tag on a non-pensando object, it should be left alone.
+	// If PG has old VLAN tag it should be removed
+
+	err := testutils.ValidateParams(defaultTestParams)
+	if err != nil {
+		t.Fatalf("Failed at validating test parameters")
+	}
+
+	// SETTING UP LOGGER
+	config := log.GetDefaultConfig("sync_test-pg")
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger := log.SetConfig(config)
+
+	// SETTING UP STATE MANAGER
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
+
+	clusterConfig := &cluster.Cluster{
+		ObjectMeta: api.ObjectMeta{
+			Name: "testCluster",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Cluster",
+		},
+		Spec: cluster.ClusterSpec{
+			AutoAdmitDSCs: true,
+		},
+	}
+
+	err = sm.Controller().Cluster().Create(clusterConfig)
+	AssertOk(t, err, "failed to create cluster config")
+	clusterItems, err := sm.Controller().Cluster().List(context.Background(), &api.ListWatchOptions{})
+	AssertOk(t, err, "failed to get cluster config")
+
+	clusterID := defs.CreateClusterID(clusterItems[0].Cluster)
+
+	// CREATING ORCH CONFIG
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+
+	// SETTING UP VCSIM
+	vcURL := &url.URL{
+		Scheme: "https",
+		Host:   defaultTestParams.TestHostName,
+		Path:   "/sdk",
+	}
+	vcURL.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: vcURL.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
+	dc1, err := s.AddDC(defaultTestParams.TestDCName)
+	AssertOk(t, err, "failed dc create")
+
+	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
+	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
+	_, err = dc1.AddDVS(dvsCreateSpec)
+	AssertOk(t, err, "failed dvs create")
+
+	orchInfo1 := []*network.OrchestratorInfo{
+		{
+			Name:      orchConfig.Name,
+			Namespace: defaultTestParams.TestDCName,
+		},
+	}
+
+	// CREATING VENICE NETWORKS
+	smmock.CreateNetwork(sm, "default", "pg1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo1)
+	smmock.CreateNetwork(sm, "default", "pg2", "10.1.2.0/24", "10.1.1.2", 101, nil, orchInfo1)
+	smmock.CreateNetwork(sm, "default", "pg3", "10.1.2.0/24", "10.1.1.2", 102, nil, orchInfo1)
+
+	time.Sleep(1 * time.Second)
+
+	// SETTING UP MOCK
+	// Real probe that will be used by mock probe when possible
+	vchub := setupTestVCHub(vcURL, sm, orchConfig, logger)
+	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.vcEventCh, vchub.State)
+	mockProbe := mock.NewProbeMock(vcp)
+	vchub.probe = mockProbe
+	mockProbe.Start(false)
+	AssertEventually(t, func() (bool, interface{}) {
+		if !mockProbe.IsSessionReady() {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready", "1s", "10s")
+
+	defer vchub.Destroy(true)
+
+	c, err := govmomi.NewClient(context.Background(), vcURL, true)
+	AssertOk(t, err, "Failed to create govmomi client")
+	restCl := rest.NewClient(c.Client)
+	tagClient := tags.NewManager(restCl)
+	err = tagClient.Login(context.Background(), vcURL.User)
+	AssertOk(t, err, "Failed to create tags client")
+
+	vchub.Sync()
+
+	verifyPg := func(dcPgMap map[string](map[string]int)) {
+		AssertEventually(t, func() (bool, interface{}) {
+			for name, pgNames := range dcPgMap {
+				dc := vchub.GetDC(name)
+				if dc == nil {
+					return false, fmt.Errorf("Failed to find DC %s", name)
+				}
+				dvs := dc.GetPenDVS(CreateDVSName(name))
+				if dvs == nil {
+					return false, fmt.Errorf("Failed to find dvs in DC %s", name)
+				}
+
+				dvs.Lock()
+				if len(dvs.Pgs) != len(pgNames) {
+					err := fmt.Errorf("PG length didn't match: exp %v, actual %v", pgNames, dvs.Pgs)
+					dvs.Unlock()
+					return false, err
+				}
+				dvs.Unlock()
+			}
+			return true, nil
+		}, "Failed to find PGs")
+	}
+
+	verifyTags := func(dcPgMap map[string](map[string]int)) {
+		AssertEventually(t, func() (bool, interface{}) {
+			for name, pgNames := range dcPgMap {
+				dc := vchub.GetDC(name)
+				if dc == nil {
+					return false, fmt.Errorf("Failed to find DC %s", name)
+				}
+
+				// Verify DC has managed tag
+				attachedTags, err := tagClient.GetAttachedTags(context.Background(), dc.dcRef)
+				AssertOk(t, err, "failed to get tags")
+				if len(attachedTags) != 1 {
+					return false, fmt.Errorf("DC didn't have expected tags, had %v", attachedTags)
+				}
+				AssertEquals(t, defs.CreateVCTagManagedTag(clusterID), attachedTags[0].Name, "DC didn't have managed tag")
+				AssertEquals(t, defs.VCTagManagedDescription, attachedTags[0].Description, "DC didn't have managed tag")
+
+				dvs := dc.GetPenDVS(CreateDVSName(name))
+				if dvs == nil {
+					err := fmt.Errorf("Failed to find dvs in DC %s", name)
+					logger.Errorf("%s", err)
+					return false, err
+				}
+
+				attachedTags, err = tagClient.GetAttachedTags(context.Background(), dvs.DvsRef)
+				AssertOk(t, err, "failed to get tags")
+				if len(attachedTags) != 1 {
+					return false, fmt.Errorf("DVS didn't have expected tags, had %v", attachedTags)
+				}
+				AssertEquals(t, defs.CreateVCTagManagedTag(clusterID), attachedTags[0].Name, "DVS didn't have managed tag")
+
+				for pgName, vlan := range pgNames {
+					pgObj := dvs.GetPenPG(pgName)
+					if pgObj == nil {
+						err := fmt.Errorf("Failed to find %s in DC %s", pgName, name)
+						logger.Errorf("%s", err)
+						return false, err
+					}
+					attachedTags, err := tagClient.GetAttachedTags(context.Background(), pgObj.PgRef)
+					AssertOk(t, err, "failed to get tags")
+					if len(attachedTags) != 2 {
+						return false, fmt.Errorf("PG %s %v didn't have expected tags, had %v", pgObj.PgRef, pgObj.PgName, attachedTags)
+					}
+					expTags := []string{
+						fmt.Sprintf("%s", defs.CreateVCTagManagedTag(clusterID)),
+						fmt.Sprintf("%s%d", defs.VCTagVlanPrefix, vlan),
+					}
+					for _, tag := range attachedTags {
+						AssertOneOf(t, tag.Name, expTags)
+					}
+				}
+			}
+			return true, nil
+		}, "Failed to verify tags")
+	}
+
+	// n1 should only be in defaultDC
+	// n2 should be in both
+	pg1 := CreatePGName("pg1")
+	pg2 := CreatePGName("pg2")
+	pg3 := CreatePGName("pg3")
+
+	dcPgMap := map[string](map[string]int){
+		defaultTestParams.TestDCName: map[string]int{
+			pg1: 100,
+			pg2: 101,
+			pg3: 102,
+		},
+	}
+
+	verifyPg(dcPgMap)
+
+	// Sync tags
+	vchub.tagSync()
+
+	verifyTags(dcPgMap)
+
+	dc := vchub.GetDC(defaultTestParams.TestDCName)
+
+	// modify the tags
+	// If user removes this tag, it should be re-added
+	// If user has this tag on a non-pensando object, it should be left alone.
+	// If PG has old VLAN tag it should be removed
+	err = tagClient.DetachTag(context.Background(), defs.CreateVCTagManagedTag(clusterID), dc.dcRef)
+	AssertOk(t, err, "Failed to remove pensando managed tag")
+	err = tagClient.AttachTag(context.Background(), fmt.Sprintf("%s%d", defs.VCTagVlanPrefix, 100), dc.dcRef)
+	AssertOk(t, err, "Failed to remove pensando managed tag")
+
+	// Create a second dvs
+	pvlanConfigSpecArray = testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
+	dvsCreateSpec = testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
+	dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().Name = "OtherDVS"
+	dvs2, err := dc1.AddDVS(dvsCreateSpec)
+	AssertOk(t, err, "failed dvs create")
+
+	err = tagClient.AttachTag(context.Background(), defs.CreateVCTagManagedTag(clusterID), dvs2.Obj.Reference())
+	AssertOk(t, err, "Failed to remove pensando managed tag")
+
+	pg := dc.GetPG(pg1, "")
+	err = tagClient.AttachTag(context.Background(), fmt.Sprintf("%s%d", defs.VCTagVlanPrefix, 102), pg.PgRef)
+	AssertOk(t, err, "Failed to remove pensando managed tag")
+
+	// Sync tags
+	vchub.tagSync()
+
+	verifyTags(dcPgMap)
+
+	// Verify dvs2 still has its tag
+	tags, err := tagClient.GetAttachedTags(context.Background(), dvs2.Obj.Reference())
+	AssertOk(t, err, "Failed to get tags on DVS2")
+	AssertEquals(t, 1, len(tags), "Dvs2 didn't have a tag")
+}
+
 func TestHostDeleteFromDVS(t *testing.T) {
 	// Create a host and a few vms on it
 	// Remove host from Pen-DVS, verify that workloads (including vmkworkload) and host are
@@ -958,7 +1205,7 @@ func TestHostDeleteFromDVS(t *testing.T) {
 	smmock.CreateNetwork(sm, "default", "vMotion_PG", "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
 	// Add PG to mockProbe (this is weird, this should be part of sim)
 	// vcHub should provide this function ??
-	mockProbe.AddPenPG(defaultTestParams.TestDCName, dvsName, &pgConfigSpec[0], retryCount)
+	mockProbe.AddPenPG(defaultTestParams.TestDCName, dvsName, &pgConfigSpec[0], nil, retryCount)
 	pg, err := mockProbe.GetPenPG(defaultTestParams.TestDCName, CreatePGName("vMotion_PG"), retryCount)
 	AssertOk(t, err, "failed to add portgroup")
 

@@ -128,6 +128,7 @@ func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger 
 	diagSvc.RegisterCustomAction(vchub.DebugCache, handlerFn)
 	diagSvc.RegisterCustomAction(vchub.DebugState, handlerFn)
 	diagSvc.RegisterCustomAction(vchub.DebugSync, handlerFn)
+	diagSvc.RegisterCustomAction(vchub.DebugVlanSpace, handlerFn)
 
 	return instance, nil
 }

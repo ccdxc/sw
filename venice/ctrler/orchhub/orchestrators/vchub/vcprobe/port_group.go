@@ -12,28 +12,45 @@ import (
 
 // AddPenPG returns a new instance of PenPG, or reconfigures the PG
 // to match the given spec if it already exists
-func (v *VCProbe) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec, retry int) error {
+func (v *VCProbe) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec, equalFn IsPGConfigEqual, retry int) error {
+	pgName := pgConfigSpec.Name
+	getAndCheck := func() (*mo.DistributedVirtualPortgroup, bool, error) {
+		moPG, err := v.GetPGConfig(dcName, pgName, []string{"config"}, 1)
+		if err != nil {
+			v.Log.Errorf("Failed at getting pg properties, err: %s", err)
+			return nil, false, err
+		}
+		// Check if config is equal
+		if equalFn != nil && equalFn(pgConfigSpec, moPG) {
+			v.Log.Infof("DC: %s - PG %s  config in vCenter is equal to given spec", dcName, pgName)
+			return moPG, true, nil
+		}
+		return moPG, false, nil
+	}
+
 	fn := func() (interface{}, error) {
-		pgName := pgConfigSpec.Name
 
 		var task *object.Task
 		var err error
 		// Check if it exists already
 		if pgObj, err := v.GetPenPG(dcName, pgName, 1); err == nil {
-			moPG, err := v.GetPGConfig(dcName, pgName, []string{"config"}, 1)
+			moPG, isEqual, err := getAndCheck()
 			if err != nil {
-				v.Log.Errorf("Failed at getting pg properties, err: %s", err)
 				return nil, err
 			}
+			if isEqual {
+				return nil, nil
+			}
+
 			pgConfigSpec.ConfigVersion = moPG.Config.ConfigVersion
 			v.Log.Infof("DC: %s - PG %s already exists, reconfiguring...", dcName, pgName)
 			task, err = pgObj.Reconfigure(v.ClientCtx, *pgConfigSpec)
 		} else {
 			// Creating PG
-			objDvs, err := v.GetPenDVS(dcName, dvsName, 1)
-			if err != nil {
+			objDvs, dvsErr := v.GetPenDVS(dcName, dvsName, 1)
+			if dvsErr != nil {
 				v.Log.Errorf("Couldn't find DVS %s for PG creation %s: err", dcName, dvsName, err)
-				return nil, err
+				return nil, dvsErr
 			}
 
 			task, err = objDvs.AddPortgroup(v.ClientCtx, []types.DVPortgroupConfigSpec{*pgConfigSpec})
@@ -41,12 +58,24 @@ func (v *VCProbe) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgro
 
 		if err != nil {
 			v.Log.Errorf("Failed at adding/reconfiguring port group: %s, err: %s", pgName, err)
+
+			_, isEqual, err1 := getAndCheck()
+			if err1 == nil && isEqual {
+				return nil, nil
+			}
+
 			return nil, err
 		}
 
 		_, err = task.WaitForResult(v.ClientCtx, nil)
 		if err != nil {
 			v.Log.Errorf("Failed at waiting results of add port group: %s, err: %s", pgName, err)
+
+			_, isEqual, err1 := getAndCheck()
+			if err1 == nil && isEqual {
+				return nil, nil
+			}
+
 			return nil, err
 		}
 
@@ -124,7 +153,11 @@ func (v *VCProbe) RenamePG(dcName string, oldName string, newName string, retry 
 		if err != nil {
 			return nil, err
 		}
-		task, err := objPg.Rename(v.ClientCtx, newName)
+		ctx := v.ClientCtx
+		if ctx == nil {
+			return nil, fmt.Errorf("Client Context was nil")
+		}
+		task, err := objPg.Rename(ctx, newName)
 		if err != nil {
 			// Failed to delete PG
 			v.Log.Errorf("Failed to rename PG %s to %s, err", oldName, newName, err)
@@ -132,7 +165,7 @@ func (v *VCProbe) RenamePG(dcName string, oldName string, newName string, retry 
 			return nil, err
 		}
 
-		_, err = task.WaitForResult(v.ClientCtx, nil)
+		_, err = task.WaitForResult(ctx, nil)
 		if err != nil {
 			// Failed to delete PG
 			v.Log.Errorf("Failed to wait for PG rename %s to %s, err", oldName, newName, err)

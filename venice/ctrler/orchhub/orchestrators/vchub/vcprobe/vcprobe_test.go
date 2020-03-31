@@ -181,7 +181,7 @@ func TestListAndWatch(t *testing.T) {
 			AssertEquals(t, 1, len(vms), "List VM response length did not match exp")
 		}
 	}
-	vm1, err := vcp.GetVM(vms[0].Self.Value)
+	vm1, err := vcp.GetVM(vms[0].Self.Value, 1)
 	AssertOk(t, err, "failed to get vm")
 	AssertEquals(t, vm1, vms[0], "VMs were not equal")
 
@@ -193,7 +193,7 @@ func TestListAndWatch(t *testing.T) {
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(testParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(testParams, pvlanConfigSpecArray)
 
-	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec, retryCount)
+	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec, nil, retryCount)
 	AssertOk(t, err, "Failed to add DVS")
 
 	time.Sleep(1 * time.Second)
@@ -210,7 +210,7 @@ func TestListAndWatch(t *testing.T) {
 	pgConfigSpecArray := testutils.GenPGConfigSpecArray(testParams, pvlanConfigSpecArray)
 
 	for i := 0; i < testParams.TestNumPG; i++ {
-		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i], retryCount)
+		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i], nil, retryCount)
 		AssertOk(t, err, "Failed to add new PG")
 	}
 
@@ -325,11 +325,11 @@ func TestDVSAndPG(t *testing.T) {
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(testParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(testParams, pvlanConfigSpecArray)
 
-	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec, retryCount)
+	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec, nil, retryCount)
 	AssertOk(t, err, "Failed to add DVS")
 
 	// Reconfigure should succeed
-	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec, retryCount)
+	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec, nil, retryCount)
 	AssertOk(t, err, "Failed to add DVS")
 
 	pgConfigSpecArray := testutils.GenPGConfigSpecArray(testParams, pvlanConfigSpecArray)
@@ -338,11 +338,11 @@ func TestDVSAndPG(t *testing.T) {
 	var mapPGNamesWithIndex *map[string]int
 
 	for i := 0; i < testParams.TestNumPG; i++ {
-		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i], retryCount)
+		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i], nil, retryCount)
 		AssertOk(t, err, "Failed to add new PG")
 
 		// Second add will result in reconfigure operation
-		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i], retryCount)
+		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i], nil, retryCount)
 		AssertOk(t, err, "Failed to add DVS")
 
 		// Rename PG and then rename it back

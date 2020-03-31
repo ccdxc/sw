@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"time"
 
 	"github.com/pensando/sw/venice/utils/ref"
 
@@ -474,13 +475,28 @@ func (v *Datacenter) AddVMWithSpec(name string, hostName string, spec types.Virt
 		return nil, err
 	}
 
-	task, err := folders.VmFolder.CreateVM(ctx, spec, pool, hostObj)
-	if err != nil {
-		return nil, err
-	}
-	err = task.Wait(ctx)
-	if err != nil {
-		return nil, err
+	// CreateVM call can potentially hit a deadlock inside vcsim
+	doneCh := make(chan error, 1)
+	go func() {
+		task, err := folders.VmFolder.CreateVM(ctx, spec, pool, hostObj)
+		if err != nil {
+			doneCh <- err
+		}
+		err = task.Wait(ctx)
+		if err != nil {
+			doneCh <- err
+		}
+
+		doneCh <- nil
+	}()
+
+	select {
+	case err := <-doneCh:
+		if err != nil {
+			return nil, err
+		}
+	case <-time.After(10 * time.Second):
+		return nil, fmt.Errorf("VCSim timed out, may be in a deadlock")
 	}
 
 	vms := simulator.Map.All("VirtualMachine")
@@ -589,13 +605,28 @@ func (v *Datacenter) UpdateVMHost(vm *simulator.VirtualMachine, hostName string)
 }
 
 // UpdateVMIP adds guest IP information
-func (v *Datacenter) UpdateVMIP(vm *simulator.VirtualMachine, macAddr string, netName string, ips []string) error {
+func (v *Datacenter) UpdateVMIP(vm *simulator.VirtualMachine, macAddr string, netName string, ips []string) ([]types.GuestNicInfo, error) {
 	vmMap := simulator.Map.Get(vm.Reference())
 	nicInfo := vm.Guest.Net
+	ipInfo := []types.NetIpConfigInfoIpAddress{}
+	for i, ip := range ips {
+		state := ""
+		if i == 0 {
+			state = "preferred"
+		}
+		entry := types.NetIpConfigInfoIpAddress{
+			IpAddress: ip,
+			State:     state,
+		}
+		ipInfo = append(ipInfo, entry)
+	}
 	newItem := types.GuestNicInfo{
 		MacAddress: macAddr,
 		Network:    netName,
 		IpAddress:  ips,
+		IpConfig: &types.NetIpConfigInfo{
+			IpAddress: ipInfo,
+		},
 	}
 
 	added := false
@@ -614,11 +645,11 @@ func (v *Datacenter) UpdateVMIP(vm *simulator.VirtualMachine, macAddr string, ne
 	simulator.Map.Update(vmMap, []types.PropertyChange{
 		{Name: "guest", Val: vm.Guest},
 	})
-	return nil
+	return vm.Guest.Net, nil
 }
 
 // RemoveVMIP removes guest IP information
-func (v *Datacenter) RemoveVMIP(vm *simulator.VirtualMachine, macAddr string) error {
+func (v *Datacenter) RemoveVMIP(vm *simulator.VirtualMachine, macAddr string) ([]types.GuestNicInfo, error) {
 	vmMap := simulator.Map.Get(vm.Reference())
 
 	indexToRemove := -1
@@ -636,7 +667,7 @@ func (v *Datacenter) RemoveVMIP(vm *simulator.VirtualMachine, macAddr string) er
 		})
 	}
 
-	return nil
+	return vm.Guest.Net, nil
 }
 
 // AddHost adds a host to the DVS

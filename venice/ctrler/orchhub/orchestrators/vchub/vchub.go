@@ -23,8 +23,9 @@ import (
 )
 
 const (
-	storeQSize        = 64
-	defaultRetryCount = 3
+	storeQSize          = 64
+	defaultRetryCount   = 3
+	defaultTagSyncDelay = 2 * time.Minute
 )
 
 // VCHub instance
@@ -41,7 +42,9 @@ type VCHub struct {
 	DcMap        map[string]*PenDC
 	DcID2NameMap map[string]string
 	// Will be taken with write lock by sync
-	syncLock sync.RWMutex
+	syncLock     sync.RWMutex
+	syncDone     bool
+	watchStarted bool
 	// whether to act upon venice network events
 	// When we are disconnected, we do not want to act upon network events
 	// until we are reconnected and sync has finished.
@@ -57,6 +60,7 @@ type VCHub struct {
 	// Opts is options used during creation of this instance
 	opts         []Option
 	useMockProbe bool
+	tagSyncDelay time.Duration
 }
 
 // Option specifies optional values for vchub
@@ -71,6 +75,13 @@ func WithMockProbe(v *VCHub) {
 func WithVcEventsCh(ch chan defs.Probe2StoreMsg) Option {
 	return func(v *VCHub) {
 		v.vcEventCh = ch
+	}
+}
+
+// WithTagSyncDelay sets the tag write sync delay
+func WithTagSyncDelay(delay time.Duration) Option {
+	return func(v *VCHub) {
+		v.tagSyncDelay = delay
 	}
 }
 
@@ -123,6 +134,7 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	v.DcID2NameMap = map[string]string{}
 	v.vcReadCh = make(chan defs.Probe2StoreMsg, storeQSize)
 	v.vcEventCh = make(chan defs.Probe2StoreMsg, storeQSize)
+	v.tagSyncDelay = defaultTagSyncDelay
 	v.opts = opts
 	v.setupPCache()
 
@@ -145,6 +157,8 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	v.Wg.Add(1)
 	go v.startEventsListener()
 	v.createProbe(config)
+	v.Wg.Add(1)
+	go v.periodicTagSync()
 }
 
 func (v *VCHub) createProbe(config *orchestration.Orchestrator) {
@@ -300,4 +314,18 @@ func (v *VCHub) createVMWorkloadName(namespace, objName string) string {
 
 func (v *VCHub) parseVMKeyFromWorkloadName(workloadName string) (vmKey string) {
 	return fmt.Sprintf("%s", utils.ParseGlobalKey(v.OrchID, "", workloadName))
+}
+
+// IsSyncDone return status of the sync - used by test programs only
+func (v *VCHub) IsSyncDone() bool {
+	v.syncLock.RLock()
+	syncDone := v.syncDone
+	defer v.syncLock.RUnlock()
+	return syncDone
+}
+
+// AreWatchersStarted return whether watchers have been started
+// Should only be used by test programs
+func (v *VCHub) AreWatchersStarted() bool {
+	return v.watchStarted
 }

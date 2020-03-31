@@ -31,14 +31,14 @@ const VCTagVlanDescription = "VLAN that will be used when packets leave the DSCs
 const VCTagManagedDefault = "Pensando Managed"
 
 // VCTagManaged is the tag to apply to objects we manage
-const vcTagManaged = "Pensando Managed - %s"
+const VCTagManaged = "Pensando Managed - %s"
 
 // VCTagManagedDescription is the description for VCTagManaged
 const VCTagManagedDescription = "This object is managed by Pensando and should not be renamed or modified."
 
 // CreateVCTagManagedTag generates tag name for VCTagManaged
 func CreateVCTagManagedTag(clusterID string) string {
-	return fmt.Sprintf(vcTagManaged, clusterID)
+	return fmt.Sprintf(VCTagManaged, clusterID)
 }
 
 // CreateClusterID generates clusterID

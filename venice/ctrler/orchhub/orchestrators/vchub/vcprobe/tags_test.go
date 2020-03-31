@@ -10,16 +10,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/tsdb"
-
 	"github.com/vmware/govmomi/simulator"
 	"github.com/vmware/govmomi/vapi/tags"
+	"github.com/vmware/govmomi/vim25/types"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 func TestTags(t *testing.T) {
@@ -63,10 +67,14 @@ func TestTags(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	orchConfig := smmock.GetOrchestratorConfig(vcID, user, password)
+	orchConfig.Status.OrchID = 1
 	err = sm.Controller().Orchestrator().Create(orchConfig)
+	orchID := fmt.Sprintf("orch%d", orchConfig.Status.OrchID)
+
 	state := &defs.State{
 		VcURL:      u,
 		VcID:       vcID,
+		OrchID:     orchID,
 		Ctx:        ctx,
 		Log:        logger,
 		StateMgr:   sm,
@@ -89,9 +97,20 @@ func TestTags(t *testing.T) {
 
 	th := &testHelper{
 		t:       t,
-		tp:      vcp.tp,
+		tp:      vcp.TagsProbeInf.(*tagsProbe),
 		storeCh: storeCh,
 	}
+
+	labels := map[string]string{}
+	labels["io.pensando.namespace"] = ""
+	labels["io.pensando.orch-name"] = orchConfig.Name
+	// Write VMs into stateManager
+	vm1Name := utils.CreateGlobalKey(orchID, "", vm1.Self.Value)
+	vm2Name := utils.CreateGlobalKey(orchID, "", vm2.Self.Value)
+	vm3Name := utils.CreateGlobalKey(orchID, "", vm3.Self.Value)
+	th.createWorkload(sm, vm1Name, labels)
+	th.createWorkload(sm, vm2Name, labels)
+	th.createWorkload(sm, vm3Name, labels)
 
 	th.fetchTags()
 	expMap := map[string][]string{}
@@ -138,10 +157,12 @@ func TestTags(t *testing.T) {
 	expMap[vm1.Self.Value] = []string{"default:tagZone1", "default:tagZone3"}
 	expMap[vm2.Self.Value] = []string{"default:tagZone1"}
 	expMap[vm3.Self.Value] = []string{"default:tagZone1"}
+
 	th.verifyTags(expMap)
 
 	// Check tag renaming event
 	th.renameTag("tagZone1", "tagZone11")
+	th.tp.fetchTagInfo()
 
 	expMap[vm1.Self.Value] = []string{"default:tagZone11", "default:tagZone3"}
 	expMap[vm2.Self.Value] = []string{"default:tagZone11"}
@@ -172,6 +193,7 @@ func TestTags(t *testing.T) {
 
 	// Rename category should generate events
 	th.renameCategory("default", "default1")
+	th.tp.fetchTagInfo()
 	expMap = map[string][]string{
 		vm1.Self.Value: []string{"default1:tagZone11"},
 		vm2.Self.Value: []string{"default1:tagZone11"},
@@ -223,6 +245,8 @@ func TestTagWriting(t *testing.T) {
 	AssertOk(t, err, "Failed to create host")
 	vm1, err := dc.AddVM("vm1", "host1", []sim.VNIC{})
 	AssertOk(t, err, "Failed to create vm1")
+	vm2, err := dc.AddVM("vm2", "host1", []sim.VNIC{})
+	AssertOk(t, err, "Failed to create vm1")
 
 	storeCh := make(chan defs.Probe2StoreMsg, 100)
 
@@ -231,10 +255,21 @@ func TestTagWriting(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	orchConfig := smmock.GetOrchestratorConfig(vcID, user, password)
+	orchConfig.Status.OrchID = 1
 	err = sm.Controller().Orchestrator().Create(orchConfig)
+	orchID := fmt.Sprintf("orch%d", orchConfig.Status.OrchID)
+
+	labels := map[string]string{}
+	labels["io.pensando.namespace"] = ""
+	labels["io.pensando.orch-name"] = orchConfig.Name
+	// Write VMs into stateManager
+	vm1Name := utils.CreateGlobalKey(orchID, "", vm1.Self.Value)
+	vm2Name := utils.CreateGlobalKey(orchID, "", vm2.Self.Value)
+
 	state := &defs.State{
 		VcURL:      u,
 		VcID:       vcID,
+		OrchID:     orchID,
 		ClusterID:  "testCluster",
 		Ctx:        ctx,
 		Log:        logger,
@@ -252,16 +287,19 @@ func TestTagWriting(t *testing.T) {
 	}()
 
 	// Start test
-	vcp.StartWatchers()
+	// vcp.StartWatchers()
 
 	time.Sleep(3 * time.Second)
 
 	th := &testHelper{
 		t:       t,
-		tp:      vcp.tp,
+		tp:      vcp.TagsProbeInf.(*tagsProbe),
 		storeCh: storeCh,
 	}
+	th.createWorkload(sm, vm1Name, labels)
+	th.createWorkload(sm, vm2Name, labels)
 
+	vcp.SetupBaseTags()
 	th.fetchTags()
 	expMap := map[string][]string{}
 	th.verifyTags(expMap)
@@ -293,14 +331,30 @@ func TestTagWriting(t *testing.T) {
 	err = th.tp.TagObjWithVlan(vm1.Reference(), 1000)
 	AssertOk(t, err, "failed to tag vm1 with vlan tag")
 
+	vlanTag := fmt.Sprintf("%s%d", defs.VCTagVlanPrefix, 1000)
+
 	expMap = map[string][]string{
 		vm1.Self.Value: []string{fmt.Sprintf("%s:%s", defs.VCTagCategory, defs.CreateVCTagManagedTag(state.ClusterID)),
 			fmt.Sprintf("%s:%s%d", defs.VCTagCategory, defs.VCTagVlanPrefix, 1000)},
 	}
 	th.verifyTags(expMap)
 
+	err = th.tp.TagObjsAsManaged([]types.ManagedObjectReference{vm1.Reference(), vm2.Reference()})
+	AssertOk(t, err, "failed to tag vm1 & vm2 as managed")
+
+	expMap = map[string][]string{
+		vm2.Self.Value: []string{fmt.Sprintf("%s:%s", defs.VCTagCategory, defs.CreateVCTagManagedTag(state.ClusterID))},
+	}
+	th.verifyTags(expMap)
+
+	tagRes, err := th.tp.GetPensandoTagsOnObjects([]types.ManagedObjectReference{vm1.Reference(), vm2.Reference()})
+	AssertOk(t, err, "failed to get pensando managed tags")
+	kingTagEntry := tagRes[string(defs.VirtualMachine)]
+	AssertEquals(t, 2, len(kingTagEntry[vm1.Self.Value]), "Should have found 2 tags")
+	AssertEquals(t, 1, len(kingTagEntry[vm2.Self.Value]), "Should have found 1 tag")
+
 	// Remove tags
-	err = th.tp.RemoveTagObjVlan(vm1.Reference())
+	err = th.tp.RemoveTag(vm1.Reference(), vlanTag)
 	AssertOk(t, err, "failed to remove tag vlan ")
 
 	expMap = map[string][]string{
@@ -325,6 +379,12 @@ func TestTagWriting(t *testing.T) {
 
 	errs := th.tp.RemovePensandoTags(vm1.Reference())
 	AssertEquals(t, 0, len(errs), "failed to remove all tags, errs %v", errs)
+
+	Assert(t, th.tp.IsManagedTag(defs.CreateVCTagManagedTag(state.ClusterID)), "isManagedTag utility function failed")
+	vlan, ok := th.tp.IsVlanTag(vlanTag)
+	Assert(t, ok, "isVlanTag utility function failed")
+	AssertEquals(t, 1000, vlan, "isVlanTag utility function failed")
+
 }
 
 type testHelper struct {
@@ -399,8 +459,7 @@ func (h *testHelper) verifyTags(expMap map[string][]string) {
 }
 
 func (h *testHelper) fetchTags() {
-	err := h.tp.fetchTags()
-	AssertOk(h.t, err, "Fetch tags failed")
+	h.tp.fetchTags()
 }
 
 func (h *testHelper) getTagMsgsFromStore() []defs.Probe2StoreMsg {
@@ -423,6 +482,23 @@ func (h *testHelper) getTagMsgsFromStore() []defs.Probe2StoreMsg {
 		}
 	}
 	return items
+}
+
+func (h *testHelper) createWorkload(sm *smmock.Statemgr, name string, labels map[string]string) {
+	err := sm.Controller().Workload().Create(&workload.Workload{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Workload",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      name,
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+			Labels:    labels,
+		},
+	},
+	)
+	AssertOk(h.t, err, "Failed to create workload")
 }
 
 func getCaller() string {
