@@ -22,6 +22,8 @@ header_type arp_rarp_t {
         hwAddrLen : 8;
         protoAddrLen : 8;
         opcode : 16;
+        senderMacAddr : 48;
+        senderIpAddr : 32;
     }
 }
 

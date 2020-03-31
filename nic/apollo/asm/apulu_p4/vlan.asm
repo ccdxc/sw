@@ -33,10 +33,16 @@ vlan_local_mapping_key_tx:
     phvwr           p.key_metadata_local_mapping_lkp_id, r7
 
 vlan_local_mapping_key_tx_non_ipv4:
-    phvwr           p.key_metadata_local_mapping_lkp_type, KEY_TYPE_MAC
-    phvwr           p.key_metadata_local_mapping_lkp_addr, k.ethernet_1_srcAddr
-    b               vlan_mapping_key
+    bbeq            k.arp_valid, TRUE, vlan_local_mapping_key_tx_arp
     phvwr           p.key_metadata_local_mapping_lkp_id, r6
+    phvwr           p.key_metadata_local_mapping_lkp_type, KEY_TYPE_MAC
+    b               vlan_mapping_key
+    phvwr           p.key_metadata_local_mapping_lkp_addr, k.ethernet_1_srcAddr
+
+vlan_local_mapping_key_tx_arp:
+    phvwr           p.key_metadata_local_mapping_lkp_type, KEY_TYPE_IPV4
+    b               vlan_mapping_key
+    phvwr           p.key_metadata_local_mapping_lkp_addr, k.arp_senderIpAddr
 
 vlan_local_mapping_key_rx:
     bcf             [!c7], vlan_local_mapping_key_rx_non_ipv4
