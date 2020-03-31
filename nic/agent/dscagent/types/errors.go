@@ -141,6 +141,8 @@ const (
 	ErrNoIpForMgmtIntf                       = Error("ErrNoIpForMgmtIntf")
 	ErrFailedToGetMgmtLink                   = Error("ErrFailedToGetMgmtLink")
 	ErrInconsistentInterfaceDelete           = Error("ErrInconsistentInterfaceDelete")
+	ErrAlertsGet                             = Error("ErrAlertsGet")
+	ErrAlertsRecv                            = Error("ErrAlertsRecv")
 )
 
 // Const Info
