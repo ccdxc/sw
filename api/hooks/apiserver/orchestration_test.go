@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/api/generated/workload"
 	apiintf "github.com/pensando/sw/api/interfaces"
@@ -38,6 +39,11 @@ func makeOrchObj(name, uri string) *orchestration.Orchestrator {
 		},
 		Spec: orchestration.OrchestratorSpec{
 			URI: uri,
+			Credentials: &monitoring.ExternalCred{
+				AuthType: "username-password",
+				UserName: "user",
+				Password: "pass",
+			},
 		},
 	}
 }
@@ -246,6 +252,171 @@ func TestOrchestratorPreCommit(t *testing.T) {
 		{apiintf.CreateOper, makeOrchObj("orch3", "11.1.1.1"), fmt.Errorf("URI is already used by Orchestrator orch2")},       // Third object with conflict
 		{apiintf.UpdateOper, makeOrchObj("orch1", "11.1.1.1"), fmt.Errorf("URI is already used by Orchestrator orch2")},       // first object update with conflict
 		{apiintf.CreateOper, makeOrchObj("orch4", "{10.30.1.181:8989}"), fmt.Errorf("{10.30.1.181:8989} is not a valid URI")}, // object with bad uri
+		{
+			apiintf.CreateOper,
+			&orchestration.Orchestrator{
+				ObjectMeta: api.ObjectMeta{
+					Name:            "cred-miss",
+					ResourceVersion: "1",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Orchestrator",
+					APIVersion: "v1",
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "vc.pensando.io",
+				},
+			},
+			fmt.Errorf("Orch cred-miss has credentials missing"),
+		},
+		{
+			apiintf.CreateOper,
+			&orchestration.Orchestrator{
+				ObjectMeta: api.ObjectMeta{
+					Name:            "user-miss",
+					ResourceVersion: "1",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Orchestrator",
+					APIVersion: "v1",
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "vc.pensando.io",
+					Credentials: &monitoring.ExternalCred{
+						AuthType: monitoring.ExportAuthType_AUTHTYPE_USERNAMEPASSWORD.String(),
+						Password: "pass",
+					},
+				},
+			},
+			fmt.Errorf("Credentials for orchestrator user-miss missing username"),
+		},
+		{
+			apiintf.CreateOper,
+			&orchestration.Orchestrator{
+				ObjectMeta: api.ObjectMeta{
+					Name:            "pass-miss",
+					ResourceVersion: "1",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Orchestrator",
+					APIVersion: "v1",
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "vc.pensando.io",
+					Credentials: &monitoring.ExternalCred{
+						AuthType: monitoring.ExportAuthType_AUTHTYPE_USERNAMEPASSWORD.String(),
+						UserName: "user",
+					},
+				},
+			},
+			fmt.Errorf("Credentials for orchestrator pass-miss missing password"),
+		},
+		{
+			apiintf.CreateOper,
+			&orchestration.Orchestrator{
+				ObjectMeta: api.ObjectMeta{
+					Name:            "extra-elem",
+					ResourceVersion: "1",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Orchestrator",
+					APIVersion: "v1",
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "vc.pensando.io",
+					Credentials: &monitoring.ExternalCred{
+						AuthType:    monitoring.ExportAuthType_AUTHTYPE_USERNAMEPASSWORD.String(),
+						UserName:    "user",
+						Password:    "pass",
+						BearerToken: "randomtoken",
+					},
+				},
+			},
+			fmt.Errorf("Credentials for orchestrator extra-elem has unnecessary fields passed"),
+		},
+		{
+			apiintf.CreateOper,
+			&orchestration.Orchestrator{
+				ObjectMeta: api.ObjectMeta{
+					Name:            "empty",
+					ResourceVersion: "1",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Orchestrator",
+					APIVersion: "v1",
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "vc.pensando.io",
+					Credentials: &monitoring.ExternalCred{
+						AuthType: monitoring.ExportAuthType_AUTHTYPE_TOKEN.String(),
+					},
+				},
+			},
+			fmt.Errorf("Credentials for orchestrator empty missing token"),
+		},
+		{
+			apiintf.CreateOper,
+			&orchestration.Orchestrator{
+				ObjectMeta: api.ObjectMeta{
+					Name:            "wrong-elem-2",
+					ResourceVersion: "1",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Orchestrator",
+					APIVersion: "v1",
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "vc.pensando.io",
+					Credentials: &monitoring.ExternalCred{
+						AuthType: monitoring.ExportAuthType_AUTHTYPE_TOKEN.String(),
+						UserName: "user",
+					},
+				},
+			},
+			fmt.Errorf("Credentials for orchestrator wrong-elem-2 missing token"),
+		},
+		{
+			apiintf.CreateOper,
+			&orchestration.Orchestrator{
+				ObjectMeta: api.ObjectMeta{
+					Name:            "extra-elem",
+					ResourceVersion: "1",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Orchestrator",
+					APIVersion: "v1",
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "vc.pensando.io",
+					Credentials: &monitoring.ExternalCred{
+						AuthType:    monitoring.ExportAuthType_AUTHTYPE_TOKEN.String(),
+						BearerToken: "token",
+						Password:    "pass",
+					},
+				},
+			},
+			fmt.Errorf("Credentials for orchestrator extra-elem has unnecessary fields passed"),
+		},
+		{
+			apiintf.CreateOper,
+			&orchestration.Orchestrator{
+				ObjectMeta: api.ObjectMeta{
+					Name:            "empty",
+					ResourceVersion: "1",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Orchestrator",
+					APIVersion: "v1",
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "vc.pensando.io",
+					Credentials: &monitoring.ExternalCred{
+						AuthType: monitoring.ExportAuthType_AUTHTYPE_CERTS.String(),
+					},
+				},
+			},
+			fmt.Errorf("Credentials for orchestrator empty missing fields"),
+		},
 	}
 
 	ctx := context.TODO()
@@ -274,5 +445,4 @@ func TestOrchestratorPreCommit(t *testing.T) {
 			Assert(t, err != nil && (err.Error() == tc.err.Error()), fmt.Sprintf("hook did not return expected error. Testcase: %d, have: \"%v\", want: \"%v\"", i, err, tc.err))
 		}
 	}
-
 }

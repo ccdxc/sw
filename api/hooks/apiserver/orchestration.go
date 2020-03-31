@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/vmware/govmomi/vim25/soap"
 
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/orchestration"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
@@ -71,7 +73,52 @@ func (o *orchHooks) validateOrchestrator(ctx context.Context, kv kvstore.Interfa
 		}
 	}
 
-	return i, true, nil
+	if orch.Spec.Credentials == nil {
+		return i, true, fmt.Errorf("Orch %v has credentials missing", orch.Name)
+	}
+
+	switch orch.Spec.Credentials.AuthType {
+	case monitoring.ExportAuthType_AUTHTYPE_USERNAMEPASSWORD.String():
+		if len(orch.Spec.Credentials.UserName) == 0 {
+			return i, true, fmt.Errorf("Credentials for orchestrator %v missing username", orch.Name)
+		}
+
+		if len(orch.Spec.Credentials.Password) == 0 {
+			return i, true, fmt.Errorf("Credentials for orchestrator %v missing password", orch.Name)
+		}
+
+		if len(orch.Spec.Credentials.BearerToken) > 0 || len(orch.Spec.Credentials.KeyData) > 0 || len(orch.Spec.Credentials.CertData) > 0 || len(orch.Spec.Credentials.CaData) > 0 {
+			return i, true, fmt.Errorf("Credentials for orchestrator %v has unnecessary fields passed", orch.Name)
+		}
+	case monitoring.ExportAuthType_AUTHTYPE_TOKEN.String():
+		if len(orch.Spec.Credentials.BearerToken) == 0 {
+			return i, true, fmt.Errorf("Credentials for orchestrator %v missing token", orch.Name)
+		}
+
+		if len(orch.Spec.Credentials.KeyData) > 0 || len(orch.Spec.Credentials.CertData) > 0 || len(orch.Spec.Credentials.CaData) > 0 || len(orch.Spec.Credentials.UserName) > 0 || len(orch.Spec.Credentials.Password) > 0 {
+			return i, true, fmt.Errorf("Credentials for orchestrator %v has unnecessary fields passed", orch.Name)
+		}
+	case monitoring.ExportAuthType_AUTHTYPE_CERTS.String():
+		if len(orch.Spec.Credentials.KeyData) == 0 || len(orch.Spec.Credentials.CertData) == 0 || len(orch.Spec.Credentials.CaData) == 0 {
+			return i, true, fmt.Errorf("Credentials for orchestrator %v missing fields", orch.Name)
+		}
+
+		if len(orch.Spec.Credentials.UserName) > 0 || len(orch.Spec.Credentials.Password) > 0 || len(orch.Spec.Credentials.BearerToken) > 0 {
+			return i, true, fmt.Errorf("Credentials for orchestrator %v has unnecessary fields passed", orch.Name)
+		}
+	case monitoring.ExportAuthType_AUTHTYPE_NONE.String():
+		fallthrough
+	default:
+		return i, true, fmt.Errorf("Unsupported auth type [%v] passed in orchestrator %v", orch.Spec.Credentials.AuthType, orch.Name)
+	}
+
+	if len(orch.Spec.ManageNamespaces) > 0 {
+		for i := range orch.Spec.ManageNamespaces {
+			orch.Spec.ManageNamespaces[i] = strings.TrimSpace(orch.Spec.ManageNamespaces[i])
+		}
+	}
+
+	return orch, true, nil
 }
 
 func createOrchCheckHook(kind string) apiserver.PreCommitFunc {
