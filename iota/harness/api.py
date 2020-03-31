@@ -433,6 +433,30 @@ def UnShutDataPorts(nodes, num_ports_per_node = 1, start_port = 1):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().UnShutDataPorts(nodes,
         num_ports_per_node, start_port)
    
+def DisablePfcPorts(node_names):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().DisablePfcPorts(node_names)
+
+def EnablePfcPorts(node_names):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().EnablePfcPorts(node_names)
+
+def DisablePausePorts(node_names):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().DisablePausePorts(node_names)
+
+def EnablePausePorts(node_names):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().EnablePausePorts(node_names)
+
+def DisableQosPorts(node_names, params):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().DisableQosPorts(node_names, params)
+
+def EnableQosPorts(node_names, params):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().EnableQosPorts(node_names, params)
+
+def DisableQueuingPorts(node_names, params):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().DisableQueuingPorts(node_names, params)
+
+def EnableQueuingPorts(node_names, params):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().EnableQueuingPorts(node_names, params)
+
 def PrintCommandResults(cmd):
     Logger.SetNode(cmd.node_name)
     Logger.header('COMMAND')

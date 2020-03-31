@@ -1,0 +1,89 @@
+meta:
+    name    : qos
+    os      : [ freebsd ]
+    nics    : [ pensando, mellanox ]
+    targetcount : 10
+
+testcases:
+    #=======================================
+    # Init
+    #=======================================
+    -   name    : Build_Rdma
+        testcase: testcases.rdma.build_rdma
+        args    :
+            type: remote_only
+
+    -   name    : Insmod_Rdma
+        testcase: testcases.rdma.insmod_rdma
+        args    :
+            type: remote_only
+
+    -   name    : Show_Gid
+        testcase: testcases.rdma.show_gid
+        args    :
+            type: remote_only
+
+    -   name    : Intf_Mtu
+        testcase: testcases.rdma.intf_mtu
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Config Tests
+    #=======================================
+    -   name    : QoS_Switch_Config
+        testcase: testcases.qos.qos_switch_config
+        args    :
+            type: remote_only
+            intf_qos: True
+            pause_enable: True
+            pause_type: 1
+
+    -   name    : Qos_Pfc_Config
+        testcase: testcases.qos.qos_pfc_config
+        iterators :
+            type         : nested
+            tclass       : [1]
+            enable       : [1]
+            mtu          : [9000]
+            pcp          : [2]
+            pfc_cos      : [2]
+            no_drop      : [1]
+            fc_config    : [1]
+            fc_type      : [2]
+            traffic_type : [1]
+        args    :
+            type: remote_only
+
+    -   name    : Qos_Traffic_Pfc_TC2
+        testcase: testcases.qos.qos_traffic_test
+        args    :
+            type: remote_only
+            rdma_pcps : [2]
+
+    #=======================================
+    # Teardown
+    #=======================================
+    -   name    : QoS_Switch_Unconfig
+        testcase: testcases.qos.qos_switch_config
+        args    :
+            type: remote_only
+            intf_qos: False
+            pause_enable: False
+            pause_type: 1
+
+    -   name    : Qos_Teardown
+        testcase: testcases.qos.qos_teardown
+        iterators :
+            type      : nested
+            tclass    : [1]
+            fc_config : [1]
+            fc_type   : [1]
+        args    :
+            type: remote_only
+
+    -   name    : Rmmod_Rdma
+        testcase: testcases.rdma.rmmod_rdma
+        args    :
+            type: remote_only
+

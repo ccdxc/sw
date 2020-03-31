@@ -26,27 +26,44 @@ def _get_driver_version(file):
     return os.path.basename(os.path.dirname(os.path.realpath(file)))
 
 def setUpSwitchQos(switch_ctx):
+    #TODO: Change this after the switch issues are fixed
+    return
     #Needed for RDMA, neeed to be set from testsuite.
     switch_ctx.flow_control_receive = True
     switch_ctx.flow_control_send = True
     switch_ctx.mtu = 9216
-    switch_ctx.qos.name = "pausenq"
+    switch_ctx.qos.name = "p-nq-iota"
+    
+    #Configure the system network-qos policy
     qosClass = switch_ctx.qos.qos_classes.add()
-    qosClass.name = "c-nq3"
-    qosClass.mtu = 1500
-    qosClass.pause_pfc_cos = 3
-    qosClass = switch_ctx.qos.qos_classes.add()
-    qosClass.name = "c-nq2"
-    qosClass.mtu = 1500
-    qosClass.pause_pfc_cos = 100  # set cos to an invalid value
-    qosClass = switch_ctx.qos.qos_classes.add()
-    qosClass.name = "c-nq1"
-    qosClass.mtu = 1500
-    qosClass.pause_pfc_cos = 100  # set cos to an invalid value
-    qosClass = switch_ctx.qos.qos_classes.add()
-    qosClass.name = "c-nq-default"
+    qosClass.name = "c-8q-nq2"
     qosClass.mtu = 9216
-    qosClass.pause_pfc_cos = 0
+    qosClass.pause_pfc_cos = 2
+    qosClass = switch_ctx.qos.qos_classes.add()
+    qosClass.name = "c-8q-nq1"
+    qosClass.mtu = 9216
+    qosClass.pause_pfc_cos = 1
+
+    #Create the qos classification policy
+    dscpPolicy = switch_ctx.dscp
+    dscpPolicy.name = "pmap-iota"
+    dscpClass = dscpPolicy.dscp_classes.add()
+    dscpClass.name = "cmap-iota-3"
+    dscpClass.cos = 3
+    dscpClass.dscp = "24-31"
+    dscpClass = dscpPolicy.dscp_classes.add()
+    dscpClass.name = "cmap-iota-2"
+    dscpClass.cos = 2
+    dscpClass.dscp = "16-23"
+    dscpClass = dscpPolicy.dscp_classes.add()
+    dscpClass.name = "cmap-iota-1"
+    dscpClass.cos = 1
+    dscpClass.dscp = "8-15"
+    dscpClass = dscpPolicy.dscp_classes.add()
+    dscpClass.name = "cmap-iota-default"
+    dscpClass.cos = 0
+    dscpClass.dscp = "0-7"
+
 
 def updateMultiNicInfo():
     try:
@@ -298,6 +315,9 @@ class _Testbed:
                     if resp != types.status.SUCCESS:
                         Logger.info("Vlan programming failed, ignoring")
                         #assert(0)
+                    resp = self.SetupQoS()
+                    if resp != types.status.SUCCESS:
+                        Logger.info("QoS Config failed, ignoring")
                 else:
                     Logger.info ("Skipped switch setup")
         return msg
@@ -691,6 +711,30 @@ class _Testbed:
             return types.status.FAILURE
         return types.status.SUCCESS
 
+    def SetupQoS(self):
+        #First Unset the Switch
+        setMsg = topo_pb2.SwitchMsg()
+        setMsg.op = topo_pb2.CREATE_QOS_CONFIG
+        switch_ips = {}
+        for instance in self.__tbspec.Instances:
+            if instance.Type == "bm":
+                for nw in instance.DataNetworks:
+                    switch_ctx = switch_ips.get(nw.SwitchIP, None)
+                    if not switch_ctx:
+                        switch_ctx = setMsg.data_switches.add()
+                        switch_ips[nw.SwitchIP] = switch_ctx
+                    switch_ctx.username = nw.SwitchUsername
+                    switch_ctx.password = nw.SwitchPassword
+                    switch_ctx.ip = nw.SwitchIP
+                    switch_ctx.ports.append(nw.Name)
+                    setUpSwitchQos(switch_ctx)
+
+        resp = api.DoSwitchOperation(setMsg)
+        if not api.IsApiResponseOk(resp):
+            return types.status.FAILURE
+        setMsg = topo_pb2.SwitchMsg()
+        return types.status.SUCCESS
+
     def SetupTestBedNetwork(self):
         #First Unset the Switch
         setMsg = topo_pb2.SwitchMsg()
@@ -707,6 +751,7 @@ class _Testbed:
                     switch_ctx.password = nw.SwitchPassword
                     switch_ctx.ip = nw.SwitchIP
                     switch_ctx.ports.append(nw.Name)
+                    setUpSwitchQos(switch_ctx)
       
         vlans = self.GetVlanRange()
         for ip, switch in switch_ips.items():
@@ -717,6 +762,7 @@ class _Testbed:
         resp = api.DoSwitchOperation(setMsg)
         if not api.IsApiResponseOk(resp):
             return types.status.FAILURE
+        setMsg = topo_pb2.SwitchMsg()
         return types.status.SUCCESS
 
     def SetUpTestBedInHostToHostNetworkMode(self):

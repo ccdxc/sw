@@ -24,6 +24,7 @@ var (
 	configVlanCfgRegex = regexp.MustCompile(`\(config-vlan-config\)\# `)
 	configPmapQos      = regexp.MustCompile(`\(config-pmap-nqos\)\# `)
 	configClassQos     = regexp.MustCompile(`\(config-pmap-nqos-c\)\# `)
+	configDscpCmap     = regexp.MustCompile(`\(config-cmap-qos\)\# `)
 	configDscpQos      = regexp.MustCompile(`\(config-pmap-qos\)\# `)
 	configDscpClass    = regexp.MustCompile(`\(config-pmap-c-qos\)\# `)
 	configQueueQos     = regexp.MustCompile(`\(config-pmap-que\)\# `)
@@ -247,19 +248,6 @@ func (sw *nexus3k) DoDscpConfig(dscpCfg *DscpConfig) error {
 		return err
 	}
 
-	nwQos := fmt.Sprintf("class-map type network-qos %v\n", dscpCfg.Name)
-	if err = exp.Send(nwQos); err != nil {
-		return err
-	}
-	_, _, err = exp.Expect(configDscpQos, timeout)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		exp.Send("exit\n")
-		time.Sleep(exitTimeout)
-	}()
-
 	if len(dscpCfg.Classes) != 0 {
 		for _, dscpQosClass := range dscpCfg.Classes {
 			cmd := fmt.Sprintf("class-map type qos match-any %v\n", dscpQosClass.Name)
@@ -267,7 +255,7 @@ func (sw *nexus3k) DoDscpConfig(dscpCfg *DscpConfig) error {
 			if err = exp.Send(cmd); err != nil {
 				return err
 			}
-			_, _, err = exp.Expect(configDscpClass, timeout)
+			_, _, err = exp.Expect(configDscpCmap, timeout)
 			if err != nil {
 				return err
 			}
@@ -287,22 +275,34 @@ func (sw *nexus3k) DoDscpConfig(dscpCfg *DscpConfig) error {
 		}
 	}
 
-	if err = exp.Send("system qos\n"); err != nil {
+	nwQos := fmt.Sprintf("policy-map type qos %v\n", dscpCfg.Name)
+	if err = exp.Send(nwQos); err != nil {
 		return err
 	}
-	_, _, err = exp.Expect(configSystemQos, timeout)
+	_, _, err = exp.Expect(configDscpQos, timeout)
 	if err != nil {
 		return err
 	}
+	if len(dscpCfg.Classes) != 0 {
+		for _, dscpQosClass := range dscpCfg.Classes {
+			cmd := fmt.Sprintf("class %v\n", dscpQosClass.Name)
 
-	systemQosCmd := fmt.Sprintf("service-policy type network-qos %v\n", dscpCfg.Name)
+			if err = exp.Send(cmd); err != nil {
+				return err
+			}
+			_, _, err = exp.Expect(configDscpClass, timeout)
+			if err != nil {
+				return err
+			}
 
-	if err = exp.Send(systemQosCmd); err != nil {
-		return err
-	}
-	_, _, err = exp.Expect(configSystemQos, timeout)
-	if err != nil {
-		return err
+			cmd = fmt.Sprintf("set qos-group %v\n", dscpQosClass.Cos)
+			if err = exp.Send(cmd); err != nil {
+				return err
+			}
+
+			exp.Send("exit\n") //exit configDscpClass
+			time.Sleep(exitTimeout)
+		}
 	}
 
 	exp.Send("exit\n") // exit system qos
@@ -869,6 +869,7 @@ func (sw *nexus3k) SetPortQos(port string, enable bool, params string) error {
 	} else {
 		cmds = []string{fmt.Sprintf("no service-policy type qos input %s", params)}
 	}
+	log.Println(cmds)
 	return sw.runConfigIFCommands(port, cmds)
 }
 

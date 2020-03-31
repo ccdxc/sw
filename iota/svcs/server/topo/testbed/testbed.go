@@ -720,7 +720,7 @@ func DoSwitchOperation(ctx context.Context, req *iota.SwitchMsg) (err error) {
 				return errors.Wrap(err, "Port queuing operation failed")
 			}
 		case iota.SwitchOp_PORT_QOS_CONFIG:
-			if err := portQosOp(n3k, ds.GetPorts(), req.GetPortQos().GetEnable(), req.GetPortQueuing().GetParams()); err != nil {
+			if err := portQosOp(n3k, ds.GetPorts(), req.GetPortQos().GetEnable(), req.GetPortQos().GetParams()); err != nil {
 				return errors.Wrap(err, "Port qos operation failed")
 			}
 		case iota.SwitchOp_PORT_PAUSE_CONFIG:
@@ -730,6 +730,15 @@ func DoSwitchOperation(ctx context.Context, req *iota.SwitchMsg) (err error) {
 		case iota.SwitchOp_PORT_PFC_CONFIG:
 			if err := portPfcOp(n3k, ds.GetPorts(), req.GetPortPfc().GetEnable()); err != nil {
 				return errors.Wrap(err, "Port priority flow control operation failed")
+			}
+		case iota.SwitchOp_CREATE_QOS_CONFIG:
+			if err := setSwitchQosConfig(n3k, ds.GetQos()); err != nil {
+				log.Errorf("TOPO SVC | InitTestBed | Set Switch QoS config failed to set netword-qos policy: %s", err.Error())
+				return errors.Wrap(err, "Configuring QOS on switch failed")
+			}
+			if err := setSwitchDscpConfig(n3k, ds.GetDscp()); err != nil {
+				log.Errorf("TOPO SVC | InitTestBed | Set Switch QoS config failed to create classification policy: %s", err.Error())
+				return errors.Wrap(err, "Configuring DSCP on switch failed")
 			}
 
 		}

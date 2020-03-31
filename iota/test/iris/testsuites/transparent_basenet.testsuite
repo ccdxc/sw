@@ -63,6 +63,7 @@ testbundles:
         - classic/ethtool.testbundle
         - networking/connectivity.testbundle
         - classic/rdma.testbundle
+        - classic/qos.testbundle
         - linktest/linktest.testbundle
         - filters/filters.testbundle
         - mtu/mtu.testbundle
@@ -102,6 +103,7 @@ testbundles:
         #- classic/rdma_stress.testbundle
         #- classic/rdma_longevity.testbundle
         #- classic/rdma_reg_dcqcn.testbundle
+        - classic/qos_reg.testbundle
         - tso/tso_regr.testbundle
         - rss/rss.testbundle
         - classic/driver-features.testbundle

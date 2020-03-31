@@ -893,6 +893,7 @@ enum SwitchOp {
     PORT_PFC_CONFIG     = 7;
     PORT_QOS_CONFIG     = 8;
     PORT_QUEUING_CONFIG = 9;
+    CREATE_QOS_CONFIG   = 10;
 }
 
 message VlanConfig {

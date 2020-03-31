@@ -305,9 +305,7 @@ func (sw *nexus3kRest) SetPortPfc(port string, enable bool) error {
 
 func (sw *nexus3kRest) DoDscpConfig(dscpConfig *DscpConfig) error {
 
-	cmds := []string{
-		"class-map type network-qos " + dscpConfig.Name,
-	}
+    var cmds []string
 	if len(dscpConfig.Classes) != 0 {
 		for _, dscpQosClass := range dscpConfig.Classes {
 			cmds = append(cmds, "class-map type qos match-any "+dscpQosClass.Name)
@@ -317,8 +315,18 @@ func (sw *nexus3kRest) DoDscpConfig(dscpConfig *DscpConfig) error {
 		}
 	}
 
-	cmds = append(cmds, "system qos")
-	cmds = append(cmds, "service-policy type network-qos "+dscpConfig.Name)
+	cmds = append(cmds, "policy-map type qos " + dscpConfig.Name)
+
+	if len(dscpConfig.Classes) != 0 {
+		for _, dscpQosClass := range dscpConfig.Classes {
+			cmds = append(cmds, "class "+dscpQosClass.Name)
+			cmds = append(cmds, fmt.Sprintf("set qos-group %v", dscpQosClass.Cos))
+			cmds = append(cmds, "exit")
+		}
+	}
+
+	/*cmds = append(cmds, "system qos")
+	cmds = append(cmds, "service-policy type network-qos "+dscpConfig.Name)*/
 	return sw.runConfigCommands(cmds)
 }
 

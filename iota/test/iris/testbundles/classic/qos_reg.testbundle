@@ -1,0 +1,140 @@
+meta:
+    name    : qos_reg
+    os      : [ freebsd ]
+    nics    : [ pensando, mellanox ]
+    targetcount : 10
+
+testcases:
+    #=======================================
+    # Init
+    #=======================================
+    -   name    : Build_Rdma
+        testcase: testcases.rdma.build_rdma
+        args    :
+            type: remote_only
+
+    -   name    : Insmod_Rdma
+        testcase: testcases.rdma.insmod_rdma
+        args    :
+            type: remote_only
+
+    -   name    : Show_Gid
+        testcase: testcases.rdma.show_gid
+        args    :
+            type: remote_only
+
+    -   name    : Intf_Mtu
+        testcase: testcases.rdma.intf_mtu
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Config Tests
+    #=======================================
+    -   name    : Qos_Fc_Config
+        testcase: testcases.qos.qos_fc_config
+        iterators :
+            type      : nested
+            fc_type   : [2]
+        args    :
+            type: remote_only
+
+    -   name    : Qos_Pfc_Config_TC1
+        testcase: testcases.qos.qos_pfc_config
+        iterators :
+            type      : nested
+            tclass    : [1]
+            enable    : [1]
+            #wt       : [50]
+            pcp       : [1]
+            pfc_cos   : [1]
+            no_drop   : [1]
+        args    :
+            type: remote_only
+
+    -   name    : Qos_Pfc_Config_TC3
+        testcase: testcases.qos.qos_pfc_config
+        iterators :
+            type      : nested
+            tclass    : [2]
+            enable    : [1]
+            #wt       : [50]
+            pcp       : [3]
+            pfc_cos   : [3]
+            no_drop   : [0]
+        args    :
+            type: remote_only
+
+    -   name    : Qos_Fc_Config_To_Link_Level
+        testcase: testcases.qos.qos_fc_config
+        iterators :
+            type      : nested
+            fc_type   : [1]
+        args    :
+            type: remote_only
+
+    -   name    : Qos_Pfc_Config_TC2
+        testcase: testcases.qos.qos_pfc_config
+        iterators :
+            type      : nested
+            tclass    : [2]
+            enable    : [1]
+            #wt       : [50]
+            pcp       : [2]
+            pfc_cos   : [2]
+            no_drop   : [1]
+        args    :
+            type: remote_only
+
+    -   name    : Qos_Traffic_Test_Link_Level_TC1_TC3
+        testcase: testcases.qos.qos_traffic_test
+        iterators :
+            type        : nested
+        args    :
+            type: remote_only
+            rdma_pcps  : [1]
+            iperf_pcps : [3]
+
+    -   name    : Qos_Fc_Config_to_Pfc
+        testcase: testcases.qos.qos_fc_config
+        iterators :
+            type      : nested
+            fc_type   : [2]
+        args    :
+            type: remote_only
+
+    -   name    : Qos_Traffic_Test_Pfc_TC1_TC3
+        testcase: testcases.qos.qos_traffic_test
+        iterators :
+            type        : nested
+        args    :
+            type: remote_only
+            rdma_pcps  : [1]
+            iperf_pcps : [3]
+
+    -   name    : Qos_Traffic_Test_Pfc_TC0_TC2
+        testcase: testcases.qos.qos_traffic_test
+        iterators :
+            type      : nested
+        args    :
+            type: remote_only
+            rdma_pcps : [0, 2]
+
+    #=======================================
+    # Teardown
+    #=======================================
+    -   name    : Qos_Teardown
+        testcase: testcases.qos.qos_teardown
+        iterators :
+            type      : nested
+            tclass    : [1]
+            fc_config : [1]
+            fc_type   : [1]
+        args    :
+            type: remote_only
+
+    -   name    : Rmmod_Rdma
+        testcase: testcases.rdma.rmmod_rdma
+        args    :
+            type: remote_only
+

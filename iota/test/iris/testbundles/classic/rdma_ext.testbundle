@@ -28,6 +28,14 @@ testcases:
         args    :
             type: remote_only
 
+    -   name    : QoS_Switch_Config
+        testcase: testcases.qos.qos_switch_config
+        args    :
+            type: remote_only
+            intf_qos: False
+            pause_enable: True
+            pause_type: 0
+
     #=======================================
     # Ping Pong
     #=======================================
@@ -596,6 +604,14 @@ testcases:
     #=======================================
     # Teardown
     #=======================================
+    -   name    : QoS_Switch_Unconfig
+        testcase: testcases.qos.qos_switch_config
+        args    :
+            type: remote_only
+            intf_qos: False
+            pause_enable: False
+            pause_type: 0
+
     -   name    : Rmmod_Rdma
         testcase: testcases.rdma.rmmod_rdma
         args    :
