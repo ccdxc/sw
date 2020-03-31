@@ -69,7 +69,7 @@ def updateMultiNicInfo():
                 store.SetPrimaryIntNicMgmtIp(ip)
     except:
         Logger.debug('failed to determine internal mnic ip. error was: {0}'.format(traceback.format_exc()))
-        Logger.warn('setting nic int mgmt ip to default of 169.254.0.1')
+        Logger.info('setting nic int mgmt ip to default of 169.254.0.1')
         store.SetPrimaryIntNicMgmtIp('169.254.0.1')
 
 class _Testbed:
@@ -87,7 +87,19 @@ class _Testbed:
         self.__fw_upgrade_done = False
         self.__read_testbed_json()
         self.__derive_testbed_attributes()
+        self.pingHosts()
         return
+
+    def pingHosts(self):
+        for instance in self.__tbspec.Instances:
+            ip = getattr(instance, "NodeMgmtIP", None)
+            if ip:
+                try:
+                    Logger.info("pinging host {0}".format(ip))
+                    subprocess.check_output(["ping","-c","3","-i","0.5",ip],stderr=subprocess.STDOUT)
+                except subprocess.CalledProcessError as e:
+                    Logger.warn("failed to ping host {0}. output was: {1}".format(ip,e.output))
+                    #raise exception to offline testbed
 
     def GetTestbedType(self):
         return self.__type
@@ -314,6 +326,40 @@ class _Testbed:
         if resource is None: return "pensando-sim"
         return getattr(resource, "NICType", "pensando-sim")
 
+    def __verifyImagePath(self):
+        data = json.load(open(self.image_manifest_file,'r'))
+        if "Drivers" not in data:
+            Logger.error("failed to find key Drivers in {0}".format(self.image_manifest_file))
+        else:
+            for drv in data["Drivers"]:
+                if "drivers_pkg" not in drv:
+                    Logger.error("failed to find drivers_pkg key in Drivers {0}".format(drv))
+                else:
+                    if not os.path.exists(drv["drivers_pkg"]):
+                        Logger.error("###############################################")
+                        Logger.error("###############################################")
+                        Logger.error("###############################################")
+                        Logger.error("failed to find driver {0}".format(drv["drivers_pkg"]))
+                        Logger.error("###############################################")
+                        Logger.error("###############################################")
+                        Logger.error("###############################################")
+
+        if "Firmwares" not in data:
+            Logger.error("failed to find key Firmwars in {0}".format(self.image_manifest_file))
+        else:
+            for fw in data["Firmwares"]:
+                if "image" not in fw:
+                    Logger.error("failed to find image key in Firmware {0}".format(fw))
+                else:
+                    if not os.path.exists(fw["image"]):
+                        Logger.error("###############################################")
+                        Logger.error("###############################################")
+                        Logger.error("###############################################")
+                        Logger.error("failed to find firmware {0}".format(fw["image"]))
+                        Logger.error("###############################################")
+                        Logger.error("###############################################")
+                        Logger.error("###############################################")
+
     def __recover_testbed(self, manifest_file, **kwargs):
         if GlobalOptions.dryrun or GlobalOptions.skip_setup:
             return
@@ -323,6 +369,8 @@ class _Testbed:
         naples_host_only = kwargs.get('naples_host_only', False) 
         firmware_reimage_only = kwargs.get('firmware_reimage_only', False)
         driver_reimage_only = kwargs.get('driver_reimage_only', False)
+
+        self.__verifyImagePath()
 
         for instance in self.__tbspec.Instances:
             cmd = ["timeout", "2400"]

@@ -62,10 +62,12 @@ def Main():
 
     testsuites = []
     result = types.status.SUCCESS
+    skipped = 0
     for ts_spec in ts_specs:
         ts = testsuite.TestSuite(ts_spec)
         testsuites.append(ts)
         if ts.IsSkipped():
+            skipped += 1
             continue
         try:
             ret = ts.Main()
@@ -82,6 +84,7 @@ def Main():
                 break
             if result == types.status.OFFLINE_TESTBED:
                 break
+
     for ts in testsuites:
         ts.PrintReport()
 
@@ -99,5 +102,10 @@ def Main():
 
     if GlobalOptions.coverage_file and GlobalOptions.coverage_dir:
        api.GetCoverageFiles(GlobalOptions.coverage_file, GlobalOptions.coverage_dir)
-
+    if skipped == len(ts_specs):
+        #result = types.status.FAILURE
+        #print(40*"#")
+        Logger.warn("ALL TESTS MARKED AS SKIPPED. NO TESTS RUN. SEE LOG FOR DETAILS.")
+        #print(40*"#")
     return result
+
