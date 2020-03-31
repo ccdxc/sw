@@ -131,11 +131,6 @@ security_policy_impl::program_security_policy_(pds_policy_spec_t *spec) {
 }
 
 sdk_ret_t
-security_policy_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    return program_security_policy_(&obj_ctxt->api_params->policy_spec);
-}
-
-sdk_ret_t
 security_policy_impl::update_policy_spec_(pds_policy_spec_t *spec,
                                           api_obj_ctxt_t *obj_ctxt) {
     uint32_t i;
@@ -188,24 +183,23 @@ security_policy_impl::update_policy_spec_(pds_policy_spec_t *spec,
 }
 
 sdk_ret_t
-security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                                api_obj_ctxt_t *obj_ctxt) {
+security_policy_impl::compute_updated_spec_(policy *new_policy,
+                                            policy *old_policy,
+                                            api_obj_ctxt_t *obj_ctxt) {
+    sdk_ret_t ret;
     uint32_t num_rules;
     pds_policy_spec_t *spec;
     rule_info_t *new_rule_info;
-    sdk_ret_t ret = SDK_RET_OK;
-    policy *new_policy = (policy *)curr_obj;
-    policy *old_policy = (policy *)orig_obj;
-
-    PDS_TRACE_DEBUG("Updating policy %s", new_policy->key2str().c_str());
 
     if (obj_ctxt->clist.size() == 0) {
         SDK_ASSERT((obj_ctxt->upd_bmap & (PDS_POLICY_UPD_RULE_ADD |
                                           PDS_POLICY_UPD_RULE_DEL |
                                           PDS_POLICY_UPD_RULE_UPD)) == 0);
-        PDS_TRACE_DEBUG("Processing policy %s update with no individual rule "
-                        "updates in this batch", new_policy->key2str().c_str());
-        return this->program_hw(curr_obj, obj_ctxt);
+        PDS_TRACE_DEBUG("Processing policy %s create/update with no individual "
+                        "rule updates in this batch",
+                        new_policy->key2str().c_str());
+        // in this case, spec can be used as-is from the object context
+        return SDK_RET_OK;
     }
 
     // we have few cases to handle here:
@@ -216,9 +210,10 @@ security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     //    add/del/updates in this batch
     // in both cases, we need to form new spec
     spec = &obj_ctxt->api_params->policy_spec;
-    if (obj_ctxt->upd_bmap & ~(PDS_POLICY_UPD_RULE_ADD |
-                               PDS_POLICY_UPD_RULE_DEL |
-                               PDS_POLICY_UPD_RULE_UPD)) {
+    if ((obj_ctxt->api_op == API_OP_CREATE) ||
+        (obj_ctxt->upd_bmap & ~(PDS_POLICY_UPD_RULE_ADD |
+                                PDS_POLICY_UPD_RULE_DEL |
+                                PDS_POLICY_UPD_RULE_UPD))) {
         // case 1 : both container and contained objects are being modified
         //          (ADD/DEL/UPD), in this we can fully ignore the set of rules
         //          that are persisted in kvstore
@@ -287,13 +282,6 @@ security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     PDS_TRACE_DEBUG("Policy %s rule count changed from %u to %u",
                     spec->key.str(), old_policy->num_rules(),
                     spec->rule_info->num_rules);
-    // and program it in the pipeline
-    ret = program_security_policy_(spec);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program policy %s update, err %u",
-                      spec->key.str(), ret);
-        goto end;
-    }
     return SDK_RET_OK;
 
 end:
@@ -301,6 +289,31 @@ end:
     if (spec->rule_info) {
         SDK_FREE(PDS_MEM_ALLOC_ID_POLICY, spec->rule_info);
         spec->rule_info = NULL;
+    }
+    return ret;
+}
+
+sdk_ret_t
+security_policy_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+    return program_security_policy_(&obj_ctxt->api_params->policy_spec);
+}
+
+sdk_ret_t
+security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
+                                api_obj_ctxt_t *obj_ctxt) {
+    sdk_ret_t ret;
+
+    // update the spec, if needed
+    ret = compute_updated_spec_((policy *)curr_obj, (policy *)orig_obj,
+                                obj_ctxt);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    // and program it in the pipeline
+    ret = program_security_policy_(&obj_ctxt->api_params->policy_spec);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program policy %s update, err %u",
+                      obj_ctxt->api_params->policy_spec.key.str(), ret);
     }
     return ret;
 }

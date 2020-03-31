@@ -169,14 +169,30 @@ policy::init_config_(policy *policy) {
 
 sdk_ret_t
 policy::program_create(api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Programming security policy %s, af %u",
-                    key2str().c_str(), af_);
-    return impl_->program_hw(this, obj_ctxt);
+    sdk_ret_t ret;
+
+    PDS_TRACE_DEBUG("Programming security policy %s", key_.str());
+    ret = impl_->program_hw(this, obj_ctxt);
+    // for container objects, element count can change during update processing
+    // as individual rule add/del/upd can happen in the same batch as policy
+    // create, so we need to reflect that in the object
+    if (ret == SDK_RET_OK) {
+        num_rules_ =
+            obj_ctxt->api_params->policy_spec.rule_info->num_rules;
+    }
+    return ret;
 }
 
 sdk_ret_t
 policy::compute_update(api_obj_ctxt_t *obj_ctxt) {
-    // we have to recompute the policy table & program in the datapath
+    pds_policy_spec_t *spec = &obj_ctxt->api_params->policy_spec;
+
+    // we can change individual rules in the policy but not the address family
+    if (af_ != spec->rule_info->af) {
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"address family\" "
+                      "on policy %s", key_.str());
+        return SDK_RET_INVALID_ARG;
+    }
     return SDK_RET_OK;
 }
 
@@ -324,9 +340,11 @@ sdk_ret_t
 policy::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
 
+    PDS_TRACE_DEBUG("Updating security policy %s", key_.str());
     ret = impl_->update_hw(orig_obj, this, obj_ctxt);
     // for container objects, element count can change during update processing
-    // so we need to reflect that in the object
+    // as individual rule add/del/upd can happen in the same batch as policy
+    // update, so we need to reflect that in the object
     if (ret == SDK_RET_OK) {
         num_rules_ =
             obj_ctxt->api_params->policy_spec.rule_info->num_rules;
@@ -355,6 +373,7 @@ policy::read(pds_policy_info_t *info) {
     return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
                           (impl::obj_info_t *)info);
 }
+
 sdk_ret_t
 policy::add_to_db(void) {
     return policy_db()->insert(this);

@@ -168,8 +168,8 @@ route_table_impl::compute_updated_spec_(route_table *new_rtable,
         SDK_ASSERT((obj_ctxt->upd_bmap & (PDS_ROUTE_TABLE_UPD_ROUTE_ADD |
                                           PDS_ROUTE_TABLE_UPD_ROUTE_DEL |
                                           PDS_ROUTE_TABLE_UPD_ROUTE_UPD)) == 0);
-        PDS_TRACE_DEBUG("Processing route table %s update with no individual "
-                        "route updates in this batch",
+        PDS_TRACE_DEBUG("Processing route table %s create/update with no "
+                        "individual route updates in this batch",
                         new_rtable->key2str().c_str());
         // in this case, spec can be used as-is from the object context
         return SDK_RET_OK;
@@ -255,6 +255,7 @@ route_table_impl::compute_updated_spec_(route_table *new_rtable,
             goto error;
         }
     }
+
     // compute the udpated spec now
     ret = update_route_table_spec_(spec, obj_ctxt);
     if (ret != SDK_RET_OK) {
@@ -288,8 +289,11 @@ route_table_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
     if ((obj_ctxt->api_op == API_OP_UPDATE) || obj_ctxt->clist.size()) {
         // if this is CREATE batched with individual route add/del/update
         // operations or update of any kind, we may have to update the spec
-        compute_updated_spec_((route_table *)api_obj,
-                              (route_table *)orig_obj, obj_ctxt);
+        ret = compute_updated_spec_((route_table *)api_obj,
+                                    (route_table *)orig_obj, obj_ctxt);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
 
     spec = &obj_ctxt->api_params->route_table_spec;

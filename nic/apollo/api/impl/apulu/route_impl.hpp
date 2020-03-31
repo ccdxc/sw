@@ -14,8 +14,8 @@
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/api/route.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
+#include "nic/apollo/api/route.hpp"
 
 namespace api {
 namespace impl {

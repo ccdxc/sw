@@ -15,6 +15,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/api/policy.hpp"
 
 namespace api {
 namespace impl {
@@ -127,14 +128,24 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t program_security_policy_(pds_policy_spec_t *spec);
 
-    /// \brief helper routine to update the policy spec using the incoming
-    ///        policy config and/or individual rule add/del/upd configurations
-    ///        along with persisted policy database
+    /// \brief update the given spec based on the contained/child nodes
+    ///        in the object context
     /// \param[in] spec    policy configuration
     /// \param[in] obj_ctxt transient state associated with this object
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t update_policy_spec_(pds_policy_spec_t *spec,
                                   api_obj_ctxt_t *obj_ctxt);
+
+    /// \brief helper routine to update the policy spec using the incoming
+    ///        policy config and/or individual route add/del/upd
+    ///        configurations along with persisted policy database
+    /// \param[in] new_rtable   cloned policy instance
+    /// \param[in] orig_rtable  original policy instance
+    /// \param[in] obj_ctxt transient state associated with this object
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t compute_updated_spec_(policy *new_policy,
+                                    policy *orig_policy,
+                                    api_obj_ctxt_t *obj_ctxt);
 
     /// \brief      fill the policy status
     /// \param[out] status status

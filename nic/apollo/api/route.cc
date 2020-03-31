@@ -182,7 +182,7 @@ route_table::compute_update(api_obj_ctxt_t *obj_ctxt) {
     // routes in the route table but not the address family
     if (af_ != spec->route_info->af) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"address family\" "
-                      "on route table %s", key2str().c_str());
+                      "on route table %s", key_.str());
         return SDK_RET_INVALID_ARG;
     }
     // in all other cases we have to recompute the route table and program in
@@ -245,11 +245,11 @@ sdk_ret_t
 route_table::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
 
-    PDS_TRACE_DEBUG("Updating route table %s", key2str().c_str());
+    PDS_TRACE_DEBUG("Updating route table %s", key_.str());
     ret = impl_->update_hw(orig_obj, this, obj_ctxt);
     // for container objects, element count can change during update processing
     // as individual route add/del/upd can happen in the same batch as route
-    // table create, so we need to reflect that in the object
+    // table update, so we need to reflect that in the object
     if (ret == SDK_RET_OK) {
         num_routes_ =
             obj_ctxt->api_params->route_table_spec.route_info->num_routes;
