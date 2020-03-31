@@ -58,10 +58,11 @@ class InterfaceObject():
             spec.L3IfSpec.VpcId = utils.PdsUuid.GetUUIDfromId(self.ifobj.vpcid)
             spec.L3IfSpec.Prefix.Addr.Af = 1
             spec.L3IfSpec.Prefix.Len = int(self.ifobj.prefix._prefixlen)
-            spec.L3IfSpec.Prefix.Addr.V4Addr = socket.htonl(int(self.ifobj.prefix.ip))
+            spec.L3IfSpec.Prefix.Addr.V4Addr = int(self.ifobj.prefix.ip)
             spec.L3IfSpec.PortId = self.ifobj.portuuid.GetUuid()
             spec.L3IfSpec.Encap.type = self.ifobj.encap
-            spec.L3IfSpec.MACAddress = utils.getmac2num(self.ifobj.macaddr,reorder=False)
+            if self.ifobj.macaddr:
+                spec.L3IfSpec.MACAddress = utils.getmac2num(self.ifobj.macaddr,reorder=False)
         elif self.iftype == interface_pb2.IF_TYPE_CONTROL:
             spec.ControlIfSpec.Prefix.Addr.Af = 1
             spec.ControlIfSpec.Prefix.Len = int(self.ifobj.prefix._prefixlen)
@@ -73,5 +74,5 @@ class InterfaceObject():
         elif self.iftype == interface_pb2.IF_TYPE_LOOPBACK:
             spec.LoopbackIfSpec.Prefix.Len = int(self.ifobj.prefix._prefixlen)
             spec.LoopbackIfSpec.Prefix.Addr.Af = types_pb2.IP_AF_INET
-            spec.LoopbackIfSpec.Prefix.Addr.V4Addr = socket.htonl(int(self.ifobj.prefix.ip))
+            spec.LoopbackIfSpec.Prefix.Addr.V4Addr = int(self.ifobj.prefix.ip)
         return grpcmsg

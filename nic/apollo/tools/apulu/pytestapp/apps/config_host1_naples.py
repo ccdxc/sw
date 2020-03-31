@@ -50,8 +50,6 @@ node_uuid=node.NodeObject().GetNodeMac()
 
 # Device object inputs
 local_tep_ip='13.13.13.13'
-gateway_ip='1.0.0.1'
-local_tep_mac='00:00:aa:aa:aa:a1'
 
 # VPC object inputs
 vpc1_id=1
@@ -60,17 +58,13 @@ vpc2_id=100
 vpc2_vxlan_encap=1002
 
 # L3-interface (underlay) objects
-loopback_prefix='13.13.13.13/32'
+loopback_prefix=local_tep_ip + '/32'
 intf1_prefix='13.1.0.1/24'
 intf2_prefix='13.2.0.1/24'
-intf1_mac='00:ae:cd:00:4f:de'
-intf2_mac='00:ae:cd:00:4f:dd'
-intf1_underlay_mac='00:ae:cd:00:14:ce'
-intf2_underlay_mac='00:ae:cd:00:14:cd'
 
 # BGP config
 local_asn = 100
-router_id = ipaddress.IPv4Address('13.13.13.13')
+router_id = ipaddress.IPv4Address(local_tep_ip)
 
 local_addr1 = ipaddress.IPv4Address('13.1.0.1')
 peer_addr1 = ipaddress.IPv4Address('13.1.0.2')
@@ -88,11 +82,9 @@ peer_addr2 = ipaddress.IPv4Address('13.2.0.2')
 
 # Tunnel object inputs (Underlay)
 tunnel_id=1
-tunnel_local_ip='13.13.13.13'
+tunnel_local_ip=local_tep_ip
 tunnel_remote_ip='14.14.14.14'
-tunnel_mac='00:00:aa:aa:aa:a1'
 tunnel_vnid=0
-tunnel_nhid=2
 
 # VCN objects
 vcn_vnic_id = 100
@@ -115,7 +107,7 @@ ipv4_subnet1='2.1.0.0/24'
 # The host_if_idx is an encoding for PF1
 subnet1_host_if_idx='0x80000047'
 subnet1_fabric_encap=202
-subnet1_v4_router_ip='2.1.0.1'
+subnet1_v4_router_ip=ipaddress.IPv4Address('2.1.0.1')
 subnet1_virt_router_mac='00:55:01:00:00:01'
 subnet1_route_prefix1='64.0.0.0/24'
 subnet1_route_table_id=1
@@ -132,11 +124,10 @@ ipv4_subnet2='3.1.0.0/24'
 # The host_if_idx is an encoding for PF1
 subnet2_host_if_idx='0x80000048'
 subnet2_fabric_encap=203
-subnet2_v4_router_ip='3.1.0.1'
+subnet2_v4_router_ip=ipaddress.IPv4Address('3.1.0.1')
 subnet2_virt_router_mac='00:55:02:00:00:01'
 subnet2_route_prefix1='64.0.0.0/24'
 subnet2_route_table_id=2
-subnet2_gw_ip_addr=ipaddress.IPv4Address('3.1.0.1')
 
 # VNIC and mapping (local and remote) table objects 
 subnet2_local_vnic_mac='00:ae:cd:00:08:12'
@@ -157,7 +148,7 @@ batch1=batch.BatchObject()
 
 # Create device object
 # local_tep_ip, gatewayip, local_tep_mac
-device1=device.DeviceObject(ipaddress.IPv4Address(local_tep_ip),ipaddress.IPv4Address(gateway_ip),local_tep_mac)
+device1=device.DeviceObject(ipaddress.IPv4Address(local_tep_ip), None, None)
 
 # Create VPC object 
 # id, v4prefix, type = vpc_pb2.VPC_TYPE_TENANT, encaptype=types_pb2.ENCAP_TYPE_VXLAN, encapvalue
@@ -173,8 +164,8 @@ vcn_vpc=vpc.VpcObject(vcn_vpc_id, type=vpc_pb2.VPC_TYPE_CONTROL, encaptype=types
 
 # Create L3 Interfaces ..
 # id, iftype, ifadminstatus, vpcid, prefix, portid, encap, macaddr
-intf1=interface.InterfaceObject( 1, interface_pb2.IF_TYPE_L3, interface_pb2.IF_STATUS_UP, vpc2_id, intf1_prefix, 1, types_pb2.ENCAP_TYPE_NONE,intf1_mac, node_uuid=node_uuid )
-intf2=interface.InterfaceObject( 2, interface_pb2.IF_TYPE_L3, interface_pb2.IF_STATUS_UP, vpc2_id, intf2_prefix, 2, types_pb2.ENCAP_TYPE_NONE,intf2_mac, node_uuid=node_uuid )
+intf1=interface.InterfaceObject( 1, interface_pb2.IF_TYPE_L3, interface_pb2.IF_STATUS_UP, vpc2_id, intf1_prefix, 1, types_pb2.ENCAP_TYPE_NONE, node_uuid=node_uuid )
+intf2=interface.InterfaceObject( 2, interface_pb2.IF_TYPE_L3, interface_pb2.IF_STATUS_UP, vpc2_id, intf2_prefix, 2, types_pb2.ENCAP_TYPE_NONE, node_uuid=node_uuid )
 lo1=interface.InterfaceObject( 3, interface_pb2.IF_TYPE_LOOPBACK, interface_pb2.IF_STATUS_UP, prefix=loopback_prefix )
 
 # BGP config
@@ -190,18 +181,13 @@ bgp_peer_af2=bgp.BgpPeerAfObject(2, local_addr2, peer_addr2)
 vcn0=interface.InterfaceObject( 100, interface_pb2.IF_TYPE_CONTROL, interface_pb2.IF_STATUS_UP, prefix=vcn_intf_prefix, macaddr=vcn_vnic_mac, gateway=vcn_v4_router_ip )
 
 
-# Create NH objects ..
-#self, id, type, l3intfid, underlaymac, vpcid=None, nhip=None, vlanid=None, macaddr=None
-nh1 = nh.NexthopObject( 1, 'underlay', 1, intf1_underlay_mac, vpc2_id )
-nh2 = nh.NexthopObject( 2, 'underlay', 2, intf2_underlay_mac, vpc2_id )
-
-
 # Create Tunnel Objects ..
 # id, vpcid, localip, remoteip, macaddr, encaptype, vnid, nhid
-tunnel1 = tunnel.TunnelObject( tunnel_id,vpc1_id, tunnel_local_ip, tunnel_remote_ip,tunnel_mac, tunnel_pb2.TUNNEL_TYPE_NONE, types_pb2.ENCAP_TYPE_VXLAN, tunnel_vnid,tunnel_nhid) 
+tunnel1 = tunnel.TunnelObject( tunnel_id,vpc1_id, tunnel_local_ip, tunnel_remote_ip, None, tunnel_pb2.TUNNEL_TYPE_NONE, types_pb2.ENCAP_TYPE_VXLAN, tunnel_vnid) 
 
 # Create DHCP Policy
-dhcp_policy1 = dhcp.DhcpPolicyObject(1, server_ip=subnet1_gw_ip_addr, mtu=9216,  gateway_ip=subnet1_gw_ip_addr)
+dhcp_policy1 = dhcp.DhcpPolicyObject(1, server_ip=subnet1_v4_router_ip, gateway_ip=subnet1_v4_router_ip)
+dhcp_policy2 = dhcp.DhcpPolicyObject(2, server_ip=subnet2_v4_router_ip, gateway_ip=subnet2_v4_router_ip)
 
 # Create NAT Port Block
 nat_pb1 = nat.NatPbObject(1, vpc1_id, nat_prefix, nat_port_lo, nat_port_hi, "udp")
@@ -212,8 +198,8 @@ nat_pb3 = nat.NatPbObject(3, vpc1_id, nat_prefix, nat_port_lo, nat_port_hi, "icm
 # id, vpcid, v4prefix, v6prefix, hostifindex, v4virtualrouterip, v6virtualrouterip, virtualroutermac, v4routetableid, v6routetableid, ingv4securitypolicyid, egrv4securitypolicyid, ingv6securitypolicyid, egrv6securitypolicyid, fabricencap='VXLAN', fabricencapid=1
 subnet1_route1=route.RouteObject(ipaddress.IPv4Network(subnet1_route_prefix1), "tunnel", tunnel_id, "napt")
 subnet1_route_table=route.RouteTableObject(subnet1_route_table_id, types_pb2.IP_AF_INET, [subnet1_route1])
-subnet1 = subnet.SubnetObject( 1, vpc1_id, ipaddress.IPv4Network(ipv4_subnet1), subnet1_host_if_idx, ipaddress.IPv4Address(subnet1_v4_router_ip), subnet1_virt_router_mac, subnet1_route_table_id, 'VXLAN', subnet1_fabric_encap, node_uuid=node_uuid, dhcp_policy_id=1 )
-subnet2 = subnet.SubnetObject( 2, vpc1_id, ipaddress.IPv4Network(ipv4_subnet2), subnet2_host_if_idx, ipaddress.IPv4Address(subnet2_v4_router_ip), subnet2_virt_router_mac, subnet1_route_table_id, 'VXLAN', subnet2_fabric_encap, node_uuid=node_uuid )
+subnet1 = subnet.SubnetObject( 1, vpc1_id, ipaddress.IPv4Network(ipv4_subnet1), subnet1_host_if_idx, subnet1_v4_router_ip, subnet1_virt_router_mac, subnet1_route_table_id, 'VXLAN', subnet1_fabric_encap, node_uuid=node_uuid, dhcp_policy_id=1 )
+subnet2 = subnet.SubnetObject( 2, vpc1_id, ipaddress.IPv4Network(ipv4_subnet2), subnet2_host_if_idx, subnet2_v4_router_ip, subnet2_virt_router_mac, subnet1_route_table_id, 'VXLAN', subnet2_fabric_encap, node_uuid=node_uuid, dhcp_policy_id=2 )
 
 # VCN subnet
 vcn_subnet = subnet.SubnetObject( vcn_subnet_id, vcn_vpc_id, ipaddress.IPv4Network(vcn_subnet_pfx), vcn_host_if_idx, vcn_v4_router_ip, vcn_virt_router_mac, 0, 'VXLAN', vcn_subnet_encap, node_uuid=node_uuid )
@@ -257,9 +243,6 @@ api.client.Create(api.ObjectTypes.BGP_PEER_AF, [bgp_peer_af2.GetGrpcCreateMessag
 
 api.client.Create(api.ObjectTypes.INTERFACE, [vcn0.GetGrpcCreateMessage()])
 
-#api.client.Create(api.ObjectTypes.NH, [nh1.GetGrpcCreateMessage()])
-#api.client.Create(api.ObjectTypes.NH, [nh2.GetGrpcCreateMessage()])
-
 api.client.Create(api.ObjectTypes.TUNNEL, [tunnel1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.ROUTE, [vcn_route_table.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.VPC, [vcn_vpc.GetGrpcCreateMessage()])
@@ -268,6 +251,7 @@ api.client.Create(api.ObjectTypes.NAT, [nat_pb1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.NAT, [nat_pb2.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.NAT, [nat_pb3.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.DHCP_POLICY, [dhcp_policy1.GetGrpcCreateMessage()])
+api.client.Create(api.ObjectTypes.DHCP_POLICY, [dhcp_policy2.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.SUBNET, [vcn_subnet.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.ROUTE, [subnet1_route_table.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.SUBNET, [subnet1.GetGrpcCreateMessage()])

@@ -18,10 +18,12 @@ class DeviceObject():
         grpcmsg = device_pb2.DeviceRequest()
         grpcmsg.Request.IPAddr.Af = types_pb2.IP_AF_INET
         grpcmsg.Request.IPAddr.V4Addr = int(self.ip)
-        grpcmsg.Request.GatewayIP.Af = types_pb2.IP_AF_INET
-        grpcmsg.Request.GatewayIP.V4Addr = int(self.gatewayip)
+        if self.gatewayip:
+            grpcmsg.Request.GatewayIP.Af = types_pb2.IP_AF_INET
+            grpcmsg.Request.GatewayIP.V4Addr = int(self.gatewayip)
         grpcmsg.Request.DevOperMode = self.deviceopermode
-        grpcmsg.Request.MACAddr = utils.getmac2num(self.mac)
+        if self.mac:
+            grpcmsg.Request.MACAddr = utils.getmac2num(self.mac)
         return grpcmsg
 
 

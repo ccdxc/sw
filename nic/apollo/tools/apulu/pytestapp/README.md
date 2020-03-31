@@ -44,25 +44,27 @@ sudo ip netns add B
 sudo ip link set enp20s0 netns A
 sudo ip link set enp21s0 netns B
 
-sudo ip netns exec A ifconfig enp20s0 2.1.0.2/24 mtu 9000 up
+#sudo ip netns exec A ifconfig enp20s0 2.1.0.2/24 mtu 9000 up
 sudo ip netns exec A ifconfig enp20s0 hw ether 00:ae:cd:00:08:11
+sudo ip netns exec A dhclient enp20s0
 sudo ip netns exec A ip route add 64.0.0.0/16 via 2.1.0.1
 sudo ip netns exec A ip route add 3.1.0.0/16 via 2.1.0.1
 
-sudo ip netns exec B ifconfig enp21s0 3.1.0.2/24 mtu 9000 up
+#sudo ip netns exec B ifconfig enp21s0 3.1.0.2/24 mtu 9000 up
 sudo ip netns exec B ifconfig enp21s0 hw ether 00:ae:cd:00:08:12
+sudo ip netns exec B dhclient enp21s0
+sudo ip netns exec B ip route add 64.0.0.0/16 via 3.1.0.1
 sudo ip netns exec B ip route add 2.1.0.0/16 via 3.1.0.1
-sudo ip netns exec B ip route add 3.1.0.0/16 via 3.1.0.1
-
 
 # node 2
 
 sudo insmod /naples/drivers-linux-eth/drivers/eth/ionic/ionic.ko
-sudo ifconfig enp20s0 2.1.0.3/24 mtu 9000 up
+#sudo ifconfig enp20s0 2.1.0.3/24 mtu 9000 up
 sudo ifconfig enp20s0 hw ether 00:ae:cd:00:00:0a
+sudo dhclient enp20s0
 
 sudo ifconfig enp22s0 hw ether 00:ae:cd:00:00:0c
-sudo ifconfig enp22s0 64.0.0.2/24 mtu 9000 up
+#sudo ifconfig enp22s0 64.0.0.2/24 mtu 9000 up
+sudo dhclient enp22s0
 sudo ip route add 3.1.0.0/24 via 2.1.0.1
 sudo ip route add 50.0.0.0/24 via 64.0.0.1
-

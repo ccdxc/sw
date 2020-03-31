@@ -53,9 +53,9 @@ class BgpPeerObject():
         spec = grpcmsg.Request.add()
         spec.Id = self.uuid.GetUuid()
         spec.LocalAddr.Af = types_pb2.IP_AF_INET
-        spec.LocalAddr.V4Addr = socket.htonl(int(self.local_addr))
+        spec.LocalAddr.V4Addr = int(self.local_addr)
         spec.PeerAddr.Af = types_pb2.IP_AF_INET
-        spec.PeerAddr.V4Addr = socket.htonl(int(self.peer_addr))
+        spec.PeerAddr.V4Addr = int(self.peer_addr)
         spec.RemoteASN = self.remote_asn
         spec.SendComm = self.send_comm
         spec.SendExtComm = self.send_ext_comm
@@ -80,9 +80,9 @@ class BgpPeerAfObject():
         spec = grpcmsg.Request.add()
         spec.Id = self.uuid.GetUuid()
         spec.LocalAddr.Af = types_pb2.IP_AF_INET
-        spec.LocalAddr.V4Addr = socket.htonl(int(self.local_addr))
+        spec.LocalAddr.V4Addr = int(self.local_addr)
         spec.PeerAddr.Af = types_pb2.IP_AF_INET
-        spec.PeerAddr.V4Addr = socket.htonl(int(self.peer_addr))
+        spec.PeerAddr.V4Addr = int(self.peer_addr)
         spec.Afi = bgp_pb2.BGP_AFI_IPV4
         spec.Safi = bgp_pb2.BGP_SAFI_UNICAST
         return grpcmsg

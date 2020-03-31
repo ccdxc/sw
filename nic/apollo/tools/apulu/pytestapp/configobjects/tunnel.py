@@ -8,13 +8,16 @@ import utils
 
 class TunnelObject():
 
-    def __init__(self, id, vpcid, localip, remoteip, macaddr, tunneltype, encaptype, vnid, nhid):
+    def __init__(self, id, vpcid, localip, remoteip, macaddr, tunneltype, encaptype, vnid, nhid=None):
         self.id        = id
         self.uuid      = utils.PdsUuid(self.id)
         self.vpcid     = vpcid
         self.localip   = ipaddress.IPv4Address(localip)
         self.remoteip  = ipaddress.IPv4Address(remoteip)
-        self.macaddr   = utils.getmac2num(macaddr,reorder=True)
+        if macaddr:
+            self.macaddr = utils.getmac2num(macaddr,reorder=True)
+        else:
+            self.macaddr = None
         self.tunneltype = tunneltype
         self.encaptype = encaptype
         self.vnid      = vnid
@@ -34,7 +37,9 @@ class TunnelObject():
 
         spec.RemoteIP.Af = types_pb2.IP_AF_INET
         spec.RemoteIP.V4Addr = int(self.remoteip)
-        spec.MACAddress = self.macaddr
-        #spec.NexthopId = utils.PdsUuid.GetUUIDfromId(self.nhid)
+        if self.macaddr:
+            spec.MACAddress = self.macaddr
+        if self.nhid:
+            spec.NexthopId = utils.PdsUuid.GetUUIDfromId(self.nhid)
 
         return grpcmsg
