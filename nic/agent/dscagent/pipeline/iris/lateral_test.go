@@ -8,6 +8,7 @@ import (
 	"net"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -422,7 +423,7 @@ func TestMirrorSessionCreateUnknownCollector(t *testing.T) {
 
 	dat, err = infraAPI.Read("Tunnel", getKey(tunnelObjMeta))
 	Assert(t, err != nil, "Lateral tunnel obj found, when it is not expected to be created. Found: %v", dat)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestNetflowSessionCreateUnknownCollector(t *testing.T) {
@@ -517,7 +518,7 @@ func TestNetflowSessionCreateUnknownCollector(t *testing.T) {
 
 	dat, err = infraAPI.Read("Tunnel", getKey(tunnelObjMeta))
 	Assert(t, err != nil, "Lateral tunnel obj found, when it is not expected to be created. Found: %v", dat)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestNetflowSessionAndMirrorSessionPointingToSameCollector(t *testing.T) {
@@ -663,7 +664,7 @@ func TestNetflowSessionAndMirrorSessionPointingToSameCollector(t *testing.T) {
 
 	dat, err = infraAPI.Read("Tunnel", getKey(tunnelObjMeta))
 	Assert(t, err != nil, "Lateral tunnel obj found, when it is not expected to be created. Found: %v", dat)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestTwoMirrorSessionCreateVeniceKnownCollector(t *testing.T) {
@@ -818,7 +819,7 @@ func TestTwoMirrorSessionCreateVeniceKnownCollector(t *testing.T) {
 	AssertOk(t, err, "Endpoint Delete failed. Err: %v", err)
 	err = HandleL2Segment(infraAPI, l2SegClient, types.Delete, *knownNet, 65, []uint64{120, 121, 122})
 	AssertOk(t, err, "Network Delete failed. Err: %v", err)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestTwoNetflowSessionCreateVeniceKnownCollector(t *testing.T) {
@@ -1008,7 +1009,7 @@ func TestTwoNetflowSessionCreateVeniceKnownCollector(t *testing.T) {
 	AssertOk(t, err, "Endpoint Delete failed. Err: %v", err)
 	err = HandleL2Segment(infraAPI, l2SegClient, types.Delete, *knownNet, 65, []uint64{120, 121, 122})
 	AssertOk(t, err, "Network Delete failed. Err: %v", err)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestTwoMirrorSessionCreatesWithSameUnknownCollectorIP(t *testing.T) {
@@ -1119,7 +1120,7 @@ func TestTwoMirrorSessionCreatesWithSameUnknownCollectorIP(t *testing.T) {
 
 	dat, err = infraAPI.Read("Tunnel", getKey(tunnelObjMeta))
 	Assert(t, err != nil, "Lateral tunnel obj found, when it is not expected to be created. Found: %v", dat)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestTwoNetflowSessionCreatesWithSameUnknownCollector(t *testing.T) {
@@ -1259,7 +1260,7 @@ func TestTwoNetflowSessionCreatesWithSameUnknownCollector(t *testing.T) {
 
 	dat, err = infraAPI.Read("Tunnel", getKey(tunnelObjMeta))
 	Assert(t, err != nil, "Lateral tunnel obj found, when it is not expected to be created. Found: %v", dat)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestTwoNetflowSessionCreatesIdempotency(t *testing.T) {
@@ -1407,7 +1408,7 @@ func TestTwoNetflowSessionCreatesIdempotency(t *testing.T) {
 
 	dat, err = infraAPI.Read("Tunnel", getKey(tunnelObjMeta))
 	Assert(t, err != nil, "Lateral tunnel obj found, when it is not expected to be created. Found: %v", dat)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestTwoMirrorSessionCreatesIdempotency(t *testing.T) {
@@ -1515,7 +1516,7 @@ func TestTwoMirrorSessionCreatesIdempotency(t *testing.T) {
 
 	dat, err = infraAPI.Read("Tunnel", getKey(tunnelObjMeta))
 	Assert(t, err != nil, "Lateral tunnel obj found, when it is not expected to be created. Found: %v", dat)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestCreateDeleteLateralObjUnknownCollectorWithTunnel(t *testing.T) {
@@ -1599,7 +1600,7 @@ func TestCreateDeleteLateralObjUnknownCollectorWithTunnel(t *testing.T) {
 
 	dat, err = infraAPI.Read("Tunnel", getKey(tunnelObjMeta))
 	Assert(t, err != nil, "Lateral tunnel obj found, when it is not expected to be created. Found: %v", dat)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestCreateDeleteLateralObjUnknownCollectorWithoutTunnel(t *testing.T) {
@@ -1691,7 +1692,7 @@ func TestCreateDeleteLateralObjUnknownCollectorWithoutTunnel(t *testing.T) {
 
 	dat, err = infraAPI.Read("Tunnel", getKey(tunnelObjMeta))
 	Assert(t, err != nil, "Lateral tunnel obj found, when it is not expected to be created. Found: %v", dat)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestCreateDeleteLateralObjVeniceKnownCollectorWithTunnel(t *testing.T) {
@@ -1817,7 +1818,7 @@ func TestCreateDeleteLateralObjVeniceKnownCollectorWithTunnel(t *testing.T) {
 	AssertOk(t, err, "Endpoint Delete failed. Err: %v", err)
 	err = HandleL2Segment(infraAPI, l2SegClient, types.Delete, *knownNet, 65, []uint64{120, 121, 122})
 	AssertOk(t, err, "Network Delete failed. Err: %v", err)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestFailedARPResolutionRetry(t *testing.T) {
@@ -1901,7 +1902,7 @@ func TestFailedARPResolutionRetry(t *testing.T) {
 
 	dat, err = infraAPI.Read("Tunnel", getKey(tunnelObjMeta))
 	Assert(t, err != nil, "Lateral tunnel obj found, when it is not expected to be created. Found: %v", dat)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestFailedARPResolution(t *testing.T) {
@@ -1943,7 +1944,7 @@ func TestFailedARPResolution(t *testing.T) {
 	// Call delete objs
 	err = DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, 65, ms.GetKey(), destIPOutSideSubnet, true)
 	AssertOk(t, err, "Deleting lateral objects must succeed.")
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestTwoMirrorSessionCreatesWithSameUnknownCollectorMac(t *testing.T) {
@@ -2068,7 +2069,7 @@ func TestTwoMirrorSessionCreatesWithSameUnknownCollectorMac(t *testing.T) {
 
 	dat, err = infraAPI.Read("Tunnel", getKey(tunnelObjMeta1))
 	Assert(t, err != nil, "Lateral tunnel obj found, when it is not expected to be created. Found: %v", dat)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }
 
 func TestTwoMirrorSessionCreatesWithSameIP(t *testing.T) {
@@ -2172,5 +2173,5 @@ func TestTwoMirrorSessionCreatesWithSameIP(t *testing.T) {
 
 	dat, err = infraAPI.Read("Tunnel", getKey(tunnelObjMeta))
 	Assert(t, err != nil, "Lateral tunnel obj found, when it is not expected to be created. Found: %v", dat)
-	GwCache = map[string]string{}
+	GwCache = sync.Map{}
 }

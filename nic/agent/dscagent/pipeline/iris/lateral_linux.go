@@ -40,7 +40,7 @@ var ArpClient *arp.Client
 var MgmtLink netlink.Link
 
 // GwCache is the global cache for ip to their gateway (if needed)
-var GwCache = map[string]string{}
+var GwCache sync.Map
 
 // CreateLateralNetAgentObjects creates lateral objects for telmetry objects and does refcounting. This is temporary code till HAL subsumes ARP'ing for dest IPs
 func CreateLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, vrfID uint64, owner string, mgmtIP, destIP, gwIP string, tunnelOp bool) error {
@@ -276,7 +276,7 @@ func DeleteLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 	}
 	lateralDB[collectorCompositeKey] = lateralDB[collectorCompositeKey][:counter]
 
-	_, internalEP := GwCache[destIP]
+	_, internalEP := GwCache.Load(destIP)
 	if internalEP && len(lateralDB[destIP]) == 0 {
 		if err := deleteOrUpdateLateralEP(infraAPI, intfClient, epClient, vrfID, owner, destIP); err != nil {
 			log.Errorf("Failed to delete or update lateral endpoint IP: %s. Err: %v", destIP, err)
@@ -377,10 +377,10 @@ func resolveIPAddress(ctx context.Context, destIP, gwIP string) string {
 		}
 		log.Infof("Dest IP %s not in management subnet %v. Using Gateway IP: %v  as destIP for ARPing...", destIP, mgmtSubnet, gwIP)
 		// Update destIP to be GwIP
-		GwCache[destIP] = gwIP
+		GwCache.Store(destIP, gwIP)
 		destIP = gwIP
 	} else {
-		GwCache[destIP] = destIP
+		GwCache.Store(destIP, destIP)
 	}
 
 	dIP := net.ParseIP(destIP)
@@ -494,7 +494,7 @@ func deleteOrUpdateLateralEP(infraAPI types.InfraAPI, intfClient halapi.Interfac
 	lateralDB[collectorCompositeKey] = lateralDB[collectorCompositeKey][:counter]
 
 	log.Infof("Lateral object endpoint DB post refcount decrement: %v", lateralDB)
-	_, internalEP := GwCache[destIP]
+	_, internalEP := GwCache.Load(destIP)
 	if internalEP {
 		// Check for pending dependencies
 		if len(lateralDB[collectorCompositeKey]) == 0 {
