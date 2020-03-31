@@ -178,7 +178,7 @@ class RouteTableObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
         spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
-        spec.EnablePBR = (self.PriorityType != None)
+        spec.PriorityEn = (self.PriorityType != None)
         for route in self.routes.values():
             rtspec = spec.Routes.add()
             rtspec.NatAction.SrcNatAction = route.SNatAction

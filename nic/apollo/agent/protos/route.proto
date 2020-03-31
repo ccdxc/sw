@@ -89,8 +89,8 @@ message RouteTableSpec {
   bytes          Id         = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IP address family
   types.IPAF     Af         = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-  // enable or disable Priority-Based-Routing (PBR) for the route table
-  bool           EnablePBR  = 3 [(gogoproto.moretags) = "meta:immutable,default=false"];
+  // enable or disable priority based routing for the route table
+  bool           PriorityEn = 3 [(gogoproto.moretags) = "meta:immutable,default=false"];
   // routes in this route table
   repeated RouteInfo Routes = 4;
 }

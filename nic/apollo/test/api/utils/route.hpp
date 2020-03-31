@@ -18,7 +18,7 @@ namespace api {
 class route_table_feeder : public feeder {
 public:
     uint8_t af;
-    bool enable_pbr;
+    bool priority_en;
     uint32_t num_routes;
     pds_route_table_spec_t spec;
     std::string base_route_pfx_str;

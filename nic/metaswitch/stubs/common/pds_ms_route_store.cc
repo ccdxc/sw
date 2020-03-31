@@ -34,7 +34,7 @@ void route_table_obj_t::update_store (state_t* state, bool op_delete)
     if (!op_delete) {
         PDS_TRACE_DEBUG ("Add Route Table %s to store", this->key().str());
         state->route_table_store().add_upd(this->key(), this);
-    } else { 
+    } else {
         PDS_TRACE_DEBUG ("Delete Route Table %s from store", this->key().str());
         state->route_table_store().erase(this->key());
     }
@@ -47,7 +47,7 @@ void route_table_obj_t::realloc_() {
     if (routes_ == nullptr) {
         new_buf->num_routes = 0;
         new_buf->af = af_;
-        new_buf->enable_pbr = false;
+        new_buf->priority_en = false;
     } else {
         // Copy existing routes to new buffer
         new_buf->num_routes = routes_->num_routes;

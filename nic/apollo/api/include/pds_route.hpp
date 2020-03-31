@@ -67,10 +67,10 @@ typedef struct pds_route_s {
 } __PACK__ pds_route_t;
 
 typedef struct route_info_s {
-    uint8_t       af;         ///< address family - v4 or v6
-    bool          enable_pbr; ///< enable/disable priority based routing
-    uint32_t      num_routes; ///< number of routes in the list
-    pds_route_t   routes[0];  ///< list or route rules
+    uint8_t       af;          ///< address family - v4 or v6
+    bool          priority_en; ///< enable/disable priority based routing
+    uint32_t      num_routes;  ///< number of routes in the list
+    pds_route_t   routes[0];   ///< list or route rules
 } route_info_t;
 #define ROUTE_INFO_SIZE(count)        \
             (sizeof(route_info_t) + (count) * sizeof(pds_route_t))

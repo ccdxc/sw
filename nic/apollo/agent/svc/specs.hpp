@@ -2964,7 +2964,7 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
         SDK_ASSERT(FALSE);
         return SDK_RET_INVALID_ARG;
     }
-    api_spec->route_info->enable_pbr = proto_spec.enablepbr();
+    api_spec->route_info->priority_en = proto_spec.priorityen();
     api_spec->route_info->num_routes = num_routes;
     for (uint32_t i = 0; i < num_routes; i++) {
         pds_route_proto_to_api_spec_common(&api_spec->route_info->routes[i],
@@ -2993,13 +2993,13 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
     } else {
         SDK_ASSERT(FALSE);
     }
-    proto_spec->set_enablepbr(api_spec->route_info->enable_pbr);
+    proto_spec->set_priorityen(api_spec->route_info->priority_en);
 
     for (uint32_t i = 0; i < api_spec->route_info->num_routes; i++) {
         pds::RouteInfo *route = proto_spec->add_routes();
         ippfx_api_spec_to_proto_spec(route->mutable_prefix(),
                                      &api_spec->route_info->routes[i].prefix);
-        if (api_spec->route_info->enable_pbr) {
+        if (api_spec->route_info->priority_en) {
             route->set_priority(api_spec->route_info->routes[i].prio);
         }
         switch (api_spec->route_info->routes[i].nh_type) {
