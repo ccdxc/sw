@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/pensando/sw/venice/globals"
+
 	protobuf "github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
@@ -48,8 +50,7 @@ func establishConn() bool {
 	}
 
 	global.mc = metric.NewMetricApiClient(global.rpcClient.ClientConn)
-	atomic.CompareAndSwapUint64(&maxFwlogPoints, uint64(defaultNumPoints), uint64(defaultNumFwlogPoints))
-	log.Infof("connected to %+v, set fwlog limit to %v", global.opts.Collector, atomic.LoadUint64(&maxFwlogPoints))
+	log.Infof("connected to %+v, metrics limit %v", global.opts.Collector, maxMetricsPoints)
 	return true
 }
 
@@ -68,10 +69,8 @@ func periodicTransmit() {
 			if err != nil {
 				// Force a reconnection
 				global.mc = nil
-				atomic.CompareAndSwapUint64(&maxFwlogPoints, uint64(defaultNumFwlogPoints), uint64(defaultNumPoints))
-				log.Infof("lost connection, set fwlog limit to %v", atomic.LoadUint64(&maxFwlogPoints))
+				log.Infof("tsdb lost connection to %v", globals.Collector)
 			}
-			log.Infof("+++ send to %v", global.opts.Collector)
 		case <-global.context.Done():
 			// flush any metrics that are not yet pushed out
 			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
@@ -262,7 +261,7 @@ func createNewMetricPointFromKeysFields(obj *iObj, keys map[string]string, field
 
 	// limit number of points stored in TSDB client
 	obj.Lock()
-	if uint64(len(obj.metricPoints)) >= atomic.LoadUint64(&maxFwlogPoints) {
+	if len(obj.metricPoints) >= maxMetricsPoints {
 		obj.Unlock()
 		atomic.AddUint64(&global.ignoredPoints, 1)
 		return

@@ -20,13 +20,11 @@ const (
 	defaultRanges                  = 10
 	defaultSendInterval            = 10 * time.Second
 	defaultConnectionRetryInterval = 100 * time.Millisecond
-	defaultNumPoints               = 1000
-	defaultNumFwlogPoints          = 30000 // when connected to Venice
+	defaultNumPoints               = 150 // save points generated in 15 minutes (max. 5 instance)
 )
 
 var (
 	maxMetricsPoints      = defaultNumPoints
-	maxFwlogPoints        = uint64(defaultNumPoints)
 	minCollectionInterval = 5 * time.Second
 )
 

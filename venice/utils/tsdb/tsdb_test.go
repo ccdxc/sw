@@ -93,10 +93,6 @@ func Setup(startLocalServer bool) error {
 }
 
 func TestFwlogPointLimits(t *testing.T) {
-	AssertEventually(t, func() (bool, interface{}) {
-		return maxFwlogPoints == defaultNumFwlogPoints, fmt.Sprintf("invalid limit for fwlogs, %v", maxFwlogPoints)
-	}, "didn't set fwlog limits", "1s", "10s")
-
 	// stop collector
 	ts.rpcServer.Stop()
 
@@ -113,10 +109,6 @@ func TestFwlogPointLimits(t *testing.T) {
 	}, time.Now())
 	AssertOk(t, err, "unable to create point")
 
-	AssertEventually(t, func() (bool, interface{}) {
-		return maxFwlogPoints == defaultNumPoints, fmt.Sprintf("invalid limit for fwlogs, %v", maxFwlogPoints)
-	}, "didn't reset fwlog limits", "1s", "10s")
-
 	TearDown()
 	Cleanup()
 	Setup(true)
@@ -128,10 +120,6 @@ func TestFwlogPointLimits(t *testing.T) {
 		},
 	}, time.Now())
 	AssertOk(t, err, "unable to create point")
-
-	AssertEventually(t, func() (bool, interface{}) {
-		return maxFwlogPoints == defaultNumFwlogPoints, fmt.Sprintf("invalid limit for fwlogs, %v", maxFwlogPoints)
-	}, "didn't set fwlog limits", "1s", "20s")
 
 }
 
@@ -436,10 +424,7 @@ func TestMaxPoints(t *testing.T) {
 	AssertOk(t, err, "unable to create obj")
 	defer obj.Delete()
 
-	savedMax := maxFwlogPoints
-	maxFwlogPoints = 600
-
-	for i := 0; i < int(maxFwlogPoints)+5; i++ {
+	for i := 0; i < maxMetricsPoints+5; i++ {
 		err := obj.Points([]*Point{
 			{
 				Tags:   map[string]string{"src": "10.1.1.1", "dest": "11.1.1.1", "port": "8080"},
@@ -447,7 +432,7 @@ func TestMaxPoints(t *testing.T) {
 			},
 		}, time.Now())
 		AssertOk(t, err, "unable to create point")
-		Assert(t, len(obj.(*iObj).metricPoints) <= int(maxFwlogPoints), "exceeded number of points %d", len(obj.(*iObj).metricPoints))
+		Assert(t, len(obj.(*iObj).metricPoints) <= maxMetricsPoints, "exceeded number of points %d", len(obj.(*iObj).metricPoints))
 	}
 
 	err = obj.Points([]*Point{
@@ -458,8 +443,7 @@ func TestMaxPoints(t *testing.T) {
 	}, time.Now())
 	AssertOk(t, err, "unable to create point")
 
-	Assert(t, len(obj.(*iObj).metricPoints) <= int(maxFwlogPoints), "exceeded number of points %d", len(obj.(*iObj).metricPoints))
-	maxFwlogPoints = savedMax
+	Assert(t, len(obj.(*iObj).metricPoints) <= maxMetricsPoints, "exceeded number of points %d", len(obj.(*iObj).metricPoints))
 }
 
 func TestAttributeChangeWithAggregation(t *testing.T) {
