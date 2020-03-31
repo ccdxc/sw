@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <string>
+#include <sstream>
 #include <vector>
 
 #include <assert.h>
@@ -60,6 +61,11 @@ zmq_ipc_msg::code(void) {
 ipc_msg_type_t
 zmq_ipc_msg::type(void) {
     return DIRECT;
+}
+
+std::string
+zmq_ipc_msg::debug(void) {
+    return "Internal ipc message";
 }
 
 void *
@@ -133,6 +139,24 @@ zmq_ipc_user_msg::headers(void) {
 zmq_ipc_msg_preamble_t *
 zmq_ipc_user_msg::preamble(void) {
     return &this->preamble_;
+}
+
+std::string
+zmq_ipc_user_msg::debug(void) {
+    std::stringstream ss;
+
+    ss << "type: " << this->preamble_.type <<
+        ", sender: " <<  this->preamble_.sender <<
+        ", recipient: " <<  this->preamble_.recipient <<
+        ", msg_code: " <<  this->preamble_.msg_code <<
+        ", serial: " <<  this->preamble_.serial <<
+        ", cookie: " <<  this->preamble_.cookie <<
+        ", pointer: " <<  this->preamble_.is_pointer <<
+        ", real_length: " <<  this->preamble_.real_length <<
+        ", crc32: " <<  this->preamble_.crc <<
+        ", tag: " <<  this->preamble_.tag;
+
+    return ss.str();
 }
 
 zmq_ipc_endpoint::zmq_ipc_endpoint() {
@@ -302,7 +326,6 @@ zmq_ipc_server::recv(void) {
         rc = zmq_recvmsg(this->zsocket_, header->zmsg(), 0);
         assert(rc != -1);
         msg->add_header(header);
-        SDK_TRACE_DEBUG("Got header with length: %d", header->length());
         if (header->length() == 0) {
             break;
         }

@@ -225,6 +225,10 @@ ipc_service::respond(ipc_msg_ptr msg, const void *data, size_t data_length) {
     this->server_receive();
     
     this->message_in_flight_ = false;
+
+    SDK_TRACE_DEBUG(
+        "Will deserialize because we responded to message - %s",
+        msg->debug().c_str());
     this->deserialize_();
 }
 
@@ -379,7 +383,9 @@ ipc_service::should_serialize_(void) {
 
 void
 ipc_service::serialize_(ipc_msg_ptr msg) {
-    SDK_TRACE_DEBUG("Serializing message with msg_code: %u", msg->code());
+    SDK_TRACE_DEBUG("Serializing message - %s",
+                    msg->debug().c_str());
+    
     this->hold_queue_.push(msg);
 }
 
@@ -403,6 +409,8 @@ ipc_service::deliver_(ipc_msg_ptr msg) {
     assert(this->req_cbs_.count(msg->code()) > 0);
                 
     req_callback_t req_cb = this->req_cbs_[msg->code()];
+
+    SDK_TRACE_DEBUG("Delivering message - %s", msg->debug().c_str());
                 
     if (req_cb.cb != NULL) {
         this->message_in_flight_ = true;
@@ -448,13 +456,13 @@ ipc_service::eventfd_receive(void) {
     uint64_t buffer;
 
     // Clear the eventfd flag
-    read(this->eventfd_, &buffer, sizeof(buffer));;
+    read(this->eventfd_, &buffer, sizeof(buffer));
     
-    while(!this->hold_queue_.empty()) {
+    if (!this->hold_queue_.empty()) {
         ipc_msg_ptr msg = this->hold_queue_.front();
+        SDK_TRACE_DEBUG("Deserializing msg - %s",
+                        msg->debug().c_str());
         this->hold_queue_.pop();
-        SDK_TRACE_DEBUG("Delivering postponed message for msg_code: %u",
-                        msg->code());
         this->deliver_(msg);
     }
 }

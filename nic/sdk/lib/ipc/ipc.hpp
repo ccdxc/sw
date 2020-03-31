@@ -32,6 +32,7 @@ public:
     virtual size_t length(void) = 0;
     /// \brief get the type of the message (DIRECT or BROADCAST)
     virtual ipc_msg_type_t type(void) = 0;
+    virtual std::string debug(void) = 0;
 };
 typedef std::shared_ptr<struct ipc_msg> ipc_msg_ptr;
 

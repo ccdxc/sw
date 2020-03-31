@@ -40,6 +40,7 @@ public:
     virtual void *data(void) override;
     virtual size_t length(void) override;
     virtual ipc_msg_type_t type(void) override;
+    virtual std::string debug(void) override;
     zmq_msg_t *zmsg(void);
 private:
     zmq_msg_t zmsg_;
@@ -52,6 +53,7 @@ public:
     virtual void *data(void) override;
     virtual size_t length(void) override;
     virtual ipc_msg_type_t type(void) override;
+    virtual std::string debug(void) override;
     std::vector<std::shared_ptr<zmq_ipc_msg> > &headers(void);
     uint32_t sender(void);
     void add_header(std::shared_ptr<zmq_ipc_msg> header);
