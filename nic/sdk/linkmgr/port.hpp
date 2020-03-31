@@ -13,17 +13,19 @@
 #include "port_mac.hpp"
 #include "port_serdes.hpp"
 
-#define MAX_PORT_SERDES_READY_RETRIES   10
-#define MAX_PORT_QSFP_AN_HCD_RETRIES    10
-#define MAX_PORT_SFP_AN_HCD_RETRIES     4
-#define MAX_PORT_MAC_SYNC_RETRIES       10
-#define MAX_PORT_SERDES_DFE_RETRIES     5
-#define MAX_PORT_MAC_FAULTS_CHECK       3
-#define MAX_PORT_MAC_NOFAULTS_CHECK     3
-#define PORT_MAC_STAT_REPORT_SIZE       1024
-#define MIN_PORT_TIMER_INTERVAL         100            // msecs
-#define MAX_LINK_AN_WAIT_TIME           50 * 1000000   // in nanosecs
-#define MAX_PORT_FEC_RETRIES            3              // FC/RS/None FEC
+#define MAX_PORT_SERDES_READY_RETRIES              10
+#define MAX_PORT_SERDES_SIG_DETECT_RETRIES         10
+#define MAX_PORT_QSFP_AN_HCD_RETRIES               10
+#define MAX_PORT_SFP_AN_HCD_RETRIES                4
+#define MAX_PORT_MAC_SYNC_RETRIES                  10
+#define MAX_PORT_SERDES_DFE_ICAL_CMPLT_RETRIES     15             // DFE ICAL complete
+#define MAX_PORT_SERDES_DFE_ICAL_EYE_RETRIES       3              // DFE ICAL eye values
+#define MAX_PORT_MAC_FAULTS_CHECK                  3
+#define MAX_PORT_MAC_NOFAULTS_CHECK                3
+#define PORT_MAC_STAT_REPORT_SIZE                  1024
+#define MIN_PORT_TIMER_INTERVAL                    100            // msecs
+#define MAX_LINK_AN_WAIT_TIME                      100 * 1000000  // in nanosecs
+#define MAX_PORT_FEC_RETRIES                       3              // FC/RS/None FEC
 
 namespace sdk {
 namespace linkmgr {
@@ -132,6 +134,11 @@ public:
         this->derived_fec_type_ = derived_fec_type;
     }
 
+    uint32_t fec_retries(void) const { return this->fec_retries_; }
+    void set_fec_retries(uint32_t count) {
+        this->fec_retries_ = count;
+    }
+
     bool auto_neg_enable(void) const { return this->auto_neg_enable_; }
     void set_auto_neg_enable(bool auto_neg_enable) {
         this->auto_neg_enable_ = auto_neg_enable;
@@ -143,8 +150,13 @@ public:
     }
 
     bool toggle_neg_mode(void) const { return this->toggle_neg_mode_; }
-    void set_toggle_neg_mode(bool toggle_neg_mode) {
-        this->toggle_neg_mode_ = toggle_neg_mode;
+    void set_toggle_neg_mode(bool mode) {
+        this->toggle_neg_mode_ = mode;
+    }
+
+    bool skip_toggle_neg_mode(void) const { return this->skip_toggle_neg_mode_; }
+    void set_skip_toggle_neg_mode(bool mode) {
+        this->skip_toggle_neg_mode_ = mode;
     }
 
     bool toggle_fec_mode(void) const { return this->toggle_fec_mode_; }
@@ -233,8 +245,19 @@ public:
     uint32_t num_mac_nofaults(void) { return this->num_mac_nofaults_; }
     void set_num_mac_nofaults(uint32_t faults) { this->num_mac_nofaults_ = faults; }
 
-    uint32_t num_dfe_retries(void) { return this->num_dfe_retries_; }
-    void set_num_dfe_retries(uint32_t num_dfe) { this->num_dfe_retries_ = num_dfe; }
+    uint32_t num_dfe_ical_cmplt_retries(void) {
+        return this->num_dfe_ical_cmplt_retries_;
+    }
+    void set_num_dfe_ical_cmplt_retries(uint32_t num_dfe) {
+        this->num_dfe_ical_cmplt_retries_ = num_dfe;
+    }
+
+    uint32_t num_dfe_ical_eye_retries(void) {
+        return this->num_dfe_ical_eye_retries_;
+    }
+    void set_num_dfe_ical_eye_retries(uint32_t num_dfe) {
+        this->num_dfe_ical_eye_retries_ = num_dfe;
+    }
 
     uint32_t num_an_hcd_retries(void) { return this->num_an_hcd_retries_; }
     void set_num_an_hcd_retries(uint32_t num_an_hcd) {
@@ -254,6 +277,11 @@ public:
     uint32_t num_serdes_ready_retries(void) { return this->num_serdes_ready_retries_; }
     void set_num_serdes_ready_retries(uint32_t num_serdes_ready) {
         this->num_serdes_ready_retries_ = num_serdes_ready;
+    }
+
+    uint32_t num_sig_detect_retries(void) { return this->num_sig_detect_retries_; }
+    void set_num_sig_detect_retries(uint32_t num) {
+        this->num_sig_detect_retries_ = num;
     }
 
     sdk_ret_t port_enable(bool start_en_timer = false);
@@ -426,14 +454,16 @@ private:
     port_fec_type_t           fec_type_;                  // operational FEC type
     port_fec_type_t           user_fec_type_;             // configured FEC type
     port_fec_type_t           derived_fec_type_;          // FEC derived based on AN or user config
+    uint32_t                  fec_retries_;               // FEC retry count
     port_pause_type_t         pause_;                     // Enable MAC pause
     bool                      tx_pause_enable_;           // Enable MAC Tx Pause
     bool                      rx_pause_enable_;           // Enable MAC Rx Pause
     bool                      auto_neg_enable_;           // Enable AutoNeg
     bool                      auto_neg_cfg_;              // user configured AutoNeg
-    sdk::event_thread::timer_t link_bringup_timer_;        // port link bring up timer
-    sdk::event_thread::timer_t link_debounce_timer_;       // port link debounce timer
+    sdk::event_thread::timer_t link_bringup_timer_;       // port link bring up timer
+    sdk::event_thread::timer_t link_debounce_timer_;      // port link debounce timer
     bool                      toggle_neg_mode_;           // for SFP+ toggle between auto_neg/force modes until link-up
+    bool                      skip_toggle_neg_mode_;      // skip toggle between auto_neg/forced. Overrides toggle_neg_mode_
     neg_mode_t                last_neg_mode_;             // last toggle was auto_neg or force mode
     bool                      toggle_fec_mode_;           // for SFP+ toggle between RS/FC/None fec modes
     uint32_t                  mac_id_;                    // mac instance for this port
@@ -459,11 +489,13 @@ private:
     port_loopback_mode_t      loopback_mode_;             // port loopback mode - MAC/PHY
     uint32_t                  mac_faults_;                // number of times MAC faults detected
     uint32_t                  num_mac_nofaults_;          // number of times no MAC faults were detected (applicable for 10G/25G-no-fec)
-    uint32_t                  num_dfe_retries_;           // number of times ical is retried in one pass of SM
+    uint32_t                  num_dfe_ical_cmplt_retries_; // number of times ical complete is retried in one pass of SM
+    uint32_t                  num_dfe_ical_eye_retries_;  // number of times ical eye check is retried in one pass of SM
     uint32_t                  num_an_hcd_retries_;        // number of times AN HCD was retried in one pass of SM
     uint32_t                  num_mac_sync_retries_;      // number of times MAC sync is retried in one pass of SM
     uint32_t                  num_link_train_retries_;    // number of times link training failed in one pass of SM
     uint32_t                  num_serdes_ready_retries_;  // number of times serdes ready was retried in one pass of SM
+    uint32_t                  num_sig_detect_retries_;    // number of times serdes signal detect was retried in one pass of SM
     bool                      persist_stats_collect_;     // set after initial link-up state; never reset (? TBD)
     uint64_t                  persist_stats_data_[MAX_MAC_STATS]; // saved stats before link flap or mac resets;
     sdk::types::mem_addr_t    port_stats_base_addr_;      // Base address for this port's stats

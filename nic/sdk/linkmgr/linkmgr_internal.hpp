@@ -35,18 +35,21 @@ extern bool hal_cfg;
     }                                                                     \
 }
 
-#define SDK_PORT_SM_LOG(type, port, state) {                              \
+#define SDK_PORT_SM_LOG(type, port, fmt, ...) {                           \
     snprintf(log_buf, MAX_LOG_SIZE,                                       \
-             "port: %d, MAC_ID: %d, MAC_CH: %d, state: %s",               \
-             port->port_num(), port->mac_id_, port->mac_ch_, state);      \
+             "port: %d, MAC_ID: %d, MAC_CH: %d, " fmt,                    \
+             port->port_num(), port->mac_id_, port->mac_ch_,              \
+             ##__VA_ARGS__);                                              \
     SDK_LINKMGR_LOG(type, log_buf);                                       \
 }
 
-#define SDK_PORT_SM_DEBUG(port, state)                                    \
-    SDK_PORT_SM_LOG(sdk::lib::SDK_TRACE_LEVEL_DEBUG, port, state)
+#define SDK_PORT_SM_DEBUG(port, fmt, ...)                                 \
+    SDK_PORT_SM_LOG(sdk::lib::SDK_TRACE_LEVEL_DEBUG, port, fmt,           \
+                    ##__VA_ARGS__)
 
-#define SDK_PORT_SM_TRACE(port, state)                                    \
-    SDK_PORT_SM_LOG(sdk::lib::SDK_TRACE_LEVEL_DEBUG, port, state)
+#define SDK_PORT_SM_TRACE(port, fmt, ...)                                 \
+    SDK_PORT_SM_LOG(sdk::lib::SDK_TRACE_LEVEL_DEBUG, port, fmt,           \
+                    ##__VA_ARGS__)
 
 #define SDK_LINKMGR_TRACE_DEBUG(format, ...)  {                           \
     snprintf(log_buf, MAX_LOG_SIZE, format, ##__VA_ARGS__);               \

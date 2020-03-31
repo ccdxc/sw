@@ -1105,13 +1105,15 @@ port_update (void *pd_p, port_args_t *args)
             configured = true;
         }
     }
+    port_p->set_toggle_neg_mode(args->toggle_neg_mode);
 
-    if (args->toggle_neg_mode != port_p->toggle_neg_mode()) {
-        SDK_TRACE_DEBUG("port %u toggle neg mode updated. new: %d, old: %d",
-                        args->port_num, args->toggle_neg_mode, port_p->toggle_neg_mode());
-        port_p->set_toggle_neg_mode(args->toggle_neg_mode);
-        configured = true;
-    }
+    // TODO required?
+    // if (args->toggle_neg_mode != port_p->toggle_neg_mode()) {
+    //     SDK_TRACE_DEBUG("port %u toggle neg mode updated. new: %d, old: %d",
+    //                     args->port_num, args->toggle_neg_mode, port_p->toggle_neg_mode());
+    //     port_p->set_toggle_neg_mode(args->toggle_neg_mode);
+    //     configured = true;
+    // }
 
     if (args->auto_neg_cfg != port_p->auto_neg_cfg()) {
         SDK_TRACE_DEBUG("AN cfg updated. new: %d, old: %d",

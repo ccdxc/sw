@@ -853,7 +853,7 @@ port::port_link_sm_an_process(void)
         SDK_PORT_SM_TRACE(this, "wait AN HCD");
 
         clock_gettime(CLOCK_MONOTONIC, &before);
-        // 50 msecs spin for AN HCD resolution
+        // 100 msecs spin for AN HCD resolution
         do {
             clock_gettime(CLOCK_MONOTONIC, &after);
             an_good = port_serdes_an_wait_hcd();
@@ -877,6 +877,9 @@ port::port_link_sm_an_process(void)
                 an_ret = AN_RESET;
                 break;
             }
+            // 10ms timer for polling since Link Training needs to
+            // be started asap (within tens of ms)
+            timeout = 10;
             this->bringup_timer_val_ += timeout;
             port_timer_start(link_bringup_timer(), timeout);
             an_ret = AN_WAIT;
@@ -891,6 +894,11 @@ port::port_link_sm_an_process(void)
 
         SDK_PORT_SM_TRACE(this, "AN HCD configure");
 
+        // If AN HCD resolves, then peer is trying to do AN.
+        // Skip toggle_neg_mode for the next iteration so that
+        // only AN is retried if current bringup iteration fails.
+        set_skip_toggle_neg_mode(true);
+
         port_serdes_an_hcd_cfg();
 
     default:
@@ -901,11 +909,16 @@ port::port_link_sm_an_process(void)
 
 bool
 port::port_serdes_eye_check(void) {
-    uint32_t lane = 0;
+    uint32_t lane;
+    uint32_t min;
+    uint32_t max;
     uint32_t values[2 * MAX_SERDES_EYE_HEIGHTS];
 
-    memset(values, 0, sizeof(uint32_t) * 2 * MAX_SERDES_EYE_HEIGHTS);
     for (lane = 0; lane < num_lanes_; ++lane) {
+        min = 0xFFFF;
+        max = 0x0;
+        memset(values, 0, sizeof(uint32_t) * 2 * MAX_SERDES_EYE_HEIGHTS);
+
         if (serdes_fns()->serdes_eye_check(port_sbus_addr(lane), values) != 0) {
             return false;
         }
@@ -918,6 +931,18 @@ port::port_serdes_eye_check(void) {
                 values[i] == 2 || values[i] >= 0xff) {
                 return false;
             }
+            if (values[i] < min) {
+                min = values[i];
+            }
+            if (values[i] > max) {
+                max = values[i];
+            }
+        }
+        // ICAL can complete with invalid signal (remote peer trying AN).
+        // DFE eye values shouldn't be very far apart for a good signal.
+        // Do the below validation to make sure values are valid
+        if ((max - min) > min) {
+            return false;
         }
     }
     return true;
@@ -957,31 +982,44 @@ port::port_link_sm_dfe_process(void)
 
                 dfe_complete = port_serdes_dfe_complete();
 
+                // ICAL needs ~0.4 secs for 100G
                 if(dfe_complete == false) {
-                    // ICAL needs ~0.4 secs for 100G
-                    timeout = 500; // 500 msecs
-                    this->bringup_timer_val_ += timeout;
-                    port_timer_start(link_bringup_timer(), timeout);
-                    ret = DFE_WAIT;
+                    timeout = 100;
+                    set_num_dfe_ical_cmplt_retries(
+                                           num_dfe_ical_cmplt_retries() + 1);
+                    // 100msecs * 15 retries = 1.5sec
+                    // 10G ICAL complete taking ~1sec
+                    if (num_dfe_ical_cmplt_retries() <
+                                     MAX_PORT_SERDES_DFE_ICAL_CMPLT_RETRIES) {
+                        // start the timer and wait for ICAL to complete
+                        this->bringup_timer_val_ += timeout;
+                        port_timer_start(link_bringup_timer(), timeout);
+                        ret = DFE_WAIT;
+                    } else {
+                        // return with DFE_RESET
+                        ret = DFE_RESET;
+                    }
                     break;
                 }
 
                 // If eye check fails
-                //   if count < MAX_PORT_SERDES_DFE_RETRIES
-                //     retry ICAL
+                //   if count < MAX_PORT_SERDES_DFE_ICAL_EYE_RETRIES
+                //     start/retry ICAL
                 //   else
                 //     return with DFE_RESET
                 if (port_serdes_eye_check() == false) {
                     set_port_link_dfe_sm(
                             port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL);
-                    set_num_dfe_retries(num_dfe_retries() + 1);
-                    if (num_dfe_retries() < MAX_PORT_SERDES_DFE_RETRIES) {
+                    set_num_dfe_ical_eye_retries(num_dfe_ical_eye_retries()+1);
+                    if (num_dfe_ical_eye_retries() <
+                                     MAX_PORT_SERDES_DFE_ICAL_EYE_RETRIES) {
+                        // start/retry ICAL
                         retry_sm = true;
-                        break;
                     } else {
+                        // return with DFE_RESET
                         ret = DFE_RESET;
-                        break;
                     }
+                    break;
                 }
 
                 // transition to pcal one shot
@@ -1035,7 +1073,6 @@ port::port_link_sm_process(bool start_en_timer)
     bool retry_sm   = false;
     an_ret_t an_ret = AN_DONE;
     dfe_ret_t dfe_ret = DFE_DONE;
-    uint8_t fec_retries;
 
     while (true) {
         retry_sm = false;
@@ -1102,7 +1139,7 @@ port::port_link_sm_process(bool start_en_timer)
                 }
 
                 // reset counter for FEC retry with different FEC modes
-                fec_retries = 0;
+                set_fec_retries(0);
 
                 SDK_PORT_SM_DEBUG(this, "Enabled");
 
@@ -1162,8 +1199,9 @@ port::port_link_sm_process(bool start_en_timer)
                 serdes_rdy = port_serdes_rdy();
 
                 if(serdes_rdy == false) {
-                    set_num_serdes_ready_retries(num_serdes_ready_retries() + 1);
-                    if (num_serdes_ready_retries() >= port_max_serdes_ready_retries()) {
+                    set_num_serdes_ready_retries(num_serdes_ready_retries()+1);
+                    if (num_serdes_ready_retries() >=
+                                         port_max_serdes_ready_retries()) {
                         retry_sm = true;
                         set_num_serdes_ready_retries(0);
                         // reset serdes and try SM again
@@ -1256,8 +1294,18 @@ port::port_link_sm_process(bool start_en_timer)
                 sig_detect = port_serdes_signal_detect();
 
                 if(sig_detect == false) {
-                    this->bringup_timer_val_ += timeout;
-                    port_timer_start(link_bringup_timer(), timeout);
+                    set_num_sig_detect_retries(num_sig_detect_retries()+1);
+                    if (num_sig_detect_retries() >=
+                                       MAX_PORT_SERDES_SIG_DETECT_RETRIES) {
+                        retry_sm = true;
+                        set_num_sig_detect_retries(0);
+                        port_link_sm_retry_enabled(true);
+                    } else {
+                        // 100msec * 10 = 1 sec
+                        timeout = 100;
+                        this->bringup_timer_val_ += timeout;
+                        port_timer_start(link_bringup_timer(), timeout);
+                    }
                     break;
                 }
 
@@ -1274,7 +1322,8 @@ port::port_link_sm_process(bool start_en_timer)
                         break;
                     } else if (dfe_ret == DFE_RESET) {
                         retry_sm = true;
-                        set_num_dfe_retries(0);
+                        set_num_dfe_ical_cmplt_retries(0);
+                        set_num_dfe_ical_eye_retries(0);
                         port_link_sm_retry_enabled(false);
                         break;
                     }
@@ -1304,12 +1353,13 @@ port::port_link_sm_process(bool start_en_timer)
                     if (num_mac_sync_retries() >= MAX_PORT_MAC_SYNC_RETRIES) {
                         retry_sm = true;
                         set_num_mac_sync_retries(0);
+                        set_fec_retries(fec_retries() + 1);
 
                         // if MAC doesn't sync in fixed/forced mode, then
                         // try with different FEC modes
                         if ((is_auto_neg() == FIXED_NEG) &&
                                 (toggle_fec_mode() == true) &&
-                                (++fec_retries < MAX_PORT_FEC_RETRIES)) {
+                                (fec_retries() < MAX_PORT_FEC_RETRIES)) {
                             toggle_fec_type();
                         } else {
                             port_link_sm_retry_enabled(false);
@@ -1422,7 +1472,6 @@ port::port_link_sm_process(bool start_en_timer)
             default:
                 break;
         }
-
         if (retry_sm == false) {
             break;
         }
@@ -1445,6 +1494,10 @@ port::is_auto_neg (void)
 void
 port::toggle_negotiation_mode (void)
 {
+    if (skip_toggle_neg_mode() == true) {
+        set_skip_toggle_neg_mode(false);
+        return;
+    }
     if (this->toggle_neg_mode_ == true) {
         this->last_neg_mode_ =
               (this->last_neg_mode_ == AUTO_NEG)? FIXED_NEG : AUTO_NEG;
@@ -1467,7 +1520,7 @@ port::toggle_fec_type (void) {
         set_fec_type(port_fec_type_t::PORT_FEC_TYPE_FC);
         break;
     }
-    SDK_TRACE_DEBUG("Trying fec_type %u", fec_type());
+    SDK_PORT_SM_DEBUG(this, "Trying fec_type %u", (uint32_t)fec_type());
     port_mac_cfg_fec(fec_type());
 }
 
@@ -1691,11 +1744,15 @@ port::port_link_sm_counters_reset(void)
     // reset serdes ready retry counter
     set_num_serdes_ready_retries(0);
 
+    // reset serdes signal detect retry counter
+    set_num_sig_detect_retries(0);
+
     // reset AN link training retry counter
     set_num_link_train_retries(0);
 
     // reset dfe retry count
-    set_num_dfe_retries(0);
+    set_num_dfe_ical_cmplt_retries(0);
+    set_num_dfe_ical_eye_retries(0);
 
     // reset number of link bringup retries
     set_num_retries(0);
