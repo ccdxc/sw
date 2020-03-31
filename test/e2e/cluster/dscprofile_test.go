@@ -91,7 +91,6 @@ func (dscTg *dscProfileTestGroup) testDSCUpdateWithSameProfile() {
 		snic.Spec.DSCProfile = "insertion.enforced"
 		_, err = snIf.Update(ctx, snic)
 	}
-	time.Sleep(time.Second)
 	Eventually(func() bool {
 		dstat, err := dscTg.suite.restSvc.ClusterV1().DSCProfile().Get(dscTg.suite.loggedInCtx, &insertionEnforced.ObjectMeta)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -100,7 +99,7 @@ func (dscTg *dscProfileTestGroup) testDSCUpdateWithSameProfile() {
 			return false
 		}
 		return true
-	}, 30, 1).Should(BeTrue(), "Failed to Propagate the profile")
+	}, 60, 1).Should(BeTrue(), "Failed to Propagate the profile")
 
 	//Verify the agent, status
 	snics, err = snIf.List(ctx, &api.ListWatchOptions{})
@@ -108,7 +107,6 @@ func (dscTg *dscProfileTestGroup) testDSCUpdateWithSameProfile() {
 		snic.Spec.DSCProfile = insertionFWProfileName
 		_, err = snIf.Update(ctx, snic)
 	}
-	time.Sleep(time.Second)
 
 	Eventually(func() bool {
 		dstat, err := dscTg.suite.restSvc.ClusterV1().DSCProfile().Get(dscTg.suite.loggedInCtx, &insertionEnforced.ObjectMeta)
@@ -119,7 +117,7 @@ func (dscTg *dscProfileTestGroup) testDSCUpdateWithSameProfile() {
 			return false
 		}
 		return true
-	}, 30, 1).Should(BeTrue(), "Failed to Propagate the profile")
+	}, 60, 1).Should(BeTrue(), "Failed to Propagate the profile")
 }
 
 var _ = Describe("profile createdelete tests", func() {

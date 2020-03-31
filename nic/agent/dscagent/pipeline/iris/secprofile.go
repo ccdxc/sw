@@ -90,6 +90,15 @@ func updateSecurityProfileHandler(infraAPI types.InfraAPI, client halapi.NwSecur
 }
 
 func deleteSecurityProfileHandler(infraAPI types.InfraAPI, client halapi.NwSecurityClient, vrfClient halapi.VrfClient, profile netproto.SecurityProfile, vrf netproto.Vrf) error {
+
+	// Update Vrf with detached security profile
+	vrfUpdateMsg := convertVrf(vrf)
+	vrfResp, err := vrfClient.VrfUpdate(context.Background(), vrfUpdateMsg)
+	if vrfResp != nil {
+		if err := utils.HandleErr(types.Update, vrfResp.Response[0].ApiStatus, err, fmt.Sprintf("Update VRF Failed for %s | %s", profile.GetKind(), profile.GetKey())); err != nil {
+			return err
+		}
+	}
 	profileDelReq := &halapi.SecurityProfileDeleteRequestMsg{
 		Request: []*halapi.SecurityProfileDeleteRequest{
 			{
@@ -101,15 +110,6 @@ func deleteSecurityProfileHandler(infraAPI types.InfraAPI, client halapi.NwSecur
 	resp, err := client.SecurityProfileDelete(context.Background(), profileDelReq)
 	if resp != nil {
 		if err := utils.HandleErr(types.Delete, resp.Response[0].ApiStatus, err, fmt.Sprintf("SecurityProfile: %s", profile.GetKey())); err != nil {
-			return err
-		}
-	}
-
-	// Update Vrf with detached security profile
-	vrfUpdateMsg := convertVrf(vrf)
-	vrfResp, err := vrfClient.VrfUpdate(context.Background(), vrfUpdateMsg)
-	if vrfResp != nil {
-		if err := utils.HandleErr(types.Update, vrfResp.Response[0].ApiStatus, err, fmt.Sprintf("Update VRF Failed for %s | %s", profile.GetKind(), profile.GetKey())); err != nil {
 			return err
 		}
 	}

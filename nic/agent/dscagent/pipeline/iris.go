@@ -1819,6 +1819,14 @@ func (i *IrisAPI) PurgeConfigs() error {
 		}
 	}
 
+	secprof := netproto.SecurityProfile{TypeMeta: api.TypeMeta{Kind: "SecurityProfile"}}
+	sp, _ := i.HandleSecurityProfile(types.List, secprof)
+	for _, secProfile := range sp {
+		if _, err := i.HandleSecurityProfile(types.Delete, secProfile); err != nil {
+			log.Errorf("Failed to purge the secProfile. Err: %v", err)
+		}
+	}
+
 	p := netproto.Profile{TypeMeta: api.TypeMeta{Kind: "Profile"}}
 	profiles, _ := i.HandleProfile(types.List, p)
 	for _, profile := range profiles {
