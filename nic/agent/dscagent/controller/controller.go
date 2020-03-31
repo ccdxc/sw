@@ -358,7 +358,13 @@ func (c *API) WatchTechSupport() {
 			return
 		}
 		// We don't need to handle multiple Tech Support Events in the same context here. So using the first entry
-		log.Infof("Controller API: %s | Evt: %v", types.InfoTechSupportWatchReceived, evt.Events[0].EventType)
+		eventType := evt.Events[0].EventType
+		log.Infof("Controller API: %s | Evt: %v", types.InfoTechSupportWatchReceived, eventType)
+		if eventType != api.EventType_CreateEvent {
+			// no need to handle events other than Create
+			log.Infof("Controller API: Skipping Techsupport %v", eventType)
+			continue
+		}
 		req := *evt.Events[0].Request
 		techSupportArtifact, err := c.PipelineAPI.HandleTechSupport(req)
 		if err != nil || len(techSupportArtifact) == 0 {
