@@ -5,7 +5,6 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_tag.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/core/tag.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/tag.hpp"
 
@@ -16,7 +15,6 @@ TagSvcImpl::TagCreate(ServerContext *context,
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
     pds_tag_spec_t api_spec;
-    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -42,12 +40,11 @@ TagSvcImpl::TagCreate(ServerContext *context,
     for (int i = 0; i < proto_req->request_size(); i ++) {
         memset(&api_spec, 0, sizeof(pds_tag_spec_t));
         auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = pds_tag_proto_to_api_spec(&api_spec, request);
         if (ret != SDK_RET_OK) {
             goto end;
         }
-        ret = core::tag_create(&key, &api_spec, bctxt);
+        ret = pds_tag_create(&api_spec, bctxt);
         // free the rules memory
         if (api_spec.rules != NULL) {
             SDK_FREE(PDS_MEM_ALLOC_ID_TAG, api_spec.rules);
@@ -82,7 +79,6 @@ TagSvcImpl::TagUpdate(ServerContext *context,
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
     pds_tag_spec_t api_spec;
-    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -108,12 +104,11 @@ TagSvcImpl::TagUpdate(ServerContext *context,
     for (int i = 0; i < proto_req->request_size(); i ++) {
         memset(&api_spec, 0, sizeof(pds_tag_spec_t));
         auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = pds_tag_proto_to_api_spec(&api_spec, request);
         if (ret != SDK_RET_OK) {
             goto end;
         }
-        ret = core::tag_update(&key, &api_spec, bctxt);
+        ret = pds_tag_update(&api_spec, bctxt);
         // free the rules memory
         if (api_spec.rules != NULL) {
             SDK_FREE(PDS_MEM_ALLOC_ID_TAG, api_spec.rules);
@@ -171,7 +166,7 @@ TagSvcImpl::TagDelete(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = core::tag_delete(&key, bctxt);
+        ret = pds_tag_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -209,7 +204,7 @@ TagSvcImpl::TagGet(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = core::tag_get(&key, &info);
+        ret = pds_tag_read(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
             break;
@@ -219,7 +214,7 @@ TagSvcImpl::TagGet(ServerContext *context,
     }
 
     if (proto_req->id_size() == 0) {
-        ret = core::tag_get_all(pds_tag_api_info_to_proto, proto_rsp);
+        ret = pds_tag_read_all(pds_tag_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;

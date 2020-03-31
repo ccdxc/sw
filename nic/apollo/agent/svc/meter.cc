@@ -5,7 +5,6 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_meter.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/core/meter.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/meter.hpp"
 
@@ -16,7 +15,6 @@ MeterSvcImpl::MeterCreate(ServerContext *context,
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
     Status status = Status::OK;
-    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
     pds_meter_spec_t api_spec;
@@ -43,12 +41,11 @@ MeterSvcImpl::MeterCreate(ServerContext *context,
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
         auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = pds_meter_proto_to_api_spec(&api_spec, request);
         if (ret != SDK_RET_OK) {
             goto end;
         }
-        ret = core::meter_create(&key, &api_spec, bctxt);
+        ret = pds_meter_create(&api_spec, bctxt);
 
         // free the rules memory
         if (api_spec.rules != NULL) {
@@ -82,7 +79,6 @@ MeterSvcImpl::MeterUpdate(ServerContext *context,
                           pds::MeterResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
     pds_meter_spec_t api_spec;
@@ -109,12 +105,11 @@ MeterSvcImpl::MeterUpdate(ServerContext *context,
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
         auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = pds_meter_proto_to_api_spec(&api_spec, request);
         if (ret != SDK_RET_OK) {
             goto end;
         }
-        ret = core::meter_update(&key, &api_spec, bctxt);
+        ret = pds_meter_update(&api_spec, bctxt);
 
         // free the rules memory
         if (api_spec.rules != NULL) {
@@ -173,7 +168,7 @@ MeterSvcImpl::MeterDelete(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = core::meter_delete(&key, bctxt);
+        ret = pds_meter_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -211,7 +206,7 @@ MeterSvcImpl::MeterGet(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = core::meter_get(&key, &info);
+        ret = pds_meter_read(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
             break;
@@ -221,7 +216,7 @@ MeterSvcImpl::MeterGet(ServerContext *context,
     }
 
     if (proto_req->id_size() == 0) {
-        ret = core::meter_get_all(pds_meter_api_info_to_proto, proto_rsp);
+        ret = pds_meter_read_all(pds_meter_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;

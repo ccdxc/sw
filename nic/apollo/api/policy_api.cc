@@ -16,7 +16,9 @@
 #include "nic/apollo/api/policy.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/policy_state.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
+#include <malloc.h>
 
 static inline sdk_ret_t
 pds_policy_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
@@ -65,7 +67,6 @@ pds_policy_create (_In_ pds_policy_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 sdk_ret_t
 pds_policy_read (_In_ pds_obj_key_t *key, _Out_ pds_policy_info_t *info)
 {
-    sdk_ret_t ret;
     policy *entry;
 
     if (key == NULL || info == NULL) {
@@ -76,49 +77,7 @@ pds_policy_read (_In_ pds_obj_key_t *key, _Out_ pds_policy_info_t *info)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if (info->spec.rule_info == NULL) {
-        return entry->read(info);
-    }
-
-    if (!info->spec.rule_info->num_rules) {
-        info->spec.rule_info->num_rules = entry->num_rules();
-    } else {
-        uint32_t num_rules_to_read = info->spec.rule_info->num_rules;
-        if (num_rules_to_read < entry->num_rules()) {
-            ret = entry->read(info);
-            if (ret != SDK_RET_OK) {
-                return ret;
-            }
-            // buffer is smaller, read all rules and copy over the
-            // requested number allocate memory for reading all the rules
-            rule_info_t *rule_info =
-                (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
-                                          POLICY_RULE_INFO_SIZE(entry->num_rules()));
-            rule_info->num_rules = entry->num_rules();
-            // retrieve all rules
-            ret = policy_db()->retrieve_rules(key, rule_info);
-            if (ret != SDK_RET_OK) {
-                SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rule_info);
-                return ret;
-            }
-            // copy over requested number of rules
-            memcpy(info->spec.rule_info, rule_info,
-                   POLICY_RULE_INFO_SIZE(num_rules_to_read));
-            info->spec.rule_info->num_rules = num_rules_to_read;
-            // free allocated memory
-            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rule_info);
-        } else {
-            ret = entry->read(info);
-            if (ret != SDK_RET_OK) {
-                return ret;
-            }
-            // read rules from lmdb
-            return policy_db()->retrieve_rules(key,
-                                               info->spec.rule_info);
-        }
-    }
-
-    return ret;
+    return entry->read(info);
 }
 
 typedef struct pds_policy_read_args_s {
@@ -146,9 +105,6 @@ pds_policy_info_from_entry (void *entry, void *ctxt)
     // entry read
     pol->read(&info);
 
-    // retrieve rules from kvstore
-    return policy_db()->retrieve_rules(&info.spec.key, info.spec.rule_info);
-
     // call cb on info
     args->cb(&info, args->ctxt);
 
@@ -162,12 +118,15 @@ pds_policy_info_from_entry (void *entry, void *ctxt)
 sdk_ret_t
 pds_policy_read_all (policy_read_cb_t policy_read_cb, void *ctxt)
 {
+    sdk_ret_t ret;
     pds_policy_read_args_t args = {0};
 
     args.ctxt = ctxt;
     args.cb = policy_read_cb;
+    ret = policy_db()->walk(pds_policy_info_from_entry, &args);
 
-    return policy_db()->walk(pds_policy_info_from_entry, &args);
+    PDS_MEMORY_TRIM();
+    return ret;
 }
 
 sdk_ret_t

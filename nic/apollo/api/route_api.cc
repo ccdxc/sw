@@ -16,6 +16,8 @@
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/route.hpp"
+#include "nic/apollo/api/utils.hpp"
+#include <malloc.h>
 
 //----------------------------------------------------------------------------
 // route table API implementation entry point
@@ -67,7 +69,6 @@ sdk_ret_t
 pds_route_table_read (_In_ pds_obj_key_t *key,
                       _Out_ pds_route_table_info_t *info)
 {
-    sdk_ret_t ret;
     route_table *entry;
 
     if (key == NULL || info == NULL) {
@@ -78,48 +79,56 @@ pds_route_table_read (_In_ pds_obj_key_t *key,
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if (info->spec.route_info == NULL) {
-        return entry->read(info);
-    }
+    return entry->read(info);
+}
 
-    if (!info->spec.route_info->num_routes) {
-        info->spec.route_info->num_routes = entry->num_routes();
-    } else {
-        uint32_t num_routes_to_read = info->spec.route_info->num_routes;
-        if (num_routes_to_read < entry->num_routes()) {
-            ret = entry->read(info);
-            if (ret != SDK_RET_OK) {
-                return ret;
-            }
-            // buffer is smaller, read all routes and copy over the
-            // requested number allocate memory for reading all the routes
-            route_info_t *route_info =
-                (route_info_t *)SDK_CALLOC(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                           ROUTE_INFO_SIZE(entry->num_routes()));
-            route_info->num_routes = entry->num_routes();
-            // retrieve all routes
-            ret = route_table_db()->retrieve_routes(key, route_info);
-            if (ret != SDK_RET_OK) {
-                SDK_FREE(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE, route_info);
-                return ret;
-            }
-            // copy over requested number of routes
-            memcpy(info->spec.route_info, route_info,
-                   ROUTE_INFO_SIZE(num_routes_to_read));
-            info->spec.route_info->num_routes = num_routes_to_read;
-            // free allocated memory
-            SDK_FREE(api::PDS_MEM_ALLOC_ID_ROUTE_TABLE, route_info);
-        } else {
-            ret = entry->read(info);
-            if (ret != SDK_RET_OK) {
-                return ret;
-            }
-            // read route table entries from lmdb
-            return route_table_db()->retrieve_routes(key,
-                                                     info->spec.route_info);
-        }
-    }
-    return SDK_RET_OK;
+typedef struct pds_route_table_read_args_s {
+    route_table_read_cb_t cb;
+    void *ctxt;
+} pds_route_table_read_args_t;
+
+bool
+pds_route_table_info_from_entry (void *entry, void *ctxt)
+{
+    route_table *route = (route_table *)entry;
+    pds_route_table_read_args_t *args = (pds_route_table_read_args_t *)ctxt;
+    pds_route_table_info_t info;
+    uint32_t num_routes = 0;
+
+    memset(&info, 0, sizeof(pds_route_table_info_t));
+
+    // read number of routes and allocate memory for routes
+    num_routes = route->num_routes();
+    info.spec.route_info =
+        (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                   ROUTE_INFO_SIZE(num_routes));
+    info.spec.route_info->num_routes = num_routes;
+
+    // entry read
+    route->read(&info);
+
+    // call cb on info
+    args->cb(&info, args->ctxt);
+
+    // free memory
+    SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
+    info.spec.route_info = NULL;
+
+    return false;
+}
+
+sdk_ret_t
+pds_route_table_read_all (route_table_read_cb_t route_table_read_cb, void *ctxt)
+{
+    sdk_ret_t ret;
+    pds_route_table_read_args_t args = {0};
+
+    args.ctxt = ctxt;
+    args.cb = route_table_read_cb;
+    ret = route_table_db()->walk(pds_route_table_info_from_entry, &args);
+
+    PDS_MEMORY_TRIM();
+    return ret;
 }
 
 sdk_ret_t
@@ -170,7 +179,7 @@ pds_route_create (_In_ pds_route_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_route_read (_In_ pds_obj_key_t *key, _Out_ pds_policy_info_t *info)
+pds_route_read (_In_ pds_obj_key_t *key, _Out_ pds_route_table_info_t *info)
 {
     return SDK_RET_INVALID_OP;
 }

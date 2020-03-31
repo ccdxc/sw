@@ -4,11 +4,12 @@
 
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/core/policy.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/policy.hpp"
+#include <malloc.h>
 
 Status
 SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
@@ -16,7 +17,6 @@ SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
                                             pds::SecurityPolicyResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_obj_key_t key = { 0 };
     pds_policy_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -48,9 +48,7 @@ SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
         if (unlikely(ret != SDK_RET_OK)) {
             goto end;
         }
-        auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.id());
-        ret = core::policy_create(&key, &api_spec, bctxt);
+        ret = pds_policy_create(&api_spec, bctxt);
         if (api_spec.rule_info != NULL) {
             SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec.rule_info);
             api_spec.rule_info = NULL;
@@ -83,7 +81,6 @@ SecurityPolicySvcImpl::SecurityPolicyUpdate(ServerContext *context,
                                             pds::SecurityPolicyResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_obj_key_t key = { 0 };
     pds_policy_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -115,9 +112,7 @@ SecurityPolicySvcImpl::SecurityPolicyUpdate(ServerContext *context,
         if (unlikely(ret != SDK_RET_OK)) {
             goto end;
         }
-        auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.id());
-        ret = core::policy_update(&key, &api_spec, bctxt);
+        ret = pds_policy_update(&api_spec, bctxt);
         if (api_spec.rule_info != NULL) {
             SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec.rule_info);
             api_spec.rule_info = NULL;
@@ -174,7 +169,7 @@ SecurityPolicySvcImpl::SecurityPolicyDelete(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = core::policy_delete(&key, bctxt);
+        ret = pds_policy_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -211,10 +206,25 @@ SecurityPolicySvcImpl::SecurityPolicyGet(ServerContext *context,
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
         memset(&info, 0, sizeof(info));
+        info.spec.rule_info =
+            (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                                      POLICY_RULE_INFO_SIZE(0));
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = core::policy_get(&key, &info);
+        // get number of rules
+        ret = pds_policy_read(&key, &info);
+        if (ret == SDK_RET_OK) {
+            uint32_t num_rules = info.spec.rule_info->num_rules;
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, info.spec.rule_info);
+            info.spec.rule_info =
+                (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                                          POLICY_RULE_INFO_SIZE(num_rules));
+            info.spec.rule_info->num_rules = num_rules;
+            ret = pds_policy_read(&key, &info);
+        }
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, info.spec.rule_info);
+            info.spec.rule_info = NULL;
             break;
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
@@ -226,9 +236,11 @@ SecurityPolicySvcImpl::SecurityPolicyGet(ServerContext *context,
     }
 
     if (proto_req->id_size() == 0) {
-        ret = core::policy_get_all(pds_policy_api_info_to_proto, proto_rsp);
+        ret = pds_policy_read_all(pds_policy_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
+
+    PDS_MEMORY_TRIM();
     return Status::OK;
 }
 

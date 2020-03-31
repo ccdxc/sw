@@ -39,7 +39,6 @@
 #include "nic/apollo/api/include/pds_flow.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/core/meter.hpp"
 #include "nic/apollo/agent/core/event.hpp"
 #include "nic/apollo/agent/svc/tag.hpp"
 #include "nic/apollo/agent/svc/meter.hpp"
@@ -3069,7 +3068,7 @@ pds_route_table_api_stats_to_proto (pds::RouteTableStats *proto_stats,
 
 // populate proto buf from route table API info
 static inline void
-pds_route_table_api_info_to_proto (const pds_route_table_info_t *api_info,
+pds_route_table_api_info_to_proto (pds_route_table_info_t *api_info,
                                    void *ctxt)
 {
     pds::RouteTableGetResponse *proto_rsp = (pds::RouteTableGetResponse *)ctxt;

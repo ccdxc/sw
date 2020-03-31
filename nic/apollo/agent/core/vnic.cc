@@ -4,7 +4,6 @@
 
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/core/tunnel.hpp"
 #include "nic/apollo/agent/core/vnic.hpp"
 
 namespace core {

@@ -121,12 +121,6 @@ cfg_db::init(void) {
     }
     service_map_ = new(mem) service_db_t();
 
-    mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(route_table_db_t));
-    if (mem == NULL) {
-        return false;
-    }
-    route_table_map_ = new(mem) route_table_db_t();
-
     slabs_[SLAB_ID_IF] =
         slab::factory("if", SLAB_ID_IF, sizeof(pds_if_spec_t),
                       16, true, true, true);
@@ -142,10 +136,6 @@ cfg_db::init(void) {
     slabs_[SLAB_ID_SERVICE] =
         slab::factory("service", SLAB_ID_SERVICE, sizeof(pds_svc_mapping_spec_t),
                       16, true, true, true);
-    slabs_[SLAB_ID_ROUTE] =
-        slab::factory("route_table", SLAB_ID_ROUTE,
-                      sizeof(pds_route_table_spec_t),
-                      16, true, true, true);
     return true;
 }
 
@@ -157,7 +147,6 @@ cfg_db::cfg_db() {
     vpc_peer_map_ = NULL;
     subnet_map_ = NULL;
     service_map_ = NULL;
-    route_table_map_ = NULL;
     memset(&device_, 0, sizeof(pds_device_spec_t));
     memset(slabs_, 0, sizeof(slabs_));
 }
@@ -193,7 +182,6 @@ cfg_db::~cfg_db() {
     FREE(MEM_ALLOC_ID_INFRA, vpc_peer_map_);
     FREE(MEM_ALLOC_ID_INFRA, subnet_map_);
     FREE(MEM_ALLOC_ID_INFRA, service_map_);
-    FREE(MEM_ALLOC_ID_INFRA, route_table_map_);
     for (i = SLAB_ID_MIN; i < SLAB_ID_MAX; i++) {
         if (slabs_[i]) {
             slab::destroy(slabs_[i]);
@@ -363,34 +351,6 @@ agent_state::service_db_walk(service_walk_cb_t cb, void *ctxt) {
 bool
 agent_state::del_from_service_db(pds_svc_mapping_key_t *key) {
     DEL_FROM_DB_WITH_KEY(service, key);
-}
-
-sdk_ret_t
-agent_state::add_to_route_table_db(pds_obj_key_t *key,
-                                   pds_route_table_spec_t *spec) {
-    ADD_TO_OBJ_DB(route_table, key, spec);
-}
-
-pds_route_table_spec_t *
-agent_state::find_in_route_table_db(pds_obj_key_t *key) {
-    FIND_IN_OBJ_DB(route_table, key);
-}
-
-bool
-agent_state::del_from_route_table_db(pds_obj_key_t *key) {
-    DEL_FROM_OBJ_DB(route_table, key);
-}
-
-sdk_ret_t
-agent_state::route_table_db_walk(route_table_walk_cb_t cb, void *ctxt) {
-    auto it_begin = DB_BEGIN(route_table);
-    auto it_end = DB_END(route_table);
-
-    for (auto it = it_begin; it != it_end; it ++) {
-        cb(it->second, ctxt);
-    }
-
-    return SDK_RET_OK;
 }
 
 class agent_state *

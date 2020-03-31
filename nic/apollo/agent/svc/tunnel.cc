@@ -4,7 +4,6 @@
 
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/core/tunnel.hpp"
 #include "nic/apollo/agent/svc/tunnel.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/hooks.hpp"
@@ -15,7 +14,6 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
                             const pds::TunnelRequest *proto_req,
                             pds::TunnelResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
     pds_tep_spec_t api_spec;
     bool batched_internally = false;
@@ -43,10 +41,8 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
     for (int i = 0; i < proto_req->request_size(); i ++) {
         memset(&api_spec, 0, sizeof(pds_tep_spec_t));
         auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.id());
         pds_tep_proto_to_api_spec(&api_spec, request);
-        hooks::tunnel_create(&api_spec);
-        ret = core::tep_create(&key, &api_spec, bctxt);
+        ret = pds_tep_create(&api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -75,7 +71,6 @@ TunnelSvcImpl::TunnelUpdate(ServerContext *context,
                             const pds::TunnelRequest *proto_req,
                             pds::TunnelResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
     pds_tep_spec_t api_spec;
     bool batched_internally = false;
@@ -103,9 +98,8 @@ TunnelSvcImpl::TunnelUpdate(ServerContext *context,
     for (int i = 0; i < proto_req->request_size(); i ++) {
         memset(&api_spec, 0, sizeof(pds_tep_spec_t));
         auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.id());
         pds_tep_proto_to_api_spec(&api_spec, request);
-        ret = core::tep_update(&key, &api_spec, bctxt);
+        ret = pds_tep_update(&api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -159,7 +153,7 @@ TunnelSvcImpl::TunnelDelete(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = core::tep_delete(&key, bctxt);
+        ret = pds_tep_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -194,21 +188,17 @@ TunnelSvcImpl::TunnelGet(ServerContext *context,
         return Status::OK;
     }
     if (proto_req->id_size() == 0) {
-        ret = core::tep_get_all(pds_tep_api_info_to_proto, proto_rsp);
+        ret = pds_tep_read_all(pds_tep_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = core::tep_get(&key, &info);
+        ret = pds_tep_read(&key, &info);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             break;
         }
-        auto response = proto_rsp->add_response();
-        pds_tep_api_spec_to_proto(response->mutable_spec(), &info.spec);
-        pds_tep_api_status_to_proto(response->mutable_status(),
-                                    &info.status);
-        pds_tep_api_stats_to_proto(response->mutable_stats(), &info.stats);
+        pds_tep_api_info_to_proto(&info, proto_rsp);
     }
     return Status::OK;
 }

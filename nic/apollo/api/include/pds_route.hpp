@@ -151,6 +151,14 @@ sdk_ret_t pds_route_table_create(pds_route_table_spec_t *spec,
 sdk_ret_t pds_route_table_read(pds_obj_key_t *key,
                                pds_route_table_info_t *info);
 
+typedef void (*route_table_read_cb_t)(pds_route_table_info_t *info, void *ctxt);
+
+/// \brief      read all route_table
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return     #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_route_table_read_all(route_table_read_cb_t route_table_get_cb, void *ctxt);
+
 /// \brief update route table
 /// \param[in] spec route table configuration
 /// \param[in] bctxt batch context if API is invoked in a batch

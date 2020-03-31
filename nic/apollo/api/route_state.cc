@@ -109,6 +109,11 @@ route_table_state::perish(const pds_obj_key_t& key) {
 }
 
 sdk_ret_t
+route_table_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
+    return route_table_ht_->walk(walk_cb, ctxt);
+}
+
+sdk_ret_t
 route_table_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
     walk_cb(route_table_slab_, ctxt);
     return SDK_RET_OK;

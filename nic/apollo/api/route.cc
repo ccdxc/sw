@@ -264,18 +264,51 @@ route_table::activate_config(pds_epoch_t epoch, api_op_t api_op,
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
-void
+sdk_ret_t
 route_table::fill_spec_(pds_route_table_spec_t *spec) {
+    sdk_ret_t ret = SDK_RET_OK;
+
     memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
     if (spec->route_info) {
+        uint32_t num_routes = spec->route_info->num_routes;
         spec->route_info->af = af_;
-        spec->route_info->num_routes = num_routes_;
+        if (!num_routes) {
+            // set num routes and return
+            spec->route_info->num_routes = num_routes_;
+        } else if (num_routes < num_routes_) {
+            // buffer is smaller, read all routes and copy over the
+            // requested number allocate memory for reading all the routes
+            route_info_t *route_info =
+                (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                           ROUTE_INFO_SIZE(num_routes_));
+            route_info->num_routes = num_routes_;
+            // retrieve all routes
+            ret = route_table_db()->retrieve_routes(&key_, route_info);
+            if (ret != SDK_RET_OK) {
+                SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, route_info);
+                return ret;
+            }
+            // copy over requested number of routes
+            memcpy(spec->route_info, route_info, ROUTE_INFO_SIZE(num_routes));
+            spec->route_info->num_routes = num_routes;
+            // free allocated memory
+            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, route_info);
+        } else {
+            // retrieve routes from lmdb
+            ret = route_table_db()->retrieve_routes(&key_, spec->route_info);
+        }
     }
+    return ret;
 }
 
 sdk_ret_t
 route_table::read(pds_route_table_info_t *info) {
-    fill_spec_(&info->spec);
+    sdk_ret_t ret;
+
+    ret = fill_spec_(&info->spec);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
     return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
                           (impl::obj_info_t *)info);
 }

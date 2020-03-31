@@ -221,7 +221,8 @@ private:
 
     /// \brief      fill the policy sw spec
     /// \param[out] spec specification
-    void fill_spec_(pds_policy_spec_t *spec);
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_spec_(pds_policy_spec_t *spec);
 
     /// \brief     initialize policy table instance with the given policy config
     /// \param[in] policy    policy from which the config is copied from

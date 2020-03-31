@@ -5,7 +5,6 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/core/mirror.hpp"
 #include "nic/apollo/agent/svc/mirror.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 
@@ -15,7 +14,6 @@ MirrorSvcImpl::MirrorSessionCreate(ServerContext *context,
                                    const pds::MirrorSessionRequest *proto_req,
                                    pds::MirrorSessionResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -44,12 +42,11 @@ MirrorSvcImpl::MirrorSessionCreate(ServerContext *context,
     for (int i = 0; i < proto_req->request_size(); i ++) {
         memset(&api_spec, 0, sizeof(api_spec));
         auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = pds_mirror_session_proto_to_api_spec(&api_spec, request);
         if (unlikely(ret != SDK_RET_OK)) {
             goto end;
         }
-        ret = core::mirror_session_create(&key, &api_spec, bctxt);
+        ret = pds_mirror_session_create(&api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -78,7 +75,6 @@ MirrorSvcImpl::MirrorSessionUpdate(ServerContext *context,
                                    const pds::MirrorSessionRequest *proto_req,
                                    pds::MirrorSessionResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -107,12 +103,11 @@ MirrorSvcImpl::MirrorSessionUpdate(ServerContext *context,
     for (int i = 0; i < proto_req->request_size(); i ++) {
         memset(&api_spec, 0, sizeof(api_spec));
         auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = pds_mirror_session_proto_to_api_spec(&api_spec, request);
         if (unlikely(ret != SDK_RET_OK)) {
             goto end;
         }
-        ret = core::mirror_session_update(&key, &api_spec, bctxt);
+        ret = pds_mirror_session_update(&api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -165,7 +160,7 @@ MirrorSvcImpl::MirrorSessionDelete(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = core::mirror_session_delete(&key, bctxt);
+        ret = pds_mirror_session_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -200,24 +195,18 @@ MirrorSvcImpl::MirrorSessionGet(ServerContext *context,
         return Status::OK;
     }
     if (proto_req->id_size() == 0) {
-        ret = core::mirror_session_get_all(pds_mirror_session_api_info_to_proto,
-                                           proto_rsp);
+        ret = pds_mirror_session_read_all(pds_mirror_session_api_info_to_proto,
+                                          proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = core::mirror_session_get(&key, &info);
+        ret = pds_mirror_session_read(&key, &info);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             break;
         }
-        // TODO: why is this not like VPCGet() ?
-        auto response = proto_rsp->add_response();
-        pds_mirror_session_api_spec_to_proto(response->mutable_spec(), &info.spec);
-        pds_mirror_session_api_status_to_proto(response->mutable_status(),
-                                               &info.status);
-        pds_mirror_session_api_stats_to_proto(response->mutable_stats(),
-                                              &info.stats);
+        pds_mirror_session_api_info_to_proto(&info, proto_rsp);
     }
     return Status::OK;
 }

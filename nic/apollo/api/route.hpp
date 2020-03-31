@@ -224,7 +224,8 @@ private:
 
     /// \brief      fill the route table sw spec
     /// \param[out] spec specification
-    void fill_spec_(pds_route_table_spec_t *spec);
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_spec_(pds_route_table_spec_t *spec);
 
     /// \brief     initialize route table instance with the given route table's
     ///            config
