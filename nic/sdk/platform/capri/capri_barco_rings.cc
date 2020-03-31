@@ -49,7 +49,7 @@ bool capri_barco_mpp_poller(capri_barco_ring_t *barco_ring, uint32_t req_tag);
 capri_barco_ring_t  barco_rings[] = {
     {   // BARCO_RING_ASYM
         BARCO_RING_ASYM_STR,
-        CAPRI_HBM_REG_BARCO_RING_ASYM,
+        ASIC_HBM_REG_BARCO_RING_ASYM,
         0,
         32,
         1024,
@@ -70,7 +70,7 @@ capri_barco_ring_t  barco_rings[] = {
     },
     {   // BARCO_RING_GCM0
         BARCO_RING_GCM0_STR,
-        CAPRI_HBM_REG_BARCO_RING_GCM0,
+        ASIC_HBM_REG_BARCO_RING_GCM0,
         0,
         BARCO_CRYPTO_DESC_ALIGN_BYTES,
         CAPRI_BARCO_RING_SLOTS,
@@ -91,7 +91,7 @@ capri_barco_ring_t  barco_rings[] = {
     },
     {   // BARCO_RING_GCM1
         BARCO_RING_GCM1_STR,
-        CAPRI_HBM_REG_BARCO_RING_GCM1,
+        ASIC_HBM_REG_BARCO_RING_GCM1,
         0,
         BARCO_CRYPTO_DESC_ALIGN_BYTES,
         CAPRI_BARCO_RING_SLOTS,
@@ -112,7 +112,7 @@ capri_barco_ring_t  barco_rings[] = {
     },
     {   // BARCO_RING_XTS0
         BARCO_RING_XTS0_STR,
-        CAPRI_HBM_REG_BARCO_RING_XTS0,
+        ASIC_HBM_REG_BARCO_RING_XTS0,
         0,
         32,
         CAPRI_BARCO_XTS_RING_SLOTS,
@@ -133,7 +133,7 @@ capri_barco_ring_t  barco_rings[] = {
     },
     {   // BARCO_RING_XTS1
         BARCO_RING_XTS1_STR,
-        CAPRI_HBM_REG_BARCO_RING_XTS1,
+        ASIC_HBM_REG_BARCO_RING_XTS1,
         0,
         32,
         CAPRI_BARCO_XTS_RING_SLOTS,
@@ -154,7 +154,7 @@ capri_barco_ring_t  barco_rings[] = {
     },
     {   // BARCO_RING_MPP0
         BARCO_RING_MPP0_STR,
-        CAPRI_HBM_REG_BARCO_RING_MPP0,
+        ASIC_HBM_REG_BARCO_RING_MPP0,
         0,
         128,
         1024,
@@ -175,7 +175,7 @@ capri_barco_ring_t  barco_rings[] = {
     },
     {   // BARCO_RING_MPP1
         BARCO_RING_MPP1_STR,
-        CAPRI_HBM_REG_BARCO_RING_MPP1,
+        ASIC_HBM_REG_BARCO_RING_MPP1,
         0,
         128,
         1024,
@@ -196,7 +196,7 @@ capri_barco_ring_t  barco_rings[] = {
     },
     {   // BARCO_RING_MPP2
         BARCO_RING_MPP2_STR,
-        CAPRI_HBM_REG_BARCO_RING_MPP2,
+        ASIC_HBM_REG_BARCO_RING_MPP2,
         0,
         128,
         1024,
@@ -217,7 +217,7 @@ capri_barco_ring_t  barco_rings[] = {
     },
     {   // BARCO_RING_MPP3
         BARCO_RING_MPP3_STR,
-        CAPRI_HBM_REG_BARCO_RING_MPP3,
+        ASIC_HBM_REG_BARCO_RING_MPP3,
         0,
         128,
         1024,
@@ -246,7 +246,7 @@ capri_barco_ring_t  barco_rings[] = {
     },
     {   // BARCO_RING_CP
         BARCO_RING_CP_STR,
-        CAPRI_HBM_REG_BARCO_RING_CP,
+        ASIC_HBM_REG_BARCO_RING_CP,
         0,
         64,
         BARCO_CRYPTO_CP_RING_SIZE,
@@ -267,7 +267,7 @@ capri_barco_ring_t  barco_rings[] = {
     },
     {   // BARCO_RING_CP_HOT
         BARCO_RING_CP_HOT_STR,
-        CAPRI_HBM_REG_BARCO_RING_CP_HOT,
+        ASIC_HBM_REG_BARCO_RING_CP_HOT,
         0,
         64,
         BARCO_CRYPTO_CP_HOT_RING_SIZE,
@@ -288,7 +288,7 @@ capri_barco_ring_t  barco_rings[] = {
     },
     {   // BARCO_RING_DC
         BARCO_RING_DC_STR,
-        CAPRI_HBM_REG_BARCO_RING_DC,
+        ASIC_HBM_REG_BARCO_RING_DC,
         0,
         64,
         BARCO_CRYPTO_DC_RING_SIZE,
@@ -309,7 +309,7 @@ capri_barco_ring_t  barco_rings[] = {
     },
     {   // BARCO_RING_DC_HOT
         BARCO_RING_DC_HOT_STR,
-        CAPRI_HBM_REG_BARCO_RING_DC_HOT,
+        ASIC_HBM_REG_BARCO_RING_DC_HOT,
         0,
         64,
         BARCO_CRYPTO_DC_HOT_RING_SIZE,
@@ -1939,7 +1939,7 @@ capri_barco_rings_init (platform_type_t platform)
             barco_rings[idx].opaqe_tag_value = 0x1;
 
             opa_tag_addr =
-                sdk::asic::asic_get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) +
+                sdk::asic::asic_get_mem_addr(ASIC_HBM_REG_OPAQUE_TAG) +
                 get_opaque_tag_offset((barco_rings_t)idx);
 
             SDK_TRACE_DEBUG("Ring: %s: Allocated opaque tag @ 0x%llx",

@@ -5,7 +5,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
 #include "nic/hal/pd/iris/internal/tcpcb_pd.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
 #include "gen/p4gen/tls_txdma_pre_crypto_enc/include/tls_txdma_pre_crypto_enc_p4plus_ingress.h"

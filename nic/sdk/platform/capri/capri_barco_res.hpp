@@ -46,11 +46,11 @@ typedef enum capri_barco_res_type_e {
     CRYPTO_BARCO_RES_MAX
 } capri_barco_res_type_t;
 
-#define CAPRI_HBM_REG_CRYPTO_ASYM_DMA_DESCR "crypto-asym-dma-descr"
-#define CAPRI_HBM_REG_CRYPTO_HBM_MEM     "crypto-hbm-mem"
-#define CAPRI_HBM_REG_ASYM_KEY_DESCR     "crypto-asym-key-desc-array"
-#define CAPRI_HBM_REG_CRYPTO_SYM_MSG_DESCR "crypto-sym-msg-descr"
-#define CAPRI_HBM_REG_CRYPTO_HBM_MEM_BIG  "crypto-hbm-mem-big"
+#define ASIC_HBM_REG_CRYPTO_ASYM_DMA_DESCR "crypto-asym-dma-descr"
+#define ASIC_HBM_REG_CRYPTO_HBM_MEM     "crypto-hbm-mem"
+#define ASIC_HBM_REG_ASYM_KEY_DESCR     "crypto-asym-key-desc-array"
+#define ASIC_HBM_REG_CRYPTO_SYM_MSG_DESCR "crypto-sym-msg-descr"
+#define ASIC_HBM_REG_CRYPTO_HBM_MEM_BIG  "crypto-hbm-mem-big"
 
 #define CRYPTO_ASYM_DMA_DESCR_COUNT_MAX 1024
 #define CRYPTO_SYM_MSG_DESCR_COUNT_MAX  1024

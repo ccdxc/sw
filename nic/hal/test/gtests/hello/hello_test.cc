@@ -10,7 +10,7 @@
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "platform/utils/lif_manager_base.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/hal/pd/asic_pd.hpp"

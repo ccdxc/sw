@@ -14,7 +14,7 @@ capri_barco_resources_t capri_barco_resources[] = {
     /* 0 - CRYPTO_BARCO_RES_ASYM_DMA_DESCR */
     {
         "Crypto Asym DMA Descriptors",
-        CAPRI_HBM_REG_CRYPTO_ASYM_DMA_DESCR,
+        ASIC_HBM_REG_CRYPTO_ASYM_DMA_DESCR,
         CRYPTO_ASYM_DMA_DESCR_COUNT_MAX,
         24,
         4,
@@ -25,7 +25,7 @@ capri_barco_resources_t capri_barco_resources[] = {
     /* 1 - CRYPTO_BARCO_RES_HBM_MEM_512B */
     {
         "Crypto 512B HBM Mem Blocks",
-        CAPRI_HBM_REG_CRYPTO_HBM_MEM,
+        ASIC_HBM_REG_CRYPTO_HBM_MEM,
         CRYPTO_HBM_MEM_COUNT_MAX,
         512,
         4,
@@ -36,7 +36,7 @@ capri_barco_resources_t capri_barco_resources[] = {
     /* 2 - CRYPTO_BARCO_RES_ASYM_KEY_DESCR */
     {
         "Crypto Asym Key Descriptors",
-        CAPRI_HBM_REG_ASYM_KEY_DESCR,
+        ASIC_HBM_REG_ASYM_KEY_DESCR,
         CRYPTO_ASYM_KEY_DESCR_COUNT_MAX,
         16,
         16,
@@ -47,7 +47,7 @@ capri_barco_resources_t capri_barco_resources[] = {
     /* 3 - CRYPTO_BARCO_RES_SYM_MSG_DESCR */
     {
         "Crypto Sym Message Descriptors",
-        CAPRI_HBM_REG_CRYPTO_SYM_MSG_DESCR,
+        ASIC_HBM_REG_CRYPTO_SYM_MSG_DESCR,
         CRYPTO_SYM_MSG_DESCR_COUNT_MAX,
         64,
         64,
@@ -58,7 +58,7 @@ capri_barco_resources_t capri_barco_resources[] = {
     /* 3 - CRYPTO_BARCO_RES_HBM_MEM_512KB */
     {
         "Crypto 512KB HBM Mem Blocks",
-        CAPRI_HBM_REG_CRYPTO_HBM_MEM_BIG,
+        ASIC_HBM_REG_CRYPTO_HBM_MEM_BIG,
         CRYPTO_HBM_MEM_BIG_COUNT_MAX,
         (512 * 1024),
         4,

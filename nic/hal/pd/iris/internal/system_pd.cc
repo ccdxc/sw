@@ -5,7 +5,7 @@
 #include "nic/hal/pd/iris/internal/system_pd.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
 #include "platform/capri/capri_tm_utils.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
@@ -346,7 +346,7 @@ hbm_get_addr_for_stat_index (p4pd_table_id table_id,
     mem_addr_t  stats_base_addr;
     p4pd_table_properties_t  tbl_ctx;
 
-    stats_base_addr =  asicpd_get_mem_addr(CAPRI_HBM_REG_P4_ATOMIC_STATS);
+    stats_base_addr =  asicpd_get_mem_addr(ASIC_HBM_REG_P4_ATOMIC_STATS);
     SDK_ASSERT(stats_base_addr != INVALID_MEM_ADDRESS);
     stats_base_addr &= ~((uint64_t)0x80000000);
 
@@ -823,7 +823,7 @@ pd_clock_delta_comp (pd_func_args_t *pd_func_args)
     g_clock_freq = sdk::asic::pd::asic_pd_clock_freq_get();
 
     // Get the base memory address of P4 clock table
-    start_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_CLOCK_GETTIMEOFDAY);
+    start_addr = asicpd_get_mem_addr(ASIC_HBM_REG_CLOCK_GETTIMEOFDAY);
     SDK_ASSERT(start_addr != INVALID_MEM_ADDRESS);
 
     // Fill in the table details for cache invalidate

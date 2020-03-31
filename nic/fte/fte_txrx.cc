@@ -16,7 +16,7 @@
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "lib/thread/thread.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "gen/proto/delphi.pb.h"
@@ -315,7 +315,7 @@ inst_t::inst_t(uint8_t fte_id) :
     } else {
         sdk::types::mem_addr_t vaddr;
         sdk::types::mem_addr_t start_addr =
-            asicpd_get_mem_addr(CAPRI_HBM_REG_PER_FTE_STATS);
+            asicpd_get_mem_addr(ASIC_HBM_REG_PER_FTE_STATS);
         HAL_TRACE_VERBOSE("Start address: {:p}", (void *)start_addr);
         SDK_ASSERT(start_addr != INVALID_MEM_ADDRESS);
 

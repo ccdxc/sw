@@ -1698,7 +1698,7 @@ capri_barco_setup_dummy_gcm1_req (uint32_t key_idx)
 
     assert((CAPRI_BARCO_RING_SLOTS & (CAPRI_BARCO_RING_SLOTS-1)) == 0);
 
-    gcm1_ring_base = sdk::asic::asic_get_mem_addr(CAPRI_HBM_REG_BARCO_RING_GCM1);
+    gcm1_ring_base = sdk::asic::asic_get_mem_addr(ASIC_HBM_REG_BARCO_RING_GCM1);
     for (idx = 0; idx < CAPRI_BARCO_RING_SLOTS; idx+=8) {
         gcm1_slot_addr = gcm1_ring_base + (idx <<
                                            CAPRI_BARCO_SYM_REQ_DESC_SZ_SHIFT);

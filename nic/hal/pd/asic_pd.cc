@@ -4,7 +4,7 @@
 #include "nic/include/hal.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "asic/asic.hpp"
 #include "asic/pd/pd.hpp"
 #include "platform/utils/mpartition.hpp"

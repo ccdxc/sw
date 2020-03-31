@@ -8,7 +8,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/internal/tcpcb_pd.hpp"
 #include "nic/hal/pd/iris/p4pd_tcp_proxy_api.h"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/include/pd.hpp"
@@ -335,11 +335,11 @@ p4pd_add_or_del_tcpcb_rx_dma(pd_tcpcb_t* tcpcb_pd, bool del)
 
     if(!del) {
         uint64_t stats_base = asicpd_get_mem_addr(
-                CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS);
+                ASIC_HBM_REG_TCP_PROXY_PER_FLOW_STATS);
         SDK_ASSERT(stats_base + tcpcb_pd->tcpcb->cb_id *
                    TCP_PER_FLOW_STATS_SIZE +
                    TCP_PER_FLOW_STATS_SIZE <= stats_base +
-                   asicpd_get_mem_size_kb(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) *
+                   asicpd_get_mem_size_kb(ASIC_HBM_REG_TCP_PROXY_PER_FLOW_STATS) *
                    1024);
         rx_dma_d.rx_stats_base = htonll(stats_base +
                 tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
@@ -824,7 +824,7 @@ p4pd_get_tcpcb_rxdma_stats(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
     }
 
-    hwid = asicpd_get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
+    hwid = asicpd_get_mem_addr(ASIC_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
                 tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
                 TCP_RX_PER_FLOW_STATS_OFFSET;
     if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&stats, sizeof(stats))) {
@@ -877,7 +877,7 @@ p4pd_get_tcpcb_txdma_stats(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
      }
 
-    hwid = asicpd_get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
+    hwid = asicpd_get_mem_addr(ASIC_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
                 tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
                 TCP_TX_PER_FLOW_STATS_OFFSET;
     if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&stats, sizeof(stats))) {
@@ -1025,7 +1025,7 @@ p4pd_add_or_del_tcp_ooo_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         }
 
         uint64_t mem_addr = (uint64_t)asicpd_get_mem_addr(
-                CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_GC_GLOBAL_OOQ_TX2RX_FP_PI;
+                ASIC_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_GC_GLOBAL_OOQ_TX2RX_FP_PI;
         data.u.load_stage0_d.ooo_rx2tx_free_pi_addr = htonll(mem_addr);
 
         data.u.load_stage0_d.ooo_rx2tx_producer_ci_addr =
@@ -1267,11 +1267,11 @@ p4pd_add_or_del_tcp_tx_tso_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
     if(!del) {
         uint64_t stats_base = asicpd_get_mem_addr(
-                CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS);
+                ASIC_HBM_REG_TCP_PROXY_PER_FLOW_STATS);
         SDK_ASSERT(stats_base + tcpcb_pd->tcpcb->cb_id *
                    TCP_PER_FLOW_STATS_SIZE +
                    TCP_PER_FLOW_STATS_SIZE <= stats_base +
-                   asicpd_get_mem_size_kb(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) *
+                   asicpd_get_mem_size_kb(ASIC_HBM_REG_TCP_PROXY_PER_FLOW_STATS) *
                    1024);
         data.tx_stats_base = htonll(stats_base +
                 tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
@@ -1670,7 +1670,7 @@ p4pd_init_tcpcb_stats(pd_tcpcb_t* tcpcb_pd)
     tcp_rx_stats_t rx_stats = { 0 };
     tcp_tx_stats_t tx_stats = { 0 };
 
-    hwid = asicpd_get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
+    hwid = asicpd_get_mem_addr(ASIC_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
                 tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
                 TCP_RX_PER_FLOW_STATS_OFFSET;
     if (!p4plus_hbm_write(hwid, (uint8_t *)&rx_stats, sizeof(rx_stats),
@@ -1679,7 +1679,7 @@ p4pd_init_tcpcb_stats(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
     }
 
-    hwid = asicpd_get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
+    hwid = asicpd_get_mem_addr(ASIC_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
                 tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
                 TCP_TX_PER_FLOW_STATS_OFFSET;
     if (!p4plus_hbm_write(hwid, (uint8_t *)&tx_stats, sizeof(tx_stats),

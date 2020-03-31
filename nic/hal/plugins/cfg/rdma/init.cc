@@ -1,7 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 #include "nic/hal/hal.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/hal/plugins/cfg/rdma/rdma.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
@@ -124,12 +124,12 @@ rdma_stats_hdrs_init(void)
     pd::pd_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t pd_func_args = {0};
 
-    args.addr = asicpd_get_mem_addr(CAPRI_HBM_REG_RDMA_STATS_HDRS);
+    args.addr = asicpd_get_mem_addr(ASIC_HBM_REG_RDMA_STATS_HDRS);
     if (args.addr == INVALID_MEM_ADDRESS)
         return;
 
     SDK_ASSERT(RDMA_STATS_HDRS_SIZE ==
-               asicpd_get_mem_size_kb(CAPRI_HBM_REG_RDMA_STATS_HDRS) * 1024);
+               asicpd_get_mem_size_kb(ASIC_HBM_REG_RDMA_STATS_HDRS) * 1024);
 
     args.buf = (uint8_t *)&rdma_stats_hdrs;
     args.size = sizeof(rdma_stats_hdrs);

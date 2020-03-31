@@ -7,7 +7,7 @@
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/platform/capri/capri_tm_utils.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 
 using qos::QosClassStatusEpd;
@@ -287,7 +287,7 @@ qos_class_pd_program_dscp_cos_map_table ()
     hal_ret_t      ret = HAL_RET_OK;
         
     uint64_t       dscp_cos_map_hbm_base_addr;
-    dscp_cos_map_hbm_base_addr =  (uint64_t)asicpd_get_mem_addr(CAPRI_HBM_REG_QOS_DSCP_COS_MAP);
+    dscp_cos_map_hbm_base_addr =  (uint64_t)asicpd_get_mem_addr(ASIC_HBM_REG_QOS_DSCP_COS_MAP);
         
     HAL_TRACE_DEBUG("Programming DSCP-PCP to TxDMA IQ mapping "
                     "dscp_cos_map_hbm_base_addr is {} and size of dscp-cos-map-table is {}", 

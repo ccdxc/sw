@@ -14,7 +14,7 @@
 #include "nic/sdk/asic/pd/scheduler.hpp"
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
 #include "gen/proto/nicmgr/metrics.delphi.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 
 using namespace sdk::asic::pd;
 
@@ -893,7 +893,7 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
     delphi::objects::lifmetrics_t   lif_metrics = {0};
 
     sdk::types::mem_addr_t stats_mem_addr =
-        asicpd_get_mem_addr(CAPRI_HBM_REG_LIF_STATS);
+        asicpd_get_mem_addr(ASIC_HBM_REG_LIF_STATS);
 
     stats_mem_addr += pd_lif->hw_lif_id << LIF_STATS_SIZE_SHIFT;
 

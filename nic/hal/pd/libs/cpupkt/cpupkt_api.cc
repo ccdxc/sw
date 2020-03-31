@@ -3,7 +3,7 @@
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 #include "platform/capri/capri_common.hpp"
 #include "platform/pal/include/pal_mem.h"

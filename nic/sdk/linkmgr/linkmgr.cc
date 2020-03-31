@@ -1433,7 +1433,7 @@ port_stats_addr (uint32_t ifindex)
                       eth_ifindex_to_str(ifindex).c_str());
         return INVALID_MEM_ADDRESS;
     }
-    port_stats_base = g_linkmgr_cfg.mempartition->start_addr(CAPRI_HBM_REG_PORT_STATS);
+    port_stats_base = g_linkmgr_cfg.mempartition->start_addr(ASIC_HBM_REG_PORT_STATS);
 
     if ((port_stats_base == 0) || (port_stats_base == INVALID_MEM_ADDRESS)) {
         SDK_TRACE_ERR("port %s stats_init port_stats_base 0x%llx port stats not supported",

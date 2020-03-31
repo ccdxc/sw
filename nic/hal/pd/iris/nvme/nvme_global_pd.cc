@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nvme_global_pd.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/sdk/platform/capri/capri_barco_rings.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
@@ -64,7 +64,7 @@ setup_txhwxtscb (uint64_t data_addr)
 
     data.log_sz = log2(CAPRI_BARCO_XTS_RING_SLOTS);
     data.xts_ring_base_addr =
-        asicpd_get_mem_addr(CAPRI_HBM_REG_BARCO_RING_XTS0);
+        asicpd_get_mem_addr(ASIC_HBM_REG_BARCO_RING_XTS0);
     data.ci = 0;
     data.pi = 0;
     data.choke_counter = 0;
@@ -89,7 +89,7 @@ setup_txhwdgstcb (uint64_t data_addr)
     nvme_txhwdgstcb_t data = { 0 };
 
     data.log_sz = log2(BARCO_CRYPTO_CP_RING_SIZE);
-    data.dgst_ring_base_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_BARCO_RING_CP);
+    data.dgst_ring_base_addr = asicpd_get_mem_addr(ASIC_HBM_REG_BARCO_RING_CP);
     data.ci = 0;
     data.pi = 0;
     data.choke_counter = 0;
@@ -114,7 +114,7 @@ setup_rxhwxtscb (uint64_t data_addr)
 
     data.log_sz = log2(CAPRI_BARCO_XTS_RING_SLOTS);
     data.xts_ring_base_addr =
-        asicpd_get_mem_addr(CAPRI_HBM_REG_BARCO_RING_XTS1);
+        asicpd_get_mem_addr(ASIC_HBM_REG_BARCO_RING_XTS1);
     data.ci = 0;
     data.pi = 0;
     data.choke_counter = 0;
@@ -139,7 +139,7 @@ setup_rxhwdgstcb (uint64_t data_addr)
     nvme_rxhwdgstcb_t data = { 0 };
 
     data.log_sz = log2(BARCO_CRYPTO_DC_RING_SIZE);
-    data.dgst_ring_base_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_BARCO_RING_DC);
+    data.dgst_ring_base_addr = asicpd_get_mem_addr(ASIC_HBM_REG_BARCO_RING_DC);
     data.ci = 0;
     data.pi = 0;
     data.choke_counter = 0;
@@ -318,10 +318,10 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
     SDK_ASSERT(tx_max_pdu_context <= nvme_hbm_resource_max(NVME_TYPE_TX_PDU_CONTEXT));
     SDK_ASSERT(rx_max_pdu_context <= nvme_hbm_resource_max(NVME_TYPE_RX_PDU_CONTEXT));
     SDK_ASSERT(nvme_hbm_offset(NVME_TYPE_MAX) <=
-               (int) (asicpd_get_mem_size_kb(CAPRI_HBM_REG_NVME) * 1024));
+               (int) (asicpd_get_mem_size_kb(ASIC_HBM_REG_NVME) * 1024));
 
 
-    uint64_t nvme_hbm_start = asicpd_get_mem_addr(CAPRI_HBM_REG_NVME);
+    uint64_t nvme_hbm_start = asicpd_get_mem_addr(ASIC_HBM_REG_NVME);
     //ns
     nvme_global_pd->nscb_base_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_NSCB);
 
@@ -347,22 +347,22 @@ create_nvme_global_state (pd_nvme_global_t *nvme_global_pd)
     nvme_global_pd->resourcecb_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RESOURCECB);
 
     //tx_hwxtscb
-    opaque_tag_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) +
+    opaque_tag_addr = asicpd_get_mem_addr(ASIC_HBM_REG_OPAQUE_TAG) +
         get_opaque_tag_offset(BARCO_RING_XTS0);
     nvme_global_pd->tx_hwxtscb_addr = opaque_tag_addr;
 
     //rx_hwxtscb
-    opaque_tag_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) +
+    opaque_tag_addr = asicpd_get_mem_addr(ASIC_HBM_REG_OPAQUE_TAG) +
         get_opaque_tag_offset(BARCO_RING_XTS1);
     nvme_global_pd->rx_hwxtscb_addr = opaque_tag_addr;
 
     //tx_hwdgstcb
-    opaque_tag_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) +
+    opaque_tag_addr = asicpd_get_mem_addr(ASIC_HBM_REG_OPAQUE_TAG) +
         get_opaque_tag_offset(BARCO_RING_CP);
     nvme_global_pd->tx_hwdgstcb_addr = opaque_tag_addr;
 
     //rx_hwdgstcb
-    opaque_tag_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_OPAQUE_TAG) +
+    opaque_tag_addr = asicpd_get_mem_addr(ASIC_HBM_REG_OPAQUE_TAG) +
         get_opaque_tag_offset(BARCO_RING_DC);
     nvme_global_pd->rx_hwdgstcb_addr = opaque_tag_addr;
 

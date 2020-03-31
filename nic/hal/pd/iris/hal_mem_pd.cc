@@ -53,7 +53,7 @@
 #include "nic/hal/pd/iris/internal/proxyrcb_pd.hpp"
 #include "nic/hal/pd/iris/internal/proxyccb_pd.hpp"
 //#include "nic/hal/pd/iris/dos/dos_pd.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/sdk/asic/pd/scheduler.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
@@ -1192,7 +1192,7 @@ hal_pd_lif_stats_region_init (void)
     p4pd_error_t                rc;
     uint64_t                    stats_base_addr;
 
-    stats_base_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_LIF_STATS);
+    stats_base_addr = asicpd_get_mem_addr(ASIC_HBM_REG_LIF_STATS);
     // subtract 2G (saves ASM instructions)
     stats_base_addr -= ((uint64_t)1 << 31);
 
@@ -1218,7 +1218,7 @@ hal_pd_hwerr_stats_region_init (void)
     p4pd_error_t                rc;
     uint64_t                    stats_base_addr;
 
-    stats_base_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_P4_HWERR_STATS);
+    stats_base_addr = asicpd_get_mem_addr(ASIC_HBM_REG_P4_HWERR_STATS);
     // subtract 2G (saves ASM instructions)
     stats_base_addr -= ((uint64_t)1 << 31);
 

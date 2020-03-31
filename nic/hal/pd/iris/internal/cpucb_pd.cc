@@ -4,7 +4,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/internal/cpucb_pd.hpp"
 #include "nic/hal/pd/iris/internal/gccb_pd.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"

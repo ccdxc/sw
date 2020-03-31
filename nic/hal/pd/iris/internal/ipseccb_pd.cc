@@ -3,7 +3,7 @@
 #include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/internal/ipseccb_pd.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/pd/iris/nw/vrf_pd.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
@@ -96,10 +96,10 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         data.u.ipsec_encap_rxdma_initial_table_d.key_index = htons(key_index);
         HAL_TRACE_DEBUG("key_index = {}\n", ipseccb_pd->ipseccb->key_index);
 
-        ipsec_cb_ring_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_IPSECCB) + ((ipseccb_pd->ipseccb->cb_id) * DEFAULT_WRING_SLOT_SIZE * IPSEC_PER_CB_RING_SIZE);
+        ipsec_cb_ring_addr = asicpd_get_mem_addr(ASIC_HBM_REG_IPSECCB) + ((ipseccb_pd->ipseccb->cb_id) * DEFAULT_WRING_SLOT_SIZE * IPSEC_PER_CB_RING_SIZE);
         HAL_TRACE_DEBUG("CB Ring Addr {:#x}", ipsec_cb_ring_addr);
 #if 0
-        ipsec_cb_ring_base = asicpd_get_mem_addr(CAPRI_HBM_REG_IPSECCB);
+        ipsec_cb_ring_base = asicpd_get_mem_addr(ASIC_HBM_REG_IPSECCB);
         ipsec_cb_ring_addr = (ipsec_cb_ring_base+(ipseccb_pd->ipseccb->cb_id * IPSEC_CB_RING_ENTRY_SIZE));
         //ipsec_cb_ring_addr = htonll(ipsec_cb_ring_addr);
 #endif
@@ -107,11 +107,11 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         data.u.ipsec_encap_rxdma_initial_table_d.cb_cindex = 0;
         data.u.ipsec_encap_rxdma_initial_table_d.cb_pindex = 0;
 
-        ipsec_barco_ring_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_IPSECCB_BARCO) + ((ipseccb_pd->ipseccb->cb_id) * IPSEC_PER_CB_BARCO_SLOT_ELEM_SIZE * IPSEC_PER_CB_BARCO_RING_SIZE);
+        ipsec_barco_ring_addr = asicpd_get_mem_addr(ASIC_HBM_REG_IPSECCB_BARCO) + ((ipseccb_pd->ipseccb->cb_id) * IPSEC_PER_CB_BARCO_SLOT_ELEM_SIZE * IPSEC_PER_CB_BARCO_RING_SIZE);
         HAL_TRACE_DEBUG("Barco Ring Addr {:#x}", ipsec_barco_ring_addr);
 #if 0
 
-        ipsec_barco_ring_base = asicpd_get_mem_addr(CAPRI_HBM_REG_IPSECCB_BARCO);
+        ipsec_barco_ring_base = asicpd_get_mem_addr(ASIC_HBM_REG_IPSECCB_BARCO);
         ipsec_barco_ring_addr = (ipsec_barco_ring_base+(ipseccb_pd->ipseccb->cb_id * IPSEC_BARCO_RING_ENTRY_SIZE));
         ipsec_barco_ring_addr = htonl(ipsec_barco_ring_addr);
 #endif

@@ -24,7 +24,7 @@
 #include "nic/sdk/lib/table/sldirectmap/sldirectmap.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 
 using sdk::table::sdk_table_api_params_t;
 

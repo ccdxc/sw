@@ -9,7 +9,7 @@
 #include "sdk/utils.hpp"
 #include "sdk/types.hpp"
 #include "nic/hal/pd/capri/capri_config.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/gen/apollo/include/p4pd.h"
 #include "nic/p4/apollo/include/defines.h"

@@ -104,20 +104,20 @@ void populate_fw_name_ver()
 }
 
 #define PORT_MAC_STAT_REPORT_SIZE   (1024)
-#define CAPRI_HBM_REG_PORT_STATS    "port_stats"
+#define ASIC_HBM_REG_PORT_STATS    "port_stats"
 
 void CmdHndler::ReadMacStats(uint32_t port, struct port_stats& stats)
 {
     uint64_t port_stats_base = 0;
 
     if (port == 0x11010001) //first uplink
-        port_stats_base = mempartition->start_addr(CAPRI_HBM_REG_PORT_STATS);
+        port_stats_base = mempartition->start_addr(ASIC_HBM_REG_PORT_STATS);
 
     else if (port == 0x11020001) //second uplink
-        port_stats_base = mempartition->start_addr(CAPRI_HBM_REG_PORT_STATS) +
+        port_stats_base = mempartition->start_addr(ASIC_HBM_REG_PORT_STATS) +
             PORT_MAC_STAT_REPORT_SIZE;
     else if (port == 0x11030001) //BX port
-        port_stats_base = mempartition->start_addr(CAPRI_HBM_REG_PORT_STATS) +
+        port_stats_base = mempartition->start_addr(ASIC_HBM_REG_PORT_STATS) +
             (2 * PORT_MAC_STAT_REPORT_SIZE);
 
     if (port_stats_base)
@@ -1205,13 +1205,13 @@ void CmdHndler::GetLinkStatus(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
     memset(&resp, 0, sizeof(resp));
     hndlr->ipc->GetLinkStatus(cmd->cmd.NcsiHdr.channel, link_status,
             link_speed);
-    status = ((link_status ? 1:0) | (link_speed << 1) | (link_speed << 24) | 
+    status = ((link_status ? 1:0) | (link_speed << 1) | (link_speed << 24) |
             (0x3 << 5)/* autoneg */ | (1 << 20) /* serdes used */ );
 
     memcpy(&resp.rsp.NcsiHdr, &cmd->cmd.NcsiHdr, sizeof(resp.rsp.NcsiHdr));
 
     //HACK: keep the src mac address as 0x2 as of now. Need to fix in better way
-    memset(resp.rsp.NcsiHdr.eth_hdr.h_source, 0x2, 
+    memset(resp.rsp.NcsiHdr.eth_hdr.h_source, 0x2,
             sizeof(resp.rsp.NcsiHdr.eth_hdr.h_source));
 
     //NCSI_CMD_BEGIN_BANNER();

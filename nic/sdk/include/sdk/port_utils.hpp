@@ -23,7 +23,7 @@ port_stats_addr_offset (uint32_t ifindex)
 {
     uint32_t parent_port;
 
-    // Base: CAPRI_HBM_REG_PORT_STATS ("port_stats")
+    // Base: ASIC_HBM_REG_PORT_STATS ("port_stats")
     // 1K MAC stats size per port
     // First 1K: Port 1
     // Next 1K: Port 2

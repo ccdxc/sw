@@ -360,7 +360,7 @@ capri_barco_sym_free_key (int32_t key_idx)
 sdk_ret_t
 capri_barco_crypto_init_tls_pad_table (void)
 {
-    uint8_t  tls_pad_bytes[asic_get_mem_size_kb(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) * 1024], i, j;
+    uint8_t  tls_pad_bytes[asic_get_mem_size_kb(ASIC_HBM_REG_TLS_PROXY_PAD_TABLE) * 1024], i, j;
     uint64_t tls_pad_base_addr = 0;
 
     SDK_TRACE_DEBUG("Initializing TLS-proxy Pad Bytes table of size 0x%llx", sizeof(tls_pad_bytes));
@@ -377,7 +377,7 @@ capri_barco_crypto_init_tls_pad_table (void)
         }
     }
 
-    tls_pad_base_addr = asic_get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE);
+    tls_pad_base_addr = asic_get_mem_addr(ASIC_HBM_REG_TLS_PROXY_PAD_TABLE);
     if (tls_pad_base_addr != INVALID_MEM_ADDRESS) {
         asic_mem_write(tls_pad_base_addr, tls_pad_bytes, sizeof(tls_pad_bytes));
     }

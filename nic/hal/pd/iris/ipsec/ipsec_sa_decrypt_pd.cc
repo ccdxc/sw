@@ -3,7 +3,7 @@
 #include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/ipsec/ipsec_pd.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/pd/iris/nw/vrf_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
@@ -86,8 +86,8 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         HAL_TRACE_DEBUG("key_index {}, new_key_index {}", ipsec_sa_pd->ipsec_sa->key_index, ipsec_sa_pd->ipsec_sa->new_key_index);
         // the below may have to use a different range for the reverse direction
 
-        ipsec_cb_ring_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_IPSECCB) +
-            ((asicpd_get_mem_size_kb(CAPRI_HBM_REG_IPSECCB)/2) * 1024) +
+        ipsec_cb_ring_addr = asicpd_get_mem_addr(ASIC_HBM_REG_IPSECCB) +
+            ((asicpd_get_mem_size_kb(ASIC_HBM_REG_IPSECCB)/2) * 1024) +
             ((ipsec_sa_pd->ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4)) *
              DEFAULT_WRING_SLOT_SIZE * IPSEC_PER_CB_RING_SIZE);
         HAL_TRACE_DEBUG("CB Ring Addr {:#x}", ipsec_cb_ring_addr);
@@ -97,8 +97,8 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_pindex = 0;
 
         ipsec_barco_ring_addr =
-            asicpd_get_mem_addr(CAPRI_HBM_REG_IPSECCB_BARCO) +
-            ((asicpd_get_mem_size_kb(CAPRI_HBM_REG_IPSECCB_BARCO)/2) * 1024) +
+            asicpd_get_mem_addr(ASIC_HBM_REG_IPSECCB_BARCO) +
+            ((asicpd_get_mem_size_kb(ASIC_HBM_REG_IPSECCB_BARCO)/2) * 1024) +
             ((ipsec_sa_pd->ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4)) *
              IPSEC_PER_CB_BARCO_SLOT_ELEM_SIZE * IPSEC_PER_CB_BARCO_RING_SIZE);
         HAL_TRACE_DEBUG("Barco Ring Addr {:#x}", ipsec_barco_ring_addr);

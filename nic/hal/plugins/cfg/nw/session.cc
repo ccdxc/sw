@@ -23,7 +23,8 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "gen/proto/ftestats/ftestats.delphi.hpp"
 #include "gen/proto/flowstats/flowstats.delphi.hpp"
 #include "nic/hal/iris/delphi/delphi_events.hpp"
@@ -3732,7 +3733,7 @@ session_init (hal_cfg_t *hal_cfg)
     } else {
         sdk::types::mem_addr_t vaddr;
         sdk::types::mem_addr_t pal_addr =
-            asicpd_get_mem_addr(CAPRI_HBM_REG_SESSION_SUMMARY_STATS);
+            asicpd_get_mem_addr(ASIC_HBM_REG_SESSION_SUMMARY_STATS);
         HAL_TRACE_VERBOSE("Start addr: {:p}", pal_addr);
         SDK_ASSERT(pal_addr != INVALID_MEM_ADDRESS);
 
@@ -3758,7 +3759,7 @@ session_init (hal_cfg_t *hal_cfg)
                                           HAL_FLOW_TELEMETRY_MAX_STATS_STATE, true);
         SDK_ASSERT(g_flow_proto_state_indexer != NULL);
 
-        pal_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_FLOW_TELEMETRY_STATS);
+        pal_addr = asicpd_get_mem_addr(ASIC_HBM_REG_FLOW_TELEMETRY_STATS);
         SDK_ASSERT(pal_addr != INVALID_MEM_ADDRESS);
 
         g_flow_telemetry_hbm_start = pal_addr;

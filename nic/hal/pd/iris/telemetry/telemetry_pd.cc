@@ -9,7 +9,7 @@
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/iris/telemetry/telemetry_pd.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/iris/telemetry/ipfix_pd.hpp"
@@ -720,7 +720,7 @@ pd_collector_get(pd_func_args_t *pd_func_args)
 
     sdk::types::mem_addr_t vaddr;
     sdk::types::mem_addr_t stats_mem_addr =
-                        asicpd_get_mem_addr(CAPRI_HBM_REG_IPFIX_STATS);
+                        asicpd_get_mem_addr(ASIC_HBM_REG_IPFIX_STATS);
     SDK_ASSERT(stats_mem_addr != INVALID_MEM_ADDRESS);
 
     stats_mem_addr += ((1 << IPFIX_STATS_SHIFT)*cfg->collector_id);

@@ -18,7 +18,7 @@
 #include <malloc.h>
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "gen/proto/rulestats/rulestats.delphi.hpp"
 
 #define NWSEC_RULE_STATS_SHIFT         6
@@ -103,7 +103,7 @@ rule_stats_cb (rule_ctr_t *ctr, bool add)
     uint32_t idx;
 
     if (add) {
-        start_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_NWSEC_RULE_STATS);
+        start_addr = asicpd_get_mem_addr(ASIC_HBM_REG_NWSEC_RULE_STATS);
         SDK_ASSERT(start_addr != INVALID_MEM_ADDRESS);
 
         rs = g_rule_stats_indexer->alloc(&idx);

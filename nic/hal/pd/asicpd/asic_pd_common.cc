@@ -11,7 +11,7 @@
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
 #include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
@@ -83,7 +83,7 @@ asicpd_stats_addr_get (int tblid, uint32_t index,
     p4pd_table_properties_t       tbl_ctx;
     mem_addr_t                    stats_base_addr;
 
-    stats_base_addr = asicpd_get_mem_addr(CAPRI_HBM_REG_P4_ATOMIC_STATS);
+    stats_base_addr = asicpd_get_mem_addr(ASIC_HBM_REG_P4_ATOMIC_STATS);
     SDK_ASSERT(stats_base_addr != INVALID_MEM_ADDRESS);
 
     for (int i = 0; i < arrlen; i++) {
@@ -111,10 +111,10 @@ asicpd_stats_region_init (asicpd_stats_region_info_t *region_arr, int arrlen)
     uint64_t                      stats_region_size;
 
     stats_region_start = stats_base_addr =
-        asicpd_get_mem_addr(CAPRI_HBM_REG_P4_ATOMIC_STATS);
+        asicpd_get_mem_addr(ASIC_HBM_REG_P4_ATOMIC_STATS);
     SDK_ASSERT(stats_base_addr != INVALID_MEM_ADDRESS);
     stats_region_size =
-        (asicpd_get_mem_size_kb(CAPRI_HBM_REG_P4_ATOMIC_STATS) << 10);
+        (asicpd_get_mem_size_kb(ASIC_HBM_REG_P4_ATOMIC_STATS) << 10);
 
     // subtract 2G (saves ASM instructions)
     stats_region_start -= ((uint64_t)1 << 31);

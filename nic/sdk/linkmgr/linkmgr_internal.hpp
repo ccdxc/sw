@@ -21,7 +21,7 @@ namespace linkmgr {
 
 // HBM region for port_stats - need to create same thing here,
 // as we cannot reference any declare outside "nic/sdk" domain
-#define CAPRI_HBM_REG_PORT_STATS         "port_stats"
+#define ASIC_HBM_REG_PORT_STATS         "port_stats"
 
 extern linkmgr_cfg_t g_linkmgr_cfg;
 extern char log_buf[];
