@@ -222,7 +222,6 @@ TEST_F(policy_rule_test, rule_add_1) {
     batch_commit(bctxt);
 }
 
-#if 0
 /// do policy and individual rule(s) add in same batch
 TEST_F(policy_rule_test, rule_add_2) {
     pds_batch_ctxt_t bctxt;
@@ -239,6 +238,7 @@ TEST_F(policy_rule_test, rule_add_2) {
     batch_commit(bctxt);
 }
 
+#if 0
 /// do policy add and then individual rule(s) add/del in same batch
 TEST_F(policy_rule_test, rule_add_del_1) {
     pds_batch_ctxt_t bctxt;
@@ -278,7 +278,6 @@ TEST_F(policy_rule_test, rule_upd_1) {
     batch_commit(bctxt);
 }
 
-#if 0
 /// add policy and update individual rule(s) in same batch
 TEST_F(policy_rule_test, rule_upd_2) {
     pds_batch_ctxt_t bctxt;
@@ -294,7 +293,6 @@ TEST_F(policy_rule_test, rule_upd_2) {
     policy_teardown(bctxt);
     batch_commit(bctxt);
 }
-#endif
 
 /// @}
 

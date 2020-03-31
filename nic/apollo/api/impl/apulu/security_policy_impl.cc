@@ -295,7 +295,21 @@ end:
 
 sdk_ret_t
 security_policy_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    return program_security_policy_(&obj_ctxt->api_params->policy_spec);
+    sdk_ret_t ret;
+
+    // update the spec, if needed
+    ret = compute_updated_spec_((policy *)api_obj, (policy *)api_obj,
+                                obj_ctxt);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    // and program it in the pipeline
+    ret = program_security_policy_(&obj_ctxt->api_params->policy_spec);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program policy %s create, err %u",
+                      obj_ctxt->api_params->policy_spec.key.str(), ret);
+    }
+    return ret;
 }
 
 sdk_ret_t
