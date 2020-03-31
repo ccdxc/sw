@@ -173,11 +173,11 @@ func (hc *HTTPClient) ReqRaw(method, url string, body interface{}) ([]byte, int,
 	}
 	defer r.Body.Close()
 
+	b, err := ioutil.ReadAll(r.Body)
 	if r.StatusCode != http.StatusOK {
-		return nil, r.StatusCode, fmt.Errorf("Server responded with %d", r.StatusCode)
+		return b, r.StatusCode, fmt.Errorf("Server responded with %d", r.StatusCode)
 	}
 
-	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, r.StatusCode, err
 	}

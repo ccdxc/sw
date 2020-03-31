@@ -58,7 +58,7 @@ func (ia *MacBasedAuthorizer) Authorize(req *http.Request) error {
 	}
 
 	for _, permittedEntity := range audience {
-		if permittedEntity == "*" || permittedEntity == ia.macAddr {
+		if permittedEntity == "*" || strings.EqualFold(permittedEntity, ia.macAddr) {
 			return nil
 		}
 	}

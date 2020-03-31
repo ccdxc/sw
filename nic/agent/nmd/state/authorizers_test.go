@@ -71,6 +71,10 @@ func TestMacBasedAuthorizer_Authorize(t *testing.T) {
 	err = authorizerToTest.Authorize(testRequest)
 	AssertOk(t, err, "Authorizer failed to allow certificate with specific mac_address ('%s') audience", testMacAddress)
 
+	testRequest = httpRequestWithVerifiedClientCertificate(t, []string{strings.ToUpper(testMacAddress)})
+	err = authorizerToTest.Authorize(testRequest)
+	AssertOk(t, err, "Authorizer failed to allow certificate with same mac_address ('%s') audience, but different case", testMacAddress)
+
 	testRequest = httpRequestWithVerifiedClientCertificate(t, []string{differentMacAddress})
 	err = authorizerToTest.Authorize(testRequest)
 	AssertError(t, err, "Authorizer failed to reject certificate with different mac_address ('%s') audience from the host", differentMacAddress)

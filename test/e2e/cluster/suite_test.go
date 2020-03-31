@@ -11,7 +11,10 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"time"
+
+	"github.com/pensando/sw/venice/utils/netutils"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -31,6 +34,7 @@ var configFile = flag.String("configFile", "./tb_config.json", "Path to JSON Con
 
 const (
 	insertionFWProfileName = "InsertionFWProfile"
+	wildCardAudience       = "*"
 )
 
 func TestE2ETest(t *testing.T) {
@@ -97,19 +101,20 @@ var _ = BeforeSuite(func() {
 			gw := net.ParseIP(ts.tu.NaplesNodeIPs[idx])
 			gw[len(gw)-1] = 1 // 1st ip is used as gateway
 			By(fmt.Sprintf("setting gateway:%v", gw))
-			st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s ip link set oob_mnic0 up", ts.tu.NaplesNodes[idx]))
+			nodeName := ts.tu.NaplesNodes[idx]
+			st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s ip link set oob_mnic0 up", nodeName))
 			Expect(st).Should(Equal(""))
 			time.Sleep(time.Second)
-			st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s route add default gw %v oob_mnic0", ts.tu.NaplesNodes[idx], gw.String()))
+			st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s route add default gw %v oob_mnic0", nodeName, gw.String()))
 			Expect(st).Should(Equal(""))
 			// netagent expects bond0 to be available and with an assigned IP
-			st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s ip link add link oob_mnic0 name bond0 type dummy", ts.tu.NaplesNodes[idx]))
+			st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s ip link add link oob_mnic0 name bond0 type dummy", nodeName))
 			Expect(st).Should(Equal(""))
 			time.Sleep(time.Second)
-			st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s ifconfig bond0 %s netmask 255.255.255.0", ts.tu.NaplesNodes[idx], agIP.String()))
+			st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s ifconfig bond0 %s netmask 255.255.255.0", nodeName, agIP.String()))
 			Expect(st).Should(Equal(""))
 			// remove route to avoid interference with oob_mnic0 // FIXME remove hardcoded network
-			st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s route del -net 192.168.30.0 netmask 255.255.255.0 dev bond0", ts.tu.NaplesNodes[idx]))
+			st = ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s route del -net 192.168.30.0 netmask 255.255.255.0 dev bond0", nodeName))
 			Expect(st).Should(Equal(""))
 
 			agURL := agIP.String() + ":" + globals.AgentProxyPort
@@ -136,7 +141,7 @@ var _ = BeforeSuite(func() {
 
 			// cache name:mac mapping
 			nodeMAC := naples.Status.Fru.MacStr
-			ts.naplesNameToMACMap[ts.tu.NaplesNodes[idx]] = nodeMAC
+			ts.naplesNameToMACMap[nodeName] = nodeMAC
 
 			By(fmt.Sprintf("Creating host obj naples%d-host", idx+1))
 			// Create a Host object
@@ -154,6 +159,10 @@ var _ = BeforeSuite(func() {
 			}
 			_, err = ts.restSvc.ClusterV1().Host().Create(ts.tu.MustGetLoggedInContext(context.Background()), host)
 			Expect(err).ShouldNot(HaveOccurred())
+
+			// verify authorization in Host mode prior to switching to Network mode
+			verifyProtectedCommandRequests(nodeName, nodeMAC)
+
 			// Switch to managed mode
 			naples.Spec.Mode = nmd.MgmtMode_NETWORK.String()
 			naples.Spec.Controllers = []string{ts.tu.ClusterVIP}
@@ -187,6 +196,70 @@ var _ = BeforeSuite(func() {
 		}
 	}
 })
+
+func verifyProtectedCommandRequests(nodeName string, nodeMAC string) {
+	verifyCommandRequestsWithoutCert(nodeName, nodeMAC, "getdate", false)
+	verifyCommandRequestsWithoutCert(nodeName, nodeMAC, "mksshdir", true)
+	audienceToTokenMap := map[string]string{
+		wildCardAudience: "/import/src/github.com/pensando/sw/test/e2e/cluster/tokens/penctl_hmm_wildcard.token",
+		"00ae.cd00.112a": "/import/src/github.com/pensando/sw/test/e2e/cluster/tokens/penctl_hmm_mac.token",
+		"00ae.cd00.0000": "/import/src/github.com/pensando/sw/test/e2e/cluster/tokens/penctl_hmm_random_mac.token",
+	}
+	for audience, tokenFilePath := range audienceToTokenMap {
+		verifyCommandRequestsToDSCInHostMode(nodeName, nodeMAC, "getdate", false, tokenFilePath, audience)
+		verifyCommandRequestsToDSCInHostMode(nodeName, nodeMAC, "mksshdir", true, tokenFilePath, audience)
+	}
+}
+
+func verifyCommandRequestsWithoutCert(nodeName string, nodeMAC string, command string, isProtected bool) {
+	verifyCommandRequestsToDSCInHostMode(nodeName, nodeMAC, command, isProtected, "", "")
+}
+
+func verifyCommandRequestsToDSCInHostMode(nodeName string, nodeMAC string, command string, isProtected bool, tokenFilePath string, audience string) {
+	var clientCerts []tls.Certificate
+	isCertProvided := tokenFilePath != ""
+	if isCertProvided {
+		pemBlocks, err := ioutil.ReadFile(tokenFilePath)
+		Expect(err).ShouldNot(HaveOccurred())
+		cert, err := tls.X509KeyPair(pemBlocks, pemBlocks)
+		Expect(err).ShouldNot(HaveOccurred())
+		clientCerts = []tls.Certificate{cert}
+	}
+	dscCommand := &nmd.DistributedServiceCardCmdExecute{
+		Executable: command,
+		Opts:       strings.Join([]string{""}, ""),
+	}
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true, // do not check agent's certificate
+		Certificates:       clientCerts,
+	}
+
+	client := netutils.NewHTTPClient()
+	client.WithTLSConfig(tlsConfig)
+	client.DisableKeepAlives()
+	defer client.CloseIdleConnections()
+
+	responseRaw, responseStatus, err := client.ReqRaw("GET", fmt.Sprintf("https://%s:%s/cmd/v1/naples/", ts.tu.NameToIPMap[nodeName], globals.AgentProxyPort), dscCommand)
+	By(fmt.Sprintf("ts:%s Host mode verification on naples node:%s for request command:%s with audience:%s, response message: %s error: %+v", time.Now().String(), nodeName, command, audience, string(responseRaw), err))
+
+	if isProtected {
+		if isCertProvided {
+			if audience != wildCardAudience && nodeMAC != audience {
+				// request should not be allowed
+				Expect(responseStatus).Should(Equal(http.StatusUnauthorized))
+			} else {
+				// request should be allowed
+				Expect(responseStatus).ShouldNot(Equal(http.StatusUnauthorized))
+			}
+		} else {
+			// request should not be allowed
+			Expect(responseStatus).Should(Equal(http.StatusUnauthorized))
+		}
+	} else {
+		// request should be allowed
+		Expect(responseStatus).ShouldNot(Equal(http.StatusUnauthorized))
+	}
+}
 
 var _ = AfterSuite(func() {
 	ts.tu.Close()
