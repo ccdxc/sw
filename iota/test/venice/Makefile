@@ -120,5 +120,6 @@ venice-sim-cloud:
 	cd ../../ && make
 	./start_iota.sh
 	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/equinix -timeout 120m -v -ginkgo.v  -topo 1Venice_2Naples_Sim_Cloud
+	VENICE_DEV=1 SKIP_SETUP=1 go test github.com/pensando/sw/iota/test/venice/testsuites/techsupport -timeout 30m -v -ginkgo.v -topo 1Venice_2Naples_Sim_Cloud
 
 all: venice-e2e upgrade

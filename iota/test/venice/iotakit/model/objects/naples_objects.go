@@ -119,10 +119,15 @@ type ThirdPartyCollection struct {
 	Nodes []*ThirdPartyNode
 }
 
-// Names retruns names of all naples in the collection
+// Names returns names of all naples in the collection
 func (npc *NaplesCollection) Names() []string {
 	var ret []string
 	for _, n := range npc.Nodes {
+		for _, inst := range n.Instances {
+			ret = append(ret, inst.Dsc.ObjectMeta.Name)
+		}
+	}
+	for _, n := range npc.FakeNodes {
 		for _, inst := range n.Instances {
 			ret = append(ret, inst.Dsc.ObjectMeta.Name)
 		}

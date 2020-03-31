@@ -73,6 +73,8 @@ type ClusterActionIntf interface {
 	AllowVeniceNodesFromNaples(vnc *objects.VeniceNodeCollection, naples *objects.NaplesCollection) error
 
 	PerformTechsupport(techsupport *monitoring.TechSupportRequest) error
+	DeleteTechsupport(techsupportName string) error
+	VerifyTechsupport(techsupportName string) error
 	VerifyTechsupportStatus(techsupportName string) error
 
 	GetRolloutObject(scaleData bool) (*rollout.Rollout, error)

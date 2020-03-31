@@ -1,6 +1,7 @@
 package techsupport_test
 
 import (
+	"time"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pensando/sw/api"
@@ -68,7 +69,7 @@ var _ = Describe("techsupport tests", func() {
 			// verify techsupport is successful
 			Eventually(func() error {
 				return ts.model.VerifyTechsupportStatus(techsupport.Name)
-			}).Should(Succeed())
+			}, 30*time.Second, 1*time.Second).Should(Succeed())
 			return
 
 		})
