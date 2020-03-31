@@ -229,6 +229,8 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 			if wload.GetSpec().Interfaces[0].Network == nws[index].Name {
 				//Set to 0 so that we don't create sub-interfaces
 				wload.Spec.Interfaces[0].MicroSegVlan = 0
+				//For now make sure we don't change the mac address
+				wload.Spec.Interfaces[0].MACAddress = ""
 				sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(h, wload, sm.Tb.Topo.WorkloadType, sm.Tb.Topo.WorkloadImage, "", nws[index].Name)
 				sm.WorkloadsObjs[wload.Name].SetParentInterface(hostIntfs[index])
 				wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.Name])
@@ -285,10 +287,11 @@ func (sm *SysModel) BringupWorkloads() error {
 		return err
 	}
 
+	if os.Getenv("DYNAMIC_IP") != "" {
+		return sm.WorkloadsGoGetIPs()
+	}
 	//Add ping for now
-	sm.WorkloadsSayHelloToDataPath()
-
-	return nil
+	return sm.WorkloadsSayHelloToDataPath()
 }
 
 //SetupWorkloads bring up.Workloads on host

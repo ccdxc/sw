@@ -473,6 +473,51 @@ func (sm *SysModel) WorkloadsSayHelloToDataPath() error {
 	return nil
 }
 
+// WorkloadsGoGetIPs function to do Dhclient in workloads
+func (sm *SysModel) WorkloadsGoGetIPs() error {
+
+	cmds := []*iota.Command{}
+	for _, wr := range sm.Workloads().Workloads {
+		cmd := iota.Command{
+			Mode:       iota.CommandMode_COMMAND_FOREGROUND,
+			Command:    fmt.Sprintf("dhclient %s", wr.GetInterface()),
+			EntityName: wr.Name(),
+			NodeName:   wr.NodeName(),
+		}
+		cmds = append(cmds, &cmd)
+	}
+
+	log.Infof("Workloads getting IPs dynamically.")
+
+	trmode := iota.TriggerMode_TRIGGER_PARALLEL
+	if !sm.Tb.HasNaplesSim() {
+		trmode = iota.TriggerMode_TRIGGER_NODE_PARALLEL
+	}
+
+	trigMsg := &iota.TriggerMsg{
+		TriggerOp:   iota.TriggerOp_EXEC_CMDS,
+		TriggerMode: trmode,
+		ApiResponse: &iota.IotaAPIResponse{},
+		Commands:    cmds,
+	}
+
+	// Trigger App
+	topoClient := iota.NewTopologyApiClient(sm.Tb.Client().Client)
+	triggerResp, err := topoClient.Trigger(context.Background(), trigMsg)
+	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to trigger a dhclient on workload. API Status: %+v | Err: %v", triggerResp.ApiResponse, err)
+	}
+
+	for _, cmdResp := range triggerResp.Commands {
+		if cmdResp.ExitCode != 0 {
+			//Don't return error for now.
+			log.Errorf("Getting IP failed. Resp: %#v", cmdResp)
+		}
+	}
+
+	return nil
+}
+
 // VerifyWorkloadStatus verifies workload status in venice
 func (sm *SysModel) VerifyWorkloadStatus(wc *objects.WorkloadCollection) error {
 	for _, wr := range wc.Workloads {
