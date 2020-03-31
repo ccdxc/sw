@@ -227,8 +227,14 @@ func (pf *objPushFilter) RemoveWatcher(kind string, watcher *Watcher) error {
 	defer pf.Unlock()
 	if recv, ok := pf.idMap[watcher.Name]; ok {
 		bitID := recv.(*receiver).bitID
-		delete(pf.watchMap, bitID)
-		log.Infof("Pushdb unwatch for kind %v name %v", kind, watcher.Name)
+		kindWatchMap, ok := pf.watchMap[bitID]
+		if ok {
+			//Another watcher could be registerd already with same ID, honor only if match
+			if curWatcher, ok := kindWatchMap[kind]; ok && watcher == curWatcher {
+				delete(kindWatchMap, kind)
+				log.Infof("Pushdb unwatch for kind %v name %v", kind, watcher.Name)
+			}
+		}
 		return nil
 	}
 
