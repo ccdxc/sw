@@ -121,13 +121,13 @@ metrics_read (std::string name, sdk::metrics::key_t key,
 }
 
 static void
-alerts_log_to_obj (sdk::operd::log_ptr log, std::shared_ptr<AlertsGetResponse> rsp)
+alerts_log_to_obj (sdk::operd::log_ptr log, AlertsGetResponse &rsp)
 {
     const char *data = log->data();
     int alert_id = *(int *)data;
     const char *message = data + sizeof(int);
     alert_t prototype = operd::alerts::alerts[alert_id];
-    ::pds::Alert *alert = rsp->mutable_response();
+    ::pds::Alert *alert = rsp.mutable_response();
 
     alert->set_name(prototype.name);
     alert->set_category(prototype.category);
@@ -143,7 +143,7 @@ alerts_log_to_obj (sdk::operd::log_ptr log, std::shared_ptr<AlertsGetResponse> r
         alert->set_severity(pds::CRITICAL);
     }
 
-    rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+    rsp.set_apistatus(types::ApiStatus::API_STATUS_OK);
 }
 
 static inline int
@@ -220,12 +220,11 @@ OperSvcImpl::AlertsGet(ServerContext *context, const Empty *req,
         sdk::operd::log_ptr log = source->read();
 
         if (log != nullptr) {
-            std::shared_ptr<AlertsGetResponse> resp =
-                std::make_shared<AlertsGetResponse>();
+            AlertsGetResponse resp;
 
             alerts_log_to_obj(log, resp);
             
-            if (!stream->Write(*resp.get())) {
+            if (!stream->Write(resp)) {
                 // Client closed connection
                 break;
             }
