@@ -483,6 +483,7 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 //             At this time, the balancer is explicitly passed. At a later
 //             time, there will be an implicit balancer created.
 func (factory *RPCClientFactory) NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, error) {
+	// Ensure factory
 	// create RPC client instance
 	rpcClient := &RPCClient{
 		nodeuuid:  factory.nodeuuid,
@@ -671,6 +672,11 @@ func SetDefaultClientFactory(factory *RPCClientFactory) {
 // NewClientFactory creates a new RPCClient factory which can be used
 // to create RPCClients with common settings
 func NewClientFactory(nodeuuid string) *RPCClientFactory {
+	if len(nodeuuid) == 0 {
+		log.Errorf("client factory instantiated with empty node-uuid.")
+		return nil
+	}
+
 	return &RPCClientFactory{
 		nodeuuid: nodeuuid,
 	}

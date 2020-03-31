@@ -248,6 +248,13 @@ func (c *API) start(ctx context.Context, kinds []string) error {
 		}
 		log.Infof("Controller API: Locking acquired for kinds: %v", c.kinds)
 
+		// Check if the RPCClient Factory is correctly instantiated.
+		if c.factory == nil {
+			log.Error(errors.Wrapf(types.ErrRPCClientFactoryUninitialized, "Controller API: %v | Config: %v", c, c.InfraAPI.GetConfig()))
+			time.Sleep(types.ControllerWaitDelay)
+			continue
+		}
+
 		// TODO unify this on Venice side to have a single config controller
 		c.npmClient, _ = c.factory.NewRPCClient(
 			c.InfraAPI.GetDscName(),
