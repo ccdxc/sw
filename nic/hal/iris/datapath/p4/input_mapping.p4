@@ -395,11 +395,10 @@ table input_properties_mac_vlan {
 }
 
 /******************************************************************************/
-/* LIF info                                                                   8/
+/* LIF info                                                                   */
 /******************************************************************************/
 action lif_info(ingress_mirror_en, ingress_mirror_session_id) {
-    if ((p4plus_to_p4.p4plus_app_id != P4PLUS_APPTYPE_CPU) and
-        (ingress_mirror_en == TRUE)) {
+    if (ingress_mirror_en == TRUE) {
         modify_field(capri_intrinsic.tm_span_session, ingress_mirror_session_id);
     }
     modify_field(scratch_metadata.flag, ingress_mirror_en);

@@ -88,6 +88,8 @@ action flow_miss() {
                     if (control_metadata.uuc_fl_pe_sup_en == TRUE) {
                         // Sup Copy
                         modify_field(capri_intrinsic.tm_cpu, TRUE);
+                        // Ingress span happens on re-injected packet
+                        modify_field(capri_intrinsic.tm_span_session, 0);
                     } else {
                         // Do we need to explicitly DROP ?
                     }
@@ -117,6 +119,8 @@ action flow_miss() {
                     modify_field(rewrite_metadata.tunnel_rewrite_index, 0);
                     modify_field(rewrite_metadata.rewrite_index, 0);
                     modify_field(qos_metadata.qos_class_id, control_metadata.flow_miss_qos_class_id);
+                    // Ingress span happens on re-injected packet
+                    modify_field(capri_intrinsic.tm_span_session, 0);
                 } else {
                     if (l4_metadata.flow_learn_cfg_en == TRUE) {
                         // Sup Copy

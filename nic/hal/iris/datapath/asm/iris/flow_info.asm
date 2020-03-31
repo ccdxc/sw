@@ -290,6 +290,7 @@ flow_miss_unicast_reg_mac_hit:
   phvwr.c1      p.control_metadata_dst_lport, CPU_LPORT
   phvwr.c1      p.rewrite_metadata_tunnel_rewrite_index, 0
   phvwr.c1      p.rewrite_metadata_rewrite_index, 0
+  phvwr.c1      p.capri_intrinsic_tm_span_session, 0
   phvwr.c1      p.qos_metadata_qos_class_id, k.control_metadata_flow_miss_qos_class_id
   seq           c2, k.l4_metadata_flow_learn_cfg_en, TRUE
   setcf         c3, [!c1 & c2]
@@ -313,6 +314,7 @@ flow_miss_unicast_prom_mgmt_mseg_bm:
 flow_miss_unicast_sup_copy_prom_mgmt:
   seq           c1, k.control_metadata_uuc_fl_pe_sup_en, TRUE
   phvwr.c1      p.capri_intrinsic_tm_cpu, 1
+  phvwr.c1      p.capri_intrinsic_tm_span_session, 0
   phvwr         p.capri_intrinsic_tm_replicate_en, 1
   add.e         r1, k.capri_intrinsic_tm_replicate_ptr, 2
   phvwr         p.capri_intrinsic_tm_replicate_ptr, r1
