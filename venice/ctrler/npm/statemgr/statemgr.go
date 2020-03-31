@@ -309,6 +309,14 @@ func (sm *Statemgr) Stop() error {
 	return sm.ctrler.Stop()
 }
 
+type featureMgrBase struct {
+	sync.Mutex
+}
+
+func (sm *featureMgrBase) ProcessDSCEvent(ev EventType, dsc *cluster.DistributedServiceCard) {
+
+}
+
 func initStatemgr() {
 	singletonStatemgr = Statemgr{
 		networkLocks:          make(map[string]*sync.Mutex),

@@ -5,7 +5,6 @@ package statemgr
 import (
 	"fmt"
 	"reflect"
-	"sync"
 	"time"
 
 	"github.com/pensando/sw/venice/globals"
@@ -229,14 +228,14 @@ type labelInterfaces struct {
 
 // SmNetworkInterface is statemanager struct for NetworkInterface
 type SmNetworkInterface struct {
-	sync.Mutex
+	featureMgrBase
 	sm           *Statemgr
 	intfsByLabel map[string]*labelInterfaces //intferfaces by labels
 }
 
 // NetworkInterfaceState is a wrapper for NetworkInterface object
 type NetworkInterfaceState struct {
-	sync.Mutex
+	featureMgrBase
 	NetworkInterfaceState *ctkit.NetworkInterface `json:"-"` // NetworkInterface object
 	pushObject            memdb.PushObjectHandle
 	txCollectors          []string
@@ -843,4 +842,58 @@ func (sma *SmNetworkInterface) GetNetworkInterfaceWatchOptions() *api.ListWatchO
 	opts := &api.ListWatchOptions{}
 	opts.FieldChangeSelector = []string{"ObjectMeta.Labels", "Spec", "Status"}
 	return opts
+}
+
+// ListNetworkInterfaces lists all network interfaces
+func (sm *Statemgr) ListNetworkInterfaces() ([]*NetworkInterfaceState, error) {
+	objs := sm.ListObjects("NetworkInterface")
+
+	var nwIntfs []*NetworkInterfaceState
+	for _, obj := range objs {
+		ns, err := NetworkInterfaceStateFromObj(obj)
+		if err != nil {
+			return nwIntfs, err
+		}
+
+		nwIntfs = append(nwIntfs, ns)
+	}
+
+	return nwIntfs, nil
+}
+
+// ProcessDSCEvent DSC removed or decomissioned.
+func (sma *SmNetworkInterface) ProcessDSCEvent(ev EventType, dsc *cluster.DistributedServiceCard) {
+
+	// see if we already have it
+	nwIntfs, err := sma.sm.ListNetworkInterfaces()
+	if err != nil {
+		log.Errorf("Can not list network interfaces")
+	}
+
+	//Process only if it is deleted or decomissioned
+	if ev != DeleteEvent && dsc.Status.AdmissionPhase != cluster.DistributedServiceCardStatus_DECOMMISSIONED.String() {
+		return
+	}
+
+	for _, nwIntf := range nwIntfs {
+		if nwIntf.NetworkInterfaceState.Status.DSC == dsc.Status.PrimaryMAC {
+
+			now := time.Now()
+			retries := 0
+			for {
+				err := sma.sm.ctrler.NetworkInterface().Delete(&nwIntf.NetworkInterfaceState.NetworkInterface)
+				if err == nil {
+					break
+				}
+				if time.Since(now) > time.Second*2 {
+					log.Errorf("delete interface failed (%s)", err)
+					now = time.Now()
+				}
+				retries++
+				time.Sleep(100 * time.Millisecond)
+
+			}
+		}
+	}
+
 }

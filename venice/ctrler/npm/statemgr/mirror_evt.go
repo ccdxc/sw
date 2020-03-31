@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -335,7 +334,7 @@ type mirrorCollector struct {
 
 //SmMirrorSessionInterface is statemanagers struct for mirror session handling
 type SmMirrorSessionInterface struct {
-	sync.Mutex
+	featureMgrBase
 	sm                 *Statemgr
 	collectors         map[string]*mirrorCollector
 	mirrorSessions     map[string]*MirrorSessionState

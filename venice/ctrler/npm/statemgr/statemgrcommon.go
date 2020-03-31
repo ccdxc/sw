@@ -2,6 +2,8 @@
 
 package statemgr
 
+import "github.com/pensando/sw/api/generated/cluster"
+
 // CompleteRegistration is the callback function statemgr calls after init is done
 func (sm *Statemgr) CompleteRegistration() {
 	sm.SetModuleReactor(sm)
@@ -23,6 +25,17 @@ func (sm *Statemgr) CompleteRegistration() {
 	sm.SetNetworkInterfaceStatusReactor(sm)
 	sm.SetAggregateStatusReactor(sm)
 	sm.SetProfileStatusReactor(sm)
+}
+
+//ProcessDSCEvent to process a DSC event
+func (sm *Statemgr) ProcessDSCEvent(ev EventType, dsc *cluster.DistributedServiceCard) {
+
+	for feature, svc := range featuremgrs {
+		if feature != "statemgr" {
+			svc.ProcessDSCEvent(ev, dsc)
+		}
+	}
+
 }
 
 func init() {

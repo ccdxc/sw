@@ -16,6 +16,7 @@ import (
 
 //SmFlowExportPolicyInterface is statemanagers struct for export policy
 type SmFlowExportPolicyInterface struct {
+	featureMgrBase
 	sync.Mutex
 	sm *Statemgr
 }

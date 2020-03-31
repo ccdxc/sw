@@ -20,6 +20,7 @@ var smgrIPAM *SmIPAM
 
 // SmIPAM is object statemgr for IPAM object
 type SmIPAM struct {
+	featureMgrBase
 	sm *Statemgr
 }
 

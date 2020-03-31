@@ -24,6 +24,7 @@ var smgrRouteTable *SmRouteTable
 
 // SmRouteTable is object statemgr for Route object
 type SmRouteTable struct {
+	featureMgrBase
 	sm *Statemgr
 }
 

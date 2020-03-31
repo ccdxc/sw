@@ -22,6 +22,7 @@ var smgrRoute *SmRoute
 
 // SmRoute is object statemgr for Route object
 type SmRoute struct {
+	featureMgrBase
 	sm *Statemgr
 }
 

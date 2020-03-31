@@ -27,6 +27,7 @@ var smgrVirtualRouter *SmVirtualRouter
 
 // SmVirtualRouter is object statemgr for Route object
 type SmVirtualRouter struct {
+	featureMgrBase
 	sm *Statemgr
 }
 

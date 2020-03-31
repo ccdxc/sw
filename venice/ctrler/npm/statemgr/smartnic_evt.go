@@ -114,6 +114,7 @@ func NewDistributedServiceCardState(smartNic *ctkit.DistributedServiceCard, stat
 
 // OnDistributedServiceCardCreate handles smartNic creation
 func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedServiceCard) error {
+	defer sm.ProcessDSCEvent(CreateEvent, &smartNic.DistributedServiceCard)
 	log.Infof("Creating smart nic: %+v", smartNic)
 
 	defer sm.sendDscUpdateNotification(&smartNic.DistributedServiceCard)
@@ -216,6 +217,7 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 // OnDistributedServiceCardUpdate handles update event on smartnic
 func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedServiceCard, nsnic *cluster.DistributedServiceCard) error {
 	// see if we already have the smartNic
+	defer sm.ProcessDSCEvent(UpdateEvent, &smartNic.DistributedServiceCard)
 	log.Infof("Update of DistributedServiceCard")
 	defer sm.sendDscUpdateNotification(nsnic)
 	sns, err := DistributedServiceCardStateFromObj(smartNic)
@@ -327,6 +329,8 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 
 // OnDistributedServiceCardDelete handles smartNic deletion
 func (sm *Statemgr) OnDistributedServiceCardDelete(smartNic *ctkit.DistributedServiceCard) error {
+
+	defer sm.ProcessDSCEvent(DeleteEvent, &smartNic.DistributedServiceCard)
 	// see if we have the smartNic
 	hs, err := DistributedServiceCardStateFromObj(smartNic)
 	if err != nil {
