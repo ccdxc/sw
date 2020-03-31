@@ -57,19 +57,21 @@ asicpd_p4plus_table_init (hal::hal_cfg_t *hal_cfg)
                                      &tbl_ctx_txdma_act);
     p4pd_global_table_properties_get(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S0_T1,
                                      &tbl_ctx_txdma_act_ext);
-    capri_p4plus_table_init(hal_cfg->platform,
-                            tbl_ctx_apphdr.stage,
-                            tbl_ctx_apphdr.stage_tableid,
-                            tbl_ctx_apphdr_ext.stage,
-                            tbl_ctx_apphdr_ext.stage_tableid,
-                            tbl_ctx_apphdr_off.stage,
-                            tbl_ctx_apphdr_off.stage_tableid,
-                            tbl_ctx_apphdr_ext_off.stage,
-                            tbl_ctx_apphdr_ext_off.stage_tableid,
-                            tbl_ctx_txdma_act.stage,
-                            tbl_ctx_txdma_act.stage_tableid,
-                            tbl_ctx_txdma_act_ext.stage,
-                            tbl_ctx_txdma_act_ext.stage_tableid);
+
+    sdk::asic::pd::asicpd_p4plus_table_init(hal_cfg->platform,
+                                            tbl_ctx_apphdr.stage,
+                                            tbl_ctx_apphdr.stage_tableid,
+                                            tbl_ctx_apphdr_ext.stage,
+                                            tbl_ctx_apphdr_ext.stage_tableid,
+                                            tbl_ctx_apphdr_off.stage,
+                                            tbl_ctx_apphdr_off.stage_tableid,
+                                            tbl_ctx_apphdr_ext_off.stage,
+                                            tbl_ctx_apphdr_ext_off.stage_tableid,
+                                            tbl_ctx_txdma_act.stage,
+                                            tbl_ctx_txdma_act.stage_tableid,
+                                            tbl_ctx_txdma_act_ext.stage,
+                                            tbl_ctx_txdma_act_ext.stage_tableid,
+                                            0, 0); /* WIP: args for elba */
     return HAL_RET_OK;
 }
 

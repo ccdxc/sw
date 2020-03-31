@@ -158,9 +158,21 @@ void asicpd_p4_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                                 p4pd_table_cache_t cache);
 bool asicpd_p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                                     p4plus_cache_action_t action);
+
 int asicpd_p4plus_table_init(p4plus_table_params_t *table_params);
+int asicpd_p4plus_table_init(platform_type_t platform_type,
+                             int stage_apphdr, int stage_tableid_apphdr,
+                             int stage_apphdr_ext, int stage_tableid_apphdr_ext,
+                             int stage_apphdr_off, int stage_tableid_apphdr_off,
+                             int stage_apphdr_ext_off,
+                             int stage_tableid_apphdr_ext_off,
+                             int stage_txdma_act, int stage_tableid_txdma_act,
+                             int stage_txdma_act_ext,
+                             int stage_tableid_txdma_act_ext,
+                             int stage_sxdma_act, int stage_tableid_sxdma_act);
 int asicpd_p4plus_table_init(p4plus_prog_t *prog,
                              platform_type_t platform_type);
+
 sdk_ret_t asicpd_tm_get_clock_tick(uint64_t *tick);
 sdk_ret_t asicpd_tm_debug_stats_get(tm_port_t port,
                                     tm_debug_stats_t *debug_stats, bool reset);
