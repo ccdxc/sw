@@ -65,6 +65,7 @@
 #include "nic/apollo/learn/learn.hpp"
 #include "nic/apollo/learn/learn_state.hpp"
 #include "gen/proto/types.pb.h"
+#include "nic/sdk/include/sdk/qos.hpp"
 
 using sdk::asic::pd::port_queue_credit_t;
 using sdk::asic::pd::queue_credit_t;
@@ -3325,7 +3326,7 @@ pds_flow_proto_to_flow_key (pds_flow_key_t *key,
 static inline void
 pds_pb_stats_entry_to_proto (pds_pb_debug_stats_t *pds_stats, void *ctxt)
 {
-    sdk::platform::capri::tm_pb_debug_stats_t *stats = &pds_stats->stats;
+    sdk::tm_debug_stats_t *stats = &pds_stats->stats;
     sdk::platform::capri::capri_queue_stats_t *qos_queue_stats =
         &pds_stats->qos_queue_stats;
     pds::PbStatsGetResponse *rsp = (pds::PbStatsGetResponse *)ctxt;
@@ -3343,8 +3344,7 @@ pds_pb_stats_entry_to_proto (pds_pb_debug_stats_t *pds_stats, void *ctxt)
     buffer_stats->set_eopcountout(stats->buffer_stats.eop_count_out);
 
     auto drop_stats = buffer_stats->mutable_dropcounts();
-    for (int i = sdk::platform::capri::BUFFER_INTRINSIC_DROP;
-         i < sdk::platform::capri::BUFFER_DROP_MAX; i ++) {
+    for (int i = sdk::BUFFER_INTRINSIC_DROP; i < sdk::BUFFER_DROP_MAX; i ++) {
         auto drop_stats_entry = drop_stats->add_statsentries();
         drop_stats_entry->set_reasons(pds::BufferDropReasons(i));
         drop_stats_entry->set_dropcount(stats->buffer_stats.drop_counts[i]);

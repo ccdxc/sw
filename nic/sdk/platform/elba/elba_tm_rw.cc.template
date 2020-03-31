@@ -3053,9 +3053,8 @@ elba_tm_get_oq_stats (tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats)
 }
 
 extern "C" sdk_ret_t
-elba_tm_get_pb_debug_stats (tm_port_t port, 
-                            tm_pb_debug_stats_t *debug_stats, 
-                            bool reset)
+elba_tm_debug_stats_get (tm_port_t port, tm_debug_stats_t *debug_stats,
+			 bool reset)
 {
     return sdk::SDK_RET_OK;
 }

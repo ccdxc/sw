@@ -15,6 +15,10 @@
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
+#include "nic/sdk/include/sdk/qos.hpp"
+
+using namespace sdk;
+using namespace sdk::asic::pd;
 
 namespace hal {
 namespace pd {
@@ -877,7 +881,7 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
     pd_system_args_t       *pd_sys_args = args->pd_sys_args;
     SystemResponse         *rsp = pd_sys_args->rsp;
     sys::PacketBufferStats *pb_stats;
-    tm_pb_debug_stats_t    debug_stats = {};
+    tm_debug_stats_t       debug_stats = {};
     unsigned               port;
     // TODO: Hook up the reset flag to API call
     bool                   reset = false;
@@ -886,7 +890,7 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
     pb_stats = rsp->mutable_stats()->mutable_packet_buffer_stats();
 
     for (port = 0; port < TM_NUM_PORTS; port++) {
-        sdk_ret = capri_tm_get_pb_debug_stats(port, &debug_stats, reset);
+        sdk_ret = asicpd_tm_debug_stats_get(port, &debug_stats, reset);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to get pb debug stats for port {} ret {}",
@@ -954,7 +958,7 @@ pd_pb_stats_clear (pd_func_args_t *pd_func_args)
     HAL_TRACE_DEBUG("Clearing PB stats");
 
     for (port = 0; port < TM_NUM_PORTS; port++) {
-        sdk_ret = capri_tm_get_pb_debug_stats(port, NULL, reset);
+        sdk_ret = asicpd_tm_debug_stats_get(port, NULL, reset);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to clear pb debug stats for port {} ret {}",

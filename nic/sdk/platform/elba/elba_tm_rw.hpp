@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "include/sdk/base.hpp"
+#include "include/sdk/qos.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/elba/elba_p4.hpp"
 
@@ -34,7 +35,7 @@ namespace elba {
 #define ELBA_TM_NUM_BUFFER_ISLANDS   2
 
 #define ELBA_TM_BUFFER_ISLAND_0_CELL_COUNT 8192
-#define ELBA_TM_BUFFER_ISLAND_1_CELL_COUNT 5120 
+#define ELBA_TM_BUFFER_ISLAND_1_CELL_COUNT 5120
 
 #define ELBA_TM_INVALID_Q            -1
 
@@ -50,7 +51,7 @@ namespace elba {
 
 #define TM_P4_RECIRC_QUEUE             23 /* Recirc queue in the P4 ports */
 
-// There are 32 queues at both P4-ig and P4-eg. The idea is to 
+// There are 32 queues at both P4-ig and P4-eg. The idea is to
 // maintain the same queue when pkt goes through the pipeline in P4-ig and
 // P4-eg. However, hardware imposes few restrictions on the queue usage:
 //      - In the P4-ig port, the uplink traffic can use only 24-31 oqs
@@ -67,7 +68,7 @@ namespace elba {
 // For recirc, oq 31 (TM_P4_IG_RECIRC_QUEUE) is used in P4-ig and oq 29 is used in P4-eg
 //
 // Offset at which the uplink queues start at P4-ig
-#define ELBA_TM_P4_UPLINK_IQ_OFFSET          24 
+#define ELBA_TM_P4_UPLINK_IQ_OFFSET          24
 // Offset at which the uplink queues start at P4-eg
 #define ELBA_TM_P4_UPLINK_EGRESS_OQ_OFFSET   16
 // Offset at which the oqs for rxdma only classes start
@@ -76,11 +77,11 @@ namespace elba {
 #define ELBA_TM_P4_SPAN_QUEUE                            30
 #define ELBA_TM_P4_CPU_COPY_QUEUE                        31
 /* On P4 EG, due to the resercation of queues 30 and 31 for span and cpu-copy,
- * the uplink queues which are using these values in p4-ig need to use the 
+ * the uplink queues which are using these values in p4-ig need to use the
  * below two values
  */
 #define ELBA_TM_P4_EG_UPLINK_SPAN_QUEUE_REPLACEMENT      (ELBA_TM_P4_UPLINK_EGRESS_OQ_OFFSET + 0)
-#define ELBA_TM_P4_EG_UPLINK_CPU_COPY_QUEUE_REPLACEMENT  (ELBA_TM_P4_UPLINK_EGRESS_OQ_OFFSET + 1) 
+#define ELBA_TM_P4_EG_UPLINK_CPU_COPY_QUEUE_REPLACEMENT  (ELBA_TM_P4_UPLINK_EGRESS_OQ_OFFSET + 1)
 
 #define QOS_QUEUE_DEFAULT 0
 #define QOS_COS_DEFAULT   0
@@ -210,14 +211,14 @@ sdk_ret_t elba_tm_uplink_lif_set(tm_port_t port, uint32_t lif);
 sdk_ret_t elba_tm_hw_config_load_poll(int phase);
 
 /** elba_tm_asic_init
- * API to call asic initialization routines for the PBC block 
+ * API to call asic initialization routines for the PBC block
  *
  * @return sdk_ret_t: Status of the operation
  */
 sdk_ret_t elba_tm_asic_init(void);
 
 /** elba_tm_init
- * API to initialize the PBC block in hardware 
+ * API to initialize the PBC block in hardware
  *
  * @return sdk_ret_t: Status of the operation
  */
@@ -254,7 +255,7 @@ sdk_ret_t elba_tm_port_program_uplink_byte_count (void);
 extern "C" sdk_ret_t elba_tm_get_clock_tick(uint64_t *tick);
 
 /** elba_tm_enable_disable_uplink_port
- * API to enable/disable an uplink port. Need to be called for link up/down 
+ * API to enable/disable an uplink port. Need to be called for link up/down
  * events etc
  */
 sdk_ret_t elba_tm_enable_disable_uplink_port(tm_port_t port, bool enable);
@@ -301,64 +302,15 @@ sdk_ret_t elba_tm_get_oq_stats(tm_port_t port, tm_q_t oq,
 
 sdk_ret_t elba_tm_periodic_stats_update(void);
 
-typedef enum {
-   BUFFER_INTRINSIC_DROP = 0,        // Pkts dropped due to intrinsic drop bit being set
-   BUFFER_DISCARDED,                 // Pkts dropped due to error
-   BUFFER_ADMITTED,                  // Errored pkts admitted to buffering
-   BUFFER_OUT_OF_CELLS_DROP,         // Pkts dropped due to cell exhaustion (first cell)
-   BUFFER_OUT_OF_CELLS_DROP_2,       // Pkts dropped due to cell exhaustion (subsequent cell)
-   BUFFER_OUT_OF_CREDIT_DROP,        // Pkts dropped due to cell-credits exhaustion
-   BUFFER_TRUNCATION_DROP,           // Pkts dropped due to size bigger than the configured MTU
-   BUFFER_PORT_DISABLED_DROP,        // Pkts dropped due to port disable
-   BUFFER_COPY_TO_CPU_TAIL_DROP,     // Copy-to-cpu pkts tail dropped
-   BUFFER_SPAN_TAIL_DROP,            // Span pkts tail dropped
-   BUFFER_MIN_SIZE_VIOLATION_DROP,   // Pkts dropped due to lesser than min size
-   BUFFER_ENQUEUE_ERROR_DROP,        // Pkts dropped due to enqueue to reserved queues
-   BUFFER_INVALID_PORT_DROP,         // Pkts dropped due to destined to invalid ports
-   BUFFER_INVALID_OUTPUT_QUEUE_DROP, // Pkts dropped due to destined to invalid output queues
-   BUFFER_DROP_MAX,
-} tm_pb_debug_buffer_drop_stats_t;
+extern "C" sdk_ret_t elba_tm_debug_stats_get(tm_port_t port,
+                                             tm_debug_stats_t *debug_stats,
+                                             bool reset);
 
-typedef struct tm_pb_debug_buffer_stats_s {
-  uint32_t          sop_count_in;                 // Count of start-of-packets in
-  uint32_t          eop_count_in;                 // Count of end-of-packets in
-  uint32_t          sop_count_out;                // Count of start-of-packets out
-  uint32_t          eop_count_out;                // Count of end-of-packets out
-  uint32_t          drop_counts[BUFFER_DROP_MAX]; // Drop counts
-} tm_pb_debug_buffer_stats_t;
-
-typedef struct oflow_fifo_drop_stats_s {
-  uint32_t occupancy_drop_count;                // Pkts dropped due to fifo full
-  uint32_t emergency_stop_drop_count;           // Pkts dropped due to emergency condition hit due to slow oflow memory to write-buffer communication
-  uint32_t write_buffer_ack_fill_up_drop_count; // Pkts dropped due to write buffer's ack fifo filling up
-  uint32_t write_buffer_ack_full_drop_count;    // Pkts dropped due to write buffer's ack fifo full
-  uint32_t write_buffer_full_drop_count;        // Pkts dropped due to write buffer filling up
-  uint32_t control_fifo_full_drop_count;        // Pkts dropped due to control fifo full
-} tm_pb_debug_oflow_fifo_drop_stats_t;
-
-typedef struct oflow_fifo_stats_s {
-  uint32_t                            sop_count_in;  // Count of start-of-packets in
-  uint32_t                            eop_count_in;  // Count of end-of-packets in
-  uint32_t                            sop_count_out; // Count of start-of-packets out
-  uint32_t                            eop_count_out; // Count of end-of-packets out
-  tm_pb_debug_oflow_fifo_drop_stats_t drop_counts;   // Drop counts
-} tm_pb_debug_oflow_fifo_stats_t;
-
-typedef struct tm_pb_debug_stats_s {
-    tm_pb_debug_buffer_stats_t      buffer_stats;
-    tm_pb_debug_oflow_fifo_stats_t  oflow_fifo_stats;
-} tm_pb_debug_stats_t;
-
-extern "C" sdk_ret_t elba_tm_get_pb_debug_stats(tm_port_t port,
-                                      tm_pb_debug_stats_t *debug_stats,
-                                      bool reset);
 uint32_t elba_tm_get_num_iqs_for_port(tm_port_t port);
 uint32_t elba_tm_get_num_oqs_for_port(tm_port_t port);
 
 }    // namespace elba
 }    // namespace platform
 }    // namespace sdk
-
-using sdk::platform::elba::tm_pb_debug_stats_t;
 
 #endif    // __ELBA_TM_RW_HPP__

@@ -1967,7 +1967,7 @@ alloc_cells (tm_port_type_e port_type, uint32_t *pbc_cell_chunks,
         //num_qs =
         //  1 + (tm_cfg_profile()->num_qs[port_type] * tm_cfg_profile()->num_active_uplink_ports);
         num_qs =
-            CAPRI_TM_NUM_BMC_QUEUES + 
+            CAPRI_TM_NUM_BMC_QUEUES +
                 (tm_cfg_profile()->num_qs[port_type] * tm_cfg_profile()->num_active_uplink_ports);
     }
 
@@ -4936,9 +4936,8 @@ capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats)
 }
 
 sdk_ret_t
-capri_tm_get_pb_debug_stats(tm_port_t port,
-                            tm_pb_debug_stats_t *debug_stats,
-                            bool reset)
+capri_tm_debug_stats_get (tm_port_t port, tm_debug_stats_t *debug_stats,
+                          bool reset)
 {
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
@@ -4950,7 +4949,7 @@ capri_tm_get_pb_debug_stats(tm_port_t port,
     }
 
     if (debug_stats) {
-        memset(debug_stats, 0, sizeof(tm_pb_debug_stats_t));
+        memset(debug_stats, 0, sizeof(tm_debug_stats_t));
 
         pbc_csr.cnt_flits[port].read();
         pbc_csr.sat_write_error[port].read();

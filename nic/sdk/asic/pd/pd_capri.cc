@@ -570,9 +570,7 @@ sdk_ret_t
 asicpd_tm_debug_stats_get (tm_port_t port, tm_debug_stats_t *debug_stats,
                            bool reset)
 {
-    return capri_tm_get_pb_debug_stats(port,
-                (sdk::platform::capri::tm_pb_debug_stats_t *) debug_stats,
-                reset);
+    return capri_tm_debug_stats_get(port, debug_stats, reset);
 }
 
 sdk_ret_t
