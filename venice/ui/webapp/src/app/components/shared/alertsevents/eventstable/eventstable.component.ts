@@ -138,7 +138,7 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
   requestName: string = '';
   firstElem: MonitoringArchiveRequest = null;
   advSearchCols: TableCol[] = [];
-  archivePermissions: boolean = false;
+  archivePermissions: boolean = true;
   eventsTimeBased: EventsEvent[] = [];
 
   constructor(protected eventsService: EventsService,
@@ -602,7 +602,10 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
     this.eventsSubscription = this.eventsService.PostGetEvents({'field-selector': this.eventsTimeConstraints}).subscribe(
       (response) => {
         const data: EventsEventList = response.body as EventsEventList;
-        this.eventsTimeBased = data.items;
+        this.eventsTimeBased = [];
+        if (data.items !== undefined && data.items !== null) {
+          this.eventsTimeBased = data.items;
+        }
         // When page is loaded, this function is called before advanced search. At that time calling combineEvents doesn't make sense
         this.eventsTimeBased = this.persistentEvents.length !== 0 ? this.combineEvents() : this.eventsTimeBased;
         this.getEvents();

@@ -1,4 +1,5 @@
-<app-tableheader title="{{isLiveApiTabSelect? 'Live API Capture': 'API Samples'}}"
+<app-tableheader class="api-capture-tableheader"
+                 title="{{isLiveApiTabSelect? 'Live API Capture': 'API Samples'}}"
                  [attr.title]="isLiveApiTabSelect? 'Live API Capture': 'API Samples'" fxLayout="row"
                  [tableMenuItems]="tableMenuItems"
                  [enableColumnSelect]="false" [cols]="cols" [icon]="headerIcon">
