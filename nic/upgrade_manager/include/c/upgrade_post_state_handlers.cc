@@ -79,18 +79,6 @@ bool UpgPostStateHandler::PostSuccessHandler(UpgCtx &ctx) {
         remove("/update/upgrade_halt_state_machine");
     }
     return true;
-    if (exists("/nic/tools/fwupdate")) {
-	int ret = 0;
-        string cmd = "rm -rf /update/" + ctx.firmwarePkgName;
-        UPG_LOG_INFO("Image is: {}", ctx.firmwarePkgName);
-        if ((ret = system (cmd.c_str())) != 0) {
-            UPG_LOG_INFO("Unable to remove firmware: /update/{} Ret: {}", ctx.firmwarePkgName, ret);
-            //return false;
-        }
-        if (exists("/update/upgrade_halt_state_machine"))
-            remove("/update/upgrade_halt_state_machine");
-    }
-    return true;
 }
 
 bool UpgPostStateHandler::PostFailedHandler(UpgCtx &ctx) {

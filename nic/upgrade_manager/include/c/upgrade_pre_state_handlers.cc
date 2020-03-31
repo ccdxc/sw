@@ -112,30 +112,7 @@ bool UpgPreStateHandler::PreDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
 
 bool UpgPreStateHandler::PreSuccessHandler(UpgCtx &ctx) {
     if (exists("/nic/tools/fwupdate")) {
-        string fw = "mainfwb";
-        FILE *fp;
-        char path[1035];
-
-        /* Open the command for reading. */
-        fp = popen("/nic/tools/fwupdate -r", "r");
-        if (fp == NULL) {
-            UPG_LOG_INFO("Failed to run command\n" );
-        }
-
-        /* Read the output a line at a time - output it. */
-        while (fgets(path, sizeof(path)-1, fp) != NULL) {
-            UPG_LOG_INFO("{}", path);
-            size_t ln = strlen(path) - 1;
-            if (*path && path[ln] == '\n') 
-                path[ln] = '\0';
-            if (strcmp(path, "mainfwa") == 0)
-                fw = "mainfwa";
-        }
-
-        /* close */
-        pclose(fp);
-
-        string cmd = "/nic/tools/fwupdate -s " + fw;
+        string cmd = "/nic/tools/fwupdate -s altfw";
         if (system (cmd.c_str()) != 0) {
             UPG_LOG_INFO("Setting boot variable failed");
 	    return false;
