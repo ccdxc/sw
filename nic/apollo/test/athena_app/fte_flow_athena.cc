@@ -297,8 +297,14 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
         src_ip = rte_be_to_cpu_32(ip40->src_addr);
         dst_ip = rte_be_to_cpu_32(ip40->dst_addr);
         key->key_type = KEY_TYPE_IPV4;
-        memcpy(key->ip_saddr, &src_ip, IPV4_ADDR_LEN);
-        memcpy(key->ip_daddr, &dst_ip, IPV4_ADDR_LEN);
+        if (*dir == HOST_TO_SWITCH) {
+            memcpy(key->ip_saddr, &src_ip, IPV4_ADDR_LEN);
+            memcpy(key->ip_daddr, &dst_ip, IPV4_ADDR_LEN);
+        }
+        else {
+            memcpy(key->ip_saddr, &dst_ip, IPV4_ADDR_LEN);
+            memcpy(key->ip_daddr, &src_ip, IPV4_ADDR_LEN);
+        }
 
         tcp0 = (struct tcp_hdr *) (((uint8_t *) ip40) +
                 ((ip40->version_ihl & IPV4_HDR_IHL_MASK) *
@@ -315,8 +321,13 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
         }
 
         key->key_type = KEY_TYPE_IPV6;
-        sdk::lib::memrev(key->ip_saddr, ip60->src_addr, IPV6_ADDR_LEN);
-        sdk::lib::memrev(key->ip_daddr, ip60->dst_addr, IPV6_ADDR_LEN);
+        if (*dir == HOST_TO_SWITCH) {
+            sdk::lib::memrev(key->ip_saddr, ip60->src_addr, IPV6_ADDR_LEN);
+            sdk::lib::memrev(key->ip_daddr, ip60->dst_addr, IPV6_ADDR_LEN);
+        } else {
+            sdk::lib::memrev(key->ip_saddr, ip60->dst_addr, IPV6_ADDR_LEN);
+            sdk::lib::memrev(key->ip_daddr, ip60->src_addr, IPV6_ADDR_LEN);
+        }
 
         tcp0 = (struct tcp_hdr *) (((uint8_t *) ip60) +
                     IPV6_HDR_LEN);
@@ -334,8 +345,13 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
     } else {
         sport = rte_be_to_cpu_16(tcp0->src_port);
         dport = rte_be_to_cpu_16(tcp0->dst_port);
-        key->l4.tcp_udp.sport = sport;
-        key->l4.tcp_udp.dport = dport;
+        if (*dir == HOST_TO_SWITCH) {
+            key->l4.tcp_udp.sport = sport;
+            key->l4.tcp_udp.dport = dport;
+        } else {
+            key->l4.tcp_udp.sport = dport;
+            key->l4.tcp_udp.dport = sport;
+        }
     }
 
     // TODO: To be reomved. Debug purpose

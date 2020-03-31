@@ -199,8 +199,8 @@ sdk_ret_t recv_packet(void)
     dump_pkt(opkt);
     return SDK_RET_OK;
 }
-uint8_t     g_h2s_port = TM_PORT_UPLINK_0;
-uint8_t     g_s2h_port = TM_PORT_UPLINK_1;
+uint8_t     g_h2s_port = TM_PORT_UPLINK_1;
+uint8_t     g_s2h_port = TM_PORT_UPLINK_0;
 /*
  * Host to Switch: Flow-miss
  */
