@@ -151,6 +151,10 @@ def copy_includes (dest):
         "{0}/nic/sdk/third-party/googletest-release-1.8.0/googletest/include/".format(dest))
     copytree("sdk/third-party/boost/include/", 
         "{0}/nic/sdk/third-party/boost/include/".format(dest))
+    copytree("third-party/gflags/include/gflags", 
+             "{0}/nic/third-party/gflags/include/gflags".format(dest))
+    copytree("sdk/third-party/zmq/include", 
+             "{0}/nic/sdk/third-party/zmq/include".format(dest))
 
 if __name__ == '__main__':
 

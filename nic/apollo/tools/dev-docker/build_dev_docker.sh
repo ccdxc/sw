@@ -60,6 +60,10 @@ copy_files() {
         nicf+='nic/include/base.hpp nic/include/ftl_dev_if.hpp nic/hal/hal_trace.hpp '
         #nicf+='nic/p4/ftl_dev/include/ftl_dev_shared.h nic/hal/pd/pd.hpp '
         nicf+='nic/hal/pd/pd.hpp '
+        nicf+='nic/third-party/gflags/include/gflags '
+        nicf+='nic/sdk/third-party/zmq/include '
+        nicf+='nic/third-party/gflags/aarch64/lib '
+        nicf+='nic/third-party/gflags/x86_64/lib '
         p4d+='nic/asm/ftl_dev nic/p4/ftl_dev '
     fi
 

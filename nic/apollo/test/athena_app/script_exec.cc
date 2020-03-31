@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "app_test_utils.hpp"
+#include "athena_app_server.hpp"
 #include "script_parser.hpp"
 #include "session_aging.hpp"
 #include "conntrack_aging.hpp"
@@ -22,6 +22,7 @@ const static map<string,test_fn_t>  name2fn_map =
     SESSION_AGING_NAME2FN_MAP
     CONNTRACK_AGING_NAME2FN_MAP
     COMBINED_AGING_NAME2FN_MAP
+    APP_TEST_NAME2FN_MAP_ENTRY(skip_fte_flow_prog_set),
     APP_TEST_NAME2FN_MAP_ENTRY(APP_TEST_EXIT_FN),
 };
 
@@ -44,9 +45,8 @@ public:
     bool                        test_success;
 };
 
-static vector<test_entry_t>     test_suite;
 
-static test_fn_t
+static inline test_fn_t
 name2fn_find(const string &token)
 {
     auto iter = name2fn_map.find(token);
@@ -78,6 +78,7 @@ sdk_ret_t
 script_exec(const string& scripts_dir,
             const string& script_fname)
 {
+    vector<test_entry_t> test_suite;
     script_parser_t     *script_parser;
     test_fn_t           test_fn;
     token_parser_t      token_parser;
@@ -199,7 +200,6 @@ script_exec(const string& scripts_dir,
 
     delete script_parser;
     script_parser = nullptr;
-    ret = SDK_RET_OK;
 
     if (test_suite.size() == 0) {
         TEST_LOG_INFO("Script file not present or is empty; "
@@ -257,12 +257,30 @@ script_exec(const string& scripts_dir,
         vparam.push_back(test_param_t((uint32_t)overall_success));
         test_entry.test_fn(vparam);
     }
+    ret = overall_success ? SDK_RET_OK : SDK_RET_ERR;
 
 done:
     if (script_parser) {
         delete script_parser;
     }
     return ret;
+}
+
+sdk_ret_t
+script_exec_msg_process(zmq_msg_t *rx_msg,
+                        zmq_msg_t *tx_msg)
+{
+    server_script_exec_t    *req;
+
+    SERVER_RSP_INIT(tx_msg, rsp, server_rsp_t);
+    req = (server_script_exec_t *)zmq_msg_data(rx_msg);
+    rsp->status = server_msg_size_check(rx_msg, sizeof(*req));
+    if (rsp->status == SDK_RET_OK) {
+        ATHENA_APP_MSG_STR_TERM(req->dir);
+        ATHENA_APP_MSG_STR_TERM(req->name);
+        rsp->status = script_exec(req->dir, req->name);
+    }
+    return (sdk_ret_t)rsp->status;
 }
 
 }    // namespace athena_app

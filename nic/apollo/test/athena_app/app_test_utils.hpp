@@ -23,6 +23,7 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include "nic/sdk/third-party/zmq/include/zmq.h"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/test/api/utils/base.hpp"
 #include "script_parser.hpp"
@@ -420,6 +421,10 @@ private:
 #define USEC_PER_SEC    1000000L
 #endif
 
+#ifndef MSEC_PER_SEC
+#define MSEC_PER_SEC    1000L
+#endif
+
 #define APP_TIME_LIMIT_EXEC_SECS(s)         ((uint64_t)(s) * USEC_PER_SEC)
 #ifdef __x86_64__
 #define APP_TIME_LIMIT_EXEC_DFLT            300 /* seconds */
@@ -512,6 +517,13 @@ randomize_max(uint32_t val_max,
 
 sdk_ret_t script_exec(const std::string& scripts_dir,
                       const std::string& script_fname);
+/*
+ * Server message process functions
+ */
+typedef sdk_ret_t (*server_msg_proc_fn_t)(zmq_msg_t *rx_msg,
+                                          zmq_msg_t *tx_msg);
+sdk_ret_t script_exec_msg_process(zmq_msg_t *rx_msg,
+                                  zmq_msg_t *tx_msg);
 
 /*
  * Miscellaneous
@@ -541,7 +553,9 @@ uint32_t mpu_timestamp2secs(uint32_t mpu_timestamp);
 #define APP_TEST_EXIT_FN        app_test_exit
 #define APP_TEST_EXIT_FN_STR    APP_TEST_NAME2STR(app_test_exit)
 bool app_test_exit(test::athena_app::test_vparam_ref_t vparam);
+bool skip_fte_flow_prog_set(test::athena_app::test_vparam_ref_t vparam);
 
 bool skip_fte_flow_prog(void);
+void program_prepare_exit(void);
 
 #endif   // __ATHENA_APP_TEST_UTILS_HPP__

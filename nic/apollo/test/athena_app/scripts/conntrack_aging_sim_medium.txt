@@ -1,10 +1,13 @@
 #For performance reasons, SIM platform aging uses an artificially 
 #reduced conntrack table size, probably not much larger than 1024 entries,
 #so the tests below should not try to do any more than that.
+
+skip_fte_flow_prog_set TRUE
+conntrack_table_clear_full 4096
+
 conntrack_aging_init
 #conntrack_aging_expiry_log_set TRUE
-conntrack_aging_sim_mode TRUE
-conntrack_aging_clear_full 4096
+conntrack_aging_force_expired_ts true
 conntrack_populate_full {TCP FIN_SENT 1023}
 conntrack_aging_test
 conntrack_populate_full {udp ESTABLISHED 888}
@@ -21,8 +24,10 @@ conntrack_populate_random
 conntrack_aging_test
 
 conntrack_aging_metrics_show
-conntrack_aging_sim_mode false
 conntrack_aging_fini
 conntrack_aging_expiry_log_set false
+conntrack_aging_force_expired_ts false
+
+skip_fte_flow_prog_set false
 app_test_exit
 

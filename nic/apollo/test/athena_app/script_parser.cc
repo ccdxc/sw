@@ -25,7 +25,11 @@ script_parser_t::script_parser_t(const string& scripts_dir,
     string      full_fname;
 
     if (scripts_dir.empty()) {
-        full_fname.assign("./" + script_fname);
+        if (!script_fname.empty() && script_fname.front() == '/') {
+            full_fname.assign(script_fname);
+        } else {
+            full_fname.assign("./" + script_fname);
+        }
     } else {
         full_fname.assign(scripts_dir + "/" + script_fname);
     }

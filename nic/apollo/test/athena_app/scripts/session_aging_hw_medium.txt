@@ -2,13 +2,15 @@
 #so it's fine to specify larger size parameters here. The infra will
 #automatically reduce it to the actual table size as needed.
 
+skip_fte_flow_prog_set TRUE
+session_table_clear_full 262555
+
 session_aging_init
-session_aging_sim_mode false
+#session_aging_force_expired_ts true
 
 session_aging_normal_tmo_set 6
 session_aging_accel_tmo_set 4
 
-session_aging_clear_full 262555
 session_populate_full 138972
 session_aging_test
 session_populate_full 262555
@@ -27,5 +29,7 @@ session_aging_test
 session_aging_metrics_show
 session_aging_accel_control False
 session_aging_fini
-session_aging_sim_mode false
+session_aging_force_expired_ts false
+
+skip_fte_flow_prog_set false
 

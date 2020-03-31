@@ -107,6 +107,8 @@ nic/build/$ARCH/$PIPELINE/lib/libdpdk_device.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdslearn.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liboperd.so                         /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpenmetrics.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libalerts_operd_con.so              /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liboperd_alerts.so                  /nic/lib/
 
 # p4/asm specific libs
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/asm_bin/
@@ -163,6 +165,9 @@ platform/src/app/cpld/cpldapp.sh                                  /nic/tools/
 platform/src/app/cpld/reboot.sh                                   /nic/tools/
 platform/src/app/cpld/bin/*.bin                                   /nic/etc/cpld/
 nic/build/$ARCH/$PIPELINE/bin/cpldapp                             /nic/bin/
+
+# Test scripts
+nic/apollo/test/athena_app/scripts/*                              /nic/etc/test_scripts/
 
 # include boot0.bin in the package
 nic/build/$ARCH/$PIPELINE/out/boot0_submake/boot0.bin             /boot0/

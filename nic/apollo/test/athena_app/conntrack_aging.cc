@@ -27,7 +27,6 @@ namespace athena_app {
    (((ret) == SDK_RET_OK) || ((ret) == SDK_RET_ENTRY_NOT_FOUND))
 
 static uint32_t             pollers_qcount;
-static uint32_t             conntrack_table_depth;
 static pds_flow_expiry_fn_t aging_expiry_dflt_fn;
 
 /*
@@ -36,6 +35,18 @@ static pds_flow_expiry_fn_t aging_expiry_dflt_fn;
 static aging_tolerance_t    glb_tolerance;
 static aging_metrics_t      conntrack_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_CONNTRACK);
 
+static uint32_t
+conntrack_table_depth(void)
+{
+    static uint32_t table_depth;
+
+    if (!table_depth) {
+        table_depth = std::min(ftl_pollers_client::conntrack_table_depth_get(),
+                                           (uint32_t)PDS_CONNTRACK_ID_MAX);
+    }
+    return table_depth;
+}
+
 static inline void
 conntrack_spec_init(pds_conntrack_spec_t *spec)
 {
@@ -43,23 +54,14 @@ conntrack_spec_init(pds_conntrack_spec_t *spec)
 }
 
 bool
-conntrack_aging_tolerance_secs_set(test_vparam_ref_t vparam)
-{
-    uint32_t secs = vparam.expected_num();
-    glb_tolerance.tolerance_secs_set(secs);
-    return true;
-}
-
-bool
-conntrack_aging_clear_full(test_vparam_ref_t vparam)
+conntrack_table_clear_full(test_vparam_ref_t vparam)
 {
     pds_conntrack_key_t key;
     uint32_t    depth;
     sdk_ret_t   ret = SDK_RET_OK;
 
-    depth = vparam.expected_num(conntrack_table_depth);
-    depth = std::min(depth, conntrack_table_depth);
-    TEST_LOG_INFO("Clearing %u conntrack entries\n", depth);
+    depth = vparam.expected_num(conntrack_table_depth());
+    depth = std::min(depth, conntrack_table_depth());
 
     flow_conntrack_key_init(&key);
     for (key.conntrack_id = 1;
@@ -71,7 +73,16 @@ conntrack_aging_clear_full(test_vparam_ref_t vparam)
             break;
         }
     }
+    TEST_LOG_INFO("Cleared %u conntrack entries\n", key.conntrack_id);
     return CONNTRACK_DELETE_RET_VALIDATE(ret);
+}
+
+bool
+conntrack_aging_tolerance_secs_set(test_vparam_ref_t vparam)
+{
+    uint32_t secs = vparam.expected_num();
+    glb_tolerance.tolerance_secs_set(secs);
+    return true;
 }
 
 bool
@@ -134,15 +145,15 @@ conntrack_populate_random(test_vparam_ref_t vparam)
     switch (vparam.size()) {
 
     case 0:
-        start_idx = randomize_max(conntrack_table_depth - 1);
-        count = randomize_max(conntrack_table_depth - start_idx);
+        start_idx = randomize_max(conntrack_table_depth() - 1);
+        count = randomize_max(conntrack_table_depth() - start_idx);
         break;
 
     case 1:
     case 2:
         tuple_eval.reset(vparam, 0);
-        start_idx = min(tuple_eval.num(0), conntrack_table_depth - 1);
-        count = min(tuple_eval.num(1), conntrack_table_depth - start_idx);
+        start_idx = min(tuple_eval.num(0), conntrack_table_depth() - 1);
+        count = min(tuple_eval.num(1), conntrack_table_depth() - start_idx);
 
         if (!tuple_eval.zero_failures() || (vparam.size() < 2)) {
             break;
@@ -215,7 +226,7 @@ conntrack_populate_full(test_vparam_ref_t vparam)
     glb_tolerance.reset(depth);
     if (tuple_eval.zero_failures()) {
         conntrack_spec_init(&spec);
-        depth = std::min(depth, conntrack_table_depth);
+        depth = std::min(depth, conntrack_table_depth());
 
         for (spec.key.conntrack_id = 1;
              spec.key.conntrack_id < depth;
@@ -239,15 +250,17 @@ conntrack_aging_expiry_fn(uint32_t expiry_id,
                         pds_flow_age_expiry_type_t expiry_type,
                         void *user_ctx)
 {
-    sdk_ret_t   ret;
+    sdk_ret_t ret = SDK_RET_OK;
 
     switch (expiry_type) {
 
     case EXPIRY_TYPE_CONNTRACK:
-        glb_tolerance.expiry_count_inc();
-        glb_tolerance.conntrack_tmo_tolerance_check(expiry_id);
-        glb_tolerance.create_id_map_find_erase(expiry_id);
-        ret = (*aging_expiry_dflt_fn)(expiry_id, expiry_type, user_ctx);
+        if (aging_expiry_dflt_fn) {
+            glb_tolerance.expiry_count_inc();
+            glb_tolerance.conntrack_tmo_tolerance_check(expiry_id);
+            glb_tolerance.create_id_map_find_erase(expiry_id);
+            ret = (*aging_expiry_dflt_fn)(expiry_id, expiry_type, user_ctx);
+        }
         break;
 
     case EXPIRY_TYPE_SESSION:
@@ -291,11 +304,8 @@ conntrack_aging_init(test_vparam_ref_t vparam)
     if (CONNTRACK_RET_VALIDATE(ret)) {
         ret = pds_flow_age_hw_scanners_start();
     }
-    conntrack_table_depth = std::min(ftl_pollers_client::conntrack_table_depth_get(),
-                                     (uint32_t)PDS_CONNTRACK_ID_MAX);
-
     return CONNTRACK_RET_VALIDATE(ret) && pollers_qcount && 
-           conntrack_table_depth && aging_expiry_dflt_fn;
+           conntrack_table_depth() && aging_expiry_dflt_fn;
 }
 
 bool
@@ -306,7 +316,7 @@ conntrack_aging_expiry_log_set(test_vparam_ref_t vparam)
 }
 
 bool
-conntrack_aging_sim_mode(test_vparam_ref_t vparam)
+conntrack_aging_force_expired_ts(test_vparam_ref_t vparam)
 {
     sdk_ret_t   ret;
 
@@ -327,7 +337,7 @@ conntrack_aging_fini(test_vparam_ref_t vparam)
 
 
     sim_vparam.push_back(test_param_t((uint32_t)false));
-    conntrack_aging_sim_mode(sim_vparam);
+    conntrack_aging_force_expired_ts(sim_vparam);
     return CONNTRACK_RET_VALIDATE(ret);
 }
 

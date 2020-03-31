@@ -2,8 +2,11 @@
 #so it's fine to specify larger size parameters here. The infra will
 #automatically reduce it to the actual table size as needed.
 
+skip_fte_flow_prog_set TRUE
+conntrack_table_clear_full 368944
+
 conntrack_aging_init
-conntrack_aging_sim_mode false
+#conntrack_aging_force_expired_ts true
 
 conntrack_aging_normal_tmo_set {ICMP unestablished  5} {others unestablished 5}
 conntrack_aging_normal_tmo_set {udp unestablished  5} {UDP ESTABLISHED 5}
@@ -13,7 +16,6 @@ conntrack_aging_accel_tmo_set {ICMP unestablished  3} {others unestablished 3}
 conntrack_aging_accel_tmo_set {udp unestablished  3} {UDP ESTABLISHED 3}
 conntrack_aging_accel_tmo_set {tcp unestablished 3} {TCP syn_sent 3} {TCP SYN_RECV 3} {tcp synack_sent 3} {tcp synack_recv 3} {tcp established 3} {tcp fin_sent 3} {tcp fin_recv 3} {tcp time_wait 3} {tcp rst_close 3}
 
-conntrack_aging_clear_full 368944
 conntrack_populate_full {TCP FIN_SENT 161072}
 conntrack_aging_test
 conntrack_populate_full {others ESTABLISHED 269844}
@@ -38,5 +40,7 @@ conntrack_aging_test
 conntrack_aging_metrics_show
 conntrack_aging_accel_control false
 conntrack_aging_fini
-conntrack_aging_sim_mode false
+conntrack_aging_force_expired_ts false
+
+skip_fte_flow_prog_set false
 

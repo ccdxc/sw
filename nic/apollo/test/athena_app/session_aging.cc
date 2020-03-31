@@ -27,7 +27,6 @@ namespace athena_app {
    (((ret) == SDK_RET_OK) || ((ret) == SDK_RET_ENTRY_NOT_FOUND))
 
 static uint32_t             pollers_qcount;
-static uint32_t             session_table_depth;
 static pds_flow_expiry_fn_t aging_expiry_dflt_fn;
 
 /*
@@ -35,6 +34,18 @@ static pds_flow_expiry_fn_t aging_expiry_dflt_fn;
  */
 static aging_tolerance_t    glb_tolerance;
 static aging_metrics_t      session_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_SESSION);
+
+static uint32_t
+session_table_depth(void)
+{
+    static uint32_t table_depth;
+
+    if (!table_depth) {
+        table_depth = std::min(ftl_pollers_client::session_table_depth_get(),
+                                   (uint32_t)PDS_FLOW_SESSION_INFO_ID_MAX);
+    }
+    return table_depth;
+}
 
 static void
 flow_session_spec_init(pds_flow_session_spec_t *spec)
@@ -45,23 +56,14 @@ flow_session_spec_init(pds_flow_session_spec_t *spec)
 }
 
 bool
-session_aging_tolerance_secs_set(test_vparam_ref_t vparam)
-{
-    uint32_t secs = vparam.expected_num();
-    glb_tolerance.tolerance_secs_set(secs);
-    return true;
-}
-
-bool
-session_aging_clear_full(test_vparam_ref_t vparam)
+session_table_clear_full(test_vparam_ref_t vparam)
 {
     pds_flow_session_key_t key;
     uint32_t    depth;
     sdk_ret_t   ret = SDK_RET_OK;
 
-    depth = vparam.expected_num(session_table_depth);
-    depth = std::min(depth, session_table_depth);
-    TEST_LOG_INFO("Clearing %u session entries\n", depth);
+    depth = vparam.expected_num(session_table_depth());
+    depth = std::min(depth, session_table_depth());
 
     flow_session_key_init(&key);
     for (key.session_info_id = 1;
@@ -73,7 +75,16 @@ session_aging_clear_full(test_vparam_ref_t vparam)
             break;
         }
     }
+    TEST_LOG_INFO("Cleared %u session entries\n", key.session_info_id);
     return SESSION_DELETE_RET_VALIDATE(ret);
+}
+
+bool
+session_aging_tolerance_secs_set(test_vparam_ref_t vparam)
+{
+    uint32_t secs = vparam.expected_num();
+    glb_tolerance.tolerance_secs_set(secs);
+    return true;
 }
 
 bool
@@ -118,14 +129,14 @@ session_populate_random(test_vparam_ref_t vparam)
      */
     if (vparam.size()) {
         ret = vparam.num(0, &start_idx);
-        start_idx = min(start_idx, session_table_depth - 1);
+        start_idx = min(start_idx, session_table_depth() - 1);
         if (vparam.size() > 1) {
             ret = vparam.num(1, &count);
-            count = min(count, session_table_depth - start_idx);
+            count = min(count, session_table_depth() - start_idx);
         }
     } else {
-        start_idx = randomize_max(session_table_depth - 1);
-        count = randomize_max(session_table_depth - start_idx);
+        start_idx = randomize_max(session_table_depth() - 1);
+        count = randomize_max(session_table_depth() - start_idx);
     }
 
     glb_tolerance.reset(count);
@@ -155,8 +166,8 @@ session_populate_full(test_vparam_ref_t vparam)
     sdk_ret_t   ret = SDK_RET_OK;
 
     session_metrics.baseline();
-    depth = vparam.expected_num(session_table_depth);
-    depth = std::min(depth, session_table_depth);
+    depth = vparam.expected_num(session_table_depth());
+    depth = std::min(depth, session_table_depth());
 
     glb_tolerance.reset(depth);
     flow_session_spec_init(&spec);
@@ -181,15 +192,17 @@ session_aging_expiry_fn(uint32_t expiry_id,
                         pds_flow_age_expiry_type_t expiry_type,
                         void *user_ctx)
 {
-    sdk_ret_t   ret;
+    sdk_ret_t ret = SDK_RET_OK;
 
     switch (expiry_type) {
 
     case EXPIRY_TYPE_SESSION:
-        glb_tolerance.expiry_count_inc();
-        glb_tolerance.session_tmo_tolerance_check(expiry_id);
-        glb_tolerance.create_id_map_find_erase(expiry_id);
-        ret = (*aging_expiry_dflt_fn)(expiry_id, expiry_type, user_ctx);
+        if (aging_expiry_dflt_fn) {
+            glb_tolerance.expiry_count_inc();
+            glb_tolerance.session_tmo_tolerance_check(expiry_id);
+            glb_tolerance.create_id_map_find_erase(expiry_id);
+            ret = (*aging_expiry_dflt_fn)(expiry_id, expiry_type, user_ctx);
+        }
         break;
 
     case EXPIRY_TYPE_CONNTRACK:
@@ -233,11 +246,8 @@ session_aging_init(test_vparam_ref_t vparam)
     if (SESSION_RET_VALIDATE(ret)) {
         ret = pds_flow_age_hw_scanners_start();
     }
-    session_table_depth = std::min(ftl_pollers_client::session_table_depth_get(),
-                                   (uint32_t)PDS_FLOW_SESSION_INFO_ID_MAX);
-
     return SESSION_RET_VALIDATE(ret) && pollers_qcount && 
-           session_table_depth && aging_expiry_dflt_fn;
+           session_table_depth() && aging_expiry_dflt_fn;
 }
 
 bool
@@ -248,11 +258,12 @@ session_aging_expiry_log_set(test_vparam_ref_t vparam)
 }
 
 bool
-session_aging_sim_mode(test_vparam_ref_t vparam)
+session_aging_force_expired_ts(test_vparam_ref_t vparam)
 {
     sdk_ret_t   ret;
 
-    ret = ftl_pollers_client::force_session_expired_ts_set(vparam.expected_bool());
+    ret = ftl_pollers_client::force_session_expired_ts_set(
+                                            vparam.expected_bool());
     return SESSION_RET_VALIDATE(ret);
 }
 
@@ -269,7 +280,7 @@ session_aging_fini(test_vparam_ref_t vparam)
 
 
     sim_vparam.push_back(test_param_t((uint32_t)false));
-    session_aging_sim_mode(sim_vparam);
+    session_aging_force_expired_ts(sim_vparam);
     return SESSION_RET_VALIDATE(ret);
 }
 

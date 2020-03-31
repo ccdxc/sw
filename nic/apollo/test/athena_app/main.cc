@@ -15,6 +15,7 @@
 #include <iostream>
 #include <stdarg.h>
 #include <sys/stat.h>
+#include <rte_common.h>
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
@@ -28,6 +29,7 @@
 #include "trace.hpp"
 #include "app_test_utils.hpp"
 #include "fte_athena.hpp"
+#include "athena_app_server.hpp"
 
 using namespace test::athena_app;
 
@@ -290,6 +292,23 @@ static uint8_t g_snd_pkt_ipv6_udp_s2h[] = {
 
 #endif /* __x86_64__ */
 
+static bool     program_wake;
+
+static void
+program_sleep(void)
+{
+    while (!program_wake) {
+        usleep(100000);
+    }
+}
+
+void
+program_prepare_exit(void)
+{
+    program_wake = true;
+    server_poll_stop();
+}
+
 int
 main (int argc, char **argv)
 {
@@ -299,6 +318,7 @@ main (int argc, char **argv)
     string       script_fname, script_dir;
     string       mode;
     boost::property_tree::ptree pt;
+    bool         success = true;
 
     struct option longopts[] = {
        { "config",      required_argument, NULL, 'c' },
@@ -469,7 +489,8 @@ main (int argc, char **argv)
 
     if (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_NO_DPDK) {
         printf("mode: ATHENA_APP_MODE_NO_DPDK. Wait forever...\n");
-        while (1) usleep(10000);
+        program_sleep();
+        goto done;
     }
 
     fte_ath::fte_init();
@@ -483,9 +504,8 @@ main (int argc, char **argv)
          * otherwise, let the test script determine its own fate.
          */
         if (script_exec(script_dir, script_fname) != SDK_RET_OK) {
-            test_vparam_t vparam;
-            vparam.push_back(test_param_t((uint32_t)false));
-            app_test_exit(vparam);
+            success = false;
+            goto done;
         }
     }
 
@@ -509,9 +529,17 @@ main (int argc, char **argv)
     recv_packet();
 #endif /* __x86_64__ */
 
-    // wait forver
-    while (1) usleep(10000);
+    if (server_init() == SDK_RET_OK) {
+        server_poll();
+    } else {
+        program_sleep();
+    }
+    server_fini();
 
+done:
+    test_vparam_t vparam;
+    vparam.push_back(test_param_t(success));
+    app_test_exit(vparam);
     return 0;
 }
 
@@ -522,7 +550,14 @@ bool
 app_test_exit(test_vparam_ref_t vparam)
 {
     pds_global_teardown();
-    exit(vparam.expected_bool() ? 0 : 1);
-    return 0;
+    rte_exit(vparam.expected_bool() ? EXIT_SUCCESS : EXIT_FAILURE,
+             __FUNCTION__);
+    return true;
 }
 
+bool
+skip_fte_flow_prog_set(test_vparam_ref_t vparam)
+{
+    skip_fte_flow_prog_ = vparam.expected_bool();
+    return true;
+}

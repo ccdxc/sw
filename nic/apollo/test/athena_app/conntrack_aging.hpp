@@ -18,10 +18,10 @@ namespace athena_app {
 
 bool conntrack_aging_init(test_vparam_ref_t vparam);
 bool conntrack_aging_expiry_log_set(test_vparam_ref_t vparam);
-bool conntrack_aging_sim_mode(test_vparam_ref_t vparam);
+bool conntrack_aging_force_expired_ts(test_vparam_ref_t vparam);
 bool conntrack_aging_fini(test_vparam_ref_t vparam);
 bool conntrack_aging_tolerance_secs_set(test_vparam_ref_t vparam);
-bool conntrack_aging_clear_full(test_vparam_ref_t vparam);
+bool conntrack_table_clear_full(test_vparam_ref_t vparam);
 bool conntrack_populate_simple(test_vparam_ref_t vparam);
 bool conntrack_populate_random(test_vparam_ref_t vparam);
 bool conntrack_populate_full(test_vparam_ref_t vparam);
@@ -33,10 +33,10 @@ bool conntrack_aging_metrics_show(test_vparam_ref_t vparam);
 
 #define CONNTRACK_AGING_NAME2FN_MAP                                     \
     APP_TEST_NAME2FN_MAP_ENTRY(conntrack_aging_init),                   \
-    APP_TEST_NAME2FN_MAP_ENTRY(conntrack_aging_sim_mode),               \
+    APP_TEST_NAME2FN_MAP_ENTRY(conntrack_aging_force_expired_ts),       \
     APP_TEST_NAME2FN_MAP_ENTRY(conntrack_aging_fini),                   \
     APP_TEST_NAME2FN_MAP_ENTRY(conntrack_aging_tolerance_secs_set),     \
-    APP_TEST_NAME2FN_MAP_ENTRY(conntrack_aging_clear_full),             \
+    APP_TEST_NAME2FN_MAP_ENTRY(conntrack_table_clear_full),             \
     APP_TEST_NAME2FN_MAP_ENTRY(conntrack_populate_simple),              \
     APP_TEST_NAME2FN_MAP_ENTRY(conntrack_populate_random),              \
     APP_TEST_NAME2FN_MAP_ENTRY(conntrack_populate_full),                \

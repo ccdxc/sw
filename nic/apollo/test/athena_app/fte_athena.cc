@@ -52,6 +52,7 @@
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
 #include "app_test_utils.hpp"
 #include "fte_athena.hpp"
+#include "athena_app_server.hpp"
 
 namespace fte_ath {
 
@@ -444,29 +445,41 @@ accumulate_stats (pds_flow_stats_t *stats)
     return;
 }
 
+sdk_ret_t
+fte_dump_flow_stats(zmq_msg_t *rx_msg,
+                    zmq_msg_t *tx_msg)
+{
+    memset(&g_flow_stats, 0, sizeof(pds_flow_stats_t));
+    for (int i = 0; i < FTE_MAX_CORES; i++) {
+         memset(&flow_stats[i], 0, sizeof(pds_flow_stats_t));
+         if (pds_flow_cache_stats_get(i, &flow_stats[i])
+             == SDK_RET_OK) {
+             accumulate_stats(&flow_stats[i]);
+         } else {
+             PDS_TRACE_ERR("Stats get failed for core#%u\n", i);
+         }
+    }
+    dump_stats(&g_flow_stats);
+    dump_flows();
+
+    if (tx_msg) {
+        SERVER_RSP_INIT(tx_msg, rsp, test::athena_app::server_rsp_t);
+    }
+    return SDK_RET_OK;
+}
+
 static void
 signal_handler (int signum)
 {
     if (signum == SIGINT || signum == SIGTERM) {
         PDS_TRACE_DEBUG("\nSIGNAL %d received..core#:%u\n",
                         signum, rte_lcore_id());
-        rte_exit(0, "received signal: %d, exiting\n", signum);
+        program_prepare_exit();
     }
     if (signum == SIGUSR1) {
         PDS_TRACE_DEBUG("\nSIGNAL %d received..\n",
                         signum);
-        memset(&g_flow_stats, 0, sizeof(pds_flow_stats_t));
-        for (int i = 0; i < FTE_MAX_CORES; i++) {
-             memset(&flow_stats[i], 0, sizeof(pds_flow_stats_t));
-             if (pds_flow_cache_stats_get(i, &flow_stats[i])
-                 == SDK_RET_OK) {
-                 accumulate_stats(&flow_stats[i]);
-             } else {
-                 PDS_TRACE_ERR("Stats get failed for core#%u\n", i);
-             }
-        }
-        dump_stats(&g_flow_stats);
-        dump_flows();
+        fte_dump_flow_stats();
     }
 }
 

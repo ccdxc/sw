@@ -11,6 +11,8 @@
 #ifndef __FTE_FTE_HPP__
 #define __FTE_FTE_HPP__
 
+#include "nic/sdk/third-party/zmq/include/zmq.h"
+
 namespace fte_ath {
 
 void fte_init(void);
@@ -18,6 +20,8 @@ void fte_init(void);
 sdk_ret_t fte_flow_prog(struct rte_mbuf *m);
 void fte_thread_init(unsigned int core_id);
 sdk_ret_t fte_flows_init(void);
+sdk_ret_t fte_dump_flow_stats(zmq_msg_t *rx_msg = nullptr,
+                              zmq_msg_t *tx_msg = nullptr);
 
 #define MAX_LINE_SZ 128
 static inline void pkt_hex_dump_trace(const char *label, char *buf, uint16_t len)

@@ -1,10 +1,13 @@
 #For performance reasons, SIM platform aging uses an artificially 
 #reduced session table size, probably not much larger than 1024 entries,
 #so the tests below should not try to do any more than that.
+
+skip_fte_flow_prog_set TRUE
+session_table_clear_full 4096
+
 session_aging_init
 #session_aging_expiry_log_set TRUE
-session_aging_sim_mode TRUE
-session_aging_clear_full 4096
+session_aging_force_expired_ts true
 session_populate_full 1011
 session_aging_test
 session_populate_random 333 209
@@ -12,7 +15,9 @@ session_aging_test
 session_populate_random
 session_aging_test
 session_aging_metrics_show
-session_aging_sim_mode FALSE
 session_aging_fini
 session_aging_expiry_log_set FALSE
+session_aging_force_expired_ts false
+
+skip_fte_flow_prog_set false
 app_test_exit

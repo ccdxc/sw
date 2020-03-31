@@ -1,6 +1,11 @@
+skip_fte_flow_prog_set TRUE
+session_table_clear_full 8388608
+conntrack_table_clear_full 8388608
+
 session_aging_init
 conntrack_aging_init
-session_aging_sim_mode false
+#session_aging_force_expired_ts true
+#conntrack_aging_force_expired_ts true
 
 session_aging_normal_tmo_set 5
 session_aging_accel_tmo_set 2
@@ -12,9 +17,6 @@ conntrack_aging_normal_tmo_set {tcp unestablished 6} {TCP syn_sent 6} {TCP SYN_R
 conntrack_aging_accel_tmo_set {ICMP unestablished 2} {icmp established 2} {others unestablished 2} {others established 2}
 conntrack_aging_accel_tmo_set {udp unestablished 2} {UDP ESTABLISHED 2}
 conntrack_aging_accel_tmo_set {tcp unestablished 2} {TCP syn_sent 2} {TCP SYN_RECV 2} {tcp synack_sent 2} {tcp synack_recv 2} {tcp established 2} {tcp fin_sent 2} {tcp fin_recv 2} {tcp time_wait 2} {tcp rst_close 2}
-
-session_aging_clear_full 8388608
-conntrack_aging_clear_full 8388608
 
 session_populate_full 6145304
 conntrack_populate_full {TCP fin_sent 7736083}
@@ -40,5 +42,7 @@ session_aging_accel_control FALSE
 conntrack_aging_accel_control false
 conntrack_aging_fini
 session_aging_fini
-session_aging_sim_mode false
+session_aging_force_expired_ts falseconntrack_aging_force_expired_ts false
+
+skip_fte_flow_prog_set false
 

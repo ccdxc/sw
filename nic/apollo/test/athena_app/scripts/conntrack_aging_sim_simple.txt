@@ -1,8 +1,11 @@
 #Simple conntrack aging test (SIM platform)
+
+skip_fte_flow_prog_set TRUE
+conntrack_table_clear_full 4096
+
 conntrack_aging_init
 #conntrack_aging_expiry_log_set TRUE
-conntrack_aging_sim_mode TRUE
-conntrack_aging_clear_full 4096
+conntrack_aging_force_expired_ts true
 conntrack_populate_simple {27 tcp syn_sent} {1 icmp unestablished} {1023 udp established} {901 tcp TIME_WAIT} {438 others UNESTABLISHED} {1019 TCP fin_recv}
 conntrack_aging_test
 
@@ -17,7 +20,9 @@ conntrack_aging_accel_control false
 conntrack_populate_simple {127 tcp syn_recv} {911 tcp established} {323 OTHERS unestablished} {401 tcp rst_close} {5 ICMP UNESTABLISHED} {719 TCP fin_sent} {15 tcp syn_sent} {16 udp established} {320 tcp fin_recv} {321 tcp fin_sent}
 conntrack_aging_test
 conntrack_aging_metrics_show
-conntrack_aging_sim_mode FALSE
 conntrack_aging_fini
 conntrack_aging_expiry_log_set FALSE
+conntrack_aging_force_expired_ts false
+
+skip_fte_flow_prog_set false
 app_test_exit
