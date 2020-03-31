@@ -19,12 +19,9 @@ input_properties:
                         r1, p.flow_lkp_metadata_lkp_vrf, \
                         d.input_properties_d.vrf
 
-    or              r1, k.capri_intrinsic_lif_s3_e10, \
-                        k.capri_intrinsic_lif_s0_e2, 8
     or              r2, d.input_properties_d.mirror_on_drop_session_id, \
                         d.input_properties_d.mirror_on_drop_en, 8
-    phvwrpair       p.control_metadata_src_lif, r1, \
-                        p.{control_metadata_mirror_on_drop_en, \
+    phvwr           p.{control_metadata_mirror_on_drop_en, \
                         control_metadata_mirror_on_drop_session_id}, r2
 
     phvwr           p.capri_intrinsic_tm_replicate_ptr, \

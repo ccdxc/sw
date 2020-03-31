@@ -24,6 +24,10 @@ input_properties_mac_vlan:
     phvwr.c3        p.qos_metadata_qos_class_id[4:0], k.capri_intrinsic_tm_iq[4:0]
     sub.c3          r1, r1, P4_RECIRC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ
 
+    or              r2, k.capri_intrinsic_lif_s3_e10, \
+                        k.capri_intrinsic_lif_s0_e2, 8
+    phvwr           p.control_metadata_src_lif, r2
+
     // if table lookup is miss, return
     nop.!c1.e
     phvwr         p.capri_p4_intrinsic_packet_len, r1

@@ -252,7 +252,6 @@ action input_properties(vrf, reg_mac_vrf, dir, flow_miss_qos_class_id,
     modify_field(capri_intrinsic.tm_replicate_ptr, flow_miss_idx);
     modify_field(control_metadata.ipsg_enable, ipsg_enable);
     modify_field(l4_metadata.profile_idx, l4_profile_idx);
-    modify_field(control_metadata.src_lif, capri_intrinsic.lif);
     modify_field(control_metadata.src_lport, src_lport);
     modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(rewrite_metadata.rewrite_index, rewrite_index);
@@ -323,6 +322,7 @@ action input_properties_mac_vlan(vrf, dir, mdest_flow_miss_action,
                                  mirror_on_drop_session_id, skip_flow_update,
                                  ep_learn_en) {
     adjust_lkp_fields();
+    modify_field(control_metadata.src_lif, capri_intrinsic.lif);
 
     // if table is a miss, return. do not perform rest of the actions.
 
