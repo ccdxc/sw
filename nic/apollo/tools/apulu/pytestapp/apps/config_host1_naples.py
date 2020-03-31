@@ -136,7 +136,7 @@ subnet2_local_host_ip=ipaddress.IPv4Address('3.1.0.2')
 subnet2_local_vnic_public_ip=ipaddress.IPv4Address('50.0.0.100')
 
 # NAT Prefix
-nat_prefix=ipaddress.IPv4Network('50.0.0.0/30')
+nat_prefix=ipaddress.IPv4Network('50.0.0.1/32')
 nat_port_lo=10000
 nat_port_hi=20000
 
@@ -186,13 +186,13 @@ vcn0=interface.InterfaceObject( 100, interface_pb2.IF_TYPE_CONTROL, interface_pb
 tunnel1 = tunnel.TunnelObject( tunnel_id,vpc1_id, tunnel_local_ip, tunnel_remote_ip, None, tunnel_pb2.TUNNEL_TYPE_NONE, types_pb2.ENCAP_TYPE_VXLAN, tunnel_vnid) 
 
 # Create DHCP Policy
-dhcp_policy1 = dhcp.DhcpPolicyObject(1, server_ip=subnet1_v4_router_ip, gateway_ip=subnet1_v4_router_ip)
-dhcp_policy2 = dhcp.DhcpPolicyObject(2, server_ip=subnet2_v4_router_ip, gateway_ip=subnet2_v4_router_ip)
+dhcp_policy1 = dhcp.DhcpPolicyObject(1, server_ip=subnet1_v4_router_ip)
+dhcp_policy2 = dhcp.DhcpPolicyObject(2, server_ip=subnet2_v4_router_ip)
 
 # Create NAT Port Block
 nat_pb1 = nat.NatPbObject(1, vpc1_id, nat_prefix, nat_port_lo, nat_port_hi, "udp")
 nat_pb2 = nat.NatPbObject(2, vpc1_id, nat_prefix, nat_port_lo, nat_port_hi, "tcp")
-nat_pb3 = nat.NatPbObject(3, vpc1_id, nat_prefix, nat_port_lo, nat_port_hi, "icmp")
+nat_pb3 = nat.NatPbObject(3, vpc1_id, nat_prefix, 0, 0, "icmp")
 
 # Create Subnets
 # id, vpcid, v4prefix, v6prefix, hostifindex, v4virtualrouterip, v6virtualrouterip, virtualroutermac, v4routetableid, v6routetableid, ingv4securitypolicyid, egrv4securitypolicyid, ingv6securitypolicyid, egrv6securitypolicyid, fabricencap='VXLAN', fabricencapid=1
