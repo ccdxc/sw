@@ -432,6 +432,15 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
             // DNAT is enabled on this route
             PDS_IMPL_NH_VAL_SET_DNAT_INFO(nh_val, TRUE,
                                           dnat_base_idx_ + dnat_idx);
+
+            rtable->routes[i].nhid = nh_val;
+            PDS_TRACE_DEBUG("Processing route table %s, route %s prio: %u -> DNAT %s, "
+                            "nh id 0x%x", spec->key.str(),
+                            ippfx2str(&rtable->routes[i].prefix),
+                            rtable->routes[i].prio,
+                            ipaddr2str(&route_spec->nat.dst_nat_ip),
+                            nh_val);
+
             // write to DNAT table at this index
             dnat_data.action_id = DNAT_DNAT_ID;
             dnat_data.dnat_info.route_table_hw_id = 0;
@@ -453,7 +462,12 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
+
+            PDS_TRACE_DEBUG("Programmed DNAT table at %u for IP %s",
+                            dnat_base_idx_ + dnat_idx,
+                            ipaddr2str(&route_spec->nat.dst_nat_ip));
             dnat_idx++;
+            continue;
         } else {
             PDS_IMPL_NH_VAL_SET_DNAT_INFO(nh_val, FALSE, 0);
         }
