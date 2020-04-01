@@ -356,13 +356,9 @@ class _Testbed:
                     Logger.error("failed to find drivers_pkg key in Drivers {0}".format(drv))
                 else:
                     if not os.path.exists(drv["drivers_pkg"]):
-                        Logger.error("###############################################")
-                        Logger.error("###############################################")
-                        Logger.error("###############################################")
-                        Logger.error("failed to find driver {0}".format(drv["drivers_pkg"]))
-                        Logger.error("###############################################")
-                        Logger.error("###############################################")
-                        Logger.error("###############################################")
+                        Logger.warn("###############################################")
+                        Logger.warn("failed to find driver {0}".format(drv["drivers_pkg"]))
+                        Logger.warn("###############################################")
 
         if "Firmwares" not in data:
             Logger.error("failed to find key Firmwars in {0}".format(self.image_manifest_file))
@@ -372,13 +368,9 @@ class _Testbed:
                     Logger.error("failed to find image key in Firmware {0}".format(fw))
                 else:
                     if not os.path.exists(fw["image"]):
-                        Logger.error("###############################################")
-                        Logger.error("###############################################")
-                        Logger.error("###############################################")
-                        Logger.error("failed to find firmware {0}".format(fw["image"]))
-                        Logger.error("###############################################")
-                        Logger.error("###############################################")
-                        Logger.error("###############################################")
+                        Logger.warn("###############################################")
+                        Logger.warn("failed to find firmware {0}".format(fw["image"]))
+                        Logger.warn("###############################################")
 
     def __recover_testbed(self, manifest_file, **kwargs):
         if GlobalOptions.dryrun or GlobalOptions.skip_setup:
@@ -390,7 +382,8 @@ class _Testbed:
         firmware_reimage_only = kwargs.get('firmware_reimage_only', False)
         driver_reimage_only = kwargs.get('driver_reimage_only', False)
 
-        self.__verifyImagePath()
+        if [n for n in self.__tbspec.Instances if n.NodeOs in ["linux","freebsd"]]:
+            self.__verifyImagePath()
 
         for instance in self.__tbspec.Instances:
             cmd = ["timeout", "2400"]
