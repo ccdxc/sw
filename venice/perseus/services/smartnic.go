@@ -34,10 +34,14 @@ type configCache struct {
 
 var cache configCache
 
-func (c *configCache) setConfig(in network.RoutingConfig) {
+func (c *configCache) setConfig(in *network.RoutingConfig) {
 	defer c.Unlock()
 	c.Lock()
-	cache.config = &in
+	if in != nil {
+		cache.config = ref.DeepCopy(in).(*network.RoutingConfig)
+	} else {
+		cache.config = nil
+	}
 }
 
 func (c *configCache) getTimers() (keepalive, holdtime uint32) {
@@ -185,15 +189,16 @@ func (m *ServiceHandlers) setupLBIf() {
 // HandleRoutingConfigEvent handles SmartNIC updates
 func (m *ServiceHandlers) HandleRoutingConfigEvent(et kvstore.WatchEventType, evtRtConfig *network.RoutingConfig) {
 	log.Infof("HandleRoutingConfigEvent called: Intf: %+v event type: %v", *evtRtConfig, et)
-	rtCfg := evtRtConfig
-	if et == kvstore.Deleted {
-		rtCfg = nil
-	} else {
-		if !cache.needUpdate(evtRtConfig) {
-			return
-		}
+	if !cache.needUpdate(evtRtConfig) {
+		return
 	}
-	err := m.configureBGP(context.TODO(), rtCfg)
+	var err error
+	if et == kvstore.Deleted {
+		err = m.configureBGP(context.TODO(), nil)
+
+	} else {
+		err = m.configureBGP(context.TODO(), evtRtConfig)
+	}
 	if err != nil {
 		log.Errorf("HandleRoutingConfigEvent: failed to apply config (%s)", err)
 	}
@@ -235,7 +240,14 @@ func (m *ServiceHandlers) configureBGP(ctx context.Context, in *network.RoutingC
 		log.Infof("Resouce version is same ignoring request [%v]", oldCfg.ResourceVersion)
 		return nil
 	}
-	updCfg, err := clientutils.GetBGPConfiguration(oldCfg, rtCfg, "0.0.0.0", rtCfg.Spec.BGPConfig.RouterId)
+	oldlb, newlb := "0.0.0.0", "0.0.0.0"
+	if oldCfg != nil {
+		oldlb = oldCfg.Spec.BGPConfig.RouterId
+	}
+	if rtCfg != nil {
+		newlb = rtCfg.Spec.BGPConfig.RouterId
+	}
+	updCfg, err := clientutils.GetBGPConfiguration(oldCfg, rtCfg, oldlb, newlb)
 	if err != nil {
 		return errors.Wrap(err, "failed to construct pegasus config")
 	}
@@ -249,7 +261,11 @@ func (m *ServiceHandlers) configureBGP(ctx context.Context, in *network.RoutingC
 		return errors.Wrap(err, "failed to apply config")
 	}
 	m.updated = true
-	cache.setConfig(*in)
+	if in == nil {
+		cache.setConfig(nil)
+	} else {
+		cache.setConfig(in)
+	}
 	switch updCfg.GlobalOper {
 	case clientutils.Create:
 		CfgAsn = updCfg.Global.Request.LocalASN

@@ -157,6 +157,9 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 		switch new.(type) {
 		case *netproto.RoutingConfig:
 			c := new.(*netproto.RoutingConfig)
+			if c == nil {
+				break
+			}
 			uid, err := uuid.FromString(c.UUID)
 			if err != nil {
 				return nil, fmt.Errorf("could not parse UUID [%v]", c.UUID)
@@ -195,6 +198,9 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 			log.Info(peers)
 		case *network.RoutingConfig:
 			c := new.(*network.RoutingConfig)
+			if c == nil {
+				break
+			}
 			if c.Spec.BGPConfig == nil {
 				break
 			}
