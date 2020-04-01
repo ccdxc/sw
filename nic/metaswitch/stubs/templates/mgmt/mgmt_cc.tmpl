@@ -481,10 +481,11 @@
             {{if $specPresent}}
               {{if (isRepeatedField .)}}
                     auto res = resp->mutable_response(pds_ms_check_get_{{$msgName | ToLower}}_status_response_count + bulk_row);
-              {{else}}
-                    auto res = resp->response();
-              {{end}}
                     auto ent = res->mutable_status();
+              {{else}}
+                    auto res = resp->mutable_response();
+                    auto ent = res->mutable_status();
+              {{end}}
             {{else}}
               {{if (isRepeatedField .)}}
                     auto res = resp->add_response();

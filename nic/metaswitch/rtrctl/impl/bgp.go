@@ -96,6 +96,15 @@ BGP Global Configuration
 Local ASN   : %d
 Router ID   : %v
 Cluster ID  : %v
+-----------------------------------
+BGP Global Status
+-----------------------------------
+Oper Status            : %v
+NumAdjRibOutRoutes     : %v
+PeakNumAdjRibOutRoutes : %v
+RemDelayTime           : %v
+TableVersion           : %v
+-----------------------------------
 `
 )
 
@@ -117,13 +126,13 @@ func bgpShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("Operation failed with error")
 	}
 
-	v := utils.NewBGPSpec(respMsg.Response.Spec)
+	v := utils.NewBGPGetResp(respMsg.Response.Spec, respMsg.Response.Status)
 	if cmd.Flag("json").Value.String() == "true" {
 		b, _ := json.MarshalIndent(v, "", "  ")
 		fmt.Println(string(b))
 		return nil
 	}
-	fmt.Printf(bgpGlobalStr, v.LocalASN, v.RouterId, v.ClusterId)
+	fmt.Printf(bgpGlobalStr, v.LocalASN, v.RouterId, v.ClusterId, v.Status, v.NumAdjRibOutRoutes, v.PeakNumAdjRibOutRoutes, v.RemDelayTime, v.TableVer)
 	return nil
 }
 

@@ -80,6 +80,15 @@ enum BGPASSize {
   BGP_AS_SIZE_FOUR_OCTET  = 2;
 }
 
+enum BGPOperStatus {
+  BGP_OPER_STATUS_NONE       = 0;
+  BGP_OPER_STATUS_UP         = 1;
+  BGP_OPER_STATUS_DOWN       = 2;
+  BGP_OPER_STATUS_GOING_UP   = 3;
+  BGP_OPER_STATUS_GOING_DOWN = 4;
+  BGP_OPER_STATUS_ACT_FAILED = 5;
+}
+
 // BGP configuration
 message BGPSpec {
   // unique key/identifier of BGP config
@@ -95,6 +104,16 @@ message BGPSpec {
 
 // operational status of BGP
 message BGPStatus {
+  // BGP current oper status
+  BGPOperStatus Status                 = 1;
+  // The total number of Adj-RIB-Out routes currently allocated
+  uint32        NumAdjRibOutRoutes     = 2;
+  // The peak number of Adj-RIB-Out routes that have been allocated at any one time
+  uint32        PeakNumAdjRibOutRoutes = 3;
+  // The maximum time remaining until route selection takes place following a restart, in hundredths of a second.
+  uint32        RemDelayTime           = 4;
+  // The table version number of the Loc-RIB
+  uint32        TableVer               = 5;
 }
 
 // BGP object

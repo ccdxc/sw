@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/satori/go.uuid"
 
@@ -24,7 +24,7 @@ const (
 
 // NLRIPrefix is a representation of the BGP Route
 type NLRIPrefix struct {
-        Afi    int
+	Afi    int
 	Safi   int
 	Type   int
 	Length int
@@ -62,7 +62,7 @@ func label2int(in []byte) uint32 {
 
 // String returns a user friendly string
 func (n *NLRIPrefix) String() string {
-	if (n == nil) {
+	if n == nil {
 		return fmt.Sprintf("0.0.0.0")
 	}
 	return fmt.Sprintf("%v", n.Prefix)
@@ -70,7 +70,7 @@ func (n *NLRIPrefix) String() string {
 
 // String returns a user friendly string
 func (n *NLRIPrefix) AttrString() string {
-	if (n == nil) {
+	if n == nil {
 		return fmt.Sprintf("")
 	}
 	return fmt.Sprintf("%v", n.Prefix.attrString())
@@ -88,24 +88,24 @@ func NewNLRIPrefix(afi int, safi int, in []byte) *NLRIPrefix {
 	}
 
 	if afi == 1 {
-	   ret.Prefix = newIPv4Route(in[0:])
+		ret.Prefix = newIPv4Route(in[0:])
 	} else {
-	  switch ret.Type {
-	  case 2:
-	  	p := &EVPNType2Route{}
-		p.parseBytes(in[2:])
-		ret.Prefix = newEVPNType2Route(p)
+		switch ret.Type {
+		case 2:
+			p := &EVPNType2Route{}
+			p.parseBytes(in[2:])
+			ret.Prefix = newEVPNType2Route(p)
 
-	  case 3:
-	  	p := &EVPNType3Route{}
-		p.parseBytes(in[2:])
-		ret.Prefix = newEVPNType3Route(p)
+		case 3:
+			p := &EVPNType3Route{}
+			p.parseBytes(in[2:])
+			ret.Prefix = newEVPNType3Route(p)
 
-	  case 5:
-		p := &EVPNType5Route{}
-		p.parseBytes(in[2:])
-		ret.Prefix = newEVPNType5Route(p)
-	 }
+		case 5:
+			p := &EVPNType5Route{}
+			p.parseBytes(in[2:])
+			ret.Prefix = newEVPNType5Route(p)
+		}
 	}
 	return ret
 }
@@ -140,7 +140,7 @@ func (s *ShadowEVPNType2Route) String() string {
 	var type2 int = 2
 	var macsize int = 48
 	if s.IPAddress == "<nil>" {
-       s.IPAddress = "0.0.0.0"
+		s.IPAddress = "0.0.0.0"
 	}
 	return fmt.Sprintf(type2Fmt, type2, s.RD, s.EthTagID, macsize, s.MACAddress, s.IPAddressLen, s.IPAddress)
 }
@@ -209,9 +209,9 @@ type EVPNType3Route struct {
 }
 
 type ShadowEVPNType3Route struct {
-	RD         string
-	EthTagID   uint32
-	IPAddress  string
+	RD        string
+	EthTagID  uint32
+	IPAddress string
 	*EVPNType3Route
 }
 
@@ -219,7 +219,7 @@ const type3Fmt = `[%d][%v][%v][%d][%v]`
 
 // String returns a user friendly string
 func (s *ShadowEVPNType3Route) String() string {
-    var type3 int = 3
+	var type3 int = 3
 	return fmt.Sprintf(type3Fmt, type3, s.RD, s.EthTagID, s.IPAddressLen, s.IPAddress)
 }
 
@@ -285,7 +285,7 @@ const type5Fmt = `[%d][%v][%v][%v][%v]`
 
 // String returns a user friendly string
 func (s *ShadowEVPNType5Route) String() string {
-    var type5 int = 5
+	var type5 int = 5
 	return fmt.Sprintf(type5Fmt, type5, s.RD, s.EthTagID, s.IPPrefixLen, s.IPPrefix)
 }
 
@@ -341,7 +341,7 @@ func newEVPNType5Route(in *EVPNType5Route) *ShadowEVPNType5Route {
 }
 
 type ShadowIPv4Route struct {
-	IPPrefix    string
+	IPPrefix string
 }
 
 // String returns a user friendly string
@@ -350,25 +350,25 @@ func (s *ShadowIPv4Route) attrString() string {
 }
 
 const ipv4Fmt = `%v`
-		   
+
 func (a *ShadowIPv4Route) parseBytes(in []byte) {
 }
 
 // String returns a user friendly string
-func (s *ShadowIPv4Route) String() string {     
-     return fmt.Sprintf(ipv4Fmt, s.IPPrefix)
+func (s *ShadowIPv4Route) String() string {
+	return fmt.Sprintf(ipv4Fmt, s.IPPrefix)
 }
 
 func newIPv4Route(in []byte) *ShadowIPv4Route {
-        if in == nil || len(net.IP(in)) == 0 {
-	   return &ShadowIPv4Route{
-		IPPrefix:       "0.0.0.0",
-           }	
+	if in == nil || len(net.IP(in)) == 0 {
+		return &ShadowIPv4Route{
+			IPPrefix: "0.0.0.0",
+		}
 	} else {
-	   return &ShadowIPv4Route{
-		IPPrefix:       net.IP(in).String(),
-           }
-        }
+		return &ShadowIPv4Route{
+			IPPrefix: net.IP(in).String(),
+		}
+	}
 }
 
 type UserPrefix interface {
@@ -397,24 +397,34 @@ func PdsIPToString(in *pds.IPAddress) string {
 // ShadowBgpSpec shadows the BGPSpec for CLI purposes
 type ShadowBgpSpec struct {
 	*pds.BGPSpec
-	Id       string
-	RouterId string
-	ClusterId string
+	Id                     string
+	RouterId               string
+	ClusterId              string
+	Status                 string
+	NumAdjRibOutRoutes     uint32
+	PeakNumAdjRibOutRoutes uint32
+	RemDelayTime           uint32
+	TableVer               uint32
 }
 
-// NewBGPSpec creates a new shadow of the BGPSpec
-func NewBGPSpec(in *pds.BGPSpec) *ShadowBgpSpec {
-	uid, err := uuid.FromBytes(in.Id)
+// NewBGPGetResp creates a new shadow of the BGPSpec
+func NewBGPGetResp(spec *pds.BGPSpec, status *pds.BGPStatus) *ShadowBgpSpec {
+	uid, err := uuid.FromBytes(spec.Id)
 	uidstr := ""
 	if err == nil {
 		uidstr = uid.String()
 	}
 
 	return &ShadowBgpSpec{
-		BGPSpec:  in,
-		Id:       uidstr,
-		RouterId:  Uint32ToIPv4Address(in.RouterId),
-		ClusterId: Uint32ToIPv4Address(in.ClusterId),
+		BGPSpec:                spec,
+		Id:                     uidstr,
+		RouterId:               Uint32ToIPv4Address(spec.RouterId),
+		ClusterId:              Uint32ToIPv4Address(spec.ClusterId),
+		Status:                 strings.TrimPrefix(status.Status.String(), "BGP_OPER_STATUS_"),
+		NumAdjRibOutRoutes:     status.NumAdjRibOutRoutes,
+		PeakNumAdjRibOutRoutes: status.PeakNumAdjRibOutRoutes,
+		RemDelayTime:           status.RemDelayTime,
+		TableVer:               status.TableVer,
 	}
 }
 
@@ -456,44 +466,44 @@ type ShadowBGPPeerStatus struct {
 }
 
 func BgpErrStr(bs []byte) string {
-    if bs[0] == 0 {
-        return "NONE"
-    }
-    if bs[0] > 7 {
-        return "Unknown Error " + strconv.Itoa(int(bs[0]))
-    }
-    type BGPErrCodeInfo struct {
-        Str       string
-        SubCodeSz int
-    }
-    ErrCodeStr := [...]BGPErrCodeInfo{
-                    {"NONE", 0},
-                    {"Message Header Error", 3},
-                    {"OPEN Message Error", 8},
-                    {"UPDATE Message Error", 11},
-                    {"Hold Timer Expired", 0},
-                    {"Finite State Machine Error", 3},
-                    {"Cease", 7},
-                    {"ROUTE-REFRESH Message Error", 1}}
+	if bs[0] == 0 {
+		return "NONE"
+	}
+	if bs[0] > 7 {
+		return "Unknown Error " + strconv.Itoa(int(bs[0]))
+	}
+	type BGPErrCodeInfo struct {
+		Str       string
+		SubCodeSz int
+	}
+	ErrCodeStr := [...]BGPErrCodeInfo{
+		{"NONE", 0},
+		{"Message Header Error", 3},
+		{"OPEN Message Error", 8},
+		{"UPDATE Message Error", 11},
+		{"Hold Timer Expired", 0},
+		{"Finite State Machine Error", 3},
+		{"Cease", 7},
+		{"ROUTE-REFRESH Message Error", 1}}
 
-    SubErrCodeStr := [...][12] string {
-        {},
-        {"Unspecific", "Connection Not Synchronized","Bad Message Length","Bad Message Type"},
-        {"Unspecific", "Unsupported Version Number","Bad Peer AS","Bad BGP Identifier","Unsupported Optional Parameter","", "Unacceptable Hold Time","Unsupported Capability","Role Mismatch"},
-        {"Unspecific", "Malformed Attribute List","Unrecognized Well-known Attribute","Missing Well-known Attribute","Attribute Flags Error","Attribute Length Error","Invalid ORIGIN Attribute","","Invalid NEXT_HOP Attribute","Optional Attribute Error", "Invalid Network Field","Malformed AS_PATH"},
-        {},
-        {"Unspecific", "Receive Unexpected Message in OpenSent State","Receive Unexpected Message in OpenConfirm State","Receive Unexpected Message in Established State"},
-        {"Unspecific", "Maximum Number of Prefixes Reached","Administrative Shutdown","Connection Rejected","Other Configuration Change","Connection Collision Resolution","Out of Resources","Hard Reset"},
-        {"Reserved", "Invalid Message Length"}}
+	SubErrCodeStr := [...][12]string{
+		{},
+		{"Unspecific", "Connection Not Synchronized", "Bad Message Length", "Bad Message Type"},
+		{"Unspecific", "Unsupported Version Number", "Bad Peer AS", "Bad BGP Identifier", "Unsupported Optional Parameter", "", "Unacceptable Hold Time", "Unsupported Capability", "Role Mismatch"},
+		{"Unspecific", "Malformed Attribute List", "Unrecognized Well-known Attribute", "Missing Well-known Attribute", "Attribute Flags Error", "Attribute Length Error", "Invalid ORIGIN Attribute", "", "Invalid NEXT_HOP Attribute", "Optional Attribute Error", "Invalid Network Field", "Malformed AS_PATH"},
+		{},
+		{"Unspecific", "Receive Unexpected Message in OpenSent State", "Receive Unexpected Message in OpenConfirm State", "Receive Unexpected Message in Established State"},
+		{"Unspecific", "Maximum Number of Prefixes Reached", "Administrative Shutdown", "Connection Rejected", "Other Configuration Change", "Connection Collision Resolution", "Out of Resources", "Hard Reset"},
+		{"Reserved", "Invalid Message Length"}}
 
-    ErrStr := ErrCodeStr[bs[0]].Str
-  
-    if int(bs[1]) > ErrCodeStr[bs[0]].SubCodeSz {
-       ErrStr += " : Unknown sub error " + strconv.Itoa(int(bs[1]))
-    } else if ErrCodeStr[bs[0]].SubCodeSz > 0 {
-       ErrStr += " : " + SubErrCodeStr[bs[0]][bs[1]]
-    }
-    return ErrStr
+	ErrStr := ErrCodeStr[bs[0]].Str
+
+	if int(bs[1]) > ErrCodeStr[bs[0]].SubCodeSz {
+		ErrStr += " : Unknown sub error " + strconv.Itoa(int(bs[1]))
+	} else if ErrCodeStr[bs[0]].SubCodeSz > 0 {
+		ErrStr += " : " + SubErrCodeStr[bs[0]][bs[1]]
+	}
+	return ErrStr
 }
 
 func newBGPPeerStatus(in *pds.BGPPeerStatus) ShadowBGPPeerStatus {
@@ -560,68 +570,67 @@ type ShadowBGPNLRIPrefixStatus struct {
 }
 
 func BGPASPath(ASSize int, ASPath []byte) string {
-    // Flag Type Total-Len {ASSegmentType NumAS {AS}*}*
-    TotalLen := int(ASPath[2])
-    if TotalLen == 0 {
-        return "NONE"
-    }
-    FirstASSeg := true
-    var ASStr string
-    for ASSegStart:= 3 ; TotalLen > 0;  {
-        if !FirstASSeg {
-            ASStr += " { "
-        }
-        NumAS := int(ASPath[ASSegStart+1])
-        ASSegLen := 2 + NumAS * ASSize
-        asseq := ASPath[ASSegStart + 2 : ASSegStart + ASSegLen]
-        FirstAS := true
-        for i:=0; i<NumAS; i++ {
-            asint := binary.BigEndian.Uint32(asseq [i*ASSize : (i+1)*ASSize])
-            if !FirstAS {
-                ASStr += " "
-            } else {
-                FirstAS = false
-            }
-            ASStr += strconv.FormatUint(uint64(asint),10)
-        }
-        if !FirstASSeg {
-            ASStr += " } "
-        } else {
-            FirstASSeg = false
-        }
-        ASSegStart += ASSegLen
-        TotalLen -= ASSegLen
-    }
-    return ASStr
+	// Flag Type Total-Len {ASSegmentType NumAS {AS}*}*
+	TotalLen := int(ASPath[2])
+	if TotalLen == 0 {
+		return "NONE"
+	}
+	FirstASSeg := true
+	var ASStr string
+	for ASSegStart := 3; TotalLen > 0; {
+		if !FirstASSeg {
+			ASStr += " { "
+		}
+		NumAS := int(ASPath[ASSegStart+1])
+		ASSegLen := 2 + NumAS*ASSize
+		asseq := ASPath[ASSegStart+2 : ASSegStart+ASSegLen]
+		FirstAS := true
+		for i := 0; i < NumAS; i++ {
+			asint := binary.BigEndian.Uint32(asseq[i*ASSize : (i+1)*ASSize])
+			if !FirstAS {
+				ASStr += " "
+			} else {
+				FirstAS = false
+			}
+			ASStr += strconv.FormatUint(uint64(asint), 10)
+		}
+		if !FirstASSeg {
+			ASStr += " } "
+		} else {
+			FirstASSeg = false
+		}
+		ASSegStart += ASSegLen
+		TotalLen -= ASSegLen
+	}
+	return ASStr
 }
 
 func BGPRouteSource(routeSrc pds.NLRISrc, peerip *pds.IPAddress) string {
-	if (routeSrc != pds.NLRISrc_NLRI_PEER) {
+	if routeSrc != pds.NLRISrc_NLRI_PEER {
 		return "LOCAL"
 	}
 	return PdsIPToString(peerip)
 }
 
-
 func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixStatus {
-      var pathOrigId string
+	var pathOrigId string
 
-      if (net.IP(in.PathOrigId).String() == "0.0.0.0") {
-         pathOrigId = "<not set>"
-      } else {
-         pathOrigId = net.IP(in.PathOrigId).String()
-      }
+	if net.IP(in.PathOrigId).String() == "0.0.0.0" {
+		pathOrigId = "<not set>"
+	} else {
+		pathOrigId = net.IP(in.PathOrigId).String()
+	}
 
-      var ASSize int
+	var ASSize int
 
-      switch (in.ASSize) {
-      case pds.BGPASSize_BGP_AS_SIZE_TWO_OCTET:
-	      ASSize = 2
-      case pds.BGPASSize_BGP_AS_SIZE_FOUR_OCTET:
-	      ASSize = 4
-      default:
-	      log.Errorf("Invalid AS Size")
-      }
+	switch in.ASSize {
+	case pds.BGPASSize_BGP_AS_SIZE_TWO_OCTET:
+		ASSize = 2
+	case pds.BGPASSize_BGP_AS_SIZE_FOUR_OCTET:
+		ASSize = 4
+	default:
+		log.Errorf("Invalid AS Size")
+	}
 	return &ShadowBGPNLRIPrefixStatus{
 		ASPathStr:           BGPASPath(ASSize, in.ASPathStr),
 		PathOrigId:          pathOrigId,

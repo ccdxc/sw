@@ -81,6 +81,15 @@ enum BGPASSize {
   BGP_AS_SIZE_FOUR_OCTET  = 2;
 }
 
+enum BGPOperStatus {
+  BGP_OPER_STATUS_NONE       = 0;
+  BGP_OPER_STATUS_UP         = 1;
+  BGP_OPER_STATUS_DOWN       = 2;
+  BGP_OPER_STATUS_GOING_UP   = 3;
+  BGP_OPER_STATUS_GOING_DOWN = 4;
+  BGP_OPER_STATUS_ACT_FAILED = 5;
+}
+
 // BGP configuration
 message BGPSpec {
   option (venice.pdsaSetGlobOpts) = {
@@ -110,6 +119,22 @@ message BGPSpec {
 
 // operational status of BGP
 message BGPStatus {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen:  "AMB_BGP_RM_OID_LEN",
+    Mib:     "bgpRmEntTable",
+    FillFn:  "bgp_rm_ent_get_fill_func",
+    SpecMsg: "BGPSpec"
+  };
+  // BGP current oper status
+  BGPOperStatus Status                 = 1 [(venice.pdsaFields) = {Field: "oper_status"}];
+  // The total number of Adj-RIB-Out routes currently allocated
+  uint32        NumAdjRibOutRoutes     = 2 [(venice.pdsaFields) = {Field: "num_aro_routes"}];
+  // The peak number of Adj-RIB-Out routes that have been allocated at any one time
+  uint32        PeakNumAdjRibOutRoutes = 3 [(venice.pdsaFields) = {Field: "peak_num_aro_routes"}];
+  // The maximum time remaining until route selection takes place following a restart, in hundredths of a second.
+  uint32        RemDelayTime           = 4 [(venice.pdsaFields) = {Field: "remain_delay_time"}];
+  // The table version number of the Loc-RIB
+  uint32        TableVer               = 5 [(venice.pdsaFields) = {Field: "table_version"}];
 }
 
 // BGP object

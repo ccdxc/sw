@@ -607,7 +607,7 @@ int main(int argc, char** argv)
     std::string end_point = std::string(inet_ntoa(ip_addr))+":50054";
     printf ("Endpoint: %s\n",end_point.c_str());
 
-    std::shared_ptr<Channel> channel = grpc::CreateChannel(end_point,
+    std::shared_ptr<Channel> channel = grpc::CreateChannel("localhost:50054",
             grpc::InsecureChannelCredentials());
     g_device_stub_  = DeviceSvc::NewStub (channel);
     g_if_stub_      = IfSvc::NewStub (channel);
