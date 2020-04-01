@@ -67,6 +67,9 @@ vpc_entry::clone(api_ctxt_t *api_ctxt) {
     cloned_vpc = vpc_db()->alloc();
     if (cloned_vpc) {
         new (cloned_vpc) vpc_entry();
+        if (cloned_vpc->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
         if (impl_) {
             cloned_vpc->impl_ = impl_->clone();
             if (unlikely(cloned_vpc->impl_ == NULL)) {
@@ -74,7 +77,6 @@ vpc_entry::clone(api_ctxt_t *api_ctxt) {
                 goto error;
             }
         }
-        cloned_vpc->init_config(api_ctxt);
         cloned_vpc->hw_id_ = hw_id_;
     }
     return cloned_vpc;

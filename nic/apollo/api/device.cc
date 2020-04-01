@@ -60,12 +60,14 @@ device_entry::clone(api_ctxt_t *api_ctxt) {
     cloned_device = device_db()->alloc();
     if (cloned_device) {
         new (cloned_device) device_entry();
+        if (cloned_device->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
         cloned_device->impl_ = impl_->clone();
         if (unlikely(cloned_device->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone device impl");
             goto error;
         }
-        cloned_device->init_config(api_ctxt);
     }
     return cloned_device;
 

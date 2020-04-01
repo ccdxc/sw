@@ -67,12 +67,14 @@ policer_entry::clone(api_ctxt_t *api_ctxt) {
     cloned_policer = policer_db()->alloc();
     if (cloned_policer) {
         new (cloned_policer) policer_entry();
+        if (cloned_policer->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
         cloned_policer->impl_ = impl_->clone();
         if (unlikely(cloned_policer->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone policer %s impl", key2str().c_str());
             goto error;
         }
-        cloned_policer->init_config(api_ctxt);
     }
     return cloned_policer;
 

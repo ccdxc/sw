@@ -59,13 +59,15 @@ vpc_peer_entry::clone(api_ctxt_t *api_ctxt) {
     cloned_vpc_peer = vpc_peer_db()->alloc();
     if (cloned_vpc_peer) {
         new (cloned_vpc_peer) vpc_peer_entry();
+        if (cloned_vpc_peer->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
         cloned_vpc_peer->impl_ = impl_->clone();
         if (unlikely(cloned_vpc_peer->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone vpc peer obj %s impl",
                            key2str().c_str());
             goto error;
         }
-        cloned_vpc_peer->init_config(api_ctxt);
     }
     return cloned_vpc_peer;
 

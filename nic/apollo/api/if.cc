@@ -80,12 +80,14 @@ if_entry::clone(api_ctxt_t *api_ctxt) {
     cloned_if = if_db()->alloc();
     if (cloned_if) {
         new (cloned_if) if_entry();
+        if (cloned_if->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
         cloned_if->impl_ = impl_->clone();
         if (unlikely(cloned_if->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone intf %s impl", key_.str());
             goto error;
         }
-        cloned_if->init_config(api_ctxt);
     }
     return cloned_if;
 

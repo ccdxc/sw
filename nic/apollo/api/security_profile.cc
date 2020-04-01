@@ -52,9 +52,17 @@ security_profile::clone(api_ctxt_t *api_ctxt) {
     cloned_profile = policy_db()->alloc_security_profile();
     if (cloned_profile) {
         new (cloned_profile) security_profile();
-        cloned_profile->init_config(api_ctxt);
+        if (cloned_profile->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
     }
     return cloned_profile;
+
+error:
+
+    cloned_profile->~security_profile();
+    policy_db()->free(cloned_profile);
+    return NULL;
 }
 
 sdk_ret_t

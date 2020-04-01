@@ -62,12 +62,14 @@ svc_mapping::clone(api_ctxt_t *api_ctxt) {
     cloned_mapping = svc_mapping_db()->alloc();
     if (cloned_mapping) {
         new (cloned_mapping) svc_mapping();
+        if (cloned_mapping->init_config(api_ctxt) != NULL) {
+            goto error;
+        }
         cloned_mapping->impl_ = impl_->clone();
         if (unlikely(cloned_mapping->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone mapping %s impl", key2str().c_str());
             goto error;
         }
-        cloned_mapping->init_config(api_ctxt);
     }
     return cloned_mapping;
 

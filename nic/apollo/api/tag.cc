@@ -72,12 +72,14 @@ tag_entry::clone(api_ctxt_t *api_ctxt) {
     cloned_tag = tag_db()->alloc();
     if (cloned_tag) {
         new (cloned_tag) tag_entry();
+        if (cloned_tag->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
         cloned_tag->impl_ = impl_->clone();
         if (unlikely(cloned_tag->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone tag %s impl", key_.str());
             goto error;
         }
-        cloned_tag->init_config(api_ctxt);
     }
     return cloned_tag;
 

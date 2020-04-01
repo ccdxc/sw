@@ -103,13 +103,15 @@ policy::clone(void) {
     cloned_policy = policy_db()->alloc();
     if (cloned_policy) {
         new (cloned_policy) policy();
+        if (cloned_policy->init_config_(this) != SDK_RET_OK) {
+            goto error;
+        }
         cloned_policy->impl_ = impl_->clone();
         if (unlikely(cloned_policy->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone policy %s impl",
                           key2str().c_str());
             goto error;
         }
-        cloned_policy->init_config_(this);
     }
     return cloned_policy;
 

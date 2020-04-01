@@ -68,12 +68,14 @@ tep_entry::clone(api_ctxt_t *api_ctxt) {
     cloned_tep = tep_db()->alloc();
     if (cloned_tep) {
         new (cloned_tep) tep_entry();
+        if (cloned_tep->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
         cloned_tep->impl_ = impl_->clone();
         if (unlikely(cloned_tep->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone tep %s impl", key_.str());
             goto error;
         }
-        cloned_tep->init_config(api_ctxt);
     }
     return cloned_tep;
 

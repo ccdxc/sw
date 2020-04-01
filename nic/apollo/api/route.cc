@@ -95,13 +95,15 @@ route_table::clone(void) {
     cloned_rtable = route_table_db()->alloc();
     if (cloned_rtable) {
         new (cloned_rtable) route_table();
+        if (cloned_rtable->init_config_(this) != SDK_RET_OK) {
+            goto error;
+        }
         cloned_rtable->impl_ = impl_->clone();
         if (unlikely(cloned_rtable->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone route table %s impl",
                           key2str().c_str());
             goto error;
         }
-        cloned_rtable->init_config_(this);
     }
     return cloned_rtable;
 

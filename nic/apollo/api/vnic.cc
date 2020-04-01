@@ -71,12 +71,14 @@ vnic_entry::clone(api_ctxt_t *api_ctxt) {
     cloned_vnic = vnic_db()->alloc();
     if (cloned_vnic) {
         new (cloned_vnic) vnic_entry();
+        if (cloned_vnic->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
         cloned_vnic->impl_ = impl_->clone();
         if (unlikely(cloned_vnic->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone vnic %s impl", key_.str());
             goto error;
         }
-        cloned_vnic->init_config(api_ctxt);
     }
     return cloned_vnic;
 

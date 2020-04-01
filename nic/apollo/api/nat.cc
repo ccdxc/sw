@@ -52,9 +52,17 @@ nat_port_block::clone(api_ctxt_t *api_ctxt) {
     cloned_port_block = nat_db()->alloc();
     if (cloned_port_block) {
         new (cloned_port_block) nat_port_block();
-        cloned_port_block->init_config(api_ctxt);
+        if (cloned_port_block->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
     }
     return cloned_port_block;
+
+error:
+
+    cloned_port_block->~nat_port_block();
+    nat_db()->free(cloned_port_block);
+    return NULL;
 }
 
 sdk_ret_t

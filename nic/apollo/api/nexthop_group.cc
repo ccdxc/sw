@@ -66,12 +66,14 @@ nexthop_group::clone(api_ctxt_t *api_ctxt) {
     cloned_nh_group = nexthop_group_db()->alloc();
     if (cloned_nh_group) {
         new (cloned_nh_group) nexthop_group();
+        if (cloned_nh_group->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
         cloned_nh_group->impl_ = impl_->clone();
         if (unlikely(cloned_nh_group->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone nexthop group %s impl", key_.str());
             goto error;
         }
-        cloned_nh_group->init_config(api_ctxt);
     }
     return cloned_nh_group;
 

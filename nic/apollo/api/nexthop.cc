@@ -65,12 +65,14 @@ nexthop::clone(api_ctxt_t *api_ctxt) {
     cloned_nh = nexthop_db()->alloc();
     if (cloned_nh) {
         new (cloned_nh) nexthop();
+        if (cloned_nh->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
         cloned_nh->impl_ = impl_->clone();
         if (unlikely(cloned_nh->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone nexthop %s impl", key_.str());
             goto error;
         }
-        cloned_nh->init_config(api_ctxt);
     }
     return cloned_nh;
 

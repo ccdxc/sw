@@ -73,12 +73,14 @@ meter_entry::clone(api_ctxt_t *api_ctxt) {
     cloned_meter = meter_db()->alloc();
     if (cloned_meter) {
         new (cloned_meter) meter_entry();
+        if (cloned_meter->init_config(api_ctxt) != SDK_RET_OK) {
+            goto error;
+        }
         cloned_meter->impl_ = impl_->clone();
         if (unlikely(cloned_meter->impl_ == NULL)) {
             PDS_TRACE_ERR("Failed to clone meter %s impl", key_.str());
             goto error;
         }
-        cloned_meter->init_config(api_ctxt);
     }
     return cloned_meter;
 
