@@ -1,6 +1,6 @@
 meta:
     name    : driver-compat
-    os      : [ esx, linux, freebsd ]
+    os      : [ esx, linux, freebsd, windows ]
     nics    : [ pensando, intel, mellanox, broadcom ]
     targetcount : 1
 

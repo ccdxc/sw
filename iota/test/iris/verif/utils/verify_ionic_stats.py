@@ -2,6 +2,7 @@
 import iota.harness.api as api
 import iota.test.utils.naples_host as host
 import iota.test.utils.ionic_utils as ionic_utils
+import iota.test.iris.utils.naples_workloads as workload
 
 IONIC_DRV_PATH = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth"
 
@@ -21,10 +22,10 @@ def Main(tc):
                 api.Trigger_AddHostCommand(
                     req, node, 'sysctl dev.%s.reset_stats=1 1>/dev/null' % host.GetNaplesSysctl(i))
             elif os == host.OS_TYPE_WINDOWS:
-              #  api.Trigger_AddHostCommand(
-              #      req, node, '/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe ' + 'Get-NetAdapterStatistics -Name "%s' % i)
-                api.Logger.error("Not supported on windows")
-                return api.types.status.FAILURE
+                intf = workload.GetNodeInterface(node)
+                name = intf.WindowsIntName(i)
+                api.Trigger_AddHostCommand(
+                    req, node, "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Get-NetAdapterStatistics -Name '%s'\"" % name)
             else:
                 api.Trigger_AddHostCommand(
                     req, node, 'ethtool -S %s | grep packets' % i)

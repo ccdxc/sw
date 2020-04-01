@@ -1,6 +1,6 @@
 meta:
     name    : vlan_offload
-    os      : [ freebsd, esx ]
+    os      : [ freebsd, esx, windows ]
     nics    : [ pensando, mellanox, intel, broadcom ]
     targetcount : 21
 

@@ -1,6 +1,6 @@
 meta:
     name    : cpldupgrade
-    os      : [ linux, freebsd, esx ]
+    os      : [ linux, freebsd, esx, windows ]
     nics    : [ pensando, intel, mellanox, broadcom ]
     targetcount : 1
 

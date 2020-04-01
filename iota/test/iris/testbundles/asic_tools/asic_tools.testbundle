@@ -1,6 +1,6 @@
 meta:
     name    : asic_tools
-    os      : [ linux, freebsd, esx ]
+    os      : [ linux, freebsd, esx, windows ]
     nics    : [ pensando, mellanox, intel, broadcom ]
 
 testcases:

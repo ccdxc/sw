@@ -1,5 +1,5 @@
 import iota.harness.api as api
-import pdb
+import json
 
 def debug_dump_display_info(resp):
     result = api.types.status.SUCCESS
@@ -376,3 +376,15 @@ def DeleteARP(node, interface, hostname):
     if resp.commands[0].exit_code != 0:
         result = api.types.status.FAILURE
     return result
+
+def getWindowsPortMapping(node):
+    os = api.GetNodeOs(node)
+    if os != "windows":
+        return []
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddHostCommand(req, node, "cat /pensando/iota/name-mapping.json")
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        return []
+    entries = json.loads(resp.commands[0].stdout)
+    return entries

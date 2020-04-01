@@ -8,7 +8,7 @@
 meta:
     name              : lif_telemetry
     nics              : [ pensando, mellanox, intel, broadcom ]
-    os                : [ linux, esx, freebsd ]
+    os                : [ linux, esx, freebsd, windows ]
     targetcount       : 1
 
 testcases:

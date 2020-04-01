@@ -1,6 +1,6 @@
 meta:
     name    : penctl
-    os      : [ linux, freebsd ]
+    os      : [ linux, freebsd, windows ]
     nics    : [ pensando, mellanox, intel ]
     targetcount : 33 
 

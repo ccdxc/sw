@@ -92,6 +92,11 @@ def GetNaplesInbandBondInterfaces(node):
     api.Logger.debug("NaplesInbandBondInterfaces for node: ", node, intfs)
     return intfs
 
+
+def GetWindowsPortMapping(node):
+    return host_utils.getWindowsPortMapping(node)
+
+
 class Interface:
     __CMD_WRAPPER = {
         InterfaceType.HOST             : api.Trigger_AddHostCommand,
@@ -214,6 +219,10 @@ class NodeInterface:
         self._oob_1g_intfs           = GetNaplesOobInterfaces(node)
         self._ib_100g_intfs          = GetNaplesInbandInterfaces(node)
         self._ib_bond_intfs          = GetNaplesInbandBondInterfaces(node)
+        if api.GetNodeOs(node) == "windows":
+            self._port_mapping       = GetWindowsPortMapping(node)
+        else:
+            self._port_mapping       = None
 
     def HostMgmtIntfs(self):
         return self._host_mgmt_intfs
@@ -235,6 +244,14 @@ class NodeInterface:
 
     def InbBondIntfs(self):
         return self._ib_bond_intfs
+
+    def WindowsIntName(self, name):
+        if self._port_mapping is None:
+            return ""
+        portInfo = self._port_mapping[name]
+        if portInfo is None:
+            return ""
+        return portInfo["Name"]
 
 def GetNodeInterface(node):
     return NodeInterface(node)

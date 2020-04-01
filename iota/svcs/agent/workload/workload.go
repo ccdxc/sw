@@ -628,17 +628,17 @@ func (app *bareMetalWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 				return "", errors.Wrap(err, stdout)
 			}
 		case "windows":
-			/*
-				comment out for now, not supported by powershell/driver
-				setMacAddrCmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Set-NetAdapter -Name '" + spec.Parent + " -MacAddress '" + spec.Mac +"' -Confirm:$false"}
-				if retCode, stdout, err := utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
-					return "", errors.Wrap(err, stdout)
-				}
-			*/
+	                name, ok := windowsPortNameMapping[spec.Parent]["Name"]
+			if !ok {
+				break
+			}
+			setMacAddrCmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Set-NetAdapter -Name '" + name + "' -MacAddress '" + spec.Mac +"' -Confirm:$false"}
+			if retCode, stdout, err := utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
+				return "", errors.Wrap(err, stdout)
+			}
 		case "freebsd":
 			// not supported
 		}
-
 	}
 
 	if spec.IPV4Address != "" {

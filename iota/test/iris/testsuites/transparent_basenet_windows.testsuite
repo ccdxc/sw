@@ -18,7 +18,6 @@ images:
 setup:
     topology: test/iris/topologies/baremetal_windows/baremetal_windows.topology
     config  :
-
         - step : utils.cleanup
         - step : testcases.penctl.install
         - step : testcases.penctl.enable_ssh
@@ -33,7 +32,7 @@ setup:
 common:
     verifs:
         -   step    : verif.utils.verify_interrupts
-        #-   step    : verif.utils.verify_ionic_stats
+        -   step    : verif.utils.verify_ionic_stats
         #-   step    : verif.utils.verify_links
         #-   step    : verif.utils.verify_cores
         #-   step    : verif.utils.verify_topology_health
@@ -48,42 +47,53 @@ common:
 
 testbundles:
     precheckin:
-        - networking/connectivity.testbundle
+        - networking/lif_telemetry_precheckin.testbundle
+        - filters/filters.testbundle
+        - subifs/subifs-precheckin.testbundle
+        - rx_mode/rx_mode.testbundle
+        - classic/driver-features-sanity.testbundle
+        - system/obfl_check.testbundle
+        - sysmon/interrupts.testbundle
+        - cpld/cpldupgrade.testbundle
+        - hpe_ilo/hpe_ilo.testbundle
 
     sanity:
         # Relative paths from iota/test/iris/testbundles/
+        #- classic/ethtool.testbundle
         - networking/connectivity.testbundle
-        - classic/link_flap.testbundle
-        #- networking/lif_telemetry.testbundle
         #- classic/rdma.testbundle
+        - linktest/linktest.testbundle
         #- filters/filters.testbundle
         #- mtu/mtu.testbundle
+        #- networking/lif_telemetry.testbundle
+        #- subifs/subifs.testbundle
         #- rx_mode/rx_mode.testbundle
         #- vlanoffload/vlanoffload.testbundle
-        #- mnic/mnic_classic.testbundle
+        - linktest/linktest.testbundle
+        - mnic/mnic_classic.testbundle
         #- linktest/linktest.testbundle
         #- classic/driver-features-int_mgmt-sanity.testbundle
-        #- linktest/linktest.testbundle
+        - linktest/linktest.testbundle
         #- classic/driver-features-oob-1g-sanity.testbundle
-        #- linktest/linktest.testbundle
+        - linktest/linktest.testbundle
         #- tso/tso.testbundle
         #- drivercsum/drivercsum.testbundle
         #- classic/driver-features-sanity.testbundle
-        #- linktest/linktest.testbundle
+        - linktest/linktest.testbundle
         #- storage/storage.testbundle
-        #- penctl/penctl_classic.testbundle
+        - penctl/penctl_classic.testbundle
         #- penctl/mode_change.testbundle
-        #- post_diag/post_diag.testbundle
-        #- asic_tools/asic_tools.testbundle
-        #- system/obfl_check.testbundle
-        #- sysmon/interrupts.testbundle
-        #- cpld/cpldupgrade.testbundle
-        #- hpe_ilo/hpe_ilo.testbundle
-        #- driver_compat/driver-compat.testbundle
+        - post_diag/post_diag.testbundle
+        - asic_tools/asic_tools.testbundle
+        - system/obfl_check.testbundle
+        - sysmon/interrupts.testbundle
+        - cpld/cpldupgrade.testbundle
+        - hpe_ilo/hpe_ilo.testbundle
+        - driver_compat/driver-compat.testbundle
 
     extended:
         # Relative paths from iota/test/iris/testbundles/
-        #- classic/rdma_ext.testbundle
+        - classic/rdma_ext.testbundle
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
@@ -91,11 +101,11 @@ testbundles:
         #- classic/rdma_stress.testbundle
         #- classic/rdma_longevity.testbundle
         #- classic/rdma_reg_dcqcn.testbundle
-        #- tso/tso_regr.testbundle
-        #- rss/rss.testbundle
-        #- classic/driver-features.testbundle
+        - tso/tso_regr.testbundle
+        - rss/rss.testbundle
+        - classic/driver-features.testbundle
         #- storage/regression.testbundle
-        #- penctl/mode_change.testbundle
+        - penctl/mode_change.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores

@@ -1,6 +1,6 @@
 meta:
     name    : oob1g
-    os      : [ linux ]
+    os      : [ linux, windows ]
     nics    : [ pensando ]
     targetcount : 1418
 

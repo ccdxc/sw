@@ -1,6 +1,6 @@
 meta:
     name    : rx_mode
-    os      : [ linux, freebsd ]
+    os      : [ linux, freebsd, windows ]
     nics    : [ pensando, mellanox, intel, broadcom ]
     #targetcount : 35
 

@@ -1,6 +1,6 @@
 meta:
     name    : drivercsum
-    os      : [ linux, freebsd ]
+    os      : [ linux, freebsd, windows ]
     nics    : [ pensando, intel, mellanox, broadcom ]
     targetcount : 96
 

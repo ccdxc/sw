@@ -1,6 +1,6 @@
 meta:
     name    : ionicdrv
-    os      : [ linux, freebsd ]
+    os      : [ linux, freebsd, windows ]
     nics    : [ pensando, intel, mellanox, broadcom ]
     targetcount : 120
 

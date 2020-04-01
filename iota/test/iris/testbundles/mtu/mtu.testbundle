@@ -1,6 +1,6 @@
 meta:
     name    : mtu
-    os      : [ linux, freebsd ]
+    os      : [ linux, freebsd, windows ]
     nics    : [ pensando, mellanox, intel, broadcom ]
     targetcount : 5
 
