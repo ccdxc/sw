@@ -4053,7 +4053,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
 },
   LifMetrics: {
   "name": "LifMetrics",
-  "description": "Key index - LIF ID",
+  "description": "Key index - LIF IfIndex",
   "displayName": "Lif Packet Statistics",
   "fields": [
     {
