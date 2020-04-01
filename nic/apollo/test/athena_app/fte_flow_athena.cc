@@ -340,8 +340,7 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
 
         key->l4.icmp.type = icmph->icmp_type;
         key->l4.icmp.code = icmph->icmp_code;
-        key->l4.icmp.identifier =
-            (rte_be_to_cpu_16(icmph->icmp_ident) & 0xff);
+        key->l4.icmp.identifier = rte_be_to_cpu_16(icmph->icmp_ident);
     } else {
         sport = rte_be_to_cpu_16(tcp0->src_port);
         dport = rte_be_to_cpu_16(tcp0->dst_port);
@@ -471,6 +470,7 @@ static sdk_ret_t
 fte_session_info_create (uint8_t dir, uint32_t session_index, uint16_t vnic_id)
 {
     pds_flow_session_spec_t spec;
+    static uint8_t create_done = 0;
 
     memset(&spec, 0, sizeof(spec));
     spec.key.session_info_id = session_index;
@@ -484,6 +484,10 @@ fte_session_info_create (uint8_t dir, uint32_t session_index, uint16_t vnic_id)
             g_sess_rewrite[vnic_id].s2h_sess_rewrite.sess_rewrite_id; 
     }
 
+    if (create_done) {
+        return pds_flow_session_info_update(&spec);
+    }
+    create_done++;
     return pds_flow_session_info_create(&spec);
 }
 
@@ -694,14 +698,13 @@ fte_flow_prog (struct rte_mbuf *m)
     }
 
     ret = pds_flow_cache_entry_create(&flow_spec);
-    if (ret != SDK_RET_OK) {
+    if ((ret != SDK_RET_OK) && (ret != SDK_RET_ENTRY_EXISTS)) {
         PDS_TRACE_DEBUG("pds_flow_cache_entry_create failed. \n");
         return ret;
     }
 
-    g_session_index++;
     fte_flow_dump();
-    return ret;    
+    return SDK_RET_OK;    
 }
 
 void
