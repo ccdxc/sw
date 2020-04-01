@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -267,26 +268,64 @@ func mirrorShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		mirrorDetailShow(respMsg)
+	} else {
+		mirrorShowHeader()
+		m := make(map[uint64]*halproto.MirrorSessionGetResponse)
+		for _, resp := range respMsg.Response {
+			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+				continue
+			}
+			m[resp.GetSpec().GetKeyOrHandle().GetMirrorsessionId()] = resp
+		}
+		var keys []uint64
+		for k := range m {
+			keys = append(keys, k)
+		}
+		sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+		for _, k := range keys {
+			mirrorShowOneResp(m[k])
+		}
+	}
+}
+
+func mirrorDetailShow(respMsg *halproto.MirrorSessionGetResponseMsg) {
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
-		if cmd != nil && cmd.Flags().Changed("yaml") {
-			respType := reflect.ValueOf(resp)
-			b, _ := yaml.Marshal(respType.Interface())
-			fmt.Println(string(b) + "\n")
-			fmt.Println("---")
-		} else {
-			spec := resp.GetSpec()
-			fmt.Println("\nMirror Session ID:                ", spec.GetKeyOrHandle().GetMirrorsessionId())
-			fmt.Println("Mirror Session HW ID:               ", resp.GetStatus().GetHandle())
-			fmt.Println("Mirror Session SnapLen:             ", spec.GetSnaplen())
-			fmt.Println("Mirror Session Tunnel Source        ", utils.IPAddrToStr(spec.GetErspanSpec().GetSrcIp()))
-			fmt.Println("Mirror Session Tunnel Destination   ", utils.IPAddrToStr(spec.GetErspanSpec().GetDestIp()))
-			fmt.Println("Mirror Session ERSPAN Type          ", spec.GetErspanSpec().GetType())
-		}
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b) + "\n")
+		fmt.Println("---")
 	}
+}
+
+func mirrorShowHeader() {
+	fmt.Printf("\n")
+	fmt.Printf("SID: Mirror session id          HWID: Mirror session hwid\n")
+	fmt.Printf("Snap: Snap length               LTEP: Local Tunnel TEP\n")
+	fmt.Printf("RTEP: Remote Tunnel TEP         ETYPE: ERSPAN Type\n")
+	fmt.Printf("\n")
+	hdrLine := strings.Repeat("-", 60)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-5s%-5s%-5s%-15s%-15s%-15s\n",
+		"SID", "HWID", "Snap", "LTEP", "RTEP", "ETYPE")
+	fmt.Println(hdrLine)
+}
+
+func mirrorShowOneResp(resp *halproto.MirrorSessionGetResponse) {
+	spec := resp.GetSpec()
+	fmt.Printf("%-5d%-5d%-5d%-15s%-15s%-15s\n",
+		spec.GetKeyOrHandle().GetMirrorsessionId(),
+		resp.GetStatus().GetHandle(),
+		spec.GetSnaplen(),
+		utils.IPAddrToStr(spec.GetErspanSpec().GetSrcIp()),
+		utils.IPAddrToStr(spec.GetErspanSpec().GetDestIp()),
+		spec.GetErspanSpec().GetType())
 }
 
 func collectorShowCmdHandler(cmd *cobra.Command, args []string) {
