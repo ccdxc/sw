@@ -1131,7 +1131,6 @@ action tcp_session_state_info(iflow_tcp_seq_num,
 @pragma stage 4
 @pragma hbm_table
 @pragma table_write
-@pragma capi_bitfields_struct
 table session_state {
     reads {
         flow_info_metadata.session_state_index : exact;
