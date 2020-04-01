@@ -327,6 +327,9 @@ func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
 func (sm *Statemgr) OnEndpointUpdate(epinfo *ctkit.Endpoint, nep *workload.Endpoint) error {
 	log.Infof("Got EP update. %v", nep)
 	epinfo.ObjectMeta = nep.ObjectMeta
+
+	sm.mbus.UpdateObjectWithReferences(epinfo.MakeKey("cluster"), convertEndpoint(&epinfo.Endpoint), references(epinfo))
+
 	if nep.Status.Migration == nil || nep.Status.Migration.Status == workload.EndpointMigrationStatus_DONE.String() {
 		return nil
 	}
