@@ -193,9 +193,11 @@ MappingSvcImpl::MappingDelete(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = pds_local_mapping_delete(&key, bctxt);
-        if (ret != SDK_RET_OK) {
-            goto end;
+        if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_local_mapping_delete(&key, bctxt);
+            if (ret != SDK_RET_OK) {
+                goto end;
+            }
         }
     }
 
@@ -237,18 +239,20 @@ MappingSvcImpl::MappingGet(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = pds_local_mapping_read(&key, &local_info);
-        if (ret == SDK_RET_OK) {
-            pds_local_mapping_api_info_to_proto(&local_info, proto_rsp);
-            continue;
+        if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_local_mapping_read(&key, &local_info);
+            if (ret == SDK_RET_OK) {
+                pds_local_mapping_api_info_to_proto(&local_info, proto_rsp);
+                continue;
+            }
+            ret = pds_remote_mapping_read(&key, &remote_info);
+            if (ret != SDK_RET_OK) {
+                proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+                break;
+            }
+            pds_remote_mapping_api_info_to_proto(&remote_info, proto_rsp);
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
         }
-        ret = pds_remote_mapping_read(&key, &remote_info);
-        if (ret != SDK_RET_OK) {
-            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-            break;
-        }
-        pds_remote_mapping_api_info_to_proto(&remote_info, proto_rsp);
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
     }
     return Status::OK;
 }

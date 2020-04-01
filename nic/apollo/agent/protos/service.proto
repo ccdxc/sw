@@ -32,8 +32,10 @@ message SvcKey {
 
 // service mapping specification
 message SvcMappingSpec {
+  // unique service mapping id
+  bytes           Id         = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // key to identify the service
-  SvcKey          Key        = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  SvcKey          Key        = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // service IP (aka. VIP)
   types.IPAddress IPAddr     = 3 [(gogoproto.moretags) = "meta:mandatory"];
   // L4 port where service is hosted, if this port is given as 0 no port
@@ -78,7 +80,7 @@ message SvcMappingResponse {
 // service mapping get request
 message SvcMappingGetRequest {
   // batched request
-  repeated SvcKey Key = 1;
+  repeated bytes Id = 1;
 }
 
 // service mapping get response
@@ -93,7 +95,7 @@ message SvcMappingDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
   // batched request
-  repeated SvcKey Key       = 2;
+  repeated bytes Id         = 2;
 }
 
 // service mapping delete response

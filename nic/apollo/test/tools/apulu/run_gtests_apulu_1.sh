@@ -26,7 +26,7 @@ run_gtest tep
 run_gtest if
 run_gtest mapping
 run_gtest mirror_session
-run_gtest svc_mapping
+#run_gtest svc_mapping
 run_gtest ftl
 run_gtest dhcp_relay
 run_gtest scale LOG="/dev/null" CFG=" -i ${CUR_DIR}/../../scale/${PIPELINE}/scale_cfg.json "

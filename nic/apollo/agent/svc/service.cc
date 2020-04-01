@@ -18,8 +18,7 @@ SvcImpl::SvcMappingCreate(ServerContext *context,
     pds_batch_ctxt_t bctxt;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
-    pds_svc_mapping_spec_t *api_spec;
-    pds_svc_mapping_key_t key = { 0 };
+    pds_svc_mapping_spec_t api_spec;
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -42,25 +41,16 @@ SvcImpl::SvcMappingCreate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_svc_mapping_spec_t *)
-                    core::agent_state::state()->service_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
-        auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key.vpc, request.key().vpcid());
-        key.backend_port = request.key().backendport();
-        ipaddr_proto_spec_to_api_spec(&key.backend_ip,
-                                      request.key().backendip());
-        pds_service_proto_to_api_spec(api_spec, request);
-        hooks::svc_mapping_create(api_spec);
-        ret = core::service_create(&key, api_spec, bctxt);
-        if (ret != SDK_RET_OK) {
-            goto end;
+        memset(&api_spec, 0, sizeof(api_spec));
+        pds_service_proto_to_api_spec(&api_spec, proto_req->request(i));
+        hooks::svc_mapping_create(&api_spec);
+        if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_svc_mapping_create(&api_spec, bctxt);
+            if (ret != SDK_RET_OK) {
+                goto end;
+            }
         }
     }
-
     if (batched_internally) {
         // commit the internal batch
         ret = pds_batch_commit(bctxt);
@@ -86,8 +76,7 @@ SvcImpl::SvcMappingUpdate(ServerContext *context,
     pds_batch_ctxt_t bctxt;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
-    pds_svc_mapping_spec_t *api_spec;
-    pds_svc_mapping_key_t key = { 0 };
+    pds_svc_mapping_spec_t api_spec;
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -110,21 +99,13 @@ SvcImpl::SvcMappingUpdate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_svc_mapping_spec_t *)
-                    core::agent_state::state()->service_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
-        auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key.vpc, request.key().vpcid());
-        key.backend_port = request.key().backendport();
-        ipaddr_proto_spec_to_api_spec(&key.backend_ip,
-                                      request.key().backendip());
-        pds_service_proto_to_api_spec(api_spec, request);
-        ret = core::service_update(&key, api_spec, bctxt);
-        if (ret != SDK_RET_OK) {
-            goto end;
+        memset(&api_spec, 0, sizeof(api_spec));
+        pds_service_proto_to_api_spec(&api_spec, proto_req->request(i));
+        if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_svc_mapping_update(&api_spec, bctxt);
+            if (ret != SDK_RET_OK) {
+                goto end;
+            }
         }
     }
 
@@ -150,12 +131,12 @@ SvcImpl::SvcMappingDelete(ServerContext *context,
                           const pds::SvcMappingDeleteRequest *proto_req,
                           pds::SvcMappingDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
-    pds_svc_mapping_key_t key = { 0 };
 
-    if ((proto_req == NULL) || (proto_req->key_size() == 0)) {
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::CANCELLED;
     }
@@ -174,14 +155,13 @@ SvcImpl::SvcMappingDelete(ServerContext *context,
         batched_internally = true;
     }
 
-    for (int i = 0; i < proto_req->key_size(); i++) {
-        pds_obj_key_proto_to_api_spec(&key.vpc, proto_req->key(i).vpcid());
-        key.backend_port = proto_req->key(i).backendport();
-        ipaddr_proto_spec_to_api_spec(&key.backend_ip,
-                                      proto_req->key(i).backendip());
-        ret = core::service_delete(&key, bctxt);
-        if (ret != SDK_RET_OK) {
-            goto end;
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_svc_mapping_delete(&key, bctxt);
+            if (ret != SDK_RET_OK) {
+                goto end;
+            }
         }
     }
 
@@ -207,35 +187,32 @@ SvcImpl::SvcMappingGet(ServerContext *context,
                        const pds::SvcMappingGetRequest *proto_req,
                        pds::SvcMappingGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_svc_mapping_key_t key = { 0 };
-    pds_svc_mapping_info_t info = { 0 };
+    pds_obj_key_t key;
+    pds_svc_mapping_info_t info;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
-    if (proto_req->key_size() == 0) {
+    if (proto_req->id_size() == 0) {
+#if 0
         // get all
         ret = core::service_get_all(pds_service_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+#endif
     }
-    for (int i = 0; i < proto_req->key_size(); i++) {
-        pds_obj_key_proto_to_api_spec(&key.vpc, proto_req->key(i).vpcid());
-        key.backend_port = proto_req->key(i).backendport();
-        ipaddr_proto_spec_to_api_spec(&key.backend_ip,
-                                      proto_req->key(i).backendip());
-        ret = core::service_get(&key, &info);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-        if (ret != SDK_RET_OK) {
-            break;
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_svc_mapping_read(&key, &info);
+            if (ret == SDK_RET_OK) {
+                pds_service_api_info_to_proto(&info, proto_rsp);
+                proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+            } else {
+                proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+                break;
+            }
         }
-        auto response = proto_rsp->add_response();
-        pds_service_api_spec_to_proto(
-                response->mutable_spec(), &info.spec);
-        pds_service_api_status_to_proto(
-                response->mutable_status(), &info.status);
-        pds_service_api_stats_to_proto(
-                response->mutable_stats(), &info.stats);
     }
     return Status::OK;
 }

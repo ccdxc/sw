@@ -46,7 +46,7 @@ func serviceShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := pds.NewSvcClient(c)
 
 	req := &pds.SvcMappingGetRequest{
-		Key: []*pds.SvcKey{},
+		Id: [][]byte{},
 	}
 
 	// PDS call

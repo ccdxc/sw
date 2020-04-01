@@ -175,7 +175,7 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t program_update(api_base *orig_obj,
-                                    api_obj_ctxt_t *obj_ctxt) override;
+                                     api_obj_ctxt_t *obj_ctxt) override;
 
     /**
      * @brief    activate the epoch in the dataplane by programming stage 0

@@ -73,14 +73,14 @@ mapping_state::insert(mapping_entry *mapping) {
 
 mapping_entry *
 mapping_state::remove(mapping_entry *mapping) {
-    void *ret;
+    void *rv;
 
     PDS_TRACE_VERBOSE("Removing %s", mapping->key2str().c_str());
-    ret = mapping_skey_ht_->remove(&mapping->skey_);
-    if ((ret != NULL) && mapping->key().valid()) {
+    rv = mapping_skey_ht_->remove(&mapping->skey_);
+    if ((rv != NULL) && mapping->key().valid()) {
         return (mapping_entry *)(mapping_ht_->remove(&mapping->key_));
     }
-    return (mapping_entry *)ret;
+    return (mapping_entry *)rv;
 }
 
 void
@@ -89,16 +89,17 @@ mapping_state::free(mapping_entry *mapping) {
 }
 
 typedef struct pds_mapping_state_iterate_args_s {
-    mapping_state_cb_t cb;
     void *ctxt;
+    mapping_state_cb_t cb;
 } pds_mapping_state_iterate_args_t;
 
 static void
-mapping_state_entry_cb (void *key, void *val, void *ctxt) {
+mapping_state_entry_cb_ (void *key, void *val, void *ctxt) {
     mapping_entry *entry;
+    pds_mapping_state_iterate_args_t *it_ctxt;
     pds_obj_key_t *pkey = (pds_obj_key_t *)key;
-    pds_mapping_state_iterate_args_t *it_ctxt = (pds_mapping_state_iterate_args_t *)ctxt;
 
+    it_ctxt = (pds_mapping_state_iterate_args_t *)ctxt;
     entry = mapping_entry::build(pkey);
     if (entry) {
         it_ctxt->cb(entry, it_ctxt->ctxt);
@@ -108,9 +109,10 @@ mapping_state_entry_cb (void *key, void *val, void *ctxt) {
 void
 mapping_state::kvstore_iterate(mapping_state_cb_t cb, void *ctxt) {
     pds_mapping_state_iterate_args_t it_ctxt;
+
     it_ctxt.cb = cb;
     it_ctxt.ctxt = ctxt;
-    kvstore_->iterate(mapping_state_entry_cb, &it_ctxt);
+    kvstore_->iterate(mapping_state_entry_cb_, &it_ctxt);
 }
 
 mapping_entry *
@@ -142,8 +144,8 @@ mapping_state::skey(pds_obj_key_t *key, pds_mapping_key_t *skey) const {
     // find the 2nd-ary key from primary key
     ret = kvstore_->find(key, sizeof(*key), skey, &skey_sz);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_VERBOSE("Primary key %s to 2nd-ary key lookup failed",
-                          key->str());
+        PDS_TRACE_VERBOSE("Primary key %s to 2nd-ary key lookup failed "
+                          "for mapping", key->str());
     }
     return ret;
 }
@@ -157,7 +159,8 @@ mapping_state::persist(mapping_entry *mapping, pds_mapping_spec_t *spec) {
                                &mapping->skey_, sizeof(mapping->skey_));
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed to insert pkey -> skey binding in kvstore for"
-                          "mapping %s, err %u", mapping->key2str().c_str(), ret);
+                          "mapping %s, err %u", mapping->key2str().c_str(),
+                          ret);
         }
         return ret;
     }

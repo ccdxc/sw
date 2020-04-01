@@ -49,6 +49,7 @@ message MappingKey {
 message MappingSpec {
   // unique mapping id
   bytes           Id             = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // along with uuid, either IPKey or MACKey attrs
   oneof mac_or_ip {
     // IP mapping key
     L3MappingKey  IPKey          = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];

@@ -117,7 +117,7 @@ pds_state::init(string pipeline, string cfg_file) {
     state_[PDS_STATE_MIRROR] = new mirror_session_state();
     state_[PDS_STATE_METER] = new meter_state();
     state_[PDS_STATE_TAG] = new tag_state();
-    state_[PDS_STATE_SVC_MAPPING] = new svc_mapping_state();
+    state_[PDS_STATE_SVC_MAPPING] = new svc_mapping_state(kvstore_);
     state_[PDS_STATE_VPC_PEER] = new vpc_peer_state();
     state_[PDS_STATE_NEXTHOP] = new nexthop_state();
     state_[PDS_STATE_NEXTHOP_GROUP] = new nexthop_group_state();

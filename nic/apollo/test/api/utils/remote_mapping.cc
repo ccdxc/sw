@@ -68,9 +68,8 @@ remote_mapping_feeder::iter_next(int width) {
 
 void
 remote_mapping_feeder::key_build(pds_obj_key_t *key) const {
-    // TODO: can we encode vpc, IP or subnet, MAC here ?
-    //       won't work with IPv6
-    //       how about storing based uuid and increment ?
+    // TODO: encoding here won't work for IPv6
+    //       how about storing base uuid and increment ?
     uint32_t vpc_id, subnet_id;
 
     memset(key, 0, sizeof(*key));

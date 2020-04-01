@@ -22,9 +22,9 @@ public:
     svc_mapping_feeder() { };
     svc_mapping_feeder(const svc_mapping_feeder& feeder) {
         init(ipaddr2str(&feeder.spec.vip),
-             feeder.spec.svc_port, feeder.spec.key.vpc,
-             ipaddr2str(&feeder.spec.key.backend_ip),
-             feeder.spec.key.backend_port,
+             feeder.spec.svc_port, feeder.spec.skey.vpc,
+             ipaddr2str(&feeder.spec.skey.backend_ip),
+             feeder.spec.skey.backend_port,
              ipaddr2str(&feeder.spec.backend_provider_ip), feeder.num_obj);
     }
 
@@ -38,11 +38,11 @@ public:
     void iter_next(int width = 1);
 
     // Build routines
-    void key_build(pds_svc_mapping_key_t *key) const;
+    void key_build(pds_obj_key_t *key) const;
     void spec_build(pds_svc_mapping_spec_t *spec) const;
 
     // Compare routines
-    bool key_compare(const pds_svc_mapping_key_t *key) const;
+    bool key_compare(const pds_obj_key_t *key) const;
     bool spec_compare(const pds_svc_mapping_spec_t *spec) const;
     bool status_compare(const pds_svc_mapping_status_t *status1,
                         const pds_svc_mapping_status_t *status2) const;
@@ -82,9 +82,9 @@ operator<<(std::ostream& os, const svc_mapping_feeder& obj) {
 
 // CRUD prototypes
 API_CREATE(svc_mapping);
-API_READ_TMP(svc_mapping);
+API_READ(svc_mapping);
 API_UPDATE(svc_mapping);
-API_DELETE_TMP(svc_mapping);
+API_DELETE(svc_mapping);
 
 }    // namespace api
 }    // namespace test

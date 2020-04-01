@@ -58,7 +58,16 @@ public:
     /// \param[in] key    key of object instance of interest
     /// \return    service mapping instance corresponding to the key or NULL if
     ///            entry is not found
-    static svc_mapping *build(pds_svc_mapping_key_t *key);
+    static svc_mapping *build(pds_obj_key_t *key);
+
+    /// \brief    build object given its 2nd-ary key from the (sw and/or
+    ///           hw state we have) and return an instance of the object (this
+    ///           is useful for stateless objects to be operated on by framework
+    ///           during DELETE or UPDATE operations)
+    /// \param[in] skey    2nd-ary key of object instance of interest
+    /// \return    service mapping instance corresponding to the key or NULL if
+    ///            entry is not found
+    static svc_mapping *build(pds_svc_mapping_key_t *skey);
 
     /// \brief    free a stateless entry's temporary s/w only resources like
     ///           memory etc., for a stateless entry calling destroy() will
@@ -179,22 +188,25 @@ public:
 
     /// \brief    return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "svc-(" + std::string(key_.vpc.str()) + "," +
-                    ipaddr2str(&key_.backend_ip) + ":" +
-                    std::to_string(key_.backend_port) + ")";
+        return "svc-(" + std::string(skey_.vpc.str()) + "," +
+                    ipaddr2str(&skey_.backend_ip) + ":" +
+                    std::to_string(skey_.backend_port) + ")";
 
     }
 
-    /// \brief   helper function to get size of key
-    /// \return  size of key
-    static uint32_t key_size(void) {
-        return sizeof(pds_svc_mapping_key_t);
-    }
+    /// \brief     return the service mapping entry's key
+    /// \return    key of the service mapping entry
+    const pds_obj_key_t& key(void) const { return key_; }
 
-    /// \brief          return the svc_mapping entry's key/id
-    /// \return         key/id of the svc_mapping entry
-    pds_svc_mapping_key_t key(void) const { return key_; }
+    /// \brief     return the service mapping entry's 2nd-ary key
+    /// \return    2nd-ary key of the svc_mapping entry
+    const pds_svc_mapping_key_t& skey(void) const { return skey_; }
 
+    ///\brief read config
+    ///\param[in]  key     pointer to the service mapping key of interest
+    ///\param[out] info    pointer to the info object
+    ///\return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_obj_key_t *id, pds_svc_mapping_info_t *info);
 
     ///\brief read config
     ///\param[in]  key Pointer to the key object
@@ -208,6 +220,14 @@ public:
     static void *svc_mapping_key_func_get(void *entry) {
         svc_mapping *mapping = (svc_mapping *)entry;
         return (void *)&(mapping->key_);
+    }
+
+    /// \brief     helper function to get 2nd-ary key given svc mapping entry
+    /// \param[in] entry    pointer to svc mapping instance
+    /// \return    pointer to the mapping instance's key
+    static void *svc_mapping_skey_func_get(void *entry) {
+        svc_mapping *mapping = (svc_mapping *)entry;
+        return (void *)&(mapping->skey_);
     }
 
     /// \brief     return impl instance of this service mapping object
@@ -227,10 +247,12 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_svc_mapping_key_t key_; ///< key of this service mapping
+    pds_obj_key_t key_;          ///< key of this service mapping
+    pds_svc_mapping_key_t skey_; ///< 2nd-ary key of this service mapping
 
-    ht_ctxt_t ht_ctxt_;         ///< hash table context
-    impl_base *impl_;           ///< impl object instance
+    ht_ctxt_t ht_ctxt_;          ///< hash table context for primary key db
+    ht_ctxt_t skey_ht_ctxt_;     ///  hash table context for 2nd-ary key db
+    impl_base *impl_;            ///< impl object instance
     /// svc_mapping_state is friend of svc_mapping
     friend class svc_mapping_state;
 } __PACK__;

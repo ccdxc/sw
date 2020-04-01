@@ -42,37 +42,40 @@ typedef enum api_obj_key_type_u {
 
 /// \brief API specific parameters
 struct api_params_s {
-    api_obj_key_type_t               key_type;
+    api_obj_key_type_t                key_type;
     union {
-        pds_batch_params_t           batch_spec;
-        pds_device_spec_t            device_spec;
-        pds_obj_key_t                key;
-        pds_if_spec_t                if_spec;
-        pds_tep_spec_t               tep_spec;
-        pds_vpc_spec_t               vpc_spec;
-        pds_subnet_spec_t            subnet_spec;
-        pds_vnic_spec_t              vnic_spec;
+        pds_batch_params_t            batch_spec;
+        pds_device_spec_t             device_spec;
+        pds_obj_key_t                 key;
+        pds_if_spec_t                 if_spec;
+        pds_tep_spec_t                tep_spec;
+        pds_vpc_spec_t                vpc_spec;
+        pds_subnet_spec_t             subnet_spec;
+        pds_vnic_spec_t               vnic_spec;
         // support both primary and 2nd-ary keys for mapping
         struct {
-            pds_mapping_key_t        mapping_skey;
-            pds_mapping_spec_t       mapping_spec;
+            pds_mapping_key_t         mapping_skey;
+            pds_mapping_spec_t        mapping_spec;
         };
-        pds_route_table_spec_t       route_table_spec;
-        pds_policy_spec_t            policy_spec;
-        pds_mirror_session_spec_t    mirror_session_spec;
-        pds_meter_spec_t             meter_spec;
-        pds_tag_spec_t               tag_spec;
-        pds_svc_mapping_key_t        svc_mapping_key;
-        pds_svc_mapping_spec_t       svc_mapping_spec;
-        pds_vpc_peer_spec_t          vpc_peer_spec;
-        pds_nexthop_spec_t           nexthop_spec;
-        pds_nexthop_group_spec_t     nexthop_group_spec;
-        pds_policer_spec_t           policer_spec;
-        pds_nat_port_block_spec_t    nat_port_block_spec;
-        pds_dhcp_policy_spec_t       dhcp_policy_spec;
-        pds_security_profile_spec_t  security_profile_spec;
-        pds_route_spec_t             route_spec;
-        pds_policy_rule_spec_t       policy_rule_spec;
+        pds_route_table_spec_t        route_table_spec;
+        pds_policy_spec_t             policy_spec;
+        pds_mirror_session_spec_t     mirror_session_spec;
+        pds_meter_spec_t              meter_spec;
+        pds_tag_spec_t                tag_spec;
+        // support both primary and 2nd-ary keys for service mapping
+        struct {
+            pds_svc_mapping_key_t     svc_mapping_key;
+            pds_svc_mapping_spec_t    svc_mapping_spec;
+        };
+        pds_vpc_peer_spec_t           vpc_peer_spec;
+        pds_nexthop_spec_t            nexthop_spec;
+        pds_nexthop_group_spec_t      nexthop_group_spec;
+        pds_policer_spec_t            policer_spec;
+        pds_nat_port_block_spec_t     nat_port_block_spec;
+        pds_dhcp_policy_spec_t        dhcp_policy_spec;
+        pds_security_profile_spec_t   security_profile_spec;
+        pds_route_spec_t              route_spec;
+        pds_policy_rule_spec_t        policy_rule_spec;
     };
 };
 

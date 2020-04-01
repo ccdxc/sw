@@ -146,23 +146,22 @@ svc_mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
         //       this will ensure that proper release of resources will happen
         api_obj->set_rsvd_rsc();
         spec = &obj_ctxt->api_params->svc_mapping_spec;
-        vpc = vpc_db()->find(&spec->key.vpc);
 
         // reserve an entry in SERVICE_MAPPING table for
         // (vpc, overlay_ip, port) -> (vpc, VIP, port)
-        vpc = vpc_db()->find(&spec->key.vpc);
+        vpc = vpc_db()->find(&spec->skey.vpc);
         PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                         ((vpc_impl *)vpc->impl())->hw_id(),
-                                        &spec->key.backend_ip,
-                                        spec->key.backend_port);
+                                        &spec->skey.backend_ip,
+                                        spec->skey.backend_port);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &svc_mapping_key, NULL,
                                        NULL, 0, sdk::table::handle_t::null());
         ret = svc_mapping_impl_db()->svc_mapping_tbl()->reserve(&tparams);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to reserve an entry for (PIP %s, PIP port %u)"
                           " in SERVICE_MAPPING table, err %u",
-                          ipaddr2str(&spec->key.backend_ip),
-                          spec->key.backend_port, ret);
+                          ipaddr2str(&spec->skey.backend_ip),
+                          spec->skey.backend_port, ret);
             goto error;
         }
         to_vip_handle_ = tparams.handle;
@@ -174,8 +173,8 @@ svc_mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to reserve (PIP %s, PIP port %u) -> VIP "
                           "xlation entry in NAT table, err %u",
-                          ipaddr2str(&spec->key.backend_ip),
-                          spec->key.backend_port, ret);
+                          ipaddr2str(&spec->skey.backend_ip),
+                          spec->skey.backend_port, ret);
             goto error;
         }
         break;
@@ -232,13 +231,13 @@ svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     // add an entry for (PIP, PIP port) -> (VIP, VIP port) xlation
     PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->vip,
                            spec->svc_port ?
-                               spec->svc_port : spec->key.backend_port);
+                               spec->svc_port : spec->skey.backend_port);
     ret = nat_data.write(to_vip_nat_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NAT table entry %u for "
                       "(PIP %s, PIP port %u) -> (VIP %s, svc port %u) xlation",
-                      to_vip_nat_idx_, ipaddr2str(&spec->key.backend_ip),
-                      spec->key.backend_port, ipaddr2str(&spec->vip),
+                      to_vip_nat_idx_, ipaddr2str(&spec->skey.backend_ip),
+                      spec->skey.backend_port, ipaddr2str(&spec->vip),
                       spec->svc_port);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
@@ -258,8 +257,8 @@ svc_mapping_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to cleanup NAT table entry %u for "
                       "(PIP %s, PIP port %u) -> (VIP %s, svc port %u) xlation",
-                      to_vip_nat_idx_, ipaddr2str(&spec->key.backend_ip),
-                      spec->key.backend_port, ipaddr2str(&spec->vip),
+                      to_vip_nat_idx_, ipaddr2str(&spec->skey.backend_ip),
+                      spec->skey.backend_port, ipaddr2str(&spec->vip),
                       spec->svc_port);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
@@ -282,11 +281,11 @@ svc_mapping_impl::activate_create_(pds_epoch_t epoch, svc_mapping *mapping,
     service_mapping_swkey_t svc_mapping_key;
     service_mapping_actiondata_t svc_mapping_data;
 
-    vpc = vpc_db()->find(&spec->key.vpc);
+    vpc = vpc_db()->find(&spec->skey.vpc);
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     ((vpc_impl *)vpc->impl())->hw_id(),
-                                    &spec->key.backend_ip,
-                                    spec->key.backend_port);
+                                    &spec->skey.backend_ip,
+                                    spec->skey.backend_port);
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data, to_vip_nat_idx_);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &svc_mapping_key, NULL,
                                    &svc_mapping_data,
@@ -296,12 +295,17 @@ svc_mapping_impl::activate_create_(pds_epoch_t epoch, svc_mapping *mapping,
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add (PIP %s, PIP port %u) -> "
                       "(VIP %s, svc port %u) xlation in SERVICE_MAPPING table, "
-                      "err %u", ipaddr2str(&spec->key.backend_ip),
-                      spec->key.backend_port, ipaddr2str(&spec->vip),
+                      "err %u", ipaddr2str(&spec->skey.backend_ip),
+                      spec->skey.backend_port, ipaddr2str(&spec->vip),
                       spec->svc_port, ret);
         return ret;
     }
-    return SDK_RET_OK;
+    ret = svc_mapping_db()->persist(mapping, spec);
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed to activate %s, err %u",
+                      mapping->key2str().c_str(), ret);
+    }
+    return ret;
 }
 
 sdk_ret_t
@@ -340,8 +344,10 @@ svc_mapping_impl::activate_delete_(pds_epoch_t epoch,
     if (!to_vip_handle_.valid()) {
         to_vip_handle_ = tparams.handle;
     }
-
-    return SDK_RET_OK;
+    ret = mapping_db()->perish(mapping->key());
+    PDS_TRACE_ERR("Failed to deactivate %s, err %u",
+                  mapping->key2str().c_str(), ret);
+    return ret;
 }
 
 sdk_ret_t
@@ -385,7 +391,7 @@ svc_mapping_impl::fill_spec_(pds_svc_mapping_spec_t *spec) {
     service_mapping_swkey_t svc_mapping_key;
     service_mapping_actiondata_t svc_mapping_data;
     nat_rewrite_entry_t nat_data = { 0 };
-    pds_svc_mapping_key_t *key = &spec->key;
+    pds_svc_mapping_key_t *key = &spec->skey;
 
     vpc = vpc_db()->find(&key->vpc);
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
@@ -445,7 +451,7 @@ svc_mapping_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     pds_svc_mapping_info_t *svc_mapping_info = (pds_svc_mapping_info_t *)info;
 
     // populate the key in the spec
-    memcpy(&svc_mapping_info->spec.key, key, sizeof(pds_svc_mapping_key_t));
+    memcpy(&svc_mapping_info->spec.skey, key, sizeof(pds_svc_mapping_key_t));
     ret = fill_spec_(&svc_mapping_info->spec);
     if (ret != SDK_RET_OK) {
         return ret;

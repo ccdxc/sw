@@ -113,7 +113,13 @@ api_base::build(api_ctxt_t *api_ctxt) {
         // service mapping is a stateless object, so we need to construct the
         // object from the datapath tables
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return svc_mapping::build(&api_ctxt->api_params->svc_mapping_key);
+            if (api_ctxt->api_params->key_type == API_OBJ_KEY_TYPE_UUID) {
+                // use primary key
+                return svc_mapping::build(&api_ctxt->api_params->key);
+            } else {
+                // use 2nd-ary key
+                return svc_mapping::build(&api_ctxt->api_params->svc_mapping_key);
+            }
         }
         return svc_mapping::build(&api_ctxt->api_params->svc_mapping_spec.key);
 
@@ -368,7 +374,13 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
 
     case OBJ_ID_SVC_MAPPING:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return svc_mapping_db()->find(&api_ctxt->api_params->svc_mapping_key);
+            if (api_ctxt->api_params->key_type == API_OBJ_KEY_TYPE_UUID) {
+                // use primary key
+                return svc_mapping_db()->find(&api_ctxt->api_params->key);
+            } else {
+                // use 2nd-ary key
+                return svc_mapping_db()->find(&api_ctxt->api_params->svc_mapping_key);
+            }
         }
         return svc_mapping_db()->find(&api_ctxt->api_params->svc_mapping_spec.key);
 

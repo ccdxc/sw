@@ -1649,11 +1649,12 @@ pds_service_api_spec_to_proto (pds::SvcMappingSpec *proto_spec,
         return;
     }
 
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     auto proto_key = proto_spec->mutable_key();
-    proto_key->set_vpcid(api_spec->key.vpc.id, PDS_MAX_KEY_LEN);
-    proto_key->set_backendport(api_spec->key.backend_port);
+    proto_key->set_vpcid(api_spec->skey.vpc.id, PDS_MAX_KEY_LEN);
+    proto_key->set_backendport(api_spec->skey.backend_port);
     ipaddr_api_spec_to_proto_spec(
-                proto_key->mutable_backendip(), &api_spec->key.backend_ip);
+                proto_key->mutable_backendip(), &api_spec->skey.backend_ip);
     ipaddr_api_spec_to_proto_spec(
                 proto_spec->mutable_ipaddr(), &api_spec->vip);
     // provider IP is optional
@@ -1700,9 +1701,11 @@ static inline void
 pds_service_proto_to_api_spec (pds_svc_mapping_spec_t *api_spec,
                                const pds::SvcMappingSpec &proto_spec)
 {
-    pds_obj_key_proto_to_api_spec(&api_spec->key.vpc, proto_spec.key().vpcid());
-    api_spec->key.backend_port = proto_spec.key().backendport();
-    ipaddr_proto_spec_to_api_spec(&api_spec->key.backend_ip,
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
+    pds_obj_key_proto_to_api_spec(&api_spec->skey.vpc,
+                                  proto_spec.key().vpcid());
+    api_spec->skey.backend_port = proto_spec.key().backendport();
+    ipaddr_proto_spec_to_api_spec(&api_spec->skey.backend_ip,
                                   proto_spec.key().backendip());
     ipaddr_proto_spec_to_api_spec(&api_spec->vip,
                                   proto_spec.ipaddr());

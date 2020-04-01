@@ -239,12 +239,14 @@ void many_create(pds_batch_ctxt_t bctxt, feeder_T& feeder) {
 template <typename feeder_T>
 void many_read(feeder_T& feeder,
                sdk_ret_t expected_result = SDK_RET_OK) {
+    sdk_ret_t ret;
     if (feeder.read_unsupported())
         return;
 
     feeder_T tmp = feeder;
     for (tmp.iter_init(); tmp.iter_more(); tmp.iter_next()) {
-        SDK_ASSERT(read(tmp) == expected_result);
+        ret = read(tmp);
+        SDK_ASSERT(ret == expected_result);
     }
 }
 

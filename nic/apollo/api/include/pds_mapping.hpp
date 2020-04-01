@@ -95,7 +95,7 @@ typedef struct pds_remote_mapping_info_t {
 sdk_ret_t pds_local_mapping_create(pds_local_mapping_spec_t *spec,
                                    pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
-typedef void (*mapping_read_cb_t) (void *info, void *ctxt);
+typedef void (*mapping_read_cb_t)(void *info, void *ctxt);
 
 /// \brief    read local mappings
 /// \param[in] cb     callback for reading local mappings

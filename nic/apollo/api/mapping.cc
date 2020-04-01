@@ -248,6 +248,4 @@ mapping_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_MAPPING, this);
 }
 
-/** @} */    // end of PDS_MAPPING_ENTRY
-
 }    // namespace api

@@ -19,7 +19,7 @@
 
 static sdk_ret_t
 pds_svc_mapping_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                            pds_svc_mapping_key_t *key,
+                            pds_obj_key_t *key,
                             pds_svc_mapping_spec_t *spec)
 {
     sdk_ret_t rv;
@@ -32,7 +32,7 @@ pds_svc_mapping_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     api_ctxt = api::api_ctxt_alloc(OBJ_ID_SVC_MAPPING, op);
     if (likely(api_ctxt != NULL)) {
         if (op == API_OP_DELETE) {
-            api_ctxt->api_params->svc_mapping_key = *key;
+            api_ctxt->api_params->key = *key;
         } else {
             api_ctxt->api_params->svc_mapping_spec = *spec;
         }
@@ -42,7 +42,7 @@ pds_svc_mapping_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
 }
 
 static inline svc_mapping *
-pds_svc_mapping_entry_find (pds_svc_mapping_key_t *key)
+pds_svc_mapping_entry_find (pds_obj_key_t *key)
 {
     // mapping does not have any entry database, as the calls are single thread,
     // we can use static entry
@@ -64,7 +64,7 @@ pds_svc_mapping_create (_In_ pds_svc_mapping_spec_t *spec,
 }
 
 sdk_ret_t
-pds_svc_mapping_read (pds_svc_mapping_key_t *key, pds_svc_mapping_info_t *info)
+pds_svc_mapping_read (pds_obj_key_t *key, pds_svc_mapping_info_t *info)
 {
     sdk_ret_t rv;
     svc_mapping *entry = NULL;
@@ -90,8 +90,7 @@ pds_svc_mapping_update (_In_ pds_svc_mapping_spec_t *spec,
 }
 
 sdk_ret_t
-pds_svc_mapping_delete (_In_ pds_svc_mapping_key_t *key,
-                        _In_ pds_batch_ctxt_t bctxt)
+pds_svc_mapping_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_svc_mapping_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

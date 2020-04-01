@@ -20,6 +20,7 @@ namespace api {
 
 svc_mapping::svc_mapping() {
     ht_ctxt_.reset();
+    skey_ht_ctxt_.reset();
     impl_ = NULL;
 }
 
@@ -88,19 +89,35 @@ svc_mapping::free(svc_mapping *mapping) {
 }
 
 svc_mapping *
-svc_mapping::build(pds_svc_mapping_key_t *key) {
+svc_mapping::build(pds_svc_mapping_key_t *skey) {
     svc_mapping *mapping;
 
     // create service mapping entry with defaults, if any
     mapping = svc_mapping_db()->alloc();
     if (mapping) {
         new (mapping) svc_mapping();
-        memcpy(&mapping->key_, key, sizeof(*key));
+        memcpy(&mapping->skey_, skey, sizeof(*skey));
         mapping->impl_ = impl_base::build(impl::IMPL_OBJ_ID_SVC_MAPPING,
-                                          key, mapping);
+                                          skey, mapping);
         if (mapping->impl_ == NULL) {
             svc_mapping::destroy(mapping);
             return NULL;
+        }
+    }
+    return mapping;
+}
+
+svc_mapping *
+svc_mapping::build(pds_obj_key_t *key) {
+    pds_svc_mapping_key_t skey;
+    svc_mapping *mapping = NULL;
+
+    // find the 2nd-ary key corresponding to this primary key
+    if (svc_mapping_db()->skey(key, &skey) == SDK_RET_OK) {
+        // and then build the object
+        mapping = svc_mapping::build(&skey);
+        if (mapping) {
+            memcpy(&mapping->key_, key, sizeof(*key));
         }
     }
     return mapping;
@@ -138,7 +155,8 @@ sdk_ret_t
 svc_mapping::init_config(api_ctxt_t *api_ctxt) {
     pds_svc_mapping_spec_t *spec = &api_ctxt->api_params->svc_mapping_spec;
 
-    memcpy(&key_, &spec->key, sizeof(pds_svc_mapping_key_t));
+    memcpy(&key_, &spec->key, sizeof(key_));
+    memcpy(&skey_, &spec->skey, sizeof(skey_));
     return SDK_RET_OK;
 }
 
@@ -168,13 +186,24 @@ svc_mapping::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 svc_mapping::activate_config(pds_epoch_t epoch, api_op_t api_op,
                              api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+    PDS_TRACE_DEBUG("Activating %s", key_.str());
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
 sdk_ret_t
-svc_mapping::read(pds_svc_mapping_key_t *key, pds_svc_mapping_info_t *info) {
-    return impl_->read_hw(this, (impl::obj_key_t *)key,
-                          (impl::obj_info_t *)info);
+svc_mapping::read(pds_obj_key_t *key, pds_svc_mapping_info_t *info) {
+    pds_svc_mapping_key_t skey;
+
+    PDS_TRACE_DEBUG("Reading %s", key->str());
+    // find the 2nd-ary key corresponding to this primary key
+    if (svc_mapping_db()->skey(key, &skey) == SDK_RET_OK) {
+        // and then read from h/w
+        memcpy(&info->spec.key, key, sizeof(*key));
+        memcpy(&info->spec.skey, &skey, sizeof(skey));
+        return impl_->read_hw(this, (impl::obj_key_t *)&skey,
+                              (impl::obj_info_t *)info);
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 // even though mapping object is stateless, we need to temporarily insert
@@ -205,7 +234,5 @@ sdk_ret_t
 svc_mapping::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_SVC_MAPPING, this);
 }
-
-/** @} */    // end of PDS_SVC_MAPPING
 
 }    // namespace api

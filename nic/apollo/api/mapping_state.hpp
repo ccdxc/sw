@@ -19,7 +19,7 @@
 
 namespace api {
 
-typedef void (*mapping_state_cb_t) (mapping_entry *entry, void *ctxt);
+typedef void (*mapping_state_cb_t)(mapping_entry *entry, void *ctxt);
 
 /// \defgroup PDS_MAPPING_STATE - mapping state handling
 /// \ingroup PDS_MAPPING
@@ -76,8 +76,8 @@ public:
                    _Out_ pds_mapping_key_t *skey) const;
 
     /// \brief      persist given mapping entry (portions of it that need to be)
-    /// \param[in]  mapping instance of the mapping entry
-    /// \param[in]  spec mapping configuration
+    /// \param[in]  mapping    instance of the mapping entry
+    /// \param[in]  spec       mapping configuration
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t persist(mapping_entry *mapping, pds_mapping_spec_t *spec);
 
