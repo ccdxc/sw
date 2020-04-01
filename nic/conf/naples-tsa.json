@@ -173,7 +173,7 @@
                                 },
                                 {       "Name" : "DscAgent State",
                                         "Method": 0,
-                                        "Command": "mkdir dscagent-state && cp /sysconfig/config0/*.db dscagent-state/"
+                                        "Command": "mkdir dscagent-state && cp /data/*.db dscagent-state/"
                                 }
 			],
 

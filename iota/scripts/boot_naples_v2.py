@@ -950,6 +950,7 @@ class HostManagement(EntityManagement):
         self.RunNaplesCmd("rm -rf /data/log && sync")
         self.RunNaplesCmd("rm -rf /data/core/* && sync")
         self.RunNaplesCmd("rm -rf /data/*.dat && sync")
+        self.RunNaplesCmd("rm -rf /data/pen-netagent* && sync")
 
     def SetUpInitFiles(self):
         CreateConfigConsoleNoAuth()

@@ -79,10 +79,10 @@ const (
 	NetagentLogFile = "/var/log/pensando/pen-netagent.log"
 
 	// NetagentPrimaryDBPath is the primary DB for netagent to store configs
-	NetagentPrimaryDBPath = "/sysconfig/config0/pen-netagent.db"
+	NetagentPrimaryDBPath = "/data/pen-netagent.db"
 
 	// NetagentBackupDBPath is the backup DB for netagent to store configs
-	NetagentBackupDBPath = "/sysconfig/config1/pen-netagent.db"
+	NetagentBackupDBPath = "/data/pen-netagent.db.bak"
 
 	// NPM is the resolver name for NPM
 	Npm = "pen-npm"
