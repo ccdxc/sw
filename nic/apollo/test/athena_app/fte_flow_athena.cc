@@ -467,27 +467,19 @@ fte_flow_pkt_rewrite (struct rte_mbuf *m, uint8_t dir,
 }
 
 static sdk_ret_t
-fte_session_info_create (uint8_t dir, uint32_t session_index, uint16_t vnic_id)
+fte_session_info_create (uint32_t session_index, uint16_t vnic_id)
 {
     pds_flow_session_spec_t spec;
-    static uint8_t create_done = 0;
 
     memset(&spec, 0, sizeof(spec));
     spec.key.session_info_id = session_index;
-    spec.key.direction = dir;
+    spec.key.direction = (SWITCH_TO_HOST | HOST_TO_SWITCH);
 
-    if (dir == HOST_TO_SWITCH) {
-        spec.data.host_to_switch_flow_info.rewrite_id = 
-            g_sess_rewrite[vnic_id].h2s_sess_rewrite.sess_rewrite_id; 
-    } else {
-        spec.data.switch_to_host_flow_info.rewrite_id =
-            g_sess_rewrite[vnic_id].s2h_sess_rewrite.sess_rewrite_id; 
-    }
+    spec.data.host_to_switch_flow_info.rewrite_id =
+            g_sess_rewrite[vnic_id].h2s_sess_rewrite.sess_rewrite_id;
+    spec.data.switch_to_host_flow_info.rewrite_id =
+            g_sess_rewrite[vnic_id].s2h_sess_rewrite.sess_rewrite_id;
 
-    if (create_done) {
-        return pds_flow_session_info_update(&spec);
-    }
-    create_done++;
     return pds_flow_session_info_create(&spec);
 }
 
@@ -691,7 +683,7 @@ fte_flow_prog (struct rte_mbuf *m)
     // PKT Rewrite
     fte_flow_pkt_rewrite(m, flow_dir, ip_offset, vnic_id);
 
-    ret = fte_session_info_create(flow_dir, g_session_index, vnic_id);
+    ret = fte_session_info_create(g_session_index, vnic_id);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_DEBUG("fte_session_info_create failed. \n");
         return ret;
@@ -703,6 +695,7 @@ fte_flow_prog (struct rte_mbuf *m)
         return ret;
     }
 
+    g_session_index++;
     fte_flow_dump();
     return SDK_RET_OK;    
 }
