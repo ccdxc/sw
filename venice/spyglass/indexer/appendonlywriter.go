@@ -15,10 +15,11 @@ func (idr *Indexer) startAppendOnlyWriter(id int,
 	batchSize,
 	elasticWorkersSize,
 	workersBufferSize int,
-	requestCreator func(int, *indexRequest, int, *workers) error) {
+	requestCreator func(int, *indexRequest, int, *workers, *workers) error) {
 
 	// Workers for running elastic writes
-	workers := newWorkers(idr.ctx, elasticWorkersSize, workersBufferSize)
+	processWorkers := newWorkers(idr.ctx, elasticWorkersSize, workersBufferSize)
+	pushWorkers := newWorkers(idr.ctx, elasticWorkersSize, workersBufferSize)
 
 	idr.logger.Infof("Starting scaled writer: %d to elasticsearch batchSize: %d", id, batchSize)
 	idr.requests[id] = make([]*elastic.BulkRequest, 0, batchSize)
@@ -39,7 +40,7 @@ func (idr *Indexer) startAppendOnlyWriter(id int,
 				return
 			}
 
-			if err := requestCreator(id, req, bulkTimeout, workers); err != nil {
+			if err := requestCreator(id, req, bulkTimeout, processWorkers, pushWorkers); err != nil {
 				continue
 			}
 
@@ -48,21 +49,23 @@ func (idr *Indexer) startAppendOnlyWriter(id int,
 
 			// check if batchSize is reached and call the bulk API
 			if len(idr.requests[id]) >= batchSize {
-				idr.helper(id, bulkTimeout, idr.requests[id])
+				idr.helper(id, bulkTimeout, idr.requests[id], pushWorkers)
 				idr.updateIndexer(id)
 				idr.requests[id] = make([]*elastic.BulkRequest, 0, batchSize)
 			}
 
 		// timer callback that fires every index-interval
 		case <-time.After(idr.indexIntvl):
-			idr.helper(id, bulkTimeout, idr.requests[id])
-			idr.updateIndexer(id)
-			idr.requests[id] = make([]*elastic.BulkRequest, 0, batchSize)
+			if len(idr.requests[id]) != 0 {
+				idr.helper(id, bulkTimeout, idr.requests[id], pushWorkers)
+				idr.updateIndexer(id)
+				idr.requests[id] = make([]*elastic.BulkRequest, 0, batchSize)
+			}
 		}
 	}
 }
 
-func (idr *Indexer) helper(id, timeout int, reqs []*elastic.BulkRequest) {
+func (idr *Indexer) helper(id, timeout int, reqs []*elastic.BulkRequest, pushWorkers *workers) {
 	failedBulkCount := 0
 	// Batch any pending requests.
 	if len(reqs) > 0 {
@@ -71,30 +74,39 @@ func (idr *Indexer) helper(id, timeout int, reqs []*elastic.BulkRequest) {
 			id,
 			len(reqs))
 
-		go func(reqs []*elastic.BulkRequest) {
-			for {
-				if failedBulkCount == timeout {
-					idr.logger.Errorf("Writer: %d elastic write failed for %d seconds. so, dropping the request", id, timeout)
-					metric.addDrop()
+		wi := func(reqs []*elastic.BulkRequest) func() {
+			return func() {
+				for {
+					if failedBulkCount == timeout {
+						idr.logger.Errorf("Writer: %d elastic write failed for %d seconds. so, dropping the request", id, timeout)
+						metric.addDrop()
+						break
+					}
+
+					result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+						return idr.elasticClient.Bulk(idr.ctx, reqs)
+					}, indexRetryIntvl, indexMaxRetries)
+
+					if err != nil {
+						idr.logger.Errorf("Writer: %d Failed to perform bulk indexing, resp: %+v err: %+v",
+							id, result, err)
+						failedBulkCount++
+						metric.addRetries(failedBulkCount)
+						continue
+					}
+
+					idr.logger.Debugf("Writer: %d Bulk request succeeded after (%d) failures", id, failedBulkCount)
+					failedBulkCount = 0
 					break
 				}
-
-				result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-					return idr.elasticClient.Bulk(idr.ctx, reqs)
-				}, indexRetryIntvl, indexMaxRetries)
-
-				if err != nil {
-					idr.logger.Errorf("Writer: %d Failed to perform bulk indexing, resp: %+v err: %+v",
-						id, result, err)
-					failedBulkCount++
-					metric.addRetries(failedBulkCount)
-					continue
-				}
-
-				idr.logger.Debugf("Writer: %d Bulk request succeeded after (%d) failures", id, failedBulkCount)
-				failedBulkCount = 0
-				break
 			}
 		}(reqs)
+
+		if pushWorkers != nil {
+			pushWorkers.postWorkItem(wi)
+			return
+		}
+
+		go wi()
 	}
 }

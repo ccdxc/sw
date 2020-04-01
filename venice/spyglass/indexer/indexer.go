@@ -56,7 +56,7 @@ const (
 	indexBatchIntvl                     = 5 * time.Second
 	indexRefreshIntvl                   = 60 * time.Second
 	fwLogsElasticBatchSize              = 100
-	fwLogsElasticWriteWorkerSize        = 10
+	fwLogsElasticWriteWorkerSize        = 15
 	fwLogsElasticWriterWorkerBufferSize = 1000
 
 	// Remove data for last 30 minutes. It will free up ~5.2Gb assuming the

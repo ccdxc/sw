@@ -41,115 +41,123 @@ type FwLogObjectV1 struct {
 	DSCID      string    `json:"dscid"`
 }
 
-func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout int, ws *workers) error {
-	// timeformat for parsing startts and endts from object meta.
-	// This time format is used by tmagent
-	timeFormat := "2006-01-02T15:04:05"
+func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout int, processWorkers *workers, pushWorkers *workers) error {
+	handleEvent := func() {
+		// timeformat for parsing startts and endts from object meta.
+		// This time format is used by tmagent
+		timeFormat := "2006-01-02T15:04:05"
 
-	// get the object meta
-	ometa, err := runtime.GetObjectMeta(req.object)
-	if err != nil {
-		idr.logger.Errorf("Writer: %d Failed to get obj-meta for object: %+v, err: %+v",
-			id, req.object, err)
-		return fmt.Errorf("Writer: %d Failed to get obj-meta for object: %+v, err: %+v",
-			id, req.object, err)
-	}
-
-	key, err := url.QueryUnescape(ometa.GetName())
-	if err != nil {
-		idr.logger.Errorf("Writer: %d Failed to decode object key: %+v, err: %+v",
-			id, req.object, err)
-		return fmt.Errorf("Writer: %d Failed to decode object key: %+v, err: %+v",
-			id, req.object, err)
-	}
-
-	// We are not indexing meta files yet
-	if strings.Contains(ometa.GetTenant(), "meta") || strings.Contains(ometa.GetNamespace(), "meta") {
-		return nil
-	}
-
-	kind := req.object.(runtime.Object).GetObjectKind()
-
-	uuid := getUUIDForFwlogObject(kind, ometa.GetTenant(), ometa.GetNamespace(), key)
-
-	idr.logger.Debugf("Writer %d, processing object: <%s %s %v %v>", id, kind, key, uuid, req.evType)
-	objStats, err := idr.vosFwLogsHTTPClient.StatObject(key)
-	if err != nil {
-		idr.logger.Errorf("Writer %d, Object %s, StatObject error %s",
-			id, key, err.Error())
-		// Skip indexing as write is guaranteed to fail without uuid
-		return fmt.Errorf("Writer %d, Object %s, StatObject error %s",
-			id, key, err.Error())
-	}
-
-	meta := objStats.MetaData
-	if meta["Metaversion"] == "v1" {
-		request, err := idr.parseFwLogsMetaV1(id, meta, key, ometa, timeFormat, uuid)
+		// get the object meta
+		ometa, err := runtime.GetObjectMeta(req.object)
 		if err != nil {
-			return err
-		}
-		idr.requests[id] = append(idr.requests[id], request)
-	}
-
-	// Getting the object, unzipping it and reading the data should happen in a loop
-	// until no errors are found. Example: Connection to VOS goes down.
-	// Create bulk requests for raw fwlogs and directly feed them into elastic
-	waitIntvl := time.Second * 20
-	maxRetries := 15
-	output, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-		objReader, err := idr.vosFwLogsHTTPClient.GetObject(idr.ctx, key)
-		if err != nil {
-			idr.logger.Errorf("Writer %d, object %s, error in getting object err %s", id, key, err.Error())
-			return nil, fmt.Errorf("Writer %d, object %s, error in getting object err %s", id, key, err.Error())
-		}
-		defer objReader.Close()
-
-		zipReader, err := gzip.NewReader(objReader)
-		if err != nil {
-			idr.logger.Errorf("Writer %d, object %s, error in unzipping object err %s", id, key, err.Error())
-			return nil, fmt.Errorf("Writer %d, object %s, error in unzipping object err %s", id, key, err.Error())
+			idr.logger.Errorf("Writer: %d Failed to get obj-meta for object: %+v, err: %+v",
+				id, req.object, err)
+			return
 		}
 
-		rd := csv.NewReader(zipReader)
-		data, err := rd.ReadAll()
+		key, err := url.QueryUnescape(ometa.GetName())
 		if err != nil {
-			idr.logger.Errorf("Writer %d, object %s, error in reading object err %s", id, key, err.Error())
-			return nil, fmt.Errorf("Writer %d, object %s, error in reading object err %s", id, key, err.Error())
+			idr.logger.Errorf("Writer: %d Failed to decode object key: %+v, err: %+v",
+				id, req.object, err)
+			return
 		}
 
-		return data, err
-	}, waitIntvl, maxRetries)
-
-	if err != nil {
-		return err
-	}
-
-	data := output.([][]string)
-
-	if meta["Csvversion"] == "v1" {
-		output, err := idr.parseFwLogsCsvV1(id, key, data, uuid, meta)
-		if err != nil {
-			return err
+		// We are not indexing meta files yet
+		if strings.Contains(ometa.GetTenant(), "meta") || strings.Contains(ometa.GetNamespace(), "meta") {
+			return
 		}
 
-		if len(output) != 0 {
-			idr.logger.Debugf("Writer: %d Calling Bulk total batches len: %d",
-				id,
-				len(output))
+		kind := req.object.(runtime.Object).GetObjectKind()
 
-			for _, fwlogs := range output {
-				if len(fwlogs) != 0 {
-					idr.logger.Infof("Writer: %d Calling Bulk Api reached batchsize len: %d",
-						id,
-						len(fwlogs))
+		uuid := getUUIDForFwlogObject(kind, ometa.GetTenant(), ometa.GetNamespace(), key)
 
-					idr.updateLastProcessedkeys(key)
-					idr.helper(id, bulkTimeout, fwlogs)
+		idr.logger.Debugf("Writer %d, processing object: <%s %s %v %v>", id, kind, key, uuid, req.evType)
+		objStats, err := idr.vosFwLogsHTTPClient.StatObject(key)
+		if err != nil {
+			idr.logger.Errorf("Writer %d, Object %s, StatObject error %s",
+				id, key, err.Error())
+			// Skip indexing as write is guaranteed to fail without uuid
+			return
+		}
+
+		meta := objStats.MetaData
+		var fwlogsMetaReq *elastic.BulkRequest
+		if meta["Metaversion"] == "v1" {
+			fwlogsMetaReq, err = idr.parseFwLogsMetaV1(id, meta, key, ometa, timeFormat, uuid)
+			if err != nil {
+				idr.logger.Errorf("Writer %d, object %s, error %s", id, key, err.Error())
+				return
+			}
+		}
+
+		// Getting the object, unzipping it and reading the data should happen in a loop
+		// until no errors are found. Example: Connection to VOS goes down.
+		// Create bulk requests for raw fwlogs and directly feed them into elastic
+		waitIntvl := time.Second * 20
+		maxRetries := 15
+		output, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+			objReader, err := idr.vosFwLogsHTTPClient.GetObject(idr.ctx, key)
+			if err != nil {
+				idr.logger.Errorf("Writer %d, object %s, error in getting object err %s", id, key, err.Error())
+				return nil, err
+			}
+			defer objReader.Close()
+
+			zipReader, err := gzip.NewReader(objReader)
+			if err != nil {
+				idr.logger.Errorf("Writer %d, object %s, error in unzipping object err %s", id, key, err.Error())
+				return nil, err
+			}
+
+			rd := csv.NewReader(zipReader)
+			data, err := rd.ReadAll()
+			if err != nil {
+				idr.logger.Errorf("Writer %d, object %s, error in reading object err %s", id, key, err.Error())
+				return nil, err
+			}
+
+			return data, err
+		}, waitIntvl, maxRetries)
+
+		if err != nil {
+			idr.logger.Errorf("Writer %d, object %s, error %s", id, key, err.Error())
+			return
+		}
+
+		data := output.([][]string)
+
+		if meta["Csvversion"] == "v1" {
+			output, err := idr.parseFwLogsCsvV1(id, key, data, uuid, meta)
+			if err != nil {
+				idr.logger.Errorf("Writer %d, object %s, error %s", id, key, err.Error())
+				return
+			}
+
+			if len(output) != 0 {
+				idr.logger.Debugf("Writer: %d Calling Bulk total batches len: %d",
+					id,
+					len(output))
+
+				for i, fwlogs := range output {
+					if len(fwlogs) != 0 {
+						// In the first bulk request, also append and post the meta document
+						if i == 0 && fwlogsMetaReq != nil {
+							fwlogs = append(fwlogs, fwlogsMetaReq)
+						}
+
+						idr.logger.Infof("Writer: %d Calling Bulk Api reached batchsize len: %d",
+							id,
+							len(fwlogs))
+
+						idr.updateLastProcessedkeys(key)
+						idr.helper(id, bulkTimeout, fwlogs, pushWorkers)
+					}
 				}
 			}
 		}
 	}
 
+	processWorkers.postWorkItem(handleEvent)
 	return nil
 }
 
