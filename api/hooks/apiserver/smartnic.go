@@ -235,17 +235,17 @@ func verifyAllowedProfile(oldProfile, newProfile cluster.DSCProfile) error {
 		return nil
 	}
 
-	if strings.ToLower(oldProfile.Spec.FwdMode) == "insertion" {
+	if oldProfile.Spec.FwdMode == cluster.DSCProfileSpec_INSERTION.String() {
 		return fmt.Errorf("reboot required cant move any profile")
 	}
 
-	if strings.ToLower(oldProfile.Spec.FwdMode) == "transparent" {
-		if strings.ToLower(newProfile.Spec.FwdMode) == "transparent" {
-			if strings.ToLower(newProfile.Spec.FlowPolicyMode) != "flowaware" {
+	if oldProfile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() {
+		if newProfile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() {
+			if newProfile.Spec.FlowPolicyMode != cluster.DSCProfileSpec_FLOWAWARE.String() {
 				return fmt.Errorf("Unable to move from %s to %s while in fwdMode:%s", oldProfile.Spec.FwdMode, newProfile.Spec.FwdMode, newProfile.Spec.FlowPolicyMode)
 			}
 		} else {
-			if strings.ToLower(newProfile.Spec.FlowPolicyMode) != "enforced" {
+			if newProfile.Spec.FlowPolicyMode != cluster.DSCProfileSpec_ENFORCED.String() {
 				return fmt.Errorf("Not valid. Move allowed from Tranparent to Insertion Enforced only")
 			}
 		}
