@@ -17,7 +17,7 @@
 
 
 sdk_ret_t
-pds_upgrade (upg::upg_ev_params_t *params)
+pds_upgrade (sdk::upg::upg_ev_params_t *params)
 {
     if (!params) {
         return SDK_RET_INVALID_ARG;

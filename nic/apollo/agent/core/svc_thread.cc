@@ -10,7 +10,6 @@
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/core.hpp"
-#include "nic/apollo/upgrade/include/ev.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/api/include/pds_upgrade.hpp"
 #include "nic/apollo/core/mem.hpp"
@@ -18,6 +17,8 @@
 
 #define SVC_SERVER_SOCKET_PATH          "/var/run/pds_svc_server_sock"
 #define CMD_IOVEC_DATA_LEN              (256)
+
+#define UPG_EV_PDS_AGENT_NAME "pdsagent"
 
 namespace core {
 
@@ -89,7 +90,7 @@ svc_server_accept_cb (sdk::event_thread::io_t *io, int fd, int events)
 }
 
 static void
-upg_ev_fill (upg::upg_ev_t *ev)
+upg_ev_fill (sdk::upg::upg_ev_t *ev)
 {
     ev->svc_id = PDS_AGENT_THREAD_ID_SVC_SERVER;
     strncpy(ev->svc_name, UPG_EV_PDS_AGENT_NAME, sizeof(ev->svc_name));
@@ -112,11 +113,11 @@ svc_server_thread_init (void *ctxt)
 {
     int fd;
     struct sockaddr_un sock_addr;
-    upg::upg_ev_t ev;
+    sdk::upg::upg_ev_t ev;
 
     // register for upgrade events
     upg_ev_fill(&ev);
-    upg::upg_ev_hdlr_register(ev);
+    sdk::upg::upg_ev_hdlr_register(ev);
 
     // initialize unix socket
     if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {

@@ -61,7 +61,7 @@ typedef struct pds_event_s {
     union {
         pds_port_info_t port_info;
         pds_lif_event_info_t lif_info;
-        upg::upg_ev_params_t upg_params;
+        sdk::upg::upg_ev_params_t upg_params;
     };
 } pds_event_t;
 

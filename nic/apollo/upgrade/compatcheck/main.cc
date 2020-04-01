@@ -7,13 +7,20 @@
 #include <getopt.h>
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
-#include "nic/apollo/upgrade/core/logger.hpp"
+#include "nic/sdk/upgrade/core/logger.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+namespace sdk {
 namespace upg {
 
 sdk::operd::logger_ptr g_upg_log = sdk::operd::logger::create(UPGRADE_LOG_NAME);
+
+}   // namespace upg
+}   // namespace sdk
+
+namespace upg {
+
 
 // TODO: may need to remove the below code once pds_init moved log operd
 // based logging
@@ -82,7 +89,7 @@ compat_check (const pds_event_t *event)
     if (event->event_id != PDS_EVENT_ID_UPG) {
         return SDK_RET_OK;
     }
-    const upg::upg_ev_params_t *params = &event->upg_params;
+    const sdk::upg::upg_ev_params_t *params = &event->upg_params;
     SDK_ASSERT (params->id == UPG_EV_NONE);
     (void)mpartition_validate();
     // need to terminate the pds_init

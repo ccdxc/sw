@@ -10,8 +10,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
-#include "nic/apollo/upgrade/svc/upgrade.hpp"
-#include "nic/apollo/upgrade/include/upgrade.hpp"
+#include "nic/sdk/upgrade/include/ev.hpp"
 
 static sdk::event_thread::event_thread *g_svc_server_thread;
 static std::string                      test_config_json;
@@ -47,28 +46,39 @@ stage_to_upg_status (upg_stage_t evt)
     return UPG_STATUS_OK;
 }
 
-static void
-upg_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+static sdk_ret_t
+test_upgrade (sdk::upg::upg_ev_params_t *params)
 {
-    upg_event_msg_t *event = (upg_event_msg_t *)msg->data();
-    upg_event_msg_t resp;
+    params->response_cb(SDK_RET_OK, params->response_cookie);
+    return SDK_RET_OK;
+}
 
-    printf("Received UPG IPC event stage %s \n",
-                    upg_stage2str(event->stage));
-
-    resp.stage          = event->stage;
-    resp.rsp_status     = stage_to_upg_status(event->stage);
-    resp.rsp_thread_id  = svc_thread_id;
-    strncpy(resp.rsp_thread_name,svc_name.c_str(),sizeof(resp.rsp_thread_name));
-    sdk::ipc::respond(msg, &resp, sizeof(resp));
+static void
+upg_ev_fill (sdk::upg::upg_ev_t *ev)
+{
+    ev->svc_id = 1;
+    strncpy(ev->svc_name, "svc1", sizeof(ev->svc_name));
+    ev->compat_check = test_upgrade;
+    ev->start = test_upgrade;
+    ev->backup = test_upgrade;
+    ev->prepare = test_upgrade;
+    ev->prepare_switchover = test_upgrade;
+    ev->switchover = test_upgrade;
+    ev->rollback = test_upgrade;
+    ev->ready = test_upgrade;
+    ev->repeal = test_upgrade;
+    ev->finish = test_upgrade;
+    ev->exit = test_upgrade;
 }
 
 void
 init (void *ctxt)
 {
-    sdk::ipc::subscribe(PDS_IPC_MSG_ID_UPGRADE, upg_event_handler, NULL);
-    sdk::ipc::reg_request_handler(PDS_IPC_MSG_ID_UPGRADE,
-                                  upg_event_handler, NULL);
+    sdk::upg::upg_ev_t ev;
+
+    // register for upgrade events
+    upg_ev_fill(&ev);
+    sdk::upg::upg_ev_hdlr_register(ev);
 }
 
 void

@@ -7,6 +7,8 @@
 ///
 //----------------------------------------------------------------------------
 
+#ifndef __UPGRADE_CORE_UTILS_HPP__
+#define __UPGRADE_CORE_UTILS_HPP__
 
 #include <iostream>
 #include <ev.h>
@@ -14,15 +16,14 @@
 #include <boost/container/vector.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/upgrade/core/stage.hpp"
-#include "nic/apollo/upgrade/core/service.hpp"
-#include "nic/apollo/upgrade/core/idl.hpp"
-#include "nic/apollo/upgrade/core/fsm.hpp"
-#include "nic/apollo/upgrade/include/upgrade.hpp"
+#include "include/sdk/base.hpp"
+#include "stage.hpp"
+#include "service.hpp"
+#include "idl.hpp"
+#include "fsm.hpp"
 
-namespace upg
-{
+namespace sdk {
+namespace upg {
 
 void           token_parse(std::string& text,
                            std::vector<std::string>& results);
@@ -42,4 +43,7 @@ void           dump(const svc_sequence_list& svcs);
 void           dump(const stage_map& tran);
 void           dump(const fsm& fsm);
 
-}
+}   // namespace upg
+}   // namespace sdk
+
+#endif    // __UPGRADE_CORE_UTILS_HPP__

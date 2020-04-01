@@ -13,8 +13,8 @@
 
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/platform.hpp"
+#include "nic/sdk/upgrade/include/ev.hpp"
 #include "nic/apollo/api/include/pds.hpp"
-#include "nic/apollo/upgrade/include/ev.hpp"
 
 /// \defgroup PDS_UPGRADE PDS Upgrade API
 /// @{
@@ -24,7 +24,7 @@
 /// it is the responsibilty of the upg manager to invoke the stages in proper order.
 /// \param[in] params upgrade event parameter
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_upgrade(upg::upg_ev_params_t *params);
+sdk_ret_t pds_upgrade(sdk::upg::upg_ev_params_t *params);
 
 /// @}
 

@@ -14,17 +14,16 @@
 #include <boost/container/vector.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/upgrade/core/stage.hpp"
-#include "nic/apollo/upgrade/core/service.hpp"
-#include "nic/apollo/upgrade/core/idl.hpp"
-#include "nic/apollo/upgrade/core/fsm.hpp"
-#include "nic/apollo/upgrade/core/utils.hpp"
-#include "nic/apollo/upgrade/core/logger.hpp"
-#include "nic/apollo/upgrade/include/upgrade.hpp"
+#include "include/sdk/base.hpp"
+#include "stage.hpp"
+#include "service.hpp"
+#include "idl.hpp"
+#include "fsm.hpp"
+#include "utils.hpp"
+#include "logger.hpp"
 
-namespace upg
-{
+namespace sdk {
+namespace upg {
 
 // Overloaded dump functions can be used for debugging
 std::string
@@ -51,7 +50,7 @@ transition_to_str (const transition_stages& transitions)
 }
 
 std::string
-script_to_str(const upg_scripts& scripts)
+script_to_str (const upg_scripts& scripts)
 {
     std::string str;
     for (auto x: scripts) {
@@ -61,7 +60,7 @@ script_to_str(const upg_scripts& scripts)
 }
 
 void
-dump(const fsm& fsm)
+dump (const fsm& fsm)
 {
     std::string str;
     upg_stage_t start = fsm.start_stage();
@@ -254,4 +253,6 @@ svc_rsp_code (const upg_status_t id)
     }
     return svc_rsp_id;
 };
-}
+
+}    // namespace upg
+}    // namespace sdk

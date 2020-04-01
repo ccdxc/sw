@@ -12,19 +12,23 @@
 #ifndef __INCLUDE_GLOBALS_HPP__
 #define __INCLUDE_GLOBALS_HPP__
 
+#include "nic/sdk/include/sdk/globals.hpp"
+
 namespace {
 
 /// grpc port for upgrade manager
-#define GRPC_UPGRADE_PORT  8888
+#define PDS_GRPC_PORT_UPGMGR  8888
 
 /// thread ids
 /// [PDS_THREAD_ID_MIN - PDS_THREAD_ID_MAX] are for PDS HAL threads
 /// [PDS_AGENT_THREAD_ID_MIN - PDS_AGENT_THREAD_ID_MAX] are for PDS Agent threads
+/// IPC endpoints internal to PDS agent/HAL use their unique thread ids as their
+/// IPC (client/server) identifier. so reserving the thread ids from ipc ids
 typedef enum pds_thread_id_s {
-    PDS_THREAD_ID_MIN = 0,
-    PDS_THREAD_ID_MAX = 31,
+    PDS_THREAD_ID_MIN       = (SDK_IPC_ID_MAX + 1),
+    PDS_THREAD_ID_MAX       = (PDS_THREAD_ID_MIN + 15),
     PDS_AGENT_THREAD_ID_MIN = (PDS_THREAD_ID_MAX + 1),
-    PDS_AGENT_THREAD_ID_MAX = 47
+    PDS_AGENT_THREAD_ID_MAX = (PDS_AGENT_THREAD_ID_MIN + 7)
 } pds_thread_id_t;
 
 /// IPC endpoints
@@ -38,31 +42,18 @@ typedef enum pds_thread_id_s {
 typedef enum pds_ipc_id_s {
     PDS_IPC_ID_MIN      = (PDS_AGENT_THREAD_ID_MAX + 1),
     PDS_IPC_ID_VPP      = PDS_IPC_ID_MIN,
-    PDS_IPC_ID_UPGRADE,
 } pds_ipc_id_t;
 
-/// IPC broadcast message ids
-/// PDS_IPC_MSG_ID_HAL_MAX message ids as reserved for pds agent/hal threads
-/// upgrade message id should be unique across processes to receive broadcast
-/// messages from upgrade manager. modifying this id will break ISSU
-typedef enum pds_ipc_msg_id_s {
-    PDS_IPC_MSG_ID_HAL_MIN = 0,
-    PDS_IPC_MSG_ID_HAL_MAX = 40,
-    PDS_IPC_MSG_ID_UPGRADE = (PDS_IPC_MSG_ID_HAL_MAX + 1),
-    PDS_IPC_MSG_ID_UPG_COMPAT_CHECK,
-    PDS_IPC_MSG_ID_UPG_START,
-    PDS_IPC_MSG_ID_UPG_BACKUP,
-    PDS_IPC_MSG_ID_UPG_PREPARE,
-    PDS_IPC_MSG_ID_UPG_READY,
-    PDS_IPC_MSG_ID_UPG_SYNC,
-    PDS_IPC_MSG_ID_UPG_PREPARE_SWITCHOVER,
-    PDS_IPC_MSG_ID_UPG_SWITCHOVER,
-    PDS_IPC_MSG_ID_UPG_ROLLBACK,
-    PDS_IPC_MSG_ID_UPG_REPEAL,
-    PDS_IPC_MSG_ID_UPG_FINISH,
-    PDS_IPC_MSG_ID_UPG_EXIT,
-    PDS_IPC_MSG_ID_UPGRADE_MAX = 60,
-} pds_ipc_msg_id_t;
+/// IPC broadcast event ids
+/// IPC broadcast events generated & subscribed by PDS agent/HAL threads
+/// internally uses ids from the HAL_MIN
+/// IPC endpoints external PDS agent uses event ids after HAL max
+typedef enum pds_ipc_event_id_s {
+    PDS_IPC_EVENT_ID_HAL_MIN = SDK_IPC_EVENT_ID_MAX + 1,
+    PDS_IPC_EVENT_ID_HAL_MAX = (PDS_IPC_EVENT_ID_HAL_MIN + 23),
+    PDS_IPC_EVENT_ID_VPP_MIN = PDS_IPC_EVENT_ID_HAL_MAX + 1,
+    PDS_IPC_EVENT_ID_VPP_MAX = PDS_IPC_EVENT_ID_VPP_MIN + 3,
+} pds_ipc_event_id_t;
 
 }    // namespace
 

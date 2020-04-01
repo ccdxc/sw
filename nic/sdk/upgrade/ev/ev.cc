@@ -3,9 +3,10 @@
 //-----------------------------------------------------------------------------
 
 #include <string.h>
-#include "nic/sdk/lib/ipc/ipc.hpp"
-#include "nic/apollo/upgrade/include/ev.hpp"
+#include "lib/ipc/ipc.hpp"
+#include "upgrade/include/ev.hpp"
 
+namespace sdk {
 namespace upg {
 
 static upg_ev_t upg_ev;
@@ -29,19 +30,16 @@ typedef struct upg_ev_cookie_s {
     sdk::ipc::ipc_msg_ptr msg;
 } upg_ev_cookie_t;
 
-
-static upg_ev_id_t
-spec2evid (upg_stage_t stage, upg_ev_hdlr_t *hdlr)
+static inline upg_ev_hdlr_t
+upg_event2hdlr (upg_ev_id_t ev_id)
 {
-    switch(stage) {
-    case UPG_STAGE_START: {
-        *hdlr = upg_ev.start;
-        return UPG_EV_START;
-    }
+    switch(ev_id) {
+    case UPG_EV_START:
+        return upg_ev.start;
     // TODO fill remaining
     default:
-        SDK_TRACE_DEBUG("Upgrade unknown stageid %u", stage);
-        return UPG_EV_NONE;
+        SDK_TRACE_DEBUG("Upgrade unknown event %s", upg_event2str(ev_id));
+        SDK_ASSERT(0);
     }
 }
 
@@ -78,16 +76,13 @@ upg_ev_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
     upg_ev_id_t ev_id;
 
     if (event->stage >= UPG_STAGE_MAX) {
-        SDK_TRACE_ERR("Upgrade Invalid stage id %u", event->stage);
+        SDK_TRACE_INFO("Upgrade Invalid stage %s, ignoring", upg_stage2str(event->stage));
         // returning OK as latest upgmgr and prev services should work
         return upg_ev_response_cb(SDK_RET_OK, cookie);
     }
 
-    ev_id = spec2evid(event->stage, &ev_func);
-    if (ev_id == UPG_EV_NONE) {
-        // returning OK as latest upgmgr and prev services should work
-        return upg_ev_response_cb(SDK_RET_OK, cookie);
-    }
+    ev_id = upg_stage2event(event->stage);
+    ev_func = upg_event2hdlr(ev_id);
 
     // validate event-id vs stage
     SDK_TRACE_DEBUG("Upgrade IPC event stage {} starting..",
@@ -117,34 +112,14 @@ upg_ev_hdlr_register(upg_ev_t &ev)
     // below 2 are broadcast events and it is mandatory to be provided
     SDK_ASSERT(ev.start);
     SDK_ASSERT(ev.ready);
-    sdk::ipc::subscribe(PDS_IPC_MSG_ID_UPG_COMPAT_CHECK, upg_ev_handler, NULL);
-    sdk::ipc::subscribe(PDS_IPC_MSG_ID_UPG_READY, upg_ev_handler, NULL);
+    sdk::ipc::subscribe(UPG_EV_COMPAT_CHECK, upg_ev_handler, NULL);
+    sdk::ipc::subscribe(UPG_EV_READY, upg_ev_handler, NULL);
 
     // below are unicast events
-    sdk::ipc::reg_request_handler(PDS_IPC_MSG_ID_UPG_COMPAT_CHECK,
-                                  upg_ev_handler, NULL);
-    sdk::ipc::reg_request_handler(PDS_IPC_MSG_ID_UPG_START,
-                                  upg_ev_handler, NULL);
-    sdk::ipc::reg_request_handler(PDS_IPC_MSG_ID_UPG_BACKUP,
-                                  upg_ev_handler, NULL);
-    sdk::ipc::reg_request_handler(PDS_IPC_MSG_ID_UPG_PREPARE,
-                                  upg_ev_handler, NULL);
-    sdk::ipc::reg_request_handler(PDS_IPC_MSG_ID_UPG_READY,
-                                  upg_ev_handler, NULL);
-    sdk::ipc::reg_request_handler(PDS_IPC_MSG_ID_UPG_SYNC,
-                                  upg_ev_handler, NULL);
-    sdk::ipc::reg_request_handler(PDS_IPC_MSG_ID_UPG_PREPARE_SWITCHOVER,
-                                  upg_ev_handler, NULL);
-    sdk::ipc::reg_request_handler(PDS_IPC_MSG_ID_UPG_SWITCHOVER,
-                                  upg_ev_handler, NULL);
-    sdk::ipc::reg_request_handler(PDS_IPC_MSG_ID_UPG_ROLLBACK,
-                                  upg_ev_handler, NULL);
-    sdk::ipc::reg_request_handler(PDS_IPC_MSG_ID_UPG_REPEAL,
-                                  upg_ev_handler, NULL);
-    sdk::ipc::reg_request_handler(PDS_IPC_MSG_ID_UPG_FINISH,
-                                  upg_ev_handler, NULL);
-    sdk::ipc::reg_request_handler(PDS_IPC_MSG_ID_UPG_EXIT,
-                                  upg_ev_handler, NULL);
+    for(uint32_t ev_id = UPG_EV_COMPAT_CHECK; ev_id <= UPG_EV_MAX; ev_id++) {
+        sdk::ipc::reg_request_handler(ev_id, upg_ev_handler, NULL);
+    }
 }
 
 }   // namespace upg
+}   // namespace sdk

@@ -1,6 +1,6 @@
 {
     "svc": {
-        "names": [ "sysmgr", "pds-agent"],
+        "names": [ "svc1", "svc2"],
         "event_sequence": "parallel",
         "rsp_timeout": "1000ms"
     },

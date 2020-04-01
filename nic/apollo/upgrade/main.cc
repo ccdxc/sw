@@ -6,27 +6,27 @@
 #include <unistd.h>
 #include <getopt.h>
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
-#include "nic/apollo/upgrade/core/logger.hpp"
+#include "nic/apollo/include/globals.hpp"
+#include "nic/sdk/upgrade/core/fsm.hpp"
 #include "nic/apollo/upgrade/svc/upgrade.hpp"
-#include "nic/apollo/upgrade/include/upgrade.hpp"
-#include "nic/apollo/upgrade/core/fsm.hpp"
-#include "nic/apollo/upgrade/core/ipc/ipc.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
 
 static sdk::event_thread::event_thread *g_upg_event_thread;
 
+namespace sdk {
 namespace upg {
 
 sdk::operd::logger_ptr g_upg_log = sdk::operd::logger::create(UPGRADE_LOG_NAME);
 
-}    // namespace upg
+}   // namespace upg
+}   // namespace sdk
 
 void
 upg_event_thread_init (void *ctxt)
 {
-    upg::init(ctxt);
+    sdk::upg::init(ctxt);
 }
 
 void
@@ -44,7 +44,7 @@ spawn_upg_event_thread (void)
     // spawn periodic thread that does background tasks
     g_upg_event_thread =
         sdk::event_thread::event_thread::factory(
-            "upg", PDS_IPC_ID_UPGRADE,
+            "upg", SDK_IPC_ID_UPGMGR,
             sdk::lib::THREAD_ROLE_CONTROL, 0x0, upg_event_thread_init,
             upg_event_thread_exit, NULL, // message
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
@@ -73,7 +73,7 @@ svc_init (void)
     // do gRPC initialization
     grpc_init();
     g_grpc_server_addr =
-        std::string("0.0.0.0:") + std::to_string(GRPC_UPGRADE_PORT);
+        std::string("0.0.0.0:") + std::to_string(PDS_GRPC_PORT_UPGMGR);
     server_builder = new ServerBuilder();
     server_builder->SetMaxReceiveMessageSize(INT_MAX);
     server_builder->SetMaxSendMessageSize(INT_MAX);

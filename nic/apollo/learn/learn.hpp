@@ -16,6 +16,7 @@
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
+#include "nic/apollo/include/globals.hpp"
 
 namespace learn {
 
@@ -95,7 +96,7 @@ typedef struct learn_clear_msg_s {
 } learn_clear_msg_t;
 
 typedef enum learn_msg_id_e {
-    LEARN_MSG_ID_NONE,
+    LEARN_MSG_ID_NONE        = (SDK_IPC_MSG_ID_MAX + 1),
     LEARN_MSG_ID_API,
     LEARN_MSG_ID_CLEAR_CMD,
 } learn_msg_id_t;

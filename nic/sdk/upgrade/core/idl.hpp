@@ -7,11 +7,12 @@
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __PDS_UPGMGR_IDL_HPP__
-#define __PDS_UPGMGR_IDL_HPP__
+#ifndef __UPGRADE_CORE_IDL_HPP__
+#define __UPGRADE_CORE_IDL_HPP__
 
 #include <string>
 
+namespace sdk {
 namespace upg {
 /// \brief This intermediate data structure holds json string to build
 /// stage_t objects.
@@ -47,32 +48,13 @@ public:
         pre_hook_scripts_  = pre_hooks ;
         post_hook_scripts_ = post_hooks ;
     };
-
     ~idl_upg_stage(void) {};
-
-    std::string& stage(void) {
-        return stage_;
-    };
-
-    std::string& svc_rsp_timeout(void) {
-        return svc_rsp_timeout_;
-    };
-
-    std::string& svc_sequence(void) {
-        return svc_sequence_;
-    };
-
-    std::string& event_sequence(void) {
-        return event_sequence_;
-    };
-
-    std::string& pre_hook_scripts(void) {
-        return pre_hook_scripts_;
-    };
-
-    std::string& post_hook_scripts(void) {
-        return post_hook_scripts_;
-    };
+    std::string& stage(void) { return stage_; };
+    std::string& svc_rsp_timeout(void) { return svc_rsp_timeout_; };
+    std::string& svc_sequence(void) { return svc_sequence_; };
+    std::string& event_sequence(void) { return event_sequence_; };
+    std::string& pre_hook_scripts(void) { return pre_hook_scripts_; };
+    std::string& post_hook_scripts(void) { return post_hook_scripts_; };
 
 private:
     std::string stage_;
@@ -83,5 +65,7 @@ private:
     std::string post_hook_scripts_;
 };
 
-}
-#endif    // __PDS_UPGMGR_IDL_HPP__
+}   // namespace upg
+}   // namespace sdk
+
+#endif    // __UPGRADE_CORE_IDL_HPP__

@@ -496,26 +496,19 @@ class GenerateStateMachine(object):
 
     @staticmethod
     def __make_header__():
-        header_name = "__FSM_AUTO_GEN__"
-        include_path1 = '"nic/apollo/upgrade/core/stage.hpp"'
-        include_path2 = '"nic/apollo/upgrade/core/service.hpp"'
-        include_path3 = '"nic/apollo/upgrade/core/idl.hpp"'
-        include_path4 = '"nic/apollo/upgrade/include/upgrade.hpp"'
+        header_name = "__UPGRADE_FSM_GEN_HPP__"
+        sdk_namespace = "namespace sdk {"
         upg_namespace = "namespace upg {"
 
         header = "#ifndef " + header_name + os.linesep
         header = header + "#define " + header_name + 2 * os.linesep
-        header = header + "#include " + include_path1 + os.linesep
-        header = header + "#include " + include_path2 + os.linesep
-        header = header + "#include " + include_path3 + os.linesep
-        header = header + "#include " + include_path4 + 2 * os.linesep
-        header = header + upg_namespace + os.linesep
+        header = header + sdk_namespace + os.linesep + upg_namespace + os.linesep
         return header
 
     @staticmethod
     def __make_footer__():
         footer = "}"
-        footer = footer + os.linesep
+        footer = footer + os.linesep + footer + os.linesep
         footer = footer + "#endif" + os.linesep
         return footer
 
@@ -528,6 +521,11 @@ class GenerateStateMachine(object):
 
 
 def main(input_json, output_pds_fsm):
+    try:
+        d = os.path.dirname(output_pds_fsm)
+        os.makedirs(d)
+    except:
+        pass
     obj = GenerateStateMachine(input_json, output_pds_fsm)
     transitions = obj.make_idl_stage_transition()
     services = obj.make_idl_svc_cfg()

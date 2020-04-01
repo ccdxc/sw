@@ -16,37 +16,59 @@
 #ifndef __UPGRADE_EV_HPP__
 #define __UPGRADE_EV_HPP__
 
-#include "nic/apollo/upgrade/include/upgrade.hpp"
+#include "include/sdk/globals.hpp"
+#include "upgrade/include/upgrade.hpp"
 
+namespace sdk {
 namespace upg {
 
 /// \brief upgrade event ids
+/// over the releases, should not change the order of it
+/// as it breaks the backward compatibility
 typedef enum upg_ev_id_s {
-    UPG_EV_NONE                 = 0,
-    UPG_EV_COMPAT_CHECK         = 1,
-    UPG_EV_START                = 2,
-    UPG_EV_BACKUP               = 3,
-    UPG_EV_PREPARE              = 4,
-    UPG_EV_PREPARE_SWITCHOVER   = 5,
-    UPG_EV_SWITCHOVER           = 6,
-    UPG_EV_ROLLBACK             = 7,
-    UPG_EV_READY                = 8,
-    UPG_EV_REPEAL               = 9,
-    UPG_EV_FINISH               = 10,
-    UPG_EV_EXIT                 = 11,
-    UPG_EV_MAX                  = 12,
+    UPG_EV_NONE         = 0,
+    UPG_EV_COMPAT_CHECK = SDK_IPC_EVENT_ID_UPGMGR_MIN,
+    UPG_EV_START,
+    UPG_EV_BACKUP,
+    UPG_EV_PREPARE,
+    UPG_EV_PREP_SWITCHOVER,
+    UPG_EV_SWITCHOVER,
+    UPG_EV_ROLLBACK,
+    UPG_EV_READY,
+    UPG_EV_REPEAL,
+    UPG_EV_FINISH,
+    UPG_EV_EXIT,
+    UPG_EV_MAX = SDK_IPC_EVENT_ID_UPGMGR_MAX,
 } upg_ev_id_t;
-
-#define UPG_EV_PDS_AGENT_NAME "pds-agent"
 
 /// \brief asynchronous response callback by the event handler
 /// cookie is passed to the event handler and it should not be modified
 typedef void (*upg_async_ev_response_cb)(sdk_ret_t status, const void *cookie);
 
 static inline const char *
-upg_event2str(upg_ev_id_t id)
+upg_event2str (upg_ev_id_t id)
 {
     return ("todo");
+}
+
+static inline upg_ev_id_t
+upg_stage2event (upg_stage_t stage)
+{
+    switch(stage) {
+    case UPG_STAGE_COMPAT_CHECK:
+        return UPG_EV_COMPAT_CHECK;
+    case UPG_STAGE_START:
+        return UPG_EV_START;
+    case UPG_STAGE_BACKUP:
+        return UPG_EV_BACKUP;
+    case UPG_STAGE_PREPARE:
+        return UPG_EV_PREPARE;
+    case UPG_STAGE_PREP_SWITCHOVER:
+        return UPG_EV_PREP_SWITCHOVER;
+    default:
+        // should handle all the stages
+        SDK_ASSERT(0);
+    }
 }
 
 /// \brief upgrade event msg
@@ -118,14 +140,15 @@ typedef struct upg_ev_s {
 void upg_ev_hdlr_register(upg_ev_t &ev);
 
 }   // namespace upg
+}   // namespace sdk
 
-using upg::upg_ev_id_t::UPG_EV_NONE;
-using upg::upg_ev_id_t::UPG_EV_COMPAT_CHECK;
-using upg::upg_ev_id_t::UPG_EV_START;
-using upg::upg_ev_id_t::UPG_EV_BACKUP;
-using upg::upg_ev_id_t::UPG_EV_PREPARE;
-using upg::upg_ev_id_t::UPG_EV_PREPARE_SWITCHOVER;
-using upg::upg_ev_id_t::UPG_EV_SWITCHOVER;
+using sdk::upg::upg_ev_id_t::UPG_EV_NONE;
+using sdk::upg::upg_ev_id_t::UPG_EV_COMPAT_CHECK;
+using sdk::upg::upg_ev_id_t::UPG_EV_START;
+using sdk::upg::upg_ev_id_t::UPG_EV_BACKUP;
+using sdk::upg::upg_ev_id_t::UPG_EV_PREPARE;
+using sdk::upg::upg_ev_id_t::UPG_EV_PREP_SWITCHOVER;
+using sdk::upg::upg_ev_id_t::UPG_EV_SWITCHOVER;
 
 /// @}
 

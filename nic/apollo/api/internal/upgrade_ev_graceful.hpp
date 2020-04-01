@@ -16,8 +16,8 @@
 #ifndef __API_UPGRADE_EV_GRACEFUL_HPP__
 #define __API_UPGRADE_EV_GRACEFUL_HPP__
 
-using upg::upg_ev_hdlr_t;
-using upg::upg_ev_params_t;
+using sdk::upg::upg_ev_hdlr_t;
+using sdk::upg::upg_ev_params_t;
 
 namespace api {
 

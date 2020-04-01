@@ -3,13 +3,14 @@
 //
 //----------------------------------------------------------------------------
 
-#ifndef __UPGRADE_LOGGER_HPP__
-#define __UPGRADE_LOGGER_HPP__
+#ifndef __UPGRADE_CORE_LOGGER_HPP__
+#define __UPGRADE_CORE_LOGGER_HPP__
 
 #include <sys/stat.h>
-#include <nic/sdk/include/sdk/base.hpp>
-#include "nic/sdk/lib/operd/logger.hpp"
+#include "include/sdk/base.hpp"
+#include "lib/operd/logger.hpp"
 
+namespace sdk {
 namespace upg {
 
 // operd logging
@@ -48,7 +49,8 @@ extern sdk::operd::logger_ptr g_upg_log;
 }
 
 }    // namespace upg
+}    // namespace sdk
 
-using upg::g_upg_log;
+using sdk::upg::g_upg_log;
 
-#endif     // __UPGRADE_LOGGER_HPP__
+#endif     // __UPGRADE_CORE_LOGGER_HPP__

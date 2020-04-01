@@ -133,6 +133,8 @@ def copy_includes (dest):
              ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
     copytree("sdk/lib", "{0}/nic/sdk/lib".format(dest), 
              ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+    copytree("sdk/upgrade", "{0}/nic/sdk/upgrade".format(dest), 
+             ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
     copytree("sdk/platform/utils","{0}/nic/sdk/platform/utils".format(dest), 
              ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
     copytree("sdk/platform/ring","{0}/nic/sdk/platform/ring".format(dest), 

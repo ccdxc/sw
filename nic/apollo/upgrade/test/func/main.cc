@@ -73,7 +73,7 @@ TEST_F(upg_func_gtest, table_property_get_set) {
 
 // This test validates the pds upgrade fucntions
 TEST_F(upg_func_gtest, start_switch) {
-    upg::upg_ev_params_t params;
+    sdk::upg::upg_ev_params_t params;
     sdk_ret_t ret;
 
     params.id = UPG_EV_START;

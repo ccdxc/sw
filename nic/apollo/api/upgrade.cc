@@ -97,21 +97,21 @@ upg_init (pds_init_params_t *params)
 }
 
 static sdk_ret_t
-upg_graceful_event_send (upg::upg_ev_params_t *params)
+upg_graceful_event_send (sdk::upg::upg_ev_params_t *params)
 {
     // TODO
     return SDK_RET_OK;
 }
 
 static sdk_ret_t
-upg_hitless_event_send (upg::upg_ev_params_t *params)
+upg_hitless_event_send (sdk::upg::upg_ev_params_t *params)
 {
     // TODO
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-upg_event_send (upg::upg_ev_params_t *params)
+upg_event_send (sdk::upg::upg_ev_params_t *params)
 {
     sdk_ret_t ret;
 

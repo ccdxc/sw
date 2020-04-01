@@ -7,16 +7,15 @@
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __PDS_UPG_CORE_IPC_HPP__
-#define __PDS_UPG_CORE_IPC_HPP__
+#ifndef __UPGRADE_CORE_IPC_HPP__
+#define __UPGRADE_CORE_IPC_HPP__
 
-#include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/lib/ipc/ipc.hpp"
-#include "nic/apollo/upgrade/core/logger.hpp"
-#include "nic/apollo/upgrade/include/upgrade.hpp"
+#include "include/sdk/base.hpp"
+#include "lib/ipc/ipc.hpp"
+#include "upgrade/include/upgrade.hpp"
 
+namespace sdk {
 namespace upg {
-namespace ipc {
 
 typedef enum ipc_svc_dom_id_s {
     IPC_SVC_DOM_ID_NONE = 0, ///< invalid
@@ -25,17 +24,16 @@ typedef enum ipc_svc_dom_id_s {
 } ipc_svc_dom_id_t;
 
 /// ipc callback which expects service name and id filled by the endpoint
-typedef void (*upg_async_response_cb_t)(sdk::ipc::ipc_msg_ptr msg,
-                                        const void *cookie, const void *ctxt);
+typedef void (*upg_async_response_cb_t)(sdk::ipc::ipc_msg_ptr msg);
 /// broadcast to a domain
-void broadcast(ipc_svc_dom_id_t dom_id, upg_stage_t stage, void *cookie);
+void upg_send_broadcast_request(ipc_svc_dom_id_t dom_id, upg_stage_t stage);
 /// unicast request to a service in a domain
-void request(ipc_svc_dom_id_t dom_id, upg_stage_t stage,
-             uint32_t svc_id, void *cookie);
+void upg_send_request(ipc_svc_dom_id_t dom_id, upg_stage_t stage,
+                      uint32_t svc_id);
 /// initialize the ipc service
-void init(upg_async_response_cb_t rsp_cb);
+void upg_ipc_init(upg_async_response_cb_t response_cb);
 
-}   // namespace ipc
 }   // namespace upg
+}   // namespace sdk
 
-#endif    //__PDS_UPG_CORE_NOTIFY_HPP___
+#endif   // __UPGRADE_CORE_IPC_HPP__

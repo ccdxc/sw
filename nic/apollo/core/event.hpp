@@ -16,30 +16,31 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/include/globals.hpp"
 
 // event identifiers
 typedef enum event_id_e {
-    EVENT_ID_NONE               = 0,
-    EVENT_ID_PDS_HAL_UP         = 1,
-    EVENT_ID_PORT_STATUS        = 2,
-    EVENT_ID_XCVR_STATUS        = 3,
-    EVENT_ID_UPLINK_STATUS      = 4,
-    EVENT_ID_HOST_LIF_CREATE    = 5,
-    EVENT_ID_LIF_STATUS         = 6,
-    EVENT_ID_MAC_LEARN          = 7,
-    EVENT_ID_IP_LEARN           = 8,
-    EVENT_ID_MAC_AGE            = 9,
-    EVENT_ID_IP_AGE             = 10,
-    EVENT_ID_UPG_COMPAT_CHECK   = 11,
-    EVENT_ID_UPG_START          = 12,
-    EVENT_ID_UPG_BACKUP         = 13,
-    EVENT_ID_UPG_LINK_DOWN      = 14,
-    EVENT_ID_UPG_HOSTDEV_RESET  = 15,
-    EVENT_ID_UPG_QUIESCE        = 16,
-    EVENT_ID_UPG_SWITCHOVER     = 17,
-    EVENT_ID_UPG_READY          = 18,
-    EVENT_ID_UPG_REPEAL         = 19,
-    EVENT_ID_UPG_EXIT           = 20,
+    EVENT_ID_NONE               = PDS_IPC_EVENT_ID_HAL_MIN,
+    EVENT_ID_PDS_HAL_UP         = (PDS_IPC_EVENT_ID_HAL_MIN + 1),
+    EVENT_ID_PORT_STATUS        = (PDS_IPC_EVENT_ID_HAL_MIN + 2),
+    EVENT_ID_XCVR_STATUS        = (PDS_IPC_EVENT_ID_HAL_MIN + 3),
+    EVENT_ID_UPLINK_STATUS      = (PDS_IPC_EVENT_ID_HAL_MIN + 4),
+    EVENT_ID_HOST_LIF_CREATE    = (PDS_IPC_EVENT_ID_HAL_MIN + 5),
+    EVENT_ID_LIF_STATUS         = (PDS_IPC_EVENT_ID_HAL_MIN + 6),
+    EVENT_ID_MAC_LEARN          = (PDS_IPC_EVENT_ID_HAL_MIN + 7),
+    EVENT_ID_IP_LEARN           = (PDS_IPC_EVENT_ID_HAL_MIN + 8),
+    EVENT_ID_MAC_AGE            = (PDS_IPC_EVENT_ID_HAL_MIN + 9),
+    EVENT_ID_IP_AGE             = (PDS_IPC_EVENT_ID_HAL_MIN + 10),
+    EVENT_ID_UPG_COMPAT_CHECK   = (PDS_IPC_EVENT_ID_HAL_MIN + 11),
+    EVENT_ID_UPG_START          = (PDS_IPC_EVENT_ID_HAL_MIN + 12),
+    EVENT_ID_UPG_BACKUP         = (PDS_IPC_EVENT_ID_HAL_MIN + 13),
+    EVENT_ID_UPG_LINK_DOWN      = (PDS_IPC_EVENT_ID_HAL_MIN + 14),
+    EVENT_ID_UPG_HOSTDEV_RESET  = (PDS_IPC_EVENT_ID_HAL_MIN + 15),
+    EVENT_ID_UPG_QUIESCE        = (PDS_IPC_EVENT_ID_HAL_MIN + 16),
+    EVENT_ID_UPG_SWITCHOVER     = (PDS_IPC_EVENT_ID_HAL_MIN + 17),
+    EVENT_ID_UPG_READY          = (PDS_IPC_EVENT_ID_HAL_MIN + 18),
+    EVENT_ID_UPG_REPEAL         = (PDS_IPC_EVENT_ID_HAL_MIN + 19),
+    EVENT_ID_UPG_EXIT           = (PDS_IPC_EVENT_ID_HAL_MIN + 20),
 } event_id_t;
 
 namespace core {

@@ -17,7 +17,7 @@ typedef uint32_t upg_thread_id_t;
 
 }   // namespace api
 
-#include "nic/apollo/upgrade/include/ev.hpp"
+#include "nic/sdk/upgrade/include/ev.hpp"
 #include "nic/apollo/api/internal/upgrade_ev_graceful.hpp"
 #include "nic/apollo/api/internal/upgrade_ev_hitless.hpp"
 
