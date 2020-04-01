@@ -2986,11 +2986,12 @@ void
 EthLif::StatsUpdate(EV_P_ ev_timer *w, int events)
 {
     EthLif *eth = (EthLif *)w->data;
+    struct edmaq_ctx ctx = { .cb = NULL, .obj = NULL };
 
     if (eth->lif_stats_addr != 0 && eth->host_lif_stats_addr != 0) {
         eth->edmaq_async->Post(eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
                                 eth->lif_stats_addr, eth->host_lif_stats_addr,
-                                sizeof(struct ionic_lif_stats), NULL);
+                                sizeof(struct ionic_lif_stats), &ctx);
     }
 }
 

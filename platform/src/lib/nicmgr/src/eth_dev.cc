@@ -2039,6 +2039,7 @@ Eth::StatsUpdate(EV_P_ ev_timer *w, int events)
 {
     Eth *eth = (Eth *)w->data;
     EthLif *eth_lif = NULL;
+    struct edmaq_ctx ctx = { .cb = NULL, .obj = NULL };
 
     auto it = eth->lif_map.find(eth->dev_resources.lif_base);
     if (it == eth->lif_map.cend()) {
@@ -2050,12 +2051,12 @@ Eth::StatsUpdate(EV_P_ ev_timer *w, int events)
     if (eth->port_mac_stats_addr != 0 && eth->host_port_mac_stats_addr != 0) {
         eth_lif->EdmaAsyncProxy(eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
                                 eth->port_mac_stats_addr, eth->host_port_mac_stats_addr,
-                                sizeof(struct ionic_port_stats), NULL);
+                                sizeof(struct ionic_port_stats), &ctx);
 
         if (eth->port_pb_stats_addr != 0 && eth->host_port_pb_stats_addr != 0) {
             eth_lif->EdmaAsyncProxy(eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
                                     eth->port_pb_stats_addr, eth->host_port_pb_stats_addr,
-                                    sizeof(struct ionic_port_pb_stats), NULL);
+                                    sizeof(struct ionic_port_pb_stats), &ctx);
         }
     }
 }
