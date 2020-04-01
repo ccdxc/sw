@@ -22,5 +22,7 @@ run_gtest flow_cache
 run_gtest flow_session_info
 run_gtest flow_session_rewrite
 
+run_gtest flow_cache_scale
+
 # end of script
 clean_exit
