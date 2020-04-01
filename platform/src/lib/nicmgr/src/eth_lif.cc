@@ -1413,7 +1413,14 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     qstate.tx.q.intr.pc_offset = off;
     qstate.tx.q.intr.cosA = cosA;
-    qstate.tx.q.intr.cosB = pd->get_iq(cmd->cos, hal_lif_info_.pinned_uplink_port_num);
+    if (spec->eth_type == ETH_HOST_MGMT ||
+        spec->eth_type == ETH_MNIC_OOB_MGMT ||
+        spec->eth_type == ETH_MNIC_INTERNAL_MGMT ||
+        spec->eth_type == ETH_MNIC_INBAND_MGMT) {
+        qstate.tx.q.intr.cosB = cosB;
+    } else {
+        qstate.tx.q.intr.cosB = pd->get_iq(cmd->cos, hal_lif_info_.pinned_uplink_port_num);
+    }
     qstate.tx.q.intr.host = (cmd->flags & IONIC_QINIT_F_EQ) ? 2 : 1;
     qstate.tx.q.intr.total = 3;
     qstate.tx.q.intr.pid = cmd->pid;
