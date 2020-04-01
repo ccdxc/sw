@@ -197,6 +197,7 @@ func TestMain(m *testing.M) {
 			"telemetry_query",
 			"objstore",
 			"tokenauth",
+			"fwlog",
 		},
 		Auditor:            auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
 		ModuleWatcher:      diagmock.GetModuleWatcher(),

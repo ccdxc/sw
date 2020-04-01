@@ -9,6 +9,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/generated/fwlog"
 	"github.com/pensando/sw/api/generated/search"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/utils/log"
@@ -165,6 +166,27 @@ func GetAuditEvent(ctx context.Context, apiGwAddr, eventID string, resp *audit.A
 	status, err := restcl.Req("GET", auditURL, &audit.AuditEventRequest{}, resp)
 	if status != http.StatusOK {
 		return fmt.Errorf("GET request failed with http status code (%d) for event (%s)", status, auditURL)
+	}
+	return err
+}
+
+// FwLogQuery queries and returns firewall logs
+func FwLogQuery(ctx context.Context, apigw string, query *fwlog.FwLogQuery, resp interface{}) error {
+	fwlogURL := fmt.Sprintf("https://%s/fwlog/v1/query", apigw)
+	restcl := netutils.NewHTTPClient()
+	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	restcl.DisableKeepAlives()
+	defer restcl.CloseIdleConnections()
+
+	// get authz header
+	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if !ok {
+		return fmt.Errorf("no authorization header in context")
+	}
+	restcl.SetHeader("Authorization", authzHeader)
+	status, err := restcl.Req("POST", fwlogURL, query, resp)
+	if status != http.StatusOK {
+		return fmt.Errorf("POST request failed with http status code (%d) for fwlog query (%s)", status, fwlogURL)
 	}
 	return err
 }

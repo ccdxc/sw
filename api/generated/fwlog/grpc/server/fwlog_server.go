@@ -37,8 +37,9 @@ func (s *sfwlogFwlogBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 	l.Infof("registering message for sfwlogFwlogBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"fwlog.FwLog":     apisrvpkg.NewMessage("fwlog.FwLog"),
-		"fwlog.FwLogList": apisrvpkg.NewMessage("fwlog.FwLogList"),
+		"fwlog.FwLog":      apisrvpkg.NewMessage("fwlog.FwLog"),
+		"fwlog.FwLogList":  apisrvpkg.NewMessage("fwlog.FwLogList"),
+		"fwlog.FwLogQuery": apisrvpkg.NewMessage("fwlog.FwLogQuery"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 		// Add a message handler for Label options

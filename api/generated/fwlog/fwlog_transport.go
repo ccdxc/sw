@@ -84,3 +84,37 @@ func EncodeGrpcRespFwLogList(ctx context.Context, response interface{}) (interfa
 func DecodeGrpcRespFwLogList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
+
+func encodeHTTPFwLogQuery(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFwLogQuery(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FwLogQuery
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFwLogQuery encodes GRPC request
+func EncodeGrpcReqFwLogQuery(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwLogQuery)
+	return req, nil
+}
+
+// DecodeGrpcReqFwLogQuery decodes GRPC request
+func DecodeGrpcReqFwLogQuery(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwLogQuery)
+	return req, nil
+}
+
+// EncodeGrpcRespFwLogQuery encodes GRC response
+func EncodeGrpcRespFwLogQuery(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFwLogQuery decodes GRPC response
+func DecodeGrpcRespFwLogQuery(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}

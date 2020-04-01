@@ -56,27 +56,61 @@ message FwLog {
     uint64 RuleID       = 12 [(gogoproto.jsontag) = "rule-id,omitempty"];
     // Session ID
     uint64 SessionID    = 13 [(gogoproto.jsontag) = "session-id,omitempty"];
-    // Session state
-    string SessionState = 14 [(gogoproto.jsontag) = "session-state,omitempty"];
     // Application ID
-    string AppID        = 15 [(gogoproto.jsontag) = "app-id,omitempty"];
+    string AppID        = 14 [(gogoproto.jsontag) = "app-id,omitempty"];
     //policy name
-    string PolicyName   = 16 [(gogoproto.jsontag) = "policy-name,omitempty"];
+    string PolicyName   = 15 [(gogoproto.jsontag) = "policy-name,omitempty"];
     // Reporter ID
-    string ReporterID   = 17 [(gogoproto.jsontag) = "reporter-id,omitempty"];
+    string ReporterID   = 16 [(gogoproto.jsontag) = "reporter-id,omitempty"];
     // Flow action
-    string FlowAction   = 18 [(gogoproto.jsontag) = "flow-action,omitempty"];
+    string FlowAction   = 17 [(gogoproto.jsontag) = "flow-action,omitempty"];
     // icmp type
-    uint32 IcmpType     = 19 [(gogoproto.jsontag) = "icmp-type,omitempty"];
+    uint32 IcmpType     = 18 [(gogoproto.jsontag) = "icmp-type,omitempty"];
     // icmp code
-    uint32 IcmpCode     = 20 [(gogoproto.jsontag) = "icmp-code,omitempty"];
+    uint32 IcmpCode     = 19 [(gogoproto.jsontag) = "icmp-code,omitempty"];
     // icmp ID
-    uint32 IcmpID       = 21 [(gogoproto.jsontag) = "icmp-id,omitempty"];
+    uint32 IcmpID       = 20 [(gogoproto.jsontag) = "icmp-id,omitempty"];
 }
 
 // list of fw logs
 message FwLogList {
-    api.TypeMeta T        = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
-    api.ListMeta ListMeta = 2 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
+    api.TypeMeta T        = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+    api.ListMeta ListMeta = 2 [(gogoproto.nullable) = false, (gogoproto.embed) = true, (gogoproto.jsontag) = "list-meta,omitempty"];
     repeated FwLog Items  = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "items,omitempty"];
+}
+
+enum SortOrder {
+    Ascending  = 0;
+    Descending = 1;
+}
+
+// FwLogQuery allows selecting logs by all attributes
+// All fields are ANDed together
+message FwLogQuery {
+    // OR of sources IPs to be matched
+    repeated string SourceIPs   = 1 [(gogoproto.jsontag) = "source-ips,omitempty", (venice.check)="IPAddr()"];
+    // OR of dest IPs to be matched
+    repeated string DestIPs     = 2 [(gogoproto.jsontag) = "destination-ips,omitempty", (venice.check)="IPAddr()"];
+    // OR of source ports to be matched NP
+    repeated uint32 SourcePorts = 3 [(gogoproto.jsontag) = "source-ports,omitempty", (venice.check)="IntRange(0, 65535)"];
+    // OR of dest ports to be matched NP
+    repeated uint32 DestPorts   = 4 [(gogoproto.jsontag) = "destination-ports,omitempty", (venice.check)="IntRange(0, 65535)"];
+    // OR of protocols to be matched
+    repeated string Protocols   = 5 [(gogoproto.jsontag) = "protocols,omitempty"];
+    // OR of actions to be matched NP
+    repeated string Actions     = 6 [(gogoproto.jsontag) = "actions,omitempty", (venice.check)="StrEnum(FwLogActions)"];
+    // OR of reporter names to be matched
+    repeated string ReporterIDs = 7 [(gogoproto.jsontag) = "reporter-ids,omitempty"];
+    // StartTime selects all logs with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z
+    api.Timestamp StartTime     = 8 [(gogoproto.jsontag) = "start-time,omitempty"];
+    // EndTime selects all logs with timestamp less than the EndTime, example 2018-09-18T00:12:00Z
+    api.Timestamp EndTime       = 9 [(gogoproto.jsontag) = "end-time,omitempty"];
+    // SortOrder specifies time ordering of results
+    string SortOrder            = 10 [(gogoproto.jsontag) = "sort-order,omitempty", (venice.check) = "StrEnum(SortOrder)", (venice.default) = "descending"];
+    // MaxResults is the max-count of search results
+    // Default value is 50 and valid range is 0..8192
+    int32 MaxResults            = 11 [(venice.default) = "50", (venice.check) = "IntRange(0,8192)", (gogoproto.jsontag) = "max-results,omitempty"];
+    // OR of tenants within the scope of which search needs to be performed. If not specified, it will be set to tenant
+    // of the logged in user. Also users in non default tenant can search fwlogs in their tenant scope only.
+    repeated string Tenants     = 12 [(gogoproto.jsontag) = "tenants,omitempty"];
 }

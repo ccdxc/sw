@@ -154,6 +154,7 @@ func Start() *Info {
 			"audit",
 			"objstore",
 			"tokenauth",
+			"fwlog",
 		},
 		Auditor:            auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), logger)),
 		ModuleWatcher:      diagmock.GetModuleWatcher(),

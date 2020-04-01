@@ -228,6 +228,18 @@ func (idr *Indexer) parseFwLogsCsvV1(id int, key string, data [][]string, uuid s
 		}
 
 		obj := fwlog.FwLog{
+			TypeMeta: api.TypeMeta{
+				Kind: "FwLog",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: globals.DefaultTenant,
+				CreationTime: api.Timestamp{
+					Timestamp: *timestamp,
+				},
+				ModTime: api.Timestamp{
+					Timestamp: *timestamp,
+				},
+			},
 			SrcVRF:     srcVRF,
 			SrcIP:      line[2],
 			DestIP:     line[3],
@@ -244,7 +256,6 @@ func (idr *Indexer) parseFwLogsCsvV1(id int, key string, data [][]string, uuid s
 			IcmpID:     uint32(icmpID),
 			IcmpCode:   uint32(icmpCode),
 		}
-		obj.ObjectMeta.CreationTime = api.Timestamp{Timestamp: *timestamp}
 
 		// prepare the index request
 		request := &elastic.BulkRequest{

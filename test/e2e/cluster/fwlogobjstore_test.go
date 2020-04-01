@@ -22,8 +22,6 @@ import (
 
 	"github.com/pensando/sw/api"
 	loginctx "github.com/pensando/sw/api/login/context"
-
-	// es "github.com/olivere/elastic"
 	"github.com/pensando/sw/nic/agent/tmagent/state/fwgen/fwevent"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"

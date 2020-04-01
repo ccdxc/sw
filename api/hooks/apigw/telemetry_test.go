@@ -61,7 +61,7 @@ func TestTelemetryOperationsHook(t *testing.T) {
 			in:   &telemetry_query.FwlogsQueryList{},
 			expectedOperations: []authz.Operation{
 				authz.NewOperation(authz.NewResource("testTenant",
-					"", auth.Permission_FwlogsQuery.String(),
+					"", auth.Permission_FwLog.String(),
 					"", ""),
 					auth.Permission_Read.String()),
 			},
@@ -87,7 +87,7 @@ func TestTelemetryOperationsHook(t *testing.T) {
 			in:   &telemetry_query.FwlogsQueryList{Tenant: "differentTenant"},
 			expectedOperations: []authz.Operation{
 				authz.NewOperation(authz.NewResource("differentTenant",
-					"", auth.Permission_FwlogsQuery.String(),
+					"", auth.Permission_FwLog.String(),
 					"", ""),
 					auth.Permission_Read.String()),
 			},

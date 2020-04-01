@@ -83,7 +83,7 @@ func fwlogsOperations(ctx context.Context, req *telemetry_query.FwlogsQueryList,
 	resource := authz.NewResource(
 		req.Tenant,
 		"",
-		auth.Permission_FwlogsQuery.String(),
+		auth.Permission_FwLog.String(),
 		"",
 		"")
 	// append requested operation

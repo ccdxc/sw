@@ -35,7 +35,7 @@ func (it *veniceIntegSuite) TestFwlogsQueryAuth(c *C) {
 	apiGwAddr := "localhost:" + it.config.APIGatewayPort
 	username := "fwlogsUser"
 	roleName := "fwlogsRole"
-	resKind := auth.Permission_FwlogsQuery.String()
+	resKind := auth.Permission_FwLog.String()
 
 	adminCtx, err := it.loggedInCtx()
 	AssertOk(c, err, "Failed to get logged in context")

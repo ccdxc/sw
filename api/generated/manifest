@@ -40,6 +40,7 @@ svc_browser.proto browser true
 svc_cluster.proto cluster true
 svc_diagnostics.proto diagnostics true
 svc_events.proto events false
+svc_fwlog.proto fwlog false
 svc_monitoring.proto monitoring true
 svc_network.proto network true
 svc_objstore.proto objstore false

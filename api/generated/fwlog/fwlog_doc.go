@@ -9,6 +9,7 @@ The following Messages are defined.
 
   FwLog
   FwLogList
+  FwLogQuery
 
 The following Services and Methods are defined.
 

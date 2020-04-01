@@ -44,8 +44,6 @@ var typesMapFwlog = map[string]*api.Struct{
 
 			"SessionID": api.Field{Name: "SessionID", CLITag: api.CLIInfo{ID: "session-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "session-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT64"},
 
-			"SessionState": api.Field{Name: "SessionState", CLITag: api.CLIInfo{ID: "session-state", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "session-state", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-
 			"AppID": api.Field{Name: "AppID", CLITag: api.CLIInfo{ID: "app-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "app-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"PolicyName": api.Field{Name: "PolicyName", CLITag: api.CLIInfo{ID: "policy-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "policy-name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
@@ -88,9 +86,9 @@ var typesMapFwlog = map[string]*api.Struct{
 	"fwlog.FwLogList": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwLogList{}) },
 		Fields: map[string]api.Field{
-			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{ID: "T", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
+			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{ID: "T", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 
-			"ListMeta": api.Field{Name: "ListMeta", CLITag: api.CLIInfo{ID: "ListMeta", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ListMeta"},
+			"ListMeta": api.Field{Name: "ListMeta", CLITag: api.CLIInfo{ID: "list-meta", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "list-meta", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ListMeta"},
 
 			"Items": api.Field{Name: "Items", CLITag: api.CLIInfo{ID: "items", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "items", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "fwlog.FwLog"},
 
@@ -101,6 +99,34 @@ var typesMapFwlog = map[string]*api.Struct{
 			"ResourceVersion": api.Field{Name: "ResourceVersion", CLITag: api.CLIInfo{ID: "resource-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "resource-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
 			"TotalCount": api.Field{Name: "TotalCount", CLITag: api.CLIInfo{ID: "total-count", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "total-count", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_INT32"},
+		},
+	},
+	"fwlog.FwLogQuery": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwLogQuery{}) },
+		Fields: map[string]api.Field{
+			"SourceIPs": api.Field{Name: "SourceIPs", CLITag: api.CLIInfo{ID: "source-ips", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source-ips", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"DestIPs": api.Field{Name: "DestIPs", CLITag: api.CLIInfo{ID: "destination-ips", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination-ips", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"SourcePorts": api.Field{Name: "SourcePorts", CLITag: api.CLIInfo{ID: "source-ports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source-ports", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"DestPorts": api.Field{Name: "DestPorts", CLITag: api.CLIInfo{ID: "destination-ports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "destination-ports", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"Protocols": api.Field{Name: "Protocols", CLITag: api.CLIInfo{ID: "protocols", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "protocols", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Actions": api.Field{Name: "Actions", CLITag: api.CLIInfo{ID: "actions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "actions", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"ReporterIDs": api.Field{Name: "ReporterIDs", CLITag: api.CLIInfo{ID: "reporter-ids", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "reporter-ids", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"StartTime": api.Field{Name: "StartTime", CLITag: api.CLIInfo{ID: "start-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
+
+			"EndTime": api.Field{Name: "EndTime", CLITag: api.CLIInfo{ID: "end-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "end-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
+
+			"SortOrder": api.Field{Name: "SortOrder", CLITag: api.CLIInfo{ID: "sort-order", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sort-order", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"MaxResults": api.Field{Name: "MaxResults", CLITag: api.CLIInfo{ID: "max-results", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-results", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"Tenants": api.Field{Name: "Tenants", CLITag: api.CLIInfo{ID: "tenants", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenants", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

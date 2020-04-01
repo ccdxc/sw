@@ -188,7 +188,7 @@ func (a *AbstractAuthorizer) AuthorizedOperations(user *auth.User, tenant, names
 	// add non-api server kinds like events etc
 	if tenant != "" {
 		kinds := []string{auth.Permission_AuditEvent.String(),
-			auth.Permission_FwlogsQuery.String(),
+			auth.Permission_FwLog.String(),
 			auth.Permission_Event.String(),
 			auth.Permission_TokenAuth.String(),
 			auth.Permission_APIEndpoint.String()}

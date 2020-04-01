@@ -255,7 +255,7 @@ message Permission {
         // Audit events
         AuditEvent       = 4[(venice.enumValueStr) = "AuditEvent"]; // ui-hint: AuditEvent
         // Fwlogs
-        FwlogsQuery      = 5 [(venice.enumValueStr) = "FwlogsQuery"]; // ui-hint: FwlogsQuery
+        FwLog            = 5 [(venice.enumValueStr) = "FwLog"]; // ui-hint: FwLog
         // TokenAuth
         TokenAuth        = 6 [(venice.enumValueStr) = "TokenAuth"]; // ui-hint: TokenAuth
     }

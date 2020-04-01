@@ -168,7 +168,7 @@ func (p *policyChecker) PopulateEvent(event *audit.AuditEvent, populators ...Eve
 	failOp := true
 	switch event.Resource.Kind {
 	// do not log search, events, audit, metrics queries, fwlogs queries
-	case auth.Permission_Search.String(), auth.Permission_Event.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwlogsQuery.String(), auth.Permission_AuditEvent.String():
+	case auth.Permission_Search.String(), auth.Permission_Event.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwLog.String(), auth.Permission_AuditEvent.String():
 		return false, false, nil
 	case auth.Permission_TokenAuth.String():
 		event.ServiceName = globals.Cmd

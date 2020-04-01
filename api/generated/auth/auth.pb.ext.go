@@ -83,14 +83,14 @@ var Permission_ResrcKind_normal = map[string]string{
 	"APIEndpoint":  "APIEndpoint",
 	"AuditEvent":   "AuditEvent",
 	"Event":        "Event",
-	"FwlogsQuery":  "FwlogsQuery",
+	"FwLog":        "FwLog",
 	"MetricsQuery": "MetricsQuery",
 	"Search":       "Search",
 	"TokenAuth":    "TokenAuth",
 	"apiendpoint":  "APIEndpoint",
 	"auditevent":   "AuditEvent",
 	"event":        "Event",
-	"fwlogsquery":  "FwlogsQuery",
+	"fwlog":        "FwLog",
 	"metricsquery": "MetricsQuery",
 	"search":       "Search",
 	"tokenauth":    "TokenAuth",
@@ -102,7 +102,7 @@ var Permission_ResrcKind_vname = map[int32]string{
 	2: "Event",
 	3: "MetricsQuery",
 	4: "AuditEvent",
-	5: "FwlogsQuery",
+	5: "FwLog",
 	6: "TokenAuth",
 }
 
@@ -112,7 +112,7 @@ var Permission_ResrcKind_vvalue = map[string]int32{
 	"Event":        2,
 	"MetricsQuery": 3,
 	"AuditEvent":   4,
-	"FwlogsQuery":  5,
+	"FwLog":        5,
 	"TokenAuth":    6,
 }
 

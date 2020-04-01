@@ -172,7 +172,7 @@ func ValidateOperation(op *auth.Operation) (Operation, error) {
 func ValidateResource(tenant, group, kind, name string) error {
 	s := runtime.GetDefaultScheme()
 	switch kind {
-	case auth.Permission_Event.String(), auth.Permission_Search.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwlogsQuery.String(), auth.Permission_AuditEvent.String(), auth.Permission_TokenAuth.String():
+	case auth.Permission_Event.String(), auth.Permission_Search.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwLog.String(), auth.Permission_AuditEvent.String(), auth.Permission_TokenAuth.String():
 		if group != "" {
 			return fmt.Errorf("invalid API group, should be empty instead of [%q]", group)
 		}
@@ -212,7 +212,7 @@ func ValidateAction(group, kind, action string) error {
 	}
 	switch kind {
 	case string(staging.KindBuffer):
-	case auth.Permission_AuditEvent.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwlogsQuery.String(), auth.Permission_Event.String(), auth.Permission_Search.String(), auth.Permission_TokenAuth.String():
+	case auth.Permission_AuditEvent.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwLog.String(), auth.Permission_Event.String(), auth.Permission_Search.String(), auth.Permission_TokenAuth.String():
 		switch action {
 		case auth.Permission_Read.String():
 		default:

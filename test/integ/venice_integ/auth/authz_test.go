@@ -1096,14 +1096,14 @@ func TestValidatePerms(t *testing.T) {
 		},
 		{
 			name:   "all actions for fw logs",
-			perms:  []auth.Permission{login.NewPermission(adminCred.Tenant, "", auth.Permission_FwlogsQuery.String(), "", "", auth.Permission_AllActions.String())},
+			perms:  []auth.Permission{login.NewPermission(adminCred.Tenant, "", auth.Permission_FwLog.String(), "", "", auth.Permission_AllActions.String())},
 			valid:  false,
 			tenant: adminCred.Tenant,
-			errmsg: fmt.Sprintf("invalid resource kind [%q] and action [%q]", auth.Permission_FwlogsQuery.String(), auth.Permission_AllActions.String()),
+			errmsg: fmt.Sprintf("invalid resource kind [%q] and action [%q]", auth.Permission_FwLog.String(), auth.Permission_AllActions.String()),
 		},
 		{
 			name:   "read action for fw logs",
-			perms:  []auth.Permission{login.NewPermission(adminCred.Tenant, "", auth.Permission_FwlogsQuery.String(), "", "", auth.Permission_Read.String())},
+			perms:  []auth.Permission{login.NewPermission(adminCred.Tenant, "", auth.Permission_FwLog.String(), "", "", auth.Permission_Read.String())},
 			valid:  true,
 			tenant: adminCred.Tenant,
 			errmsg: "",

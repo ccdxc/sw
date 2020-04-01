@@ -72,6 +72,26 @@ func (x FwLogDirections) String() string {
 	return FwLogDirections_vname[int32(x)]
 }
 
+// SortOrder_normal is a map of normalized values for the enum
+var SortOrder_normal = map[string]string{
+	"ascending":  "ascending",
+	"descending": "descending",
+}
+
+var SortOrder_vname = map[int32]string{
+	0: "ascending",
+	1: "descending",
+}
+
+var SortOrder_vvalue = map[string]int32{
+	"ascending":  0,
+	"descending": 1,
+}
+
+func (x SortOrder) String() string {
+	return SortOrder_vname[int32(x)]
+}
+
 var _ validators.DummyVar
 var validatorMapFwlog = make(map[string]map[string][]func(string, interface{}) error)
 
@@ -127,6 +147,37 @@ func (m *FwLogList) Defaults(ver string) bool {
 			i := m.Items[k]
 			ret = i.Defaults(ver) || ret
 		}
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *FwLogQuery) Clone(into interface{}) (interface{}, error) {
+	var out *FwLogQuery
+	var ok bool
+	if into == nil {
+		out = &FwLogQuery{}
+	} else {
+		out, ok = into.(*FwLogQuery)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*FwLogQuery))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *FwLogQuery) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		for k := range m.Actions {
+			m.Actions[k] = "allow"
+		}
+		m.MaxResults = 50
+		m.SortOrder = "descending"
 	}
 	return ret
 }
@@ -196,6 +247,38 @@ func (m *FwLogList) Normalize() {
 
 }
 
+func (m *FwLogQuery) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *FwLogQuery) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapFwlog["FwLogQuery"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapFwlog["FwLogQuery"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *FwLogQuery) Normalize() {
+
+	for k, v := range m.Actions {
+		m.Actions[k] = FwLogActions_normal[strings.ToLower(v)]
+	}
+
+	m.SortOrder = SortOrder_normal[strings.ToLower(m.SortOrder)]
+
+}
+
 // Transformers
 
 func init() {
@@ -227,6 +310,97 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Direction", vals)
+		}
+		return nil
+	})
+
+	validatorMapFwlog["FwLogQuery"] = make(map[string][]func(string, interface{}) error)
+	validatorMapFwlog["FwLogQuery"]["all"] = append(validatorMapFwlog["FwLogQuery"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwLogQuery)
+
+		for k, v := range m.Actions {
+			if _, ok := FwLogActions_vvalue[v]; !ok {
+				vals := []string{}
+				for k1, _ := range FwLogActions_vvalue {
+					vals = append(vals, k1)
+				}
+				return fmt.Errorf("%v[%v] did not match allowed strings %v", path+"."+"Actions", k, vals)
+			}
+		}
+		return nil
+	})
+
+	validatorMapFwlog["FwLogQuery"]["all"] = append(validatorMapFwlog["FwLogQuery"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwLogQuery)
+		for k, v := range m.DestIPs {
+			if err := validators.IPAddr(v); err != nil {
+				return fmt.Errorf("%v[%v] failed validation: %s", path+"."+"DestIPs", k, err.Error())
+			}
+		}
+
+		return nil
+	})
+
+	validatorMapFwlog["FwLogQuery"]["all"] = append(validatorMapFwlog["FwLogQuery"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwLogQuery)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "65535")
+
+		for _, v := range m.DestPorts {
+			if err := validators.IntRange(v, args); err != nil {
+				return fmt.Errorf("%v failed validation: %s", path+"."+"DestPorts", err.Error())
+			}
+		}
+		return nil
+	})
+
+	validatorMapFwlog["FwLogQuery"]["all"] = append(validatorMapFwlog["FwLogQuery"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwLogQuery)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "8192")
+
+		if err := validators.IntRange(m.MaxResults, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"MaxResults", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapFwlog["FwLogQuery"]["all"] = append(validatorMapFwlog["FwLogQuery"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwLogQuery)
+
+		if _, ok := SortOrder_vvalue[m.SortOrder]; !ok {
+			vals := []string{}
+			for k1, _ := range SortOrder_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"SortOrder", vals)
+		}
+		return nil
+	})
+
+	validatorMapFwlog["FwLogQuery"]["all"] = append(validatorMapFwlog["FwLogQuery"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwLogQuery)
+		for k, v := range m.SourceIPs {
+			if err := validators.IPAddr(v); err != nil {
+				return fmt.Errorf("%v[%v] failed validation: %s", path+"."+"SourceIPs", k, err.Error())
+			}
+		}
+
+		return nil
+	})
+
+	validatorMapFwlog["FwLogQuery"]["all"] = append(validatorMapFwlog["FwLogQuery"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwLogQuery)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "65535")
+
+		for _, v := range m.SourcePorts {
+			if err := validators.IntRange(v, args); err != nil {
+				return fmt.Errorf("%v failed validation: %s", path+"."+"SourcePorts", err.Error())
+			}
 		}
 		return nil
 	})

@@ -23,6 +23,7 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/generated/fwlog"
 	monapi "github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/venice/globals"
@@ -237,7 +238,8 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 
 	// execute the query with required index, etc
 	result, err := fdr.elasticClient.Search(ctx,
-		fmt.Sprintf("%s.*", elastic.ExternalIndexPrefix),
+		fmt.Sprintf("%s.*,-%s", elastic.ExternalIndexPrefix,
+			strings.ToLower(fmt.Sprintf("*%s.*", elastic.GetDocType(globals.FwLogs)))), //exclude fwlogs from search
 		"", //  skip the index/doc type for search
 		query,
 		fdr.constructAggregateQuery(in),
@@ -985,6 +987,9 @@ func (fdr *Finder) startRPCServer(serverName, listenURL string) error {
 		fdr.archiveSvc = archsvc.GetService(fmt.Sprintf("%s-%s", k8s.GetNodeName(), globals.Spyglass), globals.APIServer, fdr.rsr, fdr.logger, CreateJobCb)
 	}
 	archive.RegisterService(rpcServer.GrpcServer, fdr.archiveSvc)
+
+	// Register fwlog handler
+	fwlog.RegisterFwLogV1Server(rpcServer.GrpcServer, newFwLogHandler(fdr))
 
 	rpcServer.Start()
 	fdr.rpcServer = rpcServer
