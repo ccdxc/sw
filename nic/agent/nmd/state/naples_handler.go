@@ -386,6 +386,11 @@ func (n *NMD) PostStatusToAgent() (err error) {
 					if len(n.DSCStaticRoutes) != 0 {
 						statusObj.DSCStaticRoutes = n.DSCStaticRoutes
 					}
+
+					if n.Pipeline != nil && n.Pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
+						statusObj.DSCID = n.config.Spec.ID
+					}
+
 					err := netutils.HTTPPost(agentModeChangeURL, &statusObj, &resp)
 					if err != nil {
 						log.Errorf("NetAgent failed to respond to mode change. Resp: %v | Err: %v", resp, err)
