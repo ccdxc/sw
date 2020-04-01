@@ -184,6 +184,11 @@ send_arp_probe (vnic_entry *vnic, ipv4_addr_t v4_addr)
 
     subnet_key = vnic->subnet();
     subnet = subnet_db()->find(&subnet_key);
+    if (unlikely(subnet == nullptr)) {
+        PDS_TRACE_ERR("Failed to send ARP probe to %s, subnet lookup error for "
+                      "key %s", ipv4addr2str(v4_addr), subnet_key.str());
+        return;
+    }
 
     mbuf = learn_lif_alloc_mbuf();
     if (unlikely(mbuf == nullptr)) {
@@ -231,18 +236,32 @@ send_arp_probe (ep_ip_entry *ip_entry)
 {
     pds_obj_key_t vnic_key;
     vnic_entry *vnic;
+    const ip_addr_t *ip_addr = &ip_entry->key()->ip_addr;
 
     vnic_key = api::uuid_from_objid(ip_entry->vnic_obj_id());
     vnic = vnic_db()->find(&vnic_key);
-    send_arp_probe(vnic, ip_entry->key()->ip_addr.addr.v4_addr);
+    if (unlikely(vnic == nullptr)) {
+        PDS_TRACE_ERR("Failed to send ARP probe to %s, vnic lookup error for "
+                      "key %s", ipaddr2str(ip_addr), vnic_key.str());
+        return;
+    }
+    send_arp_probe(vnic, ip_addr->addr.v4_addr);
 }
 
 static void
-fill_learn_event (event_t *event, event_id_t learn_event, vnic_entry *vnic,
-                  ep_ip_entry *ip_entry)
+fill_learn_event (event_t *event, event_id_t learn_event,
+                  pds_obj_key_t *vnic_key, ep_ip_entry *ip_entry)
 {
+    vnic_entry *vnic;
     core::learn_event_info_t *info = &event->learn;
 
+    vnic = vnic_db()->find(vnic_key);
+    if (unlikely(vnic == nullptr)) {
+        PDS_TRACE_ERR("Failed to broadcast learn event %u for VNIC %s, IP %s",
+                      learn_event, vnic_key->str(), ip_entry ?
+                      ipaddr2str(&ip_entry->key()->ip_addr) : "null");
+        return;
+    }
     event->event_id = learn_event;
     info->subnet = vnic->subnet();
     info->ifindex = api::objid_from_uuid(vnic->host_if());
@@ -260,22 +279,18 @@ void
 fill_mac_event (event_t *event, event_id_t learn_event, ep_mac_entry *mac_entry)
 {
     pds_obj_key_t vnic_key;
-    vnic_entry *vnic;
 
     vnic_key = api::uuid_from_objid(mac_entry->vnic_obj_id());
-    vnic = vnic_db()->find(&vnic_key);
-    fill_learn_event(event, learn_event, vnic, nullptr);
+    fill_learn_event(event, learn_event, &vnic_key, nullptr);
 }
 
 void
 fill_ip_event (event_t *event, event_id_t learn_event, ep_ip_entry *ip_entry)
 {
     pds_obj_key_t vnic_key;
-    vnic_entry *vnic;
 
     vnic_key = api::uuid_from_objid(ip_entry->vnic_obj_id());
-    vnic = vnic_db()->find(&vnic_key);
-    fill_learn_event(event, learn_event, vnic, ip_entry);
+    fill_learn_event(event, learn_event, &vnic_key, ip_entry);
 }
 
 }    // namespace learn

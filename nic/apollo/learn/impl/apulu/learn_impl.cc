@@ -13,11 +13,12 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/internal/pds_mapping.hpp"
-#include "nic/apollo/learn/learn_impl_base.hpp"
+#include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nacl_data.h"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
+#include "nic/apollo/learn/learn_impl_base.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
 #include "nic/apollo/packet/apulu/p4_cpu_hdr.h"
 
@@ -28,6 +29,7 @@ using namespace sdk::types;
 using api::impl::subnet_impl_db;
 using api::impl::lif_impl_db;
 using api::impl::vnic_impl;
+using api::impl::lif_impl;
 
 uint16_t
 arm_to_p4_hdr_sz (void)
@@ -134,11 +136,14 @@ extract_info_from_p4_hdr (char *pkt, learn_info_t *info)
     return SDK_RET_OK;
 }
 
-void
+sdk_ret_t
 arm_to_p4_tx_hdr_fill (char *tx_hdr, p4_tx_info_t *tx_info)
 {
     uint16_t nh_idx;
     p4_tx_cpu_hdr_t *p4_tx_hdr = (p4_tx_cpu_hdr_t *)tx_hdr;
+    vnic_entry *vnic;
+    vnic_impl *vnic_impl_obj;
+    lif_impl *lif_impl_obj;
 
     memset(p4_tx_hdr, 0, sizeof(*p4_tx_hdr));
     p4_tx_hdr->lif_sbit0_ebit7  = tx_info->slif & 0xff;
@@ -146,12 +151,19 @@ arm_to_p4_tx_hdr_fill (char *tx_hdr, p4_tx_info_t *tx_info)
 
     switch (tx_info->nh_type) {
     case LEARN_NH_TYPE_DATAPATH_MNIC:
-        nh_idx = lif_impl_db()->find(sdk::platform::LIF_TYPE_MNIC_CPU)->nh_idx();
+        lif_impl_obj = lif_impl_db()->find(sdk::platform::LIF_TYPE_MNIC_CPU);
+        if (lif_impl_obj == nullptr) {
+            return SDK_RET_ERR;
+        }
+        nh_idx = lif_impl_obj->nh_idx();
         p4_tx_hdr->nexthop_valid = 1;
         break;
     case LEARN_NH_TYPE_VNIC:
-        vnic_impl *vnic_impl_obj;
-        vnic_impl_obj = (vnic_impl *)vnic_db()->find(&tx_info->vnic_key)->impl();
+        vnic = vnic_db()->find(&tx_info->vnic_key);
+        if (vnic == nullptr) {
+            return SDK_RET_ERR;
+        }
+        vnic_impl_obj = (vnic_impl *)vnic->impl();
         nh_idx = vnic_impl_obj->nh_idx();
         p4_tx_hdr->nexthop_valid = 1;
         break;
@@ -166,6 +178,7 @@ arm_to_p4_tx_hdr_fill (char *tx_hdr, p4_tx_info_t *tx_info)
         p4_tx_hdr->nexthop_id = htons(nh_idx);
     }
     p4_tx_hdr->lif_flags = htons(p4_tx_hdr->lif_flags);
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

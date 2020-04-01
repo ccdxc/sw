@@ -82,6 +82,9 @@ ep_ip_entry::mac_entry(void) {
 
     vnic_key = api::uuid_from_objid(vnic_obj_id_);
     vnic = vnic_db()->find(&vnic_key);
+    if (unlikely(vnic == nullptr)) {
+        return nullptr;
+    }
     mac_key.subnet = vnic->subnet();
     MAC_ADDR_COPY(&mac_key.mac_addr, &vnic->mac());
     return (ep_mac_db()->find(&mac_key));

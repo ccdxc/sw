@@ -1098,8 +1098,14 @@ mapping_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
         subnet = NULL;
     } else {
         subnet = subnet_find(&mkey->subnet);
+        if (unlikely(subnet == NULL)) {
+            return SDK_RET_INVALID_ARG;
+        }
         vpc_key = subnet->vpc();
         vpc = vpc_find(&vpc_key);
+    }
+    if (vpc == NULL) {
+        return SDK_RET_INVALID_ARG;
     }
     if (mapping->is_local()) {
         ret = read_local_mapping_(vpc, subnet, minfo);

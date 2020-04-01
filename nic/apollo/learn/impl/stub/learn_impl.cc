@@ -38,10 +38,10 @@ extract_info_from_p4_hdr (char *pkt, learn_info_t *info)
     return SDK_RET_ERR;
 }
 
-void
+sdk_ret_t
 arm_to_p4_tx_hdr_fill (char *tx_hdr, p4_tx_info_t *tx_info)
 {
-    return;
+    return SDK_RET_ERR;
 }
 
 sdk_ret_t

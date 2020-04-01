@@ -342,8 +342,8 @@ add_tx_pkt_hdr (void *mbuf, learn_ctxt_t *ctxt)
 
     tx_info.slif = ctxt->pkt_ctxt.impl_info.lif;
     tx_info.nh_type = impl::LEARN_NH_TYPE_NONE;
-    impl::arm_to_p4_tx_hdr_fill(learn_lif_mbuf_data_start(mbuf), &tx_info);
-    return SDK_RET_OK;
+    return impl::arm_to_p4_tx_hdr_fill(learn_lif_mbuf_data_start(mbuf),
+                                       &tx_info);
 }
 
 static sdk_ret_t

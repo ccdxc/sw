@@ -67,8 +67,8 @@ sdk_ret_t extract_info_from_p4_hdr(char *pkt, learn_info_t *info);
 /// \brief          fill cpu to p4 tx header with information from rx header
 /// \param[in]      tx_hdr  pointer to start of p4 tx header of the packet
 /// \param[in]      tx_info pointer destination for the packet
-/// \return         None
-void arm_to_p4_tx_hdr_fill(char *tx_hdr, p4_tx_info_t *tx_info);
+/// \return         SDK_RET_OK on success, SDK_RET_ERR on failure
+sdk_ret_t arm_to_p4_tx_hdr_fill(char *tx_hdr, p4_tx_info_t *tx_info);
 
 /// \brief          lookup for the presence of a remote endpoint
 /// \param[in]      key     mapping key
