@@ -5,7 +5,7 @@
   "Messages": [
     {
       "Name": "LifMetrics",
-      "Description": "Key index - LIF ID",
+      "Description": "Key index - LIF IfIndex",
       "DisplayName": "Lif Packet Statistics",
       "Fields": [
         {
