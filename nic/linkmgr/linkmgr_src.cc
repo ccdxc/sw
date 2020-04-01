@@ -261,6 +261,8 @@ linkmgr_create_ports (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
             sdk::lib::catalog::ifindex_to_logical_port(ifindex);
 
         port_args.port_type = catalog->port_type_fp(fp_port);
+        port_args.port_speed = catalog->port_speed_fp(fp_port);
+        port_args.fec_type = catalog->port_fec_type_fp(fp_port);
         port_args.num_lanes = catalog->num_lanes_fp(fp_port);
         port_args.mac_id = catalog->mac_id(logical_port, 0);
         port_args.mac_ch = catalog->mac_ch(logical_port, 0);
@@ -280,10 +282,8 @@ linkmgr_create_ports (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
             port_args.fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
             port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
         } else {
-            port_args.port_speed = port_speed_t::PORT_SPEED_100G;
-            port_args.fec_type = port_fec_type_t::PORT_FEC_TYPE_RS;
-            port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
             port_args.auto_neg_enable = true;
+            port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
         }
 
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

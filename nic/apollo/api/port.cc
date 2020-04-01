@@ -266,20 +266,18 @@ populate_port_info (pds_ifindex_t ifindex, uint32_t phy_port,
     logical_port = port_args->port_num =
         sdk::lib::catalog::ifindex_to_logical_port(ifindex);
     port_args->port_type = g_pds_state.catalogue()->port_type_fp(phy_port);
-    if (port_args->port_type == port_type_t::PORT_TYPE_ETH) {
-        port_args->port_speed = port_speed_t::PORT_SPEED_100G;
-        port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_RS;
-    } else if (port_args->port_type == port_type_t::PORT_TYPE_MGMT) {
+    port_args->port_speed = g_pds_state.catalogue()->port_speed_fp(phy_port);
+    port_args->fec_type = g_pds_state.catalogue()->port_fec_type_fp(phy_port);
+    if (port_args->port_type == port_type_t::PORT_TYPE_MGMT) {
         port_args->port_speed = port_speed_t::PORT_SPEED_1G;
         port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
+    } else {
+        port_args->auto_neg_enable = true;
     }
     port_args->admin_state = g_pds_state.catalogue()->admin_state_fp(phy_port);
     port_args->num_lanes = g_pds_state.catalogue()->num_lanes_fp(phy_port);
     port_args->mac_id = g_pds_state.catalogue()->mac_id(logical_port, 0);
     port_args->mac_ch = g_pds_state.catalogue()->mac_ch(logical_port, 0);
-    if (port_args->port_type != port_type_t::PORT_TYPE_MGMT) {
-        port_args->auto_neg_enable = true;
-    }
     port_args->debounce_time = 0;
     port_args->mtu = 0;    /**< default will be set to max mtu */
     port_args->pause = port_pause_type_t::PORT_PAUSE_TYPE_NONE;

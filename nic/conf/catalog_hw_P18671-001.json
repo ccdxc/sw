@@ -70,9 +70,9 @@
     "num_fp_ports": "3",
     "fp_ports" :
     [
-        { "port_num" : "1", "type" : "eth",  "num_lanes" : "4", "breakout_modes" : [ "4x25G", "4x10G", "2x50G" ] },
-        { "port_num" : "2", "type" : "eth",  "num_lanes" : "4", "breakout_modes" : [ "4x25G", "4x10G", "2x50G" ] },
-        { "port_num" : "3", "type" : "mgmt", "num_lanes" : "1", "breakout_modes" : [] }
+        { "port_num" : "1", "type" : "eth",  "speed" : "25G", "num_lanes" : "1", "fec" : "fc",   "breakout_modes" : [] },
+        { "port_num" : "2", "type" : "eth",  "speed" : "25G", "num_lanes" : "1", "fec" : "fc",   "breakout_modes" : [] },
+        { "port_num" : "3", "type" : "mgmt", "speed" : "1G",  "num_lanes" : "1", "fec" : "none", "breakout_modes" : [] }
     ],
 
     "num_logical_ports" : "9",

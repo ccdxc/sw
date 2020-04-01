@@ -91,6 +91,8 @@ typedef struct catalog_fp_port_s {
     port_type_t type;             // port type
     uint32_t    num_lanes;
     port_admin_state_t admin_state;
+    port_speed_t speed;
+    port_fec_type_t fec_type;
 } catalog_fp_port_t;
 
 typedef struct catalog_asic_port_s {
@@ -278,6 +280,8 @@ public:
     uint32_t num_fp_ports(void) const { return catalog_db_.num_fp_ports; }
     port_type_t  port_type_fp(uint32_t fp_port);
     port_admin_state_t  admin_state_fp(uint32_t fp_port);
+    port_speed_t port_speed_fp(uint32_t fp_port);
+    port_fec_type_t port_fec_type_fp(uint32_t fp_port);
     uint32_t     num_lanes_fp(uint32_t fp_port);
     uint32_t     breakout_modes(uint32_t fp_port);
 

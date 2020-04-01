@@ -181,6 +181,24 @@ catalog::populate_fp_port(ptree::value_type &fp_port,
     std::string admin_state = fp_port.second.get<std::string>("admin-state", "");
     fp_port_p->admin_state = catalog_admin_st_to_port_admin_st(admin_state);
 
+    std::string speed = fp_port.second.get<std::string>("speed", "");
+
+    // default speed is 100G
+    if (speed == "") {
+        fp_port_p->speed = port_speed_t::PORT_SPEED_100G;
+    } else {
+        fp_port_p->speed = catalog_speed_to_port_speed(speed);
+    }
+
+    std::string fec = fp_port.second.get<std::string>("fec", "");
+
+    // default fec is RS
+    if (fec == "") {
+        fp_port_p->fec_type = port_fec_type_t::PORT_FEC_TYPE_RS;
+    } else {
+        fp_port_p->fec_type = catalog_fec_type_to_port_fec_type(fec);
+    }
+
     for (ptree::value_type &breakout_mode :
                             fp_port.second.get_child("breakout_modes")) {
         port_breakout_mode_t mode = parse_breakout_mode(
@@ -880,6 +898,18 @@ port_admin_state_t
 catalog::admin_state_fp (uint32_t fp_port)
 {
     return catalog_db_.fp_ports[fp_port-1].admin_state;
+}
+
+port_speed_t
+catalog::port_speed_fp (uint32_t fp_port)
+{
+    return catalog_db_.fp_ports[fp_port-1].speed;
+}
+
+port_fec_type_t
+catalog::port_fec_type_fp (uint32_t fp_port)
+{
+    return catalog_db_.fp_ports[fp_port-1].fec_type;
 }
 
 uint32_t
