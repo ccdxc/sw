@@ -110,3 +110,13 @@ func BoolToString(val bool) string {
 	}
 	return "F"
 }
+
+func AddrFamilyToStr(af pds.IPAF) string {
+	if af == pds.IPAF_IP_AF_INET {
+		return "IPv4"
+	} else if af == pds.IPAF_IP_AF_INET6 {
+		return "IPv6"
+	} else {
+		return "None"
+	}
+}

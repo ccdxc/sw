@@ -1490,6 +1490,8 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                     if (idx < (num_rules - 3)) {
                         if (policy.rule_info->af == IP_AF_IPV4) {
                             if (ingress) {
+                                rule->match.l3_match.src_match_type = IP_MATCH_PREFIX;
+                                rule->match.l3_match.dst_match_type = IP_MATCH_NONE;
                                 rule->match.l3_match.src_ip_pfx.addr.af =
                                     policy.rule_info->af;
                                 rule->match.l3_match.src_ip_pfx =
@@ -1499,6 +1501,8 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                                         ((j - 1) << 14) | ((k + 2) << 4);
                                 rule->match.l3_match.src_ip_pfx.len = 28;
                             } else {
+                                rule->match.l3_match.src_match_type = IP_MATCH_NONE;
+                                rule->match.l3_match.dst_match_type = IP_MATCH_PREFIX;
                                 rule->match.l3_match.dst_ip_pfx.addr.af =
                                     policy.rule_info->af;
                                 rule->match.l3_match.dst_ip_pfx =
@@ -1508,9 +1512,10 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                                         ((j - 1) << 14) | ((k + 2) << 4);
                                 rule->match.l3_match.dst_ip_pfx.len = 28;
                             }
-                        }
-                        else {
+                        } else {
                             if (ingress) {
+                                rule->match.l3_match.src_match_type = IP_MATCH_PREFIX;
+                                rule->match.l3_match.dst_match_type = IP_MATCH_NONE;
                                 rule->match.l3_match.src_ip_pfx.addr.af =
                                     policy.rule_info->af;
                                 rule->match.l3_match.src_ip_pfx =
@@ -1520,6 +1525,8 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                                         htonl(((j - 1) << 14) | ((k + 2) << 4));
                                 rule->match.l3_match.src_ip_pfx.len = 124;
                             } else {
+                                rule->match.l3_match.src_match_type = IP_MATCH_NONE;
+                                rule->match.l3_match.dst_match_type = IP_MATCH_PREFIX;
                                 rule->match.l3_match.dst_ip_pfx.addr.af =
                                     policy.rule_info->af;
                                 rule->match.l3_match.dst_ip_pfx = g_test_params.v6_vpc_pfx;
@@ -1549,11 +1556,15 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                         // catch-all policy for LPM routes + UDP
                         if (policy.rule_info->af == IP_AF_IPV4) {
                             if (ingress) {
+                                rule->match.l3_match.src_match_type = IP_MATCH_PREFIX;
+                                rule->match.l3_match.dst_match_type = IP_MATCH_NONE;
                                 rule->match.l3_match.src_ip_pfx.addr.af =
                                     policy.rule_info->af;
                                 rule->match.l3_match.src_ip_pfx.addr.addr.v4_addr = (0xC << 28);
                                 rule->match.l3_match.src_ip_pfx.len = 8;
                             } else {
+                                rule->match.l3_match.src_match_type = IP_MATCH_NONE;
+                                rule->match.l3_match.dst_match_type = IP_MATCH_PREFIX;
                                 rule->match.l3_match.dst_ip_pfx.addr.af =
                                     policy.rule_info->af;
                                 rule->match.l3_match.dst_ip_pfx.addr.addr.v4_addr = (0xC << 28);
@@ -1561,6 +1572,8 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                             }
                         } else {
                             if (ingress) {
+                                rule->match.l3_match.src_match_type = IP_MATCH_PREFIX;
+                                rule->match.l3_match.dst_match_type = IP_MATCH_NONE;
                                 rule->match.l3_match.src_ip_pfx.addr.af =
                                     policy.rule_info->af;
                                 rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[0] = htonl(0x20210000);
@@ -1569,6 +1582,8 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                                 rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[3] = htonl(0x00000000);
                                 rule->match.l3_match.src_ip_pfx.len = 96;
                             } else {
+                                rule->match.l3_match.src_match_type = IP_MATCH_NONE;
+                                rule->match.l3_match.dst_match_type = IP_MATCH_PREFIX;
                                 rule->match.l3_match.dst_ip_pfx.addr.af =
                                     policy.rule_info->af;
                                 rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[0] = htonl(0x20210000);
