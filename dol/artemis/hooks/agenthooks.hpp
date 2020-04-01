@@ -631,7 +631,7 @@ public:
            (ip1.addr.v6_addr.addr64[1] == ip2.addr.v6_addr.addr64[1])))
 
     void add_svc_mapping(pds_svc_mapping_spec_t *svc_spec) {
-        uint32_t vpc = test::objid_from_uuid(svc_spec->key.vpc);
+        uint32_t vpc = test::objid_from_uuid(svc_spec->skey.vpc);
         uint32_t af = svc_spec->vip.af;
         uint32_t lid;
 
@@ -640,7 +640,7 @@ public:
                 if (IPCOMP(epdb[vpc].v4_locals[lid].provider_ip, svc_spec->backend_provider_ip)) {
                     epdb[vpc].v4_locals[lid].service_ip = svc_spec->vip;
                     epdb[vpc].v4_locals[lid].service_port = svc_spec->svc_port;
-                    epdb[vpc].v4_locals[lid].lb_port = svc_spec->key.backend_port;
+                    epdb[vpc].v4_locals[lid].lb_port = svc_spec->skey.backend_port;
                     break;
                 }
             }
@@ -650,7 +650,7 @@ public:
                 if (IPCOMP(epdb[vpc].v6_locals[lid].provider_ip, svc_spec->backend_provider_ip)) {
                     epdb[vpc].v6_locals[lid].service_ip = svc_spec->vip;
                     epdb[vpc].v6_locals[lid].service_port = svc_spec->svc_port;
-                    epdb[vpc].v6_locals[lid].lb_port = svc_spec->key.backend_port;
+                    epdb[vpc].v6_locals[lid].lb_port = svc_spec->skey.backend_port;
                     break;
                 }
                 assert(lid < epdb[vpc].v6_lcount);

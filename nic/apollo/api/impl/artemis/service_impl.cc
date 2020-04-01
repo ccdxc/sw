@@ -130,12 +130,12 @@ svc_mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
     }
 
     // reserve an entry in SERVICE_MAPPING with (DIP/overlay_ip, port) as key
-    vpc = vpc_db()->find(&spec->key.vpc);
+    vpc = vpc_db()->find(&spec->skey.vpc);
     memset(&svc_mapping_key, 0, sizeof(svc_mapping_key));
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     ((vpc_impl *)vpc->impl())->hw_id(),
-                                    &spec->key.backend_ip,
-                                    (ip_addr_t *)NULL, spec->key.backend_port);
+                                    &spec->skey.backend_ip,
+                                    (ip_addr_t *)NULL, spec->skey.backend_port);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key, NULL,
                                    NULL, 0, sdk::table::handle_t::null());
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->reserve(&api_params);
@@ -183,16 +183,16 @@ svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     service_mapping_swkey_t svc_mapping_key;
 
     spec = &obj_ctxt->api_params->svc_mapping_spec;
-    dip_vpc = vpc_db()->find(&spec->key.vpc);
+    dip_vpc = vpc_db()->find(&spec->skey.vpc);
     PDS_TRACE_DEBUG("Programming svc mapping (vip %s, port %u, "
                     "provider IP %s) -> (vpc %s, dip %s, port %u)",
                     ipaddr2str(&spec->vip), spec->svc_port,
                     ipaddr2str(&spec->backend_provider_ip),
-                    spec->key.vpc.str(), ipaddr2str(&spec->key.backend_ip),
-                    spec->key.backend_port);
+                    spec->skey.vpc.str(), ipaddr2str(&spec->skey.backend_ip),
+                    spec->skey.backend_port);
 
     // add NAT entry with DIP in the data
-    PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->key.backend_ip);
+    PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->skey.backend_ip);
     ret = artemis_impl_db()->nat_tbl()->insert_atid(&nat_data, to_dip_nat_hdl_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add DIP NAT entry for mapping (vip %s,"
@@ -200,8 +200,8 @@ svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                       "err %u", ipaddr2str(&spec->vip),
                       spec->svc_port,
                       ipaddr2str(&spec->backend_provider_ip),
-                      spec->key.vpc.str(), ipaddr2str(&spec->key.backend_ip),
-                      spec->key.backend_port, ret);
+                      spec->skey.vpc.str(), ipaddr2str(&spec->skey.backend_ip),
+                      spec->skey.backend_port, ret);
         return ret;
     }
 
@@ -213,7 +213,7 @@ svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                                     spec->svc_port);
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data,
                                    to_dip_nat_hdl_,
-                                   spec->key.backend_port);
+                                   spec->skey.backend_port);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key, NULL,
                                    &svc_mapping_data,
                                    SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID,
@@ -225,8 +225,8 @@ svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                       "provider IP %s) -> (vpc %s, dip %s, port %u), err %u",
                       ipaddr2str(&spec->vip), spec->svc_port,
                       ipaddr2str(&spec->backend_provider_ip),
-                      spec->key.vpc.str(), ipaddr2str(&spec->key.backend_ip),
-                      spec->key.backend_port, ret);
+                      spec->skey.vpc.str(), ipaddr2str(&spec->skey.backend_ip),
+                      spec->skey.backend_port, ret);
         return ret;
     }
 
@@ -238,15 +238,15 @@ svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                       " port %u, provider IP %s) -> (vpc %s, dip %s, port %u), "
                       "err %u", ipaddr2str(&spec->vip), spec->svc_port,
                       ipaddr2str(&spec->backend_provider_ip),
-                      spec->key.vpc.str(), ipaddr2str(&spec->key.backend_ip),
-                      spec->key.backend_port, ret);
+                      spec->skey.vpc.str(), ipaddr2str(&spec->skey.backend_ip),
+                      spec->skey.backend_port, ret);
         return ret;
     }
     // add an entry in SERVICE_MAPPING with (DIP/overlay_ip, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     ((vpc_impl *)dip_vpc->impl())->hw_id(),
-                                    &spec->key.backend_ip,
-                                    (ip_addr_t *)NULL, spec->key.backend_port);
+                                    &spec->skey.backend_ip,
+                                    (ip_addr_t *)NULL, spec->skey.backend_port);
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data,
                                    to_vip_nat_hdl_,
                                    spec->svc_port);
@@ -258,8 +258,8 @@ svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add svc mapping (vpc %s, backend-ip %s, "
                       "port %u) --> (vip %s, port %u), err %u",
-                      spec->key.vpc.str(), ipaddr2str(&spec->key.backend_ip),
-                      spec->key.backend_port,
+                      spec->skey.vpc.str(), ipaddr2str(&spec->skey.backend_ip),
+                      spec->skey.backend_port,
                       ipaddr2str(&spec->vip), spec->svc_port, ret);
         return ret;
     }
