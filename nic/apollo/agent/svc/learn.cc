@@ -22,6 +22,11 @@ using learn::ep_mac_key_t;
 using learn::ep_ip_key_t;
 using learn::ep_state_t;
 
+typedef struct ep_ip_get_arg_s {
+    pds_obj_key_t subnet;
+    pds::LearnIPGetResponse *proto_rsp;
+} ep_ip_get_args_t;
+
 static bool
 ep_mac_walk_ip_list_cb (void *entry, void *user_data)
 {
@@ -109,6 +114,20 @@ ep_ip_entry_to_proto (void *entry, void *rsp)
     return false;
 }
 
+static bool
+ep_mac_entry_subnet_filter_walk_cb (void *entry, void *ctxt)
+{
+    ep_ip_get_args_t *args = (ep_ip_get_args_t *)ctxt;
+    ep_mac_entry *mac_entry = (ep_mac_entry *)entry;
+
+    if (mac_entry->key()->subnet != args->subnet) {
+        // skip this entry
+        return false;
+    }
+    mac_entry->walk_ip_list(ep_ip_entry_to_proto, args->proto_rsp);
+    return false;
+}
+
 static sdk_ret_t
 ep_ip_get (ep_ip_key_t *key, pds::LearnIPGetResponse *proto_rsp)
 {
@@ -119,6 +138,17 @@ ep_ip_get (ep_ip_key_t *key, pds::LearnIPGetResponse *proto_rsp)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     ep_ip_entry_to_proto(ip_entry, proto_rsp);
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
+ep_ip_get_all (pds_obj_key_t subnet, pds::LearnIPGetResponse *proto_rsp)
+{
+    ep_ip_get_args_t args;
+
+    args.subnet = subnet;
+    args.proto_rsp = proto_rsp;
+    learn_db()->ep_mac_db()->walk(ep_mac_entry_subnet_filter_walk_cb, &args);
     return SDK_RET_OK;
 }
 
@@ -184,30 +214,30 @@ LearnSvcImpl::LearnMACGet(ServerContext *context,
 
 Status
 LearnSvcImpl::LearnIPGet(ServerContext* context,
-                         const ::pds::LearnIPRequest* proto_req,
+                         const ::pds::LearnIPGetRequest* proto_req,
                          pds::LearnIPGetResponse* proto_rsp) {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
     ep_ip_key_t ip_key;
+    pds_obj_key_t subnet;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
 
-    if (proto_req->key_size() == 0) {
+    if (proto_req->filter_case() == pds::LearnIPGetRequest::kSubnetId) {
+        // filter based on subnet IDs
+        pds_obj_key_proto_to_api_spec(&subnet, proto_req->subnetid());
+        ret = ep_ip_get_all(subnet, proto_rsp);
+    } else if (proto_req->filter_case() == pds::LearnIPGetRequest::kKey) {
+        // filter based on IPKey
+        pds_learn_ipkey_proto_to_api(&ip_key, proto_req->key());
+        ret = ep_ip_get(&ip_key, proto_rsp);
+    } else {
         // return all IPs learnt
         ret = ep_ip_get_all(proto_rsp);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    } else {
-        for (int i = 0; i < proto_req->key_size(); i++) {
-            pds_learn_ipkey_proto_to_api(&ip_key, proto_req->key(i));
-            ret = ep_ip_get(&ip_key, proto_rsp);
-            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-            if (ret != SDK_RET_OK) {
-                break;
-            }
-        }
     }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }
 

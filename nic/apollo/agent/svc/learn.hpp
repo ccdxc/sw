@@ -27,7 +27,7 @@ public:
                        const pds::LearnMACRequest *request,
                        pds::LearnMACGetResponse *proto_rsp) override;
     Status LearnIPGet(ServerContext* context,
-                      const pds::LearnIPRequest* request,
+                      const pds::LearnIPGetRequest* request,
                       pds::LearnIPGetResponse* proto_rsp) override;
     Status LearnStatsGet(ServerContext* context,
                          const types::Empty* request,

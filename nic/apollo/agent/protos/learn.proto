@@ -13,7 +13,7 @@ import "types.proto";
 
 service LearnSvc {
   rpc LearnMACGet (LearnMACRequest) returns (LearnMACGetResponse) {}
-  rpc LearnIPGet (LearnIPRequest) returns (LearnIPGetResponse) {}
+  rpc LearnIPGet (LearnIPGetRequest) returns (LearnIPGetResponse) {}
   rpc LearnStatsGet (types.Empty) returns (LearnStatsGetResponse) {}
   rpc LearnMACClear (LearnMACRequest) returns (LearnClearResponse) {}
   rpc LearnIPClear (LearnIPRequest) returns (LearnClearResponse) {}
@@ -85,6 +85,13 @@ message LearnMACRequest {
 
 message LearnIPRequest {
   repeated LearnIPKey Key = 1;
+}
+
+message LearnIPGetRequest {
+  oneof filter {
+    LearnIPKey Key      = 1;
+    bytes      SubnetId = 2;
+  }
 }
 
 message LearnMACGetResponse {

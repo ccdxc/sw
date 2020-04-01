@@ -87,6 +87,7 @@ func init() {
 	learnShowCmd.AddCommand(learnIPShowCmd)
 	learnIPShowCmd.Flags().StringVar(&vpcId, "vpc", "0", "Specify VPC ID")
 	learnIPShowCmd.Flags().StringVar(&epIP, "ip", "0", "Specify IP address")
+	learnIPShowCmd.Flags().StringVar(&subnetId, "subnet", "0", "Specify Subnet ID")
 	learnIPShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	learnShowCmd.AddCommand(learnStatsShowCmd)
 	learnStatsShowCmd.Flags().Bool("yaml", false, "Output in yaml")
@@ -181,27 +182,36 @@ func learnIPShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	if cmd != nil && ((cmd.Flags().Changed("vpc") || cmd.Flags().Changed("ip")) && cmd.Flags().Changed("subnet")) {
+		fmt.Printf("Cannot specify both [VPC ID/IP address] and Subnet ID as filters\n")
+		return
+	}
 	if cmd != nil && (cmd.Flags().Changed("vpc") != cmd.Flags().Changed("ip")) {
 		fmt.Printf("Cannot specify only one of VPC ID and endpoint IP address\n")
 		return
 	}
 
-	var req *pds.LearnIPRequest
+	var req *pds.LearnIPGetRequest
 	if cmd != nil && cmd.Flags().Changed("ip") && cmd.Flags().Changed("vpc") {
-		// Get specific entry
-		req = &pds.LearnIPRequest{
-			Key: []*pds.LearnIPKey{
-				&pds.LearnIPKey{
+		// Get entry by VPC/IP key
+		req = &pds.LearnIPGetRequest{
+			Filter: &pds.LearnIPGetRequest_Key{
+				Key: &pds.LearnIPKey{
 					VPCId:  uuid.FromStringOrNil(vpcId).Bytes(),
 					IPAddr: utils.IPAddrStrToPDSIPAddr(epIP),
 				},
 			},
 		}
+	} else if cmd != nil && cmd.Flags().Changed("subnet") {
+		// Get entries belonging to subnet
+		req = &pds.LearnIPGetRequest{
+			Filter: &pds.LearnIPGetRequest_SubnetId{
+				SubnetId: uuid.FromStringOrNil(subnetId).Bytes(),
+			},
+		}
 	} else {
 		// Get all entries
-		req = &pds.LearnIPRequest{
-			Key: []*pds.LearnIPKey{},
-		}
+		req = &pds.LearnIPGetRequest{}
 	}
 
 	client := pds.NewLearnSvcClient(c)
