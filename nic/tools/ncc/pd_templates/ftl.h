@@ -605,10 +605,6 @@ struct __attribute__((__packed__)) ${struct_full_name} {
 //::                else:
 struct __attribute__((__packed__)) ${struct_full_name} : base_table_entry_t {
 //::                #endif
-//::                if gen_actionid == True:
-//::                #TODO use define for actionid type
-    uint8_t actionid : P4PD_ACTIONPC_BITS;
-//::                #endif
 //::                for data_field in reversed(data_fields_list):
 //::                    # TODO remove once key is expanded for Apollo
 //::                    if data_field.name() == '__pad_key_bits':
@@ -625,6 +621,10 @@ struct __attribute__((__packed__)) ${struct_full_name} : base_table_entry_t {
 //::                        #endfor
 //::                    #endif
 //::                #endfor
+//::                if gen_actionid == True:
+//::                #TODO use define for actionid type
+    uint8_t actionid : P4PD_ACTIONPC_BITS;
+//::                #endif
 
 #ifdef __cplusplus
 
