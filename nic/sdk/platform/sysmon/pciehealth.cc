@@ -50,10 +50,28 @@
 #define SEC_TO_USEC(s)          (((uint64_t)(s)) * 1000000)
 #define MIN_TO_USEC(m)          SEC_TO_USEC((m) * 60)
 
+//
+// LOG_DELAY_MIN_US - Minimum time to wait after first log event of a series.
+// LOG_DELAY_MAX_US - Maximum time to wait for next log event of a series.
+// LOG_DELAY_RST_US - Quiet period between log events to trigger delay reset.
+//
 #define LOG_DELAY_MIN_US        MIN_TO_USEC(1)
 #define LOG_DELAY_MAX_US        MIN_TO_USEC(60)
 #define LOG_DELAY_RST_US        MIN_TO_USEC(60)
+//
+// LINK_UP_TIMEOUT - Time to wait after mac comes out of reset for the link to
+//     come up.  If the link doesn't come up in this time trigger a log event.
+// HOST_UP_CHECKTM - Time after "host up" (bios scan) to wait before checking
+//     settings controlled by OS (exttags, maxpayload, maxreadreq).  Some AMD
+//     systems BIOS's set conservative maxpayload, then the OS later sets
+//     better performance settings.
+// LTSSMST_THRESHOLD - Number of ltssm_state_changed interrupts we need
+//     in this session before we consider this a log event.  We sometimes
+//     see ltssm_state_changed interrupts at startup as the link negotiation
+//     happens and the link settles.  Sometimes see 22 of these.
+//
 #define LINK_UP_TIMEOUT         MIN_TO_USEC(5)
+#define HOST_UP_CHECKTM         MIN_TO_USEC(5)
 #define LTSSMST_THRESHOLD       25
 
 typedef struct pcie_health_info_s {
@@ -70,6 +88,7 @@ typedef struct pcie_health_info_s {
     int cur_gen;                // current speed
     int cur_width;              // current width
     int linkuptmo;              // link up timeout
+    int host_checks;            // enable host-side cfg checks
     uint64_t tstamp;            // time this was gathered
 } pcie_health_info_t;
 
@@ -79,6 +98,7 @@ typedef struct pcie_health_state_s {
     pcie_health_info_t hilog;   // last event logged
     uint32_t macupgen;          // mac up generation
     uint64_t macuptm;           // mac came up out of reset
+    uint64_t hostuptm;          // host came up (bios scan started)
     uint64_t logdelay;          // delay to next time to log
     uint64_t intr_ltssmst;      // intr_ltssmst snapshot
     char reason[80];            // reason for current event
@@ -138,9 +158,10 @@ gather_health_info(const int port)
 {
     pcie_health_state_t *hs = &health_state[port];
     pcie_health_info_t *nhi = &hs->hinew;
+    uint64_t now = get_timestamp();
 
     memset(nhi, 0, sizeof(*nhi));
-    nhi->tstamp = get_timestamp();
+    nhi->tstamp = now;
     pcieport_t *p = pcieport_get(port);
     if (p) {
         nhi->portst = p->state;
@@ -148,13 +169,23 @@ gather_health_info(const int port)
             p->macup == hs->macupgen) {
             // save (first) mac up time, so we can check linkup timeout
             if (!hs->macuptm) {
-                hs->macuptm = nhi->tstamp;
+                hs->macuptm = now;
                 hs->intr_ltssmst = p->stats.intr_ltssmst;
                 pciesys_loginfo("gather: new mac up time, "
                                 "ltssmst %" PRIu64 "\n", hs->intr_ltssmst);
             }
+            // save host up time, enable host checks
+            if (p->state >= PCIEPORTST_UP) {
+                if (!hs->hostuptm) {
+                    hs->hostuptm = now;
+                    pciesys_loginfo("gather: new host up time\n");
+                }
+                if (now - hs->hostuptm > HOST_UP_CHECKTM) {
+                    nhi->host_checks = 1;
+                }
+            }
             if (p->state < PCIEPORTST_UP &&
-                nhi->tstamp - hs->macuptm > LINK_UP_TIMEOUT) {
+                now - hs->macuptm > LINK_UP_TIMEOUT) {
                 nhi->linkuptmo = 1; // waited long enough for link up
             }
         } else {
@@ -162,6 +193,7 @@ gather_health_info(const int port)
             if (hs->macuptm) {
                 pciesys_loginfo("gather: reset mac up time\n");
                 hs->macuptm = 0;
+                hs->hostuptm = 0;
             }
             hs->macupgen = p->macup;
         }
@@ -255,7 +287,7 @@ process_health_info(const int port)
     }
     // perf: check devctl ExtTag, MaxPayload, MaxReadReq
     // for best results, we want full hw capability selected
-    if (nhi->portst >= PCIEPORTST_UP &&
+    if (nhi->host_checks &&
         nhi->devctl != lhi->devctl) {
         const int enc_to_sz[8] = { 128, 256, 512, 1024, 2048, 4096, -6, -7 };
 
