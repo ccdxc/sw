@@ -199,6 +199,7 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     for (uint8_t i = 0; i < num_dhcp_policy_; i++) {
         dhcp_policy_[i] = spec->dhcp_policy[i];
     }
+    v4_prefix_ = spec->v4_prefix;
     v4_vr_ip_ = spec->v4_vr_ip;
     v6_vr_ip_ = spec->v6_vr_ip;
     memcpy(&vr_mac_, &spec->vr_mac, sizeof(mac_addr_t));

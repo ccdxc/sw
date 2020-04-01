@@ -477,8 +477,13 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, pds_mapping_spec_t *spe
     subnet_entry *subnet;
     pds_obj_key_t dhcp_policy_key; 
     dhcp_policy *policy;
-    int index = 0;
-    int statements_len = 600;
+    uint32_t ip = 0;
+    uint32_t index = 0;
+    uint32_t statements_len = 600;
+    uint32_t buf_len = 0;
+    unsigned char *bytes = NULL;
+    ipv4_prefix_t v4_prefix = {0};
+    ipv4_addr_t v4_mask = {0};
 
     if (spec->skey.ip_addr.af != IP_AF_IPV4) {
         // No V6 support for now
@@ -551,40 +556,54 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, pds_mapping_spec_t *spe
             return SDK_RET_OOM;
         }
 
+        // subnet-mask
+        v4_prefix = subnet->v4_prefix();
+        v4_mask = ipv4_prefix_len_to_mask(v4_prefix.len);
+        bytes = (unsigned char *)&v4_mask;
+        buf_len = statements_len - index;
+
+        index += snprintf((char *)(statements->value + index), buf_len,
+                          "option subnet-mask %u.%u.%u.%u;",
+                          (uint32_t)bytes[3], (uint32_t)bytes[2], 
+                          (uint32_t)bytes[1], (uint32_t)bytes[0]);
+ 
         // gateway ip
         if (policy->gateway_ip().addr.v4_addr) {
-            uint32_t ip = policy->gateway_ip().addr.v4_addr;
-            char *bytes = (char *)&ip;
-            int buf_len = statements_len - index;
+            ip = policy->gateway_ip().addr.v4_addr;
+            bytes = (unsigned char *)&ip;
+            buf_len = statements_len - index;
 
             index += snprintf((char *)(statements->value + index), buf_len,
-                              "option routers=%d:%d:%d:%d; ",
-                              bytes[0], bytes[1], bytes[2], bytes[3]);
+                              "option routers=%u:%u:%u:%u; ",
+                              (uint32_t)bytes[3], (uint32_t)bytes[2],
+                              (uint32_t)bytes[1], (uint32_t)bytes[0]);
         }
 
         // DNS server
         if (policy->dns_server_ip().addr.v4_addr) {
-            uint32_t ip = policy->dns_server_ip().addr.v4_addr;
-            char *bytes = (char *)&ip;
-            int buf_len = statements_len - index;
+            ip = policy->dns_server_ip().addr.v4_addr;
+            bytes = (unsigned char *)&ip;
+            buf_len = statements_len - index;
             index += snprintf((char *)(statements->value + index), buf_len,
-                              "option domain-name-servers=%d:%d:%d:%d; ",
-                              bytes[0], bytes[1], bytes[2], bytes[3]);
+                              "option domain-name-servers=%u:%u:%u:%u; ",
+                              (uint32_t)bytes[3], (uint32_t)bytes[2],
+                              (uint32_t)bytes[1], (uint32_t)bytes[0]);
         }
-        
+
         // NTP server
         if (policy->ntp_server_ip().addr.v4_addr) {
-            uint32_t ip = policy->ntp_server_ip().addr.v4_addr;
-            char *bytes = (char *)&ip;
-            int buf_len = statements_len - index;
+            ip = policy->ntp_server_ip().addr.v4_addr;
+            bytes = (unsigned char *)&ip;
+            buf_len = statements_len - index;
             index += snprintf((char *)(statements->value + index), buf_len,
-                              "option ntp-servers=%d:%d:%d:%d; ",
-                              bytes[0], bytes[1], bytes[2], bytes[3]);
+                              "option ntp-servers=%u:%u:%u:%u; ",
+                              (uint32_t)bytes[3], (uint32_t)bytes[2],
+                              (uint32_t)bytes[1], (uint32_t)bytes[0]);
         }
 
         // domain name
         if(strlen(policy->domain_name())) {
-            int buf_len = statements_len - index;
+            buf_len = statements_len - index;
             index += snprintf((char *)(statements->value + index), buf_len,
                               "option domain-name=%s; ", policy->domain_name());
         }
@@ -593,7 +612,7 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, pds_mapping_spec_t *spe
         if (policy->mtu()) {
             char mtu[11];
             snprintf(mtu, sizeof(mtu), "%u", policy->mtu());
-            int buf_len = statements_len - index;
+            buf_len = statements_len - index;
             index += snprintf((char *)(statements->value + index), buf_len,
                               "option interface-mtu=%s; ", mtu);
         }
