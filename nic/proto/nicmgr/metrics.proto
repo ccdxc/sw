@@ -9,12 +9,12 @@ message LifMetrics {
     option (delphi.datapath_metrics) = true;
     option (venice.metricInfo) = {
         DisplayName: "Lif Packet Statistics",
-        Description: "Key index - LIF ID",
+        Description: "Key index - LIF IfIndex",
         Scope: PerLIF,
         Tags: [ Level4 ]
     };
 
-    fixed64        Key                              = 1; // Lif id
+    fixed64        Key                              = 1; // Lif ifidx
 
     delphi.Counter rx_unicast_bytes                 = 2 [(venice.metricsField) = {DisplayName: "Rx Unicast Bytes" Description: "Rx Unicast Bytes"}];        // Unicast bytes received at LIF
     delphi.Counter rx_unicast_packets               = 3 [(venice.metricsField) = {DisplayName: "Rx Unicast Packets" Description: "Rx Unicast Packets"}];    // Unicast packets received at LIF

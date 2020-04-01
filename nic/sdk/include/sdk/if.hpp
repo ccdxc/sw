@@ -59,7 +59,7 @@ enum {
 #define UPLINK_PC_IFINDEX(pc_id_)  ((IF_TYPE_UPLINK_PC << IF_TYPE_SHIFT) | \
                                     (pc_id_))
 #define L3_IFINDEX(if_id_)         ((IF_TYPE_L3 << IF_TYPE_SHIFT) | (if_id_))
-#define LIF_IFINDEX(if_id_)        ((IF_TYPE_LIF << IF_TYPE_SHIFT) | (if_id_))
+#define LIF_IFINDEX(if_id_)        ((uint32_t)(IF_TYPE_LIF << IF_TYPE_SHIFT) | (if_id_))
 #define LOOPBACK_IFINDEX(if_id_)   ((IF_TYPE_LOOPBACK << IF_TYPE_SHIFT) | (if_id_))
 #define CONTROL_IFINDEX(if_id_)    ((IF_TYPE_CONTROL << IF_TYPE_SHIFT) | (if_id_))
 

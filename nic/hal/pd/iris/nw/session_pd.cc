@@ -496,7 +496,7 @@ p4pd_add_upd_flow_info_table_entry (pd_session_create_args_t *args, pd_flow_t *f
 
                         sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(mem_addr, &vaddr);
                         SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
-                        bzero(&vaddr, 32); 
+                        bzero((void *)vaddr, 32); 
                     }
                     idx++;
                 }
@@ -516,7 +516,7 @@ p4pd_add_upd_flow_info_table_entry (pd_session_create_args_t *args, pd_flow_t *f
 
                         sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(mem_addr, &vaddr);
                         SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
-                        bzero(&vaddr, 32);
+                        bzero((void *)vaddr, 32);
                     }
                     idx++;
                 }  
@@ -601,6 +601,8 @@ p4pd_add_upd_flow_info_table_entry (pd_session_create_args_t *args, pd_flow_t *f
            return ret;
        }
     } else {
+       HAL_TRACE_DEBUG("Writing flow info start timestamp {} to flow index {} action id {}", 
+                       d.action_u.flow_info_flow_info.start_timestamp, flow_pd->assoc_hw_id, d.action_id);
        params.handle.pindex(flow_pd->assoc_hw_id);
        params.actiondata = &d;
        // insert the entry
