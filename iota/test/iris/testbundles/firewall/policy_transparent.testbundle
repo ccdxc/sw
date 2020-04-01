@@ -9,21 +9,21 @@ testcases:
         testcase: testcases.security.firewall_session_limit
         iterators:
             type : nested
-            kind : ["local", "remote"]
+            kind : ["remote"]
             proto : ["udp", "tcp", "icmp"]
 
     -   name    : SessionLimitWithOtherTraffic
         testcase: testcases.security.firewall_allow_other_session_limit
         iterators:
             type : nested
-            kind : ["local", "remote"]
+            kind : ["remote"]
             proto : ["udp", "tcp", "icmp"]
 
     -   name    : PolicyLocalToRemote
         testcase: testcases.security.policy_rules_auto
         iterators :
             type  : nested
-            kind  : ["local", "remote"]
+            kind  : [ "remote" ] 
             proto : ['tcp', 'udp']
             scale : [100, 100]
 

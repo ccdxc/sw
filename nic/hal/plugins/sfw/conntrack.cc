@@ -103,16 +103,14 @@ net_conntrack_configured(fte::ctx_t &ctx)
         return ctx.sess_spec()->conn_track_en();
     }
 
-    if (ctx.key().proto != types::IPPROTO_TCP || 
-        (hal::g_hal_state->is_policy_enforced() == false)) {
+    if ((ctx.key().proto != types::IPPROTO_TCP) || 
+        (!hal::g_hal_state->is_policy_enforced())) {
         return false;
     }
 
     // lookup Security profile
-    hal::nwsec_profile_t  *nwsec_prof =
-        find_nwsec_profile_by_handle(hal::g_hal_state->customer_default_security_profile_hdl());
-    if (nwsec_prof != NULL) {
-        return nwsec_prof->cnxn_tracking_en;
+    if (ctx.nwsec_profile() != NULL) {
+        return ctx.nwsec_profile()->cnxn_tracking_en;
     }
     return false;
 }
@@ -224,7 +222,7 @@ process_tcp_syn(fte::ctx_t& ctx)
             // pipeline itself during normalization logic.
             // But in case of vMotion, for migration scenarios from a non-pensando device to
             // a pensando device, reception of non-syn packet is a valid one. Those flows will
-            // be crated with 'Connection Tracking' disabled. Return false here, to continue
+            // be created with 'Connection Tracking' disabled. Return false here, to continue
             // the pipeline instead of enabling connection tracking. 
             return false;
         }

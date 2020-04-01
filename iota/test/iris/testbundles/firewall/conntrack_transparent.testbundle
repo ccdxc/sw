@@ -1,0 +1,312 @@
+meta:
+    name    : conntrack
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    os      : [ linux, esx ]
+    targetcount : 94
+
+testcases:
+    -   name    : TDL_NZ_LOW
+        testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_NZ_LOW_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+        
+    -   name    : TDL_NZ_LOW_INSIDE_NOT_ALIGN
+        testcase: testcases.security.conntrack.tcp_conntrack_in_window_not_left_aligned
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+        
+    -   name    : TDL_NZ_LOW_ON_BORDER
+        testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_border
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+        
+    -   name    : TDL_NZ_LOW_OVLP
+        testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_ovlp
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+    
+    #ignoring below testcases as we need to reduce tcp close timeout
+    -   name    : TDL_NZ_ROW_OVLP
+        testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_NZ_ROW
+        testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+    #Data is trimmed and passed packet goes through need to debug if no data becomes aligned. 
+    -   name    : TDL_Z_ROW_OVLP_RST
+        testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap_rst
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    #out of window exception set without data
+    -   name    : TDL_NZ_ROW_RST
+        testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_rst
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+    
+    -   name    : TDL_NZ_LOW_INSIDE_NOT_ALIGN_RST
+        testcase: testcases.security.conntrack.tcp_conntrack_in_window_not_left_aligned_rst
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_NZ_ROW_FIN
+        testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_fin
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_NZ_ROW_OVLP_FIN
+        testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap_fin
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_NZ_LOW_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_NZ_LOW_INSIDE_NOT_ALIGN_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_in_window_not_left_aligned
+        ignore:   False
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_NZ_LOW_ON_BORDER_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_border
+        ignore:   False
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_NZ_LOW_OVLP_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_left_of_wndw_ovlp
+        ignore:   False
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+    
+    #ignoring below testcases as we need to reduce tcp close timeout
+    -   name    : TDL_NZ_ROW_OVLP_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap
+        ignore:   True
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+        
+    -   name    : TDL_NZ_ROW_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw
+        ignore:   False
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    #Data is trimmed and passed packet goes through need to debug 
+    -   name    : TDL_Z_ROW_OVLP_RST_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap_rst
+        ignore:   False
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+    #out of window exception
+    -   name    : TDL_NZ_ROW_RST_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_rst
+        ignore:   False
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_NZ_LOW_INSIDE_NOT_ALIGN_RST_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_in_window_not_left_aligned_rst
+        ignore:   False
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_NZ_ROW_FIN_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_fin
+        ignore:   False
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_NZ_ROW_OVLP_FIN_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_right_of_wndw_overlap_fin
+        ignore:   True
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_DATA_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_data
+        ignore:   False
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_DATA_CLOSE_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_data_close
+        ignore:   False
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_SYN_FLAG_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_synflag
+        ignore:   False
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_SYN_CLOSE_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_syn_close
+        ignore:   False
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_TERM_RESP
+        testcase: testcases.security.conntrack.tcp_conntrack_term
+        ignore:   False
+        args    :
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    # done / done resp
+    -   name    : TDL_DATA
+        testcase: testcases.security.conntrack.tcp_conntrack_data
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+    
+    # tcpunexpectedpkt = True
+    -   name    : TDL_DATA_CLOSE
+        testcase: testcases.security.conntrack.tcp_conntrack_data_close
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    # 
+    -   name    : TDL_SYN_FLAG
+        testcase: testcases.security.conntrack.tcp_conntrack_synflag
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    # tcpunexpectedpkt = True
+    -   name    : TDL_SYN_CLOSE
+        testcase: testcases.security.conntrack.tcp_conntrack_syn_close
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : TDL_TERM
+        testcase: testcases.security.conntrack.tcp_conntrack_term
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    -   name    : CONN_3WAY
+        testcase: testcases.security.conntrack.tcp_conntrack_connection_est
+        ignore:   False
+        iterators:
+            type : simple
+            kind : ["remote"]
+    # trim the mss - default behaviour
+    -   name    : CONN_MSS
+        testcase: testcases.security.conntrack.tcp_conntrack_connection_mss
+        ignore:   False
+        args: 
+            resp_flow: True
+        iterators:
+            type : simple
+            kind : ["remote"]
+
+    - name      : CONN_TS_RESP
+      testcase: testcases.security.conntrack.tcp_conntrack_connection_ts
+      ignore:   False
+      args: 
+            resp_flow: True
+      iterators:
+            type : simple
+            kind : ["remote"]
+
+    - name      : CONN_TS
+      testcase: testcases.security.conntrack.tcp_conntrack_connection_ts
+      ignore:   False
+      iterators:
+            type : simple
+            kind : ["remote"]
+        
+        
+
+

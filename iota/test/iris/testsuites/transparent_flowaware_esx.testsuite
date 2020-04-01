@@ -48,7 +48,12 @@ testbundles:
         - networking/connectivity.testbundle
         - networking/telemetry.testbundle
         - networking/cps_transparent_flowaware.testbundle
-        - transition/trans_flow_to_insert_enf.testbundle
+        - transition/trans_flow_to_trans_enf.testbundle
+        - networking/connectivity.testbundle
+        - firewall/policy.testbundle
+        - firewall/conntrack.testbundle
+        - firewall/normalization.testbundle
+        - transition/trans_enf_to_insert_enf.testbundle
         - networking/connectivity.testbundle
         #- networking/telemetry.testbundle
 
@@ -56,9 +61,14 @@ testbundles:
         # Relative paths from iota/test/iris/testbundles/
         - networking/connectivity.testbundle
         - networking/telemetry.testbundle
-        - transition/trans_flow_to_insert_enf.testbundle
+        - networking/cps_transparent_flowaware.testbundle
+        - transition/trans_flow_to_trans_enf.testbundle
         - networking/connectivity.testbundle
-        - networking/telemetry.testbundle
+        - firewall/policy_transparent.testbundle
+        - firewall/conntrack_transparent.testbundle
+        - firewall/normalization.testbundle 
+        - transition/trans_enf_to_insert_enf.testbundle
+        - networking/connectivity.testbundle
 
     regression:
         # Relative paths from iota/test/iris/testbundles/

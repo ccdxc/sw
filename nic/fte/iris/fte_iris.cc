@@ -1196,7 +1196,8 @@ ctx_t::apply_session_limit(void)
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Security profile handle: {}", hal::g_hal_state->customer_default_security_profile_hdl());
+    HAL_TRACE_DEBUG("Security profile handle: {}", 
+                     hal::g_hal_state->customer_default_security_profile_hdl());
     // check for flood protection limits
     switch (key_.flow_type) {
     case hal::FLOW_TYPE_V4: //intentional fall-through

@@ -1,0 +1,8 @@
+meta:
+    name    : trans_enf_to_insert_enf
+    os      : [ esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+
+testcases:
+    -   name    : trans_enf_to_insert_enf
+        testcase: testcases.transition.trans_enf_to_insert_enf

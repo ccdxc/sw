@@ -525,7 +525,7 @@ session_aging_timeout (session_t *session,
     } else {
         // Get the default security profile
         nwsec_prof = find_nwsec_profile_by_handle(
-                        g_hal_state->oper_db()->default_security_profile_hdl());
+                        g_hal_state->oper_db()->customer_default_security_profile_hdl());
     }
 
     if (nwsec_prof != NULL) {

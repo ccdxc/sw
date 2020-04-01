@@ -805,7 +805,9 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
                 hal::g_hal_state->policy_mode(), sys::POLICY_MODE_BASE_NET)) {
 
         if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
-                    spec->policy_mode(), sys::POLICY_MODE_FLOW_AWARE)) {
+                    spec->policy_mode(), sys::POLICY_MODE_FLOW_AWARE) ||
+            IS_MODE(spec->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
+                    spec->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
              // 1. Change l4 profile to enable policy_enf_cfg_en to pull packets to FTE
             ret = hal::plugins::sfw::
                 sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT,true);
@@ -813,20 +815,6 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
             // 2. Set FTE to stop Quiescing
             fte::fte_set_quiesce(0 /* FTE ID */, false);
 
-            hal::g_hal_state->set_policy_mode(spec->policy_mode());
-        }
-
-        if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
-                    spec->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
-            /*
-             * Base-Net, Enforce
-             * 1. Change l4 profile to enable policy_enf_cfg_en to pull packets to FTE
-             */
-            ret = hal::plugins::sfw::
-                sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT,true);
- 
-            // 2. Set FTE to stop Quiescing
-            fte::fte_set_quiesce(0 /* FTE ID */, false);
             hal::g_hal_state->set_policy_mode(spec->policy_mode());
         }
 
@@ -895,6 +883,11 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
         }
 
         // => (Microseg, Enforce)
+        if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
+                    spec->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
+            hal::g_hal_state->set_policy_mode(spec->policy_mode());
+        }
+  
         if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_MICROSEG,
                     spec->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
 
@@ -931,6 +924,75 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
             fte::fte_set_quiesce(0 /* FTE ID */, false);
         }
     }
+
+    // (Transparent, Enforce) => ...
+    if (IS_MODE(hal::g_hal_state->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
+                hal::g_hal_state->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
+
+        if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_MICROSEG,
+                    spec->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
+
+            // 1. Make host traffic management
+            ret = hal::plugins::sfw::
+                sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT, false);
+
+            // 2. Cleanup config from nicmgr.
+            hal::svc::micro_seg_mode_notify(sys::MICRO_SEG_ENABLE);
+
+            // 3. Remove host enics from mseg prom list
+            ret = enicif_update_host_prom(false);
+
+            // 4. Mark Quiesce on in FTE
+            fte::fte_set_quiesce(0 /* FTE ID */, true);
+
+            // 5. Clear sessions
+            hal::session_delete_all();
+
+            // 6. Change mode
+            hal::g_hal_state->set_fwd_mode(spec->fwd_mode());
+            hal::g_hal_state->set_policy_mode(spec->policy_mode());
+
+            // 7. Add host enics to mgmt prom list
+            ret = enicif_update_host_prom(true);
+
+            // 8. Install ACLs for micro seg mode.
+            ret = hal_acl_micro_seg_init();
+
+            // 9. vMotion Init
+            ret = vmotion_init(stoi(hal::g_hal_cfg.vmotion_port));
+
+            // 10. Mark Quiesce off in FTE
+            fte::fte_set_quiesce(0 /* FTE ID */, false);
+        }
+    } 
+
+#if 0
+    // Check for change of fwd mode
+    if (hal::g_hal_state->fwd_mode() != spec->fwd_mode()) {
+        HAL_TRACE_DEBUG("Fwd mode change {} -> {}",
+                        hal::g_hal_state->fwd_mode(), spec->fwd_mode());
+        if (spec->fwd_mode() == sys::FWD_MODE_MICROSEG) {
+            /*
+             * Fwd Mode: Transparent -> Micro-Seg
+             */
+            // 1. Cleanup config from nicmgr.
+            hal::svc::micro_seg_mode_notify((spec->fwd_mode() == sys::FWD_MODE_MICROSEG) ?
+                                            sys::MICRO_SEG_ENABLE:sys::MICRO_SEG_DISABLE);
+
+            // 2. Remove host enics from mseg prom list
+            ret = enicif_update_host_prom(false);
+
+            // 3. Set up mode in hal state
+            hal::g_hal_state->set_fwd_mode(spec->fwd_mode());
+
+            // 4. Add host enics to mgmt prom list
+            ret = enicif_update_host_prom(true);
+
+            // 5. Install ACLs for micro seg mode.
+            ret = hal_acl_micro_seg_init();
+        }
+    }
+#endif
 
 end:
     rsp->set_api_status(types::API_STATUS_OK);

@@ -76,9 +76,17 @@ def addPktFltrRuleOnEp(tc, enable=True):
 
     return False if result else True
 
-def setupWorkloadDict(tc):
-    workload_pairs = api.GetRemoteWorkloadPairs()
-    workload_pairs.extend(api.GetLocalWorkloadPairs())
+def setupWorkloadDict(tc, kind=None):
+    workload_pairs = []
+    if kind != None:
+        if kind == 'remote':
+            workload_pairs = api.GetRemoteWorkloadPairs()
+        elif kind == 'local':
+            workload_pairs.extend(api.GetLocalWorkloadPairs())
+    else:
+        workload_pairs = api.GetRemoteWorkloadPairs()
+        workload_pairs.extend(api.GetLocalWorkloadPairs())
+
     naples_node_name_list = api.GetNaplesHostnames()
     w_list = []
 
@@ -102,7 +110,7 @@ def setupWorkloadDict(tc):
         api.Logger.info("%s => %s"%(w1.workload_name, ",".join(l)))
 
 def Setup(tc):
-    setupWorkloadDict(tc)
+    setupWorkloadDict(tc, tc.iterators.kind)
 
     if getattr(tc.args, 'vmotion_enable', False):
         wllist = []
@@ -135,8 +143,6 @@ def Trigger(tc):
 
     try:
         for policy_json in policies:
-            if "REJECT" in policy_json:
-                continue
             newObjects = agent_api.AddOneConfig(policy_json)
             api.Logger.info("Created new object for %s"%policy_json)
             tc.ret = agent_api.PushConfigObjects(newObjects)

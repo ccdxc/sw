@@ -5,7 +5,12 @@ from iota.test.iris.testcases.security.conntrack.session_info import *
 from iota.test.iris.testcases.security.conntrack.conntrack_utils import *
 from iota.test.iris.utils import vmotion_utils
 
+server_port = api.AllocateTcpPort()
+client_port = api.AllocateTcpPort()
+
 def Setup(tc):
+    global server_port
+    global client_port
     api.Logger.info("Setup.")
     if tc.iterators.kind == "remote":
         pairs = api.GetRemoteWorkloadPairs()
@@ -22,15 +27,15 @@ def Setup(tc):
         tc.client,tc.server = pairs[0]
     else:
         tc.server,tc.client = pairs[0]
-    cmd_cookie = start_nc_server(tc.server, "1237")
+    cmd_cookie = start_nc_server(tc.server, server_port)
     add_command(req, tc, 'server', tc.server, cmd_cookie, True) 
 
 
-    cmd_cookie = start_nc_client(tc.server, "52255", "1237")
+    cmd_cookie = start_nc_client(tc.server, client_port, server_port)
     add_command(req, tc, 'client', tc.client, cmd_cookie, True)
 
        
-    cmd_cookie = "/nic/bin/halctl show session --dstport 1237 --dstip {} --yaml".format(tc.server.ip_address)
+    cmd_cookie = "/nic/bin/halctl show session --dstport {} --dstip {} --yaml".format(server_port, tc.server.ip_address)
     add_command(req, tc, 'show before', tc.client, cmd_cookie, naples=True)
 
     
@@ -44,6 +49,8 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
+    global server_port
+    global client_port
     api.Logger.info("Trigger.")
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
@@ -51,15 +58,15 @@ def Trigger(tc):
         new_seq_num = tc.pre_ctrckinf.r_tcpseqnum + tc.pre_ctrckinf.i_tcpwinsz * (2 ** tc.pre_ctrckinf.i_tcpwinscale)
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
         #left out of window - retransmit
-        cmd_cookie = "hping3 -c 1 -s 1237 -p 52255 -M {}  -L {} --ack --fin --tcp-timestamp {} ".format(wrap_around(tc.pre_ctrckinf.r_tcpseqnum, 0), tc.pre_ctrckinf.r_tcpacknum, tc.client.ip_address)    
+        cmd_cookie = "hping3 -c 1 -s {} -p {} -M {}  -L {} --ack --fin --tcp-timestamp {} ".format(server_port, client_port, wrap_around(tc.pre_ctrckinf.r_tcpseqnum, 0), tc.pre_ctrckinf.r_tcpacknum, tc.client.ip_address)    
         add_command(req, tc, 'fail ping', tc.server, cmd_cookie)
     else:
         new_seq_num = tc.pre_ctrckinf.i_tcpseqnum + tc.pre_ctrckinf.r_tcpwinsz * (2 ** tc.pre_ctrckinf.r_tcpwinscale)
         #left out of window - retransmit
-        cmd_cookie = "hping3 -c 1 -s 52255 -p 1237 -M {}  -L {} --ack --tcp-timestamp {} --fin".format(wrap_around(tc.pre_ctrckinf.i_tcpseqnum, 0), tc.pre_ctrckinf.i_tcpacknum, tc.server.ip_address)   
+        cmd_cookie = "hping3 -c 1 -s {} -p {} -M {}  -L {} --ack --tcp-timestamp {} --fin".format(client_port, server_port, wrap_around(tc.pre_ctrckinf.i_tcpseqnum, 0), tc.pre_ctrckinf.i_tcpacknum, tc.server.ip_address)   
         add_command(req, tc,"fail ping", tc.client, cmd_cookie)
 
-    cmd_cookie = "sleep 3 && /nic/bin/halctl show session --dstport 1237 --dstip {} --yaml".format(tc.server.ip_address)
+    cmd_cookie = "sleep 3 && /nic/bin/halctl show session --dstport {} --dstip {} --yaml".format(server_port, tc.server.ip_address)
     add_command(req, tc, 'show after', tc.client, cmd_cookie, naples=True)
 
     
