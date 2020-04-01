@@ -2791,6 +2791,9 @@ static void ionic_lif_handle_fw_up(struct ionic_lif *lif)
 	if (!err)
 		err = ionic_lifs_init(ionic);
 
+	if (lif->registered)
+		ionic_lif_set_netdev_info(lif);
+
 	if (!err)
 		clear_bit(IONIC_LIF_F_FW_RESET, lif->state);
 
