@@ -46,8 +46,6 @@ label_flow_hit:
     seq.!c7         c7, d.ipv4_flow_hash_d.force_flow_miss, TRUE
     bcf             [c7], label_flow_miss
     phvwr           p.control_metadata_flow_done, TRUE
-    smneb           c1, k.tcp_flags, (TCP_FLAG_FIN|TCP_FLAG_RST), 0
-    bcf             [c1], label_force_flow_miss
     seq             c1, d.ipv4_flow_hash_d.nexthop_valid, TRUE
     bcf             [!c1], label_flow_hit_nexthop_done
     phvwr.c1        p.p4i_i2e_nexthop_type, d.ipv4_flow_hash_d.nexthop_type
@@ -56,10 +54,13 @@ label_flow_hit:
     phvwr.!c1       p.p4i_i2e_mapping_bypass, TRUE
     phvwr.!c1       p.p4i_i2e_nexthop_id, d.ipv4_flow_hash_d.nexthop_id
 label_flow_hit_nexthop_done:
-    phvwr.e         p.p4i_i2e_session_id, d.ipv4_flow_hash_d.session_index
-    phvwr.f         p.p4i_i2e_flow_role, d.ipv4_flow_hash_d.flow_role
+    phvwr           p.p4i_i2e_session_id, d.ipv4_flow_hash_d.session_index
+    seq             c2, k.arm_to_p4i_valid, FALSE
+    smneb.c2        c2, k.tcp_flags, (TCP_FLAG_FIN|TCP_FLAG_RST), 0
+    nop.!c2.e
+    phvwr           p.p4i_i2e_flow_role, d.ipv4_flow_hash_d.flow_role
 
-label_force_flow_miss:
+label_tcp_fin_rst:
     phvwrpair       p.p4i_to_arm_flow_hit, TRUE, \
                         p.p4i_to_arm_flow_role, d.ipv4_flow_hash_d.flow_role
     phvwr           p.control_metadata_flow_miss, TRUE

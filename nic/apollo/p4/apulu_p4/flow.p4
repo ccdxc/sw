@@ -23,9 +23,21 @@ action flow_hash(epoch, session_index,
             modify_field(p4i_to_arm.session_id, scratch_metadata.session_id);
             modify_field(p4i_to_arm.defunct_flow, ingress_recirc.defunct_flow);
         } else {
+            modify_field(p4i_i2e.session_id, scratch_metadata.session_id);
+            modify_field(p4i_i2e.flow_role, flow_role);
             modify_field(control_metadata.flow_done, TRUE);
             modify_field(scratch_metadata.flag, nexthop_valid);
-            if (tcp.flags & (TCP_FLAG_FIN|TCP_FLAG_RST) != 0) {
+            if (nexthop_valid == TRUE) {
+                modify_field(p4i_i2e.nexthop_type, nexthop_type);
+                if (nexthop_type == NEXTHOP_TYPE_VPC) {
+                    modify_field(p4i_i2e.mapping_lkp_id, nexthop_id);
+                } else {
+                    modify_field(p4i_i2e.mapping_bypass, TRUE);
+                    modify_field(p4i_i2e.nexthop_id, nexthop_id);
+                }
+            }
+            if ((arm_to_p4i.valid == FALSE) and
+                (tcp.flags & (TCP_FLAG_FIN|TCP_FLAG_RST) != 0)) {
                 modify_field(control_metadata.flow_miss, TRUE);
                 modify_field(control_metadata.force_flow_miss, TRUE);
                 modify_field(p4i_to_arm.flow_hit, TRUE);
@@ -39,18 +51,6 @@ action flow_hash(epoch, session_index,
                     } else {
                         modify_field(p4i_i2e.mapping_bypass, TRUE);
                         modify_field(p4i_to_arm.nexthop_id, nexthop_id);
-                    }
-                }
-            } else {
-                modify_field(p4i_i2e.session_id, scratch_metadata.session_id);
-                modify_field(p4i_i2e.flow_role, flow_role);
-                if (nexthop_valid == TRUE) {
-                    modify_field(p4i_i2e.nexthop_type, nexthop_type);
-                    if (nexthop_type == NEXTHOP_TYPE_VPC) {
-                        modify_field(p4i_i2e.mapping_lkp_id, nexthop_id);
-                    } else {
-                        modify_field(p4i_i2e.mapping_bypass, TRUE);
-                        modify_field(p4i_i2e.nexthop_id, nexthop_id);
                     }
                 }
             }
@@ -164,9 +164,21 @@ action ipv4_flow_hash(epoch, session_index, nexthop_type,
             modify_field(p4i_to_arm.session_id, scratch_metadata.session_id);
             modify_field(p4i_to_arm.defunct_flow, ingress_recirc.defunct_flow);
         } else {
+            modify_field(p4i_i2e.session_id, scratch_metadata.session_id);
+            modify_field(p4i_i2e.flow_role, flow_role);
             modify_field(control_metadata.flow_done, TRUE);
             modify_field(scratch_metadata.flag, nexthop_valid);
-            if (tcp.flags & (TCP_FLAG_FIN|TCP_FLAG_RST) != 0) {
+            if (nexthop_valid == TRUE) {
+                modify_field(p4i_i2e.nexthop_type, nexthop_type);
+                if (nexthop_type == NEXTHOP_TYPE_VPC) {
+                    modify_field(p4i_i2e.mapping_lkp_id, nexthop_id);
+                } else {
+                    modify_field(p4i_i2e.mapping_bypass, TRUE);
+                    modify_field(p4i_i2e.nexthop_id, nexthop_id);
+                }
+            }
+            if ((arm_to_p4i.valid == FALSE) and
+                (tcp.flags & (TCP_FLAG_FIN|TCP_FLAG_RST) != 0)) {
                 modify_field(control_metadata.flow_miss, TRUE);
                 modify_field(control_metadata.force_flow_miss, TRUE);
                 modify_field(p4i_to_arm.flow_hit, TRUE);
@@ -180,18 +192,6 @@ action ipv4_flow_hash(epoch, session_index, nexthop_type,
                     } else {
                         modify_field(p4i_i2e.mapping_bypass, TRUE);
                         modify_field(p4i_to_arm.nexthop_id, nexthop_id);
-                    }
-                }
-            } else {
-                modify_field(p4i_i2e.session_id, scratch_metadata.session_id);
-                modify_field(p4i_i2e.flow_role, flow_role);
-                if (nexthop_valid == TRUE) {
-                    modify_field(p4i_i2e.nexthop_type, nexthop_type);
-                    if (nexthop_type == NEXTHOP_TYPE_VPC) {
-                        modify_field(p4i_i2e.mapping_lkp_id, nexthop_id);
-                    } else {
-                        modify_field(p4i_i2e.mapping_bypass, TRUE);
-                        modify_field(p4i_i2e.nexthop_id, nexthop_id);
                     }
                 }
             }
