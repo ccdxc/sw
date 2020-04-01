@@ -708,6 +708,16 @@ outerLoop:
 		break
 	}
 
+        log.Infof("ts:%s Verify DSC Versions", time.Now().String())
+        snics, err := sm.ListSmartNIC()
+        if err != nil {
+                log.Errorf("Unable to list dsc")
+                return err
+        }
+        for _, snic := range snics {
+                log.Infof("DSC Version : %s", snic.Status.DSCVersion)
+        }
+
 	// Verify delete on rollout object
 	for numRetries = 0; numRetries < 25; numRetries++ {
 		obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}

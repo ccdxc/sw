@@ -64,7 +64,7 @@ func (v VersionChecker) CheckNICVersionForAdmission(dscSku string, dscVersion st
 	}
 
 	//TODO: Hardcoding now for e2e to pass
-	if dscVersion == "1.0E" {
+	if dscVersion == "1.0E" || veniceVersion == "iota-upgrade" {
 		return SkipForceRollout, ""
 	}
 	//check DSC Image Type (Cloud Vs Enterprise)

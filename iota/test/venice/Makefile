@@ -28,9 +28,6 @@ upgrade:
 
 rolloutrela-nightly:
 	cd ../../../ && make ws-tools && make pull-assets
-	ls -al /sw/
-	ls -al /sw/bin
-	ls -al //sw/bin/venice-install
 	cd ../../../ && tar -zxf /sw/naples_fw_all.tgz -C .
 	mkdir -p ${GOPATH}/src/github.com/pensando/sw/bin/venice-install
 	mkdir -p ${GOPATH}/src/github.com/pensando/sw/upgrade-bundle/bin

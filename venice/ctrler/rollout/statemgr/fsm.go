@@ -15,12 +15,14 @@ import (
 const defaultNumParallel = 2           // if user has not specified parallelism in Spec, we do do many SmartNICs in parallel. We can change this logic in future as needed..
 const dSCTimeoutSeconds = 480          // 8 mins of timeout for DSC preUpgrade..
 const rolloutPhasesTimeoutSeconds = 10 //timeout between rollout phases
+const veniceHealthCheckTimeout = 30
 
 var preUpgradeTimeout = dSCTimeoutSeconds * time.Second
 var rolloutPhasesTimeout = rolloutPhasesTimeoutSeconds * time.Second
 var veniceUpgradeTimeout = 19 * time.Minute
 var rolloutRetryTimeout = 5 * time.Minute
 var maxRetriesBeforeAbort uint32 = 5
+var veniceHealthCheckTimeoutSeconds = veniceHealthCheckTimeout * time.Second
 
 type rofsmEvent uint
 type rofsmState uint
@@ -270,17 +272,30 @@ func fsmAcCreated(ros *RolloutState) {
 	if ros.Spec.DSCsOnly {
 		ros.eventChan <- fsmEvVeniceBypass
 	} else {
-		ros.startRolloutTimer()
+		allVeniceHalthy := false
+		var nodeName, msg string
 
-		// Check the venice health only for nodes for which the PreCheckIssue is pending
-		veniceRollouts := ros.getVenicePendingPreCheckIssue()
-		name, msg := ros.checkVeniceHealth(veniceRollouts)
-		if msg != "" {
+		for i := 0; i < int(maxRetriesBeforeAbort); i++ {
+			// Check the venice health only for nodes for which the PreCheckIssue is pending
+			veniceRollouts := ros.getVenicePendingPreCheckIssue()
+
+			nodeName, msg = ros.checkVeniceHealth(veniceRollouts)
+			if msg != "" {
+				log.Errorf("Venice Node %s health check failed: %v", nodeName, msg)
+				time.Sleep(veniceHealthCheckTimeoutSeconds)
+			} else {
+				allVeniceHalthy = true
+				break
+			}
+		}
+
+		if allVeniceHalthy == false {
 			log.Errorf("Precheck failed: %v", msg)
-			ros.setVenicePhase(name, "", msg, rollout.RolloutPhase_FAIL)
+			ros.setVenicePhase(nodeName, "", msg, rollout.RolloutPhase_FAIL)
 			ros.eventChan <- fsmEvFail
 			return
 		}
+		ros.startRolloutTimer()
 
 		numPendingPrecheck, n, err := ros.preCheckNextVeniceNode()
 		if err != nil {
