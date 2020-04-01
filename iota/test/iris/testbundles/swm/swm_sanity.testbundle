@@ -70,3 +70,10 @@ testcases:
             count   : [5]
         args    :
             timeout : 3600
+
+    -   name    : swm_qos
+        testcase: testcases.swm.swm_qos
+        enable  : True
+        args    :
+            timeout : 3600
+
