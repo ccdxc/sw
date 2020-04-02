@@ -135,7 +135,7 @@ policy_add_rules_verify (void)
 }
 
 static void
-policy_rule_update (pds_batch_ctxt_t bctxt, std::string cidr_str)
+policy_update_rule (pds_batch_ctxt_t bctxt, std::string cidr_str)
 {
     pds_policy_rule_spec_t spec;
     ip_prefix_t ip_pfx;
@@ -169,7 +169,7 @@ policy_rule_update (pds_batch_ctxt_t bctxt, std::string cidr_str)
 }
 
 static void
-policy_rule_update_verify (std::string cidr_str)
+policy_update_rule_verify (std::string cidr_str)
 {
     sdk_ret_t ret;
     pds_obj_key_t key;
@@ -268,10 +268,10 @@ TEST_F(policy_rule_test, rule_upd_1) {
     batch_commit(bctxt);
 
     bctxt = batch_start();
-    policy_rule_update(bctxt, "30.0.0.1/16");
+    policy_update_rule(bctxt, "30.0.0.1/16");
     batch_commit(bctxt);
 
-    policy_rule_update_verify("30.0.0.1/16");
+    policy_update_rule_verify("30.0.0.1/16");
 
     bctxt = batch_start();
     policy_teardown(bctxt);
@@ -284,10 +284,10 @@ TEST_F(policy_rule_test, rule_upd_2) {
 
     bctxt = batch_start();
     policy_setup(bctxt);
-    policy_rule_update(bctxt, "30.0.0.1/16");
+    policy_update_rule(bctxt, "30.0.0.1/16");
     batch_commit(bctxt);
 
-    policy_rule_update_verify("30.0.0.1/16");
+    policy_update_rule_verify("30.0.0.1/16");
 
     bctxt = batch_start();
     policy_teardown(bctxt);
