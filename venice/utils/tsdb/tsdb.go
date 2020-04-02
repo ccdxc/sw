@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/log"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -592,6 +594,11 @@ type Point struct {
 
 // Points add multiple points in tsdb client
 func (obj *iObj) Points(points []*Point, ts time.Time) error {
+	if global == nil {
+		log.Errorf("tsdb is not initialized")
+		return nil
+	}
+
 	if ts.IsZero() {
 		ts = time.Now()
 	}
