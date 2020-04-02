@@ -60,6 +60,7 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 			"cluster-node":     api.CLIInfo{Path: "Status.ClusterNode", Skip: false, Insert: "", Help: ""},
 			"device-id":        api.CLIInfo{Path: "Status.IFHostStatus.DeviceID", Skip: false, Insert: "", Help: ""},
 			"dsc":              api.CLIInfo{Path: "Status.DSC", Skip: false, Insert: "", Help: ""},
+			"dsc-id":           api.CLIInfo{Path: "Status.DSCID", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"host-ifname":      api.CLIInfo{Path: "Status.IFHostStatus.HostIfName", Skip: false, Insert: "", Help: ""},
 			"ip-alloc-type":    api.CLIInfo{Path: "Spec.IPAllocType", Skip: false, Insert: "", Help: ""},
@@ -139,6 +140,8 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 			"MirroSessions": api.Field{Name: "MirroSessions", CLITag: api.CLIInfo{ID: "mirror-sessions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mirror-sessions", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"ClusterNode": api.Field{Name: "ClusterNode", CLITag: api.CLIInfo{ID: "cluster-node", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "cluster-node", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"DSCID": api.Field{Name: "DSCID", CLITag: api.CLIInfo{ID: "dsc-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"network.NetworkInterfaceUplinkStatus": &api.Struct{

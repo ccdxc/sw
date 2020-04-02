@@ -1090,6 +1090,12 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.dsc-id",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -8679,6 +8685,9 @@
         "cluster-node": {
           "type": "string",
           "description": "Set only if interface is on Venice Node."
+        },
+        "dsc-id": {
+          "type": "string"
         }
       },
       "description": "NetworkInterfaceStatus."

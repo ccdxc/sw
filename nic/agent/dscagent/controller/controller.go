@@ -27,7 +27,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
@@ -484,10 +483,8 @@ func (c *API) netIfWorker(ctx context.Context) {
 		select {
 		case ev := <-c.InfraAPI.UpdateIfChannel():
 			log.Infof("Got event [%v]", ev)
-			if veniceInterfaceName, updateNeeded := utils.ConvertLocalToVeniceInterfaceName(ev.Intf.ObjectMeta.Name,
-				c.InfraAPI.GetConfig().DSCID, c.InfraAPI.GetDscName()); updateNeeded {
-				ev.Intf.ObjectMeta.Name = veniceInterfaceName
-			}
+			// Set the DSC ID
+			ev.Intf.Status.DSCID = c.InfraAPI.GetConfig().DSCID
 			switch ev.Oper {
 			case types.Create:
 				// block till upadte succeeds

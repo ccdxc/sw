@@ -633,6 +633,9 @@
         },
         "ip-alloc-type": {
           "type": "string"
+        },
+        "dsc-id": {
+          "type": "string"
         }
       },
       "description": "InterfaceStatus."

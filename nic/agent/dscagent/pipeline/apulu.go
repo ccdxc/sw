@@ -194,7 +194,7 @@ func (a *ApuluAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatu
 		},
 	}
 
-	ifName, err := utils.GetIfName(a.InfraAPI.GetConfig().DSCID, utils.GetIfIndex(netproto.InterfaceSpec_LOOPBACK.String(), 0, 0, 1), "")
+	ifName, err := utils.GetIfName(a.InfraAPI.GetDscName(), utils.GetIfIndex(netproto.InterfaceSpec_LOOPBACK.String(), 0, 0, 1), "")
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrBadRequest,
 			"Failed to form interface name, uuid %v, loopback 0, err %v",
@@ -483,13 +483,6 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 	if err != nil {
 		log.Error(err)
 		return
-	}
-
-	localIntfName, updateNeeded := utils.ConvertVeniceToLocalInterfaceName(intf.Name, a.InfraAPI.GetConfig().DSCID, a.InfraAPI.GetDscName())
-	// Names would be different in venice only for local interfaces
-	_, ok := a.LocalInterfaces[localIntfName]
-	if ok && updateNeeded {
-		intf.Name = localIntfName
 	}
 
 	// Handle Get and LIST. This doesn't need any pipeline specific APIs
@@ -1586,7 +1579,7 @@ func (a *ApuluAPI) handleHostInterface(spec *halapi.LifSpec, status *halapi.LifS
 		return err
 	}
 	// form the interface name
-	ifName, err := utils.GetIfName(uid.String()[24:], status.GetIfIndex(), spec.GetType().String())
+	ifName, err := utils.GetIfName(utils.ConvertMAC(uid.String()[24:]), status.GetIfIndex(), spec.GetType().String())
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrBadRequest,
 			"Failed to form interface name, uuid %v, ifindex %x, err %v",
@@ -1616,6 +1609,7 @@ func (a *ApuluAPI) handleHostInterface(spec *halapi.LifSpec, status *halapi.LifS
 		Status: netproto.InterfaceStatus{
 			Name:        "",
 			DSC:         a.InfraAPI.GetDscName(),
+			DSCID:       a.InfraAPI.GetConfig().DSCID,
 			InterfaceID: uint64(status.GetIfIndex()),
 			IFHostStatus: netproto.InterfaceHostStatus{
 				HostIfName: status.GetName(),
@@ -1649,7 +1643,7 @@ func (a *ApuluAPI) handleUplinkInterface(spec *halapi.PortSpec, status *halapi.P
 		return err
 	}
 	// form the interface name
-	ifName, err := utils.GetIfName(uid.String()[24:], status.GetIfIndex(), spec.GetType().String())
+	ifName, err := utils.GetIfName(utils.ConvertMAC(uid.String()[24:]), status.GetIfIndex(), spec.GetType().String())
 	if spec.GetType().String() == "PORT_TYPE_ETH" {
 		ifType = netproto.InterfaceSpec_UPLINK_ETH.String()
 	} else if spec.GetType().String() == "PORT_TYPE_ETH_MGMT" {
@@ -1677,6 +1671,7 @@ func (a *ApuluAPI) handleUplinkInterface(spec *halapi.PortSpec, status *halapi.P
 		},
 		Status: netproto.InterfaceStatus{
 			DSC:         a.InfraAPI.GetDscName(),
+			DSCID:       a.InfraAPI.GetConfig().DSCID,
 			InterfaceID: uint64(status.GetIfIndex()),
 			IPAllocType: "DHCP",
 			IFUplinkStatus: netproto.InterfaceUplinkStatus{

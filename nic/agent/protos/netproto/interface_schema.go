@@ -58,6 +58,7 @@ var typesMapInterface = map[string]*api.Struct{
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"cable-type":       api.CLIInfo{Path: "Status.IFUplinkStatus.TransceiverStatus.TranceiverCableType", Skip: false, Insert: "", Help: ""},
 			"dsc":              api.CLIInfo{Path: "Status.Name", Skip: false, Insert: "", Help: ""},
+			"dsc-id":           api.CLIInfo{Path: "Status.DSCID", Skip: false, Insert: "", Help: ""},
 			"gateway-ip":       api.CLIInfo{Path: "Status.IFUplinkStatus.GatewayIP", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"host-ifname":      api.CLIInfo{Path: "Status.IFHostStatus.HostIfName", Skip: false, Insert: "", Help: ""},
@@ -166,6 +167,8 @@ var typesMapInterface = map[string]*api.Struct{
 			"InterfaceUUID": api.Field{Name: "InterfaceUUID", CLITag: api.CLIInfo{ID: "if-uuid", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "if-uuid", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"IPAllocType": api.Field{Name: "IPAllocType", CLITag: api.CLIInfo{ID: "ip-alloc-type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-alloc-type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"DSCID": api.Field{Name: "DSCID", CLITag: api.CLIInfo{ID: "dsc-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dsc-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"netproto.InterfaceUplinkStatus": &api.Struct{

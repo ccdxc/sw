@@ -214,7 +214,8 @@ message InterfaceStatus {
     bool MirrorEnabled                          = 8 [(gogoproto.jsontag) = "mirror-enabled,omitempty"];
 
     string InterfaceUUID                        = 9 [(gogoproto.jsontag) = "if-uuid,omitempty"];
-    string IPAllocType                          = 10 [(gogoproto.jsontag) = "ip-alloc-type,omitempty"]; 
+    string IPAllocType                          = 10 [(gogoproto.jsontag) = "ip-alloc-type,omitempty"];
+    string DSCID                                = 11 [(gogoproto.jsontag) = "dsc-id,omitempty"];
 }
 
 

@@ -99,6 +99,8 @@ func convertNetifObj(nodeID string, agentNetif *netproto.Interface) *network.Net
 		},
 	}
 
+	netif.Status.DSCID = agentNetif.Status.DSCID
+
 	return netif
 }
 

@@ -150,6 +150,7 @@ message NetworkInterfaceStatus {
     
     // Set only if interface is on Venice Node.
     string ClusterNode                          = 9 [(gogoproto.jsontag) = "cluster-node,omitempty"];
+    string DSCID                                = 10 [(gogoproto.jsontag) = "dsc-id,omitempty"];
 }
 
 // NetworkInterfaceHostStatus is populated for PF and VF
