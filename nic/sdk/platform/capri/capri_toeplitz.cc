@@ -29,20 +29,14 @@ namespace capri {
 
 void
 capri_rss_table_config (uint32_t stage, uint32_t stage_tableid,
-                        uint64_t tbl_base, uint64_t pc,
-                        uint32_t rss_indir_tbl_entry_size)
+                        uint64_t tbl_base, uint64_t pc)
 {
-    int tbl_id = stage_tableid;
-    uint64_t rss_indir_tbl_size;
     cap_top_csr_t & cap0 = sdk::platform::capri::g_capri_state_pd->cap_top();
     cap_te_csr_t *te_csr;
+    int tbl_id = stage_tableid;
 
-    SDK_TRACE_DEBUG("rss_indir_table stage %u stage-tableid %u table_base %x rss_indir_tbl_entry_size %u\n",
-                    stage, tbl_id, tbl_base, rss_indir_tbl_entry_size);
-
-    if (rss_indir_tbl_entry_size == 0)
-            rss_indir_tbl_entry_size = ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ;
-    rss_indir_tbl_size = (ETH_RSS_LIF_INDIR_TBL_LEN * rss_indir_tbl_entry_size);
+    SDK_TRACE_DEBUG("rss_indir_table stage %u stage-tableid %u table_base %x\n",
+                    stage, tbl_id, tbl_base);
 
     te_csr = &cap0.pcr.te[stage];
     te_csr->cfg_table_property[tbl_id].read();
@@ -54,24 +48,24 @@ capri_rss_table_config (uint32_t stage, uint32_t stage_tableid,
     // TE mask = (1 << addr_sz) - 1
     te_csr->cfg_table_property[tbl_id].addr_sz((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_LEN));
     // TE addr <<= addr_shift
-    te_csr->cfg_table_property[tbl_id].addr_shift((uint8_t)log2(rss_indir_tbl_entry_size));
+    te_csr->cfg_table_property[tbl_id].addr_shift((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ));
     // TE addr = (hash & mask) + addr_base
     te_csr->cfg_table_property[tbl_id].addr_base(tbl_base);
     // TE lif_shift_en
     te_csr->cfg_table_property[tbl_id].addr_vf_id_en(1);
     // TE lif_shift
-    te_csr->cfg_table_property[tbl_id].addr_vf_id_loc((uint8_t)log2(rss_indir_tbl_size));
+    te_csr->cfg_table_property[tbl_id].addr_vf_id_loc((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_SZ));
     // addr |= (lif << lif_shift)
     // TE addr = addr & ((1 << chain_shift) - 1) if 0 <= cycle_id < 63 else addr
     te_csr->cfg_table_property[tbl_id].chain_shift(0x3f);
     // size of each indirection table entry
-    te_csr->cfg_table_property[tbl_id].lg2_entry_size((uint8_t)log2(rss_indir_tbl_entry_size));
+    te_csr->cfg_table_property[tbl_id].lg2_entry_size((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ));
     te_csr->cfg_table_property[tbl_id].write();
+
 }
 
 sdk_ret_t
-capri_rss_table_base_pc_get (const char *handle, uint64_t *tbl_base,
-                             uint64_t *pc)
+capri_rss_table_base_pc_get (const char *handle, uint64_t *tbl_base, uint64_t *pc)
 {
     if (sdk::p4::p4_program_to_base_addr(handle,
                                          (char *)ETH_RSS_INDIR_PROGRAM,
@@ -93,23 +87,20 @@ capri_rss_table_base_pc_get (const char *handle, uint64_t *tbl_base,
 
     // Align the table address because while calculating the read address TE shifts the LIF
     // value by LOG2 of size of the per lif indirection table.
-    *tbl_base = (*tbl_base + ETH_RSS_INDIR_TBL_SZ) &
-        ~(ETH_RSS_INDIR_TBL_SZ - 1);
+    *tbl_base = (*tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
 
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-capri_toeplitz_init (const char *handle, int stage, int stage_tableid,
-                     uint32_t rss_indir_tbl_entry_size)
+capri_toeplitz_init (const char *handle, int stage, int stage_tableid)
 {
     uint64_t pc, tbl_base;
     sdk_ret_t rv;
 
     rv = capri_rss_table_base_pc_get(handle, &tbl_base, &pc);
     if (rv == SDK_RET_OK) {
-        capri_rss_table_config(stage, stage_tableid, tbl_base, pc,
-                               rss_indir_tbl_entry_size);
+        capri_rss_table_config(stage, stage_tableid, tbl_base, pc);
     }
     return rv;
 }

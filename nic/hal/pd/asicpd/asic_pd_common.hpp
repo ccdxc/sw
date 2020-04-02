@@ -15,6 +15,7 @@ typedef struct asicpd_stats_region_info_t_ {
 namespace hal {
 namespace pd {
 
+hal_ret_t asicpd_toeplitz_init(void);
 hal_ret_t asicpd_p4plus_table_init(hal::hal_cfg_t *hal_cfg);
 hal_ret_t asicpd_stats_addr_get(int tblid, uint32_t index,
                                 asicpd_stats_region_info_t *region_arr,

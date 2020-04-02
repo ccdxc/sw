@@ -396,8 +396,7 @@ asic_pd_llc_setup (llc_counters_t *llc)
 }
 
 sdk_ret_t
-asicpd_toeplitz_init (const char *handle, uint32_t tableid,
-                      uint32_t rss_indir_tbl_entry_size)
+asicpd_toeplitz_init (const char *handle, uint32_t tableid)
 {
     p4pd_table_properties_t tbl_ctx;
 
@@ -631,10 +630,10 @@ asicpd_rss_tbl_eng_cfg_get (const char *handle, uint32_t tableid,
 }
 
 void
-asicpd_rss_tbl_eng_cfg_modify (p4_tbl_eng_cfg_t *rss,
-                               uint32_t rss_indir_tbl_entry_size)
+asicpd_rss_tbl_eng_cfg_modify (p4_tbl_eng_cfg_t *rss)
 {
-    return;  /* ELBA-REBASE-TBD */
+    elba_rss_table_config(rss->stage, rss->stage_tableid, rss->mem_offset,
+                          rss->asm_base);
 }
 
 sdk_ret_t

@@ -16,12 +16,23 @@
 #include "platform/capri/capri_txs_scheduler.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/platform/drivers/xcvr.hpp"
+#include "nic/hal/pd/capri/capri_toeplitz.hpp"
 
 using namespace sdk::platform::capri;
 using namespace sdk::asic::pd;
 
 namespace hal {
 namespace pd {
+
+hal_ret_t
+asicpd_toeplitz_init (void)
+{
+    p4pd_table_properties_t tbl_ctx;
+    p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_INDIR,
+                                     &tbl_ctx);
+    capri_toeplitz_init(tbl_ctx.stage, tbl_ctx.stage_tableid);
+    return HAL_RET_OK;
+}
 
 hal_ret_t
 asicpd_p4plus_table_init (hal::hal_cfg_t *hal_cfg)

@@ -392,15 +392,14 @@ asic_pd_llc_setup (llc_counters_t *llc)
 }
 
 sdk_ret_t
-asicpd_toeplitz_init (const char *handle, uint32_t tableid,
-                      uint32_t rss_indir_tbl_entry_size)
+asicpd_toeplitz_init (const char *handle, uint32_t tableid)
 {
     p4pd_table_properties_t tbl_ctx;
 
     p4pd_global_table_properties_get(tableid, &tbl_ctx);
 
-    return capri_toeplitz_init(handle, tbl_ctx.stage, tbl_ctx.stage_tableid,
-                               rss_indir_tbl_entry_size);
+    return capri_toeplitz_init(handle, tbl_ctx.stage,
+                               tbl_ctx.stage_tableid);
 }
 
 sdk_ret_t
@@ -636,11 +635,10 @@ asicpd_rss_tbl_eng_cfg_get (const char *handle, uint32_t tableid,
 }
 
 void
-asicpd_rss_tbl_eng_cfg_modify (p4_tbl_eng_cfg_t *rss,
-                               uint32_t rss_indir_tbl_entry_size)
+asicpd_rss_tbl_eng_cfg_modify (p4_tbl_eng_cfg_t *rss)
 {
     capri_rss_table_config(rss->stage, rss->stage_tableid, rss->mem_offset,
-                           rss->asm_base, rss_indir_tbl_entry_size);
+                           rss->asm_base);
 }
 
 sdk_ret_t

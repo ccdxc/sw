@@ -880,7 +880,7 @@ artemis_impl::pipeline_init(void) {
     ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = sdk::asic::pd::asicpd_toeplitz_init("artemis_rxdma",
-                             P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR, 0);
+                             P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR);
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = p4plus_table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);

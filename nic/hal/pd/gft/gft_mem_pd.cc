@@ -522,10 +522,7 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
 
     // gft specific capri inits
     SDK_ASSERT(sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg) == SDK_RET_OK);
-    SDK_ASSERT(sdk::asic::pd::asicpd_toeplitz_init("gft_rxdma",
-                                    P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_INDIR,
-                                    sizeof(eth_rx_rss_indir_eth_rx_rss_indir_t)) ==
-               SDK_RET_OK);
+    SDK_ASSERT(asicpd_toeplitz_init() == HAL_RET_OK);
     SDK_ASSERT(asicpd_p4plus_table_init(hal_cfg) == HAL_RET_OK);
     SDK_ASSERT(sdk::asic::pd::asicpd_p4plus_recirc_init() == SDK_RET_OK);
 
