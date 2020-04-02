@@ -53,8 +53,7 @@ var (
 
 	// DSCIfIDToInterfaceName maps the ifid to interface name
 	DSCIfIDToInterfaceName = map[int8]string{
-		0: NaplesINB0Interface,
-		1: NaplesINB1Interface,
+		0: NaplesInbandInterface,
 	}
 
 	// ApuluDSCIfIDToInterfaceName maps the ifid to interface name

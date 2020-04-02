@@ -606,6 +606,10 @@ func (d *DHCPState) setInterfaceIPs() {
 		if err := netlink.LinkSetUp(link); err != nil {
 			log.Errorf("Failed to bring interface %v link up. Err: %v", linkName, err)
 		}
+
+		if d.pipeline == globals.NaplesPipelineIris {
+			break
+		}
 	}
 }
 

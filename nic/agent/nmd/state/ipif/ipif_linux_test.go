@@ -236,7 +236,7 @@ func TestDHCPValidVendorAttributes241and242Code(t *testing.T) {
 	AssertOk(t, err, "IPClient creates must succeed")
 
 	//Create a mock interfaces for testing the interface IP config
-	interfaceIds := []int8{0, 1}
+	interfaceIds := []int8{0}
 	for _, interfaceID := range interfaceIds {
 		mockInterface := &netlink.Dummy{
 			LinkAttrs: netlink.LinkAttrs{
@@ -315,6 +315,7 @@ func TestDHCPValidVendorAttributes241and242Code(t *testing.T) {
 		}
 
 		AssertEquals(t, true, ok, "The interface IP Address should match vendor specified IP address")
+		break
 	}
 
 	// Ensure the IP Assigned on the interface is indeed the YIADDR
