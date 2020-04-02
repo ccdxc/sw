@@ -277,8 +277,8 @@ dependencies:
     - reference: nic/apollo/tools/apulu/sanity/base
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
-  dol/artemis:
-    - reference: nic/apollo/tools/artemis/sanity/base
+#  dol/artemis:
+#    - reference: nic/apollo/tools/artemis/sanity/base
   dol/apulu:
     - reference: nic/apollo/tools/apulu/sanity/base
   dol/test/networking:
@@ -481,12 +481,12 @@ dependencies:
     - reference: nic/apollo/tools/apulu/sanity/base
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
-  nic/conf/apollo:
-    - reference: nic/apollo/tools/apollo/sanity/base
+#  nic/conf/apollo:
+#    - reference: nic/apollo/tools/apollo/sanity/base
+#  nic/conf/artemis:
+#    - reference: nic/apollo/tools/artemis/sanity/base
   nic/conf/athena:
     - reference: nic/apollo/tools/athena/sanity/base
-  nic/conf/artemis:
-    - reference: nic/apollo/tools/artemis/sanity/base
   nic/debug_cli/apollo:
     - reference: nic/apollo/tools/apulu/sanity/base
   nic/sdk/platform/cfgspace:
