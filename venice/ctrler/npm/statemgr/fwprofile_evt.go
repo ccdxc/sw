@@ -109,13 +109,16 @@ func (sm *Statemgr) updatePropogationStatus(genID string,
 			continue
 		}
 
-		if ver, ok := nodeVersions[snic.DistributedServiceCard.Name]; ok && ver == genID {
-			newProp.Updated++
-		} else {
-			pendingNodes = append(pendingNodes, snic.DistributedServiceCard.Name)
-			newProp.Pending++
-			if current.MinVersion == "" || versionToInt(ver) < versionToInt(newProp.MinVersion) {
-				newProp.MinVersion = ver
+		//Update only for the nodes which have entry
+		if ver, ok := nodeVersions[snic.DistributedServiceCard.Name]; ok {
+			if ver == genID {
+				newProp.Updated++
+			} else {
+				pendingNodes = append(pendingNodes, snic.DistributedServiceCard.Name)
+				newProp.Pending++
+				if current.MinVersion == "" || versionToInt(ver) < versionToInt(newProp.MinVersion) {
+					newProp.MinVersion = ver
+				}
 			}
 		}
 	}

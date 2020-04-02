@@ -557,7 +557,10 @@ func (smm *SmMirrorSessionInterface) getMirrorSession(name string) (*MirrorSessi
 func getMirrorCollectors(ms *monitoring.MirrorSession, collectors []*mirrorCollector) *mirrorSelectorCollectors {
 	mcol := &mirrorSelectorCollectors{
 		mirrorSession: ms.Name,
-		selectors:     ms.Spec.Interfaces.Selectors,
+	}
+
+	if ms.Spec.Interfaces != nil {
+		mcol.selectors = ms.Spec.Interfaces.Selectors
 	}
 	if ms.Spec.Interfaces.Direction == monitoring.Direction_RX.String() {
 		mcol.rxCollectors = collectors

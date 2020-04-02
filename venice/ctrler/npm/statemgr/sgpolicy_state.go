@@ -270,6 +270,7 @@ func (sgp *SgpolicyState) processDSCUpdate(dsc *cluster.DistributedServiceCard) 
 		delete(sgp.NodeVersions, dsc.Name)
 	}
 
+	sgp.stateMgr.PeriodicUpdaterPush(sgp)
 	return nil
 }
 

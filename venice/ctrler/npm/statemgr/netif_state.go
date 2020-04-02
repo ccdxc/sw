@@ -576,7 +576,7 @@ func updateInterfaceRequired(intfColState *intfCollectorState) bool {
 
 func selectorsMatch(selectors []*labels.Selector, l labels.Set) bool {
 
-	if len(l) == 0 {
+	if len(selectors) == 0 || len(l) == 0 {
 		return false
 	}
 	for ii := range selectors {
@@ -625,8 +625,8 @@ func (sma *SmNetworkInterface) updateMirror(nw *NetworkInterfaceState) error {
 
 	if updateInterfaceRequired(intfState) {
 		//Sendupdate
-		log.Infof("Sending mirror update for DSC %v Intf %v Collectors %v ",
-			nw.NetworkInterfaceState.Status.DSC, nw.NetworkInterfaceState.Name, nw.txCollectors)
+		log.Infof("Sending mirror update for DSC %v Intf %v Tx Collectors %v Rx Collectors %v",
+			nw.NetworkInterfaceState.Status.DSC, nw.NetworkInterfaceState.Name, nw.txCollectors, nw.rxCollectors)
 		err = nw.pushObject.UpdateObjectWithReferences(nw.NetworkInterfaceState.MakeKey(string(apiclient.GroupNetwork)),
 			convertNetworkInterfaceObject(nw), references(nw.NetworkInterfaceState))
 		if err != nil {
