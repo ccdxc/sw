@@ -1350,7 +1350,7 @@ port::port_link_sm_process(bool start_en_timer)
 
                 if(mac_sync == false) {
                     set_num_mac_sync_retries(num_mac_sync_retries() + 1);
-                    if (num_mac_sync_retries() >= MAX_PORT_MAC_SYNC_RETRIES) {
+                    if (num_mac_sync_retries() >= port_max_mac_sync_retries()) {
                         retry_sm = true;
                         set_num_mac_sync_retries(0);
                         set_fec_retries(fec_retries() + 1);
@@ -1366,8 +1366,8 @@ port::port_link_sm_process(bool start_en_timer)
                         }
                         break;
                     }
-                    // reduce MAC sync timer to 100ms
-                    timeout = 100;
+                    // reduce MAC sync timer to 100ms for 25G/10G
+                    timeout = port_mac_sync_timeout();
                     this->bringup_timer_val_ += timeout;
                     port_timer_start(link_bringup_timer(), timeout);
                     break;
@@ -1967,6 +1967,28 @@ port::timers_init(void) {
                PORT_TIMER_INIT_TIME, 0);
 
     return SDK_RET_OK;
+}
+
+uint32_t
+port::port_max_mac_sync_retries (void) {
+    switch (port_speed()) {
+    case port_speed_t::PORT_SPEED_100G:
+    case port_speed_t::PORT_SPEED_40G:
+        return MAX_PORT_MAC_SYNC_RETRIES_100G;
+    default:
+        return MAX_PORT_MAC_SYNC_RETRIES;
+    }
+}
+
+uint32_t
+port::port_mac_sync_timeout (void) {
+    switch (port_speed()) {
+    case port_speed_t::PORT_SPEED_100G:
+    case port_speed_t::PORT_SPEED_40G:
+        return 500; // msec
+    default:
+        return 100; // msec
+    }
 }
 
 //----------------------------------------------------

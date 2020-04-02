@@ -18,6 +18,7 @@
 #define MAX_PORT_QSFP_AN_HCD_RETRIES               10
 #define MAX_PORT_SFP_AN_HCD_RETRIES                4
 #define MAX_PORT_MAC_SYNC_RETRIES                  10
+#define MAX_PORT_MAC_SYNC_RETRIES_100G             10
 #define MAX_PORT_SERDES_DFE_ICAL_CMPLT_RETRIES     15             // DFE ICAL complete
 #define MAX_PORT_SERDES_DFE_ICAL_EYE_RETRIES       3              // DFE ICAL eye values
 #define MAX_PORT_MAC_FAULTS_CHECK                  3
@@ -532,6 +533,8 @@ private:
     sdk_ret_t port_serdes_state_reset(void);
     void port_link_sm_counters_reset(void);
     sdk_ret_t port_link_sm_retry_enabled(bool serdes_reset = true);
+    uint32_t port_max_mac_sync_retries(void);
+    uint32_t port_mac_sync_timeout(void);
 
     // methods to support persist mac stats across link flaps
     // note: hw mac stats get cleared upon link flap; we maintain prev in sw
