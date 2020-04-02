@@ -8,6 +8,14 @@
 //----------------------------------------------------------------------------
 
 #include <iostream>
+#include <cassert>
+#include <exception>
+#include <sstream>
+#include <string>
+#include <ev.h>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/algorithm/string.hpp>
@@ -19,10 +27,14 @@
 #include "stage.hpp"
 #include "logger.hpp"
 #include "utils.hpp"
-#include "gen/upg_fsm.hpp"
+
+#define GRACEFUL_UPGRADE_GEN "graceful_upgrade_gen.json"
+#define HITLESS_UPGRADE_GEN  "hitless_upgrade_gen.json"
 
 namespace sdk {
 namespace upg {
+
+namespace pt = boost::property_tree;
 
 static struct ev_loop *loop;
 static ev_timer timeout_watcher;
@@ -31,6 +43,8 @@ static upg_stages_map fsm_stages;
 static upg_svc_map fsm_services;
 static svc_sequence_list default_svc_names;
 static stage_map fsm_lookup_tbl;
+event_sequence_t event_sequence;
+upg_stage_t entry_stage;
 
 static void
 dispatch_event (ipc_svc_dom_id_t dom, upg_stage_t id, upg_svc svc)
@@ -375,28 +389,83 @@ str_to_event_sequence (std::string& evt_seq)
     return seq;
 };
 
-static void
-init_svc (void)
+static svc_sequence_list
+get_upg_services (pt::ptree& tree)
 {
-    for (upg_svc& service : svc) {
-        fsm_services[service.name()] = service;
-        default_svc_names.push_back(service.name());
+    svc_sequence_list svc_list;
+
+    BOOST_FOREACH (pt::ptree::value_type const &svc,
+                   tree.get_child("upg_svc")) {
+        svc_list.push_back(svc.second.get_value<std::string>());
     }
+    return svc_list;
 }
 
-static void
-init_stage_transitions (void)
+static sdk_ret_t
+init_svc (pt::ptree& tree)
 {
-    for (upg_stage_transition& stage : stage_transitions) {
-        std::string key;
-        key =
-            std::to_string(stage.from()) + std::to_string(stage.svc_rsp_code());
-        fsm_lookup_tbl[key] = stage.to();
+    sdk_ret_t ret = SDK_RET_ERR;
+    try
+    {
+        svc_sequence_list svc_list;
+
+        svc_list = get_upg_services(tree);
+        for (auto const& name : svc_list) {
+            upg_svc service = upg_svc(name);
+            fsm_services[service.name()] = service;
+            default_svc_names.push_back(service.name());
+        }
+        return SDK_RET_OK;
     }
+    catch (std::exception const& ex)
+    {
+        UPG_TRACE_VERBOSE("Error reading upgrade spec:\n %s\n", ex.what());
+        UPG_TRACE_ERR("Error reading upgrade spec:\n %s\n", ex.what());
+    }
+    return ret;
 }
 
-static void
-init_fsm_stages (void)
+static sdk_ret_t
+init_stage_transitions (pt::ptree& tree)
+{
+    upg_stage_t curr;
+    upg_stage_t next;
+    svc_rsp_code_t rsp;
+
+    std::string key;
+    std::vector<std::string> stage_transition;
+
+    sdk_ret_t ret = SDK_RET_ERR;
+    try
+    {
+        BOOST_FOREACH (pt::ptree::value_type &row,
+                       tree.get_child("upg_stage_transitions"))
+        {
+            stage_transition.clear();
+            BOOST_FOREACH (pt::ptree::value_type& transition, row.second)
+            {
+                std::string str = transition.second.get_value<std::string>();
+                stage_transition.push_back(str);
+            }
+            curr = name_to_stage_id(stage_transition[0]);
+            next = name_to_stage_id(stage_transition[2]);
+            rsp = svc_rsp_code_name_to_id(stage_transition[1]);
+            key = std::to_string(curr) + std::to_string(rsp);
+
+            fsm_lookup_tbl[key] = next;
+        }
+        return SDK_RET_OK;
+    }
+    catch (std::exception const& ex)
+    {
+        UPG_TRACE_VERBOSE("Error reading upgrade spec:\n %s\n", ex.what());
+        UPG_TRACE_ERR("Error reading upgrade spec:\n %s\n", ex.what());
+    }
+    return ret;
+}
+
+static sdk_ret_t
+init_fsm_stages (pt::ptree& tree)
 {
     upg_stage_t stage_id;
     ev_tstamp svc_rsp_timeout;
@@ -405,17 +474,83 @@ init_fsm_stages (void)
     upg_scripts prehook;
     upg_scripts posthook;
 
-    for (idl_upg_stage& stage : idl_stages_cfg) {
-        stage_id = name_to_stage_id(stage.stage());
-        svcs_seq = str_to_svc_sequence(stage.svc_sequence());
-        event_seq = str_to_event_sequence(stage.event_sequence());
-        prehook = str_to_scripts(stage.pre_hook_scripts());
-        posthook = str_to_scripts(stage.post_hook_scripts());
-        svc_rsp_timeout = str_to_timeout(stage.svc_rsp_timeout());
+    sdk_ret_t ret = SDK_RET_OK;
+    try
+    {
+        BOOST_FOREACH (pt::ptree::value_type const&v,
+                       tree.get_child("upg_stages")) {
+            const std::string & key = v.first;
+            const pt::ptree & subtree = v.second;
+            std::string timeout_str;
+            std::string svc_seq_str;
+            std::string evt_seq_str;
+            std::string pre_hook_str;
+            std::string post_hook_str;
+            if(subtree.empty()) {
+                UPG_TRACE_ERR(" Parsing Error !");
+                return SDK_RET_ERR;
+            } else {
+                timeout_str = subtree.get<std::string>("rsp_timeout", "5000");
+                svc_seq_str = subtree.get<std::string>("svc_sequence", "");
+                evt_seq_str =
+                    subtree.get<std::string>("event_sequence", "parallel");
+                pre_hook_str = subtree.get<std::string>("pre_hook", "");
+                post_hook_str = subtree.get<std::string>("post_hook", "");
 
-        fsm_stages[stage_id] =
-            upg_stage(svc_rsp_timeout, svcs_seq, event_seq, prehook, posthook);
+                stage_id = name_to_stage_id(key);
+                svcs_seq = str_to_svc_sequence(svc_seq_str);
+                event_seq = str_to_event_sequence(evt_seq_str);
+                prehook = str_to_scripts(pre_hook_str);
+                posthook  = str_to_scripts(post_hook_str);
+                svc_rsp_timeout = str_to_timeout(timeout_str);
+
+                fsm_stages[stage_id] = upg_stage(svc_rsp_timeout, svcs_seq,
+                                                 event_seq, prehook,posthook);
+            }
+        }
     }
+    catch (std::exception const& ex)
+    {
+        UPG_TRACE_VERBOSE("Error reading upgrade spec:\n %s\n", ex.what());
+        UPG_TRACE_ERR("Error reading upgrade spec:\n %s\n", ex.what());
+    }
+    return ret;
+}
+
+static sdk_ret_t
+set_entry_stage (pt::ptree& tree)
+{
+    std::string stage;
+    try
+    {
+        stage = tree.get<std::string>("entry_stage", "compatcheck");
+        entry_stage = name_to_stage_id(stage);
+    }
+    catch (std::exception const& ex)
+    {
+        UPG_TRACE_VERBOSE("Error reading upgrade spec:\n %s\n", ex.what());
+        UPG_TRACE_ERR("Error reading upgrade spec:\n %s\n", ex.what());
+        return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
+set_event_sequence (pt::ptree& tree)
+{
+    try
+    {
+        std::string seq;
+        seq = tree.get<std::string>("event_sequence", "parallel");
+        event_sequence = str_to_event_sequence(seq);
+    }
+    catch (std::exception const& ex)
+    {
+        UPG_TRACE_VERBOSE("Error reading upgrade spec:\n %s\n", ex.what());
+        UPG_TRACE_ERR("Error reading upgrade spec:\n %s\n", ex.what());
+        return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
 }
 
 static void
@@ -435,12 +570,73 @@ init_fsm (void *ctxt)
     return;
 }
 
-void
-init (void *ctxt)
+static sdk_ret_t
+load_pipeline_json(pt::ptree& tree, bool is_graceful)
 {
-    init_svc();
-    init_stage_transitions();
-    init_fsm_stages();
+    sdk_ret_t ret = SDK_RET_ERR;
+    try
+    {   std::string upg_gen_json = std::string(std::getenv("CONFIG_PATH"));
+        upg_gen_json += "/gen/";
+
+        if (is_graceful) {
+            upg_gen_json += GRACEFUL_UPGRADE_GEN;
+        } else {
+            upg_gen_json += HITLESS_UPGRADE_GEN;
+        }
+
+        if (access(upg_gen_json.c_str(), F_OK) != -1)
+        {
+            pt::read_json(upg_gen_json, tree);
+            return SDK_RET_OK;
+        } else {
+            UPG_TRACE_VERBOSE("Error reading upgrade spec: No Access");
+            UPG_TRACE_ERR("Error reading upgrade spec: No Access");
+            return SDK_RET_ERR;
+        }
+    }
+    catch (std::exception const& ex)
+    {
+        UPG_TRACE_VERBOSE("Error reading upgrade spec:\n %s\n", ex.what());
+        UPG_TRACE_ERR("Error reading upgrade spec:\n %s\n", ex.what());
+    }
+    return ret;
+}
+
+void
+init (void* ctxt)
+{
+    pt::ptree tree;
+
+    if (SDK_RET_OK != load_pipeline_json(tree, true)){
+        UPG_TRACE_ERR("Failed to load upgrade json !\n");
+        exit(1);
+    }
+
+    if (SDK_RET_OK != init_svc(tree)){
+        UPG_TRACE_ERR("Failed to init service objects !\n");
+        exit(1);
+    }
+
+    if (SDK_RET_OK != init_stage_transitions(tree)){
+        UPG_TRACE_ERR("Failed to init stage transition table !\n");
+        exit(1);
+    }
+
+    if (SDK_RET_OK != set_entry_stage(tree)){
+        UPG_TRACE_ERR("Failed to set entry stage !\n");
+        exit(1);
+    }
+
+    if (SDK_RET_OK != set_event_sequence(tree)){
+        UPG_TRACE_ERR("Failed to set default event sequence !\n");
+        exit(1);
+    }
+
+    if (SDK_RET_OK != init_fsm_stages(tree)){
+        UPG_TRACE_ERR("Failed to set init stages !\n");
+        exit(1);
+    }
+
     init_fsm(ctxt);
 }
 

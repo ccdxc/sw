@@ -12,11 +12,14 @@
 
 #include <iostream>
 #include <ev.h>
+#include <boost/unordered_map.hpp>
+#include <boost/container/vector.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include "include/sdk/base.hpp"
 #include "upgrade/include/upgrade.hpp"
 #include "stage.hpp"
 #include "service.hpp"
-#include "idl.hpp"
 #include "logger.hpp"
 
 namespace sdk {

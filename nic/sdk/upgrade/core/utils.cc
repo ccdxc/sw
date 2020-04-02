@@ -10,6 +10,9 @@
 
 #include <iostream>
 #include <ev.h>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/algorithm/string.hpp>
@@ -17,10 +20,10 @@
 #include "include/sdk/base.hpp"
 #include "stage.hpp"
 #include "service.hpp"
-#include "idl.hpp"
 #include "fsm.hpp"
 #include "utils.hpp"
 #include "logger.hpp"
+#include "upgrade/include/upgrade.hpp"
 
 namespace sdk {
 namespace upg {
@@ -37,20 +40,7 @@ svc_sequence_to_str (const svc_sequence_list svcs)
 }
 
 std::string
-transition_to_str (const transition_stages& transitions)
-{
-    std::string str = "(from:rsp:to) :"  ;
-    for (auto x: transitions) {
-        str += "( " + std::string(upg_stage2str(x.from()));
-        str += " : "  + std::to_string(x.svc_rsp_code());
-        str += " : "  + std::string(upg_stage2str(x.to())) + "),";
-    }
-
-    return str;
-}
-
-std::string
-script_to_str (const upg_scripts& scripts)
+script_to_str(const upg_scripts& scripts)
 {
     std::string str;
     for (auto x: scripts) {
@@ -80,19 +70,6 @@ dump (const fsm& fsm)
                       fsm.pending_response(),
                       fsm.timeout(),
                       svc_sequence_to_str(fsm.svc_sequence()).c_str());
-}
-
-void
-dump (const transition_stages& transitions)
-{
-    std::string str ;
-    for (auto x: transitions) {
-        str += "(from:" + std::string(upg_stage2str(x.from()));
-        str += " rsp:"  + std::to_string(x.svc_rsp_code());
-        str += " to: "  + std::string(upg_stage2str(x.to()))+ "),";
-    }
-
-    UPG_TRACE_VERBOSE("%s", str.c_str());
 }
 
 void
@@ -195,6 +172,9 @@ name_to_stage_id (const std::string stage)
         }
     }
 
+    if (!found) {
+        UPG_TRACE_VERBOSE("Stage %s doesn't exist\n", stage.c_str())
+    }
     SDK_ASSERT(found != false);
     return id;
 };
@@ -213,6 +193,9 @@ id_to_stage_name (const upg_stage_t stage)
        }
    }
 
+   if (!found) {
+       UPG_TRACE_VERBOSE("Stage %d doesn't exist\n", stage)
+   }
    SDK_ASSERT(found != false);
    return name;
 };
@@ -232,6 +215,22 @@ str_to_scripts (std::string scripts)
     return script_list;
 };
 
+svc_rsp_code_t
+svc_rsp_code_name_to_id (std::string name) {
+    svc_rsp_code_t code;
+    bool found = false;
+
+    for (uint32_t i = UPG_STATUS_OK; i < SVC_RSP_MAX; i++) {
+        if(!strcmp (svc_rsp_code_name[(svc_rsp_code_t)i], name.c_str())) {
+            code    = (svc_rsp_code_t) i;
+            found = true;
+            break;
+        }
+    }
+
+    SDK_ASSERT(found != false);
+    return code;
+}
 
 svc_rsp_code_t
 svc_rsp_code (const upg_status_t id)

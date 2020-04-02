@@ -18,7 +18,6 @@
 #include "include/sdk/base.hpp"
 #include "upgrade/include/upgrade.hpp"
 #include "service.hpp"
-#include "idl.hpp"
 
 #define DEFAULT_SVC_RSP_TIMEOUT 5
 
@@ -34,48 +33,6 @@ typedef enum stage_callback_t {
     POST_STAGE = 1
 } stage_callback_t;
 
-/// \brief  smallest data structure to decide what would be the next
-/// stage
-/// \remark
-///  stage transition happens based on the current stage and responses
-///  from all the services. This data structure helps building lookup
-///  table for stage transition.
-class upg_stage_transition {
-public:
-    upg_stage_transition(void)
-        : from_(UPG_STAGE_EXIT), svc_rsp_code_(SVC_RSP_CRIT),
-          to_(UPG_STAGE_EXIT){};
-
-    upg_stage_transition(upg_stage_t curr, svc_rsp_code_t rsp,
-                         upg_stage_t next) {
-        from_ = curr;
-        svc_rsp_code_ = rsp;
-        to_ = next;
-    };
-
-    ~upg_stage_transition(void){};
-
-    upg_stage_t from(void) const { return from_; };
-
-    void set_from(upg_stage_t id) { from_ = id; };
-
-    upg_stage_t to(void) const { return to_; };
-
-    void set_to(upg_stage_t id) { to_ = id; };
-
-    svc_rsp_code_t svc_rsp_code(void) const { return svc_rsp_code_; };
-
-    void set_svc_rsp_code(svc_rsp_code_t id) { svc_rsp_code_ = id; };
-
-private:
-    upg_stage_t from_;
-    svc_rsp_code_t svc_rsp_code_;
-    upg_stage_t to_;
-};
-
-/// \brief a container for a list of stages
-// typedef class upg_stage_transition upg_stage_transition;
-typedef boost::container::vector<upg_stage_transition> transition_stages;
 /// \brief A lookup table
 /// \remark
 /// A hash map to identify the next stage based on current stage id and
