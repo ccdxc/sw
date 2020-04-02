@@ -47,24 +47,37 @@ mapfd(int fd, const off_t off, const size_t sz)
 }
 
 #ifdef __aarch64__
+static int
+is_coherent(const pal_mmap_region_t *pr)
+{
+    const pal_data_t *pd = pal_get_data();
+    int i;
+
+    for (i = 0; i < pd->nphysmem; i++) {
+        if (pr->pa >= pd->physmem[i].pa &&
+            pr->pa < (pd->physmem[i].pa + pd->physmem[i].sz) &&
+            pd->physmem[i].flags & PAL_MEM_PHYS_COHERENT) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static void *
 pr_map(pal_mmap_region_t *pr)
 {
     pal_data_t *pd = pal_get_data();
+    int fd;
 
     /*
-     * This is a temporary hack to map the non-cached/non-coherent region and the
-     * cached/coherent regions usind different FDs opened on /dev/capmem, with and
-     * without O_SYNC flag respectively. Eventually, the cache settings would be
-     * derived by the kernel mapping passed on by u-boot memory map settings, so
-     * we can map with a single FD. 
+     * This is a temporary hack to map the non-cached/non-coherent region
+     * and the cached/coherent regions usind different FDs opened on
+     * /dev/capmem, with and without O_SYNC flag respectively. Eventually,
+     * the cache settings would be derived by the kernel mapping passed
+     * on by u-boot memory map settings, so we can map with a single FD.
      */
-    if (pr->pa >= 0xc0000000 && pr->pa < 0xc4000000) {
-        pr->va = mapfd(pd->memfd_ccoh, pr->pa, pr->sz);
-    } else {
-        pr->va = mapfd(pd->memfd_nonccoh, pr->pa, pr->sz);
-    }
-
+    fd = is_coherent(pr) ? pd->memfd_ccoh : pd->memfd_nonccoh;
+    pr->va = mapfd(fd, pr->pa, pr->sz);
     pr->mapped = 1;
     return pr->va;
 }

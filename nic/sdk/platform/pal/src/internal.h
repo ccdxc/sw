@@ -11,6 +11,8 @@
 #include "cap_top_csr_defines.h"
 #include "cap_ms_c_hdr.h"
 
+struct pal_mem_phys_range_s;
+
 /* TODO: Find a better home for this */
 #define MAXUUID 32
 #define FREEACCESS 0x01
@@ -39,6 +41,10 @@ typedef struct {
     char app_uuid[MAXUUID];
 
     pal_mmap_region_t *regions;
+
+    // Dataplane memory
+    struct pal_mem_phys_range_s *physmem;
+    int nphysmem;
 } pal_data_t;
 
 pal_data_t *pal_get_data(void);

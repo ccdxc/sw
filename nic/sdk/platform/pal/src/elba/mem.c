@@ -109,3 +109,29 @@ pal_memset(const uint64_t pa, u_int8_t c, const size_t sz, u_int32_t flags)
     }
 }
 
+int
+pal_mem_get_phys_ranges(pal_mem_phys_rangetab_t *tab)
+{
+    const pal_data_t *pd = pal_get_data();
+
+    if (tab == NULL) {
+        return -1;
+    }
+    tab->nranges = pd->nphysmem;
+    tab->range = pd->physmem;
+    return 0;
+}
+
+uint64_t
+pal_mem_get_phys_totalsize(void)
+{
+    const pal_data_t *pd = pal_get_data();
+    uint64_t totsz;
+    int i;
+
+    totsz = 0;
+    for (i = 0; i < pd->nphysmem; i++) {
+        totsz += pd->physmem[i].sz;
+    }
+    return totsz;
+}
