@@ -14,5 +14,4 @@ echo 64 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
 mkdir -p /dev/hugepages
 mount -t hugetlbfs nodev /dev/hugepages
 
-exec $PDSPKG_TOPDIR/bin/athena_app -c hal_hw.json $* >$NON_PERSISTENT_LOGDIR/athena_app_console.log
-
+exec taskset 1 $PDSPKG_TOPDIR/bin/athena_app -c hal_hw.json $* >$NON_PERSISTENT_LOGDIR/athena_app_console.log &
