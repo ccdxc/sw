@@ -12,6 +12,22 @@
 using upgrade::HdlrResp;
 using upgrade::UpgCtx;
 using upgrade::UpgCtxApi;
+using upgrade::UpgReqStateType;
+using upgrade::UpgReqStateType::UpgStateCompatCheck;
+using upgrade::UpgReqStateType::UpgStateProcessQuiesce;
+using upgrade::UpgReqStateType::UpgStatePostRestart;
+using upgrade::UpgReqStateType::UpgStateSuccess;
+using upgrade::UpgReqStateType::UpgStateFailed;
+using upgrade::UpgReqStateType::UpgStateAbort;
+using upgrade::UpgReqStateType::UpgStateUpgPossible;
+using upgrade::UpgReqStateType::UpgStateLinkDown;
+using upgrade::UpgReqStateType::UpgStateLinkUp;
+using upgrade::UpgReqStateType::UpgStateHostDown;
+using upgrade::UpgReqStateType::UpgStateHostUp;
+using upgrade::UpgReqStateType::UpgStatePostHostDown;
+using upgrade::UpgReqStateType::UpgStatePostLinkUp;
+using upgrade::UpgReqStateType::UpgStateSaveState;
+using upgrade::UpgReqStateType::UpgStateTerminal;
 
 namespace hal {
 namespace upgrade {
@@ -20,7 +36,7 @@ class nicmgr_upgrade_handler : public ::upgrade::UpgHandler {
     uint32_t prevExecState;
 
 public:
-    nicmgr_upgrade_handler() {}
+    nicmgr_upgrade_handler() { prevExecState = 0; }
     HdlrResp CompatCheckHandler(UpgCtx& upgCtx);
     HdlrResp ProcessQuiesceHandler(UpgCtx& upgCtx);
     HdlrResp LinkDownHandler(UpgCtx& upgCtx);

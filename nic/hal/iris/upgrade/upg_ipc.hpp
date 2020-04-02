@@ -46,12 +46,12 @@ typedef struct upg_msg_s {
     upg_msg_id_t   msg_id;
     upg_rsp_code_t rsp_code;
     uint32_t       prev_exec_state;
+    uint32_t       save_state_delphi;
     char rsp_err_string[UPG_RSP_ERR_STR_MAXLEN];
 } upg_msg_t;
 
 void upg_event_init(void);
-HdlrResp upg_event_notify(upg_msg_id_t id, UpgCtx& upgCtx,
-                          uint32_t prevstate);
+HdlrResp upg_event_notify(upg_msg_t *msg);
 
 }   // namespace upgrade
 }   // namespace hal

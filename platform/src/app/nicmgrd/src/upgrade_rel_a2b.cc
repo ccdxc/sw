@@ -10,7 +10,7 @@
 #include "platform/src/lib/devapi_iris/devapi_iris.hpp"
 #include "gen/proto/nicmgr/nicmgr.delphi.hpp"
 #include "nic/hal/iris/delphi/delphic.hpp"
-#include "gen/proto/nicmgr/nicmgr.pb.h"
+#include "nic/hal/iris/delphi/nicmgr_delphic.hpp"
 #include "upgrade_rel_a2b.hpp"
 
 extern DeviceManager *devmgr;
@@ -20,12 +20,6 @@ namespace nicmgr {
 bool g_device_restored = true;
 static delphi::SdkPtr delphi_sdk;
 static volatile bool mount_completed = false;
-
-// init_eth_objects mounts eth_dev objects
-void init_eth_objects(delphi::SdkPtr sdk) {
-    delphi::objects::EthDeviceInfo::Mount(sdk, delphi::ReadWriteMode);
-    delphi::objects::UplinkInfo::Mount(sdk, delphi::ReadWriteMode);
-}
 
 static void
 restore_devices(void)
@@ -128,17 +122,7 @@ void
 nicmgr_delphi_mount_complete (void)
 {
     mount_completed = true;
-}
-
-// below function is called from delphi thread
-void
-nicmgr_delphi_init (delphi::SdkPtr sdk)
-{
-    // init eth_dev delphi objects
-    init_eth_objects(sdk);
-
-    delphi_sdk = sdk;
-    return;
+    delphi_sdk = hal::svc::nicmgr_delphic_sdk();
 }
 
 static void

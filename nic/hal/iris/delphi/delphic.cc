@@ -9,6 +9,7 @@
 #include "nic/hal/iris/upgrade/upg_ipc.hpp"
 #include "nic/hal/iris/delphi/delphi.hpp"
 #include "nic/hal/iris/delphi/delphic.hpp"
+#include "nic/hal/iris/delphi/nicmgr_delphic.hpp"
 #include "nic/hal/iris/sysmgr/sysmgr.hpp"
 #include "nic/hal/svc/hal_ext.hpp"
 #include "nic/linkmgr/delphi/linkmgr_delphi.hpp"
@@ -39,14 +40,15 @@ delphi_client_start (void *ctxt)
     Status ret = linkmgr::port_svc_init(sdk);
     SDK_ASSERT_TRACE_RETURN(ret.ok(), NULL,
                             "Port service initialization failure");
-    // init nicmgr service. only for rel_A to rel_B
-    nicmgr::nicmgr_delphi_init(sdk);
 
     // register delphi client
     sdk->RegisterService(g_delphic);
 
     // register for sdk ipc for nicmgr events
     hal::upgrade::upg_event_init();
+
+    //Register for nicmgr delphic events
+    hal::svc::nicmgr_delphic_init(sdk);
 
     // sit in main loop
     sdk->MainLoop();
@@ -116,18 +118,18 @@ delphi_client::send_upg_stage_status(delphic_upg_id_t upg_id, bool status)
 {
     ::upgrade::UpgSdkPtr sdk;
 
-    switch (upg_id) { 
-    case DELPHIC_UPG_ID_HAL: { 
+    switch (upg_id) {
+    case DELPHIC_UPG_ID_HAL: {
         sdk = upgsdk_;
-        break;   
+        break;
     }
-    case DELPHIC_UPG_ID_NICMGR: { 
-        sdk = nicmgr_upgsdk_; 
-        break; 
-    } 
-    default: 
-        SDK_ASSERT(0); 
-    } 
+    case DELPHIC_UPG_ID_NICMGR: {
+        sdk = nicmgr_upgsdk_;
+        break;
+    }
+    default:
+        SDK_ASSERT(0);
+    }
 
     if (status) {
         sdk->SendAppRespSuccess();
@@ -157,7 +159,7 @@ std::string delphi_client::Name()
     return "hal";
 }
 
-static void 
+static void
 microseg_sync_result (sdk::ipc::ipc_msg_ptr msg, const void *status)
 {
     hal::core::micro_seg_info_t *response = (hal::core::micro_seg_info_t *)status;

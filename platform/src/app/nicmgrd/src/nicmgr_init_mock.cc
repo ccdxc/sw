@@ -6,6 +6,16 @@
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "upgrade_rel_a2b.hpp"
+#include "platform/src/lib/nicmgr/include/dev.hpp"
+
+DeviceManager *devmgr;
+
+std::vector<struct EthDevInfo *>
+DeviceManager::GetEthDevStateInfo() {
+    std::vector<struct EthDevInfo *> eth;
+
+    return eth;
+}
 
 namespace nicmgr {
 

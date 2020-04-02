@@ -46,13 +46,9 @@ upg_process_async_result (sdk::ipc::ipc_msg_ptr msg, const void *status)
 }
 
 HdlrResp
-upg_event_notify (upg_msg_id_t id, UpgCtx& upgCtx, uint32_t prevstate)
+upg_event_notify (upg_msg_t *msg)
 {
-    upg_msg_t msg;
     HdlrResp rsp;
-
-    msg.msg_id = id;
-    msg.prev_exec_state = prevstate;
 
     // makesure nicmgr is ready. otherwise return error
     if (!hal_thread_ready(hal::HAL_THREAD_ID_NICMGR)) {
@@ -60,12 +56,13 @@ upg_event_notify (upg_msg_id_t id, UpgCtx& upgCtx, uint32_t prevstate)
         rsp.resp = ::upgrade::FAIL;
         goto end;
     }
-    HAL_TRACE_DEBUG("[upgrade] sendin msg {} to nicmgr prevstate {}",
-                    id, msg.prev_exec_state);
+    HAL_TRACE_DEBUG("[upgrade] sendin msg {} to nicmgr, prevstate {},"
+                    "Save State Delphic {}", msg->msg_id, msg->prev_exec_state,
+                    msg->save_state_delphi);
 
     // async request to nicmgr for upgrade
-    sdk::ipc::request(hal::HAL_THREAD_ID_NICMGR, event_id_t::EVENT_ID_UPG, &msg,
-                      sizeof(msg), upg_process_async_result, NULL);
+    sdk::ipc::request(hal::HAL_THREAD_ID_NICMGR, event_id_t::EVENT_ID_UPG, msg,
+                      sizeof(upg_msg_t), upg_process_async_result, NULL);
     rsp.resp = ::upgrade::INPROGRESS;
 
 end:

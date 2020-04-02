@@ -13,6 +13,7 @@
 #include "platform/src/lib/nicmgr/include/eth_dev.hpp"
 
 #include "upgrade.hpp"
+#include "nicmgr_delphic_ipc.hpp"
 #include "upgrade_rel_a2b.hpp"
 
 using namespace upgrade;
@@ -253,14 +254,33 @@ nicmgr_upg_hndlr::LinkUpHandler(UpgCtx& upgCtx)
 void
 nicmgr_upg_hndlr::ResetState(UpgCtx& upgCtx)
 {
-
 }
 
 // Handle upgrade success
 void
 nicmgr_upg_hndlr::SuccessHandler(UpgCtx& upgCtx)
 {
+    nicmgr_delphic_msg_t ethdev_msg;
+    nicmgr_delphic_msg_t uplink_msg;
+
     NIC_LOG_INFO("Upgrade: Success");
+
+    ethdev_msg.msg_id = NICMGR_DELPHIC_MSG_CLR_UPG_ETHDEVINFO;
+    // sending async upgrade status event to hal from nicmgr
+    sdk::ipc::request(hal::HAL_THREAD_ID_DELPHI_CLIENT,
+                          event_id_t::EVENT_ID_NICMGR_DELPHIC,
+                          &ethdev_msg, sizeof(ethdev_msg), NULL);
+
+    NIC_LOG_INFO("Clearing ethdevinfo in Delphi");
+
+    uplink_msg.msg_id = NICMGR_DELPHIC_MSG_CLR_UPG_UPLINKINFO;
+    // sending async upgrade status event to hal from nicmgr
+    sdk::ipc::request(hal::HAL_THREAD_ID_DELPHI_CLIENT,
+                          event_id_t::EVENT_ID_NICMGR_DELPHIC,
+                          &uplink_msg, sizeof(uplink_msg), NULL);
+
+    NIC_LOG_INFO("Clearing uplinkinfo in Delphi");
+
     ResetState(upgCtx);
 }
 
@@ -453,20 +473,41 @@ nicmgr_upg_hndlr::upg_restore_states(void)
 }
 
 HdlrResp
-nicmgr_upg_hndlr::SaveStateHandler(UpgCtx& upgCtx) {
+nicmgr_upg_hndlr::SaveStateHandler(UpgCtx& upgCtx, upg_msg_t *msg) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     backup_mem_hdr_t *hdr = (backup_mem_hdr_t *)mem_;
     sdk_ret_t ret = SDK_RET_OK;
     UplinkInfo uplinkinfo;
     EthDeviceInfo devinfo;
+    std::vector <struct EthDevInfo*> dev_info;
+    std::map<uint32_t, uplink_t*> up_links;
     struct stat st = { 0 };
     std::string dst = std::string(NICMGR_BKUP_DIR) + std::string(NICMGR_BKUP_SHM_NAME);
     std::string src = std::string("/dev/shm/") + std::string(NICMGR_BKUP_SHM_NAME);
 
     NIC_LOG_INFO("Upgrade: SaveState");
 
-    std::vector <struct EthDevInfo*> dev_info;
-    std::map<uint32_t, uplink_t*> up_links = devmgr->GetUplinks();
+    if (msg->save_state_delphi == 1) {
+        nicmgr_delphic_msg_t ethdev_msg;
+        ethdev_msg.msg_id = NICMGR_DELPHIC_MSG_SET_UPG_ETHDEVINFO;
+
+        NIC_LOG_DEBUG("SaveState sending IPC to save ethdevinfo Delphi");
+        // sending async upgrade status event to hal from nicmgr
+        sdk::ipc::request(hal::HAL_THREAD_ID_DELPHI_CLIENT,
+                              event_id_t::EVENT_ID_NICMGR_DELPHIC,
+                              &ethdev_msg, sizeof(ethdev_msg), NULL);
+
+
+        nicmgr_delphic_msg_t uplink_msg;
+        uplink_msg.msg_id = NICMGR_DELPHIC_MSG_SET_UPG_UPLINKINFO;
+
+        NIC_LOG_DEBUG("SaveState sending IPC to save uplinkinfo Delphi");
+        // sending async upgrade status event to hal from nicmgr
+        sdk::ipc::request(hal::HAL_THREAD_ID_DELPHI_CLIENT,
+                              event_id_t::EVENT_ID_NICMGR_DELPHIC,
+                              &uplink_msg, sizeof(uplink_msg), NULL);
+        goto end;
+    }
 
     dev_info = devmgr->GetEthDevStateInfo();
     NIC_FUNC_DEBUG("Saving {} objects of EthDevInfo to shm", dev_info.size());
@@ -482,6 +523,7 @@ nicmgr_upg_hndlr::SaveStateHandler(UpgCtx& upgCtx) {
         SDK_ASSERT(ret == SDK_RET_OK);
     }
 
+    up_links = devmgr->GetUplinks();
     NIC_FUNC_DEBUG("Saving {} objects of UplinkInfo to shm", up_links.size());
 
     hdr[NICMGR_BKUP_OBJ_UPLINKINFO_ID].id = NICMGR_BKUP_OBJ_UPLINKINFO_ID;
@@ -502,7 +544,7 @@ nicmgr_upg_hndlr::SaveStateHandler(UpgCtx& upgCtx) {
             NIC_LOG_ERR("Backup directory %s/ doesn't exist, failed to create one\n",
                           NICMGR_BKUP_DIR);
             resp.resp = FAIL;
-            goto err_end;
+            goto end;
         }
     }
 
@@ -513,7 +555,7 @@ nicmgr_upg_hndlr::SaveStateHandler(UpgCtx& upgCtx) {
         NIC_LOG_DEBUG("Saving state file completed, src {} to dst {}", src, dst);
     }
 
-err_end:
+end:
     return resp;
 }
 
@@ -745,7 +787,7 @@ nicmgr_upg_hndlr::upg_ipc_handler_(sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
         rsp.errStr = "";
         break;
     case MSG_ID_UPG_SAVE_STATE:
-        rsp = SaveStateHandler(upg_ctx);
+        rsp = SaveStateHandler(upg_ctx, upg_msg);
         break;
     case MSG_ID_UPG_POST_LINK_UP:
         rsp = PostLinkUpHandler(upg_ctx);

@@ -24,15 +24,17 @@ HdlrResp
 nicmgr_upgrade_handler::CompatCheckHandler(UpgCtx& upgCtx)
 {
     std::string preVer, postVer;
-    HdlrResp    rsp;
-    uint32_t  prevstate = prevExecState;
+    upg_msg_t   msg;
+
+    msg.msg_id = MSG_ID_UPG_COMPAT_CHECK;
+    msg.prev_exec_state = prevExecState;
 
     ::upgrade::UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, ::upgrade::DEVCONFVER, preVer);
     ::upgrade::UpgCtxApi::UpgCtxGetPostUpgTableVersion(upgCtx, ::upgrade::DEVCONFVER, postVer);
     HAL_TRACE_DEBUG("[nicmgr_upgrade] Handling compat checks msg ... preVer {} postVer {}", preVer, postVer);
     prevExecState = UpgStateCompatCheck;
 
-    return upg_event_notify(MSG_ID_UPG_COMPAT_CHECK, upgCtx, prevstate);
+    return upg_event_notify(&msg);
 }
 
 //------------------------------------------------------------------------------
@@ -41,10 +43,15 @@ nicmgr_upgrade_handler::CompatCheckHandler(UpgCtx& upgCtx)
 HdlrResp
 nicmgr_upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
 {
-    uint32_t  prevstate = prevExecState;
+    upg_msg_t   msg;
+
+    msg.msg_id = MSG_ID_UPG_LINK_DOWN;
+    msg.prev_exec_state = prevExecState;
+
     HAL_TRACE_DEBUG("[nicmgr_upgrade] Handling link down msg ...");
     prevExecState = UpgStateLinkDown;
-    return upg_event_notify(MSG_ID_UPG_LINK_DOWN, upgCtx, prevstate);
+
+    return upg_event_notify(&msg);
 }
 
 //------------------------------------------------------------------------------
@@ -53,10 +60,15 @@ nicmgr_upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
 HdlrResp
 nicmgr_upgrade_handler::PostLinkUpHandler(UpgCtx& upgCtx)
 {
-    uint32_t  prevstate = prevExecState;
+    upg_msg_t   msg;
+
+    msg.msg_id = MSG_ID_UPG_POST_LINK_UP;
+    msg.prev_exec_state = prevExecState;
+
     HAL_TRACE_DEBUG("[nicmgr_upgrade] Handling Post LinkUp msg ...");
     prevExecState = UpgStatePostLinkUp;
-    return upg_event_notify(MSG_ID_UPG_POST_LINK_UP, upgCtx, prevstate);
+
+    return upg_event_notify(&msg);
 }
 
 //------------------------------------------------------------------------------
@@ -65,10 +77,15 @@ nicmgr_upgrade_handler::PostLinkUpHandler(UpgCtx& upgCtx)
 HdlrResp
 nicmgr_upgrade_handler::ProcessQuiesceHandler(UpgCtx& upgCtx)
 {
-    uint32_t  prevstate = prevExecState;
+    upg_msg_t   msg;
+
+    msg.msg_id = MSG_ID_UPG_QUIESCE;
+    msg.prev_exec_state = prevExecState;
+
     HAL_TRACE_DEBUG("[nicmgr_upgrade] Handling quiesce msg ...");
     prevExecState = UpgStateProcessQuiesce;
-    return upg_event_notify(MSG_ID_UPG_QUIESCE, upgCtx, prevstate);
+
+    return upg_event_notify(&msg);
 }
 
 
@@ -78,10 +95,33 @@ nicmgr_upgrade_handler::ProcessQuiesceHandler(UpgCtx& upgCtx)
 HdlrResp
 nicmgr_upgrade_handler::SaveStateHandler(UpgCtx& upgCtx)
 {
-    uint32_t  prevstate = prevExecState;
+    upg_msg_t   msg;
+    std::string preVer, postVer;
+    const char *dev_conf_a = "1";
+
+    msg.msg_id = MSG_ID_UPG_SAVE_STATE;
+    msg.prev_exec_state = prevExecState;
+
     HAL_TRACE_DEBUG("[nicmgr_upgrade] Handling save state msg ...");
+
+    ::upgrade::UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx,
+                                                      ::upgrade::DEVCONFVER,
+                                                      preVer);
+    ::upgrade::UpgCtxApi::UpgCtxGetPostUpgTableVersion(upgCtx,
+                                                       ::upgrade::DEVCONFVER,
+                                                       postVer);
+    // Check if B => A.
+    if (atoi(preVer.c_str()) > atoi(postVer.c_str()) &&
+             atoi(dev_conf_a) == atoi(postVer.c_str())) {
+        HAL_TRACE_DEBUG("[nicmgr_upgrade] Handling B to A Downgrade msg... "
+                    "preVer {} postVer {}",
+                    preVer, postVer);
+        msg.save_state_delphi = 1;
+    }
+
     prevExecState = UpgStateSaveState;
-    return upg_event_notify(MSG_ID_UPG_SAVE_STATE, upgCtx, prevstate);
+
+    return upg_event_notify(&msg);
 }
 
 //------------------------------------------------------------------------------
@@ -90,10 +130,15 @@ nicmgr_upgrade_handler::SaveStateHandler(UpgCtx& upgCtx)
 HdlrResp
 nicmgr_upgrade_handler::FailedHandler(UpgCtx& upgCtx)
 {
-    uint32_t  prevstate = prevExecState;
+    upg_msg_t   msg;
+
+    msg.msg_id = MSG_ID_UPG_FAIL;
+    msg.prev_exec_state = prevExecState;
+
     HAL_TRACE_DEBUG("[nicmgr_upgrade] Handling failed msg ...");
     prevExecState = UpgStateFailed;
-    return upg_event_notify(MSG_ID_UPG_FAIL, upgCtx, prevstate);
+
+    return upg_event_notify(&msg);
 }
 
 //------------------------------------------------------------------------------
@@ -102,10 +147,15 @@ nicmgr_upgrade_handler::FailedHandler(UpgCtx& upgCtx)
 HdlrResp
 nicmgr_upgrade_handler::HostDownHandler(UpgCtx& upgCtx)
 {
-    uint32_t  prevstate = prevExecState;
+    upg_msg_t   msg;
+
+    msg.msg_id = MSG_ID_UPG_HOSTDOWN;
+    msg.prev_exec_state = prevExecState;
+
     HAL_TRACE_DEBUG("[nicmgr_upgrade] Handling host down msg ...");
     prevExecState = UpgStateHostDown;
-    return upg_event_notify(MSG_ID_UPG_HOSTDOWN, upgCtx, prevstate);
+
+    return upg_event_notify(&msg);
 }
 
 //------------------------------------------------------------------------------
@@ -114,10 +164,15 @@ nicmgr_upgrade_handler::HostDownHandler(UpgCtx& upgCtx)
 HdlrResp
 nicmgr_upgrade_handler::HostUpHandler(UpgCtx& upgCtx)
 {
-    uint32_t  prevstate = prevExecState;
+    upg_msg_t   msg;
+
+    msg.msg_id = MSG_ID_UPG_HOSTUP;
+    msg.prev_exec_state = prevExecState;
+
     HAL_TRACE_DEBUG("[nicmgr_upgrade] Handling host up msg ...");
     prevExecState = UpgStateHostUp;
-    return upg_event_notify(MSG_ID_UPG_HOSTUP, upgCtx, prevstate);
+
+    return upg_event_notify(&msg);
 }
 
 //------------------------------------------------------------------------------
@@ -126,10 +181,15 @@ nicmgr_upgrade_handler::HostUpHandler(UpgCtx& upgCtx)
 HdlrResp
 nicmgr_upgrade_handler::PostHostDownHandler(UpgCtx& upgCtx)
 {
-    uint32_t  prevstate = prevExecState;
+    upg_msg_t   msg;
+
+    msg.msg_id = MSG_ID_UPG_POST_HOSTDOWN;
+    msg.prev_exec_state = prevExecState;
+
     HAL_TRACE_DEBUG("[nicmgr_upgrade] Handling post host down msg ...");
     prevExecState = UpgStatePostHostDown;
-    return upg_event_notify(MSG_ID_UPG_POST_HOSTDOWN, upgCtx, prevstate);
+
+    return upg_event_notify(&msg);
 }
 
 //------------------------------------------------------------------------------
@@ -138,12 +198,17 @@ nicmgr_upgrade_handler::PostHostDownHandler(UpgCtx& upgCtx)
 HdlrResp
 nicmgr_upgrade_handler::PostRestartHandler(UpgCtx& upgCtx)
 {
-    uint32_t  prevstate = prevExecState;
+    upg_msg_t   msg;
+
+    msg.msg_id = MSG_ID_UPG_POST_RESTART;
+    msg.prev_exec_state = prevExecState;
+
     HAL_TRACE_DEBUG("[nicmgr_upgrade] Handling post restart msg ...");
     // TODO: mostly regular asic init path should work here, no special handling
     // needed
     prevExecState = UpgStatePostRestart;
-    return upg_event_notify(MSG_ID_UPG_POST_RESTART, upgCtx, prevstate);
+
+    return upg_event_notify(&msg);
 }
 
 //------------------------------------------------------------------------------
@@ -152,10 +217,15 @@ nicmgr_upgrade_handler::PostRestartHandler(UpgCtx& upgCtx)
 HdlrResp
 nicmgr_upgrade_handler::LinkUpHandler(UpgCtx& upgCtx)
 {
-    uint32_t  prevstate = prevExecState;
+    upg_msg_t   msg;
+
+    msg.msg_id = MSG_ID_UPG_LINK_UP;
+    msg.prev_exec_state = prevExecState;
+
     HAL_TRACE_DEBUG("[nicmgr_upgrade] Handling link up msg ...");
     prevExecState = UpgStateLinkUp;
-    return upg_event_notify(MSG_ID_UPG_LINK_UP, upgCtx, prevstate);
+
+    return upg_event_notify(&msg);
 }
 
 //------------------------------------------------------------------------------
@@ -164,10 +234,15 @@ nicmgr_upgrade_handler::LinkUpHandler(UpgCtx& upgCtx)
 void
 nicmgr_upgrade_handler::SuccessHandler(UpgCtx& upgCtx)
 {
-    uint32_t  prevstate = prevExecState;
+    upg_msg_t   msg;
+
+    msg.msg_id = MSG_ID_UPG_SUCCESS;
+    msg.prev_exec_state = prevExecState;
+
     HAL_TRACE_DEBUG("[nicmgr_upgrade] Handling success msg ...");
     prevExecState = UpgStateSuccess;
-    upg_event_notify(MSG_ID_UPG_SUCCESS, upgCtx, prevstate);
+
+    upg_event_notify(&msg);
 }
 
 //------------------------------------------------------------------------------
@@ -176,10 +251,15 @@ nicmgr_upgrade_handler::SuccessHandler(UpgCtx& upgCtx)
 void
 nicmgr_upgrade_handler::AbortHandler(UpgCtx& upgCtx)
 {
-    uint32_t  prevstate = prevExecState;
+    upg_msg_t   msg;
+
+    msg.msg_id = MSG_ID_UPG_ABORT;
+    msg.prev_exec_state = prevExecState;
+
     HAL_TRACE_DEBUG("[nicmgr_upgrade] Handling abort msg ...");
     prevExecState = UpgStateAbort;
-    upg_event_notify(MSG_ID_UPG_ABORT, upgCtx, prevstate);
+
+    upg_event_notify(&msg);
 }
 
 }    // namespace upgrade

@@ -28,7 +28,7 @@ public:
     HdlrResp PostRestartHandler(UpgCtx& upgCtx);
     HdlrResp HostDownHandler(UpgCtx& upgCtx);
     HdlrResp PostHostDownHandler(UpgCtx& upgCtx);
-    HdlrResp SaveStateHandler(UpgCtx& upgCtx);
+    HdlrResp SaveStateHandler(UpgCtx& upgCtx, upg_msg_t *msg);
     HdlrResp HostUpHandler(UpgCtx& upgCtx);
     HdlrResp LinkUpHandler(UpgCtx& upgCtx);
     HdlrResp PostLinkUpHandler(UpgCtx& upgCtx);
