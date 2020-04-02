@@ -66,7 +66,7 @@ TEST_F(upg_func_gtest, table_property_get_set) {
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     sdk::asic::pd::asicpd_rss_tbl_eng_cfg_modify(
-        &cfg[P4_PIPELINE_RXDMA][P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR]);
+        &cfg[P4_PIPELINE_RXDMA][P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR], 0);
     sdk::platform::capri::capri_quiesce_stop();
 
 }
