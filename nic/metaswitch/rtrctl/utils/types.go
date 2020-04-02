@@ -456,13 +456,125 @@ func newBGPPeerSpec(in *pds.BGPPeerSpec) ShadowBGPPeerSpec {
 
 // ShadowBGPPeerStatus shadows the BGPPeerStatus for CLI purposes
 type ShadowBGPPeerStatus struct {
-	Id            string
-	LastErrorRcvd string
-	LastErrorSent string
-	Status        string
-	PrevStatus    string
-	LocalAddr     string
+	Id               string
+	LastErrorRcvd    string
+	LastErrorSent    string
+	Status           string
+	PrevStatus       string
+	LocalAddr        string
+	CapsSent         string
+	CapsRcvd         string
+	CapsNeg          string
+	SelLocalAddrType string
 	*pds.BGPPeerStatus
+}
+
+type BgpCapabilities uint32
+
+const (
+	BGP_CAP_MP_IPV4_UNI         BgpCapabilities = 0x00000001
+	BGP_CAP_MP_IPV4_MULT        BgpCapabilities = 0x00000002
+	BGP_CAP_MP_IPV4_VPN         BgpCapabilities = 0x00000004
+	BGP_CAP_MP_IPV4_LABEL       BgpCapabilities = 0x00000008
+	BGP_CAP_MP_IPV6_UNI         BgpCapabilities = 0x00000010
+	BGP_CAP_MP_IPV6_MULT        BgpCapabilities = 0x00000020
+	BGP_CAP_MP_IPV6_VPN         BgpCapabilities = 0x00000040
+	BGP_CAP_MP_IPV6_LABEL       BgpCapabilities = 0x00000080
+	BGP_CAP_ROUTE_REFRESH       BgpCapabilities = 0x00000100
+	BGP_CAP_GRACEFUL_RESTART    BgpCapabilities = 0x00000200
+	BGP_CAP_ROUTE_REFRESH_CISCO BgpCapabilities = 0x00000400
+	BGP_CAP_ORF                 BgpCapabilities = 0x00000800
+	BGP_CAP_ORF_CISCO           BgpCapabilities = 0x00001000
+	BGP_CAP_4_OCTET_AS          BgpCapabilities = 0x00002000
+	BGP_CAP_MP_L2VPN_VPLS       BgpCapabilities = 0x00004000
+	BGP_CAP_ADD_PATH            BgpCapabilities = 0x00008000
+	BGP_CAP_MP_L2VPN_EVPN       BgpCapabilities = 0x00010000
+	BGP_CAP_MP_IPV4_PRIV        BgpCapabilities = 0x00020000
+	BGP_CAP_ENH_RT_REFRESH      BgpCapabilities = 0x00040000
+	BGP_CAP_ENHE_IPV4_UNI       BgpCapabilities = 0x00080000
+	BGP_CAP_ENHE_IPV4_MULTI     BgpCapabilities = 0x00100000
+	BGP_CAP_ENHE_IPV4_LABEL     BgpCapabilities = 0x00200000
+	BGP_CAP_ENHE_IPV4_VPN       BgpCapabilities = 0x00400000
+)
+
+func BgpCapsStr(in BgpCapabilities) string {
+	ret := ""
+	if in&BGP_CAP_MP_IPV4_UNI != 0 {
+		ret += "BGP_CAP_MP_IPV4_UNI, "
+	}
+	if in&BGP_CAP_MP_IPV4_MULT != 0 {
+		ret += "BGP_CAP_MP_IPV4_MULT, "
+	}
+	if in&BGP_CAP_MP_IPV4_VPN != 0 {
+		ret += "BGP_CAP_MP_IPV4_VPN, "
+	}
+	if in&BGP_CAP_MP_IPV4_LABEL != 0 {
+		ret += "BGP_CAP_MP_IPV4_LABEL, "
+	}
+	if in&BGP_CAP_MP_IPV6_UNI != 0 {
+		ret += "BGP_CAP_MP_IPV6_UNI, "
+	}
+	if in&BGP_CAP_MP_IPV6_MULT != 0 {
+		ret += "BGP_CAP_MP_IPV6_MULT, "
+	}
+	if in&BGP_CAP_MP_IPV6_VPN != 0 {
+		ret += "BGP_CAP_MP_IPV6_VPN, "
+	}
+	if in&BGP_CAP_MP_IPV6_LABEL != 0 {
+		ret += "BGP_CAP_MP_IPV6_LABEL, "
+	}
+	if in&BGP_CAP_ROUTE_REFRESH != 0 {
+		ret += "BGP_CAP_ROUTE_REFRESH, "
+	}
+	if in&BGP_CAP_GRACEFUL_RESTART != 0 {
+		ret += "BGP_CAP_GRACEFUL_RESTART, "
+	}
+	if in&BGP_CAP_ROUTE_REFRESH_CISCO != 0 {
+		ret += "BGP_CAP_ROUTE_REFRESH_CISCO, "
+	}
+	if in&BGP_CAP_ORF != 0 {
+		ret += "BGP_CAP_ORF, "
+	}
+	if in&BGP_CAP_ORF_CISCO != 0 {
+		ret += "BGP_CAP_ORF_CISCO, "
+	}
+	if in&BGP_CAP_4_OCTET_AS != 0 {
+		ret += "BGP_CAP_4_OCTET_AS, "
+	}
+	if in&BGP_CAP_MP_L2VPN_VPLS != 0 {
+		ret += "BGP_CAP_MP_L2VPN_VPLS, "
+	}
+	if in&BGP_CAP_ADD_PATH != 0 {
+		ret += "BGP_CAP_ADD_PATH, "
+	}
+	if in&BGP_CAP_MP_L2VPN_EVPN != 0 {
+		ret += "BGP_CAP_MP_L2VPN_EVPN, "
+	}
+	if in&BGP_CAP_MP_IPV4_PRIV != 0 {
+		ret += "BGP_CAP_MP_IPV4_PRIV, "
+	}
+	if in&BGP_CAP_ENH_RT_REFRESH != 0 {
+		ret += "BGP_CAP_ENH_RT_REFRESH, "
+	}
+	if in&BGP_CAP_ENHE_IPV4_UNI != 0 {
+		ret += "BGP_CAP_ENHE_IPV4_UNI, "
+	}
+	if in&BGP_CAP_ENHE_IPV4_MULTI != 0 {
+		ret += "BGP_CAP_ENHE_IPV4_MULTI, "
+	}
+	if in&BGP_CAP_ENHE_IPV4_LABEL != 0 {
+		ret += "BGP_CAP_ENHE_IPV4_LABEL, "
+	}
+	if in&BGP_CAP_ENHE_IPV4_VPN != 0 {
+		ret += "BGP_CAP_ENHE_IPV4_VPN, "
+	}
+	if ret == "" {
+		ret = "BGP_CAP_NONE"
+	} else {
+		ret = strings.TrimSuffix(ret, ", ")
+	}
+
+	return ret
 }
 
 func BgpErrStr(bs []byte) string {
@@ -508,13 +620,17 @@ func BgpErrStr(bs []byte) string {
 
 func newBGPPeerStatus(in *pds.BGPPeerStatus) ShadowBGPPeerStatus {
 	return ShadowBGPPeerStatus{
-		Id:            "",
-		LastErrorRcvd: BgpErrStr(in.LastErrorRcvd),
-		LastErrorSent: BgpErrStr(in.LastErrorSent),
-		Status:        strings.TrimPrefix(in.Status.String(), "BGP_PEER_STATE_"),
-		PrevStatus:    strings.TrimPrefix(in.PrevStatus.String(), "BGP_PEER_STATE_"),
-		LocalAddr:     PdsIPToString(in.LocalAddr),
-		BGPPeerStatus: in,
+		Id:               "",
+		LastErrorRcvd:    BgpErrStr(in.LastErrorRcvd),
+		LastErrorSent:    BgpErrStr(in.LastErrorSent),
+		Status:           strings.TrimPrefix(in.Status.String(), "BGP_PEER_STATE_"),
+		PrevStatus:       strings.TrimPrefix(in.PrevStatus.String(), "BGP_PEER_STATE_"),
+		LocalAddr:        PdsIPToString(in.LocalAddr),
+		CapsSent:         BgpCapsStr(BgpCapabilities(in.CapsSent)),
+		CapsRcvd:         BgpCapsStr(BgpCapabilities(in.CapsRcvd)),
+		CapsNeg:          BgpCapsStr(BgpCapabilities(in.CapsNeg)),
+		SelLocalAddrType: strings.TrimPrefix(in.SelLocalAddrType.String(), "BGP_ADDR_TYPE_"),
+		BGPPeerStatus:    in,
 	}
 }
 

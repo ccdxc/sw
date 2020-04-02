@@ -142,21 +142,25 @@ const (
 
 	bgpPeerDetStr = `BGP Peer details
 ------------------------------------
-UUID                   : %s
-Admin State            : %v
-Config Local Address   : %v
-Selected Local Address : %v
-Remote Address         : %v
-Remote ASN             : %d
-Authentication         : %v
-Flags                  : [ RR Client: %v / Send Community: %v / Ext Community: %v ]
-ConfiguredTimers       : [ Holdtime: %v seconds / Keepalive: %v seconds ]
-NegotiatedTimers       : [ Holdtime: %v seconds / Keepalive: %v seconds ]
-TTL                    : %d
-Status                 : %v
-Previous State         : %v
-Last Err Recvd         : [ %v ]
-Last Err Sent          : [ %v ]
+UUID                     : %s
+Admin State              : %v
+Config Local Address     : %v
+Selected Local Address   : %v
+Remote Address           : %v
+Remote ASN               : %d
+Authentication           : %v
+Flags                    : [ RR Client: %v / Send Community: %v / Ext Community: %v ]
+ConfiguredTimers         : [ Holdtime: %v seconds / Keepalive: %v seconds ]
+NegotiatedTimers         : [ Holdtime: %v seconds / Keepalive: %v seconds ]
+TTL                      : %d
+Status                   : %v
+Previous State           : %v
+Last Err Recvd           : [ %v ]
+Last Err Sent            : [ %v ]
+Capabilities Sent        : [ %v ]
+Capabilities Received    : [ %v ]
+Capabilities Negotiated  : [ %v ]
+Selected Local Addr Type : [ %s ]
 ------------------------------------
 `
 )
@@ -197,7 +201,8 @@ func bgpPeersShowCmdHandler(cmd *cobra.Command, args []string) error {
 					peer.Spec.RRClient, peer.Spec.SendComm, peer.Spec.SendExtComm, peer.Spec.HoldTime,
 					peer.Spec.KeepAlive, peer.Status.HoldTime, peer.Status.KeepAlive, peer.Spec.TTL,
 					peer.Status.Status, peer.Status.PrevStatus,
-					peer.Status.LastErrorRcvd, peer.Status.LastErrorSent)
+					peer.Status.LastErrorRcvd, peer.Status.LastErrorSent,
+					peer.Status.CapsSent, peer.Status.CapsRcvd, peer.Status.CapsNeg, peer.Status.SelLocalAddrType)
 			} else {
 				fmt.Printf(bgpPeerFmt, peer.Spec.Id, peer.Spec.State, peer.Spec.PeerAddr, peer.Spec.RemoteASN, peer.Spec.Password, peer.Status.Status)
 				fmt.Printf("\n")

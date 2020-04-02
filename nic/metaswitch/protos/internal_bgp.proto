@@ -81,6 +81,32 @@ enum BGPASSize {
   BGP_AS_SIZE_FOUR_OCTET  = 2;
 }
 
+enum BGPAddrType {
+  BGP_ADDR_TYPE_OTHER     = 0;
+  BGP_ADDR_TYPE_IPV4      = 1;
+  BGP_ADDR_TYPE_IPV6      = 2;
+  BGP_ADDR_TYPE_NSAP      = 3;
+  BGP_ADDR_TYPE_HDLC      = 4;
+  BGP_ADDR_TYPE_BBN1822   = 5;
+  BGP_ADDR_TYPE_IEEE802   = 6;
+  BGP_ADDR_TYPE_E163      = 7;
+  BGP_ADDR_TYPE_E164      = 8;
+  BGP_ADDR_TYPE_F69       = 9;
+  BGP_ADDR_TYPE_X121      = 10;
+  BGP_ADDR_TYPE_IPX       = 11;
+  BGP_ADDR_TYPE_APPLETALK = 12;
+  BGP_ADDR_TYPE_DECNETIV  = 13;
+  BGP_ADDR_TYPE_BANYANVIN = 14;
+  BGP_ADDR_TYPE_E164_NSAP = 15;
+  BGP_ADDR_TYPE_IPV4_TNA  = 16;
+  BGP_ADDR_TYPE_IPV6_TNA  = 17;
+  BGP_ADDR_TYPE_NSAP_TNA  = 18;
+  BGP_ADDR_TYPE_VPN_IPV4  = 19;
+  BGP_ADDR_TYPE_VPN_IPV6  = 20;
+  BGP_ADDR_TYPE_L2VPN     = 25;
+
+}
+
 enum BGPOperStatus {
   BGP_OPER_STATUS_NONE       = 0;
   BGP_OPER_STATUS_UP         = 1;
@@ -241,19 +267,27 @@ message BGPPeerStatus {
     SpecMsg: "BGPPeerSpec"
   };
   // BGP session status
-  BGPPeerState    Status        = 1 [(venice.pdsaFields) = {Field: "state"}];
+  BGPPeerState    Status           = 1 [(venice.pdsaFields) = {Field: "state"}];
   // BGP session previous status
-  BGPPeerState    PrevStatus    = 2 [(venice.pdsaFields) = {Field: "last_state"}];
+  BGPPeerState    PrevStatus       = 2 [(venice.pdsaFields) = {Field: "last_state"}];
   // last error received
-  bytes           LastErrorRcvd = 3 [(venice.pdsaFields) = {Field: "last_error_rcvd"}];
+  bytes           LastErrorRcvd    = 3 [(venice.pdsaFields) = {Field: "last_error_rcvd"}];
   // Last error sent
-  bytes           LastErrorSent = 4 [(venice.pdsaFields) = {Field: "last_error_sent"}];
+  bytes           LastErrorSent    = 4 [(venice.pdsaFields) = {Field: "last_error_sent"}];
   // selected local address of the peer
-  types.IPAddress LocalAddr     = 5 [(venice.pdsaFields) = {Field: "selected_local_addr"}];
+  types.IPAddress LocalAddr        = 5 [(venice.pdsaFields) = {Field: "selected_local_addr"}];
   // BGP session holdtime in seconds established with peer
-  uint32          HoldTime      = 6 [(venice.pdsaFields) = {Field: "hold_time"}];
+  uint32          HoldTime         = 6 [(venice.pdsaFields) = {Field: "hold_time"}];
   // BGP session keepalive in seconds established with peer
-  uint32          KeepAlive     = 7 [(venice.pdsaFields) = {Field: "keep_alive"}];
+  uint32          KeepAlive        = 7 [(venice.pdsaFields) = {Field: "keep_alive"}];
+  // BGP The capabilities announced to the peer on the most recent open message sent to the peer.
+  uint32          CapsSent         = 8 [(venice.pdsaFields) = {Field: "caps_sent"}];
+  // BGP The capabilities received on the most recent open message received from the peer.
+  uint32          CapsRcvd         = 9 [(venice.pdsaFields) = {Field: "caps_rcvd"}];
+  // BGP The capabilities negotiated for the session with the peer
+  uint32          CapsNeg          = 10 [(venice.pdsaFields) = {Field: "caps_negotiated"}];
+  // BGP The address family of the local address used by the transport connection for the peering session.
+  BGPAddrType     SelLocalAddrType = 11 [(venice.pdsaFields) = {Field: "selected_local_addr_type"}];
 }
 
 // BGP peer object
