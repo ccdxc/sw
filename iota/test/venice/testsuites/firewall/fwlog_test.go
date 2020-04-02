@@ -66,6 +66,10 @@ var _ = Describe("fwlog tests", func() {
 			Eventually(func() error {
 				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "ICMP", 0, "allow", workloadPairs)
 			}).Should(Succeed())
+
+			Eventually(func() error {
+				return ts.model.FindFwlogForWorkloadPairsFromElastic("default", "ICMP", 0, "allow", workloadPairs)
+			}).Should(Succeed())
 		})
 
 		It("tags:sanity=true should log TCP/8000 allow in fwlog", func() {
@@ -93,6 +97,10 @@ var _ = Describe("fwlog tests", func() {
 			// check fwlog
 			Eventually(func() error {
 				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "TCP", 8000, "allow", workloadPairs)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return ts.model.FindFwlogForWorkloadPairsFromElastic("default", "TCP", 8000, "allow", workloadPairs)
 			}).Should(Succeed())
 		})
 
@@ -124,6 +132,10 @@ var _ = Describe("fwlog tests", func() {
 			Eventually(func() error {
 				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "UDP", 9000, "allow", workloadPairs)
 			}).Should(Succeed())
+
+			Eventually(func() error {
+				return ts.model.FindFwlogForWorkloadPairsFromElastic("default", "UDP", 9000, "allow", workloadPairs)
+			}).Should(Succeed())
 		})
 
 		It("should log ICMP deny in fwlog", func() {
@@ -154,6 +166,10 @@ var _ = Describe("fwlog tests", func() {
 			Eventually(func() error {
 				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "ICMP", 0, "deny", workloadPairs)
 			}).Should(Succeed())
+
+			Eventually(func() error {
+				return ts.model.FindFwlogForWorkloadPairsFromElastic("default", "ICMP", 0, "deny", workloadPairs)
+			}).Should(Succeed())
 		})
 
 		It("tags:sanity=true should log TCP/8100 deny in fwlog", func() {
@@ -183,6 +199,10 @@ var _ = Describe("fwlog tests", func() {
 			// check fwlog
 			Eventually(func() error {
 				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "TCP", 8100, "deny", workloadPairs)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return ts.model.FindFwlogForWorkloadPairsFromElastic("default", "TCP", 8100, "deny", workloadPairs)
 			}).Should(Succeed())
 		})
 
@@ -215,6 +235,10 @@ var _ = Describe("fwlog tests", func() {
 			Eventually(func() error {
 				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "UDP", 9100, "deny", workloadPairs)
 			}).Should(Succeed())
+
+			Eventually(func() error {
+				return ts.model.FindFwlogForWorkloadPairsFromElastic("default", "UDP", 9100, "deny", workloadPairs)
+			}).Should(Succeed())
 		})
 
 		It("should log ICMP reject in fwlog", func() {
@@ -242,6 +266,10 @@ var _ = Describe("fwlog tests", func() {
 			// check fwlog
 			Eventually(func() error {
 				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "ICMP", 0, "reject", workloadPairs)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return ts.model.FindFwlogForWorkloadPairsFromElastic("default", "ICMP", 0, "reject", workloadPairs)
 			}).Should(Succeed())
 		})
 
@@ -273,6 +301,10 @@ var _ = Describe("fwlog tests", func() {
 			Eventually(func() error {
 				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "TCP", 8200, "reject", workloadPairs)
 			}).Should(Succeed())
+
+			Eventually(func() error {
+				return ts.model.FindFwlogForWorkloadPairsFromElastic("default", "TCP", 8200, "reject", workloadPairs)
+			}).Should(Succeed())
 		})
 
 		It("should log UDP/9200 reject in fwlog", func() {
@@ -303,6 +335,10 @@ var _ = Describe("fwlog tests", func() {
 			// check fwlog
 			Eventually(func() error {
 				return ts.model.FindFwlogForWorkloadPairsFromObjStore("default", "UDP", 9200, "reject", workloadPairs)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return ts.model.FindFwlogForWorkloadPairsFromElastic("default", "UDP", 9200, "reject", workloadPairs)
 			}).Should(Succeed())
 		})
 	})

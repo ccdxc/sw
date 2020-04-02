@@ -350,6 +350,12 @@ func (sm *SysModel) FindFwlogForWorkloadPairsFromObjStore(tenantName,
 	return fmt.Errorf("not implemented")
 }
 
+// FindFwlogForWorkloadPairsFromElastic find fwlog pairs
+func (sm *SysModel) FindFwlogForWorkloadPairsFromElastic(tenantName,
+	protocol string, port uint32, fwaction string, wpc *objects.WorkloadPairCollection) error {
+	return fmt.Errorf("not implemented")
+}
+
 // GetFwLogObjectCount gets the object count for firewall logs under the bucket with the given name
 func (sm *SysModel) GetFwLogObjectCount(tenantName string, bucketName string, objectKeyPrefix string) (int, error) {
 	return 0, fmt.Errorf("not implemented")

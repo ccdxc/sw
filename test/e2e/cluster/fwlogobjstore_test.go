@@ -492,24 +492,3 @@ func downloadCsvFileViaPSMRESTAPI(bucketName, objectName string, url string) [][
 	By(fmt.Sprintf("downloaded object, data %s", lines))
 	return lines
 }
-
-// findFwlog finds fwlog in the latest file
-func findFwlog(c objstore.Client, srcIP, destIP string, port uint32, protocol, fwaction string) []string {
-	objName, err := getLastObjectName(c, "")
-	Expect(err).NotTo(HaveOccurred())
-	lines := downloadCsvFileViaPSMRESTAPI("fwlogs", objName, ts.tu.APIGwAddr)
-	for _, line := range lines {
-		if matchLine(line, srcIP, destIP, port, protocol, fwaction) {
-			return line
-		}
-	}
-	return []string{}
-}
-
-func matchLine(line []string, srcIP, destIP string, port uint32, protocol, fwaction string) bool {
-	return line[2] == srcIP &&
-		line[3] == destIP &&
-		line[4] == strconv.Itoa(int(port)) &&
-		line[7] == protocol &&
-		line[8] == fwaction
-}

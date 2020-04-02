@@ -13,8 +13,11 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/fwlog"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
+	searchutils "github.com/pensando/sw/test/utils"
+	"github.com/pensando/sw/venice/globals"
 )
 
 // GetFwLogObjectCount gets the object count for firewall logs under the bucket with the given name
@@ -239,4 +242,54 @@ func (sm *SysModel) downloadCsvFileViaPSMRESTAPI(bucketName, objectName string, 
 	}
 
 	return lines, nil
+}
+
+// FindFwlogForWorkloadPairsFromElastic finds workload ip addresses in firewall log
+func (sm *SysModel) FindFwlogForWorkloadPairsFromElastic(
+	tenantName, protocol string, port uint32, fwaction string, wpc *objects.WorkloadPairCollection) error {
+	for _, wp := range wpc.Pairs {
+		ipA := wp.First.GetIP()
+		ipB := wp.Second.GetIP()
+		aMac := wp.First.NaplesMAC()
+		bMac := wp.Second.NaplesMAC()
+		return sm.findFwlogForWorkloadPairsFromObjStore(tenantName,
+			ipA, ipB, protocol, port, fwaction, aMac, bMac)
+	}
+	return nil
+}
+
+func (sm *SysModel) findFwlogForWorkloadPairsFromElastic(
+	tenantName, srcIP, destIP, protocol string, port uint32, fwaction, naplesA, naplesB string) error {
+	url := sm.GetVeniceURL()[0]
+	ctx, err := sm.VeniceLoggedInCtx(context.Background())
+	if err != nil {
+		return err
+	}
+
+	query := &fwlog.FwLogQuery{
+		DestIPs:    []string{destIP},
+		SourceIPs:  []string{srcIP},
+		DestPorts:  []uint32{port},
+		MaxResults: 50,
+		Tenants:    []string{globals.DefaultTenant},
+	}
+
+	resp := fwlog.FwLogList{}
+	err = searchutils.FwLogQuery(ctx, url, query, &resp)
+	if err != nil {
+		return err
+	}
+
+	for _, log := range resp.Items {
+		if log.SrcIP == srcIP &&
+			log.DestIP == destIP &&
+			log.DestPort == port &&
+			log.Protocol == protocol &&
+			log.Action == fwaction {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("log not found in Elastic for srcIP %s, destIP %s, protocol %s, port %d, fwAction %s",
+		srcIP, destIP, protocol, port, fwaction)
 }
