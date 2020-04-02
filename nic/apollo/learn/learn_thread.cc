@@ -14,13 +14,20 @@
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
+#include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/learn/learn_impl_base.hpp"
 #include "nic/apollo/learn/learn_thread.hpp"
 #include "nic/apollo/learn/learn.hpp"
 #include "nic/apollo/learn/ep_utils.hpp"
 
 namespace learn {
+
+typedef struct ep_mac_clear_args_s {
+    pds_obj_key_t subnet;
+    sdk_ret_t retcode;
+} ep_mac_clear_args_t;
 
 bool
 learning_enabled (void)
@@ -83,21 +90,6 @@ learn_thread_pkt_poll_timer_cb (event::timer_t *timer)
     }
 }
 
-// note: wrapper functions ensure that remote mapping spec is provided,
-// not local mapping spec
-void
-learn_thread_ipc_api_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
-{
-    sdk_ret_t ret;
-    api::api_msg_t *api_msg  = (api::api_msg_t *)msg->data();
-
-    PDS_TRACE_DEBUG("Rcvd API batch message");
-    SDK_ASSERT(api_msg != nullptr);
-    SDK_ASSERT(api_msg->msg_id == api::API_MSG_ID_BATCH);
-    ret = process_api_batch(api_msg);
-    sdk::ipc::respond(msg, &ret, sizeof(ret));
-}
-
 static bool
 ep_ip_entry_clear_cb (void *entry, void *retcode)
 {
@@ -112,19 +104,74 @@ ep_ip_entry_clear_cb (void *entry, void *retcode)
 }
 
 static bool
-ep_mac_entry_clear_cb (void *entry, void *retcode)
+ep_mac_entry_clear_cb (void *entry, void *ctxt)
 {
     ep_mac_entry *mac_entry = (ep_mac_entry *)entry;
-    sdk_ret_t *ret = (sdk_ret_t *)retcode;
+    ep_mac_clear_args_t *args = (ep_mac_clear_args_t *)ctxt;
 
-    mac_entry->walk_ip_list(ep_ip_entry_clear_cb, ret);
-    if (*ret == SDK_RET_OK) {
-        *ret = mac_ageout(mac_entry);
+    if ((args->subnet != k_pds_obj_key_invalid)
+        && (args->subnet != mac_entry->key()->subnet)) {
+        // mac belongs to a different subnet, skip this
+        return false;
     }
-    if (*ret != SDK_RET_OK) {
+    mac_entry->walk_ip_list(ep_ip_entry_clear_cb, &args->retcode);
+    if (args->retcode == SDK_RET_OK) {
+        args->retcode = mac_ageout(mac_entry);
+    }
+    if (args->retcode != SDK_RET_OK) {
         return true; //stop iterating
     }
     return false;
+}
+
+sdk_ret_t
+process_subnet_delete (pds_obj_key_t key)
+{
+    ep_mac_clear_args_t args;
+
+    if (key == k_pds_obj_key_invalid) {
+        return SDK_RET_INVALID_ARG;
+    }
+    args.subnet = key;
+    args.retcode = SDK_RET_OK;
+    PDS_TRACE_DEBUG("Deleting all learnt MAC and IP entries for subnet %s",
+                    key.str());
+    learn_db()->ep_mac_db()->walk(ep_mac_entry_clear_cb, &args);
+    if (args.retcode != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to clear entries related to subnet %s",
+                      key.str());
+        return args.retcode;
+    }
+    // sync call to delete subnet
+    PDS_TRACE_DEBUG("Deleting subnet %s", key.str());
+    return pds_subnet_delete(&key, PDS_BATCH_CTXT_INVALID);
+}
+
+void
+learn_thread_ipc_api_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
+{
+    sdk_ret_t ret;
+    api::api_msg_t *api_msg  = (api::api_msg_t *)msg->data();
+    api_ctxt_t *api_ctxt;
+
+    PDS_TRACE_DEBUG("Rcvd API batch message");
+    SDK_ASSERT(api_msg != nullptr);
+    SDK_ASSERT(api_msg->msg_id == api::API_MSG_ID_BATCH);
+
+    // TODO: this will be cleaned up once we have framework changes
+    // to notify learn thread of subnet deletion.
+    if (api_msg->batch.apis.size() == 1) {
+        api_ctxt = *(api_msg->batch.apis.begin());
+        if (api_ctxt->obj_id == OBJ_ID_SUBNET &&
+            api_ctxt->api_op == API_OP_DELETE) {
+            ret = process_subnet_delete(api_ctxt->api_params->key);
+            sdk::ipc::respond(msg, &ret, sizeof(ret));
+            return;
+        }
+    }
+
+    ret = process_api_batch(api_msg);
+    sdk::ipc::respond(msg, &ret, sizeof(ret));
 }
 
 void
@@ -154,8 +201,12 @@ learn_thread_ipc_clear_cmd_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
         }
         break;
     case LEARN_CLEAR_MAC_ALL:
-        PDS_TRACE_INFO("Received request to clear all MAC");
-        learn_db()->ep_mac_db()->walk(ep_mac_entry_clear_cb, &ret);
+        PDS_TRACE_INFO("received request to clear all MAC");
+        ep_mac_clear_args_t args;
+        args.subnet = k_pds_obj_key_invalid;
+        args.retcode = SDK_RET_OK;
+        learn_db()->ep_mac_db()->walk(ep_mac_entry_clear_cb, &args);
+        ret = args.retcode;
         break;
     case LEARN_CLEAR_IP:
         PDS_TRACE_INFO("Received clear request for IP %s/%s",

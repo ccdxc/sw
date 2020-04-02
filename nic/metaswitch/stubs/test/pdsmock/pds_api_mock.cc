@@ -613,3 +613,11 @@ sdk_ret_t pds_remote_mapping_delete(pds_mapping_key_t *skey,
 }
 
 }    // namespace api
+
+namespace learn {
+
+sdk_ret_t api_batch_commit(pds_batch_ctxt_t bctxt) {
+    return pds_batch_commit(bctxt);
+}
+
+} // namespace learn
