@@ -58,17 +58,17 @@ upg_ev_fill (sdk::upg::upg_ev_t *ev)
 {
     ev->svc_id = 1;
     strncpy(ev->svc_name, "svc1", sizeof(ev->svc_name));
-    ev->compat_check = test_upgrade;
-    ev->start = test_upgrade;
-    ev->backup = test_upgrade;
-    ev->prepare = test_upgrade;
-    ev->prepare_switchover = test_upgrade;
-    ev->switchover = test_upgrade;
-    ev->rollback = test_upgrade;
-    ev->ready = test_upgrade;
-    ev->repeal = test_upgrade;
-    ev->finish = test_upgrade;
-    ev->exit = test_upgrade;
+    ev->compat_check_hdlr = test_upgrade;
+    ev->start_hdlr = test_upgrade;
+    ev->backup_hdlr = test_upgrade;
+    ev->prepare_hdlr = test_upgrade;
+    ev->prepare_switchover_hdlr = test_upgrade;
+    ev->switchover_hdlr = test_upgrade;
+    ev->rollback_hdlr = test_upgrade;
+    ev->ready_hdlr = test_upgrade;
+    ev->repeal_hdlr = test_upgrade;
+    ev->finish_hdlr = test_upgrade;
+    ev->exit_hdlr = test_upgrade;
 }
 
 void

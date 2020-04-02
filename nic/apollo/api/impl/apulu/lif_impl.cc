@@ -67,6 +67,7 @@ lif_impl::lif_impl(pds_lif_spec_t *spec) {
     ifindex_ = LIF_IFINDEX(id_);
     nh_idx_ = 0xFFFFFFFF;
     vnic_hw_id_ = 0xFFFF;
+    tx_sched_offset_ = INVALID_INDEXER_INDEX;
     state_ = sdk::types::LIF_STATE_NONE;
     init_done_ = false;
     ht_ctxt_.reset();

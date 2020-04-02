@@ -19,6 +19,7 @@
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/nicmgr/nicmgr.hpp"
 #include "nic/apollo/api/upgrade_state.hpp"
+#include "nic/apollo/api/internal/upgrade_ev.hpp"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 
 /// \defgroup PDS_NICMGR
@@ -28,6 +29,14 @@ DeviceManager *g_devmgr;
 sdk::event_thread::prepare_t g_ev_prepare;
 
 namespace nicmgr {
+
+// ipc incoming msg pointer which should be saved and later
+// used to respond to the caller
+typedef struct upg_ev_info_s {
+    sdk::ipc::ipc_msg_ptr msg_in;
+} upg_ev_info_t;
+
+using api::upg_ev_params_t;
 
 static void
 prepare_callback (sdk::event_thread::prepare_t *prepare, void *ctx)
@@ -40,40 +49,100 @@ prepare_callback (sdk::event_thread::prepare_t *prepare, void *ctx)
 }
 
 static void
-nicmgr_upg_ev_compat_check_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+nicmgr_upg_ev_response_hdlr (sdk_ret_t status, void *cookie)
 {
+    upg_ev_info_t *info = (upg_ev_info_t *)cookie;
+    upg_ev_params_t *params = (upg_ev_params_t *)info->msg_in->data();
+    upg_ev_params_t resp;
+
+    PDS_TRACE_DEBUG("Upgrade nicmgr IPC response type %s status %u",
+                    upg_msgid2str(params->id), status);
+
+    if (status == SDK_RET_IN_PROGRESS) {
+        return;
+    }
+
+    resp.id = params->id;
+    resp.rsp_code = status;
+    sdk::ipc::respond(info->msg_in, (const void *)&resp, sizeof(resp));
+    delete info;
+}
+
+static void
+nicmgr_upg_ev_compat_check_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+{
+    upg_ev_info_s *info = new upg_ev_info_t();
+
+    info->msg_in = msg;
     // TODO
+    return nicmgr_upg_ev_response_hdlr(SDK_RET_OK, info);
 }
 
 static void
-nicmgr_upg_ev_backup_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+nicmgr_upg_ev_backup_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 {
+    upg_ev_info_s *info = new upg_ev_info_t();
 
+    info->msg_in = msg;
+    // TODO
+    return nicmgr_upg_ev_response_hdlr(SDK_RET_OK, info);
 }
 
 static void
-nicmgr_upg_ev_link_down_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+nicmgr_upg_ev_link_down_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 {
+    upg_ev_info_s *info = new upg_ev_info_t();
 
+    info->msg_in = msg;
+    // TODO
+    return nicmgr_upg_ev_response_hdlr(SDK_RET_OK, info);
 }
 
 static void
-nicmgr_upg_ev_hostdev_reset_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+nicmgr_upg_ev_hostdev_reset_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 {
+    upg_ev_info_s *info = new upg_ev_info_t();
 
+    info->msg_in = msg;
+    // TODO
+    return nicmgr_upg_ev_response_hdlr(SDK_RET_OK, info);
 }
 
 static void
-nicmgr_upg_ev_quiesce_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+nicmgr_upg_ev_quiesce_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 {
+    upg_ev_info_s *info = new upg_ev_info_t();
 
+    info->msg_in = msg;
+    // TODO
+    return nicmgr_upg_ev_response_hdlr(SDK_RET_OK, info);
 }
 
+static void
+nicmgr_upg_ev_repeal_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+{
+    upg_ev_info_s *info = new upg_ev_info_t();
+
+    info->msg_in = msg;
+    // TODO
+    return nicmgr_upg_ev_response_hdlr(SDK_RET_OK, info);
+}
 
 static void
-nicmgr_upg_ev_repeal_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+upg_ipc_register (void)
 {
-
+    sdk::ipc::reg_request_handler(UPG_MSG_ID_COMPAT_CHECK,
+                                  nicmgr_upg_ev_compat_check_hdlr, NULL);
+    sdk::ipc::reg_request_handler(UPG_MSG_ID_BACKUP,
+                                  nicmgr_upg_ev_backup_hdlr, NULL);
+    sdk::ipc::reg_request_handler(UPG_MSG_ID_LINK_DOWN,
+                                  nicmgr_upg_ev_link_down_hdlr, NULL);
+    sdk::ipc::reg_request_handler(UPG_MSG_ID_HOSTDEV_RESET,
+                                  nicmgr_upg_ev_hostdev_reset_hdlr, NULL);
+    sdk::ipc::reg_request_handler(UPG_MSG_ID_QUIESCE,
+                                  nicmgr_upg_ev_quiesce_hdlr, NULL);
+    sdk::ipc::reg_request_handler(UPG_MSG_ID_REPEAL,
+                                  nicmgr_upg_ev_repeal_hdlr, NULL);
 }
 
 void
@@ -128,18 +197,7 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     sdk::event_thread::prepare_start(&g_ev_prepare);
 
     // register for upgrade events
-    sdk::ipc::reg_request_handler(EVENT_ID_UPG_COMPAT_CHECK,
-                                  nicmgr_upg_ev_compat_check_cb, NULL);
-    sdk::ipc::reg_request_handler(EVENT_ID_UPG_BACKUP,
-                                  nicmgr_upg_ev_backup_cb, NULL);
-    sdk::ipc::reg_request_handler(EVENT_ID_UPG_LINK_DOWN,
-                                  nicmgr_upg_ev_link_down_cb, NULL);
-    sdk::ipc::reg_request_handler(EVENT_ID_UPG_HOSTDEV_RESET,
-                                  nicmgr_upg_ev_hostdev_reset_cb, NULL);
-    sdk::ipc::reg_request_handler(EVENT_ID_UPG_QUIESCE,
-                                  nicmgr_upg_ev_quiesce_cb, NULL);
-    sdk::ipc::reg_request_handler(EVENT_ID_UPG_REPEAL,
-                                  nicmgr_upg_ev_repeal_cb, NULL);
+    upg_ipc_register();
 
     PDS_TRACE_INFO("Listening to events ...");
 }

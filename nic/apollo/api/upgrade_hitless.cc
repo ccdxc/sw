@@ -78,18 +78,16 @@ upg_hitless_init (pds_init_params_t *params)
 
     // fill upgrade events for graceful
     memset(&ev_hdlr, 0, sizeof(ev_hdlr));
-    // thread id is used for just identification here
-    // no ipc to the api thread from caller thread as grpc is already
-    // disabled, not expecting any conflicts in configs
-    ev_hdlr.thread_id = core::PDS_THREAD_ID_API;
-    ev_hdlr.compat_check = upg_ev_compat_check;
-    ev_hdlr.start = upg_ev_start;
-    ev_hdlr.backup = upg_ev_backup;
-    ev_hdlr.ready = upg_ev_ready;
-    ev_hdlr.quiesce = upg_ev_quiesce;
-    ev_hdlr.switchover = upg_ev_switchover;
-    ev_hdlr.repeal = upg_ev_repeal;
-    ev_hdlr.exit  = upg_ev_exit;
+    // thread name is used for just identification here
+    strncpy(ev_hdlr.thread_name, "hal", sizeof(ev_hdlr.thread_name));
+    ev_hdlr.compat_check_hdlr = upg_ev_compat_check;
+    ev_hdlr.start_hdlr = upg_ev_start;
+    ev_hdlr.backup_hdlr = upg_ev_backup;
+    ev_hdlr.ready_hdlr = upg_ev_ready;
+    ev_hdlr.quiesce_hdlr = upg_ev_quiesce;
+    ev_hdlr.switchover_hdlr = upg_ev_switchover;
+    ev_hdlr.repeal_hdlr = upg_ev_repeal;
+    ev_hdlr.exit_hdlr = upg_ev_exit;
 
     // register for upgrade events
     upg_ev_thread_hdlr_register(ev_hdlr);

@@ -9,10 +9,12 @@
 #include "nic/apollo/api/internal/upgrade_ev.hpp"
 #include "nic/apollo/api/upgrade.hpp"
 
+using api::upg_ev_params_t;
+
 namespace nicmgr {
 
 static sdk_ret_t
-nicmgr_send_ipc (event_id_t ev_id)
+nicmgr_send_ipc (api::upg_ev_msg_id_t id)
 {
     // TODO
     return SDK_RET_IN_PROGRESS;
@@ -21,13 +23,13 @@ nicmgr_send_ipc (event_id_t ev_id)
 static sdk_ret_t
 upg_ev_compat_check (upg_ev_params_t *params)
 {
-    return nicmgr_send_ipc(EVENT_ID_UPG_COMPAT_CHECK);
+    return nicmgr_send_ipc(UPG_MSG_ID_COMPAT_CHECK);
 }
 
 static sdk_ret_t
 upg_ev_ready (upg_ev_params_t *params)
 {
-    return nicmgr_send_ipc(EVENT_ID_UPG_READY);
+    return nicmgr_send_ipc(UPG_MSG_ID_READY);
 }
 
 static sdk_ret_t
@@ -39,7 +41,7 @@ upg_ev_backup (upg_ev_params_t *params)
 static sdk_ret_t
 upg_ev_quiesce (upg_ev_params_t *params)
 {
-    return nicmgr_send_ipc(EVENT_ID_UPG_QUIESCE);
+    return nicmgr_send_ipc(UPG_MSG_ID_QUIESCE);
 }
 
 static sdk_ret_t
@@ -67,15 +69,15 @@ upg_hitless_init (void)
 
     // fill upgrade events
     memset(&ev_hdlr, 0, sizeof(ev_hdlr));
-    ev_hdlr.thread_id = core::PDS_THREAD_ID_NICMGR;
-    ev_hdlr.compat_check = upg_ev_compat_check;
-    ev_hdlr.ready = upg_ev_ready;
-    ev_hdlr.backup = upg_ev_backup;
-    ev_hdlr.repeal = upg_ev_repeal;
-    ev_hdlr.quiesce = upg_ev_quiesce;
-    ev_hdlr.switchover = upg_ev_switchover;
-    ev_hdlr.repeal = upg_ev_repeal;
-    ev_hdlr.exit  = upg_ev_exit;
+    strncpy(ev_hdlr.thread_name, "nicmgr", sizeof(ev_hdlr.thread_name));
+    ev_hdlr.compat_check_hdlr = upg_ev_compat_check;
+    ev_hdlr.ready_hdlr = upg_ev_ready;
+    ev_hdlr.backup_hdlr = upg_ev_backup;
+    ev_hdlr.repeal_hdlr = upg_ev_repeal;
+    ev_hdlr.quiesce_hdlr = upg_ev_quiesce;
+    ev_hdlr.switchover_hdlr = upg_ev_switchover;
+    ev_hdlr.repeal_hdlr = upg_ev_repeal;
+    ev_hdlr.exit_hdlr = upg_ev_exit;
 
     // register for upgrade events
     api::upg_ev_thread_hdlr_register(ev_hdlr);

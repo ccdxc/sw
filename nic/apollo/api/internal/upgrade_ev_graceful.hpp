@@ -16,9 +16,6 @@
 #ifndef __API_UPGRADE_EV_GRACEFUL_HPP__
 #define __API_UPGRADE_EV_GRACEFUL_HPP__
 
-using sdk::upg::upg_ev_hdlr_t;
-using sdk::upg::upg_ev_params_t;
-
 namespace api {
 
 /// \brief upgrade event handlers for the registered thread
@@ -26,35 +23,35 @@ namespace api {
 /// A is the currently running process and B is the new process
 /// each process/thread should implement this and act on these events.
 typedef struct upg_ev_graceful_s {
-    /// registering thread id
+    /// registering thread name
     /// used for debug traces. no other significance.
-    upg_thread_id_t  thread_id;
+    char thread_name[64];
 
     /// compat checks should be done here (on A)
-    upg_ev_hdlr_t compat_check;
+    upg_ev_hdlr_t compat_check_hdlr;
 
     /// start of a new upgrade, mount check the existance of B should be
     /// done here (on A).
-    upg_ev_hdlr_t start;
+    upg_ev_hdlr_t start_hdlr;
 
     /// software states should be saved here (on A).
-    upg_ev_hdlr_t backup;
+    upg_ev_hdlr_t backup_hdlr;
 
     /// linkdown (on A).
-    upg_ev_hdlr_t linkdown;
+    upg_ev_hdlr_t linkdown_hdlr;
 
     /// host device reset
-    upg_ev_hdlr_t hostdev_reset;
+    upg_ev_hdlr_t hostdev_reset_hdlr;
 
     /// threads should be paused here to a safe point for switchover (on A)
     /// also pipeline pause if required
-    upg_ev_hdlr_t quiesce;
+    upg_ev_hdlr_t quiesce_hdlr;
 
     /// switching to B
-    upg_ev_hdlr_t switchover;
+    upg_ev_hdlr_t switchover_hdlr;
 
     /// making sure B bringup is successful
-    upg_ev_hdlr_t ready;
+    upg_ev_hdlr_t ready_hdlr;
 
     /// repeal an upgrade (on A / B)
     /// an repeal (on A)
@@ -63,11 +60,11 @@ typedef struct upg_ev_graceful_s {
     /// an repeal (on B)
     ///   needs to restore old state (rollback), and ready to re-spawn previous
     ///   version
-    upg_ev_hdlr_t repeal;
+    upg_ev_hdlr_t repeal_hdlr;
 
     /// completed the upgrade (on A / B)
     /// threads should shutdown by receiving this event
-    upg_ev_hdlr_t exit;
+    upg_ev_hdlr_t exit_hdlr;
 
 } upg_ev_graceful_t;
 

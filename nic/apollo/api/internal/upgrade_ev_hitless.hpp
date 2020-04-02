@@ -16,9 +16,6 @@
 #ifndef __API_UPGRADE_EV_HITLESS_HPP__
 #define __API_UPGRADE_EV_HITLESS_HPP__
 
-using sdk::upg::upg_ev_hdlr_t;
-using sdk::upg::upg_ev_params_t;
-
 namespace api {
 
 /// \brief upgrade event handlers to the registered thread
@@ -26,35 +23,35 @@ namespace api {
 /// A is the currently running process and B is the new process
 /// each process/thread should implement this and act on these events.
 typedef struct upg_ev_hitless_s {
-    /// registering thread id
+    /// registering thread name
     /// used for debug traces. no other significance.
-    upg_thread_id_t  thread_id;
+    char thread_name[64];
 
     /// compat checks should be done here (on A)
-    upg_ev_hdlr_t compat_check;
+    upg_ev_hdlr_t compat_check_hdlr;
 
     /// start of a new upgrade, mount check the existance of B should be
     /// done here (on A).
-    upg_ev_hdlr_t start;
+    upg_ev_hdlr_t start_hdlr;
 
     /// software states should be saved here (on A).
-    upg_ev_hdlr_t backup;
+    upg_ev_hdlr_t backup_hdlr;
 
     /// upgrade specific bringup should be done here (on B)
     /// the bringup shouldn't touch the shared hw resources with A
     /// [Ex: polling LIFs, ports, etc )
     /// below functions should check the bringup status of A
-    upg_ev_hdlr_t ready;
+    upg_ev_hdlr_t ready_hdlr;
 
     /// oper state syncing, config replay should be done here (on B)
-    upg_ev_hdlr_t sync;
+    upg_ev_hdlr_t sync_hdlr;
 
     /// threads should be paused here to a safe point for switchover (on A)
-    upg_ev_hdlr_t quiesce;
+    upg_ev_hdlr_t quiesce_hdlr;
 
     /// pipeline switch should be done here (on B)
     /// if it is success, it can start shared resource access
-    upg_ev_hdlr_t switchover;
+    upg_ev_hdlr_t switchover_hdlr;
 
     /// abort an upgrade (on A / B)
     /// an abort (on A)
@@ -65,11 +62,11 @@ typedef struct upg_ev_hitless_s {
     ///   sofware quiesce state.
     ///   after switchover, requires the threads to rollback and go to software
     ///   quiesce state.
-    upg_ev_hdlr_t repeal;
+    upg_ev_hdlr_t repeal_hdlr;
 
     /// completed the upgrade (on A / B)
     /// threads should shutdown by receiving this event
-    upg_ev_hdlr_t exit;
+    upg_ev_hdlr_t exit_hdlr;
 
 } upg_ev_hitless_t;
 

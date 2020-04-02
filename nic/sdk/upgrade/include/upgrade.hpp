@@ -11,31 +11,52 @@
 #ifndef __INCLUDE_UPGRADE_HPP__
 #define __INCLUDE_UPGRADE_HPP__
 
+#include "include/sdk/base.hpp"
 #include "include/sdk/types.hpp"
 #include "include/sdk/platform.hpp"
 
 /// \defgroup UPG Upgrade Manager
 /// @{
 
-
 /// \brief upgrade stages
-typedef enum upg_stage_e {
-    UPG_STAGE_NONE = 0,         ///< invalid
-    UPG_STAGE_COMPAT_CHECK,     ///< upgarde ready check
-    UPG_STAGE_START,            ///< start an upgrade
-    UPG_STAGE_BACKUP,           ///< backup config for an upgrade
-    UPG_STAGE_PREPARE,          ///< prepare for an upgrade
-    UPG_STAGE_REPEAL,           ///< abort the on-going upgrade
-    UPG_STAGE_ROLLBACK,         ///< rollback to the previous version
-    UPG_STAGE_SYNC,             ///< config replay and operational state sync
-    UPG_STAGE_PREP_SWITCHOVER,  ///< quiescing before switch to the new version
-    UPG_STAGE_SWITCHOVER,       ///< switch to the new version
-    UPG_STAGE_READY,            ///< readiness check of new version
-    UPG_STAGE_RESPAWN,          ///< respawn new version
-    UPG_STAGE_FINISH,           ///< completion of the upgrade
-    UPG_STAGE_EXIT,             ///< exit from upgrade.
-    UPG_STAGE_MAX               ///< invalid
-} upg_stage_t;
+/// ..WARNING... this should be extended in the end
+/// for maintaining backward and forward compatibility
+/// b/w upgrademgr and services
+#define UPG_STAGE_ENTRIES(E)                                \
+    /** invalid */                                          \
+    E(UPG_STAGE_NONE,               0, "invalid")           \
+    /**  compat checks  */                                  \
+    E(UPG_STAGE_COMPAT_CHECK,       1, "compatcheck")       \
+    /**  start an upgrade */                                \
+    E(UPG_STAGE_START,              2, "start")             \
+    /** backup states for an upgrade */                     \
+    E(UPG_STAGE_BACKUP,             3, "backup")            \
+    /** prepare for an upgrade */                           \
+    E(UPG_STAGE_PREPARE,            4, "prepare")           \
+    /** config replay and operational state sync */         \
+    E(UPG_STAGE_SYNC,               5, "sync")              \
+    /** quiescing before switch to the new version */       \
+    E(UPG_STAGE_PREP_SWITCHOVER,    6, "prep-switchover")   \
+    /** switch to the new version   */                      \
+    E(UPG_STAGE_SWITCHOVER,         7, "switchover")        \
+    /** readiness check of new version */                   \
+    E(UPG_STAGE_READY,              8, "ready")             \
+    /** respawn the existing version */                     \
+    E(UPG_STAGE_RESPAWN,            9, "respawn")           \
+    /** rollback to the previous version */                 \
+    E(UPG_STAGE_ROLLBACK,           10, "rollback")         \
+    /** abort the on-going upgrade by undoing */            \
+    E(UPG_STAGE_REPEAL,             11, "repeal")           \
+    /** completion of an upgrade */                         \
+    E(UPG_STAGE_FINISH,             12, "finish")           \
+    /** exit from upgrade */                                \
+    E(UPG_STAGE_EXIT,               13, "exit")             \
+    /** invalid */                                          \
+    E(UPG_STAGE_MAX,                14, "max-invalid")
+
+SDK_DEFINE_ENUM(upg_stage_t, UPG_STAGE_ENTRIES)
+SDK_DEFINE_ENUM_TO_STR(upg_stage_t, UPG_STAGE_ENTRIES)
+#undef UPG_STAGE_ENTRIES
 
 /// \brief upgrade operational table state actions
 typedef enum upg_oper_state_action_e {
@@ -49,49 +70,41 @@ typedef enum upg_oper_state_action_e {
 } upg_oper_state_action_t;
 
 /// \brief upgrade responses
-typedef enum upg_status_e {
-    UPG_STATUS_OK = 0,     ///< operation successful
-    UPG_STATUS_FAIL,       ///< operation failed, but system is stable
-    UPG_STATUS_CRITICAL    ///< operation failed, and system is unstable
-} upg_status_t;
+#define UPG_STATUS_ENTRIES(E)                       \
+    /** operation successful    */                  \
+    E(UPG_STATUS_OK,        0, "ok")                \
+    /** operation failed, but system is stable */   \
+    E(UPG_STATUS_FAIL,      1, "fail")              \
+    /** operation failed, and system is unstable */ \
+    E(UPG_STATUS_CRITICAL,  2, "fail-critical")     \
+
+SDK_DEFINE_ENUM(upg_status_t, UPG_STATUS_ENTRIES)
+SDK_DEFINE_ENUM_TO_STR(upg_status_t, UPG_STATUS_ENTRIES)
+#undef UPG_STATUS_ENTRIES
 
 /// \brief upgrade event msg
 /// as the upgrade mgr need to communicate with old and new images,
 /// we should not add anything in the middle.
 /// TODO: should i convert to protobuf and send
 typedef struct upg_event_msg_s {
-    upg_stage_t  stage;                   ///< request stage
-    sdk::platform::upg_mode_t mode;       ///< upgrade mode
-    upg_status_t   rsp_status;            ///< response status
-    char           rsp_thread_name[64];   ///< response thread name
-    uint32_t       rsp_thread_id;         ///< response thread id. can be used
-                                          ///< to send unicast ipc to this thread
+    upg_stage_t    stage;             ///< request stage
+    sdk::platform::upg_mode_t mode;   ///< upgrade mode
+    upg_status_t   rsp_status;        ///< response status
+    char           rsp_svc_name[64];  ///< response service's name
+    uint32_t       rsp_svc_ipc_id;    ///< response services's ipc id. can be used
+                                      ///< to send unicast ipc to this thread
+    uint64_t       rsp_ev_bitmap;     ///< event supported by response thread
+                                      ///< can be used by upgmgr to send an
+                                      ///< event to the service
     // TODO other infos
 } __PACK__ upg_event_msg_t;
 
 // trace utilities
 // stage to string
-static const char *upg_stage_name[] =  {
-    [UPG_STAGE_NONE]            = "none",
-    [UPG_STAGE_COMPAT_CHECK]    = "compatcheck",
-    [UPG_STAGE_START]           = "start",
-    [UPG_STAGE_BACKUP]          = "backup",
-    [UPG_STAGE_PREPARE]         = "prepare",
-    [UPG_STAGE_REPEAL]          = "repeal",
-    [UPG_STAGE_ROLLBACK]        = "rollback",
-    [UPG_STAGE_SYNC]            = "sync",
-    [UPG_STAGE_PREP_SWITCHOVER] = "prepare_switchover",
-    [UPG_STAGE_SWITCHOVER]      = "switchover",
-    [UPG_STAGE_READY]           = "ready",
-    [UPG_STAGE_RESPAWN]         = "respawn",
-    [UPG_STAGE_FINISH]          = "finish",
-    [UPG_STAGE_EXIT]            = "exit",
-};
-
 static inline const char *
 upg_stage2str (upg_stage_t stage)
 {
-    return upg_stage_name[stage];
+    return UPG_STAGE_ENTRIES_str(stage);
 }
 
 // status to string

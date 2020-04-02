@@ -37,6 +37,21 @@ typedef struct qstate_cfg_s {
     uint32_t pgm_off;
 } qstate_cfg_t;
 
+/// \brief event relay and processing states
+typedef struct ev_in_progress_state_s {
+    /// pending responses from threads
+    uint8_t rsps_pending;
+    /// event status in terms of return code
+    sdk_ret_t status;
+    /// more events are required for a particular stage to complete
+    bool more;
+    /// in progress event message id
+    upg_ev_msg_id_t id;
+    /// in progress params
+    sdk::upg::upg_ev_params_t params;
+} ev_in_progress_state_t;
+
+
 /// \defgroup PDS_UPGRADE PDS Upgrade
 /// \ingroup  UPGRADE_STATE
 /// @{
@@ -91,6 +106,31 @@ public:
     std::list<upg_ev_graceful_t> &ev_threads_hdlr_graceful(void) {
         return ev_threads_hdlr_gf_;
     }
+    sdk_ret_t ev_status(void) { return ev_state_.status; }
+    void set_ev_status(sdk_ret_t status) {
+        if (status == SDK_RET_OK || status == SDK_RET_IN_PROGRESS) {
+            return;
+        }
+        if (ev_state_.status != sdk_ret_t::SDK_RET_UPG_CRITICAL) {
+            ev_state_.status = status;
+        }
+    }
+    bool ev_in_progress(void) { return ev_state_.rsps_pending > 0; }
+    void ev_incr_in_progress(void) { ev_state_.rsps_pending++; }
+    void ev_decr_in_progress(void) { ev_state_.rsps_pending--; }
+    void ev_clear_in_progress(void) { ev_state_.rsps_pending = 0; }
+    void set_ev_in_progress_id(upg_ev_msg_id_t id) { ev_state_.id = id; }
+    upg_ev_msg_id_t ev_in_progress_id(void) { return ev_state_.id; }
+    void set_ev_more(bool more) { ev_state_.more = more; }
+    bool ev_more(void) { return ev_state_.more; }
+    sdk::upg::upg_ev_params_t *ev_params(void) { return &ev_state_.params; }
+    void set_ev_params(sdk::upg::upg_ev_params_t *params) {
+        ev_state_.params = *params;
+    }
+    void set_upg_init_mode(upg_mode_t mode) { upg_init_mode_ = mode; }
+    upg_mode_t upg_init_mode(void) { return upg_init_mode_; }
+    void set_upg_req_mode(upg_mode_t mode) { upg_req_mode_ = mode; }
+    upg_mode_t upg_req_mode(void) { return upg_req_mode_; }
 
 private:
     /// shared memory manager
@@ -108,6 +148,13 @@ private:
     /// upgrade event callbacks registered by pds threads
     std::list<upg_ev_graceful_t> ev_threads_hdlr_gf_;
     std::list<upg_ev_hitless_t> ev_threads_hdlr_hl_;
+    /// event relay and processing states
+    ev_in_progress_state_t ev_state_;
+    ///  upgrade mode in new request
+    upg_mode_t upg_req_mode_;
+    //  initialization mode during process bringup
+    upg_mode_t upg_init_mode_;
+
 private:
     sdk_ret_t init_(bool create);
 };

@@ -55,6 +55,8 @@ void xcvr_event_cb(xcvr_event_info_t *xcvr_event_info);
  */
 void port_event_cb(port_event_info_t *port_event_info);
 
+sdk_ret_t port_shutdown_all(void);
+
 }    // namespace api
 
 #endif    /** __PORT_HPP__ */

@@ -94,17 +94,17 @@ upg_ev_fill (sdk::upg::upg_ev_t *ev)
 {
     ev->svc_id = PDS_AGENT_THREAD_ID_SVC_SERVER;
     strncpy(ev->svc_name, UPG_EV_PDS_AGENT_NAME, sizeof(ev->svc_name));
-    ev->compat_check = pds_upgrade;
-    ev->start = pds_upgrade;
-    ev->backup = pds_upgrade;
-    ev->prepare = pds_upgrade;
-    ev->prepare_switchover = pds_upgrade;
-    ev->switchover = pds_upgrade;
-    ev->rollback = pds_upgrade;
-    ev->ready = pds_upgrade;
-    ev->repeal = pds_upgrade;
-    ev->finish = pds_upgrade;
-    ev->exit = pds_upgrade;
+    ev->compat_check_hdlr = pds_upgrade;
+    ev->start_hdlr = pds_upgrade;
+    ev->backup_hdlr = pds_upgrade;
+    ev->prepare_hdlr = pds_upgrade;
+    ev->prepare_switchover_hdlr = pds_upgrade;
+    ev->switchover_hdlr = pds_upgrade;
+    ev->rollback_hdlr = pds_upgrade;
+    ev->ready_hdlr = pds_upgrade;
+    ev->repeal_hdlr = pds_upgrade;
+    ev->finish_hdlr = pds_upgrade;
+    ev->exit_hdlr = pds_upgrade;
 }
 
 

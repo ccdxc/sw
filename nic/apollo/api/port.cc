@@ -28,6 +28,12 @@ typedef struct port_get_cb_ctxt_s {
     port_get_cb_t port_get_cb;
 } port_get_cb_ctxt_t;
 
+typedef struct port_shutdown_walk_cb_ctxt_s {
+    bool port_shutdown;
+    bool port_pb_shutdown;
+    bool err;
+} port_shutdown_walk_cb_ctxt_t;
+
 /**
  * @brief        Handle link UP/Down events
  * @param[in]    port_event_info port event information
@@ -146,6 +152,51 @@ xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
         return;
     }
     if_db()->walk(IF_TYPE_ETH, xvcr_event_walk_cb, xcvr_event_info);
+}
+
+bool
+port_shutdown_walk_cb (void *entry, void *ctxt)
+{
+    if_entry *intf = (if_entry *)entry;
+    port_shutdown_walk_cb_ctxt_t *ctx = (port_shutdown_walk_cb_ctxt_t *)ctxt;
+    sdk_ret_t ret;
+
+    if (ctx->port_shutdown) {
+        // ret = sdk::linkmgr::port_shutdown(intf->port_info(), false);
+    } else if (ctx->port_pb_shutdown) {
+
+        // FIX : ret = sdk::linkmgr::port_shutdown(intf->port_info(), true);
+    } else {
+        ret = SDK_RET_ERR;
+    }
+
+    if (ret != SDK_RET_OK) {
+        ctx->err = true;
+    }
+
+    return false;
+}
+
+sdk_ret_t
+port_shutdown_all (void)
+{
+    port_shutdown_walk_cb_ctxt_t ctxt = { 0 };
+
+    // let first disable all
+    ctxt.port_shutdown = true;
+    if_db()->walk(IF_TYPE_ETH, port_shutdown_walk_cb, &ctxt);
+    if (ctxt.err) {
+       return SDK_RET_ERR;
+    }
+
+    // pb disable
+    ctxt.port_shutdown = false;
+    ctxt.port_pb_shutdown = true;
+    if_db()->walk(IF_TYPE_ETH, port_shutdown_walk_cb, &ctxt);
+    if (ctxt.err) {
+       return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
 }
 
 /**

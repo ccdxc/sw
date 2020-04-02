@@ -54,7 +54,7 @@ upg_ev_handler (sdk::ipc::ipc_msg_ptr msg, const void *req_cookie,
 void
 upg_ipc_init (upg_async_response_cb_t rsp_cb)
 {
-    for (uint32_t ev_id = UPG_EV_COMPAT_CHECK; ev_id <= UPG_EV_MAX; ev_id++) {
+    for (uint32_t ev_id = UPG_EV_COMPAT_CHECK; ev_id < UPG_EV_MAX; ev_id++) {
         sdk::ipc::reg_response_handler(ev_id, upg_ev_handler, NULL);
     }
     response_cb = rsp_cb;

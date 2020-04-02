@@ -135,6 +135,23 @@ public:
     /// \return   nexthop index of the lif
     uint32_t nh_idx(void) const { return nh_idx_; }
 
+    /// \brief    save the tx scheduler offset and number of entries to this lif
+    void set_tx_sched_info(uint32_t offset, uint32_t num_entries) {
+        tx_sched_offset_ = offset;
+        tx_sched_num_entries_ = num_entries;
+    }
+
+    /// \brief    retrieve tx scheduler offset and number of entries from this lif
+    /// \retrun   true if it is valid, false otherwise
+    bool tx_sched_info(uint32_t *offset, uint32_t *num_entries) {
+        if (tx_sched_offset_ == INVALID_INDEXER_INDEX) {
+            return false;
+        }
+        *offset = tx_sched_offset_;
+        *num_entries = tx_sched_num_entries_;
+        return true;
+    }
+
 private:
     ///< constructor
     ///< \param[in] spec    lif configuration parameters
@@ -187,6 +204,8 @@ private:
     /// name of the lif, if any
     char             name_[SDK_MAX_NAME_LEN];
     mac_addr_t       mac_;            ///< MAC address of lif
+    uint32_t         tx_sched_offset_;      ///< tx scheduler entry offset
+    uint32_t         tx_sched_num_entries_; ///< number of tx scheduler entries used
 
     /// operational state
     // TODO: we can have state per pipeline in this class

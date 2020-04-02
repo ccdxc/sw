@@ -15,6 +15,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/p4/loader/loader.hpp"
 #include "nic/sdk/include/sdk/qos.hpp"
+#include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
@@ -216,6 +217,10 @@ public:
     /// \return SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t pipeline_init(void) override;
 
+    /// \brief  pipeline init routine during upgrade
+    /// \return SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t upgrade_init(void) override;
+
     /// \brief  routine to backup the states during the pipeline upgrade
     /// \return SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t upgrade_backup(void) override;
@@ -360,6 +365,14 @@ private:
     /// \brief  routine to save the table engine config
     /// \param[in] pipe pipeline
     void table_engine_cfg_backup_(p4pd_pipeline_t pipe);
+
+    /// \brief  routine to update the table engine config
+    /// \param[in] prog p4plus program info
+    void table_engine_cfg_update_(p4plus_prog_t *prog);
+
+    /// \brief  routine to initialize the p4plus table during upgrade
+    /// \return SDK_RET_OK on success, failure status code on error
+    sdk_ret_t p4plus_table_upgrade_init_(void);
 
 private:
     pipeline_cfg_t      pipeline_cfg_;

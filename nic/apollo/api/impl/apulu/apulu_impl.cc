@@ -124,6 +124,37 @@ apulu_impl::table_engine_cfg_backup_(p4pd_pipeline_t pipe) {
     g_upg_state->incr_tbl_eng_cfg_count(pipe, num_cfgs);
 }
 
+void
+apulu_impl::table_engine_cfg_update_(p4plus_prog_t *prog) {
+    p4_tbl_eng_cfg_t *cfg;
+    uint32_t num_cfgs, max_cfgs, idx;
+    uint64_t asm_base;
+
+    if (!(prog->pipe == P4_PIPELINE_RXDMA || prog->pipe == P4_PIPELINE_TXDMA)) {
+        SDK_ASSERT(0);
+    }
+    num_cfgs = api::g_upg_state->tbl_eng_cfg(prog->pipe, &cfg, &max_cfgs);
+
+    if (sdk::p4::p4_program_to_base_addr(prog->control,
+                                         (char *)prog->prog_name,
+                                         &asm_base) != 0) {
+        PDS_TRACE_ERR("Could not resolve handle %s program %s",
+                      prog->control, prog->prog_name);
+        SDK_ASSERT(0);
+    }
+
+    for (idx = 0; idx < num_cfgs; idx++) {
+        if (cfg[idx].stage == prog->stageid &&
+            cfg[idx].stage_tableid == prog->stage_tableid) {
+            cfg[idx].pc_dyn = 1;
+            cfg[idx].pc_offset = 0;
+            break;
+        }
+    }
+    SDK_ASSERT(idx < num_cfgs);
+    SDK_ASSERT(cfg[idx].asm_base == asm_base); // just a validation
+}
+
 sdk_ret_t
 apulu_impl::init_(pipeline_cfg_t *pipeline_cfg) {
     pipeline_cfg_ = *pipeline_cfg;
@@ -523,15 +554,8 @@ apulu_impl::p4plus_table_init_(void) {
     prog.control = "apulu_rxdma";
     prog.prog_name = "rxdma_stage0.bin";
     prog.pipe = P4_PIPELINE_RXDMA;
-    // configure only in hardinit
-    if (api::g_pds_state.cold_boot()) {
-        sdk::asic::pd::asicpd_p4plus_table_init(&prog,
-                                                api::g_pds_state.platform_type());
-    } else {
-        // for upgrade init, save the information and will be applied after p4 quiesce
-        table_engine_cfg_backup_(P4_PIPELINE_RXDMA);
-    }
-
+    sdk::asic::pd::asicpd_p4plus_table_init(&prog,
+                                            api::g_pds_state.platform_type());
     p4pd_global_table_properties_get(P4_P4PLUS_TXDMA_TBL_ID_TX_TABLE_S0_T0,
                                      &tbl_ctx_txdma_act);
     memset(&prog, 0, sizeof(prog));
@@ -540,15 +564,8 @@ apulu_impl::p4plus_table_init_(void) {
     prog.control = "apulu_txdma";
     prog.prog_name = "txdma_stage0.bin";
     prog.pipe = P4_PIPELINE_TXDMA;
-    // configure only in hardinit
-    if (api::g_pds_state.cold_boot()) {
-        sdk::asic::pd::asicpd_p4plus_table_init(&prog,
-                                                api::g_pds_state.platform_type());
-    } else {
-        // for upgrade init, save the information and will be applied after p4 quiesce
-        table_engine_cfg_backup_(P4_PIPELINE_TXDMA);
-    }
-
+    sdk::asic::pd::asicpd_p4plus_table_init(&prog,
+                                            api::g_pds_state.platform_type());
     return SDK_RET_OK;
 }
 
@@ -559,7 +576,7 @@ apulu_impl::pipeline_init(void) {
     std::string cfg_path = api::g_pds_state.cfg_path();
 
     p4pd_cfg.cfg_path = cfg_path.c_str();
-    ret = pipeline_p4_hbm_init(&p4pd_cfg, api::g_pds_state.cold_boot());
+    ret = pipeline_p4_hbm_init(&p4pd_cfg, true);
     SDK_ASSERT(ret == SDK_RET_OK);
 
     // skip the remaining if it is a soft initialization
@@ -569,24 +586,89 @@ apulu_impl::pipeline_init(void) {
 
     ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
-    // rss config is not modified across upgrades
-    // TODO : confirm this aproach is correct
-    if (api::g_pds_state.cold_boot()) {
-        ret = sdk::asic::pd::asicpd_toeplitz_init("apulu_rxdma",
-                             P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR);
-    }
+    ret = sdk::asic::pd::asicpd_toeplitz_init("apulu_rxdma",
+                                              P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR);
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = p4plus_table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = sdk::asic::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
-    // on upgrade boot, this will be done during switchover
-    if (api::g_pds_state.cold_boot()) {
-        ret = sdk::asic::pd::asicpd_program_table_mpu_pc();
-        SDK_ASSERT(ret == SDK_RET_OK);
-        ret = sdk::asic::pd::asicpd_deparser_init();
-        SDK_ASSERT(ret == SDK_RET_OK);
-    }
+    ret = sdk::asic::pd::asicpd_program_table_mpu_pc();
+    SDK_ASSERT(ret == SDK_RET_OK);
+    ret = sdk::asic::pd::asicpd_deparser_init();
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    g_pds_impl_state.init(&api::g_pds_state);
+    api::g_pds_state.lif_db()->impl_state_set(g_pds_impl_state.lif_impl_db());
+
+    ret = init_service_lif(APULU_SERVICE_LIF, p4pd_cfg.cfg_path);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    ret = table_init_();
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    return SDK_RET_OK;
+}
+
+// called on B during A to B ISSU upgrade
+sdk_ret_t
+apulu_impl::p4plus_table_upgrade_init_(void) {
+    p4plus_prog_t prog;
+    p4pd_table_properties_t tbl_ctx_apphdr;
+    p4pd_table_properties_t tbl_ctx_apphdr_off;
+    p4pd_table_properties_t tbl_ctx_txdma_act;
+    p4pd_table_properties_t tbl_ctx_txdma_act_ext;
+
+    p4pd_global_table_properties_get(P4_P4PLUS_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
+                                     &tbl_ctx_apphdr);
+    memset(&prog, 0, sizeof(prog));
+    prog.stageid = tbl_ctx_apphdr.stage;
+    prog.stage_tableid = tbl_ctx_apphdr.stage_tableid;
+    prog.stage_tableid_off = tbl_ctx_apphdr_off.stage_tableid;
+    prog.control = "apulu_rxdma";
+    prog.prog_name = "rxdma_stage0.bin";
+    prog.pipe = P4_PIPELINE_RXDMA;
+    // save the information and will be applied after p4 quiesce
+    table_engine_cfg_update_(&prog);
+
+    p4pd_global_table_properties_get(P4_P4PLUS_TXDMA_TBL_ID_TX_TABLE_S0_T0,
+                                     &tbl_ctx_txdma_act);
+    memset(&prog, 0, sizeof(prog));
+    prog.stageid = tbl_ctx_txdma_act.stage;
+    prog.stage_tableid = tbl_ctx_txdma_act.stage_tableid;
+    prog.control = "apulu_txdma";
+    prog.prog_name = "txdma_stage0.bin";
+    prog.pipe = P4_PIPELINE_TXDMA;
+    // save the information and will be applied after p4 quiesce
+    table_engine_cfg_update_(&prog);
+
+    return SDK_RET_OK;
+}
+
+// called on B during A to B ISSU upgrade
+sdk_ret_t
+apulu_impl::upgrade_init(void) {
+    sdk_ret_t  ret;
+    p4pd_cfg_t p4pd_cfg;
+    std::string cfg_path = api::g_pds_state.cfg_path();
+
+    p4pd_cfg.cfg_path = cfg_path.c_str();
+    ret = pipeline_p4_hbm_init(&p4pd_cfg, false);
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    // this is not valid
+    SDK_ASSERT(sdk::asic::asic_is_soft_init());
+
+    ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    // rss config is not modified across upgrades
+    // TODO : confirm this aproach is correct
+    // ret = sdk::asic::pd::asicpd_toeplitz_init("apulu_rxdma",
+    //                      P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR);
+    // SDK_ASSERT(ret == SDK_RET_OK);
+    ret = p4plus_table_upgrade_init_();
+    SDK_ASSERT(ret == SDK_RET_OK);
+    ret = sdk::asic::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
+    SDK_ASSERT(ret == SDK_RET_OK);
 
     g_pds_impl_state.init(&api::g_pds_state);
     api::g_pds_state.lif_db()->impl_state_set(g_pds_impl_state.lif_impl_db());
@@ -596,8 +678,7 @@ apulu_impl::pipeline_init(void) {
     //
     // during A to B upgrade and the service lif id of A(g_upg_state->service_lif_id)
     // matches with B(APULU_SERVICE_LIF), verify the configs are perfectly matching
-    if (api::g_pds_state.cold_boot() ||
-        (api::g_upg_state->service_lif_id() != APULU_SERVICE_LIF)) {
+    if (api::g_upg_state->service_lif_id() != APULU_SERVICE_LIF) {
         ret = init_service_lif(APULU_SERVICE_LIF, p4pd_cfg.cfg_path);
     } else {
         // on upgrade boot, verify the config
@@ -609,7 +690,6 @@ apulu_impl::pipeline_init(void) {
 
     return SDK_RET_OK;
 }
-
 
 // this re-writes the common registers in the pipeline during A to B upgrade.
 // should be called in quiesced state and it should be the final

@@ -118,6 +118,8 @@ devapi_impl::lif_init(lif_info_t *info) {
         PDS_TRACE_DEBUG("Created lif %s, id %u %s %u %s",
                         spec.key.str(), info->lif_id, info->name, info->type,
                         macaddr2str(info->mac));
+        lif->set_tx_sched_info(info->tx_sched_table_offset,
+                               info->tx_sched_num_table_entries);
     } else {
         PDS_TRACE_ERR("lif %s create failed!, id %u %s %u %s ret %u",
                         spec.key.str(), info->lif_id, info->name, info->type,

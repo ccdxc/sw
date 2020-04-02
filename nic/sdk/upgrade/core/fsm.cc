@@ -143,18 +143,18 @@ upg_event_handler (sdk::ipc::ipc_msg_ptr msg)
 
     upg_stage_t id = fsm_states.current_stage();
     upg_event_msg_t *event = (upg_event_msg_t *)msg->data();
-    std::string thread_name = event->rsp_thread_name;
+    std::string svc_name = event->rsp_svc_name;
 
     UPG_TRACE_INFO("Received UPG IPC event:\n\t stageid %s, \n\tstatus %s,"
-                   "\n\t thread %s,\n\t thread_id %u\n",
+                   "\n\t service %s,\n\t svc_ipc_id %u\n",
                    upg_stage2str(event->stage),
-                   upg_status2str(event->rsp_status), event->rsp_thread_name,
-                   event->rsp_thread_id);
+                   upg_status2str(event->rsp_status), event->rsp_svc_name,
+                   event->rsp_svc_ipc_id);
 
-    if (event->stage == id && fsm_states.is_valid_service(thread_name)) {
+    if (event->stage == id && fsm_states.is_valid_service(svc_name)) {
 
         if (event->stage == fsm_states.start_stage()) {
-            update_ipc_id(thread_name, event->rsp_thread_id);
+            update_ipc_id(svc_name, event->rsp_svc_ipc_id);
         }
 
         fsm_states.update_stage_progress(svc_rsp_code(event->rsp_status));
