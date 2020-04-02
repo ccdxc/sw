@@ -123,6 +123,7 @@ class Node(object):
             self.__nic_console_port = None
             self.__nic_mgmt_intf = None
             self.__console_hdl = None
+            self.__bond_ip = None
 
         def HostIntfs(self):
             return self.__host_intfs

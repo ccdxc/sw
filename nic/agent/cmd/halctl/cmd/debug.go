@@ -146,6 +146,14 @@ var testDebugCmd = &cobra.Command{
 	Hidden: true,
 }
 
+var vmotionDebugCmd = &cobra.Command{
+	Use:    "vmotion",
+	Short:  "dump vMotion information",
+	Long:   "dump vMotion information",
+	Hidden: true,
+	Run:    vmotionDebugCmdHandler,
+}
+
 var platDebugCmd = &cobra.Command{
 	Use:   "platform",
 	Short: "set platform options",
@@ -236,6 +244,7 @@ func init() {
 	debugCmd.AddCommand(debugUpdateCmd)
 	debugCmd.AddCommand(debugDeleteCmd)
 	debugCmd.AddCommand(testDebugCmd)
+	debugCmd.AddCommand(vmotionDebugCmd)
 	debugCmd.AddCommand(memoryDebugCmd)
 	debugCmd.AddCommand(sessionCtrlDebugCmd)
 	debugCmd.AddCommand(microSegCmd)
@@ -473,6 +482,84 @@ func memoryDebugCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("Memory trim succeeded\n")
+}
+
+func vmotionShowResp(resp *halproto.VmotionDebugResponse) {
+	if !resp.GetVmotionEnable() {
+		fmt.Printf("vMotion is disabled\n")
+		return
+	}
+
+	hdrLine := strings.Repeat("-", 70)
+
+	// Endpoints
+	fmt.Println(hdrLine)
+	fmt.Printf("%-20s%-18s%-7s%-8s%-8s%-11s\n",
+		"EndPoint", "HomingHost", "Type", "State", "Flags", "SM State")
+	fmt.Println(hdrLine)
+
+	for _, ep := range resp.GetEp() {
+		fmt.Printf("%-20s%-18s%-7d%-8d0x%-8x%-11d\n",
+			ep.GetMacAddress(), ep.GetOldHomingHostIp(), ep.GetMigrationType(),
+			ep.GetVmotionState(), ep.GetFlags(), ep.GetState())
+	}
+	fmt.Println(hdrLine)
+
+	// vMotion active Endpoints
+	fmt.Println("\n\n Migrated Endpoints")
+	fmt.Println(hdrLine)
+	fmt.Printf("%-20s%-12s%-17s\n", "EndPoint", "useg-vlan", "MigrationState")
+	fmt.Println(hdrLine)
+	for _, ep := range resp.GetActiveEp() {
+		fmt.Printf("%-20s%-12d%-17d\n", ep.GetMacAddress(), ep.GetUsegVlan(), ep.GetMigrationState())
+	}
+	fmt.Println(hdrLine)
+
+	// Statistics
+	fmt.Println("\n\n vMotion Statistics")
+	fmt.Println(hdrLine)
+	fmt.Printf("%-24s: %-6d\n", "Total vMotion", resp.GetStats().GetTotalVmotion())
+	fmt.Printf("%-24s: %-6d\n", "Total In vMotion", resp.GetStats().GetMigInVmotion())
+	fmt.Printf("%-24s: %-6d\n", "Total Out vMotion", resp.GetStats().GetMigOutVmotion())
+	fmt.Printf("%-24s: %-6d\n", "Total Success Migration", resp.GetStats().GetMigSuccess())
+	fmt.Printf("%-24s: %-6d\n", "Total Failed Migration", resp.GetStats().GetMigFailed())
+	fmt.Printf("%-24s: %-6d\n", "Total Aborted Migration", resp.GetStats().GetMigAborted())
+	fmt.Printf("%-24s: %-6d\n", "Total Timeout Migration", resp.GetStats().GetMigTimeout())
+	fmt.Printf("%-24s: %-6d\n", "Total Cold Migration", resp.GetStats().GetMigCold())
+	fmt.Println(hdrLine)
+}
+
+func vmotionDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewInternalClient(c)
+
+	req := &halproto.VmotionDebugSendRequest{}
+
+	reqMsg := &halproto.VmotionDebugSendRequestMsg{
+		Request: []*halproto.VmotionDebugSendRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.VmotionDebugReq(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("vMotion debug dump send request failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+			continue
+		}
+		vmotionShowResp(resp)
+	}
 }
 
 func pbPlatDebugCmdHandler(cmd *cobra.Command, args []string) {

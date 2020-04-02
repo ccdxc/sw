@@ -1,22 +1,23 @@
 meta:
-    name    : vmotion_basic_ping
+    name    : vmotion_inband_ping
     os      : [ esx ]
     nics    : [ pensando ]
     #targetcount : 35
 
 testcases:
-    -   name    : ping_oob_mnic0_intf
-        testcase: testcases.mnic.ping_oob
-        ignore: True
+    -   name    : ping_bond0_intf
+        testcase: testcases.mnic.ping_bond0
+        disable : False
+        ignore  : True
         args    :
             mtu: 1500
-    -   name    : BASIC_PING_VM_OOB
+    -   name    : BASIC_PING_VM_INB
         testcase: testcases.vmotion.basic_ping
         stress  : True
         args    :
             vm_type      : dsc_to_dsc
             type         : both
-            num_sessions : 2 
+            num_sessions : 2
             num_moves    : 2
+            dsc_con_type : inb
             #timeout : 60
-

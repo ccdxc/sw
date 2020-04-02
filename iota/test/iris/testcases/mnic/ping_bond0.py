@@ -15,7 +15,9 @@ def Trigger(tc):
 
     if w1.IsNaples() and w2.IsNaples():
         api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig bond0 20.20.20.20 netmask 255.255.255.0 up")
+        api.SetBondIp(w1.node_name, "20.20.20.20")
         api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig bond0 20.20.20.21 netmask 255.255.255.0 up")
+        api.SetBondIp(w2.node_name, "20.20.20.21")
         api.Trigger_AddNaplesCommand(req, w1.node_name, "ping -I bond0 -c3 20.20.20.21")
         tc.resp = api.Trigger(req)
     else:

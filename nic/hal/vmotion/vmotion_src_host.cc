@@ -43,6 +43,9 @@ src_host_end (vmotion_ep *vmn_ep, MigrationState migration_state)
 
     VMOTION_FLAG_SET_THREAD_EXITED(vmn_ep);
 
+    // Stats
+    vmn_ep->get_vmotion()->incr_migration_state_stats(migration_state);
+
     // Stop the watcher
     vmn_ep->get_event_thread()->stop();
 }

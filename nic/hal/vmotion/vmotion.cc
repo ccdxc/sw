@@ -299,6 +299,7 @@ vmotion_ep::init(ep_t *ep, ep_vmotion_type_t type)
     vmotion_type_       = type;
     ep_hdl_             = ep->hal_handle;
     old_homing_host_ip_ = ep->old_homing_host_ip;
+    memcpy(&mac_, &ep->l2_key.mac_addr, ETH_ADDR_LEN);
 
     ep->vmotion_type = type;
 
@@ -320,6 +321,14 @@ vmotion_ep::init(ep_t *ep, ep_vmotion_type_t type)
                                       STATE_SRC_HOST_END, // TODO STATE_DST_HOST_REMOVE,
                                       (fsm_state_ctx)this,
                                       NULL);  // TODO get_timer_func);
+    }
+
+    // Stats
+    get_vmotion()->incr_stats(&vmotion_stats_t::total_vmotion);
+    if (type == VMOTION_TYPE_MIGRATE_IN) {
+        get_vmotion()->incr_stats(&vmotion_stats_t::mig_in_vmotion);
+    } else {
+        get_vmotion()->incr_stats(&vmotion_stats_t::mig_out_vmotion);
     }
     return HAL_RET_OK;
 }
@@ -354,6 +363,74 @@ vmotion_ep::set_last_sync_time() {
 
     // Set the time
     sdk::timestamp_to_nsecs(&ctime, &last_sync_time_);
+}
+
+static bool
+vmotion_endpoint_dump (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t       *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    internal::VmotionDebugResponse *resp = (internal::VmotionDebugResponse *)ctxt;
+    ep_t                           *ep = (ep_t *)hal_handle_get_obj(entry->handle_id);
+    internal::VmotionActiveEp      *ep_rsp;
+
+    if (ep->vmotion_state != MigrationState::NONE) {
+        ep_rsp = resp->add_active_ep();
+
+        ep_rsp->set_mac_address(macaddr2str(ep->l2_key.mac_addr));
+        ep_rsp->set_migration_state(ep->vmotion_state);
+        ep_rsp->set_useg_vlan(ep->useg_vlan);
+    }
+
+    // Always return false here, so that we walk through all hash table entries.
+    return false;
+}
+
+void
+vmotion_ep::populate_vmotion_ep_dump (internal::VmotionDebugEp *rsp)
+{
+    auto ep = get_ep();
+
+    rsp->set_mac_address(macaddr2str(mac_));
+    rsp->set_old_homing_host_ip(ipv4addr2str(old_homing_host_ip_.addr.v4_addr));
+    rsp->set_migration_type(vmotion_type_);
+    rsp->set_vmotion_state(ep ? ep->vmotion_state : 0);
+    rsp->set_flags(flags_);
+    rsp->set_state(sm_->get_state());
+}
+
+void
+vmotion::populate_vmotion_dump (internal::VmotionDebugResponse *rsp)
+{
+    rsp->set_vmotion_enable(1);
+
+    for (std::vector<vmotion_ep *>::iterator ep = vmn_eps_.begin(); ep != vmn_eps_.end(); ep++) {
+        (*ep)->populate_vmotion_ep_dump(rsp->add_ep());
+    }
+
+    g_hal_state->ep_l2_ht()->walk(vmotion_endpoint_dump, rsp);
+
+    rsp->mutable_stats()->set_total_vmotion(stats_.total_vmotion);
+    rsp->mutable_stats()->set_mig_in_vmotion(stats_.mig_in_vmotion);
+    rsp->mutable_stats()->set_mig_out_vmotion(stats_.mig_out_vmotion);
+    rsp->mutable_stats()->set_mig_success(stats_.mig_success);
+    rsp->mutable_stats()->set_mig_failed(stats_.mig_failed);
+    rsp->mutable_stats()->set_mig_aborted(stats_.mig_aborted);
+    rsp->mutable_stats()->set_mig_timeout(stats_.mig_timeout);
+    rsp->mutable_stats()->set_mig_cold(stats_.mig_cold);
+}
+
+void
+vmotion::incr_migration_state_stats(MigrationState state)
+{
+    if (state == MigrationState::SUCCESS) {
+        incr_stats(&vmotion_stats_t::mig_success);
+    } else if (state == MigrationState::FAILED) {
+        incr_stats(&vmotion_stats_t::mig_failed);
+    } else if (state == MigrationState::TIMEOUT) {
+        incr_stats(&vmotion_stats_t::mig_timeout);
+    } else if (state == MigrationState::ABORTED) {
+        incr_stats(&vmotion_stats_t::mig_aborted);
+    }
 }
 
 } // namespace hal

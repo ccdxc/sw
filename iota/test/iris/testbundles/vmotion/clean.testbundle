@@ -10,4 +10,4 @@ testcases:
         stress  : True
         args    :
             vm_type      : dsc_to_dsc
-            node         : node2
+            #node         : node2

@@ -55,17 +55,31 @@ def start_fuz(tc):
 
     # ping test above sets the workload pairs to remote only
     # setting wl_pairs as per arg selected in testbundle 
+    workload_pairs = []
  
     if tc.args.type == 'local_only':
         api.Logger.info("local_only test")
-        tc.workload_pairs = api.GetLocalWorkloadPairs()
+        workload_pairs = api.GetLocalWorkloadPairs()
     elif tc.args.type == 'both':
         api.Logger.info(" both local and remote test")
-        tc.workload_pairs = api.GetLocalWorkloadPairs()
-        tc.workload_pairs.extend(api.GetRemoteWorkloadPairs())
+        workload_pairs = api.GetLocalWorkloadPairs()
+        workload_pairs.extend(api.GetRemoteWorkloadPairs())
     else:
         api.Logger.info("remote_only test")
-        tc.workload_pairs = api.GetRemoteWorkloadPairs()
+        workload_pairs = api.GetRemoteWorkloadPairs()
+
+    wl_under_move = []
+    for wl_info in tc.move_info:
+        wl_under_move.append(wl_info.wl)
+    '''
+    tc.workload_pairs updated in ping test above
+    resetting that to limit fuz tests to vm under move
+    ''' 
+    tc.workload_pairs = [] 
+    for pairs in workload_pairs:
+        if pairs[0] in wl_under_move or pairs[1] in wl_under_move:
+            api.Logger.info("Adding %s and %s for fuz test" %(pairs[0].workload_name, pairs[1].workload_name))
+            tc.workload_pairs.append(pairs)
 
     for idx, pairs in enumerate(tc.workload_pairs):
         client = pairs[0]
@@ -74,11 +88,12 @@ def start_fuz(tc):
                        (server.workload_name, server.ip_address, client.workload_name, client.ip_address)
         tc.cmd_descr.append(cmd_descr)
         num_sessions = int(getattr(tc.args, "num_sessions", 1))
-        api.Logger.info("Starting Fuz test from %s num-sessions %d" % (cmd_descr, num_sessions))
 
         serverCmd = None
         clientCmd = None
         port = api.AllocateTcpPort()
+
+        api.Logger.info("Starting Fuz test from %s num-sessions %d Port %d" % (cmd_descr, num_sessions, port))
 
         serverCmd = tc.fuz_exec[server.workload_name]  + " -port " + str(port)
         clientCmd = tc.fuz_exec[client.workload_name]  + " -conns " + str(num_sessions) + " -duration " + str(__fuz_run_time) + " -attempts 1 -read-timeout 100 -talk " + server.ip_address + ":" + str(port)
@@ -170,8 +185,7 @@ def update_move_info(tc, workloads, factor_l2seg, new_node):
             break
     api.Logger.info("Num of move_info elements are {}".format(len(tc.move_info)))
 
-
-def do_vmotion(tc, dsc_to_dsc):
+def create_move_info(tc, dsc_to_dsc):
     factor_l2seg = True
     new_node = ''
     old_node = ''
@@ -190,18 +204,12 @@ def do_vmotion(tc, dsc_to_dsc):
         
     workloads = api.GetWorkloads(old_node)
     assert(len(workloads) != 0)
-    api.Logger.info("moving workloads from {} to {}".format(old_node, new_node))
+    api.Logger.info("Identify workloads to move from {} to {}".format(old_node, new_node))
     update_move_info(tc, workloads, factor_l2seg, new_node)
+
+
+def do_vmotion(tc, dsc_to_dsc):
     vm_threads = []
-    #TEMP
-    if 0:
-        #import pdb; pdb.set_trace()
-        temp_node = tc.Nodes[0]
-        wl_temp   = api.GetWorkloads(temp_node)
-        wl_temp[0].sess_info_before = vm_utils.get_session_info(tc, wl_temp[0])
-        wl_temp[0].sess_info_after  = vm_utils.get_session_info(tc, wl_temp[0])
-        ret = vm_utils.verify_session_info(tc, wl_temp[0])
-        return ret
 
     for wl_info in tc.move_info:
         if (api.IsNaplesNode(wl_info.wl.node_name)):
@@ -211,7 +219,7 @@ def do_vmotion(tc, dsc_to_dsc):
         vm_thread = threading.Thread(target=triggerVmotion,args=(tc, wl_info.wl, wl_info.new_node, ))
         vm_threads.append(vm_thread)
         vm_thread.start()
-        create_ep_info(tc, wl_info.wl, wl_info.new_node, "START", wl_info.old_node)
+        vm_utils.create_ep_info(tc, wl_info.wl, wl_info.new_node, "START", wl_info.old_node)
     # wait for vmotion thread to complete, meaning vmotion is done on vcenter
     for vm_thread in vm_threads:
         vm_thread.join()
@@ -237,6 +245,7 @@ def Setup(tc):
     else:
         tc.vm_dsc_to_dsc     = True 
     tc.num_moves = int(getattr(tc.args, "num_moves", 1))
+    tc.dsc_conn_type  = getattr(tc.args, "dsc_con_type", "oob")
         
     getNonNaplesNodes(tc)
     if arping.ArPing(tc) != api.types.status.SUCCESS:
@@ -245,6 +254,11 @@ def Setup(tc):
         api.Logger.info("ping test failed on setup")
         return api.types.status.FAILURE
 
+    '''
+    identify workloads to be moved, as we want to run fuz if wl being moved is involved
+    '''
+    create_move_info(tc, tc.vm_dsc_to_dsc)
+
     #Start Fuz
     ret = start_fuz(tc)
     if ret != api.types.status.SUCCESS:
@@ -252,35 +266,6 @@ def Setup(tc):
         return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
-
-def create_ep_info(tc, wl, new_node, migr_state, old_node):
-    # get a naples handle to move to
-    ep_filter = "meta.name=" + wl.workload_name + ";"
-    objects = agent_api.QueryConfigs("Endpoint", filter=ep_filter)
-    assert(len(objects) == 1)
-    object                          = copy.deepcopy(objects[0])
-    # delete endpoint being moved on new host, TEMP
-    agent_api.DeleteConfigObjects([object], [new_node], True)
-
-    object.spec.node_uuid           = tc.uuidMap[new_node]
-    if (api.IsNaplesNode(old_node)):
-        object.status.node_uuid         = tc.uuidMap[old_node]
-        object.spec.homing_host_address = api.GetNicMgmtIP(old_node)
-        object.spec.migration           = migr_state 
-    else:
-        object.status.node_uuid         = "0011.2233.4455"  # TEMP
-        object.spec.homing_host_address = "169.169.169.169" # TEMP
-        object.spec.migration           = "FROM_NON_PEN_HOST"
-    # this triggers endpoint on new host(naples) to setup flows
-    agent_api.PushConfigObjects([object], [new_node], True)
-
-def delete_ep_info(tc, wl, node):
-    ep_filter = "meta.name=" + wl.workload_name + ";"
-    objects = agent_api.QueryConfigs("Endpoint", filter=ep_filter)
-    assert(len(objects) == 1)
-    object = objects[0]
-    agent_api.DeleteConfigObjects([object], [node], True)
-
 
 def Trigger(tc):
     tc.resp = do_vmotion(tc, tc.vm_dsc_to_dsc)
@@ -319,10 +304,10 @@ def Teardown(tc):
             vm_threads.append(vm_thread)
             vm_thread.start()
             if (api.IsNaplesNode(wl_info.old_node)):
-                create_ep_info(tc, wl_info.wl, wl_info.old_node, "START", wl_info.new_node)
+                vm_utils.create_ep_info(tc, wl_info.wl, wl_info.old_node, "START", wl_info.new_node)
     for vm_thread in vm_threads:
         vm_thread.join()
     for wl_info in tc.move_info:
        if (api.IsNaplesNode(wl_info.new_node)):
-            delete_ep_info(tc, wl_info.wl, wl_info.new_node)
+            vm_utils.delete_ep_info(tc, wl_info.wl, wl_info.new_node)
     return api.types.status.SUCCESS

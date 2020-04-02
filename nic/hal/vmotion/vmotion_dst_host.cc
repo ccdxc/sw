@@ -53,6 +53,9 @@ dst_host_end (vmotion_ep *vmn_ep)
 
     VMOTION_FLAG_SET_THREAD_EXITED(vmn_ep);
 
+    // Stats
+    vmn_ep->get_vmotion()->incr_migration_state_stats(vmn_ep->get_migration_state());
+
     // Stop the watcher
     vmn_ep->get_event_thread()->stop();
 }
@@ -93,6 +96,7 @@ vmotion_dst_host_fsm_def::vmotion_dst_host_fsm_def(void)
     FSM_SM_BEGIN((sm_def))
         FSM_STATE_BEGIN(STATE_DST_HOST_INIT, 0, NULL, NULL)
             FSM_TRANSITION(EVT_START_SYNC, SM_FUNC(process_start_sync), STATE_DST_HOST_SYNCING)
+            FSM_TRANSITION(EVT_EP_MV_DONE_RCVD, SM_FUNC(process_ep_move_done), STATE_DST_HOST_TERM_SYNC_START)
             FSM_TRANSITION(EVT_EP_MV_ABORT_RCVD, SM_FUNC(process_ep_move_abort), STATE_DST_HOST_END)
             FSM_TRANSITION(EVT_VMOTION_TIMEOUT, SM_FUNC(process_vmotion_timeout), STATE_DST_HOST_END)
         FSM_STATE_END

@@ -83,6 +83,17 @@ enum vmotion_thread_evt_t {
 #define VMOTION_FLAG_IS_INP_MAC_REMOVED(vmn_ep) \
     (VMOTION_IS_BIT_SET(*(vmn_ep->get_flags()), VMOTION_FLAG_INP_MAC_REMOVED))
 
+typedef struct vmotion_stats_s {
+    uint32_t    total_vmotion;
+    uint32_t    mig_in_vmotion;
+    uint32_t    mig_out_vmotion;
+    uint32_t    mig_success;
+    uint32_t    mig_failed;
+    uint32_t    mig_aborted;
+    uint32_t    mig_timeout;
+    uint32_t    mig_cold;
+} vmotion_stats_t;
+
 class vmotion_ep {
 public:
     // Factory methods
@@ -119,6 +130,7 @@ public:
     hal_ret_t           spawn_dst_host_thread(void);
     hal_ret_t           dst_host_init(void);
     hal_ret_t           dst_host_exit(void);
+    void                populate_vmotion_ep_dump(internal::VmotionDebugEp *rsp); 
 
     // FSM Methods
     void  process_event(uint32_t event, fsm_event_data data) { sm_->process_event(event, data); }
@@ -162,6 +174,9 @@ public:
     hal_ret_t     release_thread_id(uint32_t tid);
     hal_ret_t     spawn_src_host_thread(int sock_fd);
     bool          process_rarp(mac_addr_t mac);
+    void          populate_vmotion_dump(internal::VmotionDebugResponse *rsp);
+    void          incr_stats(uint32_t vmotion_stats_t::* const p_field) { (stats_.*p_field)++; }
+    void          incr_migration_state_stats(MigrationState state); 
 
     // FSM Related methods
     static vmotion_src_host_fsm_def* src_host_fsm_def_;
@@ -189,6 +204,7 @@ private:
 
     vmotion_t                  vmotion_;
     std::vector<vmotion_ep *>  vmn_eps_;
+    vmotion_stats_t            stats_; 
 };
 
 // data passed to the destination/source host thread.

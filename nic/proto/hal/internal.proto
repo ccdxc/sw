@@ -95,6 +95,9 @@ service Internal {
   rpc RawcCbDelete (RawcCbDeleteRequestMsg) returns (RawcCbDeleteResponseMsg) {}
   rpc RawcCbGet (RawcCbGetRequestMsg) returns (RawcCbGetResponseMsg) {}
 
+  // vMotion debug dump
+  rpc VmotionDebugReq (VmotionDebugSendRequestMsg) returns (VmotionDebugResponseMsg) {}
+
   // Test send fin
   rpc TestSendFinReq (TestSendFinRequestMsg) returns (TestSendFinResponseMsg) {}
 
@@ -1744,6 +1747,52 @@ message RawcCbGetResponse {
 // RawcCbGetResponseMsg is batched response to RawcCbGetRequestMsg
 message RawcCbGetResponseMsg {
   repeated RawcCbGetResponse    response = 1;    // batch get response
+}
+
+// vMotion Debug dump
+message VmotionDebugSendRequestMsg {
+  repeated VmotionDebugSendRequest  request = 1;
+}
+
+message VmotionDebugSendRequest {
+}
+
+message VmotionDebugResponseMsg {
+  repeated VmotionDebugResponse response = 1;
+}
+
+message VmotionStats {
+  uint32     total_vmotion = 1;
+  uint32     mig_in_vmotion = 2;
+  uint32     mig_out_vmotion = 3;
+  uint32     mig_success = 4;
+  uint32     mig_failed = 5;
+  uint32     mig_aborted = 6;
+  uint32     mig_timeout = 7;
+  uint32     mig_cold = 8;
+}
+
+message VmotionDebugEp {
+  string            mac_address          = 1;
+  string            old_homing_host_ip   = 2;
+  uint32            migration_type       = 3;
+  uint32            vmotion_state        = 4;
+  uint32            flags                = 5;
+  uint32            state                = 6;
+}
+
+message VmotionActiveEp {
+  string            mac_address          = 1;
+  uint32            migration_state      = 2;
+  uint32            useg_vlan            = 3;
+}
+
+message VmotionDebugResponse {
+  types.ApiStatus          api_status     = 1 [(gogoproto.jsontag) = "api_status"]; // status code
+  bool                     vmotion_enable = 2;
+  VmotionStats             stats          = 3;
+  repeated VmotionDebugEp  ep             = 4;
+  repeated VmotionActiveEp active_ep      = 5;
 }
 
 // Debug test to send FIN on local EPs

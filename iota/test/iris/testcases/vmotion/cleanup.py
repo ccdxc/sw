@@ -60,28 +60,34 @@ def delete_ep_info(tc, wl, node):
 
 def Setup(tc):
     vm_threads = []
+    node_list  = []
     node = getattr(tc.args, "node", None)
-    if not node:
-        api.Logger.info("Needed node param Missing")
-        return api.types.status.FAILURE
+    if node:
+        node_list.append(node)
+    else:
+        '''
+        add all nodes in the topo
+        '''
+        node_list = api.GetNodes()
     tc.uuidMap  = api.GetNaplesNodeUuidMap()
-    (wls,new_node) = getWorkloadsToRemove(tc, node)
-    for wl in  wls:
-        api.Logger.info("Moving wl {} from node {} to node {}".format(wl.workload_name, wl.node_name,new_node))
-        vm_thread = threading.Thread(target=triggerVmotion, args=(tc, wl, new_node,))
-        vm_threads.append(vm_thread)
-        vm_thread.start()
-        if (api.IsNaplesNode(new_node)):
+    for node in node_list:
+        (wls,new_node) = getWorkloadsToRemove(tc, node)
+        for wl in  wls:
+            api.Logger.info("Moving wl {} from node {} to node {}".format(wl.workload_name, wl.node_name,new_node))
+            vm_thread = threading.Thread(target=triggerVmotion, args=(tc, wl, new_node,))
+            vm_threads.append(vm_thread)
+            vm_thread.start()
+            if (api.IsNaplesNode(new_node)):
                 create_ep_info(tc, wl, new_node, "START", node)
-    for vm_thread in vm_threads:
-        vm_thread.join()
-    for wl in wls:
-       if (api.IsNaplesNode(node)):
-            delete_ep_info(tc, wl, node)
+        for vm_thread in vm_threads:
+            vm_thread.join()
+        for wl in wls:
+            if (api.IsNaplesNode(node)):
+                delete_ep_info(tc, wl, node)
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    return api.types.status.SUCCESS 
+    return api.types.status.SUCCESS
 
 def Verify(tc):
     return api.types.status.SUCCESS

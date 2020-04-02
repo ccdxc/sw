@@ -168,6 +168,9 @@ def do_vmotion(tc, wl, new_node):
 def create_ep_info(tc, wl, new_node, migr_state, old_node):
     # get a naples handle to move to
     ep_filter = "meta.name=" + wl.workload_name + ";"
+    if not hasattr(tc, 'dsc_conn_type'):
+       api.Logger.info(" seeing dsc_conn_type to oob")
+       tc.dsc_conn_type = 'oob'  
     objects = agent_api.QueryConfigs("Endpoint", filter=ep_filter)
     assert(len(objects) == 1)
     object                          = copy.deepcopy(objects[0])
@@ -178,7 +181,10 @@ def create_ep_info(tc, wl, new_node, migr_state, old_node):
     object.spec.migration           = migr_state 
     if (api.IsNaplesNode(old_node)):
         object.status.node_uuid         = tc.uuidMap[old_node]
-        object.spec.homing_host_address = api.GetNicMgmtIP(old_node)
+        if (tc.dsc_conn_type == "oob"):
+            object.spec.homing_host_address = api.GetNicMgmtIP(old_node)
+        else:
+            object.spec.homing_host_address = api.GetBondIp(old_node)
     else:
         object.status.node_uuid         = "0011.2233.4455"  # TEMP
         object.spec.homing_host_address = "169.169.169.169" # TEMP

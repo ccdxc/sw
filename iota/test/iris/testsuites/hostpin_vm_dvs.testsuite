@@ -4,7 +4,7 @@ meta:
     mode        : hybrid
     cfgmode     : netagent
     nicmode     : hostpin_dvs
-    enable      : False
+    enable      : True
     os          : [ esx ]
 
 packages:
@@ -44,10 +44,10 @@ testbundles:
 
     sanity:
         # Relative paths from iota/test/iris/testbundles/
-        - vmotion/basic_ping.testbundle
+        - vmotion/basic_inband_ping.testbundle
         #- vmotion/basic_ping_nondsc.testbundle
         - vmotion/triggers.testbundle
-        #- vmotion/clean.testbundle
+        - vmotion/clean.testbundle
         - vmotion/aging.testbundle
         
 

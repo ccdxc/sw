@@ -157,6 +157,23 @@ quiesce_stop(const types::Empty &request, types::Empty* rsp)
     return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
+hal_ret_t vmotion_debug_req(internal::VmotionDebugSendRequest& req,
+                            internal::VmotionDebugResponse *rsp)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    auto                vmn = g_hal_state->get_vmotion();
+    HAL_TRACE_DEBUG("vMotion debug dump request");
+
+    if (!vmn) {
+        rsp->set_vmotion_enable(0);
+        return ret;
+    }
+
+    vmn->populate_vmotion_dump(rsp);
+
+    return ret;
+}
+
 hal_ret_t testsendfin_req(internal::TestSendFinRequest& req,
                           internal::TestSendFinResponse *rsp)
 {

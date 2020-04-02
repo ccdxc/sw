@@ -161,6 +161,9 @@ hal_ret_t rawccb_delete(internal::RawcCbDeleteRequest& req,
 hal_ret_t rawccb_get(internal::RawcCbGetRequest& req,
                      internal::RawcCbGetResponseMsg *rsp);
 
+hal_ret_t vmotion_debug_req(internal::VmotionDebugSendRequest& req,
+                            internal::VmotionDebugResponse *rsp);
+
 hal_ret_t testsendfin_req(internal::TestSendFinRequest& req,
                           internal::TestSendFinResponse *rsp);
 

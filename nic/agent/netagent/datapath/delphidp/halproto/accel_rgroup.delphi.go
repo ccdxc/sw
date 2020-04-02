@@ -649,6 +649,13 @@ It has these top-level messages:
 	RawcCbStats
 	RawcCbGetResponse
 	RawcCbGetResponseMsg
+	VmotionDebugSendRequestMsg
+	VmotionDebugSendRequest
+	VmotionDebugResponseMsg
+	VmotionStats
+	VmotionDebugEp
+	VmotionActiveEp
+	VmotionDebugResponse
 	TestSendFinRequestMsg
 	TestSendFinRequest
 	TestSendFinResponseMsg
