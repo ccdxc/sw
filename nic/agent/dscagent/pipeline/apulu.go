@@ -633,7 +633,25 @@ func (a *ApuluAPI) HandleApp(oper types.Operation, app netproto.App) (apps []net
 	}
 	// TODO Trigger this from NPM's OnAppUpdate method
 	if oper == types.Update {
-		//
+		// Check if no actual update for App, then return
+		var existingApp netproto.App
+		d, err := a.InfraAPI.Read(app.Kind, app.GetKey())
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "App: %s | Err: %v", app.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "App: %s | Err: %v", app.GetKey(), types.ErrObjNotFound)
+		}
+		err = existingApp.Unmarshal(d)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "App: %s | Err: %v", app.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "App: %s | Err: %v", app.GetKey(), err)
+		}
+
+		// Check for idempotency
+		if proto.Equal(&app.Spec, &existingApp.Spec) {
+			//log.Infof("App: %s | Info: %s ", app.GetKey(), types.InfoIgnoreUpdate)
+			return nil, nil
+		}
+
 		var (
 			dat [][]byte
 		)
