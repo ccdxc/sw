@@ -564,6 +564,11 @@ func (d *DHCPState) isValidInterfaceIPInfo(intfIP InterfaceIP) error {
 }
 
 func (d *DHCPState) setInterfaceIPs() {
+	// PDS Controlplane configures the Linux IP for Apollo
+	// TODO: Change to Overlay routing check
+	if d.pipeline == globals.NaplesPipelineApollo {
+		return
+	}
 	// Configure the interface IPs on the uplink interfaces
 	for _, interfaceIP := range d.InterfaceIPs {
 		var linkName string

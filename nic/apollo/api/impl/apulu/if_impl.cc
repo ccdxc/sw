@@ -153,13 +153,9 @@ if_impl::program_l3_if_(if_entry *intf, pds_if_spec_t *spec) {
     // TODO: cleanup capri dependency
     port_num = if_impl::port(intf);
     if (port_num == TM_PORT_UPLINK_0) {
-        // TODO: Cleanup once linux IP programming is moved to MS
-        activate_l3_if_("dsc0", intf, spec);
         sdk::lib::memrev(p4i_device_info_data.p4i_device_info.device_mac_addr1,
                          spec->l3_if_info.mac_addr, ETH_ADDR_LEN);
     } else if (port_num == TM_PORT_UPLINK_1) {
-        // TODO: Cleanup once linux IP programming is moved to MS
-        activate_l3_if_("dsc1", intf, spec);
         sdk::lib::memrev(p4i_device_info_data.p4i_device_info.device_mac_addr2,
                          spec->l3_if_info.mac_addr, ETH_ADDR_LEN);
     }
@@ -221,35 +217,6 @@ get_default_route_add_cmd (std::string ns, ip_addr_t gateway)
                  ns.c_str(), ipaddr2str(&gateway));
     }
     return std::string(cmd);
-}
-
-sdk_ret_t
-if_impl::activate_l3_if_(std::string ifname, if_entry *intf, pds_if_spec_t *spec) {
-
-    // Linux IP programming is needed only if dscagent/nmd is not doing it
-    if (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_SIM) return(SDK_RET_OK);
-    if (!device_find() || device_find()->overlay_routing_enabled()) return(SDK_RET_OK);
-
-    int rc;
-    auto ifcmd = get_set_interface_address_cmd("", ifname,
-                    spec->l3_if_info.ip_prefix);
-    auto ifhwcmd = get_set_interface_hw_address_cmd("", ifname,
-                    spec->l3_if_info.mac_addr);
-
-    PDS_TRACE_DEBUG("%s", ifcmd.c_str());
-    rc = system(ifcmd.c_str());
-    if (rc == -1) {
-        PDS_TRACE_ERR("set l3 if address failed with ret %d", rc);
-        return SDK_RET_ERR;
-    }
-
-    rc = system(ifhwcmd.c_str());
-    if (rc == -1) {
-        PDS_TRACE_ERR("set l3 if mac address failed with ret %d", rc);
-        return SDK_RET_ERR;
-    }
-
-    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -401,25 +368,6 @@ if_impl::deactivate_control_if_(if_entry *intf) {
 }
 
 sdk_ret_t
-if_impl::deactivate_l3_if_(std::string ifname, if_entry *intf) {
-
-    // Linux IP programming is needed only if dscagent/nmd is not doing it
-    if (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_SIM) return(SDK_RET_OK);
-    if (!device_find() || device_find()->overlay_routing_enabled()) return(SDK_RET_OK);
-    int rc;
-    auto ifcmd = get_unset_interface_address_cmd("", ifname);
-
-    PDS_TRACE_DEBUG("%s", ifcmd.c_str());
-    rc = system(ifcmd.c_str());
-    if (rc == -1) {
-        PDS_TRACE_ERR("unset mgmt if address failed with ret %d", rc);
-        return SDK_RET_ERR;
-    }
-
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 if_impl::activate_delete_(pds_epoch_t epoch, if_entry *intf) {
     p4pd_error_t p4pd_ret;
     p4i_device_info_actiondata_t p4i_device_info_data;
@@ -436,13 +384,9 @@ if_impl::activate_delete_(pds_epoch_t epoch, if_entry *intf) {
         if (if_impl::port(intf) == TM_PORT_UPLINK_0) {
             memset(p4i_device_info_data.p4i_device_info.device_mac_addr1,
                    0, ETH_ADDR_LEN);
-            // TODO: Cleanup once linux IP programming is moved to MS
-            deactivate_l3_if_("dsc0", intf);
         } else if (if_impl::port(intf) == TM_PORT_UPLINK_1) {
             memset(p4i_device_info_data.p4i_device_info.device_mac_addr2,
                    0, ETH_ADDR_LEN);
-            // TODO: Cleanup once linux IP programming is moved to MS
-            deactivate_l3_if_("dsc1", intf);
         }
         // program the P4I_DEVICE_INFO table
         p4pd_ret = p4pd_global_entry_write(P4TBL_ID_P4I_DEVICE_INFO, 0,

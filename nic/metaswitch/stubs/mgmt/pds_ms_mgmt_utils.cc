@@ -76,7 +76,7 @@ pds_ms_convert_ip_addr_to_amb_ip_addr (const ip_addr_t&   pds_ms_ip_addr,
     if (pds_ms_ip_addr.af == IP_AF_IPV4) {
         NBB_PUT_LONG (amb_ip_addr, pds_ms_ip_addr.addr.v4_addr);
     } else {
-        NBB_MEMCPY (amb_ip_addr, &pds_ms_ip_addr.addr, len);
+        NBB_MEMCPY (amb_ip_addr, &pds_ms_ip_addr.addr, *len);
     }
     return;
 }

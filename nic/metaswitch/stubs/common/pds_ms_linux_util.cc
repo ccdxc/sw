@@ -72,6 +72,7 @@ get_linux_intf_params (const char* ifname,
 
 
 struct ipaddr_req_nlmsg_t {
+// Allocate NLMsg space for 2 RT attributes and an extra 16 byte padding
 #define NETLINK_SEND_BUF_LEN \
      (NLMSG_ALIGN(NLMSG_LENGTH(sizeof(struct ifaddrmsg))) + \
       (RTA_LENGTH(sizeof(in6_addr)))*2 + 16)
@@ -98,6 +99,7 @@ make_ipaddr_req_nlmsg (uint32_t pid, uint32_t lnx_ifindex, const in_ipx_addr_t& 
     auto nlhdr = (nlmsghdr*) req.buf_;
 
     nlhdr->nlmsg_len = NLMSG_ALIGN(NLMSG_LENGTH(sizeof(struct ifaddrmsg)));
+    PDS_TRACE_VERBOSE("NLMsg starting at %p len %d", nlhdr, nlhdr->nlmsg_len);
     nlhdr->nlmsg_pid = pid;
     nlhdr->nlmsg_flags = NLM_F_REQUEST | NLM_F_CREATE | NLM_F_EXCL | NLM_F_ACK;
     nlhdr->nlmsg_seq = seq;
@@ -108,6 +110,7 @@ make_ipaddr_req_nlmsg (uint32_t pid, uint32_t lnx_ifindex, const in_ipx_addr_t& 
     }
 
     auto ifaddr = (ifaddrmsg*) NLMSG_DATA(nlhdr);
+    PDS_TRACE_VERBOSE("Ifaddr  starting at %p", ifaddr);
     ifaddr->ifa_family = AF_INET;
     ifaddr->ifa_prefixlen = prefix_len;
     ifaddr->ifa_index = lnx_ifindex;
@@ -126,6 +129,8 @@ make_ipaddr_req_nlmsg (uint32_t pid, uint32_t lnx_ifindex, const in_ipx_addr_t& 
         attr->rta_len = RTA_LENGTH(sizeof(in6_addr));
         ip_len = sizeof(in6_addr);
     }
+    PDS_TRACE_VERBOSE("Rtattr starting at %p len %d total len %d",
+                      attr, attr->rta_len, nlhdr->nlmsg_len);
     memcpy(RTA_DATA(attr), &ip.addr, ip_len);
 
     if (prefix_len == 31) {
@@ -135,7 +140,7 @@ make_ipaddr_req_nlmsg (uint32_t pid, uint32_t lnx_ifindex, const in_ipx_addr_t& 
         // By default, Linux allocates the highest IP in the subnet as the
         // broadcast IP which causes the default route pointing to the
         // peer IP to fail in Linux.
-        attr = (rtattr*) (((char*)req.buf_) + nlhdr->nlmsg_len + attr->rta_len);
+        attr = (rtattr*) (((char*)req.buf_) + nlhdr->nlmsg_len);
         attr->rta_type = IFA_BROADCAST;
         if (ip.af == IP_AF_IPV4) {
             nlhdr->nlmsg_len += RTA_LENGTH(sizeof(in_addr));
@@ -146,6 +151,8 @@ make_ipaddr_req_nlmsg (uint32_t pid, uint32_t lnx_ifindex, const in_ipx_addr_t& 
             attr->rta_len = RTA_LENGTH(sizeof(in6_addr));
             ip_len = sizeof(in6_addr);
         }
+        PDS_TRACE_VERBOSE("Second Rtattr starting at %p len %d total len %d",
+                          attr, attr->rta_len, nlhdr->nlmsg_len);
         memcpy(RTA_DATA(attr), &ip.addr, ip_len);
     }
     return req;

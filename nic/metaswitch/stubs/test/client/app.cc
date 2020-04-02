@@ -103,7 +103,7 @@ static void create_intf_proto_grpc (bool lo=false) {
         pds_if.l3_if_info.vpc = pds_ms::msidx2pdsobjkey(k_underlay_vpc_id);
         pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
         pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
-        pds_if.l3_if_info.ip_prefix.len = 16;
+        pds_if.l3_if_info.ip_prefix.len = 31;
         pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index);
     }
 
@@ -602,13 +602,8 @@ int main(int argc, char** argv)
         cout << "Config file not found! Check CONFIG_PATH env var\n";
         exit(1);
     }
-    struct in_addr ip_addr;
-    ip_addr.s_addr = g_test_conf_.local_ip_addr;
-    std::string end_point = std::string(inet_ntoa(ip_addr))+":50054";
-    printf ("Endpoint: %s\n",end_point.c_str());
-
     std::shared_ptr<Channel> channel = grpc::CreateChannel("localhost:50054",
-            grpc::InsecureChannelCredentials());
+                                                           grpc::InsecureChannelCredentials());
     g_device_stub_  = DeviceSvc::NewStub (channel);
     g_if_stub_      = IfSvc::NewStub (channel);
     g_bgp_stub_     = BGPSvc::NewStub (channel);

@@ -188,8 +188,6 @@ ms_to_lnx_ipaddr (const ATG_INET_ADDRESS& in_ip, in_ipx_addr_t* out_ip)
 
 NBB_BYTE li_integ_subcomp_t::if_addr_set(NBB_ULONG ms_ifindex,
                                          ATG_LIPI_L3_IP_ADDR *ip_addr) {
-#if 0 /* TODO: configure L3 interface IP in Linux
-         Enable after solving PDS HAL batch semantics for hijacked objects */
     try {
         in_ipx_addr_t ip;
         ms_to_lnx_ipaddr(ip_addr->inet_addr, &ip);
@@ -226,14 +224,11 @@ NBB_BYTE li_integ_subcomp_t::if_addr_set(NBB_ULONG ms_ifindex,
         PDS_TRACE_ERR ("Interface 0x%x IP address add failed %s", ms_ifindex, e.what());
         return ATG_UNSUCCESSFUL;
     }
-#endif
     return ATG_OK;
 }
 
 NBB_BYTE li_integ_subcomp_t::if_addr_del(NBB_ULONG ms_ifindex,
                                          ATG_LIPI_L3_IP_ADDR *ip_addr) {
-#if 0 /* TODO: configure L3 interface IP in Linux
-         Enable after solving PDS HAL batch semantics for hijacked objects */
     try {
         in_ipx_addr_t ip;
         ms_to_lnx_ipaddr(ip_addr->inet_addr, &ip);
@@ -270,7 +265,6 @@ NBB_BYTE li_integ_subcomp_t::if_addr_del(NBB_ULONG ms_ifindex,
         PDS_TRACE_ERR ("Interface 0x%x IP address del failed %s", ms_ifindex, e.what());
         return ATG_UNSUCCESSFUL;
     }
-#endif
     return ATG_OK;
 }
 

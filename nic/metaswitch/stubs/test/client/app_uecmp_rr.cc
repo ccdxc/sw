@@ -34,8 +34,8 @@
        |                 10.3                  |
        |                                       |
        |       10.1 -----IPv4----- 10.2        |
-    (1.1.1.1) PDSA 1              PDSA 2  (2.2.2.2)
-              11.1 ------IPv4----- 11.2
+(100.100.1.1) PDSA 1              PDSA 2 (200.200.2.2)
+               11.1 ------IPv4----- 11.2
 
 
 *****************************************************/
@@ -143,7 +143,9 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false, bool updat
         pds_if.admin_state = PDS_IF_STATE_UP;
         pds_if.l3_if_info.vpc = pds_ms::msidx2pdsobjkey(k_underlay_vpc_id);
         pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
-        pds_if.l3_if_info.ip_prefix.len = 24;
+        // Cannot use /30 or /31 which makes CTR1<->CTR2 point-to-pointt
+        // since CTR3 is also connected in the same subnet in the topo
+        pds_if.l3_if_info.ip_prefix.len = 29;
     }
 
     pds_if_api_spec_to_proto (request.add_request(), &pds_if);

@@ -96,6 +96,11 @@ done
 echo ""
 
 rr=0
+# Remove interface addresses - controlplane should install this
+docker exec -dit "$CONTAINER"1 ip addr del 10.1.1.1/24 dev eth0
+docker exec -dit "$CONTAINER"1 ip addr del 11.1.1.1/24 dev eth1
+docker exec -dit "$CONTAINER"2 ip addr del 10.1.1.2/24 dev eth0
+docker exec -dit "$CONTAINER"2 ip addr del 11.1.1.2/24 dev eth1
 
 if [ $RR == 1 ]; then
     echo "RR testing mode"
