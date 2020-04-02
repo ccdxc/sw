@@ -87,7 +87,7 @@ func Test_dvs_create_delete(t *testing.T) {
 	TestUtils.Assert(t, err == nil, "successfuly created")
 	TestUtils.Assert(t, c != nil, "Cluster not created")
 
-	err = c.AddHost("tb36-host1.pensando.io", "root", "pen123!")
+	err = c.AddHost("tb36-host1.pensando.io", "root", "pen123!", "")
 	TestUtils.Assert(t, err == nil, "host added")
 
 	hostSpecs := []DVSwitchHostSpec{
@@ -166,29 +166,34 @@ func Test_vcenter_find_host(t *testing.T) {
 	TestUtils.Assert(t, err == nil, "Connected to venter")
 	TestUtils.Assert(t, vc != nil, "Vencter context set")
 
-	dc, err := vc.SetupDataCenter("sudhiaithal-iota-dc")
+	dc, err := vc.SetupDataCenter("ganesh-iota-dc")
 	TestUtils.Assert(t, err == nil, "successfuly setup dc")
-	dc, ok := vc.datacenters["sudhiaithal-iota-dc"]
-	TestUtils.Assert(t, ok, "sudhiaithal setup dc")
+	dc, ok := vc.datacenters["ganesh-iota-dc"]
+	TestUtils.Assert(t, ok, "ganesh setup dc")
 
-	c, ok := dc.clusters["sudhiaithal-iota-cluster"]
+	c, ok := dc.clusters["ganesh-iota-cluster"]
 	TestUtils.Assert(t, ok, "successfuly setup cluster")
 	TestUtils.Assert(t, len(c.hosts) == 2, "successfuly setup cluster")
 
-	dvs, err := dc.findDvs("Pen-DVS-sudhiaithal-iota-dc")
+	dvs, err := dc.findDvs("Pen-DVS-ganesh-iota-dc")
 	TestUtils.Assert(t, err == nil, "successfuly found dvs")
 	TestUtils.Assert(t, dvs != nil, "dvs nil")
 
-	vm, err2 := dc.NewVM("node2-ep1")
+	vm, err2 := dc.NewVM("node1-ep3")
 	TestUtils.Assert(t, err2 == nil, "VM FOUND")
 	TestUtils.Assert(t, vm != nil, "VM FOND")
 
-	err2 = dc.ReconfigureVMNetwork(vm, "iota-def-network", "Pen-DVS-sudhiaithal-iota-dc", "iota-data-nw-1001", 0, true)
-	fmt.Printf("Error %v", err2)
-	TestUtils.Assert(t, err2 == nil, "Reconfig faild")
+	dc.SetVlanOverride("Pen-DVS-ganesh-iota-dc", "node1-ep3", 1234, 1239)
 
-	ip, err := vm.vm.WaitForIP(ctx, true)
-	fmt.Printf("VM IP %v", ip)
+	TestUtils.Assert(t, false, "Ds not created")
+
+	/*
+		err2 = dc.ReconfigureVMNetwork(vm, "iota-def-network", "Pen-DVS-sudhiaithal-iota-dc", "iota-data-nw-1001", 0, true)
+		fmt.Printf("Error %v", err2)
+		TestUtils.Assert(t, err2 == nil, "Reconfig faild")
+
+		ip, err := vm.vm.WaitForIP(ctx, true)
+		fmt.Printf("VM IP %v", ip) */
 
 	/*dvsSpec := DVSwitchSpec{
 	Name: "iota-dvs", Cluster: "sudhiaithal-iota-cluster",
@@ -199,15 +204,16 @@ func Test_vcenter_find_host(t *testing.T) {
 	//err = dc.AddDvs(dvsSpec)
 	//TestUtils.Assert(t, err == nil, "dvs added")
 
-	vm, err2 = dc.NewVM("node2-ep1")
-	TestUtils.Assert(t, err2 == nil, "VM FOUND")
-	TestUtils.Assert(t, vm != nil, "VM FOND")
+	/*
+		vm, err2 = dc.NewVM("node2-ep1")
+		TestUtils.Assert(t, err2 == nil, "VM FOUND")
+		TestUtils.Assert(t, vm != nil, "VM FOND")
 
-	macs, err3 := vm.ReadMacs()
-	for nw, mac := range macs {
-		fmt.Printf("NW : %v. mac %v\n", nw, mac)
-	}
-	TestUtils.Assert(t, err3 != nil, "VM FOUND")
+		macs, err3 := vm.ReadMacs()
+		for nw, mac := range macs {
+			fmt.Printf("NW : %v. mac %v\n", nw, mac)
+		}
+		TestUtils.Assert(t, err3 != nil, "VM FOUND") */
 
 	//dvs, err := dc.findDvs("#Pen-DVS-sudhiaithal-iota-dc")
 	//TestUtils.Assert(t, err == nil && dvs != nil, "dvs found")

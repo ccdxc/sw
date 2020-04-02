@@ -1716,3 +1716,99 @@ func (dc *DataCenter) VMExists(name string) bool {
 
 	return dc.vc.VMExists(name)
 }
+
+//SetVlanOverride sets vlan override for the VM
+func (dc *DataCenter) SetVlanOverride(dvsName string, vmName string, accessVlan, overridevlan int) error {
+
+	err := dc.setUpFinder()
+	if err != nil {
+		return errors.Wrapf(err, "Error setup datacenter")
+	}
+
+	vm, err := dc.NewVM(vmName)
+	if err != nil {
+		return errors.Wrap(err, "Error finding VM")
+	}
+
+	dc.getClientWithLock()
+	defer dc.releaseClientLock()
+
+	dvs, err := dc.findDvs(dvsName)
+	if err != nil {
+		return errors.Wrap(err, "Dvs not found")
+	}
+
+	devList, err := vm.vm.Device(vm.entity.Ctx())
+	if err != nil {
+		return errors.Wrap(err, "Failed to device list of VM")
+	}
+
+	// Set base search criteria
+	criteria := types.DistributedVirtualSwitchPortCriteria{}
+	res, err := dvs.FetchDVPorts(dc.vc.Ctx(), &criteria)
+	if err != nil {
+		return err
+	}
+
+	allow := true
+	pSpec := []types.DVPortConfigSpec{}
+	for _, d := range devList.SelectByType((*types.VirtualEthernetCard)(nil)) {
+		veth := d.GetVirtualDevice()
+
+		switch a := veth.Backing.(type) {
+		case *types.VirtualEthernetCardDistributedVirtualPortBackingInfo:
+			for _, port := range res {
+				setting, ok := port.Config.Setting.(*types.VMwareDVSPortSetting)
+				if !ok {
+					continue
+				}
+				vlanA, ok := setting.Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec)
+				if !ok {
+					continue
+				}
+				if vlanA.VlanId == int32(accessVlan) && port.DvsUuid == a.Port.SwitchUuid &&
+					port.Key == a.Port.PortKey {
+
+					fmt.Printf("Found Matching port %v %v", port.Key, port.PortgroupKey)
+
+					spec := types.DVPortConfigSpec{
+						Key: port.Key,
+						//Name:          name,
+						Scope:         port.Config.Scope,
+						ConfigVersion: port.Config.ConfigVersion,
+						Operation:     "edit",
+						Setting: &types.VMwareDVSPortSetting{
+							SecurityPolicy: &types.DVSSecurityPolicy{
+								MacChanges:       &types.BoolPolicy{Value: &allow},
+								ForgedTransmits:  &types.BoolPolicy{Value: &allow},
+								AllowPromiscuous: &types.BoolPolicy{Value: &allow},
+							},
+							Vlan: &types.VmwareDistributedVirtualSwitchVlanIdSpec{
+								VlanId: int32(overridevlan),
+							},
+						},
+					}
+					pSpec = append(pSpec, spec)
+
+				}
+			}
+		}
+
+	}
+
+	if len(pSpec) != 0 {
+		task, err := dvs.ReconfigureDVPort(dc.Ctx(), pSpec)
+		if err != nil {
+			return err
+		}
+
+		if err != nil {
+			return err
+		}
+		_, err = task.WaitForResult(dc.Ctx())
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

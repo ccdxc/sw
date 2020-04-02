@@ -234,7 +234,9 @@ func (n *VcenterNode) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveM
 		srcHost      string
 		dstHost      string
 		workloadName string
-		vlanOverride uint32
+		switchName   string
+		vlanOverride int
+		currVlan     int
 		err          error
 	}
 	dupCheck := make(map[string]bool)
@@ -279,7 +281,8 @@ func (n *VcenterNode) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveM
 		dupCheck[key] = true
 
 		moveRequests = append(moveRequests, &moveRequest{srcHost: mSrcNode.GetNodeInfo().IPAddress,
-			srcNodeName: mvReq.SrcNodeName, dstNodeName: mvReq.DstNodeName, vlanOverride: mvReq.VlanOverride,
+			srcNodeName: mvReq.SrcNodeName, dstNodeName: mvReq.DstNodeName,
+			vlanOverride: int(mvReq.VlanOverride), currVlan: int(mvReq.CurrentVlan), switchName: mvReq.SwitchName,
 			dstHost: mvDstNode.GetNodeInfo().IPAddress, workloadName: mvReq.WorkloadName})
 
 		//All Good to trigger vmotion
@@ -298,6 +301,15 @@ func (n *VcenterNode) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveM
 						mvReq.workloadName, mvReq.srcHost, mvReq.dstHost, err.Error())
 					log.Error(msg)
 					mvReq.err = errors.New(msg)
+				}
+				if mvReq.vlanOverride != 0 {
+					err := n.dc.SetVlanOverride(mvReq.switchName, mvReq.workloadName, mvReq.currVlan, mvReq.vlanOverride)
+					if err != nil {
+						msg := fmt.Sprintf("Workload migrate Name : %v, Src : %v, Dst %v vlan override set failedfailed:  %v",
+							mvReq.workloadName, mvReq.srcHost, mvReq.dstHost, err.Error())
+						log.Error(msg)
+						mvReq.err = errors.New(msg)
+					}
 				}
 				return err
 			})

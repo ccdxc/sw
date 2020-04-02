@@ -630,8 +630,14 @@ message WorkloadMove {
     //override vlan after vmotion if set
     uint32              vlan_override    = 5;
 
+    //current vlan if we want to override after move
+    uint32              current_vlan     = 6;
+
+    //Switch name for vlan override
+    string              switch_name      = 7;
+
     // workload move response
-    IotaAPIResponse     api_response     = 6;
+    IotaAPIResponse     api_response     = 8;
 }
 
 // WorkloadMoveMsg move workloads 
