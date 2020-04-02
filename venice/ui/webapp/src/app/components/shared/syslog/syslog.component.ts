@@ -7,6 +7,11 @@ import { FormArray, FormGroup, AbstractControl, ValidatorFn, ValidationErrors } 
 import { BaseComponent } from '@app/components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
 
+export interface ReturnObjectType {
+  errorMessage: string;
+  valid: boolean;
+}
+
 @Component({
   selector: 'app-syslog',
   templateUrl: './syslog.component.html',
@@ -82,6 +87,7 @@ export class SyslogComponent extends BaseComponent implements OnInit {
     for (let i = 0; i < targetArr.length; i++) {
       this.syslogServerForm.get(['targets', i]).get('transport').setValidators([
         this.isTransportFieldValue(this.syslogServerForm.get(['targets', i]).get('transport'))]);
+      this.syslogServerForm.get(['targets', i]).get('gateway').setValidators(null);
     }
   }
 
@@ -139,8 +145,9 @@ export class SyslogComponent extends BaseComponent implements OnInit {
   isFieldEmptySysLog(field: boolean): boolean {
     return Utility.isEmpty(field);
   }
-  isSyLogFormValid(): object {
-    const returnObject = {
+
+  isSyLogFormValid(): ReturnObjectType {
+    const returnObject: ReturnObjectType = {
       errorMessage: '',
       valid: true
     };

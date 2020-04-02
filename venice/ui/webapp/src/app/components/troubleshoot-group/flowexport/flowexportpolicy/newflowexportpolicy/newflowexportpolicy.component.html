@@ -32,7 +32,7 @@
        fxFlex="nogrow"
        fxLayout="row" fxLayoutAlign="end">
     <div fxFlex="auto" fxLayoutAlign="end center">
-      <div fxFlex="nogrow">
+      <div fxFlex="nogrow" [matTooltip]="getTooltip()">
         <span (click)="saveObject()"
               class="global-button-primary new-flow-export-inline-save"
               [ngClass]="computeInlineButtonClass()">SAVE</span>

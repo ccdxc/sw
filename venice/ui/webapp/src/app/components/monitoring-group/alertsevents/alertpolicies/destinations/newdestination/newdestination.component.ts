@@ -100,7 +100,7 @@ export class NewdestinationComponent extends BaseComponent implements OnInit, Af
     if (!this.newDestination.$formGroup.get(['meta', 'name']).valid)  {
       return 'global-button-disabled';
     }
-    if (this.syslogServers.syslogServerForm.invalid) {
+    if (!this.syslogServers.isSyLogFormValid().valid) {
       this.createButtonTooltip = this.syslogServers.isSyLogFormValid()['errorMessage'];
       return 'global-button-disabled';
     }

@@ -794,7 +794,11 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
 
   ngAfterViewInit() {
     this.replaceToolbar();
+    this.postViewInit();
   }
+
+  // hook for overriding
+  postViewInit() {}
 
   replaceToolbar() {
     if (!this.isInline) {

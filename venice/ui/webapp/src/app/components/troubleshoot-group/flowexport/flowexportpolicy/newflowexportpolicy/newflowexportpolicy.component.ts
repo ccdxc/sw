@@ -1,4 +1,4 @@
-import { Component, Input, ViewEncapsulation, ViewChild } from '@angular/core';
+import { Component, Input, ViewEncapsulation, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Animations } from '@app/animations';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
@@ -12,7 +12,7 @@ import { SyslogComponent } from '@app/components/shared/syslog/syslog.component'
 import { Utility } from '@app/common/Utility';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
+import { ValidatorFn, AbstractControl, ValidationErrors, FormArray, FormControl } from '@angular/forms';
 import { OrderedItem } from '@app/components/shared/orderedlist/orderedlist.component';
 import { IPUtility } from '@app/common/IPUtility';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
@@ -25,6 +25,7 @@ import { SecurityService } from '@app/services/generated/security.service';
   styleUrls: ['./newflowexportpolicy.component.scss'],
   animations: [Animations],
   encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowExportPolicy, MonitoringFlowExportPolicy> {
   @ViewChild('syslogComponent') syslogComponent: SyslogComponent;
@@ -60,6 +61,7 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
     protected uiconfigsService: UIConfigsService,
     protected _monitoringService: MonitoringService,
     protected securityService: SecurityService,
+    private cdr: ChangeDetectorRef
   ) {
     super(_controllerService, uiconfigsService, MonitoringFlowExportPolicy);
   }
@@ -81,6 +83,7 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
             value: app.meta.uuid,
           };
         });
+        this.cdr.detectChanges();
       },
       this._controllerService.webSocketErrorHandler('Failed to get Apps')
     );
@@ -113,10 +116,23 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
           });
         });
       }
+
+      const targetsArray: FormArray = this.controlAsFormArray(this.newObject.$formGroup.get(['spec', 'exports']));
+      if (targetsArray && targetsArray.controls && targetsArray.controls.length > 0) {
+        targetsArray.controls.forEach((targetsCtrl: FormControl) => {
+          // set gateway validator to null to make the whole form valid
+          targetsCtrl.get('gateway').setValidators(null);
+        });
+      }
+      console.log();
     }
     if (this.ExportPolicyRules.length === 0) {
       this.addRule();
     }
+  }
+
+  postViewInit() {
+    this.cdr.detectChanges();
   }
 
   addRule() {
@@ -228,8 +244,8 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
       this.validationMessage = 'Error:Flow export name is required.';
       return false;
     }
-    if (!this.syslogComponent.isSyLogFormValid()['valid']) {
-      this.validationMessage = this.syslogComponent.isSyLogFormValid()['errorMessage'];
+    if (!this.syslogComponent.isSyLogFormValid().valid) {
+      this.validationMessage = this.syslogComponent.isSyLogFormValid().errorMessage;
       return false;
     }
 
@@ -334,26 +350,6 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
 
   generateUpdateSuccessMsg(object: IMonitoringFlowExportPolicy) {
     return 'Updated policy ' + object.meta.name;
-  }
-
-
-
-  isTimeoutValid(fieldName: string): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors | null => {
-      const val: string = control.value;
-      if (!val) {
-        return null;
-      }
-      if (!Utility.isTimeoutValid(val)) {
-        return {
-          [fieldName]: {
-            required: false,
-            message: 'Invalid time out value. Only h, m, s, ms, us, and ns are allowed'
-          }
-        };
-      }
-      return null;
-    };
   }
 
   getDataArray(data: any, type: string, field: string) {
