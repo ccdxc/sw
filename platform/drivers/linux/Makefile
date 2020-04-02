@@ -55,6 +55,9 @@ ETH_KOPT += CONFIG_MNET=_
 
 KCFLAGS = -Werror
 
+include linux_ver.mk
+KCFLAGS += $(EXTRA_CFLAGS)
+
 # Ionic rdma driver, if present
 ifneq ($(wildcard $(IONIC_RDMA_SRC)),)
 ALL += rdma

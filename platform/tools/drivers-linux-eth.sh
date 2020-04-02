@@ -73,6 +73,7 @@ cp "$DRIVERS_SRC/eth/ionic/ionic.h" \
    "$GEN_DIR/drivers/eth/ionic"
 
 cp "$DRIVERS_SRC/Makefile" "$GEN_DIR/drivers/"
+cp "$DRIVERS_SRC/linux_ver.mk" "$GEN_DIR/drivers/"
 
 mkdir -p "$GEN_DIR/common"
 cp "$COMMON_SRC/ionic_if.h" "$GEN_DIR/common"
