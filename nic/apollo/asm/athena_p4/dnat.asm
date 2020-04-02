@@ -11,17 +11,17 @@ struct phv_         p;
 #define DNAT_HASH_MSB   31:14
 
 #define CHECK_HASH(_hash, _hint)                            \
-    seq         c1, r1[DNAT_HASH_MSB], d.dnat_hash_d._hash; \
-    sne         c2, d.dnat_hash_d._hint, r0;                \
+    seq         c1, r1[DNAT_HASH_MSB], d.dnat_d._hash;      \
+    sne         c2, d.dnat_d._hint, r0;                     \
     bcf         [c1&c2], label_flow_hash_hit;               \
-    add         r2, r0, d.dnat_hash_d._hint;
+    add         r2, r0, d.dnat_d._hint;
     
 
 
 %%
 
-dnat_hash:
-    bbne        d.dnat_hash_d.entry_valid, TRUE, label_flow_miss
+dnat:
+    bbne        d.dnat_d.entry_valid, TRUE, label_flow_miss
     nop
     bcf         [c1], label_flow_hit
 
@@ -42,10 +42,10 @@ dnat_hash:
     CHECK_HASH(hash5, hint5);
 
     // Check for more hashes
-    seq         c1, d.dnat_hash_d.more_hashes, TRUE
-    sne         c2, d.dnat_hash_d.more_hints, r0
+    seq         c1, d.dnat_d.more_hashes, TRUE
+    sne         c2, d.dnat_d.more_hints, r0
     bcf         [c1&c2], label_flow_hash_hit
-    add         r2, r0, d.dnat_hash_d.more_hints
+    add         r2, r0, d.dnat_d.more_hints
 
 label_flow_miss:
     phvwr.e     p.ingress_recirc_header_dnat_done, TRUE
@@ -53,8 +53,9 @@ label_flow_miss:
 
 
 label_flow_hit:
+    phvwr       p.p4i_to_p4e_header_dnat_epoch, d.dnat_d.epoch
     phvwr.e     p.ingress_recirc_header_dnat_done, TRUE
-    phvwr       p.key_metadata_src, d.dnat_hash_d.addr
+    phvwr       p.key_metadata_src, d.dnat_d.addr
 
 
 label_flow_hash_hit:

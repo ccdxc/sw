@@ -32,6 +32,7 @@ typedef struct pds_dnat_mapping_key_s {
 typedef struct pds_dnat_mapping_data_s {
     uint8_t    addr_type;              ///< Address type
     uint8_t    addr[IP6_ADDR8_LEN];    ///< IP address
+    uint16_t   epoch;                  ///< DNAT Epoch Value
 } pds_dnat_mapping_data_t;
 
 /// \brief Dnat map specification

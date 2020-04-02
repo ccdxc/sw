@@ -3,16 +3,17 @@
 /*****************************************************************************/
 @pragma capi appdatafields addr_type addr
 @pragma capi hwfields_access_api
-action dnat_hash(entry_valid, pad, addr_type, addr, 
+action dnat(pad1, pad2, addr_type, addr, epoch,
                 hash1, hint1, hash2, hint2,
                 hash3, hint3, hash4, hint4,
-                hash5, hint5, more_hashes, more_hints) {
+                hash5, hint5, more_hashes, more_hints, entry_valid) {
 
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(ingress_recirc_header.dnat_done, TRUE);
         modify_field(key_metadata.src, addr);
         modify_field(key_metadata.ktype, addr_type);
+        modify_field(p4i_to_p4e_header.dnat_epoch, epoch);
 
 
         // if hardware register indicates miss, compare hashes with r1
@@ -63,7 +64,8 @@ action dnat_hash(entry_valid, pad, addr_type, addr,
     else {
         modify_field(ingress_recirc_header.dnat_done, TRUE);
     }
-    modify_field(scratch_metadata.pad31, pad);
+    modify_field(scratch_metadata.pad32, pad1);
+    modify_field(scratch_metadata.pad3, pad2);
     modify_field(scratch_metadata.flag, entry_valid);
     modify_field(scratch_metadata.flow_hash, hash1);
     modify_field(scratch_metadata.flow_hash, hash2);
@@ -79,10 +81,10 @@ table dnat {
     reads {
         key_metadata.vnic_id            : exact;
         key_metadata.ktype              : exact;
-        key_metadata.dst                : exact;
+        key_metadata.src                : exact;
     }
     actions {
-        dnat_hash;
+        dnat;
     }
     size : DNAT_TABLE_SIZE;
 }
@@ -95,7 +97,7 @@ table dnat_ohash {
         ingress_recirc_header.dnat_ohash : exact;
     }
     actions {
-        dnat_hash;
+        dnat;
     }
     size : DNAT_OHASH_TABLE_SIZE;
 }

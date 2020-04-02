@@ -36,7 +36,8 @@
 #include "nic/apollo/api/include/athena/pds_vnic.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
 #include "nic/apollo/api/include/athena/pds_flow_session_info.h"
-#include "nic/apollo/api/include/athena//pds_flow_session_rewrite.h"
+#include "nic/apollo/api/include/athena/pds_flow_session_rewrite.h"
+#include "nic/apollo/api/include/athena/pds_dnat.h"
 #include "athena_gtest.hpp"
 
 namespace core {
@@ -223,25 +224,6 @@ uint8_t     g_s_port = UPLINK_SWITCH;
 uint32_t    g_session_index = 1;
 uint32_t    g_session_rewrite_index = 1;
 uint32_t    g_epoch_index = 1;
-
-/*
- * Host to Switch: Flow-miss
- */
-uint8_t g_snd_pkt_h2s_flow_miss[] = {
-    0x00, 0x00, 0xF1, 0xD0, 0xD1, 0xD0, 0x00, 0x00,
-    0x00, 0x40, 0x08, 0x01, 0x81, 0x00, 0x00, 0x02,
-    0x08, 0x00, 0x45, 0x00, 0x00, 0x50, 0x00, 0x01,
-    0x00, 0x00, 0x40, 0x11, 0xB6, 0x9A, 0x02, 0x00,
-    0x00, 0x01, 0xC0, 0x00, 0x02, 0x01, 0x03, 0xE8,
-    0x27, 0x10, 0x00, 0x3C, 0x00, 0x00, 0x61, 0x62,
-    0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A,
-    0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72,
-    0x73, 0x74, 0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
-    0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
-    0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70,
-    0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x7A,
-    0x78, 0x79
-};
 
 
 /*
@@ -578,6 +560,47 @@ mpls_label_to_vnic_map(uint32_t mpls_label, uint16_t vnic_id)
     printf("Setup MPLS Label: %u to VNIC:%hu mapping\n",
             mpls_label, vnic_id);
     return ret;
+}
+
+
+sdk_ret_t
+create_dnat_map_ipv4(uint16_t vnic_id, ipv4_addr_t v4_nat_dip, 
+        ipv4_addr_t v4_orig_dip, uint16_t dnat_epoch)
+{
+    pds_dnat_mapping_spec_t         spec;
+
+    memset(&spec, 0, sizeof(spec));
+
+    spec.key.vnic_id = vnic_id;
+    spec.key.key_type = IP_AF_IPV4;
+    memcpy(spec.key.addr, &v4_nat_dip, sizeof(ipv4_addr_t));
+
+    spec.data.addr_type = IP_AF_IPV4;
+    memcpy(spec.data.addr, &v4_orig_dip, sizeof(ipv4_addr_t));
+    spec.data.epoch = dnat_epoch;
+
+    return pds_dnat_map_entry_create(&spec);
+}
+
+sdk_ret_t
+create_dnat_map_ipv6(uint16_t vnic_id, ipv6_addr_t *v6_nat_dip, 
+        ipv6_addr_t *v6_orig_dip, uint16_t dnat_epoch)
+{
+    pds_dnat_mapping_spec_t         spec;
+
+    memset(&spec, 0, sizeof(spec));
+
+    spec.key.vnic_id = vnic_id;
+    spec.key.key_type = IP_AF_IPV6;
+    sdk::lib::memrev(spec.key.addr, (uint8_t *)v6_nat_dip,
+            sizeof(ipv6_addr_t));
+
+    spec.data.addr_type = IP_AF_IPV6;
+    sdk::lib::memrev(spec.data.addr, (uint8_t *)v6_orig_dip,
+            sizeof(ipv6_addr_t));
+    spec.data.epoch = dnat_epoch;
+
+    return pds_dnat_map_entry_create(&spec);
 }
 
 

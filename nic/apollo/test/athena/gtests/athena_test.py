@@ -61,6 +61,22 @@ dump_pkt(expected_ipv4_udp)
 ###############################################################################
 
 ###############################################################################
+# begin Athena Switch-to-Host NAT IPv4 UDP
+###############################################################################
+print('S2H NAT IPv4 UDP')
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+udpompls_nat_ipv4_udp = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
+        UDP(sport=0xE4E7, dport=6635, chksum=0) / MPLS(label=0x12345, s=0) / \
+        MPLS(label=0x6789e, s=1) / \
+        IP(dst='3.0.0.1', src='192.0.2.1') / \
+        UDP(sport=0x2710, dport=0x03e8) / payload
+dump_pkt(udpompls_nat_ipv4_udp)
+###############################################################################
+# end Athena Switch-to-Host NAT IPv4 UDP
+###############################################################################
+
+###############################################################################
 # begin Athena Switch-to-Host IPv6 UDP
 ###############################################################################
 print('S2H IPv6 UDP')
@@ -92,6 +108,23 @@ dump_pkt(ipv4_udp)
 ###############################################################################
 
 ###############################################################################
+# begin Athena Switch-to-Host NAT IPv6 UDP
+###############################################################################
+print('S2H NAT IPv6 UDP')
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+udpompls_nat_ipv6_udp = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
+        UDP(sport=0xE4E7, dport=6635, chksum=0) / MPLS(label=0x12345, s=0) / \
+        MPLS(label=0x6789e, s=1) / \
+        IPv6(src='c00::201', dst='300::1') / \
+        UDP(sport=0x2710, dport=0x03e8) / payload
+dump_pkt(udpompls_nat_ipv6_udp)
+###############################################################################
+# end Athena Switch-to-Host IPv6 UDP
+###############################################################################
+
+
+###############################################################################
 # begin Athena Switch-to-Host IPv4 TCP
 ###############################################################################
 print('S2H IPv4 TCP')
@@ -119,6 +152,21 @@ ipv4_tcp = Ether(dst='00:00:f1:d0:d1:d0', src='00:00:00:40:08:01') / \
 dump_pkt(ipv4_tcp)
 ###############################################################################
 # end Athena Host-to-Switch IPv4 TCP
+###############################################################################
+
+###############################################################################
+# begin Athena Switch-to-Host NAT IPv4 TCP
+###############################################################################
+print('S2H NAT IPv4 TCP')
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+udpompls_nat_ipv4_tcp = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
+        UDP(sport=0xE4E7, dport=6635, chksum=0) / MPLS(label=0x12345, s=0) / \
+        MPLS(label=0x6789e, s=1) / IP(dst='3.0.0.1', src='192.0.2.1', proto=6) / \
+        TCP(sport=0x2710, dport=0x03e8) / payload
+dump_pkt(udpompls_nat_ipv4_tcp)
+###############################################################################
+# end Athena Switch-to-Host IPv4 TCP
 ###############################################################################
 
 ###############################################################################
@@ -153,16 +201,32 @@ dump_pkt(ipv6_tcp)
 ###############################################################################
 
 ###############################################################################
+# begin Athena Switch-to-Host NAT IPv6 TCP
+###############################################################################
+print('S2H NAT IPv6 TCP')
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+udpompls_nat_ipv6_tcp = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
+        UDP(sport=0xE4E7, dport=6635, chksum=0) / MPLS(label=0x12345, s=0) / \
+        MPLS(label=0x6789e, s=1) / \
+        IPv6(src='c00::201', dst='300::1') / \
+        TCP(sport=0x2710, dport=0x03e8) / payload
+dump_pkt(udpompls_nat_ipv6_tcp)
+###############################################################################
+# end Athena Switch-to-Host IPv6 TCP
+###############################################################################
+
+###############################################################################
 # begin Athena Switch-to-Host ICMP
 ###############################################################################
 print('S2H IPv4 ICMP')
 payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
-udpompls_ipv4_tcp = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+udpompls_ipv4_icmp = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
         IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
         UDP(sport=0xE4E7, dport=6635, chksum=0) / MPLS(label=0x12345, s=0) / \
         MPLS(label=0x6789d, s=1) / IP(dst='2.0.0.1', src='192.0.2.1') / \
         ICMP(type="echo-request", code=0, id=0x1234) / payload
-dump_pkt(udpompls_ipv4_tcp)
+dump_pkt(udpompls_ipv4_icmp)
 ###############################################################################
 # end Athena Switch-to-Host ICMP
 ###############################################################################
@@ -180,6 +244,21 @@ ipv4_icmp = Ether(dst='00:00:f1:d0:d1:d0', src='00:00:00:40:08:01') / \
 dump_pkt(ipv4_icmp)
 ###############################################################################
 # end Athena Host-to-Switch ICMP
+###############################################################################
+
+###############################################################################
+# begin Athena Switch-to-Host NAT ICMP
+###############################################################################
+print('S2H NAT IPv4 ICMP')
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+udpompls_nat_ipv4_icmp = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
+        UDP(sport=0xE4E7, dport=6635, chksum=0) / MPLS(label=0x12345, s=0) / \
+        MPLS(label=0x6789e, s=1) / IP(dst='3.0.0.1', src='192.0.2.1') / \
+        ICMP(type="echo-request", code=0, id=0x1234) / payload
+dump_pkt(udpompls_nat_ipv4_icmp)
+###############################################################################
+# end Athena Switch-to-Host ICMP
 ###############################################################################
 
 ###############################################################################
@@ -211,4 +290,20 @@ ipv6_icmp = Ether(dst='00:00:f1:d0:d1:d0', src='00:00:00:40:08:01') / \
 dump_pkt(ipv6_icmp)
 ###############################################################################
 # end Athena Host-to-Switch ICMPv6
+###############################################################################
+
+###############################################################################
+# begin Athena Switch-to-Host NAT ICMPv6
+###############################################################################
+print('S2H NAT IPv6 ICMP')
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+udpompls_nat_ipv6_icmp = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
+        UDP(sport=0xE4E7, dport=6635, chksum=0) / MPLS(label=0x12345, s=0) / \
+        MPLS(label=0x6789e, s=1) / \
+        IPv6(src='c00::201', dst='300::1') / \
+        ICMPv6EchoRequest(id=0x1234) / payload
+dump_pkt(udpompls_nat_ipv6_icmp)
+###############################################################################
+# end Athena Switch-to-Host ICMPv6
 ###############################################################################

@@ -127,6 +127,14 @@ create_flow_v6_icmp(uint16_t vnic_id, ipv6_addr_t *v6_addr_sip,
         uint8_t proto, uint8_t type, uint8_t code, uint16_t identifier,
         pds_flow_spec_index_type_t index_type, uint32_t index);
 
+sdk_ret_t
+create_dnat_map_ipv4(uint16_t vnic_id, ipv4_addr_t v4_nat_dip, 
+        ipv4_addr_t v4_orig_dip, uint16_t dnat_epoch);
+
+sdk_ret_t
+create_dnat_map_ipv6(uint16_t vnic_id, ipv6_addr_t *v6_nat_dip, 
+        ipv6_addr_t *v6_orig_dip, uint16_t dnat_epoch);
+
 /* UDP Flows */
 sdk_ret_t
 athena_gtest_setup_flows_udp(void);

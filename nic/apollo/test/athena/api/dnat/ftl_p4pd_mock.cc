@@ -37,7 +37,7 @@ table_size_get(uint32_t table_id)
 void
 ftl_mock_init ()
 {
-    dnat_hash_entry_t entry;
+    dnat_entry_t entry;
 
     mocktables[P4TBL_ID_DNAT].entries =
         (base_table_entry_t *)calloc(table_size_get(P4TBL_ID_DNAT), entry.entry_size());

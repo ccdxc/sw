@@ -742,23 +742,10 @@ field_list ipv4_1_checksum_list {
     ipv4_1.dstAddr;
 }
 
-@pragma checksum gress ingress
 @pragma checksum hdr_len_expr ohi.ipv4_1_len + 0
 @pragma checksum verify_len ohi.l4_1_len
 @pragma checksum update_len capri_deparser_len.ipv4_1_hdr_len
-field_list_calculation ipv4_1_checksum_ingress {
-    input {
-        ipv4_1_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-@pragma checksum gress egress
-@pragma checksum hdr_len_expr ohi.ipv4_1_len + 0
-@pragma checksum verify_len ohi.l4_1_len
-@pragma checksum update_len capri_deparser_len.ipv4_1_hdr_len
-field_list_calculation ipv4_1_checksum_egress {
+field_list_calculation ipv4_1_checksum {
     input {
         ipv4_1_checksum_list;
     }
@@ -767,8 +754,8 @@ field_list_calculation ipv4_1_checksum_egress {
 }
 
 calculated_field ipv4_1.hdrChecksum  {
-    verify ipv4_1_checksum_ingress;
-    update ipv4_1_checksum_egress;
+    verify ipv4_1_checksum;
+    update ipv4_1_checksum;
 }
 
 field_list ipv4_1_tcp_checksum_list {
@@ -969,13 +956,6 @@ field_list_calculation ipv6_1_icmp_checksum {
     output_width : 16;
 }
 
-#if 0
-calculated_field icmp.hdrChecksum {
-    update ipv4_1_icmp_checksum;
-    update ipv6_1_icmp_checksum;
-}
-#endif
-
 /******************************************************************************
  * Checksums : Layer 2 (verify only in ingress)
  *****************************************************************************/
@@ -993,22 +973,10 @@ field_list ipv4_2_checksum_list {
     ipv4_2.dstAddr;
 }
 
-@pragma checksum gress ingress
 @pragma checksum hdr_len_expr ohi.ipv4_2_len + 0
 @pragma checksum verify_len ohi.l4_2_len
-field_list_calculation ipv4_2_checksum_ingress {
-    input {
-        ipv4_2_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-@pragma checksum gress egress
-@pragma checksum hdr_len_expr ohi.ipv4_2_len + 0
-@pragma checksum verify_len ohi.l4_2_len
-@pragma checksum update_len capri_deparser_len.ipv4_1_hdr_len
-field_list_calculation ipv4_2_checksum_egress {
+@pragma checksum update_len capri_deparser_len.ipv4_2_hdr_len
+field_list_calculation ipv4_2_checksum {
     input {
         ipv4_2_checksum_list;
     }
@@ -1017,8 +985,8 @@ field_list_calculation ipv4_2_checksum_egress {
 }
 
 calculated_field ipv4_2.hdrChecksum  {
-    verify ipv4_2_checksum_ingress;
-    update ipv4_2_checksum_egress;
+    verify ipv4_2_checksum;
+    update ipv4_2_checksum;
 }
 
 field_list ipv4_2_tcp_checksum_list {

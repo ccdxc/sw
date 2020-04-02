@@ -129,61 +129,73 @@ ftlv6_get_key_dst_ip (flow_hash_entry_t *entry, uint8_t *dst)
 
 // DNAT hash table set/get API wrappers
 static inline void
-dnat_set_map_ip (dnat_hash_entry_t *entry, uint8_t *ipaddr)
+dnat_set_map_ip (dnat_entry_t *entry, uint8_t *ipaddr)
 {
     return entry->set_addr(ipaddr);
 }
 
 static inline void
-dnat_set_map_addr_type (dnat_hash_entry_t *entry, uint8_t addr_type)
+dnat_set_map_addr_type (dnat_entry_t *entry, uint8_t addr_type)
 {
     return entry->set_addr_type(addr_type);
 }
 
 static inline void
-dnat_set_key_ip (dnat_hash_entry_t *entry, uint8_t *ipaddr)
+dnat_set_map_epoch (dnat_entry_t *entry, uint16_t epoch)
 {
-    return entry->set_key_metadata_dst(ipaddr);
+    return entry->set_epoch(epoch);
 }
 
 static inline void
-dnat_set_key_vnic_id (dnat_hash_entry_t *entry, uint16_t vnic_id)
+dnat_set_key_ip (dnat_entry_t *entry, uint8_t *ipaddr)
+{
+    return entry->set_key_metadata_src(ipaddr);
+}
+
+static inline void
+dnat_set_key_vnic_id (dnat_entry_t *entry, uint16_t vnic_id)
 {
     return entry->set_key_metadata_vnic_id(vnic_id);
 }
 
 static inline void
-dnat_set_key_ktype (dnat_hash_entry_t *entry, uint8_t ktype)
+dnat_set_key_ktype (dnat_entry_t *entry, uint8_t ktype)
 {
     return entry->set_key_metadata_ktype(ktype);
 }
 
 static inline void
-dnat_get_map_ip (dnat_hash_entry_t *entry, uint8_t *ipaddr)
+dnat_get_map_ip (dnat_entry_t *entry, uint8_t *ipaddr)
 {
     return entry->get_addr(ipaddr);
 }
 
 static inline uint8_t
-dnat_get_map_addr_type (dnat_hash_entry_t *entry)
+dnat_get_map_addr_type (dnat_entry_t *entry)
 {
     return entry->get_addr_type();
 }
 
-static inline void
-dnat_get_key_ip (dnat_hash_entry_t *entry, uint8_t *ipaddr)
+static inline uint8_t
+dnat_get_map_epoch(dnat_entry_t *entry)
 {
-    return entry->get_key_metadata_dst(ipaddr);
+    return entry->get_epoch();
+}
+
+static inline void
+dnat_get_key_ip (dnat_entry_t *entry, uint8_t *ipaddr)
+{
+    return entry->get_key_metadata_src(ipaddr);
 }
 
 static inline uint16_t
-dnat_get_key_vnic_id (dnat_hash_entry_t *entry)
+dnat_get_key_vnic_id (dnat_entry_t *entry)
 {
     return entry->get_key_metadata_vnic_id();
 }
 
 static inline uint8_t
-dnat_get_key_ktype (dnat_hash_entry_t *entry)
+dnat_get_key_ktype (dnat_entry_t *entry)
 {
     return entry->get_key_metadata_ktype();
 }

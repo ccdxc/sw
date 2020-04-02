@@ -130,8 +130,9 @@ header_type scratch_metadata_t {
         cpu_flags           : 16;
         nexthop_index       : 12;
         num_nexthops        : 4;
-        pad31               : 31;
+        pad32               : 32;
         pad6                : 6;
+        pad3                : 3;
         update_ip_chksum    : 1;
         update_l4_chksum    : 1;
         index_type          : 1;

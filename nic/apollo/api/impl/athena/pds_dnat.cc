@@ -37,7 +37,7 @@ typedef struct pds_dnat_map_read_cbdata_s {
 } pds_dnat_map_read_cbdata_t;
 
 static sdk_ret_t
-dnat_map_entry_setup_key (dnat_hash_entry_t *entry,
+dnat_map_entry_setup_key (dnat_entry_t *entry,
                           pds_dnat_mapping_key_t *key)
 {
     if (!entry) {
@@ -64,7 +64,7 @@ pds_dnat_map_create ()
     // TODO: Remove this later
     tparams.entry_trace_en = true;
 
-    if ((g_dnat_mapping_tbl = dnat_hash::factory(&tparams)) == NULL) {
+    if ((g_dnat_mapping_tbl = dnat::factory(&tparams)) == NULL) {
         PDS_TRACE_ERR("DNAT mapping table creation failed");
         return SDK_RET_OOM;
     }
@@ -84,7 +84,7 @@ pds_dnat_map_delete ()
         PDS_TRACE_ERR("DNAT mapping table not yet created");
         return SDK_RET_ERR;
     }
-    dnat_hash::destroy(g_dnat_mapping_tbl);
+    dnat::destroy(g_dnat_mapping_tbl);
     return SDK_RET_OK;
 }
 
@@ -93,7 +93,7 @@ pds_dnat_map_entry_create (pds_dnat_mapping_spec_t *spec)
 {
     sdk_ret_t ret;
     sdk_table_api_params_t params = { 0 };
-    dnat_hash_entry_t entry;
+    dnat_entry_t entry;
     uint16_t vnic_id;
 
     if (!spec) {
@@ -124,6 +124,7 @@ pds_dnat_map_entry_create (pds_dnat_mapping_spec_t *spec)
          return ret;
     dnat_set_map_ip(&entry, spec->data.addr);
     dnat_set_map_addr_type(&entry, spec->data.addr_type);
+    dnat_set_map_epoch(&entry, spec->data.epoch);
     params.entry = &entry;
     ret = g_dnat_mapping_tbl->insert(&params);
     if (ret != SDK_RET_OK) {
@@ -137,7 +138,7 @@ pds_dnat_map_entry_create (pds_dnat_mapping_spec_t *spec)
 static void
 dnat_map_entry_find_cb (sdk_table_api_params_t *params)
 {
-    dnat_hash_entry_t *hwentry = (dnat_hash_entry_t *)params->entry;
+    dnat_entry_t *hwentry = (dnat_entry_t *)params->entry;
     pds_dnat_map_read_cbdata_t *cbdata =
         (pds_dnat_map_read_cbdata_t *)params->cbdata;
 
@@ -145,10 +146,11 @@ dnat_map_entry_find_cb (sdk_table_api_params_t *params)
     if (hwentry->entry_valid && (dnat_entry_valid == false)) {
         if ((hwentry->key_metadata_ktype == cbdata->key->key_type) &&
             (dnat_get_key_vnic_id(hwentry) == cbdata->key->vnic_id) &&
-            (!memcmp(hwentry->key_metadata_dst, cbdata->key->addr,
+            (!memcmp(hwentry->key_metadata_src, cbdata->key->addr,
                      IP6_ADDR8_LEN))) {
                 dnat_get_map_ip(hwentry, cbdata->info->spec.data.addr);
                 cbdata->info->spec.data.addr_type = dnat_get_map_addr_type(hwentry);
+                cbdata->info->spec.data.epoch = dnat_get_map_epoch(hwentry);
                 dnat_entry_valid = true;
         }
     }
@@ -161,7 +163,7 @@ pds_dnat_map_entry_read (pds_dnat_mapping_key_t *key,
 {
     sdk_ret_t ret;
     sdk_table_api_params_t params = { 0 };
-    dnat_hash_entry_t entry;
+    dnat_entry_t entry;
     pds_dnat_map_read_cbdata_t cbdata = { 0 };
 
     if (!key || !info) {
@@ -205,7 +207,7 @@ pds_dnat_map_entry_update (pds_dnat_mapping_spec_t *spec)
 {
     sdk_ret_t ret;
     sdk_table_api_params_t params = { 0 };
-    dnat_hash_entry_t entry;
+    dnat_entry_t entry;
 
     if (!spec) {
         PDS_TRACE_ERR("spec is null");
@@ -233,6 +235,7 @@ pds_dnat_map_entry_update (pds_dnat_mapping_spec_t *spec)
          return ret;
     dnat_set_map_ip(&entry, spec->data.addr);
     dnat_set_map_addr_type(&entry, spec->data.addr_type);
+    dnat_set_map_epoch(&entry, spec->data.epoch);
     params.entry = &entry;
     ret = g_dnat_mapping_tbl->update(&params);
     if (ret != SDK_RET_OK) {
@@ -249,7 +252,7 @@ pds_dnat_map_entry_delete (pds_dnat_mapping_key_t *key)
 {
     sdk_ret_t ret;
     sdk_table_api_params_t params = { 0 };
-    dnat_hash_entry_t entry;
+    dnat_entry_t entry;
 
     if (!key) {
         PDS_TRACE_ERR("key is null");
