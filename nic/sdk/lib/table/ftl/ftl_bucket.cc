@@ -448,6 +448,8 @@ Bucket::delink_(Apictx *ctx) {
 sdk_ret_t
 Bucket::defragment_(Apictx *ectx, Apictx *tctx) {
     sdk_ret_t ret = SDK_RET_OK;
+    handle_t old_handle;
+    handle_t new_handle;
 
     // Get parent context from the tail node context
     auto pctx = tctx->pctx;
@@ -456,6 +458,18 @@ Bucket::defragment_(Apictx *ectx, Apictx *tctx) {
     PRINT_API_CTX("ECTX", ectx);
     PRINT_API_CTX("PCTX", pctx);
     PRINT_API_CTX("TCTX", tctx);
+
+    // notify the application whenever handle changes for an entry.
+    // notification is sent twice - once before move and once after move.
+    // reason for 2 notifications is application can invoke its locking
+    // mechanism before start move and unlock after move.
+    if (ectx->params->movecb) {
+        tctx->is_main() ? old_handle.pindex(tctx->table_index) :
+                          old_handle.sindex(tctx->table_index);
+        ectx->is_main() ? new_handle.pindex(ectx->table_index) :
+                          new_handle.sindex(ectx->table_index);
+        ectx->params->movecb(tctx->entry, old_handle, new_handle, false);
+    }
 
     // STEP 2: Move tctx key+data to ectx key+data
     // Need to check because, we can be deleting a tail node itself
@@ -491,6 +505,10 @@ Bucket::defragment_(Apictx *ectx, Apictx *tctx) {
         // some hint to this entry, but we never account that stats.
         tctx->tstats->remove(!tctx->is_main());
         FTL_TRACE_VERBOSE("decrementing table stats for %s", tctx->idstr());
+    }
+    // second notifucation - move complete
+    if (ectx->params->movecb) {
+        ectx->params->movecb(tctx->entry, old_handle, new_handle, true);
     }
     return SDK_RET_OK;
 }

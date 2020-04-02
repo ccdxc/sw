@@ -26,6 +26,12 @@ pds_system_get_ticks (uint64_t sec)
     return ((uint64_t) (((double)sec)/g_clock_adjustment));
 }
 
+double
+pds_system_get_secs (uint64_t tick)
+{
+    return ((double) (((double)tick) * g_clock_adjustment));
+}
+
 uint64_t
 pds_system_get_current_tick (void)
 {

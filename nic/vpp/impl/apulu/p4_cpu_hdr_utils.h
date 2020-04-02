@@ -6,6 +6,7 @@
 #ifndef __VPP_IMPL_APULU_P4_CPU_HDR_UTILS_H__
 #define __VPP_IMPL_APULU_P4_CPU_HDR_UTILS_H__
 
+#include <stdbool.h>
 #include <nic/apollo/packet/apulu/p4_cpu_hdr.h>
 #include <nic/apollo/p4/include/apulu_defines.h>
 #include <vppinfra/format.h>
@@ -26,6 +27,7 @@
 #define VPP_CPU_FLAGS_FLOW_LOG_POS         11
 #define VPP_CPU_FLAGS_FLOW_L2L_POS         12
 #define VPP_CPU_FLAGS_FLOW_SES_EXIST_POS   13
+#define VPP_CPU_FLAGS_FLOW_RESPONDER_POS   14
 
 #define VPP_CPU_FLAGS_RX_PKT_VALID         (1 << VPP_CPU_FLAGS_RX_PKT_POS)
 #define VPP_CPU_FLAGS_NAPT_VALID           (1 << VPP_CPU_FLAGS_NAPT_POS)
@@ -33,22 +35,30 @@
 #define VPP_CPU_FLAGS_FLOW_LOG_VALID       (1 << VPP_CPU_FLAGS_FLOW_LOG_POS)
 #define VPP_CPU_FLAGS_FLOW_L2L_VALID       (1 << VPP_CPU_FLAGS_FLOW_L2L_POS)
 #define VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID (1 << VPP_CPU_FLAGS_FLOW_SES_EXIST_POS)
+#define VPP_CPU_FLAGS_FLOW_RESPONDER_VALID (1 << VPP_CPU_FLAGS_FLOW_RESPONDER_POS)
 
 #define VPP_ARM_TO_P4_HDR_SZ               APULU_ARM_TO_P4_HDR_SZ
 #define VPP_P4_TO_ARM_HDR_SZ               APULU_P4_TO_ARM_HDR_SZ
 
-always_inline u8
+always_inline bool
+pds_is_rflow (vlib_buffer_t *p0)
+{
+    return (vnet_buffer(p0)->pds_flow_data.flags &
+            VPP_CPU_FLAGS_FLOW_RESPONDER_VALID) ? true : false;
+}
+
+always_inline bool
 pds_is_flow_l2l (vlib_buffer_t *p0)
 {
     return (vnet_buffer(p0)->pds_flow_data.flags &
-            VPP_CPU_FLAGS_FLOW_L2L_VALID) ? 1 : 0;
+            VPP_CPU_FLAGS_FLOW_L2L_VALID) ? true : false;
 }
 
-always_inline u8
+always_inline bool
 pds_get_flow_log_en (vlib_buffer_t *p0)
 {
     return (vnet_buffer(p0)->pds_flow_data.flags &
-            VPP_CPU_FLAGS_FLOW_LOG_VALID) ? 1 : 0;
+            VPP_CPU_FLAGS_FLOW_LOG_VALID) ? true : false;
 }
 
 always_inline void

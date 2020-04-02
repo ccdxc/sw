@@ -9,9 +9,6 @@
 extern "C" {
 #endif
 
-#define PDS_FLOW_TIMER_TICK             0.1
-#define PDS_FLOW_SEC_TO_TIMER_TICK(X)   (X * 10)
-
 typedef enum {
     PDS_FLOW_PROTO_START,
     PDS_FLOW_PROTO_TCP = PDS_FLOW_PROTO_START,

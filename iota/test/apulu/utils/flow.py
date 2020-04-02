@@ -19,7 +19,7 @@ def verifyFlowLogging(af, workload_pairs):
         api.Logger.info("Checking ping %s <-> %s in vpp flow logs" % (
             w1.ip_address, w2.ip_address))
         command = "date"
-        command = "grep -c 'ip, source: %s:0, destination: %s' %s" % (
+        command = "grep -c 'ip, source: %s:[0-9]\{1,5\}, destination: %s' %s" % (
             w1.ip_address, w2.ip_address, log_file)
         api.Trigger_AddNaplesCommand(req, w1.node_name, command)
 

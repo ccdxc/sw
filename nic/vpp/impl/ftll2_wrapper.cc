@@ -179,6 +179,12 @@ ftll2_cache_set_session_index (uint32_t val)
     ftl_set_session_index(g_l2_flow_cache.flow + g_l2_flow_cache.count, val);
 }
 
+void
+ftll2_cache_set_flow_role(uint8_t flow_role)
+{
+    ftl_set_flow_role(g_l2_flow_cache.flow + g_l2_flow_cache.count, flow_role);
+}
+
 uint32_t
 ftll2_cache_get_session_index (int id)
 {

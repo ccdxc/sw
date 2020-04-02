@@ -458,6 +458,12 @@ ftl_set_session_index (flow_hash_entry_t *entry, uint32_t session)
 }
 
 void
+ftl_set_flow_role (flow_hash_entry_t *entry, uint8_t flow_role)
+{
+    entry->set_flow_role(flow_role);
+}
+
+void
 ftl_set_epoch (flow_hash_entry_t *entry, uint8_t val)
 {
     entry->set_epoch(val);

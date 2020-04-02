@@ -166,7 +166,8 @@ export SDK_THIRDPARTY_CAPRI_LDLIBS := sdkcapri_csrint
 #                           VPP
 # ==========================================================================
 export VPP_DEFINES_COMMON  := -DCLIB_LOG2_CACHE_LINE_BYTES=6
-export VPP_DEFINES_x86_64  := -DCLIB_DEBUG ${VPP_DEFINES_COMMON}
+export VPP_DEFINES_x86_64  := -DCLIB_DEBUG -DFLOW_AGEING_DISABLE            \
+                              ${VPP_DEFINES_COMMON}
 export VPP_DEFINES_aarch64 := ${VPP_DEFINES_COMMON}
 export VPP_FLAGS_COMMON    := -Wall -Werror
 export VPP_FLAGS_x86_64    := ${VPP_FLAGS_COMMON} -O0

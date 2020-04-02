@@ -24,6 +24,8 @@
 #define MAX_FLOWS_PER_FRAME (VLIB_FRAME_SIZE * 2)
 #define PDS_FLOW_SESSION_POOL_COUNT_MAX VLIB_FRAME_SIZE
 #define DISPLAY_BUF_SIZE (1*1024*1024)
+#define PDS_FLOW_TIMER_TICK             0.1
+#define PDS_FLOW_SEC_TO_TIMER_TICK(X)   (X * 10)
 
 #define foreach_flow_classify_next                                  \
         _(IP4_FLOW_PROG, "pds-ip4-flow-program" )                   \
@@ -31,6 +33,7 @@
         _(L2_FLOW_PROG, "pds-l2-flow-program" )                     \
         _(IP4_TUN_FLOW_PROG, "pds-tunnel-ip4-flow-program" )        \
         _(IP6_TUN_FLOW_PROG, "pds-tunnel-ip6-flow-program" )        \
+        _(AGE_FLOW, "pds-flow-age-setup" )                          \
         _(IP4_NAT, "pds-nat44" )                                    \
         _(ICMP_VRIP, "ip4-icmp-echo-request")                       \
         _(DROP, "error-drop")                                       \
@@ -48,6 +51,8 @@
         _(ICMP_VRIP, "VR IPv4 request packets received")            \
         _(UNKOWN, "Unknown flow packets")                           \
         _(VRIP_DROP, "Unknown VR IPv4 packets")                     \
+        _(FIN_RST, "FIN/RST packets")                               \
+        _(FIN_RST_NO_SES, "FIN/RST with invalid session id")        \
 
 #define foreach_flow_prog_next                                      \
         _(FWD_FLOW, "pds-fwd-flow" )                                \
@@ -191,6 +196,7 @@ typedef enum
 } flow_age_setup_counter_t;
 
 typedef enum {
+    PDS_FLOW_STATE_CONN_INIT,
     PDS_FLOW_STATE_CONN_SETUP,
     PDS_FLOW_STATE_ESTABLISHED,
     PDS_FLOW_STATE_HALF_CLOSE_IFLOW,
@@ -219,10 +225,10 @@ typedef CLIB_PACKED(struct pds_flow_index_s_ {
 // Store iflow and rflow index for each allocated session
 typedef CLIB_PACKED(struct pds_flow_hw_ctx_s {
     u32 proto : 2; // enum pds_flow_protocol
-    u32 inuse : 1;
     u32 v4 : 1; // v4 or v6 table
     u32 flow_state : 3; // enum pds_flow_state
     u32 keep_alive_retry : 2;
+    // if number of bits change then fix macro FLOW_AGE_TIMER_STOP()
     u32 timer_hdl : 23;
     u16 ingress_bd;
     pds_flow_index_t iflow;
@@ -326,6 +332,13 @@ always_inline void * pds_flow_prog_get_table6_or_l2(void)
     return fm->table6_or_l2;
 }
 
+always_inline void pds_flow_hw_ctx_init (pds_flow_hw_ctx_t *ses)
+{
+    clib_memset(ses, 0, sizeof(*ses));
+    ses->timer_hdl = ~0;
+    return;
+}
+
 always_inline void pds_session_id_alloc2(u32 *ses_id0, u32 *ses_id1)
 {
     pds_flow_main_t *fm = &pds_flow_main;
@@ -352,8 +365,7 @@ always_inline void pds_session_id_alloc2(u32 *ses_id0, u32 *ses_id1)
         }
         thr_local_pool->pool_count++;
         pool_get(fm->session_index_pool, ctx);
-        ctx->ingress_bd = 0;
-        ctx->inuse = 0;
+        pds_flow_hw_ctx_init(ctx);
         thr_local_pool->session_ids[thr_local_pool->pool_count] =
              ctx - fm->session_index_pool + 1;
         refill_count--;
@@ -391,8 +403,7 @@ always_inline u32 pds_session_id_alloc(void)
         }
         thr_local_pool->pool_count++;
         pool_get(fm->session_index_pool, ctx);
-        ctx->ingress_bd = 0;
-        ctx->inuse = 0;
+        pds_flow_hw_ctx_init(ctx);
         thr_local_pool->session_ids[thr_local_pool->pool_count] =
             ctx - fm->session_index_pool + 1;
         refill_count--;
@@ -483,17 +494,30 @@ always_inline void pds_session_set_data(u32 ses_id, u32 i_pindex,
         data->rflow.table_id = r_sindex;
         data->rflow.primary = 0;
     }
-    data->inuse = 1;
     data->proto = proto;
     data->v4 = v4;
     //pds_flow_prog_unlock();
     return;
 }
 
+extern void pds_flow_expired_timers_dispatch(u32 * expired_timers);
+
 always_inline void pds_session_id_flush(void)
 {
     pds_flow_main_t *fm = &pds_flow_main;
+    tw_timer_wheel_16t_1w_2048sl_t *tw;
 
+    foreach_vlib_main (({
+        if (ii == 0) {
+            continue;
+        }
+        tw = vec_elt_at_index(fm->timer_wheel, ii);
+        // free timer wheel to stop all timers
+        tw_timer_wheel_free_16t_1w_2048sl(tw);
+        tw_timer_wheel_init_16t_1w_2048sl(tw, pds_flow_expired_timers_dispatch,
+                                          PDS_FLOW_TIMER_TICK, ~0);
+        tw->last_run_time = vlib_time_now(this_vlib_main);
+    }));
     pds_flow_prog_lock();
     pool_free(fm->session_index_pool);
     fm->session_index_pool = NULL;

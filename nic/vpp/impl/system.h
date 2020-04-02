@@ -14,6 +14,8 @@ extern "C" {
 
 uint64_t pds_system_get_ticks(uint64_t sec);
 
+double pds_system_get_secs(uint64_t tick);
+
 uint64_t pds_system_get_current_tick(void);
 
 #ifdef __cplusplus

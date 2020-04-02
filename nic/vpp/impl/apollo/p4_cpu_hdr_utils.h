@@ -6,6 +6,7 @@
 #ifndef __VPP_IMPL_APOLLO_P4_CPU_HDR_UTILS_H__
 #define __VPP_IMPL_APOLLO_P4_CPU_HDR_UTILS_H__
 
+#include <stdbool.h>
 #include <nic/apollo/p4/include/defines.h>
 #include <nic/apollo/packet/apollo/p4_cpu_hdr.h>
 #include <vlib/vlib.h>
@@ -26,16 +27,22 @@
 #define VPP_ARM_TO_P4_HDR_SZ               APOLLO_PREDICATE_HDR_SZ
 #define VPP_P4_TO_ARM_HDR_SZ               APOLLO_P4_TO_ARM_HDR_SZ
 
-always_inline u8
-pds_is_flow_l2l (vlib_buffer_t *p0)
+always_inline bool
+pds_is_rflow (vlib_buffer_t *p0)
 {
-    return 0;
+    return false;
 }
 
-always_inline u8
+always_inline bool
+pds_is_flow_l2l (vlib_buffer_t *p0)
+{
+    return false;
+}
+
+always_inline bool
 pds_get_flow_log_en (vlib_buffer_t *p0)
 {
-    return 0;
+    return false;
 }
 
 __clib_unused static u8 *

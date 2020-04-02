@@ -93,6 +93,9 @@ private:
 typedef struct sdk_table_api_params_ sdk_table_api_params_t;
 typedef char* (*bytes2str_t)(void *bytes);
 typedef void (*iterate_t)(sdk_table_api_params_t *params);
+typedef void (*move_cb_t)(base_table_entry_t *entry,
+                          handle_t old_handle, handle_t new_handle,
+                          bool move_complete);
 
 typedef enum sdk_table_api_op_ {
     SDK_TABLE_API_NONE,
@@ -180,11 +183,17 @@ typedef struct sdk_table_api_params_ {
     // [Input]
     // number of handles to reserve, used in reservation related APIs
     uint32_t num_handles;
+    union {
+        // [Input]
+        // Iterator callback function
+        iterate_t itercb;
+        // [Input]
+        //  Move callback function - to be called when handle
+        //  of an entry changes due to defragment action
+        move_cb_t movecb;
+    };
     // [Input]
-    // Iterator callback function
-    iterate_t itercb;
-    // [Input]
-    // Callback data for table iteration
+    // Callback data for table iteration/notification
     void *cbdata;
     // [Input]
     // Set this to true to force reading h/w state without checking s/w state,

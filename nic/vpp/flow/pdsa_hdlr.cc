@@ -4,12 +4,13 @@
 // Handlers for all messages from PDS Agent
 
 #include <arpa/inet.h>
-#include "nic/vpp/infra/cfg/pdsa_db.hpp"
 #include <nic/sdk/include/sdk/table.hpp>
 #include <gen/p4gen/p4/include/ftl.h>
+#include <nic/vpp/infra/cfg/pdsa_db.hpp>
+#include <nic/vpp/infra/ipc/pdsa_vpp_hdlr.h>
+#include <nic/vpp/infra/ipc/pdsa_hdlr.hpp>
+#include <feature.h>
 #include <ftl_wrapper.h>
-#include "nic/vpp/infra/ipc/pdsa_vpp_hdlr.h"
-#include "nic/vpp/infra/ipc/pdsa_hdlr.hpp"
 #include "pdsa_hdlr.h"
 #include "pdsa_uds_hdlr.h"
 
@@ -126,10 +127,12 @@ pdsa_flow_hdlr_init (void)
 {
     // initialize callbacks for cfg/oper messages received from pds-agent
 
-    pds_cfg_register_callbacks(OBJ_ID_SECURITY_PROFILE,
-                               pdsa_flow_cfg_set, 
-                               pdsa_flow_cfg_clear,
-                               NULL);
+    if (pds_flow_age_supported()) {
+        pds_cfg_register_callbacks(OBJ_ID_SECURITY_PROFILE,
+                                   pdsa_flow_cfg_set, 
+                                   pdsa_flow_cfg_clear,
+                                   NULL);
+    }
     pds_ipc_register_cmd_callbacks(PDS_CMD_MSG_FLOW_CLEAR,
                                    pdsa_flow_clear_cmd);
 }

@@ -400,7 +400,6 @@ hint_table::get_with_handle_(Apictx *ctx) {
     ctx->bucket->read_(ctx);
     ctx->params->entry->copy_key_data(ctx->entry);
     unlock_(ctx);
-    
     return SDK_RET_OK;
 }
 

@@ -467,7 +467,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
     udp_header_t        *udp0;
     icmp46_header_t     *icmp0;
     u8                  miss_hit = 0;
-    pds_flow_main_t     *fm = &pds_flow_main;
+    pds_flow_hw_ctx_t   *ses = pds_flow_get_hw_ctx(session_id);
 
     vnet_buffer(p0)->pds_flow_data.ses_id = session_id;
 
@@ -486,7 +486,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         if (!flow_exists) {
             lkp_id = vnet_buffer(p0)->sw_if_index[VLIB_TX];
         } else {
-            lkp_id = fm->session_index_pool[session_id].ingress_bd;
+            lkp_id = ses->ingress_bd;
         }
 
         if (PREDICT_TRUE(((ip40->protocol == IP_PROTOCOL_TCP) ||
@@ -517,6 +517,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv4_cache_set_key(src_ip, dst_ip,
                             protocol, sport, dport, lkp_id);
         ftlv4_cache_set_session_index(session_id);
+        ftlv4_cache_set_flow_role(TCP_FLOW_INITIATOR);
         ftlv4_cache_set_epoch( 0xff);
         if (PREDICT_FALSE(pds_is_flow_l2l(p0))) {
             pds_flow_handle_l2l(p0, flow_exists, &miss_hit, session_id);
@@ -543,6 +544,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv4_cache_set_key(r_src_ip, r_dst_ip,
                             protocol, r_sport, r_dport, lkp_id);
         ftlv4_cache_set_session_index(session_id);
+        ftlv4_cache_set_flow_role(TCP_FLOW_RESPONDER);
         ftlv4_cache_set_epoch(0xff);
         ftlv4_cache_set_flow_miss_hit(miss_hit);
         ftlv4_cache_set_update_flag(flow_exists);
@@ -560,7 +562,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         if (!flow_exists) {
             lkp_id = vnet_buffer(p0)->sw_if_index[VLIB_TX];
         } else {
-            lkp_id = fm->session_index_pool[session_id].ingress_bd;
+            lkp_id = ses->ingress_bd;
         }
 
         if (is_l2) {
@@ -614,6 +616,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             pds_flow_extract_nexthop_info(p0, 0, 1);
         }
         ftlv6_cache_set_session_index(session_id);
+        ftlv6_cache_set_flow_role(TCP_FLOW_INITIATOR);
         ftlv6_cache_set_epoch(0xff);
         if (PREDICT_FALSE(pds_is_flow_l2l(p0))) {
             pds_flow_handle_l2l(p0, flow_exists, &miss_hit, session_id);
@@ -631,6 +634,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             pds_flow_extract_nexthop_info(p0, 0, 0);
         }
         ftlv6_cache_set_session_index(session_id);
+        ftlv6_cache_set_flow_role(TCP_FLOW_RESPONDER);
         ftlv6_cache_set_epoch(0xff);
         ftlv6_cache_set_flow_miss_hit(miss_hit);
         ftlv6_cache_set_update_flag(flow_exists);
@@ -1099,6 +1103,29 @@ VLIB_REGISTER_NODE (pds_flow_classify_node) = {
     .format_trace = format_pds_flow_classify_trace,
 };
 
+static void
+pds_session_update_data(u32 ses_id, u32 pindex, u32 sindex, 
+                        bool iflow, bool move_complete)
+{
+    pds_flow_hw_ctx_t *session;
+    pds_flow_index_t *index;
+
+    if (move_complete) {
+        session = pds_flow_get_hw_ctx(ses_id);
+        pds_flow_hw_ctx_unlock(session);
+        return;
+    }
+
+    session = pds_flow_get_hw_ctx_lock(ses_id);
+    index = iflow ? &session->iflow : &session->rflow;
+    if (pindex != ((u32) (~0L))) {
+        index->table_id = pindex;
+        index->primary = 1;
+    } else {
+        index->table_id = sindex;
+        index->primary = 0;
+    }
+}
 static clib_error_t *
 pds_flow_init (vlib_main_t * vm)
 {
@@ -1139,6 +1166,7 @@ pds_flow_init (vlib_main_t * vm)
 
     pds_flow_pipeline_init(vm);
 
+    ftl_reg_session_update_cb(pds_session_update_data);
     return 0;
 }
 

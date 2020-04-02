@@ -6,6 +6,9 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+#include <stdbool.h>
+
 void set_skip_session_program(int val);
 
 int initialize_session(void);
@@ -18,6 +21,11 @@ void session_get_addr(uint32_t ses_id, uint8_t **ses_addr,
                       uint32_t *entry_size);
 
 uint64_t pds_session_get_timestamp(uint32_t session_id);
+
+void pds_session_get_session_state(uint32_t session_id, uint8_t *iflow_state, 
+                                   uint8_t *rflow_state);
+
+bool pds_session_state_established(uint8_t state);
 
 #ifdef __cplusplus
 }
