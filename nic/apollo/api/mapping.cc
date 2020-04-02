@@ -144,6 +144,24 @@ mapping_entry::soft_delete(mapping_entry *mapping) {
 }
 
 sdk_ret_t
+mapping_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
+    return impl_->reserve_resources(this, orig_obj, obj_ctxt);
+}
+
+sdk_ret_t
+mapping_entry::release_resources(void) {
+    return impl_->release_resources(this);
+}
+
+sdk_ret_t
+mapping_entry::nuke_resources_(void) {
+    if (this->impl_) {
+        return impl_->nuke_resources(this);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 mapping_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_mapping_spec_t *spec = &api_ctxt->api_params->mapping_spec;
 
@@ -161,26 +179,8 @@ mapping_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 sdk_ret_t
-mapping_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    return impl_->reserve_resources(this, orig_obj, obj_ctxt);
-}
-
-sdk_ret_t
 mapping_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     return impl_->program_hw(this, obj_ctxt);
-}
-
-sdk_ret_t
-mapping_entry::nuke_resources_(void) {
-    if (this->impl_) {
-        return impl_->nuke_resources(this);
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-mapping_entry::release_resources(void) {
-    return impl_->release_resources(this);
 }
 
 sdk_ret_t
@@ -189,9 +189,29 @@ mapping_entry::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+mapping_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
+    pds_mapping_spec_t *spec = &obj_ctxt->api_params->mapping_spec;
+
+    if (is_local_ != spec->is_local) {
+        PDS_TRACE_ERR("R2L/L2R mapping moves are not supported via update, "
+                      "mapping %s must be deleted and re-added",
+                      key_.str());
+        return SDK_RET_INVALID_ARG;
+    }
+    if ((public_ip_valid_ != spec->public_ip_valid) ||
+        (memcmp(&public_ip_, &spec->public_ip, sizeof(ip_addr_t)))) {
+        obj_ctxt->upd_bmap |= PDS_MAPPING_UPD_PUBLIC_IP;
+    }
+    // TODO:
+    // 1. add check for subnet update and throw error if its changing
+    // 2. while doing build() populate subnet_ as well
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 mapping_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    // update operation is not supported on mapping
-    return sdk::SDK_RET_INVALID_OP;
+    PDS_TRACE_DEBUG("Updating mapping %s", key_.str());
+    return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
 
 sdk_ret_t

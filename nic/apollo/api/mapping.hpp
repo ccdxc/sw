@@ -1,10 +1,12 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    mapping.hpp
- *
- * @brief   mapping entry handling
- */
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// mapping entry handling
+///
+//----------------------------------------------------------------------------
 
 #ifndef __MAPPING_HPP__
 #define __MAPPING_HPP__
@@ -58,6 +60,10 @@ typedef struct pds_mapping_info_s {
 } __PACK__ pds_mapping_info_t;
 
 namespace api {
+
+ // attribute update bits for mapping object
+
+#define PDS_MAPPING_UPD_PUBLIC_IP    0x1
 
 /**
  * @defgroup PDS_MAPPING_ENTRY - mapping functionality
@@ -129,13 +135,6 @@ public:
     static void soft_delete(mapping_entry *mapping);
 
     /**
-     * @brief     initialize mapping entry with the given config
-     * @param[in] api_ctxt API context carrying the configuration
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
-
-    /**
      * @brief    allocate h/w resources for this object
      * @param[in] orig_obj    old version of the unmodified object
      * @param[in] obj_ctxt    transient state associated with this API
@@ -143,6 +142,20 @@ public:
      */
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
                                         api_obj_ctxt_t *obj_ctxt) override;
+
+    /**
+     * @brief     release h/w resources reserved for this object, if any
+     *            (this API is invoked during the rollback stage)
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t release_resources(void) override;
+
+    /**
+     * @brief     initialize mapping entry with the given config
+     * @param[in] api_ctxt API context carrying the configuration
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -153,19 +166,35 @@ public:
     virtual sdk_ret_t program_create(api_obj_ctxt_t *obj_ctxt) override;
 
     /**
-     * @brief     release h/w resources reserved for this object, if any
-     *            (this API is invoked during the rollback stage)
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t release_resources(void) override;
-
-    /**
      * @brief    cleanup all h/w tables relevant to this object except stage 0
      *           table(s), if any, by updating packed entries with latest epoch#
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t cleanup_config(api_obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief    compute the object diff during update operation compare the
+    ///           attributes of the object on which this API is invoked and the
+    ///           attrs provided in the update API call passed in the object
+    ///           context (as cloned object + api_params) and compute the upd
+    ///           bitmap (and stash in the object context for later use)
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t compute_update(api_obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief        add all objects that may be affected if this object is
+    ///               updated to framework's object dependency list
+    /// \param[in]    obj_ctxt    transient state associated with this API
+    ///                           processing
+    /// \return       SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) override {
+
+        // no other objects are effected if vnic is modified
+        // NOTE: assumption is that none of key or immutable fields (e.g., type
+        // of vnic, vlan of the vnic etc.) are modifiable and agent will catch
+        // such errors
+        return SDK_RET_OK;
+    }
 
     /**
      * @brief    update all h/w tables relevant to this object except stage 0
@@ -190,6 +219,28 @@ public:
                                       api_base *orig_obj,
                                       api_obj_ctxt_t *obj_ctxt) override;
 
+
+    /// \brief          reprogram all h/w tables relevant to this object and
+    ///                 dependent on other objects except stage 0 table(s),
+    ///                 if any
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t reprogram_config(api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_INVALID_OP;
+    }
+
+    /// \brief re-activate config in the hardware stage 0 tables relevant to
+    ///        this object, if any, this reactivation must be based on existing
+    ///        state and any of the state present in the dirty object list
+    ///        (like clone objects etc.) only and not directly on db objects
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    /// NOTE: this method is called when an object is in the dependent/puppet
+    ///       object list
+    virtual sdk_ret_t reactivate_config(pds_epoch_t epoch,
+                                        api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_INVALID_OP;
+    }
      /**
      * @brief     add given mapping to the database
      * @return   SDK_RET_OK on success, failure status code on error

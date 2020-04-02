@@ -209,22 +209,102 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
 }
 
 sdk_ret_t
-mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
-                                               vpc_entry *vpc,
-                                               pds_mapping_spec_t *spec) {
+mapping_impl::reserve_public_ip_mapping_resources_(mapping_entry *mapping,
+                                                   vpc_impl *vpc,
+                                                   vnic_entry *vnic,
+                                                   pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
-    vnic_entry *vnic;
     mapping_swkey_t mapping_key;
     sdk_table_api_params_t tparams;
     local_mapping_swkey_t local_mapping_key;
 
-    vnic = vnic_find(&spec->vnic);
-    if (unlikely(vnic == NULL)) {
-        PDS_TRACE_ERR("Failed to find vnic %s, local mapping %s resource "
-                      "reservation failed", spec->vnic.str(),
-                      mapping->key2str().c_str());
-        return SDK_RET_INVALID_ARG;
+    // reserve an entry in LOCAL_MAPPING table for public IP
+    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),
+                                         &spec->public_ip);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL, NULL, 0,
+                                   sdk::table::handle_t::null());
+    ret = mapping_impl_db()->local_mapping_tbl()->reserve(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in LOCAL_MAPPING table "
+                      "for public IP %s of mapping %s, vnic %s, err %u",
+                      ipaddr2str(&spec->public_ip), mapping->key2str().c_str(),
+                      vnic->key().str(), ret);
+        return ret;
     }
+    local_mapping_public_ip_hdl_ = tparams.handle;
+
+    // reserve an entry in MAPING table for public IP
+    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+                                   &spec->public_ip);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL, 0,
+                                   sdk::table::handle_t::null());
+    ret = mapping_impl_db()->mapping_tbl()->reserve(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for public IP "
+                      "%s of mapping %s, vnic %s, err %u",
+                      ipaddr2str(&spec->public_ip), mapping->key2str().c_str(),
+                      vnic->key().str(), ret);
+        return ret;
+    }
+    mapping_public_ip_hdl_ = tparams.handle;
+    PDS_TRACE_DEBUG("Rsvd public IP hdl 0x%lx in LOCAL_MAPPING table, "
+                    "public IP handle in 0x%lx in MAPPING table",
+                    local_mapping_public_ip_hdl_, mapping_public_ip_hdl_);
+    return ret;
+}
+
+sdk_ret_t
+mapping_impl::reserve_nat_resources_(mapping_entry *mapping, vnic_entry *vnic,
+                                     pds_mapping_spec_t *spec) {
+    sdk_ret_t ret;
+
+    // reserve an entry for overlay IP to public IP xlation in NAT table
+    ret = apulu_impl_db()->nat_idxr()->alloc(&to_public_ip_nat_idx_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry for public IP %s in NAT table "
+                      "for mapping %s vnic %s, err %u",
+                      ipaddr2str(&spec->public_ip), mapping->key2str().c_str(),
+                      vnic->key().str(), ret);
+        return ret;
+    }
+
+    // reserve an entry for public IP to overlay IP xlation in NAT table
+    ret = apulu_impl_db()->nat_idxr()->alloc(&to_overlay_ip_nat_idx_);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry for overlay IP in NAT table for "
+                      "mapping %s, vnic %s, err %u", mapping->key2str().c_str(),
+                      vnic->key().str(), ret);
+        return ret;
+    }
+    PDS_TRACE_DEBUG("Rsvd public IP NAT handle 0x%lx, overlay IP NAT "
+                    "handle 0x%lx", to_public_ip_nat_idx_,
+                    to_overlay_ip_nat_idx_);
+    return ret;
+}
+
+sdk_ret_t
+mapping_impl::reserve_public_ip_resources_(mapping_entry *mapping,
+                                           vpc_impl *vpc, vnic_entry *vnic,
+                                           pds_mapping_spec_t *spec) {
+    sdk_ret_t ret;
+
+    ret = reserve_public_ip_mapping_resources_(mapping, vpc, vnic, spec);
+    if (unlikely(ret != SDK_RET_OK)) {
+        return ret;
+    }
+    return reserve_nat_resources_(mapping, vnic, spec);
+}
+
+sdk_ret_t
+mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
+                                               vpc_entry *vpc,
+                                               vnic_entry *vnic,
+                                               pds_mapping_spec_t *spec) {
+    sdk_ret_t ret;
+    mapping_swkey_t mapping_key;
+    sdk_table_api_params_t tparams;
+    local_mapping_swkey_t local_mapping_key;
+
     // reserve an entry in LOCAL_MAPPING table for overlay IP
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
                                          ((vpc_impl *)vpc->impl())->hw_id(),
@@ -251,7 +331,7 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
         PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for "
                       "mapping %s, vnic %s, err %u",
                       mapping->key2str().c_str(), vnic->key().str(), ret);
-        goto error;
+        return ret;
     }
     mapping_hdl_ = tparams.handle;
 
@@ -275,73 +355,10 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
 #endif
 
     // check if this mapping has public IP
-    if (!spec->public_ip_valid) {
-        return SDK_RET_OK;
+    if (spec->public_ip_valid) {
+        ret = reserve_public_ip_resources_(mapping, (vpc_impl *)vpc->impl(),
+                                           vnic, spec);
     }
-
-    // reserve an entry in LOCAL_MAPPING table for public IP
-    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
-                                         ((vpc_impl *)vpc->impl())->hw_id(),
-                                         &spec->public_ip);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL, NULL, 0,
-                                   sdk::table::handle_t::null());
-    ret = mapping_impl_db()->local_mapping_tbl()->reserve(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry in LOCAL_MAPPING table "
-                      "for public IP %s of mapping %s, vnic %s, err %u",
-                      ipaddr2str(&spec->public_ip), mapping->key2str().c_str(),
-                      vnic->key().str(), ret);
-        goto error;
-    }
-    local_mapping_public_ip_hdl_ = tparams.handle;
-
-    // reserve an entry in MAPING table for public IP
-    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
-                                   ((vpc_impl *)vpc->impl())->hw_id(),
-                                   &spec->public_ip);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL, 0,
-                                   sdk::table::handle_t::null());
-    ret = mapping_impl_db()->mapping_tbl()->reserve(&tparams);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for public IP "
-                      "%s of mapping %s, vnic %s, err %u",
-                      ipaddr2str(&spec->public_ip), mapping->key2str().c_str(),
-                      vnic->key().str(), ret);
-        goto error;
-    }
-    mapping_public_ip_hdl_ = tparams.handle;
-
-    PDS_TRACE_DEBUG("Rsvd public IP hdl 0x%lx in LOCAL_MAPPING table, "
-                    "public IP handle in 0x%lx in MAPPING table",
-                    local_mapping_public_ip_hdl_, mapping_public_ip_hdl_);
-
-    // reserve an entry for overlay IP to public IP xlation in NAT table
-    ret = apulu_impl_db()->nat_idxr()->alloc(&to_public_ip_nat_idx_);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry for public IP %s in NAT table "
-                      "for mapping %s vnic %s, err %u",
-                      ipaddr2str(&spec->public_ip), mapping->key2str().c_str(),
-                      vnic->key().str(), ret);
-        goto error;
-    }
-
-    // reserve an entry for public IP to overlay IP xlation in NAT table
-    ret = apulu_impl_db()->nat_idxr()->alloc(&to_overlay_ip_nat_idx_);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve entry for overlay IP in NAT table for "
-                      "mapping %s, vnic %s, err %u", mapping->key2str().c_str(),
-                      vnic->key().str(), ret);
-        goto error;
-    }
-
-    PDS_TRACE_DEBUG("Rsvd public IP NAT handle 0x%lx, overlay IP NAT "
-                    "handle 0x%lx", to_public_ip_nat_idx_,
-                    to_overlay_ip_nat_idx_);
-    return SDK_RET_OK;
-
-error:
-
-    // TODO: release all allocated resources
     return ret;
 }
 
@@ -382,39 +399,111 @@ mapping_impl::reserve_remote_mapping_resources_(mapping_entry *mapping,
 sdk_ret_t
 mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                                 api_obj_ctxt_t *obj_ctxt) {
+    sdk_ret_t ret;
     vpc_entry *vpc;
+    vnic_entry *vnic;
     subnet_entry *subnet;
     pds_mapping_spec_t *spec;
-    mapping_entry *mapping = (mapping_entry *)api_obj;
+    mapping_entry *new_mapping = (mapping_entry *)api_obj;
+    mapping_entry *curr_mapping = (mapping_entry *)orig_obj;
 
     spec = &obj_ctxt->api_params->mapping_spec;
-    if (spec->is_local) {
-        PDS_TRACE_DEBUG("Reserving resources for mapping %s, local %u, "
-                        "subnet %s, vnic %s, pub_ip_valid %u, pub_ip %s",
-                        mapping->key2str().c_str(), spec->is_local,
-                        spec->subnet.str(),
-                        spec->vnic.str(), spec->public_ip_valid,
-                        ipaddr2str(&spec->public_ip));
-        // reserve all local IP mapping resources
-        vpc = vpc_find(&spec->skey.vpc);
-        return reserve_local_mapping_resources_(mapping, vpc, spec);
-    }
+    switch (obj_ctxt->api_op) {
+    case API_OP_CREATE:
+        if (spec->is_local) {
+            PDS_TRACE_DEBUG("Reserving resources for mapping %s, local %u, "
+                            "subnet %s, vnic %s, pub_ip_valid %u, pub_ip %s",
+                            new_mapping->key2str().c_str(), spec->is_local,
+                            spec->subnet.str(), spec->vnic.str(),
+                            spec->public_ip_valid,
+                            ipaddr2str(&spec->public_ip));
+            // reserve all local IP mapping resources
+            vpc = vpc_find(&spec->skey.vpc);
+            vnic = vnic_find(&spec->vnic);
+            if (unlikely(vnic == NULL)) {
+                PDS_TRACE_ERR("Failed to find vnic %s, local mapping %s resource "
+                              "reservation failed", spec->vnic.str(),
+                              new_mapping->key2str().c_str());
+                return SDK_RET_INVALID_ARG;
+            }
+            return reserve_local_mapping_resources_(new_mapping, vpc,
+                                                    vnic, spec);
+        }
 
-    // reserve all remote MAC or IP mapping resources
-    PDS_TRACE_DEBUG("Reserving resources for mapping %s local %u, subnet %s, "
-                    "nh type %s-%s", mapping->key2str().c_str(), spec->is_local,
-                    spec->subnet.str(),
-                    (spec->nh_type == PDS_NH_TYPE_OVERLAY) ? "tep" : "nh group",
-                    (spec->nh_type == PDS_NH_TYPE_OVERLAY) ?
-                        spec->tep.str() : spec->nh_group.str());
-    if (spec->skey.type == PDS_MAPPING_TYPE_L2) {
-        vpc = NULL;
-        subnet = subnet_find(&spec->skey.subnet);
-    } else {
-        vpc = vpc_find(&spec->skey.vpc);
-        subnet = NULL;
+        // reserve all remote MAC or IP mapping resources
+        PDS_TRACE_DEBUG("Reserving resources for mapping %s local %u, subnet %s, "
+                        "nh type %s-%s", new_mapping->key2str().c_str(),
+                        spec->is_local, spec->subnet.str(),
+                        (spec->nh_type == PDS_NH_TYPE_OVERLAY) ? "tep" : "nh group",
+                        (spec->nh_type == PDS_NH_TYPE_OVERLAY) ?
+                            spec->tep.str() : spec->nh_group.str());
+        if (spec->skey.type == PDS_MAPPING_TYPE_L2) {
+            vpc = NULL;
+            subnet = subnet_find(&spec->skey.subnet);
+        } else {
+            vpc = vpc_find(&spec->skey.vpc);
+            subnet = NULL;
+        }
+        return reserve_remote_mapping_resources_(new_mapping, vpc,
+                                                 subnet, spec);
+
+    case API_OP_UPDATE:
+        if (spec->is_local) {
+            PDS_TRACE_DEBUG("Reserving resources for mapping %s, local %u, "
+                            "subnet %s, vnic %s, pub_ip_valid %u, pub_ip %s",
+                            new_mapping->key2str().c_str(), spec->is_local,
+                            spec->subnet.str(), spec->vnic.str(),
+                            spec->public_ip_valid,
+                            ipaddr2str(&spec->public_ip));
+            vpc = vpc_find(&spec->skey.vpc);
+            vnic = vnic_find(&spec->vnic);
+            if (unlikely(vnic == NULL)) {
+                PDS_TRACE_ERR("Failed to find vnic %s, local mapping %s resource "
+                              "reservation failed", spec->vnic.str(),
+                              new_mapping->key2str().c_str());
+                return SDK_RET_INVALID_ARG;
+            }
+            if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP) {
+                if (spec->public_ip_valid) {
+                    // we need to acquire new resources for public IP
+                    // NOTE:
+                    // In case 1, there is no further action needed. In case 2,
+                    // during activate stage, we will have to free the resources
+                    // allocated for public IP in the original object
+                    if (curr_mapping->is_public_ip_valid()) {
+                        // case 1 - current object has public IP which is being
+                        //          updated, in this case we can reuse NAT table
+                        //          resources, so allocate only mapping table
+                        //          resources
+                        ret = reserve_public_ip_mapping_resources_(new_mapping,
+                                  (vpc_impl *)vpc->impl(), vnic, spec);
+                    } else {
+                        // case 2 - current object has no public IP, so allocate
+                        //          all resources needed for public IP
+                        ret = reserve_public_ip_resources_(new_mapping,
+                                  (vpc_impl *)vpc->impl(), vnic, spec);
+                    }
+                    // TODO: nuke relevant resources of original object in all
+                    // cases
+                } else {
+                    // we don't need to reserve resource(s) for public IP
+                    // TODO: during activate stage, we should nuke/remove
+                    // these resources associated with original object
+                    local_mapping_public_ip_hdl_ =
+                        sdk::table::handle_t::null();
+                    mapping_public_ip_hdl_ = sdk::table::handle_t::null();
+                    to_public_ip_nat_idx_ = to_overlay_ip_nat_idx_ =
+                        PDS_IMPL_RSVD_NAT_HW_ID;
+                    ret = SDK_RET_OK;
+                }
+            }
+        }
+        break;
+
+    default:
+        return SDK_RET_INVALID_OP;
     }
-    return reserve_remote_mapping_resources_(mapping, vpc, subnet, spec);
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -784,6 +873,10 @@ mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
                     macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                     spec->fabric_encap.val.value, spec->vnic.str());
     if (spec->is_local) {
+        ret = add_local_mapping_entries_(vpc, spec);
+        if (ret != SDK_RET_OK) {
+            goto error;
+        }
         if (!device_find()->overlay_routing_enabled()) {
             if (spec->skey.type == PDS_MAPPING_TYPE_L3) {
                 ret = mapping_impl_db()->insert_dhcp_binding(spec);
@@ -791,10 +884,6 @@ mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
                     return ret;
                 }
             }
-        }
-        ret = add_local_mapping_entries_(vpc, spec);
-        if (ret != SDK_RET_OK) {
-            goto error;
         }
     } else {
         ret = add_remote_mapping_entries_(vpc, subnet, spec);

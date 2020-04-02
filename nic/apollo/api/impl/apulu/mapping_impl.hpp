@@ -21,6 +21,7 @@
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
+#include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
 using sdk::table::handle_t;
@@ -170,13 +171,45 @@ private:
     sdk_ret_t add_nat_entries_(mapping_entry *mapping,
                                pds_mapping_spec_t *spec);
 
-    /// \brief     reserve necessary entries in local mapping table
+    /// \brief     reserve necessary mapping table entries for local mapping
+    /// \param[in] mapping mapping object being processed
+    /// \param[in] vpc     VPC impl instance of this mapping
+    /// \param[in] vnic    vnic of this mapping
+    /// \param[in] spec    IP mapping details
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t reserve_public_ip_mapping_resources_(mapping_entry *mapping,
+                                                   vpc_impl *vpc,
+                                                   vnic_entry *vnic,
+                                                   pds_mapping_spec_t *spec);
+
+    /// \brief     reserve necessary NAT table entries for local mapping
+    /// \param[in] mapping mapping object being processed
+    /// \param[in] vnic    vnic of this mapping
+    /// \param[in] spec    IP mapping details
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t reserve_nat_resources_(mapping_entry *mapping, vnic_entry *vnic,
+                                     pds_mapping_spec_t *spec);
+
+    /// \brief     reserve all resources needed for local mapping's
+    ///            public IP
+    /// \param[in] mapping mapping object being processed
+    /// \param[in] vpc     VPC impl instance of this mapping
+    /// \param[in] vnic    vnic of this mapping
+    /// \param[in] spec    IP mapping details
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t reserve_public_ip_resources_(mapping_entry *mapping,
+                                           vpc_impl *vpc, vnic_entry *vnic,
+                                           pds_mapping_spec_t *spec);
+
+    /// \brief     reserve necessary resources for local mapping
     /// \param[in] mapping mapping object being processed
     /// \param[in] vpc     VPC of this mapping
+    /// \param[in] vnic    vnic instance of this local mapping
     /// \param[in] spec    IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t reserve_local_mapping_resources_(mapping_entry *mapping,
                                                vpc_entry *vpc,
+                                               vnic_entry *vnic,
                                                pds_mapping_spec_t *spec);
 
     /// \brief     reserve necessary entries in remote mapping table
