@@ -226,10 +226,10 @@ jobs:
     labels: ["precommit", "hourly", "2xhourly"]
   nic/agent:
     labels: ["precommit", "hourly"]
-  nic/apollo/tools/apollo/sanity/base:
-    labels: ["daily"]
-  nic/apollo/tools/artemis/sanity/base:
-    labels: ["daily"]
+#  nic/apollo/tools/apollo/sanity/base:
+#    labels: ["daily"]
+#  nic/apollo/tools/artemis/sanity/base:
+#    labels: ["daily"]
   nic/apollo/tools/apulu/sanity/base:
     labels: ["precommit", "hourly"]
   nic/apollo/tools/apulu/sanity/customer-docker:
