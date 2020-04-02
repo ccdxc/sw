@@ -13,7 +13,7 @@
         "command": "/bin/sh /nic/tools/start-hal-haps.sh",
         "dependencies": [],
         "flags": [],
-        "memory-limit": 800.0,
+        "memory-limit": 1000.0,
         "cpu-max-percentage": 75,
         "timeout": 60.0,
         "cpu-affinity": "0xD"
