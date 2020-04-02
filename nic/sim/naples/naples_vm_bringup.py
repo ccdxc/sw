@@ -21,7 +21,6 @@ _DOCKER_API_CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
 
 AGENT_PORT = 9007
-HAL_GRPC_PORT = 1234
 REST_PORT = 8888
 SIM_PORT =   777
 NAPLES_DATA_DIR = os.environ.get("NAPLES_DATA_DIR") or "/var/run/naples/"
@@ -385,9 +384,6 @@ def __bringup_naples_container(args):
 
     NAPLES_ENV.update(NAPLES_UUID)
     
-    GRPC_PORT = {"HAL_GRPC_PORT" : str(HAL_GRPC_PORT)}
-    NAPLES_ENV.update(GRPC_PORT)
-
     naples_obj = _DOCKER_CLIENT.containers.run(NAPLES_IMAGE,
                                                name=args.sim_name,
                                                privileged=True,
