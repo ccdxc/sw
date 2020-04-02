@@ -100,7 +100,9 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_hw(api_base *api_obj,
-                                 api_obj_ctxt_t *obj_ctxt) override;
+                                 api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief     cleanup all h/w tables relevant to this object except stage 0
     ///            table(s), if any, by updating packed entries with latest
@@ -109,7 +111,9 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_hw(api_base *api_obj,
-                                 api_obj_ctxt_t *obj_ctxt) override;
+                                 api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief     update all h/w tables relevant to this object except stage 0
     ///            table(s), if any, by updating packed entries with latest
@@ -118,7 +122,9 @@ public:
     /// \param[in] obj_ctxt transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
-                                api_obj_ctxt_t *obj_ctxt) override;
+                                api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief     activate the epoch in the dataplane by programming stage 0
     ///            tables, if any
@@ -225,9 +231,11 @@ private:
 
     /// \brief     add necessary entries for local mappings
     /// \param[in] vpc  VPC of this mapping
+    /// \param[in] mapping mapping object being processed
     /// \param[in] spec IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t add_local_mapping_entries_(vpc_entry *vpc,
+                                         mapping_entry *mapping,
                                          pds_mapping_spec_t *spec);
 
     /// \brief     add necessary entries for remote mappings
@@ -236,6 +244,26 @@ private:
     /// \param[in] spec IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t add_remote_mapping_entries_(vpc_entry *vpc,
+                                          subnet_entry *subnet,
+                                          pds_mapping_spec_t *spec);
+
+    /// \brief     update necessary entries for local mappings
+    /// \param[in] vpc  VPC of this mapping
+    /// \param[in] new_mapping cloned mapping object being processed
+    /// \param[in] orig_mapping original/current mapping object
+    /// \param[in] spec IP mapping details
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t upd_local_mapping_entries_(vpc_entry *vpc,
+                                         mapping_entry *new_mapping,
+                                         mapping_entry *orig_mapping,
+                                         pds_mapping_spec_t *spec);
+
+    /// \brief     update necessary entries for remote mappings
+    /// \param[in] vpc  VPC of this mapping
+    /// \param[in] subnet subnet of this mapping
+    /// \param[in] spec IP mapping details
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t upd_remote_mapping_entries_(vpc_entry *vpc,
                                           subnet_entry *subnet,
                                           pds_mapping_spec_t *spec);
 
@@ -258,6 +286,19 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_delete_(pds_epoch_t epoch,
                                        mapping_entry *mapping);
+
+    /// \brief     program and activate mapping related tables during update
+    ///            by enabling stage0 tables corresponding to the new epoch
+    /// \param[in] epoch       epoch being activated
+    /// \param[in] mapping     mapping instance
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \param[in] spec        mapping configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t activate_update_(pds_epoch_t epoch,
+                                       mapping_entry *new_mapping,
+                                       mapping_entry *orig_mapping,
+                                       api_obj_ctxt_t *obj_ctxt,
+                                       pds_mapping_spec_t *spec);
 
     /// \brief         read the configured values from the local mapping tables
     /// \param[in]     vpc  pointer to the vpc entry

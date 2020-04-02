@@ -68,7 +68,8 @@ mapping_impl::clone(void) {
     cloned_impl = mapping_impl_db()->alloc();
     new (cloned_impl) mapping_impl();
     // deep copy is not needed as we don't store pointers
-    *cloned_impl = *this;
+    // TODO: revisit this for update handling !!
+    //*cloned_impl = *this;
     return cloned_impl;
 }
 
@@ -409,6 +410,10 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
 
     spec = &obj_ctxt->api_params->mapping_spec;
     switch (obj_ctxt->api_op) {
+    // record the fact that resource reservation was attempted
+    // NOTE: even if we partially acquire resources and fail eventually,
+    //       this will ensure that proper release of resources will happen
+    api_obj->set_rsvd_rsc();
     case API_OP_CREATE:
         if (spec->is_local) {
             PDS_TRACE_DEBUG("Reserving resources for mapping %s, local %u, "
@@ -421,8 +426,8 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
             vpc = vpc_find(&spec->skey.vpc);
             vnic = vnic_find(&spec->vnic);
             if (unlikely(vnic == NULL)) {
-                PDS_TRACE_ERR("Failed to find vnic %s, local mapping %s resource "
-                              "reservation failed", spec->vnic.str(),
+                PDS_TRACE_ERR("Failed to find vnic %s, local mapping %s "
+                              "resource reservation failed", spec->vnic.str(),
                               new_mapping->key2str().c_str());
                 return SDK_RET_INVALID_ARG;
             }
@@ -448,6 +453,10 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                                                  subnet, spec);
 
     case API_OP_UPDATE:
+        // record the fact that resource reservation was attempted
+        // NOTE: even if we partially acquire resources and fail eventually,
+        //       this will ensure that proper release of resources will happen
+        api_obj->set_rsvd_rsc();
         if (spec->is_local) {
             PDS_TRACE_DEBUG("Reserving resources for mapping %s, local %u, "
                             "subnet %s, vnic %s, pub_ip_valid %u, pub_ip %s",
@@ -458,33 +467,33 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
             vpc = vpc_find(&spec->skey.vpc);
             vnic = vnic_find(&spec->vnic);
             if (unlikely(vnic == NULL)) {
-                PDS_TRACE_ERR("Failed to find vnic %s, local mapping %s resource "
-                              "reservation failed", spec->vnic.str(),
+                PDS_TRACE_ERR("Failed to find vnic %s, local mapping %s "
+                              "resource reservation failed", spec->vnic.str(),
                               new_mapping->key2str().c_str());
                 return SDK_RET_INVALID_ARG;
             }
             if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP) {
                 if (spec->public_ip_valid) {
-                    // we need to acquire new resources for public IP
-                    // NOTE:
-                    // In case 1, there is no further action needed. In case 2,
-                    // during activate stage, we will have to free the resources
-                    // allocated for public IP in the original object
+                    // we need to acquire new resources for public IP in mapping
+                    // tables and also in NAT table. There are two cases here:
+                    // case 1 - current object has public IP which is being
+                    //          updated, in this case we can reuse NAT table
+                    //          resources, so we only have to allocate mapping
+                    //          table resources.
+                    //          // TODO: During activate stage, we need
+                    //          to free mapping table resources (only)
+                    //          associated with the original object
+                    // case 2 - current object has no public IP, so allocate
+                    //          all resources needed for public IP
                     if (curr_mapping->is_public_ip_valid()) {
-                        // case 1 - current object has public IP which is being
-                        //          updated, in this case we can reuse NAT table
-                        //          resources, so allocate only mapping table
-                        //          resources
+                        // case 1
                         ret = reserve_public_ip_mapping_resources_(new_mapping,
                                   (vpc_impl *)vpc->impl(), vnic, spec);
                     } else {
-                        // case 2 - current object has no public IP, so allocate
-                        //          all resources needed for public IP
+                        // case 2
                         ret = reserve_public_ip_resources_(new_mapping,
                                   (vpc_impl *)vpc->impl(), vnic, spec);
                     }
-                    // TODO: nuke relevant resources of original object in all
-                    // cases
                 } else {
                     // we don't need to reserve resource(s) for public IP
                     // TODO: during activate stage, we should nuke/remove
@@ -680,28 +689,6 @@ mapping_impl::add_nat_entries_(mapping_entry *mapping,
 }
 
 sdk_ret_t
-mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    pds_mapping_spec_t *spec;
-
-    spec = &obj_ctxt->api_params->mapping_spec;
-    if (spec->is_local && spec->public_ip_valid) {
-        return add_nat_entries_((mapping_entry *)api_obj, spec);
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-mapping_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-mapping_impl::update_hw(api_base *curr_obj, api_base *prev_obj,
-                        api_obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
-}
-
-sdk_ret_t
 mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
                                           pds_mapping_spec_t *spec) {
     tep_entry *tep;
@@ -757,6 +744,7 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
 
 sdk_ret_t
 mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
+                                         mapping_entry *mapping,
                                          pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
     vnic_entry *vnic;
@@ -771,6 +759,15 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
     subnet = subnet_find(&spec->subnet);
     vnic = vnic_find(&spec->vnic);
     vnic_impl_obj = (vnic_impl *)vnic->impl();
+
+    // program the NAT table first, if needed
+    if (spec->public_ip_valid) {
+        ret = add_nat_entries_(mapping, spec);
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto error;
+        }
+    }
+
     // add entry to LOCAL_MAPPING table for overlay IP
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
                                          ((vpc_impl *)vpc->impl())->hw_id(),
@@ -864,7 +861,7 @@ mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
 
     vpc = vpc_find(&spec->skey.vpc);
     subnet = subnet_find(&spec->subnet);
-    PDS_TRACE_DEBUG("Activating (%s) %s %s, subnet %s, tep %s, "
+    PDS_TRACE_DEBUG("Activating (%s) %s %s create, subnet %s, tep %s, "
                     "overlay mac %s, fabric encap type %u "
                     "fabric encap value %u, vnic %s",
                     spec->is_local ? "local" : "remote",
@@ -873,7 +870,7 @@ mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
                     macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                     spec->fabric_encap.val.value, spec->vnic.str());
     if (spec->is_local) {
-        ret = add_local_mapping_entries_(vpc, spec);
+        ret = add_local_mapping_entries_(vpc, mapping, spec);
         if (ret != SDK_RET_OK) {
             goto error;
         }
@@ -1020,6 +1017,66 @@ mapping_impl::activate_delete_(pds_epoch_t epoch, mapping_entry *mapping) {
 }
 
 sdk_ret_t
+mapping_impl::upd_local_mapping_entries_(vpc_entry *vpc,
+                                         mapping_entry *new_mapping,
+                                         mapping_entry *orig_mapping,
+                                         pds_mapping_spec_t *spec) {
+    return SDK_RET_ERR;
+}
+
+sdk_ret_t
+mapping_impl::upd_remote_mapping_entries_(vpc_entry *vpc,
+                                          subnet_entry *subnet,
+                                          pds_mapping_spec_t *spec) {
+    return SDK_RET_ERR;
+}
+
+
+sdk_ret_t
+mapping_impl::activate_update_(pds_epoch_t epoch, mapping_entry *new_mapping,
+                               mapping_entry *orig_mapping,
+                               api_obj_ctxt_t *obj_ctxt,
+                               pds_mapping_spec_t *spec) {
+    sdk_ret_t ret;
+    vpc_entry *vpc;
+    subnet_entry *subnet;
+
+    vpc = vpc_find(&spec->skey.vpc);
+    subnet = subnet_find(&spec->subnet);
+    PDS_TRACE_DEBUG("Activating (%s) %s %s update, subnet %s, tep %s, "
+                    "overlay mac %s, fabric encap type %u "
+                    "fabric encap value %u, vnic %s",
+                    spec->is_local ? "local" : "remote",
+                    new_mapping->key().str(), new_mapping->key2str().c_str(),
+                    spec->subnet.str(), spec->tep.str(),
+                    macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
+                    spec->fabric_encap.val.value, spec->vnic.str());
+
+    if (spec->is_local) {
+        ret = upd_local_mapping_entries_(vpc, new_mapping, orig_mapping, spec);
+        if (ret != SDK_RET_OK) {
+            goto error;
+        }
+    } else {
+        ret = upd_remote_mapping_entries_(vpc, subnet, spec);
+        if (ret != SDK_RET_OK) {
+            goto error;
+        }
+    }
+    // primary key to secondary key mapping doesn't change, so no need
+    // to update the kvstore and no DHCP binding change as well since
+    // secondary key is immutable
+    return SDK_RET_OK;
+
+error:
+
+    PDS_TRACE_ERR("Failed to update mapping %s, %s, err %u",
+                  new_mapping->key().str(), new_mapping->key2str().c_str(),
+                  ret);
+    return ret;
+}
+
+sdk_ret_t
 mapping_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                           pds_epoch_t epoch, api_op_t api_op,
                           api_obj_ctxt_t *obj_ctxt) {
@@ -1040,6 +1097,10 @@ mapping_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         break;
 
     case API_OP_UPDATE:
+        spec = &obj_ctxt->api_params->mapping_spec;
+        ret = activate_update_(epoch, (mapping_entry *)api_obj,
+                               (mapping_entry *)orig_obj,
+                               obj_ctxt, spec);
     default:
         ret = SDK_RET_INVALID_OP;
         break;
