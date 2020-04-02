@@ -86,7 +86,7 @@ message DistributedServiceCardSpec {
     repeated string Controllers     = 7 [(gogoproto.jsontag) = "controllers,omitempty"];
 
     // DSCProfile captures the profile that is associated with this DistributedServiceCard
-    string DSCProfile            = 8 [(gogoproto.jsontag) = "dsc-profile,omitempty"];
+    string DSCProfile            = 8 [(gogoproto.jsontag) = "device-profile,omitempty"];
 }
 
 // DistributedServiceCardStatus contains current status of a DistributedServiceCard I/O subsystem
