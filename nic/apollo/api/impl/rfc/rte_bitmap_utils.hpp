@@ -138,14 +138,18 @@ static inline void
 rte_bitmap2str (rte_bitmap *bmap, std::stringstream& a1ss,
                 std::stringstream& a2ss)
 {
+    std::ios::fmtflags f(a1ss.flags());
     for (uint32_t index = 0; index < bmap->array1_size; index++) {
         a1ss << std::setfill('0') << std::setw(8) << std::hex
              << bmap->array1[index] << " ";
     }
+    a1ss.flags(f);
+    f = a2ss.flags();
     for (uint32_t index = 0; index < bmap->array2_size; index++) {
         a2ss << std::setfill('0') << std::setw(8) << std::hex
              << bmap->array2[index] << " ";
     }
+    a2ss.flags(f);
 }
 
 struct rte_bitmap_hasher {
