@@ -318,7 +318,7 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 		if cache.config != nil {
 			log.Infof("deleteing BGP config from node")
 			rtcfg, _ := m.handleAutoConfig(cache.config)
-			updCfg, err := clientutils.GetBGPConfiguration(rtcfg, nil, "0.0.0.0", "0.0.0.0")
+			updCfg, err := clientutils.GetBGPConfiguration(rtcfg, nil, rtcfg.Spec.BGPConfig.RouterId, "0.0.0.0")
 			if err != nil {
 				log.Errorf("failed to get pegasus config (%s)", err)
 				return
