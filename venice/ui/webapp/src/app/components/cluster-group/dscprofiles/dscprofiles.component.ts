@@ -50,8 +50,8 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
 
   naplesList: ClusterDistributedServiceCard[] = [];
 
-  isTabComponent: boolean;
-  disableTableWhenRowExpanded: boolean;
+  isTabComponent: boolean = false;
+  disableTableWhenRowExpanded: boolean = true; // this make toolbar button disabled when record is in edit-mode.
   exportFilename: string = 'Venice-DSC-Profiles';
   exportMap: CustomExportMap = {};
   tableLoading: boolean = false;
@@ -78,7 +78,7 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
 
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Name', class: 'dscprofiles-column-dscprofile-name', sortable: true, width: 15 },
-    { field: 'spec.dscs', header: 'Associated DSCs', class: 'dscprofiles-column-dscs', sortable: false, width: 20 },
+    { field: 'spec.dscs', header: 'DSCs', class: 'dscprofiles-column-dscs', sortable: false, width: 20 },
     { field: 'utilization', header: 'Utilization', class: 'dscprofiles-column-utilization', sortable: false, width: 5 },
     { field: 'spec.fwd-mode', header: 'FWD Mode', class: 'dscprofiles-column-fwd-mode', sortable: true, width: 10 },
     { field: 'spec.policy-mode', header: 'Policy Mode', class: 'dscprofiles-column-policy-mode', sortable: true, width: 10 },

@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormArray } from '@angular/forms';
 import { Animations } from '@app/animations';
-import { DSCsNameMacMap, HostWorkloadTuple, ObjectsRelationsUtility, HandleWatchItemResult } from '@app/common/ObjectsRelationsUtility';
+import { DSCsNameMacMap, HostWorkloadTuple, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 import { SearchUtil } from '@app/components/search/SearchUtil';
 import { AdvancedSearchComponent } from '@app/components/shared/advanced-search/advanced-search.component';
 import { CustomExportMap, TableCol } from '@app/components/shared/tableviewedit';
@@ -12,17 +12,15 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { EventTypes, HttpEventUtility } from '@common/HttpEventUtility';
-import { Utility, VeniceObjectCache } from '@common/Utility';
+import { Utility } from '@common/Utility';
 import { TablevieweditAbstract } from '@components/shared/tableviewedit/tableviewedit.component';
-import { ClusterDistributedServiceCard, ClusterDistributedServiceCardList, IApiStatus, IClusterAutoMsgDistributedServiceCardWatchHelper, IClusterAutoMsgHostWatchHelper } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, IApiStatus } from '@sdk/v1/models/generated/cluster';
 import { ClusterHost, IClusterHost } from '@sdk/v1/models/generated/cluster/cluster-host.model';
-import { FieldsRequirement, ISearchSearchResponse, SearchSearchRequest_mode, SearchSearchRequest } from '@sdk/v1/models/generated/search';
+import { FieldsRequirement } from '@sdk/v1/models/generated/search';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { IWorkloadAutoMsgWorkloadWatchHelper, WorkloadWorkload, WorkloadWorkloadList } from '@sdk/v1/models/generated/workload';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import * as _ from 'lodash';
-import { forkJoin, Observable, Subscription } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { Observable, Subscription } from 'rxjs';
 
 export enum BuildHostWorkloadMapSourceType {
   init = 'init',
@@ -32,6 +30,16 @@ export enum BuildHostWorkloadMapSourceType {
   watchWorkloadAdd = ' watchWorkloadAdd',
   watchWorkloadDelete = ' watchWorkloadDelete',
   watchWorkloadUpdate = ' watchWorkloadUpdate',
+}
+// define UIModel for host._ui
+interface DSCInfo {
+  text: string;
+  'mac-address': string;
+  isAdmitted: boolean;
+}
+interface HostUiModel {
+  processedSmartNics: DSCInfo[];
+  processedWorkloads: WorkloadWorkload[];
 }
 /**
  * Hosts page.
@@ -66,9 +74,6 @@ export enum BuildHostWorkloadMapSourceType {
   animations: [Animations]
 })
 export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterHost> implements OnInit {
-
-  public static HOST_FIELD_DSCS: string = 'processedSmartNics';
-  public static HOST_FIELD_WORKLOADS: string = 'processedWorkloads';
 
   @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
   maxSearchRecords: number = 8000;
@@ -152,8 +157,12 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     if (myworkloads && hosts) {
       this.hostWorkloadsTuple = ObjectsRelationsUtility.buildHostWorkloadsMap(myworkloads, hosts);
       this.dataObjects.forEach(host => {
-        host._ui[HostsComponent.HOST_FIELD_DSCS] = this.processSmartNics(host);
-        host._ui[HostsComponent.HOST_FIELD_WORKLOADS] = this.getHostWorkloads(host);
+        const hostUiModel: HostUiModel = {
+          processedSmartNics : this.processSmartNics(host),
+          processedWorkloads: this.getHostWorkloads(host)
+
+        };
+        host._ui = hostUiModel;
       });
       // backup dataObjects
       this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects);
@@ -162,27 +171,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
 
 
 
-  /**
-   *
-   * @param oldMap
-   * @param newMap
-   */
-  updateHostWorkloadMap(oldMap: { [key: string]: any; }, newMap: { [key: string]: any; }) {
-    Object.keys(newMap).forEach((key) => {
-      if (oldMap[key]) {
-        oldMap[key] = newMap[key];
-      }
-    });
-  }
 
-
-  updateDSCsMaps(oldMap: { [key: string]: any; }, newMap: { [key: string]: any; }) {
-    Object.keys(newMap).forEach((key) => {
-      if (!oldMap[key]) {
-        oldMap[key] = newMap[key];
-      }
-    });
-  }
 
 
 
@@ -299,7 +288,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
       this.macToNameMap = _myDSCnameToMacMap.macToNameMap;
     }
     // When workload and hostList are ready, build host-workload map
-    if (this.workloadList && this.dataObjects) {
+    if (this.workloadList  && this.dataObjects && this.dataObjects.length > 0 ) {
       this.buildHostWorkloadsMap(this.workloadList, this.dataObjects, BuildHostWorkloadMapSourceType.watchHosts);  // host[i] -> workloads[] map
     }
   }
@@ -346,6 +335,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
           return;
         }
         this.dataObjects = response.data;
+        this.dataObjects = Utility.getLodash().cloneDeepWith(this.dataObjects); // VS-1395  force table to refresh data.
         this.handleDataReady();
       }
     );
@@ -375,7 +365,8 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
    */
   buildMoreWorkloadTooltip(host: ClusterHost): string {
     const wltips = [];
-    const workloads = host._ui[HostsComponent.HOST_FIELD_WORKLOADS];
+    const hostUiModel: HostUiModel = host._ui;
+    const workloads = hostUiModel.processedWorkloads ;
     for (let i = 0; i < workloads.length; i++) {
       if (i >= this.maxWorkloadsPerRow) {
         const workload = workloads[i];
@@ -408,8 +399,9 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   searchWorkloads(requirement: FieldsRequirement, data = this.dataObjects): any[] {
     const outputs: any[] = [];
     for (let i = 0; data && i < data.length; i++) {
-      const workloads = data[i]._ui[HostsComponent.HOST_FIELD_WORKLOADS];
-      // workloads[i] is a full object
+      const hostUiModel: HostUiModel = data[i]._ui;
+      const workloads = hostUiModel.processedWorkloads ;
+
       for (let k = 0; k < workloads.length; k++) {
         const recordValue = _.get(workloads[k], ['meta', 'name']);
         const searchValues = requirement.values;
@@ -429,8 +421,8 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   searchDSCs(requirement: FieldsRequirement, data = this.dataObjects): any[] {
     const outputs: any[] = [];
     for (let i = 0; data && i < data.length; i++) {
-      const dscs = data[i]._ui[HostsComponent.HOST_FIELD_DSCS];
-      // dsc looks like {text: "000c.2981.d8a0", mac: "000c.2981.d8a0", admitted: false}
+      const hostUiModel: HostUiModel = data[i]._ui;
+      const dscs = hostUiModel.processedSmartNics;
       for (let k = 0; k < dscs.length; k++) {
         const recordValueID = _.get(dscs[k], ['text']);
         const recordValueMac = _.get(dscs[k], ['mac']);
@@ -454,7 +446,10 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     if (selectedRows.length === 0) {
       return false;
     }
-    const list = this.getSelectedDataObjects().filter((rowData) => (rowData._ui[HostsComponent.HOST_FIELD_WORKLOADS] && rowData._ui[HostsComponent.HOST_FIELD_WORKLOADS].length > 0));
-    return (list.length === 0);
+
+    const list = selectedRows.filter((rowData: ClusterHost) => {
+      const uiData: HostUiModel = rowData._ui as HostUiModel;
+      return uiData.processedWorkloads && uiData.processedWorkloads.length > 0; } );
+     return (list.length === 0);
   }
 }

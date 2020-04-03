@@ -810,6 +810,9 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
     }
   }
 
+   /**
+   * This API is for table form toolbar buttons style (the [ADD XXX ] button)
+   */
   computeButtonClass() {
     if (this.newObject.$formGroup.get('meta.name') && Utility.isEmpty(this.newObject.$formGroup.get('meta.name').value)) {
       return 'global-button-disabled';
@@ -821,10 +824,13 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
     }
   }
 
+  /**
+   * This API is for inline edit [SAVE] button
+   */
   computeInlineButtonClass() {
-    if (this.isFormValid()) {
+    if (this.newObject.$formGroup.dirty  && this.isFormValid()  ) {  // don't disable [SAVE] button
       return '';
-    } else {
+    } else {  // disable [SAVE] button
       return 'global-button-disabled';
     }
   }

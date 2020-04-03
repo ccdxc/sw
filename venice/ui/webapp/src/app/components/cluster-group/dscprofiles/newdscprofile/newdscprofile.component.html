@@ -1,9 +1,15 @@
 <div [style.width]="'100%'" fxLayout="column">
+  <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
   <div fxFlex="auto" fxLayout="row" class="new-dsc-profile-container">
+
     <div fxFlex="auto" fxLayout="row" class="new-dsc-profile-content">
       <div fxFlex="nogrow" fxLayout="column">
+
         <ng-container *ngTemplateOutlet="metaName"></ng-container>
-        <div fxFlex="10px"></div>
+        <div fxFlex="5px"></div>
+        <div fxFlex="20px" class="new-dsc-profile-select-label">
+          {{isReleaseB? 'Select One Profile:' : 'Configure DSC Profile'}}</div>
+        <div fxFlex="5px"></div>
         <ng-container *ngIf="!isReleaseB">
           <ng-container *ngTemplateOutlet="FWPolicyMode"></ng-container>
         </ng-container>
@@ -44,7 +50,7 @@
 <ng-template #FWPolicyMode>
   <div fxFlex="100" fxLayout="row">
     <div fxFlex="50" fxLayout="column" class="new-dsc-profile-row">
-      <div fxFlex="nogrow" class="">FW:</div>
+      <div fxFlex="nogrow" class="">Forwarding Mode</div>
       <div class="newdscprofile-plist-div">
         <p-listbox #nodesListbox [options]="fwdModeOptions"
                    *ngIf="fwdModeOptions && fwdModeOptions.length>0"
@@ -54,7 +60,7 @@
       </div>
     </div>
     <div fxFlex="50" fxLayout="column" class="new-dsc-profile-row">
-      <div fxFlex="nogrow" class="">Policy:</div>
+      <div fxFlex="nogrow" class="">Policy Mode</div>
       <div class="newdscprofile-plist-div">
         <p-listbox #nodesListbox [options]="policyModeOptions"
                    *ngIf="policyModeOptions && policyModeOptions.length>0"
@@ -70,5 +76,22 @@
     <div fxFlex="30px"></div>
     <div fxFlex="auto" class="new-dsc-profile-divider"></div>
     <div fxFlex="30px"></div>
+  </div>
+</ng-template>
+
+<ng-template #inlineButtons>
+  <div *ngIf="isInline" class="new-dsc-profile-inline-buttoncontainer" fxFlex="nogrow"
+       fxLayout="row" fxLayoutAlign="start end">
+    <div fxFlex="auto" fxLayoutAlign="end center">
+      <div fxFlex="nogrow">
+        <span (click)="saveObject()"
+              class="global-button-primary global-button-padding new-dsc-profile-inline-save"
+              [ngClass]="computeInlineButtonClass()">SAVE</span>
+      </div>
+      <div fxFlex="nogrow">
+        <span (click)="cancelObject()"
+              class="global-button-neutral global-button-padding new-dsc-profile-inline-save">CANCEL</span>
+      </div>
+    </div>
   </div>
 </ng-template>

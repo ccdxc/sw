@@ -11,6 +11,7 @@ import { ClusterDSCProfile, ClusterDSCProfileSpec, IClusterDSCProfile } from '@s
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { SelectItem } from 'primeng/primeng';
 import { AbstractControl, Validators, ValidatorFn } from '@angular/forms';
+import { isNgTemplate } from '@angular/compiler';
 
 
 @Component({
@@ -26,7 +27,7 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
   // start releaseB settings
   // define properties for handling releaes-b use case. DSC-PROFILE only support
   /**
-   FW                Policy
+   fwd-mode          policy-mode
   ------------------------------
   insert             Enforce
   Transpart          BaseNet
@@ -36,9 +37,9 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
    */
   isReleaseB: boolean = true;
   releaseBDSCProfileOptions: SelectItem[] = [
-    { label: 'FW:Insert POLICY:Enforce', value: { fw: 'insertion', policy: 'enforced' } },
-    { label: 'FW:Transparent POLICY:BaseNet', value: { fw: 'transparent', policy: 'basenet' } },
-    { label: 'FW:Transparent POLICY:FlowAware', value: { fw: 'transparent', policy: 'flowaware' } }
+    { label: 'fwd-mode:Insert policy-mode:Enforce', value: { fwd: 'insertion', policy: 'enforced' } },
+    { label: 'fwd-mode:Transparent policy-mode:BaseNet', value: { fwd: 'transparent', policy: 'basenet' } },
+    { label: 'fwd-mode:Transparent policy-mode:FlowAware', value: { fwd: 'transparent', policy: 'flowaware' } }
   ];
   selectedReleaseBDSCProfile: SelectItem;
   // end releaseB settings
@@ -70,7 +71,35 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
     return this.constructor.name;
   }
   postNgInit(): void {
-    // do nothing
+    if (this.isInline) {
+      this.selectedReleaseBDSCProfile = this.getSelectedOptionFromDSCProfile(this.newObject);
+    } else {
+      this.selectedReleaseBDSCProfile = this.releaseBDSCProfileOptions[0];
+    }
+  }
+
+  /**
+   * Override super's API
+   */
+  computeInlineButtonClass() {
+    if (! this.isReleaseB ) {
+      return super.computeInlineButtonClass();
+    }
+    const theOne = this.getSelectedOptionFromDSCProfile(this.newObject);
+    const matched = (this.selectedReleaseBDSCProfile.value.fwd === theOne.value.fwd && this.selectedReleaseBDSCProfile.value.policy === theOne.value.policy);
+    if (!matched) {  // don't disable [SAVE] button
+      return '';
+    } else {  // disable [SAVE] button
+      return 'global-button-disabled';
+    }
+  }
+
+  getSelectedOptionFromDSCProfile(dscProfile: ClusterDSCProfile): SelectItem {
+    const theOne = this.releaseBDSCProfileOptions.find((item: SelectItem) => {
+      return item.value.fwd === dscProfile.spec['fwd-mode'].toLowerCase() &&
+        item.value.policy === dscProfile.spec['policy-mode'].toLowerCase();
+    });
+    return theOne;
   }
 
   setCustomValidation() {
@@ -116,7 +145,7 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
   getObjectValues(): IClusterDSCProfile {
     const dscProfile: ClusterDSCProfile = this.newObject.getFormGroupValues();
     if (this.isReleaseB) {
-      dscProfile.spec['fwd-mode'] = this.selectedReleaseBDSCProfile.value.fw;
+      dscProfile.spec['fwd-mode'] = this.selectedReleaseBDSCProfile.value.fwd;
       dscProfile.spec['policy-mode'] = this.selectedReleaseBDSCProfile.value.policy;
     } else {
       dscProfile.spec['fwd-mode'] = this.selectedFwdMode.value;
@@ -156,4 +185,16 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
     return true;
   }
 
+   /**
+    * Override super API
+    * In case update fails, restore original value;
+    * @param isCreate
+    */
+   onSaveFailure(isCreate: boolean) {
+     if (! isCreate) { // it is an update operation failure
+      this._controllerService.invokeInfoToaster('Info', 'Restore original value to DSC Profile.');
+      this.newObject.setFormGroupValuesToBeModelValues();
+      this.selectedReleaseBDSCProfile = this.getSelectedOptionFromDSCProfile(this.newObject);
+     }
+   }
 }

@@ -22,7 +22,7 @@ const URL = "10.7.100.21:10001"  // Jeff's dev
 // const URL = "10.30.5.234" // Dave's server 
 // const URL = "10.8.103.189"
 // const URL = "10.30.1.226"  // setup admin/Systest-1$
-//const URL = "10.30.9.93/" 
+// /const URL = "10.30.9.93/" 
 
 const PROXY_CONFIG =
   {

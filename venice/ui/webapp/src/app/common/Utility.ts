@@ -1133,9 +1133,10 @@ export class Utility {
     value = _.get(inputObject, fields);
     if (uiHintMap != null) {
       if (Array.isArray(value)) {
-        value = value.map((v) => uiHintMap[v]);
+        const _myvalue = value.map((v) => uiHintMap[v]); // VS-1392
+        value = (_myvalue) ? _myvalue : value;
       } else {
-        value = uiHintMap[value];
+        value =  ( uiHintMap[value] ) ? uiHintMap[value] : value; // VS-1392
       }
     }
     return value;

@@ -2,6 +2,7 @@
 
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
+$dary-grey: #a9a9a9;
 
 .new-dsc-profile-content {
   align-items: center;
@@ -17,9 +18,25 @@ $vertical-gutter: 5px;
   width: 100%;
   justify-content: space-evenly;
 
-
 }
 
 .new-dsc-profile-container .new-dsc-profile-row-plist-B .ui-listbox {
   width: 25em;
+}
+
+.new-dsc-profile-select-label {
+  @include primary-font();
+}
+
+.new-dsc-profile-inline-buttoncontainer {
+  margin: 5px 0px;
+
+  .new-dsc-profile-inline-save,
+  .new-dsc-profile-inline-cancel {
+    font-size: 16px;
+    display: inline-block;
+    padding: 4px 10px;
+    line-height: 25px;
+    margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+  }
 }
