@@ -232,14 +232,15 @@ private:
 
     /// \brief     add necessary entries for local mapping's public IP
     /// \param[in] vpc  VPC impl instance corresponding to this mapping
+    /// \param[in] subnet subnet of this mapping
     /// \param[in] vnic vnic this mapping is associated with
     /// \param[n]  vnic_impl_obj vnic impl instance of vnic corresponding to
     ///                          mapping
     /// \param[in] mapping mapping object being processed
     /// \param[in] spec IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t add_public_ip_entries_(vpc_impl *vpc, vnic_entry *vnic,
-                                     vnic_impl *vnic_impl_obj,
+    sdk_ret_t add_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
+                                     vnic_entry *vnic, vnic_impl *vnic_impl_obj,
                                      mapping_entry *mapping,
                                      pds_mapping_spec_t *spec);
 
@@ -263,8 +264,7 @@ private:
     /// \param[in] mapping mapping object being processed
     /// \param[in] spec IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t add_local_mapping_entries_(vpc_entry *vpc,
-                                         subnet_entry *subnet,
+    sdk_ret_t add_local_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
                                          mapping_entry *mapping,
                                          pds_mapping_spec_t *spec);
 
@@ -274,10 +274,25 @@ private:
     /// \param[in] mapping mapping object being processed
     /// \param[in] spec IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t add_remote_mapping_entries_(vpc_entry *vpc,
-                                          subnet_entry *subnet,
+    sdk_ret_t add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
                                           mapping_entry *mapping,
                                           pds_mapping_spec_t *spec);
+
+    /// \brief     add necessary entries for local mapping's public IP
+    /// \param[in] vpc  VPC impl instance corresponding to this mapping
+    /// \param[in] subnet subnet of this mapping
+    /// \param[in] vnic vnic this mapping is associated with
+    /// \param[n]  vnic_impl_obj vnic impl instance of vnic corresponding to
+    ///                          mapping
+    /// \param[in] new_mapping cloned mapping object being processed
+    /// \param[in] orig_mapping original/current mapping object
+    /// \param[in] spec IP mapping details
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t upd_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
+                                     vnic_entry *vnic, vnic_impl *vnic_impl_obj,
+                                     mapping_entry *new_mapping,
+                                     mapping_entry *orig_mapping,
+                                     pds_mapping_spec_t *spec);
 
     /// \brief     update necessary entries overlay IP for local mappings
     /// \param[in] vpc  VPC of this mapping
@@ -285,12 +300,16 @@ private:
     /// \param[in] vnic vnic this mapping is associated with
     /// \param[n]  vnic_impl_obj vnic impl instance of vnic corresponding to
     ///                          mapping
+    /// \param[in] new_mapping cloned mapping object being processed
+    /// \param[in] orig_mapping original/current mapping object
     /// \param[in] spec IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t upd_overlay_ip_mapping_entries_(vpc_impl *vpc,
                                               subnet_entry *subnet,
                                               vnic_entry *vnic,
                                               vnic_impl *vnic_impl_obj,
+                                              mapping_entry *new_mapping,
+                                              mapping_entry *orig_mapping,
                                               pds_mapping_spec_t *spec);
 
     /// \brief     update necessary entries for local mappings
@@ -304,6 +323,7 @@ private:
                                          subnet_entry *subnet,
                                          mapping_entry *new_mapping,
                                          mapping_entry *orig_mapping,
+                                         api_obj_ctxt_t *obj_ctxt,
                                          pds_mapping_spec_t *spec);
 
     /// \brief     update necessary entries for remote mappings
