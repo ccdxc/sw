@@ -41,6 +41,12 @@ typedef struct sub_callback_ {
     const void *ctx;
 } sub_callback_t;
 
+class ipc_service_async;
+typedef struct client_receive_cb_ctx_ {
+    ipc_service_async *svc;
+    uint64_t recipient;
+} client_receive_cb_ctx_t;
+
 class ipc_service {
 public:
     ~ipc_service();
@@ -127,6 +133,7 @@ private:
     fd_watch_ms_cb fd_watch_ms_cb_;
     fd_watch_cb fd_watch_cb_;
     const void *fd_watch_cb_ctx_;
+    client_receive_cb_ctx_t client_rx_cb_ctx_[IPC_MAX_ID + 1];
 };
 typedef std::shared_ptr<ipc_service_async> ipc_service_async_ptr;
 
@@ -135,40 +142,41 @@ thread_local ipc_service_ptr t_ipc_service = nullptr;
 static void
 server_receive (int fd, const void *ctx)
 {
-    assert(t_ipc_service != nullptr);
-    t_ipc_service->server_receive();
+    ipc_service *svc = (ipc_service *)ctx;
+
+    svc->server_receive();
 }
 
 static void
 eventfd_receive (int fd, const void *ctx)
 {
-    assert(t_ipc_service != nullptr);
-    t_ipc_service->eventfd_receive();
+    ipc_service *svc = (ipc_service *)ctx;
+
+    svc->eventfd_receive();
 }
 
 static void
 server_receive_ms (int fd, int, void *ctx)
 {
-    assert(t_ipc_service != nullptr);
-    t_ipc_service->server_receive();
+    ipc_service *svc = (ipc_service *)ctx;
+
+    svc->server_receive();
 }
 
 static void
 client_receive (int fd, const void *ctx)
 {
-    assert(t_ipc_service != nullptr);
-    uint32_t recipient = (uint64_t)ctx;
-    std::dynamic_pointer_cast<ipc_service_async>(t_ipc_service)->client_receive(
-        recipient);
+    client_receive_cb_ctx_t *c_rx_cb_ctx = (client_receive_cb_ctx_t *)ctx;
+
+    c_rx_cb_ctx->svc->client_receive(c_rx_cb_ctx->recipient);
 }
 
 static void
 client_receive_ms (int fd, int, void *ctx)
 {
-    assert(t_ipc_service != nullptr);
-    uint32_t recipient = (uint64_t)ctx;
-    std::dynamic_pointer_cast<ipc_service_async>(t_ipc_service)->client_receive(
-        recipient);
+    client_receive_cb_ctx_t *c_rx_cb_ctx = (client_receive_cb_ctx_t *)ctx;
+
+    c_rx_cb_ctx->svc->client_receive(c_rx_cb_ctx->recipient);
 }
 
 ipc_service::~ipc_service() {
@@ -261,7 +269,8 @@ ipc_service_sync::ipc_service_sync(uint32_t client_id, fd_watch_cb fd_watch_cb,
         this->get_id_());
 
     this->set_server_(server);
-    fd_watch_cb(server->fd(), sdk::ipc::server_receive, NULL, fd_watch_cb_ctx);
+    fd_watch_cb(server->fd(), sdk::ipc::server_receive, (void *)this,
+                fd_watch_cb_ctx);
 }
 
 void
@@ -302,12 +311,15 @@ ipc_service_async::ipc_service_async(uint32_t client_id,
 
     this->set_server_(server);
     if (this->fd_watch_ms_cb_) {
-        this->fd_watch_ms_cb_(server->fd(), sdk::ipc::server_receive_ms, NULL);
+        this->fd_watch_ms_cb_(server->fd(), sdk::ipc::server_receive_ms,
+                              (void *)this);
         // todo: enable serialized messages for ms thread maybe??
     } else {
-        this->fd_watch_cb_(server->fd(), sdk::ipc::server_receive, NULL,
+        this->fd_watch_cb_(server->fd(), sdk::ipc::server_receive,
+                           (void *)this,
                            this->fd_watch_cb_ctx_);
-        this->fd_watch_cb_(this->get_eventfd_(), sdk::ipc::eventfd_receive, NULL,
+        this->fd_watch_cb_(this->get_eventfd_(), sdk::ipc::eventfd_receive,
+                           (void *)this,
                            this->fd_watch_cb_ctx_);
     }    
 }
@@ -328,12 +340,15 @@ ipc_service_async::new_client_(uint32_t recipient) {
     zmq_ipc_client_async_ptr client =
         std::make_shared<zmq_ipc_client_async>(this->get_id_(), recipient);
 
+    this->client_rx_cb_ctx_[recipient] = {this, recipient};
+
     if (this->fd_watch_ms_cb_) {
         this->fd_watch_ms_cb_(client->fd(), sdk::ipc::client_receive_ms,
-                              (void *)(uint64_t)recipient);
+                              &this->client_rx_cb_ctx_[recipient]);
     } else {
         this->fd_watch_cb_(client->fd(), sdk::ipc::client_receive,
-                           (void *)(uint64_t)recipient, this->fd_watch_cb_ctx_);
+                           &this->client_rx_cb_ctx_[recipient],
+                           this->fd_watch_cb_ctx_);
     }
         
     // If we don't do this we don't get any events coming from ZMQ
