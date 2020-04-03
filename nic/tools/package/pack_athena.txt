@@ -223,6 +223,7 @@ nic/conf/captrace/sample-conf.json                                /nic/conf/capt
 nic/build/$ARCH/$PIPELINE/bin/fd_send                             /nic/conf/
 
 # agent specific files
+nic/apollo/tools/athena/start-agent-stub.sh                       /nic/tools/
 nic/apollo/tools/athena/start-agent.sh                            /nic/tools/
 nic/apollo/tools/athena/start-agent-skip-dpdk.sh                  /nic/tools/
 nic/apollo/tools/start-nmd.sh                                     /nic/tools/

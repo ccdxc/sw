@@ -39,7 +39,7 @@ mkdir -p /data/core
 echo "|$PDSPKG_TOPDIR/bin/coremgr -P /data/core -p %p -e %e -m $CORE_MIN_DISK" > /proc/sys/kernel/core_pattern
 
 # start memtun
-[ -f $SYSCONFIG/memtun_enable ] && (/$PDSPKG_TOPDIR/bin/memtun &)
+[ -f $SYSCONFIG/memtun_enable ] && (taskset 1 /$PDSPKG_TOPDIR/bin/memtun &)
 
 # if not already present, create a cache file recording the firmware inventory
 # at boot-time.  will be preserved across a live-update, and so always
