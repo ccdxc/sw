@@ -216,8 +216,8 @@ __label__ done;
         ret = hctx->bucket->write_(hctx);
     }
 
-done:
     unlock_(hctx);
+done:
     return ret;
 }
 

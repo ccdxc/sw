@@ -13,12 +13,16 @@ fill_key (uint32_t index, pds_flow_key_t *key)
 
     memset(key, 0, sizeof(pds_flow_key_t));
     key->ip_proto = IP_PROTO_UDP;
-    key->l4.tcp_udp.sport = index;
-    key->l4.tcp_udp.dport = index;
-    key->vnic_id = index;
+    key->l4.tcp_udp.sport = index % 65536;
+    key->l4.tcp_udp.dport = index % 65536;
+    key->vnic_id = (index % 511) + 1;
 
     key->key_type = KEY_TYPE_IPV6;
     src_ip[0] = 0x22;
+    src_ip[4] = index & 0xFF;
+    src_ip[5] = index >> 8 & 0xFF;
+    src_ip[6] = index >> 16 & 0xFF;
+    src_ip[7] = index >> 24 & 0xFF;
     src_ip[12] = index >> 24 & 0xFF;
     src_ip[13] = index >> 16 & 0xFF;
     src_ip[14] = index >> 8 & 0xFF;
@@ -26,6 +30,10 @@ fill_key (uint32_t index, pds_flow_key_t *key)
     memcpy(key->ip_saddr, src_ip, IP6_ADDR8_LEN);
 
     dst_ip[0] = 0x33;
+    dst_ip[4] = index & 0xFF;
+    dst_ip[5] = index >> 8 & 0xFF;
+    dst_ip[6] = index >> 16 & 0xFF;
+    dst_ip[7] = index >> 24 & 0xFF;
     dst_ip[12] = index >> 24 & 0xFF;
     dst_ip[13] = index >> 16 & 0xFF;
     dst_ip[14] = index >> 8 & 0xFF;

@@ -119,8 +119,7 @@ pds_flow_cache_create ()
     factory_params.max_recircs = 8;
     factory_params.key2str = pds_flow6_key2str;
     factory_params.appdata2str = pds_flow6_appdata2str;
-    // TODO: Remove this later
-    factory_params.entry_trace_en = true;
+    factory_params.entry_trace_en = false;
 
     if ((ftl_table = flow_hash::factory(&factory_params)) == NULL) {
         PDS_TRACE_ERR("Table creation failed.");
@@ -183,7 +182,7 @@ flow_cache_entry_find_cb (sdk_table_api_params_t *params)
         if (hwentry->key_metadata_ktype != cbdata->key->key_type) {
             return;
         }
-        vnic_id = hwentry->get_key_metadata_vnic_id();
+        vnic_id = ftlv6_get_key_vnic_id(hwentry);
         if ((vnic_id == cbdata->key->vnic_id) &&
             (!memcmp(hwentry->key_metadata_dst, cbdata->key->ip_daddr, IP6_ADDR8_LEN)) &&
             (!memcmp(hwentry->key_metadata_src, cbdata->key->ip_saddr, IP6_ADDR8_LEN)) &&
