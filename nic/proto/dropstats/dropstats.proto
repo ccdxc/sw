@@ -12,7 +12,7 @@ message DropMetrics {
         DisplayName: "Drop Statistics",
         Description: "Key index - Global ID",
         Scope: PerASIC,
-        Tags: [ Level7 ]
+        Tags: [ Level4 ]
     };
 
     fixed64          Key                              = 1;        // Global id 0
@@ -53,7 +53,7 @@ message EgressDropMetrics {
         DisplayName: "Asic Egress Drop Statistics",
         Description: "Key index - Global ID",
         Scope: PerASIC,
-        Tags: [ Level7 ]
+        Tags: [ Level4 ]
     };
 
     fixed64          Key                              = 1;        // Global id 0

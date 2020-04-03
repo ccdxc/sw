@@ -113,7 +113,7 @@ message MgmtMacMetrics {
         DisplayName: "Mgmt Port Packet Statistics",
         Description: "Key index - PORT ID",
         Scope: PerPort,
-        Tags: [ Level7 ]
+        Tags: [ Level4 ]
     };
     fixed32             Key                     = 1;    // Port id
     delphi.Counter      frames_rx_ok            = 2 [(venice.metricsField) = {DisplayName: "Rx OK Frames" Description: "Frames received OK"}];

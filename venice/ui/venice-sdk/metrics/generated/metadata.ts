@@ -350,7 +350,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     }
   ],
   "tags": [
-    "Level7"
+    "Level4"
   ],
   "scope": "PerASIC",
   "objectKind": "DistributedServiceCard"
@@ -439,7 +439,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     }
   ],
   "tags": [
-    "Level7"
+    "Level4"
   ],
   "scope": "PerASIC",
   "objectKind": "DistributedServiceCard"
@@ -3603,7 +3603,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     }
   ],
   "tags": [
-    "Level7"
+    "Level4"
   ],
   "scope": "PerPort",
   "objectKind": "DistributedServiceCard"
