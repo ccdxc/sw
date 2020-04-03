@@ -67,7 +67,7 @@ public:
 
     string UpgReqStateTypeToStr(UpgReqStateType type);
 
-    bool CanMoveStateMachine(void);
+    bool CanMoveStateMachine(bool isOnMountReq);
 
     delphi::error MoveStateMachine(UpgReqStateType type);
 

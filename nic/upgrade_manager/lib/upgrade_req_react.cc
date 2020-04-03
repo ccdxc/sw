@@ -130,7 +130,7 @@ UpgStateRespType UpgReqReact::GetPassRespType(UpgReqStateType type) {
     return StateMachine[type].statePassResp;
 }
 
-bool UpgReqReact::CanMoveStateMachine(void) {
+bool UpgReqReact::CanMoveStateMachine(bool isOnMountReq) {
     UpgStateRespType passType, failType;
     UpgReqStateType  reqType;
     bool ret = true;
@@ -158,6 +158,12 @@ bool UpgReqReact::CanMoveStateMachine(void) {
             } else {
                 UPG_LOG_DEBUG("Got fail from application {} {}", (*appResp)->key(), (*appResp)->upgapprespval());
                 ctx.upgFailed = true;
+                if (isOnMountReq) {
+                    string appRespStr = "App " + (*appResp)->key() + " returned failure: " + (*appResp)->upgapprespstr();
+                    AppendAppRespFailStr(appRespStr);
+                    SetAppRespFail();
+                    UPG_LOG_DEBUG("Adding string {} to list from OnMount", appRespStr);
+                }
             }
         }
     }

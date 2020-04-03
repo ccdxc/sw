@@ -27,7 +27,7 @@ delphi::error UpgAppRespReact::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr
         upgMgr_->SetAppRespFail();
         UPG_LOG_DEBUG("Adding string {} to list", appRespStr);
     }
-    if (upgMgr_->CanMoveStateMachine()) {
+    if (upgMgr_->CanMoveStateMachine(false)) {
         UPG_LOG_DEBUG("Can move state machine. Invoking post-state handler.");
         auto upgStateReq = upgMgr_->findUpgStateReq();
         UpgReqStateType type = upgStateReq->upgreqstate();
@@ -129,7 +129,7 @@ delphi::error UpgAppRespReact::OnUpgAppRespVal(delphi::objects::UpgAppRespPtr re
         UPG_LOG_DEBUG("Adding string {} to list", appRespStr);
     }
 
-    if (upgMgr_->CanMoveStateMachine()) {
+    if (upgMgr_->CanMoveStateMachine(false)) {
         UPG_LOG_DEBUG("Can move state machine. Invoking post-state handler.");
         auto upgStateReq = upgMgr_->findUpgStateReq();
         UpgReqStateType type = upgStateReq->upgreqstate();
