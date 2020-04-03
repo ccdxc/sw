@@ -28,6 +28,9 @@
 namespace sdk {
 namespace upg {
 
+// create a map for upgrade stages for json stage comparison
+SDK_DEFINE_MAP(upg_stage_t, UPG_STAGE_ENTRIES)
+
 // Overloaded dump functions can be used for debugging
 std::string
 svc_sequence_to_str (const svc_sequence_list svcs)
@@ -161,43 +164,31 @@ str_to_timeout (const std::string& timeout)
 upg_stage_t
 name_to_stage_id (const std::string stage)
 {
-   upg_stage_t id;
-   bool found = false;
-
-    for (uint32_t i = UPG_STAGE_COMPAT_CHECK; i < UPG_STAGE_MAX; i++) {
-        if(!strcmp (upg_stage2str((upg_stage_t)i), stage.c_str())) {
-            id    = (upg_stage_t) i;
-            found = true;
-            break;
-        }
+    try
+    {
+        return UPG_STAGE_ENTRIES_map.at(stage.c_str());
     }
-
-    if (!found) {
-        UPG_TRACE_VERBOSE("Stage %s doesn't exist\n", stage.c_str())
+    catch (std::exception const& ex)
+    {
+        UPG_TRACE_VERBOSE("Stage %s doesn't exist\n", stage.c_str());
+        SDK_ASSERT(0);
     }
-    SDK_ASSERT(found != false);
-    return id;
 };
 
 std::string
 id_to_stage_name (const upg_stage_t stage)
 {
-   std::string name;
-   bool found = false;
+    std::map<std::string, upg_stage_t>::iterator it =
+        UPG_STAGE_ENTRIES_map.begin();
 
-   for (uint32_t i = UPG_STAGE_COMPAT_CHECK; i < UPG_STAGE_MAX; i++) {
-       if(stage == (upg_stage_t)i) {
-           name = std::string(upg_stage2str((upg_stage_t) i));
-           found = true;
-           break;
-       }
-   }
-
-   if (!found) {
-       UPG_TRACE_VERBOSE("Stage %d doesn't exist\n", stage)
-   }
-   SDK_ASSERT(found != false);
-   return name;
+    while (it != UPG_STAGE_ENTRIES_map.end()) {
+        if (it->second == stage) {
+            return it->first;
+        }
+        it++;
+    }
+    UPG_TRACE_VERBOSE("Stage %d doesn't exist\n", stage);
+    SDK_ASSERT(0);
 };
 
 upg_scripts

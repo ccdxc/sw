@@ -162,9 +162,16 @@ upg_event_handler (sdk::ipc::ipc_msg_ptr msg)
             upg_stage_t id = fsm_states.current_stage();
             fsm_states.set_current_stage(id);
             if (fsm_states.current_stage() == fsm_states.end_stage()) {
-                // TODO:
+                // TODO: Is this correct ? last stage (exit) can come in
+                // failure case also. should able to read the last failure
+                // status (fail/critical/timeout) (that should give OK if all
+                // stages completed successfully). otherwise the below comment
+                // may mislead
                 UPG_TRACE_VERBOSE("Upgrade is successful.");
-                exit(0);
+                // not expeting to come back here
+                fsm_states.init_params()->fsm_completion_cb(UPG_STATUS_OK,
+                    fsm_states.init_params()->msg_in);
+                SDK_ASSERT(0);
             } else {
                 move_to_nextstage();
             }
@@ -193,7 +200,12 @@ timeout_cb (EV_P_ ev_timer *w, int revents)
         move_to_nextstage();
     } else {
         UPG_TRACE_VERBOSE("Upgrade Failed !");
-        exit(1);
+        // TODO, need critical/fail differentiation here
+        // TODO, should able to read the failure status (fail, critical, timeout)
+        // not expecting to come back here
+        fsm_states.init_params()->fsm_completion_cb(UPG_STATUS_FAIL,
+            fsm_states.init_params()->msg_in);
+        SDK_ASSERT(0);
     }
 }
 
@@ -235,13 +247,10 @@ fsm::timer_stop(void) {
 }
 
 void
-fsm::timer_init(const void *ctxt) {
+fsm::timer_init(struct ev_loop *ev_loop) {
     UPG_TRACE_VERBOSE("Initializing the timer with timeout: %f", timeout_);
 
-    sdk::event_thread::event_thread *curr_thread;
-    curr_thread = (sdk::event_thread::event_thread *)ctxt;
-    loop = curr_thread->ev_loop();
-
+    loop = ev_loop;
     ev_timer_init(&timeout_watcher, timeout_cb, timeout_, 0.0);
 }
 
@@ -553,21 +562,22 @@ set_event_sequence (pt::ptree& tree)
     return SDK_RET_OK;
 }
 
-static void
-init_fsm (void *ctxt)
+static sdk_ret_t
+init_fsm (fsm_init_params_t *params)
 {
     fsm_states.set_start_stage(entry_stage);
 
     upg_stage_t start_stage = fsm_states.start_stage();
 
     SDK_ASSERT(fsm_stages.find(start_stage) != fsm_stages.end());
-    fsm_states.timer_init(ctxt);
+    fsm_states.timer_init(params->ev_loop);
     fsm_states.set_current_stage(start_stage);
 
     fsm_states.timer_start();
     upg_ipc_init(upg_event_handler);
     upg_send_broadcast_request(IPC_SVC_DOM_ID_A, fsm_states.start_stage());
-    return;
+    fsm_states.set_init_params(params);
+    return SDK_RET_OK;
 }
 
 static sdk_ret_t
@@ -602,42 +612,42 @@ load_pipeline_json(pt::ptree& tree, bool is_graceful)
     return ret;
 }
 
-void
-init (void* ctxt)
+sdk_ret_t
+init (fsm_init_params_t *params)
 {
     pt::ptree tree;
 
     if (SDK_RET_OK != load_pipeline_json(tree, true)){
         UPG_TRACE_ERR("Failed to load upgrade json !\n");
-        exit(1);
+        return SDK_RET_ERR;
     }
 
     if (SDK_RET_OK != init_svc(tree)){
         UPG_TRACE_ERR("Failed to init service objects !\n");
-        exit(1);
+        return SDK_RET_ERR;
     }
 
     if (SDK_RET_OK != init_stage_transitions(tree)){
         UPG_TRACE_ERR("Failed to init stage transition table !\n");
-        exit(1);
+        return SDK_RET_ERR;
     }
 
     if (SDK_RET_OK != set_entry_stage(tree)){
         UPG_TRACE_ERR("Failed to set entry stage !\n");
-        exit(1);
+        return SDK_RET_ERR;
     }
 
     if (SDK_RET_OK != set_event_sequence(tree)){
         UPG_TRACE_ERR("Failed to set default event sequence !\n");
-        exit(1);
+        return SDK_RET_ERR;
     }
 
     if (SDK_RET_OK != init_fsm_stages(tree)){
         UPG_TRACE_ERR("Failed to set init stages !\n");
-        exit(1);
+        return SDK_RET_ERR;
     }
 
-    init_fsm(ctxt);
+    return init_fsm(params);
 }
 
 }    // namespace upg

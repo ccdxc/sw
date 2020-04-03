@@ -32,10 +32,10 @@ enum UpgReqType {
 enum UpgMode {
   // invalid mode
   UPG_MODE_NONE           = 0;
-  // disruptive upgrade. not supported now (reserved)
-  UPG_MODE_DISRUPTIVE     = 1;
-  // non disruptive issu upgrade mode
-  UPG_MODE_ISSU = 2;
+  // graceful upgrade
+  UPG_MODE_GRACEFUL       = 1;
+  // hitless upgrade
+  UPG_MODE_HITLESS        = 2;
 }
 
 // upgrade operation table actions

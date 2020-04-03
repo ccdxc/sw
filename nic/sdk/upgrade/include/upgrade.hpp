@@ -19,44 +19,44 @@
 /// @{
 
 /// \brief upgrade stages
-/// ..WARNING... this should be extended in the end
-/// for maintaining backward and forward compatibility
-/// b/w upgrademgr and services
-#define UPG_STAGE_ENTRIES(E)                                \
-    /** invalid */                                          \
-    E(UPG_STAGE_NONE,               0, "invalid")           \
-    /**  compat checks  */                                  \
-    E(UPG_STAGE_COMPAT_CHECK,       1, "compatcheck")       \
-    /**  start an upgrade */                                \
-    E(UPG_STAGE_START,              2, "start")             \
-    /** backup states for an upgrade */                     \
-    E(UPG_STAGE_BACKUP,             3, "backup")            \
-    /** prepare for an upgrade */                           \
-    E(UPG_STAGE_PREPARE,            4, "prepare")           \
-    /** config replay and operational state sync */         \
-    E(UPG_STAGE_SYNC,               5, "sync")              \
-    /** quiescing before switch to the new version */       \
-    E(UPG_STAGE_PREP_SWITCHOVER,    6, "prep-switchover")   \
-    /** switch to the new version   */                      \
-    E(UPG_STAGE_SWITCHOVER,         7, "switchover")        \
-    /** readiness check of new version */                   \
-    E(UPG_STAGE_READY,              8, "ready")             \
-    /** respawn the existing version */                     \
-    E(UPG_STAGE_RESPAWN,            9, "respawn")           \
-    /** rollback to the previous version */                 \
-    E(UPG_STAGE_ROLLBACK,           10, "rollback")         \
-    /** abort the on-going upgrade by undoing */            \
-    E(UPG_STAGE_REPEAL,             11, "repeal")           \
-    /** completion of an upgrade */                         \
-    E(UPG_STAGE_FINISH,             12, "finish")           \
-    /** exit from upgrade */                                \
-    E(UPG_STAGE_EXIT,               13, "exit")             \
-    /** invalid */                                          \
-    E(UPG_STAGE_MAX,                14, "max-invalid")
+/// ..WARNING... this should be extended in the end for maintaining backward
+/// and forward compatibility b/w upgrademgr and services.
+/// also the stage name mentioned here should match with the upgrade.json. so
+/// any change in that should be updated in the json.
+#define UPG_STAGE_ENTRIES(E)                                        \
+    /** invalid */                                                  \
+    E(UPG_STAGE_NONE,               0,      "invalid")              \
+    /**  compat checks  */                                          \
+    E(UPG_STAGE_COMPAT_CHECK,       1,      "compatcheck")          \
+    /**  start an upgrade */                                        \
+    E(UPG_STAGE_START,              2,      "start")                \
+    /** backup states for an upgrade */                             \
+    E(UPG_STAGE_BACKUP,             3,      "backup")               \
+    /** prepare for an upgrade */                                   \
+    E(UPG_STAGE_PREPARE,            4,      "prepare")              \
+    /** config replay and operational state sync */                 \
+    E(UPG_STAGE_SYNC,               5,      "sync")                 \
+    /** quiescing before switch to the new version */               \
+    E(UPG_STAGE_PREP_SWITCHOVER,    6,      "prepare_switchover")   \
+    /** switch to the new version   */                              \
+    E(UPG_STAGE_SWITCHOVER,         7,      "switchover")           \
+    /** readiness check of new version */                           \
+    E(UPG_STAGE_READY,              8,      "ready")                \
+    /** respawn the existing version */                             \
+    E(UPG_STAGE_RESPAWN,            9,      "respawn")              \
+    /** rollback to the previous version */                         \
+    E(UPG_STAGE_ROLLBACK,           10,     "rollback")             \
+    /** abort the on-going upgrade by undoing */                    \
+    E(UPG_STAGE_REPEAL,             11,     "repeal")               \
+    /** completion of an upgrade */                                 \
+    E(UPG_STAGE_FINISH,             12,     "finish")               \
+    /** exit from upgrade */                                        \
+    E(UPG_STAGE_EXIT,               13,     "exit")                 \
+    /** invalid */                                                  \
+    E(UPG_STAGE_MAX,                14,     "max-invalid")
 
 SDK_DEFINE_ENUM(upg_stage_t, UPG_STAGE_ENTRIES)
 SDK_DEFINE_ENUM_TO_STR(upg_stage_t, UPG_STAGE_ENTRIES)
-#undef UPG_STAGE_ENTRIES
 
 /// \brief upgrade operational table state actions
 typedef enum upg_oper_state_action_e {

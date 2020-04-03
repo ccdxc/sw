@@ -17,6 +17,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include "include/sdk/base.hpp"
+#include "lib/ipc/ipc.hpp"
 #include "upgrade/include/upgrade.hpp"
 #include "stage.hpp"
 #include "service.hpp"
@@ -24,6 +25,19 @@
 
 namespace sdk {
 namespace upg {
+
+// async callback function for upgrade completion
+typedef void (*fsm_completion_cb_t)(upg_status_t status,
+                                    sdk::ipc::ipc_msg_ptr msg_in);
+
+// fsm initialization parameters
+typedef struct fsm_init_params_s {
+    sdk::platform::upg_mode_t upg_mode;     // upgrade mode
+    struct ev_loop *ev_loop;                // event loop
+    fsm_completion_cb_t fsm_completion_cb;  // fsm completion
+    sdk::ipc::ipc_msg_ptr msg_in;           // used for async response. not used
+                                            // by fsm
+} fsm_init_params_t;
 
 class fsm {
 public:
@@ -57,11 +71,12 @@ public:
     bool is_serial_event_sequence(void) const;
     bool is_valid_service(const std::string svc) const;
     std::string next_svc(void) const;
-    void timer_init(const void *ctxt);
+    void timer_init(struct ev_loop *loop);
     void timer_start(void);
     void timer_stop(void);
     void timer_set(void);
-
+    fsm_init_params_t *init_params(void) { return &init_params_; }
+    void set_init_params(fsm_init_params_t *params) { init_params_ = *params; }
 private:
     upg_stage_t current_stage_;
     upg_stage_t start_stage_;
@@ -70,9 +85,10 @@ private:
     uint32_t size_;
     svc_sequence_list svc_sequence_;
     ev_tstamp timeout_;
+    fsm_init_params_t init_params_;
 };
 
-void init(void *ctxt);
+sdk_ret_t init(fsm_init_params_t *params);
 
 }   // namespace upg
 }   // namespace sdk

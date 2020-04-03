@@ -23,10 +23,48 @@ sdk::operd::logger_ptr g_upg_log = sdk::operd::logger::create(UPGRADE_LOG_NAME);
 }   // namespace upg
 }   // namespace sdk
 
+// fsm completion handler
+void
+fsm_completion_hdlr (upg_status_t status, sdk::ipc::ipc_msg_ptr msg_in)
+{
+    sdk::ipc::respond(msg_in, &status, sizeof(status));
+    // upgmgr not expecting any return from here. sysmgr will kill
+    // this process as the upgrade stages are done now
+    while (1) {
+        sleep(1);
+    }
+}
+
+// request from the grpc main thread to processing thread
+static void
+upg_ev_req_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+{
+    upg_ev_req_msg_t *req = (upg_ev_req_msg_t *)msg->data();
+    sdk_ret_t ret;
+    sdk::upg::fsm_init_params_t params;
+
+    memset(&params, 0, sizeof(params));
+    params.upg_mode = req->upg_mode;
+    params.ev_loop = g_upg_event_thread->ev_loop();
+    params.fsm_completion_cb = fsm_completion_hdlr;
+    params.msg_in = msg;
+
+    if (req->id == UPG_REQ_MSG_ID_START) {
+        ret = sdk::upg::init(&params);
+    } else {
+        UPG_TRACE_ERR("Upgrade, unknown request id %u", req->id);
+        ret = SDK_RET_ERR;
+    }
+    if (ret != SDK_RET_OK) {
+        fsm_completion_hdlr(UPG_STATUS_FAIL, msg);
+    }
+}
+
 void
 upg_event_thread_init (void *ctxt)
 {
-    sdk::upg::init(ctxt);
+    // register for upgrade request from grpc thread
+    sdk::ipc::reg_request_handler(UPG_REQ_MSG_ID_START, upg_ev_req_handler, NULL);
 }
 
 void
@@ -61,7 +99,7 @@ spawn_upg_event_thread (void)
 }
 
 static void
-svc_init (void)
+grpc_svc_init (void)
 {
     ServerBuilder           *server_builder;
     UpgSvcImpl              upg_svc;
@@ -92,6 +130,6 @@ svc_init (void)
 int
 main (int argc, char **argv)
 {
-    svc_init();
+    grpc_svc_init();
 }
 

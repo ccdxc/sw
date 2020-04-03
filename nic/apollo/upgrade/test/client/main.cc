@@ -7,6 +7,7 @@
 #include <grpc++/grpc++.h>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "gen/proto/upgrade.grpc.pb.h"
+#include "nic/apollo/include/globals.hpp"
 
 using std::string;
 using grpc::Channel;
@@ -16,7 +17,6 @@ using grpc::ClientContext;
 static std::string g_upg_svc_endpoint_;
 static std::unique_ptr<pds::UpgSvc::Stub>  g_upg_svc_stub_;
 
-#define GRPC_UPG_PORT    8888
 
 static sdk_ret_t
 send_upg_grpc (void)
@@ -28,11 +28,13 @@ send_upg_grpc (void)
     pds::UpgSpec        *spec = req.mutable_request();
 
     spec->set_reqtype(pds::UpgReqType::UPG_REQ_START);
+    spec->set_mode(pds::UpgMode::UPG_MODE_GRACEFUL);
 
     ret_status = g_upg_svc_stub_->UpgradeRequest(&context, req, &rsp);
-    printf("return status ok %u, rsp %u, rspmsg %s", ret_status.ok(),
+    printf("Upgrade response status ok %u, rsp %u, rspmsg %s\n", ret_status.ok(),
            rsp.status(),
-           rsp.mutable_statusmsg()->empty() ? "success" : rsp.mutable_statusmsg()->c_str());
+           rsp.mutable_statusmsg()->empty() ? "success" :
+           rsp.mutable_statusmsg()->c_str());
     if (!ret_status.ok()) {
         printf("%s failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
@@ -45,7 +47,8 @@ svc_init (void)
 {
     grpc_init();
     if (g_upg_svc_endpoint_.empty()) {
-        g_upg_svc_endpoint_ = std::string("localhost:") + std::to_string(GRPC_UPG_PORT);
+        g_upg_svc_endpoint_ = std::string("localhost:") +
+            std::to_string(PDS_GRPC_PORT_UPGMGR);
     }
     std::shared_ptr<Channel> channel =
         grpc::CreateChannel(g_upg_svc_endpoint_,

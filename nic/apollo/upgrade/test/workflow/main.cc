@@ -50,14 +50,14 @@ static sdk_ret_t
 test_upgrade (sdk::upg::upg_ev_params_t *params)
 {
     params->response_cb(SDK_RET_OK, params->response_cookie);
-    return SDK_RET_OK;
+    return SDK_RET_IN_PROGRESS;
 }
 
 static void
 upg_ev_fill (sdk::upg::upg_ev_t *ev)
 {
-    ev->svc_id = 1;
-    strncpy(ev->svc_name, "svc1", sizeof(ev->svc_name));
+    ev->svc_id = svc_thread_id;
+    strncpy(ev->svc_name, svc_name.c_str(), sizeof(ev->svc_name));
     ev->compat_check_hdlr = test_upgrade;
     ev->start_hdlr = test_upgrade;
     ev->backup_hdlr = test_upgrade;
@@ -66,6 +66,7 @@ upg_ev_fill (sdk::upg::upg_ev_t *ev)
     ev->switchover_hdlr = test_upgrade;
     ev->rollback_hdlr = test_upgrade;
     ev->ready_hdlr = test_upgrade;
+    ev->sync_hdlr = test_upgrade;
     ev->repeal_hdlr = test_upgrade;
     ev->finish_hdlr = test_upgrade;
     ev->exit_hdlr = test_upgrade;
@@ -213,6 +214,8 @@ main (int argc, char **argv)
     }
 
     printf("\n Main thread waiting .......... \n");
-    while (1);
+    while (1) {
+        sleep(10);
+    }
 }
 
