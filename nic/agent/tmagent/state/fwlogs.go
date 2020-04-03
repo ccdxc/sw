@@ -8,7 +8,7 @@ import (
 
 	"github.com/pensando/sw/venice/utils/netutils"
 
-	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
+	halproto "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/ipc"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -85,22 +85,36 @@ func (s *PolicyState) FwlogInit(path string) error {
 	return nil
 }
 
-func (s *PolicyState) handleTsDB(ev *halproto.FWEvent, ts time.Time) {
+func (s *PolicyState) handleFwLog(ev *halproto.FWEvent, ts time.Time) {
+	// return if no collectors are present
+	if !s.isAtleastOneFwLogCollectorPresent() {
+		return
+	}
+
+	vrfSrc := fmt.Sprintf("%v", ev.GetSourceVrf())
+	vrfDest := fmt.Sprintf("%v", ev.GetDestVrf())
 	ipSrc := netutils.IPv4Uint32ToString(ev.GetSipv4())
 	ipDest := netutils.IPv4Uint32ToString(ev.GetDipv4())
+	dPort := fmt.Sprintf("%v", ev.GetDport())
+	sPort := fmt.Sprintf("%v", ev.GetSport())
 	ipProt := fmt.Sprintf("%v", strings.TrimPrefix(ev.GetIpProt().String(), "IPPROTO_"))
 	action := fmt.Sprintf("%v", strings.ToLower(strings.TrimPrefix(ev.GetFwaction().String(), "SECURITY_RULE_ACTION_")))
 	dir := flowDirectionName[ev.GetDirection()]
+	ruleID := fmt.Sprintf("%v", ev.GetRuleId())
+	sessionID := fmt.Sprintf("%v", ev.GetSessionId())
 	state := strings.ToLower(strings.Replace(halproto.FlowLogEventType_name[int32(ev.GetFlowaction())], "LOG_EVENT_TYPE_", "", 1))
-	unixnano := ev.GetTimestamp()
+	alg := fmt.Sprintf("%v", strings.TrimPrefix(ev.GetAlg().String(), "APP_SVC_"))
+	icmpType := fmt.Sprintf("%v", int64(ev.GetIcmptype()))
+	icmpID := fmt.Sprintf("%v", int64(ev.GetIcmpid()))
+	icmpCode := fmt.Sprintf("%v", int64(ev.GetIcmpcode()))
 	appID := fmt.Sprintf("%v", ev.GetAppId()) // TODO: praveen convert to enum
-
+	unixnano := ev.GetTimestamp()
 	if unixnano != 0 {
 		// if a timestamp was specified in the msg, use it
 		ts = time.Unix(0, unixnano)
 	}
 
-	fields := map[string]interface{}{
+	syslogFields := map[string]interface{}{
 		"destination-port":    ev.GetDport(),
 		"destination-address": ipDest,
 		"source-address":      ipSrc,
@@ -114,24 +128,47 @@ func (s *PolicyState) handleTsDB(ev *halproto.FWEvent, ts time.Time) {
 		"timestamp":           ts.Format(time.RFC3339Nano),
 		"app-id":              appID,
 	}
-
 	// icmp fields
 	if ev.GetIpProt() == halproto.IPProtocol_IPPROTO_ICMP {
-		fields["icmp-type"] = int64(ev.GetIcmptype())
-		fields["icmp-id"] = int64(ev.GetIcmpid())
-		fields["icmp-code"] = int64(ev.GetIcmpcode())
+		syslogFields["icmp-type"] = int64(ev.GetIcmptype())
+		syslogFields["icmp-id"] = int64(ev.GetIcmpid())
+		syslogFields["icmp-code"] = int64(ev.GetIcmpcode())
 	}
 
-	log.Debugf("Fwlog: %+v", fields)
+	log.Debugf("Fwlog syslog: %+v", syslogFields)
 
-	jsonMsg, err := json.Marshal([]map[string]interface{}{fields})
+	syslogJSONMsg, err := json.Marshal([]map[string]interface{}{syslogFields})
 	if err != nil {
-		log.Errorf("failed to marshal, %v", err)
+		log.Errorf("failed to marshal json msg, %v", err)
 		return
 	}
 
-	// disable fwlog reporting to Venice for A release
-	//s.fwTable.Points([]*tsdb.Point{point}, ts)
+	// CSV file format
+	// Since no aggregation is done as fo now, just report count=1 for every log.
+	count := "1"
+
+	// CSV file format
+	fwLog := []string{
+		vrfSrc,
+		vrfDest,
+		ipSrc,
+		ipDest,
+		ts.Format(time.RFC3339),
+		sPort,
+		dPort,
+		ipProt,
+		action,
+		dir,
+		ruleID,
+		sessionID,
+		state,
+		icmpType,
+		icmpID,
+		icmpCode,
+		appID,
+		alg,
+		count,
+	}
 
 	// set src/dest vrf
 	vrfList := map[uint64]bool{
@@ -139,25 +176,43 @@ func (s *PolicyState) handleTsDB(ev *halproto.FWEvent, ts time.Time) {
 		ev.DestVrf:   true,
 	}
 
+	// used for sending the log only once to PSM
+	logSentToPSM := false
+
 	// check dest/src vrf
 	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
-		if col, ok := v.(*fwlogCollector); ok {
+		if col, ok := v.(*syslogFwlogCollector); ok {
 			col.Lock()
 			if _, ok := vrfList[col.vrf]; ok {
 				if col.syslogFd != nil && col.filter&(1<<uint32(ev.Fwaction)) != 0 {
-					s.sendFwLog(col, string(jsonMsg))
+					s.sendFwLog(col, string(syslogJSONMsg))
 				}
 			} else {
 				log.Errorf("invalid collector")
 			}
 			col.Unlock()
+		} else if _, ok := v.(*psmFwLogCollector); ok && !logSentToPSM {
+			// TODO: use sync pool
+			s.logsChannel <- singleLog{ts, ev.GetSourceVrf(), fwLog}
+			logSentToPSM = true
 		}
+
 		return true
 	})
 }
 
+func (s *PolicyState) isAtleastOneFwLogCollectorPresent() bool {
+	// Doing it this way becuase sync.Map does not provide Len method and
+	// the regular len method does not support sync.Map type.
+	present := false
+	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
+		present = true
+		return true
+	})
+	return present
+}
+
 // ProcessFWEvent process fwlog event received from ipc
 func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
-	s.handleTsDB(ev, ts)
-	s.handleObjStore(ev, ts)
+	s.handleFwLog(ev, ts)
 }

@@ -106,14 +106,13 @@ func (s *PolicyState) ObjStoreInit(nodeUUID string,
 
 	go periodicTransmit(s.ctx, rc, s.logsChannel,
 		periodicTransmitTime, testChannel, nodeUUID,
-		s.objStoreFileFormat, s.zipObjects, s.singleBucket, w)
+		s.objStoreFileFormat, s.zipObjects, w)
 	return nil
 }
 
 func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan singleLog,
 	periodicTransmitTime time.Duration, testChannel chan<- TestObject,
-	nodeUUID string, ff fileFormat, zip bool, singleBucket bool,
-	w *workers) {
+	nodeUUID string, ff fileFormat, zip bool, w *workers) {
 
 	var c objstore.Client
 	clientChannel := make(chan interface{}, 1)
@@ -146,8 +145,7 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 				len(perVrfBufferedLogs[vrf].bufferedLogs),
 				perVrfBufferedLogs[vrf].startTs,
 				perVrfBufferedLogs[vrf].endTs,
-				testChannel, nodeUUID, ff, zip,
-				singleBucket))
+				testChannel, nodeUUID, ff, zip))
 		}
 
 		// If client has not been initialized yet then drop the collected logs and move on.
@@ -234,10 +232,10 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 
 func transmitLogs(ctx context.Context,
 	c objstore.Client, vrf uint64, logs interface{}, index map[string]string, numLogs int, startTs time.Time, endTs time.Time,
-	testChannel chan<- TestObject, nodeUUID string, ff fileFormat, zip bool, singleBucket bool) func() {
+	testChannel chan<- TestObject, nodeUUID string, ff fileFormat, zip bool) func() {
 	return func() {
 		// TODO: this can be optimized. Bucket name should be calcualted only once per hour.
-		bucketName := getBucketName(bucketPrefix, vrf, nodeUUID, startTs, singleBucket)
+		bucketName := getBucketName(bucketPrefix, vrf, nodeUUID, startTs)
 		indexBucketName := getIndexBucketName(bucketName)
 
 		// The logs in input slice logs are already sorted according to their Ts.
@@ -247,20 +245,18 @@ func transmitLogs(ctx context.Context,
 		var objNameBuffer, objBuffer, indexBuffer bytes.Buffer
 		fStartTs := startTs.UTC().Format(timeFormat)
 		fEndTs := endTs.UTC().Format(timeFormat)
-		if singleBucket {
-			y, m, d := startTs.Date()
-			h, _, _ := startTs.Clock()
-			objNameBuffer.WriteString(strings.ToLower(strings.Replace(nodeUUID, ":", "-", -1)))
-			objNameBuffer.WriteString("/")
-			objNameBuffer.WriteString(strconv.Itoa(y))
-			objNameBuffer.WriteString("/")
-			objNameBuffer.WriteString(strconv.Itoa(int(m)))
-			objNameBuffer.WriteString("/")
-			objNameBuffer.WriteString(strconv.Itoa(d))
-			objNameBuffer.WriteString("/")
-			objNameBuffer.WriteString(strconv.Itoa(h))
-			objNameBuffer.WriteString("/")
-		}
+		y, m, d := startTs.Date()
+		h, _, _ := startTs.Clock()
+		objNameBuffer.WriteString(strings.ToLower(strings.Replace(nodeUUID, ":", "-", -1)))
+		objNameBuffer.WriteString("/")
+		objNameBuffer.WriteString(strconv.Itoa(y))
+		objNameBuffer.WriteString("/")
+		objNameBuffer.WriteString(strconv.Itoa(int(m)))
+		objNameBuffer.WriteString("/")
+		objNameBuffer.WriteString(strconv.Itoa(d))
+		objNameBuffer.WriteString("/")
+		objNameBuffer.WriteString(strconv.Itoa(h))
+		objNameBuffer.WriteString("/")
 		objNameBuffer.WriteString(strings.ReplaceAll(fStartTs, ":", ""))
 		objNameBuffer.WriteString("_")
 		objNameBuffer.WriteString(strings.ReplaceAll(fEndTs, ":", ""))
@@ -393,25 +389,14 @@ func getCSVIndexBuffer(index map[string]string, b *bytes.Buffer, zip bool) {
 	zw.Close()
 }
 
-func getBucketName(bucketPrefix string, vrf uint64, dscID string, ts time.Time, singleBucket bool) string {
+func getBucketName(bucketPrefix string, vrf uint64, dscID string, ts time.Time) string {
 	var b bytes.Buffer
-	if singleBucket {
-		// We dont have any cross vrf scenarios as of now.
-		// So just the tenant name from source vrf.
-		tenantName := getTenantNameFromSourceVrf(vrf)
-		b.WriteString(tenantName)
-		b.WriteString(".")
-		b.WriteString(fwlogsBucketName)
-	} else {
-		y, m, d := ts.Date()
-		h, _, _ := ts.Clock()
-		t := time.Date(y, m, d, h, 0, 0, 0, time.UTC)
-		b.WriteString(bucketPrefix)
-		b.WriteString(".")
-		b.WriteString(strings.ToLower(strings.Replace(dscID, ":", "-", -1)))
-		b.WriteString("-")
-		b.WriteString(strings.Replace(strings.Replace(t.UTC().Format(timeFormat), ":", "-", -1), "T", "t", -1))
-	}
+	// We dont have any cross vrf scenarios as of now.
+	// So just the tenant name from source vrf.
+	tenantName := getTenantNameFromSourceVrf(vrf)
+	b.WriteString(tenantName)
+	b.WriteString(".")
+	b.WriteString(fwlogsBucketName)
 	return b.String()
 }
 

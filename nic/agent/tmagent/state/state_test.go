@@ -24,7 +24,7 @@ import (
 	"github.com/pensando/sw/nic/agent/dscagent"
 	"github.com/pensando/sw/nic/agent/dscagent/infra"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
-	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
+	halproto "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/ipc"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
@@ -739,7 +739,8 @@ func TestFwPolicyOps(t *testing.T) {
 		c[k] = true
 		return true
 	})
-	Assert(t, len(c) == 0, "collectors exist after delete, %+v", c)
+	// By default PSM collector is present
+	Assert(t, len(c) == 1, "collectors exist after delete, %+v", c)
 }
 
 func TestProcessFWEvent(t *testing.T) {
@@ -895,9 +896,9 @@ func TestProcessFWEvent(t *testing.T) {
 				return false
 			}
 
-			val, ok := v.(*fwlogCollector)
+			val, ok := v.(*syslogFwlogCollector)
 			if !ok {
-				return false
+				return true
 			}
 
 			val.Lock()
@@ -1170,11 +1171,11 @@ func TestPolicyUpdate(t *testing.T) {
 				key := ps.getCollectorKey(vrf, fwPolicyEvent.Policy, target)
 				val, ok := ps.fwLogCollectors.Load(key)
 				Assert(t, ok == true, "failed to get key from map")
-				col, ok := val.(*fwlogCollector)
+				col, ok := val.(*syslogFwlogCollector)
 				Assert(t, ok == true, "failed to get collector from map")
 
 				transport := strings.Split(target.Transport, "/")
-				expCol := fwlogCollector{
+				expCol := syslogFwlogCollector{
 					vrf:         vrf,
 					filter:      filter,
 					format:      policySpec.Format,
@@ -1212,7 +1213,9 @@ func TestPolicyUpdate(t *testing.T) {
 
 		activeCollector := map[string]bool{}
 		ps.fwLogCollectors.Range(func(k, v interface{}) bool {
-			activeCollector[k.(string)] = true
+			if k != "psm" {
+				activeCollector[k.(string)] = true
+			}
 			return true
 		})
 
@@ -1243,7 +1246,7 @@ func TestSyslogConnect(t *testing.T) {
 	defer udpl1()
 
 	for k, ip := range map[string]string{"tcp": tcpAddr, "udp": udpAddr} {
-		ps.fwLogCollectors.Store(ip, &fwlogCollector{
+		ps.fwLogCollectors.Store(ip, &syslogFwlogCollector{
 			vrf:         1,
 			format:      monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 			destination: strings.Split(ip, ":")[0],
@@ -1258,7 +1261,7 @@ func TestSyslogConnect(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		server := map[string]bool{}
 		ps.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
-			if val, ok := v.(*fwlogCollector); ok {
+			if val, ok := v.(*syslogFwlogCollector); ok {
 				val.Lock()
 				if val.syslogFd == nil {
 					server[k.(string)] = true

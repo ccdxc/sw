@@ -53,13 +53,17 @@ type PolicyState struct {
 	shm                *ipc.SharedMem
 	ipc                []*ipc.IPC
 	wg                 sync.WaitGroup
-	singleBucket       bool
 	logsChannel        chan singleLog
 	objStoreFileFormat fileFormat
 	zipObjects         bool
 }
 
-type fwlogCollector struct {
+type psmFwLogCollector struct {
+	vrf    uint64
+	filter uint32
+}
+
+type syslogFwlogCollector struct {
 	sync.Mutex
 	vrf         uint64
 	port        string
@@ -73,7 +77,7 @@ type fwlogCollector struct {
 	txErr       uint64
 }
 
-func (f *fwlogCollector) String() string {
+func (f *syslogFwlogCollector) String() string {
 	if f != nil {
 		return fmt.Sprintf("vrf:%d format:%v proto:%v destination:%v port:%v fd:%v txCount:%d txErr:%d",
 			f.vrf, f.format, f.proto, f.destination, f.port, f.syslogFd != nil, f.txCount, f.txErr)
@@ -104,9 +108,10 @@ func NewTpAgent(pctx context.Context, agentPort string) (*PolicyState, error) {
 		logsChannel:        make(chan singleLog, logChannelSize),
 		objStoreFileFormat: csvFileFormat,
 		zipObjects:         true,
-		singleBucket:       true,
 	}
 
+	// Add default PSM collector for now.
+	state.fwLogCollectors.Store("psm", &psmFwLogCollector{})
 	state.connectSyslog()
 	return state, nil
 }
@@ -144,7 +149,7 @@ func (s *PolicyState) connectSyslog() error {
 			case <-time.After(time.Second * 2):
 				s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
 
-					if c, ok := v.(*fwlogCollector); ok {
+					if c, ok := v.(*syslogFwlogCollector); ok {
 						c.Lock()
 						if c.syslogFd == nil {
 							// reconnect to collector that was never connected or had write error
@@ -153,8 +158,6 @@ func (s *PolicyState) connectSyslog() error {
 							}
 						}
 						c.Unlock()
-					} else {
-						log.Errorf("invalid collector")
 					}
 					return true
 				})
@@ -219,7 +222,7 @@ func (s *PolicyState) getvrf(tenant, namespace, vrfName string) (uint64, error) 
 }
 
 // connect to syslog server
-func (s *PolicyState) newSyslog(c *fwlogCollector) error {
+func (s *PolicyState) newSyslog(c *syslogFwlogCollector) error {
 	facility := syslog.LogUser // default facility
 	if c.facility != 0 {
 		facility = c.facility
@@ -250,7 +253,7 @@ func (s *PolicyState) newSyslog(c *fwlogCollector) error {
 	return nil
 }
 
-func (s *PolicyState) closeSyslog(c *fwlogCollector) {
+func (s *PolicyState) closeSyslog(c *syslogFwlogCollector) {
 	if c.syslogFd != nil {
 		c.syslogFd.Close()
 		c.syslogFd = nil
@@ -376,12 +379,12 @@ func (s *PolicyState) getFilter(actions []string) uint32 {
 }
 
 // get collectors with matching vrf
-func (s *PolicyState) getCollector(vrf uint64) (map[string]*fwlogCollector, bool) {
-	c := map[string]*fwlogCollector{}
+func (s *PolicyState) getCollector(vrf uint64) (map[string]*syslogFwlogCollector, bool) {
+	c := map[string]*syslogFwlogCollector{}
 
 	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
 		if key, ok := k.(string); ok {
-			if val, ok := v.(*fwlogCollector); ok {
+			if val, ok := v.(*syslogFwlogCollector); ok {
 				val.Lock()
 				if val.vrf == vrf {
 					c[key] = val
@@ -405,7 +408,7 @@ func (s *PolicyState) deleteCollectors(vrf uint64) error {
 
 	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
 		if key, ok := k.(string); ok {
-			if c, ok := v.(*fwlogCollector); ok {
+			if c, ok := v.(*syslogFwlogCollector); ok {
 				c.Lock()
 				if c.vrf == vrf {
 					s.closeSyslog(c)
@@ -478,7 +481,7 @@ func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 	for _, target := range p.Spec.Targets {
 		key := s.getCollectorKey(vrf, p, target)
 		transport := strings.Split(target.Transport, "/")
-		fwcollector := &fwlogCollector{
+		fwcollector := &syslogFwlogCollector{
 			vrf:         vrf,
 			filter:      filter,
 			format:      p.Spec.Format,
@@ -541,11 +544,11 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		return fmt.Errorf("failed to get tenant for %s/%s", p.Tenant, p.Namespace)
 	}
 
-	oldCollector := make(map[string]*fwlogCollector)
+	oldCollector := make(map[string]*syslogFwlogCollector)
 	for _, target := range sp.Spec.Targets {
 		key := s.getCollectorKey(vrf, sp, target)
 		transport := strings.Split(target.Transport, "/")
-		oldCollector[key] = &fwlogCollector{
+		oldCollector[key] = &syslogFwlogCollector{
 			vrf:         vrf,
 			filter:      s.getFilter(sp.Spec.Filter),
 			format:      sp.Spec.Format,
@@ -559,7 +562,7 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		}
 	}
 
-	newCollector := make(map[string]*fwlogCollector)
+	newCollector := make(map[string]*syslogFwlogCollector)
 	filter := s.getFilter(p.Spec.Filter)
 	for _, target := range p.Spec.Targets {
 		key := s.getCollectorKey(vrf, p, target)
@@ -569,7 +572,7 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 			continue
 		}
 		transport := strings.Split(target.Transport, "/")
-		newCollector[key] = &fwlogCollector{
+		newCollector[key] = &syslogFwlogCollector{
 			vrf:         vrf,
 			filter:      filter,
 			format:      p.Spec.Format,
@@ -587,7 +590,7 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 	for k := range oldCollector {
 		log.Infof("delete collector %v", k)
 		if v, ok := s.fwLogCollectors.Load(k); ok {
-			col := v.(*fwlogCollector)
+			col := v.(*syslogFwlogCollector)
 			col.Lock()
 			s.closeSyslog(col)
 			col.Unlock()
@@ -646,13 +649,14 @@ func (s *PolicyState) DeleteFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 	// Close syslogs that will be deleted
 	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
 		key := k.(string)
-		col := v.(*fwlogCollector)
-		col.Lock()
-		if _, ok := delList[key]; ok {
-			// remove it
-			s.closeSyslog(col)
+		if col, ok := v.(*syslogFwlogCollector); ok {
+			col.Lock()
+			if _, ok := delList[key]; ok {
+				// remove it
+				s.closeSyslog(col)
+			}
+			col.Unlock()
 		}
-		col.Unlock()
 		return true
 	})
 
@@ -705,7 +709,7 @@ func (s *PolicyState) ListFwlogPolicy(tx context.Context) ([]*tpmprotos.FwlogPol
 }
 
 // send fwlog to collector
-func (s *PolicyState) sendFwLog(c *fwlogCollector, msg string) {
+func (s *PolicyState) sendFwLog(c *syslogFwlogCollector, msg string) {
 	if c.format == monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String() ||
 		c.format == monitoring.MonitoringExportFormat_SYSLOG_BSD.String() {
 
@@ -757,7 +761,7 @@ func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
 
 	var collectors []string
 	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
-		if col, ok := v.(*fwlogCollector); ok {
+		if col, ok := v.(*syslogFwlogCollector); ok {
 			col.Lock()
 			s := col.String()
 			col.Unlock()
