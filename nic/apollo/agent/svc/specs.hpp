@@ -1941,21 +1941,22 @@ pds_port_proto_to_port_args (port_args_t *port_args,
         port_args->port_type = port_type_t::PORT_TYPE_NONE;
         break;
     }
-    port_args->user_admin_state = port_args->admin_state =
+    port_args->admin_state =
                pds_port_proto_admin_state_to_sdk_admin_state(spec.adminstate());
     port_args->port_speed = pds_port_proto_speed_to_sdk_speed(spec.speed());
     port_args->fec_type =
                    pds_port_proto_fec_type_to_sdk_fec_type(spec.fectype());
-    port_args->user_fec_type = port_args->derived_fec_type =
-                                                      port_args->fec_type;
-    port_args->auto_neg_cfg = port_args->auto_neg_enable = spec.autonegen();
+    port_args->auto_neg_enable = spec.autonegen();
     port_args->debounce_time = spec.debouncetimeout();
     port_args->mtu = spec.mtu();
     port_args->pause =
                 pds_port_proto_pause_type_to_sdk_pause_type(spec.pausetype());
     port_args->loopback_mode =
        pds_port_proto_loopback_mode_to_sdk_loopback_mode(spec.loopbackmode());
-    port_args->num_lanes_cfg = port_args->num_lanes = spec.numlanes();
+    port_args->num_lanes = spec.numlanes();
+
+    // invoke after populating port_args from spec
+    sdk::linkmgr::port_store_user_config(port_args);
 }
 
 static inline types::SecurityRuleAction

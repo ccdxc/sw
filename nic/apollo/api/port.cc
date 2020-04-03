@@ -253,27 +253,8 @@ create_port (pds_ifindex_t ifindex, port_args_t *port_args)
 
     PDS_TRACE_DEBUG("Creating port %u, ifindex 0x%x",
                     port_args->port_num, ifindex);
-    /**
-     * store user configured admin_state in another variable to be used
-     * during xcvr insert/remove events
-     */
-    port_args->user_admin_state = port_args->admin_state;
 
-    /**
-     * store user configured AN in another variable to be used
-     * during xcvr insert/remove events
-     */
-    port_args->auto_neg_cfg = port_args->auto_neg_enable;
-
-    /**
-     * store user configured num_lanes in another variable to be used
-     * during xcvr insert/remove events
-     */
-    port_args->num_lanes_cfg = port_args->num_lanes;
-
-    // store user configured fec type
-    port_args->user_fec_type = port_args->derived_fec_type =
-                                                  port_args->fec_type;
+    sdk::linkmgr::port_store_user_config(port_args);
     sdk::linkmgr::port_args_set_by_xcvr_state(port_args);
     port_info = sdk::linkmgr::port_create(port_args);
     if (port_info == NULL) {

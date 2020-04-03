@@ -489,13 +489,15 @@ port::port_serdes_ical_start(void)
 {
     uint32_t lane;
     uint32_t sbus_addr;
+    port_speed_t serdes_speed =
+                        port_speed_to_serdes_speed(port_speed());
 
     for (lane = 0; lane < num_lanes_; ++lane) {
         sbus_addr = port_sbus_addr(lane);
         if (sbus_addr == 0) {
             continue;
         }
-        serdes_fns()->serdes_ical_start(sbus_addr);
+        serdes_fns()->serdes_ical_start(sbus_addr, serdes_speed);
     }
 
     return 0;
@@ -907,6 +909,18 @@ port::port_link_sm_an_process(void)
     return an_ret;
 }
 
+int
+port::port_serdes_eye_get(void) {
+    uint32_t lane;
+
+    for (lane = 0; lane < num_lanes_; ++lane) {
+        if (serdes_fns()->serdes_eye_get(port_sbus_addr(lane), 0) != 0) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
 bool
 port::port_serdes_eye_check(void) {
     uint32_t lane;
@@ -987,8 +1001,7 @@ port::port_link_sm_dfe_process(void)
                     timeout = 100;
                     set_num_dfe_ical_cmplt_retries(
                                            num_dfe_ical_cmplt_retries() + 1);
-                    // 100msecs * 15 retries = 1.5sec
-                    // 10G ICAL complete taking ~1sec
+                    // 100msecs * 10 retries = 1sec
                     if (num_dfe_ical_cmplt_retries() <
                                      MAX_PORT_SERDES_DFE_ICAL_CMPLT_RETRIES) {
                         // start the timer and wait for ICAL to complete

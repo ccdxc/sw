@@ -101,6 +101,7 @@ void stop_aacs_server(void);
 port_admin_state_t port_default_admin_state(void);
 void linkmgr_threads_stop(void);
 void linkmgr_threads_wait(void);
+void port_store_user_config(port_args_t *port_args);
 
 // \@brief     get the stats base address
 // \@param[in] ifindex ifindex of the port

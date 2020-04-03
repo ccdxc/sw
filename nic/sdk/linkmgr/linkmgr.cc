@@ -884,6 +884,37 @@ validate_port_create (port_args_t *args)
 }
 
 static void
+port_init_num_lanes (port_args_t *args)
+{
+    uint32_t asic_inst = 0;
+
+    // capri is NRZ serdes. Force num_lanes based on speed
+    // to avoid upper layers setting it
+    if (g_linkmgr_cfg.catalog->asic_type(asic_inst) ==
+                               asic_type_t::SDK_ASIC_TYPE_CAPRI) {
+        switch (args->port_speed) {
+        case port_speed_t::PORT_SPEED_100G:
+        case port_speed_t::PORT_SPEED_40G:
+            args->num_lanes = 4;
+            break;
+
+        case port_speed_t::PORT_SPEED_50G:
+            args->num_lanes = 2;
+            break;
+
+        case port_speed_t::PORT_SPEED_25G:
+        case port_speed_t::PORT_SPEED_10G:
+        case port_speed_t::PORT_SPEED_1G:
+            args->num_lanes = 1;
+            break;
+
+        default:
+            break;
+        }
+    }
+}
+
+static void
 port_init_defaults (port_args_t *args)
 {
     if (args->mtu == 0) {
@@ -900,6 +931,7 @@ port_create (port_args_t *args)
     sdk_ret_t    ret = SDK_RET_OK;
     port         *port_p = NULL;
 
+    port_init_num_lanes(args);
     if (validate_port_create (args) == false) {
         // TODO return codes
         return NULL;
@@ -1027,6 +1059,7 @@ port_update (void *pd_p, port_args_t *args)
     port               *port_p       = (port *)pd_p;
     port_admin_state_t prev_admin_st = port_p->admin_state();
 
+    port_init_num_lanes(args);
     if (validate_port_update (port_p, args) == false) {
         // TODO return codes
         return SDK_RET_ERR;
@@ -1444,6 +1477,29 @@ port_stats_addr (uint32_t ifindex)
     }
 
     return port_stats_base + port_stats_addr_offset(ifindex);
+}
+
+/// \brief     helper method to store the user configured values into separate
+///            variables in port_args
+/// \param[in] port_args port arguments to be programmed
+void
+port_store_user_config (port_args_t *port_args)
+{
+    // store user configured admin_state in another variable to be used
+    // during xcvr insert/remove events
+    port_args->user_admin_state = port_args->admin_state;
+
+    // store user configured AN in another variable to be used
+    // during xcvr insert/remove events
+    port_args->auto_neg_cfg = port_args->auto_neg_enable;
+
+    // store user configured num_lanes in another variable to be used
+    // during xcvr insert/remove events
+    port_args->num_lanes_cfg = port_args->num_lanes;
+
+    // store user configured fec type
+    port_args->user_fec_type = port_args->derived_fec_type =
+                                                  port_args->fec_type;
 }
 
 }    // namespace linkmgr

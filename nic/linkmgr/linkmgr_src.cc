@@ -612,21 +612,8 @@ port_create (port_args_t *port_args, hal_handle_t *hal_handle)
 
     pi_p->port_num = port_args->port_num;
 
-    // store user configured admin_state in another variable to be used
-    // during xcvr insert/remove events
-    port_args->user_admin_state = port_args->admin_state;
+    port_store_user_config(port_args);
 
-    // store user configured AN in another variable to be used
-    // during xcvr insert/remove events
-    port_args->auto_neg_cfg  = port_args->auto_neg_enable;
-
-    // store user configured num_lanes in another variable to be used
-    // during xcvr insert/remove events
-    port_args->num_lanes_cfg = port_args->num_lanes;
-
-    // store user configured fec type
-    port_args->user_fec_type = port_args->derived_fec_type =
-                                                  port_args->fec_type;
     // update port_args based on the xcvr state
     sdk::linkmgr::port_args_set_by_xcvr_state(port_args);
 
@@ -846,21 +833,8 @@ port_update (port_args_t *port_args)
 
     HAL_TRACE_DEBUG("port update for port: {}", port_args->port_num);
 
-    // store user configured admin_state in another variable to be used
-    // during xcvr insert/remove events
-    port_args->user_admin_state = port_args->admin_state;
+    port_store_user_config(port_args);
 
-    // store user configured AN in another variable to be used
-    // during xcvr insert/remove events
-    port_args->auto_neg_cfg     = port_args->auto_neg_enable;
-
-    // store user configured num_lanes in another variable to be used
-    // during xcvr insert/remove events
-    port_args->num_lanes_cfg    = port_args->num_lanes;
-
-    // store user configured fec type
-    port_args->user_fec_type = port_args->derived_fec_type =
-                                                  port_args->fec_type;
     // update port_args based on the xcvr state
     sdk::linkmgr::port_args_set_by_xcvr_state(port_args);
 
@@ -1639,10 +1613,11 @@ linkmgr_generic_debug_opn (GenericOpnRequest& req, GenericOpnResponse *resp)
 
         case 9:
             sbus_addr = req.val1();
+            speed  = req.val2();
 
             HAL_TRACE_DEBUG("serdes_ical_start sbus_addr: {}",
                             sbus_addr);
-            sdk::linkmgr::serdes_fns.serdes_ical_start(sbus_addr);
+            sdk::linkmgr::serdes_fns.serdes_ical_start(sbus_addr, (port_speed_t)speed);
             break;
 
         case 10:

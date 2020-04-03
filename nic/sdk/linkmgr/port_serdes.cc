@@ -113,7 +113,7 @@ serdes_eye_get_default(uint32_t sbus_addr, int eye_type)
 }
 
 int
-serdes_ical_start_default(uint32_t sbus_addr)
+serdes_ical_start_default (uint32_t sbus_addr, port_speed_t serdes_speed)
 {
     return 0;
 }
@@ -581,14 +581,58 @@ serdes_spico_upload_hw (uint32_t sbus_addr, const char* filename)
     return rc;
 }
 
+static int
+serdes_pre_ical_start_hw (uint32_t sbus_addr)
+{
+    int int_code;
+    int int_data;
+    int int_ret;
+
+    int_code = 0x18;
+    int_data = 0x7;
+    int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
+    if (int_ret == false) {
+        SDK_LINKMGR_TRACE_ERR("Failed to send interrupt to serdes. "
+                              "sbus_addr %u, int_code 0x%x, int_data 0x%x",
+                              sbus_addr, int_code, int_data);
+        return -1;
+    }
+
+    int_code = 0x19;
+    int_data = 0x2710;
+    int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
+    if (int_ret == false) {
+        SDK_LINKMGR_TRACE_ERR("Failed to send interrupt to serdes. "
+                              "sbus_addr %u, int_code 0x%x, int_data 0x%x",
+                              sbus_addr, int_code, int_data);
+        return -1;
+    }
+
+    int_code = 0x19;
+    int_data = 0x0;
+    int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
+    if (int_ret == false) {
+        SDK_LINKMGR_TRACE_ERR("Failed to send interrupt to serdes. "
+                              "sbus_addr %u, int_code 0x%x, int_data 0x%x",
+                              sbus_addr, int_code, int_data);
+        return -1;
+    }
+    return 0;
+}
+
 int
-serdes_ical_start_hw(uint32_t sbus_addr)
+serdes_ical_start_hw (uint32_t sbus_addr, port_speed_t serdes_speed)
 {
     Avago_serdes_dfe_tune_t dfe;
 
     avago_serdes_tune_init(aapl, &dfe);
     dfe.tune_mode = Avago_serdes_dfe_tune_mode_t::AVAGO_DFE_ICAL;
 
+    // 10G ICAL would take ~1s.
+    // issue additional interrupts to speed up ICAL for 10G
+    if (serdes_speed == port_speed_t::PORT_SPEED_10G) {
+        serdes_pre_ical_start_hw(sbus_addr);
+    }
     avago_serdes_tune(aapl, sbus_addr, &dfe);
 
     return 0;

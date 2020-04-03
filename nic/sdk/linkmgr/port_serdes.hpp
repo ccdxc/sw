@@ -31,7 +31,8 @@ typedef struct serdes_fn_s_ {
                                     uint32_t *sbus_addr_arr);
     int (*serdes_invert_cfg)       (uint32_t sbus_addr,
                                     serdes_info_t *serdes_info);
-    int (*serdes_ical_start)       (uint32_t sbus_addr);
+    int (*serdes_ical_start)       (uint32_t sbus_addr,
+                                    port_speed_t serdes_speed);
     int (*serdes_pcal_start)       (uint32_t sbus_addr);
     int (*serdes_an_pcal_start)    (uint32_t sbus_addr);
     int (*serdes_dfe_status)       (uint32_t sbus_addr);
