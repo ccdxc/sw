@@ -15,7 +15,7 @@ import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
 import { Store } from '@ngrx/store';
 import { IApiStatus, IAuthUser } from '@sdk/v1/models/generated/auth';
-import { ClusterVersion, ClusterCluster } from '@sdk/v1/models/generated/cluster';
+import { ClusterVersion, ClusterCluster, ClusterLicense } from '@sdk/v1/models/generated/cluster';
 import { MonitoringAlert, IMonitoringAlert, IMonitoringAlertList } from '@sdk/v1/models/generated/monitoring';
 import { Subject, Subscription, timer, interval } from 'rxjs';
 import { filter, map, takeUntil } from 'rxjs/operators';
@@ -73,6 +73,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   rolloutObjects: ReadonlyArray<RolloutRollout>;
   currentRollout: RolloutRollout = null;
   cluster: ClusterCluster = null;
+  clusterLicence: ClusterLicense = null;
 
   // idling
   showIdleWarning = false;
@@ -157,7 +158,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     this._initAppData();
     this.getVersion();
     this.getCluster();
-
+    this.getClusterLicense();
     this._subscribeToEvents();
     this._bindtoStore();
     this.userName = Utility.getInstance().getLoginName();
@@ -325,6 +326,23 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     }
     // In the very first time, record the first version data into this.version object.
     this.version = this.versionArray[0];
+  }
+
+  getClusterLicense() {
+    const sub = this.clusterService.GetLicense().subscribe(
+      (response) => {
+        this.clusterLicence = response.body as ClusterLicense;
+        if (this.clusterLicence) {
+          Utility.getInstance().setClusterLicense(this.clusterLicence);
+        }
+      },
+      (error) => {
+      // 20202-04-03 Looking at the backend code, it seems that the License object is not created unless it's in cloud mode. If the object is missing, Venice assumes default features.
+       console.log('Cluster license is not found. It is not a cloud deployment');
+       // this._controllerService.invokeRESTErrorToaster('Error: Filed to get cluster license', error);
+      }
+    );
+    this.subscriptions.push(sub);
   }
 
   getCluster() {

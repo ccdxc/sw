@@ -7,7 +7,7 @@ import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { AUTH_BODY, AUTH_KEY } from '@app/core/auth/auth.reducer';
 import { IAuthUser } from '@sdk/v1/models/generated/auth';
 import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
-import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase, ClusterDSCCondition, ClusterDSCCondition_status, ClusterDSCCondition_type, ClusterNode, ClusterNodeCondition_status, ClusterNodeCondition_type } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase, ClusterDSCCondition, ClusterDSCCondition_status, ClusterDSCCondition_type, ClusterNode, ClusterNodeCondition_status, ClusterNodeCondition_type, ClusterLicense } from '@sdk/v1/models/generated/cluster';
 import { FieldsRequirement_operator, IFieldsSelector, MonitoringAlert } from '@sdk/v1/models/generated/monitoring';
 import { ILabelsSelector, RolloutRollout } from '@sdk/v1/models/generated/rollout';
 import { SearchSearchRequest, SearchSearchRequest_mode } from '@sdk/v1/models/generated/search';
@@ -48,7 +48,6 @@ export interface VeniceObjectCache {
 
 
 export class Utility {
-
   static instance: Utility;
 
   // Define how long to keep cache data.
@@ -200,6 +199,7 @@ export class Utility {
   public veniceAPISampleMap: RestAPIRequestResponse = {};
   // Defince data cache store
   private veniceObjectCacheStore: VeniceObjectCacheStore = {};
+  private clusterLicense: ClusterLicense;
 
   private constructor() { }
 
@@ -2314,6 +2314,27 @@ export class Utility {
     }
     return responseData;
   }
+
+  setClusterLicense(clusterLicence: ClusterLicense) {
+    this.clusterLicense = clusterLicence;
+  }
+
+  getClusterLicense(): ClusterLicense {
+    return  this.clusterLicense ;
+  }
+
+  /**
+   * If return true, it means Venice is a cloud deployment
+   * Otherwise, Venice is an enterprise deployment
+   *
+   *  2020-04-03
+   *  License object is not created unless it's in cloud mode. If the object is missing, Venice assumes default features.
+   *
+   */
+  isCloudDeployment(): boolean {
+    return  (!this.clusterLicense);
+  }
+
   /**
    * @param kind
    * @param veniceObjectCache
