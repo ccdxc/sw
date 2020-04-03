@@ -13,7 +13,6 @@ packages:
 image_manifest:
     spec        : images/latest.json
     naples      : capri
-    venice      : True
 
 setup:
     topology: test/iris/topologies/2Naples_VM_Vcenter/vm.topology
