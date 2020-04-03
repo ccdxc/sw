@@ -110,8 +110,8 @@ exec > $LOG_DIR/start-naples.log
 exec 2>&1
 set -x
 
-#make sure HAL and Agent ports are reserved
-sysctl -w net.ipv4.ip_local_reserved_ports=50054,9007
+#make sure HAL we don't include 50054 HAL port
+echo 15000 50000 > /proc/sys/net/ipv4/ip_local_port_range
 
 if [ -f /tmp/naples-netagent.db ]; then
     rm -f /tmp/naples-netagent.db
