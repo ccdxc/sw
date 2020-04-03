@@ -552,8 +552,14 @@ func (d *DHCPState) parseInterfaceIPs(vendorOpts []byte) {
 
 func (d *DHCPState) isValidInterfaceIPInfo(intfIP InterfaceIP) error {
 	// checks to verify if the DSC interface IP info parsed from vendor specific options is valid
-	if _, exists := DSCIfIDToInterfaceName[intfIP.IfID]; !exists {
-		return fmt.Errorf("No interface corresponding to interface IP info exists")
+	if d.pipeline == globals.NaplesPipelineApollo {
+		if _, exists := ApuluDSCIfIDToInterfaceName[intfIP.IfID]; !exists {
+			return fmt.Errorf("No interface corresponding to interface IP info exists")
+		}
+	} else {
+		if _, exists := DSCIfIDToInterfaceName[intfIP.IfID]; !exists {
+			return fmt.Errorf("No interface corresponding to interface IP info exists")
+		}
 	}
 
 	if intfIP.PrefixLen > 32 {
