@@ -30,35 +30,39 @@ zombie_procs_count=0
 check_zombies()
 {
     zombie_procs_parents_pids=`ps -o ppid,stat,pid,args | awk '$2~/^Z/ { print $1}'`
-    zombie_procs_count=`ps -o ppid,stat,pid,args | awk '$2~/^Z/ { print $1}' | wc -l`
+    if [ "$zombie_procs_parents_pids" = "" ]; then
+        zombie_procs_count=0
+    else
+        zombie_procs_count=$(echo "$zombie_procs_parents_pids" | wc -l)
+    fi
 
     update_fwupgrade_state "$zombie_procs_count ZOMBIE PROCESSES FOUND...TRYING TO REMOVE ZOMBIES FROM SYSTEM"
     save_fwupgrade_state
 
-    for i in $zombie_procs_parents_pids
-    do
-        #if parent is not pid 1 i.e. init then only kill parent
-        if [ $i -ne 1 ]; then
-            kill -s SIGCHLD $i
-            sleep 1
-            # make sure that we don't kill ourselves
-            if [ $i -ne $$ ]; then
-                kill -KILL $i
+    if [ $zombie_procs_count -ne 0 ]; then
+        for i in $zombie_procs_parents_pids
+        do
+            #if parent is not pid 1 i.e. init then send a SIGCHLD 
+            if [ $i -ne 1 ]; then
+                kill -s SIGCHLD $i
             fi
-        fi
-    done
+        done
+
+        #Give a bit of time to get SIGCHLDs get processed...
+        sleep 0.5s
+    fi
 }
 
 kill_processes()
 {
     setsid killall5 -TERM -o $$
-    sleep 2
+    sleep 0.5s
     setsid killall5 -KILL -o $$
-    sleep 2
+    sleep 0.5s
 
     check_zombies
 
-    echo "Total $zombie_procs_count zombie processes found in systems"
+    echo "Total $zombie_procs_count zombie processes found in system"
 
     if [ $zombie_procs_count -ne 0 ]; then
 
@@ -66,9 +70,9 @@ kill_processes()
         save_fwupgrade_state
 
         setsid killall5 -TERM -o $$
-        sleep 1
+        sleep 0.5s
         setsid killall5 -KILL -o $$
-        sleep 1
+        sleep 0.5s
     fi
 }
 
@@ -135,7 +139,7 @@ update_fwupgrade_state "KILLED ALL PROCESSES EXCEPT INIT"
 save_fwupgrade_state
 
 rm -rf /data/pre-upgrade-logs.tar*
-tar -czf /data/pre-upgrade-logs.tar.gz /var/log/ /obfl/
+tar -cf /data/pre-upgrade-logs.tar /var/log/
 
 echo "Switching filesystem from $cur_image to $new_image"
 
