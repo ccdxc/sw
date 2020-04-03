@@ -142,25 +142,58 @@ const (
 
 	bgpPeerDetStr = `BGP Peer details
 ------------------------------------
-UUID                     : %s
-Admin State              : %v
-Config Local Address     : %v
-Selected Local Address   : %v
-Remote Address           : %v
-Remote ASN               : %d
-Authentication           : %v
-Flags                    : [ RR Client: %v / Send Community: %v / Ext Community: %v ]
-ConfiguredTimers         : [ Holdtime: %v seconds / Keepalive: %v seconds ]
-NegotiatedTimers         : [ Holdtime: %v seconds / Keepalive: %v seconds ]
-TTL                      : %d
-Status                   : %v
-Previous State           : %v
-Last Err Recvd           : [ %v ]
-Last Err Sent            : [ %v ]
-Capabilities Sent        : [ %v ]
-Capabilities Received    : [ %v ]
-Capabilities Negotiated  : [ %v ]
-Selected Local Addr Type : [ %s ]
+UUID                            : %s
+Admin State                     : %v
+Config Local Address            : %v
+Selected Local Address          : %v
+Remote Address                  : %v
+Remote ASN                      : %d
+Authentication                  : %v
+Flags                           : [ RR Client: %v / Send Community: %v / Ext Community: %v ]
+ConfiguredTimers                : [ Holdtime: %v seconds / Keepalive: %v seconds ]
+NegotiatedTimers                : [ Holdtime: %v seconds / Keepalive: %v seconds ]
+TTL                             : %d
+Status                          : %v
+Previous State                  : %v
+Last Err Recvd                  : [ %v ]
+Last Err Sent                   : [ %v ]
+Capabilities Sent               : [ %v ]
+Capabilities Received           : [ %v ]
+Capabilities Negotiated         : [ %v ]
+Selected Local Addr Type        : [ %s ]
+In Notifications                : [ %v ]
+Out Notifications               : [ %v ]
+In Updates                      : [ %v ]
+Out Updates                     : [ %v ]
+In Keepalives                   : [ %v ]
+Out Keepalives                  : [ %v ]
+In Refreshes                    : [ %v ]
+Out Refreshes                   : [ %v ]
+In Total Messages               : [ %v ]
+Out Total Messages              : [ %v ]
+Fsm Established Transitions     : [ %v ]
+Connect Retry Count             : [ %v ]
+Peer GroupID                    : [ %v ]
+Stale Path Time                 : [ %v sec]
+ORF Entry Count                 : [ %v ]
+Rcvd Msg Elapsed Time           : [ %v sec]
+Route Refresh Sent              : [ %v ]
+Route Refresh Rcvd              : [ %v ]
+In Prefixes                     : [ %v ]
+Out Prefixes                    : [ %v ]
+Out Prefixes Advertised         : [ %v ]
+Connect Retry Interval          : [ %v sec]
+Out Update Elapsed Time         : [ %v sec]
+Out Prefixes Denied             : [ %v ]
+Out Prefixes Implicit Withdrawn : [ %v ]
+Out Prefixes Explicit Withdrawn : [ %v ]
+In Prefixes Implicit Withdrawn  : [ %v ]
+In Prefixes Explicit Withdrawn  : [ %v ]
+Received HoldTime               : [ %v sec]
+Fsm Established Time            : [ %v sec]
+In Updates Elapsed Time         : [ %v sec]
+In Opens                        : [ %v ]
+Out Opens                       : [ %v ]
 ------------------------------------
 `
 )
@@ -202,7 +235,25 @@ func bgpPeersShowCmdHandler(cmd *cobra.Command, args []string) error {
 					peer.Spec.KeepAlive, peer.Status.HoldTime, peer.Status.KeepAlive, peer.Spec.TTL,
 					peer.Status.Status, peer.Status.PrevStatus,
 					peer.Status.LastErrorRcvd, peer.Status.LastErrorSent,
-					peer.Status.CapsSent, peer.Status.CapsRcvd, peer.Status.CapsNeg, peer.Status.SelLocalAddrType)
+					peer.Status.CapsSent, peer.Status.CapsRcvd,
+					peer.Status.CapsNeg, peer.Status.SelLocalAddrType,
+					peer.Status.InNotifications,
+					peer.Status.OutNotifications, peer.Status.InUpdates,
+					peer.Status.OutUpdates, peer.Status.InKeepalives,
+					peer.Status.OutKeepalives, peer.Status.InRefreshes,
+					peer.Status.OutRefreshes, peer.Status.InTotalMessages,
+					peer.Status.OutTotalMessages, peer.Status.FsmEstTransitions,
+					peer.Status.ConnectRetryCount, peer.Status.Peergr,
+					peer.Status.StalePathTime, peer.Status.OrfEntryCount,
+					peer.Status.RcvdMsgElpsTime, peer.Status.RouteRefrSent,
+					peer.Status.RouteRefrRcvd, peer.Status.InPrfxes,
+					peer.Status.OutPrfxes, peer.Status.OutPrfxesAdvertised,
+					peer.Status.ConnectRetryInt, peer.Status.OutUpdateElpsTime,
+					peer.Status.OutPrfxesDenied, peer.Status.OutPrfxesImpWdr,
+					peer.Status.OutPrfxesExpWdr, peer.Status.InPrfxesImpWdr,
+					peer.Status.InPrfxesExpWdr, peer.Status.ReceivedHoldTime,
+					peer.Status.FsmEstablishedTime, peer.Status.InUpdatesElpsTime,
+					peer.Status.InOpens, peer.Status.OutOpens)
 			} else {
 				fmt.Printf(bgpPeerFmt, peer.Spec.Id, peer.Spec.State, peer.Spec.PeerAddr, peer.Spec.RemoteASN, peer.Spec.Password, peer.Status.Status)
 				fmt.Printf("\n")

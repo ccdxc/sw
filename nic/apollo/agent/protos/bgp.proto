@@ -220,27 +220,93 @@ message BGPPeerSpec {
 // BGP peer status
 message BGPPeerStatus {
   // BGP session status
-  BGPPeerState    Status           = 1;
+  BGPPeerState    Status               = 1;
   // BGP session previous status
-  BGPPeerState    PrevStatus       = 2;
+  BGPPeerState    PrevStatus           = 2;
   // last error received
-  bytes           LastErrorRcvd    = 3;
+  bytes           LastErrorRcvd        = 3;
   // Last error sent
-  bytes           LastErrorSent    = 4;
+  bytes           LastErrorSent        = 4;
   // selected local address of the peer
-  types.IPAddress LocalAddr        = 5;
+  types.IPAddress LocalAddr            = 5;
   // BGP session holdtime in seconds established with peer
-  uint32          HoldTime         = 6;
+  uint32          HoldTime             = 6;
   // BGP session keepalive in seconds established with peer
-  uint32          KeepAlive        = 7;
+  uint32          KeepAlive            = 7;
   // BGP The capabilities announced to the peer on the most recent open message sent to the peer.
-  uint32          CapsSent         = 8;
+  uint32          CapsSent             = 8;
   // BGP The capabilities received on the most recent open message received from the peer.
-  uint32          CapsRcvd         = 9;
+  uint32          CapsRcvd             = 9;
   // BGP The capabilities negotiated for the session with the peer
-  uint32          CapsNeg          = 10;
+  uint32          CapsNeg              = 10;
   // BGP The address family of the local address used by the transport connection for the peering session.
-  BGPAddrType     SelLocalAddrType = 11;
+  BGPAddrType     SelLocalAddrType     = 11;
+ // Number of BGP Notifications received for this connection.
+ uint32          InNotifications       = 12;
+ // Number of BGP Notifications sent for this connection.
+ uint32          OutNotifications      = 13;
+ // Number of BGP Updates received for this connection.
+ uint32          InUpdates             = 14;
+ // Number of BGP Updates received for this connection.
+ uint32          OutUpdates            = 15;
+ // Number of BGP Keepalives received for this connection.
+ uint32          InKeepalives          = 16;
+ // Number of BGP Opens sent for this connection.
+ uint32          OutKeepalives         = 17;
+ // Number of BGP Route Refreshes received for this connection.
+ uint32          InRefreshes           = 18;
+ // Number of BGP Route Refreshes sent for this connection.
+ uint32          OutRefreshes          = 19;
+ // Total number of BGP messages received for this connection.
+ uint32          InTotalMessages       = 20;
+ // Total number of BGP messages sent for this connection.
+ uint32          OutTotalMessages      = 21;
+ // Number of times BGP FSM transitioned to established state.
+ uint32          FsmEstTransitions     = 22;
+ // Number of retries after a flap.
+ uint32          ConnectRetryCount     = 23;
+ // Peer Group ID.
+ uint32          Peergr                = 24;
+ //Number of sec to stale the routes before deleting them.
+ uint32          StalePathTime         = 25;
+ //Number of ORF entries of all types received from the peer.
+ uint32          OrfEntryCount         = 26;
+ // Time in 1/100 of sec since last message received from peer.
+ uint32          RcvdMsgElpsTime       = 27;
+ // Number of Route Refreshes sent to the peer.
+ uint32          RouteRefrSent         = 28;
+ // Number of Route Refreshes received from the peer.
+ uint32          RouteRefrRcvd         = 29;
+ // Number of prefixes received from the peer.
+ uint32          InPrfxes              = 30;
+ // Number of prefixes advertised to the peer including withdrawn prefixes.
+ uint32          OutPrfxes             = 31;
+ // Number of prefixes advertised to the peer.
+ uint32          OutPrfxesAdvertised   = 32;
+ // Connection retry time interval.
+ uint32          ConnectRetryInt       = 33;
+ // Time in sec since last update was sent to the peer.
+ uint32          OutUpdateElpsTime     = 34;
+ // Number of prefixes failed export policy.
+ uint32          OutPrfxesDenied       = 35;
+ // Number of prefixes for which implicit withdraw has been sent.
+ uint32          OutPrfxesImpWdr       = 36;
+ // Number of prefixes for which explicit withdraw has been sent.
+ uint32          OutPrfxesExpWdr       = 37;
+ // Number of prefixes for which implicit withdraw has been rcvd.
+ uint32          InPrfxesImpWdr        = 38;
+ // Number of prefixes for which explicit withdraw has been rcvd.
+ uint32          InPrfxesExpWdr        = 39;
+ // Hold time received in open message.
+ uint32          ReceivedHoldTime      = 40;
+ // For how long is this peer in established state in sec.
+ uint32          FsmEstablishedTime    = 41;
+ // Elapsed time in sec since the last BGP message is received.
+ uint32          InUpdatesElpsTime     = 42;
+ // Number of BGP Opens received for this connection.
+ uint32          InOpens               = 43;
+ // Number of BGP Opens sent for this connection.
+ uint32          OutOpens              = 44;
 }
 
 // BGP peer object

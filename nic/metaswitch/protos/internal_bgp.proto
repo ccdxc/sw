@@ -267,27 +267,61 @@ message BGPPeerStatus {
     SpecMsg: "BGPPeerSpec"
   };
   // BGP session status
-  BGPPeerState    Status           = 1 [(venice.pdsaFields) = {Field: "state"}];
+  BGPPeerState    Status                = 1 [(venice.pdsaFields) = {Field: "state"}];
   // BGP session previous status
-  BGPPeerState    PrevStatus       = 2 [(venice.pdsaFields) = {Field: "last_state"}];
+  BGPPeerState    PrevStatus            = 2 [(venice.pdsaFields) = {Field: "last_state"}];
   // last error received
-  bytes           LastErrorRcvd    = 3 [(venice.pdsaFields) = {Field: "last_error_rcvd"}];
+  bytes           LastErrorRcvd         = 3 [(venice.pdsaFields) = {Field: "last_error_rcvd"}];
   // Last error sent
-  bytes           LastErrorSent    = 4 [(venice.pdsaFields) = {Field: "last_error_sent"}];
+  bytes           LastErrorSent         = 4 [(venice.pdsaFields) = {Field: "last_error_sent"}];
   // selected local address of the peer
-  types.IPAddress LocalAddr        = 5 [(venice.pdsaFields) = {Field: "selected_local_addr"}];
+  types.IPAddress LocalAddr             = 5 [(venice.pdsaFields) = {Field: "selected_local_addr"}];
   // BGP session holdtime in seconds established with peer
-  uint32          HoldTime         = 6 [(venice.pdsaFields) = {Field: "hold_time"}];
+  uint32          HoldTime              = 6 [(venice.pdsaFields) = {Field: "hold_time"}];
   // BGP session keepalive in seconds established with peer
-  uint32          KeepAlive        = 7 [(venice.pdsaFields) = {Field: "keep_alive"}];
+  uint32          KeepAlive             = 7 [(venice.pdsaFields) = {Field: "keep_alive"}];
   // BGP The capabilities announced to the peer on the most recent open message sent to the peer.
-  uint32          CapsSent         = 8 [(venice.pdsaFields) = {Field: "caps_sent"}];
+  uint32          CapsSent              = 8 [(venice.pdsaFields) = {Field: "caps_sent"}];
   // BGP The capabilities received on the most recent open message received from the peer.
-  uint32          CapsRcvd         = 9 [(venice.pdsaFields) = {Field: "caps_rcvd"}];
+  uint32          CapsRcvd              = 9 [(venice.pdsaFields) = {Field: "caps_rcvd"}];
   // BGP The capabilities negotiated for the session with the peer
-  uint32          CapsNeg          = 10 [(venice.pdsaFields) = {Field: "caps_negotiated"}];
+  uint32          CapsNeg               = 10 [(venice.pdsaFields) = {Field: "caps_negotiated"}];
   // BGP The address family of the local address used by the transport connection for the peering session.
-  BGPAddrType     SelLocalAddrType = 11 [(venice.pdsaFields) = {Field: "selected_local_addr_type"}];
+  BGPAddrType     SelLocalAddrType      = 11 [(venice.pdsaFields) = {Field:
+  "selected_local_addr_type"}];
+  uint32          InNotifications       = 12 [(venice.pdsaFields) = {Field: "in_notifications"}];
+  uint32          OutNotifications      = 13 [(venice.pdsaFields) = {Field: "out_notifications"}];
+  uint32          InUpdates             = 14 [(venice.pdsaFields) = {Field: "in_updates"}];
+  uint32          OutUpdates            = 15 [(venice.pdsaFields) = {Field: "out_updates"}];
+  uint32          InKeepalives          = 16 [(venice.pdsaFields) = {Field: "in_keepalives"}];
+  uint32          OutKeepalives         = 17 [(venice.pdsaFields) = {Field: "out_keepalives"}];
+  uint32          InRefreshes           = 18 [(venice.pdsaFields) = {Field: "in_refreshes"}];
+  uint32          OutRefreshes          = 19 [(venice.pdsaFields) = {Field: "out_refreshes"}];
+  uint32          InTotalMessages       = 20 [(venice.pdsaFields) = {Field: "in_total_messages"}];
+  uint32          OutTotalMessages      = 21 [(venice.pdsaFields) = {Field: "out_total_messages"}];
+  uint32          FsmEstTransitions     = 22 [(venice.pdsaFields) = {Field: "fsm_established_transitions"}];
+  uint32          ConnectRetryCount     = 23 [(venice.pdsaFields) = {Field: "connect_retry_count"}];
+  uint32          Peergr                = 24 [(venice.pdsaFields) = {Field: "peergr"}];
+  uint32          StalePathTime         = 25 [(venice.pdsaFields) = {Field: "stale_path_time"}];
+  uint32          OrfEntryCount         = 26 [(venice.pdsaFields) = {Field: "orf_entry_count"}];
+  uint32          RcvdMsgElpsTime       = 27 [(venice.pdsaFields) = {Field: "rcvd_msg_elpsed_time"}];
+  uint32          RouteRefrSent         = 28 [(venice.pdsaFields) = {Field: "route_refresh_sent"}];
+  uint32          RouteRefrRcvd         = 29 [(venice.pdsaFields) = {Field: "route_refresh_rcvd"}];
+  uint32          InPrfxes              = 30 [(venice.pdsaFields) = {Field: "in_prfxes"}];
+  uint32          OutPrfxes             = 31 [(venice.pdsaFields) = {Field: "out_prfxes"}];
+  uint32          OutPrfxesAdvertised   = 32 [(venice.pdsaFields) = {Field: "out_prfxes_advertised"}];
+  uint32          ConnectRetryInt       = 33 [(venice.pdsaFields) = {Field: "connect_retry_interval"}];
+  uint32          OutUpdateElpsTime     = 34 [(venice.pdsaFields) = {Field: "out_update_elpsed_time"}];
+  uint32          OutPrfxesDenied       = 35 [(venice.pdsaFields) = {Field: "out_prfxes_denied"}];
+  uint32          OutPrfxesImpWdr       = 36 [(venice.pdsaFields) = {Field: "out_prfxes_imp_wdrw"}];
+  uint32          OutPrfxesExpWdr       = 37 [(venice.pdsaFields) = {Field: "out_prfxes_exp_wdrw"}];
+  uint32          InPrfxesImpWdr        = 38 [(venice.pdsaFields) = {Field: "in_prfxes_imp_wdrw"}];
+  uint32          InPrfxesExpWdr        = 39 [(venice.pdsaFields) = {Field: "in_prfxes_exp_wdrw"}];
+  uint32          ReceivedHoldTime      = 40 [(venice.pdsaFields) = {Field: "received_hold_time"}];
+  uint32          FsmEstablishedTime    = 41 [(venice.pdsaFields) = {Field: "fsm_established_time"}];
+  uint32          InUpdatesElpsTime     = 42 [(venice.pdsaFields) = {Field: "in_updates_elpsed_time"}];
+  uint32          InOpens               = 43 [(venice.pdsaFields) = {Field: "in_opens"}];
+  uint32          OutOpens              = 44 [(venice.pdsaFields) = {Field: "out_opens"}];
 }
 
 // BGP peer object
