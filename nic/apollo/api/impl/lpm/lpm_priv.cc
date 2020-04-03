@@ -246,7 +246,7 @@ lpm_promote_route (lpm_inode_t *inode, uint32_t stage, lpm_stage_meta_t *smeta)
     sdk_ret_t           ret;
     lpm_stage_info_t    *curr_stage;
 
-    SDK_ASSERT(0 <= stage && stage < LPM_MAX_STAGES);
+    SDK_ASSERT(stage < LPM_MAX_STAGES);
     curr_stage = &smeta->stage_info[stage];
     if (curr_stage->curr_index == smeta->keys_per_table) {
         /**< time to promote this to previous stage */

@@ -190,7 +190,7 @@ public:
 
     /// \brief          return IPv4 VR IP of this subnet
     /// \return         IPv4 virtual router (VR) IP of this subnet
-    const ipv4_addr_t v4_vr_ip(void) const { return v4_vr_ip_; }
+    ipv4_addr_t v4_vr_ip(void) const { return v4_vr_ip_; }
 
     /// \brief          return IPv6 VR IP of this subnet
     /// \return         IPv6 virtual router (VR) IP of this subnet

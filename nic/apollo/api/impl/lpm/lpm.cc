@@ -31,7 +31,7 @@ lpm_build_tree (lpm_itable_t *itable, uint32_t default_nh, uint32_t max_routes,
 
     /**< compute the # of stages, required including the def route */
     nstages = lpm_stages(itable->tree_type, ((max_routes + 1) << 1));
-    SDK_ASSERT(nstages <= LPM_MAX_STAGES);
+    SDK_ASSERT(nstages > 0 && nstages <= LPM_MAX_STAGES);
 
     /**< initialize all the stage meta */
     memset(&smeta, 0, sizeof(smeta));

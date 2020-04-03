@@ -13,7 +13,6 @@
 
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds.hpp"
-#include "nic/apollo/api/include/pds_route.hpp"
 
 /// \defgroup PDS_VPC VPC API
 /// @{
