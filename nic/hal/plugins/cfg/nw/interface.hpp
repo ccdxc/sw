@@ -449,6 +449,8 @@ hal_ret_t hal_if_pick_inb_bond_active(if_t *hal_if, IfStatus new_status, bool *c
 hal_ret_t hal_if_inb_bond_active_changed(bool took_lock);
 if_t *find_tnnlif_by_dst_ip(IfTunnelEncapType encap_type, ip_addr_t *ip);
 if_t * if_pick_uplink_oper_up(void);
+hal_ret_t hal_if_repin_inb_enics(void);
+
 
 }    // namespace hal
 

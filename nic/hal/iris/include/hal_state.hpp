@@ -86,7 +86,8 @@ typedef enum bond_mode_s {
     BOND_MODE_BROADCAST,
     BOND_MODE_LACP,
     BOND_MODE_BALANCE_TLB,
-    BOND_MODE_BALANCE_ALB
+    BOND_MODE_BALANCE_ALB,
+    BOND_MODE_NONE
 } bond_mode_t;
     
 

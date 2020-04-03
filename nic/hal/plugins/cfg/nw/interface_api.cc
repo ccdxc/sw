@@ -6,6 +6,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
+#include "nic/hal/iris/include/hal_state.hpp"
 #include "lib/ht/ht.hpp"
 
 namespace hal {
@@ -644,8 +645,8 @@ uint8_t
 inband_mgmt_get_bond_mode (void)
 {
     FILE *fptr = fopen(HAL_BOND0_MODE_FILENAME, "r");
-    char mode_str[LIF_NAME_LEN];
-    unsigned int mode = 1;
+    char mode_str[LIF_NAME_LEN] = "none";
+    unsigned int mode = hal::BOND_MODE_NONE;
 
     if (!fptr) {
         HAL_TRACE_ERR("Failed to open bond0 mode file");
@@ -653,13 +654,13 @@ inband_mgmt_get_bond_mode (void)
     }
     memset(mode_str, 0, LIF_NAME_LEN);
     fscanf(fptr, "%31s %u", mode_str, &mode);
-    HAL_TRACE_DEBUG("Inband bond mode: {}, {}", mode_str, mode);
 
 end:
     if (fptr) {
         fclose(fptr);
     }
 
+    // HAL_TRACE_DEBUG("Inband bond mode: {}, {}", mode_str, mode);
     return (uint8_t)mode;
 }
 

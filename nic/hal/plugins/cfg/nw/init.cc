@@ -198,6 +198,7 @@ init (hal_cfg_t *hal_cfg)
     } else {
         g_hal_state->set_inband_bond_mode(hal::BOND_MODE_ACTIVE_BACKUP);
     }
+    HAL_TRACE_DEBUG("Setting bond mode: {}", g_hal_state->inband_bond_mode());
 
     HAL_TRACE_DEBUG("Done with if init");
 

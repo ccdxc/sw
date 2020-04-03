@@ -5742,6 +5742,29 @@ end:
 }
 
 //-----------------------------------------------------------------------------
+// Bond removal. Only for Enterprise => Cloud Upgrade
+//-----------------------------------------------------------------------------
+hal_ret_t
+hal_if_repin_inb_enics (void)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    uint8_t bond_mode = inband_mgmt_get_bond_mode();
+    if (bond_mode != (uint8_t)g_hal_state->inband_bond_mode()) {
+        HAL_TRACE_DEBUG("Bond mode change {} => {}",
+                        g_hal_state->inband_bond_mode(),
+                        bond_mode);
+        if (bond_mode == hal::BOND_MODE_NONE) {
+            g_hal_state->set_inband_bond_mode(hal::BOND_MODE_NONE);
+            ret = enicif_update_inb_enics();
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to update inband enics. ret: {}", ret);
+            }
+        }
+    }
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
 // Re pin mirror sessions on the uplink
 //-----------------------------------------------------------------------------
 hal_ret_t
