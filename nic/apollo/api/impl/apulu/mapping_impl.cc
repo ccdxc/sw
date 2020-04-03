@@ -508,6 +508,9 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                     ret = SDK_RET_OK;
                 }
             }
+        } else {
+            // update of remote mapping, remote mapping udpate will use already
+            // allocate resources, so no need to allocate any new resources
         }
         break;
 
@@ -743,6 +746,49 @@ mapping_impl::add_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
     return SDK_RET_OK;
 }
 
+void
+mapping_impl::fill_local_overlay_ip_mapping_key_data_(
+                  vpc_impl *vpc, subnet_entry *subnet,
+                  vnic_entry *vnic, vnic_impl *vnic_impl_obj,
+                  local_mapping_swkey_t *local_mapping_key,
+                  local_mapping_appdata_t *local_mapping_data,
+                  sdk::table::handle_t local_mapping_overlay_ip_hdl,
+                  sdk_table_api_params_t *local_mapping_tbl_params,
+                  mapping_swkey_t *mapping_key, mapping_appdata_t *mapping_data,
+                  sdk::table::handle_t mapping_hdl,
+                  sdk_table_api_params_t *mapping_tbl_params,
+                  pds_mapping_spec_t *spec) {
+    // fill LOCAL_MAPPING table key, data and table params for overlay IP
+    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(local_mapping_key, vpc->hw_id(),
+                                         &spec->skey.ip_addr);
+    PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(local_mapping_data,
+        vnic_impl_obj->hw_id(), to_public_ip_nat_idx_,
+        (vnic->binding_checks_en() && (spec->skey.ip_addr.af == IP_AF_IPV4)) ?
+             true : false, vnic_impl_obj->binding_hw_id(),
+        PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID, vnic->tagged(),
+        MAPPING_TYPE_OVERLAY);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(local_mapping_tbl_params,
+                                   local_mapping_key, NULL,
+                                   local_mapping_data,
+                                   LOCAL_MAPPING_LOCAL_MAPPING_INFO_ID,
+                                   local_mapping_overlay_ip_hdl);
+
+    // fill MAPPING table key, data and table params for overlay IP
+    PDS_IMPL_FILL_IP_MAPPING_SWKEY(mapping_key, vpc->hw_id(),
+                                   &spec->skey.ip_addr);
+    memset(mapping_data, 0, sizeof(*mapping_data));
+    mapping_data->is_local = TRUE;
+    mapping_data->nexthop_valid = TRUE;
+    mapping_data->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    mapping_data->nexthop_id = vnic_impl_obj->nh_idx();
+    mapping_data->egress_bd_id = ((subnet_impl *)subnet->impl())->hw_id();
+    sdk::lib::memrev(mapping_data->dmaci, vnic->mac(), ETH_ADDR_LEN);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(mapping_tbl_params, mapping_key,
+                                   NULL, mapping_data,
+                                   MAPPING_MAPPING_INFO_ID, mapping_hdl);
+    return;
+}
+
 sdk_ret_t
 mapping_impl::add_overlay_ip_mapping_entries_(vpc_impl *vpc,
                                               subnet_entry *subnet,
@@ -752,40 +798,27 @@ mapping_impl::add_overlay_ip_mapping_entries_(vpc_impl *vpc,
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
     mapping_appdata_t mapping_data;
-    sdk_table_api_params_t tparams;
     local_mapping_swkey_t local_mapping_key;
+    sdk_table_api_params_t mapping_tbl_params;
     local_mapping_appdata_t local_mapping_data;
+    sdk_table_api_params_t local_mapping_tbl_params;
+
+    // fill key & data for overlay IP MAPPING and LOCAL_MAPPING table entries
+    fill_local_overlay_ip_mapping_key_data_(vpc, subnet, vnic, vnic_impl_obj,
+                                            &local_mapping_key,
+                                            &local_mapping_data,
+                                            local_mapping_overlay_ip_hdl_,
+                                            &local_mapping_tbl_params,
+                                            &mapping_key, &mapping_data,
+                                            mapping_hdl_, &mapping_tbl_params,
+                                            spec);
 
     // add entry to LOCAL_MAPPING table for overlay IP
-    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),
-                                         &spec->skey.ip_addr);
-    PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_mapping_data,
-        vnic_impl_obj->hw_id(), to_public_ip_nat_idx_,
-        (vnic->binding_checks_en() && (spec->skey.ip_addr.af == IP_AF_IPV4)) ?
-             true : false, vnic_impl_obj->binding_hw_id(),
-        PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID, vnic->tagged(),
-        MAPPING_TYPE_OVERLAY);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
-                                   &local_mapping_data,
-                                   LOCAL_MAPPING_LOCAL_MAPPING_INFO_ID,
-                                   local_mapping_overlay_ip_hdl_);
-    ret = mapping_impl_db()->local_mapping_tbl()->insert(&tparams);
+    ret = mapping_impl_db()->local_mapping_tbl()->insert(&local_mapping_tbl_params);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
 
     // add entry to MAPPING table for overlay IP
-    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
-                                   &spec->skey.ip_addr);
-    memset(&mapping_data, 0, sizeof(mapping_data));
-    mapping_data.is_local = TRUE;
-    mapping_data.nexthop_valid = TRUE;
-    mapping_data.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    mapping_data.nexthop_id = vnic_impl_obj->nh_idx();
-    mapping_data.egress_bd_id = ((subnet_impl *)subnet->impl())->hw_id();
-    sdk::lib::memrev(mapping_data.dmaci, vnic->mac(), ETH_ADDR_LEN);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key,
-                                   NULL, &mapping_data,
-                                   MAPPING_MAPPING_INFO_ID, mapping_hdl_);
-    ret = mapping_impl_db()->mapping_tbl()->insert(&tparams);
+    ret = mapping_impl_db()->mapping_tbl()->insert(&mapping_tbl_params);
     SDK_ASSERT(ret == SDK_RET_OK);
     return ret;
 }
@@ -822,57 +855,78 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
 }
 
 sdk_ret_t
-mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
-                                          mapping_entry *mapping,
-                                          pds_mapping_spec_t *spec) {
+mapping_impl::fill_remote_mapping_key_data_(
+                  vpc_impl *vpc, subnet_impl *subnet,
+                  mapping_swkey_t *mapping_key, mapping_appdata_t *mapping_data,
+                  sdk::table::handle_t mapping_hdl,
+                  sdk_table_api_params_t *mapping_table_params,
+                  pds_mapping_spec_t *spec) {
     tep_entry *tep;
     tep_impl *tep_impl_obj;
     nexthop_group *nh_group;
-    mapping_swkey_t mapping_key;
-    mapping_appdata_t mapping_data;
     sdk_table_api_params_t tparams;
     nexthop_group_impl *nhgroup_impl;
 
-    // add entry to MAPPING table for overlay IP or MAC
+    // fill MAPPING table entry for overlay IP or MAC
     if (spec->skey.type == PDS_MAPPING_TYPE_L3) {
-        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
-                                       ((vpc_impl *)vpc->impl())->hw_id(),
+        PDS_IMPL_FILL_IP_MAPPING_SWKEY(mapping_key, vpc->hw_id(),
                                        &spec->skey.ip_addr);
     } else {
-        PDS_IMPL_FILL_L2_MAPPING_SWKEY(&mapping_key,
-                                       ((subnet_impl *)subnet->impl())->hw_id(),
+        PDS_IMPL_FILL_L2_MAPPING_SWKEY(mapping_key, subnet->hw_id(),
                                        spec->skey.mac_addr);
     }
-    memset(&mapping_data, 0, sizeof(mapping_data));
-    mapping_data.nexthop_valid = TRUE;
+    memset(mapping_data, 0, sizeof(*mapping_data));
+    mapping_data->nexthop_valid = TRUE;
     switch (spec->nh_type) {
     case PDS_NH_TYPE_OVERLAY:
         tep = tep_find(&spec->tep);
         tep_impl_obj = (tep_impl *)tep->impl();
-        mapping_data.nexthop_type = NEXTHOP_TYPE_TUNNEL;
-        mapping_data.nexthop_id = tep_impl_obj->hw_id1();
+        mapping_data->nexthop_type = NEXTHOP_TYPE_TUNNEL;
+        mapping_data->nexthop_id = tep_impl_obj->hw_id1();
         break;
 
     case PDS_NH_TYPE_OVERLAY_ECMP:
         nh_group = nexthop_group_find(&spec->nh_group);
         nhgroup_impl = (nexthop_group_impl *)nh_group->impl();
-        mapping_data.nexthop_type = NEXTHOP_TYPE_ECMP;
-        mapping_data.nexthop_id = nhgroup_impl->hw_id();
+        mapping_data->nexthop_type = NEXTHOP_TYPE_ECMP;
+        mapping_data->nexthop_id = nhgroup_impl->hw_id();
         break;
 
     default:
         return SDK_RET_INVALID_ARG;
         break;
     }
-    mapping_data.egress_bd_id = ((subnet_impl *)subnet->impl())->hw_id();
+    mapping_data->egress_bd_id = subnet->hw_id();
     if (spec->skey.type == PDS_MAPPING_TYPE_L2) {
-        sdk::lib::memrev(mapping_data.dmaci, spec->skey.mac_addr, ETH_ADDR_LEN);
+        sdk::lib::memrev(mapping_data->dmaci, spec->skey.mac_addr,
+                         ETH_ADDR_LEN);
     } else {
-        sdk::lib::memrev(mapping_data.dmaci, spec->overlay_mac, ETH_ADDR_LEN);
+        sdk::lib::memrev(mapping_data->dmaci, spec->overlay_mac, ETH_ADDR_LEN);
     }
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key,
-                                   NULL, &mapping_data,
-                                   MAPPING_MAPPING_INFO_ID, mapping_hdl_);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(mapping_table_params, mapping_key,
+                                   NULL, mapping_data,
+                                   MAPPING_MAPPING_INFO_ID, mapping_hdl);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
+                                          mapping_entry *mapping,
+                                          pds_mapping_spec_t *spec) {
+    sdk_ret_t ret;
+    mapping_swkey_t mapping_key;
+    mapping_appdata_t mapping_data;
+    sdk_table_api_params_t tparams;
+
+    // fill key & data for MAPPING table entry for overlay IP or MAC
+    ret = fill_remote_mapping_key_data_((vpc_impl *)vpc->impl(),
+                                        (subnet_impl *)subnet->impl(),
+                                        &mapping_key, &mapping_data,
+                                        mapping_hdl_, &tparams, spec);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+
+
+    // add entry to MAPPING table for overlay IP or MAC
     return mapping_impl_db()->mapping_tbl()->insert(&tparams);
 }
 
@@ -1077,52 +1131,41 @@ mapping_impl::upd_overlay_ip_mapping_entries_(vpc_impl *vpc,
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
     mapping_appdata_t mapping_data;
-    sdk_table_api_params_t tparams;
     local_mapping_swkey_t local_mapping_key;
+    sdk_table_api_params_t mapping_tbl_params;
     local_mapping_appdata_t local_mapping_data;
+    sdk_table_api_params_t local_mapping_tbl_params;
     mapping_impl *orig_mapping_impl = (mapping_impl *)orig_mapping->impl();
 
+
+
+    // fill key & data for ovrlay IP MAPPING and LOCAL_MAPPING table entries
+    fill_local_overlay_ip_mapping_key_data_(vpc, subnet, vnic, vnic_impl_obj,
+                                            &local_mapping_key,
+                                            &local_mapping_data,
+                                            sdk::table::handle_t::null(),
+                                            &local_mapping_tbl_params,
+                                            &mapping_key, &mapping_data,
+                                            sdk::table::handle_t::null(),
+                                            &mapping_tbl_params, spec);
+
+
     // update entry corresponding to overlay IP in LOCAL_MAPPING table
-    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),
-                                         &spec->skey.ip_addr);
-    PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_mapping_data,
-        vnic_impl_obj->hw_id(), to_public_ip_nat_idx_,
-        (vnic->binding_checks_en() && (spec->skey.ip_addr.af == IP_AF_IPV4)) ?
-             true : false, vnic_impl_obj->binding_hw_id(),
-        PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID, vnic->tagged(),
-        MAPPING_TYPE_OVERLAY);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
-                                   &local_mapping_data,
-                                   LOCAL_MAPPING_LOCAL_MAPPING_INFO_ID,
-                                   sdk::table::handle_t::null());
-    ret = mapping_impl_db()->local_mapping_tbl()->update(&tparams);
+    ret = mapping_impl_db()->local_mapping_tbl()->update(&local_mapping_tbl_params);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
-    local_mapping_overlay_ip_hdl_ = tparams.handle;
+    local_mapping_overlay_ip_hdl_ = local_mapping_tbl_params.handle;
 
     // update entry corresponding to overlay IP in MAPPING table
-    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
-                                   &spec->skey.ip_addr);
-    memset(&mapping_data, 0, sizeof(mapping_data));
-    mapping_data.is_local = TRUE;
-    mapping_data.nexthop_valid = TRUE;
-    mapping_data.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    mapping_data.nexthop_id = vnic_impl_obj->nh_idx();
-    mapping_data.egress_bd_id = ((subnet_impl *)subnet->impl())->hw_id();
-    sdk::lib::memrev(mapping_data.dmaci, vnic->mac(), ETH_ADDR_LEN);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key,
-                                   NULL, &mapping_data,
-                                   MAPPING_MAPPING_INFO_ID,
-                                   sdk::table::handle_t::null());
-    ret = mapping_impl_db()->mapping_tbl()->update(&tparams);
+    ret = mapping_impl_db()->mapping_tbl()->update(&mapping_tbl_params);
     SDK_ASSERT(ret == SDK_RET_OK);
-    mapping_hdl_ = tparams.handle;
+    mapping_hdl_ = mapping_tbl_params.handle;
 
     // now that cloned object took over the overlay IP mapping resources,
-    // we need to free the ownership of it in the original object
+    // we need the original object to relinquish the ownership
     orig_mapping_impl->local_mapping_overlay_ip_hdl_ =
         sdk::table::handle_t::null();
     orig_mapping_impl->mapping_hdl_ = sdk::table::handle_t::null();
-    return ret;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -1180,8 +1223,32 @@ mapping_impl::upd_local_mapping_entries_(vpc_entry *vpc,
 sdk_ret_t
 mapping_impl::upd_remote_mapping_entries_(vpc_entry *vpc,
                                           subnet_entry *subnet,
+                                          mapping_entry *new_mapping,
+                                          mapping_entry *orig_mapping,
                                           pds_mapping_spec_t *spec) {
-    return SDK_RET_ERR;
+    sdk_ret_t ret;
+    mapping_swkey_t mapping_key;
+    mapping_appdata_t mapping_data;
+    sdk_table_api_params_t tparams;
+    mapping_impl *orig_mapping_impl = (mapping_impl *)orig_mapping->impl();
+
+    // fill key & data for MAPPING table entry for overlay IP or MAC
+    ret = fill_remote_mapping_key_data_((vpc_impl *)vpc->impl(),
+                                        (subnet_impl *)subnet->impl(),
+                                        &mapping_key, &mapping_data,
+                                        sdk::table::handle_t::null(),
+                                        &tparams, spec);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+
+    // update entry to MAPPING table for overlay IP or MAC
+    ret = mapping_impl_db()->mapping_tbl()->update(&tparams);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    mapping_hdl_ = tparams.handle;
+
+    // now that cloned object took over the remote IP/MAC mapping resources
+    // we need the original object to relinquish the ownership
+    orig_mapping_impl->mapping_hdl_ = sdk::table::handle_t::null();
+    return SDK_RET_OK;
 }
 
 
@@ -1214,7 +1281,8 @@ mapping_impl::activate_update_(pds_epoch_t epoch, mapping_entry *new_mapping,
         ret = upd_local_mapping_entries_(vpc, subnet, new_mapping, orig_mapping,
                                          obj_ctxt, spec);
     } else {
-        ret = upd_remote_mapping_entries_(vpc, subnet, spec);
+        ret = upd_remote_mapping_entries_(vpc, subnet,
+                                          new_mapping, orig_mapping, spec);
     }
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to update mapping %s, %s, err %u",

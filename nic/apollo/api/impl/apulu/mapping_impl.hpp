@@ -22,10 +22,12 @@
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
+#include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
 using sdk::table::handle_t;
+using sdk::table::sdk_table_api_params_t;
 
 namespace api {
 namespace impl {
@@ -234,7 +236,7 @@ private:
     /// \param[in] vpc  VPC impl instance corresponding to this mapping
     /// \param[in] subnet subnet of this mapping
     /// \param[in] vnic vnic this mapping is associated with
-    /// \param[n]  vnic_impl_obj vnic impl instance of vnic corresponding to
+    /// \param[in] vnic_impl_obj vnic impl instance of vnic corresponding to
     ///                          mapping
     /// \param[in] mapping mapping object being processed
     /// \param[in] spec IP mapping details
@@ -243,6 +245,35 @@ private:
                                      vnic_entry *vnic, vnic_impl *vnic_impl_obj,
                                      mapping_entry *mapping,
                                      pds_mapping_spec_t *spec);
+
+    /// \brief     fill key and data information for local overlay IP mappping's
+    ///            P4 table entries
+    /// \param[in] vpc  VPC impl instance corresponding to this mapping
+    /// \param[in] subnet subnet of this mapping
+    /// \param[in] vnic vnic this mapping is associated with
+    /// \param[in] vnic_impl_obj vnic impl instance of vnic corresponding to
+    ///                          mapping
+    /// \param[in] local_mapping_key pointer to the key structure of
+    ///            LOCAL_MAPPING table
+    /// \param[in] local_mapping_data pointer to the data structure of
+    ///            LOCAL_MAPPING table
+    /// \param[in] local_mapping_overlay_ip_hdl LOCAL_MPPING table entry handle
+    /// \param[in] local_mapping_tbl_params table params for LOCAL_MAPPING table
+    /// \param[in] mapping_key pointer to the key structure of MAPPING table
+    /// \param[in] mapping_data pointer to the data structure of MAPPING table
+    /// \param[in] mapping_hdl MAPPING table entry handle
+    /// \param[in] mapping_tbl_params  table params for MAPPING table
+    /// \param[in] spec IP mapping details
+    void fill_local_overlay_ip_mapping_key_data_(
+             vpc_impl *vpc, subnet_entry *subnet, vnic_entry *vnic,
+             vnic_impl *vnic_impl_obj, local_mapping_swkey_t *local_mapping_key,
+             local_mapping_appdata_t *local_mapping_data,
+             sdk::table::handle_t local_mapping_overlay_ip_hdl,
+             sdk_table_api_params_t *local_mapping_tbl_params,
+             mapping_swkey_t *mapping_key, mapping_appdata_t *mapping_data,
+             sdk::table::handle_t mapping_hdl,
+             sdk_table_api_params_t *mapping_tbl_params,
+             pds_mapping_spec_t *spec);
 
     /// \brief     add necessary entries for overlay IP of local mapping
     /// \param[in] vpc  VPC of this mapping
@@ -267,6 +298,22 @@ private:
     sdk_ret_t add_local_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
                                          mapping_entry *mapping,
                                          pds_mapping_spec_t *spec);
+
+    /// \brief     fill key and data information for remote IP/MAC mapping's
+    ///            P4 table entries
+    /// \param[in] vpc  VPC impl instance corresponding to this mapping
+    /// \param[in] subnet subnet imple instance of this mapping
+    /// \param[in] mapping_key pointer to the key structure of MAPPING table
+    /// \param[in] mapping_data pointer to the data structure of MAPPING table
+    /// \param[in] mapping_hdl MAPPING table entry handle
+    /// \param[in] mapping_tbl_params  table params for MAPPING table
+    /// \param[in] spec IP mapping details
+    sdk_ret_t fill_remote_mapping_key_data_(
+                  vpc_impl *vpc, subnet_impl *subnet,
+                  mapping_swkey_t *mapping_key, mapping_appdata_t *mapping_data,
+                  sdk::table::handle_t mapping_hdl,
+                  sdk_table_api_params_t *mapping_tbl_params,
+                  pds_mapping_spec_t *spec);
 
     /// \brief     add necessary entries for remote mappings
     /// \param[in] vpc  VPC of this mapping
@@ -329,10 +376,14 @@ private:
     /// \brief     update necessary entries for remote mappings
     /// \param[in] vpc  VPC of this mapping
     /// \param[in] subnet subnet of this mapping
+    /// \param[in] new_mapping cloned mapping object being processed
+    /// \param[in] orig_mapping original/current mapping object
     /// \param[in] spec IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t upd_remote_mapping_entries_(vpc_entry *vpc,
                                           subnet_entry *subnet,
+                                          mapping_entry *new_mapping,
+                                          mapping_entry *orig_mapping,
                                           pds_mapping_spec_t *spec);
 
     /// \brief     program and activate mapping related tables during create
