@@ -74,7 +74,8 @@ static ipv6_addr_t  g_h2s_dipv6 =
 static uint8_t  g_h2s_proto_tcp = 0x06;
 //static uint8_t  g_h2s_proto_icmp = 0x01;
 static uint8_t  g_h2s_proto_icmpv6 = 0x3A;
-    
+
+
 
 sdk_ret_t
 fte_setup_static_flows (void)
@@ -306,6 +307,223 @@ fte_setup_static_flows (void)
 
     return ret;
 }
+
+
+
+/*
+ * VNIC 3
+ */
+static uint16_t  g_vnic3_vlan = 0x003B;
+static uint16_t g_vnic3_id = 0x03;
+static uint32_t g_vnic3_slot_id = 0x12346;
+
+/* Towards Host */
+static mac_addr_t g_vnic3_ep_smac = {0x00, 0x11, 0x22, 0x33, 0x44, 0x56};
+static mac_addr_t g_vnic3_ep_dmac = {0x00, 0xae, 0xcd, 0x01, 0x2c, 0x61};
+
+/*
+ * VNIC 4
+ */
+static uint16_t g_vnic4_vlan = 0x0059;
+static uint16_t g_vnic4_id = 0x04;
+static uint32_t g_vnic4_slot_id = 0x54322;
+
+/* Towards Host */
+static mac_addr_t g_vnic4_ep_smac = {0x00, 0x66, 0x77, 0x88, 0x99, 0xab};
+static mac_addr_t g_vnic4_ep_dmac = {0x00, 0x11, 0x22, 0x33, 0x44, 0x56};
+
+static uint32_t    g_h2s_nat_sip = 0x03000001;
+
+sdk_ret_t
+fte_setup_static_dnat_flows(void)
+{
+    sdk_ret_t       ret = SDK_RET_OK;
+    mac_addr_t      host_mac;
+    uint8_t         vnic_stats_mask[PDS_FLOW_STATS_MASK_LEN];
+    uint32_t        vnic3_s2h_session_rewrite_id;
+    uint32_t        vnic3_h2s_session_rewrite_id;
+    uint32_t        vnic4_s2h_session_rewrite_id;
+    uint32_t        vnic4_h2s_session_rewrite_id;
+    uint32_t        vnic3_session_index;
+    uint32_t        vnic4_session_index;
+
+    /* 
+     * VNIC3 (NAT enabled flow)
+     */
+    // Setup VLAN->VNIC mapping
+    ret = fte_vlan_to_vnic_map(g_vnic3_vlan, g_vnic3_id);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_vlan_to_vnic_map failed.\n");
+        return ret;
+    }
+
+    // Setup MPLS label->VNIC mapping
+    ret = fte_mpls_label_to_vnic_map(g_vnic3_slot_id,
+                                     g_vnic3_id);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_mpls_label_to_vnic_map failed.\n");
+        return ret;
+    }
+
+    /* DNAT mapping */
+    ret = fte_create_dnat_map_ipv4(g_vnic3_id, g_h2s_nat_sip, g_h2s_sip, 0);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    vnic3_h2s_session_rewrite_id = g_session_rewrite_index++;
+    ret = fte_h2s_nat_v4_session_rewrite_mplsoudp(vnic3_h2s_session_rewrite_id,
+                                              &substrate_dmac,
+                                              &substrate_smac,
+                                              substrate_vlan,
+                                              substrate_sip,
+                                              substrate_dip,
+                                              g_vnic3_slot_id,
+                                              0,
+                                              REWRITE_NAT_TYPE_IPV4_SNAT,
+                                              (ipv4_addr_t)g_h2s_nat_sip);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_h2s_v4_session_rewrite_mplsoudp "
+                        "failed.\n");
+        return ret;
+    }
+
+    vnic3_s2h_session_rewrite_id = g_session_rewrite_index++;
+    ret = fte_s2h_nat_v4_session_rewrite(vnic3_s2h_session_rewrite_id,
+                                     (mac_addr_t *)g_vnic3_ep_dmac,
+                                     (mac_addr_t *)g_vnic3_ep_smac,
+                                     g_vnic3_vlan,
+                                     REWRITE_NAT_TYPE_IPV4_DNAT,
+                                     (ipv4_addr_t)g_h2s_sip);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_s2h_v4_session_rewrite failed.\n");
+        return ret;
+    }
+
+    vnic3_session_index = g_session_index++;
+    memset(&host_mac, 0, sizeof(host_mac));
+    ret = fte_session_info_create_all(vnic3_session_index, /*conntrack_id*/0,
+                /*skip_flow_log*/ FALSE, /*host_mac*/ &host_mac,
+
+                /*h2s_epoch_vnic*/ 0, /*h2s_epoch_vnic_id*/ 0,
+                /*h2s_epoch_mapping*/0, /*h2s_epoch_mapping_id*/0,
+                /*h2s_policer_bw1_id*/0, /*h2s_policer_bw2_id*/0,
+                /*h2s_vnic_stats_id*/0, /*h2s_vnic_stats_mask*/ vnic_stats_mask,
+                /*h2s_vnic_histogram_latency_id*/0, /*h2s_vnic_histogram_packet_len_id*/0,
+                /*h2s_tcp_flags_bitmap*/0,
+                /*h2s_session_rewrite_id*/ vnic3_h2s_session_rewrite_id,
+                /*h2s_allowed_flow_state_bitmask*/0,
+                /*h2s_egress_action*/EGRESS_ACTION_NONE,
+
+                /*s2h_epoch_vnic*/ 0, /*s2h_epoch_vnic_id*/ 0,
+                /*s2h_epoch_mapping*/0, /*s2h_epoch_mapping_id*/0,
+                /*s2h_policer_bw1_id*/0, /*s2h_policer_bw2_id*/0,
+                /*s2h_vnic_stats_id*/0, /*s2h_vnic_stats_mask*/ vnic_stats_mask,
+                /*s2h_vnic_histogram_latency_id*/0, /*s2h_vnic_histogram_packet_len_id*/0,
+                /*s2h_tcp_flags_bitmap*/0,
+                /*s2h_session_rewrite_id*/ vnic3_s2h_session_rewrite_id,
+                /*s2h_allowed_flow_state_bitmask*/0,
+                /*s2h_egress_action*/EGRESS_ACTION_NONE
+                );
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // Setup Normalized Flow entry
+    ret = fte_flow_create(g_vnic3_id, g_h2s_sip, g_h2s_dip,
+            g_h2s_proto, g_h2s_sport, g_h2s_dport,
+            PDS_FLOW_SPEC_INDEX_SESSION, vnic3_session_index);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_flow_create failed.\n");
+        return ret;
+    }
+
+
+    /* 
+     * VNIC4 (regular flow - no NAT)
+     */
+    // Setup VLAN->VNIC mapping
+    ret = fte_vlan_to_vnic_map(g_vnic4_vlan, g_vnic4_id);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_vlan_to_vnic_map failed.\n");
+        return ret;
+    }
+
+    // Setup MPLS label->VNIC mapping
+    ret = fte_mpls_label_to_vnic_map(g_vnic4_slot_id,
+                                     g_vnic4_id);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_mpls_label_to_vnic_map failed.\n");
+        return ret;
+    }
+
+    vnic4_h2s_session_rewrite_id = g_session_rewrite_index++;
+    ret = fte_h2s_v4_session_rewrite_mplsoudp(vnic4_h2s_session_rewrite_id,
+                                              &substrate_smac,
+                                              &substrate_dmac,
+                                              substrate_vlan,
+                                              substrate_dip,
+                                              substrate_sip,
+                                              g_vnic4_slot_id,
+                                              0);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_h2s_v4_session_rewrite_mplsoudp "
+                        "failed.\n");
+        return ret;
+    }
+
+    vnic4_s2h_session_rewrite_id = g_session_rewrite_index++;
+    ret = fte_s2h_v4_session_rewrite(vnic4_s2h_session_rewrite_id,
+                                     (mac_addr_t *)g_vnic4_ep_dmac,
+                                     (mac_addr_t *)g_vnic4_ep_smac,
+                                     g_vnic2_vlan);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_s2h_v4_session_rewrite failed.\n");
+        return ret;
+    }
+
+    vnic4_session_index = g_session_index++;
+    memset(&host_mac, 0, sizeof(host_mac));
+    ret = fte_session_info_create_all(vnic4_session_index, /*conntrack_id*/0,
+                /*skip_flow_log*/ FALSE, /*host_mac*/ &host_mac,
+
+                /*h2s_epoch_vnic*/ 0, /*h2s_epoch_vnic_id*/ 0,
+                /*h2s_epoch_mapping*/0, /*h2s_epoch_mapping_id*/0,
+                /*h2s_policer_bw1_id*/0, /*h2s_policer_bw2_id*/0,
+                /*h2s_vnic_stats_id*/0, /*h2s_vnic_stats_mask*/ vnic_stats_mask,
+                /*h2s_vnic_histogram_latency_id*/0, /*h2s_vnic_histogram_packet_len_id*/0,
+                /*h2s_tcp_flags_bitmap*/0,
+                /*h2s_session_rewrite_id*/ vnic4_h2s_session_rewrite_id,
+                /*h2s_allowed_flow_state_bitmask*/0,
+                /*h2s_egress_action*/EGRESS_ACTION_NONE,
+
+                /*s2h_epoch_vnic*/ 0, /*s2h_epoch_vnic_id*/ 0,
+                /*s2h_epoch_mapping*/0, /*s2h_epoch_mapping_id*/0,
+                /*s2h_policer_bw1_id*/0, /*s2h_policer_bw2_id*/0,
+                /*s2h_vnic_stats_id*/0, /*s2h_vnic_stats_mask*/ vnic_stats_mask,
+                /*s2h_vnic_histogram_latency_id*/0, /*s2h_vnic_histogram_packet_len_id*/0,
+                /*s2h_tcp_flags_bitmap*/0,
+                /*s2h_session_rewrite_id*/ vnic4_s2h_session_rewrite_id,
+                /*s2h_allowed_flow_state_bitmask*/0,
+                /*s2h_egress_action*/EGRESS_ACTION_NONE
+                );
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // Setup Normalized Flow entry
+    ret = fte_flow_create(g_vnic4_id, g_h2s_dip, g_h2s_nat_sip,
+            g_h2s_proto, g_h2s_dport, g_h2s_sport,
+            PDS_FLOW_SPEC_INDEX_SESSION, vnic4_session_index);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_flow_create failed.\n");
+        return ret;
+    }
+
+    return ret;
+
+}
+    
 
 
 }

@@ -44,6 +44,7 @@
 #include "nic/apollo/api/include/athena/pds_flow_session_info.h"
 #include "nic/apollo/api/include/athena/pds_flow_session_rewrite.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
+#include "nic/apollo/api/include/athena/pds_dnat.h"
 #include "gen/p4gen/p4/include/ftl.h"
 #include "athena_test.hpp"
 #include "app_test_utils.hpp"
@@ -769,6 +770,65 @@ fte_h2s_v4_session_rewrite_mplsoudp (uint32_t session_rewrite_id,
 }
 
 sdk_ret_t
+fte_h2s_nat_v4_session_rewrite_mplsoudp (uint32_t session_rewrite_id,
+                                     mac_addr_t *substrate_dmac,
+                                     mac_addr_t *substrate_smac,
+                                     uint16_t substrate_vlan,
+                                     uint32_t substrate_sip,
+                                     uint32_t substrate_dip,
+                                     uint32_t mpls1_label,
+                                     uint32_t mpls2_label,
+                                     pds_flow_session_rewrite_nat_type_t nat_type,
+                                     ipv4_addr_t ipv4_addr)
+{
+    pds_flow_session_rewrite_spec_t spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_rewrite_id = session_rewrite_id;
+
+    spec.data.strip_l2_header = TRUE;
+    spec.data.strip_vlan_tag = TRUE;
+
+    spec.data.nat_info.nat_type = nat_type;
+    spec.data.nat_info.u.ipv4_addr = (uint32_t) ipv4_addr;
+
+    spec.data.encap_type = ENCAP_TYPE_MPLSOUDP;
+    sdk::lib::memrev(spec.data.u.mplsoudp_encap.l2_encap.dmac,
+                     (uint8_t*)substrate_dmac, sizeof(mac_addr_t));
+    sdk::lib::memrev(spec.data.u.mplsoudp_encap.l2_encap.smac,
+                     (uint8_t*)substrate_smac, sizeof(mac_addr_t));
+    spec.data.u.mplsoudp_encap.l2_encap.insert_vlan_tag = TRUE;
+    spec.data.u.mplsoudp_encap.l2_encap.vlan_id = substrate_vlan;
+
+    spec.data.u.mplsoudp_encap.ip_encap.ip_saddr = substrate_sip;
+    spec.data.u.mplsoudp_encap.ip_encap.ip_daddr = substrate_dip;
+
+    spec.data.u.mplsoudp_encap.mpls1_label = mpls1_label;
+    spec.data.u.mplsoudp_encap.mpls2_label = mpls2_label;
+
+    return pds_flow_session_rewrite_create(&spec);
+}
+
+sdk_ret_t
+fte_create_dnat_map_ipv4(uint16_t vnic_id, ipv4_addr_t v4_nat_dip, 
+        ipv4_addr_t v4_orig_dip, uint16_t dnat_epoch)
+{
+    pds_dnat_mapping_spec_t         spec;
+
+    memset(&spec, 0, sizeof(spec));
+
+    spec.key.vnic_id = vnic_id;
+    spec.key.key_type = IP_AF_IPV4;
+    memcpy(spec.key.addr, &v4_nat_dip, sizeof(ipv4_addr_t));
+
+    spec.data.addr_type = IP_AF_IPV4;
+    memcpy(spec.data.addr, &v4_orig_dip, sizeof(ipv4_addr_t));
+    spec.data.epoch = dnat_epoch;
+
+    return pds_dnat_map_entry_create(&spec);
+}
+
+sdk_ret_t
 fte_s2h_v4_session_rewrite (uint32_t session_rewrite_id,
                             mac_addr_t *ep_dmac, mac_addr_t *ep_smac,
                             uint16_t vnic_vlan)
@@ -783,6 +843,36 @@ fte_s2h_v4_session_rewrite (uint32_t session_rewrite_id,
     spec.data.strip_vlan_tag = TRUE;
 
     spec.data.nat_info.nat_type = REWRITE_NAT_TYPE_NONE;
+
+    spec.data.encap_type = ENCAP_TYPE_L2;
+    sdk::lib::memrev(spec.data.u.l2_encap.dmac, (uint8_t*)ep_dmac,
+                     sizeof(mac_addr_t));
+    sdk::lib::memrev(spec.data.u.l2_encap.smac, (uint8_t*)ep_smac,
+                     sizeof(mac_addr_t));
+    spec.data.u.l2_encap.insert_vlan_tag = TRUE;
+    spec.data.u.l2_encap.vlan_id = vnic_vlan;
+
+    return pds_flow_session_rewrite_create(&spec);
+}
+
+sdk_ret_t
+fte_s2h_nat_v4_session_rewrite (uint32_t session_rewrite_id,
+                            mac_addr_t *ep_dmac, mac_addr_t *ep_smac,
+                            uint16_t vnic_vlan,
+                            pds_flow_session_rewrite_nat_type_t nat_type,
+                            ipv4_addr_t ipv4_addr)
+{
+    pds_flow_session_rewrite_spec_t spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_rewrite_id = session_rewrite_id;
+
+    spec.data.strip_encap_header = TRUE;
+    spec.data.strip_l2_header = TRUE;
+    spec.data.strip_vlan_tag = TRUE;
+
+    spec.data.nat_info.nat_type = nat_type;
+    spec.data.nat_info.u.ipv4_addr = (uint32_t) ipv4_addr;
 
     spec.data.encap_type = ENCAP_TYPE_L2;
     sdk::lib::memrev(spec.data.u.l2_encap.dmac, (uint8_t*)ep_dmac,
@@ -847,6 +937,12 @@ fte_setup_flow (void)
     ret = fte_setup_static_flows();
     if (ret != SDK_RET_OK) {
         PDS_TRACE_DEBUG("fte_setup_static_flows failed.\n");
+        return ret;
+    }
+
+    ret = fte_setup_static_dnat_flows();
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_setup_static_dnat_flows failed.\n");
         return ret;
     }
 
