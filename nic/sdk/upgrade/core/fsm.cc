@@ -28,8 +28,8 @@
 #include "logger.hpp"
 #include "utils.hpp"
 
-#define GRACEFUL_UPGRADE_GEN "graceful_upgrade_gen.json"
-#define HITLESS_UPGRADE_GEN  "hitless_upgrade_gen.json"
+#define GRACEFUL_UPGRADE "graceful_upgrade.json"
+#define HITLESS_UPGRADE  "hitless_upgrade.json"
 
 namespace sdk {
 namespace upg {
@@ -579,9 +579,9 @@ load_pipeline_json(pt::ptree& tree, bool is_graceful)
         upg_gen_json += "/gen/";
 
         if (is_graceful) {
-            upg_gen_json += GRACEFUL_UPGRADE_GEN;
+            upg_gen_json += GRACEFUL_UPGRADE;
         } else {
-            upg_gen_json += HITLESS_UPGRADE_GEN;
+            upg_gen_json += HITLESS_UPGRADE;
         }
 
         if (access(upg_gen_json.c_str(), F_OK) != -1)

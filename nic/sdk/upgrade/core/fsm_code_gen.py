@@ -29,6 +29,7 @@ msg = {
     14: "Arguments can't be Null"
 }
 
+
 def message(message_id):
     """ Return the message  for the id """
     return msg.get(message_id, "")
@@ -185,7 +186,8 @@ class GenerateStateMachine(object):
             frame_info = inspect.getframeinfo(inspect.currentframe())
             file = str(frame_info.filename) + str(frame_info.lineno)
             Log(file, "ERROR", message(2), call_stack=True)
-        return self.__construct_data_block__(self.stage_transition, objects)
+        return self.__construct_data_block__(self.stage_transition, objects,
+                                             True)
 
     def make_idl_svc_cfg(self):
         """ Create and return service configuration  """
@@ -194,7 +196,7 @@ class GenerateStateMachine(object):
             frame_info = inspect.getframeinfo(inspect.currentframe())
             file = str(frame_info.filename) + str(frame_info.lineno)
             Log(file, "ERROR", message(3), call_stack=True)
-        return self.__construct_data_block__(self.idl_svc_cfg, objects)
+        return self.__construct_data_block__(self.idl_svc_cfg, objects, True)
 
     def make_idl_stage_cfg(self):
         """ Create and return individual stage object  """
@@ -203,7 +205,12 @@ class GenerateStateMachine(object):
             frame_info = inspect.getframeinfo(inspect.currentframe())
             file = str(frame_info.filename) + str(frame_info.lineno)
             Log(file, "ERROR", message(4), call_stack=True)
-        return self.__construct_data_block__(self.idl_stage_cfg, objects)
+
+        return self.__construct_data_block__(self.idl_stage_cfg,
+                                             objects,
+                                             list_block=False,
+                                             last_block=True,
+                                             tab_count=1)
 
     def build_header_file(self, idl_transition, idl_svc, idl_event_sequence,
                           idl_stages, idl_entry_stage):
@@ -214,14 +221,15 @@ class GenerateStateMachine(object):
                                            idl_event_sequence, idl_stages,
                                            idl_entry_stage]):
 
-            header_file_data = self.__make_header__() + os.linesep
+            header_file_data = "{" + os.linesep
             header_file_data = header_file_data + idl_transition + os.linesep
             header_file_data = header_file_data + idl_svc + os.linesep
-            header_file_data = header_file_data + idl_event_sequence + \
+            header_file_data = header_file_data + "\t" + idl_event_sequence + \
+                               os.linesep
+            header_file_data = header_file_data + "\t " + idl_entry_stage + \
                                os.linesep
             header_file_data = header_file_data + idl_stages + os.linesep
-            header_file_data = header_file_data + idl_entry_stage + os.linesep
-            header_file_data = header_file_data + self.__make_footer__() + \
+            header_file_data = header_file_data + "}" + \
                                os.linesep
 
             return header_file_data
@@ -263,52 +271,76 @@ class GenerateStateMachine(object):
     def __load_fmt__(self):
         """ Initialize constants key format/patters  """
         self.default_event_seq_fmt = "svc.event_sequence"
+        self.default_domain_fmt = "svc.domain"
+        self.default_discovery_fmt = "svc.discovery"
         self.default_rsp_timeout_fmt = "svc.rsp_timeout"
         self.default_entry_stage_fmt = "stages.entry_stage"
         self.rsp_keys_to_walk_fmt = "stages.{0}.events.{1}.name"
         self.next_stage_keys_to_walk_fmt = "stages.{0}.events.{1}.next_stage"
         self.rsp_timeout_fmt = "stages.{0}.svc.rsp_timeout"
+        self.domain_fmt = "stages.{0}.svc.domain"
+        self.discovery_fmt = "stages.{0}.svc.discovery"
         self.svc_seq_fmt = "stages.{0}.svc.event_sequence"
         self.pre_hook_list_fmt = "stages.{0}.pre_hooks"
         self.post_hook_list_fmt = "stages.{0}.post_hooks"
         self.svc_list_fmt = "stages.{0}.svc.names"
-        self.idl_stage_fmt = "idl_upg_stage({0}){1}"
-        self.idl_stage_cfg = "idl_upg_stage idl_stages_cfg[]"
-        self.idl_svc_cfg = "upg_svc svc[]"
-        self.stage_transition = "upg_stage_transition stage_transitions[]"
-        self.event_sequence = "event_sequence_t event_sequence = {0};"
-        self.entry_stage = "upg_stage_t entry_stage = {0};"
+
+        self.idl_stage_cfg = self.__wrap_quote__("upg_stages")
+        self.idl_svc_cfg = self.__wrap_quote__("upg_svc")
+        self.stage_transition = self.__wrap_quote__("upg_stage_transitions")
+        self.event_sequence = self.__wrap_quote__("event_sequence")
+        self.event_sequence += " : {0},"
+        self.entry_stage = self.__wrap_quote__("entry_stage")
+        self.entry_stage += " : {0},"
+        self.rsp_timeout = self.__wrap_quote__("rsp_timeout")
+        self.rsp_timeout += " : {0},"
+        self.svc_sequence = self.__wrap_quote__("svc_sequence")
+        self.svc_sequence += " : {0},"
+        self.event_sequence = self.__wrap_quote__("event_sequence")
+        self.event_sequence += " : {0},"
+        self.pre_hook = self.__wrap_quote__("pre_hook")
+        self.pre_hook += " : {0},"
+        self.post_hook = self.__wrap_quote__("post_hook")
+        self.post_hook += " : {0},"
+        self.domain = self.__wrap_quote__("domain")
+        self.domain += " : {0},"
+        self.discovery = self.__wrap_quote__("discovery")
+        self.discovery += " : {0},"
 
     def __load_stages__(self):
         """ Initialize constants key-value pair of stages and enum """
-        self.stage_name_to_id["compatcheck"] = "UPG_STAGE_COMPAT_CHECK"
-        self.stage_name_to_id["start"] = "UPG_STAGE_START"
-        self.stage_name_to_id["prepare"] = "UPG_STAGE_PREPARE"
-        self.stage_name_to_id["backup"] = "UPG_STAGE_BACKUP"
-        self.stage_name_to_id["repeal"] = "UPG_STAGE_REPEAL"
-        self.stage_name_to_id["rollback"] = "UPG_STAGE_ROLLBACK"
-        self.stage_name_to_id["sync"] = "UPG_STAGE_SYNC"
-        self.stage_name_to_id["prepare_switchover"]= "UPG_STAGE_PREP_SWITCHOVER"
-        self.stage_name_to_id["switchover"] = "UPG_STAGE_SWITCHOVER"
-        self.stage_name_to_id["ready"] = "UPG_STAGE_READY"
-        self.stage_name_to_id["respawn"] = "UPG_STAGE_RESPAWN"
-        self.stage_name_to_id["finish"] = "UPG_STAGE_FINISH"
-        self.stage_name_to_id["exit"] = "UPG_STAGE_EXIT"
+        self.stage_name_to_id["compatcheck"] = \
+            self.__wrap_quote__("compatcheck")
+        self.stage_name_to_id["start"] = self.__wrap_quote__("start")
+        self.stage_name_to_id["prepare"] = self.__wrap_quote__("prepare")
+        self.stage_name_to_id["backup"] = self.__wrap_quote__("backup")
+        self.stage_name_to_id["repeal"] = self.__wrap_quote__("repeal")
+        self.stage_name_to_id["rollback"] = self.__wrap_quote__("rollback")
+        self.stage_name_to_id["sync"] = self.__wrap_quote__("sync")
+        self.stage_name_to_id["prepare_switchover"] = \
+            self.__wrap_quote__("prepare_switchover")
+        self.stage_name_to_id["switchover"] = self.__wrap_quote__("switchover")
+        self.stage_name_to_id["ready"] = self.__wrap_quote__("ready")
+        self.stage_name_to_id["respawn"] = self.__wrap_quote__("respawn")
+        self.stage_name_to_id["finish"] = self.__wrap_quote__("finish")
+        self.stage_name_to_id["exit"] = self.__wrap_quote__("exit")
 
     def __load_svs_rsp_name_to_id__(self):
         """
         Initialize constants key-value pair of service response
         and enum constants
         """
-        self.svs_rsp_name_to_id["svc_rsp_ok"] = "SVC_RSP_OK"
-        self.svs_rsp_name_to_id["svc_rsp_fail"] = "SVC_RSP_FAIL"
-        self.svs_rsp_name_to_id["svc_rsp_crit"] = "SVC_RSP_CRIT"
-        self.svs_rsp_name_to_id["svc_no_rsp"] = "SVC_RSP_NONE"
+        self.svs_rsp_name_to_id["svc_rsp_ok"] = self.__wrap_quote__("ok")
+        self.svs_rsp_name_to_id["svc_rsp_fail"] = self.__wrap_quote__("fail")
+        self.svs_rsp_name_to_id["svc_rsp_crit"] = \
+            self.__wrap_quote__("critical")
+        self.svs_rsp_name_to_id["svc_no_rsp"] = \
+            self.__wrap_quote__("no_response")
 
     def __load_evt_seq_name_to_id__(self):
         """ Initialize constants key-value pair of event sequence and enum """
-        self.evt_seq_name_to_id["parallel"] = "PARALLEL"
-        self.evt_seq_name_to_id["serial"] = "SERIAL"
+        self.evt_seq_name_to_id["parallel"] = self.__wrap_quote__("parallel")
+        self.evt_seq_name_to_id["serial"] = self.__wrap_quote__("serial")
 
     def __to_evt_seq_id__(self, key):
         """ Return enum of event sequence  """
@@ -412,8 +444,9 @@ class GenerateStateMachine(object):
             svc_name = self.__get_data_by_key_walk__("{0}.{1}".
                                                      format(svc_keys_to_walk,
                                                             svc))
-            obj = "{0}{1}{2}{3}{4}".format('\tupg_svc(', '"', svc_name, '")',
-                                           ',\n')
+            svc_name = self.__wrap_quote__(svc_name)
+
+            obj = "{0}{1}{2}".format('\t' * 2, svc_name, ',\n')
             self.svc_list.append(obj)
 
         return "".join(self.svc_list)[:-2]
@@ -425,15 +458,24 @@ class GenerateStateMachine(object):
         pre_hook_list_format = self.pre_hook_list_fmt
         post_hook_list_format = self.post_hook_list_fmt
         svc_list_format = self.svc_list_fmt
-        idl_stage_format = self.idl_stage_fmt
+        domain_format = self.domain_fmt
+        discovery_format = self.discovery_fmt
 
         default_timeout = self.__get_data_by_key_walk__(
-                default="",
-                key_path=self.default_rsp_timeout_fmt)
+            default="",
+            key_path=self.default_rsp_timeout_fmt)
 
         default_event_sequence = self.__get_data_by_key_walk__(
-                default="",
-                key_path=self.default_event_seq_fmt)
+            default="",
+            key_path=self.default_event_seq_fmt)
+
+        default_domain = self.__get_data_by_key_walk__(
+            default="A",
+            key_path=self.default_domain_fmt)
+
+        default_discovery = self.__get_data_by_key_walk__(
+            default="no",
+            key_path=self.default_discovery_fmt)
 
         for current_stage in self.__get_stages__():
             timeout_keys_to_walk = rsp_timeout_format.format(current_stage)
@@ -442,6 +484,8 @@ class GenerateStateMachine(object):
             pre_hooks_keys_to_walk = pre_hook_list_format.format(current_stage)
             post_hooks_keys_to_walk = post_hook_list_format.format(
                 current_stage)
+            domain_keys_to_walk = domain_format.format(current_stage)
+            discovery_keys_to_walk = discovery_format.format(current_stage)
 
             rsp_timeout = self.__get_data_by_key_walk__(
                 default=default_timeout,
@@ -463,21 +507,53 @@ class GenerateStateMachine(object):
                 default="",
                 key_path=pre_hooks_keys_to_walk)
 
-            current_stage = "{0}{1}{2}".format('"', current_stage, '" ')
-            rsp_timeout = "{0}{1}{2}".format('"', rsp_timeout, '" ')
-            event_sequence = "{0}{1}{2}".format('"', event_sequence, '" ')
-            service_order = "{0}{1}{2}".format('"', ":".join(svc_list), '" ')
-            pre_hooks = "{0}{1}{2}".format('"', ":".join(pre_hooks), '" ')
-            post_hooks = "{0}{1}{2}".format('"', ":".join(post_hooks), '" ')
+            domain = self.__get_data_by_key_walk__(
+                default=default_domain,
+                key_path=domain_keys_to_walk)
 
-            idl_stage_obj = ",\n\t\t\t\t".join([current_stage, rsp_timeout,
-                                                service_order, event_sequence,
-                                                pre_hooks, post_hooks])
+            discovery = self.__get_data_by_key_walk__(
+                default=default_discovery,
+                key_path=discovery_keys_to_walk)
 
-            idl_stage_obj = idl_stage_format.format(idl_stage_obj, ",\n\n\t")
+            current_stage = self.__wrap_quote__(current_stage)
+
+            rsp_timeout = self.__wrap_quote__(rsp_timeout)
+            rsp_timeout = self.rsp_timeout.format(rsp_timeout)
+
+            event_sequence = self.__wrap_quote__(event_sequence)
+            event_sequence = self.event_sequence.format(event_sequence)
+
+            svc_sequence = self.__wrap_quote__(":".join(svc_list))
+            svc_sequence = self.svc_sequence.format(svc_sequence)
+
+            pre_hooks = self.__wrap_quote__(":".join(pre_hooks))
+            pre_hooks = self.pre_hook.format(pre_hooks)
+
+            post_hooks = self.__wrap_quote__(":".join(post_hooks))
+            post_hooks = self.pre_hook.format(post_hooks)
+
+            domain = self.__wrap_quote__(domain)
+            domain = self.domain.format(domain)
+
+            discovery = self.__wrap_quote__(discovery)
+            discovery = self.discovery.format(discovery)
+            discovery = discovery[:-1]
+            delimiter = "\n\t\t\t"
+            idl_stage_obj = delimiter.join([delimiter[1:] + rsp_timeout,
+                                            svc_sequence,event_sequence,
+                                            pre_hooks, post_hooks,domain,
+                                            discovery])
+            idl_stage_obj = self.__construct_data_block__(current_stage,
+                                                          idl_stage_obj,
+                                                          list_block=False,
+                                                          last_block=False,
+                                                          no_newline=False,
+                                                          tab_count=2)
+
             self.idl_stage_list.append(idl_stage_obj)
 
-        return "".join(self.idl_stage_list)[:-2]
+        stages = "\t" + "\n\t".join(self.idl_stage_list)[:-1]
+        return stages
 
     def __get_stage_transaction_obj__(self, stage_curr=None, svc_rsp=None,
                                       stage_next=None):
@@ -490,34 +566,36 @@ class GenerateStateMachine(object):
         stage_from = self.__to_stage_id__(stage_curr)
         stage_to = self.__to_stage_id__(stage_next)
         rsp = self.__to_svs_rsp_name_to_id__(svc_rsp)
-        obj = "upg_stage_transition( {0}, {1}, {2} )".format(stage_from, rsp,
-                                                           stage_to)
+        obj = "\t\t[ {0}, {1}, {2} ]".format(stage_from, rsp, stage_to)
         return obj
 
     @staticmethod
-    def __make_header__():
-        header_name = "__UPGRADE_FSM_GEN_HPP__"
-        sdk_namespace = "namespace sdk {"
-        upg_namespace = "namespace upg {"
+    def __construct_data_block__(block, objects, list_block=False,
+                                 last_block=False, no_newline=False,
+                                 tab_count=1):
+        block = "\t" + block
 
-        header = "#ifndef " + header_name + os.linesep
-        header = header + "#define " + header_name + 2 * os.linesep
-        header = header + sdk_namespace + os.linesep + upg_namespace + os.linesep
-        return header
+        new_line = "" if no_newline else os.linesep
+        tab = "\t" * tab_count
 
-    @staticmethod
-    def __make_footer__():
-        footer = "}"
-        footer = footer + os.linesep + footer + os.linesep
-        footer = footer + "#endif" + os.linesep
-        return footer
+        if list_block:
+            block = block + " : [" + new_line
+            block = block + objects + new_line
+            block = block + tab + "],"
+        else:
+            block = block + " : {" + new_line
+            block = block + objects + new_line
+            block = block + tab + "},"
 
-    @staticmethod
-    def __construct_data_block__(block, objects):
-        block = block + " = {" + os.linesep
-        block = block + objects + os.linesep
-        block = block + "};" + os.linesep
+        if last_block:
+            block = block[:-1] + new_line
+
         return block
+
+    @staticmethod
+    def __wrap_quote__(data):
+        date = "{0}{1}{2}".format('"', data, '"')
+        return date
 
 
 def main(input_json, output_pds_fsm):
@@ -526,11 +604,12 @@ def main(input_json, output_pds_fsm):
         os.makedirs(d)
     except:
         pass
+
     obj = GenerateStateMachine(input_json, output_pds_fsm)
     transitions = obj.make_idl_stage_transition()
     services = obj.make_idl_svc_cfg()
+    entry_stage = obj.make_idl_entry_stage()
     event_sequence = obj.make_idl_event_sequence()
-    entry_stage = obj.make_idl_entry_stage();
     stages = obj.make_idl_stage_cfg()
     hpp = obj.build_header_file(transitions, services, event_sequence, stages,
                                 entry_stage)
@@ -573,3 +652,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     main(args.input_file_name, args.output_file_name)
     sys.exit(0)
+

@@ -1,8 +1,10 @@
 {
     "svc": {
-        "names": [ "svc1", "svc2"],
+        "names": [ "sysmgr", "pds-agent"],
         "event_sequence": "parallel",
-        "rsp_timeout": "1000ms"
+        "rsp_timeout": "1000ms",
+        "domain": "A",
+        "discovery": "no"
     },
 
     "stages": {
@@ -10,6 +12,9 @@
 
         "compatcheck": {
             "//": "compatchecks are done here",
+            "svc": {
+                "discovery": "yes"
+            },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "start" },
                 { "name": "svc_rsp_fail", "next_stage": "exit"  },
@@ -83,6 +88,9 @@
 
         "ready": {
             "//": "runtime compatchecks, service readiness",
+            "svc": {
+                "discovery": "yes"
+            },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "finish"   },
                 { "name": "svc_rsp_fail", "next_stage": "rollback" },

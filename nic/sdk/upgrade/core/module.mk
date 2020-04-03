@@ -2,5 +2,5 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libupgrade_core.lib
-MODULE_PREREQS  = core.upgfsmgen
+MODULE_PREREQS  = core_graceful.upgfsmgen core_hitless.upgfsmgen
 include ${MKDEFS}/post.mk

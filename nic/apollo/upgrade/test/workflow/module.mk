@@ -2,6 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET        = pdsupgtesteventsvc.bin
+MODULE_PREREQS       = graceful_test.upgfsmgen hitless_test.upgfsmgen
 MODULE_PIPELINE      = apulu
 MODULE_INCS          = ${MODULE_GEN_DIR}
 MODULE_LDLIBS        = stdc++ m

@@ -2,7 +2,9 @@
     "svc": {
         "names": [ "svc1", "svc2"],
         "event_sequence": "parallel",
-        "rsp_timeout": "1000ms"
+        "rsp_timeout": "1000ms",
+        "domain": "A",
+        "discovery": "no"
     },
 
     "stages": {
@@ -10,7 +12,10 @@
 
         "compatcheck": {
             "//": "compatchecks are done",
-            "ipc_domain": "A",
+            "svc": {
+              "domain": "A",
+              "discovery": "yes"
+            },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "start" },
                 { "name": "svc_rsp_fail", "next_stage": "exit"  },
@@ -22,10 +27,10 @@
         "start": {
             "//": "stops external communication channels and",
             "//": "prepare for B bringup",
-            "ipc_domain": "A",
             "svc": {
                 "event_sequence": "serial",
-                "names": [ "svc1", "svc2" ]
+                "names": [ "svc1", "svc2" ],
+                "domain": "A"
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "backup" },
@@ -36,8 +41,10 @@
         },
 
         "backup": {
-            "ipc_domain": "A",
-            "events": [
+            "svc": {
+              "domain": "A"
+            },
+          "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "prepare" },
                 { "name": "svc_rsp_fail", "next_stage": "repeal"  },
                 { "name": "svc_rsp_crit", "next_stage": "exit"    },
@@ -48,10 +55,10 @@
         "prepare": {
             "//": "new services will be spawned in domain B and",
             "//": "backed up data from A will be restored here",
-            "ipc_domain": "A",
             "svc": {
                 "event_sequence": "serial",
-                "names": [ "svc1", "svc2" ]
+                "names": [ "svc1", "svc2" ],
+                "domain": "A"
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "ready"  },
@@ -63,7 +70,10 @@
 
        "ready": {
             "//": "all services are ready on B",
-            "ipc_domain": "B",
+            "svc": {
+              "domain": "B",
+              "discovery": "yes"
+            },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "sync"   },
                 { "name": "svc_rsp_fail", "next_stage": "repeal" },
@@ -74,7 +84,9 @@
 
         "sync": {
             "//": "config replay and opearational states are synced",
-            "ipc_domain": "B",
+            "svc": {
+              "domain": "B"
+            },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "prepare_switchover" },
                 { "name": "svc_rsp_fail", "next_stage": "repeal"             },
@@ -85,7 +97,9 @@
 
         "prepare_switchover": {
             "//" : "quiescing",
-            "ipc_domain": "A",
+            "svc": {
+              "domain": "A"
+            },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "switchover" },
                 { "name": "svc_rsp_fail", "next_stage": "repeal"     },
@@ -95,11 +109,11 @@
         },
 
         "switchover": {
-            "ipc_domain": "B",
             "svc": {
                 "names": [ "svc2", "svc1" ],
                 "event_sequence": "serial",
-                "rsp_timeout": "2000ms"
+                "rsp_timeout": "2000ms",
+                "domain": "B"
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "finish"   },
@@ -110,11 +124,11 @@
         },
 
         "rollback": {
-            "ipc_domain": "B",
             "svc": {
                 "names": [ "svc2", "svc1" ],
                 "event_sequence": "serial",
-                "rsp_timeout": "2000ms"
+                "rsp_timeout": "2000ms",
+                "domain": "B"
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "repeal" },
@@ -126,11 +140,11 @@
 
         "repeal": {
             "//": "todo: needs discussion here on svc1 A/B",
-            "ipc_domain": "A",
              "svc": {
                 "names": [ "svc1", "svc2" ],
                 "event_sequence": "serial",
-                "rsp_timeout": "2000ms"
+                "rsp_timeout": "2000ms",
+                "domain": "A"
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "finish" },
@@ -142,10 +156,10 @@
 
        "finish": {
             "//": "todo: failure or failure-non-recovarable status to netagent",
-            "ipc_domain": "A",
             "svc": {
                 "event_sequence": "serial",
-                "names": [ "svc2", "svc1" ]
+                "names": [ "svc2", "svc1" ],
+                "domain": "A"
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "exit" },
