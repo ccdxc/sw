@@ -6,7 +6,7 @@ MODULE_SOLIBS   := pal
 MODULE_LDLIBS   := ${SDK_THIRDPARTY_CAPRI_LDLIBS}
 
 MODULE_SOLIBS   = halproto utils sdkcapri_asicrw_if sensor pal \
-                  logger catalog sdkfru sdkpal
+                  logger catalog sdkfru sdkpal pciemgr_if
 MODULE_LDLIBS   = :libprotobuf.so.14 ev grpc++ \
                   ${NIC_COMMON_LDLIBS} \
                   ${SDK_THIRDPARTY_CAPRI_LDLIBS} \

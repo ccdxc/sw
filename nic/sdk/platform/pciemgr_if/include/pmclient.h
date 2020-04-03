@@ -14,7 +14,7 @@ extern "C" {
 
 #include "pmmsg.h"
 
-int pciemgrc_open(const char *myname, const char *addrstr);
+int pciemgrc_open(const char *myname, const char *addrstr, const int receiver);
 void pciemgrc_close(void);
 int pciemgrc_msgalloc(pmmsg_t **m, size_t len);
 void pciemgrc_msgfree(pmmsg_t *m);

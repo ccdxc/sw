@@ -24,18 +24,16 @@
 
 static pciemgr::evhandler default_evhandler;
 
-pciemgr::pciemgr(const char *name, EV_P) :
-    pciemgr(name, default_evhandler, loop) {}
+pciemgr::pciemgr(const char *name) :
+    evhandlercb (default_evhandler)
+{
+    connect(name, 0);
+}
 
 pciemgr::pciemgr(const char *name, evhandler &evhandlercb, EV_P) :
-        evhandlercb (evhandlercb)
+    evhandlercb (evhandlercb)
 {
-    serverfd = pciemgrc_open(name, NULL);
-    if (serverfd < 0) {
-        // XXX retry connecting to server?
-        fprintf(stderr, "No pciemgr server found - exiting\n");
-        exit(1);
-    }
+    connect(name, 1);
     this->loop = loop;
     evutil_add_fd(EV_A_ serverfd, msgrecv, NULL, this);
 }
@@ -96,6 +94,31 @@ pciemgr::add_devres(pciehdevice_resources_t *pres)
     pciemgrc_msgsend(m);
     pciemgrc_msgfree(m);
     return 0;
+}
+
+int
+pciemgr::powermode(const int mode)
+{
+    pmmsg_t m = {
+        .hdr = {
+            .msgtype = PMMSG_POWERMODE,
+            .msglen = sizeof(pmmsg_powermode_t),
+        },
+    };
+
+    m.powermode.mode = mode;
+    return pciemgrc_msgsend(&m);
+}
+
+void
+pciemgr::connect(const char *name, const int receiver)
+{
+    serverfd = pciemgrc_open(name, NULL, receiver);
+    if (serverfd < 0) {
+        // XXX retry connecting to server?
+        fprintf(stderr, "No pciemgr server found - exiting\n");
+        exit(1);
+    }
 }
 
 void

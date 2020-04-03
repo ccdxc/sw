@@ -18,6 +18,7 @@ typedef enum pmmsg_type_e {
     PMMSG_DEVRES_ADD,
     PMMSG_FINALIZE,
     PMMSG_EVENT,
+    PMMSG_POWERMODE,
 } pmmsgtype_t;
 
 typedef struct pmmsg_hdr_s {
@@ -29,6 +30,7 @@ typedef struct pmmsg_hdr_s {
 
 typedef struct pmmsg_open_s {
     char name[32];
+    int receiver;
 } pmmsg_open_t;
 
 typedef struct pmmsg_initialize_s {
@@ -66,6 +68,10 @@ typedef struct pmmsg_event_s {
      */
 } pmmsg_event_t;
 
+typedef struct pmmsg_powermode_s {
+    int mode;
+} pmmsg_powermode_t;
+
 typedef struct pmmsg_s {
     pmmsg_hdr_t hdr;
     union {
@@ -76,6 +82,7 @@ typedef struct pmmsg_s {
         pmmsg_dev_add_t dev_add;
         pmmsg_devres_add_t devres_add;
         pmmsg_event_t event;
+        pmmsg_powermode_t powermode;
     };
 } pmmsg_t;
 

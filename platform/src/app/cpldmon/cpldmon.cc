@@ -29,6 +29,7 @@
 #include "platform/capri/csrint/csr_init.hpp"
 #include "nic/utils/trace/trace.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
+#include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 
 // CPLD to Capri gpio interrupt pin
 #define CPLD_CAPRI_INT_GPIO    0
@@ -589,6 +590,9 @@ main(int argc, char *argv[])
     //cpld_clear_enable_interrupt(SFP_P2_ERROR);
     //cpld_clear_enable_interrupt(TEST_INTERRUPT);
 
+    // Initialize pciemgr object for power mode change notifications.
+    class pciemgr *pciemgr = new class pciemgr("cpldmon");
+
     // Main loop responds to CPLD to Capri interrupt
     while (1) {
         ret = read(req.fd, &event, sizeof(event));
@@ -688,6 +692,7 @@ main(int argc, char *argv[])
                     CLOG_INFO("BEFORE: Card power {} Watts", card_power);
 
                 cap_top_set_half_clock(0, 0);
+                pciemgr->powermode(FULL_POWER);
                 cpld_clear_enable_extended_interrupt(MAIN_POWER_ON);
 
                 sleep(2);
@@ -701,6 +706,7 @@ main(int argc, char *argv[])
                 if (get_card_power(&card_power) == 0)
                     CLOG_INFO("BEFORE: Card power {} Watts", card_power);
 
+                pciemgr->powermode(LOW_POWER);
                 cap_top_set_quarter_core_clock_mode(0, 0);
                 cpld_clear_enable_extended_interrupt(MAIN_POWER_OFF);
 

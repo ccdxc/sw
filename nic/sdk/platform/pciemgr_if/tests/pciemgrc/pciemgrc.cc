@@ -73,18 +73,42 @@ class myevhandler : public pciemgr::evhandler {
                n->cfgidx, n->baraddr, n->baroffset,
                n->size, n->localpa, n->data);
     }
+    virtual void hostup(const int port) {
+        printf("hostup: port %d\n", port);
+    }
+    virtual void hostdn(const int port) {
+        printf("hostdn: port %d\n", port);
+    }
+    virtual void sriov_numvfs(const int port,
+                              const uint32_t lif,
+                              const uint16_t numvfs) {
+        printf("sriov_numvfs: port %d lif %u numvfs %u\n", port, lif, numvfs);
+    };
+    virtual void reset(const int port,
+                       uint32_t rsttype,
+                       const uint32_t lifb,
+                       const uint32_t lifc) {
+        printf("reset: port %d rsttype %d lifb %u lifc %u\n",
+               port, rsttype, lifb, lifc);
+    };
 };
 
 int
 main(int argc, char *argv[])
 {
-    const char *myname = "pciemgr";
+    const char *myname = "pciemgrc";
     myevhandler myevh;
     pciemgr = new class pciemgr(myname, myevh, EV_DEFAULT);
-    int opt, totalvfs = 0;
+    int opt, totalvfs = 0, do_initialize = 0, powermode = -1;
 
-    while ((opt = getopt(argc, argv, "v:")) != -1) {
+    while ((opt = getopt(argc, argv, "I:P:v:")) != -1) {
         switch (opt) {
+        case 'I':
+            do_initialize = 1;
+            break;
+        case 'P':
+            powermode = strtoul(optarg, NULL, 0);
+            break;
         case 'v':
             totalvfs = strtoul(optarg, NULL, 0);
             break;
@@ -93,47 +117,55 @@ main(int argc, char *argv[])
         }
     }
 
-    pciemgr->initialize();
-
-    pciehdevice_resources_t pres;
-    pciehdev_res_t *pfres = &pres.pfres;
-    pciehdev_res_t *vfres = &pres.vfres;
-    memset(&pres, 0, sizeof(pres));
-    pres.type = PCIEHDEVICE_ETH;
-    strncpy0(pres.pfres.name, "eth", sizeof(pres.pfres.name));
-    pfres->lifb = 5;
-    pfres->lifc = 1;
-    pfres->intrb = 0;
-    pfres->intrc = 4;
-    pfres->intrdmask = 1;
-    pfres->romsz = 4096;
-    pfres->rompa = 0x13f000000;
-    pfres->eth.devregspa = 0x13f000000;
-    pfres->eth.devregssz = 0x1000;
-
-    /* sriov pf with totalvfs */
-    if (totalvfs) {
-        pfres->totalvfs = totalvfs;
-        vfres->is_vf = 1;
-        if (pfres->lifc) {
-            vfres->lifb = pfres->lifb + pfres->lifc;
-            vfres->lifc = pfres->lifc;
+    if (powermode >= 0) {
+        if (pciemgr->powermode(powermode) < 0) {
+            fprintf(stderr, "powermode(%d) failed\n", powermode);
         }
-        if (pfres->intrc) {
-            vfres->intrb = pfres->intrb + pfres->intrc;
-            vfres->intrc = pfres->intrc;
-            vfres->intrdmask = pfres->intrdmask;
-        }
-        vfres->eth.devregspa = pfres->eth.devregspa + 0x1000;
-        vfres->eth.devregssz = pfres->eth.devregssz;
-        vfres->eth.devregs_stride = vfres->eth.devregssz;
     }
 
-    if (pciemgr->add_devres(&pres) < 0) {
-        fprintf(stderr, "add_devres failed\n");
-        exit(1);
+    if (do_initialize) {
+        pciemgr->initialize();
+
+        pciehdevice_resources_t pres;
+        pciehdev_res_t *pfres = &pres.pfres;
+        pciehdev_res_t *vfres = &pres.vfres;
+        memset(&pres, 0, sizeof(pres));
+        pres.type = PCIEHDEVICE_ETH;
+        strncpy0(pres.pfres.name, "eth", sizeof(pres.pfres.name));
+        pfres->lifb = 5;
+        pfres->lifc = 1;
+        pfres->intrb = 0;
+        pfres->intrc = 4;
+        pfres->intrdmask = 1;
+        pfres->romsz = 4096;
+        pfres->rompa = 0x13f000000;
+        pfres->eth.devregspa = 0x13f000000;
+        pfres->eth.devregssz = 0x1000;
+
+        /* sriov pf with totalvfs */
+        if (totalvfs) {
+            pfres->totalvfs = totalvfs;
+            vfres->is_vf = 1;
+            if (pfres->lifc) {
+                vfres->lifb = pfres->lifb + pfres->lifc;
+                vfres->lifc = pfres->lifc;
+            }
+            if (pfres->intrc) {
+                vfres->intrb = pfres->intrb + pfres->intrc;
+                vfres->intrc = pfres->intrc;
+                vfres->intrdmask = pfres->intrdmask;
+            }
+            vfres->eth.devregspa = pfres->eth.devregspa + 0x1000;
+            vfres->eth.devregssz = pfres->eth.devregssz;
+            vfres->eth.devregs_stride = vfres->eth.devregssz;
+        }
+
+        if (pciemgr->add_devres(&pres) < 0) {
+            fprintf(stderr, "add_devres failed\n");
+            exit(1);
+        }
+        pciemgr->finalize();
     }
-    pciemgr->finalize();
 
     printf("evutil_run()\n");
     evutil_run(EV_DEFAULT);

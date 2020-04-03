@@ -22,6 +22,11 @@ typedef struct pciehdev_memrw_notify_s pciehdev_memrw_notify_t;
 struct pmmsg_s;
 typedef struct pmmsg_s pmmsg_t;
 
+enum powermode {
+    LOW_POWER,
+    FULL_POWER,
+};
+
 class pciemgr {
 public:
     class evhandler {
@@ -45,15 +50,17 @@ public:
                            const uint32_t lifc) {};
     };
 
-    pciemgr(const char *name, EV_P);
+    pciemgr(const char *name);
     pciemgr(const char *name, evhandler &evhandlercb, EV_P);
     ~pciemgr(void);
 
     int initialize(const int port = 0);
     int finalize(const int port = 0);
     int add_devres(pciehdevice_resources_t *pres);
+    int powermode(const int mode);
 
 private:
+    void connect(const char *name, const int receiver);
     void msghandler(pmmsg_t *m);
     void handle_event(const pciehdev_eventdata_t *evd);
 

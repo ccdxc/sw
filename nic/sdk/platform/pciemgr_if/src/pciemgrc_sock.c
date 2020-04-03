@@ -43,7 +43,7 @@ pciemgrc_socket(const char *addrstr)
 }
 
 int
-pciemgrc_open(const char *myname, const char *addrstr)
+pciemgrc_open(const char *myname, const char *addrstr, const int receiver)
 {
     int s = pciemgrc_socket(addrstr);
     if (s >= 0) {
@@ -58,6 +58,7 @@ pciemgrc_open(const char *myname, const char *addrstr)
         pmclient.sync_writes = 1;
         pmclient.s = s;
         strncpy(m.open.name, myname, sizeof(m.open.name) - 1);
+        m.open.receiver = receiver;
         pciemgrc_msgsend(&m);
     }
     return s;

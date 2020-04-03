@@ -15,6 +15,7 @@
 #include <sys/un.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/queue.h>
 
 #include "platform/evutils/include/evutils.h"
 
@@ -28,16 +29,20 @@ typedef struct pmsclient_s {
     struct sockaddr_in addr;
     socklen_t addrlen;
     unsigned int connected:1;
+    unsigned int receiver:1;
+    TAILQ_ENTRY(pmsclient_s) list;
 } pmsclient_t;
 
 typedef struct pmserver_s {
     int fd;
     pciemgrs_handler_t *handler;
+    unsigned int init:1;
     unsigned int open:1;
     unsigned int sync_writes:1;
     unsigned int unix_socket:1;
     char unix_socket_path[265];
     pmsclient_t clients[NCLIENTS];
+    TAILQ_HEAD(pmsclient_head, pmsclient_s) receivers;
 } pmserver_t;
 
 static pmserver_t pmserver;
@@ -101,6 +106,11 @@ client_disconnect(pmsclient_t *pmsc)
     close(pmsc->fd);
     pmsc->fd = -1;
     pmsc->connected = 0;
+    if (pmsc->receiver) {
+        pmserver_t *pms = &pmserver;
+        TAILQ_REMOVE(&pms->receivers, pmsc, list);
+        pmsc->receiver = 0;
+    }
 }
 
 static void
@@ -156,6 +166,11 @@ pciemgrs_open(const char *addrstr, pciemgrs_handler_t *handler)
     pmserver_t *pms = &pmserver;
     int fd;
 
+    if (!pms->init) {
+        TAILQ_INIT(&pms->receivers);
+        pms->init = 1;
+    }
+
     fd = pciemgrs_socket(addrstr);
     if (fd < 0) return -1;
 
@@ -184,6 +199,19 @@ pciemgrs_close(void)
 }
 
 int
+pciemgrs_add_receiver(pmmsg_t *m)
+{
+    pmserver_t *pms = &pmserver;
+    pmsclient_t *pmsc = m->hdr.tag;
+
+    if (pmsc) {
+        pmsc->receiver = 1;
+        TAILQ_INSERT_TAIL(&pms->receivers, pmsc, list);
+    }
+    return 0;
+}
+
+int
 pciemgrs_msgalloc(pmmsg_t **m, size_t len)
 {
     return pciemgr_msgalloc(m, len);
@@ -196,20 +224,16 @@ pciemgrs_msgfree(pmmsg_t *m)
 }
 
 /*
- * Broadcast msg to all clients.
+ * Broadcast msg to all receivers.
  */
 int
 pciemgrs_msgsend(pmmsg_t *m)
 {
     pmserver_t *pms = &pmserver;
     pmsclient_t *pmsc;
-    int i;
 
-    pmsc = pms->clients;
-    for (i = 0; i < NCLIENTS; i++, pmsc++) {
-        if (pmsc->connected) {
-            pciemgr_msgsend(pmsc->fd, m);
-        }
+    TAILQ_FOREACH(pmsc, &pms->receivers, list) {
+        pciemgr_msgsend(pmsc->fd, m);
     }
     return 0;
 }

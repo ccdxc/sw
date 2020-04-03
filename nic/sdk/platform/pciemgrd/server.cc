@@ -20,12 +20,17 @@
 #include "platform/pciemgrutils/include/pciehcfg_impl.h"
 #include "platform/pciemgrutils/include/pciehbar_impl.h"
 #include "platform/pciemgrd/pciemgrd_impl.hpp"
+#include "platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/pciemgr_if/include/pmserver.h"
 
 static void
 do_open(pmmsg_t *m)
 {
-    pciesys_loginfo("open: %s\n", m->open.name);
+    pciesys_loginfo("open: %s receiver%c\n",
+                    m->open.name, m->open.receiver ? '+' : '-');
+    if (m->open.receiver) {
+        pciemgrs_add_receiver(m);
+    }
 }
 
 static void
@@ -143,6 +148,27 @@ do_devres_add(pmmsg_t *m)
 }
 
 static void
+powermode(const int port, void *arg)
+{
+    const int mode = *(int *)arg;
+    if (mode == LOW_POWER) {
+        int r = pcieport_powerdown(port);
+        if (r < 0) {
+            pciesys_logerror("powermode: port%d powerdown fail %d\n", port, r);
+        }
+    }
+}
+
+static void
+do_powermode(pmmsg_t *m)
+{
+    int mode = m->powermode.mode;
+    pciesys_loginfo("powermode: mode %s\n",
+                    mode == LOW_POWER ? "LOW" : "FULL");
+    portmap_foreach_port(powermode, &mode);
+}
+
+static void
 pciemgr_msg_cb(pmmsg_t *m)
 {
     switch (m->hdr.msgtype) {
@@ -157,6 +183,9 @@ pciemgr_msg_cb(pmmsg_t *m)
         break;
     case PMMSG_DEVRES_ADD:
         do_devres_add(m);
+        break;
+    case PMMSG_POWERMODE:
+        do_powermode(m);
         break;
     default:
         break;
