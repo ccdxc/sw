@@ -22,7 +22,7 @@ echo "================"
 echo "`date '+[%Y%m%d-%H:%M:%S]'` begin port$port healthlog $reason"
 echo "================"
 
-pcieutil=/platform/bin/pcieutil
+pcieutil=/nic/bin/pcieutil
 cmds="
     $pcieutil healthdump -p $port
     $pcieutil linkpoll -p $port -a -T 5

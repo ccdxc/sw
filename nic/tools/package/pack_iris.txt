@@ -282,7 +282,7 @@ nic/build/$ARCH/$PIPELINE/bin/memtun                                /platform/bi
 nic/build/$ARCH/$PIPELINE/bin/eth_dbgtool                           /platform/bin/
 nic/build/$ARCH/$PIPELINE/bin/pciemgrd                              /platform/bin/
 nic/build/$ARCH/$PIPELINE/bin/pciemgrd-gold                         /platform/bin/
-nic/build/$ARCH/$PIPELINE/bin/pcieutil                              /platform/bin/
+nic/build/$ARCH/$PIPELINE/bin/pcieutil                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/regio                                 /platform/bin/
 nic/build/$ARCH/$PIPELINE/bin/cpmem                                 /platform/bin/
 nic/build/$ARCH/$PIPELINE/bin/capmon                                /platform/bin/
