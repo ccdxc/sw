@@ -262,6 +262,8 @@ func (sgp *SgpolicyState) initNodeVersions() error {
 // processDSCUpdate sgpolicy update handles for DSC
 func (sgp *SgpolicyState) processDSCUpdate(dsc *cluster.DistributedServiceCard) error {
 
+	sgp.NetworkSecurityPolicy.Lock()
+	sgp.NetworkSecurityPolicy.Unlock()
 	if sgp.stateMgr.isDscInInsertionMode(dsc) {
 		log.Infof("DSC %v is being tracked for propogation status for policy %s", dsc.Name, sgp.GetKey())
 		sgp.NodeVersions[dsc.Name] = ""

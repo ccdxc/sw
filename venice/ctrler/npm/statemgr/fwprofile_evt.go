@@ -184,6 +184,8 @@ func (fps *FirewallProfileState) initNodeVersions() error {
 // processDSCUpdate sgpolicy update handles for DSC
 func (fps *FirewallProfileState) processDSCUpdate(dsc *cluster.DistributedServiceCard) error {
 
+	fps.FirewallProfile.Lock()
+	defer fps.FirewallProfile.Unlock()
 	if fps.stateMgr.isDscInInsertionMode(dsc) {
 		log.Infof("DSC %v is being tracked for propogation status for fwprofile %s", dsc.Name, fps.GetKey())
 		fps.NodeVersions[dsc.Name] = ""
@@ -250,16 +252,7 @@ func (sm *Statemgr) OnFirewallProfileCreate(fwProfile *ctkit.FirewallProfile) er
 		return err
 	}
 
-	dscs, _ := sm.ListDistributedServiceCards()
-	for _, dsc := range dscs {
-		dsc.DistributedServiceCard.Lock()
-		if sm.isDscAdmitted(&dsc.DistributedServiceCard.DistributedServiceCard) {
-			if _, ok := fps.NodeVersions[dsc.DistributedServiceCard.Name]; ok == false {
-				fps.NodeVersions[dsc.DistributedServiceCard.Name] = ""
-			}
-		}
-		dsc.DistributedServiceCard.Unlock()
-	}
+	fps.initNodeVersions()
 	sm.PeriodicUpdaterPush(fps)
 	sm.registerForDscUpdate(fps)
 

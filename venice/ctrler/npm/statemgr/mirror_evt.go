@@ -574,6 +574,22 @@ func getMirrorCollectors(ms *monitoring.MirrorSession, collectors []*mirrorColle
 	return mcol
 }
 
+func updateCollectorsSpec(ms *monitoring.MirrorSession, collectors []*mirrorCollector) {
+
+	for _, col := range ms.Spec.Collectors {
+		for _, curCol := range collectors {
+			if col.ExportCfg.Destination == curCol.obj.Spec.Destination &&
+				col.ExportCfg.Gateway == curCol.obj.Spec.Gateway {
+				if curCol.obj.Spec.PacketSize != ms.Spec.PacketSize {
+					curCol.obj.Spec.PacketSize = ms.Spec.PacketSize
+					curCol.pushObj.UpdateObjectWithReferences(
+						curCol.obj.GetKey(), curCol.obj, nil)
+				}
+			}
+		}
+	}
+}
+
 func (smm *SmMirrorSessionInterface) getAllMirrorSessionCollectors() []*mirrorSelectorCollectors {
 
 	smm.Lock()
@@ -628,6 +644,7 @@ func (smm *SmMirrorSessionInterface) addInterfaceMirror(ms *MirrorSessionState) 
 		} else {
 			mcol.refCount++
 		}
+		mcol.obj.Spec.PacketSize = ms.MirrorSession.MirrorSession.Spec.PacketSize
 		mCollectors = append(mCollectors, mcol)
 	}
 
@@ -767,6 +784,8 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 		if nmirror.Spec.Interfaces != nil {
 			//Now evaluate the interfaces
 			newSelCollector = getMirrorCollectors(nmirror, curCollectors)
+			updateCollectorsSpec(nmirror, curCollectors)
+
 		}
 
 	} else if (len(addCollectors) != 0 || len(delCollectors) != 0) && !selectorChanged {
@@ -800,6 +819,7 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 			if !found {
 				newCurCollectors = append(newCurCollectors, col)
 			}
+			updateCollectorsSpec(nmirror, newCurCollectors)
 		}
 		if nmirror.Spec.Interfaces != nil {
 			addCollectors = append(addCollectors, newCurCollectors...)
