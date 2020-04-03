@@ -28,16 +28,17 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
 
   DCNAMES_TOOLTIP: string = 'Type in datacenter name and hit enter or space key to add more.';
   createButtonTooltip: string = 'Ready to submit.';
+  ALL_DATACENTERS: string = 'all_namespaces';
 
   credentialTypes = Utility.convertEnumToSelectItem(MonitoringExternalCred_auth_type);
   currentObjCredType: string = 'none';
 
 
   chooseOptions: SelectItem[] = [
-    {label: 'Manage All Datacenters', value: 'ALL'},
+    {label: 'Manage All Datacenters', value: this.ALL_DATACENTERS},
     {label: 'Manage Individual Datacenters', value: 'each'}
   ];
-  pickedOption: String = 'ALL';
+  pickedOption: String = this.ALL_DATACENTERS;
 
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
@@ -75,7 +76,7 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
   processVcenterIntegration() {
     const dataCenters = this.newObject.$formGroup.get(['spec', 'manage-namespaces']).value;
     if (dataCenters) {
-      if (dataCenters.length === 1 && dataCenters[0] === 'ALL') {
+      if (dataCenters.length === 1 && dataCenters[0] === this.ALL_DATACENTERS) {
         this.newObject.$formGroup.get(['spec', 'manage-namespaces']).setValue(null);
       } else {
         this.pickedOption = 'each';
@@ -85,7 +86,6 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
       this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).value;
     // clear crdentials
     if (this.currentObjCredType === MonitoringExternalCred_auth_type['username-password']) {
-      this.newObject.$formGroup.get(['spec', 'credentials', 'username']).setValue('');
       this.newObject.$formGroup.get(['spec', 'credentials', 'password']).setValue('');
     }
     if (this.currentObjCredType === MonitoringExternalCred_auth_type.token) {
@@ -113,7 +113,7 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
       this.createButtonTooltip = 'Error: URI is empty.';
       return false;
     }
-    if (this.pickedOption !== 'ALL' && this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'manage-namespaces']))) {
+    if (this.pickedOption !== this.ALL_DATACENTERS && this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'manage-namespaces']))) {
       this.createButtonTooltip = 'Error: Datacenter names are empty.';
       return false;
     }
@@ -172,11 +172,6 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
           if (this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username'])) &&
               !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']))) {
             this.createButtonTooltip = 'Error: Username is empty.';
-            return false;
-          }
-          if (!this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username'])) &&
-              this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']))) {
-            this.createButtonTooltip = 'Error: Password is empty.';
             return false;
           }
         }
@@ -312,8 +307,8 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
 
   getObjectValues(): IOrchestrationOrchestrator {
     const currValue: IOrchestrationOrchestrator =  this.newObject.getFormGroupValues();
-    if (this.pickedOption === 'ALL') {
-      currValue.spec['manage-namespaces'] = ['ALL'];
+    if (this.pickedOption === this.ALL_DATACENTERS) {
+      currValue.spec['manage-namespaces'] = [this.ALL_DATACENTERS];
     }
     Utility.removeObjectProperties(currValue, 'status');
     const formGrp: any = currValue.spec.credentials;
@@ -372,8 +367,7 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
     if (this.currentObjCredType !== MonitoringExternalCred_auth_type['username-password']) {
       return true;
     }
-    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username'])) ||
-        !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']));
+    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'confirmPassword']));
   }
 
   isConfirmPwdRequired() {
@@ -387,8 +381,7 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
     if (this.currentObjCredType !== MonitoringExternalCred_auth_type['username-password']) {
       return true;
     }
-    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'username'])) ||
-          !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']));
+    return !this.isFieldEmpty(this.newObject.$formGroup.get(['spec', 'credentials', 'password']));
   }
 
   isTokenRequired() {

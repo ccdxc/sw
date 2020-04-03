@@ -35,7 +35,7 @@
           </mat-radio-button>
         </mat-radio-group>
       </div>
-      <span *ngIf="pickedOption !== 'ALL'"
+      <span *ngIf="pickedOption !== ALL_DATACENTERS"
             [ngClass]="{'app-formchips-requiredField': isFieldEmpty(newObject.$formGroup.get(['spec', 'manage-namespaces']))}">
         <app-formchips fxFlex="none" [chipsLabel]="'Datacenter Names'"
                        [itemValidator]="isValidDCName"

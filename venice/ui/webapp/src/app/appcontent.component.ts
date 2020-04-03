@@ -179,12 +179,14 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
       }
     }, 1000);
 
-    this.scrollChanged
-      .debounceTime(200)
-      .subscribe(scrollTop => {
-        this.scrollTop = parseInt(scrollTop, 10);
-        this.storeMenuInfo();
-      });
+    if (this.scrollChanged && this.scrollChanged.debounceTime) {
+      this.scrollChanged
+        .debounceTime(200)
+        .subscribe(scrollTop => {
+          this.scrollTop = parseInt(scrollTop, 10);
+          this.storeMenuInfo();
+        });
+    }
   }
 
   onScroll(event) {

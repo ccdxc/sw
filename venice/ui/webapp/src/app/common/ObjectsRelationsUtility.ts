@@ -3,6 +3,7 @@ import { ClusterDistributedServiceCard, ClusterHost, IClusterDistributedServiceC
 import { Utility } from '@app/common/Utility';
 import { SecuritySecurityGroup, SecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
 import { EventTypes } from './HttpEventUtility';
+import { OrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
 
 
 export interface SecuritygroupWorkloadPolicyTuple {
@@ -31,6 +32,11 @@ export interface HostWorkloadTuple {
 export interface DSCWorkloadsTuple {
     workloads: WorkloadWorkload[];
     dsc: ClusterDistributedServiceCard;
+}
+
+export interface VcenterWorkloadsTuple {
+    workloads: WorkloadWorkload[];
+    vcenter: OrchestrationOrchestrator;
 }
 
 export interface DSCnameToMacMap {
@@ -243,6 +249,25 @@ export class ObjectsRelationsUtility {
         return dscWorkloadsTuple;
     }
 
+    /**
+     * Build a map key=vcenter.meta.name, value = 'VcenterWorkloadTuple' object
+     *
+     * vcenter -- 1:m --> workloads
+     *
+     * e.g Vcenter page can use this api to find workloads
+     * const vcenterWorkloadsTuple  = ObjectsRelationsUtility.buildVcenterWorkloadsMap(this.vcenters this.workloads );
+     *
+     */
+    public static buildVcenterWorkloadsMap(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[],
+        vcenters: ReadonlyArray<OrchestrationOrchestrator>): VcenterWorkloadsTuple {
+        const vcenterWorkloadsTuple: VcenterWorkloadsTuple = {} as VcenterWorkloadsTuple;
+        vcenters.forEach((vcenter: OrchestrationOrchestrator) => {
+            const linkworkloads: WorkloadWorkload[] = this.findAssociatedWorkloadsByVcenter(workloads as any[], vcenter);
+            vcenterWorkloadsTuple[vcenter.meta.name] = linkworkloads;
+        });
+        return vcenterWorkloadsTuple;
+    }
+
     public static buildSecuitygroupWorkloadPolicyMap(securityGroups: ReadonlyArray<SecuritySecurityGroup> | SecuritySecurityGroup[], workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], securitypolicies?: ReadonlyArray<SecurityNetworkSecurityPolicy> | SecurityNetworkSecurityPolicy[])
         : { [securitygroupKey: string]: SecuritygroupWorkloadPolicyTuple; } {
         const securitygroupWorkloadPolicyTuple: { [securitygroupKey: string]: SecuritygroupWorkloadPolicyTuple; } = {};
@@ -291,6 +316,12 @@ export class ObjectsRelationsUtility {
             }
         }
         return workloadWorkloads;
+    }
+
+    public static findAssociatedWorkloadsByVcenter(workloadList: WorkloadWorkload[], vcenter: OrchestrationOrchestrator): WorkloadWorkload[] {
+        return workloadList.filter((workload: WorkloadWorkload) => {
+            return workload && workload.meta && workload.meta.labels && workload.meta.labels['io.pensando.orch-name'] === vcenter.meta.name;
+        });
     }
 
     public static findAllWorkloadsInHosts(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], hosts: ReadonlyArray<ClusterHost> | ClusterHost[]): WorkloadWorkload[] {
