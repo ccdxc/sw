@@ -9,7 +9,6 @@ import (
 
 	"github.com/pensando/sw/api/generated/monitoring"
 	evtsmgrprotos "github.com/pensando/sw/nic/agent/protos/evtprotos"
-	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/exporters"
@@ -23,7 +22,7 @@ import (
 type ExportMgr struct {
 	sync.RWMutex
 	hostname   string
-	evtsProxy  *evtsproxy.EventsProxy
+	dispatcher events.Dispatcher
 	logger     log.Logger
 	exporters  map[string]map[exporters.Type]interface{}
 	ctx        context.Context
@@ -51,11 +50,11 @@ type syslogWriter struct {
 }
 
 // NewExportManager creates a new export manager with given params
-func NewExportManager(hostname string, proxy *evtsproxy.EventsProxy, logger log.Logger) (*ExportMgr, error) {
+func NewExportManager(hostname string, dispatcher events.Dispatcher, logger log.Logger) (*ExportMgr, error) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	m := &ExportMgr{
 		hostname:   hostname,
-		evtsProxy:  proxy,
+		dispatcher: dispatcher,
 		logger:     logger,
 		exporters:  make(map[string]map[exporters.Type]interface{}),
 		ctx:        ctx,
@@ -213,9 +212,9 @@ func (m *ExportMgr) delete(policy *evtsmgrprotos.EventPolicy, update bool) error
 
 	// TODO: rewrite the code to handle it better. Update should not be calling delete, writers should be updated inline.
 	if update {
-		m.evtsProxy.UnregisterEventsExporter(policy.GetName())
+		m.dispatcher.UnregisterExporter(policy.GetName())
 	} else {
-		m.evtsProxy.DeleteEventsExporter(policy.GetName())
+		m.dispatcher.DeleteExporter(policy.GetName())
 	}
 	for t, exporterInfo := range exportersInfo {
 		switch t {
@@ -258,8 +257,8 @@ func (m *ExportMgr) create(policy *evtsmgrprotos.EventPolicy) error {
 			}
 		}
 
-		// register the exporter with events proxy (so that it can start receiving events and write it to the desired destination)
-		syslogExporter, err := m.evtsProxy.RegisterEventsExporter(exporters.Syslog, &exporters.SyslogExporterConfig{Name: policy.GetName(), Writers: ws})
+		// register the exporter with dispatcher (so that it can start receiving events and write it to the desired destination)
+		syslogExporter, err := m.startExporter(policy.GetName(), ws)
 		if err != nil {
 			cancelFunc()
 			return err
@@ -343,4 +342,23 @@ func (m *ExportMgr) createSyslogWriter(ctx context.Context, format monitoring.Mo
 // getWriterKey constructs and returns the writer key from given export config
 func (m *ExportMgr) getWriterKey(target monitoring.ExportConfig) string {
 	return fmt.Sprintf("%s:%s", target.GetDestination(), target.GetTransport())
+}
+
+// helper function to start the syslog exporter
+func (m *ExportMgr) startExporter(name string, ws []syslog.Writer) (events.Exporter, error) {
+	exporterChLen := 1000
+	syslogExporter, err := exporters.NewSyslogExporter(name, exporterChLen, ws, m.logger)
+	if err != nil {
+		return nil, err
+	}
+
+	// register the exporter
+	eventsChan, offsetTracker, err := m.dispatcher.RegisterExporter(syslogExporter)
+	if err != nil {
+		return nil, err
+	}
+
+	// start the exporter
+	syslogExporter.Start(eventsChan, offsetTracker)
+	return syslogExporter, nil
 }

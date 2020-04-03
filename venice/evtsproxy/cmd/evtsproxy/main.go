@@ -103,7 +103,7 @@ func (e *evtServices) start() {
 	}
 
 	// start events policy manager
-	e.policyMgr, err = policy.NewManager(utils.GetHostname(), e.eps, e.logger)
+	e.policyMgr, err = policy.NewManager(utils.GetHostname(), e.eps.GetEventsDispatcher(), e.logger)
 	if err != nil {
 		log.Fatalf("failed to create event policy manager, err: %v", err)
 	}

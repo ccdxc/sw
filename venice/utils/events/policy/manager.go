@@ -6,8 +6,8 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	evtsmgrprotos "github.com/pensando/sw/nic/agent/protos/evtprotos"
-	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/utils/emstore"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -20,7 +20,7 @@ import (
 // How the export works?
 //
 //  -------------------------------             --------------------------------               -----------------------
-// | Policy Watcher or REST server |  -------> | ExportMgr                      | ----------> | Evtsproxy             |
+// | Policy Watcher or REST server |  -------> | ExportMgr                      | ----------> | Dispatcher            |
 // |                               |   policy  |  - store policy (optional)     |  exporter   | - Register exporter   |
 // |                               |           |  - create exporter             |             |                       |
 // |                               |           |    -- (through export manager) |             |                       |
@@ -29,11 +29,11 @@ import (
 
 // Manager represents the event policy manager
 type Manager struct {
-	hostname  string // user friendly hostname
-	evtsProxy *evtsproxy.EventsProxy
-	expMgr    *ExportMgr
-	store     emstore.Emstore
-	logger    log.Logger
+	hostname   string // user friendly hostname
+	dispatcher events.Dispatcher
+	expMgr     *ExportMgr
+	store      emstore.Emstore
+	logger     log.Logger
 }
 
 // MOption fills the optional params for policy manager
@@ -47,18 +47,18 @@ func WithStore(store emstore.Emstore) MOption {
 }
 
 // NewManager creates a new policy manager with the given params
-func NewManager(hostname string, proxy *evtsproxy.EventsProxy, logger log.Logger, opts ...MOption) (*Manager, error) {
-	expMgr, err := NewExportManager(hostname, proxy, logger)
+func NewManager(hostname string, dispatcher events.Dispatcher, logger log.Logger, opts ...MOption) (*Manager, error) {
+	expMgr, err := NewExportManager(hostname, dispatcher, logger)
 	if err != nil {
 		logger.Errorf("failed to create policy manager, err: %v", err)
 		return nil, err
 	}
 
 	m := &Manager{
-		hostname:  hostname,
-		evtsProxy: proxy,
-		expMgr:    expMgr,
-		logger:    logger,
+		hostname:   hostname,
+		dispatcher: dispatcher,
+		expMgr:     expMgr,
+		logger:     logger,
 	}
 
 	for _, opt := range opts {

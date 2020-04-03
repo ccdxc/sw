@@ -5,7 +5,6 @@ package evtsproxy
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -39,10 +38,6 @@ type EventsProxy struct {
 
 	// resolver to connect with events manager or other services
 	resolverClient resolver.Interface
-
-	// map storing list of registered exporters; used to stop the exporters when proxy stops
-	sync.Mutex
-	exporters map[string]events.Exporter
 
 	// context details
 	ctx        context.Context
@@ -108,7 +103,6 @@ func NewEventsProxy(nodeName, serverName, serverURL string, resolverClient resol
 		RPCServer:      rpcServer,
 		evtsDispatcher: evtsDispatcher,
 		resolverClient: resolverClient,
-		exporters:      make(map[string]events.Exporter),
 		logger:         logger,
 		ctx:            ctx,
 		cancelFunc:     cancel,
@@ -143,11 +137,6 @@ func (ep *EventsProxy) Stop() {
 		ep.evtsDispatcher = nil
 	}
 
-	// stop all the exporters
-	for _, exporter := range ep.exporters {
-		exporter.Stop()
-	}
-
 	ep.cancelFunc() // this will exit the watcher go routine if it is running
 }
 
@@ -173,7 +162,7 @@ func (ep *EventsProxy) RegisterEventsExporter(exporterType exporters.Type, confi
 			return nil, err
 		}
 
-		if err := ep.registerExporter("venice", veniceExporter); err != nil {
+		if err := ep.registerExporter(veniceExporter); err != nil {
 			// close connections that got established to evtsmgr if any
 			veniceExporter.Stop()
 			return nil, err
@@ -194,7 +183,7 @@ func (ep *EventsProxy) RegisterEventsExporter(exporterType exporters.Type, confi
 			return nil, err
 		}
 
-		if err := ep.registerExporter(exporterConfig.Name, syslogExporter); err != nil {
+		if err := ep.registerExporter(syslogExporter); err != nil {
 			syslogExporter.Stop()
 			return nil, err
 		}
@@ -208,21 +197,15 @@ func (ep *EventsProxy) RegisterEventsExporter(exporterType exporters.Type, confi
 // UnregisterEventsExporter unregisters the given exporter from events dispatcher
 func (ep *EventsProxy) UnregisterEventsExporter(name string) {
 	ep.evtsDispatcher.UnregisterExporter(name)
-	ep.Lock()
-	delete(ep.exporters, name)
-	ep.Unlock()
 }
 
 // DeleteEventsExporter deletes the given exporter from events dispatcher
 func (ep *EventsProxy) DeleteEventsExporter(name string) {
 	ep.evtsDispatcher.DeleteExporter(name)
-	ep.Lock()
-	delete(ep.exporters, name)
-	ep.Unlock()
 }
 
 // helper function to register the exporter with dispatcher
-func (ep *EventsProxy) registerExporter(name string, exporter events.Exporter) error {
+func (ep *EventsProxy) registerExporter(exporter events.Exporter) error {
 	// register the given exporter
 	eventsChan, offsetTracker, err := ep.evtsDispatcher.RegisterExporter(exporter)
 	if err != nil {
@@ -231,8 +214,5 @@ func (ep *EventsProxy) registerExporter(name string, exporter events.Exporter) e
 
 	// start all the workers
 	exporter.Start(eventsChan, offsetTracker)
-	ep.Lock()
-	ep.exporters[name] = exporter
-	ep.Unlock()
 	return nil
 }

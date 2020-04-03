@@ -351,7 +351,7 @@ func (e *evtServices) start(mode string, maintenanceMode bool) {
 	}
 
 	// start events policy manager
-	if e.policyMgr, err = policy.NewManager(e.nodeName, e.eps, e.logger, policy.WithStore(e.agentStore)); err != nil {
+	if e.policyMgr, err = policy.NewManager(e.nodeName, e.eps.GetEventsDispatcher(), e.logger, policy.WithStore(e.agentStore)); err != nil {
 		e.logger.Fatalf("failed to create event policy manager, err: %v", err)
 	}
 

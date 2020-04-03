@@ -52,7 +52,7 @@ func setup(t *testing.T) (*evtsproxy.EventsProxy, *policy.Manager, types.CtrlerI
 	AssertOk(t, err, "failed to create agent store, err: %v", err)
 
 	// start events policy manager
-	policyMgr, err := policy.NewManager(t.Name(), eps, logger, policy.WithStore(agentStore))
+	policyMgr, err := policy.NewManager(t.Name(), eps.GetEventsDispatcher(), logger, policy.WithStore(agentStore))
 	AssertOk(t, err, "failed to create policy manager, err: %v", err)
 
 	pHandler, err := NewEventPolicyHandler(policyMgr, logger)

@@ -569,6 +569,7 @@ func (d *dispatcherImpl) closeAllExporters() {
 	for _, w := range d.exporters.list {
 		delete(d.exporters.list, w.wr.Name())
 		w.eventsCh.Stop()
+		w.wr.Stop()
 	}
 
 	// efficient than deleting the elements one by one

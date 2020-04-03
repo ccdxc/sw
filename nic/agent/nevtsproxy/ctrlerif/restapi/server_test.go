@@ -37,7 +37,7 @@ func setup(name string) (*evtsproxy.EventsProxy, *policy.Manager, string, string
 	}
 
 	// start events policy manager
-	policyMgr, err := policy.NewManager(name, eps, logger, policy.WithStore(agentStore))
+	policyMgr, err := policy.NewManager(name, eps.GetEventsDispatcher(), logger, policy.WithStore(agentStore))
 	if err != nil {
 		return nil, nil, "", "", nil, err
 	}

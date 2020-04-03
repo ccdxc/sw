@@ -314,7 +314,7 @@ func StartEvtsProxy(hostname, serverAddr string, mr resolver.Interface, logger l
 	}
 
 	// start events policy manager
-	policyMgr, err := policy.NewManager(hostname, evtsProxy, logger)
+	policyMgr, err := policy.NewManager(hostname, evtsProxy.GetEventsDispatcher(), logger)
 	if err != nil {
 		log.Fatalf("failed to create event policy manager, err: %v", err)
 	}
