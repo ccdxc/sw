@@ -10,8 +10,9 @@ meta:
 packages:
     - iota.test.iris
 
-images:
-    naples: nic/naples_fw.tar
+image_manifest:
+    spec        : images/latest.json
+    naples      : capri
 
 setup:
     topology: test/iris/topologies/classic_baremetal/classic_baremetal.topology
@@ -20,6 +21,10 @@ setup:
         - step : utils.cleanup
         - step : testcases.penctl.install
         - step : testcases.penctl.enable_ssh
+        - step : utils.naples_profile
+          args :
+            profile : FEATURE_PROFILE_STORAGE
+
         #- step : testcases.frequency.clock_settings
         #- step : utils.reboot_all
         - step : utils.naples_workloads
@@ -44,6 +49,17 @@ common:
         #-   step    : verif.utils.del_add_config
 
 testbundles:
+    precheckin:
+        - networking/lif_telemetry_precheckin.testbundle
+        - filters/filters.testbundle
+        - subifs/subifs-precheckin.testbundle
+        - rx_mode/rx_mode.testbundle
+        - classic/driver-features-sanity.testbundle
+        - system/obfl_check.testbundle
+        - sysmon/interrupts.testbundle
+        - cpld/cpldupgrade.testbundle
+        - hpe_ilo/hpe_ilo.testbundle
+
     sanity:
         # Relative paths from iota/test/iris/testbundles/
         - classic/ethtool.testbundle

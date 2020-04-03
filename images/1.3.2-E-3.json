@@ -1,47 +1,33 @@
 {
   "DocTemplateVersion": "1.0",
-  "Version": "latest",
+  "Version": "1.3.2-E-3",
   "Drivers": [
     {
-      "drivers_pkg": "platform/gen/drivers-linux-eth.tar.xz",
+      "drivers_pkg": "images/1.3.2-E-3/drivers-linux.tar.xz",
       "gold_drv_latest_pkg": "platform/hosttools/x86_64/linux/goldfw/latest/drivers-linux-eth.tar.xz",
       "gold_drv_old_pkg": "platform/hosttools/x86_64/linux/goldfw/old/drivers-linux-eth.tar.xz",
       "OS": "linux",
       "pkg_file_type": "SrcBundle"
     },
     {
-      "drivers_pkg": "platform/gen/drivers-freebsd-eth.tar.xz",
+      "drivers_pkg": "images/1.3.2-E-3/drivers-linux.tar.xz",
       "gold_drv_latest_pkg": "platform/hosttools/x86_64/freebsd/goldfw/latest/drivers-freebsd-eth.tar.xz",
       "gold_drv_old_pkg": "platform/hosttools/x86_64/freebsd/goldfw/old/drivers-freebsd-eth.tar.xz",
       "OS": "freebsd",
       "pkg_file_type": "SrcBundle"
     },
     {
-      "drivers_pkg": "platform/gen/drivers-esx-eth.tar.xz",
+      "drivers_pkg": "images/1.3.2-E-3/ionic-en-1.3-1OEM.670.0.0.8169922.x86_64.vib",
       "gold_drv_latest_pkg": "platform/hosttools/x86_64/esx/goldfw/latest/drivers-esx-eth.tar.xz",
       "gold_drv_old_pkg": "platform/hosttools/x86_64/esx/goldfw/old/drivers-esx-eth.tar.xz",
       "OS": "esx",
-      "pkg_file_type": "SrcBundle"
-    },
-    {
-      "drivers_pkg": "platform/gen/drivers-windows.zip",
-      "gold_drv_latest_pkg": "platform/hosttools/x86_64/windows/goldfw/latest/drivers-windows.zip",
-      "gold_drv_old_pkg": "platform/hosttools/x86_64/windows/goldfw/old/drivers-windows.zip",
-      "OS": "windows",
-      "pkg_file_type": "SrcBundle"
+      "pkg_file_type" : "VIB"
     }
   ],
   "Firmwares": [
       {
         "naples_type" : "capri",
-        "image": "nic/naples_fw.tar",
-        "gold_fw_img": "platform/goldfw/naples/naples_fw.tar",
-        "gold_fw_latest_ver": "1.3.1-E-8",
-        "gold_fw_old_ver": "1.3.1-E-7"
-      },
-      {
-        "naples_type" : "equinix",
-        "image": "nic/naples_fw_venice.tar",
+        "image": "images/1.3.2-E-3/naples_fw.tar",
         "gold_fw_img": "platform/goldfw/naples/naples_fw.tar",
         "gold_fw_latest_ver": "1.3.1-E-8",
         "gold_fw_old_ver": "1.3.1-E-7"
@@ -49,17 +35,12 @@
   ],
   "PenCtl" : [
     {
-        "Image" : "nic/host.tar"
+        "Image" : "images/1.3.2-E-3/penctl_binary.tar"
     }
   ],
   "Venice" : [
     {
-        "Image" : "bin/venice.tgz"
-    }
-  ],
-  "Simulation" : [
-    {
-        "Image" : "nic/obj/images/naples-release-v1.tgz"
+        "Image" : "images/1.3.2-E-3/venice.tgz"
     }
   ]
 }

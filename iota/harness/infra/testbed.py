@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import copy
 import os
+import pdb
 import json
 import subprocess
 import sys
@@ -96,7 +97,7 @@ class _Testbed:
     def __init__(self):
         self.curr_ts = None     # Current Testsuite
         self.prev_ts = None     # Previous Testsute
-        self.image_manifest_file = os.path.join(GlobalOptions.topdir, "images", "latest.json")
+        self.__image_manifest_file = os.path.join(GlobalOptions.topdir, "images", "latest.json")
         self.__node_ips = []
         self.__os = set()
         self.esx_ctrl_vm_ip = None
@@ -137,7 +138,9 @@ class _Testbed:
         return self.__tbspec.Provision.Vars.EsxPassword
 
     def IsUsingProdVCenter(self):
-        return getattr(self.__tbspec.Provision.Vars, 'ProdVCenter', False)
+        if hasattr(self.__tbspec, 'Provision') and hasattr(self.__tbspec.Provision, 'Vars'):
+            return getattr(self.__tbspec.Provision.Vars, 'ProdVCenter', False)
+        return False
 
     def GetVCenterDataCenterName(self):
         if self.IsUsingProdVCenter() and hasattr(self.__tbspec.Provision.Vars, 'Datastore'):
@@ -228,7 +231,6 @@ class _Testbed:
             if nap_sim_img:
                 msg.naples_sim_image = self.__get_full_path(nap_sim_img)
 
-
         msg.username = self.__tbspec.Provision.Username
         msg.password = self.__tbspec.Provision.Password
         msg.testbed_id = getattr(self, "__tbid", 1)
@@ -275,8 +277,8 @@ class _Testbed:
             if getattr(res,"ApcIP",None):
                 node_msg.apc_info.ip = res.ApcIP
                 node_msg.apc_info.port = res.ApcPort
-                node_msg.apc_info.username = res.ApcUsername
-                node_msg.apc_info.password = res.ApcPassword
+                node_msg.apc_info.username = getattr(res, 'ApcUsername', 'apc')
+                node_msg.apc_info.password = getattr(res, 'ApcPassword', 'apc')
             if getattr(instance, "NodeCimcIP", "") != "":
                 node_msg.cimc_ip_address = instance.NodeCimcIP
                 node_msg.cimc_username = getattr(instance,"NodeCimcUsername","admin")
@@ -347,27 +349,27 @@ class _Testbed:
         return getattr(resource, "NICType", "pensando-sim")
 
     def __verifyImagePath(self):
-        data = json.load(open(self.image_manifest_file,'r'))
+        data = json.load(open(self.__image_manifest_file,'r'))
         if "Drivers" not in data:
-            Logger.error("failed to find key Drivers in {0}".format(self.image_manifest_file))
+            Logger.error("failed to find key Drivers in {0}".format(self.__image_manifest_file))
         else:
             for drv in data["Drivers"]:
                 if "drivers_pkg" not in drv:
                     Logger.error("failed to find drivers_pkg key in Drivers {0}".format(drv))
                 else:
-                    if not os.path.exists(drv["drivers_pkg"]):
+                    if not os.path.exists(os.path.join(GlobalOptions.topdir, drv["drivers_pkg"])):
                         Logger.warn("###############################################")
                         Logger.warn("failed to find driver {0}".format(drv["drivers_pkg"]))
                         Logger.warn("###############################################")
 
         if "Firmwares" not in data:
-            Logger.error("failed to find key Firmwars in {0}".format(self.image_manifest_file))
+            Logger.error("failed to find key Firmwars in {0}".format(self.__image_manifest_file))
         else:
             for fw in data["Firmwares"]:
                 if "image" not in fw:
                     Logger.error("failed to find image key in Firmware {0}".format(fw))
                 else:
-                    if not os.path.exists(fw["image"]):
+                    if not os.path.exists(os.path.join(GlobalOptions.topdir, fw["image"])):
                         Logger.warn("###############################################")
                         Logger.warn("failed to find firmware {0}".format(fw["image"]))
                         Logger.warn("###############################################")
@@ -527,6 +529,8 @@ class _Testbed:
         self.__tbid = getattr(self.__tbspec, 'TestbedID', 1)
         self.__vlan_base = getattr(self.__tbspec, 'TestbedVlanBase', 1)
         self.__vlan_allocator = resmgr.TestbedVlanAllocator(self.__vlan_base, api.GetNicMode())
+        if self.curr_ts:
+            self.__image_manifest_file = self.curr_ts.GetImageManifestFile()
         resp = None
         msg = self.__prepare_TestBedMsg(self.curr_ts)
         if not GlobalOptions.skip_setup:
@@ -534,7 +538,7 @@ class _Testbed:
             if status != types.status.SUCCESS:
                 return status
             try:
-                self.__recover_testbed(self.image_manifest_file)
+                self.__recover_testbed(self.__image_manifest_file)
             except:
                 Logger.error("Failed to recover testbed")
                 Logger.debug(traceback.format_exc())
@@ -576,9 +580,9 @@ class _Testbed:
 
         reimg_req = parser.ParseJsonStream(req_json)
 
-        with open(self.image_manifest_file, "r") as fh:
+        with open(self.__image_manifest_file, "r") as fh:
             new_img_manifest = json.loads(fh.read())
-        manifest_file = self.image_manifest_file
+        manifest_file = self.__image_manifest_file
         self.__fw_upgrade_done = False
         reimage_driver = getattr(reimg_req, 'InstallDriver', False)
         reimage_firmware = getattr(reimg_req, 'InstallFirmware', False)

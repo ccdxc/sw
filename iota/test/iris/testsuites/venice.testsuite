@@ -8,9 +8,8 @@ meta:
 packages:
     - iota.test.iris
 
-images:
-    naples: /sw/nic/obj/images/naples-release-v1.tgz
-    venice: /sw/bin/venice.tgz
+image_manifest:
+    spec        : images/latest.json
 
 setup:
     topology: test/iris/topologies/3Naples_3Venice/3Naples_3Venice.topology

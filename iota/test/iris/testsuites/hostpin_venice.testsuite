@@ -11,8 +11,10 @@ meta:
 packages:
     - iota.test.iris
 
-images:
-    venice: /sw/bin/venice.tgz
+image_manifest:
+    spec        : images/latest.json
+    naples      : capri
+    venice      : True
 
 setup:
     topology: test/iris/topologies/2Naples_Venice/vm.topology

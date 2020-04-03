@@ -1073,7 +1073,6 @@ message TestBedNode {
 
     // warmd instance name
     string instance_name            = 31;
-
 }
 
 // CopyDirection defines direction whether to copy in or copy out

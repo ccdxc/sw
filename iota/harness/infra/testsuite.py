@@ -88,6 +88,7 @@ class TestSuite:
         self.result = types.status.FAILURE
         self.__skip = self.__apply_skip_filters()
         self.__ignoreList = getattr(spec.meta, "ignore_list", [])
+        self.__images = self.__load_image_manifest()
         return
 
     def Abort(self):
@@ -121,7 +122,13 @@ class TestSuite:
         return self.__setup_complete
 
     def GetImages(self):
-        return self.__spec.images
+        return self.__images
+
+    def GetImageManifestFile(self):
+        path = 'images/latest.json'
+        if hasattr(self.__spec, 'image_manifest'):
+            path = getattr(self.__spec.image_manifest, 'file', 'images/latest.json')
+        return os.path.join(GlobalOptions.topdir, path)
 
     def GetTopology(self):
         return self.__topology
@@ -167,6 +174,42 @@ class TestSuite:
 
     def GetCommonArgs(self):
         return self.__common_args
+
+    def __load_image_manifest(self):
+        manifest_file = self.GetImageManifestFile()
+        image_info = parser.JsonParse(manifest_file)
+        images = parser.Dict2Object({})
+
+        naples_type = 'capri'
+        if hasattr(self.__spec, 'image_manifest') and hasattr(self.__spec.image_manifest, 'naples'): 
+            naples_type = self.__spec.image_manifest.naples 
+
+        fw_images = list(filter(lambda x: x.naples_type == naples_type, image_info.Firmwares))
+        if fw_images:
+            setattr(images, 'naples', fw_images[0].image)
+
+        # Derive venice-image
+        venice = False
+        if hasattr(self.__spec, 'image_manifest') and hasattr(self.__spec.image_manifest, 'venice'): 
+            venice = self.__spec.image_manifest.venice 
+        if venice and image_info.Venice:
+            setattr(images, 'venice', image_info.Venice[0].Image)
+
+        # Derive driver-images
+        driver = False
+        if hasattr(self.__spec, 'image_manifest') and hasattr(self.__spec.image_manifest, 'driver'):
+            driver = self.__spec.image_manifest.driver
+        if driver:
+            setattr(images, 'driver', image_info.Drivers)
+
+        naples_sim = False
+        if hasattr(self.__spec, 'image_manifest') and hasattr(self.__spec.image_manifest, 'naples_sim'):
+            naples_sim = self.__spec.image_manifest.naples_sim
+        if naples_sim:
+            setattr(images, 'naples_sim', image_info.Simulation[0].Image)
+
+        setattr(images, 'penctl', image_info.PenCtl[0].Image)
+        return images
 
     def __resolve_calls(self):
         if getattr(self.__spec, 'common', None) and getattr(self.__spec.common, 'verifs', None):
@@ -238,7 +281,6 @@ class TestSuite:
             s.step = loader.Import(s.step, self.__spec.packages)
             s.args = getattr(s, "args", None)
         return types.status.SUCCESS
-
 
     def __parse_setup(self):
         ret = self.__parse_setup_topology()
