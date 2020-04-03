@@ -368,6 +368,7 @@ dump_flows(void)
 {
     pds_flow_iter_cb_arg_t iter_cb_arg = { 0 };
 
+    PDS_TRACE_DEBUG("\nPrinting Flow cache flows\n");
     pds_flow_cache_entry_iterate(dump_single_flow, &iter_cb_arg);
 }
 
@@ -446,6 +447,18 @@ accumulate_stats (pds_flow_stats_t *stats)
 }
 
 sdk_ret_t
+fte_dump_flows(zmq_msg_t *rx_msg,
+               zmq_msg_t *tx_msg)
+{
+    dump_flows();
+
+    if (tx_msg) {
+        SERVER_RSP_INIT(tx_msg, rsp, test::athena_app::server_rsp_t);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 fte_dump_flow_stats(zmq_msg_t *rx_msg,
                     zmq_msg_t *tx_msg)
 {
@@ -460,7 +473,6 @@ fte_dump_flow_stats(zmq_msg_t *rx_msg,
          }
     }
     dump_stats(&g_flow_stats);
-    dump_flows();
 
     if (tx_msg) {
         SERVER_RSP_INIT(tx_msg, rsp, test::athena_app::server_rsp_t);
@@ -477,6 +489,11 @@ signal_handler (int signum)
         program_prepare_exit();
     }
     if (signum == SIGUSR1) {
+        PDS_TRACE_DEBUG("\nSIGNAL %d received..\n",
+                        signum);
+        fte_dump_flows();
+    }
+    if (signum == SIGUSR2) {
         PDS_TRACE_DEBUG("\nSIGNAL %d received..\n",
                         signum);
         fte_dump_flow_stats();
@@ -867,6 +884,7 @@ fte_main (void)
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
     signal(SIGUSR1, signal_handler);
+    signal(SIGUSR2, signal_handler);
 
     if (check_lcore_params() < 0) {
         rte_exit(EXIT_FAILURE, "check_lcore_params failed\n");

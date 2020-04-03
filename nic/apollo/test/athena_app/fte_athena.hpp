@@ -20,6 +20,8 @@ void fte_init(void);
 sdk_ret_t fte_flow_prog(struct rte_mbuf *m);
 void fte_thread_init(unsigned int core_id);
 sdk_ret_t fte_flows_init(void);
+sdk_ret_t fte_dump_flows(zmq_msg_t *rx_msg = nullptr,
+                         zmq_msg_t *tx_msg = nullptr);
 sdk_ret_t fte_dump_flow_stats(zmq_msg_t *rx_msg = nullptr,
                               zmq_msg_t *tx_msg = nullptr);
 
