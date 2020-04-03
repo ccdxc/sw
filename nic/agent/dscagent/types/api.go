@@ -6,6 +6,7 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/tsproto"
 
 	"github.com/pensando/sw/venice/utils/emstore"
+	"github.com/pensando/sw/venice/utils/events"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -17,6 +18,7 @@ type ControllerAPI interface {
 	Start(kinds []string) error
 	Stop() error
 	WatchTechSupport()
+	WatchAlertPolicies() error
 }
 
 // InfraAPI implements all infra APIs that are common across pipelines
@@ -130,4 +132,7 @@ type PipelineAPI interface {
 
 	// HandleTechSupport captures tech support from DSC and uploads it to Venice
 	HandleTechSupport(obj tsproto.TechSupportRequest) (techSupportArtifact string, err error)
+
+	// HandleAlerts relays alerts from HAL to various exporters
+	HandleAlerts(evtsDispatcher events.Dispatcher)
 }

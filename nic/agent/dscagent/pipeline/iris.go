@@ -33,6 +33,7 @@ import (
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -2034,6 +2035,11 @@ func (i *IrisAPI) HandleCPRoutingConfig(obj types.DSCStaticRoute) error {
 // HandleTechSupport unimplemented
 func (i *IrisAPI) HandleTechSupport(obj tsproto.TechSupportRequest) (string, error) {
 	return "", errors.Wrapf(types.ErrNotImplemented, "Tech Support Capture not implemented by Iris Pipeline")
+}
+
+// HandleAlerts unimplemented
+func (i *IrisAPI) HandleAlerts(evtsDispatcher events.Dispatcher) {
+	return
 }
 
 // TODO Remove PortCreates once the linkmgr changes are stable

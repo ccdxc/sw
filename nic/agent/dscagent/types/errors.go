@@ -143,6 +143,7 @@ const (
 	ErrInconsistentInterfaceDelete           = Error("ErrInconsistentInterfaceDelete")
 	ErrAlertsGet                             = Error("ErrAlertsGet")
 	ErrAlertsRecv                            = Error("ErrAlertsRecv")
+	ErrAlertsFwd                             = Error("ErrAlertsFwd")
 	ErrRPCClientFactoryUninitialized         = Error("ErrRPCClientFactoryUninitialized")
 )
 

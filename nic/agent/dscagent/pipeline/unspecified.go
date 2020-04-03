@@ -25,6 +25,7 @@ import (
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/protos/tsproto"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -1759,6 +1760,11 @@ func (i *FakeAgentAPI) HandleCollector(oper types.Operation, col netproto.Collec
 // HandletechSupport stubbed out
 func (i *FakeAgentAPI) HandleTechSupport(obj tsproto.TechSupportRequest) (string, error) {
 	return "", errors.Wrapf(types.ErrNotImplemented, "Handle Tech Support not implemented by Iris Pipeline")
+}
+
+// HandleAlerts unimplemented
+func (i *FakeAgentAPI) HandleAlerts(evtsDispatcher events.Dispatcher) {
+	return
 }
 
 // TODO Move this into InfraAPI to avoid code duplication

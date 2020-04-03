@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	msapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -146,8 +147,6 @@ func (a *ApuluAPI) PipelineInit() error {
 
 	// handle all the metrics
 	apulu.HandleMetrics(a.InfraAPI, a.OperClient)
-	// handle all the alerts
-	apulu.HandleAlerts(a.OperClient)
 	// Ensure that the watches for all objects are set up since Apulu doesn't have a profile that dictates which objects to be watched
 
 	a.startDynamicWatch(types.CloudPipelineKinds)
@@ -232,6 +231,9 @@ func (a *ApuluAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatu
 		Intf: lb,
 	}
 	a.InfraAPI.UpdateIfChannel() <- ifEvnt
+
+	// start event/alert policies watcher
+	a.StartAlertPoliciesWatch()
 }
 
 // RegisterControllerAPI ensures the handles for controller API is appropriately set up
@@ -1321,6 +1323,12 @@ func (a *ApuluAPI) HandleTechSupport(obj tsproto.TechSupportRequest) (string, er
 	return apulu.HandleTechSupport(a.OperClient, obj.Spec.SkipCores, obj.Spec.InstanceID)
 }
 
+// HandleTechSupport unimplemented
+func (a *ApuluAPI) HandleAlerts(evtsDispatcher events.Dispatcher) {
+	// handle all the alerts
+	apulu.HandleAlerts(evtsDispatcher, a.OperClient)
+}
+
 // ReplayConfigs replays last known configs from boltDB
 func (a *ApuluAPI) ReplayConfigs() error {
 
@@ -1952,4 +1960,26 @@ func (a *ApuluAPI) startDynamicWatch(kinds []string) {
 
 	}
 	go startWatcher()
+}
+
+func (a *ApuluAPI) StartAlertPoliciesWatch() {
+	log.Infof("Starting Alert policy Watch")
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		for {
+			select {
+			case <-ticker.C:
+				if a.ControllerAPI == nil {
+					log.Info("Waiting for controller registration")
+				} else {
+					err := a.ControllerAPI.WatchAlertPolicies()
+					if err == nil {
+						log.Infof("Watching Alert policies")
+						return
+					}
+				}
+			}
+		}
+
+	}()
 }

@@ -27,12 +27,16 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
 	restapi "github.com/pensando/sw/nic/agent/protos/generated/restapi/netagent"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/events"
+	"github.com/pensando/sw/venice/utils/events/dispatcher"
+	"github.com/pensando/sw/venice/utils/events/exporters"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -54,6 +58,7 @@ type API struct {
 	factory             *rpckit.RPCClientFactory
 	npmURL              string
 	kinds               []string // Captures the current Watch Kinds
+	evtsDispatcher      events.Dispatcher
 }
 
 // RestServer implements REST APIs
@@ -325,6 +330,57 @@ func (c *API) watchObjects() {
 	}
 	log.Infof("Controller API: %s | Kinds: %v", types.InfoAggWatchStopped, c.kinds)
 	c.Done()
+}
+
+// WatchAlertPolicies watches for alert/event policies & handles alerts. Cloud Pipeline only
+func (c *API) WatchAlertPolicies() error {
+
+	if c.ResolverClient == nil {
+		log.Info("Controller API: Resolver client is not set yet")
+		return fmt.Errorf("Controller API: Resolver client is not set yet")
+	}
+
+	var err error
+	nodeName := c.InfraAPI.GetDscName()
+	defLogger := log.GetDefaultInstance()
+	storeConfig := &events.StoreConfig{Dir: globals.EventsDir}
+
+	// populate default object reference to be used by events dispatcher
+	dsc := &cluster.DistributedServiceCard{}
+	dsc.Defaults("all")
+	defObjRef := &api.ObjectRef{
+		Kind:      dsc.GetKind(),
+		Name:      nodeName,
+		Tenant:    dsc.GetTenant(),
+		Namespace: dsc.GetNamespace(),
+		URI:       dsc.GetSelfLink(),
+	}
+
+	// create the events dispatcher with default values
+	c.evtsDispatcher, err = dispatcher.NewDispatcher(nodeName, 0, 0, storeConfig, defObjRef, defLogger)
+	if err != nil {
+		log.Errorf("Controller API: evt dispatcher create failed, err %v", err)
+		return err
+	}
+
+	// start venice exporter
+	exporterChLen := 1000
+	veniceExporter, err := exporters.NewVeniceExporter("venice", exporterChLen, "", c.ResolverClient, defLogger)
+	eventsChan, offsetTracker, err := c.evtsDispatcher.RegisterExporter(veniceExporter)
+	if err != nil {
+		log.Errorf("Controller API: venice exporter create failed, err %v", err)
+		return err
+	}
+	veniceExporter.Start(eventsChan, offsetTracker)
+
+	// TODO: Add Policy Manger & Watcher support after decoupling it from evtsproxy
+	// policyMgr, err = policy.NewManager(nodeName, c.evtsDispatcher, defLogger)
+	// policyWatcher, err = policy.NewWatcher(policyMgr, defLogger, policy.WithResolverClient(c.resolverClient))
+
+	c.evtsDispatcher.Start()
+	log.Info("Controller API: Started Events Dispatcher")
+	c.PipelineAPI.HandleAlerts(c.evtsDispatcher)
+	return nil
 }
 
 // WatchTechSupport watches for TechSupportRequests. This is called only in Cloud Pipeline.
