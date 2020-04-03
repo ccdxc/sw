@@ -1,11 +1,12 @@
 meta:
-    name        : transparent_flowaware_esx
-    description : Transparent Flowaware ESX Test Suite
-    mode        : hardware
-    cfgmode     : netagent
-    nicmode     : unified
-    fwdmode     : transparent
-    policymode  : flowaware
+    name                    : transparent_flowaware_esx
+    description             : Transparent Flowaware ESX Test Suite
+    mode                    : hardware
+    cfgmode                 : netagent
+    nicmode                 : unified
+    fwdmode                 : transparent
+    policymode              : flowaware
+    allowduplicatebundle    : True
     os          : [ esx ]
 
 packages:

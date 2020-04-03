@@ -136,6 +136,9 @@ class TestSuite:
     def GetNicMode(self):
         return self.__spec.meta.nicmode
 
+    def GetAllowDuplicateBundle(self):
+        return getattr(self.__spec.meta, "allowduplicatebundle", "")
+
     def SetNicMode(self, mode):
         self.__spec.meta.nicmode = mode
 
@@ -226,7 +229,7 @@ class TestSuite:
             self.__common_args = self.__spec.common.args
 
     def __append_testbundle(self, bunfile):
-        if not bunfile in self.__testbunfiles:
+        if self.GetAllowDuplicateBundle() == True or not bunfile in self.__testbunfiles:
             self.__testbunfiles.append(bunfile)
 
             tbun = testbundle.TestBundle(bunfile, self)

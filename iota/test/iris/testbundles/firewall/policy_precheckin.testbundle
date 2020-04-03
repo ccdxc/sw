@@ -25,4 +25,4 @@ testcases:
             type  : nested
             kind  : ["local", "remote"]
             proto : ['tcp', 'udp']
-            scale : [50, 50]
+            scale : [50]

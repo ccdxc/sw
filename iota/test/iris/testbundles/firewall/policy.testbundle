@@ -25,7 +25,7 @@ testcases:
             type  : nested
             kind  : ["local", "remote"]
             proto : ['tcp', 'udp']
-            scale : [100, 100]
+            scale : [100]
 
     -   name    : PolicyScaleAddDelLoop
         testcase: testcases.security.policy_scale_add_del_loop
