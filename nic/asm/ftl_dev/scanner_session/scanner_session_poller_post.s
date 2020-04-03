@@ -94,16 +94,16 @@ session_poller_post:
     
     // If completed one full sweep (i.e., range_full), 
     //
-    // DMA0 = disable scheduler
-    // i.e., stop scheduling and tell poller to reschedule us. The goal here
+    // DMA0 = scheduler update eval
+    // i.e., idle scheduling and tell poller to reschedule us. The goal here
     // is to prevent duplicate postings to the software poller.
     
 _if4:    
     sne         c3, SESSION_KIVEC8_RANGE_FULL, r0               // delay slot
     bcf         [!c3], _endif4
     phvwr.c3    p.poller_slot_data_flags, SCANNER_RESCHED_REQUESTED // delay slot
-    SCANNER_DB_ADDR_SCHED_RESET(SESSION_KIVEC7_LIF,
-                                SESSION_KIVEC0_QTYPE)
+    SCANNER_DB_ADDR_SCHED_EVAL(SESSION_KIVEC7_LIF,
+                               SESSION_KIVEC0_QTYPE)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_0_dma_cmd,
                                 r_db_addr,
                                 db_data_no_index_data,
@@ -319,29 +319,52 @@ _burst_full_resched:
     .align
     
 /*
- * Control block not ready or error - disable queue scheduling
+ * Control block not ready or error - revert to initial state and 
+ * idle scheduler.
  */
-session_scan_disable:
+session_scan_idle:
  
     CLEAR_TABLE0
                 
-    // DMA0 = update FSM state
+    // DMA0 = clear FSM expiry_maps
+
+    add         r_qstate_addr, SESSION_KIVEC0_QSTATE_ADDR, \
+                SCANNER_SESSION_CB_TABLE_SUMMARIZE_OFFSET + \
+                SCANNER_STRUCT_BYTE_OFFS(s6_tbl_session_summarize_d, expiry_map0)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_0_dma_cmd,
+                                r_qstate_addr,
+                                poller_null_data_expiry_map0,
+                                poller_null_data_expiry_map3)
+                                
+    // DMA1 = update FSM state
     
     phvwr       p.fsm_state_next_state, SCANNER_STATE_INITIAL
     add         r_qstate_addr, SESSION_KIVEC0_QSTATE_ADDR, \
                 SCANNER_SESSION_CB_TABLE_FSM_OFFSET + \
                 SCANNER_STRUCT_BYTE_OFFS(s1_tbl_session_fsm_exec_d, fsm_state)
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_0_dma_cmd,
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_1_dma_cmd,
                                 r_qstate_addr,
                                 fsm_state_next_state,
                                 fsm_state_next_state)
-                                    
-    // DMA1 = disable scheduler
+                                
+    // DMA2 = clear indication of whether we have posted any expiry maps
     
-    SCANNER_DB_ADDR_SCHED_RESET(SESSION_KIVEC7_LIF,
-                                SESSION_KIVEC0_QTYPE)
-    CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP_FENCE_e(dma_p2m_1_dma_cmd,
+    phvwr       p.poller_range_has_posted_posted, 0
+    add         r_qstate_addr, SESSION_KIVEC0_QSTATE_ADDR, \
+                SCANNER_SESSION_CB_TABLE_SUMMARIZE_OFFSET + \
+                SCANNER_STRUCT_BYTE_OFFS(s6_tbl_session_summarize_d, range_has_posted)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_2_dma_cmd,
+                                r_qstate_addr,
+                                poller_range_has_posted_posted,
+                                poller_range_has_posted_posted)
+                                
+    // DMA3 = scheduler update eval
+    
+    SCANNER_DB_ADDR_SCHED_EVAL(SESSION_KIVEC7_LIF,
+                               SESSION_KIVEC0_QTYPE)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP_FENCE_e(dma_p2m_3_dma_cmd,
                                              r_db_addr,
                                              db_data_no_index_data,
                                              db_data_no_index_data)
+                                             
 

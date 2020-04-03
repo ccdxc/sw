@@ -48,6 +48,14 @@ scanner_session_start:
     SCANNER_DB_DATA(r_qid) 
     phvwr       p.db_data_no_index_data, r_db_data.dx
     
+    SCANNER_DB_DATA_TIMER(HW_MPU_TXDMA_INTRINSIC_QTYPE,
+                          r_qid, SCANNER_POLLER_QFULL_REPOST_TICKS)
+    phvwr       p.db_data_qfull_repost_ticks_data, r_db_data.dx
+    
+    SCANNER_DB_DATA_TIMER(HW_MPU_TXDMA_INTRINSIC_QTYPE,
+                          r_qid, SCANNER_RANGE_EMPTY_RESCHED_TICKS)
+    phvwr       p.db_data_range_empty_ticks_data, r_db_data.dx
+    
     phvwr       p.poller_slot_data_scanner_qid, r_qid.wx
     sne         c1, d.cb_activate, SCANNER_SESSION_CB_ACTIVATE
     bcf         [c1], _scanner_cb_cfg_discard
@@ -58,14 +66,6 @@ scanner_session_start:
     phvwr       p.db_data_burst_ticks_data, r_db_data.dx
     phvwr       p.session_kivec8_resched_uses_slow_timer, \
                 d.resched_uses_slow_timer
-    
-    SCANNER_DB_DATA_TIMER(HW_MPU_TXDMA_INTRINSIC_QTYPE,
-                          r_qid, SCANNER_POLLER_QFULL_REPOST_TICKS)
-    phvwr       p.db_data_qfull_repost_ticks_data, r_db_data.dx
-    
-    SCANNER_DB_DATA_TIMER(HW_MPU_TXDMA_INTRINSIC_QTYPE,
-                          r_qid, SCANNER_RANGE_EMPTY_RESCHED_TICKS)
-    phvwr       p.db_data_range_empty_ticks_data, r_db_data.dx
     
     /*
      * Launch state machine

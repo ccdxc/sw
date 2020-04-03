@@ -65,10 +65,13 @@ typedef struct {
 /*
  * Initialize a server response message.
  */
-#define SERVER_RSP_INIT(msg, rsp, rsp_type_t)           \
+#define SERVER_RSP_GET(msg, rsp, rsp_type_t)            \
     rsp_type_t *rsp;                                    \
     zmq_msg_init_size(msg, sizeof(rsp_type_t));         \
-    rsp = (rsp_type_t *)zmq_msg_data(msg);              \
+    rsp = (rsp_type_t *)zmq_msg_data(msg)               \
+    
+#define SERVER_RSP_INIT(msg, rsp, rsp_type_t)           \
+    SERVER_RSP_GET(msg, rsp, rsp_type_t);               \
     *rsp = {0}                                          \
     
 /*

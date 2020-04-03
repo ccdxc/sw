@@ -81,12 +81,12 @@ typedef enum p4pd_pipeline_ {
 } p4pd_pipeline_t;
 
 typedef enum p4pd_table_cache_ {
-    P4_TBL_CACHE_NONE           = 0,
-    P4_TBL_CACHE_INGRESS,
-    P4_TBL_CACHE_EGRESS,
-    P4_TBL_CACHE_TXDMA,
-    P4_TBL_CACHE_RXDMA,
-    P4_TBL_CACHE_TXDMA_RXDMA
+    P4_TBL_CACHE_NONE           = 0U,
+    P4_TBL_CACHE_INGRESS        = 1U << 0,
+    P4_TBL_CACHE_EGRESS         = 1U << 1,
+    P4_TBL_CACHE_TXDMA          = 1U << 2,
+    P4_TBL_CACHE_RXDMA          = 1U << 3,
+    P4_TBL_CACHE_TXDMA_RXDMA    = P4_TBL_CACHE_TXDMA | P4_TBL_CACHE_RXDMA,
 } p4pd_table_cache_t;
 
 typedef struct p4pd_table_mem_layout_ {

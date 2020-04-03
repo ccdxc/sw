@@ -1814,7 +1814,12 @@ ftl_lif_queues_ctl_t::stop(void)
             }
 
             (*cb_deactivate)(qstate_access);
+
+            /*
+             * No need to call sched_stop_single() as deactivate above
+             * would cause P4+ to idle scheduling for the queue.
             sched_stop_single(qid);
+             */
         }
     }
 
@@ -2491,7 +2496,8 @@ mem_access_t::cache_invalidate(uint32_t offset,
      * access the required invalidate register.
      */
     PAL_barrier();
-    sdk::asic::pd::asicpd_p4plus_invalidate_cache(paddr + offset, sz, P4PLUS_CACHE_INVALIDATE_TXDMA);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(paddr + offset, sz,
+                                                  P4PLUS_CACHE_INVALIDATE_TXDMA);
 }
 
 /*

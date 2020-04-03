@@ -231,7 +231,7 @@ capri_program_hbm_table_base_addr (int tableid, int stage_tableid,
     mem_addr_t va, start_offset;
     uint64_t size;
     mpartition_region_t *reg;
-    p4pd_table_cache_t cache = P4_TBL_CACHE_NONE;
+    uint32_t cache = P4_TBL_CACHE_NONE;
 
     if (strcmp(tablename, MEM_REGION_RSS_INDIR_TABLE_NAME) == 0) {
         // TODO: Work with Neel to clean capri_toeplitz_init
@@ -248,15 +248,19 @@ capri_program_hbm_table_base_addr (int tableid, int stage_tableid,
     size = sdk::asic::asic_get_mem_size_kb(tablename) << 10;
 
     if (is_region_cache_pipe_p4_ig(reg)) {
-        cache = P4_TBL_CACHE_INGRESS;
-    } else if (is_region_cache_pipe_p4_eg(reg)) {
-        cache = P4_TBL_CACHE_EGRESS;
-    } else if (is_region_cache_pipe_p4plus_txdma(reg)) {
-        cache = P4_TBL_CACHE_TXDMA;
-    } else if (is_region_cache_pipe_p4plus_rxdma(reg)) {
-        cache = P4_TBL_CACHE_RXDMA;
-    } else if (is_region_cache_pipe_p4plus_all(reg)) {
-        cache = P4_TBL_CACHE_TXDMA_RXDMA;
+        cache |= P4_TBL_CACHE_INGRESS;
+    }
+    if (is_region_cache_pipe_p4_eg(reg)) {
+        cache |= P4_TBL_CACHE_EGRESS;
+    }
+    if (is_region_cache_pipe_p4plus_txdma(reg)) {
+        cache |= P4_TBL_CACHE_TXDMA;
+    }
+    if (is_region_cache_pipe_p4plus_rxdma(reg)) {
+        cache |= P4_TBL_CACHE_RXDMA;
+    }
+    if (is_region_cache_pipe_p4plus_all(reg)) {
+        cache |= P4_TBL_CACHE_TXDMA_RXDMA;
     }
 
     SDK_TRACE_DEBUG("HBM Tbl Name %s, TblID %u, Stage %d, StageTblID %u, "
@@ -266,14 +270,15 @@ capri_program_hbm_table_base_addr (int tableid, int stage_tableid,
     if (tableid >= 0) {
         va = (mem_addr_t)sdk::lib::pal_mem_map(start_offset, size);
         SDK_TRACE_DEBUG(
-            " PA 0x%llx, VA 0x%lx, SZ %llu, Cache %d(%s)", start_offset, va,
-            size, cache,
-            cache == P4_TBL_CACHE_INGRESS ? "Ingress"
-                : cache == P4_TBL_CACHE_EGRESS ? "Egress"
-                : cache == P4_TBL_CACHE_TXDMA ? "Txdma"
-                : cache == P4_TBL_CACHE_RXDMA ? "Rxdma"
-                : cache == P4_TBL_CACHE_TXDMA_RXDMA ? "Txdma/Rxdma" : "None");
-        p4pd_global_hbm_table_address_set(tableid, start_offset, va, cache);
+            " PA 0x%llx, VA 0x%lx, SZ %llu", start_offset, va, size);
+        SDK_TRACE_DEBUG(
+            " Cache 0x%x(%s%s%s%s%s)", cache,
+            cache & P4_TBL_CACHE_INGRESS ? "Ingress/" : "",
+            cache & P4_TBL_CACHE_EGRESS ? "Egress/" : "",
+            cache & P4_TBL_CACHE_TXDMA ? "Txdma/" : "",
+            cache & P4_TBL_CACHE_RXDMA ? "Rxdma" : "",
+            cache ? "" : "None");
+        p4pd_global_hbm_table_address_set(tableid, start_offset, va, (p4pd_table_cache_t)cache);
     }
 
     // TODO remove slave check once VPP's invocation is fixed
@@ -324,10 +329,10 @@ capri_program_p4plus_table_mpu_pc_args (int tbl_id, cap_te_csr_t *te_csr,
 }
 
 #define CAPRI_P4PLUS_HANDLE         "p4plus"
-#define CAPRI_P4PLUS_RXDMA_PROG		"rxdma_stage0.bin"
-#define CAPRI_P4PLUS_RXDMA_EXT_PROG	"rxdma_stage0_ext.bin"
-#define CAPRI_P4PLUS_TXDMA_PROG		"txdma_stage0.bin"
-#define CAPRI_P4PLUS_TXDMA_EXT_PROG	"txdma_stage0_ext.bin"
+#define CAPRI_P4PLUS_RXDMA_PROG     "rxdma_stage0.bin"
+#define CAPRI_P4PLUS_RXDMA_EXT_PROG "rxdma_stage0_ext.bin"
+#define CAPRI_P4PLUS_TXDMA_PROG     "txdma_stage0.bin"
+#define CAPRI_P4PLUS_TXDMA_EXT_PROG "txdma_stage0_ext.bin"
 
 uint64_t
 capri_get_p4plus_table_mpu_pc (int tableid)
@@ -1678,13 +1683,14 @@ p4_invalidate_cache (uint64_t addr, uint32_t size_in_bytes, p4pd_table_cache_t c
 {
     while ((int)size_in_bytes > 0) {
         uint32_t claddr = (addr >> CACHE_LINE_SIZE_SHIFT) << 1;
-        if (cache == P4_TBL_CACHE_INGRESS) {
+        if (cache & P4_TBL_CACHE_INGRESS) {
             if (csr_cache_inval_ingress_va) {
                 *csr_cache_inval_ingress_va = claddr;
             } else {
                 sdk::lib::pal_reg_write(CSR_CACHE_INVAL_INGRESS_REG_ADDR, &claddr, 1);
             }
-        } else {
+        }
+        if (cache & P4_TBL_CACHE_EGRESS) {
             if (csr_cache_inval_egress_va) {
                 *csr_cache_inval_egress_va = claddr;
             } else {
@@ -1704,16 +1710,19 @@ capri_hbm_table_entry_cache_invalidate (p4pd_table_cache_t cache,
 {
     time_profile_begin(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE);
     uint64_t addr = (base_mem_pa + entry_addr);
-    if (cache == P4_TBL_CACHE_INGRESS || cache == P4_TBL_CACHE_EGRESS) {
+    if (cache & (P4_TBL_CACHE_INGRESS | P4_TBL_CACHE_EGRESS)) {
         p4_invalidate_cache(addr, entry_width, cache);
-    } else if (cache == P4_TBL_CACHE_TXDMA_RXDMA) {
+    }
+
+    // Allow cache to be set for both P4 (above) and P4+ (below)
+    if ((cache & P4_TBL_CACHE_TXDMA_RXDMA) == P4_TBL_CACHE_TXDMA_RXDMA) {
         p4plus_invalidate_cache(addr, entry_width, P4PLUS_CACHE_INVALIDATE_BOTH);
-    } else if (cache == P4_TBL_CACHE_TXDMA) {
+    } else if (cache & P4_TBL_CACHE_TXDMA) {
         p4plus_invalidate_cache(addr, entry_width, P4PLUS_CACHE_INVALIDATE_TXDMA);
-    } else if (cache == P4_TBL_CACHE_RXDMA) {
+    } else if (cache & P4_TBL_CACHE_RXDMA) {
         p4plus_invalidate_cache(addr, entry_width, P4PLUS_CACHE_INVALIDATE_RXDMA);
     } else {
-        SDK_ASSERT(0);
+        SDK_ASSERT(cache);
     }
     time_profile_end(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE);
     return CAPRI_OK;

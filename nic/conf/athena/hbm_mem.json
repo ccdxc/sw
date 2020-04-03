@@ -164,7 +164,9 @@
             "size": "256M",
             "reset": true,
             "cache": "p4eg",
-            "_comment": "4M * 64"
+            "cache1": "p4plus-txdma",
+            "_comment": "4M * 64",
+            "_comment1": "session_info has 2 readers: P4 and P4+, hence 2 cache types"
         },
         {
             "name": "session_rewrite",
@@ -182,10 +184,12 @@
         },
         {
             "name": "conntrack",
-            "size": "4M",
+            "size": "16M",
             "reset": true,
             "cache": "p4ig",
-            "_comment": "4M * 1B"
+            "cache1": "p4plus-txdma",
+            "_comment": "4M * 4B",
+            "_comment1": "conntrack has 2 readers: P4 and P4+, hence 2 cache types"
         },
         {
             "name": "config1",

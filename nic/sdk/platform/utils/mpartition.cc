@@ -23,6 +23,7 @@ namespace utils {
 #define JKEY_BLKCOUNT       "block_count"
 #define JKEY_MAX_ELEMENTS   "max_elements"
 #define JKEY_CACHE_PIPE     "cache"
+#define JKEY_CACHE_PIPE1    "cache1"
 #define JKEY_RESET_REGION   "reset"
 #define JKEY_BASE_REGION    "base_region"
 #define JKEY_REGION_KIND    "kind"
@@ -330,24 +331,39 @@ mpartition::region_init(const char *mpart_json_file, shmmgr *mmgr)
                                     SDK_RET_ERR, "Reserved region overflow");
             continue;
         }
+
+        auto cache_pipe_eval = [] (std::string &pipe_name) -> int
+        {
+            if (pipe_name == "p4ig") {
+                return MEM_REGION_CACHE_PIPE_P4IG;
+            }
+            if (pipe_name == "p4eg") {
+               return MEM_REGION_CACHE_PIPE_P4EG;
+            }
+            if (pipe_name == "p4plus-txdma") {
+                return MEM_REGION_CACHE_PIPE_P4PLUS_TXDMA;
+            }
+            if (pipe_name == "p4plus-rxdma") {
+                return MEM_REGION_CACHE_PIPE_P4PLUS_RXDMA;
+            }
+            if (pipe_name == "p4plus-all") {
+                return MEM_REGION_CACHE_PIPE_P4PLUS_ALL;
+            }
+            return MEM_REGION_CACHE_PIPE_NONE;
+        };
+
         std::string cache_pipe_name =
             p4_tbl.second.get<std::string>(JKEY_CACHE_PIPE, "null");
+        std::string cache_pipe_name1 =
+            p4_tbl.second.get<std::string>(JKEY_CACHE_PIPE1, "null");
+
+        // Allow P4 and P4+ cache combinations;
+        int cache_pipe = cache_pipe_eval(cache_pipe_name) | 
+                         cache_pipe_eval(cache_pipe_name1);
+        reg->cache_pipe = (cache_pipe_t)cache_pipe;
+
         reg->reset = p4_tbl.second.get<bool>(JKEY_RESET_REGION, false);
         std::string kind = p4_tbl.second.get<std::string>(JKEY_REGION_KIND, "null");
-
-        if (cache_pipe_name == "p4ig") {
-            reg->cache_pipe = MEM_REGION_CACHE_PIPE_P4IG;
-        } else if (cache_pipe_name == "p4eg") {
-            reg->cache_pipe = MEM_REGION_CACHE_PIPE_P4EG;
-        } else if (cache_pipe_name == "p4plus-txdma") {
-            reg->cache_pipe = MEM_REGION_CACHE_PIPE_P4PLUS_TXDMA;
-        } else if (cache_pipe_name == "p4plus-rxdma") {
-            reg->cache_pipe = MEM_REGION_CACHE_PIPE_P4PLUS_RXDMA;
-        } else if (cache_pipe_name == "p4plus-all") {
-            reg->cache_pipe = MEM_REGION_CACHE_PIPE_P4PLUS_ALL;
-        } else {
-            reg->cache_pipe = MEM_REGION_CACHE_PIPE_NONE;
-        }
 
         if (kind == JKEYVAL_REGION_KIND_STATIC) {
             reg->kind = MEM_REGION_KIND_STATIC;

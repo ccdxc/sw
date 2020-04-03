@@ -25,7 +25,7 @@ struct s6_tbl_session_summarize_d       d;
     .param          session_poller_empty_post_eval
     .param          session_poller_post
     .param          session_fsm_state_eval
-    .param          session_scan_disable
+    .param          session_scan_idle
     .align
 
 session_summarize:
@@ -174,11 +174,11 @@ _fsm_state_eval_launch:
 
 /*
  * Discard due to control block configuration;
- * launch stage to disable queue scheduling
+ * launch stage to give up scheduling slot
  */
 _scanner_cb_cfg_discard:
  
     SESSION_METRICS_SET(cb_cfg_discards)
-    LOAD_TABLE_NO_ADDR_e(0, session_scan_disable)
+    LOAD_TABLE_NO_ADDR_e(0, session_scan_idle)
 
     

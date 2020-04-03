@@ -42,7 +42,8 @@ session_aging_accel_control FALSE
 conntrack_aging_accel_control false
 conntrack_aging_fini
 session_aging_fini
-session_aging_force_expired_ts falseconntrack_aging_force_expired_ts false
+session_aging_force_expired_ts false
+conntrack_aging_force_expired_ts false
 
 skip_fte_flow_prog_set false
 
