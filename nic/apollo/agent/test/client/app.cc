@@ -36,6 +36,9 @@
 #include "nic/apollo/api/include/pds_tag.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/route_svc.hpp"
+#include "nic/apollo/agent/svc/mapping_svc.hpp"
+#include "nic/apollo/agent/svc/policy_svc.hpp"
 
 using std::string;
 using grpc::Channel;

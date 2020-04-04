@@ -7,7 +7,7 @@
 #include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/trace.hpp"
-#include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/policy_svc.hpp"
 #include "nic/apollo/agent/svc/policy.hpp"
 #include <malloc.h>
 
