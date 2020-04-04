@@ -23,8 +23,6 @@ static const char *cmdlist[] = {
     "pcieutil pmt",
     "pcieutil prt",
     "pcieutil hdrt",
-    "pcieutil aximst",
-    "pcieutil itr_rwhdr",
     "pcieutil dberr",
     "pcieutil cfg -xxxx",
     "pcieutil vpd",
@@ -32,6 +30,10 @@ static const char *cmdlist[] = {
     "pcieutil portcfg -xxxx",
     "pcieutil serdesfw",
     "pcieutil healthdetails",
+    // Note: these might trigger ecc errors if hw hasn't used all entries.
+    // Leave them out for now.  (Could init these tables then safe to dump.)
+    //"pcieutil aximst",
+    //"pcieutil itr_rwhdr",
     NULL
 };
 
