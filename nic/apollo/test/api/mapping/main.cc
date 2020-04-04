@@ -238,7 +238,7 @@ TEST_F(mapping_test, local_mapping_workflow_5) {
 
 /// \brief Local mappings WF_6
 /// \ref WF_6
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_6) {
+TEST_F(mapping_test, local_mapping_workflow_6) {
     local_mapping_feeder feeders[1], feeder1A, feeder1B;
 
     create_local_mapping_feeders(feeders, 1);
@@ -252,7 +252,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_6) {
 
 /// \brief Local mappings WF_7
 /// \ref WF_7
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_7) {
+TEST_F(mapping_test, local_mapping_workflow_7) {
     local_mapping_feeder feeders[1], feeder1A, feeder1B;
 
     create_local_mapping_feeders(feeders, 1);
@@ -280,7 +280,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_8) {
 
 /// \brief Local mappings WF_9
 /// \ref WF_9
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_9) {
+TEST_F(mapping_test, local_mapping_workflow_9) {
     local_mapping_feeder feeders[1], feeder1A;
 
     create_local_mapping_feeders(feeders, 1);
@@ -307,7 +307,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_10) {
 
 /// \brief Local mappings WF_N_1
 /// \ref WF_N_1
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_1) {
+TEST_F(mapping_test, local_mapping_workflow_neg_1) {
     local_mapping_feeder feeders[1];
 
     create_local_mapping_feeders(feeders, 1);
@@ -325,7 +325,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_2) {
 
 /// \brief Local mappings WF_N_3
 /// \ref WF_N_3
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_3) {
+TEST_F(mapping_test, local_mapping_workflow_neg_3) {
     local_mapping_feeder feeders[1];
 
     create_local_mapping_feeders(feeders, 1);
@@ -334,7 +334,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_3) {
 
 /// \brief Local mappings WF_N_4
 /// \ref WF_N_4
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_4) {
+TEST_F(mapping_test, local_mapping_workflow_neg_4) {
     local_mapping_feeder feeders[2];
 
     create_local_mapping_feeders(feeders, 2);
@@ -343,7 +343,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_4) {
 
 /// \brief Local mappings WF_N_5
 /// \ref WF_N_5
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_5) {
+TEST_F(mapping_test, local_mapping_workflow_neg_5) {
     local_mapping_feeder feeders[1], feeder1A;
 
     create_local_mapping_feeders(feeders, 1);
@@ -379,7 +379,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_7) {
 
 /// \brief Local mappings WF_N_8
 /// \ref WF_N_8
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_8) {
+TEST_F(mapping_test, local_mapping_workflow_neg_8) {
     local_mapping_feeder feeders[2];
 
     create_local_mapping_feeders(feeders, 2);
@@ -437,7 +437,7 @@ TEST_F(mapping_test, remote_mapping_workflow_5) {
 
 /// \brief Remote mappings WF_6
 /// \ref WF_6
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_6) {
+TEST_F(mapping_test, remote_mapping_workflow_6) {
     remote_mapping_feeder feeders[1], feeder1A, feeder1B;
 
     create_remote_mapping_feeders(feeders, 1);
@@ -451,7 +451,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_6) {
 
 /// \brief Remote mappings WF_7
 /// \ref WF_7
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_7) {
+TEST_F(mapping_test, remote_mapping_workflow_7) {
     remote_mapping_feeder feeders[1], feeder1A, feeder1B;
 
     create_remote_mapping_feeders(feeders, 1);
@@ -479,7 +479,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_8) {
 
 /// \brief Remote mappings WF_9
 /// \ref WF_9
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_9) {
+TEST_F(mapping_test, remote_mapping_workflow_9) {
     remote_mapping_feeder feeders[1], feeder1A;
 
     create_remote_mapping_feeders(feeders, 1);
@@ -506,7 +506,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_10) {
 
 /// \brief Remote mappings WF_N_1
 /// \ref WF_N_1
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_1) {
+TEST_F(mapping_test, remote_mapping_workflow_neg_1) {
     remote_mapping_feeder feeders[1];
 
     create_remote_mapping_feeders(feeders, 1);
@@ -524,7 +524,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_2) {
 
 /// \brief Remote mappings WF_N_3
 /// \ref WF_N_3
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_3) {
+TEST_F(mapping_test, remote_mapping_workflow_neg_3) {
     remote_mapping_feeder feeders[1];
 
     create_remote_mapping_feeders(feeders, 1);
@@ -533,7 +533,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_3) {
 
 /// \brief Remote mappings WF_N_4
 /// \ref WF_N_4
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_4) {
+TEST_F(mapping_test, remote_mapping_workflow_neg_4) {
     remote_mapping_feeder feeders[2];
 
     create_remote_mapping_feeders(feeders, 2);
@@ -542,7 +542,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_4) {
 
 /// \brief Remote mappings WF_N_5
 /// \ref WF_N_5
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_5) {
+TEST_F(mapping_test, remote_mapping_workflow_neg_5) {
     remote_mapping_feeder feeders[1], feeder1A;
 
     create_remote_mapping_feeders(feeders, 1);
@@ -578,7 +578,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_7) {
 
 /// \brief Remote mappings WF_N_8
 /// \ref WF_N_8
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_8) {
+TEST_F(mapping_test, remote_mapping_workflow_neg_8) {
     remote_mapping_feeder feeders[2];
 
     create_remote_mapping_feeders(feeders, 2);
