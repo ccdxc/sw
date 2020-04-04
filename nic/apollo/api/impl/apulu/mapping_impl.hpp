@@ -330,7 +330,7 @@ private:
 
     /// \brief     fill key and data information for remote IP/MAC mapping's
     ///            P4 table entries
-    /// \param[in] vpc  VPC impl instance corresponding to this mapping
+    /// \param[in] vpc vpc corresponding to this mapping
     /// \param[in] subnet subnet imple instance of this mapping
     /// \param[in] mapping_key pointer to the key structure of MAPPING table
     /// \param[in] mapping_data pointer to the data structure of MAPPING table
@@ -338,7 +338,7 @@ private:
     /// \param[in] mapping_tbl_params  table params for MAPPING table
     /// \param[in] spec IP mapping details
     sdk_ret_t fill_remote_mapping_key_data_(
-                  vpc_impl *vpc, subnet_impl *subnet,
+                  vpc_entry *vpc, subnet_impl *subnet,
                   mapping_swkey_t *mapping_key, mapping_appdata_t *mapping_data,
                   sdk::table::handle_t mapping_hdl,
                   sdk_table_api_params_t *mapping_tbl_params,

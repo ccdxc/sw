@@ -884,7 +884,7 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
 
 sdk_ret_t
 mapping_impl::fill_remote_mapping_key_data_(
-                  vpc_impl *vpc, subnet_impl *subnet,
+                  vpc_entry *vpc, subnet_impl *subnet,
                   mapping_swkey_t *mapping_key, mapping_appdata_t *mapping_data,
                   sdk::table::handle_t mapping_hdl,
                   sdk_table_api_params_t *mapping_table_params,
@@ -897,7 +897,8 @@ mapping_impl::fill_remote_mapping_key_data_(
 
     // fill MAPPING table entry for overlay IP or MAC
     if (spec->skey.type == PDS_MAPPING_TYPE_L3) {
-        PDS_IMPL_FILL_IP_MAPPING_SWKEY(mapping_key, vpc->hw_id(),
+        PDS_IMPL_FILL_IP_MAPPING_SWKEY(mapping_key,
+                                       ((vpc_impl *)vpc->impl())->hw_id(),
                                        &spec->skey.ip_addr);
     } else {
         PDS_IMPL_FILL_L2_MAPPING_SWKEY(mapping_key, subnet->hw_id(),
@@ -947,8 +948,7 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
     sdk_table_api_params_t tparams;
 
     // fill key & data for MAPPING table entry for overlay IP or MAC
-    ret = fill_remote_mapping_key_data_((vpc_impl *)vpc->impl(),
-                                        (subnet_impl *)subnet->impl(),
+    ret = fill_remote_mapping_key_data_(vpc, (subnet_impl *)subnet->impl(),
                                         &mapping_key, &mapping_data,
                                         mapping_hdl_, &tparams, spec);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
@@ -1294,8 +1294,7 @@ mapping_impl::upd_remote_mapping_entries_(vpc_entry *vpc,
     mapping_impl *orig_mapping_impl = (mapping_impl *)orig_mapping->impl();
 
     // fill key & data for MAPPING table entry for overlay IP or MAC
-    ret = fill_remote_mapping_key_data_((vpc_impl *)vpc->impl(),
-                                        (subnet_impl *)subnet->impl(),
+    ret = fill_remote_mapping_key_data_(vpc, (subnet_impl *)subnet->impl(),
                                         &mapping_key, &mapping_data,
                                         sdk::table::handle_t::null(),
                                         &tparams, spec);
