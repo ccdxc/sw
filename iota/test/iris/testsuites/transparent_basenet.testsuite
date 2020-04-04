@@ -106,8 +106,8 @@ testbundles:
         #- classic/rdma_reg_dcqcn.testbundle
         - classic/qos_reg.testbundle
         - tso/tso_regr.testbundle
-        - rss/rss.testbundle
         - classic/driver-features.testbundle
+        - rss/rss.testbundle
         #- storage/regression.testbundle
         - penctl/mode_change.testbundle
 

@@ -14,7 +14,9 @@ testcases:
         disable : False
         iterators :
             type               : nested
-            tx_ring_size       : [ 64, 128, 2048, 4096, 8192]
+            tx_ring_size       : [ 64, 128, 4096, 8192, 2048]
+            tx_queue_size      : [ 4 ]
+            rx_queue_size      : [ 4 ]
             mtu                : [ '1500', '8192']
             pktsize            : [ 128 ]
             proto              : [ 'tcp']
@@ -22,7 +24,7 @@ testcases:
         args    :
             timeout : 7200
             type         : remote_only
-            iperfthreads     : 16
+            iperfthreads     : 2
             #capture_pcap : True
 
     -   name    : UplinkIntf_RX_RING_SIZE
@@ -30,7 +32,9 @@ testcases:
         disable : False
         iterators :
             type               : nested
-            rx_ring_size       : [ 64, 256, 1024, 4096, 8192]
+            rx_ring_size       : [ 64, 256, 4096, 8192, 1024]
+            tx_queue_size      : [ 1 ]
+            rx_queue_size      : [ 1 ]
             mtu                : [ '1500', '8192']
             pktsize            : [ 128 ]
             proto              : [ 'tcp']
@@ -38,14 +42,15 @@ testcases:
         args    :
             timeout : 7200
             type: remote_only
-            iperfthreads     : 16
+            iperfthreads     : 1
             #capture_pcap : true
     -   name    : UplinkIntf_TX_QUEUE_SIZE
         testcase: testcases.drivers.features
         disable : False
         iterators :
             type               : nested
-            tx_queue_size      : [ 1, 8 ]
+            tx_queue_size      : [ 4, 8 ]
+            rx_queue_size      : [ 4 ]
             mtu                : [ '1500', '8192']
             pktsize            : [ 128, 8192]
             proto              : ['udp', 'tcp']
@@ -53,14 +58,15 @@ testcases:
         args    :
             timeout : 7200
             type: remote_only
-            iperfthreads     : 16
+            iperfthreads     : 4
             #capture_pcap : true
     -   name    : UplinkIntf_RX_QUEUE_SIZE
         testcase: testcases.drivers.features
         disable : False
         iterators :
             type               : nested
-            rx_queue_size      : [ 1, 8 ]
+            tx_queue_size      : [ 4 ]
+            rx_queue_size      : [ 4, 8 ]
             mtu                : [ '1500', '8192']
             pktsize            : [ 128, 8192]
             proto              : ['udp', 'tcp']
@@ -68,7 +74,7 @@ testcases:
         args    :
             timeout : 7200
             type: remote_only
-            iperfthreads     : 16
+            iperfthreads     : 4
             #capture_pcap : true
     -   name    : UplinkIntf_TX_CHECKSUM
         testcase: testcases.drivers.features
@@ -83,7 +89,7 @@ testcases:
         args    :
             timeout : 7200
             type: remote_only
-            iperfthreads     : 16
+            iperfthreads     : 2
             #capture_pcap : true
     -   name    : UplinkIntf_RX_CHECKSUM
         testcase: testcases.drivers.features
@@ -98,7 +104,7 @@ testcases:
         args    :
             timeout : 7200
             type: remote_only
-            iperfthreads     : 16
+            iperfthreads     : 4
             #capture_pcap : true
     -   name    : UplinkIntf_TSO
         testcase: testcases.drivers.features
@@ -118,7 +124,7 @@ testcases:
         args    :
             timeout : 7200
             type: remote_only
-            iperfthreads     : 16
+            iperfthreads     : 4
             #capture_pcap : true
     -   name    : UplinkIntf_PKT_FILTER
         testcase: testcases.drivers.features
@@ -135,7 +141,7 @@ testcases:
         args    :
             timeout : 14400
             type: remote_only
-            iperfthreads     : 16
+            iperfthreads     : 4
             #capture_pcap : true
     -   name    : UplinkIntf_RSS
         testcase: testcases.drivers.features
@@ -151,7 +157,7 @@ testcases:
         args    :
             timeout : 7200
             type: remote_only
-            iperfthreads     : 16
+            iperfthreads     : 4
             #capture_pcap : true
 
     -   name    : Load_Defaults
