@@ -25,12 +25,6 @@ def TriggerFcConfigTest(req, tc, w1, w2, fc_type):
         api.logger.error("invalid fc_type value passed: {}".format(fc_type))
         return api.types.status.FAILURE
 
-    #Enable/Disable flow control on the switch
-    if tc.enable == 0:
-        api.DisablePausePorts(tc.nodes)
-    else:
-        api.EnablePausePorts(tc.nodes)
-
     # TODO: for now run the command on ionic0 and ionic1 - until it is fixed in the HAL
     #cmd += 'sysctl dev.ionic.' + str(dev) + '.flow_ctrl=' + str(fc_type)
     cmd = 'sleep 2'

@@ -39,6 +39,14 @@ testcases:
             pause_enable: True
             pause_type: 1
 
+    -   name    : Qos_Fc_Config
+        testcase: testcases.qos.qos_fc_config
+        iterators :
+            type      : nested
+            fc_type   : [2]
+        args    :
+            type: remote_only
+
     -   name    : Qos_Pfc_Config
         testcase: testcases.qos.qos_pfc_config
         iterators :

@@ -99,17 +99,6 @@ def Trigger(tc):
     if w2.IsNaples():
         qos.TriggerPfcConfigTest(req, tc, w2, tclass)
 
-    #Disable Service Policy on the interfaces
-    result = api.DisableQosPorts(tc.nodes, "pmap-iota")
-    if result != api.types.status.SUCCESS:
-        api.Logger.error("Disable Service policy failed")
-
-    #Enable link level pause on the interfaces
-    result = api.EnablePausePorts(tc.nodes)
-    if result != api.types.status.SUCCESS:
-        api.Logger.error("Enabling link level pause failed")
-
-
     #==============================================================
     # trigger the request
     #==============================================================
