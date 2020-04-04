@@ -15,6 +15,7 @@
 #include "nic/hal/pd/iris/telemetry/ipfix_pd.hpp"
 #include "nic/hal/pd/iris/nw/tnnl_rw_pd.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 
 #define IPFIX_STATS_SHIFT 6
 
@@ -272,6 +273,7 @@ pd_mirror_session_create (pd_func_args_t *pd_func_args)
         auto erspan_type = args->session->mirror_destination_u.er_span_dest.type;
         action_data.action_u.mirror_erspan_mirror.truncate_len = args->session->truncate_len;
         action_data.action_u.mirror_erspan_mirror.erspan_type = erspan_type;
+        action_data.action_u.mirror_erspan_mirror.span_tm_oq = qos_get_span_tm_oq();
         // If erspan type I, then gre_seq is not valid field.
         if (likely(is_platform_type_hw()) &&
             likely(erspan_type == ERSPAN_TYPE_II || erspan_type == ERSPAN_TYPE_III)) {

@@ -321,6 +321,7 @@ uint32_t qos_class_restore_cb(void *obj, uint32_t len);
 // SWM related APIs
 hal_ret_t qos_swm_queue_init(uint32_t swm_uplink_port, uint64_t dmac);
 hal_ret_t qos_swm_queue_deinit(uint32_t swm_uplink_port);
+uint32_t qos_get_span_tm_oq(void);
 
 
 #define POLICER_TYPES(ENTRY) \

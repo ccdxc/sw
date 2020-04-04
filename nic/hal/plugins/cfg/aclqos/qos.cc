@@ -2064,6 +2064,12 @@ qos_swm_queue_deinit(uint32_t swm_uplink_port)
     return ret;
 }
 
+uint32_t
+qos_get_span_tm_oq (void) 
+{
+    // TODO: Ravi is going to clean this up.
+    return 1;
+}
 
 // Copp
 static inline void
