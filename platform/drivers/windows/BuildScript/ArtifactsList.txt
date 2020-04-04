@@ -1,0 +1,9 @@
+##############################################################################################
+# Specify artifact files (wildcards) relative to <SolutionName\Patform\Configuration> folder #
+##############################################################################################
+Ionic\*.inf
+Ionic\*.sys
+Ionic\*.cat
+*.exe
+*.pdb
+

@@ -504,6 +504,8 @@ dependencies:
       exclude_dirs: ["iris"]
   platform/drivers/esxi:
     - reference: iota/test/standalone/precheckin/esx
+  platform/drivers/windows:
+    - reference: iota/test/standalone/precheckin/windows    
   platform/drivers/freebsd:
     - reference: iota/test/standalone/precheckin/freebsd-rdma
   platform/drivers/linux:
