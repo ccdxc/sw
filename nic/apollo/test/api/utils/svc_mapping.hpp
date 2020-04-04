@@ -68,7 +68,7 @@ operator<<(std::ostream& os, const pds_svc_mapping_spec_t *spec) {
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_svc_mapping_info_t *obj) {
-    os << "Svc mapping info =>"
+    os << "Svc mapping info => "
        << &obj->spec
        << std::endl;
     return os;
@@ -76,7 +76,7 @@ operator<<(std::ostream& os, const pds_svc_mapping_info_t *obj) {
 
 inline std::ostream&
 operator<<(std::ostream& os, const svc_mapping_feeder& obj) {
-    os << "Svc Mapping feeder =>" << &obj.spec << " ";
+    os << "Svc Mapping feeder => " << &obj.spec;
     return os;
 }
 

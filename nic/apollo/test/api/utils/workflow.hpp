@@ -17,6 +17,14 @@
 namespace test {
 namespace api {
 
+#define WF_TRACE_ERR(cond, err_str)  \
+do {                                 \
+    if (unlikely(!(cond))) {         \
+        cerr << err_str << endl;     \
+        SDK_ASSERT(cond);            \
+    }                                \
+} while (FALSE)
+
 /// \defgroup WF Workflow
 /// This group implements the gtests workflows which will be called by various
 /// api test case binaries [Ex: vnic, subnet, etc. api gtest binary]. The
@@ -31,18 +39,24 @@ namespace api {
 /// \anchor WF_B1
 template <typename feeder_T>
 inline void workflow_b1(feeder_T& feeder) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder);
+    ret = many_create<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B1 - failed in batch1");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder, SDK_RET_OK);
+    ret = many_read<feeder_T>(feeder, SDK_RET_OK);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B1 - failed in batch1 read");
 
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder);
+    ret = many_delete<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B1 - failed in batch2");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B1 - failed in batch2 read");
 }
 
 /// \brief WF_B2
@@ -51,25 +65,33 @@ inline void workflow_b1(feeder_T& feeder) {
 /// \anchor WF_B2
 template <typename feeder_T>
 inline void workflow_b2(feeder_T& feeder, feeder_T& feeder1A) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder);
+    ret = many_create<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 - failed in batch1");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder, SDK_RET_OK);
+    ret = many_read<feeder_T>(feeder, SDK_RET_OK);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 - failed in batch1 read");
 
     bctxt = batch_start();
-    many_update<feeder_T>(bctxt, feeder1A);
+    ret = many_update<feeder_T>(bctxt, feeder1A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 - failed in batch2");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1A, SDK_RET_OK);
+    ret = many_read<feeder_T>(feeder1A, SDK_RET_OK);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 - failed in batch2 read");
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder1A);
+    ret = many_delete<feeder_T>(bctxt, feeder1A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 cleanup - failed in batch1");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1A, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder1A, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 cleanup - failed in batch1 read");
 }
 
 /// \brief WF_1

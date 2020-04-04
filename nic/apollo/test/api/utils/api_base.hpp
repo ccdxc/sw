@@ -30,15 +30,18 @@ namespace api {
 template <typename feeder_T, typename info_T>
 sdk_ret_t api_info_compare(feeder_T& feeder, info_T *info) {
     if (!feeder.key_compare(&info->spec.key)) {
-        std::cerr << "key compare failed; " << feeder << info << std::endl;
+        cerr << "key compare failed" << endl;
+        cerr << "\t" << feeder << endl << "\t" << info;
         return sdk::SDK_RET_ERR;
     }
 
     if (!feeder.spec_compare(&info->spec)) {
-        std::cerr << "spec compare failed; " << feeder << info << std::endl;
+        cerr << "spec compare failed" << endl;
+        cerr << "\t" << feeder << endl << "\t" << info;
         return sdk::SDK_RET_ERR;
     }
-    std::cout << "info compare success; " << feeder << info << std::endl;
+    cout << "info compare success" << endl;
+    cout << "\t" << feeder << endl << "\t" << info;
 
     return SDK_RET_OK;
 }
@@ -50,10 +53,13 @@ sdk_ret_t api_info_compare_singleton(
     feeder_T& feeder, info_T *info) {
 
     if (!feeder.spec_compare(&info->spec)) {
-        std::cerr << "spec compare failed; " << feeder << info << std::endl;
+        cerr << "spec compare failed" << endl;
+        cerr << "\t" << feeder << endl << "\t" << info;
         return sdk::SDK_RET_ERR;
     }
-    std::cout << "info compare success; " << feeder << info << std::endl;
+
+    cout << "info compare success" << endl;
+    cout << "\t" << feeder << endl << "\t" << info;
 
     return SDK_RET_OK;
 }
@@ -222,62 +228,68 @@ del(_api_str##_feeder& feeder) {                                             \
 
 /// \brief Invokes the create apis for all the config objects
 template <typename feeder_T>
-void many_create(pds_batch_ctxt_t bctxt, feeder_T& feeder) {
+sdk_ret_t many_create(pds_batch_ctxt_t bctxt, feeder_T& feeder) {
+    sdk_ret_t ret;
     feeder_T tmp = feeder;
+
     for (tmp.iter_init(); tmp.iter_more(); tmp.iter_next()) {
-        SDK_ASSERT(create(bctxt, tmp) == SDK_RET_OK);
+        if ((ret = create(bctxt, tmp)) != SDK_RET_OK) {
+            cerr << "MANY CREATE failed" << endl;
+            cerr << "\t" << tmp << endl;
+            return ret;
+        }
     }
-#if 0 // till we fix agent
-    if (agent_mode()) {
-        tmp.num_obj = 0;
-        SDK_ASSERT(create(tmp) == SDK_RET_OK);
-    }
-#endif
+    return ret;
 }
 
 /// \brief Invokes the read apis for all the config objects
 template <typename feeder_T>
-void many_read(feeder_T& feeder,
-               sdk_ret_t expected_result = SDK_RET_OK) {
-    sdk_ret_t ret;
-    if (feeder.read_unsupported())
-        return;
-
+sdk_ret_t many_read(feeder_T& feeder, sdk_ret_t exp_result = SDK_RET_OK) {
     feeder_T tmp = feeder;
+
+    if (feeder.read_unsupported())
+        return SDK_RET_OK;
+
     for (tmp.iter_init(); tmp.iter_more(); tmp.iter_next()) {
-        ret = read(tmp);
-        SDK_ASSERT(ret == expected_result);
+        if (read(tmp) != exp_result) {
+            cerr << "MANY READ failed" << endl;
+            cerr << "\t" << tmp << endl;
+            return SDK_RET_ERR;
+        }
     }
+    return SDK_RET_OK;
 }
 
 /// \brief Invokes the update apis for all the config objects
 template <typename feeder_T>
-void many_update(pds_batch_ctxt_t bctxt, feeder_T& feeder) {
+sdk_ret_t many_update(pds_batch_ctxt_t bctxt, feeder_T& feeder) {
+    sdk_ret_t ret;
     feeder_T tmp = feeder;
+
     for (tmp.iter_init(); tmp.iter_more(); tmp.iter_next()) {
-        SDK_ASSERT(update(bctxt, tmp) == SDK_RET_OK);
+        if ((ret = update(bctxt, tmp)) != SDK_RET_OK) {
+            cerr << "MANY UPDATE failed" << endl;
+            cerr << "\t" << tmp << endl;
+            return ret;
+        }
     }
-#if 0
-    if (agent_mode()) {
-        tmp.num_obj = 0;
-        SDK_ASSERT(update(bctxt, tmp) == SDK_RET_OK);
-    }
-#endif
+    return ret;
 }
 
 /// \brief Invokes the delete apis for all the config objects
 template <typename feeder_T>
-void many_delete(pds_batch_ctxt_t bctxt, feeder_T& feeder) {
+sdk_ret_t many_delete(pds_batch_ctxt_t bctxt, feeder_T& feeder) {
+    sdk_ret_t ret;
     feeder_T tmp = feeder;
+
     for (tmp.iter_init(); tmp.iter_more(); tmp.iter_next()) {
-        SDK_ASSERT(del(bctxt, tmp) == SDK_RET_OK);
+        if ((ret = del(bctxt, tmp)) != SDK_RET_OK) {
+            cerr << "MANY DELETE failed" << endl;
+            cerr << tmp << endl;
+            return ret;
+        }
     }
-#if 0
-    if (agent_mode()) {
-        tmp.num_obj = 0;
-        SDK_ASSERT(del(bctxt, tmp) == SDK_RET_OK);
-    }
-#endif
+    return ret;
 }
 
 /// @}
