@@ -1,7 +1,9 @@
 #! /usr/bin/python3
-import iota.test.iris.utils.naples  as naples
+import iota.test.iris.utils.naples as naples
 import iota.test.utils.naples_host as host
 import iota.harness.api as api
+import iota.test.iris.utils.naples_workloads as naples_workload_utils
+
 
 symmetric_key = "6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A"
 
@@ -258,3 +260,70 @@ def bsd_ip_link_filter_broadcast(node, intf,op):
 
 def bsd_ip_link_filter_promiscuous(node, intf,op):
     return " ".join(["ifconfig", intf,"promisc" if op == "on" else "-promisc"])
+
+
+# Windows commands
+def win_powershell_cmd(node, intf, cmd, regKey, regVal):
+    intf_list = naples_workload_utils.GetNodeInterface(node)
+    winName = intf_list.WindowsIntName(intf)
+    cmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
+           "\" %s -name %s -RegistryKeyword %s -RegistryValue %s \"" % (
+               cmd, winName, regKey, str(regVal)))
+    return cmd
+
+# Windows expects actual MTU size including Ethernet header, add 14 bytes here.
+def win_mtu_cmd(node, intf, mtu):
+    return win_powershell_cmd(node, intf, "Set-NetAdapterAdvancedProperty", "*JumboPacket",  int(mtu) + 14)
+
+def win_tx_ring_size(node, intf, size):
+    return win_powershell_cmd(node, intf, "Set-NetAdapterAdvancedProperty", "*TransmitBuffers",  int(size))
+
+def win_rx_ring_size(node, intf, size):
+    return win_powershell_cmd(node, intf, "Set-NetAdapterAdvancedProperty", "*ReceiveBuffers",  int(size))
+
+def win_num_que(node, intf, size):
+    return win_powershell_cmd(node, intf, "Set-NetAdapterAdvancedProperty", "*ReceiveBuffers",  int(size))
+
+def win_not_supported(node, intf, size):
+    return "echo > /dev/null"
+
+def win_tso_offload(node, intf,op):
+    intf_list = naples_workload_utils.GetNodeInterface(node)
+    winName = intf_list.WindowsIntName(intf)
+    if op == "on":
+        regVal = "1"
+    else:
+        regVal = "0"
+
+    cmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
+           "\" Set-NetAdapterLso -name %s  -IPv4Enabled  %s -IPv6Enabled %s \"" % (
+               winName, regVal, regVal))
+    return cmd
+
+def win_tx_checksum(node, intf, op):
+    intf_list = naples_workload_utils.GetNodeInterface(node)
+    winName = intf_list.WindowsIntName(intf)
+    if op == "on":
+        regVal = "TxEnabled"
+    else:
+        regVal = "Disabled"
+
+    cmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
+           "\" Set-NetAdapterChecksumOffload -name %s "
+           " -IpIPv4Enabled %s -TcpIPv4Enabled %s -TcpIPv6Enabled %s -UdpIPv4Enabled %s -UdpIPv6Enabled %s \"" % (
+               winName, regVal, regVal, regVal, regVal))
+    return cmd
+
+def win_rx_checksum(node, intf, op):
+    intf_list = naples_workload_utils.GetNodeInterface(node)
+    winName = intf_list.WindowsIntName(intf)
+    if op == "on":
+        regVal = "RxEnabled"
+    else:
+        regVal = "Disabled"
+
+    cmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
+           "\" Set-NetAdapterChecksumOffload -name %s "
+           " -IpIPv4Enabled %s -TcpIPv4Enabled %s -TcpIPv6Enabled %s -UdpIPv4Enabled %s -UdpIPv6Enabled %s \"" % (
+               winName, regVal, regVal, regVal, regVal))
+    return cmd

@@ -13,111 +13,139 @@ feature_cmd_map = {
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_tx_ring_size },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_tx_ring_size, "reloadCmd" : True },
+            "windows"  : { "cmd" : cmd_builder.win_tx_ring_size },
         },
     "rx_ring_size"       :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_rx_ring_size },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rx_ring_size, "reloadCmd" : True },
+            "windows"  : { "cmd" : cmd_builder.win_rx_ring_size },
         },
     "tx_queue_size"      :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_queue_size },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_tx_queue_size, "reloadCmd" : True },
+            "windows"  : { "cmd" : cmd_builder.win_num_que },
         },
     "rx_queue_size"      :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_queue_size },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rx_queue_size, "reloadCmd" : True },
+            "windows"  : { "cmd" : cmd_builder.win_num_que },
         },
     "rx_sg_size"      :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_rx_sg_size,     "reloadCmd" : True },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rx_sg_size, "reloadCmd" : True },
+            "windows"  : { "cmd" : cmd_builder.win_not_supported },
         },
     "tx_check_sum"       :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_tx_checksum },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_tx_checksum }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_tx_checksum },
+            "windows"  : { "cmd" : cmd_builder.win_tx_checksum },
         },
     "rx_check_sum"       :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_rx_checksum },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rx_checksum }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rx_checksum },
+            "windows"  : { "cmd" : cmd_builder.win_rx_checksum },
         },
     "tso_offload"        :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_tso_offload },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_tso_offload }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_tso_offload },
+            "windows"  : { "cmd" : cmd_builder.win_tso_offload },
         },
     "lro_offload"        :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_gro_offload },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_lro_offload }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_lro_offload },
+            # RSC is not supported.
+            "windows"  : { "cmd" : cmd_builder.win_not_supported },
         },
     "sg_offload"         :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_sg_offload },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_sg_offload }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_sg_offload },
+            "windows"  : { "cmd" : cmd_builder.win_not_supported },
         },
     "filter_mcast"       :
         {
             "linux"    : { "cmd" : cmd_builder.ip_link_filter_mcast },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ip_link_filter_mcast }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ip_link_filter_mcast },
+            # TODO
+            "windows"  : { "cmd" : cmd_builder.win_not_supported },
         },
     "filter_all_mcast"   :
         {
             "linux"    : { "cmd" : cmd_builder.ip_link_filter_all_mcast },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ip_link_filter_all_mcast }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ip_link_filter_all_mcast },
+            # TODO
+            "windows"  : { "cmd" : cmd_builder.win_not_supported },
         },
     "filter_broadcast"   :
         {
             "linux"    : { "cmd" : cmd_builder.ip_link_filter_broadcast },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ip_link_filter_broadcast }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ip_link_filter_broadcast },
+            # TODO
+            "windows"  : { "cmd" : cmd_builder.win_not_supported },
         },
     "filter_promiscuous" :
         {
             "linux"    : { "cmd" : cmd_builder.ip_link_filter_promiscuous },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ip_link_filter_promiscuous }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ip_link_filter_promiscuous },
+            # TODO
+            "windows"  : { "cmd" : cmd_builder.win_not_supported },
         },
     "mtu"                :
         {
             "linux"    : { "cmd" : cmd_builder.ip_link_mtu_cmd },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ip_link_mtu_cmd }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ip_link_mtu_cmd },
+            "windows"  : { "cmd" : cmd_builder.win_mtu_cmd },
         },
     "rx_vlan"            :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_rxvlan_offload },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rxvlan_offload }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rxvlan_offload },
+            "windows"  : { "cmd" : cmd_builder.win_not_supported },
         },
     "tx_vlan"            :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_txvlan_offload },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_txvlan_offload }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_txvlan_offload },
+            "windows"  : { "cmd" : cmd_builder.win_not_supported },
         },
     "hkey"               :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_hkey_offload },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_hkey_offload }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_hkey_offload },
+            "windows"  : { "cmd" : cmd_builder.win_not_supported },
         },
     "indirection_table"  :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_indirection_table },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_indirection_table }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_indirection_table },
+            "windows"  : { "cmd" : cmd_builder.win_not_supported },
         },
     "rx-flow-hash"     :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_rssflow },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rssflow }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rssflow },
+            # XXX: no ability to set the flow type -TCP, IPv4 etc.
+            "windows"  : { "cmd" : cmd_builder.win_not_supported },
         },
     "intr-coal"     :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_intr_coal },
-            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_intr_coal }
+            "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_intr_coal },
+            "windows"  : { "cmd" : cmd_builder.win_not_supported },
         },
     "legacy"      :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_legacy_intr_mode },
             "freebsd"  : { "cmd" : cmd_builder.bsd_legacy_intr_mode, 	 "reloadCmd" : True },
+            "windows"  : { "cmd" : cmd_builder.win_not_supported },
         },
 }
 

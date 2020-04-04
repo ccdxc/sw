@@ -15,6 +15,11 @@ import iota.test.iris.config.netagent.hw_push_config as hw_config
 def Setup(tc):
     tc.nodes = api.GetNaplesHostnames()
     tc.os = api.GetNodeOs(tc.nodes[0])
+
+    if tc.os != host.OS_TYPE_LINUX:
+        api.Logger.info("Not implemented for %s" % tc.os)
+        return api.types.status.IGNORED
+
     return api.types.status.SUCCESS
 
 def _triggerFLR(hostname, pci):
@@ -96,8 +101,10 @@ def _getPci(hostname, intf):
 
 def Trigger(tc):
     hostname = tc.nodes[0]
-    if tc.os != "linux":
-        return api.types.status.SUCCESS
+    
+    if tc.os != host.OS_TYPE_LINUX:
+        api.Logger.info("Not implemented for %s" % tc.os)
+        return api.types.status.IGNORED
 
     fail = 0
     for intf in api.GetNaplesHostInterfaces(hostname):

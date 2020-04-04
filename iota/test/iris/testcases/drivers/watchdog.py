@@ -78,6 +78,10 @@ def get_intf_names(tc, hostname):
 def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
+    if tc.os != host.OS_TYPE_BSD:
+        api.Logger.info("Not implemented")
+        return api.types.status.IGNORED
+
     # Read the reset counters, enable all watchdogs
     for n in tc.nodes:
         ifs = get_intf_names(tc, n)
@@ -196,6 +200,10 @@ def Verify(tc):
     return api.types.status.SUCCESS
 
 def Teardown(tc):
+    if tc.os != host.OS_TYPE_BSD:
+        api.Logger.info("Not implemented")
+        return api.types.status.IGNORED
+    
     # for every node, cycle through unload/load sequence
     for node in tc.nodes:
         if host.UnloadDriver(tc.os, node, "eth") is api.types.status.FAILURE:

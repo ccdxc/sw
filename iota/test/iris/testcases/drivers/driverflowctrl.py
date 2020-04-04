@@ -38,11 +38,14 @@ def bsd_flow_ctrl(node, inf, fc_type, fc_val, pattern):
     api.Trigger_AddHostCommand(req, node, 'sysctl dev.%s.link_pause=%d' %
                                (host.GetNaplesSysctl(inf), fc_val))
     api.Trigger_AddHostCommand(req, node, BSD_IFCONFIG_MEDIA_CMD  % inf)
-    resp = api.Trigger(req)
-    # We are interested in only last command response.
-    cmd = resp.commands[2]
     api.Logger.info("Setting %s link type: %d value: %d pattern: %s" %
                     (inf, fc_type, fc_val, pattern))
+    resp = api.Trigger(req)
+    if resp is None:
+        return -1
+    # We are interested in only last command response.
+    cmd = resp.commands[2]
+
     if cmd.exit_code != 0:
         api.Logger.error("Failed exit code: %d link type: %d value: %d, stderr: %s" %
                          (cmd.exit_code, fc_type, fc_val, cmd.stderr))
@@ -64,10 +67,12 @@ def linux_flow_ctrl(node, inf, rx_val, tx_val):
                                (inf))
     api.Trigger_AddHostCommand(req, node, 'ethtool -a %s | grep TX | cut -d : -f 2' %
                                (inf))
-    resp = api.Trigger(req)
-    cmd = resp.commands[0]
     api.Logger.info("Setting %s link value rx: %s tx: %s" %
                     (inf, rx_val, tx_val))
+    resp = api.Trigger(req)
+    if resp is None:
+        return -1
+    cmd = resp.commands[0]
     # Check Rx returned value which is of form 'Rx:    <>'
     cmd = resp.commands[1]
     if cmd.exit_code != 0:

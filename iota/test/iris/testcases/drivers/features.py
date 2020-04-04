@@ -107,7 +107,7 @@ def Trigger(tc):
 
     proto = getattr(tc.iterators, "proto", 'tcp')
     number_of_iperf_threads = getattr(tc.args, "iperfthreads", 1)
-    pktsize = getattr(tc.iterators, "pktsize", 512)
+    pktsize = getattr(tc.iterators, "pktsize", None)
     ipproto = getattr(tc.iterators, "ipproto", 'v4')
 
     server_ip = srv.ip_address
@@ -116,8 +116,8 @@ def Trigger(tc):
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                    (srv.interface, server_ip, cli.interface, client_ip)
 
-    api.Logger.info("Starting Iperf(%s/%s pktsize=%d) test from %s"
-                    % (proto, ipproto, pktsize, tc.cmd_descr))
+    api.Logger.info("Starting Iperf(%s/%s) test from %s"
+                    % (proto, ipproto, tc.cmd_descr))
 
     for i in range(number_of_iperf_threads):
         if proto == 'tcp':

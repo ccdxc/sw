@@ -7,14 +7,18 @@ def Setup(tc):
     tc.os = api.GetNodeOs(tc.nodes[0])
 
     #validate OS values. If unknown, return failure.
-    if (tc.os != 'linux') and (tc.os != 'freebsd'):
-        api.Logger.error("unknown OS %s" % tc.os)
-        return api.types.status.FAILURE
+    if tc.os != host.OS_TYPE_BSD and tc.os != host.OS_TYPE_LINUX:
+        api.Logger.info("Not implemented for %s" % tc.os)
+        return api.types.status.IGNORED
 
     return api.types.status.SUCCESS
 
 def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
+
+    if tc.os != host.OS_TYPE_BSD and tc.os != host.OS_TYPE_LINUX:
+        api.Logger.info("Not implemented for %s" % tc.os)
+        return api.types.status.IGNORED
 
     # set interrupt coalescing value
     for node in tc.nodes:

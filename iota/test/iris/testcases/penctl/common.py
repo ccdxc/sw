@@ -3,7 +3,7 @@ import json
 import time
 import iota.harness.api as api
 import iota.harness.infra.store as store
-import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
+#import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 import iota.test.utils.naples_host as naples_host_util
 
 dhcp_template = r"""set vendor-string = option vendor-class-identifier;

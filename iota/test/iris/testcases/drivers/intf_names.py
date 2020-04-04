@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import iota.harness.api as api
+import iota.test.utils.naples_host as naples_host
 
 # Testing that interface names get pushed to Naples
 #
@@ -13,6 +14,10 @@ def Setup(tc):
     api.Logger.info("Interface Names")
     tc.nodes = api.GetNaplesHostnames()
     tc.os = api.GetNodeOs(tc.nodes[0])
+
+    if tc.os != naples_host.OS_TYPE_BSD and tc.os != naples_host.OS_TYPE_LINUX:
+        api.Logger.info("Not implemented for %s" % tc.os)
+        return api.types.status.IGNORED
 
     return api.types.status.SUCCESS
 
@@ -33,8 +38,11 @@ def __getLifInfo(host_name):
 
 
 def Trigger(tc):
-    fail = 0
-
+    if tc.os != naples_host.OS_TYPE_BSD and tc.os != naples_host.OS_TYPE_LINUX:
+        api.Logger.info("Not implemented for %s" % tc.os)
+        return api.types.status.IGNORED
+    
+    fail = 0   
     pairs = api.GetLocalWorkloadPairs()
     hosts = pairs[0]
 

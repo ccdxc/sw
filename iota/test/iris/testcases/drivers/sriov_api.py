@@ -247,8 +247,9 @@ def Setup(tc):
     tc.os = api.GetNodeOs(hostname)
     tc.intf = api.GetNaplesHostInterfaces(hostname)[0]
 
-    if tc.os != "linux":
-        return api.types.status.SUCCESS
+    if tc.os != host.OS_TYPE_LINUX:
+        api.Logger.info("Not implemented for %s" % tc.os)
+        return api.types.status.IGNORED
 
     tc.num_vfs = _getSupportedVFs(hostname, tc.intf)
     if tc.num_vfs == 0:
@@ -259,8 +260,10 @@ def Setup(tc):
     return ret
 
 def Trigger(tc):
-    if tc.os != "linux":
-        return api.types.status.SUCCESS
+    if tc.os != host.OS_TYPE_LINUX:
+        api.Logger.info("Not implemented for %s" % tc.os)
+        return api.types.status.IGNORED
+        
     if tc.num_vfs == 0:
         return api.types.status.SUCCESS
 
