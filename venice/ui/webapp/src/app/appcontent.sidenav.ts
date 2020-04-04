@@ -132,7 +132,7 @@ export const sideNavMenu: SideNavItem[] = [
       {
         label: 'Firewall Profiles',
         icon: {
-          cssClass: 'app-l-side-nav-security-apps'
+          cssClass: 'app-l-side-nav-firewall-profiles'
         },
         roleGuard: UIRolePermissions.securityfirewallprofile_read,
         link: ['/security', 'firewallprofiles']
@@ -171,8 +171,7 @@ export const sideNavMenu: SideNavItem[] = [
       {
         label: 'Archive Logs',
         icon: {
-          cssClass: 'material-icons',
-          matIconName: 'event_available'
+          cssClass: 'app-l-side-nav-arch-log'
         },
         roleGuard: {
           opt: [

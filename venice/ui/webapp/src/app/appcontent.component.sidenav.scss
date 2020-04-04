@@ -263,6 +263,10 @@ a[aria-expanded="true"]::before {
   background: url("/assets/images/icons/security/ico-app.svg") center center no-repeat;
 }
 
+.app-l-side-nav-firewall-profiles {
+  background: url("/assets/images/icons/security/ico-fw-prof-w.svg") center center no-repeat;
+}
+
 .app-l-side-nav-monitoring-auditevents {
   background: url("/assets/images/icons/monitoring/ic_audit_w.svg") center center no-repeat;
   background-size: contain;
@@ -271,6 +275,10 @@ a[aria-expanded="true"]::before {
 .app-l-side-nav-monitoring-techsupport {
   background: url("/assets/images/icons/monitoring/ic_tech_support_w.svg") center center no-repeat;
   background-size: contain;
+}
+
+.app-l-side-nav-arch-log {
+  background: url("/assets/images/icons/monitoring/ico-arch-log-w.svg") center center no-repeat;
 }
 
 .app-l-side-nav-admin {
