@@ -20,6 +20,9 @@ var _ = Describe("metrics test", func() {
 	var startTime time.Time
 	BeforeEach(func() {
 		// verify cluster is in good health
+		Eventually(func() error {
+			return ts.model.VerifyClusterStatus()
+		}).Should(Succeed())
 		startTime = time.Now().UTC()
 	})
 	AfterEach(func() {
@@ -134,6 +137,128 @@ var _ = Describe("metrics test", func() {
 			err := vnc.InitTelemetryClient()
 			Expect(err).Should(BeNil())
 
+			for s := range cq.RetentionPolicyMap {
+				if s != "5minutes" {
+					continue
+				}
+				for _, m := range types.DscMetricsList {
+					// drop metrics are reported only on drop
+					if m == "IPv4FlowDropMetrics" || m == "DropMetrics" || m == "EgressDropMetrics" {
+						continue
+					}
+					cq := m + "_" + s
+					Eventually(func() error {
+						return ts.model.ForEachNaples(func(n *objects.NaplesCollection) error {
+							fields := genfields.GetFieldNamesFromKind(m)
+							for _, name := range n.Names() {
+								By(fmt.Sprintf("checking %v in naples %v", cq, name))
+
+								resp, err := vnc.QueryMetricsByReporter(cq, name, tms)
+								if err != nil {
+									fmt.Printf("query failed %v \n", err)
+									return err
+								}
+
+								if len(resp.Results) == 0 || len(resp.Results[0].Series) == 0 {
+									res, err := json.Marshal(resp)
+									fmt.Printf("query ts %v returned(%v) %+v \n", tms, err, string(res))
+									return fmt.Errorf("no results")
+								}
+
+								for _, r := range resp.Results[0].Series {
+
+									// get index
+									cIndex := map[string]int{}
+									for i, c := range r.Columns {
+										cIndex[c] = i
+									}
+
+									for _, f := range fields {
+										if _, ok := cIndex[f]; !ok {
+											fmt.Printf("failed to find %v \n", f)
+											return fmt.Errorf("failed to find %v", f)
+										}
+										fmt.Printf("\tcheck %v \u2714 \n", f)
+									}
+								}
+							}
+							return nil
+						})
+					}).Should(Succeed())
+				}
+			}
+		})
+
+		It("tags:sanity=true Check metrics after reloading nodes", func() {
+			// get node collection and init telemetry client
+			vnc := ts.model.VeniceNodes()
+			err := vnc.InitTelemetryClient()
+			Expect(err).Should(BeNil())
+
+			// reload each host
+			ts.model.ForEachVeniceNode(func(vnc *objects.VeniceNodeCollection) error {
+				Expect(ts.model.ReloadVeniceNodes(vnc)).Should(Succeed())
+
+				// wait for cluster to be back in good state
+				Eventually(func() error {
+					return ts.model.VerifyClusterStatus()
+				}).Should(Succeed())
+
+				return nil
+			})
+
+			// check metrics after reloading nodes
+			if !ts.tb.HasNaplesHW() {
+				Skip("Disabling flow drop stats on naples sim")
+			}
+			tms := time.Now().UTC().Add(time.Hour * -2).Format(time.RFC3339)
+
+			for _, k := range types.DscMetricsList {
+				if k == "IPv4FlowDropMetrics" {
+					continue
+				}
+
+				Eventually(func() error {
+					return ts.model.ForEachNaples(func(n *objects.NaplesCollection) error {
+						fields := genfields.GetFieldNamesFromKind(k)
+						for _, name := range n.Names() {
+							By(fmt.Sprintf("checking %v in naples %v", k, name))
+
+							resp, err := vnc.QueryMetricsByReporter(k, name, tms)
+							if err != nil {
+								fmt.Printf("query failed %v \n", err)
+								return err
+							}
+
+							if len(resp.Results) == 0 || len(resp.Results[0].Series) == 0 {
+								res, err := json.Marshal(resp)
+								fmt.Printf("query ts %v returned(%v) %+v \n", tms, err, string(res))
+								return fmt.Errorf("no results")
+							}
+
+							for _, r := range resp.Results[0].Series {
+
+								// get index
+								cIndex := map[string]int{}
+								for i, c := range r.Columns {
+									cIndex[c] = i
+								}
+
+								for _, f := range fields {
+									if _, ok := cIndex[f]; !ok {
+										fmt.Printf("failed to find %v \n", f)
+										return fmt.Errorf("failed to find %v", f)
+									}
+									fmt.Printf("\tcheck %v \u2714 \n", f)
+								}
+							}
+						}
+						return nil
+					})
+				}).Should(Succeed())
+			}
+
+			// check CQ metrics after reloading nodes
 			for s := range cq.RetentionPolicyMap {
 				if s != "5minutes" {
 					continue
