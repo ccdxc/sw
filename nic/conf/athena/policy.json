@@ -1,0 +1,75 @@
+{
+    "app_mode": "cpp",
+    "vnic": [
+         {
+            "vnic_id": "1",
+            "vlan_id": "100",
+            "slot_id": "1000",
+            "session": {
+                "epoch": "1234",
+                "skip_flow_log" : "false",
+                "to_host": {
+                    "tcp_flags": "7",
+                    "policer_bw1": "100M"
+                },
+                "to_switch": {
+                    "tcp_flags": "7",
+                    "policer_bw1": "500M",
+                    "host_mac": "00:00:00:40:08:01",
+                    "_comment": "For Host MAC validation on incoming packet from Host"
+                }
+            },
+            "rewrite_underlay": {
+                "type": "mplsoudp",
+                "smac": "00:01:02:03:04:05",
+                "dmac": "00:06:07:08:09:0A",
+                "vlan_id": "1",
+                "ipv4_sip": "4.3.2.1",
+                "ipv4_dip": "1.2.3.4",
+                "mpls_label1": "74565",
+                "mpls_label2": "1001",
+                "_comment": "Here mpls_label2 would be the remote VNIC slot_id"
+            },
+            "rewrite_host": {
+                "smac": "00:00:F1:D0:D1:D0",
+                "dmac": "00:00:00:40:08:01",
+                "_comment": "VNIC vlan_id drives the VLAN Tag towards Host"
+            }
+        },
+        {
+            "vnic_id": "2",
+            "vlan_id": "101",
+            "slot_id": "1001",
+            "session": {
+                "epoch": "1234",
+                "skip_flow_log" : "false",
+                "to_host": {
+                    "tcp_flags": "7",
+                    "policer_bw1": "100M"
+                },
+                "to_switch": {
+                    "tcp_flags": "7",
+                    "policer_bw1": "500M",
+                    "host_mac": "00:24:68:10:12:14",
+                    "_comment": "For Host MAC validation on incoming packet from Host"
+                }
+            },
+            "rewrite_underlay": {
+                "type": "mplsoudp",
+                "smac": "00:06:07:08:09:0A",
+                "dmac": "00:01:02:03:04:05",
+                "vlan_id": "1",
+                "ipv4_sip": "1.2.3.4",
+                "ipv4_dip": "4.3.2.1",
+                "mpls_label1": "74565",
+                "mpls_label2": "1000",
+                "_comment": "Here mpls_label2 would be the remote VNIC slot_id"
+            },
+            "rewrite_host": {
+                "smac": "00:00:00:40:08:01",
+                "dmac": "00:00:F1:D0:D1:D0",
+                "_comment": "VNIC vlan_id drives the VLAN Tag towards Host"
+            }
+        }
+    ]
+}

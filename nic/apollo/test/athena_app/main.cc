@@ -30,6 +30,7 @@
 #include "app_test_utils.hpp"
 #include "fte_athena.hpp"
 #include "athena_app_server.hpp"
+#include "json_parser.hpp"
 
 using namespace test::athena_app;
 
@@ -458,6 +459,10 @@ main (int argc, char **argv)
                 file.c_str());
         exit(1);
     }
+
+    // parse policy json file
+    file = cfg_path + "/" + pipeline + "/policy.json";
+    fte_ath::parse_flow_cache_policy_cfg(file.c_str());
 
     // Initialize the PDS functionality
     pds_init_params_t init_params;
