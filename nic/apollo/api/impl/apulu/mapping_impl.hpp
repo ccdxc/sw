@@ -232,6 +232,35 @@ private:
     sdk_ret_t add_nat_entries_(mapping_entry *mapping,
                                pds_mapping_spec_t *spec);
 
+    /// \brief     fill key and data information for local mappping's public IP
+    ///            P4 table entries
+    /// \param[in] vpc  VPC impl instance corresponding to this mapping
+    /// \param[in] subnet subnet of this mapping
+    /// \param[in] vnic vnic this mapping is associated with
+    /// \param[in] vnic_impl_obj vnic impl instance of vnic corresponding to
+    ///                          mapping
+    /// \param[in] local_mapping_key pointer to the key structure of
+    ///            LOCAL_MAPPING table
+    /// \param[in] local_mapping_data pointer to the data structure of
+    ///            LOCAL_MAPPING table
+    /// \param[in] local_mapping_public_ip_hdl LOCAL_MPPING table entry handle
+    /// \param[in] local_mapping_tbl_params table params for LOCAL_MAPPING table
+    /// \param[in] mapping_key pointer to the key structure of MAPPING table
+    /// \param[in] mapping_data pointer to the data structure of MAPPING table
+    /// \param[in] mapping_hdl MAPPING table entry handle
+    /// \param[in] mapping_tbl_params  table params for MAPPING table
+    /// \param[in] spec IP mapping details
+    void fill_public_ip_mapping_key_data_(
+             vpc_impl *vpc, subnet_entry *subnet, vnic_entry *vnic,
+             vnic_impl *vnic_impl_obj, local_mapping_swkey_t *local_mapping_key,
+             local_mapping_appdata_t *local_mapping_data,
+             sdk::table::handle_t local_mapping_overlay_ip_hdl,
+             sdk_table_api_params_t *local_mapping_tbl_params,
+             mapping_swkey_t *mapping_key, mapping_appdata_t *mapping_data,
+             sdk::table::handle_t mapping_hdl,
+             sdk_table_api_params_t *mapping_tbl_params,
+             pds_mapping_spec_t *spec);
+
     /// \brief     add necessary entries for local mapping's public IP
     /// \param[in] vpc  VPC impl instance corresponding to this mapping
     /// \param[in] subnet subnet of this mapping

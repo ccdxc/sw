@@ -693,6 +693,52 @@ mapping_impl::add_nat_entries_(mapping_entry *mapping,
     return SDK_RET_OK;
 }
 
+void
+mapping_impl::fill_public_ip_mapping_key_data_(
+                  vpc_impl *vpc, subnet_entry *subnet,
+                  vnic_entry *vnic, vnic_impl *vnic_impl_obj,
+                  local_mapping_swkey_t *local_mapping_key,
+                  local_mapping_appdata_t *local_mapping_data,
+                  sdk::table::handle_t local_mapping_public_ip_hdl,
+                  sdk_table_api_params_t *local_mapping_tbl_params,
+                  mapping_swkey_t *mapping_key, mapping_appdata_t *mapping_data,
+                  sdk::table::handle_t mapping_hdl,
+                  sdk_table_api_params_t *mapping_tbl_params,
+                  pds_mapping_spec_t *spec) {
+
+    // fill LOCAL_MAPPING table entry key, data for public IP
+    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(local_mapping_key, vpc->hw_id(),
+                                         &spec->public_ip);
+    PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(local_mapping_data,
+        vnic_impl_obj->hw_id(), to_overlay_ip_nat_idx_,
+        (vnic->binding_checks_en() &&
+         (spec->public_ip.af == IP_AF_IPV4)) ? true : false,
+        vnic_impl_obj->binding_hw_id(),
+        PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID, vnic->tagged(),
+        MAPPING_TYPE_PUBLIC);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(local_mapping_tbl_params,
+                                   local_mapping_key,
+                                   NULL, local_mapping_data,
+                                   LOCAL_MAPPING_LOCAL_MAPPING_INFO_ID,
+                                   local_mapping_public_ip_hdl_);
+
+    // fill MAPPING table entry key, data and table params for public IP
+    PDS_IMPL_FILL_IP_MAPPING_SWKEY(mapping_key, vpc->hw_id(),
+                                   &spec->public_ip);
+    memset(mapping_data, 0, sizeof(*mapping_data));
+    mapping_data->is_local = TRUE;
+    mapping_data->nexthop_valid = TRUE;
+    mapping_data->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    mapping_data->nexthop_id = vnic_impl_obj->nh_idx();
+    mapping_data->egress_bd_id = ((subnet_impl *)subnet->impl())->hw_id();
+    sdk::lib::memrev(mapping_data->dmaci, vnic->mac(), ETH_ADDR_LEN);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(mapping_tbl_params, mapping_key,
+                                   NULL, mapping_data,
+                                   MAPPING_MAPPING_INFO_ID,
+                                   mapping_hdl);
+    return;
+}
+
 sdk_ret_t
 mapping_impl::add_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
                                      vnic_entry *vnic, vnic_impl *vnic_impl_obj,
@@ -701,47 +747,29 @@ mapping_impl::add_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
     mapping_appdata_t mapping_data;
-    sdk_table_api_params_t tparams;
     local_mapping_swkey_t local_mapping_key;
+    sdk_table_api_params_t mapping_tbl_params;
     local_mapping_appdata_t local_mapping_data;
+    sdk_table_api_params_t local_mapping_tbl_params;
 
     // program the NAT table first
     ret = add_nat_entries_(mapping, spec);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
 
+    fill_public_ip_mapping_key_data_(vpc, subnet, vnic, vnic_impl_obj,
+                                      &local_mapping_key, &local_mapping_data,
+                                      local_mapping_public_ip_hdl_,
+                                      &local_mapping_tbl_params,
+                                      &mapping_key, &mapping_data,
+                                      mapping_public_ip_hdl_,
+                                      &mapping_tbl_params, spec);
+
     // add entry to LOCAL_MAPPING table for public IP
-    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),
-                                         &spec->public_ip);
-    PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_mapping_data,
-        vnic_impl_obj->hw_id(), to_overlay_ip_nat_idx_,
-        (vnic->binding_checks_en() &&
-         (spec->public_ip.af == IP_AF_IPV4)) ? true : false,
-        vnic_impl_obj->binding_hw_id(),
-        PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID, vnic->tagged(),
-        MAPPING_TYPE_PUBLIC);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams,
-                                   &local_mapping_key,
-                                   NULL, &local_mapping_data,
-                                   LOCAL_MAPPING_LOCAL_MAPPING_INFO_ID,
-                                   local_mapping_public_ip_hdl_);
-    ret = mapping_impl_db()->local_mapping_tbl()->insert(&tparams);
+    ret = mapping_impl_db()->local_mapping_tbl()->insert(&local_mapping_tbl_params);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
 
     // add entry to MAPPING table for public IP
-    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
-                                   &spec->public_ip);
-    memset(&mapping_data, 0, sizeof(mapping_data));
-    mapping_data.is_local = TRUE;
-    mapping_data.nexthop_valid = TRUE;
-    mapping_data.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    mapping_data.nexthop_id = vnic_impl_obj->nh_idx();
-    mapping_data.egress_bd_id = ((subnet_impl *)subnet->impl())->hw_id();
-    sdk::lib::memrev(mapping_data.dmaci, vnic->mac(), ETH_ADDR_LEN);
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key,
-                                   NULL, &mapping_data,
-                                   MAPPING_MAPPING_INFO_ID,
-                                   mapping_public_ip_hdl_);
-    ret = mapping_impl_db()->mapping_tbl()->insert(&tparams);
+    ret = mapping_impl_db()->mapping_tbl()->insert(&mapping_tbl_params);
     SDK_ASSERT(ret == SDK_RET_OK);
     return SDK_RET_OK;
 }
@@ -758,7 +786,7 @@ mapping_impl::fill_local_overlay_ip_mapping_key_data_(
                   sdk::table::handle_t mapping_hdl,
                   sdk_table_api_params_t *mapping_tbl_params,
                   pds_mapping_spec_t *spec) {
-    // fill LOCAL_MAPPING table key, data and table params for overlay IP
+    // fill LOCAL_MAPPING table entry key, data and table params for overlay IP
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(local_mapping_key, vpc->hw_id(),
                                          &spec->skey.ip_addr);
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(local_mapping_data,
@@ -773,7 +801,7 @@ mapping_impl::fill_local_overlay_ip_mapping_key_data_(
                                    LOCAL_MAPPING_LOCAL_MAPPING_INFO_ID,
                                    local_mapping_overlay_ip_hdl);
 
-    // fill MAPPING table key, data and table params for overlay IP
+    // fill MAPPING table entry key, data and table params for overlay IP
     PDS_IMPL_FILL_IP_MAPPING_SWKEY(mapping_key, vpc->hw_id(),
                                    &spec->skey.ip_addr);
     memset(mapping_data, 0, sizeof(*mapping_data));
@@ -1102,21 +1130,30 @@ mapping_impl::upd_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
                                      mapping_entry *orig_mapping,
                                      pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
-    mapping_impl *orig_mapping_impl = (mapping_impl *)orig_mapping->impl();
+    mapping_swkey_t mapping_key;
+    mapping_appdata_t mapping_data;
+    local_mapping_swkey_t local_mapping_key;
+    sdk_table_api_params_t mapping_tbl_params;
+    local_mapping_appdata_t local_mapping_data;
+    sdk_table_api_params_t local_mapping_tbl_params;
 
-    // before updating the NAT table /1st transfer the ownership of the NAT
-    // table resources from original object to the cloned object, after that
-    // this operation is same as add_public_ip_entries_() because this is
-    // new/updated public IP of the mapping we need to insert into mapping
-    // table(s) and also since NAT table is index table, update and add are
-    // handled the same way
-    to_public_ip_nat_idx_ = orig_mapping_impl->to_public_ip_nat_idx_;
-    to_overlay_ip_nat_idx_ =  orig_mapping_impl->to_overlay_ip_nat_idx_;
-	ret = add_public_ip_entries_(vpc, subnet, vnic, vnic_impl_obj,
-                                 new_mapping, spec);
-	SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
-    orig_mapping_impl->to_public_ip_nat_idx_ =
-        orig_mapping_impl->to_overlay_ip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
+    // fill key & data of MAPPING and LOCAL_MAPPING table entries corresponding
+    // to public IP
+    fill_public_ip_mapping_key_data_(vpc, subnet, vnic, vnic_impl_obj,
+                                      &local_mapping_key, &local_mapping_data,
+                                      sdk::table::handle_t::null(),
+                                      &local_mapping_tbl_params,
+                                      &mapping_key, &mapping_data,
+                                      sdk::table::handle_t::null(),
+                                      &mapping_tbl_params, spec);
+
+    // update LOCAL_MAPPING table entry of public IP
+    ret = mapping_impl_db()->local_mapping_tbl()->update(&local_mapping_tbl_params);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+
+    // update MAPPING table entry of public IP
+    ret = mapping_impl_db()->mapping_tbl()->insert(&mapping_tbl_params);
+    SDK_ASSERT(ret == SDK_RET_OK);
     return SDK_RET_OK;
 }
 
@@ -1178,6 +1215,7 @@ mapping_impl::upd_local_mapping_entries_(vpc_entry *vpc,
     sdk_ret_t ret;
     vnic_entry *vnic;
     vnic_impl *vnic_impl_obj;
+    bool upd_public_ip_mappings = true;
     mapping_impl *orig_impl = (mapping_impl *)orig_mapping->impl();
 
     // get the vnic corresponding to this local mapping
@@ -1192,24 +1230,39 @@ mapping_impl::upd_local_mapping_entries_(vpc_entry *vpc,
             if (orig_mapping->is_public_ip_valid()) {
                 // in this case, mapping had a public IP previously configured
                 // but that IP is being updated now
-                ret = upd_public_ip_entries_((vpc_impl *)vpc->impl(),
-                                             subnet, vnic, vnic_impl_obj,
-                                             new_mapping, orig_mapping, spec);
+                //
+                // before updating the NAT table /1st transfer the ownership of
+                // the NAT table resources from original object to the cloned
+                // object, after that this operation is same as
+                // add_public_ip_entries_() because this is new/updated public
+                // IP of the mapping we need to insert into mapping table(s) and
+                // also since NAT table is index table, update and add are
+                // handled the same way
+                to_public_ip_nat_idx_ = orig_impl->to_public_ip_nat_idx_;
+                to_overlay_ip_nat_idx_ =  orig_impl->to_overlay_ip_nat_idx_;
+                ret = add_public_ip_entries_((vpc_impl *)vpc->impl(), subnet,
+                                             vnic, vnic_impl_obj,
+                                             new_mapping, spec);
                 SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+                orig_impl->to_public_ip_nat_idx_ =
+                    orig_impl->to_overlay_ip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
+                upd_public_ip_mappings = false;
             } else {
                 // previously we didn't have the public IP and now it is being
                 // configured
                 ret = add_public_ip_entries_((vpc_impl *)vpc->impl(),
                                              subnet, vnic, vnic_impl_obj,
                                              new_mapping, spec);
+                upd_public_ip_mappings = false;
                 SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
             }
         } else {
-            // this is the case where previously public IP was not configured
-            // and the mapping is being updated with the public IP now .. we
+            // this is the case where previously public IP was configured
+            // and the mapping is being updated without the public IP now .. we
             // don't have to do anything here because old version of the object
             // when nuked, will remove the public IP mapping entries and NAT
-            // entries installed and free all the resources
+            // entries previously installed and free all the resources
+            upd_public_ip_mappings = false;
         }
     }
     // and then update the overlay IP mapping specific entries
@@ -1217,6 +1270,14 @@ mapping_impl::upd_local_mapping_entries_(vpc_entry *vpc,
                                           vnic, vnic_impl_obj,
                                           new_mapping, orig_mapping, spec);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    if (spec->public_ip_valid && upd_public_ip_mappings) {
+        // public IP attribute itself hasn't been updated but we still have to
+        // update rest of the information (e.g., forwarding related)
+        ret = upd_public_ip_entries_((vpc_impl *)vpc->impl(), subnet,
+                                     vnic, vnic_impl_obj,
+                                     new_mapping, orig_mapping, spec);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    }
     return SDK_RET_OK;
 }
 
