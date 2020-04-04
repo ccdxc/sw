@@ -153,7 +153,8 @@ pd_adjust_perf_status_t asic_pd_adjust_perf(int chip_id, int inst_id,
 void asic_pd_set_half_clock(int chip_id, int inst_id);
 sdk_ret_t asic_pd_unravel_hbm_intrs(bool *iscattrip, bool *iseccerr,
                                     bool logging=false);
-sdk_ret_t asicpd_toeplitz_init(const char *handle, uint32_t table_id);
+sdk_ret_t asicpd_toeplitz_init(const char *handle, uint32_t table_id,
+                               uint32_t rss_indir_tbl_entry_size);
 void asicpd_p4_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                                 p4pd_table_cache_t cache);
 bool asicpd_p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,

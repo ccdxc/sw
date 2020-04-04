@@ -1293,7 +1293,10 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
                                         g_stats_region_arrlen) == HAL_RET_OK);
     SDK_ASSERT(hal_pd_lif_stats_region_init() == HAL_RET_OK);
     SDK_ASSERT(hal_pd_hwerr_stats_region_init() == HAL_RET_OK);
-    SDK_ASSERT(asicpd_toeplitz_init() == HAL_RET_OK);
+    SDK_ASSERT(sdk::asic::pd::asicpd_toeplitz_init("iris_rxdma",
+                                                   P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_INDIR,
+                                                   sizeof(eth_rx_rss_indir_eth_rx_rss_indir_t)) ==
+               SDK_RET_OK);
     SDK_ASSERT(asicpd_p4plus_table_init(hal_cfg) == HAL_RET_OK);
     SDK_ASSERT(sdk::asic::pd::asicpd_p4plus_recirc_init() == SDK_RET_OK);
     // Following routines must be called after capri asic init
