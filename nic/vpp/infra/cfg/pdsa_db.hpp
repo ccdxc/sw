@@ -18,6 +18,7 @@ typedef sdk::sdk_ret_t (*pds_cfg_set_cb)(const pds_cfg_msg_t *msg);
 typedef sdk::sdk_ret_t (*pds_cfg_del_cb)(const pds_cfg_msg_t *msg);
 typedef sdk::sdk_ret_t (*pds_cfg_act_cb)(const pds_cfg_msg_t *msg);
 typedef sdk::sdk_ret_t (*pds_cfg_get_cb)(pds_cfg_msg_t *msg);
+typedef sdk::sdk_ret_t (*pds_cfg_dump_cb) ();
 typedef void (*pds_cfg_walk_cb)(pds_cfg_msg_t *msg, void *cb_msg);
 typedef void (*pds_cfg_notify_cb)(const pds_cfg_msg_t *msg, bool del);
 
@@ -26,7 +27,8 @@ int pds_cfg_register_callbacks(obj_id_t id,
                                pds_cfg_set_cb set_cb_fn,
                                pds_cfg_del_cb del_cb_fn,
                                pds_cfg_act_cb act_cb_fn,
-                               pds_cfg_get_cb get_cb_fn = NULL);
+                               pds_cfg_get_cb get_cb_fn = NULL,
+                               pds_cfg_dump_cb dump_cb_fn = NULL);
 
 int
 pds_cfg_register_notify_callbacks(obj_id_t id,
@@ -40,11 +42,12 @@ typedef struct {
 } batch_op_t;
 
 typedef struct {
-    obj_id_t       obj_id;
-    pds_cfg_set_cb set_cb;
-    pds_cfg_del_cb del_cb;
-    pds_cfg_act_cb act_cb;
-    pds_cfg_get_cb get_cb;
+    obj_id_t        obj_id;
+    pds_cfg_set_cb  set_cb;
+    pds_cfg_del_cb  del_cb;
+    pds_cfg_act_cb  act_cb;
+    pds_cfg_get_cb  get_cb;
+    pds_cfg_dump_cb dump_cb;
 } object_cbs_t;
 
 typedef struct {
@@ -112,7 +115,8 @@ public:
                              pds_cfg_set_cb set_cb_fn,
                              pds_cfg_del_cb del_cb_fn,
                              pds_cfg_act_cb act_cb_fn,
-                             pds_cfg_get_cb get_cb_fn);
+                             pds_cfg_get_cb get_cb_fn,
+                             pds_cfg_dump_cb dump_cb_fn);
 
     static void register_notify_cbs(obj_id_t id,
                                     pds_cfg_notify_cb notify_cb_fn);
@@ -122,6 +126,7 @@ public:
     sdk::sdk_ret_t create(const pds_msg_list_t *msglist);
     sdk::sdk_ret_t commit(void);
     sdk::sdk_ret_t read(pds_cfg_msg_t &msg);
+    sdk::sdk_ret_t dump(obj_id_t obj_id);
     void clear(void);
 };
 

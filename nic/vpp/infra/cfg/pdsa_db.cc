@@ -344,7 +344,8 @@ vpp_config_batch::register_cbs (obj_id_t id,
                                pds_cfg_set_cb set_cb_fn,
                                pds_cfg_del_cb del_cb_fn,
                                pds_cfg_act_cb act_cb_fn,
-                               pds_cfg_get_cb get_cb_fn) {
+                               pds_cfg_get_cb get_cb_fn,
+                               pds_cfg_dump_cb dump_cb_fn) {
     object_cbs_t cbs;
 
     cbs.obj_id = id;
@@ -352,6 +353,7 @@ vpp_config_batch::register_cbs (obj_id_t id,
     cbs.del_cb = del_cb_fn;
     cbs.act_cb = act_cb_fn;
     cbs.get_cb = get_cb_fn;
+    cbs.dump_cb = dump_cb_fn;
     vpp_config_batch::object_cbs.push_back(cbs);
 }
 
@@ -605,6 +607,22 @@ vpp_config_batch::read (pds_cfg_msg_t &msg) {
     return sdk::SDK_RET_OK;;
 }
 
+sdk::sdk_ret_t
+vpp_config_batch::dump (obj_id_t obj_id) {
+    for (auto cit = object_cbs.begin(); cit != object_cbs.end(); cit++) {
+        if ((*cit).obj_id != obj_id) {
+            continue;
+        }
+
+        if ((*cit).dump_cb) {
+            (*cit).dump_cb();
+            return sdk::SDK_RET_OK;;
+        }
+    }
+    // we don't really fail even if we can't find a CB
+    return sdk::SDK_RET_OK;;
+}
+
 // register callbacks from plugins for messages
 // return 0 indicates  registered successfully
 // return non-zero indicates registration fail (invalid param)
@@ -613,7 +631,8 @@ pds_cfg_register_callbacks (obj_id_t id,
                             pds_cfg_set_cb set_cb_fn,
                             pds_cfg_del_cb del_cb_fn,
                             pds_cfg_act_cb act_cb_fn,
-                            pds_cfg_get_cb get_cb_fn) {
+                            pds_cfg_get_cb get_cb_fn,
+                            pds_cfg_dump_cb dump_cb_fn) {
     if ((set_cb_fn == NULL) || (del_cb_fn == NULL)) {
         return -1;
     }
@@ -628,7 +647,8 @@ pds_cfg_register_callbacks (obj_id_t id,
         return -1;
     }
 
-    vpp_config_batch::register_cbs(id, set_cb_fn, del_cb_fn, act_cb_fn, get_cb_fn);
+    vpp_config_batch::register_cbs(id, set_cb_fn, del_cb_fn, act_cb_fn,
+                                   get_cb_fn, dump_cb_fn);
 
     return 0;
 }

@@ -5,6 +5,12 @@
 #include <nic/vpp/infra/cfg/pdsa_db.hpp>
 #include "pdsa_impl_db_hdlr.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "cli.h"
+
 static sdk::sdk_ret_t
 pds_cfg_db_subnet_set_cb (const pds_cfg_msg_t *msg)
 {
@@ -159,6 +165,26 @@ pds_cfg_db_device_del_cb (const pds_cfg_msg_t *msg)
     }
 }
 
+#define _(obj)                          \
+static sdk::sdk_ret_t                   \
+pds_cfg_db_##obj##_dump_cb ()           \
+{                                       \
+    int rc;                             \
+                                        \
+    rc = obj##_impl_db_dump();          \
+    if (rc == 0) {                      \
+        return sdk::SDK_RET_OK;         \
+    } else {                            \
+        return sdk::SDK_RET_ERR;        \
+    }                                   \
+}
+
+_(subnet)
+_(vnic)
+_(vpc)
+_(device)
+#undef _
+
 void
 pds_impl_db_cb_register (void)
 {
@@ -166,7 +192,8 @@ pds_impl_db_cb_register (void)
     pds_cfg_register_callbacks(OBJ_ID_##_OBJ,               \
                                pds_cfg_db_##_obj##_set_cb,  \
                                pds_cfg_db_##_obj##_del_cb,  \
-                               NULL);
+                               NULL, NULL,                  \
+                               pds_cfg_db_##_obj##_dump_cb);
 
     _(VNIC, vnic)
     _(SUBNET, subnet)
@@ -184,3 +211,8 @@ pds_cfg_db_init (void)
 
     return 0;
 }
+
+#ifdef __cplusplus
+}
+
+#endif

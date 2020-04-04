@@ -2,11 +2,15 @@
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //
 
-#include "impl_cli.h"
+#include <stddef.h>
+#include <vlib/vlib.h>
+#include "impl_db.h"
+#include "cli.h"
 
 int
-vpc_impl_db_dump (vlib_main_t * vm)
+vpc_impl_db_dump ()
 {
+    vlib_main_t *vm = vlib_get_main();
     pds_impl_db_vpc_entry_t *vpc_info;
     u16 offset;
     u32 itr;
@@ -30,8 +34,9 @@ vpc_impl_db_dump (vlib_main_t * vm)
 }
 
 int
-vnic_impl_db_dump (vlib_main_t * vm)
+vnic_impl_db_dump ()
 {
+    vlib_main_t *vm = vlib_get_main();
     pds_impl_db_vnic_entry_t *vnic_info;
     u16 offset;
     u32 itr;
@@ -61,8 +66,9 @@ vnic_impl_db_dump (vlib_main_t * vm)
 }
 
 int
-subnet_impl_db_dump (vlib_main_t * vm)
+subnet_impl_db_dump ()
 {
+    vlib_main_t *vm = vlib_get_main();
     pds_impl_db_subnet_entry_t *subnet_info;
     ip46_address_t ip;
     u16 offset;
@@ -92,8 +98,9 @@ subnet_impl_db_dump (vlib_main_t * vm)
 }
 
 int
-device_impl_db_dump (vlib_main_t * vm)
+device_impl_db_dump ()
 {
+    vlib_main_t *vm = vlib_get_main();
     pds_impl_db_device_entry_t *device;
     ip46_address_t ip;
 
