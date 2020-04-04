@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
@@ -46,6 +46,8 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
 
   @Input() existingObjects: MonitoringMirrorSession[] = [];
 
+  MAX_COLLECTORS_ALLOWED: number = 2;
+
   IPS_LABEL: string = 'IP Addresses';
   IPS_ERRORMSG: string = 'Invalid IP addresses';
   IPS_TOOLTIP: string = 'Type in ip address and hit enter or space key to add more.';
@@ -67,6 +69,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
 
   packetFilterOptions = Utility.convertEnumToSelectItem(MonitoringMirrorSessionSpec.propInfo['packet-filters'].enum);
   collectorTypeOptions = Utility.convertEnumToSelectItem(MonitoringMirrorCollector.propInfo['type'].enum);
+  interfaceDirectionOptions = Utility.convertEnumToSelectItem(MonitoringInterfaceMirror.propInfo['direction'].enum);
 
   repeaterAnimationEnabled = true;
   rules: OrderedItem<any>[] = [];
@@ -94,6 +97,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     protected securityService: SecurityService,
     protected uiconfigsService: UIConfigsService,
     protected networkService: NetworkService,
+    private cdr: ChangeDetectorRef
   ) {
     super(_controllerService, uiconfigsService, MonitoringMirrorSession);
   }
@@ -348,7 +352,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       return r.data.rule.getFormGroupValues();
     });
     const repeaterSearchExpression = this.convertFormArrayToSearchExpression(this.labelOutput);
-    currValue.spec['interfaces'] = new MonitoringInterfaceMirror();
     currValue.spec['interfaces']['selectors'] = new Array<LabelsSelector>();
     currValue.spec['interfaces']['selectors'].push(new LabelsSelector());
     currValue.spec['interfaces']['selectors'][0].requirements = repeaterSearchExpression as ILabelsRequirement[];
@@ -459,6 +462,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     const newCollector = new MonitoringMirrorCollector().$formGroup;
     newCollector.get(['export-config', 'destination']).setValidators([
       newCollector.get(['export-config', 'destination']).validator, IPUtility.isValidIPValidator]);
+    newCollector.get(['export-config', 'gateway']).setValidators([IPUtility.isValidIPValidator]);
     collectors.insert(collectors.length, newCollector);
   }
 
@@ -603,7 +607,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
 
   isShowAddCollector(): boolean {
     const collectors = this.newObject.$formGroup.get(['spec', 'collectors']) as FormArray;
-    if (collectors.length < 4) {
+    if (collectors.length < this.MAX_COLLECTORS_ALLOWED) {
       return true;
     }
     return false;
@@ -655,6 +659,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
         this.buildLabelInformation(body);
         this.buildLabelInformationFromMirrorSessions();
         this.buildLabelData();
+        this.cdr.detectChanges();
       }
     );
     this.subscriptions.push(sub);
@@ -667,12 +672,10 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
           const key = i.key;
           const values = i.values;
           if (this.matchMap[key] == null) {
-            console.log('key doesnt exist anymore');
             this.matchMap[key] = new Map<string, any>();
           }
           for (const v of values) {
             if (this.matchMap[key][v] == null) {
-              console.log('Key value pair doesnt exist anymore');
               this.matchMap[key][v] = [];
             }
           }

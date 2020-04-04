@@ -13,7 +13,7 @@
       <!-- hide this for release a. Re-open in 2020-02-28  -->
 
     </div>
-    <div fxFlex="50" fxLayout="column" fxLayoutAlign="start center"
+    <div fxFlex="50" fxLayout="column" fxLayoutAlign="start"
          class="newmirrorsession-row">
       <mat-radio-group class="newmirrorsession-radio-text"
                        fxLayoutGap="20px"
@@ -25,7 +25,7 @@
         </mat-radio-button>
         <mat-radio-button class="newmirrorsession-radio-text" fxFlex="nogrow" color="primary"
                           [disableRipple]="true" [value]="'labels'">
-          Interfaces
+          Uplink Interfaces
         </mat-radio-button>
       </mat-radio-group>
       <ng-container *ngIf="radioSelection == 'labels'">
@@ -115,14 +115,20 @@
                           [options]="collectorTypeOptions" formControlName="type">
               </p-dropdown>
             </span>
-            <div fxFlex="70px"></div>
+            <div fxFlex="10px"></div>
             <span fxFlex="none" fxLayout="row" [formGroup]="collector.get(['export-config'])"
                   [ngClass]="{
                 'newmirrorsession-collector-box': true,
                 'requiredField': isFieldEmpty(collector.get(['export-config', 'destination']))
               }">
-              <input fxFlex="nogrow" appFloatLabel="IP address" appErrorTooltip
+              <input fxFlex="nogrow" appFloatLabel="Destination" appErrorTooltip
                      formControlName="destination" spellcheck="false" type="text" pInputText>
+            </span>
+            <div fxFlex="10px"></div>
+            <span fxFlex="none" fxLayout="row" [formGroup]="collector.get(['export-config'])"
+                  class="newmirrorsession-collector-box">
+              <input fxFlex="nogrow" appFloatLabel="Gateway" appErrorTooltip
+                     formControlName="gateway" spellcheck="false" type="text" pInputText>
             </span>
             <mat-icon fxFlex="nogrow" class="global-trash-button newmirrorsession-delete"
                       *ngIf="controlAsFormArray(newObject.$formGroup.get(['spec','collectors'])).length > 1"
@@ -133,17 +139,21 @@
       <div fxFlex="10px"></div>
       <div *ngIf="isShowAddCollector()" fxFlex="none" (click)="addCollector()"
            class="newmirrorsession-add-collector">+ COLLECTOR</div>
-
+      <div class="newmirrorsession-add-collector" *ngIf="!isShowAddCollector()"></div>
     </fieldset>
   </ng-template>
 
   <ng-template #interface_selector>
     <fieldset class="newmirrorsession-selectors">
-      <legend fxFlex="shrink">Network Interfaces <span class="newmirrorsession-subtext">(select from
-          labels)</span>
+      <legend fxFlex="shrink">Upperlink Interfaces <span class="newmirrorsession-subtext">(select
+          from interface labels)</span>
       </legend>
-      <div fxFlex="auto" class="newmirrorsession-label-match-count">{{this.labelMatchCount}} Network
-        Interfaces matched.</div>
+      <div fxFlex="none" fxLayout="row" class="newmirrorsession-interface-direction-box"
+           [formGroup]="newObject.$formGroup.get(['spec', 'interfaces'])">
+        <p-dropdown appFloatLabel="Direction" appendTo="body"
+                    [options]="interfaceDirectionOptions" formControlName="direction">
+        </p-dropdown>
+      </div>
       <div fxFlex="auto" *ngIf="repeaterReady"
            class="newmirrorsession-section-div newmirrorsession-section-workloadlabels-div">
         <app-repeater #interFaceSelectorRepeater [data]="labelData"
@@ -159,6 +169,8 @@
                       [valueFormName]="'values'">
         </app-repeater>
       </div>
+      <div fxFlex="auto" class="newmirrorsession-label-match-count">{{this.labelMatchCount}}
+        Upperlink Interfaces matched.</div>
     </fieldset>
   </ng-template>
 
