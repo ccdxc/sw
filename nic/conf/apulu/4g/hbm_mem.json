@@ -2,8 +2,8 @@
     "guideline": {
         "_comment"  : "Regions are categorized to 'static','upgrade','opertbl' and 'cfgtbl'",
         "_comment1" : "For non-disruptive sw upgrades, the static* should not be modified across releases",
-        "_comment2" : "Memory fragmentation and upgrade issues, all static regions should be placed adjascent",
-        "_comment2" : "Memory fragmentation and upgrade issues, all opertbl regions should be placed adjascent"
+        "_comment2" : "Memory fragmentation and upgrade issues, all static regions should be placed adjacent",
+        "_comment2" : "Memory fragmentation and upgrade issues, all opertbl regions should be placed adjacent"
     },
     "regions": [
          {
@@ -248,6 +248,20 @@
             "size": "256K",
             "cache": "p4plus-rxdma",
             "_comment": "4K * 64B"
+        },
+        {
+            "name": "remote_mapping",
+            "kind": "cfgtbl",
+            "size": "128M",
+            "cache": "p4plus-rxdma",
+            "_comment": "4M * 32B"
+        },
+        {
+            "name": "remote_mapping_ohash",
+            "kind": "cfgtbl",
+            "size": "16M",
+            "cache": "p4plus-rxdma",
+            "_comment": "512K * 32B"
         },
         {
             "name": "local_mapping",

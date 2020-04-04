@@ -2,8 +2,8 @@
     "guideline": {
         "_comment"  : "Regions are categorized to 'static','upgrade','opertbl' and 'cfgtbl'",
         "_comment1" : "For non-disruptive sw upgrades, the static* should not be modified across releases",
-        "_comment2" : "Memory fragmentation and upgrade issues, all static regions should be placed adjascent",
-        "_comment2" : "Memory fragmentation and upgrade issues, all opertbl regions should be placed adjascent"
+        "_comment2" : "Memory fragmentation and upgrade issues, all static regions should be placed adjacent",
+        "_comment2" : "Memory fragmentation and upgrade issues, all opertbl regions should be placed adjacent"
     },
     "regions": [
          {
@@ -164,8 +164,8 @@
             "name": "lpm_v6",
             "kind": "cfgtbl",
             "_comment": "(1024+1) * (64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64)",
-            "size": "37M",
-            "block_size": "37440B",
+            "size": "1K",
+            "block_size": "1B",
             "max_elements": "1K",
             "cache": "p4plus-txdma"
         },
@@ -181,7 +181,7 @@
             "kind": "cfgtbl",
             "_comment": "dummy region - for meters use profile p2",
             "size": "1K",
-            "block_size": "1B",
+            "block_size": "1K",
             "max_elements": "1K"
         },
         {
@@ -236,6 +236,20 @@
             "size": "256K",
             "cache": "p4plus-rxdma",
             "_comment": "4K * 64B"
+        },
+        {
+            "name": "remote_mapping",
+            "kind": "cfgtbl",
+            "size": "128M",
+            "cache": "p4plus-rxdma",
+            "_comment": "4M * 32B"
+        },
+        {
+            "name": "remote_mapping_ohash",
+            "kind": "cfgtbl",
+            "size": "16M",
+            "cache": "p4plus-rxdma",
+            "_comment": "512K * 32B"
         },
         {
             "name": "local_mapping",

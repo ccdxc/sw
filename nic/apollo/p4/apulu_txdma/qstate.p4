@@ -159,6 +159,8 @@ action read_pktdesc2(sacl_base_addr4,
                      dtag_classid,
                      stag_classid,
                      pad6,
+                     local_tag_idx,
+                     remote_tag_idx,
                      pad8)
 {
     modify_field(rx_to_tx_hdr.sacl_base_addr4, sacl_base_addr4);
@@ -181,6 +183,8 @@ action read_pktdesc2(sacl_base_addr4,
     modify_field(rx_to_tx_hdr.dtag_classid, dtag_classid);
     modify_field(rx_to_tx_hdr.stag_classid, stag_classid);
     modify_field(scratch_metadata.field6, pad6);
+    modify_field(rx_to_tx_hdr.local_tag_idx, local_tag_idx);
+    modify_field(rx_to_tx_hdr.remote_tag_idx, remote_tag_idx);
     modify_field(scratch_metadata.field2, pad8);
 }
 

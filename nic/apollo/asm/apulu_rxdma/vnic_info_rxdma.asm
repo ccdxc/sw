@@ -14,18 +14,20 @@ vnic_info_rxdma:
     // Disable this lookup for further passes
     phvwr        p.p4_to_rxdma_vnic_info_en, FALSE
 
+    // Copy local_tag_idx
+    phvwr        p.rx_to_tx_hdr_local_tag_idx, k.p4_to_rxdma_local_tag_idx
+
+    // Fill the remote_ip based on the direction
+    seq          c1, k.p4_to_rxdma_rx_packet, r0
+    phvwr.c1     p.rx_to_tx_hdr_remote_ip, k.p4_to_rxdma_flow_dst
+    phvwr.!c1    p.rx_to_tx_hdr_remote_ip, k.p4_to_rxdma_flow_src
+
     // Is route root == NULL? goto process_salc_roots
     seq          c1, d.vnic_info_rxdma_d.lpm_base1, r0
     bcf          [c1], process_salc_roots
 
     // Copy route root and initialize remote_address
-    phvwr        p.rx_to_tx_hdr_route_base_addr, d.vnic_info_rxdma_d.lpm_base1
-    // Fill the remote_ip based on the direction
-    seq          c1, k.p4_to_rxdma_rx_packet, r0
-    phvwr.c1     p.rx_to_tx_hdr_remote_ip[127:64], k.p4_to_rxdma_flow_dst[127:64]
-    phvwr.c1     p.rx_to_tx_hdr_remote_ip[63:0], k.p4_to_rxdma_flow_dst[63:0]
-    phvwr.!c1    p.rx_to_tx_hdr_remote_ip[127:64], k.p4_to_rxdma_flow_src[127:64]
-    phvwr.!c1    p.rx_to_tx_hdr_remote_ip[63:0], k.p4_to_rxdma_flow_src[63:0]
+    phvwr.!c1    p.rx_to_tx_hdr_route_base_addr, d.vnic_info_rxdma_d.lpm_base1
 
 process_salc_roots:
     // if sacl_base_address == NULL, stop!
@@ -55,7 +57,7 @@ process_salc_roots:
 
     // Enable both LPMs
     phvwr.e      p.p4_to_rxdma_lpm1_enable, TRUE
-    phvwr        p.p4_to_rxdma_lpm2_enable, TRUE
+    phvwr.f      p.p4_to_rxdma_lpm2_enable, TRUE
 
 /*****************************************************************************/
 /* error function                                                            */

@@ -1,24 +1,27 @@
 header_type apulu_p4i_to_rxdma_header_t {
     fields {
-        p4plus_app_id   : 4;
-        lpm1_enable     : 1;
-        lpm2_enable     : 1;
-        vnic_info_en    : 1;
-        apulu_p4plus    : 1;
+        p4plus_app_id       : 4;
+        lpm1_enable         : 1;
+        lpm2_enable         : 1;
+        vnic_info_en        : 1;
+        apulu_p4plus        : 1;
 
-        pad0            : 6;
-        rx_packet       : 1;
-        iptype          : 1;
-        vnic_info_key   : 16;
-        vpc_id          : 16;
-        tag_root        : 40;
+        pad0                : 4;
+        mapping_done        : 1;
+        mapping_ohash_lkp   : 1;
+        rx_packet           : 1;
+        iptype              : 1;
+        vnic_info_key       : 16;
+        vpc_id              : 16;
+        local_tag_idx       : 16;
+        pad1                : 24;
 
-        flow_src        : 128;
-        flow_sport      : 16;
-        flow_dport      : 16;
-        flow_proto      : 8;
-        flow_dst        : 128;
-        service_tag     : 32;
+        flow_src            : 128;
+        flow_sport          : 16;
+        flow_dport          : 16;
+        flow_proto          : 8;
+        flow_dst            : 128;
+        service_tag         : 32;
     }
 }
 
@@ -177,6 +180,9 @@ header_type apulu_rx_to_tx_header_t {
         stag_classid    : 10; // Bits 91[0] to 92[1]
         pad6            : 6;  // Bits 92[2] to 92[7]
 
-        pad8            : 280; // Bytes 93 to 127
+        local_tag_idx   : 16; // Bytes 93 and 94
+        remote_tag_idx  : 24; // Bytes 95 to 97
+
+        pad8            : 240; // Bytes 98 to 127
     }
 }

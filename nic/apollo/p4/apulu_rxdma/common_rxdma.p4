@@ -1194,6 +1194,7 @@ control ingress {
         if (p4_to_rxdma.vnic_info_en == TRUE) {
             vnic_info_rxdma();
         }
+        remote_mapping();
         sacl_lpm();
         pkt_enqueue();
     } else {

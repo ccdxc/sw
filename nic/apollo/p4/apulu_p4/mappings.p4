@@ -1,13 +1,13 @@
 /******************************************************************************/
 /* Local mapping                                                              */
 /******************************************************************************/
-@pragma capi appdatafields vnic_id xlate_id allow_tagged_pkts binding_check_enabled binding_id1 binding_id2 ip_type
+@pragma capi appdatafields vnic_id xlate_id allow_tagged_pkts tag_idx binding_check_enabled binding_id1 binding_id2 ip_type
 @pragma capi hwfields_access_api
 action local_mapping_info(entry_valid, vnic_id,
                           hash1, hint1, hash2, hint2, hash3, hint3,
                           hash4, hint4, hash5, hint5, hash6, hint6,
-                          hash7, hint7, hash8, hint8, hash9, hint9,
-                          more_hashes, more_hints, xlate_id, allow_tagged_pkts,
+                          hash7, hint7, hash8, hint8, more_hashes, more_hints,
+                          xlate_id, allow_tagged_pkts, tag_idx,
                           binding_check_enabled, binding_id1, binding_id2,
                           ip_type) {
     if (entry_valid == TRUE) {
@@ -20,6 +20,7 @@ action local_mapping_info(entry_valid, vnic_id,
                      binding_check_enabled);
         modify_field(vnic_metadata.binding_id, binding_id1);
         modify_field(p4i_to_arm.local_mapping_ip_type, ip_type);
+        modify_field(p4i_to_rxdma.local_tag_idx, tag_idx);
         modify_field(scratch_metadata.binding_id, binding_id2);
         modify_field(scratch_metadata.flag, allow_tagged_pkts);
         if ((control_metadata.rx_packet == FALSE) and
@@ -75,11 +76,6 @@ action local_mapping_info(entry_valid, vnic_id,
             modify_field(scratch_metadata.local_mapping_hint, hint8);
             modify_field(scratch_metadata.hint_valid, TRUE);
         }
-        if ((scratch_metadata.hint_valid == FALSE) and
-            (scratch_metadata.local_mapping_hash == hash9)) {
-            modify_field(scratch_metadata.local_mapping_hint, hint9);
-            modify_field(scratch_metadata.hint_valid, TRUE);
-        }
         modify_field(scratch_metadata.flag, more_hashes);
         if ((scratch_metadata.hint_valid == FALSE) and
             (scratch_metadata.flag == TRUE)) {
@@ -111,7 +107,6 @@ action local_mapping_info(entry_valid, vnic_id,
     modify_field(scratch_metadata.local_mapping_hash, hash6);
     modify_field(scratch_metadata.local_mapping_hash, hash7);
     modify_field(scratch_metadata.local_mapping_hash, hash8);
-    modify_field(scratch_metadata.local_mapping_hash, hash9);
 }
 
 @pragma stage 2

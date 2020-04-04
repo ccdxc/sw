@@ -15,18 +15,9 @@ header_type scratch_metadata_t {
         field128        : 128;
         qid             :  24;
         dma_size        :  16;
-    }
-}
-
-header_type flow_key_t {
-    fields {
-        pad             : 12;
-        flow_ktype      : 4;
-        flow_src        : 128;
-        flow_dst        : 128;
-        flow_proto      : 8;
-        flow_dport      : 16;
-        flow_sport      : 16;
+        hint_valid      :   1;
+        mapping_hash    :  10;
+        mapping_hint    :  19;
     }
 }
 
@@ -42,6 +33,8 @@ header_type lpm_metadata_t {
 
         sacl_base_addr  : 40;
         recirc_count    : 8;
+
+        mapping_ohash   : 32;
     }
 }
 
@@ -53,9 +46,6 @@ metadata qstate_hdr_t           scratch_qstate_hdr;
 
 @pragma scratch_metadata
 metadata qstate_info_t          scratch_qstate_info;
-
-@pragma scratch_metadata
-metadata flow_key_t             scratch_flow_key;
 
 @pragma dont_trim
 @pragma pa_header_union ingress app_header

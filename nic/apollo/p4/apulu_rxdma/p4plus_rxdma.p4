@@ -5,6 +5,7 @@
 #include "../include/apulu_sacl_defines.h"
 #include "../include/lpm_defines.h"
 
+#include "mapping.p4"
 #include "sacl_lpm.p4"
 #include "vnic_info_rxdma.p4"
 #include "packet_queue.p4"
