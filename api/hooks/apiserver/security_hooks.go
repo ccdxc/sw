@@ -435,6 +435,10 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 		}
 	}
 
+	if !featureflags.AreALGsEnabled() && app.Spec.ALG != nil && app.Spec.ALG.Type != security.ALG_ICMP.String() {
+		ret = append(ret, fmt.Errorf("ALGs other ICMP are not supported"))
+	}
+
 	// validate ALG types
 	if featureflags.AreALGsEnabled() && app.Spec.ALG != nil && app.Spec.ALG.Type != "" {
 

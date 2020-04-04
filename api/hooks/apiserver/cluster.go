@@ -1123,6 +1123,25 @@ func (cl *clusterHooks) checkFFBootstrap(ctx context.Context, kv kvstore.Interfa
 }
 
 func (cl *clusterHooks) nodePreCommitHook(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+	// Validation of routing Config
+	node := i.(cluster.Node)
+	if node.Spec.RoutingConfig != "" {
+		rtCfg := network.RoutingConfig{
+			ObjectMeta: api.ObjectMeta{
+				Name: node.Spec.RoutingConfig,
+			},
+		}
+		rkey := rtCfg.MakeKey(string(apiclient.GroupNetwork))
+		err := kvs.Get(ctx, rkey, &rtCfg)
+		if err != nil {
+			cl.logger.Errorf("could not find routing cofnig [%v](%s)", node.Spec.RoutingConfig, err)
+			return i, true, fmt.Errorf("routing config not found [%v](%s)", node.Spec.RoutingConfig, err)
+		}
+		if rtCfg.Spec.BGPConfig != nil && rtCfg.Spec.BGPConfig.DSCAutoConfig {
+			cl.logger.Errorf("DSCAutoConfig routing configuration cannot be applied to Route Reflectors [%v]", node.Spec.RoutingConfig)
+			return i, true, fmt.Errorf("DSCAutoConfig routing configuration cannot be applied to Route Reflectors")
+		}
+	}
 	//create default firewall profile under the following conditions
 	// 1. upgrade from A Release to B Release (1.3 to 1.4 & up)
 	// 2. apiserver restart during upgrade
@@ -1152,6 +1171,7 @@ func (cl *clusterHooks) nodePreCommitHook(ctx context.Context, kvs kvstore.Inter
 		cl.logger.Errorf("(nodePreCommitHook) Invalid Version")
 		return i, true, nil
 	}
+
 	//upgrade from 1.3 to 1.4+ but not to 2.x
 	if strings.HasPrefix(verObj.Status.BuildVersion, "1.3") && rolloutMajorVersion == relAMajorVersion && rolloutMinorVersion > relAMinorVersion {
 		insertionFWProfile := &cluster.DSCProfile{}
