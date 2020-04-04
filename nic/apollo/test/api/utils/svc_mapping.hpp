@@ -21,7 +21,7 @@ public:
     // Constructor
     svc_mapping_feeder() { };
     svc_mapping_feeder(const svc_mapping_feeder& feeder) {
-        init(ipaddr2str(&feeder.spec.vip),
+        init(feeder.spec.key, ipaddr2str(&feeder.spec.vip),
              feeder.spec.svc_port, feeder.spec.skey.vpc,
              ipaddr2str(&feeder.spec.skey.backend_ip),
              feeder.spec.skey.backend_port,
@@ -29,7 +29,7 @@ public:
     }
 
     // Initialize feeder with the base set of values
-    void init(std::string vip_str, uint16_t svc_port,
+    void init(pds_obj_key_t key, std::string vip_str, uint16_t svc_port,
               pds_obj_key_t backend_vpc, std::string backend_ip,
               uint16_t backend_port, std::string backend_pip,
               uint32_t num_svc_mapping=100);

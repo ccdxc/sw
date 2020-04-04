@@ -322,11 +322,12 @@ svc_mapping_impl::activate_delete_(pds_epoch_t epoch,
 
     // update the service mapping xlation idx to PDS_IMPL_RSVD_NAT_HW_ID to
     // disable NAT
-    vpc = vpc_db()->find(&key->vpc);
+    pds_svc_mapping_key_t  skey = mapping->skey();
+    vpc = vpc_db()->find(&skey.vpc);
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     ((vpc_impl *)vpc->impl())->hw_id(),
-                                    &key->backend_ip,
-                                    key->backend_port);
+                                    &(skey.backend_ip),
+                                    (skey.backend_port));
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data, PDS_IMPL_RSVD_NAT_HW_ID);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &svc_mapping_key, NULL,
                                    &svc_mapping_data,
