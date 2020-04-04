@@ -2,8 +2,6 @@ import { Component, OnInit, ViewEncapsulation, ViewChild, OnDestroy, ChangeDetec
 import { ControllerService } from '@app/services/controller.service';
 import { Utility } from '@app/common/Utility';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
-import { ITelemetry_queryFwlogsQueryResponse, ITelemetry_queryFwlogsQueryList, Telemetry_queryFwlogsQuerySpec, Telemetry_queryFwlog, Telemetry_queryFwlogsQuerySpec_sort_order, ITelemetry_queryFwlog } from '@sdk/v1/models/generated/telemetry_query';
-import { TelemetryqueryService } from '@app/services/generated/telemetryquery.service';
 import { IPUtility } from '@app/common/IPUtility';
 import { LazyLoadEvent, OverlayPanel } from 'primeng/primeng';
 import { TableviewAbstract, TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';
@@ -25,6 +23,8 @@ import { Subscription, Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { ValidatorFn } from '@angular/forms';
 import { TimeRangeOption, citadelTimeOptions, citadelMaxTimePeriod } from '@app/components/shared/timerange/timerange.component';
+import { FwlogService } from '@app/services/generated/fwlog.service';
+import { IFwlogFwLogQuery, FwlogFwLogQuery, FwlogFwLogQuery_sort_order, FwlogFwLogQuery_actions, FwlogFwLogList, FwlogFwLog, IFwlogFwLog } from '@sdk/v1/models/generated/fwlog';
 
 @Component({
   selector: 'app-fwlogs',
@@ -32,23 +32,24 @@ import { TimeRangeOption, citadelTimeOptions, citadelMaxTimePeriod } from '@app/
   styleUrls: ['./fwlogs.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Telemetry_queryFwlog> {
+export class FwlogsComponent extends TableviewAbstract<IFwlogFwLog, FwlogFwLog> {
   public static ALLOPTION = 'All';
   @ViewChild(TablevieweditHTMLComponent) tableWrapper: TablevieweditHTMLComponent;
   @ViewChild('ruleDetailsOverlay') overlay: OverlayPanel;
   @ViewChild('logOptions') logOptionsMultiSelect: MultiSelect ;
 
-  dataObjects: ReadonlyArray<Telemetry_queryFwlog> = [];
+  dataObjects: ReadonlyArray<FwlogFwLog> = [];
   loading: boolean = false;
 
   isTabComponent = false;
   disableTableWhenRowExpanded = false;
+  maxRecords: number = 8000;
 
-  query: Telemetry_queryFwlogsQuerySpec = new Telemetry_queryFwlogsQuerySpec({ 'sort-order': Telemetry_queryFwlogsQuerySpec_sort_order.descending }, false);
-  actionOptions = Utility.convertEnumToSelectItem(Telemetry_queryFwlogsQuerySpec.propInfo.actions.enum);
+  query: FwlogFwLogQuery = new FwlogFwLogQuery({ 'sort-order': FwlogFwLogQuery_sort_order.descending, 'max-results': this.maxRecords }, false);
+
+  actionOptions = Utility.convertEnumToSelectItem(FwlogFwLogQuery_actions);
 
   exportFilename: string = 'Venice-fwlogs';
-  maxRecords: number = 10000;
   startingSortField: string = 'time';
   startingSortOrder: number = -1;
 
@@ -91,9 +92,9 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
 
   // Only time is supported as sortable by the backend
   cols: TableCol[] = [
-    { field: 'time', header: 'Time', class: 'fwlogs-column', sortable: true, width: 16 },
-    { field: 'source', header: 'Source', class: 'fwlogs-column-ip', sortable: true, width: 10 },
-    { field: 'destination', header: 'Destination', class: 'fwlogs-column-ip', sortable: true, width: 10 },
+    { field: 'meta.mod-time', header: 'Time', class: 'fwlogs-column', sortable: true, width: 16 },
+    { field: 'source-ip', header: 'Source', class: 'fwlogs-column-ip', sortable: true, width: 10 },
+    { field: 'destination-ip', header: 'Destination', class: 'fwlogs-column-ip', sortable: true, width: 10 },
     { field: 'protocol', header: 'Protocol', class: 'fwlogs-column-port', sortable: true, width: 7 },
     { field: 'source-port', header: 'Src Port', class: 'fwlogs-column-port', sortable: true, width: 5 },
     { field: 'destination-port', header: 'Dest Port', class: 'fwlogs-column-port', sortable: true, width: 6 },
@@ -101,13 +102,13 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     { field: 'reporter-id', header: 'Reporter', class: 'fwlogs-column', sortable: true, width: 7 },
     { field: 'direction', header: 'Direction', class: 'fwlogs-column', sortable: true, width: 7 },
     { field: 'session-id', header: 'Session ID', class: 'fwlogs-column', sortable: true},
-    { field: 'session-state', header: 'Session Action', class: 'fwlogs-column', sortable: true},
-    { field: 'policy', header: 'Policy Name', class: 'fwlogs-column', sortable: true, width: 8, roleGuard: 'securitynetworksecuritypolicy_read' },
+    { field: 'flow-action', header: 'Session Action', class: 'fwlogs-column', sortable: true},
+    { field: 'rule-id', header: 'Policy Name', class: 'fwlogs-column', sortable: true, width: 8, roleGuard: 'securitynetworksecuritypolicy_read' },
   ];
 
   searchSubscription: Subscription;
 
-  fwlogsQueryObserver: Subject<ITelemetry_queryFwlogsQueryList> = new Subject();
+  fwlogsQueryObserver: Subject<IFwlogFwLogQuery> = new Subject();
 
   timeRangeOptions: TimeRangeOption[] = citadelTimeOptions;
   maxTimePeriod = citadelMaxTimePeriod;
@@ -116,13 +117,13 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     'reporter-id': (opts) => {
       return this.getNaplesNameFromReporterID(opts.data);
     },
-    'time': (opts) => {
-      const dataObj = opts.data as ITelemetry_queryFwlog;
-      const time = dataObj.time as any;
+    'meta.mod-time': (opts) => {
+      const dataObj = opts.data as FwlogFwLog;
+      const time = dataObj.meta['mod-time'] as any;
       return new PrettyDatePipe('en-US').transform(time, 'ns');
     },
-    'policy': (opts) => {
-      const dataObj = opts.data as ITelemetry_queryFwlog;
+    'rule-id': (opts) => {
+      const dataObj = opts.data as FwlogFwLog;
       return this.displayPolicyName(dataObj);
     },
   };
@@ -132,8 +133,8 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     protected uiconfigsService: UIConfigsService,
     private clusterService: ClusterService,
     protected cdr: ChangeDetectorRef,
-    protected telemetryService: TelemetryqueryService,
     protected securityService: SecurityService,
+    protected fwlogService: FwlogService
   ) {
     super(controllerService, cdr, uiconfigsService);
   }
@@ -195,10 +196,10 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
 
   private setSearchFormValidators() {
     this.query.$formGroup.get('source-ips').setValidators(IPUtility.isValidIPValidator);
-    this.query.$formGroup.get('dest-ips').setValidators(IPUtility.isValidIPValidator);
+    this.query.$formGroup.get('destination-ips').setValidators(IPUtility.isValidIPValidator);
     const msg = 'port should be number in range [0, 65536]'; // VS-783 set validators for Ports
     this.query.$formGroup.get('source-ports').setValidators(this.isPortInputsValid('source-ports', msg));
-    this.query.$formGroup.get('dest-ports').setValidators(this.isPortInputsValid('dest-ports', msg));
+    this.query.$formGroup.get('destination-ports').setValidators(this.isPortInputsValid('destination-ports', msg));
   }
 
   setTimeRange(timeRange: TimeRange) {
@@ -227,7 +228,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     return this.ruleMap.get(data['rule-id']) ? this.ruleMap.get(data['rule-id']).policy.meta.name : null;
   }
 
-  getNaplesNameFromReporterID(data: Telemetry_queryFwlog): string {
+  getNaplesNameFromReporterID(data: FwlogFwLog): string {
     if (data == null || data['reporter-id'] == null) {
       return '';
     }
@@ -239,7 +240,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   }
 
   clearSearch() {
-    this.query = new Telemetry_queryFwlogsQuerySpec({ 'sort-order': Telemetry_queryFwlogsQuerySpec_sort_order.descending }, false);
+    this.query = new FwlogFwLogQuery({ 'sort-order': FwlogFwLogQuery_sort_order.descending, 'max-results': this.maxRecords }, false);
     this.getFwlogs();  // after clear search criteria, we want to restore table records.
   }
 
@@ -331,19 +332,19 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     // In case multiple components invoke a request for logs
     // We buffer them and take the last request in a 500ms window
     const sub = this.fwlogsQueryObserver.pipe(debounceTime(500)).subscribe(
-      (queryList) => {
-        this.searchSubscription = this.telemetryService.PostFwlogs(queryList).subscribe(
+      (query) => {
+         this.searchSubscription = this.fwlogService.PostGetLogs(query).subscribe(  //  use POST
           (resp) => {
             this.controllerService.removeToaster('Fwlog Search Failed');
             this.lastUpdateTime = new Date().toISOString();
-            const body = resp.body as ITelemetry_queryFwlogsQueryResponse;
+            const body = resp.body as FwlogFwLogList;
             let logs = null;
-            if (body.results && body.results[0]) {
-              logs = body.results[0].logs;
+            if (body.items !== undefined && body.items !== null) {
+              logs = body.items;
             }
             if (logs != null) {
               this.dataObjects = logs.map((l) => {
-                return new Telemetry_queryFwlog(l);
+                return new FwlogFwLog(l);
               });
             } else {
               this.dataObjects = [];
@@ -375,19 +376,19 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     // Remove any invalid query toasters if there are any.
     this.controllerService.removeToaster('Fwlog Search');
 
-    let sortOrder = Telemetry_queryFwlogsQuerySpec_sort_order.ascending;
+    let sortOrder = FwlogFwLogQuery_sort_order.ascending;
     if (order === -1) {
-      sortOrder = Telemetry_queryFwlogsQuerySpec_sort_order.descending;
+      sortOrder = FwlogFwLogQuery_sort_order.descending;
     }
 
-    const query = new Telemetry_queryFwlogsQuerySpec(null, false);
+    const query = new FwlogFwLogQuery(null, false);
     const queryVal: any = this.query.getFormGroupValues();
     if (queryVal.actions != null && queryVal.actions.includes(FwlogsComponent.ALLOPTION)) {
       queryVal.actions = null;
     }
     const fields = [
       'source-ips',
-      'dest-ips',
+      'destination-ips',
       'protocols'
     ];
     fields.forEach(
@@ -406,7 +407,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
     );
     const fieldsInt = [
       'source-ports',
-      'dest-ports'
+      'destination-ports'
     ];
     query.actions = queryVal.actions;
 
@@ -430,7 +431,6 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
       }
     );
 
-    query.pagination.count = this.maxRecords;
     query['sort-order'] = sortOrder;
 
     if (this.selectedTimeRange != null) {
@@ -438,15 +438,11 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
       query['end-time'] = this.selectedTimeRange.getTime().endTime.toISOString() as any;
     }
 
-    const queryList: ITelemetry_queryFwlogsQueryList = {
-      tenant: Utility.getInstance().getTenant(),
-      queries: [
-        Utility.TrimDefaultsAndEmptyFields(query)
-      ],
-    };
+    query.tenants = [Utility.getInstance().getTenant()];
+
     this.loading = true;
     // Get request
-    this.fwlogsQueryObserver.next(queryList);
+    this.fwlogsQueryObserver.next(query);
   }
 
   keyUpInput(event) {

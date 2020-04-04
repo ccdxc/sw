@@ -45,14 +45,14 @@
 
 <ng-template #bodyTemplate let-rowData let-col="col">
   <ng-container [ngSwitch]="col.field">
-    <ng-container *ngSwitchCase="'time'">
-      {{rowData.time | PrettyDate:"ns" }}
+    <ng-container *ngSwitchCase="'meta.mod-time'">
+      {{ rowData.meta["mod-time"] | PrettyDate:"ns" }}
     </ng-container>
     <ng-container *ngSwitchCase="'reporter-id'">
       <a
          routerLink="/cluster/dscs/{{ rowData['reporter-id'] }}">{{ getNaplesNameFromReporterID(rowData) }}</a>
     </ng-container>
-    <ng-container *ngSwitchCase="'policy'">
+    <ng-container *ngSwitchCase="'rule-id'">
       <div *ngIf="displayPolicyName(rowData)" class="fwlogs-sgpolicyredirect">
         <a
            routerLink="/security/sgpolicies/{{displayPolicyName(rowData)}}">{{displayPolicyName(rowData)}}</a>
@@ -151,7 +151,7 @@
       </div>
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
         <input appErrorTooltip fxFlex="nogrow" class="fwlogs-input" spellcheck="false" type="text"
-               formControlName="dest-ips" pInputText
+               formControlName="destination-ips" pInputText
                (keyup)="keyUpInput($event)"
                placeholder="10.1.1.1, 10.1.1.2">
       </div>
@@ -168,7 +168,7 @@
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
         <input matTooltip="Ports are comma separated. Ex 8000, 8001" fxFlex="nogrow"
                class="fwlogs-inputport" spellcheck="false"
-               formControlName="dest-ports" type="text" pInputText
+               formControlName="destination-ports" type="text" pInputText
                (keyup)="keyUpInput($event)"
                placeholder="Ports">
       </div>

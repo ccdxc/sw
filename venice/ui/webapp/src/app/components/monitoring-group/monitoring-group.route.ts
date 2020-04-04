@@ -51,15 +51,6 @@ const routes: Routes = [
     ]
   },
   {
-    path: 'fwlogpolicies',
-    children: [
-      {
-        path: '',
-        loadChildren: '@app/components/monitoring-group/fwlogs/fwlogpolicies/fwlogpolicies.module#FwlogpoliciesModule'
-      }
-    ]
-  },
-  {
     path: 'auditevents',
     children: [
       {

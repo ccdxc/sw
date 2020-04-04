@@ -29,9 +29,9 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { AuthService } from '@app/services/auth.service';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { TelemetryqueryService } from '@app/services/generated/telemetryquery.service';
+import { FwlogService } from '@app/services/generated/fwlog.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { Telemetry_queryFwlog, ITelemetry_queryFwlogsQueryResponse, Telemetry_queryFwlog_action, Telemetry_queryFwlog_direction } from '@sdk/v1/models/generated/telemetry_query';
+
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive.spec';
@@ -39,6 +39,7 @@ import { BehaviorSubject } from 'rxjs';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { SecurityService } from '@app/services/generated/security.service';
 import { SecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
+import { FwlogFwLogList, FwlogFwLog_action, FwlogFwLog_direction, FwlogFwLog } from '@sdk/v1/models/generated/fwlog';
 
 
 describe('fwlogsComponent', () => {
@@ -47,7 +48,10 @@ describe('fwlogsComponent', () => {
   let securityService;
   let sgPolicyObserver;
 
-  const fwlog: ITelemetry_queryFwlogsQueryResponse = { 'tenant': 'default', 'results': [{ 'statement_id': 0, 'logs': [{ 'source': '130.121.45.86', 'destination': '187.173.108.78', 'source-port': 3981, 'destination-port': 137, 'protocol': 'ICMP', 'action': Telemetry_queryFwlog_action.deny, 'direction': Telemetry_queryFwlog_direction['from-uplink'], 'rule-id': '3779', 'session-id': '807', 'session-state': 'create', 'reporter-id': '00ae.cd00.1142', 'time': '2019-05-14T18:23:31.03798656Z' as any }] }] };
+  const fwlogItem = new FwlogFwLog({ 'source-ip': '130.121.45.86', 'destination-ip': '187.173.108.78', 'source-port': 3981, 'destination-port': 137, 'protocol': 'ICMP', 'action': FwlogFwLog_action.deny, 'direction': FwlogFwLog_direction['from-uplink'], 'rule-id': '3779', 'session-id': '807', 'flow-action': 'create', 'reporter-id': '00ae.cd00.1142'}, false);
+  fwlogItem.meta['mod-time'] = '2019-05-14T18:23:31.03798656Z' as any;
+
+  const fwlog = new FwlogFwLogList({'items': [fwlogItem] }, false);
 
   const policy1 = new SecurityNetworkSecurityPolicy({
     meta: {
@@ -154,7 +158,7 @@ describe('fwlogsComponent', () => {
         ControllerService,
         UIConfigsService,
         AuthService,
-        TelemetryqueryService,
+        FwlogService,
         ConfirmationService,
         LogService,
         LogPublishersService,
@@ -188,8 +192,8 @@ describe('fwlogsComponent', () => {
     spyOn(securityService, 'WatchNetworkSecurityPolicy').and.returnValue(
       sgPolicyObserver
     );
-    const telemetryService = TestBed.get(TelemetryqueryService);
-    spyOn(telemetryService, 'PostFwlogs').and.returnValue(
+    const fwlogService = TestBed.get(FwlogService);
+    spyOn(fwlogService, 'PostGetLogs').and.returnValue(
       new BehaviorSubject({body: fwlog})
     );
 
@@ -208,7 +212,7 @@ describe('fwlogsComponent', () => {
 
     const overlay = fixture.debugElement.query(By.css('.fwlogs-ruletext'));
     const rulehashdiv = overlay.children[1].childNodes[2];
-    expect(rulehashdiv.nativeNode.textContent).toBe(fwlog.results[0].logs[0]['rule-id']);
+    expect(rulehashdiv.nativeNode.textContent).toBe(fwlog.items[0]['rule-id']);
     fixture.destroy();
     discardPeriodicTasks();
     flush();
@@ -217,8 +221,8 @@ describe('fwlogsComponent', () => {
  it('should map reporter from mac address to host name', fakeAsync(() => {
     TestingUtility.setAllPermissions();
     const clusterService = TestBed.get(ClusterService);
-    const telemetryService = TestBed.get(TelemetryqueryService);
-    spyOn(telemetryService, 'PostFwlogs').and.returnValue(
+    const fwlogService = TestBed.get(FwlogService);
+    spyOn(fwlogService, 'PostGetLogs').and.returnValue(
       new BehaviorSubject({body: fwlog})
     );
     spyOn(clusterService, 'WatchDistributedServiceCard').and.returnValue(
@@ -249,8 +253,8 @@ describe('fwlogsComponent', () => {
     expect(tableBody).toBeTruthy();
 
     TestingUtility.verifyTable(
-      fwlog.results[0].logs.map((l) => {
-        return new Telemetry_queryFwlog(l);
+      fwlog.items.map((l) => {
+        return new FwlogFwLog(l);
       }),
       component.cols, tableBody, {
       'reporter-id': (fieldElem: DebugElement, rowData: any, rowIndex: number) => {
@@ -258,12 +262,12 @@ describe('fwlogsComponent', () => {
           naple1.spec.id
         );
       },
-      'time': (fieldElem: DebugElement, rowData: any, rowIndex: number) => {
+      'meta.mod-time': (fieldElem: DebugElement, rowData: any, rowIndex: number) => {
         expect(fieldElem.nativeElement.textContent).toContain(
-         new PrettyDatePipe('en-US').transform(rowData.time, 'ns')
+         new PrettyDatePipe('en-US').transform(rowData.meta['mod-time'], 'ns')
         );
       },
-      'policy': (fieldElem: DebugElement, rowData: any, rowIndex: number) => {
+      'rule-id': (fieldElem: DebugElement, rowData: any, rowIndex: number) => {
         expect(fieldElem.nativeElement.textContent).toContain(
           policy1.meta.name
         );
@@ -326,8 +330,8 @@ describe('fwlogsComponent', () => {
       spyOn(securityService, 'WatchNetworkSecurityPolicy').and.returnValue(
         sgPolicyObserver
       );
-      const telemetryService = TestBed.get(TelemetryqueryService);
-      spyOn(telemetryService, 'PostFwlogs').and.returnValue(
+      const fwlogService = TestBed.get(FwlogService);
+      spyOn(fwlogService, 'PostGetLogs').and.returnValue(
         new BehaviorSubject({body: fwlog})
       );
 

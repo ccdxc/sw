@@ -104,10 +104,8 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
     this.controllerService.setToolbarData({
       buttons: buttons,
       breadcrumb: [
-        { label: 'Firewall Log Policies', url: Utility.getBaseUIUrl() + 'monitoring/fwlogpolicies' }
-        // restore when fwlogs page comes back
-        // { label: 'Firewall Logs', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs' },
-        // { label: 'Firewall Log Policies', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs/fwlogpolicies' }
+        { label: 'Firewall Logs', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs' },
+        { label: 'Firewall Log Policies', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs/fwlogpolicies' }
       ]
     });
   }

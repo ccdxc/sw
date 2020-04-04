@@ -211,16 +211,9 @@ export const sideNavMenu: SideNavItem[] = [
           cssClass: 'app-l-side-nav-monitoring-fwlogs'
         },
         featureGuard: Features.fwlogs,
-        roleGuard: UIRolePermissions.fwlogsquery_read,
+        roleGuard: UIRolePermissions.adminrole,
+        // roleGuard: UIRolePermissions.fwlogsquery_read,
         link: ['/monitoring', 'fwlogs']
-      },
-      {
-        label: 'Firewall Log Policies',
-        icon: {
-          cssClass: 'app-l-side-nav-monitoring-fwlogs'
-        },
-        roleGuard: UIRolePermissions.monitoringfwlogpolicy_read,
-        link: ['/monitoring', 'fwlogpolicies']
       }
     ]
   },

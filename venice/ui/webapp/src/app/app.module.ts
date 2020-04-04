@@ -43,6 +43,7 @@ import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { NetworkService} from '@app/services/generated/network.service';
 import { BrowserService } from '@app/services/generated/browser.service';
 import { OrchestrationService } from '@app/services/generated/orchestration.service';
+import { FwlogService } from '@app/services/generated/fwlog.service';
 
 // Pensando UI components
 import { AppRoutingModule } from '@app/app.routing';
@@ -185,6 +186,7 @@ import { LoginModule } from './components/login/login.module';
     NetworkService,
     BrowserService,
     OrchestrationService,
+    FwlogService,
 
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: HTTP_INTERCEPTORS, useClass: VeniceUIHttpInterceptor, multi: true },
