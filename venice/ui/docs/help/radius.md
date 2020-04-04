@@ -10,6 +10,6 @@ The toggle allows for enabling/disabling Radius authentication.
 <load-table group:auth obj:AuthRadiusDomain
             omit:servers, tag>
 | Server:Port   | &lt;IP address&gt;:&lt;Port&gt; of the RADIUS server  |
-| Server secret   | Secret is the shared secret between Venice and RADIUS server  |
+| Server secret   | Secret is the shared secret between PSM and RADIUS server  |
 <load-table group:auth obj:RadiusServer include:auth-method
             omitHeader:true>

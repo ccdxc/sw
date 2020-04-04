@@ -3,7 +3,7 @@ id: workload
 ---
 
 # Workload
-The "Workload" refers to the virtual machine that will be managed by Venice.  The workload is defined by the following attributes.
+The "Workload" refers to the virtual machine that will be managed by PSM.  The workload is defined by the following attributes.
 
 <load-table group:workload obj:ApiObjectMeta
             include:name >

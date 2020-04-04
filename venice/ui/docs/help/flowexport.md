@@ -3,7 +3,7 @@ id: flowexport
 ---
 ## Flow Export
 
-Venice allows to send specific flows to an external destination flow collector supporting IPFIX format.  Users can send the flows to multiple destination flow collectors.  To configure the flow export, the following are the configuration parameters.
+PSM allows to send specific flows to an external destination flow collector supporting IPFIX format.  Users can send the flows to multiple destination flow collectors.  To configure the flow export, the following are the configuration parameters.
 
 <load-table group:monitoring obj:ApiObjectMeta
             include:name >

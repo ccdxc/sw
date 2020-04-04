@@ -56,7 +56,7 @@ With the roles configuration, it is possible to create various types of roles th
 
 # Role configuration
 
-UI pages include mulitple objects. Venice administrator should configure roles.
+UI pages include mulitple objects. PSM administrator should configure roles.
 
 #### Cluster
 

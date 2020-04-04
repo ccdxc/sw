@@ -2,13 +2,13 @@
 <p><img src="/assets/generated/docs/help/images/system-upgrade.jpg" alt="System-Upgrade image" /></p>
 <p>Within the System Upgrade view, this allows the platform to be upgraded to a new software release.  The process is broken into 2 separate tasks.</p>
 <ul>
-<li>Rollout Images: This uploads the new firmware revision onto the Venice controllers</li>
-<li>Create Rollout: Create the upgrade "rollout" process to update the Venice controllers and DSCs adapters</li>
+<li>Rollout Images: This uploads the new firmware revision onto the PSM controllers</li>
+<li>Create Rollout: Create the upgrade "rollout" process to update the PSM controllers and DSCs adapters</li>
 </ul>
 <h2 id="rolloutimages">Rollout Images</h2>
 <h3 id="uploadimagefile">Upload Image File</h3>
 <ul>
-<li>Choose Venice image file (*.tar) </li>
+<li>Choose PSM image file (*.tar) </li>
 <li>Select "Upload" to start the process</li>
 </ul>
 <p>Note: This will take a few minutes for the upload to complete</p>
@@ -25,7 +25,7 @@
 <tbody>
 <tr>
 <td>What to upgrade</td>
-<td>DSCs Only, Venice Only or Both DSCs and Venice</td>
+<td>DSCs Only, PSM Only or Both DSCs and PSM</td>
 </tr>
 <tr>
 <td>Name of the rollout</td>
@@ -41,7 +41,7 @@
 </tr>
 <tr>
 <td>End Time</td>
-<td>specific end time. If not specified, Venice will run upgrade until completion</td>
+<td>specific end time. If not specified, PSM will run upgrade until completion</td>
 </tr>
 <tr>
 <td>Strategy</td>
@@ -61,7 +61,7 @@
 </tr>
 <tr>
 <td>Retry for failed DSCs</td>
-<td>If checked, Venice will retry upgrading DSCs up to 5 times before upgrade end time is reached. Requires Max Allowed DSC failures to be greater than 0.</td>
+<td>If checked, PSM will retry upgrading DSCs up to 5 times before upgrade end time is reached. Requires Max Allowed DSC failures to be greater than 0.</td>
 </tr>
 </tbody>
 </table>

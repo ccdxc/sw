@@ -4,7 +4,7 @@ id: alertsevents
 
 # Alerts and Events
 
-The alert and event logs discovers events of interest, that provide general information or information that are triggered by some critical event.  Venice allows the creation of customized alert and event policies to facilitate these specific events in the environment, that can be sent to an external syslog server.
+The alert and event logs discovers events of interest, that provide general information or information that are triggered by some critical event.  PSM allows the creation of customized alert and event policies to facilitate these specific events in the environment, that can be sent to an external syslog server.
 
 ## Alert Policies
 

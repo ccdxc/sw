@@ -3,7 +3,7 @@ id: mirrorsessions
 ---
 # Mirror Sessions
 
-Venice allows to send specific remote mirrored traffic to an external destination collector through ERSPAN format. Users can send the mirrored traffic to multiple collectors. To configure the mirror sessions, the following are the configuration parameters.
+PSM allows to send specific remote mirrored traffic to an external destination collector through ERSPAN format. Users can send the mirrored traffic to multiple collectors. To configure the mirror sessions, the following are the configuration parameters.
 
 
 <load-table group:monitoring obj:ApiObjectMeta

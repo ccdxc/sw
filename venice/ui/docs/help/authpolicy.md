@@ -3,7 +3,7 @@ id: authpolicy
 ---
 # Authentication Policy
 
-An authentication policy provides authentication to verify the identity of an entity (person or device) accessing Venice platform. The authentication is based on the user ID and password combination provided by the entity trying to gain access. 
+An authentication policy provides authentication to verify the identity of an entity (person or device) accessing PSM platform. The authentication is based on the user ID and password combination provided by the entity trying to gain access. 
 
 Authentication can be performed by
 
@@ -42,7 +42,7 @@ Once created, the toggle allows for enabling/disabling Radius authentication.
 <load-table group:auth obj:AuthRadiusDomain
             omit:servers, tag>
 | Server:Port   | &lt;IP address&gt;:&lt;Port&gt; of the RADIUS server  |
-| Server secret   | Secret is the shared secret between Venice and RADIUS server  |
+| Server secret   | Secret is the shared secret between PSM and RADIUS server  |
 <load-table group:auth obj:RadiusServer include:auth-method
             omitHeader:true>
 
