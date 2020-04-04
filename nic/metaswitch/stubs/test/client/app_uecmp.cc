@@ -27,6 +27,7 @@
 #include <gen/proto/cp_route.grpc.pb.h>
 #include <gen/proto/cp_test.grpc.pb.h>
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/interface_svc.hpp"
 
 /************************************************
 

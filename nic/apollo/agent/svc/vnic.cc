@@ -7,7 +7,7 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/vnic.hpp"
 #include "nic/apollo/agent/svc/vnic.hpp"
-#include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/vnic_svc.hpp"
 
 Status
 VnicSvcImpl::VnicCreate(ServerContext *context,

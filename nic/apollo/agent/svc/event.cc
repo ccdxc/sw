@@ -5,7 +5,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/eventmgr/eventmgr.hpp"
 #include "nic/apollo/agent/trace.hpp"
-#include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/event_svc.hpp"
 #include "nic/apollo/agent/svc/event.hpp"
 
 Status

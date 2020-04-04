@@ -7,6 +7,7 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/subnet.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/subnet_svc.hpp"
 #include "nic/apollo/agent/svc/subnet.hpp"
 #include "nic/apollo/agent/hooks.hpp"
 

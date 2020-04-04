@@ -39,6 +39,10 @@
 #include "nic/apollo/agent/svc/route_svc.hpp"
 #include "nic/apollo/agent/svc/mapping_svc.hpp"
 #include "nic/apollo/agent/svc/policy_svc.hpp"
+#include "nic/apollo/agent/svc/vnic_svc.hpp"
+#include "nic/apollo/agent/svc/vpc_svc.hpp"
+#include "nic/apollo/agent/svc/interface_svc.hpp"
+#include "nic/apollo/agent/svc/subnet_svc.hpp"
 
 using std::string;
 using grpc::Channel;
