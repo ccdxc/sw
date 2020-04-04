@@ -29,7 +29,7 @@ export class FirewallprofilesComponent  extends TablevieweditAbstract<ISecurityF
   isTabComponent = false;
   disableTableWhenRowExpanded = true;
   tableLoading: boolean = false;
-  exportFilename: string = 'DSC-firewall-profiles';
+  exportFilename: string = 'PSM-DSC-firewall-profiles';
   exportMap: CustomExportMap;
 
   dataObjects: ReadonlyArray<SecurityFirewallProfile> ;

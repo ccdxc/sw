@@ -317,7 +317,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
         this.labelMap['Node'] = Utility.getLabels(this.nodes as any[]);
         this.getMetrics();
       },
-      this.controllerService.webSocketErrorHandler('Failed to get Venice nodes')
+      this.controllerService.webSocketErrorHandler('Failed to get PSM nodes')
     );
     this.subscriptions.push(subscription);
   }

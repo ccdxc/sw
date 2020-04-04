@@ -28,7 +28,7 @@ export class RolloutUtil {
    *        update all naples
    *    }
    *
-   * Both Venice and DSC :
+   * Both PSM and DSC :
    *   "dscs-only": false,
    *    if (dsc-must-match-constraint== true) {
    *         Naples listed in [order-constraints] will be updated
@@ -36,7 +36,7 @@ export class RolloutUtil {
    *        update all naples
    *    }
    *
-   * Venice-only :
+   * PSM-only :
    *   "dscs-only": false,
    *   "order-constraints": [],
    *   "dsc-must-match-constraint": true,

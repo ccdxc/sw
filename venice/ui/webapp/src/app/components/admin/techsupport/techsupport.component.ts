@@ -50,7 +50,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     { field: 'status.status', header: 'Status', class: ' techsupportrequests-column-status_status', sortable: true, width: 15 }
   ];
 
-  exportFilename: string = 'Venice-tech-support-requests';
+  exportFilename: string = 'PSM-tech-support-requests';
   exportMap: CustomExportMap = {};
 
   isTabComponent = false;

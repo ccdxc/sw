@@ -30,7 +30,7 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
 
   isTabComponent: boolean;
   disableTableWhenRowExpanded: boolean;
-  exportFilename: string;
+  exportFilename: string = 'PSM-alerts';
 
   // If provided, will only show alerts and events
   // where the source node matches

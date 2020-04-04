@@ -92,7 +92,7 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
     { field: 'meta.labels', header: 'Labels', class: '', sortable: true, width: 7 }
   ];
 
-  exportFilename: string = 'Venice-networkinterfaces';
+  exportFilename: string = 'PSM-networkinterfaces';
   exportMap: CustomExportMap = {};
 
   isTabComponent = false;

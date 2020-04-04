@@ -49,7 +49,7 @@ export class FwlogsComponent extends TableviewAbstract<IFwlogFwLog, FwlogFwLog> 
 
   actionOptions = Utility.convertEnumToSelectItem(FwlogFwLogQuery_actions);
 
-  exportFilename: string = 'Venice-fwlogs';
+  exportFilename: string = 'PSM-fwlogs';
   startingSortField: string = 'time';
   startingSortOrder: number = -1;
 

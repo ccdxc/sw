@@ -74,7 +74,7 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
     { field: 'status.size', header: 'File Size', class: ' snapshots-column-filesize', sortable: true, width: 15 }
   ];
 
-  exportFilename: string = 'Venice-configuration-snapshots';
+  exportFilename: string = 'PSM-configuration-snapshots';
 
   isTabComponent = false;
   disableTableWhenRowExpanded = true;

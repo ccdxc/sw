@@ -134,3 +134,8 @@
     height: inherit;
   }
 }
+
+/* Make rollout view-reason dialog box not getting out of screen */
+.pensUI-app.RolloutstatusComponent .ui-dialog-content.ui-widget-content {
+  max-height: 500px;
+}

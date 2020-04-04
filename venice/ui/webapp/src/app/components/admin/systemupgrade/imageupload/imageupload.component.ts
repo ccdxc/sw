@@ -80,7 +80,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     { field: 'meta.mod-time', header: 'Time', class: 'imageupload-column-common imageupload-column-date', sortable: true, width: 20 },
   ];
 
-  exportFilename: string = 'Venice-images';
+  exportFilename: string = 'PSM-images';
 
   rolloutsEventUtility: HttpEventUtility<RolloutRollout>;
   rollouts: ReadonlyArray<RolloutRollout>;
@@ -236,7 +236,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     xhr.setRequestHeader(headerName, token);
     this._uploadCancelled = false;
     this.showUploadButton = false;
-    this.controllerService.invokeInfoToaster('Upload', 'File upload started.  Please do not leave Venice site');
+    this.controllerService.invokeInfoToaster('Upload', 'File upload started.  Please do not leave PSM site');
   }
   /**
    * This API serves html template
@@ -384,7 +384,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     if (this.isFileUploadInProgress() && this.uploadInForeground) {
       //  When user leaves upload image page, we don't cancel upload (//this.cancelUpload()), instead we put upload process in background.
       BackgroundProcessManager.getInstance().registerVeniceImageFileUpload(this._xhr, this.uploadingFiles);
-      this.controllerService.invokeInfoToaster('Upload', 'File upload will be running in background.  Please do not leave Venice site');
+      this.controllerService.invokeInfoToaster('Upload', 'File upload will be running in background.  Please do not leave PSM site');
     }
     super.ngOnDestroy();
   }

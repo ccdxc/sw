@@ -67,7 +67,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
     {field: 'status.state', header: 'State', class: '', sortable: true, width: 20},
   ];
 
-  exportFilename: string = 'Venice-rollouts';
+  exportFilename: string = 'PSM-rollouts';
 
   tabIndex: number = 0;
 

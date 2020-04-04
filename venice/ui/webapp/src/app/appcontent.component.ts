@@ -203,8 +203,8 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     } else {
       this.isScreenBlocked = true;
       this._controllerService.invokeConfirm({
-        header: 'Venice Unavailable',
-        message: 'A rollout is in progress. Venice is temporarily unavailable.',
+        header: 'PSM Unavailable',
+        message: 'A rollout is in progress. PSM is temporarily unavailable.',
         acceptVisible: true,
         rejectVisible: false,
         accept: () => {
@@ -648,14 +648,14 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
         if (!this.currentRollout.status['dscs-status'] || this.currentRollout.status['dscs-status'].length === 0) {
           msg = 'Rollout is completed';
         } else {
-          msg = 'Venice rollout is completed. DSC upgrades are still in progress.';
+          msg = 'PSM rollout is completed. DSC upgrades are still in progress.';
         }
         isRolloutSucceeded = true;
       } else if (this.currentRollout.status.state === RolloutRolloutStatus_state.failure) {
         msg = 'Rollout failed';
       } else if (Utility.isEmpty(this.versionArray[0].status['rollout-build-version1']) && this.currentRollout.status.state === RolloutRolloutStatus_state.progressing) {
         // Per VS-932, rollout venice part is done, DSC upgrades are in progress. We consider rollout is successful.
-        msg = 'Venice rollout is completed. DSC upgrades are still in progress.';
+        msg = 'PSM rollout is completed. DSC upgrades are still in progress.';
         isRolloutSucceeded = true;
       } else {
         msg = 'Rollout status ' + this.currentRollout.status.state;
@@ -663,9 +663,9 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
       this.currentRollout = null;
       Utility.getInstance().setCurrentRollout(null);
       if (isRolloutSucceeded === true) {
-        this._controllerService.invokeInfoToaster('Rollout', msg + ' You will be logged out in 5 seconds. Please refresh browser.');
+        this._controllerService.invokeInfoToaster('Rollout', msg + ' You will be logged out in 5 seconds. Please do a hard refresh on all open browsers to reload updated data from the server.');
         setTimeout(() => {
-          this._controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'Venice Rollout succeeded' });
+          this._controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'PSM Rollout succeeded' });
         }, 5000);
       } else {
         this._controllerService.invokeInfoToaster('Rollout', msg + ' Page will reload in 5 seconds.');

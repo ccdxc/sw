@@ -22,7 +22,7 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
   isTabComponent: boolean = false;
   disableTableWhenRowExpanded: boolean = true;
   dataObjects: ReadonlyArray<SecurityNetworkSecurityPolicy> = [];
-  exportFilename: string = 'Venice-sgpolicies';
+  exportFilename: string = 'PSM-sgpolicies';
   exportMap: CustomExportMap = {};
 
   // Currently venice supports only one security policy.

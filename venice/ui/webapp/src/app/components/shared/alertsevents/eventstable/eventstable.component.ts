@@ -38,7 +38,7 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
 
   isTabComponent: boolean = false;
   disableTableWhenRowExpanded: boolean = false;
-  exportFilename: string;
+  exportFilename: string = 'PSM-securityapp';
 
   // Used as the key for uniquely identifying poll requests.
   // If there are going to be two of these components alive at the same time,

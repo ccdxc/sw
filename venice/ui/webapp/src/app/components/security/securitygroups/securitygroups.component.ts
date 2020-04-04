@@ -47,7 +47,7 @@ export class SecuritygroupsComponent extends TablevieweditAbstract<ISecuritySecu
 
   subscriptions: Subscription[] = [];
   dataObjects: ReadonlyArray<SecuritySecurityGroup>;
-  exportFilename: string = 'Venice-securitygroups';
+  exportFilename: string = 'PSM-securitygroups';
   exportMap: CustomExportMap = {};
 
   // It is important to set values.

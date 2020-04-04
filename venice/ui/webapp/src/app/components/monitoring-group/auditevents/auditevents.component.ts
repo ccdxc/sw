@@ -53,7 +53,7 @@ export class AuditeventsComponent extends TablevieweditAbstract<IAuditAuditEvent
   fieldFormArray = new FormArray([]);
   currentSearchCriteria: string = '';
 
-  exportFilename: string = 'Venice-auditevents';
+  exportFilename: string = 'PSM-auditevents';
   numRows: number = 50;
 
   maxRecords: number = 4000; // AuditEvent query size may cause problem in backend, reduce it to 4000.

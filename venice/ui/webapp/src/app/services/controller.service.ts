@@ -518,7 +518,7 @@ export class ControllerService {
     }
     // Don't know what the error is, websockets can come to here.
     // console.error('controller.service.invokeRESTErrorToaster() \n' + JSON.stringify(error)); // VS-478 display error.
-    let msg = 'Your credentials are expired/insufficient or Venice is temporarily unavailable. Please reload browser and sign in again or contact system administrator.';
+    let msg = 'Your credentials are expired/insufficient or PSM is temporarily unavailable. Please reload browser and sign in again or contact system administrator.';
     if (error.statusCode === 0) {
       // VS-872. After browser idle for some time. Browser refuses to execute inline script because it violates the following content security policy directive...
       // This is due to cert and content-security-policy issue. We advice user to clear broswer cache. (It is conner case and is likely to occur in sys-test.)

@@ -828,7 +828,7 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
    * This API is for inline edit [SAVE] button
    */
   computeInlineButtonClass() {
-    if (this.newObject.$formGroup.dirty  && this.isFormValid()  ) {  // don't disable [SAVE] button
+    if (this.isFormValid()  ) {  // don't disable [SAVE] button
       return '';
     } else {  // disable [SAVE] button
       return 'global-button-disabled';

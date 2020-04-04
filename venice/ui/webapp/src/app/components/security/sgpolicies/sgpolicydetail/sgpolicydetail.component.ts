@@ -199,7 +199,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
   disableTableWhenRowExpanded: boolean = true;
   isTabComponent: boolean = false;
 
-  exportFilename: string = 'Venice-sgpolicy';
+  exportFilename: string = 'PSM-sgpolicy';
 
   /** Define exportMap for table export.  Basicially, it is following how displayColumn() **/
   exportMap: CustomExportMap = {

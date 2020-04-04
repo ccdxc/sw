@@ -124,7 +124,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   disableTableWhenRowExpanded: boolean = true;
   dataObjects: ReadonlyArray<WorkloadWorkload> = [];
   dataObjectsBackUp: ReadonlyArray<WorkloadWorkload> = null;
-  exportFilename: string = 'Venice-workloads';
+  exportFilename: string = 'PSM-workloads';
   exportMap: CustomExportMap = {};
 
   naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;

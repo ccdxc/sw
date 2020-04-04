@@ -47,7 +47,7 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
     matIcon: 'computer'
   };
 
-  exportFilename: string = 'Venice-vcenter-integrations';
+  exportFilename: string = 'PSM-vcenter-integrations';
 
   exportMap: CustomExportMap = {
     'workloads': (opts): string => {

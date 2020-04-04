@@ -52,7 +52,7 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
 
   isTabComponent: boolean = false;
   disableTableWhenRowExpanded: boolean = true; // this make toolbar button disabled when record is in edit-mode.
-  exportFilename: string = 'Venice-DSC-Profiles';
+  exportFilename: string = 'PSM-DSC-Profiles';
   exportMap: CustomExportMap = {};
   tableLoading: boolean = false;
 

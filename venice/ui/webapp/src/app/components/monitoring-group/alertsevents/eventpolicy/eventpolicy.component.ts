@@ -49,7 +49,7 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
     { field: 'spec.targets', header: 'Targets', class: 'eventpolicy-column-targets', sortable: false, width: 65 },
   ];
 
-  exportFilename: string = 'Venice-event-policies';
+  exportFilename: string = 'PSM-event-policies';
   exportMap: CustomExportMap = {};
 
   isTabComponent = false;

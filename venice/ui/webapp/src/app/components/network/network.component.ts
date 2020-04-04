@@ -39,7 +39,7 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
     matIcon: 'computer'
   };
 
-  exportFilename: string = 'Venice-networks';
+  exportFilename: string = 'PSM-networks';
 
   exportMap: CustomExportMap = {};
 

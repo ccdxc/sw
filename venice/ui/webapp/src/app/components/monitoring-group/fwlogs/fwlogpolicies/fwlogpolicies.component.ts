@@ -57,7 +57,7 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
   arrayDiffers: IterableDiffer<any>;
 
 
-  exportFilename: string = 'Venice-fwlog-policies';
+  exportFilename: string = 'PSM-fwlog-policies';
   exportMap: CustomExportMap = {
     'meta.name': (opts): string => {
       return opts.data.meta.name;

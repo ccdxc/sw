@@ -44,7 +44,7 @@ export class DestinationpolicyComponent extends TablevieweditAbstract<IMonitorin
     // { field: 'spec.snmp-trap-servers', header: 'SNMP TRAP Servers', class: 'destinationpolicy-column-snmp_trap_servers', sortable: false },
   ];
 
-  exportFilename: string = 'Venice-alert-destinations';
+  exportFilename: string = 'PSM-alert-destinations';
   exportMap: CustomExportMap = {};
 
   constructor(protected controllerService: ControllerService,

@@ -42,7 +42,7 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
   disableTableWhenRowExpanded = true;
   subscriptions: Subscription[] = [];
   isTabComponent = false;
-  exportFilename: string = 'Apps';
+  exportFilename: string = 'PSM-Apps';
   exportMap: CustomExportMap = {
     'spec.alg.type': (opts): string => {
       return opts.data.spec;

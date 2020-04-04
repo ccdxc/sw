@@ -59,7 +59,7 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
     // { field: 'status.oper-state', header: 'OP Status', sortable: true, width: '175px' }
   ];
 
-  exportFilename: string = 'Venice-mirrorsessons';
+  exportFilename: string = 'PSM-mirrorsessons';
 
   isTabComponent = false;
   disableTableWhenRowExpanded = true;

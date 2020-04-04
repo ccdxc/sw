@@ -119,7 +119,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   advSearchCols: TableCol[] = [];
   fieldFormArray = new FormArray([]);
 
-  exportFilename: string = 'Venice-hosts';
+  exportFilename: string = 'PSM-hosts';
 
   exportMap: CustomExportMap = {
     'workloads': (opts): string => {

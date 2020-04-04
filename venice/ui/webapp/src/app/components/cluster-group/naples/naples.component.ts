@@ -187,7 +187,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   cancelSearch: boolean = false;
 
   disableTableWhenRowExpanded: boolean = false;
-  exportFilename: string = 'Venice-DistributedServiceCards';
+  exportFilename: string = 'PSM-DistributedServiceCards';
 
   workloadList: WorkloadWorkload[] = [];
   searchDSCsCount: number = 0;
@@ -424,7 +424,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
           } else {
             this.hasDSC = false;
             this.tableLoading = false;
-            this.controllerService.invokeInfoToaster('Information', 'There is no DSC record found in Venice');
+            this.controllerService.invokeInfoToaster('Information', 'There is no DSC record found in PSM');
           }
           this.invokeWatch();
         }

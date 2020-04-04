@@ -39,7 +39,7 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
     { field: 'spec.exports', header: 'Targets', class: 'flowexportpolicy-column-targets', sortable: false, width: 40 },
   ];
 
-  exportFilename: string = 'Venice-flow-export-policies';
+  exportFilename: string = 'PSM-flow-export-policies';
   exportMap: CustomExportMap = {};
   isTabComponent = false;
   disableTableWhenRowExpanded = true;

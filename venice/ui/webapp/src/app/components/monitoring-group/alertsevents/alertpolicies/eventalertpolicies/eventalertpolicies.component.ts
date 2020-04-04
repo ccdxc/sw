@@ -43,7 +43,7 @@ export class EventalertpolicyComponent extends TablevieweditAbstract<IMonitoring
     { field: 'status.acknowledged-alerts', header: 'Acknowledged', class: 'eventalertpolicies-column-acknowledgedalerts', sortable: false, width: 15 }
   ];
 
-  exportFilename: string = 'Venice-event-alert-policies';
+  exportFilename: string = 'PSM-event-alert-policies';
 
   isTabComponent = true;
   exportMap: CustomExportMap = {};

@@ -53,7 +53,7 @@ export class ArchivelogComponent extends TablevieweditAbstract<IMonitoringArchiv
     { field: 'status.status', header: 'Status', class: 'archiverequests-column-status_status', sortable: true, width: 15 }
   ];
 
-  exportFilename: string = 'Venice-archive-logs-requests';
+  exportFilename: string = 'PSM-archive-logs-requests';
   exportMap: CustomExportMap = {};
 
   isTabComponent = false;

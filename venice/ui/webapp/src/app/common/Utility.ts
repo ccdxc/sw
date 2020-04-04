@@ -82,7 +82,7 @@ export class Utility {
   public static CREATE_SUCCESS_SUMMARY = 'Create Successful';
   public static DELETE_SUCCESS_SUMMARY = 'Delete Successful';
   public static CANCEL_SUCCESS_SUMMARY = 'Cancel Successful';
-  public static VENICE_CONNECT_FAILURE_SUMMARY = 'Failed to connect to Venice';
+  public static VENICE_CONNECT_FAILURE_SUMMARY = 'Failed to connect to PSM';
   public static ROLLOUT_IMGAGE_NAMESPACE = 'images';
   // In RBAC, when kind is ['AuditEvent', 'FwlogsQuery', 'Event'] , there is no group
   public static KINDS_WITHOUT_GROUP = ['AuditEvent', 'FwlogsQuery', 'Event'];
@@ -2324,8 +2324,8 @@ export class Utility {
   }
 
   /**
-   * If return true, it means Venice is a cloud deployment
-   * Otherwise, Venice is an enterprise deployment
+   * If return true, it means PSM is a cloud deployment
+   * Otherwise, PSM is an enterprise deployment
    *
    *  2020-04-03
    *  License object is not created unless it's in cloud mode. If the object is missing, Venice assumes default features.
