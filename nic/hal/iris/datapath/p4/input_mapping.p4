@@ -320,11 +320,17 @@ action input_properties_mac_vlan(vrf, dir, mdest_flow_miss_action,
                                  tunnel_rewrite_index, tunnel_vnid,
                                  tunnel_originate, mirror_on_drop_en,
                                  mirror_on_drop_session_id, skip_flow_update,
-                                 ep_learn_en) {
+                                 ep_learn_en, clear_ingresss_mirror) {
     adjust_lkp_fields();
     modify_field(control_metadata.src_lif, capri_intrinsic.lif);
 
     // if table is a miss, return. do not perform rest of the actions.
+
+    modify_field(control_metadata.clear_ingresss_mirror, clear_ingresss_mirror);
+    if (clear_ingresss_mirror == TRUE) {
+        // For loop back packets from network
+        // return
+    }
 
     modify_field(control_metadata.skip_flow_update, skip_flow_update);
     if (skip_flow_update == TRUE) {

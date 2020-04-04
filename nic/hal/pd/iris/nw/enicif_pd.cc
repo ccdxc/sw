@@ -905,6 +905,12 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
                                                   NULL, NULL, NULL, NULL,
                                                   TABLE_OPER_INSERT);
         }
+
+        // For inband enics, program erspan hairpin entry
+        if (lif && lif->type == types::LIF_TYPE_MNIC_INBAND_MANAGEMENT) {
+            ret = pd_enicif_inb_pgm_inp_prop_mac_vlan_tbl(pd_enicif,
+                                                          TABLE_OPER_INSERT);
+        }
     }
 
 end:
@@ -2016,6 +2022,74 @@ pd_if_inp_mac_vlan_pgm(pd_func_args_t *pd_func_args)
 }
 
 #define inp_prop_mac_vlan_data data.action_u.input_properties_mac_vlan_input_properties_mac_vlan
+hal_ret_t
+pd_enicif_inb_pgm_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif,
+                                         table_oper_t oper)
+{
+    hal_ret_t                                   ret = HAL_RET_OK;
+    sdk_ret_t                                   sdk_ret;
+    input_properties_mac_vlan_swkey_t           key;
+    input_properties_mac_vlan_swkey_mask_t      mask;
+    input_properties_mac_vlan_actiondata_t      data;
+    tcam                                        *inp_prop_mac_vlan_tbl = NULL;
+    if_t                                        *hal_if = (if_t *)pd_enicif->pi_if;
+    lif_t                                       *lif = NULL;
+
+    inp_prop_mac_vlan_tbl = g_hal_state_pd->tcam_table(
+                            P4TBL_ID_INPUT_PROPERTIES_MAC_VLAN);
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    lif = if_get_lif(hal_if);
+
+    memcpy(key.ethernet_srcAddr, lif->mac_addr, 6);
+    memrev(key.ethernet_srcAddr, 6);
+    memset(mask.ethernet_srcAddr_mask, ~0, sizeof(mask.ethernet_srcAddr_mask));
+
+    key.control_metadata_uplink = 1;
+    mask.control_metadata_uplink_mask = ~(mask.control_metadata_uplink_mask & 0);
+
+    key.entry_inactive_input_mac_vlan = 0;
+    mask.entry_inactive_input_mac_vlan_mask = 0x1;
+
+    inp_prop_mac_vlan_data.clear_ingresss_mirror = 1;
+
+    if (oper == TABLE_OPER_INSERT) {
+        sdk_ret = inp_prop_mac_vlan_tbl->insert(&key, &mask, &data, 
+                                                &pd_enicif->inp_prop_mac_vlan_idx_upl);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to program inp prop mac vlan "
+                          "entry(erspan hairpin). ret:{}", ret);
+            goto end;
+        } else {
+            HAL_TRACE_DEBUG("programmed inp prop mac vlan "
+                            "entry (erspan hairpin) at: {}", 
+                            pd_enicif->inp_prop_mac_vlan_idx_upl);
+        }
+    } else {
+        // delete
+        if (pd_enicif->inp_prop_mac_vlan_idx_upl != INVALID_INDEXER_INDEX) {
+            sdk_ret = inp_prop_mac_vlan_tbl->remove(pd_enicif->inp_prop_mac_vlan_idx_upl);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("unable to deprogram inp mac vlan tablei (erspan hairpin) "
+                              "at: {}", pd_enicif->inp_prop_mac_vlan_idx_upl);
+                goto end;
+            } else {
+                HAL_TRACE_DEBUG("deprogrammed inp mac vlan table (erspan hairpin) at:{} ", 
+                                pd_enicif->inp_prop_mac_vlan_idx_upl);
+                pd_enicif->inp_prop_mac_vlan_idx_upl = INVALID_INDEXER_INDEX;
+            }
+        }
+    }
+
+end:
+    return ret;
+}
+
+
 hal_ret_t
 pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
                                     pd_if_update_args_t *args,

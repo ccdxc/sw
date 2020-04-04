@@ -1352,6 +1352,7 @@ devapi_lif::populate_req(LifRequestMsg &req_msg,
     req->set_admin_status((::intf::IfStatus)lif_info->lif_state);
     req->set_enable_rdma(lif_info->enable_rdma);
     req->set_rdma_sniff_en(lif_info->rdma_sniff);
+    req->set_mac_address(MAC_TO_UINT64(lif_info->mac));
     // NCSI bcast & mcast filters
     req->mutable_bcast_pkt_filter()->set_arp(lif_info->bcast_filter.arp);
     req->mutable_bcast_pkt_filter()->set_dhcp_client(lif_info->bcast_filter.dhcp_client);

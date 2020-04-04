@@ -87,6 +87,8 @@ ingress_tx_stats_no_repl:
     phvwr.c2    p.capri_intrinsic_tm_replicate_en, 0
 
 ingress_tx_stats_frag:
+    seq         c1, k.control_metadata_clear_ingresss_mirror, TRUE
+    phvwr.c1    p.capri_intrinsic_tm_span_session, 0
     or          r1, r0, k.control_metadata_uplink, P4_I2E_FLAGS_UPLINK
     or          r1, r1, k.l3_metadata_ip_frag, P4_I2E_FLAGS_IP_FRAGMENT
     phvwrm      p.control_metadata_i2e_flags, r1, \

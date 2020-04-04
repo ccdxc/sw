@@ -195,6 +195,8 @@ bool pd_enicif_has_lif(if_t *hal_if, pd_if_update_args_t *if_args);
 hal_ret_t pd_enicif_update_num_prom(pd_enicif_t *pd_enicif,
                                     dllist_ctxt_t *add_l2seg_list,
                                     dllist_ctxt_t *del_l2seg_list);
+hal_ret_t pd_enicif_inb_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
+                                                  table_oper_t oper);
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_PD_ENICIF_HPP__

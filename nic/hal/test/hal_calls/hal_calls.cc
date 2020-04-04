@@ -226,6 +226,7 @@ create_lif(uint32_t lif_id, uint32_t if_id, types::LifType type, string name,
     hal_ret_t ret;
     LifSpec spec;
     LifResponse rsp;
+    static uint64_t mac = 0x00AB00000001;
 
     spec.mutable_key_or_handle()->set_lif_id(lif_id);
     spec.set_type(type);
@@ -238,9 +239,12 @@ create_lif(uint32_t lif_id, uint32_t if_id, types::LifType type, string name,
     spec.set_vlan_strip_en(vlan_strip);
     spec.set_vlan_insert_en(vlan_ins);
     spec.set_is_management(is_oob || is_int);
+    spec.set_mac_address(mac);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(spec, &rsp, NULL);
     hal::hal_cfg_db_close();
+
+    mac++;
     return ret;
 }
 

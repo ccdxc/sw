@@ -774,7 +774,7 @@ micro_seg_status_update(MicroSegSpec &req,
 }
 
 #define IS_MODE(fwd_mode, fwd_mode_val, policy_mode, policy_mode_val) \
-    (fwd_mode == fwd_mode_val) && (policy_mode == policy_mode_val)
+    ((fwd_mode == fwd_mode_val) && (policy_mode == policy_mode_val))
 
 /*
  * Handle system mode changes (fwd & policy)

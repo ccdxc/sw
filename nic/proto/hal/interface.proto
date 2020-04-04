@@ -178,8 +178,9 @@ message LifSpec {
   BcastPktFilter                     bcast_pkt_filter            = 30;
   McastPktFilter                     mcast_pkt_filter            = 31;
   bool                               rx_en                       = 32;   // SWM: Applicable only for SWM LIFs
-  repeated kh.MirrorSessionKeyHandle TxMirrorSessions            = 33 [(gogoproto.moretags) = "venice:ref"]; // Tx MirrorSessions
-  repeated kh.MirrorSessionKeyHandle RxMirrorSessions            = 34 [(gogoproto.moretags) = "venice:ref"]; // Rx MirrorSessions
+  fixed64                            mac_address                 = 33;   // LIF's mac
+  repeated kh.MirrorSessionKeyHandle TxMirrorSessions            = 34 [(gogoproto.moretags) = "venice:ref"]; // Tx MirrorSessions
+  repeated kh.MirrorSessionKeyHandle RxMirrorSessions            = 35 [(gogoproto.moretags) = "venice:ref"]; // Rx MirrorSessions
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs

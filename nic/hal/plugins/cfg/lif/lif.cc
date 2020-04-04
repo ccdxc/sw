@@ -51,6 +51,7 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     spec->set_nvme_max_ns(lif->nvme_max_ns);
     spec->set_nvme_max_sess(lif->nvme_max_sess);
     spec->set_rdma_sniff_en(lif->rdma_sniff_en);
+    spec->set_mac_address(MAC_TO_UINT64(lif->mac_addr));
 
     spec->set_vlan_strip_en(lif->vlan_strip_en);
     spec->set_vlan_insert_en(lif->vlan_insert_en);
@@ -1170,6 +1171,10 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->enable_nvme = spec.enable_nvme();
     lif->nvme_max_ns = spec.nvme_max_ns();
     lif->nvme_max_sess = spec.nvme_max_sess();
+    MAC_UINT64_TO_ADDR(lif->mac_addr,
+                       spec.mac_address());
+
+    HAL_TRACE_DEBUG("lif mac : {}", macaddr2str(lif->mac_addr));
 
     if (spec.has_rx_policer()) {
         qos_policer_update_from_spec(spec.rx_policer(), &lif->qos_info.rx_policer);

@@ -149,6 +149,12 @@ TEST_F(ep_mgmt_merge_classic_test, test1)
     // Delete enic
     ASSERT_EQ(delete_enic(enic_oob), HAL_RET_OK);
 
+    // Delete enics
+    ASSERT_EQ(delete_enic(enic_inb1), HAL_RET_OK);
+
+    ASSERT_EQ(create_enic(enic_inb1, inb_lifid1, intf::IF_ENIC_TYPE_CLASSIC,
+                          0, 0, l2seg_id_cl_up1), HAL_RET_OK);
+
     // Create enic back
     ASSERT_EQ(create_enic(enic_oob, oob_lifid, intf::IF_ENIC_TYPE_CLASSIC,
                           0, 0, l2seg_id_cl_up3), HAL_RET_OK);
@@ -192,6 +198,7 @@ TEST_F(ep_mgmt_merge_classic_test, test1)
                            l2segment::MulticastFwdPolicy::MULTICAST_FWD_POLICY_FLOOD,
                            l2segment::BroadcastFwdPolicy::BROADCAST_FWD_POLICY_FLOOD,
                            false, false), HAL_RET_OK);
+
 
 #if 0
     // Create customer VRF

@@ -128,6 +128,7 @@ create_lif(uint32_t lif_id, uint32_t if_id)
     hal_ret_t ret;
     LifSpec spec;
     LifResponse rsp;
+    static uint64_t mac = 0x00AB00000001;
 
     spec.mutable_key_or_handle()->set_lif_id(lif_id);
     spec.set_type(types::LIF_TYPE_HOST);
@@ -137,6 +138,7 @@ create_lif(uint32_t lif_id, uint32_t if_id)
     ret = hal::lif_create(spec, &rsp, NULL);
     ASSERT_TRUE(ret == HAL_RET_OK);
     hal::hal_cfg_db_close();
+    mac++;
 }
 
 void

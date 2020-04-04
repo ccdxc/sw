@@ -121,6 +121,7 @@ typedef struct lif_s {
     uint32_t            qcount;
     bool                qstate_pgm_in_hal;
     bool                rx_en;           // Applicable only for swm lif
+    mac_addr_t          mac_addr;
 
     // operational state of interface
     hal_handle_t        hal_handle;      // HAL allocated handle

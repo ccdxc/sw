@@ -30,16 +30,22 @@ input_properties_mac_vlan:
 
     // if table lookup is miss, return
     nop.!c1.e
-    phvwr         p.capri_p4_intrinsic_packet_len, r1
+    phvwr           p.capri_p4_intrinsic_packet_len, r1
 
-    // if skip_flow_update, return
-    seq             c1, d.input_properties_mac_vlan_d.skip_flow_update, TRUE
-    phvwr.c1.e      p.control_metadata_skip_flow_update, \
+    // clear mirror, return
+	seq             c1, d.input_properties_mac_vlan_d.clear_ingresss_mirror, TRUE
+	phvwr.c1.e      p.control_metadata_clear_ingresss_mirror, \
+	                    d.input_properties_mac_vlan_d.clear_ingresss_mirror    
+    // skip_flow_update, return
+    seq             c2, d.input_properties_mac_vlan_d.skip_flow_update, TRUE
+    phvwr.c2.e      p.control_metadata_skip_flow_update, \
                         d.input_properties_mac_vlan_d.skip_flow_update
-    phvwr.!c1       p.flow_miss_metadata_tunnel_originate, \
+    phvwr.!c2       p.flow_miss_metadata_tunnel_originate, \
                         d.input_properties_mac_vlan_d.tunnel_originate
     phvwr           p.control_metadata_ep_learn_en, \
                         d.input_properties_mac_vlan_d.ep_learn_en
+    phvwr           p.control_metadata_clear_ingresss_mirror, \
+                        d.input_properties_mac_vlan_d.clear_ingresss_mirror
 
     // input_properties call
     or              r1, d.input_properties_mac_vlan_d.src_lport, \

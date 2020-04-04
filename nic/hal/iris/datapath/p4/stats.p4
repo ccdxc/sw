@@ -85,6 +85,10 @@ action ingress_tx_stats(ucast_bytes, ucast_pkts, mcast_bytes, mcast_pkts,
         }
     }
 
+    if (control_metadata.clear_ingresss_mirror == TRUE) {
+        modify_field(capri_intrinsic.tm_span_session, 0);
+    }
+
     modify_field(control_metadata.i2e_flags,
 		 control_metadata.uplink << P4_I2E_FLAGS_UPLINK,
                  (1 << P4_I2E_FLAGS_UPLINK));
