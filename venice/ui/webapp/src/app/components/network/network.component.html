@@ -38,8 +38,8 @@
 </ng-template>
 
 <ng-template #createTemplate>
-  <app-newnetwork (formClose)="creationFormClose()" fxFlex="none"
-                  [existingObjects]='dataObjects'>
+  <app-newnetwork (formClose)="creationFormClose()" fxFlex="none" [vcenters]="vcenters"
+                  [existingObjects]='dataObjects' [vcenterOptions]='vcenterOptions'>
   </app-newnetwork>
 </ng-template>
 
@@ -74,6 +74,7 @@
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
   <app-newnetwork [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
-                  (formClose)="closeRowExpand()" fxFlex="none">
+                  (formClose)="closeRowExpand()" fxFlex="none"
+                  [vcenters]="vcenters" [vcenterOptions]='vcenterOptions'>
   </app-newnetwork>
 </ng-template>

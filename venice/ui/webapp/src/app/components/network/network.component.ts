@@ -7,11 +7,13 @@ import { CustomExportMap, TableCol } from '@app/components/shared/tableviewedit'
 import { Subscription, Observable } from 'rxjs';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { NetworkService } from '@app/services/generated/network.service';
+import { OrchestrationService } from '@app/services/generated/orchestration.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ControllerService } from '@app/services/controller.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { Utility } from '@app/common/Utility';
-
+import { OrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
+import { SelectItem } from 'primeng/api';
 
 @Component({
   selector: 'app-network',
@@ -43,6 +45,9 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
 
   exportMap: CustomExportMap = {};
 
+  vcenters: ReadonlyArray<OrchestrationOrchestrator> = [];
+  vcenterOptions: SelectItem[] = [];
+
   subscriptions: Subscription[] = [];
   dataObjects: ReadonlyArray<NetworkNetwork>;
   networkEventUtility: HttpEventUtility<NetworkNetwork>;
@@ -64,22 +69,40 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
   constructor(private networkService: NetworkService,
     protected cdr: ChangeDetectorRef,
     protected uiconfigsService: UIConfigsService,
+    protected orchestrationService: OrchestrationService,
     protected controllerService: ControllerService) {
     super(controllerService, cdr, uiconfigsService);
   }
 
   getNetworks() {
-    this.networkEventUtility = new HttpEventUtility<NetworkNetwork>(NetworkNetwork);
-    this.dataObjects = this.networkEventUtility.array;
-    const sub = this.networkService.WatchNetwork().subscribe(
-      response => {
-        const data = this.networkEventUtility.processEvents(response);
-        this.dataObjects = data.filter((network: NetworkNetwork) => {
-          return network && network.spec && network.spec.orchestrators &&
-              network.spec.orchestrators.length > 0;
-        });
+    const hostSubscription = this.networkService.ListNetworkWithWebsocketUpdate().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.dataObjects = response.data;
       },
       this.controllerService.webSocketErrorHandler('Failed to get networks')
+    );
+    this.subscriptions.push(hostSubscription);
+  }
+
+  getVcenterIntegrations() {
+    const sub = this.orchestrationService.ListOrchestratorsWithWebsocketUpdate().subscribe(
+      response => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.vcenters = response.data;
+        this.vcenterOptions = this.vcenters.map(vcenter => {
+          return {
+            label: vcenter.meta.name,
+            value: vcenter.meta.name
+          };
+        });
+        this.vcenterOptions.push({label: '', value: null});
+      },
+      this.controllerService.webSocketErrorHandler('Failed to get vCenter Integrations')
     );
     this.subscriptions.push(sub);
   }
@@ -109,6 +132,8 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
         return this.displayColumn_workloads(value);
       case 'spec.orchestrators':
         return this.displayColumn_orchestrators(value);
+      case 'spec.vlan-id':
+        return value ? value : 0;
       default:
         return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
     }
@@ -119,15 +144,25 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
   }
 
   displayColumn_orchestrators(values: NetworkOrchestratorInfo[]): any {
-    return values.reduce((accumulator, currentValue: NetworkOrchestratorInfo) => {
-      const eachRow: string = 'vCenter: ' + currentValue['orchestrator-name'] +
-          ', Datacenter: ' + currentValue.namespace;
-      return accumulator + '<div class="ellipsisText" title="' + eachRow + '">' + eachRow + '</div>';
-    }, '');
+    const map: {'vCenter': string, 'dataCenters': string[]} = {} as any;
+    values.forEach((value: NetworkOrchestratorInfo) => {
+      if (!map[value['orchestrator-name']]) {
+        map[value['orchestrator-name']] = [value.namespace];
+      } else {
+        map[value['orchestrator-name']].push(value.namespace);
+      }
+    });
+    let result: string = '';
+    for (const key of Object.keys(map)) {
+      const eachRow: string = 'vCenter: ' + key + ', Datacenter: ' + map[key].join(', ');
+      result += '<div class="ellipsisText" title="' + eachRow + '">' + eachRow + '</div>';
+    }
+    return result;
   }
 
   postNgInit() {
     this.getNetworks();
+    this.getVcenterIntegrations();
   }
 
   deleteRecord(object: NetworkNetwork): Observable<{ body: INetworkNetwork | IApiStatus | Error; statusCode: number }> {

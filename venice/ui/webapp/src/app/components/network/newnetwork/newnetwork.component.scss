@@ -30,46 +30,17 @@ $dary-grey: #a9a9a9;
       }
     }
 
-    .new-network-autocomplete {
-      span {
-        width: 100% !important;
+    p-multiselect.ng-invalid .ui-multiselect {
+      border-color: rgb(214, 214, 214) !important;
+    }
 
-        input {
-          border-radius: 0px;
-          width: 239px;
-          height: 30px;
-          border-right: 0px !important;
-        }
+    p-multiselect.ng-invalid .ui-multiselect-open {
+      border: solid 1px #6ba0e5 !important;
+      box-shadow: inset 5px 0 0 0 #6ba0e5 !important;
+    }
 
-        input.ui-inputtext:hover+button,
-        input.ui-inputtext:focus+button {
-          background: #fff;
-          border: solid 1px #6ba0e5;
-        }
-
-        button {
-          width: 26px;
-          height: 30px;
-          position: relative;
-          top: -1px;
-          border-radius: 0px;
-          background: #f7f7f7;
-          border: 1px solid #d6d6d6;
-          border-left: 0px !important;
-
-          .ui-button-icon-left {
-            margin-left: -1em;
-            color: #555;
-            font-size: 16px;
-          }
-        }
-
-        button:enabled:hover,
-        button:enabled:focus {
-          background: #f7f7f7;
-          border: 1px solid #d6d6d6;
-        }
-      }
+    p-multiselect.ng-invalid .ui-multiselect-open .ui-multiselect-label {
+      box-shadow: inset 5px 0 0 0 #6ba0e5 !important;
     }
 
     fieldset {

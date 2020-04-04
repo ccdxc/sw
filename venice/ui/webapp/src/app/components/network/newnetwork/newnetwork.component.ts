@@ -4,11 +4,9 @@ import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit
 import { Animations } from '@app/animations';
 import { NetworkNetwork, INetworkNetwork, NetworkOrchestratorInfo, INetworkOrchestratorInfo } from '@sdk/v1/models/generated/network';
 import { NetworkService } from '@app/services/generated/network.service';
-import { OrchestrationService } from '@app/services/generated/orchestration.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { FormArray, ValidatorFn, AbstractControl, FormGroup } from '@angular/forms';
 import { Utility } from '@app/common/Utility';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { OrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
 import { SelectItem } from 'primeng/api';
 import { minValueValidator, maxValueValidator } from '@sdk/v1/utils/validators';
@@ -23,19 +21,16 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNetwork> implements OnInit, AfterViewInit {
-
+  @Input() vcenterOptions: SelectItem[] = [];
+  @Input() vcenters: ReadonlyArray<OrchestrationOrchestrator> = [];
   @Input() existingObjects: INetworkNetwork[] = [];
 
-  vcenterEventUtility: HttpEventUtility<OrchestrationOrchestrator>;
-  vcenters: ReadonlyArray<OrchestrationOrchestrator> = [];
-  vcenterOptions: SelectItem[] = [];
-  datacenterNames: string[] = [];
+  datacenterNames: SelectItem[] = [];
 
   createButtonTooltip: string = 'Ready to submit';
 
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
-    protected orchestrationService: OrchestrationService,
     protected networkService: NetworkService,
     private cdr: ChangeDetectorRef
   ) {
@@ -46,36 +41,55 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
     return this.constructor.name;
   }
 
-  getVcenterIntegrations() {
-    this.vcenterEventUtility = new HttpEventUtility<OrchestrationOrchestrator>(OrchestrationOrchestrator);
-    this.vcenters = this.vcenterEventUtility.array as ReadonlyArray<OrchestrationOrchestrator>;
-    const sub = this.orchestrationService.WatchOrchestrator().subscribe(
-      response => {
-        this.vcenterEventUtility.processEvents(response);
-        this.vcenterOptions = this.vcenters.map(vcenter => {
-          return {
-            label: vcenter.meta.name,
-            value: vcenter.meta.name
-          };
-        });
-        this.vcenterOptions.push({label: '', value: null});
-        this.cdr.detectChanges();
-      },
-      this.controllerService.webSocketErrorHandler('Failed to get vCenter Integrations')
-    );
-    this.subscriptions.push(sub);
+  // merge all datacenters of the same vcenter together
+  loadExistingObject(data: NetworkNetwork) {
+    if (data.spec && data.spec.orchestrators && data.spec.orchestrators.length > 0) {
+      const map: {'vCenter': string, 'dataCenters': string[]} = {} as any;
+      data.spec.orchestrators.forEach((value: NetworkOrchestratorInfo) => {
+        if (!map[value['orchestrator-name']]) {
+          map[value['orchestrator-name']] = [value.namespace];
+        } else {
+          map[value['orchestrator-name']].push(value.namespace);
+        }
+      });
+      data = Utility.getLodash().cloneDeep(data);
+      data.spec.orchestrators = [];
+      for (const key of Object.keys(map)) {
+        data.spec.orchestrators.push({
+          '_ui': {},
+          'orchestrator-name': key,
+          'namespace': map[key]
+        } as NetworkOrchestratorInfo);
+      }
+    }
+    return data;
   }
 
   // Empty Hook
   postNgInit() {
-    this.getVcenterIntegrations();
-
     if (!this.isInline) {
       this.newObject.$formGroup.get(['meta', 'name']).setValidators([
         this.newObject.$formGroup.get(['meta', 'name']).validator,
         this.isNewPolicyNameValid(this.existingObjects)]);
     } else {
       this.newObject.$formGroup.get(['meta', 'name']).setValidators(null);
+      // vs-1397, 0 is default vlan id
+      if (!this.newObject.$formGroup.get(['spec', 'vlan-id']).value) {
+        this.newObject.$formGroup.get(['spec', 'vlan-id']).setValue(0);
+      }
+
+      const orchestrators: FormArray =
+        this.newObject.$formGroup.get(['spec', 'orchestrators']) as FormArray;
+      if (orchestrators && orchestrators.length > 0) {
+        orchestrators.controls.forEach((orchestrator: FormGroup) => {
+          if (orchestrator.value && orchestrator.value['orchestrator-name']) {
+            const orchestratorObj = orchestrator as any;
+            orchestratorObj.datacenterOptions =
+              this.generateDCNamesOptions(orchestrator.value['orchestrator-name']);
+          }
+        });
+      }
+
     }
 
     this.newObject.$formGroup.get(['spec', 'vlan-id']).setValidators(
@@ -97,41 +111,15 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
     const orchestrators = this.newObject.$formGroup.get(['spec', 'orchestrators']) as FormArray;
     const newOrchestrator = new NetworkOrchestratorInfo().$formGroup;
     orchestrators.insert(orchestrators.length, newOrchestrator);
+    this.newObject.$formGroup.markAsDirty();
   }
 
   removeOrchestrator(index: number) {
     const orchestrators = this.newObject.$formGroup.get(['spec', 'orchestrators']) as FormArray;
     if (orchestrators.length > 1) {
       orchestrators.removeAt(index);
+      this.newObject.$formGroup.markAsDirty();
     }
-  }
-
-  filterDatacenterNames(event, vcenterName: string) {
-    this.datacenterNames = [];
-    const options: string[] = this.generateDCNamesOptions(vcenterName);
-
-    for (let i = 0; i < options.length; i++) {
-      const brand = options[i];
-      if (!event.query || brand.toLowerCase().indexOf(event.query.toLowerCase()) > -1) {
-          this.datacenterNames.push(brand);
-      }
-    }
-  }
-
-  generateDCNamesOptions(vCenter: string): string[] {
-    if (vCenter && this.vcenters && this.vcenters.length > 0) {
-      const vcenterObj: OrchestrationOrchestrator = this.vcenters.find(
-        item => item.meta.name === vCenter
-      );
-      if (vcenterObj && vcenterObj.spec && vcenterObj.spec['manage-namespaces'] &&
-          vcenterObj.spec['manage-namespaces'].length > 0) {
-        if (vcenterObj.spec['manage-namespaces'].length > 1 ||
-            vcenterObj.spec['manage-namespaces'][0] !== 'ALL') {
-          return vcenterObj.spec['manage-namespaces'].map(item => item);
-        }
-      }
-    }
-    return [];
   }
 
   // Empty Hook
@@ -174,6 +162,26 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
     return this.createButtonTooltip;
   }
 
+  getObjectValues(): INetworkNetwork {
+    const currValue: INetworkNetwork =  this.newObject.getFormGroupValues();
+    const orchestrators = [];
+    if (currValue.spec.orchestrators && currValue.spec.orchestrators.length > 0) {
+      currValue.spec.orchestrators.forEach(item => {
+        if (item.namespace && item.namespace.length > 0) {
+          const namespaceArr = item.namespace as any;
+          namespaceArr.forEach((namespace: string) => {
+            orchestrators.push({
+              'orchestrator-name': item['orchestrator-name'],
+              namespace
+            });
+          });
+        }
+      });
+    }
+    currValue.spec.orchestrators = orchestrators;
+    return currValue;
+  }
+
   setToolbar() {
     if (!this.isInline && this.uiconfigsService.isAuthorized(UIRolePermissions.networknetwork_create)) {
       const currToolbar = this.controllerService.getToolbarData();
@@ -196,13 +204,38 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
     }
   }
 
-  onVcenterChange(event, orchestrator: FormGroup) {
+  onVcenterChange(orchestrator: FormGroup) {
     orchestrator.get(['namespace']).setValue(null);
+    const orchestratorObj = orchestrator as any;
+    orchestratorObj.datacenterOptions =
+      this.generateDCNamesOptions(orchestrator.value['orchestrator-name']);
     this.cdr.detectChanges();
   }
 
+  generateDCNamesOptions(vCenter: string): SelectItem[] {
+    if (vCenter && this.vcenters && this.vcenters.length > 0) {
+      const vcenterObj: OrchestrationOrchestrator = this.vcenters.find(
+        item => item && item.meta && item.meta.name === vCenter
+      );
+      if (vcenterObj && vcenterObj.spec && vcenterObj.spec['manage-namespaces'] &&
+          vcenterObj.spec['manage-namespaces'].length > 0) {
+        if (vcenterObj.spec['manage-namespaces'].length > 1 ||
+            vcenterObj.spec['manage-namespaces'][0] !== 'all_namespaces') {
+          const options: SelectItem[] = vcenterObj.spec['manage-namespaces'].map(item => {
+            return {
+              label: item,
+              value: item
+            };
+          });
+          return options;
+        }
+      }
+    }
+    return [];
+  }
+
   createObject(object: INetworkNetwork) {
-    return this.networkService.AddNetwork(object);
+    return this.networkService.AddNetwork(object, '', false);
   }
 
   updateObject(newObject: INetworkNetwork, oldObject: INetworkNetwork) {

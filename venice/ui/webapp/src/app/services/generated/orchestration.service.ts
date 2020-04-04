@@ -11,9 +11,13 @@ import {Utility} from '@common/Utility';
 import { UIConfigsService } from '../uiconfigs.service';
 import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
+import { OrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
 
 @Injectable()
 export class OrchestrationService extends Orchestrationv1Service {
+
+  public DATA_CACHE_TYPE_VCENTERS = 'Vcenters';
+
   // Attributes used by generated services
   protected O_Tenant: string = this.getTenant();
   protected baseUrlAndPort = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
@@ -38,6 +42,11 @@ export class OrchestrationService extends Orchestrationv1Service {
    */
   getClassName(): string {
     return this.constructor.name;
+  }
+
+  public ListOrchestratorsWithWebsocketUpdate() {
+    this.serviceUtility.createDataCache<OrchestrationOrchestrator>(OrchestrationOrchestrator, this.DATA_CACHE_TYPE_VCENTERS, () => this.ListOrchestrator(), (body: any) => this.WatchOrchestrator(body));
+    return this.serviceUtility.handleListFromCache(this.DATA_CACHE_TYPE_VCENTERS);
   }
 
   protected publishAJAXStart(eventPayload: any) {

@@ -35,27 +35,24 @@
             <div fxFlex="10px"></div>
             <span fxFlex="none" fxLayout="row" [ngClass]="{
               'new-network-orchestrator-selectbox': true,
-              'requiredField': isFieldEmpty(orchestrator.get(['orchestrator-name'])),
-              'selectboxWithValue': !isFieldEmpty(orchestrator.get(['orchestrator-name']))
+              'requiredField': isFieldEmpty(orchestrator.get(['orchestrator-name']))
             }">
               <p-dropdown appFloatLabel="vCenter Name" appendTo="body" class="new-network-select"
-                          (onChange)="onVcenterChange($event, orchestrator)"
+                          (onChange)="onVcenterChange(orchestrator)"
                           [options]="vcenterOptions" formControlName="orchestrator-name">
               </p-dropdown>
             </span>
             <div fxFlex="15px"></div>
             <span fxFlex="none" fxLayout="row" [ngClass]="{
               'new-network-orchestrator-selectbox': true,
-              'requiredField': isFieldEmpty(orchestrator.get(['namespace'])),
-              'selectboxWithValue': !isFieldEmpty(orchestrator.get(['namespace']))
+              'requiredField': isFieldEmpty(orchestrator.get(['namespace']))
             }">
-              <p-autoComplete formControlName="namespace" [suggestions]="datacenterNames"
-                              [dropdown]="true"
-                              (completeMethod)="filterDatacenterNames($event, orchestrator.get(['orchestrator-name']).value)"
-                              [size]="30"
-                              [appErrorTooltip]="'Datacenter in the orchestrator in which this network should be created in. Type \'ALL\' for all datacenters.'"
-                              appFloatLabel="Datacenter Name" class="new-network-autocomplete">
-              </p-autoComplete>
+              <p-multiSelect appFloatLabel="datacenter Names" appendTo="body"
+                             formControlName="namespace" class="new-network-select"
+                             [appErrorTooltip]="'Datacenter in the orchestrator in which this network should be created in. Type \'ALL\' for all datacenters.'"
+                             [options]="orchestrator.datacenterOptions || []"
+                             [filter]="false" [showHeader]="false" [showToggleAll]="false">
+              </p-multiSelect>
             </span>
             <mat-icon fxFlex="nogrow"
                       class="global-trash-button new-network-orchestrator-delete-icon"

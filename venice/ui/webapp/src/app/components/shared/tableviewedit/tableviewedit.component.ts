@@ -773,12 +773,17 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
         Eventtypes.COMPONENT_INIT
     });
     if (this.objectData != null) {
-      this.newObject = new this.objConstructor(this.objectData);
+      this.newObject = new this.objConstructor(this.loadExistingObject(this.objectData));
     } else {
       this.newObject = new this.objConstructor();
     }
     this.postNgInit();
     this.setDefaultValidation();
+  }
+
+  // set for overriden
+  loadExistingObject(data: any) {
+    return data;
   }
 
   setDefaultValidation() {

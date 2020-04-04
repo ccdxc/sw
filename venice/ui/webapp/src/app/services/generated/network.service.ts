@@ -11,13 +11,15 @@ import { GenServiceUtility } from './GenUtility';
 import { UIConfigsService } from '../uiconfigs.service';
 import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
-import { NetworkNetworkInterface, INetworkNetworkInterface, INetworkNetworkInterfaceList } from '@sdk/v1/models/generated/network';
+import { NetworkNetworkInterface, INetworkNetworkInterface, INetworkNetworkInterfaceList, NetworkNetwork } from '@sdk/v1/models/generated/network';
 
 
 @Injectable()
 export class NetworkService extends Networkv1Service {
 
   public  DATA_CACHE_TYPE_NETWORKINTERFACES = 'NetworkInterfaces';
+  public  DATA_CACHE_TYPE_NETWORKS = 'Networks';
+
   // Attributes used by generated services
   protected O_Tenant: string = this.getTenant();
   protected baseUrlAndPort = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
@@ -46,6 +48,11 @@ export class NetworkService extends Networkv1Service {
 
   public ListNetworkInterfacesCache() {
     return this.serviceUtility.handleListFromCache(this.DATA_CACHE_TYPE_NETWORKINTERFACES);
+  }
+
+  public ListNetworkWithWebsocketUpdate() {
+    this.serviceUtility.createDataCache<NetworkNetwork>(NetworkNetwork, this.DATA_CACHE_TYPE_NETWORKS, () => this.ListNetwork(), (body: any) => this.WatchNetwork(body));
+    return this.serviceUtility.handleListFromCache(this.DATA_CACHE_TYPE_NETWORKS);
   }
 
   protected publishAJAXStart(eventPayload: any) {
