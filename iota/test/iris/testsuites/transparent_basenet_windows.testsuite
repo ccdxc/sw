@@ -48,11 +48,12 @@ common:
 
 testbundles:
     precheckin:
-        - networking/lif_telemetry_precheckin.testbundle
-        - filters/filters.testbundle
-        - subifs/subifs-precheckin.testbundle
-        - rx_mode/rx_mode.testbundle
-        - classic/driver-features-sanity.testbundle
+        - networking/connectivity.testbundle
+        #- networking/lif_telemetry_precheckin.testbundle
+        #- filters/filters.testbundle
+        #- subifs/subifs-precheckin.testbundle
+        #- rx_mode/rx_mode.testbundle
+        #- classic/driver-features-sanity.testbundle
         - system/obfl_check.testbundle
         - sysmon/interrupts.testbundle
         - cpld/cpldupgrade.testbundle
@@ -65,7 +66,7 @@ testbundles:
         #- classic/rdma.testbundle
         - linktest/linktest.testbundle
         #- filters/filters.testbundle
-        #- mtu/mtu.testbundle
+        - mtu/mtu.testbundle
         #- networking/lif_telemetry.testbundle
         #- subifs/subifs.testbundle
         #- rx_mode/rx_mode.testbundle

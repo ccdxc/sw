@@ -353,6 +353,27 @@ e2e-targets:
        password: vm
        vars:
           BmOs: freebsd
+
+ # two bare-metal instance of windows 2019
+ 2windows2019:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-40
+       count: 2
+       resources:
+         servers:
+           - type: server-a
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: windows
+
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz
   - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node1

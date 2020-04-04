@@ -4,17 +4,19 @@ import iota.test.iris.utils.debug as debug_utils
 import iota.test.iris.utils.host as host_utils
 import iota.test.utils.naples_host as naples_host_utils
 import iota.test.iris.utils.traffic as traffic_utils
-import iota.test.iris.testcases.filters.filters_utils as filters_utils
 import random
 import time
 
 __RANDOM_MTU = -1
 __MIN_MTU_FREEBSD = 72
+__MIN_MTU_WINDOWS_IPv4 = 576  # MS05-019 security update
+__MIN_MTU_WINDOWS_IPv6 = 1280
 __MIN_MTU = 68
 __MAX_MTU = 9194
 __DEF_MTU = 1500
 
-__IS_FREEBSD = False
+__OS_TYPE = "linux"
+
 
 def verifyMTUchange(tc):
     result = api.types.status.SUCCESS
@@ -48,13 +50,6 @@ def changeWorkloadIntfMTU(new_mtu, node_name=None):
             result = api.types.status.FAILURE
     return result
 
-def isFreeBSDTestbed():
-    nodes = api.GetWorkloadNodeHostnames()
-    for node in nodes:
-        if api.GetNodeOs(node) == "freebsd":
-            return True
-    return False
-
 def getRandomMTU():
     seed = time.time()
     api.Logger.verbose("MTU filter : seed used for random MTU ", seed)
@@ -62,14 +57,11 @@ def getRandomMTU():
     return random.randint(__MIN_MTU, __MAX_MTU)
 
 def getMTUconfigs(tc):
-    global __IS_FREEBSD
     new_mtu = int(tc.iterators.mtu)
     if new_mtu == __RANDOM_MTU:
         new_mtu = getRandomMTU()
-    if new_mtu < __MIN_MTU_FREEBSD:
-        if __IS_FREEBSD is True:
-            # MIN_MTU supported by FreeBSD is 72
-            new_mtu = __MIN_MTU_FREEBSD
+    if new_mtu < __MIN_MTU:
+        new_mtu = __MIN_MTU
     return new_mtu
 
 def triggerMTUPings(tc):
@@ -110,7 +102,6 @@ def verifyMTUPings(tc):
     result = api.types.status.SUCCESS
     final_result = api.types.status.SUCCESS
     new_mtu = tc.new_mtu
-    global __IS_FREEBSD
 
     # Verify ping with exact MTU is successful
     result = traffic_utils.verifyPing(tc.cmd_cookies_1, tc.resp_1)
@@ -124,7 +115,7 @@ def verifyMTUPings(tc):
         api.Logger.error("MTU filter : Verify failed for verifyMTUPings - MTU - 1 case ", new_mtu-1)
         final_result = result
 
-    if __IS_FREEBSD is True:
+    if __OS_TYPE == "freebsd":
         msg_too_long_exit_code = 2
     else:
         msg_too_long_exit_code = 1
@@ -141,7 +132,8 @@ def Setup(tc):
     api.Logger.verbose("MTU filter : Setup")
     tc.skip = False
     result = api.types.status.SUCCESS
-    global __IS_FREEBSD
+    global __OS_TYPE
+    global __MIN_MTU
 
     if not api.RunningOnSameSwitch():
         tc.skip = True
@@ -153,16 +145,23 @@ def Setup(tc):
         tc.skip = True
 
     if tc.skip:
-       api.Logger.error("MTU filter : Setup -> No Naples Topology - So skipping the TC")
-       return api.types.status.IGNORED
+        api.Logger.error("MTU filter : Setup -> No Naples Topology - So skipping the TC")
+        return api.types.status.IGNORED
 
     """
       # In Intel cards, post MTU change, need to wait for few sec before pinging
       # instead, set max MTU on peer node
     """
     result = initPeerNode(tc.naples_node)
+    nodes = api.GetWorkloadNodeHostnames()
+    for node in nodes:
+        __OS_TYPE = api.GetNodeOs(node)
+        if __OS_TYPE == "freebsd":
+            __MIN_MTU = __MIN_MTU_FREEBSD
+        elif __OS_TYPE == "windows":
+            __MIN_MTU = __MIN_MTU_WINDOWS_IPv4
+        break
 
-    __IS_FREEBSD = isFreeBSDTestbed()
     tc.new_mtu = getMTUconfigs(tc)
     api.Logger.info("MTU filter : new MTU - ", tc.new_mtu)
 
@@ -173,8 +172,8 @@ def Setup(tc):
 def Trigger(tc):
     api.Logger.verbose("MTU filter : Trigger")
     result = api.types.status.SUCCESS
-    if tc.skip: return api.types.status.IGNORED
-    global __IS_FREEBSD
+    if tc.skip:
+        return api.types.status.IGNORED
 
     #change workloads MTU
     result = changeWorkloadIntfMTU(tc.new_mtu, tc.naples_node)
@@ -190,14 +189,15 @@ def Trigger(tc):
     debug_utils.collect_showtech(result)
     return result
 
+
 def Verify(tc):
     api.Logger.verbose("MTU filter : Verify")
-    result = api.types.status.SUCCESS
-    if tc.skip: return api.types.status.IGNORED
+    if tc.skip:
+        return api.types.status.IGNORED
 
     result = verifyMTUchange(tc)
     if result is not api.types.status.SUCCESS:
-        api.Logger.error("MTU filter : Verify failed for verifyMTUchange ")
+        api.Logger.error("MTU filter : Verify failed for verifyMTUchange")
         debug_utils.collect_showtech(result)
         return result
 
@@ -211,10 +211,11 @@ def Verify(tc):
     debug_utils.collect_showtech(result)
     return result
 
+
 def Teardown(tc):
     api.Logger.verbose("MTU filter : Teardown")
-    result = api.types.status.SUCCESS
-    if tc.skip: return api.types.status.IGNORED
+    if tc.skip:
+        return api.types.status.IGNORED
 
     #rollback workloads MTU
     result = changeWorkloadIntfMTU(__DEF_MTU)

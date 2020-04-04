@@ -1,5 +1,5 @@
 import iota.harness.api as api
-import json
+import iota.test.iris.utils.naples_workloads as workload
 
 def debug_dump_display_info(resp):
     result = api.types.status.SUCCESS
@@ -81,46 +81,6 @@ def debug_dump_all_nodes():
     api.Logger.verbose("debug_dump_all_nodes : END")
     return
 
-def GetHostMgmtInterface(node):
-
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-
-    os = api.GetNodeOs(node)
-    if os == "linux":
-        #Added just for debug
-        cmd = "ip -o -4 route show to default"
-        api.Trigger_AddHostCommand(req, node, cmd)
-        cmd = "ip -o -4 route show to default | awk '{print $5}'"
-        api.Trigger_AddHostCommand(req, node, cmd)
-        resp = api.Trigger(req)
-        #TODO Change after fixing debug knob
-        mgmt_intf = resp.commands[1].stdout.strip().split("\n")
-        return mgmt_intf[0]
-    elif os == "freebsd":
-        return "ix0"
-    elif os == "windows":
-        cmd = "ip -o -4 route show to default | awk '{print $6}'"
-        api.Trigger_AddHostCommand(req, node, cmd)
-        resp = api.Trigger(req)
-        #TODO Change after fixing debug knob
-        mgmt_intf = resp.commands[0].stdout.strip().split("\n")
-        return mgmt_intf[0]
-    else:
-        assert(0)
-
-def GetIPAddress(node, interface):
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    os = api.GetNodeOs(node)
-    if os == "linux":
-        cmd = "ip -4 addr show " + interface + " | grep -oP '(?<=inet\\s)\\d+(\\.\\d+){3}' "
-    elif os == "freebsd":
-        cmd = "ifconfig " + interface + " | grep inet | awk '{print $2}'"
-    elif os == "windows":
-        cmd = "ip -4 addr show " + interface + " | grep inet | awk '{print $2}' | cut -d'/' -f1"
-
-    api.Trigger_AddHostCommand(req, node, cmd)
-    resp = api.Trigger(req)
-    return resp.commands[0].stdout.strip("\n")
 
 def GetVlanID(node, interface):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
@@ -181,7 +141,9 @@ def SetMACAddress(node, interface, mac_addr):
     elif os == "freebsd":
         cmd = "ifconfig " + interface + " ether " + mac_addr
     elif os == "windows":
-        return ""  # TODO set MAC address is not supported as today's windows' driver
+        intf = workload.GetNodeInterface(node)
+        name = intf.WindowsIntName(interface)
+        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetAdapter -Name '%s' -MacAddress '%s' -Confirm:$false\"" % (name, mac_addr)
     api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
     return resp.commands[0]
@@ -194,7 +156,12 @@ def setInterfaceMTU(node, interface, mtu):
     elif os == "freebsd":
         cmd = "ifconfig " + interface + " mtu " + str(mtu)
     elif os == "windows":
-        cmd = ""  # TODO
+        intf = workload.GetNodeInterface(node)
+        name = intf.WindowsIntName(interface)
+        if mtu <= 1500:
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetIPInterface -AddressFamily IPv4 -InterfaceAlias '%s' -NlMtuBytes %s\"" % (name, str(mtu))
+        else:
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Get-NetAdapterAdvancedProperty '%s' -DisplayName 'Jumbo*' | Set-NetAdapterAdvancedProperty -RegistryValue '%s'\"" % (name, str(mtu))
     else:
         assert(0)
     api.Trigger_AddHostCommand(req, node, cmd)
@@ -207,14 +174,30 @@ def getInterfaceMTU(node, interface):
     if os == "linux":
         cmd = "ip -d link show " + interface + " | grep mtu | cut -d'>' -f2 | awk '{print $2}' "
     elif os == "freebsd":
-        cmd = "ifconfig " + interface +  " | grep mtu | cut -d'>' -f2 | awk '{print $4}'"
+        cmd = "ifconfig " + interface + " | grep mtu | cut -d'>' -f2 | awk '{print $4}'"
     elif os == "windows":
-        cmd = "ip -d link show " + interface + " | grep mtu | cut -d'>' -f2 | awk '{print $2}' "
+        intf = workload.GetNodeInterface(node)
+        name = intf.WindowsIntName(interface)
+        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Get-NetIPInterface -InterfaceAlias '%s' | Where-Object AddressFamily -eq 'IPv4' | Select-Object -Property NlMtu\"" % name
     else:
         assert(0)
     api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
-    mtu = resp.commands[0].stdout.strip("\n")
+    if os == "windows":
+        lines = resp.commands[0].stdout.splitlines()
+        findbreak = False
+        for line in lines:
+            line = line.strip()
+            if len(line) == 0:
+                continue
+            if line.find("----") >= 0:
+                findbreak = True
+                continue
+            if findbreak:
+                mtu = line
+                break
+    else:
+        mtu = resp.commands[0].stdout.strip("\n")
     if not mtu:
         mtu = "0"
     return int(mtu)
@@ -377,14 +360,3 @@ def DeleteARP(node, interface, hostname):
         result = api.types.status.FAILURE
     return result
 
-def getWindowsPortMapping(node):
-    os = api.GetNodeOs(node)
-    if os != "windows":
-        return []
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    api.Trigger_AddHostCommand(req, node, "cat /pensando/iota/name-mapping.json")
-    resp = api.Trigger(req)
-    if resp.commands[0].exit_code != 0:
-        return []
-    entries = json.loads(resp.commands[0].stdout)
-    return entries

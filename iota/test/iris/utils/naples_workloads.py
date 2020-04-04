@@ -1,14 +1,10 @@
 #! /usr/bin/python3
 
+import json
 import iota.harness.api as api
 import iota.harness.infra.resmgr as resmgr
 import iota.harness.infra.store as store
-import iota.test.iris.utils.host as host_utils
 import iota.test.utils.naples_host as naples_host
-#import iota.test.iris.testcases.drivers.verify as verify
-import iota.test.iris.config.netagent.hw_push_config as hw_config
-import ipaddress
-import re
 
 ip_prefix = 24
 mgmtIp = api.GetPrimaryIntNicMgmtIp()
@@ -28,9 +24,33 @@ class InterfaceType:
     NAPLES_OOB_1G      = 6
     NAPLES_IB_BOND     = 7
 
+def GetHostMgmtInterface(node):
+
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+
+    os = api.GetNodeOs(node)
+    if os == "linux":
+        cmd = "ip -o -4 route show to default | awk '{print $5}'"
+        api.Trigger_AddHostCommand(req, node, cmd)
+        resp = api.Trigger(req)
+        #TODO Change after fixing debug knob
+        mgmt_intf = resp.commands[0].stdout.strip().split("\n")
+        return mgmt_intf[0]
+    elif os == "freebsd":
+        return "ix0"
+    elif os == "windows":
+        cmd = "ip -o -4 route show to default | awk '{print $6}'"
+        api.Trigger_AddHostCommand(req, node, cmd)
+        resp = api.Trigger(req)
+        #TODO Change after fixing debug knob
+        mgmt_intf = resp.commands[0].stdout.strip().split("\n")
+        return mgmt_intf[0]
+    else:
+        assert(0)
+
 def GetHostMgmtInterfaces(node):
     intfs = []
-    intf = host_utils.GetHostMgmtInterface(node)
+    intf = GetHostMgmtInterface(node)
     api.Logger.debug("HostMgmtInterface for node:%s interface:%s " % (node, intf))
     intfObj = Interface(node, intf, InterfaceType.HOST_MGMT, api.GetNodeOs(node))
     intfs.append(intfObj)
@@ -94,7 +114,31 @@ def GetNaplesInbandBondInterfaces(node):
 
 
 def GetWindowsPortMapping(node):
-    return host_utils.getWindowsPortMapping(node)
+    os = api.GetNodeOs(node)
+    if os != "windows":
+        return []
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddHostCommand(req, node, "cat /pensando/iota/name-mapping.json")
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        return []
+    entries = json.loads(resp.commands[0].stdout)
+    return entries
+
+
+def GetIPAddress(node, interface):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    os = api.GetNodeOs(node)
+    if os == "linux":
+        cmd = "ip -4 addr show " + interface + " | grep -oP '(?<=inet\\s)\\d+(\\.\\d+){3}' "
+    elif os == "freebsd":
+        cmd = "ifconfig " + interface + " | grep inet | awk '{print $2}'"
+    elif os == "windows":
+        cmd = "ip -4 addr show " + interface + " | grep inet | awk '{print $2}' | cut -d'/' -f1"
+
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    return resp.commands[0].stdout.strip("\n")
 
 
 class Interface:
@@ -109,9 +153,9 @@ class Interface:
     }
 
     __IP_CMD_WRAPPER = {
-        InterfaceType.HOST             : host_utils.GetIPAddress,
-        InterfaceType.HOST_MGMT        : host_utils.GetIPAddress,
-        InterfaceType.HOST_INTERNAL    : host_utils.GetIPAddress,
+        InterfaceType.HOST             : GetIPAddress,
+        InterfaceType.HOST_MGMT        : GetIPAddress,
+        InterfaceType.HOST_INTERNAL    : GetIPAddress,
         InterfaceType.NAPLES_INT_MGMT  : naples_host.GetIPAddress,
         InterfaceType.NAPLES_IB_100G   : naples_host.GetIPAddress,
         InterfaceType.NAPLES_OOB_1G    : naples_host.GetIPAddress,
