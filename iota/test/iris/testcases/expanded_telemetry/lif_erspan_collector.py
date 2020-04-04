@@ -231,11 +231,11 @@ def Trigger(tc):
             # Set up TCPDUMP's on the collector
             #
             if tc.collector[c].IsNaples():
-                cmd = "tcpdump -c 600 -XX -vv -nni %s ip proto gre and dst %s\
+                cmd = "tcpdump -c 1000 -XX -vv -nni %s ip proto gre and dst %s\
                        --immediate-mode -U -w mirror-%d.pcap"%\
                       (tc.collector[c].interface, tc.collector_ip_address[c], c)
             else:
-                cmd = "tcpdump -p -c 600 -XX -vv -nni %s ip proto gre\
+                cmd = "tcpdump -p -c 1000 -XX -vv -nni %s ip proto gre\
                        and dst %s --immediate-mode -U -w mirror-%d.pcap" %\
                       (tc.collector[c].interface, tc.collector_ip_address[c], c)
             eutils.add_command(req_tcpdump_erspan, tc.collector[c], cmd, True)

@@ -687,7 +687,7 @@ def triggerTrafficInHostPinModeOrFreeBSD(tc):
     #
     # TCP
     if tc.protocol == 'tcp' or tc.protocol == 'all':
-        if tc.classic_mode == False and tc.args.type != 'precheckin':
+        if tc.classic_mode == False and tc.args.type == 'regression':
     #       cmd = "nc -l {}".format(int(tc.dest_port))
     #       add_command(req, tc.naples_peer, cmd, False)
     #       cmd = "nc {} {} -p {} "\
@@ -1023,8 +1023,8 @@ def validateErspanPackets(tc):
         # Perform TCP-pkt checks (only for hostpin mode, for now)
         # Ignore TCP-packet-count checks for now
         #
-        tcp_pkt_count_error = False
-        if tc.classic_mode == False and tc.args.type != 'precheckin':
+        pkt_count_error = False
+        if tc.classic_mode == False and tc.args.type == 'regression':
             if tc.protocol == 'tcp' or tc.protocol == 'all':
                 if tc.collector_tcp_pkts[c] < tc.tcp_erspan_pkts_expected or\
                    tc.collector_tcp_pkts[c] > (tc.tcp_erspan_pkts_expected+1):
@@ -1033,7 +1033,7 @@ def validateErspanPackets(tc):
                     .format(tc.collector_tcp_pkts[c], 
                             tc.tcp_erspan_pkts_expected,
                             tc.collector_ip_address[c]))
-                    tcp_pkt_count_error = True
+                    pkt_count_error = True
                     #tc.result[c] = api.types.status.FAILURE
 
         #
@@ -1042,7 +1042,13 @@ def validateErspanPackets(tc):
         if tc.protocol == 'udp' or tc.protocol == 'udp-mixed' or\
            tc.protocol == 'all':
             if tc.collector_udp_pkts[c] != tc.udp_erspan_pkts_expected:
-                tc.result[c] = api.types.status.FAILURE
+                api.Logger.error(\
+                "ERROR UDP: [IGNORE] {} {} ERSPAN packets to {}"\
+                .format(tc.collector_udp_pkts[c], 
+                        tc.udp_erspan_pkts_expected,
+                        tc.collector_ip_address[c]))
+                pkt_count_error = True
+                #tc.result[c] = api.types.status.FAILURE
 
         #
         # Perform ICMP-pkt checks
@@ -1050,11 +1056,17 @@ def validateErspanPackets(tc):
         if tc.protocol == 'icmp' or tc.protocol == 'udp-mixed' or\
            tc.protocol == 'all':
             if tc.collector_icmp_pkts[c] != tc.icmp_erspan_pkts_expected:
-                tc.result[c] = api.types.status.FAILURE
+                api.Logger.error(\
+                "ERROR ICMP: [IGNORE] {} {} ERSPAN packets to {}"\
+                .format(tc.collector_icmp_pkts[c], 
+                        tc.icmp_erspan_pkts_expected,
+                        tc.collector_ip_address[c]))
+                pkt_count_error = True
+                #tc.result[c] = api.types.status.FAILURE
 
         # For failed cases, print pkts for debug
         if tc.result[c] == api.types.status.FAILURE or\
-           seq_num_error == True or tcp_pkt_count_error == True:
+           seq_num_error == True or pkt_count_error == True:
             if tc.result[c] == api.types.status.FAILURE:
                 result = api.types.status.FAILURE
             for pkt in pkts:
