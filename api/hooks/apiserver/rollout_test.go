@@ -5,9 +5,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/globals"
+
 	"github.com/pensando/sw/api/generated/apiclient"
 
-	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/runtime"
 
@@ -41,6 +44,23 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 			Seconds: seconds + 1800, //30 min window
 		},
 	}
+	clusterVersion := &cluster.Version{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Version",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.DefaultVersionName,
+		},
+		Spec: cluster.VersionSpec{},
+		Status: cluster.VersionStatus{
+			BuildVersion:        "2.1.3",
+			VCSCommit:           "",
+			BuildDate:           "",
+			RolloutBuildVersion: "",
+		},
+	}
+
 	roa := rollout.RolloutAction{
 		TypeMeta: api.TypeMeta{
 			Kind: "RolloutAction",
@@ -49,7 +69,7 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 			Name: rolloutName,
 		},
 		Spec: rollout.RolloutSpec{
-			Version:                   "2.8",
+			Version:                   "2.8.1",
 			ScheduledStartTime:        scheduledStartTime,
 			ScheduledEndTime:          scheduledEndTime,
 			Strategy:                  rollout.RolloutSpec_LINEAR.String(),
@@ -59,7 +79,7 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 			Suspend:                   false,
 			DSCsOnly:                  false,
 			DSCMustMatchConstraint:    true, // hence venice upgrade only
-			UpgradeType:               rollout.RolloutSpec_Disruptive.String(),
+			UpgradeType:               rollout.RolloutSpec_Graceful.String(),
 		},
 		Status: rollout.RolloutActionStatus{
 			OperationalState: rollout.RolloutPhase_PROGRESSING.String(),
@@ -73,7 +93,7 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 			Name: rolloutName,
 		},
 		Spec: rollout.RolloutSpec{
-			Version:                   "2.8",
+			Version:                   "2.8.1",
 			ScheduledStartTime:        scheduledStartTime,
 			ScheduledEndTime:          scheduledEndTime,
 			Strategy:                  rollout.RolloutSpec_LINEAR.String(),
@@ -83,7 +103,7 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 			Suspend:                   false,
 			DSCsOnly:                  false,
 			DSCMustMatchConstraint:    true, // hence venice upgrade only
-			UpgradeType:               rollout.RolloutSpec_Disruptive.String(),
+			UpgradeType:               rollout.RolloutSpec_Graceful.String(),
 		},
 	}
 
@@ -101,6 +121,21 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 	err = kvs.Create(context.TODO(), key2, &req)
 
 	ret, skip, err := hooks.doRolloutAction(context.TODO(), kvs, txn, key2, apiintf.CreateOper, false, req)
+
+	if ret != nil || err == nil {
+		t.Fatalf("expected failure but commitAction succeeded [%v](%s)", ret, err)
+	}
+	if skip == true {
+		t.Fatalf("kvwrite not enabled on commit")
+	}
+
+	clusterKey := clusterVersion.MakeKey(string(apiclient.GroupCluster))
+	err = kvs.Create(context.TODO(), clusterKey, clusterVersion)
+	if err != nil {
+		t.Fatalf("Failed creation of clusterVersion %v", err)
+	}
+
+	ret, skip, err = hooks.doRolloutAction(context.TODO(), kvs, txn, key2, apiintf.CreateOper, false, req)
 
 	if ret == nil || err != nil {
 		t.Fatalf("failed exec commitAction [%v](%s)", ret, err)
@@ -129,9 +164,10 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 			Suspend:                   false,
 			DSCsOnly:                  false,
 			DSCMustMatchConstraint:    true, // hence venice upgrade only
-			UpgradeType:               rollout.RolloutSpec_Disruptive.String(),
+			UpgradeType:               rollout.RolloutSpec_Graceful.String(),
 		},
 	}
+
 	ret, skip, err = hooks.doRolloutAction(context.TODO(), kvs, txn, "", apiintf.CreateOper, false, req2)
 
 	if ret == nil || err == nil {
@@ -163,7 +199,7 @@ func TestRolloutActionPreCommitHooks(t *testing.T) {
 			OrderConstraints:          nil,
 			Suspend:                   false,
 			DSCsOnly:                  false,
-			UpgradeType:               rollout.RolloutSpec_Disruptive.String(),
+			UpgradeType:               rollout.RolloutSpec_Graceful.String(),
 		},
 	}
 

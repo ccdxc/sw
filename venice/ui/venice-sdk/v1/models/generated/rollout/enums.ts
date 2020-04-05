@@ -52,8 +52,9 @@ export enum RolloutRolloutSpec_strategy {
 }
 
 export enum RolloutRolloutSpec_upgrade_type {
-    'disruptive' = "disruptive",
+    'graceful' = "graceful",
     'on-next-reboot' = "on-next-reboot",
+    'disruptive' = "disruptive",
 }
 
 export enum RolloutRolloutStatus_state {
@@ -101,7 +102,8 @@ export enum RolloutRolloutSpec_strategy_uihint {
 }
 
 export enum RolloutRolloutSpec_upgrade_type_uihint {
-    'disruptive' = "Disruptive",
+    'disruptive' = "Disruptive - Deprecated",
+    'graceful' = "Graceful",
     'on-next-reboot' = "OnNextHostReboot",
 }
 

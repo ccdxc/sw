@@ -6,6 +6,8 @@ import (
 	"math"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/version"
+
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/utils"
 
@@ -39,6 +41,8 @@ const (
 	modifyRolloutOp    = 2
 	stopRolloutOp      = 3
 	defaultNumParallel = 2
+	upgradeRollout     = 4
+	downgradeRollout   = 5
 )
 
 func updateRolloutObj(ctx context.Context, kv kvstore.Interface, key string, cur *rollout.Rollout, rolloutOp int) error {
@@ -347,6 +351,26 @@ func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface
 		}
 	}
 
+	clusterVersionObject := cluster.Version{}
+	clusterVersionObjectKey := clusterVersionObject.MakeKey(string(apiclient.GroupCluster))
+	if err = kv.Get(ctx, clusterVersionObjectKey, &clusterVersionObject); err == nil {
+		srcVersion := clusterVersionObject.Status.BuildVersion
+		rolloutType := version.GetRolloutType(srcVersion, buf.Spec.Version)
+		if rolloutType == version.Downgrade && buf.Spec.UpgradeType == rollout.RolloutSpec_Graceful.String() {
+			errmsg := fmt.Sprintf("Downgrade with upgrade type '%s' is not allowed. Please use upgrade type as disruptive.", buf.Spec.UpgradeType)
+			h.l.WarnLog("msg", errmsg)
+			return nil, false, errors.New(errmsg)
+		}
+		if rolloutType == version.Upgrade && buf.Spec.UpgradeType == rollout.RolloutSpec_Disruptive.String() {
+			errmsg := fmt.Sprintf("Upgrade type '%s' is Deprecated. Please use other upgrade type.", buf.Spec.UpgradeType)
+			h.l.WarnLog("msg", errmsg)
+			return nil, false, errors.New(errmsg)
+		}
+	} else {
+		errmsg := fmt.Sprintf("Failed to obtain ClusterVersion Object %+v", err)
+		h.l.WarnLog("msg", errmsg)
+		return nil, false, errors.New(errmsg)
+	}
 	rolloutObj := rollout.Rollout{}
 	rolloutObjKey := buf.MakeKey(string(apiclient.GroupRollout))
 

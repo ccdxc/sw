@@ -214,7 +214,7 @@ var _ = Describe("rollout object tests", func() {
 					Suspend:                   false,
 					DSCsOnly:                  false,
 					DSCMustMatchConstraint:    true, // hence venice upgrade only
-					UpgradeType:               "Disruptive",
+					UpgradeType:               "Graceful",
 				},
 			}
 			// Verify creation for rollout object
@@ -413,7 +413,7 @@ var _ = Describe("rollout object tests", func() {
 					Suspend:                   false,
 					DSCsOnly:                  false,
 					DSCMustMatchConstraint:    true, // hence venice upgrade only
-					UpgradeType:               "Disruptive",
+					UpgradeType:               "Graceful",
 				},
 			}
 

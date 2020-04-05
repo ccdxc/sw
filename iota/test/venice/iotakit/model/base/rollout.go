@@ -126,7 +126,7 @@ func (sm *SysModel) CreateRolloutObject(bundleType, name string) (*rollout.Rollo
 			OrderConstraints:          nil,
 			Suspend:                   false,
 			DSCsOnly:                  false,
-			UpgradeType:               "Disruptive",
+			UpgradeType:               "Graceful",
 		},
 	}, nil
 }
@@ -227,7 +227,7 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 				OrderConstraints:          order,
 				Suspend:                   false,
 				DSCsOnly:                  true,
-				UpgradeType:               "Disruptive",
+				UpgradeType:               "Graceful",
 			},
 		}, nil
 	} else {
@@ -248,7 +248,7 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 				OrderConstraints:          nil,
 				Suspend:                   false,
 				DSCsOnly:                  false,
-				UpgradeType:               "Disruptive",
+				UpgradeType:               "Graceful",
 			},
 		}, nil
 	}

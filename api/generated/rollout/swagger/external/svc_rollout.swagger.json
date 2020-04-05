@@ -1631,12 +1631,14 @@
         "upgrade-type": {
           "type": "string",
           "enum": [
-            "disruptive",
-            "on-next-reboot"
+            "graceful",
+            "on-next-reboot",
+            "disruptive"
           ],
-          "default": "disruptive",
+          "default": "graceful",
           "x-ui-hints": {
-            "disruptive": "Disruptive",
+            "disruptive": "Disruptive - Deprecated",
+            "graceful": "Graceful",
             "on-next-reboot": "OnNextHostReboot"
           }
         },

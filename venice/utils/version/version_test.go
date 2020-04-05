@@ -65,3 +65,18 @@ func TestGetMinorVersion(t *testing.T) {
 	minor = GetMinorVersion("2.r.1-C-3")
 	testutil.AssertEqual(t, minor, 0)
 }
+
+func TestGetRolloutType(t *testing.T) {
+	rtype := GetRolloutType("1.3.1-C-10", "1.5.1-C-10")
+	testutil.AssertEqual(t, rtype, Upgrade)
+	rtype = GetRolloutType("2.3.1", "1.3.4")
+	testutil.AssertEqual(t, rtype, Downgrade)
+	rtype = GetRolloutType("iota-upgrade", "1.5.1-C-10")
+	testutil.AssertEqual(t, rtype, Patch)
+	rtype = GetRolloutType("1.3.1-C-10", "iota-upgrade")
+	testutil.AssertEqual(t, rtype, Patch)
+	rtype = GetRolloutType("1.0E", "1.5.1-C-10")
+	testutil.AssertEqual(t, rtype, Patch)
+	rtype = GetRolloutType("1.3.1-C-10", "1.3.1-C-10")
+	testutil.AssertEqual(t, rtype, Upgrade)
+}

@@ -14,6 +14,18 @@ var (
 	Version = "0.1"
 )
 
+//RolloutType const for type of rollout Upgrade/Downgrade
+type RolloutType string
+
+const (
+	//Patch Rollout is using devImage
+	Patch = RolloutType("Patch")
+	//Upgrade Rollout is upgrade
+	Upgrade = RolloutType("Upgrade")
+	//Downgrade Rollout is Downgrade
+	Downgrade = RolloutType("Downgrade")
+)
+
 //ImageType const for type of image Cloud/Enterprise
 type ImageType string
 
@@ -94,4 +106,27 @@ func GetMinorVersion(version string) int {
 		return 0
 	}
 	return minorVersion
+}
+
+//GetRolloutType the type of rollout
+func GetRolloutType(srcVersion, destVersion string) RolloutType {
+
+	log.Infof("GetRolloutType: %s %s", srcVersion, destVersion)
+	srcMajorVersion := GetMajorVersion(srcVersion)
+	srcMinorVersion := GetMinorVersion(srcVersion)
+	if srcMajorVersion == 0 || srcMinorVersion == 0 {
+		log.Errorf("Invalid Version: %s", srcVersion)
+		return Patch
+	}
+	destMajorVersion := GetMajorVersion(destVersion)
+	destMinorVersion := GetMinorVersion(destVersion)
+	if destMajorVersion == 0 || destMinorVersion == 0 {
+		log.Errorf("Invalid Version: %s", srcVersion)
+		return Patch
+	}
+
+	if destMajorVersion < srcMajorVersion || (destMajorVersion == srcMajorVersion && destMinorVersion < srcMinorVersion) {
+		return Downgrade
+	}
+	return Upgrade
 }

@@ -83,17 +83,20 @@ func (x RolloutSpec_StrategyType) String() string {
 // RolloutSpec_DSCUpgradeType_normal is a map of normalized values for the enum
 var RolloutSpec_DSCUpgradeType_normal = map[string]string{
 	"disruptive":     "disruptive",
+	"graceful":       "graceful",
 	"on-next-reboot": "on-next-reboot",
 }
 
 var RolloutSpec_DSCUpgradeType_vname = map[int32]string{
-	0: "disruptive",
+	0: "graceful",
 	1: "on-next-reboot",
+	2: "disruptive",
 }
 
 var RolloutSpec_DSCUpgradeType_vvalue = map[string]int32{
-	"disruptive":     0,
+	"graceful":       0,
 	"on-next-reboot": 1,
+	"disruptive":     2,
 }
 
 func (x RolloutSpec_DSCUpgradeType) String() string {
@@ -300,7 +303,7 @@ func (m *RolloutSpec) Defaults(ver string) bool {
 	default:
 		m.MaxParallel = 2
 		m.Strategy = "linear"
-		m.UpgradeType = "disruptive"
+		m.UpgradeType = "graceful"
 	}
 	return ret
 }
