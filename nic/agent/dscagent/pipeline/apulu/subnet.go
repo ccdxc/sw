@@ -484,6 +484,7 @@ func deleteSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		evrtresp, err := msc.EvpnEviRtDelete(ctx, eviRtReq)
 		if err != nil {
 			log.Errorf("failed to delete EVI RTs for subnet [%v/%v](%s)", nw.Tenant, nw.Name, err)
+			return err
 		}
 		if evrtresp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 			log.Errorf("failed to delete EVI RTs for subnet [%v/%v] (%v)", nw.Tenant, nw.Name, evrtresp.ApiStatus)

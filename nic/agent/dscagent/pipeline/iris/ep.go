@@ -84,6 +84,19 @@ func createEndpointHandler(infraAPI types.InfraAPI, epClient halapi.EndpointClie
 }
 
 func updateEndpointHandler(infraAPI types.InfraAPI, epClient halapi.EndpointClient, intfClient halapi.InterfaceClient, endpoint netproto.Endpoint, vrfID, networkID uint64) error {
+	updateEnic := endpoint.Status.EnicID != 0
+	// Handle interface updates for local EPs
+	if updateEnic {
+		interfaceReqMsg := convertEnicInterface(endpoint.Spec.MacAddress, endpoint.Status.EnicID, networkID, endpoint.Spec.UsegVlan)
+		log.Infof("ENIC Msg: %v", interfaceReqMsg.String())
+		resp, err := intfClient.InterfaceUpdate(context.Background(), interfaceReqMsg)
+		if resp != nil {
+			if err := utils.HandleErr(types.Update, resp.Response[0].ApiStatus, err, fmt.Sprintf("update Failed for ENIC Interface. ID: %d", endpoint.Status.EnicID)); err != nil {
+				return err
+			}
+		}
+	}
+
 	endpointReqMsg := convertEndpointUpdate(endpoint, infraAPI.GetConfig().MgmtIntf, vrfID, networkID)
 	log.Infof("Endpoint Msg: %v", endpointReqMsg.String())
 	resp, err := epClient.EndpointUpdate(context.Background(), endpointReqMsg)
