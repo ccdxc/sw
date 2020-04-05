@@ -109,7 +109,7 @@
                                 {
                                         "Name" : "Pcie Techsupport",
                                         "Method" : 0,
-                                        "Command" : "/platform/bin/pcieutil techsupport"
+                                        "Command" : "/nic/bin/pcieutil techsupport"
                                 },
                                 {
                                         "Name" : "Fwupdate -l",

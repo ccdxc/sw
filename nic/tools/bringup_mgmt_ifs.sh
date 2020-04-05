@@ -54,7 +54,7 @@ while true
 do
     if [ $int_mnic0_up -eq 0 ] && [ -d "/sys/class/net/int_mnic0" ] ; then
         if [ $int_mnic0_admin_up -eq 0 ]; then
-            bus=`/platform/bin/pcieutil dev -D 1dd8:1004`
+            bus=`/nic/bin/pcieutil dev -D 1dd8:1004`
             if [ ! -z "$bus" ]; then
                 ipaddr="169.254.$bus.1"
                 log "bringing up int_mnic0 $ipaddr"
