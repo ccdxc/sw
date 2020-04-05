@@ -42,11 +42,6 @@ def Trigger(tc):
     tc.clientCmds = []
     tc.cmd_descr = []
 
-
-    serverReq = None
-    clientReq = None
-
-
     if not api.IsSimulation():
         serverReq = api.Trigger_CreateAllParallelCommandsRequest()
         clientReq = api.Trigger_CreateAllParallelCommandsRequest()
@@ -63,9 +58,6 @@ def Trigger(tc):
         tc.cmd_descr.append(cmd_descr)
         num_sessions = int(getattr(tc.args, "num_sessions", 1))
         api.Logger.info("Starting Iperf test from %s num-sessions %d" % (cmd_descr, num_sessions))
-
-        serverCmd = None
-        clientCmd = None
 
         if tc.iterators.proto == 'udp':
             port = api.AllocateTcpPort()
@@ -85,12 +77,9 @@ def Trigger(tc):
         api.Trigger_AddCommand(clientReq, client.node_name, client.workload_name,
                                clientCmd)
 
-
     server_resp = api.Trigger(serverReq)
     #Sleep for some time as bg may not have been started.
     time.sleep(30)
-
-
 
     tc.iperf_client_resp = api.Trigger(clientReq)
     #Its faster kill iperf servers
@@ -126,7 +115,7 @@ def verify_iperf(tc):
         #api.Logger.info("Iperf Send Rate in Gbps ", iperf.GetSentGbps(cmd.stdout))
         #api.Logger.info("Iperf Receive Rate in Gbps ", iperf.GetReceivedGbps(cmd.stdout))
 
-    api.Logger.info("Iperf test successfull")
+    api.Logger.info("Iperf test successfully")
     api.Logger.info("Number of connection timeouts : {}".format(conn_timedout))
     api.Logger.info("Number of control socket errors : {}".format(control_socker_err))
     return api.types.status.SUCCESS
@@ -136,8 +125,7 @@ def Verify(tc):
     if tc.skip: return api.types.status.SUCCESS
 
     if verify_iperf(tc) != api.types.status.SUCCESS:
-        #Some Iperf3 are failing, need to debug.
-        return api.types.status.SUCCESS
+        return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
 

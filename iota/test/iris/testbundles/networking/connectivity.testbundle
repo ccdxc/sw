@@ -8,6 +8,7 @@ testcases:
     -   name    : Ping_Local_Workloads
         testcase: testcases.networking.ping
         stress  : True
+        disable : False
         args    :
             type: local_only
             #timeout : 60
@@ -15,9 +16,11 @@ testcases:
             type    : nested
             pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192]
             ipaf    : [ ipv4, ipv6 ]
+
     -   name    : Ping_Remote_Workloads
         testcase: testcases.networking.ping
         stress  : True
+        disable : False
         args    :
             type: remote_only
         iterators :
@@ -28,6 +31,7 @@ testcases:
     -   name    : Ping_Bond
         testcase: testcases.networking.ping_bond
         stress  : True
+        disable : False
         iterators :
             type    : nested
             pktsize : [64, 256, 1024]
