@@ -820,6 +820,42 @@ type ShadowEvpnIpVrfRtSpec struct {
 	*pds.EvpnIpVrfRtSpec
 }
 
+func dumpRt(in []byte) string {
+	rt := ""
+	inStr := dumpBytes(in)
+	inStrSlice := strings.Split(inStr, " ")
+	str := strings.Join(inStrSlice[:1], "")
+	var rttype int64
+	var err error
+	if rttype, err = strconv.ParseInt(str, 16, 64); err == nil {
+		rt += fmt.Sprintf("Type: %v, ", rttype)
+	}
+	str = strings.Join(inStrSlice[1:2], "")
+	if s, err := strconv.ParseInt(str, 16, 64); err == nil {
+		rt += fmt.Sprintf("Sub-type: %v, ", s)
+	}
+	if (rttype == 1) || (rttype == 2) {
+		str = strings.Join(inStrSlice[2:6], "")
+		if s, err := strconv.ParseInt(str, 16, 64); err == nil {
+			rt += fmt.Sprintf("AS: %v, ", s)
+		}
+		str = strings.Join(inStrSlice[6:], "")
+		if s, err := strconv.ParseInt(str, 16, 64); err == nil {
+			rt += fmt.Sprintf("AN: %v", s)
+		}
+	} else if rttype == 0 {
+		str = strings.Join(inStrSlice[2:4], "")
+		if s, err := strconv.ParseInt(str, 16, 64); err == nil {
+			rt += fmt.Sprintf("AS: %v, ", s)
+		}
+		str = strings.Join(inStrSlice[4:], "")
+		if s, err := strconv.ParseInt(str, 16, 64); err == nil {
+			rt += fmt.Sprintf("AN: %v", s)
+		}
+	}
+	return rt
+}
+
 func NewEvpnIpVrfRtSpec(in *pds.EvpnIpVrfRtSpec) ShadowEvpnIpVrfRtSpec {
 	uid, err := uuid.FromBytes(in.Id)
 	uidstr := ""
@@ -829,7 +865,7 @@ func NewEvpnIpVrfRtSpec(in *pds.EvpnIpVrfRtSpec) ShadowEvpnIpVrfRtSpec {
 	return ShadowEvpnIpVrfRtSpec{
 		Id:              uidstr,
 		VPCId:           string(in.VPCId),
-		RT:              dumpBytes(in.RT),
+		RT:              dumpRt(in.RT),
 		RTType:          strings.TrimPrefix(in.RTType.String(), "EVPN_RT_"),
 		EvpnIpVrfRtSpec: in,
 	}
@@ -937,7 +973,7 @@ func NewEvpnEviRtSpec(in *pds.EvpnEviRtSpec) ShadowEvpnEviRtSpec {
 	return ShadowEvpnEviRtSpec{
 		Id:            uidstr,
 		SubnetId:      string(in.SubnetId),
-		RT:            dumpBytes(in.RT),
+		RT:            dumpRt(in.RT),
 		RTType:        strings.TrimPrefix(in.RTType.String(), "EVPN_RT_"),
 		EvpnEviRtSpec: in,
 	}
