@@ -6,6 +6,9 @@ export const UrlMap: { [url: string]: string } = {
   '/cluster/dscs': 'dscs',
   '/cluster/dscs/:id': 'dscdetails',
   '/cluster/hosts': 'hosts',
+  '/cluster/dscprofiles': 'dscprofiles',
+  '/cluster/networkinterfaces': 'networkinterfaces',
+  '/network': 'network',
   '/monitoring/alertsevents': 'alertsevents',
   '/monitoring/alertsevents/alertpolicies': 'alertsevents',
   '/monitoring/alertsevents/alertdestinations': 'alertsevents',
@@ -21,10 +24,12 @@ export const UrlMap: { [url: string]: string } = {
   '/troubleshoot/flowexport': 'flowexport',
   '/troubleshoot/mirrorsessions': 'mirrorsessions',
   '/workload': 'workload',
+  '/controller/vcenter': 'vcenter',
   '/admin/authpolicy' : 'authpolicy',
   '/admin/upgrade/rollouts': 'systemupgrade',
   '/admin/users': 'localuser',
   '/admin/techsupport': 'techsupport',
   '/admin/snapshots': 'snapshots',
-  '/admin/certificate': 'updateservercertificate'
+  '/admin/certificate': 'updateservercertificate',
+  '/admin/api': 'apicapture'
 }

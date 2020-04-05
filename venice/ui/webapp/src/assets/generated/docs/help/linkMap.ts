@@ -1,5 +1,6 @@
 export const HelpLinkMap: { [id: string]: string } = {
   "alertsevents" : "/assets/generated/docs/help/alertsevents.html",
+  "apicapture" : "/assets/generated/docs/help/apicapture.html",
   "apps" : "/assets/generated/docs/help/apps.html",
   "auditevents" : "/assets/generated/docs/help/auditevents.html",
   "authpolicy" : "/assets/generated/docs/help/authpolicy.html",
@@ -7,6 +8,7 @@ export const HelpLinkMap: { [id: string]: string } = {
   "clusternode" : "/assets/generated/docs/help/clusternode.html",
   "dashboard" : "/assets/generated/docs/help/dashboard.html",
   "dscdetails" : "/assets/generated/docs/help/dscdetails.html",
+  "dscprofiles" : "/assets/generated/docs/help/dscprofiles.html",
   "dscs" : "/assets/generated/docs/help/dscs.html",
   "firewalllogpolicy" : "/assets/generated/docs/help/firewalllogpolicy.html",
   "fwlogs" : "/assets/generated/docs/help/firewalllogs.html",
@@ -15,6 +17,8 @@ export const HelpLinkMap: { [id: string]: string } = {
   "ldap" : "/assets/generated/docs/help/ldap.html",
   "metrics" : "/assets/generated/docs/help/metrics.html",
   "mirrorsessions" : "/assets/generated/docs/help/mirrorsessions.html",
+  "network" : "/assets/generated/docs/help/network.html",
+  "networkinterfaces" : "/assets/generated/docs/help/networkinterfaces.html",
   "policies" : "/assets/generated/docs/help/policies.html",
   "radius" : "/assets/generated/docs/help/radius.html",
   "securitygroups" : "/assets/generated/docs/help/securitygroups.html",
@@ -23,5 +27,6 @@ export const HelpLinkMap: { [id: string]: string } = {
   "techsupport" : "/assets/generated/docs/help/techsupport.html",
   "updateservercertificate" : "/assets/generated/docs/help/updateservercertificate.html",
   "localuser" : "/assets/generated/docs/help/usermanagement.html",
+  "vcenter" : "/assets/generated/docs/help/vcenter.html",
   "workload" : "/assets/generated/docs/help/workloads.html",
 }

@@ -1,0 +1,41 @@
+<h2 id="networkinterfaces">Network Interfaces</h2>
+<p>Network Interface describes the logical interface that is exposed to the operating system. </p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</td>
+</tr>
+<tr>
+<td>mac-address</td>
+<td>Override system allocated MAC address. Should be a valid MAC address.</td>
+</tr>
+<tr>
+<td>creation-time</td>
+<td>CreationTime is the creation time of the object. System generated and updated, not updatable by user.</td>
+</tr>
+<tr>
+<td>admin-status</td>
+<td>Desired Admin state of the port. <br> Valid options include:<br> - up <br> - down</td>
+</tr>
+<tr>
+<td>type</td>
+<td><br> Valid options include:<br> - none <br> - host-pf <br> - uplink-eth <br> - uplink-mgmt <br> - loopback-tep</td>
+</tr>
+<tr>
+<td>labels</td>
+<td>Labels are arbitrary (key,value) pairs associated with any object.</td>
+</tr>
+<tr>
+<td>oper-status</td>
+<td><br> Valid options include:<br> - up <br> - down</td>
+</tr>
+</tbody>
+</table>
+<p>A search criteria provides filtering based upone one or more of the above columns to narrow down the view of the Network Interfaces. In the right hand top corner is the gear icon which allows to export the table view of Network Interfaces into a CSV file or a JSON file.</p>

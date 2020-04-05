@@ -1,0 +1,59 @@
+<h2 id="network">Network</h2>
+<p>The Network section provides two functions -</p>
+<pre><code>1. Add a network. 
+2. Network overview - Provides a detailed table view of various networks created along with 
+the VLAN Id and the Orchestrator information.
+</code></pre>
+<h3 id="addnetwork">Add Network</h3>
+<p>The Network refers to the DSC network that PSM creates for network traffic. The network is created with the following attributes: </p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</td>
+</tr>
+<tr>
+<td>vlan-id</td>
+<td>Vlan ID for the network. Value should be between 0 and 4095.</td>
+</tr>
+<tr>
+<td>orchestrators</td>
+<td>If supplied, this network will only be applied to the orchestrators specified.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="networkoverview">Network Overview</h3>
+<p>The network overview comprise of four columns including</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</td>
+</tr>
+<tr>
+<td>creation-time</td>
+<td>CreationTime is the creation time of the object. System generated and updated, not updatable by user.</td>
+</tr>
+<tr>
+<td>vlan-id</td>
+<td>Vlan ID for the network. Value should be between 0 and 4095.</td>
+</tr>
+<tr>
+<td>orchestrators</td>
+<td>If supplied, this network will only be applied to the orchestrators specified.</td>
+</tr>
+</tbody>
+</table>
+<p>Note: Name of the object must be unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</p>
