@@ -153,6 +153,7 @@ nic/tools/pcie_hostdn.sh                                          /nic/tools/
 nic/tools/pcie_healthlog.sh                                       /nic/tools/
 nic/tools/bflog_sync.sh                                           /nic/tools/
 nic/apollo/tools/setup_env_hw.sh                                  /nic/tools/
+nic/tools/sysmgr_debug.sh                                         /nic/tools/
 
 # system level tools needed for cpld upgrade
 platform/src/app/cpld/cpldapp.sh                                  /nic/tools/

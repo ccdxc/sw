@@ -27,3 +27,10 @@ find ${TOP} -mtime +${MAX_DAYS} -type d -prune -exec rm -rf {} \;
 
 # Also don't keep any more than MAX_RECORDS
 for f in `ls -t ${TOP} | tail -n +${MAX_RECORDS}`; do rm -rf ${TOP}/$f; done
+
+if [ -e /nic/tools/collect_techsupport.sh ]
+then
+    echo "Collect techsupport ..."
+    /nic/tools/collect_techsupport.sh
+    echo "Techsupport collected ..."
+fi
