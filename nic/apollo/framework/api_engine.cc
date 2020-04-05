@@ -836,20 +836,28 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         // the current obj is already deleted from the s/w db and swapped with
         // cloned_obj when update_db() was called on cloned_obj above
         del_from_dirty_list_(it, api_obj);
-        // if we allocated resources for the updated object, we need to release
-        // the resources being used by original object as they are not needed
-        // anymore
-        if (obj_ctxt->cloned_obj->rsvd_rsc()) {
-            api_obj->release_resources();
-        }
+        // stateless cloned objects can be destroyed at this point
         if (api_base::stateless(obj_ctxt->obj_id)) {
             // destroy cloned object as it is not needed anymore
             PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
                               api_obj->key2str().c_str());
             api_base::soft_delete(obj_ctxt->obj_id, obj_ctxt->cloned_obj);
         }
-        // just free the original/built object (if object type is stateless)
-        api_base::free(obj_ctxt->obj_id, api_obj);
+        // if we allocated resources for the updated object, we need to release
+        // the resources being used by original object as they are not needed
+        // anymore
+        if (obj_ctxt->cloned_obj->rsvd_rsc()) {
+            // cloned object either took over (some or all of) the resources
+            // from the original object and/or allocated its own resources,
+            // we must now nuke all the resources that the original object
+            // is holding and free the original object
+            api_obj->delay_delete();
+        } else {
+            // just free the original/built object (if object type is stateless)
+            // and not nuke it's resources as the cloned object is re-using all
+            // the original object's resources
+            api_base::free(obj_ctxt->obj_id, api_obj);
+        }
         api_obj_ctxt_free_(obj_ctxt);
         PDS_API_ACTCFG_UPDATE_COUNTER_INC(ok, 1);
         break;

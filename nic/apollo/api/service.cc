@@ -173,14 +173,6 @@ svc_mapping::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-svc_mapping::compute_update(api_obj_ctxt_t *obj_ctxt) {
-    // we can compare the (VIP, svc port) and optimize for no update case in
-    // future but ideally we shouldn't hit that case as agent/controller
-    // shouldn't come down to HAL in such cases
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 svc_mapping::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->update_hw(orig_obj, this, obj_ctxt);
 }

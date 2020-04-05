@@ -222,7 +222,6 @@ svc_mapping_impl::nuke_resources(api_base *api_obj) {
 
 sdk_ret_t
 svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    p4pd_error_t p4pd_ret;
     pds_svc_mapping_spec_t *spec;
     nat_rewrite_entry_t nat_data;
     sdk_ret_t ret;
@@ -246,7 +245,6 @@ svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 svc_mapping_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    p4pd_error_t p4pd_ret;
     pds_svc_mapping_spec_t *spec;
     nat_rewrite_entry_t nat_data;
     sdk_ret_t ret;
@@ -314,20 +312,20 @@ svc_mapping_impl::activate_delete_(pds_epoch_t epoch,
                                    svc_mapping *mapping) {
     sdk_ret_t ret;
     vpc_entry *vpc;
+    pds_svc_mapping_key_t skey;
+    nat_rewrite_entry_t nat_data;
     sdk_table_api_params_t tparams;
-    p4pd_error_t p4pd_ret;
     service_mapping_swkey_t svc_mapping_key;
     service_mapping_actiondata_t svc_mapping_data;
-    nat_rewrite_entry_t nat_data;
 
     // update the service mapping xlation idx to PDS_IMPL_RSVD_NAT_HW_ID to
     // disable NAT
-    pds_svc_mapping_key_t  skey = mapping->skey();
+    skey = mapping->skey();
     vpc = vpc_db()->find(&skey.vpc);
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
                                     ((vpc_impl *)vpc->impl())->hw_id(),
-                                    &(skey.backend_ip),
-                                    (skey.backend_port));
+                                    &skey.backend_ip,
+                                    skey.backend_port);
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data, PDS_IMPL_RSVD_NAT_HW_ID);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &svc_mapping_key, NULL,
                                    &svc_mapping_data,
@@ -341,7 +339,7 @@ svc_mapping_impl::activate_delete_(pds_epoch_t epoch,
         return ret;
     }
 
-    /* save the handle 'update' returns */
+    // save the handle update returns
     if (!to_vip_handle_.valid()) {
         to_vip_handle_ = tparams.handle;
     }
