@@ -18,10 +18,13 @@ def delete_ts_dir(tc):
     for node in tc.nodes:
         api.Trigger_AddNaplesCommand(req, node, tc.delete_cmd)
     resp = api.Trigger(req)
-    for cmd in resp.commands:
-        if cmd.exit_code != 0:
-            api.PrintCommandResults(cmd)
-            result = False
+    try:
+        for cmd in resp.commands:
+            if cmd.exit_code != 0:
+                api.PrintCommandResults(cmd)
+                result = False
+    except Exception as e:
+        api.Logger.error("Exception {} ".format(str(e)))
     return result
 
 def get_techsupport_file(cmd_output):
@@ -76,6 +79,7 @@ def collect_techsupports(tc):
                 continue
             # copy out the generated techsupport tarball from naples
             api.Logger.debug(f"Copying out {ts_file} from {node} to {tc.dir}")
+            api.ChangeDirectory("/")
             api.CopyFromNaples(node, [ts_file], tc.dir, True)
     return result
 

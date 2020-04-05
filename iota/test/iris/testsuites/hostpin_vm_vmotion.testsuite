@@ -9,6 +9,7 @@ meta:
 
 packages:
     - iota.test.iris
+    - iota.test.common
 
 image_manifest:
     spec        : images/latest.json
@@ -28,7 +29,10 @@ setup:
           args :
              spec : scale_cfg_1vrf_1nw_2ep_2rep.cfgyml
         - step : testcases.drivers.install_iperf
-        - step : testcases.naples_upgrade.install
+        - step : utils.naples_upgrade.install
+          args :
+             naples_upgr_pkgs : ["naples_fw.tar", "naples_upg_fw.tar"]
+        - step : testcases.naples_upgrade.testupgapp_install
 
 common:
     args: 

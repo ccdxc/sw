@@ -3,15 +3,8 @@ import json
 import time
 import os
 import iota.harness.api as api
-import iota.harness.infra.store as store
-import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
-import iota.test.utils.naples_host as naples_host_util
 import iota.protos.pygen.iota_types_pb2 as types_pb2
-
-UPGRADE_ROOT_DIR = 'upgrade_bin'
-
-UPGRADE_NAPLES_PKG = "naples_fw.tar"
-UPGRADE_NAPLES_PKG_COMPAT_CHECK = "naples_upg_fw.tar"
+import iota.test.common.utils.naples_upgrade.utils as utils
 
 UPGRADE_TEST_APP = "testupgapp"
 
@@ -54,12 +47,15 @@ def startTestUpgApp(node, param):
         api.Logger.error("Failed to copy Drivers to Node: %s" % node)
         return api.types.status.FAILURE
 
-    ret = copyNaplesFwImage(node, "sysmgr.json", "/data/")
+    ret = utils.copyNaplesFwImage(node, "sysmgr.json", "/data/")
     if ret != api.types.status.SUCCESS:
         return ret
 
     req = api.Trigger_CreateExecuteCommandsRequest()
-    api.Trigger_AddNaplesCommand(req, node, "LD_LIBRARY_PATH=/platform/lib:/nic/lib /update/{} {}".format(UPGRADE_TEST_APP + ".bin", param), background = True)
+    api.Trigger_AddNaplesCommand(req, node, 
+           "LD_LIBRARY_PATH=/platform/lib:/nic/lib /update/{} {}".format(UPGRADE_TEST_APP + ".bin", param),
+           background = True)
+
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:
         api.PrintCommandResults(cmd_resp)
@@ -94,33 +90,5 @@ def stopTestUpgApp(node, unreg):
     time.sleep(2)
     killTestUpgApp(node)
     time.sleep(2)
-
-    return api.types.status.SUCCESS
-
-def GetNaplesMgmtIP(n):
-    return  api.GetNicIntMgmtIP(n)
-
-def GetNaplesMgmtPort():
-    return  "8888"
-
-def copyNaplesFwImage(node, img, path):
-
-    copy_cmd = "sshpass -p pen123 scp -o ConnectTimeout=20 -o StrictHostKeyChecking=no {} root@{}:{}".format(img, api.GetNicIntMgmtIP(node), path)
-    req = api.Trigger_CreateExecuteCommandsRequest()
-    api.Trigger_AddHostCommand(req, node, copy_cmd)
-    resp = api.Trigger(req)
-    for cmd in resp.commands:
-        if cmd.exit_code != 0:
-            api.Logger.error("Copy to failed %s" % cmd.command)
-            return api.types.status.FAILURE
-
-    req = api.Trigger_CreateExecuteCommandsRequest()
-    api.Trigger_AddNaplesCommand(req, node, "chmod 777 {}/{}".format(path, img))
-    resp = api.Trigger(req)
-    for cmd_resp in resp.commands:
-        api.PrintCommandResults(cmd_resp)
-        if cmd_resp.exit_code != 0:
-            api.Logger.error("Creating core failed %s", cmd_resp.command)
-            return api.types.status.FAILURE
 
     return api.types.status.SUCCESS

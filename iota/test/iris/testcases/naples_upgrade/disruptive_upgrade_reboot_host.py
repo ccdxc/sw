@@ -2,8 +2,8 @@
 import time
 import json
 import iota.harness.api as api
-import iota.test.iris.testcases.naples_upgrade.ping as ping
-import iota.test.iris.testcases.naples_upgrade.arping as arping
+import iota.test.utils.ping as ping
+import iota.test.utils.arping as arping
 import iota.test.iris.config.netagent.api as netagent_cfg_api
 
 def Setup(tc):

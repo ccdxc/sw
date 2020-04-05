@@ -115,6 +115,9 @@ def CollectTechSupport(tsName):
     try:
         #global __CURREN_TECHSUPPORT_CNT
         #__CURREN_TECHSUPPORT_CNT = __CURREN_TECHSUPPORT_CNT + 1
+        if GlobalOptions.pipeline in [ "apulu" ]:
+            return types.status.SUCCESS
+
         Logger.info("Collecting techsupport for testsuite {0}".format(tsName))
         tsName=re.sub('\W','_',tsName)
         logDir=GlobalOptions.logdir

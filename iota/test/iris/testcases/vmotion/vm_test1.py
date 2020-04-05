@@ -5,7 +5,7 @@ import copy
 import threading
 import iota.harness.api as api
 import iota.test.iris.config.netagent.api as agent_api
-import iota.test.iris.testcases.naples_upgrade.ping as ping
+import iota.test.utils.ping as ping
 import iota.test.iris.testcases.vmotion.arping as arping
 import iota.test.iris.testcases.vmotion.vm_utils as vm_utils 
 

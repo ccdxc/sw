@@ -3,10 +3,9 @@ import time
 import json
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
-import iota.test.iris.testcases.naples_upgrade.upgradedefs as upgradedefs
-import iota.test.iris.testcases.naples_upgrade.common as common
-import iota.test.iris.testcases.naples_upgrade.ping as ping
-import iota.test.iris.testcases.naples_upgrade.arping as arping
+import iota.test.iris.testcases.naples_upgrade.testupgapp_utils as testupgapp_utils
+import iota.test.utils.ping as ping
+import iota.test.utils.arping as arping
 import iota.test.iris.config.netagent.api as netagent_cfg_api
 
 __fuz_run_time = "300s"
@@ -134,7 +133,7 @@ def Setup(tc):
     if not tc.iterators.option:
         return api.types.status.SUCCESS
     for n in tc.Nodes:
-        common.startTestUpgApp(n, tc.iterators.option)
+        testupgapp_utils.startTestUpgApp(n, tc.iterators.option)
 
     return api.types.status.SUCCESS
 
@@ -216,9 +215,9 @@ def Verify(tc):
 def Teardown(tc):
     for n in tc.Nodes:
         if not tc.iterators.option:
-            common.stopTestUpgApp(n, False)
+            testupgapp_utils.stopTestUpgApp(n, False)
         else:
-            common.stopTestUpgApp(n, True)
+            testupgapp_utils.stopTestUpgApp(n, True)
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for node in tc.Nodes:

@@ -2,12 +2,11 @@
 import time
 import json
 import iota.harness.api as api
-import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
-import iota.test.iris.testcases.naples_upgrade.upgradedefs as upgradedefs
-import iota.test.iris.testcases.naples_upgrade.common as common
-import iota.test.iris.testcases.naples_upgrade.ping as ping
-import iota.test.iris.testcases.naples_upgrade.arping as arping
-import iota.test.iris.config.netagent.api as netagent_cfg_api
+import iota.test.utils.ping as ping
+import iota.test.utils.arping as arping
+
+UPGRADE_NAPLES_PKG = "naples_fw.tar"
+UPGRADE_NAPLES_PKG_COMPAT_CHECK = "naples_upg_fw.tar"
 
 def Setup(tc):
     tc.Nodes = api.GetNaplesHostnames()
@@ -19,9 +18,9 @@ def Setup(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for node in tc.Nodes:
-        api.Trigger_AddNaplesCommand(req, node, "cp /update/{} /update/{}.orig".format(common.UPGRADE_NAPLES_PKG_COMPAT_CHECK, common.UPGRADE_NAPLES_PKG_COMPAT_CHECK))
-        api.Trigger_AddNaplesCommand(req, node, "cp /update/{} /update/{}.orig".format(common.UPGRADE_NAPLES_PKG, common.UPGRADE_NAPLES_PKG))
-        api.Trigger_AddNaplesCommand(req, node, "cp /update/{} /update/{}".format(common.UPGRADE_NAPLES_PKG_COMPAT_CHECK, common.UPGRADE_NAPLES_PKG))
+        api.Trigger_AddNaplesCommand(req, node, "cp /update/{} /update/{}.orig".format(UPGRADE_NAPLES_PKG_COMPAT_CHECK, UPGRADE_NAPLES_PKG_COMPAT_CHECK))
+        api.Trigger_AddNaplesCommand(req, node, "cp /update/{} /update/{}.orig".format(UPGRADE_NAPLES_PKG, UPGRADE_NAPLES_PKG))
+        api.Trigger_AddNaplesCommand(req, node, "cp /update/{} /update/{}".format(UPGRADE_NAPLES_PKG_COMPAT_CHECK, UPGRADE_NAPLES_PKG))
         api.Trigger_AddNaplesCommand(req, node, "touch /data/upgrade_to_same_firmware_allowed")
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:
@@ -87,12 +86,12 @@ def Verify(tc):
 def Teardown(tc):
     req = api.Trigger_CreateExecuteCommandsRequest()
     for node in tc.Nodes:
-        api.Trigger_AddNaplesCommand(req, node, "cp /update/{}.orig /update/{}".format(common.UPGRADE_NAPLES_PKG_COMPAT_CHECK, common.UPGRADE_NAPLES_PKG_COMPAT_CHECK))
-        api.Trigger_AddNaplesCommand(req, node, "cp /update/{}.orig /update/{}".format(common.UPGRADE_NAPLES_PKG, common.UPGRADE_NAPLES_PKG))
+        api.Trigger_AddNaplesCommand(req, node, "cp /update/{}.orig /update/{}".format(UPGRADE_NAPLES_PKG_COMPAT_CHECK, UPGRADE_NAPLES_PKG_COMPAT_CHECK))
+        api.Trigger_AddNaplesCommand(req, node, "cp /update/{}.orig /update/{}".format(UPGRADE_NAPLES_PKG, UPGRADE_NAPLES_PKG))
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/delphi.dat-lock")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/delphi.dat")
-        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/{}.orig".format(common.UPGRADE_NAPLES_PKG_COMPAT_CHECK))
-        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/{}.orig".format(common.UPGRADE_NAPLES_PKG))
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/{}.orig".format(UPGRADE_NAPLES_PKG_COMPAT_CHECK))
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /update/{}.orig".format(UPGRADE_NAPLES_PKG))
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/upgrade_to_same_firmware_allowed")
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/NaplesTechSupport-*")
     resp = api.Trigger(req)

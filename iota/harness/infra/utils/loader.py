@@ -10,7 +10,10 @@ import iota.harness.infra.types as types
 def Import(modname, packages = []):
     for pkg in packages:
         imp_path = "%s.%s" % (pkg, modname)
-        module = importlib.import_module(imp_path)
+        try:
+            module = importlib.import_module(imp_path)
+        except ModuleNotFoundError:
+            continue
         if module:
             return module
     Logger.error("Failed to import module: %s in packages: " % modname, packages)
