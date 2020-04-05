@@ -46,18 +46,15 @@ linkmgr-25Gb-apulu: NAPLES_FW_TAR=naples_fw_all_apulu.tgz
 linkmgr-25Gb-apulu: 
 
 
-linkmgr-copy-fw: extract-naples-fw
-	sshpass -p lab123 scp -o StrictHostKeyChecking=no /sw/nic/naples_fw_.tar diag@192.168.69.245:/home/diag/linkMGR/$${TARGET_ID}.tar
+linkmgr-100: extract-naples-fw 
+	./regression/linkmgr/linkregression.sh ${TARGET_ID} 100Gb
 
-linkmgr-100: linkmgr-copy-fw
-	./regression/linkmgr/linkregression.sh ${TARGET_ID}.tar 100Gb
+linkmgr-40: extract-naples-fw
+	./regression/linkmgr/linkregression.sh ${TARGET_ID} 40Gb
 
-linkmgr-40: linkmgr-copy-fw
-	./regression/linkmgr/linkregression.sh ${TARGET_ID}.tar 40Gb
+linkmgr-25: extract-naples-fw
+	./regression/linkmgr/linkregression.sh ${TARGET_ID} 25Gb
 
-linkmgr-25: linkmgr-copy-fw
-	./regression/linkmgr/linkregression.sh ${TARGET_ID}.tar 25Gb
-
-linkmgr-100-vomero: linkmgr-copy-fw
-	./regression/linkmgr/linkregression.sh ${TARGET_ID}.tar 100Gb_vomero
+linkmgr-vomero: extract-naples-fw
+	./regression/linkmgr/linkregression.sh ${TARGET_ID} 100Gb_vomero
 
