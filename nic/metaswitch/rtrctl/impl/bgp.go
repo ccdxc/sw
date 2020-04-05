@@ -275,7 +275,6 @@ const (
 UUID            : %s
 AFI/SAFI        : [ %v/%v ]
 Remote Address  : %v
-Flags           : [ Next-Hop-Self: %v / Default-originate: %v ]
 ------------------------------------
 `
 )
@@ -313,7 +312,7 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 				afs = append(afs, afp)
 			} else {
 				if doDetail {
-					fmt.Printf(bgpPeerAFDetStr, afp.Id, afp.Afi, afp.Safi, afp.PeerAddr, afp.NexthopSelf, afp.DefaultOrig)
+					fmt.Printf(bgpPeerAFDetStr, afp.Id, afp.Afi, afp.Safi, afp.PeerAddr)
 				} else {
 					fmt.Printf(bgpPeerAFFmt, afp.Id, afp.PeerAddr, afp.Afi, afp.Safi)
 					fmt.Println("")
