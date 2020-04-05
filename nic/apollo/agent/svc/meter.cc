@@ -5,7 +5,7 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_meter.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/meter_svc.hpp"
 #include "nic/apollo/agent/svc/meter.hpp"
 
 Status

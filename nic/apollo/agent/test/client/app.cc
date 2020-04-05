@@ -43,6 +43,10 @@
 #include "nic/apollo/agent/svc/vpc_svc.hpp"
 #include "nic/apollo/agent/svc/interface_svc.hpp"
 #include "nic/apollo/agent/svc/subnet_svc.hpp"
+#include "nic/apollo/agent/svc/tag_svc.hpp"
+#include "nic/apollo/agent/svc/meter_svc.hpp"
+#include "nic/apollo/agent/svc/policer_svc.hpp"
+#include "nic/apollo/agent/svc/service_svc.hpp"
 
 using std::string;
 using grpc::Channel;

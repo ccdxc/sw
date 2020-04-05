@@ -9,7 +9,8 @@
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/api/debug.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/debug_svc.hpp"
+#include "nic/apollo/agent/svc/meter_svc.hpp"
 #include "nic/apollo/agent/svc/debug.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include <malloc.h>
