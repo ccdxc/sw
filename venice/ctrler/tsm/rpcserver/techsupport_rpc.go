@@ -183,16 +183,9 @@ func (r *TechSupportRPCServer) updateTechSupportNodeResult(tsr *monitoring.TechS
 		log.Infof("No state found for object %s, cannot close context.", tsr.GetObjectMeta().Name)
 	}
 
-	if isComplete(tsr.Status.DSCResults) && isComplete(tsr.Status.ControllerNodeResults) {
-		for _, key := range tsr.Spec.NodeSelector.Names {
-			_, okSN := tsr.Status.DSCResults[key]
-			_, okCN := tsr.Status.ControllerNodeResults[key]
-
-			if !okSN && !okCN {
-				tsr.Status.Status = monitoring.TechSupportJobStatus_Failed.String()
-				goto exit
-			}
-		}
+	if (len(tsr.Status.DSCResults)+len(tsr.Status.ControllerNodeResults) == len(tsr.Spec.NodeSelector.Names)) &&
+		isComplete(tsr.Status.DSCResults) &&
+		isComplete(tsr.Status.ControllerNodeResults) {
 
 		if len(tsr.Status.ControllerNodeResults) > 0 {
 			log.Infof("Techsupport for controller nodes completed. Collecting config snapshot.")
@@ -213,7 +206,6 @@ func (r *TechSupportRPCServer) updateTechSupportNodeResult(tsr *monitoring.TechS
 		return err
 	}
 
-exit:
 	return r.stateMgr.UpdateTechSupportObject(tsr)
 }
 
