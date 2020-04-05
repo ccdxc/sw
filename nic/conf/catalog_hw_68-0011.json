@@ -370,11 +370,11 @@
                     },
                     {
                         "key_or_handle" : { "copp_type" : "COPP_TYPE_ARP" },
-                        "policer" : { "pps_policer" : { "packets_per_sec" : 4000, "burst_packets" : 400} }
+                        "policer" : { "pps_policer" : { "packets_per_sec" : 500, "burst_packets" : 100} }
                     },
                     {
                         "key_or_handle" : { "copp_type" : "COPP_TYPE_DHCP" },
-                        "policer" : { "pps_policer" : { "packets_per_sec" : 4000, "burst_packets" : 400} }
+                        "policer" : { "pps_policer" : { "packets_per_sec" : 500, "burst_packets" : 100} }
                     },
                     {
                         "key_or_handle" : { "copp_type" : "COPP_TYPE_SWM" },
