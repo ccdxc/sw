@@ -1872,6 +1872,25 @@
   revision = "c851e5e1525d93917e37121f3aa6fcef28bff52f"
 
 [[projects]]
+  branch = "master"
+  digest = "1:9a5399191f92572136ec13e9d98bdfbbf61449f6a56ee92a378076c64f48fe30"
+  name = "github.com/pensando/netlink"
+  packages = [
+    ".",
+    "nl",
+  ]
+  pruneopts = "NUT"
+  revision = "21758b5dde81303c63aa53f35fbff8eaf3d6b992"
+
+[[projects]]
+  branch = "master"
+  digest = "1:9b21afe2f9568ec40a2d0e925ee567bf6aef9fba7c81becefd8ba5caeb2a9d29"
+  name = "github.com/pensando/netns"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "38bf2b6a0c40aedff9bfdd9b42586616a487e76b"
+
+[[projects]]
   digest = "1:0332ddbee3ad55b3abb8e2d45bd17b89416675b63f566cc4743681b651b7420c"
   name = "github.com/pensando/test-infra"
   packages = ["public"]
@@ -3031,6 +3050,8 @@
     "github.com/pensando/grpc-gateway/runtime",
     "github.com/pensando/grpc-gateway/third_party/googleapis/google/api",
     "github.com/pensando/grpc-gateway/utilities",
+    "github.com/pensando/netlink",
+    "github.com/pensando/netns",
     "github.com/pensando/test-infra-tracker/types",
     "github.com/pensando/test-infra/public",
     "github.com/pkg/errors",
@@ -3048,8 +3069,6 @@
     "github.com/spf13/cobra/doc",
     "github.com/tchap/go-patricia/patricia",
     "github.com/urfave/cli",
-    "github.com/vishvananda/netlink",
-    "github.com/vishvananda/netns",
     "github.com/vmware/govmomi",
     "github.com/vmware/govmomi/event",
     "github.com/vmware/govmomi/find",

@@ -11,11 +11,8 @@ import (
 	"net/http"
 	"strings"
 
-	"golang.org/x/net/html"
-
 	"github.com/spf13/cobra"
-
-	"github.com/pensando/sw/nic/agent/nmd/state"
+	"golang.org/x/net/html"
 )
 
 var coreShowCmd = &cobra.Command{
@@ -102,7 +99,7 @@ func coreDeleteCmdHandler(cmd *cobra.Command, args []string) error {
 		fmt.Println(err)
 		return err
 	}
-	naplesCfg := state.NaplesConfigResp{}
+	naplesCfg := NaplesConfigResp{}
 	json.Unmarshal(resp, &naplesCfg)
 	if naplesCfg.ErrorMsg != "" {
 		fmt.Println("Error: ", naplesCfg.ErrorMsg)

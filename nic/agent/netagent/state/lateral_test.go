@@ -10,7 +10,7 @@ import (
 
 	"github.com/pensando/sw/venice/globals"
 
-	"github.com/vishvananda/netlink"
+	"github.com/pensando/netlink"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"

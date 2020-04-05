@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vishvananda/netlink"
+	"github.com/pensando/netlink"
 
 	"github.com/pensando/sw/venice/utils/tsdb"
 

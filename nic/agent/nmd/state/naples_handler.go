@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	"github.com/vishvananda/netlink"
+	"github.com/pensando/netlink"
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"

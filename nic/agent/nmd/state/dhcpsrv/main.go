@@ -5,7 +5,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/vishvananda/netlink"
+	"github.com/pensando/netlink"
 
 	dhcp "github.com/krolaw/dhcp4"
 	"github.com/krolaw/dhcp4/conn"

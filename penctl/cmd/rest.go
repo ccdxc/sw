@@ -20,9 +20,13 @@ import (
 
 	"github.com/ghodss/yaml"
 
-	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/penctl/http2curl"
 )
+
+// NaplesConfigResp is response to NaplesConfig request nmd.Naples
+type NaplesConfigResp struct {
+	ErrorMsg string
+}
 
 var penHTTPClient = &http.Client{}
 
@@ -183,7 +187,7 @@ func restPost(v interface{}, url string) (string, error) {
 			fmt.Println(postResp.Status + " " + url)
 			fmt.Println(postResp.Body)
 		}
-		jsonResp := state.NaplesConfigResp{}
+		jsonResp := NaplesConfigResp{}
 		json.Unmarshal(bodyBytes[:len(bodyBytes)-1], &jsonResp)
 		return string(bodyBytes), errors.New(jsonResp.ErrorMsg)
 	}
@@ -471,7 +475,7 @@ func restPut(v interface{}, url string) error {
 			fmt.Println(postResp.Body)
 		}
 		bodyBytes, _ := ioutil.ReadAll(postResp.Body)
-		jsonResp := state.NaplesConfigResp{}
+		jsonResp := NaplesConfigResp{}
 		json.Unmarshal(bodyBytes[:len(bodyBytes)-1], &jsonResp)
 		return errors.New(jsonResp.ErrorMsg)
 	}

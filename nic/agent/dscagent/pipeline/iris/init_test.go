@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/mdlayher/arp"
-	"github.com/vishvananda/netlink"
+	"github.com/pensando/netlink"
 
 	"github.com/pensando/sw/venice/utils/emstore"
 

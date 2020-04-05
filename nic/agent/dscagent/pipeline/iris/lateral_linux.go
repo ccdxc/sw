@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/mdlayher/arp"
+	"github.com/pensando/netlink"
 	"github.com/pkg/errors"
-	"github.com/vishvananda/netlink"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/types"

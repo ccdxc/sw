@@ -10,7 +10,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
 	log "github.com/sirupsen/logrus"
-	"github.com/vishvananda/netlink"
+	"github.com/pensando/netlink"
 )
 
 // setupVethPairWithBridge creates veth interface pairs with specified name

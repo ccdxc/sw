@@ -13,7 +13,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/vishvananda/netlink"
+	"github.com/pensando/netlink"
 
 	"github.com/pensando/sw/venice/globals"
 )

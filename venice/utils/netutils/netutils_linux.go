@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/vishvananda/netlink"
-	"github.com/vishvananda/netns"
+	"github.com/pensando/netlink"
+	"github.com/pensando/netns"
 
 	"github.com/pensando/sw/venice/utils/log"
 )

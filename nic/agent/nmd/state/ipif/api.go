@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vishvananda/netlink"
+	"github.com/pensando/netlink"
 
 	"github.com/krolaw/dhcp4"
 	"github.com/pensando/dhcp-client"

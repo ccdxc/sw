@@ -15,7 +15,7 @@ import (
 
 	fakehal "github.com/pensando/sw/nic/agent/cmd/fakehal/hal"
 
-	"github.com/vishvananda/netlink"
+	"github.com/pensando/netlink"
 	"golang.org/x/net/context"
 	"gopkg.in/check.v1"
 

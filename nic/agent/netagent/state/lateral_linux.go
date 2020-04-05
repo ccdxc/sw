@@ -11,7 +11,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 
 	"github.com/mdlayher/arp"
-	"github.com/vishvananda/netlink"
+	"github.com/pensando/netlink"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"

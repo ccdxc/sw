@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/netlink"
 	"github.com/pkg/errors"
-	"github.com/vishvananda/netlink"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 

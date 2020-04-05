@@ -14,7 +14,7 @@ import (
 
 	"github.com/krolaw/dhcp4"
 	"github.com/pensando/dhcp-client"
-	"github.com/vishvananda/netlink"
+	"github.com/pensando/netlink"
 
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/api"

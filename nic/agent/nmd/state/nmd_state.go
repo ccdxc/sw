@@ -21,8 +21,8 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
+	"github.com/pensando/netlink"
 	"github.com/pkg/errors"
-	"github.com/vishvananda/netlink"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"

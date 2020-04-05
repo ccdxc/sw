@@ -15,7 +15,7 @@ package state
 //	"strings"
 //	"time"
 //
-//	"github.com/vishvananda/netlink"
+//	"github.com/pensando/netlink"
 //
 //	"github.com/fsnotify/fsnotify"
 //

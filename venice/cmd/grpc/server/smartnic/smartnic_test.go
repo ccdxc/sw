@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vishvananda/netlink"
+	"github.com/pensando/netlink"
 
 	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 
