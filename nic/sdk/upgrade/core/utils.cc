@@ -66,12 +66,16 @@ dump (const fsm& fsm)
                       "\tend_stage     : %s\n"
                       "\tPending resp  : %d\n"
                       "\ttimeout       : %f\n"
+                      "\tevent seq     : %s\n"
+                      "\tdiscovery     : %d\n"
                       "\tsvc sequence  : %s\n",
                       upg_stage2str(start),
                       upg_stage2str(curr),
                       upg_stage2str(end),
                       fsm.pending_response(),
                       fsm.timeout(),
+                      (fsm.is_serial_event_sequence() ? "serial":"parallel"),
+                      fsm.is_discovery(),
                       svc_sequence_to_str(fsm.svc_sequence()).c_str());
 }
 
@@ -92,12 +96,14 @@ dump (upg_stage& stage)
     UPG_TRACE_VERBOSE("\t upg_stage :"
                       "\n\t\t svc_rsp_timeout: %f"
                       "\n\t\t svc_sequence   : %s"
-                      "\n\t\t event_sequence : %d"
+                      "\n\t\t event_sequence : %s"
+                      "\n\t\t discovery     : %d"
                       "\n\t\t pre_hook       : %s"
                       "\n\t\t post_hook      : %s",
                       stage.svc_rsp_timeout(),
                       svc_sequence_to_str(stage.svc_sequence()).c_str(),
-                      stage.event_sequence(),
+                      (stage.event_sequence() == SERIAL? "serial":"parallel"),
+                      stage.is_discovery(),
                       script_to_str(stage.pre_hook_scripts()).c_str(),
                       script_to_str(stage.post_hook_scripts()).c_str());
 }

@@ -72,6 +72,16 @@ dispatch_event (ipc_svc_dom_id_t dom, upg_stage_t id)
 }
 
 static void
+send_discovery_event (ipc_svc_dom_id_t dom, upg_stage_t id)
+{
+    std::string stage_name(upg_stage2str(id));
+    SDK_ASSERT(fsm_stages.find(id) != fsm_stages.end());
+    UPG_TRACE_VERBOSE("Discovery event %s\n", stage_name.c_str());
+
+    upg_send_broadcast_request(dom, id);
+}
+
+static void
 update_ipc_id (std::string name, uint32_t ipc_id)
 {
     SDK_ASSERT(fsm_services.find(name) != fsm_services.end());
@@ -91,7 +101,15 @@ move_to_nextstage (void)
     ipc_svc_dom_id_t domain = IPC_SVC_DOM_ID_A;
 
     std::string name(upg_stage2str(fsm_states.current_stage()));
-    if (fsm_states.is_serial_event_sequence()) {
+    if (fsm_states.is_discovery()) {
+        UPG_TRACE_VERBOSE("Moving to next stage (discovery): %s\n",
+                          name.c_str());
+        dump(fsm_states);
+        upg_stage_t id = fsm_states.current_stage();
+        fsm_states.timer_stop();
+        fsm_states.timer_start();
+        send_discovery_event(domain, id);
+    } else if (fsm_states.is_serial_event_sequence()) {
         UPG_TRACE_VERBOSE("Moving to next stage (serial): %s\n", name.c_str());
         dump(fsm_states);
         if (fsm_states.has_next_svc()) {
@@ -106,7 +124,7 @@ move_to_nextstage (void)
             UPG_TRACE_VERBOSE("Oops! no service to send request.");
             SDK_ASSERT(0);
         }
-    } else {
+    } else if (fsm_states.is_parallel_event_sequence()) {
         UPG_TRACE_VERBOSE("Moving to next stage (parallel): %s\n",
                           name.c_str());
         dump(fsm_states);
@@ -114,6 +132,8 @@ move_to_nextstage (void)
         fsm_states.timer_stop();
         fsm_states.timer_start();
         dispatch_event(domain, id);
+    }else {
+       SDK_ASSERT(0);
     }
 }
 
@@ -153,7 +173,8 @@ upg_event_handler (sdk::ipc::ipc_msg_ptr msg)
 
     if (event->stage == id && fsm_states.is_valid_service(svc_name)) {
 
-        if (event->stage == fsm_states.start_stage()) {
+        if ((event->stage == fsm_states.start_stage()) ||
+            fsm_states.is_discovery()) {
             update_ipc_id(svc_name, event->rsp_svc_ipc_id);
         }
 
@@ -366,6 +387,20 @@ fsm::is_serial_event_sequence(void) const {
     return stage.event_sequence() == SERIAL;
 }
 
+bool
+fsm::is_parallel_event_sequence(void) const {
+    SDK_ASSERT(fsm_stages.find(current_stage_) != fsm_stages.end());
+    upg_stage stage = fsm_stages[current_stage_];
+    return stage.event_sequence() == PARALLEL;
+}
+
+bool
+fsm::is_discovery(void) const {
+    SDK_ASSERT(fsm_stages.find(current_stage_) != fsm_stages.end());
+    upg_stage stage = fsm_stages[current_stage_];
+    return stage.is_discovery();
+}
+
 static svc_sequence_list
 str_to_svc_sequence (std::string& svc_seq)
 {
@@ -482,6 +517,7 @@ init_fsm_stages (pt::ptree& tree)
     event_sequence_t event_seq;
     upg_scripts prehook;
     upg_scripts posthook;
+    bool is_discovery = false;
 
     sdk_ret_t ret = SDK_RET_OK;
     try
@@ -495,6 +531,7 @@ init_fsm_stages (pt::ptree& tree)
             std::string evt_seq_str;
             std::string pre_hook_str;
             std::string post_hook_str;
+            std::string discovery_str;
             if(subtree.empty()) {
                 UPG_TRACE_ERR(" Parsing Error !");
                 return SDK_RET_ERR;
@@ -505,6 +542,7 @@ init_fsm_stages (pt::ptree& tree)
                     subtree.get<std::string>("event_sequence", "parallel");
                 pre_hook_str = subtree.get<std::string>("pre_hook", "");
                 post_hook_str = subtree.get<std::string>("post_hook", "");
+                discovery_str = subtree.get<std::string>("discovery", "no");
 
                 stage_id = name_to_stage_id(key);
                 svcs_seq = str_to_svc_sequence(svc_seq_str);
@@ -512,9 +550,11 @@ init_fsm_stages (pt::ptree& tree)
                 prehook = str_to_scripts(pre_hook_str);
                 posthook  = str_to_scripts(post_hook_str);
                 svc_rsp_timeout = str_to_timeout(timeout_str);
+                is_discovery = (discovery_str.compare("no")== 0) ? false : true;
 
                 fsm_stages[stage_id] = upg_stage(svc_rsp_timeout, svcs_seq,
-                                                 event_seq, prehook,posthook);
+                                                 event_seq, prehook,posthook,
+                                                 is_discovery);
             }
         }
     }
@@ -523,6 +563,7 @@ init_fsm_stages (pt::ptree& tree)
         UPG_TRACE_VERBOSE("Error reading upgrade spec:\n %s\n", ex.what());
         UPG_TRACE_ERR("Error reading upgrade spec:\n %s\n", ex.what());
     }
+    dump(fsm_stages);
     return ret;
 }
 
@@ -575,7 +616,7 @@ init_fsm (fsm_init_params_t *params)
 
     fsm_states.timer_start();
     upg_ipc_init(upg_event_handler);
-    upg_send_broadcast_request(IPC_SVC_DOM_ID_A, fsm_states.start_stage());
+    send_discovery_event(IPC_SVC_DOM_ID_A, fsm_states.start_stage());
     fsm_states.set_init_params(params);
     return SDK_RET_OK;
 }

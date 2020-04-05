@@ -69,6 +69,8 @@ public:
     void update_stage_progress(const svc_rsp_code_t rsp);
     bool is_current_stage_over(void);
     bool is_serial_event_sequence(void) const;
+    bool is_parallel_event_sequence(void) const;
+    bool is_discovery(void) const;
     bool is_valid_service(const std::string svc) const;
     std::string next_svc(void) const;
     void timer_init(struct ev_loop *loop);
