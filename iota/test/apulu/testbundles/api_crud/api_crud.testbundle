@@ -72,6 +72,7 @@ testcases:
             #ipaf   : [ ipv4, ipv6 ]
             ipaf    : [ ipv4 ]
             #objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, interface, lmapping, rmapping ]
-            objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, lmapping, rmapping ]
+            #objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, lmapping, rmapping ]
+            objtype : [ device, vpc, subnet, vnic, nexthop, tunnel ]
             oper    : [ [update, create] ]
 
