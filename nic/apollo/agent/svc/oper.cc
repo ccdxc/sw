@@ -200,8 +200,8 @@ OperSvcImpl::MetricsGet(ServerContext* context,
             }
             memcpy(&key, metrics_req.key().c_str(), sizeof(key));
             pds_obj_key_proto_to_api_spec(&obj_key, metrics_req.key());
-            PDS_TRACE_DEBUG("Rcvd metrics request, name {}, key {}",
-                            metrics_req.name().c_str(), obj_key.str());
+            PDS_TRACE_VERBOSE("Rcvd metrics request, name {}, key {}",
+                              metrics_req.name().c_str(), obj_key.str());
             metrics_rsp = std::make_shared<MetricsGetResponse>();
             metrics_read(metrics_req.name(), key, metrics_rsp);
             stream->Write(*metrics_rsp.get());
@@ -223,7 +223,7 @@ OperSvcImpl::AlertsGet(ServerContext *context, const Empty *req,
             AlertsGetResponse resp;
 
             alerts_log_to_obj(log, resp);
-            
+
             if (!stream->Write(resp)) {
                 // Client closed connection
                 break;

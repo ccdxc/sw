@@ -563,6 +563,7 @@ api_engine::obj_dependency_computation_stage_(void)
             ret = SDK_RET_OOM;
         }
     }
+    PDS_TRACE_INFO("Object circulation list size %u", batch_ctxt_.num_msgs);
     PDS_API_OBJ_DEP_UPDATE_COUNTER_INC(ok, 1);
     return SDK_RET_OK;
 
@@ -625,7 +626,6 @@ api_engine::resource_reservation_stage_(void)
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_OBJ_DEPENDENCY),
                       sdk::SDK_RET_INVALID_ARG);
-    batch_ctxt_.num_msgs = 0;
     // walk over all the dirty objects and reserve resources, if needed
     batch_ctxt_.stage = API_BATCH_STAGE_RESERVE_RESOURCES;
     for (auto it = batch_ctxt_.dol.begin();
@@ -1118,6 +1118,7 @@ sdk_ret_t
 api_engine::batch_commit_phase1_(void) {
     sdk_ret_t ret;
 
+    batch_ctxt_.num_msgs = 0;
     // pre process the APIs by walking over the stashed API contexts to form
     // dirty object list
     PDS_TRACE_INFO("Preprocess stage start, epoch %u, API count %u",
@@ -1170,7 +1171,6 @@ api_engine::batch_commit_phase1_(void) {
     if (ret != SDK_RET_OK) {
         goto error;
     }
-    PDS_TRACE_INFO("Object circulation list size %u", batch_ctxt_.num_msgs);
     return SDK_RET_OK;
 
 error:
@@ -1238,7 +1238,6 @@ api_engine::process_ipc_async_result_(sdk::ipc::ipc_msg_ptr msg,
     ipc_msg_ptr ipc_msg;
     sdk_ret_t ret = *(sdk_ret_t *)msg->data();
 
-    SDK_TRACE_DEBUG("Received response to PDS_MSG_TYPE_CFG");
     ipc_msg = api_engine_get()->ipc_msg();
     if (ret == SDK_RET_OK) {
         // resume processing the API batch
@@ -1248,6 +1247,8 @@ api_engine::process_ipc_async_result_(sdk::ipc::ipc_msg_ptr msg,
             api_engine_get()->batch_abort_();
         }
     } else {
+        SDK_TRACE_DEBUG("Rcvd failure response to PDS_MSG_TYPE_CFG, "
+                        "err %u", ret);
         // abort the batch
         api_engine_get()->batch_abort_();
     }

@@ -1779,7 +1779,9 @@ create_objects (void)
         if (ret != SDK_RET_OK) {
             return ret;
         }
-
+        // L3 interfaces go via MS and they need time to make it to HAL before
+        // we can push nexthops pointing to them
+        sleep(1);
         ret = create_underlay_nexthops(g_test_params.max_underlay_nh);
         if (ret != SDK_RET_OK) {
             return ret;

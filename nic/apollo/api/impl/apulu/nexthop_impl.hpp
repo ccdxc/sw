@@ -210,7 +210,6 @@ populate_underlay_nh_info_ (pds_nexthop_spec_t *spec,
     lif_impl *lif;
     pds_encap_t encap;
 
-    PDS_TRACE_ERR("l3_if %s", spec->l3_if.str());
     memset(nh_data, 0, nh_data->entry_size());
     intf = if_db()->find(&spec->l3_if);
     if (!intf) {

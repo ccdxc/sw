@@ -5,7 +5,7 @@ NICDIR="$TOPDIR/nic"
 export PDSPKG_TOPDIR=$NICDIR
 # for mock runs, point obfl logging to /tmp
 export PERSISTENT_LOG_DIR=/tmp/
-#export VPP_IPC_MOCK_MODE=1
+export VPP_IPC_MOCK_MODE=1
 echo $NICDIR
 
 cleanup() {
@@ -25,12 +25,12 @@ $NICDIR/apollo/tools/apulu/start-agent-mock.sh > agent.log 2>&1 &
 # wait till agent opens up gRPC service port
 sleep 10
 
-echo "Starting VPP"
-sudo $NICDIR/vpp/tools/start-vpp-mock.sh --pipeline apulu
-if [[ $? != 0 ]]; then
-    echo "Failed to bring up VPP"
-    exit -1
-fi
+#echo "Starting VPP"
+#sudo $NICDIR/vpp/tools/start-vpp-mock.sh --pipeline apulu
+#if [[ $? != 0 ]]; then
+    #echo "Failed to bring up VPP"
+    #exit -1
+#fi
 
 echo "Starting dhcpd"
 sudo $NICDIR/apollo/tools/apulu/start-dhcpd-sim.sh -p apulu
