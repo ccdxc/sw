@@ -42,15 +42,6 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 		return errors.Wrapf(types.ErrDatapathHandling, fmt.Sprintf("Vrf: %s | Err: %s", vrf.GetKey(), err))
 	}
 
-	if vrf.Spec.VrfType != "CUSTOMER" {
-		// Only customer VRFs need handling ignore all others
-		dat, _ := vrf.Marshal()
-		if err := infraAPI.Store(vrf.Kind, vrf.GetKey(), dat); err != nil {
-			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "VPC: %s | Err: %v", vrf.GetKey(), err))
-			return errors.Wrapf(types.ErrBoltDBStoreCreate, "VPC: %s | Err: %v", vrf.GetKey(), err)
-		}
-		return nil
-	}
 	var success bool
 	resp, err := client.VPCCreate(context.Background(), vpcReq)
 	log.Infof("createVPCHandler Response: %v. Err: %v", resp, err)
@@ -80,6 +71,14 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 			}
 		}
 	}()
+	if vrf.Spec.VrfType != "CUSTOMER" {
+		dat, _ := vrf.Marshal()
+		if err := infraAPI.Store(vrf.Kind, vrf.GetKey(), dat); err != nil {
+			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "VPC: %s | Err: %v", vrf.GetKey(), err))
+			return errors.Wrapf(types.ErrBoltDBStoreCreate, "VPC: %s | Err: %v", vrf.GetKey(), err)
+		}
+		return nil
+	}
 
 	uid, err := uuid.FromString(vrf.UUID)
 	if err != nil {
