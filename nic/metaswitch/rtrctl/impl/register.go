@@ -44,4 +44,10 @@ func RegisterNodes(params *CLIParams, base *cobra.Command) {
 	evpnEviShowCmd.AddCommand(evpnEviStatusShowCmd)
 	evpnEviShowCmd.AddCommand(evpnEviRtShowCmd)
 	evpnEviRtShowCmd.AddCommand(evpnEviRtStatusShowCmd)
+
+	//routing commands
+	base.AddCommand(routingShowCmd)
+	routingShowCmd.AddCommand(interfaceShowCmd)
+	interfaceShowCmd.AddCommand(intfStatusShowCmd)
+	interfaceShowCmd.PersistentFlags().Bool("json", false, "output in json")
 }

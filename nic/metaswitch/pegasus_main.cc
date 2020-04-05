@@ -11,6 +11,7 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/internal_bgp_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/internal_evpn_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/internal_lim_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/internal_cp_route_gen.hpp"
@@ -122,6 +123,7 @@ svc_reg (void)
     BGPSvcImpl            bgp_svc;
     EvpnSvcImpl           evpn_svc;
     IfSvcImpl             intf_svc;
+    LimSvcImpl            lim_svc;
     CPRouteSvcImpl        route_svc;
 
 
@@ -138,6 +140,7 @@ svc_reg (void)
     server_builder->RegisterService(&route_svc);
     server_builder->RegisterService(&bgp_svc);
     server_builder->RegisterService(&evpn_svc);
+    server_builder->RegisterService(&lim_svc);
 
     std::unique_ptr<Server> server(server_builder->BuildAndStart());
     server->Wait();

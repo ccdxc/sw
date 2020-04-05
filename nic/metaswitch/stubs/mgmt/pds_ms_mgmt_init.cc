@@ -8,6 +8,7 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/apollo/agent/svc/service.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/internal_bgp_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/internal_lim_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/internal_evpn_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/internal_cp_route_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/cp_test_gen.hpp"
@@ -299,6 +300,7 @@ static    CPTestSvcImpl        cp_test_svc;
 static    BGPSvcImpl            bgp_svc;
 static    EvpnSvcImpl           evpn_svc;
 static    CPRouteSvcImpl        cp_route_svc;
+static    LimSvcImpl            lim_svc;
 
 void
 mgmt_svc_init (grpc::ServerBuilder* server_builder)
@@ -306,6 +308,7 @@ mgmt_svc_init (grpc::ServerBuilder* server_builder)
     server_builder->RegisterService(&bgp_svc);
     server_builder->RegisterService(&evpn_svc);
     server_builder->RegisterService(&cp_route_svc);
+    server_builder->RegisterService(&lim_svc);
 
 //    if (PDS_MOCK_MODE()) {
         PDS_TRACE_INFO("Registering CP test proto");

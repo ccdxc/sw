@@ -1,0 +1,132 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for lim
+//
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds_ms;
+
+import "gogo.proto";
+import "pdsa.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+// lim service definition
+service LimSvc {
+  rpc LimIfStatusGet (LimIfStatusGetRequest) returns (LimIfStatusGetResponse) {}
+}
+
+enum LimIfOperStatus {
+  OPER_NONE = 0;
+  OPER_UP = 1;
+  OPER_DOWN = 2;
+  OPER_TESTING = 3;
+  OPER_UNKNOWN = 4;
+  OPER_DORMANT = 5;
+  OPER_NOT_PRESENT = 6;
+  OPER_LOWER_LAYER_DN = 7;
+}
+
+enum LimIfType {
+  IFTYP_NONE = 0;
+  IFTYP_OTHER = 1;
+  IFTYP_ETHERNET_CSMACD = 6;
+  IFTYP_SOFTWARE_LOOPBACK = 24;
+  IFTYP_PROP_VIRTUAL = 53;
+  IFTYP_TUNNEL = 131;
+  IFTYP_L2VLAN = 135;
+  IFTYP_L3IPVLAN = 136;
+  IFTYP_IP_FORWARD = 142;
+  IFTYP_MPLS_TUNNEL = 150;
+  IFTYP_8023AD_LAG = 161;
+  IFTYP_MPLS = 166;
+  IFTYP_IF_PW_TYPE = 246;
+  IFTYP_HQOS_NODE = 4096;
+  IFTYP_FLOW = 4097;
+}
+
+enum LimIfLoopbackMode {
+  LOOPBACK_NONE = 0;
+  MAC_LOOPBACK = 1;
+}
+
+enum LimIfOperReason {
+  OPR_RSN_EMPTY = 0;
+  OPR_RSN_NONE = 1;
+  OPR_RSN_ENT_NOT_UP = 2;
+  OPR_RSN_ADMIN_CFG = 3;
+  OPR_RSN_PROG = 4;
+  OPR_RSN_HQOS_SET = 5;
+  OPR_RSN_HQOS_LVL = 6;
+  OPR_RSN_HQOS_NO_SRC_IF = 7;
+  OPR_RSN_HQOS_OVRLP_CFG = 8;
+  OPR_RSN_HQOS_INCMPLT_TR = 9;
+  OPR_RSN_HQOS_DFLT_BRNCH = 10;
+  OPR_RSN_Q_NO_IF = 11;
+  OPR_RSN_HQOS_NODE_NO_IF = 12;
+  OPR_RSN_RSRC_FAIL = 13;
+  OPR_RSN_HQOS_PT_MSMTCH = 14;
+  OPR_RSN_Q_WRONG_IF = 15;
+  OPR_RSN_HQOS_WRONG_SRC = 16;
+  OPR_RSN_SUBIF_NO_MATCH = 17;
+  OPR_RSN_SUBIF_M_NO_IF = 18;
+  OPR_RSN_SUBIF_NO_PARENT = 19;
+  OPR_RSN_LOCAL_IF_ERROR = 20;
+  OPR_RSN_SUBIF_R_NO_IF = 21;
+  OPR_RSN_SLOT_DOWN = 22;
+}
+
+// BGP NLRI prefix table
+message LimIfStatus {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_LIM_IF_STATUS_OID_LEN",
+    Mib:    "limInterfaceStatusTable"
+  };
+
+  uint32 EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", GetKeyOidIndex: "AMB_LIM_IF_STATUS_ENT_IX_INDEX"}];
+  uint32 IfIndex      = 2 [(venice.pdsaFields) = {Field:"if_index", GetKeyOidIndex: "AMB_LIM_IF_STATUS_IF_IX_INDEX"}];
+
+  LimIfOperStatus OperStatus = 3 [(venice.pdsaFields) = {Field: "oper_status"}];
+  string Name = 4 [(venice.pdsaFields) = {Field: "name"}];
+  string Description = 5 [(venice.pdsaFields) = {Field: "description"}];
+  LimIfType Type = 6 [(venice.pdsaFields) = {Field: "type"}];
+  string MacAddr = 7 [(venice.pdsaFields) = {Field: "mac_address"}];
+  uint32 Mtu = 8 [(venice.pdsaFields) = {Field: "mtu"}];
+  LimIfLoopbackMode LoopBackMode = 9 [(venice.pdsaFields) = {Field: "loopback_mode"}];
+  uint32 FlapCount = 10 [(venice.pdsaFields) = {Field: "flap_count"}];
+  LimIfOperReason OperReason = 11 [(venice.pdsaFields) = {Field: "oper_reason"}];
+}
+
+// BGP NLRI prefix key object
+message LimIfStatusKey {
+  uint32 EntityIndex  = 1;
+  uint32 IfIndex      = 2;
+}
+
+//BGP NLRI prefix object
+message LimIf {
+  LimIfStatus Status = 1;
+}
+
+// BGP NLRI prefix get response
+message LimIfStatusGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  repeated LimIf  Response  = 2;
+}
+
+// Lim Interface key handle
+message LimIfStatusKeyHandle {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen:  "AMB_LIM_IF_STATUS_OID_LEN",
+    Mib:     "limInterfaceStatusTable"
+    SpecMsg: "LimIfStatus"
+  };
+  LimIfStatusKey Key = 1;
+}
+
+// Lim Interface status get request
+message LimIfStatusGetRequest {
+  repeated LimIfStatusKeyHandle Request = 1;
+}

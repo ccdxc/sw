@@ -34,7 +34,7 @@ type NLRIPrefix struct {
 func dumpBytes(in []byte) string {
 	out := ""
 	for _, b := range in {
-		out = fmt.Sprintf("%s%02x ", out, b)
+		out = fmt.Sprintf("%s0x%02x ", out, b)
 	}
 	return out
 }
@@ -1000,5 +1000,35 @@ func NewEvpnEviRt(in *pds.EvpnEviRt) *ShadowEvpnEviRt {
 	return &ShadowEvpnEviRt{
 		Spec:   NewEvpnEviRtSpec(in.Spec),
 		Status: NewEvpnEviRtStatus(in.Status),
+	}
+}
+
+// ShadowLimIfStatus shadows the LimIfStatus for CLI purposes
+type ShadowLimIfStatus struct {
+	*pds.LimIfStatus
+	OperStatus   string
+	Name         string
+	Description  string
+	Type         string
+	MacAddr      string
+	Mtu          uint32
+	LoopBackMode string
+	FlapCount    uint32
+	OperReason   string
+}
+
+// NewLimIfStatusGetResp creates a new shadow of the LimIfStatus
+func NewLimIfStatusGetResp(status *pds.LimIfStatus) *ShadowLimIfStatus {
+	return &ShadowLimIfStatus{
+		LimIfStatus:  status,
+		OperStatus:   strings.TrimPrefix(status.OperStatus.String(), "OPER_"),
+		Name:         status.Name,
+		Description:  status.Description,
+		Type:         strings.TrimPrefix(status.Type.String(), "IFTYP_"),
+		MacAddr:      dumpBytes([]byte(status.MacAddr)),
+		Mtu:          status.Mtu,
+		LoopBackMode: status.LoopBackMode.String(),
+		FlapCount:    status.FlapCount,
+		OperReason:   strings.TrimPrefix(status.OperReason.String(), "OPR_RSN_"),
 	}
 }
