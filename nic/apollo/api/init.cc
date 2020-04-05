@@ -14,6 +14,7 @@
 #include "nic/sdk/lib/device/device.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/platform/pal/include/pal.h"
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/sdk/lib/kvstore/kvstore.hpp"
 #include "nic/apollo/core/trace.hpp"
@@ -229,6 +230,8 @@ pds_init (pds_init_params_t *params)
     std::string       mem_json;
     std::string       mac_str;
     mac_addr_t        mac_addr;
+    std::string       mem_str;
+    uint64_t          datapath_mem;
 
     sdk::lib::device_profile_t device_profile = { 0 };
     device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}};
@@ -260,8 +263,19 @@ pds_init (pds_init_params_t *params)
             api::g_pds_state.cfg_path() :
             api::g_pds_state.cfg_path() + params->pipeline,
         "", api::g_pds_state.platform_type()));
-    PDS_TRACE_DEBUG("Memory capacity of the system %s",
-                    api::g_pds_state.catalogue()->memory_capacity_str().c_str());
+    mem_str = api::g_pds_state.catalogue()->memory_capacity_str();
+    PDS_TRACE_DEBUG("Memory capacity of the system %s", mem_str.c_str());
+
+    // On Vomero, Uboot gives Linux 6G on boot up, so only 2G is left for Datapath.
+    // Load 4G HBM profile on systems with 2G data path memory
+    if (api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
+        datapath_mem = pal_mem_get_phys_totalsize();
+        PDS_TRACE_DEBUG("Datapath Memory:  %llu(0x%llx) Bytes", datapath_mem, datapath_mem);
+        if (datapath_mem == 0x80000000) { //2G
+            mem_str = "4g";
+            PDS_TRACE_DEBUG("Loading 4G HBM profile");
+        }
+    }
 
     // parse pipeline specific configuration
     ret = core::parse_pipeline_config(params->pipeline, &api::g_pds_state);
@@ -277,7 +291,7 @@ pds_init (pds_init_params_t *params)
     }
     api::g_pds_state.set_mempartition_cfg(mem_json);
     mem_json = api::g_pds_state.cfg_path() + "/" + params->pipeline + "/" +
-                   api::g_pds_state.catalogue()->memory_capacity_str() + "/" + mem_json;
+                   mem_str + "/" + mem_json;
 
     api::g_pds_state.set_device_profile(params->device_profile);
     api::g_pds_state.set_memory_profile(params->memory_profile);
