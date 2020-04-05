@@ -52,11 +52,11 @@ struct pds_obj_key_s {
         buf = key_str[next_str++ & 0x3];
         sprintf(buf, "%08x", htonl((*(uint32_t *)&id[0]) & 0xFFFFFFFF));
         buf[8] = '-';
-        sprintf(&buf[9], "%04x", (*(uint16_t *)&id[4]) & 0xFFFF);
+        sprintf(&buf[9], "%04x", htons((*(uint16_t *)&id[4]) & 0xFFFF));
         buf[13] = '-';
-        sprintf(&buf[14], "%04x", (*(uint16_t *)&id[6]) & 0xFFFF);
+        sprintf(&buf[14], "%04x", htons((*(uint16_t *)&id[6]) & 0xFFFF));
         buf[18] = '-';
-        sprintf(&buf[19], "%04x", (*(uint16_t *)&id[8]) & 0xFFFF);
+        sprintf(&buf[19], "%04x", htons((*(uint16_t *)&id[8]) & 0xFFFF));
         buf[23] = '-';
         for (uint32_t i = 0; i < 6; i++) {
             sprintf(&buf[24 + (i << 1)], "%02x", id[10 + i] & 0xFF);
