@@ -49,6 +49,7 @@ public:
         pending_response_ = 0;
         size_ = 0;
         timeout_ = DEFAULT_SVC_RSP_TIMEOUT;
+        prev_stage_rsp_ = SVC_RSP_OK;
     }
     ~fsm(void){};
     upg_stage_t current_stage(void) const { return current_stage_; }
@@ -65,6 +66,7 @@ public:
     ev_tstamp timeout(void) const { return timeout_; }
     svc_sequence_list svc_sequence(void) const { return svc_sequence_; }
     bool has_next_svc(void) const { return pending_response_ > 0; }
+    svc_rsp_code_t prev_stage_rsp(void) const { return prev_stage_rsp_; }
     void set_current_stage(const upg_stage_t id);
     void update_stage_progress(const svc_rsp_code_t rsp);
     bool is_current_stage_over(void);
@@ -88,6 +90,7 @@ private:
     svc_sequence_list svc_sequence_;
     ev_tstamp timeout_;
     fsm_init_params_t init_params_;
+    svc_rsp_code_t prev_stage_rsp_;
 };
 
 sdk_ret_t init(fsm_init_params_t *params);

@@ -156,6 +156,30 @@ send_ipc_to_next_service (void)
     }
 }
 
+static upg_status_t
+get_exit_status (void)
+{
+    upg_status_t status;
+    if (fsm_states.prev_stage_rsp() == SVC_RSP_CRIT) {
+        status = UPG_STATUS_CRITICAL;
+        UPG_TRACE_VERBOSE("Upgrade is in a critical state."
+                          " Need manual recovery");
+    } else if (fsm_states.prev_stage_rsp() == SVC_RSP_FAIL) {
+        status = UPG_STATUS_FAIL;
+        UPG_TRACE_VERBOSE("Upgrade failed !");
+    } else if (fsm_states.prev_stage_rsp() == SVC_RSP_NONE) {
+        UPG_TRACE_VERBOSE("Upgrade failed due to service timeout !");
+        status = UPG_STATUS_FAIL;
+    } else if (fsm_states.prev_stage_rsp() == SVC_RSP_OK) {
+        UPG_TRACE_VERBOSE("Upgrade is successful.");
+        status = UPG_STATUS_OK;
+    } else {
+        SDK_ASSERT(0);
+    }
+    return status;
+}
+
+
 void
 upg_event_handler (sdk::ipc::ipc_msg_ptr msg)
 {
@@ -183,15 +207,9 @@ upg_event_handler (sdk::ipc::ipc_msg_ptr msg)
             upg_stage_t id = fsm_states.current_stage();
             fsm_states.set_current_stage(id);
             if (fsm_states.current_stage() == fsm_states.end_stage()) {
-                // TODO: Is this correct ? last stage (exit) can come in
-                // failure case also. should able to read the last failure
-                // status (fail/critical/timeout) (that should give OK if all
-                // stages completed successfully). otherwise the below comment
-                // may mislead
-                UPG_TRACE_VERBOSE("Upgrade is successful.");
                 // not expeting to come back here
-                fsm_states.init_params()->fsm_completion_cb(UPG_STATUS_OK,
-                    fsm_states.init_params()->msg_in);
+                fsm_states.init_params()->fsm_completion_cb(get_exit_status(),
+                                                            fsm_states.init_params()->msg_in);
                 SDK_ASSERT(0);
             } else {
                 move_to_nextstage();
@@ -220,10 +238,7 @@ timeout_cb (EV_P_ ev_timer *w, int revents)
     if (fsm_states.current_stage() != fsm_states.end_stage()) {
         move_to_nextstage();
     } else {
-        UPG_TRACE_VERBOSE("Upgrade Failed !");
-        // TODO, need critical/fail differentiation here
-        // TODO, should able to read the failure status (fail, critical, timeout)
-        // not expecting to come back here
+        UPG_TRACE_VERBOSE("Upgrade must not wait for response in last stage");
         fsm_states.init_params()->fsm_completion_cb(UPG_STATUS_FAIL,
             fsm_states.init_params()->msg_in);
         SDK_ASSERT(0);
@@ -244,6 +259,7 @@ fsm::set_current_stage(const upg_stage_t stage_id) {
     current_stage_ = stage_id;
 
     SDK_ASSERT(fsm_stages.find(start_stage_) != fsm_stages.end());
+    SDK_ASSERT(end_stage_ == UPG_STAGE_EXIT);
 
     upg_stage stage = fsm_stages[current_stage_];
     svc_sequence_ = stage.svc_sequence();
@@ -291,11 +307,11 @@ void
 fsm::update_stage_progress(const svc_rsp_code_t rsp) {
     if (rsp != SVC_RSP_OK) {
         switch (rsp) {
-        case UPG_STATUS_FAIL:
+        // prev_stage_rsp_ will carry the response
+        case SVC_RSP_FAIL:
             UPG_TRACE_VERBOSE("Got failure svc response");
             break;
-        case UPG_STATUS_CRITICAL:
-            // TODO: if ( critical ??)
+        case SVC_RSP_CRIT:
             UPG_TRACE_VERBOSE("Got critical svc response");
             break;
         case SVC_RSP_NONE:
@@ -304,27 +320,25 @@ fsm::update_stage_progress(const svc_rsp_code_t rsp) {
         default:
             break;
         }
-        // TODO: if current stage is ( exit/rollback ??)
         current_stage_ = lookup_stage_transition(current_stage_, rsp);
-        SDK_ASSERT(pending_response_ >= 0);
         pending_response_ = 0;
         size_ = 0;
+        prev_stage_rsp_ = rsp;
     } else {
-        std::string str =
-            "Got OK svc response 1 of " + std::to_string(pending_response_);
-
+        std::string str = "svc response OK.";
         pending_response_--;
-        str += ". Pending rsp: " + std::to_string(pending_response_);
+        str += " Pending response : " + std::to_string(pending_response_);
 
         SDK_ASSERT(pending_response_ >= 0);
 
         if (pending_response_ == 0) {
             str += " . Finish current stage.";
-            // TOO: if current state is exit ??
             SDK_ASSERT(pending_response_ >= 0);
             current_stage_ = lookup_stage_transition(current_stage_, rsp);
+
+            prev_stage_rsp_ = (prev_stage_rsp_ == SVC_RSP_OK) ?
+                SVC_RSP_OK : prev_stage_rsp_;
             size_ = 0;
-            // TODO: if ( critical ??)
         }
         UPG_TRACE_VERBOSE("%s", str.c_str());
     }
