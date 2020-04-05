@@ -740,7 +740,6 @@ func (dc *DataCenter) AddHostsToDvs(vspec DVSwitchSpec) error {
 	config := &types.DVSConfigSpec{
 		ConfigVersion: s.Config.GetDVSConfigInfo().ConfigVersion,
 	}
-	backing := new(types.DistributedVirtualSwitchHostMemberPnicBacking)
 
 	for _, host := range vspec.Hosts {
 
@@ -760,6 +759,7 @@ func (dc *DataCenter) AddHostsToDvs(vspec DVSwitchSpec) error {
 			Host:      hostRef.Host.hs.Reference(),
 			Operation: string(types.ConfigSpecOperationAdd),
 		}
+		backing := new(types.DistributedVirtualSwitchHostMemberPnicBacking)
 		for _, pnic := range host.Pnics {
 			backing.PnicSpec = append(backing.PnicSpec,
 				types.DistributedVirtualSwitchHostMemberPnicSpec{PnicDevice: pnic})

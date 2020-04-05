@@ -119,10 +119,13 @@ func (n *VcenterNode) initVcenter() error {
 			return err
 		}
 		log.Infof("Adding pnic %v of host %v (%v) to dvs", intfs, node.GetNodeInfo().Name, node.GetNodeInfo().IPAddress)
-		hostSpecs = append(hostSpecs, vmware.DVSwitchHostSpec{
-			Name:  node.GetNodeInfo().IPAddress,
-			Pnics: intfs,
-		})
+		hostSpec := vmware.DVSwitchHostSpec{
+			Name: node.GetNodeInfo().IPAddress,
+		}
+		for _, intf := range intfs {
+			hostSpec.Pnics = append(hostSpec.Pnics, intf)
+		}
+		hostSpecs = append(hostSpecs, hostSpec)
 
 		vNWs := []vmware.NWSpec{
 			{Name: constants.IotaVmotionPortgroup},
