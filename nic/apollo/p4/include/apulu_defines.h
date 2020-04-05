@@ -275,6 +275,7 @@
 /*****************************************************************************/
 #define P4_LOCAL_MAPPING_NUM_HINTS_PER_ENTRY              8
 #define P4_MAPPING_NUM_HINTS_PER_ENTRY                    8
+#define P4_REMOTE_MAPPING_NUM_HINTS_PER_ENTRY             2
 
 /*****************************************************************************/
 /* cpu flags and bit positions                                               */

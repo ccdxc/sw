@@ -94,6 +94,10 @@ private:
     slhash      *vni_tbl_;
     ///< indexer to allocate hw vpc id
     rte_indexer *vpc_idxr_;
+    ///< local mapping class id indexer
+    rte_indexer *local_mapping_classs_id_idxr_;
+    ///< remote mapping tag indexer
+    rte_indexer *remote_mapping_class_id_idxr_;
     ///< hash table for hw_id to vpc key
     ht *impl_ht_;
 };

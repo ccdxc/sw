@@ -15,6 +15,12 @@
 
 using sdk::table::sdk_table_factory_params_t;
 
+// max of 1k classes are suppored for both remote and local mapping
+// class id 1023 (PDS_IMPL_RSVD_MAPPING_CLASS_ID) is reserved to indicate
+// that class id is not configured, so 0 to (PDS_IMPL_RSVD_MAPPING_CLASS_ID-1)
+// class id values are valid
+#define PDS_MAX_CLASS_ID_PER_VPC    1024
+
 namespace api {
 namespace impl {
 
@@ -30,6 +36,20 @@ vpc_impl_state::vpc_impl_state(pds_state *state) {
     // create indexer for vpc hw id allocation and reserve 0th entry
     vpc_idxr_ = rte_indexer::factory(tinfo.tabledepth, false, true);
     SDK_ASSERT(vpc_idxr_ != NULL);
+
+    // create classid indexer for local mappings
+    local_mapping_classs_id_idxr_ =
+        rte_indexer::factory(PDS_MAX_CLASS_ID_PER_VPC, false, false);
+    SDK_ASSERT(local_mapping_classs_id_idxr_ != NULL);
+    // set the reserved classid aside
+    local_mapping_classs_id_idxr_->alloc(PDS_IMPL_RSVD_MAPPING_CLASS_ID);
+
+    // create classid indexer for remote mappings
+    remote_mapping_class_id_idxr_ =
+        rte_indexer::factory(PDS_MAX_CLASS_ID_PER_VPC, false, false);
+    SDK_ASSERT(remote_mapping_class_id_idxr_ != NULL);
+    // set the reserved classid aside
+    remote_mapping_class_id_idxr_->alloc(PDS_IMPL_RSVD_MAPPING_CLASS_ID);
 
     // instantiate P4 tables for bookkeeping
     bzero(&tparams, sizeof(tparams));
@@ -47,6 +67,8 @@ vpc_impl_state::vpc_impl_state(pds_state *state) {
 
 vpc_impl_state::~vpc_impl_state() {
     rte_indexer::destroy(vpc_idxr_);
+    rte_indexer::destroy(local_mapping_classs_id_idxr_);
+    rte_indexer::destroy(remote_mapping_class_id_idxr_);
     slhash::destroy(vni_tbl_);
     ht::destroy(impl_ht_);
 }

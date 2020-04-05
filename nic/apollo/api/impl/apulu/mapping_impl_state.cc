@@ -25,12 +25,17 @@
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
 #include "gen/p4gen/apulu/include/p4pd.h"
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include <arpa/inet.h>
 #include <netinet/ether.h>
+
 using sdk::table::sdk_table_factory_params_t;
 
 namespace api {
 namespace impl {
+
+const char *k_dhcp_ctl_ip = "127.0.0.1";
+const int k_dhcp_ctl_port = 7911;
 
 /// \defgroup PDS_MAPPING_IMPL_STATE - mapping database functionality
 /// \ingroup PDS_MAPPING
@@ -60,6 +65,12 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     mapping_tbl_ = mem_hash::factory(&tparams);
     SDK_ASSERT(mapping_tbl_ != NULL);
 
+    // rxdma MAPPING table to drive class ids
+    tparams.table_id = P4_P4PLUS_RXDMA_TBL_ID_REMOTE_MAPPING;
+    tparams.num_hints = P4_REMOTE_MAPPING_NUM_HINTS_PER_ENTRY;
+    rxdma_mapping_tbl_ = mem_hash::factory(&tparams);
+    SDK_ASSERT(rxdma_mapping_tbl_ != NULL);
+
     // instantiate indexer for binding table
     p4pd_table_properties_get(P4TBL_ID_IP_MAC_BINDING, &tinfo);
     ip_mac_binding_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
@@ -79,6 +90,7 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
 mapping_impl_state::~mapping_impl_state() {
     mem_hash::destroy(local_mapping_tbl_);
     mem_hash::destroy(mapping_tbl_);
+    mem_hash::destroy(rxdma_mapping_tbl_);
     rte_indexer::destroy(ip_mac_binding_idxr_);
     slab::destroy(mapping_impl_slab_);
 }
@@ -97,6 +109,7 @@ sdk_ret_t
 mapping_impl_state::table_transaction_begin(void) {
     local_mapping_tbl_->txn_start();
     mapping_tbl_->txn_start();
+    rxdma_mapping_tbl_->txn_start();
     return SDK_RET_OK;
 }
 
@@ -104,6 +117,7 @@ sdk_ret_t
 mapping_impl_state::table_transaction_end(void) {
     local_mapping_tbl_->txn_end();
     mapping_tbl_->txn_end();
+    rxdma_mapping_tbl_->txn_end();
     return SDK_RET_OK;
 }
 
@@ -122,6 +136,12 @@ mapping_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     p4pd_table_properties_get(P4TBL_ID_MAPPING, &tinfo);
     stats.table_name = tinfo.tablename;
     mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
+    cb(&stats, ctxt);
+
+    memset(&stats, 0, sizeof(pds_table_stats_t));
+    p4pd_table_properties_get(P4_P4PLUS_RXDMA_TBL_ID_REMOTE_MAPPING, &tinfo);
+    stats.table_name = tinfo.tablename;
+    rxdma_mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
     cb(&stats, ctxt);
 
     return SDK_RET_OK;
@@ -463,11 +483,9 @@ mapping_impl_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
     return SDK_RET_OK;
 }
 
-const char *k_dhcp_ctl_ip = "127.0.0.1";
-const int k_dhcp_ctl_port = 7911;
-
 static sdk_ret_t
-do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, pds_mapping_spec_t *spec) {
+do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
+                        pds_mapping_spec_t *spec) {
     dhcpctl_status ret;
     dhcpctl_data_string ipaddr = NULL;
     dhcpctl_data_string mac = NULL;
@@ -475,7 +493,7 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, pds_mapping_spec_t *spe
     dhcpctl_status waitstatus = 0;
     dhcpctl_handle host = NULL;
     subnet_entry *subnet;
-    pds_obj_key_t dhcp_policy_key; 
+    pds_obj_key_t dhcp_policy_key;
     dhcp_policy *policy;
     uint32_t ip = 0;
     uint32_t index = 0;
@@ -490,7 +508,7 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, pds_mapping_spec_t *spe
         return SDK_RET_OK;
     }
 
-    // we enter this block in two cases to establish the connection with the 
+    // we enter this block in two cases to establish the connection with the
     // dhcpd server.
     // 1. when this code path is excercised for the first time after pds-agent
     //    starts.
@@ -524,7 +542,8 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, pds_mapping_spec_t *spe
         omapi_object_dereference(&host, MDL);
         return SDK_RET_OOM;
     }
-    sdk::lib::memrev(ipaddr->value, (uint8_t *)&spec->skey.ip_addr.addr.v4_addr, IP4_ADDR8_LEN);
+    sdk::lib::memrev(ipaddr->value, (uint8_t *)&spec->skey.ip_addr.addr.v4_addr,
+                     IP4_ADDR8_LEN);
     dhcpctl_set_value (host, ipaddr, "ip-address");
 
     // hardware mac address
@@ -564,9 +583,9 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, pds_mapping_spec_t *spe
 
         index += snprintf((char *)(statements->value + index), buf_len,
                           "option subnet-mask %u.%u.%u.%u;",
-                          (uint32_t)bytes[3], (uint32_t)bytes[2], 
+                          (uint32_t)bytes[3], (uint32_t)bytes[2],
                           (uint32_t)bytes[1], (uint32_t)bytes[0]);
- 
+
         // gateway ip
         if (policy->gateway_ip().addr.v4_addr) {
             ip = policy->gateway_ip().addr.v4_addr;
@@ -621,7 +640,6 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection, pds_mapping_spec_t *spe
         if (policy->lease_timeout()) {
             // TBD
         }
-
         dhcpctl_set_value(host, statements, "statements");
     }
 
@@ -681,7 +699,7 @@ do_remove_dhcp_binding (dhcpctl_handle *dhcp_connection, const char *hostname) {
     dhcpctl_status waitstatus = 0;
     dhcpctl_handle host = NULL;
 
-    // we enter this block in two cases to establish the connection with the 
+    // we enter this block in two cases to establish the connection with the
     // dhcpd server.
     // 1. when this code path is excercised for the first time after pds-agent
     //    starts.

@@ -40,6 +40,9 @@
 // reserved index in IP_MAC_BINDING table
 #define PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID     0
 
+// reserved class id to indicate that tag is not configured on a mapping
+#define PDS_IMPL_RSVD_MAPPING_CLASS_ID         1023
+
 // reserved DHCP relay NACL index
 // NOTE:
 // this index must be between PDS_IMPL_NACL_BLOCK_HIGH_PRIO_DYNAMIC_MIN and
