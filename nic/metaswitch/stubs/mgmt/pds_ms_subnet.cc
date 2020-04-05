@@ -89,8 +89,7 @@ populate_evpn_bd_spec (pds_subnet_spec_t *subnet_spec,
 }
 
 static void
-populate_evpn_if_bing_cfg_spec (pds_subnet_spec_t  *subnet_spec,
-                                EvpnIfBindCfgSpec& req,
+populate_evpn_if_bind_cfg_spec (EvpnIfBindCfgSpec& req,
                                 uint32_t           bd_id,
                                 uint32_t           if_index)
 {
@@ -121,13 +120,54 @@ populate_lim_soft_if_spec (LimInterfaceSpec& req,
     req.set_iftype (LIM_IF_TYPE_LIF);
 }
 
+static void config_evpn_bd_if_bind (const pds_subnet_spec_t* subnet_spec,
+                                    uint32_t bd_id,
+                                    const pds_obj_key_t& host_if,
+                                    NBB_LONG  row_status,
+                                    NBB_ULONG correlator)
+{
+    // Get PDS LIF IfIndex of the PF
+    auto lif_ifindex = api::objid_from_uuid(host_if);
+    // Derive MS IfIndex from PDS LIF IfIndex 
+    auto ms_ifindex = pds_to_ms_ifindex(lif_ifindex, IF_TYPE_LIF);
+
+    bool del_if = (row_status == AMB_ROW_DESTROY);
+    PDS_TRACE_DEBUG("%s Subnet %s BD %d LIF UUID %s PDS IfIndex 0x%x"
+                    " MS IfIndex 0x%x",
+                    (del_if) ? "detach" : "attach",
+                    subnet_spec->key.str(), bd_id, host_if.str(),
+                    lif_ifindex, ms_ifindex);
+
+    LimInterfaceSpec lim_swif_spec;
+    populate_lim_soft_if_spec (lim_swif_spec, lif_ifindex);
+    pds_ms_set_liminterfacespec_amb_lim_software_if(lim_swif_spec, 
+                                                    row_status,
+                                                    correlator,
+                                                    FALSE);
+    // Set MS SW Intf interface parameters
+    if (!del_if) {
+        LimInterfaceCfgSpec lim_swifcfg_spec;
+        populate_lim_swif_cfg_spec (lim_swifcfg_spec, ms_ifindex);
+        pds_ms_set_liminterfacecfgspec_amb_lim_if_cfg(lim_swifcfg_spec,
+                                                      row_status,
+                                                      correlator,
+                                                      FALSE);
+    }
+
+    // evpnIfBindCfgTable Row Update
+    EvpnIfBindCfgSpec evpn_if_bind_spec;
+    populate_evpn_if_bind_cfg_spec (evpn_if_bind_spec, bd_id, ms_ifindex);
+    pds_ms_set_evpnifbindcfgspec_amb_evpn_if_bind_cfg(evpn_if_bind_spec,
+                                                      row_status,
+                                                      correlator,
+                                                      FALSE);
+}
+
 static types::ApiStatus
 process_subnet_update (pds_subnet_spec_t *subnet_spec,
                        uint32_t          bd_id,
                        NBB_LONG          row_status)
 {
-    uint32_t if_index;
-
     PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // EVPN BD Row Update
@@ -141,34 +181,8 @@ process_subnet_update (pds_subnet_spec_t *subnet_spec,
                                        PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
 
     if (!is_pds_obj_key_invalid(subnet_spec->host_if)) {
-        // Create Lif here for now
-        LimInterfaceSpec lim_swif_spec;
-        auto lif_ifindex = api::objid_from_uuid(subnet_spec->host_if);
-        populate_lim_soft_if_spec (lim_swif_spec, lif_ifindex);
-        pds_ms_set_liminterfacespec_amb_lim_software_if (lim_swif_spec, row_status,
-                                                         PDS_MS_CTM_GRPC_CORRELATOR,
-                                                         FALSE);
-
-        // Get Lif's MS IfIndex
-        if_index = pds_to_ms_ifindex (lif_ifindex, IF_TYPE_LIF);
-        PDS_TRACE_DEBUG ("SW Interface %s:: LIF UUID %s PDS IfIndex: 0x%X MSIfIndex: 0x%X",
-                          (row_status == AMB_ROW_DESTROY) ? "Delete":"Create",
-                          subnet_spec->host_if.str(), lif_ifindex, if_index);
-
-        // Set Lif interface settings
-        LimInterfaceCfgSpec lim_swifcfg_spec;
-        populate_lim_swif_cfg_spec (lim_swifcfg_spec, if_index);
-        pds_ms_set_liminterfacecfgspec_amb_lim_if_cfg (lim_swifcfg_spec,
-                                                       row_status,
-                                                       PDS_MS_CTM_GRPC_CORRELATOR,
-                                                       FALSE);
-
-        // evpnIfBindCfgTable Row Update
-        EvpnIfBindCfgSpec evpn_if_bind_spec;
-        populate_evpn_if_bing_cfg_spec (subnet_spec, evpn_if_bind_spec, bd_id, if_index);
-        pds_ms_set_evpnifbindcfgspec_amb_evpn_if_bind_cfg (evpn_if_bind_spec, row_status,
-                                                           PDS_MS_CTM_GRPC_CORRELATOR,
-                                                           FALSE);
+        config_evpn_bd_if_bind(subnet_spec, bd_id, subnet_spec->host_if,
+                               row_status, PDS_MS_CTM_GRPC_CORRELATOR);
     }
 
     PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
@@ -184,56 +198,40 @@ struct subnet_upd_flags_t {
     operator bool() {
         return (bd || bd_if || irb);
     }
+    pds_obj_key_t prev_host_if;
 };
+
 
 static types::ApiStatus
 process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
                              const subnet_upd_flags_t& ms_upd_flags,
-                             uint32_t             bd_id,
-                             NBB_LONG             row_status)
+                             uint32_t             bd_id)
 {
-    uint32_t ms_ifindex;
-
     PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // EVPN BD Row Update
     if (ms_upd_flags.bd) {
-        PDS_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD Update", subnet_spec->key.str(), bd_id);
+        PDS_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD Update",
+                        subnet_spec->key.str(), bd_id);
         EvpnBdSpec evpn_bd_spec;
         populate_evpn_bd_spec (subnet_spec, bd_id, evpn_bd_spec);
-        pds_ms_set_evpnbdspec_amb_evpn_bd (evpn_bd_spec, row_status, 
+        pds_ms_set_evpnbdspec_amb_evpn_bd (evpn_bd_spec, AMB_ROW_ACTIVE, 
                                            PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
     }
 
-    // Create Lif here for now
+    // When subnet is attached to a new PF, create a dummy SW ifindex
+    // corresponding to this PF in Metaswitch and bind this IfIndex
+    // to the BD
     if (ms_upd_flags.bd_if) {
-        PDS_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD If Update", subnet_spec->key.str(), bd_id);
-        LimInterfaceSpec lim_swif_spec;
-        auto lif_ifindex = api::objid_from_uuid(subnet_spec->host_if);
-        populate_lim_soft_if_spec (lim_swif_spec, lif_ifindex);
-        pds_ms_set_liminterfacespec_amb_lim_software_if(lim_swif_spec, row_status,
-                                                        PDS_MS_CTM_GRPC_CORRELATOR,
-                                                        FALSE);
-
-        // Get Lif's MS IfIndex
-        ms_ifindex = pds_to_ms_ifindex (lif_ifindex, IF_TYPE_LIF);
-        PDS_TRACE_DEBUG ("SW Interface:: LIF UUID %s PDS IfIndex: 0x%X MSIfIndex: 0x%X",
-                         subnet_spec->host_if.str(), lif_ifindex, ms_ifindex);
-
-        // Set Lif interface settings
-        LimInterfaceCfgSpec lim_swifcfg_spec;
-        populate_lim_swif_cfg_spec (lim_swifcfg_spec, ms_ifindex);
-        pds_ms_set_liminterfacecfgspec_amb_lim_if_cfg(lim_swifcfg_spec, row_status,
-                                                      PDS_MS_CTM_GRPC_CORRELATOR,
-                                                      FALSE);
-
-        // evpnIfBindCfgTable Row Update
-        EvpnIfBindCfgSpec evpn_if_bind_spec;
-        populate_evpn_if_bing_cfg_spec (subnet_spec, evpn_if_bind_spec, bd_id, ms_ifindex);
-        pds_ms_set_evpnifbindcfgspec_amb_evpn_if_bind_cfg(evpn_if_bind_spec,
-                                                          row_status,
-                                                          PDS_MS_CTM_GRPC_CORRELATOR,
-                                                          FALSE);
+        if (!is_pds_obj_key_invalid(ms_upd_flags.prev_host_if)) {
+            // First delete the previous Host If
+            config_evpn_bd_if_bind(subnet_spec, bd_id, ms_upd_flags.prev_host_if,
+                                   AMB_ROW_DESTROY, PDS_MS_CTM_GRPC_CORRELATOR);
+        }
+        if (!is_pds_obj_key_invalid(subnet_spec->host_if)) {
+            config_evpn_bd_if_bind(subnet_spec, bd_id, subnet_spec->host_if,
+                                  AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+        }
     }
 
     if (ms_upd_flags.irb) {
@@ -250,7 +248,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
         populate_lim_addr_spec (&ip_prefix, lim_addr_spec,
                                 LIM_IF_TYPE_IRB, bd_id);
         pds_ms_set_liminterfaceaddrspec_amb_lim_l3_if_addr (lim_addr_spec,
-                                                            row_status,
+                                                            AMB_ROW_ACTIVE,
                                                             PDS_MS_CTM_GRPC_CORRELATOR,
                                                             FALSE);
     }
@@ -485,6 +483,7 @@ parse_subnet_update (pds_subnet_spec_t *spec, ms_bd_id_t bd_id,
         PDS_TRACE_INFO("Subnet %s BD %d Host If change - Old %s New %s",
                        spec->key.str(), bd_id, state_pds_spec.host_if.str(),
                        spec->host_if.str());
+        ms_upd_flags.prev_host_if = state_pds_spec.host_if;
         state_pds_spec.host_if = spec->host_if;
     }
 
@@ -530,8 +529,7 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
         parse_subnet_update(spec, bd_id, ms_upd_flags);
 
         if (ms_upd_flags) {
-            ret_status = process_subnet_field_update(spec, ms_upd_flags, bd_id,
-                                                     AMB_ROW_ACTIVE);
+            ret_status = process_subnet_field_update(spec, ms_upd_flags, bd_id);
             if (ret_status != types::ApiStatus::API_STATUS_OK) {
                 PDS_TRACE_ERR ("Failed to process subnet %s field update err %d",
                                spec->key.str(), ret_status);

@@ -70,7 +70,7 @@ void li_vrf_t::parse_ips_info_(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
 
 void li_vrf_t::fetch_store_info_(pds_ms::state_t* state) {
     store_info_.vpc_obj = state->vpc_store().get(ips_info_.vrf_id);
-    if (likely(store_info_.vpc_obj != nullptr)) {
+    if (likely(store_info_.vpc_obj != nullptr) && !op_delete_) {
         op_create_ = !store_info_.vpc_obj->properties().hal_created;
     }
 }
@@ -361,7 +361,8 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
         auto state_ctxt = pds_ms::state_t::thread_context();
         fetch_store_info_(state_ctxt.state());
 
-        if(store_info_.vpc_obj == nullptr) {
+        if(store_info_.vpc_obj == nullptr ||
+           !store_info_.vpc_obj->properties().hal_created) {
             PDS_TRACE_INFO ("Delete IPS for unknown MS VRF %d", ips_info_.vrf_id);
             return;
         }

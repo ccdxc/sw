@@ -88,10 +88,6 @@ l2f_test_local_mac_ip_add (const CPL2fTestCreateSpec *req, CPL2fTestResponse *re
 
     pds_ms_get_uuid (&subnet_uuid, req->subnetid());
     ip_addr_spec_to_ip_addr (req->ipaddr(), &ip_addr);
-    // Simulate IP coming from HAL which is in host order
-    if (ip_addr.af == IP_AF_IPV4) {
-        ip_addr.addr.v4_addr = ntohl(ip_addr.addr.v4_addr);
-    }
     NBB_MEMCPY(mac_addr, req->macaddr().c_str(), req->macaddr().length());
     
     pds_ms::l2f_local_mac_ip_add (subnet_uuid, ip_addr, mac_addr,
@@ -109,10 +105,6 @@ l2f_test_local_mac_ip_del (const CPL2fTestDeleteSpec *req, CPL2fTestResponse *re
 
     pds_ms_get_uuid (&subnet_uuid, req->subnetid());
     ip_addr_spec_to_ip_addr (req->ipaddr(), &ip_addr);
-    // Simulate IP coming from HAL which is in host order
-    if (ip_addr.af == IP_AF_IPV4) {
-        ip_addr.addr.v4_addr = ntohl(ip_addr.addr.v4_addr);
-    }
     NBB_MEMCPY(mac_addr, req->macaddr().c_str(), req->macaddr().length());
     
     pds_ms::l2f_local_mac_ip_del (subnet_uuid, ip_addr, mac_addr);

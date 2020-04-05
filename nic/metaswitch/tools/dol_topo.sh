@@ -150,7 +150,7 @@ do
     done
 done
 
-if [ $UNDERLAY == 0 ]; then
+if [ $UNDERLAY == 0 ] && [ $RR == 0 ]; then
     docker exec -it "$CONTAINER"3 python $MIB_PY set localhost evpnEntTable evpnEntEntityIndex=2 evpnEntLocalRouterAddressType=inetwkAddrTypeIpv4 evpnEntLocalRouterAddress='0xd2 0xd2 0x3 0x3'
 fi
 
