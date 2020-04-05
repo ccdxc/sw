@@ -66,13 +66,6 @@ devapi_iris::destroy(devapi *dapi)
 sdk_ret_t
 devapi_iris::lif_create(lif_info_t *info)
 {
-    // XXX IRIS does not create the lif until lif_init.
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-devapi_iris::lif_init(lif_info_t *info)
-{
     sdk_ret_t ret = SDK_RET_OK;
     devapi_lif *lif = NULL;
     lif = devapi_lif::factory(info, this);
@@ -81,6 +74,24 @@ devapi_iris::lif_init(lif_info_t *info)
         ret = SDK_RET_ERR;
     }
     return ret;
+}
+
+sdk_ret_t
+devapi_iris::lif_init(lif_info_t *info)
+{
+    // Moving to lif create so that hal will be read to 
+    // accept config.
+    return SDK_RET_OK;
+#if 0
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_lif *lif = NULL;
+    lif = devapi_lif::factory(info, this);
+    if (!lif) {
+        NIC_LOG_ERR("Failed to create lif. id: {}", info->lif_id);
+        ret = SDK_RET_ERR;
+    }
+    return ret;
+#endif
 }
 
 sdk_ret_t
