@@ -21,6 +21,7 @@ var topoName = flag.String("topo", "3Venice_3NaplesSim", "topology name")
 var debugFlag = flag.Bool("debug", false, "set log level to debug")
 var scaleFlag = flag.Bool("scale", false, "enable scale configuration")
 var scaleDataFlag = flag.Bool("scale-data", false, "enable datapath scale")
+var runRandomTrigger = flag.Bool("rand-trigger", false, "run random trigger between tests")
 
 // TestSuite : mirror test suite
 type TestSuite struct {

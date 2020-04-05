@@ -14,6 +14,7 @@ import iota.harness.infra.utils.parser as parser
 import iota.harness.infra.store as store
 import iota.harness.infra.resmgr as resmgr
 import iota.harness.infra.getNicHostInfo as gnhi
+import iota.harness.infra.utils.utils as utils
 
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
 
@@ -540,6 +541,7 @@ class _Testbed:
             try:
                 self.__recover_testbed(self.__image_manifest_file)
             except:
+                utils.LogException(Logger)
                 Logger.error("Failed to recover testbed")
                 Logger.debug(traceback.format_exc())
                 return types.status.CRITICAL

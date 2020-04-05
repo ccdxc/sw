@@ -28,13 +28,14 @@ var (
 )
 
 type testsuite struct {
-	name        string
-	focus       string
-	path        string
-	stopOnError bool
-	scaleData   bool
-	successCnt  int
-	runCnt      int
+	name             string
+	focus            string
+	path             string
+	stopOnError      bool
+	scaleData        bool
+	runRandomTrigger bool
+	successCnt       int
+	runCnt           int
 }
 
 //runCmd run shell command
@@ -124,14 +125,10 @@ func (suite testsuite) run(skipSetup, skipInstall, skipConfig, rebootOnly bool) 
 
 	if skipConfig {
 		env = append(env, "SKIP_CONFIG=1")
-	} else {
-		env = append(env, `SKIP_CONFIG=""`)
 	}
 
 	if skipSetup {
 		env = append(env, "SKIP_SETUP=1")
-	} else {
-		env = append(env, `SKIP_SETUP=""`)
 	}
 
 	env = append(env, "NO_CONSOLE_LOG=1")
@@ -154,6 +151,11 @@ func (suite testsuite) run(skipSetup, skipInstall, skipConfig, rebootOnly bool) 
 		cmd = append(cmd, " -scale-data")
 		cmd = append(cmd, " -scale")
 	}
+
+	if suite.runRandomTrigger {
+		cmd = append(cmd, " -rand-trigger")
+	}
+
 	cmd = append(cmd, "-ginkgo.failFast")
 	fmt.Printf("Test command %v\n", strings.Join(cmd, " "))
 	if !dryRun {
@@ -182,11 +184,12 @@ type stressRecipe struct {
 		Description string `yaml:"description"`
 	} `yaml:"meta"`
 	Config struct {
-		Iterations    int    `yaml:"iterations"`
-		RunType       string `yaml:"run-type"`
-		ScaleData     bool   `yaml:"scale-data"`
-		StopOnFailure bool   `yaml:"stop-on-failure"`
-		MaxRunTime    string `yaml:"max-run-time"`
+		Iterations       int    `yaml:"iterations"`
+		RunType          string `yaml:"run-type"`
+		ScaleData        bool   `yaml:"scale-data"`
+		RunRandomTrigger bool   `yaml:"run-random-trigger"`
+		StopOnFailure    bool   `yaml:"stop-on-failure"`
+		MaxRunTime       string `yaml:"max-run-time"`
 	} `yaml:"config"`
 	Testsuites []struct {
 		Suite string `yaml:"suite"`
@@ -337,7 +340,8 @@ func (stRecipe *stressRecipe) execute() error {
 	suites := []testsuite{}
 	for _, suite := range stRecipe.Testsuites {
 		st := testsuite{name: suite.Suite, path: suiteDirectory + "/" + suite.Suite, focus: suite.Focus,
-			stopOnError: stRecipe.Config.StopOnFailure, scaleData: stRecipe.Config.ScaleData}
+			stopOnError: stRecipe.Config.StopOnFailure, scaleData: stRecipe.Config.ScaleData,
+			runRandomTrigger: stRecipe.Config.RunRandomTrigger}
 		suites = append(suites, st)
 	}
 
@@ -389,6 +393,7 @@ Loop:
 					return err
 				}
 				//Copy the logs
+
 			}
 			//For now start noise again, run noise will stop old and start fresh.
 			for _, n := range noises {

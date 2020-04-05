@@ -149,6 +149,9 @@ func (sm *Statemgr) propgatationStatusDifferent(
 		for _, x := range X {
 			if m[x] > 0 {
 				m[x]--
+				if m[x] == 0 {
+					delete(m, x)
+				}
 				continue
 			}
 			//not present or execess

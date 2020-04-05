@@ -226,6 +226,9 @@ func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nwrk *workload.Workload)
 		for _, x := range X {
 			if m[x] > 0 {
 				m[x]--
+				if m[x] == 0 {
+					delete(m, x)
+				}
 				continue
 			}
 			//not present or execess

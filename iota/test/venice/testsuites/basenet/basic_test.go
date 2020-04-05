@@ -20,6 +20,11 @@ var _ = Describe("Basnet Sanity", func() {
 	var dscInsertionProfile *objects.DscProfile
 	var dscFlowawareProfile *objects.DscProfile
 	BeforeEach(func() {
+
+		if *runRandomTrigger {
+			err := ts.model.RunRandomTrigger(100)
+			Expect(err).Should(Succeed())
+		}
 		// verify cluster is in good health
 		Eventually(func() error {
 			return ts.model.VerifyClusterStatus()

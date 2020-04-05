@@ -378,6 +378,12 @@ func (sm *SysModel) BringupWorkloads() error {
 				return fmt.Errorf("Error deleting IOTA workload. err: %v", err)
 			}
 
+			err = wc.AllocateHostInterfaces(sm.Tb)
+			if err != nil {
+				log.Errorf("Error allocating interfaces %v", err)
+				return err
+			}
+
 			// bringup the.Workloads
 			err = wc.Bringup(sm.Tb)
 			if err != nil {

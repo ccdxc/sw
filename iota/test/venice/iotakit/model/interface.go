@@ -39,6 +39,7 @@ type SysModelInterface interface {
 	ActionIntf
 	ConfigIntf
 	ObjectIntf
+	TriggerIntf
 
 	ForEachHost(fn objects.HostIteratorFn) error
 	ForEachNaples(fn objects.NaplesIteratorFn) error
@@ -65,6 +66,17 @@ type ActionIntf interface {
 	WorkloadActionIntf
 	NodeActionIntf
 	NaplesActionIntf
+}
+
+//TriggerIntf some trigger that testcase could use to run
+type TriggerIntf interface {
+	TriggerNaplesUpgrade(int) error
+	TriggerSnapshotRestore(int) error
+	TriggerHostReboot(int) error
+	TriggerVeniceReboot(int) error
+	TriggerVenicePartition(int) error
+	TriggerLinkFlap(percent int) error
+	RunRandomTrigger(percent int) error
 }
 
 type ClusterActionIntf interface {

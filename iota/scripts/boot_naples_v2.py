@@ -718,6 +718,7 @@ class NaplesManagement(EntityManagement):
 
     def CleanUpOldFiles(self):
         self.SendlineExpect("clear_nic_config.sh remove-config", "#")
+        self.SendlineExpect("rm -rf /data/*.db", "#")
         self.SendlineExpect("rm -rf /sysconfig/config0/*.db", "#")
         self.SendlineExpect("rm -rf /sysconfig/config0/*.conf", "#")
         self.SendlineExpect("rm -rf /sysconfig/config1/*.db", "#")

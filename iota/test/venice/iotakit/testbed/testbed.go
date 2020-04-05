@@ -2081,6 +2081,7 @@ func (tb *TestBed) AfterTestCommon() error {
 
 	// remember the result
 	tb.testResult[strings.Join(testInfo.ComponentTexts, "\t")] = testInfo.Failed
+
 	return nil
 }
 

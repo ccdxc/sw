@@ -777,6 +777,8 @@ func (sm *SysModel) InitConfig(scale, scaleData bool) error {
 			return err
 		}
 
+	} else {
+		log.Info("Skipping config")
 	}
 
 	return nil

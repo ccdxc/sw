@@ -17,8 +17,12 @@ var _ = Describe("Lif mirror tests", func() {
 	var startTime time.Time
 	dataPathEnabled := true
 	BeforeEach(func() {
-		// verify cluster is in good health
 		startTime = time.Now().UTC()
+		if *runRandomTrigger {
+			err := ts.model.RunRandomTrigger(100)
+			Expect(err).Should(Succeed())
+		}
+		// verify cluster is in good health
 		Eventually(func() error {
 			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())

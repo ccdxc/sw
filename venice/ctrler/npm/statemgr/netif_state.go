@@ -881,7 +881,6 @@ func (sma *SmNetworkInterface) ProcessDSCEvent(ev EventType, dsc *cluster.Distri
 		if nwIntf.NetworkInterfaceState.Status.DSC == dsc.Status.PrimaryMAC {
 
 			now := time.Now()
-			retries := 0
 			for {
 				err := sma.sm.ctrler.NetworkInterface().Delete(&nwIntf.NetworkInterfaceState.NetworkInterface)
 				if err == nil {
@@ -889,11 +888,9 @@ func (sma *SmNetworkInterface) ProcessDSCEvent(ev EventType, dsc *cluster.Distri
 				}
 				if time.Since(now) > time.Second*2 {
 					log.Errorf("delete interface failed (%s)", err)
-					now = time.Now()
+					return
 				}
-				retries++
 				time.Sleep(100 * time.Millisecond)
-
 			}
 		}
 	}
