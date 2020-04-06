@@ -487,7 +487,8 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
 }
 
 static int
-hal_sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
+hal_sdk_logger (uint32_t mod_id, sdk_trace_level_e tracel_level,
+                const char *format, ...)
 {
     char       logbuf[1024];
     va_list    args;

@@ -29,19 +29,21 @@ changefrequency(uint64_t hbmtemperature) {
     if (hbmtemperature <= HBM_TEMP_LOWER_LIMIT) {
         status = asic_pd_adjust_perf(chip_id, inst_id, perf_id, PD_PERF_UP);
         if (status == PD_PERF_SUCCESS) {
-            SDK_TRACE_INFO("Increased the frequency.");
+            SDK_HMON_TRACE_INFO("Increased the frequency.");
         } else {
             if (perf_id != PD_PERF_ID4) {
-                SDK_TRACE_ERR("Unable to change the frequency failed, perf_id is %u", perf_id);
+                SDK_HMON_TRACE_ERR("Unable to change the frequency failed, "
+                                   "perf_id is %u", perf_id);
             }
         }
     } else if (hbmtemperature >= HBM_TEMP_UPPER_LIMIT) {
         status = asic_pd_adjust_perf(chip_id, inst_id, perf_id, PD_PERF_DOWN);
         if (status == PD_PERF_SUCCESS) {
-            SDK_TRACE_INFO("Decreased the frequency.");
+            SDK_HMON_TRACE_INFO("Decreased the frequency.");
         } else {
             if (perf_id != PD_PERF_ID0) {
-                SDK_TRACE_ERR("Unable to change the frequency failed, perf_id is %u", perf_id);
+                SDK_HMON_TRACE_ERR("Unable to change the frequency failed, "
+                                   "perf_id is %u", perf_id);
             }
         }
     } else {
@@ -66,20 +68,21 @@ checktemperature(void)
     if (!ret) {
         temperature.dietemp /= 1000;
         if (max_die_temp < temperature.dietemp) {
-            SDK_TRACE_INFO("%s is : %uC",
-                       "Die temperature", temperature.dietemp);
+            SDK_HMON_TRACE_INFO("%s is : %uC",
+                                "Die temperature", temperature.dietemp);
             max_die_temp = temperature.dietemp;
         }
 
         temperature.localtemp /= 1000;
         if (max_local_temp < temperature.localtemp) {
-            SDK_TRACE_INFO("%s is : %uC",
-                       "Local temperature", temperature.localtemp);
+            SDK_HMON_TRACE_INFO("%s is : %uC",
+                                "Local temperature", temperature.localtemp);
             max_local_temp = temperature.localtemp;
         }
 
         if (max_hbm_temp < temperature.hbmtemp) {
-            SDK_TRACE_INFO("HBM temperature is : %uC", temperature.hbmtemp);
+            SDK_HMON_TRACE_INFO("HBM temperature is : %uC",
+                                temperature.hbmtemp);
             max_hbm_temp = temperature.hbmtemp;
         }
 
@@ -90,16 +93,22 @@ checktemperature(void)
         if (startingfrequency_1100 == 1) {
             changefrequency(temperature.hbmtemp);
         }
-        if ((temperature.hbmtemp >= g_sysmon_cfg.catalog->hbmtemperature_threshold()) &&
+        if ((temperature.hbmtemp >=
+                 g_sysmon_cfg.catalog->hbmtemperature_threshold()) &&
             (prev_hbmtemp_event != SYSMOND_HBM_TEMP_ABOVE_THRESHOLD)) {
-            SDK_OBFL_TRACE_INFO("HBM temperature is : %uC *** and threshold is %u",
-                       temperature.hbmtemp, g_sysmon_cfg.catalog->hbmtemperature_threshold());
-            SDK_TRACE_INFO("HBM temperature is : %uC *** and threshold is %u",
-                       temperature.hbmtemp, g_sysmon_cfg.catalog->hbmtemperature_threshold());
+            SDK_HMON_TRACE_ERR(
+                "HBM temperature is : %uC ***, threshold is %u",
+                temperature.hbmtemp,
+                g_sysmon_cfg.catalog->hbmtemperature_threshold());
+            SDK_HMON_TRACE_INFO(
+                "HBM temperature is : %uC ***, threshold is %u",
+                temperature.hbmtemp,
+                g_sysmon_cfg.catalog->hbmtemperature_threshold());
             hbmtemp_event = SYSMOND_HBM_TEMP_ABOVE_THRESHOLD;
             prev_hbmtemp_event = SYSMOND_HBM_TEMP_ABOVE_THRESHOLD;
         } else if ((prev_hbmtemp_event == SYSMOND_HBM_TEMP_ABOVE_THRESHOLD) &&
-                   (temperature.hbmtemp < g_sysmon_cfg.catalog->hbmtemperature_threshold())) {
+                   (temperature.hbmtemp <
+                        g_sysmon_cfg.catalog->hbmtemperature_threshold())) {
             hbmtemp_event = SYSMOND_HBM_TEMP_BELOW_THRESHOLD;
             prev_hbmtemp_event = SYSMOND_HBM_TEMP_BELOW_THRESHOLD;
         } else {
@@ -109,7 +118,7 @@ checktemperature(void)
             g_sysmon_cfg.temp_event_cb(&temperature, hbmtemp_event);
         }
     } else {
-        SDK_TRACE_ERR("Reading temperature failed");
+        SDK_HMON_TRACE_ERR("Reading temperature failed");
     }
 
     return;
@@ -128,7 +137,7 @@ int configurefrequency() {
         boost::property_tree::read_json(FREQUENCY_FILE, input);
     }
     catch (std::exception const &ex) {
-        SDK_TRACE_ERR("%s", ex.what());
+        SDK_HMON_TRACE_ERR("%s", ex.what());
         return -1;
     }
 
@@ -153,9 +162,10 @@ int configurefrequency() {
             } else {
                 return -1;
             }
-            status = asic_pd_adjust_perf(chip_id, inst_id, perf_id, PD_PERF_SET);
+            status = asic_pd_adjust_perf(chip_id, inst_id, perf_id,
+                                         PD_PERF_SET);
         } catch (std::exception const &ex) {
-            SDK_TRACE_ERR("%s", ex.what());
+            SDK_HMON_TRACE_ERR("%s", ex.what());
             return -1;
         }
     }

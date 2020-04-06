@@ -17,6 +17,11 @@ namespace types {
 
 typedef uint64_t    mem_addr_t;
 
+typedef enum monitor_type_e {
+    MONITOR_TYPE_SYSTEM     = 0,
+    MONITOR_TYPE_INTERRUPTS = 1,
+} monitor_type_t;
+
 enum class port_link_sm_t {
     PORT_LINK_SM_DISABLED,
     PORT_LINK_SM_ENABLED,
@@ -353,6 +358,7 @@ using sdk::types::xcvr_state_t;
 using sdk::types::xcvr_pid_t;
 using sdk::types::lif_state_t;
 using sdk::types::pkt_type_t;
+using sdk::types::monitor_type_t;
 
 #endif    // __SDK_TYPES_HPP__
 

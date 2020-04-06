@@ -64,7 +64,8 @@ TEST_F(lif_mgr_test, test1) {
 }
 
 static int
-hal_sdk_logger (sdk_trace_level_e trace_level, const char *format, ...)
+hal_sdk_logger (uint32_t mod_id, sdk_trace_level_e trace_level,
+                const char *format, ...)
 {
     char       logbuf[1024];
     va_list    args;

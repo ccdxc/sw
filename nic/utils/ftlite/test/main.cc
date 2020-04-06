@@ -12,7 +12,8 @@
 void run_basic_tests();
 
 static int
-ftl_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
+ftl_debug_logger (uint32_t mod_id, sdk_trace_level_e trace_level,
+                  const char *format, ...)
 {
     char logbuf[1024];
     va_list args;

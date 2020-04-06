@@ -25,6 +25,7 @@
 using boost::property_tree::ptree;
 
 #define SESSION_AGE_SCAN_INTVL          1     // in seconds
+#define SYSTEM_INTR_SCAN_INTVL          5     // in seconds
 #define SYSTEM_SCAN_INTVL               10    // in seconds
 
 // TODO: create a "system" class and move all this into that class
@@ -70,7 +71,7 @@ parse_pipeline_config (string pipeline, pds_state *state)
 
     // make sure cfg file exists
     if (access(cfg_file.c_str(), R_OK) < 0) {
-        PDS_TRACE_ERR("config file %s doesn't exist or not accessible\n",
+        PDS_TRACE_ERR("config file %s doesn't exist or not accessible",
                       cfg_file.c_str());
         return SDK_RET_ERR;
     }
@@ -82,25 +83,45 @@ parse_pipeline_config (string pipeline, pds_state *state)
     return SDK_RET_OK;
 }
 
-sdk_ret_t
-schedule_timers (pds_state *state, sdk::lib::twheel_cb_t sysmon_cb)
+static void
+sysmon_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
 {
-    //void    *aging_timer, *sysmon_timer;
+    impl_base::asic_impl()->monitor(monitor_type_t::MONITOR_TYPE_SYSTEM);
+}
+
+static void
+intr_mon_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    impl_base::asic_impl()->monitor(monitor_type_t::MONITOR_TYPE_INTERRUPTS);
+}
+
+sdk_ret_t
+schedule_timers (pds_state *state)
+{
     void *sysmon_timer;
+    void *intr_timer;
 
     while (!sdk::lib::periodic_thread_is_running()) {
         pthread_yield();
     }
 
     if (state->platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
-        // start periodic timer for scanning system interrupts, temparature,
-        // power etc.
+        // start periodic timer for scanning system temparature, power etc.
         sysmon_timer = sdk::lib::timer_schedule(
                            PDS_TIMER_ID_SYSTEM_SCAN,
                            SYSTEM_SCAN_INTVL * TIME_MSECS_PER_SEC,
-                           nullptr, sysmon_cb, true);
+                           nullptr, sysmon_timer_cb, true);
         if (sysmon_timer == NULL) {
-            PDS_TRACE_ERR("Failed to start system monitoring timer\n");
+            PDS_TRACE_ERR("Failed to start system monitoring timer");
+            return SDK_RET_ERR;
+        }
+        // start periodic timer for scanning system interrupts
+        intr_timer = sdk::lib::timer_schedule(
+                           PDS_TIMER_ID_INTR_SCAN,
+                           SYSTEM_INTR_SCAN_INTVL * TIME_MSECS_PER_SEC,
+                           nullptr, intr_mon_timer_cb, true);
+        if (intr_timer == NULL) {
+            PDS_TRACE_ERR("Failed to start system interrupt timer");
             return SDK_RET_ERR;
         }
         //PDS_TRACE_DEBUG("Started periodic system scan timer with %us intvl",

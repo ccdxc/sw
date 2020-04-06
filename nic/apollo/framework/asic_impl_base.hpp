@@ -14,6 +14,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/asic/asic.hpp"
+#include "nic/sdk/platform/asicerror/interrupts.hpp"
 #include "nic/apollo/framework/obj_base.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 
@@ -42,9 +43,16 @@ public:
         return SDK_RET_ERR;
     }
 
-    /// \brief    monitor the asic
+    /// \brief    monitor the system and asic interrupts
     /// \return    SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t monitor(void) {
+    virtual sdk_ret_t monitor(monitor_type_t monitor_type) {
+        return SDK_RET_OK;
+    }
+
+    /// \brief  process the interrupts
+    /// \return SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t process_interrupts(const intr_reg_t *reg,
+                                         const intr_field_t *field) {
         return SDK_RET_OK;
     }
 

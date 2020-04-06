@@ -2413,7 +2413,8 @@ qinfo(uint16_t lif)
 }
 
 int
-debug_logger(sdk_trace_level_e trace_level, const char *format, ...)
+debug_logger (uint32_t mod_id, sdk_trace_level_e trace_level,
+              const char *format, ...)
 {
     return 0;
 }

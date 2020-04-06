@@ -86,12 +86,12 @@ intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
     case INTR_SEV_TYPE_FATAL:
     case INTR_SEV_TYPE_ERR:
         if (field->count == 1) {
-            TRACE_ERR(GetAsicErrObflOnetimeLogger(),
+            TRACE_ERR(GetAsicErrOnetimeLogger(),
                       "name: {}_{}, count: {}, severity: {}, desc: {}",
                       reg->name, field->name, field->count,
                       get_severity_str(field->severity).c_str(), field->desc);
         }
-        TRACE_ERR(GetAsicErrObflLogger(),
+        TRACE_ERR(GetAsicErrLogger(),
                   "name: {}_{}, count: {}, severity: {}, desc: {}",
                   reg->name, field->name, field->count,
                   get_severity_str(field->severity).c_str(), field->desc);
@@ -114,7 +114,7 @@ intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
     case 424:
         sdk::asic::pd::asic_pd_unravel_hbm_intrs(&iscattrip, &iseccerr, true);
         if (iscattrip == false && iseccerr == true) {
-            TRACE_ERR(GetAsicErrObflLogger(), "ECCERR observed on the system.");
+            TRACE_ERR(GetAsicErrLogger(), "ECCERR observed on the system.");
         }
         break;
     default:

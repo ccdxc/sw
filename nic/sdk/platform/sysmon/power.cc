@@ -25,8 +25,8 @@ checkpower(void)
         power.pin /= 1000;
         if (max_pin < power.pin) {
             if (power.pin > (power.pin * INCREASE_THRESHOLD)) {
-                SDK_TRACE_INFO("Power of %s is %umW",
-                           "pin", power.pin);
+                SDK_HMON_TRACE_INFO("Power of %s is %umW",
+                                    "pin", power.pin);
             }
             max_pin = power.pin;
         }
@@ -34,8 +34,8 @@ checkpower(void)
         power.pout1 /= 1000;
         if (max_pout1 < power.pout1) {
             if (power.pout1 > (power.pout1 * INCREASE_THRESHOLD)) {
-                SDK_TRACE_INFO("Power of %s is %umW",
-                           "pout1", power.pout1);
+                SDK_HMON_TRACE_INFO("Power of %s is %umW",
+                                    "pout1", power.pout1);
             }
             max_pout1 = power.pout1;
         }
@@ -43,8 +43,8 @@ checkpower(void)
         power.pout2 /= 1000;
         if (max_pout2 < power.pout2) {
             if (power.pout2 > (power.pout2 * INCREASE_THRESHOLD)) {
-                SDK_TRACE_INFO("Power of %s is %umW",
-                           "pout2", power.pout2);
+                SDK_HMON_TRACE_INFO("Power of %s is %umW",
+                                    "pout2", power.pout2);
             }
             max_pout2 = power.pout2;
         }
@@ -52,7 +52,7 @@ checkpower(void)
             g_sysmon_cfg.power_event_cb(&power);
         }
     } else {
-        SDK_TRACE_ERR("Reading power failed");
+        SDK_HMON_TRACE_ERR("Reading power failed");
     }
     return;
 }

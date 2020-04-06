@@ -13,6 +13,7 @@
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/include/trace.hpp"
 #include "nic/apollo/framework/asic_impl_base.hpp"
+#include "nic/apollo/core/core.hpp"
 
 namespace api {
 namespace impl {
@@ -48,10 +49,15 @@ public:
     virtual sdk_ret_t asic_init(asic_cfg_t *asic_cfg) override;
 
     /**
-     * @brief    monitor the asic
+     * @brief    monitor the system and asic interrupts
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t monitor(void) override;
+    virtual sdk_ret_t monitor(monitor_type_t monitor_type) override;
+
+    /// \brief  process the interrupts
+    /// \return SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t process_interrupts(const intr_reg_t *reg,
+                                         const intr_field_t *field) override;
 
     /**
      * @brief    set the core frequency with the given value

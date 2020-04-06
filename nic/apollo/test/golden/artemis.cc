@@ -206,7 +206,8 @@ memrev (uint8_t *block, size_t elnum)
 #endif
 
 static int
-sdk_trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
+sdk_trace_cb (uint32_t mod_id, sdk_trace_level_e trace_level,
+              const char *format, ...)
 {
     char logbuf[1024];
     va_list args;

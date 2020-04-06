@@ -43,7 +43,7 @@ learn_state::~learn_state() {
 }
 
 static int
-learn_log (sdk_trace_level_e trace_level,
+learn_log (uint32_t mod_id, sdk_trace_level_e trace_level,
            const char *format, ...)
 {
     // TODO: All DPDK logs to be redirected here and write logs to file

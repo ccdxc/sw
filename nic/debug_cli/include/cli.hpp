@@ -22,7 +22,8 @@ const auto LOG_MAX_FILES = 1;
  */
 sdk_trace_level_e g_cli_trace_level = sdk::lib::SDK_TRACE_LEVEL_WARN;
 static int
-cli_sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
+cli_sdk_logger (uint32_t mod_id, sdk_trace_level_e tracel_level,
+                const char *format, ...)
 {
     char       logbuf[1024];
     va_list    args;

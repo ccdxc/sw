@@ -341,7 +341,7 @@ product_info_vec_get(void)
 }
 
 static int
-sdk_trace_cb (sdk_trace_level_e trace_level,
+sdk_trace_cb (uint32_t mod_id, sdk_trace_level_e trace_level,
               const char *format, ...)
 {
     char       logbuf[1024];

@@ -389,25 +389,25 @@ logfmt(const char *fmt, va_list ap)
 static void
 logdebug(const char *fmt, va_list ap)
 {
-    SDK_TRACE_DEBUG("%s", logfmt(fmt, ap));
+    SDK_HMON_TRACE_DEBUG("%s", logfmt(fmt, ap));
 }
 
 static void
 loginfo(const char *fmt, va_list ap)
 {
-    SDK_TRACE_INFO("%s", logfmt(fmt, ap));
+    SDK_HMON_TRACE_INFO("%s", logfmt(fmt, ap));
 }
 
 static void
 logwarn(const char *fmt, va_list ap)
 {
-    SDK_TRACE_WARN("%s", logfmt(fmt, ap));
+    SDK_HMON_TRACE_WARN("%s", logfmt(fmt, ap));
 }
 
 static void
 logerror(const char *fmt, va_list ap)
 {
-    SDK_TRACE_ERR("%s", logfmt(fmt, ap));
+    SDK_HMON_TRACE_ERR("%s", logfmt(fmt, ap));
 }
 
 static void

@@ -20,7 +20,8 @@ checkruntime(void)
             if (fptr == NULL) {
                 if (filerror == false) {
                     filerror = true;
-                    SDK_TRACE_INFO("Error creating file %s", UPTIME_FILENAME);
+                    SDK_HMON_TRACE_INFO("Error creating file %s",
+                                        UPTIME_FILENAME);
                 }
                 return;
             }

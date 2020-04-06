@@ -52,20 +52,20 @@ checkpanicdump(void)
 
     getpanicmtd(mtdname);
     if (mtdname.empty()) {
-        SDK_TRACE_INFO("Could not find MTD name");
+        SDK_HMON_TRACE_INFO("Could not find MTD name");
         return;
     }
 
     snprintf(filename, sizeof(filename), "/dev/%s", mtdname.c_str());
     fd = open(filename, O_RDWR);
     if (fd < 0) {
-        SDK_TRACE_INFO("Error opening %s", filename);
+        SDK_HMON_TRACE_INFO("Error opening %s", filename);
         return;
     }
 
     // read the header
     if (read(fd, &hdr, sizeof(panicbuf_header))  < 0) {
-        SDK_TRACE_INFO("Error reading %s", filename);
+        SDK_HMON_TRACE_INFO("Error reading %s", filename);
         goto exit;
     }
     if (hdr.magic == PANIC_SIGNATURE) {
@@ -74,18 +74,18 @@ checkpanicdump(void)
         ioctl(fd, MEMGETINFO, &mtd_info);
         // validate size
         if (hdr.len + sizeof(hdr) > mtd_info.size) {
-            SDK_TRACE_INFO("Invalid length %u", hdr.len);
+            SDK_HMON_TRACE_INFO("Invalid length %u", hdr.len);
             goto exit;
         }
 
         // allocate memory for the data and read the data
         kdump = (uint8_t *)malloc(hdr.len);
         if (kdump == NULL) {
-            SDK_TRACE_INFO("Error allocating %u bytes", hdr.len);
+            SDK_HMON_TRACE_INFO("Error allocating %u bytes", hdr.len);
             goto exit;
         }
         if (read(fd, kdump, hdr.len) < 0) {
-            SDK_TRACE_INFO("Error reading data from %s", filename);
+            SDK_HMON_TRACE_INFO("Error reading data from %s", filename);
             goto exit;
         }
 
@@ -95,11 +95,11 @@ checkpanicdump(void)
         // write data to the file
         kfptr = fopen(PANIC_KDUMP_FILE, "w");
         if (kfptr == NULL) {
-            SDK_TRACE_INFO("Error opening %s", PANIC_KDUMP_FILE);
+            SDK_HMON_TRACE_INFO("Error opening %s", PANIC_KDUMP_FILE);
             goto exit;
         }
         if (fwrite(kdump, sizeof(uint8_t), hdr.len, kfptr) != hdr.len) {
-            SDK_TRACE_INFO("Error writing to %s", PANIC_KDUMP_FILE);
+            SDK_HMON_TRACE_INFO("Error writing to %s", PANIC_KDUMP_FILE);
             fclose(kfptr);
             goto exit;
         }
@@ -116,8 +116,8 @@ checkpanicdump(void)
         if (g_sysmon_cfg.panic_event_cb) {
             g_sysmon_cfg.panic_event_cb();
         }
-        SDK_TRACE_INFO("%s flash erased and %s created",
-                   PANIC_BUF, PANIC_KDUMP_FILE);
+        SDK_HMON_TRACE_INFO("%s flash erased and %s created",
+                            PANIC_BUF, PANIC_KDUMP_FILE);
     }
 exit:
     close(fd);

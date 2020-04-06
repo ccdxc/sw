@@ -45,7 +45,7 @@ checkprocess(monprocess_t *process) {
 
     it = monprocess_map.find(process->pid);
     if (it == monprocess_map.end()) {
-        SDK_OBFL_TRACE_INFO("%s(%u): RSS: %f MB, VSZ: %f MB",
+        SDK_HMON_TRACE_ERR("%s(%u): RSS: %f MB, VSZ: %f MB",
                 process->command.c_str(), process->pid, (double)process->rss / 1024.0,
                 (double)process->vsz / 1024.0);
         monprocess_map[process->pid] = *process;
@@ -60,7 +60,7 @@ checkprocess(monprocess_t *process) {
             if (process->rss_change >= PROCESS_CHANGE_THRESHOLD &&
                 process->vsz_change >= PROCESS_CHANGE_THRESHOLD) {
                 //log the change in RSS
-                SDK_OBFL_TRACE_INFO("%s(%u):RSS: %f MB (+%f MB), " \
+                SDK_HMON_TRACE_ERR("%s(%u):RSS: %f MB (+%f MB), " \
                            "VSZ: %f MB (+%f MB)",
                             process->command.c_str(), process->pid,
                             (double)process->rss / 1024.0,
@@ -72,7 +72,7 @@ checkprocess(monprocess_t *process) {
                 process->vsz_change = 0;
             } else if (process->rss_change >= PROCESS_CHANGE_THRESHOLD) {
                 //log the change in RSS
-                SDK_OBFL_TRACE_INFO("%s(%u):RSS: %fMB (+%fMB)",
+                SDK_HMON_TRACE_ERR("%s(%u):RSS: %fMB (+%fMB)",
                             process->command.c_str(), process->pid,
                             (double)process->rss / 1024.0,
                             (double)process->rss_change / 1024.0);
@@ -80,7 +80,7 @@ checkprocess(monprocess_t *process) {
                 process->rss_change = 0;
             } else if (process->vsz_change >= PROCESS_CHANGE_THRESHOLD) {
                 //log the change in vsz
-                SDK_OBFL_TRACE_INFO("%s(%u):VSZ: %fMB (+%fMB)",
+                SDK_HMON_TRACE_ERR("%s(%u):VSZ: %fMB (+%fMB)",
                             process->command.c_str(), process->pid,
                             (double)process->vsz / 1024.0,
                             (double)process->vsz_change / 1024.0);
@@ -164,7 +164,7 @@ removeprocess() {
     for (it = monprocess_map.begin(); it != monprocess_map.end(); it++) {
         const monprocess_t &cur_process = it->second;
         if (cur_process.visited != color) {
-            SDK_OBFL_TRACE_INFO("%s(%u) - exited",
+            SDK_HMON_TRACE_ERR("%s(%u) - exited",
                        cur_process.command.c_str(), cur_process.pid);
             removeitem.push_back(it->first);
         }
@@ -220,26 +220,26 @@ monitorfreememory (uint64_t *total_mem, uint64_t *available_mem,
                 curr_memory = getmeminfo(line);
                 if (*available_mem == 0) {
                     avail_memory_lowest = curr_memory;
-                    SDK_OBFL_TRACE_INFO("Available memory %f MB",
+                    SDK_HMON_TRACE_ERR("Available memory %f MB",
                     (double)avail_memory_lowest / 1024.0);
                 } else if (curr_memory < avail_memory_lowest) {
                     mem_diff = mem_diff + avail_memory_lowest - curr_memory;
                     avail_memory_lowest = curr_memory;
                     if (mem_diff >= AVAILABLE_MEMORY_THRESHOLD) {
-                        SDK_OBFL_TRACE_INFO("Available memory lowerwatermark %f MB",
+                        SDK_HMON_TRACE_ERR("Available memory lowerwatermark %f MB",
                         (double)avail_memory_lowest / 1024.0);
                         mem_diff = 0;
                     }
                 }
                 if (curr_memory < LOW_MEMORY_THRESHOLD) {
-                    SDK_OBFL_TRACE_INFO("Available memory is %f MB",
+                    SDK_HMON_TRACE_ERR("Available memory is %f MB",
                     (double)curr_memory / 1024.0);
                 }
 
                 if (sysmondebug == false &&
                     curr_memory > CRITICAL_MEMORY_THRESHOLD) {
                     // Enable the sysmonddebug script again.
-                    SDK_OBFL_TRACE_INFO("Enable sysmonddebug script again");
+                    SDK_HMON_TRACE_ERR("Enable sysmonddebug script again");
                     sysmondebug = true;
                 }
 
@@ -247,10 +247,10 @@ monitorfreememory (uint64_t *total_mem, uint64_t *available_mem,
                     curr_memory < CRITICAL_MEMORY_THRESHOLD) {
                     int status = system("/nic/tools/sysmondebug.sh");
                     if (status) {
-                        SDK_OBFL_TRACE_INFO("Unable to run debug script",
+                        SDK_HMON_TRACE_ERR("Unable to run debug script",
                             (double)curr_memory / 1024.0);
                     } else {
-                        SDK_OBFL_TRACE_INFO("Available memory is %f MB, run debug script",
+                        SDK_HMON_TRACE_ERR("Available memory is %f MB, run debug script",
                             (double)curr_memory / 1024.0);
                         sysmondebug = false;
                     }

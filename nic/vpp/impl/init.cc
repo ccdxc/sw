@@ -18,13 +18,14 @@ using namespace sdk::platform;
 extern "C" {
 
 static int
-pds_init_logger (sdk_trace_level_e tracel_level, const char *format, ...)
+pds_init_logger (uint32_t mod_id, sdk_trace_level_e tracel_level,
+                 const char *format, ...)
 {
     return 0;
 }
 
 int
-initialize_pds(void)
+initialize_pds (void)
 {
     sdk_ret_t ret;
     pds_init_params_t init_params;

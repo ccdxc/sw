@@ -30,6 +30,8 @@ sdk_ret_t spawn_routing_thread(void);
 // number of trace files to keep
 #define TRACE_NUM_FILES                        2
 #define TRACE_FILE_SIZE                        (20 << 20)
+#define TRACE_NUM_FILES_HMON                   1
+#define TRACE_FILE_SIZE_HMON                   (5 << 20)        // 5MB
 typedef void (*sig_handler_t)(int sig, siginfo_t *info, void *ptr);
 
 //------------------------------------------------------------------------------
@@ -98,38 +100,45 @@ pds_sig_init (sig_handler_t sig_handler)
     return SDK_RET_OK;
 }
 
-//------------------------------------------------------------------------------
-// logger callback passed to SDK and PDS lib
-//------------------------------------------------------------------------------
 static int
-sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
+sdk_logger_ (uint32_t mod_id, sdk_trace_level_e trace_level, const char *logbuf)
 {
-    char       logbuf[1024];
-    va_list    args;
-
-    va_start(args, format);
-    vsnprintf(logbuf, sizeof(logbuf), format, args);
-    switch (tracel_level) {
+    switch (trace_level) {
     case sdk::lib::SDK_TRACE_LEVEL_ERR:
-        PDS_TRACE_ERR_NO_META("{}", logbuf);
+        PDS_MOD_TRACE_ERR_NO_META(mod_id, "{}", logbuf);
         break;
     case sdk::lib::SDK_TRACE_LEVEL_WARN:
-        PDS_TRACE_WARN_NO_META("{}", logbuf);
+        PDS_MOD_TRACE_WARN_NO_META(mod_id, "{}", logbuf);
         break;
     case sdk::lib::SDK_TRACE_LEVEL_INFO:
-        PDS_TRACE_INFO_NO_META("{}", logbuf);
+        PDS_MOD_TRACE_INFO_NO_META(mod_id, "{}", logbuf);
         break;
     case sdk::lib::SDK_TRACE_LEVEL_DEBUG:
-        PDS_TRACE_DEBUG_NO_META("{}", logbuf);
+        PDS_MOD_TRACE_DEBUG_NO_META(mod_id, "{}", logbuf);
         break;
     case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
-        PDS_TRACE_VERBOSE_NO_META("{}", logbuf);
+        PDS_MOD_TRACE_VERBOSE_NO_META(mod_id, "{}", logbuf);
         break;
     default:
         break;
     }
-    va_end(args);
+    return 0;
+}
 
+//------------------------------------------------------------------------------
+// logger callback passed to SDK and PDS lib
+//------------------------------------------------------------------------------
+static int
+sdk_logger (uint32_t mod_id, sdk_trace_level_e trace_level,
+            const char *format, ...)
+{
+    char    logbuf[1024];
+    va_list args;
+
+    va_start(args, format);
+    vsnprintf(logbuf, sizeof(logbuf), format, args);
+    core::sdk_logger_(mod_id, trace_level, logbuf);
+    va_end(args);
     return 0;
 }
 
@@ -212,7 +221,7 @@ logger_init (void)
     std::string logfile, err_logfile;
 
     logfile = log_file(std::getenv("LOG_DIR"), "./pds-agent.log");
-    err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"), "/obfl.log");
+    err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"), "/obfl/obfl.log");
 
     if (logfile.empty() || err_logfile.empty()) {
         return SDK_RET_ERR;
@@ -222,6 +231,23 @@ logger_init (void)
     core::trace_init("agent", 0x1, true, err_logfile.c_str(), logfile.c_str(),
                      TRACE_FILE_SIZE, TRACE_NUM_FILES, utils::trace_debug);
 
+    logfile = log_file(std::getenv("LOG_DIR"), "./hmon.log");
+    err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"),
+                           "/obfl/hmon_err.log");
+
+    // initialize the hmon and interrupts logger
+    core::hmon_trace_init("hmon", 0x1, true, err_logfile.c_str(),
+                          logfile.c_str(), TRACE_FILE_SIZE_HMON,
+                          TRACE_NUM_FILES_HMON, utils::trace_info);
+
+    logfile = log_file(std::getenv("LOG_DIR"), "./asicerrord_onetime.log");
+    err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"),
+                           "/obfl/asicerrord_onetime_err.log");
+
+    // initialize the onetime interrupts logger
+    core::intr_trace_init("intr", 0x1, true, err_logfile.c_str(),
+                          logfile.c_str(), TRACE_FILE_SIZE_HMON,
+                          TRACE_NUM_FILES_HMON, utils::trace_info);
     return SDK_RET_OK;
 }
 

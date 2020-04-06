@@ -24,17 +24,17 @@ updatefwversion(void)
         boost::property_tree::read_json(FW_VERSION_FILE, input);
     }
     catch (std::exception const &ex) {
-        SDK_TRACE_DEBUG("%s",ex.what());
+        SDK_HMON_TRACE_DEBUG("%s",ex.what());
         return;
     }
 
     if (input.get_optional<std::string>(SW_VERSION_KEY)) {
         version = input.get<std::string>(SW_VERSION_KEY);
     } else {
-        SDK_TRACE_ERR("sw version not found in %s", FW_VERSION_FILE);
+        SDK_HMON_TRACE_ERR("sw version not found in %s", FW_VERSION_FILE);
         return;
     }
-    SDK_TRACE_INFO("version is %s", version.c_str());
+    SDK_HMON_TRACE_INFO("version is %s", version.c_str());
     ret = sscanf(version.c_str(), VERSION_PATTERN, &major_version,
                  &minor_version, &maintenance_version, &pipeline);
     if (ret == 4) {
@@ -48,7 +48,7 @@ updatefwversion(void)
         pal_write_fw_ver_to_cpld(major_version, minor_version,
                                  maintenance_version, pipeline_version);
     } else {
-        SDK_TRACE_ERR("Error getting firmware version");
+        SDK_HMON_TRACE_ERR("Error getting firmware version");
         return;
     }
 }

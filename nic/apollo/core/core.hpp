@@ -36,6 +36,7 @@ enum {
     PDS_TIMER_ID_NONE         = 0,
     PDS_TIMER_ID_SESSION_AGE  = 1,
     PDS_TIMER_ID_SYSTEM_SCAN  = 2,
+    PDS_TIMER_ID_INTR_SCAN    = 3,
 };
 
 sdk_ret_t spawn_periodic_thread(pds_state *state);
@@ -52,7 +53,7 @@ sdk_ret_t parse_global_config(string pipeline, string cfg_file,
 sdk_ret_t parse_pipeline_config(string pipeline, pds_state *state);
 typedef void (*sig_handler_t)(int sig, siginfo_t *info, void *ptr);
 sdk_ret_t sig_init(int signal, sig_handler_t sig_handler);
-sdk_ret_t schedule_timers(pds_state *state, sdk::lib::twheel_cb_t sysmon_cb);
+sdk_ret_t schedule_timers(pds_state *state);
 
 }    // namespace core
 

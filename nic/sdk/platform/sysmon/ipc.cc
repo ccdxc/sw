@@ -8,13 +8,13 @@
 static void
 sysmon_xcvr_event_handler(sdk::ipc::ipc_msg_ptr msg, const void *ctxt) {
 
-    SDK_TRACE_INFO("xcvr event received");
+    SDK_HMON_TRACE_INFO("xcvr event received");
 }
 
 static void
 sysmon_port_event_handler(sdk::ipc::ipc_msg_ptr msg, const void *ctxt) {
 
-    SDK_TRACE_INFO("Port event received");
+    SDK_HMON_TRACE_INFO("Port event received");
 }
 
 void

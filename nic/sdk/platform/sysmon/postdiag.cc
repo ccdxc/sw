@@ -19,14 +19,14 @@ checkpostdiag(void)
             result = system("grep -s -q FAIL " POST_TEST_FILENAME"> /dev/null 2>&1");
             if (result == 0 && g_sysmon_cfg.postdiag_event_cb) {
                 g_sysmon_cfg.postdiag_event_cb();
-                SDK_TRACE_INFO("Post diag failed, event generated");
+                SDK_HMON_TRACE_INFO("Post diag failed, event generated");
                 return;
             }
-            SDK_TRACE_INFO("Post diag completed Success");
+            SDK_HMON_TRACE_INFO("Post diag completed Success");
             return;
         } else if (access(SKIP_POST_TEST_FILE, F_OK) == 0) {
             runposttest = 1;
-            SDK_TRACE_INFO("Post skipped");
+            SDK_HMON_TRACE_INFO("Post skipped");
             return;
         }
     }

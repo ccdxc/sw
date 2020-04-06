@@ -42,4 +42,13 @@ typedef enum sdk_ipc_msg_id_s {
     SDK_IPC_MSG_ID_MAX            = SDK_IPC_MSG_ID_UPGMGR_MAX,
 } sdk_ipc_msg_id_t;
 
+/// \brief module ids reserved for sdk processes
+typedef enum sdk_mod_id_e {
+    SDK_MOD_ID_MIN   = 0,
+    SDK_MOD_ID_SDK   = SDK_MOD_ID_MIN + 1,  ///< generic SDK module id
+    SDK_MOD_ID_HMON,                        ///< module id for system monitoring
+    SDK_MOD_ID_INTR,                        ///< module id for system interrupts
+    SDK_MOD_ID_MAX
+} sdk_mod_id_t;
+
 #endif   // __SDK_GLOBALS_HPP__

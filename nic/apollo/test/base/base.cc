@@ -20,7 +20,8 @@
 // trace is spwed at ... in reality, you call your favorite logger here
 sdk_trace_level_e g_trace_level = sdk::lib::SDK_TRACE_LEVEL_DEBUG;
 static int
-trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
+trace_cb (uint32_t mod_id, sdk_trace_level_e trace_level,
+          const char *format, ...)
 {
     va_list args;
     const char *pfx;

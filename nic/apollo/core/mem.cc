@@ -17,7 +17,7 @@
 #include "nic/apollo/learn/ep_ip_entry.hpp"
 #include "nic/apollo/learn/ep_mac_entry.hpp"
 
-sdk_logger::trace_cb_t    g_trace_cb;
+sdk_logger::trace_cb_t g_trace_cb;
 
 // TODO: move all the calls to xxx_free() to inside xxx_entry()::destroy()
 

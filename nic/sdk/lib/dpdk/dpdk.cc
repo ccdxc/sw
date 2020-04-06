@@ -21,30 +21,26 @@ using namespace std;
 
 static dpdk_global_config_t dpdk_config;
 
-#define SDK_DPDK_LOG_INFO(fmt, _args...)                                \
+#define SDK_DPDK_LOG(...) \
     if (dpdk_config.log_cb) {                                           \
-        (*dpdk_config.log_cb) (SDK_TRACE_LEVEL_INFO, fmt, ##_args);     \
+        (*dpdk_config.log_cb) (sdk_mod_id_t::SDK_MOD_ID_SDK,            \
+                               ##__VA_ARGS__);                          \
     }
+
+#define SDK_DPDK_LOG_INFO(fmt, _args...)                                \
+        SDK_DPDK_LOG(SDK_TRACE_LEVEL_INFO, fmt, ##_args);               \
 
 #define SDK_DPDK_LOG_ERR(fmt, _args...)                                 \
-    if (dpdk_config.log_cb) {                                           \
-        (*dpdk_config.log_cb) (SDK_TRACE_LEVEL_ERR, fmt, ##_args);      \
-    }
+        SDK_DPDK_LOG(SDK_TRACE_LEVEL_ERR, fmt, ##_args);                \
 
 #define SDK_DPDK_LOG_WARN(fmt, _args...)                                \
-    if (dpdk_config.log_cb) {                                           \
-        (*dpdk_config.log_cb) (SDK_TRACE_LEVEL_WARN, fmt, ##_args);     \
-    }
+        SDK_DPDK_LOG(SDK_TRACE_LEVEL_WARN, fmt, ##_args);               \
 
-#define SDK_DPDK_LOG_DEBUG(fmt, _args...)                                \
-    if (dpdk_config.log_cb) {                                            \
-        (*dpdk_config.log_cb) (SDK_TRACE_LEVEL_DEGUB, fmt, ##_args);     \
-    }
+#define SDK_DPDK_LOG_DEBUG(fmt, _args...)                               \
+        SDK_DPDK_LOG(SDK_TRACE_LEVEL_DEBUG, fmt, ##_args);              \
 
-#define SDK_DPDK_LOG_VERBOSE(fmt, _args...)                              \
-    if (dpdk_config.log_cb) {                                            \
-        (*dpdk_config.log_cb) (SDK_TRACE_LEVEL_VERBOSE, fmt, ##_args);   \
-    }
+#define SDK_DPDK_LOG_VERBOSE(fmt, _args...)                             \
+        SDK_DPDK_LOG(SDK_TRACE_LEVEL_VERBOSE, fmt, ##_args);            \
 
 // if we support per device config, then move it to dpdk_device class in future.
 struct rte_eth_conf ethdev_conf = {0};

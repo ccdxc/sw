@@ -53,8 +53,8 @@ delphi_frequency_change_event_cb (uint32_t frequency)
 void
 delphi_cattrip_event_cb (void)
 {
-    TRACE_INFO(GetObflLogger(), "Cattrip occurred");
-    TRACE_FLUSH(GetObflLogger());
+    TRACE_ERR(GetLogger(), "Cattrip occurred");
+    TRACE_FLUSH(GetLogger());
     return;
 }
 

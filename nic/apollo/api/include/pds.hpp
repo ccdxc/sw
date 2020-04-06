@@ -233,6 +233,11 @@ typedef enum address_type_s {
     ADDR_TYPE_SERVICE = 2,    ///< service/infra address space
 } address_type_t;
 
+/// \brief module ids
+typedef enum pds_mod_id_e {
+    PDS_MOD_ID_PDS = sdk_mod_id_t::SDK_MOD_ID_MAX + 1,  ///< generic PDS module id
+} pds_mod_id_t;
+
 /// @}
 
 #endif    // __INCLUDE_API_PDS_HPP__

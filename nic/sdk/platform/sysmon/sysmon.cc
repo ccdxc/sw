@@ -77,13 +77,13 @@ sysmon_init (sysmon_cfg_t *sysmon_cfg)
     systemled_t led;
 
     if (sysmon_cfg == NULL) {
-        SDK_TRACE_ERR("Invalid params, cfg is NULL");
+        SDK_HMON_TRACE_ERR("Invalid params, cfg is NULL");
         return -1;
     }
 
     g_sysmon_cfg = *sysmon_cfg;
 
-    SDK_TRACE_INFO("Monitoring system events");
+    SDK_HMON_TRACE_INFO("Monitoring system events");
 
     // check for panic dump
     checkpanicdump();
@@ -91,13 +91,13 @@ sysmon_init (sysmon_cfg_t *sysmon_cfg)
     // update the firmware version in cpld
     updatefwversion();
 
-    SDK_TRACE_INFO("HBM Threshold temperature is %u",
+    SDK_HMON_TRACE_INFO("HBM Threshold temperature is %u",
                    g_sysmon_cfg.catalog->hbmtemperature_threshold());
 
     if (configurefrequency() == 0) {
-        SDK_TRACE_INFO("Frequency set from file");
+        SDK_HMON_TRACE_INFO("Frequency set from file");
     } else {
-        SDK_TRACE_INFO("Failed to set frequency from file");
+        SDK_HMON_TRACE_INFO("Failed to set frequency from file");
     }
     led.event = EVERYTHING_WORKING;
     sysmgrsystemled(led);

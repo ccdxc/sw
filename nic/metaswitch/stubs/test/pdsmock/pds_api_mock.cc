@@ -505,7 +505,8 @@ port_type_t  catalog::port_type_fp(uint32_t fp_port) {
 } // End namespace sdk
 
 static int
-sdk_test_logger (sdk_trace_level_e tracel_level, const char *format, ...)
+sdk_test_logger (uint32_t mod_id, sdk_trace_level_e tracel_level,
+                 const char *format, ...)
 {
     char       logbuf[1024];
     va_list    args;

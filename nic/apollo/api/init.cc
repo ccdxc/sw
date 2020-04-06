@@ -32,6 +32,7 @@
 #include "nic/apollo/api/upgrade.hpp"
 #include "nic/apollo/api/internal/metrics.hpp"
 #include "platform/sysmon/sysmon.hpp"
+#include "nic/sdk/platform/asicerror/interrupts.hpp"
 
 const pds_obj_key_t k_pds_obj_key_invalid = { 0 };
 
@@ -135,30 +136,48 @@ sig_handler (int sig, siginfo_t *info, void *ptr)
 }
 
 static void
-sysmon_cb (void *timer, uint32_t timer_id, void *ctxt)
-{
-    impl_base::asic_impl()->monitor();
-}
-
-static void
 power_event_cb (sdk::platform::sensor::system_power_t *power)
 {
-#if 0
-    PDS_TRACE_VERBOSE("Power of pin is {}W, pout1 is {}W, pout2 is {}W",
-                      power->pin/1000000, power->pout1/1000000,
-                      power->pout2/1000000);
-#endif
+    PDS_HMON_TRACE_VERBOSE("Power of pin is %.4fW, pout1 is %.4fW, "
+                           "pout2 is %.4fW", power->pin/1000000,
+                           power->pout1/1000000, power->pout2/1000000);
 }
 
 static void
 temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature,
                sysmond_hbm_threshold_event_t hbm_event)
 {
-#if 0
-    PDS_TRACE_VERBOSE("Die temperature is {}C, local temperature is {}C,"
-                      " HBM temperature is {}C", temperature->dietemp/1000,
-                      temperature->localtemp/1000, temperature->hbmtemp);
-#endif
+    PDS_HMON_TRACE_VERBOSE("Die temperature is %.4fC, local temperature is "
+                           "%.4fC, HBM temperature is %.4fC",
+                           temperature->dietemp/1000,
+                           temperature->localtemp/1000, temperature->hbmtemp);
+}
+
+static void
+intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
+{
+    switch (field->severity) {
+    case INTR_SEV_TYPE_HW_RMA:
+    case INTR_SEV_TYPE_FATAL:
+    case INTR_SEV_TYPE_ERR:
+        if (field->count == 1) {
+            // log to onetime interrupt error
+            PDS_INTR_TRACE_ERR("name: %s_%s, count: %u, severity: %s, desc: %s",
+                reg->name, field->name, field->count,
+                get_severity_str(field->severity).c_str(), field->desc);
+        }
+        // log in hmon error
+        PDS_HMON_TRACE_ERR("name: %s_%s, count: %u, severity: %s, desc: %s",
+            reg->name, field->name, field->count,
+            get_severity_str(field->severity).c_str(), field->desc);
+        break;
+    case INTR_SEV_TYPE_INFO:
+    default:
+        break;
+    }
+
+    // post processing of interrupts
+    impl_base::asic_impl()->process_interrupts(reg, field);
 }
 
 /**
@@ -168,6 +187,7 @@ static void
 sysmon_init (void)
 {
     sysmon_cfg_t sysmon_cfg;
+    intr_cfg_t intr_cfg;
 
     memset(&sysmon_cfg, 0, sizeof(sysmon_cfg_t));
     sysmon_cfg.power_event_cb = power_event_cb;
@@ -177,8 +197,12 @@ sysmon_init (void)
     // init the sysmon lib
     sysmon_init(&sysmon_cfg);
 
+    intr_cfg.intr_event_cb = intr_event_cb;
+    // init the interrupts lib
+    intr_init(&intr_cfg);
+
     // schedule sysmon timer
-    core::schedule_timers(&api::g_pds_state, api::sysmon_cb);
+    core::schedule_timers(&api::g_pds_state);
 }
 
 }    // namespace api
@@ -236,9 +260,9 @@ pds_init (pds_init_params_t *params)
     sdk::lib::device_profile_t device_profile = { 0 };
     device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}};
 
-    // initialize the logger
-    // TODO fix obfl logger when sdk logger is cleaned up
-    sdk::lib::logger::init(params->trace_cb, params->trace_cb);
+    sdk::lib::logger::init(params->trace_cb);
+
+    // register trace callback
     register_trace_cb(params->trace_cb);
 
     // do state initialization

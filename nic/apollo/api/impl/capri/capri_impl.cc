@@ -22,6 +22,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/sdk/third-party/asic/capri/verif/apis/cap_platform_api.h"
 #include "nic/sdk/platform/sysmon/sysmon.hpp"
+#include "nic/sdk/platform/asicerror/interrupts.hpp"
 
 using namespace sdk;
 using namespace sdk::asic::pd;
@@ -258,13 +259,46 @@ capri_impl::pb_stats (debug::pb_stats_get_cb_t cb, void *ctxt)
 }
 
 /**
- * @brief    monitor the asic
- * @return    SDK_RET_OK on success, failure status code on error
+ * @brief    monitor the system and asic interrupts
+ * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::monitor (void)
-{
-    sysmon_monitor();
+capri_impl::monitor (monitor_type_t monitor_type) {
+    if (monitor_type == monitor_type_t::MONITOR_TYPE_SYSTEM) {
+        sysmon_monitor();
+    } else if (monitor_type == monitor_type_t::MONITOR_TYPE_INTERRUPTS) {
+        traverse_interrupts();
+    }
+    return SDK_RET_OK;
+}
+
+/// \brief  process the interrupts
+/// \return SDK_RET_OK on success, failure status code on error
+sdk_ret_t
+capri_impl::process_interrupts (const intr_reg_t *reg,
+                                const intr_field_t *field) {
+    bool iscattrip = false;
+    bool iseccerr = false;
+
+    // TODO use enums
+    // invoke unravel interrupts for mc[0-7]_mch_int_mc registers
+    switch (reg->id) {
+    case 396:
+    case 400:
+    case 404:
+    case 408:
+    case 412:
+    case 416:
+    case 420:
+    case 424:
+        sdk::asic::pd::asic_pd_unravel_hbm_intrs(&iscattrip, &iseccerr, true);
+        if (iscattrip == false && iseccerr == true) {
+            PDS_HMON_TRACE_ERR("ECCERR observed on the system.");
+        }
+        break;
+    default:
+        break;
+    }
     return SDK_RET_OK;
 }
 

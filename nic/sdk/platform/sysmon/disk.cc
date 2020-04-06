@@ -57,7 +57,7 @@ checkdiskinfo(mondisk_t *disk) {
 
     it = mondisk_map.find(disk->mounted);
     if (it == mondisk_map.end()) {
-        SDK_OBFL_TRACE_INFO("%s %f MB, %f MB, %f MB %s",
+        SDK_HMON_TRACE_ERR("%s %f MB, %f MB, %f MB %s",
                 disk->filesystem.c_str(), (double)disk->size / 1024.0,
                 (double)disk->used / 1024.0,
                 (double)disk->available / 1024.0,
@@ -69,7 +69,7 @@ checkdiskinfo(mondisk_t *disk) {
         if (old_disk.size != disk->size ||
             old_disk.used != disk->used ||
             old_disk.available != disk->available) {
-            SDK_OBFL_TRACE_INFO("%s %f MB, %f MB, %f MB %s",
+            SDK_HMON_TRACE_ERR("%s %f MB, %f MB, %f MB %s",
                 disk->filesystem.c_str(), (double)disk->size / 1024.0,
                 (double)disk->used / 1024.0,
                 (double)disk->available / 1024.0,

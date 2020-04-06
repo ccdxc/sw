@@ -61,7 +61,7 @@ read_hbmerrcause_table (const hbmerrcause_t *entry, uint64_t nwl_base_addr,
     sdk::asic::asic_reg_read(nwl_base_addr + entry->offset,
                              &reg_value, 1, true);
     if (reg_value && logging) {
-        SDK_OBFL_TRACE_ERR("ECCERR::reading register %x value is %d %s %d",
+        SDK_HMON_TRACE_ERR("ECCERR::reading register %x value is %d %s %d",
                             nwl_base_addr + entry->offset, reg_value,
                             entry->message.c_str(), channel);
         return true;
@@ -77,7 +77,7 @@ read_cattrip_reg (uint64_t nwl_base_addr, uint8_t channel)
             DDR_CSR_APB_CPU0_DFI_STAT_DFI_CATTRIP_BYTE_ADDRESS,
             &reg_value, 1, true);
     if (reg_value) {
-        SDK_OBFL_TRACE_ERR("CRITCATTRIP::reading register %x value is %d %s %d",
+        SDK_HMON_TRACE_ERR("CRITCATTRIP::reading register %x value is %d %s %d",
                            nwl_base_addr +
                            DDR_CSR_APB_CPU0_DFI_STAT_DFI_CATTRIP_BYTE_ADDRESS,
                            reg_value,
@@ -100,69 +100,69 @@ print_mch_sta_data (uint64_t mc_base_addr, uint8_t channel)
     }
     // Data from STA 0
     if (mc_sta_reg_value[0]) {
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_1BIT_PS0: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_1BIT_PS0: %d",
                            CAP_MCH_CSR_MC_STA_MC_STA_0_7_ECC_ERROR_1BIT_PS0_GET(mc_sta_reg_value[0]));
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_2BIT_PS0: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_2BIT_PS0: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_0_7_ECC_ERROR_2BIT_PS0_GET(mc_sta_reg_value[0]));
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_POS_PS0_23_0: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_POS_PS0_23_0: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_0_7_ECC_ERROR_POS_PS0_23_0_GET(mc_sta_reg_value[0]));
     }
 
     // Data from STA 1
     if (mc_sta_reg_value[1]) {
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_ADDR_PS0: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_ADDR_PS0: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_1_7_ECC_ERROR_POS_PS0_27_24_GET(mc_sta_reg_value[1]));
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_2BIT_PS0: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_2BIT_PS0: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_1_7_ECC_ERROR_ADDR_PS0_GET(mc_sta_reg_value[1]));
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_RMW_ERROR_PS0: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_RMW_ERROR_PS0: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_1_7_ECC_RMW_ERROR_PS0_GET(mc_sta_reg_value[1]));
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_1BIT_PS1: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_1BIT_PS1: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_1_7_ECC_ERROR_1BIT_PS1_GET(mc_sta_reg_value[1]));
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_2BIT_PS1: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_2BIT_PS1: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_1_7_ECC_ERROR_2BIT_PS1_GET(mc_sta_reg_value[1]));
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_POS_PS1_14_0: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_POS_PS1_14_0: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_1_7_ECC_ERROR_POS_PS1_14_0_GET(mc_sta_reg_value[1]));
     }
 
     // Data from STA 2
     if (mc_sta_reg_value[2]) {
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_POS_PS1_27_15: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_POS_PS1_27_15: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_2_7_ECC_ERROR_POS_PS1_27_15_GET(mc_sta_reg_value[2]));
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_ADDR_PS1: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_ADDR_PS1: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_2_7_ECC_ERROR_ADDR_PS1_GET(mc_sta_reg_value[2]));
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_RMW_ERROR_PS1: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_RMW_ERROR_PS1: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_2_7_ECC_RMW_ERROR_PS1_GET(mc_sta_reg_value[2]));
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_CNT_1BIT_PS0_13_0: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_CNT_1BIT_PS0_13_0: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_2_7_ECC_ERROR_CNT_1BIT_PS0_13_0_GET(mc_sta_reg_value[2]));
     }
 
     // Data from STA 3
     if (mc_sta_reg_value[3]) {
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_CNT_1BIT_PS0_31_14: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_CNT_1BIT_PS0_31_14: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_3_7_ECC_ERROR_CNT_1BIT_PS0_31_14_GET(mc_sta_reg_value[3]));
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_CNT_1BIT_PS1_13_0: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_CNT_1BIT_PS1_13_0: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_3_7_ECC_ERROR_CNT_1BIT_PS1_13_0_GET(mc_sta_reg_value[3]));
     }
 
     // Data from STA 4
     if (mc_sta_reg_value[4]) {
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_CNT_1BIT_PS1_31_14: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_CNT_1BIT_PS1_31_14: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_4_7_ECC_ERROR_CNT_1BIT_PS1_31_14_GET(mc_sta_reg_value[4]));
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_CNT_2BIT_PS0_13_0: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_CNT_2BIT_PS0_13_0: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_4_7_ECC_ERROR_CNT_2BIT_PS0_13_0_GET(mc_sta_reg_value[4]));
     }
 
     // Data from STA 5
     if (mc_sta_reg_value[5]) {
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_CNT_2BIT_PS0_31_14: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_CNT_2BIT_PS0_31_14: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_5_7_ECC_ERROR_CNT_2BIT_PS0_31_14_GET(mc_sta_reg_value[5]));
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_CNT_2BIT_PS1_13_0: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_CNT_2BIT_PS1_13_0: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_5_7_ECC_ERROR_CNT_2BIT_PS1_13_0_GET(mc_sta_reg_value[5]));
     }
 
     // Data from STA 6
     if (mc_sta_reg_value[6]) {
-        SDK_OBFL_TRACE_ERR("ECCERR::ECC_ERROR_CNT_2BIT_PS1_31_14: %d",
+        SDK_HMON_TRACE_ERR("ECCERR::ECC_ERROR_CNT_2BIT_PS1_31_14: %d",
             CAP_MCH_CSR_MC_STA_MC_STA_6_7_ECC_ERROR_CNT_2BIT_PS1_31_14_GET(mc_sta_reg_value[6]));
     }
 }
@@ -180,7 +180,7 @@ print_slave_err_regs (void)
                                  &slave_err_reg_value, 1, true);
         // Data from slave error registers
         if (slave_err_reg_value & ~(NOC_REGISTER_RESET_VALUE)) {
-            SDK_OBFL_TRACE_ERR("ECCERR::Slave error register 0x%x value is : 0x%x",
+            SDK_HMON_TRACE_ERR("ECCERR::Slave error register 0x%x value is : 0x%x",
                                CAP_ADDR_BASE_MS_RBM_OFFSET +
                                slave_err_reg[t_offset], slave_err_reg_value);
             sdk::asic::asic_reg_write(CAP_ADDR_BASE_MS_RBM_OFFSET +
@@ -206,7 +206,7 @@ print_master_err_regs (void)
                                  &master_err_reg_value, 1, true);
         // Data from slave error registers
         if (master_err_reg_value) {
-            SDK_OBFL_TRACE_ERR("ECCERR::Master error register 0x%x value is : 0x%x",
+            SDK_HMON_TRACE_ERR("ECCERR::Master error register 0x%x value is : 0x%x",
                                CAP_ADDR_BASE_MS_RBM_OFFSET +
                                master_err_reg[t_offset],
                                master_err_reg_value);

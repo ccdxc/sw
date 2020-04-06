@@ -120,7 +120,7 @@ main(int argc, char *argv[])
     initializeLogger();
 
     // register for SDK logger
-    sdk::lib::logger::init(sysmond_logger, sysmond_obfl_logger);
+    sdk::lib::logger::init(sysmond_logger);
 
     // initialize the pal
 #ifdef __x86_64__
