@@ -90,7 +90,7 @@ typedef struct upg_event_msg_s {
     upg_stage_t    stage;             ///< request stage
     sdk::platform::upg_mode_t mode;   ///< upgrade mode
     upg_status_t   rsp_status;        ///< response status
-    char           rsp_svc_name[64];  ///< response service's name
+    char           rsp_svc_name[SDK_MAX_NAME_LEN];  ///< response service's name
     uint32_t       rsp_svc_ipc_id;    ///< response services's ipc id. can be used
                                       ///< to send unicast ipc to this thread
     uint64_t       rsp_ev_bitmap;     ///< event supported by response thread
@@ -108,16 +108,10 @@ upg_stage2str (upg_stage_t stage)
 }
 
 // status to string
-static const char *upg_status_name[] = {
-    [UPG_STATUS_OK]         = "ok",
-    [UPG_STATUS_FAIL]       = "fail",
-    [UPG_STATUS_CRITICAL]   = "critical",
-};
-
 static inline const char *
 upg_status2str (upg_status_t status)
 {
-    return upg_status_name[status];
+    return UPG_STATUS_ENTRIES_str(status);
 }
 
 /// @}

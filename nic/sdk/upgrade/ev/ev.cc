@@ -73,7 +73,7 @@ upg_ev_response_hdlr (sdk_ret_t status, const void *cookie)
     strncpy(resp.rsp_svc_name, upg_ev.svc_name, sizeof(resp.rsp_svc_name));
     resp.rsp_ev_bitmap = upg_ev_bitmap;
     // invoked by service thread
-    resp.rsp_svc_ipc_id = upg_ev.svc_id;
+    resp.rsp_svc_ipc_id = upg_ev.svc_ipc_id;
     // respond to upgrade manager with unicast message
     sdk::ipc::respond(info->msg_in, &resp, sizeof(resp));
     SDK_TRACE_DEBUG("Upgrade IPC response stage %s completed status %u",

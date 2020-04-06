@@ -83,11 +83,11 @@ typedef sdk_ret_t (*upg_ev_hdlr_t)(upg_ev_params_t *params);
 /// \brief upgrade event handlers for upgrade
 typedef struct upg_ev_s {
 
-    // service name
-    char svc_name[64];
+    // service name. used for debug trace only
+    char svc_name[SDK_MAX_NAME_LEN];
 
-    // service id
-    uint32_t svc_id;
+    // service ipc id
+    uint32_t svc_ipc_id;
 
     /// compat checks should be done here (on A)
     upg_ev_hdlr_t compat_check_hdlr;

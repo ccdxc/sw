@@ -56,7 +56,7 @@ test_upgrade (sdk::upg::upg_ev_params_t *params)
 static void
 upg_ev_fill (sdk::upg::upg_ev_t *ev)
 {
-    ev->svc_id = svc_thread_id;
+    ev->svc_ipc_id = svc_thread_id;
     strncpy(ev->svc_name, svc_name.c_str(), sizeof(ev->svc_name));
     ev->compat_check_hdlr = test_upgrade;
     ev->start_hdlr = test_upgrade;

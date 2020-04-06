@@ -15,6 +15,37 @@
 
 namespace api {
 
+static bool
+lif_reset_walk_cb (void *entry, void *ctxt)
+{
+    sdk_ret_t *ret = (sdk_ret_t *)ctxt;
+    api::impl::lif_impl *lif = (api::impl::lif_impl *)entry;
+    asicpd_scheduler_lif_params_t lif_params;
+    uint32_t offset, num_entries;
+
+    PDS_TRACE_DEBUG("Lif walk lif %u", lif->id());
+    if (lif->tx_sched_info(&offset, &num_entries)) {
+        lif_params.tx_sched_table_offset = offset;
+        lif_params.tx_sched_num_table_entries = num_entries;
+        PDS_TRACE_DEBUG("TX scheduler map free for lif %u, offset %u, entries %u",
+                        lif->id(), offset, num_entries);
+        *ret = asicpd_tx_scheduler_map_free(&lif_params);
+        if (*ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("TX schedule map free failed for lif %u", lif->id());
+            return true;
+        }
+    }
+    return false;
+}
+
+static sdk_ret_t
+lif_all_reset (void)
+{
+    sdk_ret_t status = SDK_RET_OK;
+    lif_db()->walk(lif_reset_walk_cb, &status);
+    return status;
+}
+
 static sdk_ret_t
 upg_ev_compat_check (upg_ev_params_t *params)
 {
@@ -42,13 +73,28 @@ upg_ev_ready (upg_ev_params_t *params)
 static sdk_ret_t
 upg_ev_link_down (upg_ev_params_t *params)
 {
-    return SDK_RET_OK;
+    sdk_ret_t ret;
+
+    PDS_TRACE_DEBUG("Shutting down all uplink ports");
+    ret = port_shutdown_all();
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Upgrade Port shutdown failed, err %u", ret);
+    }
+    return ret;
 }
 
 static sdk_ret_t
 upg_ev_quiesce (upg_ev_params_t *params)
 {
-    return SDK_RET_OK;
+    sdk_ret_t ret;
+
+    PDS_TRACE_DEBUG("Resetting all lifs");
+    // disable TX scheduler for all LIFs
+    ret = lif_all_reset();
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Lifs reset failed, err %u", ret);
+    }
+    return ret;
 }
 
 static sdk_ret_t

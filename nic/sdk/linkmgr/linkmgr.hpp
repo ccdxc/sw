@@ -103,6 +103,9 @@ port_admin_state_t port_default_admin_state(void);
 void linkmgr_threads_stop(void);
 void linkmgr_threads_wait(void);
 void port_store_user_config(port_args_t *port_args);
+// TODO : below better to use linkmgr events
+sdk_ret_t port_shutdown (void *port_p);
+sdk_ret_t port_pb_shutdown (void *port_p);
 
 // \@brief     get the stats base address
 // \@param[in] ifindex ifindex of the port

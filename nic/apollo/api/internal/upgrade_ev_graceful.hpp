@@ -25,7 +25,7 @@ namespace api {
 typedef struct upg_ev_graceful_s {
     /// registering thread name
     /// used for debug traces. no other significance.
-    char thread_name[64];
+    char thread_name[SDK_MAX_NAME_LEN];
 
     /// compat checks should be done here (on A)
     upg_ev_hdlr_t compat_check_hdlr;

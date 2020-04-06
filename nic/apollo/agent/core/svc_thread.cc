@@ -92,7 +92,7 @@ svc_server_accept_cb (sdk::event_thread::io_t *io, int fd, int events)
 static void
 upg_ev_fill (sdk::upg::upg_ev_t *ev)
 {
-    ev->svc_id = PDS_AGENT_THREAD_ID_SVC_SERVER;
+    ev->svc_ipc_id = PDS_AGENT_THREAD_ID_SVC_SERVER;
     strncpy(ev->svc_name, UPG_EV_PDS_AGENT_NAME, sizeof(ev->svc_name));
     ev->compat_check_hdlr = pds_upgrade;
     ev->start_hdlr = pds_upgrade;

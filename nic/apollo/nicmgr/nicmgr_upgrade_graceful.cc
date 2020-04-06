@@ -53,19 +53,19 @@ upg_ev_start (upg_ev_params_t *params)
 static sdk_ret_t
 upg_ev_backup (upg_ev_params_t *params)
 {
-    return SDK_RET_OK;
+    return nicmgr_send_ipc(params);
 }
 
 static sdk_ret_t
 upg_ev_repeal (upg_ev_params_t *params)
 {
-    return SDK_RET_OK;
+    return nicmgr_send_ipc(params);
 }
 
 static sdk_ret_t
 upg_ev_quiesce (upg_ev_params_t *params)
 {
-    return nicmgr_send_ipc(params);
+    return SDK_RET_OK;
 }
 
 static sdk_ret_t

@@ -162,10 +162,9 @@ port_shutdown_walk_cb (void *entry, void *ctxt)
     sdk_ret_t ret;
 
     if (ctx->port_shutdown) {
-        // ret = sdk::linkmgr::port_shutdown(intf->port_info(), false);
+        ret = sdk::linkmgr::port_shutdown(intf->port_info());
     } else if (ctx->port_pb_shutdown) {
-
-        // FIX : ret = sdk::linkmgr::port_shutdown(intf->port_info(), true);
+        ret = sdk::linkmgr::port_shutdown(intf->port_info());
     } else {
         ret = SDK_RET_ERR;
     }
@@ -189,6 +188,7 @@ port_shutdown_all (void)
        return SDK_RET_ERR;
     }
 
+    // TODO : check with team on whether the 2 loop walk is needed or not
     // pb disable
     ctxt.port_shutdown = false;
     ctxt.port_pb_shutdown = true;

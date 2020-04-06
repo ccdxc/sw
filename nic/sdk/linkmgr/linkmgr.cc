@@ -1505,5 +1505,21 @@ port_store_user_config (port_args_t *port_args)
                                                   port_args->fec_type;
 }
 
+sdk_ret_t
+port_shutdown (void *pd_p)
+{
+    port *port_p = (port *)pd_p;
+
+    return port_p->port_disable();
+}
+
+sdk_ret_t
+port_pb_shutdown (void *pd_p)
+{
+    port *port_p = (port *)pd_p;
+
+    return port_p->port_pb_enable(false);
+}
+
 }    // namespace linkmgr
 }    // namespace sdk
