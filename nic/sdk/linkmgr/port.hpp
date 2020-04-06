@@ -19,6 +19,7 @@
 #define MAX_PORT_QSFP_AN_HCD_RETRIES               10
 #define MAX_PORT_SFP_AN_HCD_RETRIES                4
 #define MAX_PORT_MAC_SYNC_RETRIES                  10
+#define MAX_PORT_MAC_SYNC_RETRIES_10G              20
 #define MAX_PORT_MAC_SYNC_RETRIES_100G             10
 #define MAX_PORT_SERDES_DFE_ICAL_CMPLT_RETRIES     10             // DFE ICAL complete
 #define MAX_PORT_SERDES_DFE_ICAL_EYE_RETRIES       3              // DFE ICAL eye values

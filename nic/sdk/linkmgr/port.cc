@@ -1989,6 +1989,8 @@ port::port_max_mac_sync_retries (void) {
     case port_speed_t::PORT_SPEED_100G:
     case port_speed_t::PORT_SPEED_40G:
         return MAX_PORT_MAC_SYNC_RETRIES_100G;
+    case port_speed_t::PORT_SPEED_10G:
+        return MAX_PORT_MAC_SYNC_RETRIES_10G;
     default:
         return MAX_PORT_MAC_SYNC_RETRIES;
     }
