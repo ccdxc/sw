@@ -6,6 +6,7 @@ nic/conf/$PIPELINE/hbm_mem.json                                   /nic/conf/$PIP
 nic/conf/$PIPELINE/device.json                                    /nic/conf/
 nic/conf/$PIPELINE/operd-regions.json                             /nic/conf/
 nic/conf/$PIPELINE/operd.json                                     /nic/conf/
+nic/conf/$PIPELINE/policy.json                                    /nic/conf/$PIPELINE/
 
 # HW catalog files
 nic/conf/catalog_hw_68-0003.json                                  /nic/conf/
