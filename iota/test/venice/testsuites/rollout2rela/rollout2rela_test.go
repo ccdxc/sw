@@ -36,7 +36,7 @@ var _ = Describe("rollout rela to tot tests", func() {
 	Context("Iota Rollout rela to tot tests", func() {
 		It("Perform rela to tot Rollout", func() {
 
-			rollout, err := ts.model.CreateRolloutObject("upgrade-bundle", "release_a_iris")
+			rollout, err := ts.model.CreateRolloutObject("upgrade-bundle", "release_a_iris", "Disruptive")
 			Expect(err).ShouldNot(HaveOccurred())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(40)

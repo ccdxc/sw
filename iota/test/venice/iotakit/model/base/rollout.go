@@ -92,7 +92,7 @@ func getImageVersion(bundleType string) string {
 }
 
 // CreateRolloutObject gets rollout instance
-func (sm *SysModel) CreateRolloutObject(bundleType, name string) (*rollout.Rollout, error) {
+func (sm *SysModel) CreateRolloutObject(bundleType, name, upgradeType string) (*rollout.Rollout, error) {
 
 	seconds := time.Now().Unix()
 	scheduledStartTime := &api.Timestamp{
@@ -126,7 +126,7 @@ func (sm *SysModel) CreateRolloutObject(bundleType, name string) (*rollout.Rollo
 			OrderConstraints:          nil,
 			Suspend:                   false,
 			DSCsOnly:                  false,
-			UpgradeType:               "Graceful",
+			UpgradeType:               upgradeType,
 		},
 	}, nil
 }

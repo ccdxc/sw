@@ -37,7 +37,7 @@ var _ = Describe("rollout nightly tests", func() {
 
 		It("Perform Iris to Iris' Rollout", func() {
 
-			rollout, err := ts.model.CreateRolloutObject("upgrade-bundle", "iris_to_irisprime")
+			rollout, err := ts.model.CreateRolloutObject("upgrade-bundle", "iris_to_irisprime", "Graceful")
 			Expect(err).ShouldNot(HaveOccurred())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(40)
@@ -81,7 +81,7 @@ var _ = Describe("rollout nightly tests", func() {
 		})
 		It("Perform Iris to Apulu Rollout", func() {
 
-			rollout, err := ts.model.CreateRolloutObject("apulu-bundle", "iris_to_apulu")
+			rollout, err := ts.model.CreateRolloutObject("apulu-bundle", "iris_to_apulu", "Graceful")
 			Expect(err).ShouldNot(HaveOccurred())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(40)
@@ -126,7 +126,7 @@ var _ = Describe("rollout nightly tests", func() {
 
 		It("Perform Apulu to IRIS Rollout", func() {
 
-			rollout, err := ts.model.CreateRolloutObject("upgrade-bundle", "apulu_to_iris")
+			rollout, err := ts.model.CreateRolloutObject("upgrade-bundle", "apulu_to_iris", "Graceful")
 			Expect(err).ShouldNot(HaveOccurred())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(40)
