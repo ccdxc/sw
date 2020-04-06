@@ -6,13 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pensando/sw/api/generated/apiclient"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/diagnostics"
@@ -23,69 +22,63 @@ import (
 )
 
 var _ = Describe("diagnostics tests", func() {
+	BeforeEach(func() {
+		By(fmt.Sprintf("ts:%s diagnostics tests", time.Now().String()))
+	})
 	Context("spyglass logs", func() {
-		var modObj *diagnostics.Module
-		BeforeEach(func() {
-			var err error
-			var node string
-			Eventually(func() error {
-				node = ts.tu.GetNodeForService(globals.Spyglass)
-				modObj, err = ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Spyglass)})
-				return err
-			}, 10, 1).Should(BeNil())
-		})
 		It("check log query", func() {
-			modObj.Spec.LogLevel = diagnostics.ModuleSpec_Debug.String()
-			var updatedModObj *diagnostics.Module
-			var err error
 			Eventually(func() error {
-				updatedModObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, modObj)
-				return err
-			}, 10, 1).Should(BeNil())
-			Expect(modObj.Spec.LogLevel).Should(Equal(diagnostics.ModuleSpec_Debug.String()))
-			// wait for spyglass to receive watch event
-			time.Sleep(3 * time.Second)
-			// create debug logs by searching for successful login audit event
-			query := &search.SearchRequest{
-				Query: &search.SearchQuery{
-					Kinds: []string{auth.Permission_AuditEvent.String()},
-					Fields: &fields.Selector{
-						Requirements: []*fields.Requirement{
-							{
-								Key:      "action",
-								Operator: "equals",
-								Values:   []string{svc.LoginAction},
-							},
-							{
-								Key:      "outcome",
-								Operator: "equals",
-								Values:   []string{audit.Outcome_Success.String()},
-							},
-							{
-								Key:      "resource.kind",
-								Operator: "equals",
-								Values:   []string{string(auth.KindUser)},
-							},
-							{
-								Key:      "resource.tenant",
-								Operator: "equals",
-								Values:   []string{globals.DefaultTenant},
-							},
-							{
-								Key:      "resource.name",
-								Operator: "equals",
-								Values:   []string{ts.tu.User},
+				node := ts.tu.GetNodeForService(globals.Spyglass)
+				modObj, err := ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.Spyglass)})
+				if err != nil {
+					return err
+				}
+				modObj.Spec.LogLevel = diagnostics.ModuleSpec_Debug.String()
+				updatedModObj, err := ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, modObj)
+				if err != nil {
+					return err
+				}
+				Expect(updatedModObj.Spec.LogLevel).Should(Equal(diagnostics.ModuleSpec_Debug.String()))
+				// create debug logs by searching for successful login audit event
+				query := &search.SearchRequest{
+					Query: &search.SearchQuery{
+						Kinds: []string{auth.Permission_AuditEvent.String()},
+						Fields: &fields.Selector{
+							Requirements: []*fields.Requirement{
+								{
+									Key:      "action",
+									Operator: "equals",
+									Values:   []string{svc.LoginAction},
+								},
+								{
+									Key:      "outcome",
+									Operator: "equals",
+									Values:   []string{audit.Outcome_Success.String()},
+								},
+								{
+									Key:      "resource.kind",
+									Operator: "equals",
+									Values:   []string{string(auth.KindUser)},
+								},
+								{
+									Key:      "resource.tenant",
+									Operator: "equals",
+									Values:   []string{globals.DefaultTenant},
+								},
+								{
+									Key:      "resource.name",
+									Operator: "equals",
+									Values:   []string{ts.tu.User},
+								},
 							},
 						},
 					},
-				},
-				From:       0,
-				MaxResults: 50,
-				Aggregate:  true,
-			}
-			Eventually(func() error {
+					From:       0,
+					MaxResults: 50,
+					Aggregate:  true,
+				}
 				resp := testutils.AuditSearchResponse{}
-				err := ts.tu.Search(ts.loggedInCtx, query, &resp)
+				err = ts.tu.Search(ts.loggedInCtx, query, &resp)
 				if err != nil {
 					return err
 				}
@@ -93,27 +86,29 @@ var _ = Describe("diagnostics tests", func() {
 					return fmt.Errorf("no audit logs for [%s|%s] successful login", globals.DefaultTenant, ts.tu.User)
 				}
 				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
+				var foundLoginEvent bool
 				for _, event := range events {
 					if (event.Object.Action == svc.LoginAction) &&
 						(event.Object.Outcome == audit.Outcome_Success.String()) &&
 						(event.Object.User.Name == ts.tu.User) &&
 						(event.Object.User.Tenant == globals.DefaultTenant) {
-						return nil
+						foundLoginEvent = true
+						break
 					}
 				}
-				return fmt.Errorf("no audit logs for [%s|%s] successful login", globals.DefaultTenant, ts.tu.User)
-			}, 30, 1).Should(BeNil())
-			// query logs through Debug action
-			Eventually(func() error {
+				if !foundLoginEvent {
+					return fmt.Errorf("no audit logs for [%s|%s] successful login", globals.DefaultTenant, ts.tu.User)
+				}
 				type debugResponse struct {
 					Diagnostics map[string]interface{} `json:"diagnostics"`
 				}
-				resp := debugResponse{}
+				// query logs through Debug action
+				dresp := debugResponse{}
 				var respStr string
 				if respStr, err = ts.tu.Debug(ts.loggedInCtx, &diagnostics.DiagnosticsRequest{
 					ObjectMeta: api.ObjectMeta{Name: updatedModObj.Name},
 					Query:      diagnostics.DiagnosticsRequest_Log.String(),
-				}, &resp); err != nil {
+				}, &dresp); err != nil {
 					return err
 				}
 				if !strings.Contains(respStr, "\"level\":\"debug\"") &&
@@ -123,67 +118,65 @@ var _ = Describe("diagnostics tests", func() {
 					// but the API should still succeed
 					// return fmt.Errorf("no logs returned: {%v}", respStr)
 				}
-				return nil
-			}, 30, 1).Should(BeNil())
-			// check audit logs for Debug action
-			query = &search.SearchRequest{
-				Query: &search.SearchQuery{
-					Kinds: []string{auth.Permission_AuditEvent.String()},
-					Fields: &fields.Selector{
-						Requirements: []*fields.Requirement{
-							{
-								Key:      "action",
-								Operator: "equals",
-								Values:   []string{"Debug"},
-							},
-							{
-								Key:      "outcome",
-								Operator: "equals",
-								Values:   []string{audit.Outcome_Success.String()},
-							},
-							{
-								Key:      "resource.kind",
-								Operator: "equals",
-								Values:   []string{string(diagnostics.KindModule)},
-							},
-							{
-								Key:      "resource.name",
-								Operator: "equals",
-								Values:   []string{updatedModObj.Name},
+				// check audit logs for Debug action
+				query = &search.SearchRequest{
+					Query: &search.SearchQuery{
+						Kinds: []string{auth.Permission_AuditEvent.String()},
+						Fields: &fields.Selector{
+							Requirements: []*fields.Requirement{
+								{
+									Key:      "action",
+									Operator: "equals",
+									Values:   []string{"Debug"},
+								},
+								{
+									Key:      "outcome",
+									Operator: "equals",
+									Values:   []string{audit.Outcome_Success.String()},
+								},
+								{
+									Key:      "resource.kind",
+									Operator: "equals",
+									Values:   []string{string(diagnostics.KindModule)},
+								},
+								{
+									Key:      "resource.name",
+									Operator: "equals",
+									Values:   []string{updatedModObj.Name},
+								},
 							},
 						},
 					},
-				},
-				From:       0,
-				MaxResults: 50,
-				Aggregate:  true,
-			}
-			Eventually(func() error {
-				resp := testutils.AuditSearchResponse{}
-				err := ts.tu.Search(ts.loggedInCtx, query, &resp)
+					From:       0,
+					MaxResults: 50,
+					Aggregate:  true,
+				}
+				aresp := testutils.AuditSearchResponse{}
+				err = ts.tu.Search(ts.loggedInCtx, query, &aresp)
 				if err != nil {
 					return err
 				}
-				if resp.ActualHits == 0 {
+				if aresp.ActualHits == 0 {
 					return fmt.Errorf("no audit logs for [%s] Debug action", updatedModObj.Name)
 				}
-				events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
-				for _, event := range events {
+				devents := aresp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
+				var foundDebugEvent bool
+				for _, event := range devents {
 					if (event.Object.Action == "Debug") &&
 						(event.Object.Outcome == audit.Outcome_Success.String()) &&
 						(event.Object.User.Name == ts.tu.User) &&
 						(event.Object.User.Tenant == globals.DefaultTenant) {
-						return nil
+						foundDebugEvent = true
+						break
 					}
 				}
-				return fmt.Errorf("no audit logs for [%s] Debug action", updatedModObj.Name)
-			}, 30, 1).Should(BeNil())
-			// restore info log level
-			Eventually(func() error {
+				if !foundDebugEvent {
+					return fmt.Errorf("no audit logs for [%s] Debug action", updatedModObj.Name)
+				}
 				updatedModObj.Spec.LogLevel = diagnostics.ModuleSpec_Info.String()
 				modObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, updatedModObj)
 				return err
-			}, 10, 1).Should(BeNil())
+			}, 30, 2).Should(BeNil())
 		})
 		It("check stats query", func() {
 			// query stats through Debug action
