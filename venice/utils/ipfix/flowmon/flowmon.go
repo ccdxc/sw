@@ -23,6 +23,7 @@ func main() {
 	t := flag.Bool("t", false, "scapy templates")
 	e := flag.Bool("e", false, "enterprise elements")
 	j := flag.Bool("json", false, "templates in json format")
+	v := flag.Bool("v", false, "template details")
 	s := flag.String("s", "", "send templates to ip:port")
 	flag.Parse()
 
@@ -31,6 +32,7 @@ func main() {
 	jsonfmt := *j
 	addr := *s
 	ee := *e
+	verbose := *v
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -41,6 +43,9 @@ func main() {
 
 	case genTemplate != false:
 		scapyTemplates(jsonfmt)
+
+	case verbose != false:
+		showTemplates()
 
 	case ee != false:
 		enterpriseElements()
@@ -140,6 +145,27 @@ func decode(buff []byte) []flowutils.InterpretedField {
 	}
 
 	return fieldList
+}
+
+func showTemplates() {
+	session := flowutils.NewSession()
+	session.LoadTemplateRecords(ipfix.GeneratePensandoTemplates())
+	i := flowutils.NewInterpreter(session)
+	ee := ipfix.GenerateEnterpriseElements()
+	for d := range ee {
+		i.AddDictionaryEntry(ee[d])
+	}
+
+	templates := ipfix.GeneratePensandoTemplates()
+	for _, t := range templates {
+		fmt.Printf("template-id: %v \n", t.TemplateID)
+		data := i.InterpretTemplate(t)
+		for i, d := range data {
+			fmt.Printf("%v \t name:%v, FieldID:%v, EnterpriseID:%v, length:%v\n",
+				i+1, d.Name, d.FieldID, d.EnterpriseID, d.Length)
+		}
+		fmt.Println()
+	}
 }
 
 // scapyTemplates to match with scapy, only for tests

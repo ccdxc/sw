@@ -77,7 +77,7 @@ func GenerateEnterpriseElements() []ipfix.DictionaryEntry {
 		},
 		{
 			Name:         "drop-vector",
-			FieldID:      0x0503,
+			FieldID:      0x0506,
 			EnterpriseID: PensandoEnterpriseID,
 			Type:         ipfix.Uint64,
 		},
