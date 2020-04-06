@@ -124,6 +124,8 @@ class Eth : public Device
   public:
     Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P);
     Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P);
+    ~Eth();
+
     static std::vector<Eth *> factory(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P);
 
     std::string GetName() { return spec->name; }

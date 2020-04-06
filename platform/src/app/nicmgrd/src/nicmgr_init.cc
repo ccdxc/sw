@@ -14,7 +14,6 @@
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/sdk/lib/utils/port_utils.hpp"
-#include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/hal/core/core.hpp"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/nicmgr/include/logger.hpp"
@@ -23,6 +22,7 @@
 #include "upgrade.hpp"
 #include "upgrade_rel_a2b.hpp"
 #include "nicmgr_ncsi.hpp"
+#include "ev.h"
 
 // for device::MICRO_SEG_ENABLE  : TODO - fix
 #include <grpc++/grpc++.h>
@@ -33,16 +33,23 @@ using namespace std;
 DeviceManager *devmgr;
 const char* nicmgr_upgrade_state_file = "/update/nicmgr_upgstate";
 const char* nicmgr_rollback_state_file = "/update/nicmgr_rollback_state";
-static evutil_check log_check;
+static ev_check log_check;
+static EV_P;
 
 static void
-log_flush (void *arg)
+log_flush ()
 {
     fflush(stdout);
     fflush(stderr);
     if (utils::logger::logger()) {
         utils::logger::logger()->flush();
     }
+}
+
+static void
+log_flush_cb (EV_P_ ev_check *w, int events)
+{
+    log_flush();
 }
 
 static bool
@@ -198,7 +205,6 @@ dev_init:
     cfg.micro_seg_en = micro_seg_en;
     cfg.shm_mgr = NULL;
     cfg.EV_A = thread->ev_loop();
-
     devmgr = new DeviceManager(&cfg);
     if (!devmgr) {
         NIC_LOG_ERR("Devmgr create failed");
@@ -218,7 +224,9 @@ dev_init:
         unlink(nicmgr_upgrade_state_file);
     }
     
-    evutil_add_check(thread->ev_loop(), &log_check, &log_flush, NULL);
+    EV_A = thread->ev_loop();
+    ev_check_init(&log_check, &log_flush_cb);
+    ev_check_start(EV_A_ & log_check);
 
     // upgrade init
     nicmgr::nicmgr_upg_init();
@@ -238,12 +246,16 @@ nicmgr_exit (void)
 {
     NIC_LOG_INFO("Nicmgr exiting!");
 
-    log_flush(NULL);
-
     if (devmgr) {
         delete devmgr;
     }
     devmgr = NULL;
+
+    if (EV_A) {
+        NIC_LOG_DEBUG("Stopping Log Check event");
+        ev_check_stop(EV_A_ & log_check);
+    }
+    log_flush();
 }
 
 }   // namespace nicmgr

@@ -572,6 +572,20 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
     active_lif_set.clear();
 }
 
+Eth::~Eth()
+{
+    NIC_LOG_INFO("{}: Destroying device", spec->name);
+
+    if (!IsDevReset()) {
+        NIC_LOG_ERR("{}: Device not in RESET state during destroy", spec->name);
+    }
+
+    // Disable devcmd polling
+    ev_prepare_stop(EV_A_ & devcmd_prepare);
+    ev_check_stop(EV_A_ & devcmd_check);
+    ev_timer_stop(EV_A_ & devcmd_timer);
+}
+
 std::vector<Eth *>
 Eth::factory(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
 {

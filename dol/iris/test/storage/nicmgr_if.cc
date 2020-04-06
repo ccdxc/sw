@@ -114,15 +114,6 @@ nicmgr_if_init(void)
 void
 nicmgr_if_fini(void)
 {
-    /*
-     * DeviceManager itself doesn't have a destructor but we can
-     * still exercise the Accel device destructor.
-     */
-    if (accel_dev) {
-        devmgr->DeleteDevice(accel_dev->GetName());
-        accel_dev = nullptr;
-    }
-
     if (utils::logger::logger()) {
         utils::logger::logger()->flush();
     }

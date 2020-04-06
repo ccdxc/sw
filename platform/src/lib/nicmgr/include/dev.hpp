@@ -20,7 +20,6 @@
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
-#include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
 #include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
@@ -28,6 +27,7 @@
 
 #include "device.hpp"
 #include "pd_client.hpp"
+#include "ev.h"
 
 using std::string;
 
@@ -118,6 +118,7 @@ class DeviceManager
 {
 public:
     DeviceManager(devicemgr_cfg_t *cfg);
+    virtual ~DeviceManager();
 
     int LoadProfile(std::string path, bool init_pci);
     void LoadState(std::vector<struct EthDevInfo *> eth_dev_info_list);
@@ -130,7 +131,7 @@ public:
 
     void AddDevice(enum DeviceType type, void *dev_spec);
     void RestoreDevice(enum DeviceType type, void *dev_state);
-    void DeleteDevice(std::string name);
+    void DeleteDevices();
 
     void HalEventHandler(bool is_up);
     void LinkEventHandler(port_status_t *evd);
@@ -158,7 +159,10 @@ public:
     void swm_update(bool enable, uint32_t port_num, uint32_t vlan, mac_t mac);
 
     DevPcieEvHandler pcie_evhandler;
-    evutil_timer heartbeat_timer;
+
+    ev_timer heartbeat_timer = {0};
+    bool hb_timer_init_done = false;
+
     sdk::lib::thread *Thread(void) { return thread; }
     void SetThread(sdk::lib::thread *thr) { thread = thr; }
     void SetUpgradeMode(UpgradeMode mode) { upgrade_mode = mode; }
@@ -197,7 +201,7 @@ private:
     int SendFWDownEvent();
 
     timespec_t hb_last;
-    static void HeartbeatEventHandler(void* obj);
+    static void HeartbeatEventHandler(EV_P_ ev_timer *w, int events);
 };
 
 #endif /* __DEV_HPP__ */

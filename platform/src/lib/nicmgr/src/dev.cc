@@ -160,9 +160,29 @@ DeviceManager::DeviceManager(devicemgr_cfg_t *cfg)
         pciemgr = new class pciemgr("nicmgrd", pcie_evhandler, EV_A);
     }
 
+    // Heartbeat timer
     NIC_LOG_INFO("Starting Heartbeat timer");
-    evutil_timer_start(EV_A_ &heartbeat_timer, DeviceManager::HeartbeatEventHandler, this, 0.0, HEARTBEAT_PERIOD_S);
+    if (!hb_timer_init_done) {
+        ev_timer_init(&heartbeat_timer, DeviceManager::HeartbeatEventHandler, 0.0, HEARTBEAT_PERIOD_S);
+        heartbeat_timer.data = this;
+        hb_timer_init_done = true;
+    }
+    ev_timer_start(EV_A_ & heartbeat_timer);
     clock_gettime(CLOCK_MONOTONIC, &hb_last);
+}
+
+
+DeviceManager::~DeviceManager()
+{
+    NIC_LOG_INFO("Destroying DeviceManager");
+    // Stop heart beat timer
+    if (hb_timer_init_done) {
+        NIC_LOG_INFO("Stoping Heartbeat timer");
+        ev_timer_stop(EV_A_ & heartbeat_timer);
+    }
+
+    // Delete devices
+    DeleteDevices();
 }
 
 static std::string
@@ -587,12 +607,11 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 }
 
 void
-DeviceManager::DeleteDevice(std::string name)
+DeviceManager::DeleteDevices()
 {
-    auto iter = devices.find(name);
-    if (iter != devices.end()) {
-        delete iter->second;
-        devices.erase(iter);
+    for (auto it = devices.begin(); it != devices.end(); it++) {
+        delete it->second;
+        devices.erase(it);
     }
 }
 
@@ -860,9 +879,9 @@ DeviceManager::XcvrEventHandler(port_status_t *evd)
 }
 
 void
-DeviceManager::HeartbeatEventHandler(void *obj)
+DeviceManager::HeartbeatEventHandler(EV_P_ ev_timer *w, int events)
 {
-    DeviceManager *devmgr = (DeviceManager *)obj;
+    DeviceManager *devmgr = (DeviceManager *)w->data;
     if (devmgr->Thread()) {
         // call thread level heartbeat
         devmgr->Thread()->punch_heartbeat();
