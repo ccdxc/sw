@@ -6,7 +6,7 @@ import iota.test.iris.testcases.penctl.common as common
 def_tech_support_file_name = "naples-tech-support.tar"
 def_tech_support_dir_name = "NaplesTechSupport"
 def_tech_support_dirs = ["cmd_out", "cores", "events", "logs", "obfl", "penctl.ver", "upgrade_logs"]
-def_tech_support_log_files = ["post-upgrade-logs.tar.gz", "pre-upgrade-logs.tar.gz"]
+def_tech_support_log_files = ["post-upgrade-logs.tar.gz", "pre-upgrade-logs.tar"]
 
 
 def Setup(tc):

@@ -40,6 +40,6 @@ logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz
   - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node1
   - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node2
-  - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node1
-  - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node2
+  - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar-node1
+  - /sw/iota/logs/useg_enf_esx/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar-node2
   - /testcase_result_export/testsuite_useg_enf_esx_results.json

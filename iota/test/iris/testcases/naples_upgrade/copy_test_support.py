@@ -11,7 +11,7 @@ def Setup(tc):
         return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
-def_upg_tech_support_files = ["/data/naples-disruptive-upgrade-tech-support.tar.gz", "/data/pre-upgrade-logs.tar.gz"]
+def_upg_tech_support_files = ["/data/naples-disruptive-upgrade-tech-support.tar.gz", "/data/pre-upgrade-logs.tar"]
 
 def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest()
@@ -27,7 +27,7 @@ def Trigger(tc):
     for node in tc.Nodes:
         resp = api.CopyFromNaples(node, def_upg_tech_support_files, tc.GetLogsDir())
         if resp == None or resp.api_response.api_status != types_pb2.API_STATUS_OK:
-            api.Logger.info("Failed to copy naples-disruptive-upgrade-tech-support.tar.gz or pre-upgrade-logs.tar.gz")
+            api.Logger.info("Failed to copy naples-disruptive-upgrade-tech-support.tar.gz or pre-upgrade-logs.tar")
             #return api.types.status.FAILURE
         for file in def_upg_tech_support_files:
             cmd = "mv " + tc.GetLogsDir() + "/" + os.path.basename(file) + " " + tc.GetLogsDir() + "/" + os.path.basename(file) + "-" + node
@@ -45,8 +45,8 @@ def Teardown(tc):
     req = api.Trigger_CreateExecuteCommandsRequest()
     for node in tc.Nodes:
         api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/naples-disruptive-upgrade-tech-support.tar.gz")
-        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/pre-upgrade-logs.tar.gz")
-        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/pre-upgrade-logs.tar.gz")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/pre-upgrade-logs.tar")
+        api.Trigger_AddNaplesCommand(req, node, "rm -rf /data/pre-upgrade-logs.tar")
         api.Trigger_AddNaplesCommand(req, node, "rm /data/sysmgr.json")
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:
