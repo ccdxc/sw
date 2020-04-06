@@ -1333,15 +1333,12 @@ func (a *ApuluAPI) HandleAlerts(evtsDispatcher events.Dispatcher) {
 func (a *ApuluAPI) ReplayConfigs() error {
 
 	// Replay RoutingConfig Object
-	rtCfgs, err := a.InfraAPI.List("RoutingConfig")
+	rtCfgKind := netproto.RoutingConfig{
+		TypeMeta: api.TypeMeta{Kind: "RoutingConfig"},
+	}
+	rtCfgs, err := a.HandleRoutingConfig(types.List, rtCfgKind)
 	if err == nil {
-		for _, o := range rtCfgs {
-			var rtcfg netproto.RoutingConfig
-			err := rtcfg.Unmarshal(o)
-			if err != nil {
-				log.Errorf("Failed to unmarshal object to RoutingConfig, Err: %v", err)
-				continue
-			}
+		for _, rtcfg := range rtCfgs {
 			creator, ok := rtcfg.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
 				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", rtcfg.Kind, rtcfg.GetKey())
@@ -1355,15 +1352,14 @@ func (a *ApuluAPI) ReplayConfigs() error {
 		}
 	}
 
-	rtTbls, err := a.InfraAPI.List("RouteTable")
+	// Replay RouteTable Object
+	rtTblKind := netproto.RouteTable{
+		TypeMeta: api.TypeMeta{Kind: "RouteTable"},
+	}
+
+	rtTbls, err := a.HandleRouteTable(types.List, rtTblKind)
 	if err == nil {
-		for _, o := range rtTbls {
-			var rtbl netproto.RouteTable
-			err := rtbl.Unmarshal(o)
-			if err != nil {
-				log.Errorf("Failed to unmarshal object to RouteTable, Err: %v", err)
-				continue
-			}
+		for _, rtbl := range rtTbls {
 			creator, ok := rtbl.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
 				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", rtbl.Kind, rtbl.GetKey())
@@ -1377,15 +1373,14 @@ func (a *ApuluAPI) ReplayConfigs() error {
 		}
 	}
 
-	ipams, err := a.InfraAPI.List("IPAMPolicy")
+	// Replay IPAMPolicy Object
+	ipamKind := netproto.IPAMPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+	}
+
+	ipams, err := a.HandleIPAMPolicy(types.List, ipamKind)
 	if err == nil {
-		for _, o := range ipams {
-			var ipam netproto.IPAMPolicy
-			err := ipam.Unmarshal(o)
-			if err != nil {
-				log.Errorf("Failed to unmarshal object to IPAM Policy, Err: %v", err)
-				continue
-			}
+		for _, ipam := range ipams {
 			creator, ok := ipam.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
 				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", ipam.Kind, ipam.GetKey())
@@ -1399,16 +1394,13 @@ func (a *ApuluAPI) ReplayConfigs() error {
 		}
 	}
 
-	// Replay vrf objects
-	vrfs, err := a.InfraAPI.List("Vrf")
+	// Replay Vrf objects
+	vrfKind := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+	}
+	vrfs, err := a.HandleVrf(types.List, vrfKind)
 	if err == nil {
-		for _, o := range vrfs {
-			var vrf netproto.Vrf
-			err := vrf.Unmarshal(o)
-			if err != nil {
-				log.Errorf("Failed to unmarshal object to Vrf, Err: %v", err)
-				continue
-			}
+		for _, vrf := range vrfs {
 			creator, ok := vrf.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
 				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", vrf.Kind, vrf.GetKey())
@@ -1422,15 +1414,13 @@ func (a *ApuluAPI) ReplayConfigs() error {
 		}
 	}
 
-	subnets, err := a.InfraAPI.List("Network")
+	// Replay Network Object
+	netKind := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+	}
+	subnets, err := a.HandleNetwork(types.List, netKind)
 	if err == nil {
-		for _, o := range subnets {
-			var netw netproto.Network
-			err := netw.Unmarshal(o)
-			if err != nil {
-				log.Errorf("Failed to unmarshal object to Network, Err: %v", err)
-				continue
-			}
+		for _, netw := range subnets {
 			creator, ok := netw.ObjectMeta.Labels["CreatedBy"]
 			if ok && creator == "Venice" {
 				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", netw.Kind, netw.GetKey())
