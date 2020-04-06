@@ -116,6 +116,23 @@ parse_flow_cache_policy_cfg (const char *cfgfile)
                     policy->rewrite_host.ep_smac);
             str2mac(rewrite_host.get<std::string>("dmac").c_str(),
                     policy->rewrite_host.ep_dmac);
+
+            pt::ptree& v4_flows = vnic.second.get_child("v4_flows");
+            str2ipv4addr(v4_flows.get<std::string>("sip").c_str(),
+                         &policy->v4_flows.sip);
+            str2ipv4addr(v4_flows.get<std::string>("dip").c_str(),
+                         &policy->v4_flows.dip);
+            policy->v4_flows.proto =
+                v4_flows.get<uint8_t>("proto");
+            policy->v4_flows.sport =
+                v4_flows.get<uint16_t>("sport");
+            policy->v4_flows.dport =
+                v4_flows.get<uint16_t>("dport");
+            policy->v4_flows.num_flows =
+                v4_flows.get<uint32_t>("num_flows");
+            policy->v4_flows.inc_type =
+                v4_flows.get<uint8_t>("inc_type");
+
             g_vnic_id_list[g_num_policies++] = vnic_id;
         }
     } catch (std::exception const& e) {

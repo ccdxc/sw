@@ -838,8 +838,13 @@ fte_setup_flow (void)
     flow_cache_policy_info_t *policy;
     rewrite_underlay_info_t *rewrite_underlay;
     rewrite_host_info_t *rewrite_host;
+    v4_flows_info_t *v4_flows;
     uint16_t vnic_id;
     uint16_t i;
+    uint32_t fcnt;
+    uint32_t sip, dip;
+    uint16_t sport, dport;
+    uint8_t proto;
 
     for (i = 0; i < g_num_policies; i++) {
         vnic_id = g_vnic_id_list[i];
@@ -892,6 +897,66 @@ fte_setup_flow (void)
         if (ret != SDK_RET_OK) {
             PDS_TRACE_DEBUG("fte_s2h_v4_session_rewrite failed.\n");
             return ret;
+        }
+
+        v4_flows = &(policy->v4_flows);
+        if (v4_flows->num_flows) {
+            sip = v4_flows->sip;
+            dip = v4_flows->dip;
+            proto = v4_flows->proto;
+            sport = v4_flows->sport;
+            dport = v4_flows->dport;
+        } else {
+            continue;
+        }
+
+        // configure the static flows
+        for (fcnt = 0; fcnt < v4_flows->num_flows; fcnt++) {
+            ret = fte_session_info_create(g_session_index, vnic_id);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_DEBUG("fte_session_info_create failed. \n");
+                return ret;
+            }
+
+            ret = fte_flow_create(vnic_id, sip, dip,
+                        proto, sport, dport,
+                        PDS_FLOW_SPEC_INDEX_SESSION, g_session_index);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_DEBUG("fte_flow_create failed. \n");
+                return ret;
+            }
+
+            g_session_index++;
+            switch (v4_flows->inc_type) {
+            case FLOW_INC_TYPE_IP:
+                sip++;
+                dip++;
+                break;
+            case FLOW_INC_TYPE_PORT:
+                sport++;
+                dport++;
+                break;
+            case FLOW_INC_TYPE_SIP:
+                sip++;
+                break;
+            case FLOW_INC_TYPE_DIP:
+                dip++;
+                break;
+            case FLOW_INC_TYPE_SPORT:
+                sport++;
+                break;
+            case FLOW_INC_TYPE_DPORT:
+                dport++;
+                break;
+            default:
+                if (v4_flows->num_flows > 1) {
+                    PDS_TRACE_DEBUG("inc_type not set. num_flows:%u "
+                                    "reset num_flows to 1.. \n",
+                                    v4_flows->num_flows);
+                    v4_flows->num_flows = 1;
+                }
+                break;
+            }
         }
     }
 

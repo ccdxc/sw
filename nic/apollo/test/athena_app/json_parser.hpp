@@ -17,6 +17,13 @@ namespace fte_ath {
 #define ENCAP_MPLSOUDP 1
 #define ENCAP_GENEVE   2
 
+#define FLOW_INC_TYPE_IP 1
+#define FLOW_INC_TYPE_PORT 2
+#define FLOW_INC_TYPE_SIP 3
+#define FLOW_INC_TYPE_DIP 4
+#define FLOW_INC_TYPE_SPORT 5
+#define FLOW_INC_TYPE_DPORT 6
+
 typedef struct session_info_s {
     uint8_t tcp_flags;
     uint64_t policer_bw1;
@@ -41,6 +48,16 @@ typedef struct rewrite_host_info_s {
     uint8_t ep_dmac[ETH_ADDR_LEN];
 } rewrite_host_info_t;
 
+typedef struct v4_flows_info_s {
+    uint32_t sip;
+    uint32_t dip;
+    uint8_t proto;
+    uint16_t sport;
+    uint16_t dport;
+    uint32_t num_flows;
+    uint8_t inc_type;
+} v4_flows_info_t;
+
 typedef struct flow_cache_policy_info_s {
     uint16_t vlan_id;
     uint16_t vnic_id;
@@ -51,6 +68,7 @@ typedef struct flow_cache_policy_info_s {
     session_info_t to_switch;
     rewrite_underlay_info_t rewrite_underlay;
     rewrite_host_info_t rewrite_host;
+    v4_flows_info_t v4_flows;
 } flow_cache_policy_info_t;
 
 int parse_flow_cache_policy_cfg(const char *cfg_file);
