@@ -68,6 +68,10 @@ public:
     /// \return   SDK_RET_OK on success, failure status code on error
     sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
 
+    /// \brief  get number of entries in the table
+    /// \return size of the table
+    uint32_t num_entries(void) const { return ep_ip_ht_->num_entries(); }
+
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:

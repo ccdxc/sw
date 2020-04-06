@@ -706,4 +706,50 @@ ipv4_prefix_within_prefix (ipv4_prefix_t *ip_prefix1, ipv4_prefix_t *ip_prefix2)
     return false;
 }
 
+static inline bool
+ipv4_addr_within_prefix (ipv4_prefix_t *prefix, ipv4_addr_t *addr)
+{
+    ipv4_addr_t mask;
+
+    if (!prefix || !addr) {
+        return false;
+    }
+    mask = ipv4_prefix_len_to_mask(prefix->len);
+    if ((prefix->v4_addr & mask) == (*addr & mask)) {
+        return true;
+    }
+    return false;
+}
+
+static inline bool
+ip_addr_within_prefix (ip_prefix_t *prefix, ip_addr_t *addr)
+{
+    ipv6_addr_t v6_mask;
+    ip_addr_t   *pfx_addr;
+    ipv4_addr_t mask;
+
+    if (!prefix || !addr) {
+        return false;
+    }
+    pfx_addr = &prefix->addr;
+    if (pfx_addr->af != addr->af) {
+        return false;
+    }
+    if (addr->af == IP_AF_IPV6) {
+        ipv6_prefix_len_to_mask(&v6_mask, prefix->len);
+        for (uint8_t i = 0; i < IP6_ADDR32_LEN; i++) {
+            if ((pfx_addr->addr.v6_addr.addr32[i] & v6_mask.addr32[i])
+                != (addr->addr.v6_addr.addr32[i] & v6_mask.addr32[i])) {
+                return false;
+            }
+        }
+    } else {
+        mask = ipv4_prefix_len_to_mask(prefix->len);
+        if ((pfx_addr->addr.v4_addr & mask) != (addr->addr.v4_addr & mask)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 #endif    // __IP_HPP__

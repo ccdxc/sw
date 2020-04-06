@@ -214,15 +214,65 @@ extract_learn_info (char *pkt_data, learn_ctxt_t *ctxt)
 static sdk_ret_t
 validate_learn (learn_ctxt_t *ctxt)
 {
-    // TODO: validate that learning mac/IP is OK
-    //
-    // for MAC address, check if we have number of vnics limit, if vlan in pkt
-    // does not match expected vlan on the subnet, or any such conditions
-    //
-    // for IP address, check if IP belongs to the associated mac's subnet,
-    // if we have number of IP mappings per VNIC limit or any such criteria
-    //
+    subnet_entry  *subnet;
+    ipv4_prefix_t v4_prefix;
+    ip_prefix_t   v6_prefix;
 
+    if (!ctxt->mac_entry && ((ctxt->mac_learn_type == LEARN_TYPE_NEW_LOCAL)
+        || (ctxt->mac_learn_type == LEARN_TYPE_MOVE_R2L))) {
+        // validate max limit for mac entries if it is a new learn or R2L move.
+        if (ep_mac_db()->num_entries() >= EP_MAX_MAC_ENTRY) {
+            PDS_TRACE_ERR("Already reached maximum limit for MACs, dropping "
+                          "EP %s", ctxt->str());
+            return SDK_RET_ERR;
+        }
+        // only one untagged vnic per subnet is allowed, since untagged vnics
+        //  use hostif's vnic_hw_id.
+        if (ctxt->pkt_ctxt.impl_info.encap.type == PDS_ENCAP_TYPE_NONE) {
+            if (impl::untagged_vnic_exists_on_lif(
+                                           ctxt->pkt_ctxt.impl_info.lif)) {
+                PDS_TRACE_ERR("Only one untagged VNIC supported per LIF, "
+                              "dropping EP %s", ctxt->str());
+                return SDK_RET_ERR;
+            }
+        }
+
+    }
+
+    // validate only if it is a new learn or R2L move.
+    if (!ctxt->ip_entry && ((ctxt->ip_learn_type == LEARN_TYPE_NEW_LOCAL)
+        || (ctxt->ip_learn_type == LEARN_TYPE_MOVE_R2L)
+        || (ctxt->ip_learn_type == LEARN_TYPE_MOVE_L2L))) {
+        // validate max limit for ip entries only if it is not a L2L move. For
+        // L2L move, we update/delete the old entry and total remains same.
+        if ((ctxt->ip_learn_type != LEARN_TYPE_MOVE_L2L) &&
+           (ep_ip_db()->num_entries() >= EP_MAX_IP_ENTRY)) {
+            PDS_TRACE_ERR("Already reached maximum limit for IPs, dropping EP "
+                          "%s", ctxt->str());
+            return SDK_RET_ERR;
+        }
+        // validate if IP belongs to the subnet. subnet should be present now,
+        // since bdid to subnetid lookup was successful
+        subnet = subnet_db()->find(&ctxt->mac_key.subnet);
+        if(ctxt->ip_key.ip_addr.af == IP_AF_IPV4) {
+            v4_prefix = subnet->v4_prefix();
+            if (!ipv4_addr_within_prefix(&v4_prefix,
+                                         &ctxt->ip_key.ip_addr.addr.v4_addr)) {
+                PDS_TRACE_ERR("IP address %s does not belong to the subnet %s",
+                              ipaddr2str(&ctxt->ip_key.ip_addr),
+                              ipv4pfx2str(&v4_prefix));
+                return SDK_RET_ERR;
+            }
+        } else {
+            v6_prefix = subnet->v6_prefix();
+            if (!ip_addr_within_prefix(&v6_prefix, &ctxt->ip_key.ip_addr)) {
+                PDS_TRACE_ERR("IPv6 address %s doesnt belong to the subnet %s",
+                              ipaddr2str(&ctxt->ip_key.ip_addr),
+                              ippfx2str(&v6_prefix));
+                return SDK_RET_ERR;
+            }
+        }
+    }
     return SDK_RET_OK;
 }
 

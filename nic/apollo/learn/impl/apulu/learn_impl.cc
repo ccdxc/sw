@@ -11,7 +11,9 @@
 #include "nic/sdk/include/sdk/l2.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/internal/pds_mapping.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nacl_data.h"
@@ -28,6 +30,7 @@ namespace impl {
 using namespace sdk::types;
 using api::impl::subnet_impl_db;
 using api::impl::lif_impl_db;
+using api::impl::vnic_impl_db;
 using api::impl::vnic_impl;
 using api::impl::lif_impl;
 
@@ -47,6 +50,25 @@ const char *
 learn_lif_name (void)
 {
     return "net_ionic1";
+}
+
+bool
+untagged_vnic_exists_on_lif (uint16_t lif_id)
+{
+    pds_obj_key_t lif_key;
+    lif_impl *lif;
+
+    lif_key = api::uuid_from_objid(LIF_IFINDEX(lif_id));
+    lif = lif_impl_db()->find(&lif_key);
+
+    if (!lif || (lif->type() != sdk::platform::LIF_TYPE_HOST)) {
+        return true;
+    }
+    if (vnic_impl_db()->find(lif->vnic_hw_id()) != NULL) {
+        // untagged vnic already exists
+        return true;
+    }
+    return false;
 }
 
 // reverse lookup subnet from hw id

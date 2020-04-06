@@ -188,6 +188,10 @@ public:
     /// \return         IPv4 CIDR block
     const ipv4_prefix_t v4_prefix(void) const { return v4_prefix_; }
 
+    /// \brief          return IPv6 CIDR block
+    /// \return         IPv6 CIDR block
+    const ip_prefix_t v6_prefix(void) const { return v6_prefix_; }
+
     /// \brief          return IPv4 VR IP of this subnet
     /// \return         IPv4 virtual router (VR) IP of this subnet
     ipv4_addr_t v4_vr_ip(void) const { return v4_vr_ip_; }
@@ -339,6 +343,7 @@ private:
     pds_obj_key_t dhcp_policy_[PDS_MAX_SUBNET_DHCP_POLICY];
 
     ipv4_prefix_t v4_prefix_;         ///< IPv4 CIDR block
+    ip_prefix_t v6_prefix_;           ///< IPv6 CIDR block
     ipv4_addr_t v4_vr_ip_;            ///< IPv4 virtual router IP
     ip_addr_t v6_vr_ip_;              ///< IPv6 virtual router IP
     mac_addr_t vr_mac_;               ///< virtual router MAC

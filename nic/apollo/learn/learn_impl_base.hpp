@@ -77,6 +77,11 @@ sdk_ret_t arm_to_p4_tx_hdr_fill(char *tx_hdr, p4_tx_info_t *tx_info);
 ///                 error code otherwise
 sdk_ret_t remote_mapping_find(pds_mapping_key_t *key);
 
+/// \brief          check if there is a untagged VNIC associated with this lif
+/// \param[in]      lif_id lif id on which the new entry is learnt.
+/// \return         true   if there is already a VNIC associated with this lif else false
+bool untagged_vnic_exists_on_lif(uint16_t lif_id);
+
 }    // namespace learn
 }    // namespace impl
 

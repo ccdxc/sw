@@ -50,5 +50,11 @@ remote_mapping_find (pds_mapping_key_t *key)
     return SDK_RET_ERR;
 }
 
+bool
+untagged_vnic_exists_on_lif (uint16_t lif_id)
+{
+	return false;
+}
+
 }    // namespace impl
 }    // namespace learn
