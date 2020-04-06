@@ -11,6 +11,7 @@
 #ifndef __VPC_IMPL_STATE_HPP__
 #define __VPC_IMPL_STATE_HPP__
 
+#include <map>
 #include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/sdk/lib/table/slhash/slhash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
@@ -28,6 +29,13 @@ namespace impl {
 
 // forward declaration
 class vpc_impl;
+
+typedef struct vpc_tag_class_info_s {
+    uint32_t class_id;   ///< class id allocated for this tag
+    uint32_t refcount;   ///< how many times this tag is re-used
+                         ///< across mappings
+} vpc_tag_class_info_t;
+typedef std::map<uint32_t, vpc_tag_class_info_t> tag_class_map_t;
 
 /// \brief  state maintained for VPCs
 class vpc_impl_state : public state_base {
@@ -82,6 +90,27 @@ public:
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t remove(uint16_t hw_id);
 
+    /// \brief      API to allocate class id given user configured tag
+    /// \param[in]   tag     user give tag (for the mapping)
+    /// \param[in]   local   if true, tag is that of local mapping, else for
+    ///                      remote mapping
+    /// \param[out]  class_id class_id corresponding to the tag, if allocation
+    ///              was succesful
+    /// \remark if the tag is seen 1st time, new class id allocated for it
+    ///         if tag is already seen, refcount is incremented and
+    ///         corresponding class_id is returned
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t alloc_class_id(uint32_t tag, bool local, uint32_t *class_id);
+
+    /// \brief      API to release class id given user configured tag
+    /// \param[in]   tag     user give tag (for the mapping)
+    /// \param[in]   local   if true, tag is that of local mapping, else for
+    ///                      remote mapping
+    /// \remark if the refcount corresponding to the tag goes down to 0,
+    ///         corresponding class_id is freed back to the pool
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t release_class_id(uint32_t tag, bool local);
+
 private:
     slhash *vni_tbl(void) { return vni_tbl_; }
     rte_indexer *vpc_idxr(void) const { return vpc_idxr_; }
@@ -98,6 +127,10 @@ private:
     rte_indexer *local_mapping_classs_id_idxr_;
     ///< remote mapping tag indexer
     rte_indexer *remote_mapping_class_id_idxr_;
+    ///< tag to class id mapper for local mappings
+    tag_class_map_t local_tag_class_map_;
+    ///< tag to class id mapper for remote mappings
+    tag_class_map_t remote_tag_class_map_;
     ///< hash table for hw_id to vpc key
     ht *impl_ht_;
 };

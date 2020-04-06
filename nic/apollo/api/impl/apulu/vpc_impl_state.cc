@@ -139,6 +139,70 @@ vpc_impl_state::remove(uint16_t hw_id) {
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+vpc_impl_state::alloc_class_id(uint32_t tag, bool local, uint32_t *class_id) {
+    sdk_ret_t ret;
+    rte_indexer *class_idxr;
+    tag_class_map_t::iterator it;
+    tag_class_map_t *tag_class_map;
+
+    if (local) {
+        tag_class_map = &local_tag_class_map_;
+        class_idxr = local_mapping_classs_id_idxr_;
+    } else {
+        tag_class_map = &remote_tag_class_map_;
+        class_idxr = remote_mapping_class_id_idxr_;
+    }
+
+    if (tag_class_map->find(tag) != tag_class_map->end()) {
+        // tag to class id mapping exists
+        (*tag_class_map)[tag].refcount++;
+        *class_id = (*tag_class_map)[tag].class_id;
+    } else {
+        // try to allocate new class id
+        ret = class_idxr->alloc(class_id);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to allocate class id for tag %u, err %u",
+                          tag, ret);
+            return ret;
+        }
+        (*tag_class_map)[tag].class_id = *class_id;
+        (*tag_class_map)[tag].refcount = 1;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_impl_state::release_class_id(uint32_t tag, bool local) {
+    sdk_ret_t ret;
+    rte_indexer *class_idxr;
+    tag_class_map_t::iterator it;
+    tag_class_map_t *tag_class_map;
+
+    if (local) {
+        tag_class_map = &local_tag_class_map_;
+        class_idxr = local_mapping_classs_id_idxr_;
+    } else {
+        tag_class_map = &remote_tag_class_map_;
+        class_idxr = remote_mapping_class_id_idxr_;
+    }
+
+    if (tag_class_map->find(tag) != tag_class_map->end()) {
+        // tag to class id mapping exists
+        (*tag_class_map)[tag].refcount--;
+        if ((*tag_class_map)[tag].refcount == 0) {
+            // free back the class id
+            class_idxr->free((*tag_class_map)[tag].class_id);
+            // cleanup the tag to class id map entry
+            tag_class_map->erase(tag);
+        }
+    } else {
+        // handle it gracefully
+        PDS_TRACE_ERR("Tag %u has not class id allocated", tag);
+    }
+    return SDK_RET_OK;
+}
+
 /// @}
 
 }    // namespace impl
