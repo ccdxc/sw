@@ -2049,6 +2049,10 @@ func (i *IrisAPI) createPortsAndUplinks(uid string) error {
 	portReqMsg := &halapi.PortGetRequestMsg{
 		Request: []*halapi.PortGetRequest{{}},
 	}
+	evtReqMsg := &halapi.EventRequest{
+		EventId:        halapi.EventId_EVENT_ID_PORT_STATE,
+		EventOperation: halapi.EventOp_EVENT_OP_SUBSCRIBE,
+	}
 
 	ports, err := i.PortClient.PortGet(context.Background(), portReqMsg)
 	if err != nil {
@@ -2056,6 +2060,35 @@ func (i *IrisAPI) createPortsAndUplinks(uid string) error {
 		return errors.Wrapf(types.ErrPipelinePortGet, "Iris Init: %v", err)
 	}
 
+	portStream, err := i.EventClient.EventListen(context.Background(), evtReqMsg)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrPipelineEventListen, "Iris Init: %v", err))
+	}
+
+	go func(stream halapi.Event_EventListenClient) {
+		for {
+			resp, err := stream.Recv()
+			if err == io.EOF {
+				log.Error(errors.Wrapf(types.ErrPipelineEventStreamClosed, "HAL Event stream closed"))
+				break
+			}
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrPipelineEventStreamClosed, "Init: %v", err))
+				break
+			}
+			if resp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
+				log.Error(errors.Wrapf(types.ErrDatapathHandling, "Iris Init: %v", err))
+			}
+
+			port := resp.GetPortEvent()
+
+			err = i.createUplinkInterface(uid, port.Spec, port.Status)
+
+		}
+
+	}(portStream)
+
+	// Store initial uplinks
 	for _, port := range ports.Response {
 		i.createUplinkInterface(uid, port.Spec, port.Status)
 	}

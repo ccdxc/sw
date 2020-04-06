@@ -45,7 +45,7 @@ message EventResponse {
   EventId                         event_id          = 2;
   oneof event_info {
       intf.LifGetResponse         lif_event         = 3;    // Lif Info
-      port.PortResponse           port_event        = 4;    // Port Info
+      port.PortGetResponse        port_event        = 4;    // Port Info
       sys.MicroSegEvent           micro_seg_event   = 5;    // Micro Seg Event
       endpoint.MigrationResponse  migration_event   = 6;    // EP Migration Info
   }

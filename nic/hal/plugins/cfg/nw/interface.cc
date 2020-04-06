@@ -40,28 +40,35 @@ hal_stream_port_status_update (port_event_info_t port_event) {
                  (grpc::ServerWriter<EventResponse> *)ctxt;
         port_event_info_t *port_event = (port_event_info_t *)entry;
         EventResponse   evtresponse;
-        auto status = evtresponse.mutable_port_event()->mutable_status();
+        auto spec = evtresponse.mutable_port_event()->mutable_spec();
+	auto status = evtresponse.mutable_port_event()->mutable_status();
         auto link_status = status->mutable_link_status();
+        uint32_t ifindex;
 
-        status->mutable_key_or_handle()->set_port_id(port_event->logical_port);
+        ifindex = sdk::lib::catalog::logical_port_to_ifindex(port_event->logical_port);
+        spec->mutable_key_or_handle()->set_port_id(ifindex);
+        spec->set_port_type(linkmgr::sdk_port_type_to_port_type_spec(port_event->type));
         // Set link status
         link_status->set_oper_state(
-                     linkmgr::sdk_port_oper_st_to_port_oper_st_spec(port_event->oper_status));
+                                    linkmgr::sdk_port_oper_st_to_port_oper_st_spec(port_event->oper_status));
         link_status->set_port_speed(
-                     linkmgr::sdk_port_speed_to_port_speed_spec(port_event->speed));
+                                    linkmgr::sdk_port_speed_to_port_speed_spec(port_event->speed));
         link_status->set_fec_type(
-                     linkmgr::sdk_port_fec_type_to_port_fec_type_spec(
-                                                   port_event->fec_type));
+                                  linkmgr::sdk_port_fec_type_to_port_fec_type_spec(
+                                                                                   port_event->fec_type));
         link_status->set_auto_neg_enable(port_event->auto_neg_enable);
         link_status->set_num_lanes(port_event->num_lanes);
+        status->set_ifindex(ifindex);
         evtresponse.set_event_id(::event::EVENT_ID_PORT_STATE);
 
         evtresponse.set_api_status(::types::ApiStatus::API_STATUS_OK);
         stream->Write(evtresponse);
+        HAL_TRACE_DEBUG("Notified event port: {}:{}, oper_st: {} ", ifindex, eth_ifindex_to_str(ifindex),
+                        linkmgr::sdk_port_oper_st_to_port_oper_st_spec(port_event->oper_status));
         return true;
     };
     g_hal_state->event_mgr()->notify_event(::event::EVENT_ID_PORT_STATE, 
-                                          (void *)&port_event, walk_cb);
+                                           (void *)&port_event, walk_cb);
 
     return HAL_RET_OK;
 }
@@ -5646,9 +5653,9 @@ port_event_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
     HAL_TRACE_DEBUG("Timer fired. Port: {}, Event: {}, Speed: {}",
                     port_ctxt->port_num, (uint32_t)port_ctxt->event,
                     (uint32_t)port_ctxt->port_speed);
-    hal_stream_port_status_update(port_event_info);
     sdk::linkmgr::port_set_leds(port_ctxt->port_num, port_ctxt->event);
     if_port_oper_state_process_event(port_ctxt->port_num, port_ctxt->event);
+    hal_stream_port_status_update(port_event_info);
     linkmgr::ipc::port_event_notify(&port_event_info);
 
     // Free ctxt
