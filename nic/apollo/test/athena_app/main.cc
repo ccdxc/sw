@@ -460,9 +460,11 @@ main (int argc, char **argv)
         exit(1);
     }
 
-    // parse policy json file
-    file = cfg_path + "/" + pipeline + "/policy.json";
-    fte_ath::parse_flow_cache_policy_cfg(file.c_str());
+    if (fte_ath::g_athena_app_mode != ATHENA_APP_MODE_NO_DPDK) {
+        // parse policy json file
+        file = cfg_path + "/" + pipeline + "/policy.json";
+        fte_ath::parse_flow_cache_policy_cfg(file.c_str());
+    }
 
     // Initialize the PDS functionality
     pds_cinit_params_t init_params;
