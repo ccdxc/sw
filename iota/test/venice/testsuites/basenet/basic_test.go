@@ -19,6 +19,7 @@ var _ = Describe("Basnet Sanity", func() {
 	dataPathEnabled := true
 	var dscInsertionProfile *objects.DscProfile
 	var dscFlowawareProfile *objects.DscProfile
+	var dscEnforcedProfile *objects.DscProfile
 	BeforeEach(func() {
 
 		if *runRandomTrigger {
@@ -33,12 +34,15 @@ var _ = Describe("Basnet Sanity", func() {
 		Expect(dscInsertionProfile.Commit()).Should(Succeed())
 		dscFlowawareProfile = objects.NewDscProfileFlowAware(ts.model.ConfigClient(), "dscFlowaware")
 		Expect(dscFlowawareProfile.Commit()).Should(Succeed())
+		dscEnforcedProfile = objects.NewDscProfileEnforced(ts.model.ConfigClient(), "dscEnforced")
+		Expect(dscEnforcedProfile.Commit()).Should(Succeed())
 	})
 	AfterEach(func() {
 		//Delete if insertion profile exists
 		ts.model.CleanupAllConfig()
 		dscInsertionProfile.Delete()
 		dscFlowawareProfile.Delete()
+		dscEnforcedProfile.Delete()
 		ts.tb.AfterTestCommon()
 	})
 
@@ -276,6 +280,69 @@ var _ = Describe("Basnet Sanity", func() {
 				//Ping should work as expected
 				Eventually(func() error {
 					return ts.model.PingPairs(workloadPairs)
+				}).Should(Succeed())
+
+			}
+
+		})
+		It("Naples to transparent enforced mode, Push new config and make sure traffic good and reset to basnet", func() {
+
+			var err error
+			for i := 0; i < int(ts.stress); i++ {
+
+				Expect(ts.model.Naples().SetDscProfile(dscEnforcedProfile)).Should(Succeed())
+
+				//Ping should fail as expected
+				Eventually(func() error {
+					return ts.model.PingPairs(ts.model.WorkloadPairs().WithinNetwork())
+				}).ShouldNot(Succeed())
+
+				workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
+
+				Expect(err).ShouldNot(HaveOccurred())
+				spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "icmp", "PERMIT")
+				spc.AddRulesForWorkloadPairs(workloadPairs.ReversePairs(), "icmp", "PERMIT")
+				Expect(spc.Commit()).Should(Succeed())
+
+				//Ping should succed as expected
+				Eventually(func() error {
+					return ts.model.PingPairs(workloadPairs)
+				}).Should(Succeed())
+
+				Expect(ts.model.CleanupAllConfig()).Should(Succeed())
+
+				//Ping should not succeed
+				Eventually(func() error {
+					return ts.model.PingPairs(workloadPairs)
+				}).ShouldNot(Succeed())
+
+				Expect(ts.model.Naples().Decommission()).Should(Succeed())
+				Eventually(func() error {
+					admit, _ := ts.model.Naples().IsAdmitted()
+					if !admit {
+						return nil
+					}
+					return fmt.Errorf("Naples still admitted")
+				}).Should(Succeed())
+
+				Expect(ts.model.Naples().ResetProfile()).Should(Succeed())
+				Expect(ts.model.Naples().Admit()).Should(Succeed())
+				//reload Nodes so that it can Join
+				Eventually(func() error {
+					return ts.model.ReloadHosts(ts.model.Hosts())
+				}).Should(Succeed())
+
+				Eventually(func() error {
+					admit, err := ts.model.Naples().IsAdmitted()
+					if err == nil && admit {
+						return nil
+					}
+					return fmt.Errorf("Naples not admitted")
+				}).Should(Succeed())
+
+				//Ping should work as expected
+				Eventually(func() error {
+					return ts.model.PingPairs(ts.model.WorkloadPairs().WithinNetwork())
 				}).Should(Succeed())
 
 			}

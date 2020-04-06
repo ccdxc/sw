@@ -53,6 +53,26 @@ func NewDscProfileFlowAware(client objClient.ObjClient, name string) *DscProfile
 	}
 }
 
+//NewDscProfileEnforced  creates new transparent enforced
+func NewDscProfileEnforced(client objClient.ObjClient, name string) *DscProfile {
+
+	return &DscProfile{
+		client: client,
+		Profile: &cluster.DSCProfile{
+			TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      name,
+				Namespace: "",
+				Tenant:    "",
+			},
+			Spec: cluster.DSCProfileSpec{
+				FwdMode:        "TRANSPARENT",
+				FlowPolicyMode: "ENFORCED",
+			},
+		},
+	}
+}
+
 //NewDscProfileBasenet creates basenet profile
 func NewDscProfileBasenet(client objClient.ObjClient, name string) *DscProfile {
 

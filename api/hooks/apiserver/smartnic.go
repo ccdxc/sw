@@ -241,8 +241,12 @@ func verifyAllowedProfile(oldProfile, newProfile cluster.DSCProfile) error {
 
 	if oldProfile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() {
 		if newProfile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() {
-			if newProfile.Spec.FlowPolicyMode != cluster.DSCProfileSpec_FLOWAWARE.String() {
-				return fmt.Errorf("Unable to move from %s to %s while in fwdMode:%s", oldProfile.Spec.FwdMode, newProfile.Spec.FwdMode, newProfile.Spec.FlowPolicyMode)
+			if oldProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_FLOWAWARE.String() {
+				if newProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_BASENET.String() {
+					return fmt.Errorf("Unable to move from %s to %s while in fwdMode:%s", oldProfile.Spec.FlowPolicyMode, newProfile.Spec.FlowPolicyMode, newProfile.Spec.FwdMode)
+				}
+			} else if oldProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_ENFORCED.String() {
+				return fmt.Errorf("Unable to move from %s to %s while in fwdMode:%s", oldProfile.Spec.FlowPolicyMode, newProfile.Spec.FlowPolicyMode, newProfile.Spec.FwdMode)
 			}
 		} else {
 			if newProfile.Spec.FlowPolicyMode != cluster.DSCProfileSpec_ENFORCED.String() {

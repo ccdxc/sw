@@ -12,6 +12,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/security"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
@@ -856,7 +857,21 @@ func (sm *SysModel) MirrorSessions() *objects.MirrorSessionCollection {
 
 // NewNetworkSecurityPolicy TODO
 func (sm *SysModel) NewNetworkSecurityPolicy(name string) *objects.NetworkSecurityPolicyCollection {
-	return nil
+	policy := &objects.NetworkSecurityPolicy{
+		VenicePolicy: &security.NetworkSecurityPolicy{
+			TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      name,
+			},
+			Spec: security.NetworkSecurityPolicySpec{
+				AttachTenant: true,
+			},
+		},
+	}
+	//sm.sgpolicies[name] = policy
+	return objects.NewNetworkSecurityPolicyCollection(policy, sm.ObjClient(), sm.Tb)
 }
 
 // VerifyRuleStats TODO

@@ -81,10 +81,11 @@ func TestDSCProfilePreCommitHooks(t *testing.T) {
 	sampleProfile.Spec.FwdMode = cluster.DSCProfileSpec_TRANSPARENT.String()
 	sampleProfile.Spec.FlowPolicyMode = cluster.DSCProfileSpec_ENFORCED.String()
 
-	//Invalid profile create
+	//valid profile create
 	_, _, err := hooks.DSCProfilePreCommitHook(context.TODO(), kvs, txns, "sample", apiintf.CreateOper, false, sampleProfile)
-	Assert(t, err != nil, "DSCProfilePrecommitHook did not return error with invalid parameters")
+	AssertOk(t, err, "DSCProfilePrecommitHook did error with valid parameters")
 
+	//Invalud profile create
 	sampleProfile.Spec.FwdMode = cluster.DSCProfileSpec_INSERTION.String()
 	sampleProfile.Spec.FlowPolicyMode = cluster.DSCProfileSpec_BASENET.String()
 

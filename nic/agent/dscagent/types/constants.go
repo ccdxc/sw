@@ -22,6 +22,8 @@ var BaseNetKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector"}
 // FlowAwareKinds catpures all the objects needed for FlowAware Profile
 var FlowAwareKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", "MirrorSession", "FlowExportPolicy"}
 
+var EnforcedKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", "MirrorSession", "FlowExportPolicy", "App", "NetworkSecurityPolicy", "Vrf", "SecurityProfile"}
+
 // InsertionKinds captures all the objects needed for Insertion USeg Enforced Profile
 var InsertionKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", "MirrorSession", "FlowExportPolicy", "App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile"}
 

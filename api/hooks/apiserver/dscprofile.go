@@ -57,11 +57,6 @@ func (cl *clusterHooks) DSCProfilePreCommitHook(ctx context.Context, kvs kvstore
 }
 
 func checkValidProfile(profile cluster.DSCProfile) error {
-	if profile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() {
-		if profile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_ENFORCED.String() {
-			return fmt.Errorf(" fwdMode:%s flowpolicy mode:%s is not supported", profile.Spec.FwdMode, profile.Spec.FlowPolicyMode)
-		}
-	}
 	if profile.Spec.FwdMode == cluster.DSCProfileSpec_INSERTION.String() {
 		if profile.Spec.FlowPolicyMode != cluster.DSCProfileSpec_ENFORCED.String() {
 			return fmt.Errorf(" fwdMode:%s flowpolicy mode:%s is not supported", profile.Spec.FwdMode, profile.Spec.FlowPolicyMode)

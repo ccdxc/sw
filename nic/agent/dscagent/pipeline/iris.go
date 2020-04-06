@@ -1476,6 +1476,8 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 		i.startDynamicWatch(types.InsertionKinds)
 	} else if strings.ToLower(profile.Spec.PolicyMode) == strings.ToLower(netproto.ProfileSpec_FLOWAWARE.String()) {
 		i.startDynamicWatch(types.FlowAwareKinds)
+	} else if strings.ToLower(profile.Spec.PolicyMode) == strings.ToLower(netproto.ProfileSpec_ENFORCED.String()) {
+		i.startDynamicWatch(types.EnforcedKinds)
 	}
 	return
 }
