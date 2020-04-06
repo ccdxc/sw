@@ -382,7 +382,7 @@ vpp_config_batch::publish (void) {
     // commit modifications to config data
     for(auto it = batch_op.begin(); it != batch_op.end(); it++) {
         if ((*it).deleted) {
-            vpp_config.unset((*it).obj_id, (*it).modified);
+            vpp_config.unset((*it).obj_id, (*it).original);
         } else {
             vpp_config.set((*it).modified);
         }

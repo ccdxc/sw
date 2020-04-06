@@ -9,6 +9,8 @@ pds_impl_db_ctx_t impl_db_ctx;
 #define POOL_IMPL_DB_ADD(obj, hw_id)                            \
     pds_impl_db_##obj##_entry_t *obj##_info;                    \
     u16 offset;                                                 \
+    if (hw_id >= vec_len(impl_db_ctx.obj##_pool_idx))           \
+        return -1;                                              \
     offset = vec_elt(impl_db_ctx.obj##_pool_idx, hw_id);        \
     if (offset == 0xffff) {                                     \
     pool_get(impl_db_ctx.obj##_pool_base, obj##_info);          \
@@ -21,6 +23,8 @@ pds_impl_db_ctx_t impl_db_ctx;
 
 #define POOL_IMPL_DB_GET(obj, hw_id)                            \
     pds_impl_db_##obj##_entry_t *obj##_info;                    \
+    if (hw_id >= vec_len(impl_db_ctx.obj##_pool_idx))           \
+        return NULL;                                            \
     u16 _offset = vec_elt(impl_db_ctx.obj##_pool_idx, hw_id);   \
     if (_offset == 0xffff) return NULL;                         \
     obj##_info = pool_elt_at_index(impl_db_ctx.obj##_pool_base, \
@@ -32,11 +36,12 @@ pds_impl_db_##obj##_del (type hw_id)                            \
 {                                                               \
     u16 offset;                                                 \
                                                                 \
+    if (hw_id >= vec_len(impl_db_ctx.obj##_pool_idx))           \
+        return -1;                                              \
     offset = vec_elt(impl_db_ctx.obj##_pool_idx, hw_id);        \
+    if (offset == 0xffff) return -1;                            \
     pool_put_index(impl_db_ctx.obj##_pool_base, offset);        \
-                                                                \
     vec_elt(impl_db_ctx.obj##_pool_idx, hw_id) = 0xffff;        \
-                                                                \
     return 0;                                                   \
 }                                                               \
 

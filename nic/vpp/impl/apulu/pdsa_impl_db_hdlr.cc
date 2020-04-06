@@ -25,7 +25,7 @@ pds_cfg_db_subnet_set_cb (const pds_cfg_msg_t *msg)
     if (rc == 0) {
         return sdk::SDK_RET_OK;
     } else {
-        return sdk::SDK_RET_ERR;
+        return sdk::SDK_RET_INVALID_ARG;
     }
 }
 
@@ -39,7 +39,7 @@ pds_cfg_db_subnet_del_cb (const pds_cfg_msg_t *msg)
     if (rc == 0) {
         return sdk::SDK_RET_OK;
     } else {
-        return sdk::SDK_RET_ERR;
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
 }
 
@@ -83,7 +83,7 @@ pds_cfg_db_vnic_set_cb (const pds_cfg_msg_t *msg)
     if (rc == 0) {
         return sdk::SDK_RET_OK;
     } else {
-        return sdk::SDK_RET_ERR;
+        return sdk::SDK_RET_INVALID_ARG;
     }
 }
 
@@ -97,7 +97,7 @@ pds_cfg_db_vnic_del_cb (const pds_cfg_msg_t *msg)
     if (rc == 0) {
         return sdk::SDK_RET_OK;
     } else {
-        return sdk::SDK_RET_ERR;
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
 }
 
@@ -115,7 +115,7 @@ pds_cfg_db_vpc_set_cb (const pds_cfg_msg_t *msg)
     if (rc == 0) {
         return sdk::SDK_RET_OK;
     } else {
-        return sdk::SDK_RET_ERR;
+        return sdk::SDK_RET_INVALID_ARG;
     }
 }
 
@@ -129,7 +129,7 @@ pds_cfg_db_vpc_del_cb (const pds_cfg_msg_t *msg)
     if (rc == 0) {
         return sdk::SDK_RET_OK;
     } else {
-        return sdk::SDK_RET_ERR;
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
 }
 
