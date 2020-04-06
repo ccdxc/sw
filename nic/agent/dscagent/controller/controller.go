@@ -37,6 +37,7 @@ import (
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/dispatcher"
 	"github.com/pensando/sw/venice/utils/events/exporters"
+	"github.com/pensando/sw/venice/utils/events/policy"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -59,6 +60,8 @@ type API struct {
 	npmURL              string
 	kinds               []string // Captures the current Watch Kinds
 	evtsDispatcher      events.Dispatcher
+	policyMgr           *policy.Manager
+	policyWatcher       *policy.Watcher
 }
 
 // RestServer implements REST APIs
@@ -332,6 +335,22 @@ func (c *API) watchObjects() {
 	c.Done()
 }
 
+// startPolicyWatcher
+func (c *API) startPolicyWatcher() {
+	go func() {
+		var err error
+		// start events policy watcher to watch events from events manager
+		if c.policyWatcher, err = policy.NewWatcher(c.policyMgr, log.GetDefaultInstance(),
+			policy.WithResolverClient(c.ResolverClient)); err != nil {
+			log.Errorf("failed to create events policy watcher, err: %v, retrying...", err)
+			time.Sleep(5 * time.Second)
+		} else {
+			log.Infof("Controller API: running policy watcher")
+			return
+		}
+	}()
+}
+
 // WatchAlertPolicies watches for alert/event policies & handles alerts. Cloud Pipeline only
 func (c *API) WatchAlertPolicies() error {
 
@@ -359,7 +378,7 @@ func (c *API) WatchAlertPolicies() error {
 	// create the events dispatcher with default values
 	c.evtsDispatcher, err = dispatcher.NewDispatcher(nodeName, 0, 0, storeConfig, defObjRef, defLogger)
 	if err != nil {
-		log.Errorf("Controller API: evt dispatcher create failed, err %v", err)
+		log.Fatalf("Controller API: evt dispatcher create failed, err %v", err)
 		return err
 	}
 
@@ -368,14 +387,17 @@ func (c *API) WatchAlertPolicies() error {
 	veniceExporter, err := exporters.NewVeniceExporter("venice", exporterChLen, "", c.ResolverClient, defLogger)
 	eventsChan, offsetTracker, err := c.evtsDispatcher.RegisterExporter(veniceExporter)
 	if err != nil {
-		log.Errorf("Controller API: venice exporter create failed, err %v", err)
+		log.Fatalf("Controller API: venice exporter create failed, err %v", err)
 		return err
 	}
 	veniceExporter.Start(eventsChan, offsetTracker)
 
-	// TODO: Add Policy Manger & Watcher support after decoupling it from evtsproxy
-	// policyMgr, err = policy.NewManager(nodeName, c.evtsDispatcher, defLogger)
-	// policyWatcher, err = policy.NewWatcher(policyMgr, defLogger, policy.WithResolverClient(c.resolverClient))
+	c.policyMgr, err = policy.NewManager(nodeName, c.evtsDispatcher, defLogger)
+	if err != nil {
+		log.Fatalf("Controller API: venice exporter create failed, err %v", err)
+		return err
+	}
+	c.startPolicyWatcher()
 
 	c.evtsDispatcher.Start()
 	log.Info("Controller API: Started Events Dispatcher")
