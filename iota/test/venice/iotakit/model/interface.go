@@ -138,7 +138,7 @@ type ObjectIntf interface {
 	NewRoutingConfig(name string) *objects.RoutingConfigCollection
 	GetRoutingConfig(name string) (*objects.RoutingConfig, error)
 	ListRoutingConfig() (*objects.RoutingConfigCollection, error)
-	NewVPC(tenant string, name string, rmac string, vni uint32) *objects.VpcObjCollection
+	NewVPC(tenant string, name string, rmac string, vni uint32, ipam string) *objects.VpcObjCollection
 	GetVPC(name string, tenant string) (*objects.Vpc, error)
 
 	NewNetwork(nwp *base.NetworkParams) *objects.NetworkCollection
@@ -146,6 +146,8 @@ type ObjectIntf interface {
 
 	NewTenant(name string) *objects.Tenant
 	GetTenant(name string) (*objects.Tenant, error)
+	NewIPAMPolicy(name string, tenant string, vrf string, ip string) *objects.IPAMPolicyCollection
+	ListIPAMPolicy(tenant string) (*objects.IPAMPolicyCollection, error)
 }
 
 //NaplesActionIntf All actions related to naples

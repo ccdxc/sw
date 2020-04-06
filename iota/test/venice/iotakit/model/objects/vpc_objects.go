@@ -20,7 +20,7 @@ type VpcObjCollection struct {
 	Objs []*Vpc
 }
 
-func NewVPC(tenant string, name string, rmac string, vni uint32,
+func NewVPC(tenant string, name string, rmac string, vni uint32, ipam string,
 	client objClient.ObjClient, testbed *testbed.TestBed) *VpcObjCollection {
 	return &VpcObjCollection{
 		Objs: []*Vpc{
@@ -56,7 +56,7 @@ func NewVPC(tenant string, name string, rmac string, vni uint32,
 								},
 							},
 						},
-						DefaultIPAMPolicy: "",
+						DefaultIPAMPolicy: ipam,
 					},
 				},
 			},
@@ -99,4 +99,10 @@ func (voc *VpcObjCollection) Delete() error {
 	}
 
 	return nil
+}
+
+func NewVPCCollection(client objClient.ObjClient, testbed *testbed.TestBed) *VpcObjCollection {
+	return &VpcObjCollection{
+		CollectionCommon: CollectionCommon{Client: client, Testbed: testbed},
+	}
 }

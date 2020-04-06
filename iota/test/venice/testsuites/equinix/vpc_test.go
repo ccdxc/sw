@@ -2,15 +2,15 @@ package equinix_test
 
 import (
 	"encoding/json"
+	"strings"
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
-	"strings"
-	"time"
 )
-
 
 var _ = Describe("VPC", func() {
 	BeforeEach(func() {
@@ -36,7 +36,7 @@ var _ = Describe("VPC", func() {
 
 			//Create VPC
 			vpcName := "testVPC"
-			vpc := ts.model.NewVPC(tenantName, vpcName, "0001.0102.0202", 100)
+			vpc := ts.model.NewVPC(tenantName, vpcName, "0001.0102.0202", 100, "")
 
 			Expect(vpc.Commit()).Should(Succeed())
 

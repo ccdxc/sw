@@ -116,6 +116,11 @@ type ObjClient interface {
 	GetTenant(name string) (objs *cluster.Tenant, err error)
 	CreateTenant(ten *cluster.Tenant) error
 	DeleteTenant(obj *cluster.Tenant) (err error)
+
+	CreateIPAMPolicy(pol *network.IPAMPolicy) error
+	DeleteIPAMPolicy(obj *network.IPAMPolicy) error
+	ListIPAMPolicy(tenant string) (objs []*network.IPAMPolicy, err error)
+	GetIPAMPolicy(name string, tenant string) (obj *network.IPAMPolicy, err error)
 }
 
 // VeniceConfigStatus saves venice status information
@@ -583,6 +588,21 @@ func (r *Client) ListIPAMPolicy(tenant string) (objs []*network.IPAMPolicy, err 
 
 	for _, restcl := range r.restcls {
 		objs, err = restcl.NetworkV1().IPAMPolicy().List(r.ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
+}
+
+// GetIPAMPolicy
+func (r *Client) GetIPAMPolicy(name string, tenant string) (objs *network.IPAMPolicy, err error) {
+
+	opts := api.ObjectMeta{Tenant: tenant, Name: name}
+
+	for _, restcl := range r.restcls {
+		objs, err = restcl.NetworkV1().IPAMPolicy().Get(r.ctx, &opts)
 		if err == nil {
 			break
 		}

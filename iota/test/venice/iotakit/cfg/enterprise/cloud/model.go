@@ -232,21 +232,7 @@ func (cl *CloudCfg) CleanupAllConfig() error {
 			}
 		}
 
-		// List routing config
-		ipams, err := rClient.ListIPAMPolicy(ten.Name)
-		if err != nil {
-			log.Errorf("err: %s", err)
-			return err
-		}
-		for _, config := range ipams {
-			err := rClient.DeleteIPAMPolicy(config)
-			if err != nil {
-				log.Errorf("err: %s", err)
-				return err
-			}
-		}
-
-		// List routing config
+		// get and delete VPC config
 		vpcs, err := rClient.ListVPC(ten.Name)
 		if err != nil {
 			log.Errorf("err: %s", err)
@@ -255,6 +241,20 @@ func (cl *CloudCfg) CleanupAllConfig() error {
 
 		for _, vpc := range vpcs {
 			err := rClient.DeleteVPC(vpc)
+			if err != nil {
+				log.Errorf("err: %s", err)
+				return err
+			}
+		}
+
+		// get and delete IPAM config
+		ipams, err := rClient.ListIPAMPolicy(ten.Name)
+		if err != nil {
+			log.Errorf("err: %s", err)
+			return err
+		}
+		for _, config := range ipams {
+			err := rClient.DeleteIPAMPolicy(config)
 			if err != nil {
 				log.Errorf("err: %s", err)
 				return err
@@ -431,6 +431,14 @@ func (cl *CloudCfg) pushConfigViaRest() error {
 		}
 	}
 
+	for _, pol := range cl.Cfg.ConfigItems.IPAMPs {
+		err := rClient.CreateIPAMPolicy(pol)
+		if err != nil {
+			log.Errorf("Error creating ipam %+v. Err: %v", pol, err)
+			return err
+		}
+	}
+
 	for _, vrf := range cl.Cfg.ConfigItems.VRFs {
 		err := rClient.CreateVPC(vrf)
 		if err != nil {
@@ -438,15 +446,6 @@ func (cl *CloudCfg) pushConfigViaRest() error {
 			return err
 		}
 	}
-
-	/*
-		for _, pol := range cl.Cfg.ConfigItems.IPAMPs {
-			err := rClient.CreateIPAMPolicy(pol)
-				if err != nil {
-					log.Errorf("Error creating ipam %+v. Err: %v", pol, err)
-					return err
-				}
-		}*/
 
 	for _, sub := range cl.Cfg.ConfigItems.Subnets {
 		err := rClient.CreateNetwork(sub)

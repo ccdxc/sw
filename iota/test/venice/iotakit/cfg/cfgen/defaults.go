@@ -220,6 +220,7 @@ var scaleCfgenParams = &Cfgen{
 				Type:             "tenant",
 				RouterMACAddress: "{{mac}}",
 				VxLanVNI:         998,
+				DefaultIPAMPolicy: "vpc1DHCP0",
 				RouteImportExport: &network.RDSpec{
 					AddressFamily: "l2vpn-evpn",
 					RDAuto:        true,
@@ -259,8 +260,8 @@ var scaleCfgenParams = &Cfgen{
 				DHCPRelay: &network.DHCPRelayPolicy{
 					Servers: []*network.DHCPServer{
 						&network.DHCPServer{
-							VirtualRouter: "default",
-							IPAddress:     "192.168.1.1",
+							VirtualRouter: "",
+							IPAddress:     "20.20.6.1",
 						},
 					},
 				},

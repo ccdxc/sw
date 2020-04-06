@@ -37,7 +37,7 @@ var _ = Describe("Network", func() {
 			vpcName := "testVPC"
 			vpcVni := uint32(700)
 
-			vpc := ts.model.NewVPC(tenantName, vpcName, "0001.0102.0202", vpcVni)
+			vpc := ts.model.NewVPC(tenantName, vpcName, "0001.0102.0202", vpcVni, "")
 
 			Expect(vpc.Commit()).Should(Succeed())
 

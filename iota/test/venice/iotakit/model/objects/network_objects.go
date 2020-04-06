@@ -4,8 +4,10 @@ import (
 	"math/rand"
 
 	"github.com/pensando/sw/api/generated/network"
-	"github.com/willf/bitset"
+	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
+	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/willf/bitset"
 )
 
 // Network represents a Vlan with a subnet (called network in venice)
@@ -90,4 +92,10 @@ func (nwc *NetworkCollection) Delete() error {
 	}
 
 	return nil
+}
+
+func NewNetworkCollection(client objClient.ObjClient, testbed *testbed.TestBed) *NetworkCollection {
+	return &NetworkCollection{
+		CollectionCommon: CollectionCommon{Client: client, Testbed: testbed},
+	}
 }
