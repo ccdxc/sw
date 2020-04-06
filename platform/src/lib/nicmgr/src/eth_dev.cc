@@ -1306,7 +1306,7 @@ Eth::_CmdPortIdentify(void *req, void *req_data, void *resp, void *resp_data)
     DEVAPI_CHECK
 
     if (spec->uplink_port_num == 0) {
-        port_config->speed = IONIC_SPEED_100G;
+        port_config->speed = IONIC_SPEED_1G;
         port_config->mtu = 1500;
         port_config->state = IONIC_PORT_ADMIN_STATE_UP;
         return (IONIC_RC_SUCCESS);
@@ -1919,7 +1919,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 
     if (spec->uplink_port_num == 0) {
         port_status->id = 0;
-        port_status->speed = IONIC_SPEED_100G;
+        port_status->speed = IONIC_SPEED_1G;
         port_status->status = IONIC_PORT_OPER_STATUS_UP;
         port_status->fec_type = IONIC_PORT_FEC_TYPE_NONE;
     } else {
@@ -2195,7 +2195,7 @@ Eth::QuiesceEventHandler(bool quiesce)
     }
 
     port_status.id = 0;
-    port_status.speed = IONIC_SPEED_100G;
+    port_status.speed = IONIC_SPEED_1G;
     port_status.status = quiesce ? IONIC_PORT_OPER_STATUS_DOWN : IONIC_PORT_OPER_STATUS_UP;
 
     LinkEventHandler(&port_status);
