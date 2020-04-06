@@ -3,7 +3,7 @@ import json
 import time
 import iota.harness.api as api
 import iota.harness.infra.store as store
-#import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
+import iota.test.iris.utils.iperf as iperf
 import iota.test.utils.naples_host as naples_host_util
 
 dhcp_template = r"""set vendor-string = option vendor-class-identifier;
@@ -90,10 +90,10 @@ def SendTraffic(tc):
     api.Logger.info("Starting Iperf  from %s" % (tc.cmd_descr))
 
     port = api.AllocateTcpPort()
-    iperf_server_cmd = cmd_builder.iperf_server_cmd(port = port)
-    tc.intf1.AddCommand(req, iperf_server_cmd, background = True)
-    iperf_client_cmd = cmd_builder.iperf_client_cmd(server_ip = tc.intf1.GetIP(), port = port,
-                            proto='tcp', pktsize=512, ipproto='v4')
+    iperf_server_cmd = iperf.ServerCmd(port=port)
+    tc.intf1.AddCommand(req, iperf_server_cmd, background=True)
+    iperf_client_cmd = iperf.ClientCmd(server_ip=tc.intf1.GetIP(), port=port,
+                                       proto='tcp', pktsize=512, ipproto='v4')
     tc.intf2.AddCommand(req, iperf_client_cmd)
 
 

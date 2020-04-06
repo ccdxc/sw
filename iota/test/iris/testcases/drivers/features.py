@@ -97,12 +97,8 @@ def Trigger(tc):
     is_naples_cmd = True
     if test_type == INTF_TEST_TYPE_HOST:
         is_naples_cmd = False
-        # XXX: wait for BSD host stack,
-        # we see connection failures. 
-        if api.GetNodeOs(srv.node_name) == host.OS_TYPE_BSD:
-            time.sleep(5)
 
-    srv_req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    srv_req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
     cli_req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
 
     proto = getattr(tc.iterators, "proto", 'tcp')
@@ -119,6 +115,7 @@ def Trigger(tc):
     api.Logger.info("Starting Iperf(%s/%s) test from %s"
                     % (proto, ipproto, tc.cmd_descr))
 
+    duration =  10
     for i in range(number_of_iperf_threads):
         if proto == 'tcp':
             port = api.AllocateTcpPort()
@@ -128,12 +125,13 @@ def Trigger(tc):
         iperf_server_cmd = iperf.ServerCmd(port, naples = is_naples_cmd)
         api.Trigger_AddCommand(srv_req, srv.node_name, srv.workload_name, iperf_server_cmd, background = True)
 
-        iperf_client_cmd = iperf.ClientCmd(server_ip, port, time=10,
+        iperf_client_cmd = iperf.ClientCmd(server_ip, port, time=duration,
                                  proto=proto, jsonOut=True, ipproto=ipproto, num_of_streams=number_of_iperf_threads,
                                  pktsize=pktsize, client_ip=client_ip, naples = is_naples_cmd)
         api.Trigger_AddCommand(cli_req, cli.node_name, cli.workload_name, iperf_client_cmd)
 
     srv_resp = api.Trigger(srv_req)
+    # Wait for iperf server to start.
     time.sleep(10)
     tc.cli_resp = api.Trigger(cli_req)
 
@@ -154,10 +152,10 @@ def Verify(tc):
         return api.types.status.FAILURE
 
     for cmd in tc.cli_resp.commands:
-        api.PrintCommandResults(cmd)
 
         if cmd.exit_code != 0:
             api.Logger.error("Iperf client exited with error")
+            api.PrintCommandResults(cmd)
             if iperf.ConnectionTimedout(cmd.stdout):
                 api.Logger.error("Connection timeout, ignoring for now")
                 continue
