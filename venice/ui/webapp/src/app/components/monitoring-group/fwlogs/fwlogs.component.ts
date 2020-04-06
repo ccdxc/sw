@@ -36,7 +36,7 @@ export class FwlogsComponent extends TableviewAbstract<IFwlogFwLog, FwlogFwLog> 
   public static ALLOPTION = 'All';
   @ViewChild(TablevieweditHTMLComponent) tableWrapper: TablevieweditHTMLComponent;
   @ViewChild('ruleDetailsOverlay') overlay: OverlayPanel;
-  @ViewChild('logOptions') logOptionsMultiSelect: MultiSelect ;
+  // @ViewChild('logOptions') logOptionsMultiSelect: MultiSelect ;
 
   dataObjects: ReadonlyArray<FwlogFwLog> = [];
   loading: boolean = false;
@@ -166,18 +166,18 @@ export class FwlogsComponent extends TableviewAbstract<IFwlogFwLog, FwlogFwLog> 
     });
   }
 
-  onActionChange(event: any) {
-    const values = this.logOptionsMultiSelect.value;
-    const index = this.getAllActionIndex(values);  // to check if 'All' is one of the selected actions
-    if (values != null && values.length > 1) {
-      if (index !== -1 && event.itemValue === FwlogsComponent.ALLOPTION) { // if 'All' is the most recent selected, un-select others
-        values[0] = values[index];
-        values.splice(1);
-      } else if (index !== -1 && event.itemValue !== FwlogsComponent.ALLOPTION) { // if another option selected after 'All', un-select 'All'
-        values.splice(index, 1);
-      }
-    }
-  }
+  // onActionChange(event: any) {
+  //   const values = this.logOptionsMultiSelect.value;
+  //   const index = this.getAllActionIndex(values);  // to check if 'All' is one of the selected actions
+  //   if (values != null && values.length > 1) {
+  //     if (index !== -1 && event.itemValue === FwlogsComponent.ALLOPTION) { // if 'All' is the most recent selected, un-select others
+  //       values[0] = values[index];
+  //       values.splice(1);
+  //     } else if (index !== -1 && event.itemValue !== FwlogsComponent.ALLOPTION) { // if another option selected after 'All', un-select 'All'
+  //       values.splice(index, 1);
+  //     }
+  //   }
+  // }
 
   getAllActionIndex(values: any): number {
     return values.findIndex((value: String) => value === FwlogsComponent.ALLOPTION);
@@ -409,7 +409,13 @@ export class FwlogsComponent extends TableviewAbstract<IFwlogFwLog, FwlogFwLog> 
       'source-ports',
       'destination-ports'
     ];
-    query.actions = queryVal.actions;
+
+    if (queryVal.actions !== null) {
+      query.actions = [queryVal.actions];
+    } else {
+      query.actions = queryVal.actions;
+    }
+
 
     fieldsInt.forEach(
       (field) => {
@@ -432,6 +438,7 @@ export class FwlogsComponent extends TableviewAbstract<IFwlogFwLog, FwlogFwLog> 
     );
 
     query['sort-order'] = sortOrder;
+    query['max-results'] = this.maxRecords;
 
     if (this.selectedTimeRange != null) {
       query['start-time'] = this.selectedTimeRange.getTime().startTime.toISOString() as any;

@@ -144,33 +144,37 @@
     <div fxFlex="nogrow" fxLayout="column">
       <div fxFlex="10px"></div>
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
-        <input appErrorTooltip fxFlex="nogrow" class="fwlogs-input" spellcheck="false" type="text"
+        <input matTooltip="Should be a valid v4 or v6 IP address. Ex: 10.1.1.2, ff02::5"
+               fxFlex="nogrow" class="fwlogs-input" spellcheck="false" type="text"
                formControlName="source-ips" pInputText
                (keyup)="keyUpInput($event)"
-               placeholder="10.1.1.1, 10.1.1.2">
+               placeholder="10.1.1.1">
       </div>
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
-        <input appErrorTooltip fxFlex="nogrow" class="fwlogs-input" spellcheck="false" type="text"
+        <input matTooltip="Should be a valid v4 or v6 IP address. Ex: 10.1.1.2, ff02::5"
+               fxFlex="nogrow" class="fwlogs-input" spellcheck="false" type="text"
                formControlName="destination-ips" pInputText
                (keyup)="keyUpInput($event)"
-               placeholder="10.1.1.1, 10.1.1.2">
+               placeholder="10.1.1.2">
       </div>
     </div>
     <div fxFlex="nogrow" fxLayout="column">
       <div fxFlex="10px"></div>
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
-        <input matTooltip="Ports are comma separated. Ex 8000, 8001" fxFlex="nogrow"
+        <!-- <input matTooltip="Ports are comma separated. Ex 8000, 8001" fxFlex="nogrow" -->
+        <input matTooltip="Ex 8000, 8001" fxFlex="nogrow"
                class="fwlogs-inputport" spellcheck="false"
                formControlName="source-ports" type="text" pInputText
                (keyup)="keyUpInput($event)"
-               placeholder="Ports">
+               placeholder="Port">
       </div>
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
-        <input matTooltip="Ports are comma separated. Ex 8000, 8001" fxFlex="nogrow"
+        <!-- <input matTooltip="Ports are comma separated. Ex 8000, 8001" fxFlex="nogrow" -->
+        <input matTooltip="Ex 8000, 8001" fxFlex="nogrow"
                class="fwlogs-inputport" spellcheck="false"
                formControlName="destination-ports" type="text" pInputText
                (keyup)="keyUpInput($event)"
-               placeholder="Ports">
+               placeholder="Port">
       </div>
     </div>
 
@@ -189,10 +193,10 @@
         <input fxFlex="nogrow" class="fwlogs-input" spellcheck="false" type="text"
                formControlName="protocols" pInputText
                (keyup)="keyUpInput($event)"
-               placeholder="TCP, UDP">
+               placeholder="TCP">
       </div>
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
-        <p-multiSelect #logOptions class="fwlogs-multiselect"
+        <!-- <p-multiSelect #logOptions class="fwlogs-multiselect"
                        formControlName="actions" appendTo="body" styleClass="fwlogs-font"
                        [filter]="false"
                        [showToggleAll]="false"
@@ -200,7 +204,9 @@
                        defaultLabel="All"
                        [options]="actionOptions"
                        (onChange)="onActionChange($event)">
-        </p-multiSelect>
+        </p-multiSelect> -->
+        <p-dropdown class="fwlogs-singleselect" formControlName="actions" appendTo="body"
+                    styleClass="fwlogs-font" [options]="actionOptions"></p-dropdown>
       </div>
     </div>
     <div fxFlex="40px"></div>
