@@ -23,6 +23,10 @@ def write_config_file( filename, content, flag ):
 
 def config_networking(properties):
     if ( properties["addrtype"] == "static" ):
+        if not reconnect_if(properties["ifname"]):
+            write_log("interface %s is disconnected. cannot continue" % properties["ifname"])
+            return False
+        # Find the existing connection name
         old_con_uuid = get_con_uuid(properties["ifname"])
         if old_con_uuid is None:
             return False        
@@ -51,9 +55,15 @@ def config_networking(properties):
         cmd = "nmcli con del " + old_con_uuid 
         output = subprocess.check_output(cmd, shell=True)
         save_config()
-        return True
+    return True
 
 def modify_routes(properties):
+    if "routes" not in properties.keys():
+        # We got nothing to do here
+        return True
+    if not reconnect_if(properties["ifname"]):
+        write_log("interface %s is disconnected. cannot continue" % properties["ifname"])
+        return False
     old_con_uuid = get_con_uuid(properties["ifname"])
     if old_con_uuid is None:
         return False        
@@ -67,7 +77,7 @@ def modify_routes(properties):
             write_log("expected format of [+/-][Route Prefix in CIDR format] [Gateway IP]")
             continue
         cmd = """nmcli con modify %s %sipv4.routes '%s'""" % ( old_con_uuid, m.group(1), m.group(2) )
-        print(cmd)
+        # print(cmd)
         output = subprocess.check_output(cmd, shell=True)
     # Use the new network config
     cmd = "nmcli con down " + old_con_uuid + " && " + "nmcli con up " + old_con_uuid
@@ -82,8 +92,9 @@ def config_password(properties):
 
 def config_hostname(properties):
     network_tmpl = "{hostname}\n"
-    write_config_file( "/etc/hostname", network_tmpl.format(**properties), "w+" )
-    subprocess.call("hostname " + properties['hostname'], shell=True)
+    # write_config_file( "/etc/hostname", network_tmpl.format(**properties), "w+" )
+    # subprocess.call("hostname " + properties['hostname'], shell=True)
+    subprocess.call("nmcli general hostname " + properties['hostname'], shell=True)
     save_config()
 
 def get_con_name():
@@ -99,6 +110,26 @@ def get_if_name():
         return iflist[0]
     else:
         return None
+
+def if_connected(ifname):
+    cmd = """nmcli device status | grep %s | awk '{print $3}'""" % ifname
+    output = subprocess.check_output(cmd, shell=True)
+    if ( output.strip() in ["connected", "connecting"] ):
+        return True
+    else:
+        return False
+
+def reconnect_if(ifname):
+    if if_connected(ifname):
+        return True
+    # Connect the interface
+    cmd = """ifconfig %s down && ifconfig %s up""" % ( properties["ifname"], properties["ifname"] )
+    output = subprocess.check_output(cmd, shell=True)
+    for i in range(6):
+        if if_connected(ifname):
+            return True 
+        time.sleep(1)
+    return False
 
 def get_con_uuid(ifname):
     # First we need to find the UUID of existing config
@@ -131,6 +162,7 @@ def write_log(msg):
 
 def abort():
     write_log("Failed to configure networking....Abort")
+    save_config()
     sys.exit(1)
 
 if __name__ == "__main__":
