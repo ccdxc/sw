@@ -10,7 +10,6 @@ struct dnat_d         d;
 %%
 
 dnat:
-    phvwr     p.txdma_control_dnat_en, FALSE
     phvwr.e   p.txdma_control_lpm1_key[127:64], d.dnat_d.dnat_address[127:64]
     phvwr.f   p.txdma_control_lpm1_key[63:0], d.dnat_d.dnat_address[63:0]
 

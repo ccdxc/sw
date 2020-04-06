@@ -384,7 +384,7 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
     p4pd_error_t           p4pd_ret;
     nexthop_group          *nh_group;
     pds_route_t            *route_spec;
-    dnat_actiondata_t      dnat_data;
+    dnat_actiondata_t      dnat_data = {0};
 
     // allocate memory for the library to build route table
     rtable =
