@@ -1086,9 +1086,10 @@ func (cl *clusterHooks) performSnapshotNow(ctx context.Context, kvs kvstore.Inte
 	meta := map[string]string{
 		"RequestName": req.Name,
 	}
-	name := "snapshot-" + strings.Replace(strings.Replace(time.Now().Format(time.UnixDate), ":", "-", -1), " ", "_", -1)
-	if req.Name != "" {
-		name = "snapshot-" + req.Name + "-" + strings.Replace(strings.Replace(time.Now().Format(time.UnixDate), ":", "-", -1), " ", "_", -1)
+
+	name := req.Name
+	if req.Name == "" {
+		name = "snapshot-" + strings.Replace(strings.Replace(time.Now().Format(time.UnixDate), ":", "-", -1), " ", "_", -1)
 	}
 
 	_, err = cl.writeSnapshot(ctx, name, oclnt, meta)

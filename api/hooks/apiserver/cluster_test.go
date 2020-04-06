@@ -1458,8 +1458,9 @@ func TestPerformSnapShot(t *testing.T) {
 	fcache.RetSnapshotReader = oclnt
 	req := cluster.ConfigurationSnapshotRequest{}
 	req.Name = "TestRequest"
-	clusterHooks.performSnapshotNow(ctx, kvs, txn, "/test/object", apiintf.CreateOper, false, req)
+	resp, _, _ := clusterHooks.performSnapshotNow(ctx, kvs, txn, "/test/object", apiintf.CreateOper, false, req)
 	Assert(t, oclnt.puts == 1, "expecting 1 put got %d", oclnt.puts)
+	Assert(t, resp.(cluster.ConfigurationSnapshot).Status.LastSnapshot.URI == "/objstore/v1/downloads/snapshots/"+"TestRequest", "expecting 1 put got %d", oclnt.puts)
 }
 
 type fakeSnapshotWriter struct {
