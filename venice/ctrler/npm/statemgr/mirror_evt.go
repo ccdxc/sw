@@ -561,11 +561,14 @@ func getMirrorCollectors(ms *monitoring.MirrorSession, collectors []*mirrorColle
 
 	if ms.Spec.Interfaces != nil {
 		mcol.selectors = ms.Spec.Interfaces.Selectors
-	}
-	if ms.Spec.Interfaces.Direction == monitoring.Direction_RX.String() {
-		mcol.rxCollectors = collectors
-	} else if ms.Spec.Interfaces.Direction == monitoring.Direction_TX.String() {
-		mcol.txCollectors = collectors
+		if ms.Spec.Interfaces.Direction == monitoring.Direction_RX.String() {
+			mcol.rxCollectors = collectors
+		} else if ms.Spec.Interfaces.Direction == monitoring.Direction_TX.String() {
+			mcol.txCollectors = collectors
+		} else {
+			mcol.txCollectors = collectors
+			mcol.rxCollectors = collectors
+		}
 	} else {
 		mcol.txCollectors = collectors
 		mcol.rxCollectors = collectors
@@ -590,13 +593,16 @@ func updateCollectorsSpec(ms *monitoring.MirrorSession, collectors []*mirrorColl
 	}
 }
 
-func (smm *SmMirrorSessionInterface) getAllMirrorSessionCollectors() []*mirrorSelectorCollectors {
+func (smm *SmMirrorSessionInterface) getAllInterfaceMirrorSessionCollectors() []*mirrorSelectorCollectors {
 
 	smm.Lock()
 	defer smm.Unlock()
 
 	mcols := []*mirrorSelectorCollectors{}
 	for _, ms := range smm.mirrorSessions {
+		if ms.MirrorSession.MirrorSession.Spec.Interfaces == nil {
+			continue
+		}
 		currentCollectors := ms.MirrorSession.Spec.GetCollectors()
 		curCollectors := []*mirrorCollector{}
 		for _, curCol := range currentCollectors {

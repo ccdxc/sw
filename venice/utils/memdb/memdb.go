@@ -349,6 +349,24 @@ func (md *Memdb) getPushObjdb(kind string) *pushObjDB {
 	return md.pushdb.getPushObjdb(kind)
 }
 
+//FindPushObject find push object of the key
+func (md *Memdb) FindPushObject(kind string, ometa *api.ObjectMeta) (Object, error) {
+
+	dbIntf := md.getPushObjectDBByType(kind)
+
+	if dbIntf == nil || reflect.ValueOf(dbIntf).IsNil() {
+		return nil, fmt.Errorf("Error finding push object %v", ometa.GetKey())
+	}
+
+	obj := dbIntf.getObject(ometa.GetKey())
+
+	if obj == nil {
+		return nil, fmt.Errorf("Error finding push object %v", ometa.GetKey())
+	}
+
+	return obj.Object(), nil
+}
+
 // WatchObjects watches for changes on an object kind
 // TODO: Add support for watch support with resource version
 func (md *Memdb) WatchObjects(kind string, watcher *Watcher) error {

@@ -20,6 +20,7 @@ import (
 	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
@@ -4038,8 +4039,9 @@ func TestNetworkInterfaceCreateDeleteAfterDSCDelete(t *testing.T) {
 	_, err = createNetworkInterface(stateMgr, "intf1", dscs[0].Status.PrimaryMAC, labels.Set{"env": "production", "app": "procurement"})
 	AssertOk(t, err, "Error creating interface ")
 
+	var nwState *NetworkInterfaceState
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := smgrNetworkInterface.FindNetworkInterface("intf1")
+		nwState, err = smgrNetworkInterface.FindNetworkInterface("intf1")
 		if err == nil {
 			return true, nil
 		}
@@ -4059,6 +4061,18 @@ func TestNetworkInterfaceCreateDeleteAfterDSCDelete(t *testing.T) {
 
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := smgrNetworkInterface.FindNetworkInterface("intf1")
+		if err != nil {
+			return true, nil
+		}
+		return false, nil
+	}, "Interface session still found", "1ms", "1s")
+
+	ometa := api.ObjectMeta{
+		Name: nwState.NetworkInterfaceState.MakeKey(string(apiclient.GroupNetwork)),
+	}
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := smgrNetworkInterface.sm.mbus.FindPushObject("Interface", &ometa)
 		if err != nil {
 			return true, nil
 		}

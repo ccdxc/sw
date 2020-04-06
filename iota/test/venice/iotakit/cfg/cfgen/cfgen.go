@@ -302,6 +302,7 @@ func (cfgen *Cfgen) genVPCs() []*network.VirtualRouter {
 		for jj := 0; jj < cfgen.TenantConfigParams.NumOfVRFsPerTenant; jj++ {
 			tVrf := netCtx.transform(cfgen.VRFConfigParams.VirtualRouterTemplate).(*network.VirtualRouter)
 			tVrf.ObjectMeta.Tenant = tenant.ObjectMeta.Name
+			tVrf.Spec.VxLanVNI = tVrf.Spec.VxLanVNI + 100
 			configs = append(configs, tVrf)
 		}
 	}

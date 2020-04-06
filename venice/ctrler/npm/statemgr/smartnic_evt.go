@@ -507,8 +507,8 @@ func (sm *Statemgr) isDscAdmitted(nsnic *cluster.DistributedServiceCard) bool {
 	return nsnic.Status.AdmissionPhase == cluster.DistributedServiceCardStatus_ADMITTED.String()
 }
 
-// isDscInInsertionMode returns true if the DSC in insertion mode cluster
-func (sm *Statemgr) isDscInInsertionMode(nsnic *cluster.DistributedServiceCard) bool {
+// isDscEnforcednMode returns true if the DSC in insertion mode cluster
+func (sm *Statemgr) isDscEnforcednMode(nsnic *cluster.DistributedServiceCard) bool {
 
 	if !sm.isDscAdmitted(nsnic) {
 		return false
@@ -519,5 +519,5 @@ func (sm *Statemgr) isDscInInsertionMode(nsnic *cluster.DistributedServiceCard) 
 		return false
 	}
 
-	return strings.ToLower(profileState.DSCProfile.DSCProfile.Spec.FwdMode) == strings.ToLower(cluster.DSCProfileSpec_INSERTION.String())
+	return strings.ToLower(profileState.DSCProfile.DSCProfile.Spec.FlowPolicyMode) == strings.ToLower(cluster.DSCProfileSpec_ENFORCED.String())
 }

@@ -45,6 +45,7 @@ var _ = Describe("Equinix Bring up", func() {
 
 		It("Delete & Add Config", func() {
 			Expect(ts.model.CleanupAllConfig()).Should(Succeed())
+			Expect(ts.model.TeardownWorkloads(ts.model.Workloads()))
 			err := ts.model.SetupDefaultConfig(context.Background(), ts.scaleData, ts.scaleData)
 			Expect(err).ShouldNot(HaveOccurred())
 		})

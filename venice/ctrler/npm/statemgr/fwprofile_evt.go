@@ -175,7 +175,7 @@ func (fps *FirewallProfileState) initNodeVersions() error {
 
 	// walk all smart nics
 	for _, dsc := range dscs {
-		if fps.stateMgr.isDscInInsertionMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
+		if fps.stateMgr.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
 			if _, ok := fps.NodeVersions[dsc.DistributedServiceCard.Name]; !ok {
 				fps.NodeVersions[dsc.DistributedServiceCard.Name] = ""
 			}
@@ -190,7 +190,7 @@ func (fps *FirewallProfileState) processDSCUpdate(dsc *cluster.DistributedServic
 
 	fps.FirewallProfile.Lock()
 	defer fps.FirewallProfile.Unlock()
-	if fps.stateMgr.isDscInInsertionMode(dsc) {
+	if fps.stateMgr.isDscEnforcednMode(dsc) {
 		log.Infof("DSC %v is being tracked for propogation status for fwprofile %s", dsc.Name, fps.GetKey())
 		fps.NodeVersions[dsc.Name] = ""
 	} else {

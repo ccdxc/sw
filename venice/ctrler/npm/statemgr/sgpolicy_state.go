@@ -249,7 +249,7 @@ func (sgp *SgpolicyState) initNodeVersions() error {
 
 	// walk all smart nics
 	for _, dsc := range dscs {
-		if sgp.stateMgr.isDscInInsertionMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
+		if sgp.stateMgr.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
 			if _, ok := sgp.NodeVersions[dsc.DistributedServiceCard.Name]; !ok {
 				sgp.NodeVersions[dsc.DistributedServiceCard.Name] = ""
 			}
@@ -263,8 +263,8 @@ func (sgp *SgpolicyState) initNodeVersions() error {
 func (sgp *SgpolicyState) processDSCUpdate(dsc *cluster.DistributedServiceCard) error {
 
 	sgp.NetworkSecurityPolicy.Lock()
-	sgp.NetworkSecurityPolicy.Unlock()
-	if sgp.stateMgr.isDscInInsertionMode(dsc) {
+	defer sgp.NetworkSecurityPolicy.Unlock()
+	if sgp.stateMgr.isDscEnforcednMode(dsc) {
 		log.Infof("DSC %v is being tracked for propogation status for policy %s", dsc.Name, sgp.GetKey())
 		sgp.NodeVersions[dsc.Name] = ""
 	} else {

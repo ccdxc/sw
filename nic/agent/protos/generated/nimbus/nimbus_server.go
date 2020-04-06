@@ -113,6 +113,12 @@ func (ms *MbusServer) AddPushObject(key string, obj memdb.Object, refs map[strin
 	return ms.memDB.AddPushObject(key, obj, refs, receivers)
 }
 
+// FindPushObject finds push object
+func (ms *MbusServer) FindPushObject(key string, ometa *api.ObjectMeta) (memdb.Object, error) {
+
+	return ms.memDB.FindPushObject(key, ometa)
+}
+
 func (ms *MbusServer) AddReceiver(ID string) (objReceiver.Receiver, error) {
 	return ms.memDB.AddReceiver(ID)
 }

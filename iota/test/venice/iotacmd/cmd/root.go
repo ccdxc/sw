@@ -30,7 +30,7 @@ func Execute() {
 
 var (
 	configFile, topology, timeout, testbed string
-	debugFlag, dryRun                      bool
+	debugFlag, dryRun, scale, scaleData    bool
 )
 
 var (
@@ -55,6 +55,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&timeout, "timeout", "", "timeout for the action, default is infinite")
 	rootCmd.PersistentFlags().BoolVar(&debugFlag, "debug", false, "enable debug mode")
 	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry", false, "dry run commands")
+	rootCmd.PersistentFlags().BoolVar(&scale, "scale", false, "dry run commands")
+	rootCmd.PersistentFlags().BoolVar(&scaleData, "scale-data", false, "dry run commands")
 }
 
 // Config contains testbed and topology info
@@ -132,7 +134,7 @@ func initialize() {
 		errorExit("failed to setup model", err)
 	}
 
-	err = setupModel.SetupDefaultConfig(context2.TODO(), false, false)
+	err = setupModel.SetupDefaultConfig(context2.TODO(), scale, scaleData)
 	if err != nil {
 		errorExit("error setting up default config", err)
 	}

@@ -603,7 +603,7 @@ func (sma *SmNetworkInterface) updateMirror(nw *NetworkInterfaceState) error {
 
 	intfState, _ := collectorIntfState[nw.NetworkInterfaceState.Name]
 
-	mcollectors := smgrMirrorInterface.getAllMirrorSessionCollectors()
+	mcollectors := smgrMirrorInterface.getAllInterfaceMirrorSessionCollectors()
 
 	for _, mcol := range mcollectors {
 		if selectorsMatch(mcol.selectors, labels.Set(nw.NetworkInterfaceState.Labels)) {
@@ -835,7 +835,8 @@ func (sma *SmNetworkInterface) OnNetworkInterfaceDelete(ctkitNetif *ctkit.Networ
 	}
 
 	sma.clearLabelMap(ifcfg)
-	return sma.sm.mbus.DeleteObjectWithReferences(ctkitNetif.MakeKey("network"),
+	ifcfg.pushObject.RemoveAllObjReceivers()
+	return ifcfg.pushObject.DeleteObjectWithReferences(ctkitNetif.MakeKey(string(apiclient.GroupNetwork)),
 		convertNetworkInterfaceObject(ifcfg), references(ctkitNetif))
 }
 
