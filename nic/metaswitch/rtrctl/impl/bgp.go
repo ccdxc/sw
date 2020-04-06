@@ -275,6 +275,7 @@ const (
 UUID            : %s
 AFI/SAFI        : [ %v/%v ]
 Remote Address  : %v
+Update Group    : %v
 ------------------------------------
 `
 )
@@ -304,17 +305,17 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 		utils.PrintHeader(bgpPeerAFFmt, bgpPeerAfHdr)
 	}
 
-	var afs []*utils.ShadowBGPPeerAFSpec
+	var afs []*utils.ShadowBGPPeerAF
 	if len(respMsg.Response) != 0 {
 		for _, r := range respMsg.Response {
-			afp := utils.NewBGPPeerAfSpec(r.Spec)
+			afp := utils.NewBGPPeerAf(r)
 			if doJSON {
 				afs = append(afs, afp)
 			} else {
 				if doDetail {
-					fmt.Printf(bgpPeerAFDetStr, afp.Id, afp.Afi, afp.Safi, afp.PeerAddr)
+					fmt.Printf(bgpPeerAFDetStr, afp.Spec.Id, afp.Spec.Afi, afp.Spec.Safi, afp.Spec.PeerAddr, afp.Status.UpdGrp)
 				} else {
-					fmt.Printf(bgpPeerAFFmt, afp.Id, afp.PeerAddr, afp.Afi, afp.Safi)
+					fmt.Printf(bgpPeerAFFmt, afp.Spec.Id, afp.Spec.PeerAddr, afp.Spec.Afi, afp.Spec.Safi)
 					fmt.Println("")
 				}
 			}

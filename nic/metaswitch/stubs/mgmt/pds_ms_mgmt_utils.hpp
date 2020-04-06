@@ -191,6 +191,10 @@ NBB_VOID bgp_peer_set_fill_func (BGPPeerSpec& req,
                                 NBB_LONG      row_status);
 
 NBB_VOID
+bgp_peer_af_status_get_fill_func (BGPPeerAfSpec &req,
+                           NBB_ULONG*    oid);
+
+NBB_VOID
 bgp_peer_af_get_fill_func (BGPPeerAfSpec &req,
                            NBB_ULONG*    oid);
 

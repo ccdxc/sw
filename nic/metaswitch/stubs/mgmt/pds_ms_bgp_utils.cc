@@ -764,6 +764,13 @@ bgp_peer_af_get_fill_func (BGPPeerAfSpec    &req,
     oid[AMB_BGP_PAS_RM_ENT_INDEX_INDEX] = PDS_MS_BGP_RM_ENT_INDEX;
 }
 
+NBB_VOID
+bgp_peer_af_status_get_fill_func (BGPPeerAfSpec &req,
+                           NBB_ULONG*             oid)
+{
+    oid[AMB_BGP_PAST_RM_ENT_INDEX_INDEX] = PDS_MS_BGP_RM_ENT_INDEX;
+}
+
 NBB_VOID 
 bgp_peer_af_set_fill_func (BGPPeerAfSpec         &req,
                            AMB_GEN_IPS           *mib_msg,

@@ -383,6 +383,8 @@ message BGPPeerAfSpec {
 
 // BGP peer AF status
 message BGPPeerAfStatus {
+  // BGP The index of the update group that the peer is a member of for this AFI/SAFI
+  uint32 UpdateGroup = 1;
 }
 
 // BGP peer AF object

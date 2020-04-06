@@ -648,7 +648,7 @@ func NewBGPPeer(in *pds.BGPPeer) *ShadowBGPPeer {
 	}
 }
 
-// ShadowBGPPeerAf shadows the BGPPeerAf for CLI purposes
+// ShadowBGPPeerAfSpec shadows the BGPPeerAf for CLI purposes
 type ShadowBGPPeerAFSpec struct {
 	*pds.BGPPeerAfSpec
 	Id        string
@@ -658,20 +658,48 @@ type ShadowBGPPeerAFSpec struct {
 	Safi      string
 }
 
-// NewBGPPeerAfSpec creates a shadow of BGPPeerAF
-func NewBGPPeerAfSpec(in *pds.BGPPeerAfSpec) *ShadowBGPPeerAFSpec {
+// NewBGPPeerAfSpec creates a shadow of BGPPeerAFSpec
+func NewBGPPeerAfSpec(in *pds.BGPPeerAfSpec) ShadowBGPPeerAFSpec {
 	uid, err := uuid.FromBytes(in.Id)
 	uidstr := ""
 	if err == nil {
 		uidstr = uid.String()
 	}
-	return &ShadowBGPPeerAFSpec{
+	return ShadowBGPPeerAFSpec{
 		BGPPeerAfSpec: in,
 		Id:            uidstr,
 		LocalAddr:     PdsIPToString(in.LocalAddr),
 		PeerAddr:      PdsIPToString(in.PeerAddr),
 		Afi:           strings.TrimPrefix(in.Afi.String(), "BGP_AFI_"),
 		Safi:          strings.TrimPrefix(in.Safi.String(), "BGP_SAFI_"),
+	}
+}
+
+// ShadowBGPPeerAfStatus shadows the BGPPeerAfStatus for CLI purposes
+type ShadowBGPPeerAFStatus struct {
+	*pds.BGPPeerAfStatus
+	UpdGrp uint32
+}
+
+// NewBGPPeerAfStatus creates a shadow of BGPPeerAF
+func NewBGPPeerAfStatus(in *pds.BGPPeerAfStatus) ShadowBGPPeerAFStatus {
+	return ShadowBGPPeerAFStatus{
+		BGPPeerAfStatus: in,
+		UpdGrp:          in.UpdateGroup,
+	}
+}
+
+// ShadowBGPPeerAF shadows the BGPPeerAf for CLI purposes
+type ShadowBGPPeerAF struct {
+	Spec   ShadowBGPPeerAFSpec
+	Status ShadowBGPPeerAFStatus
+}
+
+// NewBGPPeerAf creates a shadow of BGPPeerAF
+func NewBGPPeerAf(in *pds.BGPPeerAf) *ShadowBGPPeerAF {
+	return &ShadowBGPPeerAF{
+		Spec:   NewBGPPeerAfSpec(in.Spec),
+		Status: NewBGPPeerAfStatus(in.Status),
 	}
 }
 

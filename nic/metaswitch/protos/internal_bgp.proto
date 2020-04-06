@@ -423,6 +423,14 @@ message BGPPeerAfSpec {
 
 // BGP peer AF status
 message BGPPeerAfStatus {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen:  "AMB_BGP_PRST_OID_LEN",
+    Mib:     "bgpPeerAfiSafiStatusTable",
+    FillFn:  "bgp_peer_af_status_get_fill_func",
+    SpecMsg: "BGPPeerAfSpec"
+  };
+  // BGP The index of the update group that the peer is a member of for this AFI/SAFI
+  uint32 UpdateGroup = 1 [(venice.pdsaFields) = {Field: "update_group"}];
 }
 
 // BGP peer AF object
