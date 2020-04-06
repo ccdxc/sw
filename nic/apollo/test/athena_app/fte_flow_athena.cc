@@ -35,6 +35,8 @@
 
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/sdk/lib/table/ftl/ftl_base.hpp"
@@ -133,7 +135,7 @@ fte_flow_dump (void)
 {
     pds_flow_info_t flow_info;
 
-    if (pds_flow_cache_entry_read(&dump_flow_key, &flow_info) != SDK_RET_OK) {
+    if (pds_flow_cache_entry_read(&dump_flow_key, &flow_info) != PDS_RET_OK) {
         PDS_TRACE_DEBUG("pds_flow_cache_entry_read failed.\n");
         return;
     }
@@ -428,7 +430,7 @@ fte_session_info_create (uint32_t session_index, uint16_t vnic_id)
     spec.data.switch_to_host_flow_info.rewrite_id =
             g_flow_cache_policy[vnic_id].rewrite_host.rewrite_id;
 
-    return pds_flow_session_info_create(&spec);
+    return (sdk_ret_t)pds_flow_session_info_create(&spec);
 }
 
 sdk_ret_t
@@ -452,7 +454,7 @@ fte_flow_create(uint16_t vnic_id, ipv4_addr_t v4_addr_sip, ipv4_addr_t v4_addr_d
     spec.data.index_type = index_type;
     spec.data.index = index;
 
-    return pds_flow_cache_entry_create(&spec);
+    return (sdk_ret_t)pds_flow_cache_entry_create(&spec);
 }
 
 sdk_ret_t
@@ -478,7 +480,7 @@ fte_flow_create_icmp(uint16_t vnic_id,
     spec.data.index_type = index_type;
     spec.data.index = index;
 
-    return pds_flow_cache_entry_create(&spec);
+    return (sdk_ret_t)pds_flow_cache_entry_create(&spec);
 }
 
 sdk_ret_t
@@ -503,7 +505,7 @@ fte_flow_create_v6(uint16_t vnic_id, ipv6_addr_t *v6_addr_sip,
     spec.data.index_type = index_type;
     spec.data.index = index;
 
-    return pds_flow_cache_entry_create(&spec);
+    return (sdk_ret_t)pds_flow_cache_entry_create(&spec);
 }
 
 sdk_ret_t
@@ -529,10 +531,7 @@ fte_flow_create_v6_icmp(uint16_t vnic_id, ipv6_addr_t *v6_addr_sip,
     spec.data.index_type = index_type;
     spec.data.index = index;
 
-    return pds_flow_cache_entry_create(&spec);
-    spec.key.l4.icmp.type = type;
-    spec.key.l4.icmp.code = code;
-    spec.key.l4.icmp.identifier = identifier;
+    return (sdk_ret_t)pds_flow_cache_entry_create(&spec);
 }
 
 sdk_ret_t
@@ -558,7 +557,7 @@ fte_session_info_create_all(uint32_t session_id, uint32_t conntrack_id,
                 uint16_t s2h_allowed_flow_state_bitmask,
                 pds_egress_action_t s2h_egress_action)
 {
-    sdk_ret_t                               ret = SDK_RET_OK;
+    pds_ret_t                               ret = PDS_RET_OK;
     pds_flow_session_spec_t                 spec;
 
     memset(&spec, 0, sizeof(spec));
@@ -602,10 +601,10 @@ fte_session_info_create_all(uint32_t session_id, uint32_t conntrack_id,
     spec.data.switch_to_host_flow_info.egress_action = s2h_egress_action;
 
     ret = pds_flow_session_info_create(&spec);
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
         PDS_TRACE_ERR("Failed to program session s2h info : %u\n", ret);
     }
-    return ret;
+    return (sdk_ret_t)ret;
 }
 
 sdk_ret_t
@@ -637,7 +636,7 @@ fte_flow_prog (struct rte_mbuf *m)
         return ret;
     }
 
-    ret = pds_flow_cache_entry_create(&flow_spec);
+    ret = (sdk_ret_t)pds_flow_cache_entry_create(&flow_spec);
     if ((ret != SDK_RET_OK) && (ret != SDK_RET_ENTRY_EXISTS)) {
         PDS_TRACE_DEBUG("pds_flow_cache_entry_create failed. \n");
         return ret;
@@ -664,7 +663,7 @@ fte_vlan_to_vnic_map (uint16_t vlan_id, uint16_t vnic_id)
     spec.data.vnic_type = VNIC_TYPE_L3;
     spec.data.vnic_id = vnic_id;
 
-    return pds_vlan_to_vnic_map_create(&spec);
+    return (sdk_ret_t)pds_vlan_to_vnic_map_create(&spec);
 }
 
 sdk_ret_t
@@ -676,7 +675,7 @@ fte_mpls_label_to_vnic_map (uint32_t mpls_label, uint16_t vnic_id)
     spec.data.vnic_type = VNIC_TYPE_L3;
     spec.data.vnic_id = vnic_id;
 
-    return pds_mpls_label_to_vnic_map_create(&spec);
+    return (sdk_ret_t)pds_mpls_label_to_vnic_map_create(&spec);
 }
 
 sdk_ret_t
@@ -713,7 +712,7 @@ fte_h2s_v4_session_rewrite_mplsoudp (uint32_t session_rewrite_id,
     spec.data.u.mplsoudp_encap.mpls1_label = mpls1_label;
     spec.data.u.mplsoudp_encap.mpls2_label = mpls2_label;
 
-    return pds_flow_session_rewrite_create(&spec);
+    return (sdk_ret_t)pds_flow_session_rewrite_create(&spec);
 }
 
 sdk_ret_t
@@ -753,7 +752,7 @@ fte_h2s_nat_v4_session_rewrite_mplsoudp (uint32_t session_rewrite_id,
     spec.data.u.mplsoudp_encap.mpls1_label = mpls1_label;
     spec.data.u.mplsoudp_encap.mpls2_label = mpls2_label;
 
-    return pds_flow_session_rewrite_create(&spec);
+    return (sdk_ret_t)pds_flow_session_rewrite_create(&spec);
 }
 
 sdk_ret_t
@@ -772,7 +771,7 @@ fte_create_dnat_map_ipv4(uint16_t vnic_id, ipv4_addr_t v4_nat_dip,
     memcpy(spec.data.addr, &v4_orig_dip, sizeof(ipv4_addr_t));
     spec.data.epoch = dnat_epoch;
 
-    return pds_dnat_map_entry_create(&spec);
+    return (sdk_ret_t)pds_dnat_map_entry_create(&spec);
 }
 
 sdk_ret_t
@@ -799,7 +798,7 @@ fte_s2h_v4_session_rewrite (uint32_t session_rewrite_id,
     spec.data.u.l2_encap.insert_vlan_tag = TRUE;
     spec.data.u.l2_encap.vlan_id = vnic_vlan;
 
-    return pds_flow_session_rewrite_create(&spec);
+    return (sdk_ret_t)pds_flow_session_rewrite_create(&spec);
 }
 
 sdk_ret_t
@@ -829,7 +828,7 @@ fte_s2h_nat_v4_session_rewrite (uint32_t session_rewrite_id,
     spec.data.u.l2_encap.insert_vlan_tag = TRUE;
     spec.data.u.l2_encap.vlan_id = vnic_vlan;
 
-    return pds_flow_session_rewrite_create(&spec);
+    return (sdk_ret_t)pds_flow_session_rewrite_create(&spec);
 }
 
 static sdk_ret_t

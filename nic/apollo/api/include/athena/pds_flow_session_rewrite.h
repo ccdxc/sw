@@ -11,8 +11,7 @@
 #ifndef __PDS_FLOW_SESSION_REWRITE_H__
 #define __PDS_FLOW_SESSION_REWRITE_H__
 
-#include "nic/sdk/include/sdk/eth.hpp"
-#include "nic/sdk/include/sdk/ip.hpp"
+#include "pds_base.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -184,27 +183,27 @@ typedef struct pds_flow_session_rewrite_info_s {
 /// \param[in] spec flow session rewrite specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid session rewrite info ID(key) and data should be passed
-sdk_ret_t pds_flow_session_rewrite_create(pds_flow_session_rewrite_spec_t *spec);
+pds_ret_t pds_flow_session_rewrite_create(pds_flow_session_rewrite_spec_t *spec);
 
 /// \brief      read a flow session rewrite info entry
 /// \param[in]  key flow session rewrite key
 /// \param[out] info flow session rewrite info
 /// \return     #SDK_RET_OK on success, failure status code on error
 /// \remark     A valid session rewrite info ID(key) should be passed
-sdk_ret_t pds_flow_session_rewrite_read(pds_flow_session_rewrite_key_t *key,
+pds_ret_t pds_flow_session_rewrite_read(pds_flow_session_rewrite_key_t *key,
                                         pds_flow_session_rewrite_info_t *info);
 
 /// \brief     update flow session rewrite info entry
 /// \param[in] spec flow session rewrite specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid session rewrite info ID(key) and data should be passed
-sdk_ret_t pds_flow_session_rewrite_update(pds_flow_session_rewrite_spec_t *spec);
+pds_ret_t pds_flow_session_rewrite_update(pds_flow_session_rewrite_spec_t *spec);
 
 /// \brief     delete flow session rewrite info entry
 /// \param[in] key flow session rewrite key
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid session rewrite info ID(key) should be passed
-sdk_ret_t pds_flow_session_rewrite_delete(pds_flow_session_rewrite_key_t *key);
+pds_ret_t pds_flow_session_rewrite_delete(pds_flow_session_rewrite_key_t *key);
 
 /// @}
 

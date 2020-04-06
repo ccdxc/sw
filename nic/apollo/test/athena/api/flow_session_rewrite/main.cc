@@ -49,52 +49,60 @@ TEST_F(flow_session_rewrite_test, flow_session_rewrite_crud) {
 
     spec.key.session_rewrite_id = 2;
     fill_data(&spec.data, 2, REWRITE_NAT_TYPE_IPV4_SNAT, ENCAP_TYPE_L2);
-    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == 
+            PDS_RET_OK);
 
     key.session_rewrite_id = 2;
-    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == 
+            PDS_RET_OK);
     SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
                sizeof(pds_flow_session_rewrite_data_t)) == 0);
 
     memset(&spec, 0, sizeof(spec));
     spec.key.session_rewrite_id = 5;
     fill_data(&spec.data, 5, REWRITE_NAT_TYPE_IPV4_DNAT, ENCAP_TYPE_MPLSOUDP);
-    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == 
+            PDS_RET_OK);
 
     memset(&info, 0, sizeof(info));
     key.session_rewrite_id = 5;
-    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == 
+            PDS_RET_OK);
     SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
                sizeof(pds_flow_session_rewrite_data_t)) == 0);
 
     key.session_rewrite_id = 5;
-    SDK_ASSERT(pds_flow_session_rewrite_delete(&key) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_rewrite_delete(&key) == PDS_RET_OK);
 
     memset(&info, 0, sizeof(info));
     key.session_rewrite_id = 5;
     // FIXME: need a method to distinguish between no encap and no entry case
     SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) ==
-               SDK_RET_ERR);
+               PDS_RET_ERR);
 
     memset(&spec, 0, sizeof(spec));
     spec.key.session_rewrite_id = 20;
     fill_data(&spec.data, 20, REWRITE_NAT_TYPE_IPV6_SNAT, ENCAP_TYPE_MPLSOUDP);
-    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == 
+            PDS_RET_OK);
 
     memset(&info, 0, sizeof(info));
     key.session_rewrite_id = 20;
-    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == 
+            PDS_RET_OK);
     SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
                sizeof(pds_flow_session_rewrite_data_t)) == 0);
 
     memset(&spec, 0, sizeof(spec));
     spec.key.session_rewrite_id = 32;
     fill_data(&spec.data, 32, REWRITE_NAT_TYPE_NONE, ENCAP_TYPE_L2);
-    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == 
+            PDS_RET_OK);
 
     memset(&info, 0, sizeof(info));
     key.session_rewrite_id = 32;
-    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == 
+            PDS_RET_OK);
     SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
                sizeof(pds_flow_session_rewrite_data_t)) == 0);
 
@@ -102,44 +110,51 @@ TEST_F(flow_session_rewrite_test, flow_session_rewrite_crud) {
     spec.key.session_rewrite_id = PDS_FLOW_SESSION_REWRITE_ID_MAX;
     fill_data(&spec.data, PDS_FLOW_SESSION_REWRITE_ID_MAX,
               REWRITE_NAT_TYPE_NONE, ENCAP_TYPE_L2);
-    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == SDK_RET_INVALID_ARG);
+    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == 
+            PDS_RET_INVALID_ARG);
 
     memset(&info, 0, sizeof(info));
     key.session_rewrite_id = 0;
     fill_data(&spec.data, 0, REWRITE_NAT_TYPE_NONE, ENCAP_TYPE_L2);
-    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == SDK_RET_INVALID_ARG);
+    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == 
+            PDS_RET_INVALID_ARG);
 
     memset(&spec, 0, sizeof(spec)); 
     spec.key.session_rewrite_id = 11;
     fill_data(&spec.data, 11, REWRITE_NAT_TYPE_IPV4_SDPAT, ENCAP_TYPE_GENEVE);
-    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == PDS_RET_OK);
 
     memset(&info, 0, sizeof(info));
     key.session_rewrite_id = 11;
-    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == 
+            PDS_RET_OK);
     SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
                sizeof(pds_flow_session_rewrite_data_t)) == 0);
 
     memset(&spec, 0, sizeof(spec)); 
     spec.key.session_rewrite_id = 11;
     fill_data(&spec.data, 11, REWRITE_NAT_TYPE_IPV4_DNAT, ENCAP_TYPE_L2);
-    SDK_ASSERT(pds_flow_session_rewrite_update(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_rewrite_update(&spec) == 
+            PDS_RET_OK);
 
     memset(&info, 0, sizeof(info));
     key.session_rewrite_id = 11;
-    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_rewrite_read(&key, &info) == 
+            PDS_RET_OK);
     SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
                sizeof(pds_flow_session_rewrite_data_t)) == 0);
 
     memset(&spec, 0, sizeof(spec)); 
     spec.key.session_rewrite_id = 24;
     fill_data(&spec.data, 24, REWRITE_NAT_TYPE_MAX, ENCAP_TYPE_GENEVE);
-    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == SDK_RET_INVALID_ARG);
+    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == 
+            PDS_RET_INVALID_ARG);
 
     memset(&spec, 0, sizeof(spec)); 
     spec.key.session_rewrite_id = 34;
     fill_data(&spec.data, 34, REWRITE_NAT_TYPE_IPV6_SNAT, ENCAP_TYPE_MAX);
-    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == SDK_RET_INVALID_ARG);
+    SDK_ASSERT(pds_flow_session_rewrite_create(&spec) == 
+            PDS_RET_INVALID_ARG);
 }
 
 /// @}

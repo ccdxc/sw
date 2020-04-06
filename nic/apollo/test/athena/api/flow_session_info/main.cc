@@ -49,97 +49,107 @@ TEST_F(flow_session_info_test, flow_session_info_crud) {
 
     fill_key(&spec.key, 2, HOST_TO_SWITCH);
     fill_data(&spec.data, 2, HOST_TO_SWITCH, CREATE);
-    SDK_ASSERT(pds_flow_session_info_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_create(&spec) == PDS_RET_OK);
 
     fill_key(&key, 2, HOST_TO_SWITCH);
-    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == 
+            PDS_RET_OK);
     SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
                sizeof(pds_flow_session_data_t)) == 0);
 
     memset(&spec, 0, sizeof(spec));
     fill_key(&spec.key, 5, SWITCH_TO_HOST);
     fill_data(&spec.data, 5, SWITCH_TO_HOST, CREATE);
-    SDK_ASSERT(pds_flow_session_info_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_create(&spec) == PDS_RET_OK);
 
     memset(&info, 0, sizeof(info));
     fill_key(&key, 5, SWITCH_TO_HOST);
-    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == 
+            PDS_RET_OK);
     SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
                sizeof(pds_flow_session_data_t)) == 0);
 
     memset(&spec, 0, sizeof(spec)); 
     fill_key(&spec.key, 11, (HOST_TO_SWITCH | SWITCH_TO_HOST));
     fill_data(&spec.data, 11, (HOST_TO_SWITCH | SWITCH_TO_HOST), CREATE);
-    SDK_ASSERT(pds_flow_session_info_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_create(&spec) == PDS_RET_OK);
 
     memset(&info, 0, sizeof(info));
     fill_key(&key, 11, (HOST_TO_SWITCH | SWITCH_TO_HOST));
-    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == 
+            PDS_RET_OK);
     SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
                sizeof(pds_flow_session_data_t)) == 0);
 
     fill_key(&key, 5, HOST_TO_SWITCH);
-    SDK_ASSERT(pds_flow_session_info_delete(&key) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_delete(&key) == PDS_RET_OK);
 
     memset(&info, 0, sizeof(info));
     fill_key(&key, 5, HOST_TO_SWITCH);
     SDK_ASSERT(pds_flow_session_info_read(&key, &info) ==
-               SDK_RET_ENTRY_NOT_FOUND);
+               PDS_RET_ENTRY_NOT_FOUND);
 
     memset(&spec, 0, sizeof(spec)); 
     fill_key(&spec.key, PDS_FLOW_SESSION_INFO_ID_MAX, HOST_TO_SWITCH);
-    SDK_ASSERT(pds_flow_session_info_create(&spec) == SDK_RET_INVALID_ARG);
+    SDK_ASSERT(pds_flow_session_info_create(&spec) == 
+            PDS_RET_INVALID_ARG);
 
     memset(&info, 0, sizeof(info));
     fill_key(&key, 0, SWITCH_TO_HOST);
-    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == SDK_RET_INVALID_ARG);
+    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == 
+            PDS_RET_INVALID_ARG);
 
     memset(&info, 0, sizeof(info));
     fill_key(&key, PDS_FLOW_SESSION_INFO_ID_MAX, HOST_TO_SWITCH);
-    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == SDK_RET_INVALID_ARG);
+    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == 
+            PDS_RET_INVALID_ARG);
 
     memset(&info, 0, sizeof(info));
     fill_key(&key, 45, HOST_TO_SWITCH);
     SDK_ASSERT(pds_flow_session_info_read(&key, &info) ==
-               SDK_RET_ENTRY_NOT_FOUND);
+               PDS_RET_ENTRY_NOT_FOUND);
 
     memset(&info, 0, sizeof(info));
     memset(&spec, 0, sizeof(spec));
     fill_key(&spec.key, 40, SWITCH_TO_HOST);
     fill_data(&spec.data, 40, SWITCH_TO_HOST, CREATE);
-    SDK_ASSERT(pds_flow_session_info_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_create(&spec) == PDS_RET_OK);
     fill_key(&key, 40, SWITCH_TO_HOST);
-    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == 
+            PDS_RET_OK);
     SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
                sizeof(pds_flow_session_data_t)) == 0);
     memset(&spec, 0, sizeof(spec));
     memcpy(&spec.data, &info.spec.data, sizeof(pds_flow_session_data_t)); 
     fill_key(&spec.key, 40, HOST_TO_SWITCH);
     fill_data(&spec.data, 40, HOST_TO_SWITCH, UPDATE);
-    SDK_ASSERT(pds_flow_session_info_update(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_update(&spec) == PDS_RET_OK);
     memset(&info, 0, sizeof(info));
     fill_key(&key, 40, (HOST_TO_SWITCH | SWITCH_TO_HOST));
-    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == 
+            PDS_RET_OK);
     SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
                sizeof(pds_flow_session_data_t)) == 0);
 
     memset(&spec, 0, sizeof(spec)); 
     fill_key(&spec.key, 25, (HOST_TO_SWITCH | SWITCH_TO_HOST));
     fill_data(&spec.data, 25, (HOST_TO_SWITCH | SWITCH_TO_HOST), CREATE);
-    SDK_ASSERT(pds_flow_session_info_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_create(&spec) == PDS_RET_OK);
     memset(&info, 0, sizeof(info));
     fill_key(&key, 25, (HOST_TO_SWITCH | SWITCH_TO_HOST));
-    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == 
+            PDS_RET_OK);
     SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
                sizeof(pds_flow_session_data_t)) == 0);
     memset(&spec, 0, sizeof(spec));
     memcpy(&spec.data, &info.spec.data, sizeof(pds_flow_session_data_t)); 
     fill_key(&spec.key, 25, SWITCH_TO_HOST);
     fill_data(&spec.data, 25, SWITCH_TO_HOST, UPDATE);
-    SDK_ASSERT(pds_flow_session_info_update(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_update(&spec) == PDS_RET_OK);
     memset(&info, 0, sizeof(info));
     fill_key(&key, 25, (HOST_TO_SWITCH | SWITCH_TO_HOST));
-    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_session_info_read(&key, &info) == 
+            PDS_RET_OK);
     SDK_ASSERT(memcmp(&info.spec.data, &spec.data,
                sizeof(pds_flow_session_data_t)) == 0);
 }

@@ -12,6 +12,7 @@ action conntrack(valid_flag, flow_type, flow_state, timestamp) {
 @pragma stage 2
 @pragma hbm_table
 @pragma index_table
+@pragma capi_bitfields_struct
 table conntrack {
     reads {
         control_metadata.conntrack_index : exact;

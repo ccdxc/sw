@@ -16,6 +16,7 @@ action config2_epoch_verify(epoch) {
 @pragma stage 2
 @pragma hbm_table
 @pragma index_table
+@pragma capi_bitfields_struct
 table config1 {
     reads {
         control_metadata.epoch1_id  : exact;
@@ -29,6 +30,7 @@ table config1 {
 @pragma stage 2
 @pragma hbm_table
 @pragma index_table
+@pragma capi_bitfields_struct
 table config2 {
     reads {
         control_metadata.epoch2_id  : exact;

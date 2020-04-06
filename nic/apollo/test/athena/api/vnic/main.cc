@@ -49,26 +49,26 @@ TEST_F(vnic_test, vlan_to_vnic_map_crud) {
     spec.key.vlan_id = 1;
     spec.data.vnic_id = 1;
     spec.data.vnic_type = VNIC_TYPE_L2;
-    SDK_ASSERT(pds_vlan_to_vnic_map_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_vlan_to_vnic_map_create(&spec) == PDS_RET_OK);
 
     memset(&spec, 0 , sizeof(spec)); 
     spec.key.vlan_id = 2;
     spec.data.vnic_id = 2;
     spec.data.vnic_type = VNIC_TYPE_L2;
-    SDK_ASSERT(pds_vlan_to_vnic_map_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_vlan_to_vnic_map_create(&spec) == PDS_RET_OK);
 
     memset(&spec, 0 , sizeof(spec)); 
     spec.key.vlan_id = 5;
     spec.data.vnic_id = 20;
     spec.data.vnic_type = VNIC_TYPE_L2;
-    SDK_ASSERT(pds_vlan_to_vnic_map_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_vlan_to_vnic_map_create(&spec) == PDS_RET_OK);
 
     key.vlan_id = 2;
-    SDK_ASSERT(pds_vlan_to_vnic_map_delete(&key) == SDK_RET_OK);
+    SDK_ASSERT(pds_vlan_to_vnic_map_delete(&key) == PDS_RET_OK);
 
     memset(&key, 0 , sizeof(key));
     key.vlan_id = 2;
-    SDK_ASSERT(pds_vlan_to_vnic_map_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_vlan_to_vnic_map_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.vnic_id == 0);
     SDK_ASSERT(info.spec.data.vnic_type == 0);
 
@@ -76,11 +76,11 @@ TEST_F(vnic_test, vlan_to_vnic_map_crud) {
     spec.key.vlan_id = PDS_VLAN_ID_MAX;
     spec.data.vnic_id = 10;
     spec.data.vnic_type = VNIC_TYPE_L3;
-    SDK_ASSERT(pds_vlan_to_vnic_map_create(&spec) == SDK_RET_INVALID_ARG);
+    SDK_ASSERT(pds_vlan_to_vnic_map_create(&spec) == PDS_RET_INVALID_ARG);
 
     memset(&key, 0 , sizeof(key));
     key.vlan_id = 5;
-    SDK_ASSERT(pds_vlan_to_vnic_map_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_vlan_to_vnic_map_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.vnic_id == 20);
     SDK_ASSERT(info.spec.data.vnic_type == VNIC_TYPE_L2);
 
@@ -88,11 +88,11 @@ TEST_F(vnic_test, vlan_to_vnic_map_crud) {
     spec.key.vlan_id = 5;
     spec.data.vnic_id = 30;
     spec.data.vnic_type = VNIC_TYPE_L3;
-    SDK_ASSERT(pds_vlan_to_vnic_map_update(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_vlan_to_vnic_map_update(&spec) == PDS_RET_OK);
 
     memset(&key, 0 , sizeof(key));
     key.vlan_id = 5;
-    SDK_ASSERT(pds_vlan_to_vnic_map_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_vlan_to_vnic_map_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.vnic_id == 30);
     SDK_ASSERT(info.spec.data.vnic_type == VNIC_TYPE_L3);
 }
@@ -106,26 +106,26 @@ TEST_F(vnic_test, mpls_label_to_vnic_map_crud) {
     spec.key.mpls_label = 1;
     spec.data.vnic_id = 1;
     spec.data.vnic_type = VNIC_TYPE_L2;
-    SDK_ASSERT(pds_mpls_label_to_vnic_map_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_mpls_label_to_vnic_map_create(&spec) == PDS_RET_OK);
 
     memset(&spec, 0 , sizeof(spec)); 
     spec.key.mpls_label = 2;
     spec.data.vnic_id = 2;
     spec.data.vnic_type = VNIC_TYPE_L2;
-    SDK_ASSERT(pds_mpls_label_to_vnic_map_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_mpls_label_to_vnic_map_create(&spec) == PDS_RET_OK);
 
     memset(&spec, 0 , sizeof(spec)); 
     spec.key.mpls_label = 5;
     spec.data.vnic_id = 20;
     spec.data.vnic_type = VNIC_TYPE_L2;
-    SDK_ASSERT(pds_mpls_label_to_vnic_map_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_mpls_label_to_vnic_map_create(&spec) == PDS_RET_OK);
 
     key.mpls_label = 2;
-    SDK_ASSERT(pds_mpls_label_to_vnic_map_delete(&key) == SDK_RET_OK);
+    SDK_ASSERT(pds_mpls_label_to_vnic_map_delete(&key) == PDS_RET_OK);
 
     memset(&key, 0 , sizeof(key));
     key.mpls_label = 2;
-    SDK_ASSERT(pds_mpls_label_to_vnic_map_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_mpls_label_to_vnic_map_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.vnic_id == 0);
     SDK_ASSERT(info.spec.data.vnic_type == 0);
 
@@ -133,11 +133,11 @@ TEST_F(vnic_test, mpls_label_to_vnic_map_crud) {
     spec.key.mpls_label = PDS_MPLS_LABEL_MAX;
     spec.data.vnic_id = 10;
     spec.data.vnic_type = VNIC_TYPE_L3;
-    SDK_ASSERT(pds_mpls_label_to_vnic_map_create(&spec) == SDK_RET_INVALID_ARG);
+    SDK_ASSERT(pds_mpls_label_to_vnic_map_create(&spec) == PDS_RET_INVALID_ARG);
 
     memset(&key, 0 , sizeof(key));
     key.mpls_label = 5;
-    SDK_ASSERT(pds_mpls_label_to_vnic_map_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_mpls_label_to_vnic_map_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.vnic_id == 20);
     SDK_ASSERT(info.spec.data.vnic_type == VNIC_TYPE_L2);
 
@@ -145,7 +145,7 @@ TEST_F(vnic_test, mpls_label_to_vnic_map_crud) {
     spec.key.mpls_label = 5;
     spec.data.vnic_id = 30;
     spec.data.vnic_type = VNIC_TYPE_L3;
-    SDK_ASSERT(pds_mpls_label_to_vnic_map_update(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_mpls_label_to_vnic_map_update(&spec) == PDS_RET_OK);
 }
 
 /// @}

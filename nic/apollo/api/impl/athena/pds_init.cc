@@ -25,10 +25,11 @@ sdk_ret_t pds_dnat_map_create(void);
 sdk_ret_t pds_dnat_map_delete(void);
 void pds_dnat_map_set_core_id(uint32_t core_id);
 
+
 sdk_ret_t
-pds_global_init (pds_init_params_t *params)
+pds_global_init_v2 (pds_init_params_t *params)
 {
-    sdk_ret_t ret;
+    sdk_ret_t           ret;
 
     if (params == NULL) {
         PDS_TRACE_ERR("params arg is null");
@@ -51,14 +52,53 @@ pds_global_init (pds_init_params_t *params)
         return ret;
     }
     return ret;
+
+
 }
 
-sdk_ret_t
+pds_ret_t
+pds_global_init (pds_cinit_params_t *params)
+{
+    sdk_ret_t           ret;
+    pds_init_params_t   params_cpp;
+
+    if (params == NULL) {
+        PDS_TRACE_ERR("params arg is null");
+        return PDS_RET_INVALID_ARG;
+    }
+
+    memset(&params_cpp, 0, sizeof(params_cpp));
+    params_cpp.init_mode = (pds_init_mode_t) params->init_mode;
+    params_cpp.trace_cb = (sdk::lib::logger::trace_cb_t) params->trace_cb;
+    params_cpp.pipeline = "athena";
+    //params_cpp.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
+    params_cpp.memory_profile = PDS_MEMORY_PROFILE_DEFAULT;
+    params_cpp.cfg_file = "hal.json";
+
+    ret = pds_init(&params_cpp);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("PDS init failed with ret %u\n", ret);
+        return (pds_ret_t)ret;
+    }
+    ret = pds_flow_cache_create();
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Flow cache init failed with ret %u\n", ret);
+        return (pds_ret_t)ret;
+    }
+    ret = pds_dnat_map_create();
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("DNAT map init failed with ret %u\n", ret);
+        return (pds_ret_t)ret;
+    }
+    return (pds_ret_t)ret;
+}
+
+pds_ret_t
 pds_thread_init (uint32_t core_id)
 {
     pds_flow_cache_set_core_id(core_id);
     pds_dnat_map_set_core_id(core_id);
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
 void

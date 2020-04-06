@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <vector>
 #include "nic/include/base.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/athena/pds_vnic.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
 #include "nic/apollo/api/include/athena/pds_flow_session_info.h"

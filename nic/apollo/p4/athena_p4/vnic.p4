@@ -17,6 +17,7 @@ action mpls_label_to_vnic(vnic_type, vnic_id) {
 @pragma stage 0
 @pragma hbm_table
 @pragma index_table
+@pragma capi_bitfields_struct
 table mpls_label_to_vnic {
     reads {
         control_metadata.mpls_label_b20_b4 : exact;
@@ -47,6 +48,7 @@ action vlan_to_vnic(vnic_type, vnic_id) {
 @pragma stage 0
 @pragma hbm_table
 @pragma index_table
+@pragma capi_bitfields_struct
 table vlan_to_vnic {
     reads {
         ctag_1.vid      : exact;

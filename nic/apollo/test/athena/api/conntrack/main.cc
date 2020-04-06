@@ -49,26 +49,26 @@ TEST_F(conntrack_test, conntrack_crud) {
     spec.key.conntrack_id = 1;
     spec.data.flow_state = UNESTABLISHED;
     spec.data.flow_type = PDS_FLOW_TYPE_ICMP;
-    SDK_ASSERT(pds_conntrack_state_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_conntrack_state_create(&spec) == PDS_RET_OK);
 
     memset(&spec, 0, sizeof(spec)); 
     spec.key.conntrack_id = 2;
     spec.data.flow_state = PDS_FLOW_STATE_SYN_SENT;
     spec.data.flow_type = PDS_FLOW_TYPE_TCP;
-    SDK_ASSERT(pds_conntrack_state_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_conntrack_state_create(&spec) == PDS_RET_OK);
 
     memset(&spec, 0, sizeof(spec)); 
     spec.key.conntrack_id = 5;
     spec.data.flow_state = ESTABLISHED;
     spec.data.flow_type = PDS_FLOW_TYPE_UDP;
-    SDK_ASSERT(pds_conntrack_state_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_conntrack_state_create(&spec) == PDS_RET_OK);
 
     key.conntrack_id = 2;
-    SDK_ASSERT(pds_conntrack_state_delete(&key) == SDK_RET_OK);
+    SDK_ASSERT(pds_conntrack_state_delete(&key) == PDS_RET_OK);
 
     memset(&key, 0, sizeof(key));
     key.conntrack_id = 2;
-    SDK_ASSERT(pds_conntrack_state_read(&key, &info) == SDK_RET_ENTRY_NOT_FOUND);
+    SDK_ASSERT(pds_conntrack_state_read(&key, &info) == PDS_RET_ENTRY_NOT_FOUND);
     SDK_ASSERT(info.spec.data.flow_state == 0);
     SDK_ASSERT(info.spec.data.flow_type == 0);
 
@@ -76,17 +76,17 @@ TEST_F(conntrack_test, conntrack_crud) {
     spec.key.conntrack_id = 0;
     spec.data.flow_state = UNESTABLISHED;
     spec.data.flow_type = PDS_FLOW_TYPE_UDP;
-    SDK_ASSERT(pds_conntrack_state_create(&spec) == SDK_RET_INVALID_ARG);
+    SDK_ASSERT(pds_conntrack_state_create(&spec) == PDS_RET_INVALID_ARG);
 
     memset(&spec, 0, sizeof(spec)); 
     spec.key.conntrack_id = PDS_CONNTRACK_ID_MAX;
     spec.data.flow_state = UNESTABLISHED;
     spec.data.flow_type = PDS_FLOW_TYPE_UDP;
-    SDK_ASSERT(pds_conntrack_state_create(&spec) == SDK_RET_INVALID_ARG);
+    SDK_ASSERT(pds_conntrack_state_create(&spec) == PDS_RET_INVALID_ARG);
 
     memset(&key, 0, sizeof(key));
     key.conntrack_id = 5;
-    SDK_ASSERT(pds_conntrack_state_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_conntrack_state_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.flow_state == ESTABLISHED);
     SDK_ASSERT(info.spec.data.flow_type == PDS_FLOW_TYPE_UDP);
 
@@ -94,11 +94,11 @@ TEST_F(conntrack_test, conntrack_crud) {
     spec.key.conntrack_id = 5;
     spec.data.flow_state = UNESTABLISHED;
     spec.data.flow_type = PDS_FLOW_TYPE_OTHERS;
-    SDK_ASSERT(pds_conntrack_state_update(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_conntrack_state_update(&spec) == PDS_RET_OK);
 
     memset(&key, 0 , sizeof(key));
     key.conntrack_id = 5;
-    SDK_ASSERT(pds_conntrack_state_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_conntrack_state_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.flow_state == UNESTABLISHED);
     SDK_ASSERT(info.spec.data.flow_type == PDS_FLOW_TYPE_OTHERS);
 }

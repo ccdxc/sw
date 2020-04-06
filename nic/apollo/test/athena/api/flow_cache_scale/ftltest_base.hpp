@@ -97,7 +97,7 @@ public:
 
         fill_key(index, &spec.key);
         fill_data(index, PDS_FLOW_SPEC_INDEX_SESSION, &spec.data);
-        auto rs = pds_flow_cache_entry_create(&spec);
+        auto rs = (sdk_ret_t)pds_flow_cache_entry_create(&spec);
         MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
         if (rs == SDK_RET_OK) {
             create_();
@@ -118,7 +118,7 @@ public:
         pds_flow_key_t key = { 0 };
 
         fill_key(index, &key);
-        auto rs = pds_flow_cache_entry_delete(&key);
+        auto rs = (sdk_ret_t)pds_flow_cache_entry_delete(&key);
         MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
         if (rs == SDK_RET_OK) {
             delete_();
@@ -140,7 +140,7 @@ public:
 
         fill_key(index, &spec.key);
         fill_data(index + 10, PDS_FLOW_SPEC_INDEX_CONNTRACK, &spec.data);
-        auto rs = pds_flow_cache_entry_update(&spec);
+        auto rs = (sdk_ret_t)pds_flow_cache_entry_update(&spec);
         MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
         if (rs == SDK_RET_OK) {
             update_();
@@ -161,7 +161,7 @@ public:
         pds_flow_info_t info = { 0 };
 
         fill_key(index, &key);
-        auto rs = pds_flow_cache_entry_read(&key, &info);;
+        auto rs = (sdk_ret_t)pds_flow_cache_entry_read(&key, &info);;
         MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
         if (rs == SDK_RET_OK) {
             read_();
@@ -195,7 +195,7 @@ public:
     sdk_ret_t validate_stats() {
         pds_flow_stats_t stats = { 0 };
 
-        SDK_ASSERT(pds_flow_cache_stats_get(2, &stats) == SDK_RET_OK);
+        SDK_ASSERT(pds_flow_cache_stats_get(2, &stats) == PDS_RET_OK);
         display_gtest_stats();
         dump_stats(&stats);
 

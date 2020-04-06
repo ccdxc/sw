@@ -12,6 +12,8 @@
 #ifndef __PDS_EPOCH_H__
 #define __PDS_EPOCH_H__
 
+#include "pds_base.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -53,26 +55,26 @@ typedef struct pds_epoch_info_s {
 /// \param[in] spec epoch specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid epoch value and index should be passed
-sdk_ret_t pds_epoch_create(pds_epoch_spec_t *spec);
+pds_ret_t pds_epoch_create(pds_epoch_spec_t *spec);
 
 /// \brief     read epoch entry
 /// \param[in] key epoch key
 /// \param[out] info epoch info
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid epoch index should be passed
-sdk_ret_t pds_epoch_read(pds_epoch_key_t *key, pds_epoch_info_t *info);
+pds_ret_t pds_epoch_read(pds_epoch_key_t *key, pds_epoch_info_t *info);
 
 /// \brief     update epoch entry
 /// \param[in] spec epoch specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid epoch value and index should be passed
-sdk_ret_t pds_epoch_update(pds_epoch_spec_t *spec);
+pds_ret_t pds_epoch_update(pds_epoch_spec_t *spec);
 
 /// \brief     delete epoch entry
 /// \param[in] key epoch key
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid epoch index should be passed
-sdk_ret_t pds_epoch_delete(pds_epoch_key_t *key);
+pds_ret_t pds_epoch_delete(pds_epoch_key_t *key);
 
 /// @}
 

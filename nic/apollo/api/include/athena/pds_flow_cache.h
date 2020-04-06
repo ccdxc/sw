@@ -12,7 +12,7 @@
 #ifndef __PDS_FLOW_CACHE_H__
 #define __PDS_FLOW_CACHE_H__
 
-#include "nic/sdk/include/sdk/ip.hpp"
+#include "pds_base.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -128,33 +128,33 @@ typedef void (*pds_flow_iter_cb_t) (pds_flow_iter_cb_arg_t *);
 /// \param[in] spec flow specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid session info ID and key should be passed
-sdk_ret_t pds_flow_cache_entry_create(pds_flow_spec_t *spec);
+pds_ret_t pds_flow_cache_entry_create(pds_flow_spec_t *spec);
 
 /// \brief     read flow cache entry
 /// \param[in] key flow key
 /// \param[out] info flow information
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid flow key should be passed
-sdk_ret_t pds_flow_cache_entry_read(pds_flow_key_t *key,
+pds_ret_t pds_flow_cache_entry_read(pds_flow_key_t *key,
                                     pds_flow_info_t *info);
 
 /// \brief     update flow cache entry
 /// \param[in] spec flow specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid session info ID and key should be passed
-sdk_ret_t pds_flow_cache_entry_update(pds_flow_spec_t *spec);
+pds_ret_t pds_flow_cache_entry_update(pds_flow_spec_t *spec);
 
 /// \brief     delete flow cache entry
 /// \param[in] key flow key
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid flow key should be passed
-sdk_ret_t pds_flow_cache_entry_delete(pds_flow_key_t *key);
+pds_ret_t pds_flow_cache_entry_delete(pds_flow_key_t *key);
 
 /// \brief     iterate through flow cache table
 /// \param[in] iterate callback function
 ///  \param[in] iterate callback argument
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_flow_cache_entry_iterate(pds_flow_iter_cb_t iter_cb,
+pds_ret_t pds_flow_cache_entry_iterate(pds_flow_iter_cb_t iter_cb,
                                        pds_flow_iter_cb_arg_t *iter_cb_arg);
 
 /// \brief     get flow cache statistics
@@ -165,7 +165,7 @@ sdk_ret_t pds_flow_cache_entry_iterate(pds_flow_iter_cb_t iter_cb,
 ///            From control thread, a valid data core id should be passed
 ///            This needs to be called from control/master core
 ///            for every data core of the application
-sdk_ret_t pds_flow_cache_stats_get(int32_t core_id, pds_flow_stats_t *stats);
+pds_ret_t pds_flow_cache_stats_get(int32_t core_id, pds_flow_stats_t *stats);
 
 /// @}
 

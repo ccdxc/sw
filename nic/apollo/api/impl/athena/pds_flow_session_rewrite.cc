@@ -20,7 +20,7 @@ using namespace sdk;
 
 extern "C" {
 
-sdk_ret_t
+pds_ret_t
 pds_flow_session_rewrite_create (pds_flow_session_rewrite_spec_t *spec)
 {
     p4pd_error_t p4pd_ret = P4PD_SUCCESS;
@@ -29,23 +29,23 @@ pds_flow_session_rewrite_create (pds_flow_session_rewrite_spec_t *spec)
 
     if (!spec) {
         PDS_TRACE_ERR("spec is null");
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
     session_rewrite_id = spec->key.session_rewrite_id;
     if ((session_rewrite_id == 0) ||
         (session_rewrite_id >= PDS_FLOW_SESSION_REWRITE_ID_MAX)) {
         PDS_TRACE_ERR("session id %u is invalid", session_rewrite_id);
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
     if ((spec->data.nat_info.nat_type < REWRITE_NAT_TYPE_NONE) ||
         (spec->data.nat_info.nat_type >= REWRITE_NAT_TYPE_MAX)) {
         PDS_TRACE_ERR("Invalid NAT type %u", spec->data.nat_info.nat_type);
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
     if ((spec->data.encap_type < ENCAP_TYPE_NONE) ||
         (spec->data.encap_type >= ENCAP_TYPE_MAX)) {
         PDS_TRACE_ERR("Invalid encap type %u", spec->data.encap_type);
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
 
     // Session rewrite NAT table programming
@@ -197,13 +197,13 @@ pds_flow_session_rewrite_create (pds_flow_session_rewrite_spec_t *spec)
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to write session rewrite table at index %u",
                        session_rewrite_id);
-        return SDK_RET_HW_PROGRAM_ERR;
+        return PDS_RET_HW_PROGRAM_ERR;
     }
 
     // Session rewrite encap programming
     // TODO: Check if no encap case is valid
     if (spec->data.encap_type == ENCAP_TYPE_NONE) {
-        return SDK_RET_OK;
+        return PDS_RET_OK;
     } else if (spec->data.encap_type == ENCAP_TYPE_L2) {
 
         session_rewrite_encap_l2_entry_t session_encap_l2;
@@ -331,17 +331,17 @@ pds_flow_session_rewrite_create (pds_flow_session_rewrite_spec_t *spec)
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to write session rewrite encap table at index %u",
                        session_rewrite_id);
-        return SDK_RET_HW_PROGRAM_ERR;
+        return PDS_RET_HW_PROGRAM_ERR;
     }
 
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
-sdk_ret_t
+pds_ret_t
 pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
                                pds_flow_session_rewrite_info_t *info)
 {
-    p4pd_error_t            p4pd_ret = SDK_RET_OK;
+    p4pd_error_t            p4pd_ret = PDS_RET_OK;
     uint32_t                session_rewrite_id = 0;
     session_rewrite_entry_t session_rewrite = {0};
     uint8_t                 action_id = SESSION_REWRITE_SESSION_REWRITE_ID;
@@ -350,20 +350,20 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
 
     if (!key || !info) {
         PDS_TRACE_ERR("key or info is null");
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
     session_rewrite_id = key->session_rewrite_id;
     if ((session_rewrite_id == 0) ||
         (session_rewrite_id >= PDS_FLOW_SESSION_REWRITE_ID_MAX)) {
         PDS_TRACE_ERR("session id %u is invalid", session_rewrite_id);
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
 
     session_rewrite.clear();
     if (session_rewrite.read(session_rewrite_id) != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to read session rewrite table at index %u",
                       session_rewrite_id);
-        return SDK_RET_HW_READ_ERR;
+        return PDS_RET_HW_READ_ERR;
     }
 
     action_pc = session_rewrite.get_actionid();
@@ -374,7 +374,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
         if (!session_rewrite.get_valid_flag()) {
             PDS_TRACE_ERR("Invalid entry in session rewrite table at index %u",
                           session_rewrite_id);
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         info->spec.data.strip_encap_header =
             session_rewrite.get_strip_outer_encap_flag();
@@ -393,7 +393,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
         if (!session_rewrite_ipv4_snat.get_valid_flag()) {
             PDS_TRACE_ERR("Invalid entry in session rewrite table at index %u",
                           session_rewrite_id);
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         info->spec.data.strip_encap_header =
             session_rewrite_ipv4_snat.get_strip_outer_encap_flag();
@@ -415,7 +415,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
         if (!session_rewrite_ipv4_dnat.get_valid_flag()) {
             PDS_TRACE_ERR("Invalid entry in session rewrite table at index %u",
                           session_rewrite_id);
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         info->spec.data.strip_encap_header =
             session_rewrite_ipv4_dnat.get_strip_outer_encap_flag();
@@ -438,7 +438,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
         if (!session_rewrite_ipv4_pat.get_valid_flag()) {
             PDS_TRACE_ERR("Invalid entry in session rewrite table at index %u",
                           session_rewrite_id);
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         info->spec.data.strip_encap_header =
             session_rewrite_ipv4_pat.get_strip_outer_encap_flag();
@@ -466,7 +466,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
         if (!session_rewrite_ipv6_snat.get_valid_flag()) {
             PDS_TRACE_ERR("Invalid entry in session rewrite table at index %u",
                           session_rewrite_id);
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         info->spec.data.strip_encap_header =
             session_rewrite_ipv6_snat.get_strip_outer_encap_flag();
@@ -489,7 +489,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
         if (!session_rewrite_ipv6_dnat.get_valid_flag()) {
             PDS_TRACE_ERR("Invalid entry in session rewrite table at index %u",
                           session_rewrite_id);
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         info->spec.data.strip_encap_header =
             session_rewrite_ipv6_dnat.get_strip_outer_encap_flag();
@@ -504,7 +504,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
     } else {
         PDS_TRACE_ERR("Invalid action/entry in session rewrite table"
                       " at index %u", session_rewrite_id);
-        return SDK_RET_ERR;
+        return PDS_RET_ERR;
     }
 
 
@@ -515,7 +515,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
     if (session_encap_l2.read(session_rewrite_id) != P4PD_SUCCESS) {    
         PDS_TRACE_ERR("Failed to read session rewrite encap table at index %u",
                        session_rewrite_id);
-        return SDK_RET_HW_PROGRAM_ERR;
+        return PDS_RET_HW_PROGRAM_ERR;
     }
 
     action_pc = session_encap_l2.get_actionid();
@@ -528,7 +528,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
         if (!session_encap_l2.get_valid_flag()) {
             PDS_TRACE_ERR("Invalid entry in session encap table at index %u",
                           session_rewrite_id);
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         info->spec.data.u.l2_encap.insert_vlan_tag =
             session_encap_l2.get_add_vlan_tag_flag();
@@ -555,7 +555,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
         if (!session_encap_mplsoudp.get_valid_flag()) {
             PDS_TRACE_ERR("Invalid entry in session encap table at index %u",
                           session_rewrite_id);
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         info->spec.data.u.mplsoudp_encap.l2_encap.insert_vlan_tag =
             session_encap_mplsoudp.get_add_vlan_tag_flag();
@@ -594,7 +594,7 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
         if (!session_encap_geneve.get_valid_flag()) {
             PDS_TRACE_ERR("Invalid entry in session encap table at index %u",
                           session_rewrite_id);
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         info->spec.data.u.geneve_encap.l2_encap.insert_vlan_tag =
             session_encap_geneve.get_add_vlan_tag_flag();
@@ -638,55 +638,55 @@ pds_flow_session_rewrite_read (pds_flow_session_rewrite_key_t *key,
     } else {
         PDS_TRACE_ERR("Invalid action/entry in session encap table"
                       " at index %u", session_rewrite_id);
-        return SDK_RET_ERR;
+        return PDS_RET_ERR;
     }
 
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
-sdk_ret_t
+pds_ret_t
 pds_flow_session_rewrite_update (pds_flow_session_rewrite_spec_t *spec)
 {
     return pds_flow_session_rewrite_create(spec);
 }
 
-sdk_ret_t
+pds_ret_t
 pds_flow_session_rewrite_delete (pds_flow_session_rewrite_key_t *key)
 {
-    p4pd_error_t p4pd_ret;
-    uint32_t session_rewrite_id;
-    session_rewrite_actiondata_t session_rewrite_actiondata = { 0 };
-    session_rewrite_encap_actiondata_t session_encap_actiondata = { 0 };
+    p4pd_error_t                      p4pd_ret = P4PD_SUCCESS;
+    uint32_t                          session_rewrite_id = 
+                                              PDS_FLOW_SESSION_REWRITE_ID_MAX;
+    session_rewrite_entry_t           session_rewrite = { 0 };
+    session_rewrite_encap_l2_entry_t  session_rewrite_encap = { 0 };
+
 
     if (!key) {
         PDS_TRACE_ERR("key is null");
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
     session_rewrite_id = key->session_rewrite_id;
     if ((session_rewrite_id == 0) ||
         (session_rewrite_id >= PDS_FLOW_SESSION_REWRITE_ID_MAX)) {
         PDS_TRACE_ERR("session rewrite id %u is invalid",
                       session_rewrite_id);
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
 
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_SESSION_REWRITE,
-                                       session_rewrite_id, NULL, NULL,
-                                       &session_rewrite_actiondata);
+    session_rewrite.clear();
+    session_rewrite_encap.clear();
+    p4pd_ret = session_rewrite.write(session_rewrite_id);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to delete session rewrite table at index %u",
                       session_rewrite_id);
-        return SDK_RET_HW_PROGRAM_ERR;
+        return PDS_RET_HW_PROGRAM_ERR;
     }
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_SESSION_REWRITE_ENCAP,
-                                       session_rewrite_id, NULL, NULL,
-                                       &session_encap_actiondata);
+    p4pd_ret = session_rewrite_encap.write(session_rewrite_id);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to delete session encap table at index %u",
                       session_rewrite_id);
-        return SDK_RET_HW_PROGRAM_ERR;
+        return PDS_RET_HW_PROGRAM_ERR;
     }
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
 }

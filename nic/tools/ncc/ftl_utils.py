@@ -98,7 +98,7 @@ def is_table_pad_256(table, pipeline):
     if pipeline == 'apulu' and ('nexthop' in str(table) or 'session_track' in str(table) or 'nat' in str(table)):
         return True
 
-    if pipeline == 'athena' and ('session_rewrite' in str(table) and not 'session_rewrite_encap' in str(table)):
+    if pipeline == 'athena' and ('session_rewrite' == str(table)):
         return True
 
     return False
@@ -109,6 +109,18 @@ def is_table_pad_128(table, pipeline):
     if pipeline == 'apulu' and ('ip_mac_binding' in str(table)):
         return True
 
+    return False
+
+# TODO use pragmas
+def is_table_pad_32(table, pipeline):
+    if pipeline == 'athena' and ('conntrack' in str(table)):
+        return True
+    return False
+
+# TODO use pragmas
+def is_table_pad_16(table, pipeline):
+    if pipeline == 'athena' and (('to_vnic' in str(table)) or 'config2' == str(table) or 'config1' == str(table)):
+        return True
     return False
 
 def is_hash_field(field_name):

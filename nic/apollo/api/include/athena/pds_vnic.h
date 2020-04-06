@@ -12,6 +12,8 @@
 #ifndef __PDS_VNIC_H__
 #define __PDS_VNIC_H__
 
+#include "pds_base.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -89,53 +91,53 @@ typedef struct pds_mpls_label_to_vnic_map_info_s {
 /// \param[in] spec vlan to vnic map specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid vnic id and vlan id should be passed
-sdk_ret_t pds_vlan_to_vnic_map_create(pds_vlan_to_vnic_map_spec_t *spec);
+pds_ret_t pds_vlan_to_vnic_map_create(pds_vlan_to_vnic_map_spec_t *spec);
 
 /// \brief     read vlan to vnic map entry
 /// \param[in] key vlan id
 /// \param[out] info vlan to vnic map info
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid vlan id should be passed
-sdk_ret_t pds_vlan_to_vnic_map_read(pds_vlan_to_vnic_map_key_t *key,
+pds_ret_t pds_vlan_to_vnic_map_read(pds_vlan_to_vnic_map_key_t *key,
                                     pds_vlan_to_vnic_map_info_t *info);
 
 /// \brief     update vlan to vnic map entry
 /// \param[in] spec vlan to vnic map specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid vnic id and vlan id should be passed
-sdk_ret_t pds_vlan_to_vnic_map_update(pds_vlan_to_vnic_map_spec_t *spec);
+pds_ret_t pds_vlan_to_vnic_map_update(pds_vlan_to_vnic_map_spec_t *spec);
 
 /// \brief     delete vlan to vnic map entry
 /// \param[in] key vlan id
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid vlan id should be passed
-sdk_ret_t pds_vlan_to_vnic_map_delete(pds_vlan_to_vnic_map_key_t *key);
+pds_ret_t pds_vlan_to_vnic_map_delete(pds_vlan_to_vnic_map_key_t *key);
 
 /// \brief     create mpls label to vnic map entry
 /// \param[in] spec mpls label to vnic map specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid vnic id and mpls label should be passed
-sdk_ret_t pds_mpls_label_to_vnic_map_create(pds_mpls_label_to_vnic_map_spec_t *spec);
+pds_ret_t pds_mpls_label_to_vnic_map_create(pds_mpls_label_to_vnic_map_spec_t *spec);
 
 /// \brief     read mpls label to vnic map entry
 /// \param[in] key mpls label
 /// \param[out] info mpls label to vnic map info
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid mpls label should be passed
-sdk_ret_t pds_mpls_label_to_vnic_map_read(pds_mpls_label_to_vnic_map_key_t *key,
+pds_ret_t pds_mpls_label_to_vnic_map_read(pds_mpls_label_to_vnic_map_key_t *key,
                                           pds_mpls_label_to_vnic_map_info_t *info);
 
 /// \brief     update mpls label to vnic map entry
 /// \param[in] spec mpls label to vnic map specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid vnic id and mpls label should be passed
-sdk_ret_t pds_mpls_label_to_vnic_map_update(pds_mpls_label_to_vnic_map_spec_t *spec);
+pds_ret_t pds_mpls_label_to_vnic_map_update(pds_mpls_label_to_vnic_map_spec_t *spec);
 
 /// \brief     delete mpls label to vnic map entry
 /// \param[in] key mpls label
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid mpls label should be passed
-sdk_ret_t pds_mpls_label_to_vnic_map_delete(pds_mpls_label_to_vnic_map_key_t *key);
+pds_ret_t pds_mpls_label_to_vnic_map_delete(pds_mpls_label_to_vnic_map_key_t *key);
 
 /// @}
 

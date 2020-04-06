@@ -313,7 +313,7 @@ fte_launch_one_lcore (__attribute__((unused)) void *dummy)
 static void
 _init_pollers_client (void)
 {
-    if (pds_flow_age_init() != SDK_RET_OK) {
+    if (pds_flow_age_init() != PDS_RET_OK) {
         rte_exit(EXIT_FAILURE, "failed pds_flow_age_init");
     }
 
@@ -466,7 +466,7 @@ fte_dump_flow_stats(zmq_msg_t *rx_msg,
     for (int i = 0; i < FTE_MAX_CORES; i++) {
          memset(&flow_stats[i], 0, sizeof(pds_flow_stats_t));
          if (pds_flow_cache_stats_get(i, &flow_stats[i])
-             == SDK_RET_OK) {
+             == PDS_RET_OK) {
              accumulate_stats(&flow_stats[i]);
          } else {
              PDS_TRACE_ERR("Stats get failed for core#%u\n", i);

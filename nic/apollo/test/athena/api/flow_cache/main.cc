@@ -71,15 +71,15 @@ TEST_F(flow_cache_test, flow_cache_crud) {
 
     fill_key(1, &spec.key);
     fill_data(1, PDS_FLOW_SPEC_INDEX_SESSION, &spec.data);
-    SDK_ASSERT(pds_flow_cache_entry_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_cache_entry_create(&spec) == PDS_RET_OK);
 
     fill_key(1, &key);
-    SDK_ASSERT(pds_flow_cache_entry_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_cache_entry_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.index_type == PDS_FLOW_SPEC_INDEX_SESSION);
     SDK_ASSERT(info.spec.data.index == 1);
 
     SDK_ASSERT(pds_flow_cache_entry_iterate(dump_flow, &iter_cb_arg) ==
-               SDK_RET_OK);
+               PDS_RET_OK);
     SDK_ASSERT(memcmp(&iter_cb_arg.flow_key, &key,
                sizeof(pds_flow_key_t)) == 0);
     SDK_ASSERT(iter_cb_arg.flow_appdata.index_type == PDS_FLOW_SPEC_INDEX_SESSION);
@@ -88,37 +88,37 @@ TEST_F(flow_cache_test, flow_cache_crud) {
     memset(&spec, 0, sizeof(spec)); 
     fill_key(2, &spec.key);
     fill_data(2, PDS_FLOW_SPEC_INDEX_CONNTRACK, &spec.data);
-    SDK_ASSERT(pds_flow_cache_entry_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_cache_entry_create(&spec) == PDS_RET_OK);
 
     memset(&info, 0, sizeof(info));
     fill_key(2, &key);
-    SDK_ASSERT(pds_flow_cache_entry_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_cache_entry_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.index_type == PDS_FLOW_SPEC_INDEX_CONNTRACK);
     SDK_ASSERT(info.spec.data.index == 2);
 
     SDK_ASSERT(pds_flow_cache_entry_iterate(dump_flow, &iter_cb_arg) ==
-               SDK_RET_OK);
+               PDS_RET_OK);
 
     memset(&spec, 0, sizeof(spec)); 
     fill_key(2, &spec.key);
     fill_data(2, PDS_FLOW_SPEC_INDEX_SESSION, &spec.data);
-    SDK_ASSERT(pds_flow_cache_entry_update(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_cache_entry_update(&spec) == PDS_RET_OK);
 
     memset(&info, 0, sizeof(info));
     fill_key(2, &key);
-    SDK_ASSERT(pds_flow_cache_entry_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_cache_entry_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.index_type == PDS_FLOW_SPEC_INDEX_SESSION);
     SDK_ASSERT(info.spec.data.index == 2);
 
     memset(&info, 0, sizeof(info));
     fill_key(2, &key);
-    SDK_ASSERT(pds_flow_cache_entry_delete(&key) == SDK_RET_OK);
-    SDK_ASSERT(pds_flow_cache_entry_read(&key, &info) == SDK_RET_ENTRY_NOT_FOUND);
+    SDK_ASSERT(pds_flow_cache_entry_delete(&key) == PDS_RET_OK);
+    SDK_ASSERT(pds_flow_cache_entry_read(&key, &info) == PDS_RET_ENTRY_NOT_FOUND);
 
     SDK_ASSERT(pds_flow_cache_entry_iterate(dump_flow, &iter_cb_arg) ==
-               SDK_RET_OK);
+               PDS_RET_OK);
 
-    SDK_ASSERT(pds_flow_cache_stats_get(2, &stats) == SDK_RET_OK);
+    SDK_ASSERT(pds_flow_cache_stats_get(2, &stats) == PDS_RET_OK);
     dump_stats(&stats);
 }
 

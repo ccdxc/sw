@@ -69,7 +69,7 @@ fte_flow_dump (void)
 {
     pds_flow_info_t flow_info;
 
-    if (pds_flow_cache_entry_read(&dump_flow_key, &flow_info) != SDK_RET_OK) {
+    if (pds_flow_cache_entry_read(&dump_flow_key, &flow_info) != PDS_RET_OK) {
         PDS_TRACE_DEBUG("pds_flow_cache_entry_read failed.\n");
         return;
     }
@@ -240,7 +240,7 @@ fte_flow_prog (struct rte_mbuf *m)
     }
 #endif
 
-    if (pds_flow_cache_entry_create(&flow_spec) != SDK_RET_OK) {
+    if (pds_flow_cache_entry_create(&flow_spec) != PDS_RET_OK) {
         PDS_TRACE_DEBUG("pds_flow_cache_entry_create failed. \n");
         return;
     }

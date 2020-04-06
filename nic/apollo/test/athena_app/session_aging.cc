@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 #include "session_aging.hpp"
 #include "conntrack_aging.hpp"
+#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/athena/pds_flow_session_info.h"
 #include "nic/apollo/api/include/athena/pds_flow_age.h"
 #include "nic/apollo/api/impl/athena/ftl_pollers_client.hpp"
@@ -18,13 +19,16 @@ namespace test {
 namespace athena_app {
 
 #define SESSION_RET_VALIDATE(ret)           \
+   ((ret) == PDS_RET_OK)
+
+#define SESSION_SDK_RET_VALIDATE(ret)           \
    ((ret) == SDK_RET_OK)
 
 #define SESSION_CREATE_RET_VALIDATE(ret)    \
-   (((ret) == SDK_RET_OK) || ((ret) == SDK_RET_ENTRY_EXISTS))
+   (((ret) == PDS_RET_OK) || ((ret) == PDS_RET_ENTRY_EXISTS))
 
 #define SESSION_DELETE_RET_VALIDATE(ret)    \
-   (((ret) == SDK_RET_OK) || ((ret) == SDK_RET_ENTRY_NOT_FOUND))
+   (((ret) == PDS_RET_OK) || ((ret) == PDS_RET_ENTRY_NOT_FOUND))
 
 static uint32_t             pollers_qcount;
 static pds_flow_expiry_fn_t aging_expiry_dflt_fn;
@@ -60,7 +64,7 @@ session_table_clear_full(test_vparam_ref_t vparam)
 {
     pds_flow_session_key_t key;
     uint32_t    depth;
-    sdk_ret_t   ret = SDK_RET_OK;
+    pds_ret_t   ret = PDS_RET_OK;
 
     depth = vparam.expected_num(session_table_depth());
     depth = std::min(depth, session_table_depth());
@@ -91,15 +95,16 @@ bool
 session_populate_simple(test_vparam_ref_t vparam)
 {
     pds_flow_session_spec_t spec;
-    sdk_ret_t   ret = SDK_RET_OK;
+    pds_ret_t   ret = PDS_RET_OK;
+    sdk_ret_t   sdk_ret = SDK_RET_OK;
 
     session_metrics.baseline();
     flow_session_spec_init(&spec);
 
     glb_tolerance.reset(vparam.size());
     for (uint32_t i = 0; i < vparam.size(); i++) {
-        ret = vparam.num(i, &spec.key.session_info_id);
-        if (!SESSION_RET_VALIDATE(ret)) {
+        sdk_ret = vparam.num(i, &spec.key.session_info_id);
+        if (!SESSION_SDK_RET_VALIDATE(sdk_ret)) {
             break;
         }
         ret = pds_flow_session_info_create(&spec);
@@ -120,7 +125,8 @@ session_populate_random(test_vparam_ref_t vparam)
     pds_flow_session_spec_t spec;
     uint32_t    start_idx;
     uint32_t    count  = 0;
-    sdk_ret_t   ret = SDK_RET_OK;
+    pds_ret_t   ret = PDS_RET_OK;
+    sdk_ret_t   sdk_ret = SDK_RET_OK;
 
     session_metrics.baseline();
 
@@ -128,10 +134,16 @@ session_populate_random(test_vparam_ref_t vparam)
      * Generate random start_idx and count, unless overidden by vparam
      */
     if (vparam.size()) {
-        ret = vparam.num(0, &start_idx);
+        sdk_ret = vparam.num(0, &start_idx);
+        if (!SESSION_SDK_RET_VALIDATE(sdk_ret)) {
+            return FALSE;
+        }
         start_idx = min(start_idx, session_table_depth() - 1);
         if (vparam.size() > 1) {
-            ret = vparam.num(1, &count);
+            sdk_ret = vparam.num(1, &count);
+            if (!SESSION_SDK_RET_VALIDATE(sdk_ret)) {
+                return FALSE;
+            }
             count = min(count, session_table_depth() - start_idx);
         }
     } else {
@@ -163,7 +175,7 @@ session_populate_full(test_vparam_ref_t vparam)
 {
     pds_flow_session_spec_t spec;
     uint32_t    depth;
-    sdk_ret_t   ret = SDK_RET_OK;
+    pds_ret_t   ret = PDS_RET_OK;
 
     session_metrics.baseline();
     depth = vparam.expected_num(session_table_depth());
@@ -187,12 +199,12 @@ session_populate_full(test_vparam_ref_t vparam)
     return SESSION_CREATE_RET_VALIDATE(ret);
 }
 
-sdk_ret_t
+pds_ret_t
 session_aging_expiry_fn(uint32_t expiry_id,
                         pds_flow_age_expiry_type_t expiry_type,
                         void *user_ctx)
 {
-    sdk_ret_t ret = SDK_RET_OK;
+    pds_ret_t   ret = PDS_RET_OK;
 
     switch (expiry_type) {
 
@@ -210,7 +222,7 @@ session_aging_expiry_fn(uint32_t expiry_id,
         break;
 
     default:
-        ret = SDK_RET_INVALID_ARG;
+        ret = PDS_RET_INVALID_ARG;
         break;
     }
     return ret;
@@ -219,7 +231,8 @@ session_aging_expiry_fn(uint32_t expiry_id,
 bool
 session_aging_init(test_vparam_ref_t vparam)
 {
-    sdk_ret_t   ret;
+    pds_ret_t   ret;
+    sdk_ret_t   sdk_ret;
 
     // Start with init() in case that had never been done
     ret = pds_flow_age_init();
@@ -228,9 +241,9 @@ session_aging_init(test_vparam_ref_t vparam)
     // before scanners are started to prevent lockup in scanners
     // due to the lack of true LIF timers in SIM.
     if (!hw() && SESSION_RET_VALIDATE(ret)) {
-        ret = ftl_pollers_client::force_session_expired_ts_set(true);
+        sdk_ret = ftl_pollers_client::force_session_expired_ts_set(true);
     }
-    if (SESSION_RET_VALIDATE(ret)) {
+    if (SESSION_SDK_RET_VALIDATE(sdk_ret)) {
         ret = pds_flow_age_sw_pollers_qcount(&pollers_qcount);
     }
     if (SESSION_RET_VALIDATE(ret)) {
@@ -264,14 +277,14 @@ session_aging_force_expired_ts(test_vparam_ref_t vparam)
 
     ret = ftl_pollers_client::force_session_expired_ts_set(
                                             vparam.expected_bool());
-    return SESSION_RET_VALIDATE(ret);
+    return SESSION_SDK_RET_VALIDATE(ret);
 }
 
 bool
 session_aging_fini(test_vparam_ref_t vparam)
 {
     test_vparam_t   sim_vparam;
-    sdk_ret_t       ret;
+    pds_ret_t       ret;
 
     ret = pds_flow_age_hw_scanners_stop(true);
     if (SESSION_RET_VALIDATE(ret)) {

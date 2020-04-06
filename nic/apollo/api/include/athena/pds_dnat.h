@@ -12,7 +12,7 @@
 #ifndef __PDS_DNAT_H__
 #define __PDS_DNAT_H__
 
-#include "nic/sdk/include/sdk/ip.hpp"
+#include "pds_base.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,27 +50,27 @@ typedef struct pds_dnat_mapping_info_s {
 /// \param[in] spec dnat mapping specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid IP address and vnic id should be passed
-sdk_ret_t pds_dnat_map_entry_create(pds_dnat_mapping_spec_t *spec);
+pds_ret_t pds_dnat_map_entry_create(pds_dnat_mapping_spec_t *spec);
 
 /// \brief     read dnat mapping entry
 /// \param[in] key dnat mapping key
 /// \param[out] info dnat mapping info
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid IP address and vnic id should be passed
-sdk_ret_t pds_dnat_map_entry_read(pds_dnat_mapping_key_t *key,
+pds_ret_t pds_dnat_map_entry_read(pds_dnat_mapping_key_t *key,
                                   pds_dnat_mapping_info_t *info);
 
 /// \brief     update dnat map entry
 /// \param[in] spec dnat mapping specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid IP address and vnic id should be passed
-sdk_ret_t pds_dnat_map_entry_update(pds_dnat_mapping_spec_t *spec);
+pds_ret_t pds_dnat_map_entry_update(pds_dnat_mapping_spec_t *spec);
 
 /// \brief     delete dnat map entry
 /// \param[in] key dnat mapping key
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid IP address and vnic id should be passed
-sdk_ret_t pds_dnat_map_entry_delete(pds_dnat_mapping_key_t *key);
+pds_ret_t pds_dnat_map_entry_delete(pds_dnat_mapping_key_t *key);
 
 /// @}
 

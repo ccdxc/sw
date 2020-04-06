@@ -12,6 +12,8 @@
 #ifndef __PDS_CONNTRACK_H__
 #define __PDS_CONNTRACK_H__
 
+#include "pds_base.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -76,27 +78,27 @@ typedef struct pds_conntrack_info_s {
 /// \param[in] spec conntrack specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid flow type and conntrack id should be passed
-sdk_ret_t pds_conntrack_state_create(pds_conntrack_spec_t *spec);
+pds_ret_t pds_conntrack_state_create(pds_conntrack_spec_t *spec);
 
 /// \brief     read conntrack state entry
 /// \param[in] key conntrack key
 //  \param[in] info conntrack info
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid conntrack id should be passed
-sdk_ret_t pds_conntrack_state_read(pds_conntrack_key_t *key,
+pds_ret_t pds_conntrack_state_read(pds_conntrack_key_t *key,
                                    pds_conntrack_info_t *info);
 
 /// \brief     update conntrack state entry
 /// \param[in] spec conntrack specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid flow type and conntrack id should be passed
-sdk_ret_t pds_conntrack_state_update(pds_conntrack_spec_t *spec);
+pds_ret_t pds_conntrack_state_update(pds_conntrack_spec_t *spec);
 
 /// \brief     delete conntrack state entry
 /// \param[in] key conntrack key
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid conntrack id should be passed
-sdk_ret_t pds_conntrack_state_delete(pds_conntrack_key_t *key);
+pds_ret_t pds_conntrack_state_delete(pds_conntrack_key_t *key);
 
 /// @}
 

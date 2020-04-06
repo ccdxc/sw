@@ -30,7 +30,7 @@ static rte_atomic16_t       module_inited = RTE_ATOMIC16_INIT(0);
 static uint32_t             pollers_qcount;
 static bool                 expiry_log_en;
 
-static sdk_ret_t
+static pds_ret_t
 expiry_fn_dflt_fn(uint32_t expiry_id,
                   pds_flow_age_expiry_type_t expiry_type,
                   void *user_ctx);
@@ -161,11 +161,11 @@ qcount_get(void)
     return pollers_qcount;
 }
 
-sdk_ret_t
+pds_ret_t
 expiry_fn_dflt(pds_flow_expiry_fn_t *ret_fn_dflt)
 {
     *ret_fn_dflt = expiry_fn_dflt_fn;
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
 sdk_ret_t
@@ -377,12 +377,12 @@ expiry_submap_process(uint32_t submap_id,
     }
 }
 
-static sdk_ret_t
+static pds_ret_t
 expiry_fn_dflt_fn(uint32_t expiry_id,
                   pds_flow_age_expiry_type_t expiry_type,
                   void *user_ctx)
 {
-    sdk_ret_t   ret = SDK_RET_INVALID_ARG;
+    pds_ret_t   ret = PDS_RET_INVALID_ARG;
 
     if (expiry_log_en) {
         PDS_TRACE_DEBUG("entry %u type %d expired", expiry_id, expiry_type);

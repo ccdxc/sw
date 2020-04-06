@@ -582,9 +582,9 @@ aging_tmo_cfg_t::reset(void)
     sdk_ret_t   ret;
 
     failures.clear();
-    ret = is_accel_tmo ?
+    ret = (sdk_ret_t)(is_accel_tmo ?
           pds_flow_age_accel_timeouts_get(&tmo_rec) :
-          pds_flow_age_normal_timeouts_get(&tmo_rec);
+          pds_flow_age_normal_timeouts_get(&tmo_rec));
 
     if (ret != SDK_RET_OK) {
         TEST_LOG_ERR("Failed to get %s timeouts\n",
@@ -745,9 +745,9 @@ aging_tmo_cfg_t::tmo_set(void)
 {
     sdk_ret_t   ret;
 
-    ret = is_accel_tmo ?
+    ret = (sdk_ret_t)(is_accel_tmo ?
           pds_flow_age_accel_timeouts_set(&tmo_rec) :
-          pds_flow_age_normal_timeouts_set(&tmo_rec);
+          pds_flow_age_normal_timeouts_set(&tmo_rec));
 
     if (ret != SDK_RET_OK) {
         TEST_LOG_ERR("Failed to set %s timeouts\n",
@@ -787,7 +787,7 @@ aging_tolerance_t::tolerance_secs_set(uint32_t tolerance_secs)
 void 
 aging_tolerance_t::age_accel_control(bool enable_sense)
 {
-    if (pds_flow_age_accel_control(enable_sense) == SDK_RET_OK) {
+    if ((sdk_ret_t)pds_flow_age_accel_control(enable_sense) == SDK_RET_OK) {
         curr_tmo = enable_sense ? accel_tmo : normal_tmo;
     } else {
         TEST_LOG_ERR("Failed to set accelerated aging control %u\n",
@@ -882,7 +882,7 @@ aging_tolerance_t::session_tmo_tolerance_check(uint32_t id)
     if (hw() && tolerance_secs) {
         flow_session_key_init(&key);
         key.session_info_id = id;
-        if (pds_flow_session_info_read(&key, &info) == SDK_RET_OK) {
+        if ((sdk_ret_t)pds_flow_session_info_read(&key, &info) == SDK_RET_OK) {
             tmo_tolerance_check(id, info.status.timestamp,
                                 curr_tmo.session_tmo_get());
         } else {
@@ -909,7 +909,7 @@ aging_tolerance_t::conntrack_tmo_tolerance_check(uint32_t id)
     if (hw() && tolerance_secs) {
         flow_conntrack_key_init(&key);
         key.conntrack_id = id;
-        if (pds_conntrack_state_read(&key, &info) == SDK_RET_OK) {
+        if ((sdk_ret_t)pds_conntrack_state_read(&key, &info) == SDK_RET_OK) {
             applic_tmo = curr_tmo.conntrack_tmo_get(info.spec.data.flow_type,
                                                     info.spec.data.flow_state);
             tmo_tolerance_check(id, info.status.timestamp, applic_tmo);

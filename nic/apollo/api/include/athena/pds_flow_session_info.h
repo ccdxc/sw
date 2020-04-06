@@ -11,8 +11,7 @@
 #ifndef __PDS_FLOW_SESSION_INFO_H__
 #define __PDS_FLOW_SESSION_INFO_H__
 
-#include "nic/sdk/include/sdk/eth.hpp"
-#include "nic/sdk/include/sdk/ip.hpp"
+#include "pds_base.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -114,27 +113,27 @@ typedef struct pds_flow_session_info_s {
 /// \param[in] spec flow session specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid session info ID(key) and data should be passed
-sdk_ret_t pds_flow_session_info_create(pds_flow_session_spec_t *spec);
+pds_ret_t pds_flow_session_info_create(pds_flow_session_spec_t *spec);
 
 /// \brief      read a flow session info entry
 /// \param[in]  key flow session key
 /// \param[out] info flow session info
 /// \return     #SDK_RET_OK on success, failure status code on error
 /// \remark     A valid session info ID(key) should be passed
-sdk_ret_t pds_flow_session_info_read(pds_flow_session_key_t *key,
+pds_ret_t pds_flow_session_info_read(pds_flow_session_key_t *key,
                                      pds_flow_session_info_t *info);
 
 /// \brief     update flow session info entry
 /// \param[in] spec flow session specification
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid session info ID(key) and data should be passed
-sdk_ret_t pds_flow_session_info_update(pds_flow_session_spec_t *spec);
+pds_ret_t pds_flow_session_info_update(pds_flow_session_spec_t *spec);
 
 /// \brief     delete flow session info entry
 /// \param[in] key flow session key
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid session info ID(key) should be passed
-sdk_ret_t pds_flow_session_info_delete(pds_flow_session_key_t *key);
+pds_ret_t pds_flow_session_info_delete(pds_flow_session_key_t *key);
 
 /// @}
 

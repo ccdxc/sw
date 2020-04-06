@@ -314,7 +314,7 @@ program_prepare_exit(void)
 int
 main (int argc, char **argv)
 {
-    sdk_ret_t    ret;
+    pds_ret_t    ret;
     int          oc;
     string       cfg_path, cfg_file, profile, pipeline, file;
     string       script_fname, script_dir;
@@ -465,19 +465,28 @@ main (int argc, char **argv)
     fte_ath::parse_flow_cache_policy_cfg(file.c_str());
 
     // Initialize the PDS functionality
-    pds_init_params_t init_params;
+    pds_cinit_params_t init_params;
 
     memset(&init_params, 0, sizeof(init_params));
-    init_params.init_mode = PDS_INIT_MODE_COLD_START;
-    init_params.trace_cb  = core::sdk_logger;
+    init_params.init_mode = PDS_CINIT_MODE_COLD_START;
+    init_params.trace_cb  = (void *)core::sdk_logger;
+    /*
     init_params.pipeline  = pipeline;
     init_params.cfg_file  = cfg_file;
-    init_params.memory_profile = PDS_MEMORY_PROFILE_DEFAULT;
+    init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
+    if (!profile.empty()) {
+        if (profile.compare("p1") == 0) {
+            init_params.scale_profile = PDS_SCALE_PROFILE_P1;
+        } else if (profile.compare("p2") == 0) {
+            init_params.scale_profile = PDS_SCALE_PROFILE_P2;
+        }
+    }
+    */
     // initialize the logger instance
     core::logger_init();
 
     ret = pds_global_init(&init_params);
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
         printf("PDS global init failed with ret %u\n", ret);
         exit(1);
     }

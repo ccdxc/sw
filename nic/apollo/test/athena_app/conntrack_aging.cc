@@ -18,13 +18,13 @@ namespace test {
 namespace athena_app {
 
 #define CONNTRACK_RET_VALIDATE(ret)         \
-   ((ret) == SDK_RET_OK)
+   ((ret) == PDS_RET_OK)
 
 #define CONNTRACK_CREATE_RET_VALIDATE(ret)  \
-   (((ret) == SDK_RET_OK) || ((ret) == SDK_RET_ENTRY_EXISTS))
+   (((ret) == PDS_RET_OK) || ((ret) == PDS_RET_ENTRY_EXISTS))
 
 #define CONNTRACK_DELETE_RET_VALIDATE(ret)  \
-   (((ret) == SDK_RET_OK) || ((ret) == SDK_RET_ENTRY_NOT_FOUND))
+   (((ret) == PDS_RET_OK) || ((ret) == PDS_RET_ENTRY_NOT_FOUND))
 
 static uint32_t             pollers_qcount;
 static pds_flow_expiry_fn_t aging_expiry_dflt_fn;
@@ -58,7 +58,7 @@ conntrack_table_clear_full(test_vparam_ref_t vparam)
 {
     pds_conntrack_key_t key;
     uint32_t    depth;
-    sdk_ret_t   ret = SDK_RET_OK;
+    pds_ret_t   ret = PDS_RET_OK;
 
     depth = vparam.expected_num(conntrack_table_depth());
     depth = std::min(depth, conntrack_table_depth());
@@ -90,7 +90,7 @@ conntrack_populate_simple(test_vparam_ref_t vparam)
 {
     pds_conntrack_spec_t    spec;
     tuple_eval_t            tuple_eval;
-    sdk_ret_t               ret = SDK_RET_OK;
+    pds_ret_t               ret = PDS_RET_OK;
 
     conntrack_metrics.baseline();
     conntrack_spec_init(&spec);
@@ -129,7 +129,7 @@ conntrack_populate_random(test_vparam_ref_t vparam)
     uint32_t                start_idx;
     uint32_t                count = 0;
     bool                    randomize_typestate;
-    sdk_ret_t               ret = SDK_RET_OK;
+    pds_ret_t               ret = PDS_RET_OK;
 
     conntrack_metrics.baseline();
 
@@ -167,7 +167,7 @@ conntrack_populate_random(test_vparam_ref_t vparam)
 
     default:
         TEST_LOG_ERR("Too many tuples specified, only a max of 2 needed\n");
-        ret = SDK_RET_INVALID_ARG;
+        ret = PDS_RET_INVALID_ARG;
         break;
     }
 
@@ -211,7 +211,7 @@ conntrack_populate_full(test_vparam_ref_t vparam)
     pds_conntrack_spec_t    spec;
     tuple_eval_t            tuple_eval;
     uint32_t                depth;
-    sdk_ret_t               ret = SDK_RET_OK;
+    pds_ret_t               ret = PDS_RET_OK;
 
     conntrack_metrics.baseline();
 
@@ -245,12 +245,12 @@ conntrack_populate_full(test_vparam_ref_t vparam)
     return CONNTRACK_CREATE_RET_VALIDATE(ret) && tuple_eval.zero_failures();
 }
 
-sdk_ret_t
+pds_ret_t
 conntrack_aging_expiry_fn(uint32_t expiry_id,
                         pds_flow_age_expiry_type_t expiry_type,
                         void *user_ctx)
 {
-    sdk_ret_t ret = SDK_RET_OK;
+    pds_ret_t   ret = PDS_RET_OK;;
 
     switch (expiry_type) {
 
@@ -264,11 +264,11 @@ conntrack_aging_expiry_fn(uint32_t expiry_id,
         break;
 
     case EXPIRY_TYPE_SESSION:
-        ret = session_aging_expiry_fn(expiry_id, expiry_type, user_ctx);
+        ret = (pds_ret_t)session_aging_expiry_fn(expiry_id, expiry_type, user_ctx);
         break;
 
     default:
-        ret = SDK_RET_INVALID_ARG;
+        ret = PDS_RET_INVALID_ARG;
         break;
     }
     return ret;
@@ -277,7 +277,7 @@ conntrack_aging_expiry_fn(uint32_t expiry_id,
 bool
 conntrack_aging_init(test_vparam_ref_t vparam)
 {
-    sdk_ret_t   ret;
+    pds_ret_t   ret;
 
     // Start with init() in case that had never been done
     ret = pds_flow_age_init();
@@ -286,7 +286,7 @@ conntrack_aging_init(test_vparam_ref_t vparam)
     // before scanners are started to prevent lockup in scanners
     // due to the lack of true LIF timers in SIM.
     if (!hw() && CONNTRACK_RET_VALIDATE(ret)) {
-        ret = ftl_pollers_client::force_conntrack_expired_ts_set(true);
+        ret = (pds_ret_t)ftl_pollers_client::force_conntrack_expired_ts_set(true);
     }
     if (CONNTRACK_RET_VALIDATE(ret)) {
         ret = pds_flow_age_sw_pollers_qcount(&pollers_qcount);
@@ -321,14 +321,14 @@ conntrack_aging_force_expired_ts(test_vparam_ref_t vparam)
     sdk_ret_t   ret;
 
     ret = ftl_pollers_client::force_conntrack_expired_ts_set(vparam.expected_bool());
-    return CONNTRACK_RET_VALIDATE(ret);
+    return CONNTRACK_RET_VALIDATE((pds_ret_t)ret);
 }
 
 bool
 conntrack_aging_fini(test_vparam_ref_t vparam)
 {
     test_vparam_t   sim_vparam;
-    sdk_ret_t       ret;
+    pds_ret_t       ret;
 
     ret = pds_flow_age_hw_scanners_stop(true);
     if (CONNTRACK_RET_VALIDATE(ret)) {
@@ -394,7 +394,7 @@ conntrack_aging_normal_tmo_set(test_vparam_ref_t vparam)
     pds_flow_type_t     flowtype;
     pds_flow_state_t    flowstate;
     uint32_t            tmo_val;
-    sdk_ret_t           ret = SDK_RET_OK;
+    pds_ret_t           ret = PDS_RET_OK;
 
     glb_tolerance.reset();
 
@@ -426,7 +426,7 @@ conntrack_aging_accel_tmo_set(test_vparam_ref_t vparam)
     pds_flow_type_t     flowtype;
     pds_flow_state_t    flowstate;
     uint32_t            tmo_val;
-    sdk_ret_t           ret = SDK_RET_OK;
+    pds_ret_t           ret = PDS_RET_OK;
 
     glb_tolerance.reset();
 

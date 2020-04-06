@@ -77,6 +77,7 @@ action p4e_stats(tx_to_host, tx_to_switch, tx_to_arm) {
 @pragma stage 5
 @pragma hbm_table
 @pragma index_table
+@pragma capi_bitfields_struct
 table p4e_stats {
     reads {
         control_metadata.stats_id : exact;

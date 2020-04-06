@@ -133,7 +133,7 @@ sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
 }
 } // namespace core
 
-sdk_ret_t
+pds_ret_t
 flow_table_init(void)
 {
     return pds_thread_init(1);
@@ -252,7 +252,7 @@ create_s2h_session_rewrite(uint32_t session_rewrite_id,
     spec.data.u.l2_encap.insert_vlan_tag = TRUE;
     spec.data.u.l2_encap.vlan_id = vnic_vlan;
 
-    ret = pds_flow_session_rewrite_create(&spec);
+    ret = (sdk_ret_t)pds_flow_session_rewrite_create(&spec);
     if (ret != SDK_RET_OK) {
         printf("Failed to program session rewrite s2h info : %u\n", ret);
     }
@@ -266,7 +266,7 @@ create_s2h_session_rewrite_nat_ipv4(uint32_t session_rewrite_id,
         pds_flow_session_rewrite_nat_type_t nat_type,
         ipv4_addr_t ipv4_addr)
 { 
-    sdk_ret_t                                   ret = SDK_RET_OK;
+    pds_ret_t                                   ret = PDS_RET_OK;
     pds_flow_session_rewrite_spec_t             spec;
 
     memset(&spec, 0, sizeof(spec));
@@ -286,11 +286,11 @@ create_s2h_session_rewrite_nat_ipv4(uint32_t session_rewrite_id,
     spec.data.u.l2_encap.vlan_id = vnic_vlan;
 
     ret = pds_flow_session_rewrite_create(&spec);
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
         printf("Failed to program session rewrite s2h info : %u\n", ret);
     }
 
-    return ret;
+    return (sdk_ret_t) ret;
 }
 
 sdk_ret_t
@@ -299,7 +299,7 @@ create_s2h_session_rewrite_nat_ipv6(uint32_t session_rewrite_id,
         pds_flow_session_rewrite_nat_type_t nat_type,
         ipv6_addr_t *ipv6_addr)
 { 
-    sdk_ret_t                                   ret = SDK_RET_OK;
+    pds_ret_t                                   ret = PDS_RET_OK;
     pds_flow_session_rewrite_spec_t             spec;
 
     memset(&spec, 0, sizeof(spec));
@@ -320,11 +320,11 @@ create_s2h_session_rewrite_nat_ipv6(uint32_t session_rewrite_id,
     spec.data.u.l2_encap.vlan_id = vnic_vlan;
 
     ret = pds_flow_session_rewrite_create(&spec);
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
         printf("Failed to program session rewrite s2h info : %u\n", ret);
     }
 
-    return ret;
+    return (sdk_ret_t) ret;
 }
 
 sdk_ret_t
@@ -334,7 +334,7 @@ create_h2s_session_rewrite_mplsoudp(uint32_t session_rewrite_id,
         uint32_t substrate_sip, uint32_t substrate_dip,
         uint32_t mpls1_label, uint32_t mpls2_label)
 { 
-    sdk_ret_t                                   ret = SDK_RET_OK;
+    pds_ret_t                                   ret = PDS_RET_OK;
     pds_flow_session_rewrite_spec_t             spec;
 
     memset(&spec, 0, sizeof(spec));
@@ -358,11 +358,11 @@ create_h2s_session_rewrite_mplsoudp(uint32_t session_rewrite_id,
     spec.data.u.mplsoudp_encap.mpls2_label = mpls2_label;
 
     ret = pds_flow_session_rewrite_create(&spec);
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
         printf("Failed to program session rewrite h2s info : %u\n", ret);
     }
 
-    return ret;
+    return (sdk_ret_t) ret;
 }
 
 sdk_ret_t
@@ -374,7 +374,7 @@ create_h2s_session_rewrite_mplsoudp_nat_ipv4(uint32_t session_rewrite_id,
         pds_flow_session_rewrite_nat_type_t nat_type,
         ipv4_addr_t ipv4_addr)
 { 
-    sdk_ret_t                                   ret = SDK_RET_OK;
+    pds_ret_t                                   ret = PDS_RET_OK;
     pds_flow_session_rewrite_spec_t             spec;
 
     memset(&spec, 0, sizeof(spec));
@@ -399,11 +399,11 @@ create_h2s_session_rewrite_mplsoudp_nat_ipv4(uint32_t session_rewrite_id,
     spec.data.u.mplsoudp_encap.mpls2_label = mpls2_label;
 
     ret = pds_flow_session_rewrite_create(&spec);
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
         printf("Failed to program session rewrite h2s info : %u\n", ret);
     }
 
-    return ret;
+    return (sdk_ret_t) ret;
 }
 
 sdk_ret_t
@@ -415,7 +415,7 @@ create_h2s_session_rewrite_mplsoudp_nat_ipv6(uint32_t session_rewrite_id,
         pds_flow_session_rewrite_nat_type_t nat_type,
         ipv6_addr_t *ipv6_addr)
 { 
-    sdk_ret_t                                   ret = SDK_RET_OK;
+    pds_ret_t                                   ret = PDS_RET_OK;
     pds_flow_session_rewrite_spec_t             spec;
 
     memset(&spec, 0, sizeof(spec));
@@ -441,11 +441,11 @@ create_h2s_session_rewrite_mplsoudp_nat_ipv6(uint32_t session_rewrite_id,
     spec.data.u.mplsoudp_encap.mpls2_label = mpls2_label;
 
     ret = pds_flow_session_rewrite_create(&spec);
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
         printf("Failed to program session rewrite h2s info : %u\n", ret);
     }
 
-    return ret;
+    return (sdk_ret_t)ret;
 }
 
 sdk_ret_t
@@ -471,7 +471,7 @@ create_session_info_all(uint32_t session_id, uint32_t conntrack_id,
                 uint16_t s2h_allowed_flow_state_bitmask,
                 pds_egress_action_t s2h_egress_action)
 {
-    sdk_ret_t                               ret = SDK_RET_OK;
+    pds_ret_t                               ret = PDS_RET_OK;
     pds_flow_session_spec_t                 spec;
 
     memset(&spec, 0, sizeof(spec));
@@ -515,30 +515,30 @@ create_session_info_all(uint32_t session_id, uint32_t conntrack_id,
     spec.data.switch_to_host_flow_info.egress_action = s2h_egress_action;
 
     ret = pds_flow_session_info_create(&spec);
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
         printf("Failed to program session s2h info : %u\n", ret);
     }
-    return ret;
+    return (sdk_ret_t)ret;
 }
                             
 sdk_ret_t
 vlan_to_vnic_map(uint16_t vlan_id, uint16_t vnic_id)
 {
     pds_vlan_to_vnic_map_spec_t     spec;
-    sdk_ret_t                       ret = SDK_RET_OK;
+    pds_ret_t                       ret = PDS_RET_OK;
 
     spec.key.vlan_id = vlan_id;
     spec.data.vnic_type = VNIC_TYPE_L3;
     spec.data.vnic_id = vnic_id;
 
     ret = pds_vlan_to_vnic_map_create(&spec);
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
         printf("Failed to setup VLAN: %hu to VNIC:%hu mapping\n",
                 vlan_id, vnic_id);
     }
     printf("Setup VLAN: %hu to VNIC:%hu mapping\n",
             vlan_id, vnic_id);
-    return ret;
+    return (sdk_ret_t) ret;
 }
 
 
@@ -546,20 +546,20 @@ sdk_ret_t
 mpls_label_to_vnic_map(uint32_t mpls_label, uint16_t vnic_id)
 {
     pds_mpls_label_to_vnic_map_spec_t       spec;
-    sdk_ret_t                               ret = SDK_RET_OK;
+    pds_ret_t                               ret = PDS_RET_OK;
 
     spec.key.mpls_label = mpls_label;
     spec.data.vnic_type = VNIC_TYPE_L3;
     spec.data.vnic_id = vnic_id;
 
     ret = pds_mpls_label_to_vnic_map_create(&spec);
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
         printf("Failed to setup MPLS Label: %u to VNIC:%hu mapping\n",
                 mpls_label, vnic_id);
     }
     printf("Setup MPLS Label: %u to VNIC:%hu mapping\n",
             mpls_label, vnic_id);
-    return ret;
+    return (sdk_ret_t) ret;
 }
 
 
@@ -579,7 +579,7 @@ create_dnat_map_ipv4(uint16_t vnic_id, ipv4_addr_t v4_nat_dip,
     memcpy(spec.data.addr, &v4_orig_dip, sizeof(ipv4_addr_t));
     spec.data.epoch = dnat_epoch;
 
-    return pds_dnat_map_entry_create(&spec);
+    return (sdk_ret_t)pds_dnat_map_entry_create(&spec);
 }
 
 sdk_ret_t
@@ -600,7 +600,7 @@ create_dnat_map_ipv6(uint16_t vnic_id, ipv6_addr_t *v6_nat_dip,
             sizeof(ipv6_addr_t));
     spec.data.epoch = dnat_epoch;
 
-    return pds_dnat_map_entry_create(&spec);
+    return (sdk_ret_t)pds_dnat_map_entry_create(&spec);
 }
 
 
@@ -668,7 +668,7 @@ iterate_dump_flows(void)
     pds_flow_iter_cb_arg_t iter_cb_arg = { 0 };
 
     ASSERT_TRUE(pds_flow_cache_entry_iterate(dump_single_flow, &iter_cb_arg)
-        == SDK_RET_OK);
+        == PDS_RET_OK);
 }
 
 void
@@ -714,7 +714,7 @@ print_stats(void)
 {
     pds_flow_stats_t stats = { 0 };
 
-    ASSERT_TRUE(pds_flow_cache_stats_get(1, &stats) == SDK_RET_OK);
+    ASSERT_TRUE(pds_flow_cache_stats_get(1, &stats) == PDS_RET_OK);
     dump_stats(&stats);
 }
 
@@ -762,7 +762,7 @@ main (int argc, char **argv)
     int          oc;
     string       cfg_path, cfg_file, profile, pipeline, file;
     boost::property_tree::ptree pt;
-    sdk_ret_t ret;
+    pds_ret_t ret;
 
     struct option longopts[] = {
        { "config",    required_argument, NULL, 'c' },
@@ -856,19 +856,29 @@ main (int argc, char **argv)
     }
 
     // Initialize the PDS functionality
-    pds_init_params_t init_params;
+    pds_cinit_params_t init_params;
 
     memset(&init_params, 0, sizeof(init_params));
-    init_params.init_mode = PDS_INIT_MODE_COLD_START;
-    init_params.trace_cb  = core::sdk_logger;
+    init_params.init_mode = PDS_CINIT_MODE_COLD_START;
+    init_params.trace_cb  = (void*) core::sdk_logger;
+/*
     init_params.pipeline  = pipeline;
     init_params.cfg_file  = cfg_file;
     init_params.memory_profile = PDS_MEMORY_PROFILE_DEFAULT;
+    init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
+    if (!profile.empty()) {
+        if (profile.compare("p1") == 0) {
+            init_params.scale_profile = PDS_SCALE_PROFILE_P1;
+        } else if (profile.compare("p2") == 0) {
+            init_params.scale_profile = PDS_SCALE_PROFILE_P2;
+        }
+    }
+*/
     // initialize the logger instance
     core::logger_init();
 
     ret = pds_global_init(&init_params);
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
         fprintf(stderr, "PDS global init failed with ret %u\n", ret);
         exit(1);
     }

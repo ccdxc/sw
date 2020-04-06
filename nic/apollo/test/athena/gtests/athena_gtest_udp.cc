@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <vector>
 #include "nic/include/base.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/api/include/athena/pds_vnic.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
@@ -30,7 +32,7 @@ create_flow_v4_tcp_udp (uint16_t vnic_id, ipv4_addr_t v4_addr_sip, ipv4_addr_t v
     spec.data.index_type = index_type;
     spec.data.index = index;
 
-    return pds_flow_cache_entry_create(&spec);
+    return (sdk_ret_t)pds_flow_cache_entry_create(&spec);
 }
 
 sdk_ret_t
@@ -55,7 +57,7 @@ create_flow_v6_tcp_udp (uint16_t vnic_id, ipv6_addr_t *v6_addr_sip,
     spec.data.index_type = index_type;
     spec.data.index = index;
 
-    return pds_flow_cache_entry_create(&spec);
+    return (sdk_ret_t)pds_flow_cache_entry_create(&spec);
 }
 
 

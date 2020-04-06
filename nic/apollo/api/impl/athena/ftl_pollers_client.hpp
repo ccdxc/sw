@@ -34,7 +34,7 @@ extern volatile uint8_t user_will_poll_;
 
 sdk_ret_t init(void);
 uint32_t qcount_get(void);
-sdk_ret_t expiry_fn_dflt(pds_flow_expiry_fn_t *ret_fn_dflt);
+pds_ret_t expiry_fn_dflt(pds_flow_expiry_fn_t *ret_fn_dflt);
 sdk_ret_t poll_control(bool user_will_poll,
                        pds_flow_expiry_fn_t expiry_fn);
 sdk_ret_t poll(uint32_t qid,

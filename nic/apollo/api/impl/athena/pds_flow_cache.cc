@@ -134,7 +134,7 @@ pds_flow_cache_set_core_id (unsigned int core_id)
     ftl_table->set_thread_id(core_id);
 }
 
-sdk_ret_t
+pds_ret_t
 pds_flow_cache_entry_create (pds_flow_spec_t *spec)
 {
     sdk_ret_t ret;
@@ -145,29 +145,29 @@ pds_flow_cache_entry_create (pds_flow_spec_t *spec)
 
     if (!spec) {
         PDS_TRACE_ERR("spec is null");
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
     if (spec->key.key_type == KEY_TYPE_INVALID ||
         spec->key.key_type >= KEY_TYPE_MAX) {
         PDS_TRACE_ERR("Key type %u invalid", spec->key.key_type);
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
 
     index = spec->data.index;
     index_type = spec->data.index_type;
     if (index > PDS_FLOW_SESSION_INFO_ID_MAX) {
         PDS_TRACE_ERR("session id %u is invalid", index);
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
 
     entry.clear();
     if ((ret = flow_cache_entry_setup_key(&entry, &spec->key))
              != SDK_RET_OK)
-         return ret;
+         return (pds_ret_t) ret;
     ftlv6_set_index(&entry, index);
     ftlv6_set_index_type(&entry, index_type);
     params.entry = &entry;
-    return ftl_table->insert(&params);
+    return (pds_ret_t) ftl_table->insert(&params);
 }
 
 static void
@@ -224,7 +224,7 @@ flow_cache_entry_find_cb (sdk_table_api_params_t *params)
     return;
 }
 
-sdk_ret_t
+pds_ret_t
 pds_flow_cache_entry_read (pds_flow_key_t *key,
                            pds_flow_info_t *info)
 {
@@ -235,19 +235,19 @@ pds_flow_cache_entry_read (pds_flow_key_t *key,
 
     if (!key || !info) {
         PDS_TRACE_ERR("key/info is null");
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
     if (key->key_type == KEY_TYPE_INVALID ||
         key->key_type >= KEY_TYPE_MAX) {
         PDS_TRACE_ERR("Key type %u invalid", key->key_type);
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
 
     entry.clear();
     ftl_entry_valid = false;
     if ((ret = flow_cache_entry_setup_key(&entry, key))
              != SDK_RET_OK)
-         return ret;
+         return (pds_ret_t)ret;
     params.entry = &entry;
     params.itercb = flow_cache_entry_find_cb;
     cbdata.key = key;
@@ -255,12 +255,12 @@ pds_flow_cache_entry_read (pds_flow_key_t *key,
     params.cbdata = &cbdata;
     ret = ftl_table->iterate(&params);
     if (ftl_entry_valid == false)
-        return SDK_RET_ENTRY_NOT_FOUND;
+        return PDS_RET_ENTRY_NOT_FOUND;
     else
-        return SDK_RET_OK;
+        return PDS_RET_OK;
 }
 
-sdk_ret_t
+pds_ret_t
 pds_flow_cache_entry_update (pds_flow_spec_t *spec)
 {
     sdk_ret_t ret;
@@ -271,32 +271,32 @@ pds_flow_cache_entry_update (pds_flow_spec_t *spec)
 
     if (!spec) {
         PDS_TRACE_ERR("spec is null");
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
     if (spec->key.key_type == KEY_TYPE_INVALID ||
         spec->key.key_type >= KEY_TYPE_MAX) {
         PDS_TRACE_ERR("Key type %u invalid", spec->key.key_type);
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
 
     index = spec->data.index;
     index_type = spec->data.index_type;
     if (index > PDS_FLOW_SESSION_INFO_ID_MAX) {
         PDS_TRACE_ERR("session id %u is invalid", index);
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
 
     entry.clear();
     if ((ret = flow_cache_entry_setup_key(&entry, &spec->key))
              != SDK_RET_OK)
-         return ret;
+         return (pds_ret_t)ret;
     ftlv6_set_index(&entry, index);
     ftlv6_set_index_type(&entry, index_type);
     params.entry = &entry;
-    return ftl_table->update(&params);
+    return (pds_ret_t)ftl_table->update(&params);
 }
 
-sdk_ret_t
+pds_ret_t
 pds_flow_cache_entry_delete (pds_flow_key_t *key)
 {
     sdk_ret_t ret;
@@ -305,20 +305,20 @@ pds_flow_cache_entry_delete (pds_flow_key_t *key)
 
     if (!key) {
         PDS_TRACE_ERR("key is null");
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
     if (key->key_type == KEY_TYPE_INVALID ||
         key->key_type >= KEY_TYPE_MAX) {
         PDS_TRACE_ERR("Key type %u invalid", key->key_type);
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
 
     entry.clear();
     if ((ret = flow_cache_entry_setup_key(&entry, key))
              != SDK_RET_OK)
-         return ret;
+         return (pds_ret_t) ret;
     params.entry = &entry;
-    return ftl_table->remove(&params);
+    return (pds_ret_t) ftl_table->remove(&params);
 }
 
 void
@@ -369,7 +369,7 @@ flow_cache_entry_iterate_cb (sdk_table_api_params_t *params)
     return;
 }
 
-sdk_ret_t
+pds_ret_t
 pds_flow_cache_entry_iterate (pds_flow_iter_cb_t iter_cb,
                               pds_flow_iter_cb_arg_t *iter_cb_arg)
 {
@@ -378,7 +378,7 @@ pds_flow_cache_entry_iterate (pds_flow_iter_cb_t iter_cb,
 
     if (iter_cb == NULL || iter_cb_arg == NULL) {
         PDS_TRACE_ERR("itercb or itercb_arg is null");
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
      }
 
     cbdata.iter_cb = iter_cb;
@@ -387,10 +387,10 @@ pds_flow_cache_entry_iterate (pds_flow_iter_cb_t iter_cb,
     params.cbdata = &cbdata;
     params.force_hwread = false;
     ftl_entry_count = 0;
-    return ftl_table->iterate(&params);
+    return (pds_ret_t)ftl_table->iterate(&params);
 }
 
-sdk_ret_t
+pds_ret_t
 pds_flow_cache_stats_get (int32_t core_id, pds_flow_stats_t *stats)
 {
     sdk_ret_t ret;
@@ -400,7 +400,7 @@ pds_flow_cache_stats_get (int32_t core_id, pds_flow_stats_t *stats)
 
     if (!stats) {
         PDS_TRACE_ERR("Stats is null");
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
 
     if (core_id != -1)
@@ -409,7 +409,7 @@ pds_flow_cache_stats_get (int32_t core_id, pds_flow_stats_t *stats)
         ret = ftl_table->stats_get(&api_stats, &table_stats);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Stats get failed");
-        return ret;
+        return (pds_ret_t)ret;
     }
     // Populate api statistics
     stats->api_insert = api_stats.insert;
@@ -439,7 +439,7 @@ pds_flow_cache_stats_get (int32_t core_id, pds_flow_stats_t *stats)
         stats->table_insert_lvl[i] = table_stats.insert_lvl[i];
         stats->table_remove_lvl[i] = table_stats.remove_lvl[i];
     }
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
 }

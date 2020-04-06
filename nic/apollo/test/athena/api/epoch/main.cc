@@ -48,58 +48,58 @@ TEST_F(epoch_test, epoch_crud) {
 
     spec.key.epoch_id = 1;
     spec.data.epoch = 100;
-    SDK_ASSERT(pds_epoch_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_epoch_create(&spec) == PDS_RET_OK);
 
     memset(&info, 0, sizeof(info)); 
     key.epoch_id = 1;
-    SDK_ASSERT(pds_epoch_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_epoch_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.epoch == 100);
 
     memset(&spec, 0, sizeof(spec)); 
     spec.key.epoch_id = 2;
     spec.data.epoch = 200;
-    SDK_ASSERT(pds_epoch_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_epoch_create(&spec) == PDS_RET_OK);
 
     memset(&info, 0, sizeof(info)); 
     key.epoch_id = 2;
-    SDK_ASSERT(pds_epoch_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_epoch_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.epoch == 200);
 
     memset(&spec, 0, sizeof(spec)); 
     spec.key.epoch_id = 1000;
     spec.data.epoch = 1010;
-    SDK_ASSERT(pds_epoch_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_epoch_create(&spec) == PDS_RET_OK);
 
     memset(&info, 0, sizeof(info)); 
     key.epoch_id = 1000;
-    SDK_ASSERT(pds_epoch_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_epoch_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.epoch == 1010);
 
     key.epoch_id = 2;
-    SDK_ASSERT(pds_epoch_delete(&key) == SDK_RET_OK);
+    SDK_ASSERT(pds_epoch_delete(&key) == PDS_RET_OK);
 
     key.epoch_id = 2;
-    SDK_ASSERT(pds_epoch_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_epoch_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.epoch == 0);
 
     memset(&spec, 0, sizeof(spec)); 
     spec.key.epoch_id = 0;
     spec.data.epoch = 2000;
-    SDK_ASSERT(pds_epoch_create(&spec) == SDK_RET_INVALID_ARG);
+    SDK_ASSERT(pds_epoch_create(&spec) == PDS_RET_INVALID_ARG);
 
     memset(&spec, 0, sizeof(spec)); 
     spec.key.epoch_id = PDS_EPOCH_ID_MAX;
     spec.data.epoch = 55100;
-    SDK_ASSERT(pds_epoch_create(&spec) == SDK_RET_INVALID_ARG);
+    SDK_ASSERT(pds_epoch_create(&spec) == PDS_RET_INVALID_ARG);
 
     memset(&spec, 0, sizeof(spec)); 
     spec.key.epoch_id = 1000;
     spec.data.epoch = 11100;
-    SDK_ASSERT(pds_epoch_create(&spec) == SDK_RET_OK);
+    SDK_ASSERT(pds_epoch_create(&spec) == PDS_RET_OK);
 
     memset(&info, 0, sizeof(info)); 
     key.epoch_id = 1000;
-    SDK_ASSERT(pds_epoch_read(&key, &info) == SDK_RET_OK);
+    SDK_ASSERT(pds_epoch_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.epoch == 11100);
 
 }

@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <vector>
 #include "nic/include/base.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/athena/pds_vnic.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
 #include "nic/apollo/api/include/athena/pds_flow_session_info.h"
@@ -56,7 +58,7 @@ create_epoch_entry(uint32_t epoch_id, uint16_t epoch_val)
     spec.key.epoch_id = epoch_id;
     spec.data.epoch = epoch_val;
 
-    return pds_epoch_create(&spec);
+    return (sdk_ret_t)pds_epoch_create(&spec);
 }
 
 
