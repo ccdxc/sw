@@ -101,8 +101,6 @@ func setupSpyglass(ctx context.Context, t *testing.T,
 			r,
 			cache,
 			logger,
-			8,
-			1,
 			indexer.WithElasticClient(es),
 			indexer.WithDisableAPIServerWatcher(),
 			indexer.WithNumVosObjectsToDelete(1))

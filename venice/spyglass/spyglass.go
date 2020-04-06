@@ -83,15 +83,13 @@ func main() {
 		log.Fatalf("Failed to start finder, err: %v", err)
 	}
 
-	startIndexer := func(maxOrderedWriters, maxAppendonlyWriters int, opts ...indexer.Option) {
+	startIndexer := func(opts ...indexer.Option) {
 		for {
 			idxer, err := indexer.NewIndexer(ctx,
 				*apiServerAddr,
 				rslr,
 				cache,
 				logger,
-				maxOrderedWriters,
-				maxAppendonlyWriters,
 				opts...,
 			)
 
@@ -105,8 +103,8 @@ func main() {
 		}
 	}
 	// Create the indexers
-	go startIndexer(8, 0, indexer.WithDisableVOSWatcher())
-	go startIndexer(8, 1, indexer.WithDisableAPIServerWatcher())
+	go startIndexer(indexer.WithDisableVOSWatcher())
+	go startIndexer(indexer.WithDisableAPIServerWatcher())
 
 	router := mux.NewRouter()
 

@@ -60,7 +60,11 @@ func (idr *Indexer) startVosDiskMonitorWatcher() error {
 			case <-idr.ctx.Done():
 				idr.logger.Info("Exiting diskupdate watcher, Ctx cancelled")
 				return
-			case event := <-outCh:
+			case event, ok := <-outCh:
+				if !ok {
+					idr.logger.Info("Exiting diskupdate watcher, channel closed")
+					return
+				}
 				idr.handleVosDiskMonitorUpdate(event)
 			}
 		}

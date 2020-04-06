@@ -218,8 +218,7 @@ type writerMapEntry struct {
 // NewIndexer instantiates a new indexer
 func NewIndexer(ctx context.Context,
 	apiServerAddr string, rsr resolver.Interface, cache cache.Interface,
-	logger log.Logger, maxOrderedWriters int, maxAppendOnlyWriters int,
-	opts ...Option) (Interface, error) {
+	logger log.Logger, opts ...Option) (Interface, error) {
 	newCtx, cancelFunc := context.WithCancel(ctx)
 	indexer := Indexer{
 		ctx:                         newCtx,
@@ -233,10 +232,6 @@ func NewIndexer(ctx context.Context,
 		doneCh:                      make(chan error),
 		count:                       0,
 		cache:                       cache,
-		maxOrderedWriters:           maxOrderedWriters,
-		maxAppendOnlyWriters:        maxAppendOnlyWriters,
-		maxWriters:                  maxOrderedWriters + maxAppendOnlyWriters,
-		indexMaxBuffer:              (maxOrderedWriters + maxAppendOnlyWriters) * indexBatchSize,
 		watchVos:                    true,
 		watchAPIServer:              true,
 		numFwLogObjectsToDelete:     numFwLogObjectsToDelete,
@@ -248,6 +243,17 @@ func NewIndexer(ctx context.Context,
 			opt(&indexer)
 		}
 	}
+
+	if indexer.watchVos {
+		indexer.maxOrderedWriters = 8
+		indexer.maxAppendOnlyWriters = 1
+	} else {
+		indexer.maxOrderedWriters = 8
+		indexer.maxAppendOnlyWriters = 0
+	}
+
+	indexer.maxWriters = indexer.maxOrderedWriters + indexer.maxAppendOnlyWriters
+	indexer.indexMaxBuffer = indexer.maxWriters * indexBatchSize
 
 	logger.Infof("Creating Indexer, apiserver-addr: %s, watchAPIServer %d, watchVos %d",
 		apiServerAddr, indexer.watchAPIServer, indexer.watchVos)

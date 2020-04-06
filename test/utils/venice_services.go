@@ -237,7 +237,7 @@ func StartSpyglassWithArchiveService(service, apiServerAddr string, mr resolver.
 			indexer.WithElasticClient(esClient)(idr)
 		}
 
-		idr, err := indexer.NewIndexer(ctx, apiServerAddr, mr, cache, logger, 8, 0, spyglassOpts)
+		idr, err := indexer.NewIndexer(ctx, apiServerAddr, mr, cache, logger, spyglassOpts)
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to create indexer, err: %v", err)
 		}
