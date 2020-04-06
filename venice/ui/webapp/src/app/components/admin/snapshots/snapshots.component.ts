@@ -86,7 +86,7 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
   saveConfigForm: FormGroup = new FormGroup({
     meta: new FormGroup({
       name: new FormControl('', [
-        maxLengthValidator(10),
+        maxLengthValidator(50),  // VS-1415, per agreement with backend. set max length to be 50
         patternValidator('^[\\w\\-]*$', 'Only alphanumeric, -, or _ characters are allowed.'),
       ]),
     })
