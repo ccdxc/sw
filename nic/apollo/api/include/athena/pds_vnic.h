@@ -35,57 +35,46 @@ typedef enum pds_vnic_type_e {
 /// \brief Vlan to Vnic map key
 typedef struct pds_vlan_to_vnic_map_key_s {
     uint16_t    vlan_id;    ///< VLAN id
-} __PACK__ pds_vlan_to_vnic_map_key_t;
+} pds_vlan_to_vnic_map_key_t;
 
 /// \brief Vlan to Vnic map data
 typedef struct pds_vlan_to_vnic_map_data_s {
     pds_vnic_type_t    vnic_type;    ///< VNIC type
     uint16_t           vnic_id;      ///< VNIC id
-} __PACK__ pds_vlan_to_vnic_map_data_t;
+} pds_vlan_to_vnic_map_data_t;
 
 /// \brief Vlan to Vnic map specification
 typedef struct pds_vlan_to_vnic_map_spec_s {
     pds_vlan_to_vnic_map_key_t     key;     ///< Vlan to Vnic key
     pds_vlan_to_vnic_map_data_t    data;    ///< Vlan to Vnic data
-} __PACK__ pds_vlan_to_vnic_map_spec_t;
-
-/// \brief Vlan to Vnic map status
-typedef struct pds_vlan_to_vnic_map_status_s {
-} __PACK__ pds_vlan_to_vnic_map_status_t;
+} pds_vlan_to_vnic_map_spec_t;
 
 /// \brief Vlan to Vnic map info
 typedef struct pds_vlan_to_vnic_map_info_s {
     pds_vlan_to_vnic_map_spec_t      spec;      ///< Specification
-    pds_vlan_to_vnic_map_status_t    status;    ///< Status
-} __PACK__ pds_vlan_to_vnic_map_info_t;
-
+} pds_vlan_to_vnic_map_info_t;
 
 /// \brief Mpls label to Vnic map key
 typedef struct pds_mpls_label_to_vnic_map_key_s {
     uint32_t    mpls_label;    ///< MPLS label
-} __PACK__ pds_mpls_label_to_vnic_map_key_t;
+} pds_mpls_label_to_vnic_map_key_t;
 
 /// \brief Mpls label to Vnic map data
 typedef struct pds_mpls_label_to_vnic_map_data_s {
     pds_vnic_type_t    vnic_type;    ///< VNIC type
     uint16_t           vnic_id;      ///< VNIC id
-} __PACK__ pds_mpls_label_to_vnic_map_data_t;
+} pds_mpls_label_to_vnic_map_data_t;
 
 /// \brief Mpls label to Vnic map specification
 typedef struct pds_mpls_label_to_vnic_map_spec_s {
     pds_mpls_label_to_vnic_map_key_t     key;     ///< Mpls label to Vnic key
     pds_mpls_label_to_vnic_map_data_t    data;    ///< Mpls label to Vnic data
-} __PACK__ pds_mpls_label_to_vnic_map_spec_t;
-
-/// \brief Mpls label to Vnic map status
-typedef struct pds_mpls_label_to_vnic_map_status_s {
-} __PACK__ pds_mpls_label_to_vnic_map_status_t;
+} pds_mpls_label_to_vnic_map_spec_t;
 
 /// \brief Mpls label to Vnic map info
 typedef struct pds_mpls_label_to_vnic_map_info_s {
     pds_mpls_label_to_vnic_map_spec_t      spec;      ///< Specification
-    pds_mpls_label_to_vnic_map_status_t    status;    ///< Status
-} __PACK__ pds_mpls_label_to_vnic_map_info_t;
+} pds_mpls_label_to_vnic_map_info_t;
 
 /// \brief     create vlan to vnic map entry
 /// \param[in] spec vlan to vnic map specification

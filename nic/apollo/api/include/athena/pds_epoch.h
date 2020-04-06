@@ -27,29 +27,23 @@ extern "C" {
 /// \brief Epoch key
 typedef struct pds_epoch_key_s {
     uint32_t    epoch_id;    ///< Epoch id
-} __PACK__ pds_epoch_key_t;
+} pds_epoch_key_t;
 
 /// \brief Epoch data
 typedef struct pds_epoch_data_s {
     uint16_t    epoch;    ///< Epoch value
-} __PACK__ pds_epoch_data_t;
+} pds_epoch_data_t;
 
 /// \brief Epoch specification
 typedef struct pds_epoch_spec_s {
     pds_epoch_key_t     key;     ///< Epoch key
     pds_epoch_data_t    data;    ///< Epoch data
-} __PACK__ pds_epoch_spec_t;
-
-/// \brief Epoch status
-typedef struct pds_epoch_status_s {
-} __PACK__ pds_epoch_status_t;
+} pds_epoch_spec_t;
 
 /// \brief Epoch info
 typedef struct pds_epoch_info_s {
     pds_epoch_spec_t      spec;      ///< Specification
-    pds_epoch_status_t    status;    ///< Status
-} __PACK__ pds_epoch_info_t;
-
+} pds_epoch_info_t;
 
 /// \brief     create epoch entry
 /// \param[in] spec epoch specification

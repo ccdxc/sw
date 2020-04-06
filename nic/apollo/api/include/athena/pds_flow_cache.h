@@ -59,7 +59,7 @@ typedef struct pds_flow_key_s {
     uint8_t              ip_daddr[IP6_ADDR8_LEN];    ///< IP dest addr
     uint8_t              ip_proto;                   ///< IP protocol
     pds_flow_key_l4_t    l4;                         ///< L4 key fields
-} __PACK__ pds_flow_key_t;
+} pds_flow_key_t;
 
 /// \brief Index type
 typedef enum pds_flow_spec_index_type_e {
@@ -71,24 +71,24 @@ typedef enum pds_flow_spec_index_type_e {
 typedef struct pds_flow_data_s {
     pds_flow_spec_index_type_t     index_type;    ///< index type
     uint32_t                       index;         ///< session index
-} __PACK__ pds_flow_data_t;
+} pds_flow_data_t;
 
 /// \brief Flow spec
 typedef struct pds_flow_spec_s {
     pds_flow_key_t     key;     ///< flow key
     pds_flow_data_t    data;    ///< flow data
-} __PACK__ pds_flow_spec_t;
+} pds_flow_spec_t;
 
 /// \brief Flow information
 typedef struct pds_flow_info_s {
     pds_flow_spec_t      spec;        ///< specification
-} __PACK__ pds_flow_info_t;
+} pds_flow_info_t;
 
 /// \brief Flow iterate callback arg
 typedef struct pds_flow_iter_cb_arg_s {
     pds_flow_key_t     flow_key;
     pds_flow_data_t    flow_appdata;
-} __PACK__ pds_flow_iter_cb_arg_t;
+} pds_flow_iter_cb_arg_t;
 
 /// \brief Flow statistics
 typedef struct pds_flow_stats_t {
@@ -118,7 +118,7 @@ typedef struct pds_flow_stats_t {
     uint64_t    table_write;
     uint64_t    table_insert_lvl[PDS_FLOW_TABLE_MAX_RECIRC];
     uint64_t    table_remove_lvl[PDS_FLOW_TABLE_MAX_RECIRC];
-} __PACK__ pds_flow_stats_t;
+} pds_flow_stats_t;
 
 /// \brief     Flow iterate callback function type
 /// \remark    This function needs to be defined by the application.

@@ -42,7 +42,7 @@ pds_flow_session_rewrite_create (pds_flow_session_rewrite_spec_t *spec)
         PDS_TRACE_ERR("Invalid NAT type %u", spec->data.nat_info.nat_type);
         return PDS_RET_INVALID_ARG;
     }
-    if ((spec->data.encap_type < ENCAP_TYPE_NONE) ||
+    if ((spec->data.encap_type < ENCAP_TYPE_L2) ||
         (spec->data.encap_type >= ENCAP_TYPE_MAX)) {
         PDS_TRACE_ERR("Invalid encap type %u", spec->data.encap_type);
         return PDS_RET_INVALID_ARG;
@@ -191,6 +191,9 @@ pds_flow_session_rewrite_create (pds_flow_session_rewrite_spec_t *spec)
         session_rewrite_ipv6_dnat.set_valid_flag(TRUE);
 
         p4pd_ret = session_rewrite_ipv6_dnat.write(session_rewrite_id);
+    } else {
+        PDS_TRACE_ERR("Unsupported NAT type %u", spec->data.nat_info.nat_type);
+        return PDS_RET_INVALID_ARG;
     }
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to write session rewrite table at index %u",
@@ -199,10 +202,7 @@ pds_flow_session_rewrite_create (pds_flow_session_rewrite_spec_t *spec)
     }
 
     // Session rewrite encap programming
-    // TODO: Check if no encap case is valid
-    if (spec->data.encap_type == ENCAP_TYPE_NONE) {
-        return PDS_RET_OK;
-    } else if (spec->data.encap_type == ENCAP_TYPE_L2) {
+    if (spec->data.encap_type == ENCAP_TYPE_L2) {
 
         session_rewrite_encap_l2_entry_t session_encap_l2;
         uint64_t                         mac = 0;

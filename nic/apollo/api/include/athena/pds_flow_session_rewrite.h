@@ -37,8 +37,7 @@ typedef enum pds_flow_session_rewrite_nat_type_e {
 
 /// \brief Encapsulation type
 typedef enum pds_flow_session_encap_e {
-    ENCAP_TYPE_NONE = 0,    ///< No encap
-    ENCAP_TYPE_L2,          ///< L2 encap
+    ENCAP_TYPE_L2 = 0,      ///< L2 encap
     ENCAP_TYPE_MPLSOUDP,    ///< MPLS over UDP encap
     ENCAP_TYPE_MPLSOGRE,    ///< MPLS over GRE encap
     ENCAP_TYPE_GENEVE,      ///< Geneve encap
@@ -51,7 +50,7 @@ typedef struct pds_flow_session_rewrite_pat_info_s {
     uint32_t            ip_daddr;
     uint16_t            l4_sport;
     uint16_t            l4_dport;
-} __PACK__ pds_flow_session_rewrite_pat_info_t;
+} pds_flow_session_rewrite_pat_info_t;
 
 /// \brief Rewrite NAT informatiom
 typedef struct pds_flow_session_rewrite_nat_info_s {
@@ -61,7 +60,7 @@ typedef struct pds_flow_session_rewrite_nat_info_s {
         uint32_t                               ipv4_addr;
         pds_flow_session_rewrite_pat_info_t    pat;
     } u;
-} __PACK__ pds_flow_session_rewrite_nat_info_t;
+} pds_flow_session_rewrite_nat_info_t;
 
 /// \brief L2 encapsulation
 typedef struct pds_flow_session_l2_encap_s {
@@ -69,19 +68,19 @@ typedef struct pds_flow_session_l2_encap_s {
     uint8_t     dmac[ETH_ADDR_LEN];    ///< Destination MAC
     uint8_t     insert_vlan_tag;       ///< Insert VLAN tag
     uint16_t    vlan_id;               ///< VLAN id
-} __PACK__ pds_flow_session_l2_encap_t;
+} pds_flow_session_l2_encap_t;
 
 /// \brief IP encapsulation
 typedef struct pds_flow_session_ip_encap_s {
     uint32_t    ip_saddr;    ///< IP src address
     uint32_t    ip_daddr;    ///< IP dest address
-} __PACK__ pds_flow_session_ip_encap_t;
+} pds_flow_session_ip_encap_t;
 
 /// \brief UDP encapsulation
 typedef struct pds_flow_session_udp_encap_s {
     uint16_t    udp_sport;    ///< source port
     uint16_t    udp_dport;    ///< destination port
-} __PACK__ pds_flow_session_udp_encap_t;
+} pds_flow_session_udp_encap_t;
 
 /// \brief MPLS over UDP encapsulation
 typedef struct pds_flow_session_mplsoudp_encap_s {
@@ -91,7 +90,7 @@ typedef struct pds_flow_session_mplsoudp_encap_s {
     uint32_t                        mpls1_label;    ///< MPLS label 1
     uint32_t                        mpls2_label;    ///< MPLS label 2
     uint32_t                        mpls3_label;    ///< MPLS label 3
-} __PACK__ pds_flow_session_mplsoudp_encap_t;
+} pds_flow_session_mplsoudp_encap_t;
 
 /// \brief MPLS over GRE encapsulation
 typedef struct pds_flow_session_mplsogre_encap_s {
@@ -100,7 +99,7 @@ typedef struct pds_flow_session_mplsogre_encap_s {
     uint32_t                       mpls1_label;    ///< MPLS label 1
     uint32_t                       mpls2_label;    ///< MPLS label 2
     uint32_t                       mpls3_label;    ///< MPLS label 3
-} __PACK__ pds_flow_session_mplsogre_encap_t;
+} pds_flow_session_mplsogre_encap_t;
 
 /// \brief Geneve encapsulation
 typedef struct pds_flow_session_geneve_encap_s {
@@ -130,7 +129,7 @@ typedef struct pds_flow_session_geneve_encap_s {
     uint16_t                        sg_id6;
     ///< Originator physical IP
     uint32_t                        originator_physical_ip;
-} __PACK__ pds_flow_session_geneve_encap_t;
+} pds_flow_session_geneve_encap_t;
 
 /// \brief Packet rewrite data
 typedef struct pds_flow_session_rewrite_data_s {
@@ -156,28 +155,23 @@ typedef struct pds_flow_session_rewrite_data_s {
         ///< Geneve encap
         pds_flow_session_geneve_encap_t     geneve_encap;
     } u;
-} __PACK__ pds_flow_session_rewrite_data_t;
+} pds_flow_session_rewrite_data_t;
 
 /// \brief Session key
 typedef struct pds_flow_session_rewrite_key_s {
     uint32_t    session_rewrite_id;    ///< Session rewrite id
-} __PACK__ pds_flow_session_rewrite_key_t;
+} pds_flow_session_rewrite_key_t;
 
 /// \brief Session specification
 typedef struct pds_flow_session_rewrite_spec_s {
     pds_flow_session_rewrite_key_t     key;     ///< Session rewrite key
     pds_flow_session_rewrite_data_t    data;    ///< Session rewrite data
-} __PACK__ pds_flow_session_rewrite_spec_t;
-
-/// \brief Session status
-typedef struct pds_flow_session_rewrite_status_s {
-} __PACK__ pds_flow_session_rewrite_status_t;
+} pds_flow_session_rewrite_spec_t;
 
 /// \brief Session info
 typedef struct pds_flow_session_rewrite_info_s {
     pds_flow_session_rewrite_spec_t      spec;      ///< Specification
-    pds_flow_session_rewrite_status_t    status;    ///< Status
-} __PACK__ pds_flow_session_rewrite_info_t;
+} pds_flow_session_rewrite_info_t;
 
 /// \brief     create flow session rewrite info entry
 /// \param[in] spec flow session rewrite specification

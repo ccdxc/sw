@@ -70,7 +70,7 @@ typedef struct pds_flow_session_flow_data_s {
     uint16_t                        allowed_flow_state_bitmask;
     ///< Action to be taken on egress
     pds_egress_action_t             egress_action;
-} __PACK__ pds_flow_session_flow_data_t;
+} pds_flow_session_flow_data_t;
 
 /// \brief Session specification
 typedef struct pds_flow_session_data_s {
@@ -84,30 +84,30 @@ typedef struct pds_flow_session_data_s {
     pds_flow_session_flow_data_t    host_to_switch_flow_info;
     ///< Switch to Host data
     pds_flow_session_flow_data_t    switch_to_host_flow_info;
-} __PACK__ pds_flow_session_data_t;
+} pds_flow_session_data_t;
 
 /// \brief Session key
 typedef struct pds_flow_session_key_s {
     uint8_t     direction;          ///< Direction
     uint32_t    session_info_id;    ///< Session info id
-} __PACK__ pds_flow_session_key_t;
+} pds_flow_session_key_t;
 
 /// \brief Session specification
 typedef struct pds_flow_session_spec_s {
     pds_flow_session_key_t     key;             ///< Session key
     pds_flow_session_data_t    data;            ///< Session data
-} __PACK__ pds_flow_session_spec_t;
+} pds_flow_session_spec_t;
 
 /// \brief Session status
 typedef struct pds_flow_session_status_s {
     uint32_t    timestamp;          ///< Current timestamp
-} __PACK__ pds_flow_session_status_t;
+} pds_flow_session_status_t;
 
 /// \brief Session info
 typedef struct pds_flow_session_info_s {
     pds_flow_session_spec_t      spec;      ///< Specification
     pds_flow_session_status_t    status;    ///< Status
-} __PACK__ pds_flow_session_info_t;
+} pds_flow_session_info_t;
 
 /// \brief     create flow session info entry
 /// \param[in] spec flow session specification

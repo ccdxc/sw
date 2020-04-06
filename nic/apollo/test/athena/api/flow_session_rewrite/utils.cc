@@ -6,6 +6,8 @@
 #include "nic/apollo/api/include/athena/pds_flow_session_rewrite.h"
 #include "nic/apollo/test/athena/api/flow_session_rewrite/utils.hpp"
 
+#define UPDATE_DELTA 10
+
 // Data templates
 uint8_t smac[ETH_ADDR_LEN] = { 0x22, 0x33, 0x44, 0x0, 0x0, 0x0 };
 uint8_t dmac[ETH_ADDR_LEN] = { 0x55, 0x66, 0x77, 0x0, 0x0, 0x0 };
@@ -95,4 +97,52 @@ fill_data (pds_flow_session_rewrite_data_t *data, uint32_t index,
         geneve_encap->originator_physical_ip = origin_ip_addr + index;
     }
     return;
+}
+
+void
+fill_data_type (pds_flow_session_rewrite_data_t *data, uint32_t index)
+{
+    pds_flow_session_rewrite_nat_type_t nat_type;
+    pds_flow_session_encap_t encap_type;
+
+    nat_type = (pds_flow_session_rewrite_nat_type_t)(index % REWRITE_NAT_TYPE_MAX);
+    if (nat_type == REWRITE_NAT_TYPE_IPV4_SPAT ||
+        nat_type == REWRITE_NAT_TYPE_IPV4_DPAT) {
+        nat_type = REWRITE_NAT_TYPE_IPV4_SDPAT;
+    }
+
+    encap_type = (pds_flow_session_encap_t)(index % ENCAP_TYPE_MAX);
+    if(encap_type == ENCAP_TYPE_MPLSOGRE)
+       encap_type = ENCAP_TYPE_MPLSOUDP;
+
+    fill_data(data, index, nat_type, encap_type);
+    return;
+}
+
+void
+update_data_type (pds_flow_session_rewrite_data_t *data, uint32_t index)
+{
+    pds_flow_session_rewrite_nat_type_t nat_type;
+    pds_flow_session_encap_t encap_type;
+
+    nat_type = (pds_flow_session_rewrite_nat_type_t)(index % REWRITE_NAT_TYPE_MAX);
+    if (nat_type == REWRITE_NAT_TYPE_IPV4_SPAT ||
+        nat_type == REWRITE_NAT_TYPE_IPV4_DPAT) {
+        nat_type = REWRITE_NAT_TYPE_IPV4_SDPAT;
+    }
+
+    encap_type = (pds_flow_session_encap_t)(index % ENCAP_TYPE_MAX);
+    if(encap_type == ENCAP_TYPE_MPLSOGRE)
+        encap_type = ENCAP_TYPE_MPLSOUDP;
+
+    index = index + UPDATE_DELTA;
+    fill_data(data, index, nat_type, encap_type);
+    return;
+}
+
+void
+fill_key (pds_flow_session_rewrite_key_t *key, uint32_t index)
+{
+     key->session_rewrite_id = index;
+     return;
 }

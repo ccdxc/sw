@@ -20,4 +20,8 @@ void fill_key(pds_flow_session_key_t *key, uint32_t index,
 void fill_data(pds_flow_session_data_t *data, uint32_t index,
                uint8_t direction, bool update);
 
+void fill_scale_data(pds_flow_session_data_t *data, uint32_t index);
+
+void update_scale_data(pds_flow_session_data_t *data, uint32_t index);
+
 #endif // __UTILS_HPP__
