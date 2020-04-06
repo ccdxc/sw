@@ -385,8 +385,8 @@ class _Testbed:
         firmware_reimage_only = kwargs.get('firmware_reimage_only', False)
         driver_reimage_only = kwargs.get('driver_reimage_only', False)
 
-        if [n for n in self.__tbspec.Instances if n.NodeOs in ["linux","freebsd"]]:
-            self.__verifyImagePath()
+        #if [n for n in self.__tbspec.Instances if n.NodeOs in ["linux","freebsd"]]:
+        #    self.__verifyImagePath()
 
         for instance in self.__tbspec.Instances:
             cmd = ["timeout", "2400"]
