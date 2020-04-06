@@ -22,17 +22,20 @@ class BgpPeerObject(base.ConfigObjectBase):
         self.GID("BGPPeer%d"%self.Id)
         self.State = getattr(spec, "adminstate", 0)
         self.PeerAddr = None
+        self.RemoteASN = None
         if hasattr(spec, 'interface'):
-            # override IPs from testbed json
+            # override IPs and RemoteASN from testbed json
             self.LocalAddr = utils.GetNodeUnderlayIp(node, spec.interface)
             self.PeerAddr = utils.GetNodeUnderlayNexthop(node, spec.interface)
-        else:
+            self.RemoteASN = utils.GetNodeUnderlayBGPRemoteASN(node, spec.interface)
+        if self.LocalAddr == None:
             self.LocalAddr = ipaddress.ip_address(getattr(spec, "localaddr", None))
 
         if self.PeerAddr == None:
             self.PeerAddr = ipaddress.ip_address(getattr(spec, "peeraddr", None))
 
-        self.RemoteASN = getattr(spec, "remoteasn", 0)
+        if self.RemoteASN == None:
+            self.RemoteASN = getattr(spec, "remoteasn", 0)
         self.SendComm = getattr(spec, "sendcomm", False)
         self.SendExtComm = getattr(spec, "sendextcomm", False)
         self.RRClient = getattr(spec, "rrclient", None)
@@ -136,7 +139,7 @@ class BgpPeerObjectClient(base.ConfigClientBase):
     def GenerateObjects(self, node, vpc, vpcspec):
         def __add_bgp_peer(peerspec):
             peerafspec = getattr(peerspec, "bgppeeraf", None)
-            peeraf_obj = BgpPeerAfObject(node, peerafspec)
+            peeraf_obj = BgpPeerAfObject(node, peerafspec, peerspec)
             BgpPeerAfObjectClient.Objs[node].update({peeraf_obj.Id: peeraf_obj})
             obj = BgpPeerObject(node, peerspec, peeraf_obj)
             self.Objs[node].update({obj.Id: obj})

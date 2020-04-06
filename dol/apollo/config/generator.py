@@ -156,6 +156,9 @@ def __create(node):
 
     SecurityProfileClient.CreateObjects(node)
 
+    NHGroupClient.CreateObjects(node)
+    TunnelClient.CreateObjects(node)
+
     # Commit the Batch
     BatchClient.Commit(node)
 

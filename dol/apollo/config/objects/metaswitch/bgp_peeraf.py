@@ -13,18 +13,18 @@ import apollo.config.objects.base as base
 import bgp_pb2 as bgp_pb2
 
 class BgpPeerAfObject(base.ConfigObjectBase):
-    def __init__(self, node, spec):
+    def __init__(self, node, spec, peerspec):
         super().__init__(api.ObjectTypes.BGP_PEER_AF, node)
         self.BatchUnaware = True
         self.Id = next(ResmgrClient[node].BgpPeerAfIdAllocator)
         self.UUID = utils.PdsUuid(self.Id, api.ObjectTypes.BGP_PEER_AF)
         self.GID("BGPPeerAf%d"%self.Id)
         self.PeerAddr = None
-        if hasattr(spec, 'interface'):
+        if hasattr(peerspec, 'interface'):
             # override IPs from testbed json
-            self.LocalAddr = utils.GetNodeUnderlayIp(node, spec.interface)
-            self.PeerAddr = utils.GetNodeUnderlayNexthop(node, spec.interface)
-        else:
+            self.LocalAddr = utils.GetNodeUnderlayIp(node, peerspec.interface)
+            self.PeerAddr = utils.GetNodeUnderlayNexthop(node, peerspec.interface)
+        if self.LocalAddr == None:
             self.LocalAddr = ipaddress.ip_address(getattr(spec, "localaddr", "0.0.0.0"))
 
         if self.PeerAddr == None:

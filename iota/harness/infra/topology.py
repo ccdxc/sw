@@ -193,6 +193,18 @@ class Node(object):
         def SetNicUnderlayIPs(self, ips):
            self.__nic_underlay_ips = ips
 
+        # If static-routes are specified in the testbed json file, we'll configure them
+        # here. This is used in certain testbeds where specific routes via OOB are required.
+        def SetNicStaticRoutes(self, routes):
+           self.__nic_static_routes = routes
+           if self.__nic_static_routes:
+              for rt in self.__nic_static_routes:
+                  print("Configuring static route %s via %s " % (rt.Route, rt.Nexthop))
+                  self.__console_hdl = Console(self.__nic_console_ip, self.__nic_console_port, disable_log=True)
+                  self.__console_hdl.RunCmdGetOp("ip route add " + rt.Route + " via " + rt.Nexthop)
+           else:
+              print("No static routes to configure on naples")
+
         def read_from_console(self):
             if self.__nic_console_ip != "" and self.__nic_console_port != "":
                 try:
@@ -246,6 +258,7 @@ class Node(object):
         self.__dev_index = 1
         self.__devices = {}
         self.__nic_underlay_ips = []
+        self.__nic_static_routes = []
 
 
         nics = getattr(self.__inst, "Nics", None)
@@ -262,6 +275,7 @@ class Node(object):
                     device.SetNicIntMgmtIP(getattr(nic, "IntMgmtIP", api.GetPrimaryIntNicMgmtIp()))
                     device.SetNicMgmtIntf(getattr(nic, "NicMgmtIntf", "oob_mnic0"))
                     device.SetNicUnderlayIPs(getattr(self.__inst, "NicUnderlayIPs", []))
+                    device.SetNicStaticRoutes(getattr(self.__inst, "NicStaticRoutes", []))
                     for port in getattr(nic, "Ports", []):
                         device.SetMac(port.MAC)
                         break
@@ -279,6 +293,7 @@ class Node(object):
                     device.SetNicIntMgmtIP(getattr(self.__inst, "NicIntMgmtIP", api.GetPrimaryIntNicMgmtIp()))
                     device.SetNicMgmtIntf(getattr(self.__inst, "NicMgmtIntf", "oob_mnic0"))
                     device.SetNicUnderlayIPs(getattr(self.__inst, "NicUnderlayIPs", []))
+                    device.SetNicStaticRoutes(getattr(self.__inst, "NicStaticRoutes", []))
                     device.read_from_console()
 
         self.__nic_pci_info = {}  # not used

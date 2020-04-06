@@ -933,10 +933,26 @@ def GetNodeLoopbackIp(node):
     else:
         return None
 
+def GetNodeLoopbackRemoteTEP(node):
+    rtep = EzAccessStoreClient[node].GetLoopbackRemoteTEP()
+    if rtep:
+        return ipaddress.IPv4Address(rtep)
+    else:
+        return None
+
 def GetNodeUnderlayIp(node, intf_name):
     ip = EzAccessStoreClient[node].GetUnderlayIp(intf_name)
     if ip:
         return(ipaddress.IPv4Address(ip))
+    return None
+
+def GetNodeUnderlayMaskLen(node, intf_name):
+    return EzAccessStoreClient[node].GetUnderlayMaskLen(intf_name)
+
+def GetNodeUnderlayBGPRemoteASN(node, intf_name):
+    asn = EzAccessStoreClient[node].GetUnderlayBGPRemoteASN(intf_name)
+    if asn:
+         return(int(asn))
     return None
 
 def GetNodeUnderlayNexthop(node, intf_name):

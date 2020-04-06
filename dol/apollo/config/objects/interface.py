@@ -41,7 +41,7 @@ class InterfaceSpec_:
     pass
 
 class InterfaceInfoObject(base.ConfigObjectBase):
-    def __init__(self, node, iftype, spec, ifspec):
+    def __init__(self, node, iftype, spec, ifspec, ifId):
         self.Node = node
         self.__type = iftype
         self.VrfName = ''
@@ -64,11 +64,29 @@ class InterfaceInfoObject(base.ConfigObjectBase):
             if (hasattr(spec, 'vpcid')):
                 self.VpcId = spec.vpcid
                 self.VrfName = f'Vpc{spec.vpcid}'
-            if (hasattr(ifspec, 'ipprefix')):
-                self.ip_prefix = ipaddress.ip_network(ifspec.ipprefix.replace('\\', '/'), False)
-                self.if_ip_prefix = ipaddress.ip_interface(ifspec.ipprefix.replace('\\', '/'))
-            else:
-                self.ip_prefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
+            self.ip_prefix = None
+            # In IOTA, get L3 interface IPs from testbed json file if present.
+            # If not, then we'll use the one in the cfgyml.
+            if EzAccessStoreClient[node].GetUnderlayIPs():
+                if ifId == 1:
+                    self.ip_prefix = ipaddress.ip_network(EzAccessStoreClient[node].GetUnderlayIp("Uplink0") + "/" + \
+                                                          EzAccessStoreClient[node].GetUnderlayMaskLen("Uplink0"), False)
+                    self.if_ip_prefix = ipaddress.ip_interface(EzAccessStoreClient[node].GetUnderlayIp("Uplink0") + "/" + \
+                                                               EzAccessStoreClient[node].GetUnderlayMaskLen("Uplink0"))
+                    logger.info("Configuring L3 Interface Ifid %d ip-prefix %s if-ip-prefix %s " % (ifId, self.ip_prefix, self.if_ip_prefix))
+                elif ifId == 2:
+                    self.ip_prefix = ipaddress.ip_network(EzAccessStoreClient[node].GetUnderlayIp("Uplink1") + "/" + \
+                                                          EzAccessStoreClient[node].GetUnderlayMaskLen("Uplink1"), False)
+                    self.if_ip_prefix = ipaddress.ip_interface(EzAccessStoreClient[node].GetUnderlayIp("Uplink1") + "/" + \
+                                                               EzAccessStoreClient[node].GetUnderlayMaskLen("Uplink1"))
+                    logger.info("Configuring L3 Interface Ifid %d ip-prefix %s if-ip-prefix %s " % (ifId, self.ip_prefix, self.if_ip_prefix))
+            if not self.ip_prefix:
+                if hasattr(ifspec, 'ipprefix'):
+                    self.ip_prefix = ipaddress.ip_network(ifspec.ipprefix.replace('\\', '/'), False)
+                    self.if_ip_prefix = ipaddress.ip_interface(ifspec.ipprefix.replace('\\', '/'))
+                else:
+                    self.ip_prefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
+                    self.if_ip_prefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
             self.ethifidx = getattr(spec, 'ethifidx', -1)
             if utils.IsDol():
                 node_uuid = None
@@ -118,7 +136,7 @@ class InterfaceObject(base.ConfigObjectBase):
             else:
                 logger.error("Unhandled if type")
             self.AdminState = spec_json['spec']['admin-status']
-            info = InterfaceInfoObject(node, topo.InterfaceTypes.ETH, None, None)
+            info = InterfaceInfoObject(node, topo.InterfaceTypes.ETH, None, None, self.InterfaceId)
             self.IfInfo = info
             self.IfInfo.VrfName = self.Tenant
             self.IfInfo.Network = 'Subnet1'
@@ -145,7 +163,7 @@ class InterfaceObject(base.ConfigObjectBase):
         if utils.IsHostLifSupported() and self.lifns:
             self.obj_helper_lif = lif.LifObjectHelper(node)
             self.__create_lifs(spec)
-        info = InterfaceInfoObject(node, self.Type, spec, ifspec)
+        info = InterfaceInfoObject(node, self.Type, spec, ifspec, self.InterfaceId)
         self.IfInfo = info
         self.Status = InterfaceStatus()
         self.GID("Interface ID:%d"%self.InterfaceId)

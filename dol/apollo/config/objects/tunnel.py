@@ -39,10 +39,14 @@ class TunnelObject(base.ConfigObjectBase):
         if utils.IsDol() and self.DEVICE.OverlayRoutingEn:
             self.SetOrigin('discovered')
         ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################
-        if (hasattr(spec, 'srcaddr')):
-            self.LocalIPAddr = ipaddress.IPv4Address(spec.srcaddr)
-        else:
-            self.LocalIPAddr = self.DEVICE.IPAddr
+        # In IOTA, we'll use the Local and Remote TEP IPs from testbed json file if present.
+        # If not, we'll use the ones from cfgyml.
+        self.LocalIPAddr = utils.GetNodeLoopbackIp(node)
+        if not self.LocalIPAddr:
+           if (hasattr(spec, 'srcaddr')):
+               self.LocalIPAddr = ipaddress.IPv4Address(spec.srcaddr)
+           else:
+               self.LocalIPAddr = self.DEVICE.IPAddr
         self.EncapValue = 0
         self.Nat = False
         self.NexthopId = 0
@@ -77,10 +81,12 @@ class TunnelObject(base.ConfigObjectBase):
                 self.EncapValue = next(ResmgrClient[node].IGWVxlanIdAllocator)
             else:
                 if utils.IsV4Stack(self.DEVICE.Stack):
-                    if getattr(spec, 'dstaddr', None) != None:
-                        self.RemoteIPAddr = ipaddress.IPv4Address(spec.dstaddr)
-                    else:
-                        self.RemoteIPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
+                    self.RemoteIPAddr = utils.GetNodeLoopbackRemoteTEP(node)
+                    if not self.RemoteIPAddr:
+                        if getattr(spec, 'dstaddr', None) != None:
+                            self.RemoteIPAddr = ipaddress.IPv4Address(spec.dstaddr)
+                        else:
+                            self.RemoteIPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
                 else:
                     self.RemoteIPAddr = next(ResmgrClient[node].TepIpv6AddressAllocator)
                 # nexthop / nh_group association happens later
@@ -179,10 +185,13 @@ class TunnelObject(base.ConfigObjectBase):
                 spec.RemoteService = self.Remote
                 utils.GetRpcIPAddr(self.RemoteServicePublicIP, spec.RemoteServicePublicIP)
                 utils.GetRpcEncap(self.Node, self.RemoteServiceEncap, self.RemoteServiceEncap, spec.RemoteServiceEncap)
-        if self.IsUnderlay():
-            spec.NexthopId = utils.PdsUuid.GetUUIDfromId(self.NexthopId, ObjectTypes.NEXTHOP)
-        elif self.IsUnderlayEcmp():
-            spec.NexthopGroupId = utils.PdsUuid.GetUUIDfromId(self.NexthopGroupId, ObjectTypes.NEXTHOPGROUP)
+        # In IOTA, with BGP Underlay support, we do not need to configure NextHop object/info. Instead,
+        # NH resolution will be taken care by pds-agent/MS overlay-underlay NH stitching logic.
+        if utils.IsDol(): 
+            if self.IsUnderlay():
+                spec.NexthopId = utils.PdsUuid.GetUUIDfromId(self.NexthopId, ObjectTypes.NEXTHOP)
+            elif self.IsUnderlayEcmp():
+                spec.NexthopGroupId = utils.PdsUuid.GetUUIDfromId(self.NexthopGroupId, ObjectTypes.NEXTHOPGROUP)
         return
 
     def ValidateSpec(self, spec):

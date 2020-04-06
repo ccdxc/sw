@@ -217,16 +217,37 @@ class EzAccessStore:
     def SetUnderlayIPs(self, underlay_ips):
         self.underlay_ips = underlay_ips
 
+    def GetUnderlayIPs(self):
+        return self.underlay_ips
+
     def GetLoopbackIp(self):
         for ip in self.underlay_ips:
             if 'Loopback' in ip.Name:
                 return ip.IP
         return None
 
+    def GetLoopbackRemoteTEP(self):
+        for ip in self.underlay_ips:
+            if 'Loopback' in ip.Name:
+                return ip.RemoteTEP
+        return None
+
     def GetUnderlayIp(self, intf_name):
         for ip in self.underlay_ips:
             if ip.Name == intf_name:
                 return ip.IP
+        return None
+
+    def GetUnderlayMaskLen(self, intf_name):
+        for ip in self.underlay_ips:
+            if ip.Name == intf_name:
+                return ip.MaskLen
+        return None
+
+    def GetUnderlayBGPRemoteASN(self, intf_name):
+        for ip in self.underlay_ips:
+            if ip.Name == intf_name:
+                return ip.BGPRemoteASN
         return None
 
     def GetUnderlayNexthop(self, intf_name):
