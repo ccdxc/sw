@@ -33,18 +33,7 @@
       "/nic/bin/vppctl show dhcp proxy",
       "/nic/bin/vppctl show event-logger",
       "/nic/bin/vppctl show flow statistics",
-      "/nic/bin/vppctl show flow statistics detail",
-      "/nic/bin/vppctl show pds subnet",
-      "/nic/bin/vppctl show pds vnic",
-      "/nic/bin/vppctl show pds vpc",
-      "/nic/bin/vppctl show pds device",
-      "/nic/bin/vppctl show pds nat",
-      "/nic/bin/vppctl show pds dhcp",
-      "/nic/bin/vppctl show pds security-profile",
-      "/nic/bin/vppctl show pds subnet status",
-      "/nic/bin/vppctl show pds vnic status",
-      "/nic/bin/vppctl show pds vpc status",
-      "/nic/bin/vppctl show pds device status"
+      "/nic/bin/vppctl show flow statistics detail"
     ],
   "cores": [
       "/data/core/"
