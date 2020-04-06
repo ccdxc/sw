@@ -250,18 +250,32 @@
             "_comment": "4K * 64B"
         },
         {
-            "name": "remote_mapping",
+            "name": "rxdma_mapping",
             "kind": "cfgtbl",
             "size": "128M",
             "cache": "p4plus-rxdma",
             "_comment": "4M * 32B"
         },
         {
-            "name": "remote_mapping_ohash",
+            "name": "rxdma_mapping_ohash",
             "kind": "cfgtbl",
             "size": "16M",
             "cache": "p4plus-rxdma",
             "_comment": "512K * 32B"
+        },
+        {
+            "name": "local_mapping_tag",
+            "kind": "cfgtbl",
+            "size": "512K",
+            "cache": "p4plus-rxdma",
+            "_comment": "64K * 8B"
+        },
+        {
+            "name": "mapping_tag",
+            "kind": "cfgtbl",
+            "size": "8M",
+            "cache": "p4plus-rxdma",
+            "_comment": "1M * 8B"
         },
         {
             "name": "local_mapping",

@@ -176,13 +176,18 @@ header_type apulu_rx_to_tx_header_t {
         rx_packet       : 1;  // Bit 88[1]
         payload_len     : 14; // Bit 88[2] to 89[7]
 
-        dtag_classid    : 8;  // Byte 90
-        stag_classid    : 10; // Bits 91[0] to 92[1]
-        pad6            : 6;  // Bits 92[2] to 92[7]
+        stag0_classid   : 10; // Bytes 90 to 102
+        stag1_classid   : 10;
+        stag2_classid   : 10;
+        stag3_classid   : 10;
+        stag4_classid   : 10;
+        dtag0_classid   : 10;
+        dtag1_classid   : 10;
+        dtag2_classid   : 10;
+        dtag3_classid   : 10;
+        dtag4_classid   : 10;
+        pad6            : 4;
 
-        local_tag_idx   : 16; // Bytes 93 and 94
-        remote_tag_idx  : 24; // Bytes 95 to 97
-
-        pad8            : 240; // Bytes 98 to 127
+        pad8            : 200; // Bytes 103 to 127
     }
 }

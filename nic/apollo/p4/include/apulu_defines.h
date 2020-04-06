@@ -273,9 +273,9 @@
 /*****************************************************************************/
 /* number of hints in various HBM hash tables                                */
 /*****************************************************************************/
-#define P4_LOCAL_MAPPING_NUM_HINTS_PER_ENTRY              8
-#define P4_MAPPING_NUM_HINTS_PER_ENTRY                    8
-#define P4_REMOTE_MAPPING_NUM_HINTS_PER_ENTRY             2
+#define P4_LOCAL_MAPPING_NUM_HINTS_PER_ENTRY    8
+#define P4_MAPPING_NUM_HINTS_PER_ENTRY          8
+#define P4_RXDMA_MAPPING_NUM_HINTS_PER_ENTRY    2
 
 /*****************************************************************************/
 /* cpu flags and bit positions                                               */

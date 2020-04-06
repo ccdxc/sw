@@ -11,9 +11,6 @@ action vnic_info_rxdma(lpm_base1, lpm_base2, lpm_base3, lpm_base4,
     // Unused for now.
     modify_field(scratch_metadata.field40, lpm_base8);
 
-    // Copy local_tag_idx to TxDMA header
-    modify_field(rx_to_tx_hdr.local_tag_idx, p4_to_rxdma.local_tag_idx);
-
     // Fill the remote_ip based on the direction
     if (p4_to_rxdma.rx_packet == 0) {
         modify_field(rx_to_tx_hdr.remote_ip, p4_to_rxdma.flow_dst);

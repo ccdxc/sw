@@ -35,3 +35,5 @@
 #define VNIC_INFO_TABLE_SIZE                                1024
 #define VNIC_INFO_RXDMA_TABLE_SIZE                          4096
 #define DNAT_TABLE_SIZE                                     8192
+#define LOCAL_MAPPING_TAG_TABLE_SIZE                        65536       // 64K
+#define MAPPING_TAG_TABLE_SIZE                              1048576     // 1M

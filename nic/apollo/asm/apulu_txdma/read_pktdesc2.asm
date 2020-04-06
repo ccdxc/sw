@@ -28,11 +28,17 @@ read_pktdesc2:
                        rx_to_tx_hdr_iptype, \
                        rx_to_tx_hdr_rx_packet, \
                        rx_to_tx_hdr_payload_len, \
-                       rx_to_tx_hdr_dtag_classid, \
-                       rx_to_tx_hdr_stag_classid, \
+                       rx_to_tx_hdr_stag0_classid, \
+                       rx_to_tx_hdr_stag1_classid, \
+                       rx_to_tx_hdr_stag2_classid, \
+                       rx_to_tx_hdr_stag3_classid, \
+                       rx_to_tx_hdr_stag4_classid, \
+                       rx_to_tx_hdr_dtag0_classid, \
+                       rx_to_tx_hdr_dtag1_classid, \
+                       rx_to_tx_hdr_dtag2_classid, \
+                       rx_to_tx_hdr_dtag3_classid, \
+                       rx_to_tx_hdr_dtag4_classid, \
                        rx_to_tx_hdr_pad6, \
-                       rx_to_tx_hdr_local_tag_idx, \
-                       rx_to_tx_hdr_remote_tag_idx, \
                        rx_to_tx_hdr_pad8}, \
                        d[511:(512-(offsetof(p,rx_to_tx_hdr_sacl_base_addr4) + \
                             sizeof(p.rx_to_tx_hdr_sacl_base_addr4) - \

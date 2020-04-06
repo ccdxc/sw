@@ -327,13 +327,13 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
         // P1 table base
         modify_field(scratch_metadata.field40, SACL_P1_2_TABLE_OFFSET);
         // P1 table index
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.stag_classid << 10)|
+        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.stag0_classid << 10)|
                                                 rx_to_tx_hdr.dip_classid0);
     } else {
         // P1 table base
         modify_field(scratch_metadata.field40, SACL_P1_4_TABLE_OFFSET);
         // P1 table index
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.stag_classid << 7)|
+        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.stag0_classid << 7)|
                                                 rx_to_tx_hdr.sport_classid0);
     }
 
@@ -437,7 +437,7 @@ action rfc_action_p1_1(pad, id50,
         // P2 table base
         modify_field(scratch_metadata.field40, SACL_P2_4_TABLE_OFFSET);
         // P2 table index
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.dtag_classid << 8)|
+        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.dtag0_classid << 8)|
                                                 rx_to_tx_hdr.dport_classid0);
     }
 
@@ -687,7 +687,7 @@ action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
             modify_field(scratch_metadata.field40, SACL_P1_3_TABLE_OFFSET);
             // P1 table index
             modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sip_classid0 << 7)|
-                                                    rx_to_tx_hdr.dtag_classid);
+                                                    rx_to_tx_hdr.dtag0_classid);
         } else {
             // P1 table base
             modify_field(scratch_metadata.field40, SACL_P1_1_TABLE_OFFSET);

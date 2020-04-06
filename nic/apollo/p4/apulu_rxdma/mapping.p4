@@ -3,12 +3,12 @@
 /******************************************************************************/
 @pragma capi appdatafields tag_idx
 @pragma capi hwfields_access_api
-action remote_mapping_info(entry_valid, tag_idx, more_hashes, hash1, hint1,
-                           hash2, hint2, more_hints) {
+action rxdma_mapping_info(entry_valid, tag_idx, more_hashes, hash1, hint1,
+                          hash2, hint2, more_hints) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(scratch_metadata.field20, tag_idx);
-        modify_field(rx_to_tx_hdr.remote_tag_idx, scratch_metadata.field20);
+        modify_field(lpm_metadata.mapping_tag_idx, scratch_metadata.field20);
         modify_field(p4_to_rxdma.mapping_done, TRUE);
 
         // if hardware register indicates miss, compare hashes with r1
@@ -51,37 +51,37 @@ action remote_mapping_info(entry_valid, tag_idx, more_hashes, hash1, hint1,
 
 @pragma stage 2
 @pragma hbm_table
-table remote_mapping {
+table rxdma_mapping {
     reads {
         p4_to_rxdma.iptype      : exact;
         p4_to_rxdma.vpc_id      : exact;
         rx_to_tx_hdr.remote_ip  : exact;
     }
     actions {
-        remote_mapping_info;
+        rxdma_mapping_info;
     }
     size : MAPPING_TABLE_SIZE;
 }
 
 @pragma stage 3
 @pragma hbm_table
-@pragma overflow_table remote_mapping
-table remote_mapping_ohash {
+@pragma overflow_table rxdma_mapping
+table rxdma_mapping_ohash {
     reads {
         lpm_metadata.mapping_ohash  : exact;
     }
     actions {
-        remote_mapping_info;
+        rxdma_mapping_info;
     }
     size : MAPPING_OHASH_TABLE_SIZE;
 }
 
-control remote_mapping {
+control rxdma_mapping {
     if (p4_to_rxdma.mapping_done == FALSE) {
         if (p4_to_rxdma.mapping_ohash_lkp == FALSE) {
-            apply(remote_mapping);
+            apply(rxdma_mapping);
         } else {
-            apply(remote_mapping_ohash);
+            apply(rxdma_mapping_ohash);
         }
     }
 }

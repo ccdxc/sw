@@ -1194,8 +1194,9 @@ control ingress {
         if (p4_to_rxdma.vnic_info_en == TRUE) {
             vnic_info_rxdma();
         }
-        remote_mapping();
+        rxdma_mapping();
         sacl_lpm();
+        derive_tag_classids();
         pkt_enqueue();
     } else {
         common_p4plus_stage0();

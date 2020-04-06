@@ -66,8 +66,8 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     SDK_ASSERT(mapping_tbl_ != NULL);
 
     // rxdma MAPPING table to drive class ids
-    tparams.table_id = P4_P4PLUS_RXDMA_TBL_ID_REMOTE_MAPPING;
-    tparams.num_hints = P4_REMOTE_MAPPING_NUM_HINTS_PER_ENTRY;
+    tparams.table_id = P4_P4PLUS_RXDMA_TBL_ID_RXDMA_MAPPING;
+    tparams.num_hints = P4_RXDMA_MAPPING_NUM_HINTS_PER_ENTRY;
     rxdma_mapping_tbl_ = mem_hash::factory(&tparams);
     SDK_ASSERT(rxdma_mapping_tbl_ != NULL);
 
@@ -139,7 +139,7 @@ mapping_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     cb(&stats, ctxt);
 
     memset(&stats, 0, sizeof(pds_table_stats_t));
-    p4pd_table_properties_get(P4_P4PLUS_RXDMA_TBL_ID_REMOTE_MAPPING, &tinfo);
+    p4pd_table_properties_get(P4_P4PLUS_RXDMA_TBL_ID_RXDMA_MAPPING, &tinfo);
     stats.table_name = tinfo.tablename;
     rxdma_mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
     cb(&stats, ctxt);

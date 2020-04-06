@@ -35,6 +35,7 @@ header_type lpm_metadata_t {
         recirc_count    : 8;
 
         mapping_ohash   : 32;
+        mapping_tag_idx : 24;
     }
 }
 

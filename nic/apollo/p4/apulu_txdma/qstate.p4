@@ -156,11 +156,17 @@ action read_pktdesc2(sacl_base_addr4,
                      iptype,
                      rx_packet,
                      payload_len,
-                     dtag_classid,
-                     stag_classid,
+                     stag0_classid,
+                     stag1_classid,
+                     stag2_classid,
+                     stag3_classid,
+                     stag4_classid,
+                     dtag0_classid,
+                     dtag1_classid,
+                     dtag2_classid,
+                     dtag3_classid,
+                     dtag4_classid,
                      pad6,
-                     local_tag_idx,
-                     remote_tag_idx,
                      pad8)
 {
     modify_field(rx_to_tx_hdr.sacl_base_addr4, sacl_base_addr4);
@@ -180,11 +186,17 @@ action read_pktdesc2(sacl_base_addr4,
     modify_field(rx_to_tx_hdr.iptype, iptype);
     modify_field(rx_to_tx_hdr.rx_packet, rx_packet);
     modify_field(rx_to_tx_hdr.payload_len, payload_len);
-    modify_field(rx_to_tx_hdr.dtag_classid, dtag_classid);
-    modify_field(rx_to_tx_hdr.stag_classid, stag_classid);
-    modify_field(scratch_metadata.field6, pad6);
-    modify_field(rx_to_tx_hdr.local_tag_idx, local_tag_idx);
-    modify_field(rx_to_tx_hdr.remote_tag_idx, remote_tag_idx);
+    modify_field(rx_to_tx_hdr.stag0_classid, stag0_classid);
+    modify_field(rx_to_tx_hdr.stag1_classid, stag1_classid);
+    modify_field(rx_to_tx_hdr.stag2_classid, stag2_classid);
+    modify_field(rx_to_tx_hdr.stag3_classid, stag3_classid);
+    modify_field(rx_to_tx_hdr.stag4_classid, stag4_classid);
+    modify_field(rx_to_tx_hdr.dtag0_classid, dtag0_classid);
+    modify_field(rx_to_tx_hdr.dtag1_classid, dtag1_classid);
+    modify_field(rx_to_tx_hdr.dtag2_classid, dtag2_classid);
+    modify_field(rx_to_tx_hdr.dtag3_classid, dtag3_classid);
+    modify_field(rx_to_tx_hdr.dtag4_classid, dtag4_classid);
+    modify_field(scratch_metadata.field4, pad6);
     modify_field(scratch_metadata.field2, pad8);
 }
 

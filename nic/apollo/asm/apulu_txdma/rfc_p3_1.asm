@@ -36,8 +36,8 @@ rfc_p3_1:
     seq        c1, k.txdma_control_recirc_count[0:0], r0
     /* if so, add SACL_P1_3_TABLE_OFFSET to sacl base address. */
     addi.c1    r1, r1, SACL_P1_3_TABLE_OFFSET
-    /* P1 table index = (dtag_classid | (sip_classid0 << 7)). */
-    add.c1     r2, k.rx_to_tx_hdr_dtag_classid, k.rx_to_tx_hdr_sip_classid0, \
+    /* P1 table index = (dtag0_classid | (sip_classid0 << 7)). */
+    add.c1     r2, k.rx_to_tx_hdr_dtag0_classid, k.rx_to_tx_hdr_sip_classid0, \
                                                 SACL_TAG_CLASSID_WIDTH
     /* Else, add SACL_P1_1_TABLE_OFFSET to sacl base address. */
     addi.!c1   r1, r1, SACL_P1_1_TABLE_OFFSET
