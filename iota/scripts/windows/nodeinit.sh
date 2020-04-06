@@ -155,9 +155,9 @@ if ($skipInstall) {
 		#Discover-Devices -noScan 2
 		# workaround
 		Start-Sleep -s 3
-		& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' disable 'PCI\VEN_1DD8&DEV_1002'
-		Start-Sleep -s 3
-		& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' enable 'PCI\VEN_1DD8&DEV_1002'
+		#& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' disable 'PCI\VEN_1DD8&DEV_1002'
+		#Start-Sleep -s 3
+		#& 'C:\Program Files (x86)\Windows Kits\10\Tools\x64\devcon.exe' enable 'PCI\VEN_1DD8&DEV_1002'
 
 		# Make sure devices are bound to the driver.
 		# https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/devcon-drivernodes
