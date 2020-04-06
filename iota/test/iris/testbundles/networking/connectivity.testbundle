@@ -32,6 +32,11 @@ testcases:
         testcase: testcases.networking.ping_bond
         stress  : True
         disable : False
+        enable  : True
+        ignore  : True
+        args    :
+            port_shut_time: 60
+            failover_delay: 2
         iterators :
             type    : nested
             pktsize : [64, 256, 1024]
