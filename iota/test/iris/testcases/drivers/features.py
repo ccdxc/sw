@@ -106,9 +106,13 @@ def Trigger(tc):
     pktsize = getattr(tc.iterators, "pktsize", None)
     ipproto = getattr(tc.iterators, "ipproto", 'v4')
 
-    server_ip = srv.ip_address
-    client_ip = cli.ip_address
-
+    if ipproto == 'v4':
+        server_ip = srv.ip_address
+        client_ip = cli.ip_address
+    else:
+        server_ip = srv.ipv6_address
+        client_ip = cli.ipv6_address
+        
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                    (srv.interface, server_ip, cli.interface, client_ip)
 
@@ -126,7 +130,7 @@ def Trigger(tc):
         api.Trigger_AddCommand(srv_req, srv.node_name, srv.workload_name, iperf_server_cmd, background = True)
 
         iperf_client_cmd = iperf.ClientCmd(server_ip, port, time=duration,
-                                 proto=proto, jsonOut=True, ipproto=ipproto, num_of_streams=number_of_iperf_threads,
+                                 proto=proto, jsonOut=True, ipproto=ipproto,
                                  pktsize=pktsize, client_ip=client_ip, naples = is_naples_cmd)
         api.Trigger_AddCommand(cli_req, cli.node_name, cli.workload_name, iperf_client_cmd)
 

@@ -155,7 +155,7 @@ testcases:
             indirection_table  : [ 'equal', 'w1', 'w2', 'default']
             rx-flow-hash       : [ 'tcp4', 'udp4', 'udp6', 'tcp6']
         args    :
-            timeout : 7200
+            timeout : 43200
             type: remote_only
             iperfthreads     : 4
             #capture_pcap : true
