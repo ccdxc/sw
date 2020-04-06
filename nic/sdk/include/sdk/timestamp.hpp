@@ -24,6 +24,8 @@ typedef struct timespec timespec_t;
 #define TIME_NSECS_PER_MSEC                          1000000L
 #define TIME_NSECS_PER_USEC                          1000
 
+#define TIME_STR_SIZE 30
+
 //--------------------------------------------------------------------------
 // return true if ts1 < ts2
 //--------------------------------------------------------------------------
@@ -182,9 +184,22 @@ timestamp_to_nsecs (timespec_t *ts, int64_t *nsecs)
     *nsecs += (int64_t) (ts->tv_sec * TIME_NSECS_PER_SEC);
 }
 
+//--------------------------------------------------------------------------
+// 1. calculate the duration between ts1 and ts2.
+// 2. print the duration in 1.xxxxxxxxx format to buff
+//--------------------------------------------------------------------------
+static inline size_t
+timestamp_diff_to_str (timespec_t *ts1, timespec_t *ts2, char *buff,
+                       size_t size)
+{
+    SDK_ASSERT((ts1 != NULL) && (ts2 != NULL) && (buff != NULL));
+    timespec_t diff = timestamp_diff(ts1, ts2);
+
+    return snprintf(buff, size, "%lu.%.9lu", diff.tv_sec, diff.tv_nsec);
+}
+
 }    // namespace sdk
 
 using sdk::timespec_t;
 
 #endif    // __SDK_TIMESTAMP_HPP__
-

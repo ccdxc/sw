@@ -47,6 +47,60 @@ enum class port_link_sm_t {
     PORT_LINK_SM_UP
 };
 
+static inline std::string
+port_link_sm_to_str (port_link_sm_t state) {
+    switch (state) {
+    case port_link_sm_t::PORT_LINK_SM_DISABLED:
+        return "DISABLED";
+    case port_link_sm_t::PORT_LINK_SM_ENABLED:
+        return "ENABLED";
+    case port_link_sm_t::PORT_LINK_SM_AN_CFG:
+        return "AN_CFG";
+    case port_link_sm_t::PORT_LINK_SM_AN_DISABLED:
+        return "AN_DISABLED";
+    case port_link_sm_t::PORT_LINK_SM_AN_START:
+        return "AN_START";
+    case port_link_sm_t::PORT_LINK_SM_AN_WAIT_HCD:
+        return "AN_WAIT_HCD";
+    case port_link_sm_t::PORT_LINK_SM_AN_COMPLETE:
+        return "AN_COMPLETE";
+    case port_link_sm_t::PORT_LINK_SM_SERDES_CFG:
+        return "SERDES_CFG";
+    case port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY:
+        return "WAIT_SERDES_RDY";
+    case port_link_sm_t::PORT_LINK_SM_MAC_CFG:
+        return "MAC_CFG";
+    case port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT:
+        return "SIGNAL_DETECT";
+    case port_link_sm_t::PORT_LINK_SM_AN_DFE_TUNING:
+        return "AN_DFE_TUNING";
+    case port_link_sm_t::PORT_LINK_SM_DFE_TUNING:
+        return "DFE_TUNING";
+    case port_link_sm_t::PORT_LINK_SM_DFE_DISABLED:
+        return "DFE_DISABLED";
+    case port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL:
+        return "DFE_START_ICAL";
+    case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_ICAL:
+        return "DFE_WAIT_ICAL";
+    case port_link_sm_t::PORT_LINK_SM_DFE_START_PCAL:
+        return "DFE_START_PCAL";
+    case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_PCAL:
+        return "DFE_WAIT_PCAL";
+    case port_link_sm_t::PORT_LINK_SM_DFE_PCAL_CONTINUOUS:
+        return "DFE_PCAL_CONTINUOUS";
+    case port_link_sm_t::PORT_LINK_SM_CLEAR_MAC_REMOTE_FAULTS:
+        return "CLEAR_MAC_REMOTE_FAULTS";
+    case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC:
+        return "WAIT_MAC_SYNC";
+    case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR:
+        return "WAIT_MAC_FAULTS_CLEAR";
+    case port_link_sm_t::PORT_LINK_SM_UP:
+        return "UP";
+    default:
+        return "INVALID";
+    }
+}
+
 enum class port_event_t {
     PORT_EVENT_LINK_NONE = 0,
     PORT_EVENT_LINK_DOWN = 1,

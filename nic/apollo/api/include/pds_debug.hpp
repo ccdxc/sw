@@ -103,6 +103,7 @@ typedef struct cmd_args_s {
     bool valid;
     union {
         mapping_dump_args_t mapping_dump;
+        pds_obj_key_t port_id;
     };
 } cmd_args_t;
 
@@ -116,6 +117,7 @@ typedef enum cli_cmd_e {
     CLI_CMD_STORE_STATS_DUMP,
     CLI_CMD_NAT_PB_DUMP,
     CLI_CMD_NACL_DUMP,
+    CLI_CMD_PORT_FSM_DUMP,
     CLI_CMD_MAX = 255,
 } cli_cmd_t;
 

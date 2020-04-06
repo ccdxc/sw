@@ -18,6 +18,9 @@
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/core/core.hpp"
 
+using sdk::utils::in_mem_fsm_logger;
+using sdk::utils::record_t;
+
 namespace debug {
 
 /**
@@ -122,6 +125,48 @@ dump_state_base_stats (int fd)
     return SDK_RET_OK;
 }
 
+static inline bool
+dump_port_fsm_record (record_t *record, void *ctxt)
+{
+    char ts_buff[TIME_STR_SIZE];
+    char td_buff[TIME_STR_SIZE];
+    uint32_t written = 0;
+    port_link_sm_t sm = *(port_link_sm_t *)record->data;
+    dump_port_fsm_record_args_t *args = (dump_port_fsm_record_args_t *)ctxt;
+
+    written = strftime(ts_buff, TIME_STR_SIZE, "%Y-%m-%d %H:%M:%S",
+                       localtime(&record->real_ts.tv_sec));
+    snprintf(ts_buff+written, TIME_STR_SIZE-written, ".%lu",
+             record->real_ts.tv_nsec/TIME_NSECS_PER_MSEC );
+    sdk::timestamp_diff_to_str(&record->mon_ts, &args->prev_ts, td_buff,
+                               TIME_STR_SIZE);
+    dprintf(args->fd, " %-30s  %-30s  %-s \n", ts_buff,
+            port_link_sm_to_str(sm).c_str(),
+            (args->index == 0) ? "-" : td_buff);
+
+    args->prev_ts = record->mon_ts;
+    args->index++;
+    return false;
+}
+
+static inline void
+dump_port_fsm (sdk::linkmgr::port_args_t *port_info, void *ctxt)
+{
+    in_mem_fsm_logger *sm_logger = port_info->sm_logger;
+    pds_obj_key_t *key = (pds_obj_key_t *)port_info->port_an_args;
+    int fd = *(int *)ctxt;
+    dump_port_fsm_record_args_t args = { .fd = fd, .index = 0,
+                                         .prev_ts = { 0 } };
+
+    dprintf(fd, "\nPort ID: %s\n", key->str());
+    dprintf(fd, " %-30s  %-30s  %-s\n", "Timestamp", "State", "Duration (sec)");
+    dprintf(fd, "%s\n", std::string(80, '-').c_str());
+
+    sm_logger->walk(dump_port_fsm_record,
+                    (dump_port_fsm_record_args_t *)&args);
+    dprintf(fd,"\n");
+}
+
 /**
  * @brief       Handles command based on ctxt
  * @param[in]   ctxt  Context for CLI handler
@@ -146,6 +191,9 @@ pds_handle_cmd (cmd_ctxt_t *ctxt)
     case CLI_CMD_STORE_STATS_DUMP:
         dump_state_base_stats(ctxt->fd);
         break;
+    case CLI_CMD_PORT_FSM_DUMP:
+        return api::port_get(&ctxt->args.port_id, dump_port_fsm,
+                             (void *)&ctxt->fd);
     default:
         return SDK_RET_INVALID_ARG;
     }

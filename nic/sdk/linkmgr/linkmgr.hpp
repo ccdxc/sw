@@ -9,14 +9,14 @@
 #include "platform/utils/mpartition.hpp"
 #include "include/sdk/timestamp.hpp"
 #include "lib/shmmgr/shmmgr.hpp"
-
-#define TIME_STR_SIZE 30
+#include "lib/utils/in_mem_fsm_logger.hpp"
 
 namespace sdk {
 namespace linkmgr {
 
 using sdk::types::xcvr_state_t;
 using sdk::types::xcvr_pid_t;
+using sdk::utils::in_mem_fsm_logger;
 
 typedef void (*port_log_fn_t)(sdk_trace_level_e trace_level,
                               const char *msg);
@@ -84,6 +84,7 @@ typedef struct port_args_s {
     uint32_t              breakout_modes;             // supported breakout modes
     uint8_t               mac_addr[6];                // MAC addr of port
     uint32_t              sbus_addr[MAX_PORT_LANES];  // set the sbus addr for each lane
+    in_mem_fsm_logger     *sm_logger;                 // state machine transition Logger
 } __PACK__ port_args_t;
 
 sdk_ret_t linkmgr_init(linkmgr_cfg_t *cfg);

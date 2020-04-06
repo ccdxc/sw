@@ -404,6 +404,7 @@ enum Command {
   CMD_STORE_STATS_DUMP      = 6;
   CMD_NAT_PB_DUMP           = 7;
   CMD_NACL_DUMP             = 8;
+  CMD_PORT_FSM_DUMP         = 9;
 }
 
 enum MappingDumpType {
@@ -439,6 +440,7 @@ message CommandCtxt {
   Command             Cmd               = 2;
   oneof commandfilter {
     MappingDumpFilter MappingDumpFilter = 3;
+    bytes Id                            = 4;
   }
 }
 

@@ -8,6 +8,7 @@
 #include "include/sdk/eth.hpp"
 #include "include/sdk/timestamp.hpp"
 #include "lib/event_thread/event_thread.hpp"
+#include "lib/utils/in_mem_fsm_logger.hpp"
 #include "linkmgr_types.hpp"
 #include "linkmgr.hpp"
 #include "port_mac.hpp"
@@ -27,6 +28,8 @@
 #define MIN_PORT_TIMER_INTERVAL                    100            // msecs
 #define MAX_LINK_AN_WAIT_TIME                      100 * 1000000  // in nanosecs
 #define MAX_PORT_FEC_RETRIES                       3              // FC/RS/None FEC
+
+using sdk::utils::in_mem_fsm_logger;
 
 namespace sdk {
 namespace linkmgr {
@@ -51,6 +54,15 @@ typedef enum neg_mode_e {
 
 class port {
 public:
+    port(size_t sm_logger_capacity=64) {
+        sm_logger_ = in_mem_fsm_logger::factory(sm_logger_capacity,
+                                                sizeof(port_link_sm_t));
+    }
+
+    ~port() {
+        in_mem_fsm_logger::destroy(sm_logger_);
+    }
+
     port_oper_status_t oper_status(void) const {
         return this->oper_status_;
     }
@@ -188,16 +200,23 @@ public:
     port_link_sm_t port_link_sm(void) const { return this->link_sm_; }
     void set_port_link_sm(port_link_sm_t link_sm) {
         this->link_sm_ = link_sm;
+        report_sm_(link_sm);
     }
 
     port_link_sm_t port_link_dfe_sm(void) { return this->link_dfe_sm_; }
     void set_port_link_dfe_sm(port_link_sm_t link_sm) {
         this->link_dfe_sm_ = link_sm;
+        report_sm_(link_sm);
     }
 
     port_link_sm_t port_link_an_sm(void) { return this->link_an_sm_; }
     void set_port_link_an_sm(port_link_sm_t link_sm) {
         this->link_an_sm_ = link_sm;
+        report_sm_(link_sm);
+    }
+
+    in_mem_fsm_logger *sm_logger(void) {
+        return this->sm_logger_;
     }
 
     sdk::event_thread::timer_t *link_bringup_timer(void) {
@@ -501,6 +520,7 @@ private:
     bool                      persist_stats_collect_;     // set after initial link-up state; never reset (? TBD)
     uint64_t                  persist_stats_data_[MAX_MAC_STATS]; // saved stats before link flap or mac resets;
     sdk::types::mem_addr_t    port_stats_base_addr_;      // Base address for this port's stats
+    in_mem_fsm_logger         *sm_logger_;                // Logs Port state transitions w.r.t. port state machine.
 
     uint32_t port_max_an_retries(void);
     uint32_t port_max_serdes_ready_retries(void);
@@ -549,6 +569,7 @@ private:
     sdk_ret_t set_last_down_ts(void);
     sdk_ret_t set_last_up_ts(void);
     sdk_ret_t set_bringup_duration(void);
+    void report_sm_(port_link_sm_t link_sm);
 };
 
 }    // namespace linkmgr

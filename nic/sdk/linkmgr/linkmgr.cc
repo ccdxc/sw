@@ -929,6 +929,7 @@ void *
 port_create (port_args_t *args)
 {
     sdk_ret_t    ret = SDK_RET_OK;
+    void         *mem = NULL;
     port         *port_p = NULL;
 
     port_init_num_lanes(args);
@@ -938,8 +939,8 @@ port_create (port_args_t *args)
     }
 
     port_init_defaults(args);
-
-    port_p = (port *)g_linkmgr_state->port_slab()->alloc();
+    mem = g_linkmgr_state->port_slab()->alloc();
+    port_p = new (mem) port();
 
     // init the bringup and debounce timers
     port_p->timers_init();
@@ -1264,6 +1265,7 @@ port_delete (void *pd_p)
     port_p->port_deinit();
 
     ret = port::port_disable(port_p);
+    port_p->~port();
     g_linkmgr_state->port_slab()->free(port_p);
 
     return ret;
@@ -1301,6 +1303,7 @@ port_get (void *pd_p, port_args_t *args)
     args->num_link_down = port_p->num_link_down();
     args->bringup_duration.tv_sec = port_p->bringup_duration_sec();
     args->bringup_duration.tv_nsec = port_p->bringup_duration_nsec();
+    args->sm_logger = port_p->sm_logger();
     strncpy(args->last_down_timestamp, port_p->last_down_timestamp(), TIME_STR_SIZE);
 
     if (args->link_sm == port_link_sm_t::PORT_LINK_SM_AN_CFG &&

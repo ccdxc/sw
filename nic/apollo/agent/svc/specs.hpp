@@ -518,6 +518,8 @@ pds_proto_cmd_to_api_cmd (pds::Command proto_cmd)
         return CLI_CMD_STORE_STATS_DUMP;
     case pds::CMD_NAT_PB_DUMP:
         return CLI_CMD_NAT_PB_DUMP;
+    case pds::CMD_PORT_FSM_DUMP:
+        return CLI_CMD_PORT_FSM_DUMP;
     default:
         return CLI_CMD_MAX;
     }
@@ -570,6 +572,10 @@ pds_cmd_proto_to_cmd_ctxt (cmd_ctxt_t *cmd_ctxt,
                 break;
             }
         }
+    } else if (proto_ctxt->cmd() == pds::CMD_PORT_FSM_DUMP) {
+        cmd_ctxt->args.valid = true;
+        pds_obj_key_proto_to_api_spec(&cmd_ctxt->args.port_id,
+                                      proto_ctxt->id());
     }
 }
 

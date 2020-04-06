@@ -68,6 +68,13 @@ var portStatusShowCmd = &cobra.Command{
 	Run:   portShowStatusCmdHandler,
 }
 
+var portFsmShowCmd = &cobra.Command{
+	Use:   "fsm",
+	Short: "show port fsm",
+	Long:  "show port fsm",
+	Run:   portShowFsmCmdHandler,
+}
+
 var portUpdateCmd = &cobra.Command{
 	Use:   "port",
 	Short: "set port debug information",
@@ -108,8 +115,10 @@ func init() {
 	portShowXcvrCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
 	portShowXcvrCmd.Flags().Bool("yaml", true, "Output in yaml")
 	portShowCmd.AddCommand(portInternalShowCmd)
-	portInternalShowCmd.PersistentFlags().StringVarP(&portID, "port", "p", "", "Specify port number. eg eth1/1 or 1 to 7 for internal ports")
+	portInternalShowCmd.PersistentFlags().StringVarP(&portID, "port", "p", "", "Specify port number. eg 1 to 7 for internal ports")
 	portInternalShowCmd.AddCommand(portInternalStatsCmd)
+	portShowCmd.AddCommand(portFsmShowCmd)
+	portFsmShowCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
 
 	debugCmd.AddCommand(portUpdateCmd)
 	portUpdateCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
@@ -924,5 +933,50 @@ func portInternalStatsCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Printf("%-15s: %-20v\n", respType.Field(i).Name, respVal.Field(i).Interface())
 		}
 		fmt.Println(hdrLine)
+	}
+}
+
+func portShowFsmCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+	var cmdCtxt *pds.CommandCtxt
+	if cmd != nil && cmd.Flags().Changed("port") {
+		cmdCtxt = &pds.CommandCtxt{
+			Version: 1,
+			Cmd:     pds.Command_CMD_PORT_FSM_DUMP,
+			Commandfilter: &pds.CommandCtxt_Id{
+				Id: uuid.FromStringOrNil(portID).Bytes(),
+			},
+		}
+	} else {
+		// Get all Ports
+		cmdCtxt = &pds.CommandCtxt{
+			Version: 1,
+			Cmd:     pds.Command_CMD_PORT_FSM_DUMP,
+			Commandfilter: &pds.CommandCtxt_Id{
+					Id: uuid.FromStringOrNil(portID).Bytes(),
+			},
+		}
+	}
+
+	// handle command
+	cmdResp, err := HandleCommand(cmdCtxt)
+	if err != nil {
+		fmt.Printf("Command failed with %v error\n", err)
+		return
+	}
+	if cmdResp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Command failed with %v error\n", cmdResp.ApiStatus)
+		return
 	}
 }

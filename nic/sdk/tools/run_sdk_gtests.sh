@@ -47,4 +47,8 @@ echo "Running sldirectmap test"
 $GDB ${BUILD_DIR}/bin/sldirectmap_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/sldirectmap_test.xml" > ${SDKDIR}/sldirectmap_test.log.txt
 [[ $? -ne 0 ]] && echo "sldirectmap_test failed!" && exit 1
 
+echo "Running logger test"
+$GDB ${BUILD_DIR}/bin/logger_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/logger_test.xml" > ${SDKDIR}/logger_test.log.txt
+[[ $? -ne 0 ]] && echo "logger_test failed!" && exit 1
+
 echo "Success"

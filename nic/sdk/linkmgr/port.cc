@@ -1655,6 +1655,7 @@ port::set_last_down_ts(void)
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &this->last_down_ts_);
     strftime(this->last_down_timestamp_, TIME_STR_SIZE, "%Y-%m-%d %H:%M:%S", localtime(&now));
+    sm_logger_->reset();
 
     return SDK_RET_OK;
 }
@@ -2092,6 +2093,14 @@ port::port_disable(port *port_p)
         SDK_TRACE_ERR("Error notifying control-thread for port disable");
     }
     return ret;
+}
+
+void
+port::report_sm_(port_link_sm_t link_sm)
+{
+    int sm = static_cast<int>(link_sm);
+
+    sm_logger_->append((char *)&sm);
 }
 
 }    // namespace linkmgr
