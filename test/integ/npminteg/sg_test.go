@@ -553,6 +553,7 @@ func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
 			UdpActiveSessionLimit:     20000,
 			IcmpActiveSessionLimit:    20000,
 			OtherActiveSessionLimit:   20000,
+			DetectApp:                 true,
 		},
 	}
 
@@ -610,6 +611,7 @@ func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
 	// change conn track and session timeout
 	fwp.Spec.SessionIdleTimeout = "5m"
 	fwp.Spec.TcpHalfOpenSessionLimit = 128000
+	fwp.Spec.DetectApp = true
 	_, err = it.apisrvClient.SecurityV1().FirewallProfile().Update(context.Background(), &fwp)
 	AssertOk(c, err, "Error updating firewall profile")
 
@@ -622,7 +624,7 @@ func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
 			}
 			secp, cerr := ag.dscAgent.PipelineAPI.HandleSecurityProfile(agentTypes.Get, profileMeta)
 
-			if (cerr != nil) || (secp[0].Spec.Timeouts.SessionIdle != fwp.Spec.SessionIdleTimeout) || (secp[0].Spec.RateLimits.TcpHalfOpenSessionLimit != fwp.Spec.TcpHalfOpenSessionLimit) {
+			if (cerr != nil) || (secp[0].Spec.Timeouts.SessionIdle != fwp.Spec.SessionIdleTimeout) || (secp[0].Spec.RateLimits.TcpHalfOpenSessionLimit != fwp.Spec.TcpHalfOpenSessionLimit) || (secp[0].Spec.DetectApp != fwp.Spec.DetectApp) {
 				return false, secp
 			}
 			return true, nil

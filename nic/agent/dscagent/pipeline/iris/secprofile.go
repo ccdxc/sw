@@ -140,6 +140,7 @@ func convertSecurityProfile(profile netproto.SecurityProfile) *halapi.SecurityPr
 		icmpActiveSessionLimit,
 		otherActiveSessionLimit uint32
 	)
+	detectionModeEnable := profile.Spec.DetectApp
 
 	timeouts := profile.Spec.Timeouts
 
@@ -314,6 +315,9 @@ func convertSecurityProfile(profile netproto.SecurityProfile) *halapi.SecurityPr
 
 				// Default Normalization action none
 				TcpRstWithDataAction: iristypes.TCPRSTWithDataAction,
+
+				// detection mode
+				AppDetectionEn: detectionModeEnable,
 			},
 		},
 	}

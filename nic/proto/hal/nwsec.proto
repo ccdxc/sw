@@ -247,6 +247,7 @@ message SecurityProfileSpec {
   // Firewall knobs
   bool                         policy_enforce_en                  = 102 [(gogoproto.moretags) = "venice:default=true"];;
   bool                         flow_learn_en                      = 103 [(gogoproto.moretags) = "venice:default=false"];;
+  bool                         app_detection_en                   = 104 [(gogoproto.moretags) = "venice:default=false"];;
 }
 
 // Applicaion Layer Gateway (ALG) names for invoking appropriate ALG

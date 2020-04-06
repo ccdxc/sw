@@ -53,6 +53,7 @@ var typesMapFwprofile = map[string]*api.Struct{
 
 		CLITags: map[string]api.CLIInfo{
 			"api-version":                  api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"detect-app":                   api.CLIInfo{Path: "Spec.DetectApp", Skip: false, Insert: "", Help: ""},
 			"drop-timeout":                 api.CLIInfo{Path: "Spec.DropTimeout", Skip: false, Insert: "", Help: ""},
 			"generation-id":                api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"icmp-active-session-limit":    api.CLIInfo{Path: "Spec.IcmpActiveSessionLimit", Skip: false, Insert: "", Help: ""},
@@ -111,6 +112,8 @@ var typesMapFwprofile = map[string]*api.Struct{
 			"IcmpActiveSessionLimit": api.Field{Name: "IcmpActiveSessionLimit", CLITag: api.CLIInfo{ID: "icmp-active-session-limit", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "icmp-active-session-limit", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"OtherActiveSessionLimit": api.Field{Name: "OtherActiveSessionLimit", CLITag: api.CLIInfo{ID: "other-active-session-limit", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "other-active-session-limit", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"DetectApp": api.Field{Name: "DetectApp", CLITag: api.CLIInfo{ID: "detect-app", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "detect-app", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"security.FirewallProfileStatus": &api.Struct{

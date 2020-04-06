@@ -54,6 +54,7 @@ message SecurityProfileSpec {
     Timeouts    Timeouts              = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "timeouts,omitempty"];
 	// Rate limits for the security profile
 	RateLimits  RateLimits            = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "rate-limits"];
+	bool DetectApp                    = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag)= "detect-app", (venice.default) = "false"];
 }
 
 

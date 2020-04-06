@@ -44,6 +44,8 @@ message FirewallProfileSpec {
 	uint32 IcmpActiveSessionLimit       = 14 [(gogoproto.jsontag) = "icmp-active-session-limit", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
 	// Other Active Session limit config after which new requests will be dropped
 	uint32 OtherActiveSessionLimit      = 15 [(gogoproto.jsontag) = "other-active-session-limit", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
+	// Set the Application Identification Detection config for DSCs
+	bool DetectApp                      = 16 [(gogoproto.jsontag)= "detect-app", (venice.default) = "false"];
 }
 
 

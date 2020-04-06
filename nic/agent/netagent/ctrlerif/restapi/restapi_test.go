@@ -308,6 +308,20 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 		return
 	}
 
+	secProfile.Spec.DetectApp = true
+	err = nagent.UpdateSecurityProfile(&secProfile)
+	if err != nil {
+		log.Errorf("Failed to update security profile with detect-app. {%v}", secProfile)
+		return
+	}
+
+	secProfile.Spec.DetectApp= false
+	err = nagent.UpdateSecurityProfile(&secProfile)
+	if err != nil {
+		log.Errorf("Failed to update security profile to disable detect-app. {%v}", secProfile)
+		return
+	}
+
 	app := netproto.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
 		ObjectMeta: api.ObjectMeta{

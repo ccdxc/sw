@@ -559,6 +559,11 @@
         "rate-limits": {
           "$ref": "#/definitions/netprotoRateLimits",
           "description": "Rate limits for the security profile."
+        },
+        "detect-app": {
+          "type": "boolean",
+          "format": "boolean",
+          "default": "false"
         }
       },
       "description": "SecurityProfileSpec captures all the security profile configuration."

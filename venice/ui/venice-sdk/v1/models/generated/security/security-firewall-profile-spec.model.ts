@@ -24,6 +24,7 @@ export interface ISecurityFirewallProfileSpec {
     'udp-active-session-limit': number;
     'icmp-active-session-limit': number;
     'other-active-session-limit': number;
+    'detect-app'?: boolean;
     '_ui'?: any;
 }
 
@@ -61,6 +62,8 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
     'icmp-active-session-limit': number = null;
     /** Other Active Session limit config after which new requests will be dropped. Value should be between 0 and 128000. */
     'other-active-session-limit': number = null;
+    /** Set the Application Identification Detection config for DSCs. */
+    'detect-app': boolean = null;
     public static propInfo: { [prop in keyof ISecurityFirewallProfileSpec]: PropInfoItem } = {
         'session-idle-timeout': {
             default: '90s',
@@ -162,6 +165,12 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
             description:  `Other Active Session limit config after which new requests will be dropped. Value should be between 0 and 128000.`,
             required: true,
             type: 'number'
+        },
+        'detect-app': {
+            default: 'false',
+            description:  `Set the Application Identification Detection config for DSCs.`,
+            required: false,
+            type: 'boolean'
         },
     }
 
@@ -304,6 +313,13 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
         } else {
             this['other-active-session-limit'] = null
         }
+        if (values && values['detect-app'] != null) {
+            this['detect-app'] = values['detect-app'];
+        } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('detect-app')) {
+            this['detect-app'] = SecurityFirewallProfileSpec.propInfo['detect-app'].default;
+        } else {
+            this['detect-app'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -326,6 +342,7 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
                 'udp-active-session-limit': CustomFormControl(new FormControl(this['udp-active-session-limit'], [required, maxValueValidator(128000), ]), SecurityFirewallProfileSpec.propInfo['udp-active-session-limit']),
                 'icmp-active-session-limit': CustomFormControl(new FormControl(this['icmp-active-session-limit'], [required, maxValueValidator(128000), ]), SecurityFirewallProfileSpec.propInfo['icmp-active-session-limit']),
                 'other-active-session-limit': CustomFormControl(new FormControl(this['other-active-session-limit'], [required, maxValueValidator(128000), ]), SecurityFirewallProfileSpec.propInfo['other-active-session-limit']),
+                'detect-app': CustomFormControl(new FormControl(this['detect-app']), SecurityFirewallProfileSpec.propInfo['detect-app']),
             });
         }
         return this._formGroup;
@@ -352,6 +369,7 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
             this._formGroup.controls['udp-active-session-limit'].setValue(this['udp-active-session-limit']);
             this._formGroup.controls['icmp-active-session-limit'].setValue(this['icmp-active-session-limit']);
             this._formGroup.controls['other-active-session-limit'].setValue(this['other-active-session-limit']);
+            this._formGroup.controls['detect-app'].setValue(this['detect-app']);
         }
     }
 }

@@ -90,6 +90,7 @@ func (m *FirewallProfileSpec) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
+		m.DetectApp = false
 		m.DropTimeout = "60s"
 		m.ICMPDropTimeout = "60s"
 		m.IcmpActiveSessionLimit = 0
