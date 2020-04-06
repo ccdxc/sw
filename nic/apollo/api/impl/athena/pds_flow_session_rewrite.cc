@@ -70,8 +70,6 @@ pds_flow_session_rewrite_create (pds_flow_session_rewrite_spec_t *spec)
 
         p4pd_ret = session_rewrite.write(session_rewrite_id);
 
-        
-
     } else if (spec->data.nat_info.nat_type == REWRITE_NAT_TYPE_IPV4_SNAT) {
 
         session_rewrite_ipv4_snat_entry_t session_rewrite_ipv4_snat;

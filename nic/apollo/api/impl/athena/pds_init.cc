@@ -73,8 +73,11 @@ pds_global_init (pds_cinit_params_t *params)
     params_cpp.pipeline = "athena";
     //params_cpp.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
     params_cpp.memory_profile = PDS_MEMORY_PROFILE_DEFAULT;
-    params_cpp.cfg_file = "hal.json";
-
+#ifdef __aarch64__
+    params_cpp.cfg_file = "hal_hw.json";
+#else
+     params_cpp.cfg_file = "hal.json";
+#endif
     ret = pds_init(&params_cpp);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("PDS init failed with ret %u\n", ret);
