@@ -225,6 +225,7 @@ private:
     static uint64_t mac_addr_list[NCSI_CAP_CHANNEL_COUNT][NCSI_CAP_MIXED_MAC_FILTER_COUNT];
     static uint16_t vlan_filter_list[NCSI_CAP_CHANNEL_COUNT][NCSI_CAP_VLAN_FILTER_COUNT];
     static uint8_t vlan_mode_list[NCSI_CAP_CHANNEL_COUNT];
+    static uint32_t last_link_status[NCSI_CAP_CHANNEL_COUNT];
     static StateMachine *StateM[NCSI_CAP_CHANNEL_COUNT];
 
     void GetMacStats(uint32_t port, struct GetNicStatsRespPkt& resp);

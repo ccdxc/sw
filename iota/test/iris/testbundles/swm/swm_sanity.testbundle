@@ -38,7 +38,7 @@ testcases:
     
     -   name    : apc_reset
         testcase: testcases.swm.apc_reset 
-        enable  : False
+        enable  : True
         iterators :
             type    : nested
             count   : [1]

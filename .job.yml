@@ -212,8 +212,8 @@ jobs:
 #    labels: ["compat-linux"]
 #  iota/test/standalone/compat/server-esx:
 #    labels: ["compat-esx"]
-#  iota/test/standalone/cnic_swm:
-#    labels: ["hourly"]
+  iota/test/standalone/cnic_swm:
+    labels: ["2xhourly"]
   iota/test/standalone/sanity/swm:
     labels: ["precommit", "2xhourly"]
   iota/test/standalone/regression/swm:

@@ -36,6 +36,7 @@ namespace ncsi {
 uint64_t CmdHndler::mac_addr_list[NCSI_CAP_CHANNEL_COUNT][NCSI_CAP_MIXED_MAC_FILTER_COUNT];
 uint16_t CmdHndler::vlan_filter_list[NCSI_CAP_CHANNEL_COUNT][NCSI_CAP_VLAN_FILTER_COUNT];
 uint8_t CmdHndler::vlan_mode_list[NCSI_CAP_CHANNEL_COUNT];
+uint32_t CmdHndler::last_link_status[NCSI_CAP_CHANNEL_COUNT];
 
 StateMachine* CmdHndler::StateM[NCSI_CAP_CHANNEL_COUNT];
 NcsiParamDb* CmdHndler::NcsiDb[NCSI_CAP_CHANNEL_COUNT];
@@ -1203,10 +1204,21 @@ void CmdHndler::GetLinkStatus(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
     const struct NcsiFixedCmdPkt *cmd = (NcsiFixedCmdPkt *)cmd_pkt;
 
     memset(&resp, 0, sizeof(resp));
-    hndlr->ipc->GetLinkStatus(cmd->cmd.NcsiHdr.channel, link_status,
-            link_speed);
-    status = ((link_status ? 1:0) | (link_speed << 1) | (link_speed << 24) |
+
+    if ((hndlr->ipc->GetLinkStatus(cmd->cmd.NcsiHdr.channel, link_status,
+            link_speed))) {
+
+        SDK_TRACE_ERR("Failed to read link status. Responding with last saved"
+                "link status: 0x%x",last_link_status[cmd->cmd.NcsiHdr.channel]);
+        status = last_link_status[cmd->cmd.NcsiHdr.channel];
+    }
+    else {
+        status = ((link_status ? 1:0) | (link_speed << 1) | (link_speed << 24) |
             (0x3 << 5)/* autoneg */ | (1 << 20) /* serdes used */ );
+
+        /* save the latest status on last_link_status */
+        last_link_status[cmd->cmd.NcsiHdr.channel] = status;
+    }
 
     memcpy(&resp.rsp.NcsiHdr, &cmd->cmd.NcsiHdr, sizeof(resp.rsp.NcsiHdr));
 
