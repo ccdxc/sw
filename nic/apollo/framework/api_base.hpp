@@ -66,6 +66,12 @@ public:
     /// \return   SDK_RET_OK or error code
     static sdk_ret_t free(obj_id_t obj_id, api_base *api_obj);
 
+    /// \brief    backup method to stash the object into persistent storage
+    /// \return   SDK_RET_OK or error code
+    virtual sdk_ret_t backup(void) {
+        return SDK_RET_INVALID_OP;
+    }
+
     /// \brief  Allocate hardware resources for this object
     /// \param[in] orig_obj Old version of the unmodified object
     /// \param[in] obj_ctxt transient state associated with this API

@@ -68,9 +68,9 @@ public:
     virtual sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt) override;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
+    ht *nh_group_ht(void) const { return nexthop_group_ht_; }
 
 private:
-    ht *nh_group_ht(void) const { return nexthop_group_ht_; }
     slab *nh_group_slab(void) const { return nexthop_group_slab_; }
     // nexthop_group class is friend of nexthop_group_state
     friend class nexthop_group;

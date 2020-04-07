@@ -89,6 +89,13 @@ public:
         return NULL;
     }
 
+    /// \brief     stash the object into persistent storage
+    /// \param[in] info pointer to the info object
+    /// \return    bytes written into persistent storage for this object
+    virtual int backup(obj_info_t *info) {
+        return -1;
+    }
+
     /// \brief Allocate/reserve h/w resources for this object
     ///
     /// \param[in] api_obj  object for which resources are being reserved for

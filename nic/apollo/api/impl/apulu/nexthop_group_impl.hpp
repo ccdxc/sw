@@ -54,6 +54,10 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(nexthop_group_impl *impl);
 
+    /// \brief    stash this object into persistent storage
+    /// \return   bytes written into persistent storage
+    virtual int backup(obj_info_t *info) override { return 0; }
+
     /// \brief      allocate/reserve h/w resources for this object
     /// \param[in]  api_obj  object for which resources are being reserved
     /// \param[in]  orig_obj old version of the unmodified object

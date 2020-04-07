@@ -18,6 +18,7 @@
 #include "nic/apollo/api/include/pds_upgrade.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/internal/upgrade_ev.hpp"
+#include "nic/apollo/api/internal/upg_ctxt.hpp"
 
 namespace api {
 
@@ -75,6 +76,17 @@ public:
     /// \param[in] state destroy the upgrade state
     static void destroy(upg_state *state);
 
+    /// \brief backup objects function
+    /// \return SDK_RET_OK on success, failure status code on error
+    sdk_ret_t backup(void);
+
+    /// \brief ht walk callback to backup stateful obj
+    /// \return return true on failure to stop walk, false to continue
+    static bool backup_stateful_obj_cb(void *obj, void *ctxt);
+
+    /// \brief kvstore iterate callback to backup stateless obj
+    static void backup_statless_obj_cb(void *key, void *val, void *ctxt);
+
     // shared memory manager. all the states are saved on this during upgrade
     shmmgr *shm_mgr(void) { return shm_mmgr_; }
     // compare the profile of the running with the new by saving it in shared memory
@@ -131,6 +143,12 @@ public:
     upg_mode_t upg_init_mode(void) { return upg_init_mode_; }
     void set_upg_req_mode(upg_mode_t mode) { upg_req_mode_ = mode; }
     upg_mode_t upg_req_mode(void) { return upg_req_mode_; }
+    /// \brief set backup/restore  status
+    void set_status(bool status) { status_ = status; }
+    /// \brief get backup/restore status
+    bool status(void) { return status_; }
+    /// \brief get upg ctxt within upgrade state
+    upg_ctxt *upg_ctx(void) { return upg_ctx_; }
 
 private:
     /// shared memory manager
@@ -154,8 +172,13 @@ private:
     upg_mode_t upg_req_mode_;
     //  initialization mode during process bringup
     upg_mode_t upg_init_mode_;
+    /// \brief     instantiate upg ctxt within upgrade state
+    /// \param[in] upg_ctxt
+    void set_upg_ctx(upg_ctxt *ctxt) { upg_ctx_ = ctxt; }
 
 private:
+    bool            status_;            ///< backup/restore status
+    upg_ctxt        *upg_ctx_;          ///< singleton upg obj context
     sdk_ret_t init_(bool create);
 };
 

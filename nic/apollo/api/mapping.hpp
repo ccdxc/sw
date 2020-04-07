@@ -103,6 +103,10 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(mapping_entry *mapping);
 
+    /// \brief    stash this object into persistent storage
+    /// \return   sdk_ret_ok or error code
+    virtual sdk_ret_t backup(void) override { return SDK_RET_OK; }
+
     /**
      * @brief    build object given its key from the (sw and/or hw state we
      *           have) and return an instance of the object (this is useful for

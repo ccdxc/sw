@@ -204,6 +204,18 @@ nexthop_group::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_NEXTHOP_GROUP, this);
 }
 
+sdk_ret_t
+nexthop_group::backup(void) {
+    int size;
+    pds_nexthop_group_info_t info;
+
+    memset(&info, 0, sizeof(pds_nexthop_group_info_t));
+    // todo: not enough juice, just to show how impl backup is used
+    size = impl_->backup((impl::obj_info_t *)&info);
+
+    return SDK_RET_ERR;
+}
+
 /// @}     // end of PDS_NEXTHOP
 
 }    // namespace api

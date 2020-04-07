@@ -49,6 +49,10 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(nexthop_group *nh_group);
 
+    /// \brief    stash this object into persistent storage
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t backup(void) override;
+
     /// \brief     allocate h/w resources for this object
     /// \param[in] orig_obj old version of the unmodified object
     /// \param[in] obj_ctxt transient state associated with this API
