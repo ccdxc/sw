@@ -100,6 +100,15 @@ targets:
     build-dependencies:
     - build-apulu-x86
 
+  apulu/upgrade_test:
+    commands: ["make", "PIPELINE=apulu", "jobd/apulu/upgrade"]
+    owners: ["email:hareesh@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apulu-x86
+
 cache:
   name: "sw"
   mount_dir: "/root/.cache"

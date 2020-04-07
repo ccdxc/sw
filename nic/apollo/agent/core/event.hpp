@@ -39,8 +39,7 @@ sdk_ret_t update_event_listener(void *ctxt);
 
 /// \brief handle event notifications received (from PDS HAL)
 /// \param[in] event    event being notified
-/// \return    SDK_RET_OK on success, failure status code on error
-sdk_ret_t handle_event_ntfn(const pds_event_t *event);
+void handle_event_ntfn(const pds_event_t *event);
 
 }    // namespace core
 

@@ -37,7 +37,6 @@ sdk_ret_t
 upg_init (pds_init_params_t *params)
 {
     sdk_ret_t ret;
-    pds_event_t event;
     bool shm_create;
     upg_mode_t mode;
 
@@ -57,15 +56,7 @@ upg_init (pds_init_params_t *params)
         return SDK_RET_ERR;
     }
     g_upg_state->set_upg_init_mode(mode);
-    // this will be processed int upgrade boot/compat-check tests only
-    if (params->event_cb) {
-        event.upg_params.id = UPG_EV_NONE;
-        event.event_id = PDS_EVENT_ID_UPG;
-        ret = params->event_cb(&event);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-    }
+    // TODO update the memory paratition file
     if (shm_create) {
         g_upg_state->set_memory_profile(params->memory_profile);
     } else if (g_upg_state->memory_profile() != params->memory_profile) {

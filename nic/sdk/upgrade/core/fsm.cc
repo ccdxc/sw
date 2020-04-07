@@ -28,8 +28,8 @@
 #include "logger.hpp"
 #include "utils.hpp"
 
-#define GRACEFUL_UPGRADE "graceful_upgrade.json"
-#define HITLESS_UPGRADE  "hitless_upgrade.json"
+#define UPGRADE_GRACEFUL "upgrade_graceful.json"
+#define UPGRADE_HITLESS  "upgrade_hitless.json"
 
 namespace sdk {
 namespace upg {
@@ -636,17 +636,17 @@ init_fsm (fsm_init_params_t *params)
 }
 
 static sdk_ret_t
-load_pipeline_json(pt::ptree& tree, bool is_graceful)
+load_pipeline_json(pt::ptree& tree, sdk::platform::upg_mode_t upg_mode)
 {
     sdk_ret_t ret = SDK_RET_ERR;
     try
     {   std::string upg_gen_json = std::string(std::getenv("CONFIG_PATH"));
         upg_gen_json += "/gen/";
 
-        if (is_graceful) {
-            upg_gen_json += GRACEFUL_UPGRADE;
+        if (sdk::platform::upgrade_mode_graceful(upg_mode)) {
+            upg_gen_json += UPGRADE_GRACEFUL;
         } else {
-            upg_gen_json += HITLESS_UPGRADE;
+            upg_gen_json += UPGRADE_HITLESS;
         }
 
         if (access(upg_gen_json.c_str(), F_OK) != -1)
@@ -672,7 +672,7 @@ init (fsm_init_params_t *params)
 {
     pt::ptree tree;
 
-    if (SDK_RET_OK != load_pipeline_json(tree, true)){
+    if (SDK_RET_OK != load_pipeline_json(tree, params->upg_mode)){
         UPG_TRACE_ERR("Failed to load upgrade json !\n");
         return SDK_RET_ERR;
     }

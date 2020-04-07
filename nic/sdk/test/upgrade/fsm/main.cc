@@ -7,44 +7,16 @@
 #include <getopt.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/lib/ipc/ipc.hpp"
-#include "nic/sdk/lib/event_thread/event_thread.hpp"
-#include "nic/sdk/upgrade/include/ev.hpp"
+#include "include/sdk/base.hpp"
+#include "lib/ipc/ipc.hpp"
+#include "lib/event_thread/event_thread.hpp"
+#include "upgrade/include/ev.hpp"
 
 static sdk::event_thread::event_thread *g_svc_server_thread;
 static std::string                      test_config_json;
 static std::string                      svc_name;
 static uint32_t                         svc_thread_id;
 
-
-static inline upg_status_t
-stage_to_upg_status (upg_stage_t evt)
-{
-#if 0
-    std::string   test_id="TEST_ID_1";  // TODO: need to pass in mgs
-    std::string   description;
-    std::string   upg_stage = std::to_string(evt);
-    upg_status_t  upg_status;
-
-
-    boost::property_tree::ptree pt;
-    std::ifstream json_cfg(test_config_json.c_str());
-    read_json(json_cfg, pt);
-
-    description   = pt.get<std::string>(test_id + "." + "description");
-    upg_status    = (upg_status_t) pt.get<int>(test_id + "." + upg_stage);
-    return upg_status;
-
-   // TODO: need to do this timeout injection from test json
-   if (UPG_STAGE_PREPARE == evt) {
-       printf("\nSleeping ...\n");
-       sleep (5);
-       printf("\nSleep done ...\n");
-   }
-#endif
-    return UPG_STATUS_OK;
-}
 
 static sdk_ret_t
 test_upgrade (sdk::upg::upg_ev_params_t *params)

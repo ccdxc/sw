@@ -31,12 +31,9 @@ send_upg_grpc (void)
     spec->set_mode(pds::UpgMode::UPG_MODE_GRACEFUL);
 
     ret_status = g_upg_svc_stub_->UpgradeRequest(&context, req, &rsp);
-    printf("Upgrade response status ok %u, rsp %u, rspmsg %s\n", ret_status.ok(),
-           rsp.status(),
-           rsp.mutable_statusmsg()->empty() ? "success" :
-           rsp.mutable_statusmsg()->c_str());
-    if (!ret_status.ok()) {
-        printf("%s failed!\n", __FUNCTION__);
+    printf("Upgrade response, grpc status ok %u, upgmgr rsp %u, upgmgr rspmsg %s\n",
+           ret_status.ok(), rsp.status(), rsp.mutable_statusmsg()->c_str());
+    if (!ret_status.ok() || rsp.status() != pds::UpgStatus::UPG_STATUS_OK) {
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;
@@ -61,5 +58,9 @@ int
 main (int argc, char **argv)
 {
     svc_init();
-    send_upg_grpc();
+    if (send_upg_grpc() == SDK_RET_OK) {
+        exit(0);
+    } else {
+        exit(1);
+    }
 }
