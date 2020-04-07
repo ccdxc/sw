@@ -119,7 +119,7 @@ func createIPAMPolicy(stateMgr *Statemgr, tenant, name, dhcpIP string) (*network
 }
 
 // createNetwork utility function to create a network
-func createNetwork(t *testing.T, stateMgr *Statemgr, tenant, net, subnet, gw string) error {
+func createNetwork(t *testing.T, stateMgr *Statemgr, tenant, net, subnet, gw string, vlan uint32) error {
 	// network params
 	np := network.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
@@ -132,6 +132,7 @@ func createNetwork(t *testing.T, stateMgr *Statemgr, tenant, net, subnet, gw str
 			Type:        network.NetworkType_Bridged.String(),
 			IPv4Subnet:  subnet,
 			IPv4Gateway: gw,
+			VlanID:      vlan,
 			RouteImportExport: &network.RDSpec{
 				AddressFamily: network.BGPAddressFamily_L2vpnEvpn.String(),
 				ExportRTs: []*network.RouteDistinguisher{
@@ -230,7 +231,7 @@ func createTenant(t *testing.T, stateMgr *Statemgr, tenant string) error {
 		}
 		fmt.Printf("Error find ten %v\n", err)
 		return false, nil
-	}, "Tenant not foud", "1ms", "1s")
+	}, "Tenant not found", "1ms", "1s")
 
 	dscProfile := cluster.DSCProfile{
 		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
@@ -255,7 +256,7 @@ func createTenant(t *testing.T, stateMgr *Statemgr, tenant string) error {
 		}
 		fmt.Printf("Error find ten %v\n", err)
 		return false, nil
-	}, "Profile not foud", "1ms", "1s")
+	}, "Profile not found", "1ms", "1s")
 
 	return nil
 }
@@ -593,7 +594,7 @@ func createVirtualRouter(t *testing.T, stateMgr *Statemgr, tenant, virtualRouter
 		}
 		fmt.Printf("Error finding virtualrouter %v\n", err)
 		return false, nil
-	}, "virtual router not foud", "1ms", "1s")
+	}, "virtual router not found", "1ms", "1s")
 
 	return &vr, nil
 }
@@ -612,7 +613,7 @@ func TestNetworkCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error creating the tenant")
 
 	// create a network
-	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
+	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254", 10)
 	AssertOk(t, err, "Error creating the network")
 
 	// verify network got created
@@ -622,7 +623,7 @@ func TestNetworkCreateDelete(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "1s")
+	}, "Network not found", "1ms", "1s")
 	nw, err := stateMgr.FindNetwork("default", "default")
 	AssertOk(t, err, "Could not find the network")
 	Assert(t, (nw.Network.Spec.IPv4Subnet == "10.1.1.0/24"), "Network subnet did not match", nw)
@@ -640,20 +641,20 @@ func TestNetworkCreateDelete(t *testing.T) {
 	}
 
 	// verify can not create networks with invalid params
-	err = createNetwork(t, stateMgr, "default", "invalid", "10.1.1.0/24", "10.1.1.255")
+	err = createNetwork(t, stateMgr, "default", "invalid", "10.1.1.0/24", "10.1.1.255", 11)
 	verifyFail()
-	err = createNetwork(t, stateMgr, "default", "invalid", "10.1.1.0/24", "10.1.1.0")
+	err = createNetwork(t, stateMgr, "default", "invalid", "10.1.1.0/24", "10.1.1.0", 12)
 	verifyFail()
-	err = createNetwork(t, stateMgr, "default", "invalid", "10.1.1.0/24", "10.1.2.254")
+	err = createNetwork(t, stateMgr, "default", "invalid", "10.1.1.0/24", "10.1.2.254", 13)
 	verifyFail()
-	err = createNetwork(t, stateMgr, "default", "invalid", "10.1.1.0/24", "10.1.1.25424")
+	err = createNetwork(t, stateMgr, "default", "invalid", "10.1.1.0/24", "10.1.1.25424", 14)
 	verifyFail()
-	err = createNetwork(t, stateMgr, "default", "invalid", "10.1.1.10-20/24", "10.1.1.254")
+	err = createNetwork(t, stateMgr, "default", "invalid", "10.1.1.10-20/24", "10.1.1.254", 15)
 	verifyFail()
 	verifyFail()
 
 	// verify we cant create duplicate networks
-	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
+	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254", 10)
 	AssertOk(t, err, "Network update failed")
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := stateMgr.FindNetwork("default", "default")
@@ -661,7 +662,21 @@ func TestNetworkCreateDelete(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "1s")
+	}, "Network not found", "1ms", "1s")
+
+	// Create network with duplicate vlan id
+	err = createNetwork(t, stateMgr, "default", "dup10", "10.2.1.0/24", "10.2.1.254", 10)
+	AssertOk(t, err, "Error creating the network")
+	AssertEventually(t, func() (bool, interface{}) {
+		nw, err := stateMgr.FindNetwork("default", "dup10")
+		if err != nil {
+			return false, err
+		}
+		if nw.Network.Network.Status.OperState != network.OperState_Rejected.String() {
+			return false, fmt.Errorf("%s network should be rejected", nw.Network.Network.Name)
+		}
+		return true, nil
+	}, "Network not rejected", "1ms", "1s")
 
 	// delete the network
 	err = stateMgr.ctrler.Network().Delete(&nw.Network.Network)
@@ -675,7 +690,17 @@ func TestNetworkCreateDelete(t *testing.T) {
 		fmt.Printf("Error find ten %v\n", err)
 		return false, nil
 	}, "Network not deleted", "1ms", "1s")
-
+	// after deleting network with duplicate vlan, dup10 should get activated
+	AssertEventually(t, func() (bool, interface{}) {
+		nw, err := stateMgr.FindNetwork("default", "dup10")
+		if err != nil {
+			return false, err
+		}
+		if nw.Network.Network.Status.OperState != network.OperState_Active.String() {
+			return false, fmt.Errorf("%s network should be active", nw.Network.Network.Name)
+		}
+		return true, nil
+	}, "Network not active", "1ms", "1s")
 }
 
 func TestNetworkList(t *testing.T) {
@@ -690,7 +715,7 @@ func TestNetworkList(t *testing.T) {
 	err = createTenant(t, stateMgr, "default")
 	AssertOk(t, err, "Error creating the tenant")
 	// create a network
-	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
+	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254", 11)
 
 	// verify network got created
 	AssertEventually(t, func() (bool, interface{}) {
@@ -699,7 +724,7 @@ func TestNetworkList(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "1s")
+	}, "Network not found", "1ms", "1s")
 
 	// verify the list works
 	nets, err := stateMgr.ListNetworks()
@@ -722,7 +747,7 @@ func TestEndpointCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Error creating the tenant")
 
 	// create a network
-	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
+	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254", 11)
 	AssertOk(t, err, "Error creating the network")
 	// verify network got created
 	AssertEventually(t, func() (bool, interface{}) {
@@ -731,7 +756,7 @@ func TestEndpointCreateDelete(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "1s")
+	}, "Network not found", "1ms", "1s")
 
 	// endpoint params
 	epinfo := workload.Endpoint{
@@ -916,7 +941,7 @@ func TestEndpointStaleDelete(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "1s")
+	}, "Network not found", "1ms", "1s")
 
 	// workload params
 	wr := workload.Workload{
@@ -954,7 +979,7 @@ func TestEndpointStaleDelete(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "1s")
+	}, "Network not found", "1ms", "1s")
 
 	// verify we can find the network for the workload
 	nw, err := stateMgr.FindNetwork("default", "Network-Vlan-1")
@@ -1014,7 +1039,7 @@ func TestEndpointCreateFailure(t *testing.T) {
 	AssertOk(t, err, "Error creating the tenant")
 
 	// create a network
-	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/30", "10.1.1.2")
+	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/30", "10.1.1.2", 11)
 	AssertOk(t, err, "Error creating the network")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -1023,7 +1048,7 @@ func TestEndpointCreateFailure(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "1s")
+	}, "Network not found", "1ms", "1s")
 
 	// endpoint params
 	epinfo := workload.Endpoint{
@@ -1119,7 +1144,7 @@ func TestEndpointList(t *testing.T) {
 	AssertOk(t, err, "Error creating the tenant")
 
 	// create a network
-	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
+	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254", 11)
 	AssertOk(t, err, "Error creating the network")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -1128,7 +1153,7 @@ func TestEndpointList(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "1s")
+	}, "Network not found", "1ms", "1s")
 
 	// endpoint params
 	epinfo := ctkit.Endpoint{
@@ -1177,7 +1202,7 @@ func TestEndpointNodeState(t *testing.T) {
 	AssertOk(t, err, "Error creating the tenant")
 
 	// create a network
-	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
+	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254", 11)
 	AssertOk(t, err, "Error creating the network")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -1186,7 +1211,7 @@ func TestEndpointNodeState(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "1s")
+	}, "Network not found", "1ms", "1s")
 
 	// endpoint params
 	epinfo := ctkit.Endpoint{
@@ -1301,7 +1326,7 @@ func TestSgAttachEndpoint(t *testing.T) {
 	AssertOk(t, err, "Error finding sg")
 
 	// create a network
-	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
+	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254", 11)
 	AssertOk(t, err, "Error creating the network")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -1310,7 +1335,7 @@ func TestSgAttachEndpoint(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "1s")
+	}, "Network not found", "1ms", "1s")
 
 	// endpoint object
 	epinfo := workload.Endpoint{
@@ -1453,7 +1478,7 @@ func TestSgErrorCases(t *testing.T) {
 	AssertOk(t, err, "Error finding sg")
 
 	// create a network
-	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
+	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254", 11)
 	AssertOk(t, err, "Error creating the network")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -1462,7 +1487,7 @@ func TestSgErrorCases(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "1s")
+	}, "Network not found", "1ms", "1s")
 
 	// endpoint object with nil workload attributes
 	epinfo := workload.Endpoint{
@@ -1550,7 +1575,7 @@ func TestEndpointConcurrency(t *testing.T) {
 	AssertOk(t, err, "Error creating the tenant")
 
 	// create a network
-	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254")
+	err = createNetwork(t, stateMgr, "default", "default", "10.1.1.0/24", "10.1.1.254", 11)
 	AssertOk(t, err, "Error creating the network")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -1559,7 +1584,7 @@ func TestEndpointConcurrency(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "1s")
+	}, "Network not found", "1ms", "1s")
 
 	// find the network
 	_, err = stateMgr.FindNetwork("default", "default")
@@ -1716,7 +1741,7 @@ func TestTenantCreateDelete(t *testing.T) {
 		}
 		fmt.Printf("Error find ten %v\n", err)
 		return false, nil
-	}, "Tenant was deleted  foud", "1ms", "1s")
+	}, "Tenant was deleted  found", "1ms", "1s")
 
 	// delete resources
 
@@ -1729,7 +1754,7 @@ func TestTenantCreateDelete(t *testing.T) {
 		}
 		fmt.Printf("Error find ten %v\n", err)
 		return false, nil
-	}, "Tenant was deleted  foud", "1ms", "1s")
+	}, "Tenant was deleted  found", "1ms", "1s")
 
 	err = stateMgr.ctrler.SecurityGroup().Delete(sg2)
 	AssertEventually(t, func() (bool, interface{}) {
@@ -1740,7 +1765,7 @@ func TestTenantCreateDelete(t *testing.T) {
 		}
 		fmt.Printf("Error find ten %v\n", err)
 		return false, nil
-	}, "Tenant was deleted  foud", "1ms", "1s")
+	}, "Tenant was deleted  found", "1ms", "1s")
 
 	//Make sure Tenant  deleted.
 	AssertEventually(t, func() (bool, interface{}) {
@@ -1751,7 +1776,7 @@ func TestTenantCreateDelete(t *testing.T) {
 		}
 		fmt.Printf("Error find ten %v\n", err)
 		return false, nil
-	}, "Tenant was deleted  foud", "1ms", "1s")
+	}, "Tenant was deleted  found", "1ms", "1s")
 
 }
 
@@ -1860,7 +1885,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "20ms", "1s")
+	}, "Network not found", "20ms", "1s")
 
 	// verify we can find the network for the workload
 	nw, err := stateMgr.FindNetwork("default", "Network-Vlan-1")
@@ -1872,7 +1897,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 
 	// verify we can find the endpoint associated with the workload
 	foundEp, ok := nw.FindEndpoint("testWorkload-0001.0203.0409")
@@ -1889,7 +1914,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 
 	// verify endpoint is gone from the database
 	_, ok = nw.FindEndpoint("testWorkload-0001.0203.0405")
@@ -2019,7 +2044,7 @@ func TestWorkloadUpdate(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "1s")
+	}, "Network not found", "1ms", "1s")
 
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
@@ -2031,7 +2056,7 @@ func TestWorkloadUpdate(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoints not foud", "1ms", "2s")
+	}, "Endpoints not found", "1ms", "2s")
 
 	// verify we can find the endpoint associated with the workload
 	foundEp, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
@@ -2054,7 +2079,7 @@ func TestWorkloadUpdate(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "1s")
+	}, "Network not found", "1ms", "1s")
 
 	// verify we can find the new network for the workload
 	nw, err := stateMgr.FindNetwork("default", "Network-Vlan-2")
@@ -2092,7 +2117,7 @@ func TestWorkloadUpdate(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 
 	// verify old endpoint is deleted
 	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
@@ -2107,7 +2132,7 @@ func TestWorkloadUpdate(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 
 	// verify new endpoint is created
 	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0201.0405")
@@ -2125,7 +2150,7 @@ func TestWorkloadUpdate(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 
 	// add IP address
 	nwr = ref.DeepCopy(nwr).(workload.Workload)
@@ -2140,7 +2165,7 @@ func TestWorkloadUpdate(t *testing.T) {
 		}
 		fmt.Printf("IP Address %v", foundEp.Endpoint.Status.IPv4Address)
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 
 	// update IP address
 	nwr = ref.DeepCopy(nwr).(workload.Workload)
@@ -2155,7 +2180,7 @@ func TestWorkloadUpdate(t *testing.T) {
 		}
 		fmt.Printf("IP Address %v", foundEp.Endpoint.Status.IPv4Address)
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 
 	// remove IP address
 	nwr = ref.DeepCopy(nwr).(workload.Workload)
@@ -2170,7 +2195,7 @@ func TestWorkloadUpdate(t *testing.T) {
 		}
 		fmt.Printf("IP Address %v", foundEp.Endpoint.Status.IPv4Address)
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 
 	// add new interface to workload
 	newIntf := workload.WorkloadIntfSpec{
@@ -2189,7 +2214,7 @@ func TestWorkloadUpdate(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 
 	// verify we can find the new endpoint
 
@@ -2205,7 +2230,7 @@ func TestWorkloadUpdate(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 	// verify endpoint is gone
 	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0002.0406.0800")
 	Assert(t, (err != nil), "found endpoint for deleted interface", foundEp)
@@ -2220,7 +2245,7 @@ func TestWorkloadUpdate(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0201.0405")
 	AssertOk(t, err, "Could not find the new endpoint")
 
@@ -2234,7 +2259,7 @@ func TestWorkloadUpdate(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 
 	// verify endpoint is gone from the database
 	_, ok = nw.FindEndpoint("testWorkload-0002.0406.0800")
@@ -2338,7 +2363,7 @@ func TestWorkloadUpdateHost(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "20ms", "2s")
+	}, "Endpoint not found", "20ms", "2s")
 
 	// create the workload
 	err = stateMgr.ctrler.Workload().Create(&wr)
@@ -2350,7 +2375,7 @@ func TestWorkloadUpdateHost(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "20ms", "2s")
+	}, "Endpoint not found", "20ms", "2s")
 
 	// verify we can find the endpoint associated with the workload
 	foundEp, err := stateMgr.FindEndpoint("default", "testWorkload-0002.0202.0202")
@@ -2371,7 +2396,7 @@ func TestWorkloadUpdateHost(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 
 	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0002.0202.0202")
 	AssertOk(t, err, "Could not find the endpoint")
@@ -2388,7 +2413,7 @@ func TestWorkloadUpdateHost(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "1s")
+	}, "Endpoint not found", "1ms", "1s")
 
 	// verify endpoint is gone from the database
 	_, err = stateMgr.FindEndpoint("default", "testWorkload-0002.0202.0202")
@@ -2472,7 +2497,7 @@ func TestWorkloadWithDuplicateMac(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "2s")
+	}, "Network not found", "1ms", "2s")
 
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
@@ -2480,7 +2505,7 @@ func TestWorkloadWithDuplicateMac(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "2s")
+	}, "Endpoint not found", "1ms", "2s")
 
 	// verify we can find the network for the workload
 	nw, err := stateMgr.FindNetwork("default", "Network-Vlan-1")
@@ -2519,7 +2544,7 @@ func TestWorkloadWithDuplicateMac(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "2s")
+	}, "Endpoint not found", "1ms", "2s")
 
 	// find the second workload
 	AssertEventually(t, func() (bool, interface{}) {
@@ -2528,7 +2553,7 @@ func TestWorkloadWithDuplicateMac(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "2s")
+	}, "Endpoint not found", "1ms", "2s")
 
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := stateMgr.FindEndpoint("default", "testWorkload2-0001.0203.0405")
@@ -2536,7 +2561,7 @@ func TestWorkloadWithDuplicateMac(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "2s")
+	}, "Endpoint not found", "1ms", "2s")
 
 	// verify endpoint is not created
 	_, ok = nw.FindEndpoint("testWorkload2-0001.0203.0405")
@@ -2553,7 +2578,7 @@ func TestWorkloadWithDuplicateMac(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint not foud", "1ms", "2s")
+	}, "Endpoint not found", "1ms", "2s")
 
 	// verify endpoint is gone from the database
 	_, ok = nw.FindEndpoint("testWorkload-0001.0203.0405")
@@ -2597,7 +2622,7 @@ func TestHostCreateDelete(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "2s")
+	}, "Network not found", "1ms", "2s")
 
 	// verify we can find the endpoint associated with the host
 	foundHost, err := stateMgr.FindHost("default", "testHost")
@@ -2614,7 +2639,7 @@ func TestHostCreateDelete(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "2s")
+	}, "Network not found", "1ms", "2s")
 
 	// verify endpoint is gone from the database
 	_, err = stateMgr.FindHost("default", "testHost")
@@ -2659,7 +2684,7 @@ func TestHostUpdates(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Network not foud", "1ms", "2s")
+	}, "Network not found", "1ms", "2s")
 
 	// verify we can find the endpoint associated with the host
 	_, err = stateMgr.FindHost("default", "testHost")
@@ -2695,7 +2720,7 @@ func TestHostUpdates(t *testing.T) {
 			return true, nil
 		}
 		return false, nil
-	}, "Endpoint foud", "1ms", "2s")
+	}, "Endpoint found", "1ms", "2s")
 
 	// verify we can not find the endpoint associated with the workload
 	_, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
@@ -3365,7 +3390,7 @@ func TestIPAMPolicyCreateDelete(t *testing.T) {
 		}
 		fmt.Printf("Error finding ipampolicy %v\n", err)
 		return false, nil
-	}, "ipampolicy not foud", "1ms", "1s")
+	}, "ipampolicy not found", "1ms", "1s")
 	AssertEquals(t, obj.IPAMPolicy.Spec.DHCPRelay.Servers[0].IPAddress, policy.Spec.DHCPRelay.Servers[0].IPAddress, "IPAMPolicy params did not match")
 
 	// update the IPAMPolicy
@@ -3385,7 +3410,7 @@ func TestIPAMPolicyCreateDelete(t *testing.T) {
 		}
 		fmt.Printf("Error finding ipampolicy %v\n", err)
 		return false, nil
-	}, "ipampolicy not foud", "1ms", "1s")
+	}, "ipampolicy not found", "1ms", "1s")
 	AssertEquals(t, obj.IPAMPolicy.Spec.DHCPRelay.Servers[0].IPAddress, policy.Spec.DHCPRelay.Servers[0].IPAddress, "IPAMPolicy params did not match")
 
 	// delete the IPAM policy
@@ -3400,7 +3425,7 @@ func TestIPAMPolicyCreateDelete(t *testing.T) {
 		}
 		fmt.Printf("IPAMPolicy still found after deleting %v\n", err)
 		return false, nil
-	}, "ipampolicy still foud", "1ms", "1s")
+	}, "ipampolicy still found", "1ms", "1s")
 }
 
 func enableOverlayRouting() []error {
@@ -3459,7 +3484,7 @@ func TestRoutingConfigCreateDelete(t *testing.T) {
 		}
 		fmt.Printf("Error finding routingconfig %v\n", err)
 		return false, nil
-	}, "routingconfig not foud", "1ms", "1s")
+	}, "routingconfig not found", "1ms", "1s")
 	AssertEquals(t, obj.RoutingConfig.Spec.BGPConfig.Neighbors[0].IPAddress, rtcfg.Spec.BGPConfig.Neighbors[0].IPAddress, "routingconfig params did not match")
 
 	// update the routingconfig
@@ -3478,7 +3503,7 @@ func TestRoutingConfigCreateDelete(t *testing.T) {
 		}
 		fmt.Printf("Error finding routingconfig %v\n", err)
 		return false, nil
-	}, "routingconfig not foud", "1ms", "1s")
+	}, "routingconfig not found", "1ms", "1s")
 	AssertEquals(t, obj.RoutingConfig.Spec.BGPConfig.Neighbors[0].IPAddress, rtcfg.Spec.BGPConfig.Neighbors[0].IPAddress, "routingconfig params did not match")
 
 	// delete the routingconfig
@@ -3493,7 +3518,7 @@ func TestRoutingConfigCreateDelete(t *testing.T) {
 		}
 		fmt.Printf("Routingconfig still found after deleting %v\n", err)
 		return false, nil
-	}, "routingconfig still foud", "1ms", "1s")
+	}, "routingconfig still found", "1ms", "1s")
 }
 
 func TestModuleObject(t *testing.T) {

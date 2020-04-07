@@ -373,11 +373,15 @@ func (ws *WorkloadState) createNetwork(netName string, extVlan uint32) error {
 			IPv4Gateway: "",
 			VlanID:      extVlan,
 		},
-		Status: network.NetworkStatus{},
+		Status: network.NetworkStatus{
+			// set operState to active as internal(as opposed to user) create runs checks on status as well
+			// this will be changed by npm correctly when processing the watch event
+			// OperState: network.OperState_Active.String(),
+		},
 	}
 
 	// create it in apiserver
-	return ws.stateMgr.ctrler.Network().Create(&nwt)
+	return ws.stateMgr.ctrler.Network().SyncCreate(&nwt)
 }
 
 func (ws *WorkloadState) isMigrating() bool {

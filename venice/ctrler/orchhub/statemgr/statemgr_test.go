@@ -2,6 +2,7 @@ package statemgr
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/api/generated/workload"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -27,6 +29,98 @@ func (w *MockInstanceManager) watchOrchestratorConfig() {
 			}
 		}
 	}
+}
+
+func TestNetworkWatcher(t *testing.T) {
+	config := log.GetDefaultConfig("test-network")
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger := log.SetConfig(config)
+	sm, im, err := NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed creating state manager. Err : %v", err)
+		return
+	}
+
+	if im == nil {
+		t.Fatalf("Failed to create instance manger.")
+		return
+	}
+
+	orchName := "TestOrch"
+	probeChl := make(chan *kvstore.WatchEvent, 10)
+	sm.AddProbeChannel(orchName, probeChl)
+
+	orch := GetOrchestratorConfig(orchName, "user", "pass")
+	orchInfo := []*network.OrchestratorInfo{
+		{
+			Name:      orch.Name,
+			Namespace: orch.Namespace,
+		},
+	}
+
+	expNets := map[string]bool{}
+	_, err = CreateNetwork(sm, "default", "prod-beef-vlan100", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
+	Assert(t, (err == nil), "network could not be created")
+	expNets["prod-beef-vlan100"] = true
+
+	_, err = CreateNetwork(sm, "default", "prod-bebe-vlan200", "10.2.1.0/24", "10.2.1.1", 200, nil, orchInfo)
+	Assert(t, (err == nil), "network could not be created")
+	expNets["prod-bebe-vlan200"] = true
+
+	np := network.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "duplicate_200",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: network.NetworkSpec{
+			Type:          network.NetworkType_Bridged.String(),
+			VlanID:        200,
+			Orchestrators: orchInfo,
+		},
+		Status: network.NetworkStatus{
+			OperState: network.OperState_Rejected.String(),
+		},
+	}
+	// create a network
+	err = sm.ctrler.Network().Create(&np)
+	Assert(t, (err == nil), "network could not be created")
+
+	_, err = CreateNetwork(sm, "default", "prod-cece-vlan300", "10.3.1.0/24", "10.3.1.1", 300, nil, orchInfo)
+	Assert(t, (err == nil), "network could not be created")
+	expNets["prod-cece-vlan300"] = true
+
+	receiveNetworks := func(pChl chan *kvstore.WatchEvent, rcvNets map[string]bool) {
+		for {
+			msg, ok := <-pChl
+			if !ok {
+				logger.Infof("probe chl closed")
+				return
+			}
+			logger.Infof("Received net %s on probe chl", msg.Object.(*network.Network).Name)
+			rcvNets[msg.Object.(*network.Network).Name] = true
+		}
+	}
+	defer close(probeChl)
+	rcvNets := map[string]bool{}
+	go receiveNetworks(probeChl, rcvNets)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		for net := range expNets {
+			if _, found := rcvNets[net]; !found {
+				return false, fmt.Errorf("Net %s not found", net)
+			}
+		}
+		for net := range rcvNets {
+			if _, found := expNets[net]; !found {
+				return false, fmt.Errorf("Net %s not enxpected", net)
+			}
+		}
+		return true, nil
+	}, "All networks were not received", "1s", "10s")
+	return
 }
 
 func TestNetworkCreateList(t *testing.T) {
@@ -121,7 +215,7 @@ func createWorkload(stateMgr *Statemgr, tenant, name string, labels map[string]s
 		ObjectMeta: api.ObjectMeta{
 			Name:      name,
 			Namespace: "default",
-			Tenant:    tenant,
+			Tenant:    "default",
 			Labels:    labels,
 		},
 		Spec:   workload.WorkloadSpec{},

@@ -64,6 +64,10 @@ message OrchestratorInfo {
     string Namespace = 2 [(gogoproto.jsontag) = "namespace, omitempty", (venice.check) = "StrLen(1,-1)"];
 }
 
+enum OperState {
+	Active 	 	= 0 [(venice.enumValueStr) = "active"];
+	Rejected 	= 1 [(venice.enumValueStr) = "rejected"];
+}
 // status part of network object
 message NetworkStatus {
     // list of all workloads in this network
@@ -72,6 +76,7 @@ message NetworkStatus {
     bytes AllocatedIPv4Addrs = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "allocated-ipv4-addrs,omitempty", (gogoproto.moretags)="venice:\"sskip\""];
     // Handle is the internal Handle allocated to this network
     uint64 Handle = 3 [(gogoproto.jsontag) = "id,omitempty"];
+	string OperState = 4 [(gogoproto.jsontag) = "oper-state,omitempty", (venice.check) = "EmptyOr(StrEnum(OperState))"];
 }
 
 // Network represents a subnet

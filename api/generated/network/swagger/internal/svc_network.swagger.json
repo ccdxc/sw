@@ -1742,6 +1742,12 @@
             "required": false,
             "type": "string",
             "format": "uint64"
+          },
+          {
+            "name": "status.oper-state",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -3930,6 +3936,12 @@
             "required": false,
             "type": "string",
             "format": "uint64"
+          },
+          {
+            "name": "status.oper-state",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -8702,6 +8714,14 @@
           "type": "string",
           "format": "uint64",
           "description": "Handle is the internal Handle allocated to this network."
+        },
+        "oper-state": {
+          "type": "string",
+          "enum": [
+            "active",
+            "rejected"
+          ],
+          "default": "active"
         }
       },
       "description": "status part of network object."

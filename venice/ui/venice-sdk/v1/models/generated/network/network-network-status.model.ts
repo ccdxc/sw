@@ -7,11 +7,13 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
+import { NetworkNetworkStatus_oper_state,  } from './enums';
 
 export interface INetworkNetworkStatus {
     'workloads'?: Array<string>;
     'allocated-ipv4-addrs'?: string;
     'id'?: string;
+    'oper-state'?: NetworkNetworkStatus_oper_state;
     '_ui'?: any;
 }
 
@@ -25,6 +27,7 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
     'allocated-ipv4-addrs': string = null;
     /** Handle is the internal Handle allocated to this network. */
     'id': string = null;
+    'oper-state': NetworkNetworkStatus_oper_state = null;
     public static propInfo: { [prop in keyof INetworkNetworkStatus]: PropInfoItem } = {
         'workloads': {
             description:  `List of all workloads in this network.`,
@@ -38,6 +41,12 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
         },
         'id': {
             description:  `Handle is the internal Handle allocated to this network.`,
+            required: false,
+            type: 'string'
+        },
+        'oper-state': {
+            enum: NetworkNetworkStatus_oper_state,
+            default: 'active',
             required: false,
             type: 'string'
         },
@@ -99,6 +108,13 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
         } else {
             this['id'] = null
         }
+        if (values && values['oper-state'] != null) {
+            this['oper-state'] = values['oper-state'];
+        } else if (fillDefaults && NetworkNetworkStatus.hasDefaultValue('oper-state')) {
+            this['oper-state'] = <NetworkNetworkStatus_oper_state>  NetworkNetworkStatus.propInfo['oper-state'].default;
+        } else {
+            this['oper-state'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -109,6 +125,7 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
                 'workloads': CustomFormControl(new FormControl(this['workloads']), NetworkNetworkStatus.propInfo['workloads']),
                 'allocated-ipv4-addrs': CustomFormControl(new FormControl(this['allocated-ipv4-addrs']), NetworkNetworkStatus.propInfo['allocated-ipv4-addrs']),
                 'id': CustomFormControl(new FormControl(this['id']), NetworkNetworkStatus.propInfo['id']),
+                'oper-state': CustomFormControl(new FormControl(this['oper-state'], [enumValidator(NetworkNetworkStatus_oper_state), ]), NetworkNetworkStatus.propInfo['oper-state']),
             });
         }
         return this._formGroup;
@@ -123,6 +140,7 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
             this._formGroup.controls['workloads'].setValue(this['workloads']);
             this._formGroup.controls['allocated-ipv4-addrs'].setValue(this['allocated-ipv4-addrs']);
             this._formGroup.controls['id'].setValue(this['id']);
+            this._formGroup.controls['oper-state'].setValue(this['oper-state']);
         }
     }
 }

@@ -21,7 +21,7 @@ type NetworkState struct {
 //GetNetworkWatchOptions gets options
 func (sm *Statemgr) GetNetworkWatchOptions() *api.ListWatchOptions {
 	opts := api.ListWatchOptions{}
-	opts.FieldChangeSelector = []string{"Spec"}
+	opts.FieldChangeSelector = []string{"Spec", "Status.OperState"}
 	return &opts
 }
 
@@ -31,9 +31,10 @@ func (sm *Statemgr) OnNetworkCreate(w *ctkit.Network) error {
 	if err != nil {
 		return err
 	}
-
-	sm.SendNetworkProbeEvent(&w.Network, kvstore.Created)
-
+	// Act on network only after it is activated by NPM
+	if w.Status.OperState == network.OperState_Active.String() {
+		sm.SendNetworkProbeEvent(&w.Network, kvstore.Created)
+	}
 	return nil
 }
 
@@ -44,7 +45,9 @@ func (sm *Statemgr) OnNetworkUpdate(w *ctkit.Network, nw *network.Network) error
 		return err
 	}
 
-	sm.SendNetworkProbeEvent(nw, kvstore.Updated)
+	if w.Status.OperState == network.OperState_Active.String() {
+		sm.SendNetworkProbeEvent(nw, kvstore.Updated)
+	}
 
 	return err
 }

@@ -409,7 +409,11 @@ func init() {
 		{{else}}{{/*<10>*/}} validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(path string, i interface{}) error {
 		m := i.(*{{$msgName}})
 		{{if (strEq .Fn "StrEnum")}}{{/*<11>*/}}{{$enummap := (getEnumStrMap $file .Args)}}{{if $fldv.Repeated}}{{/*<12>*/}}
-		for k, v := range m.{{$fldk}} {
+        for k, v := range m.{{$fldk}} { {{if .AllowEmpty}}
+            if len(v) == 0 {
+                continue
+            }
+            {{end}}
 			if _, ok := {{$enummap}}[v]; !ok {
 				vals := []string{}
 				for k1, _ := range  {{$enummap}} {
@@ -418,7 +422,7 @@ func init() {
 				return fmt.Errorf("%v[%v] did not match allowed strings %v", path + "." + "{{$fldk}}", k, vals)
 			}
 		}{{else}}{{/*<12>*/}}
-		if _, ok := {{$enummap}}[m.{{$fldk}}]; !ok {
+        if _, ok := {{$enummap}}[m.{{$fldk}}]; !ok {{if .AllowEmpty}} && len(m.{{$fldk}}) != 0 {{end}}{
         	vals := []string{}
         	for k1, _ := range  {{$enummap}} {
         		vals = append(vals, k1)

@@ -426,25 +426,58 @@ func (sm *Statemgr) GetNetworkWatchOptions() *api.ListWatchOptions {
 
 // OnNetworkCreate creates local network state based on watch event
 func (sm *Statemgr) OnNetworkCreate(nw *ctkit.Network) error {
+	sm.networkKindLock.Lock()
+	defer sm.networkKindLock.Unlock()
 	// create new network state
 	ns, err := NewNetworkState(nw, sm)
 	if err != nil {
 		log.Errorf("Error creating new network state. Err: %v", err)
 		return err
 	}
-	log.Infof("Created Network state {Meta: %+v, Spec: %+v}", ns.Network.ObjectMeta, ns.Network.Spec)
+	// On restart npm might receive create events for networks that were rejected earlier.
+	// skip those here.. they are processed after watcher has started
+	if nw.Status.OperState == network.OperState_Rejected.String() {
+		log.Errorf("Network %v is in %s state, skip", nw.Name, nw.Status.OperState)
+		return nil
+	}
 
-	// store it in local DB
-	sm.mbus.AddObjectWithReferences(nw.MakeKey("network"), convertNetwork(ns), references(nw))
+	// Check if there is another network with the same vlan id, it is not allowed but can slip-thru
+	// the hooks - raise an error
+	isOk := true
+	networks, _ := sm.ListNetworks()
+	for _, nso := range networks {
+		if nso.Network.Network.Name == nw.Name {
+			continue
+		}
+		if nso.Network.Network.Spec.VlanID == nw.Spec.VlanID {
+			// TODO: convert this to some kind of event
+			log.Errorf("Network %s is created with same vlan id as another network %s", nw.Name, nso.Network.Name)
+			isOk = false
+			// keep finding more clashes and log errors
+		}
+	}
+	if isOk {
+		nw.Status.OperState = network.OperState_Active.String()
+		// store it in local DB
+		sm.mbus.AddObjectWithReferences(nw.MakeKey("network"), convertNetwork(ns), references(nw))
+	} else {
+		nw.Status.OperState = network.OperState_Rejected.String()
+	}
+	nw.Write()
+	log.Infof("Created Network state {Meta: %+v, Spec: %+v, OperState: %+v}",
+		ns.Network.ObjectMeta, ns.Network.Spec, ns.Network.Status.OperState)
 
 	return nil
 }
 
 // OnNetworkUpdate handles network update
 func (sm *Statemgr) OnNetworkUpdate(nw *ctkit.Network, nnw *network.Network) error {
+	// no need to take networkKindLock here - vlanid cannot be updated
 	// see if anything changed
 	_, ok := ref.ObjDiff(nw.Spec, nnw.Spec)
-	if (nnw.GenerationID == nw.GenerationID) && !ok {
+	ok = ok || (nw.Network.Status.OperState != nnw.Status.OperState)
+	rejected := nnw.Status.OperState == network.OperState_Rejected.String()
+	if ((nnw.GenerationID == nw.GenerationID) && !ok) || rejected {
 		nw.ObjectMeta = nnw.ObjectMeta
 		return nil
 	}
@@ -469,6 +502,9 @@ func (sm *Statemgr) OnNetworkUpdate(nw *ctkit.Network, nnw *network.Network) err
 
 // OnNetworkDelete deletes a network
 func (sm *Statemgr) OnNetworkDelete(nto *ctkit.Network) error {
+	log.Infof("Delete Network {Meta: %+v, Spec: %+v}", nto.Network.ObjectMeta, nto.Network.Spec)
+	sm.networkKindLock.Lock()
+	defer sm.networkKindLock.Unlock()
 	// see if we already have it
 	nso, err := sm.FindObject("Network", nto.Tenant, "default", nto.Name)
 	if err != nil {
@@ -489,6 +525,57 @@ func (sm *Statemgr) OnNetworkDelete(nto *ctkit.Network) error {
 		return err
 	}
 	// delete it from the DB
-	return sm.mbus.DeleteObjectWithReferences(nto.MakeKey("network"),
+	err = sm.mbus.DeleteObjectWithReferences(nto.MakeKey("network"),
 		convertNetwork(ns), references(nto))
+	if err == nil {
+		// If there was another network with same vlanid that was in rejected state, it can be
+		// accepted now
+		networks, err := sm.ListNetworks()
+		if err != nil {
+			return err
+		}
+		for _, nso := range networks {
+			if nso.Network.Network.Spec.VlanID == nto.Network.Spec.VlanID &&
+				nso.Network.Network.Status.OperState == network.OperState_Rejected.String() {
+				log.Infof("Activate network %s", nso.Network.Network.Name)
+				nso.Network.Network.Status.OperState = network.OperState_Active.String()
+				// update the status to good status, it will be processed as watch event
+				nso.Network.Write()
+				break
+			}
+		}
+	}
+	return err
+}
+
+func (sm *Statemgr) checkRejectedNetworks() {
+	sm.networkKindLock.Lock()
+	defer sm.networkKindLock.Unlock()
+	// check all the rejected networks and see if they can be accepted
+	// this is used on npm restart to handle any deleted networks when npm was down
+	rejectedNetworks := []*NetworkState{}
+	networks, err := sm.ListNetworks()
+	if err != nil {
+		return
+	}
+	for _, nso := range networks {
+		if nso.Network.Network.Status.OperState == network.OperState_Rejected.String() {
+			rejectedNetworks = append(rejectedNetworks, nso)
+		}
+	}
+	for _, rso := range rejectedNetworks {
+		isOk := true
+		for _, nso := range networks {
+			if nso.Network.Network.Spec.VlanID == rso.Network.Network.Spec.VlanID &&
+				nso.Network.Network.Status.OperState != network.OperState_Rejected.String() {
+				// still clashes with an accepted network
+				isOk = false
+				break
+			}
+		}
+		if isOk {
+			rso.Network.Network.Status.OperState = network.OperState_Active.String()
+		}
+		rso.Network.Write()
+	}
 }

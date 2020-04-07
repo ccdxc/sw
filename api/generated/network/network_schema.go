@@ -67,6 +67,7 @@ var typesMapNetwork = map[string]*api.Struct{
 			"labels":                  api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"name":                    api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":               api.CLIInfo{Path: "Spec.Orchestrators[].Namespace", Skip: false, Insert: "", Help: ""},
+			"oper-state":              api.CLIInfo{Path: "Status.OperState", Skip: false, Insert: "", Help: ""},
 			"orchestrator-name":       api.CLIInfo{Path: "Spec.Orchestrators[].Name", Skip: false, Insert: "", Help: ""},
 			"resource-version":        api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":               api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
@@ -117,6 +118,8 @@ var typesMapNetwork = map[string]*api.Struct{
 			"AllocatedIPv4Addrs": api.Field{Name: "AllocatedIPv4Addrs", CLITag: api.CLIInfo{ID: "allocated-ipv4-addrs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "allocated-ipv4-addrs", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
 
 			"Handle": api.Field{Name: "Handle", CLITag: api.CLIInfo{ID: "id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT64"},
+
+			"OperState": api.Field{Name: "OperState", CLITag: api.CLIInfo{ID: "oper-state", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "oper-state", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"network.OrchestratorInfo": &api.Struct{

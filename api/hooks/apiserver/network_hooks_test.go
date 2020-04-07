@@ -101,10 +101,10 @@ func TestValidateHooks(t *testing.T) {
 
 	nw := network.Network{
 		Spec: network.NetworkSpec{
-			Type: network.NetworkType_Routed.String(),
+			Type:   network.NetworkType_Routed.String(),
+			VlanID: 1001,
 		},
 	}
-
 	errs := nh.validateNetworkConfig(nw, "v1", false, false)
 	Assert(t, len(errs) != 0, "Expecting error when there is no IP config ")
 
@@ -255,7 +255,7 @@ func TestValidateHooks(t *testing.T) {
 
 }
 
-func TestPrecommitHooks(t *testing.T) {
+func TestNetworkPrecommitHooks(t *testing.T) {
 	kvs := &mocks.FakeKvStore{}
 	txn := &mocks.FakeTxn{}
 	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
@@ -362,7 +362,7 @@ func TestPrecommitHooks(t *testing.T) {
 		return fmt.Errorf("not found")
 	}
 	_, kvw, err = nh.checkVirtualRouterMutableUpdate(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, vrf)
-	Assert(t, err != nil, "precomit check shoud fail")
+	Assert(t, err != nil, "precommit check should fail")
 
 	kvs.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
 		r := into.(*network.VirtualRouter)
@@ -370,22 +370,24 @@ func TestPrecommitHooks(t *testing.T) {
 		return nil
 	}
 	_, kvw, err = nh.checkVirtualRouterMutableUpdate(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, vrf)
-	AssertOk(t, err, "precomit check failed (%s)", err)
+	AssertOk(t, err, "precommit check failed (%s)", err)
 	Assert(t, kvw, "kvwrite should be set")
 
 	curvrf.Spec.Type = network.VirtualRouterSpec_Infra.String()
 	_, kvw, err = nh.checkVirtualRouterMutableUpdate(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, vrf)
-	Assert(t, err != nil, "precomit check shoud fail")
+	Assert(t, err != nil, "precommit check should fail")
 
 	nw := network.Network{
 		Spec: network.NetworkSpec{
 			Type:          network.NetworkType_Routed.String(),
+			VlanID:        1001,
 			VirtualRouter: "test",
 		},
 	}
 	curnw := network.Network{
 		Spec: network.NetworkSpec{
 			Type:          network.NetworkType_Routed.String(),
+			VlanID:        1001,
 			VirtualRouter: "test",
 		},
 	}
@@ -393,7 +395,7 @@ func TestPrecommitHooks(t *testing.T) {
 		return fmt.Errorf("not found")
 	}
 	_, kvw, err = nh.checkNetworkMutableFields(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, nw)
-	Assert(t, err != nil, "precomit check shoud fail")
+	Assert(t, err != nil, "precommit check should fail")
 
 	kvs.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
 		r := into.(*network.Network)
@@ -401,18 +403,89 @@ func TestPrecommitHooks(t *testing.T) {
 		return nil
 	}
 	_, kvw, err = nh.checkNetworkMutableFields(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, nw)
-	AssertOk(t, err, "precomit check failed (%s)", err)
+	AssertOk(t, err, "precommit check failed (%s)", err)
 	Assert(t, kvw, "kvwrite should be set")
 
+	nw.Spec.VlanID = 2
+	_, kvw, err = nh.checkNetworkMutableFields(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, nw)
+	Assert(t, err != nil, "precommit check should fail")
+
+	nw.Spec.VlanID = 1001
 	nw.Spec.Type = network.NetworkType_Bridged.String()
 	_, kvw, err = nh.checkNetworkMutableFields(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, nw)
-	Assert(t, err != nil, "precomit check shoud fail")
+	Assert(t, err != nil, "precommit check should fail")
 
 	nw.Spec.Type = network.NetworkType_Routed.String()
 	nw.Spec.VirtualRouter = "test1"
 	nw.Spec.Type = network.NetworkType_Bridged.String()
 	_, kvw, err = nh.checkNetworkMutableFields(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, nw)
-	Assert(t, err != nil, "precomit check shoud fail")
+	Assert(t, err != nil, "precommit check should fail")
+}
+
+func TestNetworkCreate(t *testing.T) {
+	logConfig := &log.Config{
+		Module:      "Network-hooks",
+		Format:      log.LogFmt,
+		Filter:      log.AllowAllFilter,
+		Debug:       false,
+		CtxSelector: log.ContextAll,
+		LogToStdout: true,
+		LogToFile:   false,
+	}
+
+	// Initialize logger config
+	l := log.SetConfig(logConfig)
+	hooks := &networkHooks{
+		logger: l,
+	}
+
+	kvs := &mocks.FakeKvStore{}
+	txn := &mocks.FakeTxn{}
+	nw := &network.Network{
+		ObjectMeta: api.ObjectMeta{
+			Name:   "nw",
+			Tenant: "default",
+		},
+		Spec: network.NetworkSpec{
+			Type:          network.NetworkType_Bridged.String(),
+			VlanID:        1001,
+			VirtualRouter: "test",
+		},
+	}
+	newnw := &network.Network{
+		ObjectMeta: api.ObjectMeta{
+			Name:   "newnw",
+			Tenant: "default",
+		},
+		Spec: network.NetworkSpec{
+			Type:          network.NetworkType_Routed.String(),
+			VlanID:        1001,
+			VirtualRouter: "test",
+		},
+	}
+	ctx := context.TODO()
+	kvs.Listfn = func(ctx context.Context, prefix string, into runtime.Object) error {
+		nwList, ok := into.(*network.NetworkList)
+		if !ok {
+			return fmt.Errorf("Incorrect output list type")
+		}
+		nwList.Items = append(nwList.Items, nw)
+		return nil
+	}
+
+	// Create network
+	err := kvs.Create(ctx, nw.MakeKey(string(apiclient.GroupNetwork)), nw)
+	AssertOk(t, err, "network create operation failed")
+
+	// Create another network - same vlan
+	_, _, err = hooks.checkNetworkCreateConfig(ctx, kvs, txn, newnw.MakeKey(string(apiclient.GroupNetwork)),
+		apiintf.CreateOper, false, *newnw)
+	Assert(t, err != nil, "network create operation should have failed")
+	// Create another network - different vlan
+	newnw.Spec.VlanID = 2
+	_, _, err = hooks.checkNetworkCreateConfig(ctx, kvs, txn, newnw.MakeKey(string(apiclient.GroupNetwork)),
+		apiintf.CreateOper, false, *newnw)
+	AssertOk(t, err, "network create operation failed")
 }
 
 func TestNetworkOrchestratorRemoval(t *testing.T) {
@@ -443,7 +516,8 @@ func TestNetworkOrchestratorRemoval(t *testing.T) {
 			Tenant: "default",
 		},
 		Spec: network.NetworkSpec{
-			Type: network.NetworkType_Bridged.String(),
+			Type:   network.NetworkType_Bridged.String(),
+			VlanID: 1001,
 			Orchestrators: []*network.OrchestratorInfo{
 				&network.OrchestratorInfo{
 					Name:      "o1",

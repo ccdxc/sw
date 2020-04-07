@@ -67,7 +67,9 @@ func CreateNetwork(stateMgr *Statemgr, tenant, net, subnet, gw string, vlanid ui
 			VlanID:        vlanid,
 			Orchestrators: orchInfo,
 		},
-		Status: network.NetworkStatus{},
+		Status: network.NetworkStatus{
+			OperState: network.OperState_Active.String(),
+		},
 	}
 
 	// create a network

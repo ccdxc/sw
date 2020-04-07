@@ -194,6 +194,41 @@ func (h *networkHooks) checkNetworkMutableFields(ctx context.Context, kv kvstore
 	if in.Spec.VirtualRouter != existingNw.Spec.VirtualRouter {
 		return i, true, fmt.Errorf("cannot modify Virtual Router [%v->%v]", existingNw.Spec.Type, in.Spec.Type)
 	}
+	if in.Spec.VlanID != existingNw.Spec.VlanID {
+		return i, true, fmt.Errorf("cannot modify VlanID of a network")
+	}
+	return i, true, nil
+}
+
+func (h *networkHooks) checkNetworkCreateConfig(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	in, ok := i.(network.Network)
+	if !ok {
+		h.logger.ErrorLog("method", "checkNetworkCreateConfig", "msg", fmt.Sprintf("API server network hook called for invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+
+	// make sure that vlanID is unique (network:vlan relationship is 1:1)
+	nw := &network.Network{
+		ObjectMeta: api.ObjectMeta{
+			Tenant: globals.DefaultTenant,
+		},
+	}
+	// CAVEAT: List approach has a small timing window where this check does not work on
+	// back-to-back operations
+	// create-create with same vlan will not detect the error until 1st transaction is committed
+	// delete-create will report false error if 1st transaction is not committed
+	// NPM and other controllers which act on network objects shuold perform their own checks
+	var networks network.NetworkList
+	nwKey := nw.MakeKey(string(apiclient.GroupNetwork))
+	err := kv.List(ctx, nwKey, &networks)
+	if err != nil {
+		return i, true, fmt.Errorf("Error retrieving networks: %s", err)
+	}
+	for _, exNw := range networks.Items {
+		if exNw.Spec.VlanID == in.Spec.VlanID {
+			return i, true, fmt.Errorf("Network vlanID must be unique, already used by %s", exNw.Name)
+		}
+	}
 	return i, true, nil
 }
 
@@ -429,16 +464,17 @@ func registerNetworkHooks(svc apiserver.Service, logger log.Logger) {
 	logger.InfoLog("Service", "NetworkV1", "msg", "registering networkAction hook")
 	svc.GetCrudService("IPAMPolicy", apiintf.CreateOper).GetRequestType().WithValidate(hooks.validateIPAMPolicyConfig)
 	svc.GetCrudService("IPAMPolicy", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateIPAMPolicyConfig)
+	svc.GetCrudService("Network", apiintf.CreateOper).WithPreCommitHook(hooks.checkNetworkCreateConfig)
 	svc.GetCrudService("Network", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateNetworkConfig)
-	svc.GetCrudService("VirtualRouter", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateVirtualrouterConfig)
+	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.networkOrchConfigPrecommit)
+	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.checkNetworkMutableFields)
 	svc.GetCrudService("NetworkInterface", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateNetworkIntfConfig)
 	svc.GetCrudService("NetworkInterface", apiintf.UpdateOper).WithPreCommitHook(hooks.checkNetworkInterfaceMutable)
 	svc.GetCrudService("VirtualRouter", apiintf.CreateOper).WithPreCommitHook(hooks.createDefaultVRFRouteTable)
+	svc.GetCrudService("VirtualRouter", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateVirtualrouterConfig)
 	svc.GetCrudService("VirtualRouter", apiintf.UpdateOper).WithPreCommitHook(hooks.checkVirtualRouterMutableUpdate)
 	svc.GetCrudService("VirtualRouter", apiintf.DeleteOper).WithPreCommitHook(hooks.deleteDefaultVRFRouteTable)
-	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.networkOrchConfigPrecommit)
 	svc.GetCrudService("RoutingConfig", apiintf.CreateOper).WithPreCommitHook(hooks.routingConfigPreCommit)
-	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.networkOrchConfigPrecommit)
 	svc.GetCrudService("RoutingConfig", apiintf.UpdateOper).WithPreCommitHook(hooks.routingConfigPreCommit)
 	svc.GetCrudService("RoutingConfig", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateRoutingConfig)
 }

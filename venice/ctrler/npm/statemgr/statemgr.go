@@ -70,6 +70,7 @@ type Statemgr struct {
 	dscUpdateNotifObjects         map[string]dscUpdateIntf // objects which are watching dsc update
 	ctrler                        ctkit.Controller         // controller instance
 	topics                        Topics                   // message bus topics
+	networkKindLock               sync.Mutex               // lock on entire network kind, take when any changes are done to any network
 	networkLocks                  map[string]*sync.Mutex   // lock for performing network operation
 	logger                        log.Logger
 	ModuleReactor                 ctkit.ModuleHandler
@@ -489,6 +490,7 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 	if err != nil {
 		logger.Fatalf("Error watching network")
 	}
+	sm.checkRejectedNetworks()
 	err = ctrler.FirewallProfile().Watch(sm.FirewallProfileReactor)
 	if err != nil {
 		logger.Fatalf("Error watching firewall profile")

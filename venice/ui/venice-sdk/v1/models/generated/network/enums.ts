@@ -64,6 +64,11 @@ export enum NetworkNetworkSpec_type {
     'routed' = "routed",
 }
 
+export enum NetworkNetworkStatus_oper_state {
+    'active' = "active",
+    'rejected' = "rejected",
+}
+
 export enum NetworkPauseSpec_type {
     'disable' = "disable",
     'link' = "link",
@@ -192,6 +197,7 @@ export class AllEnums {
     NetworkNetworkInterfaceStatus_type = NetworkNetworkInterfaceStatus_type;
     NetworkNetworkInterfaceStatus_oper_status = NetworkNetworkInterfaceStatus_oper_status;
     NetworkNetworkSpec_type = NetworkNetworkSpec_type;
+    NetworkNetworkStatus_oper_state = NetworkNetworkStatus_oper_state;
     NetworkPauseSpec_type = NetworkPauseSpec_type;
     NetworkRDSpec_address_family = NetworkRDSpec_address_family;
     NetworkRouteDistinguisher_type = NetworkRouteDistinguisher_type;

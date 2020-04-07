@@ -361,6 +361,9 @@ var _ = Describe("Config SnapShot and restore", func() {
 								IPv4Subnet:  "10.0.0.0/8",
 								IPv4Gateway: "10.1.1.1",
 							},
+							Status: network.NetworkStatus{
+								OperState: network.OperState_Active.String(),
+							},
 						}
 						ret, err := grpcClient.NetworkV1().Network().Create(lctx, &netw)
 						Expect(err).To(BeNil())

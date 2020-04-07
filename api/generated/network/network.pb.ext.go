@@ -48,6 +48,26 @@ func (x NetworkType) String() string {
 	return NetworkType_vname[int32(x)]
 }
 
+// OperState_normal is a map of normalized values for the enum
+var OperState_normal = map[string]string{
+	"active":   "active",
+	"rejected": "rejected",
+}
+
+var OperState_vname = map[int32]string{
+	0: "active",
+	1: "rejected",
+}
+
+var OperState_vvalue = map[string]int32{
+	"active":   0,
+	"rejected": 1,
+}
+
+func (x OperState) String() string {
+	return OperState_vname[int32(x)]
+}
+
 var _ validators.DummyVar
 var validatorMapNetwork = make(map[string]map[string][]func(string, interface{}) error)
 
@@ -86,6 +106,7 @@ func (m *Network) Defaults(ver string) bool {
 		m.Tenant, m.Namespace = "default", "default"
 	}
 	ret = m.Spec.Defaults(ver) || ret
+	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
 
@@ -140,7 +161,13 @@ func (m *NetworkStatus) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *NetworkStatus) Defaults(ver string) bool {
-	return false
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.OperState = "active"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -247,6 +274,18 @@ func (m *Network) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool)
 			ret = append(ret, errs...)
 		}
 	}
+
+	if !ignoreStatus {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -255,6 +294,8 @@ func (m *Network) Normalize() {
 	m.ObjectMeta.Normalize()
 
 	m.Spec.Normalize()
+
+	m.Status.Normalize()
 
 }
 
@@ -434,10 +475,25 @@ func (m *NetworkStatus) References(tenant string, path string, resp map[string]a
 
 func (m *NetworkStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+	if vs, ok := validatorMapNetwork["NetworkStatus"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapNetwork["NetworkStatus"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
 func (m *NetworkStatus) Normalize() {
+
+	m.OperState = OperState_normal[strings.ToLower(m.OperState)]
 
 }
 
@@ -551,6 +607,20 @@ func init() {
 
 		if err := validators.IntRange(m.VxlanVNI, args); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"VxlanVNI", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapNetwork["NetworkStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapNetwork["NetworkStatus"]["all"] = append(validatorMapNetwork["NetworkStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*NetworkStatus)
+
+		if _, ok := OperState_vvalue[m.OperState]; !ok && len(m.OperState) != 0 {
+			vals := []string{}
+			for k1, _ := range OperState_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"OperState", vals)
 		}
 		return nil
 	})

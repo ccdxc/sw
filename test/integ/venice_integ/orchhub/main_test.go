@@ -236,7 +236,9 @@ func createNetwork(name string, vlan int, orchInfo []*network.OrchestratorInfo) 
 			VlanID:        uint32(vlan),
 			Orchestrators: orchInfo,
 		},
-		Status: network.NetworkStatus{},
+		Status: network.NetworkStatus{
+			OperState: network.OperState_Active.String(),
+		},
 	}
 	obj, err := tinfo.apicl.NetworkV1().Network().Create(context.Background(), obj)
 	return obj, err
