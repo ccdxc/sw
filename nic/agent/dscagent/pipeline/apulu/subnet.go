@@ -621,10 +621,10 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 				DHCPPolicyId: [][]byte{
 					ipamuuid,
 				},
-				// IngV4SecurityPolicyId: utils.ConvertID32(nw.Spec.IngV4SecurityPolicyID...),
-				// EgV4SecurityPolicyId:  utils.ConvertID32(nw.Spec.EgV4SecurityPolicyID...),
-				// IngV6SecurityPolicyId: utils.ConvertID32(nw.Spec.IngV6SecurityPolicyID...),
-				// EgV6SecurityPolicyId:  utils.ConvertID32(nw.Spec.EgV6SecurityPolicyID...),
+				IngV4SecurityPolicyId: utils.ConvertIDs(nw.Spec.IngV4SecurityPolicyID...),
+				EgV4SecurityPolicyId:  utils.ConvertIDs(nw.Spec.EgV4SecurityPolicyID...),
+				IngV6SecurityPolicyId: utils.ConvertIDs(nw.Spec.IngV6SecurityPolicyID...),
+				EgV6SecurityPolicyId:  utils.ConvertIDs(nw.Spec.EgV6SecurityPolicyID...),
 			},
 		},
 	}, nil

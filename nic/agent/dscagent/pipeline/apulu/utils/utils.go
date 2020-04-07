@@ -78,6 +78,17 @@ func ConvertID64(agentIDs ...uint64) [][]byte {
 	return halIDs
 }
 
+// ConvertIDs converts agent string ID to HAL Object ID
+func ConvertIDs(agentIDs ...string) [][]byte {
+	var aIDs []uint64
+	for _, a := range agentIDs {
+		if s, err := strconv.ParseUint(a, 10, 64); err == nil {
+			aIDs = append(aIDs, s)
+		}
+	}
+	return ConvertID64(aIDs...)
+}
+
 // ConvertMacAddress converts string MAC address into uint64 value
 func ConvertMacAddress(mac string) (macAddress uint64) {
 	hex := types.MacStringRegex.ReplaceAllLiteralString(mac, "")
