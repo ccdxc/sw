@@ -782,27 +782,20 @@ var _ = Describe("diagnostics tests", func() {
 		})
 	})
 	Context("orchhub", func() {
-		var modObj *diagnostics.Module
-		BeforeEach(func() {
-			var err error
-			var node string
-			Eventually(func() error {
-				node = ts.tu.GetNodeForService(globals.OrchHub)
-				modObj, err = ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.OrchHub)})
-				return err
-			}, 10, 1).Should(BeNil())
-		})
 		It("check log query", func() {
-			modObj.Spec.LogLevel = diagnostics.ModuleSpec_Debug.String()
-			var updatedModObj *diagnostics.Module
-			var err error
-			Eventually(func() error {
-				updatedModObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, modObj)
-				return err
-			}, 10, 1).Should(BeNil())
-			Expect(modObj.Spec.LogLevel).Should(Equal(diagnostics.ModuleSpec_Debug.String()))
 			// query logs through Debug action
 			Eventually(func() error {
+				node := ts.tu.GetNodeForService(globals.OrchHub)
+				modObj, err := ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.OrchHub)})
+				if err != nil {
+					return err
+				}
+				modObj.Spec.LogLevel = diagnostics.ModuleSpec_Debug.String()
+				updatedModObj, err := ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, modObj)
+				if err != nil {
+					return err
+				}
+				Expect(modObj.Spec.LogLevel).Should(Equal(diagnostics.ModuleSpec_Debug.String()))
 				type debugResponse struct {
 					Diagnostics map[string]interface{} `json:"diagnostics"`
 				}
@@ -821,19 +814,20 @@ var _ = Describe("diagnostics tests", func() {
 					// but the API should still succeed
 					// return fmt.Errorf("no logs returned: {%v}", respStr)
 				}
-				return nil
-			}, 30, 1).Should(BeNil())
-			// restore info log level
-			Eventually(func() error {
+				// restore info log level
 				updatedModObj.Spec.LogLevel = diagnostics.ModuleSpec_Info.String()
 				modObj, err = ts.restSvc.DiagnosticsV1().Module().Update(ts.loggedInCtx, updatedModObj)
 				return err
-			}, 10, 1).Should(BeNil())
+			}, 30, 1).Should(BeNil())
 		})
 		It("check stats query", func() {
-			var err error
 			// query stats through Debug action
 			Eventually(func() error {
+				node := ts.tu.GetNodeForService(globals.OrchHub)
+				modObj, err := ts.restSvc.DiagnosticsV1().Module().Get(ts.loggedInCtx, &api.ObjectMeta{Name: fmt.Sprintf("%s-%s", node, globals.OrchHub)})
+				if err != nil {
+					return err
+				}
 				type debugResponse struct {
 					Diagnostics map[string]interface{} `json:"diagnostics"`
 				}
