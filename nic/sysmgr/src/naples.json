@@ -103,18 +103,6 @@
             },
             {
                 "kind": "service",
-                "service-name": "upgrade"
-            },
-            {
-                "kind": "service",
-                "service-name": "pciemgrd"
-            },
-            {
-                "kind": "service",
-                "service-name": "hal"
-            },
-            {
-                "kind": "service",
                 "service-name": "pen-netagent"
             }
         ],
