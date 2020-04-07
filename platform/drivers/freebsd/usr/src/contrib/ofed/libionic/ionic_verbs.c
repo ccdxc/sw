@@ -994,7 +994,6 @@ out:
 static int ionic_req_notify_cq(struct ibv_cq *ibcq, int solicited_only)
 {
 	struct ionic_cq *cq = to_ionic_cq(ibcq);
-	struct ionic_ctx *ctx = to_ionic_ctx(ibcq->context);
 
 	ionic_cq_spin_lock(cq);
 
@@ -1262,7 +1261,6 @@ err_qp:
 
 static void ionic_flush_qp(struct ionic_qp *qp)
 {
-	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
 	struct ionic_cq *cq;
 
 	if (qp->vqp.qp.send_cq) {
@@ -1300,7 +1298,6 @@ static void ionic_flush_qp(struct ionic_qp *qp)
 
 static void ionic_reset_qp(struct ionic_qp *qp)
 {
-	struct ionic_ctx *ctx = to_ionic_ctx(qp->vqp.qp.context);
 	struct ionic_cq *cq;
 	int i;
 
