@@ -323,8 +323,8 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 
     lif->ionic = ionic;
     lif->index = index;
-    lif->ntxq_descs = IONIC_DEF_TXRX_DESC;
-    lif->nrxq_descs = IONIC_DEF_TXRX_DESC;
+    lif->ntxq_descs = ionic->ntx_buffers;
+    lif->nrxq_descs = ionic->nrx_buffers;
 
     lif->lif_stats = &ionic->port_stats.lif_stats[lif->index];
 
@@ -900,6 +900,14 @@ ionic_lifs_init(struct ionic *ionic)
                 return status;
             }
 
+            status = ionic_lif_set_name(lif);
+
+            if (status != NDIS_STATUS_SUCCESS) {
+                DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+                          "%s ionic_lif_set_name failed %08lX\n", __FUNCTION__,
+                          status));
+            }
+
             cur = cur->Flink;
         } while (cur != &ionic->lifs);
     }
@@ -1135,6 +1143,64 @@ ionic_lif_free(struct lif *lif)
     ionic->port_stats.lif_count--;
 
     return;
+}
+
+NDIS_STATUS
+ionic_lif_set_name(struct lif *lif)
+{
+    struct ionic_admin_ctx ctx = {0};
+    const size_t cmd_name_len = sizeof(ctx.cmd.lif_setattr.name) - 1;
+    NDIS_STATUS status = NDIS_STATUS_SUCCESS;
+    char name[ADAPTER_NAME_MAX_SZ + LIF_NAME_MAX_SZ] = {0};
+    int name_len = 0;
+
+    ctx.cmd.lif_setattr.opcode = CMD_OPCODE_LIF_SETATTR;
+    ctx.cmd.lif_setattr.attr = IONIC_LIF_ATTR_NAME;
+    ctx.cmd.lif_setattr.index = (__le16)lif->index;
+
+    // Device name and lif name, for lifs > zero
+    if (lif->index == 0) {
+        name_len = _snprintf(name, sizeof(name) - 1, "%S",
+                             lif->ionic->name.Buffer);
+    } else {
+        name_len = _snprintf(name, sizeof(name) - 1, "%S %s",
+                             lif->ionic->name.Buffer, lif->name);
+    }
+
+    // No error is expected... but should not proceed.
+    if (name_len < 0) {
+        return NDIS_STATUS_INVALID_PARAMETER;
+    }
+
+    // Formatted string should not exceed... but clamp it.
+    if (name_len >= sizeof(name)) {
+        name_len = sizeof(name) - 1;
+    }
+    // _snprintf does not guarantee string termination
+    name[name_len] = 0;
+
+    // The name fits in the cmd, else shorten the name.
+    if (name_len <= cmd_name_len) {
+        memcpy(ctx.cmd.lif_setattr.name, name, name_len);
+    } else {
+        // Shorten the name to fit, try to retain distinctness at end of name.
+        // "Pensando Systems #3 lif7" would become "Pen~ems #3 lif7"
+
+        memcpy(&ctx.cmd.lif_setattr.name[0], &name[0], 3);
+
+        ctx.cmd.lif_setattr.name[3] = '~';
+
+        memcpy(&ctx.cmd.lif_setattr.name[4],
+               &name[name_len - cmd_name_len + 4],
+               cmd_name_len - 4);
+    }
+
+    status = ionic_adminq_post_wait(lif, &ctx);
+    if (status != NDIS_STATUS_SUCCESS) {
+        return status;
+    }
+
+    return 0;
 }
 
 int
@@ -2040,7 +2106,7 @@ ionic_txrx_alloc(struct lif *lif,
         int_tbl->queue_id = (USHORT)q_index;
         lif->rxqcqs[i].qcq->queue_id = q_index;
 
-        len = lif->ionic->ident.port.config.mtu;
+        len = lif->ionic->frame_size;
 
         len = ((len / PAGE_SIZE) + 1) * PAGE_SIZE;
 
@@ -2711,6 +2777,14 @@ ionic_allocate_slave_lif(struct ionic *ionic)
                   "%s Cannot init slave lif %d: %08lX\n", __FUNCTION__,
                   lif_index, ntStatus));
         goto err_out_free_slave;
+    }
+
+    ntStatus = ionic_lif_set_name(lif);
+
+    if (ntStatus != NDIS_STATUS_SUCCESS) {
+        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+                  "%s ionic_lif_set_name failed %08lX\n", __FUNCTION__,
+                  ntStatus));
     }
 
     lif->lif_stats->lif_id = lif_index;

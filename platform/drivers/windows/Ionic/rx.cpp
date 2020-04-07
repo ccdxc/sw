@@ -808,8 +808,9 @@ ionic_rx_init(struct lif *lif, struct qcqst *qcqst)
     struct rxq_pkt *rxq_pkt = NULL;
     ULONG sg_index = 0;
     struct rxq_sg_elem *sg_elem;
+	unsigned int remaining_len = 0;
 
-    len = lif->ionic->ident.port.config.mtu;
+    len = lif->ionic->frame_size;
 
     for (i = 0; i < q->rx_pkt_cnt; i++) {
 
@@ -830,17 +831,23 @@ ionic_rx_init(struct lif *lif, struct qcqst *qcqst)
             desc = (struct rxq_desc *)desc_info->desc;
             sg_desc = (struct rxq_sg_desc *)desc_info->sg_desc;
 
+			remaining_len = len;
+
             desc->opcode = (rxq_pkt->sg_count > 1) ? (u8)RXQ_DESC_OPCODE_SG
                                                    : (u8)RXQ_DESC_OPCODE_SIMPLE;
 
             desc->addr = cpu_to_le64(rxq_pkt->phys_addr[0]);
-            desc->len = (__le16)cpu_to_le16(PAGE_SIZE);
+            desc->len = (__le16)cpu_to_le16(min( remaining_len, PAGE_SIZE));
+			remaining_len -= desc->len;
            
             for (sg_index = 0; sg_index < (rxq_pkt->sg_count - 1); sg_index++) {
                 sg_elem = &sg_desc->elems[sg_index];
                 sg_elem->addr = cpu_to_le64(rxq_pkt->phys_addr[sg_index + 1]);
-                sg_elem->len = cpu_to_le16(PAGE_SIZE);
+                sg_elem->len = (__le16)cpu_to_le16(min( remaining_len, PAGE_SIZE));
+				remaining_len -= sg_elem->len;
             }
+
+			ASSERT( remaining_len == 0);
 
             // zero filled sentinel
             sg_elem = &sg_desc->elems[rxq_pkt->sg_count];
@@ -872,6 +879,7 @@ ionic_rx_fill(struct qcq *qcq)
     struct rxq_sg_desc *sg_desc;
     ULONG sg_index = 0;
     struct rxq_sg_elem *sg_elem;
+	unsigned int remaining_len = 0;
 
     for (i = ionic_q_space_avail(q); i; i--) {
 
@@ -883,6 +891,8 @@ ionic_rx_fill(struct qcq *qcq)
             break;
         }
 
+		remaining_len = q->lif->ionic->frame_size;
+
         desc_info = q->head;
         desc = (struct rxq_desc *)desc_info->desc;
         sg_desc = (struct rxq_sg_desc *)desc_info->sg_desc;
@@ -891,13 +901,17 @@ ionic_rx_fill(struct qcq *qcq)
                                                : (u8)RXQ_DESC_OPCODE_SIMPLE;
 
         desc->addr = cpu_to_le64(rxq_pkt->phys_addr[0]);
-        desc->len = (__le16)cpu_to_le16(PAGE_SIZE);
+		desc->len = (__le16)cpu_to_le16(min( remaining_len, PAGE_SIZE));
+		remaining_len -= desc->len;
 
         for (sg_index = 0; sg_index < (rxq_pkt->sg_count - 1); sg_index++) {
             sg_elem = &sg_desc->elems[sg_index];
             sg_elem->addr = cpu_to_le64(rxq_pkt->phys_addr[sg_index + 1]);
-            sg_elem->len = cpu_to_le16(PAGE_SIZE);
+			sg_elem->len = (__le16)cpu_to_le16(min( remaining_len, PAGE_SIZE));
+			remaining_len -= sg_elem->len;
         }
+
+		ASSERT( remaining_len == 0);
 
         // zero filled sentinel
         sg_elem = &sg_desc->elems[rxq_pkt->sg_count];
@@ -1061,7 +1075,7 @@ ionic_return_packet(NDIS_HANDLE adapter_context,
     ULONG num_nbls = 0;
     PNET_BUFFER packet;
     struct rxq_pkt *rxq_pkt;
-    unsigned int len = ionic->ident.port.config.mtu;
+    unsigned int len = ionic->frame_size;
     PMDL mdl;
     PNET_BUFFER_LIST nbl, nbl_next;
     struct dev_rx_ring_stats *rx_stats = NULL;

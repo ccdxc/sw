@@ -205,13 +205,10 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
     ULONG ulLength = 0;
     NDIS_HYPERVISOR_INFO stHyperVInfo;
 	DEVICE_OBJECT *phys_device_obj = NULL;
-
-    KIRQL start_irql;
+	ULONG	returned_len = 0;
 
     UNREFERENCED_PARAMETER(AdapterHandle);
     UNREFERENCED_PARAMETER(DriverContext);
-
-    start_irql = KeGetCurrentIrql();
 
     adapter->hardware_status = NdisHardwareStatusInitializing;
 
@@ -241,13 +238,18 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
 	status = IoGetDeviceNumaNode( phys_device_obj,
 								  &adapter->numa_node);
 
-	if (status == STATUS_SUCCESS) {
-		IoPrint("%s NUMA node %d %d\n", __FUNCTION__, adapter->numa_node, KeQueryHighestNodeNumber());
-	}
-	else {
+	if (status != STATUS_SUCCESS) {
 		IoPrint("%s Failed to retrieve NUMA node Error %08lX\n", __FUNCTION__, status);
 	}
 
+	status = IoGetDeviceProperty( phys_device_obj,
+								  DevicePropertyLocationInformation,
+								  IONIC_DEV_LOC_LEN * sizeof( WCHAR),
+								  adapter->device_location,
+								  &returned_len);
+	if (status != STATUS_SUCCESS) {
+		IoPrint("Failed to get device location %08lX\n", status);
+	}
 
     //
     // Are we in the parent partition?
@@ -414,21 +416,22 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
     }
 
     IoPrint("%s ASIC %s rev 0x%X serial num %s fw version %s N_LIF %d "
-            "N_DBPGS_LIF %d Rx Budget %d RxPool Factor %d adapter %wZ\n",
+            "N_DBPGS_LIF %d Rx Budget %d RxPool Factor %d NUMA %d\n",
             __FUNCTION__, ionic_dev_asic_name(adapter->idev.dev_info.asic_type),
             adapter->idev.dev_info.asic_rev, adapter->idev.dev_info.serial_num,
             adapter->idev.dev_info.fw_version, adapter->ident.dev.nlifs,
             adapter->ident.dev.ndbpgs_per_lif, RxBudget,
-            adapter->rx_pool_factor, &adapter->name);
+            adapter->rx_pool_factor, adapter->numa_node);
 
     DbgTrace(
         (TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-         "%s ASIC %s rev 0x%X serial num %s fw version %s N_LIF %d N_DBPGS_LIF "
-         "%d\n",
-         __FUNCTION__, ionic_dev_asic_name(adapter->idev.dev_info.asic_type),
-         adapter->idev.dev_info.asic_rev, adapter->idev.dev_info.serial_num,
-         adapter->idev.dev_info.fw_version, adapter->ident.dev.nlifs,
-         adapter->ident.dev.ndbpgs_per_lif));
+         "%s ASIC %s rev 0x%X serial num %s fw version %s N_LIF %d "
+            "N_DBPGS_LIF %d Rx Budget %d RxPool Factor %d NUMA %d\n",
+            __FUNCTION__, ionic_dev_asic_name(adapter->idev.dev_info.asic_type),
+            adapter->idev.dev_info.asic_rev, adapter->idev.dev_info.serial_num,
+            adapter->idev.dev_info.fw_version, adapter->ident.dev.nlifs,
+            adapter->ident.dev.ndbpgs_per_lif, RxBudget,
+            adapter->rx_pool_factor, adapter->numa_node));
 
     status = ionic_init(adapter);
     if (status != NDIS_STATUS_SUCCESS) {
@@ -578,8 +581,6 @@ exit:
               "%s Exit status %08lX\n", __FUNCTION__, status));
 
     KeSetEvent(&InitEvent, 0, FALSE);
-
-    ASSERT(start_irql == KeGetCurrentIrql());
 
     return status;
 }

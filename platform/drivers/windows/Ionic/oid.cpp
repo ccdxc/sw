@@ -1876,7 +1876,7 @@ oid_query_information(struct ionic *ionic,
     case OID_GEN_MAXIMUM_LOOKAHEAD:
     case OID_GEN_MAXIMUM_FRAME_SIZE: {
 
-        buf_u32 = ionic->frame_size;
+        buf_u32 = ionic->frame_size - ETH_COMPLETE_HDR;
         buf_ptr = &buf_u32;
         buf_len = sizeof(buf_u32);
 
@@ -1891,7 +1891,7 @@ oid_query_information(struct ionic *ionic,
     case OID_GEN_TRANSMIT_BLOCK_SIZE:
     case OID_GEN_RECEIVE_BLOCK_SIZE: {
 
-        buf_u32 = ionic->frame_size + ETH_COMPLETE_HDR;
+        buf_u32 = ionic->frame_size;
         buf_ptr = &buf_u32;
         buf_len = sizeof(buf_u32);
 
@@ -1970,14 +1970,14 @@ oid_query_information(struct ionic *ionic,
     }
 
     case OID_GEN_TRANSMIT_BUFFER_SPACE: {
-        buf_u32 = IONIC_MAX_TXRX_DESC * IONIC_DEF_TXRX_DESC;
+        buf_u32 = ionic->ntx_buffers * ionic->frame_size;
         buf_ptr = &buf_u32;
         buf_len = sizeof(buf_u32);
         break;
     }
 
     case OID_GEN_RECEIVE_BUFFER_SPACE: {
-        buf_u32 = IONIC_MAX_TXRX_DESC * IONIC_DEF_TXRX_DESC;
+        buf_u32 = ionic->nrx_buffers * ionic->frame_size;
         buf_ptr = &buf_u32;
         buf_len = sizeof(buf_u32);
         break;
@@ -2004,7 +2004,7 @@ oid_query_information(struct ionic *ionic,
 
     case OID_GEN_MAXIMUM_SEND_PACKETS: {
         /* de-serialized drivers can ignore this */
-        buf_u32 = IONIC_DEF_TXRX_DESC;
+        buf_u32 = ionic->ntx_buffers;
         buf_ptr = &buf_u32;
         buf_len = sizeof(buf_u32);
         break;

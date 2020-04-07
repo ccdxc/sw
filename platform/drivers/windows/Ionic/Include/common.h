@@ -37,6 +37,15 @@ extern "C"
 #include "perf_counters.h"
 
 //
+// List macros
+//
+
+#define ListForEachEntry(ptr, head, type, field)                            \
+    for (ptr = CONTAINING_RECORD((head)->Flink, type, field);               \
+         &(ptr)->field != (head);                                           \
+         ptr = CONTAINING_RECORD((ptr)->field.Flink, type, field))
+
+//
 // ASM prototypes for csum calculations
 //
 
@@ -110,6 +119,14 @@ void ionic_dev_cmd_port_get_speed(struct ionic_dev *idev);
 void ionic_dev_cmd_port_autoneg(struct ionic_dev *idev, u8 an_enable);
 
 void ionic_dev_cmd_port_get_autoneg(struct ionic_dev *idev);
+
+void ionic_dev_cmd_port_fec(struct ionic_dev *idev, u8 fec_type);
+
+void ionic_dev_cmd_port_get_fec(struct ionic_dev *idev);
+
+void ionic_dev_cmd_port_pause(struct ionic_dev *idev, u8 pause_type);
+
+void ionic_dev_cmd_port_get_pause(struct ionic_dev *idev);
 
 void ionic_dev_cmd_port_identify(struct ionic_dev *idev);
 
@@ -422,6 +439,17 @@ NdisFreeMemoryWithTagPriority_internal(NDIS_HANDLE NdisHandle,
 void
 validate_memory( void);
 
+NDIS_STATUS
+GetRegKeyInfo(void *buffer,
+	ULONG buffer_len,
+	ULONG *buffer_ret);
+
+LONG
+NormalizeSpeed(LONG Speed);
+
+struct ionic*
+FindAdapterByNameLocked(PWCHAR AdapterName);
+
 //
 // handlers.cpp prototypes
 //
@@ -619,6 +647,9 @@ NDIS_STATUS
 ionic_lif_init(struct lif *lif);
 
 void ionic_lif_free(struct lif *lif);
+
+NDIS_STATUS
+ionic_lif_set_name(struct lif *lif);
 
 int ionic_station_set(struct lif *lif);
 
@@ -848,6 +879,12 @@ oid_port_delete(struct ionic *ionic,
 	void *data_buffer,
 	ULONG data_buffer_length,
 	ULONG *bytes_needed);
+
+NTSTATUS
+IoctlPortGet(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes);
+
+NTSTATUS
+IoctlPortSet(PVOID buf, ULONG inlen);
 
 //
 // qcq.cpp prototypes

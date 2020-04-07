@@ -221,6 +221,29 @@ DeviceIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         break;
     }
 
+	case IOCTL_IONIC_GET_REG_KEY_INFO: {
+
+        ntStatus = GetRegKeyInfo(
+            Irp->AssociatedIrp.SystemBuffer,
+            pIrpSp->Parameters.DeviceIoControl.OutputBufferLength, &ulInfoLen);
+
+		break;
+	}
+
+    case IOCTL_IONIC_PORT_GET: {
+        ntStatus = IoctlPortGet(Irp->AssociatedIrp.SystemBuffer,
+                                pIrpSp->Parameters.DeviceIoControl.InputBufferLength,
+                                pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
+                                &ulInfoLen);
+        break;
+    }
+
+    case IOCTL_IONIC_PORT_SET: {
+        ntStatus = IoctlPortSet(Irp->AssociatedIrp.SystemBuffer,
+                                pIrpSp->Parameters.DeviceIoControl.InputBufferLength);
+        break;
+    }
+
     default: {
         ntStatus = STATUS_INVALID_PARAMETER;
         break;

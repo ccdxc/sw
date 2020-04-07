@@ -1,0 +1,52 @@
+#!/bin/bash
+
+CMDNAME="$0"
+
+usage() {
+    echo "Import patches from external-windows and apply to sw."
+    echo "usage:"
+    echo "  $CMDNAME <path-to-external-windows> <start-ref> [end-ref]"
+}
+
+if [ $# -lt 2 -o $# -gt 3 ] ; then
+    usage
+    exit 1
+fi
+
+TOP=$(readlink -f "$(dirname "$0")/../..")
+GEN="platform/gen/winport"
+DRV="platform/drivers/windows"
+
+EXT_REPO="$1"
+REF_START="$2"
+REF_END="${3:-HEAD}"
+
+rm -rf -- "$TOP/$GEN"
+mkdir -p "$TOP/$GEN" || exit
+
+cd "$EXT_REPO" || exit
+git format-patch --histogram -o "$TOP/$GEN/" "$REF_START..$REF_END" || exit
+cd -
+
+cd "$TOP" || exit
+cat "$GEN/"* | git am --reject --directory "$DRV/" || {
+    STATUS=$?
+    echo "Useful for resolving conflicts:"
+    echo "  find -name '*.rej'"
+    echo "  git status"
+    echo "  git add"
+    echo
+    echo "Remember to look for 'does not exist in index' above."
+    echo "  There may not be .rej files for those."
+    echo "  Find the missing changes with:"
+    echo "  git am --show-current-patch"
+    echo
+    echo "After manually applying rejects and adding files:"
+    echo "  git am --continue"
+    echo "Or at any point abort this procedure:"
+    echo "  git am --continue"
+    exit $STATUS
+}
+cd -
+
+echo "Done."

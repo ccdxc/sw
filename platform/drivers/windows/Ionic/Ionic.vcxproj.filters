@@ -132,20 +132,15 @@
     <ClInclude Include="..\CommonInc\pci_ids.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\registry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Include\version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\IonicEventLog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Inf Include="Ionic64.inx">
-      <Filter>Driver Files</Filter>
-    </Inf>
-    <Inf Include="Ionic64_vf.inx">
-      <Filter>Driver Files</Filter>
-    </Inf>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="AMD64\checksum.asm">
@@ -161,5 +156,10 @@
     <MessageCompile Include="IonicMsgLog.mc">
       <Filter>Resource Files</Filter>
     </MessageCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Inf Include="Ionic64.inx">
+      <Filter>Driver Files</Filter>
+    </Inf>
   </ItemGroup>
 </Project>

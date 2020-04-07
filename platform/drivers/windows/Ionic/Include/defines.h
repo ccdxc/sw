@@ -136,13 +136,7 @@ NTSTATUS
 
 #define IONIC_ONE_SEC_WAIT              10000000
 
-//
-// Frame size
-//
-
-#define IONIC_FRAME_MIN                 1514
-#define IONIC_FRAME_MAX                 9194
-#define IONIC_FRAME_DEFAULT             9102
+#define IONIC_REG_LEN					25
 
 //
 // Flow control options
@@ -180,6 +174,7 @@ NTSTATUS
 // Max rx pool factor in %
 //
 
+#define IONIC_MIN_RX_POOL_FACTOR            100
 #define IONIC_MAX_RX_POOL_FACTOR            5000
 
 //
@@ -312,10 +307,6 @@ NTSTATUS
 
 #define IONIC_WORKITEM_FREE_QUEUE           0x00000001
 
-#ifndef ETH_MIN_MTU
-#define ETH_MIN_MTU 68
-#endif /* ETH_MIN_MTU */
-
 #define WARN_ON_ONCE
 #define WARN_ON
 
@@ -324,13 +315,14 @@ NTSTATUS
 #define likely(_x) _x
 #endif
 
-//#define IONIC_TX_MAX_SG_ELEMS	8
-//#define IONIC_RX_MAX_SG_ELEMS	8
 #define MAX_NUM_SG_CNTR		(IONIC_TX_MAX_SG_ELEMS + 1)
 
-#define IONIC_MIN_MTU			ETH_MIN_MTU
-#define IONIC_MAX_MTU			9194
-#define IONIC_MAX_TXRX_DESC		16384
+#define IONIC_MIN_MTU			576
+#define IONIC_MAX_MTU			9212
+#define IONIC_DEFAULT_MTU		9212
+
+#define IONIC_MAX_RX_DESC		16384
+#define IONIC_MAX_TX_DESC		8192
 #define IONIC_MIN_TXRX_DESC		16
 #define IONIC_DEF_TXRX_DESC		4096
 #define IONIC_LIFS_MAX			1024

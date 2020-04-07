@@ -1,8 +1,7 @@
 ;
 ; Ionic64.inf
 ;
-
-[version]
+[Version]
 Signature   = "$Windows NT$"
 Class       = Net
 ClassGUID   = {4d36e972-e325-11ce-bfc1-08002be10318}
@@ -10,35 +9,14 @@ Provider    = %ProviderString%
 DriverVer   = ; DriverVer is set by stampinf
 CatalogFile = ionic64.cat
 
-;-----------------------------------------------------------------------------
+;------------------------------------
 ; DestinationDirs
-;
+;------------------------------------
 [DestinationDirs]
-IonicMini.CopyFiles = 12
+IonicMini.Common.CopyFiles = 12  ; drivers
 
-[IonicMini.CopyFiles]
+[IonicMini.Common.CopyFiles]
 Ionic64.sys,,,2
-
-[IonicMini.DelFiles]
-Ionic64.sys
-
-[IonicMini.Service]
-DisplayName        = %IonicMini.Service.DispName%
-ServiceType        = 1 ;%SERVICE_KERNEL_DRIVER%
-StartType          = 3 ;%SERVICE_DEMAND_START%
-ErrorControl       = 1 ;%SERVICE_ERROR_NORMAL%
-ServiceBinary      = %12%\Ionic64.sys
-LoadOrderGroup	   = NDIS
-
-; -----------------------------------
-; EventLog IonicMini
-; -----------------------------------
-[IonicMini.EventLog]
-AddReg=IonicMini.EventLog.reg
-
-[IonicMini.EventLog.reg]
-HKR,, EventMessageFile, 0x00020000, "%%SystemRoot%%\System32\drivers\Ionic64.sys"
-HKR,, TypesSupported,   0x00010001, 7
 
 [SourceDisksNames]
 1 = %DiskId1%,,,""
@@ -46,106 +24,147 @@ HKR,, TypesSupported,   0x00010001, 7
 [SourceDisksFiles]
 Ionic64.sys  = 1,,
 
-;;
-;; Default uninstall sections
-;;
+[ControlFlags]
+ExcludeFromSelect = *
 
-[DefaultUninstall]
-DelFiles			= IonicMini.DelFiles
-;DelReg              = IonicMini.DelRegistry
-
-[DefaultUninstall.Services]
-DelService          = Ionic, 0x200,,	;Ensure service is stopped before deleting
-
-;----------------------------------------------------
-; Manufacturer 
-
+; -----------------------------------
+; Manufacturer section
+; -----------------------------------
 [Manufacturer]
 %ManufacturerName% = Pensando,NTamd64
 
+; -----------------------------------
+; Models section 
+; -----------------------------------
 [Pensando.NTamd64]
-%ManufacturerName%  = IonicMini,	PCI\VEN_1DD8&DEV_1002
-%ManufacturerName%  = IonicMini,	PCI\VEN_1DD8&DEV_1004
+%ManufacturerName%  = IonicMini,    PCI\VEN_1DD8&DEV_1002
+%ManufacturerName%  = IonicMini,    PCI\VEN_1DD8&DEV_1004
+%ManufacturerName%  = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003
 
-[IonicMini.nt]
-Characteristics    = 0x84 ; NCF_HAS_UI | NCF_PHYSICAL
-BusType			   = 5    ; PCI
+[IonicMini.ntamd64]
+Characteristics     = 0x84 ; NCF_HAS_UI | NCF_PHYSICAL
+BusType             = 5    ; PCI
 Port1FunctionNumber = 1
-*IfType            = 0x6 ; IF_TYPE_ETHERNET_CSMACD
-*MediaType         = 0x0 ; NdisMedium802_3
-*PhysicalMediaType = 14  ; NdisPhysicalMedium802_3
-CopyFiles		   = IonicMini.CopyFiles
-AddReg             = IonicMini.Reg
-AddReg		       = IonicMini.Default.reg
-AddReg			   = IonicMini.Powermgmt.reg
-AddReg             = IonicMini.VMQ.reg
-AddReg			   = IonicMini.SRIOV.reg
-AddReg			   = IonicMini.RSS.reg
+*IfType             = 0x6 ; IF_TYPE_ETHERNET_CSMACD
+*MediaType          = 0x0 ; NdisMedium802_3
+*PhysicalMediaType  = 14  ; NdisPhysicalMedium802_3
+CopyFiles           = IonicMini.Common.CopyFiles
+AddReg              = IonicMini.Common.Reg
+AddReg				= IonicMini.Reg
+AddReg              = IonicMini.Default.Common.reg
+AddReg              = IonicMini.Powermgmt.Common.reg
+AddReg              = IonicMini.VMQ.reg
+AddReg              = IonicMini.SRIOV.reg
+AddReg              = IonicMini.RSS.Common.reg
 
-[IonicMini.nt.Services]
-AddService         = Ionic, 2, IonicMini.Service, IonicMini.EventLog
+[IonicMiniVF.ntamd64]
+Characteristics     = 0x84 ; NCF_HAS_UI | NCF_PHYSICAL
+BusType             = 5    ; PCI
+Port1FunctionNumber = 1
+*IfType             = 0x6 ; IF_TYPE_ETHERNET_CSMACD
+*MediaType          = 0x0 ; NdisMedium802_3
+*PhysicalMediaType  = 14  ; NdisPhysicalMedium802_3
+CopyFiles           = IonicMini.Common.CopyFiles
+AddReg              = IonicMini.Common.Reg
+AddReg				= IonicMiniVF.Reg
+AddReg              = IonicMini.Default.Common.reg
+AddReg              = IonicMini.Powermgmt.Common.reg
+AddReg              = IonicMini.VMQ.reg
+AddReg              = IonicMini.RSS.Common.reg
 
-[IonicMini.nt.HW]
-AddReg			   = Ionic.msi.reg
-Include			   = pci.inf
-Needs			   = PciSriovSupported.HW
+[IonicMini.ntamd64.Services]
+AddService         = Ionic, 2, IonicMini.Service, IonicMini.Common.EventLog
+
+[IonicMiniVF.ntamd64.Services]
+AddService         = Ionic, 2, IonicMiniVF.Service, IonicMini.Common.EventLog
+
+[IonicMini.ntamd64.HW]
+AddReg             = Ionic.msi.Common.reg
+Include            = pci.inf
+Needs              = PciSriovSupported.HW
+
+[IonicMiniVF.ntamd64.HW]
+AddReg             = Ionic.msi.Common.reg
+;Include            = pci.inf
+;Needs              = PciSriovSupported.HW
+
+[IonicMini.Service]
+DisplayName        = %IonicMini.Service.DispName%
+ServiceType        = 1 ;%SERVICE_KERNEL_DRIVER%
+StartType          = 3 ;%SERVICE_DEMAND_START%
+ErrorControl       = 1 ;%SERVICE_ERROR_NORMAL%
+ServiceBinary      = %12%\Ionic64.sys
+LoadOrderGroup            = NDIS
+
+[IonicMiniVF.Service]
+DisplayName        = %IonicMiniVF.Service.DispName%
+ServiceType        = 1 ;%SERVICE_KERNEL_DRIVER%
+StartType          = 3 ;%SERVICE_DEMAND_START%
+ErrorControl       = 1 ;%SERVICE_ERROR_NORMAL%
+ServiceBinary      = %12%\Ionic64.sys
+LoadOrderGroup     = NDIS
+
+; -----------------------------------
+; EventLog IonicMini
+; -----------------------------------
+[IonicMini.Common.EventLog]
+AddReg=IonicMini.EventLog.reg
+
+[IonicMini.EventLog.reg]
+HKR,, EventMessageFile, 0x00020000, "%%SystemRoot%%\System32\drivers\Ionic64.sys"
+HKR,, TypesSupported,   0x00010001, 7
+
+
+;------------------------------------------
+;; Default uninstall sections (deprecated)
+;------------------------------------------
+[IonicMini.DelFiles]
+Ionic64.sys
+
+[DefaultUninstall]
+DelFiles           = IonicMini.DelFiles
+;DelReg            = IonicMini.DelRegistry
+
+[DefaultUninstall.Services]
+DelService         = Ionic, 0x200,,         ;Ensure service is stopped before deleting
+;-------------------------------------------
+
+
+[IonicMini.Common.Reg]
+HKR, Ndi,                         Service,             0, "Ionic"
 
 [IonicMini.Reg]
-HKR, Ndi,                         Service,             0, "Ionic"
 HKR, Ndi\Interfaces,              UpperRange,          0, "ndis5"
 HKR, Ndi\Interfaces,              LowerRange,          0, "ethernet"
 
-[Ionic.msi.reg]
+[IonicMiniVF.Reg]
+HKR, Ndi\Interfaces,              UpperRange,          0, "ndisvf"
+HKR, Ndi\Interfaces,              LowerRange,          0, "iovvf"
+
+[Ionic.msi.Common.reg]
 HKR, "Interrupt Management", 0x00000010
 HKR, "Interrupt Management\MessageSignaledInterruptProperties", 0x00000010
 HKR, "Interrupt Management\MessageSignaledInterruptProperties", MSISupported, 0x00010001, 1
 HKR, "Interrupt Management\MessageSignaledInterruptProperties", MessageNumberLimit, 0x00010001, 128
 
-[IonicMini.Default.reg]
-HKR, NDI\Params\*FlowControl,					ParamDesc, 0, "%FlowControl%"
-HKR, NDI\Params\*FlowControl,					Type,      0, "enum"
-HKR, NDI\Params\*FlowControl,					Default,   0, "3"
-HKR, NDI\Params\*FlowControl\enum,				"0",	   0, "%Disabled%"
-HKR, NDI\Params\*FlowControl\enum,				"1",	   0, "%TxEnabled%"
-HKR, NDI\Params\*FlowControl\enum,				"2",	   0, "%RxEnabled%"
-HKR, NDI\Params\*FlowControl\enum,				"3",	   0, "%TxRxEnabled%"
-
-; SpeedDuplex
-HKR, Ndi\Params\*SpeedDuplex,					ParamDesc,              0, %SpeedDuplex%
-HKR, Ndi\Params\*SpeedDuplex,					default,                0, "0"
-HKR, Ndi\Params\*SpeedDuplex\Enum,				"0",                    0, %AutoNegotiation%
-HKR, Ndi\Params\*SpeedDuplex\Enum,				"7",                    0, %10Gb_Full_Duplex%
-HKR, Ndi\Params\*SpeedDuplex\Enum,				"25000",                0, %25Gb_Full_Duplex%
-HKR, Ndi\Params\*SpeedDuplex\Enum,				"9",                    0, %40Gb_Full_Duplex%
-HKR, Ndi\Params\*SpeedDuplex\Enum,				"50000",                0, %50Gb_Full_Duplex%
-HKR, Ndi\Params\*SpeedDuplex\Enum,				"10",                   0, %100Gb_Full_Duplex%
-HKR, Ndi\Params\*SpeedDuplex,					type,                   0, "enum"
-
-; NetworkAddress
-HKR, Ndi\params\NetworkAddress,                 ParamDesc,              0, %NetworkAddress%
-HKR, Ndi\params\NetworkAddress,                 default,                0, ""
-HKR, Ndi\params\NetworkAddress,                 LimitText,              0, "12"
-HKR, Ndi\params\NetworkAddress,                 UpperCase,              0, "1"
-HKR, Ndi\params\NetworkAddress,                 optional,               0, "1"
-HKR, Ndi\params\NetworkAddress,                 type,                   0, "edit"
-
+[IonicMini.Default.Common.reg]
 ; *TransmitBuffers
 HKR, Ndi\params\*TransmitBuffers,               ParamDesc,              0, %TransmitBuffers%
 HKR, Ndi\params\*TransmitBuffers,               default,                0, "4096"
-HKR, Ndi\params\*TransmitBuffers,               min,                    0, "128"
-HKR, Ndi\params\*TransmitBuffers,               max,                    0, "4096"
-HKR, Ndi\params\*TransmitBuffers,               step,                   0, "64"
+HKR, Ndi\params\*TransmitBuffers,               min,                    0, "16"
+HKR, Ndi\params\*TransmitBuffers,               max,                    0, "8192"
+HKR, Ndi\params\*TransmitBuffers,               step,                   0, "4"
 HKR, Ndi\params\*TransmitBuffers,               Base,                   0, "10"
-HKR, Ndi\params\*TransmitBuffers,               type,                   0, "int"
+HKR, Ndi\params\*TransmitBuffers,               type,                   0, "dword"
 
 ; *ReceiveBuffers
 HKR, Ndi\params\*ReceiveBuffers,                ParamDesc,              0, %ReceiveBuffers%
 HKR, Ndi\params\*ReceiveBuffers,                default,                0, "4096"
-HKR, Ndi\params\*ReceiveBuffers,                min,                    0, "128"
-HKR, Ndi\params\*ReceiveBuffers,                max,                    0, "4096"
-HKR, Ndi\params\*ReceiveBuffers,                step,                   0, "64"
+HKR, Ndi\params\*ReceiveBuffers,                min,                    0, "16"
+HKR, Ndi\params\*ReceiveBuffers,                max,                    0, "16384"
+HKR, Ndi\params\*ReceiveBuffers,                step,                   0, "4"
 HKR, Ndi\params\*ReceiveBuffers,                Base,                   0, "10"
-HKR, Ndi\params\*ReceiveBuffers,                type,                   0, "int"
+HKR, Ndi\params\*ReceiveBuffers,                type,                   0, "dword"
 
 ; *PriorityVLANTag
 HKR, Ndi\Params\*PriorityVLANTag,               ParamDesc,              0, %PriorityVLANTag2%
@@ -173,13 +192,6 @@ HKR, Ndi\Params\*IPChecksumOffloadIPv4\Enum,    "1",                    0, %Chks
 HKR, Ndi\Params\*IPChecksumOffloadIPv4\Enum,    "2",                    0, %ChksumOffRx%
 HKR, Ndi\Params\*IPChecksumOffloadIPv4\Enum,    "3",                    0, %ChksumOffTxRx%
 HKR, Ndi\Params\*IPChecksumOffloadIPv4,         type,                   0, "enum"
-
-; *LsoV1IPv4
-HKR, Ndi\Params\*LsoV1IPv4,                     ParamDesc,              0, %LsoV1IPv4%
-HKR, Ndi\Params\*LsoV1IPv4,                     default,                0, "0"
-HKR, Ndi\Params\*LsoV1IPv4\Enum,                "0",                    0, %Disabled%
-HKR, Ndi\Params\*LsoV1IPv4\Enum,                "1",                    0, %Enabled%
-HKR, Ndi\Params\*LsoV1IPv4,                     type,                   0, "enum"
 
 ; *LsoV2IPv4
 HKR, Ndi\Params\*LsoV2IPv4,                     ParamDesc,              0, %LsoV2IPv4%
@@ -231,40 +243,54 @@ HKR, Ndi\Params\*UDPChecksumOffloadIPv6\Enum,   "2",                    0, %Chks
 HKR, Ndi\Params\*UDPChecksumOffloadIPv6\Enum,   "3",                    0, %ChksumOffTxRx%
 HKR, Ndi\Params\*UDPChecksumOffloadIPv6,        type,                   0, "enum"
 
-; *JumboPacket
+; NetworkAddress
+HKR, Ndi\params\NetworkAddress,                 ParamDesc,              0, %NetworkAddress%
+HKR, Ndi\params\NetworkAddress,                 default,                0, ""
+HKR, Ndi\params\NetworkAddress,                 LimitText,              0, "12"
+HKR, Ndi\params\NetworkAddress,                 UpperCase,              0, "1"
+HKR, Ndi\params\NetworkAddress,                 optional,               0, "1"
+HKR, Ndi\params\NetworkAddress,                 type,                   0, "edit"
 
-HKR, NDI\Params\*JumboPacket ,					ParamDesc,  0, "%JumboPacket%"
-HKR, NDI\Params\*JumboPacket ,					default,    0, "9102"
-HKR, NDI\Params\*JumboPacket ,					min,        0, "1514"
-HKR, NDI\Params\*JumboPacket ,					max,        0, "00009216"
-HKR, NDI\Params\*JumboPacket ,					step,       0, "1"
-HKR, NDI\Params\*JumboPacket ,					Base,       0, "10"
-HKR, NDI\Params\*JumboPacket ,					type,       0, "dword"
+; *LsoV1IPv4
+HKR, Ndi\Params\*LsoV1IPv4,                     ParamDesc,              0, %LsoV1IPv4%
+HKR, Ndi\Params\*LsoV1IPv4,                     default,                0, "0"
+HKR, Ndi\Params\*LsoV1IPv4\Enum,                "0",                    0, %Disabled%
+HKR, Ndi\Params\*LsoV1IPv4\Enum,                "1",                    0, %Enabled%
+HKR, Ndi\Params\*LsoV1IPv4,                     type,                   0, "enum"
+
+; *JumboPacket
+HKR, NDI\Params\*JumboPacket ,                  ParamDesc,              0, "%JumboPacket%"
+HKR, NDI\Params\*JumboPacket ,                  default,                0, "9212"
+HKR, NDI\Params\*JumboPacket ,                  min,                    0, "576"
+HKR, NDI\Params\*JumboPacket ,                  max,                    0, "9212"
+HKR, NDI\Params\*JumboPacket ,                  step,                   0, "1"
+HKR, NDI\Params\*JumboPacket ,                  Base,                   0, "10"
+HKR, NDI\Params\*JumboPacket ,                  type,                   0, "dword"
 
 ; RxQueue Size as % of current ring size
-HKR, Ndi\params\RxPoolSize,					ParamDesc,              0, %RxPoolSize%
-HKR, Ndi\params\RxPoolSize,					default,                0, "150"
-HKR, Ndi\params\RxPoolSize,					min,                    0, "100"
-HKR, Ndi\params\RxPoolSize,					max,                    0, "5000"
-HKR, Ndi\params\RxPoolSize,					step,                   0, "10"
-HKR, Ndi\params\RxPoolSize,					Base,                   0, "10"
-HKR, Ndi\params\RxPoolSize,					type,                   0, "DWORD"
+HKR, Ndi\params\RxPoolSize,                     ParamDesc,              0, %RxPoolSize%
+HKR, Ndi\params\RxPoolSize,                     default,                0, "150"
+HKR, Ndi\params\RxPoolSize,                     min,                    0, "100"
+HKR, Ndi\params\RxPoolSize,                     max,                    0, "5000"
+HKR, Ndi\params\RxPoolSize,                     step,                   0, "10"
+HKR, Ndi\params\RxPoolSize,                     Base,                   0, "10"
+HKR, Ndi\params\RxPoolSize,                     type,                   0, "DWORD"
 
 ; TxFlushMode
-HKR, Ndi\Params\TxFlushMode,					ParamDesc,              0, %TxFlushMode%
-HKR, Ndi\Params\TxFlushMode,					default,                0, "1"
-HKR, Ndi\Params\TxFlushMode\Enum,				"1",                    0, %TxModeDPC%
-HKR, Ndi\Params\TxFlushMode\Enum,				"2",                    0, %TxModeSendPath%
-HKR, Ndi\Params\TxFlushMode\Enum,				"3",                    0, %TxModeBoth%
-HKR, Ndi\Params\TxFlushMode,					type,                   0, "enum"
+HKR, Ndi\Params\TxFlushMode,                    ParamDesc,              0, %TxFlushMode%
+HKR, Ndi\Params\TxFlushMode,                    default,                0, "1"
+HKR, Ndi\Params\TxFlushMode\Enum,               "1",                    0, %TxModeDPC%
+HKR, Ndi\Params\TxFlushMode\Enum,               "2",                    0, %TxModeSendPath%
+HKR, Ndi\Params\TxFlushMode\Enum,               "3",                    0, %TxModeBoth%
+HKR, Ndi\Params\TxFlushMode,                    type,                   0, "enum"
 
-[IonicMini.Powermgmt.reg]
+[IonicMini.Powermgmt.Common.reg]
 ; EnablePME
-HKR,Ndi\Params\EnablePME,                 ParamDesc,                    0, %Enable_PME%
-HKR,Ndi\Params\EnablePME,                 Type,                         0, "enum"
-HKR,Ndi\Params\EnablePME,                 Default,                      0, "0"
-HKR,Ndi\Params\EnablePME\Enum,            "1",                          0, %Enabled%
-HKR,Ndi\Params\EnablePME\Enum,            "0",                          0, %Disabled%
+HKR,Ndi\Params\EnablePME,                       ParamDesc,              0, %Enable_PME%
+HKR,Ndi\Params\EnablePME,                       Type,                   0, "enum"
+HKR,Ndi\Params\EnablePME,                       Default,                0, "0"
+HKR,Ndi\Params\EnablePME\Enum,                  "1",                    0, %Enabled%
+HKR,Ndi\Params\EnablePME\Enum,                  "0",                    0, %Disabled%
 
 [IonicMini.VMQ.reg]
 ; *VMQ
@@ -297,7 +323,7 @@ HKR,Ndi\Params\EnablePME\Enum,            "0",                          0, %Disa
 ;HKR, NicSwitches\0,*SwitchName,                                         0,                "Default Switch"
 ;HKR, NicSwitches\0,*NumVFs,                                             0x00010001,       128
 
-[IonicMini.RSS.reg]
+[IonicMini.RSS.Common.reg]
 ; NumRssQueues
 HKR, Ndi\Params\*NumRssQueues,                   ParamDesc,              0, %NumRssQueues%
 HKR, Ndi\Params\*NumRssQueues,                   default,                0, "4"
@@ -310,36 +336,29 @@ HKR, Ndi\Params\*NumRssQueues\Enum,              "16",                   0, %16q
 HKR, Ndi\Params\*NumRssQueues\Enum,              "32",                   0, %32queues%
 
 ; *RSS
-HKR, Ndi\Params\*RSS,                           ParamDesc,              0, %RSS%
-HKR, Ndi\Params\*RSS,                           default,                0, "1"
-HKR, Ndi\Params\*RSS,                           type,                   0, "enum"
-HKR, Ndi\Params\*RSS\Enum,                      "0",                    0, %Disabled%
-HKR, Ndi\Params\*RSS\Enum,                      "1",                    0, %Enabled%
+HKR, Ndi\Params\*RSS,                            ParamDesc,              0, %RSS%
+HKR, Ndi\Params\*RSS,                            default,                0, "1"
+HKR, Ndi\Params\*RSS,                            type,                   0, "enum"
+HKR, Ndi\Params\*RSS\Enum,                       "0",                    0, %Disabled%
+HKR, Ndi\Params\*RSS\Enum,                       "1",                    0, %Enabled%
 
 [Strings]
 ProviderString               = "Pensando Systems"
 ManufacturerName             = "Pensando Systems"
 IonicMini.DeviceDesc         = "Pensando Ethernet Adapter (NDIS 6.60)"
 IonicMini.Service.DispName   = "Pensando Miniport (NDIS 6.60)"
+IonicMiniVF.DeviceDesc       = "Pensando Ethernet Adapter (NDIS 6.60) Virtual Function"
+IonicMiniVF.Service.DispName = "Pensando Miniport (NDIS 6.60) Virtual Function"
 DiskId1                      = "Pensando Miniport Device Installation Disk #1"
 NetworkAddress               = "Network Address"
-SpeedDuplex                  = "Speed & Duplex"
-AutoNegotiation              = "Auto Negotiation"
-1000Mb_Full_Duplex           = "1.0 Gbps Full Duplex"
-10Gb_Full_Duplex             = "10 Gbps Full Duplex"
-25Gb_Full_Duplex             = "25 Gbps Full Duplex"
-40Gb_Full_Duplex             = "40 Gbps Full Duplex"
-50Gb_Full_Duplex             = "50 Gbps Full Duplex"
-100Gb_Full_Duplex            = "100 Gbps Full Duplex"
 Enable_PME                   = "Enable PME"
 Enabled                      = "Enabled"
 Disabled                     = "Disabled"
 VMQ                          = "Virtual Machine Queues"
 VMQVlanFiltering             = "VMQ VLAN Filtering"
 SRIOV                        = "SR-IOV"
-RSS							 = "Receive Side Scaling"
+RSS                          = "Receive Side Scaling"
 VlanId                       = "VLAN ID"
-FlowControl					 = "Flow Control"
 
 NumRssQueues                 = "Maximum Number of RSS Queues"
 1queue                       = "1 Queue"
@@ -349,8 +368,8 @@ NumRssQueues                 = "Maximum Number of RSS Queues"
 16queues                     = "16 Queues"
 32queues                     = "32 Queues"
 
-TransmitBuffers				 = "Transmit Buffers"
-ReceiveBuffers				 = "Receive Buffers"
+TransmitBuffers              = "Transmit Buffers"
+ReceiveBuffers               = "Receive Buffers"
 
 IPChksumOffv4                = "IPv4 Checksum Offload"
 ChksumOffTxRx                = "Rx & Tx Enabled"
@@ -376,13 +395,13 @@ VlanEnabled                  = "VLAN Enabled"
 JumboPacket                  = "Jumbo Packet"
 Bytes9000                    = "9000 Bytes"
 
-RxPoolSize					 = "Rx Pool Size"
+RxPoolSize                   = "Rx Pool Size"
 
-TxFlushMode					 = "Tx Flush Mode"
-TxModeDPC					 = "Tx Flush in DPC"
-TxModeSendPath				 = "Tx Flush in Send Path"
-TxModeBoth					 = "Tx Flush Both"
+TxFlushMode                  = "Tx Flush Mode"
+TxModeDPC                    = "Tx Flush in DPC"
+TxModeSendPath               = "Tx Flush in Send Path"
+TxModeBoth                   = "Tx Flush Both"
 
-TxEnabled					 = "Tx Enabled"
-RxEnabled					 = "Rx Enabled"
-TxRxEnabled					 = "Rx & Tx Enabled"
+TxEnabled                    = "Tx Enabled"
+RxEnabled                    = "Rx Enabled"
+TxRxEnabled                  = "Rx & Tx Enabled"

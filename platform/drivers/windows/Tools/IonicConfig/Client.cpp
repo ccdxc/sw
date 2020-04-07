@@ -2,6 +2,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define _CRT_RAND_S
 
+#include "Config.h"
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -20,8 +21,9 @@ setsock_tcp_mss( SOCKET inSock, int inMSS );
 #define DEFAULT_BUFLEN 1024*100
 #define DEFAULT_PORT "27015"
 
-int 
-client( char *ServerAddr) 
+static
+int
+client(const char *ServerAddr)
 {
     WSADATA wsaData;
     SOCKET ConnectSocket = INVALID_SOCKET;
@@ -202,4 +204,59 @@ setsock_tcp_mss( SOCKET inSock, int inMSS )
     }
 
     return 0;
+}
+
+//
+// -Client
+//
+
+static
+po::options_description
+CmdBistClientOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] Client [-s] <server_addr>");
+
+    opts.add_options()
+        ("Server,s", optype_string()->required(), "Server IP address");
+
+    return opts;
+}
+
+static
+po::positional_options_description
+CmdBistClientPos()
+{
+    po::positional_options_description pos;
+
+    pos.add("Server", 1);
+
+    return pos;
+}
+
+static
+int
+CmdBistClientRun(command_info& info)
+{
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    return client(opval_string(info.vm, "Server").c_str());
+}
+
+command
+CmdBistClient()
+{
+    command cmd;
+
+    cmd.name = "Client";
+    cmd.desc = "Run built in test client";
+    cmd.hidden = true;
+
+    cmd.opts = CmdBistClientOpts;
+    cmd.pos = CmdBistClientPos;
+    cmd.run = CmdBistClientRun;
+
+    return cmd;
 }

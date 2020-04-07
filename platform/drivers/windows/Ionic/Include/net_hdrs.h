@@ -12,7 +12,7 @@
 #define ETH_P_IPv6 0x86dd
 #define ETH_P_ARP 0x0806
 
-#define ETH_COMPLETE_HDR  22 // Eth hdr + 1Q hdr + FCS
+#define ETH_COMPLETE_HDR  14 // Eth hdr
 
 #define ETH_GET_VLAN_PRIORITY(x) (((x) >> 13) & 0x7)
 #define ETH_GET_VLAN_ID(x) ((x) & 0xfff)

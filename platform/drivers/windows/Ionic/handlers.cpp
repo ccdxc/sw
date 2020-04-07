@@ -141,9 +141,9 @@ Restart(NDIS_HANDLE MiniportAdapterContext,
                 if (restartAttribs->MtuSize == 0) {
                     DbgTrace((TRACE_COMPONENT_GENERAL, TRACE_LEVEL_VERBOSE,
                               "\tUpdating Mtu to %d\n",
-                              ionic->ident.port.config.mtu));
+                              ionic->frame_size));
 
-                    restartAttribs->MtuSize = ionic->frame_size;
+                    restartAttribs->MtuSize = ionic->frame_size - ETH_COMPLETE_HDR;
                 }
             } else {
                 DbgTrace((TRACE_COMPONENT_GENERAL, TRACE_LEVEL_VERBOSE,
@@ -233,15 +233,14 @@ SetGeneralAttribs(struct ionic *Adapter)
     stAttribs.MediaType = NdisMedium802_3;
     stAttribs.PhysicalMediumType = NdisPhysicalMedium802_3;
 
-    stAttribs.MtuSize =
-            Adapter->frame_size;
+    stAttribs.MtuSize = Adapter->frame_size - ETH_COMPLETE_HDR;
 
     stAttribs.AutoNegotiationFlags = NDIS_LINK_STATE_XMIT_LINK_SPEED_AUTO_NEGOTIATED |
                                                     NDIS_LINK_STATE_RCV_LINK_SPEED_AUTO_NEGOTIATED;
 
     stAttribs.MediaConnectState = MediaConnectStateDisconnected;
     stAttribs.MediaDuplexState = MediaDuplexStateFull;
-    stAttribs.LookaheadSize = Adapter->ident.port.config.mtu - 1000;
+    stAttribs.LookaheadSize = Adapter->frame_size;
     stAttribs.PowerManagementCapabilities = NULL;
     stAttribs.MacOptions = NDIS_MAC_OPTION_TRANSFERS_NOT_PEND |
                            NDIS_MAC_OPTION_NO_LOOPBACK |

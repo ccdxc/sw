@@ -64,9 +64,6 @@ ionic_port_init(struct ionic *ionic)
     if (idev->port_info)
         return 0;
 
-    ident->port.config.an_enable = ionic->config_port_speed == 0;
-    ident->port.config.speed = ionic->config_port_speed;
-
     idev->port_info_sz = ALIGN(sizeof(*idev->port_info), PAGE_SIZE);
     idev->port_info = (port_info *)dma_alloc_coherent(ionic, idev->port_info_sz,
                                                       &idev->port_info_pa, 0);
@@ -229,4 +226,151 @@ oid_port_delete(struct ionic *ionic,
 cleanup:
 
     return ntStatus;
+}
+
+NTSTATUS
+IoctlPortGet(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes)
+{
+    struct ionic *ionic = NULL;
+    PortConfigCB *cb = (PortConfigCB *)buf;
+    union dev_cmd_comp comp = {};
+    NDIS_STATUS status = NDIS_STATUS_SUCCESS;
+
+    if (inlen < ADAPTER_NAME_MAX_SZ) {
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    if (outlen < sizeof(*cb)) {
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    NdisAcquireSpinLock(&AdapterListLock);
+
+    ionic = FindAdapterByNameLocked((PWCHAR)buf);
+    if (ionic == NULL) {
+        NdisReleaseSpinLock(&AdapterListLock);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    NdisAcquireSpinLock(&ionic->dev_cmd_lock);
+
+    // AutoNeg
+    ionic_dev_cmd_port_get_autoneg(&ionic->idev);
+    status = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+    if (status != NDIS_STATUS_SUCCESS) {
+        goto out;
+    }
+    ionic_dev_cmd_comp(&ionic->idev, &comp);
+    cb->AutoNeg = comp.port_getattr.an_enable;
+
+    // Speed
+    ionic_dev_cmd_port_get_speed(&ionic->idev);
+    status = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+    if (status != NDIS_STATUS_SUCCESS) {
+        goto out;
+    }
+    ionic_dev_cmd_comp(&ionic->idev, &comp);
+    cb->Speed = comp.port_getattr.speed;
+
+    // FEC
+    ionic_dev_cmd_port_get_fec(&ionic->idev);
+    status = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+    if (status != NDIS_STATUS_SUCCESS) {
+        goto out;
+    }
+    ionic_dev_cmd_comp(&ionic->idev, &comp);
+    cb->FEC = comp.port_getattr.fec_type;
+
+    // Pause
+    ionic_dev_cmd_port_get_pause(&ionic->idev);
+    status = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+    if (status != NDIS_STATUS_SUCCESS) {
+        goto out;
+    }
+    ionic_dev_cmd_comp(&ionic->idev, &comp);
+    cb->Pause = comp.port_getattr.pause_type;
+
+out:
+    NdisReleaseSpinLock(&ionic->dev_cmd_lock);
+    NdisReleaseSpinLock(&AdapterListLock);
+
+    if (status == NDIS_STATUS_SUCCESS) {
+        *outbytes = sizeof(*cb);
+    }
+
+    return status;
+}
+
+NTSTATUS
+IoctlPortSet(PVOID buf, ULONG inlen)
+{
+    struct ionic *ionic = NULL;
+    PortSetCB *cb = (PortSetCB *)buf;
+    NDIS_STATUS status = NDIS_STATUS_SUCCESS;
+
+    if (inlen < sizeof(*cb)) {
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    NdisAcquireSpinLock(&AdapterListLock);
+
+    ionic = FindAdapterByNameLocked(cb->AdapterName);
+    if (ionic == NULL) {
+        NdisReleaseSpinLock(&AdapterListLock);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    NdisAcquireSpinLock(&ionic->dev_cmd_lock);
+
+    // AutoNeg
+    if (cb->Flags & PORT_SET_AUTONEG) {
+        ionic_dev_cmd_port_autoneg(&ionic->idev, (u8)cb->Config.AutoNeg);
+        status = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+        if (status != NDIS_STATUS_SUCCESS) {
+            goto out;
+        }
+    }
+
+    // Speed
+    if (cb->Flags & PORT_SET_SPEED) {
+        LONG speed = NormalizeSpeed(cb->Config.Speed);
+        if (speed < 0) {
+            status = NDIS_STATUS_INVALID_PARAMETER;
+            goto out;
+        }
+        ionic_dev_cmd_port_speed(&ionic->idev, (u32)speed);
+        status = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+        if (status != NDIS_STATUS_SUCCESS) {
+            goto out;
+        }
+    }
+
+    // FEC
+    if (cb->Flags & PORT_SET_FEC) {
+        ionic_dev_cmd_port_fec(&ionic->idev, (u8)cb->Config.FEC);
+        status = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+        if (status != NDIS_STATUS_SUCCESS) {
+            goto out;
+        }
+    }
+
+    // Pause
+    if (cb->Flags & PORT_SET_PAUSE) {
+        ionic_dev_cmd_port_pause(&ionic->idev, (u8)cb->Config.Pause);
+        status = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+        if (status != NDIS_STATUS_SUCCESS) {
+            goto out;
+        }
+    }
+
+out:
+    NdisReleaseSpinLock(&ionic->dev_cmd_lock);
+
+    if (status == STATUS_SUCCESS) {
+        // TODO: persist these settings in Registry on success
+    }
+
+    NdisReleaseSpinLock(&AdapterListLock);
+
+    return status;
 }

@@ -3,6 +3,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 
+#include "Config.h"
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -19,8 +20,9 @@ setsock_tcp_mss( SOCKET inSock, int inMSS );
 #define DEFAULT_BUFLEN 1024*100
 #define DEFAULT_PORT "27015"
 
-int 
-server(void) 
+static
+int
+server(void)
 {
     WSADATA wsaData;
     int iResult;
@@ -190,4 +192,44 @@ server(void)
 cleanup:
 
     return 0;
+}
+
+//
+// -Server
+//
+
+static
+po::options_description
+CmdBistServerOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] Server");
+
+    return opts;
+}
+
+static
+int
+CmdBistServerRun(command_info& info)
+{
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    return server();
+}
+
+command
+CmdBistServer()
+{
+    command cmd;
+
+    cmd.name = "Server";
+    cmd.desc = "Run built in test server";
+    cmd.hidden = true;
+
+    cmd.opts = CmdBistServerOpts;
+    cmd.run = CmdBistServerRun;
+
+    return cmd;
 }

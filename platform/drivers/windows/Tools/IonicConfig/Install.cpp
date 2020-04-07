@@ -1,4 +1,4 @@
-
+#include "Config.h"
 #include "windows.h"
 #include "stdio.h"
 #include <shlwapi.h>
@@ -30,7 +30,7 @@ BOOL
 IsOEMPackage(LPCTSTR InfName);
 
 int 
-AddDriverPkg( WCHAR *InfFile);
+AddDriverPkg(const WCHAR *InfFile);
 
 int 
 RemoveDriverPkg( void);
@@ -53,17 +53,17 @@ int
 RemoveDeviceState(HDEVINFO Devs, PSP_DEVINFO_DATA DevInfo);
 
 int 
-UpdateDriver( WCHAR *InfFile, WCHAR *HardwareId, BOOL *reboot);
+UpdateDriver(const WCHAR *InfFile, WCHAR *HardwareId, BOOL *reboot);
 
 int
-InstallMiniport(WCHAR *InfFile)
+InstallMiniport(const WCHAR *InfFile)
 {
 
     int rc = ERROR_SUCCESS;
 
     printf("Installing INF %S\n", InfFile);
 
-    rc = AddDriverPkg( InfFile);
+    rc = AddDriverPkg(InfFile);
 
     if (rc != ERROR_SUCCESS) {
         printf("Failed to install driver package for %S Error %d\n",
@@ -125,7 +125,7 @@ exit:
 }
 
 int
-UpdateMiniport(WCHAR *InfFile)
+UpdateMiniport(const WCHAR *InfFile)
 {
 
     int rc = ERROR_SUCCESS;
@@ -153,7 +153,7 @@ exit:
 }
 
 int 
-AddDriverPkg( WCHAR *InfFile)
+AddDriverPkg(const WCHAR *InfFile)
 {
 
     int        rc = ERROR_SUCCESS;
@@ -767,7 +767,7 @@ exit:
 }
 
 int 
-UpdateDriver( WCHAR *InfFile, WCHAR *HardwareId, BOOL *reboot)
+UpdateDriver(const WCHAR *InfFile, WCHAR *HardwareId, BOOL *reboot)
 {
     int rc = ERROR_SUCCESS;
     DWORD flags = 0;
@@ -813,4 +813,150 @@ UpdateDriver( WCHAR *InfFile, WCHAR *HardwareId, BOOL *reboot)
 exit:
 
     return rc;
+}
+
+//
+// -Install
+//
+
+static
+po::options_description
+CmdInstallOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] Install [-f] <file>");
+
+    opts.add_options()
+        ("File,f", optype_wstring()->required(), "Driver inf file");
+
+    return opts;
+}
+
+static
+po::positional_options_description
+CmdInstallPos()
+{
+    po::positional_options_description pos;
+
+    pos.add("File", 1);
+
+    return pos;
+}
+
+static
+int
+CmdInstallRun(command_info& info)
+{
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    return InstallMiniport(opval_wstring(info.vm, "File").c_str()) != ERROR_SUCCESS;
+}
+
+command
+CmdInstall()
+{
+    command cmd;
+
+    cmd.name = "Install";
+    cmd.desc = "Install device driver";
+
+    cmd.opts = CmdInstallOpts;
+    cmd.pos = CmdInstallPos;
+    cmd.run = CmdInstallRun;
+
+    return cmd;
+}
+
+//
+// -Uninstall
+//
+
+static
+po::options_description
+CmdUninstallOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] Uninstall");
+
+    return opts;
+}
+
+static
+int
+CmdUninstallRun(command_info& info)
+{
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    return UninstallMiniport() != ERROR_SUCCESS;
+}
+
+command
+CmdUninstall()
+{
+    command cmd;
+
+    cmd.name = "Uninstall";
+    cmd.desc = "Uninstall device driver";
+
+    cmd.opts = CmdUninstallOpts;
+    cmd.run = CmdUninstallRun;
+
+    return cmd;
+}
+
+//
+// -Update
+//
+
+static
+po::options_description
+CmdUpdateOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] Update [-f] <file>");
+
+    opts.add_options()
+        ("File,f", optype_wstring()->required(), "Driver inf file");
+
+    return opts;
+}
+
+static
+po::positional_options_description
+CmdUpdatePos()
+{
+    po::positional_options_description pos;
+
+    pos.add("File", 1);
+
+    return pos;
+}
+
+static
+int
+CmdUpdateRun(command_info& info)
+{
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    return UpdateMiniport(opval_wstring(info.vm, "File").c_str()) != ERROR_SUCCESS;
+}
+
+command
+CmdUpdate()
+{
+    command cmd;
+
+    cmd.name = "Update";
+    cmd.desc = "Update device driver";
+
+    cmd.opts = CmdUpdateOpts;
+    cmd.run = CmdUpdateRun;
+
+    return cmd;
 }

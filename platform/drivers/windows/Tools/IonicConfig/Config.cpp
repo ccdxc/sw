@@ -1,5 +1,218 @@
+#include "Config.h"
 
-#include "windows.h"
+int
+_cdecl
+wmain(int argc, wchar_t* argv[])
+{
+    command_info info;
+    bool cmd_found = false;
+
+    info.cmd = CmdUsage();
+    info.cmds.push_back(CmdVersion());
+    info.cmds.push_back(CmdInstall());
+    info.cmds.push_back(CmdUninstall());
+    info.cmds.push_back(CmdUpdate());
+    info.cmds.push_back(CmdSetTrace());
+    info.cmds.push_back(CmdGetTrace());
+    info.cmds.push_back(CmdPort());
+    info.cmds.push_back(CmdRxBudget());
+    info.cmds.push_back(CmdDevStats());
+    info.cmds.push_back(CmdLifStats());
+    info.cmds.push_back(CmdPortStats());
+    info.cmds.push_back(CmdPerfStats());
+	info.cmds.push_back(CmdRegKeys());
+    //info.cmds.push_back(CmdOidStats());
+    //info.cmds.push_back(CmdFwcmdStats());
+    info.cmds.push_back(CmdBistClient());
+    info.cmds.push_back(CmdBistServer());
+
+    po::command_line_style::style_t style =
+        (po::command_line_style::style_t)
+        (po::command_line_style::allow_short |
+         po::command_line_style::allow_dash_for_short |
+         po::command_line_style::allow_slash_for_short |
+         po::command_line_style::short_allow_next |
+         po::command_line_style::allow_long |
+         po::command_line_style::allow_long_disguise |
+         po::command_line_style::long_allow_adjacent |
+         po::command_line_style::long_allow_next |
+         po::command_line_style::case_insensitive);
+
+    // Parse top-level options
+    try {
+        po::options_description opts = info.cmd.opts();
+        po::wparsed_options parsed = po::wcommand_line_parser(argc, argv)
+            .allow_unregistered()
+            .options(opts)
+            .style(style)
+            .run();
+        po::store(parsed, info.vm);
+        info.cmd_args = po::collect_unrecognized(parsed.options, po::include_positional);
+    }
+    catch (std::exception& e) {
+        std::cout << e.what() << std::endl;
+        info.status = 1;
+        info.usage = 1;
+    }
+
+    if (info.vm.count("Help") != 0) {
+        info.usage = 1;
+    }
+
+    // Lookup subcommand
+    if (!info.cmd_args.empty()) {
+        info.cmd_name = to_bytes(info.cmd_args.front());
+        info.cmd_args.erase(info.cmd_args.begin());
+
+        // Remove prefix - -- or / if present
+        std::string cmd_name = info.cmd_name;
+        if (cmd_name[0] == '-') {
+            if (cmd_name[1] == '-') {
+                cmd_name.erase(0, 2);
+            }
+            else {
+                cmd_name.erase(0, 1);
+            }
+        }
+        else if (cmd_name[0] == '/') {
+            cmd_name.erase(0, 1);
+        }
+
+        // Find in all commands, case insensitive
+        for (auto& cmd_i : info.cmds) {
+            if (boost::iequals(cmd_name, cmd_i.name)) {
+                info.cmd = cmd_i;
+                cmd_found = true;
+            }
+        }
+    }
+
+    // Parse subcommand options
+    if (cmd_found && !info.usage) {
+        try {
+            po::options_description opts = info.cmd.opts();
+            po::positional_options_description pos = info.cmd.pos();
+            po::wparsed_options parsed = po::wcommand_line_parser(info.cmd_args)
+                .options(opts)
+                .positional(pos)
+                .style(style)
+                .run();
+            po::store(parsed, info.vm);
+            po::notify(info.vm);
+            info.cmd_args = po::collect_unrecognized(parsed.options, po::include_positional);
+        }
+        catch (std::exception& e) {
+            std::cout << e.what() << std::endl;
+            info.status = 1;
+            info.usage = true;
+        }
+    }
+
+    try {
+        return info.cmd.run(info);
+    }
+    catch (std::exception& e) {
+        std::cout << e.what() << std::endl;
+        return 1;
+    }
+}
+
+//
+// Top-level options and list of commands
+//
+
+static
+po::options_description
+CmdUsageOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] [Command options...]");
+
+    opts.add_options()
+        ("Help,?,h", optype_flag(), "Display command specific usage");
+
+    return opts;
+}
+
+static
+int
+CmdUsageRun(command_info& info)
+{
+    if (!info.cmd_name.empty()) {
+        std::cout << "unknown command: " << info.cmd_name << std::endl;
+        info.status = 1;
+    }
+
+    std::cout << info.cmd.opts() << "Commands:" << std::endl;
+
+    for (auto& cmd_i : info.cmds) {
+        if (!cmd_i.hidden) {
+            std::cout << "  " << std::left << std::setw(20)
+                << cmd_i.name << "  " << cmd_i.desc << std::endl;
+        }
+    }
+
+    return info.status;
+}
+
+command
+CmdUsage()
+{
+    command cmd;
+
+    cmd.name = "Help";
+    cmd.desc = "Print usage";
+    cmd.hidden = true;
+    cmd.opts = CmdUsageOpts;
+    cmd.run = CmdUsageRun;
+
+    return cmd;
+}
+
+//
+// -Version
+//
+
+static
+po::options_description
+CmdVersionOpts()
+{
+    po::options_description opts("IonicConfig.exe Version");
+
+    return opts;
+}
+
+static
+int
+CmdVersionRun(command_info& info)
+{
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    std::cout << "IonicConfig.exe version " << "TODO (from build)" << std::endl;
+
+    return 0;
+}
+
+command
+CmdVersion()
+{
+    command cmd;
+
+    cmd.name = "Version";
+    cmd.desc = "Print IonicConfig.exe version";
+    cmd.opts = CmdVersionOpts;
+    cmd.run = CmdVersionRun;
+
+    return cmd;
+}
+
+
+//
+// TODO: Cleanup, move to Stats.cpp
+//
+
 #include "stdio.h"
 #include <shlwapi.h>
 #include <winioctl.h>
@@ -11,527 +224,8 @@
 #include "ionic_types.h"
 #include "ionic_stats.h"
 
-void
-DumpDevStats( void *Stats);
-
-void
-DumpMgmtStats( void *Stats);
-
-void
-DumpPortStats( DWORD Port, void *Stats);
-
-void
-DumpLifStats( DWORD Lif, void *Stats);
-
 char *
 GetLifTypeName(ULONG type);
-
-void
-DumpPerfStats( void *Stats);
-
-int
-UninstallMiniport(void);
-
-int
-InstallMiniport(WCHAR *InfFile);
-
-int
-UpdateMiniport(WCHAR *InfFile);
-
-int 
-client( char *ServerAddr);
-
-int 
-server(void);
-
-void
-help()
-{
-
-    printf("IonicConfig -level <Trace Level> -component <Trace Component> -length <Buffer size in KB> -gettrace (Get curren trace buffer) -stats <dev | perf | port # | lif # | reset > -install <INF File> -uninstall -update <INF File> -rxbudget <value> \n");
-
-    return;
-}
-
-int 
-_cdecl
-wmain(int argc, WCHAR* argv[])
-{
-
-    HANDLE    hDevice = NULL;
-    HRESULT    hr = S_OK;
-    DWORD    dwIndex = 1;
-    DWORD    dwLevel = -1;
-    DWORD    dwComponent = -1;
-    DWORD    dwLength = -1;
-    DWORD    dwFlags = -1;
-    BOOLEAN bGetTrace = FALSE;
-    char   *pTraceBuffer = NULL;
-    DWORD    dwBytesReturned = 0;
-    TraceConfigCB stTrace;
-    BOOLEAN    bStats = FALSE;
-    BOOLEAN bDevStats = FALSE;
-    BOOLEAN bPerfStats = FALSE;
-    BOOLEAN bMgmtStats = FALSE;
-    BOOLEAN bPortStats = FALSE;
-    BOOLEAN bLifStats = FALSE;
-    BOOLEAN bResetStats = FALSE;
-    DWORD   dwPort = 0;
-    DWORD    dwLif = 0;
-    void   *pStatsBuffer = NULL;
-    DWORD    dwStatsBufferLen = 0;
-    DWORD   dwPortLif = 0;
-    BOOLEAN bInstall = FALSE;
-    WCHAR    wchInfFile[ 255];
-    BOOLEAN bUninstall = FALSE;
-    BOOLEAN bUpdate = FALSE;
-    BOOLEAN bRunClient = FALSE;
-    char    chServer[255];
-    BOOLEAN bRunServer = FALSE;
-    ULONG    rx_budget = 0;
-    BOOLEAN bSetRxBudget = FALSE;
-    BOOLEAN bSetTrace = FALSE;
-
-    if( argc == 1 )
-    {
-        help();
-        return 0;
-    }
-
-    while( dwIndex < (DWORD)argc )
-    {
-
-        if( wcscmp( argv[ dwIndex], L"-level") == 0)
-        {
-
-            if( !StrToIntExW( argv[ ++dwIndex],
-                             STIF_SUPPORT_HEX,
-                             (int *)&dwLevel))
-            {
-                printf("Failed to parse parameter %S\n", argv[ dwIndex]);
-                goto cleanup;
-            }
-
-            bSetTrace = TRUE;
-        }
-        else if( wcscmp( argv[dwIndex], L"-component" ) == 0 )
-        {
-
-            if( !StrToIntExW( argv[ ++dwIndex],
-                             STIF_SUPPORT_HEX,
-                             (int *)&dwComponent))
-            {
-                printf("Failed to parse parameter %S\n", argv[ dwIndex]);
-                goto cleanup;
-            }
-
-            bSetTrace = TRUE;
-        }
-        else if( wcscmp( argv[dwIndex], L"-length" ) == 0 )
-        {
-
-            if( !StrToIntExW( argv[ ++dwIndex],
-                             STIF_SUPPORT_HEX,
-                             (int *)&dwLength))
-            {
-                printf("Failed to parse parameter %S\n", argv[ dwIndex]);
-                goto cleanup;
-            }
-
-            if (dwLength > MAXIMUM_TRACE_BUFFER_SIZE) {
-                printf("Buffer length cannot not exceed %d\n", MAXIMUM_TRACE_BUFFER_SIZE);
-                goto cleanup;
-            }
-
-            bSetTrace = TRUE;
-        }
-        else if( wcscmp( argv[dwIndex], L"-flags" ) == 0 )
-        {
-
-            if( !StrToIntExW( argv[ ++dwIndex],
-                             STIF_SUPPORT_HEX,
-                             (int *)&dwFlags))
-            {
-                printf("Failed to parse parameter %S\n", argv[ dwIndex]);
-                goto cleanup;
-            }
-
-            bSetTrace = TRUE;
-        }
-        else if( wcscmp( argv[dwIndex], L"-gettrace" ) == 0 )
-        {
-            bGetTrace = TRUE;
-        }
-        else if( wcscmp( argv[dwIndex], L"-install" ) == 0 )
-        {
-
-            dwIndex++;
-
-            if (dwIndex >= (DWORD)argc) {
-                printf("Must indicate full inf file location\n");
-                goto cleanup;
-            }
-
-            bInstall = TRUE;
-            wcscpy_s( wchInfFile, 255, argv[ dwIndex]);
-        }
-        else if( wcscmp( argv[dwIndex], L"-uninstall" ) == 0 )
-        {
-            bUninstall = TRUE;
-        }
-        else if( wcscmp( argv[dwIndex], L"-update" ) == 0 )
-        {
-
-            dwIndex++;
-
-            if (dwIndex >= (DWORD)argc) {
-                printf("Must indicate full inf file location\n");
-                goto cleanup;
-            }
-
-            wcscpy_s( wchInfFile, 255, argv[ dwIndex]);
-            bUpdate = TRUE;
-        }
-        else if( wcscmp( argv[dwIndex], L"-stats" ) == 0 )
-        {
-
-            dwIndex++;
-
-            if (dwIndex >= (DWORD)argc) {
-                printf("Must indicate types of stats to retrieve\n");
-                goto cleanup;
-            }
-
-            if (wcscmp(argv[dwIndex], L"dev") == 0) {
-                bDevStats = TRUE;
-            }
-            else if (wcscmp(argv[dwIndex], L"perf") == 0) {
-                bPerfStats = TRUE;
-            }
-            else if (wcscmp(argv[dwIndex], L"reset") == 0) {
-                bResetStats = TRUE;
-            }
-            else if (wcscmp(argv[dwIndex], L"mngmnt") == 0) {
-                bMgmtStats = TRUE;
-            }
-            else if (wcscmp(argv[dwIndex], L"port") == 0) {
-
-                if( !StrToIntExW( argv[ ++dwIndex],
-                                 STIF_SUPPORT_HEX,
-                                 (int *)&dwPort))
-                {
-                    printf("Failed to parse parameter %S\n", argv[ dwIndex]);
-                    goto cleanup;
-                }
-
-                dwIndex++;
-
-                if( argc == dwIndex) {
-                    bPortStats = TRUE;
-                }
-                else if (wcscmp(argv[dwIndex], L"lif") == 0) {
-
-                    if( !StrToIntExW( argv[ ++dwIndex],
-                                     STIF_SUPPORT_HEX,
-                                     (int *)&dwLif))
-                    {
-                        printf("Failed to parse parameter %S\n", argv[ dwIndex]);
-                        goto cleanup;
-                    }
-
-                    bLifStats = TRUE;
-                }
-                else {
-                    help();
-                    goto cleanup;
-                }
-            }
-            else {
-                help();
-                goto cleanup;
-            }
-
-            bStats = TRUE;
-        }
-        else if( wcscmp( argv[dwIndex], L"-client" ) == 0 )
-        {
-
-            dwIndex++;
-
-            if (dwIndex >= (DWORD)argc) {
-                printf("Must indicate server address\n");
-                goto cleanup;
-            }
-
-            bRunClient = TRUE;
-            sprintf_s( chServer, 255, "%S", argv[ dwIndex]);
-        }
-        else if( wcscmp( argv[dwIndex], L"-server" ) == 0 )
-        {
-
-            bRunServer = TRUE;
-        }
-        else if( wcscmp( argv[ dwIndex], L"-rxbudget") == 0)
-        {
-
-            if( !StrToIntExW( argv[ ++dwIndex],
-                             STIF_SUPPORT_HEX,
-                             (int *)&rx_budget))
-            {
-                printf("Failed to parse parameter %S\n", argv[ dwIndex]);
-                goto cleanup;
-            }
-
-            bSetRxBudget = TRUE;
-        }
-        else
-        {
-            help();
-            goto cleanup;
-        }
-
-        dwIndex++;
-    }
-
-    if (bInstall) {    
-        InstallMiniport(wchInfFile);
-        goto cleanup;
-    }
-    else if (bUninstall) {    
-        UninstallMiniport();
-        goto cleanup;
-    }
-    else if (bUpdate) {
-        UpdateMiniport( wchInfFile);
-        goto cleanup;
-    }
-    else if (bRunClient) {
-        printf("Running client with server %s\n", chServer);
-        client( chServer);
-        goto cleanup;
-    }
-    else if (bRunServer) {
-        printf("Running server\n");
-        server();
-        goto cleanup;
-    }
-
-    hDevice = CreateFile( IONIC_LINKNAME_STRING_USER,
-                          GENERIC_READ | GENERIC_WRITE,
-                          0,
-                          NULL,
-                          OPEN_EXISTING,
-                          0,
-                          NULL);
-
-    if (hDevice == INVALID_HANDLE_VALUE) {
-        printf("IonicConfig Failed to open adapter Error %d\n", GetLastError());
-        hDevice = NULL;
-        goto cleanup;
-    }
-
-    if (bStats) {
-
-        if (bResetStats) {
-
-            if( !DeviceIoControl( hDevice,
-                                  IOCTL_IONIC_RESET_STATS,
-                                  NULL,
-                                  0,
-                                  NULL,
-                                  0,
-                                  &dwBytesReturned,
-                                  NULL))
-            {
-                printf("Failed to call IOCTL_IONIC_RESET_STATS Error %d", GetLastError());
-                goto cleanup;
-            }
-
-            printf("Successfully reset stats\n");
-
-            goto cleanup;
-        }
-
-        dwStatsBufferLen = (10 * 1024 * 1024);
-
-        pStatsBuffer = malloc( dwStatsBufferLen);
-
-        if (pStatsBuffer == NULL) {
-            printf("Failed to allocate stats buffer\n");
-            goto cleanup;
-        }
-
-        if (bDevStats) {
-
-            if( !DeviceIoControl( hDevice,
-                                  IOCTL_IONIC_GET_DEV_STATS,
-                                  NULL,
-                                  0,
-                                  pStatsBuffer,
-                                  dwStatsBufferLen,
-                                  &dwBytesReturned,
-                                  NULL))
-            {
-                printf("Failed to call IOCTL_IONIC_GET_DEV_STATS Error %d", GetLastError());
-                goto cleanup;
-            }
-
-            DumpDevStats( pStatsBuffer);
-        }
-        else if (bPerfStats) {
-
-            if( !DeviceIoControl( hDevice,
-                                  IOCTL_IONIC_GET_PERF_STATS,
-                                  NULL,
-                                  0,
-                                  pStatsBuffer,
-                                  dwStatsBufferLen,
-                                  &dwBytesReturned,
-                                  NULL))
-            {
-                printf("Failed to call IOCTL_IONIC_GET_PERF_STATS Error %d", GetLastError());
-                goto cleanup;
-            }
-
-            DumpPerfStats( pStatsBuffer);
-        }
-        else if (bMgmtStats) {
-
-            if( !DeviceIoControl( hDevice,
-                                  IOCTL_IONIC_GET_MGMT_STATS,
-                                  NULL,
-                                  0,
-                                  pStatsBuffer,
-                                  0x1000,
-                                  &dwBytesReturned,
-                                  NULL))
-            {
-                printf("Failed to call IOCTL_IONIC_GET_MGMT_STATS Error %d", GetLastError());
-                goto cleanup;
-            }
-
-            DumpMgmtStats( pStatsBuffer);
-        }
-        else if (bPortStats) {
-
-            if( !DeviceIoControl( hDevice,
-                                  IOCTL_IONIC_GET_PORT_STATS,
-                                  &dwPort,
-                                  sizeof( DWORD),
-                                  pStatsBuffer,
-                                  0x1000,
-                                  &dwBytesReturned,
-                                  NULL))
-            {
-                printf("Failed to call IOCTL_IONIC_GET_PORT_STATS Error %d", GetLastError());
-                goto cleanup;
-            }
-
-            DumpPortStats( dwPort, pStatsBuffer);
-        }
-        else if( bLifStats) {
-
-            dwPortLif = (DWORD)((dwPort << 16) | (USHORT)dwLif);
-
-            if( !DeviceIoControl( hDevice,
-                                  IOCTL_IONIC_GET_LIF_STATS,
-                                  &dwPortLif,
-                                  sizeof( DWORD),
-                                  pStatsBuffer,
-                                  0x1000,
-                                  &dwBytesReturned,
-                                  NULL))
-            {
-                printf("Failed to call IOCTL_IONIC_GET_LIF_STATS Error %d", GetLastError());
-                goto cleanup;
-            }
-
-            DumpLifStats( dwLif, pStatsBuffer);
-        }
-
-        goto cleanup;
-    }
-
-    if (bGetTrace) {
-
-        pTraceBuffer = (char *)malloc( MAXIMUM_TRACE_BUFFER_SIZE * 1024);
-
-        if (pTraceBuffer == NULL) {
-            printf("Failed to allocate trace buffer\n");
-            goto cleanup;
-        }
-        
-        if( !DeviceIoControl( hDevice,
-                              IOCTL_IONIC_GET_TRACE,
-                              NULL,
-                              0,
-                              pTraceBuffer,
-                              (10 * 1024 * 1024),
-                              &dwBytesReturned,
-                              NULL ) )
-        {
-            printf("Failed to call IOCTL_IONIC_GET_TRACE Error %d", GetLastError());
-            goto cleanup;
-        }
-
-        printf(pTraceBuffer);
-
-        goto cleanup;
-    }
-
-    if( bSetTrace) {
-
-        stTrace.Component = dwComponent;
-        stTrace.Level = dwLevel;
-        stTrace.TraceBufferLength = dwLength;
-        stTrace.TraceFlags = dwFlags;
-        
-        if( !DeviceIoControl( hDevice,
-                                IOCTL_IONIC_CONFIGURE_TRACE,
-                                &stTrace,
-                                sizeof( TraceConfigCB),
-                                NULL,
-                                0,
-                                &dwBytesReturned,
-                                NULL ) )
-        {
-            printf("Failed to call IOCTL_IONIC_CONFIGURE_TRACE Error %d", GetLastError());
-            goto cleanup;
-        }
-
-        printf("Successfully configured trace\n");
-    }
-
-    if (bSetRxBudget) {
-    
-        if( !DeviceIoControl( hDevice,
-                                IOCTL_IONIC_SET_RX_BUDGET,
-                                &rx_budget,
-                                sizeof( ULONG),
-                                NULL,
-                                0,
-                                &dwBytesReturned,
-                                NULL ) )
-        {
-            printf("Failed to call IOCTL_IONIC_SET_RX_BUDGET Error %d", GetLastError());
-            goto cleanup;
-        }
-
-        printf("Successfully set rx budget to %d\n", rx_budget);
-    }
-
-cleanup:
-
-    if (hDevice != NULL){
-        CloseHandle( hDevice);
-    }
-
-    if (pTraceBuffer != NULL) {
-        free( pTraceBuffer);
-    }
-
-    return 0;
-}
 
 void
 DumpDevStats(void *Stats)
@@ -906,4 +600,725 @@ DumpPerfStats(void *Stats)
     }
 
     return;
+}
+
+void
+DumpRegKeys(void *KeyInfo, ULONG Size)
+{
+
+    struct _REG_KEY_INFO_HDR *key_info = (struct _REG_KEY_INFO_HDR *)KeyInfo;
+	struct _REG_KEY_ENTRY *entry = NULL;
+	ULONG processed_len = 0;
+	ULONG reg_index = 0;
+#define KEY_NAME_LEN		15
+	WCHAR key_name[KEY_NAME_LEN];
+	ULONG pad = 0;
+
+	while (processed_len < Size)
+	{
+
+		if (key_info->name[0] == 0) {
+			break;
+		}
+
+		printf("Adapter: %S\n", key_info->name);
+		printf("Location: %S\n", key_info->device_location);
+
+		printf("\tRegistry Key\t\t\t\tValue\t\tDefault\t\tMin\t\tMax\n\n");
+		entry = (struct _REG_KEY_ENTRY *)((char *)key_info + sizeof( struct _REG_KEY_INFO_HDR));
+		for (reg_index = 0; reg_index < key_info->entry_count; reg_index++) {
+
+			wcscpy_s(key_name, 50, (WCHAR *)((char *)entry + entry->key_name_offset));
+			/* pad with spaces so all looks the same */
+			for (pad = (ULONG)wcslen(key_name); pad < KEY_NAME_LEN; pad++) {
+				key_name[ pad] = L' ';
+			}
+			key_name[ KEY_NAME_LEN - 1] = NULL;
+
+			printf("\t%S\t\t\t\t%d\t\t%d\t\t%d\t\t%d\n", 
+						key_name,
+						entry->current_value,
+						entry->default_value,
+						entry->min_value,
+						entry->max_value);
+
+			entry = (struct _REG_KEY_ENTRY *)((char *)entry + entry->next_entry);
+		}
+
+		processed_len += key_info->next_entry;
+		key_info = (struct _REG_KEY_INFO_HDR *)((char *)key_info + key_info->next_entry);
+		printf("\n");
+	}
+
+    return;
+}
+
+//
+// TODO: move to Ioctl.cpp or something... after integration
+//
+
+BOOL
+DoIoctl(DWORD dwIoControlCode,
+        LPVOID lpInBuffer,
+        DWORD nInBufferSize,
+        LPVOID lpOutBuffer,
+        DWORD nOutBufferSize)
+{
+    HANDLE hDevice = NULL;
+    DWORD nBytesReturned = 0;
+    BOOL bResult = FALSE;
+
+    hDevice = CreateFile(IONIC_LINKNAME_STRING_USER,
+                         GENERIC_READ | GENERIC_WRITE,
+                         0,
+                         NULL,
+                         OPEN_EXISTING,
+                         0,
+                         NULL);
+
+    if (hDevice == INVALID_HANDLE_VALUE) {
+        std::cout << "IonicConfig Failed to open adapter Error " << GetLastError() << std::endl;
+        return FALSE;
+    }
+
+    bResult = DeviceIoControl(hDevice,
+                              dwIoControlCode,
+                              lpInBuffer,
+                              nInBufferSize,
+                              lpOutBuffer,
+                              nOutBufferSize,
+                              &nBytesReturned,
+                              NULL);
+
+    if (!bResult) {
+        std::cout << "Ioctl Failed Error " << GetLastError() << std::endl;
+    }
+
+    CloseHandle( hDevice);
+
+    return bResult;
+}
+
+//
+// TODO: move to Trace.cpp after integration
+//
+
+//
+// -SetTrace
+//
+
+static
+po::options_description
+CmdSetTraceOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] SetTrace [options ...]");
+
+    opts.add_options()
+        ("Level,l", optype_long(), "Set debug level")
+        ("Flags,f", optype_long(), "Set degut flags")
+        ("Component,c", optype_long(), "Set component mask")
+        ("Length,s", optype_long(), "Set trace buffer length in KB");
+
+    return opts;
+}
+
+static
+int
+CmdSetTraceRun(command_info& info)
+{
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    TraceConfigCB stTrace;
+    stTrace.Level = -1;
+    stTrace.TraceFlags = -1;
+    stTrace.Component = -1;
+    stTrace.TraceBufferLength = -1;
+
+    if (info.vm.count("Level")) {
+        stTrace.Level = opval_long(info.vm, "Level");
+    }
+
+    if (info.vm.count("Flags")) {
+        stTrace.TraceFlags = opval_long(info.vm, "Flags");
+    }
+
+    if (info.vm.count("Component")) {
+        stTrace.Component = opval_long(info.vm, "Component");
+    }
+
+    if (info.vm.count("Length")) {
+        stTrace.TraceBufferLength = opval_long(info.vm, "Length");
+        if (stTrace.TraceBufferLength < 0 ||
+            stTrace.TraceBufferLength > MAXIMUM_TRACE_BUFFER_SIZE) {
+
+            std::cout << "buffer length not in range 0 to "
+                << MAXIMUM_TRACE_BUFFER_SIZE << std::endl;
+            return 1;
+        }
+    }
+
+    return DoIoctl(IOCTL_IONIC_CONFIGURE_TRACE, &stTrace, sizeof(stTrace), NULL, 0) != TRUE;
+}
+
+command
+CmdSetTrace()
+{
+    command cmd;
+
+    cmd.name = "SetTrace";
+    cmd.desc = "Set debug trace parameters";
+    cmd.hidden = true;
+
+    cmd.opts = CmdSetTraceOpts;
+    cmd.run = CmdSetTraceRun;
+
+    return cmd;
+}
+
+//
+// -GetTrace
+//
+
+static
+po::options_description
+CmdGetTraceOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] GetTrace");
+
+    return opts;
+}
+
+static
+int
+CmdGetTraceRun(command_info& info)
+{
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    DWORD Size = MAXIMUM_TRACE_BUFFER_SIZE * 1024;
+    char *pTraceBuffer = (char *)malloc(Size + 1);
+
+    memset(pTraceBuffer, 0, Size + 1);
+
+    if (!DoIoctl(IOCTL_IONIC_GET_TRACE, NULL, 0, pTraceBuffer, Size)) {
+        info.status = 1;
+        goto out;
+    }
+
+    std::cout << pTraceBuffer << std::endl;
+
+out:
+    free(pTraceBuffer);
+    return info.status;
+}
+
+command
+CmdGetTrace()
+{
+    command cmd;
+
+    cmd.name = "GetTrace";
+    cmd.desc = "Get debug trace buffer content";
+    cmd.hidden = true;
+
+    cmd.opts = CmdGetTraceOpts;
+    cmd.run = CmdGetTraceRun;
+
+    return cmd;
+}
+
+//
+// TODO: move to Stats.cpp after integration
+//
+
+//
+// -ResetStats
+//
+
+static
+po::options_description
+CmdResetStatsOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] ResetStats");
+
+    return opts;
+}
+
+static
+int
+CmdResetStatsRun(command_info& info)
+{
+    int status = 0;
+
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    return DoIoctl(IOCTL_IONIC_RESET_STATS, NULL, 0, NULL, 0) != TRUE;
+}
+
+command
+CmdResetStats()
+{
+    command cmd;
+
+    cmd.name = "ResetStats";
+    cmd.desc = "Reset counters";
+    cmd.hidden = true;
+
+    cmd.opts = CmdResetStatsOpts;
+    cmd.run = CmdResetStatsRun;
+
+    return cmd;
+}
+
+//
+// -PortStats
+//
+
+static
+po::options_description
+CmdPortStatsOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] PortStats [-p] <port>");
+
+    opts.add_options()
+        ("Port,p", optype_long()->required(), "Port number");
+
+    return opts;
+}
+
+static
+po::positional_options_description
+CmdPortStatsPos()
+{
+    po::positional_options_description pos;
+
+    pos.add("Port", 1);
+
+    return pos;
+}
+
+static
+int
+CmdPortStatsRun(command_info& info)
+{
+    int status = 0;
+
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    DWORD dwPort = opval_long(info.vm, "Port");
+
+    DWORD Size = 10 * 1024 * 1024;
+    char *pStatsBuffer = (char *)malloc(Size);
+
+    if (!DoIoctl(IOCTL_IONIC_GET_PORT_STATS, &dwPort, sizeof(dwPort), pStatsBuffer, Size)) {
+        status = 1;
+        goto out;
+    }
+
+    // Dump* use printf
+    std::cout.flush();
+
+    DumpPortStats( dwPort, pStatsBuffer);
+
+out:
+    free(pStatsBuffer);
+    return status;
+}
+
+command
+CmdPortStats()
+{
+    command cmd;
+
+    cmd.name = "PortStats";
+    cmd.desc = "Read port mac counters from device";
+
+    cmd.opts = CmdPortStatsOpts;
+    cmd.pos = CmdPortStatsPos;
+    cmd.run = CmdPortStatsRun;
+
+    return cmd;
+}
+
+//
+// -LifStats
+//
+
+static
+po::options_description
+CmdLifStatsOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] LifStats [-p] <port> [-l] <lif>");
+
+    opts.add_options()
+        ("Port,p", optype_long()->required(), "Port number")
+        ("Lif,l", optype_long()->required(), "Lif index");
+
+    return opts;
+}
+
+static
+po::positional_options_description
+CmdLifStatsPos()
+{
+    po::positional_options_description pos;
+
+    pos.add("Port", 1);
+    pos.add("Lif", 2);
+
+    return pos;
+}
+
+static
+int
+CmdLifStatsRun(command_info& info)
+{
+    int status = 0;
+
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    DWORD dwPort = opval_long(info.vm, "Port");
+    DWORD dwLif = opval_long(info.vm, "Lif");
+    DWORD dwPortLif = (dwPort << 16) | dwLif;
+
+    DWORD Size = 10 * 1024 * 1024;
+    char *pStatsBuffer = (char *)malloc(Size);
+
+    if (!DoIoctl(IOCTL_IONIC_GET_LIF_STATS, &dwPortLif, sizeof(dwPortLif), pStatsBuffer, Size)) {
+        status = 1;
+        goto out;
+    }
+
+    // Dump* use printf
+    std::cout.flush();
+
+    DumpLifStats(dwLif, pStatsBuffer);
+
+out:
+    free(pStatsBuffer);
+    return status;
+}
+
+command
+CmdLifStats()
+{
+    command cmd;
+
+    cmd.name = "LifStats";
+    cmd.desc = "Read interface counters from device";
+
+    cmd.opts = CmdLifStatsOpts;
+    cmd.pos = CmdLifStatsPos;
+    cmd.run = CmdLifStatsRun;
+
+    return cmd;
+}
+
+//
+// -MgmtStats
+//
+
+static
+po::options_description
+CmdMgmtStatsOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] MgmtStats");
+
+    return opts;
+}
+
+static
+int
+CmdMgmtStatsRun(command_info& info)
+{
+    int status = 0;
+
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    DWORD Size = 10 * 1024 * 1024;
+    char *pStatsBuffer = (char *)malloc(Size);
+
+    if (!DoIoctl(IOCTL_IONIC_GET_LIF_STATS, NULL, 0, pStatsBuffer, Size)) {
+        status = 1;
+        goto out;
+    }
+
+    // Dump* use printf
+    std::cout.flush();
+
+    DumpMgmtStats(pStatsBuffer);
+
+out:
+    free(pStatsBuffer);
+    return status;
+}
+
+command
+CmdMgmtStats()
+{
+    command cmd;
+
+    cmd.name = "MgmtStats";
+    cmd.desc = "Read management interface counters";
+    cmd.hidden = true;
+
+    cmd.opts = CmdMgmtStatsOpts;
+    cmd.run = CmdMgmtStatsRun;
+
+    return cmd;
+}
+
+//
+// -DevStats
+//
+
+static
+po::options_description
+CmdDevStatsOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] DevStats");
+
+    return opts;
+}
+
+static
+int
+CmdDevStatsRun(command_info& info)
+{
+    int status = 0;
+
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    DWORD Size = 10 * 1024 * 1024;
+    char *pStatsBuffer = (char *)malloc(Size);
+
+    if (!DoIoctl(IOCTL_IONIC_GET_LIF_STATS, NULL, 0, pStatsBuffer, Size)) {
+        status = 1;
+        goto out;
+    }
+
+    // Dump* use printf
+    std::cout.flush();
+
+    DumpDevStats(pStatsBuffer);
+
+out:
+    free(pStatsBuffer);
+    return status;
+}
+
+command
+CmdDevStats()
+{
+    command cmd;
+
+    cmd.name = "DevStats";
+    cmd.desc = "Read device counters";
+    cmd.hidden = true;
+
+    cmd.opts = CmdDevStatsOpts;
+    cmd.run = CmdDevStatsRun;
+
+    return cmd;
+}
+
+//
+// -PerfStats
+//
+
+static
+po::options_description
+CmdPerfStatsOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] PerfStats");
+
+    return opts;
+}
+
+static
+int
+CmdPerfStatsRun(command_info& info)
+{
+    int status = 0;
+
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    DWORD Size = 10 * 1024 * 1024;
+    char *pStatsBuffer = (char *)malloc(Size);
+
+    if (!DoIoctl(IOCTL_IONIC_GET_LIF_STATS, NULL, 0, pStatsBuffer, Size)) {
+        status = 1;
+        goto out;
+    }
+
+    // Dump* use printf
+    std::cout.flush();
+
+    DumpPerfStats(pStatsBuffer);
+
+out:
+    free(pStatsBuffer);
+    return status;
+}
+
+command
+CmdPerfStats()
+{
+    command cmd;
+
+    cmd.name = "PerfStats";
+    cmd.desc = "Read performance counters";
+    cmd.hidden = true;
+
+    cmd.opts = CmdPerfStatsOpts;
+    cmd.run = CmdPerfStatsRun;
+
+    return cmd;
+}
+
+//
+// TODO: move to Registry.cpp after integration
+//
+
+//
+// -RxBudget
+//
+
+static
+po::options_description
+CmdRxBudgetOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] RxBudget [-r] <rxbudget>");
+
+    opts.add_options()
+        ("RxBudget,r", optype_long()->required(), "Receive polling budget");
+
+    return opts;
+}
+
+static
+po::positional_options_description
+CmdRxBudgetPos()
+{
+    po::positional_options_description pos;
+
+    pos.add("RxBudget", 1);
+
+    return pos;
+}
+
+static
+int
+CmdRxBudgetRun(command_info& info)
+{
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    DWORD dwRxBudget = opval_long(info.vm, "RxBudget");
+
+    return DoIoctl(IOCTL_IONIC_SET_RX_BUDGET, &dwRxBudget, sizeof(dwRxBudget), NULL, 0) != TRUE;
+}
+
+command
+CmdRxBudget()
+{
+    command cmd;
+
+    cmd.name = "RxBudget";
+    cmd.desc = "Set receive polling budget";
+
+    cmd.opts = CmdRxBudgetOpts;
+    cmd.pos = CmdRxBudgetPos;
+    cmd.run = CmdRxBudgetRun;
+
+    return cmd;
+}
+
+//
+// -RegKeys
+//
+
+static
+po::options_description
+CmdRegKeysOpts()
+{
+    po::options_description opts("IonicConfig.exe [-h] RegKeys");
+
+    return opts;
+}
+
+static
+int
+CmdRegKeysRun(command_info& info)
+{
+    int status = 0;
+
+    if (info.usage) {
+        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        return info.status;
+    }
+
+    DWORD Size = 10 * 1024 * 1024;
+    void *pBuffer = malloc(Size);
+	if (pBuffer == NULL) {
+		status = 1;
+		goto out;
+	}
+
+	memset( pBuffer, 0x00, Size);
+
+    if (!DoIoctl(IOCTL_IONIC_GET_REG_KEY_INFO, NULL, 0, pBuffer, Size)) {
+        status = 1;
+        goto out;
+    }
+
+    // Dump* use printf
+    std::cout.flush();
+
+    DumpRegKeys( pBuffer, Size);
+
+out:
+	if( pBuffer != NULL) {
+	    free(pBuffer);
+	}
+    return status;
+}
+
+command
+CmdRegKeys()
+{
+    command cmd;
+
+    cmd.name = "RegKeys";
+    cmd.desc = "List registry keys accessible in Advanced Properties";
+
+    cmd.opts = CmdRegKeysOpts;
+    cmd.run = CmdRegKeysRun;
+
+    return cmd;
 }

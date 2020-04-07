@@ -1,5 +1,6 @@
 
 #include "common.h"
+#include "registry.h"
 
 ULONG
 ExceptionFilter(IN ULONG Code, IN PEXCEPTION_POINTERS ExceptPtrs)
@@ -41,30 +42,7 @@ ReadRegParameters(struct ionic *Adapter)
     NDIS_STRING uniSriovPreferredKeyword = NDIS_STRING_CONST("*SriovPreferred"),
                 uniRssOrVmqPreferredKeyword =
                     NDIS_STRING_CONST("*RssOrVmqPreference"),
-                uniSRIOVKeyword = NDIS_STRING_CONST("*SRIOV"),
-                uniVMQKeyword = NDIS_STRING_CONST("*VMQ"),
-                uniRSSKeyword = NDIS_STRING_CONST("*RSS"),
-                uniVlanId = NDIS_STRING_CONST("VlanID"),
-                uniVlanPriEnabled = NDIS_STRING_CONST("*PriorityVLANTag"),
-                uniJumbo = NDIS_STRING_CONST("*JumboPacket"),
-                uniFlowControl = NDIS_STRING_CONST("*FlowControl"),
-                uniSpeedDuplex = NDIS_STRING_CONST("*SpeedDuplex"),
-                uniLSOV1 = NDIS_STRING_CONST("*LsoV1IPv4"),
-                uniLSOV2Ipv4 = NDIS_STRING_CONST("*LsoV2IPv4"),
-                uniLSOV2Ipv6 = NDIS_STRING_CONST("*LsoV2IPv6"),
-                uniIPChecksum = NDIS_STRING_CONST("*IPChecksumOffloadIPv4"),
-                uniTCPChecksumIPv4 =
-                    NDIS_STRING_CONST("*TCPChecksumOffloadIPv4"),
-                uniTCPChecksumIPv6 =
-                    NDIS_STRING_CONST("*TCPChecksumOffloadIPv6"),
-                uniUDPChecksumIPv4 =
-                    NDIS_STRING_CONST("*UDPChecksumOffloadIPv4"),
-                uniUDPChecksumIPv6 =
-                    NDIS_STRING_CONST("*UDPChecksumOffloadIPv6"),
-                uniRxPoolSize =
-                    NDIS_STRING_CONST("RxPoolSize"),
-                uniTxFlushMode =
-                    NDIS_STRING_CONST("TxFlushMode");
+				uniKeyWord;
     void *pMacAddr = NULL;
     UINT ulMacAddrLen = 0;
 
@@ -117,26 +95,21 @@ ReadRegParameters(struct ionic *Adapter)
         }
     }
 
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniVlanPriEnabled,
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_PRIVLAN].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
                           NdisParameterInteger);
+	
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+		if( pParameters->ParameterData.IntegerData != 0) {
+			//
+			// If 1 is enabled, they both need to be enabled
+			//
+			SetFlag(Adapter->ConfigStatus,
+					(IONIC_PRIORITY_ENABLED | IONIC_VLAN_ENABLED));
+		}
 
-    if (ntStatus == NDIS_STATUS_SUCCESS &&
-        pParameters->ParameterData.IntegerData != 0) {
-
-        //
-        // If 1 is enabled, they both need to be enabled
-        //
-
-        // if (pParameters->ParameterData.IntegerData == 1) {
-        //	SetFlag( Adapter->ConfigStatus, IONIC_PRIORITY_ENABLED);
-        //}
-        // else if (pParameters->ParameterData.IntegerData == 2) {
-        //	SetFlag( Adapter->ConfigStatus, IONIC_VLAN_ENABLED);
-        //}
-        // else if (pParameters->ParameterData.IntegerData == 3) {
-        SetFlag(Adapter->ConfigStatus,
-                (IONIC_PRIORITY_ENABLED | IONIC_VLAN_ENABLED));
-        //}
+		ionic_registry[ IONIC_REG_PRIVLAN].current_value = pParameters->ParameterData.IntegerData;
     }
 
     DbgTrace((
@@ -147,232 +120,282 @@ ReadRegParameters(struct ionic *Adapter)
                                                                      : "NO"));
 
     if (BooleanFlagOn(Adapter->ConfigStatus, IONIC_VLAN_ENABLED)) {
-        NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniVlanId,
+
+		NdisInitUnicodeString( &uniKeyWord,
+							   ionic_registry[ IONIC_REG_VLANID].name);
+        NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
                               NdisParameterInteger);
 
-        if (ntStatus == NDIS_STATUS_SUCCESS &&
-            pParameters->ParameterData.IntegerData <= ETH_VLAN_ID_MAX) {
-            Adapter->vlan_id =
-                (unsigned short)pParameters->ParameterData.IntegerData;
+        if (ntStatus == NDIS_STATUS_SUCCESS) {
+			if( pParameters->ParameterData.IntegerData <= ETH_VLAN_ID_MAX) {
+				Adapter->vlan_id =
+					(unsigned short)pParameters->ParameterData.IntegerData;
 
-            DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-                      "%s Have VLan tag %d\n", __FUNCTION__, Adapter->vlan_id));
+				DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+						  "%s Have VLan tag %d\n", __FUNCTION__, Adapter->vlan_id));
+			}
+
+			ionic_registry[ IONIC_REG_VLANID].current_value = pParameters->ParameterData.IntegerData;
         }
     }
 
-    Adapter->rx_pool_factor = IONIC_DEFAULT_RX_POOL_FACTOR;
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniRxPoolSize,
-                          NdisParameterInteger);
-
-    if (ntStatus == NDIS_STATUS_SUCCESS &&
-        pParameters->ParameterData.IntegerData != 0) {
-        Adapter->rx_pool_factor = pParameters->ParameterData.IntegerData;
-        if (Adapter->rx_pool_factor > IONIC_MAX_RX_POOL_FACTOR) {
-            Adapter->rx_pool_factor = IONIC_DEFAULT_RX_POOL_FACTOR;
-        }
-    }
-
-    Adapter->flow_control = IONIC_FC_TXRX_ENABLED;
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniFlowControl,
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_RXPOOL].name);
+    
+	Adapter->rx_pool_factor = IONIC_DEFAULT_RX_POOL_FACTOR;
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
                           NdisParameterInteger);
 
     if (ntStatus == NDIS_STATUS_SUCCESS) {
-        Adapter->flow_control = pParameters->ParameterData.IntegerData;
-        if (Adapter->flow_control > IONIC_FC_TXRX_ENABLED) {
-            Adapter->flow_control = IONIC_FC_TXRX_ENABLED;
-        }
+		if( pParameters->ParameterData.IntegerData != 0) {
+			Adapter->rx_pool_factor = pParameters->ParameterData.IntegerData;
+			if (Adapter->rx_pool_factor > IONIC_MAX_RX_POOL_FACTOR) {
+				Adapter->rx_pool_factor = IONIC_DEFAULT_RX_POOL_FACTOR;
+			}
+		}
+		ionic_registry[ IONIC_REG_RXPOOL].current_value = pParameters->ParameterData.IntegerData;
     }
 
-    Adapter->config_port_speed = 0; // auto negotiate if not specified
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniSpeedDuplex,
-                          NdisParameterInteger);
-
-    if (ntStatus == NDIS_STATUS_SUCCESS) {
-        Adapter->config_port_speed = pParameters->ParameterData.IntegerData;
-
-        // Convert required NDIS SpeedDuplex enums 0..10 to Mbps (that we support)
-        // https://docs.microsoft.com/en-us/windows-hardware/drivers/network/enumeration-keywords
-        if (Adapter->config_port_speed == 7) {
-            Adapter->config_port_speed = 10000;
-        } else if (Adapter->config_port_speed == 9) {
-            Adapter->config_port_speed = 40000;
-        } else if (Adapter->config_port_speed == 10) {
-            Adapter->config_port_speed = 100000;
-        }
-
-        if (Adapter->config_port_speed != IONIC_SPEED_1G &&
-            Adapter->config_port_speed != IONIC_SPEED_10G &&
-            Adapter->config_port_speed != IONIC_SPEED_25G &&
-            Adapter->config_port_speed != IONIC_SPEED_40G &&
-            Adapter->config_port_speed != IONIC_SPEED_50G &&
-            Adapter->config_port_speed != IONIC_SPEED_100G) {
-
-            DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
-                      "%s Invalid port speed %d Mbps\n",
-                      __FUNCTION__, Adapter->config_port_speed));
-            Adapter->config_port_speed = 0;
-        }
-    }
-
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniTxFlushMode,
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_TXMODE].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
                           NdisParameterInteger);
 
     SetFlag( Adapter->ConfigStatus, IONIC_TX_MODE_DPC);
 
-    if (ntStatus == NDIS_STATUS_SUCCESS &&
-        pParameters->ParameterData.IntegerData != 0) {
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+		if(pParameters->ParameterData.IntegerData != 0) {
 
-        if (pParameters->ParameterData.IntegerData == 2) {
-            ClearFlag( Adapter->ConfigStatus, IONIC_TX_MODE_DPC);
-            SetFlag( Adapter->ConfigStatus, IONIC_TX_MODE_SEND);
-        }
-        else if( pParameters->ParameterData.IntegerData == 3) {
-            SetFlag( Adapter->ConfigStatus, IONIC_TX_MODE_SEND);
-        }
+			if (pParameters->ParameterData.IntegerData == 2) {
+				ClearFlag( Adapter->ConfigStatus, IONIC_TX_MODE_DPC);
+				SetFlag( Adapter->ConfigStatus, IONIC_TX_MODE_SEND);
+			}
+			else if( pParameters->ParameterData.IntegerData == 3) {
+				SetFlag( Adapter->ConfigStatus, IONIC_TX_MODE_SEND);
+			}
+		}
+		ionic_registry[ IONIC_REG_TXMODE].current_value = pParameters->ParameterData.IntegerData;
     }
 
-    Adapter->frame_size = IONIC_FRAME_DEFAULT;
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniJumbo,
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_JUMBO].name);
+    Adapter->frame_size = IONIC_DEFAULT_MTU;
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
                           NdisParameterInteger);
 
     if (ntStatus == NDIS_STATUS_SUCCESS) {
 
         Adapter->frame_size = pParameters->ParameterData.IntegerData;
 
-        if( Adapter->frame_size < IONIC_FRAME_MIN ||
-            Adapter->frame_size > IONIC_FRAME_MAX) {
-            Adapter->frame_size = IONIC_FRAME_DEFAULT;
+        if( Adapter->frame_size < IONIC_MIN_MTU ||
+            Adapter->frame_size > IONIC_MAX_MTU) {
+            Adapter->frame_size = IONIC_DEFAULT_MTU;
         }
+		ionic_registry[ IONIC_REG_JUMBO].current_value = pParameters->ParameterData.IntegerData;
 
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-                  "%s Frame %\n", __FUNCTION__,
+                  "%s Frame %d\n", __FUNCTION__,
                   Adapter->frame_size));
     }
 
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_TXBUFFERS].name);
+    Adapter->ntx_buffers = IONIC_DEF_TXRX_DESC;
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
+                          NdisParameterInteger);
+
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+
+        Adapter->ntx_buffers = pParameters->ParameterData.IntegerData;
+
+        if( Adapter->ntx_buffers < IONIC_MIN_TXRX_DESC ||
+            Adapter->ntx_buffers > IONIC_MAX_TX_DESC) {
+            Adapter->ntx_buffers = IONIC_DEF_TXRX_DESC;
+        }
+		ionic_registry[ IONIC_REG_TXBUFFERS].current_value = pParameters->ParameterData.IntegerData;
+
+        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+                  "%s Number TX Buffers %d\n", __FUNCTION__,
+                  Adapter->ntx_buffers));
+    }
+
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_RXBUFFERS].name);
+    Adapter->nrx_buffers = IONIC_DEF_TXRX_DESC;
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
+                          NdisParameterInteger);
+
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+
+        Adapter->nrx_buffers = pParameters->ParameterData.IntegerData;
+
+        if( Adapter->nrx_buffers < IONIC_MIN_TXRX_DESC ||
+            Adapter->nrx_buffers > IONIC_MAX_RX_DESC) {
+            Adapter->nrx_buffers = IONIC_DEF_TXRX_DESC;
+        }
+		ionic_registry[ IONIC_REG_RXBUFFERS].current_value = pParameters->ParameterData.IntegerData;
+
+        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+                  "%s Number RX Buffers %d\n", __FUNCTION__,
+                  Adapter->nrx_buffers));
+    }
+
     // xsum and LSO offload
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_LSOV1].name);
     Adapter->lsov1_state = NDIS_OFFLOAD_PARAMETERS_LSOV1_DISABLED;
 
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniLSOV1,
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
                           NdisParameterInteger);
 
-    if (ntStatus == NDIS_STATUS_SUCCESS &&
-        pParameters->ParameterData.IntegerData == 1) {
-        Adapter->lsov1_state = NDIS_OFFLOAD_PARAMETERS_LSOV1_ENABLED;
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+		if(pParameters->ParameterData.IntegerData == 1) {
+			Adapter->lsov1_state = NDIS_OFFLOAD_PARAMETERS_LSOV1_ENABLED;
+		}
+		ionic_registry[ IONIC_REG_LSOV1].current_value = pParameters->ParameterData.IntegerData;
     }
 
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_LSOV2V4].name);
     Adapter->lsov2ipv4_state = NDIS_OFFLOAD_PARAMETERS_LSOV2_ENABLED;
 
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniLSOV2Ipv4,
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
                           NdisParameterInteger);
 
-    if (ntStatus == NDIS_STATUS_SUCCESS &&
-        pParameters->ParameterData.IntegerData == 0) {
-        Adapter->lsov2ipv4_state = NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED;
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+		if(pParameters->ParameterData.IntegerData == 0) {
+			Adapter->lsov2ipv4_state = NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED;
+		}
+		ionic_registry[ IONIC_REG_LSOV2V4].current_value = pParameters->ParameterData.IntegerData;
     }
 
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_LSOV2V6].name);
     Adapter->lsov2ipv6_state = NDIS_OFFLOAD_PARAMETERS_LSOV2_ENABLED;
 
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniLSOV2Ipv6,
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
                           NdisParameterInteger);
 
-    if (ntStatus == NDIS_STATUS_SUCCESS &&
-        pParameters->ParameterData.IntegerData == 0) {
-        Adapter->lsov2ipv6_state = NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED;
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+		if(pParameters->ParameterData.IntegerData == 0) {
+			Adapter->lsov2ipv6_state = NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED;
+		}
+		ionic_registry[ IONIC_REG_LSOV2V6].current_value = pParameters->ParameterData.IntegerData;
     }
 
     Adapter->ipv4_rx_state = NDIS_OFFLOAD_SET_ON;
     Adapter->ipv4_tx_state = NDIS_OFFLOAD_SET_ON;
 
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniIPChecksum,
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_IPCSV4].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
                           NdisParameterInteger);
 
-    if (ntStatus == NDIS_STATUS_SUCCESS &&
-        pParameters->ParameterData.IntegerData != 3) {
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+		if(pParameters->ParameterData.IntegerData != 3) {
 
-        if (pParameters->ParameterData.IntegerData == 2) {
-            Adapter->ipv4_tx_state = NDIS_OFFLOAD_SET_OFF;
-        } else if (pParameters->ParameterData.IntegerData == 1) {
-            Adapter->ipv4_rx_state = NDIS_OFFLOAD_SET_OFF;
-        } else {
-            Adapter->ipv4_rx_state = NDIS_OFFLOAD_SET_OFF;
-            Adapter->ipv4_tx_state = NDIS_OFFLOAD_SET_OFF;
-        }
+			if (pParameters->ParameterData.IntegerData == 2) {
+				Adapter->ipv4_tx_state = NDIS_OFFLOAD_SET_OFF;
+			} else if (pParameters->ParameterData.IntegerData == 1) {
+				Adapter->ipv4_rx_state = NDIS_OFFLOAD_SET_OFF;
+			} else {
+				Adapter->ipv4_rx_state = NDIS_OFFLOAD_SET_OFF;
+				Adapter->ipv4_tx_state = NDIS_OFFLOAD_SET_OFF;
+			}
+		}
+		ionic_registry[ IONIC_REG_IPCSV4].current_value = pParameters->ParameterData.IntegerData;
     }
 
     Adapter->tcpv4_rx_state = NDIS_OFFLOAD_SET_ON;
     Adapter->tcpv4_tx_state = NDIS_OFFLOAD_SET_ON;
 
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniTCPChecksumIPv4,
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_TCPCSV4].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
                           NdisParameterInteger);
 
-    if (ntStatus == NDIS_STATUS_SUCCESS &&
-        pParameters->ParameterData.IntegerData != 3) {
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+		if(pParameters->ParameterData.IntegerData != 3) {
 
-        if (pParameters->ParameterData.IntegerData == 2) {
-            Adapter->tcpv4_tx_state = NDIS_OFFLOAD_SET_OFF;
-        } else if (pParameters->ParameterData.IntegerData == 1) {
-            Adapter->tcpv4_rx_state = NDIS_OFFLOAD_SET_OFF;
-        } else {
-            Adapter->tcpv4_rx_state = NDIS_OFFLOAD_SET_OFF;
-            Adapter->tcpv4_tx_state = NDIS_OFFLOAD_SET_OFF;
-        }
+			if (pParameters->ParameterData.IntegerData == 2) {
+				Adapter->tcpv4_tx_state = NDIS_OFFLOAD_SET_OFF;
+			} else if (pParameters->ParameterData.IntegerData == 1) {
+				Adapter->tcpv4_rx_state = NDIS_OFFLOAD_SET_OFF;
+			} else {
+				Adapter->tcpv4_rx_state = NDIS_OFFLOAD_SET_OFF;
+				Adapter->tcpv4_tx_state = NDIS_OFFLOAD_SET_OFF;
+			}
+		}
+		ionic_registry[ IONIC_REG_TCPCSV4].current_value = pParameters->ParameterData.IntegerData;
     }
 
     Adapter->tcpv6_rx_state = NDIS_OFFLOAD_SET_ON;
     Adapter->tcpv6_tx_state = NDIS_OFFLOAD_SET_ON;
 
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniTCPChecksumIPv6,
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_TCPCSV6].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
                           NdisParameterInteger);
 
-    if (ntStatus == NDIS_STATUS_SUCCESS &&
-        pParameters->ParameterData.IntegerData != 3) {
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+		if(pParameters->ParameterData.IntegerData != 3) {
 
-        if (pParameters->ParameterData.IntegerData == 2) {
-            Adapter->tcpv6_tx_state = NDIS_OFFLOAD_SET_OFF;
-        } else if (pParameters->ParameterData.IntegerData == 1) {
-            Adapter->tcpv6_rx_state = NDIS_OFFLOAD_SET_OFF;
-        } else {
-            Adapter->tcpv6_rx_state = NDIS_OFFLOAD_SET_OFF;
-            Adapter->tcpv6_tx_state = NDIS_OFFLOAD_SET_OFF;
-        }
+			if (pParameters->ParameterData.IntegerData == 2) {
+				Adapter->tcpv6_tx_state = NDIS_OFFLOAD_SET_OFF;
+			} else if (pParameters->ParameterData.IntegerData == 1) {
+				Adapter->tcpv6_rx_state = NDIS_OFFLOAD_SET_OFF;
+			} else {
+				Adapter->tcpv6_rx_state = NDIS_OFFLOAD_SET_OFF;
+				Adapter->tcpv6_tx_state = NDIS_OFFLOAD_SET_OFF;
+			}
+		}
+		ionic_registry[ IONIC_REG_TCPCSV6].current_value = pParameters->ParameterData.IntegerData;
     }
 
     Adapter->udpv4_rx_state = NDIS_OFFLOAD_SET_ON;
     Adapter->udpv4_tx_state = NDIS_OFFLOAD_SET_ON;
 
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniUDPChecksumIPv4,
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_UDPCSV4].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
                           NdisParameterInteger);
 
-    if (ntStatus == NDIS_STATUS_SUCCESS &&
-        pParameters->ParameterData.IntegerData != 3) {
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+		if(pParameters->ParameterData.IntegerData != 3) {
 
-        if (pParameters->ParameterData.IntegerData == 2) {
-            Adapter->udpv4_tx_state = NDIS_OFFLOAD_SET_OFF;
-        } else if (pParameters->ParameterData.IntegerData == 1) {
-            Adapter->udpv4_rx_state = NDIS_OFFLOAD_SET_OFF;
-        } else {
-            Adapter->udpv4_rx_state = NDIS_OFFLOAD_SET_OFF;
-            Adapter->udpv4_tx_state = NDIS_OFFLOAD_SET_OFF;
-        }
+			if (pParameters->ParameterData.IntegerData == 2) {
+				Adapter->udpv4_tx_state = NDIS_OFFLOAD_SET_OFF;
+			} else if (pParameters->ParameterData.IntegerData == 1) {
+				Adapter->udpv4_rx_state = NDIS_OFFLOAD_SET_OFF;
+			} else {
+				Adapter->udpv4_rx_state = NDIS_OFFLOAD_SET_OFF;
+				Adapter->udpv4_tx_state = NDIS_OFFLOAD_SET_OFF;
+			}
+		}
+		ionic_registry[ IONIC_REG_UDPCSV4].current_value = pParameters->ParameterData.IntegerData;
     }
 
     Adapter->udpv6_rx_state = NDIS_OFFLOAD_SET_ON;
     Adapter->udpv6_tx_state = NDIS_OFFLOAD_SET_ON;
 
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniUDPChecksumIPv6,
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_UDPCSV6].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
                           NdisParameterInteger);
 
-    if (ntStatus == NDIS_STATUS_SUCCESS &&
-        pParameters->ParameterData.IntegerData != 3) {
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+		if(pParameters->ParameterData.IntegerData != 3) {
 
-        if (pParameters->ParameterData.IntegerData == 2) {
-            Adapter->udpv6_tx_state = NDIS_OFFLOAD_SET_OFF;
-        } else if (pParameters->ParameterData.IntegerData == 1) {
-            Adapter->udpv6_rx_state = NDIS_OFFLOAD_SET_OFF;
-        } else {
-            Adapter->udpv6_rx_state = NDIS_OFFLOAD_SET_OFF;
-            Adapter->udpv6_tx_state = NDIS_OFFLOAD_SET_OFF;
-        }
+			if (pParameters->ParameterData.IntegerData == 2) {
+				Adapter->udpv6_tx_state = NDIS_OFFLOAD_SET_OFF;
+			} else if (pParameters->ParameterData.IntegerData == 1) {
+				Adapter->udpv6_rx_state = NDIS_OFFLOAD_SET_OFF;
+			} else {
+				Adapter->udpv6_rx_state = NDIS_OFFLOAD_SET_OFF;
+				Adapter->udpv6_tx_state = NDIS_OFFLOAD_SET_OFF;
+			}
+		}
+		ionic_registry[ IONIC_REG_UDPCSV6].current_value = pParameters->ParameterData.IntegerData;
     }
 
     DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
@@ -417,8 +440,10 @@ ReadRegParameters(struct ionic *Adapter)
     if (ntStatus == NDIS_STATUS_SUCCESS &&
         pParameters->ParameterData.IntegerData != 0) {
 
+		NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_SRIOV].name);
         NdisReadConfiguration(&ntStatus, &pParameters, hConfig,
-                              &uniSRIOVKeyword, NdisParameterInteger);
+                              &uniKeyWord, NdisParameterInteger);
 
         if (ntStatus == NDIS_STATUS_SUCCESS) {
             DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
@@ -440,6 +465,7 @@ ReadRegParameters(struct ionic *Adapter)
 
             SetFlag(Adapter->port_stats.flags, IONIC_PORT_FLAG_SRIOV);
         }
+		ionic_registry[ IONIC_REG_SRIOV].current_value = pParameters->ParameterData.IntegerData;
     }
 
     NdisReadConfiguration(&ntStatus, &pParameters, hConfig,
@@ -456,37 +482,43 @@ ReadRegParameters(struct ionic *Adapter)
                   ntStatus));
     }
 
-    if (ntStatus == NDIS_STATUS_SUCCESS &&
-        pParameters->ParameterData.IntegerData != 0) {
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+		if( pParameters->ParameterData.IntegerData != 0) {
 
-        NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniVMQKeyword,
-                              NdisParameterInteger);
+			NdisInitUnicodeString( &uniKeyWord,
+							   ionic_registry[ IONIC_REG_VMQ].name);
+			NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
+								  NdisParameterInteger);
 
-        if (ntStatus == NDIS_STATUS_SUCCESS) {
-            DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-                      "%s Vmq keyword status %08lX Value %08lX\n", __FUNCTION__,
-                      ntStatus, pParameters->ParameterData.IntegerData));
-        } else {
-            DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-                      "%s Vmq keyword status %08lX\n", __FUNCTION__, ntStatus));
-        }
+			if (ntStatus == NDIS_STATUS_SUCCESS) {
+				DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+						  "%s Vmq keyword status %08lX Value %08lX\n", __FUNCTION__,
+						  ntStatus, pParameters->ParameterData.IntegerData));
+			} else {
+				DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+						  "%s Vmq keyword status %08lX\n", __FUNCTION__, ntStatus));
+			}
 
-        if (ntStatus == NDIS_STATUS_SUCCESS &&
-            pParameters->ParameterData.IntegerData != 0) {
-            SetFlag(Adapter->ConfigStatus, IONIC_VMQ_ENABLED);
+			if (ntStatus == NDIS_STATUS_SUCCESS &&
+				pParameters->ParameterData.IntegerData != 0) {
+				SetFlag(Adapter->ConfigStatus, IONIC_VMQ_ENABLED);
 
-            DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-                      "%s Enabling VMQ on adapter %p\n", __FUNCTION__,
-                      Adapter));
+				DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+						  "%s Enabling VMQ on adapter %p\n", __FUNCTION__,
+						  Adapter));
 
-            SetFlag(Adapter->port_stats.flags, IONIC_PORT_FLAG_VMQ);
-        }
+				SetFlag(Adapter->port_stats.flags, IONIC_PORT_FLAG_VMQ);
+			}
+		}
+		ionic_registry[ IONIC_REG_VMQ].current_value = pParameters->ParameterData.IntegerData;
     }
 
     if (!BooleanFlagOn(Adapter->ConfigStatus, IONIC_SRIOV_ENABLED) &&
         !BooleanFlagOn(Adapter->ConfigStatus, IONIC_VMQ_ENABLED)) {
 
-        NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniRSSKeyword,
+		NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_RSS].name);
+        NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
                               NdisParameterInteger);
 
         if (ntStatus == NDIS_STATUS_SUCCESS) {
@@ -508,6 +540,7 @@ ReadRegParameters(struct ionic *Adapter)
 
             SetFlag(Adapter->port_stats.flags, IONIC_PORT_FLAG_RSS);
         }
+		ionic_registry[ IONIC_REG_RSS].current_value = pParameters->ParameterData.IntegerData;
     }
 
     //
@@ -546,9 +579,11 @@ ReadSriovConfig(struct ionic *Adapter, NDIS_HANDLE Config)
 
     NDIS_STATUS ntStatus = NDIS_STATUS_SUCCESS;
     PNDIS_CONFIGURATION_PARAMETER pParameters = NULL;
-    NDIS_STRING uniNumVFsKeyword = NDIS_STRING_CONST("*NUMVFs");
+    NDIS_STRING uniKeyword;
 
-    NdisReadConfiguration(&ntStatus, &pParameters, Config, &uniNumVFsKeyword,
+	NdisInitUnicodeString( &uniKeyword,
+						   ionic_registry[ IONIC_REG_NUMVFS].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, Config, &uniKeyword,
                           NdisParameterInteger);
 
     if (ntStatus == NDIS_STATUS_SUCCESS) {
@@ -556,6 +591,7 @@ ReadSriovConfig(struct ionic *Adapter, NDIS_HANDLE Config)
                   "%s uniNumVFsKeyword keyword status %08lX Value %08lX\n",
                   __FUNCTION__, ntStatus,
                   pParameters->ParameterData.IntegerData));
+		ionic_registry[ IONIC_REG_NUMVFS].current_value = pParameters->ParameterData.IntegerData;
     } else {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s uniNumVFsKeyword keyword status %08lX\n", __FUNCTION__,
@@ -578,17 +614,19 @@ ReadVmqConfig(struct ionic *Adapter, NDIS_HANDLE Config)
 
     NDIS_STATUS ntStatus = NDIS_STATUS_SUCCESS;
     PNDIS_CONFIGURATION_PARAMETER pParameters = NULL;
-    NDIS_STRING uniVmqVLanFilteringKeyword =
-        NDIS_STRING_CONST("*VMQVlanFiltering");
+    NDIS_STRING uniKeyword;
 
+	NdisInitUnicodeString( &uniKeyword,
+						   ionic_registry[ IONIC_REG_VMQVLAN].name);
     NdisReadConfiguration(&ntStatus, &pParameters, Config,
-                          &uniVmqVLanFilteringKeyword, NdisParameterInteger);
+                          &uniKeyword, NdisParameterInteger);
 
     if (ntStatus == NDIS_STATUS_SUCCESS) {
         DbgTrace(
             (TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
              "%s VmqVLanFilteringKeyword keyword status %08lX Value %08lX\n",
              __FUNCTION__, ntStatus, pParameters->ParameterData.IntegerData));
+		ionic_registry[ IONIC_REG_VMQVLAN].current_value = pParameters->ParameterData.IntegerData;
     } else {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s VmqVLanFilteringKeyword keyword status %08lX\n",
@@ -610,16 +648,19 @@ ReadRssConfig(struct ionic *Adapter, NDIS_HANDLE Config)
 
     NDIS_STATUS ntStatus = NDIS_STATUS_SUCCESS;
     PNDIS_CONFIGURATION_PARAMETER pParameters = NULL;
-    NDIS_STRING uniNumRSSQueuesKeyword = NDIS_STRING_CONST("*NumRSSQueues");
+    NDIS_STRING uniKeyword;
 
+	NdisInitUnicodeString( &uniKeyword,
+						   ionic_registry[ IONIC_REG_RSSQUEUES].name);
     NdisReadConfiguration(&ntStatus, &pParameters, Config,
-                          &uniNumRSSQueuesKeyword, NdisParameterInteger);
+                          &uniKeyword, NdisParameterInteger);
 
     if (ntStatus == NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s NumRSSQueues keyword status %08lX Value %08lX\n",
                   __FUNCTION__, ntStatus,
                   pParameters->ParameterData.IntegerData));
+		ionic_registry[ IONIC_REG_RSSQUEUES].current_value = pParameters->ParameterData.IntegerData;
     } else {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s NumRSSQueues keyword status %08lX\n", __FUNCTION__,
@@ -2715,4 +2756,149 @@ validate_memory()
     NdisReleaseSpinLock( &memory_block_lock);
 
     return;
+}
+
+NDIS_STATUS
+GetRegKeyInfo(void *buffer,
+	ULONG buffer_len,
+	ULONG *buffer_ret)
+{
+
+	NDIS_STATUS		status = NDIS_STATUS_SUCCESS;
+	struct _REG_KEY_INFO_HDR *info_hdr = NULL;
+	struct _REG_KEY_ENTRY *reg_entry = NULL;
+	ULONG remaining_len = buffer_len;
+	void *tmp_buffer = NULL;
+	struct ionic *ionic = NULL;
+	ULONG port_index = 0;
+	ULONG port_entry_len = 0;
+	ULONG entry_len = 0;
+	ULONG reg_index = 0;
+	NDIS_STRING uniKeyName;
+
+	NdisAcquireSpinLock(&AdapterListLock);
+
+	if (remaining_len <= (port_count * sizeof( struct _REG_KEY_INFO_HDR)) + (IONIC_REG_MAX * (sizeof( struct _REG_KEY_ENTRY) + IONIC_REG_LEN))) {
+		NdisReleaseSpinLock(&AdapterListLock);
+		status = NDIS_STATUS_BUFFER_TOO_SHORT;
+		*buffer_ret = (port_count * sizeof( struct _REG_KEY_INFO_HDR)) + (IONIC_REG_MAX * (sizeof( struct _REG_KEY_ENTRY) + IONIC_REG_LEN));
+		goto exit;
+	}
+
+	/* We'll be doing everything under a spinlock so allocate a tempt, non-paged buffer to get everything */
+	tmp_buffer = NdisAllocateMemoryWithTagPriority( IonicDriver,
+													buffer_len,
+													IONIC_GENERIC_TAG,
+													NormalPoolPriority);
+	if (tmp_buffer == NULL) {
+		status = NDIS_STATUS_RESOURCES;
+		NdisReleaseSpinLock(&AdapterListLock);
+		goto exit;
+	}
+
+	NdisZeroMemory( tmp_buffer, buffer_len);
+
+	info_hdr = (struct _REG_KEY_INFO_HDR *)tmp_buffer;
+
+    ionic = (struct ionic *)AdapterList.Flink;
+
+	for( port_index = 0; port_index < (ULONG)port_count; port_index++) {
+
+		wcscpy_s( info_hdr->device_location, IONIC_DEV_LOC_LEN, ionic->device_location);
+		wcscpy_s( info_hdr->name, ADAPTER_NAME_MAX_SZ, ionic->name.Buffer);
+		info_hdr->entry_count = IONIC_REG_MAX;
+
+		port_entry_len = sizeof( struct _REG_KEY_INFO_HDR);
+		entry_len = 0;
+	
+		reg_entry = (struct _REG_KEY_ENTRY *)((char *)info_hdr + sizeof( struct _REG_KEY_INFO_HDR));
+
+		for (reg_index = 0; reg_index < IONIC_REG_MAX; reg_index++) {
+		
+			NdisInitUnicodeString( &uniKeyName,
+								   ionic_registry[ reg_index].name);
+			reg_entry->key_name_len = uniKeyName.Length;
+			reg_entry->key_name_offset = sizeof( struct _REG_KEY_ENTRY);
+
+			NdisMoveMemory( (void *)((char *)reg_entry + reg_entry->key_name_offset),
+							uniKeyName.Buffer,
+							uniKeyName.Length);
+
+			reg_entry->min_value = ionic_registry[ reg_index].minimum_value;
+			reg_entry->max_value = ionic_registry[ reg_index].maximum_value;
+			reg_entry->default_value = ionic_registry[ reg_index].default_value;
+			reg_entry->current_value = ionic_registry[ reg_index].current_value;
+
+			reg_entry->next_entry = reg_entry->key_name_offset + reg_entry->key_name_len + sizeof( WCHAR); // NULL terminator
+
+			port_entry_len += reg_entry->next_entry;
+
+			reg_entry = (struct _REG_KEY_ENTRY *)((char *)reg_entry + reg_entry->next_entry);
+		}
+
+		info_hdr->next_entry = port_entry_len;
+
+		ASSERT( remaining_len >= port_entry_len);
+		remaining_len -= port_entry_len;
+		info_hdr = (struct _REG_KEY_INFO_HDR *)((char *)info_hdr + info_hdr->next_entry);
+        ionic = (struct ionic *)ionic->list_entry.Flink;
+    }
+
+	NdisReleaseSpinLock(&AdapterListLock);
+
+	*buffer_ret = buffer_len;
+
+	NdisMoveMemory( buffer, tmp_buffer, *buffer_ret);
+
+exit:
+
+	if (tmp_buffer != NULL) {
+		NdisFreeMemoryWithTagPriority( IonicDriver,
+									   tmp_buffer,
+									   IONIC_GENERIC_TAG);										
+	}
+
+	return status;
+}
+
+LONG
+NormalizeSpeed(LONG Speed)
+{
+    // Convert required NDIS SpeedDuplex enums 0..10 to Mbps (that we support)
+    // https://docs.microsoft.com/en-us/windows-hardware/drivers/network/enumeration-keywords
+    if (Speed == 7) {
+        Speed = 10000;
+    }
+    else if (Speed == 9) {
+        Speed = 40000;
+    }
+    else if (Speed == 10) {
+        Speed = 100000;
+    }
+
+    if (Speed != IONIC_SPEED_1G &&
+        Speed != IONIC_SPEED_10G &&
+        Speed != IONIC_SPEED_25G &&
+        Speed != IONIC_SPEED_40G &&
+        Speed != IONIC_SPEED_50G &&
+        Speed != IONIC_SPEED_100G) {
+        // invalid speed
+        Speed = -1;
+    }
+
+    return Speed;
+}
+
+struct ionic *
+FindAdapterByNameLocked(PWCHAR AdapterName)
+{
+    struct ionic *ionic;
+
+    ListForEachEntry(ionic, &AdapterList, struct ionic, list_entry) {
+        if (!wcsncmp(AdapterName, ionic->name.Buffer, ADAPTER_NAME_MAX_SZ)) {
+            return ionic;
+        }
+    }
+
+    return NULL;
 }

@@ -1914,7 +1914,7 @@ ionic_tx_fill(struct ionic *ionic, struct qcqst *qcqst)
 
     struct qcq *qcq = qcqst->qcq;
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
-    unsigned int len = ionic->ident.port.config.mtu;
+    unsigned int len = ionic->frame_size;
     unsigned int i;
     struct queue *q = &qcq->q;
     struct txq_pkt *txq_pkt;

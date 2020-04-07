@@ -620,11 +620,12 @@ struct ionic {
 
     NDIS_STRING     name;
 
+	WCHAR			device_location[ IONIC_DEV_LOC_LEN];
+
 	ULONG			Flags;
 
 	NDIS_HANDLE		adapterhandle;
 	ULONG			ConfigStatus;
-	ULONG			config_port_speed;
 	NDIS_HARDWARE_STATUS	hardware_status;
 	NDIS_SPIN_LOCK	dev_cmd_lock;
 
@@ -734,6 +735,9 @@ struct ionic {
     KEVENT          outstanding_complete_event;
 
     LONG            core_redirect_count;
+
+	ULONG			ntx_buffers;
+	ULONG			nrx_buffers;
  
 	// offload state
 
@@ -807,5 +811,19 @@ struct memory_track_cb {
     void           *return_buffer;
 
     ULONG           length;
+
+};
+
+struct registry_entry {
+
+	WCHAR		name[ IONIC_REG_LEN];
+
+	ULONG		minimum_value;
+
+	ULONG		maximum_value;
+
+	ULONG		default_value;
+
+	ULONG		current_value;
 
 };

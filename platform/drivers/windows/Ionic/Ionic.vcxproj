@@ -177,7 +177,6 @@
   </Target>
   <ItemGroup>
     <Inf Include="Ionic64.inx" />
-    <Inf Include="Ionic64_vf.inx" />
   </ItemGroup>
   <ItemGroup>
     <FilesToPackage Include="$(TargetPath)" />
@@ -222,6 +221,7 @@
     <ClInclude Include="Include\ionic_if.h" />
     <ClInclude Include="Include\ionic_regs.h" />
     <ClInclude Include="Include\net_hdrs.h" />
+    <ClInclude Include="include\registry.h" />
     <ClInclude Include="Include\structs.h" />
     <ClInclude Include="Include\version.h" />
   </ItemGroup>
