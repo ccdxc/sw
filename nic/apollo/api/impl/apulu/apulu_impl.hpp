@@ -40,6 +40,9 @@
 // reserved index in IP_MAC_BINDING table
 #define PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID     0
 
+// reserved index in LOCAL_MAPPING_TAG and MAPPING_TAG tables
+#define PDS_IMPL_RSVD_TAG_HW_ID                0
+
 // reserved class id to indicate that tag is not configured on a mapping
 #define PDS_IMPL_RSVD_MAPPING_CLASS_ID         1023
 

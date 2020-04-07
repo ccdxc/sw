@@ -11,7 +11,7 @@
 #ifndef __VPC_IMPL_STATE_HPP__
 #define __VPC_IMPL_STATE_HPP__
 
-#include <map>
+#include <unordered_map>
 #include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/sdk/lib/table/slhash/slhash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
@@ -35,7 +35,8 @@ typedef struct vpc_tag_class_info_s {
     uint32_t refcount;   ///< how many times this tag is re-used
                          ///< across mappings
 } vpc_tag_class_info_t;
-typedef std::map<uint32_t, vpc_tag_class_info_t> tag_class_map_t;
+typedef std::unordered_map<uint32_t, vpc_tag_class_info_t> tag2class_map_t;
+typedef std::unordered_map<uint32_t, uint32_t> class2tag_map_t;
 
 /// \brief  state maintained for VPCs
 class vpc_impl_state : public state_base {
@@ -111,6 +112,15 @@ public:
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t release_class_id(uint32_t tag, bool local);
 
+    /// \brief      API to release class id that was previously allocated
+    /// \param[in]   class_id user give tag (for the mapping)
+    /// \param[in]   local    if true, tag is that of local mapping, else for
+    ///                       remote mapping
+    /// \remark if the refcount corresponding to the class goes down to 0,
+    ///         class_id is freed back to the pool
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t free_class_id(uint32_t class_id, bool local);
+
 private:
     slhash *vni_tbl(void) { return vni_tbl_; }
     rte_indexer *vpc_idxr(void) const { return vpc_idxr_; }
@@ -128,9 +138,13 @@ private:
     ///< remote mapping tag indexer
     rte_indexer *remote_mapping_class_id_idxr_;
     ///< tag to class id mapper for local mappings
-    tag_class_map_t local_tag_class_map_;
+    tag2class_map_t local_tag2class_map_;
+    ///< class id to tag mapper for local mappings
+    class2tag_map_t local_class2tag_map_;
     ///< tag to class id mapper for remote mappings
-    tag_class_map_t remote_tag_class_map_;
+    tag2class_map_t remote_tag2class_map_;
+    ///< class id to tag mapper for remote mappings
+    class2tag_map_t remote_class2tag_map_;
     ///< hash table for hw_id to vpc key
     ht *impl_ht_;
 };

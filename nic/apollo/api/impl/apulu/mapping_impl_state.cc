@@ -71,6 +71,17 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     rxdma_mapping_tbl_ = mem_hash::factory(&tparams);
     SDK_ASSERT(rxdma_mapping_tbl_ != NULL);
 
+    // instantiate indexer for rxdma LOCAL_MAPPING_TAG table
+    p4pd_table_properties_get(P4_P4PLUS_RXDMA_TBL_ID_LOCAL_MAPPING_TAG, &tinfo);
+    local_mapping_tag_idxr_ = rte_indexer::factory(tinfo.tabledepth,
+                                                   false, true);
+    SDK_ASSERT(local_mapping_tag_idxr_ != NULL);
+
+    // instantiate indexer for rxdma MAPPING_TAG table
+    p4pd_table_properties_get(P4_P4PLUS_RXDMA_TBL_ID_MAPPING_TAG, &tinfo);
+    mapping_tag_idxr_ = rte_indexer::factory(tinfo.tabledepth, false, true);
+    SDK_ASSERT(mapping_tag_idxr_ != NULL);
+
     // instantiate indexer for binding table
     p4pd_table_properties_get(P4TBL_ID_IP_MAC_BINDING, &tinfo);
     ip_mac_binding_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
@@ -92,6 +103,8 @@ mapping_impl_state::~mapping_impl_state() {
     mem_hash::destroy(mapping_tbl_);
     mem_hash::destroy(rxdma_mapping_tbl_);
     rte_indexer::destroy(ip_mac_binding_idxr_);
+    rte_indexer::destroy(local_mapping_tag_idxr_);
+    rte_indexer::destroy(mapping_tag_idxr_);
     slab::destroy(mapping_impl_slab_);
 }
 

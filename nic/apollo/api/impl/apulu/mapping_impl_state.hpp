@@ -92,6 +92,8 @@ private:
     mem_hash *mapping_tbl(void) { return mapping_tbl_; }
     mem_hash *rxdma_mapping_tbl(void) { return rxdma_mapping_tbl_; }
     rte_indexer *ip_mac_binding_idxr(void) { return ip_mac_binding_idxr_; }
+    rte_indexer *local_mapping_tag_idxr(void) { return local_mapping_tag_idxr_; }
+    rte_indexer *mapping_tag_idxr(void) { return mapping_tag_idxr_; }
     slab *mapping_impl_slab(void) { return mapping_impl_slab_; }
     friend class mapping_impl;    ///< friend of mapping_impl_state
     friend class subnet_impl;     ///< friend of mapping_impl_state
@@ -103,6 +105,8 @@ private:
     mem_hash *local_mapping_tbl_;
     mem_hash *rxdma_mapping_tbl_;
     rte_indexer *ip_mac_binding_idxr_;
+    rte_indexer *local_mapping_tag_idxr_;
+    rte_indexer *mapping_tag_idxr_;
     dhcpctl_handle dhcp_connection_;
     slab *mapping_impl_slab_;
 };

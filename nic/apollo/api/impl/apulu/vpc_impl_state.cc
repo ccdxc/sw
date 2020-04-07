@@ -143,21 +143,24 @@ sdk_ret_t
 vpc_impl_state::alloc_class_id(uint32_t tag, bool local, uint32_t *class_id) {
     sdk_ret_t ret;
     rte_indexer *class_idxr;
-    tag_class_map_t::iterator it;
-    tag_class_map_t *tag_class_map;
+    tag2class_map_t::iterator it;
+    tag2class_map_t *tag2class_map;
+    class2tag_map_t *class2tag_map;
 
     if (local) {
-        tag_class_map = &local_tag_class_map_;
+        tag2class_map = &local_tag2class_map_;
+        class2tag_map = &local_class2tag_map_;
         class_idxr = local_mapping_classs_id_idxr_;
     } else {
-        tag_class_map = &remote_tag_class_map_;
+        tag2class_map = &remote_tag2class_map_;
+        class2tag_map = &remote_class2tag_map_;
         class_idxr = remote_mapping_class_id_idxr_;
     }
 
-    if (tag_class_map->find(tag) != tag_class_map->end()) {
+    if (tag2class_map->find(tag) != tag2class_map->end()) {
         // tag to class id mapping exists
-        (*tag_class_map)[tag].refcount++;
-        *class_id = (*tag_class_map)[tag].class_id;
+        (*tag2class_map)[tag].refcount++;
+        *class_id = (*tag2class_map)[tag].class_id;
     } else {
         // try to allocate new class id
         ret = class_idxr->alloc(class_id);
@@ -166,9 +169,55 @@ vpc_impl_state::alloc_class_id(uint32_t tag, bool local, uint32_t *class_id) {
                           tag, ret);
             return ret;
         }
-        (*tag_class_map)[tag].class_id = *class_id;
-        (*tag_class_map)[tag].refcount = 1;
+        // add tag -> class id mapping
+        (*tag2class_map)[tag].class_id = *class_id;
+        (*tag2class_map)[tag].refcount = 1;
+        // add class id -> tag mapping
+        (*class2tag_map)[*class_id] = tag;
     }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_impl_state::free_class_id(uint32_t class_id, bool local) {
+    uint32_t tag;
+    sdk_ret_t ret;
+    rte_indexer *class_idxr;
+    tag2class_map_t::iterator it;
+    tag2class_map_t *tag2class_map;
+    class2tag_map_t *class2tag_map;
+
+    if (local) {
+        tag2class_map = &local_tag2class_map_;
+        class2tag_map = &local_class2tag_map_;
+        class_idxr = local_mapping_classs_id_idxr_;
+    } else {
+        tag2class_map = &remote_tag2class_map_;
+        class2tag_map = &remote_class2tag_map_;
+        class_idxr = remote_mapping_class_id_idxr_;
+    }
+
+    if (class2tag_map->find(class_id) != class2tag_map->end()) {
+        tag = (*class2tag_map)[class_id];
+        if (unlikely(tag2class_map->find(tag) == tag2class_map->end())) {
+            PDS_TRACE_ERR("tag2class lookup failed tag %u, class id %u",
+                          tag, class_id);
+            // go ahead and release the classid and class2tag map entry
+            class2tag_map->erase(class_id);
+            class_idxr->free(class_id);
+        } else {
+            (*tag2class_map)[tag].refcount--;
+            if ((*tag2class_map)[tag].refcount == 0) {
+                class2tag_map->erase(class_id);
+                tag2class_map->erase(tag);
+                class_idxr->free(class_id);
+            }
+        }
+    } else {
+        // handle it gracefully
+        PDS_TRACE_ERR("class id %u not in use", class_id);
+    }
+
     return SDK_RET_OK;
 }
 
@@ -176,25 +225,25 @@ sdk_ret_t
 vpc_impl_state::release_class_id(uint32_t tag, bool local) {
     sdk_ret_t ret;
     rte_indexer *class_idxr;
-    tag_class_map_t::iterator it;
-    tag_class_map_t *tag_class_map;
+    tag2class_map_t::iterator it;
+    tag2class_map_t *tag2class_map;
 
     if (local) {
-        tag_class_map = &local_tag_class_map_;
+        tag2class_map = &local_tag2class_map_;
         class_idxr = local_mapping_classs_id_idxr_;
     } else {
-        tag_class_map = &remote_tag_class_map_;
+        tag2class_map = &remote_tag2class_map_;
         class_idxr = remote_mapping_class_id_idxr_;
     }
 
-    if (tag_class_map->find(tag) != tag_class_map->end()) {
+    if (tag2class_map->find(tag) != tag2class_map->end()) {
         // tag to class id mapping exists
-        (*tag_class_map)[tag].refcount--;
-        if ((*tag_class_map)[tag].refcount == 0) {
+        (*tag2class_map)[tag].refcount--;
+        if ((*tag2class_map)[tag].refcount == 0) {
             // free back the class id
-            class_idxr->free((*tag_class_map)[tag].class_id);
+            class_idxr->free((*tag2class_map)[tag].class_id);
             // cleanup the tag to class id map entry
-            tag_class_map->erase(tag);
+            tag2class_map->erase(tag);
         }
     } else {
         // handle it gracefully

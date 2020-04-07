@@ -165,10 +165,10 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
             return NULL;
         }
 
-        // read public ip from NAT data
+        // read public IP from NAT data
         P4_IPADDR_TO_IPADDR(nat_data.ip, public_ip, key->ip_addr.af);
 
-        // read local mapping for pub ip to get it's xlate index
+        // read local mapping for pub IP to get it's xlate index
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
                                              ((vpc_impl *)vpc->impl())->hw_id(),
                                              &public_ip);
@@ -291,7 +291,7 @@ mapping_impl::reserve_public_ip_rxdma_mapping_resources_(mapping_entry *mapping,
     sdk_table_api_params_t tparams;
     rxdma_mapping_swkey_t rxdma_mapping_key;
 
-    // reserve an entry in MAPING table for public IP
+    // reserve an entry in rxdma MAPING table for public IP
     PDS_IMPL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key, vpc->hw_id(),
                                   &spec->public_ip);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
@@ -367,7 +367,7 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL, 0,
                                    sdk::table::handle_t::null());
     ret = mapping_impl_db()->mapping_tbl()->reserve(&tparams);
-    if (ret != SDK_RET_OK) {
+    if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for "
                       "mapping %s, vnic %s, err %u",
                       mapping->key2str().c_str(), vnic->key().str(), ret);
@@ -381,9 +381,10 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     // if tags are configured on this mapping, allocate all needed resources
     if (spec->num_tags) {
         for (uint32_t i = 0; i < spec->num_tags; i++) {
+            // allocate class id for each tag configured for this mapping
             ret = vpc_impl_db()->alloc_class_id(spec->tags[i],
                                                 true, &class_id_[i]);
-            if (ret != SDK_RET_OK) {
+            if (unlikely(ret != SDK_RET_OK)) {
                 PDS_TRACE_ERR("Failed to allocate class id for tag %u of "
                               "local mapping %s %s, vnic %s, err %u",
                               spec->tags[i], mapping->key().str(),
@@ -393,11 +394,25 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
             }
             num_class_id_++;
         }
-        // TODO: allocate an index the class id table
-        //       - revisit this once the table is placed
 
-        // allocate an entry in the rxdma MAPPING table to point to these
-        // class ids in the class id index table
+        // allocate an index in the rxdma LOCAL_MAPPING_TAG table
+        ret = mapping_impl_db()->local_mapping_tag_idxr()->alloc(&rxdma_local_mapping_tag_idx_);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to reserve entry in LOCAL_MAPPING_TAG table, "
+                          "err %u", ret);
+            return ret;
+        }
+
+        // allocate an index in the rxdma MAPPING_TAG table
+        ret = mapping_impl_db()->mapping_tag_idxr()->alloc(&rxdma_mapping_tag_idx_);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to reserve entry in MAPPING_TAG table, "
+                          "err %u", ret);
+            return ret;
+        }
+
+        // allocate an entry in the rxdma MAPPING table for the overlay IP to
+        // point to rxdma_mapping_tag_idx_ in rxdma MAPPING_TAG table
         PDS_IMPL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
                                       ((vpc_impl *)vpc->impl())->hw_id(),
                                       &spec->skey.ip_addr);
@@ -453,6 +468,7 @@ mapping_impl::reserve_remote_mapping_resources_(mapping_entry *mapping,
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
     sdk_table_api_params_t tparams;
+    rxdma_mapping_swkey_t rxdma_mapping_key;
 
     // reserve an entry in MAPPING table
     if (spec->skey.type == PDS_MAPPING_TYPE_L3) {
@@ -476,6 +492,48 @@ mapping_impl::reserve_remote_mapping_resources_(mapping_entry *mapping,
         return ret;
     }
     mapping_hdl_ = tparams.handle;
+
+    if ((spec->skey.type == PDS_MAPPING_TYPE_L3) && spec->num_tags) {
+        // allocate class id for each tag configured for this mapping
+        for (uint32_t i = 0; i < spec->num_tags; i++) {
+            ret = vpc_impl_db()->alloc_class_id(spec->tags[i],
+                                                true, &class_id_[i]);
+            if (unlikely(ret != SDK_RET_OK)) {
+                PDS_TRACE_ERR("Failed to allocate class id for tag %u of "
+                              "remote local mapping %s %s, err %u",
+                              spec->tags[i], mapping->key().str(),
+                              mapping->key2str().c_str(), ret);
+                return ret;
+            }
+            num_class_id_++;
+        }
+
+        // allocate an index in the rxdma MAPPING_TAG table
+        ret = mapping_impl_db()->mapping_tag_idxr()->alloc(&rxdma_mapping_tag_idx_);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to reserve entry in MAPPING_TAG table, "
+                          "err %u", ret);
+            return ret;
+        }
+
+        // allocate an entry in the rxdma MAPPING table for the overlay IP to
+        // point to rxdma_mapping_tag_idx_ in rxdma MAPPING_TAG table
+        PDS_IMPL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
+                                      ((vpc_impl *)vpc->impl())->hw_id(),
+                                      &spec->skey.ip_addr);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                       NULL, NULL, 0,
+                                       sdk::table::handle_t::null());
+        ret = mapping_impl_db()->rxdma_mapping_tbl()->reserve(&tparams);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to reserve entry in rxdma MAPPING table "
+                          "for mapping %s, err %u",
+                          mapping->key2str().c_str(), ret);
+            return ret;
+        }
+        rxdma_mapping_hdl_ = tparams.handle;
+    }
+
     return SDK_RET_OK;
 }
 
@@ -622,6 +680,16 @@ mapping_impl::nuke_resources(api_base *api_obj) {
         return ret;
     }
 
+    // release any class ids allocated for this mapping
+    for (uint32_t i = 0; i < num_class_id_; i++) {
+        ret = vpc_impl_db()->free_class_id(class_id_[i], false);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to free classid %u allocated to remote "
+                          "mapping %s, err %u",
+                          api_obj->key2str().c_str(), ret);
+            // continue freeing the resources
+        }
+    }
     if (mapping->is_local() == false) {
         // nothing else to do if there is no local mapping
         return ret;
@@ -646,12 +714,12 @@ mapping_impl::nuke_resources(api_base *api_obj) {
     }
 #endif
 
-    // nothing else to do if public ip is not configured
+    // nothing else to do if public IP is not configured
     if (!mapping->is_public_ip_valid()) {
         return SDK_RET_OK;
     }
 
-    // remove public ip mapping
+    // remove public IP mapping
     PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc_hw_id_,
                                    &mapping->public_ip());
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL,
@@ -663,7 +731,7 @@ mapping_impl::nuke_resources(api_base *api_obj) {
         return ret;
     }
 
-    // remove public ip local mapping
+    // remove public IP local mapping
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc_hw_id_,
                                          &mapping->public_ip());
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
@@ -689,6 +757,7 @@ mapping_impl::nuke_resources(api_base *api_obj) {
 
 sdk_ret_t
 mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
+    sdk_ret_t ret;
     sdk_table_api_params_t tparams = { 0 };
 
     if (local_mapping_overlay_ip_hdl_.valid()) {
@@ -718,16 +787,59 @@ mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
     if (to_overlay_ip_nat_idx_ != PDS_IMPL_RSVD_NAT_HW_ID) {
         apulu_impl_db()->nat_idxr()->free(to_overlay_ip_nat_idx_);
     }
+    if (rxdma_local_mapping_tag_idx_ != PDS_IMPL_RSVD_TAG_HW_ID) {
+        mapping_impl_db()->local_mapping_tag_idxr()->free(rxdma_local_mapping_tag_idx_);
+    }
+    if (rxdma_mapping_tag_idx_ != PDS_IMPL_RSVD_TAG_HW_ID) {
+        mapping_impl_db()->mapping_tag_idxr()->free(rxdma_mapping_tag_idx_);
+    }
+    if (rxdma_mapping_hdl_.valid()) {
+        tparams.handle = rxdma_mapping_hdl_;
+        mapping_impl_db()->rxdma_mapping_tbl()->release(&tparams);
+    }
+    if (rxdma_mapping_public_ip_hdl_.valid()) {
+        tparams.handle = rxdma_mapping_public_ip_hdl_;
+        mapping_impl_db()->rxdma_mapping_tbl()->release(&tparams);
+    }
+    // release any class ids allocated for this mapping
+    for (uint32_t i = 0; i < num_class_id_; i++) {
+        ret = vpc_impl_db()->free_class_id(class_id_[i], true);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to free classid %u allocated to local "
+                          "mapping %s, err %u",
+                          api_obj->key2str().c_str(), ret);
+            // continue freeing the resources
+        }
+    }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 mapping_impl::release_remote_mapping_resources_(api_base *api_obj) {
+    sdk_ret_t ret;
     sdk_table_api_params_t tparams = { 0 };
 
     if (mapping_hdl_.valid()) {
         tparams.handle = mapping_hdl_;
         mapping_impl_db()->mapping_tbl()->release(&tparams);
+    }
+    if (rxdma_mapping_tag_idx_ != PDS_IMPL_RSVD_TAG_HW_ID) {
+        mapping_impl_db()->mapping_tag_idxr()->free(rxdma_mapping_tag_idx_);
+    }
+    if (rxdma_mapping_hdl_.valid()) {
+        tparams.handle = rxdma_mapping_hdl_;
+        mapping_impl_db()->rxdma_mapping_tbl()->release(&tparams);
+    }
+
+    // release any class ids allocated for this mapping
+    for (uint32_t i = 0; i < num_class_id_; i++) {
+        ret = vpc_impl_db()->free_class_id(class_id_[i], false);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to free classid %u allocated to remote "
+                          "mapping %s, err %u",
+                          api_obj->key2str().c_str(), ret);
+            // continue freeing the resources
+        }
     }
     return SDK_RET_OK;
 }

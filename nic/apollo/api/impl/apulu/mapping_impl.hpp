@@ -168,6 +168,8 @@ private:
         mapping_public_ip_hdl_ = handle_t::null();
         rxdma_mapping_hdl_ = handle_t::null();
         rxdma_mapping_public_ip_hdl_ = handle_t::null();
+        rxdma_local_mapping_tag_idx_ = PDS_IMPL_RSVD_TAG_HW_ID;
+        rxdma_mapping_tag_idx_ = PDS_IMPL_RSVD_TAG_HW_ID;
         nexthop_type_ = NEXTHOP_TYPE_MAX;
         nexthop_id_ = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
         num_class_id_ = 0;
@@ -529,6 +531,9 @@ private:
     // handles for MAPPING table
     handle_t    mapping_hdl_;    // could be L2 or IP handle
     handle_t    mapping_public_ip_hdl_;
+    // indices into rxdma LOCAL_MAPPING_TAG and MAPPING_TAG tables
+    uint32_t    rxdma_local_mapping_tag_idx_;
+    uint32_t    rxdma_mapping_tag_idx_;
     // handles for RxDMA MAPPING table
     handle_t    rxdma_mapping_hdl_;
     handle_t    rxdma_mapping_public_ip_hdl_;
