@@ -22,10 +22,10 @@ var BaseNetKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector"}
 // FlowAwareKinds catpures all the objects needed for FlowAware Profile
 var FlowAwareKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", "MirrorSession", "FlowExportPolicy"}
 
-var EnforcedKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", "MirrorSession", "FlowExportPolicy", "App", "NetworkSecurityPolicy", "Vrf", "SecurityProfile"}
+var EnforcedKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", "MirrorSession", "FlowExportPolicy", "App", "NetworkSecurityPolicy", "SecurityProfile"}
 
 // InsertionKinds captures all the objects needed for Insertion USeg Enforced Profile
-var InsertionKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", "MirrorSession", "FlowExportPolicy", "App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile"}
+var InsertionKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", "MirrorSession", "FlowExportPolicy", "App", "NetworkSecurityPolicy", "Network", "Endpoint", "SecurityProfile"}
 
 // IPAddressKind captures the type of IPAddress options, Singleton, Hyphen separated range or CIDR
 type IPAddressKind int
