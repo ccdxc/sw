@@ -44,19 +44,19 @@ inline void workflow_b1(feeder_T& feeder) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
     ret = many_create<feeder_T>(bctxt, feeder);
-    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B1 - failed in batch1");
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B1 batch1 - create one failed");
     batch_commit(bctxt);
 
     ret = many_read<feeder_T>(feeder, SDK_RET_OK);
-    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B1 - failed in batch1 read");
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B1 batch1 - read one failed");
 
     bctxt = batch_start();
     ret = many_delete<feeder_T>(bctxt, feeder);
-    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B1 - failed in batch2");
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B1 batch2 - delete one failed");
     batch_commit(bctxt);
 
     ret = many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B1 - failed in batch2 read");
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B1 batch2 - read one failed");
 }
 
 /// \brief WF_B2
@@ -70,28 +70,28 @@ inline void workflow_b2(feeder_T& feeder, feeder_T& feeder1A) {
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
     ret = many_create<feeder_T>(bctxt, feeder);
-    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 - failed in batch1");
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 batch1 - create one failed");
     batch_commit(bctxt);
 
     ret = many_read<feeder_T>(feeder, SDK_RET_OK);
-    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 - failed in batch1 read");
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 batch1 - read one failed");
 
     bctxt = batch_start();
     ret = many_update<feeder_T>(bctxt, feeder1A);
-    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 - failed in batch2");
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 batch2 - update one failed");
     batch_commit(bctxt);
 
     ret = many_read<feeder_T>(feeder1A, SDK_RET_OK);
-    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 - failed in batch2 read");
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 batch2 - read one failed");
 
     // cleanup
     bctxt = batch_start();
     ret = many_delete<feeder_T>(bctxt, feeder1A);
-    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 cleanup - failed in batch1");
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 cleanup - delete one failed");
     batch_commit(bctxt);
 
     ret = many_read<feeder_T>(feeder1A, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 cleanup - failed in batch1 read");
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_B2 cleanup - read one failed");
 }
 
 /// \brief WF_1
@@ -101,13 +101,18 @@ inline void workflow_b2(feeder_T& feeder, feeder_T& feeder1A) {
 /// \anchor WF_1
 template <typename feeder_T>
 inline void workflow_1(feeder_T& feeder) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder);
-    many_delete<feeder_T>(bctxt, feeder);
+    ret = many_create<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_1 batch1 - create setmax failed");
+    ret = many_delete<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_1 batch1 - delete setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_1 batch1 - read setmax failed");
 }
 
 /// \brief WF_2
@@ -116,21 +121,29 @@ inline void workflow_1(feeder_T& feeder) {
 /// \anchor WF_2
 template <typename feeder_T>
 inline void workflow_2(feeder_T& feeder) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder);
-    many_delete<feeder_T>(bctxt, feeder);
-    many_create<feeder_T>(bctxt, feeder);
+    ret = many_create<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_2 batch1 - create setmax failed");
+    ret = many_delete<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_2 batch1 - delete setmax failed");
+    ret = many_create<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_2 batch1 - create setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder, SDK_RET_OK);
+    ret = many_read<feeder_T>(feeder, SDK_RET_OK);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_2 batch1 - read failed");
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder);
+    ret = many_delete<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_2 cleanup - delete setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_2 cleanup - read setmax failed");
 }
 
 /// \brief WF_3
@@ -140,26 +153,39 @@ inline void workflow_2(feeder_T& feeder) {
 template <typename feeder_T>
 inline void workflow_3(feeder_T& feeder1, feeder_T& feeder2,
                        feeder_T& feeder3) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder1);
-    many_create<feeder_T>(bctxt, feeder2);
-    many_delete<feeder_T>(bctxt, feeder1);
-    many_create<feeder_T>(bctxt, feeder3);
+    ret = many_create<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_3 batch1 - create set1 failed");
+    ret = many_create<feeder_T>(bctxt, feeder2);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_3 batch1 - create set2 failed");
+    ret = many_delete<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_3 batch1 - delete set1 failed");
+    ret = many_create<feeder_T>(bctxt, feeder3);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_3 batch1 - create set3 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    many_read<feeder_T>(feeder2);
-    many_read<feeder_T>(feeder3);
+    ret = many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_3 batch1 - read set1 failed");
+    ret = many_read<feeder_T>(feeder2);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_3 batch1 - read set2 failed");
+    ret = many_read<feeder_T>(feeder3);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_3 batch1 - read set3 failed");
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder2);
-    many_delete<feeder_T>(bctxt, feeder3);
+    ret = many_delete<feeder_T>(bctxt, feeder2);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_3 cleanup - delete set2 failed");
+    ret = many_delete<feeder_T>(bctxt, feeder3);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_3 cleanup - delete set3 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    many_read<feeder_T>(feeder3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_3 cleanup - read set2 failed");
+    ret = many_read<feeder_T>(feeder3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_3 cleanup - read set3 failed");
 }
 
 /// \brief WF_4
@@ -168,18 +194,24 @@ inline void workflow_3(feeder_T& feeder1, feeder_T& feeder2,
 /// \anchor WF_4
 template <typename feeder_T>
 inline void workflow_4(feeder_T& feeder) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder);
+    ret = many_create<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_4 batch1 - create setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder);
+    ret = many_read<feeder_T>(feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_4 batch1 - read setmax failed");
 
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder);
+    ret = many_delete<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_4 batch2 - delete setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_4 batch2 - read setmax failed");
 }
 
 /// \brief WF_5
@@ -189,108 +221,144 @@ inline void workflow_4(feeder_T& feeder) {
 template <typename feeder_T>
 inline void workflow_5(feeder_T& feeder1, feeder_T& feeder2,
                        feeder_T& feeder3) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder1);
-    many_create<feeder_T>(bctxt, feeder2);
+    ret = many_create<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_5 batch1 - create set1 failed");
+    ret = many_create<feeder_T>(bctxt, feeder2);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_5 batch1 - create set2 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1);
-    many_read<feeder_T>(feeder2);
+    ret = many_read<feeder_T>(feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_5 batch1 - read set1 failed");
+    ret = many_read<feeder_T>(feeder2);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_5 batch1 - read set2 failed");
 
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder1);
-    many_create<feeder_T>(bctxt, feeder3);
+    ret = many_delete<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_5 batch2 - delete set1 failed");
+    ret = many_create<feeder_T>(bctxt, feeder3);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_5 batch2 - create set3 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    many_read<feeder_T>(feeder2);
-    many_read<feeder_T>(feeder3);
+    ret = many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_5 batch2 - read set1 failed");
+    ret = many_read<feeder_T>(feeder2);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_5 batch2 - read set2 failed");
+    ret = many_read<feeder_T>(feeder3);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_5 batch2 - read set3 failed");
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder2);
-    many_delete<feeder_T>(bctxt, feeder3);
+    ret = many_delete<feeder_T>(bctxt, feeder2);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_5 cleanup - delete set2 failed");
+    ret = many_delete<feeder_T>(bctxt, feeder3);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_5 cleanup - delete set3 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    many_read<feeder_T>(feeder3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_5 cleanup - read set2 failed");
+    ret = many_read<feeder_T>(feeder3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_5 cleanup - read set3 failed");
 }
 
 /// \brief WF_6
 /// [ Create SetMax - Update SetMax - Update SetMax - Delete SetMax ] - Read
-/// Create update, update and delete max entries in the same batch
-/// NO-OP kind of result from hardware perspective
 /// \anchor WF_6
 template <typename feeder_T>
 inline void workflow_6(feeder_T& feeder1, feeder_T& feeder1A,
                        feeder_T& feeder1B) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder1);
-    many_update<feeder_T>(bctxt, feeder1A);
-    many_update<feeder_T>(bctxt, feeder1B);
-    many_delete<feeder_T>(bctxt, feeder1B);
+    ret = many_create<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_6 batch1 - create setmax failed");
+    ret = many_update<feeder_T>(bctxt, feeder1A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_6 batch1 - update setmax failed");
+    ret = many_update<feeder_T>(bctxt, feeder1B);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_6 batch1 - update setmax2 failed");
+    ret = many_delete<feeder_T>(bctxt, feeder1B);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_6 batch1 - delete setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1B, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder1B, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_6 batch1 - read setmax failed");
 }
 
 /// \brief WF_7
 /// [ Create SetMax - Delete SetMax - Create SetMax - Update SetMax] - Read -
 ///     [ Update SetMax ] - Read
-/// Create, delete aa
 /// \anchor WF_7
 template <typename feeder_T>
 inline void workflow_7(feeder_T& feeder1, feeder_T& feeder1A,
                        feeder_T& feeder1B) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder1);
-    many_delete<feeder_T>(bctxt, feeder1);
-    many_create<feeder_T>(bctxt, feeder1);
-    many_update<feeder_T>(bctxt, feeder1A);
-    many_update<feeder_T>(bctxt, feeder1B);
+    ret = many_create<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_7 batch1 - create setmax failed");
+    ret = many_delete<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_7 batch1 - delete setmax failed");
+    ret = many_create<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_7 batch1 - create setmax2 failed");
+    ret = many_update<feeder_T>(bctxt, feeder1A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_7 batch1 - update setmax failed");
+    ret = many_update<feeder_T>(bctxt, feeder1B);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_7 batch1 - update setmax2 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1B);
+    ret = many_read<feeder_T>(feeder1B);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_7 batch2 - read setmax failed");
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder1B);
+    ret = many_delete<feeder_T>(bctxt, feeder1B);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_7 cleanup - delete setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1B, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder1B, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_7 cleanup - read setmax failed");
 }
 
 /// \brief WF_8
 /// [ Create SetMax - Update SetMax ] - Read - [ Update SetMax ] - Read -
 ///     [ Delete SetMax ] - Read
-/// Create update in a batch, update in a batch, delete in a batch max
-/// checking multiple updates, each in different batch
 /// \anchor WF_8
 template <typename feeder_T>
 inline void workflow_8(feeder_T& feeder1, feeder_T& feeder1A,
                        feeder_T& feeder1B) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder1);
-    many_update<feeder_T>(bctxt, feeder1A);
+    ret = many_create<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_8 batch1 - create setmax failed");
+    ret = many_update<feeder_T>(bctxt, feeder1A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_8 batch1 - update setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1A);
+    ret = many_read<feeder_T>(feeder1A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_8 batch1 - read setmax failed");
 
     bctxt = batch_start();
-    many_update<feeder_T>(bctxt, feeder1B);
+    ret = many_update<feeder_T>(bctxt, feeder1B);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_8 batch2 - update setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1B);
+    ret = many_read<feeder_T>(feeder1B);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_8 batch2 - read set max failed");
 
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder1B);
+    ret = many_delete<feeder_T>(bctxt, feeder1B);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_8 batch3 - delete setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1B, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder1B, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_8 batch1 - read setmax failed");
 }
 
 /// \brief WF_9
@@ -299,19 +367,26 @@ inline void workflow_8(feeder_T& feeder1, feeder_T& feeder1A,
 /// \anchor WF_9
 template <typename feeder_T>
 inline void workflow_9(feeder_T& feeder1, feeder_T& feeder1A) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder1);
+    ret = many_create<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_9 batch1 - create setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1);
+    ret = many_read<feeder_T>(feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_9  batch1 - read setmax failed");
 
     bctxt = batch_start();
-    many_update<feeder_T>(bctxt, feeder1A);
-    many_delete<feeder_T>(bctxt, feeder1A);
+    ret = many_update<feeder_T>(bctxt, feeder1A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_9 batch2 - update setmax failed");
+    ret = many_delete<feeder_T>(bctxt, feeder1A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_9 batch2 - delete setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1A, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder1A, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_9 batch2 - read setmax failed");
 }
 
 /// \brief WF_10
@@ -322,78 +397,108 @@ template <typename feeder_T>
 inline void workflow_10(feeder_T& feeder1, feeder_T& feeder2,
                         feeder_T& feeder2A, feeder_T& feeder3,
                         feeder_T& feeder3A, feeder_T& feeder4) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder1);
-    many_create<feeder_T>(bctxt, feeder2);
-    many_create<feeder_T>(bctxt, feeder3);
-    many_delete<feeder_T>(bctxt, feeder1);
-    many_update<feeder_T>(bctxt, feeder2A);
+    ret = many_create<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 batch1 - create set1 failed");
+    ret = many_create<feeder_T>(bctxt, feeder2);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 batch1 - create set2 failed");
+    ret = many_create<feeder_T>(bctxt, feeder3);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 batch1 - create set3 failed");
+    ret = many_delete<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 batch1 - delete set1 failed");
+    ret = many_update<feeder_T>(bctxt, feeder2A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 batch1 - update set2 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    many_read<feeder_T>(feeder2A);
-    many_read<feeder_T>(feeder3);
+    ret = many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 batch1 - read set1 failed");
+    ret = many_read<feeder_T>(feeder2A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 batch1 - read set2 failed");
+    ret = many_read<feeder_T>(feeder3);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 batch1 - read set3 failed");
 
     bctxt = batch_start();
-    many_update<feeder_T>(bctxt, feeder3A);
-    many_delete<feeder_T>(bctxt, feeder2A);
-    many_create<feeder_T>(bctxt, feeder4);
+    ret = many_update<feeder_T>(bctxt, feeder3A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 batch2 - update set3 failed");
+    ret = many_delete<feeder_T>(bctxt, feeder2A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 batch2 - delete set2 failed");
+    ret = many_create<feeder_T>(bctxt, feeder4);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 batch2 - create set4 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder3A);
-    many_read<feeder_T>(feeder2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    many_read<feeder_T>(feeder4);
+    ret = many_read<feeder_T>(feeder3A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 batch2 - read set3 failed");
+    ret = many_read<feeder_T>(feeder2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 batch2 - read set2 failed");
+    ret = many_read<feeder_T>(feeder4);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 batch2 - read set4 failed");
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder4);
-    many_delete<feeder_T>(bctxt, feeder3A);
+    ret = many_delete<feeder_T>(bctxt, feeder4);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 cleanup - delete set4 failed");
+    ret = many_delete<feeder_T>(bctxt, feeder3A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 cleanup - delete set3 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder4, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    many_read<feeder_T>(feeder3A, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder4, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 cleanup - read set4 failed");
+    ret = many_read<feeder_T>(feeder3A, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_10 cleanup - read set3 failed");
 }
 
-/// \brief WF_N_1
+/// \brief WF_N1
 /// [ Create SetMax ] - [ Create SetMax ] - Read
-/// Create maximum number of a given api objects supported in two batches
 /// \anchor WF_N_1
 template <typename feeder_T>
 inline void workflow_neg_1(feeder_T& feeder) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder);
+    ret = many_create<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N1 batch1 - create setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder);
+    ret = many_read<feeder_T>(feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N1 batch1 - read setmax failed");
 
     bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder);
+    ret = many_create<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N1 batch2 - create setmax failed");
     batch_commit_fail(bctxt);
 
-    many_read<feeder_T>(feeder);
+    ret = many_read<feeder_T>(feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N1 batch2 - read setmax failed");
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder);
+    ret = many_delete<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N1 cleanup - delete setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N1 cleanup - read setmax failed");
 }
 
 /// \brief WF_N_2
 /// [ Create SetMax+1 ] - Read
-/// Create more than maximum number of a given api objects supported
 /// \anchor WF_N_2
 template <typename feeder_T>
 inline void workflow_neg_2(feeder_T& feeder) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder);
+    ret = many_create<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N2 batch1 - create setmax+1 failed");
     batch_commit_fail(bctxt);
 
-    many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N2 batch1 - read setmax+1 failed");
 }
 
 /// \brief WF_N_3
@@ -401,49 +506,67 @@ inline void workflow_neg_2(feeder_T& feeder) {
 /// \anchor WF_N_3
 template <typename feeder_T>
 inline void workflow_neg_3(feeder_T& feeder) {
+    sdk_ret_t ret;
+
     // trigger
-    many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N3 - read nonex failed");
 
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder);
+    ret = many_delete<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N3 batch1 - delete nonexmax failed");
     batch_commit_fail(bctxt);
+
+    ret = many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N3 batch1 - read nonexmax failed");
 
     // trigger
     bctxt = batch_start();
-    many_update<feeder_T>(bctxt, feeder);
+    ret = many_update<feeder_T>(bctxt, feeder);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N3 batch2 - update nonexmax failed");
     batch_commit_fail(bctxt);
 
-    many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N3 batch2 - read nonexmax failed");
 }
 
 /// \brief WF_N_4
 /// [ Create Set1 ] - Read - [ Delete Set1, Set2 ] - Read
-/// Invalid batch shouldn't affect entries of previous batch
 /// \anchor WF_N_4
 template <typename feeder_T>
 inline void workflow_neg_4(feeder_T& feeder1, feeder_T& feeder2) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder1);
+    ret = many_create<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N4 batch1 - create set1 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1);
+    ret = many_read<feeder_T>(feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N4 batch1 - read set1 failed");
 
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder1);
-    many_delete<feeder_T>(bctxt, feeder2);
+    ret = many_delete<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N4 batch2 - delete set1 failed");
+    ret = many_delete<feeder_T>(bctxt, feeder2);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N4 batch2 - delete set2 failed");
     batch_commit_fail(bctxt);
 
-    many_read<feeder_T>(feeder1);
-    many_read<feeder_T>(feeder2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N4 batch2 - read set1 failed");
+    ret = many_read<feeder_T>(feeder2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N4 batch2 - read set2 failed");
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder1);
+    ret = many_delete<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N4 cleanup - delete set1 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N4 cleanup - read set1 failed");
 }
 
 /// \brief WF_N_5
@@ -451,112 +574,142 @@ inline void workflow_neg_4(feeder_T& feeder1, feeder_T& feeder2) {
 /// \anchor WF_N_5
 template <typename feeder_T>
 inline void workflow_neg_5(feeder_T& feeder1, feeder_T& feeder1A) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder1);
+    ret = many_create<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N5 batch1 - create setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1);
+    ret = many_read<feeder_T>(feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N5 batch1 - read setmax failed");
 
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder1);
-    many_update<feeder_T>(bctxt, feeder1A);
+    ret = many_delete<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N5 batch2 - delete setmax failed");
+    ret = many_update<feeder_T>(bctxt, feeder1A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N5 batch2 - update setmax failed");
     batch_commit_fail(bctxt);
 
-    many_read<feeder_T>(feeder1);
+    ret = many_read<feeder_T>(feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N5 batch2 - read setmax failed");
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder1);
+    ret = many_delete<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N5 cleanup - delete setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N5 cleanup - read setmax failed");
 }
 
 /// \brief WF_N_6
 /// [ Create SetMax ] - Read - [ Update SetMax + 1 ] - Read
-/// Updation of more than max entries should fail leaving old state unchanged
 /// \anchor WF_N_6
 template <typename feeder_T>
 inline void workflow_neg_6(feeder_T& feeder1, feeder_T& feeder1A) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder1);
+    ret = many_create<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N6 batch1 - create setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1);
+    ret = many_read<feeder_T>(feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N6 batch1 - read setmax failed");
 
     bctxt = batch_start();
-    many_update<feeder_T>(bctxt, feeder1A);
+    ret = many_update<feeder_T>(bctxt, feeder1A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N6 batch2 - update setmax+1 failed");
     batch_commit_fail(bctxt);
 
-    many_read<feeder_T>(feeder1);
+    ret = many_read<feeder_T>(feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N6 batch2 - read setmax failed");
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder1);
+    ret = many_delete<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N6 cleanup - delete setmax failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N6 cleanup - read setmax failed");
 }
 
 /// \brief WF_N_7
 /// [ Create Set1 ] - Read - [ Update Set1 - Update Set2 ] - Read
-/// Create set1 in a batch, update set1 and set2 in next batch fails leaving
-/// set1 unchanged
 /// \anchor WF_N_7
 template <typename feeder_T>
 inline void workflow_neg_7(feeder_T& feeder1, feeder_T& feeder1A,
                            feeder_T& feeder2) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder1);
+    ret = many_create<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N7 batch1 - create set1 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1);
+    ret = many_read<feeder_T>(feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N7 batch1 - read set1 failed");
 
     bctxt = batch_start();
-    many_update<feeder_T>(bctxt, feeder1A);
-    many_update<feeder_T>(bctxt, feeder2);
+    ret = many_update<feeder_T>(bctxt, feeder1A);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N7 batch2 - update set1 failed");
+    ret = many_update<feeder_T>(bctxt, feeder2);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N7 batch2 - update set2 failed");
     batch_commit_fail(bctxt);
 
-    many_read<feeder_T>(feeder1);
+    ret = many_read<feeder_T>(feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N7 batch2 - read set1 failed");
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder1);
+    ret = many_delete<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N7 cleanup - delete set1 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N7 cleanup - read set1 failed");
 }
 
 /// \brief WF_N_8
 /// [ Create Set1 ] - Read - [ Delete Set1 - Update Set2 ] - Read
-/// Create set1 in a batch, delete set1 and update set2 in next batch
-/// fails leaving set1 unchanged
 /// \anchor WF_N_8
 template <typename feeder_T>
 inline void workflow_neg_8(feeder_T& feeder1, feeder_T& feeder2) {
+    sdk_ret_t ret;
+
     // trigger
     pds_batch_ctxt_t bctxt = batch_start();
-    many_create<feeder_T>(bctxt, feeder1);
+    ret = many_create<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N8 batch1 - create set1 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1);
+    ret = many_read<feeder_T>(feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N8 batch1 - read set1 failed");
 
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder1);
-    many_update<feeder_T>(bctxt, feeder2);
+    ret = many_delete<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N8 batch2 - create set1 failed");
+    ret = many_update<feeder_T>(bctxt, feeder2);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N8 batch2 - update set2 failed");
     batch_commit_fail(bctxt);
 
-    many_read<feeder_T>(feeder1);
+    ret = many_read<feeder_T>(feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N8 batch2 - read set1 failed");
 
     // cleanup
     bctxt = batch_start();
-    many_delete<feeder_T>(bctxt, feeder1);
+    ret = many_delete<feeder_T>(bctxt, feeder1);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N8 cleanup - delete set1 failed");
     batch_commit(bctxt);
 
-    many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ret = many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N8 cleanup - read set1 failed");
 }
 
 /// @}
