@@ -552,7 +552,7 @@ dependencies:
     - reference: iota/test/standalone/sanity/apulu-networking-scale
   platform/src/lib/devapi_iris:
     - reference: iota/test/standalone/precheckin/linux
-      #- reference: iota/test/standalone/sanity/swm
+    - reference: iota/test/standalone/sanity/swm
   platform/src/app/pciemgrd:
     - reference: iota/test/standalone/precheckin/linux
     - reference: nic/apollo/tools/apulu/sanity/base
