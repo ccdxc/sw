@@ -314,15 +314,6 @@ TEST_F(mapping_test, local_mapping_workflow_neg_1) {
     workflow_neg_1<local_mapping_feeder>(feeders[0]);
 }
 
-/// \brief Local mappings WF_N_2
-/// \ref WF_N_2
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_2) {
-    local_mapping_feeder feeders[1];
-
-    create_local_mapping_feeders(feeders, 1);
-    workflow_neg_2<local_mapping_feeder>(feeders[0]);
-}
-
 /// \brief Local mappings WF_N_3
 /// \ref WF_N_3
 TEST_F(mapping_test, local_mapping_workflow_neg_3) {
@@ -353,21 +344,9 @@ TEST_F(mapping_test, local_mapping_workflow_neg_5) {
     workflow_neg_5<local_mapping_feeder>(feeders[0], feeder1A);
 }
 
-/// \brief Local mappings WF_N_6
-/// \ref WF_N_6
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_6) {
-    local_mapping_feeder feeders[1], feeder1A;
-
-    create_local_mapping_feeders(feeders, 1);
-    feeder1A = feeders[0];
-    feeder1A.update_spec(1);
-
-    workflow_neg_6<local_mapping_feeder>(feeders[0], feeder1A);
-}
-
 /// \brief Local mappings WF_N_7
 /// \ref WF_N_7
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_7) {
+TEST_F(mapping_test, local_mapping_workflow_neg_7) {
     local_mapping_feeder feeders[2], feeder1A;
 
     create_local_mapping_feeders(feeders, 2);
@@ -513,15 +492,6 @@ TEST_F(mapping_test, remote_mapping_workflow_neg_1) {
     workflow_neg_1<remote_mapping_feeder>(feeders[0]);
 }
 
-/// \brief Remote mappings WF_N_2
-/// \ref WF_N_2
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_2) {
-    remote_mapping_feeder feeders[1];
-
-    create_remote_mapping_feeders(feeders, 1);
-    workflow_neg_2<remote_mapping_feeder>(feeders[0]);
-}
-
 /// \brief Remote mappings WF_N_3
 /// \ref WF_N_3
 TEST_F(mapping_test, remote_mapping_workflow_neg_3) {
@@ -552,21 +522,9 @@ TEST_F(mapping_test, remote_mapping_workflow_neg_5) {
     workflow_neg_5<remote_mapping_feeder>(feeders[0], feeder1A);
 }
 
-/// \brief Remote mappings WF_N_6
-/// \ref WF_N_6
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_6) {
-    remote_mapping_feeder feeders[1], feeder1A;
-
-    create_remote_mapping_feeders(feeders, 1);
-    feeder1A = feeders[0];
-    feeder1A.update_spec(1);
-
-    workflow_neg_6<remote_mapping_feeder>(feeders[0], feeder1A);
-}
-
 /// \brief Remote mappings WF_N_7
 /// \ref WF_N_7
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_7) {
+TEST_F(mapping_test, remote_mapping_workflow_neg_7) {
     remote_mapping_feeder feeders[2], feeder1A;
 
     create_remote_mapping_feeders(feeders, 2);

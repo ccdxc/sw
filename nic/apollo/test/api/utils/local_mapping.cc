@@ -7,6 +7,7 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/test/api/utils/local_mapping.hpp"
+#include "nic/apollo/test/api/utils/vnic.hpp"
 
 namespace test {
 namespace api {
@@ -165,6 +166,14 @@ local_mapping_feeder::update_spec(uint32_t width) {
 
     if (map_type == PDS_MAPPING_TYPE_L3)
         vnic_mac_u64 += width;
+
+    if (public_ip_valid)
+        increment_ip_addr(&public_ip_pfx.addr, 1);
+
+    // updating this filed is causing some failures, will put it comment now
+    //uint16_t vnic_id = (pdsobjkey2int(vnic) + 1)%k_max_vnic;
+    //vnic =  int2pdsobjkey(vnic_id ? vnic_id : 1);
+    this->fabric_encap.val.value++;
 }
 
 }    // namespace api
