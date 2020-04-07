@@ -267,7 +267,7 @@ func (sm *SysModel) ConnectVeniceNodesToCluster(vnc *objects.VeniceNodeCollectio
 		}
 	}
 	//Allow naples.Nodes too
-	if naples != nil && (len(naples.Nodes) != 0 || len(naples.FakeNodes) != 0) {
+	if naples != nil {
 		sm.AllowVeniceNodesFromNaples(vnc, naples)
 	}
 
@@ -303,23 +303,20 @@ func (sm *SysModel) DenyVeniceNodesFromNaples(vnc *objects.VeniceNodeCollection,
 	}
 
 	for _, venice := range vnc.Nodes {
-
 		for _, n := range naples.Nodes {
 			for _, inst := range n.Instances {
 				dsc := inst.Dsc
 				cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP  -m comment --comment %s",
 					strings.Split(dsc.GetStatus().IPConfig.IPAddress, "/")[0], cookie)
-				trig.AddCommand(cmd, venice.Name()+"_venice", venice.Name())
 				trig.AddCommandWithRetriesOnFailures(cmd, venice.Name()+"_venice",
 					venice.Name(), 3)
 			}
-			for _, n := range naples.FakeNodes {
-				cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP  -m comment --comment %s",
-					strings.Split(n.Instances[0].Dsc.GetStatus().IPConfig.IPAddress, "/")[0], cookie)
-				trig.AddCommandWithRetriesOnFailures(cmd, venice.Name()+"_venice",
-					venice.Name(), 3)
-
-			}
+		}
+		for _, n := range naples.FakeNodes {
+			cmd := fmt.Sprintf("sudo iptables -A INPUT -s %v -j DROP  -m comment --comment %s",
+				strings.Split(n.Instances[0].Dsc.GetStatus().IPConfig.IPAddress, "/")[0], cookie)
+			trig.AddCommandWithRetriesOnFailures(cmd, venice.Name()+"_venice",
+				venice.Name(), 3)
 		}
 	}
 

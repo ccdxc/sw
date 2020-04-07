@@ -179,13 +179,10 @@ L:
 			return fmt.Errorf("Error associating hosts: %s", err)
 		default:
 			err = sm.AssociateHosts()
-			if err != nil {
-				return fmt.Errorf("Error associating hosts: %s", err)
-			}
-
-			if len(sm.NaplesHosts) == len(sm.NaplesNodes)+len(sm.FakeNaples) {
+			if err == nil && len(sm.NaplesHosts) == len(sm.NaplesNodes)+len(sm.FakeNaples) {
 				break L
 			}
+			log.Errorf("Error associating hosts: %s", err)
 			time.Sleep(2 * time.Second)
 		}
 	}

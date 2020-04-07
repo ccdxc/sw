@@ -47,6 +47,9 @@ const (
 
 	//WorkloadTypeContainerMacVlan  macvlan workload
 	WorkloadTypeContainerMacVlan = "container-mac-vlan"
+
+	//MaxInterfaceBringUpRetries inteface might be missing after container delete.
+	MaxInterfaceBringUpRetries = 180
 )
 
 var (
@@ -372,10 +375,23 @@ func (app *containerWorkload) SendArpProbe(ip string, intf string, vlan int) err
 }
 
 func (app *containerWorkload) AddInterface(spec InterfaceSpec) (string, error) {
-	ifconfigCmd := []string{"ifconfig", spec.Parent, "up"}
-	if retCode, stdout, _ := utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
+	var retCode int
+	var stdout string
+	var err error
+
+	//try multiple times before giving up as container delete may make interface disappear
+	for i := 0; i < MaxInterfaceBringUpRetries; i++ {
+		ifconfigCmd := []string{"ifconfig", spec.Parent, "up"}
+		if retCode, stdout, _ = utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		break
+	}
+	if retCode != 0 {
 		return "", errors.Errorf("Could not bring up parent interface %s : %s", spec.Parent, stdout)
 	}
+
 	intfToAttach := spec.Parent
 
 	if spec.PrimaryVlan != 0 {
@@ -395,7 +411,13 @@ func (app *containerWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 	}
 
 	if spec.Mac != "" {
-		if err := app.containerHandle.SetMacAddress(intfToAttach, spec.Mac, 0); err != nil {
+		for i := 0; i < 6; i++ {
+			if err = app.containerHandle.SetMacAddress(intfToAttach, spec.Mac, 0); err == nil {
+				break
+			}
+			time.Sleep(1 * time.Second)
+		}
+		if err != nil {
 			return "", errors.Wrapf(err, "Set Mac Address failed")
 		}
 	}
@@ -628,11 +650,11 @@ func (app *bareMetalWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 				return "", errors.Wrap(err, stdout)
 			}
 		case "windows":
-	                name, ok := windowsPortNameMapping[spec.Parent]["Name"]
+			name, ok := windowsPortNameMapping[spec.Parent]["Name"]
 			if !ok {
 				break
 			}
-			setMacAddrCmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Set-NetAdapter -Name '" + name + "' -MacAddress '" + spec.Mac +"' -Confirm:$false"}
+			setMacAddrCmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Set-NetAdapter -Name '" + name + "' -MacAddress '" + spec.Mac + "' -Confirm:$false"}
 			if retCode, stdout, err := utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
 				return "", errors.Wrap(err, stdout)
 			}

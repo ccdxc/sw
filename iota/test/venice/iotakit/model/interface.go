@@ -184,6 +184,7 @@ type NodeActionIntf interface {
 	TeardownWorkloads(wc *objects.WorkloadCollection) error
 
 	ReloadHosts(hc *objects.HostCollection) error
+	ReloadFakeHosts(hc *objects.HostCollection) error
 	DenyVeniceNodesFromNaples(vnc *objects.VeniceNodeCollection, naples *objects.NaplesCollection) error
 	DisconnectNaples(npc *objects.NaplesCollection) error
 	ConnectNaples(npc *objects.NaplesCollection) error

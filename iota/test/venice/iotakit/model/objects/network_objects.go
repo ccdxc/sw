@@ -27,6 +27,18 @@ type NetworkCollection struct {
 	subnets []*Network
 }
 
+//NewNetworkCollection create a new collector
+func NewNetworkCollectionFromNetworks(client objClient.ObjClient, nws []*network.Network) *NetworkCollection {
+
+	nwc := NetworkCollection{CollectionCommon: CollectionCommon{Client: client}}
+	for _, nw := range nws {
+		nwc.subnets = append(nwc.subnets,
+			&Network{VeniceNetwork: nw, Name: nw.Name})
+	}
+
+	return &nwc
+}
+
 func (n *NetworkCollection) Subnets() []*Network {
 	return n.subnets
 }
@@ -41,7 +53,7 @@ func (snc *NetworkCollection) Any(num int) *NetworkCollection {
 		return snc
 	}
 
-	newSnc := NetworkCollection{subnets: []*Network{}}
+	newSnc := NetworkCollection{subnets: []*Network{}, CollectionCommon: snc.CollectionCommon}
 	tmpArry := make([]*Network, len(snc.subnets))
 	copy(tmpArry, snc.subnets)
 	for i := 0; i < num; i++ {
@@ -98,4 +110,40 @@ func NewNetworkCollection(client objClient.ObjClient, testbed *testbed.TestBed) 
 	return &NetworkCollection{
 		CollectionCommon: CollectionCommon{Client: client, Testbed: testbed},
 	}
+}
+
+//SetIngressSecurityPolicy sets ingress security policy to this
+func (nwc *NetworkCollection) SetIngressSecurityPolicy(policies *NetworkSecurityPolicyCollection) error {
+
+	for _, nw := range nwc.subnets {
+		nw.VeniceNetwork.Spec.IngressSecurityPolicy = []string{}
+		if policies != nil {
+			for _, pol := range policies.Policies {
+				nw.VeniceNetwork.Spec.IngressSecurityPolicy = append(nw.VeniceNetwork.Spec.IngressSecurityPolicy, pol.VenicePolicy.Name)
+			}
+		}
+		err := nwc.Client.UpdateNetwork(nw.VeniceNetwork)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+//SetEgressSecurityPolicy sets egress security policy to this
+func (nwc *NetworkCollection) SetEgressSecurityPolicy(policies *NetworkSecurityPolicyCollection) error {
+
+	for _, nw := range nwc.subnets {
+		nw.VeniceNetwork.Spec.EgressSecurityPolicy = []string{}
+		if policies != nil {
+			for _, pol := range policies.Policies {
+				nw.VeniceNetwork.Spec.EgressSecurityPolicy = append(nw.VeniceNetwork.Spec.IngressSecurityPolicy, pol.VenicePolicy.Name)
+			}
+		}
+		err := nwc.Client.UpdateNetwork(nw.VeniceNetwork)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

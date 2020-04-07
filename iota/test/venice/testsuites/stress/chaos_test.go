@@ -9,7 +9,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pensando/sw/iota/test/venice/iotakit"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
+	//"github.com/pensando/sw/iota/test/venice/iotakit"
 )
 
 var _ = Describe("Scale Chaos tests", func() {
@@ -44,7 +45,7 @@ var _ = Describe("Scale Chaos tests", func() {
 
 			ctx, cancel := context.WithCancel(context.Background())
 			flapPortCancel = cancel
-			go ts.model.Action().FlapDataSwitchPortsPeriodically(ctx, sc,
+			go ts.model.FlapDataSwitchPortsPeriodically(ctx, sc,
 				linkDownTime, flapInterval, 0)
 
 		}
@@ -58,7 +59,7 @@ var _ = Describe("Scale Chaos tests", func() {
 		runTraffic := func() error {
 
 			workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultNetworkSecurityPolicy(), "tcp")
-			options := &iotakit.ConnectionOptions{
+			options := &objects.ConnectionOptions{
 				Cps:               10,
 				Duration:          "120s",
 				NumConns:          100,
@@ -67,7 +68,7 @@ var _ = Describe("Scale Chaos tests", func() {
 				ReconnectAttempts: 25,
 			}
 
-			return ts.model.Action().FuzItWithOptions(workloadPairs, options)
+			return ts.model.ConnectionWithOptions(workloadPairs, options)
 		}
 
 		configPushCheck := func() (time.Duration, error) {
@@ -114,7 +115,7 @@ var _ = Describe("Scale Chaos tests", func() {
 		}
 
 		rebootFakeHosts := func(err chan error) {
-			err <- ts.model.Action().ReloadFakeHosts(ts.model.Hosts())
+			err <- ts.model.ReloadFakeHosts(ts.model.Hosts())
 		}
 		It("Flap links , run traffic make sure cluster in good state", func() {
 			if !ts.scaleData || ts.tb.HasNaplesSim() {
@@ -130,7 +131,7 @@ var _ = Describe("Scale Chaos tests", func() {
 
 			//Verify cluster in good state after that.
 			Eventually(func() error {
-				return ts.model.Action().VerifyClusterStatus()
+				return ts.model.VerifyClusterStatus()
 			}).Should(Succeed())
 
 			//Links should be up now, make sure traffic in good state after.
@@ -138,7 +139,7 @@ var _ = Describe("Scale Chaos tests", func() {
 
 			//Verify cluster in good state after that.
 			Eventually(func() error {
-				return ts.model.Action().VerifyClusterStatus()
+				return ts.model.VerifyClusterStatus()
 			}).Should(Succeed())
 
 		})
@@ -151,8 +152,8 @@ var _ = Describe("Scale Chaos tests", func() {
 			startPortFlap()
 
 			//Reload venice Nodes
-			ts.model.ForEachVeniceNode(func(vnc *iotakit.VeniceNodeCollection) error {
-				Expect(ts.model.Action().ReloadVeniceNodes(vnc)).Should(Succeed())
+			ts.model.ForEachVeniceNode(func(vnc *objects.VeniceNodeCollection) error {
+				Expect(ts.model.ReloadVeniceNodes(vnc)).Should(Succeed())
 
 				return nil
 			})
@@ -164,7 +165,7 @@ var _ = Describe("Scale Chaos tests", func() {
 
 			//Verify cluster in good state after that.
 			Eventually(func() error {
-				return ts.model.Action().VerifyClusterStatus()
+				return ts.model.VerifyClusterStatus()
 			}).Should(Succeed())
 
 			//Links should be up now, make sure traffic in good state after.
@@ -172,7 +173,7 @@ var _ = Describe("Scale Chaos tests", func() {
 
 			//Verify cluster in good state after that.
 			Eventually(func() error {
-				return ts.model.Action().VerifyClusterStatus()
+				return ts.model.VerifyClusterStatus()
 			}).Should(Succeed())
 
 		})
@@ -197,7 +198,7 @@ var _ = Describe("Scale Chaos tests", func() {
 
 			//Verify cluster in good state after that.
 			Eventually(func() error {
-				return ts.model.Action().VerifyClusterStatus()
+				return ts.model.VerifyClusterStatus()
 			}).Should(Succeed())
 
 			//Links should be up now, make sure traffic in good state after.
@@ -205,7 +206,7 @@ var _ = Describe("Scale Chaos tests", func() {
 
 			//Verify cluster in good state after that.
 			Eventually(func() error {
-				return ts.model.Action().VerifyClusterStatus()
+				return ts.model.VerifyClusterStatus()
 			}).Should(Succeed())
 
 		})
@@ -236,7 +237,7 @@ var _ = Describe("Scale Chaos tests", func() {
 
 			//Verify cluster in good state after that.
 			Eventually(func() error {
-				return ts.model.Action().VerifyClusterStatus()
+				return ts.model.VerifyClusterStatus()
 			}).Should(Succeed())
 
 			//Links should be up now, make sure traffic in good state after.
@@ -245,7 +246,7 @@ var _ = Describe("Scale Chaos tests", func() {
 			//Links should be up now, make sure traffic in good state after.
 			//Verify cluster in good state after that.
 			Eventually(func() error {
-				return ts.model.Action().VerifyClusterStatus()
+				return ts.model.VerifyClusterStatus()
 			}).Should(Succeed())
 
 		})

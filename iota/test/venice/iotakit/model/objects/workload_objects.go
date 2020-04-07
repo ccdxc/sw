@@ -171,16 +171,18 @@ func NewWorkloadPairCollection(client objClient.ObjClient, testbed *testbed.Test
 
 // WorkloadPair is a pair of Workloads
 type WorkloadPair struct {
-	First  *Workload
-	Second *Workload
-	Proto  string
-	Ports  []int
+	First   *Workload
+	Second  *Workload
+	Proto   string
+	Ports   []int
+	Network *Network
 }
 
 // WorkloadPairCollection is collection of workload pairs
 type WorkloadPairCollection struct {
 	CollectionCommon
-	Pairs []*WorkloadPair
+	Pairs   []*WorkloadPair
+	Network *Network
 }
 
 // GetSingleWorkloadPair gets a single pair collection based on index
@@ -217,6 +219,24 @@ func (wpc *WorkloadPairCollection) WithinNetwork() *WorkloadPairCollection {
 
 	return &newCollection
 }
+
+// OnNetwork workloads on particular network
+func (wpc *WorkloadPairCollection) OnNetwork(network *Network) *WorkloadPairCollection {
+	if wpc.HasError() {
+		return wpc
+	}
+	newCollection := WorkloadPairCollection{}
+
+	for _, pair := range wpc.Pairs {
+		if pair.First.iotaWorkload.NetworkName == network.VeniceNetwork.Name &&
+			pair.Second.iotaWorkload.NetworkName == network.VeniceNetwork.Name {
+			newCollection.Pairs = append(newCollection.Pairs, pair)
+		}
+	}
+
+	return &newCollection
+}
+
 func (wpc *WorkloadPairCollection) policyHelper(policyCollection *NetworkSecurityPolicyCollection, action, proto string) *WorkloadPairCollection {
 	if policyCollection == nil || len(policyCollection.Policies) == 0 {
 		return wpc

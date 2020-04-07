@@ -537,7 +537,6 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("mount -t ext4 /dev/mmcblk0p7 /sysconfig/config1", "#")
         self.SendlineExpect("mount -t ext4 /dev/mmcblk0p10 /data", "#")
         self.CleanUpOldFiles()
-        self.SetUpInitFiles()
         self.SendlineExpect("umount /sysconfig/config0", "#")
         self.SendlineExpect("umount /sysconfig/config1", "#")
         self.SendlineExpect("umount /data", "#")
@@ -545,6 +544,7 @@ class NaplesManagement(EntityManagement):
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Main Firmware Install failed")
     def InstallMainFirmware(self, copy_fw = True):
         self.InstallPrep()
+        self.SetUpInitFiles()
         if copy_fw:
             self.CopyIN(os.path.join(GlobalOptions.wsdir, self.fw_images.image), entity_dir = NAPLES_TMP_DIR)
         self.SendlineExpect("", "#", trySync=True)
@@ -718,11 +718,11 @@ class NaplesManagement(EntityManagement):
 
     def CleanUpOldFiles(self):
         self.SendlineExpect("clear_nic_config.sh remove-config", "#")
-        self.SendlineExpect("rm -rf /data/*.db", "#")
-        self.SendlineExpect("rm -rf /sysconfig/config0/*.db", "#")
-        self.SendlineExpect("rm -rf /sysconfig/config0/*.conf", "#")
-        self.SendlineExpect("rm -rf /sysconfig/config1/*.db", "#")
-        self.SendlineExpect("rm -rf /sysconfig/config1/*.conf", "#")
+        self.SendlineExpect("rm -rf /data/*.db && sync", "#")
+        self.SendlineExpect("rm -rf /sysconfig/config0/*.db && sync", "#")
+        self.SendlineExpect("rm -rf /sysconfig/config0/*.conf && sync", "#")
+        self.SendlineExpect("rm -rf /sysconfig/config1/*.db && sync", "#")
+        self.SendlineExpect("rm -rf /sysconfig/config1/*.conf && sync", "#")
         self.SendlineExpect("rm -f /sysconfig/config0/clusterTrustRoots.pem", "#")
         self.SendlineExpect("rm -f /sysconfig/config1/clusterTrustRoots.pem", "#")
         self.SendlineExpect("rm -f /sysconfig/config0/frequency.json", "#")
@@ -733,14 +733,12 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("rm -rf /data/*.dat && sync", "#")
         self.SendlineExpect("rm -rf /obfl/asicerrord_err*", "#")
 
-        CreateConfigConsoleNoAuth()
-        self.CopyIN(NAPLES_CONFIG_SPEC_LOCAL,
-                    entity_dir = "/sysconfig/config0")
-
     def SetUpInitFiles(self):
         CreateConfigConsoleNoAuth()
+        self.SendlineExpect("mount -t ext4 /dev/mmcblk0p6 /sysconfig/config0", "#")
         self.CopyIN(NAPLES_CONFIG_SPEC_LOCAL,
                     entity_dir = "/sysconfig/config0")
+        self.SendlineExpect("umount /sysconfig/config0", "#")
 
     @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Init for upgrade failed")
     def InitForUpgrade(self, goldfw = True, mode = True, uuid = True):
@@ -898,17 +896,6 @@ class HostManagement(EntityManagement):
         self.RunSshCmd("uptime")
         return
 
-    def InstallPrep(self):
-        self.RunNaplesCmd("/nic/tools/fwupdate -r | grep goldfw")
-        self.RunNaplesCmd("mkdir -p /data && sync")
-        self.RunNaplesCmd("mount -t ext4 /dev/mmcblk0p6 /sysconfig/config0")
-        self.RunNaplesCmd("mount -t ext4 /dev/mmcblk0p7 /sysconfig/config1")
-        #Clean up old files as we are starting fresh.
-        self.CleanUpOldFiles()
-        self.SetUpInitFiles()
-        #unmount
-        self.RunNaplesCmd("umount /sysconfig/config0")
-        self.RunNaplesCmd("umount /sysconfig/config1")
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
@@ -917,7 +904,12 @@ class HostManagement(EntityManagement):
 #        except:
 #            print('lspci failed to find nic. calling ipmi power cycle')
 #            self.IpmiResetAndWait()
-        self.InstallPrep()
+        for naples in self.naples:
+            naples.InstallPrep()
+
+        #CreateConfigConsoleNoAuth()
+        #self.CopyIN(NAPLES_CONFIG_SPEC_LOCAL,
+        #            entity_dir = HOST_NAPLES_DIR, naples_dir = "/sysconfig/config0")
 
         if copy_fw:
             self.CopyIN(os.path.join(GlobalOptions.wsdir, self.fw_images.image), entity_dir = HOST_NAPLES_DIR, naples_dir = NAPLES_TMP_DIR)

@@ -360,3 +360,29 @@ func (sm *SysModel) FindFwlogForWorkloadPairsFromElastic(tenantName,
 func (sm *SysModel) GetFwLogObjectCount(tenantName string, bucketName string, objectKeyPrefix string) (int, error) {
 	return 0, fmt.Errorf("not implemented")
 }
+
+//TeardownWorkloads teardown workloads
+func (sm *SysModel) TeardownWorkloads(wc *objects.WorkloadCollection) error {
+
+	wrkLd := &iota.WorkloadMsg{
+		ApiResponse: &iota.IotaAPIResponse{},
+		WorkloadOp:  iota.Op_DELETE,
+	}
+
+	// Teardown the workloads
+	for _, wrk := range wc.Workloads {
+		wrkLd.Workloads = append(wrkLd.Workloads, wrk.GetIotaWorkload())
+		delete(sm.WorkloadsObjs, wrk.VeniceWorkload.Name)
+	}
+
+	topoClient := iota.NewTopologyApiClient(sm.Tb.Client().Client)
+	appResp, err := topoClient.DeleteWorkloads(context.Background(), wrkLd)
+
+	if err != nil || appResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		log.Errorf("Failed to instantiate Apps. %v/%v", err, appResp.ApiResponse.ApiStatus)
+		return fmt.Errorf("Error deleting IOTA workload. Resp: %+v, err: %v", appResp.ApiResponse, err)
+	}
+
+	log.Info("Delete workload successful")
+	return nil
+}
