@@ -130,14 +130,23 @@ var _ = BeforeSuite(func() {
 
 			transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 			client := &http.Client{Transport: transport}
-			resp, err := client.Get(nmdURL)
-			Expect(err).ShouldNot(HaveOccurred())
-			data, err := ioutil.ReadAll(resp.Body)
-			Expect(err).ShouldNot(HaveOccurred())
-			fmt.Println("Got Naples Response: ", string(data))
-			err = json.Unmarshal(data, &naples)
-			Expect(err).ShouldNot(HaveOccurred())
-			resp.Body.Close()
+			Eventually(func() bool {
+				resp, err := client.Get(nmdURL)
+				if err != nil {
+					By(fmt.Sprintf("Error getting Naples object from %v: %v", nmdURL, err))
+					return false
+				}
+				data, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					By(fmt.Sprintf("Error getting Naples object from %v: %v", nmdURL, err))
+					return false
+				}
+				fmt.Println("Got Naples Response: ", string(data))
+				err = json.Unmarshal(data, &naples)
+				Expect(err).ShouldNot(HaveOccurred()) // this should not happen. No retry.
+				resp.Body.Close()
+				return true
+			}, 90, 10).Should(BeTrue(), "Failed to get Naples object from %v", nmdURL)
 
 			// cache name:mac mapping
 			nodeMAC := naples.Status.Fru.MacStr
