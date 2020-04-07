@@ -28,9 +28,8 @@ message TechSupportNodeResult {
 
 message TechSupportRequestSpec {
   // NodeSelectorSpec specifies criteria for selecting nodes to collect from. Names is a list of node names
-  //  while Labels is a label selector. Neither, one or both names and labels can be specified.  If both of
-  //  them are specified a union of nodes selected by them is used as the set of nodes. When neither is
-  //  specified all nodes are selected.
+  //  while Labels is a label selector. One or both names and labels can be specified.  If both of
+  //  them are specified a union of nodes selected by them is used as the set of nodes
   message NodeSelectorSpec {
     repeated string Names = 1  [(gogoproto.jsontag) = "names,omitempty"];
     labels.Selector Labels = 2 [(gogoproto.jsontag) = "labels,omitempty"];

@@ -419,11 +419,6 @@ class PolicyObjectClient(base.ConfigClientBase):
         # pdsctl show not supported for policy
         return True
 
-    # TODO: need to disable reading of policy objects temporarily
-    #       until persisting of these objects is mainlined into ToT
-    def ReadObjects(self, node):
-        return True
-
     def GetPolicyObject(self, node, policyid):
         return self.GetObjectByKey(node, policyid)
 

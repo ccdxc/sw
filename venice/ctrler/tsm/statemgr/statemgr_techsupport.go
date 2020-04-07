@@ -53,7 +53,7 @@ const (
 	- On the ApiServer watch side, the statemgr handleTechSupportEvent handler
 	- On the RPC side, the rpcserver handlers WatchTechSupportRequests and UpdateResult
 
-	The pattern is that whenever a client needs an object from statemgr, it must firs retrieve the corresponding State object
+	The pattern is that whenever a client needs an object from statemgr, it must first retrieve the corresponding State object
 	and acquire the lock. After it is done, it must release the lock and make sure that no further operations (including
 	logging, serialization, etc.) are performed.
 

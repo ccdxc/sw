@@ -252,7 +252,7 @@ device_impl::fill_egr_drop_stats_(pds_device_drop_stats_t *egr_drop_stats) {
         "session_hit",
         "nexthop_invalid",
         "vnic_policer_rx",
-        "tcp_out_of_window ",
+        "tcp_out_of_window",
         "tcp_win_zero",
         "tcp_unexpected_pkt",
         "tcp_non_rst_pkt_after_rst",

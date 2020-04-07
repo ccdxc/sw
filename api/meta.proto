@@ -183,7 +183,7 @@ message Status {
 
 // Watch event types
 enum EventType {
-    CreateEvent   = 0 [(venice.enumValueStr) = "create-time"];
-    UpdateEvent   = 1 [(venice.enumValueStr) = "update-time"];
+    CreateEvent   = 0 [(venice.enumValueStr) = "create-event"];
+    UpdateEvent   = 1 [(venice.enumValueStr) = "update-event"];
     DeleteEvent   = 2 [(venice.enumValueStr) = "delete-event"];
 }

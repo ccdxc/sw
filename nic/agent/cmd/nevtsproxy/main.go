@@ -191,7 +191,7 @@ func main() {
 	logger := log.SetConfig(lConfig)
 	defer logger.Close()
 
-	// start event services based to the mode
+	// start event services based on the mode
 	es := &evtServices{
 		config: &config{
 			restURL:       fmt.Sprintf("localhost:" + globals.EvtsProxyRESTPort),

@@ -50,7 +50,7 @@ type InfraAPI interface {
 	// NotifyVeniceConnection updates venice connection status from netagent
 	NotifyVeniceConnection()
 
-	// UpdateIfChannel returns a channel for propogating interface state to the netagent
+	// UpdateIfChannel returns a channel for propagating interface state to the netagent
 	UpdateIfChannel() chan UpdateIfEvent
 
 	Close() error

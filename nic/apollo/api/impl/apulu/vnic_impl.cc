@@ -155,7 +155,7 @@ vnic_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                                        sdk::table::handle_t::null());
         ret = mapping_impl_db()->local_mapping_tbl()->reserve(&tparams);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to reserve entry in LOCAL_MAPPING"
+            PDS_TRACE_ERR("Failed to reserve entry in LOCAL_MAPPING "
                           "table for vnic %s, err %u", spec->key.str(), ret);
             goto error;
         }
@@ -265,7 +265,7 @@ vnic_impl::nuke_resources(api_base *api_obj) {
                                        0, sdk::table::handle_t::null());
         ret = mapping_impl_db()->local_mapping_tbl()->remove(&tparams);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to remove entry in LOCAL_MAPPING"
+            PDS_TRACE_ERR("Failed to remove entry in LOCAL_MAPPING "
                           "table for vnic %s, err %u", vnic->key().str(), ret);
             // fall thru
         }

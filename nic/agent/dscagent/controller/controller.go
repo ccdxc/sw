@@ -565,7 +565,7 @@ func (c *API) netIfWorker(ctx context.Context) {
 			ev.Intf.Status.DSCID = c.InfraAPI.GetConfig().DSCID
 			switch ev.Oper {
 			case types.Create:
-				// block till upadte succeeds
+				// block till update succeeds
 				now := time.Now()
 				retries := 0
 				for {
