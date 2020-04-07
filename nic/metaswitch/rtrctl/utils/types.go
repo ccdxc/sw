@@ -705,11 +705,19 @@ func NewBGPPeerAf(in *pds.BGPPeerAf) *ShadowBGPPeerAF {
 
 // ShadowBGPNLRIPrefixStatus is a shadow of the BGPNLRIPrefixStatus
 type ShadowBGPNLRIPrefixStatus struct {
-	Prefix      *NLRIPrefix
-	ASPathStr   string
-	PathOrigId  string
-	NextHopAddr string
-	RouteSource string
+	Prefix           *NLRIPrefix
+	ASPathStr        string
+	PathOrigId       string
+	NextHopAddr      string
+	RouteSource      string
+	FlapStatsFlapcnt uint32
+	FlapStatsSupprsd bool
+	IsActive         string
+	Stale            bool
+	FlapStartTime    uint32
+	ReasonNotBest    string
+	EcmpRoute        bool
+	PeerAddr         string
 	*pds.BGPNLRIPrefixStatus
 }
 
@@ -781,6 +789,14 @@ func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixSta
 		NextHopAddr:         net.IP(in.NextHopAddr).String(),
 		Prefix:              NewNLRIPrefix(int(in.Afi), int(in.Safi), in.Prefix),
 		RouteSource:         BGPRouteSource(in.RouteSource, in.PeerAddr),
+		FlapStatsFlapcnt:    in.FlapStatsFlapcnt,
+		FlapStatsSupprsd:    in.FlapStatsSupprsd,
+		IsActive:            strings.TrimPrefix(in.IsActive.String(), "BGP_NLRI_ISA_"),
+		Stale:               in.Stale,
+		FlapStartTime:       in.FlapStartTime,
+		ReasonNotBest:       strings.TrimPrefix(in.ReasonNotBest.String(), "BGP_REASON_"),
+		EcmpRoute:           in.EcmpRoute,
+		PeerAddr:            PdsIPToString(in.PeerAddr),
 		BGPNLRIPrefixStatus: in,
 	}
 }

@@ -478,36 +478,77 @@ enum NLRISrc {
   NLRI_SELF = 3; // created by itself
 }
 
+enum BGPNLRIIsActive {
+  BGP_NLRI_ISA_NONE        = 0;
+  BGP_NLRI_ISA_NOT_TRACKED = 1;
+  BGP_NLRI_ISA_INACTIVE    = 2;
+  BGP_NLRI_ISA_ACTIVE      = 3;
+}
+
+enum BGPRsnNotBest {
+  BGP_REASON_NOT_CONSIDERED     = 0;
+  BGP_REASON_ROUTE_IS_BEST      = 1;
+  BGP_REASON_WEIGHT             = 2;
+  BGP_REASON_LOCAL_PREF         = 3;
+  BGP_REASON_LCL_ORIG_PRFRRED   = 4;
+  BGP_REASON_AS_PATH_LEN        = 5;
+  BGP_REASON_ORIGIN             = 6;
+  BGP_REASON_MED                = 7;
+  BGP_REASON_LOCAL_ORIG_TIE     = 8;
+  BGP_REASON_EBGP_V_IBGP_PEER   = 9;
+  BGP_REASON_ADMIN_DISTANCE     = 10;
+  BGP_REASON_PATH_TO_NEXT_CST   = 11;
+  BGP_REASON_PREF_EXISTING      = 12;
+  BGP_REASON_IDENTIFIER         = 13;
+  BGP_REASON_CLUSTER_LEN        = 14;
+  BGP_REASON_PEER_ADDR_TYPE     = 15;
+  BGP_REASON_PEER_ADDR          = 16;
+  BGP_REASON_PEER_PORT          = 17;
+  BGP_REASON_PATH_ID            = 18;
+}
+
 // BGP NLRI prefix table
 message BGPNLRIPrefixStatus {
   // BGP address family
-  BGPAfi  Afi              = 1;
+  BGPAfi          Afi              = 1;
   // BGP sub-address family
-  BGPSafi Safi             = 2;
+  BGPSafi         Safi             = 2;
   // prefix in NLRI
-  bytes   Prefix           = 3;
+  bytes           Prefix           = 3;
   // prefix length
-  uint32  PrefixLen        = 4;
+  uint32          PrefixLen        = 4;
   // route source (learned from BGP peer or AFM)
-  NLRISrc RouteSource      = 5;
+  NLRISrc         RouteSource      = 5;
   // route source index
-  uint32  RouteSourceIndex = 6;
+  uint32          RouteSourceIndex = 6;
   // path ID
-  uint32  PathID           = 7;
+  uint32          PathID           = 7;
   // chosen as BGP best route or not
-  bool    BestRoute        = 8;
+  bool            BestRoute        = 8;
   // AS path string
-  bytes   ASPathStr        = 9;
+  bytes           ASPathStr        = 9;
   // originator ID
-  bytes   PathOrigId       = 10;
+  bytes           PathOrigId       = 10;
   // next-hop address
-  bytes   NextHopAddr      = 11;
+  bytes           NextHopAddr      = 11;
   // Size of each ASN in the AS path string
-  BGPASSize ASSize         = 12;
+  BGPASSize       ASSize           = 12;
   // Is this route part of an ECMP set
-  bool    EcmpRoute        = 13;
+  bool            EcmpRoute        = 13;
   // Peer IP
-  types.IPAddress PeerAddr = 14;
+  types.IPAddress PeerAddr         = 14;
+  // The number of times this route has flapped since statistics were last cleared.
+  uint32          FlapStatsFlapcnt = 15;
+  // Whether or not this route is suppressed.
+  bool            FlapStatsSupprsd = 16;
+  // An indication of whether or not this route is installed in the forwarding table
+  BGPNLRIIsActive IsActive         = 17;
+  // Whether or not this route was last sent by the peer before BGP detected that the peer was restarting.
+  bool            Stale            = 18;
+  // The value of sysUpTime when this route flapped
+  uint32          FlapStartTime    = 19;
+  // If bgpNlriPrefixBest is 'true', then this field is set to 'routeIsBest'.  Otherwise, it reports the stage in the decision process when the route was determined to be non-best.
+  BGPRsnNotBest   ReasonNotBest    = 20;
 }
 
 // BGP NLRI prefix key object
