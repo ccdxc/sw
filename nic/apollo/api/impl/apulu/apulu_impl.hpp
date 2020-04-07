@@ -144,6 +144,21 @@ namespace impl {
     sdk::lib::memrev((key)->p4e_i2e_mapping_lkp_addr, (mac), ETH_ADDR_LEN);  \
 }
 
+#define PDS_IMPL_RXDMA_IP_MAPPING_KEY(key, vpc_hw_id, ip)                    \
+{                                                                            \
+    memset((key), 0, sizeof(*(key)));                                        \
+    (key)->p4_to_rxdma_vpc_id = (vpc_hw_id);                                 \
+    if ((ip)->af == IP_AF_IPV6) {                                            \
+        (key)->p4_to_rxdma_iptype = KEY_TYPE_IPV6;                           \
+        sdk::lib::memrev((key)->rx_to_tx_hdr_remote_ip,                      \
+                         (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
+    } else {                                                                 \
+        (key)->p4_to_rxdma_iptype = KEY_TYPE_IPV4;                           \
+        memcpy((key)->rx_to_tx_hdr_remote_ip,                                \
+               &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
+    }                                                                        \
+}
+
 #define nat_action action_u.nat_nat_rewrite
 #define PDS_IMPL_FILL_NAT_DATA(data, xlate_ip, xlate_port)                   \
 {                                                                            \

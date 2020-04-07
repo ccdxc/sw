@@ -27,6 +27,7 @@
 #include "nic/apollo/api/impl/apulu/mapping_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include "gen/p4gen/p4/include/ftl.h"
 
 using sdk::table::sdk_table_api_params_t;
@@ -284,6 +285,32 @@ mapping_impl::reserve_nat_resources_(mapping_entry *mapping, vnic_entry *vnic,
 }
 
 sdk_ret_t
+mapping_impl::reserve_public_ip_rxdma_mapping_resources_(mapping_entry *mapping,
+                  vpc_impl *vpc, vnic_entry *vnic, pds_mapping_spec_t *spec) {
+    sdk_ret_t ret;
+    sdk_table_api_params_t tparams;
+    rxdma_mapping_swkey_t rxdma_mapping_key;
+
+    // reserve an entry in MAPING table for public IP
+    PDS_IMPL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key, vpc->hw_id(),
+                                  &spec->public_ip);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                   NULL, NULL, 0,
+                                   sdk::table::handle_t::null());
+    ret = mapping_impl_db()->rxdma_mapping_tbl()->reserve(&tparams);
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed to reserve entry in rxdma MAPPING table for "
+                      "public IP %s of mapping %s, vnic %s, err %u",
+                      ipaddr2str(&spec->public_ip), mapping->key2str().c_str(),
+                      vnic->key().str(), ret);
+        return ret;
+    }
+    rxdma_mapping_public_ip_hdl_ = tparams.handle;
+    return ret;
+}
+
+
+sdk_ret_t
 mapping_impl::reserve_public_ip_resources_(mapping_entry *mapping,
                                            vpc_impl *vpc, vnic_entry *vnic,
                                            pds_mapping_spec_t *spec) {
@@ -293,7 +320,18 @@ mapping_impl::reserve_public_ip_resources_(mapping_entry *mapping,
     if (unlikely(ret != SDK_RET_OK)) {
         return ret;
     }
-    return reserve_nat_resources_(mapping, vnic, spec);
+    // reserve NAT table entries
+    ret = reserve_nat_resources_(mapping, vnic, spec);
+    if (unlikely(ret != SDK_RET_OK)) {
+        return ret;
+    }
+    // if tags are configured on this mapping, reserve an entry in the rxdma
+    // MAPPING table
+    if (spec->num_tags) {
+        return reserve_public_ip_rxdma_mapping_resources_(mapping, vpc,
+                                                          vnic, spec);
+    }
+    return ret;
 }
 
 sdk_ret_t
@@ -305,6 +343,7 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     mapping_swkey_t mapping_key;
     sdk_table_api_params_t tparams;
     local_mapping_swkey_t local_mapping_key;
+    rxdma_mapping_swkey_t rxdma_mapping_key;
 
     // reserve an entry in LOCAL_MAPPING table for overlay IP
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
@@ -339,6 +378,42 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     PDS_TRACE_DEBUG("Rsvd LOCAL_MAPPING handle 0x%lx, MAPPING handle 0x%lx",
                     local_mapping_overlay_ip_hdl_, mapping_hdl_);
 
+    // if tags are configured on this mapping, allocate all needed resources
+    if (spec->num_tags) {
+        for (uint32_t i = 0; i < spec->num_tags; i++) {
+            ret = vpc_impl_db()->alloc_class_id(spec->tags[i],
+                                                true, &class_id_[i]);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to allocate class id for tag %u of "
+                              "local mapping %s %s, vnic %s, err %u",
+                              spec->tags[i], mapping->key().str(),
+                              mapping->key2str().c_str(),
+                              vnic->key().str(), ret);
+                return ret;
+            }
+            num_class_id_++;
+        }
+        // TODO: allocate an index the class id table
+        //       - revisit this once the table is placed
+
+        // allocate an entry in the rxdma MAPPING table to point to these
+        // class ids in the class id index table
+        PDS_IMPL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
+                                      ((vpc_impl *)vpc->impl())->hw_id(),
+                                      &spec->skey.ip_addr);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                       NULL, NULL, 0,
+                                       sdk::table::handle_t::null());
+        ret = mapping_impl_db()->rxdma_mapping_tbl()->reserve(&tparams);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to reserve entry in rxdma MAPPING table "
+                          "for mapping %s, vnic %s, err %u",
+                          mapping->key2str().c_str(), vnic->key().str(), ret);
+            return ret;
+        }
+        rxdma_mapping_hdl_ = tparams.handle;
+    }
+
 #if 0
     // if IP/MAC binding checks are enabled, reserve entries in IP_MAC_BINDING
     // table so we can point from the corresponding L2 entry in the
@@ -359,6 +434,13 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     if (spec->public_ip_valid) {
         ret = reserve_public_ip_resources_(mapping, (vpc_impl *)vpc->impl(),
                                            vnic, spec);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to reserve resources for public IP %s "
+                          "of mapping %s, vnic %s, err %u",
+                          ipaddr2str(&spec->public_ip),
+                          mapping->key2str().c_str(), vnic->key().str(), ret);
+            return ret;
+        }
     }
     return ret;
 }
@@ -480,9 +562,6 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                     //          updated, in this case we can reuse NAT table
                     //          resources, so we only have to allocate mapping
                     //          table resources.
-                    //          // TODO: During activate stage, we need
-                    //          to free mapping table resources (only)
-                    //          associated with the original object
                     // case 2 - current object has no public IP, so allocate
                     //          all resources needed for public IP
                     if (curr_mapping->is_public_ip_valid()) {
@@ -498,8 +577,6 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                     }
                 } else {
                     // we don't need to reserve resource(s) for public IP
-                    // TODO: during activate stage, we should nuke/remove
-                    // these resources associated with original object
                     local_mapping_public_ip_hdl_ =
                         sdk::table::handle_t::null();
                     mapping_public_ip_hdl_ = sdk::table::handle_t::null();

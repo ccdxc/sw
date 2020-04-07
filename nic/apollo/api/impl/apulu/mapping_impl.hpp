@@ -166,8 +166,14 @@ private:
         local_mapping_public_ip_hdl_ = handle_t::null();
         mapping_hdl_ = handle_t::null();
         mapping_public_ip_hdl_ = handle_t::null();
+        rxdma_mapping_hdl_ = handle_t::null();
+        rxdma_mapping_public_ip_hdl_ = handle_t::null();
         nexthop_type_ = NEXTHOP_TYPE_MAX;
         nexthop_id_ = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
+        num_class_id_ = 0;
+        for (uint32_t i = 0; i < PDS_MAX_TAGS_PER_MAPPING; i++) {
+            class_id_[i] = PDS_IMPL_RSVD_MAPPING_CLASS_ID;
+        }
     }
 
     /// \brief destructor
@@ -191,6 +197,15 @@ private:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t reserve_nat_resources_(mapping_entry *mapping, vnic_entry *vnic,
                                      pds_mapping_spec_t *spec);
+
+    /// \brief     reserve necessary NAT table entries for local mapping
+    /// \param[in] mapping mapping object being processed
+    /// \param[in] vpc     VPC impl instance of this mapping
+    /// \param[in] vnic    vnic of this mapping
+    /// \param[in] spec    IP mapping details
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t reserve_public_ip_rxdma_mapping_resources_(mapping_entry *mapping,
+                  vpc_impl *vpc, vnic_entry *vnic, pds_mapping_spec_t *spec);
 
     /// \brief     reserve all resources needed for local mapping's
     ///            public IP
@@ -514,6 +529,13 @@ private:
     // handles for MAPPING table
     handle_t    mapping_hdl_;    // could be L2 or IP handle
     handle_t    mapping_public_ip_hdl_;
+    // handles for RxDMA MAPPING table
+    handle_t    rxdma_mapping_hdl_;
+    handle_t    rxdma_mapping_public_ip_hdl_;
+    // number of class id(s) allocated for this mapping
+    uint32_t    num_class_id_;
+    // class id(s) of this mapping
+    uint32_t    class_id_[PDS_MAX_TAGS_PER_MAPPING];
 };
 
 /// \@}

@@ -28,7 +28,7 @@ sdk_ret_t spawn_routing_thread(void);
 #define DEVICE_CONF_FILE    "/sysconfig/config0/device.conf"
 
 // number of trace files to keep
-#define TRACE_NUM_FILES                        2
+#define TRACE_NUM_FILES                        1
 #define TRACE_FILE_SIZE                        (20 << 20)
 #define TRACE_NUM_FILES_HMON                   1
 #define TRACE_FILE_SIZE_HMON                   (5 << 20)        // 5MB
