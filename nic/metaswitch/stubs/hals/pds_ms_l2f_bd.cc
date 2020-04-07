@@ -13,6 +13,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/learn/learn_api.hpp"
+#include "nic/apollo/learn/learn_thread.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <thread>
 
@@ -399,7 +400,12 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
         PDS_TRACE_DEBUG ("MS BD %d: Delete PDS Batch commit successful"
                          " for remote MACs on BD ", bd_id);
     }
-    auto ret = learn::api_batch_commit(pds_bctxt_guard.subnet_batch.release());
+    sdk_ret_t ret = SDK_RET_OK;
+    if (learn::learning_enabled()) {
+        ret = learn::api_batch_commit(pds_bctxt_guard.subnet_batch.release());
+    } else {
+        ret = pds_batch_commit(pds_bctxt_guard.subnet_batch.release());
+    }
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for delete MS BD ")
