@@ -23,13 +23,11 @@ typedef enum pds_init_mode_ce {
     PDS_CINIT_MODE_NONE,            ///< invalid mode
     PDS_CINIT_MODE_COLD_START,      ///< initialize from scratch
                                    ///< ignore any state if preserved previously
-    PDS_CINIT_MODE_POST_UPGRADE,    ///< initialize using state preserved, if any
 } pds_cinit_mode_t;
 
 
 #define PDS_FLAG_INIT_TYPE_HARD 1
 #define PDS_FLAG_INIT_TYPE_SOFT 2
-#define PDS_FLAG_INIT_TYPE_UPGRADE 4
 
 /// \brief Initialization parameters
 typedef struct pds_cinit_params_s {

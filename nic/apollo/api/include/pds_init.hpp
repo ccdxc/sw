@@ -48,13 +48,6 @@ typedef struct pds_init_params_s {
 } pds_init_params_t;
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-sdk_ret_t pds_global_init_v2(pds_init_params_t *params);
-#ifdef __cplusplus
-}
-#endif
 /// \brief initialize routine
 /// \param[in] params init time parameters
 /// \return #SDK_RET_OK on success, failure status code on error

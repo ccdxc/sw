@@ -13,8 +13,10 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/include/athena/pds_init.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
+#include "nic/sdk/asic/asic.hpp"
 
 using namespace sdk;
+using namespace sdk::asic;
 
 extern "C" {
 // Function prototypes
@@ -26,41 +28,13 @@ sdk_ret_t pds_dnat_map_delete(void);
 void pds_dnat_map_set_core_id(uint32_t core_id);
 
 
-sdk_ret_t
-pds_global_init_v2 (pds_init_params_t *params)
-{
-    sdk_ret_t           ret;
-
-    if (params == NULL) {
-        PDS_TRACE_ERR("params arg is null");
-        return SDK_RET_INVALID_ARG;
-    }
-
-    ret = pds_init(params);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("PDS init failed with ret %u\n", ret);
-        return ret;
-    }
-    ret = pds_flow_cache_create();
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Flow cache init failed with ret %u\n", ret);
-        return ret;
-    }
-    ret = pds_dnat_map_create();
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("DNAT map init failed with ret %u\n", ret);
-        return ret;
-    }
-    return ret;
-
-
-}
-
 pds_ret_t
 pds_global_init (pds_cinit_params_t *params)
 {
     sdk_ret_t           ret;
     pds_init_params_t   params_cpp;
+    asic_init_type_t    asic_init_type = ASIC_INIT_TYPE_HARD;
+
 
     if (params == NULL) {
         PDS_TRACE_ERR("params arg is null");
@@ -78,6 +52,13 @@ pds_global_init (pds_cinit_params_t *params)
 #else
      params_cpp.cfg_file = "hal.json";
 #endif
+   
+    if (params->flags & PDS_FLAG_INIT_TYPE_SOFT) {
+        asic_init_type = ASIC_INIT_TYPE_SOFT;
+    } 
+
+    sdk::asic::asic_set_init_type(asic_init_type);
+
     ret = pds_init(&params_cpp);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("PDS init failed with ret %u\n", ret);
