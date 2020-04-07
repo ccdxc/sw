@@ -247,7 +247,8 @@ testcases:
             bidir    : ['yes']
             rxdepth  : [10]
             txdepth  : [64]
-            size     : [65536, 1048576]
+            # TODO: Add back 1048576
+            size     : [65536]
             numsges  : [16]
             command  : ['ib_send_bw']
 
@@ -261,7 +262,8 @@ testcases:
             bidir    : ['yes']
             rxdepth  : [1]
             txdepth  : [64]
-            size     : [65536, 1048576]
+            # TODO: Add back 1048576
+            size     : [65536]
             numsges  : [16]
             command  : ['ib_read_bw', 'ib_write_bw']
 

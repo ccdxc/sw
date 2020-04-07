@@ -10,7 +10,7 @@ queue_name: baremetal
 e2e-targets:
  # baremetal
 # e2e-freebsd-regression-rdma:
-#   commands: ["sh", "-c", "make regression-rdma && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle mtu,rdma_reg"]
+#   commands: ["sh", "-c", "make regression-rdma && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle mtu,rdma_reg"]
 #   owners: ["email:rdma-dpath@pensando.io"]
 #   area:
 #   sub-area:
@@ -39,7 +39,7 @@ e2e-targets:
 #          EsxPassword: Pen0trl!
 #
 # e2e-freebsd-regression-rdma-dcqcn:
-#   commands: ["sh", "-c", "make regression-rdma-dcqcn && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle mtu,rdma_reg_dcqcn"]
+#   commands: ["sh", "-c", "make regression-rdma-dcqcn && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle mtu,rdma_reg_dcqcn"]
 #   owners: ["email:rdma-dpath@pensando.io"]
 #   area:
 #   sub-area:
@@ -67,7 +67,7 @@ e2e-targets:
 #          EsxUsername: root
 #          EsxPassword: Pen0trl!
 # e2e-freebsd-regression-rdma-stress:
-#   commands: ["sh", "-c", "make regression-rdma-stress && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle mtu,rdma_stress"]
+#   commands: ["sh", "-c", "make regression-rdma-stress && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle mtu,rdma_stress"]
 #   owners: ["email:rdma-dpath@pensando.io"]
 #   area:
 #   sub-area:
@@ -95,7 +95,7 @@ e2e-targets:
 #          EsxUsername: root
 #          EsxPassword: Pen0trl!
 # e2e-freebsd-regression-storage:
-#   commands: ["sh", "-c", "make regression-storage && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle storage"]
+#   commands: ["sh", "-c", "make regression-storage && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle storage"]
 #   owners: ["email:stg-dev@pensando.io"]
 #   area:
 #   sub-area:

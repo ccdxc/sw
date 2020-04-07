@@ -6,11 +6,11 @@ image:
 rebase: true
 queue_name: baremetal
 
-# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
 e2e-targets:
   # baremetal + baremetal Esx test cases
  e2e-linux-bm-regression-rdma:
-   commands: ["sh", "-c", "make regression-rdma && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle mtu,rdma_reg"]
+   commands: ["sh", "-c", "make regression-rdma && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle mtu,rdma_reg"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
    owners: ["email:rdma-dpath@pensando.io"]
    area:
@@ -40,7 +40,7 @@ e2e-targets:
           EsxUsername: root
           EsxPassword: Pen0trl!
  e2e-linux-bm-regression-rdma-stress:
-   commands: ["sh", "-c", "make regression-rdma-stress && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle mtu,rdma_stress"]
+   commands: ["sh", "-c", "make regression-rdma-stress && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle mtu,rdma_stress"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
    owners: ["email:rdma-dpath@pensando.io"]
    area:
@@ -158,7 +158,7 @@ e2e-targets:
           EsxPassword: Pen0trl!
  
  e2e-linux-bm-regression-storage:
-   commands: ["sh", "-c", "make regression-storage && ./run_iota.sh --testsuite transparent_basenet --regression --testbundle storage --skip-sanity"]
+   commands: ["sh", "-c", "make regression-storage && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle storage --skip-sanity"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
    owners: ["email:stg-dev@pensando.io"]
    area:

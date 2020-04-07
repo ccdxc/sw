@@ -10,7 +10,7 @@ queue_name: baremetal
 e2e-targets:
  # baremetal RDMA
  e2e-linux-bm-rdma:
-   commands: ["sh", "-c", "make linux && ./run_iota.sh --testsuite transparent_basenet --precheckin --testbundle rdma,lif_telemetry,filters,subifs,rx_mode,ionicdrv,obfl_check,interrupts_check,cpldupgrade,hpe-ilo"]
+   commands: ["sh", "-c", "make linux && ./run_iota.sh --testsuite transparent_basenet_storage --precheckin --testbundle rdma,lif_telemetry,filters,subifs,rx_mode,ionicdrv,obfl_check,interrupts_check,cpldupgrade,hpe-ilo"]
    owners: ["email:aboyer@pensando.io"]
    area:
    sub-area:

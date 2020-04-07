@@ -63,7 +63,6 @@ testbundles:
         # Relative paths from iota/test/iris/testbundles/
         #- classic/ethtool.testbundle
         - networking/connectivity.testbundle
-        #- classic/rdma.testbundle
         - linktest/linktest.testbundle
         #- filters/filters.testbundle
         - mtu/mtu.testbundle
@@ -82,7 +81,6 @@ testbundles:
         #- drivercsum/drivercsum.testbundle
         - classic/driver-features-sanity.testbundle
         - linktest/linktest.testbundle
-        #- storage/storage.testbundle
         - penctl/penctl_classic.testbundle
         #- penctl/mode_change.testbundle
         - post_diag/post_diag.testbundle
@@ -95,18 +93,12 @@ testbundles:
 
     extended:
         # Relative paths from iota/test/iris/testbundles/
-        - classic/rdma_ext.testbundle
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
-        #- classic/rdma_reg.testbundle
-        #- classic/rdma_stress.testbundle
-        #- classic/rdma_longevity.testbundle
-        #- classic/rdma_reg_dcqcn.testbundle
         - tso/tso_regr.testbundle
         - rss/rss.testbundle
         - classic/driver-features.testbundle
-        #- storage/regression.testbundle
         - penctl/mode_change.testbundle
 
 teardown:

@@ -2,7 +2,7 @@
 import time
 import iota.harness.api as api
 import iota.test.iris.testcases.rdma.rdma_perftest as rdma_perf
-import iota.test.iris.utils.naples_host as host
+import iota.test.utils.naples_host as host
 
 def Setup(tc):
     rdma_perf.Setup(tc)
@@ -100,13 +100,12 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
-    
     result = api.types.status.SUCCESS
-    
+
     #print krping output
     for cmd in tc.krping_resp.commands:
         api.PrintCommandResults(cmd)
-    
+
     #print dmesg output
     for cmd in tc.dmesg_resp.commands:
         api.PrintCommandResults(cmd)
@@ -115,22 +114,20 @@ def Verify(tc):
     result = rdma_perf.Verify(tc)
     if result != api.types.status.SUCCESS:
         return result
-    
+
     #print ping output and check if pipline is stuck
     for cmd in tc.ping_resp.commands:
         api.PrintCommandResults(cmd)
-        ping_output = cmd.stdout.split("\n")
-        
-        if "round-trip" in ping_output[-2]:
-            ping_result = ping_output[-3].split()
-        else:
-            ping_result = ping_output[-2].split()
-            
-        pkts_sent = int(ping_result[0])
-        pkts_rcvd = int(ping_result[3])
-        if pkts_sent != 10 or pkts_rcvd != 10:
-            api.Logger.error("PING not successful")
-            return api.types.status.FAILURE
+
+        for ping_output in cmd.stdout.splitlines():
+            if "packets transmitted" in ping_output:
+                ping_result = ping_output.split()
+
+                pkts_sent = int(ping_result[0])
+                pkts_rcvd = int(ping_result[3])
+                if pkts_sent != 10 or pkts_rcvd != 10:
+                    api.Logger.error("PING not successful")
+                    return api.types.status.FAILURE
 
     return result
 

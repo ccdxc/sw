@@ -67,7 +67,6 @@ testbundles:
         - flowlog/flowlog.testbundle
         - aging/aging_flowaware.testbundle
         - networking/lif_telemetry.testbundle
-        #- classic/rdma.testbundle
         - linktest/linktest.testbundle
         - filters/filters.testbundle
         #- mtu/mtu.testbundle
@@ -84,7 +83,6 @@ testbundles:
         - tso/tso.testbundle
         - classic/driver-features-sanity.testbundle
         - linktest/linktest.testbundle
-        #- storage/storage.testbundle
         - penctl/penctl_classic.testbundle
         #- penctl/mode_change.testbundle
         - post_diag/post_diag.testbundle

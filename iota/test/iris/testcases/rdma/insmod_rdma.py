@@ -2,6 +2,7 @@
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.verif.utils.rdma_utils as rdma
+import iota.test.iris.testcases.penctl.common as penctl
 import iota.test.utils.naples_host as host
 
 def Setup(tc):
@@ -23,6 +24,10 @@ def Setup(tc):
 
 def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+
+    for n in tc.nodes:
+        penctl.AddPenctlCommand(req, n, "show dsc")
+
     api.Logger.info("Loading RDMA driver on nodes: {0}".format(tc.nodes))
 
     for n in tc.nodes:
