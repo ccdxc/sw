@@ -157,6 +157,7 @@ bool UpgReqReact::CanMoveStateMachine(bool isOnMountReq) {
                 UPG_LOG_DEBUG("Got pass from application {}/{}", (*appResp)->key(), ((*appResp))->meta().ShortDebugString());
             } else {
                 UPG_LOG_DEBUG("Got fail from application {} {}", (*appResp)->key(), (*appResp)->upgapprespval());
+                UPG_OBFL_TRACE("Got fail from application {} {}", (*appResp)->key(), (*appResp)->upgapprespval());
                 ctx.upgFailed = true;
                 if (isOnMountReq) {
                     string appRespStr = "App " + (*appResp)->key() + " returned failure: " + (*appResp)->upgapprespstr();
