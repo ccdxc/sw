@@ -76,6 +76,11 @@ periodic_thread_run (void *ctxt)
     while (TRUE) {
         // wait for timer to fire
         if (sdk::lib::timerfd_wait(&timerfd_info, &missed) < 0) {
+            // timerfd_wait can fail if the read system call is interrupted
+            // which sets errno to EINTR
+            if (errno == EINTR) {
+                continue;
+            }
             SDK_TRACE_ERR("Periodic thread failed to wait on timer");
             break;
         }
