@@ -478,4 +478,23 @@ func generateContinuousQueryMap(suffix string, rpSpec ContinuousQueryRetentionSp
 					GROUP BY time(` + rpSpec.GroupBy + `), "name", "reporterID", "tenant"
 				END`,
 	}
+
+	ContinuousQueryMap["EgressDropMetrics_"+suffix] = ContinuousQuerySpec{
+		CQName:                 "EgressDropMetrics_" + suffix,
+		DBName:                 "default",
+		RetentionPolicyName:    rpSpec.Name,
+		RetentionPolicyInHours: rpSpec.Hours,
+		Query: `CREATE CONTINUOUS QUERY EgressDropMetrics_` + suffix + ` ON "default"
+				BEGIN
+					SELECT last("DropOutputMapping") AS "DropOutputMapping", 
+							last("DropPruneSrcPort") AS "DropPruneSrcPort", 
+							last("DropMirror") AS "DropMirror", 
+							last("DropPolicer") AS "DropPolicer", 
+							last("DropCopp") AS "DropCopp", 
+							last("DropChecksumErr") AS "DropChecksumErr" 
+					INTO "default"."` + rpSpec.Name + `"."EgressDropMetrics_` + suffix + `"
+					FROM "EgressDropMetrics"
+					GROUP BY time(` + rpSpec.GroupBy + `), "name", "reporterID", "tenant"
+				END`,
+	}
 }
