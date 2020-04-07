@@ -221,7 +221,7 @@ logger_init (void)
     std::string logfile, err_logfile;
 
     logfile = log_file(std::getenv("LOG_DIR"), "./pds-agent.log");
-    err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"), "/obfl/obfl.log");
+    err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"), "/obfl.log");
 
     if (logfile.empty() || err_logfile.empty()) {
         return SDK_RET_ERR;
@@ -233,7 +233,7 @@ logger_init (void)
 
     logfile = log_file(std::getenv("LOG_DIR"), "./hmon.log");
     err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"),
-                           "/obfl/hmon_err.log");
+                           "/hmon_err.log");
 
     // initialize the hmon and interrupts logger
     core::hmon_trace_init("hmon", 0x1, true, err_logfile.c_str(),
@@ -242,7 +242,7 @@ logger_init (void)
 
     logfile = log_file(std::getenv("LOG_DIR"), "./asicerrord_onetime.log");
     err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"),
-                           "/obfl/asicerrord_onetime_err.log");
+                           "/asicerrord_onetime_err.log");
 
     // initialize the onetime interrupts logger
     core::intr_trace_init("intr", 0x1, true, err_logfile.c_str(),

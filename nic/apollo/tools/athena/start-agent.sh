@@ -9,6 +9,8 @@ rm -f $NON_PERSISTENT_LOGDIR/pds-athena-agent.log*
 
 ulimit -c unlimited
 
+export PERSISTENT_LOG_DIR=/obfl/
+
 #Huge-pages for DPDK
 echo 64 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
 mkdir -p /dev/hugepages

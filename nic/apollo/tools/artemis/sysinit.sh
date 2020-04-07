@@ -13,6 +13,7 @@ export LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/../platform/lib:/usr/local/lib:/usr/li
 export HAL_PBC_INIT_CONFIG="2x100_hbm"
 export COVFILE=$NIC_DIR/coverage/sim_bullseye_hal.cov
 export AGENT_TEST_HOOKS_LIB=libflowtestagenthooks.so
+export PERSISTENT_LOG_DIR='/obfl/'
 
 ulimit -c unlimited
 cd /

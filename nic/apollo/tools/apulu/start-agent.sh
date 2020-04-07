@@ -8,5 +8,6 @@ rm -f $NON_PERSISTENT_LOGDIR/pds-agent.log*
 
 ulimit -c unlimited
 
+export PERSISTENT_LOG_DIR=/obfl/
 exec $PDSPKG_TOPDIR/bin/pdsagent -c hal_hw.json $*
 

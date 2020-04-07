@@ -6,6 +6,7 @@ source $CUR_DIR/setup_env_hw.sh
 export GOTRACEBACK='crash'
 export GOGC=50
 export SYSMGR_CORES='0x1'
+export PERSISTENT_LOG_DIR='/obfl/'
 
 ulimit -c unlimited
 
