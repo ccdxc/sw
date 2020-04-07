@@ -7,10 +7,6 @@ import iota.test.apulu.utils.misc as misc_utils
 import time
 
 def __learn_endpoints(args):
-    # Enabling Max age for all endpoints
-    if not conf_utils.SetDeviceLearnTimeout(86400):
-        return api.types.status.FAILURE
-
     if not conf_utils.ClearLearnData():
         return api.types.status.FAILURE
 

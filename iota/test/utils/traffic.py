@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import time
+import random
 import iota.harness.api as api
 import iota.test.iris.utils.iperf as iperf
 
@@ -59,7 +60,11 @@ def __get_ping_base_cmd(w, af, packet_size, count, interval, do_pmtu_disc):
 
     return ping_cmd
 
-def pingWorkloads(workload_pairs, af="ipv4", packet_size=64, count=3, interval=0.2, do_pmtu_disc=False):
+def __add_source_ip_to_ping_cmd(ping_base_cmd, source_ip):
+    ping_cmd = ping_base_cmd + " -I %s" %(source_ip)
+    return ping_cmd
+
+def pingWorkloads(workload_pairs, af="ipv4", packet_size=64, count=3, interval=0.2, do_pmtu_disc=False, sec_ip_test_type='none'):
     cmd_cookies = []
 
     if not api.IsSimulation():
@@ -72,12 +77,33 @@ def pingWorkloads(workload_pairs, af="ipv4", packet_size=64, count=3, interval=0
         w2 = pair[1]
 
         ping_base_cmd = __get_ping_base_cmd(w1, af, packet_size, count, interval, do_pmtu_disc)
-        addr = __get_workload_address(w2, af)
-        ping_cmd = __ping_addr_substitution(ping_base_cmd, addr)
+        if sec_ip_test_type == 'all':
+            src_list = list()
+            dst_list = list()
+            src_list.append(__get_workload_address(w1, af))
+            src_list.extend(w1.sec_ip_addresses)
+            dst_list.append(__get_workload_address(w2, af))
+            dst_list.extend(w2.sec_ip_addresses)
+            for src_ip in src_list:
+                for dst_ip in dst_list:
+                    ping_cmd = __add_source_ip_to_ping_cmd(ping_base_cmd, src_ip)
+                    ping_cmd = __ping_addr_substitution(ping_cmd, dst_ip)
+                    api.Logger.verbose(" Ping cmd %s " % (ping_cmd))
+                    api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, ping_cmd)
+                    cmd_cookies.append(ping_cmd)
+        else:
+            addr = __get_workload_address(w2, af)
+            ping_cmd = __ping_addr_substitution(ping_base_cmd, addr)
+            api.Logger.verbose(" Ping cmd %s " % (ping_cmd))
+            api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, ping_cmd)
+            cmd_cookies.append(ping_cmd)
 
-        api.Logger.verbose(" Ping cmd %s " % (ping_cmd))
-        api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, ping_cmd)
-        cmd_cookies.append(ping_cmd)
+            if sec_ip_test_type == 'random':
+                ping_cmd = __add_source_ip_to_ping_cmd(ping_base_cmd, random.choice(w1.sec_ip_addresses))
+                ping_cmd = __ping_addr_substitution(ping_cmd, random.choice(w2.sec_ip_addresses))
+                api.Logger.verbose(" Ping cmd %s " % (ping_cmd))
+                api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, ping_cmd)
+                cmd_cookies.append(ping_cmd)
 
     resp = api.Trigger(req)
     return cmd_cookies, resp

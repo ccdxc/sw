@@ -5,11 +5,11 @@ import iota.test.apulu.config.api as config_api
 import apollo.config.objects.subnet as subnet
 import apollo.config.objects.vnic as vnic
 
-def TriggerConnectivityTest(workload_pairs, proto, af, pktsize):
+def TriggerConnectivityTest(workload_pairs, proto, af, pktsize, sec_ip_test_type='none'):
     cmd_cookies = []
     resp = None
     if proto == 'icmp':
-        cmd_cookies, resp = traffic_utils.pingWorkloads(workload_pairs, af, pktsize)
+        cmd_cookies, resp = traffic_utils.pingWorkloads(workload_pairs, af, pktsize, sec_ip_test_type=sec_ip_test_type)
     elif proto in ['tcp','udp']:
         cmd_cookies, resp = traffic_utils.iperfWorkloads(workload_pairs, af, proto, pktsize, "1K", 1, 1)
     else:
@@ -29,13 +29,13 @@ def VerifyConnectivityTest(proto, cmd_cookies, resp, expected_exit_code=0):
 
 # Testcases which want to test connectivity after a trigger, through
 # different protocol packets with multiple packet sizes can use this API.
-def ConnectivityTest(workload_pairs, proto_list, ipaf_list, pktsize_list, expected_exit_code=0):
+def ConnectivityTest(workload_pairs, proto_list, ipaf_list, pktsize_list, expected_exit_code=0, sec_ip_test_type='none'):
     cmd_cookies = []
     resp = None
     for af in ipaf_list:
         for proto in proto_list:
             for pktsize in pktsize_list:
-                cmd_cookies, resp = TriggerConnectivityTest(workload_pairs, proto, af, pktsize)
+                cmd_cookies, resp = TriggerConnectivityTest(workload_pairs, proto, af, pktsize, sec_ip_test_type)
                 return VerifyConnectivityTest(proto, cmd_cookies, resp, expected_exit_code)
     return api.types.status.SUCCESS
 

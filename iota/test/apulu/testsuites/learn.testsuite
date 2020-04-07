@@ -1,0 +1,55 @@
+meta:
+    name        : learn
+    description : Equinix Learn Testsuite
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : classic
+    os          : [ linux, freebsd ]
+
+packages:
+    - iota.test.apulu
+
+images:
+    naples: nic/naples_fw_venice.tar
+
+setup:
+    topology: test/apulu/topologies/classic_baremetal/container_centos.topology
+    config  :
+        #- step : utils.naples_workloads
+        - step : verif.config.verify_oob
+        - step : config.set_max_mtu
+        - step : config.topology
+          args :
+             spec :
+                node1 : 2naples_container_learn_node1.cfgyml
+                node2 : 2naples_container_learn_node2.cfgyml
+        - step : config.bringup_workloads
+        - step : config.add_routes
+        - step : config.learn_endpoints
+
+common:
+    verifs:
+        #-   step    : verif.utils.verify_links
+        #-   step    : verif.utils.verify_cores
+        #-   step    : verif.utils.verify_topology_health
+    debugs:
+        -   step    : verif.utils.collect_techsupport
+
+    setup:
+        #-   step    : verif.utils.link_flap
+        #-   step    : verif.utils.del_add_config
+
+testbundles:
+    sanity:
+        # Relative paths from iota/test/apulu/testbundles/
+        - networking/underlay.testbundle
+        - networking/h2h.testbundle
+        #- learn/aging.testbundle
+        #- learn/ep-move.testbundle
+
+    regression:
+        # Relative paths from iota/test/apulu/testbundles/
+
+teardown:
+    -   step    : verif.utils.collect_techsupport
+    #-    step    : config.clean_netagent

@@ -5,6 +5,11 @@ import iota.test.apulu.utils.flow as flow_utils
 import iota.test.apulu.utils.connectivity as conn_utils
 
 def Setup(tc):
+    tc.sec_ip_test_type = getattr(tc.args, "use-sec-ip", 'none')
+    if tc.sec_ip_test_type not in ['all', 'random', 'none']:
+        api.Logger.error("Invalid value for use-sec-ip %s" %(tc.sec_ip_test_type))
+        return api.types.status.FAILURE
+
     tc.workload_pairs = config_api.GetWorkloadPairs(conn_utils.Get_workload_type(tc), conn_utils.Get_workload_scope(tc))
     if len(tc.workload_pairs) == 0:
         api.Logger.error("Skipping Testcase due to no workload pairs.")
@@ -19,7 +24,7 @@ def Trigger(tc):
     for pair in tc.workload_pairs:
         api.Logger.info("%s between %s and %s" % (tc.iterators.proto, pair[0].ip_address, pair[1].ip_address))
 
-    tc.cmd_cookies, tc.resp = conn_utils.TriggerConnectivityTest(tc.workload_pairs, tc.iterators.proto, tc.iterators.ipaf, tc.iterators.pktsize)
+    tc.cmd_cookies, tc.resp = conn_utils.TriggerConnectivityTest(tc.workload_pairs, tc.iterators.proto, tc.iterators.ipaf, tc.iterators.pktsize, tc.sec_ip_test_type)
     return api.types.status.SUCCESS
 
 def Verify(tc):
