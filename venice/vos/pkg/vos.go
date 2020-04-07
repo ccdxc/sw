@@ -171,7 +171,7 @@ func (i *instance) Watch(ctx context.Context,
 	cleanupFn := func() {
 		i.pfxWatcher.Del(path, peer)
 	}
-	wq.Dequeue(ctx, 0, handleFn, cleanupFn, opts)
+	wq.Dequeue(ctx, 0, false, handleFn, cleanupFn, opts)
 	return nil
 }
 

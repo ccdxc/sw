@@ -56,7 +56,7 @@ type WatchEventQConfig struct {
 // WatchEventQ is a interface for a Watch Q which is used to mux events to watchers.
 type WatchEventQ interface {
 	Enqueue(evType kvstore.WatchEventType, obj, prev runtime.Object) error
-	Dequeue(ctx context.Context, fromver uint64, cb apiintf.EventHandlerFn, cleanupfn func(), opts *api.ListWatchOptions)
+	Dequeue(ctx context.Context, fromver uint64, ignoreBulk bool, cb apiintf.EventHandlerFn, cleanupfn func(), opts *api.ListWatchOptions)
 	// Stop signals a watcher exiting. Returns true when the last
 	//  watcher has returned
 	Stop() bool
@@ -347,7 +347,7 @@ func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.O
 // for each element. Dequeue() runs as a go routine and does callbacks in a tight loop
 // till the end of the list is encountered.
 func (w *watchEventQ) Dequeue(ctx context.Context,
-	fromver uint64, cb apiintf.EventHandlerFn, cleanupFn func(),
+	fromver uint64, ignoreBulk bool, cb apiintf.EventHandlerFn, cleanupFn func(),
 	opts *api.ListWatchOptions) {
 	peer := ctxutils.GetContextID(ctx)
 	tracker := watcher{peerID: peer}
@@ -404,7 +404,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 	maxver := uint64(0)
 
 	// List from store if fromver is not specified
-	if fromver == 0 {
+	if fromver == 0 && !ignoreBulk {
 		// Peek at the top of the queue. The latest object in the store may not be an accurate marker
 		// if there have been recent deletes.
 		var item *list.Element
@@ -472,7 +472,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 	prev = item
 	if item != nil {
 		obj := item.Value.(*watchEvent)
-		if fromver != 0 && obj.version > fromver {
+		if fromver != 0 && obj.version > fromver && !ignoreBulk {
 			// fromver was specified and we do not have enough history, error out.
 			errmsg := api.Status{
 				Result:  api.StatusResultExpired,
@@ -484,7 +484,7 @@ func (w *watchEventQ) Dequeue(ctx context.Context,
 			return
 		}
 		// ignore events older than startVer
-		for item != nil && obj != nil && startVer != math.MaxUint64 && obj.version < startVer {
+		for item != nil && obj != nil && startVer != math.MaxUint64 && (ignoreBulk || obj.version < startVer) {
 			item = item.Next()
 			if item != nil {
 				obj = item.Value.(*watchEvent)

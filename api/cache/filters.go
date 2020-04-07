@@ -80,7 +80,7 @@ func fieldChangeSelectorFilterFn(selectors []string) filterFn {
 
 func getFilters(opts api.ListWatchOptions, schemaType string) ([]filterFn, error) {
 	var filters []filterFn
-	if opts.ResourceVersion != "" {
+	if opts.ResourceVersion != "" && opts.ResourceVersion != "-1" {
 		ver, err := strconv.ParseUint(opts.ResourceVersion, 10, 64)
 		if err != nil {
 			log.Fatalf("unable to parse version string [%s](%s)", opts.ResourceVersion, err)

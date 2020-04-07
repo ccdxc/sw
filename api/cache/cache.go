@@ -1378,16 +1378,22 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 		c.queues.Del(key, peer)
 	}
 	var fromVer uint64
+	var ignoreBulk bool
 	if opts.ResourceVersion != "" {
-		fromVer, err = strconv.ParseUint(opts.ResourceVersion, 10, 64)
-		if err != nil {
-			fromVer = 0
+		resVer := strings.TrimSpace(opts.ResourceVersion)
+		if resVer == "-1" {
+			ignoreBulk = true
+		} else {
+			fromVer, err = strconv.ParseUint(opts.ResourceVersion, 10, 64)
+			if err != nil {
+				fromVer = 0
+			}
 		}
 	}
 	c.logger.DebugLog("oper", "watchfiltered", "msg", "starting watcher with version", fromVer)
 	watchers.Add(1)
 	go func() {
-		wq.Dequeue(nctx, fromVer, watchHandler, cleanupFn, &api.ListWatchOptions{})
+		wq.Dequeue(nctx, fromVer, ignoreBulk, watchHandler, cleanupFn, &api.ListWatchOptions{})
 		watchers.Add(-1)
 		ret.Stop()
 		close(ret.ch)

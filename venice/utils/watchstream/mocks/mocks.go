@@ -88,7 +88,7 @@ func (f *FakeWatchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runti
 
 // Dequeue implements a mock interface
 func (f *FakeWatchEventQ) Dequeue(ctx context.Context,
-	fromver uint64, cb apiintf.EventHandlerFn, cleanupfn func(), opts *api.ListWatchOptions) {
+	fromver uint64, ignoreBulk bool, cb apiintf.EventHandlerFn, cleanupfn func(), opts *api.ListWatchOptions) {
 	defer f.Unlock()
 	f.Lock()
 	close(f.DqCh)

@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -4677,4 +4678,115 @@ func TestRoutingConfigReferences(t *testing.T) {
 
 	_, err = restcl.NetworkV1().RoutingConfig().Delete(ctx, &rtCfg.ObjectMeta)
 	AssertOk(t, err, "expecting to succeed")
+}
+
+func TestFromMinusOneWatch(t *testing.T) {
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
+	if err != nil {
+		t.Fatalf("cannot create REST client")
+	}
+	defer restcl.Close()
+
+	ctx := context.Background()
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
+
+	// gRPC client
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	if err != nil {
+		t.Fatalf("cannot create grpc client")
+	}
+	defer apicl.Close()
+
+	pub := bookstore.Publisher{
+		ObjectMeta: api.ObjectMeta{
+			Name: "Sahara",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Publisher",
+		},
+		Spec: bookstore.PublisherSpec{
+			Id:      "111",
+			Address: "#1 hilane, timbuktoo",
+			WebAddr: "http://sahara-books.org",
+		},
+	}
+	apicl.BookstoreV1().Publisher().Create(ctx, &pub)
+	book1 := bookstore.Book{
+		ObjectMeta: api.ObjectMeta{
+			Name:         "from-1.book1",
+			GenerationID: "1",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "book",
+		},
+		Spec: bookstore.BookSpec{
+			ISBNId:    "111-2-31-123456-0",
+			Author:    "foo",
+			Category:  bookstore.BookSpec_Fiction.String(),
+			Publisher: "Sahara",
+		},
+	}
+	apicl.BookstoreV1().Book().Create(ctx, &book1)
+
+	// Start watchers
+	waitWatch := make(chan bool)
+	doneCh := make(chan bool)
+	errCh := make(chan error)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	var grpcWatchCount, restWtchCount uint32
+
+	go func() {
+		opts := api.ListWatchOptions{}
+		opts.ResourceVersion = "-1"
+		grpcWatcher, err := apicl.BookstoreV1().Book().Watch(ctx, &opts)
+		AssertOk(t, err, "failed to start grpc Watcher (%s)", err)
+		restWatcher, err := apicl.BookstoreV1().Book().Watch(ctx, &opts)
+		AssertOk(t, err, "failed to start rest Watcher (%s)", err)
+
+		close(waitWatch)
+
+		for {
+			select {
+			case ev, ok := <-grpcWatcher.EventChan():
+				if !ok {
+					errCh <- fmt.Errorf("grpc watch returned error")
+					return
+				}
+				atomic.AddUint32(&grpcWatchCount, 1)
+				t.Logf("received GRPC Watch [%+v]", ev)
+
+			case ev, ok := <-restWatcher.EventChan():
+				if !ok {
+					errCh <- fmt.Errorf("grpc watch returned error")
+					return
+				}
+				atomic.AddUint32(&restWtchCount, 1)
+				t.Logf("received GRPC Watch [%+v]", ev)
+			case <-doneCh:
+				t.Logf("got exit")
+				errCh <- nil
+				return
+			}
+		}
+	}()
+
+	<-waitWatch
+	AssertConsistently(t, func() (bool, interface{}) {
+		return atomic.LoadUint32(&grpcWatchCount) == 0 && atomic.LoadUint32(&restWtchCount) == 0,
+			fmt.Sprintf("counts are %v / %v]", atomic.LoadUint32(&grpcWatchCount), atomic.LoadUint32(&restWtchCount))
+	}, fmt.Sprintf("received watch events while expecting none [%v/%v]", atomic.LoadUint32(&grpcWatchCount), atomic.LoadUint32(&restWtchCount)), "100ms", "3s")
+
+	book1.Name = "from-1.book2"
+	_, err = apicl.BookstoreV1().Book().Create(ctx, &book1)
+	AssertOk(t, err, " got error creating book")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		return atomic.LoadUint32(&grpcWatchCount) == 1 && atomic.LoadUint32(&restWtchCount) == 1,
+			fmt.Sprintf("counts are %v / %v]", atomic.LoadUint32(&grpcWatchCount), atomic.LoadUint32(&restWtchCount))
+	}, "failed to get watch events", "100ms", "3s")
 }
