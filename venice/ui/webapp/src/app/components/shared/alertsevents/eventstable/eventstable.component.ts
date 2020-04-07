@@ -93,8 +93,8 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
     { field: 'message', header: 'Message', class: '', sortable: false, width: 30 },
     { field: 'object-ref', header: 'Object Ref', class: '', sortable: false, width: 10 },
     { field: 'count', header: 'Count', class: '', sortable: false, width: 5 },
-    { field: 'source', header: 'Source Node & Component', class: '', sortable: false},
-    { field: 'meta.mod-time', header: 'Time', class: '', sortable: true, width: 13 }
+    { field: 'source', header: 'Source Node & Component', class: '', sortable: false, width: 25},
+    { field: 'meta.mod-time', header: 'Time', class: '', sortable: true, width: 12 }
   ];
 
   // Will hold mapping from severity types to counts

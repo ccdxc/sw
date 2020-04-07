@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef, Output, EventE
 import { required } from '@sdk/v1/utils/validators';
 import { AuthpolicybaseComponent } from '@app/components/admin/authpolicy/authpolicybase/authpolicybase.component';
 import { Animations } from '@app/animations';
-import {IAuthRadius, AuthRadius, AuthRadiusServer, AuthRadiusDomain} from '@sdk/v1/models/generated/auth';
+import { IAuthRadius, AuthRadius, AuthRadiusServer, AuthRadiusDomain } from '@sdk/v1/models/generated/auth';
 import { RadiusSave } from '@app/components/admin/authpolicy/.';
 import { FormArray, AbstractControl } from '@angular/forms';
 import { SelectItem } from 'primeng/primeng';
@@ -69,7 +69,7 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
     this.radiusObject.setValues(this.radiusData);
     if (this.radiusObject.domains == null || this.radiusObject.domains.length === 0) {
       const newDomain = new AuthRadiusDomain();
-      this.radiusObject.domains = [ newDomain ];
+      this.radiusObject.domains = [newDomain];
       const domains = this.radiusObject.$formGroup.get(['domains']) as FormArray;
       domains.insert(0, newDomain.$formGroup);
     }
@@ -189,20 +189,55 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
       this._controllerService.invokeErrorToaster('Invalid', 'There are invalid inputs.  Fields with "*" are required');
       return;
     }
+    const errors = this.updateRadiusObjectValues(true);
+    if (errors.length > 0) {
+      this._controllerService.invokeErrorToaster('Invalid', errors.join('\n'));
+      return ;
+    }
+
     this.updateRadiusData();
     let radiusSave: RadiusSave;
     if (this.inCreateMode) {
-      radiusSave =  { createData: this.radiusData,
-        onSuccess: (resp) => {this.setRadiusEditMode(false); },
+      radiusSave = {
+        createData: this.radiusData,
+        onSuccess: (resp) => { this.setRadiusEditMode(false); },
       };
       this.invokeCreateRadius.emit(radiusSave);
     } else {
       // POST DATA
-      radiusSave =  {
-        onSuccess: (resp) => {this.setRadiusEditMode(false); },
+      radiusSave = {
+        onSuccess: (resp) => { this.setRadiusEditMode(false); },
       };
       this.invokeSaveRadius.emit(radiusSave); // emit event to parent to update RADIUS if REST call succeeds, ngOnChange() will bb invoked and refresh data.
     }
+  }
+
+  checkServerPortValid(): boolean {
+     const errors  = this.updateRadiusObjectValues(false);
+     return (errors.length === 0);
+  }
+
+  updateRadiusObjectValues( modifyURL: boolean = false, delimiter: string = ':'): string[] {
+    const errors = [];
+    const domainsLen = this.radiusObject.$formGroup.get(['domains'])['length']; // dowmin is a FormArray
+    for (let i = 0; i < domainsLen; i++) {
+      const serversLen = this.radiusObject.$formGroup.get(['domains', i, 'servers'])['length']; // servers is FormArray
+      for (let j = 0; j < serversLen; j++) {
+        const url = this.radiusObject.$formGroup.get(['domains', i, 'servers', j, 'url']).value;
+        const parts = url.split(delimiter);
+        if (parts.length === 2 && parts[1]) {
+          if (!Utility.isInteger(parts[1])) {
+            errors.push('Invalid port number [' + parts[1] + '] in server ' + j);
+          }
+        } else {
+          if (modifyURL) {
+            const newURL = parts[0] + delimiter + '1812'; // VS-1427
+            this.radiusObject.$formGroup.get(['domains', i, 'servers', j, 'url']).setValue(newURL);
+          }
+        }
+      }
+    }
+    return errors;
   }
 
   /**

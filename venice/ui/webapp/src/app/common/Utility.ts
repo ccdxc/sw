@@ -90,7 +90,7 @@ export class Utility {
   public static HERO_CARD_THIRDVALUE_LENGTH: number = 15;
 
   public static UNSUPPORTED_CATEGORIES = ['Diagnostics', 'Orchestration'];
-  public static UNSUPPORTED_KINDS = ['License', 'Module', 'StatsPolicy', 'Service', 'LbPolicy', 'Orchestration', 'FirewallProfile', 'VirtualRouter',  'IPAMPolicy', 'RoutingConfig', 'RouteTable', 'Bucket', 'Object', 'Orchestrator', 'SecurityGroup', 'Certificate', 'TrafficEncryptionPolicy'];
+  public static UNSUPPORTED_KINDS = ['License', 'Module', 'StatsPolicy', 'Service', 'LbPolicy', 'Orchestration',  'VirtualRouter', 'IPAMPolicy', 'RoutingConfig', 'RouteTable', 'Bucket', 'Object', 'Orchestrator', 'SecurityGroup', 'Certificate', 'TrafficEncryptionPolicy'];
 
   public static allColors = [
     '#97b8df',
@@ -453,14 +453,28 @@ export class Utility {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
   }
 
+  static isInteger(value: string): boolean {
+    if (isNaN(Number(value))) {
+      return false;
+    }
+    if (value.startsWith('00')) {
+      return false;   // '00234"
+    }
+    if (Number(value) === 0) {
+      return true;  // value ='0'
+    }
+    const regex = /^[1-9]\d*$/;
+    return regex.test(value); // isInteger('123') -> true
+  }
+
   /**
    * chunk('00aecd010ed8', 4) => ["00ae", "cd01", "0ed8"]
    * @param str
    * @param size
    */
-  static chunk(str: string , size: number) {
+  static chunk(str: string, size: number) {
     return str.match(new RegExp('.{1,' + size + '}', 'g'));
-}
+  }
 
   static s4() {
     return Math.floor((1 + Math.random()) * 0x10000)
@@ -1136,7 +1150,7 @@ export class Utility {
         const _myvalue = value.map((v) => uiHintMap[v]); // VS-1392
         value = (_myvalue) ? _myvalue : value;
       } else {
-        value =  ( uiHintMap[value] ) ? uiHintMap[value] : value; // VS-1392
+        value = (uiHintMap[value]) ? uiHintMap[value] : value; // VS-1392
       }
     }
     return value;
@@ -1146,11 +1160,19 @@ export class Utility {
    * Gets the propinfo for the given key.
    */
   public static getNestedPropInfo(instance: any, keys: string | Array<string>, reportMissingPropInf: boolean = true) {
-    if (keys == null) {
+    if (keys == null ) {  // do not check "_ui" key.
       return null;
     }
     if (typeof keys === 'string') {
+      if ( keys === '_ui') {
+        return null;
+      }
       keys = keys.split('.');
+    }
+    if (Array.isArray(keys)) {
+      if ( keys[0] && keys[0] === '_ui') {
+        return null;
+      }
     }
     const parent = _.get(instance, keys.slice(0, -1));
     let propInfo = null;
@@ -1160,7 +1182,7 @@ export class Utility {
       propInfo = instance.getPropInfo(keys[keys.length - 1]);
     }
     if (propInfo == null && reportMissingPropInf) {
-      console.error('propInfo was null, supplied property path is likely invalid. Input keys and instance: ' + keys + ' ' + ((instance.kind) ? instance.kind : instance));
+      console.error('propInfo was null, supplied property path is likely invalid. Input keys and instance: [' + keys + '] [' + ((instance.kind) ? instance.kind : instance + ']'));
     }
     return propInfo;
   }
@@ -1283,7 +1305,7 @@ export class Utility {
       case 'Host':
         return cat + '/hosts';
       case 'DSCProfile':
-          return cat + '/dscprofiles?dscprofile=' + name;
+        return cat + '/dscprofiles?dscprofile=' + name;
       case 'Workload':
       case 'Endpoint':
         return 'workload';  // VS-363, when search is:Workload or is:Endpoint, we should /workload page
@@ -1302,7 +1324,7 @@ export class Utility {
       case 'NetworkSecurityPolicy':
         return 'security/sgpolicies';
       case 'NetworkInterface':
-          return 'cluster/networkinterfaces?interface=' + name;
+        return 'cluster/networkinterfaces?interface=' + name;
       case 'AuditEvent':
         return 'monitoring/auditevents';
       case 'FwlogPolicy':
@@ -1319,6 +1341,10 @@ export class Utility {
         return 'monitoring/alertsevents/eventpolicy';
       case 'SnapshotRestore':
         return 'admin/snapshots'; // VS-1059
+      case 'FirewallProfile':
+        return 'security/firewallprofiles';
+      case 'Network':
+        return 'network';
       default:
         return (!isToUseDefault) ? null : cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
     }
@@ -1873,9 +1899,9 @@ export class Utility {
   public static returnDateTime(inputString: string): string {
     const milliseconds = Date.parse(inputString);
     if (!isNaN(milliseconds) && inputString.split(' ').length > 1) {
-        const dateString = new Date(milliseconds);
-        const resultValue = (dateString).toISOString().split('.'); // ["2020-02-14T13:15:29", "000Z"]
-        return resultValue[0]; // For inputString: '2020-02-14 13:15:29 UTC', ' 13:15:29 2020-02-14 GMT'
+      const dateString = new Date(milliseconds);
+      const resultValue = (dateString).toISOString().split('.'); // ["2020-02-14T13:15:29", "000Z"]
+      return resultValue[0]; // For inputString: '2020-02-14 13:15:29 UTC', ' 13:15:29 2020-02-14 GMT'
     }
     return inputString; // For inputString: '2020-02-14', '13:28:30', 'abc'
   }
@@ -2249,7 +2275,7 @@ export class Utility {
   onRESTSample(request: any, response: any) {
     // We don't use 'Features.apiCapture' here to avoid circular importing. We have to hard-code 'apiCapture' string
     response = _.cloneDeep(response);
-    if (! (this.getUIConfigsService() && this.getUIConfigsService().isFeatureEnabled('apiCapture'))) {
+    if (!(this.getUIConfigsService() && this.getUIConfigsService().isFeatureEnabled('apiCapture'))) {
       return;
       // Capturing API REST request-response content consumes resources. We should just let it by-pass by default
     }
@@ -2320,7 +2346,7 @@ export class Utility {
   }
 
   getClusterLicense(): ClusterLicense {
-    return  this.clusterLicense ;
+    return this.clusterLicense;
   }
 
   /**
@@ -2332,7 +2358,7 @@ export class Utility {
    *
    */
   isCloudDeployment(): boolean {
-    return  (!this.clusterLicense);
+    return (!this.clusterLicense);
   }
 
   /**
