@@ -506,7 +506,7 @@ func emptyOrDurationProfile(field *descriptor.Field, reg *descriptor.Registry, v
 }
 
 func protoPortProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
-	str := "tcp/1234, arp"
+	str := "udp/1234, arp"
 	prof.Example[ver] = prof.Example[ver] + str
 	prof.DocStrings[ver] = append(prof.DocStrings[ver], "should be a valid layer 3 or layer 4 protocol and port/type")
 	prof.Required[ver] = true
@@ -514,7 +514,7 @@ func protoPortProfile(field *descriptor.Field, reg *descriptor.Registry, ver str
 }
 
 func protoPortRangeProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
-	str := "tcp/1234-1235"
+	str := "udp/1234-1235"
 	prof.Example[ver] = prof.Example[ver] + str
 	prof.DocStrings[ver] = append(prof.DocStrings[ver], "should be a valid layer 3 or layer 4 protocol and port range")
 	prof.Required[ver] = true

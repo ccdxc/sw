@@ -25,7 +25,7 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
     public static propInfo: { [prop in keyof IMonitoringAppProtoSelector]: PropInfoItem } = {
         'proto-ports': {
             description:  `Ports - Includes protocol name and port Eg ["tcp/1234", "udp"]. Should be a valid layer 3 or layer 4 protocol and port range.`,
-            hint:  'tcp/1234-1235',
+            hint:  'udp/1234-1235',
             required: false,
             type: 'Array<string>'
         },

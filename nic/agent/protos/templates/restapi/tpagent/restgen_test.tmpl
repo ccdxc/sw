@@ -77,7 +77,7 @@ import (
 
                           // change protocol & interval
                           {{lower .}}Data.Spec.Interval = "60s"
-                          {{lower .}}Data.Spec.Exports[0].Transport = "TCP/2055"
+                          {{lower .}}Data.Spec.Exports[0].Transport = "UDP/2055"
 
                           // put
                           err = netutils.HTTPPut("http://"+agentRestURL+"/api/telemetry/flowexports/default/default/" + "test{{title .}}{{title $crudObject}}/", &{{lower .}}Data, &resp)

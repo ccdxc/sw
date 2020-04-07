@@ -17378,7 +17378,7 @@
           "items": {
             "type": "string"
           },
-          "example": "tcp/1234-1235",
+          "example": "udp/1234-1235",
           "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]. Should be a valid layer 3 or layer 4 protocol and port range."
         },
         "applications": {
@@ -18024,7 +18024,7 @@
         },
         "transport": {
           "type": "string",
-          "example": "tcp/1234, arp",
+          "example": "udp/1234, arp",
           "description": "protocol and Port number where an external collector is gathering the data example \"UDP/2055\". Should be a valid layer 3 or layer 4 protocol and port/type."
         },
         "credentials": {

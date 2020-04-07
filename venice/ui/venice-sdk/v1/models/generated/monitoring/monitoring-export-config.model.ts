@@ -42,7 +42,7 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
         },
         'transport': {
             description:  `Protocol and Port number where an external collector is gathering the data example "UDP/2055". Should be a valid layer 3 or layer 4 protocol and port/type.`,
-            hint:  'tcp/1234, arp',
+            hint:  'udp/1234, arp',
             required: false,
             type: 'string'
         },

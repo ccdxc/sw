@@ -116,7 +116,7 @@ type ExportConfig struct {
 	// IP address or URL of the collector/entity to which the data is to be exported
 	Destination string `protobuf:"bytes,1,opt,name=Destination,proto3" json:"destination,omitempty"`
 	// protocol and Port number where an external collector is gathering the data
-	// example "TCP/2055"
+	// example "UDP/2055"
 	Transport *ProtoPort `protobuf:"bytes,2,opt,name=Transport" json:"proto-port,omitempty"`
 	// Gateway of IP address or URL of the collector/entity to which the data is to be exported
 	Gateway string `protobuf:"bytes,3,opt,name=Gateway,proto3" json:"gateway,omitempty"`
