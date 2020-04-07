@@ -10,6 +10,7 @@ import inspect
 import json
 import os
 import sys
+import errno
 
 msg = {
     # message id : message
@@ -26,7 +27,10 @@ msg = {
     11: "Stage ({0}) not found!",
     12: "Service response({0}) not found!",
     13: "Value not found path: {0}",
-    14: "Arguments can't be Null"
+    14: "Arguments can't be Null",
+    15: "Failed to create destination directory {0} !",
+    16: "Failed to generate required intermediate json !",
+    17: "Successfully generated required intermediate json."
 }
 
 
@@ -129,7 +133,7 @@ class GenerateStateMachine(object):
         self.evt_seq_name_to_id = {}
         self.stage_transitions = []
         self.svc_list = []
-        self.idl_stage_list = []
+        self.stage_list = []
 
         self.__load__json__()
         self.__load_stages__()
@@ -159,7 +163,7 @@ class GenerateStateMachine(object):
             file = str(frame_info.filename) + ":" + str(frame_info.lineno)
             Log(file, "ERROR", message(1), call_stack=True)
 
-    def make_idl_event_sequence(self):
+    def make_event_sequence(self):
         """ Create and return global service event sequence """
         event_sequence = self.__get_data_by_key_walk__(
             default="parallel",
@@ -169,7 +173,7 @@ class GenerateStateMachine(object):
             self.__to_evt_seq_id__(event_sequence)) + os.linesep
         return event_sequence
 
-    def make_idl_entry_stage(self):
+    def make_entry_stage(self):
         """ Create and return entry stage """
         entry_stage = self.__get_data_by_key_walk__(
             default="compatcheck",
@@ -179,7 +183,7 @@ class GenerateStateMachine(object):
             self.__to_stage_id__(entry_stage)) + os.linesep
         return entry_stage
 
-    def make_idl_stage_transition(self):
+    def make_stage_transition(self):
         """ Create and return global stage transition  """
         objects = self.__generate_stage_transitions__()
         if objects is None:
@@ -189,16 +193,16 @@ class GenerateStateMachine(object):
         return self.__construct_data_block__(self.stage_transition, objects,
                                              True)
 
-    def make_idl_svc_cfg(self):
+    def make_svc(self):
         """ Create and return service configuration  """
         objects = self.__generate_svc__()
         if objects is None:
             frame_info = inspect.getframeinfo(inspect.currentframe())
             file = str(frame_info.filename) + str(frame_info.lineno)
             Log(file, "ERROR", message(3), call_stack=True)
-        return self.__construct_data_block__(self.idl_svc_cfg, objects, True)
+        return self.__construct_data_block__(self.svc, objects, True)
 
-    def make_idl_stage_cfg(self):
+    def make_stages(self):
         """ Create and return individual stage object  """
         objects = self.__generate_stages__()
         if objects is None:
@@ -206,29 +210,29 @@ class GenerateStateMachine(object):
             file = str(frame_info.filename) + str(frame_info.lineno)
             Log(file, "ERROR", message(4), call_stack=True)
 
-        return self.__construct_data_block__(self.idl_stage_cfg,
+        return self.__construct_data_block__(self.runtime_stage_cfg,
                                              objects,
                                              list_block=False,
                                              last_block=True,
                                              tab_count=1)
 
-    def build_header_file(self, idl_transition, idl_svc, idl_event_sequence,
-                          idl_stages, idl_entry_stage):
+    def build_header_file(self, transition, svc, event_sequence,
+                          stages, entry_stage):
         """ Create and return header part of the file including #define,
         #includes
         """
-        if all(obj is not None for obj in [idl_transition, idl_svc,
-                                           idl_event_sequence, idl_stages,
-                                           idl_entry_stage]):
+        if all(obj is not None for obj in [transition, svc,
+                                           event_sequence, stages,
+                                           entry_stage]):
 
             header_file_data = "{" + os.linesep
-            header_file_data = header_file_data + idl_transition + os.linesep
-            header_file_data = header_file_data + idl_svc + os.linesep
-            header_file_data = header_file_data + "\t" + idl_event_sequence + \
+            header_file_data = header_file_data + transition + os.linesep
+            header_file_data = header_file_data + svc + os.linesep
+            header_file_data = header_file_data + "\t" + event_sequence + \
                                os.linesep
-            header_file_data = header_file_data + "\t " + idl_entry_stage + \
+            header_file_data = header_file_data + "\t " + entry_stage + \
                                os.linesep
-            header_file_data = header_file_data + idl_stages + os.linesep
+            header_file_data = header_file_data + stages + os.linesep
             header_file_data = header_file_data + "}" + \
                                os.linesep
 
@@ -273,6 +277,7 @@ class GenerateStateMachine(object):
         self.default_event_seq_fmt = "svc.event_sequence"
         self.default_domain_fmt = "svc.domain"
         self.default_discovery_fmt = "svc.discovery"
+        self.default_discovery_fmt = "svc.discovery"
         self.default_rsp_timeout_fmt = "svc.rsp_timeout"
         self.default_entry_stage_fmt = "stages.entry_stage"
         self.rsp_keys_to_walk_fmt = "stages.{0}.events.{1}.name"
@@ -285,8 +290,8 @@ class GenerateStateMachine(object):
         self.post_hook_list_fmt = "stages.{0}.post_hooks"
         self.svc_list_fmt = "stages.{0}.svc.names"
 
-        self.idl_stage_cfg = self.__wrap_quote__("upg_stages")
-        self.idl_svc_cfg = self.__wrap_quote__("upg_svc")
+        self.runtime_stage_cfg = self.__wrap_quote__("upg_stages")
+        self.svc = self.__wrap_quote__("upg_svc")
         self.stage_transition = self.__wrap_quote__("upg_stage_transitions")
         self.event_sequence = self.__wrap_quote__("event_sequence")
         self.event_sequence += " : {0},"
@@ -452,7 +457,7 @@ class GenerateStateMachine(object):
         return "".join(self.svc_list)[:-2]
 
     def __generate_stages__(self):
-        """ Return IDL stage objects  """
+        """ Return stage objects  """
         rsp_timeout_format = self.rsp_timeout_fmt
         svc_seq_format = self.svc_seq_fmt
         pre_hook_list_format = self.pre_hook_list_fmt
@@ -539,20 +544,20 @@ class GenerateStateMachine(object):
             discovery = self.discovery.format(discovery)
             discovery = discovery[:-1]
             delimiter = "\n\t\t\t"
-            idl_stage_obj = delimiter.join([delimiter[1:] + rsp_timeout,
-                                            svc_sequence,event_sequence,
-                                            pre_hooks, post_hooks,domain,
-                                            discovery])
-            idl_stage_obj = self.__construct_data_block__(current_stage,
-                                                          idl_stage_obj,
-                                                          list_block=False,
-                                                          last_block=False,
-                                                          no_newline=False,
-                                                          tab_count=2)
+            stage = delimiter.join([delimiter[1:] + rsp_timeout,
+                                    svc_sequence, event_sequence,
+                                    pre_hooks, post_hooks, domain,
+                                    discovery])
+            stage = self.__construct_data_block__(current_stage,
+                                                  stage,
+                                                  list_block=False,
+                                                  last_block=False,
+                                                  no_newline=False,
+                                                  tab_count=2)
 
-            self.idl_stage_list.append(idl_stage_obj)
+            self.stage_list.append(stage)
 
-        stages = "\t" + "\n\t".join(self.idl_stage_list)[:-1]
+        stages = "\t" + "\n\t".join(self.stage_list)[:-1]
         return stages
 
     def __get_stage_transaction_obj__(self, stage_curr=None, svc_rsp=None,
@@ -598,24 +603,47 @@ class GenerateStateMachine(object):
         return date
 
 
-def main(input_json, output_pds_fsm):
+def crete_dest_dir(output_json):
     try:
-        d = os.path.dirname(output_pds_fsm)
-        os.makedirs(d)
-    except:
+        if not os.path.exists(output_json):
+            out_dir = os.path.dirname(output_json)
+            os.makedirs(out_dir)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            frame = inspect.getframeinfo(inspect.currentframe())
+            filename = str(frame.filename) + str(frame.lineno)
+            Log(filename, "ERROR", message(15).format(output_json),
+                call_stack=True)
         pass
+    except:
+        frame = inspect.getframeinfo(inspect.currentframe())
+        filename = str(frame.filename) + str(frame.lineno)
+        Log(filename, "ERROR", message(15).format(output_json), call_stack=True)
 
-    obj = GenerateStateMachine(input_json, output_pds_fsm)
-    transitions = obj.make_idl_stage_transition()
-    services = obj.make_idl_svc_cfg()
-    entry_stage = obj.make_idl_entry_stage()
-    event_sequence = obj.make_idl_event_sequence()
-    stages = obj.make_idl_stage_cfg()
-    hpp = obj.build_header_file(transitions, services, event_sequence, stages,
-                                entry_stage)
-    print(hpp)
-    obj.dump_header(hpp)
-    sys.exit(0)
+
+def main(input_json, output_json):
+    try:
+        crete_dest_dir(output_json)
+        obj = GenerateStateMachine(input_json, output_json)
+        transitions = obj.make_stage_transition()
+        services = obj.make_svc()
+        entry_stage = obj.make_entry_stage()
+        event_sequence = obj.make_event_sequence()
+        stages = obj.make_stages()
+        hpp = obj.build_header_file(transitions, services, event_sequence,
+                                    stages, entry_stage)
+        #print(hpp)
+        obj.dump_header(hpp)
+    except:
+        frame_info = inspect.getframeinfo(inspect.currentframe())
+        file = str(frame_info.filename) + str(frame_info.lineno)
+        Log(file, "ERROR", message(16), call_stack=True)
+
+    else:
+        frame = inspect.getframeinfo(inspect.currentframe())
+        filename = str(frame.filename) + str(frame.lineno)
+        Log(filename, "INFO", message(17), call_stack=True)
+        sys.exit(0)
 
 
 """
@@ -627,8 +655,8 @@ def main(input_json, output_pds_fsm):
 
     optional arguments:
       -h, --help            show this help message and exit
-      -i [INPUT_FILE_NAME]  PDS upgrade Json (example: 'upgrade.json')
-      -o [OUTPUT_FILE_NAME] PDS fsm header file (example: 'upg_fsm.hpp')
+      -i [INPUT_FILE_NAME]  PDS upgrade Json (example: 'graceful.json')
+      -o [OUTPUT_FILE_NAME] PDS fsm Json (example: 'graceful_upgrade.json')
 """
 
 if __name__ == "__main__":
@@ -647,7 +675,7 @@ if __name__ == "__main__":
                         type=str,
                         required=True,
                         help='PDS fsm header file '
-                             '(example: \'upg_fsm.hpp\')')
+                             '(example: \'graceful_upgrade.json\')')
 
     args = parser.parse_args()
     main(args.input_file_name, args.output_file_name)
