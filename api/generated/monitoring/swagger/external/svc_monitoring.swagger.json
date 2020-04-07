@@ -6188,73 +6188,6 @@
         "tags": [
           "monitoring/v1"
         ]
-      },
-      "put": {
-        "summary": "Update StatsAlertPolicy object",
-        "operationId": "UpdateStatsAlertPolicy_1",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/monitoringStatsAlertPolicy"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/monitoringStatsAlertPolicyUpdate"
-            }
-          }
-        ],
-        "tags": [
-          "monitoring/v1"
-        ]
       }
     },
     "/configs/monitoring/v1/techsupport": {
@@ -13093,79 +13026,6 @@
         "tags": [
           "monitoring/v1"
         ]
-      },
-      "put": {
-        "summary": "Update StatsAlertPolicy object",
-        "operationId": "UpdateStatsAlertPolicy",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/monitoringStatsAlertPolicy"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/monitoringStatsAlertPolicyUpdate"
-            }
-          }
-        ],
-        "tags": [
-          "monitoring/v1"
-        ]
       }
     },
     "/configs/monitoring/v1/watch/MirrorSession": {
@@ -19318,24 +19178,6 @@
           "description": "Acknowledged alerts based on this policy."
         }
       }
-    },
-    "monitoringStatsAlertPolicyUpdate": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string"
-        },
-        "api-version": {
-          "type": "string"
-        },
-        "meta": {
-          "$ref": "#/definitions/apiObjectMetaUpdate"
-        },
-        "spec": {
-          "$ref": "#/definitions/monitoringStatsAlertPolicySpec"
-        }
-      },
-      "description": "StatsAlertPolicy - tenant scoped."
     },
     "monitoringSyslogAuditor": {
       "type": "object",

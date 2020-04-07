@@ -1052,26 +1052,6 @@ export class Monitoringv1Service extends AbstractService {
     return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Update StatsAlertPolicy object */
-  public UpdateStatsAlertPolicy_1(O_Name, body: IMonitoringStatsAlertPolicy, stagingID: string = "", previousVal: IMonitoringStatsAlertPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/statsAlertPolicies/{O.Name}';
-    url = url.replace('{O.Name}', O_Name);
-    const opts = {
-      eventID: 'UpdateStatsAlertPolicy_1',
-      objType: 'MonitoringStatsAlertPolicy',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    body = TrimUIFields(body)
-    if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringStatsAlertPolicy(body), previousVal, trimDefaults)
-    }
-    return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}>;
-  }
-  
   /** List TechSupportRequest objects */
   public ListTechSupportRequest(queryParam: any = null, stagingID: string = ""):Observable<{body: IMonitoringTechSupportRequestList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/techsupport';
@@ -2227,27 +2207,6 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Update StatsAlertPolicy object */
-  public UpdateStatsAlertPolicy(O_Name, body: IMonitoringStatsAlertPolicy, stagingID: string = "", previousVal: IMonitoringStatsAlertPolicy = null, trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/monitoring/v1/tenant/{O.Tenant}/statsAlertPolicies/{O.Name}';
-    url = url.replace('{O.Tenant}', this['O_Tenant']);
-    url = url.replace('{O.Name}', O_Name);
-    const opts = {
-      eventID: 'UpdateStatsAlertPolicy',
-      objType: 'MonitoringStatsAlertPolicy',
-      isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-      opts.isStaging = true;
-    }
-    body = TrimUIFields(body)
-    if (trimObject) {
-      body = TrimDefaultsAndEmptyFields(body, new MonitoringStatsAlertPolicy(body), previousVal, trimDefaults)
-    }
-    return this.invokeAJAXPutCall(url, body, opts) as Observable<{body: IMonitoringStatsAlertPolicy | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Watch MirrorSession objects. Supports WebSockets or HTTP long poll */

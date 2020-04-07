@@ -318,14 +318,16 @@ func (a *alertHooks) validateStatsAlertPolicy(ctx context.Context, kv kvstore.In
 
 	// validate group->kind->field-name mappings
 	metric := statsAlertPolicy.Spec.Metric
-	if !genfields.IsGroupValid(metric.Group) {
-		return i, false, errInvalidMetricGroup
-	}
-	if !genfields.IsKindValid(metric.Group, metric.Kind) {
-		return i, false, errInvalidMetricKind
-	}
-	if !genfields.IsFieldNameValid(metric.Group, metric.Kind, metric.FieldName) {
-		return i, false, errInvalidMetricFieldName
+	if !utils.IsEmpty(metric.Group) {
+		if !genfields.IsGroupValid(metric.Group) {
+			return i, false, errInvalidMetricGroup
+		}
+		if !genfields.IsKindValid(metric.Group, metric.Kind) {
+			return i, false, errInvalidMetricKind
+		}
+		if !genfields.IsFieldNameValid(metric.Group, metric.Kind, metric.FieldName) {
+			return i, false, errInvalidMetricFieldName
+		}
 	}
 
 	// validate measurement window

@@ -500,23 +500,7 @@ func restPostStatsAlertPolicy(hostname, token string, obj interface{}) error {
 }
 
 func restPutStatsAlertPolicy(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*monitoring.StatsAlertPolicy); ok {
-		nv, err := restcl.MonitoringV1().StatsAlertPolicy().Update(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("put operation not supported for StatsAlertPolicy object")
 }
 
 func restGetAlertDestination(hostname, tenant, token string, obj interface{}) error {
@@ -1052,7 +1036,7 @@ func init() {
 
 	cl.AddRestPostFunc("monitoring.StatsAlertPolicy", "v1", restPostStatsAlertPolicy)
 	cl.AddRestDeleteFunc("monitoring.StatsAlertPolicy", "v1", restDeleteStatsAlertPolicy)
-	cl.AddRestPutFunc("monitoring.StatsAlertPolicy", "v1", restPutStatsAlertPolicy)
+
 	cl.AddRestGetFunc("monitoring.StatsAlertPolicy", "v1", restGetStatsAlertPolicy)
 
 	cl.AddRestPostFunc("monitoring.AlertDestination", "v1", restPostAlertDestination)

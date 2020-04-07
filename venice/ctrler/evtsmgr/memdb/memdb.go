@@ -268,7 +268,7 @@ func (m *MemDb) StopWatchAlertDestinations(watcher *memdb.Watcher) {
 
 // WatchVersion returns the watcher to watch for version events
 func (m *MemDb) WatchVersion() *memdb.Watcher {
-	watcher := memdb.Watcher{Name: "alert-dest"}
+	watcher := memdb.Watcher{Name: "version"}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
 	m.WatchObjects("Version", &watcher)
 	return &watcher
@@ -277,6 +277,19 @@ func (m *MemDb) WatchVersion() *memdb.Watcher {
 // StopWatchVersion stops the version watcher
 func (m *MemDb) StopWatchVersion(watcher *memdb.Watcher) {
 	m.StopWatchObjects("Version", watcher)
+}
+
+// WatchStatsAlertPolicy returns the watcher to watch for stats alert policy events
+func (m *MemDb) WatchStatsAlertPolicy() *memdb.Watcher {
+	watcher := memdb.Watcher{Name: "stats-alert-policy"}
+	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	m.WatchObjects("StatsAlertPolicy", &watcher)
+	return &watcher
+}
+
+// StopWatchStatsAlertPolicy stops the stats alert policy watcher
+func (m *MemDb) StopWatchStatsAlertPolicy(watcher *memdb.Watcher) {
+	m.StopWatchObjects("StatsAlertPolicy", watcher)
 }
 
 // NewMemDb creates a new mem DB

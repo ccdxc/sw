@@ -61,6 +61,11 @@ func NewQueryService(listenURL string, br broker.Inf, opts ...Option) (*Server, 
 	return srv, nil
 }
 
+// GetListenURL returns the gRPC listen URL of citadel server
+func (q *Server) GetListenURL() string {
+	return q.grpcSrv.GetListenURL()
+}
+
 // Stop stops the server
 func (q *Server) Stop() {
 	if q.moduleWatcher != nil { // stop module watcher if it has been initialized

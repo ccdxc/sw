@@ -125,6 +125,13 @@ func TestEventsManagerInstantiation(t *testing.T) {
 	_, err = NewEventsManager("server-name", "listen-url", mockResolver, tLogger)
 	Assert(t, err != nil, "expected failure, EventsManager init succeeded")
 
+	// with stats alert mgr
+	ec, err := elastic.NewClient("", mockResolver, tLogger.WithContext("submodule", "elastic"))
+	AssertOk(t, err, "failed to create elastic client")
+	_, err = NewEventsManager("server-name", testServerURL, mockResolver, tLogger,
+		WithElasticClient(ec), WithSkipStatsAlertMgr(true))
+	AssertOk(t, err, "failed to create events mgr")
+
 	// update the elasticsearch entry with dummy elastic URL to make client creation fail
 	addMockService(mockResolver, globals.ElasticSearch, "dummy-url")
 
@@ -208,4 +215,7 @@ func TestGCAlerts(t *testing.T) {
 	time.Sleep(2 * time.Second) // alert deletion will fail with `NotFound` error
 
 	evtsMgr.GCAlerts(0) // this should fail
+
+	evtsMgr.configWatcher.Stop()
+	evtsMgr.GCAlerts(100 * time.Millisecond)
 }

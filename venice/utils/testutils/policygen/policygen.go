@@ -150,6 +150,38 @@ func CreateAlertObj(tenant, namespace, name string, state monitoring.AlertState,
 	return alert
 }
 
+// CreateStatsAlertPolicyObj helper function to create stats alert policy object with the given params.
+func CreateStatsAlertPolicyObj(tenant, namespace, name string, metric monitoring.MetricIdentifier, measurementCriteria *monitoring.MeasurementCriteria,
+	thresholds monitoring.Thresholds, destinations []string) *monitoring.StatsAlertPolicy {
+	creationTime, _ := types.TimestampProto(time.Now())
+
+	return &monitoring.StatsAlertPolicy{
+		TypeMeta: api.TypeMeta{
+			Kind:       "StatsAlertPolicy",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:            name,
+			Tenant:          tenant,
+			Namespace:       namespace,
+			ResourceVersion: fmt.Sprintf("%d", rand.Intn(10000)),
+			CreationTime: api.Timestamp{
+				Timestamp: *creationTime,
+			},
+			ModTime: api.Timestamp{
+				Timestamp: *creationTime,
+			},
+		},
+		Spec: monitoring.StatsAlertPolicySpec{
+			Metric:              metric,
+			MeasurementCriteria: measurementCriteria,
+			Thresholds:          thresholds,
+			Enable:              true,
+			Destinations:        destinations,
+		},
+	}
+}
+
 // CreateAlertPolicyObj helper function to create alert policy object with the given params.
 func CreateAlertPolicyObj(tenant, namespace, name, resource string, severity eventattrs.Severity, message string,
 	requirements []*fields.Requirement, destinations []string) *monitoring.AlertPolicy {

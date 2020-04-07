@@ -5916,7 +5916,8 @@ func makeURIMonitoringV1AutoUpdateMirrorSessionUpdateOper(in *MirrorSession) str
 
 //
 func makeURIMonitoringV1AutoUpdateStatsAlertPolicyUpdateOper(in *StatsAlertPolicy) string {
-	return fmt.Sprint("/configs/monitoring/v1", "/tenant/", in.Tenant, "/statsAlertPolicies/", in.Name)
+	return ""
+
 }
 
 //
@@ -6892,24 +6893,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddStatsAlertPolicy(ctx context.Co
 
 // AutoUpdateStatsAlertPolicy CRUD method for StatsAlertPolicy
 func (r *EndpointsMonitoringV1RestClient) AutoUpdateStatsAlertPolicy(ctx context.Context, in *StatsAlertPolicy) (*StatsAlertPolicy, error) {
-	path := makeURIMonitoringV1AutoUpdateStatsAlertPolicyUpdateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespMonitoringV1AutoUpdateStatsAlertPolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*StatsAlertPolicy), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoLabelStatsAlertPolicy label method for StatsAlertPolicy

@@ -546,7 +546,6 @@
             ],
             "RestMethods": [
               "get",
-              "put",
               "delete",
               "post",
               "list",

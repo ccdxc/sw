@@ -2969,8 +2969,6 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoUpdateMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "MirrorSession", "monitoring", apiintf.UpdateOper)
 
-	e.svcProf["AutoUpdateStatsAlertPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "StatsAlertPolicy", "monitoring", apiintf.UpdateOper)
-
 	e.svcProf["AutoUpdateTroubleshootingSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TroubleshootingSession", "monitoring", apiintf.UpdateOper)
 
 	e.svcProf["AutoWatchAlert"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgAlertWatchHelper", "monitoring", apiintf.WatchOper)

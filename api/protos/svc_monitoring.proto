@@ -65,7 +65,7 @@ service MonitoringV1 {
     };
     option (venice.apiRestService) = {
         Object: "StatsAlertPolicy"
-        Method: ["get", "put", "delete", "post", "list" , "watch"]
+        Method: ["get", "delete", "post", "list" , "watch"]
     };
     option (venice.apiRestService) = {
         Object: "AlertDestination"

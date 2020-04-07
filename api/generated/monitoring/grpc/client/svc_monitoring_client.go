@@ -2372,7 +2372,7 @@ func (a *restObjMonitoringV1StatsAlertPolicy) Allowed(oper apiintf.APIOperType) 
 	case apiintf.CreateOper:
 		return true
 	case apiintf.UpdateOper:
-		return true
+		return false
 	case apiintf.GetOper:
 		return true
 	case apiintf.DeleteOper:

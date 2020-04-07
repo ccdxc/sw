@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/apiclient"
 	emmemdb "github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver"
+	"github.com/pensando/sw/venice/ctrler/evtsmgr/statsalertmgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/diagnostics"
@@ -59,18 +60,20 @@ type Option func(*EventsManager)
 // EventsManager instance of events manager; responsible for all aspects of events
 // including management of elastic connections.
 type EventsManager struct {
-	RPCServer      *rpcserver.RPCServer     // RPCServer that exposes the server implementation of event manager APIs
-	configWatcher  *apiclient.ConfigWatcher // api client
-	memDb          *emmemdb.MemDb           // memDb to store the alert policies and alerts
-	logger         log.Logger               // logger
-	esClient       elastic.ESClient         // elastic client
-	alertEngine    alertengine.Interface    // alert engine
-	ctx            context.Context          // context
-	cancelFunc     context.CancelFunc       // cancel func
-	diagSvc        diagnostics.Service
-	moduleWatcher  module.Watcher
-	AlertsGCConfig *AlertsGCConfig
-	wg             sync.WaitGroup // for GC routine
+	RPCServer         *rpcserver.RPCServer     // RPCServer that exposes the server implementation of event manager APIs
+	configWatcher     *apiclient.ConfigWatcher // api client
+	memDb             *emmemdb.MemDb           // memDb to store the alert policies and alerts
+	logger            log.Logger               // logger
+	esClient          elastic.ESClient         // elastic client
+	alertEngine       alertengine.Interface    // alert engine
+	ctx               context.Context          // context
+	cancelFunc        context.CancelFunc       // cancel func
+	diagSvc           diagnostics.Service
+	moduleWatcher     module.Watcher
+	AlertsGCConfig    *AlertsGCConfig
+	skipStatsAlertMgr bool
+	statsAlertMgr     *statsalertmgr.StatsAlertMgr
+	wg                sync.WaitGroup // for GC routine
 }
 
 // AlertsGCConfig contains GC related config
@@ -110,6 +113,13 @@ func WithAlertsGCConfig(config *AlertsGCConfig) Option {
 	}
 }
 
+// WithSkipStatsAlertMgr passes a custom knob to instruct evtsmgr to skip stats alert mgr
+func WithSkipStatsAlertMgr(skip bool) Option {
+	return func(em *EventsManager) {
+		em.skipStatsAlertMgr = skip
+	}
+}
+
 // NewEventsManager returns a events manager/controller instance
 func NewEventsManager(serverName, serverURL string, resolverClient resolver.Interface,
 	logger log.Logger, opts ...Option) (*EventsManager, error) {
@@ -128,6 +138,7 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 			Interval:                      defaultGCInterval,
 			ResolvedAlertsRetentionPeriod: defaultResolvedAlertsRetentionPeriod,
 		},
+		skipStatsAlertMgr: true,
 	}
 	for _, opt := range opts {
 		if opt != nil {
@@ -185,6 +196,16 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 
 	em.configWatcher.StartWatcher()
 
+	// TODO: this is a temp. place holder for stats alert mgr, it needs to be moved to a different location (alert mgr)
+	if !em.skipStatsAlertMgr {
+		em.statsAlertMgr, err = statsalertmgr.NewStatsAlertMgr(ctx, em.memDb, resolverClient, logger.WithContext("pkg",
+			"stats-alert-mgr"))
+		if err != nil {
+			em.logger.Error("failed to create stats alert mgr, err: %v", err)
+			return nil, err
+		}
+	}
+
 	em.wg.Add(1)
 	go em.gcAlerts()
 
@@ -217,6 +238,12 @@ func (em *EventsManager) Stop() {
 	if em.configWatcher != nil {
 		em.configWatcher.Stop()
 		em.configWatcher = nil
+	}
+
+	// TODO: this is a temp. place holder for stats alert mgr, it needs to be moved to a different location (alert mgr)
+	if em.statsAlertMgr != nil {
+		em.statsAlertMgr.Stop()
+		em.statsAlertMgr = nil
 	}
 
 	if em.RPCServer != nil {

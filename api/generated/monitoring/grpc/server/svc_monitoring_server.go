@@ -1428,11 +1428,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 
 		s.endpointsMonitoringV1.fnAutoUpdateStatsAlertPolicy = srv.AddMethod("AutoUpdateStatsAlertPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.StatsAlertPolicy"], pkgMessages["monitoring.StatsAlertPolicy"], "monitoring", "AutoUpdateStatsAlertPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(monitoring.StatsAlertPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/statsAlertPolicies/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateTechSupportRequest = srv.AddMethod("AutoUpdateTechSupportRequest",

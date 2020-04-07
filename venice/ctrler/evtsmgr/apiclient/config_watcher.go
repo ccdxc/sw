@@ -161,7 +161,7 @@ func (c *ConfigWatcher) processEvents(parentCtx context.Context) error {
 	// watch alert destination
 	watcher, err = c.apiClient.MonitoringV1().AlertDestination().Watch(ctx, opts)
 	if err != nil {
-		c.logger.Errorf("failed to watch alerts, err: %v", err)
+		c.logger.Errorf("failed to watch alert destination, err: %v", err)
 		return err
 	}
 	watchList[len(selCases)] = "alertDestination"
@@ -172,10 +172,21 @@ func (c *ConfigWatcher) processEvents(parentCtx context.Context) error {
 	// watch event policy
 	watcher, err = c.apiClient.MonitoringV1().EventPolicy().Watch(ctx, opts)
 	if err != nil {
-		c.logger.Errorf("failed to watch alerts, err: %v", err)
+		c.logger.Errorf("failed to watch event policy, err: %v", err)
 		return err
 	}
 	watchList[len(selCases)] = "eventPolicy"
+	selCases = append(selCases, reflect.SelectCase{
+		Dir:  reflect.SelectRecv,
+		Chan: reflect.ValueOf(watcher.EventChan())})
+
+	// watch stats policy
+	watcher, err = c.apiClient.MonitoringV1().StatsAlertPolicy().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}})
+	if err != nil {
+		c.logger.Errorf("failed to watch stats alert policy, err: %v", err)
+		return err
+	}
+	watchList[len(selCases)] = "statsAlertPolicy"
 	selCases = append(selCases, reflect.SelectCase{
 		Dir:  reflect.SelectRecv,
 		Chan: reflect.ValueOf(watcher.EventChan())})
@@ -220,6 +231,10 @@ func (c *ConfigWatcher) processEvents(parentCtx context.Context) error {
 		case *monitoring.EventPolicy:
 			if err := c.processEventPolicy(event.Type, obj); err != nil {
 				c.logger.Errorf("[eventPolicy] failed to add/update/delete memDb, err: %v", err)
+			}
+		case *monitoring.StatsAlertPolicy:
+			if err := c.processStatsAlertPolicy(event.Type, obj); err != nil {
+				c.logger.Errorf("[statsAlertPolicy] failed to add/update/delete memDb, err: %v", err)
 			}
 		default:
 			c.logger.Errorf("invalid watch event type received from {%s}, %+v", watchList[id], event)
@@ -300,5 +315,21 @@ func (c *ConfigWatcher) processEventPolicy(eventType kvstore.WatchEventType, eve
 	default:
 		c.logger.Errorf("invalid event policy watch event, type %s policy %+v", eventType, eventPolicy)
 		return fmt.Errorf("invalid event policy watch event")
+	}
+}
+
+// helper to process stats alert policies
+func (c *ConfigWatcher) processStatsAlertPolicy(eventType kvstore.WatchEventType, statsAlertPolicy *monitoring.StatsAlertPolicy) error {
+	c.logger.Debugf("processing stats alert policy watch event: {%s} {%#v} ", eventType, statsAlertPolicy)
+	switch eventType {
+	case kvstore.Created:
+		return c.memDb.AddObject(statsAlertPolicy)
+	case kvstore.Updated:
+		return c.memDb.UpdateObject(statsAlertPolicy)
+	case kvstore.Deleted:
+		return c.memDb.DeleteObject(statsAlertPolicy)
+	default:
+		c.logger.Errorf("invalid stats alert policy watch event, type %s policy %+v", eventType, statsAlertPolicy)
+		return fmt.Errorf("invalid stats alert policy watch event")
 	}
 }
