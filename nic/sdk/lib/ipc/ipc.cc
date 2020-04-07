@@ -139,6 +139,23 @@ typedef std::shared_ptr<ipc_service_async> ipc_service_async_ptr;
 
 thread_local ipc_service_ptr t_ipc_service = nullptr;
 
+static std::mutex g_thread_handles_lock;
+static std::map<std::string, ipc_service_ptr> g_thread_handles;
+
+const int THREAD_NAME_BUFFER_SZ = 64;
+
+static std::string
+thread_name (void)
+{
+    int rc;
+    char buffer[THREAD_NAME_BUFFER_SZ];
+
+    rc = pthread_getname_np(pthread_self(), buffer, THREAD_NAME_BUFFER_SZ);
+    assert(rc == 0);
+    
+    return buffer;
+}
+
 static void
 server_receive (int fd, const void *ctx)
 {
@@ -608,9 +625,18 @@ async_client::subscribe(uint32_t msg_code, subscription_cb callback,
 ipc_service_ptr
 service (void)
 {
+    // first try to find a handle based on the thread name
+    if (t_ipc_service == nullptr) {
+        g_thread_handles_lock.lock();
+        t_ipc_service = g_thread_handles[thread_name()];
+        g_thread_handles_lock.unlock();
+    }
+
+    // if it's still null, create one ad-hoc
     if (t_ipc_service == nullptr) {
         t_ipc_service = std::make_shared<ipc_service_sync>();
     }
+    
     return t_ipc_service;
 }
 
@@ -626,9 +652,15 @@ ipc_init_async (uint32_t client_id, fd_watch_cb fd_watch_cb,
 void
 ipc_init_metaswitch (uint32_t client_id, fd_watch_ms_cb fd_watch_ms_cb)
 {
+
+    g_thread_handles_lock.lock();
+    assert(g_thread_handles.count(thread_name()) == 0);
+
     t_ipc_service = nullptr;
     t_ipc_service = std::make_shared<ipc_service_async>(client_id,
                                                         fd_watch_ms_cb);
+    g_thread_handles[thread_name()] = t_ipc_service;
+    g_thread_handles_lock.unlock();
 }
 
 void
