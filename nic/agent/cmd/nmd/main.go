@@ -11,13 +11,14 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/events/recorder"
+	"github.com/pensando/netlink"
 
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/pipeline"
 	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -92,6 +93,16 @@ func main() {
 	if val, ok := os.LookupEnv("NAPLES_PIPELINE"); ok {
 		pipelineType = val
 	}
+
+	// Wait for interfaces to be up for the corresponding pipeline.
+
+	switch pipelineType {
+	case globals.NaplesPipelineIris:
+		waitForInterfaces(ipif.NaplesOOBInterface, ipif.NaplesInbandInterface)
+	case globals.NaplesPipelineApollo:
+		waitForInterfaces(ipif.NaplesOOBInterface, ipif.ApuluINB0Interface, ipif.ApuluINB1Interface)
+	}
+
 	p, err := pipeline.NewPipeline(state.Kind(pipelineType))
 	if err != nil {
 		log.Fatalf("Error creating setting up pipeline. Err: %v", err)
@@ -130,4 +141,31 @@ func main() {
 
 	// wait forever
 	select {}
+}
+
+func waitForInterfaces(interfaces ...string) {
+	results := make(chan bool, len(interfaces))
+	for _, i := range interfaces {
+		ticker := time.NewTicker(time.Second * 5)
+		go func(intf string) {
+			for {
+				select {
+				case <-ticker.C:
+					log.Infof("Checking for interface %s to be created", intf)
+					_, err := netlink.LinkByName(intf)
+					if err == nil {
+						log.Infof("Interface %s is created.", intf)
+						results <- true
+						return
+					}
+				}
+			}
+		}(i)
+	}
+
+	for j := 0; j < len(interfaces); j++ {
+		<-results
+	}
+	close(results)
+	return
 }
