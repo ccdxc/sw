@@ -96,6 +96,14 @@ sdk_ret_t pds_vpc_create(pds_vpc_spec_t *spec,
 /// \remark     VPC spec containing a valid vpc key should be passed
 sdk_ret_t pds_vpc_read(pds_obj_key_t *key, pds_vpc_info_t *info);
 
+typedef void (*vpc_read_cb_t)(pds_vpc_info_t *info, void *ctxt);
+
+/// \brief Read all VPC information
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_vpc_read_all(vpc_read_cb_t vpc_read_cb, void *ctxt);
+
 /// \brief     update VPC
 /// \param[in] spec specification
 /// \param[in] bctxt batch context if API is invoked in a batch
@@ -148,6 +156,14 @@ sdk_ret_t pds_vpc_peer_create(pds_vpc_peer_spec_t *spec,
 /// \param[out] info information
 /// \return     #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_vpc_peer_read(pds_obj_key_t *key, pds_vpc_peer_info_t *info);
+
+typedef void (*vpc_peer_read_cb_t)(pds_vpc_peer_info_t *info, void *ctxt);
+
+/// \brief Read all VNIC information
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_vpc_peer_read_all(vpc_peer_read_cb_t vpc_peer_read_cb, void *ctxt);
 
 /// \brief     update VPC peering
 /// \param[in] spec specification

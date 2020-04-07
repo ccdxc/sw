@@ -106,6 +106,14 @@ sdk_ret_t pds_subnet_create(pds_subnet_spec_t *spec,
 ///  - Subnet spec containing a valid subnet key should be passed
 sdk_ret_t pds_subnet_read(pds_obj_key_t *key, pds_subnet_info_t *info);
 
+typedef void (*subnet_read_cb_t)(pds_subnet_info_t *info, void *ctxt);
+
+/// \brief Read all subnet information
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_subnet_read_all(subnet_read_cb_t subnet_read_cb, void *ctxt);
+
 /// \brief Update subnet
 /// \param[in] spec Specification
 /// \param[in] bctxt batch context if API is invoked in a batch

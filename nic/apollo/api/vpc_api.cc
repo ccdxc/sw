@@ -73,6 +73,40 @@ pds_vpc_read (_In_ pds_obj_key_t *key, _Out_ pds_vpc_info_t *info)
     return entry->read(info);
 }
 
+typedef struct pds_vpc_read_args_s {
+    vpc_read_cb_t cb;
+    void *ctxt;
+} pds_vpc_read_args_t;
+
+bool
+pds_vpc_info_from_entry (void *entry, void *ctxt)
+{
+    vpc_entry *vpc = (vpc_entry *)entry;
+    pds_vpc_read_args_t *args = (pds_vpc_read_args_t *)ctxt;
+    pds_vpc_info_t info;
+
+    memset(&info, 0, sizeof(pds_vpc_info_t));
+
+    // call entry read
+    vpc->read(&info);
+
+    // call cb on info
+    args->cb(&info, args->ctxt);
+
+    return false;
+}
+
+sdk_ret_t
+pds_vpc_read_all (vpc_read_cb_t vpc_read_cb, void *ctxt)
+{
+    pds_vpc_read_args_t args = { 0 };
+
+    args.ctxt = ctxt;
+    args.cb = vpc_read_cb;
+
+    return vpc_db()->walk(pds_vpc_info_from_entry, &args);
+}
+
 sdk_ret_t
 pds_vpc_update (_In_ pds_vpc_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
@@ -150,6 +184,12 @@ pds_vpc_peer_read (_In_ pds_obj_key_t *key,
     }
 
     return entry->read(info);
+}
+
+sdk_ret_t
+pds_vpc_peer_read_all (vpc_peer_read_cb_t vpc_peer_read_cb, void *ctxt)
+{
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

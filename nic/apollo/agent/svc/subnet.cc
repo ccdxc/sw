@@ -5,11 +5,11 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/core/subnet.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/subnet_svc.hpp"
 #include "nic/apollo/agent/svc/subnet.hpp"
 #include "nic/apollo/agent/hooks.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_subnet.hpp"
 
 Status
 SubnetSvcImpl::SubnetCreate(ServerContext *context,
@@ -17,8 +17,7 @@ SubnetSvcImpl::SubnetCreate(ServerContext *context,
                             pds::SubnetResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_obj_key_t key = { 0 };
-    pds_subnet_spec_t *api_spec;
+    pds_subnet_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -43,17 +42,15 @@ SubnetSvcImpl::SubnetCreate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_subnet_spec_t *)
-                    core::agent_state::state()->subnet_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
+        memset(&api_spec, 0, sizeof(pds_subnet_spec_t));
         auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.id());
-        pds_subnet_proto_to_api_spec(api_spec, request);
-        hooks::subnet_create(api_spec);
-        ret = core::subnet_create(&key, api_spec, bctxt);
+        pds_subnet_proto_to_api_spec(&api_spec, request);
+        if (core::agent_state::state()->device()->overlay_routing_en) {
+            // call the metaswitch api
+            ret = pds_ms::subnet_create(&api_spec, bctxt);
+        } else if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_subnet_create(&api_spec, bctxt);
+        }
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -82,8 +79,7 @@ SubnetSvcImpl::SubnetUpdate(ServerContext *context,
                             pds::SubnetResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_obj_key_t key = { 0 };
-    pds_subnet_spec_t *api_spec;
+    pds_subnet_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -107,16 +103,15 @@ SubnetSvcImpl::SubnetUpdate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_subnet_spec_t *)
-                    core::agent_state::state()->subnet_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
+        memset(&api_spec, 0, sizeof(pds_subnet_spec_t));
         auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.id());
-        pds_subnet_proto_to_api_spec(api_spec, request);
-        ret = core::subnet_update(&key, api_spec, bctxt);
+        pds_subnet_proto_to_api_spec(&api_spec, request);
+        if (core::agent_state::state()->device()->overlay_routing_en) {
+            // call the metaswitch api
+            ret = pds_ms::subnet_update(&api_spec, bctxt);
+        } else if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_subnet_update(&api_spec, bctxt);
+        }
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -170,7 +165,7 @@ SubnetSvcImpl::SubnetDelete(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = core::subnet_delete(&key, bctxt);
+        ret = pds_subnet_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -206,24 +201,18 @@ SubnetSvcImpl::SubnetGet(ServerContext *context,
         return Status::OK;
     }
     if (proto_req->id_size() == 0) {
-        // get all
-        ret = core::subnet_get_all(pds_subnet_api_info_to_proto, proto_rsp);
+        // read all
+        ret = pds_subnet_read_all(pds_subnet_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = core::subnet_get(&key, &info);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        ret = pds_subnet_read(&key, &info);
         if (ret != SDK_RET_OK) {
             break;
         }
-        auto response = proto_rsp->add_response();
-        pds_subnet_api_spec_to_proto(
-                response->mutable_spec(), &info.spec);
-        pds_subnet_api_status_to_proto(
-                response->mutable_status(), &info.status);
-        pds_subnet_api_stats_to_proto(
-                response->mutable_stats(), &info.stats);
+        pds_subnet_api_info_to_proto(&info, proto_rsp);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;
 }

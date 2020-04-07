@@ -97,24 +97,6 @@ bool
 cfg_db::init(void) {
     void *mem;
 
-    mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(vpc_db_t));
-    if (mem == NULL) {
-        return false;
-    }
-    vpc_map_ = new(mem) vpc_db_t();
-
-    mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(vpc_peer_db_t));
-    if (mem == NULL) {
-        return false;
-    }
-    vpc_peer_map_ = new(mem) vpc_peer_db_t();
-
-    mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(subnet_db_t));
-    if (mem == NULL) {
-        return false;
-    }
-    subnet_map_ = new(mem) subnet_db_t();
-
     mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(service_db_t));
     if (mem == NULL) {
         return false;
@@ -123,15 +105,6 @@ cfg_db::init(void) {
 
     slabs_[SLAB_ID_IF] =
         slab::factory("if", SLAB_ID_IF, sizeof(pds_if_spec_t),
-                      16, true, true, true);
-    slabs_[SLAB_ID_VPC] =
-        slab::factory("vpc", SLAB_ID_VPC, sizeof(pds_vpc_spec_t),
-                      16, true, true, true);
-    slabs_[SLAB_ID_VPC_PEER] =
-        slab::factory("vpc-peer", SLAB_ID_VPC_PEER, sizeof(pds_vpc_peer_spec_t),
-                      16, true, true, true);
-    slabs_[SLAB_ID_SUBNET] =
-        slab::factory("subnet", SLAB_ID_SUBNET, sizeof(pds_subnet_spec_t),
                       16, true, true, true);
     slabs_[SLAB_ID_SERVICE] =
         slab::factory("service", SLAB_ID_SERVICE, sizeof(pds_svc_mapping_spec_t),
@@ -143,9 +116,6 @@ cfg_db::init(void) {
 // (private) constructor method
 //------------------------------------------------------------------------------
 cfg_db::cfg_db() {
-    vpc_map_ = NULL;
-    vpc_peer_map_ = NULL;
-    subnet_map_ = NULL;
     service_map_ = NULL;
     memset(&device_, 0, sizeof(pds_device_spec_t));
     memset(slabs_, 0, sizeof(slabs_));
@@ -178,9 +148,6 @@ cfg_db::factory(void) {
 cfg_db::~cfg_db() {
     uint32_t i;
 
-    FREE(MEM_ALLOC_ID_INFRA, vpc_map_);
-    FREE(MEM_ALLOC_ID_INFRA, vpc_peer_map_);
-    FREE(MEM_ALLOC_ID_INFRA, subnet_map_);
     FREE(MEM_ALLOC_ID_INFRA, service_map_);
     for (i = SLAB_ID_MIN; i < SLAB_ID_MAX; i++) {
         if (slabs_[i]) {
@@ -245,91 +212,6 @@ agent_state::cleanup(void) {
 //------------------------------------------------------------------------------
 agent_state::~agent_state() {
     cleanup();
-}
-
-sdk_ret_t
-agent_state::add_to_vpc_db(pds_obj_key_t *key, pds_vpc_spec_t *spec) {
-    ADD_TO_OBJ_DB(vpc, key, spec);
-}
-
-pds_vpc_spec_t *
-agent_state::find_in_vpc_db(pds_obj_key_t *key) {
-    FIND_IN_OBJ_DB(vpc, key);
-}
-
-sdk_ret_t
-agent_state::vpc_db_walk(vpc_walk_cb_t cb, void *ctxt) {
-    auto it_begin = DB_BEGIN(vpc);
-    auto it_end = DB_END(vpc);
-
-    for (auto it = it_begin; it != it_end; it ++) {
-        cb(it->second, ctxt);
-    }
-
-    return SDK_RET_OK;
-}
-
-bool
-agent_state::del_from_vpc_db(pds_obj_key_t *key) {
-    DEL_FROM_OBJ_DB(vpc, key);
-}
-
-sdk_ret_t
-agent_state::add_to_vpc_peer_db(pds_obj_key_t *key, pds_vpc_peer_spec_t *spec) {
-    ADD_TO_OBJ_DB(vpc_peer, key, spec);
-}
-
-pds_vpc_peer_spec_t *
-agent_state::find_in_vpc_peer_db(pds_obj_key_t *key) {
-    FIND_IN_OBJ_DB(vpc_peer, key);
-}
-
-sdk_ret_t
-agent_state::vpc_peer_db_walk(vpc_peer_walk_cb_t cb, void *ctxt) {
-    auto it_begin = DB_BEGIN(vpc_peer);
-    auto it_end = DB_END(vpc_peer);
-
-    for (auto it = it_begin; it != it_end; it ++) {
-        cb(it->second, ctxt);
-    }
-
-    return SDK_RET_OK;
-}
-
-bool
-agent_state::del_from_vpc_peer_db(pds_obj_key_t *key) {
-    DEL_FROM_OBJ_DB(vpc_peer, key);
-}
-
-sdk_ret_t
-agent_state::add_to_subnet_db(pds_obj_key_t *key, pds_subnet_spec_t *spec) {
-    ADD_TO_OBJ_DB(subnet, key, spec);
-}
-
-pds_subnet_spec_t *
-agent_state::find_in_subnet_db(pds_obj_key_t *key) {
-    FIND_IN_OBJ_DB(subnet, key);
-}
-
-sdk_ret_t
-agent_state::subnet_db_walk(subnet_walk_cb_t cb, void *ctxt) {
-    auto it_begin = DB_BEGIN(subnet);
-    auto it_end = DB_END(subnet);
-
-    for (auto it = it_begin; it != it_end; it ++) {
-        cb(it->second, ctxt);
-    }
-    return SDK_RET_OK;
-}
-
-bool
-agent_state::del_from_subnet_db(pds_obj_key_t *key) {
-    DEL_FROM_OBJ_DB(subnet, key);
-}
-
-sdk_ret_t
-agent_state::add_to_service_db(pds_svc_mapping_key_t *key, pds_svc_mapping_spec_t *spec) {
-    ADD_TO_DB_WITH_KEY(service, key, spec);
 }
 
 pds_svc_mapping_spec_t *

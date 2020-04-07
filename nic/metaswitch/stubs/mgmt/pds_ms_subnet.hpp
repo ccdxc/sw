@@ -3,7 +3,6 @@
 #ifndef __PDS_MS_SUBNET_HPP__
 #define __PDS_MS_SUBNET_HPP__
 
-#include "nic/apollo/agent/core/subnet.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 
 namespace pds_ms {

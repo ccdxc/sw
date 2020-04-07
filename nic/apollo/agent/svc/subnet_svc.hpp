@@ -151,7 +151,7 @@ pds_subnet_api_stats_to_proto (pds::SubnetStats *proto_stats,
 
 // populate proto buf from subnet API info
 static inline void
-pds_subnet_api_info_to_proto (const pds_subnet_info_t *api_info, void *ctxt)
+pds_subnet_api_info_to_proto (pds_subnet_info_t *api_info, void *ctxt)
 {
     pds::SubnetGetResponse *proto_rsp = (pds::SubnetGetResponse *)ctxt;
     auto subnet = proto_rsp->add_response();

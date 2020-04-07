@@ -398,6 +398,9 @@ subnet_entry::fill_spec_(pds_subnet_spec_t *spec) {
     memcpy(&spec->vr_mac, vr_mac_, sizeof(mac_addr_t));
     spec->fabric_encap = fabric_encap_;
     spec->host_if = host_if_;
+    spec->v4_prefix = v4_prefix_;
+    spec->v4_vr_ip = v4_vr_ip_;
+    spec->v6_vr_ip = v6_vr_ip_;
 }
 
 sdk_ret_t

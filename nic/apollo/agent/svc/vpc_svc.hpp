@@ -85,7 +85,7 @@ pds_vpc_api_stats_to_proto (pds::VPCStats *proto_stats,
 
 // populate proto buf from vpc API info
 static inline void
-pds_vpc_api_info_to_proto (const pds_vpc_info_t *api_info, void *ctxt)
+pds_vpc_api_info_to_proto (pds_vpc_info_t *api_info, void *ctxt)
 {
     pds::VPCGetResponse *proto_rsp = (pds::VPCGetResponse *)ctxt;
     auto vpc = proto_rsp->add_response();
@@ -127,7 +127,7 @@ pds_vpc_peer_api_stats_to_proto (pds::VPCPeerStats *proto_stats,
 
 // populate proto buf from vpc API info
 static inline void
-pds_vpc_peer_api_info_to_proto (const pds_vpc_peer_info_t *api_info, void *ctxt)
+pds_vpc_peer_api_info_to_proto (pds_vpc_peer_info_t *api_info, void *ctxt)
 {
     pds::VPCPeerGetResponse *proto_rsp = (pds::VPCPeerGetResponse *)ctxt;
     auto vpc = proto_rsp->add_response();

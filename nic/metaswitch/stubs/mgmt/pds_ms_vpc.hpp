@@ -3,7 +3,6 @@
 #ifndef __PDS_MS_VPC_HPP__
 #define __PDS_MS_VPC_HPP__
 
-#include "nic/apollo/agent/core/vpc.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
 
 namespace pds_ms {

@@ -301,6 +301,8 @@ vpc_entry::fill_spec_(pds_vpc_spec_t *spec) {
     memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
     spec->type = type_;
     spec->fabric_encap = fabric_encap_;
+    spec->v4_route_table = v4_route_table_;
+    spec->v6_route_table = v6_route_table_;
     if (nat46_pfx_valid_) {
         memcpy(&spec->nat46_prefix, &nat46_pfx_,
                sizeof(ip_prefix_t));

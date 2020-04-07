@@ -93,40 +93,62 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printSubnetHeader() {
-	hdrLine := strings.Repeat("-", 269)
+	hdrLine := strings.Repeat("-", 146)
 	fmt.Printf("\n")
 	fmt.Printf("RtTblID - Route Table IDs (IPv4/IPv6)           HostIf    - Host interface subnet is deployed on\n")
 	fmt.Printf("IngSGID - Ingress Security Group ID (IPv4/IPv6) EgSGID  - Egress Security Group ID (IPv4/IPv6)\n")
 	fmt.Printf("ToS     - Type of Service in outer IP header\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s%-40s%-40s%-40s%-3s\n",
-		"ID", "VpcID", "HostIf", "IPv4Prefix", "VR IPv4", "VR MAC",
-		"RtTblID", "IngSGID", "EgSGID", "ToS")
+	fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s\n",
+		"ID", "VpcID", "HostIf",
+		"IPv4Prefix", "VR IPv4", "VR MAC")
+	fmt.Println(hdrLine)
+	fmt.Printf("%-20s%-40s%-40s%-40s%-3s\n",
+		"", "RtTblID", "IngSGID", "EgSGID", "ToS")
 	fmt.Println(hdrLine)
 }
 
 func printSubnet(subnet *pds.Subnet) {
 	spec := subnet.GetSpec()
-	lifName := "-"
+	numIngressPolicy := len(spec.GetIngV4SecurityPolicyId())
+	numEgressPolicy := len(spec.GetEgV4SecurityPolicyId())
+	ingressPolicy := spec.GetIngV4SecurityPolicyId()
+	egressPolicy := spec.GetEgV4SecurityPolicyId()
+	numIterations := 0
+	lifName, ingressStr, egressStr := "-", "-", "-"
+
+	if numIngressPolicy > numEgressPolicy {
+		numIterations = numIngressPolicy
+	} else {
+		numIterations = numEgressPolicy
+	}
+
 	if len(spec.GetHostIf()) > 0 {
 		lifName = lifGetNameFromKey(spec.GetHostIf())
 	}
-	ingSecPol, egSecPol := "", ""
-	if x := spec.GetIngV4SecurityPolicyId(); x != nil {
-		ingSecPol = uuid.FromBytesOrNil(x[0]).String()
-	}
-	if x := spec.GetEgV4SecurityPolicyId(); x != nil {
-		egSecPol = uuid.FromBytesOrNil(x[0]).String()
-	}
 
-	fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s%-40s%-40s%-40s%-3d\n",
-		uuid.FromBytesOrNil(spec.GetId()).String(),
-		uuid.FromBytesOrNil(spec.GetVPCId()).String(), lifName,
-		utils.IPv4PrefixToStr(spec.GetV4Prefix()),
-		utils.Uint32IPAddrtoStr(spec.GetIPv4VirtualRouterIP()),
-		utils.MactoStr(spec.GetVirtualRouterMac()),
-		uuid.FromBytesOrNil(spec.GetV4RouteTableId()).String(),
-		ingSecPol,
-		egSecPol,
-		spec.GetToS())
+	for i := 0; i < numIterations; i++ {
+		if i < numIngressPolicy {
+			ingressStr = uuid.FromBytesOrNil(ingressPolicy[i]).String()
+		} else {
+			ingressStr = "-"
+		}
+		if i < numEgressPolicy {
+			egressStr = uuid.FromBytesOrNil(egressPolicy[i]).String()
+		} else {
+			egressStr = "-"
+		}
+		if i == 0 {
+			fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s\n%-20s%-40s%-40s%-40s%-3d\n",
+				uuid.FromBytesOrNil(spec.GetId()).String(),
+				uuid.FromBytesOrNil(spec.GetVPCId()).String(), lifName,
+				utils.IPv4PrefixToStr(spec.GetV4Prefix()),
+				utils.Uint32IPAddrtoStr(spec.GetIPv4VirtualRouterIP()),
+				utils.MactoStr(spec.GetVirtualRouterMac()), "",
+				uuid.FromBytesOrNil(spec.GetV4RouteTableId()).String(),
+				ingressStr, egressStr, spec.GetToS())
+		} else {
+			fmt.Printf("%-60s%-40s%-40s\n", "", ingressStr, egressStr)
+		}
+	}
 }

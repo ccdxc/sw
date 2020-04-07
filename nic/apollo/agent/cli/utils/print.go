@@ -41,6 +41,9 @@ func MactoStr(mac uint64) string {
 
 // IPAddrToStr converts PDS proto IP address to string
 func IPAddrToStr(ipAddr *pds.IPAddress) string {
+	if ipAddr == nil {
+		return "-"
+	}
 	if ipAddr.GetAf() == pds.IPAF_IP_AF_INET {
 		v4Addr := ipAddr.GetV4Addr()
 		ip := make(net.IP, 4)
@@ -72,10 +75,16 @@ func ByteIPv6AddrtoStr(addr []byte) string {
 }
 
 func IPv4PrefixToStr(pfx *pds.IPv4Prefix) string {
+	if pfx == nil {
+		return "-"
+	}
 	return fmt.Sprintf("%s/%d", Uint32IPAddrtoStr(pfx.GetAddr()), pfx.GetLen())
 }
 
 func IPv6PrefixToStr(pfx *pds.IPv6Prefix) string {
+	if pfx == nil {
+		return "-/-"
+	}
 	return fmt.Sprintf("%s/%d", ByteIPv6AddrtoStr(pfx.GetAddr()), pfx.GetLen())
 }
 
@@ -90,6 +99,9 @@ func IPPrefixToStr(pfx *pds.IPPrefix) string {
 
 // EncapToString converts encap to string
 func EncapToString(encap *pds.Encap) string {
+	if encap == nil {
+		return "-"
+	}
 	encapType := encap.GetType()
 	encapStr := strings.Replace(encapType.String(), "ENCAP_TYPE_", "", -1)
 	switch encapType {

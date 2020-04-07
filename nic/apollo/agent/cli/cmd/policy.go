@@ -227,5 +227,4 @@ func printPolicy(resp *pds.SecurityPolicy) {
 
 		fmt.Println(outStr)
 	}
-	fmt.Println(strings.Repeat("-", 60))
 }

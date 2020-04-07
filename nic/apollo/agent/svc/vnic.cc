@@ -5,7 +5,6 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/core/vnic.hpp"
 #include "nic/apollo/agent/svc/vnic.hpp"
 #include "nic/apollo/agent/svc/vnic_svc.hpp"
 
@@ -15,7 +14,6 @@ VnicSvcImpl::VnicCreate(ServerContext *context,
                         pds::VnicResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_obj_key_t key = { 0 };
     pds_vnic_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -42,12 +40,11 @@ VnicSvcImpl::VnicCreate(ServerContext *context,
     for (int i = 0; i < proto_req->request_size(); i ++) {
         memset(&api_spec, 0, sizeof(pds_vnic_spec_t));
         auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = pds_vnic_proto_to_api_spec(&api_spec, request);
         if (ret != SDK_RET_OK) {
             goto end;
         }
-        ret = core::vnic_create(&key, &api_spec, bctxt);
+        ret = pds_vnic_create(&api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -76,7 +73,6 @@ VnicSvcImpl::VnicUpdate(ServerContext *context,
                         pds::VnicResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_obj_key_t key = { 0 };
     pds_vnic_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -103,12 +99,11 @@ VnicSvcImpl::VnicUpdate(ServerContext *context,
     for (int i = 0; i < proto_req->request_size(); i ++) {
         memset(&api_spec, 0, sizeof(pds_vnic_spec_t));
         auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = pds_vnic_proto_to_api_spec(&api_spec, request);
         if (ret != SDK_RET_OK) {
             goto end;
         }
-        ret = core::vnic_update(&key, &api_spec, bctxt);
+        ret = pds_vnic_update(&api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -162,7 +157,7 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = core::vnic_delete(&key, bctxt);
+        ret = pds_vnic_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -199,7 +194,7 @@ VnicSvcImpl::VnicGet(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = core::vnic_get(&key, &info);
+        ret = pds_vnic_read(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
             break;
@@ -209,7 +204,7 @@ VnicSvcImpl::VnicGet(ServerContext *context,
     }
 
     if (proto_req->id_size() == 0) {
-        ret = core::vnic_get_all(pds_vnic_api_info_to_proto, proto_rsp);
+        ret = pds_vnic_read_all(pds_vnic_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;

@@ -73,6 +73,40 @@ pds_subnet_read (_In_ pds_obj_key_t *key, _Out_ pds_subnet_info_t *info)
     return entry->read(info);
 }
 
+typedef struct pds_subnet_read_args_s {
+    subnet_read_cb_t cb;
+    void *ctxt;
+} pds_subnet_read_args_t;
+
+bool
+pds_subnet_info_from_entry (void *entry, void *ctxt)
+{
+    subnet_entry *subnet = (subnet_entry *)entry;
+    pds_subnet_read_args_t *args = (pds_subnet_read_args_t *)ctxt;
+    pds_subnet_info_t info;
+
+    memset(&info, 0, sizeof(pds_subnet_info_t));
+
+    // call entry read
+    subnet->read(&info);
+
+    // call cb on info
+    args->cb(&info, args->ctxt);
+
+    return false;
+}
+
+sdk_ret_t
+pds_subnet_read_all (subnet_read_cb_t subnet_read_cb, void *ctxt)
+{
+    pds_subnet_read_args_t args = { 0 };
+
+    args.ctxt = ctxt;
+    args.cb = subnet_read_cb;
+
+    return subnet_db()->walk(pds_subnet_info_from_entry, &args);
+}
+
 sdk_ret_t
 pds_subnet_update (_In_ pds_subnet_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {
