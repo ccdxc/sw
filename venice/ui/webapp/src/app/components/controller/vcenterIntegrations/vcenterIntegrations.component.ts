@@ -5,7 +5,6 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { OrchestrationService } from '@app/services/generated/orchestration.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { HttpEventUtility } from '@common/HttpEventUtility';
 import { Utility } from '@common/Utility';
 import { TablevieweditAbstract } from '@components/shared/tableviewedit/tableviewedit.component';
 import { IApiStatus, OrchestrationOrchestrator, IOrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
@@ -17,7 +16,7 @@ import { WorkloadService } from '@app/services/generated/workload.service';
 import { VcenterWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 
 /**
- * vCenter Integration page.
+ * vCenter page.
  * UI fetches all vcenter objects.
  *
  */
@@ -57,10 +56,8 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
 
   subscriptions: Subscription[] = [];
   dataObjects: ReadonlyArray<OrchestrationOrchestrator>;
-  vcenterIntegrationEventUtility: HttpEventUtility<OrchestrationOrchestrator>;
 
   workloadList: WorkloadWorkload[] = [];
-  vcenterWorkloadsTuple: VcenterWorkloadsTuple = {} as VcenterWorkloadsTuple;
 
   disableTableWhenRowExpanded: boolean = true;
   isTabComponent: boolean = false;
@@ -86,13 +83,15 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
   }
 
   getVcenterIntegrations() {
-    this.vcenterIntegrationEventUtility = new HttpEventUtility<OrchestrationOrchestrator>(OrchestrationOrchestrator);
-    this.dataObjects = this.vcenterIntegrationEventUtility.array;
-    const sub = this.orchestrationService.WatchOrchestrator().subscribe(
+    const sub = this.orchestrationService.ListOrchestratorsWithWebsocketUpdate().subscribe(
       response => {
-        this.vcenterIntegrationEventUtility.processEvents(response);
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.dataObjects = response.data;
+        this.buildVCenterWorkloadsMap();
       },
-      this.controllerService.webSocketErrorHandler('Failed to get vCenter Integations')
+      this.controllerService.webSocketErrorHandler('Failed to get vCenters')
     );
     this.subscriptions.push(sub);
   }
@@ -124,9 +123,7 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
   }
 
   displayColumn_workloads(rowData: OrchestrationOrchestrator): any {
-    const associatedWorkloads: WorkloadWorkload[] =
-        this.vcenterWorkloadsTuple[rowData.meta.name];
-
+    const associatedWorkloads: WorkloadWorkload[] = rowData._ui.associatedWorkloads;
     if (!associatedWorkloads || associatedWorkloads.length === 0) {
       return '';
     }
@@ -166,11 +163,13 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
   buildVCenterWorkloadsMap() {
     if (this.dataObjects && this.dataObjects.length > 0 &&
         this.workloadList && this.workloadList.length > 0) {
-      this.vcenterWorkloadsTuple = ObjectsRelationsUtility.buildVcenterWorkloadsMap(this.workloadList, this.dataObjects);
-      this.dataObjects.forEach(vcenter => {
+      const vcenterWorkloadsTuple: VcenterWorkloadsTuple =
+        ObjectsRelationsUtility.buildVcenterWorkloadsMap(this.workloadList, this.dataObjects);
+      this.dataObjects = this.dataObjects.map(vcenter => {
         const associatedWorkloads: WorkloadWorkload[] =
-          this.vcenterWorkloadsTuple[vcenter.meta.name] || [];
+          vcenterWorkloadsTuple[vcenter.meta.name] || [];
         vcenter._ui.associatedWorkloads = associatedWorkloads;
+        return vcenter;
       });
     }
   }
@@ -180,11 +179,11 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
   }
 
   generateDeleteConfirmMsg(object: IOrchestrationOrchestrator): string {
-    return 'Are you sure you want to delete vCenter Integration ' + object.meta.name;
+    return 'Are you sure you want to delete vCenter ' + object.meta.name;
   }
 
   generateDeleteSuccessMsg(object: IOrchestrationOrchestrator): string {
-    return 'Deleted vCenter Integration ' + object.meta.name;
+    return 'Deleted vCenter ' + object.meta.name;
   }
 
   getClassName(): string {

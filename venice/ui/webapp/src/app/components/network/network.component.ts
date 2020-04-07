@@ -102,7 +102,7 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
         });
         this.vcenterOptions.push({label: '', value: null});
       },
-      this.controllerService.webSocketErrorHandler('Failed to get vCenter Integrations')
+      this.controllerService.webSocketErrorHandler('Failed to get vCenters')
     );
     this.subscriptions.push(sub);
   }

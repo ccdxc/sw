@@ -298,11 +298,11 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
   }
 
   generateCreateSuccessMsg(object: IOrchestrationOrchestrator): string {
-    return 'Created vCenter Integration ' + object.meta.name;
+    return 'Created vCenter ' + object.meta.name;
   }
 
   generateUpdateSuccessMsg(object: IOrchestrationOrchestrator): string {
-    return 'Updated vCenter Integration ' + object.meta.name;
+    return 'Updated vCenter ' + object.meta.name;
   }
 
   getObjectValues(): IOrchestrationOrchestrator {

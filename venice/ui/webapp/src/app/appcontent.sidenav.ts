@@ -259,7 +259,7 @@ export const sideNavMenu: SideNavItem[] = [
     ]
   },
   {
-    label: 'Controller',
+    label: 'Orchestrator',
     icon: {
       cssClass: 'app-l-side-nav-controller',
     },

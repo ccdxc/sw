@@ -1,4 +1,4 @@
-<app-pagebody [icon]="bodyicon" header="vCenter Integration Overview">
+<app-pagebody [icon]="bodyicon" header="vCenter Overview">
   <div fxFlex class="vcenter-integrations-table-container">
     <ng-container *ngTemplateOutlet="DataTable"></ng-container>
   </div>
@@ -26,7 +26,7 @@
   <div fxFlex fxLayout="column">
     <div fxLayout="row">
       <app-tableheader fxFlex="auto" fxLayout="row" [tableMenuItems]="tableMenuItems"
-                       title="vCenter Integrations"
+                       title="vCenters"
                        [total]="dataObjects.length" [icon]="headerIcon"
                        [enableColumnSelect]="true"
                        [cols]="cols" (columnSelectChange)="onColumnSelectChange($event)">
@@ -67,12 +67,12 @@
 <!-- TABLE ACTION -->
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon matTooltip="Update vCenter Integration"
+    <mat-icon matTooltip="Update vCenter"
               *roleGuard="'orchestrationorchestrator_update'"
               class="global-table-action-icon"
               (click)="expandRowRequest($event, rowData)">edit
     </mat-icon>
-    <mat-icon matTooltip="Delete vCenter Integration"
+    <mat-icon matTooltip="Delete vCenter"
               *roleGuard="'orchestrationorchestrator_delete'"
               class="global-table-action-icon"
               (click)="onDeleteRecord($event, rowData)">delete
