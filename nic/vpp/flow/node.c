@@ -6,6 +6,7 @@
 #include <session.h>
 #include "node.h"
 #include <flow.h>
+#include "log.h"
 #include "pdsa_hdlr.h"
 #include "pdsa_uds_hdlr.h"
 #include <nic/vpp/infra/utils.h>
@@ -1104,7 +1105,7 @@ VLIB_REGISTER_NODE (pds_flow_classify_node) = {
 };
 
 static void
-pds_session_update_data(u32 ses_id, u32 pindex, u32 sindex, 
+pds_session_update_data(u32 ses_id, u32 pindex, u32 sindex,
                         bool iflow, bool move_complete)
 {
     pds_flow_hw_ctx_t *session;
@@ -1126,6 +1127,40 @@ pds_session_update_data(u32 ses_id, u32 pindex, u32 sindex,
         index->primary = 0;
     }
 }
+
+void
+pds_packet_type_flags_build (void)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+
+    fm->packet_types = vec_new(u16, PDS_FLOW_PKT_TYPE_MAX);
+    vec_elt(fm->packet_types, PDS_FLOW_L2L_INTER_SUBNET) = PDS_PKT_TYPE_L2L;
+    vec_elt(fm->packet_types, PDS_FLOW_L2L_INTRA_SUBNET) = PDS_PKT_TYPE_L2L;
+    vec_elt(fm->packet_types, PDS_FLOW_L2R_INTER_SUBNET) = PDS_PKT_TYPE_L2R;
+    vec_elt(fm->packet_types, PDS_FLOW_L2R_INTER_SUBNET) = PDS_PKT_TYPE_L2R;
+    vec_elt(fm->packet_types, PDS_FLOW_L2N_OVERLAY_ROUTE_EN) = PDS_PKT_TYPE_N;
+    vec_elt(fm->packet_types, PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAPT) =
+                                                        PDS_PKT_TYPE_N;
+    vec_elt(fm->packet_types, PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAT) =
+                                                        PDS_PKT_TYPE_N;
+    vec_elt(fm->packet_types, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS) = PDS_PKT_TYPE_N;
+    vec_elt(fm->packet_types, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAPT) =
+                                                        PDS_PKT_TYPE_N;
+    vec_elt(fm->packet_types, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAT) =
+                                                        PDS_PKT_TYPE_N;
+    vec_elt(fm->packet_types, PDS_FLOW_L2N_INTRA_VCN_ROUTE) = PDS_PKT_TYPE_N;
+    vec_elt(fm->packet_types, PDS_FLOW_R2L_INTRA_SUBNET) = PDS_PKT_TYPE_R2L;
+    vec_elt(fm->packet_types, PDS_FLOW_R2L_INTER_SUBNET) = PDS_PKT_TYPE_R2L;
+    vec_elt(fm->packet_types, PDS_FLOW_N2L_OVERLAY_ROUTE_EN) = PDS_PKT_TYPE_N;
+    vec_elt(fm->packet_types, PDS_FLOW_N2L_OVERLAY_ROUTE_EN_NAT) =
+                                                            PDS_PKT_TYPE_N;
+    vec_elt(fm->packet_types, PDS_FLOW_N2L_OVERLAY_ROUTE_DIS) = PDS_PKT_TYPE_N;
+    vec_elt(fm->packet_types, PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_NAT) =
+                                                            PDS_PKT_TYPE_N;
+    vec_elt(fm->packet_types, PDS_FLOW_N2L_INTRA_VCN_ROUTE) = PDS_PKT_TYPE_N;
+    return;
+}
+
 static clib_error_t *
 pds_flow_init (vlib_main_t * vm)
 {
@@ -1133,6 +1168,7 @@ pds_flow_init (vlib_main_t * vm)
     int no_of_threads = fm->no_threads = vec_len(vlib_worker_threads);
     int i;
 
+    pds_vpp_flow_log_init();
     fm->max_sessions = pds_session_get_max();
     pool_init_fixed(fm->session_index_pool, fm->max_sessions);
     clib_memset(fm->session_index_pool, 0,
@@ -1165,6 +1201,7 @@ pds_flow_init (vlib_main_t * vm)
     pds_flow_dump_init();
 
     pds_flow_pipeline_init(vm);
+    pds_packet_type_flags_build();
 
     ftl_reg_session_update_cb(pds_session_update_data);
     return 0;
@@ -1174,4 +1211,3 @@ VLIB_INIT_FUNCTION (pds_flow_init) =
 {
     .runs_after = VLIB_INITS("pds_infra_init"),
 };
-

@@ -48,6 +48,14 @@ pds_session_get_advance_offset (void)
 }
 
 always_inline void
+pds_packet_type_fill (pds_flow_hw_ctx_t *ctx, u8 type)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+
+    ctx->packet_type = vec_elt(fm->packet_types, type);
+}
+
+always_inline void
 pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
                      u32 session_id0, u32 session_id1,
                      u16 *next0, u16 *next1, u32 *counter)
@@ -81,12 +89,13 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
     ctx0 = pds_flow_get_hw_ctx(session_id0);
     ses_en = fm->con_track_en && (ctx0->proto == PDS_FLOW_PROTO_TCP);
     actiondata.action_u.session_session_info.session_tracking_en = ses_en;
-    
+    pds_packet_type_fill(ctx0, vnet_buffer(b0)->pds_flow_data.packet_type);
+
     if (PREDICT_FALSE(session_program(session_id0, (void *)&actiondata))) {
         *next0 = SESSION_PROG_NEXT_DROP;
     } else {
 skip_prog0:
-        *next0 = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW : 
+        *next0 = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW :
                                             SESSION_PROG_NEXT_FWD_FLOW;
     }
 
@@ -113,6 +122,7 @@ skip_prog0:
     ctx1 = pds_flow_get_hw_ctx(session_id1);
     ses_en = fm->con_track_en && (ctx1->proto == PDS_FLOW_PROTO_TCP);
     actiondata.action_u.session_session_info.session_tracking_en = ses_en;
+    pds_packet_type_fill(ctx1, vnet_buffer(b1)->pds_flow_data.packet_type);
 
     if (PREDICT_FALSE(session_program(session_id1, (void *)&actiondata))) {
         *next1 = SESSION_PROG_NEXT_DROP;
@@ -134,6 +144,7 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     session_actiondata_t actiondata = {0};
     pds_flow_main_t *fm = &pds_flow_main;
     pds_flow_rewrite_flags_t *rewrite_flags;
+    pds_flow_hw_ctx_t *ctx;
 
     if (vnet_buffer(b)->pds_flow_data.flags &
         VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID) {
@@ -155,6 +166,8 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b)->pds_flow_data.packet_type));
     actiondata.action_u.session_session_info.tx_rewrite_flags = rewrite_flags->tx_rewrite;
     actiondata.action_u.session_session_info.rx_rewrite_flags = rewrite_flags->rx_rewrite;
+    ctx = pds_flow_get_hw_ctx(session_id);
+    pds_packet_type_fill(ctx, vnet_buffer(b)->pds_flow_data.packet_type);
 
     if (PREDICT_FALSE(session_program(session_id, (void *)&actiondata))) {
         next[0] = SESSION_PROG_NEXT_DROP;

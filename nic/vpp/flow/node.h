@@ -236,9 +236,10 @@ typedef CLIB_PACKED(struct pds_flow_hw_ctx_s {
     // lock per session entry: since iflow/rflow index may get updated from
     // other threads, we need lock here.
     volatile u8 lock;
+    u8 packet_type : 2;
     // make 4 byte aligned.
-    u8 reserved_1;
-    u16 reserved_2; 
+    u8 reserved_1 : 6;
+    u16 reserved_2;
 }) pds_flow_hw_ctx_t;
 
 typedef struct pds_flow_session_id_thr_local_pool_s {
@@ -272,8 +273,18 @@ typedef struct pds_flow_main_s {
     u32 max_sessions;
     u8 no_threads;
     u8 con_track_en;
+    u8 *packet_types;
 } pds_flow_main_t;
 
+typedef enum {
+    PDS_PKT_TYPE_L2L,
+    PDS_PKT_TYPE_L2R,
+    PDS_PKT_TYPE_R2L,
+    PDS_PKT_TYPE_N,         // for both L2N and N2L
+} pds_flow_pkt_type;
+
+// packet types - Any new addition should be handled in
+// pds_packet_type_flags_build ()
 typedef enum {
     PDS_FLOW_L2L_INTRA_SUBNET = 0,
     PDS_FLOW_L2L_INTER_SUBNET,
@@ -294,7 +305,7 @@ typedef enum {
     PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_NAT,
     PDS_FLOW_N2L_INTRA_VCN_ROUTE,
     PDS_FLOW_PKT_TYPE_MAX,
-} pds_flow_pkt_type;
+} pds_flow_pkt_sub_type;
 
 extern pds_flow_main_t pds_flow_main;
 
