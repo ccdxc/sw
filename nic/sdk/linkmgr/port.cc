@@ -998,12 +998,12 @@ port::port_link_sm_dfe_process(void)
 
                 // ICAL needs ~0.4 secs for 100G
                 if(dfe_complete == false) {
-                    timeout = 100;
+                    timeout = port_mac_sync_ical_timeout();
                     set_num_dfe_ical_cmplt_retries(
                                            num_dfe_ical_cmplt_retries() + 1);
                     // 100msecs * 10 retries = 1sec
                     if (num_dfe_ical_cmplt_retries() <
-                                     MAX_PORT_SERDES_DFE_ICAL_CMPLT_RETRIES) {
+                                     port_max_ical_cmplt_retries()) {
                         // start the timer and wait for ICAL to complete
                         this->bringup_timer_val_ += timeout;
                         port_timer_start(link_bringup_timer(), timeout);
@@ -1026,6 +1026,8 @@ port::port_link_sm_dfe_process(void)
                     set_num_dfe_ical_eye_retries(num_dfe_ical_eye_retries()+1);
                     if (num_dfe_ical_eye_retries() <
                                      MAX_PORT_SERDES_DFE_ICAL_EYE_RETRIES) {
+                        // reset the ical complete retry counter
+                        set_num_dfe_ical_cmplt_retries(0);
                         // start/retry ICAL
                         retry_sm = true;
                     } else {
@@ -1380,7 +1382,7 @@ port::port_link_sm_process(bool start_en_timer)
                         break;
                     }
                     // reduce MAC sync timer to 100ms for 25G/10G
-                    timeout = port_mac_sync_timeout();
+                    timeout = port_mac_sync_ical_timeout();
                     this->bringup_timer_val_ += timeout;
                     port_timer_start(link_bringup_timer(), timeout);
                     break;
@@ -1984,11 +1986,13 @@ port::timers_init(void) {
 }
 
 uint32_t
+port::port_max_ical_cmplt_retries (void) {
+    return MAX_PORT_SERDES_DFE_ICAL_CMPLT_RETRIES;
+}
+
+uint32_t
 port::port_max_mac_sync_retries (void) {
     switch (port_speed()) {
-    case port_speed_t::PORT_SPEED_100G:
-    case port_speed_t::PORT_SPEED_40G:
-        return MAX_PORT_MAC_SYNC_RETRIES_100G;
     case port_speed_t::PORT_SPEED_10G:
         return MAX_PORT_MAC_SYNC_RETRIES_10G;
     default:
@@ -1997,7 +2001,7 @@ port::port_max_mac_sync_retries (void) {
 }
 
 uint32_t
-port::port_mac_sync_timeout (void) {
+port::port_mac_sync_ical_timeout (void) {
     switch (port_speed()) {
     case port_speed_t::PORT_SPEED_100G:
     case port_speed_t::PORT_SPEED_40G:
