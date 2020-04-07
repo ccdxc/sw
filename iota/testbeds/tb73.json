@@ -1,0 +1,77 @@
+{
+    "TestbedID": 74,
+    "TestbedVlanBase": 100,
+    "Instances": [
+        {
+            "Type": "bm",
+            "DataNetworks": [
+                {
+                    "Name"              : "uplink0",
+                    "SwitchIP"          : "1.1.1.1",
+                    "SwitchPassword"    : "abc",
+                    "SwitchPort"        : 10,
+                    "Speed"             : "100G",
+                    "SwitchUsername"    : "user"
+               },
+               {
+                   "Name"               : "uplink1",
+                   "SwitchIP"           : "1.1.1.1",
+                   "SwitchPassword"     : "abc",
+                   "SwitchPort"         : 20,
+                   "Speed"              : "100G",
+                   "SwitchUsername"     : "user"
+               }
+            ],
+            "NodeMgmtIP"    : "tb73-host1",
+            "NodeCimcIP"    : "tb73-host1-cimc",
+            "NodeOs"        : "linux",
+            "NicConsoleIP"  : "chamber-ts8",
+            "NicConsolePort": "2003",
+            "NicMgmtIP"     : "192.168.71.92",
+            "Name"          : "tb73-host1",
+            "Resource"      : {
+                "NICType"       : "pensando",
+                "NICSerialNum"  : "FLM18510033",
+                "NICUuid"       : "00:ae:cd:00:27:a8"
+            }
+       },
+       {
+            "Type": "bm",
+            "DataNetworks": [
+                {
+                    "Name"              : "uplink0",
+                    "SwitchIP"          : "1.1.1.1",
+                    "SwitchPassword"    : "abc",
+                    "SwitchPort"        : 30,
+                    "Speed"             : "100G",
+                    "SwitchUsername"    : "user"
+               },
+               {
+                   "Name"               : "uplink1",
+                   "SwitchIP"           : "1.1.1.1",
+                   "SwitchPassword"     : "abc",
+                   "SwitchPort"         : 40,
+                   "Speed"              : "100G",
+                   "SwitchUsername"     : "user"
+               }
+            ],
+            "NodeMgmtIP"    : "tb73-host2",
+            "NodeCimcIP"    : "tb73-host2-cimc",
+            "NodeOs"        : "linux",
+            "NicConsoleIP"  : "chamber-ts8",
+            "NicConsolePort": "2004",
+            "NicMgmtIP"     : "192.168.71.65",
+            "Name"          : "tb73-host2",
+            "Resource"      : {
+                "NICType"       : "pensando",
+                "NICSerialNum"  : "FLM18510046",
+                "NICUuid"       : "00:ae:cd:00:2f:70"
+            }
+       }
+  ],
+  "Provision": {
+    "Username": "vm",
+    "Password": "vm",
+    "PrivateKeyFile": ""
+  }
+}

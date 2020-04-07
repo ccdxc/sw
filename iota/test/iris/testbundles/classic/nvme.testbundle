@@ -1,0 +1,119 @@
+meta:
+    name    : nvme
+    os      : [ linux ]
+    nicmode : bitw
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : Modprobe_NVMe
+        testcase: testcases.nvme.modprobe_nvme
+        args    :
+            type: remote_only
+
+    -   name    : Rmmod_NVMe
+        testcase: testcases.nvme.rmmod_nvme
+        args    :
+            type: remote_only
+
+    -   name    : Setup_NVMe-oF
+        testcase: testcases.nvme.setup_nvmeof
+        args    :
+            type: remote_only
+
+    -   name    : Reset_Controller
+        testcase: testcases.nvme.reset_ctrl
+        args    :
+            type: remote_only
+        iterators :
+            type  : nested
+            ctrl  : [nvme1]
+
+    -   name    : Identify_Controller
+        testcase: testcases.nvme.id_ctrl
+        args    :
+            type: remote_only
+        iterators :
+            type  : nested
+            ctrl  : [nvme1]
+
+    -   name    : Get_Feature
+        testcase: testcases.nvme.get_ftr
+        args    :
+            type: remote_only
+        iterators :
+            type  : nested
+            ctrl  : [nvme1]
+
+    -   name    : Set_Feature
+        testcase: testcases.nvme.set_ftr
+        args    :
+            type: remote_only
+        iterators :
+            type  : nested
+            ctrl  : [nvme1]
+
+    -   name    : Identify_Namespace
+        testcase: testcases.nvme.id_ns
+        args    :
+            type: remote_only
+        iterators     :
+            type      : nested
+            namespace : [nvme1n1]
+
+    -   name    : Read
+        testcase: testcases.nvme.read
+        args    :
+            type: remote_only
+        iterators     :
+            type      : nested
+            namespace : [nvme1n1]
+            datasize  : [4, 8, 64, 256, 512, 1024, 4096, 100000, 300000, 900000]
+
+    -   name    : Write
+        testcase: testcases.nvme.write
+        args    :
+            type: remote_only
+        iterators     :
+            type      : nested
+            namespace : [nvme1n1]
+            datasize  : [4, 8, 64, 256, 512, 1024, 4096, 100000, 300000, 900000]
+
+    -   name    : Input_Output
+        testcase: testcases.nvme.io
+        args    :
+            type: remote_only
+        iterators     :
+            type      : nested
+            namespace : [nvme1n1]
+            datasize  : [4, 8, 64, 256, 512, 1024, 4096, 100000, 300000, 900000]
+
+    -   name    : Fio
+        testcase: testcases.nvme.fio
+        args    :
+            type: remote_only
+        iterators      :
+            type       : nested
+            namespace  : [nvme1n1]
+            command    : [read, randread, write, randwrite, rw, randrw]
+            block_size : [4k, 256k, 1M]
+            io_depth   : [32, 64]
+            runtime    : [60, 120]
+            num_jobs   : [4,  64]
+            #block_size : [64k]
+            #io_depth   : [64]
+            #runtime    : [10]
+            #num_jobs   : [16]
+
+    -   name    : Pynvme_Setup
+        testcase: testcases.nvme.pynvme_setup
+        args    :
+            type: remote_only
+
+    -   name    : Pynvme
+        testcase: testcases.nvme.pynvme
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            testcase : [tc01_create_ctrl.py, tc02_id_ctrl.py, tc03_reset_ctrl.py, tc04_create_qp.py, tc05_detect_ns.py, tc06_io.py, tc07_ioworker.py]
+

@@ -830,6 +830,8 @@ class HostManagement(EntityManagement):
 
         node_init_script = os.path.join(GlobalOptions.wsdir, 'iota', 'scripts', self.__host_os, 'nodeinit.sh')
         pen_nics_script = os.path.join(GlobalOptions.wsdir, 'iota', 'scripts', 'pen_nics.py')
+        host_nvmeof_script = os.path.join(GlobalOptions.wsdir, 'iota', 'scripts', 'initiator.py')
+        target_nvmeof_script = os.path.join(GlobalOptions.wsdir, 'iota', 'scripts', 'target_malloc.py')
         if cleanup:
             nodeinit_args += " --cleanup"
             self.RunSshCmd("sudo rm -rf /naples &&  sudo mkdir -p /naples && sudo chown vm:vm /naples")
@@ -848,6 +850,8 @@ class HostManagement(EntityManagement):
             self.RunSshCmd("sudo mkdir -p /pensando && sudo chown vm:vm /pensando")
             self.CopyIN(pen_nics_script,  HOST_NAPLES_DIR)
             self.CopyIN(node_init_script, HOST_NAPLES_DIR)
+            self.CopyIN(host_nvmeof_script, HOST_NAPLES_DIR)
+            self.CopyIN(target_nvmeof_script, HOST_NAPLES_DIR)
             self.CopyIN(os.path.join(GlobalOptions.wsdir, driver_pkg), HOST_NAPLES_DIR)
 
             nodeinit_args = ""

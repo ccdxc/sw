@@ -1,0 +1,15 @@
+{
+  "intf" : "enp97s0",
+  "tgt_ip" : "1.1.0.2",
+  "ini_ip" : "1.1.0.1",
+  "prefixlen" : "24",
+  "mtu" : "9192",
+  "hmem" : "8192",
+  "spdk_dir" : "/root/spdk",
+  "cpu_mask" : "0xF",
+  "mdev_name" : "Malloc0",
+  "block_size" : "1024",
+  "num_block" : "512",
+  "ctrl_name" : "SPDK_Controller1                        ",
+  "nqn" : "nqn.2016-06.io.spdk:cnode1"
+}
