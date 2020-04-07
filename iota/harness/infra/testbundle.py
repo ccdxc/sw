@@ -189,7 +189,7 @@ class TestBundle:
             if not selected_list:
                 tcResId = "tb_{0}_tc_{1}_non_selected_count_{2}".format(self.Name(),tc.Name(),_i)
                 tcResult = TestCaseResult(tcResId, tc.Name(), "unknown")
-                tcResult.closeResult(types.status.SKIPPED, time.strftime("%Y-%m-%dT%H:%M:%SZ",time.localtime()), 0, types.status.str(types.status.SKIPPED).title())
+                tcResult.closeResult(types.status.SKIPPED, time.strftime("%Y-%m-%dT%H:%M:%SZ",time.localtime()), 0, "{}")
                 self.addTcResult(tcResult)
             for selected in selected_list:
                 if self.__sel_entry:
@@ -207,7 +207,7 @@ class TestBundle:
                     tc.SetBundleStore(self.GetStore())
                     startTime=time.time()
                     ret = tc.Main()
-                    tcResult.closeResult(ret, time.strftime("%Y-%m-%dT%H:%M:%SZ",time.localtime()), time.time()-startTime, types.status.str(ret).title())
+                    tcResult.closeResult(ret, time.strftime("%Y-%m-%dT%H:%M:%SZ",time.localtime()), time.time()-startTime, tc.iterRes.toJson())
                     if ret != types.status.SUCCESS:
                         result = ret
                         if result == types.status.CRITICAL and GlobalOptions.stop_on_critical:

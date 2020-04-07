@@ -261,6 +261,21 @@ class TeardownStep:
         print(types.FORMAT_TESTCASE_SUMMARY % (modname, self.__get_owner(), types.status.str(self.__status).title(), self.__timer.TotalTime()))
         return types.status.SUCCESS
 
+
+class IterationResults(object):
+    def __init__(self):
+        self.results = {}
+
+    def addResults(self, title, iteration):
+        self.results[title] = iteration
+
+    def toJson(self):
+        try:
+            return json.dumps(self.results)
+        except:
+            Logger.debug("failed to export iteration results")
+            return "{}"
+
 class TestcaseDataIters:
     def __init__(self):
         self.__summary = None
@@ -429,6 +444,7 @@ class Testcase:
         self.__iters = []
         self.__aborted = False
         self.status = types.status.UNAVAIL
+        self.iterRes = IterationResults()
 
         self.__setup_iters()
         self.__setup_background_tasks()
@@ -752,6 +768,7 @@ class Testcase:
                 if verify_result != types.status.SUCCESS:
                     Logger.error("Common verifs failed.")
                     result = verify_result
+                self.iterRes.addResults(iter_data.GetInstanceId(), result)
                 iter_data.SetStatus(result)
 
                 #If the tests have failed, lets run debug actions.
