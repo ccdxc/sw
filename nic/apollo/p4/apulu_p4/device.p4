@@ -69,6 +69,20 @@ action p4e_device_info(device_ipv4_addr, device_ipv6_addr) {
     modify_field(rewrite_metadata.device_ipv4_addr, device_ipv4_addr);
     modify_field(rewrite_metadata.device_ipv6_addr, device_ipv6_addr);
     p4e_recirc();
+
+    // identify packet type
+    if (ethernet_1.dstAddr == 0xFFFFFFFFFFFF) {
+        modify_field(p4e_to_p4plus_classic_nic.l2_pkt_type,
+                     PACKET_TYPE_BROADCAST);
+    } else {
+        if ((ethernet_1.dstAddr & 0x010000000000) != 0) {
+            modify_field(p4e_to_p4plus_classic_nic.l2_pkt_type,
+                         PACKET_TYPE_MULTICAST);
+        } else {
+            modify_field(p4e_to_p4plus_classic_nic.l2_pkt_type,
+                         PACKET_TYPE_UNICAST);
+        }
+    }
 }
 
 @pragma stage 0
