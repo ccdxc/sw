@@ -5,10 +5,12 @@
 #ifndef __VPP_IMPL_FEATURE_H__
 #define __VPP_IMPL_FEATURE_H__
 
-static inline uint8_t
+#include <stdbool.h>
+
+static inline bool
 pds_flow_age_supported (void)
 {
-    return 0;
+    return false;
 }
 
 #endif  // __VPP_IMPL_FEATURE_H__

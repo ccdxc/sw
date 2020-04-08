@@ -320,18 +320,6 @@ pds_flow_add_tx_hdrs_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1)
         tx1->flow_lkp_id =
             clib_host_to_net_u16(ses1->ingress_bd);
     }
-    if (vnet_buffer(b0)->pds_flow_data.tcp_flags & (TCP_FLAG_FIN | TCP_FLAG_RST)) {
-        tx0->nexthop_valid = true;
-        tx0->nexthop_type = (vnet_buffer(b0)->pds_flow_data.nexthop >> 16) & 0x3;
-        tx0->nexthop_id = (vnet_buffer(b0)->pds_flow_data.nexthop & 0xffff);
-        tx0->nexthop_id = clib_host_to_net_u16(tx0->nexthop_id);
-    }
-    if (vnet_buffer(b1)->pds_flow_data.tcp_flags & (TCP_FLAG_FIN | TCP_FLAG_RST)) {
-        tx1->nexthop_valid = true;
-        tx1->nexthop_type = (vnet_buffer(b1)->pds_flow_data.nexthop >> 16) & 0x3;
-        tx1->nexthop_id = (vnet_buffer(b1)->pds_flow_data.nexthop & 0xffff);
-        tx1->nexthop_id = clib_host_to_net_u16(tx1->nexthop_id);
-    }
     tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
     tx1->lif_flags = clib_host_to_net_u16(tx1->lif_flags);
 }
@@ -360,12 +348,6 @@ pds_flow_add_tx_hdrs_x1 (vlib_buffer_t *b0)
         tx0->flow_lkp_id_override = 1;
         tx0->flow_lkp_id =
             clib_host_to_net_u16(ses->ingress_bd);
-    }
-    if (vnet_buffer(b0)->pds_flow_data.tcp_flags & (TCP_FLAG_FIN | TCP_FLAG_RST)) {
-        tx0->nexthop_valid = true;
-        tx0->nexthop_type = (vnet_buffer(b0)->pds_flow_data.nexthop >> 16) & 0x3;
-        tx0->nexthop_id = (vnet_buffer(b0)->pds_flow_data.nexthop & 0xffff);
-        tx0->nexthop_id = clib_host_to_net_u16(tx0->nexthop_id);
     }
     tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
 }

@@ -5,17 +5,18 @@
 #ifndef __VPP_IMPL_FEATURE_H__
 #define __VPP_IMPL_FEATURE_H__
 
-static inline uint8_t
+#include <stdbool.h>
+
+static inline bool
 pds_flow_age_supported (void)
 {
     // we need this to resolved at compile time as this function gets called
     // per packet in flow plugin. Compiler would optimize this function call
     // at build time, so that there is no performance penalty per packet.
 #ifdef FLOW_AGEING_DISABLE
-    return 0;
+    return false;
 #else
-    // to enable after some more testing
-    return 0;
+    return true;
 #endif
 }
 
