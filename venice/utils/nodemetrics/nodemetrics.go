@@ -54,7 +54,10 @@ type nodemetrics struct {
 	frequency time.Duration
 	table     tsdb.Obj
 	metricObj *nodeMetrics
-	logger    log.Logger
+	// Disk partition high usage event status.
+	// A critical event/alert is raised when a disk partition usage exceeds configured threshold.
+	diskPEvtStatus map[string]bool
+	logger         log.Logger
 }
 
 // NodeInterface provides functions to manage nodemetrics
@@ -76,14 +79,17 @@ func NewNodeMetrics(pctx context.Context, obj runtime.Object, frequency time.Dur
 		return nil, err
 	}
 
+	diskPEvtStatus := make(map[string]bool)
+
 	ctx, cancel := context.WithCancel(pctx)
 	w := &nodemetrics{
-		ctx:       ctx,
-		cancel:    cancel,
-		frequency: frequency,
-		table:     table,
-		metricObj: metricObj,
-		logger:    logger,
+		ctx:            ctx,
+		cancel:         cancel,
+		frequency:      frequency,
+		table:          table,
+		metricObj:      metricObj,
+		diskPEvtStatus: diskPEvtStatus,
+		logger:         logger,
 	}
 
 	if obj.GetObjectKind() == string(cluster.KindDistributedServiceCard) {
@@ -150,6 +156,20 @@ func (w *nodemetrics) periodicUpdate(ctx context.Context) {
 				if err != nil {
 					w.logger.Errorf("Node Watcher: failed to read disk %+v, error: %v", p, err)
 					continue
+				}
+
+				if globals.ThresholdEventConfig && (usage.Total > 0) {
+					partitionUsedPercent := math.Ceil(float64(usage.Used*10000)/float64(usage.Total)) / 100
+					if partitionUsedPercent > globals.DiskHighThreshold {
+						s, found := w.diskPEvtStatus[p.Mountpoint]
+						if !found || !s {
+							recorder.Event(eventtypes.DISK_THRESHOLD_EXCEEDED,
+								fmt.Sprintf("Disk partition %s threshold exceeded %v%%, current usage: %v%%", p.Mountpoint, globals.DiskHighThreshold, partitionUsedPercent), nil)
+							w.diskPEvtStatus[p.Mountpoint] = true
+						}
+					} else {
+						w.diskPEvtStatus[p.Mountpoint] = false
+					}
 				}
 
 				diskFree += usage.Free
