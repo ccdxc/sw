@@ -394,10 +394,15 @@ func epShowOneResp(resp *halproto.EndpointGetResponse) {
 
 	var ifID []uint64
 	var ifIDStr []string
+	var err int
 
 	ifID = append(ifID, resp.GetSpec().GetEndpointAttrs().GetInterfaceKeyHandle().GetInterfaceId())
 	ifIDStr = append(ifIDStr, "-")
-	_, ifIDStr = ifGetStrFromID(ifID)
+	err, ifIDStr = ifGetStrFromID(ifID)
+
+	if err == -1 {
+		ifIDStr = append(ifIDStr, "-")
+	}
 
 	fmt.Printf("%-10d%-10d%-21s%-15s%-10t%-5d%-5d%-20s\n",
 		resp.GetStatus().GetKeyOrHandle().GetEndpointHandle(),
