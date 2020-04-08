@@ -15,6 +15,11 @@ using grpc::ServerBuilder;
 
 static sdk::event_thread::event_thread *g_upg_event_thread;
 
+// TODO: need to chnange when sysmgr change is ready
+// static upg_stage_t fsm_entry_stage = UPG_STAGE_NONE;
+// static upg_stage_t fsm_entry_stage = UPG_STAGE_COMPAT_CHECK;
+static upg_stage_t fsm_entry_stage = UPG_STAGE_READY;
+
 namespace sdk {
 namespace upg {
 
@@ -48,6 +53,7 @@ upg_ev_req_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
     params.ev_loop = g_upg_event_thread->ev_loop();
     params.fsm_completion_cb = fsm_completion_hdlr;
     params.msg_in = msg;
+    params.entry_stage = fsm_entry_stage;
 
     if (req->id == UPG_REQ_MSG_ID_START) {
         ret = sdk::upg::init(&params);

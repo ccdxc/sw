@@ -37,6 +37,7 @@ typedef struct fsm_init_params_s {
     fsm_completion_cb_t fsm_completion_cb;  // fsm completion
     sdk::ipc::ipc_msg_ptr msg_in;           // used for async response. not used
                                             // by fsm
+    upg_stage_t entry_stage;                // start a specific discovery stage
 } fsm_init_params_t;
 
 class fsm {

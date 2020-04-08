@@ -29,6 +29,7 @@ void token_parse(std::string& text,
                  std::vector<std::string>& results);
 ev_tstamp str_to_timeout(const std::string& timeout);
 upg_stage_t name_to_stage_id(const std::string stage);
+std::string id_to_stage_name (const upg_stage_t stage);
 std::string svc_sequence_to_str(const svc_sequence_list svcs);
 std::string script_to_str(const upg_scripts& scripts);
 upg_scripts str_to_scripts(std::string scripts);

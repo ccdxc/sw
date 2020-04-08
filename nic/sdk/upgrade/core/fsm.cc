@@ -625,12 +625,29 @@ init_fsm (fsm_init_params_t *params)
     upg_stage_t start_stage = fsm_states.start_stage();
 
     SDK_ASSERT(fsm_stages.find(start_stage) != fsm_stages.end());
-    fsm_states.timer_init(params->ev_loop);
-    fsm_states.set_current_stage(start_stage);
+    SDK_ASSERT(params != NULL);
 
+    fsm_states.timer_init(params->ev_loop);
+    if (UPG_STAGE_NONE != params->entry_stage) {
+        std::string stage;
+        stage = id_to_stage_name(params->entry_stage);
+
+        UPG_TRACE_VERBOSE("Setting start stage(%s) from Init params",
+                          stage.c_str());
+        fsm_states.set_current_stage(params->entry_stage);
+    } else {
+        std::string stage;
+        stage = id_to_stage_name(start_stage);
+
+        UPG_TRACE_VERBOSE("Setting start stage(%s) from upgrade json",
+                          stage.c_str());
+        fsm_states.set_current_stage(start_stage);
+    }
     fsm_states.timer_start();
     upg_ipc_init(upg_event_handler);
-    send_discovery_event(IPC_SVC_DOM_ID_A, fsm_states.start_stage());
+
+    SDK_ASSERT (fsm_states.is_discovery() == true);
+    send_discovery_event(IPC_SVC_DOM_ID_A, fsm_states.current_stage());
     fsm_states.set_init_params(params);
     return SDK_RET_OK;
 }
