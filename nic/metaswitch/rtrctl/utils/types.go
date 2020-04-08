@@ -873,6 +873,54 @@ func NewEvpnIpVrf(in *pds.EvpnIpVrf) *ShadowEvpnIpVrf {
 	}
 }
 
+// ShadowEvpnMacIpStatus shadows the EvpnMacIpStatus for CLI purposes
+type ShadowEvpnMacIpStatus struct {
+	EVIId      uint32
+	EthTagID   uint32
+	MACAddress string
+	IPAddress  string
+	PathID     uint32
+	Source     string
+	NHAddress  string
+	LocalIfId  uint32
+	Label      uint32
+	InUse      bool
+	Esi        string
+	SeqNum     uint32
+	Sticky     bool
+	*pds.EvpnMacIpStatus
+}
+
+func NewEvpnMacIpStatus(in *pds.EvpnMacIpStatus) ShadowEvpnMacIpStatus {
+	return ShadowEvpnMacIpStatus{
+		EVIId:           in.EVIId,
+		EthTagID:        in.EthTagID,
+		MACAddress:      dumpBytes([]byte(in.MACAddress)),
+		IPAddress:       PdsIPToString(in.IPAddress),
+		PathID:          in.PathID,
+		Source:          strings.TrimPrefix(in.Source.String(), "EVPN_SOURCE_"),
+		NHAddress:       PdsIPToString(in.NHAddress),
+		LocalIfId:       in.LocalIfId,
+		Label:           in.Label,
+		InUse:           in.InUse,
+		Esi:             in.Esi,
+		SeqNum:          in.SeqNum,
+		Sticky:          in.Sticky,
+		EvpnMacIpStatus: in,
+	}
+}
+
+// ShadowEvpnMacIp shadows the EvpnMacIp for CLI purposes
+type ShadowEvpnMacIp struct {
+	Status ShadowEvpnMacIpStatus
+}
+
+func NewEvpnMacIp(in *pds.EvpnMacIp) *ShadowEvpnMacIp {
+	return &ShadowEvpnMacIp{
+		Status: NewEvpnMacIpStatus(in.Status),
+	}
+}
+
 //
 // ShadowEvpnIpVrfRt
 //

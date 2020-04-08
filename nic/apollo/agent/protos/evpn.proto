@@ -369,6 +369,11 @@ message EvpnMacIpStatus {
   EvpnSource      Source     = 6;
   types.IPAddress NHAddress  = 7;
   uint32          LocalIfId  = 8;
+  uint32          Label      = 9;
+  bool            InUse      = 10;
+  string          Esi        = 11;
+  uint32          SeqNum     = 12;
+  bool            Sticky     = 13;
 }
 
 // EVPN MAC IP Table Key

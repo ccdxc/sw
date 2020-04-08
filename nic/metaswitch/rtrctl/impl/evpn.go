@@ -84,6 +84,21 @@ var evpnEviRtStatusShowCmd = &cobra.Command{
 	RunE:  evpnEviRtStatusShowCmdHandler,
 }
 
+var evpnBdShowCmd = &cobra.Command{
+	Use:   "bd",
+	Short: "show EVPN BD information",
+	Long:  "show EVPN BD information",
+	Args:  cobra.NoArgs,
+}
+
+var evpnBdMacIPShowCmd = &cobra.Command{
+	Use:   "mac-ip",
+	Short: "show EVPN BD MAC-IP Status information",
+	Long:  "show EVPN BD MAC-IP Status information",
+	Args:  cobra.NoArgs,
+	RunE:  evpnBdMacIPShowCmdHandler,
+}
+
 func init() {
 
 }
@@ -322,4 +337,64 @@ func evpnEviRtStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
 		fmt.Println(string(b))
 	}
 	return nil
+}
+
+const (
+	evpnMacIPDetStr = `EVPN BD MAC-IP details
+------------------------------------
+EviId          : %v
+EthTagId       : %v
+MacAddress     : %v
+IPAddress      : %v
+PathID         : %v
+Source         : %v
+NHAddress      : %v
+LocalIfId      : %v
+Label          : %v
+InUse          : %v
+Esi            : %v
+SeqNum         : %v
+Sticky         : %v
+------------------------------------
+`
+)
+
+func evpnBdMacIPShowCmdHandler(cmd *cobra.Command, args []string) error {
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
+	if err != nil {
+		return errors.New("Could not connect to the PDS. Is PDS Running?")
+	}
+	defer c.Close()
+	client := pegasusClient.NewEvpnSvcClient(c)
+
+	req := &pegasusClient.EvpnMacIpGetRequest{}
+	respMsg, err := client.EvpnMacIpGet(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("Getting evpn mac-ip failed (%s)", err)
+	}
+
+	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
+		return errors.New("Operation failed with error")
+	}
+
+	doJSON := cmd.Flag("json").Value.String() == "true"
+
+	var bdMacIPs []*utils.ShadowEvpnMacIp
+	for _, p := range respMsg.Response {
+		bdMacIP := utils.NewEvpnMacIp(p)
+		if doJSON {
+			bdMacIPs = append(bdMacIPs, bdMacIP)
+		} else {
+			fmt.Printf(evpnMacIPDetStr, bdMacIP.Status.EVIId, bdMacIP.Status.EthTagID, bdMacIP.Status.MACAddress,
+				bdMacIP.Status.IPAddress, bdMacIP.Status.PathID, bdMacIP.Status.Source, bdMacIP.Status.NHAddress,
+				bdMacIP.Status.LocalIfId, bdMacIP.Status.Label, bdMacIP.Status.InUse, bdMacIP.Status.Esi,
+				bdMacIP.Status.SeqNum, bdMacIP.Status.Sticky)
+		}
+	}
+	if doJSON {
+		b, _ := json.MarshalIndent(bdMacIPs, "", "  ")
+		fmt.Println(string(b))
+	}
+	return nil
+
 }

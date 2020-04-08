@@ -495,6 +495,11 @@ message EvpnMacIpStatus {
   EvpnSource      Source     = 6 [(venice.pdsaFields) = {Field:"source"}];
   types.IPAddress NHAddress  = 7 [(venice.pdsaFields) = {Field:"bgp_nh_addr"}];
   uint32          LocalIfId  = 8 [(venice.pdsaFields) = {Field:"local_interface"}];
+  uint32          Label      = 9 [(venice.pdsaFields) = {Field:"label"}];
+  bool            InUse      = 10 [(venice.pdsaFields) = {Field:"in_use"}];
+  string          Esi        = 11 [(venice.pdsaFields) = {Field:"esi"}];
+  uint32          SeqNum     = 12 [(venice.pdsaFields) = {Field:"sequence_num"}];
+  bool            Sticky     = 13 [(venice.pdsaFields) = {Field:"sticky"}];
 }
 
 // EVPN MAC IP Table Key
