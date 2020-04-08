@@ -69,6 +69,7 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 			if delresp.ApiStatus[0] != halapi.ApiStatus_API_STATUS_OK {
 				log.Errorf("Vrf: %s could not cleanup vpc from datapath: Status: %s", vrf.GetKey(), delresp.ApiStatus)
 			}
+			log.Infof("Vrf: %s delete returned | Status: %s Err %v", vrf.GetKey(), delresp.ApiStatus, err)
 		}
 	}()
 	if vrf.Spec.VrfType != "CUSTOMER" {
@@ -77,6 +78,7 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "VPC: %s | Err: %v", vrf.GetKey(), err))
 			return errors.Wrapf(types.ErrBoltDBStoreCreate, "VPC: %s | Err: %v", vrf.GetKey(), err)
 		}
+		success = true
 		return nil
 	}
 
