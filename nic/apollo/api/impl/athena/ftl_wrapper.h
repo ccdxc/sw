@@ -87,12 +87,16 @@ ftlv6_get_index_type (flow_hash_entry_t *entry)
 static inline uint16_t
 ftlv6_get_key_vnic_id (flow_hash_entry_t *entry)
 {
+#ifndef P4_16
     uint16_t vnic_id = 0;
 
     // ftl generated code misses out on msb
     vnic_id |= (entry->key_metadata_vnic_id_sbit0_ebit7 << 1) & 0x1ff;
     vnic_id |= (entry->key_metadata_vnic_id_sbit8_ebit8 << 0) & 0x1;
     return vnic_id;
+#else
+    return entry->get_key_metadata_vnic_id();
+#endif
 }
 
 static inline uint16_t
@@ -180,7 +184,7 @@ dnat_get_map_addr_type (dnat_entry_t *entry)
     return entry->get_addr_type();
 }
 
-static inline uint8_t
+static inline uint16_t
 dnat_get_map_epoch(dnat_entry_t *entry)
 {
     return entry->get_epoch();
@@ -195,7 +199,16 @@ dnat_get_key_ip (dnat_entry_t *entry, uint8_t *ipaddr)
 static inline uint16_t
 dnat_get_key_vnic_id (dnat_entry_t *entry)
 {
+#ifndef P4_16 
+    uint16_t vnic_id = 0;
+
+    // ftl generated code misses out on msb
+    vnic_id |= (entry->key_metadata_vnic_id_sbit0_ebit7 << 1) & 0x1ff;
+    vnic_id |= (entry->key_metadata_vnic_id_sbit8_ebit8 << 0) & 0x1;
+    return vnic_id;
+#else
     return entry->get_key_metadata_vnic_id();
+#endif
 }
 
 static inline uint8_t

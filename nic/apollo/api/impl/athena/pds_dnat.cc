@@ -37,19 +37,19 @@ typedef struct pds_dnat_map_read_cbdata_s {
     pds_dnat_mapping_info_t *info;
 } pds_dnat_map_read_cbdata_t;
 
-static sdk_ret_t
+static pds_ret_t
 dnat_map_entry_setup_key (dnat_entry_t *entry,
                           pds_dnat_mapping_key_t *key)
 {
     if (!entry) {
         PDS_TRACE_ERR("entry is null");
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
 
     dnat_set_key_ktype(entry, key->key_type);
     dnat_set_key_vnic_id(entry, key->vnic_id);
     dnat_set_key_ip(entry, key->addr);
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
 pds_ret_t
@@ -92,7 +92,7 @@ pds_dnat_map_delete ()
 pds_ret_t
 pds_dnat_map_entry_create (pds_dnat_mapping_spec_t *spec)
 {
-    sdk_ret_t ret = SDK_RET_OK;
+    pds_ret_t ret = PDS_RET_OK;
     sdk_table_api_params_t params = { 0 };
     dnat_entry_t entry;
     uint16_t vnic_id;
@@ -121,17 +121,17 @@ pds_dnat_map_entry_create (pds_dnat_mapping_spec_t *spec)
 
     entry.clear();
     if ((ret = dnat_map_entry_setup_key(&entry, &spec->key))
-             != SDK_RET_OK)
+             != PDS_RET_OK)
          return (pds_ret_t) ret;
     dnat_set_map_ip(&entry, spec->data.addr);
     dnat_set_map_addr_type(&entry, spec->data.addr_type);
     dnat_set_map_epoch(&entry, spec->data.epoch);
     params.entry = &entry;
-    ret = g_dnat_mapping_tbl->insert(&params);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to insert entry in DNAT mapping "
-                      "table for (vnic id %u, IP %s), err %u\n", spec->key.vnic_id,
-                      ipv6addr2str(*(ipv6_addr_t *)spec->key.addr), ret);
+    ret = (pds_ret_t)g_dnat_mapping_tbl->insert(&params);
+    if (ret != PDS_RET_OK) {
+        //PDS_TRACE_ERR("Failed to insert entry in DNAT mapping "
+        //              "table for (vnic id %u, IP %s), err %u\n", spec->key.vnic_id,
+        //              ipv6addr2str(*(ipv6_addr_t *)spec->key.addr), ret);
     }
     return (pds_ret_t)ret;
 }
@@ -162,7 +162,7 @@ pds_ret_t
 pds_dnat_map_entry_read (pds_dnat_mapping_key_t *key,
                          pds_dnat_mapping_info_t *info)
 {
-    sdk_ret_t ret;
+    pds_ret_t ret;
     sdk_table_api_params_t params = { 0 };
     dnat_entry_t entry;
     pds_dnat_map_read_cbdata_t cbdata = { 0 };
@@ -185,14 +185,14 @@ pds_dnat_map_entry_read (pds_dnat_mapping_key_t *key,
     entry.clear();
     dnat_entry_valid = false;
     if ((ret = dnat_map_entry_setup_key(&entry, key))
-             != SDK_RET_OK)
+             != PDS_RET_OK)
          return (pds_ret_t)ret;
     params.entry = &entry;
     params.itercb = dnat_map_entry_find_cb;
     cbdata.key = key;
     cbdata.info = info;
     params.cbdata = &cbdata;
-    ret = g_dnat_mapping_tbl->iterate(&params);
+    ret = (pds_ret_t)g_dnat_mapping_tbl->iterate(&params);
     if (dnat_entry_valid == false) {
         //PDS_TRACE_ERR("Failed to read entry in DNAT mapping "
         //              "table for (vnic id %u, IP %s), err %u\n", key->vnic_id,
@@ -205,7 +205,7 @@ pds_dnat_map_entry_read (pds_dnat_mapping_key_t *key,
 pds_ret_t
 pds_dnat_map_entry_update (pds_dnat_mapping_spec_t *spec)
 {
-    sdk_ret_t ret;
+    pds_ret_t ret;
     sdk_table_api_params_t params = { 0 };
     dnat_entry_t entry;
 
@@ -231,18 +231,18 @@ pds_dnat_map_entry_update (pds_dnat_mapping_spec_t *spec)
 
     entry.clear();
     if ((ret = dnat_map_entry_setup_key(&entry, &spec->key))
-             != SDK_RET_OK)
+             != PDS_RET_OK)
          return (pds_ret_t) ret;
     dnat_set_map_ip(&entry, spec->data.addr);
     dnat_set_map_addr_type(&entry, spec->data.addr_type);
     dnat_set_map_epoch(&entry, spec->data.epoch);
     params.entry = &entry;
-    ret = g_dnat_mapping_tbl->update(&params);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to update entry in DNAT mapping "
-                      "table for (vnic id %u, IP %s), err %u\n",
-                      spec->key.vnic_id,
-                      ipv6addr2str(*(ipv6_addr_t *)spec->key.addr), ret);
+    ret = (pds_ret_t)g_dnat_mapping_tbl->update(&params);
+    if (ret != PDS_RET_OK) {
+        //PDS_TRACE_ERR("Failed to update entry in DNAT mapping "
+        //              "table for (vnic id %u, IP %s), err %u\n",
+        //              spec->key.vnic_id,
+        //              ipv6addr2str(*(ipv6_addr_t *)spec->key.addr), ret);
     }
     return (pds_ret_t)ret;
 }
@@ -250,7 +250,7 @@ pds_dnat_map_entry_update (pds_dnat_mapping_spec_t *spec)
 pds_ret_t
 pds_dnat_map_entry_delete (pds_dnat_mapping_key_t *key)
 {
-    sdk_ret_t ret;
+    pds_ret_t ret;
     sdk_table_api_params_t params = { 0 };
     dnat_entry_t entry;
 
@@ -271,14 +271,14 @@ pds_dnat_map_entry_delete (pds_dnat_mapping_key_t *key)
 
     entry.clear();
     if ((ret = dnat_map_entry_setup_key(&entry, key))
-             != SDK_RET_OK)
+             != PDS_RET_OK)
          return (pds_ret_t)ret;
     params.entry = &entry;
-    ret = g_dnat_mapping_tbl->remove(&params);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to delete entry in DNAT mapping "
-                      "table for (vnic id %u, IP %s), err %u\n", key->vnic_id,
-                      ipv6addr2str(*(ipv6_addr_t *)key->addr), ret);
+    ret = (pds_ret_t)g_dnat_mapping_tbl->remove(&params);
+    if (ret != PDS_RET_OK) {
+        //PDS_TRACE_ERR("Failed to delete entry in DNAT mapping "
+        //              "table for (vnic id %u, IP %s), err %u\n", key->vnic_id,
+        //              ipv6addr2str(*(ipv6_addr_t *)key->addr), ret);
     }
     return (pds_ret_t)ret;
 }
