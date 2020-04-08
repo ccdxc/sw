@@ -25,11 +25,34 @@
   font-size: 36px;
 }
 
-.app-shell-header-logo-div .mat-icon-button {
-  height: 30px;
-  width: 30px;
-  padding: 1px 3px;
-  margin: auto 4px auto 1px;
+.app-menu-pin-parent .mat-icon-button:focus,
+.app-expanded-collapsed-btn-parent .mat-icon-button:focus {
+  outline: none !important;
+}
+
+.app-header-logo-parent {
+  margin-right: 77px;
+}
+
+.app-menu-pin-parent {
+  .mat-icon-button .mat-icon {
+    width: 15px !important;
+    height: 23px !important;
+    line-height: 23px !important;
+    color: #484848 !important;
+  }
+}
+
+.app-expanded-collapsed-btn-parent {
+  .mat-icon-button .mat-icon {
+    width: 21.9px !important;
+    height: 12.5px !important;
+    line-height: 11.5px !important;
+
+    svg>g>path:nth-child(2) {
+      fill: #484848;
+    }
+  }
 }
 
 .app-shell-cluster-name {
@@ -38,7 +61,6 @@
   font-size: 20px;
   font-weight: normal;
   color: #676763 !important;
-
 }
 
 .app-shell-doclink {
@@ -67,9 +89,6 @@
 }
 
 .app-shell-header-logo-div .mat-icon-button .mat-icon {
-  height: 24px;
-  width: 24px;
-  line-height: 24px;
   font-size: 24px;
 }
 
@@ -257,13 +276,12 @@
 /*====== header left =====*/
 .app-shell-header-logo-div {
   min-width: $sidenavWidth;
+  height: 100%;
+  padding-left: 7px;
+  padding-right: 10px;
 }
 
 .app-header-logo.navbar-btn {
-  margin-right: 45px;
-  margin-left: 10px;
-  margin-top: 5px;
-  margin-bottom: 5pxl;
   cursor: pointer;
 }
 
@@ -280,6 +298,14 @@
   justify-content: center;
   background: #c5cae9;
   padding: 0px;
+}
+
+.shell-animate-in {
+  transform: translateX(0%) !important;
+}
+
+.shell-animate-out {
+  transform: translateX(-100%) !important;
 }
 
 .app-shell-left-sidenav {

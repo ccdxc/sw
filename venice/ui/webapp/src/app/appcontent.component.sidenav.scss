@@ -41,14 +41,12 @@
 }
 
 #app-sidebar.active ul li a {
-  padding: 20px 10px;
+  padding: 10px 10px;
   text-align: center;
   font-size: 0.85em;
 }
 
 #app-sidebar.active ul li a i {
-  margin-right: 0;
-  display: block;
   font-size: 1.8em;
   margin-bottom: 5px;
 }
@@ -78,17 +76,15 @@
 
 #app-sidebar ul.components {
   padding: 5px 0;
-  // border-bottom: 1px solid #47748b;
 }
 
 #app-sidebar ul li a {
   padding: 10px;
+  padding-left: 6px;
   font-size: 18px;
-  display: block;
 }
 
 #app-sidebar ul li a i {
-  margin-right: 10px;
   display: inline-block;
   vertical-align: middle;
 }
@@ -119,7 +115,7 @@ a[aria-expanded="true"]::before {
 
 #app-sidebar ul ul a {
   font-size: 16px !important;
-  padding-left: 30px !important;
+  // padding-left: 25px !important;
 }
 
 #app-sidebar.active ul ul a {
@@ -143,9 +139,55 @@ a[aria-expanded="true"]::before {
   height: 24px;
 }
 
-#app-sidebar.active ul li a .app-l-side-nav-li {
-  width: 60px;
+#app-sidebar .app-sidenav-group-header,
+.app-sidenav-item {
+  display: flex !important;
+  flex-direction: row;
+  justify-content: flex-start;
 }
+
+#app-sidebar .app-sidenav-icon-parent {
+  flex: 0 0 45px;
+}
+
+#app-sidebar .app-sidenav-group-header {
+  .app-sidenav-icon-parent-submenu {
+    flex: 0 0 37px;
+  }
+}
+
+#app-sidebar .app-sidenav-span-parent {
+  flex: 0 0 1;
+}
+
+#app-sidebar .app-sidenav-selected {
+  .app-l-side-nav-bubble {
+    background-color: #8cafda;
+  }
+}
+
+#app-sidebar .app-l-side-nav-bubble {
+  padding-top: 0px;
+  padding-bottom: 0px;
+  padding-right: 1px;
+  padding-left: 5px;
+  height: 6px;
+  width: 6px;
+  margin-right: 5px;
+  display: inline-block;
+  color: inherit;
+  border-radius: 70px;
+}
+
+.app-sidenav-selected .app-sidenav-icon-parent>i,
+.app-sidenav-selected .app-sidenav-icon-parent-submenu>i {
+  filter: invert(21%) sepia(22%) saturate(549%) hue-rotate(173deg) contrast(91%) brightness(93%);
+}
+
+.pensando-ui #app-sidebar .app-sidenav-selected {
+  background: inherit;
+}
+
 
 .app-l-side-nav-cluster {
   background: url("/assets/images/icons/ico-system-w.svg") center center no-repeat;

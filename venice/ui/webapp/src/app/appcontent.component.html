@@ -15,20 +15,30 @@
     <ng-container>
       <mat-toolbar color="primary">
         <mat-toolbar-row class="app-shell-tool-bar-row">
-          <div class="app-shell-header-logo-div">
-            <img id="app-header-logo" class="navbar-btn app-header-logo" (click)="redirectHome()"
-                 src="../../../assets/images/headers/pensando-header-logo.svg" />
+          <div fxLayout="row" class="app-shell-header-logo-div">
+
             <!-- Commenting out collapsed sidenav for August release
-                            The pin/unpin isn't completely smooth
-                            Menu expanded doesn't always cause the main content
-                            to flow correctly -->
-            <!-- <button mat-icon-button (click)="sidenav.toggle()" title="Show Or Hide Side Menu">
-                            <mat-icon svgIcon="menu-pin"></mat-icon>
-                        </button>
-                        <button mat-icon-button (click)="onSidebarCollapseClick($event);" title="Expand Or Collapse Side Menu" [style.visibility]="sidenav.opened ? 'visible' : 'hidden'">
-                            <mat-icon svgIcon="menu-expand" *ngIf="!isSideNavExpanded"></mat-icon>
-                            <mat-icon svgIcon="menu-collapse" *ngIf="isSideNavExpanded"></mat-icon>
-                        </button> -->
+            The pin/unpin isn't completely smooth
+            Menu expanded doesn't always cause the main content
+            to flow correctly -->
+            <div fxLayoutAlign="start center" class="app-header-logo-parent">
+              <img id="app-header-logo" class="navbar-btn app-header-logo" (click)="redirectHome()"
+                   src="../../../assets/images/headers/pensando-header-logo.svg" />
+            </div>
+            <div fxLayoutAlign="start center" class="app-menu-pin-parent">
+              <button mat-icon-button (click)="onSideNavToggle()"
+                      title="{{isSideNavShown ? 'Hide Side Menu' : 'Show Side Menu'}}">
+                <mat-icon svgIcon="menu-pin"></mat-icon>
+              </button>
+            </div>
+            <div fxLayoutAlign="start center" class="app-expanded-collapsed-btn-parent">
+              <button mat-icon-button (click)="onSidebarCollapseClick($event);"
+                      title="{{isSideNavExpanded ? 'Collapse Side Menu' : 'Expand Side Menu' }}"
+                      [style.visibility]="isSideNavShown ? 'visible' : 'hidden'">
+                <mat-icon svgIcon="{{!isSideNavExpanded ?  'menu-expand' : 'menu-collapse' }}">
+                </mat-icon>
+              </button>
+            </div>
           </div>
           <ng-container *ngIf="!isUINavigationBlocked">
             <div class="app-shell-header-search-div">
@@ -121,9 +131,12 @@
           </ng-container>
         </mat-sidenav>
         <mat-sidenav #sidenav class="app-shell-left-sidenav" mode="side" opened="true"
-                     [disableClose]="true" id="app-sidebar">
+                     [disableClose]="true" id="app-sidebar"
+                     [ngClass]="[isSideNavExpanded ? '' : 'active', isSideNavShown ? 'shell-animate-in' : 'shell-animate-out']"
+                     *ngIf="isSideNavShown">
           <!-- Side Nav Items -->
-          <div id="app-sidebar-container" class="panel-scroll" (scroll)="onScroll($event)">
+          <div id="app-sidebar-container" class="panel-scroll" [scrollTop]="scrollTop"
+               (scroll)="onScroll($event)">
             <ul class="list-unstyled components">
               <ng-container *ngTemplateOutlet="SideNavMenu; context:{items:sideNavMenu}">
               </ng-container>
@@ -232,17 +245,26 @@
           <a *ngIf="item.children == null" [routerLink]="item.link"
              routerLinkActive="app-sidenav-selected"
              class="app-sidenav-item" [id]="item.label">
-            <i
-               [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass">{{item.icon.matIconName}}</i>
-            <span class="app-l-side-nav-item-label">{{item.label}}</span>
+            <div class="app-sidenav-icon-parent">
+              <span class="app-l-side-nav-bubble"></span>
+              <i [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass"
+                 [matTooltip]='item.label'>{{item.icon.matIconName}}</i>
+            </div>
+            <div *ngIf="isSideNavExpanded" class="app-sidenav-span-parent">
+              <span class="app-l-side-nav-item-label">{{item.label}}</span>
+            </div>
           </a>
 
           <a *ngIf="item.children != null" class="app-sidenav-group-header"
              (click)="onMenuItemClick($event, item.link[0]);"
              [attr.aria-expanded]="isSubMenuShown(item.link[0])">
-            <i
-               [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass">{{item.icon.matIconName}}</i>
-            <span class="app-l-side-nav-item-label">{{item.label}}</span>
+            <div class="app-sidenav-icon-parent-submenu">
+              <i [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass"
+                 [matTooltip]='item.label'>{{item.icon.matIconName}}</i>
+            </div>
+            <div *ngIf="isSideNavExpanded" class="app-sidenav-span-parent">
+              <span class="app-l-side-nav-item-label">{{item.label}}</span>
+            </div>
           </a>
 
           <ul *ngIf="item.children != null && item.children.length > 0"

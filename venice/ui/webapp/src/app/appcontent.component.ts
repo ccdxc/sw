@@ -65,7 +65,8 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   // is Left-hand-side item click function registered?
   private _boolInitApp = false;
 
-  protected isSideNavExpanded = true;
+  isSideNavExpanded = true;
+  isSideNavShown = true;
 
   subscriptions: Subscription[] = [];
 
@@ -139,7 +140,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     protected workloadService: WorkloadService,
     protected authService: AuthService,
     protected rolloutService: RolloutService,
-    protected router: Router,
+    protected router: Router
   ) {
     super(_controllerService, uiconfigsService);
   }
@@ -291,7 +292,6 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     //   // template: this.helpTemplate
     //   id: 'authpolicy'
     // });
-    this.initializeScrollTop();
   }
 
   redirectHome() {
@@ -577,7 +577,9 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   storeMenuInfo() {
     sessionStorage.setItem(SIDE_MENU_INFO, JSON.stringify({
       menuItiems: this.openedMenuItems,
-      menuScrollTop: this.scrollTop
+      menuScrollTop: this.scrollTop,
+      sideNavStatus: this.isSideNavExpanded,
+      sideNavShown: this.isSideNavShown
     }));
   }
 
@@ -590,13 +592,14 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
       if (menuInfo.menuScrollTop) {
         this.scrollTop = parseInt(menuInfo.menuScrollTop, 10);
       }
+      this.isSideNavShown = menuInfo.sideNavShown;
+      this.isSideNavExpanded = menuInfo.sideNavStatus;
     }
   }
 
-  initializeScrollTop() {
-    if (this.scrollTop !== 0) {
-      document.getElementById('app-sidebar-container').scrollTop = this.scrollTop;
-    }
+  onSideNavToggle() {
+    this.isSideNavShown = !this.isSideNavShown;
+    this.storeMenuInfo();
   }
 
   /**
@@ -606,30 +609,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
    */
   onSidebarCollapseClick(event) {
     this.isSideNavExpanded = !this.isSideNavExpanded;
-    const jQuery = Utility.getJQuery();
-    if (jQuery('#app-sidebar').hasClass('pindown') !== true) {
-      jQuery('#app-sidebar').toggleClass('active');
-      if (event && event.currentTarget) {
-        jQuery(event.currentTarget).toggleClass('active');
-
-        // very important, it trigger the autosize of sidenav-container
-        setTimeout(() => {
-          this._sidenav.open();
-        }, 500);
-      }
-    }
-  }
-
-  /**
-   * This function serves html template.
-   * It pins down the SideNav panel to a fixed position
-   * @param
-   */
-  onSidebarPindownClick($event) {
-    const jQuery = Utility.getJQuery();
-
-    jQuery('#app-sidebar').toggleClass('pindown');
-    jQuery('#app-sidebarCollapse').toggleClass('pindown');
+    this.storeMenuInfo();
   }
 
   onLogoutClick() {
@@ -881,6 +861,6 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   }
 
   alertType(event) {
-   this.onToolbarIconClick(event.event, this._rightSideNavIndicator);
+    this.onToolbarIconClick(event.event, this._rightSideNavIndicator);
   }
 }
