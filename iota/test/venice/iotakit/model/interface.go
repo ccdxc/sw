@@ -284,7 +284,11 @@ func InitSuite(topoName, paramsFile string, scale, scaleData bool) (*testbed.Tes
 	// create sysmodel
 	model, err := NewSysModel(tb)
 	if err != nil {
-		tb.CollectLogs()
+		if model != nil {
+			model.CollectLogs()
+		} else {
+			tb.CollectLogs()
+		}
 		return nil, nil, err
 	}
 

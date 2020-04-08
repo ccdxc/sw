@@ -25,6 +25,7 @@ var _ = Describe("VPC", func() {
 
 	Context("VPC tests", func() {
 		It("Add a VPC & verify config", func() {
+			Skip("Disabling test for sanity")
 			//Create VPC config
 
 			tenantName := "tenant0"

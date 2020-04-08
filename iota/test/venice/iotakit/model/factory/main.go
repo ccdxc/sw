@@ -19,7 +19,7 @@ func NewDefaultSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType, skipSetup
 	sm := &enterprise.SysModel{SysModel: base.SysModel{Type: common.DefaultModel}}
 
 	if err := sm.Init(tb, cfgType, skipSetup); err != nil {
-		return nil, err
+		return sm, err
 	}
 
 	return sm, nil

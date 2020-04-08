@@ -27,6 +27,7 @@ var _ = Describe("Network", func() {
 
 	Context("Network tests", func() {
 		It("Add a subnet & verify config", func() {
+			Skip("Disabling test for sanity")
 
 			tenantName := "tenant0"
 

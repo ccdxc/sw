@@ -26,6 +26,7 @@ var _ = Describe("Routing Config Tests", func() {
 
 	Context("Undelay ASN", func() {
 		It("Update Underlay ASN", func() {
+			Skip("Disabling test for sanity")
 
 			// get all existing routing config
 			rcc, err := ts.model.ListRoutingConfig()
