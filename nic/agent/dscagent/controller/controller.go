@@ -405,6 +405,51 @@ func (c *API) WatchAlertPolicies() error {
 	return nil
 }
 
+func (c *API) sendTechSupportUpdate(tsClient tsproto.TechSupportApiClient, req *tsproto.TechSupportRequest, status tsproto.TechSupportRequestStatus_ActionStatus) {
+	update := &tsproto.TechSupportRequest{
+		TypeMeta: api.TypeMeta{
+			Kind: "TechSupportRequest",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: req.ObjectMeta.Name,
+		},
+		Spec: tsproto.TechSupportRequestSpec{
+			InstanceID: req.Spec.InstanceID,
+		},
+		Status: tsproto.TechSupportRequestStatus{
+			Status: status,
+		},
+	}
+
+	if status == tsproto.TechSupportRequestStatus_InProgress {
+		startTime := api.Timestamp{}
+		startTime.Parse("now()")
+		update.Status.StartTime = &startTime
+		req.Status.StartTime = &startTime
+	} else if status == tsproto.TechSupportRequestStatus_Failed || status == tsproto.TechSupportRequestStatus_Completed {
+		endTime := api.Timestamp{}
+		endTime.Parse("now()")
+		update.Status.StartTime = req.Status.StartTime
+		update.Status.EndTime = &endTime
+		// set uri for the artifact
+		update.Status.URI = req.Status.URI
+
+		if len(req.Status.Reason) > 0 {
+			// update reason if populated
+			update.Status.Reason = req.Status.Reason
+		}
+	}
+
+	updParams := &tsproto.UpdateTechSupportResultParameters{
+		NodeName: c.InfraAPI.GetDscName(),
+		NodeKind: "DistributedServiceCard",
+		Request:  update,
+	}
+
+	tsClient.UpdateTechSupportResult(c.WatchCtx, updParams)
+	log.Infof("Controller API: updating techsupport status to %s", status.String())
+}
+
 // WatchTechSupport watches for TechSupportRequests. This is called only in Cloud Pipeline.
 func (c *API) WatchTechSupport() {
 	if c.WatchCtx == nil {
@@ -450,16 +495,19 @@ func (c *API) WatchTechSupport() {
 			continue
 		}
 		req := *evt.Events[0].Request
+		c.sendTechSupportUpdate(techSupportAPIHandler, &req, tsproto.TechSupportRequestStatus_InProgress)
 		techSupportArtifact, err := c.PipelineAPI.HandleTechSupport(req)
 		if err != nil || len(techSupportArtifact) == 0 {
-			// TODO Raise an event here to Venice once evts infra is available
 			log.Error(errors.Wrapf(types.ErrTechSupportCollection, "Controller API: %s", err))
+			req.Status.Reason = fmt.Sprintf("%s", types.ErrTechSupportCollection)
+			c.sendTechSupportUpdate(techSupportAPIHandler, &req, tsproto.TechSupportRequestStatus_Failed)
 			continue
 		}
 
 		if _, err := os.Stat(techSupportArtifact); err != nil {
-			// TODO Raise an event here to Venice once evts infra is available
 			log.Error(errors.Wrapf(types.ErrTechSupportArtifactsMissing, "Controller API: %s", err))
+			req.Status.Reason = fmt.Sprintf("%s", types.ErrTechSupportArtifactsMissing)
+			c.sendTechSupportUpdate(techSupportAPIHandler, &req, tsproto.TechSupportRequestStatus_Failed)
 			continue
 		}
 
@@ -469,45 +517,22 @@ func (c *API) WatchTechSupport() {
 		vosTarget := fmt.Sprintf("%v.tar.gz", targetID)
 		vosUri := fmt.Sprintf("/objstore/v1/downloads/tenant/default/techsupport/%v", vosTarget)
 		// Upload the artifact to Venice
+		log.Infof("Controller API: uploading techsupport to %s", vosUri)
 		if err := export.SendToVenice(c.ResolverClient, techSupportArtifact, vosTarget); err != nil {
-			// TODO Raise an event here to Venice once evts infra is available
 			log.Error(errors.Wrapf(types.ErrTechSupportVeniceExport, "Controller API: %s", err))
+			req.Status.Reason = fmt.Sprintf("%s", types.ErrTechSupportVeniceExport)
+			c.sendTechSupportUpdate(techSupportAPIHandler, &req, tsproto.TechSupportRequestStatus_Failed)
 			continue
 		}
 
 		// Default remove it from DSC only if it has been successfully uploaded to Venice
 		if err := os.Remove(techSupportArtifact); err != nil {
+			req.Status.Reason = fmt.Sprintf("%s", types.ErrTechSupportArtifactCleanup)
 			log.Error(errors.Wrapf(types.ErrTechSupportArtifactCleanup, "Controller API: %s", err))
 		}
 
-		// send update to tsm
-		// TODO: send updates in above error cases
-		update := &tsproto.TechSupportRequest{
-			TypeMeta: api.TypeMeta{
-				Kind: "TechSupportRequest",
-			},
-			ObjectMeta: api.ObjectMeta{
-				Name: req.ObjectMeta.Name,
-			},
-			Spec: tsproto.TechSupportRequestSpec{
-				InstanceID: req.Spec.InstanceID,
-			},
-			Status: tsproto.TechSupportRequestStatus{
-				Status: tsproto.TechSupportRequestStatus_Completed,
-			},
-		}
-
-		// set uri for the artifact
-		update.Status.URI = vosUri
-
-		updParams := &tsproto.UpdateTechSupportResultParameters{
-			NodeName: c.InfraAPI.GetDscName(),
-			NodeKind: "DistributedServiceCard",
-			Request:  update,
-		}
-
-		techSupportAPIHandler.UpdateTechSupportResult(c.WatchCtx, updParams)
-		log.Infof("Controller API: uploaded techsupport to %s", vosUri)
+		req.Status.URI = vosUri
+		c.sendTechSupportUpdate(techSupportAPIHandler, &req, tsproto.TechSupportRequestStatus_Completed)
 	}
 }
 
