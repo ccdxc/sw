@@ -13,6 +13,7 @@
 
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/interface_svc.hpp"
+#include "nic/apollo/agent/svc/port_svc.hpp"
 
 static inline sdk_ret_t
 pds_event_spec_proto_to_api_spec (pds_event_spec_t *api_spec,
@@ -65,4 +66,4 @@ pds_event_to_proto_event_response (pds::EventResponse *proto_rsp,
     return SDK_RET_INVALID_ARG;
 }
 
-#endif //__AGENT_SVC_EVENT_SVC_HPP__
+#endif    //__AGENT_SVC_EVENT_SVC_HPP__

@@ -276,4 +276,4 @@ pds_lif_api_info_to_proto (void *entry, void *ctxt)
     pds_lif_api_status_to_proto(proto_status, &api_info->status);
 }
 
-#endif //__AGENT_SVC_INTERFACE_SVC_HPP__
+#endif    //__AGENT_SVC_INTERFACE_SVC_HPP__

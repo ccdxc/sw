@@ -286,4 +286,4 @@ pds_remote_mapping_api_info_to_proto (void *info, void *ctxt)
     pds_mapping_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
-#endif //__AGENT_SVC_MAPPING_SVC_HPP__
+#endif    //__AGENT_SVC_MAPPING_SVC_HPP__

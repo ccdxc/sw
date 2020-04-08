@@ -99,4 +99,4 @@ pds_tag_proto_to_api_spec (pds_tag_spec_t *api_spec,
     return SDK_RET_OK;
 }
 
-#endif //__AGENT_SVC_TAG_SVC_HPP__
+#endif    //__AGENT_SVC_TAG_SVC_HPP__

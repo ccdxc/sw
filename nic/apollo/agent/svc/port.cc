@@ -10,7 +10,7 @@
 // @rsrikanth -> including this is a clear layer violation, we can only
 //               include from api/include, not from api/ like this in agent code
 #include "nic/apollo/agent/trace.hpp"
-#include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/port_svc.hpp"
 
 Status
 PortSvcImpl::PortGet(ServerContext *context,

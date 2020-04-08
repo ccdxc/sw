@@ -5,7 +5,7 @@
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/svc/tunnel.hpp"
-#include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/tunnel_svc.hpp"
 #include "nic/apollo/agent/hooks.hpp"
 
 // create tunnel object

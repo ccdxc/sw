@@ -3,7 +3,7 @@
 // -----------------------------------------------------------------------------
 
 #include "nic/apollo/agent/svc/session.hpp"
-#include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/session_svc.hpp"
 
 Status
 SessionSvcImpl::SessionGet(ServerContext *context, const Empty *req,

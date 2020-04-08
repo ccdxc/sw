@@ -203,4 +203,4 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
     return SDK_RET_OK;
 }
 
-#endif //__AGENT_SVC_VNIC_SVC_HPP__ 
+#endif    //__AGENT_SVC_VNIC_SVC_HPP__ 

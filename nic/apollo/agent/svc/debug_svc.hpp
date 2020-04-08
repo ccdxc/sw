@@ -249,4 +249,4 @@ pds_table_stats_entry_to_proto (pds_table_stats_t *stats, void *ctxt)
     rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
 }
 
-#endif //__AGENT_SVC_DEBUG_SVC_HPP__
+#endif    //__AGENT_SVC_DEBUG_SVC_HPP__

@@ -164,4 +164,4 @@ pds_subnet_api_info_to_proto (pds_subnet_info_t *api_info, void *ctxt)
     pds_subnet_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
-#endif //__AGENT_SVC_SUBNET_SVC_HPP__
+#endif    //__AGENT_SVC_SUBNET_SVC_HPP__

@@ -449,4 +449,4 @@ cleanup:
     return ret;
 }
 
-#endif //__AGENT_SVC_POLICY_SVC_HPP__
+#endif    //__AGENT_SVC_POLICY_SVC_HPP__

@@ -153,4 +153,4 @@ pds_vpc_peer_proto_to_api_spec (pds_vpc_peer_spec_t *api_spec,
     pds_obj_key_proto_to_api_spec(&api_spec->vpc2, proto_spec.vpc2());
 }
 
-#endif //__AGENT_SVC_VPC_SVC_HPP__
+#endif    //__AGENT_SVC_VPC_SVC_HPP__

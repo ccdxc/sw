@@ -7,7 +7,7 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/nh.hpp"
 #include "nic/apollo/agent/core/nh_group.hpp"
-#include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/nh_svc.hpp"
 #include "nic/apollo/agent/svc/nh.hpp"
 #include "nic/apollo/agent/trace.hpp"
 

@@ -88,4 +88,4 @@ pds_service_proto_to_api_spec (pds_svc_mapping_spec_t *api_spec,
     api_spec->svc_port = proto_spec.svcport();
 }
 
-#endif //__AGENT_SVC_SERVICE_SVC_HPP__
+#endif    //__AGENT_SVC_SERVICE_SVC_HPP__

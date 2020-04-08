@@ -154,4 +154,4 @@ pds_meter_api_info_to_proto (pds_meter_info_t *api_info, void *ctxt)
     pds_meter_api_stats_to_proto(proto_stats, &api_info->stats);
 }
 
-#endif //__AGENT_SVC_METER_SVC_HPP__
+#endif    //__AGENT_SVC_METER_SVC_HPP__
