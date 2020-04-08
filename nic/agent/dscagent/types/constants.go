@@ -116,9 +116,6 @@ const (
 	// DefaultAgentRestURL is netagent's default REST Endpoint
 	DefaultAgentRestURL = "127.0.0.1:9007"
 
-	// ControllerWaitDelay is the duration during for which netagent waits to reconnect to the controllers
-	ControllerWaitDelay = time.Minute * 1
-
 	// DefaultVrf is the name of the default vrf
 	DefaultVrf = "default"
 
@@ -272,6 +269,11 @@ const (
 
 	// VrfOffSet captures ID Alloc space for Vrf
 	VrfOffSet = 65
+)
+
+var (
+	// ControllerWaitDelay is the duration during for which netagent waits to reconnect to the controllers
+	ControllerWaitDelay = time.Second * 30
 )
 
 const (

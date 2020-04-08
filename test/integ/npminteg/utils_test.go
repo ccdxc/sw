@@ -67,6 +67,7 @@ func CreateAgent(logger log.Logger, veniceURL, nodeUUID string) (*Dpagent, error
 		AdmissionState: "admitted", // Fake admission status
 		Controllers:    []string{veniceURL},
 	}
+
 	err = nagent.ControllerAPI.HandleVeniceCoordinates(o)
 	logger.Infof("RestURL: %v", lis.ListenURL.String())
 	time.Sleep(time.Second * 30)
@@ -489,4 +490,8 @@ func (it *integTestSuite) CreateTenant(name string) error {
 	}
 	_, err := it.apisrvClient.ClusterV1().Tenant().Create(context.Background(), tenant)
 	return err
+}
+
+func init() {
+	types.ControllerWaitDelay = 3 * time.Second
 }

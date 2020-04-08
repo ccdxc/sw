@@ -263,6 +263,7 @@ func (c *API) start(ctx context.Context, kinds []string) error {
 		}
 
 		// TODO unify this on Venice side to have a single config controller
+
 		c.npmClient, _ = c.factory.NewRPCClient(
 			c.InfraAPI.GetDscName(),
 			c.npmURL,
@@ -280,11 +281,7 @@ func (c *API) start(ctx context.Context, kinds []string) error {
 			c.InfraAPI.NotifyVeniceConnection()
 		} else {
 			// Loop forever connect to all controllers NPM, TPM and TSM. Handle cascading closures to prevent leaks
-			if c.npmClient != nil {
-				if err := c.npmClient.Close(); err != nil {
-					log.Error(errors.Wrapf(types.ErrNPMWatcherClose, "Controller API: %s", err))
-				}
-			}
+			c.closeConnections()
 			log.Infof("Controller API: %s", types.InfoControllerReconnecting)
 			time.Sleep(types.ControllerWaitDelay)
 			continue
@@ -310,6 +307,9 @@ func (c *API) start(ctx context.Context, kinds []string) error {
 
 		// TODO Watch for Mirror and NetflowSessions
 		<-watchExited
+		c.closeConnections()
+		time.Sleep(types.ControllerWaitDelay)
+
 	}
 }
 
@@ -536,6 +536,25 @@ func (c *API) WatchTechSupport() {
 	}
 }
 
+// closeConnections close connections
+func (c *API) closeConnections() {
+
+	if c.npmClient != nil {
+		if err := c.npmClient.Close(); err != nil {
+			log.Error(errors.Wrapf(types.ErrNPMWatcherClose, "Controller API: %s", err))
+		}
+	}
+
+	if c.ifClient != nil {
+		if err := c.ifClient.Close(); err != nil {
+			log.Error(errors.Wrapf(types.ErrNPMWatcherClose, "Controller API: %s", err))
+		}
+	}
+
+	c.npmClient = nil
+	c.ifClient = nil
+}
+
 // Stop cancels all watchers and closes all clients to venice controllers
 // Caller must be holding the lock
 func (c *API) Stop() error {
@@ -553,11 +572,7 @@ func (c *API) Stop() error {
 	c.cancelWatcher = nil
 	c.nimbusClient = nil
 
-	if c.npmClient != nil {
-		if err := c.npmClient.Close(); err != nil {
-			log.Error(errors.Wrapf(types.ErrNPMWatcherClose, "Controller API: %s", err))
-		}
-	}
+	c.closeConnections()
 	return nil
 }
 

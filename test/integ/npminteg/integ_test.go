@@ -113,6 +113,10 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	// test parameters
 	it.numAgents = 1
 
+	// We need a fairly high limit because all clients are collapsed into a single process
+	// so they hit the same rate limiter
+	rpckit.SetDefaultListenerConnectionRateLimit(50)
+
 	err := testutils.SetupIntegTLSProvider()
 	if err != nil {
 		log.Fatalf("Error setting up TLS provider: %v", err)
@@ -344,7 +348,7 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 			}
 			_, nerr := ag.dscAgent.PipelineAPI.HandleNetwork(agentTypes.Get, nt)
 			return (nerr == nil), nil
-		}, "Network not found on agent", "10ms", it.pollTimeout())
+		}, "Network not found on agent", it.pollTimeout(), "10s")
 	}
 
 	// delete the network

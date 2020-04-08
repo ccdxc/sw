@@ -127,7 +127,7 @@ func (i *FakeAgentAPI) PipelineInit() error {
 	}
 
 	log.Infof("setting up the watchers")
-	i.startDynamicWatch(types.InsertionKinds)
+	//i.startDynamicWatch(types.InsertionKinds)
 	return nil
 }
 
