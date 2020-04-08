@@ -905,7 +905,7 @@ fte_main (void)
     // init FTL
     if (g_athena_app_mode == ATHENA_APP_MODE_CPP) {
         if ((sdk_ret = fte_flows_init()) != SDK_RET_OK) {
-            rte_exit(EXIT_FAILURE, "FTE flows init:err=%d", sdk_ret);
+            PDS_TRACE_DEBUG("FTE flow init failed: ret=%d ", sdk_ret);
         }
     }
 

@@ -922,8 +922,15 @@ fte_setup_flow (void)
                         proto, sport, dport,
                         PDS_FLOW_SPEC_INDEX_SESSION, g_session_index);
             if (ret != SDK_RET_OK) {
-                PDS_TRACE_DEBUG("fte_flow_create failed. \n");
-                return ret;
+                PDS_TRACE_DEBUG("fte_setup_flow: fte_flow_create failed. \n");
+                PDS_TRACE_DEBUG("V4 Flow insert Failed: SrcIP:0x%x DstIP:0x%x "
+                    "Dport:%u Sport:%u Proto:%u "
+                    "Ktype:%u VNICID:%u "
+                    "index:%u index_type:%u\n\n",
+                    sip, dip, dport, sport, proto, KEY_TYPE_IPV6, vnic_id,
+                    g_session_index, PDS_FLOW_SPEC_INDEX_SESSION);
+                // Even on collision/flow insert fail, continue the flow creation
+                //return ret;
             }
 
             g_session_index++;

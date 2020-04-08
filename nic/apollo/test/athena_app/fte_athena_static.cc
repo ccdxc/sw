@@ -177,7 +177,7 @@ fte_setup_static_flows (void)
             g_h2s_proto, g_h2s_sport, g_h2s_dport,
             PDS_FLOW_SPEC_INDEX_SESSION, vnic1_session_index);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_DEBUG("fte_flow_create failed.\n");
+        PDS_TRACE_DEBUG("fte_flow_create_v6 failed.\n");
         return ret;
     }
 
@@ -186,7 +186,7 @@ fte_setup_static_flows (void)
             g_h2s_proto_tcp, g_h2s_sport, g_h2s_dport,
             PDS_FLOW_SPEC_INDEX_SESSION, vnic1_session_index);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_DEBUG("fte_flow_create failed.\n");
+        PDS_TRACE_DEBUG("fte_flow_create_v6 failed.\n");
         return ret;
     }
 
@@ -196,7 +196,7 @@ fte_setup_static_flows (void)
             g_h2s_icmpv6_identifier,
             PDS_FLOW_SPEC_INDEX_SESSION, vnic1_session_index);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_DEBUG("fte_flow_create failed.\n");
+        PDS_TRACE_DEBUG("fte_flow_create_v6_icmp failed.\n");
         return ret;
     }
 
