@@ -57,9 +57,12 @@ capri_txs_timer_init_hsh_depth (uint32_t key_lines)
         g_capri_state_pd->mempartition()->start_addr(MEM_REGION_TIMERS_NAME);
 
     txs_csr->cfg_timer_static.read();
-    SDK_TRACE_DEBUG("hbm_base 0x%llx", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
-    SDK_TRACE_DEBUG("timer hash depth %u", txs_csr->cfg_timer_static.tmr_hsh_depth());
-    SDK_TRACE_DEBUG("timer wheel depth %u", txs_csr->cfg_timer_static.tmr_wheel_depth());
+    SDK_TRACE_DEBUG("hbm_base 0x%llx",
+                    (uint64_t)txs_csr->cfg_timer_static.hbm_base());
+    SDK_TRACE_DEBUG("timer hash depth %u",
+                    txs_csr->cfg_timer_static.tmr_hsh_depth());
+    SDK_TRACE_DEBUG("timer wheel depth %u",
+                    txs_csr->cfg_timer_static.tmr_wheel_depth());
     txs_csr->cfg_timer_static.hbm_base(timer_key_hbm_base_addr);
     txs_csr->cfg_timer_static.tmr_hsh_depth(key_lines - 1);
     txs_csr->cfg_timer_static.tmr_wheel_depth(CAPRI_TIMER_WHEEL_DEPTH - 1);
@@ -123,7 +126,8 @@ capri_txs_timer_init_post (uint32_t key_lines, asic_cfg_t *capri_cfg)
     // Per Cino this is needed for an ASIC bug workaround
     capri_txs_timer_init_hsh_depth(key_lines);
 
-    capri_coreclk_freq = (uint32_t)(capri_get_coreclk_freq(capri_cfg->platform) / 1000000);
+    capri_coreclk_freq =
+        (uint32_t)(capri_get_coreclk_freq(capri_cfg->platform) / 1000000);
 
     // Set the tick resolution
     txs_csr->cfg_fast_timer.read();
@@ -136,11 +140,13 @@ capri_txs_timer_init_post (uint32_t key_lines, asic_cfg_t *capri_cfg)
 
     // Timer doorbell config
     txs_csr->cfg_fast_timer_dbell.read();
-    txs_csr->cfg_fast_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_EVAL);
+    txs_csr->cfg_fast_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC |
+                                              DB_SCHED_UPD_EVAL);
     txs_csr->cfg_fast_timer_dbell.write();
 
     txs_csr->cfg_slow_timer_dbell.read();
-    txs_csr->cfg_slow_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_EVAL);
+    txs_csr->cfg_slow_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC |
+                                              DB_SCHED_UPD_EVAL);
     txs_csr->cfg_slow_timer_dbell.write();
 
     // Enable slow and fast timers
@@ -152,14 +158,14 @@ capri_txs_timer_init_post (uint32_t key_lines, asic_cfg_t *capri_cfg)
     SDK_TRACE_DEBUG("Done timer post init");
 }
 
-
 sdk_ret_t
 capri_txs_scheduler_init (uint32_t admin_cos, asic_cfg_t *capri_cfg)
 {
 
     cap_top_csr_t       &cap0 = g_capri_state_pd->cap_top();
     cap_txs_csr_t       &txs_csr = cap0.txs.txs;
-    cap_psp_csr_t       &psp_pt_csr = cap0.pt.pt.psp, &psp_pr_csr = cap0.pr.pr.psp;
+    cap_psp_csr_t       &psp_pt_csr = cap0.pt.pt.psp,
+                        &psp_pr_csr = cap0.pr.pr.psp;
     uint64_t            txs_sched_hbm_base_addr;
     uint16_t            dtdm_lo_map, dtdm_hi_map;
     uint32_t            control_cos = 0;
@@ -181,7 +187,8 @@ capri_txs_scheduler_init (uint32_t admin_cos, asic_cfg_t *capri_cfg)
     txs_csr.cfg_sch.enable(0);
     txs_csr.cfg_sch.write();
 
-    cap_wa_csr_cfg_wa_sched_hint_t   &wa_sched_hint_csr = cap0.db.wa.cfg_wa_sched_hint;
+    cap_wa_csr_cfg_wa_sched_hint_t &wa_sched_hint_csr =
+        cap0.db.wa.cfg_wa_sched_hint;
     wa_sched_hint_csr.read();
     /* 5 bit value: bit 0=host, 1=local, 2=32b, 3=timer, 4=arm4kremap" */
     wa_sched_hint_csr.enable_src_mask(0x0);
@@ -307,12 +314,14 @@ capri_txs_scheduler_init (uint32_t admin_cos, asic_cfg_t *capri_cfg)
 }
 
 sdk_ret_t
-capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, capri_txs_sched_lif_params_t *txs_hw_params)
+capri_txs_scheduler_lif_params_update (uint32_t hw_lif_id,
+                                       capri_txs_sched_lif_params_t *txs_hw_params)
 {
 
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_txs_csr_t &txs_csr = cap0.txs.txs;
-    uint32_t      i = 0, j = 0, table_offset = 0, num_cos_val = 0, lif_cos_index = 0;
+    uint32_t      i = 0, j = 0, table_offset = 0,
+                  num_cos_val = 0, lif_cos_index = 0;
     uint16_t      lif_cos_bmp = 0x0;
 
     lif_cos_bmp = txs_hw_params->cos_bmp;
@@ -342,7 +351,8 @@ capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, capri_txs_sched_lif_pa
             lif_cos_index = (num_cos_val * txs_hw_params->num_entries_per_cos);
             //Program all entries for this cos.
             for (j = 0; j < txs_hw_params->num_entries_per_cos; j++) {
-                table_offset = txs_hw_params->sched_table_offset + lif_cos_index + j;
+                table_offset = txs_hw_params->sched_table_offset +
+                    lif_cos_index + j;
                 txs_csr.dhs_sch_grp_entry.entry[table_offset].read();
                 txs_csr.dhs_sch_grp_entry.entry[table_offset].lif(hw_lif_id);
                 txs_csr.dhs_sch_grp_entry.entry[table_offset].qid_offset(j);
@@ -354,15 +364,17 @@ capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, capri_txs_sched_lif_pa
     }
 
     SDK_TRACE_DEBUG("Programmed sched-table-offset %u and entries-per-cos %u"
-                    "and cos-bmp 0x%lx for hw-lif-id %u", txs_hw_params->sched_table_offset,
-                     txs_hw_params->num_entries_per_cos, lif_cos_bmp, hw_lif_id);
+                    "and cos-bmp 0x%lx for hw-lif-id %u",
+                    txs_hw_params->sched_table_offset,
+                     txs_hw_params->num_entries_per_cos, lif_cos_bmp,
+                     hw_lif_id);
 
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 capri_txs_policer_lif_params_update (uint32_t hw_lif_id,
-                            capri_txs_policer_lif_params_t *txs_hw_params)
+                                     capri_txs_policer_lif_params_t *txs_hw_params)
 {
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_txs_csr_t &txs_csr = cap0.txs.txs;
@@ -400,12 +412,14 @@ capri_txs_scheduler_tx_alloc (capri_txs_sched_lif_params_t *tx_params,
     // Sched table can hold 8K queues per index and mandates new index for each cos.
     total_qcount = tx_params->total_qcount;
     *alloc_units  =  (total_qcount / CAPRI_TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY);
-    *alloc_units += ((total_qcount % CAPRI_TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY) ? 1 : 0);
+    *alloc_units +=
+        ((total_qcount % CAPRI_TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY) ? 1 : 0);
     *alloc_units *=   sdk::lib::count_bits_set(tx_params->cos_bmp);
 
     if (*alloc_units > 0) {
         //Allocate consecutive alloc_unit num of entries in sched table.
-        *alloc_offset = g_capri_state_pd->txs_scheduler_map_idxr()->Alloc(*alloc_units);
+        *alloc_offset =
+            g_capri_state_pd->txs_scheduler_map_idxr()->Alloc(*alloc_units);
         if (*alloc_offset < 0) {
             ret = SDK_RET_NO_RESOURCE;
         }

@@ -156,8 +156,7 @@ typedef struct tm_uplink_iq_params_s {
     tm_q_t   p4_q;
 } __PACK__ tm_uplink_iq_params_t;
 
-sdk_ret_t capri_tm_uplink_iq_no_drop_update (tm_port_t port,
-                                             tm_q_t iq,
+sdk_ret_t capri_tm_uplink_iq_no_drop_update (tm_port_t port, tm_q_t iq,
                                              bool no_drop);
 sdk_ret_t capri_tm_uplink_iq_params_update(tm_port_t port, tm_q_t iq,
                                            tm_uplink_iq_params_t *iq_params);
@@ -172,30 +171,25 @@ typedef struct tm_uplink_input_dscp_map_s {
 
 sdk_ret_t capri_tm_uplink_input_dscp_map_update(tm_port_t port,
                                                 tm_uplink_input_dscp_map_t *dscp_map);
-sdk_ret_t capri_tm_uplink_oq_update(tm_port_t port,
-                                    tm_q_t oq,
+sdk_ret_t capri_tm_uplink_oq_update(tm_port_t port, tm_q_t oq,
                                     uint32_t xoff_cos);
-sdk_ret_t capri_tm_set_uplink_mac_xoff(tm_port_t port,
-                                       bool reset_all_xoff,
-                                       bool set_all_xoff,
-                                       bool reset_pfc_xoff,
+sdk_ret_t capri_tm_set_uplink_mac_xoff(tm_port_t port, bool reset_all_xoff,
+                                       bool set_all_xoff, bool reset_pfc_xoff,
                                        bool set_pfc_xoff,
                                        uint32_t xoff_cos_bitmap);
 sdk_ret_t capri_tm_get_uplink_mac_xoff (tm_port_t port,
                                         uint32_t *xoff_cos_bitmap);
-sdk_ret_t capri_tm_get_uplink_oq_xoff_map(tm_port_t port, tm_q_t oq, uint32_t *xoff_cos);
+sdk_ret_t capri_tm_get_uplink_oq_xoff_map(tm_port_t port, tm_q_t oq,
+                                          uint32_t *xoff_cos);
 sdk_ret_t capri_tm_uplink_set_cam_type (tm_port_t port,
                                         uint32_t  entry,
                                         uint32_t  etype);
-sdk_ret_t capri_tm_uplink_set_cam_da (tm_port_t port,
-                                      uint32_t  entry,
-                                      uint64_t  dmac);
-sdk_ret_t capri_tm_uplink_set_cam_cos (tm_port_t port,
-                                       uint32_t  entry,
-                                       uint32_t  cos);
-sdk_ret_t capri_tm_set_uplink_iq_to_p4_oq_map (tm_port_t port,
-                                               tm_q_t     iq,
-                                               tm_q_t     p4_q);
+sdk_ret_t capri_tm_uplink_set_cam_da (tm_port_t port, uint32_t entry,
+                                      uint64_t dmac);
+sdk_ret_t capri_tm_uplink_set_cam_cos (tm_port_t port, uint32_t entry,
+                                       uint32_t cos);
+sdk_ret_t capri_tm_set_uplink_iq_to_p4_oq_map (tm_port_t port, tm_q_t iq,
+                                               tm_q_t p4_q);
 
 #define TM_SCHED_TYPES(ENTRY)                    \
     ENTRY(TM_SCHED_TYPE_DWRR,       0, "dwrr")   \
@@ -375,8 +369,7 @@ typedef struct pb_sched_port_cfg_s {
 } pb_sched_port_cfg_t;
 
 sdk_ret_t capri_tm_debug_stats_get (tm_port_t port,
-                                    tm_debug_stats_t *debug_stats,
-                                    bool reset);
+                                    tm_debug_stats_t *debug_stats, bool reset);
 
 uint32_t capri_tm_get_num_iqs_for_port(tm_port_t port);
 uint32_t capri_tm_get_num_oqs_for_port(tm_port_t port);
@@ -387,11 +380,9 @@ sdk_ret_t cap_pb_sched_spq_pgm(uint32_t chip_id, uint32_t inst_id,
 uint32_t capri_tm_get_port_occupancy(tm_port_t port, uint32_t iq);
 uint32_t capri_tm_get_xon_threshold(uint32_t ctx);
 uint32_t capri_tm_get_xoff_threshold(uint32_t ctx);
-uint64_t capri_tm_get_port_mon_out(int chip_id, int inst_id,
-                                   tm_port_t tm_port,
+uint64_t capri_tm_get_port_mon_out(int chip_id, int inst_id, tm_port_t tm_port,
                                    tm_q_t tm_oq);
-uint64_t capri_tm_get_port_mon_in(int chip_id, int inst_id,
-                                  tm_port_t tm_port,
+uint64_t capri_tm_get_port_mon_in(int chip_id, int inst_id, tm_port_t tm_port,
                                   tm_q_t tm_iq);
 // set the span queue threshold
 sdk_ret_t capri_tm_set_span_threshold(uint32_t span_threshold);

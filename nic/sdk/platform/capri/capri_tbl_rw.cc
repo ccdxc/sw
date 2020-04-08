@@ -435,14 +435,17 @@ capri_p4plus_table_init (p4plus_prog_t *prog,
 
     return CAPRI_OK ;
 }
+
 int
 capri_p4plus_table_init (platform_type_t platform_type,
                          int stage_apphdr, int stage_tableid_apphdr,
                          int stage_apphdr_ext, int stage_tableid_apphdr_ext,
                          int stage_apphdr_off, int stage_tableid_apphdr_off,
-                         int stage_apphdr_ext_off, int stage_tableid_apphdr_ext_off,
+                         int stage_apphdr_ext_off,
+                         int stage_tableid_apphdr_ext_off,
                          int stage_txdma_act, int stage_tableid_txdma_act,
-                         int stage_txdma_act_ext, int stage_tableid_txdma_act_ext)
+                         int stage_txdma_act_ext,
+                         int stage_tableid_txdma_act_ext)
 {
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     cap_te_csr_t *te_csr = NULL;
@@ -584,30 +587,39 @@ capri_timer_init_helper (uint32_t key_lines)
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     cap_txs_csr_t *txs_csr = &cap0.txs.txs;
 
-    timer_key_hbm_base_addr = sdk::asic::asic_get_mem_addr(MEM_REGION_TIMERS_NAME);
+    timer_key_hbm_base_addr =
+        sdk::asic::asic_get_mem_addr(MEM_REGION_TIMERS_NAME);
 
     txs_csr->cfg_timer_static.read();
-    SDK_TRACE_DEBUG("hbm_base %llx", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
-    SDK_TRACE_DEBUG("timer hash depth %u", txs_csr->cfg_timer_static.tmr_hsh_depth());
-    SDK_TRACE_DEBUG("timer wheel depth %u", txs_csr->cfg_timer_static.tmr_wheel_depth());
+    SDK_TRACE_DEBUG("hbm_base %llx",
+                    (uint64_t)txs_csr->cfg_timer_static.hbm_base());
+    SDK_TRACE_DEBUG("timer hash depth %u",
+                    txs_csr->cfg_timer_static.tmr_hsh_depth());
+    SDK_TRACE_DEBUG("timer wheel depth %u",
+                    txs_csr->cfg_timer_static.tmr_wheel_depth());
     txs_csr->cfg_timer_static.hbm_base(timer_key_hbm_base_addr);
     txs_csr->cfg_timer_static.tmr_hsh_depth(key_lines - 1);
     txs_csr->cfg_timer_static.tmr_wheel_depth(CAPRI_TIMER_WHEEL_DEPTH - 1);
     txs_csr->cfg_timer_static.write();
 
     txs_csr->cfg_fast_timer_dbell.read();
-    txs_csr->cfg_fast_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_EVAL);
+    txs_csr->cfg_fast_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC |
+                                              DB_SCHED_UPD_EVAL);
     txs_csr->cfg_fast_timer_dbell.write();
 
     txs_csr->cfg_slow_timer_dbell.read();
-    txs_csr->cfg_slow_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC | DB_SCHED_UPD_EVAL);
+    txs_csr->cfg_slow_timer_dbell.addr_update(DB_IDX_UPD_PIDX_INC |
+                                              DB_SCHED_UPD_EVAL);
     txs_csr->cfg_slow_timer_dbell.write();
 
     // TODO:remove
     txs_csr->cfg_timer_static.read();
-    SDK_TRACE_DEBUG("hbm_base %llx", (uint64_t)txs_csr->cfg_timer_static.hbm_base());
-    SDK_TRACE_DEBUG("timer hash depth %u", txs_csr->cfg_timer_static.tmr_hsh_depth());
-    SDK_TRACE_DEBUG("timer wheel depth %u", txs_csr->cfg_timer_static.tmr_wheel_depth());
+    SDK_TRACE_DEBUG("hbm_base %llx",
+                    (uint64_t)txs_csr->cfg_timer_static.hbm_base());
+    SDK_TRACE_DEBUG("timer hash depth %u",
+                    txs_csr->cfg_timer_static.tmr_hsh_depth());
+    SDK_TRACE_DEBUG("timer wheel depth %u",
+                    txs_csr->cfg_timer_static.tmr_wheel_depth());
 
     // initialize timer wheel to 0
 #if 0
@@ -652,8 +664,8 @@ capri_p4p_stage_id_init (void)
 }
 
 static inline bool
-p4plus_invalidate_cache_aligned(uint64_t addr, uint32_t size_in_bytes,
-        p4plus_cache_action_t action)
+p4plus_invalidate_cache_aligned (uint64_t addr, uint32_t size_in_bytes,
+                                 p4plus_cache_action_t action)
 {
     assert ((addr & ~CACHE_LINE_SIZE_MASK) == addr);
 
@@ -663,14 +675,16 @@ p4plus_invalidate_cache_aligned(uint64_t addr, uint32_t size_in_bytes,
             if (csr_cache_inval_rxdma_va) {
                 *csr_cache_inval_rxdma_va = claddr;
             } else {
-                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_RXDMA_REG_ADDR, &claddr, 1);
+                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_RXDMA_REG_ADDR,
+                                        &claddr, 1);
             }
         }
         if (action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_TXDMA) {
             if (csr_cache_inval_txdma_va) {
                 *csr_cache_inval_txdma_va = claddr;
             } else {
-                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_TXDMA_REG_ADDR, &claddr, 1);
+                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_TXDMA_REG_ADDR,
+                                        &claddr, 1);
             }
         }
         size_in_bytes -= CACHE_LINE_SIZE;
@@ -681,8 +695,8 @@ p4plus_invalidate_cache_aligned(uint64_t addr, uint32_t size_in_bytes,
 }
 
 bool
-p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
-        p4plus_cache_action_t action)
+p4plus_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
+                         p4plus_cache_action_t action)
 {
     bool ret;
 
@@ -700,7 +714,8 @@ p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
 
 
 void
-capri_deparser_init(int tm_port_ingress, int tm_port_egress) {
+capri_deparser_init (int tm_port_ingress, int tm_port_egress)
+{
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cpp_int recirc_rw_bm = 0;
     // Ingress deparser is indexed with 1
@@ -757,7 +772,8 @@ capri_tcam_memory_init (asic_cfg_t *capri_cfg)
     }
 
     // Ingress
-    uint64_t pa = CAP_ADDR_BASE_TSI_PICT_OFFSET + offsetof(Cap_pict_csr, dhs_tcam_xy);
+    uint64_t pa = CAP_ADDR_BASE_TSI_PICT_OFFSET + offsetof(Cap_pict_csr,
+                                                           dhs_tcam_xy);
     for (int i = 0; i < CAP_PICT_CSR_DHS_TCAM_XY_ENTRY_ARRAY_COUNT; i++) {
         pal_memset(pa, 0, 36, 0);
         pa += 36;
@@ -827,7 +843,8 @@ capri_sram_memory_init (asic_cfg_t *capri_cfg)
     }
 
     // Ingress
-    uint64_t pa = CAP_ADDR_BASE_SSI_PICS_OFFSET + offsetof(Cap_pics_csr, dhs_sram);
+    uint64_t pa = CAP_ADDR_BASE_SSI_PICS_OFFSET + offsetof(Cap_pics_csr,
+                                                           dhs_sram);
     for (int i = 0; i < CAP_PICS_CSR_DHS_SRAM_ENTRY_ARRAY_COUNT; i++) {
         pal_memset(pa, 0, sizeof(Cap_pics_csr_dhs_sram_entry), 0);
         pa += sizeof(Cap_pics_csr_dhs_sram_entry);
@@ -879,12 +896,14 @@ static int
 capri_p4plus_shadow_init (void)
 {
     if (!g_shadow_sram_rxdma) {
-        g_shadow_sram_rxdma = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
-                                                                     sizeof(capri_sram_shadow_mem_t));
+        g_shadow_sram_rxdma =
+            (capri_sram_shadow_mem_t*) CAPRI_CALLOC(1,
+                                                    sizeof(capri_sram_shadow_mem_t));
     }
     if (!g_shadow_sram_txdma) {
-        g_shadow_sram_txdma = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
-                                                                     sizeof(capri_sram_shadow_mem_t));
+        g_shadow_sram_txdma =
+            (capri_sram_shadow_mem_t*) CAPRI_CALLOC(1,
+                                                    sizeof(capri_sram_shadow_mem_t));
     }
     if (!g_shadow_sram_rxdma || !g_shadow_sram_txdma) {
         // TODO: Log error/trace
@@ -896,10 +915,11 @@ capri_p4plus_shadow_init (void)
 }
 
 void
-capri_table_csr_cache_inval_init(void)
+capri_table_csr_cache_inval_init (void)
 {
     csr_cache_inval_ingress_va =
-        (uint32_t *)sdk::lib::pal_mem_map(CSR_CACHE_INVAL_INGRESS_REG_ADDR, 0x4);
+        (uint32_t *)sdk::lib::pal_mem_map(CSR_CACHE_INVAL_INGRESS_REG_ADDR,
+                                          0x4);
     csr_cache_inval_egress_va =
         (uint32_t *)sdk::lib::pal_mem_map(CSR_CACHE_INVAL_EGRESS_REG_ADDR, 0x4);
     csr_cache_inval_txdma_va =
@@ -1068,10 +1088,8 @@ capri_global_pics_get (uint32_t tableid)
 }
 
 int
-capri_table_entry_write (uint32_t tableid,
-                         uint32_t index,
-                         uint8_t  *hwentry,
-                         uint8_t  *hwentry_mask,
+capri_table_entry_write (uint32_t tableid, uint32_t index,
+                         uint8_t  *hwentry, uint8_t  *hwentry_mask,
                          uint16_t hwentry_bit_len,
                          p4_table_mem_layout_t &tbl_info, int gress,
                          bool is_oflow_table, bool ingress,
@@ -1130,7 +1148,8 @@ capri_table_entry_write (uint32_t tableid,
 
     if (hwentry_mask) {
         /* If mask is specified, it should encompass the entire macros currently */
-        if ((entry_start_word != 0) || (tbl_info.entry_width % CAPRI_SRAM_WORDS_PER_BLOCK)) {
+        if ((entry_start_word != 0) || (tbl_info.entry_width %
+                                        CAPRI_SRAM_WORDS_PER_BLOCK)) {
             SDK_TRACE_ERR("Masked write with entry_start_word %u and width %u "
                           "not supported",
                           entry_start_word, tbl_info.entry_width);
@@ -1140,7 +1159,8 @@ capri_table_entry_write (uint32_t tableid,
 
     for (int j = 0; j < tbl_info.entry_width; j++) {
         if (copy_bits >= 16) {
-            shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word] = *_hwentry;
+            shadow_sram->mem[sram_row][block %
+                CAPRI_SRAM_BLOCK_COUNT][entry_start_word] = *_hwentry;
             _hwentry++;
             copy_bits -= 16;
         } else if (copy_bits) {
@@ -1160,7 +1180,8 @@ capri_table_entry_write (uint32_t tableid,
     pu_cpp_int<128> sram_block_data;
     pu_cpp_int<128> sram_block_datamask;
     uint8_t temp[16], tempmask[16];
-    for (int i = entry_start_block; i <= entry_end_block; i += CAPRI_SRAM_ROWS, blk++) {
+    for (int i = entry_start_block; i <= entry_end_block;
+         i += CAPRI_SRAM_ROWS, blk++) {
         //all shadow_sram->mem[sram_row][i] to be pushed to capri..
         uint8_t *s = (uint8_t*)(shadow_sram->mem[sram_row][blk]);
         for (int p = 15; p >= 0; p--) {
@@ -1176,13 +1197,15 @@ capri_table_entry_write (uint32_t tableid,
         cpp_int_helper::s_cpp_int_from_array(sram_block_data, 0, 15, temp);
 
         if (hwentry_mask) {
-            uint8_t *m = hwentry_mask + (i-entry_start_block)*(CAPRI_SRAM_BLOCK_WIDTH>>3) ;
+            uint8_t *m = hwentry_mask +
+                (i-entry_start_block)*(CAPRI_SRAM_BLOCK_WIDTH>>3) ;
             for (int p = 15; p >= 0; p--) {
                 tempmask[p] = *m; m++;
             }
 
             sram_block_datamask = 0;
-            cpp_int_helper::s_cpp_int_from_array(sram_block_datamask, 0, 15, tempmask);
+            cpp_int_helper::s_cpp_int_from_array(sram_block_datamask,
+                                                 0, 15, tempmask);
 
             pics_csr->dhs_sram_update_addr.entry.address(i);
             pics_csr->dhs_sram_update_addr.entry.write();
@@ -1200,13 +1223,10 @@ capri_table_entry_write (uint32_t tableid,
 }
 
 int
-capri_table_entry_read (uint32_t tableid,
-                        uint32_t index,
-                        uint8_t  *hwentry,
-                        uint16_t *hwentry_bit_len,
+capri_table_entry_read (uint32_t tableid, uint32_t index,
+                        uint8_t  *hwentry, uint16_t *hwentry_bit_len,
                         p4_table_mem_layout_t &tbl_info, int gress,
-                        bool is_oflow_table,
-                        uint32_t ofl_parent_tbl_depth)
+                        bool is_oflow_table, uint32_t ofl_parent_tbl_depth)
 {
     /*
      * Unswizzing of the bytes into readable format is
@@ -1251,7 +1271,8 @@ capri_table_entry_read (uint32_t tableid,
         uint8_t to_copy_bytes = (to_copy + 7) >> 3;
         to_copy_bytes += (to_copy_bytes & 0x1) ? 1 : 0;
         for (int i = 0; i < (to_copy_bytes >> 1); ++i) {
-            *_hwentry = shadow_sram->mem[sram_row][block % CAPRI_SRAM_BLOCK_COUNT][entry_start_word + i];
+            *_hwentry = shadow_sram->mem[sram_row][block %
+                CAPRI_SRAM_BLOCK_COUNT][entry_start_word + i];
             ++_hwentry;
         }
         copy_bits -= to_copy;
@@ -1265,10 +1286,8 @@ capri_table_entry_read (uint32_t tableid,
 }
 
 int
-capri_table_hw_entry_read (uint32_t tableid,
-                           uint32_t index,
-                           uint8_t  *hwentry,
-                           uint16_t *hwentry_bit_len,
+capri_table_hw_entry_read (uint32_t tableid, uint32_t index,
+                           uint8_t  *hwentry, uint16_t *hwentry_bit_len,
                            p4_table_mem_layout_t &tbl_info, int gress,
                            bool is_oflow_table, bool ingress,
                            uint32_t ofl_parent_tbl_depth)
@@ -1389,10 +1408,8 @@ capri_tcam_entry_details_get (uint32_t index,
 }
 
 int
-capri_tcam_table_entry_write (uint32_t tableid,
-                              uint32_t index,
-                              uint8_t  *trit_x,
-                              uint8_t  *trit_y,
+capri_tcam_table_entry_write (uint32_t tableid, uint32_t index,
+                              uint8_t  *trit_x, uint8_t  *trit_y,
                               uint16_t hwentry_bit_len,
                               p4_table_mem_layout_t &tbl_info,
                               int gress, bool ingress)
@@ -1468,7 +1485,8 @@ capri_tcam_table_entry_write (uint32_t tableid,
     pu_cpp_int<128> tcam_block_data_y;
     uint8_t temp_x[16];
     uint8_t temp_y[16];
-    for (int i = entry_start_block; i <= entry_end_block; i += CAPRI_TCAM_ROWS, blk++) {
+    for (int i = entry_start_block; i <= entry_end_block;
+         i += CAPRI_TCAM_ROWS, blk++) {
         uint8_t *s = (uint8_t*)(g_shadow_tcam_p4[gress]->mem_x[tcam_row][blk]);
         for (int p = 15; p >= 0; p--) {
             temp_x[p] = *s; s++;
@@ -1481,8 +1499,10 @@ capri_tcam_table_entry_write (uint32_t tableid,
             cap_pict_csr_t & pict_csr = cap0.tsi.pict;
             tcam_block_data_x = 0;
             tcam_block_data_y = 0;
-            cpp_int_helper::s_cpp_int_from_array(tcam_block_data_x, 0, 15, temp_x);
-            cpp_int_helper::s_cpp_int_from_array(tcam_block_data_y, 0, 15, temp_y);
+            cpp_int_helper::s_cpp_int_from_array(tcam_block_data_x,
+                                                 0, 15, temp_x);
+            cpp_int_helper::s_cpp_int_from_array(tcam_block_data_y,
+                                                 0, 15, temp_y);
             pict_csr.dhs_tcam_xy.entry[i].x((pu_cpp_int<128>)tcam_block_data_x);
             pict_csr.dhs_tcam_xy.entry[i].y((pu_cpp_int<128>)tcam_block_data_y);
             pict_csr.dhs_tcam_xy.entry[i].valid(1);
@@ -1491,8 +1511,10 @@ capri_tcam_table_entry_write (uint32_t tableid,
             cap_pict_csr_t & pict_csr = cap0.tse.pict;
             tcam_block_data_x = 0;
             tcam_block_data_y = 0;
-            cpp_int_helper::s_cpp_int_from_array(tcam_block_data_x, 0, 15, temp_x);
-            cpp_int_helper::s_cpp_int_from_array(tcam_block_data_y, 0, 15, temp_y);
+            cpp_int_helper::s_cpp_int_from_array(tcam_block_data_x,
+                                                 0, 15, temp_x);
+            cpp_int_helper::s_cpp_int_from_array(tcam_block_data_y,
+                                                 0, 15, temp_y);
             pict_csr.dhs_tcam_xy.entry[i].x((pu_cpp_int<128>)tcam_block_data_x);
             pict_csr.dhs_tcam_xy.entry[i].y((pu_cpp_int<128>)tcam_block_data_y);
             pict_csr.dhs_tcam_xy.entry[i].valid(1);
@@ -1503,13 +1525,10 @@ capri_tcam_table_entry_write (uint32_t tableid,
 }
 
 int
-capri_tcam_table_entry_read (uint32_t tableid,
-                             uint32_t index,
-                             uint8_t  *trit_x,
-                             uint8_t  *trit_y,
+capri_tcam_table_entry_read (uint32_t tableid, uint32_t index,
+                             uint8_t  *trit_x, uint8_t  *trit_y,
                              uint16_t *hwentry_bit_len,
-                             p4_table_mem_layout_t &tbl_info,
-                             int gress)
+                             p4_table_mem_layout_t &tbl_info, int gress)
 {
     int tcam_row, entry_start_block, entry_end_block;
     int entry_start_word;
@@ -1528,7 +1547,9 @@ capri_tcam_table_entry_read (uint32_t tableid,
                  + ((tbl_col * tbl_info.entry_width) /
                      CAPRI_TCAM_WORDS_PER_BLOCK);
     int block = blk;
-    int pad = (tbl_info.entry_width_bits % 16) ? (16 - (tbl_info.entry_width_bits % 16)) : 0;
+    int pad = (tbl_info.entry_width_bits % 16) ? (16 -
+                                                  (tbl_info.entry_width_bits %
+                                                   16)) : 0;
     int copy_bits = tbl_info.entry_width_bits + pad;
     int start_word = entry_start_word;
     uint16_t *_trit_x = (uint16_t*)trit_x;
@@ -1570,10 +1591,8 @@ capri_tcam_table_entry_read (uint32_t tableid,
 }
 
 int
-capri_tcam_table_hw_entry_read (uint32_t tableid,
-                                uint32_t index,
-                                uint8_t  *trit_x,
-                                uint8_t  *trit_y,
+capri_tcam_table_hw_entry_read (uint32_t tableid, uint32_t index,
+                                uint8_t  *trit_x, uint8_t  *trit_y,
                                 uint16_t *hwentry_bit_len,
                                 p4_table_mem_layout_t &tbl_info,
                                 bool ingress)
@@ -1608,15 +1627,19 @@ capri_tcam_table_hw_entry_read (uint32_t tableid,
             pict_csr.dhs_tcam_xy.entry[i].read();
             tcam_block_data_x = pict_csr.dhs_tcam_xy.entry[i].x();
             tcam_block_data_y = pict_csr.dhs_tcam_xy.entry[i].y();
-            cpp_int_helper::s_array_from_cpp_int(tcam_block_data_x, 0, 15, temp_x);
-            cpp_int_helper::s_array_from_cpp_int(tcam_block_data_y, 0, 15, temp_y);
+            cpp_int_helper::s_array_from_cpp_int(tcam_block_data_x, 0, 15,
+                                                 temp_x);
+            cpp_int_helper::s_array_from_cpp_int(tcam_block_data_y, 0, 15,
+                                                 temp_y);
         } else {
             cap_pict_csr_t & pict_csr = cap0.tse.pict;
             pict_csr.dhs_tcam_xy.entry[i].read();
             tcam_block_data_x = pict_csr.dhs_tcam_xy.entry[i].x();
             tcam_block_data_y = pict_csr.dhs_tcam_xy.entry[i].y();
-            cpp_int_helper::s_array_from_cpp_int(tcam_block_data_x, 0, 15, temp_x);
-            cpp_int_helper::s_array_from_cpp_int(tcam_block_data_y, 0, 15, temp_y);
+            cpp_int_helper::s_array_from_cpp_int(tcam_block_data_x, 0, 15,
+                                                 temp_x);
+            cpp_int_helper::s_array_from_cpp_int(tcam_block_data_y, 0, 15,
+                                                 temp_y);
         }
         for (int p = 15; p >= 8; p--) {
             byte = temp_x[p];
@@ -1648,10 +1671,8 @@ capri_tcam_table_hw_entry_read (uint32_t tableid,
 }
 
 int
-capri_hbm_table_entry_write (uint32_t tableid,
-                             uint32_t index,
-                             uint8_t *hwentry,
-                             uint16_t entry_size,
+capri_hbm_table_entry_write (uint32_t tableid, uint32_t index,
+                             uint8_t *hwentry, uint16_t entry_size,
                              uint16_t entry_width,
                              p4pd_table_properties_t *tbl_info)
 {
@@ -1665,13 +1686,15 @@ capri_hbm_table_entry_write (uint32_t tableid,
     if (tbl_info->base_mem_va) {
         addr = tbl_info->base_mem_va + entry_start_addr;
         sdk::asic::asic_vmem_write(addr, hwentry, (entry_size >> 3),
-                                   (sdk::asic::asic_write_mode_t) tbl_info->wr_mode);
+                                   (sdk::asic::asic_write_mode_t)
+                                   tbl_info->wr_mode);
     } else if (tbl_info->base_mem_pa) {
         addr  = tbl_info->base_mem_pa + entry_start_addr;
         sdk::asic::asic_mem_write(addr, hwentry, (entry_size >> 3));
     } else {
         // if base_mem_va/base_mem_pa is not set, get hbm addr from tablename
-        addr = sdk::asic::asic_get_mem_addr(tbl_info->tablename) + entry_start_addr;
+        addr = sdk::asic::asic_get_mem_addr(tbl_info->tablename) +
+            entry_start_addr;
         sdk::asic::asic_mem_write(addr, hwentry, (entry_size >> 3));
     }
     time_profile_end(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_WRITE);
@@ -1679,7 +1702,8 @@ capri_hbm_table_entry_write (uint32_t tableid,
 }
 
 void
-p4_invalidate_cache (uint64_t addr, uint32_t size_in_bytes, p4pd_table_cache_t cache)
+p4_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
+                     p4pd_table_cache_t cache)
 {
     while ((int)size_in_bytes > 0) {
         uint32_t claddr = (addr >> CACHE_LINE_SIZE_SHIFT) << 1;
@@ -1687,14 +1711,16 @@ p4_invalidate_cache (uint64_t addr, uint32_t size_in_bytes, p4pd_table_cache_t c
             if (csr_cache_inval_ingress_va) {
                 *csr_cache_inval_ingress_va = claddr;
             } else {
-                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_INGRESS_REG_ADDR, &claddr, 1);
+                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_INGRESS_REG_ADDR,
+                                        &claddr, 1);
             }
         }
         if (cache & P4_TBL_CACHE_EGRESS) {
             if (csr_cache_inval_egress_va) {
                 *csr_cache_inval_egress_va = claddr;
             } else {
-                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_EGRESS_REG_ADDR, &claddr, 1);
+                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_EGRESS_REG_ADDR,
+                                        &claddr, 1);
             }
         }
         size_in_bytes -= CACHE_LINE_SIZE;
@@ -1716,11 +1742,14 @@ capri_hbm_table_entry_cache_invalidate (p4pd_table_cache_t cache,
 
     // Allow cache to be set for both P4 (above) and P4+ (below)
     if ((cache & P4_TBL_CACHE_TXDMA_RXDMA) == P4_TBL_CACHE_TXDMA_RXDMA) {
-        p4plus_invalidate_cache(addr, entry_width, P4PLUS_CACHE_INVALIDATE_BOTH);
+        p4plus_invalidate_cache(addr, entry_width,
+                                P4PLUS_CACHE_INVALIDATE_BOTH);
     } else if (cache & P4_TBL_CACHE_TXDMA) {
-        p4plus_invalidate_cache(addr, entry_width, P4PLUS_CACHE_INVALIDATE_TXDMA);
+        p4plus_invalidate_cache(addr, entry_width,
+                                P4PLUS_CACHE_INVALIDATE_TXDMA);
     } else if (cache & P4_TBL_CACHE_RXDMA) {
-        p4plus_invalidate_cache(addr, entry_width, P4PLUS_CACHE_INVALIDATE_RXDMA);
+        p4plus_invalidate_cache(addr, entry_width,
+                                P4PLUS_CACHE_INVALIDATE_RXDMA);
     } else {
         SDK_ASSERT(cache);
     }
@@ -1728,14 +1757,10 @@ capri_hbm_table_entry_cache_invalidate (p4pd_table_cache_t cache,
     return CAPRI_OK;
 }
 
-
 int
-capri_hbm_table_entry_read (uint32_t tableid,
-                            uint32_t index,
-                            uint8_t *hwentry,
+capri_hbm_table_entry_read (uint32_t tableid, uint32_t index, uint8_t *hwentry,
                             uint16_t *entry_size,
-                            p4_table_mem_layout_t &tbl_info,
-                            bool read_thru)
+                            p4_table_mem_layout_t &tbl_info, bool read_thru)
 {
     mem_addr_t entry_start_addr, addr;
 
@@ -1744,13 +1769,15 @@ capri_hbm_table_entry_read (uint32_t tableid,
 
     if (tbl_info.base_mem_va) {
         addr = tbl_info.base_mem_va + entry_start_addr;
-        sdk::asic::asic_vmem_read(addr, hwentry, tbl_info.entry_width, read_thru);
+        sdk::asic::asic_vmem_read(addr, hwentry, tbl_info.entry_width,
+                                  read_thru);
     } else if (tbl_info.base_mem_pa) {
         addr  = tbl_info.base_mem_pa + entry_start_addr;
         sdk::asic::asic_mem_read(addr, hwentry, tbl_info.entry_width);
     } else {
         // if base_mem_va/base_mem_pa is not set, get hbm addr from tablename
-        addr = sdk::asic::asic_get_mem_addr(tbl_info.tablename) + entry_start_addr;
+        addr = sdk::asic::asic_get_mem_addr(tbl_info.tablename) +
+            entry_start_addr;
         sdk::asic::asic_mem_read(addr, hwentry, tbl_info.entry_width);
     }
     *entry_size = tbl_info.entry_width;
@@ -1849,7 +1876,8 @@ asic_csr_dump_reg (char *block_name, bool exclude_mem)
     for (auto itr : cap_child_base) {
         if (itr->get_csr_type() == pen_csr_base::CSR_TYPE_REGISTER) {
             if(itr->get_parent() != nullptr && exclude_mem) {
-                if (itr->get_parent()->get_csr_type() == pen_csr_base::CSR_TYPE_MEMORY) {
+                if (itr->get_parent()->get_csr_type() ==
+                    pen_csr_base::CSR_TYPE_MEMORY) {
                     continue;
                 }
             }
@@ -1866,7 +1894,8 @@ asic_csr_dump_reg (char *block_name, bool exclude_mem)
             stringstream addr;
             addr << hex << "0x" << offset;
 
-            data_tl.push_back( tuple< std::string, string, std::string>(name, addr.str(), ss.str()));
+            data_tl.push_back(tuple< std::string, string,
+                              std::string>(name, addr.str(), ss.str()));
 
         }
     }
@@ -1938,8 +1967,6 @@ capri_tbl_eng_cfg_modify (p4pd_pipeline_t pipeline,
     }
     return SDK_RET_OK;
 }
-
-
 
 } // namespace capri
 } // namespace platform

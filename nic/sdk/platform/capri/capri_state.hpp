@@ -18,7 +18,9 @@ public:
     ~capri_state_pd();
 
     // get APIs for TXS scheduler related state
-    sdk::lib::BMAllocator *txs_scheduler_map_idxr(void) { return txs_scheduler_map_idxr_; }
+    sdk::lib::BMAllocator *txs_scheduler_map_idxr(void)
+    { return txs_scheduler_map_idxr_; }
+
     std::string cfg_path(void) const { return cfg_.cfg_path; }
     mpartition *mempartition(void) const { return cfg_.mempartition; }
     cap_top_csr_t& cap_top() { return *cap_top_; }
@@ -36,6 +38,7 @@ private:
     capri_state_pd();
     bool init(asic_cfg_t *cfg);
 };
+
 extern class capri_state_pd *g_capri_state_pd;
 
 extern sdk_ret_t capri_state_pd_init(asic_cfg_t *cfg);

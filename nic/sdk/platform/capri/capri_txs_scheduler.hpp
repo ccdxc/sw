@@ -54,8 +54,8 @@ namespace capri {
 /* (lif,queue,cos) mapping params in scheduler table */
 typedef struct capri_txs_sched_lif_params_s_ {
     uint32_t             sched_table_offset;
-    uint32_t             num_entries_per_cos; 
-    uint32_t             total_qcount; 
+    uint32_t             num_entries_per_cos;
+    uint32_t             total_qcount;
     uint16_t             cos_bmp;
 } __PACK__ capri_txs_sched_lif_params_t;
 
@@ -63,7 +63,7 @@ typedef struct capri_txs_sched_lif_params_s_ {
 typedef struct capri_txs_policer_lif_params_s {
     uint32_t             sched_table_start_offset;
     uint32_t             sched_table_end_offset;
-} __PACK__ capri_txs_policer_lif_params_t;  
+} __PACK__ capri_txs_policer_lif_params_t;
 
 /** capri_txs_scheduler_init
  * API to init the txs scheduler module
@@ -82,7 +82,7 @@ void capri_txs_timer_init_hsh_depth(uint32_t key_lines);
  * @param  txs_hw_params[in]. scheduler table params for this entry.
  * @return sdk_ret_t: Status of the operation
  */
-sdk_ret_t capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, 
+sdk_ret_t capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id,
                                                 capri_txs_sched_lif_params_t *txs_hw_params);
 
 sdk_ret_t capri_txs_scheduler_tx_alloc(capri_txs_sched_lif_params_t *tx_params,
@@ -94,13 +94,13 @@ sdk_ret_t capri_txs_scheduler_tx_dealloc(uint32_t alloc_offset,
 
 /** capri_txs_policer_lif_params_update
  * API to program txs policer table with lif,cos scheduler-table mappings.
- *      
+ *
  * @param  hw_lif_id[in]: hw lif id for this entry.
  * @param  txs_hw_params[in]. scheduler table params for this entry.
  * @return sdk_ret_t: Status of the operation
- */     
+ */
 sdk_ret_t capri_txs_policer_lif_params_update(uint32_t hw_lif_id,
-                                 capri_txs_policer_lif_params_t *txs_hw_params);
+                                              capri_txs_policer_lif_params_t *txs_hw_params);
 
 typedef struct capri_txs_scheduler_cos_stats_s {
     uint32_t cos;

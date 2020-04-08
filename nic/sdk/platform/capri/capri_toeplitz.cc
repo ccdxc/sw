@@ -135,7 +135,8 @@ capri_rss_table_config_ex (uint32_t stage, uint32_t stage_tableid,
 }
 
 sdk_ret_t
-capri_rss_table_base_pc_get (const char *handle, uint64_t *tbl_base, uint64_t *pc)
+capri_rss_table_base_pc_get (const char *handle, uint64_t *tbl_base,
+                             uint64_t *pc)
 {
     if (sdk::p4::p4_program_to_base_addr(handle,
                                          (char *)ETH_RSS_INDIR_PROGRAM,

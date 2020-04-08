@@ -20,8 +20,9 @@ namespace capri {
 static ENGINE       *engine = NULL;
 BIO                 *bio = NULL;
 
-static int fips_asym_rsa_sig_gen_param(void *ctx,
-                              const PSE_RSA_SIGN_PARAM *param)
+static int
+fips_asym_rsa_sig_gen_param (void *ctx,
+                             const PSE_RSA_SIGN_PARAM *param)
 {
     return capri_barco_asym_rsa_sig_gen(param->key_size,
                                           param->key_idx,
@@ -33,8 +34,9 @@ static int fips_asym_rsa_sig_gen_param(void *ctx,
                                           param->caller_unique_id);
 }
 
-int fips_asym_rsa_encrypt_param(void *ctx,
-                              const PSE_RSA_ENCRYPT_PARAM *param)
+int
+fips_asym_rsa_encrypt_param (void *ctx,
+                             const PSE_RSA_ENCRYPT_PARAM *param)
 {
     return capri_barco_asym_rsa_encrypt(param->key_size,
                                           param->n,
@@ -45,8 +47,9 @@ int fips_asym_rsa_encrypt_param(void *ctx,
                                           param->caller_unique_id);
 }
 
-int fips_asym_rsa_decrypt_param(void *ctx,
-                              const PSE_RSA_DECRYPT_PARAM *param)
+int
+fips_asym_rsa_decrypt_param (void *ctx,
+                             const PSE_RSA_DECRYPT_PARAM *param)
 {
     return capri_barco_asym_rsa2k_crt_decrypt(param->key_idx,
                                               param->p,
@@ -69,7 +72,8 @@ const static PSE_RSA_OFFLOAD_METHOD     offload_method =
     .rand_method        = NULL,
 };
 
-static sdk_ret_t init_ssl(void)
+static sdk_ret_t
+init_ssl(void)
 {
     SSL_library_init();
 
@@ -81,9 +85,8 @@ static sdk_ret_t init_ssl(void)
     return SDK_RET_OK;
 }
 
-
-
-static sdk_ret_t init_pse_engine()
+static sdk_ret_t
+init_pse_engine (void)
 {
     const char        *eng_path;
 
@@ -138,8 +141,10 @@ static sdk_ret_t init_pse_engine()
 
     return SDK_RET_OK;
 }
+
 #if 0
-RSA * rsa_setup_key(unsigned short modulus_len, char *n, char *e, char *d)
+RSA *
+rsa_setup_key (unsigned short modulus_len, char *n, char *e, char *d)
 {
     int         ret = 0;
     RSA         *r = NULL;
@@ -167,7 +172,8 @@ RSA * rsa_setup_key(unsigned short modulus_len, char *n, char *e, char *d)
     return r;
 }
 
-EVP_PKEY * evp_key_setup(unsigned short modulus_len, char *n, char *e)
+EVP_PKEY *
+evp_key_setup(unsigned short modulus_len, char *n, char *e)
 {
     RSA         *r;
     EVP_PKEY    *evp_pkey;
@@ -192,7 +198,10 @@ EVP_PKEY * evp_key_setup(unsigned short modulus_len, char *n, char *e)
 }
 #endif
 
-int compute_message_digest(const EVP_MD *md, const unsigned char *message, size_t message_len, char *digest, unsigned int *digest_len)
+int
+compute_message_digest (const EVP_MD *md, const unsigned char *message,
+                        size_t message_len, char *digest,
+                        unsigned int *digest_len)
 {
     EVP_MD_CTX *mdctx;
 
@@ -221,7 +230,9 @@ int compute_message_digest(const EVP_MD *md, const unsigned char *message, size_
     return 0;
 }
 
-EVP_PKEY *rsa_setup_key(ENGINE *engine, uint16_t key_size, int32_t key_idx, uint8_t *n, uint8_t *e)
+EVP_PKEY *
+rsa_setup_key (ENGINE *engine, uint16_t key_size, int32_t key_idx,
+               uint8_t *n, uint8_t *e)
 {
     PSE_KEY             pse_key = {0};
     EVP_PKEY            *pkey = NULL;
@@ -249,10 +260,13 @@ EVP_PKEY *rsa_setup_key(ENGINE *engine, uint16_t key_size, int32_t key_idx, uint
     return pkey;
 }
 
-sdk_ret_t capri_barco_asym_fips_rsa_sig_gen(uint16_t key_size, int32_t key_idx,
-        uint8_t *n, uint8_t *e, uint8_t *msg, uint16_t msg_len, uint8_t *s,
-        hash_type_t hash_type, rsa_signature_scheme_t sig_scheme, 
-        bool async_en, const uint8_t *unique_key)
+sdk_ret_t
+capri_barco_asym_fips_rsa_sig_gen (uint16_t key_size, int32_t key_idx,
+                                   uint8_t *n, uint8_t *e, uint8_t *msg,
+                                   uint16_t msg_len, uint8_t *s,
+                                   hash_type_t hash_type,
+                                   rsa_signature_scheme_t sig_scheme,
+                                   bool async_en, const uint8_t *unique_key)
 {
     EVP_PKEY_CTX        *ctx = NULL;
     size_t              siglen = 0;
@@ -290,9 +304,11 @@ sdk_ret_t capri_barco_asym_fips_rsa_sig_gen(uint16_t key_size, int32_t key_idx,
         ret = SDK_RET_ERR;
         goto cleanup;
     }
-    if ((ossl_ret = EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING)) <= 0) {
+    if ((ossl_ret = EVP_PKEY_CTX_set_rsa_padding(ctx,
+                                                 RSA_PKCS1_PADDING)) <= 0) {
         /* Error */
-        SDK_TRACE_ERR("Failed to setup padding scheme in EVP_PKEY_CTX, ret:%d", ossl_ret);
+        SDK_TRACE_ERR("Failed to setup padding scheme in EVP_PKEY_CTX, ret:%d",
+                      ossl_ret);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
@@ -319,7 +335,8 @@ sdk_ret_t capri_barco_asym_fips_rsa_sig_gen(uint16_t key_size, int32_t key_idx,
     }
     if ((ossl_ret = EVP_PKEY_CTX_set_signature_md(ctx, md)) <= 0) {
         /* Error */
-        SDK_TRACE_ERR("Failed to setup hash scheme in EVP_PKEY_CTX, ret:%d", ossl_ret);
+        SDK_TRACE_ERR("Failed to setup hash scheme in EVP_PKEY_CTX, ret:%d",
+                      ossl_ret);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
@@ -343,7 +360,9 @@ sdk_ret_t capri_barco_asym_fips_rsa_sig_gen(uint16_t key_size, int32_t key_idx,
     SDK_TRACE_INFO("Computed message digest of len: %d", digest_len);
     CAPRI_BARCO_API_PARAM_HEXDUMP("Msg Digest", digest, digest_len);
 
-    if ((ossl_ret = EVP_PKEY_sign(ctx, s, &siglen, (const unsigned char*) digest, digest_len)) <= 0) {
+    if ((ossl_ret = EVP_PKEY_sign(ctx, s, &siglen,
+                                  (const unsigned char*) digest,
+                                  digest_len)) <= 0) {
         /* Error */
         SDK_TRACE_ERR("Failed to generate sig, ret:%d", ossl_ret);
         ret = SDK_RET_ERR;
@@ -363,10 +382,13 @@ cleanup:
     return ret;
 }
 
-sdk_ret_t capri_barco_asym_fips_rsa_sig_verify(uint16_t key_size,
-        uint8_t *n, uint8_t *e, uint8_t *msg, uint16_t msg_len, uint8_t *s,
-        hash_type_t hash_type, rsa_signature_scheme_t sig_scheme, 
-        bool async_en, const uint8_t *unique_key)
+sdk_ret_t
+capri_barco_asym_fips_rsa_sig_verify (uint16_t key_size, uint8_t *n,
+                                      uint8_t *e, uint8_t *msg,
+                                      uint16_t msg_len, uint8_t *s,
+                                      hash_type_t hash_type,
+                                      rsa_signature_scheme_t sig_scheme,
+                                      bool async_en, const uint8_t *unique_key)
 {
     EVP_PKEY_CTX        *ctx = NULL;
     sdk_ret_t           ret = SDK_RET_OK;
@@ -403,9 +425,11 @@ sdk_ret_t capri_barco_asym_fips_rsa_sig_verify(uint16_t key_size,
         ret = SDK_RET_ERR;
         goto cleanup;
     }
-    if ((ossl_ret = EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING)) <= 0) {
+    if ((ossl_ret = EVP_PKEY_CTX_set_rsa_padding(ctx,
+                                                 RSA_PKCS1_PADDING)) <= 0) {
         /* Error */
-        SDK_TRACE_ERR("Failed to setup padding scheme in EVP_PKEY_CTX, ret:%d", ossl_ret);
+        SDK_TRACE_ERR("Failed to setup padding scheme in EVP_PKEY_CTX, ret:%d",
+                      ossl_ret);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
@@ -432,7 +456,8 @@ sdk_ret_t capri_barco_asym_fips_rsa_sig_verify(uint16_t key_size,
     }
     if ((ossl_ret = EVP_PKEY_CTX_set_signature_md(ctx, md)) <= 0) {
         /* Error */
-        SDK_TRACE_ERR("Failed to setup hash scheme in EVP_PKEY_CTX, ret:%d", ossl_ret);
+        SDK_TRACE_ERR("Failed to setup hash scheme in EVP_PKEY_CTX, ret:%d",
+                      ossl_ret);
         ret = SDK_RET_ERR;
         goto cleanup;
     }
@@ -447,7 +472,9 @@ sdk_ret_t capri_barco_asym_fips_rsa_sig_verify(uint16_t key_size,
     SDK_TRACE_INFO("Computed message digest of len: %d", digest_len);
     CAPRI_BARCO_API_PARAM_HEXDUMP("Msg Digest", digest, digest_len);
 
-    if ((ossl_ret = EVP_PKEY_verify(ctx, s, key_size, (const unsigned char*) digest, digest_len)) <= 0) {
+    if ((ossl_ret = EVP_PKEY_verify(ctx, s, key_size,
+                                    (const unsigned char*) digest,
+                                    digest_len)) <= 0) {
         /* Error */
         SDK_TRACE_ERR("Failed to verify sig, ret:%d", ossl_ret);
         ret = SDK_RET_ERR;
@@ -468,6 +495,7 @@ cleanup:
 
     return ret;
 }
+
 }    // namespace capri
 }    // namespace platform
 }    // namespace sdk

@@ -14,7 +14,7 @@ namespace capri {
 //------------------------------------------------------------------------------
 // (private) constructor method
 //------------------------------------------------------------------------------
-capri_state_pd::capri_state_pd()
+capri_state_pd::capri_state_pd (void)
 {
     txs_scheduler_map_idxr_ = NULL;
 }
@@ -22,7 +22,7 @@ capri_state_pd::capri_state_pd()
 //------------------------------------------------------------------------------
 // destructor
 //------------------------------------------------------------------------------
-capri_state_pd::~capri_state_pd()
+capri_state_pd::~capri_state_pd (void)
 {
     txs_scheduler_map_idxr_ ? delete txs_scheduler_map_idxr_ : (void)0;
 }
@@ -31,11 +31,11 @@ capri_state_pd::~capri_state_pd()
 // init() function to instantiate the state
 //------------------------------------------------------------------------------
 bool
-capri_state_pd::init(asic_cfg_t *cfg)
+capri_state_pd::init (asic_cfg_t *cfg)
 {
     if (cfg) {
         // BMAllocator based bmp range allocator to manage txs scheduler mapping
-        txs_scheduler_map_idxr_ = 
+        txs_scheduler_map_idxr_ =
                         new sdk::lib::BMAllocator(CAPRI_TXS_SCHEDULER_MAP_MAX_ENTRIES);
         SDK_ASSERT_RETURN((txs_scheduler_map_idxr_ != NULL), false);
         cfg_ = *cfg;
@@ -50,7 +50,7 @@ capri_state_pd::init(asic_cfg_t *cfg)
 // factory method
 //------------------------------------------------------------------------------
 capri_state_pd *
-capri_state_pd::factory(asic_cfg_t *cfg)
+capri_state_pd::factory (asic_cfg_t *cfg)
 {
     capri_state_pd *state;
 
@@ -64,7 +64,7 @@ capri_state_pd::factory(asic_cfg_t *cfg)
 }
 
 sdk_ret_t
-capri_state_pd_init(asic_cfg_t *cfg)
+capri_state_pd_init (asic_cfg_t *cfg)
 {
     if (g_capri_state_pd) {
         return SDK_RET_OK;
