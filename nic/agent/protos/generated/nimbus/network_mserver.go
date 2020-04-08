@@ -51,6 +51,22 @@ func (ms *MbusServer) ListNetworks(ctx context.Context, nodeID string, filters [
 	return objlist, nil
 }
 
+// ListNetworksNoFilter lists all Networks in the mbus without applying a watch filter
+func (ms *MbusServer) ListNetworksNoFilter(ctx context.Context) ([]*netproto.Network, error) {
+	var objlist []*netproto.Network
+
+	// walk all objects
+	objs := ms.memDB.ListObjects("Network", nil)
+	for _, oo := range objs {
+		obj, err := NetworkFromObj(oo)
+		if err == nil {
+			objlist = append(objlist, obj)
+		}
+	}
+
+	return objlist, nil
+}
+
 // NetworkStatusReactor is the reactor interface implemented by controllers
 type NetworkStatusReactor interface {
 	OnNetworkCreateReq(nodeID string, objinfo *netproto.Network) error
@@ -58,7 +74,7 @@ type NetworkStatusReactor interface {
 	OnNetworkDeleteReq(nodeID string, objinfo *netproto.Network) error
 	OnNetworkOperUpdate(nodeID string, objinfo *netproto.Network) error
 	OnNetworkOperDelete(nodeID string, objinfo *netproto.Network) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type NetworkNodeStatus struct {
@@ -350,7 +366,7 @@ func (eh *NetworkTopic) ListNetworks(ctx context.Context, objsel *api.ListWatchO
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("netproto.Network", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter("netproto.Network", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -379,8 +395,11 @@ func (eh *NetworkTopic) WatchNetworks(watchOptions *api.ListWatchOptions, stream
 	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
 	if eh.statusReactor != nil {
-		watcher.Filters["Network"] = eh.statusReactor.GetWatchFilter("Network", watchOptions)
+		watcher.Filters["Network"] = eh.statusReactor.GetAgentWatchFilter("Network", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true
@@ -388,8 +407,6 @@ func (eh *NetworkTopic) WatchNetworks(watchOptions *api.ListWatchOptions, stream
 		watcher.Filters["Network"] = append(watcher.Filters["Network"], filt)
 	}
 
-	ctx := stream.Context()
-	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
 	err := eh.server.memDB.WatchObjects("Network", &watcher)
 	if err != nil {

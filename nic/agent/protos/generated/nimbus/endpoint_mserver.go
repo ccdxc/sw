@@ -51,6 +51,22 @@ func (ms *MbusServer) ListEndpoints(ctx context.Context, nodeID string, filters 
 	return objlist, nil
 }
 
+// ListEndpointsNoFilter lists all Endpoints in the mbus without applying a watch filter
+func (ms *MbusServer) ListEndpointsNoFilter(ctx context.Context) ([]*netproto.Endpoint, error) {
+	var objlist []*netproto.Endpoint
+
+	// walk all objects
+	objs := ms.memDB.ListObjects("Endpoint", nil)
+	for _, oo := range objs {
+		obj, err := EndpointFromObj(oo)
+		if err == nil {
+			objlist = append(objlist, obj)
+		}
+	}
+
+	return objlist, nil
+}
+
 // EndpointStatusReactor is the reactor interface implemented by controllers
 type EndpointStatusReactor interface {
 	OnEndpointCreateReq(nodeID string, objinfo *netproto.Endpoint) error
@@ -58,7 +74,7 @@ type EndpointStatusReactor interface {
 	OnEndpointDeleteReq(nodeID string, objinfo *netproto.Endpoint) error
 	OnEndpointOperUpdate(nodeID string, objinfo *netproto.Endpoint) error
 	OnEndpointOperDelete(nodeID string, objinfo *netproto.Endpoint) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type EndpointNodeStatus struct {
@@ -350,7 +366,7 @@ func (eh *EndpointTopic) ListEndpoints(ctx context.Context, objsel *api.ListWatc
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("netproto.Endpoint", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter("netproto.Endpoint", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -379,8 +395,11 @@ func (eh *EndpointTopic) WatchEndpoints(watchOptions *api.ListWatchOptions, stre
 	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
 	if eh.statusReactor != nil {
-		watcher.Filters["Endpoint"] = eh.statusReactor.GetWatchFilter("Endpoint", watchOptions)
+		watcher.Filters["Endpoint"] = eh.statusReactor.GetAgentWatchFilter("Endpoint", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true
@@ -388,8 +407,6 @@ func (eh *EndpointTopic) WatchEndpoints(watchOptions *api.ListWatchOptions, stre
 		watcher.Filters["Endpoint"] = append(watcher.Filters["Endpoint"], filt)
 	}
 
-	ctx := stream.Context()
-	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
 	err := eh.server.memDB.WatchObjects("Endpoint", &watcher)
 	if err != nil {

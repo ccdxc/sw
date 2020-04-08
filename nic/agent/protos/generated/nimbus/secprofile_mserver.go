@@ -51,6 +51,22 @@ func (ms *MbusServer) ListSecurityProfiles(ctx context.Context, nodeID string, f
 	return objlist, nil
 }
 
+// ListSecurityProfilesNoFilter lists all SecurityProfiles in the mbus without applying a watch filter
+func (ms *MbusServer) ListSecurityProfilesNoFilter(ctx context.Context) ([]*netproto.SecurityProfile, error) {
+	var objlist []*netproto.SecurityProfile
+
+	// walk all objects
+	objs := ms.memDB.ListObjects("SecurityProfile", nil)
+	for _, oo := range objs {
+		obj, err := SecurityProfileFromObj(oo)
+		if err == nil {
+			objlist = append(objlist, obj)
+		}
+	}
+
+	return objlist, nil
+}
+
 // SecurityProfileStatusReactor is the reactor interface implemented by controllers
 type SecurityProfileStatusReactor interface {
 	OnSecurityProfileCreateReq(nodeID string, objinfo *netproto.SecurityProfile) error
@@ -58,7 +74,7 @@ type SecurityProfileStatusReactor interface {
 	OnSecurityProfileDeleteReq(nodeID string, objinfo *netproto.SecurityProfile) error
 	OnSecurityProfileOperUpdate(nodeID string, objinfo *netproto.SecurityProfile) error
 	OnSecurityProfileOperDelete(nodeID string, objinfo *netproto.SecurityProfile) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type SecurityProfileNodeStatus struct {
@@ -350,7 +366,7 @@ func (eh *SecurityProfileTopic) ListSecurityProfiles(ctx context.Context, objsel
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("netproto.SecurityProfile", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter("netproto.SecurityProfile", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -379,8 +395,11 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(watchOptions *api.ListWatc
 	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
 	if eh.statusReactor != nil {
-		watcher.Filters["SecurityProfile"] = eh.statusReactor.GetWatchFilter("SecurityProfile", watchOptions)
+		watcher.Filters["SecurityProfile"] = eh.statusReactor.GetAgentWatchFilter("SecurityProfile", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true
@@ -388,8 +407,6 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(watchOptions *api.ListWatc
 		watcher.Filters["SecurityProfile"] = append(watcher.Filters["SecurityProfile"], filt)
 	}
 
-	ctx := stream.Context()
-	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
 	err := eh.server.memDB.WatchObjects("SecurityProfile", &watcher)
 	if err != nil {

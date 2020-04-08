@@ -339,3 +339,19 @@ func (sm *SysModel) NetworkInterfaces() *objects.NetworkInterfaceCollection {
 
 	return intfc
 }
+
+// ListNetworkInterfacesByFilter returns all network interfaces matching the filter
+func (sm *SysModel) ListNetworkInterfacesByFilter(filter string) (*objects.NetworkInterfaceCollection, error) {
+
+	intfc := objects.NewInterfaceCollection(sm.ObjClient(), sm.Tb)
+
+	intfs, err := sm.ObjClient().ListNetowrkInterfacesByFilter(filter)
+	if err != nil {
+		intfc.SetError(err)
+	}
+	for _, wf := range intfs {
+		intfc.Interfaces = append(intfc.Interfaces, wf)
+	}
+
+	return intfc, nil
+}

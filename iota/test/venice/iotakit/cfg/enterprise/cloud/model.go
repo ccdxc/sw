@@ -166,6 +166,20 @@ func (cl *CloudCfg) CleanupAllConfig() error {
 		}
 	}
 
+	dscs, err := rClient.ListSmartNIC()
+	if err != nil {
+		log.Errorf("err: %s", err)
+		return err
+	}
+	for _, dsc := range dscs {
+		dsc.Spec.RoutingConfig = ""
+		err := rClient.UpdateSmartNIC(dsc)
+		if err != nil {
+			log.Errorf("err: %s", err)
+			return err
+		}
+	}
+
 	// List routing config
 	configs, err := rClient.ListRoutingConfig()
 	if err != nil {
@@ -183,12 +197,6 @@ func (cl *CloudCfg) CleanupAllConfig() error {
 
 	// List routing config
 	tenants, err := rClient.ListTenant()
-	if err != nil {
-		log.Errorf("err: %s", err)
-		return err
-	}
-
-	dscs, err := rClient.ListSmartNIC()
 	if err != nil {
 		log.Errorf("err: %s", err)
 		return err
@@ -391,6 +399,21 @@ func (cl *CloudCfg) pushConfigViaRest() error {
 		if err != nil {
 			log.Errorf("Error creating routing config : %+v. Err: %v", r, err)
 			return err
+		}
+
+		dscs, err := rClient.ListSmartNIC()
+		if err != nil {
+			log.Errorf("err: %s", err)
+			return err
+		}
+
+		for _, dsc := range dscs {
+			dsc.Spec.RoutingConfig = r.Name
+			err := rClient.UpdateSmartNIC(dsc)
+			if err != nil {
+				log.Errorf("err: %s", err)
+				return err
+			}
 		}
 	}
 

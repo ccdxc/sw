@@ -50,6 +50,7 @@ func Validate(in []cluster.Feature) (cluster.LicenseStatus, []error) {
 	ret := cluster.LicenseStatus{}
 	var reterrs []error
 	fmap := make(map[string]bool)
+	log.Infof("Received validate: %s", in)
 	for _, v := range in {
 		switch v.FeatureKey {
 		case OverlayRouting, SubnetSecurityPolicies, SecurityALG:
@@ -74,6 +75,7 @@ func Update(in []cluster.Feature) []error {
 	updFeatures := featureFlags{}
 	fmap := make(map[string]bool)
 	var reterrs []error
+	log.Infof("Recived update: %v", in)
 	for _, v := range in {
 		switch v.FeatureKey {
 		case OverlayRouting:
@@ -82,6 +84,7 @@ func Update(in []cluster.Feature) []error {
 			} else {
 				fmap[v.FeatureKey] = true
 				updFeatures.overlayRouting = true
+				log.Infof("Enabling overlay Routing")
 			}
 
 		case SubnetSecurityPolicies:
@@ -90,6 +93,7 @@ func Update(in []cluster.Feature) []error {
 			} else {
 				fmap[v.FeatureKey] = true
 				updFeatures.networkLevelSecurityPolicy = true
+				log.Infof("Enabling subnet security policies")
 			}
 
 		case SecurityALG:
@@ -98,6 +102,7 @@ func Update(in []cluster.Feature) []error {
 			} else {
 				fmap[v.FeatureKey] = true
 				updFeatures.appSecurity = true
+				log.Infof("Enabling security ALG")
 			}
 
 		default:
@@ -108,34 +113,56 @@ func Update(in []cluster.Feature) []error {
 	currentFeatures.Lock()
 	copyFlags(&updFeatures, &currentFeatures)
 	currentFeatures.Unlock()
+	log.Infof("Done updating feature flags")
 	return reterrs
 }
 
 // Initialize tries to read the Feature flags from the API server.
 func Initialize(service string, apiSrvURL string, rslvr resolver.Interface) {
+	log.Infof("Initialize received service: %s | apisrvUrl: %s", service, apiSrvURL)
 	if initialized {
+		log.Infof("Flags already initialized")
 		return
 	}
+	var apiClientDone bool
+	var apicl apiclient.Services
+	var err error
 	for {
-		apicl, err := apiclient.NewGrpcAPIClient(service, apiSrvURL, log.GetDefaultInstance(), rpckit.WithBalancer(balancer.New(rslvr)))
+		if apiClientDone == false {
+			apicl, err = apiclient.NewGrpcAPIClient(service, apiSrvURL, log.GetDefaultInstance(), rpckit.WithBalancer(balancer.New(rslvr)))
+		}
 		if err == nil {
+			apiClientDone = true
 			defer apicl.Close()
-			ff, err := apicl.ClusterV1().License().Get(context.TODO(), &api.ObjectMeta{})
-			if err != nil {
-				// no feature flag available. Continue with defaults
-				log.Infof("No feature flags available, continuing with defaults (%s)", err)
-				return
+			cc, err := apicl.ClusterV1().Cluster().Get(context.TODO(), &api.ObjectMeta{})
+			if err == nil {
+				if cc.Status.AuthBootstrapped {
+					ff, err := apicl.ClusterV1().License().Get(context.TODO(), &api.ObjectMeta{})
+					if err != nil {
+						// no feature flag available. Continue with defaults
+						log.Infof("No feature flags available, continuing with defaults (%s)", err)
+						return
+					}
+					SetFeatures(ff.Spec.Features)
+					return
+				}
 			}
-			Update(ff.Spec.Features)
-			log.Infof("feature flags updated [%v]", ff.Status)
-			return
 		}
 		time.Sleep(time.Second)
 	}
 }
 
+// SetFeatures is a helper function to set the feature flags
+func SetFeatures(in []cluster.Feature) {
+	log.Infof("Received: %v", in)
+	Update(in)
+	SetInitialized()
+	log.Infof("feature flags updated [%v]", in)
+}
+
 // SetInitialized is used for testing purposes only, so initialization by reading apiserver object can be skipped.
 func SetInitialized() {
+	log.Infof("Setting feature flags initialized")
 	initialized = true
 }
 

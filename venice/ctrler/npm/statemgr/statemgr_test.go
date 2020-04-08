@@ -3234,10 +3234,10 @@ func TestWatchFilter(t *testing.T) {
 	options3 := api.ListWatchOptions{}
 	options3.FieldSelector = "spec.node-uui=0000.0000.0001"
 
-	filterFn1 := stateMgr.GetWatchFilter("Network", &options1)
-	filterFn2 := stateMgr.GetWatchFilter("netproto.Endpoint", &options2)
-	filterFn3 := stateMgr.GetWatchFilter("Endpoint", &options2)
-	filterFn4 := stateMgr.GetWatchFilter("netproto.Endpoint", &options3)
+	filterFn1 := stateMgr.GetAgentWatchFilter("Network", &options1)
+	filterFn2 := stateMgr.GetAgentWatchFilter("netproto.Endpoint", &options2)
+	filterFn3 := stateMgr.GetAgentWatchFilter("Endpoint", &options2)
+	filterFn4 := stateMgr.GetAgentWatchFilter("netproto.Endpoint", &options3)
 
 	obj1 := netproto.Network{}
 	obj1.Name = "xyz"
@@ -3303,7 +3303,7 @@ func TestWatchFilter(t *testing.T) {
 	obj3.Name = "newtest"
 	options4 := api.ListWatchOptions{}
 	options4.FieldChangeSelector = []string{"ObjectMeta.Name"}
-	filterFn5 := stateMgr.GetWatchFilter("Network", &options4)
+	filterFn5 := stateMgr.GetAgentWatchFilter("Network", &options4)
 
 	res = true
 	for _, filt := range filterFn5 {
@@ -3314,6 +3314,34 @@ func TestWatchFilter(t *testing.T) {
 	}
 
 	Assert(t, res == true, "expecting filter to pass")
+
+	options9 := api.ListWatchOptions{}
+	options9.FieldSelector = "tenant=tenant1,name in (name2)"
+
+	filterFn9 := stateMgr.GetAgentWatchFilter("netproto.Endpoint", &options9)
+	fmt.Println("Length of flts: ", len(filterFn9))
+	obj9 := obj2
+	obj9.Tenant = "tenant1"
+	obj9.Name = "name2"
+
+	res = true
+	for _, filt := range filterFn9 {
+		if !filt(&obj9, nil) {
+			res = false
+			break
+		}
+	}
+
+	Assert(t, res == true, "expecting combo filter to pass")
+
+	res = true
+	for _, filt := range filterFn9 {
+		if !filt(&obj3, nil) {
+			res = false
+			break
+		}
+	}
+	Assert(t, res == false, "expecting combo filter to fail")
 
 	stateMgr.StopAppWatch()
 	stateMgr.StartAppWatch()
@@ -3822,7 +3850,7 @@ func TestMirrorCreateUpdateDeleteCollector(t *testing.T) {
 	}, "Mirror session not found", "1ms", "1s")
 
 	for i := numCollectors; i < numCollectors+10; i++ {
-		fmt.Printf("Checking collector %v", getCollectorName(i))
+		fmt.Printf("Checking collector %v\n", getCollectorName(i))
 		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
 		AssertOk(t, err, "Error finding collector  ")
 		Assert(t, col.pushObj != nil, "push object not set")
@@ -3855,7 +3883,7 @@ func TestMirrorCreateUpdateDeleteCollector(t *testing.T) {
 	}, "Mirror session not found", "1ms", "1s")
 
 	for i := numCollectors; i < numCollectors+5; i++ {
-		fmt.Printf("Checking collector %v", getCollectorName(i))
+		fmt.Printf("Checking collector %v\n", getCollectorName(i))
 		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
 		AssertOk(t, err, "Error finding collector  ")
 		Assert(t, col.pushObj != nil, "push object not set")

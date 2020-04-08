@@ -51,6 +51,22 @@ func (ms *MbusServer) ListVrfs(ctx context.Context, nodeID string, filters []mem
 	return objlist, nil
 }
 
+// ListVrfsNoFilter lists all Vrfs in the mbus without applying a watch filter
+func (ms *MbusServer) ListVrfsNoFilter(ctx context.Context) ([]*netproto.Vrf, error) {
+	var objlist []*netproto.Vrf
+
+	// walk all objects
+	objs := ms.memDB.ListObjects("Vrf", nil)
+	for _, oo := range objs {
+		obj, err := VrfFromObj(oo)
+		if err == nil {
+			objlist = append(objlist, obj)
+		}
+	}
+
+	return objlist, nil
+}
+
 // VrfStatusReactor is the reactor interface implemented by controllers
 type VrfStatusReactor interface {
 	OnVrfCreateReq(nodeID string, objinfo *netproto.Vrf) error
@@ -58,7 +74,7 @@ type VrfStatusReactor interface {
 	OnVrfDeleteReq(nodeID string, objinfo *netproto.Vrf) error
 	OnVrfOperUpdate(nodeID string, objinfo *netproto.Vrf) error
 	OnVrfOperDelete(nodeID string, objinfo *netproto.Vrf) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type VrfNodeStatus struct {
@@ -350,7 +366,7 @@ func (eh *VrfTopic) ListVrfs(ctx context.Context, objsel *api.ListWatchOptions) 
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("netproto.Vrf", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter("netproto.Vrf", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -379,8 +395,11 @@ func (eh *VrfTopic) WatchVrfs(watchOptions *api.ListWatchOptions, stream netprot
 	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
 	if eh.statusReactor != nil {
-		watcher.Filters["Vrf"] = eh.statusReactor.GetWatchFilter("Vrf", watchOptions)
+		watcher.Filters["Vrf"] = eh.statusReactor.GetAgentWatchFilter("Vrf", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true
@@ -388,8 +407,6 @@ func (eh *VrfTopic) WatchVrfs(watchOptions *api.ListWatchOptions, stream netprot
 		watcher.Filters["Vrf"] = append(watcher.Filters["Vrf"], filt)
 	}
 
-	ctx := stream.Context()
-	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
 	err := eh.server.memDB.WatchObjects("Vrf", &watcher)
 	if err != nil {

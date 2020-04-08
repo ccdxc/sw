@@ -123,7 +123,7 @@ var _ = BeforeSuite(func() {
 			// Switch to managed mode
 			naples.Spec.Mode = nmd.MgmtMode_NETWORK.String()
 			naples.Spec.Controllers = ts.tu.VeniceNodeIPs
-			naples.Spec.ID = fmt.Sprintf("naples-%d", idx)
+			naples.Spec.ID = fmt.Sprintf("naples%d", idx+1)
 			naples.Spec.NetworkMode = nmd.NetworkMode_OOB.String()
 			// Ensure that a random static IP is given
 			naples.Spec.IPConfig = &cluster.IPConfig{

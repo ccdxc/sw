@@ -51,6 +51,22 @@ func (ms *MbusServer) ListIPAMPolicys(ctx context.Context, nodeID string, filter
 	return objlist, nil
 }
 
+// ListIPAMPolicysNoFilter lists all IPAMPolicys in the mbus without applying a watch filter
+func (ms *MbusServer) ListIPAMPolicysNoFilter(ctx context.Context) ([]*netproto.IPAMPolicy, error) {
+	var objlist []*netproto.IPAMPolicy
+
+	// walk all objects
+	objs := ms.memDB.ListObjects("IPAMPolicy", nil)
+	for _, oo := range objs {
+		obj, err := IPAMPolicyFromObj(oo)
+		if err == nil {
+			objlist = append(objlist, obj)
+		}
+	}
+
+	return objlist, nil
+}
+
 // IPAMPolicyStatusReactor is the reactor interface implemented by controllers
 type IPAMPolicyStatusReactor interface {
 	OnIPAMPolicyCreateReq(nodeID string, objinfo *netproto.IPAMPolicy) error
@@ -58,7 +74,7 @@ type IPAMPolicyStatusReactor interface {
 	OnIPAMPolicyDeleteReq(nodeID string, objinfo *netproto.IPAMPolicy) error
 	OnIPAMPolicyOperUpdate(nodeID string, objinfo *netproto.IPAMPolicy) error
 	OnIPAMPolicyOperDelete(nodeID string, objinfo *netproto.IPAMPolicy) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type IPAMPolicyNodeStatus struct {
@@ -350,7 +366,7 @@ func (eh *IPAMPolicyTopic) ListIPAMPolicys(ctx context.Context, objsel *api.List
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("netproto.IPAMPolicy", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter("netproto.IPAMPolicy", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -379,8 +395,11 @@ func (eh *IPAMPolicyTopic) WatchIPAMPolicys(watchOptions *api.ListWatchOptions, 
 	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
 	if eh.statusReactor != nil {
-		watcher.Filters["IPAMPolicy"] = eh.statusReactor.GetWatchFilter("IPAMPolicy", watchOptions)
+		watcher.Filters["IPAMPolicy"] = eh.statusReactor.GetAgentWatchFilter("IPAMPolicy", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true
@@ -388,8 +407,6 @@ func (eh *IPAMPolicyTopic) WatchIPAMPolicys(watchOptions *api.ListWatchOptions, 
 		watcher.Filters["IPAMPolicy"] = append(watcher.Filters["IPAMPolicy"], filt)
 	}
 
-	ctx := stream.Context()
-	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
 	err := eh.server.memDB.WatchObjects("IPAMPolicy", &watcher)
 	if err != nil {

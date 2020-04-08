@@ -50,6 +50,16 @@ type MbusServer struct {
 	stats      map[string]tsdb.Obj // nimbus stats
 }
 
+// GetWatchFilter returns the filter functions based on the watchoptions
+func (ms *MbusServer) GetWatchFilter(kind string, opts *api.ListWatchOptions) []memdb.FilterFn {
+	return ms.memDB.GetWatchFilter(kind, opts)
+}
+
+// SetWatchFilterFlags sets the watch filter behavior based on the featureflags
+func (ms *MbusServer) SetWatchFilterFlags(flags map[string]uint) {
+	ms.memDB.SetWatchFilterFlags(flags)
+}
+
 // AddObject adds object to mbus
 func (ms *MbusServer) AddObject(obj memdb.Object) error {
 	ms.Stats(obj.GetObjectKind(), "AddEvent").Inc()
@@ -180,6 +190,10 @@ func (ms *MbusServer) GetDBWatchers(kind string) (*memdb.DBWatchers, error) {
 	return ms.memDB.GetDBWatchers(kind)
 }
 
+func (ms *MbusServer) SendRoutingConfig(dsc, oldRtCfg, newRtCfg string) {
+	ms.memDB.SendRoutingConfig(dsc, oldRtCfg, newRtCfg)
+}
+
 // NewMbusServer creates a new instance of message bus server
 func NewMbusServer(svcName string, grpcServer *rpckit.RPCServer) *MbusServer {
 	mbusServer := MbusServer{
@@ -267,7 +281,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "App":
 
 			if _, ok := eh.statusReactor.(AppStatusReactor); ok {
-				filters = eh.statusReactor.(AppStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(AppStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListApps(context.Background(), nodeID, filters)
@@ -287,7 +301,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "Collector":
 
 			if _, ok := eh.statusReactor.(CollectorStatusReactor); ok {
-				filters = eh.statusReactor.(CollectorStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(CollectorStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListCollectors(context.Background(), nodeID, filters)
@@ -307,7 +321,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "Endpoint":
 
 			if _, ok := eh.statusReactor.(EndpointStatusReactor); ok {
-				filters = eh.statusReactor.(EndpointStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(EndpointStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListEndpoints(context.Background(), nodeID, filters)
@@ -327,7 +341,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "FlowExportPolicy":
 
 			if _, ok := eh.statusReactor.(FlowExportPolicyStatusReactor); ok {
-				filters = eh.statusReactor.(FlowExportPolicyStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(FlowExportPolicyStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListFlowExportPolicys(context.Background(), nodeID, filters)
@@ -347,7 +361,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "IPAMPolicy":
 
 			if _, ok := eh.statusReactor.(IPAMPolicyStatusReactor); ok {
-				filters = eh.statusReactor.(IPAMPolicyStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(IPAMPolicyStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListIPAMPolicys(context.Background(), nodeID, filters)
@@ -367,7 +381,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "Interface":
 
 			if _, ok := eh.statusReactor.(InterfaceStatusReactor); ok {
-				filters = eh.statusReactor.(InterfaceStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(InterfaceStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListInterfaces(context.Background(), nodeID, filters)
@@ -387,7 +401,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "MirrorSession":
 
 			if _, ok := eh.statusReactor.(MirrorSessionStatusReactor); ok {
-				filters = eh.statusReactor.(MirrorSessionStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(MirrorSessionStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListMirrorSessions(context.Background(), nodeID, filters)
@@ -407,7 +421,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "Network":
 
 			if _, ok := eh.statusReactor.(NetworkStatusReactor); ok {
-				filters = eh.statusReactor.(NetworkStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(NetworkStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListNetworks(context.Background(), nodeID, filters)
@@ -427,7 +441,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "NetworkSecurityPolicy":
 
 			if _, ok := eh.statusReactor.(NetworkSecurityPolicyStatusReactor); ok {
-				filters = eh.statusReactor.(NetworkSecurityPolicyStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(NetworkSecurityPolicyStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListNetworkSecurityPolicys(context.Background(), nodeID, filters)
@@ -447,7 +461,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "Profile":
 
 			if _, ok := eh.statusReactor.(ProfileStatusReactor); ok {
-				filters = eh.statusReactor.(ProfileStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(ProfileStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListProfiles(context.Background(), nodeID, filters)
@@ -467,7 +481,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "RouteTable":
 
 			if _, ok := eh.statusReactor.(RouteTableStatusReactor); ok {
-				filters = eh.statusReactor.(RouteTableStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(RouteTableStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListRouteTables(context.Background(), nodeID, filters)
@@ -487,7 +501,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "RoutingConfig":
 
 			if _, ok := eh.statusReactor.(RoutingConfigStatusReactor); ok {
-				filters = eh.statusReactor.(RoutingConfigStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(RoutingConfigStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListRoutingConfigs(context.Background(), nodeID, filters)
@@ -507,7 +521,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "SecurityProfile":
 
 			if _, ok := eh.statusReactor.(SecurityProfileStatusReactor); ok {
-				filters = eh.statusReactor.(SecurityProfileStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(SecurityProfileStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListSecurityProfiles(context.Background(), nodeID, filters)
@@ -527,7 +541,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "Vrf":
 
 			if _, ok := eh.statusReactor.(VrfStatusReactor); ok {
-				filters = eh.statusReactor.(VrfStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(VrfStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListVrfs(context.Background(), nodeID, filters)
@@ -1045,6 +1059,691 @@ func (eh *AggregateTopic) WatcherInConfigSync(nodeID string, kind string, event 
 	return true
 }
 
+func evalFilterFns(obj memdb.Object, flt []memdb.FilterFn) bool {
+	if len(flt) == 0 {
+		return false
+	}
+
+	for _, fn := range flt {
+		if !fn(obj, nil) {
+			return false
+		}
+	}
+	return true
+}
+
+func (eh *AggregateTopic) handleReconcileEvent(aggKey string, ctx context.Context, evt memdb.Event, watchEvts netproto.AggObjectEventList, stream netproto.AggWatchApiV1_WatchObjectsServer) {
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	kind := evt.Obj.GetObjectKind()
+
+	addAggObjectEvent := func(mobj *types.Any, meta *api.ObjectMeta, evtType api.EventType) {
+		watchEvt := netproto.AggObjectEvent{
+			EventType: evtType,
+			AggObj:    netproto.AggObject{Kind: kind, Object: &api.Any{}},
+		}
+
+		watchEvt.AggObj.Object.Any = *mobj
+		watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
+		eh.updateSentObjStatus(aggKey, nodeID, kind, watchEvt.EventType, meta)
+	}
+
+	switch kind {
+
+	case "App":
+		objlist, err := eh.server.ListAppsNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
+	case "Collector":
+		objlist, err := eh.server.ListCollectorsNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
+	case "Endpoint":
+		objlist, err := eh.server.ListEndpointsNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
+	case "FlowExportPolicy":
+		objlist, err := eh.server.ListFlowExportPolicysNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
+	case "IPAMPolicy":
+		objlist, err := eh.server.ListIPAMPolicysNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
+	case "Interface":
+		objlist, err := eh.server.ListInterfacesNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
+	case "MirrorSession":
+		objlist, err := eh.server.ListMirrorSessionsNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
+	case "Network":
+		objlist, err := eh.server.ListNetworksNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
+	case "NetworkSecurityPolicy":
+		objlist, err := eh.server.ListNetworkSecurityPolicysNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
+	case "Profile":
+		objlist, err := eh.server.ListProfilesNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
+	case "RouteTable":
+		objlist, err := eh.server.ListRouteTablesNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
+	case "RoutingConfig":
+		objlist, err := eh.server.ListRoutingConfigsNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
+	case "SecurityProfile":
+		objlist, err := eh.server.ListSecurityProfilesNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
+	case "Vrf":
+		objlist, err := eh.server.ListVrfsNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
+	}
+
+	if len(watchEvts.AggObjectEvents) > 0 {
+		err := stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending Aggregate to stream. Err: %v", err)
+			return
+		}
+	}
+}
+
 // WatchObjects watches aggregate  and sends streaming resp
 func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netproto.AggWatchApiV1_WatchObjectsServer) error {
 	ctx := stream.Context()
@@ -1062,7 +1761,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "App":
 			if _, ok := eh.statusReactor.(AppStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(AppStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(AppStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1072,7 +1771,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Collector":
 			if _, ok := eh.statusReactor.(CollectorStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(CollectorStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(CollectorStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1082,7 +1781,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Endpoint":
 			if _, ok := eh.statusReactor.(EndpointStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(EndpointStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(EndpointStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1092,7 +1791,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "FlowExportPolicy":
 			if _, ok := eh.statusReactor.(FlowExportPolicyStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(FlowExportPolicyStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(FlowExportPolicyStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1102,7 +1801,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "IPAMPolicy":
 			if _, ok := eh.statusReactor.(IPAMPolicyStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(IPAMPolicyStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(IPAMPolicyStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1112,7 +1811,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Interface":
 			if _, ok := eh.statusReactor.(InterfaceStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(InterfaceStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(InterfaceStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1122,7 +1821,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "MirrorSession":
 			if _, ok := eh.statusReactor.(MirrorSessionStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(MirrorSessionStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(MirrorSessionStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1132,7 +1831,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Network":
 			if _, ok := eh.statusReactor.(NetworkStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(NetworkStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(NetworkStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1142,7 +1841,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "NetworkSecurityPolicy":
 			if _, ok := eh.statusReactor.(NetworkSecurityPolicyStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(NetworkSecurityPolicyStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(NetworkSecurityPolicyStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1152,7 +1851,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Profile":
 			if _, ok := eh.statusReactor.(ProfileStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(ProfileStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(ProfileStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1162,7 +1861,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "RouteTable":
 			if _, ok := eh.statusReactor.(RouteTableStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(RouteTableStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(RouteTableStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1172,7 +1871,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "RoutingConfig":
 			if _, ok := eh.statusReactor.(RoutingConfigStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(RoutingConfigStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(RoutingConfigStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1182,7 +1881,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "SecurityProfile":
 			if _, ok := eh.statusReactor.(SecurityProfileStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(SecurityProfileStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(SecurityProfileStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1192,7 +1891,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Vrf":
 			if _, ok := eh.statusReactor.(VrfStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(VrfStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(VrfStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1477,199 +2176,204 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 				return errors.New("Error reading from channel")
 			}
 
-			// convert the events
-			var etype api.EventType
-			switch evt.EventType {
-			case memdb.CreateEvent:
-				etype = api.EventType_CreateEvent
-			case memdb.UpdateEvent:
-				etype = api.EventType_UpdateEvent
-			case memdb.DeleteEvent:
-				etype = api.EventType_DeleteEvent
+			if evt.EventType == memdb.ReconcileEvent {
+				log.Infof("Received a reconcile event for: %v", evt)
+				eh.handleReconcileEvent(aggKey, ctx, evt, watchEvts, stream)
+			} else {
+				// convert the events
+				var etype api.EventType
+				switch evt.EventType {
+				case memdb.CreateEvent:
+					etype = api.EventType_CreateEvent
+				case memdb.UpdateEvent:
+					etype = api.EventType_UpdateEvent
+				case memdb.DeleteEvent:
+					etype = api.EventType_DeleteEvent
+				}
+
+				// get the object
+				kind := evt.Obj.GetObjectKind()
+				watchEvt := netproto.AggObjectEvent{
+					EventType: etype,
+					AggObj:    netproto.AggObject{Kind: kind, Object: &api.Any{}},
+				}
+				var mobj *types.Any
+				switch kind {
+
+				case "App":
+					obj, err := AppFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				case "Collector":
+					obj, err := CollectorFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				case "Endpoint":
+					obj, err := EndpointFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				case "FlowExportPolicy":
+					obj, err := FlowExportPolicyFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				case "IPAMPolicy":
+					obj, err := IPAMPolicyFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				case "Interface":
+					obj, err := InterfaceFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				case "MirrorSession":
+					obj, err := MirrorSessionFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				case "Network":
+					obj, err := NetworkFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				case "NetworkSecurityPolicy":
+					obj, err := NetworkSecurityPolicyFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				case "Profile":
+					obj, err := ProfileFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				case "RouteTable":
+					obj, err := RouteTableFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				case "RoutingConfig":
+					obj, err := RoutingConfigFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				case "SecurityProfile":
+					obj, err := SecurityProfileFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				case "Vrf":
+					obj, err := VrfFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				}
+				watchEvt.AggObj.Object.Any = *mobj
+				watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
+
+				// convert to netproto format
+				if !running {
+					running = true
+					timer.Reset(DefaultWatchHoldInterval)
+				}
+				if len(watchEvts.AggObjectEvents) >= DefaultWatchBatchSize {
+					if err := sendToStream(); err != nil {
+						return err
+					}
+					if !timer.Stop() {
+						<-timer.C
+					}
+					timer.Reset(DefaultWatchHoldInterval)
+				}
+				eh.updateSentObjStatus(aggKey, nodeID, kind, etype, evt.Obj.GetObjectMeta())
 			}
-
-			// get the object
-			kind := evt.Obj.GetObjectKind()
-			watchEvt := netproto.AggObjectEvent{
-				EventType: etype,
-				AggObj:    netproto.AggObject{Kind: kind, Object: &api.Any{}},
-			}
-			var mobj *types.Any
-			switch kind {
-
-			case "App":
-				obj, err := AppFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "Collector":
-				obj, err := CollectorFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "Endpoint":
-				obj, err := EndpointFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "FlowExportPolicy":
-				obj, err := FlowExportPolicyFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "IPAMPolicy":
-				obj, err := IPAMPolicyFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "Interface":
-				obj, err := InterfaceFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "MirrorSession":
-				obj, err := MirrorSessionFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "Network":
-				obj, err := NetworkFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "NetworkSecurityPolicy":
-				obj, err := NetworkSecurityPolicyFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "Profile":
-				obj, err := ProfileFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "RouteTable":
-				obj, err := RouteTableFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "RoutingConfig":
-				obj, err := RoutingConfigFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "SecurityProfile":
-				obj, err := SecurityProfileFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			case "Vrf":
-				obj, err := VrfFromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-
-			}
-			watchEvt.AggObj.Object.Any = *mobj
-			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
-
-			// convert to netproto format
-			if !running {
-				running = true
-				timer.Reset(DefaultWatchHoldInterval)
-			}
-			if len(watchEvts.AggObjectEvents) >= DefaultWatchBatchSize {
-				if err := sendToStream(); err != nil {
-					return err
-				}
-				if !timer.Stop() {
-					<-timer.C
-				}
-				timer.Reset(DefaultWatchHoldInterval)
-			}
-			eh.updateSentObjStatus(aggKey, nodeID, kind, etype, evt.Obj.GetObjectMeta())
 		case <-timer.C:
 			running = false
 			if err := sendToStream(); err != nil {

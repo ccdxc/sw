@@ -51,6 +51,22 @@ func (ms *MbusServer) ListApps(ctx context.Context, nodeID string, filters []mem
 	return objlist, nil
 }
 
+// ListAppsNoFilter lists all Apps in the mbus without applying a watch filter
+func (ms *MbusServer) ListAppsNoFilter(ctx context.Context) ([]*netproto.App, error) {
+	var objlist []*netproto.App
+
+	// walk all objects
+	objs := ms.memDB.ListObjects("App", nil)
+	for _, oo := range objs {
+		obj, err := AppFromObj(oo)
+		if err == nil {
+			objlist = append(objlist, obj)
+		}
+	}
+
+	return objlist, nil
+}
+
 // AppStatusReactor is the reactor interface implemented by controllers
 type AppStatusReactor interface {
 	OnAppCreateReq(nodeID string, objinfo *netproto.App) error
@@ -58,7 +74,7 @@ type AppStatusReactor interface {
 	OnAppDeleteReq(nodeID string, objinfo *netproto.App) error
 	OnAppOperUpdate(nodeID string, objinfo *netproto.App) error
 	OnAppOperDelete(nodeID string, objinfo *netproto.App) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type AppNodeStatus struct {
@@ -350,7 +366,7 @@ func (eh *AppTopic) ListApps(ctx context.Context, objsel *api.ListWatchOptions) 
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("netproto.App", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter("netproto.App", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -379,8 +395,11 @@ func (eh *AppTopic) WatchApps(watchOptions *api.ListWatchOptions, stream netprot
 	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
 	if eh.statusReactor != nil {
-		watcher.Filters["App"] = eh.statusReactor.GetWatchFilter("App", watchOptions)
+		watcher.Filters["App"] = eh.statusReactor.GetAgentWatchFilter("App", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true
@@ -388,8 +407,6 @@ func (eh *AppTopic) WatchApps(watchOptions *api.ListWatchOptions, stream netprot
 		watcher.Filters["App"] = append(watcher.Filters["App"], filt)
 	}
 
-	ctx := stream.Context()
-	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
 	err := eh.server.memDB.WatchObjects("App", &watcher)
 	if err != nil {

@@ -27,6 +27,9 @@ var EnforcedKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", 
 // InsertionKinds captures all the objects needed for Insertion USeg Enforced Profile
 var InsertionKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", "MirrorSession", "FlowExportPolicy", "App", "NetworkSecurityPolicy", "Network", "Endpoint", "SecurityProfile"}
 
+// AllKinds captures all the objects that agent will watch from Venice
+var AllKinds = []string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile", "RouteTable", "RoutingConfig", "IPAMPolicy", "Interface"}
+
 // IPAddressKind captures the type of IPAddress options, Singleton, Hyphen separated range or CIDR
 type IPAddressKind int
 

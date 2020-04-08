@@ -35,9 +35,10 @@ type EventType string
 
 // event types
 const (
-	CreateEvent EventType = "Create"
-	UpdateEvent EventType = "Update"
-	DeleteEvent EventType = "Delete"
+	CreateEvent    EventType = "Create"
+	UpdateEvent    EventType = "Update"
+	DeleteEvent    EventType = "Delete"
+	ReconcileEvent EventType = "Reconcile"
 )
 
 var (
@@ -52,10 +53,11 @@ var ErrObjectNotFound = errors.New("object not found")
 
 // Event is watch event notifications
 type Event struct {
-	EventType EventType
-	Obj       Object
-	refs      map[string]apiintf.ReferenceObj
-	key       string
+	EventType        EventType
+	Obj              Object
+	refs             map[string]apiintf.ReferenceObj
+	key              string
+	OldFlts, NewFlts []FilterFn
 }
 
 type resolveState int
@@ -184,6 +186,13 @@ type Memdb struct {
 	objGraph        graph.Interface
 	dbAddResolver   resolver
 	dbDelResolver   resolver
+	filterGroups    map[string]watchFiltersetInterface
+	// map of per object kind watch filter flags
+	filterFlags    map[string]uint
+	dscWatcherInfo map[string]dscWatcherDBInterface
+	wFilterLock    sync.RWMutex
+	wFilterDSCLock sync.RWMutex
+	topoHandler    topoMgrInterface
 }
 
 type objIntf interface {
@@ -206,13 +215,37 @@ type objIntf interface {
 }
 
 type objDBInterface interface {
-	watchEvent(obj objIntf, et EventType) error
+	watchEvent(md *Memdb, obj objIntf, et EventType) error
 	getObject(key string) objIntf
 	setObject(key string, obj objIntf)
 	deleteObject(key string)
 	dbType() objDBType
 	Lock()
 	Unlock()
+}
+
+type dscWatcherDBInterface interface {
+	addDSCWatcherInfo(kind string, watcher chan Event)
+	addDSCWatcherInfoWatchOptions(kind string, options api.ListWatchOptions) (old, new []FilterFn, err error)
+	delDSCWatcherInfo(kind string, watcher chan Event)
+	getDSCWatchers(kind string) []chan Event
+	clearWatchOptions(kind string) []FilterFn
+	getFilterFns(kind string) []FilterFn
+	dump() string
+}
+
+type watchFiltersetInterface interface {
+	addWFilterGroup(kind string, watchOptions api.ListWatchOptions, watchers []chan Event) (*WFilterGroup, error)
+	delWatcherFromWFilterGroup(watchOptions api.ListWatchOptions, watchers []chan Event) (*WFilterGroup, error)
+	watchEvent(ev Event)
+	dump() string
+}
+
+type topoMgrInterface interface {
+	handleAddEvent(obj Object)
+	handleUpdateEvent(old, new Object)
+	handleDeleteEvent(obj Object)
+	dump() string
 }
 
 func sendToWatcher(ev Event, watcher *Watcher) error {
@@ -231,7 +264,32 @@ func sendToWatcher(ev Event, watcher *Watcher) error {
 }
 
 // watchEvent sends out watch event to all watchers
-func (od *Objdb) watchEvent(obj objIntf, et EventType) error {
+func (od *Objdb) watchEvent(md *Memdb, obj objIntf, et EventType) error {
+	if md.isControllerWatchFilter(obj.Object().GetObjectKind()) {
+		return md.watchEventControllerFilter(obj.Object(), et)
+	}
+	return od.watchEventAgentFilter(obj, et)
+}
+
+// watchEventControllerFilter sends out watch event to all watchers with controller based watch fitlers
+func (md *Memdb) watchEventControllerFilter(obj Object, et EventType) error {
+	// create the event
+	ev := Event{
+		EventType: et,
+		Obj:       obj,
+	}
+
+	// go through the per kind filter groups to send to watchers
+	md.wFilterLock.RLock()
+	defer md.wFilterLock.RUnlock()
+	if grp, ok := md.filterGroups[obj.GetObjectKind()]; ok {
+		grp.watchEvent(ev)
+	}
+	return nil
+}
+
+// watchEventAgentFilter sends out watch event to all watchers with agent based watch fitlers
+func (od *Objdb) watchEventAgentFilter(obj objIntf, et EventType) error {
 	done := false
 	// create the event
 	ev := Event{
@@ -268,11 +326,15 @@ func NewMemdb() *Memdb {
 	md := Memdb{
 		objdb:           make(map[string]*Objdb),
 		registeredKinds: make(map[string]bool),
+		filterGroups:    make(map[string]watchFiltersetInterface),
+		filterFlags:     make(map[string]uint),
+		dscWatcherInfo:  make(map[string]dscWatcherDBInterface),
 	}
 
 	md.dbAddResolver = newAddResolver(&md)
 	md.dbDelResolver = newDeleteResolver(&md)
 	md.pushdb = newPushDB(&md)
+	md.topoHandler = newTopoMgr(&md)
 
 	md.objGraph, _ = graph.NewCayleyStore()
 
@@ -373,6 +435,11 @@ func (md *Memdb) WatchObjects(kind string, watcher *Watcher) error {
 	// get objdb
 	od := md.getObjdb(kind)
 
+	if md.isControllerWatchFilter(kind) {
+		log.Infof("Adding watcher info from dsc: %s | kind: %s", watcher.Name, kind)
+		md.addDscWInfo(watcher.Name, kind, watcher.Channel)
+	}
+
 	if !md.pushdb.KindEnabled(kind) {
 		log.Infof("PubDB watch for kind %v name %v", kind, watcher.Name)
 		od.WatchLock.Lock()
@@ -392,6 +459,10 @@ func (md *Memdb) StopWatchObjects(kind string, watcher *Watcher) error {
 	od := md.getObjdb(kind)
 
 	if !md.pushdb.KindEnabled(kind) {
+		if md.isControllerWatchFilter(kind) {
+			log.Infof("Deleting watcher info from dsc: %s | kind: %s", watcher.Name, kind)
+			md.delDSCInfo(watcher.Name, kind, watcher.Channel)
+		}
 		// lock object db
 		od.WatchLock.Lock()
 		for i, other := range od.watchers {
@@ -671,7 +742,8 @@ func (md *Memdb) addObject(od objDBInterface, key string, obj objIntf, refs map[
 		obj.Lock()
 		obj.resolved()
 		obj.Unlock()
-		od.watchEvent(obj, CreateEvent)
+		md.topoHandler.handleAddEvent(obj.Object())
+		od.watchEvent(md, obj, CreateEvent)
 		md.dbAddResolver.trigger(key, obj.Object())
 	} else {
 		obj.Lock()
@@ -714,6 +786,7 @@ func (md *Memdb) updateObject(od objDBInterface, key string, obj objIntf, refs m
 	}
 
 	md.updateReferences(key, obj.Object(), refs)
+	old := ostate.Object()
 	ostate.SetValue(obj.Object())
 
 	if md.dbAddResolver.resolvedCheck(key, obj.Object()) {
@@ -726,7 +799,14 @@ func (md *Memdb) updateObject(od objDBInterface, key string, obj objIntf, refs m
 		}
 		ostate.resolved()
 		ostate.Unlock()
-		od.watchEvent(ostate, event)
+
+		if event == CreateEvent {
+			md.topoHandler.handleAddEvent(obj.Object())
+		} else {
+			md.topoHandler.handleUpdateEvent(old, obj.Object())
+		}
+
+		od.watchEvent(md, ostate, event)
 		md.dbAddResolver.trigger(key, obj.Object())
 	} else {
 		log.Infof("Update Object key %v unresolved", key)
@@ -811,7 +891,6 @@ func (md *Memdb) updateReferences(key string, obj Object, refs map[string]apiint
 // DeleteObjectWithReferences deletes an object from memdb and sends out watch notifications
 func (md *Memdb) deleteObject(od objDBInterface, key string, obj objIntf, refs map[string]apiintf.ReferenceObj) error {
 	// if we dont have the object, return error
-
 	md.filterOutRefs(refs)
 	// lock object db
 	od.Lock()
@@ -839,7 +918,8 @@ func (md *Memdb) deleteObject(od objDBInterface, key string, obj objIntf, refs m
 		od.Lock()
 		od.deleteObject(key)
 		od.Unlock()
-		od.watchEvent(existingObj, DeleteEvent)
+		md.topoHandler.handleDeleteEvent(obj.Object())
+		od.watchEvent(md, existingObj, DeleteEvent)
 		md.dbDelResolver.trigger(key, obj.Object())
 	} else {
 		log.Infof("Delete Object key %v unresolved, refs %v", key, refs)
@@ -931,7 +1011,26 @@ func (md *Memdb) ListObjectsForReceiver(kind string, receiverID string, filters 
 		return md.pushdb.ListObjects(kind, receiverID)
 	}
 
+	if md.isControllerWatchFilter(kind) {
+		log.Infof("Replay DSC objects for dsc: %s | kind: %s", receiverID, kind)
+		return md.ListDscObjects(receiverID, kind)
+	}
+
 	return md.ListObjects(kind, filters)
+}
+
+// ListDscObjects returns a list of objects with controller watch filters
+func (md *Memdb) ListDscObjects(dsc, kind string) []Object {
+	md.wFilterDSCLock.Lock()
+	defer md.wFilterDSCLock.Unlock()
+	if dscInfo, ok := md.dscWatcherInfo[dsc]; ok {
+		flts := dscInfo.getFilterFns(kind)
+		if flts != nil {
+			log.Infof("Found existing filters for dsc: %s | kind: %s", dsc, kind)
+			return md.ListObjects(kind, flts)
+		}
+	}
+	return nil
 }
 
 // AddNodeState adds node state to an object

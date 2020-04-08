@@ -2,14 +2,16 @@ package equinix_test
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/base"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
-	"strings"
-	"time"
 )
 
 var _ = Describe("Network", func() {
@@ -74,6 +76,19 @@ var _ = Describe("Network", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(nw.VeniceNetwork.Name == nwName).Should(BeTrue())
 
+			// get all host nw interfaces
+			filter := fmt.Sprintf("spec.type=host-pf")
+			nwIfs, err := ts.model.ListNetworkInterfacesByFilter(filter)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(nwIfs).ShouldNot(BeNil())
+			Expect(len(nwIfs.Interfaces) != 0).Should(BeTrue())
+
+			// attach the first interface to the subnet
+			nwIfs.Interfaces[0].Spec.AttachNetwork = nwName
+			nwIfs.Interfaces[0].Spec.AttachTenant = tenantName
+			log.Infof("Updating nwif: %s | spec: %v | status: %v", nwIfs.Interfaces[0].Name, nwIfs.Interfaces[0].Spec, nwIfs.Interfaces[0].Status)
+			Expect(nwIfs.Commit()).Should(Succeed())
+
 			//Verify state in Naples
 
 			if !ts.tb.HasNaplesHW() {
@@ -92,7 +107,7 @@ var _ = Describe("Network", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 
 				log.Infof("pdsctl output: \n %s", cmdout)
-
+				Expect(len(cmdout) != 0).Should(BeTrue())
 				Expect(strings.Contains(cmdout[0], uuid)).Should(BeTrue())
 				return nil
 			})
@@ -106,7 +121,7 @@ var _ = Describe("Network", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 
 				log.Infof("PDSCTL output: \n %s", cmdout)
-
+				Expect(len(cmdout) != 0).Should(BeTrue())
 				nwData := []netproto.Network{}
 
 				err = json.Unmarshal([]byte(cmdout[0]), &nwData)
@@ -124,6 +139,12 @@ var _ = Describe("Network", func() {
 				Expect(match).To(BeTrue())
 				return nil
 			})
+
+			// detach the interface to the subnet
+			nwIfs.Interfaces[0].Spec.AttachNetwork = ""
+			nwIfs.Interfaces[0].Spec.AttachTenant = ""
+
+			Expect(nwIfs.Commit()).Should(Succeed())
 
 			Expect(nwc.Delete()).Should(Succeed())
 

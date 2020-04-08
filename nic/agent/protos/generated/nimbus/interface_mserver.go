@@ -51,6 +51,22 @@ func (ms *MbusServer) ListInterfaces(ctx context.Context, nodeID string, filters
 	return objlist, nil
 }
 
+// ListInterfacesNoFilter lists all Interfaces in the mbus without applying a watch filter
+func (ms *MbusServer) ListInterfacesNoFilter(ctx context.Context) ([]*netproto.Interface, error) {
+	var objlist []*netproto.Interface
+
+	// walk all objects
+	objs := ms.memDB.ListObjects("Interface", nil)
+	for _, oo := range objs {
+		obj, err := InterfaceFromObj(oo)
+		if err == nil {
+			objlist = append(objlist, obj)
+		}
+	}
+
+	return objlist, nil
+}
+
 // InterfaceStatusReactor is the reactor interface implemented by controllers
 type InterfaceStatusReactor interface {
 	OnInterfaceCreateReq(nodeID string, objinfo *netproto.Interface) error
@@ -58,7 +74,7 @@ type InterfaceStatusReactor interface {
 	OnInterfaceDeleteReq(nodeID string, objinfo *netproto.Interface) error
 	OnInterfaceOperUpdate(nodeID string, objinfo *netproto.Interface) error
 	OnInterfaceOperDelete(nodeID string, objinfo *netproto.Interface) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type InterfaceNodeStatus struct {
@@ -350,7 +366,7 @@ func (eh *InterfaceTopic) ListInterfaces(ctx context.Context, objsel *api.ListWa
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("netproto.Interface", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter("netproto.Interface", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -379,8 +395,11 @@ func (eh *InterfaceTopic) WatchInterfaces(watchOptions *api.ListWatchOptions, st
 	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
 	if eh.statusReactor != nil {
-		watcher.Filters["Interface"] = eh.statusReactor.GetWatchFilter("Interface", watchOptions)
+		watcher.Filters["Interface"] = eh.statusReactor.GetAgentWatchFilter("Interface", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true
@@ -388,8 +407,6 @@ func (eh *InterfaceTopic) WatchInterfaces(watchOptions *api.ListWatchOptions, st
 		watcher.Filters["Interface"] = append(watcher.Filters["Interface"], filt)
 	}
 
-	ctx := stream.Context()
-	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
 	err := eh.server.memDB.WatchObjects("Interface", &watcher)
 	if err != nil {

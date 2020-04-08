@@ -4,17 +4,14 @@ package statemgr
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	apiintf "github.com/pensando/sw/api/interfaces"
-	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/diagnostics"
@@ -22,7 +19,6 @@ import (
 	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
-	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -65,14 +61,16 @@ type Topics struct {
 // Statemgr is the object state manager
 type Statemgr struct {
 	sync.Mutex
-	mbus                          *nimbus.MbusServer       // nimbus server
-	periodicUpdaterQueue          chan updatable           // queue for periodically writing items back to apiserver
-	dscUpdateNotifObjects         map[string]dscUpdateIntf // objects which are watching dsc update
-	ctrler                        ctkit.Controller         // controller instance
-	topics                        Topics                   // message bus topics
-	networkKindLock               sync.Mutex               // lock on entire network kind, take when any changes are done to any network
-	networkLocks                  map[string]*sync.Mutex   // lock for performing network operation
-	logger                        log.Logger
+	mbus                  *nimbus.MbusServer       // nimbus server
+	periodicUpdaterQueue  chan updatable           // queue for periodically writing items back to apiserver
+	dscUpdateNotifObjects map[string]dscUpdateIntf // objects which are watching dsc update
+	ctrler                ctkit.Controller         // controller instance
+	topics                Topics                   // message bus topics
+	networkKindLock       sync.Mutex               // lock on entire network kind, take when any changes are done to any network
+	networkLocks          map[string]*sync.Mutex   // lock for performing network operation
+	logger                log.Logger
+	WatchFilterFlags      map[string]uint
+
 	ModuleReactor                 ctkit.ModuleHandler
 	TenantReactor                 ctkit.TenantHandler
 	SecurityGroupReactor          ctkit.SecurityGroupHandler
@@ -322,6 +320,7 @@ func initStatemgr() {
 	singletonStatemgr = Statemgr{
 		networkLocks:          make(map[string]*sync.Mutex),
 		dscUpdateNotifObjects: make(map[string]dscUpdateIntf),
+		WatchFilterFlags:      make(map[string]uint),
 	}
 	featuremgrs = make(map[string]FeatureStateMgr)
 }
@@ -447,8 +446,10 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 	// Fetch feature flags if available before proceeding.
 	featureflags.Initialize(globals.Npm, apisrvURL, rslvr)
 
+	sm.setWatchFilterFlags()
+
 	for name, svc := range featuremgrs {
-		logger.Info("svc", name, "complete registration")
+		logger.Info("svc", name, " complete registration")
 		svc.CompleteRegistration()
 	}
 
@@ -763,132 +764,6 @@ func references(obj apiServerObject) map[string]apiintf.ReferenceObj {
 	resp := make(map[string]apiintf.ReferenceObj)
 	obj.References(obj.GetObjectMeta().Name, obj.GetObjectMeta().Namespace, resp)
 	return resp
-}
-
-func fromVersionFilterFn(fromVer uint64) memdb.FilterFn {
-	return func(obj, prev memdb.Object) bool {
-		meta := obj.GetObjectMeta()
-		ver, err := strconv.ParseUint(meta.ResourceVersion, 10, 64)
-		if err != nil {
-			log.Fatalf("unable to parse version string [%s](%s)", meta.ResourceVersion, err)
-		}
-		return ver >= fromVer
-	}
-}
-
-func nameFilterFn(name string) memdb.FilterFn {
-	return func(obj, prev memdb.Object) bool {
-		meta := obj.GetObjectMeta()
-		return meta.Name == name
-	}
-}
-
-func tenantFilterFn(tenant string) memdb.FilterFn {
-	return func(obj, prev memdb.Object) bool {
-		meta := obj.GetObjectMeta()
-		return meta.Tenant == tenant
-	}
-}
-
-func namespaceFilterFn(namespace string) memdb.FilterFn {
-	return func(obj, prev memdb.Object) bool {
-		meta := obj.GetObjectMeta()
-		return meta.Namespace == namespace
-	}
-}
-
-func labelSelectorFilterFn(selector *labels.Selector) memdb.FilterFn {
-	return func(obj, prev memdb.Object) bool {
-		meta := obj.GetObjectMeta()
-		labels := labels.Set(meta.Labels)
-		return selector.Matches(labels)
-	}
-}
-
-func fieldSelectorFilterFn(selector *fields.Selector) memdb.FilterFn {
-	return func(obj, prev memdb.Object) bool {
-		return selector.MatchesObj(obj)
-	}
-}
-
-func fieldChangeSelectorFilterFn(selectors []string) memdb.FilterFn {
-	return func(obj, prev memdb.Object) bool {
-		diffs, ok := ref.ObjDiff(obj, prev)
-		if !ok {
-			return false
-		}
-		for _, f := range selectors {
-			if diffs.Lookup(f) {
-				return true
-			}
-		}
-		return false
-	}
-}
-
-// GetWatchFilter returns a filter function to filter Watch Events
-func (sm *Statemgr) GetWatchFilter(kind string, opts *api.ListWatchOptions) []memdb.FilterFn {
-	var filters []memdb.FilterFn
-
-	if opts.ResourceVersion != "" {
-		ver, err := strconv.ParseUint(opts.ResourceVersion, 10, 64)
-		if err != nil {
-			log.Fatalf("unable to parse version string [%s](%s)", opts.ResourceVersion, err)
-		}
-		filters = append(filters, fromVersionFilterFn(ver))
-	}
-
-	if opts.Name != "" {
-		// FIX for VS-1305, with Naples running release A code and Venice running newer code, Naples will send the
-		// node ID as the name for endpoints to filter.
-		if kind == "netproto.Endpoint" {
-			newOpts := &api.ListWatchOptions{}
-			str := fmt.Sprintf("spec.node-uuid=%s", opts.Name)
-			newOpts.FieldSelector = str
-			return sm.GetWatchFilter(kind, newOpts)
-		}
-		filters = append(filters, nameFilterFn(opts.Name))
-	}
-
-	if opts.Tenant != "" {
-		filters = append(filters, tenantFilterFn(opts.Tenant))
-	}
-
-	if opts.Namespace != "" {
-		filters = append(filters, namespaceFilterFn(opts.Namespace))
-	}
-
-	if opts.LabelSelector != "" {
-		selector, err := labels.Parse(opts.LabelSelector)
-		if err != nil {
-			log.Errorf("invalid label selector specification(%s)", err)
-			return nil
-		}
-		filters = append(filters, labelSelectorFilterFn(selector))
-	}
-
-	if opts.FieldSelector != "" {
-		var selector *fields.Selector
-		var err error
-		if kind != "" {
-			selector, err = fields.ParseWithValidation(kind, opts.FieldSelector)
-			if err != nil {
-				log.Errorf("invalid field selector specification(%s)", err)
-				return nil
-			}
-		} else {
-			selector, err = fields.Parse(opts.FieldSelector)
-			if err != nil {
-				log.Errorf("invalid field selector specification(%s)", err)
-				return nil
-			}
-		}
-		filters = append(filters, fieldSelectorFilterFn(selector))
-	}
-	if len(opts.FieldChangeSelector) != 0 {
-		filters = append(filters, fieldChangeSelectorFilterFn(opts.FieldChangeSelector))
-	}
-	return filters
 }
 
 //

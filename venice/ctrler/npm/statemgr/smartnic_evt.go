@@ -115,14 +115,24 @@ func NewDistributedServiceCardState(smartNic *ctkit.DistributedServiceCard, stat
 // OnDistributedServiceCardCreate handles smartNic creation
 func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedServiceCard) error {
 	defer sm.ProcessDSCEvent(CreateEvent, &smartNic.DistributedServiceCard)
+	defer sm.sendDscUpdateNotification(&smartNic.DistributedServiceCard)
+	sns, err := sm.dscCreate(smartNic)
+	if err != nil {
+		return err
+	}
+	sm.addDSCRelatedobjects(smartNic, sns, true)
+	sm.PeriodicUpdaterPush(sns)
+	return nil
+}
+
+func (sm *Statemgr) dscCreate(smartNic *ctkit.DistributedServiceCard) (*DistributedServiceCardState, error) {
 	log.Infof("Creating smart nic: %+v", smartNic)
 
-	defer sm.sendDscUpdateNotification(&smartNic.DistributedServiceCard)
 	// create new smartNic object
 	sns, err := NewDistributedServiceCardState(smartNic, sm)
 	if err != nil {
 		log.Errorf("Error creating smartNic %+v. Err: %v", smartNic, err)
-		return err
+		return nil, err
 	}
 
 	log.Infof("Profile %s", smartNic.DistributedServiceCard.Spec.DSCProfile)
@@ -149,19 +159,24 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 		}
 	}
 
+	return sns, nil
+}
+
+func (sm *Statemgr) addDSCRelatedobjects(smartNic *ctkit.DistributedServiceCard, sns *DistributedServiceCardState, sendSgPolicies bool) {
 	// see if smartnic is admitted
 	if sm.isDscAdmitted(&smartNic.DistributedServiceCard) {
-		// Update SGPolicies
-		policies, _ := sm.ListSgpolicies()
-		for _, policy := range policies {
-			policy.NetworkSecurityPolicy.Lock()
-			if _, ok := policy.NodeVersions[smartNic.DistributedServiceCard.Name]; ok == false {
-				policy.NodeVersions[smartNic.DistributedServiceCard.Name] = ""
-				sm.PeriodicUpdaterPush(policy)
+		if sendSgPolicies {
+			// Update SGPolicies
+			policies, _ := sm.ListSgpolicies()
+			for _, policy := range policies {
+				policy.NetworkSecurityPolicy.Lock()
+				if _, ok := policy.NodeVersions[smartNic.DistributedServiceCard.Name]; ok == false {
+					policy.NodeVersions[smartNic.DistributedServiceCard.Name] = ""
+					sm.PeriodicUpdaterPush(policy)
+				}
+				policy.NetworkSecurityPolicy.Unlock()
 			}
-			policy.NetworkSecurityPolicy.Unlock()
 		}
-
 		// Update FirewallProfiles
 		fwprofiles, _ := sm.ListFirewallProfiles()
 		for _, fwprofile := range fwprofiles {
@@ -209,21 +224,30 @@ func (sm *Statemgr) OnDistributedServiceCardCreate(smartNic *ctkit.DistributedSe
 			host.Unlock()
 		}
 	}
-
-	sm.PeriodicUpdaterPush(sns)
-	return nil
 }
 
 // OnDistributedServiceCardUpdate handles update event on smartnic
 func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedServiceCard, nsnic *cluster.DistributedServiceCard) error {
-	// see if we already have the smartNic
+	defer sm.sendDscUpdateNotification(nsnic)
 	defer sm.ProcessDSCEvent(UpdateEvent, &smartNic.DistributedServiceCard)
+	sns, err := sm.updateDSC(smartNic, nsnic)
+	if err != nil {
+		return nil
+	}
+
+	sm.updateDSCRelatedObjects(sns, nsnic, true)
+	sm.PeriodicUpdaterPush(sns)
+	return nil
+}
+
+func (sm *Statemgr) updateDSC(smartNic *ctkit.DistributedServiceCard, nsnic *cluster.DistributedServiceCard) (*DistributedServiceCardState, error) {
+	// see if we already have the smartNic
 	log.Infof("Update of DistributedServiceCard")
 	defer sm.sendDscUpdateNotification(nsnic)
 	sns, err := DistributedServiceCardStateFromObj(smartNic)
 	if err != nil {
 		log.Errorf("Error finding smartnic. Err: %v", err)
-		return err
+		return nil, err
 	}
 
 	newProfile := nsnic.Spec.DSCProfile
@@ -276,33 +300,38 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 
 	sns.DistributedServiceCard.DistributedServiceCard = *nsnic
 
+	return sns, nil
+}
+
+func (sm *Statemgr) updateDSCRelatedObjects(sns *DistributedServiceCardState, nsnic *cluster.DistributedServiceCard, sgPolicyUpdate bool) {
 	_, ok := sns.DistributedServiceCard.Labels[orchutils.OrchNameKey]
 	if ok {
 		if !sns.isOrchestratorCompatible() {
 			recorder.Event(eventtypes.HOST_DSC_MODE_INCOMPATIBLE,
 				fmt.Sprintf("DSC [%v] mode is incompatible with Host", sns.DistributedServiceCard.Name),
 				nil)
-			return nil
+			return
 		}
 	}
-
-	// Update SGPolicies
-	policies, _ := sm.ListSgpolicies()
-	for _, policy := range policies {
-		policy.NetworkSecurityPolicy.Lock()
-		if sm.isDscAdmitted(nsnic) {
-			if _, ok := policy.NodeVersions[nsnic.Name]; !ok {
-				policy.NodeVersions[nsnic.Name] = ""
-				sm.PeriodicUpdaterPush(policy)
+	if sgPolicyUpdate {
+		// Update SGPolicies
+		policies, _ := sm.ListSgpolicies()
+		for _, policy := range policies {
+			policy.NetworkSecurityPolicy.Lock()
+			if sm.isDscAdmitted(nsnic) {
+				if _, ok := policy.NodeVersions[nsnic.Name]; !ok {
+					policy.NodeVersions[nsnic.Name] = ""
+					sm.PeriodicUpdaterPush(policy)
+				}
+			} else {
+				_, ok := policy.NodeVersions[nsnic.Name]
+				if ok {
+					delete(policy.NodeVersions, nsnic.Name)
+					sm.PeriodicUpdaterPush(policy)
+				}
 			}
-		} else {
-			_, ok := policy.NodeVersions[nsnic.Name]
-			if ok {
-				delete(policy.NodeVersions, nsnic.Name)
-				sm.PeriodicUpdaterPush(policy)
-			}
+			policy.NetworkSecurityPolicy.Unlock()
 		}
-		policy.NetworkSecurityPolicy.Unlock()
 	}
 
 	// update firewall profiles
@@ -323,19 +352,25 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 			fwprofile.FirewallProfile.Unlock()
 		}
 	}
-	sm.PeriodicUpdaterPush(sns)
-	return nil
 }
 
 // OnDistributedServiceCardDelete handles smartNic deletion
 func (sm *Statemgr) OnDistributedServiceCardDelete(smartNic *ctkit.DistributedServiceCard) error {
-
 	defer sm.ProcessDSCEvent(DeleteEvent, &smartNic.DistributedServiceCard)
+	hs, err := sm.deleteDsc(smartNic)
+	if err != nil {
+		return err
+	}
+
+	return sm.deleteDscRelatedObjects(smartNic, hs, true)
+}
+
+func (sm *Statemgr) deleteDsc(smartNic *ctkit.DistributedServiceCard) (*DistributedServiceCardState, error) {
 	// see if we have the smartNic
 	hs, err := DistributedServiceCardStateFromObj(smartNic)
 	if err != nil {
 		log.Errorf("Could not find the smartNic %v. Err: %v", smartNic, err)
-		return err
+		return nil, err
 	}
 
 	log.Infof("Deleting smart nic: %+v", smartNic)
@@ -359,16 +394,22 @@ func (sm *Statemgr) OnDistributedServiceCardDelete(smartNic *ctkit.DistributedSe
 		oldProfileState.DSCProfile.Unlock()
 
 	}
-	// Update SGPolicies
-	policies, _ := sm.ListSgpolicies()
-	for _, policy := range policies {
-		policy.NetworkSecurityPolicy.Lock()
-		_, ok := policy.NodeVersions[hs.DistributedServiceCard.Name]
-		if ok {
-			delete(policy.NodeVersions, hs.DistributedServiceCard.Name)
-			sm.PeriodicUpdaterPush(policy)
+	return hs, nil
+}
+
+func (sm *Statemgr) deleteDscRelatedObjects(smartNic *ctkit.DistributedServiceCard, hs *DistributedServiceCardState, sgPolicyDelete bool) error {
+	if sgPolicyDelete {
+		// Update SGPolicies
+		policies, _ := sm.ListSgpolicies()
+		for _, policy := range policies {
+			policy.NetworkSecurityPolicy.Lock()
+			_, ok := policy.NodeVersions[hs.DistributedServiceCard.Name]
+			if ok {
+				delete(policy.NodeVersions, hs.DistributedServiceCard.Name)
+				sm.PeriodicUpdaterPush(policy)
+			}
+			policy.NetworkSecurityPolicy.Unlock()
 		}
-		policy.NetworkSecurityPolicy.Unlock()
 	}
 
 	fwprofiles, _ := sm.ListFirewallProfiles()
@@ -417,7 +458,6 @@ func (sm *Statemgr) OnDistributedServiceCardDelete(smartNic *ctkit.DistributedSe
 			}
 		}
 	}
-
 	return nil
 }
 

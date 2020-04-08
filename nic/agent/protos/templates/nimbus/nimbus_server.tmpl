@@ -58,6 +58,22 @@ func (ms *MbusServer) List{{$crudObject}}s(ctx context.Context, nodeID string, f
     return objlist, nil
 }
 
+// List{{$crudObject}}sNoFilter lists all {{$crudObject}}s in the mbus without applying a watch filter
+func (ms *MbusServer) List{{$crudObject}}sNoFilter(ctx context.Context) ([]*netproto.{{$crudObject}}, error) {
+    var objlist []*netproto.{{$crudObject}}
+
+    // walk all objects
+    objs := ms.memDB.ListObjects("{{$crudObject}}", nil)
+    for _, oo := range objs {
+        obj, err := {{$crudObject}}FromObj(oo)
+        if err == nil {
+            objlist = append(objlist, obj)
+        }
+    }
+
+    return objlist, nil
+}
+
 // {{$crudObject}}StatusReactor is the reactor interface implemented by controllers
 type {{$crudObject}}StatusReactor interface {
     On{{$crudObject}}CreateReq(nodeID string, objinfo *netproto.{{$crudObject}}) error
@@ -65,7 +81,7 @@ type {{$crudObject}}StatusReactor interface {
     On{{$crudObject}}DeleteReq(nodeID string, objinfo *netproto.{{$crudObject}}) error
     On{{$crudObject}}OperUpdate(nodeID string, objinfo *netproto.{{$crudObject}}) error
     On{{$crudObject}}OperDelete(nodeID string, objinfo *netproto.{{$crudObject}}) error
-    GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+    GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type {{$crudObject}}NodeStatus struct {
@@ -358,7 +374,7 @@ func (eh *{{$crudObject}}Topic) List{{$crudObject}}s(ctx context.Context, objsel
     }
 
     if  eh.statusReactor != nil {
-        filters = eh.statusReactor.GetWatchFilter("netproto.{{$crudObject}}", objsel)
+        filters = eh.statusReactor.GetAgentWatchFilter("netproto.{{$crudObject}}", objsel)
     } else {
         filters = append(filters, filterFn)
     }
@@ -387,8 +403,11 @@ func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(watchOptions *api.ListWatc
     watcher.Filters = make(map[string][]memdb.FilterFn)
     defer close(watcher.Channel)
 
+    ctx := stream.Context()
+    nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
     if  eh.statusReactor != nil {
-        watcher.Filters["{{$crudObject}}"] = eh.statusReactor.GetWatchFilter("{{$crudObject}}", watchOptions)
+        watcher.Filters["{{$crudObject}}"] = eh.statusReactor.GetAgentWatchFilter("{{$crudObject}}", watchOptions)
     } else {
         filt := func(obj, prev memdb.Object) bool {
             return true
@@ -396,8 +415,6 @@ func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(watchOptions *api.ListWatc
         watcher.Filters["{{$crudObject}}"] = append(watcher.Filters["{{$crudObject}}"], filt)
     }
 
-    ctx := stream.Context()
-    nodeID := netutils.GetNodeUUIDFromCtx(ctx)
     watcher.Name = nodeID
     err := eh.server.memDB.WatchObjects("{{$crudObject}}", &watcher)
     if err != nil {

@@ -27,6 +27,7 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
+	"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -107,6 +108,7 @@ func (it *migrationTestSuite) SetUpSuite(c *C) {
 	c.Assert(err, check.IsNil)
 
 	// Create NPM
+	featureflags.SetInitialized()
 	ctrler, err := npm.NewNetctrler(integTestNpmRPCURL, integTestRESTURL, integTestApisrvURL, rc, logger.WithContext("submodule", "pen-npm"), false)
 	c.Assert(err, IsNil)
 	it.npmCtrler = ctrler
@@ -247,6 +249,7 @@ func (it *migrationTestSuite) restartNpm() error {
 	time.Sleep(time.Millisecond * 100)
 	var err error
 
+	featureflags.SetInitialized()
 	it.npmCtrler, err = npm.NewNetctrler(integTestNpmRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
 	if err != nil {
 		log.Errorf("Failed to create new NPM. Err : %v", err)

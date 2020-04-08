@@ -140,6 +140,7 @@ type ObjectIntf interface {
 	ListRoutingConfig() (*objects.RoutingConfigCollection, error)
 	NewVPC(tenant string, name string, rmac string, vni uint32, ipam string) *objects.VpcObjCollection
 	GetVPC(name string, tenant string) (*objects.Vpc, error)
+	ListNetworkInterfacesByFilter(filter string) (*objects.NetworkInterfaceCollection, error)
 
 	NewNetwork(nwp *base.NetworkParams) *objects.NetworkCollection
 	GetNetwork(tenant string, name string) (*objects.Network, error)

@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
 
 	"github.com/pensando/sw/api/generated/cluster"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -147,7 +147,14 @@ func TestFeatureFlags(t *testing.T) {
 	Assert(t, IsNetworkSecPolicyEnabled() == true, "expecing network level secpolicy to be false")
 	Assert(t, AreALGsEnabled() == false, "expecing ALGs to be true")
 
-	SetInitialized()
+	nflags := []cluster.Feature{
+		{FeatureKey: OverlayRouting},
+	}
+	_, errs = Validate(nflags)
+	AssertOk(t, err, "Validate failed (%s)", err)
+
+	SetFeatures(nflags)
+
 	// Make sure there is no holdup
 	Initialize("aa", "nodest", nil)
 }

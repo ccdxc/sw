@@ -2,7 +2,10 @@
 
 package statemgr
 
-import "github.com/pensando/sw/api/generated/cluster"
+import (
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/utils/featureflags"
+)
 
 // CompleteRegistration is the callback function statemgr calls after init is done
 func (sm *Statemgr) CompleteRegistration() {
@@ -12,7 +15,6 @@ func (sm *Statemgr) CompleteRegistration() {
 	sm.SetAppReactor(sm)
 	sm.SetNetworkReactor(sm)
 	sm.SetFirewallProfileReactor(sm)
-	sm.SetDistributedServiceCardReactor(sm)
 	sm.SetHostReactor(sm)
 	sm.SetEndpointReactor(sm)
 	sm.SetNetworkSecurityPolicyReactor(sm)
@@ -25,6 +27,10 @@ func (sm *Statemgr) CompleteRegistration() {
 	sm.SetNetworkInterfaceStatusReactor(sm)
 	sm.SetAggregateStatusReactor(sm)
 	sm.SetProfileStatusReactor(sm)
+
+	if featureflags.IsOVerlayRoutingEnabled() == false {
+		sm.SetDistributedServiceCardReactor(sm)
+	}
 }
 
 //ProcessDSCEvent to process a DSC event

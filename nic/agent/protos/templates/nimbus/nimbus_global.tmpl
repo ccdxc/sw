@@ -51,6 +51,16 @@ type MbusServer struct {
 	stats      map[string]tsdb.Obj // nimbus stats
 }
 
+// GetWatchFilter returns the filter functions based on the watchoptions
+func (ms *MbusServer) GetWatchFilter(kind string, opts *api.ListWatchOptions) []memdb.FilterFn {
+	return ms.memDB.GetWatchFilter(kind, opts)
+}
+
+// SetWatchFilterFlags sets the watch filter behavior based on the featureflags
+func (ms *MbusServer) SetWatchFilterFlags(flags map[string]uint) {
+	ms.memDB.SetWatchFilterFlags(flags)
+}
+
 // AddObject adds object to mbus
 func (ms *MbusServer) AddObject(obj memdb.Object) error {
 	ms.Stats(obj.GetObjectKind(), "AddEvent").Inc()
@@ -183,6 +193,10 @@ func (ms *MbusServer) GetDBWatchers(kind string) (*memdb.DBWatchers, error) {
 	return ms.memDB.GetDBWatchers(kind)
 }
 
+func (ms *MbusServer) SendRoutingConfig(dsc, oldRtCfg, newRtCfg string) {
+	ms.memDB.SendRoutingConfig(dsc, oldRtCfg, newRtCfg)
+}
+
 // NewMbusServer creates a new instance of message bus server
 func NewMbusServer(svcName string, grpcServer *rpckit.RPCServer) *MbusServer {
 	mbusServer := MbusServer{
@@ -270,7 +284,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 			case "{{$value.Object}}":
 
 				if _, ok := eh.statusReactor.({{$value.Object}}StatusReactor); ok {
-					filters = eh.statusReactor.({{$value.Object}}StatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+					filters = eh.statusReactor.({{$value.Object}}StatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 				} 
 				
 				objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nodeID, filters)
@@ -531,6 +545,93 @@ func (eh *AggregateTopic) WatcherInConfigSync(nodeID string, kind string, event 
 	return true
 }
 
+func evalFilterFns(obj memdb.Object, flt []memdb.FilterFn) bool {
+	if len(flt) == 0 {
+		return false
+	}
+
+	for _, fn := range flt {
+		if !fn(obj, nil) {
+			return false
+		}
+	}
+	return true
+}
+
+func (eh *AggregateTopic) handleReconcileEvent(aggKey string, ctx context.Context, evt memdb.Event, watchEvts netproto.AggObjectEventList, stream netproto.AggWatchApiV1_WatchObjectsServer) {
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	kind := evt.Obj.GetObjectKind()
+
+	addAggObjectEvent := func(mobj *types.Any, meta *api.ObjectMeta, evtType api.EventType) {
+		watchEvt := netproto.AggObjectEvent{
+			EventType: evtType,
+			AggObj:    netproto.AggObject{Kind: kind, Object: &api.Any{}},
+		}
+
+		watchEvt.AggObj.Object.Any = *mobj
+		watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
+		eh.updateSentObjStatus(aggKey, nodeID, kind, watchEvt.EventType, meta)
+	}
+
+	switch kind {
+		{{range $key, $value := $manifest}}
+		case "{{$value.Object}}":
+			objlist, err := eh.server.List{{$value.Object}}sNoFilter(context.Background())
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return
+			}
+			for _, obj := range objlist {
+				oldVal := evalFilterFns(obj, evt.OldFlts)
+				newVal := evalFilterFns(obj, evt.NewFlts)
+				// watch filters didn't exist earlier
+				if len(evt.OldFlts) == 0 {
+					if newVal == true {
+						mobj, err := types.MarshalAny(obj)
+						if err != nil {
+							log.Errorf("Error  marshalling any object. Err: %v", err)
+							return
+						}
+						log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+						addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+					}
+					continue
+				}
+
+				if oldVal == newVal {
+					continue
+				} else if newVal == true {
+					// add the object
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				} else {
+					// delete the object
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+				}
+			}
+		{{end}}
+	}
+
+	if len(watchEvts.AggObjectEvents) > 0 {
+		err := stream.Send(&watchEvts)
+		if err != nil {
+			log.Errorf("Error sending Aggregate to stream. Err: %v", err)
+			return
+		}
+	}
+}
+
 // WatchObjects watches aggregate  and sends streaming resp
 func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netproto.AggWatchApiV1_WatchObjectsServer) error {
 	ctx := stream.Context()
@@ -548,7 +649,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 		{{range $key, $value := $manifest}}
 		case "{{$value.Object}}":
 			if _, ok := eh.statusReactor.({{$value.Object}}StatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.({{$value.Object}}StatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.({{$value.Object}}StatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -638,56 +739,61 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 				return errors.New("Error reading from channel")
 			}
 
-			// convert the events
-			var etype api.EventType
-			switch evt.EventType {
-			case memdb.CreateEvent:
-				etype = api.EventType_CreateEvent
-			case memdb.UpdateEvent:
-				etype = api.EventType_UpdateEvent
-			case memdb.DeleteEvent:
-				etype = api.EventType_DeleteEvent
-			}
+			if evt.EventType == memdb.ReconcileEvent {
+				log.Infof("Received a reconcile event for: %v", evt)
+				eh.handleReconcileEvent(aggKey, ctx, evt, watchEvts, stream)
+			} else {
+				// convert the events
+				var etype api.EventType
+				switch evt.EventType {
+				case memdb.CreateEvent:
+					etype = api.EventType_CreateEvent
+				case memdb.UpdateEvent:
+					etype = api.EventType_UpdateEvent
+				case memdb.DeleteEvent:
+					etype = api.EventType_DeleteEvent
+				}
 
-			// get the object
-			kind := evt.Obj.GetObjectKind()
-			watchEvt := netproto.AggObjectEvent{
-				EventType: etype,
-				AggObj:    netproto.AggObject{Kind: kind, Object: &api.Any{}},
-			}
-			var mobj *types.Any
-			switch kind {
-			{{range $key, $value := $manifest}}
-			case "{{$value.Object}}":
-				obj, err := {{$value.Object}}FromObj(evt.Obj)
-				if err != nil {
-					return err
+				// get the object
+				kind := evt.Obj.GetObjectKind()
+				watchEvt := netproto.AggObjectEvent{
+					EventType: etype,
+					AggObj:    netproto.AggObject{Kind: kind, Object: &api.Any{}},
 				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
+				var mobj *types.Any
+				switch kind {
+				{{range $key, $value := $manifest}}
+				case "{{$value.Object}}":
+					obj, err := {{$value.Object}}FromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+				{{end}}
 				}
-			{{end}}
-			}
-			watchEvt.AggObj.Object.Any = *mobj
-			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
+				watchEvt.AggObj.Object.Any = *mobj
+				watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
 
-			// convert to netproto format
-			if !running {
-				running = true
-				timer.Reset(DefaultWatchHoldInterval)
-			}
-			if len(watchEvts.AggObjectEvents) >= DefaultWatchBatchSize {
-				if err := sendToStream(); err != nil {
-					return err
+				// convert to netproto format
+				if !running {
+					running = true
+					timer.Reset(DefaultWatchHoldInterval)
 				}
-				if !timer.Stop() {
-					<-timer.C
+				if len(watchEvts.AggObjectEvents) >= DefaultWatchBatchSize {
+					if err := sendToStream(); err != nil {
+						return err
+					}
+					if !timer.Stop() {
+						<-timer.C
+					}
+					timer.Reset(DefaultWatchHoldInterval)
 				}
-				timer.Reset(DefaultWatchHoldInterval)
+				eh.updateSentObjStatus(aggKey, nodeID, kind, etype, evt.Obj.GetObjectMeta())
 			}
-			eh.updateSentObjStatus(aggKey, nodeID, kind, etype, evt.Obj.GetObjectMeta())
 		case <-timer.C:
 			running = false
 			if err := sendToStream(); err != nil {

@@ -51,6 +51,22 @@ func (ms *MbusServer) ListFlowExportPolicys(ctx context.Context, nodeID string, 
 	return objlist, nil
 }
 
+// ListFlowExportPolicysNoFilter lists all FlowExportPolicys in the mbus without applying a watch filter
+func (ms *MbusServer) ListFlowExportPolicysNoFilter(ctx context.Context) ([]*netproto.FlowExportPolicy, error) {
+	var objlist []*netproto.FlowExportPolicy
+
+	// walk all objects
+	objs := ms.memDB.ListObjects("FlowExportPolicy", nil)
+	for _, oo := range objs {
+		obj, err := FlowExportPolicyFromObj(oo)
+		if err == nil {
+			objlist = append(objlist, obj)
+		}
+	}
+
+	return objlist, nil
+}
+
 // FlowExportPolicyStatusReactor is the reactor interface implemented by controllers
 type FlowExportPolicyStatusReactor interface {
 	OnFlowExportPolicyCreateReq(nodeID string, objinfo *netproto.FlowExportPolicy) error
@@ -58,7 +74,7 @@ type FlowExportPolicyStatusReactor interface {
 	OnFlowExportPolicyDeleteReq(nodeID string, objinfo *netproto.FlowExportPolicy) error
 	OnFlowExportPolicyOperUpdate(nodeID string, objinfo *netproto.FlowExportPolicy) error
 	OnFlowExportPolicyOperDelete(nodeID string, objinfo *netproto.FlowExportPolicy) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type FlowExportPolicyNodeStatus struct {
@@ -350,7 +366,7 @@ func (eh *FlowExportPolicyTopic) ListFlowExportPolicys(ctx context.Context, objs
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("netproto.FlowExportPolicy", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter("netproto.FlowExportPolicy", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -379,8 +395,11 @@ func (eh *FlowExportPolicyTopic) WatchFlowExportPolicys(watchOptions *api.ListWa
 	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
 	if eh.statusReactor != nil {
-		watcher.Filters["FlowExportPolicy"] = eh.statusReactor.GetWatchFilter("FlowExportPolicy", watchOptions)
+		watcher.Filters["FlowExportPolicy"] = eh.statusReactor.GetAgentWatchFilter("FlowExportPolicy", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true
@@ -388,8 +407,6 @@ func (eh *FlowExportPolicyTopic) WatchFlowExportPolicys(watchOptions *api.ListWa
 		watcher.Filters["FlowExportPolicy"] = append(watcher.Filters["FlowExportPolicy"], filt)
 	}
 
-	ctx := stream.Context()
-	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
 	err := eh.server.memDB.WatchObjects("FlowExportPolicy", &watcher)
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 	net2 "net"
 	"strings"
 
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -148,6 +148,12 @@ func (c *ConfigCache) Update(ctx context.Context, client apiclient.Services, obj
 			return err
 		}
 		c.SecPols[s.Tenant+"."+s.Name] = s
+	case string(network.KindNetworkInterface):
+		nwif := obj.(*network.NetworkInterface)
+		_, err := client.NetworkV1().NetworkInterface().Update(ctx, nwif)
+		if err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("unknown kind")
 	}
@@ -214,7 +220,7 @@ func (c *ConfigCache) Get(ctx context.Context, client apiclient.Services, kind s
 	return nil, fmt.Errorf("unknown kind")
 }
 
-func (c *ConfigCache) Verify(tenant, kind, naples string) error {
+func (c *ConfigCache) Verify(tenant, kind, naples string, count int) error {
 	By(fmt.Sprintf("verifying [%v] on [%v]", kind, naples))
 	verifyRd := func(r1 *network.RDSpec, r2 *netproto.RDSpec) bool {
 		if r1.AddressFamily != r2.AddressFamily {
@@ -276,8 +282,15 @@ func (c *ConfigCache) Verify(tenant, kind, naples string) error {
 				nws = append(nws, v)
 			}
 		}
-		if len(nws) != len(c.Networks) {
-			return fmt.Errorf("expecting %d networks got %d", len(c.Networks), len(nws))
+		count := 0
+		for _, a := range c.Networks {
+			if a.Tenant == tenant {
+				count++
+			}
+		}
+
+		if len(nws) != count {
+			return fmt.Errorf("expecting %d networks got %d", count, len(nws))
 		}
 		for _, v := range nws {
 			cv, ok := c.Networks[v.Tenant+"."+v.Name]
@@ -333,8 +346,14 @@ func (c *ConfigCache) Verify(tenant, kind, naples string) error {
 				secPols = append(secPols, v)
 			}
 		}
-		if len(secPols) != len(c.SecPols) {
-			return fmt.Errorf("expecting %d Security Polcies got %d", len(c.SecPols), len(secPols))
+
+		/*
+			if len(secPols) != len(c.SecPols) {
+				return fmt.Errorf("expecting %d Security Polcies got %d", len(c.SecPols), len(secPols))
+			}
+		*/
+		if len(secPols) != count {
+			return fmt.Errorf("expecting %d Security Polcies got %d", count, len(secPols))
 		}
 		for _, v := range secPols {
 			_, ok := c.SecPols[v.Tenant+"."+v.Name]
@@ -422,9 +441,10 @@ var _ = Describe("Cloud E2E", func() {
 			}
 
 			By("Configure Routing Config for NAPLES")
+			napleRtCfgName := "NaplesBGP"
 			rtCfg := network.RoutingConfig{
 				ObjectMeta: api.ObjectMeta{
-					Name: "NaplesBGP",
+					Name: napleRtCfgName,
 				},
 				Spec: network.RoutingConfigSpec{
 					BGPConfig: &network.BGPConfig{
@@ -453,6 +473,12 @@ var _ = Describe("Cloud E2E", func() {
 			_, err = restClient.NetworkV1().RoutingConfig().Create(lctx, &rtCfg)
 			if err != nil {
 				Expect(strings.Contains(err.Error(), "409")).Should(BeTrue(), "got error while creating rouging config (%s)", err)
+			}
+
+			for _, dsc := range dscs {
+				dsc.Spec.RoutingConfig = napleRtCfgName
+				_, err := restClient.ClusterV1().DistributedServiceCard().Update(lctx, dsc)
+				Expect(err).Should(BeNil(), fmt.Sprintf("Failed to update DSC: %s, err: %s", dsc.Name, err))
 			}
 
 			for _, nip := range ts.tu.VeniceNodeIPs {
@@ -579,6 +605,7 @@ var _ = Describe("Cloud E2E", func() {
 				_, err = restClient.ClusterV1().Tenant().Delete(ctx, &api.ObjectMeta{Name: tenantName})
 				Expect(err).To(BeNil(), "failed to delete tenant[%v](%s)", tenantName, err)
 			}
+
 		}
 
 		It("CRUD tests", func() {
@@ -666,9 +693,10 @@ var _ = Describe("Cloud E2E", func() {
 				By(fmt.Sprintf("Creating VPC %s", v.Name))
 				err = cache.Create(lctx, restClient, v)
 				Expect(err).To(BeNil(), "VPC create failed (%s)", err)
-
+				k := 1
 				// Create Subnets
 				for j := 0; i < 3; i++ {
+					k = k + 1
 					subnetName := fmt.Sprintf("%s.subnet%d", v.Name, i)
 					subn := &network.Network{
 						TypeMeta: api.TypeMeta{Kind: "Network"},
@@ -678,6 +706,7 @@ var _ = Describe("Cloud E2E", func() {
 						},
 						Spec: network.NetworkSpec{
 							Type:          network.NetworkType_Routed.String(),
+							VlanID:        uint32(20*i + j + k),
 							VirtualRouter: v.Name,
 							IPv4Subnet:    fmt.Sprintf("10.%d.%d.1/24", i, j),
 							IPv4Gateway:   fmt.Sprintf("10.%d.%d.1", i, j),
@@ -787,31 +816,120 @@ var _ = Describe("Cloud E2E", func() {
 					By(fmt.Sprintf("Creating network %s", subn.Name))
 					err = cache.Create(lctx, restClient, subn)
 					Expect(err).To(BeNil(), "subnet create [%v] failed 9%s)", subn.Name, err)
-
 				}
 			}
-			By(fmt.Sprintf("Verify start on [%v]", ts.tu.NaplesNodes))
-			Eventually(func() error {
-				for _, n := range ts.tu.NaplesNodes {
-					err := cache.Verify(tenantName, string(network.KindVirtualRouter), n)
-					if err != nil {
-						return err
-					}
-					err = cache.Verify(tenantName, string(network.KindNetwork), n)
-					if err != nil {
-						return err
-					}
-					err = cache.Verify(tenantName, string(security.KindNetworkSecurityPolicy), n)
-					if err != nil {
-						return err
-					}
+
+			opts := api.ListWatchOptions{
+				FieldSelector: "spec.type=host-pf",
+			}
+
+			var nwIfs []*network.NetworkInterface
+
+			nwIfs, err = restClient.NetworkV1().NetworkInterface().List(lctx, &opts)
+			Expect(err).Should(BeNil(), fmt.Sprintf("failed to list host-pf interfaces %s)", err))
+			Expect(nwIfs).Should(Not(BeNil()), "No host-pf interfaces found")
+
+			By(fmt.Sprintf("List host-pfs [%v]", nwIfs))
+			var dscs []*cluster.DistributedServiceCard
+
+			dscs, err = restClient.ClusterV1().DistributedServiceCard().List(lctx, &api.ListWatchOptions{})
+			Expect(err).Should(BeNil(), fmt.Sprintf("failed to list DSCs %s)", err))
+
+			checkNaples := ""
+			for _, dsc := range dscs {
+				if dsc.Name == nwIfs[0].Status.DSC {
+					checkNaples = dsc.Spec.ID
 				}
-				By(fmt.Sprintf("veriyfy okay on %d nodes", len(ts.tu.NaplesNodes)))
+			}
+			Expect(checkNaples).Should(Not(HaveLen(0)), fmt.Sprintf("failed to find the DSC: %s)", nwIfs[0].Status.DSC))
+
+			nwIfs[0].Spec.AttachTenant = tenantName
+			policyCount := 0
+			for _, l := range cache.Networks {
+				nwIfs[0].Spec.AttachNetwork = l.Name
+				policyCount += len(l.Spec.IngressSecurityPolicy) + len(l.Spec.EgressSecurityPolicy)
+				break
+			}
+			By(fmt.Sprintf("Tenant: %s | network: %s", tenantName, nwIfs[0].Spec.AttachNetwork))
+			By(fmt.Sprintf("Updating host-pf %s", nwIfs[0].Name))
+			Eventually(func() error {
+				err := cache.Update(lctx, restClient, nwIfs[0])
+				return err
+			}, 60, 10).Should(BeNil(), "Failed to update host-pf (%s)", err)
+			//Expect(err).To(BeNil(), "host-pf update failed (%s)", err)
+
+			By(fmt.Sprintf("Verify objects exist on [%s]", checkNaples))
+			Eventually(func() error {
+				err := cache.Verify(tenantName, string(network.KindVirtualRouter), checkNaples, 0)
+				if err != nil {
+					return err
+				}
+				err = cache.Verify(tenantName, string(network.KindNetwork), checkNaples, 0)
+				if err != nil {
+					return err
+				}
+				err = cache.Verify(tenantName, string(security.KindNetworkSecurityPolicy), checkNaples, policyCount)
+				if err != nil {
+					return err
+				}
+
+				By(fmt.Sprintf("veriyfy okay on %s node", checkNaples))
 				return nil
 			}, 60, 10).Should(BeNil(), "Failed to validate on naples (%s)", err)
 
+			naplesList := []string{}
+
+			By(fmt.Sprintf("List of Naples: %v", ts.tu.NaplesNodes))
+			for _, b := range ts.tu.NaplesNodes {
+				if b != checkNaples {
+					naplesList = append(naplesList, b)
+				}
+			}
+
+			By(fmt.Sprintf("Verify objects DO NOT exist on [%v]", naplesList))
+			Eventually(func() error {
+				for _, n := range naplesList {
+					err := cache.Verify(tenantName, string(network.KindVirtualRouter), n, 0)
+					if err != nil {
+						return err
+					}
+				}
+				By(fmt.Sprintf("veriyfy VPCs okay on %d node(s)", len(naplesList)))
+				return nil
+			}, 60, 10).Should(HaveOccurred(), "Failed to validate on naples (%s)", err)
+
+			Eventually(func() error {
+				for _, n := range naplesList {
+					err = cache.Verify(tenantName, string(network.KindNetwork), n, 0)
+					if err != nil {
+						return err
+					}
+				}
+				By(fmt.Sprintf("veriyfy subnets okay on %d node(s)", len(naplesList)))
+				return nil
+			}, 60, 10).Should(HaveOccurred(), "Failed to validate on naples (%s)", err)
+
+			Eventually(func() error {
+				for _, n := range naplesList {
+					err = cache.Verify(tenantName, string(security.KindNetworkSecurityPolicy), n, policyCount)
+					if err != nil {
+						return err
+					}
+				}
+				By(fmt.Sprintf("veriyfy network security policies okay on %d node(s)", len(naplesList)))
+				return nil
+			}, 60, 10).Should(HaveOccurred(), "Failed to validate on naples (%s)", err)
+
 			// Cleanup all objects
 			By(fmt.Sprintf("cleaning up created objectd"))
+			// detach the network before cleaning up the objects
+			By(fmt.Sprintf("Updating host-pf %s", nwIfs[0].Name))
+			nwIfs[0].Spec.AttachNetwork = ""
+			nwIfs[0].Spec.AttachTenant = ""
+			Eventually(func() error {
+				err := cache.Update(lctx, restClient, nwIfs[0])
+				return err
+			}, 60, 10).Should(BeNil(), "Failed to update host-pf (%s)", err)
 			cleanUpObjects(lctx)
 			cache.Init()
 		})

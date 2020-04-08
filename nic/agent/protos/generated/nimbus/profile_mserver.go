@@ -51,6 +51,22 @@ func (ms *MbusServer) ListProfiles(ctx context.Context, nodeID string, filters [
 	return objlist, nil
 }
 
+// ListProfilesNoFilter lists all Profiles in the mbus without applying a watch filter
+func (ms *MbusServer) ListProfilesNoFilter(ctx context.Context) ([]*netproto.Profile, error) {
+	var objlist []*netproto.Profile
+
+	// walk all objects
+	objs := ms.memDB.ListObjects("Profile", nil)
+	for _, oo := range objs {
+		obj, err := ProfileFromObj(oo)
+		if err == nil {
+			objlist = append(objlist, obj)
+		}
+	}
+
+	return objlist, nil
+}
+
 // ProfileStatusReactor is the reactor interface implemented by controllers
 type ProfileStatusReactor interface {
 	OnProfileCreateReq(nodeID string, objinfo *netproto.Profile) error
@@ -58,7 +74,7 @@ type ProfileStatusReactor interface {
 	OnProfileDeleteReq(nodeID string, objinfo *netproto.Profile) error
 	OnProfileOperUpdate(nodeID string, objinfo *netproto.Profile) error
 	OnProfileOperDelete(nodeID string, objinfo *netproto.Profile) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type ProfileNodeStatus struct {
@@ -350,7 +366,7 @@ func (eh *ProfileTopic) ListProfiles(ctx context.Context, objsel *api.ListWatchO
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("netproto.Profile", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter("netproto.Profile", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -379,8 +395,11 @@ func (eh *ProfileTopic) WatchProfiles(watchOptions *api.ListWatchOptions, stream
 	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
 	if eh.statusReactor != nil {
-		watcher.Filters["Profile"] = eh.statusReactor.GetWatchFilter("Profile", watchOptions)
+		watcher.Filters["Profile"] = eh.statusReactor.GetAgentWatchFilter("Profile", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true
@@ -388,8 +407,6 @@ func (eh *ProfileTopic) WatchProfiles(watchOptions *api.ListWatchOptions, stream
 		watcher.Filters["Profile"] = append(watcher.Filters["Profile"], filt)
 	}
 
-	ctx := stream.Context()
-	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
 	err := eh.server.memDB.WatchObjects("Profile", &watcher)
 	if err != nil {

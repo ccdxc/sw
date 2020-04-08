@@ -442,7 +442,9 @@ func ValidateFlowExportPolicy(i types.InfraAPI, netflow netproto.FlowExportPolic
 func ValidateVrf(i types.InfraAPI, tenant, namespace, name string) (vrf netproto.Vrf, err error) {
 	// Pick default vrf is unspecified or specified default
 	if len(name) == 0 || name == types.DefaultVrf {
-		tenant = types.DefaultTenant
+		if len(tenant) == 0 {
+			tenant = types.DefaultTenant
+		}
 		namespace = types.DefaultNamespace
 		name = types.DefaultVrf
 	}

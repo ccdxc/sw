@@ -341,6 +341,9 @@ func convertNetworkInterfaceObject(ifcfg *NetworkInterfaceState) *netproto.Inter
 			TxCollectors: ifcfg.txCollectors,
 			RxCollectors: ifcfg.rxCollectors,
 		},
+		Status: netproto.InterfaceStatus{
+			DSC: ifcfg.NetworkInterfaceState.Status.DSC,
+		},
 	}
 
 	if ifcfg.NetworkInterfaceState.Spec.IPConfig != nil {

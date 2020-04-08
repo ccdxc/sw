@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/ref"
@@ -310,6 +311,7 @@ func (it *migrationTestSuite) TestMigrationNPMRestartAfterTimeout(c *C) {
 	}
 
 	log.Infof("Restarting NPM")
+	featureflags.SetInitialized()
 	it.npmCtrler, err = npm.NewNetctrler(integTestNpmRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
 	AssertOk(c, err, "failed to start NPM")
 	time.Sleep(time.Second)
@@ -387,6 +389,7 @@ func (it *migrationTestSuite) TestMigrationNPMRestartBeforeTimeout(c *C) {
 		AssertOk(c, err, "workload migration status changed from started")
 	}
 
+	featureflags.SetInitialized()
 	it.npmCtrler, err = npm.NewNetctrler(integTestNpmRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
 	AssertOk(c, err, "failed to start NPM")
 	time.Sleep(time.Second)

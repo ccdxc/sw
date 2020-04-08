@@ -51,6 +51,22 @@ func (ms *MbusServer) ListCollectors(ctx context.Context, nodeID string, filters
 	return objlist, nil
 }
 
+// ListCollectorsNoFilter lists all Collectors in the mbus without applying a watch filter
+func (ms *MbusServer) ListCollectorsNoFilter(ctx context.Context) ([]*netproto.Collector, error) {
+	var objlist []*netproto.Collector
+
+	// walk all objects
+	objs := ms.memDB.ListObjects("Collector", nil)
+	for _, oo := range objs {
+		obj, err := CollectorFromObj(oo)
+		if err == nil {
+			objlist = append(objlist, obj)
+		}
+	}
+
+	return objlist, nil
+}
+
 // CollectorStatusReactor is the reactor interface implemented by controllers
 type CollectorStatusReactor interface {
 	OnCollectorCreateReq(nodeID string, objinfo *netproto.Collector) error
@@ -58,7 +74,7 @@ type CollectorStatusReactor interface {
 	OnCollectorDeleteReq(nodeID string, objinfo *netproto.Collector) error
 	OnCollectorOperUpdate(nodeID string, objinfo *netproto.Collector) error
 	OnCollectorOperDelete(nodeID string, objinfo *netproto.Collector) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type CollectorNodeStatus struct {
@@ -350,7 +366,7 @@ func (eh *CollectorTopic) ListCollectors(ctx context.Context, objsel *api.ListWa
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetWatchFilter("netproto.Collector", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter("netproto.Collector", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -379,8 +395,11 @@ func (eh *CollectorTopic) WatchCollectors(watchOptions *api.ListWatchOptions, st
 	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
+	ctx := stream.Context()
+	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+
 	if eh.statusReactor != nil {
-		watcher.Filters["Collector"] = eh.statusReactor.GetWatchFilter("Collector", watchOptions)
+		watcher.Filters["Collector"] = eh.statusReactor.GetAgentWatchFilter("Collector", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true
@@ -388,8 +407,6 @@ func (eh *CollectorTopic) WatchCollectors(watchOptions *api.ListWatchOptions, st
 		watcher.Filters["Collector"] = append(watcher.Filters["Collector"], filt)
 	}
 
-	ctx := stream.Context()
-	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher.Name = nodeID
 	err := eh.server.memDB.WatchObjects("Collector", &watcher)
 	if err != nil {

@@ -301,7 +301,7 @@ func (pObjState *pObjState) IsReceiver(recv objReceiver.Receiver) (bool, error) 
 }
 
 // watchEvent sends out watch event to all watchers
-func (od *pushObjDB) watchEvent(obj objIntf, et EventType) error {
+func (od *pushObjDB) watchEvent(md *Memdb, obj objIntf, et EventType) error {
 	pobj, ok := obj.(*pObjState)
 	if !ok {
 		return fmt.Errorf("Invalid object ")

@@ -19,12 +19,21 @@ import (
 
 	"github.com/pensando/sw/api"
 	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb/objReceiver"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 type testObj struct {
+	api.TypeMeta
+	api.ObjectMeta
+	field     string
+	depMap    map[string]*apiintf.ReferenceObj
+	revDepMap map[string]*apiintf.ReferenceObj
+}
+
+type testObj1 struct {
 	api.TypeMeta
 	api.ObjectMeta
 	field     string
@@ -230,12 +239,11 @@ func waitForWatch(t *testing.T, watchChan chan Event) (Event, error) {
 	select {
 	case evt, ok := <-watchChan:
 		Assert(t, ok, "Error reading from channel", evt)
-		logrus.Infof("Received watch event {%+v} obj {%+v} %v", evt, evt.Obj.GetObjectMeta(), len(watchChan))
+		logrus.Infof("Received watch event {%+v} kind %s obj {%+v} %v", evt, evt.Obj.GetObjectKind(), evt.Obj.GetObjectMeta(), len(watchChan))
 		return evt, nil
 	case <-time.After(100 * time.Millisecond):
 		return Event{}, errors.New("Timed out while waiting for channel event")
 	}
-
 }
 
 func generateObjectReferences(relations []relation) {
@@ -2382,7 +2390,7 @@ func TestMemdbAddDeleteReceivers(t *testing.T) {
 		Assert(t, err != nil, "Delete succeded")
 	}
 
-	fmt.Printf("Storage size %v", md.pushdb.bitMap.BinaryStorageSize())
+	fmt.Printf("Storage size %v\n", md.pushdb.bitMap.BinaryStorageSize())
 	Assert(t, md.pushdb.bitMap.Len() == maxReceivers, "Storage matched")
 
 }
@@ -3857,4 +3865,876 @@ func TestMemdbObjPushAndMemdbWatcher_1(t *testing.T) {
 		}
 		stopWatchForKinds(t, md, watchers, []string{"a", "b", "c"})
 	*/
+}
+
+type WatchNode struct {
+	nodeID   string
+	objKinds []string
+}
+
+func addWatchNodes(count int) []WatchNode {
+	nodes := []WatchNode{}
+	for cnt := 0; cnt < count; cnt++ {
+		node := WatchNode{}
+		node.nodeID = fmt.Sprintf("00:00:00:00:00:0%d", cnt+1)
+		node.objKinds = []string{"testObj1", "testObj"}
+		nodes = append(nodes, node)
+	}
+	return nodes
+}
+
+func getWatchOptions(dsc, kind string) api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+
+	switch dsc {
+	case "00:00:00:00:00:01":
+		opts.Name = getObjectName(kind, 1)
+	case "00:00:00:00:00:02":
+		opts.Name = getObjectName(kind, 2)
+	case "00:00:00:00:00:03":
+		opts.Name = getObjectName(kind, 3)
+	}
+	return opts
+}
+
+func addObjects(objs []*testObj, md *Memdb) error {
+	for _, obj := range objs {
+		err := md.AddObject(obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func delObjects(objs []*testObj, md *Memdb) error {
+	for _, obj := range objs {
+		err := md.DeleteObject(obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func addObjects1(objs []*testObj1, md *Memdb) error {
+	for _, obj := range objs {
+		err := md.AddObject(obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func delObjects1(objs []*testObj1, md *Memdb) error {
+	for _, obj := range objs {
+		err := md.DeleteObject(obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func getExpectedName(k string) string {
+	strs := strings.Split(k, "-")
+	switch strs[0] {
+	case "00:00:00:00:00:01":
+		return getObjectName(strs[1], 1)
+	case "00:00:00:00:00:02":
+		return getObjectName(strs[1], 2)
+	case "00:00:00:00:00:03":
+		return getObjectName(strs[1], 3)
+	case "00:00:00:00:00:04":
+		return getObjectName(strs[1], 1)
+	}
+	return ""
+}
+
+func getExpectedName1(k string) string {
+	strs := strings.Split(k, "-")
+	switch strs[0] {
+	case "00:00:00:00:00:01":
+		if strs[1] == "testObj" {
+			return "watchers1+2"
+		}
+		return "watchers1+3"
+	case "00:00:00:00:00:02":
+		if strs[1] == "testObj" {
+			return "watchers1+2"
+		}
+		return "watchers2+4"
+	case "00:00:00:00:00:03":
+		if strs[1] == "testObj" {
+			return "watchers3+4"
+		}
+		return "watchers1+3"
+	case "00:00:00:00:00:04":
+		if strs[1] == "testObj" {
+			return "watchers3+4"
+		}
+		return "watchers2+4"
+	}
+	return ""
+}
+
+func objName(obj Object) string {
+	switch obj.(type) {
+	case *testObj:
+		tobj := obj.(*testObj)
+		return tobj.Name
+	case *testObj1:
+		tobj := obj.(*testObj1)
+		return tobj.Name
+	default:
+		return ""
+	}
+}
+
+func dumpDSCInfo(md *Memdb) {
+	for a, b := range md.dscWatcherInfo {
+		fmt.Println("DSCWatchInfo: ", a)
+		fmt.Println(b.dump())
+	}
+}
+
+func dumpFilterSetInfo(md *Memdb) {
+	for a, b := range md.filterGroups {
+		fmt.Println("FilterSet for: ", a)
+		fmt.Println(b.dump())
+	}
+}
+
+/*
+func dumpFilterGrpInfo(md *Memdb) {
+	for a, b := range md.filterGroups {
+		fmt.Println("FilterGrp Info: ", a, " ", b)
+		for x, y := range b {
+			fmt.Println("	FilterGrp: Info ", x, " ", *y)
+		}
+	}
+}
+*/
+
+func getWatchOptions1(dsc, kind string) api.ListWatchOptions {
+	opts := api.ListWatchOptions{}
+	name := ""
+	switch dsc {
+	case "00:00:00:00:00:01":
+		if kind == "testObj" {
+			name = "watchers1+2"
+		} else {
+			name = "watchers1+3"
+		}
+	case "00:00:00:00:00:02":
+		if kind == "testObj" {
+			name = "watchers1+2"
+		} else {
+			name = "watchers2+4"
+		}
+	case "00:00:00:00:00:03":
+		if kind == "testObj" {
+			name = "watchers3+4"
+		} else {
+			name = "watchers1+3"
+		}
+	case "00:00:00:00:00:04":
+		if kind == "testObj" {
+			name = "watchers3+4"
+		} else {
+			name = "watchers2+4"
+		}
+	}
+	opts.Name = name
+	return opts
+}
+
+func TestMemdbWatchDSCAddDel(t *testing.T) {
+	// create a new memdb
+	md := NewMemdb()
+	count := 3
+	// set watch flags
+	wFlags := map[string]uint{}
+	wFlags["testObj"] = ControllerWatchFilter
+	wFlags["testObj1"] = ControllerWatchFilter
+	md.SetWatchFilterFlags(wFlags)
+
+	// set up the nodes
+	wNodes := addWatchNodes(count)
+
+	// set up the watchers
+	watchers := map[string]Watcher{}
+
+	for _, node := range wNodes {
+		for _, kind := range node.objKinds {
+			watcher := Watcher{}
+			watcher.Channel = make(chan Event, WatchLen)
+			watcher.Name = node.nodeID
+			watchers[node.nodeID+"-"+kind] = watcher
+			// start the watcher
+			md.WatchObjects(kind, &watcher)
+		}
+	}
+
+	objs := []*testObj{
+		&testObj{
+			TypeMeta: api.TypeMeta{Kind: "testObj"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "tenant",
+				Name:   getObjectName("testObj", 1),
+			},
+		},
+		&testObj{
+			TypeMeta: api.TypeMeta{Kind: "testObj"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "tenant",
+				Name:   getObjectName("testObj", 2),
+			},
+		},
+		&testObj{
+			TypeMeta: api.TypeMeta{Kind: "testObj"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "tenant",
+				Name:   getObjectName("testObj", 3),
+			},
+		},
+	}
+
+	objs1 := []*testObj1{
+		&testObj1{
+			TypeMeta: api.TypeMeta{Kind: "testObj1"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "tenant",
+				Name:   getObjectName("testObj1", 1),
+			},
+		},
+		&testObj1{
+			TypeMeta: api.TypeMeta{Kind: "testObj1"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "tenant",
+				Name:   getObjectName("testObj1", 2),
+			},
+		},
+		&testObj1{
+			TypeMeta: api.TypeMeta{Kind: "testObj1"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "tenant",
+				Name:   getObjectName("testObj1", 3),
+			},
+		},
+	}
+
+	err := addObjects(objs, md)
+	AssertOk(t, err, "Error adding objects")
+	err = addObjects1(objs1, md)
+	AssertOk(t, err, "Error adding objects")
+
+	// verify we don't get a watch event before installing any watch filters
+	for _, w := range watchers {
+		_, err := waitForWatch(t, w.Channel)
+		Assert(t, (err != nil), "Received invalid object", err)
+	}
+
+	err = delObjects(objs, md)
+	AssertOk(t, err, "Error deleting objects")
+	err = delObjects1(objs1, md)
+	AssertOk(t, err, "Error deleting objects")
+
+	kinds := []string{"testObj", "testObj1"}
+	// add watch filter groups
+	for key := range md.dscWatcherInfo {
+		for _, k := range kinds {
+			options := getWatchOptions(key, k)
+			_, _, err := md.addDscWatchOptions(key, k, options)
+			Assert(t, (err == nil), "Error adding watch filter group", err)
+		}
+	}
+
+	err = addObjects(objs, md)
+	AssertOk(t, err, "Error adding objects")
+	err = addObjects1(objs1, md)
+	AssertOk(t, err, "Error adding objects")
+
+	// verify watch evernts are received correctly
+	for k, w := range watchers {
+		eventObj, err := waitForWatch(t, w.Channel)
+		wobj := eventObj.Obj
+		// every watcher should receive an event
+		Assert(t, (err == nil), "Received invalid object", w)
+		Assert(t, eventObj.EventType == CreateEvent, "Received invalid object", wobj)
+		Assert(t, (objName(wobj) == getExpectedName(k)), "received a wrong object", wobj)
+	}
+
+	err = delObjects(objs, md)
+	AssertOk(t, err, "Error deleting objects")
+	err = delObjects1(objs1, md)
+	AssertOk(t, err, "Error deleting objects")
+
+	// verify delete watch evernts are received correctly
+	for k, w := range watchers {
+		eventObj, err := waitForWatch(t, w.Channel)
+		wobj := eventObj.Obj
+		// every watcher should receive an event
+		Assert(t, (err == nil), "Received invalid object", w)
+		Assert(t, eventObj.EventType == DeleteEvent, "Received invalid object", wobj)
+		Assert(t, (objName(wobj) == getExpectedName(k)), "received a wrong object", wobj)
+	}
+
+	/*
+		// stop all the watches
+		for k, w := range watchers {
+			strs := strings.Split(k, "-")
+			md.StopWatchObjects(strs[1], &w)
+		}
+	*/
+
+	// add another watcher with existing watch options
+	newWatcher := Watcher{}
+	newWatcher.Channel = make(chan Event, WatchLen)
+	newWatcher.Name = "00:00:00:00:00:04"
+	watchers[newWatcher.Name+"-"+"testObj"] = newWatcher
+	// start the watcher
+	md.WatchObjects("testObj", &newWatcher)
+
+	options := getWatchOptions("00:00:00:00:00:01", "testObj")
+	_, _, err = md.addDscWatchOptions("00:00:00:00:00:04", "testObj", options)
+	Assert(t, (err == nil), "Error adding watch filter group", err)
+
+	err = addObjects(objs, md)
+	AssertOk(t, err, "Error adding objects")
+	err = addObjects1(objs1, md)
+	AssertOk(t, err, "Error adding objects")
+
+	// verify watch evernts are received correctly
+	for k, w := range watchers {
+		eventObj, err := waitForWatch(t, w.Channel)
+		wobj := eventObj.Obj
+		// every watcher should receive an event
+		Assert(t, (err == nil), "Received invalid object", w)
+		Assert(t, eventObj.EventType == CreateEvent, "Received invalid object", wobj)
+		Assert(t, (objName(wobj) == getExpectedName(k)), "received a wrong object", wobj)
+	}
+
+	newObjs := []*testObj{
+		&testObj{
+			TypeMeta: api.TypeMeta{Kind: "testObj"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "tenant",
+				Name:   "watchers1+2",
+			},
+		},
+		&testObj{
+			TypeMeta: api.TypeMeta{Kind: "testObj"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "tenant",
+				Name:   "watchers3+4",
+			},
+		},
+	}
+
+	newObjs1 := []*testObj1{
+		&testObj1{
+			TypeMeta: api.TypeMeta{Kind: "testObj1"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "tenant",
+				Name:   "watchers1+3",
+			},
+		},
+		&testObj1{
+			TypeMeta: api.TypeMeta{Kind: "testObj1"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: "tenant",
+				Name:   "watchers2+4",
+			},
+		},
+	}
+
+	for k := range watchers {
+		strs := strings.Split(k, "-")
+		options := getWatchOptions1(strs[0], strs[1])
+		_, _, err = md.addDscWatchOptions(strs[0], strs[1], options)
+		Assert(t, (err == nil), "Error adding watch filter group", err)
+	}
+
+	err = addObjects(newObjs, md)
+	AssertOk(t, err, "Error adding objects")
+	err = addObjects1(newObjs1, md)
+	AssertOk(t, err, "Error adding objects")
+
+	// verify watch evernts are received correctly
+	for k, w := range watchers {
+		eventObj, err := waitForWatch(t, w.Channel)
+		wobj := eventObj.Obj
+		// every watcher should receive an event
+		Assert(t, (err == nil), "Received invalid object", w)
+		Assert(t, eventObj.EventType == CreateEvent, "Received invalid object", wobj)
+		Assert(t, (objName(wobj) == getExpectedName1(k)), "received a wrong object", wobj)
+	}
+}
+
+func TestMemdbCtrlWatchTopo(t *testing.T) {
+	// create a new memdb
+	md := NewMemdb()
+
+	kinds := []string{"SecurityProfile", "IPAMPolicy", "RouteTable", "Vrf", "NetworkSecurityPolicy", "Network", "RoutingConfig"}
+	// set watch flags
+	wFlags := map[string]uint{}
+	for _, kind := range kinds {
+		wFlags[kind] = ControllerWatchFilter
+	}
+
+	md.SetWatchFilterFlags(wFlags)
+
+	watchers := []Watcher{}
+	for i := 0; i < 2; i++ {
+		w := Watcher{}
+		w.Channel = make(chan Event, WatchLen)
+		w.Name = fmt.Sprintf("00:00:00:00:00:0%d", i+1)
+		watchers = append(watchers, w)
+	}
+
+	for _, k := range kinds {
+		for _, w := range watchers {
+			md.WatchObjects(k, &w)
+		}
+	}
+
+	rtCfg := []*netproto.RoutingConfig{
+		&netproto.RoutingConfig{
+			TypeMeta: api.TypeMeta{Kind: "RoutingConfig"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Name:      "rtcfg-test",
+				Namespace: "default",
+			},
+		},
+		&netproto.RoutingConfig{
+			TypeMeta: api.TypeMeta{Kind: "RoutingConfig"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Name:      "rtcfg-test1",
+				Namespace: "default",
+			},
+		},
+	}
+
+	// add routing config
+	md.SendRoutingConfig(watchers[0].Name, "", rtCfg[0].Name)
+	eventObj, err := waitForWatch(t, watchers[0].Channel)
+	wobj := eventObj.Obj
+	Assert(t, (err == nil), "Received invalid object", watchers[0])
+	Assert(t, eventObj.EventType == ReconcileEvent, "Received invalid object", wobj)
+	Assert(t, (len(eventObj.OldFlts) == 0 && len(eventObj.NewFlts) != 0), "received a wrong object", wobj)
+
+	// update routing config
+	md.SendRoutingConfig(watchers[0].Name, rtCfg[0].Name, rtCfg[1].Name)
+	eventObj, err = waitForWatch(t, watchers[0].Channel)
+	wobj = eventObj.Obj
+	Assert(t, (err == nil), "Received invalid object", watchers[0])
+	Assert(t, eventObj.EventType == ReconcileEvent, "Received invalid object", wobj)
+	Assert(t, (len(eventObj.OldFlts) != 0 && len(eventObj.NewFlts) != 0), "received a wrong object", wobj)
+
+	// delete routing config
+	md.SendRoutingConfig(watchers[0].Name, rtCfg[1].Name, "")
+	eventObj, err = waitForWatch(t, watchers[0].Channel)
+	wobj = eventObj.Obj
+	Assert(t, (err == nil), "Received invalid object", watchers[0])
+	Assert(t, eventObj.EventType == ReconcileEvent, "Received invalid object", wobj)
+	Assert(t, (len(eventObj.OldFlts) != 0 && len(eventObj.NewFlts) == 0), "received a wrong object", wobj)
+
+	ipam := []*netproto.IPAMPolicy{
+		&netproto.IPAMPolicy{
+			TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "ipam-test",
+				Namespace: "default",
+			},
+			Spec: netproto.IPAMPolicySpec{
+				DHCPRelay: &netproto.DHCPRelayPolicy{},
+			},
+			Status: netproto.IPAMPolicyStatus{},
+		},
+		&netproto.IPAMPolicy{
+			TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant2",
+				Name:      "ipam-test",
+				Namespace: "default",
+			},
+			Spec: netproto.IPAMPolicySpec{
+				DHCPRelay: &netproto.DHCPRelayPolicy{},
+			},
+			Status: netproto.IPAMPolicyStatus{},
+		},
+		&netproto.IPAMPolicy{
+			TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "ipam-def",
+				Namespace: "default",
+			},
+			Spec: netproto.IPAMPolicySpec{
+				DHCPRelay: &netproto.DHCPRelayPolicy{},
+			},
+			Status: netproto.IPAMPolicyStatus{},
+		},
+		&netproto.IPAMPolicy{
+			TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant2",
+				Name:      "ipam-test1",
+				Namespace: "default",
+			},
+			Spec: netproto.IPAMPolicySpec{
+				DHCPRelay: &netproto.DHCPRelayPolicy{},
+			},
+			Status: netproto.IPAMPolicyStatus{},
+		},
+		&netproto.IPAMPolicy{
+			TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant2",
+				Name:      "ipam-def",
+				Namespace: "default",
+			},
+			Spec: netproto.IPAMPolicySpec{
+				DHCPRelay: &netproto.DHCPRelayPolicy{},
+			},
+			Status: netproto.IPAMPolicyStatus{},
+		},
+		&netproto.IPAMPolicy{
+			TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant2",
+				Name:      "ipam-def1",
+				Namespace: "default",
+			},
+			Spec: netproto.IPAMPolicySpec{
+				DHCPRelay: &netproto.DHCPRelayPolicy{},
+			},
+			Status: netproto.IPAMPolicyStatus{},
+		},
+	}
+
+	server := &netproto.DHCPServer{
+		IPAddress:     "10.1.1.1",
+		VirtualRouter: "default",
+	}
+	ipam[0].Spec.DHCPRelay.Servers = append(ipam[0].Spec.DHCPRelay.Servers, server)
+
+	server1 := &netproto.DHCPServer{
+		IPAddress:     "20.1.1.1",
+		VirtualRouter: "default",
+	}
+	ipam[1].Spec.DHCPRelay.Servers = append(ipam[1].Spec.DHCPRelay.Servers, server1)
+
+	for _, i := range ipam {
+		err := md.AddObject(i)
+		AssertOk(t, err, "IPAM object add failed")
+	}
+
+	vrf := []*netproto.Vrf{
+		&netproto.Vrf{
+			TypeMeta: api.TypeMeta{Kind: "Vrf"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "vrf-test",
+				Namespace: "default",
+			},
+
+			Spec: netproto.VrfSpec{
+				IPAMPolicy: "ipam-def",
+			},
+		},
+		&netproto.Vrf{
+			TypeMeta: api.TypeMeta{Kind: "Vrf"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant2",
+				Name:      "vrf-test",
+				Namespace: "default",
+			},
+
+			Spec: netproto.VrfSpec{
+				IPAMPolicy: "ipam-def",
+			},
+		},
+		&netproto.Vrf{
+			TypeMeta: api.TypeMeta{Kind: "Vrf"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant2",
+				Name:      "vrf-test",
+				Namespace: "default",
+			},
+
+			Spec: netproto.VrfSpec{
+				IPAMPolicy: "ipam-def1",
+			},
+		},
+	}
+
+	for c, v := range vrf {
+		if c != 2 {
+			err := md.AddObject(v)
+			AssertOk(t, err, "VRF object add failed")
+		}
+	}
+
+	sgpolicy := []*netproto.NetworkSecurityPolicy{
+		&netproto.NetworkSecurityPolicy{
+			TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "sgpolicy-test1",
+				Namespace: "default",
+			},
+		},
+		&netproto.NetworkSecurityPolicy{
+			TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "sgpolicy-test2",
+				Namespace: "default",
+			},
+		},
+		&netproto.NetworkSecurityPolicy{
+			TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant2",
+				Name:      "sgpolicy-test1",
+				Namespace: "default",
+			},
+		},
+		&netproto.NetworkSecurityPolicy{
+			TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant2",
+				Name:      "sgpolicy-test2",
+				Namespace: "default",
+			},
+		},
+		&netproto.NetworkSecurityPolicy{
+			TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant2",
+				Name:      "sgpolicy-test3",
+				Namespace: "default",
+			},
+		},
+	}
+
+	for _, s := range sgpolicy {
+		err := md.AddObject(s)
+		AssertOk(t, err, "sgpolicy add failed")
+	}
+
+	nw := []*netproto.Network{
+		&netproto.Network{
+			TypeMeta: api.TypeMeta{Kind: "Network"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "network-test",
+				Namespace: "default",
+			},
+			Spec: netproto.NetworkSpec{
+				VrfName:               "vrf-test",
+				IPAMPolicy:            "ipam-test",
+				IngV4SecurityPolicyID: []string{"sgpolicy-test1"},
+				EgV4SecurityPolicyID:  []string{"sgpolicy-test2"},
+			},
+		},
+		&netproto.Network{
+			TypeMeta: api.TypeMeta{Kind: "Network"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant2",
+				Name:      "network-test",
+				Namespace: "default",
+			},
+			Spec: netproto.NetworkSpec{
+				VrfName:               "vrf-test",
+				IPAMPolicy:            "ipam-test",
+				IngV4SecurityPolicyID: []string{"sgpolicy-test1"},
+				EgV4SecurityPolicyID:  []string{"sgpolicy-test2"},
+			},
+		},
+		&netproto.Network{
+			TypeMeta: api.TypeMeta{Kind: "Network"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant2",
+				Name:      "network-test",
+				Namespace: "default",
+			},
+			Spec: netproto.NetworkSpec{
+				VrfName: "vrf-test",
+				//IPAMPolicy:            "ipam-test1",
+				IngV4SecurityPolicyID: []string{"sgpolicy-test1"},
+				EgV4SecurityPolicyID:  []string{"sgpolicy-test3"},
+			},
+		},
+	}
+
+	for a, n := range nw {
+		if a != 2 {
+			err := md.AddObject(n)
+			AssertOk(t, err, "network add failed")
+		}
+	}
+
+	nwif := []*netproto.Interface{
+		&netproto.Interface{
+			TypeMeta: api.TypeMeta{Kind: "Interface"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "netif-test",
+				Namespace: "default",
+			},
+			Spec: netproto.InterfaceSpec{
+				VrfName: "tenant1",
+				Network: "network-test",
+			},
+			Status: netproto.InterfaceStatus{
+				DSC: "00:00:00:00:00:01",
+			},
+		},
+		&netproto.Interface{
+			TypeMeta: api.TypeMeta{Kind: "Interface"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "netif-test",
+				Namespace: "default",
+			},
+			Spec: netproto.InterfaceSpec{
+				VrfName: "tenant2",
+				Network: "network-test",
+			},
+			Status: netproto.InterfaceStatus{
+				DSC: "00:00:00:00:00:01",
+			},
+		},
+		&netproto.Interface{
+			TypeMeta: api.TypeMeta{Kind: "Interface"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "netif-test",
+				Namespace: "default",
+			},
+			Spec: netproto.InterfaceSpec{
+				VrfName: "",
+				Network: "",
+			},
+			Status: netproto.InterfaceStatus{
+				DSC: "00:00:00:00:00:01",
+			},
+		},
+	}
+
+	//for _, ni := range nwif {
+	err = md.AddObject(nwif[0])
+	AssertOk(t, err, "nwif add failed")
+	//}
+	fmt.Println(md.topoHandler.dump())
+
+	if dscDB, ok := md.dscWatcherInfo["00:00:00:00:00:01"]; ok {
+		fmt.Println(dscDB.dump())
+	}
+
+	cnt := 0
+	for true {
+		_, err := waitForWatch(t, watchers[0].Channel)
+		Assert(t, (err == nil), "Received invalid object", err)
+		cnt++
+		if cnt == 6 {
+			break
+		}
+	}
+
+	err = md.UpdateObject(nwif[1])
+	AssertOk(t, err, "nwif update failed")
+
+	fmt.Println(md.topoHandler.dump())
+
+	if dscDB, ok := md.dscWatcherInfo["00:00:00:00:00:01"]; ok {
+		fmt.Println(dscDB.dump())
+	}
+
+	cnt = 0
+	for true {
+		_, err := waitForWatch(t, watchers[0].Channel)
+		Assert(t, (err == nil), "Received invalid object", err)
+		cnt++
+		if cnt == 6 {
+			break
+		}
+	}
+
+	err = md.UpdateObject(nw[2])
+	AssertOk(t, err, "nw update failed")
+
+	fmt.Println(md.topoHandler.dump())
+	if dscDB, ok := md.dscWatcherInfo["00:00:00:00:00:01"]; ok {
+		fmt.Println(dscDB.dump())
+	}
+
+	cnt = 0
+	for true {
+		_, err := waitForWatch(t, watchers[0].Channel)
+		Assert(t, (err == nil), "Received invalid object", err)
+		cnt++
+		if cnt == 3 {
+			break
+		}
+	}
+
+	// update vrf ipam policy
+	err = md.UpdateObject(vrf[2])
+	AssertOk(t, err, "vrf update failed")
+
+	fmt.Println(md.topoHandler.dump())
+	if dscDB, ok := md.dscWatcherInfo["00:00:00:00:00:01"]; ok {
+		fmt.Println(dscDB.dump())
+	}
+
+	cnt = 0
+	for true {
+		_, err := waitForWatch(t, watchers[0].Channel)
+		Assert(t, (err == nil), "Received invalid object", err)
+		cnt++
+		if cnt == 2 {
+			break
+		}
+	}
+
+	// detach the network
+	err = md.UpdateObject(nwif[2])
+	AssertOk(t, err, "nwif update failed")
+
+	fmt.Println(md.topoHandler.dump())
+
+	if dscDB, ok := md.dscWatcherInfo["00:00:00:00:00:01"]; ok {
+		fmt.Println(dscDB.dump())
+	}
+
+	cnt = 0
+	for true {
+		_, err := waitForWatch(t, watchers[0].Channel)
+		Assert(t, (err == nil), "Received invalid object", err)
+		cnt++
+		if cnt == 6 {
+			break
+		}
+	}
+
+	err = md.DeleteObject(nw[0])
+	Assert(t, (err == nil), "nw delete failed")
+
+	err = md.DeleteObject(vrf[0])
+	Assert(t, (err == nil), "vrf delete failed")
+
+	// stop all the watchers
+	for _, k := range kinds {
+		for _, w := range watchers {
+			md.StopWatchObjects(k, &w)
+		}
+	}
 }
