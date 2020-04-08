@@ -1,6 +1,12 @@
-//-----------------------------------------------------------------------------
-// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
-//-----------------------------------------------------------------------------
+//
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// This module defines nicmgr event handlers during process upgrade
+///
+//----------------------------------------------------------------------------
 
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/nicmgr/include/eth_dev.hpp"
@@ -8,7 +14,7 @@
 
 
 namespace nicmgr {
-namespace lib {
+namespace upg {
 
 static UpgradeEvent UpgEvent;
 static UpgradeState ExpectedState;
@@ -21,7 +27,7 @@ static DeviceManager *devmgr;
 static upg_device_reset_status_cb_t reset_status_app_cb;
 static upg_event_response_cb_t event_response_app_cb;
 
-evutil_timer ServiceTimer;
+static evutil_timer ServiceTimer;
 
 static string
 UpgStateToStr (UpgradeState state)
@@ -188,5 +194,5 @@ upg_ev_init (upg_device_reset_status_cb_t reset_status_cb,
     devmgr = DeviceManager::GetInstance();
 }
 
-}   // namespace lib
+}   // namespace upg
 }   // namespace nicmgr

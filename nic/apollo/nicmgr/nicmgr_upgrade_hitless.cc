@@ -9,9 +9,19 @@
 #include "nic/apollo/api/internal/upgrade_ev.hpp"
 #include "nic/apollo/api/upgrade.hpp"
 
-using api::upg_ev_params_t;
-
 namespace nicmgr {
+
+sdk_ret_t
+nicmgr_upg_hitless_init (void)
+{
+    // TODO
+    return SDK_RET_OK;
+}
+
+}    // namespace nicmgr
+
+// below functions are called from api thread context
+namespace api {
 
 static sdk_ret_t
 nicmgr_send_ipc (api::upg_ev_msg_id_t id)
@@ -63,7 +73,7 @@ upg_ev_exit (upg_ev_params_t *params)
 }
 
 sdk_ret_t
-upg_hitless_init (void)
+nicmgr_upg_hitless_init (void)
 {
     upg_ev_hitless_t ev_hdlr;
 
@@ -85,4 +95,4 @@ upg_hitless_init (void)
     return SDK_RET_OK;
 }
 
-}    // namespace nicmgr
+}    // namespace api

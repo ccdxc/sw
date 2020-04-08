@@ -21,7 +21,6 @@
 #include "nic/apollo/api/upgrade_state.hpp"
 #include "nic/apollo/api/internal/upgrade_ev.hpp"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
-#include "platform/src/lib/nicmgr/include/upgrade.hpp"
 
 /// \defgroup PDS_NICMGR
 /// @{
@@ -31,14 +30,6 @@ sdk::event_thread::prepare_t g_ev_prepare;
 
 namespace nicmgr {
 
-// ipc incoming msg pointer which should be saved and later
-// used to respond to the caller
-typedef struct upg_ev_info_s {
-    sdk::ipc::ipc_msg_ptr msg_in;
-} upg_ev_info_t;
-
-using api::upg_ev_params_t;
-
 static void
 prepare_callback (sdk::event_thread::prepare_t *prepare, void *ctx)
 {
@@ -47,108 +38,6 @@ prepare_callback (sdk::event_thread::prepare_t *prepare, void *ctx)
     if (utils::logger::logger()) {
         utils::logger::logger()->flush();
     }
-}
-
-static void
-nicmgr_upg_ev_response_hdlr (sdk_ret_t status, void *cookie)
-{
-    upg_ev_info_t *info = (upg_ev_info_t *)cookie;
-    upg_ev_params_t *params = (upg_ev_params_t *)info->msg_in->data();
-    upg_ev_params_t resp;
-
-    PDS_TRACE_DEBUG("Upgrade nicmgr IPC response type %s status %u",
-                    upg_msgid2str(params->id), status);
-
-    if (status == SDK_RET_IN_PROGRESS) {
-        return;
-    }
-
-    resp.id = params->id;
-    resp.rsp_code = status;
-    sdk::ipc::respond(info->msg_in, (const void *)&resp, sizeof(resp));
-    delete info;
-}
-
-// callback handler from nicmgr library when the hostdev
-// reset is completed. some pipelines may need this
-static int
-nicmgr_device_reset_status_hdlr (void)
-{
-    return 0;
-}
-
-static void
-nicmgr_upg_ev_compat_check_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
-{
-    upg_ev_info_s *info = new upg_ev_info_t();
-    sdk_ret_t ret;
-
-    PDS_TRACE_DEBUG("Upgrade nicmgr IPC request compat check");
-    info->msg_in = msg;
-    ret = nicmgr::lib::upg_compat_check_handler();
-    return nicmgr_upg_ev_response_hdlr(ret, info);
-}
-
-static void
-nicmgr_upg_ev_backup_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
-{
-    upg_ev_info_s *info = new upg_ev_info_t();
-
-    PDS_TRACE_DEBUG("Upgrade nicmgr IPC request backup");
-    info->msg_in = msg;
-    // TODO
-    return nicmgr_upg_ev_response_hdlr(SDK_RET_OK, info);
-}
-
-static void
-nicmgr_upg_ev_link_down_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
-{
-    upg_ev_info_s *info = new upg_ev_info_t();
-    sdk_ret_t ret;
-
-    PDS_TRACE_DEBUG("Upgrade nicmgr IPC request linkdown");
-    info->msg_in = msg;
-    ret = nicmgr::lib::upg_link_down_handler(info);
-    return nicmgr_upg_ev_response_hdlr(ret, info);
-}
-
-static void
-nicmgr_upg_ev_hostdev_reset_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
-{
-    upg_ev_info_s *info = new upg_ev_info_t();
-    sdk_ret_t ret;
-
-    PDS_TRACE_DEBUG("Upgrade nicmgr IPC request hostdev reset");
-    info->msg_in = msg;
-    ret = nicmgr::lib::upg_host_down_handler(info);
-    return nicmgr_upg_ev_response_hdlr(ret, info);
-}
-
-static void
-nicmgr_upg_ev_repeal_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
-{
-    upg_ev_info_s *info = new upg_ev_info_t();
-    sdk_ret_t ret;
-
-    PDS_TRACE_DEBUG("Upgrade nicmgr IPC request repeal");
-    info->msg_in = msg;
-    ret = nicmgr::lib::upg_failed_handler(info);
-    return nicmgr_upg_ev_response_hdlr(ret, info);
-}
-
-static void
-upg_ipc_register (void)
-{
-    sdk::ipc::reg_request_handler(UPG_MSG_ID_COMPAT_CHECK,
-                                  nicmgr_upg_ev_compat_check_hdlr, NULL);
-    sdk::ipc::reg_request_handler(UPG_MSG_ID_BACKUP,
-                                  nicmgr_upg_ev_backup_hdlr, NULL);
-    sdk::ipc::reg_request_handler(UPG_MSG_ID_LINK_DOWN,
-                                  nicmgr_upg_ev_link_down_hdlr, NULL);
-    sdk::ipc::reg_request_handler(UPG_MSG_ID_HOSTDEV_RESET,
-                                  nicmgr_upg_ev_hostdev_reset_hdlr, NULL);
-    sdk::ipc::reg_request_handler(UPG_MSG_ID_REPEAL,
-                                  nicmgr_upg_ev_repeal_hdlr, NULL);
 }
 
 void
@@ -205,11 +94,7 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     sdk::event_thread::prepare_start(&g_ev_prepare);
 
     // register for upgrade events
-    upg_ipc_register();
-
-    // register the async handlers to nicmgr library
-    nicmgr::lib::upg_ev_init(nicmgr_device_reset_status_hdlr,
-                             nicmgr_upg_ev_response_hdlr);
+    nicmgr_upg_graceful_init();
 
     PDS_TRACE_INFO("Listening to events ...");
 }

@@ -12,7 +12,7 @@
 #define __NICMGR_LIB_UPGRADE_HPP__
 
 namespace nicmgr {
-namespace lib {
+namespace upg {
 
 typedef int (*upg_device_reset_status_cb_t)(void);
 typedef void (*upg_event_response_cb_t)(sdk_ret_t status, void *cookie);
@@ -24,7 +24,7 @@ sdk_ret_t upg_host_down_handler(void *cookie);
 void upg_ev_init(upg_device_reset_status_cb_t reset_status_cb,
                  upg_event_response_cb_t event_response_cb);
 
-}   // namespace lib
+}   // namespace upg
 }   // namespace nicmgr
 
 #endif   // __NICMGR_LIB_UPGRADE_HPP__

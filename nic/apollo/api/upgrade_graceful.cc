@@ -118,7 +118,7 @@ upg_ev_repeal (upg_ev_params_t *params)
 static sdk_ret_t
 upg_ev_exit (upg_ev_params_t *params)
 {
-    return pds_teardown();
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

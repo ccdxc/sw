@@ -159,6 +159,8 @@ class Eth : public Device
 
     int SendFWDownEvent();
     void GetEthDevInfo(struct EthDevInfo *dev_info);
+    static std::string eth_type_to_str(EthDevType type);
+    static EthDevType str_to_eth_type(std::string const &s);
 
   private:
     // Device Spec
@@ -246,9 +248,7 @@ class Eth : public Device
     static void PortConfigUpdate(void *obj);
     static void PortStatusUpdate(void *obj);
 
-    static std::string eth_type_to_str(EthDevType type);
     static std::string os_type_to_str(unsigned int os_type);
-    static EthDevType str_to_eth_type(std::string const &s);
 
     const char *opcode_to_str(cmd_opcode_t opcode);
     const char *qos_class_to_str(uint8_t qos_class);

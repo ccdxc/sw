@@ -116,6 +116,7 @@ nic/build/$ARCH/$PIPELINE/lib/libalerts_operd_con.so              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liboperd_alerts.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libupgrade_core.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libupgrade_ev.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsnicmgr_upgrade.so             /nic/lib/
 
 # p4/asm specific libs
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/asm_bin/

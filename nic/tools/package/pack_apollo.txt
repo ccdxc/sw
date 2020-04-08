@@ -114,6 +114,7 @@ nic/build/$ARCH/$PIPELINE/lib/liboperd.so                         /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpenmetrics.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libupgrade_core.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libupgrade_ev.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsnicmgr_upgrade.so             /nic/lib/
 
 # p4/asm specific libs
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/asm_bin/

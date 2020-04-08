@@ -75,9 +75,9 @@ upg_init (pds_init_params_t *params)
     }
 
     // nicmgr registers for upgrade events
-    ret = nicmgr::upg_graceful_init();
+    ret = nicmgr_upg_graceful_init();
     if (ret == SDK_RET_OK) {
-        ret = nicmgr::upg_hitless_init();
+        ret = nicmgr_upg_hitless_init();
     }
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Upgrade nicmgr graceful/hitless init failed");

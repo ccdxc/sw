@@ -6,5 +6,6 @@ MODULE_PIPELINE = apollo artemis apulu athena
 MODULE_INCS     := ${MODULE_SRC_DIR} \
                    ${TOPDIR}/nic/sdk/platform/devapi \
                    ${TOPDIR}/platform/src/lib/nicmgr/include
+MODULE_SRCS     := ${MODULE_SRC_DIR}/nicmgr.cc
 MODULE_PREREQS  = hal.memrgns
 include ${MKDEFS}/post.mk

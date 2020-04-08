@@ -163,7 +163,7 @@ upg_event_send (sdk::upg::upg_ev_params_t *params)
 }
 
 void
-upg_ev_response_hdlr (sdk_ret_t ret, upg_ev_msg_id_t id)
+upg_ev_process_response (sdk_ret_t ret, upg_ev_msg_id_t id)
 {
     sdk::upg::upg_ev_params_t *params = api::g_upg_state->ev_params();
 

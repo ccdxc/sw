@@ -54,9 +54,9 @@ upg_event2hdlr (upg_ev_id_t ev_id)
     }
 }
 
-// ipc async response handler
+// ipc async response processing function
 static void
-upg_ev_response_hdlr (sdk_ret_t status, const void *cookie)
+upg_ev_process_response (sdk_ret_t status, const void *cookie)
 {
     upg_event_msg_t resp;
     upg_ev_info_t *info = (upg_ev_info_t *)cookie;
@@ -99,7 +99,7 @@ upg_ev_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
         SDK_TRACE_INFO("Upgrade Invalid stage %s, ignoring",
                        upg_stage2str(event->stage));
         // returning OK as latest upgmgr and prev services should work
-        return upg_ev_response_hdlr(SDK_RET_OK, info);
+        return upg_ev_process_response(SDK_RET_OK, info);
     }
 
     ev_id = upg_stage2event(event->stage);
@@ -109,7 +109,7 @@ upg_ev_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
     if (!ev_func) {
         SDK_TRACE_INFO("Upgrade stage %s not implemented %s",
                        upg_stage2str(event->stage));
-        return upg_ev_response_hdlr(SDK_RET_OK, info);
+        return upg_ev_process_response(SDK_RET_OK, info);
     }
 
     // validate event-id vs stage
@@ -119,13 +119,13 @@ upg_ev_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
     // TODO fill other infos
     params.id = ev_id;
     params.mode = event->mode;
-    params.response_cb = upg_ev_response_hdlr;
+    params.response_cb = upg_ev_process_response;
     params.response_cookie = info;
     ret = ev_func(&params);
     SDK_TRACE_DEBUG("Upgrade IPC event stage %s ret %u",
                     upg_stage2str(event->stage), ret);
     if (ret != SDK_RET_IN_PROGRESS) {
-        upg_ev_response_hdlr(ret, info);
+        upg_ev_process_response(ret, info);
     }
     return;
 }
