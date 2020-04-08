@@ -47,7 +47,7 @@ accelcfg_exit (void)
 extern "C" void
 accelcfg_thread_init(int tid)
 {
-    HAL_ABORT(hal::accel_rgroup_init(tid) == HAL_RET_OK);
+    HAL_ABORT(hal::accel_rgroup_init(tid, ACCEL_RING_ID_MAX) == HAL_RET_OK);
 }
 
 extern "C" void

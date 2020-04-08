@@ -4,7 +4,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = asicerrord.bin
 MODULE_PIPELINE = iris
 MODULE_SOLIBS   = sdkpal delphisdk logger halproto shmmgr utils sdkasicpd\
-                  pdcapri pdcommon p4pd_${PIPELINE} sdkp4 sdkp4utils \
+                  pdcommon p4pd_${PIPELINE} sdkp4 sdkp4utils \
                   p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma \
                   asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}} ${NIC_SDK_SOLIBS} \
                   bm_allocator sdkxcvrdriver hal_mock \

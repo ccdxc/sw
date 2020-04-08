@@ -6,7 +6,7 @@
 
 #include "include/sdk/base.hpp"
 #include "include/sdk/eth.hpp"
-#include "nic/include/accel_ring.h"
+#include "include/sdk/accel_metrics.h"
 #include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
 #include <set>
 

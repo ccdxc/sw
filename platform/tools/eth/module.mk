@@ -5,7 +5,7 @@ MODULE_PIPELINE := iris
 MODULE_SOLIBS   := sdkpal logger sdkplatformutils shmmgr bm_allocator \
                     ${NIC_SDK_SOLIBS} \
                     sdkcapri_asicrw_if \
-                    sdkasicpd pdcapri pdcommon\
+                    sdkasicpd pdcommon\
                     sdkp4 sdkp4utils \
                     asicpd \
                     p4pd_${PIPELINE} \

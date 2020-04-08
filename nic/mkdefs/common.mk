@@ -99,8 +99,8 @@ export NIC_HAL_UTILS_SOLIBS := utils bitmap block_list nat eventmgr \
 
 export NIC_HAL_PD_SOLIBS_x86_64 := model_client
 export NIC_HAL_PD_SOLIBS_aarch64 :=
-export NIC_HAL_PD_SOLIBS := sdkcapri_asicrw_if pdcapri pdcommon sdkp4 \
-       pd_${PIPELINE} sdkasicpd sdkasiccmn asicpd pd_acl_tcam pd_met pdaccel \
+export NIC_HAL_PD_SOLIBS := sdkcapri_asicrw_if pdcommon sdkp4 \
+       pd_${PIPELINE} sdkasicpd sdkasiccmn asicpd pd_acl_tcam pd_met \
        ${NIC_HAL_PD_SOLIBS_${ARCH}}
 export NIC_CAPSIM_LDLIBS := mpuobj capisa isa sknobs
 

@@ -73,7 +73,6 @@ enum {
     HAL_TIMER_ID_CLOCK_ROLLOVER,
     HAL_TIMER_ID_ALG_MIN,
     HAL_TIMER_ID_ALG_MAX = HAL_TIMER_ID_ALG_MIN + 32,
-    HAL_TIMER_ID_ACCEL_RGROUP,
     HAL_TIMER_ID_VMOTION_TIMEOUT,
     HAL_TIMER_ID_EP_VMOTION_NORMALIZATION,
     HAL_TIMER_ID_MAX,
@@ -89,7 +88,7 @@ typedef enum bond_mode_s {
     BOND_MODE_BALANCE_ALB,
     BOND_MODE_NONE
 } bond_mode_t;
-    
+
 
 #define HAL_HANDLE_HT_SZ                             (16 << 10)
 
@@ -413,7 +412,7 @@ public:
     void set_customer_default_vrf(vrf_id_t vrf) { customer_default_vrf_ = vrf; }
     vrf_id_t customer_default_vrf(void) { return customer_default_vrf_; }
 
-    void set_inb_bond_active_uplink(hal_handle_t hdl) { inb_bond_active_uplink_hdl_ = hdl; } 
+    void set_inb_bond_active_uplink(hal_handle_t hdl) { inb_bond_active_uplink_hdl_ = hdl; }
     hal_handle_t inb_bond_active_uplink(void) { return inb_bond_active_uplink_hdl_; }
 
     void set_customer_default_security_profile (hal_handle_t hdl) { customer_default_securityprof_hdl_ = hdl; }

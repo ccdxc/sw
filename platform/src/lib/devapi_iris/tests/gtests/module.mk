@@ -11,7 +11,7 @@ MODULE_SOLIBS   := devapi_iris halproto indexer hal_devapi
 #                   commonproto nicmgrproto halproto \
 #                   delphisdk upgrade upgrade_app upgradeutils sysmgr \
 #                   sdkcapri_asicrw_if \
-#                   sdkasicpd pdcapri pdcommon hal_mock \
+#                   sdkasicpd pdcommon hal_mock \
 #                   sdkp4 sdkp4utils p4pd_common_p4plus_rxdma sdkxcvrdriver \
 #                   p4pd_common_p4plus_txdma p4pd_${PIPELINE} \
 #                   asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}} devapi_iris

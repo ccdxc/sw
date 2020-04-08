@@ -4,30 +4,28 @@
 
 #include "accel_rgroup.hpp"
 #include "nic/include/pd_api.hpp"
+#include "nic/sdk/asic/pd/pd_accel_rgroup.hpp"
+
+using namespace sdk::asic::pd::accel;
 
 namespace hal {
 
 hal_ret_t
-accel_rgroup_init(int tid)
+accel_rgroup_init(int tid, uint32_t accel_total_rings)
 {
-   pd::pd_accel_rgroup_init_args_t  args = {0};
-   pd::pd_func_args_t               pd_func_args = {0};
+   sdk_ret_t sdk_ret;
 
-   args.tid = tid;
-   pd_func_args.pd_accel_rgroup_init = &args;
-   return  pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_INIT, &pd_func_args);
+   sdk_ret = asicpd_accel_rgroup_init(tid, accel_total_rings);
+   return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 
 hal_ret_t
 accel_rgroup_fini(int tid)
 {
-   pd::pd_accel_rgroup_fini_args_t  args = {0};
-   pd::pd_func_args_t               pd_func_args = {0};
-
-   args.tid = tid;
-   pd_func_args.pd_accel_rgroup_fini = &args;
-   return  pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_FINI, &pd_func_args);
+   sdk_ret_t sdk_ret;
+   sdk_ret = asicpd_accel_rgroup_fini(tid);
+   return hal_sdk_ret_to_hal_ret(sdk_ret);
 }
 
 
@@ -35,31 +33,31 @@ hal_ret_t
 accel_rgroup_add(const AccelRGroupAddRequest& request,
                  AccelRGroupAddResponse *response)
 {
-    pd::pd_accel_rgroup_add_args_t  args = {0};
-    pd::pd_func_args_t              pd_func_args = {0};
-    hal_ret_t                       ret;
+    sdk_ret_t sdk_ret;
+    hal_ret_t ret;
 
-    args.rgroup_name = request.rgroup_name().c_str();
-    args.metrics_mem_addr = request.metrics_mem_addr();
-    args.metrics_mem_size = request.metrics_mem_size();
-    pd_func_args.pd_accel_rgroup_add = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_ADD, &pd_func_args);
-    response->set_api_status(ret == HAL_RET_OK ? types::API_STATUS_OK :
-                                                 types::API_STATUS_ERR);
-    return ret;
+    sdk_ret = asicpd_accel_rgroup_add(
+                            request.rgroup_name().c_str(),
+                            request.metrics_mem_addr(),
+                            request.metrics_mem_size()
+                            );
+   ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+
+   response->set_api_status(ret == HAL_RET_OK ? types::API_STATUS_OK :
+                                                types::API_STATUS_ERR);
+   return ret;
 }
 
 hal_ret_t
 accel_rgroup_del(const AccelRGroupDelRequest& request,
                  AccelRGroupDelResponse *response)
 {
-    pd::pd_accel_rgroup_del_args_t  args = {0};
-    pd::pd_func_args_t              pd_func_args = {0};
-    hal_ret_t                       ret;
+    sdk_ret_t   sdk_ret;
+    hal_ret_t   ret;
 
-    args.rgroup_name = request.rgroup_name().c_str();
-    pd_func_args.pd_accel_rgroup_del = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_DEL, &pd_func_args);
+    sdk_ret = asicpd_accel_rgroup_del(request.rgroup_name().c_str());
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+
     response->set_api_status(ret == HAL_RET_OK ? types::API_STATUS_OK :
                                                  types::API_STATUS_ERR);
     return ret;
@@ -69,17 +67,17 @@ hal_ret_t
 accel_rgroup_ring_add(const AccelRGroupRingAddRequest& request,
                       AccelRGroupRingAddResponse *response)
 {
-    pd::pd_accel_rgroup_ring_add_args_t args = {0};
-    pd::pd_func_args_t                  pd_func_args = {0};
-    hal_ret_t                           ret;
+    sdk_ret_t   sdk_ret;
+    hal_ret_t   ret;
 
-    args.rgroup_name = request.rgroup_name().c_str();
-    args.ring_name = request.ring_name().c_str();
-    args.ring_handle = request.ring_handle();
-    pd_func_args.pd_accel_rgroup_ring_add = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_RING_ADD, &pd_func_args);
+    sdk_ret = asicpd_accel_rgroup_ring_add(
+                             request.rgroup_name().c_str(),
+                             request.ring_name().c_str(),
+                             request.ring_handle()
+                            );
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
-    response->set_ring_handle(args.ring_handle);
+    response->set_ring_handle(request.ring_handle());
     response->set_api_status(ret == HAL_RET_OK ? types::API_STATUS_OK :
                                                  types::API_STATUS_ERR);
     return ret;
@@ -89,14 +87,14 @@ hal_ret_t
 accel_rgroup_ring_del(const AccelRGroupRingDelRequest& request,
                       AccelRGroupRingDelResponse *response)
 {
-    pd::pd_accel_rgroup_ring_del_args_t args = {0};
-    pd::pd_func_args_t                  pd_func_args = {0};
-    hal_ret_t                           ret;
+    sdk_ret_t   sdk_ret;
+    hal_ret_t   ret;
 
-    args.rgroup_name = request.rgroup_name().c_str();
-    args.ring_name = request.ring_name().c_str();
-    pd_func_args.pd_accel_rgroup_ring_del = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_RING_DEL, &pd_func_args);
+    sdk_ret = asicpd_accel_rgroup_ring_del(
+                             request.rgroup_name().c_str(),
+                             request.ring_name().c_str()
+                             );
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
 
     response->set_api_status(ret == HAL_RET_OK ? types::API_STATUS_OK :
                                                  types::API_STATUS_ERR);
@@ -107,19 +105,26 @@ hal_ret_t
 accel_rgroup_reset_set(const AccelRGroupResetSetRequest& request,
                        AccelRGroupResetSetResponse *response)
 {
-    pd::pd_accel_rgroup_reset_set_args_t    args = {0};
-    pd::pd_func_args_t                      pd_func_args = {0};
-    hal_ret_t                               ret;
+    sdk_ret_t   sdk_ret;
+    hal_ret_t   ret;
+    uint32_t    last_ring_handle = 0;
+    uint32_t    last_sub_ring = 0;
 
-    args.rgroup_name = request.rgroup_name().c_str();
-    args.sub_ring = request.sub_ring();
-    args.reset_sense = request.reset_sense();
-    pd_func_args.pd_accel_rgroup_reset_set = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_RESET_SET, &pd_func_args);
+    sdk_ret = asicpd_accel_rgroup_reset_set(
+                                            request.rgroup_name().c_str(),
+                                            request.sub_ring(),
+                                            &last_ring_handle,
+                                            &last_sub_ring,
+                                            request.reset_sense()
+                                           );
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+
     response->set_api_status(ret == HAL_RET_OK ? types::API_STATUS_OK :
                                                  types::API_STATUS_ERR);
-    response->set_last_ring_handle(args.last_ring_handle);
-    response->set_last_sub_ring(args.last_sub_ring);
+
+    response->set_last_ring_handle(last_ring_handle);
+    response->set_last_sub_ring(last_sub_ring);
+
     return ret;
 }
 
@@ -127,19 +132,24 @@ hal_ret_t
 accel_rgroup_enable_set(const AccelRGroupEnableSetRequest& request,
                         AccelRGroupEnableSetResponse *response)
 {
-    pd::pd_accel_rgroup_enable_set_args_t   args = {0};
-    pd::pd_func_args_t                      pd_func_args = {0};
-    hal_ret_t                               ret;
+    sdk_ret_t   sdk_ret;
+    hal_ret_t   ret;
+    uint32_t    last_ring_handle = 0;
+    uint32_t    last_sub_ring = 0;
 
-    args.rgroup_name = request.rgroup_name().c_str();
-    args.sub_ring = request.sub_ring();
-    args.enable_sense = request.enable_sense();
-    pd_func_args.pd_accel_rgroup_enable_set = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_ENABLE_SET, &pd_func_args);
+    sdk_ret = asicpd_accel_rgroup_enable_set(
+                       request.rgroup_name().c_str(),
+                       request.sub_ring(),
+                       &last_ring_handle,
+                       &last_sub_ring,
+                       request.enable_sense());
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+
     response->set_api_status(ret == HAL_RET_OK ? types::API_STATUS_OK :
                                                  types::API_STATUS_ERR);
-    response->set_last_ring_handle(args.last_ring_handle);
-    response->set_last_sub_ring(args.last_sub_ring);
+
+    response->set_last_ring_handle(last_ring_handle);
+    response->set_last_sub_ring(last_sub_ring);
     return ret;
 }
 
@@ -147,20 +157,25 @@ hal_ret_t
 accel_rgroup_pndx_set(const AccelRGroupPndxSetRequest& request,
                       AccelRGroupPndxSetResponse *response)
 {
-    pd::pd_accel_rgroup_pndx_set_args_t args = {0};
-    pd::pd_func_args_t                  pd_func_args = {0};
-    hal_ret_t                           ret;
+    sdk_ret_t   sdk_ret;
+    hal_ret_t   ret;
+    uint32_t    last_ring_handle = 0;
+    uint32_t    last_sub_ring = 0;
 
-    args.rgroup_name = request.rgroup_name().c_str();
-    args.sub_ring = request.sub_ring();
-    args.val = request.val();
-    args.conditional = request.conditional();
-    pd_func_args.pd_accel_rgroup_pndx_set = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_PNDX_SET, &pd_func_args);
+    sdk_ret  = asicpd_accel_rgroup_pndx_set(
+                                request.rgroup_name().c_str(),
+                                request.sub_ring(),
+                                &last_ring_handle,
+                                &last_sub_ring,
+                                request.val(),
+                                request.conditional());
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+
+
     response->set_api_status(ret == HAL_RET_OK ? types::API_STATUS_OK :
                                                  types::API_STATUS_ERR);
-    response->set_last_ring_handle(args.last_ring_handle);
-    response->set_last_sub_ring(args.last_sub_ring);
+    response->set_last_ring_handle(last_ring_handle);
+    response->set_last_sub_ring(last_sub_ring);
     return ret;
 }
 
@@ -196,25 +211,26 @@ hal_ret_t
 accel_rgroup_info_get(const AccelRGroupInfoGetRequest& request,
                       AccelRGroupInfoGetResponse *response)
 {
-    pd::pd_accel_rgroup_info_get_args_t args = {0};
-    pd::pd_func_args_t                  pd_func_args = {0};
     rgroup_info_get_ctx_t               ctx = {0};
+    sdk_ret_t                           sdk_ret;
     hal_ret_t                           ret;
 
-    args.rgroup_name = request.rgroup_name().c_str();
-    args.sub_ring = request.sub_ring();
     ctx.response = response;
-    args.cb_func = &rgroup_info_get_cb;
-    args.usr_ctx = &ctx;
-    pd_func_args.pd_accel_rgroup_info_get = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_INFO_GET, &pd_func_args);
+    sdk_ret = asicpd_accel_rgroup_info_get(
+                                request.rgroup_name().c_str(),
+                                request.sub_ring(),
+                                &rgroup_info_get_cb,
+                                &ctx
+                               );
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+
     if (ret == HAL_RET_OK) {
         response->set_api_status(types::API_STATUS_OK);
         return ret;
     }
 
     HAL_TRACE_ERR("{} rgroup_name {} error {}", __FUNCTION__,
-                  args.rgroup_name, ret);
+                  request.rgroup_name().c_str(), ret);
     response->set_api_status(types::API_STATUS_ERR);
     return ret;
 }
@@ -244,25 +260,24 @@ hal_ret_t
 accel_rgroup_indices_get(const AccelRGroupIndicesGetRequest& request,
                          AccelRGroupIndicesGetResponse *response)
 {
-    pd::pd_accel_rgroup_indices_get_args_t  args = {0};
-    pd::pd_func_args_t                      pd_func_args = {0};
     rgroup_indices_get_ctx_t                ctx = {0};
+    sdk_ret_t                               sdk_ret;
     hal_ret_t                               ret;
 
-    args.rgroup_name = request.rgroup_name().c_str();
-    args.sub_ring = request.sub_ring();
     ctx.response = response;
-    args.cb_func = &rgroup_indices_get_cb;
-    args.usr_ctx = &ctx;
-    pd_func_args.pd_accel_rgroup_indices_get = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_INDICES_GET, &pd_func_args);
+    sdk_ret = asicpd_accel_rgroup_indices_get(request.rgroup_name().c_str(),
+                                   request.sub_ring(),
+                                   (accel_rgroup_ring_indices_cb_t) &rgroup_indices_get_cb,
+                                   &ctx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+
     if (ret == HAL_RET_OK) {
         response->set_api_status(types::API_STATUS_OK);
         return ret;
     }
 
     HAL_TRACE_ERR("{} rgroup_name {} error {}", __FUNCTION__,
-                  args.rgroup_name, ret);
+                  request.rgroup_name().c_str(), ret);
     response->set_api_status(types::API_STATUS_ERR);
     return ret;
 }
@@ -292,25 +307,25 @@ hal_ret_t
 accel_rgroup_metrics_get(const AccelRGroupMetricsGetRequest& request,
                          AccelRGroupMetricsGetResponse *response)
 {
-    pd::pd_accel_rgroup_metrics_get_args_t  args = {0};
-    pd::pd_func_args_t                      pd_func_args = {0};
     rgroup_metrics_get_ctx_t                ctx = {0};
+    sdk_ret_t                               sdk_ret;
     hal_ret_t                               ret;
 
-    args.rgroup_name = request.rgroup_name().c_str();
-    args.sub_ring = request.sub_ring();
     ctx.response = response;
-    args.cb_func = &rgroup_metrics_get_cb;
-    args.usr_ctx = &ctx;
-    pd_func_args.pd_accel_rgroup_metrics_get = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_METRICS_GET, &pd_func_args);
+    sdk_ret = asicpd_accel_rgroup_metrics_get(
+                                   request.rgroup_name().c_str(),
+                                   request.sub_ring(),
+                                   (accel_rgroup_ring_metrics_cb_t) &rgroup_metrics_get_cb,
+                                   &ctx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+
     if (ret == HAL_RET_OK) {
         response->set_api_status(types::API_STATUS_OK);
         return ret;
     }
 
     HAL_TRACE_ERR("{} rgroup_name {} error {}", __FUNCTION__,
-                  args.rgroup_name, ret);
+                  request.rgroup_name().c_str(), ret);
     response->set_api_status(types::API_STATUS_ERR);
     return ret;
 }
@@ -345,25 +360,25 @@ hal_ret_t
 accel_rgroup_misc_get(const AccelRGroupMiscGetRequest& request,
                       AccelRGroupMiscGetResponse *response)
 {
-    pd::pd_accel_rgroup_misc_get_args_t  args = {0};
-    pd::pd_func_args_t                   pd_func_args = {0};
     rgroup_misc_get_ctx_t                ctx = {0};
+    sdk_ret_t                            sdk_ret;
     hal_ret_t                            ret;
 
-    args.rgroup_name = request.rgroup_name().c_str();
-    args.sub_ring = request.sub_ring();
     ctx.response = response;
-    args.cb_func = &rgroup_misc_get_cb;
-    args.usr_ctx = &ctx;
-    pd_func_args.pd_accel_rgroup_misc_get = &args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_MISC_GET, &pd_func_args);
+    sdk_ret = asicpd_accel_rgroup_misc_get(
+                                   request.rgroup_name().c_str(),
+                                   request.sub_ring(),
+                                   (accel_rgroup_ring_misc_cb_t) &rgroup_misc_get_cb,
+                                   &ctx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+
     if (ret == HAL_RET_OK) {
         response->set_api_status(types::API_STATUS_OK);
         return ret;
     }
 
     HAL_TRACE_ERR("{} rgroup_name {} error {}", __FUNCTION__,
-                  args.rgroup_name, ret);
+                  request.rgroup_name().c_str(), ret);
     response->set_api_status(types::API_STATUS_ERR);
     return ret;
 }

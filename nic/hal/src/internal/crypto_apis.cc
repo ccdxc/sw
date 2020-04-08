@@ -9,8 +9,6 @@
 #include "nic/sdk/include/sdk/crypto_apis.hpp"
 #include "nic/hal/src/internal/crypto_cert_store.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
-// #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
-// #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
 #include <openssl/pem.h>
 
 using namespace sdk::asic::pd;

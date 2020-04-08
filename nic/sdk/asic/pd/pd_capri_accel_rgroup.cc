@@ -1,9 +1,13 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
-#include "nic/sdk/platform/capri/capri_barco_rings.hpp"
-#include "nic/hal/plugins/cfg/aclqos/barco_rings.hpp"
-#include "nic/hal/pd/capri/accel/accel_rgroup.hpp"
-#include "nic/sdk/asic/rw/asicrw.hpp"
+#include <map>
+#include <unordered_map>
+#include "include/sdk/lock.hpp"
+#include "lib/periodic/periodic.hpp"
+#include "platform/capri/capri_barco_rings.hpp"
+#include "asic/pd/pd.hpp"
+#include "asic/pd/pd_accel_rgroup.hpp"
+#include "asic/rw/asicrw.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 
 /*
@@ -11,11 +15,14 @@
  */
 
 using namespace sdk::asic::pd;
+using namespace sdk::platform::capri;
 
 #define ACCEL_RGROUP_METRICS_TIMER_MS   500
 
-namespace hal {
+namespace sdk {
+namespace asic {
 namespace pd {
+namespace accel {
 
 /*
  * Write a config 32-bit register
@@ -110,7 +117,7 @@ namespace pd {
 #define SUB_RING_VALIDATE_RETURN(sub_ring)                                  \
     do {                                                                    \
         if (((sub_ring) != ACCEL_SUB_RING_ALL) && ((sub_ring) > 0)) {       \
-            return HAL_RET_INVALID_ARG;                                     \
+            return SDK_RET_INVALID_ARG;                                     \
         }                                                                   \
     } while (false)
 
@@ -119,11 +126,11 @@ namespace pd {
  */
 #define FOR_EACH_RGROUP_RING_INVOKE(func, sub_ring, ret_val, ...)           \
     do {                                                                    \
-        accel_rgroup_elem_iter_c iter = elem_map.begin();                   \
-        while (iter != elem_map.end()) {                                    \
+        accel_rgroup_elem_iter_c iter = elem_map_.begin();                  \
+        while (iter != elem_map_.end()) {                                   \
             ret_val = iter->second.first->func(iter->second.second,         \
                                                sub_ring, __VA_ARGS__);      \
-            if (ret_val != HAL_RET_OK) break;                               \
+            if (ret_val != SDK_RET_OK) break;                               \
             iter++;                                                         \
         }                                                                   \
     } while (false)
@@ -132,12 +139,12 @@ namespace pd {
                                              last_ring_handle,              \
                                              last_sub_ring, ...)            \
     do {                                                                    \
-        accel_rgroup_elem_iter_c iter = elem_map.begin();                   \
-        while (iter != elem_map.end()) {                                    \
+        accel_rgroup_elem_iter_c iter = elem_map_.begin();                  \
+        while (iter != elem_map_.end()) {                                   \
             ret_val = iter->second.first->func(iter->second.second,         \
                                                sub_ring, last_ring_handle,  \
                                                last_sub_ring, __VA_ARGS__); \
-            if (ret_val != HAL_RET_OK) break;                               \
+            if (ret_val != SDK_RET_OK) break;                               \
             iter++;                                                         \
         }                                                                   \
     } while (false)
@@ -157,6 +164,8 @@ namespace pd {
         sdk::asic::asic_mem_write(addr, buf, size);                         \
     } while (false)
 
+static uint32_t accel_max_rings;
+
 /*
  * Get handle to Accelerator control block
  */
@@ -171,7 +180,7 @@ accel_ctl(void)
  * Get sw_reset capability
  */
 static inline bool
-accel_ring_sw_reset_capable (types::BarcoRings ring_type)
+accel_ring_sw_reset_capable (uint8_t ring_type)
 {
     bool    sw_reset_capable;
     bool    sw_enable_capable;
@@ -186,8 +195,8 @@ accel_ring_sw_reset_capable (types::BarcoRings ring_type)
  * Retrieve ring meta config info from HAL
  */
 static void
-accel_ring_meta_config_get(types::BarcoRings ring_type,
-                           accel_rgroup_ring_info_t *ret_info)
+accel_ring_meta_config_get (uint8_t ring_type,
+                            accel_rgroup_ring_info_t *ret_info)
 {
     barco_ring_meta_config_t    meta = {0};
 
@@ -205,9 +214,8 @@ accel_ring_meta_config_get(types::BarcoRings ring_type,
 /*
  * Write to shadow pndx
  */
-static inline hal_ret_t
-accel_shadow_pndx_write(types::BarcoRings ring_type,
-                        uint32_t val)
+static inline sdk_ret_t
+accel_shadow_pndx_write (uint8_t ring_type, uint32_t val)
 {
     barco_ring_meta_config_t meta = {0};
 
@@ -216,26 +224,24 @@ accel_shadow_pndx_write(types::BarcoRings ring_type,
         assert(meta.pndx_size <= sizeof(val));
         if (sdk::asic::asic_mem_write(meta.shadow_pndx_addr, (uint8_t *)&val,
                                 meta.pndx_size)) {
-            HAL_TRACE_ERR("Failed to write shadow pndx @ {:x} size {}",
+            SDK_TRACE_ERR("Failed to write shadow pndx @ {:x} size {}",
                           meta.shadow_pndx_addr, meta.pndx_size);
-            return HAL_RET_HW_FAIL;
+            return SDK_RET_HW_PROGRAM_ERR; /* TBD-REBASE: SDK_RET_HW_FAIL */
         }
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-static void accel_rgroup_timer(void *timer,
-                               uint32_t timer_id,
-                               void *user_ctx);
+static void accel_rgroup_timer(void *timer, uint32_t timer_id, void *user_ctx);
 
-static accel_ring_cp_t          ring_cp(types::BarcoRings::BARCO_RING_CP);
-static accel_ring_cp_hot_t      ring_cp_hot(types::BarcoRings::BARCO_RING_CP_HOT);
-static accel_ring_dc_t          ring_dc(types::BarcoRings::BARCO_RING_DC);
-static accel_ring_dc_hot_t      ring_dc_hot(types::BarcoRings::BARCO_RING_DC_HOT);
-static accel_ring_xts0_t        ring_xts0(types::BarcoRings::BARCO_RING_XTS0);
-static accel_ring_xts1_t        ring_xts1(types::BarcoRings::BARCO_RING_XTS1);
-static accel_ring_gcm0_t        ring_gcm0(types::BarcoRings::BARCO_RING_GCM0);
-static accel_ring_gcm1_t        ring_gcm1(types::BarcoRings::BARCO_RING_GCM1);
+static accel_ring_cp_t          ring_cp(BARCO_RING_CP);
+static accel_ring_cp_hot_t      ring_cp_hot(BARCO_RING_CP_HOT);
+static accel_ring_dc_t          ring_dc(BARCO_RING_DC);
+static accel_ring_dc_hot_t      ring_dc_hot(BARCO_RING_DC_HOT);
+static accel_ring_xts0_t        ring_xts0(BARCO_RING_XTS0);
+static accel_ring_xts1_t        ring_xts1(BARCO_RING_XTS1);
+static accel_ring_gcm0_t        ring_gcm0(BARCO_RING_GCM0);
+static accel_ring_gcm1_t        ring_gcm1(BARCO_RING_GCM1);
 
 
 static accel_ring_ops_map_t     supported_ring_ops_map = {
@@ -264,35 +270,37 @@ static bool                     lock_inited;
 #define ACCEL_RGROUP_UNLOCK()                                               \
     SDK_SPINLOCK_UNLOCK(&rgroup_lock)
 
-hal_ret_t
-accel_rgroup_init(int tid)
+#define SDK_TIMER_ID_ACCEL_RGROUP 0x8765
+
+sdk_ret_t
+asicpd_accel_rgroup_init (int tid, uint32_t accel_total_rings)
 {
     if (!lock_inited) {
         SDK_ASSERT(!SDK_SPINLOCK_INIT(&rgroup_lock, PTHREAD_PROCESS_PRIVATE));
         lock_inited = true;
     }
-    if (!rgroup_timer && (tid == hal::HAL_THREAD_ID_PERIODIC)) {
-
+    if (!rgroup_timer) {
         while (!sdk::lib::periodic_thread_is_running()) {
             pthread_yield();
         }
 
-        rgroup_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_ACCEL_RGROUP,
+        rgroup_timer = sdk::lib::timer_schedule(SDK_TIMER_ID_ACCEL_RGROUP,
                                  ACCEL_RGROUP_METRICS_TIMER_MS, nullptr,
                                  accel_rgroup_timer, true);
         if (!rgroup_timer) {
-            HAL_TRACE_ERR("Failed to start periodic rgroup timer");
-            return HAL_RET_ERR;
+            SDK_TRACE_ERR("Failed to start periodic rgroup timer");
+            return SDK_RET_ERR;
         }
     }
-    return HAL_RET_OK;
+
+    accel_max_rings = accel_total_rings;
+    return SDK_RET_OK;
 }
 
-
-hal_ret_t
-accel_rgroup_fini(int tid)
+sdk_ret_t
+asicpd_accel_rgroup_fini (int tid)
 {
-     if (rgroup_timer && (tid == hal::HAL_THREAD_ID_PERIODIC)) {
+     if (rgroup_timer) {
          sdk::lib::timer_delete(rgroup_timer);
          rgroup_timer = nullptr;
      }
@@ -301,15 +309,14 @@ accel_rgroup_fini(int tid)
          SDK_SPINLOCK_DESTROY(&rgroup_lock);
          lock_inited = false;
      }
-     return HAL_RET_OK;
+     return SDK_RET_OK;
 }
-
 
 /*
  * Located supported ring_ops given a ring name.
  */
 accel_ring_ops_t *
-accel_ring_ops_find(const std::string& ring_name)
+accel_ring_ops_find (const std::string& ring_name)
 {
     accel_ring_ops_iter_c   iter;
 
@@ -321,7 +328,7 @@ accel_ring_ops_find(const std::string& ring_name)
  * Located an existing ring group given a group name.
  */
 accel_rgroup_t *
-accel_rgroup_find(const char *rgroup_name)
+accel_rgroup_find (const char *rgroup_name)
 {
     accel_rgroup_iter_c iter;
 
@@ -332,25 +339,24 @@ accel_rgroup_find(const char *rgroup_name)
 /*
  * Add a new ring group.
  */
-hal_ret_t
-accel_rgroup_add(const char *rgroup_name,
-                 uint64_t metrics_mem_addr,
-                 uint32_t metrics_mem_size)
+sdk_ret_t
+asicpd_accel_rgroup_add (const char *rgroup_name, uint64_t metrics_mem_addr,
+                         uint32_t metrics_mem_size)
 {
     accel_rgroup_t  *rgroup;
-    hal_ret_t       ret_val;
+    sdk_ret_t       ret_val;
 
     ACCEL_RGROUP_LOCK();
     if (accel_rgroup_find(rgroup_name)) {
-        ret_val = HAL_RET_ENTRY_EXISTS;
+        ret_val = SDK_RET_ENTRY_EXISTS;
         goto done;
     }
 
     if (metrics_mem_size) {
-        if (metrics_mem_size < ACCEL_METRICS_MEM_OFFSET(ACCEL_RING_ID_MAX, 0)) {
-            HAL_TRACE_ERR("rgroup {} metrics_mem_size {} too small",
+        if (metrics_mem_size < ACCEL_METRICS_MEM_OFFSET(accel_max_rings, 0)) {
+            SDK_TRACE_ERR("rgroup {} metrics_mem_size {} too small",
                           rgroup_name, metrics_mem_size);
-            ret_val = HAL_RET_INVALID_ARG;
+            ret_val = SDK_RET_INVALID_ARG;
             goto done;
         }
     }
@@ -358,12 +364,12 @@ accel_rgroup_add(const char *rgroup_name,
     rgroup = new (std::nothrow) accel_rgroup_t(metrics_mem_addr,
                                                metrics_mem_size);
     if (!rgroup) {
-        HAL_TRACE_ERR("Failed to allocate rgroup {}", rgroup_name);
-        ret_val = HAL_RET_OOM;
+        SDK_TRACE_ERR("Failed to allocate rgroup {}", rgroup_name);
+        ret_val = SDK_RET_OOM;
         goto done;
     }
     rgroup_map.insert(std::make_pair(std::string(rgroup_name), rgroup));
-    ret_val = HAL_RET_OK;
+    ret_val = SDK_RET_OK;
 
 done:
     ACCEL_RGROUP_UNLOCK();
@@ -373,8 +379,8 @@ done:
 /*
  * Delete a ring group.
  */
-hal_ret_t
-accel_rgroup_del(const char *rgroup_name)
+sdk_ret_t
+asicpd_accel_rgroup_del (const char *rgroup_name)
 {
     accel_rgroup_t  *rgroup;
 
@@ -385,19 +391,18 @@ accel_rgroup_del(const char *rgroup_name)
         delete rgroup;
     }
     ACCEL_RGROUP_UNLOCK();
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 /*
  * Add a ring by name to a ring group.
  */
-hal_ret_t
-accel_rgroup_ring_add(const char *rgroup_name,
-                      const char *ring_name,
-                      uint32_t ring_handle)
+sdk_ret_t
+asicpd_accel_rgroup_ring_add (const char *rgroup_name, const char *ring_name,
+                              uint32_t ring_handle)
 {
     accel_rgroup_t  *rgroup;
-    hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
+    sdk_ret_t       ret_val = SDK_RET_ENTRY_NOT_FOUND;
 
     ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
@@ -412,9 +417,8 @@ accel_rgroup_ring_add(const char *rgroup_name,
 /*
  * Remove a ring by name from a ring group.
  */
-hal_ret_t
-accel_rgroup_ring_del(const char *rgroup_name,
-                      const char *ring_name)
+sdk_ret_t
+asicpd_accel_rgroup_ring_del (const char *rgroup_name, const char *ring_name)
 {
     accel_rgroup_t  *rgroup;
 
@@ -424,22 +428,20 @@ accel_rgroup_ring_del(const char *rgroup_name,
         rgroup->ring_del(std::string(ring_name));
     }
     ACCEL_RGROUP_UNLOCK();
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 /*
  * Invoke ring_reset on all rings in a group, taking the argument sub_ring
  * into considerations.
  */
-hal_ret_t
-accel_rgroup_reset_set(const char *rgroup_name,
-                       uint32_t sub_ring,
-                       uint32_t *last_ring_handle,
-                       uint32_t *last_sub_ring,
-                       bool reset_sense)
+sdk_ret_t
+asicpd_accel_rgroup_reset_set (const char *rgroup_name, uint32_t sub_ring,
+                               uint32_t *last_ring_handle,
+                               uint32_t *last_sub_ring, bool reset_sense)
 {
     accel_rgroup_t  *rgroup;
-    hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
+    sdk_ret_t       ret_val = SDK_RET_ENTRY_NOT_FOUND;
 
     ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
@@ -455,15 +457,13 @@ accel_rgroup_reset_set(const char *rgroup_name,
  * Invoke ring_enable on all rings in a group, taking the argument sub_ring
  * into considerations.
  */
-hal_ret_t
-accel_rgroup_enable_set(const char *rgroup_name,
-                        uint32_t sub_ring,
-                        uint32_t *last_ring_handle,
-                        uint32_t *last_sub_ring,
-                        bool enable_sense)
+sdk_ret_t
+asicpd_accel_rgroup_enable_set (const char *rgroup_name, uint32_t sub_ring,
+                                uint32_t *last_ring_handle,
+                                uint32_t *last_sub_ring, bool enable_sense)
 {
     accel_rgroup_t  *rgroup;
-    hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
+    sdk_ret_t       ret_val = SDK_RET_ENTRY_NOT_FOUND;
 
     ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
@@ -479,16 +479,14 @@ accel_rgroup_enable_set(const char *rgroup_name,
  * Invoke ring_pndx_set on all rings in a group, taking the argument sub_ring
  * into considerations.
  */
-hal_ret_t
-accel_rgroup_pndx_set(const char *rgroup_name,
-                      uint32_t sub_ring,
-                      uint32_t *last_ring_handle,
-                      uint32_t *last_sub_ring,
-                      uint32_t val,
-                      bool conditional)
+sdk_ret_t
+asicpd_accel_rgroup_pndx_set (const char *rgroup_name, uint32_t sub_ring,
+                              uint32_t *last_ring_handle,
+                              uint32_t *last_sub_ring, uint32_t val,
+                              bool conditional)
 {
     accel_rgroup_t  *rgroup;
-    hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
+    sdk_ret_t       ret_val = SDK_RET_ENTRY_NOT_FOUND;
 
     ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
@@ -503,14 +501,13 @@ accel_rgroup_pndx_set(const char *rgroup_name,
 /*
  * Retrieve config info for all rings in a group.
  */
-hal_ret_t
-accel_rgroup_info_get(const char *rgroup_name,
-                      uint32_t sub_ring,
-                      accel_rgroup_ring_info_cb_t cb_func,
-                      void *user_ctx)
+sdk_ret_t
+asicpd_accel_rgroup_info_get (const char *rgroup_name, uint32_t sub_ring,
+                              accel_rgroup_ring_info_cb_t cb_func,
+                              void *user_ctx)
 {
     accel_rgroup_t  *rgroup;
-    hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
+    sdk_ret_t       ret_val = SDK_RET_ENTRY_NOT_FOUND;
 
     ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
@@ -524,14 +521,13 @@ accel_rgroup_info_get(const char *rgroup_name,
 /*
  * Retrieve indices for all rings in a group.
  */
-hal_ret_t
-accel_rgroup_indices_get(const char *rgroup_name,
-                         uint32_t sub_ring,
-                         accel_rgroup_ring_indices_cb_t cb_func,
-                         void *user_ctx)
+sdk_ret_t
+asicpd_accel_rgroup_indices_get (const char *rgroup_name, uint32_t sub_ring,
+                                 accel_rgroup_ring_indices_cb_t cb_func,
+                                 void *user_ctx)
 {
     accel_rgroup_t  *rgroup;
-    hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
+    sdk_ret_t       ret_val = SDK_RET_ENTRY_NOT_FOUND;
 
     ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
@@ -545,14 +541,13 @@ accel_rgroup_indices_get(const char *rgroup_name,
 /*
  * Retrieve metrics for all rings in a group.
  */
-hal_ret_t
-accel_rgroup_metrics_get(const char *rgroup_name,
-                         uint32_t sub_ring,
-                         accel_rgroup_ring_metrics_cb_t cb_func,
-                         void *user_ctx)
+sdk_ret_t
+asicpd_accel_rgroup_metrics_get (const char *rgroup_name, uint32_t sub_ring,
+                                 accel_rgroup_ring_metrics_cb_t cb_func,
+                                 void *user_ctx)
 {
     accel_rgroup_t  *rgroup;
-    hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
+    sdk_ret_t       ret_val = SDK_RET_ENTRY_NOT_FOUND;
 
     ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
@@ -566,14 +561,13 @@ accel_rgroup_metrics_get(const char *rgroup_name,
 /*
  * Retrieve miscellaneous config/status for all rings in a group.
  */
-hal_ret_t
-accel_rgroup_misc_get(const char *rgroup_name,
-                      uint32_t sub_ring,
-                      accel_rgroup_ring_misc_cb_t cb_func,
-                      void *user_ctx)
+sdk_ret_t
+asicpd_accel_rgroup_misc_get (const char *rgroup_name, uint32_t sub_ring,
+                              accel_rgroup_ring_misc_cb_t cb_func,
+                              void *user_ctx)
 {
     accel_rgroup_t  *rgroup;
-    hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
+    sdk_ret_t       ret_val = SDK_RET_ENTRY_NOT_FOUND;
 
     ACCEL_RGROUP_LOCK();
     rgroup = accel_rgroup_find(rgroup_name);
@@ -588,56 +582,53 @@ accel_rgroup_misc_get(const char *rgroup_name,
  * Add a ring by name to a ring group. The ring must have
  * supported ring_ops.
  */
-hal_ret_t
-accel_rgroup_t::ring_add(const std::string& ring_name,
-                         uint32_t ring_handle)
+sdk_ret_t
+accel_rgroup_t::ring_add (const std::string& ring_name, uint32_t ring_handle)
 {
     accel_ring_ops_t            *ring_ops;
     accel_rgroup_elem_iter_c    elem_iter;
 
     ring_ops = accel_ring_ops_find(ring_name);
     if (!ring_ops) {
-        return HAL_RET_INVALID_ARG;
+        return SDK_RET_INVALID_ARG;
     }
 
-    elem_iter = elem_map.find(ring_name);
-    if (elem_iter != elem_map.end()) {
-        return HAL_RET_ENTRY_EXISTS;
+    elem_iter = elem_map_.find(ring_name);
+    if (elem_iter != elem_map_.end()) {
+        return SDK_RET_ENTRY_EXISTS;
     }
 
-    elem_map.insert(std::make_pair(ring_name,
-                                   std::make_pair(ring_ops, ring_handle)));
-    return HAL_RET_OK;
+    elem_map_.insert(std::make_pair(ring_name,
+                                    std::make_pair(ring_ops, ring_handle)));
+    return SDK_RET_OK;
 }
 
 /*
  * Remove a ring by name from a ring group.
  */
-hal_ret_t
-accel_rgroup_t::ring_del(const std::string& ring_name)
+sdk_ret_t
+accel_rgroup_t::ring_del (const std::string& ring_name)
 {
     accel_rgroup_elem_iter_c    elem_iter;
 
-    elem_iter = elem_map.find(ring_name);
-    if (elem_iter == elem_map.end()) {
-        return HAL_RET_ENTRY_NOT_FOUND;
+    elem_iter = elem_map_.find(ring_name);
+    if (elem_iter == elem_map_.end()) {
+        return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    elem_map.erase(ring_name);
-    return HAL_RET_OK;
+    elem_map_.erase(ring_name);
+    return SDK_RET_OK;
 }
 
 /*
  * Invoke ring_reset on all rings in a group, taking the argument sub_ring
  * into considerations.
  */
-hal_ret_t
-accel_rgroup_t::reset_set(uint32_t sub_ring,
-                          uint32_t *last_ring_handle,
-                          uint32_t *last_sub_ring,
-                          bool reset_sense)
+sdk_ret_t
+accel_rgroup_t::reset_set (uint32_t sub_ring, uint32_t *last_ring_handle,
+                           uint32_t *last_sub_ring, bool reset_sense)
 {
-    hal_ret_t   ret_val = HAL_RET_OK;
+    sdk_ret_t   ret_val = SDK_RET_OK;
     FOR_EACH_RGROUP_RING_INVOKE_RET_LAST(reset_set, sub_ring, ret_val,
                                          last_ring_handle, last_sub_ring,
                                          reset_sense);
@@ -648,13 +639,11 @@ accel_rgroup_t::reset_set(uint32_t sub_ring,
  * Invoke ring_enable on all rings in a group, taking the argument sub_ring
  * into considerations.
  */
-hal_ret_t
-accel_rgroup_t::enable_set(uint32_t sub_ring,
-                           uint32_t *last_ring_handle,
-                           uint32_t *last_sub_ring,
-                           bool enable_sense)
+sdk_ret_t
+accel_rgroup_t::enable_set (uint32_t sub_ring, uint32_t *last_ring_handle,
+                            uint32_t *last_sub_ring, bool enable_sense)
 {
-    hal_ret_t   ret_val = HAL_RET_OK;
+    sdk_ret_t   ret_val = SDK_RET_OK;
     FOR_EACH_RGROUP_RING_INVOKE_RET_LAST(enable_set, sub_ring, ret_val,
                                          last_ring_handle, last_sub_ring,
                                          enable_sense);
@@ -665,14 +654,12 @@ accel_rgroup_t::enable_set(uint32_t sub_ring,
  * Invoke ring_pndx_set on all rings in a group, taking the argument sub_ring
  * into considerations.
  */
-hal_ret_t
-accel_rgroup_t::pndx_set(uint32_t sub_ring,
-                         uint32_t *last_ring_handle,
-                         uint32_t *last_sub_ring,
-                         uint32_t val,
-                         bool conditional)
+sdk_ret_t
+accel_rgroup_t::pndx_set (uint32_t sub_ring, uint32_t *last_ring_handle,
+                          uint32_t *last_sub_ring, uint32_t val,
+                          bool conditional)
 {
-    hal_ret_t   ret_val = HAL_RET_OK;
+    sdk_ret_t   ret_val = SDK_RET_OK;
     FOR_EACH_RGROUP_RING_INVOKE_RET_LAST(pndx_set, sub_ring, ret_val,
                                          last_ring_handle, last_sub_ring, val,
                                          conditional);
@@ -682,12 +669,11 @@ accel_rgroup_t::pndx_set(uint32_t sub_ring,
 /*
  * Retrieve config info on all rings in a group.
  */
-hal_ret_t
-accel_rgroup_t::info_get(uint32_t sub_ring,
-                         accel_rgroup_ring_info_cb_t cb_func,
-                         void *user_ctx)
+sdk_ret_t
+accel_rgroup_t::info_get (uint32_t sub_ring,
+                          accel_rgroup_ring_info_cb_t cb_func, void *user_ctx)
 {
-    hal_ret_t   ret_val = HAL_RET_OK;
+    sdk_ret_t   ret_val = SDK_RET_OK;
     FOR_EACH_RGROUP_RING_INVOKE(info_get, sub_ring, ret_val,
                                 cb_func, user_ctx);
     return ret_val;
@@ -696,12 +682,12 @@ accel_rgroup_t::info_get(uint32_t sub_ring,
 /*
  * Retrieve current ring indices on all rings in a group.
  */
-hal_ret_t
-accel_rgroup_t::indices_get(uint32_t sub_ring,
-                            accel_rgroup_ring_indices_cb_t cb_func,
-                            void *user_ctx)
+sdk_ret_t
+accel_rgroup_t::indices_get (uint32_t sub_ring,
+                             accel_rgroup_ring_indices_cb_t cb_func,
+                             void *user_ctx)
 {
-    hal_ret_t   ret_val = HAL_RET_OK;
+    sdk_ret_t   ret_val = SDK_RET_OK;
     FOR_EACH_RGROUP_RING_INVOKE(indices_get, sub_ring, ret_val,
                                 cb_func, user_ctx);
     return ret_val;
@@ -710,12 +696,12 @@ accel_rgroup_t::indices_get(uint32_t sub_ring,
 /*
  * Retrieve current ring metrics on all rings in a group.
  */
-hal_ret_t
-accel_rgroup_t::metrics_get(uint32_t sub_ring,
-                            accel_rgroup_ring_metrics_cb_t cb_func,
-                            void *user_ctx)
+sdk_ret_t
+accel_rgroup_t::metrics_get (uint32_t sub_ring,
+                             accel_rgroup_ring_metrics_cb_t cb_func,
+                             void *user_ctx)
 {
-    hal_ret_t   ret_val = HAL_RET_OK;
+    sdk_ret_t   ret_val = SDK_RET_OK;
     FOR_EACH_RGROUP_RING_INVOKE(metrics_get, sub_ring, ret_val,
                                 cb_func, user_ctx);
     return ret_val;
@@ -724,12 +710,12 @@ accel_rgroup_t::metrics_get(uint32_t sub_ring,
 /*
  * Retrieve  miscellaneous config/status on all rings in a group.
  */
-hal_ret_t
-accel_rgroup_t::misc_get(uint32_t sub_ring,
-                         accel_rgroup_ring_misc_cb_t cb_func,
-                         void *user_ctx)
+sdk_ret_t
+accel_rgroup_t::misc_get (uint32_t sub_ring,
+                          accel_rgroup_ring_misc_cb_t cb_func,
+                          void *user_ctx)
 {
-    hal_ret_t   ret_val = HAL_RET_OK;
+    sdk_ret_t   ret_val = SDK_RET_OK;
     FOR_EACH_RGROUP_RING_INVOKE(misc_get, sub_ring, ret_val,
                                 cb_func, user_ctx);
     return ret_val;
@@ -738,42 +724,35 @@ accel_rgroup_t::misc_get(uint32_t sub_ring,
 /*
  * All supported ring_ops methods begin here
  */
-hal_ret_t
-accel_ring_cp_t::reset_set(uint32_t ring_handle,
-                           uint32_t sub_ring,
-                           uint32_t *last_ring_handle,
-                           uint32_t *last_sub_ring,
-                           bool reset_sense)
+sdk_ret_t
+accel_ring_cp_t::reset_set (uint32_t ring_handle, uint32_t sub_ring,
+                            uint32_t *last_ring_handle, uint32_t *last_sub_ring,
+                            bool reset_sense)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     ACCEL_CFG_RMW32(cp_cfg_glb, BARCO_CRYPTO_CP_CFG_GLB_SOFT_RESET, reset_sense);
     soft_resets += reset_sense ? 1 : 0;
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_cp_t::enable_set(uint32_t ring_handle,
-                            uint32_t sub_ring,
-                            uint32_t *last_ring_handle,
-                            uint32_t *last_sub_ring,
-                            bool enable_sense)
+sdk_ret_t
+accel_ring_cp_t::enable_set (uint32_t ring_handle, uint32_t sub_ring,
+                             uint32_t *last_ring_handle,
+                             uint32_t *last_sub_ring, bool enable_sense)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     ACCEL_CFG_RMW32(cp_cfg_dist, BARCO_CRYPTO_CP_DIST_DESC_Q_EN, enable_sense);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_cp_t::pndx_set(uint32_t ring_handle,
-                          uint32_t sub_ring,
-                          uint32_t *last_ring_handle,
-                          uint32_t *last_sub_ring,
-                          uint32_t val,
-                          bool conditional)
+sdk_ret_t
+accel_ring_cp_t::pndx_set (uint32_t ring_handle, uint32_t sub_ring,
+                          uint32_t *last_ring_handle, uint32_t *last_sub_ring,
+                          uint32_t val, bool conditional)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
@@ -782,10 +761,10 @@ accel_ring_cp_t::pndx_set(uint32_t ring_handle,
         ACCEL_CFG_WRITE32(cp_cfg_q_pd_idx, val);
         return accel_shadow_pndx_write(ring_type, val);
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 accel_ring_cp_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
                            accel_rgroup_ring_info_cb_t cb_func,
                            void *usr_ctx)
@@ -802,14 +781,13 @@ accel_ring_cp_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
                                   &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_cp_t::indices_get(uint32_t ring_handle,
-                             uint32_t sub_ring,
-                             accel_rgroup_ring_indices_cb_t cb_func,
-                             void *usr_ctx)
+sdk_ret_t
+accel_ring_cp_t::indices_get (uint32_t ring_handle, uint32_t sub_ring,
+                              accel_rgroup_ring_indices_cb_t cb_func,
+                              void *usr_ctx)
 {
     accel_rgroup_ring_indices_t indices = {0};
 
@@ -822,14 +800,13 @@ accel_ring_cp_t::indices_get(uint32_t ring_handle,
     ACCEL_CFG_READ32(cp_sta_q_cp_idx_early, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_cp_t::metrics_get(uint32_t ring_handle,
-                             uint32_t sub_ring,
-                             accel_rgroup_ring_metrics_cb_t cb_func,
-                             void *usr_ctx)
+sdk_ret_t
+accel_ring_cp_t::metrics_get (uint32_t ring_handle, uint32_t sub_ring,
+                              accel_rgroup_ring_metrics_cb_t cb_func,
+                              void *usr_ctx)
 {
     accel_rgroup_ring_metrics_t metrics = {0};
 
@@ -838,18 +815,17 @@ accel_ring_cp_t::metrics_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     metrics.soft_resets = soft_resets;
-    ACCEL_CFG_READ64(cp_sta_in_bcnt_w0,  cp_sta_in_bcnt_w1,  metrics.input_bytes);
+    ACCEL_CFG_READ64(cp_sta_in_bcnt_w0, cp_sta_in_bcnt_w1,metrics.input_bytes);
     ACCEL_CFG_READ64(cp_sta_out_bcnt_w0, cp_sta_out_bcnt_w1, metrics.output_bytes);
 
     (*cb_func)(usr_ctx, metrics);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_cp_t::misc_get(uint32_t ring_handle,
-                          uint32_t sub_ring,
-                          accel_rgroup_ring_misc_cb_t cb_func,
-                          void *usr_ctx)
+sdk_ret_t
+accel_ring_cp_t::misc_get (uint32_t ring_handle, uint32_t sub_ring,
+                           accel_rgroup_ring_misc_cb_t cb_func,
+                           void *usr_ctx)
 {
     accel_rgroup_ring_misc_t misc = {0};
 
@@ -895,44 +871,40 @@ accel_ring_cp_t::misc_get(uint32_t ring_handle,
     misc.num_reg_vals = 30;
 
     (*cb_func)(usr_ctx, misc);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_cp_hot_t::reset_set(uint32_t ring_handle,
-                               uint32_t sub_ring,
-                               uint32_t *last_ring_handle,
-                               uint32_t *last_sub_ring,
-                               bool reset_sense)
+sdk_ret_t
+accel_ring_cp_hot_t::reset_set (uint32_t ring_handle, uint32_t sub_ring,
+                                uint32_t *last_ring_handle,
+                                uint32_t *last_sub_ring, bool reset_sense)
 {
     // reset as part of cp so nothing to do
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_cp_hot_t::enable_set(uint32_t ring_handle,
-                                uint32_t sub_ring,
-                                uint32_t *last_ring_handle,
-                                uint32_t *last_sub_ring,
-                                bool enable_sense)
+sdk_ret_t
+accel_ring_cp_hot_t::enable_set (uint32_t ring_handle, uint32_t sub_ring,
+                                 uint32_t *last_ring_handle,
+                                 uint32_t *last_sub_ring,
+                                 bool enable_sense)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
-    ACCEL_CFG_RMW32(cp_cfg_dist, BARCO_CRYPTO_CP_DIST_DESC_HOTQ_EN, enable_sense);
-    return HAL_RET_OK;
+    ACCEL_CFG_RMW32(cp_cfg_dist, BARCO_CRYPTO_CP_DIST_DESC_HOTQ_EN,
+                    enable_sense);
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_cp_hot_t::pndx_set(uint32_t ring_handle,
-                              uint32_t sub_ring,
-                              uint32_t *last_ring_handle,
-                              uint32_t *last_sub_ring,
-                              uint32_t val,
-                              bool conditional)
+sdk_ret_t
+accel_ring_cp_hot_t::pndx_set (uint32_t ring_handle, uint32_t sub_ring,
+                               uint32_t *last_ring_handle,
+                               uint32_t *last_sub_ring, uint32_t val,
+                               bool conditional)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
@@ -941,10 +913,10 @@ accel_ring_cp_hot_t::pndx_set(uint32_t ring_handle,
         ACCEL_CFG_WRITE32(cp_cfg_hotq_pd_idx, val);
         return accel_shadow_pndx_write(ring_type, val);
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 accel_ring_cp_hot_t::info_get (uint32_t ring_handle,
                                uint32_t sub_ring,
                                accel_rgroup_ring_info_cb_t cb_func,
@@ -962,14 +934,13 @@ accel_ring_cp_hot_t::info_get (uint32_t ring_handle,
                                   &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_cp_hot_t::indices_get(uint32_t ring_handle,
-                                 uint32_t sub_ring,
-                                 accel_rgroup_ring_indices_cb_t cb_func,
-                                 void *usr_ctx)
+sdk_ret_t
+accel_ring_cp_hot_t::indices_get (uint32_t ring_handle, uint32_t sub_ring,
+                                  accel_rgroup_ring_indices_cb_t cb_func,
+                                  void *usr_ctx)
 {
     accel_rgroup_ring_indices_t indices = {0};
 
@@ -982,14 +953,13 @@ accel_ring_cp_hot_t::indices_get(uint32_t ring_handle,
     ACCEL_CFG_READ32(cp_sta_hotq_cp_idx_early, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_cp_hot_t::metrics_get(uint32_t ring_handle,
-                                 uint32_t sub_ring,
-                                 accel_rgroup_ring_metrics_cb_t cb_func,
-                                 void *usr_ctx)
+sdk_ret_t
+accel_ring_cp_hot_t::metrics_get (uint32_t ring_handle, uint32_t sub_ring,
+                                  accel_rgroup_ring_metrics_cb_t cb_func,
+                                  void *usr_ctx)
 {
     accel_rgroup_ring_metrics_t metrics = {0};
 
@@ -1002,14 +972,13 @@ accel_ring_cp_hot_t::metrics_get(uint32_t ring_handle,
 
     metrics.soft_resets = soft_resets;
     (*cb_func)(usr_ctx, metrics);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_cp_hot_t::misc_get(uint32_t ring_handle,
-                              uint32_t sub_ring,
-                              accel_rgroup_ring_misc_cb_t cb_func,
-                              void *usr_ctx)
+sdk_ret_t
+accel_ring_cp_hot_t::misc_get (uint32_t ring_handle, uint32_t sub_ring,
+                               accel_rgroup_ring_misc_cb_t cb_func,
+                               void *usr_ctx)
 {
     accel_rgroup_ring_misc_t misc = {0};
 
@@ -1023,45 +992,39 @@ accel_ring_cp_hot_t::misc_get(uint32_t ring_handle,
     misc.num_reg_vals = 3;
 
     (*cb_func)(usr_ctx, misc);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_dc_t::reset_set(uint32_t ring_handle,
-                           uint32_t sub_ring,
-                           uint32_t *last_ring_handle,
-                           uint32_t *last_sub_ring,
-                           bool reset_sense)
+sdk_ret_t
+accel_ring_dc_t::reset_set (uint32_t ring_handle, uint32_t sub_ring,
+                            uint32_t *last_ring_handle, uint32_t *last_sub_ring,
+                            bool reset_sense)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
-    ACCEL_CFG_RMW32(dc_cfg_glb, BARCO_CRYPTO_DC_CFG_GLB_SOFT_RESET, reset_sense);
+    ACCEL_CFG_RMW32(dc_cfg_glb, BARCO_CRYPTO_DC_CFG_GLB_SOFT_RESET,
+                    reset_sense);
     soft_resets += reset_sense ? 1 : 0;
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_dc_t::enable_set(uint32_t ring_handle,
-                            uint32_t sub_ring,
-                            uint32_t *last_ring_handle,
-                            uint32_t *last_sub_ring,
-                            bool enable_sense)
+sdk_ret_t
+accel_ring_dc_t::enable_set (uint32_t ring_handle, uint32_t sub_ring,
+                             uint32_t *last_ring_handle,
+                             uint32_t *last_sub_ring, bool enable_sense)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     ACCEL_CFG_RMW32(dc_cfg_dist, BARCO_CRYPTO_DC_DIST_DESC_Q_EN, enable_sense);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_dc_t::pndx_set(uint32_t ring_handle,
-                          uint32_t sub_ring,
-                          uint32_t *last_ring_handle,
-                          uint32_t *last_sub_ring,
-                          uint32_t val,
-                          bool conditional)
+sdk_ret_t
+accel_ring_dc_t::pndx_set (uint32_t ring_handle, uint32_t sub_ring,
+                           uint32_t *last_ring_handle, uint32_t *last_sub_ring,
+                           uint32_t val, bool conditional)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
@@ -1070,10 +1033,10 @@ accel_ring_dc_t::pndx_set(uint32_t ring_handle,
         ACCEL_CFG_WRITE32(dc_cfg_q_pd_idx, val);
         return accel_shadow_pndx_write(ring_type, val);
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 accel_ring_dc_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
                            accel_rgroup_ring_info_cb_t cb_func,
                            void *usr_ctx)
@@ -1090,14 +1053,13 @@ accel_ring_dc_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
                                   &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_dc_t::indices_get(uint32_t ring_handle,
-                             uint32_t sub_ring,
-                             accel_rgroup_ring_indices_cb_t cb_func,
-                             void *usr_ctx)
+sdk_ret_t
+accel_ring_dc_t::indices_get (uint32_t ring_handle, uint32_t sub_ring,
+                              accel_rgroup_ring_indices_cb_t cb_func,
+                              void *usr_ctx)
 {
     accel_rgroup_ring_indices_t indices = {0};
 
@@ -1110,14 +1072,13 @@ accel_ring_dc_t::indices_get(uint32_t ring_handle,
     ACCEL_CFG_READ32(dc_sta_q_cp_idx_early, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_dc_t::metrics_get(uint32_t ring_handle,
-                             uint32_t sub_ring,
-                             accel_rgroup_ring_metrics_cb_t cb_func,
-                             void *usr_ctx)
+sdk_ret_t
+accel_ring_dc_t::metrics_get (uint32_t ring_handle, uint32_t sub_ring,
+                              accel_rgroup_ring_metrics_cb_t cb_func,
+                              void *usr_ctx)
 {
     accel_rgroup_ring_metrics_t metrics = {0};
 
@@ -1126,18 +1087,18 @@ accel_ring_dc_t::metrics_get(uint32_t ring_handle,
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
     metrics.soft_resets = soft_resets;
-    ACCEL_CFG_READ64(dc_sta_in_bcnt_w0,  dc_sta_in_bcnt_w1,  metrics.input_bytes);
-    ACCEL_CFG_READ64(dc_sta_out_bcnt_w0, dc_sta_out_bcnt_w1, metrics.output_bytes);
+    ACCEL_CFG_READ64(dc_sta_in_bcnt_w0, dc_sta_in_bcnt_w1, metrics.input_bytes);
+    ACCEL_CFG_READ64(dc_sta_out_bcnt_w0, dc_sta_out_bcnt_w1,
+                     metrics.output_bytes);
 
     (*cb_func)(usr_ctx, metrics);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_dc_t::misc_get(uint32_t ring_handle,
-                          uint32_t sub_ring,
-                          accel_rgroup_ring_misc_cb_t cb_func,
-                          void *usr_ctx)
+sdk_ret_t
+accel_ring_dc_t::misc_get (uint32_t ring_handle, uint32_t sub_ring,
+                           accel_rgroup_ring_misc_cb_t cb_func,
+                           void *usr_ctx)
 {
     accel_rgroup_ring_misc_t misc = {0};
 
@@ -1183,44 +1144,39 @@ accel_ring_dc_t::misc_get(uint32_t ring_handle,
     misc.num_reg_vals = 30;
 
     (*cb_func)(usr_ctx, misc);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_dc_hot_t::reset_set(uint32_t ring_handle,
-                               uint32_t sub_ring,
-                               uint32_t *last_ring_handle,
-                               uint32_t *last_sub_ring,
-                               bool reset_sense)
+sdk_ret_t
+accel_ring_dc_hot_t::reset_set (uint32_t ring_handle, uint32_t sub_ring,
+                                uint32_t *last_ring_handle,
+                                uint32_t *last_sub_ring, bool reset_sense)
 {
     // reset as part of dc so nothing to do
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_dc_hot_t::enable_set(uint32_t ring_handle,
-                                uint32_t sub_ring,
-                                uint32_t *last_ring_handle,
-                                uint32_t *last_sub_ring,
-                                bool enable_sense)
+sdk_ret_t
+accel_ring_dc_hot_t::enable_set (uint32_t ring_handle, uint32_t sub_ring,
+                                 uint32_t *last_ring_handle,
+                                 uint32_t *last_sub_ring, bool enable_sense)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
-    ACCEL_CFG_RMW32(dc_cfg_dist, BARCO_CRYPTO_DC_DIST_DESC_HOTQ_EN, enable_sense);
-    return HAL_RET_OK;
+    ACCEL_CFG_RMW32(dc_cfg_dist, BARCO_CRYPTO_DC_DIST_DESC_HOTQ_EN,
+                    enable_sense);
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_dc_hot_t::pndx_set(uint32_t ring_handle,
-                              uint32_t sub_ring,
-                              uint32_t *last_ring_handle,
-                              uint32_t *last_sub_ring,
-                              uint32_t val,
-                              bool conditional)
+sdk_ret_t
+accel_ring_dc_hot_t::pndx_set (uint32_t ring_handle, uint32_t sub_ring,
+                               uint32_t *last_ring_handle,
+                               uint32_t *last_sub_ring, uint32_t val,
+                               bool conditional)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
@@ -1229,10 +1185,10 @@ accel_ring_dc_hot_t::pndx_set(uint32_t ring_handle,
         ACCEL_CFG_WRITE32(dc_cfg_hotq_pd_idx, val);
         return accel_shadow_pndx_write(ring_type, val);
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 accel_ring_dc_hot_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
                                accel_rgroup_ring_info_cb_t cb_func,
                                void *usr_ctx)
@@ -1249,14 +1205,13 @@ accel_ring_dc_hot_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
                                   &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_dc_hot_t::indices_get(uint32_t ring_handle,
-                                 uint32_t sub_ring,
-                                 accel_rgroup_ring_indices_cb_t cb_func,
-                                 void *usr_ctx)
+sdk_ret_t
+accel_ring_dc_hot_t::indices_get (uint32_t ring_handle, uint32_t sub_ring,
+                                  accel_rgroup_ring_indices_cb_t cb_func,
+                                  void *usr_ctx)
 {
     accel_rgroup_ring_indices_t indices = {0};
 
@@ -1269,14 +1224,13 @@ accel_ring_dc_hot_t::indices_get(uint32_t ring_handle,
     ACCEL_CFG_READ32(dc_sta_hotq_cp_idx_early, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_dc_hot_t::metrics_get(uint32_t ring_handle,
-                                 uint32_t sub_ring,
-                                 accel_rgroup_ring_metrics_cb_t cb_func,
-                                 void *usr_ctx)
+sdk_ret_t
+accel_ring_dc_hot_t::metrics_get (uint32_t ring_handle, uint32_t sub_ring,
+                                  accel_rgroup_ring_metrics_cb_t cb_func,
+                                  void *usr_ctx)
 {
     accel_rgroup_ring_metrics_t metrics = {0};
 
@@ -1289,14 +1243,13 @@ accel_ring_dc_hot_t::metrics_get(uint32_t ring_handle,
 
     metrics.soft_resets = soft_resets;
     (*cb_func)(usr_ctx, metrics);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_dc_hot_t::misc_get(uint32_t ring_handle,
-                              uint32_t sub_ring,
-                              accel_rgroup_ring_misc_cb_t cb_func,
-                              void *usr_ctx)
+sdk_ret_t
+accel_ring_dc_hot_t::misc_get (uint32_t ring_handle, uint32_t sub_ring,
+                               accel_rgroup_ring_misc_cb_t cb_func,
+                               void *usr_ctx)
 {
     accel_rgroup_ring_misc_t misc = {0};
 
@@ -1310,45 +1263,39 @@ accel_ring_dc_hot_t::misc_get(uint32_t ring_handle,
     misc.num_reg_vals = 3;
 
     (*cb_func)(usr_ctx, misc);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_xts0_t::reset_set(uint32_t ring_handle,
-                             uint32_t sub_ring,
-                             uint32_t *last_ring_handle,
-                             uint32_t *last_sub_ring,
-                             bool reset_sense)
+sdk_ret_t
+accel_ring_xts0_t::reset_set (uint32_t ring_handle, uint32_t sub_ring,
+                              uint32_t *last_ring_handle,
+                              uint32_t *last_sub_ring, bool reset_sense)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     ACCEL_CFG_RMW32(xts_enc_soft_rst, 0xffffffff, reset_sense);
     soft_resets += reset_sense ? 1 : 0;
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_xts0_t::enable_set(uint32_t ring_handle,
-                              uint32_t sub_ring,
-                              uint32_t *last_ring_handle,
-                              uint32_t *last_sub_ring,
-                              bool enable_sense)
+sdk_ret_t
+accel_ring_xts0_t::enable_set (uint32_t ring_handle, uint32_t sub_ring,
+                               uint32_t *last_ring_handle,
+                               uint32_t *last_sub_ring, bool enable_sense)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     // XTS0 does not implement ring_enable
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_xts0_t::pndx_set(uint32_t ring_handle,
-                            uint32_t sub_ring,
-                            uint32_t *last_ring_handle,
-                            uint32_t *last_sub_ring,
-                            uint32_t val,
-                            bool conditional)
+sdk_ret_t
+accel_ring_xts0_t::pndx_set (uint32_t ring_handle, uint32_t sub_ring,
+                             uint32_t *last_ring_handle,
+                             uint32_t *last_sub_ring, uint32_t val,
+                             bool conditional)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
@@ -1357,10 +1304,10 @@ accel_ring_xts0_t::pndx_set(uint32_t ring_handle,
         ACCEL_CFG_WRITE32(xts_enc_producer_idx, val);
         return accel_shadow_pndx_write(ring_type, val);
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 accel_ring_xts0_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
                              accel_rgroup_ring_info_cb_t cb_func,
                              void *usr_ctx)
@@ -1377,14 +1324,13 @@ accel_ring_xts0_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
                                   &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_xts0_t::indices_get(uint32_t ring_handle,
-                               uint32_t sub_ring,
-                               accel_rgroup_ring_indices_cb_t cb_func,
-                               void *usr_ctx)
+sdk_ret_t
+accel_ring_xts0_t::indices_get (uint32_t ring_handle, uint32_t sub_ring,
+                                accel_rgroup_ring_indices_cb_t cb_func,
+                                void *usr_ctx)
 {
     accel_rgroup_ring_indices_t indices = {0};
 
@@ -1397,14 +1343,13 @@ accel_ring_xts0_t::indices_get(uint32_t ring_handle,
     ACCEL_CFG_READ32(xts_enc_error_idx, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_xts0_t::metrics_get(uint32_t ring_handle,
-                               uint32_t sub_ring,
-                               accel_rgroup_ring_metrics_cb_t cb_func,
-                               void *usr_ctx)
+sdk_ret_t
+accel_ring_xts0_t::metrics_get (uint32_t ring_handle, uint32_t sub_ring,
+                                accel_rgroup_ring_metrics_cb_t cb_func,
+                                void *usr_ctx)
 {
     accel_rgroup_ring_metrics_t metrics = {0};
 
@@ -1417,14 +1362,13 @@ accel_ring_xts0_t::metrics_get(uint32_t ring_handle,
 
     metrics.soft_resets = soft_resets;
     (*cb_func)(usr_ctx, metrics);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_xts0_t::misc_get(uint32_t ring_handle,
-                            uint32_t sub_ring,
-                            accel_rgroup_ring_misc_cb_t cb_func,
-                            void *usr_ctx)
+sdk_ret_t
+accel_ring_xts0_t::misc_get (uint32_t ring_handle, uint32_t sub_ring,
+                             accel_rgroup_ring_misc_cb_t cb_func,
+                             void *usr_ctx)
 {
     accel_rgroup_ring_misc_t misc = {0};
 
@@ -1442,45 +1386,40 @@ accel_ring_xts0_t::misc_get(uint32_t ring_handle,
     misc.num_reg_vals = 7;
 
     (*cb_func)(usr_ctx, misc);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_xts1_t::reset_set(uint32_t ring_handle,
-                             uint32_t sub_ring,
-                             uint32_t *last_ring_handle,
-                             uint32_t *last_sub_ring,
-                             bool reset_sense)
+sdk_ret_t
+accel_ring_xts1_t::reset_set (uint32_t ring_handle, uint32_t sub_ring,
+                              uint32_t *last_ring_handle,
+                              uint32_t *last_sub_ring, bool reset_sense)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     ACCEL_CFG_RMW32(xts_soft_rst, 0xffffffff, reset_sense);
     soft_resets += reset_sense ? 1 : 0;
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_xts1_t::enable_set(uint32_t ring_handle,
-                              uint32_t sub_ring,
-                              uint32_t *last_ring_handle,
-                              uint32_t *last_sub_ring,
-                              bool enable_sense)
+sdk_ret_t
+accel_ring_xts1_t::enable_set (uint32_t ring_handle, uint32_t sub_ring,
+                               uint32_t *last_ring_handle,
+                               uint32_t *last_sub_ring,
+                               bool enable_sense)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     // XTS1 does not implement ring_enable
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_xts1_t::pndx_set(uint32_t ring_handle,
-                            uint32_t sub_ring,
-                            uint32_t *last_ring_handle,
-                            uint32_t *last_sub_ring,
-                            uint32_t val,
-                            bool conditional)
+sdk_ret_t
+accel_ring_xts1_t::pndx_set (uint32_t ring_handle, uint32_t sub_ring,
+                             uint32_t *last_ring_handle,
+                             uint32_t *last_sub_ring, uint32_t val,
+                             bool conditional)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
@@ -1489,10 +1428,10 @@ accel_ring_xts1_t::pndx_set(uint32_t ring_handle,
         ACCEL_CFG_WRITE32(xts_producer_idx, val);
         return accel_shadow_pndx_write(ring_type, val);
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 accel_ring_xts1_t::info_get (uint32_t ring_handle,
                              uint32_t sub_ring,
                              accel_rgroup_ring_info_cb_t cb_func,
@@ -1510,14 +1449,13 @@ accel_ring_xts1_t::info_get (uint32_t ring_handle,
                                   &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_xts1_t::indices_get(uint32_t ring_handle,
-                               uint32_t sub_ring,
-                               accel_rgroup_ring_indices_cb_t cb_func,
-                               void *usr_ctx)
+sdk_ret_t
+accel_ring_xts1_t::indices_get (uint32_t ring_handle, uint32_t sub_ring,
+                                accel_rgroup_ring_indices_cb_t cb_func,
+                                void *usr_ctx)
 {
     accel_rgroup_ring_indices_t indices = {0};
 
@@ -1530,14 +1468,13 @@ accel_ring_xts1_t::indices_get(uint32_t ring_handle,
     ACCEL_CFG_READ32(xts_error_idx, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_xts1_t::metrics_get(uint32_t ring_handle,
-                               uint32_t sub_ring,
-                               accel_rgroup_ring_metrics_cb_t cb_func,
-                               void *usr_ctx)
+sdk_ret_t
+accel_ring_xts1_t::metrics_get (uint32_t ring_handle, uint32_t sub_ring,
+                                accel_rgroup_ring_metrics_cb_t cb_func,
+                                void *usr_ctx)
 {
     accel_rgroup_ring_metrics_t metrics = {0};
 
@@ -1550,14 +1487,13 @@ accel_ring_xts1_t::metrics_get(uint32_t ring_handle,
 
     metrics.soft_resets = soft_resets;
     (*cb_func)(usr_ctx, metrics);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_xts1_t::misc_get(uint32_t ring_handle,
-                            uint32_t sub_ring,
-                            accel_rgroup_ring_misc_cb_t cb_func,
-                            void *usr_ctx)
+sdk_ret_t
+accel_ring_xts1_t::misc_get (uint32_t ring_handle, uint32_t sub_ring,
+                             accel_rgroup_ring_misc_cb_t cb_func,
+                             void *usr_ctx)
 {
     accel_rgroup_ring_misc_t misc = {0};
 
@@ -1575,45 +1511,39 @@ accel_ring_xts1_t::misc_get(uint32_t ring_handle,
     misc.num_reg_vals = 7;
 
     (*cb_func)(usr_ctx, misc);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_gcm0_t::reset_set(uint32_t ring_handle,
-                             uint32_t sub_ring,
-                             uint32_t *last_ring_handle,
-                             uint32_t *last_sub_ring,
-                             bool reset_sense)
+sdk_ret_t
+accel_ring_gcm0_t::reset_set (uint32_t ring_handle, uint32_t sub_ring,
+                              uint32_t *last_ring_handle,
+                              uint32_t *last_sub_ring, bool reset_sense)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     ACCEL_CFG_RMW32(gcm0_soft_rst, 0xffffffff, reset_sense);
     soft_resets += reset_sense ? 1 : 0;
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_gcm0_t::enable_set(uint32_t ring_handle,
-                              uint32_t sub_ring,
-                              uint32_t *last_ring_handle,
-                              uint32_t *last_sub_ring,
-                              bool enable_sense)
+sdk_ret_t
+accel_ring_gcm0_t::enable_set (uint32_t ring_handle, uint32_t sub_ring,
+                               uint32_t *last_ring_handle,
+                               uint32_t *last_sub_ring, bool enable_sense)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     // GCM0 does not implement ring_enable
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_gcm0_t::pndx_set(uint32_t ring_handle,
-                            uint32_t sub_ring,
-                            uint32_t *last_ring_handle,
-                            uint32_t *last_sub_ring,
-                            uint32_t val,
-                            bool conditional)
+sdk_ret_t
+accel_ring_gcm0_t::pndx_set (uint32_t ring_handle, uint32_t sub_ring,
+                             uint32_t *last_ring_handle,
+                             uint32_t *last_sub_ring, uint32_t val,
+                             bool conditional)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
@@ -1622,10 +1552,10 @@ accel_ring_gcm0_t::pndx_set(uint32_t ring_handle,
         ACCEL_CFG_WRITE32(gcm0_producer_idx, val);
         return accel_shadow_pndx_write(ring_type, val);
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 accel_ring_gcm0_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
                              accel_rgroup_ring_info_cb_t cb_func,
                              void *usr_ctx)
@@ -1642,14 +1572,13 @@ accel_ring_gcm0_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
                                   &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_gcm0_t::metrics_get(uint32_t ring_handle,
-                               uint32_t sub_ring,
-                               accel_rgroup_ring_metrics_cb_t cb_func,
-                               void *usr_ctx)
+sdk_ret_t
+accel_ring_gcm0_t::metrics_get (uint32_t ring_handle, uint32_t sub_ring,
+                                accel_rgroup_ring_metrics_cb_t cb_func,
+                                void *usr_ctx)
 {
     accel_rgroup_ring_metrics_t metrics = {0};
 
@@ -1662,14 +1591,13 @@ accel_ring_gcm0_t::metrics_get(uint32_t ring_handle,
 
     metrics.soft_resets = soft_resets;
     (*cb_func)(usr_ctx, metrics);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_gcm0_t::indices_get(uint32_t ring_handle,
-                               uint32_t sub_ring,
-                               accel_rgroup_ring_indices_cb_t cb_func,
-                               void *usr_ctx)
+sdk_ret_t
+accel_ring_gcm0_t::indices_get (uint32_t ring_handle, uint32_t sub_ring,
+                                accel_rgroup_ring_indices_cb_t cb_func,
+                                void *usr_ctx)
 {
     accel_rgroup_ring_indices_t indices = {0};
 
@@ -1682,14 +1610,13 @@ accel_ring_gcm0_t::indices_get(uint32_t ring_handle,
     ACCEL_CFG_READ32(gcm0_error_idx, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_gcm0_t::misc_get(uint32_t ring_handle,
-                            uint32_t sub_ring,
-                            accel_rgroup_ring_misc_cb_t cb_func,
-                            void *usr_ctx)
+sdk_ret_t
+accel_ring_gcm0_t::misc_get (uint32_t ring_handle, uint32_t sub_ring,
+                             accel_rgroup_ring_misc_cb_t cb_func,
+                             void *usr_ctx)
 {
     accel_rgroup_ring_misc_t misc = {0};
 
@@ -1707,45 +1634,40 @@ accel_ring_gcm0_t::misc_get(uint32_t ring_handle,
     misc.num_reg_vals = 7;
 
     (*cb_func)(usr_ctx, misc);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_gcm1_t::reset_set(uint32_t ring_handle,
-                             uint32_t sub_ring,
-                             uint32_t *last_ring_handle,
-                             uint32_t *last_sub_ring,
-                             bool reset_sense)
+sdk_ret_t
+accel_ring_gcm1_t::reset_set (uint32_t ring_handle, uint32_t sub_ring,
+                              uint32_t *last_ring_handle,
+                              uint32_t *last_sub_ring, bool reset_sense)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     ACCEL_CFG_RMW32(gcm1_soft_rst, 0xffffffff, reset_sense);
     soft_resets += reset_sense ? 1 : 0;
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_gcm1_t::enable_set(uint32_t ring_handle,
-                              uint32_t sub_ring,
-                              uint32_t *last_ring_handle,
-                              uint32_t *last_sub_ring,
-                              bool enable_sense)
+sdk_ret_t
+accel_ring_gcm1_t::enable_set (uint32_t ring_handle, uint32_t sub_ring,
+                               uint32_t *last_ring_handle,
+                               uint32_t *last_sub_ring,
+                               bool enable_sense)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
     // GCM1 does not implement ring_enable
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_gcm1_t::pndx_set(uint32_t ring_handle,
-                            uint32_t sub_ring,
-                            uint32_t *last_ring_handle,
-                            uint32_t *last_sub_ring,
-                            uint32_t val,
-                            bool conditional)
+sdk_ret_t
+accel_ring_gcm1_t::pndx_set (uint32_t ring_handle, uint32_t sub_ring,
+                             uint32_t *last_ring_handle,
+                             uint32_t *last_sub_ring, uint32_t val,
+                             bool conditional)
 {
     *last_ring_handle = ring_handle;
     *last_sub_ring = ACCEL_SUB_RING0;
@@ -1754,10 +1676,10 @@ accel_ring_gcm1_t::pndx_set(uint32_t ring_handle,
         ACCEL_CFG_WRITE32(gcm1_producer_idx, val);
         return accel_shadow_pndx_write(ring_type, val);
     }
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
+sdk_ret_t
 accel_ring_gcm1_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
                              accel_rgroup_ring_info_cb_t cb_func,
                              void *usr_ctx)
@@ -1774,14 +1696,13 @@ accel_ring_gcm1_t::info_get (uint32_t ring_handle, uint32_t sub_ring,
                                   &info.sw_enable_capable);
     assert(info.pndx_size);
     (*cb_func)(usr_ctx, info);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_gcm1_t::indices_get(uint32_t ring_handle,
-                               uint32_t sub_ring,
-                               accel_rgroup_ring_indices_cb_t cb_func,
-                               void *usr_ctx)
+sdk_ret_t
+accel_ring_gcm1_t::indices_get (uint32_t ring_handle, uint32_t sub_ring,
+                                accel_rgroup_ring_indices_cb_t cb_func,
+                                void *usr_ctx)
 {
     accel_rgroup_ring_indices_t indices = {0};
 
@@ -1794,14 +1715,13 @@ accel_ring_gcm1_t::indices_get(uint32_t ring_handle,
     ACCEL_CFG_READ32(gcm1_error_idx, indices.endx);
 
     (*cb_func)(usr_ctx, indices);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_gcm1_t::metrics_get(uint32_t ring_handle,
-                               uint32_t sub_ring,
-                               accel_rgroup_ring_metrics_cb_t cb_func,
-                               void *usr_ctx)
+sdk_ret_t
+accel_ring_gcm1_t::metrics_get (uint32_t ring_handle, uint32_t sub_ring,
+                                accel_rgroup_ring_metrics_cb_t cb_func,
+                                void *usr_ctx)
 {
     accel_rgroup_ring_metrics_t metrics = {0};
 
@@ -1814,14 +1734,13 @@ accel_ring_gcm1_t::metrics_get(uint32_t ring_handle,
 
     metrics.soft_resets = soft_resets;
     (*cb_func)(usr_ctx, metrics);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
-hal_ret_t
-accel_ring_gcm1_t::misc_get(uint32_t ring_handle,
-                            uint32_t sub_ring,
-                            accel_rgroup_ring_misc_cb_t cb_func,
-                            void *usr_ctx)
+sdk_ret_t
+accel_ring_gcm1_t::misc_get (uint32_t ring_handle, uint32_t sub_ring,
+                             accel_rgroup_ring_misc_cb_t cb_func,
+                             void *usr_ctx)
 {
     accel_rgroup_ring_misc_t misc = {0};
 
@@ -1839,16 +1758,16 @@ accel_ring_gcm1_t::misc_get(uint32_t ring_handle,
     misc.num_reg_vals = 7;
 
     (*cb_func)(usr_ctx, misc);
-    return HAL_RET_OK;
+    return SDK_RET_OK;
 }
 
 static void
-rgroup_indices_get_cb(void *user_ctx,
-                      const accel_rgroup_ring_indices_t& indices)
+rgroup_indices_get_cb (void *user_ctx,
+                       const accel_rgroup_ring_indices_t& indices)
 {
     accel_ring_metrics_t *fill_ctx;
 
-    if ((indices.ring_handle < ACCEL_RING_ID_MAX) &&
+    if ((indices.ring_handle < accel_max_rings) &&
         (indices.sub_ring < ACCEL_SUB_RING_MAX)) {
 
         fill_ctx = (accel_ring_metrics_t *)((char *)user_ctx +
@@ -1859,12 +1778,12 @@ rgroup_indices_get_cb(void *user_ctx,
 }
 
 static void
-rgroup_metrics_get_cb(void *user_ctx,
-                      const accel_rgroup_ring_metrics_t& metrics)
+rgroup_metrics_get_cb (void *user_ctx,
+                       const accel_rgroup_ring_metrics_t& metrics)
 {
     accel_ring_metrics_t *fill_ctx;
 
-    if ((metrics.ring_handle < ACCEL_RING_ID_MAX) &&
+    if ((metrics.ring_handle < accel_max_rings) &&
         (metrics.sub_ring < ACCEL_SUB_RING_MAX)) {
 
         fill_ctx = (accel_ring_metrics_t *)((char *)user_ctx +
@@ -1876,20 +1795,23 @@ rgroup_metrics_get_cb(void *user_ctx,
 }
 
 static void
-accel_rgroup_timer(void *timer,
-                   uint32_t timer_id,
-                   void *user_ctx)
+accel_rgroup_timer (void *timer, uint32_t timer_id, void *user_ctx)
 {
     accel_rgroup_t           *rgroup;
     accel_rgroup_iter_c      iter;
-    accel_ring_metrics_t     metrics[ACCEL_RING_ID_MAX][ACCEL_SUB_RING_MAX];
+    accel_ring_metrics_t     *metrics;
+    size_t len;
+
+    len = sizeof(accel_ring_metrics_t) * accel_max_rings * ACCEL_SUB_RING_MAX;
+    metrics = (accel_ring_metrics_t *)
+        SDK_MALLOC(SDK_MEM_ALLOC_ACCEL_RINGS_METRICS, len);
 
     ACCEL_RGROUP_LOCK();
     iter = rgroup_map.begin();
     while (iter != rgroup_map.end()) {
         rgroup = iter->second;
         if (rgroup->metrics_size_get() >= sizeof(metrics)) {
-            memset(metrics, 0, sizeof(metrics));
+            memset(metrics, 0, len);
             rgroup->indices_get(ACCEL_SUB_RING_ALL,
                                 rgroup_indices_get_cb, metrics);
             rgroup->metrics_get(ACCEL_SUB_RING_ALL,
@@ -1900,9 +1822,11 @@ accel_rgroup_timer(void *timer,
         iter++;
     }
     ACCEL_RGROUP_UNLOCK();
+
+    SDK_FREE(SDK_MEM_ALLOC_ACCEL_RINGS_METRICS, metrics);
 }
 
-
-}/// aameppac  pd
-
-} // nmmesaacehhal
+}   // namespace accel
+}   // namespace pd
+}   // namespace asic
+}   // namespace sdk

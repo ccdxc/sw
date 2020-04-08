@@ -438,7 +438,7 @@ p4pd_add_upd_flow_info_table_entry (pd_session_create_args_t *args, pd_flow_t *f
                                      flow_cfg->eg_mirror_session;
             }
         }
-        d.action_u.flow_info_flow_info.ingress_mirror_overwrite = 
+        d.action_u.flow_info_flow_info.ingress_mirror_overwrite =
             d.action_u.flow_info_flow_info.ingress_mirror_session_id ? 1 : 0;
 
         if (flow_attrs->export_en) {
@@ -462,15 +462,15 @@ p4pd_add_upd_flow_info_table_entry (pd_session_create_args_t *args, pd_flow_t *f
  		 * IPFIX EXTENDED stats table is organized as 1M entries of 32Bytes per
  		 * export id and we support 16 exporters in all. Hence the address would be
  		 * (region-start-address)+(exporter_idx (0-3)* (entry-size(32B) * flow-table-depth))+(flow-index*32B)
- 		 */ 
-                while (idx < 4) { 
+ 		 */
+                while (idx < 4) {
                     if (flow_attrs->export_en & (0x1 << idx)) {
-                        sdk::types::mem_addr_t mem_addr = 
+                        sdk::types::mem_addr_t mem_addr =
                               (stats_mem_addr + ((idx << 5) << 20)) + (flow_pd->assoc_hw_id << 5);
 
                         sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(mem_addr, &vaddr);
                         SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
-                        bzero((void *)vaddr, 32); 
+                        bzero((void *)vaddr, 32);
                     }
                     idx++;
                 }
@@ -493,7 +493,7 @@ p4pd_add_upd_flow_info_table_entry (pd_session_create_args_t *args, pd_flow_t *f
                         bzero((void *)vaddr, 32);
                     }
                     idx++;
-                }  
+                }
             }
         }
 
@@ -556,7 +556,7 @@ p4pd_add_upd_flow_info_table_entry (pd_session_create_args_t *args, pd_flow_t *f
         d.action_u.flow_info_flow_info.session_state_index =
         d.action_u.flow_info_flow_info.flow_conn_track ?
                  sess_pd->session_state_idx : 0;
-   
+
         // Dont update the start timestamp during update
         // we dont want to mess up aging logic
         if (!entry_exists)
@@ -575,7 +575,7 @@ p4pd_add_upd_flow_info_table_entry (pd_session_create_args_t *args, pd_flow_t *f
            return ret;
        }
     } else {
-       HAL_TRACE_DEBUG("Writing flow info start timestamp {} to flow index {} action id {}", 
+       HAL_TRACE_DEBUG("Writing flow info start timestamp {} to flow index {} action id {}",
                        d.action_u.flow_info_flow_info.start_timestamp, flow_pd->assoc_hw_id, d.action_id);
        params.handle.pindex(flow_pd->assoc_hw_id);
        params.actiondata = &d;
@@ -706,8 +706,8 @@ p4pd_fill_flow_hash_key (flow_key_t *flow_key,
         } else if ((flow_key->proto == IP_PROTO_ICMP) ||
                 (flow_key->proto == IP_PROTO_ICMPV6)) {
             // Set Sport for ECHO request/response
-            if (((flow_key->icmp_type == ICMP_TYPE_ECHO_REQUEST || 
-                  flow_key->icmp_type == ICMPV6_TYPE_ECHO_REQUEST) && 
+            if (((flow_key->icmp_type == ICMP_TYPE_ECHO_REQUEST ||
+                  flow_key->icmp_type == ICMPV6_TYPE_ECHO_REQUEST) &&
                  flow_key->icmp_code == ICMP_CODE_ECHO_REQUEST) ||
                 ((flow_key->icmp_type == ICMP_TYPE_ECHO_RESPONSE ||
                   flow_key->icmp_type == ICMPV6_TYPE_ECHO_RESPONSE) &&
@@ -762,7 +762,7 @@ p4pd_add_upd_flow_hash_table_entry (flow_key_t *flow_key,
     if (flow_key->flow_type == FLOW_TYPE_V4) {
         memcpy(key.flow_lkp_metadata_lkp_src, flow_key->sip.v6_addr.addr8, IP6_ADDR8_LEN);
         memcpy(key.flow_lkp_metadata_lkp_dst, flow_key->dip.v6_addr.addr8, IP6_ADDR8_LEN);
-    } 
+    }
     else if (flow_key->flow_type == FLOW_TYPE_V6) {
         sdk::lib::memrev(key.flow_lkp_metadata_lkp_src, flow_key->sip.v6_addr.addr8, IP6_ADDR8_LEN);
         sdk::lib::memrev(key.flow_lkp_metadata_lkp_dst, flow_key->dip.v6_addr.addr8, IP6_ADDR8_LEN);
@@ -825,7 +825,7 @@ p4pd_add_upd_flow_hash_table_entry (flow_key_t *flow_key,
         }
         HAL_TRACE_VERBOSE("update {}, src {}, dst {}", update, src_buf.c_str(), dst_buf.c_str());
     }
-   
+
     bool hash_valid = (hash_val) ? true : false;
 
     if (update) {
@@ -852,7 +852,7 @@ p4pd_add_upd_flow_hash_table_entry (flow_key_t *flow_key,
 //------------------------------------------------------------------------------
 static hal_ret_t
 p4pd_del_flow_hash_table_entry (flow_key_t *flow_key,
-                                uint8_t lkp_inst, uint8_t export_en, 
+                                uint8_t lkp_inst, uint8_t export_en,
                                 pd_flow_t *flow_pd)
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -1501,7 +1501,7 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     return ret;
 }
 
-// Optimized pd_flow_get() version for Flow-age thread to conserve 
+// Optimized pd_flow_get() version for Flow-age thread to conserve
 // compute cycles
 hal_ret_t
 pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
@@ -1595,7 +1595,7 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
                                  u1.raw_metrics.last_flow_table_bytes;
         flow_telemetry_state_p->u1.raw_metrics.last_flow_table_packets =
                                 (uint32_t) flow_table_packets;
-        flow_telemetry_state_p->u1.raw_metrics.last_flow_table_bytes = 
+        flow_telemetry_state_p->u1.raw_metrics.last_flow_table_bytes =
                                 (uint32_t) flow_table_bytes;
 
         // Packets / Bytes are accumulated to handle Telemetry-HBM-resource
@@ -1614,7 +1614,7 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
         if (last_drops != current_hw_drop_packets) {
             // Sense for first-time occurring drop-events
             if (flow_telemetry_state_p->u1.drop_metrics.packets == 0)
-                flow_telemetry_state_p->u1.drop_metrics.first_timestamp = 
+                flow_telemetry_state_p->u1.drop_metrics.first_timestamp =
                                         ctime_ns;
             flow_telemetry_state_p->u1.drop_metrics.last_timestamp = ctime_ns;
 
@@ -1623,7 +1623,7 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
             flow_table_bytes = fs_entry.get_drop_bytes();
 
             // Compute Delta-Packets/Bytes since last capture
-            delta_packets = (uint32_t) flow_table_packets - 
+            delta_packets = (uint32_t) flow_table_packets -
             flow_telemetry_state_p->u1.drop_metrics.last_flow_table_packets;
             delta_bytes = (uint32_t) flow_table_bytes - flow_telemetry_state_p->
                                      u1.drop_metrics.last_flow_table_bytes;
@@ -1636,7 +1636,7 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
             // Re-use case
             flow_telemetry_state_p->u1.drop_metrics.packets += delta_packets;
             flow_telemetry_state_p->u1.drop_metrics.bytes += delta_bytes;
-            flow_telemetry_state_p->u1.drop_metrics.reason |= 
+            flow_telemetry_state_p->u1.drop_metrics.reason |=
                                     fs_entry.get_drop_reason();
         }
     }
@@ -1646,31 +1646,31 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
         if (flow_telemetry_state_p->u2.last_age_timer_ticks) {
             uint32_t flow_rate_compute_time;
 
-            flow_rate_compute_time = current_age_timer_ticks - 
+            flow_rate_compute_time = current_age_timer_ticks -
                                 flow_telemetry_state_p->u2.last_age_timer_ticks;
             switch (flow_rate_compute_time) {
                 case FLOW_RATE_COMPUTE_TIME_1SEC:
                     pps = (flow_telemetry_state_p->u1.raw_metrics.packets -
                            flow_telemetry_state_p->u1.raw_metrics.last_packets);
-                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes - 
+                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes -
                           flow_telemetry_state_p->u1.raw_metrics.last_bytes);
                     break;
                 case FLOW_RATE_COMPUTE_TIME_2SEC:
                     pps = (flow_telemetry_state_p->u1.raw_metrics.packets -
                       flow_telemetry_state_p->u1.raw_metrics.last_packets) >> 1;
-                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes - 
+                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes -
                         flow_telemetry_state_p->u1.raw_metrics.last_bytes) >> 1;
                     break;
                 case FLOW_RATE_COMPUTE_TIME_4SEC:
                     pps = (flow_telemetry_state_p->u1.raw_metrics.packets -
                       flow_telemetry_state_p->u1.raw_metrics.last_packets) >> 2;
-                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes - 
+                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes -
                         flow_telemetry_state_p->u1.raw_metrics.last_bytes) >> 2;
                     break;
                 case FLOW_RATE_COMPUTE_TIME_8SEC:
                     pps = (flow_telemetry_state_p->u1.raw_metrics.packets -
                       flow_telemetry_state_p->u1.raw_metrics.last_packets) >> 3;
-                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes - 
+                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes -
                         flow_telemetry_state_p->u1.raw_metrics.last_bytes) >> 3;
                     break;
                 default:
@@ -1680,8 +1680,8 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
                     pps = (flow_telemetry_state_p->u1.raw_metrics.packets -
                            flow_telemetry_state_p->u1.raw_metrics.last_packets)/
                            flow_rate_compute_time;
-                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes - 
-                          flow_telemetry_state_p->u1.raw_metrics.last_bytes) / 
+                    bw = (flow_telemetry_state_p->u1.raw_metrics.bytes -
+                          flow_telemetry_state_p->u1.raw_metrics.last_bytes) /
                           flow_rate_compute_time;
                     break;
             }
@@ -1697,19 +1697,19 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
                                         peak_bw_timestamp = ctime_ns;
             }
         }
-        flow_telemetry_state_p->u1.raw_metrics.last_packets = 
+        flow_telemetry_state_p->u1.raw_metrics.last_packets =
                                 flow_telemetry_state_p->u1.raw_metrics.packets;
-        flow_telemetry_state_p->u1.raw_metrics.last_bytes = 
+        flow_telemetry_state_p->u1.raw_metrics.last_bytes =
                                 flow_telemetry_state_p->u1.raw_metrics.bytes;
-        flow_telemetry_state_p->u2.last_age_timer_ticks = 
+        flow_telemetry_state_p->u2.last_age_timer_ticks =
                                 current_age_timer_ticks;
     }
-                
+
     // Derive Behavioral-Flow-stats for exposition via gRPC, if enabled
     if (flow_p->flow_telemetry_enable_flags & (1<<FLOW_TELEMETRY_BEHAVIORAL)) {
 
         if (pps > flow_telemetry_state_p->u1.behavioral_metrics.pps_threshold) {
-            // Sense for first-time occurring event and update timestamp 
+            // Sense for first-time occurring event and update timestamp
             // accordingly
             if (flow_telemetry_state_p->u1.behavioral_metrics.
                                         pps_threshold_exceed_events == 0)
@@ -1723,7 +1723,7 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
         }
 
         if (bw > flow_telemetry_state_p->u1.behavioral_metrics.bw_threshold) {
-            // Sense for first-time occurring event and update timestamp 
+            // Sense for first-time occurring event and update timestamp
             // accordingly
             if (flow_telemetry_state_p->u1.behavioral_metrics.
                                         bw_threshold_exceed_events == 0)
@@ -1738,13 +1738,13 @@ pd_flow_get_for_age_thread (pd_func_args_t *pd_func_args, flow_t *flow_p,
     }
 
     // Support on-the-fly FlowStats Telemetry Disablement
-    flow_p->flow_telemetry_create_flags |= 
+    flow_p->flow_telemetry_create_flags |=
     ~flow_p->flow_telemetry_enable_flags&flow_telemetry_state_p->present_flags;
 
     return ret;
 }
 
-// Optimized pd_session_get() version for Flow-age thread to conserve 
+// Optimized pd_session_get() version for Flow-age thread to conserve
 // compute cycles
 hal_ret_t
 pd_session_get_for_age_thread (pd_func_args_t *pd_func_args)
@@ -1755,7 +1755,6 @@ pd_session_get_for_age_thread (pd_func_args_t *pd_func_args)
     pd_session_t                           *pd_session;
     pd_flow_get_args_t                      flow_get_args;
     pd_func_args_t                          pd_func_args1;
-    session_state_actiondata_t              d;
     session_state_t                        *ss;
     sdk_table_api_params_t                 params;
 
@@ -1901,7 +1900,7 @@ pd_get_cpu_bypass_flowid (pd_func_args_t *pd_func_args)
     return HAL_RET_OK;
 }
 
-// 
+//
 // Read the flow hash table given flow key
 //
 hal_ret_t

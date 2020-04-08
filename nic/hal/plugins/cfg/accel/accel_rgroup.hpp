@@ -35,68 +35,7 @@ using accelRGroup::AccelRGroupMiscGetResponse;
 
 namespace hal {
 
-/*
- * Ring config info
- */
-typedef struct {
-    uint32_t    ring_handle;
-    uint32_t    sub_ring;
-    uint64_t    base_pa;
-    uint64_t    pndx_pa;
-    uint64_t    shadow_pndx_pa;
-    uint64_t    opaque_tag_pa;
-    uint32_t    opaque_tag_size;
-    uint32_t    ring_size;
-    uint32_t    desc_size;
-    uint32_t    pndx_size;
-    bool        sw_reset_capable;
-    bool        sw_enable_capable;
-} accel_rgroup_ring_info_t;
-
-typedef void (*accel_rgroup_ring_info_cb_t)(void *user_ctx,
-                                            const accel_rgroup_ring_info_t& info);
-/*
- * Ring indices info
- */
-typedef struct {
-    uint32_t    ring_handle;
-    uint32_t    sub_ring;
-    uint32_t    pndx;          /* producer index */
-    uint32_t    cndx;          /* consumer index */
-    uint32_t    endx;          /* error index */
-} accel_rgroup_ring_indices_t;
-
-typedef void (*accel_rgroup_ring_indices_cb_t)(void *user_ctx,
-                                               const accel_rgroup_ring_indices_t& indices);
-
-/*
- * Ring metrics info
- */
-typedef struct {
-    uint32_t    ring_handle;
-    uint32_t    sub_ring;
-    uint64_t    input_bytes;
-    uint64_t    output_bytes;
-    uint64_t    soft_resets;
-} accel_rgroup_ring_metrics_t;
-
-typedef void (*accel_rgroup_ring_metrics_cb_t)(void *user_ctx,
-                                               const accel_rgroup_ring_metrics_t& metrics);
-/*
- * Ring miscellaneous info, identified by resource name
- */
-typedef struct {
-    uint32_t    ring_handle;
-    uint32_t    sub_ring;
-    uint32_t    num_reg_vals;
-    accel_ring_reg_val_t reg_val[ACCEL_RING_NUM_REGS_MAX];
-} accel_rgroup_ring_misc_t;
-
-typedef void (*accel_rgroup_ring_misc_cb_t)(void *user_ctx,
-                                            const accel_rgroup_ring_misc_t& misc);
-
-
-hal_ret_t accel_rgroup_init(int tid);
+hal_ret_t accel_rgroup_init(int tid, uint32_t accel_total_rings);
 hal_ret_t accel_rgroup_fini(int tid);
 hal_ret_t accel_rgroup_add(const AccelRGroupAddRequest& request,
                            AccelRGroupAddResponse *response);

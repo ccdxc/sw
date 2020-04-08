@@ -91,8 +91,6 @@ MODULE_ARLIBS	= \
 	pd_iris \
 	pd_met \
 	pd_wring \
-	pdaccel\
-	pdcapri \
 	pdcommon \
 	penipc \
 	penipc_ev \

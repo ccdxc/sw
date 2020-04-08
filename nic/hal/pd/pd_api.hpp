@@ -38,7 +38,6 @@
 #include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/hal/src/internal/proxyccb.hpp"
 #include "nic/sdk/include/sdk/crypto_apis.hpp"
-#include "nic/hal/plugins/cfg/accel/accel_rgroup.hpp"
 #include "nic/sdk/platform/capri/capri_barco_rings.hpp"
 #ifdef GFT
 #include "nic/hal/plugins/cfg/gft/gft.hpp"
@@ -2801,89 +2800,6 @@ typedef struct pd_barco_asym_rsa2k_sig_gen_args_s {
     const uint8_t *unique_key;    // unique key for Async wait-ctx (usually engine-id)
 } __PACK__ pd_barco_asym_rsa2k_sig_gen_args_t;
 
-// Accelerator ring group
-typedef struct pd_accel_rgroup_init_args_s {
-    int tid;
-} __PACK__ pd_accel_rgroup_init_args_t;
-
-typedef struct pd_accel_rgroup_fini_args_s {
-    int tid;
-} __PACK__ pd_accel_rgroup_fini_args_t;
-
-typedef struct pd_accel_rgroup_add_args_s {
-    const char *rgroup_name;
-    uint64_t metrics_mem_addr;
-    uint32_t metrics_mem_size;
-} __PACK__ pd_accel_rgroup_add_args_t;
-
-typedef struct pd_accel_rgroup_del_args_s {
-    const char *rgroup_name;
-} __PACK__ pd_accel_rgroup_del_args_t;
-
-typedef struct pd_accel_rgroup_ring_add_args_s {
-    const char *rgroup_name;
-    const char *ring_name;
-    uint32_t ring_handle;
-} __PACK__ pd_accel_rgroup_ring_add_args_t;
-
-typedef struct pd_accel_rgroup_ring_del_args_s {
-    const char *rgroup_name;
-    const char *ring_name;
-} __PACK__ pd_accel_rgroup_ring_del_args_t;
-
-typedef struct pd_accel_rgroup_reset_set_args_s {
-    const char *rgroup_name;
-    uint32_t sub_ring;
-    bool reset_sense;
-    uint32_t last_ring_handle;
-    uint32_t last_sub_ring;
-} __PACK__ pd_accel_rgroup_reset_set_args_t;
-
-typedef struct pd_accel_rgroup_enable_set_args_s {
-    const char *rgroup_name;
-    uint32_t sub_ring;
-    bool enable_sense;
-    uint32_t last_ring_handle;
-    uint32_t last_sub_ring;
-} __PACK__ pd_accel_rgroup_enable_set_args_t;
-
-typedef struct pd_accel_rgroup_pndx_set_args_s {
-    const char *rgroup_name;
-    uint32_t sub_ring;
-    uint32_t val;
-    uint32_t conditional;
-    uint32_t last_ring_handle;
-    uint32_t last_sub_ring;
-} __PACK__ pd_accel_rgroup_pndx_set_args_t;
-
-typedef struct pd_accel_rgroup_info_get_args_s {
-    const char *rgroup_name;
-    uint32_t sub_ring;
-    accel_rgroup_ring_info_cb_t cb_func;
-    void *usr_ctx;
-} __PACK__ pd_accel_rgroup_info_get_args_t;
-
-typedef struct pd_accel_rgroup_indices_get_args_s {
-    const char *rgroup_name;
-    uint32_t sub_ring;
-    accel_rgroup_ring_indices_cb_t cb_func;
-    void *usr_ctx;
-} __PACK__ pd_accel_rgroup_indices_get_args_t;
-
-typedef struct pd_accel_rgroup_metrics_get_args_s {
-    const char *rgroup_name;
-    uint32_t sub_ring;
-    accel_rgroup_ring_metrics_cb_t cb_func;
-    void *usr_ctx;
-} __PACK__ pd_accel_rgroup_metrics_get_args_t;
-
-typedef struct pd_accel_rgroup_misc_get_args_s {
-    const char *rgroup_name;
-    uint32_t sub_ring;
-    accel_rgroup_ring_misc_cb_t cb_func;
-    void *usr_ctx;
-} __PACK__ pd_accel_rgroup_misc_get_args_t;
-
 #ifdef GFT
 // gft
 typedef struct pd_gft_exact_match_profile_args_s {
@@ -3377,16 +3293,6 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_COLLECTOR_GET,            261, "PD_FUNC_ID_COLLECTOR_GET")\
     ENTRY(PD_FUNC_ID_EP_IF_UPDATE,             262, "PD_FUNC_ID_EP_IF_UPDATE")      \
     ENTRY(PD_FUNC_ID_PB_STATS_GET,             263, "PD_FUNC_ID_PB_STATS_GET")\
-    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_ADD,         264, "PD_FUNC_ID_ACCEL_RGROUP_ADD")\
-    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_DEL,         265, "PD_FUNC_ID_ACCEL_RGROUP_DEL")\
-    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_RING_ADD,    266, "PD_FUNC_ID_ACCEL_RGROUP_RING_ADD")\
-    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_RING_DEL,    267, "PD_FUNC_ID_ACCEL_RGROUP_RING_DEL")\
-    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_RESET_SET,   268, "PD_FUNC_ID_ACCEL_RGROUP_RESET_SET")\
-    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_ENABLE_SET,  269, "PD_FUNC_ID_ACCEL_RGROUP_ENABLE_SET")\
-    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_PNDX_SET,    270, "PD_FUNC_ID_ACCEL_RGROUP_PNDX_SET")\
-    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_INFO_GET,    271, "PD_FUNC_ID_ACCEL_RGROUP_INFO_GET")\
-    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_INDICES_GET, 272, "PD_FUNC_ID_ACCEL_RGROUP_INDICES_GET")\
-    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_METRICS_GET, 273, "PD_FUNC_ID_ACCEL_RGROUP_METRICS_GET")\
     ENTRY(PD_FUNC_ID_LIF_STATS_GET,            274, "PD_FUNC_ID_LIF_STATS_GET")            \
     ENTRY(PD_FUNC_ID_FTE_SPAN_CREATE,          275, "PD_FUNC_ID_FTE_SPAN_CREATE")\
     ENTRY(PD_FUNC_ID_FTE_SPAN_UPDATE,          276, "PD_FUNC_ID_FTE_SPAN_UPDATE")\
@@ -3411,9 +3317,6 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_CPU_SEND_NEW,             295, "PD_FUNC_ID_CPU_SEND_NEW")\
     ENTRY(PD_FUNC_ID_LIF_SCHED_CONTROL,        297, "PD_FUNC_ID_LIF_SCHED_CONTROL") \
     ENTRY(PD_FUNC_ID_QOS_CLASS_THRESHOLDS_GET, 298, "PD_FUNC_ID_QOS_CLASS_THRESHOLDS_GET") \
-    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_INIT,        299, "PD_FUNC_ID_ACCEL_RGROUP_INIT")\
-    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_FINI,        300, "PD_FUNC_ID_ACCEL_RGROUP_FINI")\
-    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_MISC_GET,    301, "PD_FUNC_ID_ACCEL_RGROUP_MISC_GET")\
     ENTRY(PD_FUNC_ID_QOS_CLASS_SET_GLOBAL_PAUSE_TYPE, 302, "PD_FUNC_ID_QOS_CLASS_SET_GLOBAL_PAUSE_TYPE")  \
     ENTRY(PD_FUNC_ID_WRING_GET_BASE_ADDR,      303, "PD_FUNC_ID_WRING_GET_BASE_ADDR")               \
     ENTRY(PD_FUNC_ID_FLOW_HASH_GET,            304, "PD_FUNC_ID_FLOW_HASH_GET")\
@@ -3861,21 +3764,6 @@ typedef struct pd_func_args_s {
 
         // pb
         PD_UNION_ARGS_FIELD(pd_pb_stats_get);
-
-        // accelerator ring group
-        PD_UNION_ARGS_FIELD(pd_accel_rgroup_init);
-        PD_UNION_ARGS_FIELD(pd_accel_rgroup_fini);
-        PD_UNION_ARGS_FIELD(pd_accel_rgroup_add);
-        PD_UNION_ARGS_FIELD(pd_accel_rgroup_del);
-        PD_UNION_ARGS_FIELD(pd_accel_rgroup_ring_add);
-        PD_UNION_ARGS_FIELD(pd_accel_rgroup_ring_del);
-        PD_UNION_ARGS_FIELD(pd_accel_rgroup_reset_set);
-        PD_UNION_ARGS_FIELD(pd_accel_rgroup_enable_set);
-        PD_UNION_ARGS_FIELD(pd_accel_rgroup_pndx_set);
-        PD_UNION_ARGS_FIELD(pd_accel_rgroup_info_get);
-        PD_UNION_ARGS_FIELD(pd_accel_rgroup_indices_get);
-        PD_UNION_ARGS_FIELD(pd_accel_rgroup_metrics_get);
-        PD_UNION_ARGS_FIELD(pd_accel_rgroup_misc_get);
 
         // fte_span pd calls
         PD_UNION_ARGS_FIELD(pd_fte_span_create);
@@ -4350,21 +4238,6 @@ PD_FUNCP_TYPEDEF(pd_swphv_get_state);
 // pb
 PD_FUNCP_TYPEDEF(pd_pb_stats_get);
 PD_FUNCP_TYPEDEF(pd_pb_stats_clear);
-
-// accelerator ring group
-PD_FUNCP_TYPEDEF(pd_accel_rgroup_init);
-PD_FUNCP_TYPEDEF(pd_accel_rgroup_fini);
-PD_FUNCP_TYPEDEF(pd_accel_rgroup_add);
-PD_FUNCP_TYPEDEF(pd_accel_rgroup_del);
-PD_FUNCP_TYPEDEF(pd_accel_rgroup_ring_add);
-PD_FUNCP_TYPEDEF(pd_accel_rgroup_ring_del);
-PD_FUNCP_TYPEDEF(pd_accel_rgroup_reset_set);
-PD_FUNCP_TYPEDEF(pd_accel_rgroup_enable_set);
-PD_FUNCP_TYPEDEF(pd_accel_rgroup_pndx_set);
-PD_FUNCP_TYPEDEF(pd_accel_rgroup_info_get);
-PD_FUNCP_TYPEDEF(pd_accel_rgroup_indices_get);
-PD_FUNCP_TYPEDEF(pd_accel_rgroup_metrics_get);
-PD_FUNCP_TYPEDEF(pd_accel_rgroup_misc_get);
 
 // fte_span pd calls
 PD_FUNCP_TYPEDEF(pd_fte_span_create);

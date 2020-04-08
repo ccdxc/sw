@@ -13,7 +13,7 @@ MODULE_SOLIBS   := pal ${NIC_SDK_SOLIBS} \
                    upgrade upgrade_app upgradeutils \
                    sysmgr \
                    sdkcapri_asicrw_if \
-                   sdkasicpd pdcapri pdcommon hal_mock \
+                   sdkasicpd pdcommon hal_mock \
                    sdkp4 sdkp4utils sdkxcvrdriver p4pd_${PIPELINE} \
                    p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma \
                    asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}} lif_mgr

@@ -8,7 +8,7 @@ MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc ${MODULE_SRC_DIR}/event_reco
                   ${MODULE_SRC_DIR}/delphi/asicerrord_delphi.cc ${MODULE_SRC_DIR}/cpld/*.cc)
 MODULE_SOLIBS   = delphisdk trace halproto utils sdkasicpd \
                   sdkcapri_asicrw_if sensor pal catalog logger \
-                  pdcapri pdcommon p4pd_${PIPELINE} sdkp4 \
+                  pdcommon p4pd_${PIPELINE} sdkp4 \
                   p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma \
                   asicpd ${NIC_SDK_SOLIBS} penipc penipc_ev halproto \
                   bm_allocator sdkxcvrdriver hal_mock events_recorder \

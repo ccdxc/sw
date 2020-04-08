@@ -472,21 +472,6 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_PB_STATS_GET, pd_pb_stats_get);
     PD_FUNC_LOAD(PD_FUNC_ID_PB_STATS_CLEAR, pd_pb_stats_clear);
 
-    // accelerator ring group
-    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_INIT, pd_accel_rgroup_init);
-    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_FINI, pd_accel_rgroup_fini);
-    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_ADD, pd_accel_rgroup_add);
-    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_DEL, pd_accel_rgroup_del);
-    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_RING_ADD, pd_accel_rgroup_ring_add);
-    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_RING_DEL, pd_accel_rgroup_ring_del);
-    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_RESET_SET, pd_accel_rgroup_reset_set);
-    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_ENABLE_SET, pd_accel_rgroup_enable_set);
-    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_PNDX_SET, pd_accel_rgroup_pndx_set);
-    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_INFO_GET, pd_accel_rgroup_info_get);
-    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_INDICES_GET, pd_accel_rgroup_indices_get);
-    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_METRICS_GET, pd_accel_rgroup_metrics_get);
-    PD_FUNC_LOAD(PD_FUNC_ID_ACCEL_RGROUP_MISC_GET, pd_accel_rgroup_misc_get);
-
     // fte_span pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_FTE_SPAN_GET, pd_fte_span_get);
     PD_FUNC_LOAD(PD_FUNC_ID_FTE_SPAN_CREATE, pd_fte_span_create);

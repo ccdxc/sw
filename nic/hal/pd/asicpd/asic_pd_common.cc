@@ -13,11 +13,8 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
-#include "platform/capri/capri_txs_scheduler.hpp"
-#include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/platform/drivers/xcvr.hpp"
 
-using namespace sdk::platform::capri;
 using namespace sdk::asic::pd;
 
 namespace hal {

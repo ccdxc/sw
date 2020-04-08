@@ -37,20 +37,9 @@ enum {
 
 typedef uint32_t    accel_ring_id_t;
 
-/*
- * Accelerator sub-rings:
- *  Capri: single sub-ring per ring ID
- *  Post-Capri: multiple sub-rings per
- */
-enum {
-    ACCEL_SUB_RING0     = 0,
-    ACCEL_SUB_RING_MAX,
-    ACCEL_SUB_RING_ALL  = 0xffffffff,
-};
-
 /**
  * accel_ring_t - Hardware accelerator ring information
- * 
+ *
  *     @ring_id:          ring ID
  *     @ring_base_pa:     physical address of ring base memory
  *     @ring_pndx_pa:     physical address of producer index memory
@@ -72,27 +61,5 @@ typedef struct accel_ring {
     uint8_t         ring_pndx_size;
     uint8_t         ring_opaque_tag_size;
 } accel_ring_t;
-
-/**
- * HW ring info metrics layout for Delphi
- */
-typedef struct {
-    uint64_t    pndx;
-    uint64_t    cndx;
-    uint64_t    input_bytes;
-    uint64_t    output_bytes;
-    uint64_t    soft_resets;
-} __attribute__((packed)) accel_ring_metrics_t;
-
-/**
- * Ring miscellaneous register info, identified by register name
- */
-#define ACCEL_RING_REG_NAME_MAX         32
-#define ACCEL_RING_NUM_REGS_MAX         32
-
-typedef struct {
-    char        name[ACCEL_RING_REG_NAME_MAX];
-    uint32_t    val;
-} accel_ring_reg_val_t;
 
 #endif /* _ACCEL_RING_H_ */

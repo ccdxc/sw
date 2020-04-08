@@ -393,18 +393,6 @@ PD_FUNC_STUB(pd_get_slab);
 PD_FUNC_STUB(pd_pb_stats_get);
 PD_FUNC_STUB(pd_pb_stats_clear);
 
-// accelerator ring group
-PD_FUNC_STUB(pd_accel_rgroup_add);
-PD_FUNC_STUB(pd_accel_rgroup_del);
-PD_FUNC_STUB(pd_accel_rgroup_ring_add);
-PD_FUNC_STUB(pd_accel_rgroup_ring_del);
-PD_FUNC_STUB(pd_accel_rgroup_reset_set);
-PD_FUNC_STUB(pd_accel_rgroup_enable_set);
-PD_FUNC_STUB(pd_accel_rgroup_pndx_set);
-PD_FUNC_STUB(pd_accel_rgroup_info_get);
-PD_FUNC_STUB(pd_accel_rgroup_indices_get);
-
-
 PD_FUNC_STUB(pd_fte_span_create);
 PD_FUNC_STUB(pd_fte_span_update);
 PD_FUNC_STUB(pd_fte_span_mem_free);
