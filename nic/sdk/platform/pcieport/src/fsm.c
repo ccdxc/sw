@@ -208,8 +208,17 @@ pcieport_buschg(pcieport_t *p)
 }
 
 static void
+pcieport_update_tx_fc(pcieport_t *p)
+{
+    pcieport_get_tx_fc_credits(p->port,
+                               &p->txfc_phdr,  &p->txfc_pdata,
+                               &p->txfc_nphdr, &p->txfc_npdata);
+}
+
+static void
 pcieport_hostup(pcieport_t *p)
 {
+    pcieport_update_tx_fc(p);
     pcieport_event_hostup(p, ++p->stats.hostup);
 }
 

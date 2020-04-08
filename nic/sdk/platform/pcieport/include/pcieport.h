@@ -73,6 +73,10 @@ union pcieport_u {
         char last_fault_reason[80];
         pcieport_stats_t stats;
         u_int32_t macup;
+        int txfc_phdr;                  /* tx fc credits    posted hdr */
+        int txfc_pdata;                 /* tx fc credits    posted data */
+        int txfc_nphdr;                 /* tx fc credits nonposted hdr */
+        int txfc_npdata;                /* tx fc credits nonposted data */
     };
     u_int8_t _pad[2048];
 };
@@ -119,6 +123,9 @@ int pcieport_hostconfig(const int port, const pciemgr_params_t *params);
 int pcieport_crs_off(const int port);
 int pcieport_is_accessible(const int port);
 int pcieport_powerdown(const int port);
+void pcieport_get_tx_fc_credits(const int port,
+                                int *posted_data, int *posted_hdr,
+                                int *nonposted_data, int *nonposted_hdr);
 
 int pcieport_intr_init(const int port);
 int pcieport_intr(const int port);

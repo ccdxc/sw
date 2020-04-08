@@ -379,6 +379,10 @@ pcieport_showport(const int port)
     P("vga_support", "%d", p->vga_support);
     P("reduce_rx_cred", "%d", p->reduce_rx_cred);
     P("macup", "%d", p->macup);
+    P("txfc_phdr", "%d", p->txfc_phdr);
+    P("txfc_pdata", "%d", p->txfc_pdata);
+    P("txfc_nphdr", "%d", p->txfc_nphdr);
+    P("txfc_npdata", "%d", p->txfc_npdata);
     P("state", "%s", pcieport_stname(p->state));
     P("event", "%s", pcieport_evname(p->event));
     P("fault_reason", "%s", p->fault_reason);

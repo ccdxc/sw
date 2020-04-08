@@ -16,6 +16,7 @@
 #include "cap_pp_c_hdr.h"
 
 #include "platform/evutils/include/evutils.h"
+#include "platform/misc/include/misc.h"
 #include "platform/pal/include/pal.h"
 #include "platform/pciemgr/include/pciemgr.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
@@ -51,32 +52,54 @@
 #define MIN_TO_USEC(m)          SEC_TO_USEC((m) * 60)
 
 //
-// LOG_DELAY_MIN_US - Minimum time to wait after first log event of a series.
-// LOG_DELAY_MAX_US - Maximum time to wait for next log event of a series.
-// LOG_DELAY_RST_US - Quiet period between log events to trigger delay reset.
+// LOG_DELAY_MIN_US - Minimum throttle time to wait after first
+//     log event of a series.
 //
 #define LOG_DELAY_MIN_US        MIN_TO_USEC(1)
+//
+// LOG_DELAY_MAX_US - Maximum time to wait for next log event of a series.
+//     Once we reach this log throttle time we don't increase the timeout.
+//
 #define LOG_DELAY_MAX_US        MIN_TO_USEC(60)
+//
+// LOG_DELAY_RST_US - Quiet period between log events to trigger delay reset.
+//     If we don't get any events for this time, reset log throttle to 0.
+//
 #define LOG_DELAY_RST_US        MIN_TO_USEC(60)
 //
 // LINK_UP_TIMEOUT - Time to wait after mac comes out of reset for the link to
 //     come up.  If the link doesn't come up in this time trigger a log event.
+//
+#define LINK_UP_TIMEOUT         MIN_TO_USEC(5)
+//
 // HOST_UP_CHECKTM - Time after "host up" (bios scan) to wait before checking
 //     settings controlled by OS (exttags, maxpayload, maxreadreq).  Some AMD
 //     systems BIOS's set conservative maxpayload, then the OS later sets
 //     better performance settings.
+//
+#define HOST_UP_CHECKTM         MIN_TO_USEC(5)
+//
 // LTSSMST_THRESHOLD - Number of ltssm_state_changed interrupts we need
 //     in this session before we consider this a log event.  We sometimes
 //     see ltssm_state_changed interrupts at startup as the link negotiation
 //     happens and the link settles.  Sometimes see 22 of these.
 //
-#define LINK_UP_TIMEOUT         MIN_TO_USEC(5)
-#define HOST_UP_CHECKTM         MIN_TO_USEC(5)
 #define LTSSMST_THRESHOLD       25
+//
+// TXFC_PHDR_MIN  - For writes, minimum tx fc credits posted header.
+// TXFC_PDATA_MIN - For writes, minimum tx fc credits posted data.
+// TXFC_NPHDR_MIN - For reads,  minimum tx fc credits nonposted header.
+//
+#define TXFC_PHDR_MIN           127
+#define TXFC_PDATA_MIN          500
+#define TXFC_NPHDR_MIN          127
 
 typedef struct pcie_health_info_s {
+    uint64_t tstamp;            // time this was gathered
+    uint64_t faults;            // portstats faults
+    uint64_t phypollfail;       // portstats phypollfail
+    uint64_t intr_ltssmst;      // portstats ltssm_state_changed
     pcieportst_t portst;        // pcieport state
-    uint64_t intr_ltssmst;      // ltssm_state_changed
     uint32_t aer_uesta;         // AER Uncorrectable Error Status
     uint32_t aer_cesta;         // AER Correctable Error Status
     uint32_t physl_sta;         // physical layer cap status
@@ -87,9 +110,12 @@ typedef struct pcie_health_info_s {
     int cap_width;              // capable width
     int cur_gen;                // current speed
     int cur_width;              // current width
+    int txfc_phdr;              // tx fc credits    posted hdr
+    int txfc_pdata;             // tx fc credits    posted data
+    int txfc_nphdr;             // tx fc credits nonposted hdr
+    int txfc_npdata;            // tx fc credits nonposted data
     int linkuptmo;              // link up timeout
     int host_checks;            // enable host-side cfg checks
-    uint64_t tstamp;            // time this was gathered
 } pcie_health_info_t;
 
 typedef struct pcie_health_state_s {
@@ -100,7 +126,7 @@ typedef struct pcie_health_state_s {
     uint64_t macuptm;           // mac came up out of reset
     uint64_t hostuptm;          // host came up (bios scan started)
     uint64_t logdelay;          // delay to next time to log
-    uint64_t intr_ltssmst;      // intr_ltssmst snapshot
+    uint64_t base_ltssmst;      // intr_ltssmst baseline
     char reason[80];            // reason for current event
 } pcie_health_state_t;
 
@@ -158,54 +184,68 @@ gather_health_info(const int port)
 {
     pcie_health_state_t *hs = &health_state[port];
     pcie_health_info_t *nhi = &hs->hinew;
-    uint64_t now = get_timestamp();
+    const uint64_t now = get_timestamp();
 
     memset(nhi, 0, sizeof(*nhi));
     nhi->tstamp = now;
+
     pcieport_t *p = pcieport_get(port);
-    if (p) {
-        nhi->portst = p->state;
-        if (p->state >= PCIEPORTST_MACUP &&
-            p->macup == hs->macupgen) {
-            // save (first) mac up time, so we can check linkup timeout
-            if (!hs->macuptm) {
-                hs->macuptm = now;
-                hs->intr_ltssmst = p->stats.intr_ltssmst;
-                pciesys_loginfo("gather: new mac up time, "
-                                "ltssmst %" PRIu64 "\n", hs->intr_ltssmst);
-            }
-            // save host up time, enable host checks
-            if (p->state >= PCIEPORTST_UP) {
-                if (!hs->hostuptm) {
-                    hs->hostuptm = now;
-                    pciesys_loginfo("gather: new host up time\n");
-                }
-                if (now - hs->hostuptm > HOST_UP_CHECKTM) {
-                    nhi->host_checks = 1;
-                }
-            }
-            if (p->state < PCIEPORTST_UP &&
-                now - hs->macuptm > LINK_UP_TIMEOUT) {
-                nhi->linkuptmo = 1; // waited long enough for link up
-            }
-        } else {
-            // not up (or bounced), reset macuptm/gen
-            if (hs->macuptm) {
-                pciesys_loginfo("gather: reset mac up time\n");
-                hs->macuptm = 0;
-                hs->hostuptm = 0;
-            }
-            hs->macupgen = p->macup;
+    if (!p) return;
+
+    // not up (or bounced), reset macuptm/gen
+    if (p->state < PCIEPORTST_MACUP || hs->macupgen != p->macup) {
+        if (hs->macuptm) {
+            pciesys_loginfo("gather: reset mac up time\n");
+            hs->macuptm = 0;
         }
-        // subtract baseline so capturing only this link up session
-        nhi->intr_ltssmst = p->stats.intr_ltssmst - hs->intr_ltssmst;
-        if (pcieport_is_accessible(port)) {
-            nhi->cap_gen = p->cap_gen;
-            nhi->cap_width = p->cap_width;
-            portcfg_read_genwidth(port, &nhi->cur_gen, &nhi->cur_width);
+        hs->hostuptm = 0;
+        hs->macupgen = p->macup;
+    }
+
+    // mac is up
+    if (p->state >= PCIEPORTST_MACUP) {
+        // save (first) mac up time, so we can check linkup timeout
+        if (!hs->macuptm) {
+            hs->macuptm = now;
+            hs->base_ltssmst = p->stats.intr_ltssmst; // save baseline
+            pciesys_loginfo("gather: new mac up time, "
+                            "ltssmst %" PRIu64 "\n", hs->base_ltssmst);
         }
     }
+
+    // link not yet up, but mac up for a while
+    if (p->state < PCIEPORTST_UP && hs->macuptm &&
+        now - hs->macuptm > LINK_UP_TIMEOUT) {
+        nhi->linkuptmo = 1; // waited long enough for link up
+    }
+
+    // host up - save host up time, enable host checks
+    if (p->state >= PCIEPORTST_UP) {
+        if (!hs->hostuptm) {
+            hs->hostuptm = now;
+            pciesys_loginfo("gather: new host up time\n");
+        }
+        // wait for host os to get a chance to change host settings
+        if (now - hs->hostuptm > HOST_UP_CHECKTM) {
+            nhi->host_checks = 1;
+        }
+    }
+
+    nhi->portst = p->state;
+    nhi->faults = p->stats.faults;
+    nhi->phypollfail = p->stats.phypollfail;
+    // subtract baseline so capturing only this link up session
+    nhi->intr_ltssmst = p->stats.intr_ltssmst - hs->base_ltssmst;
+    // tx fc credits sample
+    nhi->txfc_pdata  = p->txfc_pdata;
+    nhi->txfc_phdr   = p->txfc_phdr;
+    nhi->txfc_npdata = p->txfc_npdata;
+    nhi->txfc_nphdr  = p->txfc_nphdr;
+
     if (pcieport_is_accessible(port)) {
+        nhi->cap_gen   = p->cap_gen;
+        nhi->cap_width = p->cap_width;
+        portcfg_read_genwidth(port, &nhi->cur_gen, &nhi->cur_width);
         nhi->devctl    = portcfg_readw(port, PORTCFG_CAP_PCIE + 0x8);
         nhi->lnksta2   = portcfg_readw(port, PORTCFG_CAP_PCIE + 0x32);
         nhi->aer_uesta = portcfg_readd(port, PORTCFG_CAP_AER + 0x4);
@@ -226,7 +266,7 @@ gather_health_info(const int port)
 // needs to be generated for the current state.
 //
 // N.B. Each test should somehow take into account the state at the
-// last log event in "hilog".  Compare against was was logged about
+// last log event in "hilog".  Compare against what was logged about
 // before to generate log events only for *new* conditions.  This will
 // prevent an error condition from continuously flooding the logs with
 // the same health event.
@@ -235,11 +275,26 @@ static void
 process_health_info(const int port)
 {
     pcie_health_state_t *hs = &health_state[port];
-    pcie_health_info_t *nhi = &hs->hinew;
-    pcie_health_info_t *ohi = &hs->hiold;
-    pcie_health_info_t *lhi = &hs->hilog;
+    const pcie_health_info_t *nhi = &hs->hinew;
+    const pcie_health_info_t *ohi = &hs->hiold;
+    const pcie_health_info_t *lhi = &hs->hilog;
 
-    // check for (first) link up timeout
+    // faults stat
+    if (nhi->faults > lhi->faults) {
+        set_reason(hs, "faults %" PRIu64, nhi->faults);
+        goto want_log;
+    }
+    // phypollfail stat
+    if (nhi->phypollfail > lhi->phypollfail) {
+        set_reason(hs, "phypollfail %" PRIu64, nhi->phypollfail);
+        goto want_log;
+    }
+    // core_initiated_recovery events
+    if (nhi->recovery > lhi->recovery) {
+        set_reason(hs, "recovery %d", nhi->recovery);
+        goto want_log;
+    }
+    // link up timeout
     if (nhi->linkuptmo && !lhi->linkuptmo) {
         set_reason(hs, "link up timeout");
         goto want_log;
@@ -247,19 +302,13 @@ process_health_info(const int port)
     // current link parameters match expected capability
     // Only complain if we don't match expected, *and*
     // we didn't complain about this last time.
-    if ((nhi->cur_gen &&
-         nhi->cur_gen <  nhi->cap_gen &&
-         nhi->cur_gen != lhi->cur_gen) ||
-        (nhi->cur_width &&
-         nhi->cur_width <  nhi->cap_width &&
-         nhi->cur_width != lhi->cur_width)) {
+#define check_genwidth(field) \
+    (nhi->cur_##field && \
+     nhi->cur_##field < nhi->cap_##field && \
+     nhi->cur_##field != lhi->cur_##field)
+    if (check_genwidth(gen) || check_genwidth(width)) {
         set_reason(hs, "gen%dx%d (capable gen%dx%d)",
                    nhi->cur_gen, nhi->cur_width, nhi->cap_gen, nhi->cap_width);
-        goto want_log;
-    }
-    // new core_initiated_recovery events
-    if (nhi->recovery > lhi->recovery) {
-        set_reason(hs, "recovery %d", nhi->recovery);
         goto want_log;
     }
     // newly up in gen3, check gen3 equalization complete
@@ -283,6 +332,20 @@ process_health_info(const int port)
     // wait for "enough" to report.
     if (nhi->intr_ltssmst - lhi->intr_ltssmst >= LTSSMST_THRESHOLD) {
         set_reason(hs, "intr_ltssmst %" PRIu64, nhi->intr_ltssmst);
+        goto want_log;
+    }
+    // perf: check tx fc credits
+    // Note -1 means infinite credits here.
+#define check_txfc(txfc_field, lowval, hival) \
+    (nhi->txfc_field >= (lowval) && nhi->txfc_field < (hival) && \
+     nhi->txfc_field != lhi->txfc_field)
+    if (nhi->portst >= PCIEPORTST_UP &&
+        (check_txfc(txfc_phdr,  0, TXFC_PHDR_MIN) ||
+         check_txfc(txfc_pdata, 0, TXFC_PDATA_MIN) ||
+         check_txfc(txfc_nphdr, 0, TXFC_NPHDR_MIN))) {
+        set_reason(hs, "tx fc credits post %d/%d nonpost %d/%d",
+                   nhi->txfc_phdr,  nhi->txfc_pdata,
+                   nhi->txfc_nphdr, nhi->txfc_npdata);
         goto want_log;
     }
     // perf: check devctl ExtTag, MaxPayload, MaxReadReq
@@ -315,6 +378,7 @@ process_health_info(const int port)
  want_log:
     // reset delay if enough time elapsed with no errors detected
     if (nhi->tstamp - ohi->tstamp > LOG_DELAY_RST_US) {
+        pciesys_logdebug("port%d reset logdelay\n", port);
         hs->logdelay = 0;
     }
     // no more log events until enough time since last logged event

@@ -446,3 +446,22 @@ pcieport_set_ltssm_st_cnt(pcieport_t *p, const int cnt)
 {
     pal_reg_wr32(PXP_(SAT_P_PORT_CNT_LTSSM_STATE_CHANGED, p->port), cnt);
 }
+
+void
+pcieport_get_tx_fc_credits(const int port,
+                           int *posted_hdr, int *posted_data,
+                           int *nonposted_hdr, int *nonposted_data)
+{
+    u_int32_t reg[2];
+#define HDR_CREDITS(r)          (((r) >> 16) & 0x7ff)
+#define HDR_INFINITE(r)         ((r) & (1 << 27))
+#define DATA_CREDITS(r)         ((r) & 0x7fff)
+#define DATA_INFINITE(r)        ((r) & (1 << 15))
+
+    pal_reg_rd32w(PXC_(STA_C_TX_FC_CREDITS, port), reg, 2);
+
+    *posted_hdr     =  HDR_INFINITE(reg[0]) ? -1 :  HDR_CREDITS(reg[0]);
+    *posted_data    = DATA_INFINITE(reg[0]) ? -1 : DATA_CREDITS(reg[0]);
+    *nonposted_hdr  =  HDR_INFINITE(reg[1]) ? -1 :  HDR_CREDITS(reg[1]);
+    *nonposted_data = DATA_INFINITE(reg[1]) ? -1 : DATA_CREDITS(reg[1]);
+}
