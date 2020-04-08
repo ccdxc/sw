@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"strings"
 	"time"
 
 	"net"
@@ -454,6 +455,10 @@ func (sm *Statemgr) OnNetworkCreate(nw *ctkit.Network) error {
 	isOk := true
 	networks, _ := sm.ListNetworks()
 	for _, nso := range networks {
+		if strings.ToLower(nso.Network.Spec.Type) == strings.ToLower(network.NetworkType_Routed.String()) {
+			//Ignore if network is routed types
+			continue
+		}
 		if nso.Network.Network.Name == nw.Name {
 			continue
 		}
