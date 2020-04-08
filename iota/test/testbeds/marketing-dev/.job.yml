@@ -220,7 +220,7 @@ e2e-targets:
    sub-area:
    feature:
    clusters:
-     - image: build-17
+     - image: build-9
        count: 1
        resources:
          servers:
@@ -240,7 +240,7 @@ e2e-targets:
    sub-area:
    feature:
    clusters:
-     - image: build-17
+     - image: build-9
        count: 2
        resources:
          servers:
