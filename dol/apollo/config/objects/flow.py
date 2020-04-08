@@ -156,7 +156,8 @@ class FlowMapObjectHelper:
 
         assert (fwdmode == 'L2' or fwdmode == 'L3' or fwdmode == 'IGW' or \
                 fwdmode == 'IGW_NAT' or fwdmode == 'VPC_PEER' or \
-                fwdmode == 'POLICY' or fwdmode == 'L2L' or fwdmode == 'IGW_NAPT') == True
+                fwdmode == 'POLICY' or fwdmode == 'L2L' or \
+                fwdmode == 'IGW_NAPT' or fwdmode == 'IGW_NAPT_SERVICE') == True
 
         selected_objs = []
         if topo.ChosenFlowObjs.use_selected_objs == True and len(topo.ChosenFlowObjs.objs) != 0:
@@ -217,6 +218,20 @@ class FlowMapObjectHelper:
                         continue
                     if not routetblobj.IsNatEnabled():
                         # Skip IGWs without nat flag set to True
+                        continue
+                    obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.TUNNEL)
+                    if IsAlreadySelected(obj, selected_objs): continue
+                    objs.append(obj)
+        elif fwdmode == 'IGW_NAPT_SERVICE':
+            for lobj in lmapping.GetMatchingObjects(mapsel, dutNode):
+                if hasattr(lobj, "PublicIP") == True:
+                    # skip VNICs which have floating IP
+                    continue
+                for routetblobj in routetable.GetAllMatchingObjects(mapsel):
+                    if not self.__is_lmapping_match(routetblobj, lobj):
+                        continue
+                    if not routetblobj.IsTwiceNatEnabled():
+                        # Skip IGWs without service nat flag set to True
                         continue
                     obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.TUNNEL)
                     if IsAlreadySelected(obj, selected_objs): continue

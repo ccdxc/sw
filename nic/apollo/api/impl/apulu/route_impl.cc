@@ -385,6 +385,7 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
     nexthop_group          *nh_group;
     pds_route_t            *route_spec;
     dnat_actiondata_t      dnat_data = {0};
+    nat2_actiondata_t      nat2_data = {0};
 
     // allocate memory for the library to build route table
     rtable =
@@ -459,13 +460,62 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                 PDS_TRACE_ERR("Failed to program DNAT table at %u for route "
                               "%s in route table %s", dnat_base_idx_ + dnat_idx,
                               ippfx2str(&route_spec->prefix), spec->key.str());
-                ret = SDK_RET_INVALID_ARG;
+                ret = SDK_RET_HW_PROGRAM_ERR;
                 goto cleanup;
             }
 
             PDS_TRACE_DEBUG("Programmed DNAT table at %u for IP %s",
                             dnat_base_idx_ + dnat_idx,
                             ipaddr2str(&route_spec->nat.dst_nat_ip));
+
+            // write to NAT2 table at this index
+            nat2_data.action_id = NAT2_NAT2_REWRITE_ID;
+            if (route_spec->nat.dst_nat_ip.af == IP_AF_IPV4) {
+                memcpy(nat2_data.action_u.nat2_nat2_rewrite.ip,
+                       &route_spec->nat.dst_nat_ip.addr.v4_addr, IP4_ADDR8_LEN);
+            } else {
+                sdk::lib::memrev(nat2_data.action_u.nat2_nat2_rewrite.ip,
+                                 route_spec->nat.dst_nat_ip.addr.v6_addr.addr8,
+                                 IP6_ADDR8_LEN);
+            }
+            p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NAT2,
+                                               (dnat_base_idx_ + dnat_idx) * 2,
+                                               NULL, NULL, &nat2_data);
+            if (p4pd_ret != P4PD_SUCCESS) {
+                PDS_TRACE_ERR("Failed to program NAT2 table at %u for route "
+                              "%s in route table %s", (dnat_base_idx_ + dnat_idx) * 2,
+                              ippfx2str(&route_spec->prefix), spec->key.str());
+                ret = SDK_RET_HW_PROGRAM_ERR;
+                goto cleanup;
+            }
+
+            PDS_TRACE_DEBUG("Programmed NAT2 table at %u for IP %s",
+                            (dnat_base_idx_ + dnat_idx) * 2,
+                            ipaddr2str(&route_spec->nat.dst_nat_ip));
+
+            // program reverse entry in nat2 table
+            if (route_spec->prefix.addr.af == IP_AF_IPV4) {
+                memcpy(nat2_data.action_u.nat2_nat2_rewrite.ip,
+                       &route_spec->prefix.addr.addr.v4_addr, IP4_ADDR8_LEN);
+            } else {
+                sdk::lib::memrev(nat2_data.action_u.nat2_nat2_rewrite.ip,
+                                 route_spec->prefix.addr.addr.v6_addr.addr8,
+                                 IP6_ADDR8_LEN);
+            }
+            p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NAT2,
+                                               (dnat_base_idx_ + dnat_idx) * 2 + 1,
+                                               NULL, NULL, &nat2_data);
+            if (p4pd_ret != P4PD_SUCCESS) {
+                PDS_TRACE_ERR("Failed to program NAT2 table at %u for route "
+                              "%s in route table %s", (dnat_base_idx_ + dnat_idx) * 2 + 1,
+                              ippfx2str(&route_spec->prefix), spec->key.str());
+                ret = SDK_RET_HW_PROGRAM_ERR;
+                goto cleanup;
+            }
+
+            PDS_TRACE_DEBUG("Programmed NAT2 table at %u for IP %s",
+                            (dnat_base_idx_ + dnat_idx) * 2 + 1,
+                            ipaddr2str(&route_spec->prefix.addr));
             dnat_idx++;
             continue;
         } else {

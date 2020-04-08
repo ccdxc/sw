@@ -83,6 +83,13 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         actiondata.action_u.session_session_info.rx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx + 1;
     }
+    if (vnet_buffer2(b0)->pds_nat_data.xlate_idx2) {
+        // Twice NAT
+        actiondata.action_u.session_session_info.tx_xlate_id2 =
+            vnet_buffer2(b0)->pds_nat_data.xlate_idx2;
+        actiondata.action_u.session_session_info.rx_xlate_id2 =
+            vnet_buffer2(b0)->pds_nat_data.xlate_idx2 + 1;
+    }
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b0)->pds_flow_data.packet_type));
     actiondata.action_u.session_session_info.tx_rewrite_flags = rewrite_flags->tx_rewrite;
     actiondata.action_u.session_session_info.rx_rewrite_flags = rewrite_flags->rx_rewrite;
@@ -115,6 +122,13 @@ skip_prog0:
             vnet_buffer2(b1)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx + 1;
+    }
+    if (vnet_buffer2(b1)->pds_nat_data.xlate_idx2) {
+        // Twice NAT
+        actiondata.action_u.session_session_info.tx_xlate_id2 =
+            vnet_buffer2(b1)->pds_nat_data.xlate_idx2;
+        actiondata.action_u.session_session_info.rx_xlate_id2 =
+            vnet_buffer2(b1)->pds_nat_data.xlate_idx2 + 1;
     }
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b1)->pds_flow_data.packet_type));
     actiondata.action_u.session_session_info.tx_rewrite_flags = rewrite_flags->tx_rewrite;
@@ -162,6 +176,13 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
             vnet_buffer2(b)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx + 1;
+    }
+    if (vnet_buffer2(b)->pds_nat_data.xlate_idx2) {
+        // Twice NAT
+        actiondata.action_u.session_session_info.tx_xlate_id2 =
+            vnet_buffer2(b)->pds_nat_data.xlate_idx2;
+        actiondata.action_u.session_session_info.rx_xlate_id2 =
+            vnet_buffer2(b)->pds_nat_data.xlate_idx2 + 1;
     }
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b)->pds_flow_data.packet_type));
     actiondata.action_u.session_session_info.tx_rewrite_flags = rewrite_flags->tx_rewrite;
@@ -557,7 +578,16 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
                         counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
                         return;
                     }
-                    if (dev->overlay_routing_en) {
+                    if (hdr->dnat_en) {
+                        // For now only supported in overlay_routing_dis case
+                        u32 ip;
+                        u16 port;
+                        xlate_id = hdr->dnat_id * 2;
+                        pds_dnat_tbl_read_ip4(xlate_id, &ip, &port);
+                        vnet_buffer2(p)->pds_nat_data.xlate_idx2 = xlate_id;
+                        vnet_buffer2(p)->pds_nat_data.xlate_addr2 = ip;
+                        pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_TWICE_NAT;
+                    } else if (dev->overlay_routing_en) {
                         pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAPT;
                     } else {
                         pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAPT;
@@ -1120,6 +1150,22 @@ pds_flow_rewrite_flags_init (void)
     // return traffic is routing as it will come with VNI of VPC
     rewrite_flags->rx_rewrite =
             (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
+            (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
+            (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
+            (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);
+
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_TWICE_NAT);
+    rewrite_flags->tx_rewrite =
+            (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
+            (TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START) |
+            (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
+            (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
+            (TX_REWRITE_SMAC_FROM_VRMAC << TX_REWRITE_SMAC_START) |
+            (TX_REWRITE_TTL_DEC << TX_REWRITE_TTL_START);
+    // return traffic is routing as it will come with VNI of VPC
+    rewrite_flags->rx_rewrite =
+            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
+            (RX_REWRITE_SIP_FROM_NAT << RX_REWRITE_SIP_START) |
             (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
             (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |
             (RX_REWRITE_TTL_DEC << RX_REWRITE_TTL_START);

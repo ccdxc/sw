@@ -541,6 +541,10 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             // static NAT
             r_dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
         }
+        if (vnet_buffer2(p0)->pds_nat_data.xlate_idx2) {
+            // twice NAT
+            r_src_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr2;
+        }
         lkp_id = vnet_buffer(p0)->pds_flow_data.egress_lkp_id;
         ftlv4_cache_set_key(r_src_ip, r_dst_ip,
                             protocol, r_sport, r_dport, lkp_id);

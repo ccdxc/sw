@@ -29,7 +29,7 @@ def TestCaseSetup(tc):
     ignore_ids = [ 'L2_IPV4_VRIP_ICMP_ECHO_QTAG', 'L3_IPV4_VRIP_ICMP_ECHO_QTAG' ]
     if tc.module.name in ignore_ids:
         tc.AddIgnorePacketField('IP', 'id')
-    if tc.config.root.FwdMode == 'IGW_NAPT':
+    if tc.config.root.FwdMode == 'IGW_NAPT' or tc.config.root.FwdMode == 'IGW_NAPT_SERVICE':
         vpc_key = tc.config.localmapping.VNIC.SUBNET.VPC.GetKey()
         tc.pvtdata.nat_port_blocks = \
                 nat_pb.client.GetVpcNatPortBlocks(utils.NAT_ADDR_TYPE_PUBLIC, vpc_key)

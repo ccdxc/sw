@@ -21,7 +21,7 @@
 #define SESSION_TABLE_SIZE                                  2097152     // 2M
 #define MIRROR_SESSION_TABLE_SIZE                           256
 #define NAT_TABLE_SIZE                                      65536       // 64K
-#define NAT2_TABLE_SIZE                                     1024        // 1K
+#define NAT2_TABLE_SIZE                                     8192        // 8K
 #define ECMP_TABLE_SIZE                                     2048
 #define TUNNEL_TABLE_SIZE                                   2048
 #define TUNNEL2_TABLE_SIZE                                  2048
@@ -34,6 +34,6 @@
 
 #define VNIC_INFO_TABLE_SIZE                                1024
 #define VNIC_INFO_RXDMA_TABLE_SIZE                          4096
-#define DNAT_TABLE_SIZE                                     8192
+#define DNAT_TABLE_SIZE                                     4096        // NAT2_TABLE_SIZE / 2
 #define LOCAL_MAPPING_TAG_TABLE_SIZE                        65536       // 64K
 #define MAPPING_TAG_TABLE_SIZE                              1048576     // 1M

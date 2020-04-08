@@ -169,15 +169,33 @@ def __get_non_default_random_route(routeTable):
     else:
         while True:
             route = random.choice(routes)
+            if hasattr(route, "DstNatIp") and route.DstNatIp:
+                continue
             if not utils.isDefaultRoute(route.ipaddr):
                 break
     return route
+
+def __get_dnat_route(route_tbl):
+    return str(route_tbl.ServiceNatPrefix.network_address)
+
+def __get_dnat_route_dest(route_tbl):
+    return str(route_tbl.DstNatIp)
 
 def GetUsableHostFromRoute(testcase, packet, args=None):
     route = __get_non_default_random_route(testcase.config.route)
     routepfx = route.ipaddr if route else None
     pfxpos = __get_pfx_position_selector(testcase.module.args)
     addr = __get_host_from_pfx(routepfx, testcase.config.route.AddrFamily, pfxpos)
+    return addr
+
+def GetDnatRoute(testcase, packet, args=None):
+    addr = __get_dnat_route(testcase.config.route)
+    logger.info("returning ", addr)
+    return addr
+
+def GetDnatRouteDest(testcase, packet, args=None):
+    addr = __get_dnat_route_dest(testcase.config.route)
+    logger.info("returning ", addr)
     return addr
 
 def __get_random_port_in_range(beg=utils.L4PORT_MIN, end=utils.L4PORT_MAX):

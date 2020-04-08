@@ -73,7 +73,7 @@ apulu_impl_state::apulu_impl_state(pds_state *state) {
 
     // DNAT table bookkeeping
     p4pd_table_properties_get(P4_P4PLUS_TXDMA_TBL_ID_DNAT, &tinfo);
-    dnat_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, false);
+    dnat_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
     SDK_ASSERT(dnat_idxr_ != NULL);
 }
 

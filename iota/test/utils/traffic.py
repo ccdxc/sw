@@ -144,7 +144,13 @@ def iperfWorkloads(workload_pairs, af="ipv4", proto="tcp", packet_size=64,
         client_addr = __get_workload_address(client, af)
         port = api.AllocateUdpPort() if proto == 'udp' else api.AllocateTcpPort()
         serverCmd = iperf.ServerCmd(port)
-        clientCmd = iperf.ClientCmd(server_addr, port, time, packet_size, proto, None, ipproto, bandwidth, num_of_streams, jsonOut=True)
+        if proto == 'udp':
+            pktsize = packet_size
+            msssize = None
+        else:
+            pktsize = None
+            msssize = packet_size
+        clientCmd = iperf.ClientCmd(server_addr, port, time, pktsize, proto, None, ipproto, bandwidth, num_of_streams, jsonOut=True, msssize=msssize)
 
         cmd_cookie = "Server: %s(%s:%s:%d) <--> Client: %s(%s)" %\
                      (server.workload_name, server_addr, proto, port,\
@@ -196,14 +202,14 @@ def verifyIPerf(cmd_cookies, response, exit_code=0, min_bw=0):
         elif not api.GlobalOptions.dryrun:
             tx_bw = iperf.GetSentGbps(cmd.stdout)
             rx_bw = iperf.GetReceivedGbps(cmd.stdout)
-            api.Logger.info("Iperf Send Rate in Gbps ", tx_bw)
-            api.Logger.info("Iperf Receive Rate in Gbps ", rx_bw)
+            api.Logger.info(f"Iperf Send Rate {tx_bw} Gbps")
+            api.Logger.info(f"Iperf Receive Rate {rx_bw} Gbps ")
             if min_bw:
                 if float(tx_bw) < float(min_bw) or float(rx_bw) < float(min_bw):
-                    api.Logger.error("Iperf min bw not met")
+                    api.Logger.error("Iperf min bw not met {tx_bw} {rx_bw} {min_bw}")
                     return api.types.status.FAILURE
 
-    api.Logger.info("Iperf test successfull")
+    api.Logger.info("Iperf test successful")
     api.Logger.info("Number of connection timeouts : {}".format(conn_timedout))
     api.Logger.info("Number of control socket errors : {}".format(control_socker_err))
     return result

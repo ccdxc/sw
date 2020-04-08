@@ -63,6 +63,7 @@ class NatActionTypes(enum.IntEnum):
     NONE = 0
     STATIC = 1
     NAPT = 2
+    NAPT_SERVICE = 3
 
 class L3MatchType(enum.IntEnum):
     PFX = 0

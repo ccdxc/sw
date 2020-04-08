@@ -9,6 +9,8 @@ from collections import OrderedDict, defaultdict
 from infra.common.logging import logger
 from infra.common.glopts  import GlobalOptions
 
+import types_pb2 as types_pb2
+
 from apollo.config.store import EzAccessStore
 from apollo.config.store import client as EzAccessStoreClient
 
@@ -26,10 +28,11 @@ from apollo.config.objects.tunnel import client as TunnelClient
 from apollo.config.agent.api import ObjectTypes as ObjectTypes
 
 class RouteObject():
-    def __init__(self, node, ipaddress, priority=0, nh_type="", nhid=0, nhgid=0, vpcid=0, tunnelid=0, nat_type=None):
+    def __init__(self, node, ipaddr, priority=0, nh_type="", nhid=0, nhgid=0, vpcid=0, \
+            tunnelid=0, nat_type=None, service_nat_prefix=None, dnat_ip=None):
         super().__init__()
         self.Id = next(ResmgrClient[node].RouteIdAllocator)
-        self.ipaddr = ipaddress
+        self.ipaddr = ipaddr
         self.Priority = priority
         self.NextHopType = nh_type
         if self.NextHopType == "vpcpeer":
@@ -44,8 +47,18 @@ class RouteObject():
             self.SNatAction = topo.NatActionTypes.STATIC
         elif nat_type == "napt":
             self.SNatAction = topo.NatActionTypes.NAPT
+        elif nat_type == "service":
+            self.SNatAction = topo.NatActionTypes.NAPT_SERVICE
         else:
             self.SNatAction = topo.NatActionTypes.NONE
+        self.ServiceNatPrefix = None
+        self.DstNatIp = None
+        if service_nat_prefix:
+            svc_nat_prefix = ipaddress.ip_network(service_nat_prefix.replace('\\', '/'))
+            if svc_nat_prefix.overlaps(ipaddr):
+                self.DstNatIp = dnat_ip
+                self.ServiceNatPrefix = svc_nat_prefix
+                self.SNatAction = topo.NatActionTypes.NAPT_SERVICE
 
     def __repr__(self):
         return "RouteID:%d|ip:%s|priority:%d|type:%s"\
@@ -182,6 +195,9 @@ class RouteTableObject(base.ConfigObjectBase):
         for route in self.routes.values():
             rtspec = spec.Routes.add()
             rtspec.NatAction.SrcNatAction = route.SNatAction
+            if route.DstNatIp:
+                rtspec.NatAction.DstNatIP.Af = types_pb2.IP_AF_INET
+                rtspec.NatAction.DstNatIP.V4Addr = int(ipaddress.ip_address(route.DstNatIp))
             utils.GetRpcIPPrefix(route.ipaddr, rtspec.Prefix)
             if self.PriorityType:
                 rtspec.Priority = route.Priority
@@ -272,9 +288,16 @@ class RouteTableObject(base.ConfigObjectBase):
             else:
                 self.NextHopType = "tep"
         self.NatLevel = None
+        self.NatType = None
+        self.ServiceNatPrefix = None
+        svc_nat_prefix = getattr(spec, 'servicenatprefix', None)
+        if svc_nat_prefix:
+            self.ServiceNatPrefix = ipaddress.ip_network(svc_nat_prefix.replace('\\', '/'))
+        self.DstNatIp = getattr(spec, 'dnatip', None)
         natspec = getattr(spec, 'nat', None)
         if natspec:
             self.NatLevel = getattr(natspec, 'level', None)
+            self.NatType = getattr(natspec, 'type', None)
         super().DeriveOperInfo()
         return
 
@@ -326,6 +349,11 @@ class RouteTableObject(base.ConfigObjectBase):
         elif natlevel == 'route':
             # all routes in route table has same NAT action in DOL
             # TODO: make it random / rrobin
+            return True
+        return False
+
+    def IsTwiceNatEnabled(self):
+        if self.DstNatIp != None:
             return True
         return False
 
@@ -453,16 +481,20 @@ class RouteObjectClient(base.ConfigClientBase):
             priorityType = getattr(spec, "priority", None)
             if priorityType:
                 priority = __get_priority(priorityType, True)
-            nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type = __get_route_attribs(spec, af)
-            obj = RouteObject(node, ipaddr, priority, nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type)
+            nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type, service_nat_prefix, \
+                    dnat_ip = __get_route_attribs(spec, af)
+            obj = RouteObject(node, ipaddr, priority, nh_type, nh_id, nhgid, vpcid, \
+                    tunnelid, nat_type, service_nat_prefix, dnat_ip)
             routes.update({obj.Id: obj})
             c = 1
             while c < count:
                 ipaddr = utils.GetNextSubnet(ipaddr)
                 if priorityType:
                     priority = __get_priority(priorityType, False, priority)
-                nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type = __get_route_attribs(spec, af)
-                obj = RouteObject(node, ipaddr, priority, nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type)
+                nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type, service_nat_prefix, \
+                        dnat_ip = __get_route_attribs(spec, af)
+                obj = RouteObject(node, ipaddr, priority, nh_type, nh_id, nhgid, vpcid, tunnelid, \
+                        nat_type, service_nat_prefix, dnat_ip)
                 routes.update({obj.Id: obj})
                 c += 1
             return routes
@@ -543,6 +575,8 @@ class RouteObjectClient(base.ConfigClientBase):
             vpcid = 0
             tunnelid = 0
             nat_type = None
+            service_nat_prefix = getattr(spec, 'servicenatprefix', None)
+            dnat_ip = getattr(spec, 'dnatip', None)
             natspec = getattr(spec, 'nat', None)
             if natspec:
                 nat_type = getattr(natspec, 'type', None)
@@ -565,7 +599,7 @@ class RouteObjectClient(base.ConfigClientBase):
                     nhid = nexthop.NexthopId
             elif nh_type == "nhg":
                 nhgid = 1 # fill later
-            return nh_type, nhid, nhgid, vpcid, tunnelid, nat_type
+            return nh_type, nhid, nhgid, vpcid, tunnelid, nat_type, service_nat_prefix, dnat_ip
 
         def __get_priority(priotype, firstVal=False, priority=0):
             if priotype ==  "increasing":
@@ -591,9 +625,11 @@ class RouteObjectClient(base.ConfigClientBase):
                 for route in routespec:
                     if priorityType:
                         priority = __get_priority(spec.priority, False, priority)
-                    nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type = __get_route_attribs(spec)
+                    nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type, \
+                            service_nat_prefix, dnat_ip = __get_route_attribs(spec)
                     obj = RouteObject(node, ipaddress.ip_network(route.replace('\\', '/')),\
-                                          priority, nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type)
+                                          priority, nh_type, nh_id, nhgid, vpcid, tunnelid,\
+                                          nat_type, service_nat_prefix, dnat_ip)
                     routes.update({obj.Id: obj})
             return routes
 

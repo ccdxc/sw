@@ -33,3 +33,9 @@ modules:
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAPT,Label=NETWORKING
 
+    - module:
+        name    : IPV4_UDP_TWICE_NAT
+        spec    : local2igw_dnat.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAPT_SERVICE,Label=NETWORKING
+
