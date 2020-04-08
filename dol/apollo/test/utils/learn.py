@@ -116,8 +116,8 @@ def VerifyIPAgeRefreshed(tc, ep_ip):
     if not PopulateRuntimeInfo(ep_ip):
         return False
     age = tc.config.devicecfg.LearnAgeTimeout
-    # allow 3 second worst case test delay
-    return ep_ip.RuntimeInfo.Ttl > (age - 3)
+    # allow 5 second worst case test delay
+    return ep_ip.RuntimeInfo.Ttl > (age - 5)
 
 def ClearOnDevice(ep_mac_ip):
     status_ok, output = pdsctl.ExecutePdsctlClearCommand(ep_mac_ip.CliCmd, \
