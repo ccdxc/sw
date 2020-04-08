@@ -44,6 +44,7 @@
 
 #define P4_IPADDR_TO_IPADDR(p4_ip_, ip_, af_)                                \
 {                                                                            \
+    memset(&(ip_), 0, sizeof(ip_));                                          \
     (ip_).af = (af_);                                                        \
     if ((af_) == IP_AF_IPV6) {                                               \
         sdk::lib::memrev((ip_).addr.v6_addr.addr8, (p4_ip_), IP6_ADDR8_LEN); \

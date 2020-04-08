@@ -451,7 +451,7 @@ api_engine::pre_process_update_(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
-    sdk_ret_t     ret = SDK_RET_OK;
+    sdk_ret_t ret = SDK_RET_OK;
 
     PDS_TRACE_DEBUG("Performing api op %u on api object %u",
                     api_ctxt->api_op, api_ctxt->obj_id);
@@ -762,7 +762,7 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
                              api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t    ret;
 
-    PDS_TRACE_DEBUG("Performing API op %u on %s", obj_ctxt->api_op,
+    PDS_TRACE_DEBUG("Activating API op %u on %s", obj_ctxt->api_op,
                     api_obj->key2str().c_str());
     switch (obj_ctxt->api_op) {
     case API_OP_NONE:
@@ -851,6 +851,8 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
             // from the original object and/or allocated its own resources,
             // we must now nuke all the resources that the original object
             // is holding and free the original object
+            PDS_TRACE_DEBUG("Deleting original object & cleaning up left over "
+                            "resources");
             api_obj->delay_delete();
         } else {
             // just free the original/built object (if object type is stateless)

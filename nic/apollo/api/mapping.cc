@@ -198,13 +198,13 @@ mapping_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
                       key_.str());
         return SDK_RET_INVALID_ARG;
     }
-    if ((public_ip_valid_ != spec->public_ip_valid) ||
-        (memcmp(&public_ip_, &spec->public_ip, sizeof(ip_addr_t)))) {
+    if (is_local_ &&
+        ((public_ip_valid_ != spec->public_ip_valid) ||
+         (memcmp(&public_ip_, &spec->public_ip, sizeof(ip_addr_t))))) {
         obj_ctxt->upd_bmap |= PDS_MAPPING_UPD_PUBLIC_IP;
     }
-    // TODO:
-    // 1. add check for subnet update and throw error if its changing
-    // 2. while doing build() populate subnet_ as well
+    PDS_TRACE_DEBUG("mapping %s upd bmap 0x%lx", key_.str(),
+                    obj_ctxt->upd_bmap);
     return SDK_RET_OK;
 }
 

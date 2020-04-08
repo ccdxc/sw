@@ -157,10 +157,10 @@ sdk_ret_t
 pds_local_mapping_read (pds_obj_key_t *key,
                         pds_local_mapping_info_t *local_info)
 {
+    mapping_entry *entry;
+    pds_mapping_key_t skey;
     pds_mapping_info_t info;
     sdk_ret_t rv = SDK_RET_OK;
-    pds_mapping_key_t skey;
-    mapping_entry *entry = NULL;
 
     if ((key == NULL) || (local_info == NULL)) {
         return SDK_RET_INVALID_ARG;
@@ -171,7 +171,9 @@ pds_local_mapping_read (pds_obj_key_t *key,
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     entry = mapping_entry::build(&skey);
-
+    if (entry == NULL) {
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
     memset(&info, 0, sizeof(pds_mapping_info_t));
     info.spec.key = *key;
     rv = entry->read(key, &info);
