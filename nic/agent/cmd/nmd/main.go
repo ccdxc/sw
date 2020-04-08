@@ -94,13 +94,21 @@ func main() {
 		pipelineType = val
 	}
 
-	// Wait for interfaces to be up for the corresponding pipeline.
+	// If interfaces are specified in CLI,
+	// Wait for interfaces to be up
+	// This is a temporary fix for SIM bringup.
+	// TODO: Create the corresponding pipeline interfaces in SIM container.
+	if *oobInterface != "" && *inbInterface != "" {
+		waitForInterfaces(*oobInterface, *inbInterface)
+	} else {
+		// Wait for interfaces to be up for the corresponding pipeline.
 
-	switch pipelineType {
-	case globals.NaplesPipelineIris:
-		waitForInterfaces(ipif.NaplesOOBInterface, ipif.NaplesInbandInterface)
-	case globals.NaplesPipelineApollo:
-		waitForInterfaces(ipif.NaplesOOBInterface, ipif.ApuluINB0Interface, ipif.ApuluINB1Interface)
+		switch pipelineType {
+		case globals.NaplesPipelineIris:
+			waitForInterfaces(ipif.NaplesOOBInterface, ipif.NaplesInbandInterface)
+		case globals.NaplesPipelineApollo:
+			waitForInterfaces(ipif.NaplesOOBInterface, ipif.ApuluINB0Interface, ipif.ApuluINB1Interface)
+		}
 	}
 
 	p, err := pipeline.NewPipeline(state.Kind(pipelineType))
