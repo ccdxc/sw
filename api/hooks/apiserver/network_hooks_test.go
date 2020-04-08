@@ -121,6 +121,15 @@ func TestValidateHooks(t *testing.T) {
 	Assert(t, len(errs) != 0, "v6 not supported")
 	nw.Spec.IPv6Subnet = ""
 
+	nw.Spec.RouteImportExport = &network.RDSpec{}
+	nw.Spec.RouteImportExport.AddressFamily = network.BGPAddressFamily_IPv4Unicast.String()
+	errs = nh.validateNetworkConfig(nw, "v1", false, false)
+	Assert(t, len(errs) != 0, "expecting to fail due to RT/RT on network")
+
+	nw.Spec.RouteImportExport.AddressFamily = network.BGPAddressFamily_L2vpnEvpn.String()
+	errs = nh.validateNetworkConfig(nw, "v1", false, false)
+	Assert(t, len(errs) == 0, "expecting to succeeed")
+
 	nw.Spec.IngressSecurityPolicy = []string{"xxx"}
 	nw.Spec.EgressSecurityPolicy = []string{"xxx"}
 	errs = nh.validateNetworkConfig(nw, "v1", false, false)
@@ -162,6 +171,14 @@ func TestValidateHooks(t *testing.T) {
 	Assert(t, len(errs) == 0, "expecting to succeeed")
 
 	vrf.Spec.VxLanVNI = 90001
+	errs = nh.validateVirtualrouterConfig(vrf, "v1", false, false)
+	Assert(t, len(errs) == 0, "expecting to succeeed")
+
+	vrf.Spec.RouteImportExport.AddressFamily = network.BGPAddressFamily_IPv4Unicast.String()
+	errs = nh.validateVirtualrouterConfig(vrf, "v1", false, false)
+	Assert(t, len(errs) != 0, "expecting to fail due to RT/RT on vrf")
+
+	vrf.Spec.RouteImportExport.AddressFamily = network.BGPAddressFamily_L2vpnEvpn.String()
 	errs = nh.validateVirtualrouterConfig(vrf, "v1", false, false)
 	Assert(t, len(errs) == 0, "expecting to succeeed")
 

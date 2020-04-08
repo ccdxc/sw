@@ -63,6 +63,9 @@ func (h *networkHooks) validateNetworkConfig(i interface{}, ver string, ignStatu
 		if in.Spec.RouteImportExport.RDAuto && in.Spec.RouteImportExport.RD != nil {
 			ret = append(ret, fmt.Errorf("rd and rd-auto specified, only one of them can be specified"))
 		}
+		if in.Spec.RouteImportExport.AddressFamily == network.BGPAddressFamily_IPv4Unicast.String() {
+			ret = append(ret, fmt.Errorf("Route Import Export of address family ipv4 unicast cannot be specified for Network"))
+		}
 	}
 
 	if len(in.Spec.IngressSecurityPolicy) > 2 {
@@ -340,6 +343,9 @@ func (h *networkHooks) validateVirtualrouterConfig(i interface{}, ver string, ig
 		if in.Spec.RouteImportExport != nil {
 			ret = append(ret, fmt.Errorf("Route Import Export cannot be specified for an Infra Virtual Router"))
 		}
+	}
+	if in.Spec.RouteImportExport != nil && in.Spec.RouteImportExport.AddressFamily == network.BGPAddressFamily_IPv4Unicast.String() {
+		ret = append(ret, fmt.Errorf("Route Import Export of address family ipv4 unicast cannot be specified for Virtual Router"))
 	}
 	return ret
 }
