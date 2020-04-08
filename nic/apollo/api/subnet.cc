@@ -289,9 +289,19 @@ subnet_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     }
     if (v4_vr_ip_ != spec->v4_vr_ip) {
         obj_ctxt->upd_bmap |= PDS_SUBNET_UPD_V4_VR_IP;
+        // TODO: this is temporary
+        PDS_TRACE_ERR("Attempt to modify immutable attr IPv4 VR IP from "
+                      "%s to %s on subnet %s", ipv4addr2str(v4_vr_ip_),
+                      ipv4addr2str(spec->v4_vr_ip), key2str().c_str());
+        return SDK_RET_INVALID_ARG;
     }
     if (memcmp(&v6_vr_ip_, &spec->v6_vr_ip, sizeof(v6_vr_ip_))) {
         obj_ctxt->upd_bmap |= PDS_SUBNET_UPD_V6_VR_IP;
+        // TODO: this is temporary
+        PDS_TRACE_ERR("Attempt to modify immutable attr IPv6 VR IP from "
+                      "%s to %s on subnet %s", ipaddr2str(&v6_vr_ip_),
+                      ipaddr2str(&spec->v6_vr_ip), key2str().c_str());
+        return SDK_RET_INVALID_ARG;
     }
     PDS_TRACE_DEBUG("subnet %s upd bmap 0x%lx",
                     key2str().c_str(), obj_ctxt->upd_bmap);
