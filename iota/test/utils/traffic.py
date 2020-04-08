@@ -165,7 +165,7 @@ def iperfWorkloads(workload_pairs, af="ipv4", proto="tcp", packet_size=64,
     api.Trigger_TerminateAllCommands(server_resp)
     return [cmdDesc, serverCmds, clientCmds], client_resp
 
-def verifyIPerf(cmd_cookies, response, exit_code=0):
+def verifyIPerf(cmd_cookies, response, exit_code=0, min_bw=0):
     result = api.types.status.SUCCESS
     conn_timedout = 0
     control_socker_err = 0
@@ -194,8 +194,14 @@ def verifyIPerf(cmd_cookies, response, exit_code=0):
                 api.Logger.error("Iperf failed", iperf.Error(cmd.stdout))
                 result = api.types.status.FAILURE
         elif not api.GlobalOptions.dryrun:
-            api.Logger.info("Iperf Send Rate in Gbps ", iperf.GetSentGbps(cmd.stdout))
-            api.Logger.info("Iperf Receive Rate in Gbps ", iperf.GetReceivedGbps(cmd.stdout))
+            tx_bw = iperf.GetSentGbps(cmd.stdout)
+            rx_bw = iperf.GetReceivedGbps(cmd.stdout)
+            api.Logger.info("Iperf Send Rate in Gbps ", tx_bw)
+            api.Logger.info("Iperf Receive Rate in Gbps ", rx_bw)
+            if min_bw:
+                if float(tx_bw) < float(min_bw) or float(rx_bw) < float(min_bw):
+                    api.Logger.error("Iperf min bw not met")
+                    return api.types.status.FAILURE
 
     api.Logger.info("Iperf test successfull")
     api.Logger.info("Number of connection timeouts : {}".format(conn_timedout))

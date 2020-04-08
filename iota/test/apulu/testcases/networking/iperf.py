@@ -44,7 +44,9 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
-    res = traffic_utils.verifyIPerf(tc.cmd_cookies, tc.resp)
+    res = traffic_utils.verifyIPerf(tc.cmd_cookies, tc.resp, min_bw=0.3)
+    if res != api.types.status.SUCCESS:
+        return res
     if tc.args.type != 'igw_napt_only':
         return flow_utils.verifyFlows(tc.iterators.ipaf, tc.workload_pairs)
     else:

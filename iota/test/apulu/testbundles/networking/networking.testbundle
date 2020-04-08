@@ -36,7 +36,7 @@ testcases:
         iterators :
             type      : nested
             ipaf      : [ ipv4 ]
-            pktsize   : [ 64 ]
+            pktsize   : [ 128 ]
             protocol  : [ tcp ]
 
     -   name    : Iperf_IGW_NAPT_UDP
@@ -48,5 +48,5 @@ testcases:
         iterators :
             type      : nested
             ipaf      : [ ipv4 ]
-            pktsize   : [ 64 ]
+            pktsize   : [ 128 ]
             protocol  : [ udp ]
