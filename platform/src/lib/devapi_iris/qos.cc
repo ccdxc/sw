@@ -178,7 +178,7 @@ devapi_qos::qos_class_create(qos_class_info_t *info)
     if (info->class_type == sdk::platform::QOS_CLASS_TYPE_PCP) {
         req->mutable_class_map()->set_dot1q_pcp(info->class_dot1q_pcp);
     } else if (info->class_type == sdk::platform::QOS_CLASS_TYPE_DSCP) {
-        for (uint8_t i = 0; i < 64; i++) {
+        for (uint8_t i = 0; i < info->class_ndscp; i++) {
             req->mutable_class_map()->mutable_ip_dscp()->Add(info->class_ip_dscp[i]);
         }
     } else {

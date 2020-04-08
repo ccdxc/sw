@@ -168,6 +168,8 @@ struct ionic_qos {
 	uint8_t pcp_to_tc[IONIC_QOS_PCP_MAX];
 	/* DSCP to TC map. */
 	uint8_t dscp_to_tc[IONIC_QOS_DSCP_MAX];
+	/* TC used for all Ethernet traffic */
+	uint8_t tc_ethernet;
 };
 
 struct ionic {

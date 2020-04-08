@@ -1881,6 +1881,7 @@ struct ionic_qos_identify_comp {
 #define IONIC_QOS_CLASS_NAME_SZ	32
 #define IONIC_QOS_DSCP_MAX		64
 #define IONIC_QOS_ALL_PCP		0xFF
+#define IONIC_DSCP_BLOCK_SIZE		8
 
 /**
  * enum ionic_qos_class

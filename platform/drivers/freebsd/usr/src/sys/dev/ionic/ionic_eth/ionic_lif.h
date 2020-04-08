@@ -36,7 +36,7 @@
 #define LIF_NAME_MAX_SZ			8
 #define MAX_VLAN_TAG 			4095
 
-#define IONIC_GET_COS(ifp) ((ifp->if_pcp == IFNET_PCP_NONE) ? 0 : ifp->if_pcp)
+#define IONIC_GET_PCP(ifp) ((ifp->if_pcp == IFNET_PCP_NONE) ? 0 : ifp->if_pcp)
 
 struct ionic_adminq_stats {
 	uint64_t comp_err;

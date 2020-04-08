@@ -720,7 +720,7 @@ ionic_qos_init(struct ionic *ionic)
 	memset(ionic->qos.pfc_cos, 0, sizeof(ionic->qos.pfc_cos));
 	memset(ionic->qos.pcp_to_tc, 0, sizeof(ionic->qos.pcp_to_tc));
 	memset(ionic->qos.dscp_to_tc, 0, sizeof(ionic->qos.dscp_to_tc));
-	for(tc = 0; tc < max_tcs; tc++) {
+	for (tc = 0; tc < max_tcs; tc++) {
 		qos = &ident->qos.config[tc];
 		ionic_qos_print(ionic, qos, tc, "Get");
 
@@ -733,13 +733,22 @@ ionic_qos_init(struct ionic *ionic)
 		ionic->qos.dwrr_bw_perc[tc] = qos->dwrr_weight;
 		ionic->qos.pfc_cos[tc] = qos->pfc_cos;
 
-		if (qos->dot1q_pcp >= 0 && qos->dot1q_pcp < IONIC_QOS_PCP_MAX)
-			ionic->qos.pcp_to_tc[qos->dot1q_pcp] = tc;
-
-		for(i = 0; i < qos->ndscp; i++) {
-			dscp = qos->ip_dscp[i];
-			if (dscp >= 0 && dscp < IONIC_QOS_DSCP_MAX)
-				ionic->qos.dscp_to_tc[dscp] = tc;
+		if ( (qos->class_type == IONIC_QOS_CLASS_TYPE_NONE) || 
+		     (qos->class_type == IONIC_QOS_CLASS_TYPE_PCP) ) {
+			if (qos->dot1q_pcp >= 0 && qos->dot1q_pcp < IONIC_QOS_PCP_MAX)
+				ionic->qos.pcp_to_tc[qos->dot1q_pcp] = tc;
+		}
+		else if (qos->class_type == IONIC_QOS_CLASS_TYPE_DSCP){
+			for (i = 0; i < qos->ndscp; i++) {
+				dscp = qos->ip_dscp[i];
+				if (dscp >= 0 && dscp < IONIC_QOS_DSCP_MAX)
+					ionic->qos.dscp_to_tc[dscp] = tc;
+			}
+		}
+		else {
+			/*IONIC_NETDEV_ERROR(ifp,
+			    "Invalid class type for TC: %d,", tc);*/
+			return (EINVAL);
 		}
 	}
 
@@ -804,51 +813,115 @@ ionic_qos_class_reset(struct ionic *ionic, uint8_t group)
 	return (err);
 }
 
-/*
- * Get an available PCP value.
- * Note: called before TC is enabled.
- */
-static int
-ionic_get_avail_pcp(struct ionic_lif *lif, int wanted_pcp)
+static void
+ionic_qos_set_default_pcp(struct ionic_lif *lif, int tc, union ionic_qos_config *qos)
+ {
+ 	struct ionic *ionic = lif->ionic;
+ 	struct ionic_identity *ident = &ionic->ident;
+	union ionic_qos_config *search_qos;
+ 	int i;
+	int def_pcp = -1;
+	int tc_pcp = tc;
+	bool tc_pcp_available = true;
+	uint8_t bitmap = 0;
+ 
+ 	/*
+ 	 * By default, map the PCP to respective TC (TC <-> PCP one-to-one mapped);
+ 	 * if the PCP is already mapped to some other TC, pick the first available PCP
+ 	 */
+	for (i = 1; i < ionic->qos.max_tcs; i++) {
+		search_qos = &ident->qos.config[i];
+		if ((search_qos->flags & IONIC_QOS_CONFIG_F_ENABLE) == 0)
+ 			continue;
+		if (search_qos->dot1q_pcp == IONIC_QOS_ALL_PCP)
+ 			continue;
+ 
+		/* if existing config is DSCP, looking for used-up PCPs may not be necessary */
+		if(search_qos->class_type == IONIC_QOS_CLASS_TYPE_DSCP)
+			continue;
+
+		bitmap |= BIT(search_qos->dot1q_pcp);
+ 		IONIC_NETDEV_INFO(lif->netdev, " tc: %d pause_type: %d pcp: %d "
+ 		    "sched_type: %d wt: %d PCP map: 0x%x\n",
+		    i, search_qos->pause_type, search_qos->dot1q_pcp,
+		    search_qos->sched_type, search_qos->dwrr_weight, bitmap);
+ 	}
+ 
+	if ((bitmap & BIT(tc_pcp)) != 0) {
+		tc_pcp_available = false;
+		def_pcp = -1;
+	} 
+
+	if (!tc_pcp_available) {
+		/* TC PCP not available; pick the first free PCP */
+		for (i = IONIC_QOS_PCP_MAX -1;  i >= 0; i--) {
+			if ((bitmap & BIT(i)) == 0) {
+				def_pcp = i;
+				break;
+			}
+		}
+	} else {
+		def_pcp = tc_pcp;
+	}
+
+	if (def_pcp != -1)
+		qos->dot1q_pcp = def_pcp;
+}
+
+static void
+ionic_qos_set_default_dscp(struct ionic_lif *lif, int tc, union ionic_qos_config *qos)
 {
 	struct ionic *ionic = lif->ionic;
 	struct ionic_identity *ident = &ionic->ident;
-	union ionic_qos_config *qos;
-	int i;
-	uint8_t bitmap;
-
-	/*
-	 * By default, map the PCP to respective TC (TC <-> PCP one-to-one mapped);
-	 * if the PCP is already mapped to some other TC, pick the first available PCP
-	 */
-	bitmap = 0;
-	for (i = 0; i < ionic->qos.max_tcs; i++) {
-		qos = &ident->qos.config[i];
-		if ((qos->flags & IONIC_QOS_CONFIG_F_ENABLE) == 0)
+	union ionic_qos_config *search_qos;
+	int i, j;
+	int def_dscp = -1;
+	int tc_dscp = tc * (IONIC_QOS_DSCP_MAX/IONIC_QOS_TC_MAX);
+	bool tc_dscp_available = true;
+	uint64_t bitmap = 0;
+ 
+ 	/*
+	 * By default, map the dscp to respective TC (TC <-> dscp one-to-one mapped);
+	 * if the dscp is already mapped to some other TC, pick the first available dscp
+ 	 */
+	for (i = 1; i < ionic->qos.max_tcs; i++) {
+		if (i == tc)
 			continue;
-		if (qos->dot1q_pcp == IONIC_QOS_ALL_PCP)
+
+		search_qos = &ident->qos.config[i];
+		if ((search_qos->flags & IONIC_QOS_CONFIG_F_ENABLE) == 0)
 			continue;
 
-		bitmap |= BIT(qos->dot1q_pcp);
-		IONIC_NETDEV_INFO(lif->netdev, " tc: %d pause_type: %d pcp: %d "
-		    "sched_type: %d wt: %d PCP map: 0x%x\n",
-		    i, qos->pause_type, qos->dot1q_pcp,
-		    qos->sched_type, qos->dwrr_weight, bitmap);
+		/* if existing config is PCP, looking for used-up DSCPs may not be necessary */
+		if(search_qos->class_type == IONIC_QOS_CLASS_TYPE_PCP)
+			continue;
+
+		for (j = 0 ; j < search_qos->ndscp ; j++) 
+			bitmap |= BIT(search_qos->ip_dscp[j]);
+ 	}
+ 
+	if ((bitmap & BIT(tc_dscp)) != 0) {
+		tc_dscp_available = false;
+		def_dscp = -1;
+	} 
+
+	if (!tc_dscp_available) {
+		/* TC dscp not available; pick the first free dscp */
+		for (i = tc_dscp; i < IONIC_QOS_DSCP_MAX; i++) {
+			if ((bitmap & BIT(i)) == 0) {
+				def_dscp = i;
+				break;
+			}
+		}
+	} else {
+		def_dscp = tc_dscp;
 	}
 
-	if ((bitmap & BIT(wanted_pcp)) == 0)
-		return (wanted_pcp);
-
-	/*
-	 * TC PCP not available; pick the first free PCP,
-	 * PCP0 is the last resort.
-	 */
-	for (i = IONIC_QOS_PCP_MAX -1;  i >= 0; i--) {
-		if ((bitmap & BIT(i)) == 0)
-			return (i);
+	qos->ndscp = 0;
+	if (def_dscp != -1) {
+		qos->ndscp = 1;
+		qos->ip_dscp[0] = (uint8_t)def_dscp;
 	}
-
-	return (-1);
 }
 
 static void
@@ -880,7 +953,7 @@ ionic_qos_bw_update(struct ionic_lif *lif, uint8_t *bw_perc)
 	int tc, error;
 
 	ionic_qos_class_identify(ionic);
-	for(tc = 0; tc < ionic->qos.max_tcs; tc++) {
+	for (tc = 1; tc < ionic->qos.max_tcs; tc++) {
 		qos = &ident->qos.config[tc];
 		if ((qos->flags & IONIC_QOS_CONFIG_F_ENABLE) == 0) {
 			continue;
@@ -922,7 +995,7 @@ ionic_qos_pcp_to_tc_update(struct ionic_lif *lif, uint8_t *pcp)
 	bool update;
 
 	ionic_qos_class_identify(ionic);
-	for (tc = 0; tc < ionic->qos.max_tcs; tc++) {
+	for (tc = 1; tc < ionic->qos.max_tcs; tc++) {
 		qos = &ident->qos.config[tc];
 
 		if (qos->dot1q_pcp == IONIC_QOS_ALL_PCP)
@@ -945,26 +1018,12 @@ ionic_qos_pcp_to_tc_update(struct ionic_lif *lif, uint8_t *pcp)
 		if (!update || (qos->dot1q_pcp == new_pcp))
 			continue;
 
-		if ((qos->flags & IONIC_QOS_CONFIG_F_ENABLE) == 0) {
-			IONIC_NETDEV_WARN(ifp, "TC%d is not enabled\n", tc);
-			return (EINVAL);
-		}
+		if ((qos->flags & IONIC_QOS_CONFIG_F_ENABLE) == 0 ||
+		    (qos->class_type != IONIC_QOS_CLASS_TYPE_PCP)) {
+			continue;
+ 		}
 
 		IONIC_NETDEV_INFO(ifp, "TC%d new PCP value: %d\n", tc, new_pcp);
-		/*
-		 * TODO: remove this once DSCP classification type is supported
-		 * Default it to PCP until then
-		 */
-		if (qos->class_type == IONIC_QOS_CLASS_TYPE_NONE) {
-			qos->class_type = IONIC_QOS_CLASS_TYPE_PCP;
-		}
-
-		if (qos->class_type != IONIC_QOS_CLASS_TYPE_PCP) {
-			IONIC_NETDEV_WARN(ifp,
-			    "Current policy(%d) is not PCP for TC: %d\n",
-			    qos->class_type, tc);
-			continue;
-		}
 
 		ionic_qos_set_default(lif, tc, qos);
 		qos->dot1q_pcp = new_pcp;
@@ -991,7 +1050,7 @@ ionic_qos_pfc_cos_update(struct ionic_lif *lif, uint8_t *pfc_cos)
 	int tc, error;
 
 	ionic_qos_class_identify(ionic);
-	for(tc = 0; tc < ionic->qos.max_tcs; tc++) {
+	for (tc = 1; tc < ionic->qos.max_tcs; tc++) {
 		qos = &ident->qos.config[tc];
 
 		if (qos->pfc_cos == pfc_cos[tc])
@@ -1028,13 +1087,11 @@ ionic_qos_dscp_to_tc_update(struct ionic_lif *lif, uint8_t *dscp)
 	uint8_t new_dscp[IONIC_QOS_DSCP_MAX];
 
 	ionic_qos_class_identify(ionic);
-	for(tc = 0; tc < ionic->qos.max_tcs; tc++) {
+	for (tc = 1; tc < ionic->qos.max_tcs; tc++) {
 		qos = &ident->qos.config[tc];
 
-		if (qos->class_type != IONIC_QOS_CLASS_TYPE_DSCP) {
-			IONIC_NETDEV_WARN(ifp,
-			    "Current policy(%d) is not DSCP for TC: %d\n",
-			    	qos->class_type, tc);
+		if ((qos->flags & IONIC_QOS_CONFIG_F_ENABLE) == 0 ||
+		    (qos->class_type != IONIC_QOS_CLASS_TYPE_DSCP)) {
 			continue;
 		}
 
@@ -1042,16 +1099,10 @@ ionic_qos_dscp_to_tc_update(struct ionic_lif *lif, uint8_t *dscp)
 		for (i = 0; i < IONIC_QOS_DSCP_MAX; i++) {
 			if (dscp[i] == tc) {
 				new_dscp[ndscp++] = i;
-				break;
 			}
 		}
 		if (!ndscp)
 			continue;
-
-		if ((qos->flags & IONIC_QOS_CONFIG_F_ENABLE) == 0) {
-			IONIC_NETDEV_WARN(ifp, "TC%d is not enabled\n", tc);
-			return (EINVAL);
-		}
 
 		ionic_qos_set_default(lif, tc, qos);
 		qos->ndscp = ndscp;
@@ -1078,10 +1129,10 @@ ionic_qos_enable_update(struct ionic_lif *lif, uint8_t *enable)
 	struct ifnet *ifp = lif->netdev;
 	struct ionic_identity *ident = &ionic->ident;
 	union ionic_qos_config *qos;
-	int tc, error, pcp;
+	int tc, error;
 
 	ionic_qos_class_identify(ionic);
-	for(tc = 1; tc < ionic->qos.max_tcs; tc++) {
+	for (tc = 1; tc < ionic->qos.max_tcs; tc++) {
 		qos = &ident->qos.config[tc];
 		if (enable[tc] == (qos->flags & IONIC_QOS_CONFIG_F_ENABLE))
 			continue;
@@ -1094,18 +1145,27 @@ ionic_qos_enable_update(struct ionic_lif *lif, uint8_t *enable)
 			}
 			continue;
 		}
-		pcp = ionic_get_avail_pcp(lif, tc);
-		if (pcp < 0) {
-			IONIC_NETDEV_ERROR(ifp,
-			    "No available PCP value\n");
-			return (EINVAL);
-		}
-		qos->dot1q_pcp = pcp;
+
 		qos->flags |= IONIC_QOS_CONFIG_F_ENABLE;
 		ionic_qos_set_default(lif, tc, qos);
 
-		qos->class_type = (lif->ionic->qos.class_type == IONIC_QOS_CLASS_TYPE_NONE) ?
-			IONIC_QOS_CLASS_TYPE_PCP : lif->ionic->qos.class_type;
+		if ((lif->ionic->qos.class_type == IONIC_QOS_CLASS_TYPE_NONE) || 
+			(lif->ionic->qos.class_type == IONIC_QOS_CLASS_TYPE_PCP)) {
+			qos->ndscp = 0;
+			memset(qos->ip_dscp, 0, sizeof(qos->ip_dscp));
+			ionic_qos_set_default_pcp(lif, tc, qos);
+			qos->class_type = IONIC_QOS_CLASS_TYPE_PCP;
+		}
+		else if (lif->ionic->qos.class_type == IONIC_QOS_CLASS_TYPE_DSCP) {
+			qos->dot1q_pcp = 0;
+			ionic_qos_set_default_dscp(lif, tc, qos);
+			qos->class_type = IONIC_QOS_CLASS_TYPE_DSCP;
+		}
+		else {
+			IONIC_NETDEV_ERROR(ifp,
+			    "Invalid class type for TC: %d,", tc);
+			return (EINVAL);
+ 		}
 
 		error = ionic_qos_tc_init(ionic, tc, qos);
 		if (error) {
@@ -1127,12 +1187,15 @@ ionic_qos_no_drop_update(struct ionic_lif *lif, uint8_t *no_drop)
 	struct ionic_identity *ident = &ionic->ident;
 	union ionic_qos_config *qos;
 	int tc, error;
+	uint8_t pause_type;
 
 	ionic_qos_class_identify(ionic);
-	for(tc = 1; tc < ionic->qos.max_tcs; tc++) {
+	for (tc = 1; tc < ionic->qos.max_tcs; tc++) {
 		qos = &ident->qos.config[tc];
 
-		if (no_drop[tc] == (qos->flags & IONIC_QOS_CONFIG_F_NO_DROP))
+		IONIC_NETDEV_WARN(ifp, "TC%d , flags: 0x%x\n", tc, qos->flags);
+
+		if (no_drop[tc] == ((qos->flags & IONIC_QOS_CONFIG_F_NO_DROP) >> 1))
 			continue;
 
 		if ((qos->flags & IONIC_QOS_CONFIG_F_ENABLE) == 0) {
@@ -1145,6 +1208,12 @@ ionic_qos_no_drop_update(struct ionic_lif *lif, uint8_t *no_drop)
 			qos->flags |= IONIC_QOS_CONFIG_F_NO_DROP;
 		else
 			qos->flags &= ~IONIC_QOS_CONFIG_F_NO_DROP;
+
+		pause_type = ionic->idev.port_info->config.pause_type & IONIC_PAUSE_TYPE_MASK;
+		if (pause_type != IONIC_PORT_PAUSE_TYPE_PFC)
+			qos->pause_type = IONIC_PORT_PAUSE_TYPE_LINK;
+		else
+			qos->pause_type = pause_type;
 
 		error = ionic_qos_tc_update(lif, tc, qos);
 		if (error) {
@@ -1169,7 +1238,7 @@ ionic_qos_sched_type_update(struct ionic_lif *lif, uint8_t *sched)
 	int tc, error;
 
 	ionic_qos_class_identify(ionic);
-	for(tc = 0; tc < ionic->qos.max_tcs; tc++) {
+	for (tc = 1; tc < ionic->qos.max_tcs; tc++) {
 		qos = &ident->qos.config[tc];
 
 		if (sched[tc])
@@ -1209,27 +1278,41 @@ ionic_qos_class_type_update(struct ionic_lif *lif,
 	int tc, error;
 
 	ionic_qos_class_identify(ionic);
-	for(tc = 0; tc < ionic->qos.max_tcs; tc++) {
+	for (tc = 1; tc < ionic->qos.max_tcs; tc++) {
 		qos = &ident->qos.config[tc];
 
 		if (qos->class_type == class)
 			continue;
 
 		if ((qos->flags & IONIC_QOS_CONFIG_F_ENABLE) == 0) {
-			IONIC_NETDEV_WARN(ifp, "TC%d is not enabled\n", tc);
-			return (EINVAL);
+			continue;
 		}
 
 		ionic_qos_set_default(lif, tc, qos);
 		qos->class_type = class;
+
+		if ( (qos->class_type == IONIC_QOS_CLASS_TYPE_NONE) || 
+		     (qos->class_type == IONIC_QOS_CLASS_TYPE_PCP) ) {
+			qos->ndscp = 0;
+			memset(qos->ip_dscp, 0, sizeof(qos->ip_dscp));
+			ionic_qos_set_default_pcp(lif, tc, qos);
+		}
+		else if (qos->class_type == IONIC_QOS_CLASS_TYPE_DSCP) {
+			qos->dot1q_pcp = 0;
+			ionic_qos_set_default_dscp(lif, tc, qos);
+		}
+		else {
+			IONIC_NETDEV_ERROR(ifp,
+			    "Invalid class type %d for TC: %d,", qos->class_type, tc);
+			return (EINVAL);
+		}
 
 		error = ionic_qos_tc_update(lif, tc, qos);
 		if (error) {
 			IONIC_NETDEV_ERROR(ifp,
 			    "Failed to change class type for TC: %d,"
 			    " error: %d\n", tc, error);
-			//TC0 class can't be changed.
-			//return (error);
+			return (error);
 		}
 	}
 

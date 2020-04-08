@@ -1583,6 +1583,34 @@ ionic_if_init(void *arg)
 	IONIC_LIF_UNLOCK(lif);
 }
 
+static uint8_t
+ionic_lif_cos(struct ionic_lif *lif)
+{
+	struct ionic_qos *qos = &lif->ionic->qos;
+	uint8_t cos = 0;
+	int i;
+
+	switch (qos->class_type) {
+	case IONIC_QOS_CLASS_TYPE_DSCP:
+		/* Map from the configured TC back to a DSCP COS */
+		for (i = 0; i < IONIC_QOS_DSCP_MAX; i++) {
+			if (qos->dscp_to_tc[i] == qos->tc_ethernet) {
+				cos = i;
+				break;
+			}
+		}
+		break;
+	case IONIC_QOS_CLASS_TYPE_PCP:
+		/* Use the configured PCP COS */
+		cos = IONIC_GET_PCP(lif->netdev);
+		break;
+	default:
+		break;
+	}
+
+	return cos;
+}
+
 int
 ionic_lif_netdev_alloc(struct ionic_lif *lif, int ndescs)
 {
@@ -1619,7 +1647,7 @@ ionic_lif_netdev_alloc(struct ionic_lif *lif, int ndescs)
 	/* Connect lif to ifnet, taking a long-lived reference */
 	if_ref(ifp);
 	lif->netdev = ifp;
-	lif->cos = IONIC_GET_COS(ifp);
+	lif->cos = ionic_lif_cos(lif);
 #ifdef NETAPP_PATCH
 	lif->iff_up = (ifp->if_flags & IFF_UP) != 0;
 #endif
@@ -2886,6 +2914,26 @@ ionic_notifyq_sysctl(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 			&notifyq->comp_count, "NQ completions processed");
 }
 
+static void
+ionic_lif_update_cos(struct ionic_lif *lif)
+{
+	uint8_t cos;
+	bool do_reinit = false;
+
+	IONIC_LIF_LOCK(lif);
+
+	cos = ionic_lif_cos(lif);
+	if (cos != lif->cos) {
+		lif->cos = cos;
+		do_reinit = true;
+	}
+
+	IONIC_LIF_UNLOCK(lif);
+
+	if (do_reinit)
+		ionic_lif_reinit(lif, false);
+}
+
 static int
 ionic_qos_class_type_sysctl(SYSCTL_HANDLER_ARGS)
 {
@@ -2908,14 +2956,24 @@ ionic_qos_class_type_sysctl(SYSCTL_HANDLER_ARGS)
 		goto err_out;
 	}
 
-	error = ionic_qos_class_type_update(lif, value);
-	if (error) {
-		goto err_out;
+	if (value != lif->ionic->qos.class_type) {
+		error = ionic_qos_class_type_update(lif, value);
+		if (error) {
+			goto err_out;
+		}
+
+		lif->ionic->qos.class_type = value;
 	}
 	lif->ionic->qos.class_type = value;
 
+	ionic_qos_init(lif->ionic);
+
 err_out:
 	IONIC_LIF_UNLOCK(lif);
+
+	/* Check if the new classification type resulted in a new COS */
+	ionic_lif_update_cos(lif);
+
 	return (error);
 }
 
@@ -2942,7 +3000,13 @@ ionic_qos_tc_enable_sysctl(SYSCTL_HANDLER_ARGS)
 	for (i = 0; i < ionic->qos.max_tcs; i++) {
 		if (enable[i] > 1) {
 			error = ERANGE;
-			if_printf(lif->netdev, "invalid value - 0(disable)/1(enable).\n");
+			if_printf(lif->netdev, "invalid value - 0(disable)/1(enable)\n");
+			goto err_out;
+		}
+		if (!enable[i] && i == ionic->qos.tc_ethernet) {
+			error = EINVAL;
+			if_printf(lif->netdev,
+			    "TC%d cannot be disabled while hosting Ethernet\n", i);
 			goto err_out;
 		}
 	}
@@ -2957,6 +3021,55 @@ err_out:
 	IONIC_LIF_UNLOCK(lif);
 	return (error);
 
+}
+
+static int
+ionic_qos_tc_ethernet_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct ionic_lif *lif = oidp->oid_arg1;
+	struct ionic *ionic = lif->ionic;
+	int value, error;
+
+	IONIC_LIF_LOCK(lif);
+	value = ionic->qos.tc_ethernet;
+
+	error = sysctl_handle_int(oidp, &value, 0, req);
+	if (error || (req->newptr == NULL))
+		goto err_out;
+
+	if ((value < 0) ||
+	    (value >= ionic->qos.max_tcs)) {
+		error = ERANGE;
+		if_printf(lif->netdev,
+		    "Ethernet cannot be assigned to invalid TC%d; use 0..%d\n",
+		    value, ionic->qos.max_tcs - 1);
+		goto err_out;
+	}
+
+	if (value && !ionic->qos.enable_flag[value]) {
+		error = EINVAL;
+		if_printf(lif->netdev,
+		    "Ethernet cannot be assigned to disabled TC%d\n",
+		    value);
+		goto err_out;
+	}
+
+	if (value != ionic->qos.tc_ethernet) {
+		if (value && ionic->qos.no_drop[value])
+			if_printf(lif->netdev,
+			    "Warning: Ethernet is assigned to no-drop TC%d\n",
+			    value);
+
+		ionic->qos.tc_ethernet = value;
+	}
+
+err_out:
+	IONIC_LIF_UNLOCK(lif);
+
+	/* Check if the new Ethernet TC resulted in a new COS */
+	ionic_lif_update_cos(lif);
+
+	return (error);
 }
 
 static int
@@ -2982,9 +3095,12 @@ ionic_qos_no_drop_sysctl(SYSCTL_HANDLER_ARGS)
 	for (i = 0; i < ionic->qos.max_tcs; i++) {
 		if (no_drop[i] > 1) {
 			error = ERANGE;
-			if_printf(lif->netdev, "invalid value - 0(disable)/1(enable).\n");
+			if_printf(lif->netdev, "invalid value - 0(disable)/1(enable)\n");
 			goto err_out;
 		}
+		if (i && no_drop[i] && i == ionic->qos.tc_ethernet)
+			if_printf(lif->netdev,
+			    "Warning: Ethernet is assigned to no-drop TC%d\n", i);
 	}
 
 	error = ionic_qos_no_drop_update(lif, no_drop);
@@ -3023,7 +3139,7 @@ ionic_qos_tc_sched_type_sysctl(SYSCTL_HANDLER_ARGS)
 	for (i = 0; i < ionic->qos.max_tcs; i++) {
 		if (sched[i] > 1) {
 			error = ERANGE;
-			if_printf(lif->netdev, "sched value is 0(strict) or 1(DWRR).\n");
+			if_printf(lif->netdev, "sched value is 0(strict) or 1(DWRR)\n");
 			goto err_out;
 		}
 	}
@@ -3181,6 +3297,7 @@ ionic_qos_dscp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 	if (error)
 		goto err_out;
 
+	/* Range check all of the new values */
 	for (i = 0; i < IONIC_DSCP_BLOCK_SIZE; i++) {
 		if (dscp_to_tc[i] >= ionic->qos.max_tcs ) {
 			if_printf(ifp, "Out of range value: %d\n", dscp_to_tc[i]);
@@ -3189,7 +3306,11 @@ ionic_qos_dscp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 		}
 	}
 
-	error = ionic_qos_dscp_to_tc_update(lif, dscp_to_tc);
+	/* Copy the chunk of new values into the master array */
+	for (i = 0; i < IONIC_DSCP_BLOCK_SIZE; i++)
+		ionic->qos.dscp_to_tc[i + start] = dscp_to_tc[i];
+
+	error = ionic_qos_dscp_to_tc_update(lif, ionic->qos.dscp_to_tc);
 	if (error) {
 		goto err_out;
 	}
@@ -3197,6 +3318,10 @@ ionic_qos_dscp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 	ionic_qos_init(ionic);
 err_out:
 	IONIC_LIF_UNLOCK(lif);
+
+	/* Check if the new DSCP to TC mapping resulted in a new COS */
+	ionic_lif_update_cos(lif);
+
 	return (error);
 }
 
@@ -3216,42 +3341,46 @@ ionic_qos_sysctl(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "max_tcs", CTLFLAG_RD,
 			&lif->ionic->qos.max_tcs, 0, "Max number of TCs supported");
 	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "classification_type",
-			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
+			CTLTYPE_INT | CTLFLAG_RW, lif, 0,
 			ionic_qos_class_type_sysctl, "I",
 			"Set port classification policy");
 	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "tc_enable",
 			CTLTYPE_U8 | CTLFLAG_RW, lif, 0,
 			ionic_qos_tc_enable_sysctl, "QU",
-			"Enable/disable for TC classes.");
+			"Enable/disable for Traffic Classes");
+	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "tc_ethernet",
+			CTLTYPE_INT | CTLFLAG_RW, lif, 0,
+			ionic_qos_tc_ethernet_sysctl, "I",
+			"TC for Ethernet traffic");
 	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "tc_no_drop",
 			CTLTYPE_U8 | CTLFLAG_RW, lif, 0,
 			ionic_qos_no_drop_sysctl, "QU",
-			"No drop enabled for QoS TC class.");
+			"No drop enabled for QoS TC");
 	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "tc_pfc_cos",
 			CTLTYPE_U8 | CTLFLAG_RW, lif, 0,
 			ionic_qos_pfc_cos_sysctl, "QU",
-			"Class of service value(0-7) for each TC.");
+			"Class of Service value(0-7) for each TC");
 	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "tc_sched_type",
 			CTLTYPE_U8 | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
 			ionic_qos_tc_sched_type_sysctl, "QU",
-			"Scheduling policy for TC class -0(strict)/1(DWRR).");
+			"Scheduling policy for TCs - 0(strict)/1(DWRR)");
 #ifdef notyet
 	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "tc_bw_perc",
 			CTLTYPE_U8 | CTLFLAG_RW, lif, 0,
 			ionic_qos_tc_bw_perc_sysctl, "QU",
-			"Bandwidth percent for traffic classes.");
+			"Bandwidth percent for TCs");
 #endif
 	SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, "pcp_to_tc",
 			CTLTYPE_U8 | CTLFLAG_RW, lif, 0,
 			ionic_qos_pcp_to_tc_sysctl, "QU",
-			"PCP to TC mapping.");
-	for( i = 0; i < IONIC_QOS_DSCP_MAX;  i += IONIC_DSCP_BLOCK_SIZE)  {
+			"PCP to TC mapping");
+	for (i = 0; i < IONIC_QOS_DSCP_MAX;  i += IONIC_DSCP_BLOCK_SIZE)  {
 		snprintf(namebuf, QUEUE_NAME_LEN, "dscp_%d_%d_to_tc", i,
 		    i + (IONIC_DSCP_BLOCK_SIZE - 1));
 		SYSCTL_ADD_PROC(ctx, queue_list, OID_AUTO, namebuf,
-			CTLTYPE_U8 | CTLFLAG_RW | CTLFLAG_SKIP, lif, i,
+			CTLTYPE_U8 | CTLFLAG_RW, lif, i,
 			ionic_qos_dscp_to_tc_sysctl, "QU",
-			"DPCP to TC mapping for block of 8 DSCP range");
+			"DSCP to TC mapping for block of 8 DSCP range");
 	}
 }
 
@@ -3817,8 +3946,12 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 
 	default:
 		error = ether_ioctl(ifp, command, data);
-		if ((command == SIOCSLANPCP) && (lif->cos != IONIC_GET_COS(ifp))) {
-			lif->cos = IONIC_GET_COS(ifp);
+		if ((command == SIOCSLANPCP) &&
+		    (lif->ionic->qos.class_type == IONIC_QOS_CLASS_TYPE_PCP) &&
+		    (lif->cos != IONIC_GET_PCP(ifp))) {
+			lif->cos = IONIC_GET_PCP(ifp);
+
+			/* Reinit the LIF to pick up the new COS value */
 			error = ionic_lif_reinit(lif, false);
 		}
 		break;
