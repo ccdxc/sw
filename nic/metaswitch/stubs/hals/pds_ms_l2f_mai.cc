@@ -12,6 +12,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/apollo/api/internal/pds_mapping.hpp"
+#include "nic/apollo/learn/learn_api.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <l2f_integ_api.hpp>
 #include <thread>
@@ -427,7 +428,7 @@ NBB_BYTE l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) 
         // safe to release the cookie_uptr_ unique_ptr
         rc = ATG_ASYNC_COMPLETION;
         cookie = cookie_uptr_.release();
-        auto ret = pds_batch_commit(pds_bctxt_guard.release());
+        auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
         if (unlikely (ret != SDK_RET_OK)) {
             delete cookie;
             throw Error(std::string("Batch commit failed for MAC Add BD ")
@@ -492,7 +493,7 @@ void l2f_mai_t::handle_delete_mac(l2f::FdbMacKey *key) {
     // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for MAC Del BD ")
@@ -575,7 +576,7 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
     // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for Remote IP Add BD ")
@@ -625,7 +626,7 @@ void l2f_mai_t::handle_delete_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
     // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for Remote IP Del BD ")

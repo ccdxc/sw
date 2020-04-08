@@ -31,6 +31,17 @@ detect_learn_type (learn_ctxt_t *ctxt)
         is_local = (ctxt->ip_entry != nullptr);
     }
 
+    // API caller may not distinguish between create and update ops, figure it
+    // out by checking if remote mapping entry already exists
+    if (!is_local && ctxt->api_ctxt.op == API_OP_CREATE) {
+        if (impl::remote_mapping_find(ctxt->api_ctxt.mkey) == SDK_RET_OK) {
+            // remote mapping exists, this is update op
+            PDS_TRACE_DEBUG("Remote mapping create is changed to update op  %s",
+                            ctxt->str());
+            ctxt->api_ctxt.op = API_OP_UPDATE;
+        }
+    }
+
     switch (ctxt->api_ctxt.op) {
     case API_OP_CREATE:
         if (is_local) {
@@ -135,6 +146,7 @@ process_mapping_api (mapping_key_spec_t key_spec, api_op_t op,
     ctxt.ctxt_type = LEARN_CTXT_TYPE_API;
     ctxt.bctxt = bctxt;
     ctxt.api_ctxt.del_objs = del_obj_list;
+
     if (op == API_OP_DELETE) {
         ret = create_learn_ctxt(key_spec.skey, &ctxt, op);
     } else {

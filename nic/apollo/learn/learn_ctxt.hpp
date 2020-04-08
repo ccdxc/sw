@@ -14,6 +14,8 @@
 #include <vector>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
+#include "nic/apollo/learn/ep_mac_entry.hpp"
+#include "nic/apollo/learn/ep_ip_entry.hpp"
 #include "nic/apollo/learn/learn.hpp"
 #include "nic/apollo/learn/learn_impl_base.hpp"
 

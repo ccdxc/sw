@@ -17,6 +17,7 @@
 #include "nic/apollo/learn/learn.hpp"
 #include "nic/apollo/learn/learn_api.hpp"
 #include "nic/apollo/learn/learn_ctxt.hpp"
+#include "nic/apollo/learn/learn_thread.hpp"
 
 namespace learn {
 
@@ -34,6 +35,12 @@ sdk_ret_t
 api_batch_commit (pds_batch_ctxt_t bctxt)
 {
     api::api_msg_t *api_msg = (api::api_msg_t *)bctxt;
+
+    // if learning is disabled, directly commit to API thread
+    if (!learning_enabled()) {
+        PDS_TRACE_DEBUG("Learning is disabled, committing API batch directly");
+        return pds_batch_commit(bctxt);
+    }
 
     if (likely(api_msg->batch.apis.size() > 0)) {
         //TODO: sync batch support

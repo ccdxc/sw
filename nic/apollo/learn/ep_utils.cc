@@ -72,7 +72,11 @@ delete_ip_from_ep (ep_ip_entry *ip_entry, ep_mac_entry *mac_entry)
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to delete IP mapping for EP %s, error code %u",
                       ip_entry->key2str().c_str(), ret);
-        return ret;
+        // if the failure is because the entry was not found, continue to delete
+        // the software state to keep it in sync with HAL
+        if (ret != SDK_RET_ENTRY_NOT_FOUND) {
+            return ret;
+        }
     }
 
     PDS_TRACE_INFO("Deleting IP mapping %s", ip_entry->key2str().c_str());
@@ -118,7 +122,11 @@ delete_ep (ep_mac_entry *mac_entry)
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to delete EP %s, error code %u",
                       mac_entry->key2str().c_str(), ret);
-        return ret;
+        // if the failure is because the entry was not found, continue to delete
+        // the software state to keep it in sync with HAL
+        if (ret != SDK_RET_ENTRY_NOT_FOUND) {
+            return ret;
+        }
     }
     LEARN_COUNTER_INCR(api_calls);
     return delete_mac_entry(mac_entry);

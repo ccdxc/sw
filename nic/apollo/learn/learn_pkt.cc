@@ -289,9 +289,7 @@ update_ep_mac (learn_ctxt_t *ctxt)
         ctxt->mac_entry->add_to_db();
         // start MAC aging timer
         mac_aging_timer_restart(ctxt->mac_entry);
-        if (ctxt->mac_learn_type == LEARN_TYPE_NEW_LOCAL) {
-            broadcast_mac_event(EVENT_ID_MAC_LEARN, ctxt->mac_entry);
-        }
+        broadcast_mac_event(EVENT_ID_MAC_LEARN, ctxt->mac_entry);
         LEARN_COUNTER_INCR(vnics);
         break;
     case LEARN_TYPE_MOVE_L2L:
@@ -320,9 +318,7 @@ update_ep_ip (learn_ctxt_t *ctxt)
         ctxt->ip_entry->set_state(EP_STATE_CREATED);
         ctxt->ip_entry->add_to_db();
         ctxt->mac_entry->add_ip(ctxt->ip_entry);
-        if (ctxt->ip_learn_type == LEARN_TYPE_NEW_LOCAL) {
-            broadcast_ip_event(EVENT_ID_IP_LEARN, ctxt->ip_entry);
-        }
+        broadcast_ip_event(EVENT_ID_IP_LEARN, ctxt->ip_entry);
         LEARN_COUNTER_INCR(l3_mappings);
         break;
     case LEARN_TYPE_MOVE_L2L:
