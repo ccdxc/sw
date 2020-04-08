@@ -141,6 +141,7 @@ SubnetSvcImpl::SubnetDelete(ServerContext *context,
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
     pds_obj_key_t key = { 0 };
+    pds_subnet_info_t info = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -165,7 +166,16 @@ SubnetSvcImpl::SubnetDelete(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = pds_subnet_delete(&key, bctxt);
+        ret = pds_subnet_read(&key, &info);
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+        if (core::agent_state::state()->device()->overlay_routing_en) {
+            // call the metaswitch api
+            ret = pds_ms::subnet_delete(&info.spec, bctxt);
+        } else if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_subnet_delete(&key, bctxt);
+        }
         if (ret != SDK_RET_OK) {
             goto end;
         }

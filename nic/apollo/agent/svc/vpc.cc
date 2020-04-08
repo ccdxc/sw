@@ -8,6 +8,7 @@
 #include "nic/apollo/agent/svc/vpc_svc.hpp"
 #include "nic/apollo/agent/svc/vpc.hpp"
 #include "nic/apollo/agent/trace.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_vpc.hpp"
 
 Status
 VPCSvcImpl::VPCCreate(ServerContext *context,
@@ -42,7 +43,14 @@ VPCSvcImpl::VPCCreate(ServerContext *context,
         memset(&api_spec, 0, sizeof(pds_vpc_spec_t));
         auto proto_spec = proto_req->request(i);
         pds_vpc_proto_to_api_spec(&api_spec, proto_spec);
-        ret = pds_vpc_create(&api_spec, bctxt);
+        // underlay VPC is always sent to control-plane
+        if (core::agent_state::state()->device()->overlay_routing_en ||
+           (api_spec.type == PDS_VPC_TYPE_UNDERLAY)) {
+            // call the metaswitch api    
+            ret = pds_ms::vpc_create(&api_spec, bctxt);
+        } else if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_vpc_create(&api_spec, bctxt);
+        }
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -98,7 +106,14 @@ VPCSvcImpl::VPCUpdate(ServerContext *context,
         memset(&api_spec, 0, sizeof(pds_vpc_spec_t));
         auto proto_spec = proto_req->request(i);
         pds_vpc_proto_to_api_spec(&api_spec, proto_spec);
-        ret = pds_vpc_update(&api_spec, bctxt);
+        // underlay VPC is always sent to control-plane
+        if (core::agent_state::state()->device()->overlay_routing_en ||
+           (api_spec.type == PDS_VPC_TYPE_UNDERLAY)) {
+            // call the metaswitch api    
+            ret = pds_ms::vpc_update(&api_spec, bctxt);
+        } else if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_vpc_update(&api_spec, bctxt);
+        }
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -128,6 +143,7 @@ VPCSvcImpl::VPCDelete(ServerContext *context,
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
     pds_obj_key_t key = { 0 };
+    pds_vpc_info_t info = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -152,7 +168,18 @@ VPCSvcImpl::VPCDelete(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = pds_vpc_delete(&key, bctxt);
+        ret = pds_vpc_read(&key, &info);
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+        // underlay VPC is always sent to control-plane
+        if (core::agent_state::state()->device()->overlay_routing_en ||
+           (info.spec.type == PDS_VPC_TYPE_UNDERLAY)) {
+            // call the metaswitch api    
+            ret = pds_ms::vpc_delete(&info.spec, bctxt);
+        } else if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_vpc_delete(&key, bctxt);
+        }
         if (ret != SDK_RET_OK) {
             goto end;
         }
