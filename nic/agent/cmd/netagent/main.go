@@ -4,8 +4,11 @@
 package main
 
 import (
+	"context"
 	"runtime/debug"
 	"time"
+
+	"github.com/pensando/sw/venice/utils/tsdb"
 
 	"github.com/pensando/sw/nic/agent/dscagent"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
@@ -40,6 +43,15 @@ func main() {
 		},
 	}
 	logger := log.SetConfig(logConfig)
+	tsdb.Init(context.Background(), &tsdb.Opts{
+		ClientName:              types.Netagent,
+		Collector:               types.Collector,
+		DBName:                  "default",
+		SendInterval:            time.Minute,
+		ConnectionRetryInterval: types.StatsRetryInterval,
+	})
+	defer tsdb.Cleanup()
+
 	ag, err := dscagent.NewDSCAgent(logger, types.Npm, types.Tpm, types.Tsm, types.DefaultAgentRestURL)
 	if err != nil {
 		log.Fatalf("Agent failed to start. Err: %v", err)

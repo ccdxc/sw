@@ -1,10 +1,13 @@
 package migrationinteg
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/pensando/sw/venice/utils/tsdb"
 
 	"gopkg.in/check.v1"
 	. "gopkg.in/check.v1"
@@ -103,6 +106,13 @@ func (it *migrationTestSuite) SetUpSuite(c *C) {
 
 	rc := resolver.New(&resolver.Config{Name: globals.Npm, Servers: []string{resolverServer.GetListenURL()}})
 
+	tsdb.Init(context.Background(), &tsdb.Opts{
+		ClientName:     "npm-integ-test",
+		ResolverClient: rc,
+		Collector:      globals.Collector,
+		DBName:         globals.DefaultTenant,
+	})
+
 	// Create API Server
 	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", logger.WithContext("submodule", "pen-apiserver"))
 	c.Assert(err, check.IsNil)
@@ -198,11 +208,11 @@ func (it *migrationTestSuite) SetUpSuite(c *C) {
 }
 
 func (it *migrationTestSuite) SetUpTest(c *C) {
-	log.Infof("====================== Setup Test ======================")
+	log.Infof("====================== Setup Test %v ======================", c.TestName())
 }
 
 func (it *migrationTestSuite) TearDownTest(c *C) {
-	log.Infof("====================== TearDown Test ======================")
+	log.Infof("====================== TearDown Test %v ======================", c.TestName())
 	err := it.deleteAllObjects()
 	if err != nil {
 		it.logger.Infof("Failed to delete all objects. Err : %v", err)

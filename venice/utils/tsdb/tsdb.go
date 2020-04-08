@@ -96,12 +96,32 @@ func IsInitialized() bool {
 
 // Start starts tsdb export
 func Start(resolverClient resolver.Interface) error {
+	if global == nil {
+		log.Errorf("tsdb is not initialized")
+		return nil
+	}
+	global.Lock()
+	defer global.Unlock()
 	global.opts.ResolverClient = resolverClient
 	return nil
 }
 
+// Update sets tsdb client name and resolver
+func Update(name string, rc resolver.Interface) {
+	if global == nil {
+		log.Errorf("tsdb is not initialized")
+		return
+	}
+	global.Lock()
+	defer global.Unlock()
+	global.opts.ResolverClient = rc
+	global.opts.ClientName = name
+
+}
+
 // Cleanup pushes all pending metrics and frees up resources allocated to the tsdb client
 func Cleanup() {
+	log.Info("tsdb stopped")
 	if global == nil {
 		return
 	}
@@ -179,29 +199,27 @@ func NewObj(tableName string, keys map[string]string, metrics interface{}, opts 
 	objName := getObjName(keys)
 
 	obj, ok := global.objs[objName]
-	if ok {
-		return obj, nil
+	if !ok {
+
+		obj = &iObj{}
+		obj.tableName = tableName
+		obj.fields = make(map[string]interface{})
+		obj.keys = keys
+
+		if opts != nil {
+			obj.opts = *opts
+			obj.opts.collectionTicks = int(opts.CollectionInterval.Seconds() / minCollectionInterval.Seconds())
+			obj.collectionTicks = obj.opts.collectionTicks
+		}
+
+		// every object is added to global object's hash based on object's name
+		global.objs[objName] = obj
 	}
-
-	obj = &iObj{}
-	obj.tableName = tableName
-	obj.fields = make(map[string]interface{})
-	obj.keys = keys
-
 	// if metrics are provided during this object creation, fill the fields based on
 	// supplied metrics structure
 	if err := fillFields(obj, metrics); err != nil {
 		return nil, err
 	}
-
-	if opts != nil {
-		obj.opts = *opts
-		obj.opts.collectionTicks = int(opts.CollectionInterval.Seconds() / minCollectionInterval.Seconds())
-		obj.collectionTicks = obj.opts.collectionTicks
-	}
-
-	// every object is added to global object's hash based on object's name
-	global.objs[objName] = obj
 
 	return obj, nil
 }

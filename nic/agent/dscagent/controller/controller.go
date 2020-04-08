@@ -18,6 +18,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/utils/nodemetrics"
+
 	export "github.com/pensando/sw/venice/utils/techsupport/exporter"
 
 	"github.com/pensando/sw/nic/agent/protos/tsproto"
@@ -27,11 +30,10 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
-	restapi "github.com/pensando/sw/nic/agent/protos/generated/restapi/netagent"
+	"github.com/pensando/sw/nic/agent/protos/generated/restapi/netagent"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/events"
@@ -168,18 +170,12 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 
 		if c.ResolverClient == nil {
 			c.ResolverClient = resolver.New(&resolver.Config{Name: types.Netagent, Servers: obj.Controllers})
-			tsdb.Init(context.Background(), &tsdb.Opts{
-				ClientName:              types.Netagent + c.InfraAPI.GetDscName(),
-				ResolverClient:          c.ResolverClient,
-				Collector:               types.Collector,
-				DBName:                  "default",
-				SendInterval:            time.Minute,
-				ConnectionRetryInterval: types.StatsRetryInterval,
-			})
 		} else {
 			log.Infof("Controller API: %s | Obj: %v", types.InfoUpdateVeniceCoordinates, obj.Controllers)
 			c.ResolverClient.UpdateServers(obj.Controllers)
 		}
+
+		tsdb.Update(types.Netagent+c.InfraAPI.GetDscName(), c.ResolverClient)
 
 		c.factory = rpckit.NewClientFactory(c.InfraAPI.GetDscName())
 		c.Unlock()
@@ -195,7 +191,6 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 		if err := c.Stop(); err != nil {
 			log.Error(errors.Wrapf(types.ErrControllerWatcherStop, "Controller API: %s", err))
 		}
-		tsdb.Cleanup()
 		c.InfraAPI.StoreConfig(obj)
 
 		if err := c.PipelineAPI.PurgeConfigs(); err != nil {
@@ -222,18 +217,20 @@ func (c *API) Start(kinds []string) error {
 		}
 	}()
 
-	// Init TSDB
-	opts := &tsdb.Opts{
-		ClientName:              types.Netagent + c.InfraAPI.GetDscName(),
-		ResolverClient:          c.ResolverClient,
-		Collector:               types.Collector,
-		DBName:                  "default",
-		SendInterval:            types.StatsSendInterval,
-		ConnectionRetryInterval: types.StatsRetryInterval,
+	node := &cluster.DistributedServiceCard{
+		TypeMeta: api.TypeMeta{
+			Kind: "DistributedServiceCard",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: c.InfraAPI.GetDscName(),
+		},
 	}
 
-	tsdb.Init(c.WatchCtx, opts)
-	log.Infof("Controller API: %s", types.InfoTSDBInitDone)
+	// node-metrics will be stopped on context cancel()
+	_, err := nodemetrics.NewNodeMetrics(c.WatchCtx, node, 30*time.Second, log.WithContext("pkg", "nodemetrics"))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

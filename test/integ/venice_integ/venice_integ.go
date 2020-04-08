@@ -13,7 +13,9 @@ import (
 	"strings"
 	"time"
 
-	fakehal "github.com/pensando/sw/nic/agent/cmd/fakehal/hal"
+	"github.com/pensando/sw/venice/utils/tsdb"
+
+	"github.com/pensando/sw/nic/agent/cmd/fakehal/hal"
 
 	"github.com/pensando/netlink"
 	"golang.org/x/net/context"
@@ -26,7 +28,7 @@ import (
 	pencluster "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/dscagent"
 	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
-	halproto "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/ipc"
 	"github.com/pensando/sw/nic/agent/nmd"
 	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
@@ -46,7 +48,7 @@ import (
 	"github.com/pensando/sw/venice/citadel/collector"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver"
 	"github.com/pensando/sw/venice/citadel/data"
-	httpserver "github.com/pensando/sw/venice/citadel/http"
+	"github.com/pensando/sw/venice/citadel/http"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/query"
 	cmdapi "github.com/pensando/sw/venice/cmd/apiclient"
@@ -58,7 +60,7 @@ import (
 	cmdsvc "github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	cmdtypes "github.com/pensando/sw/venice/cmd/types"
-	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/ctrler/rollout"
@@ -79,7 +81,6 @@ import (
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/nodemetrics"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/strconv"
@@ -711,16 +712,6 @@ func (it *veniceIntegSuite) startAgent(c *check.C, veniceURL string) {
 
 		rc := it.resolverClient
 
-		// report node metrics
-		node := &cluster.DistributedServiceCard{
-			TypeMeta: api.TypeMeta{
-				Kind: "DistributedServiceCard",
-			},
-			ObjectMeta: api.ObjectMeta{
-				Name: dscAgent.InfraAPI.GetDscName(),
-			},
-		}
-
 		snic := naples{
 			macAddr:  snicMac,
 			snicName: snicName,
@@ -729,10 +720,18 @@ func (it *veniceIntegSuite) startAgent(c *check.C, veniceURL string) {
 		it.snics = append(it.snics, &snic)
 
 		if i == 0 { // start only 1 instance
-			_, err = nodemetrics.NewNodeMetrics(it.ctx, node, 10*time.Second, it.logger)
-			if err != nil {
-				log.Fatalf("Error creating nodemetrics. Err: %v", err)
+
+			opts := &tsdb.Opts{
+				ClientName:              fmt.Sprintf("tmagent-%d", i),
+				Collector:               globals.Collector,
+				ResolverClient:          rc,
+				DBName:                  "default",
+				SendInterval:            time.Duration(30) * time.Second,
+				ConnectionRetryInterval: 100 * time.Millisecond,
 			}
+
+			// Init the TSDB
+			tsdb.Init(context.Background(), opts)
 
 			tpState, err := tmstate.NewTpAgent(it.ctx, globals.AgentRESTPort)
 			if err != nil {
@@ -1168,6 +1167,7 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 
 	it.fakehal.Stop()
 	nmdutils.ClearVeniceTrustRoots()
+	tsdb.Cleanup()
 
 	time.Sleep(time.Millisecond * 100) // allow goroutines to cleanup and terminate gracefully
 	log.Infof("============================= TearDownSuite completed ==========================")

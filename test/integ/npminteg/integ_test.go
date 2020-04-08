@@ -124,7 +124,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 
 	// Init tsdb
 	ctx, cancel := context.WithCancel(context.Background())
-	tsdb.Init(ctx, &tsdb.Opts{ClientName: "NpmIntegTestSuite", ResolverClient: &rmock.ResolverClient{}})
+	tsdb.Init(context.Background(), &tsdb.Opts{ClientName: "NpmIntegTestSuite", ResolverClient: &rmock.ResolverClient{}})
 	defer cancel()
 
 	it.logger = logger
@@ -325,7 +325,6 @@ func (it *integTestSuite) TearDownSuite(c *C) {
 	it.resolverClient = nil
 	testutils.CleanupIntegTLSProvider()
 	it.fakehal.Stop()
-
 	time.Sleep(time.Millisecond * 100) // allow goroutines to cleanup and terminate gracefully
 
 	log.Infof("Stopped all servers and clients")

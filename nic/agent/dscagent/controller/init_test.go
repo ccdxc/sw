@@ -23,6 +23,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 var (
@@ -491,6 +492,13 @@ func TestMain(m *testing.M) {
 
 	log.Infof("Primary DB: %s | Backup DB: %s", primaryDB.Name(), secondaryDB.Name())
 
+	options := &tsdb.Opts{
+		ClientName: "tsdb-test",
+		DBName:     "objMetrics",
+	}
+
+	tsdb.Init(context.Background(), options)
+
 	infraAPI, err = infra.NewInfraAPI(primaryDB.Name(), secondaryDB.Name())
 	if err != nil {
 		log.Errorf("Test Setup Failed. Err: %v", err)
@@ -530,6 +538,7 @@ func TestMain(m *testing.M) {
 	mockHal.Stop()
 	pipelineAPI.PurgeConfigs()
 	infraAPI.Close()
+	tsdb.Cleanup()
 	os.Remove(primaryDB.Name())
 	os.Remove(secondaryDB.Name())
 	os.Exit(code)

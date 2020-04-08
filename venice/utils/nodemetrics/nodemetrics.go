@@ -103,6 +103,7 @@ func NewNodeMetrics(pctx context.Context, obj runtime.Object, frequency time.Dur
 
 // Close stops node watcher
 func (w *nodemetrics) Close() {
+	log.Infof("node metrics stopped")
 	w.cancel()
 	w.wg.Wait()
 }
