@@ -52,6 +52,7 @@ action p4i_to_p4e_state() {
                 modify_field(control_metadata.conntrack_index_valid , TRUE);
             }
         }
+        modify_field(control_metadata.update_checksum, p4i_to_p4e_header.update_checksum);
     }
 }
 

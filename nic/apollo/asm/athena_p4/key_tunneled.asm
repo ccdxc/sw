@@ -77,8 +77,11 @@ tunneled_ipv6_packet_done:
 
 .align
 tunneled_nonip_packet:
-    phvwr.e.f       p.control_metadata_skip_flow_lkp, TRUE
-    nop
+    phvwr           p.control_metadata_flow_miss, TRUE
+    phvwr           p.ingress_recirc_header_flow_done, TRUE
+    phvwr           p.ingress_recirc_header_dnat_done, TRUE
+    phvwr.e         p.control_metadata_skip_dnat_lkp, TRUE
+    phvwr.f         p.control_metadata_skip_flow_lkp, TRUE
 
 /*****************************************************************************/
 /* error function                                                            */

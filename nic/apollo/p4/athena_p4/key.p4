@@ -75,7 +75,11 @@ action native_ipv6_packet() {
 }
 
 action native_nonip_packet() {
-    modify_field(control_metadata.skip_flow_lkp, TRUE);
+        /* Skip DNAT and Flow lookup */
+        modify_field(control_metadata.skip_dnat_lkp, TRUE);
+        modify_field(control_metadata.skip_flow_lkp, TRUE);
+        modify_field(ingress_recirc_header.flow_done, TRUE);
+        modify_field(ingress_recirc_header.dnat_done, TRUE);
 }
 
 action tunneled_ipv4_packet() {
@@ -149,7 +153,11 @@ action tunneled_ipv6_packet() {
 }
 
 action tunneled_nonip_packet()  {
+    /* Skip DNAT and Flow lookup */
+    modify_field(control_metadata.skip_dnat_lkp, TRUE);
     modify_field(control_metadata.skip_flow_lkp, TRUE);
+    modify_field(ingress_recirc_header.flow_done, TRUE);
+    modify_field(ingress_recirc_header.dnat_done, TRUE);
 }
 
 @pragma stage 0

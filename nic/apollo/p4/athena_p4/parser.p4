@@ -776,22 +776,10 @@ field_list ipv4_1_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum gress ingress
-@pragma checksum update_len capri_deparser_len.l4_payload_len
-@pragma checksum verify_len ohi.l4_1_len
-field_list_calculation ipv4_1_tcp_checksum_ingress {
-    input {
-        ipv4_1_tcp_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-@pragma checksum gress egress
 @pragma checksum update_len capri_deparser_len.l4_payload_len
 @pragma checksum verify_len ohi.l4_1_len
 @pragma checksum update_share icmp.hdrChecksum tcp.checksum udp_1.checksum udp_2.checksum
-field_list_calculation ipv4_1_tcp_checksum_egress {
+field_list_calculation ipv4_1_tcp_checksum {
     input {
         ipv4_1_tcp_checksum_list;
     }
@@ -817,36 +805,16 @@ field_list ipv6_1_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum gress ingress
-@pragma checksum update_len capri_deparser_len.l4_payload_len
-@pragma checksum verify_len ohi.l4_1_len
-field_list_calculation ipv6_1_tcp_checksum_ingress {
-    input {
-        ipv6_1_tcp_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-@pragma checksum gress egress
 @pragma checksum update_len capri_deparser_len.l4_payload_len
 @pragma checksum verify_len ohi.l4_1_len
 @pragma checksum update_share icmp.hdrChecksum tcp.checksum udp_1.checksum udp_2.checksum
-field_list_calculation ipv6_1_tcp_checksum_egress {
+field_list_calculation ipv6_1_tcp_checksum {
     input {
         ipv6_1_tcp_checksum_list;
     }
     algorithm : csum16;
     output_width : 16;
 }
-#if 0
-calculated_field tcp.checksum {
-    verify ipv4_1_tcp_checksum_ingress;
-    verify ipv6_1_tcp_checksum_ingress;
-    update ipv4_1_tcp_checksum_egress;
-    update ipv6_1_tcp_checksum_egress;
-}
-#endif
 
 field_list ipv4_1_udp_checksum_list {
     ipv4_1.srcAddr;
@@ -859,22 +827,10 @@ field_list ipv4_1_udp_checksum_list {
     payload;
 }
 
-@pragma checksum gress ingress
-@pragma checksum update_len capri_deparser_len.l4_payload_len
-@pragma checksum verify_len ohi.l4_1_len
-field_list_calculation ipv4_1_udp_checksum_ingress {
-    input {
-        ipv4_1_udp_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-@pragma checksum gress egress
 @pragma checksum update_len capri_deparser_len.l4_payload_len
 @pragma checksum verify_len ohi.l4_1_len
 @pragma checksum update_share icmp.hdrChecksum tcp.checksum udp_1.checksum udp_2.checksum
-field_list_calculation ipv4_1_udp_checksum_egress {
+field_list_calculation ipv4_1_udp_checksum {
     input {
         ipv4_1_udp_checksum_list;
     }
@@ -892,22 +848,10 @@ field_list ipv6_1_udp_checksum_list {
     payload;
 }
 
-@pragma checksum gress ingress
-@pragma checksum update_len capri_deparser_len.l4_payload_len
-@pragma checksum verify_len ohi.l4_1_len
-field_list_calculation ipv6_1_udp_checksum_ingress {
-    input {
-        ipv6_1_udp_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-@pragma checksum gress egress
 @pragma checksum update_len capri_deparser_len.l4_payload_len
 @pragma checksum verify_len ohi.l4_1_len
 @pragma checksum update_share icmp.hdrChecksum tcp.checksum udp_1.checksum udp_2.checksum
-field_list_calculation ipv6_1_udp_checksum_egress {
+field_list_calculation ipv6_1_udp_checksum {
     input {
         ipv6_1_udp_checksum_list;
     }
@@ -916,10 +860,10 @@ field_list_calculation ipv6_1_udp_checksum_egress {
 }
 
 calculated_field udp_1.checksum {
-    verify ipv4_1_udp_checksum_ingress;
-    verify ipv6_1_udp_checksum_ingress;
-    update ipv4_1_udp_checksum_egress;
-    update ipv6_1_udp_checksum_egress;
+    verify ipv4_1_udp_checksum;
+    verify ipv6_1_udp_checksum;
+    update ipv4_1_udp_checksum;
+    update ipv6_1_udp_checksum;
 }
 
 field_list ipv4_1_icmp_checksum_list {
@@ -957,7 +901,7 @@ field_list_calculation ipv6_1_icmp_checksum {
 }
 
 /******************************************************************************
- * Checksums : Layer 2 (verify only in ingress)
+ * Checksums : Layer 2
  *****************************************************************************/
 field_list ipv4_2_checksum_list {
     ipv4_2.version;
@@ -1007,21 +951,10 @@ field_list ipv4_2_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum gress ingress
-@pragma checksum verify_len ohi.l4_2_len
-field_list_calculation ipv4_2_tcp_checksum_ingress {
-    input {
-        ipv4_2_tcp_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-@pragma checksum gress egress
 @pragma checksum update_len capri_deparser_len.l4_payload_len
 @pragma checksum verify_len ohi.l4_2_len
 @pragma checksum update_share icmp.hdrChecksum tcp.checksum udp_1.checksum udp_2.checksum
-field_list_calculation ipv4_2_tcp_checksum_egress {
+field_list_calculation ipv4_2_tcp_checksum {
     input {
         ipv4_2_tcp_checksum_list;
     }
@@ -1047,21 +980,10 @@ field_list ipv6_2_tcp_checksum_list {
     payload;
 }
 
-@pragma checksum gress ingress
-@pragma checksum verify_len ohi.l4_2_len
-field_list_calculation ipv6_2_tcp_checksum_ingress {
-    input {
-        ipv6_2_tcp_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-@pragma checksum gress egress
 @pragma checksum update_len capri_deparser_len.l4_payload_len
 @pragma checksum verify_len ohi.l4_2_len
 @pragma checksum update_share icmp.hdrChecksum tcp.checksum udp_1.checksum udp_2.checksum
-field_list_calculation ipv6_2_tcp_checksum_egress {
+field_list_calculation ipv6_2_tcp_checksum {
     input {
         ipv6_2_tcp_checksum_list;
     }
@@ -1070,15 +992,15 @@ field_list_calculation ipv6_2_tcp_checksum_egress {
 }
 
 calculated_field tcp.checksum {
-    verify ipv4_1_tcp_checksum_ingress;
-    verify ipv6_1_tcp_checksum_ingress;
-    update ipv4_1_tcp_checksum_egress;
-    update ipv6_1_tcp_checksum_egress;
+    verify ipv4_1_tcp_checksum;
+    verify ipv6_1_tcp_checksum;
+    update ipv4_1_tcp_checksum;
+    update ipv6_1_tcp_checksum;
 
-    verify ipv4_2_tcp_checksum_ingress;
-    verify ipv6_2_tcp_checksum_ingress;
-    update ipv4_2_tcp_checksum_egress;
-    update ipv6_2_tcp_checksum_egress;
+    verify ipv4_2_tcp_checksum;
+    verify ipv6_2_tcp_checksum;
+    update ipv4_2_tcp_checksum;
+    update ipv6_2_tcp_checksum;
 }
 
 field_list ipv4_2_udp_checksum_list {
@@ -1092,21 +1014,10 @@ field_list ipv4_2_udp_checksum_list {
     payload;
 }
 
-@pragma checksum gress ingress
-@pragma checksum verify_len ohi.l4_2_len
-field_list_calculation ipv4_2_udp_checksum_ingress {
-    input {
-        ipv4_2_udp_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-@pragma checksum gress egress
 @pragma checksum update_len capri_deparser_len.l4_payload_len
 @pragma checksum verify_len ohi.l4_2_len
 @pragma checksum update_share icmp.hdrChecksum tcp.checksum udp_1.checksum udp_2.checksum
-field_list_calculation ipv4_2_udp_checksum_egress {
+field_list_calculation ipv4_2_udp_checksum {
     input {
         ipv4_2_udp_checksum_list;
     }
@@ -1124,21 +1035,10 @@ field_list ipv6_2_udp_checksum_list {
     payload;
 }
 
-@pragma checksum gress ingress
-@pragma checksum verify_len ohi.l4_2_len
-field_list_calculation ipv6_2_udp_checksum_ingress {
-    input {
-        ipv6_2_udp_checksum_list;
-    }
-    algorithm : csum16;
-    output_width : 16;
-}
-
-@pragma checksum gress egress
 @pragma checksum update_len capri_deparser_len.l4_payload_len
 @pragma checksum verify_len ohi.l4_2_len
 @pragma checksum update_share icmp.hdrChecksum tcp.checksum udp_1.checksum udp_2.checksum
-field_list_calculation ipv6_2_udp_checksum_egress {
+field_list_calculation ipv6_2_udp_checksum {
     input {
         ipv6_2_udp_checksum_list;
     }
@@ -1147,10 +1047,10 @@ field_list_calculation ipv6_2_udp_checksum_egress {
 }
 
 calculated_field udp_2.checksum {
-    verify ipv4_2_udp_checksum_ingress;
-    verify ipv6_2_udp_checksum_ingress;
-    update ipv4_2_udp_checksum_egress;
-    update ipv6_2_udp_checksum_egress;
+    verify ipv4_2_udp_checksum;
+    verify ipv6_2_udp_checksum;
+    update ipv4_2_udp_checksum;
+    update ipv6_2_udp_checksum;
 }
 
 field_list ipv4_2_icmp_checksum_list {

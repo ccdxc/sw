@@ -35,16 +35,29 @@ control statistics {
 #endif
 
 
-action p4i_stats(rx_from_host, rx_from_switch, rx_from_arm) {
+action p4i_stats(rx_from_host, rx_from_switch, rx_from_arm,
+            rx_user_csum_err, rx_substrate_csum_err) {
     if (control_metadata.from_arm == TRUE) {
         modify_field(scratch_metadata.counter_rx, rx_from_arm);
     }
     else {
         if (control_metadata.direction == TX_FROM_HOST) {
             modify_field(scratch_metadata.counter_rx, rx_from_host);
+            if ((capri_intrinsic.csum_err & 0x01) != 0) {
+                modify_field(scratch_metadata.counter_rx, rx_user_csum_err);
+                drop_packet();
+            }
         }
         else {
             modify_field(scratch_metadata.counter_rx, rx_from_switch);
+            if ((capri_intrinsic.csum_err & 0x01) != 0) {
+                modify_field(scratch_metadata.counter_rx, rx_user_csum_err);
+                drop_packet();
+            }
+            if ((capri_intrinsic.csum_err & 0x01) != 0) {
+                modify_field(scratch_metadata.counter_rx, rx_substrate_csum_err);
+                drop_packet();
+            }
         }
     }
 }
@@ -89,7 +102,9 @@ table p4e_stats {
 }
 
 control p4i_statistics {
-    apply(p4i_stats);
+    if (ingress_recirc_header.valid == FALSE) {
+        apply(p4i_stats);
+    }
 }
 
 control p4e_statistics {

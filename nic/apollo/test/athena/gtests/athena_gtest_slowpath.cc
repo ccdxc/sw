@@ -70,7 +70,7 @@ setup_flow_v4_udp_epoch_mismatch(void)
     uint8_t         vnic_stats_mask[PDS_FLOW_STATS_MASK_LEN];
     uint32_t        s2h_session_rewrite_id;
     uint32_t        h2s_session_rewrite_id;
-    uint32_t        h2s_epoch1_id;
+    uint32_t        h2s_epoch1_id, s2h_epoch1_id;
 
     // Setup VNIC Mappings
     ret = vlan_to_vnic_map(g_h2s_udp_vlan, g_udp_vnic_id);
@@ -109,6 +109,12 @@ setup_flow_v4_udp_epoch_mismatch(void)
         return ret;
     }
 
+    s2h_epoch1_id = g_epoch_index++;
+    ret = create_epoch_entry(s2h_epoch1_id, g_epoch_val + 1);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
     memset(&host_mac, 0, sizeof(host_mac));
     ret = create_session_info_all(g_session_index, /*conntrack_id*/0,
                 /*skip_flow_log*/ FALSE, /*host_mac*/ &host_mac,
@@ -123,7 +129,7 @@ setup_flow_v4_udp_epoch_mismatch(void)
                 /*h2s_allowed_flow_state_bitmask*/0,
                 /*h2s_egress_action*/EGRESS_ACTION_NONE,
 
-                /*s2h_epoch_vnic*/ 0, /*s2h_epoch_vnic_id*/ 0,
+                /*s2h_epoch_vnic*/ g_epoch_val, /*s2h_epoch_vnic_id*/ s2h_epoch1_id,
                 /*s2h_epoch_mapping*/0, /*s2h_epoch_mapping_id*/0,
                 /*s2h_policer_bw1_id*/0, /*s2h_policer_bw2_id*/0,
                 /*s2h_vnic_stats_id*/0, /*s2h_vnic_stats_mask*/ vnic_stats_mask,
@@ -183,23 +189,63 @@ static uint8_t g_snd_pkt_h2s[] = {
     0x78, 0x79
 };
 
+/*
+ * Switch to Host: Packet to be sent
+ */
+static uint8_t g_snd_pkt_s2h[] = {
+    0x00, 0x12, 0x34, 0x56, 0x78, 0x90, 0x00, 0xAA,
+    0xBB, 0xCC, 0xDD, 0xEE, 0x08, 0x00, 0x45, 0x00,
+    0x00, 0x74, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11,
+    0xA2, 0xA0, 0x64, 0x65, 0x66, 0x67, 0x0C, 0x0C,
+    0x01, 0x01, 0xE4, 0xE7, 0x19, 0xEB, 0x00, 0x60,
+    0x00, 0x00, 0x12, 0x34, 0x50, 0x00, 0x67, 0x89,
+    0xC1, 0x00, 0x45, 0x00, 0x00, 0x50, 0x00, 0x01,
+    0x00, 0x00, 0x40, 0x11, 0xB6, 0x9A, 0xC0, 0x00,
+    0x02, 0x01, 0x02, 0x00, 0x00, 0x01, 0x27, 0x10,
+    0x03, 0xE8, 0x00, 0x3C, 0xF3, 0x44, 0x61, 0x62,
+    0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A,
+    0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72,
+    0x73, 0x74, 0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
+    0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+    0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70,
+    0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x7A,
+    0x78, 0x79,
+};
+
+
+static uint8_t g_snd_pkt_arp_h2s[] = {
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xAA,
+    0xBB, 0xCC, 0xDD, 0xEE, 0x81, 0x00, 0x00, 0x01,
+    0x08, 0x06, 0x00, 0x01, 0x08, 0x00, 0x06, 0x04,
+    0x00, 0x01, 0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE,
+    0x02, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0xC0, 0x00, 0x02, 0x01
+};
+
 sdk_ret_t
 athena_gtest_test_flows_slowpath(void)
 {
     sdk_ret_t           ret = SDK_RET_OK;
 
-    ret = send_packet("UDP-IPv4-epoch-mismatch: h2s pkt", g_snd_pkt_h2s, sizeof(g_snd_pkt_h2s), g_h_port,
-                       NULL, 0, 0);
+    ret = send_packet("UDP-IPv4-epoch-mismatch: h2s pkt", g_snd_pkt_h2s,
+            sizeof(g_snd_pkt_h2s), g_h_port,
+            NULL, 0, 0);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
-#if 0
-    ret = send_packet("TCP-IPv4: s2h pkt", g_snd_pkt_s2h, sizeof(g_snd_pkt_s2h), g_s_port,
-                       g_rcv_pkt_s2h, sizeof(g_rcv_pkt_s2h), g_h_port);
+    ret = send_packet("UDP-IPv4-epoch-mismatch: s2h pkt", g_snd_pkt_s2h,
+            sizeof(g_snd_pkt_s2h), g_s_port,
+            NULL, 0, 0);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-#endif
+
+    ret = send_packet("ARP-Req: h2s pkt", g_snd_pkt_arp_h2s,
+            sizeof(g_snd_pkt_arp_h2s), g_h_port,
+            NULL, 0, 0);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
     return ret;
 }
