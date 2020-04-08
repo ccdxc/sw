@@ -46,7 +46,7 @@ VPCSvcImpl::VPCCreate(ServerContext *context,
         // underlay VPC is always sent to control-plane
         if (core::agent_state::state()->device()->overlay_routing_en ||
            (api_spec.type == PDS_VPC_TYPE_UNDERLAY)) {
-            // call the metaswitch api    
+            // call the metaswitch api
             ret = pds_ms::vpc_create(&api_spec, bctxt);
         } else if (!core::agent_state::state()->pds_mock_mode()) {
             ret = pds_vpc_create(&api_spec, bctxt);
@@ -109,7 +109,7 @@ VPCSvcImpl::VPCUpdate(ServerContext *context,
         // underlay VPC is always sent to control-plane
         if (core::agent_state::state()->device()->overlay_routing_en ||
            (api_spec.type == PDS_VPC_TYPE_UNDERLAY)) {
-            // call the metaswitch api    
+            // call the metaswitch api
             ret = pds_ms::vpc_update(&api_spec, bctxt);
         } else if (!core::agent_state::state()->pds_mock_mode()) {
             ret = pds_vpc_update(&api_spec, bctxt);
@@ -175,7 +175,7 @@ VPCSvcImpl::VPCDelete(ServerContext *context,
         // underlay VPC is always sent to control-plane
         if (core::agent_state::state()->device()->overlay_routing_en ||
            (info.spec.type == PDS_VPC_TYPE_UNDERLAY)) {
-            // call the metaswitch api    
+            // call the metaswitch api
             ret = pds_ms::vpc_delete(&info.spec, bctxt);
         } else if (!core::agent_state::state()->pds_mock_mode()) {
             ret = pds_vpc_delete(&key, bctxt);
@@ -219,7 +219,7 @@ VPCSvcImpl::VPCGet(ServerContext *context,
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = pds_vpc_read(&key, &info);
         if (ret != SDK_RET_OK) {
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
             break;
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);

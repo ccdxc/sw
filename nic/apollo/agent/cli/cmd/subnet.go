@@ -127,28 +127,39 @@ func printSubnet(subnet *pds.Subnet) {
 		lifName = lifGetNameFromKey(spec.GetHostIf())
 	}
 
-	for i := 0; i < numIterations; i++ {
-		if i < numIngressPolicy {
-			ingressStr = uuid.FromBytesOrNil(ingressPolicy[i]).String()
-		} else {
-			ingressStr = "-"
+	if numIterations != 0 {
+		for i := 0; i < numIterations; i++ {
+			if i < numIngressPolicy {
+				ingressStr = uuid.FromBytesOrNil(ingressPolicy[i]).String()
+			} else {
+				ingressStr = "-"
+			}
+			if i < numEgressPolicy {
+				egressStr = uuid.FromBytesOrNil(egressPolicy[i]).String()
+			} else {
+				egressStr = "-"
+			}
+			if i == 0 {
+				fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s\n%-20s%-40s%-40s%-40s%-3d\n",
+					uuid.FromBytesOrNil(spec.GetId()).String(),
+					uuid.FromBytesOrNil(spec.GetVPCId()).String(), lifName,
+					utils.IPv4PrefixToStr(spec.GetV4Prefix()),
+					utils.Uint32IPAddrtoStr(spec.GetIPv4VirtualRouterIP()),
+					utils.MactoStr(spec.GetVirtualRouterMac()), "",
+					uuid.FromBytesOrNil(spec.GetV4RouteTableId()).String(),
+					ingressStr, egressStr, spec.GetToS())
+			} else {
+				fmt.Printf("%-60s%-40s%-40s\n", "", ingressStr, egressStr)
+			}
 		}
-		if i < numEgressPolicy {
-			egressStr = uuid.FromBytesOrNil(egressPolicy[i]).String()
-		} else {
-			egressStr = "-"
-		}
-		if i == 0 {
-			fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s\n%-20s%-40s%-40s%-40s%-3d\n",
-				uuid.FromBytesOrNil(spec.GetId()).String(),
-				uuid.FromBytesOrNil(spec.GetVPCId()).String(), lifName,
-				utils.IPv4PrefixToStr(spec.GetV4Prefix()),
-				utils.Uint32IPAddrtoStr(spec.GetIPv4VirtualRouterIP()),
-				utils.MactoStr(spec.GetVirtualRouterMac()), "",
-				uuid.FromBytesOrNil(spec.GetV4RouteTableId()).String(),
-				ingressStr, egressStr, spec.GetToS())
-		} else {
-			fmt.Printf("%-60s%-40s%-40s\n", "", ingressStr, egressStr)
-		}
+	} else {
+		fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s\n%-20s%-40s%-40s%-40s%-3d\n",
+			uuid.FromBytesOrNil(spec.GetId()).String(),
+			uuid.FromBytesOrNil(spec.GetVPCId()).String(), lifName,
+			utils.IPv4PrefixToStr(spec.GetV4Prefix()),
+			utils.Uint32IPAddrtoStr(spec.GetIPv4VirtualRouterIP()),
+			utils.MactoStr(spec.GetVirtualRouterMac()), "",
+			uuid.FromBytesOrNil(spec.GetV4RouteTableId()).String(),
+			ingressStr, egressStr, spec.GetToS())
 	}
 }

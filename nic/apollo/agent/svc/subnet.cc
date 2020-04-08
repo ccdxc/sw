@@ -219,6 +219,7 @@ SubnetSvcImpl::SubnetGet(ServerContext *context,
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = pds_subnet_read(&key, &info);
         if (ret != SDK_RET_OK) {
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
             break;
         }
         pds_subnet_api_info_to_proto(&info, proto_rsp);

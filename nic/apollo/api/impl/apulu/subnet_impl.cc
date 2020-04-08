@@ -674,7 +674,7 @@ subnet_impl::fill_spec_(pds_subnet_spec_t *spec) {
     sdk_table_api_params_t tparams;
 
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_BD, hw_id_,
-                                       NULL, NULL, &bd_data);
+                                      NULL, NULL, &bd_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to read BD table at index %u", hw_id_);
         return sdk::SDK_RET_HW_READ_ERR;
