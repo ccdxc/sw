@@ -17,8 +17,8 @@ static sdk::event_thread::event_thread *g_upg_event_thread;
 
 // TODO: need to chnange when sysmgr change is ready
 // static upg_stage_t fsm_entry_stage = UPG_STAGE_NONE;
-// static upg_stage_t fsm_entry_stage = UPG_STAGE_COMPAT_CHECK;
-static upg_stage_t fsm_entry_stage = UPG_STAGE_READY;
+ static upg_stage_t fsm_entry_stage = UPG_STAGE_COMPAT_CHECK;
+//static upg_stage_t fsm_entry_stage = UPG_STAGE_READY;
 
 namespace sdk {
 namespace upg {
