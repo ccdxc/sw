@@ -59,8 +59,9 @@ api_process_async_result_ (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
     api_msg_t *api_msg = (api_msg_t *)ctx;
     sdk_ret_t ret = *(sdk_ret_t *)msg->data();
 
-    api_msg->batch.response_cb(ret, api_msg->batch.cookie);
-
+    if (api_msg->batch.response_cb != NULL) {
+        api_msg->batch.response_cb(ret, api_msg->batch.cookie);
+    }
     api_batch_destroy((pds_batch_ctxt_t)api_msg);
 }
 

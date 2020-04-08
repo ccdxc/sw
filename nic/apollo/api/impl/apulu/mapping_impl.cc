@@ -1346,6 +1346,10 @@ mapping_impl::upd_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
     sdk_table_api_params_t local_mapping_tbl_params;
     mapping_impl *orig_mapping_impl = (mapping_impl *)orig_mapping->impl();
 
+    // take over the public IP to overlay IP
+    to_overlay_ip_nat_idx_ =  orig_mapping_impl->to_overlay_ip_nat_idx_;
+    orig_mapping_impl->to_overlay_ip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
+
     // fill key & data of MAPPING and LOCAL_MAPPING table entries corresponding
     // to public IP
     fill_public_ip_mapping_key_data_(vpc, subnet, vnic, vnic_impl_obj,
@@ -1390,6 +1394,10 @@ mapping_impl::upd_overlay_ip_mapping_entries_(vpc_impl *vpc,
     local_mapping_appdata_t local_mapping_data;
     sdk_table_api_params_t local_mapping_tbl_params;
     mapping_impl *orig_mapping_impl = (mapping_impl *)orig_mapping->impl();
+
+    // take over the overlay IP to public IP
+    to_public_ip_nat_idx_ = orig_mapping_impl->to_public_ip_nat_idx_;
+    orig_mapping_impl->to_public_ip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
 
     // fill key & data for ovrlay IP MAPPING and LOCAL_MAPPING table entries
     fill_local_overlay_ip_mapping_key_data_(vpc, subnet, vnic, vnic_impl_obj,
@@ -1479,6 +1487,15 @@ mapping_impl::upd_local_mapping_entries_(vpc_entry *vpc,
             // entries previously installed and free all the resources
             upd_public_ip_mappings = false;
         }
+    }
+
+    if (spec->public_ip_valid && upd_public_ip_mappings) {
+        // only reason why we will update public IP mapping entries at this
+        // point is because there is no public IP information change but other
+        // attrs might have changed, so own the xfer the public IP related
+        // resources
+        to_overlay_ip_nat_idx_ = orig_impl->to_overlay_ip_nat_idx_;
+        to_public_ip_nat_idx_ = orig_impl->to_public_ip_nat_idx_;
     }
     // and then update the overlay IP mapping specific entries
     ret = upd_overlay_ip_mapping_entries_((vpc_impl *)vpc->impl(), subnet,

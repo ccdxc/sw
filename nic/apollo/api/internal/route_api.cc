@@ -151,7 +151,8 @@ pds_update_teps (void)
     pds_batch_params_t batch_params = { 0 };
 
     batch_params.epoch = g_route_api_epoch_;
-    batch_params.async = false;
+    batch_params.async = true;
+    // no need to pass callback as there is no action we can take there
     bctxt = pds_batch_start(&batch_params);
     tep_db()->walk(tep_upd_walk_cb_, (void *)bctxt);
     return pds_batch_commit(bctxt);

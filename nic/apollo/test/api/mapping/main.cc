@@ -266,7 +266,7 @@ TEST_F(mapping_test, local_mapping_workflow_7) {
 
 /// \brief Local mappings WF_8
 /// \ref WF_8
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_8) {
+TEST_F(mapping_test, local_mapping_workflow_8) {
     local_mapping_feeder feeders[1], feeder1A, feeder1B;
 
     create_local_mapping_feeders(feeders, 1);
