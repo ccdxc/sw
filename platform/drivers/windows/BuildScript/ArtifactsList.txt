@@ -6,4 +6,7 @@ Ionic\*.sys
 Ionic\*.cat
 *.exe
 *.pdb
+*.msi
+*.wixpdb
+
 
