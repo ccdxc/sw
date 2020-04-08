@@ -663,6 +663,9 @@ export class SearchUtil {
     if (!category) {
       _.union(SearchUtil.stringOperators, SearchUtil.numberOperators);
     }
+    if (keys.length === 2 && keys[0] === 'meta' && keys[1] === 'labels') {
+      return SearchUtil.stringOperators;  // VS-1437
+    }
     const instance = CategoryMapping[category][kind].instance;
     if (!instance) {
       return _.union(SearchUtil.stringOperators, SearchUtil.numberOperators);

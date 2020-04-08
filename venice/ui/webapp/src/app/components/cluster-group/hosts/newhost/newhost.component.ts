@@ -123,7 +123,7 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
 
     this.smartNICIDs = (<any>this.newHostForm.get(['spec', 'dscs'])).controls;
 
-    // gets the options for the radio buttons
+    // gets the options for the radio button
     this.smartNICIDOptions = Object.keys((<any>this.newHostForm.get(['spec', 'dscs', 0])).controls);
 
     this.setValidators(this.newObject);
@@ -136,6 +136,11 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
     for (let i = 0; i < this.radioValues.length; i++) {
       this.setDSCValidator(newObject, 0);
     }
+  }
+
+  shouldRadioButtonBeChecked(smartNICIDOption, index): boolean {
+    const control  = this.newObject.$formGroup.get(['spec', 'dscs', index, smartNICIDOption]);
+    return (control && control.value);
   }
 
   private setDSCValidator(newObject: ClusterHost, index: number) {
@@ -171,7 +176,7 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
       this.radioValues = []; // clean up radioValues array
       for (let i = 0; i < this.newObject.spec['dscs'].length; i++) {
         const clusterDSCID: ClusterDistributedServiceCardID = this.newObject.spec['dscs'][i];
-        this.radioValues.push(''); // ma
+
         if (clusterDSCID[NewhostComponent.KEYS_ID] !== null) {
           this.radioValues[i] = NewhostComponent.KEYS_ID;
         }
@@ -458,14 +463,18 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
     return this.createButtonTooltip;
   }
 
-  getFieldTooltip() {
+  getFieldTooltip(): string  {
     // TODO: 2020-03-24 host update is not supported. This api is not fully tested.
-    for (let i = 0; i < this.radioValues.length; i++) {
-      if (Utility.isEmpty(this.newHostForm.get(['spec', 'dscs', i, this.radioValues[i]]).value)) {
-        return `${this.radioValues[i]} field is empty`;
-      }
-      if (!this.newHostForm.get(['spec', 'dscs', i, 'mac-address']).valid) {
-        return NewhostComponent.MACADDRESS_MESSAGE;
+    const dscLen = this.newHostForm.get(['spec', 'dscs'])['length']; // spec.dsc is a formarray
+    for (let i = 0; i < dscLen ; i++) {
+      for (let j = 0; j < this.radioValues.length; j++) {
+        const control = this.newHostForm.get(['spec', 'dscs', i,  this.radioValues[j]]);
+        if (control && Utility.isEmpty(control.value)) {
+          return `${this.radioValues[j]} field is empty`;
+        }
+        if (!this.newHostForm.get(['spec', 'dscs', i, 'mac-address']).valid) {
+          return NewhostComponent.MACADDRESS_MESSAGE;
+        }
       }
     }
   }

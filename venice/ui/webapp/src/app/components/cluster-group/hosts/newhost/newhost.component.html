@@ -131,7 +131,8 @@
             <mat-radio-button fxFlex="nogrow" color="primary" fxLayoutAlign="start center"
                               [disableRipple]="true"
                               class="" *ngFor="let smartNICIDOption of smartNICIDOptions"
-                              [value]="smartNICIDOption">
+                              [value]="smartNICIDOption"
+                              [checked]="shouldRadioButtonBeChecked(smartNICIDOption, index)">
               {{smartNICIDOption}}
             </mat-radio-button>
 

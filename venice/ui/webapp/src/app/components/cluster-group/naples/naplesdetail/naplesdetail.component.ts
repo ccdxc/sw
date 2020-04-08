@@ -207,12 +207,15 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
         if (!entry) {
           this.init();
+        } else {
+          const name = entry.object.meta.name;
+          this._router.navigateByUrl(`cluster/dscs/${name}`);
         }
-
-        const name = entry.object.meta.name;
-        this._router.navigateByUrl(`cluster/dscs/${name}`);
       },
-      () => this.init()
+      (error) => {
+        this._controllerService.invokeRESTErrorToaster('Failed to search DSC ' + this.selectedId, error);
+      },
+      () => this.init()  // VS-1432.  If this.selectedId is not a valid DSC name, NaplesDatail will present DSC not found
     );
   }
 
@@ -249,15 +252,6 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
         }
       );
       this.subscriptions.push(dscSubscription);
-      /* this.networkService.ListNetworkInterface().subscribe(
-        (response) => {
-          const body: INetworkNetworkInterfaceList = response.body as INetworkNetworkInterfaceList;
-          this.allNetworkInterfaces = body.items as NetworkNetworkInterface[];
-          if (this.allNetworkInterfaces && this.allNetworkInterfaces.length > 0) {
-            this.getThisDSCNetworkInterfaces();  // find all NIs belong to current DSC
-          }
-        }
-      ); */
     }
   }
 
@@ -371,7 +365,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
         this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS] = hostWorkloadMap[hostname];
       },
       (error) => {
-        this._controllerService.invokeRESTErrorToaster('Failed to invoke browser', error);
+        this._controllerService.invokeRESTErrorToaster('Failed to invoke browser api', error);
       }
     );
   }
