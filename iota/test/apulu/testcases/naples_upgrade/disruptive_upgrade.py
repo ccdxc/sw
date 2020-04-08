@@ -5,7 +5,6 @@ import iota.harness.api as api
 import iota.test.common.utils.naples_upgrade.utils as utils
 import iota.test.common.utils.copy_tech_support as techsupp
 
-#def_upg_tech_support_files = ["/data/naples-disruptive-upgrade-tech-support.tar.gz", "/data/pre-upgrade-logs.tar.gz"]
 def_upg_tech_support_files = ["/data/techsupport/DSC_TechSupport.tar.gz"]
 UPGRADE_NAPLES_PKG = "naples_fw_venice.tar"
 NAPLES_PKG = "naples_fw.tar"

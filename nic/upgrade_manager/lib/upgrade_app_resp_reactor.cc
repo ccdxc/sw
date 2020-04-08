@@ -56,21 +56,6 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
         upgMgr_->DeleteUpgMgrResp();
         if (exists("/nic/tools/fwupdate")) {
             UPG_LOG_INFO("Image is: {}", ctx.firmwarePkgName);
-            cmd = "rm -rf /data/post-upgrade-logs.tar.gz";
-            if ((ret = system (cmd.c_str())) != 0) {
-                UPG_LOG_INFO("Unable to delete old logs post-upgrade");
-            }
-            cmd = "tar -czf /data/post-upgrade-logs.tar.gz /var/log/ /obfl/";
-            if ((ret = system (cmd.c_str())) != 0) {
-                UPG_LOG_INFO("Unable to save logs post-upgrade");
-            }
-            UPG_LOG_INFO("Going to collect tech-support");
-            cmd = "NAPLES_URL=http://localhost /nic/bin/penctl system tech-support -b naples-disruptive-upgrade-tech-support --odir /data";
-            if ((ret = system (cmd.c_str())) != 0) {
-                UPG_LOG_INFO("Unable to create penctl tech-support");
-            } else {
-                UPG_LOG_INFO("Created penctl tech-support");
-            }
         }
         if (ctx.upgFailed) {
             //TODO: Move to OnUpgRespDelete once we have go APIs from sysmgr

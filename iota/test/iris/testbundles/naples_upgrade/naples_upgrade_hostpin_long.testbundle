@@ -52,7 +52,3 @@ testcases:
         testcase    : testcases.naples_upgrade.disruptive_upgrade_compat_check
         args      :
             sleep : 30
-
-    -   name: COPY_TECH_SUPPORT
-        testcase    : testcases.naples_upgrade.copy_test_support
-
