@@ -244,27 +244,28 @@ class RetryOnFailureInterceptors(grpc.UnaryUnaryClientInterceptor,
         self.__status_codes2retry = [grpc.StatusCode.UNAVAILABLE]
 
     def __continue_rpc(self, continuation, call_info, req):
+        retry = False
         res = continuation(call_info, req)
         if not isinstance(res, grpc.RpcError):
             # return if this is not error case
-            return res
+            return res, retry
         # get the error code
         rc = res.code()
         if rc not in self.__status_codes2retry:
             # return if there is no need to retry for this error code
-            return res
+            return res, retry
         # need to retry for this error
-        return None
+        return res, True
 
     def __intercept_rpc(self, continuation, call_info, req):
         for __retry in range(self.__max_retries):
-            res = self.__continue_rpc(continuation, call_info, req)
-            if res is not None:
+            res, retry = self.__continue_rpc(continuation, call_info, req)
+            if not retry:
                 # return in case of success / uninterested responses
                 return res
             logger.info(f"sleeping for {self.__backoff_timeout}s before rpc retry")
             time.sleep(self.__backoff_timeout)
-        logger.error("Max rpc retries elapsed")
+        logger.error("Max rpc retries elapsed - agent likely crashed")
         return res
 
     def intercept_unary_unary(self, continuation, client_call_details, request):
