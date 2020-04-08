@@ -15,6 +15,10 @@ import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { VcenterWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 
+
+interface VcenterUIModel {
+  associatedWorkloads: WorkloadWorkload[];
+}
 /**
  * vCenter page.
  * UI fetches all vcenter objects.
@@ -124,19 +128,10 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
 
   displayColumn_workloads(rowData: OrchestrationOrchestrator): any {
     const associatedWorkloads: WorkloadWorkload[] = rowData._ui.associatedWorkloads;
-    if (!associatedWorkloads || associatedWorkloads.length === 0) {
-      return '';
-    }
-
-    const names: string[] = [];
-    // vcenter may have lots of workloads, only display 10 workloads but
+    // vcenter may have lots of workloads, only display 8 workloads but
     // provide a link that can allow user to go to workload page to filer
     // right workloads related to the selected vcenter.
-    for (let i = 0; i < Math.min(10, associatedWorkloads.length); i++) {
-      names.push(associatedWorkloads[i].meta.name);
-    }
-    const namesInStr = names.join(', ');
-    return associatedWorkloads.length <= 10 ? namesInStr : namesInStr + ' ...';
+    return Utility.getMaxiumNumberWorkloadNames(associatedWorkloads);
   }
 
   postNgInit() {
@@ -168,7 +163,8 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
       this.dataObjects = this.dataObjects.map(vcenter => {
         const associatedWorkloads: WorkloadWorkload[] =
           vcenterWorkloadsTuple[vcenter.meta.name] || [];
-        vcenter._ui.associatedWorkloads = associatedWorkloads;
+        const uiModel: VcenterUIModel = { associatedWorkloads };
+        vcenter._ui = uiModel;
         return vcenter;
       });
     }

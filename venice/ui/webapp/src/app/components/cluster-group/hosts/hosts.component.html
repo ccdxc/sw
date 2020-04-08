@@ -65,6 +65,15 @@
 <!-- TABLE BODY -->
 <ng-template #bodyTemplate let-rowData let-col="col">
   <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'meta.name'">
+      <div class="ellipsisText">
+        <span [title]="rowData.meta.name">{{rowData.meta.name}}</span>
+        <span [title]="rowData.meta.labels['io.pensando.orch-name']"
+              *ngIf="rowData.meta.labels && rowData.meta.labels['io.pensando.orch-name']">
+          ({{rowData.meta.labels['io.pensando.orch-name']}})
+        </span>
+      </div>
+    </ng-container>
     <ng-container *ngSwitchCase="'meta.mod-time'">
       {{rowData.meta['mod-time'] | PrettyDate }}
     </ng-container>

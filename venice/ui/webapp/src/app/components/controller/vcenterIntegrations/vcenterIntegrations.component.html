@@ -53,8 +53,8 @@
     </ng-container>
     <ng-container *ngSwitchCase="'associatedWorkloads'">
       <ng-container *ngIf="displayColumn_workloads(rowData) as workloads">
-        <div class="ellipsisText" title="{{workloads}}" *ngIf="workloads">
-          {{ workloads }}
+        <div class="ellipsisText" title="{{workloads.title}}">
+          {{ workloads.list }}
         </div>
       </ng-container>
     </ng-container>

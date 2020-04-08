@@ -4,6 +4,7 @@ import { Utility } from '@app/common/Utility';
 import { SecuritySecurityGroup, SecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
 import { EventTypes } from './HttpEventUtility';
 import { OrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
+import { NetworkNetwork } from '@sdk/v1/models/generated/network';
 
 
 export interface SecuritygroupWorkloadPolicyTuple {
@@ -37,6 +38,11 @@ export interface DSCWorkloadsTuple {
 export interface VcenterWorkloadsTuple {
     workloads: WorkloadWorkload[];
     vcenter: OrchestrationOrchestrator;
+}
+
+export interface NetworkWorkloadsTuple {
+    workloads: WorkloadWorkload[];
+    network: NetworkNetwork;
 }
 
 export interface DSCnameToMacMap {
@@ -250,7 +256,7 @@ export class ObjectsRelationsUtility {
     }
 
     /**
-     * Build a map key=vcenter.meta.name, value = 'VcenterWorkloadTuple' object
+     * Build a map key=vcenter.meta.name, value = 'Workload' object
      *
      * vcenter -- 1:m --> workloads
      *
@@ -266,6 +272,25 @@ export class ObjectsRelationsUtility {
             vcenterWorkloadsTuple[vcenter.meta.name] = linkworkloads;
         });
         return vcenterWorkloadsTuple;
+    }
+
+    /**
+     * Build a map key=network.meta.name, value = 'Workload' object
+     *
+     * network -- 1:m --> workloads
+     *
+     * e.g network page can use this api to find workloads
+     * const networkWorkloadsTuple  = ObjectsRelationsUtility.buildNetworkWorkloadsMap(this.networks this.workloads );
+     *
+     */
+    public static buildNetworkWorkloadsMap(workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[],
+        networks: ReadonlyArray<NetworkNetwork>): NetworkWorkloadsTuple {
+        const networkWorkloadsTuple: NetworkWorkloadsTuple = {} as NetworkWorkloadsTuple;
+        networks.forEach((network: NetworkNetwork) => {
+            const linkworkloads: WorkloadWorkload[] = this.findAssociatedWorkloadsByNetwork(workloads as any[], network);
+            networkWorkloadsTuple[network.meta.name] = linkworkloads;
+        });
+        return networkWorkloadsTuple;
     }
 
     public static buildSecuitygroupWorkloadPolicyMap(securityGroups: ReadonlyArray<SecuritySecurityGroup> | SecuritySecurityGroup[], workloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[], securitypolicies?: ReadonlyArray<SecurityNetworkSecurityPolicy> | SecurityNetworkSecurityPolicy[])
@@ -321,6 +346,20 @@ export class ObjectsRelationsUtility {
     public static findAssociatedWorkloadsByVcenter(workloadList: WorkloadWorkload[], vcenter: OrchestrationOrchestrator): WorkloadWorkload[] {
         return workloadList.filter((workload: WorkloadWorkload) => {
             return workload && workload.meta && workload.meta.labels && workload.meta.labels['io.pensando.orch-name'] === vcenter.meta.name;
+        });
+    }
+
+    public static findAssociatedWorkloadsByNetwork(workloadList: WorkloadWorkload[], network: NetworkNetwork): WorkloadWorkload[] {
+        return workloadList.filter((workload: WorkloadWorkload) => {
+            if (workload.spec && workload.spec.interfaces && workload.spec.interfaces.length > 0) {
+                for (let i = 0; i < workload.spec.interfaces.length; i++) {
+                    const itf = workload.spec.interfaces[i];
+                    if (itf && itf.network === network.meta.name) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         });
     }
 

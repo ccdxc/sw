@@ -23,6 +23,7 @@ import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
 import { UIConfigsService } from '../services/uiconfigs.service';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 
 /**
  * VeniceObjectCacheStore is for data-cache.
@@ -2141,6 +2142,34 @@ export class Utility {
       aggregate: false,
     });
     return query;
+  }
+
+  /**
+   * This API takes a ist of workload objects and print at maxium 8
+   * workloads name with display name if it has one
+   */
+  public static getMaxiumNumberWorkloadNames(workloads: WorkloadWorkload[], maxCount: number = 8) {
+    if (!workloads || workloads.length === 0) {
+      return null;
+    }
+    const names: string[] = [];
+    for (let i = 0; i < Math.min(maxCount, workloads.length); i++) {
+      let fullname = workloads[i].meta.name;
+      if (workloads[i].meta.labels &&
+            workloads[i].meta.labels['io.pensando.vcenter.display-name']) {
+        fullname += '(' + workloads[i].meta.labels['io.pensando.vcenter.display-name'] + ')';
+      }
+      names.push(fullname);
+    }
+    const isOverMax: boolean = workloads && workloads.length > maxCount;
+    let list: string = names.join(', ');
+    let title: string = names.join('\n');
+    if (isOverMax) {
+      const hiddenNumber: number = workloads.length - maxCount;
+      list += ' ' + hiddenNumber + ' more ...';
+      title += '\n' + hiddenNumber + ' more ...';
+    }
+    return { list, title };
   }
 
   setControllerService(controllerService: ControllerService) {

@@ -20,6 +20,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { NetworkComponent } from './network.component';
 import { NewnetworkComponent } from './newnetwork/newnetwork.component';
 import { NetworkService } from '@app/services/generated/network.service';
+import { WorkloadService } from '@app/services/generated/workload.service';
 import { OrchestrationService } from '@app/services/generated/orchestration.service';
 
 describe('NetworkComponent', () => {
@@ -51,6 +52,7 @@ describe('NetworkComponent', () => {
         SecurityService,
         MessageService,
         OrchestrationService,
+        WorkloadService,
         NetworkService
       ]
     })

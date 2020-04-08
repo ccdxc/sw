@@ -62,8 +62,10 @@
 <ng-template #bodyTemplate let-rowData let-col="col" let-hovered="hovered">
   <ng-container [ngSwitch]="col.field">
     <ng-container *ngSwitchCase="'meta.name'">
-      <div>
-        {{rowData.meta.name}}
+      <div class="ellipsisText" [title]="rowData.meta.name">{{rowData.meta.name}}</div>
+      <div class="ellipsisText" [title]="rowData.meta.labels['io.pensando.vcenter.display-name']"
+           *ngIf="rowData.meta.labels && rowData.meta.labels['io.pensando.vcenter.display-name']">
+        ({{rowData.meta.labels['io.pensando.vcenter.display-name']}})
       </div>
     </ng-container>
     <ng-container *ngSwitchCase="'meta.mod-time'">
@@ -107,9 +109,17 @@
           <ng-container *ngTemplateOutlet="ipmacTemplate; context:{rowData:rowData, index:index}">
           </ng-container>
         </ng-container>
-        <div @fastSlideInOut *ngIf="hovered" class="workload-column-values">Micro-seg vlan:
-          {{rowData.spec.interfaces[index]["micro-seg-vlan"]}} External vlan:
-          {{rowData.spec.interfaces[index]["external-vlan"]}}</div>
+        <div @fastSlideInOut *ngIf="hovered" class="workload-column-values">
+          Micro-seg vlan: {{rowData.spec.interfaces[index]['micro-seg-vlan']}}
+          <ng-container
+                        *ngIf="rowData.spec.interfaces[index]['external-vlan'] !== 0 || !rowData.spec.interfaces[index]['network']">
+            External vlan: {{rowData.spec.interfaces[index]['external-vlan']}}
+          </ng-container>
+          <ng-container
+                        *ngIf="rowData.spec.interfaces[index]['external-vlan'] === 0 && rowData.spec.interfaces[index]['network']">
+            Network: {{rowData.spec.interfaces[index]['network']}}
+          </ng-container>
+        </div>
       </ng-container>
     </div>
     <ng-container *ngSwitchDefault>

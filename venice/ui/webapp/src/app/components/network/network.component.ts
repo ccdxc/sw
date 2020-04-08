@@ -14,6 +14,13 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
 import { Utility } from '@app/common/Utility';
 import { OrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
 import { SelectItem } from 'primeng/api';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
+import { WorkloadService } from '@app/services/generated/workload.service';
+import { NetworkWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
+
+interface NetworkUIModel {
+  associatedWorkloads: WorkloadWorkload[];
+}
 
 @Component({
   selector: 'app-network',
@@ -48,6 +55,8 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
   vcenters: ReadonlyArray<OrchestrationOrchestrator> = [];
   vcenterOptions: SelectItem[] = [];
 
+  workloadList: WorkloadWorkload[] = [];
+
   subscriptions: Subscription[] = [];
   dataObjects: ReadonlyArray<NetworkNetwork>;
   networkEventUtility: HttpEventUtility<NetworkNetwork>;
@@ -61,15 +70,16 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Name', class: 'network-column-name', sortable: true, width: 20 },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'vcenter-integration-column-date', sortable: true, width: '180px' },
-    { field: 'spec.vlan-id', header: 'VLAN', class: 'network-column-vlan', sortable: true, width: 10 },
-    { field: 'spec.orchestrators', header: 'Orchestrators', class: 'network-column-orchestrators', sortable: false, width: 70 },
-    // { field: 'status.workloads', header: 'Workloads', class: 'network-column-workloads', sortable: false, width: 40 },
+    { field: 'spec.vlan-id', header: 'VLAN', class: 'network-column-vlan', sortable: true, width: '80px'},
+    { field: 'spec.orchestrators', header: 'Orchestrators', class: 'network-column-orchestrators', sortable: false, width: 35 },
+    { field: 'associatedWorkloads', header: 'Workloads', class: '', sortable: false, width: 35 },
   ];
 
   constructor(private networkService: NetworkService,
     protected cdr: ChangeDetectorRef,
     protected uiconfigsService: UIConfigsService,
     protected orchestrationService: OrchestrationService,
+    protected workloadService: WorkloadService,
     protected controllerService: ControllerService) {
     super(controllerService, cdr, uiconfigsService);
   }
@@ -81,6 +91,7 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
           return;
         }
         this.dataObjects = response.data;
+        this.buildVCenterWorkloadsMap();
       },
       this.controllerService.webSocketErrorHandler('Failed to get networks')
     );
@@ -105,6 +116,22 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
       this.controllerService.webSocketErrorHandler('Failed to get vCenters')
     );
     this.subscriptions.push(sub);
+  }
+
+  /**
+   * Fetch workloads.
+   */
+  watchWorkloads() {
+    const workloadSubscription = this.workloadService.ListWorkloadCache().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.workloadList = response.data as WorkloadWorkload[];
+        this.buildVCenterWorkloadsMap();
+      }
+    );
+    this.subscriptions.push(workloadSubscription);
   }
 
   setDefaultToolbar() {
@@ -139,8 +166,12 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
     }
   }
 
-  displayColumn_workloads(values: string[]): any {
-    return '';
+  displayColumn_workloads(rowData: NetworkNetwork): any {
+    const associatedWorkloads: WorkloadWorkload[] = rowData._ui.associatedWorkloads;
+    // network may have lots of workloads, only display 8 workloads but
+    // provide a link that can allow user to go to workload page to filer
+    // right workloads related to the selected vcenter.
+    return Utility.getMaxiumNumberWorkloadNames(associatedWorkloads);
   }
 
   displayColumn_orchestrators(values: NetworkOrchestratorInfo[]): any {
@@ -163,6 +194,22 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
   postNgInit() {
     this.getNetworks();
     this.getVcenterIntegrations();
+    this.watchWorkloads();
+  }
+
+  buildVCenterWorkloadsMap() {
+    if (this.dataObjects && this.dataObjects.length > 0 &&
+        this.workloadList && this.workloadList.length > 0) {
+      const networkWorkloadsTuple: NetworkWorkloadsTuple =
+        ObjectsRelationsUtility.buildNetworkWorkloadsMap(this.workloadList, this.dataObjects);
+      this.dataObjects = this.dataObjects.map(network => {
+        const associatedWorkloads: WorkloadWorkload[] =
+          networkWorkloadsTuple[network.meta.name] || [];
+        const uiModel: NetworkUIModel = { associatedWorkloads };
+        network._ui = uiModel;
+        return network;
+      });
+    }
   }
 
   deleteRecord(object: NetworkNetwork): Observable<{ body: INetworkNetwork | IApiStatus | Error; statusCode: number }> {

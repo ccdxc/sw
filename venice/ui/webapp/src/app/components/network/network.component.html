@@ -49,6 +49,13 @@
     <ng-container *ngSwitchCase="'meta.creation-time'">
       {{rowData.meta['creation-time'] | PrettyDate }}
     </ng-container>
+    <ng-container *ngSwitchCase="'associatedWorkloads'">
+      <ng-container *ngIf="displayColumn_workloads(rowData) as workloads">
+        <div class="ellipsisText" title="{{workloads.title}}">
+          {{ workloads.list }}
+        </div>
+      </ng-container>
+    </ng-container>
     <ng-container *ngSwitchDefault>
       <div [innerHTML]="displayColumn(rowData, col)">
       </div>
