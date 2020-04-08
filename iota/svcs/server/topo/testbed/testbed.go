@@ -612,22 +612,42 @@ func portLinkOp(dataSwitch dataswitch.Switch, ports []string, shutdown bool) err
 	return nil
 }
 
-func portLinkFlap(ctx context.Context, dataSwitch dataswitch.Switch, ports []string, flapCount, downTime, flapInterval uint32) error {
+func portLinkFlap(ctx context.Context, dataSwitches []*iota.DataSwitch, flapCount, downTime, flapInterval uint32) error {
 	log.Infof("Doing port link flap (count %v, downtime %v, interval %v)",
 		flapCount, downTime, flapInterval)
 	for i := 0; i < int(flapCount); i++ {
-		for _, port := range ports {
-			if err := dataSwitch.LinkOp(port, true); err != nil {
-				return errors.Wrap(err, "Setting switch trunk mode failed")
+		for _, ds := range dataSwitches {
+			dataSwitch := dataswitch.NewSwitch(dataswitch.N3KSwitchType, ds.GetIp(), ds.GetUsername(), ds.GetPassword())
+			if dataSwitch == nil {
+				log.Errorf("TOPO SVC | InitTestBed | Switch not found %s", dataswitch.N3KSwitchType)
+				return errors.New("Switch not found")
+			}
+			defer dataSwitch.Disconnect()
+
+			ports := ds.GetPorts()
+			for _, port := range ports {
+				if err := dataSwitch.LinkOp(port, true); err != nil {
+					return errors.Wrap(err, "Setting port down failed")
+				}
 			}
 		}
 
 		time.Sleep(time.Duration(downTime) * time.Second)
 		log.Info("Sleeping after link down")
 
-		for _, port := range ports {
-			if err := dataSwitch.LinkOp(port, false); err != nil {
-				return errors.Wrap(err, "Setting switch trunk mode failed")
+		for _, ds := range dataSwitches {
+			dataSwitch := dataswitch.NewSwitch(dataswitch.N3KSwitchType, ds.GetIp(), ds.GetUsername(), ds.GetPassword())
+			if dataSwitch == nil {
+				log.Errorf("TOPO SVC | InitTestBed | Switch not found %s", dataswitch.N3KSwitchType)
+				return errors.New("Switch not found")
+			}
+			defer dataSwitch.Disconnect()
+
+			ports := ds.GetPorts()
+			for _, port := range ports {
+				if err := dataSwitch.LinkOp(port, false); err != nil {
+					return errors.Wrap(err, "Setting port up failed")
+				}
 			}
 		}
 
@@ -688,6 +708,15 @@ func doVlanConfiguration(dataSwitch dataswitch.Switch, ports []string, vlanConfi
 // DoSwitchOperation allocates vlans based on the switch port ID
 func DoSwitchOperation(ctx context.Context, req *iota.SwitchMsg) (err error) {
 
+	if req.GetOp() == iota.SwitchOp_FLAP_PORTS {
+		if err := portLinkFlap(ctx, req.DataSwitches, req.GetFlapInfo().GetCount(),
+			req.GetFlapInfo().GetDownTime(),
+			req.GetFlapInfo().GetInterval()); err != nil {
+			return errors.Wrap(err, "Port up operation failed")
+		}
+		return nil
+	}
+
 	for _, ds := range req.DataSwitches {
 		n3k := dataswitch.NewSwitch(dataswitch.N3KSwitchType, ds.GetIp(), ds.GetUsername(), ds.GetPassword())
 		if n3k == nil {
@@ -708,12 +737,6 @@ func DoSwitchOperation(ctx context.Context, req *iota.SwitchMsg) (err error) {
 		case iota.SwitchOp_VLAN_CONFIG:
 			if err := doVlanConfiguration(n3k, ds.GetPorts(), req.GetVlanConfig()); err != nil {
 				return errors.Wrap(err, "Vlan config operation failed")
-			}
-		case iota.SwitchOp_FLAP_PORTS:
-			if err := portLinkFlap(ctx, n3k, ds.GetPorts(), req.GetFlapInfo().GetCount(),
-				req.GetFlapInfo().GetDownTime(),
-				req.GetFlapInfo().GetInterval()); err != nil {
-				return errors.Wrap(err, "Port up operation failed")
 			}
 		case iota.SwitchOp_PORT_QUEUING_CONFIG:
 			if err := portQueuingOp(n3k, ds.GetPorts(), req.GetPortQueuing().GetEnable(), req.GetPortQueuing().GetParams()); err != nil {
