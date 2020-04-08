@@ -92,6 +92,59 @@ func (stg *securityTestGroup) testSgpolicyCreateDelete() {
 					},
 					Action: "PERMIT",
 				},
+				{
+					FromIPAddresses: []string{"20.0.0.0/24"},
+					ToIPAddresses:   []string{"31.0.0.0/24"},
+					ProtoPorts: []security.ProtoPort{
+						{
+							Protocol: "TCP",
+							Ports:    "81",
+						},
+					},
+					Action: "PERMIT",
+				},
+				{
+					FromIPAddresses: []string{"10.0.0.0/24"},
+					ToIPAddresses:   []string{"11.0.0.0/24"},
+					ProtoPorts: []security.ProtoPort{
+						{
+							Protocol: "udp",
+							Ports:    "80",
+						},
+					},
+					Action: "PERMIT",
+				},
+				{
+					FromIPAddresses: []string{"20.0.0.0/24"},
+					ToIPAddresses:   []string{"31.0.0.0/24"},
+					ProtoPorts: []security.ProtoPort{
+						{
+							Protocol: "UDP",
+							Ports:    "81",
+						},
+					},
+					Action: "PERMIT",
+				},
+				{
+					FromIPAddresses: []string{"20.0.0.0/24"},
+					ToIPAddresses:   []string{"31.0.0.0/24"},
+					ProtoPorts: []security.ProtoPort{
+						{
+							Protocol: "icmp",
+						},
+					},
+					Action: "PERMIT",
+				},
+				{
+					FromIPAddresses: []string{"20.0.0.0/24"},
+					ToIPAddresses:   []string{"31.0.0.0/24"},
+					ProtoPorts: []security.ProtoPort{
+						{
+							Protocol: "IcMP",
+						},
+					},
+					Action: "PERMIT",
+				},
 			},
 		},
 	}
