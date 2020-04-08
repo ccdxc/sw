@@ -16,6 +16,8 @@
 namespace test {
 namespace api {
 
+#define BIT(x) (1ul << (x))
+
 /// \defgroup PDS_FEEDER Feeder module
 /// @{
 

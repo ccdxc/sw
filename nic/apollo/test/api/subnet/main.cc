@@ -48,12 +48,14 @@ protected:
     }
 };
 
-//----------------------------------------------------------------------------
-// Subnet test cases implementation
-//----------------------------------------------------------------------------
 
 /// \defgroup SUBNET_TEST Subnet Tests
 /// @{
+
+
+//---------------------------------------------------------------------
+// Templatized test cases
+//---------------------------------------------------------------------
 
 /// \brief Subnet WF_B1
 /// \ref WF_B1
@@ -324,6 +326,35 @@ TEST_F(subnet, subnet_workflow_neg_8) {
     feeder2.init(key2, k_vpc_key, "11.0.0.0/16",
                  "00:02:0A:00:00:01", 20);
     workflow_neg_8<subnet_feeder>(feeder1, feeder2);
+}
+
+
+//---------------------------------------------------------------------
+// Non templatized test cases
+//---------------------------------------------------------------------
+
+/// \brief Update of vpc inside subnet should be rejected
+TEST_F(subnet, DISABLED_subnet_update_vpc) {
+    if (!apulu()) return;
+
+    subnet_feeder feeder;
+    pds_subnet_spec_t spec;
+    pds_obj_key_t key = int2pdsobjkey(1);
+
+    // init
+    feeder.init(key, k_vpc_key, "10.0.0.0/16", "00:02:01:00:00:01");
+    subnet_create(feeder);
+
+    // trigger
+    spec.vpc = int2pdsobjkey(2);
+    subnet_update(feeder, &spec, SUBNET_ATTR_VPC);
+
+    // validate
+    subnet_read(feeder);
+
+    // cleanup
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// @}

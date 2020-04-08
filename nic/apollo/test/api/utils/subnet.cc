@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/apollo/test/api/utils/batch.hpp"
 #include "nic/apollo/test/api/utils/subnet.hpp"
 #include "nic/apollo/test/api/utils/vpc.hpp"
 
@@ -124,6 +125,118 @@ bool
 subnet_feeder::status_compare(const pds_subnet_status_t *status1,
                               const pds_subnet_status_t *status2) const {
     return true;
+}
+
+//----------------------------------------------------------------------------
+// Subnet CRUD helper routines
+//----------------------------------------------------------------------------
+
+void
+subnet_create (subnet_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_create<subnet_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
+}
+
+void
+subnet_read (subnet_feeder& feeder, sdk_ret_t exp_result)
+{
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_read<subnet_feeder>(feeder, exp_result)));
+}
+
+static inline void
+subnet_attr_update (subnet_feeder& feeder, pds_subnet_spec_t *spec,
+                    int chg_bmap)
+{
+    if (chg_bmap | SUBNET_ATTR_VPC) {
+        feeder.spec.vpc = spec->vpc;
+    }
+    if (chg_bmap | SUBNET_ATTR_V4_PREFIX) {
+        feeder.spec.v4_prefix = spec->v4_prefix;
+    }
+    if (chg_bmap | SUBNET_ATTR_V6_PREFIX) {
+        feeder.spec.v6_prefix = spec->v6_prefix;
+    }
+    if (chg_bmap | SUBNET_ATTR_V4_VRIP) {
+        feeder.spec.v4_vr_ip = spec->v4_vr_ip;
+    }
+    if (chg_bmap | SUBNET_ATTR_V6_VRIP) {
+        feeder.spec.v6_vr_ip = spec->v6_vr_ip;
+    }
+    if (chg_bmap | SUBNET_ATTR_VRMAC) {
+        memcpy(&spec->vr_mac, &feeder.spec.vr_mac, sizeof(spec->vr_mac));
+    }
+    if (chg_bmap | SUBNET_ATTR_V4_RTTBL) {
+        feeder.spec.v4_route_table = spec->v4_route_table;
+    }
+    if (chg_bmap | SUBNET_ATTR_V6_RTTBL) {
+        feeder.spec.v6_route_table = spec->v6_route_table;
+    }
+    if (chg_bmap | SUBNET_ATTR_V4_INGPOL) {
+        feeder.spec.num_ing_v4_policy = spec->num_ing_v4_policy;
+        memcpy(&spec->ing_v4_policy, &feeder.spec.ing_v4_policy,
+               sizeof(spec->ing_v4_policy));
+    }
+    if (chg_bmap | SUBNET_ATTR_V6_INGPOL) {
+        feeder.spec.num_ing_v6_policy = spec->num_ing_v6_policy;
+        memcpy(&spec->ing_v6_policy, &feeder.spec.ing_v6_policy,
+               sizeof(spec->ing_v6_policy));
+    }
+    if (chg_bmap | SUBNET_ATTR_V4_EGRPOL) {
+        feeder.spec.num_egr_v4_policy = spec->num_egr_v4_policy;
+        memcpy(&spec->egr_v4_policy, &feeder.spec.egr_v4_policy,
+               sizeof(spec->egr_v4_policy));
+    }
+    if (chg_bmap | SUBNET_ATTR_V6_EGRPOL) {
+        feeder.spec.num_egr_v6_policy = spec->num_egr_v6_policy;
+        memcpy(&spec->egr_v6_policy, &feeder.spec.egr_v6_policy,
+               sizeof(spec->egr_v6_policy));
+    }
+    if (chg_bmap | SUBNET_ATTR_FAB_ENCAP) {
+        feeder.spec.fabric_encap = spec->fabric_encap;
+    }
+    if (chg_bmap | SUBNET_ATTR_HOST_IF) {
+        feeder.spec.host_if = spec->host_if;
+    }
+    if (chg_bmap | SUBNET_ATTR_DHCP_POL) {
+        feeder.spec.num_dhcp_policy = spec->num_dhcp_policy;
+        memcpy(&spec->dhcp_policy, &feeder.spec.dhcp_policy,
+               sizeof(spec->dhcp_policy));
+    }
+    if (chg_bmap | SUBNET_ATTR_TOS) {
+        feeder.spec.tos = spec->tos;
+    }
+}
+
+void
+subnet_update (subnet_feeder& feeder, pds_subnet_spec_t *spec,
+               int chg_bmap, sdk_ret_t exp_result)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    subnet_attr_update(feeder, spec, chg_bmap);
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_update<subnet_feeder>(bctxt, feeder)));
+
+    // if expected result is err, batch commit should fail
+    if (exp_result == SDK_RET_ERR)
+        batch_commit_fail(bctxt);
+    else
+        batch_commit(bctxt);
+}
+
+void
+subnet_delete (subnet_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_delete<subnet_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
 }
 
 //----------------------------------------------------------------------------

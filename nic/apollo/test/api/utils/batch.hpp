@@ -6,6 +6,7 @@
 #ifndef __TEST_API_UTILS_BATCH_HPP__
 #define __TEST_API_UTILS_BATCH_HPP__
 
+#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #ifdef AGENT_MODE
 #include "nic/apollo/agent/test/client/app.hpp"
@@ -27,14 +28,14 @@ batch_start (void)
 #ifdef AGENT_MODE
     if (!agent_mode()) {
         bctxt = pds_batch_start(&batch_params);
-        EXPECT_TRUE(bctxt != PDS_BATCH_CTXT_INVALID);
+        SDK_ASSERT(bctxt != PDS_BATCH_CTXT_INVALID);
     } else {
         bctxt = batch_start_grpc(epoch);
-        EXPECT_TRUE(bctxt != PDS_BATCH_CTXT_INVALID);
+        SDK_ASSERT(bctxt != PDS_BATCH_CTXT_INVALID);
     }
 #else
     bctxt = pds_batch_start(&batch_params);
-    EXPECT_TRUE(bctxt != PDS_BATCH_CTXT_INVALID);
+    SDK_ASSERT(bctxt != PDS_BATCH_CTXT_INVALID);
 #endif
     return bctxt;
 }
@@ -44,12 +45,12 @@ batch_commit (pds_batch_ctxt_t bctxt)
 {
 #ifdef AGENT_MODE
     if (!agent_mode()) {
-        ASSERT_TRUE(pds_batch_commit(bctxt) == SDK_RET_OK);
+        SDK_ASSERT(pds_batch_commit(bctxt) == SDK_RET_OK);
     } else {
-        ASSERT_TRUE(batch_commit_grpc(bctxt) == SDK_RET_OK);
+        SDK_ASSERT(batch_commit_grpc(bctxt) == SDK_RET_OK);
     }
 #else
-    ASSERT_TRUE(pds_batch_commit(bctxt) == SDK_RET_OK);
+    SDK_ASSERT(pds_batch_commit(bctxt) == SDK_RET_OK);
 #endif
 }
 
@@ -58,12 +59,12 @@ batch_commit_fail (pds_batch_ctxt_t bctxt)
 {
 #ifdef AGENT_MODE
     if (!agent_mode()) {
-        ASSERT_TRUE(pds_batch_commit(bctxt) != SDK_RET_OK);
+        SDK_ASSERT(pds_batch_commit(bctxt) != SDK_RET_OK);
     } else {
-        ASSERT_TRUE(batch_commit_grpc(bctxt) != SDK_RET_OK);
+        SDK_ASSERT(batch_commit_grpc(bctxt) != SDK_RET_OK);
     }
 #else
-    ASSERT_TRUE(pds_batch_commit(bctxt) != SDK_RET_OK);
+    SDK_ASSERT(pds_batch_commit(bctxt) != SDK_RET_OK);
 #endif
 }
 
