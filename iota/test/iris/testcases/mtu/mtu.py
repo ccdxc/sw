@@ -182,6 +182,13 @@ def Trigger(tc):
         debug_utils.collect_showtech(result)
         return result
 
+    # check MTU change, windows needs it, while it doesn't hurt on any platform
+    result = verifyMTUchange(tc)
+    if result is not api.types.status.SUCCESS:
+        api.Logger.error("MTU filter : Verify failed for verifyMTUchange")
+        debug_utils.collect_showtech(result)
+        return result
+
     #Trigger ping across all remote workload pairs
     triggerMTUPings(tc)
 

@@ -158,10 +158,9 @@ def setInterfaceMTU(node, interface, mtu):
     elif os == "windows":
         intf = workload.GetNodeInterface(node)
         name = intf.WindowsIntName(interface)
-        if mtu <= 1500:
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetIPInterface -AddressFamily IPv4 -InterfaceAlias '%s' -NlMtuBytes %s\"" % (name, str(mtu))
-        else:
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Get-NetAdapterAdvancedProperty '%s' -DisplayName 'Jumbo*' | Set-NetAdapterAdvancedProperty -RegistryValue '%s'\"" % (name, str(mtu))
+        # windows mtu includes 14B ethernet header and checksum
+        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Get-NetAdapterAdvancedProperty '%s' -DisplayName 'Jumbo*' | Set-NetAdapterAdvancedProperty -RegistryValue '%s'\"" % (name, str(mtu+14))
+        api.Trigger_AddHostCommand(req, node, "sleep 10", timeout=300)
     else:
         assert(0)
     api.Trigger_AddHostCommand(req, node, cmd)
@@ -178,26 +177,12 @@ def getInterfaceMTU(node, interface):
     elif os == "windows":
         intf = workload.GetNodeInterface(node)
         name = intf.WindowsIntName(interface)
-        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Get-NetIPInterface -InterfaceAlias '%s' | Where-Object AddressFamily -eq 'IPv4' | Select-Object -Property NlMtu\"" % name
+        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"(Get-NetIPInterface -InterfaceAlias '%s' | Where-Object AddressFamily -eq 'IPv4' | Select-Object -Property NlMtu).NlMtu\"" % name
     else:
         assert(0)
     api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
-    if os == "windows":
-        lines = resp.commands[0].stdout.splitlines()
-        findbreak = False
-        for line in lines:
-            line = line.strip()
-            if len(line) == 0:
-                continue
-            if line.find("----") >= 0:
-                findbreak = True
-                continue
-            if findbreak:
-                mtu = line
-                break
-    else:
-        mtu = resp.commands[0].stdout.strip("\n")
+    mtu = resp.commands[0].stdout.strip("\n")
     if not mtu:
         mtu = "0"
     return int(mtu)
