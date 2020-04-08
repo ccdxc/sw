@@ -1215,14 +1215,14 @@ func ifGetStrFromID(ifID []uint64) (int, []string) {
 	if err != nil {
 		// Avoid unconditional print in utilities
 		//fmt.Printf("Getting if failed. %v\n", err)
-		return -1, nil
+		return -1, ifStr
 	}
 
 	index = 0
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
-			return -1, nil
+			fmt.Printf("If Get Operation failed with %v error\n", resp.ApiStatus)
+			return -1, ifStr
 		}
 
 		ifStr = append(ifStr, fmt.Sprintf("%s", ifRespToStr(resp)))
