@@ -338,8 +338,9 @@ inst_t::inst_t(uint8_t fte_id) :
         bzero(stats_.fte_hbm_stats, sizeof(fte_hbm_stats_t));
     }
 
-    if (hal::g_hal_state->is_microseg_enabled())
+    if (!hal::g_hal_state->is_base_net()) {
         set_quiesce(false);
+    }
 }
 
 //------------------------------------------------------------------------------
