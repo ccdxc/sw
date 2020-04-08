@@ -76,17 +76,6 @@ public:
     /// \param[in] state destroy the upgrade state
     static void destroy(upg_state *state);
 
-    /// \brief backup objects function
-    /// \return SDK_RET_OK on success, failure status code on error
-    sdk_ret_t backup(void);
-
-    /// \brief ht walk callback to backup stateful obj
-    /// \return return true on failure to stop walk, false to continue
-    static bool backup_stateful_obj_cb(void *obj, void *ctxt);
-
-    /// \brief kvstore iterate callback to backup stateless obj
-    static void backup_statless_obj_cb(void *key, void *val, void *ctxt);
-
     // shared memory manager. all the states are saved on this during upgrade
     shmmgr *shm_mgr(void) { return shm_mmgr_; }
     // compare the profile of the running with the new by saving it in shared memory
@@ -148,7 +137,8 @@ public:
     /// \brief get backup/restore status
     bool status(void) { return status_; }
     /// \brief get upg ctxt within upgrade state
-    upg_ctxt *upg_ctx(void) { return upg_ctx_; }
+    upg_ctxt *api_upg_ctx(void) { return api_upg_ctx_; }
+    upg_ctxt *nicmgr_upg_ctx(void) { return nicmgr_upg_ctx_; }
 
 private:
     /// shared memory manager
@@ -170,16 +160,22 @@ private:
     ev_in_progress_state_t ev_state_;
     ///  upgrade mode in new request
     upg_mode_t upg_req_mode_;
-    //  initialization mode during process bringup
+    ///  initialization mode during process bringup
     upg_mode_t upg_init_mode_;
-    /// \brief     instantiate upg ctxt within upgrade state
-    /// \param[in] upg_ctxt
-    void set_upg_ctx(upg_ctxt *ctxt) { upg_ctx_ = ctxt; }
+    /// backup/restore status
+    bool            status_;
+    /// api upg obj context
+    upg_ctxt        *api_upg_ctx_;
+    /// api upg obj context
+    upg_ctxt        *nicmgr_upg_ctx_;
 
 private:
-    bool            status_;            ///< backup/restore status
-    upg_ctxt        *upg_ctx_;          ///< singleton upg obj context
     sdk_ret_t init_(bool create);
+    /// \brief     instantiate upg ctxt within upgrade state
+    /// \param[in] upg_ctxt
+    void set_api_upg_ctx(upg_ctxt *ctxt) { api_upg_ctx_ = ctxt; }
+    void set_nicmgr_upg_ctx(upg_ctxt *ctxt) { nicmgr_upg_ctx_ = ctxt; }
+
 };
 
 extern upg_state *g_upg_state;

@@ -64,7 +64,8 @@ upg_state::init_(bool shm_create) {
 
 void
 upg_state::destroy(upg_state *state) {
-    upg_ctxt::destroy(state->upg_ctx());
+    upg_ctxt::destroy(state->api_upg_ctx());
+    upg_ctxt::destroy(state->nicmgr_upg_ctx());
     SDK_FREE(api::PDS_MEM_ALLOC_UPG, state);
     shmmgr::remove(PDS_UPG_SHM_NAME);
 }
@@ -88,7 +89,8 @@ upg_state::factory(bool shm_create) {
     }
 
     // initialize the ugprade object context
-    ustate->set_upg_ctx(upg_ctxt::factory());
+    ustate->set_api_upg_ctx(upg_ctxt::factory());
+    ustate->set_nicmgr_upg_ctx(upg_ctxt::factory());
     return ustate;
 
 err_exit:
@@ -117,119 +119,6 @@ upg_state::set_qstate_cfg(uint64_t addr, uint32_t size, uint32_t pgm_off) {
     q.size = size;
     q.pgm_off = pgm_off;
     qstate_cfgs_.push_back(q);
-}
-
-bool
-upg_state::backup_stateful_obj_cb(void *obj, void *obj_ctxt) {
-    sdk_ret_t ret;
-    string keystr;
-    uint32_t obj_id = *(uint32_t *)obj_ctxt;
-
-    if (!obj) {
-        return false;
-    }
-
-    switch (obj_id) {
-    case OBJ_ID_NEXTHOP_GROUP:
-        keystr = ((nexthop_group *)obj)->key2str();
-        ret = ((nexthop_group *)obj)->backup();
-        break;
-
-    default:
-        SDK_ASSERT(0);
-    }
-
-    if (ret != SDK_RET_OK) {
-        api::g_upg_state->set_status(false);
-        PDS_TRACE_ERR("Backup stateful obj id:%u failed for key:%s, rcode:%u",
-                                                         obj_id, keystr, ret);
-        return true; // stop the walk
-    }
-    return false;
-}
-
-void
-upg_state::backup_statless_obj_cb(void *key, void *val, void *obj_ctxt) {
-    sdk_ret_t ret;
-    uint32_t obj_id = *(uint32_t *)obj_ctxt;
-    pds_obj_key_t *pkey = (pds_obj_key_t *)key;
-
-    if (!key || !val) {
-        return;
-    }
-
-    switch (obj_id) {
-    case OBJ_ID_MAPPING:
-        mapping_entry *entry;
-        entry = mapping_entry::build(pkey);
-        ret = entry->backup();
-        mapping_entry::soft_delete(entry);
-        break;
-
-    default:
-        SDK_ASSERT(0);
-    }
-
-    if (ret != SDK_RET_OK) {
-        api::g_upg_state->set_status(false);
-        PDS_TRACE_ERR("Backup stateless obj id:%u failed for key:%s, rcode:%u",
-                                                     obj_id, pkey->str(), ret);
-    }
-    return;
-}
-
-static inline
-sdk_ret_t backup_nexthop_group(void) {
-    ht *nh_group_ht;
-    obj_id_t obj_id = OBJ_ID_NEXTHOP_GROUP;
-
-    nh_group_ht = nexthop_group_db()->nh_group_ht();
-    return (nh_group_ht->walk(upg_state::backup_stateful_obj_cb,
-                                              (void *)&obj_id));
-}
-
-static inline
-sdk_ret_t backup_mapping(void) {
-    sdk::lib::kvstore *kvs;
-    obj_id_t obj_id = OBJ_ID_MAPPING;
-
-    kvs = api::g_pds_state.kvstore();
-    return (kvs->iterate(upg_state::backup_statless_obj_cb,
-                                         (void *)&obj_id));
-}
-
-sdk_ret_t
-upg_state::backup(void) {
-    sdk_ret_t ret;
-
-    // get and initialize a segment from shread memory for write
-    ret = upg_ctx()->init(true);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-    // set the backup status to true. will set to false if there is a failure
-    set_status(true);
-
-    for (uint32_t id = (uint32_t )OBJ_ID_NONE + 1; id < OBJ_ID_MAX - 1; id++) {
-        switch (id) {
-        case OBJ_ID_NEXTHOP_GROUP:
-            ret = backup_nexthop_group();
-            break;
-
-        case OBJ_ID_MAPPING:
-            ret = backup_mapping();
-            break;
-
-        default:
-            break;
-        }
-    }   //end for
-
-    if (status() == false) {
-        PDS_TRACE_ERR("Backup failed");
-        return SDK_RET_ERR;
-    }
-    return SDK_RET_OK;
 }
 
 }    // namespace api

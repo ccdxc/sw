@@ -13,13 +13,23 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 
+// total size of the below should not exceed PDS_UPG_SHM_SIZE
+// api objects
+#define PDS_UPGRADE_API_OBJ_STORE_NAME "pds_upg_api_objs_info"
+#define PDS_UPGRADE_API_OBJ_STORE_SIZE (50 * 1024)
+// nicmgr objects
+#define PDS_UPGRADE_NICMGR_OBJ_STORE_NAME "pds_upg_nicmgr_objs_info"
+#define PDS_UPGRADE_NICMGR_OBJ_STORE_SIZE (20 * 1024)
+
 namespace api {
 
-/// \brief upgrade objs meta data. saved in the front of persistent storage
+/// \brief upgrade objs meta data. saved in the front of persistent storage.
+/// the signature of this structure needs to be preserved for hitless upgrade
 typedef struct upg_obj_stash_meta_s {
     uint32_t        obj_id;       ///< upgrade obj id
     uint32_t        obj_count;    ///< number of objects saved for this object
     uint32_t        offset;       ///< pointer to the first object
+    uint64_t        pad;          ///< for future use
 } __PACK__ upg_obj_stash_meta_t;
 
 class upg_ctxt {
@@ -46,7 +56,8 @@ public:
     char *mem(void) const { return mem_; }
 
     /// \brief get segment from shared memory
-    sdk_ret_t init(bool create);
+    sdk_ret_t init(const char *obj_store_name, size_t obj_store_size,
+                   bool obj_store_create);
 
 private:
     /// \brief constructor

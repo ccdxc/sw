@@ -17,34 +17,33 @@
 
 namespace api {
 
-#define PDS_UPGRADE_STORE_NAME "pds_upg_objs_info"
-#define PDS_UPGRADE_STORE_META_SIZE (50 * 1024)
-#define PDS_UPGRADE_STORE_OBJ_OFFSET (1024)
+// this is for the header information pointing to each object types
+#define PDS_UPGRADE_STORE_OBJ_OFFSET (16 * sizeof(upg_obj_stash_meta_t))
 
 sdk_ret_t
-upg_ctxt::init(bool create) {
+upg_ctxt::init(const char *obj_store_name, size_t obj_store_size,
+               bool obj_store_create) {
     shmmgr *shm_mmgr_;
 
     SDK_ASSERT(api::g_upg_state->shm_mgr() != NULL);
     shm_mmgr_ = api::g_upg_state->shm_mgr();
 
     try {
-        mem_ = (char *)shm_mmgr_->segment_alloc(PDS_UPGRADE_STORE_NAME,
-                                                PDS_UPGRADE_STORE_META_SIZE,
-                                                create);
+        mem_ = (char *)shm_mmgr_->segment_alloc(obj_store_name, obj_store_size,
+                                                obj_store_create);
         if (!mem_) {
             PDS_TRACE_ERR("Failed to init shared memory segment for:%s",
-                                 create == true ? "backup" : "restore");
+                          obj_store_create == true ? "backup" : "restore");
             return SDK_RET_OOM;
         }
     } catch (...) {
         PDS_TRACE_ERR("Failed to init shared memory segment for:%s",
-                             create == true ? "backup" : "restore");
+                      obj_store_create == true ? "backup" : "restore");
         return SDK_RET_OOM;
     }
-    obj_size_   = PDS_UPGRADE_STORE_META_SIZE - PDS_UPGRADE_STORE_OBJ_OFFSET;
+    obj_size_   = obj_store_size - PDS_UPGRADE_STORE_OBJ_OFFSET;
     obj_offset_ = PDS_UPGRADE_STORE_OBJ_OFFSET;
-    if (create) {
+    if (obj_store_create) {
         memset(mem_, 0, PDS_UPGRADE_STORE_OBJ_OFFSET);
     }
     return SDK_RET_OK;
@@ -70,7 +69,9 @@ upg_ctxt::factory(void) {
 
 void
 upg_ctxt::destroy(upg_ctxt *uctxt) {
-    SDK_FREE(api::PDS_MEM_ALLOC_ID_UPG_CTXT, uctxt);
+    if (uctxt) {
+        SDK_FREE(api::PDS_MEM_ALLOC_ID_UPG_CTXT, uctxt);
+    }
 }
 
 } // namespace api
