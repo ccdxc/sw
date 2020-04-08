@@ -662,11 +662,11 @@ bgp_peer_set_fill_func (BGPPeerSpec& req,
         // IP addresses associated with a MAC in case of the EVPN Remote
         // to Local MAC/IP move scenario since it causes spurious IP add
         // for the invalid IP addresses
-        v_amb_bgp_peer->min_asorigination_interval = 1;
+        v_amb_bgp_peer->min_asorigination_interval = 0;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PER_MIN_AS_ORIG_INT);
-        v_amb_bgp_peer->min_route_advertise_interval = 1;
+        v_amb_bgp_peer->min_route_advertise_interval = 0;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PEER_MIN_RT_ADVERT);
-        v_amb_bgp_peer->min_route_withdraw_interval = 1;
+        v_amb_bgp_peer->min_route_withdraw_interval = 0;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PEER_MIN_RT_WDRW);
     }
 }
@@ -797,6 +797,16 @@ bgp_peer_af_set_fill_func (BGPPeerAfSpec         &req,
         }
     }
     
+    // Avoid delay in advertising Type-2 withdrawal for all
+    // IP addresses associated with a MAC in case of the EVPN Remote
+    // to Local MAC/IP move scenario since it causes spurious IP add
+    // for the invalid IP addresses
+    v_amb_bgp_peer_af->min_asorigination_interval = 1;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PAS_MIN_AS_ORIG_INT);
+    v_amb_bgp_peer_af->min_route_advertise_interval = 0;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PAS_MIN_RT_ADV_INT);
+    v_amb_bgp_peer_af->min_route_withdraw_interval = 0;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PAS_MIN_WDRW_INT);
     v_amb_bgp_peer_af->disable_afi_safi = (req.disable()) ? AMB_TRUE : AMB_FALSE;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PAS_DISABLE);
     
