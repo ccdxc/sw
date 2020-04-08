@@ -140,7 +140,8 @@ void inline
 print_usage (char **argv)
 {
     fprintf(stdout, "Usage : %s -c|--config <cfg.json> "
-            "[ -m | --mode { l2-fwd | no-dpdk } ] \n", argv[0]);
+            "[ -m | --mode { l2-fwd | no-dpdk } ] "
+            "[ -j | --policy_json </abs-path/policy.json> ] \n", argv[0]);
 }
 #ifdef __x86_64__
 void dump_pkt(std::vector<uint8_t> &pkt)
@@ -320,6 +321,7 @@ main (int argc, char **argv)
     string       cfg_path, cfg_file, profile, pipeline, file;
     string       script_fname, script_dir;
     string       mode;
+    string       policy_json_file;
     boost::property_tree::ptree pt;
     bool         success = true;
 
@@ -330,13 +332,14 @@ main (int argc, char **argv)
        { "test_script", required_argument, NULL, 't' },
        { "script_dir",  required_argument, NULL, 'd' },
        { "mode",        required_argument, NULL, 'm' },
+       { "policy_json", required_argument, NULL, 'j' },
        { "no-fte-flow-prog", no_argument,  &skip_fte_flow_prog_, 1 },
        { "help",        no_argument,       NULL, 'h' },
        { 0,             0,                 0,     0 }
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hc:p:f:t:d:m:W;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hc:p:f:t:d:m:j:W;", longopts, NULL)) != -1) {
         switch (oc) {
         case 0:
             break;
@@ -394,6 +397,16 @@ main (int argc, char **argv)
                 }
             } else {
                 fprintf(stderr, "mode value is not specified\n");
+                print_usage(argv);
+                exit(1);
+            }
+            break;
+
+        case 'j':
+            if (optarg) {
+                policy_json_file = std::string(optarg);
+            } else {
+                fprintf(stderr, "policy json file is not specified\n");
                 print_usage(argv);
                 exit(1);
             }
@@ -463,8 +476,10 @@ main (int argc, char **argv)
 
     if (fte_ath::g_athena_app_mode != ATHENA_APP_MODE_NO_DPDK) {
         // parse policy json file
-        file = cfg_path + "/" + pipeline + "/policy.json";
-        fte_ath::parse_flow_cache_policy_cfg(file.c_str());
+        if (policy_json_file.empty()) {
+            policy_json_file = cfg_path + "/" + pipeline + "/policy.json";
+        }
+        fte_ath::parse_flow_cache_policy_cfg(policy_json_file.c_str());
     }
 
     // Initialize the PDS functionality

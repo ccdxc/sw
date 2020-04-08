@@ -831,6 +831,79 @@ fte_s2h_nat_v4_session_rewrite (uint32_t session_rewrite_id,
     return (sdk_ret_t)pds_flow_session_rewrite_create(&spec);
 }
 
+static sdk_ret_t 
+fte_setup_v4_flows_json (void)
+{
+    sdk_ret_t ret;
+    uint8_t v4_flows_cnt = 0;
+    v4_flows_info_t *v4_flows;
+    uint16_t vnic_id;
+    uint32_t sip, dip;
+    uint8_t proto;
+    uint16_t sport, dport;
+    uint32_t num_flows_added = 0;
+
+    while (v4_flows_cnt < g_num_v4_flows) {
+        v4_flows = &g_v4_flows[v4_flows_cnt];
+        vnic_id = v4_flows->vnic_lo;
+        proto = v4_flows->proto;
+        while (vnic_id <= v4_flows->vnic_hi) {
+            if (g_flow_cache_policy[vnic_id].vnic_id == 0) {
+                vnic_id++;
+                continue;
+            }
+            sip = v4_flows->sip_lo;
+            while (sip <= v4_flows->sip_hi) {
+                dip = v4_flows->dip_lo;
+                while (dip <= v4_flows->dip_hi) {
+                    sport = v4_flows->sport_lo;
+                    while (sport <= v4_flows->sport_hi) {
+                        dport = v4_flows->dport_lo;
+                        while (dport <= v4_flows->dport_hi) {
+                            ret = fte_session_info_create(
+                                    g_session_index, vnic_id);
+                            if (ret != SDK_RET_OK) {
+                                PDS_TRACE_DEBUG(
+                                    "fte_session_info_create failed.\n");
+                                return ret;
+                            }
+
+                            ret = fte_flow_create(vnic_id, sip, dip,
+                                    proto, sport, dport,
+                                    PDS_FLOW_SPEC_INDEX_SESSION,
+                                    g_session_index);
+                            if (ret != SDK_RET_OK) {
+                                PDS_TRACE_DEBUG(
+                                    "fte_flow_create failed. \n");
+                                PDS_TRACE_DEBUG("SrcIP:0x%x DstIP:0x%x "
+                                    "Dport:%u Sport:%u Proto:%u "
+                                    "VNICID:%u index:%u\n\n",
+                                    sip, dip, dport, sport, proto,
+                                    vnic_id, g_session_index);
+                                // Even on collision/flow insert fail,
+                                // continue the flow creation
+                                // return ret;
+                            }
+                            g_session_index++;
+                            num_flows_added++;
+                            dport++;
+                        }
+                        sport++;
+                    }
+                    dip++;
+                }
+                sip++;
+            }
+            vnic_id++;
+        }
+        v4_flows_cnt++;
+    }
+
+    PDS_TRACE_DEBUG("fte_setup_v4_flows_json: num_flows_added:%u \n",
+                    num_flows_added);
+    return SDK_RET_OK;
+}
+
 static sdk_ret_t
 fte_setup_flow (void)
 {
@@ -838,13 +911,8 @@ fte_setup_flow (void)
     flow_cache_policy_info_t *policy;
     rewrite_underlay_info_t *rewrite_underlay;
     rewrite_host_info_t *rewrite_host;
-    v4_flows_info_t *v4_flows;
     uint16_t vnic_id;
     uint16_t i;
-    uint32_t fcnt;
-    uint32_t sip, dip;
-    uint16_t sport, dport;
-    uint8_t proto;
 
     for (i = 0; i < g_num_policies; i++) {
         vnic_id = g_vnic_id_list[i];
@@ -898,73 +966,12 @@ fte_setup_flow (void)
             PDS_TRACE_DEBUG("fte_s2h_v4_session_rewrite failed.\n");
             return ret;
         }
+    }
 
-        v4_flows = &(policy->v4_flows);
-        if (v4_flows->num_flows) {
-            sip = v4_flows->sip;
-            dip = v4_flows->dip;
-            proto = v4_flows->proto;
-            sport = v4_flows->sport;
-            dport = v4_flows->dport;
-        } else {
-            continue;
-        }
-
-        // configure the static flows
-        for (fcnt = 0; fcnt < v4_flows->num_flows; fcnt++) {
-            ret = fte_session_info_create(g_session_index, vnic_id);
-            if (ret != SDK_RET_OK) {
-                PDS_TRACE_DEBUG("fte_session_info_create failed. \n");
-                return ret;
-            }
-
-            ret = fte_flow_create(vnic_id, sip, dip,
-                        proto, sport, dport,
-                        PDS_FLOW_SPEC_INDEX_SESSION, g_session_index);
-            if (ret != SDK_RET_OK) {
-                PDS_TRACE_DEBUG("fte_setup_flow: fte_flow_create failed. \n");
-                PDS_TRACE_DEBUG("V4 Flow insert Failed: SrcIP:0x%x DstIP:0x%x "
-                    "Dport:%u Sport:%u Proto:%u "
-                    "Ktype:%u VNICID:%u "
-                    "index:%u index_type:%u\n\n",
-                    sip, dip, dport, sport, proto, KEY_TYPE_IPV6, vnic_id,
-                    g_session_index, PDS_FLOW_SPEC_INDEX_SESSION);
-                // Even on collision/flow insert fail, continue the flow creation
-                //return ret;
-            }
-
-            g_session_index++;
-            switch (v4_flows->inc_type) {
-            case FLOW_INC_TYPE_IP:
-                sip++;
-                dip++;
-                break;
-            case FLOW_INC_TYPE_PORT:
-                sport++;
-                dport++;
-                break;
-            case FLOW_INC_TYPE_SIP:
-                sip++;
-                break;
-            case FLOW_INC_TYPE_DIP:
-                dip++;
-                break;
-            case FLOW_INC_TYPE_SPORT:
-                sport++;
-                break;
-            case FLOW_INC_TYPE_DPORT:
-                dport++;
-                break;
-            default:
-                if (v4_flows->num_flows > 1) {
-                    PDS_TRACE_DEBUG("inc_type not set. num_flows:%u "
-                                    "reset num_flows to 1.. \n",
-                                    v4_flows->num_flows);
-                    v4_flows->num_flows = 1;
-                }
-                break;
-            }
-        }
+    ret = fte_setup_v4_flows_json();
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_setup_v4_flows_json failed.\n");
+        return ret;
     }
 
     ret = fte_setup_static_flows();

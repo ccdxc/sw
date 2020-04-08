@@ -34,19 +34,6 @@
                 "smac": "00:00:F1:D0:D1:D0",
                 "dmac": "00:00:00:40:08:01",
                 "_comment": "VNIC vlan_id drives the VLAN Tag towards Host"
-            },
-            "v4_flows": {
-                "sip": "20.0.0.1",
-                "dip": "30.0.0.1",
-                "proto": "17",
-                "sport": "100",
-                "dport": "200",
-                "num_flows": "10",
-                "inc_type": "1",
-                "_comment": "inc_type: values to be incremented to generate multiple flows. Options below: ",
-                "_comment1": "1 - inc both sip & dip; 2 - inc both sport & dport; 3 - inc only sip ",
-                "_comment2": "4 - inc only dip; 5 - inc only sport; 6 - inc only dport ",
-                "_comment3": "NOTE: Values are incremented sequentially. No negative cases are addressed yet. "
             }
         },
         {
@@ -83,6 +70,34 @@
                 "dmac": "00:00:F1:D0:D1:D0",
                 "_comment": "VNIC vlan_id drives the VLAN Tag towards Host"
             }
+        }
+    ],
+    "v4_flows": [
+        {
+            "vnic_lo": "1",
+            "vnic_hi": "1",
+            "sip_lo": "10.0.0.1",
+            "sip_hi": "10.0.0.1",
+            "dip_lo": "20.0.0.1",
+            "dip_hi": "20.0.0.1",
+            "proto": "17",
+            "sport_lo": "100",
+            "sport_hi": "100",
+            "dport_lo": "200",
+            "dport_hi": "200"
+        },
+        {
+            "vnic_lo": "1",
+            "vnic_hi": "1",
+            "sip_lo": "30.0.0.1",
+            "sip_hi": "30.0.0.1",
+            "dip_lo": "40.0.0.1",
+            "dip_hi": "40.0.0.1",
+            "proto": "6",
+            "sport_lo": "300",
+            "sport_hi": "300",
+            "dport_lo": "400",
+            "dport_hi": "400"
         }
     ]
 }

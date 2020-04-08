@@ -13,16 +13,10 @@ namespace fte_ath {
 #define MAX_VNIC_ID 512
 #define MAX_VLAN_ID 0x1000        // 2^12 = 4096
 #define MAX_MPLS_LABEL 0x100000   // 2^20 = 1048576
+#define MAX_V4_FLOWS 32
 
 #define ENCAP_MPLSOUDP 1
 #define ENCAP_GENEVE   2
-
-#define FLOW_INC_TYPE_IP 1
-#define FLOW_INC_TYPE_PORT 2
-#define FLOW_INC_TYPE_SIP 3
-#define FLOW_INC_TYPE_DIP 4
-#define FLOW_INC_TYPE_SPORT 5
-#define FLOW_INC_TYPE_DPORT 6
 
 typedef struct session_info_s {
     uint8_t tcp_flags;
@@ -49,13 +43,17 @@ typedef struct rewrite_host_info_s {
 } rewrite_host_info_t;
 
 typedef struct v4_flows_info_s {
-    uint32_t sip;
-    uint32_t dip;
+    uint16_t vnic_lo;
+    uint16_t vnic_hi;
+    uint32_t sip_lo;
+    uint32_t sip_hi;
+    uint32_t dip_lo;
+    uint32_t dip_hi;
     uint8_t proto;
-    uint16_t sport;
-    uint16_t dport;
-    uint32_t num_flows;
-    uint8_t inc_type;
+    uint16_t sport_lo;
+    uint16_t sport_hi;
+    uint16_t dport_lo;
+    uint16_t dport_hi;
 } v4_flows_info_t;
 
 typedef struct flow_cache_policy_info_s {
@@ -68,16 +66,17 @@ typedef struct flow_cache_policy_info_s {
     session_info_t to_switch;
     rewrite_underlay_info_t rewrite_underlay;
     rewrite_host_info_t rewrite_host;
-    v4_flows_info_t v4_flows;
 } flow_cache_policy_info_t;
 
-int parse_flow_cache_policy_cfg(const char *cfg_file);
+void parse_flow_cache_policy_cfg(const char *cfg_file);
 
 extern uint16_t g_vlan_to_vnic[MAX_VLAN_ID];
 extern uint16_t g_mpls_label_to_vnic[MAX_MPLS_LABEL];
 extern flow_cache_policy_info_t g_flow_cache_policy[MAX_VNIC_ID];
 extern uint16_t g_vnic_id_list[MAX_VNIC_ID];
 extern uint32_t g_num_policies;
+extern v4_flows_info_t g_v4_flows[MAX_V4_FLOWS];
+extern uint8_t g_num_v4_flows;
 
 }
 

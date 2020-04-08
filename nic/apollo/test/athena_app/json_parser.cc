@@ -19,6 +19,8 @@ uint16_t g_mpls_label_to_vnic[MAX_MPLS_LABEL];
 flow_cache_policy_info_t g_flow_cache_policy[MAX_VNIC_ID];
 uint16_t g_vnic_id_list[MAX_VNIC_ID];
 uint32_t g_num_policies;
+v4_flows_info_t g_v4_flows[MAX_V4_FLOWS];
+uint8_t g_num_v4_flows;
 
 static int
 str2mac(const char* mac, uint8_t *out)
@@ -32,20 +34,23 @@ str2mac(const char* mac, uint8_t *out)
     }
 }
 
-int
+void
 parse_flow_cache_policy_cfg (const char *cfgfile)
 {
     pt::ptree json_pt;
     std::string cfg_file;
     flow_cache_policy_info_t *policy;
+    v4_flows_info_t *v4_flows_info;
     uint16_t vnic_id;
 
     cfg_file = std::string(cfgfile);
     // make sure cfg file exists
     if (access(cfg_file.c_str(), R_OK) < 0) {
-        fprintf(stderr, "Policy json file %s doesn't exist or not accessible\n",
+        fprintf(stderr, "Policy json file %s doesn't exist or not accessible. "
+                        "In command-line option, provide the absolute path of the file. "
+                        "Otherwise make sure nic/conf/athena/policy.json exists..\n",
                 cfg_file.c_str());
-        return -1;
+        return;
     }
 
     std::ifstream json_cfg(cfg_file.c_str());
@@ -55,10 +60,10 @@ parse_flow_cache_policy_cfg (const char *cfgfile)
         std::string mode = json_pt.get<std::string>("app_mode");
         if (mode == "l2_fwd") {
             fte_ath::g_athena_app_mode = ATHENA_APP_MODE_L2_FWD;
-            return 0;
+            return;
         } else if (mode == "no_dpdk") {
             fte_ath::g_athena_app_mode = ATHENA_APP_MODE_NO_DPDK;
-            return 0;
+            return;
         } else if (mode == "cpp") {
             fte_ath::g_athena_app_mode = ATHENA_APP_MODE_CPP;
         }
@@ -117,30 +122,37 @@ parse_flow_cache_policy_cfg (const char *cfgfile)
             str2mac(rewrite_host.get<std::string>("dmac").c_str(),
                     policy->rewrite_host.ep_dmac);
 
-            pt::ptree& v4_flows = vnic.second.get_child("v4_flows");
-            str2ipv4addr(v4_flows.get<std::string>("sip").c_str(),
-                         &policy->v4_flows.sip);
-            str2ipv4addr(v4_flows.get<std::string>("dip").c_str(),
-                         &policy->v4_flows.dip);
-            policy->v4_flows.proto =
-                v4_flows.get<uint8_t>("proto");
-            policy->v4_flows.sport =
-                v4_flows.get<uint16_t>("sport");
-            policy->v4_flows.dport =
-                v4_flows.get<uint16_t>("dport");
-            policy->v4_flows.num_flows =
-                v4_flows.get<uint32_t>("num_flows");
-            policy->v4_flows.inc_type =
-                v4_flows.get<uint8_t>("inc_type");
-
             g_vnic_id_list[g_num_policies++] = vnic_id;
         }
+
+        BOOST_FOREACH (pt::ptree::value_type &v4_flows,
+                       json_pt.get_child("v4_flows")) {
+            v4_flows_info = &g_v4_flows[g_num_v4_flows];
+            v4_flows_info->vnic_lo = v4_flows.second.get<uint16_t>("vnic_lo");
+            v4_flows_info->vnic_hi = v4_flows.second.get<uint16_t>("vnic_hi");
+            str2ipv4addr(v4_flows.second.get<std::string>("sip_lo").c_str(),
+                         &v4_flows_info->sip_lo);
+            str2ipv4addr(v4_flows.second.get<std::string>("sip_hi").c_str(),
+                         &v4_flows_info->sip_hi);
+            str2ipv4addr(v4_flows.second.get<std::string>("dip_lo").c_str(),
+                         &v4_flows_info->dip_lo);
+            str2ipv4addr(v4_flows.second.get<std::string>("dip_hi").c_str(),
+                         &v4_flows_info->dip_hi);
+            v4_flows_info->proto = v4_flows.second.get<uint8_t>("proto");
+            v4_flows_info->sport_lo = v4_flows.second.get<uint16_t>("sport_lo");
+            v4_flows_info->sport_hi = v4_flows.second.get<uint16_t>("sport_hi");
+            v4_flows_info->dport_lo = v4_flows.second.get<uint16_t>("dport_lo");
+            v4_flows_info->dport_hi = v4_flows.second.get<uint16_t>("dport_hi");
+            g_num_v4_flows++;
+        }
+
     } catch (std::exception const& e) {
         std::cerr << e.what() << std::endl;
-        return -1;
+        return;
     }
     printf("POLICIES PARSED %u\n", g_num_policies);
-    return 0;
+    printf("V4 FLOWS PARSED %u\n", g_num_v4_flows);
+    return;
 }
 
 }
