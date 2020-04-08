@@ -603,6 +603,7 @@ type pdsaFieldOpt struct {
 	AddrTypeFieldName      string
 	AddrLenFieldName       string
 	IsInternalField        bool
+	PackedElemSize         string
 }
 
 type fieldMetricOptions struct {
@@ -826,6 +827,7 @@ func getPdsaFieldOpt(f *descriptor.Field, cam *CamInfo, table string) (pdsaField
 		ret.SetKeyOidAddrTypeIndex = o.SetKeyOidAddrTypeIndex
 		ret.GetKeyOidAddrTypeIndex = o.GetKeyOidAddrTypeIndex
 		ret.IsInternalField = o.IsInternalField
+		ret.PackedElemSize = o.PackedElemSize
 		ret.AddrTypeFieldName = o.AddrTypeFieldName
 		ret.AddrLenFieldName = o.AddrLenFieldName
 		if o.IsZeroIPValid {

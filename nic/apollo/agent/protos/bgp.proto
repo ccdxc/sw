@@ -549,6 +549,8 @@ message BGPNLRIPrefixStatus {
   uint32          FlapStartTime    = 19;
   // If bgpNlriPrefixBest is 'true', then this field is set to 'routeIsBest'.  Otherwise, it reports the stage in the decision process when the route was determined to be non-best.
   BGPRsnNotBest   ReasonNotBest    = 20;
+  // The extended community membership associated with the route after import policy has been applied.
+  repeated bytes  ExtComm          = 21;
 }
 
 // BGP NLRI prefix key object

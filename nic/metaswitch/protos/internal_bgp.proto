@@ -611,6 +611,8 @@ message BGPNLRIPrefixStatus {
   uint32          FlapStartTime    = 19 [(venice.pdsaFields) = {Field: "flap_start_time"}];
   // If bgpNlriPrefixBest is 'true', then this field is set to 'routeIsBest'.  Otherwise, it reports the stage in the decision process when the route was determined to be non-best.
   BGPRsnNotBest   ReasonNotBest    = 20 [(venice.pdsaFields) = {Field: "reason_not_best"}];
+  // The extended community membership associated with the route after import policy has been applied.
+  repeated bytes  ExtComm          = 21 [(venice.pdsaFields) = {Field: "ext_communities", PackedElemSize: "8"}];
 }
 
 // BGP NLRI prefix key object

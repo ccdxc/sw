@@ -39,6 +39,14 @@ func dumpBytes(in []byte) string {
 	return out
 }
 
+func dumpNonHexBytes(in []byte) string {
+	out := ""
+	for _, b := range in {
+		out = fmt.Sprintf("%s%02x ", out, b)
+	}
+	return out
+}
+
 func printRD(in []byte) string {
 	switch in[1] {
 	case 0:
@@ -718,6 +726,7 @@ type ShadowBGPNLRIPrefixStatus struct {
 	ReasonNotBest    string
 	EcmpRoute        bool
 	PeerAddr         string
+	ExtComm          []string
 	*pds.BGPNLRIPrefixStatus
 }
 
@@ -783,7 +792,7 @@ func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixSta
 	default:
 		log.Errorf("Invalid AS Size")
 	}
-	return &ShadowBGPNLRIPrefixStatus{
+	ret := ShadowBGPNLRIPrefixStatus{
 		ASPathStr:           BGPASPath(ASSize, in.ASPathStr),
 		PathOrigId:          pathOrigId,
 		NextHopAddr:         net.IP(in.NextHopAddr).String(),
@@ -799,6 +808,19 @@ func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixSta
 		PeerAddr:            PdsIPToString(in.PeerAddr),
 		BGPNLRIPrefixStatus: in,
 	}
+	ret.ExtComm = dumpExtComm(in.ExtComm)
+	return &ret
+}
+
+func dumpExtComm(in [][]byte) []string {
+	var r []string
+	for _, b := range in {
+		v := dumpRt(b)
+		if v != "" {
+			r = append(r, v)
+		}
+	}
+	return r
 }
 
 //
@@ -866,7 +888,10 @@ type ShadowEvpnIpVrfRtSpec struct {
 
 func dumpRt(in []byte) string {
 	rt := ""
-	inStr := dumpBytes(in)
+	if len(in) != 8 || int(in[1]) != 2 {
+		return rt
+	}
+	inStr := dumpNonHexBytes(in)
 	inStrSlice := strings.Split(inStr, " ")
 	str := strings.Join(inStrSlice[:1], "")
 	var rttype int64
@@ -881,7 +906,11 @@ func dumpRt(in []byte) string {
 	if (rttype == 1) || (rttype == 2) {
 		str = strings.Join(inStrSlice[2:6], "")
 		if s, err := strconv.ParseInt(str, 16, 64); err == nil {
-			rt += fmt.Sprintf("AS: %v, ", s)
+			if rttype == 1 {
+				rt += fmt.Sprintf("IP: %v", Uint32ToIPv4Address(uint32(s)))
+			} else {
+				rt += fmt.Sprintf("AS: %v, ", s)
+			}
 		}
 		str = strings.Join(inStrSlice[6:], "")
 		if s, err := strconv.ParseInt(str, 16, 64); err == nil {
@@ -895,6 +924,11 @@ func dumpRt(in []byte) string {
 		str = strings.Join(inStrSlice[4:], "")
 		if s, err := strconv.ParseInt(str, 16, 64); err == nil {
 			rt += fmt.Sprintf("AN: %v", s)
+		}
+	} else if rttype == 3 {
+		str = strings.Join(inStrSlice[2:], "")
+		if s, err := strconv.ParseInt(str, 16, 64); err == nil {
+			rt += fmt.Sprintf("AS: %v, ", s)
 		}
 	}
 	return rt

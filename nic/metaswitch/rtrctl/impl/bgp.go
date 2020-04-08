@@ -336,6 +336,7 @@ const (
       FlapStatsSupprsd %v IsActive %v Stale %v
       FlapStartTime %v ReasonNotBest %v EcmpRoute %v
       PeerAddr %v
+      ExtComm %v
 `
 )
 
@@ -400,7 +401,7 @@ func bgpNlriShowCmdHandler(cmd *cobra.Command, _afisafi string, args []string) e
 			fmt.Printf(bgpNLRI, best, nlri.NextHopAddr, nlri.ASPathStr,
 				nlri.RouteSource, nlri.PathOrigId, nlri.FlapStatsFlapcnt,
 				nlri.FlapStatsSupprsd, nlri.IsActive, nlri.Stale, nlri.FlapStartTime,
-				nlri.ReasonNotBest, nlri.EcmpRoute, nlri.PeerAddr)
+				nlri.ReasonNotBest, nlri.EcmpRoute, nlri.PeerAddr, nlri.ExtComm)
 			attrString := nlri.Prefix.AttrString()
 			if attrString != "" {
 				fmt.Println(nlri.Prefix.AttrString())

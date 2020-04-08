@@ -39,6 +39,7 @@ message PdsaFields {
   string AddrLenFieldName       = 17;
   string KeysMsg                = 18;
   bool   IsInternalField        = 19;
+  string PackedElemSize         = 20;
 }
 
 // PDSA Option extensions applicable to Fields

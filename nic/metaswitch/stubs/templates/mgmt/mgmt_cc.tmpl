@@ -42,7 +42,13 @@
   {{range $fields}}
     {{$castFn := getPdsaCastPrintFunc .Type}}
     {{if (eq $castFn "pds_ms_print_byte_array")}}
+      {{if (isRepeatedField .)}}
+      for (int i=0; i<req.{{.Name | ToLower}}_size(); i++) {
+          {{$castFn}}(req.{{.Name | ToLower}}(i), "{{$msgName}}", "{{.Name}}");
+      }
+      {{else}}
       {{$castFn}}(req.{{.Name | ToLower}}(), "{{$msgName}}", "{{.Name}}");
+      {{end}}
     {{end}}
   {{end}}
     }
@@ -562,7 +568,17 @@
                       {{if (eq $fieldOpt.FieldHasLen false)}}
                     ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, {{$fieldOpt.FieldLen}}));
                       {{else}}
+                        {{if not (eq $fieldOpt.PackedElemSize "")}} 
+                          {{if (isRepeatedField .)}}
+                    for (int i=0; i<v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len/{{$fieldOpt.PackedElemSize}}; i++) {
+                        ent->add_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}+(i*{{$fieldOpt.PackedElemSize}}), {{$fieldOpt.PackedElemSize}}));
+                    }
+                          {{else}}
+                    //Field {{$fieldOpt.Name}} has PackedElemSize set to {{$fieldOpt.PackedElemSize}} but is not set to repeated!
+                          {{end}}
+                        {{else}}
                     ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len));
+                        {{end}}
                       {{end}}
                     {{end}}
                   {{end}}
@@ -1162,7 +1178,13 @@
                   {{ if HasPrefix .GetTypeName ".pds_ms."}}
         out.set_{{$fieldOpt.Name | ToLower}}((pds_ms::{{TrimPrefix .GetTypeName ".pds_ms."}})in.{{$fieldOpt.Name | ToLower}}());
                   {{else}}
+                    {{if (isRepeatedField .)}}
+        for (int i=0; i<in.{{$fieldOpt.Name | ToLower}}_size(); i++) {
+            out.add_{{$fieldOpt.Name | ToLower}}(in.{{$fieldOpt.Name | ToLower}}(i));
+        }
+                    {{else}}
         out.set_{{$fieldOpt.Name | ToLower}}(in.{{$fieldOpt.Name | ToLower}}());
+                    {{end}}
                   {{end}}
                 {{end}}
               {{end}}
@@ -1201,7 +1223,13 @@
                   {{ if HasPrefix .GetTypeName ".pds_ms."}}
         out.set_{{$fieldOpt.Name | ToLower}}((pds_ms::{{TrimPrefix .GetTypeName ".pds_ms."}})in.{{$fieldOpt.Name | ToLower}}());
                   {{else}}
+                    {{if (isRepeatedField .)}}
+        for (int i=0; i<in.{{$fieldOpt.Name | ToLower}}_size(); i++) {
+            out.add_{{$fieldOpt.Name | ToLower}}(in.{{$fieldOpt.Name | ToLower}}(i));
+        }
+                    {{else}}
         out.set_{{$fieldOpt.Name | ToLower}}(in.{{$fieldOpt.Name | ToLower}}());
+                    {{end}}
                   {{end}}
                 {{end}}
               {{end}}
@@ -1247,7 +1275,13 @@
                   {{ if HasPrefix .GetTypeName ".pds_ms."}}
         out.set_{{$fieldOpt.Name | ToLower}}((pds::{{TrimPrefix .GetTypeName ".pds_ms."}})in.{{$fieldOpt.Name | ToLower}}());
                   {{else}}
+                    {{if (isRepeatedField .)}}
+        for (int i=0; i<in.{{$fieldOpt.Name | ToLower}}_size(); i++) {
+            out.add_{{$fieldOpt.Name | ToLower}}(in.{{$fieldOpt.Name | ToLower}}(i));
+        }
+                    {{else}}
         out.set_{{$fieldOpt.Name | ToLower}}(in.{{$fieldOpt.Name | ToLower}}());
+                    {{end}}
                   {{end}}
                 {{end}}
               {{end}}
@@ -1286,7 +1320,13 @@
                   {{ if HasPrefix .GetTypeName ".pds_ms."}}
         out.set_{{$fieldOpt.Name | ToLower}}((pds::{{TrimPrefix .GetTypeName ".pds_ms."}})in.{{$fieldOpt.Name | ToLower}}());
                   {{else}}
+                    {{if (isRepeatedField .)}}
+        for (int i=0; i<in.{{$fieldOpt.Name | ToLower}}_size(); i++) {
+            out.add_{{$fieldOpt.Name | ToLower}}(in.{{$fieldOpt.Name | ToLower}}(i));
+        }
+                    {{else}}
         out.set_{{$fieldOpt.Name | ToLower}}(in.{{$fieldOpt.Name | ToLower}}());
+                    {{end}}
                   {{end}}
                 {{end}}
               {{end}}

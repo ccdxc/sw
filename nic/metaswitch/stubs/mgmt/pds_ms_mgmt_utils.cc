@@ -180,7 +180,7 @@ pds_ms_print_byte_array (string in_str, string in_msg, string in_field)
 string
 pds_ms_get_string_in_byte_array_with_len(NBB_BYTE *in_str, NBB_ULONG len)
 {
-    std::string ret(in_str, in_str + len);
+    std::string ret((const char*)in_str, len);
     return ret;
 }
 
