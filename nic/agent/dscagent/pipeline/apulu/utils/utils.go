@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
@@ -78,15 +79,18 @@ func ConvertID64(agentIDs ...uint64) [][]byte {
 	return halIDs
 }
 
-// ConvertIDs converts agent string ID to HAL Object ID
+// ConvertIDs converts agent string UUID to HAL Object ID
 func ConvertIDs(agentIDs ...string) [][]byte {
-	var aIDs []uint64
+	var aIDs [][]byte
 	for _, a := range agentIDs {
-		if s, err := strconv.ParseUint(a, 10, 64); err == nil {
-			aIDs = append(aIDs, s)
+		id, err := uuid.FromString(a)
+		if err != nil {
+			log.Errorf("Failed to parse UUID %s", a)
+			continue
 		}
+		aIDs = append(aIDs, id.Bytes())
 	}
-	return ConvertID64(aIDs...)
+	return aIDs
 }
 
 // ConvertMacAddress converts string MAC address into uint64 value

@@ -592,7 +592,7 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 			log.Errorf("Get IPAMPolicy failed for %s | %s", nw.GetKind(), nw.GetKey())
 			return nil, err
 		}
-		ipu, _ := uuid.FromString(policy.UUID)
+		ipu, err := uuid.FromString(policy.UUID)
 		if err != nil {
 			log.Errorf("Parse IPAMPolicy UUID failed for %s | %s", nw.GetKind(), nw.GetKey())
 			return nil, err

@@ -37,7 +37,7 @@ func convertHALFirewallRules(nsp netproto.NetworkSecurityPolicy, ruleIDToAppMapp
 }
 
 func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Map, ruleID *int) ([]*halapi.RuleMatch, error) {
-	var srcL3Match, dstL3Match *halapi.RuleL3Match
+	var srcL3Matches, dstL3Matches, ruleL3MatchComb []*halapi.RuleL3Match
 	var srcProtoPorts, dstProtoPorts []string
 	var appProtoPorts []string
 	var app *netproto.App
@@ -63,7 +63,7 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 	}
 
 	if src != nil {
-		srcL3Match, err = convertIPs(src.Addresses, true)
+		srcL3Matches, err = convertIPs(src.Addresses, true)
 		if err != nil {
 			log.Errorf("Could not convert IP Addresses from Src: {%v}. Err: %v", src.Addresses, err)
 			return nil, err
@@ -78,7 +78,7 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 	}
 
 	if dst != nil {
-		dstL3Match, err = convertIPs(dst.Addresses, false)
+		dstL3Matches, err = convertIPs(dst.Addresses, false)
 		if err != nil {
 			log.Errorf("Could not convert IP Addresses from Dst: {%v}. Err: %v", dst.Addresses, err)
 			return nil, err
@@ -98,6 +98,10 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 		dstProtoPorts = appProtoPorts
 	}
 
+	// For cloud we need to expand the L3 rule match too.
+	// Build the L3 rule match combinations
+	ruleL3MatchComb = convertRuleL3Matches(srcL3Matches, dstL3Matches)
+
 	// flatten appropriately
 	// flatten if needed
 	switch {
@@ -108,12 +112,6 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 			log.Errorf("Failed to convert rule. Err: %v", err)
 			return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
 		}
-		ruleL3Match := &halapi.RuleL3Match{
-			Protocol: halProtocol,
-			Srcmatch: srcL3Match.Srcmatch,
-			Dstmatch: dstL3Match.Dstmatch,
-		}
-
 		ruleL4Match := &halapi.RuleL4Match{
 			L4Info: &halapi.RuleL4Match_TypeCode{
 				TypeCode: &halapi.ICMPMatch{
@@ -123,11 +121,14 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 			},
 		}
 
-		ruleMatch := &halapi.RuleMatch{
-			L3Match: ruleL3Match,
-			L4Match: ruleL4Match,
+		for _, ruleL3Match := range ruleL3MatchComb {
+			ruleL3Match.Protocol = halProtocol
+			ruleMatch := &halapi.RuleMatch{
+				L3Match: ruleL3Match,
+				L4Match: ruleL4Match,
+			}
+			ruleMatches = append(ruleMatches, ruleMatch)
 		}
-		ruleMatches = append(ruleMatches, ruleMatch)
 		return ruleMatches, nil
 
 	case len(srcProtoPorts) == 0 && len(dstProtoPorts) != 0:
@@ -148,11 +149,6 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 				log.Errorf("Failed to convert rule. Err: %v", err)
 				return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
 			}
-			ruleL3Match := &halapi.RuleL3Match{
-				Protocol: halProtocol,
-				Srcmatch: srcL3Match.Srcmatch,
-				Dstmatch: dstL3Match.Dstmatch,
-			}
 			var ruleL4Match *halapi.RuleL4Match
 
 			// Handle TCP/UDP proto/ports here.
@@ -171,12 +167,14 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 				}
 			}
 
-			ruleMatch := &halapi.RuleMatch{
-				L3Match: ruleL3Match,
-				L4Match: ruleL4Match,
+			for _, ruleL3Match := range ruleL3MatchComb {
+				ruleL3Match.Protocol = halProtocol
+				ruleMatch := &halapi.RuleMatch{
+					L3Match: ruleL3Match,
+					L4Match: ruleL4Match,
+				}
+				ruleMatches = append(ruleMatches, ruleMatch)
 			}
-
-			ruleMatches = append(ruleMatches, ruleMatch)
 		}
 		return ruleMatches, nil
 	case len(dstProtoPorts) == 0 && len(srcProtoPorts) != 0:
@@ -197,11 +195,6 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 				log.Errorf("Failed to convert rule. Err: %v", err)
 				return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
 			}
-			ruleL3Match := &halapi.RuleL3Match{
-				Protocol: halProtocol,
-				Srcmatch: srcL3Match.Srcmatch,
-				Dstmatch: dstL3Match.Dstmatch,
-			}
 			var ruleL4Match *halapi.RuleL4Match
 
 			// Handle TCP/UDP proto/ports here.
@@ -220,12 +213,14 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 				}
 			}
 
-			ruleMatch := &halapi.RuleMatch{
-				L3Match: ruleL3Match,
-				L4Match: ruleL4Match,
+			for _, ruleL3Match := range ruleL3MatchComb {
+				ruleL3Match.Protocol = halProtocol
+				ruleMatch := &halapi.RuleMatch{
+					L3Match: ruleL3Match,
+					L4Match: ruleL4Match,
+				}
+				ruleMatches = append(ruleMatches, ruleMatch)
 			}
-
-			ruleMatches = append(ruleMatches, ruleMatch)
 		}
 		return ruleMatches, nil
 	case len(srcProtoPorts) > 0 && len(dstProtoPorts) > 0:
@@ -253,11 +248,6 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 					return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
 				}
 
-				ruleL3Match := &halapi.RuleL3Match{
-					Protocol: halProtocol,
-					Srcmatch: srcL3Match.Srcmatch,
-					Dstmatch: dstL3Match.Dstmatch,
-				}
 				var ruleL4Match *halapi.RuleL4Match
 
 				// Handle TCP/UDP proto/ports here.
@@ -282,24 +272,25 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 					}
 				}
 
-				ruleMatch := &halapi.RuleMatch{
-					L3Match: ruleL3Match,
-					L4Match: ruleL4Match,
+				for _, ruleL3Match := range ruleL3MatchComb {
+					ruleL3Match.Protocol = halProtocol
+					ruleMatch := &halapi.RuleMatch{
+						L3Match: ruleL3Match,
+						L4Match: ruleL4Match,
+					}
+					ruleMatches = append(ruleMatches, ruleMatch)
 				}
-				ruleMatches = append(ruleMatches, ruleMatch)
 			}
 		}
 		return ruleMatches, nil
 		// Empty src and dst proto ports. No flattening needed.
 	case len(srcProtoPorts) == 0 && len(dstProtoPorts) == 0:
-		ruleL3Match := &halapi.RuleL3Match{
-			Srcmatch: srcL3Match.Srcmatch,
-			Dstmatch: dstL3Match.Dstmatch,
+		for _, ruleL3Match := range ruleL3MatchComb {
+			ruleMatch := &halapi.RuleMatch{
+				L3Match: ruleL3Match,
+			}
+			ruleMatches = append(ruleMatches, ruleMatch)
 		}
-		ruleMatch := &halapi.RuleMatch{
-			L3Match: ruleL3Match,
-		}
-		ruleMatches = append(ruleMatches, ruleMatch)
 		return ruleMatches, nil
 
 	default:
@@ -319,14 +310,39 @@ func convertRuleAction(action string) halapi.SecurityRuleAction {
 	}
 }
 
-// In Cloud pipeline we pass only one srcmatch/dstmatch to HAL, so take the
-// first one.
-func convertIPs(addresses []string, srcMatch bool) (*halapi.RuleL3Match, error) {
+func convertRuleL3Matches(srcL3Matches, dstL3Matches []*halapi.RuleL3Match) []*halapi.RuleL3Match {
+	if len(srcL3Matches) == 0 && len(dstL3Matches) == 0 {
+		return []*halapi.RuleL3Match{
+			&halapi.RuleL3Match{},
+		}
+	}
+	if len(srcL3Matches) == 0 {
+		return dstL3Matches
+	}
+	if len(dstL3Matches) == 0 {
+		return srcL3Matches
+	}
+	var ruleL3Matches []*halapi.RuleL3Match
+	for _, srcL3Match := range srcL3Matches {
+		for _, dstL3Match := range dstL3Matches {
+			ruleL3Match := &halapi.RuleL3Match{
+				Srcmatch: srcL3Match.Srcmatch,
+				Dstmatch: dstL3Match.Dstmatch,
+			}
+			ruleL3Matches = append(ruleL3Matches, ruleL3Match)
+		}
+	}
+	return ruleL3Matches
+}
+
+func convertIPs(addresses []string, srcMatch bool) ([]*halapi.RuleL3Match, error) {
+	var ruleL3Matches []*halapi.RuleL3Match
 	for _, a := range addresses {
 		if ip := net.ParseIP(strings.TrimSpace(a)); len(ip) > 0 {
+			var ruleL3Match *halapi.RuleL3Match
 			// try parsing as an octet
 			if srcMatch {
-				return &halapi.RuleL3Match{
+				ruleL3Match = &halapi.RuleL3Match{
 					Srcmatch: &halapi.RuleL3Match_SrcPrefix{
 						SrcPrefix: &halapi.IPPrefix{
 							Addr: &halapi.IPAddress{
@@ -338,26 +354,29 @@ func convertIPs(addresses []string, srcMatch bool) (*halapi.RuleL3Match, error) 
 							Len: uint32(32),
 						},
 					},
-				}, nil
-			}
-			return &halapi.RuleL3Match{
-				Dstmatch: &halapi.RuleL3Match_DstPrefix{
-					DstPrefix: &halapi.IPPrefix{
-						Addr: &halapi.IPAddress{
-							Af: halapi.IPAF_IP_AF_INET,
-							V4OrV6: &halapi.IPAddress_V4Addr{
-								V4Addr: utils.Ipv4Touint32(ip),
+				}
+			} else {
+				ruleL3Match = &halapi.RuleL3Match{
+					Dstmatch: &halapi.RuleL3Match_DstPrefix{
+						DstPrefix: &halapi.IPPrefix{
+							Addr: &halapi.IPAddress{
+								Af: halapi.IPAF_IP_AF_INET,
+								V4OrV6: &halapi.IPAddress_V4Addr{
+									V4Addr: utils.Ipv4Touint32(ip),
+								},
 							},
+							Len: uint32(32),
 						},
-						Len: uint32(32),
 					},
-				},
-			}, nil
+				}
+			}
+			ruleL3Matches = append(ruleL3Matches, ruleL3Match)
 		} else if ip, network, err := net.ParseCIDR(strings.TrimSpace(a)); err == nil {
+			var ruleL3Match *halapi.RuleL3Match
 			// try parsing as IPMask
 			prefixLen, _ := network.Mask.Size()
 			if srcMatch {
-				return &halapi.RuleL3Match{
+				ruleL3Match = &halapi.RuleL3Match{
 					Srcmatch: &halapi.RuleL3Match_SrcPrefix{
 						SrcPrefix: &halapi.IPPrefix{
 							Addr: &halapi.IPAddress{
@@ -369,44 +388,50 @@ func convertIPs(addresses []string, srcMatch bool) (*halapi.RuleL3Match, error) 
 							Len: uint32(prefixLen),
 						},
 					},
-				}, nil
-			}
-			return &halapi.RuleL3Match{
-				Dstmatch: &halapi.RuleL3Match_DstPrefix{
-					DstPrefix: &halapi.IPPrefix{
-						Addr: &halapi.IPAddress{
-							Af: halapi.IPAF_IP_AF_INET,
-							V4OrV6: &halapi.IPAddress_V4Addr{
-								V4Addr: utils.Ipv4Touint32(ip),
+				}
+			} else {
+				ruleL3Match = &halapi.RuleL3Match{
+					Dstmatch: &halapi.RuleL3Match_DstPrefix{
+						DstPrefix: &halapi.IPPrefix{
+							Addr: &halapi.IPAddress{
+								Af: halapi.IPAF_IP_AF_INET,
+								V4OrV6: &halapi.IPAddress_V4Addr{
+									V4Addr: utils.Ipv4Touint32(ip),
+								},
 							},
+							Len: uint32(prefixLen),
 						},
-						Len: uint32(prefixLen),
 					},
-				},
-			}, nil
+				}
+			}
+			ruleL3Matches = append(ruleL3Matches, ruleL3Match)
 		} else if ipRange := strings.Split(strings.TrimSpace(a), "-"); len(ipRange) == 2 {
 			// try parsing as hyphen separated range
+			var ruleL3Match *halapi.RuleL3Match
 			addrRange, err := convertIPRange(ipRange[0], ipRange[1])
 			if err != nil {
 				log.Errorf("failed to parse IP Range {%v}. Err: %v", ipRange, err)
 				return nil, err
 			}
 			if srcMatch {
-				return &halapi.RuleL3Match{
+				ruleL3Match = &halapi.RuleL3Match{
 					Srcmatch: &halapi.RuleL3Match_SrcRange{
 						SrcRange: addrRange,
 					},
-				}, nil
+				}
+			} else {
+				ruleL3Match = &halapi.RuleL3Match{
+					Dstmatch: &halapi.RuleL3Match_DstRange{
+						DstRange: addrRange,
+					},
+				}
 			}
-			return &halapi.RuleL3Match{
-				Dstmatch: &halapi.RuleL3Match_DstRange{
-					DstRange: addrRange,
-				},
-			}, nil
+			ruleL3Matches = append(ruleL3Matches, ruleL3Match)
 		} else if a == "any" {
+			var ruleL3Match *halapi.RuleL3Match
 			// Interpret it as 0.0.0.0/0
 			if srcMatch {
-				return &halapi.RuleL3Match{
+				ruleL3Match = &halapi.RuleL3Match{
 					Srcmatch: &halapi.RuleL3Match_SrcPrefix{
 						SrcPrefix: &halapi.IPPrefix{
 							Addr: &halapi.IPAddress{
@@ -415,24 +440,26 @@ func convertIPs(addresses []string, srcMatch bool) (*halapi.RuleL3Match, error) 
 							},
 						},
 					},
-				}, nil
-			}
-			return &halapi.RuleL3Match{
-				Dstmatch: &halapi.RuleL3Match_DstPrefix{
-					DstPrefix: &halapi.IPPrefix{
-						Addr: &halapi.IPAddress{
-							Af:     halapi.IPAF_IP_AF_INET,
-							V4OrV6: &halapi.IPAddress_V4Addr{},
+				}
+			} else {
+				ruleL3Match = &halapi.RuleL3Match{
+					Dstmatch: &halapi.RuleL3Match_DstPrefix{
+						DstPrefix: &halapi.IPPrefix{
+							Addr: &halapi.IPAddress{
+								Af:     halapi.IPAF_IP_AF_INET,
+								V4OrV6: &halapi.IPAddress_V4Addr{},
+							},
 						},
 					},
-				},
-			}, nil
+				}
+			}
+			ruleL3Matches = append(ruleL3Matches, ruleL3Match)
 		} else {
 			// give up
 			return nil, fmt.Errorf("invalid IP Address format {%v}. Should either be in an octet, CIDR or hyphen separated IP Range", a)
 		}
 	}
-	return &halapi.RuleL3Match{}, nil
+	return ruleL3Matches, nil
 }
 
 func convertAppProtocol(protocol string) (uint32, error) {
