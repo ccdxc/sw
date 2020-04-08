@@ -265,7 +265,7 @@ func (h Hal) VrfDelete(ctx context.Context, req *irisproto.VrfDeleteRequestMsg) 
 }
 
 // EventListen stubbed out
-func (h Hal) EventListen(req *irisproto.EventRequest, stream irisproto.Event_EventListenServer) error {
+func (h Hal) EventListen(stream irisproto.Event_EventListenServer) error {
 	evtResp := &irisproto.EventResponse{
 		ApiStatus: irisproto.ApiStatus_API_STATUS_OK,
 		EventId:   0,

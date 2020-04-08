@@ -1529,10 +1529,11 @@ func (i *FakeAgentAPI) initLifStream() {
 	}
 	log.Infof("FakeAgent API: %s | %s", types.InfoPipelineInit, types.InfoSingletonLifGet)
 
-	lifStream, err := i.EventClient.EventListen(context.Background(), evtReqMsg)
+	lifStream, err := i.EventClient.EventListen(context.Background())
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrPipelineEventListen, "FakeAgent Init: %v", err))
 	}
+	lifStream.Send(evtReqMsg)
 
 	go func(stream halapi.Event_EventListenClient) {
 		for {

@@ -9,23 +9,25 @@
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/src/internal/event.hpp"
 
-Status EventServiceImpl::EventListen(ServerContext* context, const EventRequest* req,
-                   ServerWriter<EventResponse>* stream)
+Status EventServiceImpl::EventListen(ServerContext* context,
+                   grpc::ServerReaderWriter<EventResponse, EventRequest> *stream)
 {
-    hal_ret_t ret = HAL_RET_OK;
+    EventRequest    req;
+    hal_ret_t       ret;
 
     HAL_TRACE_DEBUG("Handling event operation, event id {}, operation {}, "
-                    "stream {}", req->event_id(), req->event_operation(),
+                    "stream {}", req.event_id(), req.event_operation(),
                     (void *)stream);
 
-    ret = hal::handle_event_request(req, stream);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Event op {} failed for event id {}",
-                      req->event_operation(), req->event_id());
-        return Status::CANCELLED;
-    }
-
     do {
+        while (stream->Read(&req)) {
+            ret = hal::handle_event_request(&req, stream);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Event op {} failed for event id {}", req.event_operation(), req.event_id());
+                return Status::CANCELLED;
+            }
+        }
+
         // if this stream doesn't have any events of interest, we can close
         // this stream
         if (!hal::g_hal_state->event_mgr()->is_listener_active(stream)) {

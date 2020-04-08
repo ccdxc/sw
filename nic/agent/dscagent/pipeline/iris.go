@@ -1995,10 +1995,12 @@ func (i *IrisAPI) initLifStream(uid string) {
 	}
 	log.Infof("Iris API: %s | %s", types.InfoPipelineInit, types.InfoSingletonLifGet)
 
-	lifStream, err := i.EventClient.EventListen(context.Background(), evtReqMsg)
+	lifStream, err := i.EventClient.EventListen(context.Background())
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrPipelineEventListen, "Iris Init: %v", err))
 	}
+
+	lifStream.Send(evtReqMsg)
 
 	go func(stream halapi.Event_EventListenClient) {
 		for {
@@ -2060,10 +2062,11 @@ func (i *IrisAPI) createPortsAndUplinks(uid string) error {
 		return errors.Wrapf(types.ErrPipelinePortGet, "Iris Init: %v", err)
 	}
 
-	portStream, err := i.EventClient.EventListen(context.Background(), evtReqMsg)
+	portStream, err := i.EventClient.EventListen(context.Background())
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrPipelineEventListen, "Iris Init: %v", err))
 	}
+	portStream.Send(evtReqMsg)
 
 	go func(stream halapi.Event_EventListenClient) {
 		for {

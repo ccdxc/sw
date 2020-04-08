@@ -18,8 +18,8 @@ using grpc::ServerWriter;
 
 class EventServiceImpl final : public Event::Service {
 public:
-    Status EventListen(ServerContext* context, const EventRequest* request,
-                       ServerWriter<EventResponse>* writer) override;
+    Status EventListen(ServerContext* context,
+                       grpc::ServerReaderWriter<EventResponse, EventRequest>* writer) override;
 };
 
 #endif    // __EVENT_SVC_HPP__

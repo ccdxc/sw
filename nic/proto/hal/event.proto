@@ -16,7 +16,7 @@ option go_package="halproto";
 // Event service definition
 service Event {
   // TODO: rename this API - with bidir streaming, this name doesn't make sense
-  rpc EventListen (EventRequest) returns (stream EventResponse) {}
+  rpc EventListen (stream EventRequest) returns (stream EventResponse) {}
 }
 
 // events that HAL generates and app(s) can listen to

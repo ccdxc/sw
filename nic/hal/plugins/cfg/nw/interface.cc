@@ -33,6 +33,19 @@
 
 namespace hal {
 
+//------------------------------------------------------------------------------
+// Port event to PortOperState
+//------------------------------------------------------------------------------
+::port::PortOperState
+port_event_to_port_oper_state (port_event_t event)
+{
+    switch(event) {
+    case port_event_t::PORT_EVENT_LINK_UP: return ::port::PORT_OPER_STATUS_UP;
+    case port_event_t::PORT_EVENT_LINK_DOWN: return ::port::PORT_OPER_STATUS_DOWN;
+    default: return ::port::PORT_OPER_STATUS_NONE;
+    }
+}
+
 static inline hal_ret_t
 hal_stream_port_status_update (port_event_info_t port_event) {
     auto walk_cb = [](uint32_t event_id, void *entry, void *ctxt) {
@@ -49,13 +62,13 @@ hal_stream_port_status_update (port_event_info_t port_event) {
         spec->mutable_key_or_handle()->set_port_id(ifindex);
         spec->set_port_type(linkmgr::sdk_port_type_to_port_type_spec(port_event->type));
         // Set link status
-        link_status->set_oper_state(
-                                    linkmgr::sdk_port_oper_st_to_port_oper_st_spec(port_event->oper_status));
+        link_status->set_oper_state(port_event_to_port_oper_state(port_event->event));
+
         link_status->set_port_speed(
                                     linkmgr::sdk_port_speed_to_port_speed_spec(port_event->speed));
         link_status->set_fec_type(
                                   linkmgr::sdk_port_fec_type_to_port_fec_type_spec(
-                                                                                   port_event->fec_type));
+                                                                   port_event->fec_type));
         link_status->set_auto_neg_enable(port_event->auto_neg_enable);
         link_status->set_num_lanes(port_event->num_lanes);
         status->set_ifindex(ifindex);

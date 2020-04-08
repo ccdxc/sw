@@ -18,7 +18,7 @@ namespace hal {
 #define HAL_MAX_EVENTS              64
 
 hal_ret_t handle_event_request(const EventRequest *req,
-                               grpc::ServerWriter<EventResponse> *stream);
+                               grpc::ServerReaderWriter<EventResponse, EventRequest> *stream);
 
 }    // namespace hal
 

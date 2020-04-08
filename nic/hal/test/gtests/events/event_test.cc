@@ -1,4 +1,6 @@
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
+
+
 #include "gen/proto/interface.pb.h"
 #include "nic/hal/hal.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
@@ -49,32 +51,32 @@ TEST_F(event_test, notify_listeners)
      auto stub = Event::NewStub(channel);
      grpc::ClientContext context;
      EventRequest req;
-
+     std::shared_ptr<grpc::ClientReaderWriter<EventRequest, EventResponse>> stream(stub->EventListen(&context));
      req.set_event_id(event::EVENT_ID_PORT_STATE);
      req.set_event_operation(event::EVENT_OP_SUBSCRIBE);
-     std::unique_ptr<grpc::ClientReader<EventResponse>> stream(stub->EventListen(&context, req));
-     hal::handle_event_request(&req, (grpc::ServerWriter<EventResponse> *)stream.get());
-
      std::thread writer([]() {
          auto walk_cb =  [](uint32_t event_id, void *entry, void *ctxt) {
-             grpc::ServerWriter<EventResponse> *stream =
-                              (grpc::ServerWriter<EventResponse> *)ctxt;
+             grpc::ClientReaderWriter<EventResponse, EventRequest> *stream =
+                              (grpc::ClientReaderWriter<EventResponse, EventRequest> *)ctxt;
              EventResponse   evtresponse;
 
-             std::cout << "Listener available";
+             std::cout << "Listener available stream " << stream << endl;
              evtresponse.set_event_id(event::EVENT_ID_PORT_STATE);
              stream->Write(evtresponse);
+             sleep(100);
              return true;
          };
 
-         std::cout << "Running this" << std::endl;
+         sleep(30);
+         std::cout << "Running this " << std::endl;
          hal::g_hal_state->event_mgr()->walk_listeners(event::EVENT_ID_PORT_STATE, (void *)1, walk_cb);
      });
 
+     hal::handle_event_request(&req, (grpc::ServerReaderWriter<EventResponse, EventRequest> *)stream.get());
      EventResponse event_response;
      while (stream->Read(&event_response)) {
-        std::cout << "Got event " << event_response.event_id() << std::endl;
-        break;
+              std::cout << "Got event " << event_response.event_id() << std::endl;
+              break;
      }
      writer.join();
      grpc::Status status = stream->Finish();
