@@ -46,10 +46,10 @@ def test_read_help_cmd(node_name):
             failed = True
     return api.types.status.FAILURE if failed else api.types.status.SUCCESS
 
-def test_read_table_help_cmd(node_name, table_name=None):
+def test_read_table_help_cmd(node_name, table_names=None):
     failed = False
     req = api.Trigger_CreateExecuteCommandsRequest(serial=False)
-    tables = [table_name] if table_name else p4ctl.GetTables(node_name)
+    tables = table_names if table_names else p4ctl.GetTables(node_name)
 
     if not len(tables):
         api.Logger.error("Failed to get the list of tables on %s"%(node_name))
@@ -73,10 +73,10 @@ def test_read_table_help_cmd(node_name, table_name=None):
 
     return api.types.status.FAILURE if failed else api.types.status.SUCCESS
 
-def test_read_table_index_cmd(node_name, table_name=None, index=0):
+def test_read_table_index_cmd(node_name, table_names=None, index=0):
     failed = False
     req = api.Trigger_CreateExecuteCommandsRequest(serial=False)
-    tables = [table_name] if table_name else p4ctl.GetTables(node_name)
+    tables = table_names if table_names else p4ctl.GetTables(node_name)
 
     if not len(tables):
         api.Logger.error("Failed to get the list of tables on %s"%(node_name))

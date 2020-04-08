@@ -3,29 +3,13 @@ from datetime import datetime
 import re
 
 import iota.harness.api as api
+import iota.test.apulu.utils.naples as naples_utils
+import iota.test.apulu.verif.utils.techsupport_utils as ts_utils
 
-TS_DIR = "/data/techsupport/"
 TS_SCRIPT = "/nic/tools/collect_techsupport.sh"
 TS_SCRIPT_OP_PATTERN = 'Techsupport collected at (\S+)\r\n'
 
-CHMOD_BASE_CMD = "chmod "
-
 class __TCData: pass
-
-def delete_ts_dir(tc):
-    result = True
-    req = api.Trigger_CreateAllParallelCommandsRequest()
-    for node in tc.nodes:
-        api.Trigger_AddNaplesCommand(req, node, tc.delete_cmd)
-    resp = api.Trigger(req)
-    try:
-        for cmd in resp.commands:
-            if cmd.exit_code != 0:
-                api.PrintCommandResults(cmd)
-                result = False
-    except Exception as e:
-        api.Logger.error("Exception {} ".format(str(e)))
-    return result
 
 def get_techsupport_file(cmd_output):
     api.Logger.verbose(f"techsupport script output {cmd_output}")
@@ -34,9 +18,9 @@ def get_techsupport_file(cmd_output):
     return ts_file
 
 def trigger_techsupport_requests(tc):
-    result = delete_ts_dir(tc)
+    result = ts_utils.DeleteTSDir(tc.nodes)
     if result != True:
-        api.Logger.error(f"Failed to delete {TS_DIR} before request")
+        api.Logger.error("Failed to clean techsupport in naples before request")
         return result
 
     req = api.Trigger_CreateAllParallelCommandsRequest()
@@ -46,21 +30,13 @@ def trigger_techsupport_requests(tc):
     tc.resp = api.Trigger(req)
     return True
 
-def fix_file_permission(node, file, perm='644'):
-    cmd = f"{CHMOD_BASE_CMD} {perm} {file}"
-    req = api.Trigger_CreateAllParallelCommandsRequest()
-    api.Trigger_AddNaplesCommand(req, node, cmd)
-    resp = api.Trigger(req)
-    if resp and resp.commands[0].exit_code == 0:
-        return True
-    return False
-
 def collect_techsupports(tc):
     result = True
     if tc.resp is None:
         api.Logger.error("Failed to trigger techsupport requests")
         return False
 
+    tc.techsupportTarBalls = []
     for cmd in tc.resp.commands:
         node = cmd.node_name
         if cmd.exit_code != 0:
@@ -69,11 +45,13 @@ def collect_techsupports(tc):
             result = False
         else:
             ts_file = get_techsupport_file(cmd.stdout)
+            if api.GlobalOptions.dryrun:
+                continue
             if ts_file is None:
                 api.Logger.error(f"Failed to parse techsupport op for {node}")
                 result = False
                 continue
-            if not fix_file_permission(node, ts_file):
+            if not naples_utils.ChangeFilesPermission([node], [ts_file]):
                 api.Logger.error(f"Failed to fix perm for techsupport on {node}")
                 result = False
                 continue
@@ -81,6 +59,7 @@ def collect_techsupports(tc):
             api.Logger.debug(f"Copying out {ts_file} from {node} to {tc.dir}")
             api.ChangeDirectory("/")
             api.CopyFromNaples(node, [ts_file], tc.dir, True)
+            tc.techsupportTarBalls.append(tc.dir+ts_utils.GetTechsupportFilename(ts_file))
     return result
 
 def __setup(tc):
@@ -88,20 +67,32 @@ def __setup(tc):
     if len(tc.nodes) == 0:
         api.Logger.error("No naples node found")
         return False
-    tc.delete_cmd = f"rm -rf {TS_DIR}"
     return True
 
 def __trigger(tc):
     return trigger_techsupport_requests(tc)
 
 def __verify(tc):
-    return collect_techsupports(tc)
+    if not collect_techsupports(tc):
+        return False
+    if api.GlobalOptions.dryrun:
+        # no techsupport files to verify in case of dryrun
+        api.Logger.verbose(f"DryRun: nothing to be verified")
+        return True
+    if not ts_utils.IsCoreCollected(tc.techsupportTarBalls):
+        api.Logger.error(f"Core directory is not collected in techsupport")
+        return False
+    cores = ts_utils.GetCoreFiles(tc.techsupportTarBalls)
+    if cores:
+        api.Logger.error(f"Core files {cores} found in techsupport")
+        return False
+    return True
 
 def __teardown(tc):
-    #delete techsupport in naples post copy
-    result = delete_ts_dir(tc)
+    # delete techsupport in naples post copy
+    result = ts_utils.DeleteTSDir(tc.nodes)
     if result != True:
-        api.Logger.error(f"Failed to delete {TS_DIR} during teardown")
+        api.Logger.error("Failed to cleanup techsupport during teardown")
     return result
 
 def __collect_techsupport(testcase):
@@ -112,6 +103,7 @@ def __collect_techsupport(testcase):
     else:
         # techsupport collection as part of testsuite teardown
         tc.dir = api.GetTestsuiteLogsDir()
+    tc.dir += "/"
     if not __setup(tc) or not __trigger(tc) or not __verify(tc) or not __teardown(tc):
        return api.types.status.FAILURE
     return api.types.status.SUCCESS
@@ -119,5 +111,5 @@ def __collect_techsupport(testcase):
 def Main(tc):
     api.Logger.verbose("Collecting TechSupport")
     res = __collect_techsupport(tc)
-    api.Logger.verbose(f"Collecting TechSupport - result {res}")
+    api.Logger.info(f"Collecting TechSupport - result {res}")
     return res

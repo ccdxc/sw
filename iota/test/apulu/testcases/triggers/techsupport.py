@@ -1,39 +1,28 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 
+import iota.test.apulu.verif.utils.techsupport_utils as ts_utils
+
 # Following come from DOL
 from apollo.oper.oper import client as OperClient
 
-TS_DIR = "/data/techsupport/"
-NUKE_TS_DIR_CMD = f"rm -rf {TS_DIR}"
-
-def delete_ts_dir(naples_nodes):
-    result = True
-    req = api.Trigger_CreateAllParallelCommandsRequest()
-    for node in naples_nodes:
-        api.Trigger_AddNaplesCommand(req, node, NUKE_TS_DIR_CMD)
-    resp = api.Trigger(req)
-    for cmd in resp.commands:
-        if cmd.exit_code != 0:
-            api.PrintCommandResults(cmd)
-            result = False
-    return result
-
 def trigger_techsupport_request(tc):
-    result = delete_ts_dir(tc.nodes)
+    result = ts_utils.DeleteTSDir(tc.nodes)
     if result != True:
-        api.Logger.error(f"Failed to delete {TS_DIR} in naples before copy")
+        api.Logger.error("Failed to clean techsupport in naples before request")
         return result
 
     # get testcase directory to copy out generated techsupports
     tc_dir = tc.GetLogsDir()
-    skipcores = getattr(tc.iterators, "skipcores", False)
+    tc.techsupportTarBalls = []
     for node in tc.nodes:
         # initiate techsupport collect request
         ts_obj = OperClient.GetTechSupportObject(node)
-        ts_obj.SetSkipCores(skipcores)
+        ts_obj.SetSkipCores(tc.skipcores)
         ts_file = ts_obj.Collect()
-        api.Logger.debug(f"Collecting techsupport from {node} skipcores {skipcores}")
+        api.Logger.debug(f"Collecting techsupport from {node} skipcores {tc.skipcores}")
+        if api.GlobalOptions.dryrun:
+            continue
         if ts_file is None:
             api.Logger.error(f"Failed to collect techsupport for {node}")
             result = False
@@ -41,6 +30,8 @@ def trigger_techsupport_request(tc):
         api.Logger.debug(f"Copying out {ts_file} from {node} to {tc_dir}")
         # copy out the generated techsupport tarball from naples
         api.CopyFromNaples(node, [ts_file], tc_dir, True)
+        tc.techsupportTarBalls.append(tc_dir+ts_utils.GetTechsupportFilename(ts_file))
+    api.Logger.verbose(f"TS: collected techsupports {tc.techsupportTarBalls}")
     return result
 
 def Setup(tc):
@@ -49,6 +40,7 @@ def Setup(tc):
     if len(tc.nodes) == 0:
         api.Logger.error("No naples nodes found")
         result = api.types.status.FAILURE
+    tc.skipcores = getattr(tc.iterators, "skipcores", False)
     api.Logger.verbose(f"TS: Setup returned {result}")
     return result
 
@@ -61,14 +53,25 @@ def Trigger(tc):
 
 def Verify(tc):
     result = api.types.status.SUCCESS
+    if api.GlobalOptions.dryrun:
+        # no techsupport files to verify in case of dryrun
+        api.Logger.verbose(f"TS: DryRun Verify returned {result}")
+        return result
+    if tc.skipcores == ts_utils.IsCoreCollected(tc.techsupportTarBalls):
+        api.Logger.error(f"TS: collect core verification failed")
+        result = api.types.status.FAILURE
+    cores = ts_utils.GetCoreFiles(tc.techsupportTarBalls)
+    if cores:
+        api.Logger.error(f"TS: core(s) {cores} found in techsupport")
+        result = api.types.status.FAILURE
     api.Logger.verbose(f"TS: Verify returned {result}")
     return result
 
 def Teardown(tc):
     result = api.types.status.SUCCESS
-    #delete techsupport in naples post copy
-    if not delete_ts_dir(tc.nodes):
-        api.Logger.error(f"Failed to cleanup {TS_DIR} during teardown")
+    # delete techsupport in naples post copy
+    if not ts_utils.DeleteTSDir(tc.nodes):
+        api.Logger.error("Failed to cleanup techsupport during teardown")
         result = api.types.status.FAILURE
     api.Logger.verbose(f"TS: Teardown returned {result}")
     return result

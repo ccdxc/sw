@@ -9,4 +9,4 @@ testcases:
         stress  : True
         iterators :
             type      : simple
-            skipcores : [ False, True ]
+            skipcores : [ True, False ]
