@@ -57,6 +57,7 @@ var _ = Describe("Client certificates", func() {
 
 	Context("with wild-card audience", func() {
 		It("should be allowed", func() {
+			Skip("Skipping client cert auth tests")
 			Eventually(func() bool {
 				// get token with * audience from Venice/api-gw
 				httpClient, err := utils.GetNodeAuthTokenHTTPClient(ts.loggedInCtx, apiGwAddr, []string{"*"})
@@ -79,6 +80,7 @@ var _ = Describe("Client certificates", func() {
 
 	Context("with specific mac-address audience", func() {
 		It("should be allowed only when mac-address in token audience matches request serving device mac", func() {
+			Skip("Skipping client cert auth tests")
 			Eventually(func() bool {
 				// get mac-address to allow
 				allowedNaplesNode := ts.tu.NaplesNodes[0]
@@ -116,6 +118,7 @@ var _ = Describe("Client certificates", func() {
 		})
 
 		It("should be rejected when mac-address in token audience does not match request serving device mac", func() {
+			Skip("Skipping client cert auth tests")
 			Eventually(func() bool {
 				// get token with specific audience from Venice/api-gw
 				httpClient, err := utils.GetNodeAuthTokenHTTPClient(ts.loggedInCtx, apiGwAddr, []string{testMac})
