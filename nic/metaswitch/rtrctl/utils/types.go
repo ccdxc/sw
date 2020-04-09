@@ -1158,3 +1158,38 @@ func NewLimIfStatusGetResp(status *pds.LimIfStatus) *ShadowLimIfStatus {
 		OperReason:   strings.TrimPrefix(status.OperReason.String(), "OPR_RSN_"),
 	}
 }
+
+// ShadowCPStaticRouteSpec shadows the CPStaticRouteSpec for CLI purposes
+type ShadowCPStaticRouteSpec struct {
+	DestAddr    string
+	PrefixLen   uint32
+	NextHopAddr string
+	State       string
+	Override    bool
+	AdminDist   uint32
+	*pds.CPStaticRouteSpec
+}
+
+func newCPStaticRouteSpec(in *pds.CPStaticRouteSpec) ShadowCPStaticRouteSpec {
+	return ShadowCPStaticRouteSpec{
+		DestAddr:          PdsIPToString(in.DestAddr),
+		PrefixLen:         in.PrefixLen,
+		NextHopAddr:       PdsIPToString(in.NextHopAddr),
+		State:             strings.TrimPrefix(in.State.String(), "ADMIN_STATE_"),
+		Override:          in.Override,
+		AdminDist:         in.AdminDist,
+		CPStaticRouteSpec: in,
+	}
+}
+
+// ShadowCPStaticRoute shadows the CPStaticRoute for CLI purposes
+type ShadowCPStaticRoute struct {
+	Spec ShadowCPStaticRouteSpec
+}
+
+// NewCPStaticRoute creates a shadow of CPStaticRoute
+func NewCPStaticRoute(in *pds.CPStaticRoute) *ShadowCPStaticRoute {
+	return &ShadowCPStaticRoute{
+		Spec: newCPStaticRouteSpec(in.Spec),
+	}
+}

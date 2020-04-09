@@ -53,4 +53,6 @@ func RegisterNodes(params *CLIParams, base *cobra.Command) {
 	routingShowCmd.AddCommand(interfaceShowCmd)
 	interfaceShowCmd.AddCommand(intfStatusShowCmd)
 	interfaceShowCmd.PersistentFlags().Bool("json", false, "output in json")
+	routingShowCmd.AddCommand(staticTableShowCmd)
+	staticTableShowCmd.PersistentFlags().Bool("json", false, "output in json")
 }
