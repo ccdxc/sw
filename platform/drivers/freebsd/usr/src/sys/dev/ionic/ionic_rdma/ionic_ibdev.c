@@ -468,7 +468,8 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 	/*
 	 * ionic_create_rdma_admin() may reduce aq_count or eq_count if
 	 * it is unable to allocate all that were requested.
-	 * aq_count is tunable; see ionic_rdma_aq_count
+	 * aq_count is tunable; see ionic_aq_count
+	 * eq_count is tunable; see ionic_eq_count
 	 */
 	dev->aq_count = le32_to_cpu(ident->rdma.aq_qtype.qid_count);
 	dev->eq_count = le32_to_cpu(ident->rdma.eq_qtype.qid_count);
@@ -485,8 +486,10 @@ static struct ionic_ibdev *ionic_create_ibdev(void *handle,
 	dev->rrq_stride = ident->rdma.rrq_stride;
 	dev->rsq_stride = ident->rdma.rsq_stride;
 
-	xa_init(&dev->qp_tbl);
-	xa_init(&dev->cq_tbl);
+	xa_init_flags(&dev->qp_tbl, GFP_ATOMIC);
+	rwlock_init(&dev->qp_tbl_rw);
+	xa_init_flags(&dev->cq_tbl, GFP_ATOMIC);
+	rwlock_init(&dev->cq_tbl_rw);
 
 	mutex_init(&dev->inuse_lock);
 	spin_lock_init(&dev->inuse_splock);

@@ -134,10 +134,12 @@ struct ionic_ibdev {
 	u8			rsq_stride;
 
 	/* These tables are used in the fast path.
-	 * They are protected by RCU.
+	 * They are protected by rw locks.
 	 */
 	struct xarray		qp_tbl;
+	rwlock_t		qp_tbl_rw;
 	struct xarray		cq_tbl;
+	rwlock_t		cq_tbl_rw;
 
 	/* These lists are used for debugging only.
 	 * They are protected by the dev_lock.
@@ -204,6 +206,13 @@ struct ionic_eq {
 
 	int			irq;
 	char			name[32];
+
+	u64			poll_isr;
+	u64			poll_isr_single;
+	u64			poll_isr_full;
+	u64			poll_wq;
+	u64			poll_wq_single;
+	u64			poll_wq_full;
 
 	struct dentry		*debug;
 };
@@ -589,6 +598,7 @@ extern int ionic_rqcmb_order;
 
 extern u16 ionic_aq_depth;
 extern int ionic_aq_count;
+extern int ionic_eq_count;
 extern u16 ionic_eq_depth;
 extern u16 ionic_eq_isr_budget;
 extern u16 ionic_eq_work_budget;

@@ -1340,10 +1340,7 @@ int ionic_create_cq_common(struct ionic_cq *cq,
 		goto err_cqid;
 
 	/* the first eq is reserved for async events */
-	eq_idx = attr->comp_vector;
-	if (eq_idx >= dev->eq_count - 1)
-		eq_idx %= dev->eq_count - 1;
-	eq_idx += 1;
+	eq_idx = (attr->comp_vector % (dev->eq_count - 1)) + 1;
 
 	cq->eqid = dev->eq_vec[eq_idx]->eqid;
 
@@ -1415,7 +1412,9 @@ int ionic_create_cq_common(struct ionic_cq *cq,
 	init_completion(&cq->cq_rel_comp);
 	kref_init(&cq->cq_kref);
 
-	rc = xa_err(xa_store_irq(&dev->cq_tbl, cq->cqid, cq, GFP_KERNEL));
+	write_lock_irqsave(&dev->cq_tbl_rw, irqflags);
+	rc = xa_err(xa_store(&dev->cq_tbl, cq->cqid, cq, GFP_KERNEL));
+	write_unlock_irqrestore(&dev->cq_tbl_rw, irqflags);
 	if (rc)
 		goto err_xa;
 
@@ -1454,7 +1453,9 @@ void ionic_destroy_cq_common(struct ionic_ibdev *dev, struct ionic_cq *cq)
 	list_del(&cq->cq_list_ent);
 	spin_unlock_irqrestore(&dev->dev_lock, irqflags);
 
-	xa_erase_irq(&dev->cq_tbl, cq->cqid);
+	write_lock_irqsave(&dev->cq_tbl_rw, irqflags);
+	xa_erase(&dev->cq_tbl, cq->cqid);
+	write_unlock_irqrestore(&dev->cq_tbl_rw, irqflags);
 
 	kref_put(&cq->cq_kref, ionic_cq_complete);
 	wait_for_completion(&cq->cq_rel_comp);
@@ -2512,7 +2513,9 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	init_completion(&qp->qp_rel_comp);
 	kref_init(&qp->qp_kref);
 
-	rc = xa_err(xa_store_irq(&dev->qp_tbl, qp->qpid, qp, GFP_KERNEL));
+	write_lock_irqsave(&dev->qp_tbl_rw, irqflags);
+	rc = xa_err(xa_store(&dev->qp_tbl, qp->qpid, qp, GFP_KERNEL));
+	write_unlock_irqrestore(&dev->qp_tbl_rw, irqflags);
 	if (rc)
 		goto err_xa;
 
@@ -2890,7 +2893,9 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 	if (rc)
 		return rc;
 
-	xa_erase_irq(&dev->qp_tbl, qp->qpid);
+	write_lock_irqsave(&dev->qp_tbl_rw, irqflags);
+	xa_erase(&dev->qp_tbl, qp->qpid);
+	write_unlock_irqrestore(&dev->qp_tbl_rw, irqflags);
 
 	kref_put(&qp->qp_kref, ionic_qp_complete);
 	wait_for_completion(&qp->qp_rel_comp);

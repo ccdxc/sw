@@ -58,19 +58,22 @@ MODULE_PARM_DESC(xxx_aq_dbell, "XXX Enable ringing aq doorbell (to test handling
 #endif
 
 #endif /* NOT_UPSTREAM */
+#define IONIC_EQ_COUNT_MIN	2
+#define IONIC_AQ_COUNT_MIN	1
+
 /* not a valid queue position or negative error status */
-#define IONIC_ADMIN_POSTED 0x10000
+#define IONIC_ADMIN_POSTED	0x10000
 
 /* cpu can be held with irq disabled for COUNT * MS  (for create/destroy_ah) */
-#define IONIC_ADMIN_BUSY_RETRY_COUNT 2000
-#define IONIC_ADMIN_BUSY_RETRY_MS 1
+#define IONIC_ADMIN_BUSY_RETRY_COUNT	2000
+#define IONIC_ADMIN_BUSY_RETRY_MS	1
 
 /* admin queue will be considered failed if a command takes longer */
-#define IONIC_ADMIN_TIMEOUT (HZ * 2)
-#define IONIC_ADMIN_WARN (HZ)
+#define IONIC_ADMIN_TIMEOUT	(HZ * 2)
+#define IONIC_ADMIN_WARN	(HZ)
 
 /* will poll for admin cq to tolerate and report from missed event */
-#define IONIC_ADMIN_DELAY (HZ / 4)
+#define IONIC_ADMIN_DELAY	(HZ / 4)
 
 /* work queue for polling the event queue and admin cq */
 struct workqueue_struct *ionic_evt_workq;
@@ -731,31 +734,31 @@ void ionic_kill_ibdev(struct ionic_ibdev *dev, bool fatal_path)
 		unsigned long index;
 
 		/* Flush qp send and recv */
-		xa_lock(&dev->qp_tbl);
+		read_lock(&dev->qp_tbl_rw);
 		xa_for_each(&dev->qp_tbl, index, qp)
 			ionic_flush_qp(qp);
-		xa_unlock(&dev->qp_tbl);
+		read_unlock(&dev->qp_tbl_rw);
 
 		/* Notify completions */
-		xa_lock(&dev->cq_tbl);
+		read_lock(&dev->cq_tbl_rw);
 		xa_for_each(&dev->cq_tbl, index, cq)
 			ionic_notify_flush_cq(cq);
-		xa_unlock(&dev->cq_tbl);
+		read_unlock(&dev->cq_tbl_rw);
 #else
 		struct xa_iter iter;
 		void **slot;
 
 		/* Flush qp send and recv */
-		xa_lock(&dev->qp_tbl);
+		read_lock(&dev->qp_tbl_rw);
 		xa_for_each_slot(&dev->qp_tbl, slot, &iter)
 			ionic_flush_qp(*slot);
-		xa_unlock(&dev->qp_tbl);
+		read_unlock(&dev->qp_tbl_rw);
 
 		/* Notify completions */
-		xa_lock(&dev->cq_tbl);
+		read_lock(&dev->cq_tbl_rw);
 		xa_for_each_slot(&dev->cq_tbl, slot, &iter)
 			ionic_notify_flush_cq(*slot);
-		xa_unlock(&dev->cq_tbl);
+		read_unlock(&dev->cq_tbl_rw);
 #endif /* HAVE_XARRAY */
 	}
 
@@ -856,11 +859,11 @@ static void ionic_cq_event(struct ionic_ibdev *dev, u32 cqid, u8 code)
 	struct ionic_cq *cq;
 	unsigned long irqflags;
 
-	xa_lock_irqsave(&dev->cq_tbl, irqflags);
+	read_lock_irqsave(&dev->cq_tbl_rw, irqflags);
 	cq = xa_load(&dev->cq_tbl, cqid);
 	if (cq)
 		kref_get(&cq->cq_kref);
-	xa_unlock_irqrestore(&dev->cq_tbl, irqflags);
+	read_unlock_irqrestore(&dev->cq_tbl_rw, irqflags);
 
 	if (!cq) {
 		ibdev_dbg(&dev->ibdev,
@@ -868,27 +871,27 @@ static void ionic_cq_event(struct ionic_ibdev *dev, u32 cqid, u8 code)
 		goto out;
 	}
 
-	ibev.device = &dev->ibdev;
-	ibev.element.cq = &cq->ibcq;
-
 	switch (code) {
 	case IONIC_V1_EQE_CQ_NOTIFY:
 		if (cq->ibcq.comp_handler)
 			cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
-		goto out;
+		break;
 
 	case IONIC_V1_EQE_CQ_ERR:
-		ibev.event = IB_EVENT_CQ_ERR;
+		if (cq->ibcq.event_handler) {
+			ibev.event = IB_EVENT_CQ_ERR;
+			ibev.device = &dev->ibdev;
+			ibev.element.cq = &cq->ibcq;
+
+			cq->ibcq.event_handler(&ibev, cq->ibcq.cq_context);
+		}
 		break;
 
 	default:
 		ibdev_dbg(&dev->ibdev,
 			  "unrecognized cqid %#x code %u\n", cqid, code);
-		goto out;
+		break;
 	}
-
-	if (cq->ibcq.event_handler)
-		cq->ibcq.event_handler(&ibev, cq->ibcq.cq_context);
 
 out:
 	if (cq)
@@ -930,11 +933,11 @@ static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 	struct ionic_qp *qp;
 	unsigned long irqflags;
 
-	xa_lock_irqsave(&dev->qp_tbl, irqflags);
+	read_lock_irqsave(&dev->qp_tbl_rw, irqflags);
 	qp = xa_load(&dev->qp_tbl, qpid);
 	if (qp)
 		kref_get(&qp->qp_kref);
-	xa_unlock_irqrestore(&dev->qp_tbl, irqflags);
+	read_unlock_irqrestore(&dev->qp_tbl_rw, irqflags);
 
 	if (!qp) {
 		ibdev_dbg(&dev->ibdev,
@@ -1042,8 +1045,16 @@ static void ionic_poll_eq_work(struct work_struct *work)
 		return;
 
 	npolled = ionic_poll_eq(eq, ionic_eq_work_budget);
+#ifdef NOT_UPSTREAM
+	eq->poll_wq += npolled;
+	if (npolled == 1)
+		eq->poll_wq_single++;
+#endif /* NOT_UPSTREAM */
 
-	if (npolled) {
+	if (npolled == ionic_eq_work_budget) {
+#ifdef NOT_UPSTREAM
+		eq->poll_wq_full++;
+#endif /* NOT_UPSTREAM */
 		ionic_intr_credits(eq->dev->intr_ctrl, eq->intr, npolled, 0);
 		queue_work(ionic_evt_workq, &eq->work);
 	} else {
@@ -1065,9 +1076,23 @@ static irqreturn_t ionic_poll_eq_isr(int irq, void *eqptr)
 		return IRQ_HANDLED;
 
 	npolled = ionic_poll_eq(eq, ionic_eq_isr_budget);
+#ifdef NOT_UPSTREAM
+	eq->poll_isr += npolled;
+	if (npolled == 1)
+		eq->poll_isr_single++;
+#endif /* NOT_UPSTREAM */
 
-	ionic_intr_credits(eq->dev->intr_ctrl, eq->intr, npolled, 0);
-	queue_work(ionic_evt_workq, &eq->work);
+	if (npolled == ionic_eq_isr_budget) {
+#ifdef NOT_UPSTREAM
+		eq->poll_isr_full++;
+#endif /* NOT_UPSTREAM */
+		ionic_intr_credits(eq->dev->intr_ctrl, eq->intr, npolled, 0);
+		queue_work(ionic_evt_workq, &eq->work);
+	} else {
+		xchg(&eq->armed, true);
+		ionic_intr_credits(eq->dev->intr_ctrl, eq->intr,
+				   0, IONIC_INTR_CRED_UNMASK);
+	}
 
 	return IRQ_HANDLED;
 }
@@ -1077,7 +1102,7 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev, int eqid)
 	struct ionic_eq *eq;
 	int rc;
 
-	eq = kmalloc(sizeof(*eq), GFP_KERNEL);
+	eq = kzalloc(sizeof(*eq), GFP_KERNEL);
 	if (!eq) {
 		rc = -ENOMEM;
 		goto err_eq;
@@ -1180,14 +1205,23 @@ int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 	INIT_LIST_HEAD(&dev->cq_list);
 	spin_lock_init(&dev->dev_lock);
 
-	if (ionic_aq_count > 0 && ionic_aq_count < dev->aq_count) {
+	if (ionic_aq_count >= IONIC_AQ_COUNT_MIN &&
+	    ionic_aq_count < dev->aq_count) {
 		ibdev_dbg(&dev->ibdev,
 			  "limiting adminq count to %d\n", ionic_aq_count);
 		dev->aq_count = ionic_aq_count;
 	}
 
+	if (ionic_eq_count >= IONIC_EQ_COUNT_MIN &&
+	    ionic_eq_count < dev->eq_count) {
+		dev_dbg(&dev->ibdev.dev, "limiting eventq count to %d\n",
+			ionic_eq_count);
+		dev->eq_count = ionic_eq_count;
+	}
+
 	/* need at least two eq and one aq */
-	if (dev->eq_count < 2 || !dev->aq_count) {
+	if (dev->eq_count < IONIC_EQ_COUNT_MIN ||
+	    dev->aq_count < IONIC_AQ_COUNT_MIN) {
 		rc = -EINVAL;
 		goto out;
 	}

@@ -18,6 +18,7 @@ bool ionic_sqcmb_inline;
 int ionic_rqcmb_order = 5; /* 32 pages */
 u16 ionic_aq_depth = 63;
 int ionic_aq_count = 4;
+int ionic_eq_count = 32;
 u16 ionic_eq_depth = 511;
 u16 ionic_eq_isr_budget = 10;
 u16 ionic_eq_work_budget = 1000;
@@ -63,6 +64,7 @@ IRCFG_BOOL(sqcmb_inline);
 IRCFG_INT(rqcmb_order);
 IRCFG_U16(aq_depth);
 IRCFG_INT(aq_count);
+IRCFG_INT(eq_count);
 IRCFG_U16(eq_depth);
 IRCFG_U16(eq_isr_budget);
 IRCFG_U16(eq_work_budget);
@@ -113,6 +115,7 @@ static ssize_t ionic_rdma_description_show(struct config_item *item, char *pg)
 "rqcmb_order     Only alloc rq cmb less than order\n"
 "aq_depth        Min depth for admin queues\n"
 "aq_count        Limit number of admin queues created\n"
+"eq_count        Limit number of event queues created\n"
 "eq_depth        Min depth for event queues\n"
 "eq_isr_budget   Max events to poll per round in isr context\n"
 "eq_work_budget  Max events to poll per round in work context\n"
@@ -131,6 +134,7 @@ CONFIGFS_ATTR(ionic_rdma_, sqcmb_inline);
 CONFIGFS_ATTR(ionic_rdma_, rqcmb_order);
 CONFIGFS_ATTR(ionic_rdma_, aq_depth);
 CONFIGFS_ATTR(ionic_rdma_, aq_count);
+CONFIGFS_ATTR(ionic_rdma_, eq_count);
 CONFIGFS_ATTR(ionic_rdma_, eq_depth);
 CONFIGFS_ATTR(ionic_rdma_, eq_isr_budget);
 CONFIGFS_ATTR(ionic_rdma_, eq_work_budget);
@@ -150,6 +154,7 @@ static struct configfs_attribute *ionic_rdma_attrs[] = {
 	&ionic_rdma_attr_rqcmb_order,
 	&ionic_rdma_attr_aq_depth,
 	&ionic_rdma_attr_aq_count,
+	&ionic_rdma_attr_eq_count,
 	&ionic_rdma_attr_eq_depth,
 	&ionic_rdma_attr_eq_isr_budget,
 	&ionic_rdma_attr_eq_work_budget,
@@ -199,6 +204,9 @@ MODULE_PARM_DESC(aq_depth, "Min depth for admin queues.");
 
 module_param_named(aq_count, ionic_aq_count, int, 0644);
 MODULE_PARM_DESC(aq_count, "Limit number of admin queues created.");
+
+module_param_named(eq_count, ionic_eq_count, int, 0644);
+MODULE_PARM_DESC(eq_count, "Limit number of event queues created.");
 
 module_param_named(eq_depth, ionic_eq_depth, ushort, 0444);
 MODULE_PARM_DESC(eq_depth, "Min depth for event queues.");
@@ -559,6 +567,14 @@ static int ionic_eq_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "armed:\t%u\n", eq->armed);
 	seq_printf(s, "irq:\t%u\n", eq->irq);
 	seq_printf(s, "name:\t%s\n", eq->name);
+#ifdef NOT_UPSTREAM
+	seq_printf(s, "poll_isr:\t\t%llu\n", eq->poll_isr);
+	seq_printf(s, "poll_isr_single:\t%llu\n", eq->poll_isr_single);
+	seq_printf(s, "poll_isr_full:\t\t%llu\n", eq->poll_isr_full);
+	seq_printf(s, "poll_wq:\t\t%llu\n", eq->poll_wq);
+	seq_printf(s, "poll_wq_single:\t\t%llu\n", eq->poll_wq_single);
+	seq_printf(s, "poll_wq_full:\t\t%llu\n", eq->poll_wq_full);
+#endif /* NOT_UPSTREAM */
 
 	/* interrupt control readback */
 	intr = &eq->dev->intr_ctrl[eq->intr];

@@ -85,27 +85,21 @@
 #ifdef HAVE_RADIX_TREE_LOCK
 #define xarray       radix_tree_root
 #define xa_tree
-#define xa_init(_xa) INIT_RADIX_TREE((_xa), GFP_KERNEL)
+#define xa_init_flags(_xa, _fl) INIT_RADIX_TREE((_xa), _fl)
 #else
 struct xarray {
 	spinlock_t x_lock;
 	struct radix_tree_root x_tree;
 };
 #define xa_tree(_xa) &(_xa)->x_tree
-static inline void xa_init(struct xarray *xa)
+static inline void xa_init_flags(struct xarray *xa, gfp_t flags)
 {
 	spin_lock_init(&xa->x_lock);
-	INIT_RADIX_TREE(xa_tree(xa), GFP_KERNEL);
+	INIT_RADIX_TREE(xa_tree(xa), flags);
 }
 
 #define xa_lock(_xa) spin_lock(&(_xa)->x_lock)
 #define xa_unlock(_xa) spin_unlock(&(_xa)->x_lock)
-#define xa_lock_irq(_xa) spin_lock_irq(&(_xa)->x_lock)
-#define xa_unlock_irq(_xa) spin_unlock_irq(&(_xa)->x_lock)
-#define xa_lock_irqsave(_xa, _flags)					\
-	spin_lock_irqsave(&(_xa)->x_lock, _flags)
-#define xa_unlock_irqrestore(_xa, _flags)				\
-	spin_unlock_irqrestore(&(_xa)->x_lock, _flags)
 #endif /* HAVE_RADIX_TREE_LOCK */
 
 #define xa_iter radix_tree_iter
@@ -114,14 +108,14 @@ static inline void xa_init(struct xarray *xa)
 #define xa_load(_xa, _idx) radix_tree_lookup(xa_tree(_xa), _idx)
 #define xa_destroy(_xa)
 
-static inline void *xa_store_irq(struct xarray *xa, unsigned long idx,
-				 void *item, gfp_t unused)
+static inline void *xa_store(struct xarray *xa, unsigned long idx,
+			     void *item, gfp_t unused)
 {
 	int ret;
 
-	xa_lock_irq(xa);
+	xa_lock(xa);
 	ret = radix_tree_insert(xa_tree(xa), idx, item);
-	xa_unlock_irq(xa);
+	xa_unlock(xa);
 
 	return (ret ? ERR_PTR(ret) : item);
 }
@@ -131,11 +125,11 @@ static inline int xa_err(void *item)
 	return (IS_ERR(item) ? PTR_ERR(item) : 0);
 }
 
-static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
+static inline void xa_erase(struct xarray *xa, unsigned long idx)
 {
-	xa_lock_irq(xa);
+	xa_lock(xa);
 	radix_tree_delete(xa_tree(xa), idx);
-	xa_unlock_irq(xa);
+	xa_unlock(xa);
 }
 #endif /* HAVE_XARRAY */
 #ifndef HAVE_STATIC_ASSERT

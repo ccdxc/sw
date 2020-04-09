@@ -65,6 +65,10 @@ int ionic_aq_count = 4;
 SYSCTL_INT(_hw_ionic_rdma, OID_AUTO, aq_count, CTLFLAG_RDTUN,
     &ionic_aq_count, 0, "Limit number of admin queues created");
 
+int ionic_eq_count = 32;
+SYSCTL_INT(_hw_ionic_rdma, OID_AUTO, eq_count, CTLFLAG_RDTUN,
+    &ionic_eq_count, 0, "Limit number of event queues created");
+
 u16 ionic_eq_depth = 511;
 SYSCTL_U16(_hw_ionic_rdma, OID_AUTO, eq_depth, CTLFLAG_RDTUN,
     &ionic_eq_depth, 0, "Min depth for event queues");
@@ -628,6 +632,16 @@ void ionic_dbg_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq)
 	ionic_bool(ctx, parent, &eq->armed, "armed", "EQ Armed");
 	ionic_int(ctx, parent, &eq->irq, "irq", "EQ IRQ");
 	ionic_string(ctx, parent, eq->name, "name", "EQ ISR Name");
+	ionic_u64(ctx, parent, &eq->poll_isr, "poll_isr", "EQE polled by ISR");
+	ionic_u64(ctx, parent, &eq->poll_isr_single, "poll_isr_single",
+		  "EQ ISR runs that found a single EQE");
+	ionic_u64(ctx, parent, &eq->poll_isr_full, "poll_isr_full",
+		  "EQ ISR runs that hit budget limit");
+	ionic_u64(ctx, parent, &eq->poll_wq, "poll_wq", "EQE polled by WQ");
+	ionic_u64(ctx, parent, &eq->poll_wq_single, "poll_wq_single",
+		  "EQ WQ runs that found a single EQE");
+	ionic_u64(ctx, parent, &eq->poll_wq_full, "poll_wq_full",
+		  "EQ WQ runs that hit budget limit");
 
 	intr = &eq->dev->intr_ctrl[eq->intr];
 	ionic_ioread32(ctx, parent, &intr->coal_init,
