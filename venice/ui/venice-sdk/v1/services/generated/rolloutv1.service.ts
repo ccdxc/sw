@@ -1,4 +1,4 @@
-import { AbstractService } from './abstract.service';
+import { AbstractService, ServerEvent } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
@@ -140,6 +140,14 @@ export class Rolloutv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IRolloutAutoMsgRolloutWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  protected createListRolloutCache(): Observable<ServerEvent<RolloutRollout>> {
+    return this.createDataCache<RolloutRollout>(RolloutRollout, `RolloutRollout`, () => this.ListRollout(), (body: any) => this.WatchRollout(body));
+  }
+
+  public ListRolloutCache(): Observable<ServerEvent<RolloutRollout>> {
+    return this.getFromDataCache(`RolloutRollout`, () => { return this.createListRolloutCache() });
   }
   
 }

@@ -5,18 +5,12 @@ import { AUTH_KEY } from '@app/core/auth/auth.reducer';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
+import { MethodOpts, ServerEvent } from '@sdk/v1/services/generated/abstract.service';
 import * as oboe from 'oboe';
 import { NEVER, Observable, Subject, Subscriber, Subscription, TeardownLogic, BehaviorSubject, ReplaySubject } from 'rxjs';
 import { WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
 import { delay, publishReplay, refCount, bufferTime } from 'rxjs/operators';
-import { HttpEventUtility, ChangeEvent } from '@app/common/HttpEventUtility';
-
-export interface ServerEvent<T> {
-  data: ReadonlyArray<T>;
-  events: ChangeEvent<T>[];
-  connIsErrorState: boolean;
-}
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
 
 // VS-1306 experimental code. See if we can preserve data to re-run createDataCache() if ListXXXCache() fails
 export interface CreateCacheConfig {
@@ -64,8 +58,6 @@ export class GenServiceUtility {
   logoutSubscription: Subscription = null;
 
   id: string = null;
-
-  _createCacheConfigMap: CreateCacheConfigMap;
 
   constructor(http: HttpClient, ajaxStartCallback, ajaxEndCallback, useWebSockets = true) {
     this._http = http;
@@ -267,70 +259,36 @@ export class GenServiceUtility {
    *
    *  See hosts.component.ts for example
    */
-  public createDataCache<T>(constructor: any, key: string, listFn: () => Observable<VeniceResponse>, watchFn: (query: any) => Observable<VeniceResponse>): Observable<ServerEvent<any>> {
-    // preserve input parameter
-
-    // service (eg cluser-service) class may have multiple keys
-    if (!this._createCacheConfigMap) {
-      // case-1, this._createCacheConfigMap is not initialized
-      this._createCacheConfigMap = {
-        key: {
-          constructor: constructor,
-          key: key,
-          listFn: listFn,
-          watchFn: watchFn
-        }
-      };
-    } else {
-      // case-2, set the key entry
-      this._createCacheConfigMap[key] = {
-        constructor: constructor,
-        key: key,
-        listFn: listFn,
-        watchFn: watchFn
-      };
-    }
+  public createDataCache<T>(constructor: any, key: string, listFn: () => Observable<VeniceResponse>, watchFn: (query: any) => Observable<VeniceResponse>): Observable<ServerEvent<T>> {
     let observer = new ReplaySubject<ServerEvent<T>>(1);
     if (this.cacheMap[key] != null) {
       // Fetch same observable that we have given out
       observer = this.cacheMap[key];
     }
-    const eventUtility = new HttpEventUtility<T>(constructor);
-    // Only replay the last emitted event to new subscribers
-    const sub = listFn().subscribe(resp => {
-      const body = resp.body;
-      let resVersion = 0;
-      if (body && body.items) {
-        const events = body.items.map(item => {
-          const ver = parseInt(item.meta['resource-version'], 10);
-          if (ver > resVersion) {
-            resVersion = ver;
-          }
-          return {
-            type: 'Created',
-            object: item,
-          };
-        });
-        eventUtility.processEvents({ events: events });
-      }
-      observer.next({
-        data: eventUtility.array,
-        events: [],
-        connIsErrorState: false,
-      });
-      const watchBody = {};
-      // comment out this block in order to have a  quick fix for https://pensando.atlassian.net/browse/VS-1296. WE MUST REVISIT THIS.
-      /* if (resVersion > 0) {
-        watchBody['O.resource-version'] = (resVersion + 1).toString();
-      } */
 
+    // We start the watch call first so that we don't miss any events
+    // while the list call is being returned to us.
+    // Watch events are processed as they come, but the resulting array
+    // won't be sent to clients until the list has completed.
+    // HttpEventUtility will not process an event for an object that has an older resource version
+    // so old data in the list will not overwrite the watch event, and vice-versa
+
+    // Only replay the last emitted event to new subscribers
+    const eventUtility = new HttpEventUtility<T>(constructor);
       // TODO: the retry should be replaced with an observable retry
-      const watchMethod = () => {
+     let listDone = false;
+     const watchMethod = () => {
+        const watchBody = {};
+        watchBody['O.resource-version'] = '-1';
         const watchSub = watchFn(watchBody).subscribe(watchResp => {
           const evts = (<any>watchResp).events;
           eventUtility.processEvents({
             events: evts,
           });
+          if (!listDone) {
+            // Don't emit until list call is done
+            return;
+          }
           observer.next({
             data: eventUtility.array,
             events: evts,
@@ -351,7 +309,25 @@ export class GenServiceUtility {
           });
         this.subscriptions.push(watchSub);
       };
-      watchMethod();
+    watchMethod();
+
+    const sub = listFn().subscribe(resp => {
+      const body = resp.body;
+      if (body && body.items) {
+        const events = body.items.map(item => {
+          return {
+            type: 'Created',
+            object: item,
+          };
+        });
+        eventUtility.processEvents({ events: events });
+      }
+      observer.next({
+        data: eventUtility.array,
+        events: [],
+        connIsErrorState: false,
+      });
+      listDone = true;
     },
       (error) => {
         const controller = Utility.getInstance().getControllerService();
@@ -371,14 +347,13 @@ export class GenServiceUtility {
     return observer;
   }
 
-  public handleListFromCache(key: string): Observable<ServerEvent<any>> {
+  public handleListFromCache(key: string, createCacheFn: any): Observable<ServerEvent<any>> {
     if (this.cacheMap[key]) {
       return this.cacheMap[key];
     } else {
       // VS-1306. If browser is idle for a while. User is logged out. But Venice-UI is on browser and ClusterService object exists. We try to re-build the cache.
-      console.error('GenUtility.ts handleListFromCache() re-run createDataCache()', JSON.stringify(this._createCacheConfigMap), key);  // VS-1306.
-      if (this._createCacheConfigMap[key]) {
-        return this.createDataCache(this._createCacheConfigMap[key].constructor, this._createCacheConfigMap[key].key, this._createCacheConfigMap[key].listFn, this._createCacheConfigMap[key].watchFn);
+      if (createCacheFn != null) {
+        return createCacheFn();
       } else {
         if (Utility.getInstance().getControllerService()) {
           Utility.getInstance().getControllerService().invokeErrorToaster('Session Expired', 'Please refresh your browser');

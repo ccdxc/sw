@@ -89,7 +89,7 @@ export class AuthService extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
-    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+    return this.invokeAJAX('GET', url, queryParam, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
 
   public IsAuthorized(O_Name, body: IAuthSubjectAccessReviewRequest, stagingID: string = '', trimObject: boolean = true): Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {

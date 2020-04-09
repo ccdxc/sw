@@ -352,7 +352,7 @@ export enum UIRolePermissions {
   'workloadworkload_clear' = 'workloadworkload_clear',
   'auditevent_read' = 'auditevent_read',
   'eventsevent_read' = 'eventsevent_read',
-  'fwlogsquery_read' = 'fwlogsquery_read',
+  'fwlog_read' = 'fwlog_read',
   'metrics_read' = 'metrics_read',
   'adminrole' = 'adminrole',
 }

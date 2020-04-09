@@ -629,7 +629,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   }
 
   getNILabels() {
-    const sub = this.networkService.ListNetworkInterfacesCache().subscribe(
+    const sub = this.networkService.ListNetworkInterfaceCache().subscribe(
       (response) => {
         if (response.connIsErrorState) {
           return;

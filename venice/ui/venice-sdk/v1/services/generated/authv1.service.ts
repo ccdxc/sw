@@ -1,4 +1,4 @@
-import { AbstractService } from './abstract.service';
+import { AbstractService, ServerEvent } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
@@ -1178,6 +1178,30 @@ export class Authv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IAuthAutoMsgUserWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  protected createListRoleBindingCache(): Observable<ServerEvent<AuthRoleBinding>> {
+    return this.createDataCache<AuthRoleBinding>(AuthRoleBinding, `AuthRoleBinding`, () => this.ListRoleBinding(), (body: any) => this.WatchRoleBinding(body));
+  }
+
+  public ListRoleBindingCache(): Observable<ServerEvent<AuthRoleBinding>> {
+    return this.getFromDataCache(`AuthRoleBinding`, () => { return this.createListRoleBindingCache() });
+  }
+  
+  protected createListRoleCache(): Observable<ServerEvent<AuthRole>> {
+    return this.createDataCache<AuthRole>(AuthRole, `AuthRole`, () => this.ListRole(), (body: any) => this.WatchRole(body));
+  }
+
+  public ListRoleCache(): Observable<ServerEvent<AuthRole>> {
+    return this.getFromDataCache(`AuthRole`, () => { return this.createListRoleCache() });
+  }
+  
+  protected createListUserCache(): Observable<ServerEvent<AuthUser>> {
+    return this.createDataCache<AuthUser>(AuthUser, `AuthUser`, () => this.ListUser(), (body: any) => this.WatchUser(body));
+  }
+
+  public ListUserCache(): Observable<ServerEvent<AuthUser>> {
+    return this.getFromDataCache(`AuthUser`, () => { return this.createListUserCache() });
   }
   
 }

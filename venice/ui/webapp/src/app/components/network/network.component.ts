@@ -85,7 +85,7 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
   }
 
   getNetworks() {
-    const hostSubscription = this.networkService.ListNetworkWithWebsocketUpdate().subscribe(
+    const hostSubscription = this.networkService.ListNetworkCache().subscribe(
       (response) => {
         if (response.connIsErrorState) {
           return;
@@ -99,7 +99,7 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
   }
 
   getVcenterIntegrations() {
-    const sub = this.orchestrationService.ListOrchestratorsWithWebsocketUpdate().subscribe(
+    const sub = this.orchestrationService.ListOrchestratorCache().subscribe(
       response => {
         if (response.connIsErrorState) {
           return;

@@ -9,6 +9,7 @@ import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
 import { UIConfigsService } from '../uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 
@@ -39,6 +40,14 @@ export class FwlogService extends Fwlogv1Service {
     return this.constructor.name;
   }
 
+  protected createDataCache<T>(constructor: any, key: string, listFn: () => Observable<VeniceResponse>, watchFn: (query: any) => Observable<VeniceResponse>) {
+    return this.serviceUtility.createDataCache(constructor, key, listFn, watchFn);
+  }
+
+  protected getFromDataCache(kind: string, createCacheFn: any) {
+    return this.serviceUtility.handleListFromCache(kind, createCacheFn);
+  }
+
   protected publishAJAXStart(eventPayload: any) {
     this._controllerService.publish(Eventtypes.AJAX_START, eventPayload);
   }
@@ -48,8 +57,19 @@ export class FwlogService extends Fwlogv1Service {
   }
 
   protected invokeAJAX(method: string, url: string, payload: any, opts: MethodOpts, forceReal: boolean = false): Observable<VeniceResponse> {
+
+    const key = this.convertEventID(opts);
+    if (!this.uiconfigsService.isAuthorized(key)) {
+      return NEVER;
+    }
     const isOnline = !this.isToMockData() || forceReal;
     return this.serviceUtility.invokeAJAX(method, url, payload, opts.eventID, isOnline);
+  }
+
+  convertEventID(opts) {
+    // All event operations are reads, even posts.
+    const key = 'fwlog' + '_' + 'read';
+    return UIRolePermissions[key];
   }
 
   /**

@@ -1,4 +1,4 @@
-import { AbstractService } from './abstract.service';
+import { AbstractService, ServerEvent } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
@@ -942,6 +942,38 @@ export class Securityv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISecurityAutoMsgSecurityGroupWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  protected createListAppCache(): Observable<ServerEvent<SecurityApp>> {
+    return this.createDataCache<SecurityApp>(SecurityApp, `SecurityApp`, () => this.ListApp(), (body: any) => this.WatchApp(body));
+  }
+
+  public ListAppCache(): Observable<ServerEvent<SecurityApp>> {
+    return this.getFromDataCache(`SecurityApp`, () => { return this.createListAppCache() });
+  }
+  
+  protected createListFirewallProfileCache(): Observable<ServerEvent<SecurityFirewallProfile>> {
+    return this.createDataCache<SecurityFirewallProfile>(SecurityFirewallProfile, `SecurityFirewallProfile`, () => this.ListFirewallProfile(), (body: any) => this.WatchFirewallProfile(body));
+  }
+
+  public ListFirewallProfileCache(): Observable<ServerEvent<SecurityFirewallProfile>> {
+    return this.getFromDataCache(`SecurityFirewallProfile`, () => { return this.createListFirewallProfileCache() });
+  }
+  
+  protected createListNetworkSecurityPolicyCache(): Observable<ServerEvent<SecurityNetworkSecurityPolicy>> {
+    return this.createDataCache<SecurityNetworkSecurityPolicy>(SecurityNetworkSecurityPolicy, `SecurityNetworkSecurityPolicy`, () => this.ListNetworkSecurityPolicy(), (body: any) => this.WatchNetworkSecurityPolicy(body));
+  }
+
+  public ListNetworkSecurityPolicyCache(): Observable<ServerEvent<SecurityNetworkSecurityPolicy>> {
+    return this.getFromDataCache(`SecurityNetworkSecurityPolicy`, () => { return this.createListNetworkSecurityPolicyCache() });
+  }
+  
+  protected createListSecurityGroupCache(): Observable<ServerEvent<SecuritySecurityGroup>> {
+    return this.createDataCache<SecuritySecurityGroup>(SecuritySecurityGroup, `SecuritySecurityGroup`, () => this.ListSecurityGroup(), (body: any) => this.WatchSecurityGroup(body));
+  }
+
+  public ListSecurityGroupCache(): Observable<ServerEvent<SecuritySecurityGroup>> {
+    return this.getFromDataCache(`SecuritySecurityGroup`, () => { return this.createListSecurityGroupCache() });
   }
   
 }

@@ -11,12 +11,9 @@ import {Utility} from '@common/Utility';
 import { UIConfigsService } from '../uiconfigs.service';
 import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
-import { OrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
 
 @Injectable()
 export class OrchestrationService extends Orchestrationv1Service {
-
-  public DATA_CACHE_TYPE_VCENTERS = 'Vcenters';
 
   // Attributes used by generated services
   protected O_Tenant: string = this.getTenant();
@@ -44,9 +41,12 @@ export class OrchestrationService extends Orchestrationv1Service {
     return this.constructor.name;
   }
 
-  public ListOrchestratorsWithWebsocketUpdate() {
-    this.serviceUtility.createDataCache<OrchestrationOrchestrator>(OrchestrationOrchestrator, this.DATA_CACHE_TYPE_VCENTERS, () => this.ListOrchestrator(), (body: any) => this.WatchOrchestrator(body));
-    return this.serviceUtility.handleListFromCache(this.DATA_CACHE_TYPE_VCENTERS);
+  protected createDataCache<T>(constructor: any, key: string, listFn: () => Observable<VeniceResponse>, watchFn: (query: any) => Observable<VeniceResponse>) {
+    return this.serviceUtility.createDataCache(constructor, key, listFn, watchFn);
+  }
+
+  protected getFromDataCache(kind: string, createCacheFn: any) {
+    return this.serviceUtility.handleListFromCache(kind, createCacheFn);
   }
 
   protected publishAJAXStart(eventPayload: any) {

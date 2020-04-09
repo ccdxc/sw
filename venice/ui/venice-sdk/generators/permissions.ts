@@ -35,7 +35,7 @@ export function generateUIPermissionsFile(manifestData) {
   }
   permEnum.push('auditevent' + delimiter + 'read');
   permEnum.push('eventsevent' + delimiter + 'read');
-  permEnum.push('fwlogsquery' + delimiter + 'read');
+  permEnum.push('fwlog' + delimiter + 'read');
 
   permEnum.push('metrics' + delimiter + 'read');
   permEnum.push('adminrole');

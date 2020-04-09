@@ -1,4 +1,4 @@
-import { AbstractService } from './abstract.service';
+import { AbstractService, ServerEvent } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
@@ -2532,6 +2532,86 @@ export class Monitoringv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IMonitoringAutoMsgStatsAlertPolicyWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  protected createListTechSupportRequestCache(): Observable<ServerEvent<MonitoringTechSupportRequest>> {
+    return this.createDataCache<MonitoringTechSupportRequest>(MonitoringTechSupportRequest, `MonitoringTechSupportRequest`, () => this.ListTechSupportRequest(), (body: any) => this.WatchTechSupportRequest(body));
+  }
+
+  public ListTechSupportRequestCache(): Observable<ServerEvent<MonitoringTechSupportRequest>> {
+    return this.getFromDataCache(`MonitoringTechSupportRequest`, () => { return this.createListTechSupportRequestCache() });
+  }
+  
+  protected createListMirrorSessionCache(): Observable<ServerEvent<MonitoringMirrorSession>> {
+    return this.createDataCache<MonitoringMirrorSession>(MonitoringMirrorSession, `MonitoringMirrorSession`, () => this.ListMirrorSession(), (body: any) => this.WatchMirrorSession(body));
+  }
+
+  public ListMirrorSessionCache(): Observable<ServerEvent<MonitoringMirrorSession>> {
+    return this.getFromDataCache(`MonitoringMirrorSession`, () => { return this.createListMirrorSessionCache() });
+  }
+  
+  protected createListAlertDestinationCache(): Observable<ServerEvent<MonitoringAlertDestination>> {
+    return this.createDataCache<MonitoringAlertDestination>(MonitoringAlertDestination, `MonitoringAlertDestination`, () => this.ListAlertDestination(), (body: any) => this.WatchAlertDestination(body));
+  }
+
+  public ListAlertDestinationCache(): Observable<ServerEvent<MonitoringAlertDestination>> {
+    return this.getFromDataCache(`MonitoringAlertDestination`, () => { return this.createListAlertDestinationCache() });
+  }
+  
+  protected createListAlertPolicyCache(): Observable<ServerEvent<MonitoringAlertPolicy>> {
+    return this.createDataCache<MonitoringAlertPolicy>(MonitoringAlertPolicy, `MonitoringAlertPolicy`, () => this.ListAlertPolicy(), (body: any) => this.WatchAlertPolicy(body));
+  }
+
+  public ListAlertPolicyCache(): Observable<ServerEvent<MonitoringAlertPolicy>> {
+    return this.getFromDataCache(`MonitoringAlertPolicy`, () => { return this.createListAlertPolicyCache() });
+  }
+  
+  protected createListAlertCache(): Observable<ServerEvent<MonitoringAlert>> {
+    return this.createDataCache<MonitoringAlert>(MonitoringAlert, `MonitoringAlert`, () => this.ListAlert(), (body: any) => this.WatchAlert(body));
+  }
+
+  public ListAlertCache(): Observable<ServerEvent<MonitoringAlert>> {
+    return this.getFromDataCache(`MonitoringAlert`, () => { return this.createListAlertCache() });
+  }
+  
+  protected createListArchiveRequestCache(): Observable<ServerEvent<MonitoringArchiveRequest>> {
+    return this.createDataCache<MonitoringArchiveRequest>(MonitoringArchiveRequest, `MonitoringArchiveRequest`, () => this.ListArchiveRequest(), (body: any) => this.WatchArchiveRequest(body));
+  }
+
+  public ListArchiveRequestCache(): Observable<ServerEvent<MonitoringArchiveRequest>> {
+    return this.getFromDataCache(`MonitoringArchiveRequest`, () => { return this.createListArchiveRequestCache() });
+  }
+  
+  protected createListEventPolicyCache(): Observable<ServerEvent<MonitoringEventPolicy>> {
+    return this.createDataCache<MonitoringEventPolicy>(MonitoringEventPolicy, `MonitoringEventPolicy`, () => this.ListEventPolicy(), (body: any) => this.WatchEventPolicy(body));
+  }
+
+  public ListEventPolicyCache(): Observable<ServerEvent<MonitoringEventPolicy>> {
+    return this.getFromDataCache(`MonitoringEventPolicy`, () => { return this.createListEventPolicyCache() });
+  }
+  
+  protected createListFlowExportPolicyCache(): Observable<ServerEvent<MonitoringFlowExportPolicy>> {
+    return this.createDataCache<MonitoringFlowExportPolicy>(MonitoringFlowExportPolicy, `MonitoringFlowExportPolicy`, () => this.ListFlowExportPolicy(), (body: any) => this.WatchFlowExportPolicy(body));
+  }
+
+  public ListFlowExportPolicyCache(): Observable<ServerEvent<MonitoringFlowExportPolicy>> {
+    return this.getFromDataCache(`MonitoringFlowExportPolicy`, () => { return this.createListFlowExportPolicyCache() });
+  }
+  
+  protected createListFwlogPolicyCache(): Observable<ServerEvent<MonitoringFwlogPolicy>> {
+    return this.createDataCache<MonitoringFwlogPolicy>(MonitoringFwlogPolicy, `MonitoringFwlogPolicy`, () => this.ListFwlogPolicy(), (body: any) => this.WatchFwlogPolicy(body));
+  }
+
+  public ListFwlogPolicyCache(): Observable<ServerEvent<MonitoringFwlogPolicy>> {
+    return this.getFromDataCache(`MonitoringFwlogPolicy`, () => { return this.createListFwlogPolicyCache() });
+  }
+  
+  protected createListStatsAlertPolicyCache(): Observable<ServerEvent<MonitoringStatsAlertPolicy>> {
+    return this.createDataCache<MonitoringStatsAlertPolicy>(MonitoringStatsAlertPolicy, `MonitoringStatsAlertPolicy`, () => this.ListStatsAlertPolicy(), (body: any) => this.WatchStatsAlertPolicy(body));
+  }
+
+  public ListStatsAlertPolicyCache(): Observable<ServerEvent<MonitoringStatsAlertPolicy>> {
+    return this.getFromDataCache(`MonitoringStatsAlertPolicy`, () => { return this.createListStatsAlertPolicyCache() });
   }
   
 }

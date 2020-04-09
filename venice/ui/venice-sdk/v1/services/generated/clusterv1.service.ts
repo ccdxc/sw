@@ -1,4 +1,4 @@
-import { AbstractService } from './abstract.service';
+import { AbstractService, ServerEvent } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
@@ -967,6 +967,46 @@ export class Clusterv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IClusterAutoMsgVersionWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  protected createListDistributedServiceCardCache(): Observable<ServerEvent<ClusterDistributedServiceCard>> {
+    return this.createDataCache<ClusterDistributedServiceCard>(ClusterDistributedServiceCard, `ClusterDistributedServiceCard`, () => this.ListDistributedServiceCard(), (body: any) => this.WatchDistributedServiceCard(body));
+  }
+
+  public ListDistributedServiceCardCache(): Observable<ServerEvent<ClusterDistributedServiceCard>> {
+    return this.getFromDataCache(`ClusterDistributedServiceCard`, () => { return this.createListDistributedServiceCardCache() });
+  }
+  
+  protected createListDSCProfileCache(): Observable<ServerEvent<ClusterDSCProfile>> {
+    return this.createDataCache<ClusterDSCProfile>(ClusterDSCProfile, `ClusterDSCProfile`, () => this.ListDSCProfile(), (body: any) => this.WatchDSCProfile(body));
+  }
+
+  public ListDSCProfileCache(): Observable<ServerEvent<ClusterDSCProfile>> {
+    return this.getFromDataCache(`ClusterDSCProfile`, () => { return this.createListDSCProfileCache() });
+  }
+  
+  protected createListHostCache(): Observable<ServerEvent<ClusterHost>> {
+    return this.createDataCache<ClusterHost>(ClusterHost, `ClusterHost`, () => this.ListHost(), (body: any) => this.WatchHost(body));
+  }
+
+  public ListHostCache(): Observable<ServerEvent<ClusterHost>> {
+    return this.getFromDataCache(`ClusterHost`, () => { return this.createListHostCache() });
+  }
+  
+  protected createListNodeCache(): Observable<ServerEvent<ClusterNode>> {
+    return this.createDataCache<ClusterNode>(ClusterNode, `ClusterNode`, () => this.ListNode(), (body: any) => this.WatchNode(body));
+  }
+
+  public ListNodeCache(): Observable<ServerEvent<ClusterNode>> {
+    return this.getFromDataCache(`ClusterNode`, () => { return this.createListNodeCache() });
+  }
+  
+  protected createListTenantCache(): Observable<ServerEvent<ClusterTenant>> {
+    return this.createDataCache<ClusterTenant>(ClusterTenant, `ClusterTenant`, () => this.ListTenant(), (body: any) => this.WatchTenant(body));
+  }
+
+  public ListTenantCache(): Observable<ServerEvent<ClusterTenant>> {
+    return this.getFromDataCache(`ClusterTenant`, () => { return this.createListTenantCache() });
   }
   
 }

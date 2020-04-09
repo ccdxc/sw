@@ -46,6 +46,14 @@ export class TelemetryqueryService extends Telemetry_queryv1Service {
     return this.constructor.name;
   }
 
+  protected createDataCache<T>(constructor: any, key: string, listFn: () => Observable<VeniceResponse>, watchFn: (query: any) => Observable<VeniceResponse>) {
+    return this.serviceUtility.createDataCache(constructor, key, listFn, watchFn);
+  }
+
+  protected getFromDataCache(kind: string, createCacheFn: any) {
+    return this.serviceUtility.handleListFromCache(kind, createCacheFn);
+  }
+
   protected publishAJAXStart(eventPayload: any) {
     this._controllerService.publish(Eventtypes.AJAX_START, eventPayload);
   }

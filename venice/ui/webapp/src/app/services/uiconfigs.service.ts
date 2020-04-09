@@ -134,8 +134,7 @@ export class UIConfigsService {
         Features.fwlogs,
       ],
       requiredPerm: [
-       // UIRolePermissions.fwlogsquery_read,
-       UIRolePermissions.adminrole
+       UIRolePermissions.fwlog_read,
       ],
     },
     'monitoring/flowexport': {

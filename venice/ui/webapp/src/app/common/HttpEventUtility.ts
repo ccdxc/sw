@@ -1,15 +1,5 @@
 import { Utility } from '@app/common/Utility';
-
-export enum EventTypes {
-  create = 'Created',
-  update = 'Updated',
-  delete = 'Deleted',
-}
-
-export interface ChangeEvent<T> {
-  type: EventTypes;
-  object: T;
-}
+import { EventTypes, ChangeEvent } from '@sdk/v1/services/generated/abstract.service';
 
 /**
  * Utility for handling event from watch streams. It can be used for any watch API.
@@ -32,6 +22,8 @@ export class HttpEventUtility<T> {
   private objectConstructor: any;
   private isSingleton: boolean;
   private isToTrim: boolean = false;
+  // Whether to check for resource version and discard old events
+  private useResVer: boolean = true;
 
   private _updateRecordsMap: { [type: string]: Array<T>  } = {};
 
@@ -45,11 +37,12 @@ export class HttpEventUtility<T> {
    * @param filter              If the filter returns false for an object,
    *                            it won't be added to the array
    */
-  constructor(objectConstructor: any = null, isSingleton: boolean = false, filter: (object: any) => boolean = null, isToTrim: boolean = false) {
+  constructor(objectConstructor: any = null, isSingleton: boolean = false, filter: (object: any) => boolean = null, isToTrim: boolean = false, useResVer: boolean = true) {
     this.objectConstructor = objectConstructor;
     this.isSingleton = isSingleton;
     this.filter = filter;
     this.isToTrim = isToTrim;
+    this.useResVer = useResVer;
   }
 
   /**
@@ -89,6 +82,26 @@ export class HttpEventUtility<T> {
         switch (event.type) {
           case EventTypes.create:
             if (this.hasItem(objName)) {
+              // Convert to update
+              event.type = EventTypes.update;
+            }
+            break;
+          case EventTypes.update:
+            if (!this.hasItem(objName) && !(this.isSingleton && this.dataArray.length > 0)) {
+              // Convert to create
+              event.type = EventTypes.create;
+            }
+            break;
+          case EventTypes.delete:
+            if (!this.hasItem(objName)) {
+              // Skip event
+              return;
+            }
+        }
+
+        switch (event.type) {
+          case EventTypes.create:
+            if (this.hasItem(objName)) {
               break;
             }
             this.addItem(obj, objName);
@@ -99,6 +112,19 @@ export class HttpEventUtility<T> {
             this._updateRecordsMap[EventTypes.delete].push(obj);
             break;
           case EventTypes.update:
+            if (this.useResVer && obj != null && obj.meta != null && obj.meta['resource-version'] != null) {
+              const resVer = parseInt(obj.meta['resource-version'], 10);
+              // Get resVer of object in cache
+              const cacheObj: any = this.dataArray[this.dataMapping[objName]];
+              let curResVer = 0;
+              if (cacheObj.meta != null && cacheObj.meta['resource-version'] != null) {
+                curResVer = parseInt(cacheObj.meta['resource-version'], 10);
+              }
+              if (resVer <= curResVer) {
+                // Old event, don't process
+                return;
+              }
+            }
             if (this.isSingleton && this.dataArray.length > 0) {
               // Can only be one object, so all updates are happening
               // to the one object we have

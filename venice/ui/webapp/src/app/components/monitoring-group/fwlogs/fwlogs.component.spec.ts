@@ -316,7 +316,7 @@ describe('fwlogsComponent', () => {
 
     it('sgpolicy info should not be available to user without permission', () => {
 
-      TestingUtility.addPermissions([UIRolePermissions['fwlogsquery_read']]);
+      TestingUtility.addPermissions([UIRolePermissions['fwlog_read']]);
 
       sgPolicyObserver = new BehaviorSubject({
         events: [

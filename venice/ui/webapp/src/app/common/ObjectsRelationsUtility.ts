@@ -2,9 +2,9 @@ import { WorkloadWorkload, IWorkloadWorkload, IApiStatus, WorkloadWorkloadIntfSp
 import { ClusterDistributedServiceCard, ClusterHost, IClusterDistributedServiceCardID, IClusterAutoMsgHostWatchHelper } from '@sdk/v1/models/generated/cluster';
 import { Utility } from '@app/common/Utility';
 import { SecuritySecurityGroup, SecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
-import { EventTypes } from './HttpEventUtility';
 import { OrchestrationOrchestrator } from '@sdk/v1/models/generated/orchestration';
 import { NetworkNetwork } from '@sdk/v1/models/generated/network';
+import { EventTypes } from '@sdk/v1/services/generated/abstract.service';
 
 
 export interface SecuritygroupWorkloadPolicyTuple {

@@ -1,4 +1,4 @@
-import { AbstractService } from './abstract.service';
+import { AbstractService, ServerEvent } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
@@ -124,6 +124,14 @@ export class Diagnosticsv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IDiagnosticsAutoMsgModuleWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  protected createListModuleCache(): Observable<ServerEvent<DiagnosticsModule>> {
+    return this.createDataCache<DiagnosticsModule>(DiagnosticsModule, `DiagnosticsModule`, () => this.ListModule(), (body: any) => this.WatchModule(body));
+  }
+
+  public ListModuleCache(): Observable<ServerEvent<DiagnosticsModule>> {
+    return this.getFromDataCache(`DiagnosticsModule`, () => { return this.createListModuleCache() });
   }
   
 }

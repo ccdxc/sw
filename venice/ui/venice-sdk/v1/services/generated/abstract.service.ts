@@ -14,6 +14,23 @@ export interface MethodOpts {
   isStaging: boolean
 }
 
+export enum EventTypes {
+  create = 'Created',
+  update = 'Updated',
+  delete = 'Deleted',
+}
+
+export interface ChangeEvent<T> {
+  type: EventTypes;
+  object: T;
+}
+
+export interface ServerEvent<T> {
+  data: ReadonlyArray<T>;
+  events: ChangeEvent<T>[];
+  connIsErrorState: boolean;
+}
+
 @Injectable()
 export class AbstractService {
   protected O_Tenant: string = "";
@@ -27,6 +44,17 @@ export class AbstractService {
   getClassName(): string {
     return 'base_service';
   }
+
+  // This function should be overwritten
+  protected createDataCache<T> (constructor: any, key: string, listFn: () => Observable<any>, watchFn: (query: any) => Observable<any>): Observable<any> {
+    return null
+  }
+
+  // This function should be overwritten
+  protected getFromDataCache(kind: string, createCacheFn: any): any {
+    return null
+  }
+
 
   // This function should be overwritten
   protected invokeAJAX(method: string, url: string, payload: any, opts: MethodOpts,  forceReal: boolean = false): Observable<any> {

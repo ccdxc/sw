@@ -1,4 +1,4 @@
-import { AbstractService } from './abstract.service';
+import { AbstractService, ServerEvent } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
@@ -526,6 +526,22 @@ export class Workloadv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new ApiLabel(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IWorkloadWorkload | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  protected createListEndpointCache(): Observable<ServerEvent<WorkloadEndpoint>> {
+    return this.createDataCache<WorkloadEndpoint>(WorkloadEndpoint, `WorkloadEndpoint`, () => this.ListEndpoint(), (body: any) => this.WatchEndpoint(body));
+  }
+
+  public ListEndpointCache(): Observable<ServerEvent<WorkloadEndpoint>> {
+    return this.getFromDataCache(`WorkloadEndpoint`, () => { return this.createListEndpointCache() });
+  }
+  
+  protected createListWorkloadCache(): Observable<ServerEvent<WorkloadWorkload>> {
+    return this.createDataCache<WorkloadWorkload>(WorkloadWorkload, `WorkloadWorkload`, () => this.ListWorkload(), (body: any) => this.WatchWorkload(body));
+  }
+
+  public ListWorkloadCache(): Observable<ServerEvent<WorkloadWorkload>> {
+    return this.getFromDataCache(`WorkloadWorkload`, () => { return this.createListWorkloadCache() });
   }
   
 }

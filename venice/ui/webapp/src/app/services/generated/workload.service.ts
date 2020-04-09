@@ -16,8 +16,6 @@ import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 @Injectable()
 export class WorkloadService extends Workloadv1Service {
 
-  public DATA_CACHE_TYPE_WORKLOAD = 'Workloads';
-
   // Attributes used by generated services
   protected O_Tenant: string = this.getTenant();
   protected baseUrlAndPort = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
@@ -34,7 +32,7 @@ export class WorkloadService extends Workloadv1Service {
         (payload) => { this.publishAJAXEnd(payload); }
       );
       this.serviceUtility.setId(this.getClassName());
-      this.serviceUtility.createDataCache<WorkloadWorkload>(WorkloadWorkload, this.DATA_CACHE_TYPE_WORKLOAD, () => this.ListWorkload(), (body: any) => this.WatchWorkload(body));
+      this.createListWorkloadCache();
   }
 
   /**
@@ -44,16 +42,20 @@ export class WorkloadService extends Workloadv1Service {
     return this.constructor.name;
   }
 
-  public ListWorkloadCache() {
-    return this.serviceUtility.handleListFromCache(this.DATA_CACHE_TYPE_WORKLOAD);
-  }
-
   protected publishAJAXStart(eventPayload: any) {
     this._controllerService.publish(Eventtypes.AJAX_START, eventPayload);
   }
 
   protected publishAJAXEnd(eventPayload: any) {
     this._controllerService.publish(Eventtypes.AJAX_END, eventPayload);
+  }
+
+  protected createDataCache<T>(constructor: any, key: string, listFn: () => Observable<VeniceResponse>, watchFn: (query: any) => Observable<VeniceResponse>) {
+    return this.serviceUtility.createDataCache(constructor, key, listFn, watchFn);
+  }
+
+  protected getFromDataCache(kind: string, createCacheFn: any) {
+    return this.serviceUtility.handleListFromCache(kind, createCacheFn);
   }
 
   protected invokeAJAX(method: string, url: string, payload: any, opts: MethodOpts, forceReal: boolean = false): Observable<VeniceResponse> {

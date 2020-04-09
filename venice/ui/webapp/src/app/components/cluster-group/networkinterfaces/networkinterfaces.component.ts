@@ -175,7 +175,7 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
   }
 
   watchNetworkInterfaces() {
-    const dscSubscription = this.networkService.ListNetworkInterfacesCache().subscribe(
+    const dscSubscription = this.networkService.ListNetworkInterfaceCache().subscribe(
       (response) => {
         if (response.connIsErrorState) {
           return;

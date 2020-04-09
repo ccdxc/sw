@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormArray } from '@angular/forms';
-import { EventTypes, HttpEventUtility } from '@app/common/HttpEventUtility';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { DSCWorkloadsTuple, HandleWatchItemResult, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 import { Utility, VeniceObjectCache } from '@app/common/Utility';

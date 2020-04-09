@@ -87,7 +87,7 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
   }
 
   getVcenterIntegrations() {
-    const sub = this.orchestrationService.ListOrchestratorsWithWebsocketUpdate().subscribe(
+    const sub = this.orchestrationService.ListOrchestratorCache().subscribe(
       response => {
         if (response.connIsErrorState) {
           return;

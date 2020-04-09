@@ -150,7 +150,7 @@ export const sideNavMenu: SideNavItem[] = [
         UIRolePermissions.monitoringalert_read,
         UIRolePermissions.eventsevent_read,
         UIRolePermissions.auditevent_read,
-        UIRolePermissions.fwlogsquery_read
+        UIRolePermissions.fwlog_read
       ]
     },
     children: [
@@ -210,8 +210,7 @@ export const sideNavMenu: SideNavItem[] = [
           cssClass: 'app-l-side-nav-monitoring-fwlogs'
         },
         featureGuard: Features.fwlogs,
-        roleGuard: UIRolePermissions.adminrole,
-        // roleGuard: UIRolePermissions.fwlogsquery_read,
+        roleGuard: UIRolePermissions.fwlog_read,
         link: ['/monitoring', 'fwlogs']
       }
     ]

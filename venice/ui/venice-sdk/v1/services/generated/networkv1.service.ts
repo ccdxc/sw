@@ -1,4 +1,4 @@
-import { AbstractService } from './abstract.service';
+import { AbstractService, ServerEvent } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
@@ -1067,6 +1067,54 @@ export class Networkv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: INetworkAutoMsgVirtualRouterWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  protected createListNetworkInterfaceCache(): Observable<ServerEvent<NetworkNetworkInterface>> {
+    return this.createDataCache<NetworkNetworkInterface>(NetworkNetworkInterface, `NetworkNetworkInterface`, () => this.ListNetworkInterface(), (body: any) => this.WatchNetworkInterface(body));
+  }
+
+  public ListNetworkInterfaceCache(): Observable<ServerEvent<NetworkNetworkInterface>> {
+    return this.getFromDataCache(`NetworkNetworkInterface`, () => { return this.createListNetworkInterfaceCache() });
+  }
+  
+  protected createListRoutingConfigCache(): Observable<ServerEvent<NetworkRoutingConfig>> {
+    return this.createDataCache<NetworkRoutingConfig>(NetworkRoutingConfig, `NetworkRoutingConfig`, () => this.ListRoutingConfig(), (body: any) => this.WatchRoutingConfig(body));
+  }
+
+  public ListRoutingConfigCache(): Observable<ServerEvent<NetworkRoutingConfig>> {
+    return this.getFromDataCache(`NetworkRoutingConfig`, () => { return this.createListRoutingConfigCache() });
+  }
+  
+  protected createListIPAMPolicyCache(): Observable<ServerEvent<NetworkIPAMPolicy>> {
+    return this.createDataCache<NetworkIPAMPolicy>(NetworkIPAMPolicy, `NetworkIPAMPolicy`, () => this.ListIPAMPolicy(), (body: any) => this.WatchIPAMPolicy(body));
+  }
+
+  public ListIPAMPolicyCache(): Observable<ServerEvent<NetworkIPAMPolicy>> {
+    return this.getFromDataCache(`NetworkIPAMPolicy`, () => { return this.createListIPAMPolicyCache() });
+  }
+  
+  protected createListNetworkCache(): Observable<ServerEvent<NetworkNetwork>> {
+    return this.createDataCache<NetworkNetwork>(NetworkNetwork, `NetworkNetwork`, () => this.ListNetwork(), (body: any) => this.WatchNetwork(body));
+  }
+
+  public ListNetworkCache(): Observable<ServerEvent<NetworkNetwork>> {
+    return this.getFromDataCache(`NetworkNetwork`, () => { return this.createListNetworkCache() });
+  }
+  
+  protected createListRouteTableCache(): Observable<ServerEvent<NetworkRouteTable>> {
+    return this.createDataCache<NetworkRouteTable>(NetworkRouteTable, `NetworkRouteTable`, () => this.ListRouteTable(), (body: any) => this.WatchRouteTable(body));
+  }
+
+  public ListRouteTableCache(): Observable<ServerEvent<NetworkRouteTable>> {
+    return this.getFromDataCache(`NetworkRouteTable`, () => { return this.createListRouteTableCache() });
+  }
+  
+  protected createListVirtualRouterCache(): Observable<ServerEvent<NetworkVirtualRouter>> {
+    return this.createDataCache<NetworkVirtualRouter>(NetworkVirtualRouter, `NetworkVirtualRouter`, () => this.ListVirtualRouter(), (body: any) => this.WatchVirtualRouter(body));
+  }
+
+  public ListVirtualRouterCache(): Observable<ServerEvent<NetworkVirtualRouter>> {
+    return this.getFromDataCache(`NetworkVirtualRouter`, () => { return this.createListVirtualRouterCache() });
   }
   
 }

@@ -16,11 +16,6 @@ import { GenServiceUtility } from './GenUtility';
 @Injectable()
 export class ClusterService extends Clusterv1Service {
 
-  public  DATA_CACHE_TYPE_DSC = 'DistributedServiceCards';
-  public  DATA_CACHE_TYPE_HOST = 'Hosts';
-  public  DATA_CACHE_TYPE_NODE = 'Nodes';
-  public  DATA_CACHE_TYPE_DSCPRPOFILE = 'DSCProfile';
-
   // Attributes used by generated services
   protected O_Tenant: string = this.getTenant();
   protected baseUrlAndPort = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
@@ -37,9 +32,9 @@ export class ClusterService extends Clusterv1Service {
         (payload) => { this.publishAJAXEnd(payload); }
       );
       this.serviceUtility.setId(this.getClassName());
-      this.serviceUtility.createDataCache<ClusterDistributedServiceCard>(ClusterDistributedServiceCard, this.DATA_CACHE_TYPE_DSC, () => this.ListDistributedServiceCard(), (body: any) => this.WatchDistributedServiceCard(body));
-      this.serviceUtility.createDataCache<ClusterHost>(ClusterHost, this.DATA_CACHE_TYPE_HOST, () => this.ListHost(), (body: any) => this.WatchHost(body));
-      this.serviceUtility.createDataCache<ClusterDSCProfile>(ClusterDSCProfile, this.DATA_CACHE_TYPE_DSCPRPOFILE, () => this.ListDSCProfile(), (body: any) => this.WatchDSCProfile(body));
+      this.createListDistributedServiceCardCache();
+      this.createListHostCache();
+      this.createListDSCProfileCache();
 
   }
 
@@ -50,18 +45,13 @@ export class ClusterService extends Clusterv1Service {
     return this.constructor.name;
   }
 
-  public ListDistributedServiceCardCache() {
-    return this.serviceUtility.handleListFromCache(this.DATA_CACHE_TYPE_DSC);
+  protected createDataCache<T>(constructor: any, key: string, listFn: () => Observable<VeniceResponse>, watchFn: (query: any) => Observable<VeniceResponse>) {
+    return this.serviceUtility.createDataCache(constructor, key, listFn, watchFn);
   }
 
-  public ListHostCache() {
-    return this.serviceUtility.handleListFromCache(this.DATA_CACHE_TYPE_HOST);
+  protected getFromDataCache(kind: string, createCacheFn: any) {
+    return this.serviceUtility.handleListFromCache(kind, createCacheFn);
   }
-
-  public ListDSCProfileCache() {
-    return this.serviceUtility.handleListFromCache(this.DATA_CACHE_TYPE_DSCPRPOFILE);
-  }
-
 
   protected publishAJAXStart(eventPayload: any) {
     this._controllerService.publish(Eventtypes.AJAX_START, eventPayload);

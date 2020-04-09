@@ -240,7 +240,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
    */
   getNetworkInterfaces() {
     if (this.uiconfigsService.isAuthorized(UIRolePermissions.networknetworkinterface_read)) {
-      const dscSubscription = this.networkService.ListNetworkInterfacesCache().subscribe(
+      const dscSubscription = this.networkService.ListNetworkInterfaceCache().subscribe(
         (response) => {
           if (response.connIsErrorState) {
             return;

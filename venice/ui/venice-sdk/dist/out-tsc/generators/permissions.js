@@ -33,7 +33,7 @@ function generateUIPermissionsFile(manifestData) {
     };
     permEnum.push('auditevent' + delimiter + 'read');
     permEnum.push('eventsevent' + delimiter + 'read');
-    permEnum.push('fwlogsquery' + delimiter + 'read');
+    permEnum.push('fwlog' + delimiter + 'read');
     permEnum.push('metrics' + delimiter + 'read');
     permEnum.push('adminrole');
     var outputFile = 'v1' + '/models/generated/UI-permissions-enum.ts';

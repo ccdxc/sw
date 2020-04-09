@@ -1,4 +1,4 @@
-import { AbstractService } from './abstract.service';
+import { AbstractService, ServerEvent } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
@@ -139,6 +139,14 @@ export class Orchestrationv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IOrchestrationAutoMsgOrchestratorWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  protected createListOrchestratorCache(): Observable<ServerEvent<OrchestrationOrchestrator>> {
+    return this.createDataCache<OrchestrationOrchestrator>(OrchestrationOrchestrator, `OrchestrationOrchestrator`, () => this.ListOrchestrator(), (body: any) => this.WatchOrchestrator(body));
+  }
+
+  public ListOrchestratorCache(): Observable<ServerEvent<OrchestrationOrchestrator>> {
+    return this.getFromDataCache(`OrchestrationOrchestrator`, () => { return this.createListOrchestratorCache() });
   }
   
 }
