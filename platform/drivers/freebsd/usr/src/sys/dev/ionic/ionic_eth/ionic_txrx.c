@@ -1494,6 +1494,8 @@ ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 {
 	struct ionic_lif *lif = if_getsoftc(ifp);
 	struct ionic_lif_stats *hwstat = &lif->info->stats;
+	uint64_t val;
+	int i;
 
 	switch (cnt) {
 	case IFCOUNTER_IPACKETS:
@@ -1508,9 +1510,12 @@ ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 			hwstat->rx_desc_data_error);
 
 	case IFCOUNTER_OPACKETS:
+		/* RDMA ucast/mcast packets are double-counted here */
 		return (hwstat->tx_ucast_packets +
 			hwstat->tx_mcast_packets +
-			hwstat->tx_bcast_packets);
+			hwstat->tx_bcast_packets -
+			hwstat->tx_rdma_ucast_packets -
+			hwstat->tx_rdma_mcast_packets);
 
 	case IFCOUNTER_OERRORS:
 		return (hwstat->tx_queue_disabled +
@@ -1526,17 +1531,20 @@ ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 			hwstat->rx_bcast_bytes);
 
 	case IFCOUNTER_OBYTES:
-		return (hwstat->tx_ucast_bytes +
-			hwstat->tx_mcast_bytes +
-			hwstat->tx_bcast_bytes);
+		/* FW counter is inaccurate, so use per-queue counters */
+		for (i = 0, val = 0; i < lif->ntxqs; i++)
+			val += lif->txqs[i]->stats.bytes;
+		return (val);
 
 	case IFCOUNTER_IMCASTS:
 		return (hwstat->rx_mcast_packets +
 			hwstat->rx_bcast_packets);
 
 	case IFCOUNTER_OMCASTS:
+		/* RDMA mcast packets are double-counted here */
 		return (hwstat->tx_mcast_packets +
-			hwstat->tx_bcast_packets);
+			hwstat->tx_bcast_packets -
+			hwstat->tx_rdma_mcast_packets);
 
 	case IFCOUNTER_IQDROPS:
 		return (hwstat->rx_ucast_drop_packets +
