@@ -1,11 +1,11 @@
 # Events Management System
 This document captures how different events management components are designed and how to use it to record events.
 
-[High-Level Architecture](https://docs.google.com/document/d/10X8YgG6tVaHRTfvHnTn9S6MORo5hNJ0k2AcD-Eomh18)
-
 Table of Contents
 -----------------
+  * [High-Level Architecture](#high-level-architecture)
   * [Sample Event](#sample-event)
+  * [Sample Event Policy](#sample-event-policy)
   * [Event Types](#event-types)
      * [How to add/update/delete event types category?](#how-to-addupdatedelete-event-types-category)
      * [How to add/update/delete event types?](#how-to-addupdatedelete-event-types)
@@ -22,6 +22,14 @@ Table of Contents
         * [Event Recorder](#event-recorder-1)
         * [Event Proxy](#event-proxy-1)
      * [How to record events from NAPLES platform components and HAL/FTE?](#how-to-record-events-from-naples-platform-components-and-halfte)
+  * [Events Simulator](#events-simulator)
+  * [Scale Testing](#scale-testing)
+
+## High-Level Architecture
+
+[Design Doc](https://docs.google.com/document/d/10X8YgG6tVaHRTfvHnTn9S6MORo5hNJ0k2AcD-Eomh18)
+
+![High-Level Architecture](./docs/EvtsHighLevelArch.png)
 
 ## Sample Event
 ```
@@ -57,6 +65,36 @@ Table of Contents
 
 ```
 
+## Sample Event Policy
+```
+{
+	"kind": "EventPolicy",
+	"api-version": "v1",
+	"meta": {
+		"name": "test",
+		"tenant": "default",
+		"namespace": "default",
+		"generation-id": "1",
+		"resource-version": "100834",
+		"uuid": "c705e215-e201-483a-988f-6e0bd73d0bf3",
+		"creation-time": "2020-04-09T18:50:40.180775601Z",
+		"mod-time": "2020-04-09T18:50:40.180777968Z",
+		"self-link": "/configs/monitoring/v1/tenant/default/event-policy/test"
+	},
+	"spec": {
+		"format": "syslog-bsd",
+		"targets": [{
+			"destination": "10.5.6.7",
+			"transport": "UDP/2055"
+		}],
+		"config": {
+			"facility-override": "user",
+			"prefix": "pen-events"
+		}
+	},
+	"status": {}
+}
+```
 ## Event Types
 All the event types are maintained in `sw/events/protos/eventtypes.proto` along with it's category and severity. When an event is recorded, category and severity will be automatically populated based on the event type. Events types are compiled for both go and c++ clients.
 
@@ -206,3 +244,15 @@ Proxy will read the events from shared memory, massages the event (key conversio
 			"link %s is up, "linkXXXXXX");                // message...
 	...
 	```
+	## Events Simulator
+	```
+	[yuva@7b3c0aa10fb3 sw]$ ./nic/build/x86_64/iris/bin/gen_events  -h
+	Usage: ./nic/build/x86_64/iris/bin/gen_events
+         -h help
+         -r rate per second
+         -t total events
+         -c percentage of critical events (default: 1%)
+         -s substring to be included in all the event messages
+	```
+	## Scale Testing
+	Dev. testing   - 10 events/sec from 100 NAPLES sims
