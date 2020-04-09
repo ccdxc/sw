@@ -206,6 +206,7 @@ func testAPICRUDOps() func() {
 				for i := 0; i < numNetw; i++ {
 					objMeta := &netw.ObjectMeta
 					objMeta.Name = netwPrefix + strconv.Itoa(i)
+					netw.Spec.VlanID = uint32(i)
 					ret, err := grpcClient.NetworkV1().Network().Create(lctx, &netw)
 					Expect(err).Should(BeNil(), fmt.Sprintf("got error Creating network %s (%s)", objMeta.Name, err))
 					Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
@@ -223,6 +224,7 @@ func testAPICRUDOps() func() {
 						objMeta := &netw.ObjectMeta
 						objMeta.Name = netwPrefix + strconv.Itoa(i)
 						if retNetw.GetObjectMeta().GetName() == objMeta.Name {
+							netw.Spec.VlanID = uint32(i)
 							Expect(reflect.DeepEqual(retNetw.Spec, netw.Spec)).To(Equal(true))
 							netwFound = true
 							break
@@ -236,6 +238,7 @@ func testAPICRUDOps() func() {
 				for i := 0; i < numNetw; i++ {
 					objMeta := &netw.ObjectMeta
 					objMeta.Name = netwPrefix + strconv.Itoa(i)
+					netw.Spec.VlanID = uint32(i)
 					ret, err := grpcClient.NetworkV1().Network().Update(lctx, &netw)
 					Expect(err).To(BeNil())
 					Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
@@ -253,7 +256,6 @@ func testAPICRUDOps() func() {
 					objMeta.Name = netwPrefix + strconv.Itoa(i)
 					ret, err := grpcClient.NetworkV1().Network().Delete(lctx, &netw.ObjectMeta)
 					Expect(err).To(BeNil())
-					Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
 					expNEvents = addToWatchList(expNEvents, ret, kvstore.Deleted)
 				}
 			}
@@ -309,6 +311,7 @@ func testAPICRUDOps() func() {
 				for i := 0; i < numNetw; i++ {
 					objMeta := &netw.ObjectMeta
 					objMeta.Name = netwPrefix + strconv.Itoa(i)
+					netw.Spec.VlanID = 300 + uint32(i)
 					ret, err := restClient.NetworkV1().Network().Create(lctx, &netw)
 					Expect(err).To(BeNil())
 					Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
@@ -325,6 +328,7 @@ func testAPICRUDOps() func() {
 					for i := 10; i < 20; i++ {
 						objMeta := &netw.ObjectMeta
 						objMeta.Name = netwPrefix + strconv.Itoa(i)
+						netw.Spec.VlanID = 300 + uint32(i)
 						if retNetw.GetObjectMeta().GetName() == objMeta.Name {
 							Expect(reflect.DeepEqual(retNetw.Spec, netw.Spec)).To(Equal(true))
 							netwFound = true
@@ -339,6 +343,7 @@ func testAPICRUDOps() func() {
 				for i := 0; i < numNetw; i++ {
 					objMeta := &netw.ObjectMeta
 					objMeta.Name = netwPrefix + strconv.Itoa(i)
+					netw.Spec.VlanID = 300 + uint32(i)
 					ret, err := restClient.NetworkV1().Network().Update(lctx, &netw)
 					Expect(err).To(BeNil())
 					Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
@@ -360,7 +365,6 @@ func testAPICRUDOps() func() {
 					objMeta.Name = netwPrefix + strconv.Itoa(i)
 					ret, err := restClient.NetworkV1().Network().Delete(lctx, &netw.ObjectMeta)
 					Expect(err).To(BeNil())
-					Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
 					expNEvents = addToWatchList(expNEvents, ret, kvstore.Deleted)
 				}
 			}
@@ -509,6 +513,7 @@ var _ = Describe("api crud tests", func() {
 
 		for i := 0; i < numNetw; i++ {
 			netw.ObjectMeta.Name = netwPrefix + strconv.Itoa(i)
+			netw.Spec.VlanID = uint32(i)
 			_, err := grpcClient.NetworkV1().Network().Create(context.Background(), &netw)
 			Expect(err).Should(BeNil(), fmt.Sprintf("got error Creatring network %s (%s)", netw.ObjectMeta.Name, err))
 		}

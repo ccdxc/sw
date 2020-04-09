@@ -334,7 +334,7 @@ var _ = Describe("Config SnapShot and restore", func() {
 							By(fmt.Sprintf("got networks [%+v]", netws))
 							Expect(err).Should(BeNil(), fmt.Sprintf("got error listing networks (%s)", err))
 							for _, n := range netws {
-								if strings.HasPrefix("SnapshotTest", n.Name) {
+								if strings.HasPrefix(n.Name, "SnapshotTest") {
 									_, err = grpcClient.NetworkV1().Network().Delete(lctx, &api.ObjectMeta{Tenant: n.Tenant, Name: n.Name})
 									Expect(err).Should(BeNil(), fmt.Sprintf("got error deleting networks[%v] (%v)", n.Name, apierrors.FromError(err)))
 								}
