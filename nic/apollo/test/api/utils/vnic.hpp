@@ -47,34 +47,21 @@ enum vnic_attrs {
 // VNIC test feeder class
 class vnic_feeder : public feeder {
 public:
-    // TODO: move to vnic_spec_t instead of below variables
-    pds_obj_key_t key;
-    pds_obj_key_t vpc;
-    pds_obj_key_t subnet;
-    pds_encap_t vnic_encap;
-    pds_encap_t fabric_encap;
-    uint64_t mac_u64;
-    bool binding_checks_en;
-    uint8_t tx_mirror_session_bmap;
-    uint8_t rx_mirror_session_bmap;
-    bool configure_policy;
+    pds_vnic_spec_t spec;
 
     // Constructor
     vnic_feeder() {
-        vpc.reset();
     }
-    vnic_feeder(const vnic_feeder& feeder) {
-        init(feeder.key, feeder.num_obj, feeder.mac_u64, feeder.vnic_encap.type,
-             feeder.fabric_encap.type, feeder.binding_checks_en,
-             feeder.configure_policy);
-    }
+    vnic_feeder(const vnic_feeder& feeder);
+
 
     // Initialize feeder with the base set of values
-    void init(pds_obj_key_t key, uint32_t num_vnic = k_max_vnic,
-              uint64_t mac = k_feeder_mac,
-              pds_encap_type_t vnic_encap_type = PDS_ENCAP_TYPE_DOT1Q,
-              pds_encap_type_t fabric_encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
-              bool binding_checks_en = true, bool configure_policy = true);
+    void init(pds_obj_key_t key, pds_obj_key_t subnet,
+              uint32_t num_vnic, uint64_t mac,
+              pds_encap_type_t vnic_encap_type,
+              pds_encap_type_t fabric_encap_type,
+              bool binding_checks_en, bool configure_policy,
+              uint8_t tx_mirror_session_bmap, uint8_t rx_mirror_session_bmap);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -135,7 +122,7 @@ operator<<(std::ostream& os, const pds_vnic_info_t *obj) {
 inline std::ostream&
 operator<<(std::ostream& os, const vnic_feeder& obj) {
     os << "VNIC feeder =>"
-       << " key: " << std::string(obj.key.str());
+       << " key: " << std::string(obj.spec.key.str());
     return os;
 }
 

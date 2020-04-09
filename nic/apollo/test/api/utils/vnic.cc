@@ -73,41 +73,13 @@ vnic_feeder_encap_next (pds_encap_t *encap, int width = 1)
 // VNIC feeder class routines
 //----------------------------------------------------------------------------
 
-void
-vnic_feeder::init(pds_obj_key_t key, uint32_t num_vnic, uint64_t mac,
-                  pds_encap_type_t vnic_encap_type,
-                  pds_encap_type_t fabric_encap_type,
-                  bool binding_checks_en, bool configure_policy) {
-    this->key = key;
-    this->vpc = int2pdsobjkey(1);
-    this->subnet = int2pdsobjkey(1);
-    this->mac_u64 = mac | (pdsobjkey2int(key) << 24);
-    vnic_feeder_encap_init(pdsobjkey2int(key), vnic_encap_type, &vnic_encap);
-    vnic_feeder_encap_init(pdsobjkey2int(key), fabric_encap_type,
-                           &fabric_encap);
-    this->binding_checks_en = binding_checks_en;
-    this->tx_mirror_session_bmap = 0;
-    this->rx_mirror_session_bmap = 0;
-    this->configure_policy = configure_policy;
-    num_obj = num_vnic;
-}
-
-void
-vnic_feeder::iter_next(int width) {
-    key = int2pdsobjkey(pdsobjkey2int(key) + width);
-    vnic_feeder_encap_next(&vnic_encap);
-    if (apollo()) {
-        vnic_feeder_encap_next(&fabric_encap);
-        tx_mirror_session_bmap += width;
-        rx_mirror_session_bmap += width;
+static void
+increment_num (uint8_t *num)
+{
+    (*num)++;
+    if (*num > PDS_MAX_VNIC_POLICY) {
+        *num = 0;
     }
-    mac_u64 += width;
-    cur_iter_pos++;
-}
-
-void
-vnic_feeder::key_build(pds_obj_key_t *key) const {
-    *key = this->key;
 }
 
 static void
@@ -119,30 +91,31 @@ fill_policy_ids (pds_obj_key_t *pol_arr,
     }
 }
 
-static void
-increment_num (uint8_t *num)
-{
-    (*num)++;
-    if (*num > PDS_MAX_VNIC_POLICY) {
-        *num = 0;
-    }
-}
-
 void
-vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
+vnic_feeder::init(pds_obj_key_t key, pds_obj_key_t subnet,
+                  uint32_t num_vnic, uint64_t mac,
+                  pds_encap_type_t vnic_encap_type,
+                  pds_encap_type_t fabric_encap_type,
+                  bool binding_checks_en, bool configure_policy,
+                  uint8_t tx_mirror_session_bmap,
+                  uint8_t rx_mirror_session_bmap) {
     static uint8_t num_policy = 0;
+    uint64_t mac_64;
     //static uint32_t lif_id = HOST_LIF_ID_MIN;
+    num_obj = num_vnic;
+    memset(&spec, 0, sizeof(pds_vnic_spec_t));
+    spec.key = key;
+    spec.subnet = subnet;
+    vnic_feeder_encap_init(pdsobjkey2int(key), vnic_encap_type,
+                           &spec.vnic_encap);
+    vnic_feeder_encap_init(pdsobjkey2int(key), fabric_encap_type,
+                           &spec.fabric_encap);
 
-    memset(spec, 0, sizeof(pds_vnic_spec_t));
-    this->key_build(&spec->key);
-
-    spec->subnet = subnet;
-    spec->vnic_encap = vnic_encap;
-    spec->fabric_encap = fabric_encap;
-    MAC_UINT64_TO_ADDR(spec->mac_addr, mac_u64);
-    spec->binding_checks_en = binding_checks_en;
-    spec->tx_mirror_session_bmap = tx_mirror_session_bmap;
-    spec->rx_mirror_session_bmap = rx_mirror_session_bmap;
+    mac_64 = mac | (pdsobjkey2int(key) << 24);
+    MAC_UINT64_TO_ADDR(spec.mac_addr, mac_64);
+    spec.binding_checks_en = binding_checks_en;
+    spec.tx_mirror_session_bmap = tx_mirror_session_bmap;
+    spec.rx_mirror_session_bmap = rx_mirror_session_bmap;
 
 #if 0
     // TODO: this should be under platform == HW check
@@ -152,25 +125,57 @@ vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
     }
 #endif
 
-    if (this->configure_policy) {
+    if (configure_policy) {
         increment_num(&num_policy);
-        spec->num_ing_v4_policy = num_policy;
-        fill_policy_ids(spec->ing_v4_policy, TEST_POLICY_ID_BASE + 1, num_policy);
+        spec.num_ing_v4_policy = num_policy;
+        fill_policy_ids(spec.ing_v4_policy, TEST_POLICY_ID_BASE + 1, num_policy);
         increment_num(&num_policy);
-        spec->num_ing_v6_policy = num_policy;
-        fill_policy_ids(spec->ing_v6_policy, TEST_POLICY_ID_BASE + 5, num_policy);
+        spec.num_ing_v6_policy = num_policy;
+        fill_policy_ids(spec.ing_v6_policy, TEST_POLICY_ID_BASE + 5, num_policy);
         increment_num(&num_policy);
-        spec->num_egr_v4_policy = num_policy;
-        fill_policy_ids(spec->egr_v4_policy, TEST_POLICY_ID_BASE + 10, num_policy);
+        spec.num_egr_v4_policy = num_policy;
+        fill_policy_ids(spec.egr_v4_policy, TEST_POLICY_ID_BASE + 10, num_policy);
         increment_num(&num_policy);
-        spec->num_egr_v6_policy = num_policy;
-        fill_policy_ids(spec->egr_v6_policy, TEST_POLICY_ID_BASE + 15, num_policy);
+        spec.num_egr_v6_policy = num_policy;
+        fill_policy_ids(spec.egr_v6_policy, TEST_POLICY_ID_BASE + 15, num_policy);
     }
+}
+
+vnic_feeder::vnic_feeder(const vnic_feeder& feeder) {
+    memcpy(&this->spec, &feeder.spec, sizeof(pds_vnic_spec_t));
+    num_obj = feeder.num_obj;
+}
+
+void
+vnic_feeder::iter_next(int width) {
+    uint64_t mac_u64;
+    spec.key = int2pdsobjkey(pdsobjkey2int(spec.key) + width);
+    vnic_feeder_encap_next(&spec.vnic_encap);
+    if (apollo()) {
+        vnic_feeder_encap_next(&spec.fabric_encap);
+        spec.tx_mirror_session_bmap += width;
+        spec.rx_mirror_session_bmap += width;
+    }
+    mac_u64 = MAC_TO_UINT64(spec.mac_addr);
+    mac_u64+= width;
+
+    MAC_UINT64_TO_ADDR(spec.mac_addr, mac_u64);
+    cur_iter_pos++;
+}
+
+void
+vnic_feeder::key_build(pds_obj_key_t *key) const {
+    *key = this->spec.key;
+}
+
+void
+vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
+    memcpy(spec, &this->spec, sizeof(pds_vnic_spec_t));
 }
 
 bool
 vnic_feeder::key_compare(const pds_obj_key_t *key) const {
-    if (this->key != *key)
+    if (this->spec.key != *key)
         return false;
     return true;
 }
@@ -179,25 +184,24 @@ bool
 vnic_feeder::spec_compare(const pds_vnic_spec_t *spec) const {
     mac_addr_t mac = {0};
 
-    if (!test::pdsencap_isequal(&vnic_encap, &spec->vnic_encap))
+    if (!test::pdsencap_isequal(&this->spec.vnic_encap, &spec->vnic_encap))
         return false;
 
     if (apollo()) {
-        if (!test::pdsencap_isequal(&fabric_encap, &spec->fabric_encap))
+        if (!test::pdsencap_isequal(&this->spec.fabric_encap, &spec->fabric_encap))
             return false;
 
-        if (binding_checks_en != spec->binding_checks_en)
+        if (this->spec.binding_checks_en != spec->binding_checks_en)
             return false;
 
-        if (tx_mirror_session_bmap != spec->tx_mirror_session_bmap)
+        if (this->spec.tx_mirror_session_bmap != spec->tx_mirror_session_bmap)
             return false;
 
-        if (rx_mirror_session_bmap != spec->rx_mirror_session_bmap)
+        if (this->spec.rx_mirror_session_bmap != spec->rx_mirror_session_bmap)
             return false;
     }
 
-    MAC_UINT64_TO_ADDR(mac, mac_u64);
-    if (memcmp(mac, &spec->mac_addr, sizeof(mac)))
+    if (memcmp(&this->spec.mac_addr, &spec->mac_addr, sizeof(mac)))
         return false;
 
     return true;
@@ -272,13 +276,17 @@ static vnic_feeder k_vnic_feeder;
 
 void sample_vnic_setup(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
-    k_vnic_feeder.init(int2pdsobjkey(1));
+    k_vnic_feeder.init(int2pdsobjkey(1), int2pdsobjkey(1), k_max_vnic,
+                       k_feeder_mac, PDS_ENCAP_TYPE_DOT1Q,
+                       PDS_ENCAP_TYPE_MPLSoUDP, true, true, 0, 0);
     many_create(bctxt, k_vnic_feeder);
 }
 
 void sample_vnic_teardown(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
-    k_vnic_feeder.init(int2pdsobjkey(1));
+    k_vnic_feeder.init(int2pdsobjkey(1), int2pdsobjkey(1), k_max_vnic,
+                       k_feeder_mac, PDS_ENCAP_TYPE_DOT1Q,
+                       PDS_ENCAP_TYPE_MPLSoUDP, true, true, 0, 0);
     many_delete(bctxt, k_vnic_feeder);
 }
 
