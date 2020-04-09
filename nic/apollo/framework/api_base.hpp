@@ -284,7 +284,7 @@ protected:
     /// \brief constructor
     api_base() {
         in_dol_ = 0;
-        in_dol_ = 0;
+        in_aol_ = 0;
         rsvd_rsc_ = 0;
     };
 
