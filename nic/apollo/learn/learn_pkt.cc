@@ -49,14 +49,16 @@ detect_l2l_move (learn_ctxt_t *ctxt, pds_mapping_type_t mapping_type)
 {
     pds_obj_key_t vnic_key;
     vnic_entry *vnic;
-    pds_ifindex_t ifindex;
+    pds_ifindex_t vnic_ifindex;
+    pds_ifindex_t pkt_ifindex;
     bool l2l_move = false;
     impl::learn_info_t  *impl = &ctxt->pkt_ctxt.impl_info;
+    const mac_addr_t *vnic_mac;
 
     if (mapping_type == PDS_MAPPING_TYPE_L2) {
         // L2L move for MAC
         // 1) same MAC, subnet is now associated with different LIF, subnet has
-        //    removed LIFs, in this case, update VNIC but keep IPs learnt
+        //    moved LIFs, in this case, update VNIC but keep IPs learnt
         // 2) MAC is seen with different VLAN tag than what we learnt before,
         //    in this case, update VNIC with new VLAN tag and keep IPs intact
         // 3) VLAN has changed
@@ -64,17 +66,36 @@ detect_l2l_move (learn_ctxt_t *ctxt, pds_mapping_type_t mapping_type)
         //    VNIC spec is always rebuilt
         vnic_key = api::uuid_from_objid(ctxt->mac_entry->vnic_obj_id());
         vnic = vnic_db()->find(&vnic_key);
-        ifindex = (pds_ifindex_t) LIF_IFINDEX(impl->lif);
-        l2l_move = (api::objid_from_uuid(vnic->host_if()) != ifindex) ||
+        vnic_ifindex = api::objid_from_uuid(vnic->host_if());
+        pkt_ifindex = (pds_ifindex_t) LIF_IFINDEX(impl->lif);
+
+        // encap comparison assumes encap type is 802.1Q
+        l2l_move = (vnic_ifindex != pkt_ifindex) ||
                    (vnic->vnic_encap().val.vlan_tag !=
                     impl->encap.val.vlan_tag);
-        // encap comparison above assumes encap type is 802.1Q
+
+        if (l2l_move) {
+            ctxt->mac_move_log = "attributes changed ifindex-(" +
+                                to_string(vnic_ifindex) + ", " +
+                                to_string(pkt_ifindex) + "), " +
+                                "VLAN TAG-(" +
+                                to_string(vnic->vnic_encap().val.vlan_tag) +
+                                ", " + to_string(impl->encap.val.vlan_tag) +
+                                ")";
+        }
     } else {
         // check if existing MAC address mapped to this IP is different from the
         // one seen in the packet, if yes, move the IP to the MAC seen in the
         // packet, this could be an existing MAC or a new MAC
-        l2l_move = (memcmp(ctxt->ip_entry->mac_entry()->key()->mac_addr,
-                           ctxt->mac_key.mac_addr, ETH_ADDR_LEN) != 0);
+        vnic_mac = &ctxt->ip_entry->mac_entry()->key()->mac_addr;
+        l2l_move = (memcmp(vnic_mac, ctxt->mac_key.mac_addr, ETH_ADDR_LEN)
+                    != 0);
+        if (l2l_move) {
+            ctxt->ip_move_log = "MAC address changed (" +
+                                std::string(macaddr2str(*vnic_mac)) + ", " +
+                                std::string(macaddr2str(ctxt->mac_key.mac_addr))
+                                + ")";
+        }
     }
     return l2l_move;
 }
@@ -224,6 +245,7 @@ validate_learn (learn_ctxt_t *ctxt)
         if (ep_mac_db()->num_entries() >= EP_MAX_MAC_ENTRY) {
             PDS_TRACE_ERR("Already reached maximum limit for MACs, dropping "
                           "EP %s", ctxt->str());
+            LEARN_COUNTER_INCR(validation_err[MAC_LIMIT]);
             return SDK_RET_ERR;
         }
         // only one untagged vnic per subnet is allowed, since untagged vnics
@@ -233,6 +255,7 @@ validate_learn (learn_ctxt_t *ctxt)
                                            ctxt->pkt_ctxt.impl_info.lif)) {
                 PDS_TRACE_ERR("Only one untagged VNIC supported per LIF, "
                               "dropping EP %s", ctxt->str());
+                LEARN_COUNTER_INCR(validation_err[UNTAGGED_MAC_LIMIT]);
                 return SDK_RET_ERR;
             }
         }
@@ -249,6 +272,7 @@ validate_learn (learn_ctxt_t *ctxt)
            (ep_ip_db()->num_entries() >= EP_MAX_IP_ENTRY)) {
             PDS_TRACE_ERR("Already reached maximum limit for IPs, dropping EP "
                           "%s", ctxt->str());
+            LEARN_COUNTER_INCR(validation_err[IP_LIMIT]);
             return SDK_RET_ERR;
         }
         // validate if IP belongs to the subnet. subnet should be present now,
@@ -261,6 +285,7 @@ validate_learn (learn_ctxt_t *ctxt)
                 PDS_TRACE_ERR("IP address %s does not belong to the subnet %s",
                               ipaddr2str(&ctxt->ip_key.ip_addr),
                               ipv4pfx2str(&v4_prefix));
+                LEARN_COUNTER_INCR(validation_err[IP_ADDR_SUBNET_MISMATCH]);
                 return SDK_RET_ERR;
             }
         } else {
@@ -269,6 +294,7 @@ validate_learn (learn_ctxt_t *ctxt)
                 PDS_TRACE_ERR("IPv6 address %s doesnt belong to the subnet %s",
                               ipaddr2str(&ctxt->ip_key.ip_addr),
                               ippfx2str(&v6_prefix));
+                LEARN_COUNTER_INCR(validation_err[IP_ADDR_SUBNET_MISMATCH]);
                 return SDK_RET_ERR;
             }
         }
@@ -290,7 +316,9 @@ update_ep_mac (learn_ctxt_t *ctxt)
         // start MAC aging timer
         mac_aging_timer_restart(ctxt->mac_entry);
         broadcast_mac_event(EVENT_ID_MAC_LEARN, ctxt->mac_entry);
-        LEARN_COUNTER_INCR(vnics);
+        if (ctxt->mac_learn_type == LEARN_TYPE_NEW_LOCAL) {
+            broadcast_mac_event(EVENT_ID_MAC_LEARN, ctxt->mac_entry);
+        }
         break;
     case LEARN_TYPE_MOVE_L2L:
         // nothing to do
@@ -319,7 +347,6 @@ update_ep_ip (learn_ctxt_t *ctxt)
         ctxt->ip_entry->add_to_db();
         ctxt->mac_entry->add_ip(ctxt->ip_entry);
         broadcast_ip_event(EVENT_ID_IP_LEARN, ctxt->ip_entry);
-        LEARN_COUNTER_INCR(l3_mappings);
         break;
     case LEARN_TYPE_MOVE_L2L:
         old_ip_entry = ctxt->pkt_ctxt.old_ip_entry;
@@ -360,6 +387,7 @@ update_ep (learn_ctxt_t *ctxt)
                       ctxt->str(), ret);
         return ret;
     }
+    PDS_TRACE_INFO("Processed %s", ctxt->log_str(PDS_MAPPING_TYPE_L2));
 
     if (ctxt->ip_learn_type != LEARN_TYPE_INVALID) {
         ret = update_ep_ip(ctxt);
@@ -367,9 +395,8 @@ update_ep (learn_ctxt_t *ctxt)
             PDS_TRACE_ERR("Failed to update EP %s IP state (error code %u)",
                           ctxt->str(), ret);
         }
+        PDS_TRACE_INFO("Processed %s", ctxt->log_str(PDS_MAPPING_TYPE_L3));
     }
-
-    PDS_TRACE_VERBOSE("Processed learn for EP %s", ctxt->str());
     return ret;
 }
 
@@ -397,8 +424,8 @@ reinject_pkt_to_p4 (void *mbuf, learn_ctxt_t *ctxt)
 {
     // check if packet needs to be dropped
     if (ctxt->pkt_ctxt.impl_info.hints & LEARN_HINT_ARP_REPLY) {
-        ctxt->pkt_ctxt.pkt_drop_reason = PKT_DROP_REASON_ARP_REPLY;
-        return SDK_RET_ERR;
+        learn_lif_drop_pkt(mbuf, PKT_DROP_REASON_ARP_REPLY);
+        return SDK_RET_OK;
     }
 
     // reinject packet to p4
@@ -413,14 +440,18 @@ void
 process_learn_pkt (void *mbuf)
 {
     learn_ctxt_t ctxt = { 0 };
-    sdk_ret_t ret;
+    learn_batch_ctxt_t lbctxt;
+    sdk_ret_t ret = SDK_RET_ERR;
     char *pkt_data = learn_lif_mbuf_data_start(mbuf);
 #ifdef BATCH_SUPPORT
     pds_batch_params_t batch_params {learn_db()->epoch_next(), false, nullptr,
                                       nullptr};
 #endif
+    bool has_learn_info = false;
 
     ctxt.ctxt_type = LEARN_CTXT_TYPE_PKT;
+    memset(&lbctxt.counters, 0, sizeof(lbctxt.counters));
+    ctxt.lbctxt = &lbctxt;
 
     // default drop reason
     ctxt.pkt_ctxt.pkt_drop_reason = PKT_DROP_REASON_PARSE_ERR;
@@ -437,7 +468,9 @@ process_learn_pkt (void *mbuf)
         goto error;
     }
 
-    PDS_TRACE_DEBUG("Rcvd learn pkt with info  %s", ctxt.str());
+    PDS_TRACE_DEBUG("Learn context %s", ctxt.str());
+    has_learn_info = true;
+    ctxt.pkt_ctxt.pkt_drop_reason = PKT_DROP_REASON_LEARNING_FAIL;
 
     // all required info is gathered, validate the learn
     ret = validate_learn(&ctxt);
@@ -468,9 +501,7 @@ process_learn_pkt (void *mbuf)
     // submit the apis in sync mode
     ret = pds_batch_commit(ctxt.bctxt);
     ctxt.bctxt = PDS_BATCH_CTXT_INVALID;
-    LEARN_COUNTER_INCR(api_calls);
     if (unlikely(ret != SDK_RET_OK)) {
-        LEARN_COUNTER_INCR(api_failure);
         goto error;
     }
 #endif
@@ -480,6 +511,7 @@ process_learn_pkt (void *mbuf)
     if (unlikely(ret != SDK_RET_OK)) {
         goto error;
     }
+    update_batch_counters(&lbctxt, true);
 
     // reinject the packet to p4 if needed
     if (reinject_pkt_to_p4(mbuf, &ctxt) == SDK_RET_OK) {
@@ -489,8 +521,19 @@ process_learn_pkt (void *mbuf)
 
 error:
 
+    if (has_learn_info) {
+        PDS_TRACE_ERR("Failed to process %s",
+                       ctxt.log_str(PDS_MAPPING_TYPE_L2));
+        if (ctxt.ip_learn_type != LEARN_TYPE_INVALID) {
+            PDS_TRACE_ERR("Failed to process %s",
+                          ctxt.log_str(PDS_MAPPING_TYPE_L3));
+        }
+    }
+    if (ret != SDK_RET_OK) {
+        update_batch_counters(&lbctxt, false);
+    }
+
     // clean up any allocated resources
-    // TODO: update pkt_drop_reason from ret code
     learn_lif_drop_pkt(mbuf, ctxt.pkt_ctxt.pkt_drop_reason);
     ctxt.reset();
 }

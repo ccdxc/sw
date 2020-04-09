@@ -137,7 +137,7 @@ create_learn_ctxt (pds_remote_mapping_spec_t *spec, learn_ctxt_t *ctxt,
 
 sdk_ret_t
 process_mapping_api (mapping_key_spec_t key_spec, api_op_t op,
-                     pds_batch_ctxt_t bctxt, learn_entry_list_t *del_obj_list)
+                     pds_batch_ctxt_t bctxt, learn_batch_ctxt_t *lbctxt)
 {
     sdk_ret_t ret;
     learn_ctxt_t ctxt = { 0 };
@@ -145,7 +145,7 @@ process_mapping_api (mapping_key_spec_t key_spec, api_op_t op,
 
     ctxt.ctxt_type = LEARN_CTXT_TYPE_API;
     ctxt.bctxt = bctxt;
-    ctxt.api_ctxt.del_objs = del_obj_list;
+    ctxt.lbctxt = lbctxt;
 
     if (op == API_OP_DELETE) {
         ret = create_learn_ctxt(key_spec.skey, &ctxt, op);
@@ -160,7 +160,13 @@ process_mapping_api (mapping_key_spec_t key_spec, api_op_t op,
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    return process_learn(&ctxt);
+    PDS_TRACE_DEBUG("Learn context: %s", ctxt.str());
+    ret = process_learn(&ctxt);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to process %s",
+                      ctxt.log_str(ctxt.api_ctxt.mkey->type));
+    }
+    return ret;
 }
 
 }   // namespace learn

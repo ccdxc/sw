@@ -348,3 +348,8 @@ dpdk_mbuf *
 dpdk_device::alloc_mbuf(void) {
     return (dpdk_mbuf *) rte_pktmbuf_alloc(dpdk_config.rte_mp);
 }
+
+uint32_t
+dpdk_device::avail_mbuf_count(void) {
+    return rte_mempool_avail_count(dpdk_config.rte_mp);
+}

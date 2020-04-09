@@ -96,7 +96,7 @@ public:
 
     /// \brief          return stringified key of the object (for debugging)
     string key2str(void) const {
-        return "IP entry-(" + std::string(key_.vpc.str()) + ", " +
+        return "IP-(" + std::string(key_.vpc.str()) + ", " +
             std::string(ipaddr2str(&key_.ip_addr)) + ")";
     }
 

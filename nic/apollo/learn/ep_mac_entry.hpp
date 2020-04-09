@@ -111,7 +111,7 @@ public:
 
     /// \brief          return stringified key of the object (for debugging)
     string key2str(void) const {
-        return "MAC entry-(" + std::string(key_.subnet.str()) + ", " +
+        return "MAC-(" + std::string(key_.subnet.str()) + ", " +
             std::string(macaddr2str(key_.mac_addr)) + ")";
     }
 

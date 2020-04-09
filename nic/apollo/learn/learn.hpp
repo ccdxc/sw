@@ -59,6 +59,7 @@ typedef struct {
 typedef enum {
     LEARN_TYPE_INVALID = 0,      ///< learn type not available
     LEARN_TYPE_NONE,             ///< existing entry, nothing to learn
+    LEARN_TYPE_COUNTER_MIN = LEARN_TYPE_NONE,
     LEARN_TYPE_NEW_LOCAL,        ///< new local learn
     LEARN_TYPE_NEW_REMOTE,       ///< new remote learn
     LEARN_TYPE_MOVE_L2L,         ///< local to local move
@@ -66,7 +67,46 @@ typedef enum {
     LEARN_TYPE_MOVE_L2R,         ///< local to remote move
     LEARN_TYPE_MOVE_R2R,         ///< remote to remote move
     LEARN_TYPE_DELETE,           ///< delete
+    LEARN_TYPE_COUNTER_MAX = LEARN_TYPE_DELETE,
 } ep_learn_type_t;
+
+/// \brief return number of learn types tracked by counters
+static constexpr int
+learn_type_ctr_sz (void)
+{
+    return (LEARN_TYPE_COUNTER_MAX - LEARN_TYPE_COUNTER_MIN + 1);
+}
+#define NUM_LEARN_TYPE_CTRS learn_type_ctr_sz()
+
+// counter index
+#define LEARN_TYPE_CTR_IDX(learn_type)     (learn_type - LEARN_TYPE_COUNTER_MIN)
+#define CTR_IDX_TO_LEARN_TYPE(idx)         (idx + LEARN_TYPE_COUNTER_MIN)
+
+static inline const char *
+ep_learn_type_str (ep_learn_type_t learn_type)
+{
+    switch (learn_type) {
+    case LEARN_TYPE_INVALID:
+        return "Invalid";
+    case LEARN_TYPE_NONE:
+        return "None";
+    case LEARN_TYPE_NEW_LOCAL:
+        return "New Local";
+    case LEARN_TYPE_NEW_REMOTE:
+        return "New Remote";
+    case LEARN_TYPE_MOVE_L2L:
+        return "L2L";
+    case LEARN_TYPE_MOVE_R2L:
+        return "R2L";
+    case LEARN_TYPE_MOVE_L2R:
+        return "L2R";
+    case LEARN_TYPE_MOVE_R2R:
+        return "R2R";
+    case LEARN_TYPE_DELETE:
+        return "Delete";
+    }
+    return "Error";
+}
 
 /// \brief process learn packet received on learn lif
 void process_learn_pkt(void *mbuf);

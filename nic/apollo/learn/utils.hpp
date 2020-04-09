@@ -12,7 +12,6 @@
 #define __LEARN_UTILS_HPP__
 
 #include "nic/sdk/lib/dpdk/dpdk.hpp"
-#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/learn/learn_state.hpp"
 #include "nic/apollo/learn/learn_impl_base.hpp"
 
@@ -24,7 +23,15 @@ namespace learn {
 static inline void *
 learn_lif_alloc_mbuf (void)
 {
-    return (void *) learn_lif->alloc_mbuf();
+    void *mbuf;
+
+    mbuf = (void *)learn_lif->alloc_mbuf();
+    if (unlikely(mbuf == nullptr)) {
+        LEARN_COUNTER_INCR(pkt_buf_alloc_err);
+    } else {
+        LEARN_COUNTER_INCR(pkt_buf_alloc_ok);
+    }
+    return mbuf;
 }
 
 /// \brief get pointer to pkt data given mbuf
@@ -59,8 +66,7 @@ learn_lif_drop_pkt (void *mbuf, uint8_t reason)
 
     learn_lif->drop_packets(&pkt, 1);
     SDK_ASSERT((reason < PKT_DROP_REASON_MAX));
-    LEARN_COUNTER_INCR(drop_reason[reason]);
-    PDS_TRACE_VERBOSE("Dropped pkt with reason %u", reason);
+    LEARN_COUNTER_INCR(pkt_drop_reason[reason]);
 
     // force driver cq cleanup
     (void) learn_lif->transmit_packets(0, nullptr, 0);
@@ -76,12 +82,11 @@ learn_lif_send_pkt (void *mbuf)
 
     tx_fail = learn_lif->transmit_packets(0, &pkt, 1);
     if (tx_fail) {
-        PDS_TRACE_ERR("Failed to reinject learn packet");
+        LEARN_COUNTER_INCR(tx_pkts_err);
         learn_lif_drop_pkt(mbuf, PKT_DROP_REASON_TX_FAIL);
         return;
     }
-    LEARN_COUNTER_INCR(tx_pkts);
-    PDS_TRACE_VERBOSE("Tx count %u", LEARN_COUNTER_GET(tx_pkts));
+    LEARN_COUNTER_INCR(tx_pkts_ok);
 }
 
 /// \brief add data to mbuf
@@ -92,6 +97,13 @@ learn_lif_mbuf_append_data (void *mbuf, uint16_t len)
     dpdk_mbuf *pkt = (dpdk_mbuf *)mbuf;
 
     return dpdk_device::append_data(pkt, len);
+}
+
+/// \brief get count of available mbufs in the pool
+static inline uint32_t
+learn_lif_avail_mbuf_count (void)
+{
+    return learn_lif->avail_mbuf_count();
 }
 
 }    // namespace learn

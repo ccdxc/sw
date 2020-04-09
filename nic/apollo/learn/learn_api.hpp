@@ -28,7 +28,7 @@ typedef union {
 
 sdk_ret_t process_mapping_api(mapping_key_spec_t key_spec, api_op_t op,
                               pds_batch_ctxt_t bctxt,
-                              learn_entry_list_t *del_obj_list);
+                              learn_batch_ctxt_t *lbctxt);
 }   // namespace learn
 
 #endif  // __LEARN__LEARN_API_HPP__

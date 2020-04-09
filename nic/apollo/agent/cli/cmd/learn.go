@@ -440,6 +440,8 @@ func LearnPktDropReasonToStr(reason pds.LearnPktDropReason) string {
 		reasonStr = "Parse errors"
 	case pds.LearnPktDropReason_LEARN_PKTDROP_REASON_RES_ALLOC_FAIL:
 		reasonStr = "Resource allocation failures"
+	case pds.LearnPktDropReason_LEARN_PKTDROP_REASON_LEARNING_FAIL:
+		reasonStr = "Learning failures"
 	case pds.LearnPktDropReason_LEARN_PKTDROP_REASON_MBUF_ERR:
 		reasonStr = "Internal packet buffer errors"
 	case pds.LearnPktDropReason_LEARN_PKTDROP_REASON_TX_FAIL:
@@ -450,6 +452,64 @@ func LearnPktDropReasonToStr(reason pds.LearnPktDropReason) string {
 		reasonStr = "Unknown"
 	}
 	return reasonStr
+}
+
+func LearnValidationTypeToStr(valType pds.LearnValidationType) string {
+	var valStr string
+
+	switch valType {
+	case pds.LearnValidationType_LEARN_CHECK_UNTAGGED_MAC_LIMIT:
+		valStr = "Exceeded untagged MAC per host interface limit"
+	case pds.LearnValidationType_LEARN_CHECK_MAC_LIMIT:
+		valStr = "Exceeded MAC per host interface limit"
+	case pds.LearnValidationType_LEARN_CHECK_IP_LIMIT:
+		valStr = "Exceeded IP adressed per MAC limit"
+	case pds.LearnValidationType_LEARN_CHECK_IP_IN_SUBNET:
+		valStr = "IP address does not belong to subnet"
+	default:
+		valStr = "Unknown"
+	}
+	return valStr
+}
+
+func LearnEventTypeToStr(eventType pds.LearnEventType) string {
+	var eventStr string
+
+	switch eventType {
+	case pds.LearnEventType_LEARN_EVENT_NEW_LOCAL:
+		eventStr = "New local learn";
+	case pds.LearnEventType_LEARN_EVENT_NEW_REMOTE:
+		eventStr = "New remote learn";
+	case pds.LearnEventType_LEARN_EVENT_L2L_MOVE:
+		eventStr = "Local to local move";
+	case pds.LearnEventType_LEARN_EVENT_R2L_MOVE:
+		eventStr = "Remote to local move";
+	case pds.LearnEventType_LEARN_EVENT_L2R_MOVE:
+		eventStr = "Local to remote move";
+	case pds.LearnEventType_LEARN_EVENT_R2R_MOVE:
+		eventStr = "Remote to remote move";
+	case pds.LearnEventType_LEARN_EVENT_DELETE:
+		eventStr = "Remote delete";
+	default:
+		eventStr = "Unknown"
+	}
+	return eventStr;
+}
+
+func LearnApiOpTypeToStr(opType pds.LearnApiOpType) string {
+	var opStr string
+
+	switch opType {
+	case pds.LearnApiOpType_LEARN_API_OP_CREATE:
+		opStr = "Create";
+	case pds.LearnApiOpType_LEARN_API_OP_DELETE:
+		opStr = "Delete";
+	case pds.LearnApiOpType_LEARN_API_OP_UPDATE:
+		opStr = "Update";
+	default:
+		opStr = "Unknown";
+	}
+	return opStr;
 }
 
 func printLearnMACHeader() {
@@ -508,22 +568,92 @@ func printLearnIP(resp *pds.LearnIPGetResponse) {
 	}
 }
 
+func printLearnEventStats(levents []*pds.LearnEvents, header string, err bool) {
+	var errStr string
+
+	if len(levents) > 0 {
+		fmt.Printf("%s:\n", header)
+	}
+	if err {
+		errStr = " errors"
+	} else {
+		errStr = ""
+	}
+	for _, levent := range levents {
+		if levent.GetEventType() == pds.LearnEventType_LEARN_EVENT_NONE {
+			continue;
+		}
+		fmt.Printf("	# %-30s: %-20d\n",
+				   LearnEventTypeToStr(levent.GetEventType()) + errStr,
+				   levent.GetCount())
+	}
+}
+
+func printLearnApiStats(ops []*pds.LearnApiOps, header string, err bool) {
+	var errStr string
+
+	if len(ops) > 0 {
+		fmt.Printf("%s:\n", header)
+	}
+	if err {
+		errStr = " errors"
+	} else {
+		errStr = ""
+	}
+	for _, op := range ops {
+		fmt.Printf("	# %-30s: %-20d\n",
+		LearnApiOpTypeToStr(op.GetApiOpType()) + errStr,
+		op.GetCount())
+	}
+}
 func printLearnStats(resp *pds.LearnStatsGetResponse) {
 	stats := resp.GetStats()
 
-	fmt.Printf("Endpoint learning statistics:\n")
-	fmt.Printf("	Total MACs/VNICs learnt      : %-20d\n", stats.GetNumVnics())
-	fmt.Printf("	Total IPs/L3 mappings learnt : %-20d\n", stats.GetNumL3Mappings())
-	fmt.Printf("	# API calls                  : %-20d\n", stats.GetNumApiCalls())
-	fmt.Printf("	# API failures               : %-20d\n", stats.GetNumApiFailure())
-	fmt.Printf("	# Packets received           : %-20d\n", stats.GetNumPktsRcvd())
-	fmt.Printf("	# Packets sent               : %-20d\n", stats.GetNumPktsSent())
+	fmt.Printf("Packet counters:\n")
+	fmt.Printf("	# Packets received              : %-20d\n", stats.GetPktsRcvd())
+	fmt.Printf("	# Packets sent                  : %-20d\n", stats.GetPktsSent())
+	fmt.Printf("	# Packet send errors            : %-20d\n", stats.GetPktSendErrors())
+	fmt.Printf("	# Arp probes sent               : %-20d\n", stats.GetArpProbesSent())
+	fmt.Printf("	# Arp probe send errors         : %-20d\n", stats.GetArpProbeSendErrors())
+	fmt.Printf("	# Buffers allocated             : %-20d\n", stats.GetPktBufferAlloc())
+	fmt.Printf("	# Buffer allocation errors      : %-20d\n", stats.GetPktBufferAllocErrors())
+	fmt.Printf("	# Buffers available             : %-20d\n", stats.GetPktBufferAvailable())
+
 	if len(stats.GetDropStats()) > 0 {
 		fmt.Printf("	# Drop counters:\n")
 	}
 	for _, dropStats := range stats.GetDropStats() {
-		fmt.Printf("		%-31s: %-20d\n",
+		fmt.Printf("	      %-26s: %-20d\n",
 			LearnPktDropReasonToStr(dropStats.GetReason()),
 			dropStats.GetNumDrops())
 	}
+
+	fmt.Printf("Aging counters:\n")
+	fmt.Printf("	# IP mapping ageouts            : %-20d\n", stats.GetIpAgeouts())
+	fmt.Printf("	# MAC ageouts                   : %-20d\n", stats.GetMacAgeouts())
+	fmt.Printf("	# IP mapping ageout errors      : %-20d\n", stats.GetIpAgeoutErrors())
+	fmt.Printf("	# MAC ageout errors             : %-20d\n", stats.GetMacAgeoutErrors())
+
+	printLearnEventStats(stats.GetMacLearnEvents(), "MAC learn and move counters", false)
+	printLearnEventStats(stats.GetMacLearnErrors(), "MAC learn and move errors", true)
+	printLearnEventStats(stats.GetIpLearnEvents(), "IP learn and move counters", false)
+	printLearnEventStats(stats.GetIpLearnErrors(), "IP learn and move errors", true)
+
+	if len(stats.GetValidationErrors()) > 0 {
+		fmt.Printf("Learn validation error counters:\n")
+	}
+	for _, valErr := range stats.GetValidationErrors() {
+		fmt.Printf("	# %-26s: %-20d\n",
+			LearnValidationTypeToStr(valErr.GetValidationType()),
+			valErr.GetCount())
+	}
+
+	printLearnApiStats(stats.GetVnicOps(), "VNIC API", false);
+	printLearnApiStats(stats.GetVnicOpErrors(), "VNIC API errors", true);
+	printLearnApiStats(stats.GetRemoteL2Mappings(), "Remote MAC mapping API", false);
+	printLearnApiStats(stats.GetRemoteL2MappingErrors(), "Remote MAC mapping API errors", true);
+	printLearnApiStats(stats.GetLocalL3Mappings(), "Local IP mapping API", false);
+	printLearnApiStats(stats.GetLocalL3MappingErrors(), "Local IP mapping API errors", true);
+	printLearnApiStats(stats.GetRemoteL3Mappings(), "Remote IP mapping API", false);
+	printLearnApiStats(stats.GetRemoteL3MappingErrors(), "Remote IP mapping API errors", true);
 }

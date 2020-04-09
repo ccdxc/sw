@@ -83,6 +83,7 @@ learn_thread_pkt_poll_timer_cb (event::timer_t *timer)
     if (unlikely(!rx_pkts || !rx_count)) {
         return;
     }
+    PDS_TRACE_VERBOSE("Rcvd learn packet");
     LEARN_COUNTER_ADD(rx_pkts, rx_count);
 
     for (uint16_t i = 0; i < rx_count; i++) {

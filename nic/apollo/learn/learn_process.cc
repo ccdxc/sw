@@ -21,6 +21,97 @@ namespace learn {
 
 using namespace sdk::types;
 
+// wrapper functions to increment counters around mapping APIs
+static inline sdk_ret_t
+vnic_create (learn_ctxt_t *ctxt, pds_vnic_spec_t *spec)
+{
+    batch_counters_t *counters = &ctxt->lbctxt->counters;
+
+    counters->vnics[OP_CREATE]++;
+    return pds_vnic_create(spec, ctxt->bctxt);
+}
+
+static inline sdk_ret_t
+vnic_update (learn_ctxt_t *ctxt, pds_vnic_spec_t *spec)
+{
+    batch_counters_t *counters = &ctxt->lbctxt->counters;
+
+    counters->vnics[OP_UPDATE]++;
+    return pds_vnic_update(spec, ctxt->bctxt);
+}
+
+static inline sdk_ret_t
+local_mapping_create (learn_ctxt_t *ctxt, pds_local_mapping_spec_t *spec)
+{
+    batch_counters_t *counters = &ctxt->lbctxt->counters;
+
+    if (spec->skey.type == PDS_MAPPING_TYPE_L3) {
+        counters->local_ip_map[OP_CREATE]++;
+    }
+    return pds_local_mapping_create(spec, ctxt->bctxt);
+}
+
+static inline sdk_ret_t
+local_mapping_update (learn_ctxt_t *ctxt, pds_local_mapping_spec_t *spec)
+{
+    batch_counters_t *counters = &ctxt->lbctxt->counters;
+
+    if (spec->skey.type == PDS_MAPPING_TYPE_L3) {
+        counters->local_ip_map[OP_UPDATE]++;
+    }
+    return pds_local_mapping_update(spec, ctxt->bctxt);
+}
+
+static inline sdk_ret_t
+local_mapping_delete (learn_ctxt_t *ctxt, pds_mapping_key_t *key)
+{
+    batch_counters_t *counters = &ctxt->lbctxt->counters;
+
+    if (key->type == PDS_MAPPING_TYPE_L3) {
+        counters->local_ip_map[OP_UPDATE]++;
+    }
+    return api::pds_local_mapping_delete(key, ctxt->bctxt);
+}
+
+static inline sdk_ret_t
+remote_mapping_create (learn_ctxt_t *ctxt, pds_remote_mapping_spec_t *spec)
+{
+    batch_counters_t *counters = &ctxt->lbctxt->counters;
+
+    if (spec->skey.type == PDS_MAPPING_TYPE_L3) {
+        counters->remote_ip_map[OP_CREATE]++;
+    } else {
+        counters->remote_mac_map[OP_CREATE]++;
+    }
+    return pds_remote_mapping_create(spec, ctxt->bctxt);
+}
+
+static inline sdk_ret_t
+remote_mapping_update (learn_ctxt_t *ctxt, pds_remote_mapping_spec_t *spec)
+{
+    batch_counters_t *counters = &ctxt->lbctxt->counters;
+
+    if (spec->skey.type == PDS_MAPPING_TYPE_L3) {
+        counters->remote_ip_map[OP_UPDATE]++;
+    } else {
+        counters->remote_mac_map[OP_UPDATE]++;
+    }
+    return pds_remote_mapping_update(spec, ctxt->bctxt);
+}
+
+static inline sdk_ret_t
+remote_mapping_delete (learn_ctxt_t *ctxt, pds_mapping_key_t *key)
+{
+    batch_counters_t *counters = &ctxt->lbctxt->counters;
+
+    if (key->type == PDS_MAPPING_TYPE_L3) {
+        counters->remote_ip_map[OP_DELETE]++;
+    } else {
+        counters->remote_mac_map[OP_DELETE]++;
+    }
+    return api::pds_remote_mapping_delete(key, ctxt->bctxt);
+}
+
 static sdk_ret_t
 process_new_local_mac (learn_ctxt_t *ctxt)
 {
@@ -50,8 +141,8 @@ process_new_local_mac (learn_ctxt_t *ctxt)
     MAC_ADDR_COPY(spec.mac_addr, ctxt->mac_key.mac_addr);
     spec.host_if = api::uuid_from_objid(LIF_IFINDEX(impl->lif));
 
-    PDS_TRACE_INFO("Creating VNIC %s for EP %s", spec.key.str(), ctxt->str());
-    return pds_vnic_create(&spec, ctxt->bctxt);
+    PDS_TRACE_DEBUG("Creating VNIC %s for EP %s", spec.key.str(), ctxt->str());
+    return vnic_create(ctxt, &spec);
 }
 
 static sdk_ret_t
@@ -68,8 +159,8 @@ process_l2l_move_mac (learn_ctxt_t *ctxt)
     MAC_ADDR_COPY(spec.mac_addr, ctxt->mac_key.mac_addr);
     spec.host_if = api::uuid_from_objid(LIF_IFINDEX(impl->lif));
 
-    PDS_TRACE_INFO("Updating VNIC %s for EP %s", spec.key.str(), ctxt->str());
-    return pds_vnic_update(&spec, ctxt->bctxt);
+    PDS_TRACE_DEBUG("Updating VNIC %s for EP %s", spec.key.str(), ctxt->str());
+    return vnic_update(ctxt, &spec);
 }
 
 static sdk_ret_t
@@ -79,7 +170,7 @@ process_r2l_move_mac (learn_ctxt_t *ctxt)
     pds_mapping_key_t mkey;
 
     ep_mac_to_pds_mapping_key(&ctxt->mac_key, &mkey);
-    ret = api::pds_remote_mapping_delete(&mkey, ctxt->bctxt);
+    ret = remote_mapping_delete(ctxt, &mkey);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -110,8 +201,8 @@ process_new_local_ip (learn_ctxt_t *ctxt)
     spec.num_tags = 0;
     MAC_ADDR_COPY(spec.vnic_mac, ctxt->mac_key.mac_addr);
 
-    PDS_TRACE_INFO("Creating IP mapping for EP %s", ctxt->str());
-    return pds_local_mapping_create(&spec, ctxt->bctxt);
+    PDS_TRACE_DEBUG("Creating IP mapping for EP %s", ctxt->str());
+    return local_mapping_create(ctxt, &spec);
 }
 
 static sdk_ret_t
@@ -125,7 +216,7 @@ process_l2l_move_ip (learn_ctxt_t *ctxt)
     // not index, there should be no disruption to existing flows involving this
     // IP
     ep_ip_to_pds_mapping_key(&ctxt->ip_key, &mkey);
-    ret = api::pds_local_mapping_delete(&mkey, ctxt->bctxt);
+    ret = local_mapping_delete(ctxt, &mkey);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to delete local mapping for EP %s", ctxt->str());
         return ret;
@@ -152,7 +243,7 @@ process_r2l_move_ip (learn_ctxt_t *ctxt)
     pds_mapping_key_t mkey;
 
     ep_ip_to_pds_mapping_key(&ctxt->ip_key, &mkey);
-    ret = api::pds_remote_mapping_delete(&mkey, ctxt->bctxt);
+    ret = remote_mapping_delete(ctxt, &mkey);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -163,7 +254,7 @@ process_r2l_move_ip (learn_ctxt_t *ctxt)
 static inline sdk_ret_t
 process_new_remote_mac_ip (learn_ctxt_t *ctxt)
 {
-    return pds_remote_mapping_create(ctxt->api_ctxt.spec, ctxt->bctxt);
+    return remote_mapping_create(ctxt, ctxt->api_ctxt.spec);
 }
 
 // structure to pass batch context to walk callback and get return status
@@ -192,7 +283,7 @@ static bool del_ip_entry_cb (void *entry, void *cookie)
     learn_ctxt_t *ctxt = (learn_ctxt_t *)cookie;
     ep_ip_entry *ip_entry = (ep_ip_entry *)entry;
 
-    add_to_delete_list(ip_entry, ctxt->mac_entry, ctxt->api_ctxt.del_objs);
+    add_to_delete_list(ip_entry, ctxt->mac_entry, &ctxt->lbctxt->del_objs);
     return false;
 }
 
@@ -225,7 +316,7 @@ process_l2r_move_mac (learn_ctxt_t *ctxt)
     }
 
     // create remote mapping
-    ret = pds_remote_mapping_create(ctxt->api_ctxt.spec, ctxt->bctxt);
+    ret = remote_mapping_create(ctxt, ctxt->api_ctxt.spec);
     if (unlikely(ret != SDK_RET_OK)) {
         return ret;
     }
@@ -234,7 +325,7 @@ process_l2r_move_mac (learn_ctxt_t *ctxt)
     mac_entry->walk_ip_list(del_ip_entry_cb, ctxt);
 
     // add MAC entry to delete list
-    add_to_delete_list(mac_entry, ctxt->api_ctxt.del_objs);
+    add_to_delete_list(mac_entry, &ctxt->lbctxt->del_objs);
     return SDK_RET_OK;
 }
 
@@ -244,18 +335,18 @@ process_l2r_move_ip (learn_ctxt_t *ctxt)
     sdk_ret_t ret;
 
     // delete local mapping, add remote mapping
-    ret = api::pds_local_mapping_delete(ctxt->api_ctxt.mkey, ctxt->bctxt);
+    ret = local_mapping_delete(ctxt, ctxt->api_ctxt.mkey);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    ret = pds_remote_mapping_create(ctxt->api_ctxt.spec, ctxt->bctxt);
+    ret = remote_mapping_create(ctxt, ctxt->api_ctxt.spec);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
     // add ip entry to delete list
     add_to_delete_list(ctxt->ip_entry, ctxt->mac_entry,
-                       ctxt->api_ctxt.del_objs);
+                       &ctxt->lbctxt->del_objs);
     return SDK_RET_OK;
 }
 
@@ -264,20 +355,20 @@ process_r2r_move_mac_ip (learn_ctxt_t *ctxt)
 {
     sdk_ret_t ret;
 
-    // TODO: return pds_remote_mapping_update(ctxt->api_ctxt.spec, ctxt->bctxt);
+    // TODO: return remote_mapping_update(ctxt, ctxt->api_ctxt.spec);
     // mapping table does not support update yet
 
-    ret = api::pds_remote_mapping_delete(ctxt->api_ctxt.mkey, ctxt->bctxt);
+    ret = remote_mapping_delete(ctxt, ctxt->api_ctxt.mkey);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    return pds_remote_mapping_create(ctxt->api_ctxt.spec, ctxt->bctxt);
+    return remote_mapping_create(ctxt, ctxt->api_ctxt.spec);
 }
 
 static inline sdk_ret_t
 process_delete_mac (learn_ctxt_t *ctxt)
 {
-    return api::pds_remote_mapping_delete(ctxt->api_ctxt.mkey, ctxt->bctxt);
+    return remote_mapping_delete(ctxt, ctxt->api_ctxt.mkey);
 }
 
 // caller ensures key type is L3
@@ -324,7 +415,21 @@ process_delete_ip (learn_ctxt_t *ctxt)
     if (vnic) {
         send_arp_probe(vnic, mkey->ip_addr.addr.v4_addr);
     }
-    return api::pds_remote_mapping_delete(mkey, ctxt->bctxt);
+    return remote_mapping_delete(ctxt, mkey);
+}
+
+static inline void
+update_counters (learn_ctxt_t *ctxt, ep_learn_type_t learn_type,
+                 pds_mapping_type_t mtype)
+{
+    int idx = LEARN_TYPE_CTR_IDX(learn_type);
+    batch_counters_t *counters = &ctxt->lbctxt->counters;
+
+    if (mtype == PDS_MAPPING_TYPE_L2) {
+        counters->mac_learns[idx]++;
+    } else {
+        counters->ip_learns[idx]++;
+    }
 }
 
 #define DISPATCH_MAC_OR_IP(func, ctxt, mtype, ret)      \
@@ -369,6 +474,7 @@ process_learn_dispatch (learn_ctxt_t *ctxt, ep_learn_type_t learn_type,
     default:
         break;
     }
+    update_counters(ctxt, learn_type, mtype);
     return ret;
 }
 
@@ -399,10 +505,12 @@ process_learn (learn_ctxt_t *ctxt)
     }
 
     if (learn_mac) {
+        PDS_TRACE_DEBUG("Processing %s", ctxt->log_str(PDS_MAPPING_TYPE_L2));
         ret = process_learn_dispatch(ctxt, ctxt->mac_learn_type,
                                      PDS_MAPPING_TYPE_L2);
     }
     if (ret == SDK_RET_OK && learn_ip) {
+        PDS_TRACE_DEBUG("Processing %s", ctxt->log_str(PDS_MAPPING_TYPE_L3));
         ret = process_learn_dispatch(ctxt, ctxt->ip_learn_type,
                                           PDS_MAPPING_TYPE_L3);
     }

@@ -98,6 +98,7 @@ public:
                               uint16_t num_packets);
     void drop_packets(dpdk_mbuf **packets, uint16_t num_packets);
     dpdk_mbuf *alloc_mbuf(void);
+    uint32_t avail_mbuf_count(void);
 };
 
 }    // namespace dpdk

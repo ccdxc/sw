@@ -49,10 +49,12 @@ delete_ip_entry (ep_ip_entry *ip_entry, ep_mac_entry *mac_entry)
 
     ret = ip_entry->del_from_db();
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to delete EP %s from db, error code %u",
+        PDS_TRACE_ERR("Failed to delete %s from db, error code %u",
                       ip_entry->key2str().c_str(), ret);
         return ret;
     }
+    PDS_TRACE_INFO("Deleted %s", ip_entry->key2str().c_str());
+
     ret = ip_entry->delay_delete();
     if (ret == SDK_RET_OK) {
         // if this was the last IP on this EP, start MAC aging timer
@@ -70,16 +72,18 @@ delete_ip_from_ep (ep_ip_entry *ip_entry, ep_mac_entry *mac_entry)
 
     ret = delete_local_ip_mapping(ip_entry, PDS_BATCH_CTXT_INVALID);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to delete IP mapping for EP %s, error code %u",
+        PDS_TRACE_ERR("Failed to delete %s, error code %u",
                       ip_entry->key2str().c_str(), ret);
+        LEARN_COUNTER_INCR(local_ip_map_err[OP_DELETE]);
+
         // if the failure is because the entry was not found, continue to delete
         // the software state to keep it in sync with HAL
         if (ret != SDK_RET_ENTRY_NOT_FOUND) {
             return ret;
         }
+    } else {
+        LEARN_COUNTER_INCR(local_ip_map_ok[OP_DELETE]);
     }
-
-    PDS_TRACE_INFO("Deleting IP mapping %s", ip_entry->key2str().c_str());
     return delete_ip_entry(ip_entry, mac_entry);
 }
 
@@ -103,11 +107,11 @@ delete_mac_entry (ep_mac_entry *mac_entry)
 
     ret = mac_entry->del_from_db();
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to delete EP %s from db, error code %u",
+        PDS_TRACE_ERR("Failed to delete %s from db, error code %u",
                       mac_entry->key2str().c_str(), ret);
         return ret;
     }
-    PDS_TRACE_INFO("Deleted EP %s", mac_entry->key2str().c_str());
+    PDS_TRACE_INFO("Deleted %s", mac_entry->key2str().c_str());
     return mac_entry->delay_delete();
 }
 
@@ -122,13 +126,16 @@ delete_ep (ep_mac_entry *mac_entry)
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to delete EP %s, error code %u",
                       mac_entry->key2str().c_str(), ret);
+        LEARN_COUNTER_INCR(vnic_err[OP_DELETE]);
+
         // if the failure is because the entry was not found, continue to delete
         // the software state to keep it in sync with HAL
         if (ret != SDK_RET_ENTRY_NOT_FOUND) {
             return ret;
         }
+    } else {
+        LEARN_COUNTER_INCR(vnic_ok[OP_DELETE]);
     }
-    LEARN_COUNTER_INCR(api_calls);
     return delete_mac_entry(mac_entry);
 }
 
@@ -150,7 +157,7 @@ mac_ageout (ep_mac_entry *mac_entry)
     fill_mac_event(&event, EVENT_ID_MAC_AGE, mac_entry);
     ret = delete_ep(mac_entry);
     if (unlikely(ret != SDK_RET_OK)) {
-        PDS_TRACE_ERR("Failed to delete EP %s, error code %u",
+        PDS_TRACE_ERR("Failed to delete %s, error code %u",
                       mac_entry->key2str().c_str(), ret);
         return ret;
     }
@@ -194,15 +201,17 @@ send_arp_probe (vnic_entry *vnic, ipv4_addr_t v4_addr)
     subnet = subnet_db()->find(&subnet_key);
     if (unlikely(subnet == nullptr)) {
         PDS_TRACE_ERR("Failed to send ARP probe to %s, subnet lookup error for "
-                      "key %s", ipv4addr2str(v4_addr), subnet_key.str());
+                      "IP %s", ipv4addr2str(v4_addr), subnet_key.str());
+        LEARN_COUNTER_INCR(arp_probes_err);
         return;
     }
 
     mbuf = learn_lif_alloc_mbuf();
     if (unlikely(mbuf == nullptr)) {
-        PDS_TRACE_ERR("Failed to allocate pkt buffer for ARP probe, EP %s, "
+        PDS_TRACE_ERR("Failed to allocate pkt buffer for ARP probe, IP %s, "
                       "%s, %s", ipv4addr2str(v4_addr),
                       subnet->key2str().c_str(), vnic->key2str().c_str());
+        LEARN_COUNTER_INCR(arp_probes_err);
         return;
     }
     tx_hdr = learn_lif_mbuf_append_data(mbuf, ARP_PKT_ETH_FRAME_LEN +
@@ -237,6 +246,7 @@ send_arp_probe (vnic_entry *vnic, ipv4_addr_t v4_addr)
     tx_info.vnic_key = vnic->key();
     impl::arm_to_p4_tx_hdr_fill(tx_hdr, &tx_info);
     learn_lif_send_pkt(mbuf);
+    LEARN_COUNTER_INCR(arp_probes_ok);
 }
 
 void

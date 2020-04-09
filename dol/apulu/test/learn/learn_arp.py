@@ -42,10 +42,10 @@ def TestCaseStepVerify(tc, step):
                 stats = learn.GetLearnStatistics()
                 if not stats:
                     return False
-                return stats['numpktsrcvd'] == 1 and \
-                       stats['numpktssent'] == 1 and \
-                       stats['numvnics'] == 1 and \
-                       stats['numl3mappings'] == 1
+                return stats['pktsrcvd'] == 1 and \
+                       stats['pktssent'] == 1 and \
+                       stats['maclearnevents'][1]['count'] == 1 and \
+                       stats['iplearnevents'][1]['count'] == 1
             return False
         elif tc.module.name == "RECV_ARP_PROBE_AND_REPLY":
             # verify age is reflected correctly

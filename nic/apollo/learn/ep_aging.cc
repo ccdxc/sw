@@ -36,8 +36,12 @@ mac_aging_cb (event::timer_t *timer)
         return;
     }
     if (mac_ageout(mac_entry) == SDK_RET_OK) {
-        PDS_TRACE_INFO("MAC aged out successfully for EP %s",
+        PDS_TRACE_INFO("Ageout successful for %s",
                        mac_entry->key2str().c_str());
+        LEARN_COUNTER_INCR(mac_ageout_ok);
+    } else {
+        PDS_TRACE_ERR("Failed to ageout %s", mac_entry->key2str().c_str());
+        LEARN_COUNTER_INCR(mac_ageout_err);
     }
 }
 
@@ -57,8 +61,15 @@ ip_aging_cb (event::timer_t *timer)
         if (ip_entry->arp_probe_count() == MAX_NUM_ARP_PROBES) {
             // we did not receive reply to ARP probe, despite retries,
             // delete IP mapping
-            PDS_TRACE_INFO("IP aged out %s", ip_entry->key2str().c_str());
-            (void)ip_ageout(ip_entry);
+            if (ip_ageout(ip_entry) == SDK_RET_OK) {
+                PDS_TRACE_INFO("Ageout successful for %s",
+                               ip_entry->key2str().c_str());
+                LEARN_COUNTER_INCR(ip_ageout_ok);
+            } else {
+                LEARN_COUNTER_INCR(ip_ageout_err);
+                PDS_TRACE_ERR("Failed to ageout %s",
+                              ip_entry->key2str().c_str());
+            }
             return;
         }
     } else {
@@ -72,7 +83,8 @@ ip_aging_cb (event::timer_t *timer)
     ip_entry->arp_probe_count_incr();
 
     PDS_TRACE_VERBOSE("Sent ARP probe for %s, probe count %u",
-                      ip_entry->key2str().c_str(), ip_entry->arp_probe_count());
+                      ip_entry->key2str().c_str(),
+                      ip_entry->arp_probe_count());
     // start timer for arp probe response
     event::timer_set(timer, (float) learn_db()->arp_probe_timeout(), 0.0);
     event::timer_start(timer);

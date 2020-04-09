@@ -59,7 +59,7 @@ api_batch_commit (pds_batch_ctxt_t bctxt)
 static sdk_ret_t
 process_deleted_objects (learn_entry_list_t *del_objects)
 {
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
 
     for (auto it = del_objects->begin(); it != del_objects->end(); ++it) {
         learn_entry_t del_obj = *it;
@@ -71,18 +71,22 @@ process_deleted_objects (learn_entry_list_t *del_objects)
             ret = delete_ip_entry(del_obj.ip_entry, del_obj.mac_entry);
             break;
         default:
-            return SDK_RET_ERR;
+            SDK_ASSERT(false);
         }
         if (ret != SDK_RET_OK) {
+            PDS_TRACE_DEBUG("Failed to process deleted object list of size %u,"
+                            " return code %u", del_objects->size(), ret);
             return ret;
         }
     }
-    return ret;
+    PDS_TRACE_DEBUG("Processed deleted object list of size %u, return code %u",
+                    del_objects->size(), ret);
+    return SDK_RET_OK;
 }
 
 static sdk_ret_t
 process_api (api_ctxt_t *api_ctxt, pds_batch_ctxt_t bctxt,
-             learn_entry_list_t *del_obj_list)
+             learn_batch_ctxt_t *lbctxt)
 {
     mapping_key_spec_t key_spec;
 
@@ -101,7 +105,7 @@ process_api (api_ctxt_t *api_ctxt, pds_batch_ctxt_t bctxt,
     default:
         return SDK_RET_INVALID_OP;
     }
-    return process_mapping_api(key_spec, api_ctxt->api_op, bctxt, del_obj_list);
+    return process_mapping_api(key_spec, api_ctxt->api_op, bctxt, lbctxt);
 }
 
 #ifdef BATCH_SUPPORT
@@ -110,11 +114,12 @@ process_api_batch (api::api_msg_t *api_msg)
 {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    learn_entry_list_t del_obj_list;
+    learn_batch_ctxt_t lbctxt;
     auto apis = &api_msg->batch.apis;
     pds_batch_params_t batch_params {learn_db()->epoch_next(), false, nullptr,
                                      nullptr};
 
+    memset(&lbctxt.counters, 0, sizeof(lbctxt.counters));
     // create a new sync batch
     bctxt = pds_batch_start(&batch_params);
     if (unlikely(bctxt == PDS_BATCH_CTXT_INVALID)) {
@@ -123,7 +128,7 @@ process_api_batch (api::api_msg_t *api_msg)
 
     // process each API in the batch
     for (auto it = apis->begin(); it != apis->end(); ++it) {
-        ret = process_api(*it, bctxt, &del_obj_list);
+        ret = process_api(*it, bctxt, &lbctxt);
         if (ret != SDK_RET_OK) {
             return ret;
         }
@@ -131,12 +136,13 @@ process_api_batch (api::api_msg_t *api_msg)
 
     // commit the new batch
     ret = pds_batch_commit(bctxt);
+    update_batch_counters(&lbctxt, ret == SDK_RET_OK);
     if (unlikely(ret != SDK_RET_OK)) {
         return ret;
     }
 
     // batch commit succeeded, clean up state for deleted objects
-    ret = process_deleted_objects(&del_obj_list);
+    ret = process_deleted_objects(&lbctxt.del_objs);
     return ret;
 }
 #else
@@ -145,17 +151,19 @@ sdk_ret_t
 process_api_batch (api::api_msg_t *api_msg)
 {
     sdk_ret_t ret;
+    learn_batch_ctxt_t lbctxt;
     auto apis = &api_msg->batch.apis;
-    learn_entry_list_t del_obj_list;
 
     // process each API in the batch individually
     for (auto it = apis->begin(); it != apis->end(); ++it) {
-        del_obj_list.clear();
-        ret = process_api(*it, PDS_BATCH_CTXT_INVALID, &del_obj_list);
+        lbctxt.del_objs.clear();
+        memset(&lbctxt.counters, 0, sizeof(lbctxt.counters));
+        ret = process_api(*it, PDS_BATCH_CTXT_INVALID, &lbctxt);
+        update_batch_counters(&lbctxt, ret == SDK_RET_OK);
         if (ret != SDK_RET_OK) {
             return ret;
         }
-        ret = process_deleted_objects(&del_obj_list);
+        ret = process_deleted_objects(&lbctxt.del_objs);
         if (unlikely(ret != SDK_RET_OK)) {
             return ret;
         }

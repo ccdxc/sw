@@ -1259,6 +1259,9 @@ pds_learn_pkt_drop_reason_to_proto (uint8_t reason)
     case learn::PKT_DROP_REASON_RES_ALLOC_FAIL:
         proto_reason = pds::LEARN_PKTDROP_REASON_RES_ALLOC_FAIL;
         break;
+    case learn::PKT_DROP_REASON_LEARNING_FAIL:
+        proto_reason = pds::LEARN_PKTDROP_REASON_LEARNING_FAIL;
+        break;
     case learn::PKT_DROP_REASON_MBUF_ERR:
         proto_reason = pds::LEARN_PKTDROP_REASON_MBUF_ERR;
         break;
@@ -1273,6 +1276,64 @@ pds_learn_pkt_drop_reason_to_proto (uint8_t reason)
         break;
     }
     return proto_reason;
+}
+
+static inline pds::LearnEventType
+pds_ep_learn_type_to_proto (uint8_t learn_type)
+{
+    switch (learn_type) {
+    case learn::LEARN_TYPE_NEW_LOCAL:
+        return pds::LEARN_EVENT_NEW_LOCAL;
+    case learn::LEARN_TYPE_NEW_REMOTE:
+        return pds::LEARN_EVENT_NEW_REMOTE;
+    case learn::LEARN_TYPE_MOVE_L2L:
+        return pds::LEARN_EVENT_L2L_MOVE;
+    case learn::LEARN_TYPE_MOVE_R2L:
+        return pds::LEARN_EVENT_R2L_MOVE;
+    case learn::LEARN_TYPE_MOVE_L2R:
+        return pds::LEARN_EVENT_L2R_MOVE;
+    case learn::LEARN_TYPE_MOVE_R2R:
+        return pds::LEARN_EVENT_R2R_MOVE;
+    case learn::LEARN_TYPE_DELETE:
+        return pds::LEARN_EVENT_DELETE;
+    default:
+        break;
+    }
+    return pds::LEARN_EVENT_NONE;
+}
+
+static inline pds::LearnValidationType
+pds_learn_validation_type_to_proto (uint8_t validation_type)
+{
+    switch (validation_type) {
+    case learn::UNTAGGED_MAC_LIMIT:
+        return pds::LEARN_CHECK_UNTAGGED_MAC_LIMIT;
+    case MAC_LIMIT:
+        return pds::LEARN_CHECK_MAC_LIMIT;
+    case IP_LIMIT:
+        return pds::LEARN_CHECK_IP_LIMIT;
+    case IP_ADDR_SUBNET_MISMATCH:
+        return pds::LEARN_CHECK_IP_IN_SUBNET;
+    default:
+        break;
+    }
+    return pds::LEARN_CHECK_NONE;
+}
+
+static inline pds::LearnApiOpType
+pds_learn_api_op_to_proto (uint8_t op_type)
+{
+    switch (op_type) {
+    case OP_CREATE:
+        return pds::LEARN_API_OP_CREATE;
+    case OP_DELETE:
+        return pds::LEARN_API_OP_DELETE;
+    case OP_UPDATE:
+        return pds::LEARN_API_OP_UPDATE;
+    default:
+        break;
+    }
+    return pds::LEARN_API_OP_NONE;
 }
 
 #endif    // __AGENT_SVC_SPECS_HPP__

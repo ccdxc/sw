@@ -17,6 +17,7 @@
 #include "nic/apollo/learn/ep_ip_state.hpp"
 #include "nic/apollo/learn/ep_utils.hpp"
 #include "nic/apollo/learn/learn.hpp"
+#include "nic/apollo/learn/utils.hpp"
 
 using learn::ep_mac_key_t;
 using learn::ep_ip_key_t;
@@ -159,26 +160,85 @@ ep_ip_get_all (pds::LearnIPGetResponse *proto_rsp)
     return SDK_RET_OK;
 }
 
+#define FILL_LEARN_EVENT_COUNTERS(ctr_name, idx, proto_name, verbose)       \
+{                                                                           \
+    uint8_t learn_type = CTR_IDX_TO_LEARN_TYPE(idx);                        \
+    if (verbose || counters->ctr_name[idx]) {                               \
+        pds::LearnEvents *events =                                          \
+        proto_rsp->mutable_stats()->add_##proto_name();                     \
+        events->set_eventtype(pds_ep_learn_type_to_proto(learn_type));      \
+        events->set_count(counters->ctr_name[idx]);                         \
+    }                                                                       \
+}
+
+#define FILL_API_COUNTERS(ctr_name, idx, proto_name, verbose)               \
+{                                                                           \
+    if (verbose || counters->ctr_name[idx]) {                               \
+        pds::LearnApiOps *ops =                                             \
+        proto_rsp->mutable_stats()->add_##proto_name();                     \
+        ops->set_apioptype(pds_learn_api_op_to_proto(idx));                 \
+        ops->set_count(counters->ctr_name[idx]);                            \
+    }                                                                       \
+}
+
 static sdk_ret_t
 ep_learn_stats_fill (pds::LearnStatsGetResponse *proto_rsp)
 {
     learn::learn_counters_t *counters = learn_db()->counters();
+    auto stats = proto_rsp->mutable_stats();
 
-    proto_rsp->mutable_stats()->set_numpktsrcvd(counters->rx_pkts);
-    proto_rsp->mutable_stats()->set_numpktssent(counters->tx_pkts);
-    proto_rsp->mutable_stats()->set_numvnics(counters->vnics);
-    proto_rsp->mutable_stats()->set_numl3mappings(counters->l3_mappings);
-    proto_rsp->mutable_stats()->set_numapicalls(counters->api_calls);
-    proto_rsp->mutable_stats()->set_numapifailure(counters->api_failure);
-
+    // packet counters
+    stats->set_pktsrcvd(counters->rx_pkts);
+    stats->set_pktssent(counters->tx_pkts_ok);
+    stats->set_pktsenderrors(counters->tx_pkts_err);
+    stats->set_arpprobessent(counters->arp_probes_ok);
+    stats->set_arpprobesenderrors(counters->arp_probes_err);
+    stats->set_pktbufferavailable(learn::learn_lif_avail_mbuf_count());
+    stats->set_pktbufferalloc(counters->pkt_buf_alloc_ok);
+    proto_rsp->mutable_stats()->set_pktbufferallocerrors(counters->pkt_buf_alloc_err);
     for (uint8_t i = (uint8_t)learn::PKT_DROP_REASON_NONE;
          i < (uint8_t)learn::PKT_DROP_REASON_MAX; i++) {
-        if (counters->drop_reason[i]) {
-            pds::LearnPktDropStats *drop_stats
-                            = proto_rsp->mutable_stats()->add_dropstats();
+        if (counters->pkt_drop_reason[i]) {
+            pds::LearnPktDropStats *drop_stats = stats->add_dropstats();
             drop_stats->set_reason(pds_learn_pkt_drop_reason_to_proto(i));
-            drop_stats->set_numdrops(counters->drop_reason[i]);
+            drop_stats->set_numdrops(counters->pkt_drop_reason[i]);
         }
+    }
+
+    // ageout counters
+    stats->set_ipageouts(counters->ip_ageout_ok);
+    stats->set_ipageouterrors(counters->ip_ageout_err);
+    stats->set_macageouts(counters->mac_ageout_ok);
+    stats->set_macageouterrors(counters->mac_ageout_err);
+
+    // learn and move counters
+    for (uint8_t i = 0; i < learn_type_ctr_sz(); i++) {
+        FILL_LEARN_EVENT_COUNTERS(mac_learns_ok, i, maclearnevents, true);
+        FILL_LEARN_EVENT_COUNTERS(ip_learns_ok, i, iplearnevents, true);
+        FILL_LEARN_EVENT_COUNTERS(mac_learns_err, i, maclearnerrors, false);
+        FILL_LEARN_EVENT_COUNTERS(ip_learns_err, i, iplearnerrors, false);
+    }
+
+    // learn validation errors
+    for (uint8_t i = 0; i < LEARN_VALIDATION_MAX; i++) {
+        if (counters->validation_err[i]) {
+            pds::LearnValidations *lverr =
+                proto_rsp->mutable_stats()->add_validationerrors();
+            lverr->set_validationtype(pds_learn_validation_type_to_proto(i));
+            lverr->set_count(counters->validation_err[i]);
+        }
+    }
+
+    // API counters
+    for (uint8_t i = 0; i < learn::OP_MAX; i++) {
+        FILL_API_COUNTERS(vnic_ok, i, vnicops, true);
+        FILL_API_COUNTERS(vnic_err, i, vnicoperrors, false);
+        FILL_API_COUNTERS(remote_mac_map_ok, i, remotel2mappings, true);
+        FILL_API_COUNTERS(remote_mac_map_err, i, remotel2mappingerrors, false);
+        FILL_API_COUNTERS(local_ip_map_ok, i, locall3mappings, true);
+        FILL_API_COUNTERS(local_ip_map_err, i, locall3mappingerrors, false);
+        FILL_API_COUNTERS(remote_ip_map_ok, i, remotel3mappings, true);
+        FILL_API_COUNTERS(remote_ip_map_err, i, remotel3mappingerrors, false);
     }
     return SDK_RET_OK;
 }
