@@ -142,6 +142,10 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
         # pdsctl show not supported for dhcp policy yet
         return True
 
+    def GrpcRead(self, node):
+        # grpc read not supported for dhcp policy yet
+        return True
+
     def IsReadSupported(self):
         if utils.IsNetAgentMode():
             return True

@@ -127,25 +127,25 @@ class PdsUuid:
     @staticmethod
     def GetUuidString(uuid):
         # keep this inline with pds_obj_key_s.str()
-        uuid_id = int.from_bytes(uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END], "big")
-        uuid_objtype = PdsUuid.GetObjTypefromUUID(uuid)
-        uuid_rsvd = PdsUuid.GetReservedValfromUUID(uuid)
+        uuid_id = PdsUuid.GetIdfromUUID(uuid, "big")
+        uuid_objtype = PdsUuid.GetObjTypefromUUID(uuid, "big")
+        uuid_rsvd = PdsUuid.GetReservedValfromUUID(uuid, "big")
         uuid_magic = int.from_bytes(uuid[PDS_UUID_MAGIC_BYTE_OFFSET_START:PDS_UUID_MAGIC_BYTE_OFFSET_END], PDS_UUID_BYTE_ORDER)
         uuid_mac = int.from_bytes(uuid[PDS_UUID_SYSTEM_MAC_OFFSET_START:], PDS_NODE_UUID_BYTE_ORDER)
         uuidstr = f"{uuid_id:08x}-{uuid_objtype:04x}-{uuid_rsvd:04x}-{uuid_magic:04x}-{uuid_mac:012x}"
         return uuidstr
 
     @staticmethod
-    def GetIdfromUUID(uuid):
-        return int.from_bytes(uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END], PDS_UUID_BYTE_ORDER)
+    def GetIdfromUUID(uuid, byte_order=PDS_UUID_BYTE_ORDER):
+        return int.from_bytes(uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END], byte_order)
 
     @staticmethod
-    def GetObjTypefromUUID(uuid):
-        return int.from_bytes(uuid[PDS_UUID_OBJTYPE_OFFSET_START:PDS_UUID_OBJTYPE_OFFSET_END], PDS_UUID_BYTE_ORDER)
+    def GetObjTypefromUUID(uuid, byte_order=PDS_UUID_BYTE_ORDER):
+        return int.from_bytes(uuid[PDS_UUID_OBJTYPE_OFFSET_START:PDS_UUID_OBJTYPE_OFFSET_END], byte_order)
 
     @staticmethod
-    def GetReservedValfromUUID(uuid):
-        return int.from_bytes(uuid[PDS_UUID_RESERVED_OFFSET_START:PDS_UUID_RESERVED_OFFSET_END], PDS_UUID_BYTE_ORDER)
+    def GetReservedValfromUUID(uuid, byte_order=PDS_UUID_BYTE_ORDER):
+        return int.from_bytes(uuid[PDS_UUID_RESERVED_OFFSET_START:PDS_UUID_RESERVED_OFFSET_END], byte_order)
 
     @staticmethod
     def GetUUIDfromId(id, objtype=None, node_uuid=None):

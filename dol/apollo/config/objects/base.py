@@ -521,7 +521,7 @@ class ConfigClientBase(base.ConfigClientBase):
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), fixed))
             api.client[node].Create(self.ObjType, msgs)
             #TODO: Add validation for create & based on that set HW habitant
-            list(map(lambda x: x.SetHwHabitant(True), fixed))
+        list(map(lambda x: x.SetHwHabitant(True), fixed))
         return True
 
     def DeleteObjects(self, node):
