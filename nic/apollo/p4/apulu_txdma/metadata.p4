@@ -22,14 +22,18 @@ header_type txdma_control_metadata_t {
         cindex              : 16;
 
         rfc_index           : 20;
-        dnat_en             : 1;
-        pad0                : 3;
         rfc_p1_classid      : 10;
-        svc_id              : 10;
-        rule_priority       : 11;
+        stag_classid        : 10;
+        dtag_classid        : 10;
+        recirc_count        : 12;
+        dnat_en             : 1;
         st_enable           : 1;
 
-        recirc_count        : 8;
+        stag_count          : 4;
+        dtag_count          : 4;
+        root_count          : 4;
+        rule_priority       : 11;
+        pad0                : 1;
     }
 }
 

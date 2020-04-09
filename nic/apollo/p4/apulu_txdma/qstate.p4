@@ -198,6 +198,10 @@ action read_pktdesc2(sacl_base_addr4,
     modify_field(rx_to_tx_hdr.dtag4_classid, dtag4_classid);
     modify_field(scratch_metadata.field4, pad6);
     modify_field(scratch_metadata.field2, pad8);
+
+    // Copy the first set of TAGs
+    modify_field(txdma_control.stag_classid, stag0_classid);
+    modify_field(txdma_control.dtag_classid, dtag0_classid);
 }
 
 @pragma stage 1

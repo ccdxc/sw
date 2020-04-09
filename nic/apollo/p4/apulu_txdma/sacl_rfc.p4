@@ -319,7 +319,7 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
         modify_field(txdma_control.rule_priority, scratch_metadata.field10);
         modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
         modify_field(txdma_to_p4e.sacl_action, scratch_metadata.field1);
-        modify_field(txdma_to_p4e.sacl_root_num, txdma_control.recirc_count>>1);
+        modify_field(txdma_to_p4e.sacl_root_num, txdma_control.root_count);
     }
 
     // Initialize the correct table base and index based on the recirc count
@@ -327,13 +327,13 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
         // P1 table base
         modify_field(scratch_metadata.field40, SACL_P1_2_TABLE_OFFSET);
         // P1 table index
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.stag0_classid << 10)|
+        modify_field(scratch_metadata.field20, (txdma_control.stag_classid << 10)|
                                                 rx_to_tx_hdr.dip_classid0);
     } else {
         // P1 table base
         modify_field(scratch_metadata.field40, SACL_P1_4_TABLE_OFFSET);
         // P1 table index
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.stag0_classid << 7)|
+        modify_field(scratch_metadata.field20, (txdma_control.stag_classid << 7)|
                                                 rx_to_tx_hdr.sport_classid0);
     }
 
@@ -437,7 +437,7 @@ action rfc_action_p1_1(pad, id50,
         // P2 table base
         modify_field(scratch_metadata.field40, SACL_P2_4_TABLE_OFFSET);
         // P2 table index
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.dtag0_classid << 8)|
+        modify_field(scratch_metadata.field20, (txdma_control.dtag_classid << 8)|
                                                 rx_to_tx_hdr.dport_classid0);
     }
 
@@ -678,7 +678,7 @@ action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
         modify_field(txdma_control.rule_priority, scratch_metadata.field10);
         modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
         modify_field(txdma_to_p4e.sacl_action, scratch_metadata.field1);
-        modify_field(txdma_to_p4e.sacl_root_num, txdma_control.recirc_count>>1);
+        modify_field(txdma_to_p4e.sacl_root_num, txdma_control.root_count);
     }
 
     if (rx_to_tx_hdr.sacl_base_addr0 != 0) {
@@ -687,7 +687,7 @@ action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
             modify_field(scratch_metadata.field40, SACL_P1_3_TABLE_OFFSET);
             // P1 table index
             modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sip_classid0 << 7)|
-                                                    rx_to_tx_hdr.dtag0_classid);
+                                                    txdma_control.dtag_classid);
         } else {
             // P1 table base
             modify_field(scratch_metadata.field40, SACL_P1_1_TABLE_OFFSET);
@@ -724,48 +724,116 @@ table rfc_p3_1 {
 
 action setup_rfc()
 {
-    if (txdma_control.recirc_count == 1) {
-        modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr1);
-        modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid1);
-        modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid1);
-        modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid1);
-        modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid1);
-    } else {
-        if (txdma_control.recirc_count == 3) {
-            modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr2);
-            modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid2);
-            modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid2);
-            modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid2);
-            modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid2);
+    if ((txdma_control.recirc_count & 0x1) == 1) {
+        // Done for combination. Initialize for the next combination.
+
+        // Find the next STAG
+        if (txdma_control.stag_count == 0) {
+            modify_field(scratch_metadata.field10, rx_to_tx_hdr.stag1_classid);
         } else {
-            if (txdma_control.recirc_count == 5) {
-                modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr3);
-                modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid3);
-                modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid3);
-                modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid3);
-                modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid3);
+            if (txdma_control.stag_count == 1) {
+                modify_field(scratch_metadata.field10, rx_to_tx_hdr.stag2_classid);
             } else {
-                if (txdma_control.recirc_count == 7) {
-                    modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr4);
-                    modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid4);
-                    modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid4);
-                    modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid4);
-                    modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid4);
+                if (txdma_control.stag_count == 2) {
+                    modify_field(scratch_metadata.field10, rx_to_tx_hdr.stag3_classid);
                 } else {
-                    if (txdma_control.recirc_count == 9) {
-                        modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr5);
-                        modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid5);
-                        modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid5);
-                        modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid5);
-                        modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid5);
+                    if (txdma_control.stag_count == 3) {
+                        modify_field(scratch_metadata.field10, rx_to_tx_hdr.stag4_classid);
                     } else {
-                        if (txdma_control.recirc_count == 11) {
-                            // No more RFC Lookups
-                            modify_field(rx_to_tx_hdr.sacl_base_addr0, 0);
+                        modify_field(scratch_metadata.field10, 0x3FF);
+                    }
+                }
+            }
+        }
+
+        // If the next STAG is invalid
+        if (scratch_metadata.field10 == 0x3FF) {
+            // Find the next DTAG
+            if (txdma_control.dtag_count == 0) {
+                modify_field(scratch_metadata.field10, rx_to_tx_hdr.dtag1_classid);
+            } else {
+                if (txdma_control.dtag_count == 1) {
+                    modify_field(scratch_metadata.field10, rx_to_tx_hdr.dtag2_classid);
+                } else {
+                    if (txdma_control.dtag_count == 2) {
+                        modify_field(scratch_metadata.field10, rx_to_tx_hdr.dtag3_classid);
+                    } else {
+                        if (txdma_control.dtag_count == 3) {
+                            modify_field(scratch_metadata.field10, rx_to_tx_hdr.dtag4_classid);
+                        } else {
+                            modify_field(scratch_metadata.field10, 0x3FF);
                         }
                     }
                 }
             }
+
+            // If the next DTAG is invalid
+            if (scratch_metadata.field10 == 0x3FF) {
+                // Done for policy root. Initialize for the next policy root.
+
+                // Reinitialized TAG classids to the first
+                modify_field(txdma_control.stag_count, 0);
+                modify_field(txdma_control.stag_classid, rx_to_tx_hdr.stag0_classid);
+                modify_field(txdma_control.dtag_count, 0);
+                modify_field(txdma_control.dtag_classid, rx_to_tx_hdr.dtag0_classid);
+
+                if (txdma_control.root_count == 0) {
+                    modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr1);
+                    modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid1);
+                    modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid1);
+                    modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid1);
+                    modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid1);
+                } else {
+                    if (txdma_control.root_count == 1) {
+                        modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr2);
+                        modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid2);
+                        modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid2);
+                        modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid2);
+                        modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid2);
+                    } else {
+                        if (txdma_control.root_count == 2) {
+                            modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr3);
+                            modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid3);
+                            modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid3);
+                            modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid3);
+                            modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid3);
+                        } else {
+                            if (txdma_control.root_count == 3) {
+                                modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr4);
+                                modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid4);
+                                modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid4);
+                                modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid4);
+                                modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid4);
+                            } else {
+                                if (txdma_control.root_count == 4) {
+                                    modify_field(rx_to_tx_hdr.sacl_base_addr0, rx_to_tx_hdr.sacl_base_addr5);
+                                    modify_field(rx_to_tx_hdr.sip_classid0, rx_to_tx_hdr.sip_classid5);
+                                    modify_field(rx_to_tx_hdr.dip_classid0, rx_to_tx_hdr.dip_classid5);
+                                    modify_field(rx_to_tx_hdr.sport_classid0, rx_to_tx_hdr.sport_classid5);
+                                    modify_field(rx_to_tx_hdr.dport_classid0, rx_to_tx_hdr.dport_classid5);
+                                } else {
+                                    if (txdma_control.root_count == 5) {
+                                        // No more RFC Lookups
+                                        modify_field(rx_to_tx_hdr.sacl_base_addr0, 0);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                modify_field(txdma_control.root_count, txdma_control.root_count + 1);
+            } else {
+                // The next DTAG is valid. Start again with the first STAG.
+                modify_field(txdma_control.stag_count, 0);
+                modify_field(txdma_control.stag_classid, rx_to_tx_hdr.stag0_classid);
+                modify_field(txdma_control.dtag_count, txdma_control.dtag_count + 1);
+                modify_field(txdma_control.dtag_classid, scratch_metadata.field10);
+            }
+        } else {
+            // The next STAG is valid.
+            modify_field(txdma_control.stag_count, txdma_control.stag_count + 1);
+            modify_field(txdma_control.stag_classid, scratch_metadata.field10);
         }
     }
 }

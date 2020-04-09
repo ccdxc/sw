@@ -27,8 +27,8 @@ rfc_p1_1:
                                                  SACL_PROTO_DPORT_CLASSID_WIDTH
     /* Else, add SACL_P2_4_TABLE_OFFSET to sacl base address. */
     addi.!c1   r1, r1, SACL_P2_4_TABLE_OFFSET
-    /* P2 table index = (proto_dport_classid0 | (dtag0_classid << 8)). */
-    add.!c1    r2, k.rx_to_tx_hdr_dport_classid0, k.rx_to_tx_hdr_dtag0_classid, \
+    /* P2 table index = (proto_dport_classid0 | (dtag_classid << 8)). */
+    add.!c1    r2, k.rx_to_tx_hdr_dport_classid0, k.txdma_control_dtag_classid, \
                                                  SACL_PROTO_DPORT_CLASSID_WIDTH
     /* Write P2 table index to PHV */
     phvwr      p.txdma_control_rfc_index, r2
