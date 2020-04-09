@@ -112,6 +112,7 @@ header snap_header_t snap_header;
 @pragma pa_header_union ingress p4plus_to_p4_vlan
 @pragma pa_header_union egress p4_to_p4plus_roce_vlan
 header vlan_tag_t vlan_tag;
+header vlan_tag_t span_vlan_tag;
 header mpls_t mpls[MPLS_DEPTH];
 
 @pragma pa_header_union egress ipv6 p4_to_p4plus_roce_ipv6
@@ -415,7 +416,6 @@ parser parse_span_copy {
 }
 
 @pragma xgress egress
-@pragma capture_payload_offset
 parser parse_ethernet_span_copy {
     extract(ethernet);
     return select(latest.etherType) {
@@ -425,9 +425,8 @@ parser parse_ethernet_span_copy {
 }
 
 @pragma xgress egress
-@pragma dont_capture_payload_offset
 parser parse_vlan_span_copy {
-    extract(vlan_tag);
+    extract(span_vlan_tag);
     return ingress;
 }
 
@@ -1473,7 +1472,6 @@ parser parse_udp {
         UDP_PORT_GENV : parse_geneve;
         UDP_PORT_VXLAN_GPE : parse_vxlan_gpe;
         UDP_PORT_ROCE_V2: parse_roce_v2_pre;
-        //UDP_PORT_NATT : parse_ipsec_esp;
         UDP_PORT_MPLS : parse_mpls;
         default: ingress;
     }
@@ -1962,6 +1960,7 @@ parser parse_inner_ethernet {
         ETHERTYPE_IPV4 : parse_inner_ipv4;
         ETHERTYPE_IPV6 : parse_inner_ipv6;
         default: ingress;
+        0x1 mask 0x0 : parse_vlan_span_copy;
     }
 }
 

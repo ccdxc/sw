@@ -204,7 +204,6 @@ encap_erspan_common:
 
 // r6 :  etherType (input)
 f_encap_vlan:
-  .assert(offsetof(p, ethernet_etherType) - offsetof(p, vlan_tag_etherType) == 32)
   phvwr       p.vlan_tag_valid, 1
   add         r3, r6, d.u.encap_vxlan_d.vlan_id, 16
   add         r4, r0, ETHERTYPE_VLAN

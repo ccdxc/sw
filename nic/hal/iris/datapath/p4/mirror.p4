@@ -1,11 +1,12 @@
 /*****************************************************************************/
 /* Mirror                                                                    */
 /*****************************************************************************/
-action mirror_truncate(truncate_len, is_erspan) {
+action mirror_truncate(truncate_len, adjust_len, is_erspan) {
     if ((truncate_len != 0) and
-        (truncate_len < capri_p4_intrinsic.packet_len)) {
-        modify_field(capri_deparser_len.trunc_pkt_len, truncate_len);
-        modify_field(capri_p4_intrinsic.packet_len, truncate_len, 14);
+        ((truncate_len + 14) < capri_p4_intrinsic.packet_len)) {
+        modify_field(capri_deparser_len.trunc_pkt_len,
+                     truncate_len - adjust_len);
+        subtract_from_field(capri_p4_intrinsic.packet_len, truncate_len + 14);
         if (is_erspan == TRUE) {
             modify_field(erspan_t2.truncated, TRUE);
             modify_field(erspan_t3.truncated, TRUE);
@@ -14,9 +15,6 @@ action mirror_truncate(truncate_len, is_erspan) {
 }
 
 action local_span(dst_lport, truncate_len, span_tm_oq, qid, qid_en) {
-    if (vlan_tag.valid == TRUE) {
-        remove_header(vlan_tag);
-    }
     if (qid_en == TRUE) {
         modify_field(scratch_metadata.qid_en, qid_en);
         modify_field(control_metadata.qid, qid);
@@ -32,24 +30,29 @@ action local_span(dst_lport, truncate_len, span_tm_oq, qid, qid_en) {
     modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(control_metadata.dest_tm_oq, span_tm_oq);
     modify_field(rewrite_metadata.tunnel_rewrite_index, 0);
-    mirror_truncate(truncate_len, FALSE);
+    if (span_vlan_tag.valid == TRUE) {
+        mirror_truncate(truncate_len, 4, FALSE);
+    } else {
+        mirror_truncate(truncate_len, 0, FALSE);
+    }
 }
 
 action remote_span(dst_lport, truncate_len, tunnel_rewrite_index, vlan,
                    span_tm_oq) {
-    if (vlan_tag.valid == TRUE) {
-        remove_header(vlan_tag);
-    }
-
     modify_field(capri_intrinsic.tm_span_session, 0);
     modify_field(control_metadata.dst_lport, dst_lport);
     modify_field(control_metadata.dest_tm_oq, span_tm_oq);
     modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
     modify_field(rewrite_metadata.tunnel_vnid, vlan);
-    mirror_truncate(truncate_len, FALSE);
+    if (span_vlan_tag.valid == TRUE) {
+        mirror_truncate(truncate_len, 4, FALSE);
+    } else {
+        mirror_truncate(truncate_len, 0, FALSE);
+    }
 }
 
-action erspan_mirror(dst_lport, truncate_len, tunnel_rewrite_index, span_tm_oq,
+action erspan_mirror(dst_lport, truncate_len, vlan_strip_en,
+                     tunnel_rewrite_index, span_tm_oq,
                      erspan_type, gre_seq_en, seq_num) {
     modify_field(scratch_metadata.flag, gre_seq_en);
     if (scratch_metadata.flag == TRUE) {
@@ -58,24 +61,34 @@ action erspan_mirror(dst_lport, truncate_len, tunnel_rewrite_index, span_tm_oq,
     }
 
     if (erspan_type == ERSPAN_TYPE_II) {
-        modify_field(erspan_t2.span_id, capri_intrinsic.tm_span_session);
-        modify_field(erspan_t2.encap_type, 0x3);
-        if (vlan_tag.valid == TRUE) {
-            modify_field(erspan_t2.vlan, vlan_tag.vid);
-            modify_field(erspan_t2.cos, vlan_tag.pcp);
+        add(erspan_t2.span_id, capri_intrinsic.tm_span_session, 1);
+        if (span_vlan_tag.valid == TRUE) {
+            modify_field(erspan_t2.vlan, span_vlan_tag.vid);
+            modify_field(erspan_t2.cos, span_vlan_tag.pcp);
+            modify_field(scratch_metadata.flag, vlan_strip_en);
+            if (scratch_metadata.flag == TRUE) {
+                modify_field(erspan_t2.encap_type, 0x2);
+                modify_field(ethernet.etherType, span_vlan_tag.etherType);
+                remove_header(span_vlan_tag);
+                subtract_from_field(capri_p4_intrinsic.packet_len, 4);
+            } else {
+                modify_field(erspan_t2.encap_type, 0x3);
+            }
         }
     }
 
     if ((erspan_type == 0) or (erspan_type == ERSPAN_TYPE_III)) {
-        modify_field(erspan_t3.span_id, capri_intrinsic.tm_span_session);
-        if (vlan_tag.valid == TRUE) {
-            modify_field(erspan_t3.vlan, vlan_tag.vid);
-            modify_field(erspan_t3.cos, vlan_tag.pcp);
+        add(erspan_t3.span_id, capri_intrinsic.tm_span_session, 1);
+        if (span_vlan_tag.valid == TRUE) {
+            modify_field(erspan_t3.vlan, span_vlan_tag.vid);
+            modify_field(erspan_t3.cos, span_vlan_tag.pcp);
+            modify_field(scratch_metadata.flag, vlan_strip_en);
+            if (scratch_metadata.flag == TRUE) {
+                modify_field(ethernet.etherType, span_vlan_tag.etherType);
+                remove_header(span_vlan_tag);
+                subtract_from_field(capri_p4_intrinsic.packet_len, 4);
+            }
         }
-    }
-
-    if (vlan_tag.valid == TRUE) {
-        remove_header(vlan_tag);
     }
 
     modify_field(capri_intrinsic.tm_span_session, 0);
@@ -83,7 +96,11 @@ action erspan_mirror(dst_lport, truncate_len, tunnel_rewrite_index, span_tm_oq,
     modify_field(control_metadata.dest_tm_oq, span_tm_oq);
     modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
     modify_field(rewrite_metadata.erspan_type, erspan_type);
-    mirror_truncate(truncate_len, TRUE);
+    if (span_vlan_tag.valid == TRUE) {
+        mirror_truncate(truncate_len, 4, FALSE);
+    } else {
+        mirror_truncate(truncate_len, 0, FALSE);
+    }
 }
 
 action drop_mirror() {

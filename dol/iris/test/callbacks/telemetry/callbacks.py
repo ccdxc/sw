@@ -33,7 +33,7 @@ def GetExpectedPort(testcase, args):
             id = id + 3
         tnl = telemetry.data.getErspanSession(id)
         return tnl.ports
- 
+
     if direc == "ingress":
         if 'ports' not in testcase.config.ingress_mirror.__dict__[ssn].intf.__dict__:
             ports = []
@@ -53,7 +53,7 @@ def GetExpectedPort(testcase, args):
     return None
 
 def GetRspanVlan(testcase, packet):
-    if "session2" in testcase.config.ingress_mirror.__dict__ and testcase.config.ingress_mirror.__dict__["session2"] is not None: 
+    if "session2" in testcase.config.ingress_mirror.__dict__ and testcase.config.ingress_mirror.__dict__["session2"] is not None:
         return testcase.config.ingress_mirror.__dict__["session2"].segment.vlan_id
     else:
         return 0
@@ -86,7 +86,7 @@ def truncatePkt(testcase, pktbuf, pktlen, spantype, args):
         hdrsize = hdrsize + 54
     args.end = args.end + hdrsize
     if pktlen == 0 or pktbuf.size <= pktlen:
-        args.end = pktbuf.size 
+        args.end = pktbuf.size
     args.pktid = pktbuf.GID()
     logger.info("truncatePkt truncating %s to size %d" % (args.pktid, args.end))
     return pktslicer.GetPacketSlice(testcase, pktbuf, args)
@@ -315,9 +315,9 @@ def GetErspanSessionid(testcase, inpkt, args):
     for (id, direc, spantype, pkt, intf, pktlen) in ssns:
         if pkt == args.pktid:
             if direc == "ingress":
-                sessionid = id - 1
+                sessionid = id
             else:
-                sessionid = id - 1 + 3
+                sessionid = id + 3
             break
     return sessionid
 
