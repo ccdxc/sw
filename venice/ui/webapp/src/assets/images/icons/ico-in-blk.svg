@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="25px" height="25px" viewBox="0 0 25 25" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 64 (93537) - https://sketch.com -->
+    <title>ico-in-blk</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group-Copy" transform="translate(0.359238, 0.369843)">
+            <polygon id="Path" points="0 0 24 0 24 24 0 24"></polygon>
+            <path d="M17.1412986,3.005 L6.85870138,3.015 C5.75870138,3.015 4.85870138,3.915 4.85870138,5.015 L4.85870138,9.005 L6.85870138,9.005 L6.85870138,4.995 L17.1412986,4.985 L17.1412986,19.015 L6.85870138,19.025 L6.85870138,15.005 L4.85870138,15.005 L4.85870138,19.015 C4.85870138,20.115 5.75870138,20.995 6.85870138,20.995 L17.1412986,20.985 C18.2412986,20.985 19.1412986,20.105 19.1412986,19.005 L19.1412986,5.005 C19.1412986,3.895 18.2412986,3.005 17.1412986,3.005 Z M10.0491771,16.005 L14.0491771,12.005 L10.0491771,8.005 L10.0491771,11.005 L4.85870138,11.005 L4.85870138,13.005 L10.0491771,13.005 L10.0491771,16.005 Z" id="Shape" fill="#767676" fill-rule="nonzero"></path>
+        </g>
+    </g>
+</svg>

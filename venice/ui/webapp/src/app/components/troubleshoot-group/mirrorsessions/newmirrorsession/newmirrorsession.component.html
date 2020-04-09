@@ -154,23 +154,64 @@
                     [options]="interfaceDirectionOptions" formControlName="direction">
         </p-dropdown>
       </div>
-      <div fxFlex="auto" *ngIf="repeaterReady"
+      <div fxFlex="auto"
            class="newmirrorsession-section-div newmirrorsession-section-workloadlabels-div">
-        <app-repeater #interFaceSelectorRepeater [data]="labelData"
-                      [buildKeyPlaceholder]="buildKeyPlaceholder"
-                      [buildValuePlaceholder]="buildValuePlaceholder"
-                      [panelStyleClass]="'newmirrorsession-select-panel'"
-                      [formArray]="this.newObject.$formGroup.get(['spec', 'interfaces', 'selectors', 0, 'requirements'])"
-                      [enableMultiSelectFilter]="true"
-                      [enableMultiSelectAll]="true"
-                      (repeaterValues)="handleLabelRepeaterData($event)"
-                      [keyFormName]="'key'"
-                      [operatorFormName]="'operators'"
-                      [valueFormName]="'values'">
-        </app-repeater>
+        <div fxFlex="none" fxLayout="column" fxLayoutGap="15px"
+             [formGroup]="newObject.$formGroup.get(['spec', 'interfaces', 'selectors', 0, 'requirements'])">
+          <div fxFlex="nogrow" [formGroupName]="index" [@fastSlideInOut]
+               *ngFor="let selector of controlAsFormArray(newObject.$formGroup.get(['spec', 'interfaces', 'selectors', 0, 'requirements'])).controls; first as first; last as last; index as index;">
+            <div fxFlex="none" fxLayout="row" fxLayoutAlign="start end">
+              <div fxFlex="10px"></div>
+              <span fxFlex="none" fxLayout="row" [ngClass]="{
+                'newmirrorsession-interface-box': true,
+                'selectboxWithValue': true,
+                'requiredField': isFieldEmpty(selector.get(['key']))
+              }">
+                <p-dropdown formControlName="key" appFloatLabel="Label Key" appendTo="body"
+                            class="newmirrorsession-interface-selectbox" [options]="labelKeyOptions"
+                            (onChange)="onInterfaceKeyChange(selector)">
+                </p-dropdown>
+              </span>
+              <div fxFlex="15px"></div>
+              <span fxFlex="none" fxLayout="row" class="newmirrorsession-interface-operator-box">
+                <p-dropdown appFloatLabel="Operator" appendTo="body"
+                            class="newmirrorsession-interface-selectbox"
+                            [options]="labelOperatorOptions" formControlName="operator">
+                </p-dropdown>
+              </span>
+              <div fxFlex="15px"></div>
+              <span fxFlex="none" fxLayout="row" [ngClass]="{
+                'newmirrorsession-interface-box': true,
+                'selectboxWithValue': true,
+                'requiredField': isFieldEmpty(selector.get(['values']))
+              }">
+                <p-multiSelect appFloatLabel="Label Values" appendTo="body"
+                               formControlName="values" class="newmirrorsession-interface-selectbox"
+                               [options]="labelValueOptionsMap[selector.get(['key']).value] || []"
+                               [filter]="false" [showHeader]="false" [showToggleAll]="false">
+                </p-multiSelect>
+              </span>
+              <div fxFlex="10px"></div>
+              <div fxFlex="nogrow" *ngIf="last">
+                <span class="newmirrorsession-interface-and" (click)="addInterfaceSelector()">+
+                  AND</span>
+              </div>
+              <div fxFlex="10px"></div>
+              <mat-icon fxFlex="nogrow" class="global-trash-button newmirrorsession-delete"
+                        *ngIf="controlAsFormArray(newObject.$formGroup.get(['spec', 'interfaces', 'selectors', 0, 'requirements'])).length > 1"
+                        (click)="removeInterfaceSelector(index)">delete</mat-icon>
+            </div>
+          </div>
+        </div>
       </div>
-      <div fxFlex="auto" class="newmirrorsession-label-match-count">{{this.labelMatchCount}}
-        Upperlink Interfaces matched.</div>
+      <div fxFlex="auto" class="newmirrorsession-label-match-count"
+           *ngIf="getAllInterfaceSelectorsValues()">
+        <ng-container *ngIf="getLabelMatchInfo() as labelMatchInfo">
+          <span class="newmirrorsession-label-match-tooltip"
+                [title]="labelMatchInfo.title">{{ labelMatchInfo.count }}</span> Upperlink
+          Interfaces matched.
+        </ng-container>
+      </div>
     </fieldset>
   </ng-template>
 

@@ -54,7 +54,7 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
     { field: 'spec.packet-size', header: 'Packet Size', sortable: false, width: '100px', },
     // { field: 'spec.packet-filters', header: 'Packet Filters', sortable: false, width: 10 },
     { field: 'spec.collectors', header: 'collectors', sortable: false, width: 10 },
-    { field: 'spec.interfaces.selectors', header: 'Interface Selectors', sortable: false, width: 20 },
+    { field: 'spec.interfaces.selectors', header: 'Upperlink Interface Selectors', sortable: false, width: 20 },
     { field: 'spec.match-rules', header: 'Match Rules', sortable: false, width: 30 },
     // { field: 'status.oper-state', header: 'OP Status', sortable: true, width: '175px' }
   ];
@@ -135,7 +135,7 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
     });
   }
 
-  displayColumn(data, col): any {
+  displayColumn(data: MonitoringMirrorSession, col: TableCol): any {
     const fields = col.field.split('.');
     const value = Utility.getObjectValueByPropertyPath(data, fields);
     const column = col.field;
@@ -143,7 +143,7 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
       case 'spec.interfaces.selectors':
         // currently we pick the 1st selector from array
         if (Array.isArray(value) && value.length) {
-          return this.displayColumn_interfaceselectors(value[0]);
+          return this.displayColumn_interfaceselectors(data.spec.interfaces.direction, value[0]);
         }
         return '';
       case 'spec.collectors':
@@ -202,9 +202,23 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
     return this.displayListInColumn(list);
   }
 
-  displayColumn_interfaceselectors(value: ILabelsSelector): string {
-    const list: string[] = Utility.convertOneLabelSelectorToStringList(value);
-    return this.displayListInColumn(list);
+  displayColumn_interfaceselectors(direction: string, value: ILabelsSelector): string {
+    let directionIcon = '<div title="Direction: Both" class="mirrorsessions-column-txrx-icon"></div>';
+    if (direction === 'tx') {
+      directionIcon = '<div title="Direction: TX" class="mirrorsessions-column-tx-icon"></div>';
+    } else if (direction === 'rx') {
+      directionIcon = '<div title="Direction: RX" class="mirrorsessions-column-rx-icon"></div>';
+    }
+    const result: string[] = [];
+    if (value && value.requirements && value.requirements.length > 0) {
+      value.requirements.forEach(selector => {
+        const icon = (selector.operator === 'in') ?
+            '<div title="In" class="mirrorsessions-column-in-icon"></div>' :
+            '<div title="Not In" class="mirrorsessions-column-notin-icon"></div>';
+        result.push('<span>' + selector.key + icon + '[' + selector.values.join(',') + ']</span>');
+      });
+    }
+    return directionIcon + ', ' + result.join(', ');
   }
 
   displayListInColumn(list: string[]): string {

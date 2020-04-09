@@ -8,3 +8,40 @@
   padding-left: 10px;
   padding-right: 10px;
 }
+
+.mirrorsessions-column-tx-icon,
+.mirrorsessions-column-rx-icon,
+.mirrorsessions-column-txrx-icon,
+.mirrorsessions-column-notin-icon,
+.mirrorsessions-column-in-icon {
+  height: 16px;
+  width: 16px;
+  background-size: contain !important;
+  display: inline-block;
+  position: relative;
+  top: 3px;
+}
+
+.mirrorsessions-column-notin-icon {
+  background: url(/assets/images/icons/ico-notin-blk.svg) center center no-repeat;
+}
+
+.mirrorsessions-column-in-icon {
+  background: url(/assets/images/icons/ico-in-blk.svg) center center no-repeat;
+}
+
+.mirrorsessions-column-notin-icon {
+  background: url(/assets/images/icons/ico-notin-blk.svg) center center no-repeat;
+}
+
+.mirrorsessions-column-tx-icon {
+  background: url(/assets/images/icons/ico-tx-blk.svg) center center no-repeat;
+}
+
+.mirrorsessions-column-rx-icon {
+  background: url(/assets/images/icons/ico-rx-blk.svg) center center no-repeat;
+}
+
+.mirrorsessions-column-txrx-icon {
+  background: url(/assets/images/icons/ico-txrx-blk.svg) center center no-repeat;
+}

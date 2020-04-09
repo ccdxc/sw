@@ -25,11 +25,6 @@ $dary-grey: #a9a9a9;
     }
   }
 
-  .newmirrorsession-label-match-count {
-    padding-left: 10px;
-    padding-bottom: 20px;
-  }
-
   .newmirrorsession-select-panel {
     display: none;
   }
@@ -47,8 +42,6 @@ $dary-grey: #a9a9a9;
       height: 30px;
       font-size: 14px;
     }
-
-
   }
 
   .newmirrorsession-general-box,
@@ -120,6 +113,56 @@ $dary-grey: #a9a9a9;
 
       p-dropdown {
         width: 170px;
+      }
+    }
+
+    .newmirrorsession-section-workloadlabels-div {
+      margin-bottom: 10px;
+
+      .newmirrorsession-interface-box {
+        width: 170px;
+      }
+
+      .newmirrorsession-interface-box.requiredField :first-child {
+        width: 100% !important;
+      }
+
+      .newmirrorsession-interface-operator-box {
+        width: 100px;
+      }
+
+      .newmirrorsession-interface-selectbox {
+        height: 30px;
+        font-size: 14px;
+        width: 100%;
+      }
+
+      .newmirrorsession-interface-and {
+        &:hover {
+          cursor: pointer;
+          color: black;
+        }
+      }
+
+      p-multiselect.ng-invalid .ui-multiselect {
+        border-color: rgb(214, 214, 214) !important;
+      }
+
+      p-multiselect.ng-invalid .ui-multiselect-open {
+        border: solid 1px #6ba0e5 !important;
+        box-shadow: inset 5px 0 0 0 #6ba0e5 !important;
+      }
+
+      p-multiselect.ng-invalid .ui-multiselect-open .ui-multiselect-label {
+        box-shadow: inset 5px 0 0 0 #6ba0e5 !important;
+      }
+    }
+
+    .newmirrorsession-label-match-count {
+      margin: 0px 0px 10px 10px;
+
+      .newmirrorsession-label-match-tooltip {
+        text-decoration: underline;
       }
     }
   }

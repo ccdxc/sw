@@ -6,7 +6,7 @@ import { Animations } from '@app/animations';
 import {
   IMonitoringMirrorSession, MonitoringMirrorSession, ILabelsRequirement,
   MonitoringMirrorSessionSpec, MonitoringMirrorCollector, MonitoringMatchRule,
-  MonitoringMirrorSessionSpec_packet_filters
+  MonitoringMirrorSessionSpec_packet_filters, LabelsRequirement
 } from '@sdk/v1/models/generated/monitoring';
 import { SecurityApp } from '@sdk/v1/models/generated/security';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
@@ -16,7 +16,6 @@ import {
 import { IPUtility } from '@app/common/IPUtility';
 import { Utility } from '@app/common/Utility';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { RepeaterData, ValueType } from 'web-app-framework';
 import { SearchUtil } from '@app/components/search/SearchUtil';
 import { OrderedItem } from '@app/components/shared/orderedlist/orderedlist.component';
 import { SelectItem } from 'primeng/api';
@@ -27,7 +26,13 @@ import { NetworkService } from '@app/services/generated/network.service';
 import {SearchExpression, SearchInputTypeValue, SearchModelField, SearchSpec} from '@app/components/search';
 import { LabelsSelector, ILabelsSelector } from '@sdk/v1/models/generated/monitoring/labels-selector.model';
 import { MonitoringInterfaceMirror, IMonitoringInterfaceMirror } from '@sdk/v1/models/generated/monitoring/monitoring-interface-mirror.model';
+import { selector, values } from 'd3';
 
+export interface MatchRule {
+  key: string;
+  operator: string;
+  values: string[];
+}
 
 const PACKET_FILTERS_ERRORMSG: string =
   'At least one match rule must be specified';
@@ -63,15 +68,10 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   minDate: Date = new Date();
   defaultDate: Date = null;
 
-  labelData: RepeaterData[] = [];
-  labelOutput: any;
-  labelFormArray = new FormArray([]);
-
   packetFilterOptions = Utility.convertEnumToSelectItem(MonitoringMirrorSessionSpec.propInfo['packet-filters'].enum);
   collectorTypeOptions = Utility.convertEnumToSelectItem(MonitoringMirrorCollector.propInfo['type'].enum);
   interfaceDirectionOptions = Utility.convertEnumToSelectItem(MonitoringInterfaceMirror.propInfo['direction'].enum);
 
-  repeaterAnimationEnabled = true;
   rules: OrderedItem<any>[] = [];
 
   PROTO_PORTS_OPTION: string = 'proto-ports';
@@ -87,9 +87,15 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   securityAppOptions: SelectItem[] = [];
 
   labelMatchCount: number = 0;
-  repeaterReady: boolean = false;
   matchMap: Map<string, any> = new Map<string, any>();
   allNIList: string[] = [];
+  labelOperatorOptions: SelectItem[] = [
+    { label: 'In', value: 'in' },
+    { label: 'Not In', value: 'notin' }
+  ];
+  labelKeyOptions: SelectItem[] = [];
+  labelValueOptionsMap: {key: string, values: SelectItem[]} = {} as {key: string, values: SelectItem[]};
+
   radioSelection: string = 'rules';
 
   constructor(protected _controllerService: ControllerService,
@@ -159,24 +165,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
         this.newObject.$formGroup.get(['spec', 'start-condition', 'schedule-time']).setValue(localDate);
       }
 
-      // process interface selectors
-      if (this.objectData.spec['interfaces'] && this.objectData.spec['interfaces']['selectors'].length) {
-        const searchExpressons: ILabelsRequirement[] =
-          this.objectData.spec['interfaces']['selectors'][0].requirements;
-        const list = [];
-        searchExpressons.forEach((item) => {
-          const op = item.operator;
-          const formControl = new FormControl({
-            keyFormControl: '',
-            operatorFormControl: op,
-            valueFormControl: (item.values) ? item.values : [],
-            keytextFormName: item.key
-          });
-          list.push(formControl);
-        });
-        this.labelFormArray = new FormArray(list);
-      }
-
       // process match rules
       this.rules = [];
       if (this.newObject.spec['match-rules'].length > 0) {
@@ -216,6 +204,14 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     const collectors = this.newObject.$formGroup.get(['spec', 'collectors']) as FormArray;
     if (collectors.length === 0) {
       this.addCollector();
+    }
+
+    // Add one interface selector if it doesn't already have one
+    const selectors = this.newObject.$formGroup.get(['spec', 'interfaces', 'selectors']) as FormArray;
+    if (selectors.length === 0) {
+      const newSelector = new LabelsSelector().$formGroup;
+      selectors.push(newSelector);
+      this.addInterfaceSelector();
     }
 
     // Add one matchrule if it doesn't already have one
@@ -267,20 +263,10 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     }
 
     if (this.radioSelection === 'labels') {
-      // validate interface selector
-      if (this.labelMatchCount === 0) {
-        this.createButtonTooltip = 'Selected Labels should match atleast one Network Interface.';
+      if (!this.getAllInterfaceSelectorsValues()) {
+        this.createButtonTooltip = 'At least one label is incomplete.';
         return false;
       }
-
-      for (let i = 0; i < this.labelOutput.length ; i++) {
-        const obj = this.labelOutput[i];
-        if ( !(obj.key) || !(obj.values) || !(obj.operators)) {
-          this.createButtonTooltip = 'Atleast one label is incomplete.';
-          return false;
-        }
-      }
-
     } else {
       // validate rules
       if (this.areAllRulesEmpty()) {
@@ -348,19 +334,15 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       // if the seconds are 0, the schedule time will become 0
       scheduleTime.setSeconds(30);
     }
-    currValue.spec['match-rules'] = this.rules.map(r => {
-      return r.data.rule.getFormGroupValues();
-    });
-    const repeaterSearchExpression = this.convertFormArrayToSearchExpression(this.labelOutput);
-    currValue.spec['interfaces']['selectors'] = new Array<LabelsSelector>();
-    currValue.spec['interfaces']['selectors'].push(new LabelsSelector());
-    currValue.spec['interfaces']['selectors'][0].requirements = repeaterSearchExpression as ILabelsRequirement[];
 
     if (this.radioSelection === 'labels') {
       currValue.spec['match-rules'] = [];
       currValue.spec['packet-filters'] = [];
     } else {
       currValue.spec['interfaces'] = null;
+      currValue.spec['match-rules'] = this.rules.map(r => {
+        return r.data.rule.getFormGroupValues();
+      });
     }
 
     return currValue;
@@ -446,15 +428,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     ];
 
     this._controllerService.setToolbarData(currToolbar);
-  }
-
-  /**
-   * This API serves html template. When repeater's value is changed, we update labelOutput value.
-   */
-  handleLabelRepeaterData(values: any) {
-    const matches = this.getMatches(values);
-    this.labelMatchCount = matches.length;
-    this.labelOutput = values;
   }
 
   addCollector() {
@@ -613,37 +586,46 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     return false;
   }
 
-  getMatches(selectors) {
+  // this function join two array and return a new araay with items appears
+  // on both array
+  joinArry(arr1: any[], arr2: any[]): any[] {
+    if (arr1.length === 0) {
+      return [...arr2];
+    }
+    if (arr2.length === 0) {
+      return [...arr1];
+    }
+    return [...arr1].filter(i => arr2.includes(i));
+  }
+
+  getMatches(selectors: any[]) {
     let matchList = [];
-    let first: boolean = true;
-    for (const x of selectors) {
-      if (x['key'] && x['operators'] && x['values']) {
-        const matches = this.getRuleMatches(x);
-        if (first) {
-          matchList = matches;
-          first = false;
-        } else {
-          matchList = [...matchList].filter(i => matches.includes(i));
-        }
+    for (const selctor of selectors) {
+      if (selctor.key && selctor.operator && selctor.values) {
+        matchList = this.joinArry(matchList, this.getRuleMatches(selctor));
       }
     }
     return matchList;
   }
 
-  getRuleMatches(rule): any {
-    const key = rule['key'];
-    const op = rule['operators'];
-    const val = rule['values'];
+  getRuleMatches(rule: MatchRule): string[] {
+    const key = rule.key;
+    const op = rule.operator;
+    const val = rule.values;
     let matches = [];
-    if (this.matchMap[key] != null && this.matchMap[key][val] != null && this.matchMap[key][val].length !== 0) {
-      matches = this.matchMap[key][val];
+    if (this.matchMap[key] && val.length > 0) {
+      val.forEach((item: string) => {
+        if (this.matchMap[key][item]) {
+          matches = matches.concat(this.matchMap[key][item]);
+        }
+      });
     }
+    matches = [...Array.from(new Set(matches).values())];
 
     if (op === 'in') {
       return matches;
-    } else {
-      return [...this.allNIList].filter(i => !matches.includes(i));
     }
+    return [...this.allNIList].filter(i => !matches.includes(i));
   }
 
   getNILabels() {
@@ -652,11 +634,12 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
         if (response.connIsErrorState) {
           return;
         }
-        const body: NetworkNetworkInterface[] = response.data as NetworkNetworkInterface[];
+        const allInterfaces: NetworkNetworkInterface[] = response.data as NetworkNetworkInterface[];
         this.matchMap = new Map<string, any>();
-        this.labelData = [];
+        this.labelKeyOptions = [];
+        this.labelValueOptionsMap = {} as {key: string, values: SelectItem[]};
         this.allNIList = [];
-        this.buildLabelInformation(body);
+        this.buildLabelInformation(allInterfaces);
         this.buildLabelInformationFromMirrorSessions();
         this.buildLabelData();
         this.cdr.detectChanges();
@@ -670,11 +653,10 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       if (obj.spec.interfaces && obj.spec.interfaces.selectors.length && obj.spec.interfaces.selectors[0]) {
         for (const i of obj.spec.interfaces.selectors[0].requirements ) {
           const key = i.key;
-          const values = i.values;
           if (this.matchMap[key] == null) {
             this.matchMap[key] = new Map<string, any>();
           }
-          for (const v of values) {
+          for (const v of i.values) {
             if (this.matchMap[key][v] == null) {
               this.matchMap[key][v] = [];
             }
@@ -685,7 +667,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   }
 
   buildLabelInformation(networkInterfaces: NetworkNetworkInterface[]) {
-
     if (networkInterfaces.length) {
       networkInterfaces.forEach((item: NetworkNetworkInterface) => {
         if (item.meta && item.meta.labels && item.spec.type === NetworkNetworkInterfaceSpec_type['uplink-eth']) {
@@ -696,10 +677,10 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
             if (this.matchMap[key][item.meta.labels[key]] == null) {
               this.matchMap[key][item.meta.labels[key]] = [];
             }
-            this.matchMap[key][item.meta.labels[key]].push(item.meta.uuid);
+            this.matchMap[key][item.meta.labels[key]].push(item.meta.name);
           }
         }
-        this.allNIList.push(item.meta.uuid);
+        this.allNIList.push(item.meta.name);
       });
     }
   }
@@ -710,27 +691,57 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       for (const val of Object.keys(this.matchMap[key])) {
         valList.push({ value: val, label: val });
       }
-
-      const label = {
-        key: { value: key, label: key },
-        values: valList,
-        operators: SearchUtil.stringOperators,
-        fieldType: ValueType.singleSelect,
-        valueType: ValueType.multiSelect,
-        keyLabel: 'Label Key',
-        valueLabel: 'Label Value'
-      };
-      this.labelData.push(label);
+      this.labelKeyOptions.push({label: key, value: key});
+      this.labelValueOptionsMap[key] = valList;
     }
-    this.repeaterReady = true;
+    this.labelKeyOptions.push({ label: '', value: null });
   }
 
-  buildKeyPlaceholder(repeater: any, keyFormName: string): string {
-    return 'key';
+  addInterfaceSelector() {
+    const selectors = this.newObject.$formGroup.get(['spec', 'interfaces', 'selectors', 0, 'requirements']) as FormArray;
+    const newSelector = new LabelsRequirement().$formGroup;
+    newSelector.get(['operator']).setValue('in');
+    selectors.insert(selectors.length, newSelector);
   }
 
-  buildValuePlaceholder(repeater: any, keyFormName: string): string {
-    return 'value';
+  removeInterfaceSelector(index: number) {
+    const selectors = this.newObject.$formGroup.get(['spec', 'interfaces', 'selectors', 0, 'requirements']) as FormArray;
+    if (selectors.length > 1) {
+      selectors.removeAt(index);
+    }
   }
 
+  getAllInterfaceSelectorsValues(): MatchRule[] {
+    const result: MatchRule[] = [];
+    const selectors = this.newObject.$formGroup.get(['spec', 'interfaces', 'selectors', 0, 'requirements']) as FormArray;
+    for (let i = 0; i < selectors.length; i++) {
+      const item = selectors.controls[i].value;
+      if (!item.key || !item.values || item.values.length === 0) {
+        return null;
+      }
+      result.push(item);
+    }
+    return result;
+  }
+
+  getLabelMatchInfo() {
+    const ifValues = this.getAllInterfaceSelectorsValues();
+    if (!ifValues || ifValues.length === 0) {
+      return { count: 0, title: '' };
+    }
+    const matches = this.getMatches(ifValues);
+    const list = [];
+    for (let i = 0; i < Math.min(10, matches.length); i++) {
+      list.push(matches[i]);
+    }
+    let title = list.join('\n');
+    if (matches.length > 10) {
+      title += '\n...';
+    }
+    return {count: matches.length, title };
+  }
+
+  onInterfaceKeyChange(ifSelector: any) {
+    ifSelector.get(['values']).setValue(null);
+  }
 }

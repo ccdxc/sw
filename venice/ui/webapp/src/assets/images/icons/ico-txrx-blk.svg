@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="25px" height="25px" viewBox="0 0 25 25" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 64 (93537) - https://sketch.com -->
+    <title>ico-txrx-blk</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="tx/rx" transform="translate(0.359238, 0.769843)">
+            <polygon id="Path" points="0 0 24 0 24 24 0 24"></polygon>
+            <path d="M22.078614,12.5447771 L17.0820039,18.7947771 L17.0820039,15.0447771 L1.92138603,15.0447771 L1.92138603,12.5447771 L22.078614,12.5447771 Z M6.91799607,5.20522288 L6.91799607,8.95522288 L22.078614,8.95522288 L22.078614,11.4552229 L1.92138603,11.4552229 L6.91799607,5.20522288 Z" id="Shape" fill="#767676"></path>
+        </g>
+    </g>
+</svg>
