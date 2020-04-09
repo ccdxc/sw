@@ -22,7 +22,6 @@ namespace elba {
 #define ELBA_PCIE_ATOMIC_BASE_ADDR \
             ELBA_PCIE_ATOMIC_BASE_ADDR_GET(ELBA_PCIE_ATOMIC_REGION_ID, ELBA_PCIE_ATOMIC_PAGE_ID)
 
-
 // elba_pxb_pcie_init
 // API to init the pxb pcie module
 //

@@ -140,10 +140,10 @@ typedef struct tm_uplink_iq_params_s {
 } __PACK__ tm_uplink_iq_params_t;
 
 sdk_ret_t elba_tm_uplink_iq_params_update(tm_port_t port, tm_q_t iq,
-                                           tm_uplink_iq_params_t *iq_params);
+                                          tm_uplink_iq_params_t *iq_params);
 
 sdk_ret_t elba_tm_uplink_input_map_update(tm_port_t port, uint32_t dot1q_pcp,
-                                           tm_q_t iq);
+                                          tm_q_t iq);
 
 typedef struct tm_uplink_input_dscp_map_s {
     bool        ip_dscp[ELBA_TM_MAX_DSCP_VALS];
@@ -151,10 +151,10 @@ typedef struct tm_uplink_input_dscp_map_s {
 } tm_uplink_input_dscp_map_t;
 
 sdk_ret_t elba_tm_uplink_input_dscp_map_update(tm_port_t port,
-                                                tm_uplink_input_dscp_map_t *dscp_map);
+                                               tm_uplink_input_dscp_map_t *dscp_map);
 
 sdk_ret_t elba_tm_uplink_oq_update(tm_port_t port, tm_q_t oq,
-                                    bool xoff_enable, uint32_t xoff_cos);
+                                   bool xoff_enable, uint32_t xoff_cos);
 
 #define TM_SCHED_TYPES(ENTRY)                    \
     ENTRY(TM_SCHED_TYPE_DWRR,       0, "dwrr")   \
@@ -191,9 +191,9 @@ typedef enum {
  * @return sdk_ret_t: Status of the operation
  */
 sdk_ret_t elba_tm_scheduler_map_update(tm_port_t port,
-                                        tm_queue_node_type_e node_type,
-                                        uint32_t node,
-                                        tm_queue_node_params_t *node_params);
+                                       tm_queue_node_type_e node_type,
+                                       uint32_t node,
+                                       tm_queue_node_params_t *node_params);
 
 /** elba_tm_uplink_lif_set
  * API to program the lif value on an uplink port
@@ -225,7 +225,7 @@ sdk_ret_t elba_tm_asic_init(void);
 sdk_ret_t elba_tm_init(sdk::lib::catalog* catalog);
 
 
-sdk_ret_t elba_pf_init (void);
+sdk_ret_t elba_pf_init(void);
 
 /** elba_tm_repl_table_base_addr_set
  * API to program the base address in HBM for the replication table
@@ -243,8 +243,7 @@ sdk_ret_t elba_tm_repl_table_base_addr_set(uint64_t addr);
  */
 sdk_ret_t elba_tm_repl_table_token_size_set(uint32_t size_in_bits);
 
-
-sdk_ret_t elba_tm_port_program_uplink_byte_count (void);
+sdk_ret_t elba_tm_port_program_uplink_byte_count(void);
 
 /** elba_tm_get_clock_tick
  * API to get the hardware clock tick.
@@ -264,7 +263,7 @@ sdk_ret_t elba_tm_enable_disable_uplink_port(tm_port_t port, bool enable);
  * return front panel port number give TM/PB port number
  */
 static inline int
-elba_tm_port_to_fp_port (uint32_t tm_port)
+elba_tm_port_to_fp_port(uint32_t tm_port)
 {
     SDK_ASSERT((tm_port >= ELBA_TM_UPLINK_PORT_BEGIN) &&
                (tm_port <= ELBA_TM_UPLINK_PORT_END));
@@ -289,7 +288,7 @@ typedef struct tm_iq_stats_s {
 } __PACK__ tm_iq_stats_t;
 
 sdk_ret_t elba_tm_get_iq_stats(tm_port_t port, tm_q_t iq,
-                                tm_iq_stats_t *iq_stats);
+                               tm_iq_stats_t *iq_stats);
 
 sdk_ret_t elba_tm_reset_iq_stats(tm_port_t port, tm_q_t iq);
 
@@ -298,7 +297,7 @@ typedef struct tm_oq_stats_s {
 } __PACK__ tm_oq_stats_t;
 
 sdk_ret_t elba_tm_get_oq_stats(tm_port_t port, tm_q_t oq,
-                                tm_oq_stats_t *oq_stats);
+                               tm_oq_stats_t *oq_stats);
 
 sdk_ret_t elba_tm_periodic_stats_update(void);
 

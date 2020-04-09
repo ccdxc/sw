@@ -22,7 +22,6 @@ namespace elba {
 #define ELBA_P4PLUS_NUM_STAGES       8
 #define ELBA_P4PLUS_SXDMA_NUM_STAGES 4
 
-
 sdk_ret_t elba_table_rw_init(asic_cfg_t *elba_cfg);
 sdk_ret_t elba_p4plus_table_rw_init(void);
 
@@ -191,4 +190,4 @@ extern "C" sdk_ret_t elba_pf_l2_multi_dest_tcam_entry_write(uint8_t index,
 
 
 
-#endif   // __ELBA_TBL_RW_HPP__ 
+#endif   // __ELBA_TBL_RW_HPP__

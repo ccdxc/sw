@@ -137,15 +137,16 @@ sdk_ret_t asic_pd_hbm_bw_get(hbm_bw_samples_t *hbm_bw_samples);
 sdk_ret_t asic_pd_llc_setup(llc_counters_t *llc);
 sdk_ret_t asic_pd_llc_get(llc_counters_t *llc);
 sdk_ret_t asicpd_p4plus_recirc_init(void);
-sdk_ret_t asic_pd_qstate_map_clear(uint32_t lif_id);
-sdk_ret_t asic_pd_qstate_map_write(lif_qstate_t *qstate, uint8_t enable);
-sdk_ret_t asic_pd_qstate_map_read (lif_qstate_t *qstate);
-sdk_ret_t asic_pd_qstate_write(uint64_t addr, const uint8_t *buf,
-                               uint32_t size);
-sdk_ret_t asic_pd_qstate_read(uint64_t addr, uint8_t *buf, uint32_t size);
-sdk_ret_t asic_pd_qstate_clear(lif_qstate_t *qstate);
-sdk_ret_t asic_pd_p4plus_invalidate_cache(mpartition_region_t *reg,
-                                          uint64_t q_addr, uint32_t size);
+sdk_ret_t asicpd_qstate_map_clear(uint32_t lif_id);
+sdk_ret_t asicpd_qstate_map_write(lif_qstate_t *qstate, uint8_t enable);
+sdk_ret_t asicpd_qstate_map_read (lif_qstate_t *qstate);
+sdk_ret_t asicpd_qstate_write(uint64_t addr, const uint8_t *buf,
+                              uint32_t size);
+sdk_ret_t asicpd_qstate_read(uint64_t addr, uint8_t *buf, uint32_t size);
+sdk_ret_t asicpd_qstate_clear(lif_qstate_t *qstate);
+void asicpd_reset_qstate_map(uint32_t lif_id);
+sdk_ret_t asicpd_p4plus_invalidate_cache(mpartition_region_t *reg,
+                                         uint64_t q_addr, uint32_t size);
 uint32_t asic_pd_clock_freq_get(void);
 pd_adjust_perf_status_t asic_pd_adjust_perf(int chip_id, int inst_id,
                                             pd_adjust_perf_index_t &idx,
@@ -444,7 +445,7 @@ using sdk::asic::pd::llc_counters_t;
 using sdk::asic::pd::scheduler_stats_t;
 using sdk::asic::pd::hbm_bw_samples_t;
 using sdk::asic::pd::p4_tbl_eng_cfg_t;
-using sdk::asic::pd::asic_pd_qstate_map_read;
+using sdk::asic::pd::asicpd_qstate_map_read;
 using sdk::asic::pd::asicpd_get_mem_addr;
 using sdk::asic::pd::asicpd_get_mem_size_kb;
 using sdk::asic::pd::asicpd_get_hbm_region_by_address;

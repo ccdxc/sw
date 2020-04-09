@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "asic/asic_cfg.hpp"
+#include "asic/cmn/asic_cfg.hpp"
 
 namespace sdk {
 namespace platform {
@@ -42,12 +42,11 @@ namespace elba {
         (ELBA_TIMER_NUM_KEY_CACHE_LINES * ELBA_TIMER_NUM_KEY_PER_CACHE_LINE * \
          ELBA_TIMER_NUM_DATA_PER_CACHE_LINE)
 
-
 // (lif,queue,cos) mapping params in scheduler table
 typedef struct elba_txs_sched_lif_params_s_ {
     uint32_t             sched_table_offset;
-    uint32_t             num_entries_per_cos; 
-    uint32_t             total_qcount; 
+    uint32_t             num_entries_per_cos;
+    uint32_t             total_qcount;
     uint16_t             cos_bmp;
 } __PACK__ elba_txs_sched_lif_params_t;
 
@@ -55,7 +54,7 @@ typedef struct elba_txs_sched_lif_params_s_ {
 typedef struct elba_txs_policer_lif_params_s {
     uint32_t             sched_table_start_offset;
     uint32_t             sched_table_end_offset;
-} __PACK__ elba_txs_policer_lif_params_t;  
+} __PACK__ elba_txs_policer_lif_params_t;
 
 // elba_txs_scheduler_init
 // API to init the txs scheduler module
@@ -63,9 +62,9 @@ typedef struct elba_txs_policer_lif_params_s {
 // @return sdk_ret_t: Status of the operation
 //
 
-sdk_ret_t elba_txs_scheduler_init (uint32_t admin_cos, asic_cfg_t *elba_cfg);
+sdk_ret_t elba_txs_scheduler_init(uint32_t admin_cos, asic_cfg_t *elba_cfg);
 
-extern "C" void elba_txs_timer_init_hsh_depth (uint32_t key_lines);
+extern "C" void elba_txs_timer_init_hsh_depth(uint32_t key_lines);
 
 // elba_txs_scheduler_lif_params_update
 // API to program txs scheduler table with lif,queue,cos mappings.
@@ -74,19 +73,19 @@ extern "C" void elba_txs_timer_init_hsh_depth (uint32_t key_lines);
 // @param  txs_hw_params[in]. scheduler table params for this entry.
 // @return sdk_ret_t: Status of the operation
 //
-sdk_ret_t elba_txs_scheduler_lif_params_update (uint32_t hw_lif_id, 
-                                                elba_txs_sched_lif_params_t *txs_hw_params);
+sdk_ret_t elba_txs_scheduler_lif_params_update(uint32_t hw_lif_id,
+                                               elba_txs_sched_lif_params_t *txs_hw_params);
 
-sdk_ret_t elba_txs_scheduler_tx_alloc (elba_txs_sched_lif_params_t *tx_params,
-                                       uint32_t *alloc_offset,
-                                       uint32_t *alloc_units);
+sdk_ret_t elba_txs_scheduler_tx_alloc(elba_txs_sched_lif_params_t *tx_params,
+                                      uint32_t *alloc_offset,
+                                      uint32_t *alloc_units);
 
-sdk_ret_t elba_txs_scheduler_tx_dealloc (uint32_t alloc_offset,
-                                         uint32_t alloc_units);
+sdk_ret_t elba_txs_scheduler_tx_dealloc(uint32_t alloc_offset,
+                                        uint32_t alloc_units);
 
 // elba_txs_policer_lif_params_update
 // API to program txs policer table with lif,cos scheduler-table mappings.
-//      
+//
 // @param  hw_lif_id[in]: hw lif id for this entry.
 // @param  txs_hw_params[in]. scheduler table params for this entry.
 // @return sdk_ret_t: Status of the operation

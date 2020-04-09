@@ -9,6 +9,7 @@ namespace sdk {
 namespace platform {
 namespace elba {
 #endif
+
 /*
  * #defines shared by ASM and C code
  */
@@ -24,4 +25,5 @@ namespace elba {
 }    // namespace platform
 }    // namespace sdk
 #endif    // __cplusplus
+
 #endif    // __ELBA_COMMON_HPP_

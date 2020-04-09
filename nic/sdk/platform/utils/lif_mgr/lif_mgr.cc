@@ -3,7 +3,9 @@
 //-----------------------------------------------------------------------------
 #include "include/sdk/mem.hpp"
 #include "platform/utils/lif_mgr/lif_mgr.hpp"
-#include "platform/capri/capri_qstate.hpp"
+#include "asic/pd/pd.hpp"
+
+using namespace sdk::asic::pd;
 
 namespace sdk {
 namespace platform {
@@ -334,8 +336,8 @@ end:
 // - Program qstate
 //-----------------------------------------------------------------------------
 sdk_ret_t
-lif_mgr::write_qstate(uint32_t lif_id, uint32_t type, uint32_t qid,
-                      uint8_t *buf, uint32_t bufsize)
+lif_mgr::write_qstate (uint32_t lif_id, uint32_t type, uint32_t qid,
+                       uint8_t *buf, uint32_t bufsize)
 {
     sdk_ret_t ret                = SDK_RET_OK;
     lif_qstate_t *qstate         = NULL;
@@ -369,15 +371,14 @@ lif_mgr::write_qstate(uint32_t lif_id, uint32_t type, uint32_t qid,
     q_addr = qstate->hbm_address + qstate->type[type].hbm_offset +
         (qid * qstate->type[type].qsize);
 
-
-    sdk::asic::pd::asic_pd_qstate_write(q_addr, buf, bufsize);
+    asicpd_qstate_write(q_addr, buf, bufsize);
 
     if (mp_) {
         reg = mp_->region_by_address(q_addr);
         SDK_ASSERT(reg != NULL);
     }
 
-    ret = sdk::asic::pd::asic_pd_p4plus_invalidate_cache(reg, q_addr, bufsize);
+    ret = asicpd_p4plus_invalidate_cache(reg, q_addr, bufsize);
 
 end:
     LIF_MGR_API_END_UNLOCK();
@@ -418,7 +419,7 @@ lif_mgr::read_qstate(uint32_t lif_id, uint32_t type, uint32_t qid,
     q_addr = qstate->hbm_address + qstate->type[type].hbm_offset +
         (qid * qstate->type[type].qsize);
 
-    ret = sdk::asic::pd::asic_pd_qstate_read(q_addr, buf, bufsize);
+    ret = sdk::asic::pd::asicpd_qstate_read(q_addr, buf, bufsize);
 
 end:
     LIF_MGR_API_END_UNLOCK();
@@ -429,7 +430,7 @@ end:
     qstate->type[QID].qtype_info.entries, qstate->type[QID].qtype_info.size
 
 sdk_ret_t
-lif_mgr::read_qstate_map(uint32_t lif_id, lif_qstate_t *qstate)
+lif_mgr::read_qstate_map (uint32_t lif_id, lif_qstate_t *qstate)
 {
     sdk_ret_t ret = SDK_RET_OK;
 
@@ -439,7 +440,7 @@ lif_mgr::read_qstate_map(uint32_t lif_id, lif_qstate_t *qstate)
 
     qstate->lif_id = lif_id;
     LIF_MGR_API_START_LOCK();
-    ret = sdk::asic::pd::asic_pd_qstate_map_read(qstate);
+    ret = asicpd_qstate_map_read(qstate);
     LIF_MGR_API_END_UNLOCK();
 
     return ret;
@@ -449,7 +450,7 @@ lif_mgr::read_qstate_map(uint32_t lif_id, lif_qstate_t *qstate)
 // - Clear qstate
 //-----------------------------------------------------------------------------
 sdk_ret_t
-lif_mgr::clear_qstate(uint32_t lif_id)
+lif_mgr::clear_qstate (uint32_t lif_id)
 {
     sdk_ret_t ret = SDK_RET_OK;
     lif_qstate_t *qstate = NULL;
@@ -461,7 +462,7 @@ lif_mgr::clear_qstate(uint32_t lif_id)
         ret = SDK_RET_INVALID_ARG;
         goto end;
     }
-    ret = sdk::asic::pd::asic_pd_qstate_clear(qstate);
+    ret = asicpd_qstate_clear(qstate);
 
 end:
     LIF_MGR_API_END_UNLOCK();
@@ -473,7 +474,7 @@ end:
 // - Program qstate map
 //-----------------------------------------------------------------------------
 sdk_ret_t
-lif_mgr::enable(uint32_t lif_id)
+lif_mgr::enable (uint32_t lif_id)
 {
     sdk_ret_t ret = SDK_RET_OK;
     lif_qstate_t *qstate = NULL;
@@ -485,7 +486,7 @@ lif_mgr::enable(uint32_t lif_id)
         ret = SDK_RET_INVALID_ARG;
         goto end;
     }
-    ret = sdk::asic::pd::asic_pd_qstate_map_write(qstate, true);
+    ret = asicpd_qstate_map_write(qstate, true);
 end:
     LIF_MGR_API_END_UNLOCK();
     return ret;
@@ -496,9 +497,9 @@ end:
 // - DeProgram qstate map
 //-----------------------------------------------------------------------------
 sdk_ret_t
-lif_mgr::disable(uint32_t lif_id)
+lif_mgr::disable (uint32_t lif_id)
 {
-    return sdk::asic::pd::asic_pd_qstate_map_clear(lif_id);
+    return asicpd_qstate_map_clear(lif_id);
 }
 
 //-----------------------------------------------------------------------------
@@ -508,7 +509,7 @@ lif_mgr::disable(uint32_t lif_id)
 // - Clean up local state & free up lif id
 //-----------------------------------------------------------------------------
 sdk_ret_t
-lif_mgr::remove(uint32_t lif_id)
+lif_mgr::remove (uint32_t lif_id)
 {
     sdk_ret_t ret = SDK_RET_OK;
     indexer::status irs;
@@ -525,10 +526,10 @@ lif_mgr::remove(uint32_t lif_id)
     }
 
     // zero out qstate map
-    ret = sdk::asic::pd::asic_pd_qstate_map_clear(lif_id);
+    ret = asicpd_qstate_map_clear(lif_id);
 
     // zero out qstate
-    ret = sdk::asic::pd::asic_pd_qstate_clear(qstate);
+    ret = asicpd_qstate_clear(qstate);
 
     // Free up hbm memory
     alloc_offset = qstate->hbm_address - hbm_base_;
@@ -537,7 +538,8 @@ lif_mgr::remove(uint32_t lif_id)
         for (uint32_t i = alloc_offset; i < (alloc_offset + alloc_units); i++) {
             irs = hbm_indexer_->free(i);
             if (irs != indexer::SUCCESS) {
-                ret = (irs == indexer::DUPLICATE_FREE) ? SDK_RET_DUPLICATE_FREE : SDK_RET_OOB;
+                ret = (irs == indexer::DUPLICATE_FREE) ?
+                    SDK_RET_DUPLICATE_FREE : SDK_RET_OOB;
                 goto end;
             }
         }
@@ -557,15 +559,14 @@ end:
 
 // TODO : Handle HAL/nicmgr process restarts
 sdk_ret_t
-lif_mgr::lifs_reset(uint32_t start_lif, uint32_t end_lif)
+lif_mgr::lifs_reset (uint32_t start_lif, uint32_t end_lif)
 {
     for (uint32_t lif_id = start_lif; lif_id <= end_lif; lif_id++) {
-        sdk::platform::capri::capri_reset_qstate_map(lif_id);
+        asicpd_reset_qstate_map(lif_id);
     }
 
     return SDK_RET_OK;
 }
-
 
 } // namespace utils
 } // namespace platform

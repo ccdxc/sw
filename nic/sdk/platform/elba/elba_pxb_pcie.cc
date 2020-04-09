@@ -18,15 +18,17 @@ elba_pxb_pcie_init (void)
     elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
     elb_pxb_csr_t &pxb_csr = elb0.pxb.pxb;
 
-    SDK_TRACE_DEBUG("Initializing LIF state for all of %d LIFs", ELBA_PCIE_MAX_LIFS);
+    SDK_TRACE_DEBUG("Initializing LIF state for all of %d LIFs",
+                    ELBA_PCIE_MAX_LIFS);
 
     for (int i = 0; i < ELBA_PCIE_MAX_LIFS; i++) {
         pxb_csr.dhs_itr_pcihdrt.entry[i].valid(1);
         pxb_csr.dhs_itr_pcihdrt.entry[i].write();
     }
     SDK_TRACE_DEBUG("Initializing PCIE Atomic Region/Page as 0x%x/0x%x",
-                     ELBA_PCIE_ATOMIC_REGION_ID, ELBA_PCIE_ATOMIC_PAGE_ID);
-    // axi addressing formula :  
+                    ELBA_PCIE_ATOMIC_REGION_ID, ELBA_PCIE_ATOMIC_PAGE_ID);
+
+    // axi addressing formula :
     //     {1 const (1bit), region - 4bit , page_id - 19bit , 12bit addr with page };
     // allocate region number 0xf and page 0x3ff within region as atomic
     // above formula will create id_0_addr : 0xf803ff000 to access atomic id[0]
@@ -35,6 +37,7 @@ elba_pxb_pcie_init (void)
     pxb_csr.cfg_pcie_local_memaddr_decode.atomic(ELBA_PCIE_ATOMIC_REGION_ID);
     pxb_csr.cfg_pcie_local_memaddr_decode.rc_cfg(0);
     pxb_csr.cfg_pcie_local_memaddr_decode.write();
+
     return SDK_RET_OK;
 }
 

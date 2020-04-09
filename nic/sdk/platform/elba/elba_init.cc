@@ -68,8 +68,8 @@ elba_timer_hbm_init (void)
 static sdk_ret_t
 elba_pgm_init (asic_cfg_t *cfg)
 {
-    sdk_ret_t      ret;
-    std::string    full_path;
+    sdk_ret_t ret;
+    std::string full_path;
 
     for (uint8_t i = 0; i < cfg->num_pgm_cfgs; i++) {
         full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name +
@@ -95,9 +95,9 @@ elba_pgm_init (asic_cfg_t *cfg)
 static sdk_ret_t
 elba_asm_init (asic_cfg_t *cfg)
 {
-    int             iret = 0;
-    uint64_t        base_addr;
-    std::string     full_path;
+    int iret = 0;
+    uint64_t base_addr;
+    std::string full_path;
     uint32_t num_symbols = 0;
     sdk::p4::p4_param_info_t *symbols = NULL;
 
@@ -106,42 +106,42 @@ elba_asm_init (asic_cfg_t *cfg)
             "/" + cfg->asm_cfg[i].path;
         SDK_TRACE_DEBUG("Loading ASM binaries from dir %s", full_path.c_str());
 
-	// Check if directory is present
-	if (access(full_path.c_str(), R_OK) < 0) {
-            SDK_TRACE_ERR("%s not_present/no_read_permissions",
-                full_path.c_str());
-            return SDK_RET_ERR;
+        // Check if directory is present
+        if (access(full_path.c_str(), R_OK) < 0) {
+                SDK_TRACE_ERR("%s not_present/no_read_permissions",
+                    full_path.c_str());
+                return SDK_RET_ERR;
         }
 
         symbols = NULL;
         if(cfg->asm_cfg[i].symbols_func) {
-            num_symbols = cfg->asm_cfg[i].symbols_func((void **)&symbols, cfg->platform);
+            num_symbols = cfg->asm_cfg[i].symbols_func((void **)&symbols,
+                                                       cfg->platform);
         }
 
         base_addr = get_mem_addr(cfg->asm_cfg[i].base_addr.c_str());
         SDK_TRACE_DEBUG("base addr 0x%llx", base_addr);
         iret = sdk::p4::p4_load_mpu_programs(cfg->asm_cfg[i].name.c_str(),
-           (char *)full_path.c_str(),
-           base_addr,
-           symbols,
-           num_symbols,
-           cfg->asm_cfg[i].sort_func);
+                                             (char *)full_path.c_str(),
+                                             base_addr, symbols, num_symbols,
+                                             cfg->asm_cfg[i].sort_func);
 
-       if(symbols)
-           SDK_FREE(SDK_MEM_ALLOC_PD, symbols);
+        if(symbols)
+            SDK_FREE(SDK_MEM_ALLOC_PD, symbols);
 
-       if (iret != 0) {
-          SDK_TRACE_ERR("Failed to load program %s", full_path);
-          return SDK_RET_ERR;
-       }
+        if (iret != 0) {
+            SDK_TRACE_ERR("Failed to load program %s", full_path);
+            return SDK_RET_ERR;
+        }
    }
+
    return SDK_RET_OK;
 }
 
 static sdk_ret_t
 elba_hbm_regions_init (asic_cfg_t *cfg)
 {
-    sdk_ret_t           ret = SDK_RET_OK;
+    sdk_ret_t ret = SDK_RET_OK;
 
     ret = elba_asm_init(cfg);
     if (ret != SDK_RET_OK) {
@@ -167,7 +167,7 @@ elba_hbm_regions_init (asic_cfg_t *cfg)
 static sdk_ret_t
 elba_cache_init (asic_cfg_t *cfg)
 {
-    sdk_ret_t   ret = SDK_RET_OK;
+    sdk_ret_t ret = SDK_RET_OK;
 
     // Program Global parameters of the cache.
     ret = elba_hbm_cache_init(cfg);
@@ -180,9 +180,9 @@ elba_cache_init (asic_cfg_t *cfg)
     if (ret != SDK_RET_OK) {
         return ret;
     }
+
     return ret;
 }
-
 
 /*
  * ASIC teams wants to disable Error recovery of Seq ID check pRDMA,
@@ -192,15 +192,16 @@ elba_cache_init (asic_cfg_t *cfg)
  * into prd_asic_init api called from SDK, then this will be removed
  */
 static sdk_ret_t
-elba_prd_init()
+elba_prd_init(void)
 {
-    elb_top_csr_t & cap0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_top_csr_t &cap0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
     elb_pr_csr_t &pr_csr = cap0.pr.pr;
 
     pr_csr.prd.cfg_ctrl.read();
     pr_csr.prd.cfg_ctrl.pkt_phv_sync_err_recovery_en(0);
     pr_csr.prd.cfg_ctrl.write();
     SDK_TRACE_DEBUG("Disabled pkt_phv_sync_err_recovery_en in pr_prd_cfg_ctrl");
+
     return SDK_RET_OK;
 }
 
@@ -208,9 +209,9 @@ elba_prd_init()
  * For Capri backward compatability, disable the Qstate address shift
  */
 static sdk_ret_t
-elba_psp_init()
+elba_psp_init(void)
 {
-    elb_top_csr_t & cap0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_top_csr_t &cap0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
     elb_psp_csr_t &pr_psp_csr = cap0.pr.pr.psp;
 
     pr_psp_csr.cfg_qstate_map_rsp.read();
@@ -218,6 +219,7 @@ elba_psp_init()
     pr_psp_csr.cfg_qstate_map_rsp.addr_shift_value(0);
     pr_psp_csr.cfg_qstate_map_rsp.write();
     SDK_TRACE_DEBUG("Disabled Qstate address shift for Elba");
+
     return SDK_RET_OK;
 }
 
@@ -225,7 +227,7 @@ elba_psp_init()
  * For Capri backward compatability, disable the Qstate address shift
  */
 static sdk_ret_t
-elba_npv_init()
+elba_npv_init(void)
 {
     elb_top_csr_t & cap0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
     elb_psp_csr_t &pt_npv_csr = cap0.pt.pt.psp;
@@ -235,13 +237,14 @@ elba_npv_init()
     pt_npv_csr.cfg_qstate_map_rsp.addr_shift_value(0);
     pt_npv_csr.cfg_qstate_map_rsp.write();
     SDK_TRACE_DEBUG("Disabled Qstate address shift for Elba");
+
     return SDK_RET_OK;
 }
 
 static sdk_ret_t
-elba_sxdma_psp_init()
+elba_sxdma_psp_init(void)
 {
-    elb_top_csr_t & cap0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_top_csr_t &cap0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
     elb_psp_csr_t &pt_npv_csr = cap0.xd.pt.psp;
 
     pt_npv_csr.cfg_qstate_map_rsp.read();
@@ -249,9 +252,9 @@ elba_sxdma_psp_init()
     pt_npv_csr.cfg_qstate_map_rsp.addr_shift_value(0);
     pt_npv_csr.cfg_qstate_map_rsp.write();
     SDK_TRACE_DEBUG("Disabled Qstate address shift for Elba sxdma");
+
     return SDK_RET_OK;
 }
-
 
 static sdk_ret_t
 elba_repl_init (asic_cfg_t *cfg)
@@ -259,10 +262,12 @@ elba_repl_init (asic_cfg_t *cfg)
 #ifdef MEM_REGION_MCAST_REPL_NAME
     uint64_t hbm_repl_table_offset = get_mem_offset(MEM_REGION_MCAST_REPL_NAME);
     if (hbm_repl_table_offset != INVALID_MEM_ADDRESS) {
-        elba_tm_repl_table_base_addr_set(hbm_repl_table_offset / SDK_ASIC_REPL_ENTRY_WIDTH);
+        elba_tm_repl_table_base_addr_set(hbm_repl_table_offset /
+                                         SDK_ASIC_REPL_ENTRY_WIDTH);
         elba_tm_repl_table_token_size_set(cfg->repl_entry_width * 8);
     }
 #endif
+
     return SDK_RET_OK;
 }
 
@@ -381,8 +386,8 @@ elba_block_init_start (asic_cfg_t *cfg)
 static sdk_ret_t
 elba_block_init_done (asic_cfg_t *cfg)
 {
-    sdk_ret_t    ret         = SDK_RET_OK;
-    int          chip_id     = 0;
+    sdk_ret_t ret = SDK_RET_OK;
+    int chip_id = 0;
     block_info_t *block_info = NULL;
 
     for (int block = 0; block < MAX_INIT_BLOCKS; ++block) {
@@ -402,7 +407,7 @@ elba_block_init_done (asic_cfg_t *cfg)
 sdk_ret_t
 elba_block_init (asic_cfg_t *cfg)
 {
-    sdk_ret_t           ret = SDK_RET_OK;
+    sdk_ret_t ret = SDK_RET_OK;
 
     // initialize block info
     elba_block_info_init();
@@ -438,8 +443,8 @@ elba_block_init (asic_cfg_t *cfg)
 static sdk_ret_t
 elba_init (asic_cfg_t *cfg)
 {
-    sdk_ret_t   ret;
-    int         sxdma_lifs[] = {35};
+    sdk_ret_t ret;
+    int sxdma_lifs[] = {35};
 
     SDK_ASSERT_TRACE_RETURN((cfg != NULL), SDK_RET_INVALID_ARG, "Invalid cfg");
     SDK_TRACE_DEBUG("Initializing Elba");
@@ -464,19 +469,20 @@ elba_init (asic_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Elba cache init failure, err : %d", ret);
 
-    #if 1 /*TODO_ELBA*/
     // do asic init before overwriting with the default configs
     ret = elba_tm_asic_init();
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Elba TM ASIC init failure, err : %d", ret);
-    #endif 
-
 
     ret = elba_txs_scheduler_init(cfg->admin_cos, cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                              "Elba scheduler init failure, err : %d", ret);
-    // Init the LIF/QOS-GROUP/Scheduler tabels for default: 512 LIFS, 8 COSs, each map to unique QGroup with 2K QIDs
-    elb_txs_cfg_sch_qgrp_tab(0, 0, 512, 0xff, 1, 4, sizeof(sxdma_lifs)/sizeof(sxdma_lifs[0]), sxdma_lifs);
+
+    // Init the LIF/QOS-GROUP/Scheduler tabels for default: 512 LIFS,
+    // 8 COSs, each map to unique QGroup with 2K QIDs
+    elb_txs_cfg_sch_qgrp_tab(0, 0, 512, 0xff, 1, 4,
+                             sizeof(sxdma_lifs)/sizeof(sxdma_lifs[0]),
+                             sxdma_lifs);
     SDK_TRACE_DEBUG("Elba scheduler init Done");
 
     // Call PXB/PCIE init only in MODEL and RTL simulation
@@ -488,11 +494,11 @@ elba_init (asic_cfg_t *cfg)
                                 "PXB/PCIE init failure, err : %d", ret);
     }
 
-    #if 1 /*TODO_ELBA*/
+#if 1 /*TODO_ELBA*/
     ret = elba_tm_init(cfg->catalog);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Elba TM init failure, err : %d", ret);
-    #else
+#else
     ret = elba_pf_init();
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
         "Error intializing pbc ret %d", ret);
@@ -500,7 +506,7 @@ elba_init (asic_cfg_t *cfg)
     ret = elba_tm_port_program_uplink_byte_count();
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Elba TM port program defaults, err : %d", ret);
-    #endif
+#endif
 
     ret = elba_repl_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
@@ -602,6 +608,7 @@ elba_asic_init (asic_cfg_t *cfg)
             cfg->asm_cfg[i].sort_func;
     }
     elba_cfg.completion_func = cfg->completion_func;
+
     return elba_init(&elba_cfg);
 }
 

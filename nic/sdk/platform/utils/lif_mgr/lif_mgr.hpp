@@ -7,6 +7,7 @@
 #include "include/sdk/base.hpp"
 #include "lib/indexer/indexer.hpp"
 #include "asic/pd/pd.hpp"
+
 namespace sdk {
 namespace platform {
 namespace utils {
@@ -69,7 +70,6 @@ public:
     static sdk_ret_t lifs_reset(uint32_t start_lif, uint32_t end_lif);
 
 };
-
 
 // Start Traces
 #define LIF_MGR_API_START_LOCK()                                        \

@@ -16,7 +16,11 @@ public:
     ~elba_state_pd();
 
     // get APIs for TXS scheduler related state
-    sdk::lib::BMAllocator *txs_scheduler_map_idxr(void) { return txs_scheduler_map_idxr_; }
+    sdk::lib::BMAllocator *txs_scheduler_map_idxr(void)
+    {
+        return txs_scheduler_map_idxr_;
+    }
+
     std::string cfg_path(void) const { return cfg_path_; }
     mpartition *mempartition(void) const { return mempartition_; }
 

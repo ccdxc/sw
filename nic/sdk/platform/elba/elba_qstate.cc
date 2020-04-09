@@ -10,7 +10,6 @@ namespace sdk {
 namespace platform {
 namespace elba {
 
-
 #define ELBA_SET_QSTATE_MAP_ENTRY(QID)                                    \
     entry->length ## QID(qstate->type[QID].qtype_info.entries);           \
     entry->size ## QID(qstate->type[QID].qtype_info.size);
@@ -22,7 +21,7 @@ namespace elba {
 
 template <typename T>
 void
-set_qstate_entry(LIFQState *qstate, T *entry, int cos)
+set_qstate_entry (LIFQState *qstate, T *entry, int cos)
 {
     entry->qstate_base(qstate->hbm_address >> 12);
     entry->length0(qstate->params_in.type[0].entries);
@@ -46,14 +45,17 @@ set_qstate_entry(LIFQState *qstate, T *entry, int cos)
 }
 
 template <typename T>
-void clear_qstate_entry(T *entry) {
+void
+clear_qstate_entry (T *entry)
+{
     entry->vld(1);
     entry->write();
 }
 
 template <typename T>
 void
-reset_qstate_entry(T *entry) {
+reset_qstate_entry (T *entry)
+{
     entry->vld(0);
     entry->write();
 }
@@ -73,7 +75,6 @@ elba_clear_qstate_map (uint32_t lif_id)
     clear_qstate_entry(pr_entry);
 }
 
-
 void
 elba_reset_qstate_map (uint32_t lif_id)
 {
@@ -89,10 +90,9 @@ elba_reset_qstate_map (uint32_t lif_id)
     reset_qstate_entry(pr_entry);
 }
 
-
 template <typename T>
 void
-elba_set_qstate_map(lif_qstate_t *qstate, T *entry, uint8_t enable)
+elba_set_qstate_map (lif_qstate_t *qstate, T *entry, uint8_t enable)
 {
     entry->qstate_base(qstate->hbm_address >> 12);
     ELBA_SET_QSTATE_MAP_ENTRY(0);
@@ -190,7 +190,6 @@ get_qstate_lif_params (LIFQState *qstate, T *entry, uint32_t *is_valid)
     qstate->params_in.type[7].size = (uint8_t) entry->size7();
 }
 
-
 void
 push_qstate_to_elba (LIFQState *qstate, int cos)
 {
@@ -203,7 +202,8 @@ push_qstate_to_elba (LIFQState *qstate, int cos)
     set_qstate_entry(qstate, wa_entry, cos);
     auto *psp_entry = &elb0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     set_qstate_entry(qstate, psp_entry, cos);
-    auto *xd_psp_entry = &elb0.xd.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
+    auto *xd_psp_entry =
+        &elb0.xd.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     set_qstate_entry(qstate, xd_psp_entry, cos);
     auto *pr_entry = &elb0.pr.pr.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     set_qstate_entry(qstate, pr_entry, cos);
@@ -218,7 +218,8 @@ clear_qstate (LIFQState *qstate)
     clear_qstate_entry(wa_entry);
     auto *psp_entry = &elb0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     clear_qstate_entry(psp_entry);
-    auto *xd_psp_entry = &elb0.xd.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
+    auto *xd_psp_entry =
+        &elb0.xd.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     clear_qstate_entry(xd_psp_entry);
     auto *pr_entry = &elb0.pr.pr.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     clear_qstate_entry(pr_entry);
@@ -230,7 +231,9 @@ read_lif_params_from_elba (LIFQState *qstate)
     elb_top_csr_t & elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
     uint32_t is_valid = 0;
     auto *psp_entry = &elb0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
-    // Since content is going to be same in ASIC across all 3 blocks - reading from one is enough ??
+
+    // Since content is going to be same in ASIC across all
+    // 3 blocks - reading from one is enough ??
     get_qstate_lif_params(qstate, psp_entry, &is_valid);
 }
 
@@ -243,10 +246,13 @@ elba_clear_qstate (LIFQState *qstate)
     clear_qstate_entry(wa_entry);
     auto *psp_entry = &elb0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     clear_qstate_entry(psp_entry);
-    auto *xd_psp_entry = &elb0.xd.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
+    auto *xd_psp_entry =
+        &elb0.xd.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
     clear_qstate_entry(xd_psp_entry);
     auto *pr_entry = &elb0.pr.pr.psp.dhs_lif_qstate_map.entry[qstate->lif_id];
+
     clear_qstate_entry(pr_entry);
+
     return SDK_RET_OK;
 }
 

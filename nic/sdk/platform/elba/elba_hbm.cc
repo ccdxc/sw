@@ -25,23 +25,23 @@ namespace elba {
 static uint32_t elba_freq = 0;
 
 static inline sdk_ret_t
-elb_nx_block_write(uint32_t chip, uint64_t addr, int size,
-                   uint32_t *data_in , bool no_zero_time,
-                   uint32_t flags)
+elb_nx_block_write (uint32_t chip, uint64_t addr, int size,
+                    uint32_t *data_in , bool no_zero_time, uint32_t flags)
 {
     return sdk::asic::asic_reg_write(addr, data_in, 1,
                                         ASIC_WRITE_MODE_BLOCKING);
 }
 
 static inline uint32_t
-elb_nx_block_read(uint32_t chip, uint64_t addr, int size,
-                  bool no_zero_time, uint32_t flags)
+elb_nx_block_read (uint32_t chip, uint64_t addr, int size,
+                   bool no_zero_time, uint32_t flags)
 {
     uint32_t data = 0x0;
     if (sdk::asic::asic_reg_read(addr, &data, 1, false /*read_thru*/) !=
                                  SDK_RET_OK) {
         SDK_TRACE_ERR("NX read failed. addr: %llx", addr);
     }
+
     return data;
 }
 
@@ -103,11 +103,12 @@ asic_reset_hbm_regions (asic_cfg_t *elba_cfg)
                     SDK_TRACE_DEBUG("Resetting %s hbm region", reg->mem_reg_name);
                     sdk::asic::asic_mem_write(g_elba_state_pd->mempartition()->addr(reg->start_offset),
                                               NULL, reg->size);
-                } else if (elba_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {
+                } else if (elba_cfg->platform ==
+                           platform_type_t::PLATFORM_TYPE_HW) {
                 }
             }   // if reg->reset
         }   // for loop
-    }      // platform == HAPS or HW 
+    }      // platform == HAPS or HW
 }
 
 static sdk_ret_t
@@ -120,12 +121,14 @@ static sdk_ret_t
 elba_hbm_p4_cache_init (asic_cfg_t *cfg)
 {
     // Enable P4 Ingress (inst_id = 1)
-    elb_pics_csr_t & ig_pics_csr = ELB_BLK_REG_MODEL_ACCESS(elb_pics_csr_t, 0, 1);
+    elb_pics_csr_t & ig_pics_csr =
+        ELB_BLK_REG_MODEL_ACCESS(elb_pics_csr_t, 0, 1);
     ig_pics_csr.picc.cfg_cache_global.hash_mode(0);
     ig_pics_csr.picc.cfg_cache_global.write();
 
     // Enable P4 Egress (inst_id = 2)
-    elb_pics_csr_t & eg_pics_csr = ELB_BLK_REG_MODEL_ACCESS(elb_pics_csr_t, 0, 2);
+    elb_pics_csr_t & eg_pics_csr =
+        ELB_BLK_REG_MODEL_ACCESS(elb_pics_csr_t, 0, 2);
     eg_pics_csr.picc.cfg_cache_global.hash_mode(0);
     eg_pics_csr.picc.cfg_cache_global.write();
 
@@ -144,6 +147,7 @@ elba_hbm_p4plus_cache_init (asic_cfg_t *cfg)
     elb_pics_csr_t & txdma_pics_csr = ELB_BLK_REG_MODEL_ACCESS(elb_pics_csr_t, 0, 3);
     txdma_pics_csr.picc.cfg_cache_global.hash_mode(0);
     txdma_pics_csr.picc.cfg_cache_global.write();
+
     return SDK_RET_OK;
 }
 
@@ -165,11 +169,8 @@ elba_hbm_cache_init (asic_cfg_t *cfg)
 }
 
 sdk_ret_t
-elba_hbm_cache_program_region (mpartition_region_t *reg,
-                                uint32_t inst_id,
-                                uint32_t filter_idx,
-                                bool slave,
-                                bool master)
+elba_hbm_cache_program_region (mpartition_region_t *reg, uint32_t inst_id,
+                               uint32_t filter_idx, bool slave, bool master)
 {
 
     elb_pics_csr_t & pics_csr = ELB_BLK_REG_MODEL_ACCESS(elb_pics_csr_t, 0, inst_id);
@@ -189,12 +190,12 @@ elba_hbm_cache_program_region (mpartition_region_t *reg,
     pics_csr.p4invf.filter_addr_ctl.value[filter_idx].read_access(1);
     pics_csr.p4invf.filter_addr_ctl.value[filter_idx].write_access(1);
     pics_csr.p4invf.filter_addr_ctl.value[filter_idx].write();
+
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-elba_hbm_cache_program_db (mpartition_region_t *reg,
-                            uint32_t filter_idx)
+elba_hbm_cache_program_db (mpartition_region_t *reg, uint32_t filter_idx)
 {
     elb_wa_csr_t & wa_csr = ELB_BLK_REG_MODEL_ACCESS(elb_wa_csr_t, 0, 0);
 
@@ -216,12 +217,12 @@ elba_hbm_cache_program_db (mpartition_region_t *reg,
     wa_csr.wainvf.filter_addr_ctl.value[filter_idx].read_access(1);
     wa_csr.wainvf.filter_addr_ctl.value[filter_idx].write_access(1);
     wa_csr.wainvf.filter_addr_ctl.value[filter_idx].write();
+
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-elba_hbm_cache_program_pcie (mpartition_region_t *reg,
-                            uint32_t filter_idx)
+elba_hbm_cache_program_pcie (mpartition_region_t *reg, uint32_t filter_idx)
 {
     elb_pxb_csr_t & pxb_csr = ELB_BLK_REG_MODEL_ACCESS(elb_pxb_csr_t, 0, 0);
 
@@ -244,6 +245,7 @@ elba_hbm_cache_program_pcie (mpartition_region_t *reg,
     pxb_csr.invf.filter_addr_ctl.value[filter_idx].read_access(1);
     pxb_csr.invf.filter_addr_ctl.value[filter_idx].write_access(1);
     pxb_csr.invf.filter_addr_ctl.value[filter_idx].write();
+
     return SDK_RET_OK;
 }
 
@@ -425,7 +427,7 @@ elba_set_hbm_bw_window (uint32_t val)
 
 extern "C" sdk_ret_t
 elba_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
-              asic_hbm_bw_t *hbm_bw_arr)
+             asic_hbm_bw_t *hbm_bw_arr)
 {
     uint64_t prev_ts     = 0;
     uint64_t cur_ts      = 0;

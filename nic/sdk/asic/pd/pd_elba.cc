@@ -486,9 +486,15 @@ asic_pd_qstate_clear (lif_qstate_t *qstate)
     return elba_clear_qstate(qstate);
 }
 
+void
+asicpd_reset_qstate_map (uint32_t lif_id)
+{
+    elba_reset_qstate_map(lif_id);
+}
+
 sdk_ret_t
-asic_pd_p4plus_invalidate_cache (mpartition_region_t *reg, uint64_t q_addr,
-                                 uint32_t size)
+asicpd_p4plus_invalidate_cache (mpartition_region_t *reg, uint64_t q_addr,
+                                uint32_t size)
 {
     p4plus_cache_action_t action = P4PLUS_CACHE_ACTION_NONE;
 

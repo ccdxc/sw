@@ -27,7 +27,7 @@ namespace elba {
 
 //@return int: Status of the operation
 
-sdk_ret_t elba_sw_phv_init();
+sdk_ret_t elba_sw_phv_init(void);
 
 // elba_sw_phv_inject
 // API to inject a software PHV into the pipeline
@@ -39,7 +39,7 @@ sdk_ret_t elba_sw_phv_init();
 // data: raw PHV data to inject (needs to contain num_flits * sizeof(flit) bytes of data)
 // @return int: Status of the operation
 //
-sdk_ret_t elba_sw_phv_inject(asic_swphv_type_t type, uint8_t prof_num, 
+sdk_ret_t elba_sw_phv_inject(asic_swphv_type_t type, uint8_t prof_num,
                              uint8_t start_idx, uint8_t num_flits, void *data);
 
 //
@@ -49,7 +49,7 @@ sdk_ret_t elba_sw_phv_inject(asic_swphv_type_t type, uint8_t prof_num,
 // prof_num: profile number to use
 // state: current state of swphv injection to return
 //
-sdk_ret_t elba_sw_phv_get(asic_swphv_type_t type, uint8_t prof_num, 
+sdk_ret_t elba_sw_phv_get(asic_swphv_type_t type, uint8_t prof_num,
                            asic_sw_phv_state_t *state);
 
 }    // namespace capri

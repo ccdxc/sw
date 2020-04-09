@@ -6,13 +6,14 @@
 #include "linkmgr_internal.hpp"
 #include "linkmgr.hpp"
 #include "linkmgr_types.hpp"
-#include "include/sdk/asic/capri/cap_mx_api.h"
+#include "asic/pd/pd.hpp"
 #include "platform/drivers/xcvr.hpp"
 #include "platform/fru/fru.hpp"
 #include "platform/pal/include/pal.h"
 #include "lib/pal/pal.hpp"
-#include "platform/capri/capri_tm_rw.hpp"
 #include "asic/rw/asicrw.hpp"
+
+using namespace sdk::asic::pd;
 
 namespace sdk {
 namespace linkmgr {
@@ -44,7 +45,7 @@ port::port_debounce_timer_cb(void)
 }
 
 // fn returns max serdes ready retries value
-// TODO: enhance to add 
+// TODO: enhance to add
 uint32_t
 port::port_max_serdes_ready_retries (void)
 {
@@ -1927,38 +1928,35 @@ port::port_mac_stats_persist_clear(bool reset)
 }
 
 sdk_ret_t
-port::port_pb_drain(void) {
+port::port_pb_drain (void)
+{
     uint32_t tm_port = logical_port_to_tm_port(port_num());
 
-    // TODO remove capri reference
-    return sdk::platform::capri::capri_tm_drain_uplink_port(tm_port);
+    return asicpd_tm_drain_uplink_port(tm_port);
 }
 
 sdk_ret_t
-port::port_pb_write_control(bool enable) {
+port::port_pb_write_control(bool enable)
+{
     uint32_t tm_port = logical_port_to_tm_port(port_num());
 
-    // TODO remove capri reference
-    return sdk::platform::capri::capri_tm_write_control_uplink_port(
-                                                        tm_port, enable);
+    return asicpd_tm_write_control_uplink_port(tm_port, enable);
 }
 
 sdk_ret_t
-port::port_pb_flush(bool enable) {
+port::port_pb_flush (bool enable)
+{
     uint32_t tm_port = logical_port_to_tm_port(port_num());
 
-    // TODO remove capri reference
-    return sdk::platform::capri::capri_tm_flush_uplink_port(
-                                                        tm_port, enable);
+    return asicpd_tm_flush_uplink_port(tm_port, enable);
 }
 
 sdk_ret_t
-port::port_pb_enable(bool enable) {
+port::port_pb_enable (bool enable)
+{
     uint32_t tm_port = logical_port_to_tm_port(port_num());
 
-    // TODO remove capri reference
-    return sdk::platform::capri::capri_tm_enable_disable_uplink_port(
-                                                        tm_port, enable);
+    return asicpd_tm_enable_disable_uplink_port(tm_port, enable);
 }
 
 sdk_ret_t

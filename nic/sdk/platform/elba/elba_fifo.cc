@@ -21,14 +21,15 @@ typedef struct elba_profile_s {
 } elba_profile_t;
 
 static elba_profile_t elba_profile[ELBA_MAX_HW_FIFO_PROFILES];
-static int            elba_profile_idx = 1; // let's start with idx 1 (for DOL)
+static int elba_profile_idx = 1; // let's start with idx 1 (for DOL)
 
 static sdk_ret_t
 elba_init_hw_profile (hw_fifo_prof_t *prof)
 {
     elb_top_csr_t &   elb0     = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
     elb_hff_csr_t     *hff_csr = &elb0.ms.soc.hff;
-    elb_hff_csr_cfg_hff_resource_profile_0_t *hff_profile = &hff_csr->cfg_hff_resource_profile_0;
+    elb_hff_csr_cfg_hff_resource_profile_0_t *hff_profile =
+        &hff_csr->cfg_hff_resource_profile_0;
 
     SDK_ASSERT(elba_profile_idx < ELBA_MAX_HW_FIFO_PROFILES);
 
@@ -47,16 +48,19 @@ elba_init_hw_profile (hw_fifo_prof_t *prof)
 
     prof->opaque = (uint64_t)&elba_profile[elba_profile_idx];
     elba_profile_idx++;
+
     return SDK_RET_OK;
 }
 
 extern "C" sdk_ret_t
 elba_init_hw_fifo (int fifo_num, uint64_t addr, int n, hw_fifo_prof_t *prof)
 {
-    elb_top_csr_t &     elb0     = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
-    elb_hff_csr_t       *hff_csr = &elb0.ms.soc.hff;
-    elb_hff_csr_cfg_hff_resource_0_t *hff_resource = &hff_csr->cfg_hff_resource_0;
-    elb_hff_csr_dhs_fifo_ptr_t       *dhs_fifo_ptr = &hff_csr->dhs_fifo_ptr;
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_hff_csr_t *hff_csr = &elb0.ms.soc.hff;
+    elb_hff_csr_cfg_hff_resource_0_t *hff_resource =
+        &hff_csr->cfg_hff_resource_0;
+    elb_hff_csr_dhs_fifo_ptr_t *dhs_fifo_ptr = &hff_csr->dhs_fifo_ptr;
+
     hff_resource  += fifo_num;
 
     SDK_TRACE_DEBUG("init hw fifo %d addr 0x%llx size %d", fifo_num, addr, n);
@@ -80,6 +84,7 @@ elba_init_hw_fifo (int fifo_num, uint64_t addr, int n, hw_fifo_prof_t *prof)
     dhs_fifo_ptr->entry[fifo_num].full(1);
     dhs_fifo_ptr->entry[fifo_num].empty(0);
     dhs_fifo_ptr->entry[fifo_num].write();
+
     return SDK_RET_OK;
 }
 
@@ -98,14 +103,15 @@ elba_get_hw_fifo_info (int fifo_num, hw_fifo_stats_t *stats)
 
     SDK_TRACE_DEBUG("get hw fifo %d head %d tail %d empty %d full %d",
             fifo_num, stats->head, stats->tail, stats->empty, stats->full);
+
     return SDK_RET_OK;
 }
 
 extern "C" sdk_ret_t
 elba_set_hw_fifo_info (int fifo_num, hw_fifo_stats_t *stats)
 {
-    elb_top_csr_t &     elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
-    elb_hff_csr_t       *hff_csr = &elb0.ms.soc.hff;
+    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_hff_csr_t*hff_csr = &elb0.ms.soc.hff;
     elb_hff_csr_dhs_fifo_ptr_t *dhs_fifo_ptr = &hff_csr->dhs_fifo_ptr;
 
     dhs_fifo_ptr->entry[fifo_num].read();
@@ -116,6 +122,7 @@ elba_set_hw_fifo_info (int fifo_num, hw_fifo_stats_t *stats)
     dhs_fifo_ptr->entry[fifo_num].write();
     SDK_TRACE_DEBUG("set hw fifo %d head %d tail %d empty %d full %d",
             fifo_num, stats->head, stats->tail, stats->empty, stats->full);
+
     return SDK_RET_OK;
 }
 

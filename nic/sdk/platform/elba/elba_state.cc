@@ -12,7 +12,7 @@ namespace elba {
 // (private) constructor method
 //------------------------------------------------------------------------------
 void
-elba_state_pd::elba_state_pd ()
+elba_state_pd::elba_state_pd (void)
 {
     txs_scheduler_map_idxr_ = NULL;
     mempartition_ = NULL;
@@ -22,7 +22,7 @@ elba_state_pd::elba_state_pd ()
 // destructor
 //------------------------------------------------------------------------------
 void
-elba_state_pd::~elba_state_pd ()
+elba_state_pd::~elba_state_pd (void)
 {
     txs_scheduler_map_idxr_ ? delete txs_scheduler_map_idxr_ : (void)0;
 }
@@ -34,8 +34,8 @@ bool
 elba_state_pd::init (asic_cfg_t *cfg)
 {
     // BMAllocator based bmp range allocator to manage txs scheduler mapping
-    txs_scheduler_map_idxr_ = 
-                    new sdk::lib::BMAllocator(ELBA_TXS_SCHEDULER_MAP_MAX_ENTRIES);
+    txs_scheduler_map_idxr_ =
+        new sdk::lib::BMAllocator(ELBA_TXS_SCHEDULER_MAP_MAX_ENTRIES);
     SDK_ASSERT_RETURN((txs_scheduler_map_idxr_ != NULL), false);
     mempartition_ = cfg->mempartition;
     cfg_path_ = cfg->cfg_path;
@@ -74,7 +74,6 @@ elba_state_pd_init (asic_cfg_t *cfg)
                             "Failed to instantiate Elba PD");
     return SDK_RET_OK;
 }
-
 
 }    // namespace elba
 }    // namespace platform
