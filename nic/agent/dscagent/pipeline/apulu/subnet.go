@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
 	pipelineUtils "github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils/validator"
@@ -607,6 +608,34 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 		ipamuuid = ipu.Bytes()
 	}
 
+	getPolicyUuid := func(names []string) []string {
+		ids := []string{}
+		for _, n := range names {
+			p := netproto.NetworkSecurityPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "NetworkSecurityPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    nw.Tenant,
+					Namespace: nw.Namespace,
+					Name:      n,
+				},
+			}
+			dat, err := infraAPI.Read(p.Kind, p.GetKey())
+			if err != nil {
+				log.Errorf("Look up failed for %s | err: %s", p.GetKey(), err)
+			}
+			obj := netproto.NetworkSecurityPolicy{}
+			err = obj.Unmarshal(dat)
+			if err != nil {
+				log.Errorf("Unmarshal failed for %s | err: %s", p.GetKey(), err)
+			}
+			ids = append(ids, obj.UUID)
+		}
+		log.Infof("Returning network security policy ids: %v", ids)
+		return ids
+	}
+
 	return &halapi.SubnetRequest{
 		BatchCtxt: nil,
 		Request: []*halapi.SubnetSpec{
@@ -629,10 +658,8 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 				DHCPPolicyId: [][]byte{
 					ipamuuid,
 				},
-				IngV4SecurityPolicyId: utils.ConvertIDs(nw.Spec.IngV4SecurityPolicyID...),
-				EgV4SecurityPolicyId:  utils.ConvertIDs(nw.Spec.EgV4SecurityPolicyID...),
-				IngV6SecurityPolicyId: utils.ConvertIDs(nw.Spec.IngV6SecurityPolicyID...),
-				EgV6SecurityPolicyId:  utils.ConvertIDs(nw.Spec.EgV6SecurityPolicyID...),
+				IngV4SecurityPolicyId: utils.ConvertIDs(getPolicyUuid(nw.Spec.IngV4SecurityPolicies)...),
+				EgV4SecurityPolicyId:  utils.ConvertIDs(getPolicyUuid(nw.Spec.EgV4SecurityPolicies)...),
 			},
 		},
 	}, nil

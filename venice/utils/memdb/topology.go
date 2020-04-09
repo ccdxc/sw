@@ -502,17 +502,17 @@ func (tn *topoNode) addNode(obj Object) {
 			k1 := getKey(obj.GetObjectMeta().Tenant, obj.GetObjectMeta().Namespace, nw.Spec.VrfName)
 			tn.tm.addObjBackref(k1, "Vrf", key, kind)
 		}
-		if len(nw.Spec.IngV4SecurityPolicyID) != 0 {
-			topoRefs.refs["NetworkSecurityPolicy"] = append(topoRefs.refs["NetworkSecurityPolicy"], nw.Spec.IngV4SecurityPolicyID...)
+		if len(nw.Spec.IngV4SecurityPolicies) != 0 {
+			topoRefs.refs["NetworkSecurityPolicy"] = append(topoRefs.refs["NetworkSecurityPolicy"], nw.Spec.IngV4SecurityPolicies...)
 		}
-		if len(nw.Spec.IngV6SecurityPolicyID) != 0 {
-			topoRefs.refs["NetworkSecurityPolicy"] = append(topoRefs.refs["NetworkSecurityPolicy"], nw.Spec.IngV6SecurityPolicyID...)
+		if len(nw.Spec.IngV6SecurityPolicies) != 0 {
+			topoRefs.refs["NetworkSecurityPolicy"] = append(topoRefs.refs["NetworkSecurityPolicy"], nw.Spec.IngV6SecurityPolicies...)
 		}
-		if len(nw.Spec.EgV6SecurityPolicyID) != 0 {
-			topoRefs.refs["NetworkSecurityPolicy"] = append(topoRefs.refs["NetworkSecurityPolicy"], nw.Spec.EgV6SecurityPolicyID...)
+		if len(nw.Spec.EgV6SecurityPolicies) != 0 {
+			topoRefs.refs["NetworkSecurityPolicy"] = append(topoRefs.refs["NetworkSecurityPolicy"], nw.Spec.EgV6SecurityPolicies...)
 		}
-		if len(nw.Spec.EgV4SecurityPolicyID) != 0 {
-			topoRefs.refs["NetworkSecurityPolicy"] = append(topoRefs.refs["NetworkSecurityPolicy"], nw.Spec.EgV4SecurityPolicyID...)
+		if len(nw.Spec.EgV4SecurityPolicies) != 0 {
+			topoRefs.refs["NetworkSecurityPolicy"] = append(topoRefs.refs["NetworkSecurityPolicy"], nw.Spec.EgV4SecurityPolicies...)
 		}
 
 		tn.topo[key] = topoRefs
@@ -714,16 +714,16 @@ func (tn *topoNode) updateNode(old, new Object) {
 		}
 
 		sgPolicies := []string{}
-		sgPolicies = append(sgPolicies, oldObj.Spec.IngV4SecurityPolicyID...)
-		sgPolicies = append(sgPolicies, oldObj.Spec.EgV4SecurityPolicyID...)
-		sgPolicies = append(sgPolicies, oldObj.Spec.IngV6SecurityPolicyID...)
-		sgPolicies = append(sgPolicies, oldObj.Spec.EgV6SecurityPolicyID...)
+		sgPolicies = append(sgPolicies, oldObj.Spec.IngV4SecurityPolicies...)
+		sgPolicies = append(sgPolicies, oldObj.Spec.EgV4SecurityPolicies...)
+		sgPolicies = append(sgPolicies, oldObj.Spec.IngV6SecurityPolicies...)
+		sgPolicies = append(sgPolicies, oldObj.Spec.EgV6SecurityPolicies...)
 
 		nsgPolicies := []string{}
-		nsgPolicies = append(nsgPolicies, newObj.Spec.IngV4SecurityPolicyID...)
-		nsgPolicies = append(nsgPolicies, newObj.Spec.EgV4SecurityPolicyID...)
-		nsgPolicies = append(nsgPolicies, newObj.Spec.IngV6SecurityPolicyID...)
-		nsgPolicies = append(nsgPolicies, newObj.Spec.EgV6SecurityPolicyID...)
+		nsgPolicies = append(nsgPolicies, newObj.Spec.IngV4SecurityPolicies...)
+		nsgPolicies = append(nsgPolicies, newObj.Spec.EgV4SecurityPolicies...)
+		nsgPolicies = append(nsgPolicies, newObj.Spec.IngV6SecurityPolicies...)
+		nsgPolicies = append(nsgPolicies, newObj.Spec.EgV6SecurityPolicies...)
 
 		delSg, addSg := getSgPolicyDiffs(sgPolicies, nsgPolicies)
 
@@ -1113,10 +1113,10 @@ func (tm *topoMgr) handleNetworkUpdate(old, new Object) {
 
 	// TODO use objDiff??
 	if oldObj.Spec.IPAMPolicy == newObj.Spec.IPAMPolicy && oldObj.Spec.VrfName == newObj.Spec.VrfName &&
-		!sgPoliciesUpdated(oldObj.Spec.IngV4SecurityPolicyID, newObj.Spec.IngV4SecurityPolicyID) &&
-		!sgPoliciesUpdated(oldObj.Spec.EgV4SecurityPolicyID, newObj.Spec.EgV4SecurityPolicyID) &&
-		!sgPoliciesUpdated(oldObj.Spec.IngV6SecurityPolicyID, newObj.Spec.IngV6SecurityPolicyID) &&
-		!sgPoliciesUpdated(oldObj.Spec.EgV4SecurityPolicyID, newObj.Spec.EgV6SecurityPolicyID) {
+		!sgPoliciesUpdated(oldObj.Spec.IngV4SecurityPolicies, newObj.Spec.IngV4SecurityPolicies) &&
+		!sgPoliciesUpdated(oldObj.Spec.EgV4SecurityPolicies, newObj.Spec.EgV4SecurityPolicies) &&
+		!sgPoliciesUpdated(oldObj.Spec.IngV6SecurityPolicies, newObj.Spec.IngV6SecurityPolicies) &&
+		!sgPoliciesUpdated(oldObj.Spec.EgV4SecurityPolicies, newObj.Spec.EgV6SecurityPolicies) {
 		// not a topology trigger
 		return
 	}

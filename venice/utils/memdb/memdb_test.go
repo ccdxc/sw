@@ -4540,8 +4540,8 @@ func TestMemdbCtrlWatchTopo(t *testing.T) {
 			Spec: netproto.NetworkSpec{
 				VrfName:               "vrf-test",
 				IPAMPolicy:            "ipam-test",
-				IngV4SecurityPolicyID: []string{"sgpolicy-test1"},
-				EgV4SecurityPolicyID:  []string{"sgpolicy-test2"},
+				IngV4SecurityPolicies: []string{"sgpolicy-test1"},
+				EgV4SecurityPolicies:  []string{"sgpolicy-test2"},
 			},
 		},
 		&netproto.Network{
@@ -4554,8 +4554,8 @@ func TestMemdbCtrlWatchTopo(t *testing.T) {
 			Spec: netproto.NetworkSpec{
 				VrfName:               "vrf-test",
 				IPAMPolicy:            "ipam-test",
-				IngV4SecurityPolicyID: []string{"sgpolicy-test1"},
-				EgV4SecurityPolicyID:  []string{"sgpolicy-test2"},
+				IngV4SecurityPolicies: []string{"sgpolicy-test1"},
+				EgV4SecurityPolicies:  []string{"sgpolicy-test2"},
 			},
 		},
 		&netproto.Network{
@@ -4568,8 +4568,8 @@ func TestMemdbCtrlWatchTopo(t *testing.T) {
 			Spec: netproto.NetworkSpec{
 				VrfName: "vrf-test",
 				//IPAMPolicy:            "ipam-test1",
-				IngV4SecurityPolicyID: []string{"sgpolicy-test1"},
-				EgV4SecurityPolicyID:  []string{"sgpolicy-test3"},
+				IngV4SecurityPolicies: []string{"sgpolicy-test1"},
+				EgV4SecurityPolicies:  []string{"sgpolicy-test3"},
 			},
 		},
 	}

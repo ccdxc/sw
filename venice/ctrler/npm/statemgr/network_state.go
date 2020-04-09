@@ -119,11 +119,11 @@ func convertNetwork(nw *NetworkState) *netproto.Network {
 	}
 
 	if nw.Network.Spec.IngressSecurityPolicy != nil {
-		ntn.Spec.IngV4SecurityPolicyID = append(ntn.Spec.IngV4SecurityPolicyID, nw.Network.Spec.IngressSecurityPolicy...)
+		ntn.Spec.IngV4SecurityPolicies = append(ntn.Spec.IngV4SecurityPolicies, nw.Network.Spec.IngressSecurityPolicy...)
 	}
 
 	if nw.Network.Spec.EgressSecurityPolicy != nil {
-		ntn.Spec.EgV4SecurityPolicyID = append(ntn.Spec.EgV4SecurityPolicyID, nw.Network.Spec.EgressSecurityPolicy...)
+		ntn.Spec.EgV4SecurityPolicies = append(ntn.Spec.EgV4SecurityPolicies, nw.Network.Spec.EgressSecurityPolicy...)
 	}
 
 	return &ntn

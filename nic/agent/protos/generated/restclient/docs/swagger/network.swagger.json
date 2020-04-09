@@ -596,28 +596,28 @@
           "type": "string",
           "description": "V6RouteTableID is the allocated routing table for the VRF."
         },
-        "ing-v4-sec-pol-id": {
+        "ing-v4-sec-policies": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "description": "Ingress v4 Security Policies applied to this network."
         },
-        "eg-v4-sec-pol-id": {
+        "eg-v4-sec-policies": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "description": "Egress v4 Security Policies applied to this network."
         },
-        "ing-v6-sec-pol-id": {
+        "ing-v6-sec-policies": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "description": "Ingress v6 Security Policies applied to this network."
         },
-        "eg-v6-sec-pol-id": {
+        "eg-v6-sec-policies": {
           "type": "array",
           "items": {
             "type": "string"

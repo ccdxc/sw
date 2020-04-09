@@ -89,16 +89,16 @@ message NetworkSpec {
     string V6RouteTableID                   = 10 [(gogoproto.jsontag) = "v6-route-table-id,omitempty"];
 
     // Ingress v4 Security Policies applied to this network
-    repeated string IngV4SecurityPolicyID   = 11 [(gogoproto.jsontag) = "ing-v4-sec-pol-id,omitempty"];
+    repeated string IngV4SecurityPolicies   = 11 [(gogoproto.jsontag) = "ing-v4-sec-policies,omitempty"];
 
     // Egress v4 Security Policies applied to this network
-    repeated string EgV4SecurityPolicyID    = 12 [(gogoproto.jsontag) = "eg-v4-sec-pol-id,omitempty"];
+    repeated string EgV4SecurityPolicies     = 12 [(gogoproto.jsontag) = "eg-v4-sec-policies,omitempty"];
 
     // Ingress v6 Security Policies applied to this network
-    repeated string IngV6SecurityPolicyID   = 13 [(gogoproto.jsontag) = "ing-v6-sec-pol-id,omitempty"];
+    repeated string IngV6SecurityPolicies    = 13 [(gogoproto.jsontag) = "ing-v6-sec-policies,omitempty"];
 
     // Egress v6 Security Policies applied to this network
-    repeated string EgV6SecurityPolicyID    = 14 [(gogoproto.jsontag) = "eg-v6-sec-pol-id,omitempty"];
+    repeated string EgV6SecurityPolicies     = 14 [(gogoproto.jsontag) = "eg-v6-sec-policies,omitempty"];
 
     // RouteImportExport is used as the Route Distinguisher and to control Import Export of routes for the network
     RDSpec RouteImportExport                = 15 [(gogoproto.jsontag) = "route-import-export,omitempty"];
