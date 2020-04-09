@@ -32,6 +32,7 @@ testcases:
         testcase: testcases.networking.ping_bond
         stress  : True
         disable : False
+        ignore  : True
         args    :
             port_shut_time: 20
             failover_delay: 2
