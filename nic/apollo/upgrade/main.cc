@@ -33,6 +33,12 @@ void
 fsm_completion_hdlr (upg_status_t status, sdk::ipc::ipc_msg_ptr msg_in)
 {
     sdk::ipc::respond(msg_in, &status, sizeof(status));
+
+    if (status == UPG_STATUS_OK) {
+        UPG_TRACE_INFO("Upgrade finished successfully");
+    } else {
+        UPG_TRACE_ERR("Upgrade failed !!");
+    }
     // upgmgr not expecting any return from here. sysmgr will kill
     // this process as the upgrade stages are done now
     while (1) {
@@ -58,7 +64,7 @@ upg_ev_req_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
     if (req->id == UPG_REQ_MSG_ID_START) {
         ret = sdk::upg::init(&params);
     } else {
-        UPG_TRACE_ERR("Upgrade, unknown request id %u", req->id);
+        UPG_TRACE_ERR("Unknown request id %u", req->id);
         ret = SDK_RET_ERR;
     }
     if (ret != SDK_RET_OK) {

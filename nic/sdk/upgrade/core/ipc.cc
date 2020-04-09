@@ -26,7 +26,7 @@ upg_send_request (ipc_svc_dom_id_t dom_id, upg_stage_t stage, uint32_t svc_id)
 
     msg.stage = stage;
 
-    UPG_TRACE_INFO("Request notification stage %s, event %s, svcid %u\n",
+    UPG_TRACE_INFO("Request notification stage %s, event %s, svcid %u",
                    upg_stage2str(msg.stage), upg_event2str(ev_id), svc_id);
     sdk::ipc::request(svc_id, ev_id, &msg, sizeof(msg), NULL);
 }
@@ -39,7 +39,7 @@ upg_send_broadcast_request (ipc_svc_dom_id_t dom_id, upg_stage_t stage)
 
     msg.stage = stage;
 
-    UPG_TRACE_INFO("Broadcasting notification for stage %s, event %s\n",
+    UPG_TRACE_INFO("Broadcasting notification for stage %s, event %s",
                    upg_stage2str(msg.stage), upg_event2str(ev_id));
     sdk::ipc::broadcast(ev_id, &msg, sizeof(msg));
 }

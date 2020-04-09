@@ -35,7 +35,7 @@ SDK_DEFINE_MAP(upg_stage_t, UPG_STAGE_ENTRIES)
 std::string
 svc_sequence_to_str (const svc_sequence_list svcs)
 {
-    std::string str = "svc_sequence_list : ";
+    std::string str = "svc sequence list is ";
     for (auto x: svcs) {
         str += x + "," ;
     }
@@ -61,13 +61,13 @@ dump (const fsm& fsm)
     upg_stage_t end   = fsm.end_stage();
 
     UPG_TRACE_VERBOSE("Runtime state : \n"
-                      "\tstart_stage   : %s\n"
-                      "\tcurrent_stage : %s\n"
-                      "\tend_stage     : %s\n"
-                      "\tPending resp  : %d\n"
+                      "\tstart stage   : %s\n"
+                      "\tcurrent stage : %s\n"
+                      "\tend stage     : %s\n"
+                      "\tPending resp  : %u\n"
                       "\ttimeout       : %f\n"
                       "\tevent seq     : %s\n"
-                      "\tdiscovery     : %d\n"
+                      "\tdiscovery     : %u\n"
                       "\tsvc sequence  : %s\n",
                       upg_stage2str(start),
                       upg_stage2str(curr),
@@ -93,13 +93,13 @@ dump (const upg_scripts& scripts)
     void
 dump (upg_stage& stage)
 {
-    UPG_TRACE_VERBOSE("\t upg_stage :"
-                      "\n\t\t svc_rsp_timeout: %f"
-                      "\n\t\t svc_sequence   : %s"
-                      "\n\t\t event_sequence : %s"
-                      "\n\t\t discovery     : %d"
-                      "\n\t\t pre_hook       : %s"
-                      "\n\t\t post_hook      : %s",
+    UPG_TRACE_VERBOSE("\t upg stage :"
+                      "\n\t\t svc rsp timeout: %f"
+                      "\n\t\t svc sequence   : %s"
+                      "\n\t\t event sequence : %s"
+                      "\n\t\t discovery      : %u"
+                      "\n\t\t pre hook       : %s"
+                      "\n\t\t post hook      : %s",
                       stage.svc_rsp_timeout(),
                       svc_sequence_to_str(stage.svc_sequence()).c_str(),
                       (stage.event_sequence() == SERIAL? "serial":"parallel"),
@@ -111,7 +111,7 @@ dump (upg_stage& stage)
 void
 dump (upg_stages_map& stages)
 {
-    std::string str = "upg_stages_map : ";
+    std::string str = "upg stages map : ";
     UPG_TRACE_VERBOSE("%s", str.c_str());
     for (auto x: stages) {
         dump(x.second);
@@ -124,7 +124,7 @@ dump (const upg_svc_map& svcs)
     std::string str = "services : ";
     for (std::pair<std::string, upg_svc> element : svcs) {
         upg_svc x = element.second;
-        str += x.name() + "(ipd_id :";
+        str += x.name() + "(ipd id :";
         str += std::to_string(x.ipc_id()) + "), "  ;
     }
     UPG_TRACE_VERBOSE("%s", str.c_str());
@@ -133,7 +133,7 @@ dump (const upg_svc_map& svcs)
 void
 dump (const svc_sequence_list& svcs)
 {
-    std::string str = "svc_sequence_list : ";
+    std::string str = "svc sequence list : ";
     for (auto x: svcs) {
         str += x + ", ";
     }
@@ -177,6 +177,7 @@ name_to_stage_id (const std::string stage)
     catch (std::exception const& ex)
     {
         UPG_TRACE_VERBOSE("Stage %s doesn't exist\n", stage.c_str());
+        UPG_TRACE_ERR("Stage %s doesn't exist", stage.c_str());
         SDK_ASSERT(0);
     }
 };
@@ -193,7 +194,8 @@ id_to_stage_name (const upg_stage_t stage)
         }
         it++;
     }
-    UPG_TRACE_VERBOSE("Stage %d doesn't exist\n", stage);
+    UPG_TRACE_VERBOSE("Stage %u doesn't exist\n", stage);
+    UPG_TRACE_ERR("Stage %u doesn't exist", stage);
     SDK_ASSERT(0);
 };
 

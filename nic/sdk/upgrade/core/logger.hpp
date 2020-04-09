@@ -44,8 +44,7 @@ extern sdk::operd::logger_ptr g_upg_log;
 
 #define UPG_TRACE_VERBOSE(fmt, ...)                                       \
 {                                                                         \
-    printf("\n[%s:%u] " fmt, __FNAME__, __LINE__, ##__VA_ARGS__);         \
-    g_upg_log->trace("[%s:%u] " fmt, __FNAME__, __LINE__, ##__VA_ARGS__); \
+   printf("[%s:%u] " fmt, __FNAME__, __LINE__, ##__VA_ARGS__);            \
 }
 
 }    // namespace upg
