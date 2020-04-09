@@ -112,6 +112,8 @@ func TestListAndWatch(t *testing.T) {
 		StateMgr:   sm,
 		OrchConfig: orchConfig,
 		Wg:         &sync.WaitGroup{},
+		DcIDMap:    map[string]types.ManagedObjectReference{},
+		DvsIDMap:   map[string]types.ManagedObjectReference{},
 	}
 	vcp := NewVCProbe(storeCh, eventCh, state)
 	vcp.Start(false)
@@ -282,7 +284,7 @@ func TestDVSAndPG(t *testing.T) {
 	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
 	defer s.Destroy()
-	_, err = s.AddDC(testParams.TestDCName)
+	dc1, err := s.AddDC(testParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
 
 	sm, _, err := smmock.NewMockStateManager()
@@ -302,6 +304,8 @@ func TestDVSAndPG(t *testing.T) {
 		StateMgr:   sm,
 		OrchConfig: orchConfig,
 		Wg:         &sync.WaitGroup{},
+		DcIDMap:    map[string]types.ManagedObjectReference{},
+		DvsIDMap:   map[string]types.ManagedObjectReference{},
 	}
 	vcp := NewVCProbe(storeCh, eventCh, state)
 	vcp.Start(false)
@@ -332,6 +336,10 @@ func TestDVSAndPG(t *testing.T) {
 	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec, nil, retryCount)
 	AssertOk(t, err, "Failed to add DVS")
 
+	dvsName := testParams.TestDVSName
+	dvsObj, err := vcp.GetPenDVS(testParams.TestDCName, dvsName, retryCount)
+	AssertOk(t, err, "Failed to get DVS")
+
 	pgConfigSpecArray := testutils.GenPGConfigSpecArray(testParams, pvlanConfigSpecArray)
 	// startMicroSegVlanID := testParams.StartPVLAN + int32(testParams.TestNumPVLANPair*2)
 	var numPG int
@@ -345,9 +353,11 @@ func TestDVSAndPG(t *testing.T) {
 		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i], nil, retryCount)
 		AssertOk(t, err, "Failed to add DVS")
 
-		// Rename PG and then rename it back
+		// Rename objects
 		// VCSim doesn't support rename, so we don't check the rror
 		vcp.RenamePG(testParams.TestDCName, pgConfigSpecArray[i].Name, "TestPG", retryCount)
+		vcp.RenameDVS(testParams.TestDCName, testParams.TestDVSName, "TestDVS", retryCount)
+		vcp.RenameDC(testParams.TestDCName, "TestDC", retryCount)
 
 		pgName := fmt.Sprint(testParams.TestPGNameBase, i)
 		pgObj, err := vcp.GetPenPG(testParams.TestDCName, pgName, retryCount)
@@ -357,6 +367,14 @@ func TestDVSAndPG(t *testing.T) {
 		AssertOk(t, err, "Failed to find created PG %s as mo ref", pgName)
 		Assert(t, pgMo != nil, "Couldn't find created PG %s as mo ref", pgName)
 	}
+
+	// Verify state cache behavior
+	// Incorrectly populate state. Future opertaions should happen on the dc1 ref
+	vcp.State.DcIDMap["DC2"] = dc1.Obj.Self
+	vcp.State.DvsIDMap["DVS2"] = dvsObj.Reference()
+
+	dvsObj, err = vcp.GetPenDVS("DC2", "DVS2", retryCount)
+	AssertOk(t, err, "Failed to get DVS")
 	/*
 		for i := 0; i < testParams.TestNumPG; i++ {
 			mapPortsSetting, err = GenMicroSegVlanMappingPerPG(testParams, penPGArray[i], &startMicroSegVlanID)
@@ -375,7 +393,7 @@ func TestDVSAndPG(t *testing.T) {
 	*/
 
 	// Verify the results
-	dvsObj, err := vcp.GetPenDVS(testParams.TestDCName, testParams.TestDVSName, retryCount)
+	dvsObj, err = vcp.GetPenDVS(testParams.TestDCName, testParams.TestDVSName, retryCount)
 	AssertOk(t, err, "Failed to get DVS %s", testParams.TestDVSName)
 
 	var dvs mo.DistributedVirtualSwitch
@@ -473,11 +491,13 @@ func TestEventReceiver(t *testing.T) {
 	eventCh := make(chan defs.Probe2StoreMsg, 24)
 	ctx, cancel := context.WithCancel(context.Background())
 	state := &defs.State{
-		VcURL: vcURL,
-		VcID:  "vcenter",
-		Ctx:   ctx,
-		Log:   logger,
-		Wg:    &sync.WaitGroup{},
+		VcURL:    vcURL,
+		VcID:     "vcenter",
+		Ctx:      ctx,
+		Log:      logger,
+		Wg:       &sync.WaitGroup{},
+		DcIDMap:  map[string]types.ManagedObjectReference{},
+		DvsIDMap: map[string]types.ManagedObjectReference{},
 	}
 	defer func() {
 		cancel()

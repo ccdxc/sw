@@ -354,6 +354,18 @@ func (mr *MockProbeInfMockRecorder) AddPenDC(dcName, retry interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPenDC", reflect.TypeOf((*MockProbeInf)(nil).AddPenDC), dcName, retry)
 }
 
+// RenameDC mocks base method
+func (m *MockProbeInf) RenameDC(oldName, newName string, retry int) error {
+	ret := m.ctrl.Call(m, "RenameDC", oldName, newName, retry)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RenameDC indicates an expected call of RenameDC
+func (mr *MockProbeInfMockRecorder) RenameDC(oldName, newName, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenameDC", reflect.TypeOf((*MockProbeInf)(nil).RenameDC), oldName, newName, retry)
+}
+
 // RemovePenDC mocks base method
 func (m *MockProbeInf) RemovePenDC(dcName string, retry int) error {
 	ret := m.ctrl.Call(m, "RemovePenDC", dcName, retry)
@@ -429,7 +441,7 @@ func (mr *MockProbeInfMockRecorder) RemovePenPG(dcName, pgName, retry interface{
 }
 
 // AddPenDVS mocks base method
-func (m *MockProbeInf) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, equalFn vcprobe.IsDVSConfigEqual, retry int) error {
+func (m *MockProbeInf) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, equalFn vcprobe.DVSConfigDiff, retry int) error {
 	ret := m.ctrl.Call(m, "AddPenDVS", dcName, dvsCreateSpec, equalFn, retry)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -438,6 +450,18 @@ func (m *MockProbeInf) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSp
 // AddPenDVS indicates an expected call of AddPenDVS
 func (mr *MockProbeInfMockRecorder) AddPenDVS(dcName, dvsCreateSpec, equalFn, retry interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPenDVS", reflect.TypeOf((*MockProbeInf)(nil).AddPenDVS), dcName, dvsCreateSpec, equalFn, retry)
+}
+
+// RenameDVS mocks base method
+func (m *MockProbeInf) RenameDVS(dcName, oldName, newName string, retry int) error {
+	ret := m.ctrl.Call(m, "RenameDVS", dcName, oldName, newName, retry)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RenameDVS indicates an expected call of RenameDVS
+func (mr *MockProbeInfMockRecorder) RenameDVS(dcName, oldName, newName, retry interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenameDVS", reflect.TypeOf((*MockProbeInf)(nil).RenameDVS), dcName, oldName, newName, retry)
 }
 
 // GetPenDVS mocks base method

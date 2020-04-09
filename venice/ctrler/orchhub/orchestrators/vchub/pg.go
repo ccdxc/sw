@@ -229,3 +229,116 @@ func (d *PenDVS) RemovePenPG(pgName string) error {
 	return nil
 
 }
+
+func (v *VCHub) handlePG(m defs.VCEventMsg) {
+	v.Log.Infof("Got handle PG event for PG %s in DC %s", m.Key, m.DcName)
+	// If non-pensando PG, check whether we need to reserve useg space for it
+	// If it is pensando PG, verify pvlan config has not been modified
+
+	penDC := v.GetDC(m.DcName)
+	if penDC == nil {
+		v.Log.Errorf("DC not found for %s", m.DcName)
+		return
+	}
+	dvs := penDC.GetPenDVS(CreateDVSName(m.DcName))
+	if dvs == nil {
+		v.Log.Errorf("DVS state for DC %s was nil", m.DcName)
+	}
+
+	if m.UpdateType == types.ObjectUpdateKindLeave {
+		// Object was deleted
+		penPG := penDC.GetPGByID(m.Key)
+		if penPG == nil {
+			// TODO: Check if we have any vlans stored for it if it is non-pensando.
+			return
+		}
+
+		err := dvs.AddPenPG(penPG.PgName, penPG.NetworkMeta)
+		if err != nil {
+			v.Log.Errorf("Failed to set vlan config for PG %s, %s", penPG.PgName, err)
+		}
+		return
+	}
+
+	// extract config
+	if len(m.Changes) == 0 {
+		v.Log.Errorf("Received pg event with no changes")
+		return
+	}
+
+	var pgConfig *types.DVPortgroupConfigInfo
+
+	for _, prop := range m.Changes {
+		config, ok := prop.Val.(types.DVPortgroupConfigInfo)
+		if !ok {
+			v.Log.Errorf("Expected prop to be of type DVPortgroupConfigInfo, got %T", config)
+			continue
+		}
+		pgConfig = &config
+	}
+
+	if pgConfig == nil || pgConfig.DistributedVirtualSwitch == nil {
+		v.Log.Errorf("Insufficient PG config %p", pgConfig)
+		return
+	}
+
+	// Check if it is for our DVS
+	if pgConfig.DistributedVirtualSwitch.Reference().Value != dvs.DvsRef.Value {
+		// Not for pensando DVS
+		v.Log.Debugf("Skipping PG event as its not attached to a PenDVS")
+		return
+	}
+
+	// Check name change
+	penPG := dvs.pgIDMap[m.Key]
+	if penPG == nil {
+		// Not pensando PG
+		v.Log.Debugf("Not a pensando PG - %s", m.Key)
+		return
+	}
+
+	if penPG.PgName != pgConfig.Name {
+		evtMsg := fmt.Sprintf("User renamed a Pensando created Port Group. Port group name has been changed back.")
+		recorder.Event(eventtypes.ORCH_INVALID_ACTION, evtMsg, v.State.OrchConfig)
+		// Put object name back
+		err := v.probe.RenamePG(m.DcName, pgConfig.Name, penPG.PgName, defaultRetryCount)
+		if err != nil {
+			v.Log.Errorf("Failed to rename PG, %s", err)
+		}
+		// Don't check vlan config now, name change will trigger another event
+		return
+	}
+
+	// Check vlan config
+	// Pensando PG, reset config if changed
+	_, secondary, err := dvs.UsegMgr.GetVlansForPG(pgConfig.Name)
+	if err != nil {
+		v.Log.Errorf("Failed to get assigned vlans for PG %s", err)
+		return
+	}
+
+	pgMo := &mo.DistributedVirtualPortgroup{
+		Config: *pgConfig,
+	}
+	equal := dvs.createPGConfigCheck(secondary)(nil, pgMo)
+	if equal {
+		v.Log.Debugf("Config is equal, nothing to write back")
+		return
+	}
+	v.Log.Infof("PG %s change detected, writing back", pgConfig.Name)
+	// Vlan spec is not what we expect, set it back
+	err = dvs.AddPenPG(pgConfig.Name, penPG.NetworkMeta)
+	if err != nil {
+		v.Log.Errorf("Failed to set vlan config for PG %s, %s", pgConfig.Name, err)
+	}
+	evtMsg := fmt.Sprintf("User modified vlan settings for a Pensando created Port Group. Port group settings have been changed back.")
+	recorder.Event(eventtypes.ORCH_INVALID_ACTION, evtMsg, v.State.OrchConfig)
+}
+
+func extractVlanConfig(pgConfig types.DVPortgroupConfigInfo) (types.BaseVmwareDistributedVirtualSwitchVlanSpec, error) {
+	portConfig, ok := pgConfig.DefaultPortConfig.(*types.VMwareDVSPortSetting)
+	if !ok {
+		return nil, fmt.Errorf("ignoring PG %s as casting to VMwareDVSPortSetting failed %+v", pgConfig.Name, pgConfig.DefaultPortConfig)
+	}
+	return portConfig.Vlan, nil
+}

@@ -377,7 +377,9 @@ func strLenProfile(field *descriptor.Field, reg *descriptor.Registry, ver string
 		prof.MaxLen[ver] = max
 		prof.DocStrings[ver] = append(prof.DocStrings[ver], fmt.Sprintf("length of string should be between %v and %v", min, max))
 	}
-	prof.Required[ver] = true
+	if min != 0 {
+		prof.Required[ver] = true
+	}
 	prof.MinLen[ver] = min
 	return nil
 }

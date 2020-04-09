@@ -18007,8 +18007,7 @@
     "monitoringExportConfig": {
       "type": "object",
       "required": [
-        "destination",
-        "gateway"
+        "destination"
       ],
       "properties": {
         "destination": {

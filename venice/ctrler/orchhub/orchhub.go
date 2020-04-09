@@ -45,6 +45,7 @@ type OrchCtrler struct {
 
 // NewOrchCtrler creates an OrchCtrler
 func NewOrchCtrler(opts Opts) (*OrchCtrler, error) {
+	opts.Logger.Infof("OrchCtrler starting...")
 	// start module watcher
 	moduleChangeCb := func(diagmod *diagapi.Module) {
 		opts.Logger.ResetFilter(diagnostics.GetLogFilter(diagmod.Spec.LogLevel))

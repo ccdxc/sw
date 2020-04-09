@@ -213,6 +213,12 @@ type State struct {
 	StateMgr   *statemgr.Statemgr
 	OrchConfig *orchestration.Orchestrator
 	Wg         *sync.WaitGroup
+
+	DcMapLock  sync.RWMutex
+	DcIDMap    map[string]types.ManagedObjectReference
+	DvsMapLock sync.RWMutex
+	DvsIDMap   map[string]types.ManagedObjectReference
+
 	// If supplied, we only process events if the DC name matches any of this
 	// TODO: for testing locally only, remove eventually
 	ForceDCNames map[string]bool

@@ -9,8 +9,8 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
-	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 )
 
@@ -49,6 +49,11 @@ func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 			HostName2Key: map[string]string{},
 		}
 		v.DcMap[dcName] = dc
+
+		v.State.DcMapLock.Lock()
+		v.State.DcIDMap[dcName] = dcRef
+		v.State.DcMapLock.Unlock()
+
 		if v.DcID2NameMap == nil {
 			v.DcID2NameMap = map[string]string{}
 		}
@@ -60,46 +65,7 @@ func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 		}
 	}
 
-	dvsName := CreateDVSName(dcName)
-
-	// Create a pen dvs
-	// Pvlan allocations on the dvs
-	pvlanConfigSpecArray := []types.VMwareDVSPvlanConfigSpec{}
-
-	// Setup all the pvlan allocations now
-	// vlans 0 and 1 are reserved
-	for i := useg.FirstPGVlan; i < useg.FirstUsegVlan; i += 2 {
-		PvlanEntryProm := types.VMwareDVSPvlanMapEntry{
-			PrimaryVlanId:   int32(i),
-			PvlanType:       "promiscuous",
-			SecondaryVlanId: int32(i),
-		}
-		pvlanMapEntry := types.VMwareDVSPvlanMapEntry{
-			PrimaryVlanId:   int32(i),
-			PvlanType:       "isolated",
-			SecondaryVlanId: int32(i + 1),
-		}
-		pvlanSpecProm := types.VMwareDVSPvlanConfigSpec{
-			PvlanEntry: PvlanEntryProm,
-			Operation:  "add",
-		}
-		pvlanSpec := types.VMwareDVSPvlanConfigSpec{
-			PvlanEntry: pvlanMapEntry,
-			Operation:  "add",
-		}
-		pvlanConfigSpecArray = append(pvlanConfigSpecArray, pvlanSpecProm)
-		pvlanConfigSpecArray = append(pvlanConfigSpecArray, pvlanSpec)
-	}
-
-	// TODO: Set number of uplinks
-	var spec types.DVSCreateSpec
-	spec.ConfigSpec = &types.VMwareDVSConfigSpec{
-		PvlanConfigSpec: pvlanConfigSpecArray,
-	}
-	spec.ConfigSpec.GetDVSConfigSpec().Name = dvsName
-	spec.ProductInfo = new(types.DistributedVirtualSwitchProductSpec)
-	spec.ProductInfo.Version = "6.5.0"
-	err := dc.AddPenDVS(&spec)
+	err := dc.AddPenDVS()
 	if err != nil {
 		evtMsg := fmt.Sprintf("Failed to create DVS in Datacenter %s. Network configuration cannot be pushed.", dcName)
 		v.Log.Errorf(evtMsg)
@@ -109,6 +75,60 @@ func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 	}
 
 	return dc, nil
+}
+
+// RemovePenDC removes all DC state on remove DC event from vCenter
+func (v *VCHub) RemovePenDC(dcName string) {
+	v.DcMapLock.Lock()
+	defer v.DcMapLock.Unlock()
+
+	existingDC, ok := v.DcMap[dcName]
+	if !ok {
+		// nothing to do
+		v.Log.Errorf("Remove DC called on %s but there is no entry for it", dcName)
+	}
+
+	// Stop watcher for this DC
+	v.probe.StopWatchForDC(dcName, existingDC.dcRef.Value)
+
+	// Delete any Workloads or hosts associated with this DC
+	// There may be stale hosts or workloads if we were disconnected
+	opts := api.ListWatchOptions{}
+	workloads, err := v.StateMgr.Controller().Workload().List(v.Ctx, &opts)
+	if err != nil {
+		v.Log.Errorf("Failed to get network list. Err : %v", err)
+	}
+	for _, workload := range workloads {
+		if utils.IsObjForOrch(workload.Labels, v.VcID, existingDC.Name) {
+			v.deleteWorkload(&workload.Workload)
+		}
+	}
+
+	hosts, err := v.StateMgr.Controller().Host().List(v.Ctx, &opts)
+	if err != nil {
+		v.Log.Errorf("Failed to get network list. Err : %v", err)
+	}
+	for _, host := range hosts {
+		if utils.IsObjForOrch(host.Labels, v.VcID, existingDC.Name) {
+			v.deleteHostFromDc(&host.Host, existingDC)
+		}
+	}
+
+	// Delete entries in map
+	delete(v.DcMap, existingDC.Name)
+	delete(v.DcID2NameMap, existingDC.dcRef.Value)
+
+	v.State.DcMapLock.Lock()
+	delete(v.State.DcIDMap, existingDC.Name)
+	v.State.DcMapLock.Unlock()
+
+	v.State.DvsMapLock.Lock()
+	dvsName := CreateDVSName(existingDC.Name)
+	if _, ok := v.State.DvsIDMap[dvsName]; ok {
+		delete(v.State.DvsIDMap, dvsName)
+	}
+	v.State.DvsMapLock.Unlock()
+	return
 }
 
 // GetDC returns the DC by display name

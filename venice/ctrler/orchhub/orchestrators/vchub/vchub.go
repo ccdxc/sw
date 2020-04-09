@@ -125,6 +125,8 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 		StateMgr:     stateMgr,
 		OrchConfig:   config,
 		Wg:           &sync.WaitGroup{},
+		DcIDMap:      map[string]types.ManagedObjectReference{}, // Obj name to ID
+		DvsIDMap:     map[string]types.ManagedObjectReference{}, // Obj name to ID
 		ForceDCNames: forceDCMap,
 	}
 

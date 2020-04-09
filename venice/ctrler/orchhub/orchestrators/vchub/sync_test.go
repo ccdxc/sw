@@ -1391,6 +1391,8 @@ func setupTestVCHub(vcURL *url.URL, stateMgr *statemgr.Statemgr, config *orchest
 		OrchConfig:   config,
 		Wg:           &sync.WaitGroup{},
 		ForceDCNames: map[string]bool{utils.ManageAllDcs: true},
+		DcIDMap:      map[string]types.ManagedObjectReference{},
+		DvsIDMap:     map[string]types.ManagedObjectReference{},
 	}
 	vchub := &VCHub{}
 	vchub.State = &state

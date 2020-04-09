@@ -1,16 +1,16 @@
 package vchub
 
 import (
+	"fmt"
+
 	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
 
-	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
-	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 )
 
@@ -142,6 +142,8 @@ func (v *VCHub) handleVCEvent(m defs.VCEventMsg) {
 		v.handleHost(m)
 	case defs.DistributedVirtualPortgroup:
 		v.handlePG(m)
+	case defs.VmwareDistributedVirtualSwitch:
+		v.handleDVS(m)
 	case defs.Datacenter:
 		v.handleDC(m)
 	default:
@@ -163,7 +165,6 @@ func (v *VCHub) handleVCNotification(m defs.VCNotificationMsg) {
 }
 
 func (v *VCHub) handleDC(m defs.VCEventMsg) {
-	// TODO: HANDLE RENAME
 	// Check if we have a DC object
 	v.Log.Infof("Handle DC called")
 	existingDC := v.GetDCFromID(m.Key)
@@ -175,39 +176,31 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 		}
 		v.probe.StopWatchForDC(existingDC.Name, m.Key)
 		// Cleanup internal state
-		v.DcMapLock.Lock()
-
-		// Delete any Workloads or hosts associated with this DC
-		opts := api.ListWatchOptions{}
-		workloads, err := v.StateMgr.Controller().Workload().List(v.Ctx, &opts)
-		if err != nil {
-			v.Log.Errorf("Failed to get network list. Err : %v", err)
-		}
-		for _, workload := range workloads {
-			if utils.IsObjForOrch(workload.Labels, v.VcID, existingDC.Name) {
-				v.deleteWorkload(&workload.Workload)
-			}
-		}
-
-		hosts, err := v.StateMgr.Controller().Host().List(v.Ctx, &opts)
-		if err != nil {
-			v.Log.Errorf("Failed to get network list. Err : %v", err)
-		}
-		for _, host := range hosts {
-			if utils.IsObjForOrch(host.Labels, v.VcID, existingDC.Name) {
-				v.deleteHostFromDc(&host.Host, existingDC)
-			}
-		}
-
-		delete(v.DcMap, existingDC.Name)
-		v.DcMapLock.Unlock()
+		v.RemovePenDC(existingDC.Name)
 		return
 	}
 
 	for _, prop := range m.Changes {
 		name := prop.Val.(string)
-		v.Log.Infof("Handle DC %s", name)
+		v.Log.Infof("Handle DC %s %s", name, m.Key)
+		// Check ID first to detect rename
 		v.DcMapLock.Lock()
+
+		oldName, ok := v.DcID2NameMap[m.Key]
+		if ok && oldName != name {
+			// Rename event of a DC we have state for
+			v.Log.Infof("DC %s renamed to %s, changing back...", name, oldName)
+
+			evtMsg := fmt.Sprintf("User renamed a Pensando managed DC. Name has been changed back.")
+			recorder.Event(eventtypes.ORCH_INVALID_ACTION, evtMsg, v.State.OrchConfig)
+
+			err := v.probe.RenameDC(name, oldName, 3)
+			if err != nil {
+				v.Log.Errorf("Failed to rename DC %s back to %s, err %s", name, oldName, err)
+			}
+			return
+		}
+
 		if penDc, ok := v.DcMap[name]; ok {
 			penDc.Lock()
 			if _, ok := penDc.DvsMap[CreateDVSName(name)]; ok {

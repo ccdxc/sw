@@ -72,7 +72,7 @@ func (v *VCProbe) newTagsProbe() {
 }
 
 func (t *tagsProbe) StartWatch() {
-	t.Log.Debugf("Tag Start Watch starting")
+	t.Log.Infof("Tag Start Watch starting")
 	t.pollTags()
 	t.WatcherWg.Add(1)
 	go func() {
@@ -420,13 +420,16 @@ func (t *tagsProbe) RemovePensandoTags(ref types.ManagedObjectReference) []error
 
 // pollTags polls the cis rest server for tag information
 func (t *tagsProbe) pollTags() {
+	t.Log.Infof("Poll tags starting")
 	ctx := t.ClientCtx
 	if ctx == nil {
+		t.Log.Infof("Poll tags exiting")
 		return
 	}
 	for {
 		select {
 		case <-ctx.Done():
+			t.Log.Infof("Poll tags exiting")
 			return
 		case <-time.After(tagsPollDelay):
 			t.fetchTags()
@@ -435,13 +438,16 @@ func (t *tagsProbe) pollTags() {
 }
 
 func (t *tagsProbe) pollTagInfo() {
+	t.Log.Infof("Poll tag info starting")
 	ctx := t.ClientCtx
 	if ctx == nil {
+		t.Log.Infof("Poll tags exiting")
 		return
 	}
 	for {
 		select {
 		case <-ctx.Done():
+			t.Log.Infof("Poll tags exiting")
 			return
 		case <-time.After(renameDelay):
 			t.fetchTagInfo()
@@ -500,11 +506,27 @@ func (t *tagsProbe) fetchTags() {
 				select {
 				case <-ctx.Done():
 					return
-				case <-time.After(200 * time.Millisecond):
+				case <-time.After(500 * time.Millisecond):
 				}
 				continue
 			}
 			// Process res
+			if len(res) != len(vmChunk) {
+				presentMap := map[string]bool{}
+				// Some items have no tags. Add in their references
+				for _, item := range res {
+					presentMap[item.ObjectID.Reference().Value] = true
+				}
+
+				for _, item := range vmChunk {
+					if _, ok := presentMap[item.Reference().Value]; !ok {
+						res = append(res, tags.AttachedTags{
+							ObjectID: item,
+							TagIDs:   []string{},
+						})
+					}
+				}
+			}
 			t.processTags(res)
 			break
 		}
@@ -534,42 +556,80 @@ func (t *tagsProbe) processTags(tags []tags.AttachedTags) {
 		if writeTags {
 			t.vmTagMap[vm] = NewDeltaStrSet(tagObj.TagIDs)
 
+			workWg := sync.WaitGroup{}
 			var tagEntries []defs.TagEntry
-			for _, id := range tagObj.TagIDs {
-				t.tagMapLock.RLock()
-				tagEntry, ok := t.tagMap[id]
-				if !ok {
-					// Could be new tag
-					t.tagMapLock.RUnlock()
+			jobs := make(chan int, 100)
+			res := make(chan []defs.TagEntry, 100)
+			workerFn := func() {
+				defer workWg.Done()
+				if t.ClientCtx.Err() != nil {
+					return
+				}
+				var entries []defs.TagEntry
+				for j := range jobs {
+					id := tagObj.TagIDs[j]
 
-					// No locks should be held when calling fetch tagInfo
-					t.fetchTagInfo()
-
-					// Try re-reading
 					t.tagMapLock.RLock()
-					tagEntry, ok = t.tagMap[id]
+					tagEntry, ok := t.tagMap[id]
 					if !ok {
-						// Skip since we failed to get info about this tag
-						t.Log.Errorf("Failed to get info about tag ID %s, skipping", id)
+						// Could be new tag
 						t.tagMapLock.RUnlock()
+
+						// No locks should be held when calling fetch tagInfo
+						t.fetchSingleTagInfo(id)
+
+						// Try re-reading
+						t.tagMapLock.RLock()
+						tagEntry, ok = t.tagMap[id]
+						if !ok {
+							// Skip since we failed to get info about this tag
+							t.Log.Errorf("Failed to get info about tag ID %s, skipping", id)
+							t.tagMapLock.RUnlock()
+							// Don't mark the tag as written
+							t.vmTagMap[vm].RemoveSingle(id)
+							continue
+						}
+					}
+					tagName := tagEntry.TagName
+					catID := tagEntry.CatID
+					catName, ok := t.catMap[catID]
+					t.tagMapLock.RUnlock()
+					if !ok {
+						// Skip since we failed to get info about this category
+						t.Log.Errorf("Failed to get info about cat ID %s for tag %s ID %s, skipping", catID, tagName, id)
+						t.vmTagMap[vm].RemoveSingle(id)
 						continue
 					}
-				}
-				tagName := tagEntry.TagName
-				catID := tagEntry.CatID
-				catName, ok := t.catMap[catID]
-				t.tagMapLock.RUnlock()
-				if !ok {
-					// Skip since we failed to get info about this category
-					t.Log.Errorf("Failed to get info about cat ID %s for tag %s ID %s, skipping", catID, tagName, id)
-					continue
-				}
 
-				entry := defs.TagEntry{
-					Name:     tagName,
-					Category: catName,
+					entry := defs.TagEntry{
+						Name:     tagName,
+						Category: catName,
+					}
+					entries = append(entries, entry)
 				}
-				tagEntries = append(tagEntries, entry)
+				res <- entries
+			}
+
+			for w := 1; w <= 20; w++ {
+				workWg.Add(1)
+				go workerFn()
+			}
+
+			for j := 0; j < len(tagObj.TagIDs); j++ {
+				jobs <- j
+			}
+			close(jobs)
+
+			workWg.Wait()
+
+			read := true
+			for read {
+				select {
+				case entry := <-res:
+					tagEntries = append(tagEntries, entry...)
+				default:
+					read = false
+				}
 			}
 
 			m := defs.Probe2StoreMsg{
@@ -595,7 +655,89 @@ func (t *tagsProbe) processTags(tags []tags.AttachedTags) {
 	}
 }
 
-// fetchTagInfo gets all tags/categories IDs and names
+func (t *tagsProbe) retry(fn func() (interface{}, error), operName string, delay time.Duration, count int) (interface{}, error) {
+	if count < 1 {
+		return nil, fmt.Errorf("Supplied invalid count")
+	}
+	i := 0
+	var ret interface{}
+	err := fmt.Errorf("Client Ctx cancelled")
+	ctx := t.ClientCtx
+	for i < count && ctx != nil && ctx.Err() == nil {
+		ret, err = fn()
+		if err == nil {
+			return ret, nil
+		}
+		i++
+		if i < count {
+			t.Log.Errorf("tag %s failed: %s, retrying...", operName, err)
+			t.CheckSession = true
+		}
+		select {
+		case <-ctx.Done():
+			return nil, err
+		case <-time.After(retryDelay):
+		}
+	}
+	return nil, err
+}
+
+//
+func (t *tagsProbe) fetchSingleTagInfo(tagID string) {
+	tc := t.GetTagClientWithRLock()
+	defer t.ReleaseClientsRLock()
+
+	fn := func() (interface{}, error) {
+		return tc.GetTag(t.ClientCtx, tagID)
+	}
+
+	tagInf, err := t.retry(fn, "fetch single tag", 500*time.Millisecond, 3)
+	if err != nil {
+		t.Log.Errorf("Failed to fetch tag %s", err)
+		return
+	}
+	tag := tagInf.(*tags.Tag)
+
+	t.tagMapLock.Lock()
+	currEntry, ok := t.tagMap[tagID]
+	if ok && currEntry.TagName != tag.Name {
+		// Tag name has changed
+		t.resetTag(tag.ID)
+	}
+	t.tagMap[tag.ID] = &tagEntry{
+		TagName: tag.Name,
+		CatID:   tag.CategoryID,
+	}
+
+	_, ok = t.tagMap[tag.CategoryID]
+	t.tagMapLock.Unlock()
+	if ok {
+		return
+	}
+	// Check if we have cat info
+	fn = func() (interface{}, error) {
+		return tc.GetCategory(t.ClientCtx, tag.CategoryID)
+	}
+	catInf, err := t.retry(fn, "fetch single cat", 500*time.Millisecond, 3)
+	if err != nil {
+		t.Log.Errorf("Failed to fetch tag %s", err)
+		return
+	}
+
+	cat := catInf.(*tags.Category)
+	t.tagMapLock.Lock()
+	currName, ok := t.catMap[cat.ID]
+	if ok && currName != cat.Name {
+		// cat name has changed
+		// All tags in this category need to be reset
+		t.resetCategory(cat.ID, true)
+	}
+	t.catMap[cat.ID] = cat.Name
+	t.tagMapLock.Unlock()
+
+}
+
+// fetchTagInfo gets the display names for all tags that we are currently using.
 // If a tag or category is renamed, we iterate over all of vmTagMap and remove those entries
 // The next time the poll runs, it will generate correct update events for them.
 // This is an expensive operation, but tags/categories should not be renamed that often
@@ -605,7 +747,13 @@ func (t *tagsProbe) fetchTagInfo() {
 
 	// GetTags synchronously does GetTag for each return tag ID
 	// Perform ListTag and then call the GetTag APIs concurrently ourselves.
-	tagIDs, err := tc.ListTags(t.ClientCtx)
+	// tagIDs, err := tc.ListTags(t.ClientCtx)
+	t.tagMapLock.Lock()
+	tagIDs := []string{}
+	for id := range t.tagMap {
+		tagIDs = append(tagIDs, id)
+	}
+	t.tagMapLock.Unlock()
 
 	workWg := sync.WaitGroup{}
 	workerFn := func(jobs <-chan int) {
@@ -615,18 +763,19 @@ func (t *tagsProbe) fetchTagInfo() {
 		}
 		for j := range jobs {
 			id := tagIDs[j]
-			tag, err := tc.GetTag(t.ClientCtx, id)
-			if err != nil {
-				t.Log.Errorf("Tags client get tag %s failed, %s", id, err.Error())
-				if strings.Contains(err.Error(), "code: 401") { // auth error
-					loginErr := tc.Login(t.ClientCtx, t.VcURL.User)
-					if loginErr != nil {
-						t.Log.Errorf("Tags client attempted to re-login but failed, %s", loginErr.Error())
-						t.CheckSession = true
-					}
-				}
-				continue // Don't return as jobs queue could get blocked and close(jobs) won't be able to run
+
+			fn := func() (interface{}, error) {
+				return tc.GetTag(t.ClientCtx, id)
 			}
+
+			// Larger time out since this is only for renamed tags
+			tagInf, err := t.retry(fn, "fetching tag", 500*time.Millisecond, 3)
+			if err != nil {
+				t.Log.Errorf("Failed to fetch tag %s", err)
+				continue // Don't return, as this could make the jobs channel get blockedj
+			}
+			tag := tagInf.(*tags.Tag)
+
 			t.tagMapLock.Lock()
 			currEntry, ok := t.tagMap[id]
 			if ok && currEntry.TagName != tag.Name {

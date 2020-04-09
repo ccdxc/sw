@@ -72,8 +72,8 @@ type TagsProbeInf interface {
 // IsPGConfigEqual checks whether the create config is equal to the existing config
 type IsPGConfigEqual func(spec *types.DVPortgroupConfigSpec, config *mo.DistributedVirtualPortgroup) bool
 
-// IsDVSConfigEqual checks whether the create config is equal to the existing config
-type IsDVSConfigEqual func(spec *types.DVSCreateSpec, config *mo.DistributedVirtualSwitch) bool
+// DVSConfigDiff returns the diff of the two configs that should be written back to vcenter, or nil if there is none
+type DVSConfigDiff func(spec *types.DVSCreateSpec, config *mo.DistributedVirtualSwitch) *types.DVSCreateSpec
 
 // ProbeInf is the interface Probe implements
 type ProbeInf interface {
@@ -93,6 +93,7 @@ type ProbeInf interface {
 
 	// datacenter.go functions
 	AddPenDC(dcName string, retry int) error
+	RenameDC(oldName string, newName string, retry int) error
 	RemovePenDC(dcName string, retry int) error
 
 	// port_group.go functions
@@ -105,7 +106,8 @@ type ProbeInf interface {
 	RemovePenPG(dcName, pgName string, retry int) error
 
 	// distributed_vswitch.go functions
-	AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, equalFn IsDVSConfigEqual, retry int) error
+	AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, equalFn DVSConfigDiff, retry int) error
+	RenameDVS(dcName, oldName string, newName string, retry int) error
 	GetPenDVS(dcName, dvsName string, retry int) (*object.DistributedVirtualSwitch, error)
 	UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVSPortSettings, retry int) error
 	GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, retry int) ([]types.DistributedVirtualPort, error)
@@ -262,10 +264,6 @@ func (v *VCProbe) StartWatchers() {
 				v.Log.Infof("tag probe finished")
 				return true
 			})
-			// tryForever(func() {
-			// 	// Should create hosts from this event
-			// 	v.startWatch(defs.VmwareDistributedVirtualSwitch, []string{"config"}, v.processDVSEvent)
-			// })
 			select {
 			case <-ctx.Done():
 			}
@@ -338,6 +336,7 @@ func (v *VCProbe) StartWatchForDC(dcName, dcID string) {
 		}
 		return true
 	})
+
 	v.tryForever(func() bool {
 		v.Log.Debugf("PG watch Started")
 		v.startWatch(ctx, defs.DistributedVirtualPortgroup, []string{"config"}, v.vcEventHandlerForDC(dcID, dcName), &ref)
@@ -346,6 +345,16 @@ func (v *VCProbe) StartWatchForDC(dcName, dcID string) {
 		}
 		return true
 	})
+
+	v.tryForever(func() bool {
+		v.Log.Debugf("DVS watch started")
+		v.startWatch(ctx, defs.VmwareDistributedVirtualSwitch, []string{"name", "config"}, v.vcEventHandlerForDC(dcID, dcName), &ref)
+		if ctx.Err() != nil {
+			return false
+		}
+		return true
+	})
+
 	v.WatcherWg.Add(1)
 	go v.runEventReceiver(ref)
 }

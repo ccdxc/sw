@@ -1,6 +1,7 @@
 package vchub
 
 import (
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -10,11 +11,15 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -23,6 +28,10 @@ import (
 var (
 	logConfig = log.GetDefaultConfig("vcstore_integ_test")
 	logger    = log.SetConfig(logConfig)
+
+	evRecorder = mockevtsrecorder.NewRecorder("vcstore_integ_test",
+		log.GetNewLogger(log.GetDefaultConfig("vcstore_integ_test")))
+	_ = recorder.Override(evRecorder)
 )
 
 type storeTC struct {
@@ -74,6 +83,8 @@ func runStoreTC(t *testing.T, testCases []storeTC) {
 			OrchConfig:   orchConfig,
 			Wg:           &sync.WaitGroup{},
 			ForceDCNames: map[string]bool{utils.ManageAllDcs: true},
+			DcIDMap:      map[string]types.ManagedObjectReference{},
+			DvsIDMap:     map[string]types.ManagedObjectReference{},
 		}
 
 		vchub := &VCHub{
@@ -199,6 +210,7 @@ func addDCState(t *testing.T, vchub *VCHub, dcName string) {
 			dvsName: penDVS,
 		},
 		HostName2Key: map[string]string{},
+		probe:        vchub.probe,
 	}
 	vchub.DcID2NameMap["DC1"] = dcName
 }
@@ -223,4 +235,61 @@ func addPGState(t *testing.T, vchub *VCHub, dcName, pgName, pgID, networkName st
 	penDVS.UsegMgr.AssignVlansForPG(pgName)
 	penDVS.Pgs[pgName] = penPG
 	penDVS.pgIDMap[pgID] = penPG
+}
+
+func TestDCs(t *testing.T) {
+
+	dcName := "DC1"
+	dcID := "DC1"
+
+	testCases := []storeTC{
+		{
+			name: "DC rename",
+			events: []defs.Probe2StoreMsg{
+				{
+					MsgType: defs.VCEvent,
+					Val: defs.VCEventMsg{
+						VcObject:   defs.Datacenter,
+						Key:        dcID,
+						Originator: "127.0.0.1:8990",
+						Changes: []types.PropertyChange{
+							types.PropertyChange{
+								Op:   types.PropertyChangeOpAdd,
+								Name: "name",
+								Val:  "RandomName",
+							},
+						},
+					},
+				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				mockProbe := mock.NewMockProbeInf(mockCtrl)
+				vchub.probe = mockProbe
+				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
+
+				mockProbe.EXPECT().RenameDC("RandomName", dcName, gomock.Any()).Return(nil).Times(1)
+
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
+
+				eventRecorder.ClearEvents()
+
+			},
+			verify: func(v *VCHub) {
+				// Verification is mockprobe RenamePG getting called
+				AssertEventually(t, func() (bool, interface{}) {
+					evts := eventRecorder.GetEvents()
+					found := false
+					for _, evt := range evts {
+						if evt.EventType == eventtypes.ORCH_INVALID_ACTION.String() && strings.Contains(evt.Message, "DC") {
+							found = true
+						}
+					}
+					return found, nil
+				}, "Failed to find orch invalid event")
+			},
+		},
+	}
+
+	runStoreTC(t, testCases)
 }

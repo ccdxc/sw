@@ -480,6 +480,8 @@ func TestVmotionWithWatchers(t *testing.T) {
 		Log:          logger.WithContext("submodule", "vcprobe"),
 		Wg:           &sync.WaitGroup{},
 		ForceDCNames: map[string]bool{orchutils.ManageAllDcs: true},
+		DcIDMap:      map[string]types.ManagedObjectReference{},
+		DvsIDMap:     map[string]types.ManagedObjectReference{},
 	}
 
 	vcp := vcprobe.NewVCProbe(nil, nil, &state)

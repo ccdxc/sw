@@ -3,6 +3,7 @@ package vchub
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
@@ -130,6 +132,62 @@ func TestNetworks(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				// Verification is mockprobe RenamePG getting called
+				AssertEventually(t, func() (bool, interface{}) {
+					evts := eventRecorder.GetEvents()
+					found := false
+					for _, evt := range evts {
+						if evt.EventType == eventtypes.ORCH_INVALID_ACTION.String() && strings.Contains(evt.Message, "Port Group") {
+							found = true
+						}
+					}
+					return found, nil
+				}, "Failed to find orch invalid event")
+			},
+		},
+		{
+			name: "dvs rename",
+			events: []defs.Probe2StoreMsg{
+				{
+					MsgType: defs.VCEvent,
+					Val: defs.VCEventMsg{
+						VcObject:   defs.VmwareDistributedVirtualSwitch,
+						DcID:       dcName,
+						DcName:     dcName,
+						Key:        "dvs-1",
+						Originator: "127.0.0.1:8990",
+						Changes: []types.PropertyChange{
+							types.PropertyChange{
+								Op:   types.PropertyChangeOpAdd,
+								Name: "name",
+								Val:  "RandomName",
+							},
+						},
+					},
+				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				mockProbe := mock.NewMockProbeInf(mockCtrl)
+				vchub.probe = mockProbe
+				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
+
+				mockProbe.EXPECT().RenameDVS(dcName, "RandomName", CreateDVSName(dcName), gomock.Any()).Return(nil).Times(1)
+
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
+
+			},
+			verify: func(v *VCHub) {
+				// Verification is mockprobe RenamePG getting called
+				AssertEventually(t, func() (bool, interface{}) {
+					evts := eventRecorder.GetEvents()
+					found := false
+					for _, evt := range evts {
+						if evt.EventType == eventtypes.ORCH_INVALID_ACTION.String() && strings.Contains(evt.Message, "DVS") {
+							found = true
+						}
+					}
+					return found, nil
+				}, "Failed to find orch invalid event")
 			},
 		},
 		{
@@ -325,7 +383,69 @@ func TestNetworks(t *testing.T) {
 				addPGState(t, vchub, dcName, CreatePGName("PG1"), "pg-1", "PG1")
 			},
 			verify: func(v *VCHub) {
-				// Verification is mockprobe RenamePG getting called
+				AssertEventually(t, func() (bool, interface{}) {
+					evts := eventRecorder.GetEvents()
+					found := false
+					for _, evt := range evts {
+						if evt.EventType == eventtypes.ORCH_INVALID_ACTION.String() && strings.Contains(evt.Message, "Port Group") {
+							found = true
+						}
+					}
+					return found, nil
+				}, "Failed to find orch invalid event")
+			},
+		},
+		{
+			name: "dvs config change",
+			events: []defs.Probe2StoreMsg{
+				{
+					MsgType: defs.VCEvent,
+					Val: defs.VCEventMsg{
+						VcObject:   defs.VmwareDistributedVirtualSwitch,
+						DcID:       dcName,
+						DcName:     dcName,
+						Key:        "dvs-1",
+						Originator: "127.0.0.1:8990",
+						Changes: []types.PropertyChange{
+							types.PropertyChange{
+								Op:   types.PropertyChangeOpAdd,
+								Name: "config",
+								Val:  types.VMwareDVSConfigInfo{},
+							},
+						},
+					},
+				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				mockProbe := mock.NewMockProbeInf(mockCtrl)
+				vchub.probe = mockProbe
+				mockProbe.EXPECT().AddPenDVS(dcName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+				mockProbe.EXPECT().GetPenDVS(dcName, dvsName, gomock.Any()).Return(
+					&object.DistributedVirtualSwitch{
+						Common: object.NewCommon(nil,
+							types.ManagedObjectReference{
+								Type:  string(defs.VmwareDistributedVirtualSwitch),
+								Value: "PG-10",
+							}),
+						// },
+					}, nil).AnyTimes()
+
+				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
+
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
+			},
+			verify: func(v *VCHub) {
+				AssertEventually(t, func() (bool, interface{}) {
+					evts := eventRecorder.GetEvents()
+					found := false
+					for _, evt := range evts {
+						if evt.EventType == eventtypes.ORCH_INVALID_ACTION.String() && strings.Contains(evt.Message, "Port Group") {
+							found = true
+						}
+					}
+					return found, nil
+				}, "Failed to find orch invalid event")
 			},
 		},
 		{
@@ -401,7 +521,7 @@ func TestNetworks(t *testing.T) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 
-				mockProbe.EXPECT().StopWatchForDC("DC1", "DC1").Times(1)
+				mockProbe.EXPECT().StopWatchForDC("DC1", "DC1").AnyTimes()
 
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)

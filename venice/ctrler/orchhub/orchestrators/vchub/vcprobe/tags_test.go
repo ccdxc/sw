@@ -80,6 +80,8 @@ func TestTags(t *testing.T) {
 		StateMgr:   sm,
 		OrchConfig: orchConfig,
 		Wg:         &sync.WaitGroup{},
+		DcIDMap:    map[string]types.ManagedObjectReference{},
+		DvsIDMap:   map[string]types.ManagedObjectReference{},
 	}
 	vcp := NewVCProbe(storeCh, nil, state)
 	vcp.Start(false)
@@ -276,6 +278,8 @@ func TestTagWriting(t *testing.T) {
 		StateMgr:   sm,
 		OrchConfig: orchConfig,
 		Wg:         &sync.WaitGroup{},
+		DcIDMap:    map[string]types.ManagedObjectReference{},
+		DvsIDMap:   map[string]types.ManagedObjectReference{},
 	}
 	vcp := NewVCProbe(storeCh, nil, state)
 	vcp.Start(false)

@@ -2,8 +2,9 @@ package vcprobe
 
 import (
 	"errors"
+	"fmt"
 
-	"github.com/vmware/govmomi/find"
+	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
@@ -15,54 +16,56 @@ import (
 type PenDVSPortSettings map[string]types.BaseVmwareDistributedVirtualSwitchVlanSpec
 
 // AddPenDVS adds a new PenDVS to the given vcprobe instance
-func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, equalFn IsDVSConfigEqual, retry int) error {
+func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, diffFn DVSConfigDiff, retry int) error {
 	dvsName := dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().Name
-	getAndCheck := func(finder *find.Finder) (*object.DistributedVirtualSwitch, *mo.DistributedVirtualSwitch, bool, error) {
-		dvsObj, err := v.getPenDVS(dcName, dvsName, finder)
+
+	getAndCheck := func(client *govmomi.Client) (*object.DistributedVirtualSwitch, *mo.DistributedVirtualSwitch, bool, error) {
+		dvsObj, err := v.getDVSObj(dcName, dvsName, client)
 		if err != nil {
 			v.Log.Errorf("Failed to get DVS")
 			return nil, nil, false, err
 		}
 
-		var dvs mo.DistributedVirtualSwitch
-		err = dvsObj.Properties(v.ClientCtx, dvsObj.Reference(), []string{"config"}, &dvs)
+		dvs := &mo.DistributedVirtualSwitch{}
+		err = dvsObj.Properties(v.ClientCtx, dvsObj.Reference(), []string{"config"}, dvs)
 		if err != nil {
 			v.Log.Errorf("Failed at getting dvs properties, err: %s", err)
 			return nil, nil, false, err
 		}
 		// Check if config is equal
-		if equalFn != nil && equalFn(dvsCreateSpec, &dvs) {
+		if diffFn != nil && diffFn(dvsCreateSpec, dvs) == nil {
 			v.Log.Infof("DC: %s - DVS %s  config in vCenter is equal to given spec", dcName, dvsName)
-			return dvsObj, &dvs, true, nil
+			return dvsObj, dvs, true, nil
 		}
-		return dvsObj, &dvs, false, nil
+		return dvsObj, dvs, false, nil
 	}
 
 	fn := func() (interface{}, error) {
 		client := v.GetClientWithRLock()
-		finder := v.CreateFinder(client)
 		defer v.ReleaseClientsRLock()
 
 		// Check if it exists first
 		var task *object.Task
 		var err error
-		dvsObj, dvs, isEqual, err := getAndCheck(finder)
+		dvsObj, dvs, isEqual, err := getAndCheck(client)
 		if err == nil {
 			if isEqual {
 				return nil, nil
 			}
 
-			dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().ConfigVersion = dvs.Config.GetDVSConfigInfo().ConfigVersion
-			v.Log.Infof("DC: %s - DVS already exists, reconfiguring...", dcName)
-			task, err = dvsObj.Reconfigure(v.ClientCtx, dvsCreateSpec.ConfigSpec.GetDVSConfigSpec())
-		} else {
-			dc, finderErr := finder.Datacenter(v.ClientCtx, dcName)
-			if finderErr != nil {
-				v.Log.Errorf("Datacenter: %s doesn't exist, err: %s", dcName, err)
-				return nil, finderErr
+			if diffFn != nil {
+				dvsCreateSpec = diffFn(dvsCreateSpec, dvs)
 			}
 
-			finder.SetDatacenter(dc)
+			dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().ConfigVersion = dvs.Config.GetDVSConfigInfo().ConfigVersion
+			v.Log.Infof("DC: %s - DVS already exists, reconfiguring...", dcName)
+			task, err = dvsObj.Reconfigure(v.ClientCtx, dvsCreateSpec.ConfigSpec)
+		} else {
+			dc, dcErr := v.getDCObj(dcName, client)
+			if dcErr != nil {
+				v.Log.Errorf("Datacenter: %s doesn't exist, err: %s", dcName, err)
+				return nil, dcErr
+			}
 
 			folders, folderErr := dc.Folders(v.ClientCtx)
 			if folderErr != nil {
@@ -75,7 +78,8 @@ func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, e
 		if err != nil {
 			v.Log.Errorf("Failed at creating dvs: %s, err: %s", dvsName, err)
 
-			_, _, isEqual, err1 := getAndCheck(finder)
+			// Verify that the DVS did not get written
+			_, _, isEqual, err1 := getAndCheck(client)
 			if err1 == nil && isEqual {
 				return nil, nil
 			}
@@ -87,7 +91,7 @@ func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, e
 		if err != nil {
 			v.Log.Errorf("Failed at waiting results of creating dvs: %s, err: %s", dvsName, err)
 
-			_, _, isEqual, err1 := getAndCheck(finder)
+			_, _, isEqual, err1 := getAndCheck(client)
 			if err1 == nil && isEqual {
 				return nil, nil
 			}
@@ -105,9 +109,8 @@ func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec, e
 func (v *VCProbe) GetPenDVS(dcName, dvsName string, retry int) (*object.DistributedVirtualSwitch, error) {
 	fn := func() (interface{}, error) {
 		client := v.GetClientWithRLock()
-		finder := v.CreateFinder(client)
 		defer v.ReleaseClientsRLock()
-		return v.getPenDVS(dcName, dvsName, finder)
+		return v.getDVSObj(dcName, dvsName, client)
 	}
 	ret, err := v.withRetry(fn, retry)
 	if ret == nil {
@@ -116,37 +119,83 @@ func (v *VCProbe) GetPenDVS(dcName, dvsName string, retry int) (*object.Distribu
 	return ret.(*object.DistributedVirtualSwitch), err
 }
 
-func (v *VCProbe) getPenDVS(dcName, dvsName string, finder *find.Finder) (*object.DistributedVirtualSwitch, error) {
-	dc, err := finder.Datacenter(v.ClientCtx, dcName)
-	if err != nil {
-		v.Log.Errorf("Datacenter: %s doesn't exist, err: %s", dcName, err)
-		return nil, err
-	}
+func (v *VCProbe) getDVSObj(dcName, dvsName string, client *govmomi.Client) (*object.DistributedVirtualSwitch, error) {
 
-	finder.SetDatacenter(dc)
-
-	net, err := finder.Network(v.ClientCtx, dvsName)
-	if err != nil {
-		v.Log.Errorf("Failed at finding network: %s, err: %s", dvsName, err)
-		return nil, err
-	}
-
-	objDvs, ok := net.(*object.DistributedVirtualSwitch)
+	v.State.DvsMapLock.RLock()
+	dvsRef, ok := v.State.DvsIDMap[dvsName]
+	v.State.DvsMapLock.RUnlock()
 	if !ok {
-		v.Log.Errorf("Failed at getting DVS object")
-		return nil, errors.New("Failed at getting DVS object")
+		dc, err := v.getDCObj(dcName, client)
+		if err != nil {
+			v.Log.Errorf("Datacenter: %s doesn't exist, err: %s", dcName, err)
+			return nil, err
+		}
+		finder := v.CreateFinder(client)
+		finder.SetDatacenter(dc)
+
+		net, err := finder.Network(v.ClientCtx, dvsName)
+		if err != nil {
+			v.Log.Errorf("Failed at finding network: %s, err: %s", dvsName, err)
+			return nil, err
+		}
+
+		objDvs, ok := net.(*object.DistributedVirtualSwitch)
+		if !ok {
+			v.Log.Errorf("Failed at getting DVS object")
+			return nil, errors.New("Failed at getting DVS object")
+		}
+		return objDvs, nil
 	}
-	return objDvs, nil
+	dvsObj := object.NewDistributedVirtualSwitch(client.Client, dvsRef)
+	// check ref is still valid
+	var dvs mo.DistributedVirtualSwitch
+	err := dvsObj.Properties(v.ClientCtx, dvsObj.Reference(), []string{"name"}, &dvs)
+	if err != nil {
+		v.Log.Errorf("Failed at getting dvs properties, err: %s", err)
+		return nil, err
+	}
+	return dvsObj, nil
+}
+
+// RenameDVS renames the given dvs
+func (v *VCProbe) RenameDVS(dcName string, oldName string, newName string, retry int) error {
+	fn := func() (interface{}, error) {
+		dvsObj, err := v.GetPenDVS(dcName, oldName, 1)
+		if err != nil {
+			v.Log.Errorf("Failed to rename DVS %s to %s, failed to find DVS: err %s", oldName, newName, err)
+			return nil, err
+		}
+		ctx := v.ClientCtx
+		if ctx == nil {
+			return nil, fmt.Errorf("Client Context was nil")
+		}
+		task, err := dvsObj.Rename(ctx, newName)
+		if err != nil {
+			// Failed to rename DVS
+			v.Log.Errorf("Failed to rename DVS %s to %s, err %s", oldName, newName, err)
+			return nil, err
+		}
+
+		_, err = task.WaitForResult(ctx, nil)
+		if err != nil {
+			// Failed to rename DVS
+			v.Log.Errorf("Failed to wait for DVS rename %s to %s, err %s", oldName, newName, err)
+			return nil, err
+		}
+
+		return nil, nil
+	}
+	_, err := v.withRetry(fn, retry)
+	return err
 }
 
 // RemovePenDVS removes the DVS
 func (v *VCProbe) RemovePenDVS(dcName, dvsName string, retry int) error {
 	fn := func() (interface{}, error) {
 		client := v.GetClientWithRLock()
-		finder := v.CreateFinder(client)
 		defer v.ReleaseClientsRLock()
 
-		objDvs, err := v.getPenDVS(dcName, dvsName, finder)
+		objDvs, err := v.getDVSObj(dcName, dvsName, client)
 		if err != nil {
 			return nil, err
 		}
@@ -173,9 +222,8 @@ func (v *VCProbe) RemovePenDVS(dcName, dvsName string, retry int) error {
 func (v *VCProbe) GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, retry int) ([]types.DistributedVirtualPort, error) {
 	fn := func() (interface{}, error) {
 		client := v.GetClientWithRLock()
-		finder := v.CreateFinder(client)
 		defer v.ReleaseClientsRLock()
-		return v.getPenDVSPorts(dcName, dvsName, criteria, finder)
+		return v.getPenDVSPorts(dcName, dvsName, criteria, client)
 	}
 	ret, err := v.withRetry(fn, retry)
 	if ret == nil {
@@ -184,9 +232,9 @@ func (v *VCProbe) GetPenDVSPorts(dcName, dvsName string, criteria *types.Distrib
 	return ret.([]types.DistributedVirtualPort), err
 }
 
-func (v *VCProbe) getPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, finder *find.Finder) ([]types.DistributedVirtualPort, error) {
+func (v *VCProbe) getPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, client *govmomi.Client) ([]types.DistributedVirtualPort, error) {
 
-	dvsObj, err := v.getPenDVS(dcName, dvsName, finder)
+	dvsObj, err := v.getDVSObj(dcName, dvsName, client)
 	if err != nil {
 		return nil, err
 	}
@@ -213,10 +261,9 @@ func (v *VCProbe) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVS
 		portSpecs := make([]types.DVPortConfigSpec, numPorts)
 
 		client := v.GetClientWithRLock()
-		finder := v.CreateFinder(client)
 		defer v.ReleaseClientsRLock()
 
-		dvsObj, err := v.getPenDVS(dcName, dvsName, finder)
+		dvsObj, err := v.getDVSObj(dcName, dvsName, client)
 		if err != nil {
 			return nil, err
 		}
@@ -229,7 +276,7 @@ func (v *VCProbe) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVS
 			PortKey: portKeys,
 		}
 
-		ports, err := v.getPenDVSPorts(dcName, dvsName, criteria, finder)
+		ports, err := v.getPenDVSPorts(dcName, dvsName, criteria, client)
 		if err != nil {
 			return nil, err
 		}
