@@ -346,6 +346,30 @@ static void send_ips_response_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips,
     NBB_DESTROY_THREAD_CONTEXT
 }
 
+static tep_obj_t* indirect_ps_2_tep_obj_(state_t* state, 
+                                         ms_ps_id_t indirect_pathset,
+                                         uint32_t ll_direct_pathset) {
+    auto indirect_ps_obj = state->indirect_ps_store().get(indirect_pathset);
+    if (indirect_ps_obj == nullptr) {
+        PDS_TRACE_DEBUG("Set new indirect pathset %d -> direct pathset %d",
+                        indirect_pathset, ll_direct_pathset);
+        std::unique_ptr<indirect_ps_obj_t> indirect_ps_obj_uptr 
+            (new indirect_ps_obj_t(ll_direct_pathset));
+        state->indirect_ps_store().add_upd(indirect_pathset,
+                                           std::move(indirect_ps_obj_uptr));
+        return nullptr;
+    }
+    if (indirect_ps_obj->ll_direct_pathset != ll_direct_pathset) {
+        PDS_TRACE_DEBUG("Set indirect pathset %d -> direct pathset %d",
+                        indirect_pathset, ll_direct_pathset);
+        indirect_ps_obj->ll_direct_pathset = ll_direct_pathset;
+    }
+    if (ip_addr_is_zero(&(indirect_ps_obj->tep_ip))) {
+        return nullptr;
+    }
+    return state->tep_store().get(indirect_ps_obj->tep_ip);
+}
+
 NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
     NBB_BYTE rc = ATG_OK;
 
@@ -354,9 +378,9 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
         // Check if this is an Indirect Pathset that is referenced by
         // existing VXLAN Tunnels (TEPs)
         auto state_ctxt = pds_ms::state_t::thread_context();
-        auto tep_obj = state_ctxt.state()->indirect_ps_2_tep_obj(ips_info_.pathset_id,
-                                                                 true /* Mark this PS as indirect
-                                                                         if not done so yet */);
+        auto tep_obj = indirect_ps_2_tep_obj_(state_ctxt.state(),
+                                              ips_info_.pathset_id,
+                                              ips_info_.ll_dp_corr_id);
         if (tep_obj == nullptr) {
             // This Pathset does not have any reference yet
             // Nothing to do
@@ -560,7 +584,8 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
 
-        if (state_ctxt.state()->erase_indirect_ps(ips_info_.pathset_id)) {
+        if (state_ctxt.state()->indirect_ps_store().
+            erase(ips_info_.pathset_id)) {
             // Ignore deletes of indirect pathset
             return;
         }

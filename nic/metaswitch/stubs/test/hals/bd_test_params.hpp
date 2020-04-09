@@ -36,7 +36,7 @@ public:
     mac_str_to_addr((char*) "04:06:03:09:00:03", vpc_spec.vr_mac);
     vpc_spec.v4_route_table = pds_ms::msidx2pdsobjkey(vrf_id);
     vpc_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-    vpc_spec.fabric_encap.val.vnid  = 100;
+    vpc_spec.fabric_encap.val.vnid  = 1000;
     vpc_spec.tos = 5;
 
 
@@ -55,7 +55,7 @@ public:
     subnet_spec.egr_v4_policy[1] = pds_ms::msidx2pdsobjkey(6);
     subnet_spec.egr_v4_policy[2] = pds_ms::msidx2pdsobjkey(7);
     subnet_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-    subnet_spec.fabric_encap.val.vnid  = 100;
+    subnet_spec.fabric_encap.val.vnid  = 2000;
     subnet_spec.num_dhcp_policy = 1;
     subnet_spec.dhcp_policy[0] = pds_ms::msidx2pdsobjkey(10);
     subnet_spec.tos = 5;

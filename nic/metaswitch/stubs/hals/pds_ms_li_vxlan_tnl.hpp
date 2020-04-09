@@ -46,6 +46,7 @@ private:
     struct store_info_t {
         tep_obj_t*   tep_obj;
         if_obj_t*    tun_if_obj;
+        uint32_t     ll_direct_pathset = 0;
     };
 
 private:

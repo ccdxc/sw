@@ -7,6 +7,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_uuid_obj.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
+#include <utility>
 
 namespace pds_ms {
 
@@ -166,6 +167,63 @@ void mgmt_state_t::redo_bgp_peer_pend (vector<bgp_peer_pend_obj_t>& list) {
             bgp_peer_store.add(obj.local_addr, obj.peer_addr);
         }
     }
+}
+
+mgmt_obj_t* mgmt_state_t::check_vni_match(pds_vnid_id_t vni,
+                                          mgmt_obj_type_e obj_type,
+                                          ms_idx_t ms_id,
+                                          const pds_obj_key_t& uuid) {
+     auto it = vni_store_.find(vni);
+     if (it == vni_store_.end()) {
+         return nullptr;
+     }
+     if ((obj_type == it->second.obj_type) &&
+         (ms_id == it->second.ms_id) && (uuid == it->second.uuid)) {
+         return nullptr;
+     }
+     return &(it->second);
+}
+
+void mgmt_state_t::set_vni(pds_vnid_id_t vni, mgmt_obj_type_e obj_type, 
+                           ms_idx_t id, const pds_obj_key_t& uuid) {
+     auto ret_pair = vni_store_.emplace(std::piecewise_construct,
+                                        std::forward_as_tuple(vni),
+                                        std::forward_as_tuple(obj_type, id, uuid));
+     // Should be a new VNI and so should get emplaced successfully
+     SDK_ASSERT(ret_pair.second);
+}
+
+void mgmt_state_t::reset_vni(pds_vnid_id_t vni) {
+    vni_store_.erase(vni);
+}
+
+static std::string mgmt_obj_str(mgmt_obj_type_e obj_type) {
+    switch (obj_type) {
+    case mgmt_obj_type_e::VPC:
+        return "VPC";
+    case mgmt_obj_type_e::SUBNET:
+        return "Subnet";
+    }
+    return "";
+}
+
+bool mgmt_check_vni(pds_vnid_id_t vni, mgmt_obj_type_e obj_type,
+                         ms_idx_t ms_id, const pds_obj_key_t& uuid) {
+    if (vni == 0) {
+        PDS_TRACE_ERR("Invalid VNI 0");
+        return false;
+    }
+    // Check unique VNI
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    auto obj_info = mgmt_ctxt.state()->
+        check_vni_match(vni, obj_type, ms_id, uuid);
+    if (obj_info != nullptr) {
+        PDS_TRACE_ERR("Wrong VNI - already associated to %s %s MS Idx %d",
+                      mgmt_obj_str(obj_info->obj_type).c_str(),
+                      obj_info->uuid.str(), obj_info->ms_id);
+        return false;
+    }
+    return true;
 }
 
 bool

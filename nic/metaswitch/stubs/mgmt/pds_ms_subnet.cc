@@ -377,6 +377,11 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
         mgmt_uuid_guard_t uuid_guard;
 
         bd_id = subnet_uuid_2_idx_alloc(spec->key);
+        if (!mgmt_check_vni(spec->fabric_encap.val.vnid,
+                            mgmt_obj_type_e::SUBNET,
+                            bd_id, spec->key)) {
+            return SDK_RET_INVALID_ARG;
+        }
         cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::CREATE);
 
         ret_status = process_subnet_update (spec, bd_id, AMB_ROW_ACTIVE);
@@ -388,6 +393,8 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
             cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::COMMIT_DEL);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
+        mgmt_set_vni(spec->fabric_encap.val.vnid,
+                     mgmt_obj_type_e::SUBNET, bd_id, spec->key);
         PDS_TRACE_DEBUG ("Subnet %s bd %d create is successfully processed",
                          spec->key.str(), bd_id);
     } catch (const Error& e) {
@@ -431,6 +438,7 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
         }
         delete_completed = true;
 
+        mgmt_reset_vni(spec->fabric_encap.val.vnid);
         if (cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::COMMIT_DEL)) {
             // Subnet UUID is released by the L2F BD stub usually.
             // But if L2F BD stub was never invoked for this subnet

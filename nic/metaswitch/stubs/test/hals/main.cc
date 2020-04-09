@@ -142,6 +142,13 @@ TEST_F(pds_ms_hals_test, vxlan_test) {
     test_input->trigger_delete();
     test_output->validate();
 
+    // Mock parallel TEP and underlay pathset updates
+    std::cout << "=== Parallel TEP and underlay pathset update test ===" << std::endl;
+    test_input->next();
+    test_output->expect_create();
+    vxlan_input->trigger_create(true /* parallel uecmp update */);
+    test_output->validate();
+
     // Mock batch update failure
     std::cout << "=== TEP Spec Create failure test ===" << std::endl;
     test_input->next();

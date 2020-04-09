@@ -12,6 +12,7 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_bd.hpp"
 #include "nic/apollo/api/utils.hpp"
+#include <unordered_set>
 
 namespace pds_ms_test {
 using pds_ms::ms_ifindex_t;
@@ -42,6 +43,7 @@ public:
         pds_ms::subnet_create(&subnet_spec, 0);
         auto add_upd = generate_add_upd_ips();
         l2f_is.add_upd_bd(&add_upd);
+        subnet_uuids.insert(subnet_spec.key);
     }
 
     void trigger_delete(void) override {
@@ -49,6 +51,7 @@ public:
         pds_ms::subnet_delete(&subnet_spec, 0);
         ATG_L2_BD_ID ms_bd_id = {ATG_L2_BRIDGE_DOMAIN_EVPN, bd_id, 0};
         l2f_is.delete_bd(&ms_bd_id, NBB_CORRELATOR{0});
+        subnet_uuids.erase(subnet_spec.key);
     }
 
     void trigger_update(void) override {
@@ -83,6 +86,11 @@ public:
     void cleanup() override {
         // Delete the VPC created as a pre-req
         std::cout << " ====== Cleanup ========" << std::endl;
+        for (auto& subnet_uuid: subnet_uuids) {
+            pds_subnet_spec_t subnet_spec = {0};
+            subnet_spec.key = subnet_uuid;
+            pds_ms::subnet_delete(&subnet_spec, 0);
+        }
         pds_ms::vpc_delete(&vpc_spec, 0);
         // TODO Fix - currently VPC delete is not calling HAL stub VRF delete
        auto state_ctxt = pds_ms::state_t::thread_context(); 
@@ -94,6 +102,8 @@ public:
                .erase(pds_ms::msidx2pdsobjkey(vrf_id));
        }
     }
+private:
+    std::unordered_set<pds_obj_key_t, pds_obj_key_hash> subnet_uuids;
 };
 
 } // End Namespace

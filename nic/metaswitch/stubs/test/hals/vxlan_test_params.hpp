@@ -23,6 +23,7 @@ public:
        test::extract_ip_addr (dip, &dest_ip);
    }
    void next(void) override {}; 
+   virtual void trigger_create(bool parallel_uecmp_upd) = 0;
    virtual ~vxlan_input_params_t(void) {};
 };
 

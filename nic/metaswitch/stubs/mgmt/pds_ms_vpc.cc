@@ -274,6 +274,13 @@ vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         pds_cache_vpc_spec(spec, vrf_id, false);
 
         if (spec->type != PDS_VPC_TYPE_UNDERLAY) {
+            if (!mgmt_check_vni(spec->fabric_encap.val.vnid,
+                                mgmt_obj_type_e::VPC,
+                                vrf_id, spec->key)) {
+                // Delete the cached spec
+                pds_cache_vpc_spec(spec, vrf_id, true);
+                return SDK_RET_INVALID_ARG;
+            }
             // Create VRF in Metaswitch and send component Join
             // Metaswitch invokes LI Stub which will push the VPC to HAL
             ret_status = process_vpc_update (vrf_id, rtm_index, AMB_ROW_ACTIVE);
@@ -284,6 +291,8 @@ vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
                 pds_cache_vpc_spec(spec, vrf_id, true);
                 return pds_ms_api_to_sdk_ret (ret_status);
             }
+            mgmt_set_vni(spec->fabric_encap.val.vnid,
+                         mgmt_obj_type_e::VPC, vrf_id, spec->key);
         } else {
             // Default VRF is already created in Metaswitch by default
             // Send component Join and manually push the VPC to HAL
@@ -319,6 +328,25 @@ vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
     return SDK_RET_OK;
 }
 
+static bool vpc_has_subnets (const pds_obj_key_t& vpc_uuid)
+{
+    bool found = false;
+    auto state_ctxt = state_t::thread_context();
+
+    state_ctxt.state()->subnet_store().
+        walk([vpc_uuid, &found] (ms_bd_id_t bd,
+                                subnet_obj_t& subnet_obj) -> bool{
+        if (subnet_obj.spec().vpc == vpc_uuid) {
+            PDS_TRACE_DEBUG ("Found Subnet %s in VPC %s",
+                             subnet_obj.spec().key.str(), vpc_uuid.str());
+            found = true;
+            return false;
+        }
+        return true;
+    });
+    return found;
+}
+
 sdk_ret_t
 vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
@@ -339,6 +367,11 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         mib_idx_t   rtm_index;
         std::tie(vrf_id,rtm_index) = vpc_uuid_2_idx_fetch(spec->key, true);
 
+        if (vpc_has_subnets(spec->key)) {
+            PDS_TRACE_ERR ("Cannot delete VPC %s that has subnets attached to it",
+                           spec->key.str());
+            return SDK_RET_INVALID_OP;
+        }
         ret_status = process_vpc_update (vrf_id, rtm_index, AMB_ROW_DESTROY);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
             PDS_TRACE_ERR ("Failed to process VPC %s VRF %d delete (error=%d)",
@@ -348,6 +381,7 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         PDS_TRACE_DEBUG ("VPC %s VRF %d delete is successfully processed",
                          spec->key.str(), vrf_id);
         // Remove cached VPC spec, after successful reply from MS
+        mgmt_reset_vni(spec->fabric_encap.val.vnid);
         if (pds_cache_vpc_spec(spec, vrf_id, true)) {
             // VPC UUID is released by the LI VRF stub usually.
             // But if LI VRF stub was never invoked for this VPC

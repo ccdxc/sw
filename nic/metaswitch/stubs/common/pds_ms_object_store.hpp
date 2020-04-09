@@ -28,8 +28,9 @@ public:
     void add_upd(const KEY& key, std::unique_ptr<OBJECT>&& obj) {
         store_[key] = std::move(obj);
     }
-    void erase(const KEY& key) {
-        store_.erase(key);
+    // Return true if anything is erased
+    bool erase(const KEY& key) {
+        return (store_.erase(key) > 0);
     }
     void clear(void) {
         store_.clear();

@@ -8,6 +8,7 @@
 
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_indirect_ps_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_tep_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_subnet_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_bd_store.hpp"
@@ -42,6 +43,7 @@ enum slab_id_e {
     PDS_MS_PATHSET_SLAB_ID,
     PDS_MS_ECMP_IDX_GUARD_SLAB_ID,
     PDS_MS_COOKIE_SLAB_ID,
+    PDS_MS_INDIRECT_PS_SLAB_ID,
     PDS_MS_MAX_SLAB_ID
 };
 
@@ -49,7 +51,7 @@ enum slab_id_e {
 class state_t {
 public:
     struct context_t {
-    public:    
+    public:
         context_t(std::recursive_mutex& m, state_t* s) : l_(m), state_(s)  {
             if (unlikely(mgmt_state_locked(false))) {
                 PDS_TRACE_ERR("Acquiring Stub State lock within Mgmt state lock is not allowed");
@@ -69,12 +71,12 @@ public:
             l_ = std::move(c.l_);
             return *this;
         }
-            
-    private:    
+
+    private:
         std::unique_lock<std::recursive_mutex> l_;
         state_t* state_ = nullptr;
     };
-    static void create(void) { 
+    static void create(void) {
         SDK_ASSERT (g_state_ == nullptr);
         g_state_ = new state_t;
     }
@@ -82,8 +84,8 @@ public:
         delete(g_state_); g_state_ = nullptr;
     }
 
-    // Obtain a mutual exclusion context for thread safe access to the 
-    // global stub state. Automatic release when the context goes 
+    // Obtain a mutual exclusion context for thread safe access to the
+    // global stub state. Automatic release when the context goes
     // out of scope. Direct external access to Stub state without
     // a context is prohibited.
     // Calling this more than once from the same thread will deadlock.
@@ -100,6 +102,7 @@ public:
         }
     }
 public:
+    indirect_ps_store_t& indirect_ps_store(void) {return indirect_ps_store_;}
     tep_store_t& tep_store(void) {return tep_store_;}
     bd_store_t&  bd_store(void) {return bd_store_;}
     if_store_t&  if_store(void) {return if_store_;}
@@ -110,7 +113,7 @@ public:
 
     uint32_t get_slab_in_use(slab_id_e slab_id) {
         return slabs_[slab_id]->num_in_use();
-    } 
+    }
     uint32_t lnx_ifindex(uint32_t pds_ifindex) {
         // Check that we are not passed a LIF by mistake
         SDK_ASSERT (IFINDEX_TO_IFTYPE(pds_ifindex) == IF_TYPE_L3);
@@ -133,17 +136,8 @@ public:
         return ecmp_idx_gen_->free(index);
     }
 
-    // Back-ref from Indirect Pathset (Cascaded) to TEP
-    void map_indirect_ps_2_tep_ip(ms_ps_id_t indirect_pathset, const ip_addr_t& tep_ip);
-    void unmap_indirect_ps_2_tep_ip(ms_ps_id_t indirect_pathset);
-    bool erase_indirect_ps(ms_ps_id_t indirect_pathset) {
-        return (indirect_ps_2_tep_tbl_.erase(indirect_pathset) > 0);
-    }
-    tep_obj_t* indirect_ps_2_tep_obj(ms_ps_id_t indirect_pathset,
-                                     bool mark_indirect_if_not_found = false);
-
     void add_ignored_prefix(const ip_prefix_t& prefix) {
-        ignored_prefixes_.insert(prefix); 
+        ignored_prefixes_.insert(prefix);
     }
     bool reset_ignored_prefix(const ip_prefix_t& prefix) {
         auto it = ignored_prefixes_.find(prefix);
@@ -159,9 +153,10 @@ private:
     // Unique ptr helps to uninitialize cleanly in case of initialization errors
     slab_uptr_t slabs_[PDS_MS_MAX_SLAB_ID];
 
-    tep_store_t tep_store_; 
-    bd_store_t bd_store_; 
-    if_store_t if_store_; 
+    indirect_ps_store_t indirect_ps_store_;
+    tep_store_t tep_store_;
+    bd_store_t bd_store_;
+    if_store_t if_store_;
     vpc_store_t vpc_store_;
     subnet_store_t subnet_store_;
     route_table_store_t route_table_store_;
@@ -174,8 +169,6 @@ private:
     static std::recursive_mutex g_mtx_;
     pds_batch_ctxt_guard_t bg_;
     uint32_t lnx_ifindex_table_[k_max_fp_ports] = {0};
-    // Back-ref from Indirect Pathset (Cascaded) to TEP
-    std::unordered_map<ms_ps_id_t,ip_addr_t> indirect_ps_2_tep_tbl_;
 
     std::unordered_set<ip_prefix_t, ip_prefix_hash> ignored_prefixes_;
 

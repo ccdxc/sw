@@ -83,14 +83,14 @@ void li_vxlan_tnl::parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_
 void li_vxlan_tnl::cache_obj_in_cookie_for_create_op_(void) {
     if (likely (store_info_.tun_if_obj == nullptr)) {
         // Create new If Object but do not save it in the Global State yet
-        // This automatically allocates a HAL Overlay ECMP table index 
-        std::unique_ptr<if_obj_t> new_if_obj 
+        // This automatically allocates a HAL Overlay ECMP table index
+        std::unique_ptr<if_obj_t> new_if_obj
             (new if_obj_t(if_obj_t::vxlan_tunnel_properties_t
-                              {ips_info_.if_index, 
+                              {ips_info_.if_index,
                               ips_info_.tep_ip}));
-        // Update the local store info context so that the make_pds_spec 
+        // Update the local store info context so that the make_pds_spec
         // refers to the latest fields
-        store_info_.tun_if_obj = new_if_obj.get(); 
+        store_info_.tun_if_obj = new_if_obj.get();
         // Cache the new object in the cookie to revisit asynchronously
         // when the PDS API response is received
         cookie_uptr_->objs.push_back(std::move (new_if_obj));
@@ -103,25 +103,25 @@ void li_vxlan_tnl::cache_obj_in_cookie_for_create_op_(void) {
     // Create new Tep Object but do not save it in the Global State yet
     // Use the MS Tunnel IfIndex as the HAL index for TEP table
     // ECMP Table index is allocated in constructor for every new TEP object
-    std::unique_ptr<tep_obj_t> new_tep_obj 
+    std::unique_ptr<tep_obj_t> new_tep_obj
         (new tep_obj_t(ips_info_.tep_ip, ips_info_.src_ip,
-                       ips_info_.hal_uecmp_idx, ips_info_.if_index));
-    // Update the local store info context so that the make_pds_spec 
+                       store_info_.ll_direct_pathset, ips_info_.if_index));
+    // Update the local store info context so that the make_pds_spec
     // refers to the latest fields
-    store_info_.tep_obj = new_tep_obj.get(); 
+    store_info_.tep_obj = new_tep_obj.get();
     // Cache the new object in the cookie to revisit asynchronously
     // when the PDS API response is received
     cookie_uptr_->objs.push_back(std::move(new_tep_obj));
 }
 
-bool 
+bool
 li_vxlan_tnl::cache_obj_in_cookie_for_update_op_(void) {
     // Updating existing tunnel - check all properties to see what has changed
     auto& tnl_if_prop = store_info_.tun_if_obj->vxlan_tunnel_properties();
     // Dest IP cannot change for existing tunnel
     SDK_ASSERT(IPADDR_EQ (&tnl_if_prop.tep_ip, &ips_info_.tep_ip));
 
-    if (unlikely (ips_info_.hal_uecmp_idx == 
+    if (unlikely (store_info_.ll_direct_pathset ==
                   store_info_.tep_obj->properties().hal_uecmp_idx)) {
         // No change in TEP
         return false;
@@ -131,12 +131,12 @@ li_vxlan_tnl::cache_obj_in_cookie_for_update_op_(void) {
     // but do not save it in the Global State yet
     // This does not allocate a new Overlay ECMP index
     // since the old obj is copied to the new obj first
-    std::unique_ptr<tep_obj_t> new_tep_obj 
+    std::unique_ptr<tep_obj_t> new_tep_obj
         (new tep_obj_t(*(store_info_.tep_obj)));
-    new_tep_obj->properties().hal_uecmp_idx = ips_info_.hal_uecmp_idx;
-    // Update the local store info context so that the make_pds_spec 
+    new_tep_obj->properties().hal_uecmp_idx = store_info_.ll_direct_pathset;
+    // Update the local store info context so that the make_pds_spec
     // refers to the latest fields
-    store_info_.tep_obj = new_tep_obj.get(); 
+    store_info_.tep_obj = new_tep_obj.get();
     // Cache the new object in the cookie to revisit asynchronously
     // when the PDS API response is received
     cookie_uptr_->objs.push_back(std::move(new_tep_obj));
@@ -155,14 +155,14 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_(state_t::context_t&
     auto bctxt = pds_batch_start(&bp);
 
     if (unlikely (!bctxt)) {
-        throw Error("PDS Batch Start failed for TEP " 
+        throw Error("PDS Batch Start failed for TEP "
                     + ips_info_.tep_ip_str);
     }
     bctxt_guard_.set (bctxt);
 
     if (op_delete_) { // Delete
         // First delete Overlay ECMP entry before TEP entry to ensure
-        // Overlay ECMP does not point to deleted TEP in hardware. 
+        // Overlay ECMP does not point to deleted TEP in hardware.
         auto nhgroup_key = make_pds_nhgroup_key_();
         if (!PDS_MOCK_MODE()) {
             ret = pds_nexthop_group_delete(&nhgroup_key, bctxt);
@@ -217,7 +217,7 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_(state_t::context_t&
         }
 
         if (op_create_) {
-            // Create Overlay ECMP entry for a new TEP 
+            // Create Overlay ECMP entry for a new TEP
             // No change in Overlay ECMP for TEP update
             auto nhgroup_spec = make_pds_nhgroup_spec_();
             if (!PDS_MOCK_MODE()) {
@@ -233,6 +233,46 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_(state_t::context_t&
     return bctxt_guard_;
 }
 
+static uint32_t map_indirect_ps_2_tep_ip_(state_t* state, ms_ps_id_t indirect_pathset,
+                                         const ip_addr_t& tep_ip) {
+    auto indirect_ps_obj = state->indirect_ps_store().get(indirect_pathset);
+    if (indirect_ps_obj == nullptr) {
+        PDS_TRACE_DEBUG("Map new indirect underlay pathset %d to TEP %s",
+                        indirect_pathset, ipaddr2str(&tep_ip));
+        std::unique_ptr<indirect_ps_obj_t> indirect_ps_obj_uptr 
+            (new indirect_ps_obj_t(tep_ip));
+        state->indirect_ps_store().add_upd(indirect_pathset,
+                                           std::move(indirect_ps_obj_uptr));
+        return 0;
+    }
+    if (!ip_addr_is_zero(&(indirect_ps_obj->tep_ip))) {
+        // Assert there is only 1 TEP referring to each indirect Pathset
+        if (!ip_addr_is_equal (&(indirect_ps_obj->tep_ip), &tep_ip)) {
+            PDS_TRACE_ERR("Attempt to associate TEP %s to MS Underlay Pathset %d"
+                          " that is already associated to TEP %s",
+                          ipaddr2str(&tep_ip), indirect_pathset,
+                          ipaddr2str(&(indirect_ps_obj->tep_ip)));
+            SDK_ASSERT(0);
+        }
+        return indirect_ps_obj->ll_direct_pathset;
+    }
+    PDS_TRACE_DEBUG("Map indirect underlay pathset %d to TEP %s",
+                    indirect_pathset, ipaddr2str(&tep_ip));
+    indirect_ps_obj->tep_ip = tep_ip;
+    return indirect_ps_obj->ll_direct_pathset;
+}
+
+static void unmap_indirect_ps_2_tep_ip_(state_t* state,
+                                        ms_ps_id_t indirect_pathset) {
+    PDS_TRACE_DEBUG("Unmap indirect underlay pathset %d", indirect_pathset);
+    auto indirect_ps_obj = state->indirect_ps_store().get(indirect_pathset);
+    if (indirect_ps_obj == nullptr) {
+        return;
+    }
+    ip_addr_t zero_ip = {0};
+    indirect_ps_obj->tep_ip = zero_ip;
+}
+
 NBB_BYTE li_vxlan_tnl::handle_add_upd_() {
 
     NBB_BYTE rc = ATG_OK;
@@ -243,29 +283,46 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_() {
 
     fetch_store_info_(state_ctxt.state());
 
+    // Associate Indirect ECMP Pathset -> TEP
+    // This will not be deleted even if the Tunnel create fails
+    // Entry will be erased when the Pathset is deleted from Metaswitch
+    store_info_.ll_direct_pathset =
+        map_indirect_ps_2_tep_ip_(state_ctxt.state(),
+                                  ips_info_.uecmp_ps, ips_info_.tep_ip);
+
+    if (store_info_.ll_direct_pathset != ips_info_.hal_uecmp_idx) {
+        PDS_TRACE_DEBUG("detected parallel update to TEP %s (ecmp: %d) and "
+                        "indirect pathset %d (ecmp: %d). prefer indirect pathset",
+                        ips_info_.tep_ip_str.c_str(), ips_info_.hal_uecmp_idx,
+                        ips_info_.uecmp_ps, store_info_.ll_direct_pathset);
+    }
+
     if (store_info_.tep_obj != nullptr) {
         // Update Tunnel
+        auto old_uecmp_ps = store_info_.tep_obj->properties().uecmp_ps;
+        if (old_uecmp_ps != ips_info_.uecmp_ps) {
+            PDS_TRACE_DEBUG("TEP %s change in indirect pathset, "
+                            "unmap from old indirect ps %d",
+                            ips_info_.tep_ip_str.c_str(), old_uecmp_ps);
+            unmap_indirect_ps_2_tep_ip_(state_ctxt.state(), old_uecmp_ps);
+        }
         PDS_TRACE_INFO ("TEP %s Update IPS Underlay ECMP Pathset %d DP Corr %d",
                         ips_info_.tep_ip_str.c_str(), ips_info_.uecmp_ps,
-                        ips_info_.hal_uecmp_idx);
+                        store_info_.ll_direct_pathset);
         if (unlikely(!cache_obj_in_cookie_for_update_op_())) {
             // No change
             return rc;
-        } 
+        }
     } else {
         // Create Tunnel
         PDS_TRACE_INFO ("TEP %s Create IPS Underlay ECMP Pathset %d DP Corr %d",
-                        ips_info_.tep_ip_str.c_str(), ips_info_.uecmp_ps, ips_info_.hal_uecmp_idx);
+                        ips_info_.tep_ip_str.c_str(), ips_info_.uecmp_ps, store_info_.ll_direct_pathset);
         op_create_ = true;
-        cache_obj_in_cookie_for_create_op_(); 
+        cache_obj_in_cookie_for_create_op_();
     }
-    // Indirect ECMP Pathset <-> TEP mapping
-    // This will not be deleted even if the Tunnel create fails
-    // Entry will be erased when the Pathset is deleted from Metaswitch
-    state_ctxt.state()->map_indirect_ps_2_tep_ip(ips_info_.uecmp_ps, ips_info_.tep_ip);
     store_info_.tep_obj->properties().uecmp_ps = ips_info_.uecmp_ps;
 
-    pds_bctxt_guard = make_batch_pds_spec_(state_ctxt); 
+    pds_bctxt_guard = make_batch_pds_spec_(state_ctxt);
 
     // If we have batched multiple IPS earlier flush it now
     // Cannot add a Tunnel create to an existing batch
@@ -274,7 +331,7 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_() {
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    // All processing complete, only batch commit remains - 
+    // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     rc = ATG_ASYNC_COMPLETION;
     auto cookie = cookie_uptr_.release();
@@ -285,7 +342,7 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_() {
                     .append(ips_info_.tep_ip_str)
                     .append(" err=").append(std::to_string(ret)));
     }
-    PDS_TRACE_DEBUG ("TEP %s: Add/Upd PDS Batch commit successful", 
+    PDS_TRACE_DEBUG ("TEP %s: Add/Upd PDS Batch commit successful",
                      ips_info_.tep_ip_str.c_str());
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
@@ -307,6 +364,7 @@ NBB_BYTE li_vxlan_tnl::handle_uecmp_update(state_t::context_t&& state_ctxt,
     ips_info_.tep_ip = tep_obj->properties().tep_ip;
     // MS LIM IfIndex for the VXLAN Tunnel is used as the HAL TEP Index
     ips_info_.if_index = tep_obj->properties().hal_tep_idx;
+    store_info_.ll_direct_pathset = ll_dp_corr_id;
     ips_info_.hal_uecmp_idx = ll_dp_corr_id;
     NBB_CORR_GET_VALUE(ips_info_.uecmp_ps, pathset_id);
     state_ctxt.release();
@@ -321,7 +379,7 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_a
     // Alloc new cookie and cache IPS
     cookie_uptr_.reset (new cookie_t);
 
-    cookie_uptr_->send_ips_reply = 
+    cookie_uptr_->send_ips_reply =
         [vxlan_tnl_add_upd_ips] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
@@ -337,7 +395,7 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_a
             auto it = vxlan_store.find(key);
             if (it == vxlan_store.end()) {
                 // MS Stub Stateless mode
-                auto send_response = li::VxLan::set_ips_rc(&vxlan_tnl_add_upd_ips->ips_hdr, 
+                auto send_response = li::VxLan::set_ips_rc(&vxlan_tnl_add_upd_ips->ips_hdr,
                                                           (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
                 PDS_TRACE_DEBUG("++++++ VXLAN Tunnel 0x%x: Send Async IPS reply %s stateless mode ++++++",
@@ -357,7 +415,7 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_a
             }
             NBS_RELEASE_SHARED_DATA();
             NBS_EXIT_SHARED_CONTEXT();
-            NBB_DESTROY_THREAD_CONTEXT    
+            NBB_DESTROY_THREAD_CONTEXT
         };
 
     return handle_add_upd_();
@@ -369,7 +427,7 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
 
     // MS stub Integration APIs do not support Async callback for deletes.
     // However since we should not block the MS NBase main thread
-    // the HAL processing is always asynchronous even for deletes. 
+    // the HAL processing is always asynchronous even for deletes.
     // Assuming that Deletes never fail the Store is also updated
     // in a synchronous fashion for deletes so that it is in sync
     // if there is a subsequent create from MS.
@@ -383,7 +441,7 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
         auto state_ctxt = pds_ms::state_t::thread_context();
 
         fetch_store_info_(state_ctxt.state());
-        if (unlikely (store_info_.tep_obj == nullptr && 
+        if (unlikely (store_info_.tep_obj == nullptr &&
                       store_info_.tun_if_obj == nullptr)) {
             // No change
             return;
@@ -391,19 +449,19 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
         tep_ip = store_info_.tep_obj->properties().tep_ip;
         PDS_TRACE_INFO ("TEP %s: Delete IPS", ipaddr2str(&tep_ip));
 
-        pds_bctxt_guard = make_batch_pds_spec_ (state_ctxt); 
+        pds_bctxt_guard = make_batch_pds_spec_ (state_ctxt);
 
         // If we have batched multiple IPS earlier flush it now
         // VXLAN Tunnel deletion cannot be appended to an existing batch
         state_ctxt.state()->flush_outstanding_pds_batch();
 
-        state_ctxt.state()->unmap_indirect_ps_2_tep_ip(
+        unmap_indirect_ps_2_tep_ip_(state_ctxt.state(),
             store_info_.tep_obj->properties().uecmp_ps);
 
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    cookie_uptr_->send_ips_reply = 
+    cookie_uptr_->send_ips_reply =
         [tep_ip] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
@@ -413,7 +471,7 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
 
         };
 
-    // All processing complete, only batch commit remains - 
+    // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
@@ -423,12 +481,12 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
                     .append(ipaddr2str(&tep_ip))
                     .append(" err=").append(std::to_string(ret)));
     }
-    PDS_TRACE_DEBUG ("TEP %s: Delete PDS Batch commit successful", 
+    PDS_TRACE_DEBUG ("TEP %s: Delete PDS Batch commit successful",
                      ipaddr2str(&tep_ip));
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
-        // Deletes are synchronous - Delete the store entry immediately 
+        // Deletes are synchronous - Delete the store entry immediately
         state_ctxt.state()->tep_store().erase(tep_ip);
         state_ctxt.state()->if_store().erase(ips_info_.if_index);
     }

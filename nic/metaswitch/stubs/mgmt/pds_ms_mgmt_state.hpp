@@ -36,6 +36,21 @@ enum mgmt_slab_id_e {
     PDS_MS_MGMT_MAX_SLAB_ID
 };
 
+enum class mgmt_obj_type_e {
+    VPC,
+    SUBNET
+};
+
+using ms_idx_t = uint32_t;
+
+struct mgmt_obj_t {
+    mgmt_obj_type_e obj_type;
+    ms_idx_t         ms_id;
+    pds_obj_key_t   uuid;
+    mgmt_obj_t(mgmt_obj_type_e obj_type_, ms_idx_t ms_id_, const pds_obj_key_t& uuid_)
+        : obj_type(obj_type_), ms_id(ms_id_), uuid(uuid_) {};
+};
+
 // Singleton that holds all global state for the mgmt stub
 // Placeholder class currently as we do not have any global
 // mgmt stub state yet
@@ -168,6 +183,14 @@ public:
     bool overlay_routing_en() {return overlay_routing_en_;}
     void set_overlay_routing_en(bool enable) {overlay_routing_en_ = enable;}
 
+    mgmt_obj_t* check_vni_match(pds_vnid_id_t vni,
+                                mgmt_obj_type_e obj_type,
+                                ms_idx_t ms_id,
+                                const pds_obj_key_t& uuid);
+    void set_vni(pds_vnid_id_t vni, mgmt_obj_type_e obj_type,
+                 ms_idx_t id, const pds_obj_key_t& uuid);
+    void reset_vni(pds_vnid_id_t vni);
+
 private:
     static mgmt_state_t* g_state_;
     // Predicate to avoid spurious wake-up calls
@@ -189,6 +212,8 @@ private:
     bgp_peer_store_t  bgp_peer_store_;
     std::vector<bgp_peer_pend_obj_t> bgp_peer_pend_;
     bool overlay_routing_en_ = false;
+        
+    std::unordered_map<pds_vnid_id_t, mgmt_obj_t> vni_store_; 
 
 private:
     mgmt_state_t(void);
@@ -207,6 +232,21 @@ public:
         mgmt_ctxt.state()->release_pending_uuid();
     }
 };
+
+bool mgmt_check_vni(pds_vnid_id_t vni, mgmt_obj_type_e obj_type,
+                    ms_idx_t ms_id, const pds_obj_key_t& uuid);
+static inline
+void mgmt_set_vni(pds_vnid_id_t vni, mgmt_obj_type_e obj_type,
+                  ms_idx_t ms_id, const pds_obj_key_t& uuid) {
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    mgmt_ctxt.state()->set_vni(vni, obj_type, ms_id, uuid);
+}
+
+static inline
+void mgmt_reset_vni(pds_vnid_id_t vni) {
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    mgmt_ctxt.state()->reset_vni(vni);
+}
 
 // Function prototypes
 bool  mgmt_state_init(void);

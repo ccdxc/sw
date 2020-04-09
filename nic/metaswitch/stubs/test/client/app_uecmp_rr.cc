@@ -809,8 +809,9 @@ static void delete_evpn_ip_vrf_proto_grpc () {
     ClientContext   context;
     Status          ret_status;
 
-    auto proto_spec = request.add_request();
-    proto_spec->set_id (pds_ms::msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    auto keyh = request.add_request ();
+    auto proto_spec = keyh->mutable_key();
+    proto_spec->set_vpcid (pds_ms::msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
 
     printf ("Pushing EVPN IP VRF Delete proto...\n");
     ret_status = g_evpn_stub_->EvpnIpVrfDelete(&context, request, &response);
