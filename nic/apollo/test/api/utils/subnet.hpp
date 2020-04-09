@@ -34,6 +34,9 @@ enum subnet_attrs {
     SUBNET_ATTR_TOS        =  BIT(15),
 };
 
+#define SUBNET_ATTR_POL SUBNET_ATTR_V4_INGPOL | SUBNET_ATTR_V6_INGPOL | \
+                        SUBNET_ATTR_V4_EGRPOL | SUBNET_ATTR_V6_EGRPOL
+
 // Subnet test feeder class
 class subnet_feeder : public feeder {
 public:
@@ -49,7 +52,8 @@ public:
     // Initialize feeder with the base set of values
     void init(pds_obj_key_t key, pds_obj_key_t vpc_key,
               std::string cidr_str, std::string vrmac_str,
-              int num_subnet = 1);
+              int num_subnet = 1, int num_policies = 1,
+              int start_policy_index = 0);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -65,6 +69,18 @@ public:
                         const pds_subnet_status_t *status2) const;
 };
 
+inline std::string
+policy_str_get(uint8_t num_policies, const pds_obj_key_t *policy)
+{
+    std::string policy_str;
+
+    for (uint8_t i = 0; i < num_policies; i++) {
+        policy_str.append(policy[i].str());
+        policy_str.append(", ");
+    }
+    return policy_str;
+}
+
 // Dump prototypes
 inline std::ostream&
 operator<<(std::ostream& os, const pds_subnet_spec_t *spec) {
@@ -75,10 +91,14 @@ operator<<(std::ostream& os, const pds_subnet_spec_t *spec) {
         << " vr_mac: " << macaddr2str(spec->vr_mac)
         << " v4_rt: " << spec->v4_route_table.str()
         << " v6_rt: " << spec->v6_route_table.str()
-        << " v4_in_pol: " << spec->ing_v4_policy[0].str()
-        << " v6_in_pol: " << spec->ing_v6_policy[0].str()
-        << " v4_eg_pol: " << spec->egr_v4_policy[0].str()
-        << " v6_eg_pol: " << spec->egr_v6_policy[0].str()
+        << " ing_v4_num_policies: " << spec->num_ing_v4_policy
+        << " ing_v6_num_policies: " << spec->num_ing_v6_policy
+        << " egr_v4_num_policies: " << spec->num_egr_v4_policy
+        << " egr_v6_num_policies: " << spec->num_egr_v6_policy
+        << " v4_ing_pol: " << policy_str_get(spec->num_ing_v4_policy, spec->ing_v4_policy)
+        << " v6_ing_pol: " << policy_str_get(spec->num_ing_v6_policy, spec->ing_v6_policy)
+        << " v4_egr_pol: " << policy_str_get(spec->num_egr_v4_policy, spec->egr_v4_policy)
+        << " v6_egr_pol: " << policy_str_get(spec->num_egr_v6_policy, spec->egr_v6_policy)
         << " fabric encap: " << pds_encap2str(&spec->fabric_encap);
     return os;
 }
@@ -116,6 +136,8 @@ void sample_subnet_setup(pds_batch_ctxt_t bctxt);
 void sample_subnet_teardown(pds_batch_ctxt_t bctxt);
 void sample1_subnet_setup(pds_batch_ctxt_t bctxt);
 void sample1_subnet_teardown(pds_batch_ctxt_t bctxt);
+void spec_policy_fill(pds_subnet_spec_t *spec, uint8_t num_policies,
+                      uint8_t start_policy_index);
 
 }    // namespace api
 }    // namespace test

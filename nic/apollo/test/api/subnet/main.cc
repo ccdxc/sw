@@ -11,6 +11,7 @@
 #include "nic/apollo/test/api/utils/subnet.hpp"
 #include "nic/apollo/test/api/utils/vpc.hpp"
 #include "nic/apollo/test/api/utils/policy.hpp"
+#include "nic/apollo/test/api/utils/vnic.hpp"
 #include "nic/apollo/test/api/utils/workflow.hpp"
 
 namespace test {
@@ -338,7 +339,7 @@ TEST_F(subnet, DISABLED_subnet_update_vpc) {
     if (!apulu()) return;
 
     subnet_feeder feeder;
-    pds_subnet_spec_t spec;
+    pds_subnet_spec_t spec = {0};
     pds_obj_key_t key = int2pdsobjkey(1);
 
     // init
@@ -353,6 +354,193 @@ TEST_F(subnet, DISABLED_subnet_update_vpc) {
     subnet_read(feeder);
 
     // cleanup
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Subnet WF_11
+/// Attach one policy P1 to subnet S1 and then update S1 by adding P2 to S1
+/// (so S1 ends up with P1 and P2)
+TEST_F(subnet, subnet_workflow_11) {
+    if (!apulu()) return;
+
+    sdk_ret_t ret;
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_subnet_spec_t spec = {0};
+    subnet_feeder feeder;
+    pds_batch_ctxt_t bctxt = batch_start();
+    uint8_t num_policies = 1;
+    uint8_t start_pol_index = 0;
+
+    sample_vnic_setup(bctxt);
+    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", num_policies, start_pol_index);
+
+    subnet_create(feeder);
+    subnet_read(feeder, SDK_RET_OK);
+
+    num_policies = 2;
+    start_pol_index = 0;
+    spec_policy_fill(&spec, num_policies, start_pol_index);
+    subnet_update(feeder, &spec, SUBNET_ATTR_POL);
+    subnet_read(feeder);
+
+    sample_vnic_teardown(bctxt);
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Subnet WF_12
+/// Attach policy P1 to subnet and then update S1 with no policy
+TEST_F(subnet, subnet_workflow_12) {
+    if (!apulu()) return;
+
+    sdk_ret_t ret;
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_subnet_spec_t spec = {0};
+    subnet_feeder feeder;
+    pds_batch_ctxt_t bctxt = batch_start();
+    uint8_t num_policies = 1;
+    uint8_t start_pol_index = 0;
+
+    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", 1, 1);
+    subnet_create(feeder);
+    subnet_read(feeder, SDK_RET_OK);
+
+    num_policies = 0;
+    start_pol_index = 0;
+    spec_policy_fill(&spec, num_policies, start_pol_index);
+    subnet_update(feeder, &spec, SUBNET_ATTR_POL);
+    subnet_read(feeder, SDK_RET_OK);
+
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Subnet WF_13
+/// Attach policy P1, P2 to subnet and update S1 with P1 only (disassociating P2)
+/// and then with no policies
+TEST_F(subnet, subnet_workflow_13) {
+    if (!apulu()) return;
+
+    sdk_ret_t ret;
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_subnet_spec_t spec = {0};
+    subnet_feeder feeder;
+    pds_batch_ctxt_t bctxt = batch_start();
+    uint8_t num_policies = 2;
+    uint8_t start_pol_index = 0;
+
+    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", 1, 1);
+    subnet_create(feeder);
+    subnet_read(feeder, SDK_RET_OK);
+
+    spec_policy_fill(&spec, num_policies, start_pol_index);
+    subnet_update(feeder, &spec, SUBNET_ATTR_POL);
+    subnet_read(feeder);
+
+    num_policies = 1;
+    start_pol_index = 0;
+    spec_policy_fill(&spec, num_policies, start_pol_index);
+    subnet_update(feeder, &spec, SUBNET_ATTR_POL);
+    subnet_read(feeder);
+
+    memset(&spec, 0, sizeof(spec));
+    num_policies = 0;
+    start_pol_index = 0;
+    spec_policy_fill(&spec, num_policies, start_pol_index);
+    subnet_update(feeder, &spec, SUBNET_ATTR_POL);
+    subnet_read(feeder);
+
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Subnet WF_14
+/// Attach policy P1, P2 to subnet and update S1 with P3, P4
+TEST_F(subnet, subnet_workflow_14) {
+    if (!apulu()) return;
+
+    sdk_ret_t ret;
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_subnet_spec_t spec = {0};
+    subnet_feeder feeder;
+    pds_batch_ctxt_t bctxt = batch_start();
+    uint8_t num_policies = 2;
+    uint8_t start_pol_index = 0;
+
+    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", num_policies, start_pol_index);
+    subnet_create(feeder);
+    subnet_read(feeder, SDK_RET_OK);
+
+    num_policies = 2;
+    start_pol_index = 2;
+    spec_policy_fill(&spec, num_policies, start_pol_index);
+    subnet_update(feeder, &spec, SUBNET_ATTR_POL);
+    subnet_read(feeder);
+
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Subnet WF_15
+/// Attach policy P1, P2 to subnet and update S1 with P2, P3
+TEST_F(subnet, subnet_workflow_15) {
+    if (!apulu()) return;
+
+    sdk_ret_t ret;
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_subnet_spec_t spec = {0};
+    subnet_feeder feeder;
+    pds_batch_ctxt_t bctxt = batch_start();
+    uint8_t num_policies = 2;
+    uint8_t start_pol_index = 0;
+
+    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", num_policies, start_pol_index);
+    subnet_create(feeder);
+    subnet_read(feeder, SDK_RET_OK);
+
+    num_policies = 2;
+    start_pol_index = 1;
+    spec_policy_fill(&spec, num_policies, start_pol_index);
+    subnet_update(feeder, &spec, SUBNET_ATTR_POL);
+    subnet_read(feeder);
+
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Subnet WF_16
+/// update VR mac
+TEST_F(subnet, subnet_workflow_16) {
+    if (!apulu()) return;
+
+    sdk_ret_t ret;
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_subnet_spec_t spec = {0};
+    subnet_feeder feeder;
+    pds_batch_ctxt_t bctxt = batch_start();
+    uint8_t num_policies = 2;
+    uint8_t start_pol_index = 0;
+    uint64_t mac;
+
+    sample_vnic_setup(bctxt);
+    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", num_policies, start_pol_index);
+    subnet_create(feeder);
+    subnet_read(feeder, SDK_RET_OK);
+
+    mac = MAC_TO_UINT64(feeder.spec.vr_mac);
+    mac++;
+    MAC_UINT64_TO_ADDR(spec.vr_mac, mac);
+    subnet_update(feeder, &spec, SUBNET_ATTR_VRMAC);
+    subnet_read(feeder);
+
+    sample_vnic_teardown(bctxt);
     subnet_delete(feeder);
     subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
