@@ -134,6 +134,7 @@ private:
     fd_watch_cb fd_watch_cb_;
     const void *fd_watch_cb_ctx_;
     client_receive_cb_ctx_t client_rx_cb_ctx_[IPC_MAX_ID + 1];
+    int ipc_client_eventfds_[IPC_MAX_ID + 1];
 };
 typedef std::shared_ptr<ipc_service_async> ipc_service_async_ptr;
 
@@ -252,8 +253,8 @@ ipc_service::respond(ipc_msg_ptr msg, const void *data, size_t data_length) {
     this->message_in_flight_ = false;
 
     SDK_TRACE_DEBUG(
-        "Will deserialize because we responded to message - %s",
-        msg->debug().c_str());
+        "0x%x: will deserialize because we responded to message - %s",
+        pthread_self(), msg->debug().c_str());
     this->deserialize_();
 }
 
@@ -358,11 +359,21 @@ ipc_service_async::new_client_(uint32_t recipient) {
         std::make_shared<zmq_ipc_client_async>(this->get_id_(), recipient);
 
     this->client_rx_cb_ctx_[recipient] = {this, recipient};
+    
 
     if (this->fd_watch_ms_cb_) {
         this->fd_watch_ms_cb_(client->fd(), sdk::ipc::client_receive_ms,
                               &this->client_rx_cb_ctx_[recipient]);
+
+        // For MS we also create a event fd, so we check for incoming
+        // messages only from the FD POLL thread
+        this->ipc_client_eventfds_[recipient] =
+            eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
+        assert(this->ipc_client_eventfds_[recipient] != -1);
+        this->fd_watch_ms_cb_(client->fd(), sdk::ipc::client_receive_ms,
+                              &this->client_rx_cb_ctx_[recipient]);
     } else {
+        this->ipc_client_eventfds_[recipient] = -1;
         this->fd_watch_cb_(client->fd(), sdk::ipc::client_receive,
                            &this->client_rx_cb_ctx_[recipient],
                            this->fd_watch_cb_ctx_);
@@ -386,7 +397,15 @@ ipc_service_async::request(uint32_t recipient, uint32_t msg_code,
 
     client->send(msg_code, data, data_length, cb, cookie);
 
-    this->client_receive(recipient);
+    if (this->ipc_client_eventfds_[recipient] != -1) {
+        // This is a special case for MS
+        // Instead of checking for messages here, notify the
+        // POLL FD thread to check
+        uint64_t buffer = 1;
+        write(this->ipc_client_eventfds_[recipient], &buffer, sizeof(buffer));
+    } else {
+        this->client_receive(recipient);
+    }
 }
 
 void
@@ -396,6 +415,14 @@ ipc_service_async::client_receive(uint32_t sender) {
     zmq_ipc_client_async_ptr client =
         std::dynamic_pointer_cast<zmq_ipc_client_async>(
             this->get_client_(sender));
+
+    SDK_TRACE_DEBUG("0x%x: client receive check", pthread_self());
+    
+    if (this->ipc_client_eventfds_[sender] != -1) {
+        // Read the eventfd to clear the flag
+        uint64_t buffer;
+        read(this->ipc_client_eventfds_[sender], &buffer, sizeof(buffer));
+    }
 
     while (true) {
         zmq_ipc_user_msg_ptr msg = client->recv();
@@ -415,8 +442,8 @@ ipc_service::should_serialize_(void) {
 
 void
 ipc_service::serialize_(ipc_msg_ptr msg) {
-    SDK_TRACE_DEBUG("Serializing message - %s",
-                    msg->debug().c_str());
+    SDK_TRACE_DEBUG("0x%x: serializing message - %s",
+                    pthread_self(), msg->debug().c_str());
     
     this->hold_queue_.push(msg);
 }
@@ -429,7 +456,8 @@ ipc_service::deserialize_(void) {
         return;
     }
 
-    SDK_TRACE_DEBUG("Messages waiting: %i", this->hold_queue_.size());
+    SDK_TRACE_DEBUG("0x%x: messages waiting: %i",
+                    pthread_self(), this->hold_queue_.size());
     
     // Notify the client we have messages for delivery
     write(this->eventfd_, &buffer, sizeof(buffer));
@@ -442,7 +470,8 @@ ipc_service::deliver_(ipc_msg_ptr msg) {
                 
     req_callback_t req_cb = this->req_cbs_[msg->code()];
 
-    SDK_TRACE_DEBUG("Delivering message - %s", msg->debug().c_str());
+    SDK_TRACE_DEBUG("0x%x: delivering message - %s",
+                    pthread_self(), msg->debug().c_str());
                 
     if (req_cb.cb != NULL) {
         this->message_in_flight_ = true;
@@ -492,8 +521,8 @@ ipc_service::eventfd_receive(void) {
     
     if (!this->hold_queue_.empty()) {
         ipc_msg_ptr msg = this->hold_queue_.front();
-        SDK_TRACE_DEBUG("Deserializing msg - %s",
-                        msg->debug().c_str());
+        SDK_TRACE_DEBUG("0x%x: deserializing msg - %s",
+                        pthread_self(), msg->debug().c_str());
         this->hold_queue_.pop();
         this->deliver_(msg);
     }
@@ -505,7 +534,8 @@ ipc_service::broadcast(uint32_t msg_code, const void *data,
     std::vector<uint32_t> recipients = subscribers::instance()->get(msg_code);
 
     if (recipients.size() == 0) {
-        SDK_TRACE_DEBUG("No subscribers for message: msg_code: %u", msg_code);
+        SDK_TRACE_DEBUG("0x%x: no subscribers for message: msg_code: %u",
+                        pthread_self(), msg_code);
     }
     for (uint32_t recipient : recipients) {
         this->get_client_(recipient)->broadcast(msg_code, data, data_length);
