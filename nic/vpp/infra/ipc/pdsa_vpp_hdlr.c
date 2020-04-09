@@ -35,6 +35,7 @@ pds_vpp_fd_register (int fd) {
     clib_file.private_data    = 0; // perhaps change to something else?
     clib_file.file_descriptor = fd;
     clib_file.flags           = UNIX_FILE_EVENT_EDGE_TRIGGERED;
+    clib_file.description     = format(0, "VPP-PDSA IPC server");
 
     // register file desc
     clib_file_add(&file_main, &clib_file);
