@@ -119,12 +119,24 @@ func convertFlowExportPolicy(fePolicy *monitoring.FlowExportPolicy) *netproto.Fl
 
 		if r.Src != nil && r.Src.IPAddresses != nil {
 			srcAddresses = r.Src.IPAddresses
+		} else {
+			srcAddresses = []string{"any"}
 		}
 
 		if r.Dst != nil && r.Dst.IPAddresses != nil {
 			dstAddresses = r.Dst.IPAddresses
+		} else {
+			dstAddresses = []string{"any"}
 		}
 
+		if len(protoPorts) == 0 {
+			protoPorts = []*netproto.ProtoPort{
+				&netproto.ProtoPort{
+					Port:     "any",
+					Protocol: "any",
+				},
+			}
+		}
 		m := netproto.MatchRule{
 			Src: &netproto.MatchSelector{
 				Addresses: srcAddresses,

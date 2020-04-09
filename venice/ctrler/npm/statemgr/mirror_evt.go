@@ -92,6 +92,9 @@ func buildDSCMirrorSession(mss *MirrorSessionState) *netproto.MirrorSession {
 		ObjectMeta: ms.ObjectMeta,
 	}
 	tSpec := &tms.Spec
+
+	//Vrf same as tenant
+	tSpec.VrfName = ms.ObjectMeta.Tenant
 	//tSpec.CaptureAt = netproto.MirrorSrcDst_SRC_DST
 	tSpec.MirrorDirection = netproto.MirrorDir_BOTH
 	//tSpec.Enable = (mss.State == monitoring.MirrorSessionState_ACTIVE)
