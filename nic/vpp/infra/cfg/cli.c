@@ -36,7 +36,7 @@ int
 subnet_cfg_dump (vlib_main_t *vm)
 {
     int len = 40 * PDS_VPP_MAX_DHCP_SUBNET;
-    char dhcp_buf[len];
+    char dhcp_buf[len+1];
     char dhcp_name[15];
     buf_entry_t buf_entry;
 
@@ -44,16 +44,17 @@ subnet_cfg_dump (vlib_main_t *vm)
     for (int i = 0; i < PDS_VPP_MAX_DHCP_SUBNET; i++) {
         memset(dhcp_name, 0 ,15);
         sprintf(dhcp_name, "%s%d", "DhcpPolicy", i);
-        sprintf(dhcp_buf + strlen(dhcp_buf), "%-40s", dhcp_name);
+        snprintf(dhcp_buf + strlen(dhcp_buf), 40, "%-40s", dhcp_name);
     }
+    dhcp_buf[len] = '\0';
 
     memset(buf_entry.buf, 0 , DISPLAY_BUF_SIZE);
     buf_entry.vm = vm;
-    PRINT_HEADER_LINE(420);
+    PRINT_HEADER_LINE(421);
     vlib_cli_output(vm, "%-40s%-40s%-40s%-20s%-16s%-20s%-40s%-s%-3s",
                     "ID", "VpcID", "HostIf", "IPv4Prefix",
                     "VR IPv4", "VR MAC", "RtTblID", dhcp_buf, "ToS");
-    PRINT_HEADER_LINE(420);
+    PRINT_HEADER_LINE(421);
     subnet_cfg_db_dump_hdlr((void *)&buf_entry);
 
     return 0;

@@ -57,20 +57,22 @@ static void
 subnet_cfg_entry_dump (pds_cfg_msg_t *msg, void *buf)
 {
     int len = 40 * PDS_MAX_SUBNET_DHCP_POLICY;
-    char dhcp_buf[len];
+    char dhcp_buf[len+1];
 
     memset(dhcp_buf, 0, len);
     for (int i = 0; i < msg->subnet.spec.num_dhcp_policy; i++) {
-        sprintf(dhcp_buf + strlen(dhcp_buf), "%-40s",
+        snprintf(dhcp_buf + strlen(dhcp_buf), 40, "%-40s",
                 msg->subnet.spec.dhcp_policy[i].str());
     }
 
     for (int i = msg->subnet.spec.num_dhcp_policy;
          i < PDS_MAX_SUBNET_DHCP_POLICY; i++) {
-        sprintf(dhcp_buf + strlen(dhcp_buf), "%-40s", "-");
+        snprintf(dhcp_buf + strlen(dhcp_buf), 40, "%-40s", "-");
     }
 
-    snprintf((char *)buf, 420, "%-40s%-40s%-40s%-20s%-16s%-20s%-40s%-s%-3d\n\n",
+    dhcp_buf[len] = '\0';
+
+    snprintf((char *)buf, 421, "%-40s%-40s%-40s%-20s%-16s%-20s%-40s%-s%-3d\n\n",
              msg->subnet.spec.key.str(),
              msg->subnet.spec.vpc.str(), msg->subnet.spec.host_if.str(),
              ipv4pfx2str(&(msg->subnet.spec.v4_prefix)),
