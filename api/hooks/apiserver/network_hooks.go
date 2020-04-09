@@ -6,19 +6,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/workload"
-	"github.com/pensando/sw/api/interfaces"
-	"github.com/pensando/sw/api/utils"
+	apiintf "github.com/pensando/sw/api/interfaces"
+	apiutils "github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/apiserver/pkg"
+	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/featureflags"
@@ -46,6 +48,24 @@ func (h *networkHooks) validateIPAMPolicyConfig(i interface{}, ver string, ignSt
 	return nil
 }
 
+func validateImportExportRTs(rd *network.RouteDistinguisher, name string) (ret []error) {
+	switch strings.ToLower(rd.Type) {
+	case strings.ToLower(network.RouteDistinguisher_Type0.String()):
+		if rd.AdminValue > math.MaxUint16 {
+			ret = append(ret, fmt.Errorf("%s Route Distinguisher %s admin value cannot be greater than %d", name, network.RouteDistinguisher_Type0.String(), math.MaxUint16))
+		}
+	case strings.ToLower(network.RouteDistinguisher_Type1.String()):
+		if rd.AssignedValue > math.MaxUint16 {
+			ret = append(ret, fmt.Errorf("%s Route Distinguisher %s assigned value cannot be greater than %d", name, network.RouteDistinguisher_Type1.String(), math.MaxUint16))
+		}
+	case strings.ToLower(network.RouteDistinguisher_Type2.String()):
+		if rd.AssignedValue > math.MaxUint16 {
+			ret = append(ret, fmt.Errorf("%s Route Distinguisher %s assigned value cannot be greater than %d", name, network.RouteDistinguisher_Type2.String(), math.MaxUint16))
+		}
+	}
+	return
+}
+
 func (h *networkHooks) validateNetworkConfig(i interface{}, ver string, ignStatus, ignoreSpec bool) []error {
 	var ret []error
 
@@ -66,6 +86,31 @@ func (h *networkHooks) validateNetworkConfig(i interface{}, ver string, ignStatu
 		if in.Spec.RouteImportExport.AddressFamily == network.BGPAddressFamily_IPv4Unicast.String() {
 			ret = append(ret, fmt.Errorf("Route Import Export of address family ipv4 unicast cannot be specified for Network"))
 		}
+		if in.Spec.RouteImportExport.AddressFamily == network.BGPAddressFamily_L2vpnEvpn.String() {
+			if in.Spec.VxlanVNI == 0 {
+				ret = append(ret, fmt.Errorf("For address family %s VxlanVNI must be specified", network.BGPAddressFamily_L2vpnEvpn.String()))
+			}
+			if in.Spec.VirtualRouter == "" {
+				ret = append(ret, fmt.Errorf("For address family %s VirtualRouter must be specified", network.BGPAddressFamily_L2vpnEvpn.String()))
+			}
+			if in.Spec.VirtualRouter == "default" {
+				ret = append(ret, fmt.Errorf("For address family %s VirtualRouter has to be non-default", network.BGPAddressFamily_L2vpnEvpn.String()))
+			}
+		}
+
+		for _, e := range in.Spec.RouteImportExport.ExportRTs {
+			errs := validateImportExportRTs(e, "Export")
+			if errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+
+		for _, e := range in.Spec.RouteImportExport.ImportRTs {
+			errs := validateImportExportRTs(e, "Import")
+			if len(errs) != 0 {
+				ret = append(ret, errs...)
+			}
+		}
 	}
 
 	if len(in.Spec.IngressSecurityPolicy) > 2 {
@@ -74,6 +119,7 @@ func (h *networkHooks) validateNetworkConfig(i interface{}, ver string, ignStatu
 	if len(in.Spec.EgressSecurityPolicy) > 2 {
 		ret = append(ret, fmt.Errorf("maximum of 2 egress security policies are allowed"))
 	}
+
 	return ret
 }
 
@@ -199,6 +245,9 @@ func (h *networkHooks) checkNetworkMutableFields(ctx context.Context, kv kvstore
 	}
 	if in.Spec.VlanID != existingNw.Spec.VlanID {
 		return i, true, fmt.Errorf("cannot modify VlanID of a network")
+	}
+	if in.Spec.VxlanVNI != existingNw.Spec.VxlanVNI {
+		return i, true, fmt.Errorf("cannot modify VxlanVNI of a network")
 	}
 	return i, true, nil
 }
@@ -384,6 +433,9 @@ func (h *networkHooks) checkVirtualRouterMutableUpdate(ctx context.Context, kv k
 	}
 	if curObj.Spec.Type != existingObj.Spec.Type {
 		return i, true, fmt.Errorf("VirtualRouter Type cannot be modified [%v->%v]", existingObj.Spec.Type, curObj.Spec.Type)
+	}
+	if curObj.Spec.VxLanVNI != existingObj.Spec.VxLanVNI {
+		return i, true, fmt.Errorf("VirtualRouter VxLanVNI cannot be updated")
 	}
 	return i, true, nil
 }

@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"fmt"
+	"math"
 	"testing"
 	"time"
 
@@ -127,8 +128,10 @@ func TestValidateHooks(t *testing.T) {
 	Assert(t, len(errs) != 0, "expecting to fail due to RT/RT on network")
 
 	nw.Spec.RouteImportExport.AddressFamily = network.BGPAddressFamily_L2vpnEvpn.String()
+	nw.Spec.VxlanVNI = 1000
+	nw.Spec.VirtualRouter = "test"
 	errs = nh.validateNetworkConfig(nw, "v1", false, false)
-	Assert(t, len(errs) == 0, "expecting to succeeed")
+	Assert(t, len(errs) == 0, "expecting to succeed [%v]", errs)
 
 	nw.Spec.IngressSecurityPolicy = []string{"xxx"}
 	nw.Spec.EgressSecurityPolicy = []string{"xxx"}
@@ -145,6 +148,49 @@ func TestValidateHooks(t *testing.T) {
 
 	nw.Spec.EgressSecurityPolicy = []string{"xxx", "xxx1", "xxx2"}
 	nw.Spec.IngressSecurityPolicy = []string{"xxx", "xxx1"}
+	errs = nh.validateNetworkConfig(nw, "v1", false, false)
+	Assert(t, len(errs) != 0, "Expecting to fail")
+
+	nw.Spec.RouteImportExport.AddressFamily = network.BGPAddressFamily_L2vpnEvpn.String()
+	nw.Spec.VxlanVNI = 0
+	nw.Spec.VirtualRouter = ""
+	errs = nh.validateNetworkConfig(nw, "v1", false, false)
+	Assert(t, len(errs) != 0, "Expecting to fail")
+
+	nw.Spec.VxlanVNI = 1000
+	errs = nh.validateNetworkConfig(nw, "v1", false, false)
+	Assert(t, len(errs) != 0, "Expecting to fail")
+
+	nw.Spec.VxlanVNI = 1000
+	nw.Spec.VirtualRouter = "default"
+	errs = nh.validateNetworkConfig(nw, "v1", false, false)
+	Assert(t, len(errs) != 0, "Expecting to fail")
+
+	nw.Spec.VxlanVNI = 0
+	nw.Spec.VirtualRouter = "test"
+	errs = nh.validateNetworkConfig(nw, "v1", false, false)
+	Assert(t, len(errs) != 0, "Expecting to fail")
+
+	nw.Spec.VxlanVNI = 1000
+	nw.Spec.VirtualRouter = "test"
+	rt := &network.RouteDistinguisher{}
+	rt.Type = network.RouteDistinguisher_Type0.String()
+	rt.AdminValue = math.MaxUint16 + 1
+	nw.Spec.RouteImportExport.ExportRTs = []*network.RouteDistinguisher{rt}
+	errs = nh.validateNetworkConfig(nw, "v1", false, false)
+	Assert(t, len(errs) != 0, "Expecting to fail")
+
+	nw.Spec.RouteImportExport.ImportRTs = []*network.RouteDistinguisher{rt}
+	errs = nh.validateNetworkConfig(nw, "v1", false, false)
+	Assert(t, len(errs) != 0, "Expecting to fail")
+
+	rt.Type = network.RouteDistinguisher_Type1.String()
+	rt.AssignedValue = math.MaxUint16 + 1
+	errs = nh.validateNetworkConfig(nw, "v1", false, false)
+	Assert(t, len(errs) != 0, "Expecting to fail")
+
+	rt.Type = network.RouteDistinguisher_Type2.String()
+	rt.AssignedValue = math.MaxUint16 + 1
 	errs = nh.validateNetworkConfig(nw, "v1", false, false)
 	Assert(t, len(errs) != 0, "Expecting to fail")
 
@@ -390,6 +436,11 @@ func TestNetworkPrecommitHooks(t *testing.T) {
 	AssertOk(t, err, "precommit check failed (%s)", err)
 	Assert(t, kvw, "kvwrite should be set")
 
+	curvrf.Spec.VxLanVNI = 1000
+	_, kvw, err = nh.checkVirtualRouterMutableUpdate(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, vrf)
+	Assert(t, err != nil, "precommit check should fail")
+	curvrf.Spec.VxLanVNI = 0
+
 	curvrf.Spec.Type = network.VirtualRouterSpec_Infra.String()
 	_, kvw, err = nh.checkVirtualRouterMutableUpdate(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, vrf)
 	Assert(t, err != nil, "precommit check should fail")
@@ -419,9 +470,15 @@ func TestNetworkPrecommitHooks(t *testing.T) {
 		*r = curnw
 		return nil
 	}
+
 	_, kvw, err = nh.checkNetworkMutableFields(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, nw)
 	AssertOk(t, err, "precommit check failed (%s)", err)
 	Assert(t, kvw, "kvwrite should be set")
+
+	nw.Spec.VxlanVNI = 1000
+	_, kvw, err = nh.checkNetworkMutableFields(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, nw)
+	Assert(t, err != nil, "precommit check should fail")
+	nw.Spec.VxlanVNI = 0
 
 	nw.Spec.VlanID = 2
 	_, kvw, err = nh.checkNetworkMutableFields(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, nw)
@@ -437,6 +494,7 @@ func TestNetworkPrecommitHooks(t *testing.T) {
 	nw.Spec.Type = network.NetworkType_Bridged.String()
 	_, kvw, err = nh.checkNetworkMutableFields(ctx, kvs, txn, "/test/key", apiintf.UpdateOper, false, nw)
 	Assert(t, err != nil, "precommit check should fail")
+
 }
 
 func TestNetworkCreate(t *testing.T) {
