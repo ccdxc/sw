@@ -254,19 +254,19 @@ func (sm *SysModel) VerifyClusterStatus() error {
 			return errors.New("Config not in sync")
 		}
 
-			// verify ping is successful across all workloads
-			if sm.Tb.HasNaplesHW() {
-				for i := 0; i < 10; i++ {
-					err = sm.PingPairs(sm.WorkloadPairs().WithinNetwork())
-					if err == nil {
-						break
-					}
-				}
-				if err != nil {
-					return err
-				}
-			}
 	*/
+	// verify ping is successful across all workloads
+	if sm.Tb.HasNaplesHW() {
+		for i := 0; i < 10; i++ {
+			err = sm.PingPairs(sm.WorkloadPairs().WithinNetwork())
+			if err == nil {
+				break
+			}
+		}
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

@@ -573,6 +573,8 @@ func (sm *SysModel) SetupDefaultCommon(ctx context.Context, scale, scaleData boo
 // SetupDefaultConfig sets up a default config for the system
 func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData bool) error {
 
+	sm.Scale = scale
+	sm.ScaleData = scaleData
 	err := sm.setupInsertionMode()
 
 	if err != nil {

@@ -318,6 +318,9 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 
 	log.Infof("Setting up default config...")
 
+	sm.Scale = scale
+	sm.ScaleData = scaleData
+
 	err := sm.InitConfig(scale, scaleData)
 	if err != nil {
 		return err

@@ -157,20 +157,15 @@ func (sm *VcenterSysModel) SetupWorkloads(scale bool) error {
 
 // SetupDefaultConfig sets up a default config for the system
 func (sm *VcenterSysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData bool) error {
-
+	sm.Scale = scale
+	sm.ScaleData = scaleData
 	err := sm.InitConfig(scale, scaleData)
 	if err != nil {
 		return err
 	}
 
-	//objects.NewOrchestrator(
-	if err := sm.SetupDefaultCommon(ctx, scale, scaleData); err != nil {
-		return err
-	}
-
 	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancelFunc()
-
 	//Give it some time for hosts to be discovered.
 L:
 	for true {
@@ -185,6 +180,11 @@ L:
 			log.Errorf("Error associating hosts: %s", err)
 			time.Sleep(2 * time.Second)
 		}
+	}
+
+	//objects.NewOrchestrator(
+	if err := sm.SetupDefaultCommon(ctx, scale, scaleData); err != nil {
+		return err
 	}
 
 	//Reassociate workloads to hosts

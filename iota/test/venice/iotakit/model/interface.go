@@ -75,6 +75,7 @@ type TriggerIntf interface {
 	TriggerHostReboot(int) error
 	TriggerVeniceReboot(int) error
 	TriggerVenicePartition(int) error
+	TriggerDeleteAddConfig(int) error
 	TriggerLinkFlap(percent int) error
 	RunRandomTrigger(percent int) error
 }

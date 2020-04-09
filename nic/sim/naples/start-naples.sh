@@ -140,6 +140,11 @@ cd "$LOG_DIR"
 
 if [ ! -z "$NO_DATAPATH" ]; then
     echo "Starting sysmgr ...no datapth"
+    #netagent waits for these interfaces
+    ip link add dsc0 type dummy
+    ip link add dsc1 type dummy
+    ip link add oob_mnic0 type dummy
+    ip link add bond0 type dummy
     $NIC_DIR/bin/sysmgr $NIC_DIR/conf/sysmgr_no_datapath.json &
 else
     if [ $WITH_QEMU == 1 ]; then

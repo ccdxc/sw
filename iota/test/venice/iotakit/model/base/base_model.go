@@ -52,7 +52,8 @@ type SysModel struct {
 	SkipSetup  bool             //to do skip setup or not
 	SkipConfig bool             //to do skip reboot or not
 	Tb         *testbed.TestBed // testbed
-
+	Scale      bool
+	ScaleData  bool
 }
 
 // Init init sys model
@@ -905,5 +906,11 @@ func (sm *SysModel) SetConfigModel(mType testbed.ModelType) error {
 		return err
 	}
 
+	return nil
+}
+
+//SetupDefaultConfig setup default config
+func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData bool) error {
+	panic("Base model does not implement default config")
 	return nil
 }

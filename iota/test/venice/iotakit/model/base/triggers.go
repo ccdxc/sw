@@ -128,16 +128,29 @@ func (sm *SysModel) TriggerLinkFlap(percent int) error {
 	return sm.FlapDataSwitchPorts(sc, 60*time.Second)
 }
 
+//TriggerDeleteAddConfig triggers link flap
+func (sm *SysModel) TriggerDeleteAddConfig(percent int) error {
+
+	err := sm.CleanupAllConfig()
+	if err != nil {
+		return err
+	}
+
+	err = sm.InitConfig(sm.Scale, sm.ScaleData)
+	return err
+}
+
 //RunRandomTrigger runs a random trigger
 func (sm *SysModel) RunRandomTrigger(percent int) error {
 
 	triggers := []triggerFunc{
-		sm.TriggerNaplesUpgrade,
+		sm.TriggerDeleteAddConfig,
 		sm.TriggerSnapshotRestore,
 		sm.TriggerHostReboot,
 		sm.TriggerVeniceReboot,
 		sm.TriggerVenicePartition,
 		sm.TriggerLinkFlap,
+		sm.TriggerNaplesUpgrade,
 	}
 
 	index := rand.Intn(len(triggers))
