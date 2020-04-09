@@ -150,6 +150,18 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:0dd81bac18c7970db1b841f3b219079e5a411beaf5809aef168f84dadff311a4"
+  name = "github.com/bhendo/go-powershell"
+  packages = [
+    ".",
+    "backend",
+    "utils",
+  ]
+  pruneopts = "NUT"
+  revision = "219e7fb4e41e15c1a8f68c7f082c4c6df96d6362"
+
+[[projects]]
+  branch = "master"
   digest = "1:bfd6b98cf43a82b899b91c6bfb0c858a2ca88abce2dc0c6519180e8f8546a369"
   name = "github.com/bmizerany/pat"
   packages = ["."]
@@ -1289,6 +1301,14 @@
   pruneopts = "NUT"
   revision = "03217c3e97663914aec3faafde50d081f197a0a2"
   version = "1.1.8"
+
+[[projects]]
+  branch = "master"
+  digest = "1:333ebbbdb62483e10837940facfbfecdff98d144c9423f31af4129e056f76111"
+  name = "github.com/juju/errors"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "3fe23663418fc1d724868c84f21b7519bbac7441"
 
 [[projects]]
   branch = "master"
@@ -2928,6 +2948,8 @@
     "github.com/GeertJohan/go.rice/rice",
     "github.com/RackSec/srslog",
     "github.com/asaskevich/govalidator",
+    "github.com/bhendo/go-powershell",
+    "github.com/bhendo/go-powershell/backend",
     "github.com/boltdb/bolt",
     "github.com/c9s/goprocinfo/linux",
     "github.com/calmh/ipfix",

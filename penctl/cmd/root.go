@@ -73,6 +73,7 @@ var jsonFormat bool
 var mockMode bool
 var authTokenFile string
 var compat11 bool
+var dscURL string
 
 func init() {
 	// Fill logger config params
@@ -93,6 +94,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&mockMode, "localhost", "l", false, "run penctl in mock managedBy to localhost")
 	rootCmd.PersistentFlags().StringVarP(&authTokenFile, "authtoken", "a", "", "path to file containing authorization token")
 	rootCmd.PersistentFlags().BoolVarP(&compat11, "compat-1.1", "", false, "run in 1.1 firmware compatibility mode")
+	rootCmd.PersistentFlags().StringVarP(&dscURL, "dsc-url", "", "", "set url for Distributed Service Card")
 
 	rootCmd.PersistentFlags().MarkHidden("localhost")
 

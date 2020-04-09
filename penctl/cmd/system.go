@@ -14,6 +14,8 @@ import (
 	nmd "github.com/pensando/sw/nic/agent/protos/nmd"
 )
 
+var tabularFormat bool
+
 var getSysMemCmd = &cobra.Command{
 	Use:   "system-memory-usage",
 	Short: "Show free/used memory on Distributed Service Card (in MB)",
@@ -28,6 +30,14 @@ var getProcMemInfoCmd = &cobra.Command{
 	Long:  "\n------------------------------------\n Check /proc/meminfo file on Distributed Service Card \n------------------------------------\n",
 	Args:  cobra.NoArgs,
 	RunE:  getProcMemInfoCmdHandler,
+}
+
+var getNaplesInfoCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Get all Naples Information",
+	Long:  "\n------------------------------------\n Get all Naples Information \n------------------------------------\n",
+	Args:  cobra.NoArgs,
+	RunE:  getNaplesInfo,
 }
 
 var getSystemCmd = &cobra.Command{
@@ -57,8 +67,10 @@ func init() {
 	showCmd.AddCommand(getSysMemCmd)
 	showCmd.AddCommand(getProcMemInfoCmd)
 	showCmd.AddCommand(getSystemCmd)
+	showCmd.AddCommand(getNaplesInfoCmd)
 	getSystemCmd.AddCommand(getSystemStatusCmd)
 	getSystemCmd.AddCommand(getSystemQueueStatsCmd)
+	showCmd.PersistentFlags().BoolVarP(&tabularFormat, "tabular", "t", false, "display in table format")
 }
 
 func getSysMemCmdHandler(cmd *cobra.Command, args []string) error {
