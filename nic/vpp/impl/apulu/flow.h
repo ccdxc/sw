@@ -1157,6 +1157,7 @@ pds_flow_rewrite_flags_init (void)
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_TWICE_NAT);
     rewrite_flags->tx_rewrite =
             (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
+            (TX_REWRITE_SPORT_FROM_NAT << TX_REWRITE_SPORT_START) |
             (TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START) |
             (TX_REWRITE_DMAC_FROM_TUNNEL << TX_REWRITE_DMAC_START) |
             (TX_REWRITE_ENCAP_VXLAN << TX_REWRITE_ENCAP_START) |
@@ -1165,6 +1166,7 @@ pds_flow_rewrite_flags_init (void)
     // return traffic is routing as it will come with VNI of VPC
     rewrite_flags->rx_rewrite =
             (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
+            (RX_REWRITE_DPORT_FROM_NAT << RX_REWRITE_DPORT_START) |
             (RX_REWRITE_SIP_FROM_NAT << RX_REWRITE_SIP_START) |
             (RX_REWRITE_DMAC_FROM_NEXTHOP << RX_REWRITE_DMAC_START) |
             (RX_REWRITE_SMAC_FROM_VRMAC << RX_REWRITE_SMAC_START) |

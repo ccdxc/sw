@@ -106,7 +106,8 @@ class _Testbed:
         self.__fw_upgrade_done = False
         self.__read_testbed_json()
         self.__derive_testbed_attributes()
-        self.pingHosts()
+        if not GlobalOptions.dryrun:
+            self.pingHosts()
         return
 
     def pingHosts(self):

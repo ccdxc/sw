@@ -27,12 +27,22 @@ testcases:
             ipaf    : [ ipv4 ]
             pktsize : [ 64 ]
 
+    -   name    : Ping_IGW_NAPT_SERVICE_Workloads
+        testcase: testcases.networking.ping
+        stress  : True
+        args    :
+            type: igw_napt_only
+            napt_type: service
+        iterators :
+            type    : nested
+            ipaf    : [ ipv4 ]
+            pktsize : [ 64 ]
+
     -   name    : Iperf_IGW_NAPT_TCP
         testcase: testcases.networking.iperf
         args    :
             type : igw_napt_only
             num_streams : 10
-
         iterators :
             type      : nested
             ipaf      : [ ipv4 ]
@@ -44,9 +54,33 @@ testcases:
         args    :
             type : igw_napt_only
             num_streams : 10
-
         iterators :
             type      : nested
             ipaf      : [ ipv4 ]
             pktsize   : [ 1024 ]
             protocol  : [ udp ]
+
+    -   name    : Iperf_IGW_NAPT_SERVICE_TCP
+        testcase: testcases.networking.iperf
+        args    :
+            type : igw_napt_only
+            napt_type: service
+            num_streams : 10
+        iterators :
+            type      : nested
+            ipaf      : [ ipv4 ]
+            pktsize   : [ 512 ]
+            protocol  : [ tcp ]
+
+    -   name    : Iperf_IGW_NAPT_SERVICE_UDP
+        testcase: testcases.networking.iperf
+        args    :
+            type : igw_napt_only
+            napt_type: service
+            num_streams : 10
+        iterators :
+            type      : nested
+            ipaf      : [ ipv4 ]
+            pktsize   : [ 512 ]
+            protocol  : [ udp ]
+

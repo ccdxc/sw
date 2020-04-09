@@ -16,8 +16,13 @@ def Setup(tc):
         tc.workload_pairs = config_api.GetPingableWorkloadPairs(
             wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
     elif tc.args.type == 'igw_napt_only':
+        napt_type = getattr(tc.args, "napt_type", None)
+        if napt_type and napt_type == 'service':
+            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY
+        else:
+            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY
         tc.workload_pairs = config_api.GetWorkloadPairs(
-            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY,
+            wl_pair_type = wl_pair_type,
             wl_pair_scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET)
         tc.nat_port_blocks = config_api.GetAllNatPortBlocks()
         tc.nat_pre_stats = {}

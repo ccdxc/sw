@@ -81,13 +81,18 @@ class VnicObject(base.ConfigObjectBase):
         self.DeriveOperInfo(node)
         self.Mutable = True if (utils.IsUpdateSupported() and self.IsOriginFixed()) else False
         self.LocalVnic = getattr(spec, 'localvnic', False)
-        self.IgwVnic = getattr(spec, 'igwvnic', False)
+        self.VnicType = getattr(spec, 'vnictype', None)
         self.HasPublicIp = getattr(spec, 'public', False)
         remote_routes = getattr(spec, 'remoteroutes', None)
         if remote_routes:
             self.RemoteRoutes = remote_routes.replace('\\', '/').split(',')
         else:
             self.RemoteRoutes = None
+        service_ips = getattr(spec, 'serviceips', None)
+        if service_ips:
+            self.ServiceIPs = service_ips.replace('\\', '/').split(',')
+        else:
+            self.ServiceIPs = None
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION
@@ -121,6 +126,10 @@ class VnicObject(base.ConfigObjectBase):
             logger.info("- Ing V6 Policies:", self.IngV6SecurityPolicyIds)
             logger.info("- Egr V4 Policies:", self.EgV4SecurityPolicyIds)
             logger.info("- Egr V6 Policies:", self.EgV6SecurityPolicyIds)
+        if self.VnicType:
+            logger.info("- VnicType:", self.VnicType)
+        if self.ServiceIPs:
+            logger.info("- Service IPs:", self.ServiceIPs)
         self.Status.Show()
         return
 
@@ -236,6 +245,9 @@ class VnicObject(base.ConfigObjectBase):
 
     def IsEncapTypeVLAN(self):
         return self.dot1Qenabled
+
+    def IsIgwVnic(self):
+        return self.VnicType =="igw" or self.VnicType == "igw_service"
 
     def GetDependees(self, node):
         """

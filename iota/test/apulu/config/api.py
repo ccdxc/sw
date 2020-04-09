@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import random
+import copy
 #Following come from dol/infra
 from apollo.config.generator import ObjectInfo as ObjClient
 from apollo.config.agent.api import ObjectTypes as APIObjTypes
@@ -13,6 +14,7 @@ import iota.harness.api as api
 WORKLOAD_PAIR_TYPE_LOCAL_ONLY    = 1
 WORKLOAD_PAIR_TYPE_REMOTE_ONLY   = 2
 WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY = 3
+WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY = 4
 
 WORKLOAD_PAIR_SCOPE_INTRA_SUBNET = 1
 WORKLOAD_PAIR_SCOPE_INTER_SUBNET = 2
@@ -84,10 +86,16 @@ def __vnics_in_same_vpc(vnic1, vnic2):
 def __vnics_are_local_to_igw_pair(vnic1, vnic2):
     if vnic1.Node == vnic2.Node:
         return False
-    if vnic1.LocalVnic == True and vnic2.IgwVnic == True:
+    if vnic1.LocalVnic == True and vnic2.VnicType == "igw":
         return True
     return False
 
+def __vnics_are_local_to_igw_service_pair(vnic1, vnic2):
+    if vnic1.Node == vnic2.Node:
+        return False
+    if vnic1.LocalVnic == True and vnic2.VnicType == "igw_service":
+        return True
+    return False
 
 def __findWorkloadByVnic(vnic_inst):
     wloads = api.GetWorkloads()
@@ -100,6 +108,7 @@ def __findWorkloadByVnic(vnic_inst):
 def __getWorkloadPairsBy(wl_pair_type, wl_pair_scope = WORKLOAD_PAIR_SCOPE_INTRA_SUBNET):
     wl_pairs = []
     naplesHosts = api.GetNaplesHostnames()
+    service_vnics_done = []
     vnics = []
     for node in naplesHosts:
         vnics.extend(vnic.client.Objects(node))
@@ -116,9 +125,23 @@ def __getWorkloadPairsBy(wl_pair_type, wl_pair_scope = WORKLOAD_PAIR_SCOPE_INTRA
             if wl_pair_type == WORKLOAD_PAIR_TYPE_LOCAL_ONLY and vnic1.Node != vnic2.Node:
                 continue
             elif wl_pair_type == WORKLOAD_PAIR_TYPE_REMOTE_ONLY and\
-                 ((vnic1.Node == vnic2.Node) or vnic1.IgwVnic or vnic2.IgwVnic):
+                    ((vnic1.Node == vnic2.Node) or vnic1.IsIgwVnic() or vnic2.IsIgwVnic()):
                 continue
             elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY and not __vnics_are_local_to_igw_pair(vnic1, vnic2):
+                continue
+            elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY:
+                if not __vnics_are_local_to_igw_service_pair(vnic1, vnic2):
+                    continue
+                if vnic1 in service_vnics_done:
+                    continue
+                w1 = __findWorkloadByVnic(vnic1)
+                for service_ip in vnic1.ServiceIPs:
+                    # We need to ping w2 using its service ip, so change its ip address
+                    w2 = copy.copy(__findWorkloadByVnic(vnic2))
+                    w2.ip_address = service_ip
+                    assert(w1 and w2)
+                    wl_pairs.append((w1, w2))
+                service_vnics_done.append(vnic1)
                 continue
 
             w1 = __findWorkloadByVnic(vnic1)

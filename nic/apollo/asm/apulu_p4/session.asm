@@ -53,7 +53,7 @@ session_rx:
     sne             c1, d.session_info_d.rx_xlate_id2, r0
     phvwr.c1        p.control_metadata_apply_nat2, TRUE
     b               session_stats
-    phvwr.c1        p.rewrite_metadata_xlate_id2, d.session_info_d.tx_xlate_id2
+    phvwr.c1        p.rewrite_metadata_xlate_id2, d.session_info_d.rx_xlate_id2
 
 session_tx:
     phvwr           p.rewrite_metadata_flags, d.session_info_d.tx_rewrite_flags
