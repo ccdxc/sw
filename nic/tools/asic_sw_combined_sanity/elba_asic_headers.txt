@@ -119,6 +119,7 @@
 ./elba/model/elb_dpa/elb_dpp_csr.h
 ./elba/model/elb_dpa/elb_dpr_csr.h
 ./elba/model/elb_ms/elb_ms_csr.h
+./elba/model/elb_ms/elb_ms_csr_define.h
 ./elba/model/elb_ms/elb_mse_csr.h
 ./elba/model/elb_pb/elb_pf_csr.h
 ./elba/model/elb_pb/elb_pbc_csr.h
