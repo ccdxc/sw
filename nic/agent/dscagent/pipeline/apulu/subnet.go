@@ -7,11 +7,13 @@ package apulu
 import (
 	"context"
 	"fmt"
+	"net"
 
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
+	pipelineUtils "github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils/validator"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -565,9 +567,14 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 		v6VrIP = nw.Spec.V6Address[0].Address.V6Address
 	}
 	if nw.Spec.V4Address != nil {
+		_, ipn, err := net.ParseCIDR(fmt.Sprintf("%s/%d", utils.ConvertIntIPtoStr(nw.Spec.V4Address[0].Address.V4Address), nw.Spec.V4Address[0].PrefixLen))
+		if err != nil {
+			log.Errorf("resolving IP network failed for %x/%d | %s", nw.Spec.V4Address[0].Address.V4Address, nw.Spec.V4Address[0].PrefixLen, err)
+			return nil, err
+		}
 		v4Prefix = &halapi.IPv4Prefix{
 			Len:  nw.Spec.V4Address[0].PrefixLen,
-			Addr: nw.Spec.V4Address[0].Address.V4Address,
+			Addr: pipelineUtils.Ipv4Touint32(ipn.IP),
 		}
 		v4VrIP = nw.Spec.V4Address[0].Address.V4Address
 	}

@@ -46,4 +46,17 @@ func TestRDToBytes(t *testing.T) {
 		t.Errorf("unexpected RD [%v][%v]", r, exp)
 	}
 
+	for _, c := range []struct {
+		in  uint32
+		out string
+	}{
+		{0x0A010101, "10.1.1.1"},
+		{0, "0.0.0.0"},
+		{1, "0.0.0.1"},
+		{0x0A0A0101, "10.10.1.1"},
+	} {
+		if c.out != ConvertIntIPtoStr(c.in) {
+			t.Errorf("expecting [%v] [ got [%v]", c.out, ConvertIntIPtoStr(c.in))
+		}
+	}
 }

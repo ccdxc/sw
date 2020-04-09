@@ -144,6 +144,12 @@ func ConvertIPAddress(address string) (ipAddress *halapi.IPAddress) {
 	return
 }
 
+func ConvertIntIPtoStr(in uint32) string {
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, in)
+	return net.IP(b).String()
+}
+
 // ConvertIPPrefix converts IP Address string to hal ip prefix. TODO v6
 func ConvertIPPrefix(address string) (ipAddress *halapi.IPPrefix, err error) {
 	addr, net, err := net.ParseCIDR(address)
