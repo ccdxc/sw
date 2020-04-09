@@ -328,7 +328,7 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 		d.nmd.SetInterfaceIPs(interfaceIPs)
 	}
 
-	if d.Hostname != "" && d.pipeline == globals.NaplesPipelineApollo {
+	if d.Hostname != "" {
 		d.nmd.SetDSCID(d.Hostname)
 	}
 

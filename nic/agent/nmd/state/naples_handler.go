@@ -342,9 +342,7 @@ func (n *NMD) PostStatusToAgent() (err error) {
 		statusObj.DSCStaticRoutes = n.DSCStaticRoutes
 	}
 
-	if n.Pipeline != nil && n.Pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
-		statusObj.DSCID = n.config.Spec.ID
-	}
+	statusObj.DSCID = n.config.Spec.ID
 
 	var resp Response
 	ticker := time.NewTicker(time.Minute)
@@ -387,9 +385,7 @@ func (n *NMD) PostStatusToAgent() (err error) {
 						statusObj.DSCStaticRoutes = n.DSCStaticRoutes
 					}
 
-					if n.Pipeline != nil && n.Pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
-						statusObj.DSCID = n.config.Spec.ID
-					}
+					statusObj.DSCID = n.config.Spec.ID
 
 					err := netutils.HTTPPost(agentModeChangeURL, &statusObj, &resp)
 					if err != nil {

@@ -1907,6 +1907,7 @@ func (i *IrisAPI) createHostInterface(uid string, spec *halapi.LifSpec, status *
 				HostIfName: spec.GetName(),
 			},
 			OperStatus: status.GetLifStatus().String(),
+			DSCID:      i.InfraAPI.GetConfig().DSCID,
 		},
 	}
 	b, _ := json.MarshalIndent(l, "", "   ")
@@ -1961,6 +1962,7 @@ func (i *IrisAPI) createUplinkInterface(uid string, spec *halapi.PortSpec, statu
 			IFUplinkStatus: netproto.InterfaceUplinkStatus{
 				PortID: spec.KeyOrHandle.GetPortId(),
 			},
+			DSCID: i.InfraAPI.GetConfig().DSCID,
 		},
 	}
 	ifEvnt := types.UpdateIfEvent{
