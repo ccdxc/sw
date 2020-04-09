@@ -235,7 +235,7 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
   }
 
   createObject(object: INetworkNetwork) {
-    return this.networkService.AddNetwork(object, '', false);
+    return this.networkService.AddNetwork(object);
   }
 
   updateObject(newObject: INetworkNetwork, oldObject: INetworkNetwork) {
