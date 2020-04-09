@@ -7,7 +7,7 @@
 #include <stdarg.h>
 #include <string>
 
-#include "alert_defs.h"
+#include "gen/alerts/alert_defs.h"
 #include "nic/sdk/lib/operd/operd.hpp"
 #include "nic/sdk/lib/operd/region.hpp"
 

@@ -131,8 +131,8 @@ define ADD_RECIPE_FOR_POSTGEN_MK
     ifeq "$${${1}_ASIC}" "$${ASIC}"
         ifeq "$${${1}_PIPELINE}" "$${PIPELINE}"
             ifeq "$${${1}_FWTYPE}" "$${FWTYPE}"
-                $${${1}_MK_DIR}/${2}: $${${1}_MKTARGET}
-		${AT}touch $$@
+$${${1}_MK_DIR}/${2}: $${${1}_MKTARGET}
+	${AT}touch $$@
             endif
         endif
     endif

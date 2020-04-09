@@ -16,5 +16,17 @@
         "category": "System",
         "severity": "WARN",
         "description": "System cold booted"
+    },
+    {
+        "name": "LINK_UP",
+        "category": "Network",
+        "severity": "INFO",
+        "description": "Port link is up"
+    },
+    {
+        "name": "LINK_DOWN",
+        "category": "Network",
+        "severity": "INFO",
+        "description": "Port link is down"
     }
 ]

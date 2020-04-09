@@ -10,7 +10,7 @@ MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl \
                   sdkp4 sdkp4utils sdkcapri_asicrw_if sdkcapri \
                   sdkplatformutils sdkxcvrdriver sdkasicpd \
                   bm_allocator sdklinkmgr sdklinkmgrcsr operd \
-		  operd_alerts
+		  operd_alerts operd_alert_defs
 MODULE_LDLIBS   = ${NIC_CAPSIM_LDLIBS} \
                   ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
                   AAPL

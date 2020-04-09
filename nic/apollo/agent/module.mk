@@ -10,7 +10,8 @@ MODULE_SOLIBS   = pdsproto thread trace logger svc pdsapi memhash sltcam \
                   rfc_${PIPELINE} event_thread pdsrfc pdsagentcore slhash \
                   pdsmshals pdsmsmgmt pdsmscommon pdsmsstubs pdsmsmgmtsvc \
                   ${NIC_${PIPELINE}_NICMGR_LIBS} ${NIC_FTL_LIBS} \
-                  sdkeventmgr kvstore_lmdb penmetrics sdkpal
+                  sdkeventmgr kvstore_lmdb penmetrics sdkpal operd_alerts \
+		  operd_alert_defs
 MODULE_LDFLAGS  = -L$(MS_LIB_DIR)
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} lmdb \
                   ${NIC_COMMON_LDLIBS} edit ncurses $(MS_LD_LIBS)

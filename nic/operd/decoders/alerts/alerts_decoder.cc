@@ -9,7 +9,7 @@
 #include "gen/proto/oper.pb.h"
 #include "gen/proto/types.pb.h"
 #include "nic/sdk/lib/operd/decoder.h"
-#include "nic/operd/alerts/alert_defs.h"
+#include "gen/alerts/alert_defs.h"
 
 static size_t
 alerts_decoder (uint8_t encoder, const char *data, size_t data_length,

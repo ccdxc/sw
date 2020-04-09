@@ -10,5 +10,6 @@ MODULE_LDLIBS   =
 MODULE_DEPS     = 
 MODULE_FLAGS    = -Werror
 MODULE_SRC_DIR  = ${BLD_GEN_DIR}/alerts
+MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc)
 MODULE_PREREQS  = liboperd_alerts.submake
 include ${MKDEFS}/post.mk

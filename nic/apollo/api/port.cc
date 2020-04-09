@@ -20,6 +20,7 @@
 #include "nic/apollo/api/if.hpp"
 #include "nic/apollo/api/port.hpp"
 #include "nic/apollo/api/internal/metrics.hpp"
+#include "nic/operd/alerts/alerts.hpp"
 
 namespace api {
 
@@ -99,6 +100,15 @@ port_event_cb (port_event_info_t *port_event_info)
     pds_event.port_info.info.port_an_args = (port_an_args_t *)&key;
     // notify the agent
     g_pds_state.event_notify(&pds_event);
+
+    // Raise an event
+    operd::alerts::operd_alerts_t alert = operd::alerts::LINK_DOWN;
+    if (port_event_info->event == port_event_t::PORT_EVENT_LINK_UP) {
+        alert = operd::alerts::LINK_UP;
+    }
+    operd::alerts::alert_recorder::get()->alert(
+        alert, "Port %s", key.str());
+
 }
 
 bool
