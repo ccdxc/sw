@@ -184,17 +184,17 @@ static inline void
 rmap_attr_update (remote_mapping_feeder& feeder, pds_remote_mapping_spec_t *spec,
                   int chg_bmap)
 {
-    if (chg_bmap | RMAP_ATTR_SUBNET) {
+    if (bit_check(chg_bmap, RMAP_ATTR_SUBNET)) {
     }
-    if (chg_bmap | RMAP_ATTR_FAB_ENCAP) {
+    if (bit_check(chg_bmap, RMAP_ATTR_FAB_ENCAP)) {
     }
-    if (chg_bmap | RMAP_ATTR_NH_TYPE) {
+    if (bit_check(chg_bmap, RMAP_ATTR_NH_TYPE)) {
     }
-    if (chg_bmap | RMAP_ATTR_VNIC_MAC) {
+    if (bit_check(chg_bmap, RMAP_ATTR_VNIC_MAC)) {
     }
-    if (chg_bmap | RMAP_ATTR_TAGS) {
+    if (bit_check(chg_bmap, RMAP_ATTR_TAGS)) {
     }
-    if (chg_bmap | RMAP_ATTR_PROVIDER_IP) {
+    if (bit_check(chg_bmap, RMAP_ATTR_PROVIDER_IP)) {
     }
 }
 

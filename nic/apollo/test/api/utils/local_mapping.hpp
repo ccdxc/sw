@@ -17,13 +17,13 @@ namespace test {
 namespace api {
 
 enum lmap_attrs {
-    LMAP_ATTR_VNIC        =  BIT(0),
-    LMAP_ATTR_SUBNET      =  BIT(1),
-    LMAP_ATTR_FAB_ENCAP   =  BIT(2),
-    LMAP_ATTR_VNIC_MAC    =  BIT(3),
-    LMAP_ATTR_PUBLIC_IP   =  BIT(4),
-    LMAP_ATTR_PROVIDER_IP =  BIT(5),
-    LMAP_ATTR_TAGS        =  BIT(6),
+    LMAP_ATTR_VNIC        =  bit(0),
+    LMAP_ATTR_SUBNET      =  bit(1),
+    LMAP_ATTR_FAB_ENCAP   =  bit(2),
+    LMAP_ATTR_VNIC_MAC    =  bit(3),
+    LMAP_ATTR_PUBLIC_IP   =  bit(4),
+    LMAP_ATTR_PROVIDER_IP =  bit(5),
+    LMAP_ATTR_TAGS        =  bit(6),
 };
 
 // Local mapping feeder class
@@ -127,7 +127,7 @@ API_DELETE(local_mapping);
 void lmap_create(local_mapping_feeder& feeder);
 void lmap_read(local_mapping_feeder& feeder, sdk_ret_t exp_result = SDK_RET_OK);
 void lmap_update(local_mapping_feeder& feeder, pds_local_mapping_spec_t *spec,
-                 int chg_bmap, sdk_ret_t exp_result = SDK_RET_OK);
+                 uint64_t chg_bmap, sdk_ret_t exp_result = SDK_RET_OK);
 void lmap_delete(local_mapping_feeder& feeder);
 
 }    // namespace api

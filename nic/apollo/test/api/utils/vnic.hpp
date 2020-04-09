@@ -17,6 +17,33 @@ namespace api {
 extern const uint64_t k_feeder_mac;
 extern const uint32_t k_max_vnic;
 
+enum vnic_attrs {
+    VNIC_ATTR_HOSTNAME           =  bit(0),
+    VNIC_ATTR_SUBNET             =  bit(1),
+    VNIC_ATTR_VNIC_ENCAP         =  bit(2),
+    VNIC_ATTR_FAB_ENCAP          =  bit(3),
+    VNIC_ATTR_MAC_ADDR           =  bit(4),
+    VNIC__ATTR_BINDING_CHECKS_EN =  bit(5),
+    VNIC_ATTR_TX_MIRROR          =  bit(6),
+    VNIC_ATTR_RX_MIRROR          =  bit(7),
+    VNIC_ATTR_V4_METER           =  bit(8),
+    VNIC_ATTR_V6_METER           =  bit(9),
+    VNIC_ATTR_SWITCH_VNIC        =  bit(10),
+    VNIC_ATTR_V4_INGPOL          =  bit(11),
+    VNIC_ATTR_V6_INGPOL          =  bit(12),
+    VNIC_ATTR_V4_EGRPOL          =  bit(13),
+    VNIC_ATTR_V6_EGRPOL          =  bit(14),
+    VNIC_ATTR_HOST_IF            =  bit(15),
+    VNIC_ATTR_TX_POLICER         =  bit(16),
+    VNIC_ATTR_RX_POLICER         =  bit(17),
+    VNIC_ATTR_PRIMARY            =  bit(18),
+    VNIC_ATTR_MAX_SESSIONS       =  bit(19),
+    VNIC_ATTR_FLOW_LEARN_EN      =  bit(20),
+};
+
+#define VNIC_ATTR_POL VNIC_ATTR_V4_INGPOL | VNIC_ATTR_V6_INGPOL | \
+                      VNIC_ATTR_V4_EGRPOL | VNIC_ATTR_V6_EGRPOL
+
 // VNIC test feeder class
 class vnic_feeder : public feeder {
 public:
@@ -117,6 +144,13 @@ API_CREATE(vnic);
 API_READ(vnic);
 API_UPDATE(vnic);
 API_DELETE(vnic);
+
+// VNIC crud helper prototypes
+void vnic_create(vnic_feeder& feeder);
+void vnic_read(vnic_feeder& feeder, sdk_ret_t exp_result = SDK_RET_OK);
+void vnic_update(vnic_feeder& feeder, pds_vnic_spec_t *spec,
+                 uint64_t chg_bmap, sdk_ret_t exp_result = SDK_RET_OK);
+void vnic_delete(vnic_feeder& feeder);
 
 // Misc function prototypes
 void sample_vnic_setup(pds_batch_ctxt_t bctxt);

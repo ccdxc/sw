@@ -6,6 +6,7 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/apollo/api/utils.hpp"
+#include "nic/apollo/test/api/utils/batch.hpp"
 #include "nic/apollo/test/api/utils/vnic.hpp"
 
 #define HOST_LIF_ID_MIN 71
@@ -207,6 +208,65 @@ vnic_feeder::status_compare(const pds_vnic_status_t *status1,
                             const pds_vnic_status_t *status2) const {
     return true;
 }
+
+//----------------------------------------------------------------------------
+// VNIC CRUD helper routines
+//----------------------------------------------------------------------------
+
+void
+vnic_create (vnic_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_create<vnic_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
+}
+
+void
+vnic_read (vnic_feeder& feeder, sdk_ret_t exp_result)
+{
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_read<vnic_feeder>(feeder, exp_result)));
+}
+
+static inline void
+vnic_attr_update (vnic_feeder& feeder, pds_vnic_spec_t *spec,
+                  int chg_bmap)
+{
+}
+
+void
+vnic_update (vnic_feeder& feeder, pds_vnic_spec_t *spec,
+             int chg_bmap, sdk_ret_t exp_result)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    vnic_attr_update(feeder, spec, chg_bmap);
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_update<vnic_feeder>(bctxt, feeder)));
+
+    // if expected result is err, batch commit should fail
+    if (exp_result == SDK_RET_ERR)
+        batch_commit_fail(bctxt);
+    else
+        batch_commit(bctxt);
+}
+
+void
+vnic_delete (vnic_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_delete<vnic_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
+}
+
+//----------------------------------------------------------------------------
+// Misc routines
+//----------------------------------------------------------------------------
+
 
 static vnic_feeder k_vnic_feeder;
 

@@ -203,19 +203,19 @@ static inline void
 lmap_attr_update (local_mapping_feeder& feeder, pds_local_mapping_spec_t *spec,
                   int chg_bmap)
 {
-    if (chg_bmap | LMAP_ATTR_VNIC) {
+    if (bit_check(chg_bmap, LMAP_ATTR_VNIC)) {
     }
-    if (chg_bmap | LMAP_ATTR_SUBNET) {
+    if (bit_check(chg_bmap, LMAP_ATTR_SUBNET)) {
     }
-    if (chg_bmap | LMAP_ATTR_FAB_ENCAP) {
+    if (bit_check(chg_bmap, LMAP_ATTR_FAB_ENCAP)) {
     }
-    if (chg_bmap | LMAP_ATTR_VNIC_MAC) {
+    if (bit_check(chg_bmap, LMAP_ATTR_VNIC_MAC)) {
     }
-    if (chg_bmap | LMAP_ATTR_PUBLIC_IP) {
+    if (bit_check(chg_bmap, LMAP_ATTR_PUBLIC_IP)) {
     }
-    if (chg_bmap | LMAP_ATTR_PROVIDER_IP) {
+    if (bit_check(chg_bmap, LMAP_ATTR_PROVIDER_IP)) {
     }
-    if (chg_bmap | LMAP_ATTR_TAGS) {
+    if (bit_check(chg_bmap, LMAP_ATTR_TAGS)) {
     }
 }
 

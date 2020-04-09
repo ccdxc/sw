@@ -16,22 +16,22 @@ namespace test {
 namespace api {
 
 enum subnet_attrs {
-    SUBNET_ATTR_VPC        =  BIT(0),
-    SUBNET_ATTR_V4_PREFIX  =  BIT(1),
-    SUBNET_ATTR_V6_PREFIX  =  BIT(2),
-    SUBNET_ATTR_V4_VRIP    =  BIT(3),
-    SUBNET_ATTR_V6_VRIP    =  BIT(4),
-    SUBNET_ATTR_VRMAC      =  BIT(5),
-    SUBNET_ATTR_V4_RTTBL   =  BIT(6),
-    SUBNET_ATTR_V6_RTTBL   =  BIT(7),
-    SUBNET_ATTR_V4_INGPOL  =  BIT(8),
-    SUBNET_ATTR_V6_INGPOL  =  BIT(9),
-    SUBNET_ATTR_V4_EGRPOL  =  BIT(10),
-    SUBNET_ATTR_V6_EGRPOL  =  BIT(11),
-    SUBNET_ATTR_FAB_ENCAP  =  BIT(12),
-    SUBNET_ATTR_HOST_IF    =  BIT(13),
-    SUBNET_ATTR_DHCP_POL   =  BIT(14),
-    SUBNET_ATTR_TOS        =  BIT(15),
+    SUBNET_ATTR_VPC        =  bit(0),
+    SUBNET_ATTR_V4_PREFIX  =  bit(1),
+    SUBNET_ATTR_V6_PREFIX  =  bit(2),
+    SUBNET_ATTR_V4_VRIP    =  bit(3),
+    SUBNET_ATTR_V6_VRIP    =  bit(4),
+    SUBNET_ATTR_VRMAC      =  bit(5),
+    SUBNET_ATTR_V4_RTTBL   =  bit(6),
+    SUBNET_ATTR_V6_RTTBL   =  bit(7),
+    SUBNET_ATTR_V4_INGPOL  =  bit(8),
+    SUBNET_ATTR_V6_INGPOL  =  bit(9),
+    SUBNET_ATTR_V4_EGRPOL  =  bit(10),
+    SUBNET_ATTR_V6_EGRPOL  =  bit(11),
+    SUBNET_ATTR_FAB_ENCAP  =  bit(12),
+    SUBNET_ATTR_HOST_IF    =  bit(13),
+    SUBNET_ATTR_DHCP_POL   =  bit(14),
+    SUBNET_ATTR_TOS        =  bit(15),
 };
 
 #define SUBNET_ATTR_POL SUBNET_ATTR_V4_INGPOL | SUBNET_ATTR_V6_INGPOL | \
@@ -127,8 +127,8 @@ extern pds_obj_key_t k_subnet_key;
 // Subnet crud helper prototypes
 void subnet_create(subnet_feeder& feeder);
 void subnet_read(subnet_feeder& feeder, sdk_ret_t exp_result = SDK_RET_OK);
-void subnet_update(subnet_feeder& feeder, pds_subnet_spec_t *spec, int chg_bmap,
-                   sdk_ret_t exp_result = SDK_RET_OK);
+void subnet_update(subnet_feeder& feeder, pds_subnet_spec_t *spec,
+                   uint64_t chg_bmap, sdk_ret_t exp_result = SDK_RET_OK);
 void subnet_delete(subnet_feeder& feeder);
 
 // Misc function prototypes
