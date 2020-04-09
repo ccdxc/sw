@@ -6,6 +6,7 @@
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
+#include "nic/apollo/test/api/utils/batch.hpp"
 #include "nic/apollo/test/api/utils/local_mapping.hpp"
 #include "nic/apollo/test/api/utils/vnic.hpp"
 
@@ -174,6 +175,75 @@ local_mapping_feeder::update_spec(uint32_t width) {
     //uint16_t vnic_id = (pdsobjkey2int(vnic) + 1)%k_max_vnic;
     //vnic =  int2pdsobjkey(vnic_id ? vnic_id : 1);
     this->fabric_encap.val.value++;
+}
+
+//----------------------------------------------------------------------------
+// Local mapping CRUD helper routines
+//----------------------------------------------------------------------------
+
+void
+lmap_create (local_mapping_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_create<local_mapping_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
+}
+
+void
+lmap_read (local_mapping_feeder& feeder, sdk_ret_t exp_result)
+{
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_read<local_mapping_feeder>(feeder, exp_result)));
+}
+
+// Local mapping feeder class
+static inline void
+lmap_attr_update (local_mapping_feeder& feeder, pds_local_mapping_spec_t *spec,
+                  int chg_bmap)
+{
+    if (chg_bmap | LMAP_ATTR_VNIC) {
+    }
+    if (chg_bmap | LMAP_ATTR_SUBNET) {
+    }
+    if (chg_bmap | LMAP_ATTR_FAB_ENCAP) {
+    }
+    if (chg_bmap | LMAP_ATTR_VNIC_MAC) {
+    }
+    if (chg_bmap | LMAP_ATTR_PUBLIC_IP) {
+    }
+    if (chg_bmap | LMAP_ATTR_PROVIDER_IP) {
+    }
+    if (chg_bmap | LMAP_ATTR_TAGS) {
+    }
+}
+
+void
+lmap_update (local_mapping_feeder& feeder, pds_local_mapping_spec_t *spec,
+             int chg_bmap, sdk_ret_t exp_result)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    lmap_attr_update(feeder, spec, chg_bmap);
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_update<local_mapping_feeder>(bctxt, feeder)));
+
+    // if expected result is err, batch commit should fail
+    if (exp_result == SDK_RET_ERR)
+        batch_commit_fail(bctxt);
+    else
+        batch_commit(bctxt);
+}
+
+void
+lmap_delete (local_mapping_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_delete<local_mapping_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
 }
 
 }    // namespace api

@@ -17,6 +17,15 @@
 namespace test {
 namespace api {
 
+enum rmap_attrs {
+    RMAP_ATTR_SUBNET      =  BIT(0),
+    RMAP_ATTR_FAB_ENCAP   =  BIT(1),
+    RMAP_ATTR_NH_TYPE     =  BIT(2),
+    RMAP_ATTR_VNIC_MAC    =  BIT(3),
+    RMAP_ATTR_TAGS        =  BIT(4),
+    RMAP_ATTR_PROVIDER_IP =  BIT(5),
+};
+
 // Local mapping feeder class
 class remote_mapping_feeder : public feeder {
 public:
@@ -112,6 +121,13 @@ API_CREATE(remote_mapping);
 API_READ(remote_mapping);
 API_UPDATE(remote_mapping);
 API_DELETE(remote_mapping);
+
+// Remote mapping crud helper prototypes
+void rmap_create(remote_mapping_feeder& feeder);
+void rmap_read(remote_mapping_feeder& feeder, sdk_ret_t exp_result = SDK_RET_OK);
+void ramp_update(remote_mapping_feeder& feeder, pds_remote_mapping_spec_t *spec,
+                 int chg_bmap, sdk_ret_t exp_result = SDK_RET_OK);
+void rmap_delete(remote_mapping_feeder& feeder);
 
 }    // namespace api
 }    // namespace test

@@ -5,8 +5,9 @@
 
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/utils.hpp"
+#include "nic/apollo/api/include/pds_if.hpp"
+#include "nic/apollo/test/api/utils/batch.hpp"
 #include "nic/apollo/test/api/utils/remote_mapping.hpp"
 
 namespace test {
@@ -156,6 +157,72 @@ remote_mapping_feeder::update_spec(uint32_t width) {
     nh_id += width;
     if (nh_id > PDS_MAX_TEP)
         nh_id -= PDS_MAX_TEP;
+}
+
+//----------------------------------------------------------------------------
+// Remote mapping CRUD helper routines
+//----------------------------------------------------------------------------
+
+void
+rmap_create (remote_mapping_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_create<remote_mapping_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
+}
+
+void
+rmap_read (remote_mapping_feeder& feeder, sdk_ret_t exp_result)
+{
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_read<remote_mapping_feeder>(feeder, exp_result)));
+}
+
+static inline void
+rmap_attr_update (remote_mapping_feeder& feeder, pds_remote_mapping_spec_t *spec,
+                  int chg_bmap)
+{
+    if (chg_bmap | RMAP_ATTR_SUBNET) {
+    }
+    if (chg_bmap | RMAP_ATTR_FAB_ENCAP) {
+    }
+    if (chg_bmap | RMAP_ATTR_NH_TYPE) {
+    }
+    if (chg_bmap | RMAP_ATTR_VNIC_MAC) {
+    }
+    if (chg_bmap | RMAP_ATTR_TAGS) {
+    }
+    if (chg_bmap | RMAP_ATTR_PROVIDER_IP) {
+    }
+}
+
+void
+rmap_update (remote_mapping_feeder& feeder, pds_remote_mapping_spec_t *spec,
+             int chg_bmap, sdk_ret_t exp_result)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    rmap_attr_update(feeder, spec, chg_bmap);
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_update<remote_mapping_feeder>(bctxt, feeder)));
+
+    // if expected result is err, batch commit should fail
+    if (exp_result == SDK_RET_ERR)
+        batch_commit_fail(bctxt);
+    else
+        batch_commit(bctxt);
+}
+
+void
+rmap_delete (remote_mapping_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_delete<remote_mapping_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
 }
 
 }    // namespace api

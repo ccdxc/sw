@@ -334,7 +334,7 @@ TEST_F(subnet, subnet_workflow_neg_8) {
 // Non templatized test cases
 //---------------------------------------------------------------------
 
-/// \brief Update of vpc inside subnet should be rejected
+/// \brief update vpc
 TEST_F(subnet, DISABLED_subnet_update_vpc) {
     if (!apulu()) return;
 
@@ -358,10 +358,9 @@ TEST_F(subnet, DISABLED_subnet_update_vpc) {
     subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
 
-/// \brief Subnet WF_11
-/// Attach one policy P1 to subnet S1 and then update S1 by adding P2 to S1
-/// (so S1 ends up with P1 and P2)
-TEST_F(subnet, subnet_workflow_11) {
+/// \brief update policy - attach one policy P1 to subnet S1 and then update
+///        S1 by adding P2 to S1 (so S1 ends up with P1 and P2)
+TEST_F(subnet, subnet_update_policy1) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
@@ -390,9 +389,9 @@ TEST_F(subnet, subnet_workflow_11) {
     subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
 
-/// \brief Subnet WF_12
-/// Attach policy P1 to subnet and then update S1 with no policy
-TEST_F(subnet, subnet_workflow_12) {
+/// \brief update policy - attach policy P1 to subnet and then update S1
+///        with no policy
+TEST_F(subnet, subnet_update_policy2) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
@@ -418,10 +417,9 @@ TEST_F(subnet, subnet_workflow_12) {
     subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
 
-/// \brief Subnet WF_13
-/// Attach policy P1, P2 to subnet and update S1 with P1 only (disassociating P2)
-/// and then with no policies
-TEST_F(subnet, subnet_workflow_13) {
+/// \brief update policy - attach policy P1, P2 to subnet and update S1
+///        with P1 only (disassociating P2) and then with no policies
+TEST_F(subnet, subnet_update_policy3) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
@@ -458,9 +456,9 @@ TEST_F(subnet, subnet_workflow_13) {
     subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
 
-/// \brief Subnet WF_14
-/// Attach policy P1, P2 to subnet and update S1 with P3, P4
-TEST_F(subnet, subnet_workflow_14) {
+/// \brief update policy - Attach policy P1, P2 to subnet and update S1
+///        with P3, P4
+TEST_F(subnet, subnet_update_policy4) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
@@ -486,9 +484,9 @@ TEST_F(subnet, subnet_workflow_14) {
     subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
 
-/// \brief Subnet WF_15
-/// Attach policy P1, P2 to subnet and update S1 with P2, P3
-TEST_F(subnet, subnet_workflow_15) {
+/// \brief update policy - attach policy P1, P2 to subnet and update S1
+///        with P2, P3
+TEST_F(subnet, subnet_update_policy5) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
@@ -514,9 +512,8 @@ TEST_F(subnet, subnet_workflow_15) {
     subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
 
-/// \brief Subnet WF_16
-/// update VR mac
-TEST_F(subnet, subnet_workflow_16) {
+/// \brief update VR MAC
+TEST_F(subnet, subnet_update_vrmac) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
