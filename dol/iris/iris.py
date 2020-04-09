@@ -14,12 +14,13 @@ from infra.common.logging   import logger as logger
 
 from iris.config.store      import Store as Store
 
+asic = os.environ.get('ASIC', 'capri')
 IRIS_CONFIG_TEMPLATE_PATH   = "iris/config/templates/"
 IRIS_CONFIG_SPEC_PATH       = "iris/config/specs/"
 IRIS_CONFIG_TOPO_SPEC_PATH  = "iris/config/topology/%s" % GlobalOptions.topology
 IRIS_TEST_PATH              = "iris/test/"
-IRIS_PROTO_PATH = os.environ['WS_TOP'] + '/nic/build/x86_64/iris/gen/proto/'
-GFT_PROTO_PATH = os.environ['WS_TOP'] + '/nic/build/x86_64/gft/gen/proto/'
+IRIS_PROTO_PATH = os.environ['WS_TOP'] + '/nic/build/x86_64/iris/' + asic + '/gen/proto/'
+GFT_PROTO_PATH = os.environ['WS_TOP'] + '/nic/build/x86_64/gft/' + asic + '/gen/proto/'
 
 sys.path.insert(0, IRIS_PROTO_PATH)
 sys.path.insert(0, GFT_PROTO_PATH)

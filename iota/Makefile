@@ -11,6 +11,7 @@ export IOTA_AGENT_BIN_FREEBSD_DIR 		:= ${IOTA_BIN_DIR}/agent/freebsd
 export IOTA_AGENT_TEST_BIN_LINUX_DIR  	:= ${IOTA_BIN_DIR}/agent/test/linux
 export IOTA_AGENT_TEST_BIN_FREEBSD_DIR  := ${IOTA_BIN_DIR}/agent/test/freebsd
 export IOTA_PENCTL_DIR                  := ${IOTA_BIN_DIR}/penctl
+export ASIC                             ?= capri
 SRCS := $(shell find ./ -name *.go)
 
 
@@ -70,7 +71,7 @@ iota-tarball: iota
 
 heimdall:
 	make -C $(NICDIR) heimdall.gobin
-	cp $(NICDIR)/build/x86_64/iris/bin/heimdall $(IOTA_BIN_DIR)/
+	cp $(NICDIR)/build/x86_64/iris/${ASIC}/bin/heimdall $(IOTA_BIN_DIR)/
 
 .PHONY: test
 test:

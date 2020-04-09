@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
-from os import system, mkdir, chdir
+from os import system, mkdir, chdir, environ
 from  shutil import copytree, ignore_patterns, make_archive
 import argparse
 
-
+asic = environ.get('ASIC', 'capri')
 
 def parse_input ():
     parser = argparse.ArgumentParser(description="Build and validate Standalone App")
@@ -60,23 +60,23 @@ def copy_gen (dest, arch="aarch64"):
         TODO: Handle Exceptions
     """
     if arch == "all" :
-        copytree("build/x86_64/athena/lib".format(arch),
-             "{0}/nic/build/x86_64/athena/lib".format(dest))
+        copytree("build/x86_64/athena/{0}/lib".format(asic),
+             "{0}/nic/build/x86_64/athena/{1}/lib".format(dest, asic))
 
-        copytree("build/x86_64/athena/gen/p4gen/p4/include".format(arch),
-              "{0}/nic/build/x86_64/athena/gen/p4gen/p4/include".format(dest))
+        copytree("build/x86_64/athena/{0}/gen/p4gen/p4/include".format(asic),
+              "{0}/nic/build/x86_64/athena/{1}/gen/p4gen/p4/include".format(dest, asic))
 
-        copytree("build/aarch64/athena/lib".format(arch),
-             "{0}/nic/build/aarch64/athena/lib".format(dest))
+        copytree("build/aarch64/athena/{0}/lib".format(asic),
+             "{0}/nic/build/aarch64/athena/{1}/lib".format(dest, asic))
 
-        copytree("build/aarch64/athena/gen/p4gen/p4/include".format(arch),
-              "{0}/nic/build/aarch64/athena/gen/p4gen/p4/include".format(dest))
+        copytree("build/aarch64/athena/{0}/gen/p4gen/p4/include".format(asic),
+              "{0}/nic/build/aarch64/athena/{1}/gen/p4gen/p4/include".format(dest, asic))
     else :
-        copytree("build/{0}/athena/lib".format(arch),
-             "{0}/nic/build/{1}/athena/lib".format(dest, arch))
+        copytree("build/{0}/athena/{1}/lib".format(arch, asic),
+             "{0}/nic/build/{1}/athena/{2}/lib".format(dest, arch, asic))
 
-        copytree("build/{0}/athena/gen/p4gen/p4/include".format(arch),
-              "{0}/nic/build/{1}/athena/gen/p4gen/p4/include".format(dest, arch))
+        copytree("build/{0}/athena/{1}/gen/p4gen/p4/include".format(arch, asic),
+              "{0}/nic/build/{1}/athena/{2}/gen/p4gen/p4/include".format(dest, arch, asic))
 
 
 def copy_test_app (dest="nic"):

@@ -7,9 +7,11 @@ import zmq
 import random
 from   subprocess import call
 
+asic = os.environ.get('ASIC', 'capri')
+
 paths = [
     '/mbt/',
-    '/nic/build/x86_64/iris/gen/proto/',
+    '/nic/build/x86_64/iris/' + asic + '/gen/proto/',
     '/nic/',
     '/dol/',
     '/dol/third_party/',

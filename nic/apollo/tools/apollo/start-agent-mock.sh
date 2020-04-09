@@ -3,6 +3,7 @@ TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NIC_DIR=`dirname $ABS_TOOLS_DIR/../../../..`
 #GDB='gdb --args'
+export ASIC="${ASIC:-capri}"
 export CONFIG_PATH=$NIC_DIR/conf/
 export LOG_DIR=$NIC_DIR/
 export PERSISTENT_LOG_DIR=$NIC_DIR/
@@ -12,7 +13,7 @@ export VPP_IPC_MOCK_MODE=1
 export ZMQ_SOC_DIR=${NIC_DIR}
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NIC_DIR/third-party/metaswitch/output/x86_64/
 echo "Starting Agent: `date +%x_%H:%M:%S:%N`"
-BUILD_DIR=$NIC_DIR/build/x86_64/apollo
+BUILD_DIR=$NIC_DIR/build/x86_64/apollo/${ASIC}
 export COVFILE=$NIC_DIR/coverage/sim_bullseye_hal.cov
 rm -f $NIC_DIR/conf/pipeline.json
 ln -s $NIC_DIR/conf/apollo/pipeline.json $NIC_DIR/conf/pipeline.json

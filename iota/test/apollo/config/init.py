@@ -3,6 +3,7 @@ import sys
 import os
 import pdb
 
+asic = os.environ.get('ASIC', 'capri')
 paths = [
     '/dol/',
     '/dol/third_party/'
@@ -19,6 +20,6 @@ for path in paths:
     sys.path.insert(0, fullpath)
 
 
-APOLLO_PROTO_PATH = os.environ['WS_TOP'] + '/nic/build/x86_64/apollo/gen/proto/'
+APOLLO_PROTO_PATH = os.environ['WS_TOP'] + '/nic/build/x86_64/apollo/' + asic + '/gen/proto/'
 
 sys.path.insert(0, APOLLO_PROTO_PATH)

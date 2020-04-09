@@ -1,5 +1,6 @@
 #! /bin/bash -e
 
+export ASIC="${ASIC:-capri}"
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NIC_DIR=`dirname $ABS_TOOLS_DIR`
@@ -19,5 +20,5 @@ echo "\"mgmt-if-mac\": 0" >> /sw/nic/conf/device.conf
 echo "}" >> /sw/nic/conf/device.conf
 
 echo "STARTING HAL: `date +%x_%H:%M:%S:%N`"
-IRIS_BLD_DIR=$NIC_DIR/build/x86_64/iris
+IRIS_BLD_DIR=$NIC_DIR/build/x86_64/iris/${ASIC}
 $GDB $IRIS_BLD_DIR/bin/hal -c hal.json 2>&1

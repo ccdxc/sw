@@ -3,8 +3,9 @@ import grpc
 import os
 import sys
 import time
+asic = os.environ.get('ASIC', 'capri')
 paths = [
-    '/nic/build/x86_64/iris/gen/proto/',
+    '/nic/build/x86_64/iris/' + asic + '/gen/proto/',
     '/nic/cli/', # To get tenjin_wrapper.
     '/mbt/'
 ]

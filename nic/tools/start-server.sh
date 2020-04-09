@@ -1,6 +1,7 @@
 #!/bin/bash -e
 #cd `dirname $0`        
 #NIC_DIR=$PWD      
+export ASIC="${ASIC:-capri}"
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NIC_DIR=`dirname $ABS_TOOLS_DIR`
@@ -17,9 +18,9 @@ do
 done 
 
 if [ "$server_type" = "tls" ]; then
-    $SUDO $GDB $NIC_DIR/build/x86_64/iris/bin/nic_proxy_e2etest_tls_server $portlist
+    $SUDO $GDB $NIC_DIR/build/x86_64/iris/${ASIC}/bin/nic_proxy_e2etest_tls_server $portlist
 else
-    $SUDO $GDB $NIC_DIR/build/x86_64/iris/bin/nic_proxy_e2etest_tcp_server $portlist
+    $SUDO $GDB $NIC_DIR/build/x86_64/iris/${ASIC}/bin/nic_proxy_e2etest_tcp_server $portlist
 fi
 
 ##! /bin/bash -e

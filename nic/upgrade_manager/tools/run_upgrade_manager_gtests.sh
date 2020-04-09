@@ -1,7 +1,8 @@
 #! /bin/bash
+export ASIC="${ASIC:-capri}"
 export WS_TOP="/sw"
 export TOPDIR="/sw/nic"
-export BUILD_DIR=${TOPDIR}/build/x86_64/iris/
+export BUILD_DIR=${TOPDIR}/build/x86_64/iris/${ASIC}
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 
 #CMD_OPTS="COVFILE\=${COVFILE}"

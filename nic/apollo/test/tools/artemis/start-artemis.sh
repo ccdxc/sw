@@ -1,3 +1,4 @@
+export ASIC="${ASIC:-capri}"
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NIC_DIR=`dirname $ABS_TOOLS_DIR`/../../
@@ -13,5 +14,5 @@ export GRPC_TRACE=api
 echo "STARTING APOLLO: `date +%x_%H:%M:%S:%N`"
 rm -f ${NICDIR}/conf/pipeline.json
 ln -s ${NICDIR}/conf/artemis/pipeline.json
-$GDB $NIC_DIR/build/x86_64/artemis/bin/artemis_test
+$GDB $NIC_DIR/build/x86_64/artemis/${ASIC}/bin/artemis_test
 rm -f ${NICDIR}/conf/pipeline.json

@@ -8,6 +8,8 @@ from concurrent import futures
 from infra.common.logging import logger
 import ${proxy_handler}
 
+asic = os.environ.get('ASIC', 'capri')
+
 def grpc_server_start():
     proxyServer = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
     return proxyServer
@@ -27,7 +29,7 @@ def set_grpc_forward_channel(grpc_channel):
 proxyServer = grpc_server_start()
 //:: ws_top = ws_top  or os.path.abspath(os.path.dirname(sys.argv[0]) + '/..')
 //:: os.environ['WS_TOP'] = ws_top
-//:: fullpath = ws_top + '/nic/build/x86_64/iris/gen/proto/'
+//:: fullpath = ws_top + '/nic/build/x86_64/iris/' + asic + '/gen/proto/'
 //:: sys.path.insert(0, fullpath)
 
 if 'WS_TOP' in os.environ:
@@ -37,7 +39,7 @@ else:
     ws_top = os.path.abspath(ws_top)
     os.environ['WS_TOP'] = ws_top
 
-fullpath = ws_top + '/nic/build/x86_64/iris/gen/proto/'
+fullpath = ws_top + '/nic/build/x86_64/iris/' + asic + '/gen/proto/'
 sys.path.insert(0, fullpath)
 
 //:: grpc_service_reg_str = ''

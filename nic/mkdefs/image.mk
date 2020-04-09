@@ -117,15 +117,23 @@ diag_env:
 
 .PHONY: firmware-normal
 firmware-normal: build-image
-	cp ${NICDIR}/buildroot/${OUT_DIR}/images/${NAPLES_FW_NAME} \
-		${NICDIR}/naples_fw_${SW_VERSION}.tar
-	ln -frs ${NICDIR}/naples_fw_${SW_VERSION}.tar ${NICDIR}/${NAPLES_FW_NAME}
+	if [ ${ASIC} == "capri" ]; then \
+		cp ${NICDIR}/buildroot/${OUT_DIR}/images/${NAPLES_FW_NAME} ${NICDIR}/naples_fw_${SW_VERSION}.tar; \
+		ln -frs ${NICDIR}/naples_fw_${SW_VERSION}.tar ${NICDIR}/${NAPLES_FW_NAME}; \
+	else \
+		cp ${NICDIR}/buildroot/${OUT_DIR}/images/${NAPLES_FW_NAME} ${NICDIR}/naples_fw_${ASIC}_${SW_VERSION}.tar; \
+		ln -frs ${NICDIR}/naples_fw_${ASIC}_${SW_VERSION}.tar ${NICDIR}/naples_fw_${ASIC}.tar; \
+	fi
 
 .PHONY: firmware-upgrade
 firmware-upgrade: build-upg-image
-	cp ${NICDIR}/buildroot/${OUT_DIR}/images/naples_upg_fw.tar \
-		${NICDIR}/naples_upg_fw_${SW_VERSION}.tar
-	ln -frs ${NICDIR}/naples_upg_fw_${SW_VERSION}.tar ${NICDIR}/naples_upg_fw.tar
+	if [ ${ASIC} == "capri" ]; then \
+		cp ${NICDIR}/buildroot/${OUT_DIR}/images/naples_upg_fw.tar ${NICDIR}/naples_upg_fw_${SW_VERSION}.tar; \
+		ln -frs ${NICDIR}/naples_upg_fw_${SW_VERSION}.tar ${NICDIR}/naples_upg_fw.tar; \
+	else \
+		cp ${NICDIR}/buildroot/${OUT_DIR}/images/naples_upg_fw.tar ${NICDIR}/naples_upg_fw_${ASIC}_${SW_VERSION}.tar; \
+		ln -frs ${NICDIR}/naples_upg_fw_${ASIC}_${SW_VERSION}.tar ${NICDIR}/naples_upg_fw_${ASIC}.tar; \
+	fi
 
 .PHONY: penctl-version
 penctl-version:

@@ -4,6 +4,7 @@ TOPDIR = ../../../..
 OBJ_DIR = ./obj
 
 export ARCH ?= x86_64
+export ASIC ?= capri
 CXX = /tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-g++ 
 CPPFLAGS += -I/usr/local/include -std=c++11 -pthread -g -c -Wall -Werror -O0
 CPPFLAGS += -MT $@ -MMD -MP -MF $(OBJ_DIR)/$*.d -D__FNAME__=__FUNCTION__ -DRTE_FORCE_INTRINSICS
@@ -13,12 +14,12 @@ CPPFLAGS  += -march=native
 endif
 
 INC_DIRS = -I. -I$(TOPDIR) -I$(TOPDIR)/nic/sdk -I$(TOPDIR)/nic/sdk/dpdk/build/include/ \
-		-I$(TOPDIR)/nic/build/$(ARCH)/athena/ -I$(TOPDIR)/nic/hal/third-party/spdlog/include \
+		-I$(TOPDIR)/nic/build/$(ARCH)/athena/${ASIC} -I$(TOPDIR)/nic/hal/third-party/spdlog/include \
 		-I$(TOPDIR)/nic/sdk/third-party/googletest-release-1.8.0/googletest/include \
                 -I$(TOPDIR)/nic/sdk/third-party/boost/include
 
 MODE = debug
-LDFLAGS = -L$(TOPDIR)/nic/build/$(ARCH)/athena/lib/ -Wl,-rpath=$(TOPDIR)/nic/build/$(ARCH)/athena/lib/ \
+LDFLAGS = -L$(TOPDIR)/nic/build/$(ARCH)/athena/${ASIC}/lib/ -Wl,-rpath=$(TOPDIR)/nic/build/$(ARCH)/athena/${ASIC}/lib/ \
 		-L$(TOPDIR)/nic/third-party/metaswitch/output/$(ARCH)/$(MODE)
 
 ifeq ($(ARCH), x86_64)

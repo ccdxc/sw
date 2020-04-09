@@ -2,7 +2,8 @@ import os
 import time
 from subprocess import Popen
 
-HNTAP_CMD = '../nic/build/x86_64/iris/bin/nic_infra_hntap'
+asic = os.environ.get('ASIC', 'capri')
+HNTAP_CMD = '../nic/build/x86_64/iris/' + asic + '/bin/nic_infra_hntap'
 hntap_log = os.environ['WS_TOP']  + "/nic/" + "/hntap.log"
 
 class Hntap(object):

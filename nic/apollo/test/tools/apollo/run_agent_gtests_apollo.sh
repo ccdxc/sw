@@ -1,5 +1,6 @@
 export NICDIR=`pwd`
-export BUILD_DIR=${NICDIR}/build/x86_64/apollo/
+export ASIC="${ASIC:-capri}"
+export BUILD_DIR=${NICDIR}/build/x86_64/apollo/${ASIC}
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export CONFIG_PATH=${NICDIR}/conf/
 export ZMQ_SOC_DIR=${NICDIR}

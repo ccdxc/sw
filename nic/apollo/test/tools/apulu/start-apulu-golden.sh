@@ -1,3 +1,4 @@
+export ASIC="${ASIC:-capri}"
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NIC_DIR=`dirname $ABS_TOOLS_DIR`/../../
@@ -13,5 +14,5 @@ export GRPC_TRACE=api
 echo "STARTING APULU: `date +%x_%H:%M:%S:%N`"
 rm -f $NIC_DIR/conf/pipeline.json
 ln -s $NIC_DIR/conf/apulu/pipeline.json $NIC_DIR/conf/pipeline.json
-$GDB $NIC_DIR/build/x86_64/apulu/bin/apulu_test
+$GDB $NIC_DIR/build/x86_64/apulu/${ASIC}/bin/apulu_test
 rm -f $NIC_DIR/conf/pipeline.json

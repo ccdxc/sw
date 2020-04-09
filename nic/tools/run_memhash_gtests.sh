@@ -2,11 +2,12 @@
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 export WS_TOP="/sw"
+export ASIC="${ASIC:-capri}"
 export NICDIR=`dirname $ABS_TOOLS_DIR`
 export TOPDIR=$NICDIR
 export NON_PERSISTENT_LOGDIR=${TOPDIR}
 export ASIC_MOCK_MODE=1
-export BUILD_DIR=${TOPDIR}/build/x86_64/apollo
+export BUILD_DIR=${TOPDIR}/build/x86_64/apollo/${ASIC}
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export HAL_CONFIG_PATH=${TOPDIR}/conf
 export DISABLE_AGING=1

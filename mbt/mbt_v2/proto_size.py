@@ -4,9 +4,11 @@ import os
 import sys
 import random
 
+asic = os.environ.get('ASIC', 'capri')
+
 paths = [
     '/mbt/',
-    '/nic/build/x86_64/iris/gen/proto/',
+    '/nic/build/x86_64/iris/' + asic + '/gen/proto/',
     '/dol/',
     '/dol/third_party/',
 ]

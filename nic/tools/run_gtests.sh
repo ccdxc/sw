@@ -2,13 +2,14 @@
 
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
+export ASIC="${ASIC:-capri}"
 export WS_TOP="/sw"
 export NICDIR=`dirname $ABS_TOOLS_DIR`
 export TOPDIR=$NICDIR
 export SDKDIR=${NICDIR}/sdk/
 export NON_PERSISTENT_LOGDIR=${TOPDIR}
 export ASIC_MOCK_MODE=1
-export BUILD_DIR=${TOPDIR}/build/x86_64/iris/
+export BUILD_DIR=${TOPDIR}/build/x86_64/iris/${ASIC}
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 
 export SNORT_EXPORT_DIR=${TOPDIR}/hal/third-party/snort3/export

@@ -6,9 +6,10 @@ then
     exit 1
 fi
 
+export ASIC="${ASIC:-capri}"
 export PDSPKG_TOPDIR='/sw/nic/'
 export PIPELINE=$1
-export BUILD_DIR=${PDSPKG_TOPDIR}/build/x86_64/${PIPELINE}/
+export BUILD_DIR=${PDSPKG_TOPDIR}/build/x86_64/${PIPELINE}/${ASIC}
 export CONFIG_PATH=$PDSPKG_TOPDIR/conf/
 export COVFILE=$PDSPKG_TOPDIR/coverage/sim_bullseye_hal.cov
 export PATH=${PATH}:${BUILD_DIR}/bin

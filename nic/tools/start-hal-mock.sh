@@ -1,4 +1,5 @@
 #! /bin/bash -e
+export ASIC="${ASIC:-capri}"
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NIC_DIR=`dirname $ABS_TOOLS_DIR`
@@ -15,7 +16,7 @@ rm -f $NIC_DIR/hal.log
 
 if [ "$PROFILING" == 1 ]
 then
-    $GDB $NIC_DIR/build/x86_64/iris/bin/hal_perf -c hal_mock.json 2>&1
+    $GDB $NIC_DIR/build/x86_64/iris/${ASIC}/bin/hal_perf -c hal_mock.json 2>&1
 else
-    $GDB $NIC_DIR/build/x86_64/iris/bin/hal -c hal_mock.json 2>&1
+    $GDB $NIC_DIR/build/x86_64/iris/${ASIC}/bin/hal -c hal_mock.json 2>&1
 fi

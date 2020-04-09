@@ -14,6 +14,7 @@ in the system '''
 
 imageVersion = ""
 cmdGitVersion = ""
+asic = os.environ.get('ASIC', 'capri')
 
 def main():
     # extract imageVersion and gitVersion from command line arguments
@@ -160,7 +161,7 @@ installInfo['LoadAndInstall'].append(InstallationItem(install_type="systemctl-re
 installInfo['LoadAndInstall'].append(InstallationItem(install_type="inline-script", data="echo done", comment="done"))
 
 ExecuteCommand("cp tools/scripts/gettechsupport.sh tools/docker-files/install/target/usr/bin/ ")
-ExecuteCommand("cp nic/build/x86_64/iris/bin/penctl.linux tools/docker-files/install/target/usr/bin/ ")
+ExecuteCommand("cp nic/build/x86_64/iris/" + asic + "/bin/penctl.linux tools/docker-files/install/target/usr/bin/ ")
 
 with open("bin/venice-install.json", 'w') as f:
     json.dump(installInfo, f, indent=True, sort_keys=True, cls=MyEncoder)

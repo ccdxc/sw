@@ -22,6 +22,10 @@ from subprocess import Popen, PIPE, call
 # Globals
 
 #nic_dir = os.environ.get('WS_TOP')
+asic = os.environ.get('ASIC')
+if not asic:
+    print('run.py: ASIC is not set, default to capri.')
+    asic = 'capri'
 nic_dir = os.path.dirname(sys.argv[0])
 nic_dir = os.path.abspath(nic_dir)
 print "WS_TOP = ", nic_dir
@@ -72,7 +76,7 @@ os.environ["LD_LIBRARY_PATH"] = "/usr/local/lib:/usr/local/lib64:asic/capri/mode
 os.environ["PKG_CONFIG_PATH"] = "/usr/local/lib/pkgconfig"
 
 #Path and executables
-bin_dir = nic_dir + '/build/x86_64/iris/bin/'
+bin_dir = nic_dir + '/build/x86_64/iris/' + asic + '/bin/'
 model_executable = bin_dir + "cap_model"
 model_core_path  = nic_dir
 
@@ -199,34 +203,34 @@ def run_model(args):
     if args.modellogs:
         model_cmd.append("+plog=info")
         if args.gft or args.gft_gtest:
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/gft/gen/p4gen/gft/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/gft/" + asic + "/gen/p4gen/gft/dbg_out/model_debug.json")
         elif args.apollo_gtest or args.apollo_scale_test or args.apollo_scale_vxlan_test:
             os.system("%s/tools/merge_model_debug.py --pipeline apollo --p4 apollo --rxdma p4plus_rxdma --txdma p4plus_txdma" % nic_dir)
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apollo/gen/p4gen/apollo/dbg_out/combined_model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apollo/" + asic + "/gen/p4gen/apollo/dbg_out/combined_model_debug.json")
         elif args.artemis_gtest or args.artemis_scale_test:
             os.system("%s/tools/merge_model_debug.py --pipeline artemis --p4 artemis --rxdma p4plus_rxdma --txdma p4plus_txdma" % nic_dir)
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/artemis/gen/p4gen/artemis/dbg_out/combined_model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/artemis/" + asic + "/gen/p4gen/artemis/dbg_out/combined_model_debug.json")
         elif args.athena_app:
             os.system("%s/tools/merge_model_debug.py --pipeline athena --p4 athena --rxdma p4plus_rxdma --txdma p4plus_txdma" % nic_dir)
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/athena/gen/p4gen/athena/dbg_out/combined_model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/athena/" + asic + "/gen/p4gen/athena/dbg_out/combined_model_debug.json")
         elif args.athena_gtests:
             os.system("%s/tools/merge_model_debug.py --pipeline athena --p4 athena --rxdma p4plus_rxdma --txdma p4plus_txdma" % nic_dir)
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/athena/gen/p4gen/athena/dbg_out/combined_model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/athena/" + asic + "/gen/p4gen/athena/dbg_out/combined_model_debug.json")
         elif args.apulu_gtest:
             os.system("%s/tools/merge_model_debug.py --pipeline apulu --p4 apulu --rxdma p4plus_rxdma --txdma p4plus_txdma" % nic_dir)
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apulu/gen/p4gen/apulu/dbg_out/combined_model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/apulu/" + asic + "/gen/p4gen/apulu/dbg_out/combined_model_debug.json")
         elif args.hello_gtest:
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/hello/gen/p4gen/hello/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/hello/" + asic + "/gen/p4gen/hello/dbg_out/model_debug.json")
         elif args.l2switch_gtest:
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/l2switch/gen/p4gen/l2switch/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/l2switch/" + asic + "/gen/p4gen/l2switch/dbg_out/model_debug.json")
         elif args.elektra_gtest:
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/elektra/gen/p4gen/elektra/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/elektra/" + asic + "/gen/p4gen/elektra/dbg_out/model_debug.json")
         elif args.phoebus_gtest:
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/phoebus/gen/p4gen/phoebus/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/phoebus/" + asic + "/gen/p4gen/phoebus/dbg_out/model_debug.json")
         elif args.gft16_gtest:
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/gft16/gen/p4gen//gft16/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/gft16/" + asic + "/gen/p4gen//gft16/dbg_out/model_debug.json")
         else:
-            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/iris/gen/p4gen/p4/dbg_out/model_debug.json")
+            model_cmd.append("+model_debug=" + nic_dir + "/build/x86_64/iris/" + asic + "/gen/p4gen/p4/dbg_out/model_debug.json")
     if args.coveragerun or args.asmcov:
         dump_file= nic_dir + "/coverage/asm_cov.dump"
         model_cmd.append("+mpu_cov_dump_file=" + dump_file)
@@ -235,27 +239,27 @@ def run_model(args):
 
     global bin_dir
     if args.gft or args.gft_gtest:
-        bin_dir = nic_dir + '/build/x86_64/gft/bin/'
+        bin_dir = nic_dir + '/build/x86_64/gft/' + asic + '/bin/'
     elif args.apollo_gtest or args.apollo_scale_test or args.apollo_scale_vxlan_test:
-        bin_dir = nic_dir + '/build/x86_64/apollo/bin/'
+        bin_dir = nic_dir + '/build/x86_64/apollo/' + asic + '/bin/'
     elif args.artemis_gtest or args.artemis_scale_test:
-        bin_dir = nic_dir + '/build/x86_64/artemis/bin/'
+        bin_dir = nic_dir + '/build/x86_64/artemis/' + asic + '/bin/'
     elif args.apulu_gtest:
-        bin_dir = nic_dir + '/build/x86_64/apulu/bin/'
+        bin_dir = nic_dir + '/build/x86_64/apulu/' + asic + '/bin/'
     elif args.athena_app:
-        bin_dir = nic_dir + '/build/x86_64/athena/bin/'
+        bin_dir = nic_dir + '/build/x86_64/athena/' + asic + '/bin/'
     elif args.athena_gtests:
-        bin_dir = nic_dir + '/build/x86_64/athena/bin/'
+        bin_dir = nic_dir + '/build/x86_64/athena/' + asic + '/bin/'
     elif args.l2switch_gtest:
-        bin_dir = nic_dir + '/build/x86_64/l2switch/bin/'
+        bin_dir = nic_dir + '/build/x86_64/l2switch/' + asic + '/bin/'
     elif args.elektra_gtest:
-        bin_dir = nic_dir + '/build/x86_64/elektra/bin/'
+        bin_dir = nic_dir + '/build/x86_64/elektra/' + asic + '/bin/'
     elif args.phoebus_gtest:
-        bin_dir = nic_dir + '/build/x86_64/phoebus/bin/'
+        bin_dir = nic_dir + '/build/x86_64/phoebus/' + asic + '/bin/'
     elif args.gft16_gtest:
-        bin_dir = nic_dir + '/build/x86_64/gft16/bin/'
+        bin_dir = nic_dir + '/build/x86_64/gft16/' + asic + '/bin/'
     elif args.hello_gtest:
-        bin_dir = nic_dir + '/build/x86_64/hello/bin/'
+        bin_dir = nic_dir + '/build/x86_64/hello/' + asic + '/bin/'
 
     os.chdir(bin_dir)
     log = open(model_log, "w")
@@ -392,7 +396,7 @@ def run_hal(args):
     if args.rtl:
         jsonfile = 'hal_rtl.json'
     if args.gft:
-        bin_dir = nic_dir + '/build/x86_64/gft/bin/'
+        bin_dir = nic_dir + '/build/x86_64/gft/' + asic + '/bin/'
         jsonfile = 'hal_gft.json'
 
     hal_log_dir = nic_dir
@@ -455,8 +459,8 @@ def dump_coverage_data():
 # Run sw/platform's model_server
 def run_platform_model_server(args, standalone=False):
     wait_for_hal_and_fte()
-    bin_dir = os.path.join(nic_dir, "build/x86_64/iris/bin")
-    lib_dir = os.path.join(nic_dir, "build/x86_64/iris/lib")
+    bin_dir = os.path.join(nic_dir, "build/x86_64/iris", asic, "bin")
+    lib_dir = os.path.join(nic_dir, "build/x86_64/iris", asic, "lib")
     os.environ["LD_LIBRARY_PATH"] += ":" + lib_dir
     print "LD_LIBRARY_PATH: " + os.environ["LD_LIBRARY_PATH"]
     os.chdir(nic_dir)
@@ -480,8 +484,8 @@ def run_platform_model_server(args, standalone=False):
 # Run nicmgr gtest
 def run_nicmgr_gtest(args, standalone=False):
     wait_for_hal_and_fte()
-    bin_dir = os.path.join(nic_dir, "build/x86_64/iris/out/nicmgr_gtest")
-    lib_dir = os.path.join(nic_dir, "build/x86_64/iris/lib")
+    bin_dir = os.path.join(nic_dir, "build/x86_64/iris", asic, "out/nicmgr_gtest")
+    lib_dir = os.path.join(nic_dir, "build/x86_64/iris", asic, "lib")
     os.environ["LD_LIBRARY_PATH"] += ":" + lib_dir
     print "LD_LIBRARY_PATH: " + os.environ["LD_LIBRARY_PATH"]
     os.chdir(nic_dir)
@@ -507,8 +511,8 @@ def run_nicmgr_gtest(args, standalone=False):
 # Run nicmgr
 def run_nicmgr(args, standalone=False):
     wait_for_hal_and_fte()
-    bin_dir = os.path.join(nic_dir, "build/x86_64/iris/bin")
-    lib_dir = os.path.join(nic_dir, "build/x86_64/iris/lib")
+    bin_dir = os.path.join(nic_dir, "build/x86_64/iris", asic, "bin")
+    lib_dir = os.path.join(nic_dir, "build/x86_64/iris", asic, "lib")
     os.environ["DOL"] = "1"
     os.environ["LD_LIBRARY_PATH"] += ":" + lib_dir
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
@@ -558,7 +562,7 @@ def run_nicmgr_platform_model_server(args, standalone=False):
 # Run Storage DOL
 def run_storage_dol(port, args):
     wait_for_hal_and_fte()
-    bin_dir = nic_dir + "/../nic/build/x86_64/iris/bin"
+    bin_dir = nic_dir + "/../nic/build/x86_64/iris/" + asic + "/bin"
     if args.rtl:
         if args.storage_test:
             cmd = ['./storage_test', '--hal_port', str(port), '--hal_ip', str(args.hal_ip), '--test_group', args.storage_test, '--poll_interval', '3600', '--long_poll_interval', '3600']
@@ -594,7 +598,7 @@ def run_storage_dol(port, args):
 # Run FIPS hal_test
 def run_hal_test_fips(port, args):
     wait_for_hal_and_fte()
-    bin_dir = nic_dir + "/build/x86_64/iris/bin"
+    bin_dir = nic_dir + "/build/x86_64/iris/" + asic + "/bin"
     script_dir = nic_dir + "/third-party/nist-cavp"
     os.environ["ENGINE_LOG_DIR"] = nic_dir
     cmd = ['./hal_test', '--hal_port', str(port), '--script_dir', script_dir]
@@ -611,7 +615,7 @@ def run_hal_test_fips(port, args):
 # Run offload test
 def run_offload_test(port, args):
     wait_for_hal_and_fte()
-    bin_dir = nic_dir + "/../nic/build/x86_64/iris/bin"
+    bin_dir = nic_dir + "/../nic/build/x86_64/iris/" + asic + "/bin"
     script_dir = nic_dir + "/third-party/nist-cavp"
     os.environ["ENGINE_LOG_DIR"] = nic_dir
     if args.rtl:
@@ -640,7 +644,7 @@ def run_offload_test(port, args):
 
 # Run athena app
 def run_athena_app(args):
-    bin_dir = nic_dir + "/../nic/build/x86_64/athena/bin"
+    bin_dir = nic_dir + "/../nic/build/x86_64/athena/" + asic + "/bin"
     os.environ["LOG_DIR"] = nic_dir + '/'
     os.environ["PERSISTENT_LOG_DIR"] = nic_dir + '/'
     os.environ["CONFIG_PATH"] = nic_dir + "/conf/"
@@ -679,7 +683,7 @@ def run_athena_app(args):
 
 # Run athena gtests
 def run_athena_gtests(args):
-    bin_dir = nic_dir + "/../nic/build/x86_64/athena/bin"
+    bin_dir = nic_dir + "/../nic/build/x86_64/athena/" + asic + "/bin"
     os.environ["LOG_DIR"] = nic_dir + '/'
     os.environ["PERSISTENT_LOG_DIR"] = nic_dir + '/'
     os.environ["CONFIG_PATH"] = nic_dir + "/conf/"
@@ -716,7 +720,7 @@ def run_filter_gtest(args):
     #os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     #os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../bazel-bin/nic/model_sim/"
     os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/../platform/gen/x86_64/lib/"
-    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/build/x86_64/iris/lib/"
+    os.environ["LD_LIBRARY_PATH"] += ":" + nic_dir + "/build/x86_64/iris/" + asic + "/lib/"
     os.chdir(nic_dir)
     hal_api_gtest_bin_dir = nic_dir + "/../platform/gen/x86_64/src/lib/hal_api/gtest/filter_test"
     hal_api_gtest_bin_dir1 = nic_dir + "/../platform/gen/x86_64/src/lib/hal_api/gtest/filter_smart_test"
@@ -742,7 +746,7 @@ def run_span_gtest(args):
 def run_gft_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     os.chdir(nic_dir)
-    cmd = ['build/x86_64/gft/bin/gft_test']
+    cmd = ['build/x86_64/gft/' + asic + '/bin/gft_test']
     p = Popen(cmd)
     #p.communicate()
     return check_for_completion(p, None, model_process, hal_process, args)
@@ -757,7 +761,7 @@ def run_apollo_test(args):
     except:
         pass
     os.symlink(nic_dir + "/conf/apollo/pipeline.json", nic_dir + "/conf/pipeline.json")
-    cmd = ['build/x86_64/apollo/bin/apollo_test']
+    cmd = ['build/x86_64/apollo/' + asic + '/bin/apollo_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -772,10 +776,10 @@ def run_artemis_scale_test(args):
     except:
         pass
     os.symlink(nic_dir + "/conf/artemis/pipeline.json", nic_dir + "/conf/pipeline.json")
-    cmd = ["build/x86_64/artemis/bin/artemis_scale_test",
+    cmd = ["build/x86_64/artemis/" + asic + "/bin/artemis_scale_test",
            '-c', "hal.json",
            '-i', "apollo/test/scale/artemis/scale_cfg_sim.json",
-           "--gtest_output=", "xml:build/x86_64/artemis/gtest_results/artemis_scale_test.xml"]
+           "--gtest_output=", "xml:build/x86_64/artemis/" + asic + "/gtest_results/artemis_scale_test.xml"]
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -791,10 +795,10 @@ def run_apollo_scale_test(args):
     except:
         pass
     os.symlink(nic_dir + "/conf/apollo/pipeline.json", nic_dir + "/conf/pipeline.json")
-    cmd = ["build/x86_64/apollo/bin/apollo_scale_test",
+    cmd = ["build/x86_64/apollo/" + asic + "/bin/apollo_scale_test",
            '-c', "hal.json",
            '-i', "apollo/test/scale/scale_cfg_sim.json",
-           "--gtest_output=", "xml:build/x86_64/apollo/gtest_results/apollo_scale_test.xml"]
+           "--gtest_output=", "xml:build/x86_64/apollo/" + asic + "/gtest_results/apollo_scale_test.xml"]
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -811,10 +815,10 @@ def run_apollo_vxlan_scale_test(args):
     except:
         pass
     os.symlink(nic_dir + "/conf/apollo/pipeline.json", nic_dir + "/conf/pipeline.json")
-    cmd = ["build/x86_64/apollo/bin/apollo_scale_test",
+    cmd = ["build/x86_64/apollo/" + asic + "/bin/apollo_scale_test",
            '-c', "hal.json",
            '-i', "apollo/test/scale/scale_cfg_sim.json",
-           "--gtest_output=", "xml:build/x86_64/apollo/gtest_results/apollo_scale_test.xml"]
+           "--gtest_output=", "xml:build/x86_64/apollo/" + asic + "/gtest_results/apollo_scale_test.xml"]
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -828,7 +832,7 @@ def run_artemis_test(args):
     except:
         pass
     os.symlink(nic_dir + "/conf/artemis/pipeline.json", nic_dir + "/conf/pipeline.json")
-    cmd = ['build/x86_64/artemis/bin/artemis_test']
+    cmd = ['build/x86_64/artemis/' + asic + '/bin/artemis_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -842,7 +846,7 @@ def run_apulu_test(args):
     except:
         pass
     os.symlink(nic_dir + "/conf/apulu/pipeline.json", nic_dir + "/conf/pipeline.json")
-    cmd = ['build/x86_64/apulu/bin/apulu_test']
+    cmd = ['build/x86_64/apulu/' + asic + '/bin/apulu_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -850,7 +854,7 @@ def run_apulu_test(args):
 def run_l2switch_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.chdir(nic_dir)
-    cmd = ['build/x86_64/l2switch/bin/l2switch_test']
+    cmd = ['build/x86_64/l2switch/' + asic + '/bin/l2switch_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -858,7 +862,7 @@ def run_l2switch_test(args):
 def run_elektra_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.chdir(nic_dir)
-    cmd = ['build/x86_64/elektra/bin/elektra_test']
+    cmd = ['build/x86_64/elektra/' + asic + '/bin/elektra_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -866,7 +870,7 @@ def run_elektra_test(args):
 def run_phoebus_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.chdir(nic_dir)
-    cmd = ['build/x86_64/phoebus/bin/phoebus_test']
+    cmd = ['build/x86_64/phoebus/' + asic + '/bin/phoebus_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -874,7 +878,7 @@ def run_phoebus_test(args):
 def run_gft16_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.chdir(nic_dir)
-    cmd = ['build/x86_64/gft16/bin/gft16_test']
+    cmd = ['build/x86_64/gft16/' + asic + '/bin/gft16_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 
@@ -883,7 +887,7 @@ def run_gft16_test(args):
 def run_hello_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     os.chdir(nic_dir)
-    cmd = ['build/x86_64/hello/bin/hello_test']
+    cmd = ['build/x86_64/hello/' + asic + '/bin/hello_test']
     p = Popen(cmd)
     return check_for_completion(p, None, model_process, hal_process, args)
 

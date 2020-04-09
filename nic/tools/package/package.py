@@ -4,6 +4,12 @@ import sys
 import argparse
 
 pwd          = os.getcwd()
+if 'ASIC' in os.environ:
+    asic = os.environ['ASIC']
+    print('package.py: ASIC=%s' % asic)
+else:
+    asic = 'capri'
+    print('package.py: ASIC is not set, default to capri')
 
 # common files for both x86_64 and aarch64
 files        = [ ]
@@ -64,7 +70,7 @@ def process_files(files, arch, pipeline):
     new_files = []
     for f in files:
         f.replace("$ARCH", arch)
-        f.replace("$PIPELINE", pipeline);
+        f.replace("$PIPELINE", pipeline + '/' + asic);
         new_files.append(f);
     print files
     print "NEW files"
@@ -195,6 +201,9 @@ for input_file in files:
             continue
 
         items = line.split()
+        items[0] = items[0].replace("aarch64/iris", "aarch64/iris" + '/' + asic)
+        items[0] = items[0].replace("x86_64/iris", "x86_64/iris" + '/' + asic)
+        items[0] = items[0].replace("nic/build/$ARCH/$PIPELINE", "nic/build/" + arch + '/' + args.pipeline + '/' + asic)
         items[0] = items[0].replace("$ARCH", arch)
         items[0] = items[0].replace("$PIPELINE", args.pipeline)
         items[1] = items[1].replace("$PIPELINE", args.pipeline)

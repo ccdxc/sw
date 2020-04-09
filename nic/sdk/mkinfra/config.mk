@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 TOP_MAKEFILE  := ${MAKEFILE_LIST}
 
-export BLD_ARCH_DIR        := $(abspath ${BLDTOP}/build/${ARCH}/${PIPELINE})
+export BLD_ARCH_DIR        := $(abspath ${BLDTOP}/build/${ARCH}/${PIPELINE}/${ASIC})
 export BLD_OUT_DIR         := ${BLD_ARCH_DIR}/out
 export BLD_LIB_DIR         := ${BLD_ARCH_DIR}/lib
 export BLD_BIN_DIR         := ${BLD_ARCH_DIR}/bin
@@ -29,7 +29,7 @@ CMD_CAPAS       := ${COMMON_CMD_CAPAS}
 CMD_CAPAS_OPTS  := ${COMMON_CAPAS_OPTS}
 
 CMD_PROTOC_LDLIB_PATH   := ${TOPDIR}/nic/hal/third-party/google/x86_64/lib/
-CMD_PROTOC_PLUGIN_PATH   := ${TOPDIR}/nic/build/x86_64/iris/bin/
+CMD_PROTOC_PLUGIN_PATH   := ${TOPDIR}/nic/build/x86_64/iris/${ASIC}/bin/
 CMD_PROTOC              := LC_ALL=C PATH=${CMD_PROTOC_PLUGIN_PATH}:$$(PATH) LD_LIBRARY_PATH=${CMD_PROTOC_LDLIB_PATH} ${TOPDIR}/nic/hal/third-party/google/x86_64/bin/protoc
 CMD_PROTOC_C            := ${TOPDIR}/nic/hal/third-party/google/x86_64/bin/protoc-c
 CMD_MOCKGEN             := mockgen

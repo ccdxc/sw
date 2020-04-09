@@ -5,6 +5,7 @@ import json
 import argparse
 from collections import OrderedDict
 
+asic = os.environ.get('ASIC', 'capri')
 def parse_input():
     parser = argparse.ArgumentParser(description='Merge P4/P4+ model debug json files')
     parser.add_argument('--pipeline', dest='pipe', action='store',
@@ -26,9 +27,9 @@ def main():
 
     cur_path = os.path.abspath(__file__)
     cur_path = os.path.dirname(os.path.dirname(cur_path))
-    p4_path = os.path.join(cur_path, 'build/x86_64/' + args.pipe + '/gen/p4gen/' + args.p4 + '/dbg_out/model_debug.json')
-    rxdma_path = os.path.join(cur_path, 'build/x86_64/' + args.pipe + '/gen/p4gen/' + args.rxdma + '/dbg_out/model_debug.json')
-    txdma_path = os.path.join(cur_path, 'build/x86_64/' + args.pipe + '/gen/p4gen/' + args.txdma + '/dbg_out/model_debug.json')
+    p4_path = os.path.join(cur_path, 'build/x86_64/' + args.pipe + '/' + asic + '/gen/p4gen/' + args.p4 + '/dbg_out/model_debug.json')
+    rxdma_path = os.path.join(cur_path, 'build/x86_64/' + args.pipe + '/' + asic + '/gen/p4gen/' + args.rxdma + '/dbg_out/model_debug.json')
+    txdma_path = os.path.join(cur_path, 'build/x86_64/' + args.pipe + '/' + asic + '/gen/p4gen/' + args.txdma + '/dbg_out/model_debug.json')
 
     with open(p4_path, 'r') as p4_fp, open(rxdma_path, 'r') as rxdma_fp, \
             open(txdma_path, 'r') as txdma_fp:
@@ -40,7 +41,7 @@ def main():
         p4_json['TableEngine']['RXDMA'] = rxdma_json['TableEngine']['INGRESS']
         p4_json['TableEngine']['TXDMA'] = txdma_json['TableEngine']['INGRESS']
 
-    out_fpath = os.path.join(cur_path, 'build/x86_64/' + args.pipe + '/gen/p4gen/' + args.p4 + '/dbg_out/combined_model_debug.json')
+    out_fpath = os.path.join(cur_path, 'build/x86_64/' + args.pipe + '/' + asic + '/gen/p4gen/' + args.p4 + '/dbg_out/combined_model_debug.json')
     with open(out_fpath, 'w') as out_fp:
         json.dump(p4_json, out_fp, sort_keys=False, indent=4)
 

@@ -9,8 +9,9 @@ import subprocess
 import threading
 import signal
 
+asic = os.environ.get('ASIC', 'capri')
 paths = [
-    '/nic/build/x86_64/iris/gen/proto/',
+    '/nic/build/x86_64/iris/' + asic + '/gen/proto/',
     '/nic'
 ]
 ws_top = os.path.dirname(sys.argv[0]) + '/../../'
@@ -64,7 +65,7 @@ def hal_init():
 
 def run_hntap():
     log = open(hntap_log, "w")
-    cmd = ['../nic/build/x86_64/iris/bin/nic_proxy_e2etest_hntap', '-n', '5']
+    cmd = ['../nic/build/x86_64/iris/' + asic + '/bin/nic_proxy_e2etest_hntap', '-n', '5']
     p = Popen(cmd, stdout=log, stderr=log)
     global hntap_process
     hntap_process = p

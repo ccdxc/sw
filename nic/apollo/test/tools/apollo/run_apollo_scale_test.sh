@@ -2,12 +2,13 @@
 
 set -ex
 export NICDIR=`pwd`
+export ASIC="${ASIC:-capri}"
 export NON_PERSISTENT_LOGDIR=${NICDIR}
 export ZMQ_SOC_DIR=${NICDIR}
 export ASIC_MOCK_MODE=1
 export ASIC_MOCK_MEMORY_MODE=1
 export SKIP_VERIFY=1
-export BUILD_DIR=${NICDIR}/build/x86_64/apollo/
+export BUILD_DIR=${NICDIR}/build/x86_64/apollo/${ASIC}
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export CONFIG_PATH=${NICDIR}/conf
 export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov

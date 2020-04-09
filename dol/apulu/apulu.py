@@ -12,13 +12,14 @@ import infra.engine.engine as engine
 
 from apollo.config.store import EzAccessStore as EzAccessStore
 
+asic = os.environ.get('ASIC', 'capri')
 # reusing apollo objects
 APULU_CONFIG_TEMPLATE_PATH  = "apollo/config/templates/"
 APULU_CONFIG_SPEC_PATH      = "apollo/config/specs/"
 APULU_CONFIG_TOPO_SPEC_PATH = "apollo/config/topology/%s" % GlobalOptions.topology
 APULU_TEST_PATH             = "apulu/test/"
 APULU_TEST_CALLBACK_PATH    = "apollo.test.callbacks"
-APULU_PROTO_PATH            = os.environ['WS_TOP'] + '/nic/build/x86_64/apulu/gen/proto/'
+APULU_PROTO_PATH            = os.environ['WS_TOP'] + '/nic/build/x86_64/apulu/' + asic + '/gen/proto/'
 sys.path.insert(0, APULU_PROTO_PATH)
 import apollo.config.topology    as topology
 

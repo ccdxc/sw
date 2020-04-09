@@ -1,6 +1,8 @@
 # The config file should be copied to your home directory.  A sample config
 # file is checked in.  Please follow the instructions in the config file.
 
+export ASIC="${ASIC:-capri}"
+
 # Change directory to your workspace
 ws() {
     cd "$WS/$1"
@@ -209,7 +211,7 @@ start_model_how() {
     # export GDB="gdb -ex run -e ~/.gdbinit --args"
     # IRIS_DEBUG=1 LOG_LEVEL=info
 
-    LD_LIBRARY_PATH="$PWD/../nic/build/x86_64/iris/lib" \
+    LD_LIBRARY_PATH="$PWD/../nic/build/x86_64/iris/${ASIC}/lib" \
     ZMQ_SOC_DIR="$PWD/../nic" \
     src/sim/model_server/start-model -d "$@"
 }
@@ -316,7 +318,7 @@ start_nicmgr_eth() {
     fi
 
     HAL_CONFIG_PATH="$PWD/../nic/conf" \
-    LD_LIBRARY_PATH="../nic/build/x86_64/iris/lib/:./gen/x86_64/lib/:../nic/conf/sdk" \
+    LD_LIBRARY_PATH="../nic/build/x86_64/iris/${ASIC}/lib/:./gen/x86_64/lib/:../nic/conf/sdk" \
         ZMQ_SOC_DIR=$PWD/../nic \
         $GDB ./gen/x86_64/bin/nicmgrd -c ./src/app/nicmgrd/etc/eth.json
 }
@@ -328,7 +330,7 @@ start_nicmgr_eth_smart() {
     fi
 
     HAL_CONFIG_PATH="../nic/conf" \
-    LD_LIBRARY_PATH="../nic/build/x86_64/iris/lib/:./gen/x86_64/lib/:../nic/conf/sdk" \
+    LD_LIBRARY_PATH="../nic/build/x86_64/iris/${ASIC}/lib/:./gen/x86_64/lib/:../nic/conf/sdk" \
         ZMQ_SOC_DIR=$PWD/../nic \
         $GDB ./gen/x86_64/bin/nicmgrd -s -c ./src/app/nicmgrd/etc/eth-smart.json
 }
@@ -340,7 +342,7 @@ start_nicmgr_accel() {
     fi
 
     HAL_CONFIG_PATH="../nic/conf" \
-    LD_LIBRARY_PATH="../nic/build/x86_64/iris/lib/:./gen/x86_64/lib/:../nic/conf/sdk" \
+    LD_LIBRARY_PATH="../nic/build/x86_64/iris/${ASIC}/lib/:./gen/x86_64/lib/:../nic/conf/sdk" \
         ZMQ_SOC_DIR=$PWD/../nic \
         $GDB ./gen/x86_64/bin/nicmgrd -p sim -c ./src/app/nicmgrd/etc/accel.json
 }

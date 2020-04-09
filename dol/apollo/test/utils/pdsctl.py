@@ -8,6 +8,7 @@ from infra.common.logging import logger
 
 import apollo.config.utils as utils
 
+asic = os.environ.get('ASIC', 'capri')
 __CMDTYPE_SHOW  = ' show '
 __CMDTYPE_CLEAR = ' clear '
 
@@ -15,7 +16,7 @@ __CMDFLAG_YAML = ' --yaml '
 __CMDFLAG_ID   = ' --id '
 
 def __get_pdsctl_path():
-    rel_path = "nic/build/x86_64/%s/bin/pdsctl" % (utils.GetPipelineName())
+    rel_path = "nic/build/x86_64/%s/%s/bin/pdsctl" % (utils.GetPipelineName(), asic)
     abs_path = os.path.join(os.environ['WS_TOP'], rel_path)
     return abs_path
 

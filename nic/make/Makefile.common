@@ -229,7 +229,7 @@ halctl:
 	$(eval AGENT_BIN_DIR = $(TOPDIR)/obj/$(ARCH)/agent)
 	@mkdir -p $(AGENT_BIN_DIR)
     ifeq ($(ARCH),aarch64)
-	@cd $(TOPDIR)/../ && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -a -o $(AGENT_BIN_DIR)/halctl github.com/pensando/sw/nic/agent/cmd/halctl
+	@cd $(TOPDIR)/../ && env CGO_LDFLAGS='-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include -L/sw/nic/build/aarch64/iris/${ASIC}/lib' CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -a -o $(AGENT_BIN_DIR)/halctl github.com/pensando/sw/nic/agent/cmd/halctl
     else
 	@cd $(TOPDIR)/../ && go build -ldflags="-s -w" -o $(AGENT_BIN_DIR)/halctl github.com/pensando/sw/nic/agent/cmd/halctl
 	@cp $(AGENT_BIN_DIR)/halctl ${GOPATH}/bin/
@@ -244,7 +244,7 @@ agent:
 	@env
 	@mkdir -p $(AGENT_BIN_DIR)
     ifeq ($(ARCH),aarch64)
-	@cd $(TOPDIR)/../ && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -tags $(PIPELINE) -ldflags="-s -w" -a -o $(AGENT_BIN_DIR)/netagent github.com/pensando/sw/nic/agent/cmd/netagent
+	@cd $(TOPDIR)/../ && env CGO_LDFLAGS='-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include -L/sw/nic/build/aarch64/iris/${ASIC}/lib' CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -tags $(PIPELINE) -ldflags="-s -w" -a -o $(AGENT_BIN_DIR)/netagent github.com/pensando/sw/nic/agent/cmd/netagent
     else
 	@cd $(TOPDIR)/../ && go build -ldflags="-s -w" -o -tags $(MODULE_PIPELINE) $(AGENT_BIN_DIR)/netagent github.com/pensando/sw/nic/agent/cmd/netagent
     endif
@@ -253,7 +253,7 @@ heimdall:
 	$(eval AGENT_BIN_DIR = $(TOPDIR)/obj/$(ARCH)/agent)
 	@mkdir -p $(AGENT_BIN_DIR)
     ifeq ($(ARCH),aarch64)
-	@cd $(TOPDIR)/../ && env CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -a -o $(AGENT_BIN_DIR)/heimdall github.com/pensando/sw/nic/e2etests/go/agent/cmd/heimdall
+	@cd $(TOPDIR)/../ && env CGO_LDFLAGS='-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include -L/sw/nic/build/aarch64/iris/${ASIC}/lib' CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -a -o $(AGENT_BIN_DIR)/heimdall github.com/pensando/sw/nic/e2etests/go/agent/cmd/heimdall
     else
 	@cd $(TOPDIR)/../ && go build -ldflags="-s -w" -o $(AGENT_BIN_DIR)/heimdall github.com/pensando/sw/nic/e2etests/go/agent/cmd/heimdall
     endif

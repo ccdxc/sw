@@ -32,7 +32,7 @@ DEFINE_uint64(long_poll_interval, 300,
 #ifdef __x86_64__
 DEFINE_string(script_dir, "/sw/nic/third-party/nist-cavp",
               "Script directory path)");
-DEFINE_string(engine_path, "/sw/nic/build/x86_64/iris/lib/libtls_pse.so",
+DEFINE_string(engine_path, "/sw/nic/build/x86_64/iris/capri/lib/libtls_pse.so",
               "SSL engine library full path");
 DEFINE_string(nicmgr_config_file, "/sw/platform/src/app/nicmgrd/etc/accel.json",
               "nicmgr json configuration filename (full path)");

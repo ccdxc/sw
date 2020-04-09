@@ -1,5 +1,6 @@
 #! /bin/bash -e
 
+export ASIC="${ASIC:-capri}"
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NIC_DIR=`dirname $ABS_TOOLS_DIR/../../../../`
@@ -12,7 +13,7 @@ export PERSISTENT_LOG_DIR=$NIC_DIR/
 export VPP_IPC_MOCK_MODE=1
 export ZMQ_SOC_DIR=${NIC_DIR}
 echo "Starting Agent: `date +%x_%H:%M:%S:%N`"
-BUILD_DIR=$NIC_DIR/build/x86_64/artemis
+BUILD_DIR=$NIC_DIR/build/x86_64/artemis/${ASIC}
 export COVFILE=$NIC_DIR/coverage/sim_bullseye_hal.cov
 rm -f $NIC_DIR/conf/pipeline.json
 ln -s $NIC_DIR/conf/artemis/pipeline.json $NIC_DIR/conf/pipeline.json

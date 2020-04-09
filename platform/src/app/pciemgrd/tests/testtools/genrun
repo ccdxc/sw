@@ -1,14 +1,15 @@
 #!/bin/sh
 
+export ASIC="${ASIC:-capri}"
 TOPDIR=../../../../..
 GENLIB=$TOPDIR/gen/x86_64/lib
 GENBIN=$TOPDIR/gen/x86_64/bin
-NICBIN=$TOPDIR/../nic/build/x86_64/iris/bin
+NICBIN=$TOPDIR/../nic/build/x86_64/iris/${ASIC}/bin
 
 N=$GENLIB
 N=${N}:$TOPDIR/../fake_root_target/x86_64/platform/lib
 N=${N}:$TOPDIR/../fake_root_target/x86_64/nic/lib
-N=${N}:$TOPDIR/../nic/build/x86_64/iris/lib
+N=${N}:$TOPDIR/../nic/build/x86_64/iris/${ASIC}/lib
 N=${N}:$TOPDIR/../nic/third-party/libev/x86_64/lib
 export LD_LIBRARY_PATH=${N}
 

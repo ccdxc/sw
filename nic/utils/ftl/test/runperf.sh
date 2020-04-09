@@ -1,9 +1,10 @@
 #! /bin/bash
+export ASIC="${ASIC:-capri}"
 export SWDIR=`git rev-parse --show-toplevel`
 export NICDIR=$SWDIR/nic/
 export ASIC_MOCK_MODE=1
 export ASIC_MOCK_MEMORY_MODE=1
-export BLDDIR=${NICDIR}/build/x86_64/apollo
+export BLDDIR=${NICDIR}/build/x86_64/apollo/${ASIC}
 export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
 
 rm -f ${NICDIR}/core.*

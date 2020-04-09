@@ -6,9 +6,10 @@ then
     exit 1
 fi
 
+export ASIC="${ASIC:-capri}"
 export PDSPKG_TOPDIR=$NIC_DIR/
 export PIPELINE=$1
-export BUILD_DIR=${PDSPKG_TOPDIR}/build/x86_64/${PIPELINE}/
+export BUILD_DIR=${PDSPKG_TOPDIR}/build/x86_64/${PIPELINE}/${ASIC}
 export CONFIG_PATH=$PDSPKG_TOPDIR/conf/
 export PATH=${PATH}:${BUILD_DIR}/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PDSPKG_TOPDIR/third-party/metaswitch/output/x86_64/:$PDSPKG_TOPDIR/lib:$PDSPKG_TOPDIR/lib64:$NIC_DIR/../usr/lib

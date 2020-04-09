@@ -1,6 +1,7 @@
 #! /bin/bash
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
+export ASIC="${ASIC:-capri}"
 export NICDIR=`dirname $ABS_TOOLS_DIR`
 export DOLDIR=`readlink -f ${NICDIR}/../dol/`
 
@@ -18,4 +19,4 @@ tar cvzf ${NICDIR}/nic_sanity_logs.tar.gz -P --ignore-failed-read \
     /root/naples/data/logs/* \
     *.log.* \
     /tmp/hal_techsupport/* \
-    ${NICDIR}/build/x86_64/iris/valgrind/*
+    ${NICDIR}/build/x86_64/iris/${ASIC}/valgrind/*

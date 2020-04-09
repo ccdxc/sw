@@ -1,4 +1,5 @@
 #! /bin/bash -x
+export ASIC="${ASIC:-capri}"
 TOPDIR=`git rev-parse --show-toplevel`
 NICDIR="$TOPDIR/nic"
 export PDSPKG_TOPDIR=$NICDIR
@@ -17,8 +18,8 @@ trap cleanup EXIT
 
 $NICDIR/apollo/tools/apollo/start-agent-mock.sh > agent.log 2>&1 &
 sleep 10
-$NICDIR/build/x86_64/apollo/bin/testapp -i $NICDIR/apollo/test/scale/scale_cfg.json 2>&1 | tee testapp.log
-linecount=`$NICDIR/build/x86_64/apollo/bin/pdsctl show vnic | grep "DOT1Q" | wc -l`
+$NICDIR/build/x86_64/apollo/${ASIC}/bin/testapp -i $NICDIR/apollo/test/scale/scale_cfg.json 2>&1 | tee testapp.log
+linecount=`$NICDIR/build/x86_64/apollo/${ASIC}/bin/pdsctl show vnic | grep "DOT1Q" | wc -l`
 if [[ $linecount -eq 0 ]]; then
     echo "testapp failure"
     exit 1

@@ -1,6 +1,7 @@
 #!/bin/sh
 # Usage: start-dhcpd-sim.sh -p <pipeline>
 
+export ASIC="${ASIC:-capri}"
 while getopts ":p" opt; do
     case $opt in
         a) PIPELINE=$OPTARG ;;
@@ -22,7 +23,7 @@ DHCP_PKG_DIR=$PDSPKG_TOPDIR/sdk/third-party/dhcp-server-pkg/x86_64
 ip tuntap add dev dhcp_tap mode tap >/dev/null 2>&1
 ifconfig dhcp_tap 169.254.0.2 netmask 255.255.255.0
 
-LD_LIBRARY_PATH=$PDSPKG_TOPDIR/build/x86_64/$PIPELINE/lib:$DHCP_PKG_DIR/lib
+LD_LIBRARY_PATH=$PDSPKG_TOPDIR/build/x86_64/$PIPELINE/${ASIC}/lib:$DHCP_PKG_DIR/lib
 DHCPD_ARGS="-cf $PDSPKG_TOPDIR/conf/dhcp-server/dhcpd.conf dhcp_tap"
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH $DHCP_PKG_DIR/bin/dhcpd $DHCPD_ARGS
 if [[ $? != 0 ]]; then

@@ -7,6 +7,7 @@ CACHEMOUNT := ":cached"
 else
 CACHEMOUNT :=
 endif
+export ASIC ?= capri
 
 # Lists excluded patterns to "go list"
 EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|iota|buildroot|gometrics|netagent|dscagent|tsagent|tpagent|agent/tpa|nic/metaswitch/rtrctl/utils|nic/metaswitch/clientutils"
@@ -793,7 +794,7 @@ naples-firmware-tarball-athena: NAPLES_FW_TAR=naples_fw_all_athena.tgz
 naples-firmware-tarball-athena: naples-firmware-tarball
 
 naples-protos-apulu:
-	tar -zcf naples-protos-apulu.tgz nic/build/aarch64/${PIPELINE}/gen/proto/
+	tar -zcf naples-protos-apulu.tgz nic/build/aarch64/${PIPELINE}/${ASIC}/gen/proto/
 
 naples-firmware-tarball-athena: NAPLES_FW_TAR=naples_fw_all_athena.tgz
 naples-firmware-tarball-athena: naples-firmware-tarball

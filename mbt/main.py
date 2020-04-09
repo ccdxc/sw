@@ -5,8 +5,10 @@ from base64 import test
 import zmq
 import random
 
+asic = os.environ.get('ASIC', 'capri')
+
 paths = [
-    '/nic/build/x86_64/iris/gen/proto/',
+    '/nic/build/x86_64/iris/' + asic + '/gen/proto/',
     '/nic/',
     '/dol/',
     '/dol/third_party/',

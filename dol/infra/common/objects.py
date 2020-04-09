@@ -17,6 +17,7 @@ from collections import OrderedDict
 from infra.common.glopts import GlobalOptions
 from infra.common.logging import logger
 
+asic = os.environ.get('ASIC', 'capri')
 
 class FrameworkObject(object):
     __readonly = False
@@ -1234,7 +1235,7 @@ def GetHostMemMgrObject():
         pipeline_name = "gft"
     else:
         pipeline_name = GlobalOptions.pipeline
-    libpath = "nic/build/x86_64/%s/lib/libhost_mem.so" % (pipeline_name)
+    libpath = "nic/build/x86_64/%s/%s/lib/libhost_mem.so" % (pipeline_name, asic)
     libpath = os.path.join(os.environ['WS_TOP'], libpath)
     HostMemMgr = HostMemory(libpath)
     return HostMemMgr

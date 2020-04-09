@@ -7,7 +7,8 @@ import consts
 
 from infra.app import AppFactory
 
-HNTAP_CMD = 'build/x86_64/iris/bin/nic_infra_hntap'
+asic = os.environ.get('ASIC', 'capri')
+HNTAP_CMD = 'build/x86_64/iris/' + asic + '/bin/nic_infra_hntap'
 CONTAINER_HNTAP_CMD = "naples/nic/tools/restart-hntap.sh"
 
 def preexec(): # Don't forward signals.

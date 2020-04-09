@@ -4,6 +4,7 @@ TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NIC_DIR=`dirname $ABS_TOOLS_DIR/../../../../`
 #GDB='gdb --args'
+export ASIC="${ASIC:-capri}"
 export CONFIG_PATH=$NIC_DIR/conf/
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export LOG_DIR=$NIC_DIR/
@@ -22,7 +23,7 @@ echo "Starting Agent: `date +%x_%H:%M:%S:%N`"
 export COVFILE=$NIC_DIR/coverage/sim_bullseye_hal.cov
 rm -f $NIC_DIR/conf/pipeline.json
 ln -s $NIC_DIR/conf/athena/pipeline.json $NIC_DIR/conf/pipeline.json
-BUILD_DIR=$NIC_DIR/build/x86_64/athena
+BUILD_DIR=$NIC_DIR/build/x86_64/athena/${ASIC}
 $GDB $BUILD_DIR/bin/athena_app -c hal.json $* 2>&1
 
 # Use the following BUILD_DIR & GDB to run the athena_app built from Makefile

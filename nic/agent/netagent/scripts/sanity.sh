@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export ASIC="${ASIC:-capri}"
 function cleanup {
   pkill cap_model
   pkill hal
@@ -14,7 +15,7 @@ export SYSUUID="42:42:42:42:42:42"
 ./tools/start-model.sh > /dev/null &
 ./tools/start-hal.sh > /dev/null &
 ./agent/netagent/scripts/wait-for-hal.sh || cleanup $?
-./build/x86_64/iris/bin/fake_nic_mgr || cleanup $?
+./build/x86_64/iris/${ASIC}/bin/fake_nic_mgr || cleanup $?
 
 export VENICE_DEV=1
 cd $GOPATH/src/github.com/pensando/sw
@@ -23,7 +24,7 @@ if [ "$1" == "single-threaded" ]; then
 fi
 if [ "$1" == "stand-alone" ]; then
   export E2E_AGENT_DATAPATH=HAL
-  LD_LIBRARY_PATH=$GOPATH/src/github.com/pensando/sw/nic/build/x86_64/iris/lib/ go test -v ./nic/agent/tests/standalone || cleanup $?
+  LD_LIBRARY_PATH=$GOPATH/src/github.com/pensando/sw/nic/build/x86_64/iris/${ASIC}/lib/ go test -v ./nic/agent/tests/standalone || cleanup $?
   cleanup
 fi
 go test -v ./test/integ/venice_integ -run TestVeniceInteg -datapath=hal -hosts=1 -timeout=15m || cleanup $?

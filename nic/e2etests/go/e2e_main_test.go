@@ -47,7 +47,7 @@ func TestMain(t *testing.T) {
 	fmt.Println(dir)
 
 	Common.NicDir = Common.NicDir + "/../../"
-	HntapExecDir = "../../../nic/build/x86_64/iris/bin"
+	HntapExecDir = "../../../nic/build/x86_64/iris/capri/bin"
 	Common.HntapCfgFile = Common.NicDir + "/conf/hntap.conf"
 	Common.HntapLogFile = Common.NicDir + "/hntap.log"
 

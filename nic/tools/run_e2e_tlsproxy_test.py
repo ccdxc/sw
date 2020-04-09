@@ -8,8 +8,9 @@ import time
 import subprocess
 import threading
 
+asic = os.environ.get('ASIC', 'capri')
 paths = [
-    '/nic/build/x86_64/iris/gen/proto/',
+    '/nic/build/x86_64/iris/' + asic + '/gen/proto/',
     '/nic'
 ]
 ws_top = os.path.dirname(sys.argv[0]) + '/../../'
@@ -30,7 +31,7 @@ from subprocess import Popen, PIPE, call
 nic_tools_dir = os.path.dirname(sys.argv[0])
 nic_dir = nic_tools_dir + "/.."
 nic_dir = os.path.abspath(nic_dir)
-bin_dir = nic_dir + '/build/x86_64/iris/bin'
+bin_dir = nic_dir + '/build/x86_64/iris/' + asic + '/bin'
 print("NIC_DIR = ", nic_dir)
 if nic_dir is None:
     print("NIC dir is not set!")

@@ -4,7 +4,7 @@ set -e
 export TOOLDIR=`dirname $0`
 export SKIP_VERIFY=1
 export SDKDIR=`readlink -f $TOOLDIR/..`
-export BUILD_DIR=${SDKDIR}/build/x86_64/
+export BUILD_DIR=${SDKDIR}/build/x86_64/${ASIC}
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export PATH=${PATH}:${BUILD_DIR}/bin
 #export GDB='gdb --args'

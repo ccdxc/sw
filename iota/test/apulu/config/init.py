@@ -3,11 +3,12 @@ import sys
 import os
 import pdb
 
+asic = os.environ.get('ASIC', 'capri')
 paths = [
     '/dol/',
     '/dol/third_party/',
     '/nic/sdk',
-    '/nic/build/aarch64/apulu/gen/proto',
+    '/nic/build/aarch64/apulu/' + asic + '/gen/proto',
 ]
 
 ws_top = os.path.dirname(sys.argv[0]) + '/../'
@@ -21,6 +22,6 @@ for path in paths:
     sys.path.insert(0, fullpath)
 
 
-APULU_PROTO_PATH = os.environ['WS_TOP'] + '/nic/build/aarch64/apulu/gen/proto/'
+APULU_PROTO_PATH = os.environ['WS_TOP'] + '/nic/build/aarch64/apulu/' + asic + '/gen/proto/'
 
 sys.path.insert(0, APULU_PROTO_PATH)

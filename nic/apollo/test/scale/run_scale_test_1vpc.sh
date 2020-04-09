@@ -1,11 +1,12 @@
 #! /bin/bash
 
 set -e
+export ASIC="${ASIC:-capri}"
 export NICDIR=`pwd`
 export NON_PERSISTENT_LOGDIR=${NICDIR}
 export ZMQ_SOC_DIR=${NICDIR}
 export SKIP_VERIFY=1
-export BUILD_DIR=${NICDIR}/build/x86_64/apollo/
+export BUILD_DIR=${NICDIR}/build/x86_64/apollo/${ASIC}
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export CONFIG_PATH=${NICDIR}/conf
 #export GDB='gdb --args'

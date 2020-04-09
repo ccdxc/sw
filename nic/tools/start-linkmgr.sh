@@ -1,4 +1,5 @@
 #! /bin/bash -e
+export ASIC="${ASIC:-capri}"
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NIC_DIR=`dirname $ABS_TOOLS_DIR`
@@ -17,4 +18,4 @@ fi
 
 echo "catalog: $catalog_file"
 
-$GDB $NIC_DIR/build/x86_64/iris/bin/linkmgr -p $catalog_file
+$GDB $NIC_DIR/build/x86_64/iris/${ASIC}/bin/linkmgr -p $catalog_file

@@ -68,4 +68,5 @@ CONFIG_GTEST_FLAGS              := ${COMMON_GTEST_FLAGS}
 # For gtest, we cant use the following GCC flags.
 CONFIG_GTEST_EXCLUDE_FLAGS      := ${COMMON_GTEST_EXCLUDE_FLAGS}
 
-CMD_GOBIN := CGO_LDFLAGS=-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build
+CMD_GOBIN := CGO_LDFLAGS="-L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/include -L/usr/src/github.com/pensando/sw/nic/build/${ARCH}/${PIPELINE}/${ASIC}/lib" \
+	CC=/tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build

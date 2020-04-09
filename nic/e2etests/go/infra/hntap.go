@@ -13,7 +13,7 @@ import (
 )
 
 //HntapExecDir Exec dir for Hntap
-var HntapExecDir = "build/x86_64/iris/bin"
+var HntapExecDir = "build/x86_64/iris/capri/bin"
 
 //HntapCmd Hntap Cmd to execute
 var HntapCmd = HntapExecDir + "/nic_infra_hntap"

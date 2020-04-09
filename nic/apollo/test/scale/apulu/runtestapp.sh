@@ -2,6 +2,7 @@
 
 TOPDIR=`git rev-parse --show-toplevel`
 NICDIR="$TOPDIR/nic"
+export ASIC="${ASIC:-capri}"
 export PDSPKG_TOPDIR=$NICDIR
 # for mock runs, point obfl logging to /tmp
 export PERSISTENT_LOG_DIR=/tmp/
@@ -39,8 +40,8 @@ if [[ $? != 0 ]]; then
     exit -1
 fi
 
-$NICDIR/build/x86_64/apulu/bin/testapp -i $NICDIR/apollo/test/scale/apulu/scale_cfg.json
-linecount=`$NICDIR/build/x86_64/apulu/bin/pdsctl show vpc | grep "TENANT" | wc -l`
+$NICDIR/build/x86_64/apulu/${ASIC}/bin/testapp -i $NICDIR/apollo/test/scale/apulu/scale_cfg.json
+linecount=`$NICDIR/build/x86_64/apulu/${ASIC}/bin/pdsctl show vpc | grep "TENANT" | wc -l`
 if [[ $linecount -eq 0 ]]; then
     echo "testapp failure"
     exit 1

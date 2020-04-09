@@ -1,4 +1,5 @@
 #! /bin/bash -e
+export ASIC="${ASIC:-capri}"
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NIC_DIR=`dirname $ABS_TOOLS_DIR`
@@ -12,4 +13,4 @@ export SNORT_DAQ_PATH=$SNORT_EXPORT_DIR/x86_64/lib/
 export GRPC_TRACE=api
 
 echo "STARTING HAL: `date +%x_%H:%M:%S:%N`"
-$GDB $NIC_DIR/build/x86_64/iris/bin/hal -c hal.json 2>&1
+$GDB $NIC_DIR/build/x86_64/iris/${ASIC}/bin/hal -c hal.json 2>&1

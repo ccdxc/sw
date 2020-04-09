@@ -1,4 +1,5 @@
 #! /bin/bash
+export ASIC="${ASIC:-capri}"
 export SWDIR=`git rev-parse --show-toplevel`
 export NICDIR=$SWDIR/nic/
 export ASIC_MOCK_MODE=1
@@ -13,7 +14,7 @@ fi
 
 set -e
 # PI gtests
-export PATH=${PATH}:${NICDIR}/build/x86_64/iris/bin
+export PATH=${PATH}:${NICDIR}/build/x86_64/iris/${ASIC}/bin
 echo "Starting " `which iris_ftl_test`
 sleep 1
 $ARGS iris_ftl_test --threads=4 $*

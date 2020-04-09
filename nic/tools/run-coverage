@@ -4,6 +4,7 @@ TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 export NIC_DIR=`dirname $ABS_TOOLS_DIR`
 export IOTA_DIR=$NIC_DIR/../iota/
+export ASIC="${ASIC:-capri}"
 
 #Parse Command line options first.
 getopt --test > /dev/null
@@ -137,7 +138,7 @@ export GCOVR=$NIC_DIR/third-party/gcovr-3.3/scripts/gcovr
 export BULLSEYE_COVHTML=/home/asic/tools/eda/bullseye/bin/covhtml
 export BULLSEYE_COVSELECT=/home/asic/tools/eda/bullseye/bin/covselect
 export BULLSEYE_COVMERGE=/home/asic/tools/eda/bullseye/bin/covmerge
-export GEN_DIR=$NIC_DIR/build/x86_64/iris/gen/p4gen
+export GEN_DIR=$NIC_DIR/build/x86_64/iris/${ASIC}/gen/p4gen
 
 if [ ${#skip_targets[@]} -eq 0 ]; then
     $NIC_DIR/tools/gen_dol_cov_run.py --job-files ${jobs_files[@]}

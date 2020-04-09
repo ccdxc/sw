@@ -2,8 +2,11 @@
 
 WS_TOP="/sw"
 TOPDIR="/sw/nic"
-BUILD_DIR=${TOPDIR}/build/x86_64/iris/
 TESTDIR=$(pwd)
+export ARCH="${ARCH:-x86_64}"
+export PIPELINE="${PIPELINE:-iris}"
+export ASIC="${ASIC:-capri}"
+BUILD_DIR=${TOPDIR}/build/x86_64/iris/${ASIC}
 
 export OPERD_REGIONS="${TESTDIR}/operd-regions.json"
 export PENLOG_LOCATION="."
@@ -31,6 +34,27 @@ popd
 # fi
 
 pushd /usr/src/github.com/pensando/sw/nic/sysmgr/goexample && go build && popd
+
+echo "sysmgr test.sh arch=${ARCH}, pipeline=${PIPELINE}, asic=${ASIC}"
+if [ ${ASIC} != "capri" ]; then
+    echo "Please fix test.json etc.. to run this test for ${ASIC}. Ignored for now..."
+    exit 0
+fi
+
+cd /sw/nic/build/${ARCH}/${PIPELINE}
+for d in bin lib out pgm_bin gen gtest_results
+do
+    if [ -e ${ASIC}/$d ]; then
+        if [ -e $d ]; then
+            echo "link $d [`readlink $d`] already exist"
+        else
+            echo "ln -s ${ASIC}/$d $d"
+            ln -s ${ASIC}/$d $d
+        fi
+    else
+        echo "ignore ${ASIC}/$d"
+    fi
+done
 
 cd ${TESTDIR}
 
