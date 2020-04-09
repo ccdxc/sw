@@ -1118,6 +1118,8 @@ func (srv *fakeRPCServer) ListFlowExportPolicy(ctx context.Context, ometa *api.O
 
 // ############################ Test Helper Methods ############################
 func createRPCServer() (*fakeRPCServer, error) {
+	// Avoid rate limit from kicking in and delaying connections, set the limit fairly high.
+	rpckit.SetDefaultListenerConnectionRateLimit(100)
 	// create an RPC server
 	grpcServer, err := rpckit.NewRPCServer("netctrler", ":0")
 	if err != nil {
