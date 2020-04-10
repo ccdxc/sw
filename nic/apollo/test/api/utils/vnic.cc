@@ -234,15 +234,56 @@ vnic_read (vnic_feeder& feeder, sdk_ret_t exp_result)
         (SDK_RET_OK == many_read<vnic_feeder>(feeder, exp_result)));
 }
 
-static inline void
-vnic_attr_update (vnic_feeder& feeder, pds_vnic_spec_t *spec,
-                  int chg_bmap)
+static void
+vnic_attr_update (vnic_feeder& feeder, pds_vnic_spec_t *spec, uint64_t chg_bmap)
 {
+    if (bit_isset(chg_bmap, VNIC_ATTR_HOSTNAME)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_SUBNET)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_VNIC_ENCAP)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_FAB_ENCAP)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_MAC_ADDR)) {
+    }
+    if (bit_isset(chg_bmap, VNIC__ATTR_BINDING_CHECKS_EN)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_TX_MIRROR)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_RX_MIRROR)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_V4_METER)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_V6_METER)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_SWITCH_VNIC)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_V4_INGPOL)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_V6_INGPOL)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_V4_EGRPOL)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_V6_EGRPOL)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_HOST_IF)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_TX_POLICER)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_RX_POLICER)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_PRIMARY)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_MAX_SESSIONS)) {
+    }
+    if (bit_isset(chg_bmap, VNIC_ATTR_FLOW_LEARN_EN)) {
+    }
 }
 
 void
 vnic_update (vnic_feeder& feeder, pds_vnic_spec_t *spec,
-             int chg_bmap, sdk_ret_t exp_result)
+             uint64_t chg_bmap, sdk_ret_t exp_result)
 {
     pds_batch_ctxt_t bctxt = batch_start();
 

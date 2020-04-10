@@ -16,11 +16,8 @@
 namespace test {
 namespace api {
 
-#define bit(pos)             (1ul   <<  (pos))
-#define bit_set(val, pos)    ((val) |=  (1ul<<(pos)))
-#define bit_clear(val, pos)  ((val) &= ~(1ul<<(pos)))
-#define bit_flip(val, pos)   ((val) ^=  (1ul<<(pos)))
-#define bit_check(val, pos)  ((val) &   (1ul<<(pos)))
+#define bit(bit)                 (1ULL << (bit))
+#define bit_isset(bitmask, bit)  ((bitmask) & (bit))
 
 /// \defgroup PDS_FEEDER Feeder module
 /// @{

@@ -155,66 +155,66 @@ subnet_read (subnet_feeder& feeder, sdk_ret_t exp_result)
         (SDK_RET_OK == many_read<subnet_feeder>(feeder, exp_result)));
 }
 
-static inline void
+static void
 subnet_attr_update (subnet_feeder& feeder, pds_subnet_spec_t *spec,
                     uint64_t chg_bmap)
 {
-    if (bit_check(chg_bmap, SUBNET_ATTR_VPC)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_VPC)) {
         feeder.spec.vpc = spec->vpc;
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_V4_PREFIX)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_V4_PREFIX)) {
         feeder.spec.v4_prefix = spec->v4_prefix;
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_V6_PREFIX)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_V6_PREFIX)) {
         feeder.spec.v6_prefix = spec->v6_prefix;
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_V4_VRIP)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_V4_VRIP)) {
         feeder.spec.v4_vr_ip = spec->v4_vr_ip;
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_V6_VRIP)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_V6_VRIP)) {
         feeder.spec.v6_vr_ip = spec->v6_vr_ip;
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_VRMAC)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_VRMAC)) {
         memcpy(&feeder.spec.vr_mac, &spec->vr_mac, sizeof(spec->vr_mac));
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_V4_RTTBL)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_V4_RTTBL)) {
         feeder.spec.v4_route_table = spec->v4_route_table;
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_V6_RTTBL)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_V6_RTTBL)) {
         feeder.spec.v6_route_table = spec->v6_route_table;
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_V4_INGPOL)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_V4_INGPOL)) {
         feeder.spec.num_ing_v4_policy = spec->num_ing_v4_policy;
         memcpy(&feeder.spec.ing_v4_policy, &spec->ing_v4_policy,
                sizeof(spec->ing_v4_policy));
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_V6_INGPOL)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_V6_INGPOL)) {
         feeder.spec.num_ing_v6_policy = spec->num_ing_v6_policy;
         memcpy(&feeder.spec.ing_v6_policy, &spec->ing_v6_policy,
                sizeof(spec->ing_v6_policy));
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_V4_EGRPOL)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_V4_EGRPOL)) {
         feeder.spec.num_egr_v4_policy = spec->num_egr_v4_policy;
         memcpy(&feeder.spec.egr_v4_policy, &spec->egr_v4_policy,
                sizeof(spec->egr_v4_policy));
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_V6_EGRPOL)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_V6_EGRPOL)) {
         feeder.spec.num_egr_v6_policy = spec->num_egr_v6_policy;
         memcpy(&feeder.spec.egr_v6_policy, &spec->egr_v6_policy,
                sizeof(spec->egr_v6_policy));
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_FAB_ENCAP)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_FAB_ENCAP)) {
         feeder.spec.fabric_encap = spec->fabric_encap;
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_HOST_IF)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_HOST_IF)) {
         feeder.spec.host_if = spec->host_if;
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_DHCP_POL)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_DHCP_POL)) {
         feeder.spec.num_dhcp_policy = spec->num_dhcp_policy;
         memcpy(&feeder.spec.dhcp_policy, &spec->dhcp_policy,
                sizeof(spec->dhcp_policy));
     }
-    if (bit_check(chg_bmap, SUBNET_ATTR_TOS)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_TOS)) {
         feeder.spec.tos = spec->tos;
     }
 }

@@ -180,27 +180,27 @@ rmap_read (remote_mapping_feeder& feeder, sdk_ret_t exp_result)
         (SDK_RET_OK == many_read<remote_mapping_feeder>(feeder, exp_result)));
 }
 
-static inline void
-rmap_attr_update (remote_mapping_feeder& feeder, pds_remote_mapping_spec_t *spec,
-                  int chg_bmap)
+static void
+rmap_attr_update (remote_mapping_feeder& feeder,
+                  pds_remote_mapping_spec_t *spec, uint64_t chg_bmap)
 {
-    if (bit_check(chg_bmap, RMAP_ATTR_SUBNET)) {
+    if (bit_isset(chg_bmap, RMAP_ATTR_SUBNET)) {
     }
-    if (bit_check(chg_bmap, RMAP_ATTR_FAB_ENCAP)) {
+    if (bit_isset(chg_bmap, RMAP_ATTR_FAB_ENCAP)) {
     }
-    if (bit_check(chg_bmap, RMAP_ATTR_NH_TYPE)) {
+    if (bit_isset(chg_bmap, RMAP_ATTR_NH_TYPE)) {
     }
-    if (bit_check(chg_bmap, RMAP_ATTR_VNIC_MAC)) {
+    if (bit_isset(chg_bmap, RMAP_ATTR_VNIC_MAC)) {
     }
-    if (bit_check(chg_bmap, RMAP_ATTR_TAGS)) {
+    if (bit_isset(chg_bmap, RMAP_ATTR_TAGS)) {
     }
-    if (bit_check(chg_bmap, RMAP_ATTR_PROVIDER_IP)) {
+    if (bit_isset(chg_bmap, RMAP_ATTR_PROVIDER_IP)) {
     }
 }
 
 void
 rmap_update (remote_mapping_feeder& feeder, pds_remote_mapping_spec_t *spec,
-             int chg_bmap, sdk_ret_t exp_result)
+             uint64_t chg_bmap, sdk_ret_t exp_result)
 {
     pds_batch_ctxt_t bctxt = batch_start();
 
