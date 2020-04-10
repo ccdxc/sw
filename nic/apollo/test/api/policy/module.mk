@@ -5,7 +5,7 @@ MODULE_TARGET   = ${PIPELINE}_policy_test.gtest
 MODULE_PIPELINE = apollo artemis apulu
 MODULE_ARCH     = x86_64
 MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl \
-                  pdstest pdstestapiutils \
+                  pdstest pdstestapiutils pdsproto \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}} \
                   sdkp4 sdkp4utils sdkcapri_asicrw_if sdkcapri \

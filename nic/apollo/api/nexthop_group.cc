@@ -16,6 +16,7 @@
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/nexthop.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/upgrade_state.hpp"
 
 namespace api {
 
@@ -210,10 +211,14 @@ nexthop_group::backup(void) {
     pds_nexthop_group_info_t info;
 
     memset(&info, 0, sizeof(pds_nexthop_group_info_t));
-    // todo: not enough juice, just to show how impl backup is used
+    fill_spec_(&info.spec);
     size = impl_->backup((impl::obj_info_t *)&info);
-
-    return SDK_RET_ERR;
+    if (size < 0) {
+        PDS_TRACE_ERR("Failed to backup nexthop group %s", key_.str());
+        return SDK_RET_ERR;
+    }
+    g_upg_state->api_upg_ctx()->incr_obj_offset(size);
+    return SDK_RET_OK;
 }
 
 /// @}     // end of PDS_NEXTHOP

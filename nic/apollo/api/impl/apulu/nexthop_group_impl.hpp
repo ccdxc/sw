@@ -56,7 +56,7 @@ public:
 
     /// \brief    stash this object into persistent storage
     /// \return   bytes written into persistent storage
-    virtual int backup(obj_info_t *info) override { return 0; }
+    virtual int backup(obj_info_t *info) override;
 
     /// \brief      allocate/reserve h/w resources for this object
     /// \param[in]  api_obj  object for which resources are being reserved

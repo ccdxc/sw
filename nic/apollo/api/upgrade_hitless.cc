@@ -79,7 +79,14 @@ sdk_ret_t backup_nexthop_group(void) {
     ht *nh_group_ht;
     obj_id_t obj_id = OBJ_ID_NEXTHOP_GROUP;
 
+    SDK_ASSERT(g_upg_state->api_upg_ctx() != NULL);
+    //fill up meta for nh group
+    upg_obj_stash_meta_t *hdr =
+            (upg_obj_stash_meta_t *)g_upg_state->api_upg_ctx()->mem();
+    hdr[obj_id].obj_id = obj_id;
+    hdr[obj_id].offset = g_upg_state->api_upg_ctx()->obj_offset();
     nh_group_ht = nexthop_group_db()->nh_group_ht();
+    hdr[obj_id].obj_count = nh_group_ht->num_entries();
     return (nh_group_ht->walk(backup_stateful_obj_cb, (void *)&obj_id));
 }
 
@@ -88,6 +95,7 @@ sdk_ret_t backup_mapping(void) {
     sdk::lib::kvstore *kvs;
     obj_id_t obj_id = OBJ_ID_MAPPING;
 
+    // todo fix kvstore iterate, check PR 21927
     kvs = api::g_pds_state.kvstore();
     return (kvs->iterate(backup_statless_obj_cb, (void *)&obj_id));
 }

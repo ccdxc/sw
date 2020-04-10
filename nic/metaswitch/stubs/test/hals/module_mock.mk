@@ -15,7 +15,7 @@ MODULE_SOLIBS   = shmmgr pdsmscommon pdsmshals pdstestapiutils \
 MODULE_DEFS     = -DPDS_MOCKAPI
 MODULE_LDFLAGS  = -L$(MS_LIB_DIR)
 MODULE_LDLIBS   = rt dl $(MS_LD_LIBS)
-MODULE_SOLIBS   += pdsmscommon slab shmmgr rte_indexer pdscore \
+MODULE_SOLIBS   += pdsmscommon slab shmmgr rte_indexer pdscore pdsproto \
 		  pal pdsframework pdscore pdsapi pdsapi_impl pdstest \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}} \

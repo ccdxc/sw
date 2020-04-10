@@ -9,16 +9,9 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/mem.hpp"
-#include "nic/sdk/lib/kvstore/kvstore.hpp"
-#include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
-#include "nic/apollo/framework/api.h"
 #include "nic/apollo/api/upgrade_state.hpp"
-#include "nic/apollo/api/pds_state.hpp"
-#include "nic/apollo/api/nexthop_group.hpp"
-#include "nic/apollo/api/include/pds.hpp"
-#include "nic/apollo/api/mapping.hpp"
 
 namespace api {
 

@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "grpc++/grpc++.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/core/mem.hpp"
@@ -16,10 +17,14 @@
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/nexthop_group.hpp"
+#include "nic/apollo/api/upgrade_state.hpp"
 #include "nic/apollo/api/impl/apulu/tep_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
+#include "gen/proto/types.pb.h"
+#include "gen/proto/nh.grpc.pb.h"
+#include "nic/apollo/api/impl/apulu/specs.hpp"
 
 namespace api {
 namespace impl {
@@ -377,6 +382,38 @@ nexthop_group_impl::read_hw(api_base *api_obj, obj_key_t *key,
         return ret;
     }
     return SDK_RET_OK;
+}
+
+int
+nexthop_group_impl::backup(obj_info_t *info) {
+    sdk_ret_t ret;
+    pds::NhGroupGetResponse nhg_pbuf;
+    uint32_t pbuf_byte_size;
+    uint32_t obj_size   = g_upg_state->api_upg_ctx()->obj_size();
+    uint32_t obj_offset = g_upg_state->api_upg_ctx()->obj_offset();
+    char           *mem = g_upg_state->api_upg_ctx()->mem();
+    pds_nexthop_group_info_t *dinfo = (pds_nexthop_group_info_t *)info;
+
+    ret = fill_info_(dinfo);
+    if (unlikely(ret != SDK_RET_OK)) {
+        return -1;
+    }
+    // convert api info to proto
+    pds_nh_group_api_info_to_proto(dinfo, (void *)&nhg_pbuf);
+    pbuf_byte_size = nhg_pbuf.ByteSizeLong();
+    if ((obj_offset + pbuf_byte_size + 4) > obj_size) {
+        PDS_TRACE_ERR("Failed to backup nh group:%s, out of space",
+                                           dinfo->spec.key.str());
+        return -1;
+    }
+    // now serialize the proto buf
+    *(uint32_t *)&mem[obj_offset] = pbuf_byte_size;
+    if (nhg_pbuf.SerializeToArray(&mem[obj_offset + 4],
+                              pbuf_byte_size) == false) {
+        PDS_TRACE_ERR("Failed to serialize nh group:%s", dinfo->spec.key.str());
+        return -1;
+    }
+    return (pbuf_byte_size + 4);
 }
 
 /// \@}    // end of PDS_NEXTHOP_GROUP_IMPL

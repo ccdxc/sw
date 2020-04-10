@@ -281,6 +281,7 @@ fill_nh_status_ (pds_nexthop_status_t *status, uint16_t hw_id) {
     }
     status->port = nh_data.get_port();
     status->vlan = nh_data.get_vlan();
+    status->hw_id = hw_id;
     return SDK_RET_OK;
 }
 

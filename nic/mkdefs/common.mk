@@ -161,6 +161,7 @@ export NIC_THIRDPARTY_GOOGLE_LDLIBS := :libprotobuf.so.14 grpc++_reflection \
        grpc++ grpc_unsecure grpc++_unsecure
 export NIC_THIRDPARTY_PACKET_PARSER_LDLIBS := packet_parser
 export SDK_THIRDPARTY_CAPRI_LDLIBS := sdkcapri_csrint
+export PDS_UPG_LDLIBS := ${NIC_THIRDPARTY_GOOGLE_LDLIBS}
 
 # ==========================================================================
 #                           VPP
@@ -183,17 +184,17 @@ export VPP_PLUGINS_INCS    := ${SDK_THIRD_PARTY_VPP_INCLUDES}               \
 # ==========================================================================
 #                           Apollo GTEST common LDLIBS
 # ==========================================================================
-export apollo_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS}
+export apollo_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS} ${PDS_UPG_LDLIBS}
 
 # ==========================================================================
 #                           ARTEMIS GTEST common LDLIBS
 # ==========================================================================
-export artemis_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS}
+export artemis_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS} ${PDS_UPG_LDLIBS}
 
 # ==========================================================================
 #                           APULU GTEST common LDLIBS
 # ==========================================================================
-export apulu_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS}
+export apulu_GTEST_COMMON_LDLIBS := ${SDK_THIRDPARTY_CAPRI_LDLIBS} ${PDS_UPG_LDLIBS}
 
 # ==========================================================================
 #                           ATHENA GTEST common LDLIBS
