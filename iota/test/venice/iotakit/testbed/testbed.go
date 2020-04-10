@@ -807,6 +807,12 @@ func (tb *TestBed) setupVcenterNode(node *TestNode) error {
 		}
 	}
 
+	prodVCenter, ok := tb.Params.Provision.Vars["ProdVCenter"]
+	if ok && prodVCenter == "true" {
+		uid = tb.Params.Provision.Vars["Datastore"]
+		tb.cleanup = true
+	}
+
 	log.Info("Setting up vcenter node...")
 	switch node.Personality {
 	case iota.PersonalityType_PERSONALITY_VCENTER_NODE:

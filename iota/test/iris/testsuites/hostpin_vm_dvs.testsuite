@@ -36,7 +36,6 @@ setup:
 
 common:
     verifs:
-        -   step    : verif.vmotion.verify_vmotion
         -   step    : verif.utils.verify_interrupts
         #-   step    : verif.utils.verify_cores
         #-   step    : verif.utils.verify_topology_health

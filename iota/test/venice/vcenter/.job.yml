@@ -9,7 +9,7 @@ queue_name: baremetal
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
 e2e-targets:
   # baremetal + vm test case
- e2e-venice-2naples:
+ e2e-venice-2naples-vcenter:
    commands: ["make", "-C", "iota/test/venice", "vcenter-e2e"]
    # commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:venice-dev@pensando.io"]
@@ -46,9 +46,9 @@ e2e-targets:
           VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
-          VcenterUsername: administrator@vsphere.local
-          VcenterPassword: N0isytem$
-          VcenterLicense: YN69K-6YK5J-78X8T-0M3RH-0T12H
-          VcenterIP: 192.168.68.10
+          # VcenterUsername: administrator@vsphere.local
+          # VcenterPassword: N0isytem$
+          # VcenterLicense: YN69K-6YK5J-78X8T-0M3RH-0T12H
+          # VcenterIP: 192.168.68.10
 logfiles:
   - /go/src/github.com/pensando/sw/iota/logs/venice-iota.tgz

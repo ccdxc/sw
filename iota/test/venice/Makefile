@@ -88,10 +88,11 @@ vcenter-e2e:
 	cd ../../../ && make ws-tools && make pull-assets && tar -zxf /sw/naples_fw_all.tgz -C .
 	ln -s /sw/bin/venice.tgz /go/src/github.com/pensando/sw/bin/venice.tgz
 	cd ../../ && make
-	./start_iota.sh
+	./modify_warmd.sh
+	./start_iota.sh ${GOPATH}/src/github.com/pensando/sw/iota/warmd.json
 	mkdir -p /go/src/github.com/pensando/sw/bin/upgrade-bundle
 	asset-pull bundle_image 1.2.0-140 /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar
-	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/vchub -timeout 3h -v -ginkgo.v  -topo 3Venice_2Naples_Vcenter
+	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/vchub -timeout 3h -v -ginkgo.v  -topo 3Venice_2Naples_Vcenter -testbed ${GOPATH}/src/github.com/pensando/sw/iota/warmd.json
 
 venice-e2e-basenet:
 	cd ../../../ && make ws-tools && make pull-assets && tar -zxf /sw/naples_fw_all.tgz -C .

@@ -28,8 +28,11 @@ fw_version=""
 
 # find all the ionic interfaces and the mgmt interfaces
 function init_host() {
+    if [[ -f /etc/docker/daemon.json ]] ;
+    then
+        [ -s /etc/docker/daemon.json ] || (echo "{\"insecure-registries\" : [\"registry.test.pensando.io:5000\"]}" >> /etc/docker/daemon.json && systemctl restart docker)
+    fi
     cnt=`lsmod | grep ionic | wc -l`
-    [ -s /etc/docker/daemon.json ] || (echo "{\"insecure-registries\" : [\"registry.test.pensando.io:5000\"]}" >> /etc/docker/daemon.json && systemctl restart docker)
     if [[ $cnt -eq 0 ]] ; 
     then
         echo "No IONIC driver loaded. Loading $DEFAULT_IONIC_DRIVER_PATH"
