@@ -7,7 +7,7 @@ feature:
     module      : networking
     runorder    : 1200
     enable      : True
-    ignore      : True
+    ignore      : False
 
 modules:
     - module:
@@ -21,21 +21,18 @@ modules:
         spec    : arp_proxy.testspec
         iterate :
             - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
-        ignore   : True
 
     - module:
         name    : IPV4_ARP_PROXY_DOUBLE_VLAN
         spec    : arp_proxy.testspec
         iterate :
             - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
-        ignore   : True
 
     - module:
         name    : IPV4_ARP_PROXY_NO_MAPPING_ENTRY
         spec    : arp_proxy.testspec
         iterate :
             - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
-        ignore   : True
 
     - module:
         name    : IPV4_ARP_PROXY_OUTSIDE_SUBNET

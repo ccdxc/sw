@@ -214,10 +214,24 @@ def verifyIPerf(cmd_cookies, response, exit_code=0, min_bw=0):
     api.Logger.info("Number of control socket errors : {}".format(control_socker_err))
     return result
 
+def GetHping3Cmd(protocol, src_wl, destination_ip, destination_port):
+    if protocol == 'tcp':
+        cmd = (f"hping3 -S -p {int(destination_port)} -c 3 {destination_ip} -I {src_wl.interface}")
+    elif protocol == 'udp':
+        cmd = (f"hping3 --{protocol.lower()} -p {int(destination_port)} -c 3 {destination_ip} -I {src_wl.interface}")
+    else:
+        cmd = (f"hping3 --{protocol.lower()} -c 3 {destination_ip} -I {src_wl.interface}")
 
-def PingCmdBuilder(proto, src_wl, dest_ip, args=None):
+    return cmd
+
+def PingCmdBuilder(src_wl, dest_ip, proto='icmp', af='ipv4',
+        pktsize=64, args=None):
+
     cmd = None
+    dest_addr = " %s" %(dest_ip)
     if proto == 'arp':
+        if not __is_ipv4(af):
+            assert(0)
         if args == 'DAD':
             arp_base_cmd = __get_arp_base_cmd(src_wl, False, True)
         elif args == 'update':
@@ -226,13 +240,20 @@ def PingCmdBuilder(proto, src_wl, dest_ip, args=None):
             arp_base_cmd = __get_arp_base_cmd(src_wl)
 
         addr = __get_workload_address(src_wl, "ipv4")
-        dest_addr = " %s" %(addr)
-        if args != 'update':
-            dest_addr = " %s" %(dest_ip)
+        if args == 'update':
+            dest_addr = " %s" %(addr)
         cmd = arp_base_cmd + dest_addr
+    elif proto == 'icmp':
+        ping_base_cmd = __get_ping_base_cmd(src_wl, af, pktsize, 3, 0.2, False)
+        cmd = __ping_addr_substitution(ping_base_cmd, dest_addr)
+    elif proto in ['tcp', 'udp']:
+        dest_port = api.AllocateUdpPort() if proto == 'udp' else api.AllocateTcpPort()
+        cmd = GetHping3Cmd(proto, src_wl, dest_ip, dest_port)
+
     return cmd
 
-def __get_arp_base_cmd(workload,  update_neighbor=False, send_dad=False, count=3, deadline=3):
+def __get_arp_base_cmd(workload, update_neighbor=False, send_dad=False,
+        count=3, deadline=3):
     arp_cmd = __ARP_CMD
 
     if update_neighbor is True:
@@ -242,9 +263,11 @@ def __get_arp_base_cmd(workload,  update_neighbor=False, send_dad=False, count=3
         arp_cmd += " -D "
 
     arp_cmd += " -c %d -w %d -I %s" %(count, deadline, workload.interface)
+
     return arp_cmd
 
-def ARPingWorkloads(workload_pairs, update_neighbor=False, send_dad=False, count=3, deadline=3):
+def ARPingWorkloads(workload_pairs, update_neighbor=False, send_dad=False,
+        count=3, deadline=3):
     cmd_cookies = []
 
     if not api.IsSimulation():

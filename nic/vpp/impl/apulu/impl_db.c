@@ -149,16 +149,16 @@ IMPL_DB_ENTRY_DEL(uint16_t, vpc);
 IMPL_DB_ENTRY_GET(uint16_t, vpc);
 IMPL_DB_INIT(vpc, PDS_VPP_MAX_VPC, 0xffff);
 
-void
+int
 pds_impl_db_vr_ip_mac_get (uint16_t subnet, uint32_t *vr_ip, uint8_t **vr_mac)
 {
     pds_impl_db_subnet_entry_t *entry = pds_impl_db_subnet_get(subnet);
     if (PREDICT_FALSE(!entry)) {
-        return;
+        return -1;
     }
     *vr_ip = entry->vr_ip.ip4.data_u32;
     *vr_mac = entry->mac;
-    return;
+    return 0;
 }
 
 int

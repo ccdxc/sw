@@ -1,5 +1,4 @@
 # /usr/bin/python3
-import pdb
 import ipaddress
 import random
 from scapy.all import *
@@ -10,29 +9,33 @@ from apollo.config.resmgr import Resmgr
 from apollo.config.store import EzAccessStore
 import apollo.config.utils as utils
 import apollo.config.topo as topo
-
 from apollo.config.agent.api import ObjectTypes as ObjectTypes
-
-import policy_pb2 as policy_pb2
 import types_pb2 as types_pb2
 
 IPV4_HOST = ipaddress.IPv4Address(0xbadee1ba)
 IPV6_HOST = ipaddress.IPv6Address('e1ba:aced:a11:face:b00c:bade:da75:900d')
 
-def __get_packet_template_impl(obj, args):
+def __get_packet_template_impl(obj, tsargs=None, modargs=None):
     af = obj.AddrFamily
     template = 'ETH'
     template += "_%s" % (af)
+    proto = None
 
-    if args is not None:
-        proto = args.proto
-        if af == "IPV6" and proto == "icmp":
-            proto = "icmpv6"
-        template += "_%s" % (proto)
+    # testspec args takes precedence over module args
+    if tsargs is not None:
+        proto = tsargs.proto
+    elif modargs is not None:
+        proto = __get_module_args_value(modargs, 'proto')
+    else:
+        assert(0)
+
+    if af == "IPV6" and proto == "icmp":
+        proto = "icmpv6"
+    template += "_%s" % (proto)
     return infra_api.GetPacketTemplate(template)
 
 def GetPacketTemplateFromMapping(testcase, packet, args=None):
-    return __get_packet_template_impl(testcase.config.localmapping, args)
+    return __get_packet_template_impl(testcase.config.localmapping, args, testcase.module.args)
 
 def __get_proto_from_policy_rule(rule):
     if rule is None:
@@ -677,27 +680,24 @@ def GetUnderlayRemoteMacFromRoute(tc, pkt, args=None):
         assert(0)
     return nh.underlayMACAddr.get()
 
-def GetVirtualRouterIP(testcase, pkt, args):
+def GetVirtualRouterIP(testcase, pkt, args=None):
     if testcase.config.root.FwdMode == 'L3':
-        if args.type == 'IPv4':
-            return str(testcase.config.remotemapping.SUBNET.VirtualRouterIPAddr[1])
-        elif args.type == 'IPv6':
+        if testcase.config.remotemapping.IsV6():
             return str(testcase.config.remotemapping.SUBNET.VirtualRouterIPAddr[0].packed)
+        else:
+            return str(testcase.config.remotemapping.SUBNET.VirtualRouterIPAddr[1])
     else:
-        if args.type == 'IPv4':
-            return str(testcase.config.localmapping.VNIC.SUBNET.VirtualRouterIPAddr[1])
-        elif args.type == 'IPv6':
+        if testcase.config.localmapping.IsV6():
             return str(testcase.config.localmapping.VNIC.SUBNET.VirtualRouterIPAddr[0].packed)
+        else:
+            return str(testcase.config.localmapping.VNIC.SUBNET.VirtualRouterIPAddr[1])
 
-def GetVirtualRouterMAC(testcase, pkt, args):
+def GetVirtualRouterMAC(testcase, pkt, args=None):
     if testcase.config.root.FwdMode == 'L3':
             return str(testcase.config.remotemapping.SUBNET.VirtualRouterMACAddr)
     return str(testcase.config.localmapping.VNIC.SUBNET.VirtualRouterMACAddr)
 
 def __is_any_cfg_deleted(tc):
-    nexthop = None
-    nexthopgroup = None
-    interface = None
     device = tc.config.devicecfg
     lmapping = tc.config.localmapping
     rmapping = tc.config.remotemapping
@@ -725,6 +725,24 @@ def IsARPProxyNegativeTestCase(testcase):
     if "IPV4_ARP_PROXY_OUTSIDE_SUBNET" == testcase.module.name or \
         "IPV4_ARP_PROXY_NO_MAPPING" == testcase.module.name:
         logger.info("Negative test cases for ARP proxy")
+        return True
+    return False
+
+def IsVRIPNegativeTestCase(tc):
+    proto = __get_module_args_value(tc.module.args, 'proto')
+    if proto == 'TCP' or proto == 'UDP':
+        return True
+    device = tc.config.devicecfg
+    lmapping = tc.config.localmapping
+    vnic = lmapping.VNIC
+    subnet = vnic.SUBNET
+    vpc = subnet.VPC
+    if device.IsOverlayRoutingEnabled():
+        objs = [device, vpc, subnet]
+    else:
+        objs = [device, vpc, subnet, vnic, lmapping ]
+    values = list(map(lambda x: not(x.IsHwHabitant()) or (x.IsDirty()), list(filter(None, objs))))
+    if any(values):
         return True
     return False
 
@@ -818,6 +836,14 @@ def GetDstIpForARP(testcase, packet, args=None):
         return nextpfx
     else:
         return testcase.config.remotemapping.IP
+
+def GetDstMacForARP(testcase, packet, args=None):
+    if "IPV4_ARP_PROXY_NO_MAPPING" == testcase.module.name:
+        return testcase.config.devicecfg.MACAddr
+    elif "IPV4_ARP_PROXY_OUTSIDE_SUBNET" == testcase.module.name:
+        return "00:00:00:00:00:00"
+    else:
+        return testcase.config.remotemapping.MACAddr
 
 def GetDstMac(testcase, packet, args=None):
     lobj = testcase.config.localmapping

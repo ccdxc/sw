@@ -6,49 +6,58 @@ selectors:
 
 packets:
     - packet:
-        id          : FROM_HOST_PKT # Input packet
+        id          : BASE_PKT # Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=ICMP
+        template    : callback://networking/packets/GetPacketTemplateFromMapping
         encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        headers     :
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+            icmp:
+                code    : 0
+                type    : 0
+                id      : callback://networking/packets/GetUsableICMPId
+
+
+    - packet:
+        id          : FROM_HOST_PKT # Input packet from host
+        clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : callback://networking/packets/GetVirtualRouterMAC/type=IPv4
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                dst     : callback://networking/packets/GetVirtualRouterMAC
             ipv4:
                 src     : ref://testcase/config/localmapping/IP
-                dst     : callback://networking/packets/GetVirtualRouterIP/type=IPv4
+                dst     : callback://networking/packets/GetVirtualRouterIP
                 ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetVirtualRouterIP
+                hlim    : 64
+            tcp:
+                sport   : 100
+                dport   : 200
             icmp:
                 code    : 0
                 type    : 8
-                id      : 1111
-            payload:
-                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
         id          : TO_HOST_PKT
-        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=ICMP
-        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
             eth:
                 src   : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
                 dst   : ref://testcase/config/localmapping/VNIC/MACAddr
-            qtag:
-                vlan  : ref://testcase/config/localmapping/VNIC/VlanId
             ipv4:
-                src     : callback://networking/packets/GetVirtualRouterIP/type=IPv4
+                src     : callback://networking/packets/GetVirtualRouterIP
                 dst     : ref://testcase/config/localmapping/IP
                 ttl     : 64
-            icmp:
-                code    : 0
-                type    : 0
-                id      : 1111
-                #id      : callback://networking/packets/GetUsableICMPId
-            payload:
-                data  : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+            ipv6:
+                src     : callback://networking/packets/GetVirtualRouterIP
+                dst     : ref://testcase/config/localmapping/IP
+                hlim    : 64
 
 buffers:
     - buffer:
@@ -110,11 +119,11 @@ session:
         trigger:
             descriptors:
                 - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC1
-                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
-                - descriptor:
                     object  : ref://testcase/descriptors/id=DESC3
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
         expect:
             delay: 1
             descriptors:
@@ -122,6 +131,6 @@ session:
                     object  : ref://testcase/descriptors/id=DESC2
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
                 - descriptor:
-                    negtest : callback://networking/packets/IsARPProxyNegativeTestCase
+                    negtest : callback://networking/packets/IsVRIPNegativeTestCase
                     object  : ref://testcase/descriptors/id=DESC4
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX

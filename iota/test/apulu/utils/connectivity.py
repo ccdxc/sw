@@ -39,36 +39,37 @@ def ConnectivityTest(workload_pairs, proto_list, ipaf_list, pktsize_list, expect
                 return VerifyConnectivityTest(proto, cmd_cookies, resp, expected_exit_code)
     return api.types.status.SUCCESS
 
-def Get_workload_type(tc):
+def GetWorkloadType(iterators=None):
     type = config_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY
 
-    if not hasattr(tc.iterators, 'workload_type'):
+    if not hasattr(iterators, 'workload_type'):
         return type
 
-    if tc.iterators.workload_type == 'local':
+    if iterators.workload_type == 'local':
         type = config_api.WORKLOAD_PAIR_TYPE_LOCAL_ONLY
-    elif tc.iterators.workload_type == 'remote':
+    elif iterators.workload_type == 'remote':
         type = config_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY
-    elif tc.iterators.workload_type == 'igw':
+    elif iterators.workload_type == 'igw':
         type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY
 
     return type
 
-def Get_workload_scope(tc):
+def GetWorkloadScope(iterators=None):
     scope = config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET
 
-    if not hasattr(tc.iterators, 'workload_scope'):
+    if not hasattr(iterators, 'workload_scope'):
         return scope
-    if tc.iterators.workload_scope == 'intra-subnet':
+    if iterators.workload_scope == 'intra-subnet':
         scope = config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET
-    elif tc.iterators.workload_scope == 'inter-subnet':
+    elif iterators.workload_scope == 'inter-subnet':
         scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET
-    elif tc.iterators.workload_scope == 'inter-vpc':
+    elif iterators.workload_scope == 'inter-vpc':
         scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_VPC
 
     return scope
 
 def ConnectivityARPingTest(workload_pairs, args=None):
+    # default probe count is 3
     probe_count = 3
     sent_probes = dict()
     if args == 'DAD':
@@ -85,9 +86,12 @@ def ConnectivityARPingTest(workload_pairs, args=None):
 
     return cmd_cookies, resp, sent_probes
 
-def ConnectivityVRIPTest(scope=config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET, args=None):
+def ConnectivityVRIPTest(proto='icmp', af='ipv4', pktsize=64,
+        scope=config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET, args=None):
+
     cmd_cookies = []
     cmd = None
+    # default probe count is 3
     probe_count = 3
     sent_probes = dict()
 
@@ -108,10 +112,8 @@ def ConnectivityVRIPTest(scope=config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET, args
             wl = config_api.FindWorkloadByVnic(vnic1)
             assert(wl)
             dest_ip = vnic1.SUBNET.GetIPv4VRIP()
-            api.Logger.info(f"arp between {wl.ip_address} and {dest_ip}")
-            cmd = traffic_utils.PingCmdBuilder('arp', wl, dest_ip, args)
-
-            api.Logger.verbose(" ARP cmd %s " % (cmd))
+            cmd = traffic_utils.PingCmdBuilder(wl, dest_ip, proto, af, pktsize, args)
+            api.Logger.info(" VR_IP cmd %s " % (cmd))
             api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, cmd)
             cmd_cookies.append(cmd)
             cur_cnt = sent_probes.get(wl.node_name, 0)
@@ -126,10 +128,8 @@ def ConnectivityVRIPTest(scope=config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET, args
                 if scope == config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET and (vnic1.SUBNET.GID() == subnet1.GID()):
                     continue
                 dest_ip = subnet1.GetIPv4VRIP()
-                api.Logger.info(f"arp between {wl.ip_address} and {dest_ip}")
-                cmd = traffic_utils.PingCmdBuilder('arp', wl, dest_ip, args)
-
-                api.Logger.verbose(" ARP cmd %s " % (cmd))
+                cmd = traffic_utils.PingCmdBuilder(wl, dest_ip, proto, af, pktsize, args)
+                api.Logger.info(" VRIP cmd %s " % (cmd))
                 api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, cmd)
                 cmd_cookies.append(cmd)
                 cur_cnt = sent_probes.get(wl.node_name, 0)

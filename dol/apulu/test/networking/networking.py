@@ -26,8 +26,10 @@ def TestCaseSetup(tc):
     tc.AddIgnorePacketField('IP', 'chksum') #Needed to pass NAT testcase
     # TODO: Ignore tos until all testspecs are updated to take tos from VPC
     tc.AddIgnorePacketField('IP', 'tos')
-    ignore_ids = [ 'L2_IPV4_VRIP_ICMP_ECHO_QTAG', 'L3_IPV4_VRIP_ICMP_ECHO_QTAG' ]
-    if tc.module.name in ignore_ids:
+    # vpp writes ip->id field in case of vrip packets
+    # ignore ip->id field here
+    ts_name = 'local2vrip.testspec'
+    if tc.module.spec == ts_name:
         tc.AddIgnorePacketField('IP', 'id')
     if tc.config.root.FwdMode == 'IGW_NAPT' or tc.config.root.FwdMode == 'IGW_NAPT_SERVICE':
         vpc_key = tc.config.localmapping.VNIC.SUBNET.VPC.GetKey()

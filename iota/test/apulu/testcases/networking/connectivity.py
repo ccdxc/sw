@@ -10,7 +10,8 @@ def Setup(tc):
         api.Logger.error("Invalid value for use-sec-ip %s" %(tc.sec_ip_test_type))
         return api.types.status.FAILURE
 
-    tc.workload_pairs = config_api.GetWorkloadPairs(conn_utils.Get_workload_type(tc), conn_utils.Get_workload_scope(tc))
+    tc.workload_pairs = config_api.GetWorkloadPairs(conn_utils.GetWorkloadType(tc.iterators),
+            conn_utils.GetWorkloadScope(tc.iterators))
     if len(tc.workload_pairs) == 0:
         api.Logger.error("Skipping Testcase due to no workload pairs.")
         if tc.iterators.workload_type == 'local' and tc.iterators.workload_scope == 'intra-subnet':

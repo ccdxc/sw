@@ -35,7 +35,7 @@ packets:
         template    : ref://factory/packets/id=ETH_ARP
         headers     :
             eth:
-                src   : ref://testcase/config/remotemapping/MACAddr
+                src   : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
                 dst   : ref://testcase/config/localmapping/VNIC/MACAddr
             qtag:
                 vlan  : ref://testcase/config/localmapping/VNIC/VlanId

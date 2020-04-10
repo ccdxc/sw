@@ -1,0 +1,21 @@
+meta:
+    name    : h2vrip
+    os      : [ linux ]
+    nicmode : classic
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : VRIP_ARP_Connectivity
+        testcase: testcases.vrip.vrip
+        iterators :
+            type    : nested
+            proto   : [ arp ]
+            workload_scope : [ intra-subnet, inter-subnet ]
+
+    -   name    : VRIP_Connectivity
+        testcase: testcases.vrip.vrip
+        iterators :
+            type    : nested
+            proto   : [ icmp, tcp, udp ]
+            pktsize : [ 64, 1024, 1530 ]
+            workload_scope : [ intra-subnet, inter-subnet ]

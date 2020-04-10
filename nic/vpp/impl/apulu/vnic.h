@@ -27,10 +27,10 @@ pds_vnic_id_get (void *hdr)
     return (((p4_rx_cpu_hdr_t *)hdr)->vnic_id);
 }
 
-// return FALSE if VNIC is not present,
-// else set vnic_nh_hw_id and return TRUE
-static inline bool
-pds_vnic_data_fill (void *hdr, u16 *vnic_nh_hw_id, u32 *offset)
+// return -1 if VNIC is not present,
+// else set vnic_nh_hw_id and return 0
+static inline int
+pds_vnic_nexthop_get (void *hdr, u16 *vnic_nh_hw_id, u32 *offset)
 {
     u16 vnic_id;
     pds_impl_db_vnic_entry_t *vnic;
@@ -42,6 +42,19 @@ pds_vnic_data_fill (void *hdr, u16 *vnic_nh_hw_id, u32 *offset)
     }
     *vnic_nh_hw_id = vnic->nh_hw_id;
     *offset = VPP_P4_TO_ARM_HDR_SZ + vnic->l2_encap_len;
+    return 0;
+}
+
+static inline int
+pds_vnic_subnet_get (u16 vnic_id, u16 *subnet_hw_id)
+{
+    pds_impl_db_vnic_entry_t *vnic_info = NULL;
+
+    vnic_info = pds_impl_db_vnic_get(vnic_id);
+    if (PREDICT_FALSE(vnic_info == NULL)) {
+        return -1;
+    }
+    *subnet_hw_id = vnic_info->subnet_hw_id;
     return 0;
 }
 

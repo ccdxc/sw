@@ -40,14 +40,11 @@ def ExecuteVPPctlClearCommand(node, cmd, args=None):
 def ParseShowCommand(node_name, type, args=None):
     ret = api.types.status.SUCCESS
     if api.GlobalOptions.dryrun:
-        return api.types.status.SUCCESS
-    ret, resp = ExecuteVPPctlShowCommand(node_name, type, args)
-    if ret != True:
+        return api.types.status.SUCCESS, None
+    res, resp = ExecuteVPPctlShowCommand(node_name, type, args)
+    if res != True:
         api.Logger.error(f"Failed to execute show {type} at node {node_name} : {resp}")
         ret = api.types.status.FAILURE
-    else:
-        api.Logger.info(f"Type: {type} and ShowResponse: {resp}")
-        ret = api.types.status.SUCCESS
 
     return ret, resp
 

@@ -63,15 +63,16 @@ arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
     arp_proxy_trace_t *trace;
     void *p4_rx_meta = NULL;
     mac_addr_t mac;
-    u32 bd_id = 0;
+    u32 vrip = 0, bd_id = 0;
     u32 dst;
     u32 offset = 0;
     u16 vnic_nh_hw_id;
+    u8 *vrmac;
 
     p4_rx_meta = (void*) (vlib_buffer_get_current(p0));
     bd_id = pds_ingress_bd_id_get(p4_rx_meta);
-    if (PREDICT_FALSE(pds_vnic_data_fill(p4_rx_meta, &vnic_nh_hw_id,
-                                         &offset))) {
+    if (PREDICT_FALSE(pds_vnic_nexthop_get(p4_rx_meta, &vnic_nh_hw_id,
+                                           &offset))) {
         counter[ARP_PROXY_COUNTER_VNIC_MISSING]++;
         goto error;
     }
@@ -99,8 +100,12 @@ arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
             goto error;
         }
         // Ethernet
+        if (0 != pds_impl_db_vr_ip_mac_get(bd_id, &vrip, &vrmac)) {
+            counter[ARP_PROXY_COUNTER_SUBNET_CHECK_FAIL]++;
+            goto error;
+        }
         clib_memcpy(&e0->dst_address, &e0->src_address, ETH_ADDR_LEN);
-        clib_memcpy(&e0->src_address, mac, ETH_ADDR_LEN);
+        clib_memcpy(&e0->src_address, vrmac, ETH_ADDR_LEN);
 
         // ARP Reply
         arp->opcode = clib_host_to_net_u16 (ETHERNET_ARP_OPCODE_reply);

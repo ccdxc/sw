@@ -41,7 +41,7 @@ packets:
                 vlan  : ref://testcase/config/localmapping/VNIC/VlanId
             arp:
                 op    : 2 # ARP_REPLY
-                hwsrc : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
+                hwsrc : callback://networking/packets/GetDstMacForARP
                 hwdst : ref://testcase/config/localmapping/VNIC/MACAddr
                 psrc  : ref://testcase/config/remotemapping/IP
                 pdst  : ref://testcase/config/localmapping/IP

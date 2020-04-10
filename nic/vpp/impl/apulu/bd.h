@@ -17,7 +17,7 @@ extern "C" {
 int pds_l2vnid_get(uint16_t bd_id, uint32_t *l2_vni);
 
 // check if ipv4 address is within subnet pfx
-static inline bool
+static inline int
 pds_subnet_check(u16 bd_id, u32 ip_addr)
 {
     pds_impl_db_subnet_entry_t *subnet;

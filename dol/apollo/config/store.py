@@ -247,7 +247,7 @@ class EzAccessStore:
     def GetUnderlayBGPRemoteASN(self, intf_name):
         for ip in self.underlay_ips:
             if ip.Name == intf_name:
-                return ip.BGPRemoteASN
+                return getattr(ip, "BGPRemoteASN", None)
         return None
 
     def GetUnderlayNexthop(self, intf_name):

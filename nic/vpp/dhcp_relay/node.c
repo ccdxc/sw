@@ -9,8 +9,9 @@
 #include <string.h>
 #include "includes.h"
 #include "pdsa_vpp_cfg.h"
+#include "vnic.h"
 
-// *INDENT-OFF* 
+// *INDENT-OFF*
 VLIB_PLUGIN_REGISTER () = {
     .description = "Pensando DHCP Relay Plugin",
 };
@@ -167,17 +168,15 @@ pds_dhcp_relay_clfy_fill_next (vlib_buffer_t *b, u16 *next,
 {
     if (host) {
         // packet coming from host, send towards DHCP server
-        pds_impl_db_vnic_entry_t *vnic_info = NULL;
-        u16 vnic_id;
+        u16 vnic_id, subnet_hw_id;
         dhcp_relay_policy_t *policy = NULL;
         vnic_id = vnet_buffer(b)->pds_dhcp_data.vnic_id;
-        vnic_info = pds_impl_db_vnic_get(vnic_id);
-        if (PREDICT_FALSE(vnic_info == NULL)) {
+        if (0 != pds_vnic_subnet_get(vnic_id, &subnet_hw_id)) {
             counter[DHCP_RELAY_CLFY_COUNTER_NO_VNIC]++;
             *next = PDS_DHCP_RELAY_CLFY_NEXT_DROP;
             return;
         }
-        policy = pds_dhcp_relay_policy_find(vnic_info->subnet_hw_id);
+        policy = pds_dhcp_relay_policy_find(subnet_hw_id);
         if (PREDICT_FALSE(!policy)) {
             counter[DHCP_RELAY_CLFY_COUNTER_NO_DHCP]++;
             *next = PDS_DHCP_RELAY_CLFY_NEXT_DROP;
@@ -423,7 +422,7 @@ pds_dhcp_relay_client_tx_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
     vlib_buffer_advance(p0, -(pds_dhcp_relay_client_tx_buffer_advance_offset(p0)));
     vlib_buffer_advance(p1, -(pds_dhcp_relay_client_tx_buffer_advance_offset(p1)));
 
-    // TODO need to fill all the p4 tx header fileds 
+    // TODO need to fill all the p4 tx header fileds
 
     pds_dhcp_relay_client_fill_tx_hdr_x2(p0, p1, &error0, &error1);
 
@@ -432,21 +431,21 @@ pds_dhcp_relay_client_tx_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
 
     return;
 }
-    
+
 always_inline void
 pds_dhcp_relay_client_tx_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
 {
     bool error;
     vlib_buffer_advance(p, -(pds_dhcp_relay_client_tx_buffer_advance_offset(p)));
 
-    // TODO need to fill all the p4 tx header fileds 
+    // TODO need to fill all the p4 tx header fileds
     pds_dhcp_relay_client_fill_tx_hdr_x1(p, &error);
 
     pds_dhcp_relay_client_tx_fill_next(next, counter, error);
 
     return;
 }
-    
+
 static uword
 pds_dhcp_relay_client_tx (vlib_main_t * vm,
                            vlib_node_runtime_t * node,
@@ -599,11 +598,10 @@ pds_dhcp_client_tx_callback (vlib_main_t * vm, vlib_buffer_t *b)
 {
     udp_header_t *u0;
     ip4_header_t *ip0;
-    u32 old0, new0;
+    u32 vrip=0, old0, new0;
     ip_csum_t sum0;
-    u16 vnic_id;
-    pds_impl_db_vnic_entry_t *vnic_info = NULL;
-    pds_impl_db_subnet_entry_t *subnet_info = NULL;
+    u16 vnic_id, subnet_hw_id;
+    u8 *vrmac;
 
     ethernet_header_t *eth0;
 
@@ -615,12 +613,10 @@ pds_dhcp_client_tx_callback (vlib_main_t * vm, vlib_buffer_t *b)
 
     // extract vnic and subnet info
     vnic_id = vnet_buffer(b)->pds_dhcp_data.vnic_id;
-    vnic_info = pds_impl_db_vnic_get(vnic_id);
-    if(vnic_info == NULL) {
+    if (0 != pds_vnic_subnet_get(vnic_id, &subnet_hw_id)) {
         return -1;
     }
-    subnet_info = pds_impl_db_subnet_get(vnic_info->subnet_hw_id);
-    if(subnet_info == NULL) {
+    if (0 != pds_impl_db_vr_ip_mac_get(subnet_hw_id, &vrip, &vrmac)) {
         return -2;
     }
 
@@ -639,7 +635,7 @@ pds_dhcp_client_tx_callback (vlib_main_t * vm, vlib_buffer_t *b)
 
     sum0 = ip0->checksum;
     old0 = ip0->src_address.as_u32;
-    new0 = subnet_info->vr_ip.ip4.as_u32;
+    new0 = vrip;
     new0 = clib_host_to_net_u32(new0);
     ip0->src_address.as_u32 = new0;
     sum0 = ip_csum_update(sum0, old0, new0, ip4_header_t /* structure */ ,
@@ -648,7 +644,7 @@ pds_dhcp_client_tx_callback (vlib_main_t * vm, vlib_buffer_t *b)
 
     // eth header filling
     eth0->type =  clib_net_to_host_u16(ETHERNET_TYPE_IP4);
-    clib_memcpy(eth0->src_address, subnet_info->mac, ETH_ADDR_LEN);
+    clib_memcpy(eth0->src_address, vrmac, ETH_ADDR_LEN);
     clib_memset(eth0->dst_address, 0xff, ETH_ADDR_LEN);
     return 0;
 }
@@ -951,9 +947,9 @@ pds_dhcp_relay_to_client_x1 (vlib_main_t *vm,
 {
     dhcp_header_t *h0;
     ip4_header_t *ip0 = 0;
-    u16 vnic_id;
-    pds_impl_db_vnic_entry_t *vnic_info = NULL;
-    pds_impl_db_subnet_entry_t *subnet_info = NULL;
+    u16 vnic_id, subnet_hw_id;
+    u8 *vrmac;
+    u32 vrip = 0;
     dhcp_relay_server_t *server = NULL;
 
     h0 = vlib_buffer_get_current(b0);
@@ -989,19 +985,17 @@ pds_dhcp_relay_to_client_x1 (vlib_main_t *vm,
     }
 
     vnic_id = vnet_buffer(b0)->pds_dhcp_data.vnic_id;
-    vnic_info = pds_impl_db_vnic_get(vnic_id);
-    if(vnic_info == NULL) {
+    if (0 != pds_vnic_subnet_get(vnic_id, &subnet_hw_id)) {
         counter[DHCP_RELAY_TO_CLIENT_COUNTER_NO_VNIC]++;
         *next = PDS_DHCP_RELAY_TO_CLIENT_NEXT_DROP;
         goto trace;
     }
-    subnet_info = pds_impl_db_subnet_get(vnic_info->subnet_hw_id);
-    if(subnet_info == NULL) {
+    if (0 != pds_impl_db_vr_ip_mac_get(subnet_hw_id, &vrip, &vrmac)) {
         counter[DHCP_RELAY_TO_CLIENT_COUNTER_NO_SUBNET]++;
         *next = PDS_DHCP_RELAY_TO_CLIENT_NEXT_DROP;
         goto trace;
     }
-    server = pds_dhcp_relay_server_find(vnic_info->subnet_hw_id,
+    server = pds_dhcp_relay_server_find(subnet_hw_id,
                                         ip0->dst_address.as_u32,
                                         ip0->src_address.as_u32, 0, 0);
     if (!server) {
