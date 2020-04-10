@@ -2,9 +2,24 @@ package radius
 
 import (
 	"errors"
+	"net"
+	"strconv"
+	"strings"
 
 	"github.com/pensando/sw/api/generated/auth"
 )
+
+const defaultRadiusPort int = 1812
+
+// AddDefaultPort checks if a port is present in URL of Radius servers, else it adds default port
+func AddDefaultPort(url string) (string, error) {
+	_, _, err := net.SplitHostPort(url)
+	if err != nil && strings.Contains(err.Error(), "missing port in address") {
+		url = url + ":" + strconv.Itoa(defaultRadiusPort)
+		return url, nil
+	}
+	return url, err
+}
 
 // ValidateRadiusConfig validates radius configuration
 func ValidateRadiusConfig(config *auth.Radius) []error {
@@ -31,6 +46,12 @@ func ValidateRadiusConfig(config *auth.Radius) []error {
 	for _, srv := range domain.Servers {
 		if srv.Url == "" {
 			errs = append(errs, errors.New("radius <address:port> not defined"))
+		} else {
+			if url, portErr := AddDefaultPort(srv.Url); portErr == nil {
+				srv.Url = url
+			} else {
+				errs = append(errs, portErr)
+			}
 		}
 	}
 	return errs

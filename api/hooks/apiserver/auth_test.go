@@ -390,6 +390,35 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 			errs: []error{},
 		},
 		{
+			name: "Missing port in Radius config",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "ValidRadiusServerAuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Local: &auth.Local{},
+						Radius: &auth.Radius{
+							Domains: []*auth.RadiusDomain{
+								{
+									NasID: "Venice",
+									Servers: []*auth.RadiusServer{
+										{
+											Url: "localhost",
+										},
+									},
+								},
+							},
+						},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_RADIUS.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errs: []error{},
+		},
+		{
 			name: "Missing AuthenticatorOrder",
 			in: auth.AuthenticationPolicy{
 				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},

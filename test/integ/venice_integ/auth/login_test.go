@@ -744,8 +744,7 @@ func TestLdapChecks(t *testing.T) {
 }
 
 func TestRadiusLogin(t *testing.T) {
-	t.Skip()
-	config := getACSConfig()
+	config := getFreeRadiusConfig()
 	localUserCred := &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,
