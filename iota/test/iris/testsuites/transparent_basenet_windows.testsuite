@@ -54,15 +54,15 @@ testbundles:
         #- subifs/subifs-precheckin.testbundle
         #- rx_mode/rx_mode.testbundle
         #- classic/driver-features-sanity.testbundle
-        - system/obfl_check.testbundle
-        - sysmon/interrupts.testbundle
-        - cpld/cpldupgrade.testbundle
-        - hpe_ilo/hpe_ilo.testbundle
+        #- system/obfl_check.testbundle
+        #- sysmon/interrupts.testbundle
+        #- cpld/cpldupgrade.testbundle
+        #- hpe_ilo/hpe_ilo.testbundle
 
     sanity:
         # Relative paths from iota/test/iris/testbundles/
         #- classic/ethtool.testbundle
-        - networking/connectivity.testbundle
+        #- networking/connectivity.testbundle
         - linktest/linktest.testbundle
         #- filters/filters.testbundle
         - mtu/mtu.testbundle

@@ -196,6 +196,8 @@ jobs:
     labels: ["2xhourly"]
   iota/test/standalone/sanity/linux:
     labels: ["2xhourly"]
+  iota/test/standalone/sanity/windows:
+    labels: ["daily"]
   iota/test/standalone/sanity/apulu-networking:
     labels: ["2xhourly"]
   iota/test/standalone/sanity/apulu-networking-scale:
@@ -324,6 +326,8 @@ dependencies:
     - reference: iota/test/standalone/precheckin/esx
       exclude_dirs: ["test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/linux
+      exclude_dirs: ["test/iris/testcases/server"]
+    - reference: iota/test/standalone/precheckin/windows
       exclude_dirs: ["test/iris/testcases/server"]
   iota/test/standalone:
     - reference: iota/test/standalone/precheckin/freebsd

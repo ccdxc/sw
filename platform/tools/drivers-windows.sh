@@ -78,5 +78,5 @@ cd "$GEN_DIR/.."
 cp "$GEN_DIR/ArtifactsZipped/Artifacts.zip" .
 mv -f Artifacts.zip "$GEN_PKG_UNSIGNED"
 
-asset-pull windows-driver 1.1.38 $GEN_PKG
+asset-pull windows-driver 1.1.43.0 $GEN_PKG
 
