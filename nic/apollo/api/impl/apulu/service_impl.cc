@@ -343,9 +343,11 @@ svc_mapping_impl::activate_delete_(pds_epoch_t epoch,
     if (!to_vip_handle_.valid()) {
         to_vip_handle_ = tparams.handle;
     }
-    ret = mapping_db()->perish(mapping->key());
-    PDS_TRACE_ERR("Failed to deactivate %s, err %u",
+    ret = svc_mapping_db()->perish(mapping->key());
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed to deactivate %s, err %u",
                   mapping->key2str().c_str(), ret);
+    }
     return ret;
 }
 

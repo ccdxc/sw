@@ -32,11 +32,15 @@ public:
     virtual sdk_ret_t txn_commit(void) = 0;
     virtual sdk_ret_t txn_abort(void) = 0;
     virtual sdk_ret_t find(_In_ const void *key, _In_ size_t key_sz,
-                           _Out_ void *data, _Inout_ size_t *data_sz) = 0;
+                           _Out_ void *data, _Inout_ size_t *data_sz,
+                           std::string key_prefix) = 0;
     virtual sdk_ret_t insert(const void *key, size_t key_sz,
-                             const void *data, size_t data_sz) = 0;
-    virtual sdk_ret_t remove(const void *key, size_t key_sz) = 0;
-    virtual sdk_ret_t iterate(kvstore_iterate_cb_t cb, void *ctxt) = 0;
+                             const void *data, size_t data_sz,
+                             std::string key_prefix) = 0;
+    virtual sdk_ret_t remove(const void *key, size_t key_sz,
+                             std::string key_prefix) = 0;
+    virtual sdk_ret_t iterate(kvstore_iterate_cb_t cb, void *ctxt,
+                              std::string key_prefix) = 0;
 
 protected:
     kvstore() {}

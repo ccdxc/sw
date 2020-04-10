@@ -18,6 +18,8 @@
 namespace sdk {
 namespace lib {
 
+typedef char kvstore_key;
+
 class kvstore_lmdb : public kvstore {
 public:
     static kvstore *factory(std::string dbpath, size_t size);
@@ -26,11 +28,15 @@ public:
     virtual sdk_ret_t txn_commit(void) override;
     virtual sdk_ret_t txn_abort(void) override;
     virtual sdk_ret_t find(_In_ const void *key, _In_ size_t key_sz,
-                           _Out_ void *data, _Inout_ size_t *data_sz) override;
+                           _Out_ void *data, _Inout_ size_t *data_sz,
+                           std::string key_prefix) override;
     virtual sdk_ret_t insert(const void *key, size_t key_sz,
-                             const void *data, size_t data_sz) override;
-    virtual sdk_ret_t remove(const void *key, size_t key_sz) override;
-    virtual sdk_ret_t iterate(kvstore_iterate_cb_t cb, void *ctxt) override;
+                             const void *data, size_t data_sz,
+                             std::string key_prefix) override;
+    virtual sdk_ret_t remove(const void *key, size_t key_sz,
+                             std::string key_prefix) override;
+    virtual sdk_ret_t iterate(kvstore_iterate_cb_t cb, void *ctxt,
+                              std::string key_prefix) override;
 
 private:
     kvstore_lmdb() {
@@ -39,6 +45,8 @@ private:
     }
     ~kvstore_lmdb() {}
     sdk_ret_t init(std::string dbpath, size_t size);
+    static void *key_prefix_match_(void *key, size_t key_sz,
+                                   std::string key_prefix);
 
 private:
     MDB_env *env_;

@@ -147,10 +147,27 @@ kvstore_lmdb::txn_abort(void) {
     return SDK_RET_OK;
 }
 
+// matches the key with the prefix and returns the key sans prefix if it matches
+void *
+kvstore_lmdb::key_prefix_match_(void *key, size_t key_sz,
+                                std::string key_prefix) {
+    char *kvs_key = (char *)key;
+
+    if (((key_prefix.size() == 0) && (kvs_key[0] == ':')) ||
+        (memcmp(kvs_key, key_prefix.c_str(), key_prefix.size()) == 0)) {
+        kvs_key += (key_prefix.size() + 1);
+        return kvs_key;
+    } else {
+        return NULL;
+    }
+}
+
 sdk_ret_t
-kvstore_lmdb::iterate(kvstore_iterate_cb_t cb, void *ctxt) {
+kvstore_lmdb::iterate(kvstore_iterate_cb_t cb, void *ctxt,
+                      std::string key_prefix) {
     int rv;
     sdk_ret_t ret;
+    void *key_data;
     MDB_cursor *db_cur;
     MDB_val db_key;
     MDB_val db_val;
@@ -180,7 +197,11 @@ kvstore_lmdb::iterate(kvstore_iterate_cb_t cb, void *ctxt) {
         goto end;
     }
     while (rv != MDB_NOTFOUND) {
-        cb(db_key.mv_data, db_val.mv_data, ctxt);
+        key_data = key_prefix_match_(db_key.mv_data, db_key.mv_size,
+                                     key_prefix);
+        if (key_data) {
+            cb(key_data, db_val.mv_data, ctxt);
+        }
         rv = mdb_cursor_get(db_cur, &db_key, &db_val, MDB_NEXT);
         if (rv && rv != MDB_NOTFOUND) {
             SDK_TRACE_ERR("kvstore iterate failed, err %d", rv);
@@ -205,11 +226,14 @@ end:
 }
 
 sdk_ret_t
-kvstore_lmdb::find(const void *key, size_t key_sz, void *data, size_t *data_sz) {
+kvstore_lmdb::find(const void *key, size_t key_sz,
+                   void *data, size_t *data_sz,
+                   std::string key_prefix) {
     int rv;
     sdk_ret_t ret;
     MDB_val db_key;
     MDB_val db_val;
+    std::string kvs_key;
     bool new_txn = false;
 
     // if this is not inside a transaction, open new transaction
@@ -220,9 +244,10 @@ kvstore_lmdb::find(const void *key, size_t key_sz, void *data, size_t *data_sz) 
         }
         new_txn = true;
     }
-    // lookup the key
-    db_key.mv_data = (void *)key;
-    db_key.mv_size = key_sz;
+    // compute the key with prefix
+    kvs_key = key_prefix + ":" + std::string((char *)key, key_sz);
+    db_key.mv_data = (void *)kvs_key.c_str();
+    db_key.mv_size = kvs_key.size();
     rv = mdb_get(t_txn_hdl_, db_dbi_, &db_key, &db_val);
     if (rv) {
         ret = SDK_RET_ENTRY_NOT_FOUND;
@@ -251,11 +276,13 @@ end:
 
 sdk_ret_t
 kvstore_lmdb::insert(const void *key, size_t key_sz,
-                     const void *data, size_t data_sz) {
+                     const void *data, size_t data_sz,
+                     std::string key_prefix) {
     int rv;
     MDB_val db_key;
     MDB_val db_val;
     bool new_txn = false;
+    std::string kvs_key;
     sdk_ret_t ret = SDK_RET_OK;
 
     // if this is not inside a transaction, open new transaction
@@ -267,8 +294,9 @@ kvstore_lmdb::insert(const void *key, size_t key_sz,
         new_txn = true;
     }
     // update the database
-    db_key.mv_data = (void *)key;
-    db_key.mv_size = key_sz;
+    kvs_key = key_prefix + ":" + std::string((char *)key, key_sz);
+    db_key.mv_data = (void *)kvs_key.c_str();
+    db_key.mv_size = kvs_key.size();
     db_val.mv_data = (void *)data;
     db_val.mv_size = data_sz;
     rv = mdb_put(t_txn_hdl_, db_dbi_, &db_key, &db_val, 0);
@@ -292,9 +320,11 @@ end:
 }
 
 sdk_ret_t
-kvstore_lmdb::remove(const void *key, size_t key_sz) {
+kvstore_lmdb::remove(const void *key, size_t key_sz,
+                     std::string key_prefix) {
     int rv;
     MDB_val db_key;
+    std::string kvs_key;
     bool new_txn = false;
     sdk_ret_t ret = SDK_RET_OK;
 
@@ -307,8 +337,9 @@ kvstore_lmdb::remove(const void *key, size_t key_sz) {
         new_txn = true;
     }
     // update the database
-    db_key.mv_data = (void *)key;
-    db_key.mv_size = key_sz;
+    kvs_key = key_prefix + ":" + std::string((char *)key, key_sz);
+    db_key.mv_data = (void *)kvs_key.c_str();
+    db_key.mv_size = kvs_key.size();
     rv = mdb_del(t_txn_hdl_, db_dbi_, &db_key, NULL);
     if (rv) {
         SDK_TRACE_ERR("kvstore remove failed, err %d", rv);

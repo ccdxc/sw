@@ -83,7 +83,8 @@ policy_state::find_policy(pds_obj_key_t *policy_key) const {
 sdk_ret_t
 policy_state::retrieve_rules(pds_obj_key_t *key, rule_info_t *rule_info) {
     size_t read_size = POLICY_RULE_INFO_SIZE(rule_info->num_rules);
-    return kvstore_->find(key, sizeof(pds_obj_key_t), rule_info, &read_size);
+    return kvstore_->find(key, sizeof(pds_obj_key_t), rule_info,
+                          &read_size, "policy");
 }
 
 sdk_ret_t
@@ -93,7 +94,8 @@ policy_state::persist(policy *policy, pds_policy_spec_t *spec) {
     if (policy->key_.valid()) {
         ret = kvstore_->insert(&policy->key_, sizeof(policy->key_),
                             spec->rule_info,
-                            POLICY_RULE_INFO_SIZE(spec->rule_info->num_rules));
+                            POLICY_RULE_INFO_SIZE(spec->rule_info->num_rules),
+                            "policy");
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed to persist policy %s in kvstore, err %u",
                           spec->key.str(), ret);
@@ -108,7 +110,7 @@ policy_state::perish(const pds_obj_key_t& key) {
     sdk_ret_t ret;
 
     if (key.valid()) {
-        ret = kvstore_->remove(&key, sizeof(key));
+        ret = kvstore_->remove(&key, sizeof(key), "policy");
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed to remove policy %s from kvstore, err %u",
                           key.str(), ret);

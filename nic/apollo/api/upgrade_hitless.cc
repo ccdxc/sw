@@ -97,7 +97,7 @@ sdk_ret_t backup_mapping(void) {
 
     // todo fix kvstore iterate, check PR 21927
     kvs = api::g_pds_state.kvstore();
-    return (kvs->iterate(backup_statless_obj_cb, (void *)&obj_id));
+    return (kvs->iterate(backup_statless_obj_cb, (void *)&obj_id, "mapping"));
 }
 
 static sdk_ret_t

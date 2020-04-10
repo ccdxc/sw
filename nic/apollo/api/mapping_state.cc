@@ -112,7 +112,7 @@ mapping_state::kvstore_iterate(mapping_state_cb_t cb, void *ctxt) {
 
     it_ctxt.cb = cb;
     it_ctxt.ctxt = ctxt;
-    kvstore_->iterate(mapping_state_entry_cb_, &it_ctxt);
+    kvstore_->iterate(mapping_state_entry_cb_, &it_ctxt, "mapping");
 }
 
 mapping_entry *
@@ -142,7 +142,7 @@ mapping_state::skey(pds_obj_key_t *key, pds_mapping_key_t *skey) const {
     size_t skey_sz = sizeof(pds_mapping_key_t);
 
     // find the 2nd-ary key from primary key
-    ret = kvstore_->find(key, sizeof(*key), skey, &skey_sz);
+    ret = kvstore_->find(key, sizeof(*key), skey, &skey_sz, "mapping");
     if (ret != SDK_RET_OK) {
         PDS_TRACE_VERBOSE("Primary key %s to 2nd-ary key lookup failed "
                           "for mapping", key->str());
@@ -156,7 +156,8 @@ mapping_state::persist(mapping_entry *mapping, pds_mapping_spec_t *spec) {
 
     if (mapping->key_.valid()) {
         ret = kvstore_->insert(&mapping->key_, sizeof(mapping->key_),
-                               &mapping->skey_, sizeof(mapping->skey_));
+                               &mapping->skey_, sizeof(mapping->skey_),
+                               "mapping");
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed to insert pkey -> skey binding in kvstore for"
                           "mapping %s, err %u", mapping->key2str().c_str(),
@@ -172,7 +173,7 @@ mapping_state::perish(const pds_obj_key_t& key) {
     sdk_ret_t ret;
 
     if (key.valid()) {
-        ret = kvstore_->remove(&key, sizeof(key));
+        ret = kvstore_->remove(&key, sizeof(key), "mapping");
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed to remove pkey -> skey binding in kvstore for"
                           "mapping %s, err %u", key.str(), ret);
