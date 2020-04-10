@@ -2112,9 +2112,6 @@ func getMetaswitchMibTablesInfo() (*CamInfo, error) {
 	if gopath == "" {
 		gopath = build.Default.GOPATH
 	}
-	path := gopath + "/src/github.com/pensando/sw/nic/metaswitch/stubs/mgmt/gen"
-	_ = os.Mkdir(path+"/mgmt", 755)
-	_ = os.Mkdir(path+"/svc", 755)
 
 	// Open our xmlFile
 	xmlFile, err := os.Open(gopath + "/src/github.com/pensando/sw/nic/third-party/metaswitch/mibref/mib.xml")
