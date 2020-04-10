@@ -463,8 +463,11 @@ ionic_process_sg_list(PDEVICE_OBJECT DeviceObject,
                       "%s Queue TXQ Failed adapter %p NB %p\n", __FUNCTION__,
                       ionic, nb));
 
-            ionic_txq_complete_failed_pkt(ionic, qcq, nb, &completed_list,
-                                          NDIS_STATUS_INVALID_PACKET);
+            ionic_txq_complete_failed_pkt(ionic, qcq, 
+										  txq_pkt->parent_nbl, 
+										  nb, 
+										  &completed_list,
+                                          NDIS_STATUS_SEND_ABORTED);
         }
 
         ionic_send_complete(ionic, &completed_list, DISPATCH_LEVEL);

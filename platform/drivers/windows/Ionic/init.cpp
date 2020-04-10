@@ -60,7 +60,7 @@ DriverEntry(void* DriverObject, void* RegistryPath)
 
     NdisAllocateSpinLock(&TraceLock);
 
-    NdisAllocateSpinLock(&AdapterListLock);
+    NDIS_INIT_MUTEX(&AdapterListLock);
     InitializeListHead(&AdapterList);
 
     NdisAllocateSpinLock(&memory_block_lock);
@@ -176,7 +176,6 @@ DriverUnload(PDRIVER_OBJECT DriverObject)
     TearDownTrace();
 
     NdisFreeSpinLock(&TraceLock);
-    NdisFreeSpinLock(&AdapterListLock);
 
     if (IonicDriver != NULL) {
         NdisMDeregisterMiniportDriver(IonicDriver);
@@ -404,7 +403,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s ionic_dev_setup() failed Status %08lX\n", __FUNCTION__,
                   status));
-        goto unregister_interrupts;
+        goto unmap_bars_exit;
     }
 
     status = ionic_identify(adapter);
@@ -490,7 +489,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s ionic_register_interrupts() failed Status %08lX\n",
                   __FUNCTION__, status));
-        goto unmap_bars_exit;
+        goto err_out_free_lifs;
     }
 
     DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
@@ -509,6 +508,14 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
     if (status != NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Cannot open LIFs: %08lX, aborting\n", __FUNCTION__,
+                  status));
+        goto err_out_free_lifs;
+    }
+
+	status = set_port_config( adapter);
+    if (status != NDIS_STATUS_SUCCESS) {
+        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+                  "%s Failed to configure port: %08lX, aborting\n", __FUNCTION__,
                   status));
         goto err_out_free_lifs;
     }
@@ -566,7 +573,6 @@ err_out_reset:
 err_out_teardown:
     ionic_dev_teardown(adapter);
 
-unregister_interrupts:
 	if( adapter->intr_obj != NULL) {
 	    NdisMDeregisterInterruptEx(adapter->intr_obj);
 	}

@@ -14,7 +14,7 @@ struct rxq_pkt {
 	struct rxq_pkt *next;
 
     struct queue *q;
-    ULONG size;
+
     ULONG flags;
 
 	u32				sg_count;
@@ -50,7 +50,6 @@ struct tx_frag_pool_elem {
 struct txq_pkt {
     struct txq_pkt *next;
     struct queue *q;
-    ULONG size;
     ULONG flags;
     PNET_BUFFER_LIST parent_nbl;
     PNET_BUFFER packet_orig;
@@ -80,6 +79,8 @@ struct txq_pkt_private {
 struct txq_nbl_private {
 
     LONG    ref_count;
+
+	LONG	nb_processed_cnt;
 
     LARGE_INTEGER send_nbl_time;
 };
@@ -757,6 +758,9 @@ struct ionic {
 	ULONG			lsov1_state;
 
     ULONG           rx_pool_factor;
+
+	/* Registry parameters specific to this interface */
+	struct registry_entry *registry_config;
 };
 
 typedef struct _ADAPTER_CNTRL_EXT

@@ -479,8 +479,7 @@ ionic_qcqs_alloc(struct lif *lif)
     
     for (i = 0; i < (int)lif->ntxqs; i++) {
         lif->txqcqs[i].tx_stats =
-            &lif->ionic->master_lif->lif_stats
-                 ->tx_ring[0]; //&lif->lif_stats->tx_ring[ i]; // Collect all the slave lif stats in the master lif. The stats interface does not specify a lif ...
+            &lif->lif_stats->tx_ring[ i];
     }
 
     q_list_size = sizeof(*lif->rxqcqs) * lif->nrxqs;
@@ -502,8 +501,7 @@ ionic_qcqs_alloc(struct lif *lif)
     
     for (i = 0; i < (int)lif->nrxqs; i++) {
         lif->rxqcqs[i].rx_stats =
-            &lif->ionic->master_lif->lif_stats
-                 ->rx_ring[0]; //&lif->lif_stats->rx_ring[ i];
+            &lif->lif_stats->rx_ring[ i];
     }
 
     lif->lif_stats->rx_count = lif->nrxqs;
@@ -866,13 +864,19 @@ ionic_qcq_free(struct lif *lif, struct qcq *qcq)
     if (qcq->flags & QCQ_F_INTR)
         ionic_intr_free(lif, qcq->intr.index);
 
-    NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, qcq->cq.info,
-                                  IONIC_CQ_INFO_TAG);
-    qcq->cq.info = NULL;
-    NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, qcq->q.info,
-                                  IONIC_Q_INFO_TAG);
+	if( qcq->cq.info != NULL) {
+		NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, qcq->cq.info,
+									  IONIC_CQ_INFO_TAG);
+		qcq->cq.info = NULL;
+	}
 
-    qcq->q.info = NULL;
+	if( qcq->q.info != NULL) {
+		NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, qcq->q.info,
+									  IONIC_Q_INFO_TAG);
+
+		qcq->q.info = NULL;
+	}
+
     NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, qcq,
                                   IONIC_QCQ_TAG);
 }
@@ -2234,6 +2238,7 @@ err_out_free_rxqcqs:
         if (lif->rxqcqs[i].qcq != NULL) {
             ionic_free_rxq_pkts(lif->ionic, lif->rxqcqs[i].qcq);
             ionic_qcq_free(lif, lif->rxqcqs[i].qcq);
+			lif->rxqcqs[i].qcq = NULL;
         }
     }
 
@@ -2242,6 +2247,7 @@ err_out_free_txqcqs:
         if (lif->txqcqs[i].qcq != NULL) {
             ionic_free_txq_pkts(lif->ionic, lif->txqcqs[i].qcq);
             ionic_qcq_free(lif, lif->txqcqs[i].qcq);
+			lif->txqcqs[i].qcq = NULL;
         }
     }
 

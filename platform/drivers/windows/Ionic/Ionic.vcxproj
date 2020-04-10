@@ -145,7 +145,7 @@
       <TimeStamp>$(IonicMpVerMaj).$(IonicMpVerMin).$(IonicMpVerSP).$(IonicMpVerBuild)</TimeStamp>
     </Inf>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)ndis.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)ndis.lib;wdmsec.lib</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(UM_IncludePath);Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -162,7 +162,7 @@
       <TimeStamp>$(IonicMpVerMaj).$(IonicMpVerMin).$(IonicMpVerSP).$(IonicMpVerBuild)</TimeStamp>
     </Inf>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)ndis.lib</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib;$(DDK_LIB_PATH)ndis.lib;wdmsec.lib</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(UM_IncludePath);Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

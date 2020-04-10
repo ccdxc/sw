@@ -372,7 +372,6 @@ ionic_alloc_rxq_netbuffers(struct ionic *ionic,
 
     /* setup the rq_pkt */
     rxq_pkt->parent_nbl = parent_nbl;
-    rxq_pkt->size = size;
 
     /* map the RQ this will be used on */
     rxq_pkt->q = q;

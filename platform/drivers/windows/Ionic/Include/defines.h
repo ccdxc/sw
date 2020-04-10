@@ -111,7 +111,6 @@ NTSTATUS
 #define le32_to_cpu
 
 #define NET_BUFFER_SG_LIST_CREATED      1
-#define NET_BUFFER_BUFFER_CREATED       2
 
 #define NET_BUFFER_LIST_SET_REF_COUNTER(_nbl_, _count_) \
     ((struct txq_nbl_private *)&NET_BUFFER_LIST_MINIPORT_RESERVED(_nbl_))->ref_count = (_count_)
@@ -137,6 +136,8 @@ NTSTATUS
 #define IONIC_ONE_SEC_WAIT              10000000
 
 #define IONIC_REG_LEN					25
+
+#define IONIC_REG_UNDEFINED				0xFFFFFFFF
 
 //
 // Flow control options
@@ -317,7 +318,7 @@ NTSTATUS
 
 #define MAX_NUM_SG_CNTR		(IONIC_TX_MAX_SG_ELEMS + 1)
 
-#define IONIC_MIN_MTU			576
+#define IONIC_MIN_MTU			590
 #define IONIC_MAX_MTU			9212
 #define IONIC_DEFAULT_MTU		9212
 

@@ -22,10 +22,15 @@
 #define IONIC_REG_TXBUFFERS		19
 #define IONIC_REG_RXBUFFERS		20
 #define IONIC_REG_PME			21
+#define IONIC_REG_AUTONEG		22
+#define IONIC_REG_SPEED			23
+#define IONIC_REG_FEC			24
+#define IONIC_REG_PAUSE			25
+#define IONIC_REG_PAUSETYPE		26
 
-#define IONIC_REG_MAX			21
+#define IONIC_REG_ENTRY_COUNT	27 // Include the 0th entry
 
-
+#ifndef DEFINITIONS_ONLY
 struct registry_entry ionic_registry[] = {
 		{L"*SRIOV",						0,		1,		1,		0}, // Current set to 0 since SRIOV is disabled now
 		{L"*VMQ",						0,		1,		1,		0}, // Current set to 0 since VMQ is disabled now
@@ -49,6 +54,10 @@ struct registry_entry ionic_registry[] = {
 		{L"*TransmitBuffers",			IONIC_MIN_TXRX_DESC, IONIC_MAX_TX_DESC, IONIC_DEF_TXRX_DESC, IONIC_DEF_TXRX_DESC},
 		{L"*ReceiveBuffers",			IONIC_MIN_TXRX_DESC, IONIC_MAX_RX_DESC, IONIC_DEF_TXRX_DESC, IONIC_DEF_TXRX_DESC},
 		{L"*EnablePME",					0,		1,		0,		0},
-
+		{L"AutoNegotiate",				0,		1,		1,		IONIC_REG_UNDEFINED},
+		{L"Speed",						IONIC_SPEED_1G,		IONIC_SPEED_100G,		0,		IONIC_REG_UNDEFINED},
+		{L"FEC",						PORT_FEC_TYPE_NONE,		PORT_FEC_TYPE_RS,	0,		IONIC_REG_UNDEFINED},
+		{L"Pause",						0,		IONIC_PAUSE_F_TX | IONIC_PAUSE_F_RX,		0,		IONIC_REG_UNDEFINED},
+		{L"PauseType",					0,		2,		0,		IONIC_REG_UNDEFINED},
 		};
-
+#endif

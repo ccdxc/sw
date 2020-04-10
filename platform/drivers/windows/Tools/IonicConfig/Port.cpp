@@ -8,12 +8,13 @@
 
 static
 po::options_description
-CmdPortOpts()
+CmdPortOpts(bool hidden)
 {
     po::options_description opts("IonicConfig.exe [-h] Port [options ...]");
 
+    OptAddDevName(opts);
+
     opts.add_options()
-        ("Name,n", optype_wstring()->required(), "Interface name")
         ("AutoNeg,a", optype_bool(), "Set Auto Negotiation (yes|no)")
         ("Speed,s", optype_string(), "Set Speed (Mbps|Ndis link speed enum)")
         ("FEC,f", optype_string(), "Set FEC (None|FC|RS)")
@@ -27,16 +28,16 @@ static
 int
 CmdPortRun(command_info& info)
 {
+    ULONG error;
+
     if (info.usage) {
-        std::cout << info.cmd.opts() << info.cmd.desc << std::endl;
+        std::cout << info.cmd.opts(info.hidden) << info.cmd.desc << std::endl;
         return info.status;
     }
 
     PortSetCB cb = {};
 
-    const std::wstring& name = opval_wstring(info.vm, "Name");
-
-    opval_wstrncpy(cb.AdapterName, sizeof(cb.AdapterName), info.vm, "Name");
+    OptGetDevName(info, cb.AdapterName, sizeof(cb.AdapterName), false);
 
     if (info.vm.count("AutoNeg")) {
         cb.Flags |= PORT_SET_AUTONEG;
@@ -109,15 +110,29 @@ CmdPortRun(command_info& info)
     }
 
     if (cb.Flags) {
-        if (!DoIoctl(IOCTL_IONIC_PORT_SET, &cb, sizeof(cb), NULL, 0)) {
+        error = DoIoctl(IOCTL_IONIC_PORT_SET, &cb, sizeof(cb), NULL, 0, NULL, info.dryrun);
+        if (error != ERROR_SUCCESS) {
             info.status = 1;
         }
     } else {
-        if (!DoIoctl(IOCTL_IONIC_PORT_GET,
-                     cb.AdapterName, sizeof(cb.AdapterName),
-                     &cb.Config, sizeof(cb.Config))) {
-            info.status = 1;
-        } else {
+        AdapterCB getcb = {};
+
+        memcpy(getcb.AdapterName, cb.AdapterName, sizeof(cb.AdapterName));
+
+        do {
+            memset(&cb, 0, sizeof(cb));
+
+            error = DoIoctl(IOCTL_IONIC_PORT_GET,
+                             &getcb, sizeof(getcb),
+                             &cb, sizeof(cb),
+                NULL,
+                             info.dryrun);
+            if (error != ERROR_SUCCESS && error != ERROR_MORE_DATA) {
+                info.status = 1;
+                break;
+            }
+
+            std::wstring name(cb.AdapterName);
             std::cout << "Port Configuration: " << to_bytes(name) << std::endl;
 
             std::cout << std::left << std::setw(20) << "AutoNeg: "
@@ -163,7 +178,12 @@ CmdPortRun(command_info& info)
             } else {
                 std::cout << std::hex << (cb.Config.Pause & 0x0f) << " (unknown)" << std::endl;
             }
-        }
+
+            std::cout << std::endl;
+
+            // this ioctl gets one at at time
+            ++getcb.Skip;
+        } while (error == ERROR_MORE_DATA);
     }
 
     return info.status;

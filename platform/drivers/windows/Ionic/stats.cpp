@@ -1,306 +1,311 @@
 #include "common.h"
 
-NDIS_STATUS
-GetDevStats(ULONG BufferLength, void *Buffer, ULONG *BytesReturned)
+NTSTATUS
+IoctlDevStats(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes)
 {
-
     NDIS_STATUS ntStatus = NDIS_STATUS_SUCCESS;
-    struct dev_port_stats *pStats = NULL;
-    MDL *pMdl = NULL;
-    void *pSystemBuffer = NULL;
+    NDIS_STRING AdapterNameString = {};
+    AdapterCB cb = {};
+    DevStatsRespCB *resp = NULL;
     struct ionic *ionic = NULL;
-    ULONG ulPortIndex = 0;
+    bool found = false;
 
-    if (BufferLength < sizeof(struct dev_port_stats) * port_count) {
-        ntStatus = NDIS_STATUS_BUFFER_TOO_SHORT;
-        goto cleanup;
+    *outbytes = 0;
+
+    if (inlen < sizeof(cb)) {
+        return NDIS_STATUS_BUFFER_TOO_SHORT;
     }
 
-    //
-    // Lock down the memory
-    //
-
-    pSystemBuffer = LockBuffer(Buffer, BufferLength, &pMdl);
-
-    if (pSystemBuffer == NULL) {
-        ntStatus = NDIS_STATUS_RESOURCES;
-        goto cleanup;
+    if (outlen < sizeof(*resp)) {
+        return NDIS_STATUS_BUFFER_TOO_SHORT;
     }
 
-    pStats = (struct dev_port_stats *)pSystemBuffer;
+    cb = *(AdapterCB *)buf;
+    resp = (DevStatsRespCB *)buf;
+    InitAdapterNameString(&AdapterNameString, cb.AdapterName);
 
-    NdisZeroMemory(pStats, BufferLength);
+    NdisZeroMemory(buf, outlen);
 
-    NdisAcquireSpinLock(&AdapterListLock);
+    PAGED_CODE();
+    NDIS_WAIT_FOR_MUTEX(&AdapterListLock);
 
-    ionic = (struct ionic *)AdapterList.Flink;
-    *BytesReturned = 0;
+    ListForEachEntry(ionic, &AdapterList, struct ionic, list_entry) {
+        if (!MatchesAdapterNameIonic(&AdapterNameString, ionic)) {
+            continue;
+        }
+        found = true;
 
-    while (ulPortIndex < (ULONG)port_count) {
+        if (cb.Skip) {
+            --cb.Skip;
+            continue;
+        }
 
-        NdisMoveMemory(pStats, &ionic->port_stats,
-                       sizeof(struct dev_port_stats));
-
-        *BytesReturned += sizeof(struct dev_port_stats);
-
-        ionic = (struct ionic *)ionic->list_entry.Flink;
-        pStats = (struct dev_port_stats *)((char *)pStats +
-                                           sizeof(struct dev_port_stats));
-        ulPortIndex++;
-    }
-
-    NdisReleaseSpinLock(&AdapterListLock);
-
-cleanup:
-
-    if (pSystemBuffer != NULL) {
-        MmUnlockPages(pMdl);
-        IoFreeMdl(pMdl);
-    }
-
-    return ntStatus;
-}
-
-NDIS_STATUS
-GetMgmtStats(ULONG BufferLength, void *Buffer, ULONG *BytesReturned)
-{
-
-    NDIS_STATUS ntStatus = NDIS_STATUS_SUCCESS;
-    MDL *pMdl = NULL;
-    void *pSystemBuffer = NULL;
-    ULONG ulPortIndex = 0;
-    struct ionic *ionic = NULL;
-
-    if (BufferLength < sizeof(struct mgmt_port_stats)) {
-        ntStatus = NDIS_STATUS_BUFFER_TOO_SHORT;
-        goto cleanup;
-    }
-
-    //
-    // Lock down the memory since we will be accessing it at raised IRQL
-    //
-
-    pSystemBuffer = LockBuffer(Buffer, BufferLength, &pMdl);
-
-    if (pSystemBuffer == NULL) {
-        ntStatus = NDIS_STATUS_RESOURCES;
-        goto cleanup;
-    }
-
-    NdisAcquireSpinLock(&AdapterListLock);
-
-    ionic = (struct ionic *)AdapterList.Flink;
-
-    ntStatus = NDIS_STATUS_INVALID_PARAMETER;
-
-    while (ulPortIndex < (ULONG)port_count) {
-
-        if (ionic->pci_config.DeviceID ==
-            PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT) {
-
-            NdisMoveMemory(Buffer, &ionic->idev.port_info->stats,
-                           sizeof(struct mgmt_port_stats));
-
-            ntStatus = NDIS_STATUS_SUCCESS;
-            *BytesReturned = sizeof(struct mgmt_port_stats);
-
+        // ioctl response may be for more than one adapter, if it fits
+        if (outlen < *outbytes + sizeof(*resp)) {
+            ntStatus = NDIS_STATUS_BUFFER_OVERFLOW;
             break;
         }
 
-        ionic = (struct ionic *)ionic->list_entry.Flink;
-        ulPortIndex++;
+        wcscpy_s(resp->adapter_name, ADAPTER_NAME_MAX_SZ, ionic->name.Buffer);
+
+        NdisMoveMemory(&resp->stats, &ionic->port_stats,
+                       sizeof(resp->stats));
+
+        *outbytes += sizeof(*resp);
+
+        ++resp;
     }
 
-    NdisReleaseSpinLock(&AdapterListLock);
+    NDIS_RELEASE_MUTEX(&AdapterListLock);
 
-cleanup:
-
-    if (pSystemBuffer != NULL) {
-        MmUnlockPages(pMdl);
-        IoFreeMdl(pMdl);
+    // If specific device was requested but not found
+    if (AdapterNameString.Length != 0 && !found) {
+        ntStatus = NDIS_STATUS_INVALID_PARAMETER;
     }
 
     return ntStatus;
 }
 
-NDIS_STATUS
-GetPortStats(ULONG Port, ULONG BufferLength, void *Buffer, ULONG *BytesReturned)
+NTSTATUS
+IoctlMgmtStats(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes)
 {
-
     NDIS_STATUS ntStatus = NDIS_STATUS_SUCCESS;
-    MDL *pMdl = NULL;
-    void *pSystemBuffer = NULL;
-    ULONG ulPortIndex = 0;
+    NDIS_STRING AdapterNameString = {};
+    AdapterCB cb = {};
+    MgmtStatsRespCB *resp = NULL;
     struct ionic *ionic = NULL;
+    bool found = false;
 
-    if (BufferLength < sizeof(struct port_stats)) {
-        ntStatus = NDIS_STATUS_BUFFER_TOO_SHORT;
-        goto cleanup;
+    *outbytes = 0;
+
+    if (inlen < sizeof(cb)) {
+        return NDIS_STATUS_BUFFER_TOO_SHORT;
     }
 
-    //
-    // Lock down the memory since we will be accessing it at raised IRQL
-    //
-
-    pSystemBuffer = LockBuffer(Buffer, BufferLength, &pMdl);
-
-    if (pSystemBuffer == NULL) {
-        ntStatus = NDIS_STATUS_RESOURCES;
-        goto cleanup;
+    if (outlen < sizeof(*resp)) {
+        return NDIS_STATUS_BUFFER_TOO_SHORT;
     }
 
-    NdisAcquireSpinLock(&AdapterListLock);
+    cb = *(AdapterCB *)buf;
+    resp = (MgmtStatsRespCB *)buf;
+    InitAdapterNameString(&AdapterNameString, cb.AdapterName);
 
-    ionic = (struct ionic *)AdapterList.Flink;
+    NdisZeroMemory(buf, outlen);
 
-    ntStatus = NDIS_STATUS_INVALID_PARAMETER;
+    PAGED_CODE();
+    NDIS_WAIT_FOR_MUTEX(&AdapterListLock);
 
-    while (ulPortIndex < (ULONG)port_count) {
+    ListForEachEntry(ionic, &AdapterList, struct ionic, list_entry) {
+        if (ionic->pci_config.DeviceID != PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT) {
+            continue;
+        }
+        if (!MatchesAdapterNameIonic(&AdapterNameString, ionic)) {
+            continue;
+        }
+        found = true;
 
-        if (ulPortIndex == Port) {
+        if (cb.Skip) {
+            --cb.Skip;
+            continue;
+        }
 
-            NdisMoveMemory(Buffer, &ionic->idev.port_info->stats,
-                           sizeof(struct port_stats));
-
-            ntStatus = NDIS_STATUS_SUCCESS;
-            *BytesReturned = sizeof(struct port_stats);
-
+        // ioctl response is for one adapter at a time
+        if (*outbytes != 0) {
+            ntStatus = NDIS_STATUS_BUFFER_OVERFLOW;
             break;
         }
 
-        ionic = (struct ionic *)ionic->list_entry.Flink;
-        ulPortIndex++;
+        wcscpy_s(resp->adapter_name, ADAPTER_NAME_MAX_SZ, ionic->name.Buffer);
+
+        NdisMoveMemory(&resp->stats, &ionic->idev.port_info->stats,
+                       sizeof(resp->stats));
+
+        *outbytes = sizeof(*resp);
+
+        ++resp;
     }
 
-    NdisReleaseSpinLock(&AdapterListLock);
+    NDIS_RELEASE_MUTEX(&AdapterListLock);
 
-cleanup:
-
-    if (pSystemBuffer != NULL) {
-        MmUnlockPages(pMdl);
-        IoFreeMdl(pMdl);
+    // If specific device was requested but not found
+    if (AdapterNameString.Length != 0 && !found) {
+        ntStatus = NDIS_STATUS_INVALID_PARAMETER;
     }
 
     return ntStatus;
 }
 
-NDIS_STATUS
-GetLifStats(ULONG PortLif,
-            ULONG BufferLength,
-            void *Buffer,
-            ULONG *BytesReturned)
+NTSTATUS
+IoctlPortStats(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes)
 {
-
     NDIS_STATUS ntStatus = NDIS_STATUS_SUCCESS;
-    USHORT usPort = 0;
-    USHORT usLif = 0;
-    MDL *pMdl = NULL;
-    void *pSystemBuffer = NULL;
-    ULONG ulPortIndex = 0;
+    NDIS_STRING AdapterNameString = {};
+    AdapterCB cb = {};
+    PortStatsRespCB *resp = NULL;
     struct ionic *ionic = NULL;
-    ULONG ulLifIndex = 0;
-    LIST_ENTRY *currentEntry = NULL;
+    bool found = false;
+
+    *outbytes = 0;
+
+    if (inlen < sizeof(cb)) {
+        return NDIS_STATUS_BUFFER_TOO_SHORT;
+    }
+
+    if (outlen < sizeof(*resp)) {
+        return NDIS_STATUS_BUFFER_TOO_SHORT;
+    }
+
+    cb = *(AdapterCB *)buf;
+    resp = (PortStatsRespCB *)buf;
+    InitAdapterNameString(&AdapterNameString, cb.AdapterName);
+
+    NdisZeroMemory(buf, outlen);
+
+    PAGED_CODE();
+    NDIS_WAIT_FOR_MUTEX(&AdapterListLock);
+
+    ListForEachEntry(ionic, &AdapterList, struct ionic, list_entry) {
+        if (!MatchesAdapterNameIonic(&AdapterNameString, ionic)) {
+            continue;
+        }
+        found = true;
+
+        if (cb.Skip) {
+            --cb.Skip;
+            continue;
+        }
+
+        // ioctl response is for one adapter at a time
+        if (*outbytes != 0) {
+            ntStatus = NDIS_STATUS_BUFFER_OVERFLOW;
+            break;
+        }
+
+        wcscpy_s(resp->adapter_name, ADAPTER_NAME_MAX_SZ, ionic->name.Buffer);
+
+        NdisMoveMemory(&resp->stats, &ionic->idev.port_info->stats,
+                       sizeof(resp->stats));
+
+        *outbytes = sizeof(struct port_stats);
+
+        ++resp;
+    }
+
+    NDIS_RELEASE_MUTEX(&AdapterListLock);
+
+    // If specific device was requested but not found
+    if (AdapterNameString.Length != 0 && !found) {
+        ntStatus = NDIS_STATUS_INVALID_PARAMETER;
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+IoctlLifStats(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes)
+{
+    NDIS_STATUS ntStatus = NDIS_STATUS_SUCCESS;
+    NDIS_STRING AdapterNameString = {};
+    AdapterCB cb = {};
+    LifStatsRespCB *resp = NULL;
+    struct ionic *ionic = NULL;
     struct lif *lif = NULL;
+    bool found = false;
 
-    usPort = (USHORT)(PortLif >> 16);
-    usLif = (USHORT)PortLif;
+    *outbytes = 0;
 
-    if (BufferLength < sizeof(struct lif_stats)) {
-        ntStatus = NDIS_STATUS_BUFFER_TOO_SHORT;
-        goto cleanup;
+    if (inlen < sizeof(cb)) {
+        return NDIS_STATUS_BUFFER_TOO_SHORT;
     }
 
-    //
-    // Lock down the memory since we will be accessing it at raised IRQL
-    //
-
-    pSystemBuffer = LockBuffer(Buffer, BufferLength, &pMdl);
-
-    if (pSystemBuffer == NULL) {
-        ntStatus = NDIS_STATUS_RESOURCES;
-        goto cleanup;
+    if (outlen < sizeof(*resp)) {
+        return NDIS_STATUS_BUFFER_TOO_SHORT;
     }
 
-    NdisAcquireSpinLock(&AdapterListLock);
+    cb = *(AdapterCB *)buf;
+    resp = (LifStatsRespCB *)buf;
+    InitAdapterNameString(&AdapterNameString, cb.AdapterName);
 
-    ntStatus = NDIS_STATUS_INVALID_PARAMETER;
+    NdisZeroMemory(buf, outlen);
 
-    ionic = (struct ionic *)AdapterList.Flink;
+    PAGED_CODE();
+    NDIS_WAIT_FOR_MUTEX(&AdapterListLock);
 
-    while (ulPortIndex < (ULONG)port_count) {
+    ListForEachEntry(ionic, &AdapterList, struct ionic, list_entry) {
+        if (!MatchesAdapterNameIonic(&AdapterNameString, ionic)) {
+            continue;
+        }
+        found = true;
 
-        if (usPort == (USHORT)ulPortIndex) {
+        if (cb.Skip) {
+            --cb.Skip;
+            continue;
+        }
 
-            currentEntry = ionic->lifs.Flink;
+        // ioctl response is for one adapter at a time
+        if (*outbytes != 0) {
+            ntStatus = NDIS_STATUS_BUFFER_OVERFLOW;
+            break;
+        }
 
-            while (ulLifIndex < ionic->total_lif_count) {
+        wcscpy_s(resp->adapter_name, ADAPTER_NAME_MAX_SZ, ionic->name.Buffer);
 
-                lif = CONTAINING_RECORD(currentEntry, struct lif, list);
-
-                if (usLif == (USHORT)lif->index) {
-
-                    NdisMoveMemory(Buffer, &lif->info->stats,
-                                   sizeof(struct lif_stats));
-
-                    *BytesReturned = sizeof(struct lif_stats);
-                    ntStatus = NDIS_STATUS_SUCCESS;
-
-                    break;
-                }
-
-                currentEntry = currentEntry->Flink;
-
-                ulLifIndex++;
+        ListForEachEntry(lif, &ionic->lifs, struct lif, list) {
+            if (lif->index != cb.Index) {
+                continue;
             }
 
+            resp->lif_index = lif->index;
+
+            NdisMoveMemory(&resp->stats, &lif->info->stats,
+                           sizeof(struct lif_stats));
+
+            // ioctl response is for one lif per adapter
             break;
         }
 
-        ionic = (struct ionic *)ionic->list_entry.Flink;
-        ulPortIndex++;
+        *outbytes += sizeof(*resp);
+
+        ++resp;
     }
 
-    NdisReleaseSpinLock(&AdapterListLock);
+    NDIS_RELEASE_MUTEX(&AdapterListLock);
 
-cleanup:
-
-    if (pSystemBuffer != NULL) {
-        MmUnlockPages(pMdl);
-        IoFreeMdl(pMdl);
+    // If specific device was requested but not found
+    if (AdapterNameString.Length != 0 && !found) {
+        ntStatus = NDIS_STATUS_INVALID_PARAMETER;
     }
 
     return ntStatus;
 }
 
-NDIS_STATUS
-GetPerfStats(void *Buffer, ULONG BufferLength, ULONG *BytesReturned)
+NTSTATUS
+IoctlPerfStats(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes)
 {
-
     NDIS_STATUS ntStatus = NDIS_STATUS_SUCCESS;
+    NDIS_STRING AdapterNameString = {};
+    AdapterCB cb = {};
     struct _PERF_MON_CB *stats = NULL;
-    ULONG length = 0;
 
-    ntStatus = get_perfmon_stats( &stats, &length);
+    *outbytes = 0;
 
-    if (ntStatus != NDIS_STATUS_SUCCESS) {
-        goto exit;
+    if (inlen < sizeof(cb)) {
+        return NDIS_STATUS_BUFFER_TOO_SHORT;
     }
 
-    if (BufferLength < length) {
-        ntStatus = NDIS_STATUS_BUFFER_TOO_SHORT;
-        *BytesReturned = length;
-        goto exit;
+    if (outlen < sizeof(*stats)) {
+        return NDIS_STATUS_BUFFER_TOO_SHORT;
     }
 
-    NdisMoveMemory( Buffer,
-                    stats,
-                    length);
+    cb = *(AdapterCB *)buf;
+    InitAdapterNameString(&AdapterNameString, cb.AdapterName);
 
-    *BytesReturned = length;
+    NdisZeroMemory(buf, outlen);
 
-exit:
-    
+    ntStatus = get_perfmon_stats(&cb, outlen, &stats, outbytes);
+
     if (stats != NULL) {
+        NdisMoveMemory(buf, stats, *outbytes);
         NdisFreeMemoryWithTagPriority_internal( IonicDriver, stats, IONIC_STATS_TAG);
     }
 

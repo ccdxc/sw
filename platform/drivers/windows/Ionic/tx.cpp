@@ -109,7 +109,9 @@ ionic_service_pending_nb_requests(struct ionic *ionic, struct qcq *qcq)
             DbgTrace((TRACE_COMPONENT_PENDING_LIST, TRACE_LEVEL_VERBOSE,
                       "%s Faileing NB %p Status %08lX\n", __FUNCTION__,
                       txq_pkt->packet_orig, status));
-            ionic_txq_complete_failed_pkt(ionic, qcq, txq_pkt->packet_orig,
+            ionic_txq_complete_failed_pkt(ionic, qcq, 
+										  txq_pkt->parent_nbl,
+										  txq_pkt->packet_orig,
                                           &completed_list,
                                           NDIS_STATUS_SEND_ABORTED);
         }
@@ -137,6 +139,9 @@ process_nbl(struct ionic *ionic,
     PNET_BUFFER nb, next_nb;
     struct txq_pkt_private *txq_pkt_private;
     struct txq_pkt *txq_pkt;
+	LONG processed_cnt = 0;
+	struct txq_nbl_private *nbl_private = (struct txq_nbl_private *)NET_BUFFER_LIST_MINIPORT_RESERVED( nbl);
+	bool fail_nbl = FALSE;
 
     mss.Value = NET_BUFFER_LIST_INFO(nbl, TcpLargeSendNetBufferListInfo);
 
@@ -152,12 +157,31 @@ process_nbl(struct ionic *ionic,
     for (nb = NET_BUFFER_LIST_FIRST_NB(nbl); nb; nb = next_nb) {
 
         next_nb = NET_BUFFER_NEXT_NB(nb);
+		
+		if (processed_cnt < nbl_private->nb_processed_cnt) {
+			processed_cnt++;
+			continue;
+		}
+		processed_cnt++;
+
+		if (fail_nbl) {
+            DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_ERROR,
+                      "%s NdisMAllocateNetBufferSGList failed previously adapter %p NBL "
+                      "%p NB %p\n",
+                      __FUNCTION__, ionic, nbl, nb));
+
+            ionic_txq_complete_failed_pkt(ionic, qcq, 
+										  nbl, 
+										  nb, 
+										  completed_list,
+                                          NDIS_STATUS_SEND_ABORTED);
+			continue;
+		}
+		
         txq_pkt_private =
             (struct txq_pkt_private *)NET_BUFFER_MINIPORT_RESERVED(nb);
 
-        if (txq_pkt_private->txq_pkt != NULL) {
-            continue;
-        }
+        ASSERT (txq_pkt_private->txq_pkt == NULL);
 
         //
         // Do we need multiple descriptors?
@@ -177,29 +201,14 @@ process_nbl(struct ionic *ionic,
             break;
         }
 
+		nbl_private->nb_processed_cnt++;
+
         txq_pkt = txq_pkt_private->txq_pkt;
         txq_pkt->parent_nbl = nbl;
         txq_pkt->packet_orig = nb;
         txq_pkt->sg_os_list = NULL;
-    }
 
-    if (!nbl) {
-        goto cleanup;
-    }
-
-    //
-    // Send this nbl off for processing
-    //
-
-    for (nb = NET_BUFFER_LIST_FIRST_NB(nbl); nb; nb = next_nb) {
-
-        next_nb = NET_BUFFER_NEXT_NB(nb);
-        txq_pkt_private =
-            (struct txq_pkt_private *)NET_BUFFER_MINIPORT_RESERVED(nb);
-
-        txq_pkt = txq_pkt_private->txq_pkt;
         txq_pkt->flags = NET_BUFFER_SG_LIST_CREATED;
-
         txq_pkt->send_nb_time = KeQueryPerformanceCounter( NULL);
 
         DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
@@ -218,15 +227,15 @@ process_nbl(struct ionic *ionic,
                       __FUNCTION__, ionic, nbl, nb, status));
 
             txq_pkt->flags = 0;
-
-            ionic_txq_complete_failed_pkt(ionic, qcq, nb, completed_list,
-                                          NDIS_STATUS_INVALID_PACKET);
-
+            ionic_txq_complete_failed_pkt(ionic, qcq, 
+										  nbl, 
+										  nb, 
+										  completed_list,
+                                          NDIS_STATUS_SEND_ABORTED);
             qcq->tx_stats->dma_map_error++;
+			fail_nbl = true;
         }
     }
-
-cleanup:
 
     return status;
 }
@@ -346,14 +355,12 @@ ionic_txq_complete_pkt(struct queue *q,
             if (txq_pkt->sg_os_list &&
                 (txq_pkt->sg_os_list != txq_pkt->sg_list)) {
                 NdisMFreeNetBufferSGList(ionic->dma_handle, txq_pkt->sg_os_list,
-                                         packet_orig);
-                txq_pkt->sg_os_list = NULL;
+                                         packet_orig);                
             } else {
                 NdisMFreeNetBufferSGList(ionic->dma_handle, txq_pkt->sg_list,
                                          packet_orig);
             }
-
-            txq_pkt->sg_os_list = (PSCATTER_GATHER_LIST)-1;
+			txq_pkt->sg_os_list = NULL;
 
             tick_count = KeQueryPerformanceCounter(NULL);
 
@@ -363,8 +370,7 @@ ionic_txq_complete_pkt(struct queue *q,
             InterlockedAdd64( (LONGLONG *)&qcq->tx_stats->nb_queue_to_comp_tick,
                                 (LONGLONG)(tick_count.QuadPart - txq_pkt->queue_nb_time.QuadPart));
 
-            ionic_return_txq_pkt(qcq, txq_pkt,
-                                 txq_pkt_private->current_desc_cnt);
+            ionic_return_txq_pkt(qcq, txq_pkt);
 
             ref_cnt = NET_BUFFER_LIST_DEC_REF_COUNTER(parent_nbl);
             if (!ref_cnt) {
@@ -1171,10 +1177,8 @@ ionic_txq_nbl_list_push_tail(struct txq_nbl_list *list, PNET_BUFFER_LIST nbl)
 }
 
 void
-ionic_return_txq_pkt(struct qcq *qcq, struct txq_pkt *txq_pkt, ULONG desc_cnt)
+ionic_return_txq_pkt(struct qcq *qcq, struct txq_pkt *txq_pkt)
 {
-
-    UNREFERENCED_PARAMETER(desc_cnt);
 
     NdisAcquireSpinLock(&qcq->pkt_list_lock);
 
@@ -1211,6 +1215,7 @@ ionic_txq_nbl_list_pop_head(struct txq_nbl_list *list)
 void
 ionic_txq_complete_failed_pkt(struct ionic *ionic,
                               struct qcq *qcq,
+							  PNET_BUFFER_LIST parent_nbl,
                               PNET_BUFFER packet,
                               struct txq_nbl_list *completed_list,
                               NDIS_STATUS status)
@@ -1218,38 +1223,37 @@ ionic_txq_complete_failed_pkt(struct ionic *ionic,
     struct txq_pkt_private *txq_pkt_private =
         (struct txq_pkt_private *)NET_BUFFER_MINIPORT_RESERVED(packet);
     struct txq_pkt *txq_pkt = txq_pkt_private->txq_pkt;
-    PNET_BUFFER_LIST parent_nbl = txq_pkt->parent_nbl;
     LONG ref_cnt;
 
     DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
-              "%s Enter TXQ complete failed pkt adapter %p NB %p\n",
-              __FUNCTION__, ionic, packet));
+              "%s Enter TXQ complete failed pkt adapter %p NBL %p NB %p\n",
+              __FUNCTION__, ionic, parent_nbl, packet));
 
     if (txq_pkt != NULL) {
         if (txq_pkt->sg_os_list && (txq_pkt->sg_os_list != txq_pkt->sg_list)) {
-
             NdisMFreeNetBufferSGList(ionic->dma_handle, txq_pkt->sg_os_list,
                                      txq_pkt->packet_orig);
-
-            txq_pkt->sg_os_list = NULL;
-        } else {
+        } else if( (txq_pkt->flags & NET_BUFFER_SG_LIST_CREATED) != 0) {
             NdisMFreeNetBufferSGList(ionic->dma_handle, txq_pkt->sg_list,
                                      txq_pkt->packet_orig);
         }
+		txq_pkt->sg_os_list = NULL;
 
         DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
                   "%s Returning failed packet\n", __FUNCTION__));
 
-        ionic_return_txq_pkt(qcq, txq_pkt, txq_pkt_private->desc_cnt);
+        ionic_return_txq_pkt(qcq, txq_pkt);
     }
+	/* Don't reset a previously set failure status */
+	if (NET_BUFFER_LIST_STATUS(parent_nbl) == NDIS_STATUS_SUCCESS) {
+		NET_BUFFER_LIST_STATUS(parent_nbl) = status;
+	}
 
     ref_cnt = NET_BUFFER_LIST_DEC_REF_COUNTER(parent_nbl);
     if (!ref_cnt) {
         DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
                   "%s TXQ adapter %p NBL %p Complete\n", __FUNCTION__, ionic,
                   parent_nbl));
-
-        NET_BUFFER_LIST_STATUS(parent_nbl) = status;
         ionic_txq_nbl_list_push_tail(completed_list, parent_nbl);
     }
 
@@ -1510,6 +1514,7 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
             txq_pkt_private =
                 (struct txq_pkt_private *)NET_BUFFER_MINIPORT_RESERVED(nb);
 
+			/* xxx - update list entry normally. */
             txq_pkt_private->link.Flink = NULL;
             txq_pkt_private->link.Blink = NULL;
             txq_pkt_private->txq_pkt = NULL;
@@ -1520,6 +1525,11 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
             nb_ref++;
         }
         NET_BUFFER_LIST_SET_REF_COUNTER(nbl, nb_ref);
+		NET_BUFFER_LIST_STATUS(nbl) = NDIS_STATUS_SUCCESS;
+
+		DbgTrace((TRACE_COMPONENT_PENDING_LIST, TRACE_LEVEL_VERBOSE,
+              "%s Adapter %p num_nbs %d nbl %p\n", __FUNCTION__,
+              ionic, nb_ref, nbl));
     }
 
     NDIS_RAISE_IRQL_TO_DISPATCH(&old_irql);
@@ -1535,6 +1545,7 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
 
         nbl_private = (struct txq_nbl_private *)NET_BUFFER_LIST_MINIPORT_RESERVED( nbl);
         nbl_private->send_nbl_time = KeQueryPerformanceCounter( NULL);
+		nbl_private->nb_processed_cnt = 0;
 
         next_nbl = NET_BUFFER_LIST_NEXT_NBL(nbl);
         NET_BUFFER_LIST_NEXT_NBL(nbl) = NULL;
@@ -1547,7 +1558,7 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
             lif = ionic->vm_queue[lif_id].lif;
         }
 
-        qcq = lif->txqcqs[tx_queue].qcq;        
+        qcq = lif->txqcqs[tx_queue].qcq;
 
         if( BooleanFlagOn( ionic->ConfigStatus, IONIC_TX_MODE_SEND)) {
             ionic_tx_flush(qcq, false, false);
@@ -1592,13 +1603,13 @@ ionic_tx_release_pending(struct ionic *ionic, struct qcq * qcq)
 {
 
     struct txq_pkt_private *txq_pkt_private;
+	struct txq_nbl_private *nbl_private;
     struct txq_pkt *txq_pkt;
     struct txq_nbl_list completed_list;
     PNET_BUFFER_LIST cur_nbl;
     PNET_BUFFER cur_nb, next_nb;
-    LONG ref_cnt;
-    LONG pkts_removed = 0;
     PLIST_ENTRY list_entry = NULL;
+	LONG	processed_cnt = 0;
 
     ASSERT(ionic != NULL);
 
@@ -1622,7 +1633,9 @@ ionic_tx_release_pending(struct ionic *ionic, struct qcq * qcq)
                   "%s Cleaning packet %p\n", __FUNCTION__,
                   txq_pkt->packet_orig));
 
-        ionic_txq_complete_failed_pkt(ionic, qcq, txq_pkt->packet_orig,
+        ionic_txq_complete_failed_pkt(ionic, qcq, 
+									  txq_pkt->parent_nbl, 
+									  txq_pkt->packet_orig,
                                       &completed_list,
                                       NDIS_STATUS_SEND_ABORTED);
     }
@@ -1633,57 +1646,26 @@ ionic_tx_release_pending(struct ionic *ionic, struct qcq * qcq)
     while (cur_nbl) {
 
         InterlockedDecrement( (LONG *)&qcq->tx_stats->pending_nbl_count);
+		nbl_private = (struct txq_nbl_private *)NET_BUFFER_LIST_MINIPORT_RESERVED( cur_nbl);
 
-        cur_nb = NET_BUFFER_LIST_FIRST_NB(cur_nbl);
-        txq_pkt_private =
-            (struct txq_pkt_private *)NET_BUFFER_MINIPORT_RESERVED(cur_nb);
+		for (cur_nb = NET_BUFFER_LIST_FIRST_NB(cur_nbl); cur_nb; cur_nb = next_nb) {
 
-        if (!txq_pkt_private->txq_pkt) {
-
-            DbgTrace((TRACE_COMPONENT_PENDING_LIST, TRACE_LEVEL_VERBOSE,
-                      "%s Cleaning nbl %p\n", __FUNCTION__, cur_nbl));
-
-            NET_BUFFER_LIST_STATUS(cur_nbl) = NDIS_STATUS_SEND_ABORTED;
-
-            pkts_removed += NET_BUFFER_LIST_GET_REF_COUNTER(cur_nbl);
-
-            NET_BUFFER_LIST_SET_REF_COUNTER(cur_nbl, 0);
-            ionic_txq_nbl_list_push_tail(&completed_list, cur_nbl);
-        } else {
-
-            while (cur_nb) {
-                next_nb = NET_BUFFER_NEXT_NB(cur_nb);
-                txq_pkt_private =
-                    (struct txq_pkt_private *)NET_BUFFER_MINIPORT_RESERVED(
-                        cur_nb);
-
-                if (txq_pkt_private->txq_pkt) {
-                    txq_pkt = txq_pkt_private->txq_pkt;
-                    if (txq_pkt->flags != NET_BUFFER_SG_LIST_CREATED) {
-                        DbgTrace((TRACE_COMPONENT_PENDING_LIST,
-                                  TRACE_LEVEL_VERBOSE, "%s Cleaning nb %p\n",
-                                  __FUNCTION__, cur_nb));
-                        ionic_txq_complete_failed_pkt(ionic, qcq, cur_nb,
-                                                      &completed_list,
-                                                      NDIS_STATUS_SEND_ABORTED);
-                    }
-                } else {
-
-                    ref_cnt = NET_BUFFER_LIST_DEC_REF_COUNTER(cur_nbl);
-                    if (!ref_cnt) {
-                        NET_BUFFER_LIST_STATUS(cur_nbl) =
-                            NDIS_STATUS_SEND_ABORTED;
-
-                        DbgTrace((TRACE_COMPONENT_PENDING_LIST,
-                                  TRACE_LEVEL_VERBOSE,
-                                  "%s Cleaning deref'd nbl %p\n", __FUNCTION__,
-                                  cur_nbl));
-
-                        ionic_txq_nbl_list_push_tail(&completed_list, cur_nbl);
-                    }
-                }
-                cur_nb = next_nb;
-            }
+			next_nb = NET_BUFFER_NEXT_NB(cur_nb);
+			
+			if (processed_cnt < nbl_private->nb_processed_cnt) {
+				processed_cnt++;
+				continue;
+			}
+            
+			DbgTrace((TRACE_COMPONENT_PENDING_LIST,
+                        TRACE_LEVEL_VERBOSE, "%s Cleaning nb %p\n",
+                        __FUNCTION__, cur_nb));
+            ionic_txq_complete_failed_pkt(ionic, 
+										  qcq,
+										  cur_nbl,
+										  cur_nb,
+										  &completed_list,
+										  NDIS_STATUS_SEND_ABORTED);
         }
         cur_nbl = ionic_txq_nbl_list_pop_head(&qcq->txq_pending_nbl);
     }
@@ -1793,7 +1775,12 @@ ionic_tx_flush(struct qcq *qcq, bool cleanup, bool credits)
                            flags);
 
     if (!cleanup) {
-        //ionic_service_pending_requests(cq->lif->ionic, qcq);
+		if( work_done) {
+			ionic_service_pending_nbl_requests(cq->lif->ionic, qcq);
+			NdisDprAcquireSpinLock(&qcq->txq_pending_nb_lock);
+			ionic_service_pending_nb_requests(cq->lif->ionic, qcq);
+			NdisDprReleaseSpinLock(&qcq->txq_pending_nb_lock);
+		}
     } else {
         ionic_tx_release_pending(cq->lif->ionic, qcq);
     }
@@ -1914,7 +1901,6 @@ ionic_tx_fill(struct ionic *ionic, struct qcqst *qcqst)
 
     struct qcq *qcq = qcqst->qcq;
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
-    unsigned int len = ionic->frame_size;
     unsigned int i;
     struct queue *q = &qcq->q;
     struct txq_pkt *txq_pkt;
@@ -1927,10 +1913,7 @@ ionic_tx_fill(struct ionic *ionic, struct qcqst *qcqst)
 
     txq_pkt = qcq->tx_pkt_list_head;
     for (i = 0; i < q->num_descs; i++) {
-
         txq_pkt->q = q;
-        txq_pkt->size = len;
-
         txq_pkt = txq_pkt->next;
     }
 

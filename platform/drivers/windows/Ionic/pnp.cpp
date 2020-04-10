@@ -42,6 +42,12 @@ ionic_add_device(NDIS_HANDLE miniport_adapter_handle,
                   adapter, sizeof(struct ionic)));
 
     adapter->adapterhandle = miniport_adapter_handle;
+	
+	status = init_registry_config( adapter);
+
+	if( status != NDIS_STATUS_SUCCESS) {
+        goto cleanup;
+	}
 
     NdisAllocateSpinLock(&adapter->dev_cmd_lock);
 
@@ -69,10 +75,11 @@ ionic_add_device(NDIS_HANDLE miniport_adapter_handle,
 
     if (status == NDIS_STATUS_SUCCESS) {
         // Insert this new IONIC Device into the Global List
-        NdisAcquireSpinLock(&AdapterListLock);
+        PAGED_CODE();
+        NDIS_WAIT_FOR_MUTEX(&AdapterListLock);
         InsertTailList(&AdapterList, &adapter->list_entry);
         port_cnt = InterlockedIncrement((long *)&port_count);
-        NdisReleaseSpinLock(&AdapterListLock);
+        NDIS_RELEASE_MUTEX(&AdapterListLock);
 
         if (port_cnt == 1) {
             RegisterDevice(IonicDriver);
@@ -87,10 +94,15 @@ cleanup:
 
     if (status != NDIS_STATUS_SUCCESS) {
 
-        if (stAttribs.MiniportAddDeviceContext != NULL) {
+        if (adapter != NULL) {
+			if (adapter->registry_config != NULL) {
+				NdisFreeMemoryWithTagPriority_internal(miniport_adapter_handle,
+                                          adapter->registry_config,
+                                          IONIC_ADAPTER_TAG);
+			}
             NdisFreeMemoryWithTagPriority_internal(miniport_adapter_handle,
-                                          stAttribs.MiniportAddDeviceContext,
-                                          IONIC_ADAPTER_STATS_TAG);
+                                          adapter,
+                                          IONIC_ADAPTER_TAG);
         }
     }
 
@@ -121,10 +133,11 @@ ionic_remove_device(NDIS_HANDLE miniport_add_device_context)
         set_event = TRUE;
     }
 
-    NdisAcquireSpinLock(&AdapterListLock);
+    PAGED_CODE();
+    NDIS_WAIT_FOR_MUTEX(&AdapterListLock);
     RemoveEntryList(&ionic->list_entry);
     lPortCnt = InterlockedDecrement((long *)&port_count);
-    NdisReleaseSpinLock(&AdapterListLock);
+    NDIS_RELEASE_MUTEX(&AdapterListLock);
 
     if (set_event) {
         KeSetEvent( &perfmon_event, 0, FALSE);
@@ -135,6 +148,12 @@ ionic_remove_device(NDIS_HANDLE miniport_add_device_context)
     }
 
     NdisFreeSpinLock(&ionic->dev_cmd_lock);
+
+	if (ionic->registry_config != NULL) {
+		NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle,
+                                    ionic->registry_config,
+                                    IONIC_ADAPTER_TAG);
+	}
 
     NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, ionic, IONIC_ADAPTER_TAG);
 

@@ -330,6 +330,9 @@ NDIS_STATUS
 ReadConfigParams( void);
 
 void
+ReadPortConfig(struct ionic *Adapter, NDIS_HANDLE Config);
+
+void
 ReadSriovConfig( struct ionic *Adapter,
 				 NDIS_HANDLE Config);
 
@@ -340,6 +343,10 @@ ReadVmqConfig( struct ionic *Adapter,
 void
 ReadRssConfig( struct ionic *Adapter,
 				 NDIS_HANDLE Config);
+
+NDIS_STATUS
+UpdateRegistryKeyword(struct ionic *ionic,
+                      ULONG keyword_index);
 
 char *
 GetHyperVPartitionTypeString(ULONG PartitionType);
@@ -414,7 +421,7 @@ process_work_item(PVOID   WorkItemContext,
     NDIS_HANDLE  work_handle);
 
 NDIS_STATUS
-get_perfmon_stats(struct _PERF_MON_CB **perfmon_stats, ULONG *len);
+get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_stats, ULONG *len);
 
 void
 ref_request(struct ionic *ionic);
@@ -439,16 +446,42 @@ NdisFreeMemoryWithTagPriority_internal(NDIS_HANDLE NdisHandle,
 void
 validate_memory( void);
 
-NDIS_STATUS
-GetRegKeyInfo(void *buffer,
-	ULONG buffer_len,
-	ULONG *buffer_ret);
+NTSTATUS
+IoctlRegKeyInfo(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes);
 
 LONG
 NormalizeSpeed(LONG Speed);
 
 struct ionic*
 FindAdapterByNameLocked(PWCHAR AdapterName);
+
+static inline void
+InitAdapterNameString(NDIS_STRING *AdapterNameString, PWCHAR AdapterName)
+{
+    AdapterName[ADAPTER_NAME_MAX_SZ - 1] = 0;
+
+    AdapterNameString->Buffer = AdapterName;
+    AdapterNameString->Length = (USHORT)(wcsnlen(AdapterName, ADAPTER_NAME_MAX_SZ) * sizeof(WCHAR));
+    AdapterNameString->MaximumLength = AdapterNameString->Length + sizeof(WCHAR);
+}
+
+static inline bool
+EqualsAdapterNameIonic(NDIS_STRING *AdapterNameString, struct ionic *ionic)
+{
+    return RtlEqualUnicodeString(AdapterNameString, &ionic->name, false);
+}
+
+static inline bool
+MatchesAdapterNameIonic(NDIS_STRING *AdapterNameString, struct ionic *ionic)
+{
+    return AdapterNameString->Length == 0 || EqualsAdapterNameIonic(AdapterNameString, ionic);
+}
+
+NTSTATUS
+IoctlAdapterInfo(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes);
+
+NDIS_STATUS
+init_registry_config( struct ionic *adapter);
 
 //
 // handlers.cpp prototypes
@@ -886,6 +919,9 @@ IoctlPortGet(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes);
 NTSTATUS
 IoctlPortSet(PVOID buf, ULONG inlen);
 
+NDIS_STATUS
+set_port_config(struct ionic *ionic);
+
 //
 // qcq.cpp prototypes
 //
@@ -1093,32 +1129,20 @@ get_rid(struct ionic *ionic,
 // stats.cpp prototypes
 //
 
-NDIS_STATUS
-GetDevStats(ULONG BufferLength,
-	void *Buffer,
-	ULONG *BytesReturned);
+NTSTATUS
+IoctlDevStats(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes);
 
-NDIS_STATUS
-GetMgmtStats(ULONG BufferLength,
-	void *Buffer,
-	ULONG *BytesReturned);
+NTSTATUS
+IoctlPortStats(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes);
 
-NDIS_STATUS
-GetPortStats(ULONG Port,
-	ULONG BufferLength,
-	void *Buffer,
-	ULONG *BytesReturned);
+NTSTATUS
+IoctlLifStats(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes);
 
-NDIS_STATUS
-GetLifStats(ULONG Lif,
-	ULONG BufferLength,
-	void *Buffer,
-	ULONG *BytesReturned);
+NTSTATUS
+IoctlMgmtStats(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes);
 
-NDIS_STATUS
-GetPerfStats(void *Buffer,
-	ULONG BufferLength,
-	ULONG *BytesReturned);
+NTSTATUS
+IoctlPerfStats(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes);
 
 //
 // switch.cpp prototypes
@@ -1264,11 +1288,12 @@ void ionic_send_complete(struct ionic *ionic,
 void ionic_txq_nbl_list_push_tail(struct txq_nbl_list *list,
     PNET_BUFFER_LIST nbl);
 
-void ionic_return_txq_pkt(struct qcq *qcq, struct txq_pkt *txq_pkt, ULONG desc_cnt);
+void ionic_return_txq_pkt(struct qcq *qcq, struct txq_pkt *txq_pkt);
 
 PNET_BUFFER_LIST ionic_txq_nbl_list_pop_head(struct txq_nbl_list *list);
 
 void ionic_txq_complete_failed_pkt(struct ionic *ionic, struct qcq *qcq,
+	PNET_BUFFER_LIST parent_nbl,
     PNET_BUFFER packet,
     struct txq_nbl_list *completed_list, NDIS_STATUS status);
 

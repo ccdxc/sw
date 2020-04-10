@@ -40,7 +40,7 @@ extern PTraceLogMsg     TraceMsgFnc;
 
 extern LIST_ENTRY		AdapterList;
 
-extern NDIS_SPIN_LOCK	AdapterListLock;
+extern NDIS_MUTEX	AdapterListLock;
 
 extern LONG				port_count;
 

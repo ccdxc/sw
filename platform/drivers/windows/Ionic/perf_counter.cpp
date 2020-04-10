@@ -70,7 +70,7 @@ IonicPerfCounterCallback(
     uni_allocated_adapter_name.MaximumLength = (USHORT)(name_buffer_len / 2);
     uni_allocated_adapter_name.Length = 0;
 
-    ndis_status = get_perfmon_stats(&perfmon_stats, &stats_len);
+    ndis_status = get_perfmon_stats(NULL, 0, &perfmon_stats, &stats_len);
 
     if (ndis_status != NDIS_STATUS_SUCCESS) {
         status = STATUS_UNSUCCESSFUL;

@@ -1,9 +1,12 @@
 #pragma once
 
+#include "pci_ids.h"
+#include "ionic_types.h"
+#include "ionic_stats.h"
+
 #define IONIC_LINKNAME_STRING_USER      L"\\??\\IonicControl"
 
 #define ADAPTER_NAME_MAX_SZ             64
-#define LIF_NAME_MAX_SZ                 32
 
 //
 // IO Control codes
@@ -16,13 +19,24 @@
 #define IOCTL_IONIC_GET_PORT_STATS      CTL_CODE(FILE_DEVICE_UNKNOWN, 0x10104, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_IONIC_GET_LIF_STATS       CTL_CODE(FILE_DEVICE_UNKNOWN, 0x10105, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_IONIC_GET_PERF_STATS      CTL_CODE(FILE_DEVICE_UNKNOWN, 0x10106, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define IOCTL_IONIC_RESET_STATS         CTL_CODE(FILE_DEVICE_UNKNOWN, 0x10107, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define _IOCTL_IONIC_UNUSED_7           CTL_CODE(FILE_DEVICE_UNKNOWN, 0x10107, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_IONIC_SET_RX_BUDGET       CTL_CODE(FILE_DEVICE_UNKNOWN, 0x10108, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_IONIC_GET_REG_KEY_INFO    CTL_CODE(FILE_DEVICE_UNKNOWN, 0x10109, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_IONIC_PORT_GET            CTL_CODE(FILE_DEVICE_UNKNOWN, 0x1010a, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_IONIC_PORT_SET            CTL_CODE(FILE_DEVICE_UNKNOWN, 0x1010b, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define IOCTL_IONIC_GET_ADAPTER_INFO	CTL_CODE(FILE_DEVICE_UNKNOWN, 0x1010c, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 #define IONIC_DEV_LOC_LEN					50
+
+//
+// Common ioctl input buffers
+//
+
+typedef struct _ADAPTER_CB {
+    WCHAR       AdapterName[ADAPTER_NAME_MAX_SZ];
+    ULONG       Skip;
+    ULONG       Index;
+} AdapterCB;
 
 //
 // Logging subsystem defines and structres
@@ -183,3 +197,64 @@ typedef struct _PORT_SET_CB {
 #define PORT_SET_SPEED          0x0002
 #define PORT_SET_FEC            0x0004
 #define PORT_SET_PAUSE          0x0008
+
+//
+// related to IOCTL_IONIC_GET_ADAPTER_INFO
+//
+
+#define IONIC_DEVINFO_FWVERS_BUFLEN 32
+#define IONIC_DEVINFO_SERIAL_BUFLEN 32
+
+struct _ADAPTER_INFO {
+
+	WCHAR			device_location[ IONIC_DEV_LOC_LEN];
+
+	WCHAR           name[ADAPTER_NAME_MAX_SZ];
+
+	ULONG			hw_state;
+
+	USHORT			link_state;
+
+	ULONG			Mtu;
+
+	ULONGLONG		Speed;
+
+	USHORT			vendor_id;
+
+	USHORT			product_id;
+
+	UCHAR			asic_type;
+	
+	UCHAR			asic_rev;
+
+	char			fw_version[IONIC_DEVINFO_FWVERS_BUFLEN + 1];
+
+	char			serial_num[IONIC_DEVINFO_SERIAL_BUFLEN + 1];
+};
+
+struct _ADAPTER_INFO_HDR {
+
+	ULONG			count;
+	
+};
+
+typedef struct _DEV_STATS_RESP_CB {
+    WCHAR                   adapter_name[ADAPTER_NAME_MAX_SZ];
+    struct dev_port_stats   stats;
+} DevStatsRespCB;
+
+typedef struct _PORT_STATS_RESP_CB {
+    WCHAR                   adapter_name[ADAPTER_NAME_MAX_SZ];
+    struct port_stats       stats;
+} PortStatsRespCB;
+
+typedef struct _MGMT_STATS_RESP_CB {
+    WCHAR                   adapter_name[ADAPTER_NAME_MAX_SZ];
+    struct mgmt_port_stats  stats;
+} MgmtStatsRespCB;
+
+typedef struct _LIF_STATS_RESP_CB {
+    WCHAR                   adapter_name[ADAPTER_NAME_MAX_SZ];
+    DWORD                   lif_index;
+    struct lif_stats        stats;
+} LifStatsRespCB;

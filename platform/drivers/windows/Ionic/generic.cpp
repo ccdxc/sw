@@ -109,7 +109,7 @@ ReadRegParameters(struct ionic *Adapter)
 					(IONIC_PRIORITY_ENABLED | IONIC_VLAN_ENABLED));
 		}
 
-		ionic_registry[ IONIC_REG_PRIVLAN].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_PRIVLAN].current_value = pParameters->ParameterData.IntegerData;
     }
 
     DbgTrace((
@@ -135,7 +135,7 @@ ReadRegParameters(struct ionic *Adapter)
 						  "%s Have VLan tag %d\n", __FUNCTION__, Adapter->vlan_id));
 			}
 
-			ionic_registry[ IONIC_REG_VLANID].current_value = pParameters->ParameterData.IntegerData;
+			Adapter->registry_config[ IONIC_REG_VLANID].current_value = pParameters->ParameterData.IntegerData;
         }
     }
 
@@ -153,7 +153,7 @@ ReadRegParameters(struct ionic *Adapter)
 				Adapter->rx_pool_factor = IONIC_DEFAULT_RX_POOL_FACTOR;
 			}
 		}
-		ionic_registry[ IONIC_REG_RXPOOL].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_RXPOOL].current_value = pParameters->ParameterData.IntegerData;
     }
 
 	NdisInitUnicodeString( &uniKeyWord,
@@ -174,7 +174,7 @@ ReadRegParameters(struct ionic *Adapter)
 				SetFlag( Adapter->ConfigStatus, IONIC_TX_MODE_SEND);
 			}
 		}
-		ionic_registry[ IONIC_REG_TXMODE].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_TXMODE].current_value = pParameters->ParameterData.IntegerData;
     }
 
 	NdisInitUnicodeString( &uniKeyWord,
@@ -191,7 +191,7 @@ ReadRegParameters(struct ionic *Adapter)
             Adapter->frame_size > IONIC_MAX_MTU) {
             Adapter->frame_size = IONIC_DEFAULT_MTU;
         }
-		ionic_registry[ IONIC_REG_JUMBO].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_JUMBO].current_value = pParameters->ParameterData.IntegerData;
 
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s Frame %d\n", __FUNCTION__,
@@ -212,7 +212,7 @@ ReadRegParameters(struct ionic *Adapter)
             Adapter->ntx_buffers > IONIC_MAX_TX_DESC) {
             Adapter->ntx_buffers = IONIC_DEF_TXRX_DESC;
         }
-		ionic_registry[ IONIC_REG_TXBUFFERS].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_TXBUFFERS].current_value = pParameters->ParameterData.IntegerData;
 
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s Number TX Buffers %d\n", __FUNCTION__,
@@ -233,7 +233,7 @@ ReadRegParameters(struct ionic *Adapter)
             Adapter->nrx_buffers > IONIC_MAX_RX_DESC) {
             Adapter->nrx_buffers = IONIC_DEF_TXRX_DESC;
         }
-		ionic_registry[ IONIC_REG_RXBUFFERS].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_RXBUFFERS].current_value = pParameters->ParameterData.IntegerData;
 
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s Number RX Buffers %d\n", __FUNCTION__,
@@ -252,7 +252,7 @@ ReadRegParameters(struct ionic *Adapter)
 		if(pParameters->ParameterData.IntegerData == 1) {
 			Adapter->lsov1_state = NDIS_OFFLOAD_PARAMETERS_LSOV1_ENABLED;
 		}
-		ionic_registry[ IONIC_REG_LSOV1].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_LSOV1].current_value = pParameters->ParameterData.IntegerData;
     }
 
 	NdisInitUnicodeString( &uniKeyWord,
@@ -266,7 +266,7 @@ ReadRegParameters(struct ionic *Adapter)
 		if(pParameters->ParameterData.IntegerData == 0) {
 			Adapter->lsov2ipv4_state = NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED;
 		}
-		ionic_registry[ IONIC_REG_LSOV2V4].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_LSOV2V4].current_value = pParameters->ParameterData.IntegerData;
     }
 
 	NdisInitUnicodeString( &uniKeyWord,
@@ -280,7 +280,7 @@ ReadRegParameters(struct ionic *Adapter)
 		if(pParameters->ParameterData.IntegerData == 0) {
 			Adapter->lsov2ipv6_state = NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED;
 		}
-		ionic_registry[ IONIC_REG_LSOV2V6].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_LSOV2V6].current_value = pParameters->ParameterData.IntegerData;
     }
 
     Adapter->ipv4_rx_state = NDIS_OFFLOAD_SET_ON;
@@ -303,7 +303,7 @@ ReadRegParameters(struct ionic *Adapter)
 				Adapter->ipv4_tx_state = NDIS_OFFLOAD_SET_OFF;
 			}
 		}
-		ionic_registry[ IONIC_REG_IPCSV4].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_IPCSV4].current_value = pParameters->ParameterData.IntegerData;
     }
 
     Adapter->tcpv4_rx_state = NDIS_OFFLOAD_SET_ON;
@@ -326,7 +326,7 @@ ReadRegParameters(struct ionic *Adapter)
 				Adapter->tcpv4_tx_state = NDIS_OFFLOAD_SET_OFF;
 			}
 		}
-		ionic_registry[ IONIC_REG_TCPCSV4].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_TCPCSV4].current_value = pParameters->ParameterData.IntegerData;
     }
 
     Adapter->tcpv6_rx_state = NDIS_OFFLOAD_SET_ON;
@@ -349,7 +349,7 @@ ReadRegParameters(struct ionic *Adapter)
 				Adapter->tcpv6_tx_state = NDIS_OFFLOAD_SET_OFF;
 			}
 		}
-		ionic_registry[ IONIC_REG_TCPCSV6].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_TCPCSV6].current_value = pParameters->ParameterData.IntegerData;
     }
 
     Adapter->udpv4_rx_state = NDIS_OFFLOAD_SET_ON;
@@ -372,7 +372,7 @@ ReadRegParameters(struct ionic *Adapter)
 				Adapter->udpv4_tx_state = NDIS_OFFLOAD_SET_OFF;
 			}
 		}
-		ionic_registry[ IONIC_REG_UDPCSV4].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_UDPCSV4].current_value = pParameters->ParameterData.IntegerData;
     }
 
     Adapter->udpv6_rx_state = NDIS_OFFLOAD_SET_ON;
@@ -395,7 +395,7 @@ ReadRegParameters(struct ionic *Adapter)
 				Adapter->udpv6_tx_state = NDIS_OFFLOAD_SET_OFF;
 			}
 		}
-		ionic_registry[ IONIC_REG_UDPCSV6].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_UDPCSV6].current_value = pParameters->ParameterData.IntegerData;
     }
 
     DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
@@ -465,7 +465,7 @@ ReadRegParameters(struct ionic *Adapter)
 
             SetFlag(Adapter->port_stats.flags, IONIC_PORT_FLAG_SRIOV);
         }
-		ionic_registry[ IONIC_REG_SRIOV].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_SRIOV].current_value = pParameters->ParameterData.IntegerData;
     }
 
     NdisReadConfiguration(&ntStatus, &pParameters, hConfig,
@@ -510,7 +510,7 @@ ReadRegParameters(struct ionic *Adapter)
 				SetFlag(Adapter->port_stats.flags, IONIC_PORT_FLAG_VMQ);
 			}
 		}
-		ionic_registry[ IONIC_REG_VMQ].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_VMQ].current_value = pParameters->ParameterData.IntegerData;
     }
 
     if (!BooleanFlagOn(Adapter->ConfigStatus, IONIC_SRIOV_ENABLED) &&
@@ -540,8 +540,14 @@ ReadRegParameters(struct ionic *Adapter)
 
             SetFlag(Adapter->port_stats.flags, IONIC_PORT_FLAG_RSS);
         }
-		ionic_registry[ IONIC_REG_RSS].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_RSS].current_value = pParameters->ParameterData.IntegerData;
     }
+
+	//
+	// Read port configuration parameters
+	//
+
+	ReadPortConfig( Adapter, hConfig);
 
     //
     // Go read in interface specific information
@@ -574,6 +580,89 @@ cleanup:
 }
 
 void
+ReadPortConfig(struct ionic *Adapter, NDIS_HANDLE Config)
+{
+
+    NDIS_STATUS ntStatus = NDIS_STATUS_SUCCESS;
+    PNDIS_CONFIGURATION_PARAMETER pParameters = NULL;
+    NDIS_STRING uniKeyword;
+
+	NdisInitUnicodeString( &uniKeyword,
+						   ionic_registry[ IONIC_REG_AUTONEG].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, Config, &uniKeyword,
+                          NdisParameterInteger);
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+                  "%s AutoNegotiate keyword status %08lX Value %08lX\n",
+                  __FUNCTION__, ntStatus,
+                  pParameters->ParameterData.IntegerData));
+		Adapter->registry_config[ IONIC_REG_AUTONEG].current_value = pParameters->ParameterData.IntegerData;
+    }
+
+	NdisInitUnicodeString( &uniKeyword,
+						   ionic_registry[ IONIC_REG_SPEED].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, Config, &uniKeyword,
+                          NdisParameterInteger);
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+                  "%s Speed keyword status %08lX Value %08lX\n",
+                  __FUNCTION__, ntStatus,
+                  pParameters->ParameterData.IntegerData));
+		Adapter->registry_config[ IONIC_REG_SPEED].current_value = pParameters->ParameterData.IntegerData;
+    }
+
+	NdisInitUnicodeString( &uniKeyword,
+						   ionic_registry[ IONIC_REG_FEC].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, Config, &uniKeyword,
+                          NdisParameterInteger);
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+                  "%s FEC keyword status %08lX Value %08lX\n",
+                  __FUNCTION__, ntStatus,
+                  pParameters->ParameterData.IntegerData));
+		Adapter->registry_config[ IONIC_REG_FEC].current_value = pParameters->ParameterData.IntegerData;
+    }
+
+	NdisInitUnicodeString( &uniKeyword,
+						   ionic_registry[ IONIC_REG_PAUSE].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, Config, &uniKeyword,
+                          NdisParameterInteger);
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+                  "%s PAUSE keyword status %08lX Value %08lX\n",
+                  __FUNCTION__, ntStatus,
+                  pParameters->ParameterData.IntegerData));
+		Adapter->registry_config[ IONIC_REG_PAUSE].current_value = pParameters->ParameterData.IntegerData;
+    }
+
+	/* Only read the PauseType if we set the Pause */
+	if( Adapter->registry_config[ IONIC_REG_PAUSE].current_value != IONIC_REG_UNDEFINED) {
+		NdisInitUnicodeString( &uniKeyword,
+							   ionic_registry[ IONIC_REG_PAUSETYPE].name);
+		NdisReadConfiguration(&ntStatus, &pParameters, Config, &uniKeyword,
+							  NdisParameterInteger);
+		if (ntStatus == NDIS_STATUS_SUCCESS) {
+			DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+					  "%s PAUSETYPE keyword status %08lX Value %08lX\n",
+					  __FUNCTION__, ntStatus,
+					  pParameters->ParameterData.IntegerData));
+			Adapter->registry_config[ IONIC_REG_PAUSETYPE].current_value = pParameters->ParameterData.IntegerData;
+		}
+	}
+
+	DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+				"%s Port Config AutoNeg %d Speed %d FEC %d Pause %d PauseType %d\n",
+					__FUNCTION__,
+					Adapter->registry_config[ IONIC_REG_AUTONEG].current_value,
+					Adapter->registry_config[ IONIC_REG_SPEED].current_value,
+					Adapter->registry_config[ IONIC_REG_FEC].current_value,
+					Adapter->registry_config[ IONIC_REG_PAUSE].current_value,
+					Adapter->registry_config[ IONIC_REG_PAUSETYPE].current_value));
+
+    return;
+}
+
+void
 ReadSriovConfig(struct ionic *Adapter, NDIS_HANDLE Config)
 {
 
@@ -591,7 +680,7 @@ ReadSriovConfig(struct ionic *Adapter, NDIS_HANDLE Config)
                   "%s uniNumVFsKeyword keyword status %08lX Value %08lX\n",
                   __FUNCTION__, ntStatus,
                   pParameters->ParameterData.IntegerData));
-		ionic_registry[ IONIC_REG_NUMVFS].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_NUMVFS].current_value = pParameters->ParameterData.IntegerData;
     } else {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s uniNumVFsKeyword keyword status %08lX\n", __FUNCTION__,
@@ -626,7 +715,7 @@ ReadVmqConfig(struct ionic *Adapter, NDIS_HANDLE Config)
             (TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
              "%s VmqVLanFilteringKeyword keyword status %08lX Value %08lX\n",
              __FUNCTION__, ntStatus, pParameters->ParameterData.IntegerData));
-		ionic_registry[ IONIC_REG_VMQVLAN].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_VMQVLAN].current_value = pParameters->ParameterData.IntegerData;
     } else {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s VmqVLanFilteringKeyword keyword status %08lX\n",
@@ -635,7 +724,6 @@ ReadVmqConfig(struct ionic *Adapter, NDIS_HANDLE Config)
 
     if (ntStatus == NDIS_STATUS_SUCCESS &&
         pParameters->ParameterData.IntegerData != 0) {
-
         SetFlag(Adapter->ConfigStatus, IONIC_VMQ_VLAN_FILTERING_ENABLED);
     }
 
@@ -660,7 +748,7 @@ ReadRssConfig(struct ionic *Adapter, NDIS_HANDLE Config)
                   "%s NumRSSQueues keyword status %08lX Value %08lX\n",
                   __FUNCTION__, ntStatus,
                   pParameters->ParameterData.IntegerData));
-		ionic_registry[ IONIC_REG_RSSQUEUES].current_value = pParameters->ParameterData.IntegerData;
+		Adapter->registry_config[ IONIC_REG_RSSQUEUES].current_value = pParameters->ParameterData.IntegerData;
     } else {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s NumRSSQueues keyword status %08lX\n", __FUNCTION__,
@@ -673,6 +761,58 @@ ReadRssConfig(struct ionic *Adapter, NDIS_HANDLE Config)
     }
 
     return;
+}
+
+NDIS_STATUS
+UpdateRegistryKeyword(struct ionic *ionic,
+                      ULONG keyword_index)
+{
+
+    NDIS_STATUS status = NDIS_STATUS_SUCCESS;
+    NDIS_CONFIGURATION_OBJECT stObjectParams;
+    NDIS_CONFIGURATION_PARAMETER stConfigParam;
+    NDIS_HANDLE hConfig = NULL;
+	NDIS_STRING keyword_name;
+
+    //
+    // Open a handle to the configuration space in the registry for the miniport
+    // driver.
+    //
+
+    NdisZeroMemory(&stObjectParams, sizeof(NDIS_CONFIGURATION_OBJECT));
+
+    stObjectParams.Header.Type = NDIS_OBJECT_TYPE_CONFIGURATION_OBJECT;
+    stObjectParams.Header.Size = NDIS_SIZEOF_CONFIGURATION_OBJECT_REVISION_1;
+    stObjectParams.Header.Revision = NDIS_CONFIGURATION_OBJECT_REVISION_1;
+
+    stObjectParams.NdisHandle = ionic->adapterhandle;
+    stObjectParams.Flags = 0;
+
+    status = NdisOpenConfigurationEx(&stObjectParams, &hConfig);
+
+    if (status != NDIS_STATUS_SUCCESS) {
+        DbgTrace(
+            (TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+             "%s Failed to open config handle for adapter %p Error %08lX\n",
+             __FUNCTION__, ionic, status));
+        goto cleanup;
+    }
+
+	NdisInitUnicodeString( &keyword_name,
+						   ionic_registry[ keyword_index].name);
+    
+	stConfigParam.ParameterType = NdisParameterInteger;
+    stConfigParam.ParameterData.IntegerData = ionic->registry_config[ keyword_index].current_value;
+
+    NdisWriteConfiguration(&status, hConfig, &keyword_name, &stConfigParam);
+
+cleanup:
+
+    if (hConfig != NULL) {
+        NdisCloseConfiguration(hConfig);
+    }
+
+    return status;
 }
 
 void *
@@ -2325,14 +2465,18 @@ process_work_item(PVOID   WorkItemContext,
 }
 
 NDIS_STATUS
-get_perfmon_stats(struct _PERF_MON_CB **perfmon_stats, ULONG *len)
+get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_stats, ULONG *len)
 {
-
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
+    NDIS_STRING AdapterNameString = {};
+    ULONG   buffer_len_alloc = 0;
     ULONG   buffer_len = 0;
+    ULONG   lut_len_alloc = 0;
     ULONG   lut_len = 0;
+    ULONG   skip = 0;
+    ULONG   adapter_count = 0;
+    bool    more = false;
     struct ionic *ionic = NULL;
-    ULONG port_index = 0;
     ULONG queue_cnt = 0;
     LIST_ENTRY *list_entry = NULL;
     struct lif *lif = NULL;
@@ -2355,16 +2499,28 @@ get_perfmon_stats(struct _PERF_MON_CB **perfmon_stats, ULONG *len)
                                    NULL);
 
     if (status != STATUS_SUCCESS) {
-        goto exit;
+        return status;
     }
 
     KeQueryPerformanceCounter( &perf_frequ);
 
     buffer_len = sizeof( struct _PERF_MON_CB);
 
-    ionic = (struct ionic *)AdapterList.Flink;
+    PAGED_CODE();
+    NDIS_WAIT_FOR_MUTEX(&AdapterListLock);
 
-    while (port_index < (ULONG)port_count) {
+    if (cb != NULL) {
+        InitAdapterNameString(&AdapterNameString, cb->AdapterName);
+        skip = cb->Skip;
+    }
+    ListForEachEntry(ionic, &AdapterList, struct ionic, list_entry) {
+        if (!MatchesAdapterNameIonic(&AdapterNameString, ionic)) {
+            continue;
+        }
+        if (skip) {
+            --skip;
+            continue;
+        }
 
         buffer_len += sizeof( struct _PERF_MON_ADAPTER_STATS);
 
@@ -2392,8 +2548,31 @@ get_perfmon_stats(struct _PERF_MON_CB **perfmon_stats, ULONG *len)
             } while (list_entry != &ionic->lifs);
         }
 
-        ionic = (struct ionic *)ionic->list_entry.Flink;
-        port_index++;
+        // only process what fits in max output buffer len
+        if (maxlen != 0 && (buffer_len + lut_len) > maxlen) {
+            more = true;
+            break;
+        }
+        buffer_len_alloc = buffer_len;
+        lut_len_alloc = lut_len;
+        ++adapter_count;
+    }
+    buffer_len = buffer_len_alloc;
+    lut_len = lut_len_alloc;
+
+    NDIS_RELEASE_MUTEX(&AdapterListLock);
+
+    if (buffer_len + lut_len == 0) {
+        if (more) {
+            KeSetEvent(&perfmon_event, 0, FALSE);
+            return NDIS_STATUS_BUFFER_TOO_SHORT;
+        } if (AdapterNameString.Length != 0) {
+            KeSetEvent(&perfmon_event, 0, FALSE);
+            return NDIS_STATUS_INVALID_PARAMETER;
+        } else {
+            KeSetEvent(&perfmon_event, 0, FALSE);
+            return NDIS_STATUS_SUCCESS;
+        }
     }
 
     stats = (struct _PERF_MON_CB *)NdisAllocateMemoryWithTagPriority_internal( IonicDriver,
@@ -2403,8 +2582,7 @@ get_perfmon_stats(struct _PERF_MON_CB **perfmon_stats, ULONG *len)
 
     if (stats == NULL) {
         KeSetEvent( &perfmon_event, 0, FALSE);
-        status = NDIS_STATUS_RESOURCES;
-        goto exit;
+        return NDIS_STATUS_RESOURCES;
     }
 
     DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
@@ -2425,21 +2603,33 @@ get_perfmon_stats(struct _PERF_MON_CB **perfmon_stats, ULONG *len)
 
     adapter_stats = (struct _PERF_MON_ADAPTER_STATS *)((char *)stats + sizeof( struct _PERF_MON_CB));
 
-    ionic = (struct ionic *)AdapterList.Flink;
-    port_index = 0;
+    PAGED_CODE();
+    NDIS_WAIT_FOR_MUTEX(&AdapterListLock);
 
-    while (port_index < (ULONG)port_count) {
+    if (cb != NULL) {
+        skip = cb->Skip;
+    }
+    ListForEachEntry(ionic, &AdapterList, struct ionic, list_entry) {
+        if (!MatchesAdapterNameIonic(&AdapterNameString, ionic)) {
+            continue;
+        }
+        if (skip) {
+            --skip;
+            continue;
+        }
+        if (adapter_count == 0) {
+            break;
+        }
+        --adapter_count;
 
         if (ionic->total_lif_count != 0) {
             // we are only returning lif/q stats for adapters with non-zero lif counts
             stats->adapter_count++;
             lut[lut_index++] = adapter_stats;
 
-            adapter_stats->lif_count = ionic->total_lif_count;
-            NdisMoveMemory( adapter_stats->name,
-                            ionic->name.Buffer,
-                            min( ionic->name.Length, ADAPTER_NAME_MAX_SZ));
-            adapter_stats->core_redirection_count = InterlockedExchange( &ionic->core_redirect_count,
+	    adapter_stats->lif_count = ionic->total_lif_count;
+	    wcscpy_s(adapter_stats->name, ADAPTER_NAME_MAX_SZ, ionic->name.Buffer);
+	    adapter_stats->core_redirection_count = InterlockedExchange( &ionic->core_redirect_count,
                                                                          0);
             if (ionic->pci_config.DeviceID == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT) {
                 adapter_stats->mgmt_device = TRUE;
@@ -2549,14 +2739,15 @@ get_perfmon_stats(struct _PERF_MON_CB **perfmon_stats, ULONG *len)
 
             adapter_stats = (struct _PERF_MON_ADAPTER_STATS *)lif_stats;
         }
-
-        ionic = (struct ionic *)ionic->list_entry.Flink;
-        port_index++;
     }
+
+    NDIS_RELEASE_MUTEX(&AdapterListLock);
 
     KeSetEvent( &perfmon_event, 0, FALSE);
 
-exit:
+    if (status == NDIS_STATUS_SUCCESS && more) {
+        status = NDIS_STATUS_BUFFER_OVERFLOW;
+    }
 
     return status;
 }
@@ -2758,104 +2949,119 @@ validate_memory()
     return;
 }
 
-NDIS_STATUS
-GetRegKeyInfo(void *buffer,
-	ULONG buffer_len,
-	ULONG *buffer_ret)
+NTSTATUS
+IoctlRegKeyInfo(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes)
 {
-
 	NDIS_STATUS		status = NDIS_STATUS_SUCCESS;
+        AdapterCB cb = {};
 	struct _REG_KEY_INFO_HDR *info_hdr = NULL;
+	struct _REG_KEY_INFO_HDR *last_info_hdr = NULL;
 	struct _REG_KEY_ENTRY *reg_entry = NULL;
-	ULONG remaining_len = buffer_len;
-	void *tmp_buffer = NULL;
+	struct _REG_KEY_ENTRY *last_reg_entry = NULL;
 	struct ionic *ionic = NULL;
-	ULONG port_index = 0;
 	ULONG port_entry_len = 0;
 	ULONG entry_len = 0;
 	ULONG reg_index = 0;
-	NDIS_STRING uniKeyName;
+	NDIS_STRING uniKeyName = {};
+	NDIS_STRING AdapterNameString = {};
 
-	NdisAcquireSpinLock(&AdapterListLock);
+        *outbytes = 0;
 
-	if (remaining_len <= (port_count * sizeof( struct _REG_KEY_INFO_HDR)) + (IONIC_REG_MAX * (sizeof( struct _REG_KEY_ENTRY) + IONIC_REG_LEN))) {
-		NdisReleaseSpinLock(&AdapterListLock);
-		status = NDIS_STATUS_BUFFER_TOO_SHORT;
-		*buffer_ret = (port_count * sizeof( struct _REG_KEY_INFO_HDR)) + (IONIC_REG_MAX * (sizeof( struct _REG_KEY_ENTRY) + IONIC_REG_LEN));
-		goto exit;
+	if (inlen < sizeof(cb)) {
+		return NDIS_STATUS_BUFFER_TOO_SHORT;
 	}
 
-	/* We'll be doing everything under a spinlock so allocate a tempt, non-paged buffer to get everything */
-	tmp_buffer = NdisAllocateMemoryWithTagPriority( IonicDriver,
-													buffer_len,
-													IONIC_GENERIC_TAG,
-													NormalPoolPriority);
-	if (tmp_buffer == NULL) {
-		status = NDIS_STATUS_RESOURCES;
-		NdisReleaseSpinLock(&AdapterListLock);
-		goto exit;
+	if (outlen < sizeof(*info_hdr) + sizeof(*reg_entry) * IONIC_REG_ENTRY_COUNT) {
+		return NDIS_STATUS_BUFFER_TOO_SHORT;
 	}
 
-	NdisZeroMemory( tmp_buffer, buffer_len);
+	cb = *(AdapterCB *)buf;
+	InitAdapterNameString(&AdapterNameString, cb.AdapterName);
 
-	info_hdr = (struct _REG_KEY_INFO_HDR *)tmp_buffer;
+	NdisZeroMemory(buf, outlen);
 
-    ionic = (struct ionic *)AdapterList.Flink;
+	PAGED_CODE();
+	NDIS_WAIT_FOR_MUTEX(&AdapterListLock);
 
-	for( port_index = 0; port_index < (ULONG)port_count; port_index++) {
+	info_hdr = (struct _REG_KEY_INFO_HDR *)buf;
+
+	ListForEachEntry(ionic, &AdapterList, struct ionic, list_entry) {
+		if (!MatchesAdapterNameIonic(&AdapterNameString, ionic)) {
+			continue;
+		}
+		if (cb.Skip) {
+			--cb.Skip;
+			continue;
+		}
+
+		// ioctl response is for more than one adapter,
+		// but we don't know if this one fits yet
+		port_entry_len = sizeof( struct _REG_KEY_INFO_HDR);
+
+		if (outlen < *outbytes + port_entry_len) {
+			status = NDIS_STATUS_BUFFER_OVERFLOW;
+			break;
+		}
 
 		wcscpy_s( info_hdr->device_location, IONIC_DEV_LOC_LEN, ionic->device_location);
 		wcscpy_s( info_hdr->name, ADAPTER_NAME_MAX_SZ, ionic->name.Buffer);
-		info_hdr->entry_count = IONIC_REG_MAX;
+		info_hdr->entry_count = IONIC_REG_ENTRY_COUNT;
 
-		port_entry_len = sizeof( struct _REG_KEY_INFO_HDR);
-		entry_len = 0;
-	
 		reg_entry = (struct _REG_KEY_ENTRY *)((char *)info_hdr + sizeof( struct _REG_KEY_INFO_HDR));
 
-		for (reg_index = 0; reg_index < IONIC_REG_MAX; reg_index++) {
-		
-			NdisInitUnicodeString( &uniKeyName,
-								   ionic_registry[ reg_index].name);
+		for (reg_index = 0; reg_index < IONIC_REG_ENTRY_COUNT; reg_index++) {
+			NdisInitUnicodeString(&uniKeyName, ionic->registry_config[reg_index].name);
+
+			// don't know if all the entries fit yet..
+			// variable length also affects alignment
+			entry_len = sizeof(*reg_entry) + uniKeyName.Length * sizeof(WCHAR);
+			if (outlen < *outbytes + port_entry_len + entry_len) {
+				status = NDIS_STATUS_BUFFER_OVERFLOW;
+				break;
+			}
+
 			reg_entry->key_name_len = uniKeyName.Length;
-			reg_entry->key_name_offset = sizeof( struct _REG_KEY_ENTRY);
+			reg_entry->key_name_offset = sizeof(*reg_entry);
 
 			NdisMoveMemory( (void *)((char *)reg_entry + reg_entry->key_name_offset),
 							uniKeyName.Buffer,
-							uniKeyName.Length);
+							uniKeyName.Length * sizeof(WCHAR));
 
-			reg_entry->min_value = ionic_registry[ reg_index].minimum_value;
-			reg_entry->max_value = ionic_registry[ reg_index].maximum_value;
-			reg_entry->default_value = ionic_registry[ reg_index].default_value;
-			reg_entry->current_value = ionic_registry[ reg_index].current_value;
+			reg_entry->min_value = ionic->registry_config[ reg_index].minimum_value;
+			reg_entry->max_value = ionic->registry_config[ reg_index].maximum_value;
+			reg_entry->default_value = ionic->registry_config[ reg_index].default_value;
+			reg_entry->current_value = ionic->registry_config[ reg_index].current_value;
 
-			reg_entry->next_entry = reg_entry->key_name_offset + reg_entry->key_name_len + sizeof( WCHAR); // NULL terminator
+			reg_entry->next_entry = entry_len;
 
-			port_entry_len += reg_entry->next_entry;
+			port_entry_len += entry_len;
+			last_reg_entry = reg_entry;
 
 			reg_entry = (struct _REG_KEY_ENTRY *)((char *)reg_entry + reg_entry->next_entry);
 		}
 
+		last_reg_entry->next_entry = 0;
+
 		info_hdr->next_entry = port_entry_len;
 
-		ASSERT( remaining_len >= port_entry_len);
-		remaining_len -= port_entry_len;
+		// only when completed we incr outbytes
+		*outbytes += port_entry_len;
+
+		last_info_hdr = info_hdr;
+
 		info_hdr = (struct _REG_KEY_INFO_HDR *)((char *)info_hdr + info_hdr->next_entry);
-        ionic = (struct ionic *)ionic->list_entry.Flink;
-    }
+	}
 
-	NdisReleaseSpinLock(&AdapterListLock);
+	if (last_info_hdr != NULL) {
+		last_info_hdr->next_entry = 0;
+	}
 
-	*buffer_ret = buffer_len;
+	NDIS_RELEASE_MUTEX(&AdapterListLock);
 
-	NdisMoveMemory( buffer, tmp_buffer, *buffer_ret);
-
-exit:
-
-	if (tmp_buffer != NULL) {
-		NdisFreeMemoryWithTagPriority( IonicDriver,
-									   tmp_buffer,
-									   IONIC_GENERIC_TAG);										
+	// If specific device was requested but not found
+	// Maybe it was found and didn't fit, so check outbytes
+	if (AdapterNameString.Length != 0 && *outbytes == 0) {
+		status = NDIS_STATUS_INVALID_PARAMETER;
 	}
 
 	return status;
@@ -2892,13 +3098,132 @@ NormalizeSpeed(LONG Speed)
 struct ionic *
 FindAdapterByNameLocked(PWCHAR AdapterName)
 {
+    NDIS_STRING AdapterNameString = {};
     struct ionic *ionic;
 
+    InitAdapterNameString(&AdapterNameString, AdapterName);
+
     ListForEachEntry(ionic, &AdapterList, struct ionic, list_entry) {
-        if (!wcsncmp(AdapterName, ionic->name.Buffer, ADAPTER_NAME_MAX_SZ)) {
+        if (EqualsAdapterNameIonic(&AdapterNameString, ionic)) {
             return ionic;
         }
     }
 
     return NULL;
+}
+
+NTSTATUS
+IoctlAdapterInfo(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes)
+{
+	NDIS_STATUS		status = NDIS_STATUS_SUCCESS;
+	NDIS_STRING AdapterNameString = {};
+        AdapterCB cb = {};
+	struct _ADAPTER_INFO_HDR *info_hdr = NULL;
+	struct _ADAPTER_INFO *entry = NULL;
+	struct ionic *ionic = NULL;
+	bool found = false;
+
+	*outbytes = 0;
+
+	if (inlen < sizeof(cb)) {
+		return NDIS_STATUS_BUFFER_TOO_SHORT;
+	}
+
+	if (outlen < sizeof(*info_hdr) + sizeof(*entry)) {
+		return NDIS_STATUS_BUFFER_TOO_SHORT;
+	}
+
+	cb = *(AdapterCB *)buf;
+	InitAdapterNameString(&AdapterNameString, cb.AdapterName);
+
+	NdisZeroMemory(buf, outlen);
+
+	PAGED_CODE();
+	NDIS_WAIT_FOR_MUTEX(&AdapterListLock);
+
+	info_hdr = (struct _ADAPTER_INFO_HDR *)buf;
+	*outbytes += sizeof(*info_hdr);
+
+	entry = (struct _ADAPTER_INFO *)((char *)info_hdr + sizeof( _ADAPTER_INFO_HDR));
+
+	ListForEachEntry(ionic, &AdapterList, struct ionic, list_entry) {
+		if (!MatchesAdapterNameIonic(&AdapterNameString, ionic)) {
+			continue;
+		}
+		found = true;
+
+		// ioctl response may be for more than one adapter, if it fits
+		if (outlen < *outbytes + sizeof(*entry)) {
+			status = NDIS_STATUS_BUFFER_OVERFLOW;
+			break;
+		}
+
+		entry->asic_rev = ionic->idev.dev_info.asic_type;
+		entry->asic_type = ionic->idev.dev_info.asic_rev;
+
+		strcpy_s( entry->fw_version,
+				  IONIC_DEVINFO_FWVERS_BUFLEN,
+				  ionic->idev.dev_info.fw_version);
+
+		strcpy_s( entry->serial_num,
+				  IONIC_DEVINFO_SERIAL_BUFLEN,
+				  ionic->idev.dev_info.serial_num);
+
+		wcscpy_s( entry->device_location, IONIC_DEV_LOC_LEN, ionic->device_location);
+		wcscpy_s( entry->name, ADAPTER_NAME_MAX_SZ, ionic->name.Buffer);
+
+		entry->vendor_id = ionic->pci_config.VendorID;
+		entry->product_id = ionic->pci_config.DeviceID;
+
+		entry->hw_state = (ULONG)ionic->hardware_status;
+
+		entry->link_state = le16_to_cpu(ionic->master_lif->info->status.link_status);
+
+		entry->Mtu = ionic->frame_size;
+
+		if (entry->link_state != PORT_OPER_STATUS_UP) {
+			entry->Speed = 0;
+		}
+		else {
+			entry->Speed = le32_to_cpu(ionic->master_lif->info->status.link_speed);
+			entry->Speed *= MEGABITS_PER_SECOND;
+		}
+
+		*outbytes += sizeof(*entry);
+
+		++info_hdr->count;
+		++entry;
+	}
+
+	NDIS_RELEASE_MUTEX(&AdapterListLock);
+
+	// If specific device was requested but not found
+	if (AdapterNameString.Length != 0 && !found) {
+		status = NDIS_STATUS_INVALID_PARAMETER;
+	}
+
+	return status;
+}
+
+NDIS_STATUS
+init_registry_config( struct ionic *adapter)
+{
+	NDIS_STATUS			status = NDIS_STATUS_SUCCESS;
+
+	adapter->registry_config = (struct registry_entry *)NdisAllocateMemoryWithTagPriority_internal(
+        adapter->adapterhandle, sizeof(struct registry_entry) * IONIC_REG_ENTRY_COUNT, IONIC_ADAPTER_TAG,
+        NormalPoolPriority);
+
+	if( adapter->registry_config == NULL) {
+        status = NDIS_STATUS_RESOURCES;
+        goto cleanup;
+	}
+
+	NdisMoveMemory( adapter->registry_config,
+					ionic_registry,
+					sizeof(struct registry_entry) * IONIC_REG_ENTRY_COUNT);
+
+cleanup:
+
+	return status;
 }

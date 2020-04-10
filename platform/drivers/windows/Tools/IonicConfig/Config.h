@@ -1,15 +1,21 @@
 #pragma once
 
+#define WIN32_LEAN_AND_MEAN
 #include "windows.h"
-#include <codecvt>
-#include <iomanip>
-#include <iostream>
+#include <boost/process.hpp>
+
 #include <boost/algorithm/string.hpp>
+#include <boost/process/async.hpp>
 #include <boost/program_options/cmdline.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/variables_map.hpp>
 
+#include <codecvt>
+#include <iomanip>
+#include <iostream>
+
 namespace po = boost::program_options;
+namespace bp = boost::process;
 
 namespace {
     std::string to_bytes(const std::wstring &wstr)
@@ -116,7 +122,7 @@ struct command {
     std::string name;
     std::string desc;
     bool hidden;
-    po::options_description(*opts)();
+    po::options_description(*opts)(bool hidden);
     po::positional_options_description(*pos)();
     int (*run)(command_info& info);
 
@@ -126,6 +132,9 @@ struct command {
 struct command_info {
     int status;
     bool usage;
+    bool hidden;
+    bool dryrun;
+
     std::string cmd_name;
     std::vector<std::wstring> cmd_args;
     po::variables_map vm;
@@ -133,21 +142,20 @@ struct command_info {
     command cmd;
     std::vector<command> cmds;
 
-    command_info() : status(), usage() {}
+    command_info() : status(), usage(), hidden(), dryrun() {}
 };
 
-BOOL
+DWORD
 DoIoctl(DWORD dwIoControlCode,
         LPVOID lpInBuffer,
         DWORD nInBufferSize,
         LPVOID lpOutBuffer,
-        DWORD nOutBufferSize);
+        DWORD nOutBufferSize,
+        PDWORD pnBytesReturned,
+        bool dryrun);
 
 command CmdUsage();
 command CmdVersion();
-command CmdInstall();
-command CmdUninstall();
-command CmdUpdate();
 command CmdSetTrace();
 command CmdGetTrace();
 command CmdPort();
@@ -157,7 +165,24 @@ command CmdLifStats();
 command CmdPortStats();
 command CmdPerfStats();
 command CmdRegKeys();
+command CmdInfo();
 //TODO command CmdOidStats();
 //TODO command CmdFwcmdStats();
-command CmdBistClient();
-command CmdBistServer();
+
+DWORD
+OptGetAlternateNames(command_info& info,
+				  WCHAR *name,
+				  DWORD name_sz,
+				  WCHAR *ifname,
+				  DWORD ifname_sz,
+				  WCHAR *descrname,
+				  DWORD descrname_sz);
+
+void
+OptGetDevName(command_info& info,
+	WCHAR *devname,
+	DWORD devname_sz,
+	BOOL required);
+
+void
+OptAddDevName(po::options_description& opts);

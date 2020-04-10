@@ -19,11 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Client.cpp" />
     <ClCompile Include="Config.cpp" />
-    <ClCompile Include="Install.cpp" />
     <ClCompile Include="Port.cpp" />
-    <ClCompile Include="Server.cpp" />
+    <ClCompile Include="pscmd.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.h" />

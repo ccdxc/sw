@@ -1,5 +1,6 @@
 
 #include "common.h"
+#include <wdmsec.h>
 
 NDIS_STATUS
 RegisterDevice(NDIS_HANDLE Adapter)
@@ -38,6 +39,7 @@ RegisterDevice(NDIS_HANDLE Adapter)
     ndisDeviceAttribute.SymbolicName = &uniDeviceLinkUnicodeString;
     ndisDeviceAttribute.MajorFunctions = &pDispatchTable[0];
     ndisDeviceAttribute.ExtensionSize = sizeof(AdapterCntrlExt);
+	ndisDeviceAttribute.DefaultSDDLString = &SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RW_RES_R;
 
     ntStatus = NdisRegisterDeviceEx(Adapter, &ndisDeviceAttribute,
                                     &AdapterCntrlDevObj, &AdapterControl);
@@ -140,69 +142,42 @@ DeviceIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     }
 
     case IOCTL_IONIC_GET_DEV_STATS: {
-
-        ntStatus =
-            GetDevStats(pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
-                        Irp->AssociatedIrp.SystemBuffer, &ulInfoLen);
-
+        ntStatus = IoctlDevStats(Irp->AssociatedIrp.SystemBuffer,
+                                 pIrpSp->Parameters.DeviceIoControl.InputBufferLength,
+                                 pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
+                                 &ulInfoLen);
         break;
     }
 
     case IOCTL_IONIC_GET_MGMT_STATS: {
-
-        ntStatus =
-            GetMgmtStats(pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
-                         Irp->AssociatedIrp.SystemBuffer, &ulInfoLen);
+        ntStatus = IoctlMgmtStats(Irp->AssociatedIrp.SystemBuffer,
+                                  pIrpSp->Parameters.DeviceIoControl.InputBufferLength,
+                                  pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
+                                  &ulInfoLen);
         break;
     }
 
     case IOCTL_IONIC_GET_PORT_STATS: {
-
-        ULONG *pulPort = (ULONG *)Irp->AssociatedIrp.SystemBuffer;
-
-        if (pulPort == NULL ||
-            pIrpSp->Parameters.DeviceIoControl.InputBufferLength <
-                sizeof(ULONG)) {
-            ntStatus = NDIS_STATUS_BUFFER_TOO_SHORT;
-            break;
-        }
-
-        ntStatus = GetPortStats(
-            *pulPort, pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
-            Irp->AssociatedIrp.SystemBuffer, &ulInfoLen);
-
+        ntStatus = IoctlPortStats(Irp->AssociatedIrp.SystemBuffer,
+                                  pIrpSp->Parameters.DeviceIoControl.InputBufferLength,
+                                  pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
+                                  &ulInfoLen);
         break;
     }
 
     case IOCTL_IONIC_GET_LIF_STATS: {
-
-        ULONG *pulPortLif = (ULONG *)Irp->AssociatedIrp.SystemBuffer;
-
-        if (pulPortLif == NULL ||
-            pIrpSp->Parameters.DeviceIoControl.InputBufferLength <
-                sizeof(ULONG)) {
-            ntStatus = NDIS_STATUS_BUFFER_TOO_SHORT;
-            break;
-        }
-
-        ntStatus = GetLifStats(
-            *pulPortLif, pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
-            Irp->AssociatedIrp.SystemBuffer, &ulInfoLen);
-
+        ntStatus = IoctlLifStats(Irp->AssociatedIrp.SystemBuffer,
+                                 pIrpSp->Parameters.DeviceIoControl.InputBufferLength,
+                                 pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
+                                 &ulInfoLen);
         break;
     }
 
     case IOCTL_IONIC_GET_PERF_STATS: {
-
-        ntStatus = GetPerfStats(
-            Irp->AssociatedIrp.SystemBuffer,
-            pIrpSp->Parameters.DeviceIoControl.OutputBufferLength, &ulInfoLen);
-
-        break;
-    }
-
-    case IOCTL_IONIC_RESET_STATS: {
-
+        ntStatus = IoctlPerfStats(Irp->AssociatedIrp.SystemBuffer,
+                                  pIrpSp->Parameters.DeviceIoControl.InputBufferLength,
+                                  pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
+                                  &ulInfoLen);
         break;
     }
 
@@ -221,14 +196,13 @@ DeviceIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         break;
     }
 
-	case IOCTL_IONIC_GET_REG_KEY_INFO: {
-
-        ntStatus = GetRegKeyInfo(
-            Irp->AssociatedIrp.SystemBuffer,
-            pIrpSp->Parameters.DeviceIoControl.OutputBufferLength, &ulInfoLen);
-
-		break;
-	}
+    case IOCTL_IONIC_GET_REG_KEY_INFO: {
+        ntStatus = IoctlRegKeyInfo(Irp->AssociatedIrp.SystemBuffer,
+                                   pIrpSp->Parameters.DeviceIoControl.InputBufferLength,
+                                   pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
+                                   &ulInfoLen);
+        break;
+    }
 
     case IOCTL_IONIC_PORT_GET: {
         ntStatus = IoctlPortGet(Irp->AssociatedIrp.SystemBuffer,
@@ -241,6 +215,14 @@ DeviceIoControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     case IOCTL_IONIC_PORT_SET: {
         ntStatus = IoctlPortSet(Irp->AssociatedIrp.SystemBuffer,
                                 pIrpSp->Parameters.DeviceIoControl.InputBufferLength);
+        break;
+    }
+
+    case IOCTL_IONIC_GET_ADAPTER_INFO: {
+        ntStatus = IoctlAdapterInfo(Irp->AssociatedIrp.SystemBuffer,
+                                    pIrpSp->Parameters.DeviceIoControl.InputBufferLength,
+                                    pIrpSp->Parameters.DeviceIoControl.OutputBufferLength,
+                                    &ulInfoLen);
         break;
     }
 

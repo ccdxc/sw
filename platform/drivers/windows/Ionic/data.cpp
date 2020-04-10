@@ -28,7 +28,7 @@ UNICODE_STRING AdapterRegistryPath = {0};
 
 LIST_ENTRY AdapterList;
 
-NDIS_SPIN_LOCK AdapterListLock;
+NDIS_MUTEX AdapterListLock;
 
 LONG port_count = 0;
 

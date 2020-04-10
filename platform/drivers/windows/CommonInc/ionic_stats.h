@@ -5,6 +5,8 @@
 #define MAX_LIF_COUNT				32
 #define MAX_PORT_COUNT				10
 
+#define LIF_NAME_MAX_SZ				32
+
 struct global_stats {
 
 	LARGE_INTEGER	perf_frequency;

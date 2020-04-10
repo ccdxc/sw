@@ -261,7 +261,7 @@ HKR, Ndi\Params\*LsoV1IPv4,                     type,                   0, "enum
 ; *JumboPacket
 HKR, NDI\Params\*JumboPacket ,                  ParamDesc,              0, "%JumboPacket%"
 HKR, NDI\Params\*JumboPacket ,                  default,                0, "9212"
-HKR, NDI\Params\*JumboPacket ,                  min,                    0, "576"
+HKR, NDI\Params\*JumboPacket ,                  min,                    0, "590"
 HKR, NDI\Params\*JumboPacket ,                  max,                    0, "9212"
 HKR, NDI\Params\*JumboPacket ,                  step,                   0, "1"
 HKR, NDI\Params\*JumboPacket ,                  Base,                   0, "10"
