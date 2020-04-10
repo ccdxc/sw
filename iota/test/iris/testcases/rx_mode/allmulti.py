@@ -3,6 +3,7 @@ import iota.test.iris.utils.host as host_utils
 import iota.test.iris.utils.naples as naples_utils
 import iota.test.utils.naples_host as naples_host_utils
 import iota.test.iris.utils.hal_show as hal_show_utils
+import iota.test.utils.ionic_utils as ionic_utils
 import yaml
 import ipaddress
 
@@ -33,7 +34,7 @@ def Setup(tc):
         tc.skip = True
         return api.types.status.IGNORED
 
-    if api.GetNodeOs(tc.naples_node) == "freebsd" and tc.args.mode == "enable_allmulti":
+    if api.GetNodeOs(tc.naples_node) != "linux" and tc.args.mode == "enable_allmulti":
         api.Logger.info("Skipping testcase because allmulti cannot be set in FreeBSD")
         tc.skip = True
         return api.types.status.IGNORED
@@ -140,10 +141,23 @@ def Trigger(tc):
 
     # Run tcpdump in non-promiscuous mode on all interfaces
     for intf in tc.all_intfs:
-        cmd = "tcpdump -l -i " + intf  + " -ptne  host " + tc.target_multicast_IP
+        if api.GetNodeOs(tc.naples_node) == "windows" and intf in tc.host_intfs:
+            intfGuid = ionic_utils.winIntfGuid(tc.naples_node, intf)
+            intfVal = str(ionic_utils.winTcpDumpIdx(tc.naples_node, intfGuid))
+        else:
+            intfVal = intf
+
+        cmd = "tcpdump -l -i " + intfVal  + " -ptne  host " + tc.target_multicast_IP
+        if api.GetNodeOs(tc.naples_node) == "windows" and intf in tc.host_intfs:
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " \""
         __PR_AddCommand(intf, tc, req, cmd, True)
 
-    cmd = "sleep 1; ping -c 5 -I " + tc.peer_workloads[0].ip_address + " " + tc.target_multicast_IP + ";sleep 1"
+
+    if api.GetNodeOs(tc.naples_node) == "windows":
+        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" sleep 1; ping -n 5 -S " + tc.peer_workloads[0].ip_address + " " + tc.target_multicast_IP + ";sleep 1 \" "
+    else:
+        cmd = "sleep 1; ping -c 5 -I " + tc.peer_workloads[0].ip_address + " " + tc.target_multicast_IP + ";sleep 1"
+
     api.Trigger_AddHostCommand(req, tc.peer_node, cmd)
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)

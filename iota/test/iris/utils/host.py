@@ -312,8 +312,9 @@ def AddStaticARP(node, interface, hostname, macaddr):
     elif os == "freebsd":
         cmd = "arp -s " + hostname + " " + macaddr
     elif os == "windows":
-        #TODO
-        return api.types.status.FAILURE
+        winMac = macaddr.replace(':', '-', 5)
+        cmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
+           "\" arp -s %s  %s \"" % (hostname, winMac))
     else:
         assert(0)
 
@@ -333,8 +334,8 @@ def DeleteARP(node, interface, hostname):
     elif os == "freebsd":
         cmd = "arp -d " + hostname
     elif os == "windows":
-        # TODO
-        return api.types.status.FAILURE
+        cmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
+           "\" arp -d %s \"" % (hostname))
     else:
         assert(0)
 

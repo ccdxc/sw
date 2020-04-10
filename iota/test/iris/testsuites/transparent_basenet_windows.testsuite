@@ -68,7 +68,7 @@ testbundles:
         - mtu/mtu.testbundle
         #- networking/lif_telemetry.testbundle
         #- subifs/subifs.testbundle
-        #- rx_mode/rx_mode.testbundle
+        - rx_mode/rx_mode.testbundle
         #- vlanoffload/vlanoffload.testbundle
         - linktest/linktest.testbundle
         - mnic/mnic_classic.testbundle
@@ -77,7 +77,7 @@ testbundles:
         - linktest/linktest.testbundle
         #- classic/driver-features-oob-1g-sanity.testbundle
         - linktest/linktest.testbundle
-        #- tso/tso.testbundle
+        - tso/tso.testbundle
         #- drivercsum/drivercsum.testbundle
         - classic/driver-features-sanity.testbundle
         - linktest/linktest.testbundle

@@ -2,6 +2,7 @@ import iota.harness.api as api
 import iota.test.iris.utils.host as host_utils
 import iota.test.iris.utils.naples as naples_utils
 import iota.test.utils.naples_host as naples_host_utils
+import iota.test.utils.ionic_utils as ionic_utils
 import ipaddress
 
 def Setup(tc):
@@ -86,9 +87,19 @@ def Trigger(tc):
     # For further debug, listen for packets on peer node as well
     if tc.args.mode == "promiscuous":
         req_node2 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-
         for workload in tc.peer_workloads:
-            cmd = "tcpdump -l -i " + workload.interface + " -tne arp host " + tc.target_IP + " or icmp"
+            if api.GetNodeOs(tc.naples_node) == "windows":
+                cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe tcpdump.exe "
+                intfGuid = ionic_utils.winIntfGuid(
+                    tc.naples_node, workload.interface)
+                intf = str(ionic_utils.winTcpDumpIdx(tc.naples_node, intfGuid))
+            else:
+                intf = workload.interface
+
+            cmd = "tcpdump -l -i " + intf + " -tne arp host " + tc.target_IP + " or icmp"
+            if api.GetNodeOs(tc.naples_node) == "windows":
+                cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " \""
+
             api.Trigger_AddHostCommand(req_node2, tc.peer_node, cmd, True)
         trig_resp_node2 = api.Trigger(req_node2)
 
@@ -108,15 +119,30 @@ def Trigger(tc):
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
         # Warm N3K FDB table with current interface MAC address (to avoid future flooding of packets with DST MAC matching this interface)
-        cmd = "arping -c 1 -I " + intf1 + " " + tc.target_IP
+        if api.GetNodeOs(tc.naples_node) == "windows":
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe arp-ping -n 1 " + tc.target_IP
+        else:
+            cmd = "arping -c 1 -I " + intf1 + " " + tc.target_IP
         api.Trigger_AddHostCommand(req, tc.naples_node, cmd)
 
         # Run tcpdump on all interfaces
         for intf2 in tc.all_intfs:
-            cmd = "tcpdump -l -i " + intf2 + tcpdump_flags_extra + " -tne ether host " + mac_addr
+            if api.GetNodeOs(tc.naples_node) == "windows" and intf2 in tc.host_intfs:
+                intfGuid = ionic_utils.winIntfGuid(tc.naples_node, intf2)
+                intfVal = str(ionic_utils.winTcpDumpIdx(tc.naples_node, intfGuid))
+            else:
+                intfVal = intf2
+
+            cmd = "tcpdump -l -i " + intfVal + tcpdump_flags_extra + " -tne ether host " + mac_addr
+            if api.GetNodeOs(tc.naples_node) == "windows" and intf2 in tc.host_intfs:
+                cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " \""
             __PR_AddCommand(intf2, tc, req, cmd, True)
 
-        cmd = "sleep 1; ping -c 5 " + tc.target_IP + ";sleep 1"
+        if api.GetNodeOs(tc.naples_node) == "windows":
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \" sleep 1; ping -n 5 " + tc.target_IP + ";sleep 1 \" "
+        else:
+            cmd = "sleep 1; ping -c 5 " + tc.target_IP + ";sleep 1"
+
         api.Trigger_AddHostCommand(req, tc.peer_node, cmd)
         trig_resp = api.Trigger(req)
         term_resp = api.Trigger_TerminateAllCommands(trig_resp)

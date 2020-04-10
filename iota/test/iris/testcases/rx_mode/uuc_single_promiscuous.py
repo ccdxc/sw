@@ -3,6 +3,7 @@ import iota.test.iris.utils.host as host_utils
 import iota.test.iris.utils.naples as naples_utils
 import iota.test.utils.naples_host as naples_host_utils
 import iota.test.iris.utils.hal_show as hal_show_utils
+import iota.test.utils.ionic_utils as ionic_utils
 import yaml
 import ipaddress
 
@@ -103,16 +104,38 @@ def Trigger(tc):
             break
         #  Run tcpdump on intf1 in promiscuous mode
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-        cmd = "tcpdump -l -i " + intf1 + " -tne ether host " + tc.random_mac
+        if api.GetNodeOs(tc.naples_node) == "windows" and intf1 in tc.host_intfs:
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe tcpdump.exe "
+            intfGuid = ionic_utils.winIntfGuid(tc.naples_node, intf1)
+            intfVal = str(ionic_utils.winTcpDumpIdx(tc.naples_node, intfGuid))
+        else:
+            intfVal = intf1
+            
+        cmd = "tcpdump -l -i " + intfVal + " -tne ether host " + tc.random_mac
+        if api.GetNodeOs(tc.naples_node) == "windows":
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " \""
         __PR_AddCommand(intf1, tc, req, cmd, True)
 
         # Run tcpdump in non-promiscuous mode on all other interfaces
         for intf2 in tc.all_intfs:
             if intf2 != intf1:
-                cmd = "tcpdump -l -i " + intf2 + " -ptne ether host " + tc.random_mac
+                if api.GetNodeOs(tc.naples_node) == "windows" and intf2 in tc.host_intfs:
+                    intfGuid = ionic_utils.winIntfGuid(tc.naples_node, intf2)
+                    intfVal = str(ionic_utils.winTcpDumpIdx(tc.naples_node, intfGuid))
+                else:
+                    intfVal = intf2
+                
+                cmd = "tcpdump -l -i " + intfVal + " -ptne ether host " + tc.random_mac
+                if api.GetNodeOs(tc.naples_node) == "windows" and intf2 in tc.host_intfs:
+                    cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " \""
                 __PR_AddCommand(intf2, tc, req, cmd, True)
 
-        cmd = "sleep 1; ping -c 5 " + tc.target_IP + ";sleep 1"
+
+        if api.GetNodeOs(tc.naples_node) == "windows":
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" sleep 1; ping -n 5 " + tc.target_IP + ";sleep 1 \" "
+        else:
+            cmd = "sleep 1; ping -c 5 " + tc.target_IP + ";sleep 1"
+
         api.Trigger_AddHostCommand(req, tc.peer_node, cmd)
         cmds_terminated = False
         trig_resp = api.Trigger(req)

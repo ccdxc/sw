@@ -267,7 +267,7 @@ def win_powershell_cmd(node, intf, cmd, regKey, regVal):
     intf_list = naples_workload_utils.GetNodeInterface(node)
     winName = intf_list.WindowsIntName(intf)
     cmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
-           "\" %s -name %s -RegistryKeyword %s -RegistryValue %s \"" % (
+           "\" %s -name '%s' -RegistryKeyword %s -RegistryValue %s \"" % (
                cmd, winName, regKey, str(regVal)))
     return cmd
 
@@ -296,7 +296,7 @@ def win_tso_offload(node, intf,op):
         regVal = "0"
 
     cmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
-           "\" Set-NetAdapterLso -name %s  -IPv4Enabled  %s -IPv6Enabled %s \"" % (
+           "\" Set-NetAdapterLso -name '%s'  -IPv4Enabled  %s -IPv6Enabled %s \"" % (
                winName, regVal, regVal))
     return cmd
 
@@ -309,9 +309,9 @@ def win_tx_checksum(node, intf, op):
         regVal = "Disabled"
 
     cmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
-           "\" Set-NetAdapterChecksumOffload -name %s "
+           "\" Set-NetAdapterChecksumOffload -name '%s' "
            " -IpIPv4Enabled %s -TcpIPv4Enabled %s -TcpIPv6Enabled %s -UdpIPv4Enabled %s -UdpIPv6Enabled %s \"" % (
-               winName, regVal, regVal, regVal, regVal))
+               winName, regVal, regVal, regVal, regVal, regVal))
     return cmd
 
 def win_rx_checksum(node, intf, op):
@@ -323,7 +323,7 @@ def win_rx_checksum(node, intf, op):
         regVal = "Disabled"
 
     cmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
-           "\" Set-NetAdapterChecksumOffload -name %s "
+           "\" Set-NetAdapterChecksumOffload -name '%s' "
            " -IpIPv4Enabled %s -TcpIPv4Enabled %s -TcpIPv6Enabled %s -UdpIPv4Enabled %s -UdpIPv6Enabled %s \"" % (
-               winName, regVal, regVal, regVal, regVal))
+               winName, regVal, regVal, regVal, regVal, regVal))
     return cmd

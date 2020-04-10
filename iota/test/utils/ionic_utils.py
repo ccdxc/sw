@@ -1,5 +1,7 @@
 import iota.harness.api as api
 import iota.test.utils.naples_host as host
+import iota.test.iris.utils.naples_workloads as workloads
+import json
 
 VXLAN_SERVER_IP = "100.1.1.1"
 VXLAN_CLIENT_IP = "100.1.1.2"
@@ -227,3 +229,76 @@ def setupVxLAN(ipv4, srv, cli):
         return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
+
+#
+# Return index of tcpdump -D output which is interfaceUUID
+# Input is node name and Linux name like ethX
+
+def winIntfGuid(node, intf):
+    api.Logger.info("Get intfGUID for: %s " %(intf))
+    intf_list = workloads.GetNodeInterface(node)
+    # Got windows name - Ethernet from ethX
+    winName = intf_list.WindowsIntName(intf)
+
+    hostCmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
+           "\" Get-NetAdapter -name '%s' | ConvertTo-Json \"" % (winName))
+    
+    req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
+    api.Trigger_AddHostCommand(req, node, hostCmd)
+    resp = api.Trigger(req)
+    if resp is None:
+        api.Logger.error("Failed to run host cmd: %s on host: %s"
+                         %(hostCmd, node))
+        return api.types.status.FAILURE
+
+    cmd = resp.commands[0]
+    if cmd.exit_code != 0:
+        api.Logger.error("HOST CMD: %s failed on host: %s,"
+                         " exit code: %d" %
+                         (hostCmd, node, cmd.exit_code))
+        api.PrintCommandResults(cmd)
+        return api.types.status.FAILURE
+
+    try:
+        jsonOut = json.loads(cmd.stdout)
+    except:
+        api.Logger.error("Failed to parse iperf json output :", cmd.stdout)
+        return api.types.status.FAILURE
+    
+    intfGuid = jsonOut["InterfaceGuid"]
+    api.Logger.info("InterfaceGuid: %s for %s" %(intfGuid, intf))
+    return intfGuid
+
+# Use Interface GUID to get tcpdump -D index value for tcpdump -i input
+def winTcpDumpIdx(node, intfGuid):
+    hostCmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
+           "\" tcpdump -D | ConvertTo-Json \"")
+    
+    req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
+    api.Trigger_AddHostCommand(req, node, hostCmd)
+    resp = api.Trigger(req)
+    if resp is None:
+        api.Logger.error("Failed to run host cmd: %s on host: %s"
+                         %(hostCmd, node))
+        return api.types.status.FAILURE
+
+    cmd = resp.commands[0]
+    if cmd.exit_code != 0:
+        api.Logger.error("HOST CMD: %s failed on host: %s,"
+                         " exit code: %d" %
+                         (hostCmd, node, cmd.exit_code))
+        api.PrintCommandResults(cmd)
+        return api.types.status.FAILURE
+
+    try:
+        jsonOut = json.loads(cmd.stdout)
+    except:
+        api.Logger.error("Failed to parse iperf json output :", cmd.stdout)
+        return api.types.status.FAILURE
+    
+    for line in jsonOut:
+        if line.find(str(intfGuid)) != -1:
+            api.Logger.info("Found intfGuid: %s index: %s in line :%s" %(intfGuid, line[0:1], line))
+            return int(line[0:1])
+    
+    return -1
