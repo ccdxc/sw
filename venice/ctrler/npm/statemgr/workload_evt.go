@@ -424,8 +424,9 @@ func (ws *WorkloadState) createEndpoints() error {
 					// Create networks since all creates are idempotent
 					err = ws.createNetwork(netName, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
 					if err != nil {
-						log.Errorf("Error creating network. Err: %v", err)
-						return err
+						log.Errorf("Error creating network, ignoring  Err: %v", err)
+						netName = ns.Network.Network.Name
+						//		return err
 					}
 				}
 			} else {

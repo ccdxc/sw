@@ -26,6 +26,16 @@ const evChanLength = 10000
 const resyncInterval = time.Minute * 5
 const DefaultRPCTimeout = time.Second * 30
 
+// diffOpType
+type diffOpType string
+
+// event types
+const (
+	delAddUpdateDiffOp diffOpType = "DelAddUpdate"
+	delteDiffOp        diffOpType = "Delete"
+	addUpdateOp        diffOpType = "AddUpdate"
+)
+
 // NimbusClient is the nimbus client
 type NimbusClient struct {
 	sync.Mutex                        // lock the npm client
@@ -212,7 +222,7 @@ func (client *NimbusClient) processAggObjectWatchEvent(evt netproto.AggObjectEve
 
 // diffAppsDynamic diffs local state with controller state
 func (client *NimbusClient) diffAppsDynamic(objList *netproto.AppList, reactor AppReactor,
-	ostream *AggWatchOStream) {
+	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.App)
 	for _, obj := range objList.Apps {
@@ -230,60 +240,64 @@ func (client *NimbusClient) diffAppsDynamic(objList *netproto.AppList, reactor A
 		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: App | Err: %v", types.Operation(types.List), err))
 	}
 	//localObjs := reactor.ListApp()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.AppEvent{
-					EventType: api.EventType_DeleteEvent,
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.AppEvent{
+						EventType: api.EventType_DeleteEvent,
 
-					App: lobj,
+						App: lobj,
+					}
+					log.Infof("diffApps(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
+					client.processAppEvent(evt, reactor, nil)
 				}
-				log.Infof("diffApps(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
-				client.processAppEvent(evt, reactor, nil)
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
-	// add/update all new objects
-	for _, obj := range objList.Apps {
-		evt := netproto.AppEvent{
-			EventType: api.EventType_UpdateEvent,
-
-			App: *obj,
-		}
-		client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
-		err := client.processAppEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "App", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.Apps {
+			evt := netproto.AppEvent{
 				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
+
+				App: *obj,
 			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
+			client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
+			err := client.processAppEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "App", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
 			}
-			ostream.Unlock()
 		}
 	}
 }
 
 // diffCollectorsDynamic diffs local state with controller state
 func (client *NimbusClient) diffCollectorsDynamic(objList *netproto.CollectorList, reactor CollectorReactor,
-	ostream *AggWatchOStream) {
+	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Collector)
 	for _, obj := range objList.Collectors {
@@ -301,60 +315,64 @@ func (client *NimbusClient) diffCollectorsDynamic(objList *netproto.CollectorLis
 		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Collector | Err: %v", types.Operation(types.List), err))
 	}
 	//localObjs := reactor.ListCollector()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.CollectorEvent{
-					EventType: api.EventType_DeleteEvent,
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.CollectorEvent{
+						EventType: api.EventType_DeleteEvent,
 
-					Collector: lobj,
+						Collector: lobj,
+					}
+					log.Infof("diffCollectors(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.Collector.GetObjectKind(), evt.Collector.ObjectMeta)
+					client.processCollectorEvent(evt, reactor, nil)
 				}
-				log.Infof("diffCollectors(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.Collector.GetObjectKind(), evt.Collector.ObjectMeta)
-				client.processCollectorEvent(evt, reactor, nil)
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
-	// add/update all new objects
-	for _, obj := range objList.Collectors {
-		evt := netproto.CollectorEvent{
-			EventType: api.EventType_UpdateEvent,
-
-			Collector: *obj,
-		}
-		client.lockObject(evt.Collector.GetObjectKind(), evt.Collector.ObjectMeta)
-		err := client.processCollectorEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "Collector", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.Collectors {
+			evt := netproto.CollectorEvent{
 				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
+
+				Collector: *obj,
 			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
+			client.lockObject(evt.Collector.GetObjectKind(), evt.Collector.ObjectMeta)
+			err := client.processCollectorEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "Collector", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
 			}
-			ostream.Unlock()
 		}
 	}
 }
 
 // diffEndpointsDynamic diffs local state with controller state
 func (client *NimbusClient) diffEndpointsDynamic(objList *netproto.EndpointList, reactor EndpointReactor,
-	ostream *AggWatchOStream) {
+	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Endpoint)
 	for _, obj := range objList.Endpoints {
@@ -372,60 +390,64 @@ func (client *NimbusClient) diffEndpointsDynamic(objList *netproto.EndpointList,
 		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Endpoint | Err: %v", types.Operation(types.List), err))
 	}
 	//localObjs := reactor.ListEndpoint()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.EndpointEvent{
-					EventType: api.EventType_DeleteEvent,
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.EndpointEvent{
+						EventType: api.EventType_DeleteEvent,
 
-					Endpoint: lobj,
+						Endpoint: lobj,
+					}
+					log.Infof("diffEndpoints(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
+					client.processEndpointEvent(evt, reactor, nil)
 				}
-				log.Infof("diffEndpoints(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
-				client.processEndpointEvent(evt, reactor, nil)
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
-	// add/update all new objects
-	for _, obj := range objList.Endpoints {
-		evt := netproto.EndpointEvent{
-			EventType: api.EventType_UpdateEvent,
-
-			Endpoint: *obj,
-		}
-		client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
-		err := client.processEndpointEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "Endpoint", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.Endpoints {
+			evt := netproto.EndpointEvent{
 				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
+
+				Endpoint: *obj,
 			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
+			client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
+			err := client.processEndpointEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "Endpoint", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
 			}
-			ostream.Unlock()
 		}
 	}
 }
 
 // diffFlowExportPolicysDynamic diffs local state with controller state
 func (client *NimbusClient) diffFlowExportPolicysDynamic(objList *netproto.FlowExportPolicyList, reactor FlowExportPolicyReactor,
-	ostream *AggWatchOStream) {
+	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.FlowExportPolicy)
 	for _, obj := range objList.FlowExportPolicys {
@@ -443,60 +465,64 @@ func (client *NimbusClient) diffFlowExportPolicysDynamic(objList *netproto.FlowE
 		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: FlowExportPolicy | Err: %v", types.Operation(types.List), err))
 	}
 	//localObjs := reactor.ListFlowExportPolicy()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.FlowExportPolicyEvent{
-					EventType: api.EventType_DeleteEvent,
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.FlowExportPolicyEvent{
+						EventType: api.EventType_DeleteEvent,
 
-					FlowExportPolicy: &lobj,
+						FlowExportPolicy: &lobj,
+					}
+					log.Infof("diffFlowExportPolicys(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.FlowExportPolicy.GetObjectKind(), evt.FlowExportPolicy.ObjectMeta)
+					client.processFlowExportPolicyEvent(evt, reactor, nil)
 				}
-				log.Infof("diffFlowExportPolicys(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.FlowExportPolicy.GetObjectKind(), evt.FlowExportPolicy.ObjectMeta)
-				client.processFlowExportPolicyEvent(evt, reactor, nil)
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
-	// add/update all new objects
-	for _, obj := range objList.FlowExportPolicys {
-		evt := netproto.FlowExportPolicyEvent{
-			EventType: api.EventType_UpdateEvent,
-
-			FlowExportPolicy: obj,
-		}
-		client.lockObject(evt.FlowExportPolicy.GetObjectKind(), evt.FlowExportPolicy.ObjectMeta)
-		err := client.processFlowExportPolicyEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "FlowExportPolicy", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.FlowExportPolicys {
+			evt := netproto.FlowExportPolicyEvent{
 				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
+
+				FlowExportPolicy: obj,
 			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
+			client.lockObject(evt.FlowExportPolicy.GetObjectKind(), evt.FlowExportPolicy.ObjectMeta)
+			err := client.processFlowExportPolicyEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "FlowExportPolicy", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
 			}
-			ostream.Unlock()
 		}
 	}
 }
 
 // diffIPAMPolicysDynamic diffs local state with controller state
 func (client *NimbusClient) diffIPAMPolicysDynamic(objList *netproto.IPAMPolicyList, reactor IPAMPolicyReactor,
-	ostream *AggWatchOStream) {
+	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.IPAMPolicy)
 	for _, obj := range objList.IPAMPolicys {
@@ -514,60 +540,64 @@ func (client *NimbusClient) diffIPAMPolicysDynamic(objList *netproto.IPAMPolicyL
 		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: IPAMPolicy | Err: %v", types.Operation(types.List), err))
 	}
 	//localObjs := reactor.ListIPAMPolicy()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.IPAMPolicyEvent{
-					EventType: api.EventType_DeleteEvent,
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.IPAMPolicyEvent{
+						EventType: api.EventType_DeleteEvent,
 
-					IPAMPolicy: lobj,
+						IPAMPolicy: lobj,
+					}
+					log.Infof("diffIPAMPolicys(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.IPAMPolicy.GetObjectKind(), evt.IPAMPolicy.ObjectMeta)
+					client.processIPAMPolicyEvent(evt, reactor, nil)
 				}
-				log.Infof("diffIPAMPolicys(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.IPAMPolicy.GetObjectKind(), evt.IPAMPolicy.ObjectMeta)
-				client.processIPAMPolicyEvent(evt, reactor, nil)
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
-	// add/update all new objects
-	for _, obj := range objList.IPAMPolicys {
-		evt := netproto.IPAMPolicyEvent{
-			EventType: api.EventType_UpdateEvent,
-
-			IPAMPolicy: *obj,
-		}
-		client.lockObject(evt.IPAMPolicy.GetObjectKind(), evt.IPAMPolicy.ObjectMeta)
-		err := client.processIPAMPolicyEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "IPAMPolicy", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.IPAMPolicys {
+			evt := netproto.IPAMPolicyEvent{
 				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
+
+				IPAMPolicy: *obj,
 			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
+			client.lockObject(evt.IPAMPolicy.GetObjectKind(), evt.IPAMPolicy.ObjectMeta)
+			err := client.processIPAMPolicyEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "IPAMPolicy", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
 			}
-			ostream.Unlock()
 		}
 	}
 }
 
 // diffInterfacesDynamic diffs local state with controller state
 func (client *NimbusClient) diffInterfacesDynamic(objList *netproto.InterfaceList, reactor InterfaceReactor,
-	ostream *AggWatchOStream) {
+	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Interface)
 	for _, obj := range objList.Interfaces {
@@ -585,60 +615,64 @@ func (client *NimbusClient) diffInterfacesDynamic(objList *netproto.InterfaceLis
 		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Interface | Err: %v", types.Operation(types.List), err))
 	}
 	//localObjs := reactor.ListInterface()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.InterfaceEvent{
-					EventType: api.EventType_DeleteEvent,
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.InterfaceEvent{
+						EventType: api.EventType_DeleteEvent,
 
-					Interface: lobj,
+						Interface: lobj,
+					}
+					log.Infof("diffInterfaces(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
+					client.processInterfaceEvent(evt, reactor, nil)
 				}
-				log.Infof("diffInterfaces(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
-				client.processInterfaceEvent(evt, reactor, nil)
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
-	// add/update all new objects
-	for _, obj := range objList.Interfaces {
-		evt := netproto.InterfaceEvent{
-			EventType: api.EventType_UpdateEvent,
-
-			Interface: *obj,
-		}
-		client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
-		err := client.processInterfaceEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "Interface", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.Interfaces {
+			evt := netproto.InterfaceEvent{
 				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
+
+				Interface: *obj,
 			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
+			client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
+			err := client.processInterfaceEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "Interface", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
 			}
-			ostream.Unlock()
 		}
 	}
 }
 
 // diffMirrorSessionsDynamic diffs local state with controller state
 func (client *NimbusClient) diffMirrorSessionsDynamic(objList *netproto.MirrorSessionList, reactor MirrorSessionReactor,
-	ostream *AggWatchOStream) {
+	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.MirrorSession)
 	for _, obj := range objList.MirrorSessions {
@@ -656,60 +690,64 @@ func (client *NimbusClient) diffMirrorSessionsDynamic(objList *netproto.MirrorSe
 		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: MirrorSession | Err: %v", types.Operation(types.List), err))
 	}
 	//localObjs := reactor.ListMirrorSession()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.MirrorSessionEvent{
-					EventType: api.EventType_DeleteEvent,
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.MirrorSessionEvent{
+						EventType: api.EventType_DeleteEvent,
 
-					MirrorSession: &lobj,
+						MirrorSession: &lobj,
+					}
+					log.Infof("diffMirrorSessions(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.MirrorSession.GetObjectKind(), evt.MirrorSession.ObjectMeta)
+					client.processMirrorSessionEvent(evt, reactor, nil)
 				}
-				log.Infof("diffMirrorSessions(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.MirrorSession.GetObjectKind(), evt.MirrorSession.ObjectMeta)
-				client.processMirrorSessionEvent(evt, reactor, nil)
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
-	// add/update all new objects
-	for _, obj := range objList.MirrorSessions {
-		evt := netproto.MirrorSessionEvent{
-			EventType: api.EventType_UpdateEvent,
-
-			MirrorSession: obj,
-		}
-		client.lockObject(evt.MirrorSession.GetObjectKind(), evt.MirrorSession.ObjectMeta)
-		err := client.processMirrorSessionEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "MirrorSession", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.MirrorSessions {
+			evt := netproto.MirrorSessionEvent{
 				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
+
+				MirrorSession: obj,
 			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
+			client.lockObject(evt.MirrorSession.GetObjectKind(), evt.MirrorSession.ObjectMeta)
+			err := client.processMirrorSessionEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "MirrorSession", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
 			}
-			ostream.Unlock()
 		}
 	}
 }
 
 // diffNetworksDynamic diffs local state with controller state
 func (client *NimbusClient) diffNetworksDynamic(objList *netproto.NetworkList, reactor NetworkReactor,
-	ostream *AggWatchOStream) {
+	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Network)
 	for _, obj := range objList.Networks {
@@ -727,60 +765,64 @@ func (client *NimbusClient) diffNetworksDynamic(objList *netproto.NetworkList, r
 		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Network | Err: %v", types.Operation(types.List), err))
 	}
 	//localObjs := reactor.ListNetwork()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.NetworkEvent{
-					EventType: api.EventType_DeleteEvent,
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.NetworkEvent{
+						EventType: api.EventType_DeleteEvent,
 
-					Network: lobj,
+						Network: lobj,
+					}
+					log.Infof("diffNetworks(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
+					client.processNetworkEvent(evt, reactor, nil)
 				}
-				log.Infof("diffNetworks(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
-				client.processNetworkEvent(evt, reactor, nil)
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
-	// add/update all new objects
-	for _, obj := range objList.Networks {
-		evt := netproto.NetworkEvent{
-			EventType: api.EventType_UpdateEvent,
-
-			Network: *obj,
-		}
-		client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
-		err := client.processNetworkEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "Network", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.Networks {
+			evt := netproto.NetworkEvent{
 				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
+
+				Network: *obj,
 			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
+			client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
+			err := client.processNetworkEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "Network", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
 			}
-			ostream.Unlock()
 		}
 	}
 }
 
 // diffNetworkSecurityPolicysDynamic diffs local state with controller state
 func (client *NimbusClient) diffNetworkSecurityPolicysDynamic(objList *netproto.NetworkSecurityPolicyList, reactor NetworkSecurityPolicyReactor,
-	ostream *AggWatchOStream) {
+	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.NetworkSecurityPolicy)
 	for _, obj := range objList.NetworkSecurityPolicys {
@@ -798,60 +840,64 @@ func (client *NimbusClient) diffNetworkSecurityPolicysDynamic(objList *netproto.
 		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: NetworkSecurityPolicy | Err: %v", types.Operation(types.List), err))
 	}
 	//localObjs := reactor.ListNetworkSecurityPolicy()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.NetworkSecurityPolicyEvent{
-					EventType: api.EventType_DeleteEvent,
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.NetworkSecurityPolicyEvent{
+						EventType: api.EventType_DeleteEvent,
 
-					NetworkSecurityPolicy: lobj,
+						NetworkSecurityPolicy: lobj,
+					}
+					log.Infof("diffNetworkSecurityPolicys(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
+					client.processNetworkSecurityPolicyEvent(evt, reactor, nil)
 				}
-				log.Infof("diffNetworkSecurityPolicys(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
-				client.processNetworkSecurityPolicyEvent(evt, reactor, nil)
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
-	// add/update all new objects
-	for _, obj := range objList.NetworkSecurityPolicys {
-		evt := netproto.NetworkSecurityPolicyEvent{
-			EventType: api.EventType_UpdateEvent,
-
-			NetworkSecurityPolicy: *obj,
-		}
-		client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
-		err := client.processNetworkSecurityPolicyEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "NetworkSecurityPolicy", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.NetworkSecurityPolicys {
+			evt := netproto.NetworkSecurityPolicyEvent{
 				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
+
+				NetworkSecurityPolicy: *obj,
 			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
+			client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
+			err := client.processNetworkSecurityPolicyEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "NetworkSecurityPolicy", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
 			}
-			ostream.Unlock()
 		}
 	}
 }
 
 // diffProfilesDynamic diffs local state with controller state
 func (client *NimbusClient) diffProfilesDynamic(objList *netproto.ProfileList, reactor ProfileReactor,
-	ostream *AggWatchOStream) {
+	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Profile)
 	for _, obj := range objList.Profiles {
@@ -869,60 +915,64 @@ func (client *NimbusClient) diffProfilesDynamic(objList *netproto.ProfileList, r
 		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Profile | Err: %v", types.Operation(types.List), err))
 	}
 	//localObjs := reactor.ListProfile()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.ProfileEvent{
-					EventType: api.EventType_DeleteEvent,
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.ProfileEvent{
+						EventType: api.EventType_DeleteEvent,
 
-					Profile: lobj,
+						Profile: lobj,
+					}
+					log.Infof("diffProfiles(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.Profile.GetObjectKind(), evt.Profile.ObjectMeta)
+					client.processProfileEvent(evt, reactor, nil)
 				}
-				log.Infof("diffProfiles(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.Profile.GetObjectKind(), evt.Profile.ObjectMeta)
-				client.processProfileEvent(evt, reactor, nil)
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
-	// add/update all new objects
-	for _, obj := range objList.Profiles {
-		evt := netproto.ProfileEvent{
-			EventType: api.EventType_UpdateEvent,
-
-			Profile: *obj,
-		}
-		client.lockObject(evt.Profile.GetObjectKind(), evt.Profile.ObjectMeta)
-		err := client.processProfileEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "Profile", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.Profiles {
+			evt := netproto.ProfileEvent{
 				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
+
+				Profile: *obj,
 			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
+			client.lockObject(evt.Profile.GetObjectKind(), evt.Profile.ObjectMeta)
+			err := client.processProfileEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "Profile", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
 			}
-			ostream.Unlock()
 		}
 	}
 }
 
 // diffRouteTablesDynamic diffs local state with controller state
 func (client *NimbusClient) diffRouteTablesDynamic(objList *netproto.RouteTableList, reactor RouteTableReactor,
-	ostream *AggWatchOStream) {
+	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.RouteTable)
 	for _, obj := range objList.RouteTables {
@@ -940,60 +990,64 @@ func (client *NimbusClient) diffRouteTablesDynamic(objList *netproto.RouteTableL
 		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RouteTable | Err: %v", types.Operation(types.List), err))
 	}
 	//localObjs := reactor.ListRouteTable()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.RouteTableEvent{
-					EventType: api.EventType_DeleteEvent,
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.RouteTableEvent{
+						EventType: api.EventType_DeleteEvent,
 
-					RouteTable: lobj,
+						RouteTable: lobj,
+					}
+					log.Infof("diffRouteTables(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.RouteTable.GetObjectKind(), evt.RouteTable.ObjectMeta)
+					client.processRouteTableEvent(evt, reactor, nil)
 				}
-				log.Infof("diffRouteTables(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.RouteTable.GetObjectKind(), evt.RouteTable.ObjectMeta)
-				client.processRouteTableEvent(evt, reactor, nil)
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
-	// add/update all new objects
-	for _, obj := range objList.RouteTables {
-		evt := netproto.RouteTableEvent{
-			EventType: api.EventType_UpdateEvent,
-
-			RouteTable: *obj,
-		}
-		client.lockObject(evt.RouteTable.GetObjectKind(), evt.RouteTable.ObjectMeta)
-		err := client.processRouteTableEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "RouteTable", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.RouteTables {
+			evt := netproto.RouteTableEvent{
 				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
+
+				RouteTable: *obj,
 			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
+			client.lockObject(evt.RouteTable.GetObjectKind(), evt.RouteTable.ObjectMeta)
+			err := client.processRouteTableEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "RouteTable", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
 			}
-			ostream.Unlock()
 		}
 	}
 }
 
 // diffRoutingConfigsDynamic diffs local state with controller state
 func (client *NimbusClient) diffRoutingConfigsDynamic(objList *netproto.RoutingConfigList, reactor RoutingConfigReactor,
-	ostream *AggWatchOStream) {
+	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.RoutingConfig)
 	for _, obj := range objList.RoutingConfigs {
@@ -1011,60 +1065,64 @@ func (client *NimbusClient) diffRoutingConfigsDynamic(objList *netproto.RoutingC
 		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RoutingConfig | Err: %v", types.Operation(types.List), err))
 	}
 	//localObjs := reactor.ListRoutingConfig()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.RoutingConfigEvent{
-					EventType: api.EventType_DeleteEvent,
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.RoutingConfigEvent{
+						EventType: api.EventType_DeleteEvent,
 
-					RoutingConfig: lobj,
+						RoutingConfig: lobj,
+					}
+					log.Infof("diffRoutingConfigs(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.RoutingConfig.GetObjectKind(), evt.RoutingConfig.ObjectMeta)
+					client.processRoutingConfigEvent(evt, reactor, nil)
 				}
-				log.Infof("diffRoutingConfigs(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.RoutingConfig.GetObjectKind(), evt.RoutingConfig.ObjectMeta)
-				client.processRoutingConfigEvent(evt, reactor, nil)
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
-	// add/update all new objects
-	for _, obj := range objList.RoutingConfigs {
-		evt := netproto.RoutingConfigEvent{
-			EventType: api.EventType_UpdateEvent,
-
-			RoutingConfig: *obj,
-		}
-		client.lockObject(evt.RoutingConfig.GetObjectKind(), evt.RoutingConfig.ObjectMeta)
-		err := client.processRoutingConfigEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "RoutingConfig", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.RoutingConfigs {
+			evt := netproto.RoutingConfigEvent{
 				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
+
+				RoutingConfig: *obj,
 			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
+			client.lockObject(evt.RoutingConfig.GetObjectKind(), evt.RoutingConfig.ObjectMeta)
+			err := client.processRoutingConfigEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "RoutingConfig", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
 			}
-			ostream.Unlock()
 		}
 	}
 }
 
 // diffSecurityProfilesDynamic diffs local state with controller state
 func (client *NimbusClient) diffSecurityProfilesDynamic(objList *netproto.SecurityProfileList, reactor SecurityProfileReactor,
-	ostream *AggWatchOStream) {
+	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.SecurityProfile)
 	for _, obj := range objList.SecurityProfiles {
@@ -1082,60 +1140,64 @@ func (client *NimbusClient) diffSecurityProfilesDynamic(objList *netproto.Securi
 		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: SecurityProfile | Err: %v", types.Operation(types.List), err))
 	}
 	//localObjs := reactor.ListSecurityProfile()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.SecurityProfileEvent{
-					EventType: api.EventType_DeleteEvent,
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.SecurityProfileEvent{
+						EventType: api.EventType_DeleteEvent,
 
-					SecurityProfile: lobj,
+						SecurityProfile: lobj,
+					}
+					log.Infof("diffSecurityProfiles(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
+					client.processSecurityProfileEvent(evt, reactor, nil)
 				}
-				log.Infof("diffSecurityProfiles(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
-				client.processSecurityProfileEvent(evt, reactor, nil)
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
-	// add/update all new objects
-	for _, obj := range objList.SecurityProfiles {
-		evt := netproto.SecurityProfileEvent{
-			EventType: api.EventType_UpdateEvent,
-
-			SecurityProfile: *obj,
-		}
-		client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
-		err := client.processSecurityProfileEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "SecurityProfile", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.SecurityProfiles {
+			evt := netproto.SecurityProfileEvent{
 				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
+
+				SecurityProfile: *obj,
 			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
+			client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
+			err := client.processSecurityProfileEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "SecurityProfile", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
 			}
-			ostream.Unlock()
 		}
 	}
 }
 
 // diffVrfsDynamic diffs local state with controller state
 func (client *NimbusClient) diffVrfsDynamic(objList *netproto.VrfList, reactor VrfReactor,
-	ostream *AggWatchOStream) {
+	ostream *AggWatchOStream, op diffOpType) {
 	// build a map of objects
 	objmap := make(map[string]*netproto.Vrf)
 	for _, obj := range objList.Vrfs {
@@ -1153,68 +1215,82 @@ func (client *NimbusClient) diffVrfsDynamic(objList *netproto.VrfList, reactor V
 		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Vrf | Err: %v", types.Operation(types.List), err))
 	}
 	//localObjs := reactor.ListVrf()
-	for _, lobj := range localObjs {
-		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
-		if ok && ctby == "Venice" {
-			key := lobj.ObjectMeta.GetKey()
-			if _, ok := objmap[key]; !ok {
-				evt := netproto.VrfEvent{
-					EventType: api.EventType_DeleteEvent,
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.VrfEvent{
+						EventType: api.EventType_DeleteEvent,
 
-					Vrf: lobj,
+						Vrf: lobj,
+					}
+					log.Infof("diffVrfs(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.Vrf.GetObjectKind(), evt.Vrf.ObjectMeta)
+					client.processVrfEvent(evt, reactor, nil)
 				}
-				log.Infof("diffVrfs(): Deleting object %+v", lobj.ObjectMeta)
-				client.lockObject(evt.Vrf.GetObjectKind(), evt.Vrf.ObjectMeta)
-				client.processVrfEvent(evt, reactor, nil)
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 			}
-		} else {
-			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
 		}
 	}
 
-	// add/update all new objects
-	for _, obj := range objList.Vrfs {
-		evt := netproto.VrfEvent{
-			EventType: api.EventType_UpdateEvent,
-
-			Vrf: *obj,
-		}
-		client.lockObject(evt.Vrf.GetObjectKind(), evt.Vrf.ObjectMeta)
-		err := client.processVrfEvent(evt, reactor, nil)
-
-		if err == nil {
-			mobj, err := protoTypes.MarshalAny(obj)
-			aggObj := netproto.AggObject{Kind: "Vrf", Object: &api.Any{}}
-			aggObj.Object.Any = *mobj
-			robj := netproto.AggObjectEvent{
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.Vrfs {
+			evt := netproto.VrfEvent{
 				EventType: api.EventType_UpdateEvent,
-				AggObj:    aggObj,
+
+				Vrf: *obj,
 			}
-			// send oper status
-			ostream.Lock()
-			err = ostream.stream.Send(&robj)
-			if err != nil {
-				log.Errorf("failed to send Agg oper Status, %s", err)
-				client.debugStats.AddInt("AggOperSendError", 1)
-			} else {
-				client.debugStats.AddInt("AggOperSent", 1)
+			client.lockObject(evt.Vrf.GetObjectKind(), evt.Vrf.ObjectMeta)
+			err := client.processVrfEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "Vrf", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
 			}
-			ostream.Unlock()
 		}
 	}
 }
 
 // diffApp diffs local state with controller state
 // FIXME: this is not handling deletes today
-func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList, reactor AggReactor, ostream *AggWatchOStream) {
+func (client *NimbusClient) diffAggWatchObjects(kinds []string, objList *netproto.AggObjectList, reactor AggReactor, ostream *AggWatchOStream) {
 
 	type listObject struct {
 		kind    string
 		objects interface{}
 	}
 
+	type kindOrderObject struct {
+		kind string
+		lobj *listObject
+	}
+
 	//This will order be diffed
 	listOrderObjects := []*listObject{}
+	kindOrderObjects := []*kindOrderObject{}
+
+	for _, kind := range kinds {
+		kindOrderObjects = append(kindOrderObjects, &kindOrderObject{kind: kind})
+	}
 
 	addToListOrder := func(kind string, obj *protoTypes.DynamicAny) {
 		for _, lobj := range listOrderObjects {
@@ -1382,49 +1458,117 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 	}
 
 	for _, lobj := range listOrderObjects {
+		for _, kobj := range kindOrderObjects {
+			if kobj.kind == lobj.kind {
+				kobj.lobj = lobj
+			}
+		}
+	}
+
+	//Now do add/update
+	for index := range kindOrderObjects {
+		obj := kindOrderObjects[len(kindOrderObjects)-1-index]
+		lobj := obj.lobj
+		if lobj == nil {
+			continue
+		}
 		switch lobj.kind {
 
 		case "App":
-			client.diffAppsDynamic(lobj.objects.(*netproto.AppList), reactor.(AppReactor), ostream)
+			client.diffAppsDynamic(lobj.objects.(*netproto.AppList), reactor.(AppReactor), ostream, addUpdateOp)
 
 		case "Collector":
-			client.diffCollectorsDynamic(lobj.objects.(*netproto.CollectorList), reactor.(CollectorReactor), ostream)
+			client.diffCollectorsDynamic(lobj.objects.(*netproto.CollectorList), reactor.(CollectorReactor), ostream, addUpdateOp)
 
 		case "Endpoint":
-			client.diffEndpointsDynamic(lobj.objects.(*netproto.EndpointList), reactor.(EndpointReactor), ostream)
+			client.diffEndpointsDynamic(lobj.objects.(*netproto.EndpointList), reactor.(EndpointReactor), ostream, addUpdateOp)
 
 		case "FlowExportPolicy":
-			client.diffFlowExportPolicysDynamic(lobj.objects.(*netproto.FlowExportPolicyList), reactor.(FlowExportPolicyReactor), ostream)
+			client.diffFlowExportPolicysDynamic(lobj.objects.(*netproto.FlowExportPolicyList), reactor.(FlowExportPolicyReactor), ostream, addUpdateOp)
 
 		case "IPAMPolicy":
-			client.diffIPAMPolicysDynamic(lobj.objects.(*netproto.IPAMPolicyList), reactor.(IPAMPolicyReactor), ostream)
+			client.diffIPAMPolicysDynamic(lobj.objects.(*netproto.IPAMPolicyList), reactor.(IPAMPolicyReactor), ostream, addUpdateOp)
 
 		case "Interface":
-			client.diffInterfacesDynamic(lobj.objects.(*netproto.InterfaceList), reactor.(InterfaceReactor), ostream)
+			client.diffInterfacesDynamic(lobj.objects.(*netproto.InterfaceList), reactor.(InterfaceReactor), ostream, addUpdateOp)
 
 		case "MirrorSession":
-			client.diffMirrorSessionsDynamic(lobj.objects.(*netproto.MirrorSessionList), reactor.(MirrorSessionReactor), ostream)
+			client.diffMirrorSessionsDynamic(lobj.objects.(*netproto.MirrorSessionList), reactor.(MirrorSessionReactor), ostream, addUpdateOp)
 
 		case "Network":
-			client.diffNetworksDynamic(lobj.objects.(*netproto.NetworkList), reactor.(NetworkReactor), ostream)
+			client.diffNetworksDynamic(lobj.objects.(*netproto.NetworkList), reactor.(NetworkReactor), ostream, addUpdateOp)
 
 		case "NetworkSecurityPolicy":
-			client.diffNetworkSecurityPolicysDynamic(lobj.objects.(*netproto.NetworkSecurityPolicyList), reactor.(NetworkSecurityPolicyReactor), ostream)
+			client.diffNetworkSecurityPolicysDynamic(lobj.objects.(*netproto.NetworkSecurityPolicyList), reactor.(NetworkSecurityPolicyReactor), ostream, addUpdateOp)
 
 		case "Profile":
-			client.diffProfilesDynamic(lobj.objects.(*netproto.ProfileList), reactor.(ProfileReactor), ostream)
+			client.diffProfilesDynamic(lobj.objects.(*netproto.ProfileList), reactor.(ProfileReactor), ostream, addUpdateOp)
 
 		case "RouteTable":
-			client.diffRouteTablesDynamic(lobj.objects.(*netproto.RouteTableList), reactor.(RouteTableReactor), ostream)
+			client.diffRouteTablesDynamic(lobj.objects.(*netproto.RouteTableList), reactor.(RouteTableReactor), ostream, addUpdateOp)
 
 		case "RoutingConfig":
-			client.diffRoutingConfigsDynamic(lobj.objects.(*netproto.RoutingConfigList), reactor.(RoutingConfigReactor), ostream)
+			client.diffRoutingConfigsDynamic(lobj.objects.(*netproto.RoutingConfigList), reactor.(RoutingConfigReactor), ostream, addUpdateOp)
 
 		case "SecurityProfile":
-			client.diffSecurityProfilesDynamic(lobj.objects.(*netproto.SecurityProfileList), reactor.(SecurityProfileReactor), ostream)
+			client.diffSecurityProfilesDynamic(lobj.objects.(*netproto.SecurityProfileList), reactor.(SecurityProfileReactor), ostream, addUpdateOp)
 
 		case "Vrf":
-			client.diffVrfsDynamic(lobj.objects.(*netproto.VrfList), reactor.(VrfReactor), ostream)
+			client.diffVrfsDynamic(lobj.objects.(*netproto.VrfList), reactor.(VrfReactor), ostream, addUpdateOp)
+
+		}
+	}
+
+	//First do delete objects which are removed
+	for index := range kindOrderObjects {
+		obj := kindOrderObjects[len(kindOrderObjects)-1-index]
+		lobj := obj.lobj
+		if lobj == nil {
+			continue
+		}
+		switch lobj.kind {
+
+		case "App":
+			client.diffAppsDynamic(lobj.objects.(*netproto.AppList), reactor.(AppReactor), ostream, delteDiffOp)
+
+		case "Collector":
+			client.diffCollectorsDynamic(lobj.objects.(*netproto.CollectorList), reactor.(CollectorReactor), ostream, delteDiffOp)
+
+		case "Endpoint":
+			client.diffEndpointsDynamic(lobj.objects.(*netproto.EndpointList), reactor.(EndpointReactor), ostream, delteDiffOp)
+
+		case "FlowExportPolicy":
+			client.diffFlowExportPolicysDynamic(lobj.objects.(*netproto.FlowExportPolicyList), reactor.(FlowExportPolicyReactor), ostream, delteDiffOp)
+
+		case "IPAMPolicy":
+			client.diffIPAMPolicysDynamic(lobj.objects.(*netproto.IPAMPolicyList), reactor.(IPAMPolicyReactor), ostream, delteDiffOp)
+
+		case "Interface":
+			client.diffInterfacesDynamic(lobj.objects.(*netproto.InterfaceList), reactor.(InterfaceReactor), ostream, delteDiffOp)
+
+		case "MirrorSession":
+			client.diffMirrorSessionsDynamic(lobj.objects.(*netproto.MirrorSessionList), reactor.(MirrorSessionReactor), ostream, delteDiffOp)
+
+		case "Network":
+			client.diffNetworksDynamic(lobj.objects.(*netproto.NetworkList), reactor.(NetworkReactor), ostream, delteDiffOp)
+
+		case "NetworkSecurityPolicy":
+			client.diffNetworkSecurityPolicysDynamic(lobj.objects.(*netproto.NetworkSecurityPolicyList), reactor.(NetworkSecurityPolicyReactor), ostream, delteDiffOp)
+
+		case "Profile":
+			client.diffProfilesDynamic(lobj.objects.(*netproto.ProfileList), reactor.(ProfileReactor), ostream, delteDiffOp)
+
+		case "RouteTable":
+			client.diffRouteTablesDynamic(lobj.objects.(*netproto.RouteTableList), reactor.(RouteTableReactor), ostream, delteDiffOp)
+
+		case "RoutingConfig":
+			client.diffRoutingConfigsDynamic(lobj.objects.(*netproto.RoutingConfigList), reactor.(RoutingConfigReactor), ostream, delteDiffOp)
+
+		case "SecurityProfile":
+			client.diffSecurityProfilesDynamic(lobj.objects.(*netproto.SecurityProfileList), reactor.(SecurityProfileReactor), ostream, delteDiffOp)
+
+		case "Vrf":
+			client.diffVrfsDynamic(lobj.objects.(*netproto.VrfList), reactor.(VrfReactor), ostream, delteDiffOp)
 
 		}
 	}
@@ -1657,7 +1801,7 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 		}
 	} else {
 		// perform a diff of the states
-		client.diffAggWatchObjects(objList, reactor, ostream)
+		client.diffAggWatchObjects(kinds, objList, reactor, ostream)
 
 	}
 
@@ -1704,7 +1848,7 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 				}
 			} else {
 				// perform a diff of the states
-				client.diffAggWatchObjects(objList, reactor, ostream)
+				client.diffAggWatchObjects(kinds, objList, reactor, ostream)
 			}
 		}
 	}

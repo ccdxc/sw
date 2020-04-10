@@ -509,7 +509,6 @@ class NaplesManagement(EntityManagement):
         self.WaitForSsh()
 
     def StartSSH(self):
-        self.SendlineExpect("echo classic > /sysconfig/config0/app-start.conf", "#")
         self.SendlineExpect("/etc/init.d/S50sshd start", "#")
 
     def Reboot(self):

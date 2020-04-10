@@ -490,8 +490,10 @@ func (p *pushDB) ListObjects(kind string, receiverID string) []Object {
 
 	var objs []Object
 	for _, pobj := range od.objects {
-		if pobj.bitMap.Test(r.bitID) {
-			objs = append(objs, pobj.obj)
+		if pobj.objState.isResolved() {
+			if pobj.bitMap.Test(r.bitID) {
+				objs = append(objs, pobj.obj)
+			}
 		}
 	}
 
