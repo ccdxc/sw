@@ -5,6 +5,7 @@ action ingress_tx_stats(ucast_bytes, ucast_pkts, mcast_bytes, mcast_pkts,
                         bcast_bytes, bcast_pkts, pad1, pad2) {
     if (recirc_header.valid == TRUE) {
         modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
+        modify_field(capri_intrinsic.tm_span_session, 0);
         // return
     }
     if (capri_intrinsic.drop == TRUE) {
