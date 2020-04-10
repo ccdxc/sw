@@ -1009,7 +1009,7 @@ ionic_tx_setup(struct ionic_txque *txq, struct mbuf **m_headp)
 		bus_dmamap_unload(txq->buf_tag, txbuf->dma_map);
 		IONIC_TX_TRACE(txq, "No space available, head: %u tail: %u nsegs: %d\n",
 		    txq->head_index, txq->tail_index, nsegs);
-		return (ENOSPC);
+		return (EAGAIN);
 	}
 
 	m = *m_headp;
@@ -1263,7 +1263,7 @@ ionic_tx_tso_setup(struct ionic_txque *txq, struct mbuf **m_headp)
 		bus_dmamap_unload(txq->tso_buf_tag, first_txbuf->tso_dma_map);
 		IONIC_TX_TRACE(txq, "TSO too big, num_descs: %d request: %d\n",
 		    txq->num_descs, num_descs);
-		return (ENOSPC);
+		return (ENOSPC); // DO NOT try again
 	}
 	if (!ionic_tx_avail(txq, num_descs)) {
 		stats->tso_no_descs++;
@@ -1271,7 +1271,7 @@ ionic_tx_tso_setup(struct ionic_txque *txq, struct mbuf **m_headp)
 		IONIC_TX_TRACE(txq,
 		    "No space avail, head: %u tail: %u num_descs: %d\n",
 		    txq->head_index, txq->tail_index, num_descs);
-		return (ENOSPC);
+		return (EAGAIN);
 	}
 
 	bus_dmamap_sync(txq->tso_buf_tag, first_txbuf->tso_dma_map,
@@ -1392,13 +1392,10 @@ ionic_tx_tso_setup(struct ionic_txque *txq, struct mbuf **m_headp)
 static int
 ionic_xmit(struct ifnet *ifp, struct ionic_txque *txq, struct mbuf **m)
 {
-	struct ionic_tx_stats *stats;
 	int err;
 
 	if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0)
 		return (ENETDOWN);
-
-	stats = &txq->stats;
 
 	/* Send a copy of the frame to the BPF listener */
 	ETHER_BPF_MTAP(ifp, *m);
@@ -1408,7 +1405,7 @@ ionic_xmit(struct ifnet *ifp, struct ionic_txque *txq, struct mbuf **m)
 	else
 		err = ionic_tx_setup(txq, m);
 
-	txq->full = (err == ENOSPC);
+	txq->full = (err == EAGAIN);
 	if (txq->full && !txq->wdog_start)
 		txq->wdog_start = ticks;
 
@@ -1432,21 +1429,25 @@ ionic_start_xmit_locked(struct ifnet *ifp, struct ionic_txque *txq)
 	stats = &txq->stats;
 
 	while ((m = drbr_peek(ifp, txq->br)) != NULL) {
-		if ((err = ionic_xmit(ifp, txq, &m)) != 0) {
-			if (m == NULL) {
-				drbr_advance(ifp, txq->br);
-			} else {
-				stats->re_queue++;
-				drbr_putback(ifp, txq->br, m);
-			}
+		err = ionic_xmit(ifp, txq, &m);
+		if (likely(err == 0)) {
+			/* on successful xmit, reset watchdog timer */
+			txq->wdog_start = ticks;
+			drbr_advance(ifp, txq->br);
+		} else if (err == EAGAIN) {
+			/* pause xmit, tx queue is full */
+			stats->re_queue++;
+			drbr_putback(ifp, txq->br, m);
 			break;
+		} else {
+			/* xmit failed, drop m and do not try again,
+			 * but continue next xmit, may succeed.
+			 */
+			drbr_advance(ifp, txq->br);
+			if (m != NULL)
+				m_freem(m);
 		}
-		drbr_advance(ifp, txq->br);
 	}
-
-	/* On successful ionic_xmit, set the watchdog timer */
-	if (!err)
-		txq->wdog_start = ticks;
 }
 
 int
