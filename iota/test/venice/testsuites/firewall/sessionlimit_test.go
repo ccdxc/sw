@@ -68,10 +68,34 @@ func VerifyFirewallHalConfig(fwp *objects.FirewallProfileCollection, sessType st
 				return fmt.Errorf("hal programming failed for %v", fieldString)
 			}
 		} else {
-			return fmt.Errorf("failed to run shmdump, %v", err)
+			return fmt.Errorf("failed to run halctl, %v", err)
 		}
 		return nil
 	})
+}
+
+func VerifyDetectAppHalConfig(fwp *objects.FirewallProfileCollection, enable bool) error {
+	var fieldString string
+	naplesCol := ts.model.Naples()
+
+	if len(naplesCol.Nodes) == 0 {
+		return nil
+	}
+	fieldString = fmt.Sprintf("appdetectionen: %v", enable)
+
+	halCommand := fmt.Sprintf("/nic/bin/halctl show nwsec profile | /bin/grep '%s'", fieldString)
+	return ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
+		if out, err := ts.model.RunNaplesCommand(nc, halCommand); err == nil {
+			log.Infof(strings.Join(out, ","))
+			if len(out) == 0 {
+				return fmt.Errorf("hal programming failed for %v", fieldString)
+			}
+		} else {
+			return fmt.Errorf("failed to run halctl, %v", err)
+		}
+		return nil
+	})
+
 }
 
 func SaveSettings() *objects.FirewallProfileCollection {
@@ -215,6 +239,33 @@ var _ = Describe("session limit tests", func() {
 			Expect(VerifyFirewallHalConfig(fwp, "ICMP", conn_limit)).ShouldNot(HaveOccurred())
 			Expect(VerifyFirewallHalConfig(fwp, "OTHER", conn_limit)).ShouldNot(HaveOccurred())
 
+		})
+
+		It("tags:sanity=true Verify default firewallprofile have detect-app to false", func(){
+			if !ts.tb.HasNaplesHW() {
+				Skip("Disabling on naples sim till traffic issue is debugged")
+			}
+			testMode := false
+			By(fmt.Sprintf("Verify Hal Programming of default DetectApp on naples"))
+			Expect(VerifyDetectAppHalConfig(fwp, testMode)).ShouldNot(HaveOccurred())
+		})
+
+		It("tags:sanity=true Should enable detect-app and verify on hal", func(){
+			Skip("Disable test until hal functionality is in place")
+			if !ts.tb.HasNaplesHW() {
+				Skip("Disabling on naples sim till traffic issue is debugged")
+			}
+			testMode := true
+			By(fmt.Sprintf("Set DetectApp[%v] on naples", testMode))
+			Expect(fwp.SetDetectApp(testMode)).Should(Succeed())
+			Expect(fwp.Commit()).Should(Succeed())
+
+			Eventually(func() error {
+				return VerifyFirewallPropagation(fwp)
+			}).Should(Succeed())
+
+			By(fmt.Sprintf("Verify Hal Programming of DetectApp on naples"))
+			Expect(VerifyDetectAppHalConfig(fwp, testMode)).ShouldNot(HaveOccurred())
 		})
 	})
 })

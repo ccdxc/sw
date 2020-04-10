@@ -54,6 +54,7 @@ func NewFirewallProfile(name string, client objClient.ObjClient, testbed *testbe
 	}
 }
 
+
 func (fwp* FirewallProfileCollection) GetDefaultFirewallProfile() (*security.FirewallProfile, error) {
 	fwps, err := fwp.Client.ListFirewallProfile()
 
@@ -67,6 +68,16 @@ func (fwp* FirewallProfileCollection) GetDefaultFirewallProfile() (*security.Fir
 	}
 
 	return fwps[0], nil
+}
+
+func (fwp *FirewallProfileCollection) SetDetectApp(enable bool) error {
+	if fwp.err != nil {
+		return fwp.err
+	}
+	for _, profile := range fwp.Profiles {
+		profile.VeniceFirewallProfile.Spec.DetectApp = enable
+	}
+	return nil
 }
 
 func (fwp *FirewallProfileCollection) SetFirewallLimit(sessType  string, limit int) error {
