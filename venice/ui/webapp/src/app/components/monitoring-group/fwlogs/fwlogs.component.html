@@ -31,7 +31,9 @@
                        [tableMenuItems]="tableMenuItems" [enableColumnSelect]="true" [cols]="cols"
                        (columnSelectChange)="onColumnSelectChange($event)"
                        [lastUpdateTime]="lastUpdateTime" [showRefreshIcon]="true"
-                       (refreshIconClick)="getFwlogs()">
+                       (refreshIconClick)="getFwlogs()" class="fwlogs-table-header"
+                       [showTotalHits]="true">
+        <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
         <div fxFlex></div>
         <app-timerange fxFlex="nogrow"
                        [selectedTimeRange]="selectedTimeRange"
@@ -58,6 +60,19 @@
            routerLink="/security/sgpolicies/{{displayPolicyName(rowData)}}">{{displayPolicyName(rowData)}}</a>
       </div>
       <span *ngIf="!displayPolicyName(rowData)">No Policy Found</span>
+    </ng-container>
+    <ng-container *ngSwitchCase="'protocol'">
+      <div *ngIf="rowData.protocol == 'ICMP'" class="fwlogs-icmp">
+        <div>{{displayColumn(rowData, col)}}</div>
+        <div @fastSlideInOut class="fwlogs-icmp-content">
+          <span fxLayout="row wrap">icmp-type: {{rowData['icmp-type']}}</span>
+          <span fxLayout="row wrap">icmp-code: {{rowData['icmp-code']}}</span>
+          <span fxLayout="row wrap">icmp-id: {{rowData['icmp-id']}}</span>
+        </div>
+      </div>
+      <div *ngIf="rowData.protocol !== 'ICMP'">
+        {{displayColumn(rowData,col)}}
+      </div>
     </ng-container>
     <ng-container *ngSwitchDefault>
       <ng-container *roleGuard="col.roleGuard">
@@ -162,7 +177,7 @@
       <div fxFlex="10px"></div>
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
         <!-- <input matTooltip="Ports are comma separated. Ex 8000, 8001" fxFlex="nogrow" -->
-        <input matTooltip="Ex 8000, 8001" fxFlex="nogrow"
+        <input matTooltip="Port should be number in range [0, 65536]. Ex 8000" fxFlex="nogrow"
                class="fwlogs-inputport" spellcheck="false"
                formControlName="source-ports" type="text" pInputText
                (keyup)="keyUpInput($event)"
@@ -170,7 +185,7 @@
       </div>
       <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
         <!-- <input matTooltip="Ports are comma separated. Ex 8000, 8001" fxFlex="nogrow" -->
-        <input matTooltip="Ex 8000, 8001" fxFlex="nogrow"
+        <input matTooltip="Port should be number in range [0, 65536]. Ex 8000" fxFlex="nogrow"
                class="fwlogs-inputport" spellcheck="false"
                formControlName="destination-ports" type="text" pInputText
                (keyup)="keyUpInput($event)"
@@ -221,4 +236,10 @@
     </div>
   </div>
   <div fxFlex="20px"></div>
+</ng-template>
+
+<ng-template #actionButtonsTemplate>
+  <div matTooltip="Total firewall logs" class="fwlogs-table-header-title">
+    | System has ({{veniceRecords | number}}) logs
+  </div>
 </ng-template>

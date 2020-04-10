@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewEncapsulation, ViewChild, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
 import { Utility } from '@app/common/Utility';
+import { Animations } from '@app/animations';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { IPUtility } from '@app/common/IPUtility';
 import { LazyLoadEvent, OverlayPanel } from 'primeng/primeng';
@@ -30,6 +31,7 @@ import { IFwlogFwLogQuery, FwlogFwLogQuery, FwlogFwLogQuery_sort_order, FwlogFwL
   selector: 'app-fwlogs',
   templateUrl: './fwlogs.component.html',
   styleUrls: ['./fwlogs.component.scss'],
+  animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
 export class FwlogsComponent extends TableviewAbstract<IFwlogFwLog, FwlogFwLog> {
@@ -44,6 +46,9 @@ export class FwlogsComponent extends TableviewAbstract<IFwlogFwLog, FwlogFwLog> 
   isTabComponent = false;
   disableTableWhenRowExpanded = false;
   maxRecords: number = 8000;
+
+  getVeniceRecords: boolean = false;
+  veniceRecords: number = 0;
 
   query: FwlogFwLogQuery = new FwlogFwLogQuery({ 'sort-order': FwlogFwLogQuery_sort_order.descending, 'max-results': this.maxRecords }, false);
 
@@ -139,6 +144,20 @@ export class FwlogsComponent extends TableviewAbstract<IFwlogFwLog, FwlogFwLog> 
     super(controllerService, cdr, uiconfigsService);
   }
 
+  // Fetches count of logs inside venice
+  fetchVeniceRecords() {
+    const query = new FwlogFwLogQuery({
+       'sort-order': FwlogFwLogQuery_sort_order.descending,
+       'max-results': 2, // For fetching the count of venice records we don't need to fetch all records
+       'actions': null,
+       'end-time': new Date().toISOString(),
+       'tenant': [Utility.getInstance().getTenant()],
+      }, false);
+      this.loading = true;
+      this.getVeniceRecords = true;
+      this.fwlogsQueryObserver.next(query);
+  }
+
   getClassName(): string {
     return this.constructor.name;
   }
@@ -185,6 +204,7 @@ export class FwlogsComponent extends TableviewAbstract<IFwlogFwLog, FwlogFwLog> 
 
   postNgInit() {
     this.fwlogQueryListener();
+    this.fetchVeniceRecords();
     this.getNaples();
     this.setSearchFormValidators();
     this.getSGPolicies();
@@ -209,7 +229,9 @@ export class FwlogsComponent extends TableviewAbstract<IFwlogFwLog, FwlogFwLog> 
         return;
       }
       this.selectedTimeRange = timeRange;
-      this.getFwlogs();
+      if (!this.getVeniceRecords) {
+        this.getFwlogs();
+      }
     }, 0);
   }
 
@@ -339,17 +361,34 @@ export class FwlogsComponent extends TableviewAbstract<IFwlogFwLog, FwlogFwLog> 
             this.lastUpdateTime = new Date().toISOString();
             const body = resp.body as FwlogFwLogList;
             let logs = null;
-            if (body.items !== undefined && body.items !== null) {
-              logs = body.items;
-            }
-            if (logs != null) {
-              this.dataObjects = logs.map((l) => {
-                return new FwlogFwLog(l);
-              });
+            if (!this.getVeniceRecords) {
+              // Code to get data
+              if (body.items !== undefined && body.items !== null) {
+                logs = body.items;
+              }
+              if (logs != null) {
+                this.dataObjects = logs.map((l) => {
+                  return new FwlogFwLog(l);
+                });
+              } else {
+                this.dataObjects = [];
+              }
+              this.loading = false;
             } else {
-              this.dataObjects = [];
+              // Code to calculate venice Records
+              const listmeta = body['list-meta'];
+              if (listmeta !== undefined && listmeta !== null) {
+                this.veniceRecords = (listmeta['total-count'] !== undefined && listmeta['total-count'] !== null) ? body['list-meta']['total-count'] : 0;
+              } else {
+                this.veniceRecords = 0;
+              }
+              this.getVeniceRecords = false;
+              if (this.selectedTimeRange !== undefined) {
+                this.getFwlogs();
+              } else {
+                this.loading = false;
+              }
             }
-            this.loading = false;
           },
           (error) => {
             this.dataObjects = [];

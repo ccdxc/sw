@@ -117,12 +117,12 @@
 
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px"
        *ngIf="!(rowData._ui['processedWorkloads'] && rowData._ui['processedWorkloads'].length > 0)">
-    <!-- 2020-01-08 backend does not support host edit 
-      <mat-icon matTooltip="Edit host" *roleGuard="'clusterhost_update'"
+    <!-- 2020-01-08 backend does not support host edit. Enable it 202004-08  -->
+    <mat-icon matTooltip="Edit host" *roleGuard="'clusterhost_update'"
               class="global-table-action-icon"
               (click)="expandRowRequest($event, rowData)">edit
-    </mat-icon> 
-    -->
+    </mat-icon>
+
     <mat-icon matTooltip="Delete host" *roleGuard="'clusterhost_delete'"
               class="global-table-action-icon"
               (click)="onDeleteRecord($event, rowData)">delete

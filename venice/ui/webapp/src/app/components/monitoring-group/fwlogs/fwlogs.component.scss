@@ -15,6 +15,25 @@ $vertical-gutter: 5px;
   height: 100%;
 }
 
+.fwlogs-table-header>.tableheader-container>.tableheader-title-container {
+  flex: 0 0 auto !important;
+}
+
+.fwlogs-table-header-title {
+  @include primary-font(20px, #484848);
+}
+
+.fwlogs-icmp-content {
+  display: none;
+}
+
+.fwlogs-icmp:hover {
+  .fwlogs-icmp-content {
+    display: block;
+  }
+}
+
+.fwlogs-multiselect,
 .fwlogs-singleselect {
   @include primary-font();
   text-align: left !important;
@@ -38,6 +57,7 @@ $vertical-gutter: 5px;
   margin: 3px 10px
 }
 
+.fwlogs-multiselect,
 .fwlogs-singleselect,
 .fwlogs-input {
   width: 155px;
