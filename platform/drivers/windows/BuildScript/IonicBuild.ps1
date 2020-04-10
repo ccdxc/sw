@@ -144,9 +144,47 @@ if(!(Test-Path -Path $PathToMsBuild -PathType Leaf)) {
     throw "Invalid path to MSBuild.exe: " + $PathToMsBuild
 }
 
-# Look for the Pensando build environment folder and the text file keeping the build number.
+
+# If the string variant of the version is received as an argument, 
+# then parse it into its numeric variants
+if (!([string]::IsNullOrWhiteSpace($VerStr))) {
+    $VerStrL = $VerStr.Split("-")[0]
+    $VerStrR1 = $VerStr.Split("-")[1]
+    $VerStrR2 = $VerStr.Split("-")[2]
+    $VerStrR3 = $VerStr.Split("-")[3]
+
+    $VerStrMaj = $VerStrL.Split(".")[0]
+    $VerStrMin = $VerStrL.Split(".")[1]
+    $VerStrSP = $VerStrL.Split(".")[2]
+    $VerStrBuild = $VerStrL.Split(".")[3]
+    $VerStrExt = $VerStrR1
+	if ([string]::IsNullOrWhiteSpace($VerStrR2)) {
+		$VerStrExt += "."+$VerStrR2
+		if ([string]::IsNullOrWhiteSpace($VerStrR3)) {
+			$VerStrExt += "."+$VerStrR3
+		}
+	}
+
+    if ($VerStrMaj -match '^\d+$' ) {
+        $VerMaj = $VerStrMaj -as [int]
+    }
+    if ($VerStrMin -match '^\d+$') {
+        $VerMin = $VerStrMin -as [int]
+    }
+    if ($VerStrSP -match '^\d+$') {
+        $VerSP = $VerStrSP -as [int]
+    }
+    if ($VerStrBuild -match '^\d+$') {
+        $VerBuild = $VerStrBuild -as [int]
+    }
+    if (!([string]::IsNullOrWhiteSpace($VerStrExt))) {
+        $VerExt += $VerStrExt
+    }
+}
+
+# Look for the Pensando build environment folder and the text file holding the build number.
 #
-$BuildVersionFile = "IonicBuildVersion.txt"
+$BuildVersionFile = "" + $VerMaj + "." + $VerMin + "." + $VerSP + ".txt"
 $PathToBuildEnv = $Env:AllUsersProfile + "\PensandoBuildEnv"
 $PathToBuildVersionFile = $PathToBuildEnv + "\" + $BuildVersionFile
 # Validate the path to build environment folder.
@@ -169,40 +207,9 @@ if ((-1 -eq $VerBuild) -or ($ResetVerBuild)) {
     $VerBuild += 1;
 }
 
+# Build the version string variant back from the numeric one.
+$VerStr = "" + $VerMaj + "." + $VerMin + "." + $VerSP + "." + $VerBuild + "-" + $VerExt
 
-# If the string variant of the version is received as an argument, then parse it into
-# its numeric variants, otherwise build the string variant from the numeric one.
-if (!([string]::IsNullOrWhiteSpace($VerStr))) {
-    $VerStrL = $VerStr.Split("-")[0]
-    $VerStrR1 = $VerStr.Split("-")[1]
-    $VerStrR2 = $VerStr.Split("-")[2]
-    $VerStrR3 = $VerStr.Split("-")[3]
-
-    $VerStrMaj = $VerStrL.Split(".")[0]
-    $VerStrMin = $VerStrL.Split(".")[1]
-    $VerStrSP = $VerStrL.Split(".")[2]
-    $VerStrBuild = $VerStrL.Split(".")[3]
-    $VerStrExt = $VerStrR1+"."+$VerStrR2+"."+$VerStrR3
-
-    if ($VerStrMaj -match '^\d+$' ) {
-        $VerMaj = $VerStrMaj -as [int]
-    }
-    if ($VerStrMin -match '^\d+$') {
-        $VerMin = $VerStrMin -as [int]
-    }
-    if ($VerStrSP -match '^\d+$') {
-        $VerSP = $VerStrSP -as [int]
-    }
-    if ($VerStrBuild -match '^\d+$') {
-        $VerBuild = $VerStrBuild -as [int]
-    }
-    if (!([string]::IsNullOrWhiteSpace($VerStrExt))) {
-        $VerExt += $VerStrExt
-    }
-} 
-else {
-	$VerStr = "" + $VerMaj + "." + $VerMin + "." + $VerSP + "." + $VerBuild + "-" + $VerExt
-}
 
 # Set version environment variables to be picked up by the visual studio solution and included projects.
 $Env:IONIC_NDIS_VERSION = $NdisVer
