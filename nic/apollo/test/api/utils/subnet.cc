@@ -43,9 +43,9 @@ subnet_feeder::init(pds_obj_key_t key, pds_obj_key_t vpc_key,
     spec.num_egr_v6_policy = num_policies_per_subnet;
     while(i < num_policies_per_subnet) {
         spec.ing_v4_policy[i] = int2pdsobjkey(policy_start + i + 1);
-        spec.ing_v6_policy[i] = int2pdsobjkey(policy_start + i + 5);
-        spec.egr_v4_policy[i] = int2pdsobjkey(policy_start + i + 10);
-        spec.egr_v6_policy[i] = int2pdsobjkey(policy_start + i + 15);
+        spec.ing_v6_policy[i] = int2pdsobjkey(policy_start + i + 6);
+        spec.egr_v4_policy[i] = int2pdsobjkey(policy_start + i + 11);
+        spec.egr_v6_policy[i] = int2pdsobjkey(policy_start + i + 16);
         i++;
     }
     spec.fabric_encap.val.vnid = pdsobjkey2int(key) + 512;
@@ -186,22 +186,22 @@ subnet_attr_update (subnet_feeder& feeder, pds_subnet_spec_t *spec,
     if (bit_isset(chg_bmap, SUBNET_ATTR_V4_INGPOL)) {
         feeder.spec.num_ing_v4_policy = spec->num_ing_v4_policy;
         memcpy(&feeder.spec.ing_v4_policy, &spec->ing_v4_policy,
-               sizeof(spec->ing_v4_policy));
+               sizeof(spec->ing_v4_policy[0]) * spec->num_ing_v4_policy);
     }
     if (bit_isset(chg_bmap, SUBNET_ATTR_V6_INGPOL)) {
         feeder.spec.num_ing_v6_policy = spec->num_ing_v6_policy;
         memcpy(&feeder.spec.ing_v6_policy, &spec->ing_v6_policy,
-               sizeof(spec->ing_v6_policy));
+               sizeof(spec->ing_v6_policy[0]) * spec->num_ing_v6_policy);
     }
     if (bit_isset(chg_bmap, SUBNET_ATTR_V4_EGRPOL)) {
         feeder.spec.num_egr_v4_policy = spec->num_egr_v4_policy;
         memcpy(&feeder.spec.egr_v4_policy, &spec->egr_v4_policy,
-               sizeof(spec->egr_v4_policy));
+               sizeof(spec->egr_v4_policy[0]) * spec->num_egr_v4_policy);
     }
     if (bit_isset(chg_bmap, SUBNET_ATTR_V6_EGRPOL)) {
         feeder.spec.num_egr_v6_policy = spec->num_egr_v6_policy;
         memcpy(&feeder.spec.egr_v6_policy, &spec->egr_v6_policy,
-               sizeof(spec->egr_v6_policy));
+               sizeof(spec->egr_v6_policy[0]) * spec->num_egr_v6_policy);
     }
     if (bit_isset(chg_bmap, SUBNET_ATTR_FAB_ENCAP)) {
         feeder.spec.fabric_encap = spec->fabric_encap;
@@ -292,9 +292,9 @@ spec_policy_fill (pds_subnet_spec_t *spec, uint8_t num_policies,
     spec->num_egr_v6_policy = num_policies;
     for (uint8_t i = 0; i < num_policies; i++) {
         spec->ing_v4_policy[i] = int2pdsobjkey(policy_start + i + 1);
-        spec->ing_v6_policy[i] = int2pdsobjkey(policy_start + i + 5);
-        spec->egr_v4_policy[i] = int2pdsobjkey(policy_start + i + 10);
-        spec->egr_v6_policy[i] = int2pdsobjkey(policy_start + i + 15);
+        spec->ing_v6_policy[i] = int2pdsobjkey(policy_start + i + 6);
+        spec->egr_v4_policy[i] = int2pdsobjkey(policy_start + i + 11);
+        spec->egr_v6_policy[i] = int2pdsobjkey(policy_start + i + 16);
     }
 }
 

@@ -23,7 +23,7 @@ enum vnic_attrs {
     VNIC_ATTR_VNIC_ENCAP         =  bit(2),
     VNIC_ATTR_FAB_ENCAP          =  bit(3),
     VNIC_ATTR_MAC_ADDR           =  bit(4),
-    VNIC__ATTR_BINDING_CHECKS_EN =  bit(5),
+    VNIC_ATTR_BINDING_CHECKS_EN  =  bit(5),
     VNIC_ATTR_TX_MIRROR          =  bit(6),
     VNIC_ATTR_RX_MIRROR          =  bit(7),
     VNIC_ATTR_V4_METER           =  bit(8),
@@ -61,7 +61,8 @@ public:
               pds_encap_type_t vnic_encap_type,
               pds_encap_type_t fabric_encap_type,
               bool binding_checks_en, bool configure_policy,
-              uint8_t tx_mirror_session_bmap, uint8_t rx_mirror_session_bmap);
+              uint8_t tx_mirror_session_bmap, uint8_t rx_mirror_session_bmap,
+              uint8_t num_policies_per_vnic, uint8_t start_policy_index);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -142,6 +143,11 @@ void vnic_delete(vnic_feeder& feeder);
 // Misc function prototypes
 void sample_vnic_setup(pds_batch_ctxt_t bctxt);
 void sample_vnic_teardown(pds_batch_ctxt_t bctxt);
+void vnic_feeder_encap_init(uint32_t id, pds_encap_type_t encap_type,
+                            pds_encap_t *encap);
+void vnic_feeder_encap_next(pds_encap_t *encap, int width = 1);
+void vnic_spec_policy_fill(pds_vnic_spec_t *spec, uint8_t num_policies,
+                           uint8_t start_policy_index);
 
 }    // namespace api
 }    // namespace test

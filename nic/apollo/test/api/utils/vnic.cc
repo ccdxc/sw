@@ -19,7 +19,7 @@ const uint64_t k_feeder_mac = 0x101000000000;
 // artemis - one is reserved, hence max is MAX_VNIC - 1
 const uint32_t k_max_vnic = ::apollo() ? 64 : PDS_MAX_VNIC - 1;
 
-static inline void
+void
 vnic_feeder_encap_init (uint32_t id, pds_encap_type_t encap_type,
                         pds_encap_t *encap)
 {
@@ -46,8 +46,8 @@ vnic_feeder_encap_init (uint32_t id, pds_encap_type_t encap_type,
 }
 
 
-static inline void
-vnic_feeder_encap_next (pds_encap_t *encap, int width = 1)
+void
+vnic_feeder_encap_next (pds_encap_t *encap, int width)
 {
     switch (encap->type) {
     case PDS_ENCAP_TYPE_DOT1Q:
@@ -82,12 +82,30 @@ increment_num (uint8_t *num)
     }
 }
 
-static void
+void
 fill_policy_ids (pds_obj_key_t *pol_arr,
                  uint32_t start_key, uint8_t num_policy)
 {
     for (int i = 0; i < num_policy; i++) {
         pol_arr[i] = int2pdsobjkey(start_key++);
+    }
+}
+
+void
+vnic_spec_policy_fill (pds_vnic_spec_t *spec, uint8_t num_policies,
+                       uint8_t start_policy_index)
+{
+    uint8_t policy_start = TEST_POLICY_ID_BASE + start_policy_index;
+
+    spec->num_ing_v4_policy = num_policies;
+    spec->num_ing_v6_policy = num_policies;
+    spec->num_egr_v4_policy = num_policies;
+    spec->num_egr_v6_policy = num_policies;
+    for (uint8_t i = 0; i < num_policies; i++) {
+        spec->ing_v4_policy[i] = int2pdsobjkey(policy_start + i + 1);
+        spec->ing_v6_policy[i] = int2pdsobjkey(policy_start + i + 6);
+        spec->egr_v4_policy[i] = int2pdsobjkey(policy_start + i + 11);
+        spec->egr_v6_policy[i] = int2pdsobjkey(policy_start + i + 16);
     }
 }
 
@@ -98,8 +116,8 @@ vnic_feeder::init(pds_obj_key_t key, pds_obj_key_t subnet,
                   pds_encap_type_t fabric_encap_type,
                   bool binding_checks_en, bool configure_policy,
                   uint8_t tx_mirror_session_bmap,
-                  uint8_t rx_mirror_session_bmap) {
-    static uint8_t num_policy = 0;
+                  uint8_t rx_mirror_session_bmap,
+                  uint8_t num_policies_per_vnic, uint8_t start_policy_index) {
     uint64_t mac_64;
     //static uint32_t lif_id = HOST_LIF_ID_MIN;
     num_obj = num_vnic;
@@ -126,18 +144,22 @@ vnic_feeder::init(pds_obj_key_t key, pds_obj_key_t subnet,
 #endif
 
     if (configure_policy) {
-        increment_num(&num_policy);
-        spec.num_ing_v4_policy = num_policy;
-        fill_policy_ids(spec.ing_v4_policy, TEST_POLICY_ID_BASE + 1, num_policy);
-        increment_num(&num_policy);
-        spec.num_ing_v6_policy = num_policy;
-        fill_policy_ids(spec.ing_v6_policy, TEST_POLICY_ID_BASE + 5, num_policy);
-        increment_num(&num_policy);
-        spec.num_egr_v4_policy = num_policy;
-        fill_policy_ids(spec.egr_v4_policy, TEST_POLICY_ID_BASE + 10, num_policy);
-        increment_num(&num_policy);
-        spec.num_egr_v6_policy = num_policy;
-        fill_policy_ids(spec.egr_v6_policy, TEST_POLICY_ID_BASE + 15, num_policy);
+        spec.num_ing_v4_policy = num_policies_per_vnic;
+        fill_policy_ids(spec.ing_v4_policy,
+                        TEST_POLICY_ID_BASE + start_policy_index + 1,
+                        num_policies_per_vnic);
+        spec.num_ing_v6_policy = num_policies_per_vnic;
+        fill_policy_ids(spec.ing_v6_policy,
+                        TEST_POLICY_ID_BASE + start_policy_index + 6,
+                        num_policies_per_vnic);
+        spec.num_egr_v4_policy = num_policies_per_vnic;
+        fill_policy_ids(spec.egr_v4_policy,
+                        TEST_POLICY_ID_BASE + start_policy_index + 11,
+                        num_policies_per_vnic);
+        spec.num_egr_v6_policy = num_policies_per_vnic;
+        fill_policy_ids(spec.egr_v6_policy,
+                        TEST_POLICY_ID_BASE + start_policy_index + 16,
+                        num_policies_per_vnic);
     }
 }
 
@@ -238,46 +260,75 @@ static void
 vnic_attr_update (vnic_feeder& feeder, pds_vnic_spec_t *spec, uint64_t chg_bmap)
 {
     if (bit_isset(chg_bmap, VNIC_ATTR_HOSTNAME)) {
+       strcpy(feeder.spec.hostname, spec->hostname);
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_SUBNET)) {
+        feeder.spec.subnet = spec->subnet;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_VNIC_ENCAP)) {
+        feeder.spec.vnic_encap = spec->vnic_encap;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_FAB_ENCAP)) {
+        feeder.spec.fabric_encap = spec->fabric_encap;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_MAC_ADDR)) {
+        memcpy(&feeder.spec.mac_addr, &spec->mac_addr, sizeof(spec->mac_addr));
     }
-    if (bit_isset(chg_bmap, VNIC__ATTR_BINDING_CHECKS_EN)) {
+    if (bit_isset(chg_bmap, VNIC_ATTR_BINDING_CHECKS_EN)) {
+        feeder.spec.binding_checks_en = spec->binding_checks_en;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_TX_MIRROR)) {
+        feeder.spec.tx_mirror_session_bmap = spec->tx_mirror_session_bmap;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_RX_MIRROR)) {
+        feeder.spec.rx_mirror_session_bmap = spec->rx_mirror_session_bmap;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_V4_METER)) {
+        feeder.spec.v4_meter = spec->v4_meter;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_V6_METER)) {
+        feeder.spec.v6_meter = spec->v6_meter;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_SWITCH_VNIC)) {
+        feeder.spec.switch_vnic = spec->switch_vnic;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_V4_INGPOL)) {
+        feeder.spec.num_ing_v4_policy = spec->num_ing_v4_policy;
+        memcpy(&feeder.spec.ing_v4_policy, &spec->ing_v4_policy,
+               sizeof(spec->ing_v4_policy[0]) * spec->num_ing_v4_policy);
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_V6_INGPOL)) {
+        feeder.spec.num_ing_v6_policy = spec->num_ing_v6_policy;
+        memcpy(&feeder.spec.ing_v6_policy, &spec->ing_v6_policy,
+               sizeof(spec->ing_v6_policy[0]) * spec->num_ing_v6_policy);
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_V4_EGRPOL)) {
+        feeder.spec.num_egr_v4_policy = spec->num_egr_v4_policy;
+        memcpy(&feeder.spec.egr_v4_policy, &spec->egr_v4_policy,
+               sizeof(spec->egr_v4_policy[0]) * spec->num_egr_v4_policy);
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_V6_EGRPOL)) {
+        feeder.spec.num_egr_v6_policy = spec->num_egr_v6_policy;
+        memcpy(&feeder.spec.egr_v6_policy, &spec->egr_v6_policy,
+               sizeof(spec->egr_v6_policy[0]) * spec->num_egr_v6_policy);
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_HOST_IF)) {
+        feeder.spec.host_if = spec->host_if;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_TX_POLICER)) {
+        feeder.spec.tx_policer = spec->tx_policer;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_RX_POLICER)) {
+        feeder.spec.rx_policer = spec->rx_policer;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_PRIMARY)) {
+        feeder.spec.primary = spec->primary;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_MAX_SESSIONS)) {
+        feeder.spec.max_sessions = spec->max_sessions;
     }
     if (bit_isset(chg_bmap, VNIC_ATTR_FLOW_LEARN_EN)) {
+        feeder.spec.flow_learn_en = spec->flow_learn_en;
     }
 }
 
@@ -319,7 +370,7 @@ void sample_vnic_setup(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
     k_vnic_feeder.init(int2pdsobjkey(1), int2pdsobjkey(1), k_max_vnic,
                        k_feeder_mac, PDS_ENCAP_TYPE_DOT1Q,
-                       PDS_ENCAP_TYPE_MPLSoUDP, true, true, 0, 0);
+                       PDS_ENCAP_TYPE_MPLSoUDP, true, true, 0, 0, 5, 0);
     many_create(bctxt, k_vnic_feeder);
 }
 
@@ -327,7 +378,7 @@ void sample_vnic_teardown(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
     k_vnic_feeder.init(int2pdsobjkey(1), int2pdsobjkey(1), k_max_vnic,
                        k_feeder_mac, PDS_ENCAP_TYPE_DOT1Q,
-                       PDS_ENCAP_TYPE_MPLSoUDP, true, true, 0, 0);
+                       PDS_ENCAP_TYPE_MPLSoUDP, true, true, 0, 0, 5, 0);
     many_delete(bctxt, k_vnic_feeder);
 }
 
