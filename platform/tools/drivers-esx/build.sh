@@ -44,11 +44,15 @@ if  [[ $1 = "--install" ]]; then
 else
     if [ $1 -eq 67 ]
     then
-        cd drivers/esxi/ionic_en/ && cp Makefile_6.7 Makefile && make && rm -rf .build
+        cd drivers/esxi/ionic_en/ && cp Makefile_6.7 Makefile && make
+        mkdir -p .build/package/devel/linux32/release/nativeddk/NativeDDK/rpm/ionic_en/output/current/vib20/ionic-en && mv .build/package/devel/linux32/release/nativeddk/NativeDDK/rpm/ionic_en/output/current/*.vib .build/package/devel/linux32/release/nativeddk/NativeDDK/rpm/ionic_en/output/current/vib20/ionic-en
+        /opt/vmware/vibtools-6.7.0-8169922/bin/vibpublish -g build/bundle/metadata.zip -e build/bundle/offline-bundle.zip  -t ESXi,6.7.0 -v .build/package/devel/linux32/release/nativeddk/NativeDDK/rpm/ionic_en/output/current -b build/bulletin.xml -n Pensando Systems --vendor-code=PEN  --force
+        rm -rf .build
     else
-        cd drivers/esxi/ionic_en/ && cp Makefile_6.5 Makefile && make && rm -rf .build
+        cd drivers/esxi/ionic_en/ && cp Makefile_6.5 Makefile && make
+        mkdir -p .build/package/devel/linux32/release/nativeddk/NativeDDK/rpm/ionic_en/output/current/vib20/ionic-en && mv .build/package/devel/linux32/release/nativeddk/NativeDDK/rpm/ionic_en/output/current/*.vib .build/package/devel/linux32/release/nativeddk/NativeDDK/rpm/ionic_en/output/current/vib20/ionic-en
+        /opt/vmware/vibtools-6.5.0-4598673/bin/vibpublish -g build/bundle/metadata.zip -e build/bundle/offline-bundle.zip  -t ESXi,6.5.0 -v .build/package/devel/linux32/release/nativeddk/NativeDDK/rpm/ionic_en/output/current -b build/bulletin.xml -n Pensando Systems --vendor-code=PEN  --force
+        rm -rf .build
     fi
     echo "Building drivers successfull...."
 fi
-
-
