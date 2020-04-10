@@ -2,6 +2,7 @@
 import time
 import iota.harness.api as api
 def Setup(tc):
+    tc.config_only = getattr(tc.args, "verify", "yes")
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -26,18 +27,17 @@ def Trigger(tc):
         if w2.IsNaples():
             for if_ip in mgmt_ip:
                 ping_cmd = "ping -I oob_mnic0 -c3 %s" % (if_ip)
-
             api.Trigger_AddNaplesCommand(req, w2.node_name, "dhclient oob_mnic0")
             api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig oob_mnic0")
             api.Trigger_AddNaplesCommand(req, w2.node_name, ping_cmd)
-
         tc.resp = api.Trigger(req)
     else:
         tc.resp = None
-
     return api.types.status.SUCCESS
 
 def Verify(tc):
+    if tc.config_only == "no":
+        return api.types.status.SUCCESS
     if tc.resp is None:
         return api.types.status.FAILURE
     result = api.types.status.SUCCESS

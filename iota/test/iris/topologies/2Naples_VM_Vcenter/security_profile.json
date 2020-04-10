@@ -15,17 +15,17 @@
           "default"
         ],
         "timeouts": {
-          "session-idle": "90s",
-          "tcp": "45s",
-          "tcp-drop": "90s",
-          "tcp-connection-setup": "30s",
-          "tcp-half-close": "60s",
-          "tcp-close": "30s",
-          "drop": "30s",
-          "udp": "100s",
-          "udp-drop": "30s",
-          "icmp": "6s",
-          "icmp-drop": "30s"
+          "session-idle": "240s",
+          "tcp": "90s",
+          "tcp-drop": "180s",
+          "tcp-connection-setup": "60s",
+          "tcp-half-close": "120s",
+          "tcp-close": "60s",
+          "drop": "60s",
+          "udp": "200s",
+          "udp-drop": "60s",
+          "icmp": "120s",
+          "icmp-drop": "300s"
         },
         "enable-connection-tracking": true,
         "enable-tcp-normalization": true,

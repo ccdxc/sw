@@ -77,6 +77,10 @@ def get_session_per_node_info(tc, wl, node):
 def build_dict(session, sess_dict):
     # v4 key assumed
     i_flow_key  = session['spec']['initiatorflow']['flowkey']['flowkey']['v4key']
+    if 'l4fields' not in i_flow_key:
+        return
+    if 'tcpudp' not in i_flow_key['l4fields']:
+        return
     # key -> sip, dip, proto, sport, dport
     sess_i_key  = (i_flow_key['sip'], 
                        i_flow_key['dip'], 
@@ -84,6 +88,11 @@ def build_dict(session, sess_dict):
                        i_flow_key['l4fields']['tcpudp']['sport'],
                        i_flow_key['l4fields']['tcpudp']['dport'])
     sess_i_data = {'action': session['spec']['initiatorflow']['flowdata']['flowinfo']['flowaction']}
+    if 'conntrackinfo' in session['spec']['initiatorflow']['flowdata']:
+        sess_i_data['tcpwinscale'] = session['spec']['initiatorflow']['flowdata']['conntrackinfo']['tcpwinscale']
+        sess_i_data['tcpmss'] = session['spec']['initiatorflow']['flowdata']['conntrackinfo']['tcpmss']
+    if 'initiatorflowstats' in session['stats']:
+        sess_i_data['packets'] = session['stats']['initiatorflowstats']['flowpermittedpackets']
     sess_dict[sess_i_key] = sess_i_data
 
     r_flow_key  = session['spec']['responderflow']['flowkey']['flowkey']['v4key']
@@ -93,35 +102,63 @@ def build_dict(session, sess_dict):
                        r_flow_key['l4fields']['tcpudp']['sport'],
                        r_flow_key['l4fields']['tcpudp']['dport'])
     sess_r_data = {'action': session['spec']['responderflow']['flowdata']['flowinfo']['flowaction']}
+    if 'conntrackinfo' in session['spec']['responderflow']['flowdata']:
+        sess_r_data['tcpwinscale'] = session['spec']['responderflow']['flowdata']['conntrackinfo']['tcpwinscale']
+        sess_r_data['tcpmss'] = session['spec']['responderflow']['flowdata']['conntrackinfo']['tcpmss']
+    if 'responderflowstats' in session['stats']:
+        sess_r_data['packets'] = session['stats']['responderflowstats']['flowpermittedpackets']
     sess_dict[sess_r_key] = sess_r_data
 
-def compare_session_info(sess_before_dict, sess_after_dict):
+def compare_session_info(sess_before_dict, sess_after_dict, detailed=False):
     #import pdb; pdb.set_trace()
+    ret = api.types.status.SUCCESS
     for flow_key,flow_data in sess_before_dict.items():
+        (sip, dip, proto, sport, dport) = flow_key
+        sip = str(ipaddress.ip_address(sip))
+        dip = str(ipaddress.ip_address(dip))
         if flow_key in sess_after_dict:
-            if sess_before_dict[flow_key] != sess_after_dict[flow_key]:
-                (sip, dip, proto, sport, dport) = flow_key
-                sip = str(ipaddress.ip_address(sip))
-                dip = str(ipaddress.ip_address(dip))
+            api.Logger.info('flow key sip:{} dip:{} proto:{} sport:{} dport:{} '.format(sip, dip, proto, sport, dport))
+            sess_before_data = sess_before_dict[flow_key]
+            sess_after_data  = sess_after_dict[flow_key]
+            if (sess_before_data['action'] != sess_after_data['action']): 
                 action_before = sess_before_dict[flow_key]['action']
                 action_after  = sess_after_dict[flow_key]['action']
-                api.Logger.info('flow data mismatch {} {} {} {} {} -> before {}, after {}  '.format(sip, dip, proto, sport, dport, action_before, action_after))
-                return api.types.status.FAILURE
+                api.Logger.info('flow action mismatch {} {} {} {} {} -> before {}, after {}  '.format(sip, dip, proto, sport, dport, action_before, action_after))
+                ret = api.types.status.FAILURE
+                continue
+            if not detailed:
+                api.Logger.info('flow compare for action successful')
+                continue 
+            if 'tcpwinscale' not in sess_before_data:
+                continue
+            if ((sess_before_data['tcpwinscale'] != sess_after_data['tcpwinscale']) or 
+                (sess_before_data['tcpmss']      != sess_after_data['tcpmss'])): 
+                api.Logger.info('flow conntrack info mismatch key sip:{} dip:{} proto:{} sport:{} dport:{} '.format(sip, dip, proto, sport, dport))
+                api.Logger.info('before data tcpwinscale : {} tcpmss : {}'.format(sess_before_data['tcpwinscale'], sess_before_data['tcpmss']))
+                api.Logger.info('after data tcpwinscale : {} tcpmss : {}'.format(sess_after_data['tcpwinscale'], sess_after_data['tcpmss']))
+                ret = api.types.status.FAILURE
+                continue 
+            
+            if 'packets' not in sess_before_data:
+                continue
+            if (sess_after_data['packets'] < sess_before_data['packets']): 
+                api.Logger.info('flow conntrack info mismatch key sip:{} dip:{} proto:{} sport:{} dport:{} '.format(sip, dip, proto, sport, dport))
+                api.Logger.info('permitted pkts before : {}, after : {}'.format(sess_before_data['packets'], sess_after_data['packets']))
+                ret = api.types.status.FAILURE
+                continue 
+            api.Logger.info('flow compare successful')
         else:
-            (sip, dip, proto, sport, dport) = flow_key
-            sip = str(ipaddress.ip_address(sip))
-            dip = str(ipaddress.ip_address(dip))
             api.Logger.info('flow not found {} {} {} {} {}'.format(sip, dip, proto, sport, dport))
-            return api.types.status.FAILURE
-    return api.types.status.SUCCESS 
+            ret = api.types.status.FAILURE
+    return ret 
 
 def verify_session_info(tc, wl_info):
     sess_before_dict = {} 
     sess_after_dict  = {} 
-    if not (hasattr(wl_info, 'sess_before_dict')):
+    if not (hasattr(wl_info, 'sess_info_before')):
         api.Logger.info("no sessions before move")
         return api.types.status.SUCCESS
-    if not (hasattr(wl_info, 'sess_after_dict')):
+    if not (hasattr(wl_info, 'sess_info_after')):
         api.Logger.info("no sessions after move")
         return api.types.status.SUCCESS
     for session in wl_info.sess_info_before:
@@ -130,7 +167,7 @@ def verify_session_info(tc, wl_info):
     for session in wl_info.sess_info_after:
         if session != None:
             build_dict(session, sess_after_dict)
-    ret = compare_session_info(sess_before_dict, sess_after_dict)
+    ret = compare_session_info(sess_before_dict, sess_after_dict, tc.detailed)
     if ret != api.types.status.SUCCESS:
         api.Logger.info('session compare failed for wl {}'.format(wl_info.wl.workload_name))
     api.Logger.info('session compare successful for wl {}'.format(wl_info.wl.workload_name))
@@ -212,5 +249,28 @@ def vm_move_back(tc):
        vm_thread.join()
     if (api.IsNaplesNode(tc.new_node)):
        delete_ep_info(tc, tc.wl, tc.new_node)
+    return api.types.status.SUCCESS
+
+def increase_timeout():
+    #Query will get the reference of objects on store
+    store_profile_objects = agent_api.QueryConfigs(kind='SecurityProfile')
+    if len(store_profile_objects) == 0:
+        api.Logger.error("No security profile objects in store")
+        return api.types.status.FAILURE
+
+    for object in store_profile_objects:
+        #object.spec.timeouts.session-idle = "240s"
+        object.spec.timeouts.tcp = "90s"
+        object.spec.timeouts.udp = "200s"
+        object.spec.timeouts.icmp = "120s"
+        object.spec.timeouts.tcp_half_close = "120s"
+        object.spec.timeouts.tcp_close = "60s"
+        object.spec.timeouts.tcp_connection_setup = "60s"
+        object.spec.timeouts.tcp_drop = "180s"
+        object.spec.timeouts.udp_drop = "60s"
+        object.spec.timeouts.icmp_drop = "300s"
+
+    #Now push the update as we modified.
+    agent_api.UpdateConfigObjects(store_profile_objects)
     return api.types.status.SUCCESS
 

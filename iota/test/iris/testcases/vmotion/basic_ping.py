@@ -122,8 +122,7 @@ def update_node_info(tc, cmd_resp):
     for cmd in cmd_resp.commands:
         if cmd.entity_name in wl_moving.keys():
             move_info = wl_moving[cmd.entity_name]
-            api.Logger.info("updating node in for entity {} to node {}", 
-                             cmd.entity_name, move_info.new_node) 
+            api.Logger.info("updating node in for entity {} to node {}".format(cmd.entity_name, move_info.new_node)) 
             api.Trigger_UpdateNodeForCommands(cmd_resp, cmd.entity_name, 
                                               move_info.old_node, 
                                               move_info.new_node)
@@ -136,7 +135,7 @@ def wait_and_verify_fuz(tc):
     api.Trigger_TerminateAllCommands(tc.server_resp)
     for idx, cmd in enumerate(tc.fuz_client_resp.commands):
         if cmd.exit_code != 0:
-            api.Logger.error("Fuz commmand failed Workload : {}, command : {},  stdout : {} stderr : {}", cmd.entity_name, cmd.command, cmd.stdout, cmd.stderr)
+            api.Logger.error("Fuz commmand failed Workload : {}, command : {},  stdout : {} stderr : {}".format(cmd.entity_name, cmd.command, cmd.stdout, cmd.stderr))
             return api.types.status.FAILURE
 
     api.Logger.info("Fuz test successfull")
@@ -246,6 +245,13 @@ def Setup(tc):
         tc.vm_dsc_to_dsc     = True 
     tc.num_moves = int(getattr(tc.args, "num_moves", 1))
     tc.dsc_conn_type  = getattr(tc.args, "dsc_con_type", "oob")
+
+    if hasattr(tc.args, "conntrack"):
+        tc.detailed = True
+    else:
+        tc.detailed = False
+
+    vm_utils.increase_timeout()
         
     getNonNaplesNodes(tc)
     if arping.ArPing(tc) != api.types.status.SUCCESS:
