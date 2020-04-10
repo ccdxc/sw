@@ -86,6 +86,12 @@ create_vpc (pds_vpc_spec_t *pds_vpc)
 }
 
 sdk_ret_t
+create_dhcp_policy (pds_dhcp_policy_spec_t *pds_dhcp)
+{
+    return create_dhcp_policy_grpc(pds_dhcp);
+}
+
+sdk_ret_t
 create_nat_port_block (pds_nat_port_block_spec_t *pds_napt)
 {
     return create_nat_port_block_grpc(pds_napt);

@@ -9,6 +9,7 @@
 #include "gen/proto/gogo.grpc.pb.h"
 #include "gen/proto/mapping.grpc.pb.h"
 #include "gen/proto/vpc.grpc.pb.h"
+#include "gen/proto/dhcp.grpc.pb.h"
 #include "gen/proto/route.grpc.pb.h"
 #include "gen/proto/policy.grpc.pb.h"
 #include "gen/proto/subnet.grpc.pb.h"
@@ -25,6 +26,7 @@
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
+#include "nic/apollo/api/include/pds_dhcp.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/api/include/pds_policer.hpp"
@@ -96,6 +98,7 @@ pds::MappingRequest           g_mapping_req;
 pds::VnicRequest              g_vnic_req;
 pds::SubnetRequest            g_subnet_req;
 pds::VPCRequest               g_vpc_req;
+pds::DHCPPolicyRequest        g_dhcp_req;
 pds::VPCPeerRequest           g_vpc_peer_req;
 pds::TunnelRequest            g_tunnel_req;
 pds::MirrorSessionRequest     g_mirror_session_req;
@@ -292,6 +295,31 @@ create_vpc_grpc (pds_vpc_spec_t *spec)
             return SDK_RET_ERR;
         }
         g_vpc_req.clear_request();
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_dhcp_policy_grpc (pds_dhcp_policy_spec_t *spec)
+{
+    ClientContext       context;
+    DHCPPolicyResponse  response;
+    Status              ret_status;
+
+    if (spec) {
+        pds_dhcp_policy_api_spec_to_proto(g_dhcp_req.add_request(), spec);
+    }
+    if ((g_dhcp_req.request_size() >= APP_GRPC_BATCH_COUNT) || !spec) {
+        ret_status = g_dhcp_stub_->DHCPPolicyCreate(&context, g_dhcp_req, &response);
+        if (!ret_status.ok() ||
+            (response.apistatus() != types::API_STATUS_OK)) {
+            printf("create dhcp policy %s failed, status %u, response %u, err %u\n",
+                   spec ? spec->key.str() : "", ret_status.ok(),
+                   response.apistatus(), ret_status.error_code());
+            return SDK_RET_ERR;
+        }
+        g_dhcp_req.clear_request();
     }
 
     return SDK_RET_OK;

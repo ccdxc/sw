@@ -18,6 +18,7 @@
 #include "nic/apollo/api/include/pds_service.hpp"
 #include "nic/apollo/api/include/pds_tag.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
+#include "nic/apollo/api/include/pds_dhcp.hpp"
 #include "nic/apollo/api/include/pds_nat.hpp"
 #include "nic/apollo/api/internal/pds_mapping.hpp"
 #include "nic/apollo/test/scale/test_common.hpp"
@@ -34,6 +35,7 @@ sdk_ret_t read_vpc(pds_obj_key_t *key, pds_vpc_info_t *info);
 sdk_ret_t update_vpc(pds_vpc_spec_t *pds_vpc);
 sdk_ret_t delete_vpc(pds_obj_key_t *key);
 sdk_ret_t create_vpc_peer(pds_vpc_peer_spec_t *pds_vpc_peer);
+sdk_ret_t create_dhcp_policy(pds_dhcp_policy_spec_t *pds_dhcp);
 sdk_ret_t create_tag(pds_tag_spec_t *pds_tag);
 sdk_ret_t create_meter(pds_meter_spec_t *pds_meter);
 sdk_ret_t create_policer(pds_policer_spec_t *pds_policer);

@@ -120,6 +120,16 @@ create_vpc (pds_vpc_spec_t *pds_vpc)
 }
 
 sdk_ret_t
+create_dhcp_policy (pds_dhcp_policy_spec_t *pds_dhcp)
+{
+    if (pds_dhcp) {
+        return pds_dhcp_policy_create(pds_dhcp);
+    } else {
+        return SDK_RET_OK;
+    }
+}
+
+sdk_ret_t
 create_nat_port_block (pds_nat_port_block_spec_t *pds_napt)
 {
     if (pds_napt) {

@@ -10,6 +10,7 @@
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
+#include "nic/apollo/api/include/pds_dhcp.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/api/include/pds_policer.hpp"
@@ -29,6 +30,7 @@ sdk_ret_t create_remote_mapping_grpc(pds_remote_mapping_spec_t *spec);
 sdk_ret_t create_vnic_grpc(pds_vnic_spec_t *spec);
 sdk_ret_t create_subnet_grpc(pds_subnet_spec_t *spec);
 sdk_ret_t create_vpc_grpc(pds_vpc_spec_t *spec = NULL);
+sdk_ret_t create_dhcp_policy_grpc(pds_dhcp_policy_spec_t *spec);
 sdk_ret_t create_nat_port_block_grpc(pds_nat_port_block_spec_t *spec = NULL);
 sdk_ret_t read_vpc_grpc(pds_obj_key_t *key = NULL, pds_vpc_info_t *info = NULL);
 sdk_ret_t update_vpc_grpc(pds_vpc_spec_t *spec = NULL);

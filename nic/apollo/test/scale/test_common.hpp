@@ -57,6 +57,10 @@ typedef struct test_params_s {
         bool dual_stack;
         pds_device_oper_mode_t dev_oper_mode;
     };
+    // dhcp policy config
+    struct {
+        uint32_t num_dhcp_policies;
+    };
     // underlay config
     struct {
         uint32_t max_l3_if;
@@ -442,6 +446,7 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
     test_params->remote_svc_tep_vnid_base = 20000;
     test_params->max_l3_if = 2;
     test_params->max_underlay_nh = 2;
+    test_params->num_dhcp_policies = 2;
     return SDK_RET_OK;
 }
 

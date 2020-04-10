@@ -44,6 +44,37 @@ uint32_t tep_id = 0;
 #define ROUTE_TABLE_ID_BASE    4096
 
 //----------------------------------------------------------------------------
+// create dhcp relay policies
+//------------------------------------------------------------------------------
+sdk_ret_t
+create_dhcp_policies (uint32_t num_dhcp_policies, ip_addr_t *ipaddr)
+{
+    pds_dhcp_policy_spec_s policy_spec;
+    uint32_t server_ip = 0x14000001;
+    sdk_ret_t rv;
+
+    for (uint32_t i = 1; i <= num_dhcp_policies; i ++) {
+        policy_spec.key = test::int2pdsobjkey(i);
+        policy_spec.type = PDS_DHCP_POLICY_TYPE_RELAY;
+        policy_spec.relay_spec.vpc = test::int2pdsobjkey(i);
+        policy_spec.relay_spec.agent_ip = *ipaddr;
+        policy_spec.relay_spec.server_ip.af = IP_AF_IPV4;
+        policy_spec.relay_spec.server_ip.addr.v4_addr = server_ip + i;
+        rv = create_dhcp_policy(&policy_spec);
+        SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                                "create dhcp policy %s failed, ret %u",
+                                policy_spec.key.str(), rv);
+    }
+
+    rv = create_dhcp_policy(NULL);
+    SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
+                            "create dhcp policies failed, ret %u",
+                            rv);
+
+    return rv;
+}
+
+//----------------------------------------------------------------------------
 // create route tables
 //------------------------------------------------------------------------------
 sdk_ret_t
@@ -1958,6 +1989,15 @@ create_objects (void)
                        g_test_params.num_meter);
     if (ret != SDK_RET_OK) {
         return ret;
+    }
+
+    // create dhcp relays
+    if (apulu()) {
+        ret = create_dhcp_policies(g_test_params.num_dhcp_policies,
+                                   &g_test_params.device_ip);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
 
     // create mappings
