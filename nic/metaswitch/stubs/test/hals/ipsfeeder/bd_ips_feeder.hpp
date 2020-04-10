@@ -48,7 +48,7 @@ public:
 
     void trigger_delete(void) override {
         bd_input_params_t::trigger_delete();
-        pds_ms::subnet_delete(&subnet_spec, 0);
+        pds_ms::subnet_delete(subnet_spec.key, 0);
         ATG_L2_BD_ID ms_bd_id = {ATG_L2_BRIDGE_DOMAIN_EVPN, bd_id, 0};
         l2f_is.delete_bd(&ms_bd_id, NBB_CORRELATOR{0});
         subnet_uuids.erase(subnet_spec.key);
@@ -89,7 +89,7 @@ public:
         for (auto& subnet_uuid: subnet_uuids) {
             pds_subnet_spec_t subnet_spec = {0};
             subnet_spec.key = subnet_uuid;
-            pds_ms::subnet_delete(&subnet_spec, 0);
+            pds_ms::subnet_delete(subnet_spec.key, 0);
         }
         pds_ms::vpc_delete(&vpc_spec, 0);
         // TODO Fix - currently VPC delete is not calling HAL stub VRF delete

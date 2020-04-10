@@ -459,9 +459,10 @@ main (int argc, char **argv)
     sleep(5);
 #ifdef PDS_MOCKAPI
     ::testing::InitGoogleTest(&argc, argv);
-    RUN_ALL_TESTS();
+    int ret = RUN_ALL_TESTS();
 #else
     api_test_program_run(argc, argv);
 #endif
     _Exit(0);
+    return (ret);
 }

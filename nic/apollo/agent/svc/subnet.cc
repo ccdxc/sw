@@ -166,13 +166,9 @@ SubnetSvcImpl::SubnetDelete(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = pds_subnet_read(&key, &info);
-        if (ret != SDK_RET_OK) {
-            goto end;
-        }
         if (core::agent_state::state()->device()->overlay_routing_en) {
             // call the metaswitch api
-            ret = pds_ms::subnet_delete(&info.spec, bctxt);
+            ret = pds_ms::subnet_delete(key, bctxt);
         } else if (!core::agent_state::state()->pds_mock_mode()) {
             ret = pds_subnet_delete(&key, bctxt);
         }

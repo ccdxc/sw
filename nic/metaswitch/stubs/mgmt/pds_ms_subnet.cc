@@ -410,11 +410,12 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
+subnet_delete (pds_obj_key_t &key, pds_batch_ctxt_t bctxt)
 {
     types::ApiStatus ret_status;
     ms_bd_id_t bd_id = 0;
     bool delete_completed = false;
+    pds_subnet_spec_t *spec;
 
     // lock to allow only one grpc thread processing at a time
     std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
@@ -423,7 +424,19 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
         // Guard to release all pending UUIDs in case of any failures
         mgmt_uuid_guard_t uuid_guard;
 
-        bd_id = subnet_uuid_2_idx_fetch(spec->key, true);
+        bd_id = subnet_uuid_2_idx_fetch(key, true);
+        {
+            // Get the subnet spec from the store
+            auto state_ctxt = state_t::thread_context();
+            auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
+            if (subnet_obj == nullptr) {
+                throw Error(std::string("Store lookup failed for subnet ")
+                            .append(key.str()).append(" bd ")
+                            .append(std::to_string(bd_id)), SDK_RET_ENTRY_NOT_FOUND);
+            }
+            spec = &subnet_obj->spec();
+        }
+    
         // Mark as deleted so that L2F stub can release the Subnet UUID
         cache_subnet_spec (spec, bd_id, pds_ms_subnet_cache_op_t::MARK_DEL);
 
