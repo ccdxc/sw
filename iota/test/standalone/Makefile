@@ -55,6 +55,6 @@ linkmgr-40: extract-naples-fw
 linkmgr-25: extract-naples-fw
 	./regression/linkmgr/linkregression.sh ${TARGET_ID} 25Gb
 
-linkmgr-vomero: extract-naples-fw
+linkmgr-100-vomero: extract-naples-fw
 	./regression/linkmgr/linkregression.sh ${TARGET_ID} 100Gb_vomero
 
