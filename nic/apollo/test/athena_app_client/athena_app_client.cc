@@ -59,7 +59,7 @@ client_connect(string& client_sock_str)
         rx_bytes = zmq_msg_recv(&mon_msg, mon_sock, 0);
         if (rx_bytes < 0) {
             if ((zmq_errno() != EAGAIN) && (zmq_errno() != EINTR)) {
-                ret = SDK_RET_ERR;
+                ret = PDS_RET_ERR;
             }
 
         } else if (rx_bytes >= (int)sizeof(uint16_t)) {
@@ -72,7 +72,7 @@ client_connect(string& client_sock_str)
 
             case ZMQ_EVENT_CLOSED:
                 CLIENT_LOG_ERR("failed connect - socket prematurely closed\n");
-                ret = SDK_RET_ERR;
+                ret = PDS_RET_ERR;
                 break;
 
             default:
@@ -141,7 +141,7 @@ client_req_rsp(zmq_msg_t *tx_msg,
             zmq_msg_close(tx_msg);
             CLIENT_LOG_ERR("failed to send message to server: %s\n",
                            zmq_strerror(zmq_errno()));
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         zmq_msg_close(tx_msg);
     }
@@ -156,7 +156,7 @@ client_req_rsp(zmq_msg_t *tx_msg,
             zmq_msg_close(&rx_msg);
             CLIENT_LOG_ERR("failed to receive message from server: %s\n",
                            zmq_strerror(zmq_errno()));
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         status = (*rsp_handler)(&rx_msg);
         zmq_msg_close(&rx_msg);

@@ -116,21 +116,21 @@ expiry_submap_process(uint32_t submap_id,
                       pds_flow_age_expiry_type_t expiry_type,
                       uint8_t submap,
                       void *user_ctx);
-sdk_ret_t
+pds_ret_t
 init(void)
 {
     client_queue_t  *queue;
-    sdk_ret_t       ret = SDK_RET_OK;
+    pds_ret_t       ret = PDS_RET_OK;
 
     if (rte_atomic16_test_and_set(&module_inited)) {
         ret = ftl_dev_impl::init();
-        if (ret != SDK_RET_OK) {
+        if (ret != PDS_RET_OK) {
             PDS_TRACE_ERR("init failed: error %d", ret);
             return ret;
         }
 
         ret = ftl_dev_impl::pollers_qcount_get(&pollers_qcount);
-        if (ret != SDK_RET_OK) {
+        if (ret != PDS_RET_OK) {
             PDS_TRACE_ERR("pollers_qcount_get failed: error %d", ret);
             return ret;
         }
@@ -145,7 +145,7 @@ init(void)
                                           FTL_POLLERS_BURST_BUF_SZ);
                 if (!queue->poller_slot_data) {
                     PDS_TRACE_ERR("failed to allocate slot data for qid %u", qid);
-                    return SDK_RET_OOM;
+                    return PDS_RET_OOM;
                 }
             }
         }
@@ -168,40 +168,40 @@ expiry_fn_dflt(pds_flow_expiry_fn_t *ret_fn_dflt)
     return PDS_RET_OK;
 }
 
-sdk_ret_t
+pds_ret_t
 poll_control(bool user_will_poll,
              pds_flow_expiry_fn_t expiry_fn)
 {
     user_will_poll_ = user_will_poll;
     pollers_expiry_fn_set(expiry_fn);
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
-sdk_ret_t
+pds_ret_t
 force_session_expired_ts_set(bool force_expired_ts)
 {
     return ftl_dev_impl::force_session_expired_ts_set(force_expired_ts);
 }
 
-sdk_ret_t
+pds_ret_t
 force_conntrack_expired_ts_set(bool force_expired_ts)
 {
     return ftl_dev_impl::force_conntrack_expired_ts_set(force_expired_ts);
 }
 
-sdk_ret_t
+pds_ret_t
 session_scanners_metrics_get(ftl_dev_if::lif_attr_metrics_t *metrics)
 {
     return ftl_dev_impl::session_scanners_metrics_get(metrics);
 }
 
-sdk_ret_t
+pds_ret_t
 conntrack_scanners_metrics_get(ftl_dev_if::lif_attr_metrics_t *metrics)
 {
     return ftl_dev_impl::conntrack_scanners_metrics_get(metrics);
 }
 
-sdk_ret_t
+pds_ret_t
 pollers_metrics_get(ftl_dev_if::lif_attr_metrics_t *metrics)
 {
     return ftl_dev_impl::pollers_metrics_get(metrics);
@@ -212,7 +212,7 @@ session_table_depth_get(void)
 {
     uint32_t    table_depth;
 
-    return ftl_dev_impl::session_table_depth_get(&table_depth) == SDK_RET_OK ?
+    return ftl_dev_impl::session_table_depth_get(&table_depth) == PDS_RET_OK ?
            table_depth : 0;
 }
 
@@ -221,8 +221,14 @@ conntrack_table_depth_get(void)
 {
     uint32_t    table_depth;
 
-    return ftl_dev_impl::conntrack_table_depth_get(&table_depth) == SDK_RET_OK ?
+    return ftl_dev_impl::conntrack_table_depth_get(&table_depth) == PDS_RET_OK ?
            table_depth : 0;
+}
+
+uint64_t
+mpu_timestamp(void)
+{
+    return ftl_dev_impl::mpu_timestamp();
 }
 
 void
@@ -241,7 +247,7 @@ expiry_log_set(bool enable_sense)
  * contains the necessary locking but would obviously be less efficient
  * when a given queue is "overly polled".
  */
-sdk_ret_t
+pds_ret_t
 poll(uint32_t qid,
      void *user_ctx)
 {
@@ -249,18 +255,18 @@ poll(uint32_t qid,
     poller_slot_data_t          *slot_data;
     pds_flow_age_expiry_type_t  expiry_type;
     uint32_t                    burst_count;
-    sdk_ret_t                   ret = SDK_RET_OK;
+    pds_ret_t                   ret = PDS_RET_OK;
 
     if (!queue) {
         PDS_TRACE_ERR("invalid qid %u max is %u", qid, pollers_qcount);
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
 
     burst_count = FTL_POLLERS_BURST_COUNT;
     ret = ftl_dev_impl::pollers_dequeue_burst(qid, queue->poller_slot_data,
                                               FTL_POLLERS_BURST_BUF_SZ,
                                               &burst_count);
-    if ((ret == SDK_RET_OK) && burst_count) {
+    if ((ret == PDS_RET_OK) && burst_count) {
         if (expiry_log_en) {
             PDS_TRACE_DEBUG("pollers_dequeue_burst poller_qid %d burst_count %u",
                             qid, burst_count);

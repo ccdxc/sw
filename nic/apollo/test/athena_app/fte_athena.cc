@@ -24,6 +24,7 @@
 #include <getopt.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <vector>
 
 #include <rte_common.h>
 #include <rte_log.h>
@@ -79,11 +80,13 @@ char const * g_eal_args[] = {"fte",
 #define FTE_MAX_RXDSCR 256 // Max RX Descriptors
 #define FTE_PREFETCH_NLINES 7
 
+const static enum rte_rmt_call_master_t fte_call_master_type = SKIP_MASTER;
 static uint16_t nb_rxd = FTE_MAX_RXDSCR;
 static uint16_t nb_txd = FTE_MAX_TXDSCR;
 
-static rte_atomic32_t pollers_qid = RTE_ATOMIC32_INIT(-1);
-static uint32_t pollers_client_qcount;
+typedef std::vector<uint32_t> pollers_qid_vec_t;
+static pollers_qid_vec_t pollers_qid_conf[FTE_MAX_CORES];
+static rte_atomic32_t pollers_lcore_idx = RTE_ATOMIC32_INIT(-1);
 
 // Ports set in promiscuous mode off by default.
 static int promiscuous_on;
@@ -131,6 +134,8 @@ static struct rte_mempool * pktmbuf_pool[NB_SOCKETS];
 
 pds_flow_stats_t flow_stats[FTE_MAX_CORES];
 pds_flow_stats_t g_flow_stats;
+static bool fte_threads_started;
+static bool fte_threads_done;
 
 // Send burst of packets on an output interface 
 static inline void
@@ -196,7 +201,7 @@ _process (struct rte_mbuf *m, struct lcore_conf *qconf,
 
 // main processing loop
 static void
-fte_rx_loop (int poller_qid)
+fte_rx_loop (pollers_qid_vec_t *qid_vec)
 {
     struct rte_mbuf *pkts_burst[MAX_PKT_BURST];
     unsigned lcore_id;
@@ -227,10 +232,11 @@ fte_rx_loop (int poller_qid)
                         lcore_id, portid, queueid);
     }
 
-    while (1) {
-        if ((poller_qid != -1) &&
-            !ftl_pollers_client::user_will_poll()) {
-            pds_flow_age_sw_pollers_poll(poller_qid, nullptr);
+    while (!fte_threads_done) {
+        if (qid_vec && !ftl_pollers_client::user_will_poll()) {
+            for (size_t q = 0; q < qid_vec->size(); q++) {
+                pds_flow_age_sw_pollers_poll(qid_vec->at(q), nullptr);
+            }
         }
         cur_tsc = rte_rdtsc();
 
@@ -254,7 +260,7 @@ fte_rx_loop (int poller_qid)
         /*
          * Read packet from RX queues
          */
-        for (i = 0; i < qconf->n_rx_queue; ++i) {
+        for (i = 0; !fte_threads_done && (i < qconf->n_rx_queue); ++i) {
             portid = qconf->rx_queue_list[i].port_id;
             queueid = qconf->rx_queue_list[i].queue_id;
             nb_rx = rte_eth_rx_burst(portid, queueid, pkts_burst,
@@ -266,7 +272,7 @@ fte_rx_loop (int poller_qid)
             PDS_TRACE_DEBUG("Core #%u received %d pkt(s) from "
                             "port:%u queue:%u \n",
                             lcore_id, nb_rx, portid, queueid);
-            for (i = 0; i < nb_rx; i++) {
+            for (i = 0; !fte_threads_done && (i < nb_rx); i++) {
                 auto m = pkts_burst[i];
 #ifdef DEBUG
                 pkt_hex_dump_trace("PKT:",
@@ -290,38 +296,63 @@ fte_rx_loop (int poller_qid)
 static int
 fte_launch_one_lcore (__attribute__((unused)) void *dummy)
 {
-    int qid;
+    pollers_qid_vec_t *qid_vec;
+    uint32_t lcore_id;
+    int lcore_idx;
 
+    lcore_id = rte_lcore_id();
     if (g_athena_app_mode == ATHENA_APP_MODE_CPP) {
-        fte_thread_init(rte_lcore_id());
+        fte_thread_init(lcore_id);
     }
 
-    /*
-     * rte_lcore_index(rte_lcore_id()) does not return zero-based index
-     * as expected so derive poller qid from an atomic.
-     */
-    qid = rte_atomic32_add_return(&pollers_qid, 1);
-    if (qid >= (int)pollers_client_qcount) {
-        qid = -1;
-    }
-    PDS_TRACE_DEBUG("Launching fte_rx_loop with poller qid %d", qid);
-
-    fte_rx_loop(qid);
+    lcore_idx = rte_atomic32_add_return(&pollers_lcore_idx, 1);
+    qid_vec = lcore_idx < FTE_MAX_CORES ? 
+              &pollers_qid_conf[lcore_idx] : nullptr;
+    PDS_TRACE_DEBUG("Launching fte_rx_loop on core_id %u(#%d) with %d "
+                    "poller queues", lcore_id, lcore_idx,
+                    qid_vec ? (int)qid_vec->size() : 0);
+    fte_rx_loop(qid_vec);
     return 0;
 }
 
 static void
 _init_pollers_client (void)
 {
+    uint32_t lcore_count;
+    uint32_t total_qcount;
+    uint32_t per_lcore_qcount;
+    uint32_t qid;
+
     if (pds_flow_age_init() != PDS_RET_OK) {
         rte_exit(EXIT_FAILURE, "failed pds_flow_age_init");
     }
 
-    pollers_client_qcount = ftl_pollers_client::qcount_get();
-    if (rte_lcore_count() < pollers_client_qcount) {
-        PDS_TRACE_DEBUG("Number of lcores (%u) is less than number of"
-                        " poller queues (%u)", rte_lcore_count(),
-                        pollers_client_qcount);
+    lcore_count = std::min(rte_lcore_count(), (uint32_t)FTE_MAX_CORES);
+    if (lcore_count && (fte_call_master_type == SKIP_MASTER)) {
+        lcore_count--;
+    }
+    total_qcount = ftl_pollers_client::qcount_get();
+    PDS_TRACE_DEBUG("lcore_count: %u pollers_qcount: %u",
+                    lcore_count, total_qcount);
+    if (lcore_count) {
+        per_lcore_qcount = std::max(total_qcount / lcore_count, (uint32_t)1);
+        qid = 0;
+        for (uint32_t lc = 0; lc < lcore_count; lc++) {
+
+            /*
+             * Last lcore gets all the remaining queues.
+             */
+            if (lc == (lcore_count - 1)) {
+                per_lcore_qcount = total_qcount - qid;
+            }
+            for (uint32_t q = 0; q < per_lcore_qcount; q++) {
+                if (qid >= total_qcount) {
+                    break;
+                }
+                pollers_qid_conf[lc].push_back(qid);
+                qid++;
+            }
+        }
     }
 }
 
@@ -446,7 +477,7 @@ accumulate_stats (pds_flow_stats_t *stats)
     return;
 }
 
-sdk_ret_t
+pds_ret_t
 fte_dump_flows(zmq_msg_t *rx_msg,
                zmq_msg_t *tx_msg)
 {
@@ -455,10 +486,10 @@ fte_dump_flows(zmq_msg_t *rx_msg,
     if (tx_msg) {
         SERVER_RSP_INIT(tx_msg, rsp, test::athena_app::server_rsp_t);
     }
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
-sdk_ret_t
+pds_ret_t
 fte_dump_flow_stats(zmq_msg_t *rx_msg,
                     zmq_msg_t *tx_msg)
 {
@@ -477,7 +508,7 @@ fte_dump_flow_stats(zmq_msg_t *rx_msg,
     if (tx_msg) {
         SERVER_RSP_INIT(tx_msg, rsp, test::athena_app::server_rsp_t);
     }
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
 static void
@@ -913,7 +944,8 @@ fte_main (void)
 
     ret = 0;
     // launch per-lcore init on every slave lcore
-    rte_eal_mp_remote_launch(fte_launch_one_lcore, NULL, SKIP_MASTER);
+    fte_threads_started = true;
+    rte_eal_mp_remote_launch(fte_launch_one_lcore, NULL, fte_call_master_type);
 
     return ret;
 }
@@ -926,6 +958,19 @@ fte_init (void)
     fte_main();
 
     return;
+}
+
+void
+fte_fini (void)
+{
+    if (fte_threads_started) {
+        fte_threads_done = true;
+        rte_eal_mp_wait_lcore();
+    }
+
+    /*
+     * Anything else in fte_athena that needs explicit cleanup goes here.
+     */
 }
 
 } // namespace fte

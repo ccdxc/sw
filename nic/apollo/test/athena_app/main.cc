@@ -536,7 +536,7 @@ main (int argc, char **argv)
          * Fail the test if there were a script parsing error;
          * otherwise, let the test script determine its own fate.
          */
-        if (script_exec(script_dir, script_fname) != SDK_RET_OK) {
+        if (script_exec(script_dir, script_fname) != PDS_RET_OK) {
             success = false;
             goto done;
         }
@@ -562,7 +562,7 @@ main (int argc, char **argv)
     recv_packet();
 #endif /* __x86_64__ */
 
-    if (server_init() == SDK_RET_OK) {
+    if (server_init() == PDS_RET_OK) {
         server_poll();
     } else {
         program_sleep();
@@ -582,6 +582,7 @@ done:
 bool
 app_test_exit(test_vparam_ref_t vparam)
 {
+    fte_ath::fte_fini();
     pds_global_teardown();
     rte_exit(vparam.expected_bool() ? EXIT_SUCCESS : EXIT_FAILURE,
              __FUNCTION__);

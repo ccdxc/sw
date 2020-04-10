@@ -433,18 +433,22 @@
  * MPU stalls, the division result will be referenced as late as possible.
  *
  * Reference Capri Clock spreadsheet
- * (https://docs.google.com/spreadsheets/d/1LNUhA67uG3bOdQh8Z3XaKZ_b_CRh9j_bm88uMkpCOqg/edit?ts=5e0b93ee#gi)
- * Timestamp bits 47:23 give interval of 1.01E-02 (which is very close to 1/100 s).
+ * (https://docs.google.com/spreadsheets/d/1LNUhA67uG3bOdQh8Z3XaKZ_b_CRh9j_bm88uMkpCOqg)
+ * Timestamp bits 47:23 give interval of 1.01E-02 (10.1ms).
  *
- * Note also that the P4 timestamp written in session/conntrack entries already
- * reflect bits [47:23] of the system time.
+ * Note also that the P4 timestamp written in session/conntrack entries currently
+ * reflects bits [40:23] of the system time.
  */
+#define MPU_SESSION_TIMESTAMP_SELECT MPU_SESSION_TIMESTAMP_MSB:MPU_SESSION_TIMESTAMP_LSB
+
 #define SCANNER_TS_CALC(_timestamp_data)                                        \
-    sub         r_timestamp, r_timestamp[47:23], _timestamp_data;               \
+    sub         r_timestamp, r_timestamp[MPU_SESSION_TIMESTAMP_SELECT],         \
+                _timestamp_data;                                                \
+    and         r_timestamp, r_timestamp, MPU_SESSION_TIMESTAMP_MASK;           \
     divi        r_timestamp, r_timestamp, 100;                                  \
 
 #define SESSION_EXPIRY_CHECK_e(_exp_bit, _base_tmo)                             \
-    slt.e       c1, _base_tmo, r_timestamp;                                     \
+    sle.e       c1, _base_tmo, r_timestamp;                                     \
     phvwri.c1   p.session_kivec0_##_exp_bit##_expired, 1;                       \
 
 #define SESSION_EXPIRY_CHECK_KIVEC2_e(_expiry_bit)                              \
@@ -508,24 +512,24 @@
                                             SESSION_KIVEC5_OTHERS_TMO)          \
 
 #define CONNTRACK_EXPIRY_CHECK_OTHERS_FLOW_STATES_e(_exp_bit, _others_tmo)      \
-    slt.e       c1, _others_tmo, r_timestamp;                                   \
+    sle.e       c1, _others_tmo, r_timestamp;                                   \
     phvwri.c1   p.session_kivec0_##_exp_bit##_expired, 1;                       \
     
 #define CONNTRACK_EXPIRY_CHECK_ICMP_FLOW_STATES_e(_exp_bit, _icmp_tmo)          \
-    slt.e       c1, _icmp_tmo, r_timestamp;                                     \
+    sle.e       c1, _icmp_tmo, r_timestamp;                                     \
     phvwri.c1   p.session_kivec0_##_exp_bit##_expired, 1;                       \
     
 #define CONNTRACK_EXPIRY_CHECK_UDP_FLOW_STATES_e(_exp_bit, _udp_tmo,            \
                                                  _udp_est_tmo)                  \
     seq         c1, r_flow_state, CONNTRACK_FLOW_STATE_UNESTABLISHED;           \
-    slt.c1.e    c1, _udp_tmo, r_timestamp;                                      \
+    sle.c1.e    c1, _udp_tmo, r_timestamp;                                      \
     phvwri.c1   p.session_kivec0_##_exp_bit##_expired, 1;                       \
-    slt.e       c1, _udp_est_tmo, r_timestamp;                                  \
+    sle.e       c1, _udp_est_tmo, r_timestamp;                                  \
     phvwri.c1   p.session_kivec0_##_exp_bit##_expired, 1;                       \
     
 #define CONNTRACK_BRCASE_FLOW_STATE_e(_flow_state, _exp_bit, _tmo)              \
   .brcase _flow_state;                                                          \
-    slt.e       c1, _tmo, r_timestamp;                                          \
+    sle.e       c1, _tmo, r_timestamp;                                          \
     phvwri.c1   p.session_kivec0_##_exp_bit##_expired, 1;                       \
 
 #define CONNTRACK_BRCASE_FLOW_STATE_UNUSED_e(_unused_state)                     \

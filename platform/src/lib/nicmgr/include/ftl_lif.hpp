@@ -148,6 +148,9 @@ typedef enum {
     FTL_LIF_EV_QUEUES_STOP_COMPLETE,
     FTL_LIF_EV_POLLERS_FLUSH,
     FTL_LIF_EV_POLLERS_DEQ_BURST,
+    FTL_LIF_EV_MPU_TIMESTAMP_INIT,
+    FTL_LIF_EV_MPU_TIMESTAMP_START,
+    FTL_LIF_EV_MPU_TIMESTAMP_STOP,
     FTL_LIF_EV_ACCEL_AGING_CONTROL,
 
     FTL_LIF_EV_MAX
@@ -175,6 +178,9 @@ typedef enum {
     FTL_DEV_INDEX_STRINGIFY(FTL_LIF_EV_QUEUES_STOP_COMPLETE),       \
     FTL_DEV_INDEX_STRINGIFY(FTL_LIF_EV_POLLERS_FLUSH),              \
     FTL_DEV_INDEX_STRINGIFY(FTL_LIF_EV_POLLERS_DEQ_BURST),          \
+    FTL_DEV_INDEX_STRINGIFY(FTL_LIF_EV_MPU_TIMESTAMP_INIT),         \
+    FTL_DEV_INDEX_STRINGIFY(FTL_LIF_EV_MPU_TIMESTAMP_START),        \
+    FTL_DEV_INDEX_STRINGIFY(FTL_LIF_EV_MPU_TIMESTAMP_STOP),         \
     FTL_DEV_INDEX_STRINGIFY(FTL_LIF_EV_ACCEL_AGING_CONTROL),        \
  
 typedef ftl_lif_event_t (FtlLif::*ftl_lif_action_t)(ftl_lif_event_t event,
@@ -328,6 +334,7 @@ public:
 
     ftl_status_code_t init(const scanners_init_cmd_t *cmd);
     ftl_status_code_t init(const pollers_init_cmd_t *cmd);
+    ftl_status_code_t init(const mpu_timestamp_init_cmd_t *cmd);
 
     ftl_status_code_t start(void);
     ftl_status_code_t sched_start_single(uint32_t qid);
@@ -375,6 +382,36 @@ private:
     uint32_t                quiesce_qid_;
     uint32_t                quiescing   : 1,
                             unused      : 31;
+};
+
+/**
+ * MPU timestamp access class
+ */
+class mpu_timestamp_access_t {
+public:
+    mpu_timestamp_access_t(FtlLif& lif) :
+        lif(lif),
+        v_qstate(nullptr)
+    {
+    }
+
+    void reset(volatile uint8_t *qstate_vaddr)
+    {
+        v_qstate = (volatile mpu_timestamp_qstate_t *)qstate_vaddr;
+    }
+
+    uint64_t curr_timestamp(void)
+    {
+        /*
+         * Only HW platform has VA access to qstate;
+         * SIM would not, but then SIM doesn't require timestamp anyway.
+         */
+        return v_qstate ? v_qstate->timestamp : 0;
+    }
+
+private:
+    FtlLif&                 lif;
+    volatile mpu_timestamp_qstate_t *v_qstate;
 };
 
 /**
@@ -426,6 +463,7 @@ public:
 
     uint64_t LifIdGet(void) { return hal_lif_info_.lif_id; }
     const std::string& LifNameGet(void) { return lif_name; }
+    uint64_t mpu_timestamp(void) { return mpu_timestamp_access.curr_timestamp(); }
 
     lif_info_t                  hal_lif_info_;
 
@@ -450,6 +488,8 @@ private:
     ftl_lif_queues_ctl_t        session_scanners_ctl;
     ftl_lif_queues_ctl_t        conntrack_scanners_ctl;
     ftl_lif_queues_ctl_t        pollers_ctl;
+    ftl_lif_queues_ctl_t        mpu_timestamp_ctl;
+    mpu_timestamp_access_t      mpu_timestamp_access;
 
     // PD Info
     PdClient                    *pd;
@@ -509,6 +549,12 @@ private:
                                                  ftl_lif_devcmd_ctx_t& devcmd_ctx);
     ftl_lif_event_t ftl_lif_scanners_quiesce_action(ftl_lif_event_t event,
                                                     ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_mpu_timestamp_init_action(ftl_lif_event_t event,
+                                                      ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_mpu_timestamp_start_action(ftl_lif_event_t event,
+                                                       ftl_lif_devcmd_ctx_t& devcmd_ctx);
+    ftl_lif_event_t ftl_lif_mpu_timestamp_stop_action(ftl_lif_event_t event,
+                                                      ftl_lif_devcmd_ctx_t& devcmd_ctx);
     ftl_lif_event_t ftl_lif_accel_aging_ctl_action(ftl_lif_event_t event,
                                                    ftl_lif_devcmd_ctx_t& devcmd_ctx);
 

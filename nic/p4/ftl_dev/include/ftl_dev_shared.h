@@ -46,6 +46,7 @@
 #define FTL_DEV_QTYPE_SCANNER_SESSION           0
 #define FTL_DEV_QTYPE_SCANNER_CONNTRACK         1
 #define FTL_DEV_QTYPE_POLLER                    2
+#define FTL_DEV_QTYPE_MPU_TIMESTAMP             3
 
 /*
  * Session Info (P4 session_info_t)
@@ -76,6 +77,13 @@
 #define SCANNER_SESSION_CB_TABLE_SUMMARIZE_OFFSET (2 * HW_CB_SINGLE_BYTES)
 #define SCANNER_SESSION_CB_TABLE_METRICS0_OFFSET  (3 * HW_CB_SINGLE_BYTES)
 
+/*
+ * MPU Timestamp Control Block size
+ */
+#define MPU_TIMESTAMP_CB_TABLE_BYTES            64
+#define MPU_TIMESTAMP_CB_TABLE_BYTES_SHFT       6
+#define MPU_TIMESTAMP_CB_TABLE_MULTIPLE         (MPU_TIMESTAMP_CB_TABLE_BYTES_SHFT - \
+                                                HW_CB_SINGLE_BYTES_SHFT + 1)
 /*
  * Poller Control Block size
  */
@@ -167,7 +175,7 @@
  */
 
 #define SCANNER_POLLER_QFULL_REPOST_TIMER       CAPRI_MEM_FAST_TIMER_START
-#define SCANNER_POLLER_QFULL_REPOST_TICKS       100  // 100us
+#define SCANNER_POLLER_QFULL_REPOST_TICKS       100  // 100 x 1.2us
 
 /*
  * scanner reschedule time upon range_full but when no non-empty expiry maps
@@ -176,11 +184,78 @@
  * 0.5 sec or less.
  */
 #define SCANNER_RANGE_EMPTY_RESCHED_TIMER       CAPRI_MEM_SLOW_TIMER_START
-#define SCANNER_RANGE_EMPTY_RESCHED_TICKS       300  // 300ms
+#define SCANNER_RANGE_EMPTY_RESCHED_TICKS       200  // 200 x 1.2ms
+ 
+/*
+ * Timestamp is in clock ticks with clock speed of 833Mhz (Capri), or
+ * (833 * 1M) ticks per second, i.e., 1.2ns per tick.
+ *
+ * Reference Capri Clock spreadsheet
+ * (https://docs.google.com/spreadsheets/d/1LNUhA67uG3bOdQh8Z3XaKZ_b_CRh9j_bm88uMkpCOqg/edit?ts=5e0b93ee#gi)
+ * Timestamp bits 47:23 give interval of 1.01E-02 (10.1ms).
+ *
+ * Note also that the P4 timestamps written into session/conntrack entries currently
+ * reflect only a subset of the bits.
+ */
+#define MPU_SESSION_TIMESTAMP_LSB               23
+#define MPU_SESSION_TIMESTAMP_BITS              18
+#define MPU_SESSION_TIMESTAMP_MSB               (MPU_SESSION_TIMESTAMP_LSB + \
+                                                 MPU_SESSION_TIMESTAMP_BITS - 1)
+#define MPU_SESSION_TIMESTAMP_MASK              ((1 << MPU_SESSION_TIMESTAMP_BITS) - 1)
+
+/*
+ * MPU timestamp rescheduling interval and undervalue, i.e., number of ticks
+ * a SW read would have been behind.
+ */
+#define MPU_TIMESTAMP_RESCHED_TIMER             CAPRI_MEM_SLOW_TIMER_START
+#define MPU_TIMESTAMP_RESCHED_TICKS             30   // 30 x 1.2ms
+#define MPU_TIMESTAMP_RESCHED_MS                36
+
+/*
+ * 36 / 10.1 rounded up
+ */
+#define MPU_TIMESTAMP_UNDERVALUE_TICKS          ((MPU_TIMESTAMP_RESCHED_MS / 10) + 1)
  
 #ifdef __cplusplus
 
 namespace ftl_dev_if {
+
+static inline uint32_t
+scanner_session_timestamp(uint64_t mpu_timestamp,
+                          bool underage_adjust = false)
+{
+    uint32_t ts = (uint32_t)(mpu_timestamp >> MPU_SESSION_TIMESTAMP_LSB);
+
+    if (underage_adjust) {
+        ts += MPU_TIMESTAMP_UNDERVALUE_TICKS;
+    }
+    return ts & MPU_SESSION_TIMESTAMP_MASK;
+}
+
+static inline uint32_t
+scanner_session_timestamp_diff(uint32_t session_ts_end,
+                               uint32_t session_ts_start)
+{
+    return (session_ts_end - session_ts_start) &
+           MPU_SESSION_TIMESTAMP_MASK;
+}
+/*
+ * For the time being, conntrack timestamp uses the same format as
+ * session timestamp.
+ */
+static inline uint32_t
+scanner_conntrack_timestamp(uint64_t mpu_timestamp,
+                            bool underage_adjust = false)
+{
+    return scanner_session_timestamp(mpu_timestamp, underage_adjust);
+}
+
+static inline uint32_t
+scanner_conntrack_timestamp_diff(uint32_t conntrack_ts_end,
+                                 uint32_t conntrack_ts_start)
+{
+    return scanner_session_timestamp_diff(conntrack_ts_end, conntrack_ts_start);
+}
 
 /**
  * qstate_1ring_cb_t - Standard qstate control block, with 1 set of
@@ -273,6 +348,17 @@ typedef struct {
     scanner_session_summarize_t summarize;
     scanner_session_metrics0_t  metrics0;
 } __attribute__((packed)) scanner_session_qstate_t;
+
+/**
+ * mpu_timestamp_qstate_t - MPU Timestamp queue state
+ */
+typedef struct {
+    qstate_1ring_cb_t       qstate_1ring;
+    uint64_t                timestamp;
+    uint64_t                num_updates;
+    uint8_t                 pad[34];
+    scanner_session_cb_activate_t cb_activate;  // must be last in CB
+} __attribute__((packed)) mpu_timestamp_qstate_t;
 
 /**
  * poller_qstate_t - Poller control block

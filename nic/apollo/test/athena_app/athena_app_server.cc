@@ -44,9 +44,9 @@ server_msg_process(zmq_msg_t *rx_msg,
     server_req_t            *req;
     server_msg_proc_fn_t    msg_proc_fn;
 
-    if (server_msg_size_check(rx_msg, sizeof(server_req_t)) != SDK_RET_OK) {
+    if (server_msg_size_check(rx_msg, sizeof(server_req_t)) != PDS_RET_OK) {
         SERVER_RSP_INIT(tx_msg, rsp, server_rsp_t);
-        return (rsp->status = SDK_RET_INVALID_ARG);
+        return (rsp->status = PDS_RET_INVALID_ARG);
     }
 
     /*
@@ -64,7 +64,7 @@ server_msg_process(zmq_msg_t *rx_msg,
 
     TEST_LOG_ERR("unknown command: %s\n", req->cmd_str);
     SERVER_RSP_INIT(tx_msg, rsp, server_rsp_t);
-    return (rsp->status = SDK_RET_INVALID_OP);
+    return (rsp->status = PDS_RET_INVALID_OP);
 }
 
 static void

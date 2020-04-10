@@ -50,29 +50,29 @@ typedef enum pds_flow_state_e {
 typedef struct pds_conntrack_data_s {
     pds_flow_type_t     flow_type;     ///< Flow Type
     pds_flow_state_t    flow_state;    ///< Flow State
-} pds_conntrack_data_t;
+} __PACK__ pds_conntrack_data_t;
 
 /// \brief Connection tracking key
 typedef struct pds_conntrack_key_s {
     uint32_t    conntrack_id;    ///< Connection Tracking State ID
-} pds_conntrack_key_t;
+} __PACK__ pds_conntrack_key_t;
 
 /// \brief Connection tracking specification
 typedef struct pds_conntrack_spec_s {
     pds_conntrack_key_t     key;    ///< Connection tracking key
     pds_conntrack_data_t    data;  ///< Connection tracking data
-} pds_conntrack_spec_t;
+} __PACK__ pds_conntrack_spec_t;
 
 /// \brief Connection tracking status
 typedef struct pds_conntrack_status_s {
     uint32_t    timestamp;          ///< Current timestamp
-} pds_conntrack_status_t;
+} __PACK__ pds_conntrack_status_t;
 
 /// \brief Epoch info
 typedef struct pds_conntrack_info_s {
     pds_conntrack_spec_t      spec;      ///< Specification
     pds_conntrack_status_t    status;    ///< Status
-} pds_conntrack_info_t;
+} __PACK__ pds_conntrack_info_t;
 
 /// \brief     create conntrack state entry
 /// \param[in] spec conntrack specification

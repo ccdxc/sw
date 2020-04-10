@@ -2,6 +2,8 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = scanner_session.p4bin
 MODULE_PIPELINE = athena
+MODULE_SRCS = ${MODULE_SRC_DIR}/scanner_session.p4 \
+              ${MODULE_SRC_DIR}/mpu_timestamp.p4
 MODULE_NCC_OPTS = --p4-plus --pd-gen --asm-out --no-ohi \
                   --two-byte-profile --fe-flags="-I${TOPDIR} -I${SDKDIR} -I${SDKDIR}" \
                                   --gen-dir ${BLD_P4GEN_DIR}

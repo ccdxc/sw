@@ -153,11 +153,6 @@ ftl_lif_state_event_t           FtlLif::lif_post_init_ev_table[] = {
         FTL_LIF_ST_SAME,
     },
     {
-        FTL_LIF_EV_GETATTR,
-        &FtlLif::ftl_lif_getattr_action,
-        FTL_LIF_ST_SAME,
-    },
-    {
         FTL_LIF_EV_ACCEL_AGING_CONTROL,
         &FtlLif::ftl_lif_accel_aging_ctl_action,
         FTL_LIF_ST_SAME,
@@ -186,11 +181,6 @@ ftl_lif_state_event_t           FtlLif::lif_queues_reset_ev_table[] = {
     {
         FTL_LIF_EV_ANY,
         &FtlLif::ftl_lif_reject_action,
-        FTL_LIF_ST_SAME,
-    },
-    {
-        FTL_LIF_EV_GETATTR,
-        &FtlLif::ftl_lif_getattr_action,
         FTL_LIF_ST_SAME,
     },
     {
@@ -255,13 +245,13 @@ ftl_lif_state_event_t           FtlLif::lif_queues_pre_init_ev_table[] = {
         FTL_LIF_ST_SAME,
     },
     {
-        FTL_LIF_EV_GETATTR,
-        &FtlLif::ftl_lif_getattr_action,
+        FTL_LIF_EV_ACCEL_AGING_CONTROL,
+        &FtlLif::ftl_lif_accel_aging_ctl_action,
         FTL_LIF_ST_SAME,
     },
     {
-        FTL_LIF_EV_ACCEL_AGING_CONTROL,
-        &FtlLif::ftl_lif_accel_aging_ctl_action,
+        FTL_LIF_EV_MPU_TIMESTAMP_INIT,
+        &FtlLif::ftl_lif_mpu_timestamp_init_action,
         FTL_LIF_ST_SAME,
     },
     {
@@ -328,6 +318,21 @@ ftl_lif_state_event_t           FtlLif::lif_queues_init_transition_ev_table[] = 
     {
         FTL_LIF_EV_SCANNERS_STOP,
         &FtlLif::ftl_lif_null_action,
+        FTL_LIF_ST_SAME,
+    },
+    {
+        FTL_LIF_EV_MPU_TIMESTAMP_INIT,
+        &FtlLif::ftl_lif_mpu_timestamp_init_action,
+        FTL_LIF_ST_SAME,
+    },
+    {
+        FTL_LIF_EV_MPU_TIMESTAMP_START,
+        &FtlLif::ftl_lif_mpu_timestamp_start_action,
+        FTL_LIF_ST_SAME,
+    },
+    {
+        FTL_LIF_EV_MPU_TIMESTAMP_STOP,
+        &FtlLif::ftl_lif_mpu_timestamp_stop_action,
         FTL_LIF_ST_SAME,
     },
     {
@@ -402,6 +407,16 @@ ftl_lif_state_event_t           FtlLif::lif_queues_stopping_ev_table[] = {
         FTL_LIF_ST_SAME,
     },
     {
+        FTL_LIF_EV_MPU_TIMESTAMP_START,
+        &FtlLif::ftl_lif_mpu_timestamp_start_action,
+        FTL_LIF_ST_SAME,
+    },
+    {
+        FTL_LIF_EV_MPU_TIMESTAMP_STOP,
+        &FtlLif::ftl_lif_mpu_timestamp_stop_action,
+        FTL_LIF_ST_SAME,
+    },
+    {
         FTL_LIF_EV_POLLERS_DEQ_BURST,
         &FtlLif::ftl_lif_pollers_deq_burst_action,
         FTL_LIF_ST_SAME,
@@ -468,6 +483,16 @@ ftl_lif_state_event_t           FtlLif::lif_queues_started_ev_table[] = {
         FTL_LIF_ST_SAME,
     },
     {
+        FTL_LIF_EV_MPU_TIMESTAMP_START,
+        &FtlLif::ftl_lif_mpu_timestamp_start_action,
+        FTL_LIF_ST_SAME,
+    },
+    {
+        FTL_LIF_EV_MPU_TIMESTAMP_STOP,
+        &FtlLif::ftl_lif_mpu_timestamp_stop_action,
+        FTL_LIF_ST_SAME,
+    },
+    {
         FTL_LIF_EV_POLLERS_FLUSH,
         &FtlLif::ftl_lif_pollers_flush_action,
         FTL_LIF_ST_SAME,
@@ -503,6 +528,8 @@ static void poller_cb_activate(const mem_access_t *access);
 static void poller_cb_deactivate(const mem_access_t *access);
 static void scanner_session_cb_activate(const mem_access_t *access);
 static void scanner_session_cb_deactivate(const mem_access_t *access);
+static void mpu_timestamp_cb_activate(const mem_access_t *access);
+static void mpu_timestamp_cb_deactivate(const mem_access_t *access);
 static const char *lif_state_str(ftl_lif_state_t state);
 static const char *lif_event_str(ftl_lif_event_t event);
 
@@ -525,6 +552,9 @@ static const opcode2event_map_t opcode2event_map = {
     {FTL_DEVCMD_OPCODE_SCANNERS_START,         FTL_LIF_EV_SCANNERS_START},
     {FTL_DEVCMD_OPCODE_SCANNERS_START_SINGLE,  FTL_LIF_EV_SCANNERS_START_SINGLE},
     {FTL_DEVCMD_OPCODE_SCANNERS_STOP,          FTL_LIF_EV_SCANNERS_STOP},
+    {FTL_DEVCMD_OPCODE_MPU_TIMESTAMP_INIT,     FTL_LIF_EV_MPU_TIMESTAMP_INIT},
+    {FTL_DEVCMD_OPCODE_MPU_TIMESTAMP_START,    FTL_LIF_EV_MPU_TIMESTAMP_START},
+    {FTL_DEVCMD_OPCODE_MPU_TIMESTAMP_STOP,     FTL_LIF_EV_MPU_TIMESTAMP_STOP},
     {FTL_DEVCMD_OPCODE_ACCEL_AGING_CONTROL,    FTL_LIF_EV_ACCEL_AGING_CONTROL},
 };
 
@@ -569,6 +599,8 @@ FtlLif::FtlLif(FtlDev& ftl_dev,
     conntrack_scanners_ctl(*this, FTL_QTYPE_SCANNER_CONNTRACK,
                            spec->conntrack_hw_scanners),
     pollers_ctl(*this, FTL_QTYPE_POLLER, spec->sw_pollers),
+    mpu_timestamp_ctl(*this, FTL_QTYPE_MPU_TIMESTAMP, 1),
+    mpu_timestamp_access(*this),
     pd(ftl_dev.PdClientGet()),
     dev_api(ftl_dev.DevApiGet()),
     normal_age_access_(*this),
@@ -618,7 +650,10 @@ FtlLif::FtlLif(FtlDev& ftl_dev,
 FtlLif::~FtlLif()
 {
     ftl_lif_devcmd_ctx_t    devcmd_ctx;
+    lif_reset_cmd_t         devcmd_reset = {0};
 
+    devcmd_ctx.req = (ftl_devcmd_t *)&devcmd_reset;
+    devcmd_reset.quiesce_check = true;
     devcmd_ctx.status = FTL_RC_EAGAIN;
     while (devcmd_ctx.status == FTL_RC_EAGAIN) {
         ftl_lif_state_machine(FTL_LIF_EV_DESTROY, devcmd_ctx);
@@ -774,6 +809,12 @@ FtlLif::ftl_lif_create_action(ftl_lif_event_t event,
         .type_num = FTL_QTYPE_POLLER,
         .size = HW_CB_MULTIPLE(POLLER_CB_TABLE_BYTES_SHFT),
         .entries = log_2(spec->sw_pollers),
+    };
+
+    pd_qinfo[FTL_QTYPE_MPU_TIMESTAMP] = {
+        .type_num = FTL_QTYPE_MPU_TIMESTAMP,
+        .size = HW_CB_MULTIPLE(MPU_TIMESTAMP_CB_TABLE_BYTES_SHFT),
+        .entries = log_2(1),
     };
 
     hal_lif_info_.type = sdk::platform::LIF_TYPE_SERVICE;
@@ -945,6 +986,10 @@ FtlLif::ftl_lif_getattr_action(ftl_lif_event_t event,
                 devcmd_ctx.status = pollers_ctl.metrics_get(metrics);
                 break;
 
+            case FTL_QTYPE_MPU_TIMESTAMP:
+                devcmd_ctx.status = mpu_timestamp_ctl.metrics_get(metrics);
+                break;
+
             default:
                 NIC_LOG_ERR("{}: Unsupported qtype {}", LifNameGet(), cmd->qtype);
                 devcmd_ctx.status = FTL_RC_EQTYPE;
@@ -1008,6 +1053,7 @@ FtlLif::ftl_lif_identify_action(ftl_lif_event_t event,
                                        spec->conntrack_burst_resched_time_us;
     rsp->base.qident[FTL_QTYPE_POLLER].qcount = pollers_ctl.qcount();
     rsp->base.qident[FTL_QTYPE_POLLER].qdepth = spec->sw_poller_qdepth;
+    rsp->base.qident[FTL_QTYPE_MPU_TIMESTAMP].qcount = 1;
 
     cpl->ver = IDENTITY_VERSION_1;
     return FTL_LIF_EV_NULL;
@@ -1047,12 +1093,14 @@ FtlLif::ftl_lif_reset_action(ftl_lif_event_t event,
      * Special handling for the case where lif_reset is
      * called before scanners are initialized.
      */
-    if (session_scanners_ctl.empty_qstate_access() ||
-        conntrack_scanners_ctl.empty_qstate_access()) {
+    if (session_scanners_ctl.empty_qstate_access()      ||
+        conntrack_scanners_ctl.empty_qstate_access()    ||
+        mpu_timestamp_ctl.empty_qstate_access()) {
         return FTL_LIF_EV_QUEUES_STOP_COMPLETE;
     }
     session_scanners_ctl.stop();
     conntrack_scanners_ctl.stop();
+    mpu_timestamp_ctl.stop();
 
     if (cmd->quiesce_check) {
         fsm_ctx.ts.time_expiry_set(FTL_LIF_SCANNERS_QUIESCE_TIME_US);
@@ -1119,8 +1167,8 @@ ftl_lif_event_t
 FtlLif::ftl_lif_scanners_init_action(ftl_lif_event_t event,
                                      ftl_lif_devcmd_ctx_t& devcmd_ctx)
 {
-    scanners_init_cmd_t         *cmd = &devcmd_ctx.req->scanners_init;
-    scanners_init_cpl_t         *cpl = &devcmd_ctx.rsp->scanners_init;
+    scanners_init_cmd_t *cmd = &devcmd_ctx.req->scanners_init;
+    scanners_init_cpl_t *cpl = &devcmd_ctx.rsp->scanners_init;
 
     FTL_LIF_FSM_LOG();
     switch (cmd->qtype) {
@@ -1250,6 +1298,37 @@ FtlLif::ftl_lif_scanners_start_single_action(ftl_lif_event_t event,
     }
 
     cpl->qtype = cmd->qtype;
+    return FTL_LIF_EV_NULL;
+}
+
+ftl_lif_event_t
+FtlLif::ftl_lif_mpu_timestamp_init_action(ftl_lif_event_t event,
+                                          ftl_lif_devcmd_ctx_t& devcmd_ctx)
+{
+    mpu_timestamp_init_cmd_t    *cmd = &devcmd_ctx.req->mpu_timestamp_init;
+    mpu_timestamp_init_cpl_t    *cpl = &devcmd_ctx.rsp->mpu_timestamp_init;
+
+    FTL_LIF_FSM_LOG();
+    devcmd_ctx.status = mpu_timestamp_ctl.init(cmd);
+    cpl->qtype = cmd->qtype;
+    return FTL_LIF_EV_NULL;
+}
+
+ftl_lif_event_t
+FtlLif::ftl_lif_mpu_timestamp_start_action(ftl_lif_event_t event,
+                                           ftl_lif_devcmd_ctx_t& devcmd_ctx)
+{
+    FTL_LIF_FSM_LOG();
+    devcmd_ctx.status = mpu_timestamp_ctl.start();
+    return FTL_LIF_EV_NULL;
+}
+
+ftl_lif_event_t
+FtlLif::ftl_lif_mpu_timestamp_stop_action(ftl_lif_event_t event,
+                                          ftl_lif_devcmd_ctx_t& devcmd_ctx)
+{
+    FTL_LIF_FSM_LOG();
+    devcmd_ctx.status = mpu_timestamp_ctl.stop();
     return FTL_LIF_EV_NULL;
 }
 
@@ -1415,10 +1494,6 @@ FtlLif::force_session_expired_ts_set(age_tmo_cb_t *age_tmo_cb,
                                      const mem_access_t& access,
                                      uint8_t force_expired_ts)
 {
-    /*
-     * Timestamp set/get only used for SIM debugging purposes so
-     * it's fine to dynamically update it.
-     */
     age_tmo_cb->force_session_expired_ts = force_expired_ts;
     access.small_write(offsetof(age_tmo_cb_t, force_session_expired_ts),
                        (uint8_t *)&age_tmo_cb->force_session_expired_ts,
@@ -1430,10 +1505,6 @@ FtlLif::force_conntrack_expired_ts_set(age_tmo_cb_t *age_tmo_cb,
                                        const mem_access_t& access,
                                        uint8_t force_expired_ts)
 {
-    /*
-     * Timestamp set/get only used for SIM debugging purposes so
-     * it's fine to dynamically update it.
-     */
     age_tmo_cb->force_conntrack_expired_ts = force_expired_ts;
     access.small_write(offsetof(age_tmo_cb_t, force_conntrack_expired_ts),
                        (uint8_t *)&age_tmo_cb->force_conntrack_expired_ts,
@@ -1706,6 +1777,57 @@ ftl_lif_queues_ctl_t::init(const pollers_init_cmd_t *cmd)
 }
 
 ftl_status_code_t
+ftl_lif_queues_ctl_t::init(const mpu_timestamp_init_cmd_t *cmd)
+{
+    int64_t                 qstate_addr;
+    mpu_timestamp_qstate_t  qstate = {0};
+    mem_access_t            qs_access(lif);
+    ftl_status_code_t       status;
+    uint8_t                 pc_offset;
+
+    NIC_LOG_DEBUG("{}: qtype {} cos_override {} cos {}",
+                  lif.LifNameGet(), cmd->qtype, cmd->cos_override, cmd->cos);
+    qstate_access.clear();
+    wring_access.clear();
+    qid_high_ = 0;
+
+    qstate_addr = qid_qstate_addr(0);
+    if (qstate_addr < 0) {
+        return FTL_RC_ERROR;
+    }
+
+    /*
+     * Init doorbell accesses
+     */
+    db_pndx_inc.reset(qtype(),
+                      ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
+                                            ASIC_DB_UPD_INDEX_INCR_PINDEX,
+                                            false));
+    db_shed_clr.reset(qtype(),
+                      ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSA,
+                                            ASIC_DB_UPD_INDEX_UPDATE_NONE,
+                                            false));
+    qs_access.reset(qstate_addr, sizeof(qstate));
+    status = pgm_pc_offset_get("mpu_timestamp_stage0", &pc_offset);
+    if (status != FTL_RC_SUCCESS) {
+        return status;
+    }
+    lif.mpu_timestamp_access.reset(qs_access.va());
+
+    qstate.qstate_1ring.pc_offset = pc_offset;
+    qstate.qstate_1ring.eval_last = 1 << 0;
+    qstate.qstate_1ring.cosB = cmd->cos_override ? cmd->cos : lif.cosB;
+    qstate.qstate_1ring.host_wrings = 0;
+    qstate.qstate_1ring.total_wrings = 1;
+    qstate.qstate_1ring.pid = cmd->pid;
+    qs_access.small_write(0, (uint8_t *)&qstate, sizeof(qstate));
+    qs_access.cache_invalidate();
+
+    qstate_access.push_back(std::move(qs_access));
+    return FTL_RC_SUCCESS;
+}
+
+ftl_status_code_t
 ftl_lif_queues_ctl_t::start(void)
 {
     void                (*cb_activate)(const mem_access_t *access);
@@ -1716,6 +1838,10 @@ ftl_lif_queues_ctl_t::start(void)
     case FTL_QTYPE_SCANNER_SESSION:
     case FTL_QTYPE_SCANNER_CONNTRACK:
         cb_activate = &scanner_session_cb_activate;
+        break;
+
+    case FTL_QTYPE_MPU_TIMESTAMP:
+        cb_activate = &mpu_timestamp_cb_activate;
         break;
 
     case FTL_QTYPE_POLLER:
@@ -1758,6 +1884,7 @@ ftl_lif_queues_ctl_t::sched_start_single(uint32_t qid)
 
     case FTL_QTYPE_SCANNER_SESSION:
     case FTL_QTYPE_SCANNER_CONNTRACK:
+    case FTL_QTYPE_MPU_TIMESTAMP:
 
         /*
          * Doorbell update with a pndx increment
@@ -1789,6 +1916,10 @@ ftl_lif_queues_ctl_t::stop(void)
     case FTL_QTYPE_SCANNER_SESSION:
     case FTL_QTYPE_SCANNER_CONNTRACK:
         cb_deactivate = &scanner_session_cb_deactivate;
+        break;
+
+    case FTL_QTYPE_MPU_TIMESTAMP:
+        cb_deactivate = &mpu_timestamp_cb_deactivate;
         break;
 
     case FTL_QTYPE_POLLER:
@@ -1841,6 +1972,7 @@ ftl_lif_queues_ctl_t::sched_stop_single(uint32_t qid)
 
     case FTL_QTYPE_SCANNER_SESSION:
     case FTL_QTYPE_SCANNER_CONNTRACK:
+    case FTL_QTYPE_MPU_TIMESTAMP:
 
         /*
          * Doorbell update clear
@@ -1951,6 +2083,7 @@ ftl_lif_queues_ctl_t::quiesce(void)
 
     case FTL_QTYPE_SCANNER_SESSION:
     case FTL_QTYPE_SCANNER_CONNTRACK:
+    case FTL_QTYPE_MPU_TIMESTAMP:
 
         for (; qid_high_ && (quiesce_qid_ <= qid_high_); quiesce_qid_++) {
             qstate_access = qid_qstate_access(quiesce_qid_);
@@ -1997,7 +2130,7 @@ ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
 
     memset(metrics, 0, sizeof(*metrics));
     if (qcount_) {
-        min_elapsed_ticks = (uint64_t)~0;
+        min_elapsed_ticks = UINT64_MAX;
         max_elapsed_ticks = 0;
         total_min_elapsed_ticks = 0;
         total_max_elapsed_ticks = 0;
@@ -2038,10 +2171,10 @@ ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
                      (curr_range_sz == scanner_qstate.fsm.scan_range_sz)) &&
 
                     /*
-                     * qstate min_range_elapsed_ticks had been initialized to ~0
-                     * so skip the entry if it were never updated.
+                     * qstate min_range_elapsed_ticks had been initialized to
+                     * UINT64_MAX so skip the entry if it were never updated.
                      */
-                    (scanner_qstate.metrics0.min_range_elapsed_ticks != (uint64_t)~0)) {
+                    (scanner_qstate.metrics0.min_range_elapsed_ticks != UINT64_MAX)) {
 
                     avg_count++;
                     min_elapsed_ticks = std::min(min_elapsed_ticks,
@@ -2067,13 +2200,21 @@ ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
                 break;
             }
 
+            case FTL_QTYPE_MPU_TIMESTAMP: {
+                mpu_timestamp_qstate_t qstate;
+
+                qstate_access->small_read(0, (uint8_t *)&qstate, sizeof(qstate));
+                metrics->mpu_timestamp.total_num_updates += qstate.num_updates;
+                break;
+            }
+
             default:
                 return FTL_RC_SUCCESS;
             }
         }
 
         if (avg_count) {
-            if (min_elapsed_ticks != (uint64_t)~0) {
+            if (min_elapsed_ticks != UINT64_MAX) {
                 metrics->scanners.min_range_elapsed_ns =
                          hw_coreclk_ticks_to_time_ns(min_elapsed_ticks);
             }
@@ -2356,6 +2497,27 @@ scanner_session_cb_deactivate(const mem_access_t *access)
     access->small_write(offsetof(scanner_session_qstate_t, summarize) +
                         offsetof(scanner_session_summarize_t, cb_activate),
                     (uint8_t *)&deactivate, sizeof(deactivate));
+    access->cache_invalidate();
+}
+
+static void
+mpu_timestamp_cb_activate(const mem_access_t *access)
+{
+    scanner_session_cb_activate_t   activate = SCANNER_SESSION_CB_ACTIVATE;
+
+    access->small_write(offsetof(mpu_timestamp_qstate_t, cb_activate),
+                        (uint8_t *)&activate, sizeof(activate));
+    access->cache_invalidate();
+}
+
+static void
+mpu_timestamp_cb_deactivate(const mem_access_t *access)
+{
+    scanner_session_cb_activate_t   deactivate =
+            (scanner_session_cb_activate_t)~SCANNER_SESSION_CB_ACTIVATE;
+
+    access->small_write(offsetof(mpu_timestamp_qstate_t, cb_activate),
+                        (uint8_t *)&deactivate, sizeof(deactivate));
     access->cache_invalidate();
 }
 

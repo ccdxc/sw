@@ -16,6 +16,7 @@
 #include "gen/p4gen/athena/include/p4pd.h"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
+#include "ftl_dev_impl.hpp"
 
 
 #ifndef BITS_PER_BYTE
@@ -104,6 +105,8 @@ pds_flow_session_entry_setup (session_info_entry_t *entry,
                 data->switch_to_host_flow_info.allowed_flow_state_bitmask);
     }
     entry->set_valid_flag(TRUE);
+    entry->set_timestamp(ftl_dev_if::scanner_session_timestamp(
+                                     ftl_dev_impl::mpu_timestamp()));
 
     return PDS_RET_OK;
 }

@@ -27,7 +27,7 @@ cmd_script_exec_rsp_check(zmq_msg_t *rx_msg)
                         rsp->status == 0 ? "SUCCESS" : "FAILURE");
         return rsp->status;
     }
-    return SDK_RET_ERR;
+    return PDS_RET_ERR;
 }
 
 int

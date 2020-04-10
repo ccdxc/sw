@@ -37,7 +37,10 @@ enum ftl_devcmd_opcode {
     FTL_DEVCMD_OPCODE_SCANNERS_START            = 12,
     FTL_DEVCMD_OPCODE_SCANNERS_START_SINGLE     = 13,
     FTL_DEVCMD_OPCODE_SCANNERS_STOP             = 14,
-    FTL_DEVCMD_OPCODE_ACCEL_AGING_CONTROL       = 15,
+    FTL_DEVCMD_OPCODE_MPU_TIMESTAMP_INIT        = 15,
+    FTL_DEVCMD_OPCODE_MPU_TIMESTAMP_START       = 16,
+    FTL_DEVCMD_OPCODE_MPU_TIMESTAMP_STOP        = 17,
+    FTL_DEVCMD_OPCODE_ACCEL_AGING_CONTROL       = 18,
 };
 
 #define FTL_DEVCMD_OPCODE_CASE_TABLE                                    \
@@ -56,6 +59,9 @@ enum ftl_devcmd_opcode {
     FTL_DEV_CASE_STRINGIFY(FTL_DEVCMD_OPCODE_SCANNERS_START);           \
     FTL_DEV_CASE_STRINGIFY(FTL_DEVCMD_OPCODE_SCANNERS_START_SINGLE);    \
     FTL_DEV_CASE_STRINGIFY(FTL_DEVCMD_OPCODE_SCANNERS_STOP);            \
+    FTL_DEV_CASE_STRINGIFY(FTL_DEVCMD_OPCODE_MPU_TIMESTAMP_INIT);       \
+    FTL_DEV_CASE_STRINGIFY(FTL_DEVCMD_OPCODE_MPU_TIMESTAMP_START);      \
+    FTL_DEV_CASE_STRINGIFY(FTL_DEVCMD_OPCODE_MPU_TIMESTAMP_STOP);       \
     FTL_DEV_CASE_STRINGIFY(FTL_DEVCMD_OPCODE_ACCEL_AGING_CONTROL);      \
     
 enum ftl_status_code {
@@ -163,6 +169,7 @@ enum ftl_qtype {
     FTL_QTYPE_SCANNER_SESSION   = FTL_DEV_QTYPE_SCANNER_SESSION,
     FTL_QTYPE_SCANNER_CONNTRACK = FTL_DEV_QTYPE_SCANNER_CONNTRACK,
     FTL_QTYPE_POLLER            = FTL_DEV_QTYPE_POLLER,
+    FTL_QTYPE_MPU_TIMESTAMP     = FTL_DEV_QTYPE_MPU_TIMESTAMP,
     FTL_QTYPE_MAX               = 8,
 };
 
@@ -372,9 +379,14 @@ typedef struct {
     uint64_t   total_num_qfulls;
 } lif_attr_pollers_metrics_t;
 
+typedef struct {
+    uint64_t   total_num_updates;
+} lif_attr_mpu_timestamp_metrics_t;
+
 typedef union {
     lif_attr_scanners_metrics_t scanners;
     lif_attr_pollers_metrics_t  pollers;
+    lif_attr_mpu_timestamp_metrics_t mpu_timestamp;
 } lif_attr_metrics_t;
 
 /**
@@ -422,7 +434,7 @@ typedef struct lif_getattr_cpl {
     uint8_t     rsvd1;
     __le16      cpl_index;
     union {
-        // char    name[FTL_DEV_IFNAMSIZ];
+        // char name[FTL_DEV_IFNAMSIZ];
         uint8_t         force_expired_ts;
         uint8_t         rsvd2[12];
     };
@@ -671,6 +683,46 @@ typedef struct scanners_start_single_cpl {
 } scanners_start_single_cpl_t;
 
 /**
+ * mpu_timestamp_init_cmd_t - HW MPU timestamp queue init command
+ * @opcode:     opcode
+ * @qtype:      queue type (MPU timestamp)
+ * @lif_index:  software lif index
+ * @pid:        Process ID
+ * @cos:        Class of service for the queues.
+ * @cos_override: override FW selected cos with cmd cos
+ */
+typedef struct mpu_timestamp_init_cmd {
+    uint8_t     opcode;
+    uint8_t     qtype;
+    __le16      lif_index;
+    __le16      pid;
+    uint8_t     rsvd1;
+    uint8_t     cos;
+    uint8_t     cos_override;
+    uint8_t     rsvd2[55];
+} mpu_timestamp_init_cmd_t;
+
+/**
+ * mpu_timestamp_init_cmd_t - HW MPU timestamp queue init command completion
+ * @status:     The status of the command.  Values for status are:
+ *                 0 = Successful completion
+ * @qtype:      queue type
+ */
+typedef struct mpu_timestamp_init_cpl {
+    uint8_t     status;
+    uint8_t     qtype;
+    uint8_t     rsvd[14];
+} mpu_timestamp_init_cpl_t;
+
+/**
+ * HW MPU timestamp start/stop
+ */
+typedef scanners_start_cmd_t    mpu_timestamp_start_cmd_t;
+typedef scanners_start_cpl_t    mpu_timestamp_start_cpl_t;
+typedef scanners_stop_cmd_t     mpu_timestamp_stop_cmd_t;
+typedef scanners_stop_cpl_t     mpu_timestamp_stop_cpl_t;
+
+/**
  * struct accel_aging_ctl_cmd_t - LIF accelerated aging control command
  * @opcode: opcode
  * @lif_index: software lif index
@@ -707,6 +759,9 @@ typedef union ftl_devcmd {
     scanners_start_cmd_t          scanners_start;
     scanners_stop_cmd_t           scanners_stop;
     scanners_start_single_cmd_t   scanners_start_single;
+    mpu_timestamp_init_cmd_t      mpu_timestamp_init;
+    mpu_timestamp_start_cmd_t     mpu_timestamp_start;
+    mpu_timestamp_stop_cmd_t      mpu_timestamp_stop;
     accel_aging_ctl_cmd_t         accel_aging_ctl;
 } ftl_devcmd_t;
 
@@ -729,6 +784,9 @@ typedef union ftl_devcmd_cpl {
     scanners_start_cpl_t          scanners_start;
     scanners_stop_cpl_t           scanners_stop;
     scanners_start_single_cpl_t   scanners_start_single;
+    mpu_timestamp_init_cpl_t      mpu_timestamp_init;
+    mpu_timestamp_start_cpl_t     mpu_timestamp_start;
+    mpu_timestamp_stop_cpl_t      mpu_timestamp_stop;
     accel_aging_ctl_cpl_t         accel_aging_ctl;
 } ftl_devcmd_cpl_t;
 

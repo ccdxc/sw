@@ -22,7 +22,7 @@ cmd_flow_stats_dump_rsp_check(zmq_msg_t *rx_msg)
                         rsp->status == 0 ? "SUCCESS" : "FAILURE");
         return rsp->status;
     }
-    return SDK_RET_ERR;
+    return PDS_RET_ERR;
 }
 
 int

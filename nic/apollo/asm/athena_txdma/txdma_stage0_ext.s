@@ -70,3 +70,8 @@ nicmgr_resp_stage0_ext:
 scanner_session_stage0_ext:
     nop.e
     nop
+
+.align
+mpu_timestamp_stage0_ext:
+    nop.e
+    nop

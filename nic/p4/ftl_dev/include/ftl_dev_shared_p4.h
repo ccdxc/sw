@@ -175,6 +175,46 @@ header_type scanner_session_metrics0_t {
     modify_field(scratch.min_range_elapsed_ticks, min_range_elapsed_ticks);     \
     modify_field(scratch.max_range_elapsed_ticks, max_range_elapsed_ticks);     \
     
+/**
+ * MPU timestamp control block for stage 0
+ */
+header_type mpu_timestamp_cb_t {
+    fields {
+        CAPRI_QSTATE_HEADER_COMMON
+        CAPRI_QSTATE_HEADER_RING(0)
+        timestamp                       : 64;
+        num_updates                     : 64;
+        pad                             : 272;
+        cb_activate                     : 16;  // must be last in CB
+    }
+}
+
+#define MPU_TIMESTAMP_CB_DATA                                                   \
+    rsvd, cosA, cosB, cos_sel, eval_last,                                       \
+    host, total, pid, pi_0, ci_0,                                               \
+    timestamp, num_updates,                                                     \
+    pad, cb_activate                                                            \
+    
+#define MPU_TIMESTAMP_CB_PRAGMA                                                 \
+@pragma little_endian pi_0 ci_0                                                 \
+    timestamp num_updates cb_activate                                           \
+
+#define MPU_TIMESTAMP_CB_USE(scratch)                                           \
+    modify_field(scratch.rsvd, rsvd);                                           \
+    modify_field(scratch.cosA, cosA);                                           \
+    modify_field(scratch.cosB, cosB);                                           \
+    modify_field(scratch.cos_sel, cos_sel);                                     \
+    modify_field(scratch.eval_last, eval_last);                                 \
+    modify_field(scratch.host, host);                                           \
+    modify_field(scratch.total, total);                                         \
+    modify_field(scratch.pid, pid);                                             \
+    modify_field(scratch.pi_0, pi_0);                                           \
+    modify_field(scratch.ci_0, ci_0);                                           \
+    modify_field(scratch.timestamp, timestamp);                                 \
+    modify_field(scratch.num_updates, num_updates);                             \
+    modify_field(scratch.pad, pad);                                             \
+    modify_field(scratch.cb_activate, cb_activate);                             \
+    
 /*
  * Aging timeout values
  */

@@ -21,9 +21,6 @@ namespace athena_app {
 #define SESSION_RET_VALIDATE(ret)           \
    ((ret) == PDS_RET_OK)
 
-#define SESSION_SDK_RET_VALIDATE(ret)           \
-   ((ret) == SDK_RET_OK)
-
 #define SESSION_CREATE_RET_VALIDATE(ret)    \
    (((ret) == PDS_RET_OK) || ((ret) == PDS_RET_ENTRY_EXISTS))
 
@@ -96,15 +93,14 @@ session_populate_simple(test_vparam_ref_t vparam)
 {
     pds_flow_session_spec_t spec;
     pds_ret_t   ret = PDS_RET_OK;
-    sdk_ret_t   sdk_ret = SDK_RET_OK;
 
     session_metrics.baseline();
     flow_session_spec_init(&spec);
 
     glb_tolerance.reset(vparam.size());
     for (uint32_t i = 0; i < vparam.size(); i++) {
-        sdk_ret = vparam.num(i, &spec.key.session_info_id);
-        if (!SESSION_SDK_RET_VALIDATE(sdk_ret)) {
+        ret = vparam.num(i, &spec.key.session_info_id);
+        if (!SESSION_RET_VALIDATE(ret)) {
             break;
         }
         ret = pds_flow_session_info_create(&spec);
@@ -126,7 +122,6 @@ session_populate_random(test_vparam_ref_t vparam)
     uint32_t    start_idx;
     uint32_t    count  = 0;
     pds_ret_t   ret = PDS_RET_OK;
-    sdk_ret_t   sdk_ret = SDK_RET_OK;
 
     session_metrics.baseline();
 
@@ -134,14 +129,14 @@ session_populate_random(test_vparam_ref_t vparam)
      * Generate random start_idx and count, unless overidden by vparam
      */
     if (vparam.size()) {
-        sdk_ret = vparam.num(0, &start_idx);
-        if (!SESSION_SDK_RET_VALIDATE(sdk_ret)) {
+        ret = vparam.num(0, &start_idx);
+        if (!SESSION_RET_VALIDATE(ret)) {
             return FALSE;
         }
         start_idx = min(start_idx, session_table_depth() - 1);
         if (vparam.size() > 1) {
-            sdk_ret = vparam.num(1, &count);
-            if (!SESSION_SDK_RET_VALIDATE(sdk_ret)) {
+            ret = vparam.num(1, &count);
+            if (!SESSION_RET_VALIDATE(ret)) {
                 return FALSE;
             }
             count = min(count, session_table_depth() - start_idx);
@@ -232,7 +227,6 @@ bool
 session_aging_init(test_vparam_ref_t vparam)
 {
     pds_ret_t   ret;
-    sdk_ret_t   sdk_ret;
 
     // Start with init() in case that had never been done
     ret = pds_flow_age_init();
@@ -241,9 +235,9 @@ session_aging_init(test_vparam_ref_t vparam)
     // before scanners are started to prevent lockup in scanners
     // due to the lack of true LIF timers in SIM.
     if (!hw() && SESSION_RET_VALIDATE(ret)) {
-        sdk_ret = ftl_pollers_client::force_session_expired_ts_set(true);
+        ret = ftl_pollers_client::force_session_expired_ts_set(true);
     }
-    if (SESSION_SDK_RET_VALIDATE(sdk_ret)) {
+    if (SESSION_RET_VALIDATE(ret)) {
         ret = pds_flow_age_sw_pollers_qcount(&pollers_qcount);
     }
     if (SESSION_RET_VALIDATE(ret)) {
@@ -273,11 +267,11 @@ session_aging_expiry_log_set(test_vparam_ref_t vparam)
 bool
 session_aging_force_expired_ts(test_vparam_ref_t vparam)
 {
-    sdk_ret_t   ret;
+    pds_ret_t   ret;
 
     ret = ftl_pollers_client::force_session_expired_ts_set(
                                             vparam.expected_bool());
-    return SESSION_SDK_RET_VALIDATE(ret);
+    return SESSION_RET_VALIDATE(ret);
 }
 
 bool
@@ -325,8 +319,9 @@ session_4combined_expiry_count_check(bool poll_needed)
 bool
 session_4combined_result_check(void)
 {
-    TEST_LOG_INFO("Session entries aged out: %u\n",
-                  glb_tolerance.expiry_count());
+    TEST_LOG_INFO("Session entries aged out: %u, over_age_min: %u, "
+                  "over_age_max: %u\n", glb_tolerance.expiry_count(),
+                  glb_tolerance.over_age_min(), glb_tolerance.over_age_max());
     glb_tolerance.create_id_map_empty_check();
     session_metrics.expiry_count_check(glb_tolerance.expiry_count());
     return session_4combined_expiry_count_check() &&

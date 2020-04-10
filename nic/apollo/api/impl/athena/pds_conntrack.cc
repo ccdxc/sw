@@ -16,6 +16,7 @@
 #include "gen/p4gen/athena/include/p4pd.h"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
+#include "ftl_dev_impl.hpp"
 
 //#define CONNTRACK_STATE_FASTER_DELETE
 
@@ -48,6 +49,8 @@ pds_conntrack_state_create (pds_conntrack_spec_t *spec)
     entry.set_valid_flag(TRUE);
     entry.set_flow_type(spec->data.flow_type);
     entry.set_flow_state(spec->data.flow_state);
+    entry.set_timestamp(ftl_dev_if::scanner_conntrack_timestamp(
+                                    ftl_dev_impl::mpu_timestamp()));
   
     p4pd_ret = entry.write(conntrack_id);
     if (p4pd_ret != P4PD_SUCCESS) {

@@ -264,7 +264,7 @@ conntrack_aging_expiry_fn(uint32_t expiry_id,
         break;
 
     case EXPIRY_TYPE_SESSION:
-        ret = (pds_ret_t)session_aging_expiry_fn(expiry_id, expiry_type, user_ctx);
+        ret = session_aging_expiry_fn(expiry_id, expiry_type, user_ctx);
         break;
 
     default:
@@ -286,7 +286,7 @@ conntrack_aging_init(test_vparam_ref_t vparam)
     // before scanners are started to prevent lockup in scanners
     // due to the lack of true LIF timers in SIM.
     if (!hw() && CONNTRACK_RET_VALIDATE(ret)) {
-        ret = (pds_ret_t)ftl_pollers_client::force_conntrack_expired_ts_set(true);
+        ret = ftl_pollers_client::force_conntrack_expired_ts_set(true);
     }
     if (CONNTRACK_RET_VALIDATE(ret)) {
         ret = pds_flow_age_sw_pollers_qcount(&pollers_qcount);
@@ -318,10 +318,10 @@ conntrack_aging_expiry_log_set(test_vparam_ref_t vparam)
 bool
 conntrack_aging_force_expired_ts(test_vparam_ref_t vparam)
 {
-    sdk_ret_t   ret;
+    pds_ret_t   ret;
 
     ret = ftl_pollers_client::force_conntrack_expired_ts_set(vparam.expected_bool());
-    return CONNTRACK_RET_VALIDATE((pds_ret_t)ret);
+    return CONNTRACK_RET_VALIDATE(ret);
 }
 
 bool
@@ -369,8 +369,9 @@ conntrack_4combined_expiry_count_check(bool poll_needed)
 bool
 conntrack_4combined_result_check(void)
 {
-    TEST_LOG_INFO("Conntrack entries aged out: %u\n",
-                  glb_tolerance.expiry_count());
+    TEST_LOG_INFO("Conntrack entries aged out: %u, over_age_min: %u, "
+                  "over_age_max: %u\n", glb_tolerance.expiry_count(),
+                  glb_tolerance.over_age_min(), glb_tolerance.over_age_max());
     glb_tolerance.create_id_map_empty_check();
     conntrack_metrics.expiry_count_check(glb_tolerance.expiry_count());
     return conntrack_4combined_expiry_count_check() &&

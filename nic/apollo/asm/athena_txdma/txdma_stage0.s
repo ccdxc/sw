@@ -27,6 +27,7 @@ struct phv_ p;
     .param      nicmgr_fetch_desc
     .param      nicmgr_drop
     .param      scanner_session_start
+    .param      mpu_timestamp_start
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -77,4 +78,9 @@ nicmgr_resp_stage0:
 .align
 scanner_session_stage0:
     j   scanner_session_start
+    nop
+
+.align
+mpu_timestamp_stage0:
+    j   mpu_timestamp_start
     nop

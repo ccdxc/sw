@@ -97,39 +97,39 @@ flowstate2num_find(const std::string& token)
 /**
  * Test parameters
  */
-sdk_ret_t 
+pds_ret_t 
 test_param_t::num(uint32_t *ret_num,
                   bool suppress_err_log) const
 {
     if (is_num()) {
         *ret_num = num_;
-        return SDK_RET_OK;
+        return PDS_RET_OK;
     }
 
     *ret_num = 0;
     if (!suppress_err_log) {
         TEST_LOG_ERR("Numeric token not found\n");
     }
-    return SDK_RET_ERR;
+    return PDS_RET_ERR;
 }
 
-sdk_ret_t 
+pds_ret_t 
 test_param_t::str(std::string *ret_str,
                   bool suppress_err_log) const
 {
     if (is_str()) {
         ret_str->assign(str_);
-        return SDK_RET_OK;
+        return PDS_RET_OK;
     }
 
     ret_str->clear();
     if (!suppress_err_log) {
         TEST_LOG_ERR("String token not found\n");
     }
-    return SDK_RET_ERR;
+    return PDS_RET_ERR;
 }
 
-sdk_ret_t
+pds_ret_t
 test_param_t::bool_val(bool *ret_bool,
                        bool suppress_err_log) const
 {
@@ -154,13 +154,13 @@ test_param_t::bool_val(bool *ret_bool,
         if (!suppress_err_log) {
             TEST_LOG_ERR("Bool token not found\n");
         }
-        return SDK_RET_ERR;
+        return PDS_RET_ERR;
 
     }
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
-sdk_ret_t
+pds_ret_t
 test_param_t::flowtype(pds_flow_type_t *ret_flowtype,
                        bool suppress_err_log) const
 {
@@ -172,7 +172,7 @@ test_param_t::flowtype(pds_flow_type_t *ret_flowtype,
             if (!suppress_err_log) {
                 TEST_LOG_ERR("Invalid flow type %u\n", num_);
             }
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         *ret_flowtype = (pds_flow_type_t)num_;
         break;
@@ -183,7 +183,7 @@ test_param_t::flowtype(pds_flow_type_t *ret_flowtype,
             if (!suppress_err_log) {
                 TEST_LOG_ERR("Invalid flow type %s\n", str_.c_str());
             }
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         *ret_flowtype = *find_val;
         break;
@@ -193,13 +193,13 @@ test_param_t::flowtype(pds_flow_type_t *ret_flowtype,
         if (!suppress_err_log) {
             TEST_LOG_ERR("Flow type token not found\n");
         }
-        return SDK_RET_ERR;
+        return PDS_RET_ERR;
 
     }
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
-sdk_ret_t
+pds_ret_t
 test_param_t::flowstate(pds_flow_state_t *ret_flowstate,
                         bool suppress_err_log) const
 {
@@ -211,7 +211,7 @@ test_param_t::flowstate(pds_flow_state_t *ret_flowstate,
             if (!suppress_err_log) {
                 TEST_LOG_ERR("Invalid flow state %u\n", num_);
             }
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         *ret_flowstate = (pds_flow_state_t)num_;
         break;
@@ -222,7 +222,7 @@ test_param_t::flowstate(pds_flow_state_t *ret_flowstate,
             if (!suppress_err_log) {
                 TEST_LOG_ERR("Invalid flow state %s\n", str_.c_str());
             }
-            return SDK_RET_ERR;
+            return PDS_RET_ERR;
         }
         *ret_flowstate = *find_val;
         break;
@@ -232,31 +232,31 @@ test_param_t::flowstate(pds_flow_state_t *ret_flowstate,
         if (!suppress_err_log) {
             TEST_LOG_ERR("Flow state token not found\n");
         }
-        return SDK_RET_ERR;
+        return PDS_RET_ERR;
     }
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
-sdk_ret_t 
+pds_ret_t 
 test_param_t::tuple(test_param_tuple_t *ret_tuple,
                     bool suppress_err_log) const
 {
     if (is_tuple()) {
         *ret_tuple = tuple_;
-        return SDK_RET_OK;
+        return PDS_RET_OK;
     }
 
     ret_tuple->clear();
     if (!suppress_err_log) {
         TEST_LOG_ERR("Tuple not found\n");
     }
-    return SDK_RET_ERR;
+    return PDS_RET_ERR;
 }
 
 /**
  * Vector parameters
  */
-sdk_ret_t 
+pds_ret_t 
 test_vparam_t::num(uint32_t idx,
                    uint32_t *ret_num,
                    bool suppress_err_log) const
@@ -270,10 +270,10 @@ test_vparam_t::num(uint32_t idx,
     if (!suppress_err_log) {
         TEST_LOG_ERR("Numeric token not found at index %u\n", idx);
     }
-    return SDK_RET_ERR;
+    return PDS_RET_ERR;
 }
 
-sdk_ret_t 
+pds_ret_t 
 test_vparam_t::str(uint32_t idx,
                    std::string *ret_str,
                    bool suppress_err_log) const
@@ -287,10 +287,10 @@ test_vparam_t::str(uint32_t idx,
     if (!suppress_err_log) {
         TEST_LOG_ERR("String token not found at index %u\n", idx);
     }
-    return SDK_RET_ERR;
+    return PDS_RET_ERR;
 }
 
-sdk_ret_t
+pds_ret_t
 test_vparam_t::flowtype(uint32_t idx,
                         pds_flow_type_t *ret_flowtype,
                         bool suppress_err_log) const
@@ -304,10 +304,10 @@ test_vparam_t::flowtype(uint32_t idx,
     if (!suppress_err_log) {
         TEST_LOG_ERR("Flow type token not found at index %u\n", idx);
     }
-    return SDK_RET_ERR;
+    return PDS_RET_ERR;
 }
 
-sdk_ret_t
+pds_ret_t
 test_vparam_t::flowstate(uint32_t idx,
                         pds_flow_state_t *ret_flowstate,
                         bool suppress_err_log) const
@@ -321,10 +321,10 @@ test_vparam_t::flowstate(uint32_t idx,
     if (!suppress_err_log) {
         TEST_LOG_ERR("Flow state token not found at index %u\n", idx);
     }
-    return SDK_RET_ERR;
+    return PDS_RET_ERR;
 }
 
-sdk_ret_t 
+pds_ret_t 
 test_vparam_t::tuple(uint32_t idx,
                      test_param_tuple_t *ret_tuple,
                      bool suppress_err_log) const
@@ -338,7 +338,7 @@ test_vparam_t::tuple(uint32_t idx,
     if (!suppress_err_log) {
         TEST_LOG_ERR("Tuple not found at index %u\n", idx);
     }
-    return SDK_RET_ERR;
+    return PDS_RET_ERR;
 }
 
 bool
@@ -347,7 +347,7 @@ test_vparam_t::expected_bool(bool dflt) const
     if (vparam.size()) {
         const test_param_t& param = vparam.at(0);
         bool  ret_val;
-        if (param.bool_val(&ret_val) == SDK_RET_OK) {
+        if (param.bool_val(&ret_val) == PDS_RET_OK) {
             return ret_val;
         }
     }
@@ -388,7 +388,7 @@ tuple_eval_t::reset(test_vparam_ref_t vparam,
                     uint32_t vparam_idx)
 {
     fail_count = 0;
-    if (vparam.tuple(vparam_idx, &tuple) != SDK_RET_OK) {
+    if (vparam.tuple(vparam_idx, &tuple) != PDS_RET_OK) {
         fail_count++;
     }
 }
@@ -399,7 +399,7 @@ tuple_eval_t::num(uint32_t idx)
     uint32_t ret_val = 0;
 
     if ((idx >= tuple.size()) ||
-        (tuple.at(idx).num(&ret_val) != SDK_RET_OK)) {
+        (tuple.at(idx).num(&ret_val) != PDS_RET_OK)) {
         fail_count++;
     }
     return ret_val;
@@ -411,7 +411,7 @@ tuple_eval_t::str(uint32_t idx)
     std::string ret_str;
 
     if ((idx >= tuple.size()) ||
-        (tuple.at(idx).str(&ret_str) != SDK_RET_OK)) {
+        (tuple.at(idx).str(&ret_str) != PDS_RET_OK)) {
         fail_count++;
     }
     return ret_str;
@@ -423,7 +423,7 @@ tuple_eval_t::flowtype(uint32_t idx)
     pds_flow_type_t ret_val = PDS_FLOW_TYPE_TCP;
 
     if ((idx >= tuple.size()) ||
-        (tuple.at(idx).flowtype(&ret_val) != SDK_RET_OK)) {
+        (tuple.at(idx).flowtype(&ret_val) != PDS_RET_OK)) {
         fail_count++;
     }
     return ret_val;
@@ -435,7 +435,7 @@ tuple_eval_t::flowstate(uint32_t idx)
     pds_flow_state_t ret_val = UNESTABLISHED;
 
     if ((idx >= tuple.size()) ||
-        (tuple.at(idx).flowstate(&ret_val) != SDK_RET_OK)) {
+        (tuple.at(idx).flowstate(&ret_val) != PDS_RET_OK)) {
         fail_count++;
     }
     return ret_val;
@@ -444,7 +444,7 @@ tuple_eval_t::flowstate(uint32_t idx)
 /**
  * Metrics
  */
-sdk_ret_t
+pds_ret_t
 aging_metrics_t::baseline(void)
 {
     return refresh(base);
@@ -461,7 +461,7 @@ aging_metrics_t::delta_expired_entries(void) const
     case ftl_dev_if::FTL_QTYPE_SCANNER_SESSION:
     case ftl_dev_if::FTL_QTYPE_SCANNER_CONNTRACK:
 
-        if (refresh(curr) == SDK_RET_OK) {
+        if (refresh(curr) == PDS_RET_OK) {
             delta = curr.scanners.total_expired_entries -
                     base.scanners.total_expired_entries;
         }
@@ -484,7 +484,7 @@ aging_metrics_t::delta_num_qfulls(void) const
 
     case ftl_dev_if::FTL_QTYPE_POLLER:
 
-        if (refresh(curr) == SDK_RET_OK) {
+        if (refresh(curr) == PDS_RET_OK) {
             delta = curr.pollers.total_num_qfulls -
                     base.pollers.total_num_qfulls;
         }
@@ -546,10 +546,10 @@ aging_metrics_t::show(bool latest) const
     }
 }
 
-sdk_ret_t
+pds_ret_t
 aging_metrics_t::refresh(ftl_dev_if::lif_attr_metrics_t& m) const
 {
-    sdk_ret_t   ret = SDK_RET_OK;
+    pds_ret_t   ret = PDS_RET_OK;
 
     switch (qtype) {
 
@@ -579,14 +579,14 @@ aging_metrics_t::refresh(ftl_dev_if::lif_attr_metrics_t& m) const
 void 
 aging_tmo_cfg_t::reset(void)
 {
-    sdk_ret_t   ret;
+    pds_ret_t   ret;
 
     failures.clear();
-    ret = (sdk_ret_t)(is_accel_tmo ?
+    ret = is_accel_tmo ?
           pds_flow_age_accel_timeouts_get(&tmo_rec) :
-          pds_flow_age_normal_timeouts_get(&tmo_rec));
+          pds_flow_age_normal_timeouts_get(&tmo_rec);
 
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
         TEST_LOG_ERR("Failed to get %s timeouts\n",
                      is_accel_tmo ? "accelerated" : "normal");
         failures.counters.get++;
@@ -743,13 +743,13 @@ aging_tmo_cfg_t::conntrack_tmo_get(pds_flow_type_t flowtype,
 void 
 aging_tmo_cfg_t::tmo_set(void)
 {
-    sdk_ret_t   ret;
+    pds_ret_t   ret;
 
-    ret = (sdk_ret_t)(is_accel_tmo ?
+    ret = is_accel_tmo ?
           pds_flow_age_accel_timeouts_set(&tmo_rec) :
-          pds_flow_age_normal_timeouts_set(&tmo_rec));
+          pds_flow_age_normal_timeouts_set(&tmo_rec);
 
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
         TEST_LOG_ERR("Failed to set %s timeouts\n",
                      is_accel_tmo ? "accelerated" : "normal");
         failures.counters.set++;
@@ -763,6 +763,8 @@ void
 aging_tolerance_t::reset(uint32_t ids_max)
 {
     num_ids_max = ids_max;
+    over_age_min_ = UINT32_MAX;
+    over_age_max_ = 0;
     create_count_ = 0;
     erase_count_ = 0;
     expiry_count_ = 0;
@@ -787,8 +789,8 @@ aging_tolerance_t::tolerance_secs_set(uint32_t tolerance_secs)
 void 
 aging_tolerance_t::age_accel_control(bool enable_sense)
 {
-    if ((sdk_ret_t)pds_flow_age_accel_control(enable_sense) == SDK_RET_OK) {
-        curr_tmo = enable_sense ? accel_tmo : normal_tmo;
+    if (pds_flow_age_accel_control(enable_sense) == PDS_RET_OK) {
+        curr_tmo = enable_sense ? &accel_tmo : &normal_tmo;
     } else {
         TEST_LOG_ERR("Failed to set accelerated aging control %u\n",
                      enable_sense);
@@ -873,18 +875,29 @@ aging_tolerance_t::session_tmo_tolerance_check(uint32_t id)
 {
     pds_flow_session_key_t  key;
     pds_flow_session_info_t info;
+    uint32_t                curr_ts;
+    uint32_t                delta_secs;
 
     /*
      * Only HW has real timestamp applicable for tolerance check.
      * However, this involves a read which is very expensive
      * so it is taken or skipped based on user configuration.
+     *
+     * Note also that choosing the right value for tolerance config
+     * is tricky. Consider this case, say, 4M entries aged out at the
+     * same time by P4+. The SW code to delete these 4M entries can
+     * take multiple seconds, so the last entry being deleted can be
+     * seconds well past its age.
      */
     if (hw() && tolerance_secs) {
         flow_session_key_init(&key);
         key.session_info_id = id;
-        if ((sdk_ret_t)pds_flow_session_info_read(&key, &info) == SDK_RET_OK) {
-            tmo_tolerance_check(id, info.status.timestamp,
-                                curr_tmo.session_tmo_get());
+        if (pds_flow_session_info_read(&key, &info) == PDS_RET_OK) {
+            curr_ts = session_timestamp(mpu_timestamp(), true);
+            delta_secs = session_timestamp2secs(
+                                 session_timestamp_diff(curr_ts,
+                                                        info.status.timestamp));
+            tmo_tolerance_check(id, delta_secs, curr_tmo->session_tmo_get());
         } else {
             failures.counters.info_read++;
         }
@@ -900,6 +913,8 @@ aging_tolerance_t::conntrack_tmo_tolerance_check(uint32_t id)
     pds_conntrack_key_t     key;
     pds_conntrack_info_t    info;
     uint32_t                applic_tmo;
+    uint32_t                curr_ts;
+    uint32_t                delta_secs;
 
     /*
      * Only HW has real timestamp applicable for tolerance check.
@@ -909,10 +924,14 @@ aging_tolerance_t::conntrack_tmo_tolerance_check(uint32_t id)
     if (hw() && tolerance_secs) {
         flow_conntrack_key_init(&key);
         key.conntrack_id = id;
-        if ((sdk_ret_t)pds_conntrack_state_read(&key, &info) == SDK_RET_OK) {
-            applic_tmo = curr_tmo.conntrack_tmo_get(info.spec.data.flow_type,
-                                                    info.spec.data.flow_state);
-            tmo_tolerance_check(id, info.status.timestamp, applic_tmo);
+        if (pds_conntrack_state_read(&key, &info) == PDS_RET_OK) {
+            applic_tmo = curr_tmo->conntrack_tmo_get(info.spec.data.flow_type,
+                                                     info.spec.data.flow_state);
+            curr_ts = conntrack_timestamp(mpu_timestamp(), true);
+            delta_secs = conntrack_timestamp2secs(
+                                   conntrack_timestamp_diff(curr_ts,
+                                                            info.status.timestamp));
+            tmo_tolerance_check(id, delta_secs, applic_tmo);
         } else {
             failures.counters.info_read++;
         }
@@ -921,41 +940,69 @@ aging_tolerance_t::conntrack_tmo_tolerance_check(uint32_t id)
 
 void 
 aging_tolerance_t::tmo_tolerance_check(uint32_t id,
-                                       uint32_t entry_ts,
+                                       uint32_t delta_secs,
                                        uint32_t applic_tmo_secs)
 {
-    uint32_t    curr_ts = mpu_timestamp();
-    uint32_t    delta_secs;
-
-    delta_secs = mpu_timestamp2secs(curr_ts - entry_ts);
     if (delta_secs < applic_tmo_secs) {
-        TEST_LOG_ERR("entry_id %u aged out in less than timeout of %u seconds "
-                     "(actual: %u)\n", id, applic_tmo_secs, delta_secs);
-        failures.counters.ts_tolerance++;
-    } else if ((delta_secs - applic_tmo_secs) > tolerance_secs) {
-        TEST_LOG_ERR("entry_id %u took extra %u seconds to age out "
-                     "(tolerance is %u seconds)\n",
-                     id, delta_secs - applic_tmo_secs, tolerance_secs);
-        failures.counters.ts_tolerance++;
+        if (failures.counters.under_age == 0) {
+            TEST_LOG_ERR("entry_id %u aged out in < timeout of %u seconds "
+                         "(actual: %u)\n", id, applic_tmo_secs, delta_secs);
+        }
+        failures.counters.under_age++;
+    } else {
+        uint32_t over_age = delta_secs - applic_tmo_secs;
+        over_age_min_ = std::min(over_age, over_age_min_);
+        over_age_max_ = std::max(over_age, over_age_max_);
+        if (over_age > tolerance_secs) {
+            if (failures.counters.over_age == 0) {
+                TEST_LOG_ERR("entry_id %u took extra %u seconds to age out "
+                             "(tolerance is %u seconds)\n",
+                             id, over_age, tolerance_secs);
+            }
+            failures.counters.over_age++;
+        }
     }
 }
 
 /*
- * On Capri, P4 updates flow timestamp using bits 47:23 of the MPU tick.
- * With a clock speed of 833MHz, this gives interval of 1.01E-02 (which is
- * very close to 1/100 s, i.e., 10ms). 
- * 
+ * Convenient wrappers
  */
-uint32_t
+uint64_t
 mpu_timestamp(void)
 {
-    return 0; /* temporary */
+    return ftl_pollers_client::mpu_timestamp();
 }
 
 uint32_t
-mpu_timestamp2secs(uint32_t mpu_timestamp)
+session_timestamp(uint64_t mpu_timestamp,
+                  bool underage_adjust)
 {
-    return mpu_timestamp / 100;
+    return ftl_dev_if::scanner_session_timestamp(mpu_timestamp,
+                                                 underage_adjust);
+}
+
+uint32_t
+session_timestamp_diff(uint32_t session_ts_end,
+                       uint32_t session_ts_start)
+{
+    return ftl_dev_if::scanner_session_timestamp_diff(session_ts_end,
+                                                      session_ts_start);
+}
+
+uint32_t
+conntrack_timestamp(uint64_t mpu_timestamp,
+                    bool underage_adjust)
+{
+    return ftl_dev_if::scanner_conntrack_timestamp(mpu_timestamp,
+                                                   underage_adjust);
+}
+
+uint32_t
+conntrack_timestamp_diff(uint32_t conntrack_ts_end,
+                         uint32_t conntrack_ts_start)
+{
+    return ftl_dev_if::scanner_conntrack_timestamp_diff(conntrack_ts_end,
+                                                        conntrack_ts_start);
 }
 
 void

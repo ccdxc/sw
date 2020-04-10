@@ -72,6 +72,12 @@ conntrack_scanners(void)
 }
 
 static inline lif_queues_ctl_t *
+mpu_timestamp_ctl(void)
+{
+    return queues_ctl[FTL_QTYPE_MPU_TIMESTAMP];
+}
+
+static inline lif_queues_ctl_t *
 qtype_queue_ctl(enum ftl_qtype qtype)
 {
     return qtype < FTL_QTYPE_MAX ?
@@ -79,18 +85,19 @@ qtype_queue_ctl(enum ftl_qtype qtype)
 }
 
 
-static sdk_ret_t dev_identify(void);
-static sdk_ret_t lif_init(void);
-static sdk_ret_t attr_age_tmo_set(enum lif_attr attr,
+static pds_ret_t dev_identify(void);
+static pds_ret_t lif_init(void);
+static pds_ret_t attr_age_tmo_set(enum lif_attr attr,
                                   const pds_flow_age_timeouts_t *attr_age_tmo);
-static sdk_ret_t attr_age_tmo_get(enum lif_attr attr,
+static pds_ret_t attr_age_tmo_get(enum lif_attr attr,
                                   pds_flow_age_timeouts_t *attr_age_tmo);
-static sdk_ret_t force_expired_ts_set(enum lif_attr attr,
+static pds_ret_t force_expired_ts_set(enum lif_attr attr,
                                       bool force_expired_ts);
-static sdk_ret_t metrics_get(enum ftl_qtype qtype,
+static pds_ret_t metrics_get(enum ftl_qtype qtype,
                              lif_attr_metrics_t *metrics);
-static sdk_ret_t pollers_alloc(enum ftl_qtype qtype);
-static sdk_ret_t scanners_alloc(enum ftl_qtype qtype);
+static pds_ret_t pollers_alloc(enum ftl_qtype qtype);
+static pds_ret_t scanners_alloc(enum ftl_qtype qtype);
+static pds_ret_t mpu_timestamp_ctl_alloc(enum ftl_qtype qtype);
 
 static void queues_lock_all(void *user_arg,
                             uint32_t idx);
@@ -116,38 +123,38 @@ static void age_tmo_cfg_lock(void *user_arg,
                              uint32_t idx);
 static void age_tmo_cfg_unlock(void *user_arg,
                                uint32_t idx);
-static sdk_ret_t ftl_status_2_sdk_ret(ftl_status_code_t ftl_status);
+static pds_ret_t ftl_status_2_pds_ret(ftl_status_code_t ftl_status);
 
 
-sdk_ret_t
+pds_ret_t
 init(void)
 {
     DeviceManager       *devmgr_if;
-    sdk_ret_t           ret = SDK_RET_OK;
+    pds_ret_t           ret = PDS_RET_OK;
 
     if (rte_atomic16_test_and_set(&module_inited)) {
         platform_type = api::g_pds_state.platform_type();
         PDS_TRACE_DEBUG("One-time initialization platform_type %d",
                         platform_type);
         devmgr_if = nicmgr::nicmgrapi::devmgr_if();
-        SDK_ASSERT_TRACE_RETURN(devmgr_if, SDK_RET_ENTRY_NOT_FOUND,
+        SDK_ASSERT_TRACE_RETURN(devmgr_if, PDS_RET_ENTRY_NOT_FOUND,
                                 "failed to locate devmgr_if");
 
         ftl_dev = (FtlDev *)devmgr_if->GetDevice("ftl");
-        SDK_ASSERT_TRACE_RETURN(ftl_dev, SDK_RET_ENTRY_NOT_FOUND,
+        SDK_ASSERT_TRACE_RETURN(ftl_dev, PDS_RET_ENTRY_NOT_FOUND,
                                 "failed to locate ftl device");
         ret = dev_identify();
-        if (ret == SDK_RET_OK) {
+        if (ret == PDS_RET_OK) {
             ret = lif_init();
         }
     }
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 scanners_start(void)
 {
-    sdk_ret_t       ret = SDK_RET_RETRY;
+    pds_ret_t       ret = PDS_RET_RETRY;
 
     if (lif_init_done()) {
 
@@ -155,7 +162,7 @@ scanners_start(void)
          * Scanners_start in nicmgr will start all scanner types (session and
          * conntrack scanners) regardless of how it is invoked below.
          */
-        ret = SDK_RET_OK;
+        ret = PDS_RET_OK;
         if (session_scanners()) {
             ret = session_scanners()->start();
         } else if (conntrack_scanners()) {
@@ -165,10 +172,10 @@ scanners_start(void)
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 scanners_stop(bool quiesce_check)
 {
-    sdk_ret_t       ret = SDK_RET_RETRY;
+    pds_ret_t       ret = PDS_RET_RETRY;
 
     if (lif_init_done()) {
 
@@ -176,7 +183,7 @@ scanners_stop(bool quiesce_check)
          * Scanners_stop in nicmgr will stop all scanner types (session and
          * conntrack scanners) regardless of how it is invoked below.
          */
-        ret = SDK_RET_OK;
+        ret = PDS_RET_OK;
         if (session_scanners()) {
             ret = session_scanners()->stop(quiesce_check);
         } else if (conntrack_scanners()) {
@@ -186,12 +193,12 @@ scanners_stop(bool quiesce_check)
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 scanners_start_single(enum ftl_qtype qtype,
                       uint32_t qid)
 {
     lif_queues_ctl_t    *qctl;
-    sdk_ret_t           ret = SDK_RET_INVALID_ARG;
+    pds_ret_t           ret = PDS_RET_INVALID_ARG;
 
     /*
      * start-single is expected to be called well after init time
@@ -205,26 +212,26 @@ scanners_start_single(enum ftl_qtype qtype,
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 pollers_qcount_get(uint32_t *ret_qcount)
 {
     *ret_qcount = 0;
     if (!lif_init_done()) {
-        return SDK_RET_RETRY;
+        return PDS_RET_RETRY;
     }
     if (pollers()) {
         *ret_qcount = pollers()->qcount_get();
     }
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
-sdk_ret_t
+pds_ret_t
 pollers_flush(void)
 {
-    sdk_ret_t       ret = SDK_RET_OK;
+    pds_ret_t       ret = PDS_RET_OK;
 
     if (!lif_init_done()) {
-        return SDK_RET_RETRY;
+        return PDS_RET_RETRY;
     }
     if (pollers()) {
         ret = pollers()->flush();
@@ -232,16 +239,16 @@ pollers_flush(void)
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 pollers_dequeue_burst(uint32_t qid,
                       poller_slot_data_t *slot_data_buf,
                       uint32_t slot_data_buf_sz,
                       uint32_t *burst_count)
 {
-    sdk_ret_t       ret = SDK_RET_NOOP;
+    pds_ret_t       ret = PDS_RET_NOOP;
 
     if (!lif_init_done()) {
-        return SDK_RET_RETRY;
+        return PDS_RET_RETRY;
     }
     if (pollers()) {
         ret = pollers()->dequeue_burst(qid, slot_data_buf,
@@ -250,31 +257,31 @@ pollers_dequeue_burst(uint32_t qid,
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 normal_timeouts_set(const pds_flow_age_timeouts_t *age_tmo)
 {
     return attr_age_tmo_set(FTL_LIF_ATTR_NORMAL_AGE_TMO, age_tmo);
 }
 
-sdk_ret_t
+pds_ret_t
 normal_timeouts_get(pds_flow_age_timeouts_t *age_tmo)
 {
     return attr_age_tmo_get(FTL_LIF_ATTR_NORMAL_AGE_TMO, age_tmo);
 }
 
-sdk_ret_t
+pds_ret_t
 accel_timeouts_set(const pds_flow_age_timeouts_t *age_tmo)
 {
     return attr_age_tmo_set(FTL_LIF_ATTR_ACCEL_AGE_TMO, age_tmo);
 }
 
-sdk_ret_t
+pds_ret_t
 accel_timeouts_get(pds_flow_age_timeouts_t *age_tmo)
 {
     return attr_age_tmo_get(FTL_LIF_ATTR_ACCEL_AGE_TMO, age_tmo);
 }
 
-sdk_ret_t
+pds_ret_t
 accel_aging_control(bool enable_sense)
 {
     devcmd_t        devcmd(ftl_lif, age_tmo_cfg_lock, age_tmo_cfg_unlock);
@@ -284,52 +291,52 @@ accel_aging_control(bool enable_sense)
     return devcmd.submit();
 }
 
-sdk_ret_t
+pds_ret_t
 force_session_expired_ts_set(bool force_expired_ts)
 {
     return force_expired_ts_set(FTL_LIF_ATTR_FORCE_SESSION_EXPIRED_TS,
                                 force_expired_ts);
 }
 
-sdk_ret_t
+pds_ret_t
 force_conntrack_expired_ts_set(bool force_expired_ts)
 {
     return force_expired_ts_set(FTL_LIF_ATTR_FORCE_CONNTRACK_EXPIRED_TS,
                                 force_expired_ts);
 }
 
-sdk_ret_t
+pds_ret_t
 session_scanners_metrics_get(lif_attr_metrics_t *metrics)
 {
     return metrics_get(FTL_QTYPE_SCANNER_SESSION, metrics);
 }
 
-sdk_ret_t
+pds_ret_t
 conntrack_scanners_metrics_get(lif_attr_metrics_t *metrics)
 {
     return metrics_get(FTL_QTYPE_SCANNER_CONNTRACK, metrics);
 }
 
-sdk_ret_t
+pds_ret_t
 pollers_metrics_get(lif_attr_metrics_t *metrics)
 {
     return metrics_get(FTL_QTYPE_POLLER, metrics);
 }
 
-sdk_ret_t
+pds_ret_t
 session_table_depth_get(uint32_t *ret_table_depth)
 {
     *ret_table_depth = session_scanners() ? 
                        session_scanners()->table_depth() : 0;
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
-sdk_ret_t
+pds_ret_t
 conntrack_table_depth_get(uint32_t *ret_table_depth)
 {
     *ret_table_depth = conntrack_scanners() ? 
                        conntrack_scanners()->table_depth() : 0;
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
 bool
@@ -338,35 +345,41 @@ lif_init_done(void)
     return !!rte_atomic16_read(&lif_init_completed);
 }
 
-static sdk_ret_t
+uint64_t
+mpu_timestamp(void)
+{
+    return ftl_lif ? ftl_lif->mpu_timestamp() : 0;
+}
+
+static pds_ret_t
 dev_identify(void)
 {
     devcmd_t        devcmd(ftl_dev);
-    sdk_ret_t       ret;
+    pds_ret_t       ret;
 
     devcmd.req().dev_identify.opcode = FTL_DEVCMD_OPCODE_IDENTIFY;
     devcmd.req().dev_identify.type = FTL_LIF_TYPE_BASE;
     devcmd.req().dev_identify.ver = IDENTITY_VERSION_1;
 
     ret = devcmd.submit(nullptr, &dev_ident);
-    SDK_ASSERT_TRACE_RETURN(ret == SDK_RET_OK, ret,
+    SDK_ASSERT_TRACE_RETURN(ret == PDS_RET_OK, ret,
                             "failed device identify");
     SDK_ASSERT_TRACE_RETURN(dev_ident.base.version == IDENTITY_VERSION_1,
-                            SDK_RET_ERR, "unexpected device version %d",
+                            PDS_RET_ERR, "unexpected device version %d",
                             dev_ident.base.version);
-    SDK_ASSERT_TRACE_RETURN(dev_ident.base.nlifs, SDK_RET_ERR,
+    SDK_ASSERT_TRACE_RETURN(dev_ident.base.nlifs, PDS_RET_ERR,
                             "no device LIFs");
     ftl_lif = ftl_dev->LifFind(0);
-    SDK_ASSERT_TRACE_RETURN(ftl_lif, SDK_RET_ERR,
+    SDK_ASSERT_TRACE_RETURN(ftl_lif, PDS_RET_ERR,
                             "LIF at index 0 not found");
     return ret;
 }
 
-static sdk_ret_t
+static pds_ret_t
 lif_init(void)
 {
     devcmd_t        devcmd(ftl_lif);
-    sdk_ret_t       ret = SDK_RET_OK;
+    pds_ret_t       ret = PDS_RET_OK;
 
     if (rte_atomic16_test_and_set(&lif_init_initiated)) {
         PDS_TRACE_DEBUG("One-time LIF initialization");
@@ -375,61 +388,68 @@ lif_init(void)
         devcmd.req().lif_identify.type = FTL_LIF_TYPE_BASE;
         devcmd.req().lif_identify.ver = IDENTITY_VERSION_1;
         ret = devcmd.submit_with_retry(nullptr, &lif_ident);
-        SDK_ASSERT_TRACE_RETURN(ret == SDK_RET_OK, ret,
+        SDK_ASSERT_TRACE_RETURN(ret == PDS_RET_OK, ret,
                                 "failed LIF identify");
         SDK_ASSERT_TRACE_RETURN(lif_ident.base.version == IDENTITY_VERSION_1,
-                                SDK_RET_ERR, "unexpected LIF version %d",
+                                PDS_RET_ERR, "unexpected LIF version %d",
                                 lif_ident.base.version);
         devcmd.req_clr();
         devcmd.req().lif_init.opcode = FTL_DEVCMD_OPCODE_LIF_INIT;
         ret = devcmd.submit_with_retry();
-        SDK_ASSERT_TRACE_RETURN(ret == SDK_RET_OK, ret,
+        SDK_ASSERT_TRACE_RETURN(ret == PDS_RET_OK, ret,
                                 "failed LIF init");
         devcmd.req_clr();
         devcmd.req().lif_reset.opcode = FTL_DEVCMD_OPCODE_LIF_RESET;
         ret = devcmd.submit_with_retry();
-        SDK_ASSERT_TRACE_RETURN(ret == SDK_RET_OK, ret,
+        SDK_ASSERT_TRACE_RETURN(ret == PDS_RET_OK, ret,
                                 "failed LIF reset");
         /*
          * Allocate poller/scanners before initializing them
          * (in order to provide proper devcmd locking)
          */
         ret = pollers_alloc(FTL_QTYPE_POLLER);
-        if (ret == SDK_RET_OK) {
+        if (ret == PDS_RET_OK) {
             ret = scanners_alloc(FTL_QTYPE_SCANNER_SESSION);
         }
-        if (ret == SDK_RET_OK) {
+        if (ret == PDS_RET_OK) {
             ret = scanners_alloc(FTL_QTYPE_SCANNER_CONNTRACK);
+        }
+        if (ret == PDS_RET_OK) {
+            ret = mpu_timestamp_ctl_alloc(FTL_QTYPE_MPU_TIMESTAMP);
         }
 
         /*
          * Pre-lock and share the same devcmd block across all queue inits.
          */
-        if (ret == SDK_RET_OK) {
+        if (ret == PDS_RET_OK) {
             devcmd_t devcmd_qinit(ftl_lif, queues_lock_all, queues_unlock_all);
 
             devcmd_qinit.owner_pre_lock();
-            if (pollers() && (ret == SDK_RET_OK)) {
+            if (pollers() && (ret == PDS_RET_OK)) {
                 ret = pollers()->init(&devcmd_qinit);
             }
-            if (session_scanners() && (ret == SDK_RET_OK)) {
+            if (session_scanners() && (ret == PDS_RET_OK)) {
                 ret = session_scanners()->init(&devcmd_qinit);
             }
-            if (conntrack_scanners() && (ret == SDK_RET_OK)) {
+            if (conntrack_scanners() && (ret == PDS_RET_OK)) {
                 ret = conntrack_scanners()->init(&devcmd_qinit);
+            }
+            if (mpu_timestamp_ctl() && (ret == PDS_RET_OK)) {
+                ret = mpu_timestamp_ctl()->init(&devcmd_qinit);
             }
 
             /*
              * Scanners are always started by default unless we're in
              * SIM mode, in which case, a test program will start them.
-             * (For now keep scanners disabled until fully brought up.)
              */
-            if (0 /*platform_is_hw(platform_type)*/) {
-
-                if (session_scanners() && (ret == SDK_RET_OK)) {
+            if (platform_is_hw(platform_type)) {
+                if (mpu_timestamp_ctl() && (ret == PDS_RET_OK)) {
+                    ret = mpu_timestamp_ctl()->start(&devcmd_qinit);
+                }
+                if (session_scanners() && (ret == PDS_RET_OK)) {
                     ret = session_scanners()->start(&devcmd_qinit);
                 }
-                if (conntrack_scanners() && (ret == SDK_RET_OK)) {
+                if (conntrack_scanners() && (ret == PDS_RET_OK)) {
                     ret = conntrack_scanners()->start(&devcmd_qinit);
                 }
             }
@@ -440,7 +460,7 @@ lif_init(void)
     return ret;
 }
 
-static sdk_ret_t
+static pds_ret_t
 attr_age_tmo_set(enum lif_attr attr,
                  const pds_flow_age_timeouts_t *attr_age_tmo)
 {
@@ -452,7 +472,7 @@ attr_age_tmo_set(enum lif_attr attr,
     return devcmd.submit();
 }
 
-static sdk_ret_t
+static pds_ret_t
 attr_age_tmo_get(enum lif_attr attr,
                  pds_flow_age_timeouts_t *attr_age_tmo)
 {
@@ -463,7 +483,7 @@ attr_age_tmo_get(enum lif_attr attr,
     return devcmd.submit(nullptr, (void *)attr_age_tmo);
 }
 
-static sdk_ret_t
+static pds_ret_t
 force_expired_ts_set(enum lif_attr attr,
                      bool force_expired_ts)
 {
@@ -475,7 +495,7 @@ force_expired_ts_set(enum lif_attr attr,
     return devcmd.submit();
 }
 
-static sdk_ret_t
+static pds_ret_t
 metrics_get(enum ftl_qtype qtype,
             lif_attr_metrics_t *metrics)
 {
@@ -487,44 +507,64 @@ metrics_get(enum ftl_qtype qtype,
     return devcmd.submit(nullptr, metrics);
 }
 
-static sdk_ret_t
+static pds_ret_t
 pollers_alloc(enum ftl_qtype qtype)
 {
     queue_identity_t    *qident = qtype_qident(qtype);
 
-    SDK_ASSERT_TRACE_RETURN(qtype == FTL_QTYPE_POLLER, SDK_RET_INVALID_ARG,
+    SDK_ASSERT_TRACE_RETURN(qtype == FTL_QTYPE_POLLER, PDS_RET_INVALID_ARG,
                             "invalid qtype %d", qtype);
     PDS_TRACE_DEBUG("qtype %d qcount %d qdepth %d", qtype,
                     qident->qcount, qident->qdepth);
     if (qident->qcount) {
         queues_ctl[qtype] = new lif_queues_ctl_t(qtype, qident->qcount,
                                                  qident->qdepth);
-        SDK_ASSERT_TRACE_RETURN(queues_ctl[qtype], SDK_RET_OOM,
+        SDK_ASSERT_TRACE_RETURN(queues_ctl[qtype], PDS_RET_OOM,
                                 "failed to allocate pollers for qtype %d",
                                 qtype);
     }
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
-static sdk_ret_t
+static pds_ret_t
 scanners_alloc(enum ftl_qtype qtype)
 {
     queue_identity_t    *qident = qtype_qident(qtype);
 
     SDK_ASSERT_TRACE_RETURN((qtype == FTL_QTYPE_SCANNER_SESSION) ||
                             (qtype == FTL_QTYPE_SCANNER_CONNTRACK),
-                            SDK_RET_INVALID_ARG,
+                            PDS_RET_INVALID_ARG,
                             "invalid qtype %d", qtype);
     PDS_TRACE_DEBUG("qtype %d qcount %d qdepth %d", qtype,
                     qident->qcount, qident->qdepth);
     if (qident->qcount) {
         queues_ctl[qtype] = new lif_queues_ctl_t(qtype, qident->qcount,
                                                  qident->qdepth);
-        SDK_ASSERT_TRACE_RETURN(queues_ctl[qtype], SDK_RET_OOM,
+        SDK_ASSERT_TRACE_RETURN(queues_ctl[qtype], PDS_RET_OOM,
                                 "failed to allocate scanners for qtype %d",
                                 qtype);
     }
-    return SDK_RET_OK;
+    return PDS_RET_OK;
+}
+
+static pds_ret_t
+mpu_timestamp_ctl_alloc(enum ftl_qtype qtype)
+{
+    queue_identity_t    *qident = qtype_qident(qtype);
+
+    SDK_ASSERT_TRACE_RETURN(qtype == FTL_QTYPE_MPU_TIMESTAMP,
+                            PDS_RET_INVALID_ARG,
+                            "invalid qtype %d", qtype);
+    PDS_TRACE_DEBUG("qtype %d qcount %d qdepth %d", qtype,
+                    qident->qcount, qident->qdepth);
+    if (qident->qcount) {
+        queues_ctl[qtype] = new lif_queues_ctl_t(qtype, qident->qcount,
+                                                 qident->qdepth);
+        SDK_ASSERT_TRACE_RETURN(queues_ctl[qtype], PDS_RET_OOM,
+                                "failed to allocate MPU timestamp for qtype %d",
+                                qtype);
+    }
+    return PDS_RET_OK;
 }
 
 /**
@@ -553,12 +593,12 @@ lif_queues_ctl_t::~lif_queues_ctl_t()
     SDK_FREE(SDK_MEM_ALLOC_FTL_DEV_IMPL_LOCKS, spinlocks);
 }
 
-sdk_ret_t
+pds_ret_t
 lif_queues_ctl_t::init(devcmd_t *owner_devcmd)
 {
     devcmd_t        local_devcmd(ftl_lif, queues_lock_all, queues_unlock_all);
     devcmd_t        *devcmd;
-    sdk_ret_t       ret = SDK_RET_OK;
+    pds_ret_t       ret = PDS_RET_OK;
 
     /*
      * Caller may have supplied a devcmd_t struct which indicates
@@ -577,19 +617,23 @@ lif_queues_ctl_t::init(devcmd_t *owner_devcmd)
         ret = scanners_init(devcmd);
         break;
 
+    case FTL_QTYPE_MPU_TIMESTAMP:
+        ret = mpu_timestamp_init(devcmd);
+        break;
+
     default:
-        ret = SDK_RET_ERR;
+        ret = PDS_RET_ERR;
         break;
     }
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 lif_queues_ctl_t::start(devcmd_t *owner_devcmd)
 {
     devcmd_t        local_devcmd(ftl_lif, scanners_lock_all, scanners_unlock_all);
     devcmd_t        *devcmd;
-    sdk_ret_t       ret = SDK_RET_OK;
+    pds_ret_t       ret = PDS_RET_OK;
 
     /*
      * Caller may have supplied a devcmd_t struct which indicates
@@ -612,25 +656,35 @@ lif_queues_ctl_t::start(devcmd_t *owner_devcmd)
         devcmd->rsp_clr();
         devcmd->req().scanners_start.opcode = FTL_DEVCMD_OPCODE_SCANNERS_START;
         ret = devcmd->submit();
-        if (ret != SDK_RET_OK) {
+        if (ret != PDS_RET_OK) {
+            PDS_TRACE_ERR("failed devcmd: error %d", ret);
+        }
+        break;
+
+    case FTL_QTYPE_MPU_TIMESTAMP:
+        devcmd->req_clr();
+        devcmd->rsp_clr();
+        devcmd->req().mpu_timestamp_start.opcode = FTL_DEVCMD_OPCODE_MPU_TIMESTAMP_START;
+        ret = devcmd->submit();
+        if (ret != PDS_RET_OK) {
             PDS_TRACE_ERR("failed devcmd: error %d", ret);
         }
         break;
 
     default:
-        ret = SDK_RET_ERR;
+        ret = PDS_RET_ERR;
         break;
     }
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 lif_queues_ctl_t::stop(bool quiesce_check,
                        devcmd_t *owner_devcmd)
 {
     devcmd_t        local_devcmd(ftl_lif, scanners_lock_all, scanners_unlock_all);
     devcmd_t        *devcmd;
-    sdk_ret_t       ret = SDK_RET_OK;
+    pds_ret_t       ret = PDS_RET_OK;
 
     /*
      * Caller may have supplied a devcmd_t struct which indicates
@@ -654,24 +708,34 @@ lif_queues_ctl_t::stop(bool quiesce_check,
         devcmd->req().scanners_stop.opcode = FTL_DEVCMD_OPCODE_SCANNERS_STOP;
         devcmd->req().scanners_stop.quiesce_check = quiesce_check;
         ret = devcmd->submit_with_retry();
-        if (ret != SDK_RET_OK) {
+        if (ret != PDS_RET_OK) {
+            PDS_TRACE_ERR("failed devcmd: error %d", ret);
+        }
+        break;
+
+    case FTL_QTYPE_MPU_TIMESTAMP:
+        devcmd->req_clr();
+        devcmd->rsp_clr();
+        devcmd->req().mpu_timestamp_stop.opcode = FTL_DEVCMD_OPCODE_MPU_TIMESTAMP_STOP;
+        ret = devcmd->submit();
+        if (ret != PDS_RET_OK) {
             PDS_TRACE_ERR("failed devcmd: error %d", ret);
         }
         break;
 
     default:
-        ret = SDK_RET_ERR;
+        ret = PDS_RET_ERR;
         break;
     }
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 lif_queues_ctl_t::start_single(uint32_t qid)
 {
     devcmd_t        devcmd(ftl_lif, scanners_lock_one, scanners_unlock_one,
                            this, qid);
-    sdk_ret_t       ret = SDK_RET_OK;
+    pds_ret_t       ret = PDS_RET_OK;
 
     switch (qtype) {
 
@@ -688,24 +752,27 @@ lif_queues_ctl_t::start_single(uint32_t qid)
         devcmd.req().scanners_start_single.qtype = qtype;
         devcmd.req().scanners_start_single.index = qid;
         ret = devcmd.submit();
-        if (ret != SDK_RET_OK) {
+        if (ret != PDS_RET_OK) {
             PDS_TRACE_ERR("failed devcmd: error %d", ret);
         }
         break;
 
+    case FTL_QTYPE_MPU_TIMESTAMP:
+        break;
+
     default:
         PDS_TRACE_ERR("unsupported qtype %d", qtype);
-        ret = SDK_RET_ERR;
+        ret = PDS_RET_ERR;
         break;
     }
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 lif_queues_ctl_t::flush(void)
 {
     devcmd_t        devcmd(ftl_lif, pollers_lock_all, pollers_unlock_all);
-    sdk_ret_t       ret = SDK_RET_OK;
+    pds_ret_t       ret = PDS_RET_OK;
 
     switch (qtype) {
 
@@ -713,13 +780,14 @@ lif_queues_ctl_t::flush(void)
         devcmd.req().pollers_flush.opcode = FTL_DEVCMD_OPCODE_POLLERS_FLUSH;
         devcmd.req().pollers_flush.qtype = FTL_QTYPE_POLLER;
         ret = devcmd.submit();
-        if (ret != SDK_RET_OK) {
+        if (ret != PDS_RET_OK) {
             PDS_TRACE_ERR("failed devcmd: error %d", ret);
         }
         break;
 
     case FTL_QTYPE_SCANNER_SESSION:
     case FTL_QTYPE_SCANNER_CONNTRACK:
+    case FTL_QTYPE_MPU_TIMESTAMP:
 
         /*
          * HW queues support start/stop rather than flush.
@@ -727,13 +795,13 @@ lif_queues_ctl_t::flush(void)
         break;
 
     default:
-        ret = SDK_RET_ERR;
+        ret = PDS_RET_ERR;
         break;
     }
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 lif_queues_ctl_t::dequeue_burst(uint32_t qid,
                                 poller_slot_data_t *slot_data_buf,
                                 uint32_t slot_data_buf_sz,
@@ -741,7 +809,7 @@ lif_queues_ctl_t::dequeue_burst(uint32_t qid,
                                 devcmd_t *owner_devcmd)
 {
     devcmd_t        *devcmd;
-    sdk_ret_t       ret = SDK_RET_OK;
+    pds_ret_t       ret = PDS_RET_OK;
 
     switch (qtype) {
 
@@ -758,7 +826,7 @@ lif_queues_ctl_t::dequeue_burst(uint32_t qid,
             devcmd->req().pollers_deq_burst.buf_sz = slot_data_buf_sz;
 
             ret = devcmd->submit(nullptr, slot_data_buf);
-            if ((ret != SDK_RET_OK) && (ret != SDK_RET_RETRY)) {
+            if ((ret != PDS_RET_OK) && (ret != PDS_RET_RETRY)) {
                 PDS_TRACE_ERR("failed devcmd: error %d", ret);
             }
 
@@ -766,11 +834,12 @@ lif_queues_ctl_t::dequeue_burst(uint32_t qid,
             break;
         }
 
-        ret = SDK_RET_INVALID_ARG;
+        ret = PDS_RET_INVALID_ARG;
         break;
 
     case FTL_QTYPE_SCANNER_SESSION:
     case FTL_QTYPE_SCANNER_CONNTRACK:
+    case FTL_QTYPE_MPU_TIMESTAMP:
 
         /*
          * HW queues have nothing to dequeue
@@ -779,18 +848,18 @@ lif_queues_ctl_t::dequeue_burst(uint32_t qid,
         break;
 
     default:
-        ret = SDK_RET_ERR;
+        ret = PDS_RET_ERR;
         break;
     }
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 lif_queues_ctl_t::pollers_init(devcmd_t *devcmd)
 {
     uint64_t        wrings_base_addr;
     uint32_t        wrings_total_sz;
-    sdk_ret_t       ret;
+    pds_ret_t       ret;
 
     devcmd->req_clr();
     devcmd->rsp_clr();
@@ -804,7 +873,7 @@ lif_queues_ctl_t::pollers_init(devcmd_t *devcmd)
     wrings_total_sz = api::g_pds_state.mempartition()->size(
                                         FTL_DEV_POLLER_RINGS_HBM_HANDLE);
     SDK_ASSERT_TRACE_RETURN((wrings_base_addr != INVALID_MEM_ADDRESS) &&
-                            wrings_total_sz, SDK_RET_NO_RESOURCE,
+                            wrings_total_sz, PDS_RET_NO_RESOURCE,
                             "HBM memory error for %s"
                             FTL_DEV_POLLER_RINGS_HBM_HANDLE);
     devcmd->req().pollers_init.wrings_base_addr = wrings_base_addr;
@@ -819,20 +888,20 @@ lif_queues_ctl_t::pollers_init(devcmd_t *devcmd)
     qcount_actual = devcmd->req().pollers_init.qcount;
 
     ret = devcmd->submit();
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
         PDS_TRACE_ERR("failed devcmd: error %d", ret);
     }
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 lif_queues_ctl_t::scanners_init(devcmd_t *devcmd)
 {
     queue_identity_t        *qident = &lif_ident.base.qident[qtype];
     queue_identity_t        *pollers_qident = &lif_ident.base.qident[FTL_QTYPE_POLLER];
     p4pd_table_properties_t tprop = {0};
     uint32_t                tableid;
-    sdk_ret_t               ret;
+    pds_ret_t               ret;
 
     devcmd->req_clr();
     devcmd->rsp_clr();
@@ -847,7 +916,7 @@ lif_queues_ctl_t::scanners_init(devcmd_t *devcmd)
     if (p4pd_error != P4PD_SUCCESS) {
         PDS_TRACE_ERR("failed to obtain properties for tableid %u: "
                       "error %d", tableid, p4pd_error);
-        return SDK_RET_HW_PROGRAM_ERR;
+        return PDS_RET_HW_PROGRAM_ERR;
     }
 
     devcmd->req().scanners_init.scan_addr_base = tprop.base_mem_pa;
@@ -877,7 +946,24 @@ lif_queues_ctl_t::scanners_init(devcmd_t *devcmd)
     qcount_actual = devcmd->req().scanners_init.qcount;
 
     ret = devcmd->submit();
-    if (ret != SDK_RET_OK) {
+    if (ret != PDS_RET_OK) {
+        PDS_TRACE_ERR("failed devcmd: error %d", ret);
+    }
+    return ret;
+}
+
+pds_ret_t
+lif_queues_ctl_t::mpu_timestamp_init(devcmd_t *devcmd)
+{
+    pds_ret_t               ret;
+
+    devcmd->req_clr();
+    devcmd->rsp_clr();
+    devcmd->req().mpu_timestamp_init.opcode = FTL_DEVCMD_OPCODE_MPU_TIMESTAMP_INIT;
+    devcmd->req().mpu_timestamp_init.qtype = qtype;
+
+    ret = devcmd->submit();
+    if (ret != PDS_RET_OK) {
         PDS_TRACE_ERR("failed devcmd: error %d", ret);
     }
     return ret;
@@ -965,33 +1051,33 @@ devcmd_t::devcmd_t(FtlLif *ftl_lif,
     rsp_clr();
 }
 
-sdk_ret_t
+pds_ret_t
 devcmd_t::owner_pre_lock(void)
 {
     if (spinlock_enter) {
         (*spinlock_enter)(user_arg, user_idx);
         pre_locked = true;
-        return SDK_RET_OK;
+        return PDS_RET_OK;
     }
-    return SDK_RET_NOOP;
+    return PDS_RET_NOOP;
 }
 
-sdk_ret_t
+pds_ret_t
 devcmd_t::owner_pre_unlock(void)
 {
     if (pre_locked && spinlock_leave) {
         pre_locked = false;
         (*spinlock_leave)(user_arg, user_idx);
-        return SDK_RET_OK;
+        return PDS_RET_OK;
     }
-    return SDK_RET_NOOP;
+    return PDS_RET_NOOP;
 }
 
-sdk_ret_t
+pds_ret_t
 devcmd_t::submit(void *req_data,
                  void *rsp_data)
 {
-    sdk_ret_t           ret;
+    pds_ret_t           ret;
 
     /*
      * Take lock only if not already pre-locked by owener.
@@ -1005,19 +1091,19 @@ devcmd_t::submit(void *req_data,
     if (!pre_locked && spinlock_leave) {
         (*spinlock_leave)(user_arg, user_idx);
     }
-    if (ret == SDK_RET_RETRY) {
+    if (ret == PDS_RET_RETRY) {
         PDS_TRACE_DEBUG("retry needed for command %s",
                         ftl_dev_opcode_str(req_.cmd.opcode));
     }
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 devcmd_t::submit_with_retry(void *req_data,
                             void *rsp_data)
 {
     ftl_timestamp_t     ts;
-    sdk_ret_t           ret;
+    pds_ret_t           ret;
 
     ts.time_expiry_set(FTL_DEVCMD_RETRY_TMO_US);
 
@@ -1030,7 +1116,7 @@ devcmd_t::submit_with_retry(void *req_data,
 
     for ( ;; ) {
         ret = cmd_handler(req_data, rsp_data);
-        if ((ret != SDK_RET_RETRY) || ts.time_expiry_check()) {
+        if ((ret != PDS_RET_RETRY) || ts.time_expiry_check()) {
             break;
         }
         usleep(10000);
@@ -1039,10 +1125,10 @@ devcmd_t::submit_with_retry(void *req_data,
     if (!pre_locked && spinlock_leave) {
         (*spinlock_leave)(user_arg, user_idx);
     }
-    return ret == SDK_RET_RETRY ? SDK_RET_HW_PROGRAM_ERR : ret;
+    return ret == PDS_RET_RETRY ? PDS_RET_HW_PROGRAM_ERR : ret;
 }
 
-sdk_ret_t
+pds_ret_t
 devcmd_t::cmd_handler(void *req_data,
                       void *rsp_data)
 {
@@ -1051,7 +1137,7 @@ devcmd_t::cmd_handler(void *req_data,
     status = ftl_lif ?
              ftl_lif->CmdHandler(&req_, req_data, &rsp_, rsp_data) :
              ftl_dev->CmdHandler(&req_, req_data, &rsp_, rsp_data);
-    return ftl_status_2_sdk_ret(status);
+    return ftl_status_2_pds_ret(status);
 }
 
 /**
@@ -1167,34 +1253,34 @@ queues_unlock_all(void *user_arg,
     pollers_unlock_all(user_arg, idx);
 }
 
-static sdk_ret_t
-ftl_status_2_sdk_ret(ftl_status_code_t ftl_status)
+static pds_ret_t
+ftl_status_2_pds_ret(ftl_status_code_t ftl_status)
 {
     switch (ftl_status) {
 
-#define FTL_STATUS_CASE_SDK_RET(x, y)      case x: return y
+#define FTL_STATUS_CASE_PDS_RET(x, y)      case x: return y
 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_SUCCESS,  SDK_RET_OK); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_EVERSION, SDK_RET_HW_SW_OO_SYNC); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_EOPCODE,  SDK_RET_INVALID_OP); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_EIO,      SDK_RET_HW_PROGRAM_ERR); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_EPERM,    SDK_RET_ERR); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_EQID,     SDK_RET_INVALID_ARG); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_EQTYPE,   SDK_RET_INVALID_ARG); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_ENOENT,   SDK_RET_ENTRY_NOT_FOUND); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_EINTR,    SDK_RET_RETRY); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_EAGAIN,   SDK_RET_RETRY); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_ENOMEM,   SDK_RET_OOM); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_EFAULT,   SDK_RET_INVALID_ARG); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_EBUSY,    SDK_RET_IN_PROGRESS); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_EEXIST,   SDK_RET_ENTRY_EXISTS); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_EINVAL,   SDK_RET_INVALID_ARG); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_ENOSPC,   SDK_RET_NO_RESOURCE); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_ERANGE,   SDK_RET_OOB); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_BAD_ADDR, SDK_RET_OOB); 
-    FTL_STATUS_CASE_SDK_RET(FTL_RC_ERROR,    SDK_RET_ERR); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_SUCCESS,  PDS_RET_OK); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_EVERSION, PDS_RET_HW_SW_OO_SYNC); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_EOPCODE,  PDS_RET_INVALID_OP); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_EIO,      PDS_RET_HW_PROGRAM_ERR); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_EPERM,    PDS_RET_ERR); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_EQID,     PDS_RET_INVALID_ARG); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_EQTYPE,   PDS_RET_INVALID_ARG); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_ENOENT,   PDS_RET_ENTRY_NOT_FOUND); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_EINTR,    PDS_RET_RETRY); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_EAGAIN,   PDS_RET_RETRY); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_ENOMEM,   PDS_RET_OOM); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_EFAULT,   PDS_RET_INVALID_ARG); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_EBUSY,    PDS_RET_IN_PROGRESS); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_EEXIST,   PDS_RET_ENTRY_EXISTS); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_EINVAL,   PDS_RET_INVALID_ARG); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_ENOSPC,   PDS_RET_NO_RESOURCE); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_ERANGE,   PDS_RET_OOB); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_BAD_ADDR, PDS_RET_OOB); 
+    FTL_STATUS_CASE_PDS_RET(FTL_RC_ERROR,    PDS_RET_ERR); 
 
-    default: return SDK_RET_ERR;
+    default: return PDS_RET_ERR;
     }
 }
 

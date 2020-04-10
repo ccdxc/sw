@@ -1,4 +1,3 @@
-
 //
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //
@@ -16,6 +15,7 @@
 #include <getopt.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string>
 #include <iostream>
 #include <map>
@@ -26,6 +26,7 @@
 #include "nic/sdk/third-party/zmq/include/zmq.h"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/test/api/utils/base.hpp"
+#include "nic/apollo/api/include/athena/pds_base.h"
 #include "script_parser.hpp"
 #include "nic/include/ftl_dev_if.hpp"
 #include "nic/apollo/api/include/athena/pds_conntrack.h"
@@ -72,17 +73,17 @@ public:
     bool is_str(void) const { return type == TOKEN_TYPE_STR;  }
     bool is_tuple(void) const { return type == TOKEN_TYPE_TUPLE_BEGIN;  }
 
-    sdk_ret_t  num(uint32_t *ret_num,
+    pds_ret_t  num(uint32_t *ret_num,
                    bool suppress_err_log = false) const;
-    sdk_ret_t  str(std::string *ret_str,
+    pds_ret_t  str(std::string *ret_str,
                    bool suppress_err_log = false) const;
-    sdk_ret_t  bool_val(bool *ret_bool,
+    pds_ret_t  bool_val(bool *ret_bool,
                         bool suppress_err_log = false) const;
-    sdk_ret_t  flowtype(pds_flow_type_t *ret_flowtype,
+    pds_ret_t  flowtype(pds_flow_type_t *ret_flowtype,
                         bool suppress_err_log = false) const;
-    sdk_ret_t  flowstate(pds_flow_state_t *ret_flowstate,
+    pds_ret_t  flowstate(pds_flow_state_t *ret_flowstate,
                          bool suppress_err_log = false) const;
-    sdk_ret_t  tuple(std::vector<test_param_t> *ret_tuple,
+    pds_ret_t  tuple(std::vector<test_param_t> *ret_tuple,
                      bool suppress_err_log = false) const;
 
     friend class test_vparam_t;
@@ -111,19 +112,19 @@ public:
 
     uint32_t size(void) const { return vparam.size(); }
 
-    sdk_ret_t num(uint32_t idx,
+    pds_ret_t num(uint32_t idx,
                   uint32_t *ret_num,
                   bool suppress_err_log = false) const;
-    sdk_ret_t str(uint32_t idx,
+    pds_ret_t str(uint32_t idx,
                   std::string *ret_str,
                   bool suppress_err_log = false) const;
-    sdk_ret_t flowtype(uint32_t idx,
+    pds_ret_t flowtype(uint32_t idx,
                        pds_flow_type_t *ret_flowtype,
                        bool suppress_err_log = false) const;
-    sdk_ret_t flowstate(uint32_t idx,
+    pds_ret_t flowstate(uint32_t idx,
                         pds_flow_state_t *ret_flowstate,
                         bool suppress_err_log = false) const;
-    sdk_ret_t tuple(uint32_t idx,
+    pds_ret_t tuple(uint32_t idx,
                     test_param_tuple_t *ret_tuple,
                     bool suppress_err_log = false) const;
     bool expected_bool(bool dflt = false) const;
@@ -282,7 +283,8 @@ public:
     {
         return counters.accel_control   +
                counters.info_read       +
-               counters.ts_tolerance    +
+               counters.under_age       +
+               counters.over_age        +
                counters.create_add      +
                counters.create_erase    +
                counters.empty_check;
@@ -295,7 +297,8 @@ private:
     struct {
         uint32_t                accel_control;
         uint32_t                info_read;
-        uint32_t                ts_tolerance;
+        uint32_t                under_age;
+        uint32_t                over_age;
         uint32_t                create_add;
         uint32_t                create_erase;
         uint32_t                empty_check;
@@ -320,9 +323,11 @@ public:
     aging_tolerance_t(uint32_t num_ids_max = AGING_TOLERANCE_STORE_ID_THRESH) :
         normal_tmo(false),
         accel_tmo(true),
-        curr_tmo(normal_tmo),
+        curr_tmo(&normal_tmo),
         num_ids_max(num_ids_max),
         tolerance_secs(0),
+        over_age_min_(UINT32_MAX),
+        over_age_max_(0),
         create_count_(0),
         erase_count_(0),
         expiry_count_(0) {}
@@ -343,6 +348,11 @@ public:
     void expiry_count_inc(void) { expiry_count_++; }
     uint32_t create_count(void) { return create_count_; }
     uint32_t expiry_count(void) { return expiry_count_; }
+    uint32_t over_age_min(void)
+    {
+        return over_age_min_ == UINT32_MAX ? 0 : over_age_min_;
+    }
+    uint32_t over_age_max(void) { return over_age_max_; }
 
     bool create_map_with_ids(void)
     {
@@ -364,12 +374,14 @@ public:
 private:
 
     void tmo_tolerance_check(uint32_t id,
-                             uint32_t entry_ts,
+                             uint32_t delta_secs,
                              uint32_t applic_tmo_secs);
 
-    aging_tmo_cfg_t&            curr_tmo;
+    aging_tmo_cfg_t             *curr_tmo;
     uint32_t                    num_ids_max;
     uint32_t                    tolerance_secs;
+    uint32_t                    over_age_min_;
+    uint32_t                    over_age_max_;
     tolerance_fail_count_t      failures;
 
     id_map_t                    create_id_map;
@@ -391,7 +403,7 @@ public:
         base = {0};
     }
 
-    sdk_ret_t baseline(void);
+    pds_ret_t baseline(void);
     uint64_t delta_expired_entries(void) const;
     uint64_t delta_num_qfulls(void) const;
 
@@ -411,7 +423,7 @@ public:
     void show(bool latest = true) const;
 
 private:
-    sdk_ret_t refresh(ftl_dev_if::lif_attr_metrics_t& m) const;
+    pds_ret_t refresh(ftl_dev_if::lif_attr_metrics_t& m) const;
 
     enum ftl_dev_if::ftl_qtype     qtype;
     ftl_dev_if::lif_attr_metrics_t base;
@@ -515,14 +527,14 @@ randomize_max(uint32_t val_max,
     return (rand_num ? rand_num : (zero_ok ? 0 : 1));
 }
 
-sdk_ret_t script_exec(const std::string& scripts_dir,
+pds_ret_t script_exec(const std::string& scripts_dir,
                       const std::string& script_fname);
 /*
  * Server message process functions
  */
-typedef sdk_ret_t (*server_msg_proc_fn_t)(zmq_msg_t *rx_msg,
+typedef pds_ret_t (*server_msg_proc_fn_t)(zmq_msg_t *rx_msg,
                                           zmq_msg_t *tx_msg);
-sdk_ret_t script_exec_msg_process(zmq_msg_t *rx_msg,
+pds_ret_t script_exec_msg_process(zmq_msg_t *rx_msg,
                                   zmq_msg_t *tx_msg);
 
 /*
@@ -541,8 +553,31 @@ flow_conntrack_key_init(pds_conntrack_key_t *key)
     memset(key, 0, sizeof(*key));
 }
 
-uint32_t mpu_timestamp(void);
-uint32_t mpu_timestamp2secs(uint32_t mpu_timestamp);
+uint64_t mpu_timestamp(void);
+uint32_t session_timestamp(uint64_t mpu_timestamp,
+                           bool underage_adjust = false);
+uint32_t session_timestamp_diff(uint32_t session_ts_end,
+                                uint32_t session_ts_start);
+uint32_t conntrack_timestamp(uint64_t mpu_timestamp,
+                             bool underage_adjust = false);
+uint32_t conntrack_timestamp_diff(uint32_t conntrack_ts_end,
+                                  uint32_t conntrack_ts_start);
+
+/*
+ * On Capri, P4 updates flow timestamp using bits 47:23 of the MPU tick.
+ * With a clock speed of 833MHz, this gives interval of 1.01E-02 (10.1ms).
+ */
+static inline uint32_t
+session_timestamp2secs(uint32_t session_ts)
+{
+    return session_ts / 100;
+}
+
+static inline uint32_t
+conntrack_timestamp2secs(uint32_t conntrack_ts)
+{
+    return session_timestamp2secs(conntrack_ts);
+}
 
 }    // namespace athena_app
 }    // namespace test

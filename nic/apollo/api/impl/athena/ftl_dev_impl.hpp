@@ -25,6 +25,7 @@
 #include <rte_atomic.h>
 
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/apollo/api/include/athena/pds_base.h"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
 
@@ -40,29 +41,30 @@
 
 namespace ftl_dev_impl {
 
-sdk_ret_t init(void);
-sdk_ret_t pollers_qcount_get(uint32_t *ret_qcount);
-sdk_ret_t scanners_start(void);
-sdk_ret_t scanners_stop(bool quiesce_check);
-sdk_ret_t scanners_start_single(enum ftl_qtype qtype,
+pds_ret_t init(void);
+pds_ret_t pollers_qcount_get(uint32_t *ret_qcount);
+pds_ret_t scanners_start(void);
+pds_ret_t scanners_stop(bool quiesce_check);
+pds_ret_t scanners_start_single(enum ftl_qtype qtype,
                                 uint32_t qid);
-sdk_ret_t pollers_flush(void);
-sdk_ret_t pollers_dequeue_burst(uint32_t qid,
+pds_ret_t pollers_flush(void);
+pds_ret_t pollers_dequeue_burst(uint32_t qid,
                                 poller_slot_data_t *slot_data_buf,
                                 uint32_t slot_data_buf_sz,
                                 uint32_t *burst_count);
-sdk_ret_t normal_timeouts_set(const pds_flow_age_timeouts_t *age_tmo);
-sdk_ret_t normal_timeouts_get(pds_flow_age_timeouts_t *age_tmo);
-sdk_ret_t accel_timeouts_set(const pds_flow_age_timeouts_t *age_tmo);
-sdk_ret_t accel_timeouts_get(pds_flow_age_timeouts_t *age_tmo);
-sdk_ret_t accel_aging_control(bool enable_sense);
-sdk_ret_t force_session_expired_ts_set(bool force_expired_ts);
-sdk_ret_t force_conntrack_expired_ts_set(bool force_expired_ts);
-sdk_ret_t session_scanners_metrics_get(lif_attr_metrics_t *metrics);
-sdk_ret_t conntrack_scanners_metrics_get(lif_attr_metrics_t *metrics);
-sdk_ret_t pollers_metrics_get(lif_attr_metrics_t *metrics);
-sdk_ret_t session_table_depth_get(uint32_t *ret_table_depth);
-sdk_ret_t conntrack_table_depth_get(uint32_t *ret_table_depth);
+pds_ret_t normal_timeouts_set(const pds_flow_age_timeouts_t *age_tmo);
+pds_ret_t normal_timeouts_get(pds_flow_age_timeouts_t *age_tmo);
+pds_ret_t accel_timeouts_set(const pds_flow_age_timeouts_t *age_tmo);
+pds_ret_t accel_timeouts_get(pds_flow_age_timeouts_t *age_tmo);
+pds_ret_t accel_aging_control(bool enable_sense);
+pds_ret_t force_session_expired_ts_set(bool force_expired_ts);
+pds_ret_t force_conntrack_expired_ts_set(bool force_expired_ts);
+pds_ret_t session_scanners_metrics_get(lif_attr_metrics_t *metrics);
+pds_ret_t conntrack_scanners_metrics_get(lif_attr_metrics_t *metrics);
+pds_ret_t pollers_metrics_get(lif_attr_metrics_t *metrics);
+pds_ret_t session_table_depth_get(uint32_t *ret_table_depth);
+pds_ret_t conntrack_table_depth_get(uint32_t *ret_table_depth);
+uint64_t  mpu_timestamp(void);
 
 bool lif_init_done(void);
 
@@ -78,13 +80,13 @@ public:
                      uint32_t qdepth);
     ~lif_queues_ctl_t();
 
-    sdk_ret_t init(devcmd_t *owner_devcmd = nullptr);
-    sdk_ret_t start(devcmd_t *owner_devcmd = nullptr);
-    sdk_ret_t stop( bool quiesce_check,
+    pds_ret_t init(devcmd_t *owner_devcmd = nullptr);
+    pds_ret_t start(devcmd_t *owner_devcmd = nullptr);
+    pds_ret_t stop( bool quiesce_check,
                     devcmd_t *owner_devcmd = nullptr);
-    sdk_ret_t start_single(uint32_t qid);
-    sdk_ret_t flush(void);
-    sdk_ret_t dequeue_burst(uint32_t qid,
+    pds_ret_t start_single(uint32_t qid);
+    pds_ret_t flush(void);
+    pds_ret_t dequeue_burst(uint32_t qid,
                             poller_slot_data_t *slot_data_buf,
                             uint32_t slot_data_buf_sz,
                             uint32_t *burst_count,
@@ -104,8 +106,9 @@ private:
     uint32_t                table_sz;
     rte_spinlock_t          *spinlocks;
 
-    sdk_ret_t pollers_init(devcmd_t *devcmd);
-    sdk_ret_t scanners_init(devcmd_t *devcmd);
+    pds_ret_t pollers_init(devcmd_t *devcmd);
+    pds_ret_t scanners_init(devcmd_t *devcmd);
+    pds_ret_t mpu_timestamp_init(devcmd_t *devcmd);
 };
 
 /**
@@ -146,11 +149,11 @@ public:
     ftl_devcmd_t& req(void) { return req_; }
     ftl_devcmd_cpl_t& rsp(void) { return rsp_; }
 
-    sdk_ret_t owner_pre_lock(void);
-    sdk_ret_t owner_pre_unlock(void);
-    sdk_ret_t submit(void *req_data = nullptr,
+    pds_ret_t owner_pre_lock(void);
+    pds_ret_t owner_pre_unlock(void);
+    pds_ret_t submit(void *req_data = nullptr,
                      void *rsp_data = nullptr);
-    sdk_ret_t submit_with_retry(void *req_data = nullptr,
+    pds_ret_t submit_with_retry(void *req_data = nullptr,
                                 void *rsp_data = nullptr);
 
 private:
@@ -164,7 +167,7 @@ private:
     ftl_devcmd_t                req_;
     ftl_devcmd_cpl_t            rsp_;
 
-    sdk_ret_t cmd_handler(void *req_data,
+    pds_ret_t cmd_handler(void *req_data,
                           void *rsp_data);
 };
 

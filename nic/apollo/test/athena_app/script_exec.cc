@@ -74,7 +74,7 @@ timeval_delta(struct timeval& end,
     }
 }
 
-sdk_ret_t
+pds_ret_t
 script_exec(const string& scripts_dir,
             const string& script_fname)
 {
@@ -92,7 +92,7 @@ script_exec(const string& scripts_dir,
     bool                in_tuple;
     bool                has_app_exit;
     bool                overall_success;
-    sdk_ret_t           ret = SDK_RET_INVALID_ARG;
+    pds_ret_t           ret = PDS_RET_INVALID_ARG;
 
     script_parser = new script_parser_t(scripts_dir, script_fname,
                                         token_parser);
@@ -257,7 +257,7 @@ script_exec(const string& scripts_dir,
         vparam.push_back(test_param_t((uint32_t)overall_success));
         test_entry.test_fn(vparam);
     }
-    ret = overall_success ? SDK_RET_OK : SDK_RET_ERR;
+    ret = overall_success ? PDS_RET_OK : PDS_RET_ERR;
 
 done:
     if (script_parser) {
@@ -266,7 +266,7 @@ done:
     return ret;
 }
 
-sdk_ret_t
+pds_ret_t
 script_exec_msg_process(zmq_msg_t *rx_msg,
                         zmq_msg_t *tx_msg)
 {
@@ -275,12 +275,12 @@ script_exec_msg_process(zmq_msg_t *rx_msg,
     SERVER_RSP_INIT(tx_msg, rsp, server_rsp_t);
     req = (server_script_exec_t *)zmq_msg_data(rx_msg);
     rsp->status = server_msg_size_check(rx_msg, sizeof(*req));
-    if (rsp->status == SDK_RET_OK) {
+    if (rsp->status == PDS_RET_OK) {
         ATHENA_APP_MSG_STR_TERM(req->dir);
         ATHENA_APP_MSG_STR_TERM(req->name);
         rsp->status = script_exec(req->dir, req->name);
     }
-    return (sdk_ret_t)rsp->status;
+    return (pds_ret_t)rsp->status;
 }
 
 }    // namespace athena_app

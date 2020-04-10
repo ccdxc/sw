@@ -91,7 +91,7 @@ void server_poll_stop(void);
 /*
  * Size validator for small messages.
  */
-static inline sdk_ret_t
+static inline pds_ret_t
 server_msg_size_check(zmq_msg_t *rx_msg,
                       size_t exp_size)
 {
@@ -101,9 +101,9 @@ server_msg_size_check(zmq_msg_t *rx_msg,
     if (rx_size < exp_size) {
         TEST_LOG_ERR("Rx bytes %d less than expected(%d)\n",
                      (int)rx_size, (int)exp_size);
-        return SDK_RET_INVALID_ARG;
+        return PDS_RET_INVALID_ARG;
     }
-    return SDK_RET_OK;
+    return PDS_RET_OK;
 }
 
 static inline const char *
