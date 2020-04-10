@@ -155,21 +155,23 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
             dip_inode += 2;
         }
 
-        if (rule->match.l3_match.ip_proto == IP_PROTO_ICMP) {
-            itable_update_icmp_type_code(&rule->match.l4_match.sport_range,
-                                         &rule->match.l4_match.dport_range,
-                                         rule->match.l4_match.icmp_type,
-                                         rule->match.l4_match.icmp_code);
+        if (rule->match.l3_match.proto_match_type != MATCH_SPECIFIC) {
+            itable_update_l4_any(&rule->match.l4_match);
+        } else if (rule->match.l3_match.ip_proto == IP_PROTO_ICMP) {
+            itable_update_icmp_type_code(&rule->match.l4_match);
+        } else if ((rule->match.l3_match.ip_proto != IP_PROTO_TCP) &&
+                   (rule->match.l3_match.ip_proto != IP_PROTO_UDP)){
+            itable_update_l4_any(&rule->match.l4_match);
         }
 
         // handle source port match condition
         port_inode = itable_add_port_inodes(rule_num, port_inode,
-                               &rule->match.l4_match.sport_range);
+                                            &rule->match.l4_match);
 
         // handle protocol and destination port match condition
         itable_add_proto_port_inodes(rule_num, proto_port_inode,
-                                     rule->match.l3_match.ip_proto,
-                                     &rule->match.l4_match.dport_range);
+                                     &rule->match.l3_match,
+                                     &rule->match.l4_match);
         proto_port_inode += 2;
     }
     sip_itable->num_nodes = sip_inode - &sip_itable->nodes[0];

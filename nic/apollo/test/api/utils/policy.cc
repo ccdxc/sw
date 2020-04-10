@@ -76,6 +76,7 @@ create_rules(std::string cidr_str, uint8_t af, uint16_t num_rules,
             (*rule_info)->rules[i].match.l4_match.sport_range.port_hi = 65535;
             (*rule_info)->rules[i].match.l4_match.dport_range.port_lo = 0;
             (*rule_info)->rules[i].match.l4_match.dport_range.port_hi = 65535;
+            (*rule_info)->rules[i].match.l3_match.proto_match_type = MATCH_SPECIFIC;
             (*rule_info)->rules[i].match.l3_match.ip_proto = IP_PROTO_TCP;
             // create few as range match rules and rest as prefix
             if (num_range_rules) {
@@ -118,13 +119,17 @@ create_rules(std::string cidr_str, uint8_t af, uint16_t num_rules,
                 (*rule_info)->rules[i].match.l4_match.sport_range.port_hi = 65535;
                 (*rule_info)->rules[i].match.l4_match.dport_range.port_lo = 0;
                 (*rule_info)->rules[i].match.l4_match.dport_range.port_hi = 65535;
+                (*rule_info)->rules[i].match.l3_match.proto_match_type = MATCH_SPECIFIC;
                 (*rule_info)->rules[i].match.l3_match.ip_proto = IP_PROTO_TCP;
                 stateful_rules--;
             } else {
                 (*rule_info)->rules[i].stateful = false;
-                (*rule_info)->rules[i].match.l4_match.icmp_type = 1;
-                (*rule_info)->rules[i].match.l4_match.icmp_code = 1;
+                (*rule_info)->rules[i].match.l3_match.proto_match_type = MATCH_SPECIFIC;
                 (*rule_info)->rules[i].match.l3_match.ip_proto = IP_PROTO_ICMP;
+                (*rule_info)->rules[i].match.l4_match.type_match_type = MATCH_SPECIFIC;
+                (*rule_info)->rules[i].match.l4_match.icmp_type = 1;
+                (*rule_info)->rules[i].match.l4_match.code_match_type = MATCH_SPECIFIC;
+                (*rule_info)->rules[i].match.l4_match.icmp_code = 1;
             }
             memcpy(&(*rule_info)->rules[i].match.l3_match.src_ip_pfx,
                    &ip_pfx, sizeof(ip_prefix_t));

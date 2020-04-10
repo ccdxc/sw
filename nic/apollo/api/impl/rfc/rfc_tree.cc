@@ -72,30 +72,49 @@ itable_add_tag_inodes (uint32_t rule, inode_t *tag_inode, uint32_t tag)
 }
 
 void
-itable_update_icmp_type_code (port_range_t *sport_range,
-                              port_range_t *dport_range,
-                              uint8_t icmp_type,
-                              uint8_t icmp_code)
+itable_update_l4_any (rule_l4_match_t *l4Match)
 {
-    dport_range->port_lo = ((icmp_type << 8) | icmp_code);
-    dport_range->port_hi = dport_range->port_lo;
-    sport_range->port_lo = 0;
-    sport_range->port_hi = 65535;
+    l4Match->dport_range.port_lo = 0;
+    l4Match->dport_range.port_hi = 65535;
+    l4Match->sport_range.port_lo = 0;
+    l4Match->sport_range.port_hi = 65535;
+}
+
+void
+itable_update_icmp_type_code (rule_l4_match_t *l4Match)
+{
+    if (l4Match->type_match_type == MATCH_SPECIFIC) {
+        if (l4Match->code_match_type == MATCH_SPECIFIC) {
+            l4Match->dport_range.port_lo = ((l4Match->icmp_type << 8) |
+                                             l4Match->icmp_code);
+            l4Match->dport_range.port_hi = l4Match->dport_range.port_lo;
+        } else {
+            l4Match->dport_range.port_lo = ((l4Match->icmp_type << 8));
+            l4Match->dport_range.port_hi = ((l4Match->icmp_type << 8) |
+                                             255);
+        }
+    } else {
+        l4Match->dport_range.port_lo = 0;
+        l4Match->dport_range.port_hi = 65535;
+    }
+
+    l4Match->sport_range.port_lo = 0;
+    l4Match->sport_range.port_hi = 65535;
 }
 
 inode_t *
 itable_add_port_inodes (uint32_t rule, inode_t *port_inode,
-                        port_range_t *port_range)
+                        rule_l4_match_t *l4Match)
 {
-    port_inode->port = port_range->port_lo;
+    port_inode->port = l4Match->sport_range.port_lo;
     port_inode->rfc.class_id = 0;
     port_inode->rfc.rule_no = rule;
     port_inode->rfc.start = TRUE;
     port_inode->rfc.pad = 0;
     port_inode++;
 
-    if (port_range->port_hi != 65535) {
-        port_inode->port = port_range->port_hi + 1;
+    if (l4Match->sport_range.port_hi != 65535) {
+        port_inode->port = l4Match->sport_range.port_hi + 1;
         port_inode->rfc.class_id = 0;
         port_inode->rfc.rule_no = rule;
         port_inode->rfc.start = FALSE;
@@ -108,23 +127,24 @@ itable_add_port_inodes (uint32_t rule, inode_t *port_inode,
 
 void
 itable_add_proto_port_inodes (uint32_t rule, inode_t *proto_port_inode,
-                              uint8_t ip_proto, port_range_t *port_range)
+                              rule_l3_match_t *l3Match,
+                              rule_l4_match_t *l4Match)
 {
-    uint32_t   port_hi;
+    if (l3Match->proto_match_type == MATCH_SPECIFIC) {
+        proto_port_inode->key32 = (l3Match->ip_proto << 24) |
+                                   l4Match->dport_range.port_lo;
+    } else {
+        proto_port_inode->key32 = 0;
+    }
 
-    proto_port_inode->key32 = (ip_proto << 24) | port_range->port_lo;
     proto_port_inode->rfc.class_id = 0;
     proto_port_inode->rfc.rule_no = rule;
     proto_port_inode->rfc.start = TRUE;
     proto_port_inode->rfc.pad = 0;
 
     proto_port_inode++;
-    port_hi = port_range->port_hi + 1;
-    if (ip_proto) {
-        proto_port_inode->key32 = (ip_proto << 24) | port_hi;
-    } else {
-        proto_port_inode->key32 = 0x00FFFFFF;
-    }
+    proto_port_inode->key32 = (l3Match->ip_proto << 24) |
+                              (l4Match->dport_range.port_hi + 1);
     proto_port_inode->rfc.class_id = 0;
     proto_port_inode->rfc.rule_no = rule;
     proto_port_inode->rfc.start = FALSE;

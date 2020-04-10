@@ -115,14 +115,20 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 		ruleL4Match := &halapi.RuleL4Match{
 			L4Info: &halapi.RuleL4Match_TypeCode{
 				TypeCode: &halapi.ICMPMatch{
-					Type: app.Spec.ALG.ICMP.Type,
-					Code: app.Spec.ALG.ICMP.Code,
+					Typematch: &halapi.ICMPMatch_TypeNum{
+						TypeNum: app.Spec.ALG.ICMP.Type,
+					},
+					Codematch: &halapi.ICMPMatch_CodeNum{
+						CodeNum: app.Spec.ALG.ICMP.Code,
+					},
 				},
 			},
 		}
 
 		for _, ruleL3Match := range ruleL3MatchComb {
-			ruleL3Match.Protocol = halProtocol
+			ruleL3Match.Protomatch = &halapi.RuleL3Match_ProtoNum{
+				ProtoNum: halProtocol,
+			}
 			ruleMatch := &halapi.RuleMatch{
 				L3Match: ruleL3Match,
 				L4Match: ruleL4Match,
@@ -168,7 +174,9 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 			}
 
 			for _, ruleL3Match := range ruleL3MatchComb {
-				ruleL3Match.Protocol = halProtocol
+				ruleL3Match.Protomatch = &halapi.RuleL3Match_ProtoNum{
+					ProtoNum: halProtocol,
+				}
 				ruleMatch := &halapi.RuleMatch{
 					L3Match: ruleL3Match,
 					L4Match: ruleL4Match,
@@ -214,7 +222,9 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 			}
 
 			for _, ruleL3Match := range ruleL3MatchComb {
-				ruleL3Match.Protocol = halProtocol
+				ruleL3Match.Protomatch = &halapi.RuleL3Match_ProtoNum{
+					ProtoNum: halProtocol,
+				}
 				ruleMatch := &halapi.RuleMatch{
 					L3Match: ruleL3Match,
 					L4Match: ruleL4Match,
@@ -273,7 +283,9 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 				}
 
 				for _, ruleL3Match := range ruleL3MatchComb {
-					ruleL3Match.Protocol = halProtocol
+					ruleL3Match.Protomatch = &halapi.RuleL3Match_ProtoNum{
+						ProtoNum: halProtocol,
+					}
 					ruleMatch := &halapi.RuleMatch{
 						L3Match: ruleL3Match,
 						L4Match: ruleL4Match,

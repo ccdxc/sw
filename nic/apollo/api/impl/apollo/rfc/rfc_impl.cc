@@ -109,10 +109,10 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
                                       &rule->match.l3_match.dst_ip_pfx);
         }
         port_inode = itable_add_port_inodes(rule_num, port_inode,
-                               &rule->match.l4_match.sport_range);
+                                            &rule->match.l4_match);
         itable_add_proto_port_inodes(rule_num, proto_port_inode,
-                                     rule->match.l3_match.ip_proto,
-                                     &rule->match.l4_match.dport_range);
+                                     &rule->match.l3_match,
+                                     &rule->match.l4_match);
         addr_inode += 2;
         proto_port_inode += 2;
     }

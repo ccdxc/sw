@@ -40,8 +40,14 @@ typedef enum ip_match_type_s {
     IP_MATCH_TAG    = 3,    ///< match based on the tag
 } ip_match_type_t;
 
+typedef enum match_type_s {
+    MATCH_ANY      = 0, ///< match any
+    MATCH_SPECIFIC = 1, ///< match specific
+} match_type_t;
+
 /// \brief    rule L3 match criteria
 typedef struct rule_l3_match_s {
+    match_type_t     proto_match_type;///< Protocol match type
     uint8_t          ip_proto;        ///< IP protocol
     ip_match_type_t  src_match_type;  ///< src match condition type
     ip_match_type_t  dst_match_type;  ///< dst match condition type
@@ -65,8 +71,10 @@ typedef struct rule_l4_match_s {
             port_range_t    dport_range;    ///< destination port range
         };
         struct {
-            uint8_t    icmp_type;    ///< ICMP type
-            uint8_t    icmp_code;    ///< ICMP code
+            match_type_t    type_match_type;///< match type for type field
+            uint8_t         icmp_type;      ///< ICMP type
+            match_type_t    code_match_type;///< match type for code field
+            uint8_t         icmp_code;      ///< ICMP code
         };
     };
 } __PACK__ rule_l4_match_t;

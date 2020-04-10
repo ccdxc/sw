@@ -134,7 +134,7 @@ func printPolicy(resp *pds.SecurityPolicy) {
 		// Print Destination (Prefix or Range or Tag)
 
 		l3Match := rule.GetMatch().GetL3Match()
-		outStr += fmt.Sprintf("%-10d", l3Match.GetProtocol())
+		outStr += fmt.Sprintf("%-10d", l3Match.GetProtoNum())
 
 		switch l3Match.GetSrcmatch().(type) {
 		case *pds.RuleL3Match_SrcPrefix:
@@ -208,8 +208,8 @@ func printPolicy(resp *pds.SecurityPolicy) {
 				srcLowHighStr, dstLowHighStr, "-")
 		case *pds.RuleL4Match_TypeCode:
 			outStr += fmt.Sprintf("%-13s%-13s%6d/-%6d", "-", "-",
-				l4Match.GetTypeCode().GetType(),
-				l4Match.GetTypeCode().GetCode())
+				l4Match.GetTypeCode().GetTypeNum(),
+				l4Match.GetTypeCode().GetCodeNum())
 		default:
 			outStr += fmt.Sprintf("%-13s%-13s%-13s", "-", "-", "-")
 		}

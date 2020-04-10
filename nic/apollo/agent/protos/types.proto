@@ -35,6 +35,11 @@ enum IPAF {
   IP_AF_INET6 = 2; // IPv6
 }
 
+enum WildcardMatch {
+  MATCH_NONE  = 0;
+  MATCH_ANY   = 256;
+}
+
 // IP Address object
 message IPAddress {
   IPAF      Af     = 1 [(gogoproto.moretags) = "meta:mandatory"];
@@ -127,16 +132,19 @@ enum RuleDir {
 // L3 rule match criteria
 message RuleL3Match {
   // IP Protocol
-  uint32               Protocol  = 1 [(gogoproto.moretags) = "meta:range:0-255"];
+  oneof protomatch {
+    uint32              ProtoNum       = 1;
+    types.WildcardMatch ProtoWildcard  = 2; // Match ANY protocol
+  }
   oneof srcmatch {
-    types.IPPrefix     SrcPrefix = 2; // Src IP Prefix
-    types.AddressRange SrcRange  = 3; // Src IP Range
-    uint32             SrcTag    = 4; // Src Tag
+    types.IPPrefix      SrcPrefix = 3; // Src IP Prefix
+    types.AddressRange  SrcRange  = 4; // Src IP Range
+    uint32              SrcTag    = 5; // Src Tag
   }
   oneof dstmatch {
-    types.IPPrefix     DstPrefix = 5; // Dst IP Prefix
-    types.AddressRange DstRange  = 6; // Dst IP Range
-    uint32             DstTag    = 7; // Dst Tag
+    types.IPPrefix      DstPrefix = 6; // Dst IP Prefix
+    types.AddressRange  DstRange  = 7; // Dst IP Range
+    uint32              DstTag    = 8; // Dst Tag
   }
 }
 
@@ -151,9 +159,15 @@ message PortMatch {
 // ICMPv4/ICMPv6 rule match criteria
 message ICMPMatch {
   // ICMP type
-  uint32 type = 1;
+  oneof typematch {
+    uint32              TypeNum       = 1 ;
+    types.WildcardMatch TypeWildcard  = 2; // Match ANY type
+  }
   // ICMP code
-  uint32 code = 2;
+  oneof codematch {
+    uint32              CodeNum       = 3 ;
+    types.WildcardMatch CodeWildcard  = 4; // Match ANY code
+  }
 }
 
 // L4 rule match criteria

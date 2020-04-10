@@ -1521,6 +1521,7 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                     rule->action_data.fw_action.action =
                         SECURITY_RULE_ACTION_ALLOW;
                     rule->stateful = g_test_params.stateful;
+                    rule->match.l3_match.proto_match_type = MATCH_SPECIFIC;
                     rule->match.l3_match.ip_proto = 17;    // UDP
                     rule->match.l4_match.sport_range.port_lo = 100;
                     rule->match.l4_match.sport_range.port_hi = 10000;
@@ -1585,6 +1586,7 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                         idx++;
                     } else if (idx < (num_rules - 1)) {
                         // catch-all policy within the vpc for TCP traffic
+                        rule->match.l3_match.proto_match_type = MATCH_SPECIFIC;
                         rule->match.l3_match.ip_proto = 6;
                         rule->match.l4_match.dport_range.port_lo = 0;
                         rule->match.l4_match.dport_range.port_hi = 65535;

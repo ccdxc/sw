@@ -268,7 +268,7 @@ class PolicyObject(base.ConfigObjectBase):
         l3match = rule.L3Match
         if l3match and l3match.valid:
             proto = l3match.Proto
-            specrule.Match.L3Match.Protocol = proto
+            specrule.Match.L3Match.ProtoNum = proto
             if l3match.SrcIPLow and l3match.SrcIPHigh:
                 utils.GetRpcIPRange(l3match.SrcIPLow, l3match.SrcIPHigh, specrule.Match.L3Match.SrcRange)
             if l3match.DstIPLow and l3match.DstIPHigh:
@@ -284,8 +284,8 @@ class PolicyObject(base.ConfigObjectBase):
         l4match = rule.L4Match
         if l4match and l4match.valid:
             if utils.IsICMPProtocol(proto):
-                specrule.Match.L4Match.TypeCode.type = l4match.IcmpType
-                specrule.Match.L4Match.TypeCode.code = l4match.IcmpCode
+                specrule.Match.L4Match.TypeCode.TypeNum = l4match.IcmpType
+                specrule.Match.L4Match.TypeCode.CodeNum = l4match.IcmpCode
             else:
                 specrule.Match.L4Match.Ports.SrcPortRange.PortLow = l4match.SportLow
                 specrule.Match.L4Match.Ports.SrcPortRange.PortHigh = l4match.SportHigh

@@ -94,6 +94,7 @@ policy_add_rules (pds_batch_ctxt_t bctxt, std::string cidr_str)
         spec.rule.match.l4_match.sport_range.port_hi = 65535;
         spec.rule.match.l4_match.dport_range.port_lo = 0;
         spec.rule.match.l4_match.dport_range.port_hi = 65535;
+        spec.rule.match.l3_match.proto_match_type = MATCH_SPECIFIC;
         spec.rule.match.l3_match.ip_proto = IP_PROTO_TCP;
         spec.rule.match.l3_match.src_match_type = IP_MATCH_RANGE;
         spec.rule.match.l3_match.dst_match_type = IP_MATCH_RANGE;
@@ -149,6 +150,7 @@ policy_update_rule (pds_batch_ctxt_t bctxt, std::string cidr_str)
     spec.rule.match.l4_match.sport_range.port_hi = 65535;
     spec.rule.match.l4_match.dport_range.port_lo = 0;
     spec.rule.match.l4_match.dport_range.port_hi = 65535;
+    spec.rule.match.l3_match.proto_match_type = MATCH_SPECIFIC;
     spec.rule.match.l3_match.ip_proto = IP_PROTO_TCP;
     spec.rule.match.l3_match.src_match_type = IP_MATCH_RANGE;
     spec.rule.match.l3_match.dst_match_type = IP_MATCH_RANGE;

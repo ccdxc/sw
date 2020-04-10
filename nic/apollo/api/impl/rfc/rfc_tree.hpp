@@ -111,14 +111,13 @@ void itable_add_address_inodes(uint32_t rule, inode_t *addr_inode,
 void itable_add_address_range_inodes(uint32_t rule, inode_t *addr_inode,
                                      ipvx_range_t *range);
 void itable_add_tag_inodes(uint32_t rule, inode_t *tag_inode, uint32_t tag);
-void itable_update_icmp_type_code (port_range_t *sport_range,
-                                   port_range_t *dport_range,
-                                   uint8_t icmp_type,
-                                   uint8_t icmp_code);
+void itable_update_icmp_type_code (rule_l4_match_t *l4Match);
+void itable_update_l4_any (rule_l4_match_t *l4Match);
 inode_t *itable_add_port_inodes(uint32_t rule, inode_t *port_inode,
-                            port_range_t *port_range);
+                                rule_l4_match_t *l4Match);
 void itable_add_proto_port_inodes(uint32_t rule, inode_t *proto_port_inode,
-                                  uint8_t ip_proto, port_range_t *port_range);
+                                  rule_l3_match_t *l3Match,
+                                  rule_l4_match_t *l4Match);
 /// \brief    dump the contents of given equivalence table
 /// \param[in] rfc_ctxt    RFC context carrying all of the previous phases
 ///                       information processed until now
