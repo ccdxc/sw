@@ -327,6 +327,7 @@ func (s *snetworkNetworkinterfaceBackend) regMsgsFunc(l log.Logger, scheme *runt
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*network.NetworkInterface); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}

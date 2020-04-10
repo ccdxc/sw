@@ -327,6 +327,7 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*monitoring.Alert); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -613,6 +614,7 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*monitoring.AlertDestination); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -901,6 +903,7 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*monitoring.AlertPolicy); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -1199,6 +1202,7 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*monitoring.StatsAlertPolicy); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}

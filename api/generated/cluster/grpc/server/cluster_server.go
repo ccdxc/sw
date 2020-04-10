@@ -328,6 +328,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*cluster.Cluster); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -807,6 +808,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*cluster.Host); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -1098,6 +1100,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*cluster.Node); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -1582,6 +1585,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*cluster.Version); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}

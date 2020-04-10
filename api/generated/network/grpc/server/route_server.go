@@ -333,6 +333,7 @@ func (s *snetworkRouteBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*network.RouteTable); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -621,6 +622,7 @@ func (s *snetworkRouteBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*network.RoutingConfig); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}

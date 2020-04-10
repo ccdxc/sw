@@ -327,6 +327,7 @@ func (s *sworkloadWorkloadBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*workload.Workload); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}

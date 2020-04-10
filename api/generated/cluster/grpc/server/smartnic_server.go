@@ -330,6 +330,7 @@ func (s *sclusterSmartnicBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sche
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*cluster.DistributedServiceCard); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}

@@ -329,6 +329,7 @@ func (s *ssecurityNetworkencryptionBackend) regMsgsFunc(l log.Logger, scheme *ru
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*security.TrafficEncryptionPolicy); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}

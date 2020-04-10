@@ -579,6 +579,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*bookstore.Book); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -895,6 +896,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*bookstore.Coupon); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -1209,6 +1211,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*bookstore.Customer); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -1528,6 +1531,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*bookstore.Order); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -2031,6 +2035,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*bookstore.Publisher); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -2721,6 +2726,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*bookstore.Store); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}

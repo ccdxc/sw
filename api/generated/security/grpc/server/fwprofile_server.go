@@ -327,6 +327,7 @@ func (s *ssecurityFwprofileBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sc
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*security.FirewallProfile); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}

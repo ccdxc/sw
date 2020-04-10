@@ -327,6 +327,7 @@ func (s *srolloutRolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*rollout.Rollout); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -613,6 +614,7 @@ func (s *srolloutRolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*rollout.RolloutAction); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}

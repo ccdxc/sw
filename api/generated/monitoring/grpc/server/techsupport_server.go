@@ -328,6 +328,7 @@ func (s *smonitoringTechsupportBackend) regMsgsFunc(l log.Logger, scheme *runtim
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*monitoring.TechSupportRequest); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}

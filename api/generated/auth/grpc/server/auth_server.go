@@ -327,6 +327,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*auth.AuthenticationPolicy); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -1007,6 +1008,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*auth.Role); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -1293,6 +1295,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*auth.RoleBinding); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -1960,6 +1963,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*auth.User); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -2246,6 +2250,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*auth.UserPreference); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}

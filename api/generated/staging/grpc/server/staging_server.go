@@ -327,6 +327,7 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*staging.Buffer); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -615,6 +616,7 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*staging.ClearAction); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -903,6 +905,7 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*staging.CommitAction); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}

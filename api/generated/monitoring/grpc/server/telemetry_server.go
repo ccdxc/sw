@@ -327,6 +327,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*monitoring.FlowExportPolicy); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
@@ -615,6 +616,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if ret, ok := oldObj.(*monitoring.FwlogPolicy); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
 					ret.Status = n.Status
 					return ret, nil
 				}
