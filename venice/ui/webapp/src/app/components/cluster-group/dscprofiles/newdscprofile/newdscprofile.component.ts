@@ -1,6 +1,6 @@
 
-import { required } from '@sdk/v1/utils/validators';
-import { AfterViewInit, Component, Input, OnInit, ViewEncapsulation, OnDestroy } from '@angular/core';
+import { AfterViewInit, Component, Input, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { ValidatorFn } from '@angular/forms';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
@@ -8,10 +8,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ClusterDSCProfile, ClusterDSCProfileSpec, IClusterDSCProfile } from '@sdk/v1/models/generated/cluster';
-import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { SelectItem } from 'primeng/primeng';
-import { AbstractControl, Validators, ValidatorFn } from '@angular/forms';
-import { isNgTemplate } from '@angular/compiler';
 
 
 @Component({
@@ -24,28 +21,8 @@ import { isNgTemplate } from '@angular/compiler';
 export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, ClusterDSCProfile> implements OnInit, AfterViewInit, OnDestroy {
   @Input() existingObjects: ClusterDSCProfile[] = [];
 
-  // start releaseB settings
-  // define properties for handling releaes-b use case. DSC-PROFILE only support
-  /**
-   fwd-mode          policy-mode
-  ------------------------------
-  insert             Enforce
-  Transpart          BaseNet
-  Transpart          FlowAware
-
-  html and ts will branch of based on this.isReleaseB value
-   */
-  isReleaseB: boolean = true;
-  releaseBDSCProfileOptions: SelectItem[] = [
-    { label: 'fwd-mode:Insert policy-mode:Enforce', value: { fwd: 'insertion', policy: 'enforced' } },
-    { label: 'fwd-mode:Transparent policy-mode:BaseNet', value: { fwd: 'transparent', policy: 'basenet' } },
-    { label: 'fwd-mode:Transparent policy-mode:FlowAware', value: { fwd: 'transparent', policy: 'flowaware' } }
-  ];
-  selectedReleaseBDSCProfile: SelectItem;
-  // end releaseB settings
-
   fwdModeOptions: SelectItem[] = Utility.convertEnumToSelectItem(ClusterDSCProfileSpec.propInfo['fwd-mode'].enum);
-  policyModeOptions: SelectItem[] = Utility.convertEnumToSelectItem(ClusterDSCProfileSpec.propInfo['policy-mode'].enum);
+  policyModeOptions: SelectItem[];
 
   selectedFwdMode: SelectItem;
   selectedPolicyMode: SelectItem;
@@ -71,35 +48,21 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
     return this.constructor.name;
   }
   postNgInit(): void {
-    if (this.isInline) {
-      this.selectedReleaseBDSCProfile = this.getSelectedOptionFromDSCProfile(this.newObject);
+
+  }
+
+  // method to update the policy mode options to match what is currently supported
+  setPolicyModeOptions(selectedFwdMode: SelectItem) {
+    if (selectedFwdMode.value.label === 'Insertion') {
+      this.policyModeOptions = [
+        { label: 'Enforced', value: 'enforced' }
+      ];
     } else {
-      this.selectedReleaseBDSCProfile = this.releaseBDSCProfileOptions[0];
+      this.policyModeOptions = [
+        { label: 'BaseNet', value: 'basenet' },
+        { label: 'FlowAware', value: 'flowaware'}
+      ];
     }
-  }
-
-  /**
-   * Override super's API
-   */
-  computeInlineButtonClass() {
-    if (! this.isReleaseB ) {
-      return super.computeInlineButtonClass();
-    }
-    const theOne = this.getSelectedOptionFromDSCProfile(this.newObject);
-    const matched = (this.selectedReleaseBDSCProfile.value.fwd === theOne.value.fwd && this.selectedReleaseBDSCProfile.value.policy === theOne.value.policy);
-    if (!matched) {  // don't disable [SAVE] button
-      return '';
-    } else {  // disable [SAVE] button
-      return 'global-button-disabled';
-    }
-  }
-
-  getSelectedOptionFromDSCProfile(dscProfile: ClusterDSCProfile): SelectItem {
-    const theOne = this.releaseBDSCProfileOptions.find((item: SelectItem) => {
-      return item.value.fwd === dscProfile.spec['fwd-mode'].toLowerCase() &&
-        item.value.policy === dscProfile.spec['policy-mode'].toLowerCase();
-    });
-    return theOne;
   }
 
   setCustomValidation() {
@@ -144,13 +107,8 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
    */
   getObjectValues(): IClusterDSCProfile {
     const dscProfile: ClusterDSCProfile = this.newObject.getFormGroupValues();
-    if (this.isReleaseB) {
-      dscProfile.spec['fwd-mode'] = this.selectedReleaseBDSCProfile.value.fwd;
-      dscProfile.spec['policy-mode'] = this.selectedReleaseBDSCProfile.value.policy;
-    } else {
-      dscProfile.spec['fwd-mode'] = this.selectedFwdMode.value;
-      dscProfile.spec['policy-mode'] = this.selectedPolicyMode.value;
-    }
+    dscProfile.spec['fwd-mode'] = this.selectedFwdMode.value;
+    dscProfile.spec['policy-mode'] = this.selectedPolicyMode.value;
     return dscProfile;
   }
 
@@ -175,13 +133,15 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
       this.validationErrorMessage = 'Error: Name field is not valid.';
       return false;
     }
-    if (this.isReleaseB && !this.selectedReleaseBDSCProfile) {
-      this.validationErrorMessage = 'Please select DSC profile config.';
-      return false;
-    } if (!this.isReleaseB && (!this.selectedFwdMode || !this.selectedPolicyMode)) {
-      this.validationErrorMessage = 'Please select both FW and Policy values.';
+    if (!this.selectedFwdMode) {
+      this.validationErrorMessage = 'Error: Please specify forwarding mode.';
       return false;
     }
+    if (!this.selectedPolicyMode) {
+      this.validationErrorMessage = 'Error: Please specify policy mode.';
+      return false;
+    }
+
     return true;
   }
 
@@ -194,7 +154,6 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
      if (! isCreate) { // it is an update operation failure
       this._controllerService.invokeInfoToaster('Info', 'Restore original value to DSC Profile.');
       this.newObject.setFormGroupValuesToBeModelValues();
-      this.selectedReleaseBDSCProfile = this.getSelectedOptionFromDSCProfile(this.newObject);
      }
    }
 }

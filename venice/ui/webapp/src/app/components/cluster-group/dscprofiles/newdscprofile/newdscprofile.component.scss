@@ -40,3 +40,29 @@ $dary-grey: #a9a9a9;
     margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
   }
 }
+
+.fwdModeText,
+.polModeText {
+  font-weight: normal;
+  font-size: 12px;
+  pointer-events: none;
+  margin-bottom: .25em;
+  margin-left: .25em;
+  margin-top: .25em;
+  color: #898989;
+  line-height: 1;
+}
+
+fieldset {
+  border: 1px solid $dary-grey;
+  padding: 5px;
+  margin-bottom: 10px;
+
+  legend {
+    padding: 0 2px;
+    @include primary-font(15px);
+    color: #676763;
+    margin-bottom: 0px;
+    width: 127px;
+  }
+}

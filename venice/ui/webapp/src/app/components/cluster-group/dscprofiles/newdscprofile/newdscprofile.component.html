@@ -6,15 +6,9 @@
       <div fxFlex="nogrow" fxLayout="column">
 
         <ng-container *ngTemplateOutlet="metaName"></ng-container>
-        <div fxFlex="5px"></div>
-        <div fxFlex="20px" class="new-dsc-profile-select-label">
-          {{isReleaseB? 'Select One Profile:' : 'Configure DSC Profile'}}</div>
-        <div fxFlex="5px"></div>
-        <ng-container *ngIf="!isReleaseB">
+        <div fxFlex="10px"></div>
+        <ng-container>
           <ng-container *ngTemplateOutlet="FWPolicyMode"></ng-container>
-        </ng-container>
-        <ng-container *ngIf="isReleaseB">
-          <ng-container *ngTemplateOutlet="ReleaseB_FWPolicyMode"></ng-container>
         </ng-container>
       </div>
     </div>
@@ -36,41 +30,40 @@
   </div>
 </ng-template>
 
-<ng-template #ReleaseB_FWPolicyMode>
-  <div fxFlex="100" fxLayout="row">
-    <p-listbox #nodesListbox [options]="releaseBDSCProfileOptions"
-               styleClass="new-dsc-profile-row-plist-B"
-               *ngIf="releaseBDSCProfileOptions && releaseBDSCProfileOptions.length>0"
-               [(ngModel)]="selectedReleaseBDSCProfile"
-               optionLabel="label" [listStyle]="{'height':'100px'}">
-    </p-listbox>
-  </div>
+<ng-template #FWPolicyMode>
+  <fieldset>
+    <legend>
+      Configure DSC Mode
+    </legend>
+    <div fxFlex="100" fxLayout="row">
+      <div fxFlex="50" fxLayout="column" class="new-dsc-profile-row">
+        <div fxFlex="nogrow" class="fwdModeText">Forwarding Mode</div>
+        <div class="newdscprofile-plist-div">
+          <p-listbox #nodesListbox [options]="fwdModeOptions"
+                     *ngIf="fwdModeOptions && fwdModeOptions.length>0"
+                     [(ngModel)]="selectedFwdMode" checkbox="true" optionLabel="label"
+                     [listStyle]="{'height':'100px'}"
+                     (onChange)="setPolicyModeOptions($event)">
+          </p-listbox>
+        </div>
+      </div>
+
+      <div fxFlex="50" fxLayout="column" class="new-dsc-profile-row"
+           *ngIf="policyModeOptions && policyModeOptions.length > 0">
+        <div fxFlex="nogrow" class="polModeText">Policy Mode</div>
+        <div class="newdscprofile-plist-div">
+          <p-listbox #nodesListbox [options]="policyModeOptions"
+                     *ngIf="policyModeOptions && policyModeOptions.length>0"
+                     [(ngModel)]="selectedPolicyMode" checkbox="true" optionLabel="label"
+                     [listStyle]="{'height':'100px'}">
+          </p-listbox>
+        </div>
+      </div>
+
+    </div>
+  </fieldset>
 </ng-template>
 
-<ng-template #FWPolicyMode>
-  <div fxFlex="100" fxLayout="row">
-    <div fxFlex="50" fxLayout="column" class="new-dsc-profile-row">
-      <div fxFlex="nogrow" class="">Forwarding Mode</div>
-      <div class="newdscprofile-plist-div">
-        <p-listbox #nodesListbox [options]="fwdModeOptions"
-                   *ngIf="fwdModeOptions && fwdModeOptions.length>0"
-                   [(ngModel)]="selectedFwdMode" checkbox="true" optionLabel="label"
-                   [listStyle]="{'height':'100px'}">
-        </p-listbox>
-      </div>
-    </div>
-    <div fxFlex="50" fxLayout="column" class="new-dsc-profile-row">
-      <div fxFlex="nogrow" class="">Policy Mode</div>
-      <div class="newdscprofile-plist-div">
-        <p-listbox #nodesListbox [options]="policyModeOptions"
-                   *ngIf="policyModeOptions && policyModeOptions.length>0"
-                   [(ngModel)]="selectedPolicyMode" checkbox="true" optionLabel="label"
-                   [listStyle]="{'height':'100px'}">
-        </p-listbox>
-      </div>
-    </div>
-  </div>
-</ng-template>
 <ng-template #divider>
   <div fxFlex="20px" fxLayout="row">
     <div fxFlex="30px"></div>
@@ -81,7 +74,8 @@
 
 <ng-template #inlineButtons>
   <div *ngIf="isInline" class="new-dsc-profile-inline-buttoncontainer" fxFlex="nogrow"
-       fxLayout="row" fxLayoutAlign="start end">
+       fxLayout="row"
+       fxLayoutAlign="start end">
     <div fxFlex="auto" fxLayoutAlign="end center">
       <div fxFlex="nogrow">
         <span (click)="saveObject()"
