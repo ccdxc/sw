@@ -51,6 +51,7 @@ var _ = Describe("Client certificates", func() {
 
 	var apiGwAddr string
 	BeforeEach(func() {
+		Skip("Skipping client cert auth tests")
 		apiGwAddr = ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 		waitForDSCsToBeAdmitted(apiGwAddr)
 	})
