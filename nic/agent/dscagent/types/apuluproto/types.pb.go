@@ -130,6 +130,13 @@
 		DHCPPolicyGetResponse
 		DHCPPolicyDeleteRequest
 		DHCPPolicyDeleteResponse
+		LldpIfStats
+		LldpId
+		LldpChassisCapabilitySpec
+		LldpIfChassisSpec
+		LldpIfPortSpec
+		LldpIfSpec
+		LldpSpec
 		UplinkSpec
 		UplinkPCSpec
 		L3IfSpec
@@ -139,6 +146,11 @@
 		UplinkIfStatus
 		LoopbackIfStatus
 		InterfaceStatus
+		UplinkIfStats
+		UplinkPCStats
+		L3IfStats
+		LoopbackIfStats
+		ControlIfStats
 		InterfaceStats
 		Interface
 		InterfaceRequest

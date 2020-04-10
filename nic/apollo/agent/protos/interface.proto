@@ -40,13 +40,99 @@ enum IfStatus {
   IF_STATUS_DOWN = 2;
 }
 
+message LldpIfStats {
+    uint32 TxCount        = 1; // transmitted pkts
+    uint32 RxCount        = 2; // received pkts
+    uint32 RxDiscarded    = 3; // rx discarded pkts
+    uint32 RxUnrecognized = 4; // rx unrecognized pkts
+    uint32 AgeoutCount    = 5; // count of entry aged out
+    uint32 InsertCount    = 6; // count of inserts
+    uint32 DeleteCount    = 7; // count of deletes
+}
+
+// LLDP chassis/port Identifier key type
+enum LldpIdType {
+    LLDPID_SUBTYPE_NONE    = 0;  //"unknown"
+    LLDPID_SUBTYPE_IFNAME  = 1;  //"ifname"
+    LLDPID_SUBTYPE_IFALIAS = 2;  //"ifalias",
+    LLDPID_SUBTYPE_LOCAL   = 3;  //"local"
+    LLDPID_SUBTYPE_MAC     = 4;  //"mac"
+    LLDPID_SUBTYPE_IP      = 5;  //"ip"
+    LLDPID_SUBTYPE_PORT    = 6;  //"portnum"
+    LLDPID_SUBTYPE_CHASSIS = 7;  //"chasiss-str"
+}
+
+// Protocol used for LLDP
+enum LldpProtoMode {
+    LLDP_MODE_NONE  = 0;
+    LLDP_MODE_LLDP  = 1;
+    LLDP_MODE_CDPV1 = 2;
+    LLDP_MODE_CDPV2 = 3;
+    LLDP_MODE_EDP   = 4;
+    LLDP_MODE_FDP   = 5;
+    LLDP_MODE_SONMP = 6;    
+}
+
+// Key-type and value for Identified
+message LldpId {
+    LldpIdType Type  = 1;
+    bytes      Value = 2;
+}
+
+// Capabilities on the interfce
+enum LldpCapType {
+    LLDP_CAPTYPE_OTHER     = 0;
+    LLDP_CAPTYPE_REPEATER  = 1;
+    LLDP_CAPTYPE_BRIDGE    = 2;
+    LLDP_CAPTYPE_ROUTER    = 3;
+    LLDP_CAPTYPE_WLAN      = 4;
+    LLDP_CAPTYPE_TELEPHONE = 5;
+    LLDP_CAPTYPE_DOCSIS    = 6; 
+    LLDP_CAPTYPE_STATION   = 7;
+}
+
+message LldpChassisCapabilitySpec {
+    LldpCapType CapType    = 1; // Capability type
+    bool        CapEnabled = 2; // Enabled/disabled
+}
+
+message LldpIfChassisSpec {
+  string                             SysName    = 1; // System name
+  LldpId                             ChassisId  = 2; // System identifier
+  string                             SysDescr   = 3; // Description string
+  types.IPAddress                    MgmtIP     = 4; // Management IP
+  repeated LldpChassisCapabilitySpec Capability = 5; // List of capabilities
+}
+
+message LldpIfPortSpec {
+  LldpId PortId    = 1; // Port identifier
+  string PortDescr = 2; // Description string
+  uint32 Ttl       = 3; // TTL
+}
+
+message LldpIfSpec {
+  string            IfName            = 1; // Interface name
+  uint32            RouterId          = 2; // Router-id
+  LldpProtoMode     Proto             = 3; // LLDP/CDP/EDP/FDP/..
+  uint32            Age               = 4; // Time (in seconds) since discovery
+  LldpIfChassisSpec LldpIfChassisSpec = 5; // Chassis info
+  LldpIfPortSpec    LldpIfPortSpec    = 6; // Physical port info
+}
+
+message LldpSpec {
+  LldpIfSpec  LldpIfSpec  = 1; // Local interface info
+  LldpIfSpec  LldpNbrSpec = 2; // Neighbor info
+}
+
 // Uplink configuration (if interface type is IF_TYPE_UPLINK)
 message UplinkSpec {
   // physical port id corresponding to this interface
-  bytes  PortId       = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes    PortId       = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // Untagged ingress packets are considered as coming with this VLAN id
-  // Egress packet tagged with this VLAN id are sent untagge
-  uint32 NativeVlanId = 2;
+  // Egress packet tagged with this VLAN id are sent untagged
+  uint32   NativeVlanId = 2;
+  // Lldp info for the uplink interface
+  LldpSpec LldpSpec     = 3;
 }
 
 // Uplink port-channel configuration (i.e., if interface type is
@@ -141,8 +227,31 @@ message InterfaceStatus {
   }
 }
 
+message UplinkIfStats {
+  LldpIfStats LldpIfStats = 1; // LLDP Tx/Rx packet/error stats
+}
+
+message UplinkPCStats {
+}
+
+message L3IfStats {
+}
+
+message LoopbackIfStats {
+}
+
+message ControlIfStats {
+}
+
 // stats for an interface, if any
 message InterfaceStats {
+  oneof ifstats {
+    UplinkIfStats   UplinkIfStats    = 1;
+    UplinkPCStats   UplinkPCStats    = 2;
+    L3IfStats       L3IfStats        = 3;
+    LoopbackIfStats LoopbackIfStats  = 4;
+    ControlIfStats  ControlIfStats   = 5;
+  }
 }
 
 // interface Object

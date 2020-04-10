@@ -308,4 +308,6 @@ nic/sdk/third-party/dhcp-server-pkg/$ARCH/lib/libisc.so.1104      /usr/lib/
 nic/sdk/third-party/dhcp-server-pkg/$ARCH/lib/libirs.so.161       /usr/lib/
 nic/sdk/third-party/dhcp-server-pkg/$ARCH/lib/libisccfg.so.163    /usr/lib/
 
-
+# lldp
+nic/tools/lldp/S60lldpd                                          /nic/tools/start-lldpd.sh
+nic/conf/apulu/lldpd.conf                                        /etc/lldpd.d/lldpd.conf
